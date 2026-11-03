@@ -280,6 +280,44 @@ Error rows on a refusal (added 2026-11-03, #331): when a refusal stops a stage, 
 
 This amendment changes one verdict rule, the flipped-pair clause, and no spend total, stage cap, arm or split.
 
+### 2026-11-03, after gate 1: results, and the precision of the re-priced figures (#349)
+
+**Run.** Ledger run `n15-ceiling-gate-1-2026-11-03T16-27-45-284Z-54bc0fda` (cap $470, estimate $331.34) metered $133.87 over 3,304 requests and is closed. It ran at runner commit `88d3b3f5`, attesting this file at `71d52121`, at gbrain `62637c96a` (v0.60.557.0) and MANIFEST `5729db40…a615`. The [receipt](runs/gate-1/receipt.json), every rollout's row ([`rows.jsonl.gz`](runs/gate-1/rows.jsonl.gz)), the proposer's inputs and outputs ([`one-shot/`](runs/gate-1/one-shot/)) and the refusal audit ([`refusal-audit/`](runs/gate-1/refusal-audit/)) are committed beside this file, with the calibration re-read's two receipts and rows ([`runs/calibration-reread/`](runs/calibration-reread/)).
+
+**Verdict: fail, cause `saturated`, scoped to Opus.** Counts H 0, S 2, D 0, X 0, V 1, U 0 with R = 2. No Opus pair had headroom and the Opus pairs read `saturated`, so Sol's gate did not run (section 4). Scores are substance pass on the 36 gate tasks per skill; 18 of each skill's 36 come from held-out families, which no train or selection task shares:
+
+| Opus 5.5 pair | Label | No skill | Seed, run 1 / run 2 | Kept one-shot | Reachability | #304's rewrite | Rubric one-shot | Seed, held-out families | No skill, held-out families |
+|---|---|---|---|---|---|---|---|---|---|
+| `query` | saturated | 1.000 | 1.000 / 1.000 | the seed, 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+| `briefing` | saturated | 0.972 | 1.000 / 1.000 | the seed, 1.000 | 0.972 | 1.000 | audit-disqualified | 1.000 | 1.000 |
+| `fact-check` | invalid | 0.861 | 0.889 / 0.889 | the seed, 0.889 | 0.889 | 0.889 | 0.889 | 0.778 | 0.778 |
+
+The receipt gives every column but the last, which is computed from the receipt's per-task results and each gate task's `held_out` flag in `gate.jsonl`.
+
+- No proposal beat the seed on selection, where the seed scored 1.000 on all three skills, so the seed is the kept one-shot on every pair. `briefing`'s second proposal and its rubric one-shot were disqualified by the leak audit, which rejects any date in a proposal: each had put one in an invented citation example.
+- `fact-check` reads `invalid` because 22 of its 36 no-skill answers (61%) failed a form check, against the 10% limit; 17 of those 22 were right on substance. The contract asks for "a label of your skill's six-level scale", which an arm with no skill cannot know, so it wrote labels such as `CONTRADICTED`. That is a contract bug, not a model result.
+- Every arm, reachability included, missed the same four `fact-check` tasks, all from the held-out three-hop family. In all 24 of those rollouts the answer names the person the answer key holds, and each fails the per-part status check: the answers check the claim's three links one by one and mark the true links verified or supported, and the answer key scores the claim as one contradicted part. So `fact-check`'s 0.861 and 0.778 are a scoring mismatch on one family, not room an optimizer could use.
+- Refusal audit: 191 substance-true answers had a negation within five words of the deciding value (`query` 14, `briefing` 29, `fact-check` 148). GPT-6.1 Sol, a different model family from the Opus answers, judged each one: 0 false-correct and 0 ambiguous, so no pair flips.
+- GST-956, preliminary and never deciding (section 7): #304's rewrite against seed run 1 is +0 [0, 0] on all three pairs, 0 wins and 0 losses, McNemar p 1.0, `no-difference-shown`.
+- Opus made 4,756 tool calls in the stage's 1,068 rollouts and none was refused; no rollout stopped at the turn limit or the output limit. No arm was voided, no spend went unscored and the re-price trigger did not fire: the stage's mean rollout cost was $0.061 after `query`, $0.132 after `briefing` and $0.123 after `fact-check`, under the $0.2058 threshold. Per pair, `query` cost $23.74, `briefing` $67.92 and `fact-check` $42.21, proposer calls included.
+
+**The re-priced figures' precision (#349).** The previous amendment's re-priced figures come from the re-read receipts' unrounded means, $0.164665525 per Opus rollout and $0.0735933139 per Sol rollout (the gate receipt's `resolved_config.prices`), not from the $0.1647 and $0.0736 its table prints. With the unrounded means the stop-path read is 1,728 × ($0.164665525 + $0.0735933139) = $411.71, the gate attempt $331.34, the Opus-only attempt $227.96, B0 $161.91 and Opus's 1.25× trigger $0.2058. Recomputed from the rounded means they would read $411.78, $331.39, $228.01, $161.94 and $0.2059. Sol's trigger is $0.0920 either way. No figure, cap or rule changes.
+
+Under section 4 the next step would be the one revision and a second gate. The next amendment records why neither runs.
+
+### 2026-11-03, after gate 1: the benchmark is retired
+
+Garry Tan, relayed by the Captain (GBEV-3) on 2026-11-03: "I guess we are just saturated and we should note saturation and consider the category retired". This retires K, the SkillOpt optimizer benchmark, on gate 1's evidence.
+
+- Gate 2 does not run. The revision built for it (branch `gbev30/skillopt-ceiling-rev1`, never balanced and never run) is abandoned, and the stop-path read (A4), B0, B1 and B2 do not run. The 96 test tasks per skill were never read and stay sealed.
+- This departs from the preregistered path. Section 4 allowed one revision and a second gate before a cut, and section 8 a stop-path read on test; Garry's decision ends the study after one gate. The verdict is his call on gate 1's evidence, not a preregistered CUT-CANDIDATE, and it rests on `query` and `briefing` on Opus 5.5: `fact-check` was unreadable and Sol did not run.
+- L, gbrain's iterative loop. Garry's words, the same day: "Ok I guess we should just retire it from gbrain as well. But we should mark it as deprecated and remove it in a month". gbrain marks the loop deprecated now and removes it on or after 2026-12-03. This study never measured the loop (B1 and B2 never ran), so that decision rests on #304's and the November 1 re-baseline's ties, not on this gate. In gbrain-evals, Cats 30 to 33, which run the loop, are marked deprecated and are deleted after gbrain's removal release reaches the pin.
+- GST-956 keeps only its preliminary read above; its deciding read on test does not run. GST-955 (Sol on multi-hop `query`) is not answered.
+- The program ledger is closed. It holds three runs, all closed: the superseded first calibration ($27.95), the calibration re-read ($15.45) and gate 1 ($133.87), $177.27 committed over 5,038 requests against the $9,163 program cap (the $9,500 total less #304's $337), and `verify` passes. The re-read's $0.42 of open reservations stay counted in the total. With #304, the program spent $514.27 of its $9,500.
+- The runner, the v1 to v3 task sets and their keyless checks stay, as do the published receipts. No new result is published from this benchmark.
+
+No paid call follows this amendment.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project.

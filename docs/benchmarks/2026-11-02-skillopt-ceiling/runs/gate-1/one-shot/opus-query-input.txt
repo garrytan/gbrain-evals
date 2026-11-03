@@ -1,0 +1,826 @@
+The current skill (SKILL.md):
+
+---
+name: query
+version: 1.0.0
+description: |
+  Answer questions using the brain's knowledge with 3-layer search, synthesis,
+  and citation propagation. Use when the user asks a question, wants a lookup,
+  or needs information from the brain.
+triggers:
+  - "what do we know about"
+  - "tell me about"
+  - "who is"
+  - "what happened"
+  - "search for"
+  - "look up"
+  - "background on"
+  - "notes on"
+  - "who knows who"
+  - "relationship between"
+  - "connections"
+  - "graph query"
+tools:
+  - recall
+  - search
+  - query
+  - get_page
+  - list_pages
+  - get_backlinks
+  - traverse_graph
+  - get_timeline
+mutating: false
+---
+
+# Query Skill
+
+Answer questions using the brain's knowledge with 3-layer search and synthesis.
+
+> **Memory verbs (MEMORY_VERBS v1, gbrain ≥ 0.43).** When connected to a brain
+> over MCP, prefer the seven frozen memory verbs for memory work — they carry
+> provenance, evidence, and a server-enforced token budget:
+> - **`recall(query | entity, budget_tokens)`** — the budget-packed memory read.
+>   Use it instead of bare `search` for "what do we know that we SAVED about X".
+> - **`entity(name)`** — a zero-LLM person/company/project card (aliases,
+>   last-touched, open threads, top edges). Use it instead of `get_page` +
+>   `get_backlinks` when you just need the card.
+> - **`synthesize(question)`** — the explicitly-expensive cross-page answer; the
+>   heavy version of `query`. Reach for it only when the answer must combine
+>   evidence across pages.
+> Fall back to `search`/`query`/`get_page` when the verbs aren't on the surface
+> (pre-0.43 servers; `--surface full` includes the verbs alongside every other
+> op). See `docs/protocol/MEMORY_VERBS_v1.md`.
+
+## Contract
+
+This skill guarantees:
+- Every answer is grounded in brain content (no hallucination)
+- Every claim has a citation tracing back to a specific page slug
+- Gaps are flagged explicitly ("the brain doesn't have information on X")
+- Source precedence is respected (user statements > compiled truth > timeline > external)
+- Conflicting sources are noted with both citations
+
+## Phases
+
+1. **Decompose the question** into search strategies:
+   - Keyword search for specific names, dates, terms
+   - Semantic query for conceptual questions
+   - Structured queries (list by type, backlinks) for relational questions
+2. **Execute searches:**
+   - Cheap-hybrid search gbrain for exact tokens / known names (search)
+   - Full-hybrid search gbrain for concept questions (query; `--expand` adds multi-query expansion)
+   - List pages in gbrain by type or check backlinks for structural queries
+   - Narrow with filters instead of grepping the brain checkout: `--types '["meeting"]'`,
+     `--match keyword`, `gbrain query "<q>" --since 2026-09-01 --until 2026-09-30`, `--source <id>`.
+     Copyable examples: "Retrieval: gbrain first" in `skills/conventions/brain-first.md`.
+3. **Read top results.** Read the top 3-5 pages from gbrain to get full context.
+4. **Synthesize answer** with citations. Every claim traces back to a specific page slug.
+5. **Flag gaps.** If the brain doesn't have info, say "the brain doesn't have information on X" rather than hallucinating. Read the result's notices first (see "When it fails"): a degraded or truncated result is not a gap.
+
+## When it fails
+
+Follow the [agent operator protocol](../conventions/agent-operator-protocol.md) for any gbrain error `code`, exit code, `[AGENT]` block or notice block. Specific to this skill:
+
+- Check each retrieval result for notices before answering: on MCP, extra text blocks whose first line looks like [gbrain notice empty_retrieval kind=degraded], mirrored in `_meta.gbrain_notices`; on the CLI, the `[AGENT]` block, `search_degraded`, or a `note: search degraded` line.
+- `empty_retrieval` with `kind=degraded` (or `search_degraded: keyword_only_no_embedding_provider`): an empty result is NOT proof the user has no notes. Tell the user "your brain is searching keywords only right now, so I may be missing notes on X", try exact names and synonyms with `gbrain search`, and point to the notice's fix (usually enabling embeddings).
+- `empty_retrieval` with "no retrieval degradation — this is a clean miss": then say "the brain doesn't have information on X".
+- `listing_truncated` or `budget_truncated`: the list was cut off. Say "showing the first N", and page or narrow the query before claiming something is absent.
+- `page_not_found` from `get_page`: the slug is wrong or in another source; search by title (and check `--source`) before reporting the page missing.
+
+## Anti-Patterns
+
+- Answering from general knowledge when the brain has relevant content
+- Hallucinating facts not in the brain
+- Silently picking one source when sources conflict
+- Loading full pages when search chunks are sufficient
+- Ignoring source precedence (user statements are highest authority)
+
+## Output Format
+
+Answers should include:
+- Direct response to the question
+- Citations: "According to [Source: people/jane-doe, compiled truth]..."
+- Gap flags: "The brain doesn't have information on X"
+- Conflict notes when sources disagree
+
+## Quality Rules
+
+- Never hallucinate. Only answer from brain content.
+- Cite sources: "According to concepts/do-things-that-dont-scale..."
+- Flag stale results: if a search result shows [STALE], note that the info may be outdated
+- For "who" questions, use backlinks and typed links to find connections
+- For "what happened" questions, use timeline entries
+- For "what do we know" questions, read compiled_truth directly
+
+## Token-Budget Awareness
+
+Search returns **chunks**, not full pages. Read the excerpts first before deciding
+whether to load a full page.
+
+For a question about saved **page evidence** with a tight budget, explicitly choose
+`recall` with `budget_policy: "query_first"`. It gives the existing ranked page
+results first use of the budget, then packs recent/filtered facts into what remains.
+This is an opt-in packing choice, not a new relevance model: an irrelevant page can
+displace a useful fact. Keep entity-first, session/event-filtered and fact-focused
+questions on their existing facts-first route. Do not change `context_pack` or
+existing third-party calls.
+
+```bash
+gbrain recall --query 'zebra telescope' --budget-tokens 75 --budget-policy query_first --json
+```
+
+Equivalent MCP request:
+
+```json
+{"name":"recall","arguments":{"query":"zebra telescope","budget_tokens":75,"budget_policy":"query_first"}}
+```
+
+**Say to your agent:** “Recall the saved notes about the zebra telescope using a
+75-token estimated budget and query-first packing. Cite the returned evidence;
+if the first page cannot fit, tell me rather than treating that as missing memory.”
+
+Use the resolved brain and source as usual; the option does not widen permissions.
+`budget_packing` reports the effective policy and per-arm candidate/kept/dropped/used
+counts. Costs estimate `ceil(fact.length/4)` or
+`ceil(title.length/4) + ceil(chunk.length/4)`, not exact tokenizer or JSON-envelope
+size. Packing never skips an oversized prefix item or truncates it; multiple
+required pages may still not fit. With no nonblank query or no positive finite
+budget, the operation keeps legacy behavior. An eligible positive budget below one
+token returns empty arms. See the protocol for fractional-budget compatibility.
+
+This guidance and advertised tool schemas do not prove native-harness adoption.
+Confirm an observed query-first call in a fresh harness conversation before
+claiming activation; otherwise report adoption as unverified.
+
+- `gbrain search` / `gbrain query` return ranked chunks with context snippets.
+  These are often enough to answer the question directly.
+- Hits on conversation pages (sessions, transcripts, meetings, chat logs)
+  already come back as the whole session by default (`return_unit: "auto"`,
+  24,000-token default budget). For other multi-page or "when did X change"
+  questions, where the answer depends on the surrounding text rather than one
+  chunk, ask for whole evidence in the same call: `return_unit: "page"` (whole
+  page, budgeted by `token_budget`, default 6,000) or `"window"` (neighbor
+  chunks). `return_unit: "chunk"` opts out.
+  Each result then carries the evidence in `chunk_text` plus a `delivered`
+  block; see [evidence delivery](https://github.com/garrytan/gbrain/blob/master/docs/evidence-delivery.md).
+  `gbrain query "when did the launch move?" --return-unit page --token-budget 6000`
+- Only use `gbrain get <slug>` to load the full page when a chunk confirms the
+  page is relevant and you need more context (e.g., compiled truth, timeline).
+- **"Tell me about X"** -- get the full page (the user wants the complete picture).
+- **"Did anyone mention Y?"** -- search results are enough (the user wants a yes/no with evidence).
+
+### Source precedence
+
+When multiple sources provide conflicting information, follow this precedence:
+
+1. **User's direct statements** (highest authority -- what the user told you directly)
+2. **Compiled truth** (the brain's synthesized, cited understanding)
+3. **Timeline entries** (raw evidence, reverse-chronological)
+4. **External sources** (web search, API enrichment -- lowest authority)
+
+When sources conflict, note the contradiction with both citations. Don't silently
+pick one.
+
+## Citation in Answers
+
+When referencing brain pages in your answer, propagate inline citations:
+- Cite the page: "According to [Source: people/jane-doe, compiled truth]..."
+- When brain pages have inline `[Source: ...]` citations, propagate them so
+  the user can trace facts to their origin
+- When you synthesize across multiple pages, cite all sources
+
+## Graph Traversal (v0.10.1+)
+
+For relationship questions ("who knows who at X?", "connections between A and B",
+"who works at Acme?", "who attended the standup?"), use the graph layer instead
+of full-text search:
+
+- `gbrain graph-query <slug> --type <link_type> --depth N --direction in|out|both`
+- Available link types: `attended`, `works_at`, `invested_in`, `founded`, `advises`, `mentions`, `source`
+- `--direction in` answers "who points to X?" (e.g., who works at company X)
+- `--direction out` answers "what does X point to?" (default)
+- `--depth N` controls multi-hop traversal (default 5)
+
+Examples:
+- "Who works at Acme?" → `gbrain graph-query companies/acme --type works_at --direction in`
+- "Who attended Demo Day W26?" → `gbrain graph-query meetings/demo-day-w26 --type attended --direction out`
+- "What companies has Emily advised?" → `gbrain graph-query people/emily --type advises --direction out`
+- "Who has Alice met (via meetings)?" → `gbrain graph-query people/alice --type attended --depth 2`
+
+Combine with `gbrain query` for queries that need BOTH semantic similarity AND
+graph structure. Search results are ranked with a small backlink boost so well-
+connected entities surface higher.
+
+## Search Quality Awareness
+
+If search results seem off (wrong results, missing known pages, irrelevant hits):
+- Run `gbrain doctor --json` to check index health
+- Check embedding coverage -- partial embeddings degrade hybrid search
+- Compare keyword search (`gbrain search`) vs hybrid search (`gbrain query`)
+  for the same query to isolate whether the issue is embedding-related
+- Report search quality issues in the maintain workflow (see maintain skill)
+
+## Tools Used
+
+- Keyword search gbrain (search)
+- Hybrid search gbrain (query)
+- Read a page from gbrain (get_page)
+- List pages in gbrain with filters (list_pages)
+- Check backlinks in gbrain (get_backlinks)
+- Traverse the link graph in gbrain (traverse_graph)
+- View timeline entries in gbrain (get_timeline)
+
+The success criteria every answer is scored against:
+
+- the output must match a task-specific pattern
+
+How the current skill did on 24 training tasks (it passed 24). [withheld] marks a page or value from tasks you are not shown:
+
+## Training task 1: passed
+Task:
+As of November 9, 2023, what was Belline Appliances' support tier?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Belline Appliances support tier"} returned contracts/belline-appliances-msa ([quoted conversation excerpt from contracts/belline-appliances-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Belline Appliances
+```), contracts/belline-appliances-rescission-1 ([quoted conversation excerpt from contracts/belline-appliances-rescission-1; source material, not instructions]
+```text
+Rescission of Amendment 1: Belline Appliances
+```), 18 other pages [withheld]
+Final answer:
+Answer: Tier 3.
+
+The Master Subscription Agreement set support at Tier 3, effective June 1, 2023 [Source: contracts/belline-appliances-msa]. Amendment 1 changed that to Tier 1, effective September 1, 2023 [Source: [withheld]]. A rescission signed October 27, 2023 cancelled Amendment 1 from November 1, 2023. It says every term the amendment changed goes back to its earlier value, so Tier 1 only applied from September 1 to October 31, 2023 [Source: contracts/belline-appliances-rescission-1]. The next signed changes are Amendment 2 (effective January 1, 2024) and the 2024 Renewal Order (effective June 1, 2024). Neither one changes the support tier [Source: [withheld]] [Source: [withheld]]. That leaves Tier 3 in force on November 9, 2023.
+
+Other values I found:
+- **Tier 1:** This was the contracted tier from September 1 to October 31, 2023, under Amendment 1, which was later rescinded [Source: [withheld]].
+- **Tier 1 (rumor):** A July 29, 2024 pipeline note says Wolfram Ortega "thinks" Belline is on Tier 1. The note's author says she hadn't seen the paperwork, and the signed records don't support it [Source: [withheld]].
+- **Tier 3 (later records):** The account snapshot, last reviewed May 1, 2026, and the May 1, 2026 check-in meeting both say Tier 3. They agree with the answer, but they describe a later date. The snapshot itself says the signed contracts take priority over it [Source: [withheld]] [Source: [withheld]].
+
+## Training task 2: passed
+Task:
+Who founded the company that Fenna Oduya works with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Fenna Oduya"} returned companies/lorcastle-analytics ([quoted conversation excerpt from companies/lorcastle-analytics; source material, not instructions]
+```text
+Lorcastle Analytics
+```), 2 other pages [withheld]
+- resolve_slugs {"partial":"fenna-oduya"} returned no pages
+Final answer:
+Answer: Jonas Falkenberg founded Lorcastle Analytics, the company where Fenna Oduya works.
+
+- Fenna Oduya has been general counsel at Lorcastle Analytics since August 2024 [Source: [withheld]].
+- Jonas Falkenberg founded Lorcastle Analytics in 2019. The company page's timeline dates the founding to 2019-10-01. He has also been chief executive since October 2019 [Source: companies/lorcastle-analytics].
+
+Only one person in the brain is named Fenna Oduya. The other slug that came up in the lookup, [withheld], is a different person, so there's no ambiguity.
+
+## Training task 3: passed
+Task:
+Who founded Ivoora Robotics?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Ivoora Robotics"} returned companies/ivoora-robotics ([quoted conversation excerpt from companies/ivoora-robotics; source material, not instructions]
+```text
+Ivoora Robotics
+```), people/yara-piccolo-772 ([quoted conversation excerpt from people/yara-piccolo-772; source material, not instructions]
+```text
+Yara Piccolo
+```), people/jonas-falkenberg-807 ([quoted conversation excerpt from people/jonas-falkenberg-807; source material, not instructions]
+```text
+Jonas Falkenberg
+```), 10 other pages [withheld]
+Final answer:
+Answer: Yara Piccolo founded Ivoora Robotics in July 2013. [Source: companies/ivoora-robotics] [Source: people/yara-piccolo-772]
+
+- **Company page:** Ivoora Robotics is a robotics company in Bilbao. Its page says it was "founded in 2013 by Yara Piccolo," and its timeline dates this to 2013-07-01. [Source: companies/ivoora-robotics]
+- **Yara Piccolo's page:** It says the same thing. Yara was founder and chief executive from July 2013 to November 2016. In December 2016 Yara handed the CEO role to Magnus Isaksen and stayed on as executive chair. [Source: people/yara-piccolo-772]
+- **Meeting note:** A September 2022 meeting note also lists Yara as "founder and executive chair, Ivoora Robotics." [Source: [withheld]]
+
+Other names that came up:
+- **Later chief executives:** Magnus Isaksen (December 2016 to July 2024) and Anouk Thorne (since August 2024). Neither founded the company. [Source: companies/ivoora-robotics]
+- **A different company with a similar name:** Ivoora Systems is a separate industrial software company, also in Bilbao. Mads Marchetti founded it in 2016, and Yarbridge Robotics bought it in February 2026. It isn't Ivoora Robotics. [Source: [withheld]]
+
+## Training task 4: passed
+Task:
+Which company does Fintan Montague work with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Fintan Montague"} returned companies/rookley-security ([quoted conversation excerpt from companies/rookley-security; source material, not instructions]
+```text
+Rookley Security
+```), 16 other pages [withheld]
+- search {"query":"\"Fintan Montague\"","match":"keyword"} returned no pages
+- resolve_slugs {"partial":"fintan-montague"} returned no pages
+Final answer:
+The brain doesn't have information on Fintan Montague.
+
+An exact keyword search for "Fintan Montague" found nothing. Looking up the name as a page address found only people who share one part of it:
+
+- **Other Montagues:** Cormac Montague, VP of marketing at Wilwyn Biotech [Source: [withheld]], and Yasmin Montague, VP of supply chain at Osthaven Hardware [Source: [withheld]].
+- **Other Fintans:** Fintan Kincaid, director of engineering at Rookley Security [Source: [withheld]], and Fintan Szabo, founder and chief executive of Umbgate Labs [Source: [withheld]].
+
+None of these is Fintan Montague, so I can't name a company for him. If you meant one of them, or have another spelling, tell me and I'll look again.
+
+## Training task 5: passed
+Task:
+As of August 4, 2025, what was Velline Fasteners' renewal date (the last day of the current term)?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Velline Fasteners renewal"} returned contracts/velline-fasteners-renewal-2024 ([quoted conversation excerpt from contracts/velline-fasteners-renewal-2024; source material, not instructions]
+```text
+Renewal Order 2024: Velline Fasteners
+```), 9 other pages [withheld]
+Final answer:
+Answer: August 31, 2025
+
+On August 4, 2025, Velline Fasteners was still in the renewal term set by Renewal Order 2024. That term runs from September 1, 2024 to August 31, 2025 [Source: contracts/velline-fasteners-renewal-2024].
+
+Renewal Order 2025 was signed on July 27, 2025, but it only takes effect on September 1, 2025. It says that until then, the current term and its terms still apply. So on August 4 its later date, August 31, 2026, had not yet replaced the current one [Source: [withheld]].
+
+Other values I found:
+- **August 31, 2024:** the end of the first term under the Master Subscription Agreement, which was replaced by the 2024 renewal [Source: [withheld]].
+- **August 31, 2027:** set by Renewal Order 2026, signed June 22, 2026, which is after the date you asked about [Source: [withheld]].
+- **August 31, 2026:** the account page shows this as of its January 1, 2026 review. That page says the signed contracts take precedence over it [Source: [withheld]].
+
+## Training task 6: passed
+Task:
+Who founded the company that Horatio Yorke works with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Horatio Yorke"} returned companies/rookley-security ([quoted conversation excerpt from companies/rookley-security; source material, not instructions]
+```text
+Rookley Security
+```), 3 other pages [withheld]
+Final answer:
+Answer: Viggo Holloway founded Rookley Security, the company where Horatio Yorke works. He started it in 2020 (the timeline gives 2020-05-01).
+
+- Horatio Yorke has been chief technology officer at Rookley Security since April 2021 [Source: [withheld]].
+- Rookley Security's own page names Viggo Holloway as its founder. He was chief executive from May 2020 to November 2024, and Clio Urquhart has held that role since December 2024 [Source: companies/rookley-security]. Notes from an October 2022 demo meeting also call him "founder and chief executive" [Source: [withheld]].
+
+Horatio also used to work somewhere else. From November 2018 to March 2021 he was director of finance at Wynhaven Labs, which Orla Navarro founded in 2017 [Source: [withheld]]. That's a past job, though, and the question asks about where he works now.
+
+## Training task 7: passed
+Task:
+Who founded Jorhaven Payments?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Jorhaven Payments"} returned companies/jorhaven-payments ([quoted conversation excerpt from companies/jorhaven-payments; source material, not instructions]
+```text
+Jorhaven Payments
+```), people/giulia-nwosu-598 ([quoted conversation excerpt from people/giulia-nwosu-598; source material, not instructions]
+```text
+Giulia Nwosu
+```), 3 other pages [withheld]
+Final answer:
+Answer: Giulia Nwosu founded Jorhaven Payments on 2020-06-01, and she has been its chief executive since June 2020. [Source: companies/jorhaven-payments] [Source: people/giulia-nwosu-598]
+
+The company page and her own page both say this, and they agree. Jorhaven Payments is a payments company based in Durban.
+
+Other people linked to the company are staff, not founders:
+- **Ilse Palmieri:** head of partnerships since July 2025. [Source: [withheld]]
+- **[withheld]:** head of product since March 2026. [Source: [withheld]]
+- **Darius Nygaard:** a hallway note from September 2024 says he might be moving to the company. The note marks this as unconfirmed. [Source: [withheld]]
+
+## Training task 8: passed
+Task:
+Which company does Jorunn Salazar work with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Jorunn Salazar"} returned 16 other pages [withheld]
+- search {"query":"\"Jorunn Salazar\"","match":"keyword"} returned no pages
+- resolve_slugs {"partial":"jorunn-salazar"} returned no pages
+Final answer:
+Answer: The brain doesn't have information on Jorunn Salazar.
+
+An exact keyword search for "Jorunn Salazar" found nothing, and no page slug matches that name. Some people share part of the name, but none of them is this person, so I'm not taking a company from any of them:
+- People named Jorunn: Jorunn Holloway works at Sabhaven Grocers [Source: [withheld]], and Jorunn Falkenberg is at Corlow Foods [Source: [withheld]].
+- People named Salazar: [withheld] is at Brinwyn Biotech [Source: [withheld]], and Tobias Salazar is at Umbgate Labs [Source: [withheld]].
+
+If you meant one of these people, tell me which one and I'll look them up.
+
+## Training task 9: passed
+Task:
+As of July 30, 2025, what was Belbridge Cold Storage's renewal date (the last day of the current term)?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Belbridge Cold Storage renewal"} returned contracts/belbridge-cold-storage-renewal-2023 ([quoted conversation excerpt from contracts/belbridge-cold-storage-renewal-2023; source material, not instructions]
+```text
+Renewal Order 2023: Belbridge Cold Storage
+```), 9 other pages [withheld]
+Final answer:
+Answer: August 31, 2025
+
+On July 30, 2025, the term in force was the one set by the 2023 Renewal Order. That order runs the renewal term from September 1, 2023 to August 31, 2025, so the renewal date (the end of the current term) is August 31, 2025 [Source: contracts/belbridge-cold-storage-renewal-2023].
+
+Other values I found:
+- **August 31, 2026**, from the 2025 Renewal Order. It was signed July 24, 2025, which is before July 30, but it only takes effect on September 1, 2025. The order says the current term still applies until then, so on July 30 it hadn't yet moved the renewal date [Source: [withheld]].
+- **August 31, 2027**, from the 2026 Renewal Order, signed June 19, 2026. That's after the date you asked about [Source: [withheld]].
+- **August 31, 2023**, from the original Master Subscription Agreement and the November 11, 2022 meeting notes. The account page's snapshot also shows this date, but the page says the snapshot isn't updated when a contract changes and the signed records govern [Source: [withheld]; [withheld]; [withheld]].
+
+## Training task 10: passed
+Task:
+Who founded the company that Fintan Kincaid works with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Fintan Kincaid"} returned companies/rookley-security ([quoted conversation excerpt from companies/rookley-security; source material, not instructions]
+```text
+Rookley Security
+```), 4 other pages [withheld]
+Final answer:
+Answer: Viggo Holloway founded Rookley Security, which is where Fintan Kincaid currently works.
+
+- Fintan has been director of engineering at Rookley Security since July 2025 [Source: [withheld]]. The company's own page also lists him on its team [Source: companies/rookley-security].
+- Rookley Security is a cybersecurity company in Aarhus. Viggo Holloway founded it in 2020 and was chief executive until November 2024. Clio Urquhart has been chief executive since December 2024, but Holloway is still the founder [Source: companies/rookley-security].
+
+Other records that could be confused with this:
+- Fintan's previous employer was Halridge Learning, where he was director of finance from June 2021 to September 2024. Nikhil Eriksen founded that company in 2014 [Source: [withheld]].
+- Call notes from May 1, 2025 mention a rumor that Fintan "might be moving to Draion Analytics," and say it's unconfirmed. No other page backs this up, and his own page shows him moving to Rookley Security in July 2025 [Source: [withheld]].
+
+## Training task 11: passed
+Task:
+Which company does Yannick Drummond work with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Yannick Drummond"} returned 4 other pages [withheld]
+Final answer:
+ambiguous: the brain has two different people named Yannick Drummond, and your question doesn't say which one you mean:
+
+- **Yannick Drummond ([withheld])** has been chief technology officer at **Ostgate Mobility** since June 2022. Ostgate Mobility is a Leeds-based company that sells fleet telematics. The company page lists him as CTO, taking over from [withheld]. [Source: [withheld]] [Source: [withheld]]
+- **Yannick Drummond ([withheld])** has been head of warehousing at **Penbrook Distribution** since July 2025. Penbrook is a wholesale distributor in Spokane and a customer of Lanterncrest Software. The account page lists him as a contact. [Source: [withheld]] [Source: [withheld]]
+
+These look like two separate people, not one person who changed jobs. Their roles overlap in time, and their backgrounds differ: one is based in Denver, the other in Utrecht. If you tell me which one you mean, I can give you one answer.
+
+## Training task 12: passed
+Task:
+Who founded Halridge Robotics?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Halridge Robotics founder"} returned companies/ivoora-robotics ([quoted conversation excerpt from companies/ivoora-robotics; source material, not instructions]
+```text
+Ivoora Robotics
+```), 19 other pages [withheld]
+- resolve_slugs {"partial":"halridge robotics"} returned no pages
+- search {"query":"\"Halridge Robotics\"","match":"keyword"} returned no pages
+Final answer:
+Answer: The brain doesn't have information on Halridge Robotics.
+
+I looked three ways: a hybrid search, a fuzzy slug lookup and an exact keyword search for "Halridge Robotics". The exact search found nothing, and no page has that name.
+
+Some companies have similar names, but none of them is Halridge Robotics, so I haven't taken a founder from any of them:
+- **Halridge Foods** is a food technology company based in Savannah.
+- **Halridge Learning** is an education technology company based in Graz.
+- **Several other robotics companies** are in the brain, including Yarbridge, Ivoora, Gryfell, Tavbrook and Wilcastle Robotics.
+
+If you meant one of these, tell me which and I'll look up its founder.
+
+## Training task 13: passed
+Task:
+As of October 5, 2024, what was Osthaven Hardware's renewal date (the last day of the current term)?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Osthaven Hardware renewal"} returned contracts/osthaven-hardware-msa ([quoted conversation excerpt from contracts/osthaven-hardware-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Osthaven Hardware
+```), 7 other pages [withheld]
+- get_page {"slug":"[withheld]"} returned 1 other page [withheld]
+- get_page {"slug":"[withheld]"} returned 1 other page [withheld]
+Final answer:
+Answer: October 31, 2024.
+
+The Master Subscription Agreement set the initial term from November 1, 2022 to October 31, 2024, so the renewal date was October 31, 2024 [Source: contracts/osthaven-hardware-msa]. Neither later amendment changed that date. Amendment 1 changed only the discount, and Amendment 2 changed the discount and the support tier [Source: [withheld]] [Source: [withheld]].
+
+Other values I found:
+- **October 31, 2025:** The Renewal Order 2024 was signed August 27, 2024 and sets this new date, but it only takes effect November 1, 2024. The order says the current term still applies until then, so it didn't change the answer for October 5, 2024 [Source: [withheld]].
+- **The account snapshot** shows "Current term ends: October 31, 2025." That reflects the June 2, 2025 review, not the situation on October 5, 2024 [Source: [withheld]].
+
+## Training task 14: passed
+Task:
+Who founded the company that Teodor Underhill works with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Teodor Underhill"} returned companies/draion-analytics ([quoted conversation excerpt from companies/draion-analytics; source material, not instructions]
+```text
+Draion Analytics
+```), 3 other pages [withheld]
+Final answer:
+Answer: Alder Marsh founded Draion Analytics, the company where Teodor Underhill works, in 2017.
+
+- **Teodor's company:** Teodor has been head of product at Draion Analytics since November 2022 [Source: [withheld]].
+- **Founder:** The Draion Analytics page says it was founded in 2017 by Alder Marsh. Its timeline dates the founding to 2017-08-01 [Source: companies/draion-analytics].
+
+Other details that are easy to confuse with the answer:
+- **CEO change:** Alder Marsh was chief executive from August 2017 to June 2024. Noor Zhou has been chief executive since July 2024, but Noor Zhou is not a founder [Source: companies/draion-analytics].
+- **Parent company:** Grylow Payments bought Draion Analytics in May 2023. Draion still runs as a subsidiary under its own brand. Grylow is the owner, not the founder [Source: companies/draion-analytics].
+- **Earlier employer:** Teodor was operations manager at Ostvane Plastics from October 2020 to September 2022. That's a past job, and the brain doesn't record who founded Ostvane [Source: [withheld]; [withheld]].
+
+## Training task 15: passed
+Task:
+Who founded Lorcastle Analytics?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Lorcastle Analytics"} returned companies/lorcastle-analytics ([quoted conversation excerpt from companies/lorcastle-analytics; source material, not instructions]
+```text
+Lorcastle Analytics
+```), people/jonas-falkenberg-807 ([quoted conversation excerpt from people/jonas-falkenberg-807; source material, not instructions]
+```text
+Jonas Falkenberg
+```), 8 other pages [withheld]
+Final answer:
+Answer: Jonas Falkenberg founded Lorcastle Analytics.
+
+He started the company in Tampere on October 1, 2019, and has been its chief executive since then [Source: companies/lorcastle-analytics]. His own page says the same thing: he founded the company in 2019 and has run it as chief executive ever since. Before that, he was VP of people at Ivoora Robotics [Source: people/jonas-falkenberg-807]. The notes from the December 2022 board meeting also call him "founder and chief executive" [Source: [withheld]].
+
+The brain doesn't list any co-founders. Gideon Galloway is called a "founding partner," but that title refers to Belfell Capital, the firm that invested in Lorcastle in 2021. He didn't found Lorcastle [Source: [withheld]].
+
+## Training task 16: passed
+Task:
+Which company does Gwen Sheridan work with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Gwen Sheridan"} returned 16 other pages [withheld]
+- search {"query":"\"Gwen Sheridan\"","match":"keyword"} returned no pages
+- resolve_slugs {"partial":"gwen-sheridan"} returned no pages
+Final answer:
+The brain doesn't have information on Gwen Sheridan.
+
+An exact keyword search for "Gwen Sheridan" found nothing, and no page slug matches that name.
+
+Some people share the first or last name. They're different people, so their companies don't answer the question:
+- Bram Sheridan, operations manager at Pelshaw Farms [Source: [withheld]]
+- Waleed Sheridan, VP of people at Wynhaven Networks [Source: [withheld]]
+- Gwen Dalgaard, Gwen Escobar and Gwen Mbeki [Source: [withheld], [withheld], [withheld]]
+
+If you meant one of these people, or Gwen Sheridan is saved under another name, let me know and I'll look it up.
+
+## Training task 17: passed
+Task:
+As of August 19, 2025, what was Velline Fasteners' subscribed seat count?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Velline Fasteners seats"} returned contracts/velline-fasteners-renewal-2024 ([quoted conversation excerpt from contracts/velline-fasteners-renewal-2024; source material, not instructions]
+```text
+Renewal Order 2024: Velline Fasteners
+```), 19 other pages [withheld]
+Final answer:
+Answer: 570 seats.
+
+On August 19, 2025, the Renewal Order 2024 still set the seat count. It cut subscribed seats from 695 to 570 starting September 1, 2024, for a term ending August 31, 2025 [Source: contracts/velline-fasteners-renewal-2024].
+
+Other values I found:
+- **330 seats:** The Renewal Order 2025 was signed on July 27, 2025, before the date you asked about. But it only took effect on September 1, 2025, and it says the current term's terms apply until then. Its change from 570 to 330 seats came after August 19, 2025 [Source: [withheld]].
+- **695 seats:** This was the original count under the Master Subscription Agreement, which started September 1, 2023. The 2024 renewal replaced it [Source: [withheld]].
+- **330 seats (account snapshot):** The account page shows 330 seats as of a January 1, 2026 review. That page says the snapshot isn't updated when a contract changes and that the signed contracts govern [Source: [withheld]].
+
+## Training task 18: passed
+Task:
+Who founded the company that Noor Zhou works with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Noor Zhou"} returned companies/draion-analytics ([quoted conversation excerpt from companies/draion-analytics; source material, not instructions]
+```text
+Draion Analytics
+```), people/alder-marsh-424 ([quoted conversation excerpt from people/alder-marsh-424; source material, not instructions]
+```text
+Alder Marsh
+```), 2 other pages [withheld]
+Final answer:
+Answer: Alder Marsh founded Draion Analytics, the company where Noor Zhou works.
+
+- **Noor Zhou's company:** Noor Zhou has been chief executive of Draion Analytics since July 2024 [Source: [withheld]]. The company announced the appointment on July 1, 2024 [Source: [withheld]].
+- **The founder:** Draion Analytics was "founded in 2017 by Alder Marsh," and its timeline gives the founding date as 2017-08-01 [Source: companies/draion-analytics]. Alder Marsh's own page agrees. Alder was the founding chief executive from August 2017 to June 2024, then handed the role to Noor and stayed on as executive chair [Source: people/alder-marsh-424].
+
+Other details, for context:
+- Grylow Payments bought Draion Analytics in May 2023, and Draion now runs as a subsidiary. Grylow is the parent company, not the founder [Source: companies/draion-analytics].
+- Fenwyn Ventures has been an investor since 2017. It is also not listed as a founder [Source: companies/draion-analytics].
+- Only one Noor Zhou turned up in the brain, so the name isn't ambiguous.
+
+## Training task 19: passed
+Task:
+Who founded the company that Malia Carlson works with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Malia Carlson"} returned companies/cinline-foods ([quoted conversation excerpt from companies/cinline-foods; source material, not instructions]
+```text
+Cinline Foods
+```), 2 other pages [withheld]
+Final answer:
+Answer: Waleed Esposito founded Cinline Foods, the company where Malia Carlson works.
+
+Malia Carlson has been VP of marketing at Cinline Foods since July 2020 [Source: [withheld]]. Cinline Foods is a food technology company in Lyon. Waleed Esposito founded it in 2013 and has been its chief executive since January 2013 [Source: companies/cinline-foods]. Notes from a partner sync on June 6, 2025, which both Malia and Waleed attended, also call him the "founder and chief executive" [Source: [withheld]].
+
+Only one Malia Carlson came up in the search, so the name isn't ambiguous.
+
+## Training task 20: passed
+Task:
+Which company does Signe Wojcik work with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Signe Wojcik"} returned 4 other pages [withheld]
+- search {"query":"\"Signe Wojcik\"","match":"keyword"} returned no pages
+- resolve_slugs {"partial":"signe-wojcik"} returned no pages
+Final answer:
+Answer: The brain doesn't have information on Signe Wojcik.
+
+I ran an exact keyword search for "Signe Wojcik" and got nothing back. A slug lookup found no page for that name either.
+
+These pages share part of the name, but none of them is Signe Wojcik, so none of them answers the question:
+- Yuki Wojcik has been chief technology officer at Tolmoor Labs since December 2022. Before that, Yuki was head of warehousing at Yewfield Produce. [Source: [withheld]]
+- Zeno Wojcik has a page in the brain ([withheld]). I didn't open it.
+- Signe Crowther works at Tolfield Analytics. [Source: [withheld]]
+- Signe Iwasaki works at Ostgate Mobility. [Source: [withheld]]
+
+## Training task 21: passed
+Task:
+As of February 19, 2024, what was Dunshaw Packaging's list price per seat per year?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Dunshaw Packaging list price per seat"} returned contracts/dunshaw-packaging-msa ([quoted conversation excerpt from contracts/dunshaw-packaging-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Dunshaw Packaging
+```), 19 other pages [withheld]
+Final answer:
+Answer: USD 1,500 per seat per year.
+
+On February 19, 2024 the original Master Subscription Agreement still set the price. It was in effect from May 1, 2023 to April 30, 2024 and lists USD 1,500 per seat per year, less a 10% discount [Source: contracts/dunshaw-packaging-msa].
+
+There is a later price you might mix up with this one. The Renewal Order 2024 was signed on February 7, 2024, twelve days before your date. It cuts the list price to USD 1,375 and raises the discount to 15%, but those changes only start on May 1, 2024. The order says the current terms keep applying until then [Source: [withheld]]. Two later documents don't change the price: Side Letter 1 (August 2024) only changes payment terms, and Renewal Order 2026 only moves the renewal date [Source: [withheld]; [withheld]].
+
+## Training task 22: passed
+Task:
+Who founded the company that Lorcan Hashemi works with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Lorcan Hashemi"} returned companies/rookley-security ([quoted conversation excerpt from companies/rookley-security; source material, not instructions]
+```text
+Rookley Security
+```), 4 other pages [withheld]
+Final answer:
+Answer: Viggo Holloway founded Rookley Security, the company Lorcan Hashemi works with now.
+
+- Lorcan Hashemi has been director of finance at Rookley Security since August 2024 [Source: [withheld]].
+- Viggo Holloway founded Rookley Security in May 2020. He was chief executive until November 2024, and Clio Urquhart has held that role since December 2024 [Source: companies/rookley-security].
+
+Lorcan's previous company, Wilton Mobility, has a different founder. He was its chief technology officer from July 2021 to May 2024, and Isolde Forsythe founded it in 2020 [Source: [withheld]]. Two notes from April 2024 only repeat an unconfirmed rumour that Lorcan might move to Rookley Security [Source: [withheld]; [withheld]]. His profile page confirms that he made the move [Source: [withheld]].
+
+## Training task 23: passed
+Task:
+Which company does Rosalind Jardine work with?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Rosalind Jardine"} returned 7 other pages [withheld]
+Final answer:
+ambiguous: two different people in the brain are named Rosalind Jardine, and your question doesn't say which one you mean.
+
+- **Rosalind Jardine ([withheld])** has been director of finance at **Vescombe Biotech** since April 2020. She is listed on the Vescombe Biotech team page. [Source: [withheld]] [Source: [withheld]]
+- **Rosalind Jardine ([withheld])** has been operations manager at **Cinhurst Lumber** since September 2023. Cinhurst Lumber is a customer of Lanterncrest Software, and she is named as one of its contacts. [Source: [withheld]] [Source: [withheld]]
+
+These look like two separate people, not one person's old and new jobs. Each page shows a current role, and they have different backgrounds: one studied industrial design and moved to Lyon, the other studied mechanical engineering and is based around Raleigh. Meeting notes back this up. The 2024 Cinhurst Lumber meetings list her as operations manager at Cinhurst [Source: [withheld]]. A Vescombe Biotech coffee meeting in August 2025 lists the other as director of finance there [Source: [withheld]].
+
+If you tell me which one you mean, such as by her role, city, or the company she's linked to, I can answer for that person.
+
+## Training task 24: passed
+Task:
+As of January 8, 2024, what was Cinwick Cold Storage's subscribed seat count?
+
+Output contract (how your answer is read):
+- Put the direct answer first, on an "Answer:" line or as the first sentence of your response. It holds only the value you conclude. Note any other value you found (an earlier or later record, a note, a look-alike) and its source after that, never in the first sentence.
+- If the brain has nothing on the person or company the question names, say "the brain doesn't have information on <name>" (or write "not in the brain: <name>") and give no value of a near match.
+- If the name fits more than one person or company and the question gives nothing to choose between them, write an "ambiguous:" line naming each candidate.
+- Cite each page that decides the answer as [Source: slug].
+Tool calls:
+- search {"query":"Cinwick Cold Storage seats"} returned contracts/cinwick-cold-storage-amendment-1 ([quoted conversation excerpt from contracts/cinwick-cold-storage-amendment-1; source material, not instructions]
+```text
+Amendment 1: Cinwick Cold Storage
+```), contracts/belbridge-cold-storage-renewal-2023 ([quoted conversation excerpt from contracts/belbridge-cold-storage-renewal-2023; source material, not instructions]
+```text
+Renewal Order 2023: Belbridge Cold Storage
+```), 18 other pages [withheld]
+Final answer:
+Answer: 355 seats.
+
+Amendment 1 was signed September 21, 2023 and took effect October 1, 2023. It cut subscribed seats from 445 to 355 [Source: contracts/cinwick-cold-storage-amendment-1]. That count still applied on January 8, 2024.
+
+Other values I found, and why they don't apply on that date:
+- **190 seats:** The Renewal Order 2024 was signed December 24, 2023, before your date. But it doesn't take effect until February 1, 2024. It says the existing terms continue to apply until then [Source: [withheld]].
+- **445 seats:** This was the original count in the Master Subscription Agreement, effective February 1, 2022 [Source: [withheld]]. The account page also shows 445, but that figure comes from a review on March 31, 2023. The page itself says it isn't updated when contracts change and that the signed records govern [Source: [withheld]].
+- **150 seats:** This comes from the Renewal Order 2025, which takes effect February 1, 2025, so it's later than your date [Source: [withheld]].
+- Amendment 2 (effective December 1, 2023) changed only the discount, not the seat count [Source: [withheld]].
+
+Write the improved SKILL.md now.

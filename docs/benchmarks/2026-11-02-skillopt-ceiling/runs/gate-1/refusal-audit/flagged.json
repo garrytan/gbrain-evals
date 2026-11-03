@@ -1,0 +1,4091 @@
+[
+ {
+  "key": "query/opus/no-skill",
+  "task_id": "query-gate-25",
+  "run": 1,
+  "status": null,
+  "gold": [
+   45
+  ],
+  "hits": [
+   {
+    "value": "45",
+    "context": "ubscription Agreement (signed July 23, 2022, effective September 1, 2022) sets payment terms at net 45. [Source: contracts/korshaw-lumber-msa] - Neither signed amendment changed the payment terms before",
+    "negs": [
+     "Neither"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/seed",
+  "task_id": "query-gate-11",
+  "run": 1,
+  "status": null,
+  "gold": [
+   120
+  ],
+  "hits": [
+   {
+    "value": "120",
+    "context": " (signed July 20, 2023, effective August 1, 2023), which says either party may decline renewal with 120 days' notice [Source: contracts/wexburn-brewing-msa]. None of the later signed documents changed i",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/seed",
+  "task_id": "query-gate-14",
+  "run": 1,
+  "status": null,
+  "gold": [
+   15
+  ],
+  "hits": [
+   {
+    "value": "15",
+    "context": "r Subscription Agreement (signed July 29, 2022, effective August 1, 2022) sets payment terms at net 15 [Source: contracts/penwell-building-supply-msa]. - **Nothing changed it by June 17, 2026:** The bra",
+    "negs": [
+     "Nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/seed",
+  "task_id": "query-gate-30",
+  "run": 1,
+  "status": null,
+  "gold": [
+   15
+  ],
+  "hits": [
+   {
+    "value": "15",
+    "context": " Agreement was signed February 12, 2023 and took effect April 1, 2023. It sets payment terms at net 15 [Source: contracts/ivocastle-moving-msa]. - **Nothing changed it by December 3, 2024:** Side Letter",
+    "negs": [
+     "Nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/seed",
+  "task_id": "query-gate-14",
+  "run": 2,
+  "status": null,
+  "gold": [
+   15
+  ],
+  "hits": [
+   {
+    "value": "15",
+    "context": "issue. - The Master Subscription Agreement took effect August 1, 2022 and set payment terms at net 15 [Source: contracts/penwell-building-supply-msa]. - None of the later signed records changed payment",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/seed",
+  "task_id": "query-gate-30",
+  "run": 2,
+  "status": null,
+  "gold": [
+   15
+  ],
+  "hits": [
+   {
+    "value": "15",
+    "context": " Agreement was signed February 12, 2023 and took effect April 1, 2023. It sets payment terms of net 15. [Source: contracts/ivocastle-moving-msa] - **Nothing changed it before December 3, 2024:** Side Le",
+    "negs": [
+     "Nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/kept-rewrite",
+  "task_id": "query-gate-14",
+  "run": 1,
+  "status": null,
+  "gold": [
+   15
+  ],
+  "hits": [
+   {
+    "value": "15",
+    "context": "after issue. The Master Subscription Agreement (effective August 1, 2022) set payment terms at net 15 [Source: contracts/penwell-building-supply-msa]. None of the later signed records change that: - **",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/kept-rewrite",
+  "task_id": "query-gate-20",
+  "run": 1,
+  "status": null,
+  "gold": [
+   235
+  ],
+  "hits": [
+   {
+    "value": "235",
+    "context": " (not in force on that date):** The Renewal Order 2025 was signed July 15, 2025 and cuts seats from 235 to 205. It doesn't take effect until September 1, 2025, and it says the current terms apply until t",
+    "negs": [
+     "doesn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/kept-rewrite",
+  "task_id": "query-gate-25",
+  "run": 1,
+  "status": null,
+  "gold": [
+   45
+  ],
+  "hits": [
+   {
+    "value": "45",
+    "context": " it.** The Master Subscription Agreement took effect September 1, 2022 and says \"Payment terms: net 45.\" [Source: contracts/korshaw-lumber-msa] - **No later contract changed it before November 23, 2024.",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/kept-rewrite",
+  "task_id": "query-gate-30",
+  "run": 1,
+  "status": null,
+  "gold": [
+   15
+  ],
+  "hits": [
+   {
+    "value": "15",
+    "context": " Agreement was signed February 12, 2023 and took effect April 1, 2023. It sets payment terms of net 15 [Source: contracts/ivocastle-moving-msa]. - **Later contracts didn't change it:** - Side Letter 1",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/kept-rewrite",
+  "task_id": "query-gate-33",
+  "run": 1,
+  "status": null,
+  "gold": [
+   505
+  ],
+  "hits": [
+   {
+    "value": "505",
+    "context": "endment-2] [Source: contracts/wexburn-brewing-rescission-1] - **Renewal Order 2025** cut seats from 505 to 460, but not until August 1, 2025, which is after the date you asked about. [Source: contracts/w",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/reachability",
+  "task_id": "query-gate-14",
+  "run": 1,
+  "status": null,
+  "gold": [
+   15
+  ],
+  "hits": [
+   {
+    "value": "15",
+    "context": " Subscription Agreement (signed July 29, 2022, effective August 1, 2022) sets payment terms at \"net 15\" [Source: contracts/penwell-building-supply-msa]. None of the later signed documents changed this: ",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/reachability",
+  "task_id": "query-gate-25",
+  "run": 1,
+  "status": null,
+  "gold": [
+   45
+  ],
+  "hits": [
+   {
+    "value": "45",
+    "context": "ent, signed July 23, 2022 and effective September 1, 2022. The agreement says \"Invoices are due net 45\" [Source: contracts/korshaw-lumber-msa]. No signed contract changed the payment term before that d",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "query/opus/reachability",
+  "task_id": "query-gate-30",
+  "run": 1,
+  "status": null,
+  "gold": [
+   15
+  ],
+  "hits": [
+   {
+    "value": "15",
+    "context": " and took effect April 1, 2023, with a term running to March 31, 2025. It says invoices are due net 15 [Source: contracts/ivocastle-moving-msa]. None of the later signed documents changes the payment te",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/no-skill",
+  "task_id": "briefing-gate-07",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Kirsi Gilchrist",
+   1425,
+   "Wynhaven Networks"
+  ],
+  "hits": [
+   {
+    "value": "Wynhaven Networks",
+    "context": "ople there since November 2015. [Source: people/waleed-sheridan-776, updated date not recorded] The Wynhaven Networks company page lists him in the same role. Its chief executive is founder Lars Tamura. [Source: compa",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/no-skill",
+  "task_id": "briefing-gate-06",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Tolmoor Labs",
+   "Osthaven Hardware",
+   "Pelshaw Farms",
+   "Belvane Mobility",
+   "Isencrest Analytics",
+   "Tolbrook Analytics"
+  ],
+  "hits": [
+   {
+    "value": "Tolbrook Analytics",
+    "context": "tics company in Porto, and Jonas Ibarra has been its chief executive since March 2019. Don't mix up Tolbrook Analytics (Zoltan) with Tolmoor Labs (Soren). **Notes** - Each attendee matched exactly one brain page. Simi",
+    "negs": [
+     "Don't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/no-skill",
+  "task_id": "briefing-gate-32",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Wynhaven Networks",
+   "Kirsi Gilchrist",
+   5
+  ],
+  "hits": [
+   {
+    "value": "5",
+    "context": " figure comes from the Master Subscription Agreement, and the 2024 renewal didn't change it. The 2025 Renewal Order, signed August 27, 2025, raises the discount to 10% and the list price from USD 1,425",
+    "negs": [
+     "didn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "der, signed August 27, 2025, raises the discount to 10% and the list price from USD 1,425 to USD 1,650 per seat. Those changes don't start until November 1, 2025, 10 days from now. [Source: contracts/c",
+    "negs": [
+     "don't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "the list price from USD 1,425 to USD 1,650 per seat. Those changes don't start until November 1, 2025, 10 days from now. [Source: contracts/calelle-fulfillment-renewal-2025, updated 2026-11-03] The cur",
+    "negs": [
+     "don't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/no-skill",
+  "task_id": "briefing-gate-34",
+  "run": 1,
+  "status": null,
+  "gold": [
+   5,
+   "Wynhaven Networks",
+   "Kirsi Gilchrist"
+  ],
+  "hits": [
+   {
+    "value": "5",
+    "context": "025, signed August 27, 2025, raises the discount to 10% and the list price from USD 1,425 to USD 1,650 per seat. Those changes don't start until **November 1, 2025**, four days from now. Until then, th",
+    "negs": [
+     "don't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "e list price from USD 1,425 to USD 1,650 per seat. Those changes don't start until **November 1, 2025**, four days from now. Until then, the current terms apply. [Source: contracts/calelle-fulfillment-",
+    "negs": [
+     "don't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/no-skill",
+  "task_id": "briefing-gate-35",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Tolmoor Labs",
+   "Desmond Palmieri",
+   30,
+   "Dunshaw Packaging"
+  ],
+  "hits": [
+   {
+    "value": "30",
+    "context": "rterly review he raised moving to Tier 3 support and a 15% discount. Nothing has been signed. - 15:30 Coffee with Giulia Fennimore Giulia Fennimore is with Dunshaw Packaging today, where she has been",
+    "negs": [
+     "Nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-03",
+  "run": 1,
+  "status": null,
+  "gold": [
+   145,
+   "Niall Whitlock",
+   "Wexburn Brewing"
+  ],
+  "hits": [
+   {
+    "value": "145",
+    "context": "26-11-03]. ACTION ITEMS - Oakwick: in the pricing discussion, use the signed terms in force today (145 seats, USD 1,750 list less 10%). Don't use the account snapshot or the hallway notes [Source: accou",
+    "negs": [
+     "Don't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-10",
+  "run": 1,
+  "status": null,
+  "gold": [
+   20,
+   "Zofia Delacroix",
+   "Jorhaven Payments",
+   "Elmford Materials"
+  ],
+  "hits": [
+   {
+    "value": "20",
+    "context": "Security since February 2022 but keeps its own brand. [Source: companies/elmford-materials, updated 2026-11-03] Don't confuse him with Jovan Mendes, CFO of Lumbridge Foods. Internal and other blocks:",
+    "negs": [
+     "Don't"
+    ]
+   },
+   {
+    "value": "20",
+    "context": " anything up for these. ACTIVE DEALS - Beldale Building Supply: the current term ends February 28, 2027. Nothing comes due in the next 7 days. [Source: contracts/beldale-building-supply-renewal-2025, u",
+    "negs": [
+     "Nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-20",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Korridge Networks",
+   "Umbgate Labs",
+   "Yarbridge Robotics",
+   "Halridge Foods",
+   "Corcote Supply"
+  ],
+  "hits": [
+   {
+    "value": "Corcote Supply",
+    "context": "3] (13:00 Inbox and follow-ups is an internal block, so it has no attendee entry.) ACTIVE DEALS - Corcote Supply renewal: the notice deadline is about June 1, and the term ends July 31, 2026. See the Yusuf entry ",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-28",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Kelholm Security",
+   "Wilcastle Robotics",
+   "Yvette Nakashima"
+  ],
+  "hits": [
+   {
+    "value": "Kelholm Security",
+    "context": "-whitaker-723). A September 12, 2024 call note says, unconfirmed, that *Kasimir* might be moving to Kelholm Security. That rumor is not about Rafael. [Source: notes/call-notes-cyrus-44, updated 2026-11-03] - 11:30 H",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-31",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Jorhaven Payments",
+   135,
+   "Zofia Delacroix",
+   "Elmford Materials"
+  ],
+  "hits": [
+   {
+    "value": "135",
+    "context": "ated 2026-11-03] ACTIVE DEALS - Beldale Building Supply: renewal term runs to February 28, 2027 at 135 seats and a 20% discount. Nothing has been signed since January 16, 2025. [Source: contracts/beldal",
+    "negs": [
+     "Nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-32",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Wynhaven Networks",
+   "Kirsi Gilchrist",
+   5
+  ],
+  "hits": [
+   {
+    "value": "5",
+    "context": "orce now. Treat them as a data problem to check. - Rumoured terms in internal notes (net 30, net 15, Tier 2) were never confirmed. Don't use them. - At the Dec 2024 review, Halima floated net 30 an",
+    "negs": [
+     "never",
+     "Don't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "lle contracts in the order file. **Stale pages to flag** - Waleed's page has nothing newer than 2015 except the Dec 2022 meeting. - The Calelle account snapshot was last reviewed Dec 20, 2024, and the",
+    "negs": [
+     "nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-34",
+  "run": 1,
+  "status": null,
+  "gold": [
+   5,
+   "Wynhaven Networks",
+   "Kirsi Gilchrist"
+  ],
+  "hits": [
+   {
+    "value": "5",
+    "context": "fulfillment-renewal-2024, updated 2024-08-14]. The Renewal Order 2025 was signed on August 27, 2025, but it doesn't take effect until November 1, 2025. From that date the discount becomes 10% and the",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "e Renewal Order 2025 was signed on August 27, 2025, but it doesn't take effect until November 1, 2025. From that date the discount becomes 10% and the list price goes from USD 1,425 to USD 1,650 per se",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": " and Renewal Order 2026), which are later than today. I relied only on records dated October 28, 2025 or earlier. Neither 2026 document changes the discount anyway. - **Not covered:** this briefing cov",
+    "negs": [
+     "Neither"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-35",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Tolmoor Labs",
+   "Desmond Palmieri",
+   30,
+   "Dunshaw Packaging"
+  ],
+  "hits": [
+   {
+    "value": "30",
+    "context": "NGS TODAY - 10:00 Hiring sync (internal) Internal meeting. I didn't look up any attendees. - 10:30 Catch-up with Nikhil Nordin Nikhil Nordin is with Tolmoor Labs today, where he is founder and chi",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-10",
+  "run": 2,
+  "status": null,
+  "gold": [
+   20,
+   "Zofia Delacroix",
+   "Jorhaven Payments",
+   "Elmford Materials"
+  ],
+  "hits": [
+   {
+    "value": "20",
+    "context": ", and it now runs as a subsidiary under its own brand [Source: companies/elmford-materials, updated 2026-11-03]. **Internal (no external lookup):** 10:30 Lunch; 14:00 Pipeline review. **What I couldn'",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-17",
+  "run": 2,
+  "status": null,
+  "gold": [
+   "Calelle Fulfillment",
+   "Valeria Eastwood"
+  ],
+  "hits": [
+   {
+    "value": "Calelle Fulfillment",
+    "context": ", and none has a status field. I couldn't pick out which ones are active or due in the next 7 days. Calelle Fulfillment has no signed contract yet (see the 09:00 entry). ACTION ITEMS - Confirm who Idris Takahashi is be",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-32",
+  "run": 2,
+  "status": null,
+  "gold": [
+   "Wynhaven Networks",
+   "Kirsi Gilchrist",
+   5
+  ],
+  "hits": [
+   {
+    "value": "5",
+    "context": " 10% and the list price from USD 1,425 to USD 1,650 per seat per year, but only from November 1, 2025, so it doesn't apply today [Source: contracts/calelle-fulfillment-renewal-2025, updated 2026-11-03]",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": " from November 1, 2025, so it doesn't apply today [Source: contracts/calelle-fulfillment-renewal-2025, updated 2026-11-03]. Other terms today: 280 seats, net 45 payment terms, Tier 1 support, and 90 da",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "en paperwork for those, and the signed contracts don't support them [Source: notes/call-notes-arjun-55, updated 2026-11-03; notes/hallway-notes-paloma-28, updated 2026-11-03; notes/call-notes-tycho-25,",
+    "negs": [
+     "don't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "n paperwork for those, and the signed contracts don't support them [Source: notes/call-notes-arjun-55, updated 2026-11-03; notes/hallway-notes-paloma-28, updated 2026-11-03; notes/call-notes-tycho-25, ",
+    "negs": [
+     "don't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-33",
+  "run": 2,
+  "status": null,
+  "gold": [
+   "Kelridge Moving",
+   "Ostley Learning",
+   "Cinvale Biotech",
+   "Belfell Capital"
+  ],
+  "hits": [
+   {
+    "value": "Kelridge Moving",
+    "context": "October 2014 and Gideon's October 2016. Treat the roles as likely but not recently confirmed. - The Kelridge Moving account snapshot dates from August 2022 and lists a term ending April 30, 2025. A 2025 renewal orde",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-34",
+  "run": 2,
+  "status": null,
+  "gold": [
+   5,
+   "Wynhaven Networks",
+   "Kirsi Gilchrist"
+  ],
+  "hits": [
+   {
+    "value": "5",
+    "context": "alelle-fulfillment-renewal-2024, updated 2024-08-14] The 2025 renewal was signed on August 27, 2025, but it doesn't take effect until November 1, 2025, four days from now. It raises the discount to 1",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "] The 2025 renewal was signed on August 27, 2025, but it doesn't take effect until November 1, 2025, four days from now. It raises the discount to 10% and the list price to USD 1,650 per seat per yea",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "y, as VP of people. [Source: people/waleed-sheridan-776, updated date not recorded; latest entry 2015-11-01] He has held that role since November 2015, and the company page lists him on the Wynhaven ",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "irsi Gilchrist. [Source: companies/brinwyn-foods, updated date not recorded; CEO change dated 2024-05-01] She took over on May 1, 2024, from founder Greta Marchetti, who stayed on as executive chair.",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "ve chair. [Source: announcements/brinwyn-foods-names-kirsi-gilchrist-chief-executive, updated 2024-05-01] [Source: people/greta-marchetti-562, updated date not recorded] Before that, Kirsi was genera",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "yn-foods-names-kirsi-gilchrist-chief-executive, updated 2024-05-01] [Source: people/greta-marchetti-562, updated date not recorded] Before that, Kirsi was general counsel at Selelle Foods. Ulrich Ker",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "Kirsi Gilchrist",
+    "context": ", no brain lookup needed. - 17:00 Demo for Brinwyn Foods Brinwyn Foods' chief executive today is Kirsi Gilchrist. [Source: companies/brinwyn-foods, updated date not recorded; CEO change dated 2024-05-01] She to",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/seed",
+  "task_id": "briefing-gate-35",
+  "run": 2,
+  "status": null,
+  "gold": [
+   "Tolmoor Labs",
+   "Desmond Palmieri",
+   30,
+   "Dunshaw Packaging"
+  ],
+  "hits": [
+   {
+    "value": "30",
+    "context": "TINGS TODAY - 10:00 Hiring sync (internal) Internal meeting, so I didn't look anything up. - 10:30 Catch-up with Nikhil Nordin Nikhil Nordin is with Tolmoor Labs, where he is founder and chief exe",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/kept-rewrite",
+  "task_id": "briefing-gate-03",
+  "run": 1,
+  "status": null,
+  "gold": [
+   145,
+   "Niall Whitlock",
+   "Wexburn Brewing"
+  ],
+  "hits": [
+   {
+    "value": "Niall Whitlock",
+    "context": "he briefing date. I left out any terms or events dated after August 27, 2024. - The page lookup for Niall Whitlock didn't show an updated date. I used 2026-11-03 because every other page has that date. - I didn't c",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/kept-rewrite",
+  "task_id": "briefing-gate-10",
+  "run": 1,
+  "status": null,
+  "gold": [
+   20,
+   "Zofia Delacroix",
+   "Jorhaven Payments",
+   "Elmford Materials"
+  ],
+  "hits": [
+   {
+    "value": "20",
+    "context": "hallway-notes-mateo-77, updated 2026-11-03] [Source: contracts/beldale-building-supply-msa, updated 2026-11-03] - 10:30 Lunch -- internal, no attendees named - 11:30 Demo for Gryfell Robotics (externa",
+    "negs": [
+     "no"
+    ]
+   },
+   {
+    "value": "20",
+    "context": "le/ilse-palmieri-763, updated 2026-11-03] Before that, she was CTO at Lumbridge Foods from August 2022 to April 2025. Don't confuse her with Desmond Palmieri, who is CEO of Fernmora Security. [Source:",
+    "negs": [
+     "Don't"
+    ]
+   },
+   {
+    "value": "20",
+    "context": "ri-763, updated 2026-11-03] Before that, she was CTO at Lumbridge Foods from August 2022 to April 2025. Don't confuse her with Desmond Palmieri, who is CEO of Fernmora Security. [Source: people/ilse-p",
+    "negs": [
+     "Don't"
+    ]
+   },
+   {
+    "value": "20",
+    "context": " after today's date. I used each page's dated contents to work out what applies as of September 18, 2026. - I didn't run the optional salience or anomaly checks.",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/kept-rewrite",
+  "task_id": "briefing-gate-23",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "2026-02-28",
+   195,
+   "Wilhaven Supply"
+  ],
+  "hits": [
+   {
+    "value": "Wilhaven Supply",
+    "context": "ride-817, updated 2026-11-03] A June 2023 account check-in also lists him as logistics manager at Wilhaven Supply, so the brain has no conflicting record. [Source: meetings/wilhaven-supply-account-check-in-1, upda",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/kept-rewrite",
+  "task_id": "briefing-gate-32",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Wynhaven Networks",
+   "Kirsi Gilchrist",
+   5
+  ],
+  "hits": [
+   {
+    "value": "5",
+    "context": "-renewal-2024, updated 2026-11-03] Coming change: the 2025 Renewal Order was signed August 27, 2025 but doesn't take effect until November 1, 2025. From then the discount becomes 10%, the list price ",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "nge: the 2025 Renewal Order was signed August 27, 2025 but doesn't take effect until November 1, 2025. From then the discount becomes 10%, the list price rises from USD 1,425 to USD 1,650 per seat per ",
+    "negs": [
+     "doesn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/kept-rewrite",
+  "task_id": "briefing-gate-34",
+  "run": 1,
+  "status": null,
+  "gold": [
+   5,
+   "Wynhaven Networks",
+   "Kirsi Gilchrist"
+  ],
+  "hits": [
+   {
+    "value": "5",
+    "context": " [Source: contracts/calelle-fulfillment-renewal-2024, updated 2026-11-03] Upcoming change: the 2025 renewal was signed 2025-08-27 but doesn't take effect until 2025-11-01. From then, the discount ris",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "lle-fulfillment-renewal-2024, updated 2026-11-03] Upcoming change: the 2025 renewal was signed 2025-08-27 but doesn't take effect until 2025-11-01. From then, the discount rises to 10% and the list p",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "6-11-03] Upcoming change: the 2025 renewal was signed 2025-08-27 but doesn't take effect until 2025-11-01. From then, the discount rises to 10% and the list price to USD 1,650. Today is inside the cu",
+    "negs": [
+     "doesn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/reachability",
+  "task_id": "briefing-gate-03",
+  "run": 1,
+  "status": null,
+  "gold": [
+   145,
+   "Niall Whitlock",
+   "Wexburn Brewing"
+  ],
+  "hits": [
+   {
+    "value": "145",
+    "context": "145 starting September 1, 2026. All of these are dated after today, so none of them changes today's 145 seats. [Source: contracts/oakwick-fasteners-amendment-1, updated 2026-11-03; accounts/oakwick-faste",
+    "negs": [
+     "none"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/reachability",
+  "task_id": "briefing-gate-10",
+  "run": 1,
+  "status": null,
+  "gold": [
+   20,
+   "Zofia Delacroix",
+   "Jorhaven Payments",
+   "Elmford Materials"
+  ],
+  "hits": [
+   {
+    "value": "20",
+    "context": "ats from 145 to 195 on June 1, 2024 [Source: contracts/beldale-building-supply-amendment-1, updated 2026-11-03]. No Beldale contract changes anything after the renewal. Attendees: none named on the in",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/reachability",
+  "task_id": "briefing-gate-21",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Farid Pemberton",
+   "Orrmere Distribution",
+   "Tavbrook Robotics",
+   465
+  ],
+  "hits": [
+   {
+    "value": "Orrmere Distribution",
+    "context": "63, updated 2026-11-03] He has held that role since March 2024 and no other employer is recorded. Orrmere Distribution is a Lanterncrest Yard customer, and Brigid Oyelaran owns the account. [Source: accounts/orrmere-di",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/reachability",
+  "task_id": "briefing-gate-34",
+  "run": 1,
+  "status": null,
+  "gold": [
+   5,
+   "Wynhaven Networks",
+   "Kirsi Gilchrist"
+  ],
+  "hits": [
+   {
+    "value": "5",
+    "context": "2024, signed 2024-08-14] - **Change on Saturday:** Renewal Order 2025 was signed on August 27, 2025, but doesn't take effect until **November 1, 2025**. From that date the discount goes to 10% and th",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "** Renewal Order 2025 was signed on August 27, 2025, but doesn't take effect until **November 1, 2025**. From that date the discount goes to 10% and the list price goes from USD 1,425 to USD 1,650 per ",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "not signed terms:** In call and hallway notes, colleagues guessed Calelle had moved to net 30, net 15 or Tier 2 support. None of these is backed by a signed document. [Source: notes/call-notes-arjun-55",
+    "negs": [
+     "None"
+    ]
+   },
+   {
+    "value": "5",
+    "context": "Source: people/waleed-sheridan-776, updated 2026-11-03] - He has held this role since November 2015, and his page lists no other employer. The Wynhaven page agrees. Wynhaven is a network infrastructu",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "briefing/opus/reachability",
+  "task_id": "briefing-gate-35",
+  "run": 1,
+  "status": null,
+  "gold": [
+   "Tolmoor Labs",
+   "Desmond Palmieri",
+   30,
+   "Dunshaw Packaging"
+  ],
+  "hits": [
+   {
+    "value": "30",
+    "context": "(internal) This is an internal meeting with no named attendees, so I didn't look anyone up. - 10:30 Catch-up with Nikhil Nordin Nikhil Nordin is with Tolmoor Labs today, as its founder and chief ex",
+    "negs": [
+     "didn't"
+    ]
+   },
+   {
+    "value": "30",
+    "context": "updated 2026-11-03] ACTIVE DEALS - Fenley Grocers is the only deal on today's calendar; see the 14:30 meeting above. I didn't do a wider pipeline scan. PEOPLE IN PLAY - Nikhil Nordin, Desmond Palmieri",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-03",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": " Alder Marsh, so Alder was still chief executive until then. Nothing in the brain disagrees, so no correction is needed. Things to watch before shipping: - **Similar name:** `people/alder-marsch-564` (Alde",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-02",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ity. I treated it as supporting evidence only. The contract pages above are what decide the claim. Correction: none needed. Caveat: 445 is right only for the date given. Anyone reusing this claim with a la",
+    "negs": [
+     "none"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-05",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "SUPPORTED",
+    "context": "rain's support is consistent, but that is all it rests on. **Summary:** 1 claim checked, and it is supported. Nothing needs correcting.",
+    "negs": [
+     "Nothing"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "ent, but that is all it rests on. **Summary:** 1 claim checked, and it is supported. Nothing needs correcting.",
+    "negs": [
+     "Nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-06",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CONFIRMED",
+    "context": "e marked trust tier \"unknown\" and origin \"legacy.\" The brain is consistent, but none of it has been confirmed by a user or a curator.",
+    "negs": [
+     "none"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "ld. Every link agrees across several pages, and nothing in the brain contradicts any of them, so no corrections are needed. **Before it ships:** - **Date-dependent:** The claim is only true from January 202",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-08",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Yara Piccolo"
+  ],
+  "hits": [
+   {
+    "value": "Yara Piccolo",
+    "context": "tive. STATUS: CONTRADICTED Correct value: On January 29, 2015, Ivoora Robotics' chief executive was Yara Piccolo (people/yara-piccolo-772). Magnus Isaksen didn't take the job until December 1, 2016, almost two ye",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-09",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "`accounts/wilhaven-supply` is the same stale snapshot as in part 1. **Overall:** This can ship. No corrections needed.",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-10",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "VERIFIED",
+    "context": "ages agree with each other, but none of them is user-confirmed. **Summary:** 1 claim checked. It's verified, with nothing contradicting it. The claim is fine to ship as written.",
+    "negs": [
+     "nothing"
+    ]
+   },
+   {
+    "value": "CONFIRMED",
+    "context": "e trust tier \"unknown\" and legacy origin. The pages agree with each other, but none of them is user-confirmed. **Summary:** 1 claim checked. It's verified, with nothing contradicting it. The claim is fine to ",
+    "negs": [
+     "none"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "is Amara Quintero; none of them is linked to Ostley Learning. Nothing in the brain disagrees, so no correction is needed. All the source pages have trust tier \"unknown\" and legacy origin. The pages agree wit",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-11",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Kalinda Beaumont"
+  ],
+  "hits": [
+   {
+    "value": "Kalinda Beaumont",
+    "context": "fficer. STATUS: FALSE Correct value: On April 1, 2023, Grylow Health's chief technology officer was Kalinda Beaumont, not Henrik Kristiansen. She held the role from April 2022 to February 2026. Henrik Kristiansen onl",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-12",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Jonas Falkenberg"
+  ],
+  "hits": [
+   {
+    "value": "CONTRADICTED",
+    "context": "**Fact-check report: 1 claim checked, 1 contradicted. Do not ship as written.** [1] CLAIM: Ingrid Sorensen founded Lorcastle Analytics. STATUS: CONTRAD",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-13",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "Tier 2",
+    "context": "h 26, 2026; **effective April 1, 2026**) decides this. It changes the support tier from Tier 1 to **Tier 2**, and nothing else. April 30, 2026 is after the effective date, so Tier 2 applies. - None of the o",
+    "negs": [
+     "nothing"
+    ]
+   },
+   {
+    "value": "Tier 2",
+    "context": "rt tier from Tier 1 to **Tier 2**, and nothing else. April 30, 2026 is after the effective date, so Tier 2 applies. - None of the other signed records change the support tier back: - `contracts/calelle-fu",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-14",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   150,
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "150",
+    "context": "t count was 135. STATUS: CONTRADICTED Correct value: 150 seats - `contracts/dunwell-lumber-msa` set 150 seats from January 1, 2023. - None of the changes up to June 14, 2025 touch seats. Amendment 1 (`co",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-15",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": " \"as of September 2, 2022\", it will be out of date. **Verdict:** The claim can ship as written. No correction is needed.",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-16",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   385,
+   120
+  ],
+  "hits": [
+   {
+    "value": "120",
+    "context": "storage-msa` originally set 90 days. - `contracts/grymora-cold-storage-side-letter-1` changed it to 120 days from December 1, 2024. - No later contract changes the notice period. The rescission only reve",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-17",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Tamsin Murakami"
+  ],
+  "hits": [
+   {
+    "value": "Tamsin Murakami",
+    "context": " CONTRADICTED Correct value: On November 2, 2016, Starcrest Mobility's chief technology officer was Tamsin Murakami, not Nanami Pryce. Was \"Nanami Pryce (CTO on 2016-11-02)\", now \"Tamsin Murakami (CTO from June 201",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-21",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Wolfram Ellison"
+  ],
+  "hits": [
+   {
+    "value": "Wolfram Ellison",
+    "context": "icts this claim. Zofia Delacroix runs Gryfell Robotics as chief executive, but she didn't found it. Wolfram Ellison did. **[1] CLAIM:** Zofia Delacroix founded Gryfell Robotics. **STATUS:** FALSE **Correction:** wa",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-20",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   500
+  ],
+  "hits": [
+   {
+    "value": "500",
+    "context": " July 31, 2025. August 16, 2023 falls inside that term. - `contracts/umbwyn-hardware-renewal-2025` (500 to 590) doesn't take effect until August 1, 2025, so it doesn't apply. The 650 figure probably com",
+    "negs": [
+     "doesn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-19",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "VERIFIED",
+    "context": " - `contracts/varhaven-farms-amendment-1` - `contracts/varhaven-farms-renewal-2025` **Overall:** VERIFIED. No corrections are needed. Before publishing, though, make sure the pipeline didn't take seat coun",
+    "negs": [
+     "No"
+    ]
+   },
+   {
+    "value": "CONFIRMED",
+    "context": "ting notes mention $1,700 only as an unsigned idea. - `notes/slack-recap-wolfram-31` repeats an unconfirmed rumour of $1,750. Neither changes the result. - This is the list price. The MSA's 15% discount has ",
+    "negs": [
+     "Neither"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "/varhaven-farms-amendment-1` - `contracts/varhaven-farms-renewal-2025` **Overall:** VERIFIED. No corrections are needed. Before publishing, though, make sure the pipeline didn't take seat counts from the ",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-23",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Alder Marsh"
+  ],
+  "hits": [
+   {
+    "value": "Alder Marsh",
+    "context": "sch founded Draion Analytics. STATUS: CONTRADICTED Correct value: Draion Analytics was founded by **Alder Marsh** (`people/alder-marsh-424`), not Alder Marsch. Correction: was \"Alder Marsch\", now \"Alder Marsh\". ",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "CONTRADICTED",
+    "context": "**Fact-check report: 1 claim checked, 1 contradicted. Do not ship it as written.** [1] CLAIM: Alder Marsch founded Draion Analytics. STATUS: CONTRADICT",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-28",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Veda Zawadzki"
+  ],
+  "hits": [
+   {
+    "value": "Veda Zawadzki",
+    "context": "**Verdict: do not ship.** The brain says Lorwell Energy was founded by Veda Zawadzki, not Farid Pemberton. The claim appears to mix up two companies with similar names. Farid Pemberton",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "Veda Zawadzki",
+    "context": "Vidal as chief financial officer. Farid Pemberton isn't on the page. - `people/veda-zawadzki-784`: \"Veda Zawadzki founded Lorwell Energy, the energy storage company, in 2015.\" - `people/farid-pemberton-981`: \"Fari",
+    "negs": [
+     "isn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-27",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   235,
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "235",
+    "context": "ts/morora-appliances`. An unconfirmed 2023 hallway note (`notes/call-notes-tycho-10`) also mentions 235, but it decides nothing. **[2] CLAIM:** As of June 8, 2026, Morora Appliances' payment term was ne",
+    "negs": [
+     "nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-32",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CONFIRMED",
+    "context": "ed has trust tier \"unknown\" and legacy origin. They agree with each other, but none of them is user-confirmed.",
+    "negs": [
+     "none"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "laim (3 links)** Overall: **VERIFIED.** The brain backs every link and nothing in it disagrees. No correction is needed. [1] CLAIM: Idris Aldana works with Varley Networks (the company the claim refers to)",
+    "negs": [
+     "nothing",
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-33",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "r (legacy origin). They agree with each other, but no page with a higher trust tier backs them up. Correction: none needed.",
+    "negs": [
+     "none"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-34",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   20
+  ],
+  "hits": [
+   {
+    "value": "20",
+    "context": "ge discount was 10%. STATUS: FALSE Correct value: 20% (was 10%, now 20%) The discount on April 30, 2024 was 20%, not 10%. The 10% figure does appear in the brain, but it only applied from December 1, 2",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "20",
+    "context": "nt was 10%. STATUS: FALSE Correct value: 20% (was 10%, now 20%) The discount on April 30, 2024 was 20%, not 10%. The 10% figure does appear in the brain, but it only applied from December 1, 2024, seve",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "20",
+    "context": ", the terms in force before this document continue to apply.\" So the 10% did not apply on April 30, 2024. - **accounts/umbbrook-produce**: the contract history lists only four documents: the MSA, Amendm",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "20",
+    "context": " Amendment 1, Amendment 2 (signed Nov 13, 2025) and the cancellation of Amendment 2 (signed Dec 23, 2025). No document changes the discount between April 1 and December 1, 2024. Amendment 2 and its canc",
+    "negs": [
+     "No"
+    ]
+   },
+   {
+    "value": "20",
+    "context": " discount. Likely cause: the pipeline took the later 10% from Amendment 1 and attached it to April 2024 without checking that amendment's start date. Fix: \"As of April 30, 2024, Umbbrook Produce's per",
+    "negs": [
+     "without"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-35",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "2026 falls inside his tenure. The newest dated page, the December 2025 meeting note, also fits. No correction is needed.",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/no-skill",
+  "task_id": "fact-check-gate-36",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNSUPPORTED",
+    "context": "hecked** [1] CLAIM: As of August 12, 2023, Wynlow Plastics' subscribed seat count was 840. STATUS: UNSUPPORTED - **Entity check:** There is no customer called \"Wynlow Plastics\" in the brain. I searched for that",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-03",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "0 - Data-derived hard fails: 0 (0 required to ship) - Confidence: HIGH. **The claim can ship.** ## Corrections Applied None. The brain supports the claim. ## Claims Requiring the User's Input None. ## Ful",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-02",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ected: 0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 - Confidence: HIGH. The gate passes. ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-04",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Nikhil Eriksen"
+  ],
+  "hits": [
+   {
+    "value": "Nikhil Eriksen",
+    "context": "e-learning`: \"It was founded in 2014 by Nikhil Eriksen.\" Its timeline says \"2014-05-01 | Founded by Nikhil Eriksen.\" Carys Mbeki is not mentioned anywhere on the page, including the leadership and team lists. - `pe",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-05",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "0 - Data-derived hard fails: 0 (0 required to ship) - Confidence: HIGH. **The claim can ship.** ## Corrections Applied None. The brain supports the claim as written. ## Claims Requiring the User's Input No",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-06",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "o returns `people/paloma-achebe-244`, a different person who has nothing to do with this claim. ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-08",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Yara Piccolo"
+  ],
+  "hits": [
+   {
+    "value": "FALSE",
+    "context": "I checked this against the brain before it ships. **The claim is false and must not ship as written.** On January 29, 2015, the brain has Yara Piccolo as Ivoora Robotics'",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "WRONG",
+    "context": "derived: 0, data-derived: 1) - ✅ Verified: 0 (0%) - 🤷 Unverified (hedged): 0 - 🔧 Corrected: 0 - ❌ Wrong (fixed): 1 - Data-derived hard fails: 1 (none may remain at delivery; this one is cleared only if t",
+    "negs": [
+     "none"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-11",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Kalinda Beaumont"
+  ],
+  "hits": [
+   {
+    "value": "Kalinda Beaumont",
+    "context": "laim is false and blocks delivery.** On April 1, 2023, Grylow Health's chief technology officer was Kalinda Beaumont, not Henrik Kristiansen. He didn't start that job until March 2026. ## Summary - Claims checked: 1",
+    "negs": [
+     "not",
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-10",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "ACCURATE",
+    "context": "s marked \"unknown\" trust and \"legacy\" origin. Neither page names any other founder, so \"founded\" is accurate. A \"sole founder\" version wasn't claimed and I didn't check it.",
+    "negs": [
+     "wasn't"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "ta-derived hard fails: 0 (0 required to ship) - Confidence: HIGH. **Gate: the claim can ship.** ## Corrections Applied None. The brain does not contradict the claim. ## Claims Requiring the User's Input No",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-12",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Jonas Falkenberg"
+  ],
+  "hits": [
+   {
+    "value": "Jonas Falkenberg",
+    "context": "alytics`: \"It was founded in 2019 by Jonas Falkenberg.\" The timeline reads \"2019-10-01 | Founded by Jonas Falkenberg.\" The page never mentions Ingrid Sorensen. - `people/jonas-falkenberg-807`: \"Jonas Falkenberg found",
+    "negs": [
+     "never"
+    ]
+   },
+   {
+    "value": "Jonas Falkenberg",
+    "context": "ed by Jonas Falkenberg.\" The page never mentions Ingrid Sorensen. - `people/jonas-falkenberg-807`: \"Jonas Falkenberg founded Lorcastle Analytics … in 2019.\" It lists him as founder and chief executive since October 2",
+    "negs": [
+     "never"
+    ]
+   },
+   {
+    "value": "FALSE",
+    "context": "# Fact-Check Report: \"Ingrid Sorensen founded Lorcastle Analytics.\" The brain says this claim is false, so it can't ship as written. Ingrid Sorensen founded a different company with a similar name, Lorc",
+    "negs": [
+     "can't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-09",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "e four. I then read each one and applied them in order of effective date, up to April 17, 2026. ## Corrections Applied None. All three values match the signed records. ## Claims Requiring the User's Input ",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-13",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "Tier 2",
+    "context": "il 1, 2026, which was still in force on April 30, 2026. **Gate:** Do not ship with \"Tier 1\". With \"Tier 2\" it passes: there are no remaining hard fails, and the corrected value is confirmed by the governin",
+    "negs": [
+     "not",
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-15",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 - Confidence: HIGH. **The claim can ship.** ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-14",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   150,
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "150",
+    "context": ". LANE: data-derived STATUS: ❌ FALSE Correct value: 150 SOURCE: `contracts/dunwell-lumber-msa` sets 150 seats from Jan 1, 2023. No amendment in effect before June 14, 2025 changes seats. `contracts/dunwe",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-16",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   385,
+   120
+  ],
+  "hits": [
+   {
+    "value": "385",
+    "context": "effective** date, not the date it was signed. ## Corrections Applied 1. Seat count: was 370, now **385**. The drop to 370 doesn't start until March 1, 2026. Sources: `contracts/grymora-cold-storage-msa`",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "385",
+    "context": " value. No other contract changed seats. The account page `accounts/grymora-cold-storage` also says 385, but that snapshot isn't updated when contracts change, so I didn't rely on it. [2] CLAIM: As of D",
+    "negs": [
+     "isn't"
+    ]
+   },
+   {
+    "value": "120",
+    "context": "rymora-cold-storage-msa` (90 days at the start) and `contracts/grymora-cold-storage-side-letter-1` (120 days from Dec 1, 2024). NOTES: No later contract changes the notice period. Amendment 1 only change",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-17",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Tamsin Murakami"
+  ],
+  "hits": [
+   {
+    "value": "Tamsin Murakami",
+    "context": "t: Starcrest Mobility CTO on 2016-11-02 **Verdict: blocked. The claim can't ship.** The brain says Tamsin Murakami was Starcrest Mobility's chief technology officer on November 2, 2016, not Nanami Pryce. Nanami Pry",
+    "negs": [
+     "can't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-19",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "did not rely on the account page, the meeting notes or the Slack/pipeline recaps for any value. ## Corrections Applied None needed. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-20",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   500
+  ],
+  "hits": [
+   {
+    "value": "500",
+    "context": "2023 to July 31, 2025. **This page decides the claim.** - `contracts/umbwyn-hardware-renewal-2025`: 500 → 590, but not until August 1, 2025. The \"before\" value of 500 matches the 2023 renewal. NOTES: - ",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "500",
+    "context": "snapshot or the original contract and missed the later changes. Nothing else I found disagrees with 500. The informal notes pages don't mention seat counts. - **Each step follows from the last.** Every c",
+    "negs": [
+     "don't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-23",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Alder Marsh"
+  ],
+  "hits": [
+   {
+    "value": "Alder Marsh",
+    "context": "aion Analytics. LANE: data-derived STATUS: ❌ FALSE Correct value: Draion Analytics was founded by **Alder Marsh** (people/alder-marsh-424), not Alder Marsch (people/alder-marsch-564). SOURCE: - `search \"Draion A",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "Alder Marsh",
+    "context": "has been director of operations at Elmmere Building Supply since August 2023 and is based in Porto. Alder Marsh is based in Tacoma. Nothing on Alder Marsch's page links them to Draion Analytics. - Graph check: w",
+    "negs": [
+     "Nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-21",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Wolfram Ellison"
+  ],
+  "hits": [
+   {
+    "value": "FALSE",
+    "context": "ed): 0 - 🔧 Corrected: 0 - ❌ Wrong (fixed): 1 - Data-derived hard fails: 1. The claim as written is false and must not ship. The corrected version below can ship. - Confidence: LOW as written. The correcte",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-24",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNVERIFIED",
+    "context": "f March 10, 2023, Umbley Fulfillment's subscribed seat count was 130. LANE: data-derived STATUS: 🤷 UNVERIFIED (level 3). The company named isn't in the brain, so this is a hard block until the name is fixed. S",
+    "negs": [
+     "isn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-25",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Linnea Thomsen"
+  ],
+  "hits": [
+   {
+    "value": "Linnea Thomsen",
+    "context": "] CLAIM: Linnea Thomson founded Kestvane Systems. LANE: data-derived STATUS: ❌ FALSE Correct value: Linnea Thomsen (people/linnea-thomsen-188), not Linnea Thomson (people/linnea-thomson-616) SOURCE: I didn't reuse ",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-28",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Veda Zawadzki"
+  ],
+  "hits": [
+   {
+    "value": "Veda Zawadzki",
+    "context": "nies/lorwell-energy`: \"founded in 2015 by Veda Zawadzki\". Its timeline has \"2015-05-01 | Founded by Veda Zawadzki\". Farid is not mentioned anywhere on the page. - `people/veda-zawadzki-784`: \"Veda Zawadzki founded",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "WRONG",
+    "context": "s are almost the same (\"Lorwell Energy\" vs \"Lorwell Systems\"), so the pipeline probably matched the wrong company. Farid has no recorded link to Lorwell Energy at all. - **Other Lorwell Energy mentions:** ",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-27",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   235,
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "Tier 2",
+    "context": "rora-appliances-amendment-1` (signed Jan 29, 2026; effective Feb 1, 2026): \"Support tier | Tier 3 | Tier 2.\" The 2026 renewal didn't change the tier. NOTES: Tier 3 was the original tier in `contracts/morora",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-32",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ed: 0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 (0 required to ship) - Confidence: HIGH ## Corrections Applied None. The brain doesn't contradict any part. ## Claims Requiring the User's Input None",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-33",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "fixed): 0 - Data-derived hard fails: 0 (0 required to ship) - Confidence: HIGH - **Gate: PASS** ## Corrections Applied None needed. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-35",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "VERIFIED",
+    "context": "uly 27, 2026, Magnus Isaksen was Thalhaven Security's chief executive. LANE: data-derived STATUS: ✅ VERIFIED SOURCE: I didn't re-run the pipeline's query. Instead I ran exact-token searches for \"Magnus Isakse",
+    "negs": [
+     "didn't"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 - Confidence: HIGH. **The claim can ship.** ## Corrections Applied None. Every brain page I checked supports the claim. ## Claims Requiring the User's In",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-03",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": " (fixed): 0 - Data-derived hard fails: 0 - Confidence: HIGH. **The claim can ship as written.** ## Corrections Applied None. The brain supports the claim. ## Claims Requiring the User's Input None. ## Ful",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-02",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "d): 0 - Data-derived hard fails: 0 (0 required to ship) - Confidence: HIGH. The gate is passed. ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-04",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   "Nikhil Eriksen"
+  ],
+  "hits": [
+   {
+    "value": "Nikhil Eriksen",
+    "context": "hodes, Leopold Ferreira, Fintan Kincaid) never mention Carys Mbeki. - `people/nikhil-eriksen-706`: \"Nikhil Eriksen founded Halridge Learning… in 2014,\" and he has been chief executive since May 2014. - `people/cary",
+    "negs": [
+     "never"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-01",
+  "run": 2,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNVERIFIED",
+    "context": "count named \"Yewfield Distribution\" exists. (The claim assumes this.) LANE: data-derived STATUS: 🤷 UNVERIFIED (3). The brain has no such entity, so this blocks delivery. SOURCE: A slug lookup for `yewfield-dis",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-05",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "rd fails: 0 (0 are allowed if it is to ship) - Confidence: HIGH. **Gate: PASS. This can ship.** ## Corrections Applied None. The brain holds the same value as the claim. ## Claims Requiring the User's Inpu",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-08",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   "Yara Piccolo"
+  ],
+  "hits": [
+   {
+    "value": "FALSE",
+    "context": "# Fact-Check Report: Ivoora Robotics CEO on 2015-01-29 **The claim is false and must not ship.** On January 29, 2015, the brain says Yara Piccolo was Ivoora Robotics' chief ex",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-06",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ach side of a relationship agree. Meeting attendance and co-mentions were not used as evidence. ## Corrections Applied None. ## Claims Requiring Your Input - \"Works with\" is vague. I read it as Nils's curr",
+    "negs": [
+     "not",
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-10",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": " (fixed): 0 - Data-derived hard fails: 0 - Confidence: HIGH. **The claim can ship as written.** ## Corrections Applied None. The brain agrees with the claim. ## Claims Requiring the User's Input None. ## ",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-09",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "LIKELY ACCURATE",
+    "context": " Amendment 2 (effective later) changes only seats. Only one document sets this term, so I rated it \"likely accurate,\" and nothing contradicts it. I found no note or meeting claiming any other payment term. [3] CLAI",
+    "negs": [
+     "nothing"
+    ]
+   },
+   {
+    "value": "VERIFIED",
+    "context": "ummary - I checked 3 parts of the claim. All 3 come from the brain, and none come from the web. - ✅ Verified or likely accurate: 3 of 3 (100%) - 🤷 Unverified: 0 · 🔧 Corrected: 0 · ❌ Wrong: 0 - Brain-derived",
+    "negs": [
+     "none"
+    ]
+   },
+   {
+    "value": "ACCURATE",
+    "context": "ent 2 (effective later) changes only seats. Only one document sets this term, so I rated it \"likely accurate,\" and nothing contradicts it. I found no note or meeting claiming any other payment term. [3] CLAI",
+    "negs": [
+     "nothing"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "dment 1 and Amendment 2. I applied them in order of their effective dates up to April 17, 2026. ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-13",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "WRONG",
+    "context": "rely on it. The amendment's own \"Before this document\" column says Tier 1, which shows the note was wrong back then. I didn't consult the web, because a web search can't check what the brain's own contract",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-15",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ed: 0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 (0 required to ship) - Confidence: HIGH ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-14",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   150,
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "150",
+    "context": "Two of its three values are wrong for June 14, 2025. On that date the brain's signed contracts give 150 seats (not 135) and Tier 2 support (not Tier 3). Only the 5% discount is correct. ## Summary - Tot",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "150",
+    "context": ". LANE: data-derived STATUS: ❌ FALSE Correct value: 150 SOURCE: `contracts/dunwell-lumber-msa` sets 150 seats from January 1, 2023. Neither `contracts/dunwell-lumber-amendment-1` nor `contracts/dunwell-l",
+    "negs": [
+     "Neither"
+    ]
+   },
+   {
+    "value": "Tier 2",
+    "context": "are wrong for June 14, 2025. On that date the brain's signed contracts give 150 seats (not 135) and Tier 2 support (not Tier 3). Only the 5% discount is correct. ## Summary - Total claims checked: 3 (web-d",
+    "negs": [
+     "not",
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-16",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   385,
+   120
+  ],
+  "hits": [
+   {
+    "value": "120",
+    "context": "cts/grymora-cold-storage-msa` (90 days at signing); `contracts/grymora-cold-storage-side-letter-1` (120 days from December 1, 2024). NOTES: None of the later documents (Amendment 1, the Rescission, the 2",
+    "negs": [
+     "None"
+    ]
+   },
+   {
+    "value": "WRONG",
+    "context": "I checked the claim against the brain. Two of its three values are wrong, so **it should not ship as written.** All three parts were checked against the signed contract pag",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-20",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   500
+  ],
+  "hits": [
+   {
+    "value": "500",
+    "context": "are seat count as of August 16, 2023 The claim is wrong. On August 16, 2023, Umbwyn Hardware had **500** subscribed seats, not 650. The 650 figure is the original contract count, which ended on February",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-19",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ment says \"all other terms are unchanged\" and \"this document controls for the terms it states.\" ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-21",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   "Wolfram Ellison"
+  ],
+  "hits": [
+   {
+    "value": "Wolfram Ellison",
+    "context": "her all describe that role, never founding. Every page that speaks to who founded the company names Wolfram Ellison, and none conflict, so this is FALSE (level 6), not just unverified. The pages agree with each othe",
+    "negs": [
+     "none"
+    ]
+   },
+   {
+    "value": "FALSE",
+    "context": "ry page that speaks to who founded the company names Wolfram Ellison, and none conflict, so this is FALSE (level 6), not just unverified. The pages agree with each other: Wolfram was chief executive from 2",
+    "negs": [
+     "none",
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-23",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   "Alder Marsh"
+  ],
+  "hits": [
+   {
+    "value": "Alder Marsh",
+    "context": "LANE: data-derived STATUS: 🔧 LIKELY INACCURATE Correct value: The founder of Draion Analytics is **Alder Marsh** (`people/alder-marsh-424`), founded 2017-08-01. It is not Alder Marsch (`people/alder-marsch-564`",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-25",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   "Linnea Thomsen"
+  ],
+  "hits": [
+   {
+    "value": "Linnea Thomsen",
+    "context": "a-derived **STATUS:** ❌ FALSE **Correct value:** Kestvane Systems was founded in December 2014 by **Linnea Thomsen** (`people/linnea-thomsen-188`), not Linnea Thomson (`people/linnea-thomson-616`). **SOURCE:** I u",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-27",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   235,
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "235",
+    "context": "026 **The claim fails and can't ship as written.** Only the payment term is right. The brain holds 235 seats, not 260, and Tier 2 support, not Tier 3. The wrong values match the account page's old snaps",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "235",
+    "context": "says the signed records govern. One call note, `notes/call-notes-tycho-10` from 2023, also mentions 235. It's secondhand and has no paperwork behind it, so it didn't factor into this decision. [2] CLAIM",
+    "negs": [
+     "no"
+    ]
+   },
+   {
+    "value": "Tier 2",
+    "context": "nd can't ship as written.** Only the payment term is right. The brain holds 235 seats, not 260, and Tier 2 support, not Tier 3. The wrong values match the account page's old snapshot, which was last reviewe",
+    "negs": [
+     "not",
+     "not"
+    ]
+   },
+   {
+    "value": "Tier 2",
+    "context": " signed January 29, 2026 and took effect February 1, 2026, changing the support tier from Tier 3 to Tier 2. The later `contracts/morora-appliances-renewal-2026` doesn't change support tier. NOTES: Tier 3 co",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "WRONG",
+    "context": " the payment term is right. The brain holds 235 seats, not 260, and Tier 2 support, not Tier 3. The wrong values match the account page's old snapshot, which was last reviewed October 25, 2023. That page s",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-28",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   "Veda Zawadzki"
+  ],
+  "hits": [
+   {
+    "value": "Veda Zawadzki",
+    "context": "well-energy`: \"It was founded in 2015 by Veda Zawadzki.\" The timeline says \"2015-05-01 | Founded by Veda Zawadzki.\" Farid Pemberton isn't mentioned anywhere on the page. - `people/veda-zawadzki-784`: \"Veda Zawadzk",
+    "negs": [
+     "isn't"
+    ]
+   },
+   {
+    "value": "FALSE",
+    "context": "# Fact-Check Report: \"Farid Pemberton founded Lorwell Energy.\" **Verdict: the claim is false and can't ship. Don't deliver it.** The brain says Farid Pemberton founded **Lorwell Systems**, a d",
+    "negs": [
+     "can't",
+     "Don't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-33",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "VERIFIED",
+    "context": " June 22, 2014, Wolfram Ellison was Gryfell Robotics' chief executive. LANE: data-derived STATUS: ✅ VERIFIED SOURCE: I re-derived this without using the pipeline's query path. I ran an exact keyword search fo",
+    "negs": [
+     "without"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "ed): 0 - Data-derived hard fails: 0 - Confidence: HIGH. The claim passes the gate and can ship. ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-34",
+  "run": 2,
+  "status": "contradicted",
+  "gold": [
+   20
+  ],
+  "hits": [
+   {
+    "value": "20",
+    "context": ", 2024. It changes the discount from 20% to 10%, and says the earlier terms apply until December 1, 2024. So 10% did not apply until seven months after the claim's date. - `contracts/umbbrook-produce-am",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-32",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ong: 0 - Data-derived hard fails: 0 - Confidence: HIGH. Nothing blocks the claim from shipping. ## Corrections Applied None. The brain supports every link in the chain. ## Claims Requiring the User's Input",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/seed",
+  "task_id": "fact-check-gate-35",
+  "run": 2,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": " 0 - Data-derived hard fails: 0 - Confidence: HIGH. **The gate passes and the claim can ship.** ## Corrections Applied None. The brain supports the claim. ## Claims Requiring the User's Input None. ## Ful",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-03",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "SUPPORTED",
+    "context": "er way. The verdict rests on reading the pages directly. ## Corrections Applied None. The claim is supported as written. ## Claims Requiring the User's Input None.",
+    "negs": [
+     "None"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "empty backlink result says nothing either way. The verdict rests on reading the pages directly. ## Corrections Applied None. The claim is supported as written. ## Claims Requiring the User's Input None.",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-02",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "f the informal notes (call notes, pipeline notes, Slack recaps) mention a different seat count. ## Corrections Applied None. The claim is correct and can ship as written. ## Claims Requiring the User's Inp",
+    "negs": [
+     "None"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "ine notes, Slack recaps) mention a different seat count. ## Corrections Applied None. The claim is correct and can ship as written. ## Claims Requiring the User's Input None.",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-04",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Nikhil Eriksen"
+  ],
+  "hits": [
+   {
+    "value": "FALSE",
+    "context": " of any kind, not even employment or advising. The brain names a different founder, so the label is FALSE, not UNVERIFIED. ## Corrections Applied 1. Was: \"Carys Mbeki founded Halridge Learning.\" Now: \"",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "WRONG",
+    "context": "nies share the name \"Halridge\" (Halridge Learning and Halridge Foods), and the pipeline matched the wrong one. Carys Mbeki has no recorded tie to Halridge Learning of any kind, not even employment or advis",
+    "negs": [
+     "no"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-01",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNVERIFIED",
+    "context": "ks … 750 seats,\" 2025, unconfirmed). These are hearsay and don't override signed contracts. - **Why UNVERIFIED and not FALSE:** the brain holds no seat count for \"Yewfield Distribution,\" so it doesn't contradic",
+    "negs": [
+     "don't",
+     "not"
+    ]
+   },
+   {
+    "value": "NO RECORD",
+    "context": "s 745. LANE: data-derived STATUS: UNVERIFIED PARTS: - Entity \"Yewfield Distribution\": the brain has no record of it. No account page, no contracts, no mentions. - Subscribed seats: claimed 745. The brain has n",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-05",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": " Ventures, led by Dmitri Lucero, are listed in other roles. None of them is named as a founder. ## Corrections Applied None needed. ## Claims Requiring the User's Input None.",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-08",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Yara Piccolo"
+  ],
+  "hits": [
+   {
+    "value": "WRONG",
+    "context": "tics-names-magnus-isaksen-chief-executive` ## Claims Requiring the User's Input None. The claim is wrong and shouldn't ship as written. Use the corrected wording above instead.",
+    "negs": [
+     "None",
+     "shouldn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-06",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "cs`, Haskfield Capital invested in it (2019), and Esme Achebe founded Haskfield Capital (2017). ## Corrections Applied None needed. ## Claims Requiring the User's Input - **Optional wording fix:** \"Works w",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-10",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": " links here. The empty result doesn't count for or against the claim; the page text decides it. ## Corrections Applied None needed. ## Claims Requiring the User's Input None. The claim can ship.",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-09",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CONFIRMED",
+    "context": "ale 2023 value. The hallway note `notes/pipeline-notes-vivienne-54` (May 2025, \"thinks … Tier 1,\" unconfirmed) is not evidence and played no part in the verdict. Tier 1 only became correct when Amendment 1 too",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "only became correct when Amendment 1 took effect on Apr 1, 2026, 16 days before the claim date. ## Corrections Applied None. All three parts match the records in force on April 17, 2026. ## Claims Requirin",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-13",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "Tier 2",
+    "context": "endment 1 took effect on April 1, 2026, which is before April 30, 2026. It sets the support tier to Tier 2. No signed record between April 1 and April 30, 2026 changes the tier again. NOTES (why the pipeli",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-15",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "VERIFIED",
+    "context": "r 2, 2022 ## Summary - Total claims checked: 1 (web-derived: 0, data-derived: 1) - Verified: 1 · Unverified: 0 · Wrong: 0 - Data-derived hard fails: 0 (none allowed if it is to ship) - Confidence: HIGH · Gat",
+    "negs": [
+     "none"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "'t decide anything. - The informal notes pages (`notes/*`) don't mention Umbwyn's renewal date. ## Corrections Applied None. The claim is correct as stated. ## Claims Requiring the User's Input None.",
+    "negs": [
+     "don't",
+     "None"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "s pages (`notes/*`) don't mention Umbwyn's renewal date. ## Corrections Applied None. The claim is correct as stated. ## Claims Requiring the User's Input None.",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-16",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   385,
+   120
+  ],
+  "hits": [
+   {
+    "value": "385",
+    "context": " `contracts/grymora-cold-storage-renewal-2026` | Jan 10, 2026 | **Mar 1, 2026** | Seats change from 385 to 370. **Not yet in force on Dec 15, 2025** | No signed record between December 1 and December 15",
+    "negs": [
+     "Not"
+    ]
+   },
+   {
+    "value": "120",
+    "context": "acts/grymora-cold-storage-side-letter-1` | Nov 30, 2024 | Dec 1, 2024 | Notice changes from 90 to **120 days**. Nothing else changes | | `contracts/grymora-cold-storage-amendment-1` | Aug 18, 2025 | Sep ",
+    "negs": [
+     "Nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-17",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Tamsin Murakami"
+  ],
+  "hits": [
+   {
+    "value": "Tamsin Murakami",
+    "context": "by `companies/starcrest-mobility` Correct value: On November 2, 2016, Starcrest Mobility's CTO was Tamsin Murakami. Nanami Pryce did not become CTO until January 2019, more than two years after the claim's date. S",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-19",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "VERIFIED",
+    "context": ". - **Claims checked:** 3 parts of one claim. All three come from the brain, none from the web. - **Verified:** 3 · Unverified: 0 · Wrong: 0 - **Hard fails on brain-derived claims:** 0 - **Confidence:** HIGH ",
+    "negs": [
+     "none"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "he notice period alone. NOTES: No signed record changes the 60-day notice period after the MSA. ## Corrections Applied None. All three values match the contract in force on February 10, 2025. ## Claims Req",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-25",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Linnea Thomsen"
+  ],
+  "hits": [
+   {
+    "value": "Linnea Thomsen",
+    "context": "there and names Idris Castellanos as its founder. Correct value: Kestvane Systems was founded by **Linnea Thomsen** (`people/linnea-thomsen-188`) in December 2014, not by Linnea Thomson (`people/linnea-thomson-616",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "WRONG",
+    "context": "s. Thomson, both named Linnea). The pipeline most likely matched the name loosely and joined to the wrong person. The brain doesn't say anywhere that Linnea Thomson founded or worked at Kestvane Systems, a",
+    "negs": [
+     "doesn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-23",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Alder Marsh"
+  ],
+  "hits": [
+   {
+    "value": "Alder Marsh",
+    "context": "up by `accounts/elmmere-building-supply`. Correct value: Draion Analytics was founded in 2017 by **Alder Marsh** (`people/alder-marsh-424`), not Alder Marsch (`people/alder-marsch-564`). SOURCE: I searched by ",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "FALSE",
+    "context": "ct is real, but it got attached to the wrong person. The brain names the actual founder, so this is FALSE, not UNVERIFIED. ## Corrections Applied 1. Was: \"Alder Marsch founded Draion Analytics.\" Now: \"Ald",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-24",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "NO RECORD",
+    "context": "was 130. LANE: data-derived STATUS: UNVERIFIED PARTS: - Account \"Umbley Fulfillment\": the brain has no record of it. No account page, no contract, no meeting and no note uses that name. - Seat count: claimed 1",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-27",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   235,
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "Tier 2",
+    "context": "ora Appliances' subscribed seat count was 235, its payment term was net 45 and its support tier was Tier 2.* ## Records I didn't rely on - `accounts/morora-appliances`: its snapshot is from 2023, and the p",
+    "negs": [
+     "didn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-30",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNVERIFIED",
+    "context": "n the brain, and the brain clearly names someone else in the role. That's why this is FALSE and not UNVERIFIED. The name looks made up, possibly a mix of \"Zainab\" (Upton or Fukuda) and \"Takahashi\" (Adaeze or Da",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-33",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "VERIFIED",
+    "context": "hair (since February 2021) doesn't affect the 2014 date. ## Corrections Applied None. The claim is verified as stated. ## Claims Requiring the User's Input None.",
+    "negs": [
+     "None"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "aim date. His later role as executive chair (since February 2021) doesn't affect the 2014 date. ## Corrections Applied None. The claim is verified as stated. ## Claims Requiring the User's Input None.",
+    "negs": [
+     "doesn't",
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-32",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "VERIFIED",
+    "context": "ship. ## Summary - Claims checked: 1, split into 3 parts (all from the brain, none from the web) - Verified: 3 parts · Unverified: 0 · Wrong: 0 - Claims that block shipping: 0 - Confidence: HIGH · Gate: PASS",
+    "negs": [
+     "none"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": " different person (`notes/hallway-notes-vivienne-16`), which has nothing to do with this claim. ## Corrections Applied None needed. ## Claims Needing Your Input None.",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-34",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   20
+  ],
+  "hits": [
+   {
+    "value": "20",
+    "context": "20%. - Amendment 1 is the only record that sets a 10% discount. It wasn't signed until November 11, 2024 and took effect on December 1, 2024, seven months after the claim date. Its own table says the di",
+    "negs": [
+     "wasn't"
+    ]
+   },
+   {
+    "value": "20",
+    "context": " effect on December 1, 2024, seven months after the claim date. Its own table says the discount was 20% before then. - Nothing else changes the discount between April 1 and April 30, 2024. Amendment 2 a",
+    "negs": [
+     "Nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-35",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "agree and none contradict, so this meets the bar for VERIFIED (two or more consistent records). ## Corrections Applied None needed. ## Claims Requiring the User's Input None.",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/kept-rewrite",
+  "task_id": "fact-check-gate-36",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CAN'T BE VERIFIED",
+    "context": "eport: Wynlow Plastics seat count The brain has no account called \"Wynlow Plastics,\" so this claim can't be verified and shouldn't ship as written. The closest match is **Wynlow Grocers**. If that's the account the p",
+    "negs": [
+     "shouldn't"
+    ]
+   },
+   {
+    "value": "NO RECORD",
+    "context": "TUS: UNVERIFIED PARTS: - Entity \"Wynlow Plastics\": claimed to exist as an account → **the brain has no record of it.** None of these turned up an account by that name: slug resolve on \"wynlow\", a keyword searc",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-02",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ed: 0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 (0 required to ship) - Confidence: HIGH ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-04",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Nikhil Eriksen"
+  ],
+  "hits": [
+   {
+    "value": "Nikhil Eriksen",
+    "context": "ys the company \"was founded in 2014 by Nikhil Eriksen.\" Its timeline reads \"2014-05-01 | Founded by Nikhil Eriksen.\" Carys Mbeki does not appear anywhere in its leadership or team lists: chief executive Nikhil Erik",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-03",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ails: 0 (0 required to ship) - Confidence: HIGH **Gate: PASS.** The claim can ship as written. ## Corrections Applied None. ## Claims Requiring the User's Input None. One note: the brain has a person with",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-01",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNVERIFIED",
+    "context": " June 5, 2023, Yewfield Distribution's subscribed seat count was 745. LANE: data-derived STATUS: 🤷 UNVERIFIED SOURCE: No page for the named entity. I searched in four ways: - exact keyword search for \"Yewfield",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-05",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ails: 0 (0 needed to ship) - Confidence: HIGH - **Gate: PASS. This claim can ship as written.** ## Corrections Applied None. ## Claims Requiring the User's Input None. There are two similar names in the br",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-06",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ten. Each step in the chain is stated on both the person's own page and the company's own page. ## Corrections Applied None. ## Claims Requiring the User's Input - One wording note, not a correction: \"work",
+    "negs": [
+     "None"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": "page. ## Corrections Applied None. ## Claims Requiring the User's Input - One wording note, not a correction: \"works with\" is loose. In the brain, Nils Upton has been **chief executive** of Vesfell Logisti",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-10",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "lowed for the claim to ship) - Confidence: HIGH **Gate: PASS.** The claim can ship as written. ## Corrections Applied None. ## Claims Requiring the User's Input None. Both names match exactly one page eac",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-11",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Kalinda Beaumont"
+  ],
+  "hits": [
+   {
+    "value": "Kalinda Beaumont",
+    "context": "port: Grylow Health CTO as of April 1, 2023 **Do not ship.** The claim is false. On April 1, 2023, Kalinda Beaumont was Grylow Health's CTO, not Henrik Kristiansen. He didn't take the role until March 2026. ## Summ",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "FALSE",
+    "context": "# Fact-Check Report: Grylow Health CTO as of April 1, 2023 **Do not ship.** The claim is false. On April 1, 2023, Kalinda Beaumont was Grylow Health's CTO, not Henrik Kristiansen. He didn't take",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-09",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "fixed): 0 - Data-derived hard fails: 0 (0 required to ship) - Confidence: HIGH - Gate: **PASS** ## Corrections Applied None. ## Claims Requiring the User's Input None. The name \"Wilhaven Supply\" matches `a",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-12",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Jonas Falkenberg"
+  ],
+  "hits": [
+   {
+    "value": "Jonas Falkenberg",
+    "context": " the company \"was founded in 2019 by Jonas Falkenberg.\" Its timeline reads \"2019-10-01 | Founded by Jonas Falkenberg.\" Ingrid Sorensen isn't listed anywhere on the page, including the leadership, team and investor li",
+    "negs": [
+     "isn't"
+    ]
+   },
+   {
+    "value": "Jonas Falkenberg",
+    "context": "ay outright who founded a company, not just show someone working there. Here several pages agree on Jonas Falkenberg, and none mention Ingrid in connection with Lorcastle Analytics. - **Likely cause of the error:** t",
+    "negs": [
+     "none"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-13",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "STALE",
+    "context": "ys the snapshot isn't updated when a contract changes and that the signed records govern. This is a stale summary, not a real dispute between records, so it has no bearing on the status. - **Other mentions",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-15",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "# Fact-Check Report: Umbwyn Hardware renewal date as of September 2, 2022 The claim is correct, and nothing in it blocks delivery. ## Summary - Total claims checked: 1 (web-derived: 0, data-der",
+    "negs": [
+     "nothing"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": " Wrong (fixed): 0 - Data-derived hard fails: 0 - Confidence: HIGH - **Gate: PASS. OK to ship.** ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-14",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   150,
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "150",
+    "context": "im fails and can't ship as written. Two of its three values are wrong for June 14, 2025: seats were 150 (not 135) and support was Tier 2 (not Tier 3). The 5% discount is right. ## Summary - Total claims",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "Tier 2",
+    "context": "tten. Two of its three values are wrong for June 14, 2025: seats were 150 (not 135) and support was Tier 2 (not Tier 3). The 5% discount is right. ## Summary - Total claims checked: 3 parts of 1 claim (web",
+    "negs": [
+     "not",
+     "not"
+    ]
+   },
+   {
+    "value": "WRONG",
+    "context": "r terms as of June 14, 2025 The claim fails and can't ship as written. Two of its three values are wrong for June 14, 2025: seats were 150 (not 135) and support was Tier 2 (not Tier 3). The 5% discount is",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "STALE",
+    "context": "iewed March 4, 2025, shows \"Support: Tier 3,\" and says it isn't updated when contracts change. It's stale and doesn't decide this part.",
+    "negs": [
+     "doesn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-16",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   385,
+   120
+  ],
+  "hits": [
+   {
+    "value": "120",
+    "context": "-storage-side-letter-1` (signed November 30, 2024, effective December 1, 2024) raised it from 90 to 120 days. No later record changes it. The rescission only cancels Amendment 1, which covered discount a",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-19",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ils: 0 (0 required to ship) - Confidence: HIGH - **Gate: PASS. The claim can ship as written.** ## Corrections Applied None. ## Claims Requiring the User's Input None. One thing to watch: the \"Account snap",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-20",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   500
+  ],
+  "hits": [
+   {
+    "value": "500",
+    "context": "-2025`: effective August 1, 2025, after the claim's date, so it doesn't apply. Its \"before\" column (500) is a second confirmation of the 2023 value. NOTES: - I checked this a different way from how it wa",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "OUTDATED",
+    "context": "e` (\"Last reviewed October 19, 2022. Seats: 650\"), or just the original MSA value. That snapshot is outdated, not a real conflict between records, because the page says the signed records govern. Seats were n",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-23",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Alder Marsh"
+  ],
+  "hits": [
+   {
+    "value": "Alder Marsh",
+    "context": "s. LANE: data-derived STATUS: ❌ FALSE Correct value: Draion Analytics was founded in August 2017 by Alder Marsh (`people/alder-marsh-424`), who isn't the same person as Alder Marsch (`people/alder-marsch-564`). ",
+    "negs": [
+     "isn't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-25",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Linnea Thomsen"
+  ],
+  "hits": [
+   {
+    "value": "FALSE",
+    "context": "# Fact-Check Report: \"Linnea Thomson founded Kestvane Systems.\" The claim is false and can't ship as written. The brain has two different people with nearly the same name. Kestvane S",
+    "negs": [
+     "can't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-24",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNVERIFIED",
+    "context": "f March 10, 2023, Umbley Fulfillment's subscribed seat count was 130. LANE: data-derived STATUS: 🤷 UNVERIFIED SOURCE: No page for this company exists. How I looked: - An exact keyword search for \"Umbley Fulfil",
+    "negs": [
+     "No"
+    ]
+   },
+   {
+    "value": "UNVERIFIED",
+    "context": " the writer hadn't seen the paperwork. - **Why delivery is blocked:** under the hard-block rule, an UNVERIFIED data-derived claim can't ship as written. To unblock it, either change the company to Umbley Moving",
+    "negs": [
+     "can't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-28",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Veda Zawadzki"
+  ],
+  "hits": [
+   {
+    "value": "Veda Zawadzki",
+    "context": "ancial officer (since April 2023). Farid Pemberton is not mentioned. - `people/veda-zawadzki-784`: \"Veda Zawadzki founded Lorwell Energy … in 2015.\" Career: \"Since May 2015: founder and chief executive, Lorwell En",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "FALSE",
+    "context": "ded Lorwell Energy: the company's own page and the founder's person page. That is why the status is FALSE and not just unverified. The only other page mentioning Lorwell Energy, `notes/call-notes-tycho-46`",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-27",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   235,
+   "Tier 2"
+  ],
+  "hits": [
+   {
+    "value": "235",
+    "context": " claim's date, so it applies. A secondhand note in `notes/call-notes-tycho-10` from 2023 also says \"235 seats,\" but it doesn't decide anything here. [2] CLAIM: As of June 8, 2026, Morora Appliances' pay",
+    "negs": [
+     "doesn't"
+    ]
+   },
+   {
+    "value": "WRONG",
+    "context": "rd fails: 2 (you need 0 to ship) - Confidence: LOW - **Gate: BLOCKED.** Two of the three values are wrong. Don't ship until they're corrected. ## Corrections Applied 1. Subscribed seats — was: 260, now: *",
+    "negs": [
+     "Don't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-32",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ils: 0 (0 required to ship) - Confidence: HIGH - **Gate: PASS.** The claim can ship as written. ## Corrections Applied None. ## Claims Requiring the User's Input None. Each name matched exactly one page. T",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-33",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ails: 0 (0 required to ship) - Confidence: HIGH **Gate: PASS.** The claim can ship as written. ## Corrections Applied None. ## Claims Requiring the User's Input None. Both names match exactly: there is on",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-34",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   20
+  ],
+  "hits": [
+   {
+    "value": "20",
+    "context": "hanges the discount from 20% (\"Before this document\") to 10%. Its effective date is after April 30, 2024, so it does not apply to the claim's date. Its \"before\" column separately confirms the 20%. - `ac",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "20",
+    "context": "dment-2` (support tier only) and `contracts/umbbrook-produce-rescission-1` (takes effect January 1, 2026) don't change the discount. Both also fall after the claim's date. - The account snapshot (last r",
+    "negs": [
+     "don't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-35",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ed: 0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 (0 required to ship) - Confidence: HIGH ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/rubric-one-shot",
+  "task_id": "fact-check-gate-36",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNVERIFIED",
+    "context": "s of August 12, 2023, Wynlow Plastics' subscribed seat count was 840. LANE: data-derived STATUS: 🤷 UNVERIFIED SOURCE: No page exists for \"Wynlow Plastics.\" These searches all came back without it: - an exact k",
+    "negs": [
+     "No"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-03",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ils: 0 (0 required to ship) - Confidence: HIGH - **Gate: PASS.** The claim can ship as written. ## Corrections Applied None. The brain supports the claim. ## Claims Requiring the User's Input None. ## Ful",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-02",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "d): 0 - Data-derived hard fails: 0 (0 required to ship) - Confidence: HIGH. The claim can ship. ## Corrections Applied None. The brain agrees with the claim. ## Claims Requiring the User's Input None. ## ",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-04",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Nikhil Eriksen"
+  ],
+  "hits": [
+   {
+    "value": "Nikhil Eriksen",
+    "context": "-Check Report: \"Carys Mbeki founded Halridge Learning.\" **Verdict: does not ship.** The brain says Nikhil Eriksen founded Halridge Learning, not Carys Mbeki. The claim is false and blocks delivery. ## Summary - T",
+    "negs": [
+     "not",
+     "not"
+    ]
+   },
+   {
+    "value": "Nikhil Eriksen",
+    "context": "o Halridge Learning. Two independent sources (the company page and the founder's own page) agree on Nikhil Eriksen, and nothing in the brain supports Carys Mbeki. That makes this level 6 (FALSE), not just unverifie",
+    "negs": [
+     "nothing"
+    ]
+   },
+   {
+    "value": "FALSE",
+    "context": "e) agree on Nikhil Eriksen, and nothing in the brain supports Carys Mbeki. That makes this level 6 (FALSE), not just unverified. Corrected claim, safe to ship: **\"Nikhil Eriksen founded Halridge Learning ",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-01",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNVERIFIED",
+    "context": " June 5, 2023, Yewfield Distribution's subscribed seat count was 745. LANE: data-derived STATUS: 🤷 UNVERIFIED SOURCE: How I checked, without re-running the pipeline's query: - An exact keyword search for `\"Yew",
+    "negs": [
+     "without"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-05",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "dged): 0 - 🔧 Corrected: 0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 - Confidence: HIGH ## Corrections Applied None. The brain supports the claim. ## Claims Requiring the User's Input None. ## Ful",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-07",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Ignatius Varga"
+  ],
+  "hits": [
+   {
+    "value": "Ignatius Varga",
+    "context": "vidence, and none of them contain instructions. As written, the claim can't ship. Replace it with: \"Ignatius Varga founded Tavshaw Studios in 2011; Aurelio Ciccone has been its chief executive since August 2021.\"",
+    "negs": [
+     "can't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-08",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Yara Piccolo"
+  ],
+  "hits": [
+   {
+    "value": "LIKELY INACCURATE",
+    "context": "lied it to an earlier date. Two separate brain pages say the same thing, so this is FALSE, not just LIKELY INACCURATE. Both pages are marked trust tier \"unknown\" and are shown as quoted material. I used them only as e",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "FALSE",
+    "context": "024 term and applied it to an earlier date. Two separate brain pages say the same thing, so this is FALSE, not just LIKELY INACCURATE. Both pages are marked trust tier \"unknown\" and are shown as quoted mat",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "INACCURATE",
+    "context": " to an earlier date. Two separate brain pages say the same thing, so this is FALSE, not just LIKELY INACCURATE. Both pages are marked trust tier \"unknown\" and are shown as quoted material. I used them only as e",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-06",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "VERIFIED",
+    "context": "ntradicts any of them. - Claims checked: 3 parts. All 3 are data-derived; none are web-derived. - ✅ Verified: 3 of 3 (100%) - 🤷 Unverified (hedged): 0 - 🔧 Corrected: 0 - ❌ Wrong (fixed): 0 - Data-derived ha",
+    "negs": [
+     "none"
+    ]
+   },
+   {
+    "value": "CONFIRMED",
+    "context": "n `legacy`. That doesn't affect how well the pages agree with each other, but none of them has been confirmed by a user.",
+    "negs": [
+     "none"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": " a role (founder, investor, chief executive), not two names that just appear in the same place. ## Corrections Applied None needed. ## Claims Requiring the User's Input - None about the facts. One wording ",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-10",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "VERIFIED",
+    "context": "ge and her own page say it separately and agree on the date (2014-04-01), so this meets the bar for VERIFIED. - **No typed link in the graph:** A one-step graph walk from `people/amara-jardine-529` returned n",
+    "negs": [
+     "No"
+    ]
+   },
+   {
+    "value": "CORRECT",
+    "context": " Data-derived hard fails: 0 - Confidence: HIGH - **Gate: PASS.** The claim can ship as written. ## Corrections Applied None. The brain agrees with the claim. ## Claims Requiring the User's Input None for t",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-09",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "wilhaven-supply-amendment-2`. I read it too, and it doesn't change any value on April 17, 2026. ## Corrections Applied None. ## Claims Requiring the User's Input None. One note: Amendment 2 raises the seat",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-11",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Kalinda Beaumont"
+  ],
+  "hits": [
+   {
+    "value": "Kalinda Beaumont",
+    "context": " Grylow Health's chief technology officer.\" The brain says Henrik Kristiansen was not the CTO then. Kalinda Beaumont was. Henrik started as CTO in March 2026. - **Corrected text:** \"On April 1, 2023, Kalinda Beaum",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "Kalinda Beaumont",
+    "context": "y officer. LANE: data-derived STATUS: ❌ FALSE Correct value: On 2023-04-01, Grylow Health's CTO was Kalinda Beaumont (people/kalinda-beaumont-449). Henrik Kristiansen did not hold the role until March 2026. SOURCE: I",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "FALSE",
+    "context": "fied (hedged): 0 - 🔧 Corrected: 0 - ❌ Wrong (fixed): 1 - Data-derived hard fails: 1. The claim was false and can't ship as written. The corrected version below can. - Confidence: HIGH for the correction. ",
+    "negs": [
+     "can't"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-12",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Jonas Falkenberg"
+  ],
+  "hits": [
+   {
+    "value": "Jonas Falkenberg",
+    "context": "019 by [Jonas Falkenberg](people/jonas-falkenberg-807)\". Its timeline says \"2019-10-01 | Founded by Jonas Falkenberg\". Ingrid Sorensen is not named anywhere on the page, including the leadership and team lists. - `pe",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-15",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": " 1 (100%) - Corrections: 0 - Data-derived hard fails: 0 - Confidence: HIGH. The claim can ship. ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-18",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Sabine Quarles"
+  ],
+  "hits": [
+   {
+    "value": "Sabine Quarles",
+    "context": ", or joined on the leadership section where both names appear. Two separate pages say directly that Sabine Quarles is the founder, and nothing in the brain backs Magnus as founder. That makes this a contradiction, ",
+    "negs": [
+     "nothing"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-20",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   500
+  ],
+  "hits": [
+   {
+    "value": "500",
+    "context": "o **500** for the term August 1, 2023 to July 31, 2025. - `contracts/umbwyn-hardware-renewal-2025`: 500 → 590, but not until August 1, 2025, so it doesn't apply on the date in question. NOTES: 650 is th",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-19",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ent's \"before\" value matches the previous document's \"after\" value, so the chain is consistent. ## Corrections Applied None. ## Claims Requiring the User's Input None. ## Full Claim-by-Claim Report [1] C",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-25",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Linnea Thomsen"
+  ],
+  "hits": [
+   {
+    "value": "WRONG",
+    "context": " upstream content was really about Linnea Thomson of Fernmora Logistics, the founder part is simply wrong and should be cut, not renamed. ## Full Claim-by-Claim Report [1] CLAIM: Linnea Thomson founded K",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-24",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNVERIFIED",
+    "context": " 🤷 Unverified: 1 - 🔧 Corrected: 0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 (the claim is unverified, not contradicted) - Confidence: LOW ## Corrections Applied None. No brain page contradicts the cl",
+    "negs": [
+     "not"
+    ]
+   },
+   {
+    "value": "UNSUPPORTED",
+    "context": "es look alike. That would be an entity-resolution error, not verification. - **Gate:** the claim is unsupported, so it does not ship as written. Cut it, or restate it as \"Umbley Moving's subscribed seat count wa",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-28",
+  "run": 1,
+  "status": "contradicted",
+  "gold": [
+   "Veda Zawadzki"
+  ],
+  "hits": [
+   {
+    "value": "Veda Zawadzki",
+    "context": "d in 2015 by [Veda Zawadzki](people/veda-zawadzki-784).\" Its timeline says \"2015-05-01 | Founded by Veda Zawadzki.\" Farid Pemberton does not appear anywhere on the page. - `people/veda-zawadzki-784`: \"Veda Zawadzk",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-33",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "ed: 0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 - Confidence: HIGH. The claim can ship. ## Corrections Applied None. Two brain pages each support the claim on their own. ## Claims Requiring the Use",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-32",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": ": 0 - Data-derived hard fails: 0 (0 needed to ship) - Confidence: HIGH. **The claim can ship.** ## Corrections Applied None. The brain supports every part of the claim. ## Claims Requiring the User's Input",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-35",
+  "run": 1,
+  "status": "supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "CORRECT",
+    "context": "0 - ❌ Wrong (fixed): 0 - Data-derived hard fails: 0 - Confidence: HIGH. **The claim can ship.** ## Corrections Applied None. The brain supports the claim as written. ## Claims Requiring the User's Input No",
+    "negs": [
+     "None"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "fact-check/opus/reachability",
+  "task_id": "fact-check-gate-36",
+  "run": 1,
+  "status": "not-supported",
+  "gold": [],
+  "hits": [
+   {
+    "value": "UNVERIFIED",
+    "context": "s of August 12, 2023, Wynlow Plastics' subscribed seat count was 840. LANE: data-derived STATUS: 🤷 UNVERIFIED (level 3) SOURCE: These checks don't depend on the pipeline's query path: - Keyword search for \"Wyn",
+    "negs": [
+     "don't"
+    ]
+   },
+   {
+    "value": "UNVERIFIED",
+    "context": " as verification. - No brain page holds a different value for Wynlow Plastics. That makes the claim unverified, not contradicted. - **Action:** remove the claim, or restate it about Wynlow Grocers, which `contr",
+    "negs": [
+     "not"
+    ]
+   }
+  ]
+ }
+]

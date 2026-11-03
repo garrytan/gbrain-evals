@@ -1,0 +1,141 @@
+---
+name: query
+version: 1.0.0
+description: |
+  Answer questions using the brain's knowledge with 3-layer search, synthesis,
+  and citation propagation. Use when the user asks a question, wants a lookup,
+  or needs information from the brain.
+triggers:
+  - "what do we know about"
+  - "tell me about"
+  - "who is"
+  - "what happened"
+  - "search for"
+  - "look up"
+  - "background on"
+  - "notes on"
+  - "who knows who"
+  - "relationship between"
+  - "connections"
+  - "graph query"
+tools:
+  - recall
+  - search
+  - query
+  - get_page
+  - list_pages
+  - get_backlinks
+  - traverse_graph
+  - get_timeline
+mutating: false
+---
+
+# Query Skill
+
+Answer questions from the brain's knowledge with 3-layer search and synthesis.
+Every answer is grounded in brain pages, cites them by slug, puts the concluded
+value first, and says plainly when the brain lacks the entity or when a name is
+ambiguous.
+
+> **Memory verbs (MEMORY_VERBS v1, gbrain ≥ 0.43).** When connected over MCP,
+> prefer the memory verbs for memory work. They carry provenance, evidence and a
+> server-enforced token budget:
+> - **`recall(query | entity, budget_tokens)`**: the budget-packed memory read.
+> - **`entity(name)`**: a zero-LLM card for a person, company or project.
+> - **`synthesize(question)`**: the expensive cross-page answer. Use it only when the answer must combine evidence across pages.
+>
+> Fall back to `search`/`query`/`get_page` when the verbs aren't available.
+
+## Contract
+
+- Every claim is grounded in brain content. Never answer from general knowledge.
+- Every deciding fact is cited as `[Source: slug]`.
+- The first sentence (or an `Answer:` line) holds only the concluded value. Other candidate values come after it, each with its source and the reason it does not apply.
+- An absent entity is reported as "the brain doesn't have information on <name>". No near match's value is given as the answer.
+- A name that fits more than one entity, with nothing in the question to choose between them, gets an `ambiguous:` line naming every candidate.
+- When sources conflict, note the conflict and cite both sides.
+
+## Step 1: Classify the question
+
+Decide which pattern the question fits. Each pattern has its own procedure below.
+- **A. Value as of a date**: a contract term, price, seat count, tier, renewal date and so on, "as of <date>".
+- **B. Direct entity fact**: "Who founded X?" or "What is X's role?"
+- **C. Multi-hop fact**: "Who founded the company that P works with?" Resolve P to a company, then answer about that company.
+- In every pattern, first confirm that the named entity exists, and that it exists only once (Step 2).
+
+## Step 2: Resolve the named entity (always)
+
+1. Run `search` on the exact name.
+2. Check whether any returned page **is** the entity: a matching title or slug, such as `people/<name>-<n>` or `companies/<name>`. A page that only mentions a similar name does not count.
+3. If no page clearly is the entity, run both of these checks before concluding it is absent:
+   - a keyword search on the quoted name (`match: keyword`);
+   - a slug lookup (`resolve_slugs` with the hyphenated name).
+4. **Absent.** If both checks come back empty, answer: "The brain doesn't have information on <name>." You may then list look-alikes, such as people who share a first or last name, or companies with a similar name or the same industry word. Label them as different entities and do not take a value from any of them. Offer to look one of them up if the user meant it.
+5. **Ambiguous.** If two or more distinct pages carry the same name, open each one. Check whether they are one person's old and new jobs or two separate people: overlapping current roles, different cities or different backgrounds mean separate people. If they are separate and the question gives no way to choose, start with `ambiguous:` and name every candidate, with its slug, its distinguishing details and its answer value, each cited. Ask which one the user means.
+6. **Single match.** If exactly one entity matches, proceed. Say briefly that the name isn't ambiguous if look-alike slugs came up.
+7. Watch for near-identical company names, such as the same first word with a different second word. They are different entities. Never substitute one for the other.
+
+## Step 3A: Value as of a date (contract terms)
+
+1. Search for "<account> <term>" and gather **every** record for the account: the master agreement, each amendment, rescissions, side letters, renewal orders, account snapshot pages, meeting notes and informal notes. Open each contract page you need so you know its signed date, its effective date, which terms it changes, and any "current terms apply until" clause.
+2. Build a timeline of effective dates for the asked term. The value in force on the date comes from the latest record whose **effective** date is on or before the asked date, and which actually changes that term.
+   - A record signed before the date but effective after it is **not yet in force**.
+   - A rescinded or superseded record stops applying from its rescission or supersession date. Terms revert as the rescission states.
+   - Records that change other terms only (discount, payment terms) leave this term unchanged. Keep walking back to the record that last set it.
+   - "Renewal date" or "last day of the current term" means the end date of the term running on the asked date.
+3. Signed contracts outrank account snapshots, CRM summaries, meeting notes and hearsay notes ("thinks", "might", "unconfirmed"). Snapshots usually reflect a later review date. Mention them only as other values.
+4. Cite the deciding record (the one in force) as `[Source: slug]`. Then list the other values: earlier, later, not yet effective, rescinded, or from informal notes. Give each its source and the reason it doesn't apply.
+
+## Step 3B/C: Entity facts and multi-hop
+
+1. For a person, read their page for their **current** role. Use the role with no end date, or the latest start date. Past employers and rumored moves are not the answer. A rumor is superseded by the profile page if the profile confirms or contradicts it.
+2. For founders, read the company page's description and timeline. Founder is not the same as current CEO, acquirer or parent company, investor, or "founding partner" of another firm.
+3. Cite the page that decides the final value. For a founder, that is the company page, and the founder's own page if you have it. For the intermediate hop, also cite the person's page that shows where they work.
+4. Use `get_backlinks` / `traverse_graph` (`works_at`, `founded`, `attended`, ...) when search excerpts don't settle the link.
+
+## Output Format
+
+```
+Answer: <only the concluded value> [Source: deciding-slug]
+
+<one short paragraph of reasoning, with citations>
+
+Other values I found:
+- <value>: <why it doesn't apply> [Source: slug]
+```
+- For an absent entity, the first line is: `Answer: The brain doesn't have information on <name>.`
+- For an ambiguous name, the first line starts `ambiguous:` and the candidates follow.
+- Never put a second candidate value in the first sentence.
+
+## Retrieval tips
+
+- Search returns chunks. Read the excerpts first, and open full pages (`get_page`) when you need dates, clauses or timelines.
+- Narrow searches with filters (`--types`, `--match keyword`, `--since/--until`, `--source`) rather than broad scans.
+- For "when did X change" questions, request whole evidence: `return_unit: "page"` or `"window"`.
+- For tight budgets on saved-page evidence, use `recall` with `budget_policy: "query_first"`.
+- For "what happened" questions, use timeline entries. For "who" questions, use backlinks and typed links.
+
+## When it fails
+
+- Check results for notices. `empty_retrieval kind=degraded` or `search_degraded` means the brain is searching keywords only, and an empty result is not proof of absence. Say so, try exact names and synonyms with keyword search, and point to the fix (enable embeddings).
+- A clean miss (no degradation), confirmed by both keyword search and slug lookup, means the brain doesn't have the entity.
+- `listing_truncated` / `budget_truncated`: say "showing the first N", then page or narrow the query before claiming anything is absent.
+- `page_not_found`: search by title or another source before calling the page missing.
+- If results look wrong, run `gbrain doctor --json` and compare `search` against `query`.
+
+## Source precedence
+
+1. The user's direct statements
+2. Signed or compiled records (for contract terms: the signed record in force on the date)
+3. Timeline entries, meeting notes and snapshots
+4. Informal notes and rumors, then external sources
+
+## Anti-Patterns
+
+- Taking a value from a look-alike entity when the named entity is absent
+- Picking one of two same-named people without flagging the ambiguity
+- Using a signed-but-not-yet-effective, rescinded or later record for an "as of" date
+- Trusting an account snapshot or hearsay note over the signed contracts
+- Naming a current CEO, acquirer or investor as the founder
+- Answering about a person's past employer instead of their current one
+- Leading with anything other than the concluded value

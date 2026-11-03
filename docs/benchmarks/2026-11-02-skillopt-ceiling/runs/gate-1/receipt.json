@@ -1,0 +1,3130 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n15-skillopt-method",
+  "gbrain_version": "0.60.557.0",
+  "gbrain_pin": "github:garrytan/gbrain#62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+  "execution": {
+    "source_tree": {
+      "sha256": "b4ece56444dfc75f6e426977f527f62e68a17cf6a6e2d093e0a754d2956b9178",
+      "scheme": "git-index-blob-v1",
+      "files": 15482,
+      "git_head": "88d3b3f52487ef2a55343afd48aff8e94689ec18",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+      "declared_sha": "62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+      "version": "0.60.557.0",
+      "package_sha256": "d46d3cf4598f5388fb3efcf832575879abeac39b4f79664cd84786dd3bff87d5",
+      "loaded_git_head": null
+    }
+  },
+  "hashes": {
+    "dataset": "skillopt-method-v3",
+    "dataset_manifest_sha256": "5729db40f90d5be7c662f1869ea4a8a346dfae00f65a0ea8d45b0da0300ba615",
+    "skillopt-method-v1_manifest_sha256": "8ff8a0ec97e03e3550de18821d8ebdf08f9dbfd6342f9dc2c5914d33c17e4642",
+    "skillopt-method-v3_manifest_sha256": "5729db40f90d5be7c662f1869ea4a8a346dfae00f65a0ea8d45b0da0300ba615",
+    "criteria_query_sha256": "f4479de11f94303fa45c79a56d09c929f9323241a6a8ac9c5d2cf9803e6b7217",
+    "criteria_briefing_sha256": "456532f2be637f2aaffe1a188accb29f27dfc863106157db9f982e9589eb1c7b",
+    "criteria_fact-check_sha256": "1c335f84aa1f7f886aa82807e3b6400ee9a87d834685d45d01525dc3045880c6",
+    "seeds_gbrain_commit": "311a83bbefb127118acb252fe827cb047126aa4d"
+  },
+  "started_at": "2026-11-03T16:27:46.115Z",
+  "cost": {
+    "usd": 133.869675,
+    "input_tokens": 73613807,
+    "output_tokens": 1666708,
+    "basis": "budget ledger n15-ceiling-gate-1-2026-11-03T16-27-45-284Z-54bc0fda: 3304 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/home/user/.capy/work/gbev30/ledger/ledger.sqlite",
+    "program_cap_usd": 9163,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 4,
+      "max": 12787.9
+    }
+  },
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 3,
+  "n_scored": 3,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md",
+    "preregistration_commit": "71d521217a83f55d5e0d064a30ce6f301f2053ea",
+    "runner_commit": "88d3b3f52487ef2a55343afd48aff8e94689ec18",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-03T16:27:46.127Z"
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "mode": "ceiling",
+    "dataset": "skillopt-method-v3",
+    "stage": "gate",
+    "attempt": 1,
+    "prices": {
+      "opus": 0.16466552500000003,
+      "sol": 0.07359331388888887
+    },
+    "calibration": [
+      "/home/user/.capy/work/gbev30/cal-reread/opus/receipt.json",
+      "/home/user/.capy/work/gbev30/cal-reread/sol/receipt.json"
+    ],
+    "previous": null,
+    "estimate_usd": 331.3380916,
+    "resumed": false,
+    "keys_in_process": [
+      "ANTHROPIC_API_KEY",
+      "OPENAI_API_KEY"
+    ],
+    "ledger_runner": "n15-ceiling-gate-1",
+    "models": {
+      "targets": {
+        "opus": "anthropic:claude-opus-5-5",
+        "sol": "openai:gpt-6.1-sol"
+      },
+      "proposer": "anthropic:claude-opus-5-5"
+    }
+  },
+  "finished_at": "2026-11-03T17:52:19.344Z",
+  "data": {
+    "gate": {
+      "mode": "live",
+      "stage": "gate",
+      "attempt": 1,
+      "dataset": "skillopt-method-v3",
+      "dataset_manifest_sha256": "5729db40f90d5be7c662f1869ea4a8a346dfae00f65a0ea8d45b0da0300ba615",
+      "models": {
+        "targets": {
+          "opus": "anthropic:claude-opus-5-5",
+          "sol": "openai:gpt-6.1-sol"
+        },
+        "proposer": "anthropic:claude-opus-5-5"
+      },
+      "runs": {
+        "no_skill": 1,
+        "seed": 2,
+        "seed_sel": 2,
+        "train": 1,
+        "proposal_sel": 2,
+        "one_shot": 2,
+        "kept_rewrite": 1,
+        "rubric": 1,
+        "reachability": 1
+      },
+      "prices": {
+        "opus": 0.16466552500000003,
+        "sol": 0.07359331388888887
+      },
+      "estimate_usd": 331.3380916,
+      "pairs": [
+        {
+          "skill": "query",
+          "target": "opus",
+          "status": "scored",
+          "arms": {
+            "no-skill": {
+              "arm": "no-skill",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "4eca50d2",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "query-gate-01": 1,
+                "query-gate-02": 1,
+                "query-gate-03": 1,
+                "query-gate-04": 1,
+                "query-gate-05": 1,
+                "query-gate-06": 1,
+                "query-gate-07": 1,
+                "query-gate-08": 1,
+                "query-gate-09": 1,
+                "query-gate-10": 1,
+                "query-gate-11": 1,
+                "query-gate-12": 1,
+                "query-gate-13": 1,
+                "query-gate-14": 1,
+                "query-gate-15": 1,
+                "query-gate-16": 1,
+                "query-gate-17": 1,
+                "query-gate-18": 1,
+                "query-gate-19": 1,
+                "query-gate-20": 1,
+                "query-gate-21": 1,
+                "query-gate-22": 1,
+                "query-gate-23": 1,
+                "query-gate-24": 1,
+                "query-gate-25": 1,
+                "query-gate-26": 1,
+                "query-gate-27": 1,
+                "query-gate-28": 1,
+                "query-gate-29": 1,
+                "query-gate-30": 1,
+                "query-gate-31": 1,
+                "query-gate-32": 1,
+                "query-gate-33": 1,
+                "query-gate-34": 1,
+                "query-gate-35": 1,
+                "query-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 60,
+                "read": 60,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 91,
+                "usd": 2.8000722,
+                "unpriced_calls": 0,
+                "input_tokens": 1189235,
+                "output_tokens": 16733,
+                "cache_read_tokens": 725106,
+                "cache_creation_tokens": 463875,
+                "reasoning_tokens": 836,
+                "retries": 0,
+                "mean_rollout_usd": 0.07777978333333332,
+                "calls_per_rollout": 2.5277777777777777,
+                "cached_input_share": 0.6097247390128948,
+                "reasoning_tokens_per_rollout": 23.22222222222222
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "seed": {
+              "arm": "seed",
+              "split": "gate",
+              "runs": 2,
+              "tasks": 36,
+              "skill_sha8": "afe2a883",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "query-gate-01": 1,
+                "query-gate-02": 1,
+                "query-gate-03": 1,
+                "query-gate-04": 1,
+                "query-gate-05": 1,
+                "query-gate-06": 1,
+                "query-gate-07": 1,
+                "query-gate-08": 1,
+                "query-gate-09": 1,
+                "query-gate-10": 1,
+                "query-gate-11": 1,
+                "query-gate-12": 1,
+                "query-gate-13": 1,
+                "query-gate-14": 1,
+                "query-gate-15": 1,
+                "query-gate-16": 1,
+                "query-gate-17": 1,
+                "query-gate-18": 1,
+                "query-gate-19": 1,
+                "query-gate-20": 1,
+                "query-gate-21": 1,
+                "query-gate-22": 1,
+                "query-gate-23": 1,
+                "query-gate-24": 1,
+                "query-gate-25": 1,
+                "query-gate-26": 1,
+                "query-gate-27": 1,
+                "query-gate-28": 1,
+                "query-gate-29": 1,
+                "query-gate-30": 1,
+                "query-gate-31": 1,
+                "query-gate-32": 1,
+                "query-gate-33": 1,
+                "query-gate-34": 1,
+                "query-gate-35": 1,
+                "query-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 121,
+                "read": 121,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 72,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 72,
+                "calls": 181,
+                "usd": 4.1782216000000005,
+                "unpriced_calls": 0,
+                "input_tokens": 3281090,
+                "output_tokens": 35299,
+                "cache_read_tokens": 2694313,
+                "cache_creation_tokens": 586271,
+                "reasoning_tokens": 1719,
+                "retries": 0,
+                "mean_rollout_usd": 0.058030855555555566,
+                "calls_per_rollout": 2.513888888888889,
+                "cached_input_share": 0.8211640034256908,
+                "reasoning_tokens_per_rollout": 23.875
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "seed-sel": {
+              "arm": "seed-sel",
+              "split": "sel",
+              "runs": 2,
+              "tasks": 24,
+              "skill_sha8": "afe2a883",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "query-sel-01": 1,
+                "query-sel-02": 1,
+                "query-sel-03": 1,
+                "query-sel-04": 1,
+                "query-sel-05": 1,
+                "query-sel-06": 1,
+                "query-sel-07": 1,
+                "query-sel-08": 1,
+                "query-sel-09": 1,
+                "query-sel-10": 1,
+                "query-sel-11": 1,
+                "query-sel-12": 1,
+                "query-sel-13": 1,
+                "query-sel-14": 1,
+                "query-sel-15": 1,
+                "query-sel-16": 1,
+                "query-sel-17": 1,
+                "query-sel-18": 1,
+                "query-sel-19": 1,
+                "query-sel-20": 1,
+                "query-sel-21": 1,
+                "query-sel-22": 1,
+                "query-sel-23": 1,
+                "query-sel-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 71,
+                "read": 71,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 48,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 48,
+                "calls": 111,
+                "usd": 2.3328917999999996,
+                "unpriced_calls": 0,
+                "input_tokens": 2025833,
+                "output_tokens": 23356,
+                "cache_read_tokens": 1721474,
+                "cache_creation_tokens": 304041,
+                "reasoning_tokens": 1715,
+                "retries": 0,
+                "mean_rollout_usd": 0.04860191249999999,
+                "calls_per_rollout": 2.3125,
+                "cached_input_share": 0.8497610612523342,
+                "reasoning_tokens_per_rollout": 35.729166666666664
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "seed-train": {
+              "arm": "seed-train",
+              "split": "train",
+              "runs": 1,
+              "tasks": 24,
+              "skill_sha8": "afe2a883",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "query-train-01": 1,
+                "query-train-02": 1,
+                "query-train-03": 1,
+                "query-train-04": 1,
+                "query-train-05": 1,
+                "query-train-06": 1,
+                "query-train-07": 1,
+                "query-train-08": 1,
+                "query-train-09": 1,
+                "query-train-10": 1,
+                "query-train-11": 1,
+                "query-train-12": 1,
+                "query-train-13": 1,
+                "query-train-14": 1,
+                "query-train-15": 1,
+                "query-train-16": 1,
+                "query-train-17": 1,
+                "query-train-18": 1,
+                "query-train-19": 1,
+                "query-train-20": 1,
+                "query-train-21": 1,
+                "query-train-22": 1,
+                "query-train-23": 1,
+                "query-train-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 37,
+                "read": 37,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 24,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 24,
+                "calls": 55,
+                "usd": 1.6229086000000004,
+                "unpriced_calls": 0,
+                "input_tokens": 963953,
+                "output_tokens": 11815,
+                "cache_read_tokens": 715208,
+                "cache_creation_tokens": 248587,
+                "reasoning_tokens": 729,
+                "retries": 0,
+                "mean_rollout_usd": 0.06762119166666668,
+                "calls_per_rollout": 2.2916666666666665,
+                "cached_input_share": 0.7419531865142802,
+                "reasoning_tokens_per_rollout": 30.375
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "proposal-1": {
+              "arm": "proposal-1",
+              "split": "sel",
+              "runs": 2,
+              "tasks": 24,
+              "skill_sha8": "c8959525",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "query-sel-01": 1,
+                "query-sel-02": 1,
+                "query-sel-03": 1,
+                "query-sel-04": 1,
+                "query-sel-05": 1,
+                "query-sel-06": 1,
+                "query-sel-07": 1,
+                "query-sel-08": 1,
+                "query-sel-09": 1,
+                "query-sel-10": 1,
+                "query-sel-11": 1,
+                "query-sel-12": 1,
+                "query-sel-13": 1,
+                "query-sel-14": 1,
+                "query-sel-15": 1,
+                "query-sel-16": 1,
+                "query-sel-17": 1,
+                "query-sel-18": 1,
+                "query-sel-19": 1,
+                "query-sel-20": 1,
+                "query-sel-21": 1,
+                "query-sel-22": 1,
+                "query-sel-23": 1,
+                "query-sel-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 76,
+                "read": 76,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 48,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 48,
+                "calls": 112,
+                "usd": 2.6892720000000003,
+                "unpriced_calls": 0,
+                "input_tokens": 2007224,
+                "output_tokens": 27446,
+                "cache_read_tokens": 1644885,
+                "cache_creation_tokens": 362019,
+                "reasoning_tokens": 1420,
+                "retries": 0,
+                "mean_rollout_usd": 0.05602650000000001,
+                "calls_per_rollout": 2.3333333333333335,
+                "cached_input_share": 0.8194825291048732,
+                "reasoning_tokens_per_rollout": 29.583333333333332
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "proposal-2": {
+              "arm": "proposal-2",
+              "split": "sel",
+              "runs": 2,
+              "tasks": 24,
+              "skill_sha8": "05d330c0",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "query-sel-01": 1,
+                "query-sel-02": 1,
+                "query-sel-03": 1,
+                "query-sel-04": 1,
+                "query-sel-05": 1,
+                "query-sel-06": 1,
+                "query-sel-07": 1,
+                "query-sel-08": 1,
+                "query-sel-09": 1,
+                "query-sel-10": 1,
+                "query-sel-11": 1,
+                "query-sel-12": 1,
+                "query-sel-13": 1,
+                "query-sel-14": 1,
+                "query-sel-15": 1,
+                "query-sel-16": 1,
+                "query-sel-17": 1,
+                "query-sel-18": 1,
+                "query-sel-19": 1,
+                "query-sel-20": 1,
+                "query-sel-21": 1,
+                "query-sel-22": 1,
+                "query-sel-23": 1,
+                "query-sel-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 76,
+                "read": 76,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 48,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 48,
+                "calls": 114,
+                "usd": 2.4275686000000007,
+                "unpriced_calls": 0,
+                "input_tokens": 1860039,
+                "output_tokens": 27020,
+                "cache_read_tokens": 1544313,
+                "cache_creation_tokens": 315402,
+                "reasoning_tokens": 969,
+                "retries": 0,
+                "mean_rollout_usd": 0.050574345833333346,
+                "calls_per_rollout": 2.375,
+                "cached_input_share": 0.8302583978077879,
+                "reasoning_tokens_per_rollout": 20.1875
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "kept-rewrite": {
+              "arm": "kept-rewrite",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "52942b2a",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "query-gate-01": 1,
+                "query-gate-02": 1,
+                "query-gate-03": 1,
+                "query-gate-04": 1,
+                "query-gate-05": 1,
+                "query-gate-06": 1,
+                "query-gate-07": 1,
+                "query-gate-08": 1,
+                "query-gate-09": 1,
+                "query-gate-10": 1,
+                "query-gate-11": 1,
+                "query-gate-12": 1,
+                "query-gate-13": 1,
+                "query-gate-14": 1,
+                "query-gate-15": 1,
+                "query-gate-16": 1,
+                "query-gate-17": 1,
+                "query-gate-18": 1,
+                "query-gate-19": 1,
+                "query-gate-20": 1,
+                "query-gate-21": 1,
+                "query-gate-22": 1,
+                "query-gate-23": 1,
+                "query-gate-24": 1,
+                "query-gate-25": 1,
+                "query-gate-26": 1,
+                "query-gate-27": 1,
+                "query-gate-28": 1,
+                "query-gate-29": 1,
+                "query-gate-30": 1,
+                "query-gate-31": 1,
+                "query-gate-32": 1,
+                "query-gate-33": 1,
+                "query-gate-34": 1,
+                "query-gate-35": 1,
+                "query-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 80,
+                "read": 80,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 102,
+                "usd": 2.7149862,
+                "unpriced_calls": 0,
+                "input_tokens": 1617079,
+                "output_tokens": 21764,
+                "cache_read_tokens": 1209461,
+                "cache_creation_tokens": 407342,
+                "reasoning_tokens": 1077,
+                "retries": 0,
+                "mean_rollout_usd": 0.07541628333333333,
+                "calls_per_rollout": 2.8333333333333335,
+                "cached_input_share": 0.7479294456238688,
+                "reasoning_tokens_per_rollout": 29.916666666666668
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "rubric-one-shot": {
+              "arm": "rubric-one-shot",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "a68229d6",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "query-gate-01": 1,
+                "query-gate-02": 1,
+                "query-gate-03": 1,
+                "query-gate-04": 1,
+                "query-gate-05": 1,
+                "query-gate-06": 1,
+                "query-gate-07": 1,
+                "query-gate-08": 1,
+                "query-gate-09": 1,
+                "query-gate-10": 1,
+                "query-gate-11": 1,
+                "query-gate-12": 1,
+                "query-gate-13": 1,
+                "query-gate-14": 1,
+                "query-gate-15": 1,
+                "query-gate-16": 1,
+                "query-gate-17": 1,
+                "query-gate-18": 1,
+                "query-gate-19": 1,
+                "query-gate-20": 1,
+                "query-gate-21": 1,
+                "query-gate-22": 1,
+                "query-gate-23": 1,
+                "query-gate-24": 1,
+                "query-gate-25": 1,
+                "query-gate-26": 1,
+                "query-gate-27": 1,
+                "query-gate-28": 1,
+                "query-gate-29": 1,
+                "query-gate-30": 1,
+                "query-gate-31": 1,
+                "query-gate-32": 1,
+                "query-gate-33": 1,
+                "query-gate-34": 1,
+                "query-gate-35": 1,
+                "query-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 62,
+                "read": 62,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 84,
+                "usd": 2.6136538,
+                "unpriced_calls": 0,
+                "input_tokens": 1364253,
+                "output_tokens": 19316,
+                "cache_read_tokens": 957019,
+                "cache_creation_tokens": 406994,
+                "reasoning_tokens": 812,
+                "retries": 0,
+                "mean_rollout_usd": 0.07260149444444444,
+                "calls_per_rollout": 2.3333333333333335,
+                "cached_input_share": 0.7014967165181238,
+                "reasoning_tokens_per_rollout": 22.555555555555557
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "reachability": {
+              "arm": "reachability",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "afe2a883",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "query-gate-01": 1,
+                "query-gate-02": 1,
+                "query-gate-03": 1,
+                "query-gate-04": 1,
+                "query-gate-05": 1,
+                "query-gate-06": 1,
+                "query-gate-07": 1,
+                "query-gate-08": 1,
+                "query-gate-09": 1,
+                "query-gate-10": 1,
+                "query-gate-11": 1,
+                "query-gate-12": 1,
+                "query-gate-13": 1,
+                "query-gate-14": 1,
+                "query-gate-15": 1,
+                "query-gate-16": 1,
+                "query-gate-17": 1,
+                "query-gate-18": 1,
+                "query-gate-19": 1,
+                "query-gate-20": 1,
+                "query-gate-21": 1,
+                "query-gate-22": 1,
+                "query-gate-23": 1,
+                "query-gate-24": 1,
+                "query-gate-25": 1,
+                "query-gate-26": 1,
+                "query-gate-27": 1,
+                "query-gate-28": 1,
+                "query-gate-29": 1,
+                "query-gate-30": 1,
+                "query-gate-31": 1,
+                "query-gate-32": 1,
+                "query-gate-33": 1,
+                "query-gate-34": 1,
+                "query-gate-35": 1,
+                "query-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 100,
+                "read": 100,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 94,
+                "usd": 1.9152918000000003,
+                "unpriced_calls": 0,
+                "input_tokens": 1366379,
+                "output_tokens": 18857,
+                "cache_read_tokens": 1102809,
+                "cache_creation_tokens": 263310,
+                "reasoning_tokens": 501,
+                "retries": 0,
+                "mean_rollout_usd": 0.05320255000000001,
+                "calls_per_rollout": 2.611111111111111,
+                "cached_input_share": 0.8071033000360808,
+                "reasoning_tokens_per_rollout": 13.916666666666666
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            }
+          },
+          "proposals": [
+            {
+              "id": "proposal-1",
+              "outcome": "proposed",
+              "cost_usd": 0.150336,
+              "retries": 0,
+              "text_sha8": "c8959525",
+              "audit": {
+                "skill": "query",
+                "added_lines": 74,
+                "removed_lines": 154,
+                "flags": [],
+                "disqualified": false
+              },
+              "selection": 1
+            },
+            {
+              "id": "proposal-2",
+              "outcome": "proposed",
+              "cost_usd": 0.137096,
+              "retries": 0,
+              "text_sha8": "05d330c0",
+              "audit": {
+                "skill": "query",
+                "added_lines": 62,
+                "removed_lines": 154,
+                "flags": [],
+                "disqualified": false
+              },
+              "selection": 1
+            },
+            {
+              "id": "rubric-one-shot",
+              "outcome": "proposed",
+              "cost_usd": 0.15572,
+              "retries": 0,
+              "text_sha8": "a68229d6",
+              "audit": {
+                "skill": "query",
+                "added_lines": 78,
+                "removed_lines": 150,
+                "flags": [],
+                "disqualified": false
+              }
+            }
+          ],
+          "kept": "seed",
+          "scores": {
+            "no_skill": 1,
+            "seed_run1": 1,
+            "seed_run2": 1,
+            "seed": 1,
+            "seed_trained_families": 1,
+            "seed_held_out_families": 1,
+            "seed_selection": 1,
+            "one_shot": 1,
+            "kept_rewrite": 1,
+            "rubric_one_shot": 1,
+            "reachability": 1
+          },
+          "gate_pair": {
+            "skill": "query",
+            "target": "opus",
+            "form_fail": {
+              "no_skill": 0,
+              "seed": 0
+            },
+            "proposals_passing_audit": 2,
+            "reachability": 1,
+            "limited_share": 0,
+            "refusal_limited": false,
+            "one_shot": 1,
+            "seed": 1
+          },
+          "label": "saturated",
+          "gst956": {
+            "difference": {
+              "tasks": 36,
+              "point": 0,
+              "lower": 0,
+              "upper": 0,
+              "wins": 0,
+              "losses": 0,
+              "mcnemar_p": 1,
+              "verdict": "no-difference-shown"
+            },
+            "rule": "#304's rewrite rule (test-stage.ts rewriteVerdict): rewrite-beats-seed when the bootstrap lower bound is above 0 and the exact McNemar p is below 0.05, rewrite-worse when the upper bound is below 0 with p below 0.05, else no-difference-shown; never deciding the gate"
+          },
+          "cost": {
+            "rollouts": 384,
+            "calls": 944,
+            "usd": 23.2948666,
+            "unpriced_calls": 0,
+            "input_tokens": 15675085,
+            "output_tokens": 201606,
+            "cache_read_tokens": 12314588,
+            "cache_creation_tokens": 3357841,
+            "reasoning_tokens": 9778,
+            "retries": 0,
+            "mean_rollout_usd": 0.06066371510416666,
+            "calls_per_rollout": 2.4583333333333335,
+            "cached_input_share": 0.78561538900746,
+            "reasoning_tokens_per_rollout": 25.463541666666668
+          },
+          "proposer_usd": 0.443152,
+          "proposer_retries": 0
+        },
+        {
+          "skill": "briefing",
+          "target": "opus",
+          "status": "scored",
+          "arms": {
+            "no-skill": {
+              "arm": "no-skill",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "4eca50d2",
+              "substance": 0.9722222222222222,
+              "full": 0.9722222222222222,
+              "form_fail": 0.027777777777777776,
+              "run1": {
+                "briefing-gate-01": 1,
+                "briefing-gate-02": 1,
+                "briefing-gate-03": 1,
+                "briefing-gate-04": 1,
+                "briefing-gate-05": 1,
+                "briefing-gate-06": 1,
+                "briefing-gate-07": 1,
+                "briefing-gate-08": 1,
+                "briefing-gate-09": 1,
+                "briefing-gate-10": 1,
+                "briefing-gate-11": 1,
+                "briefing-gate-12": 1,
+                "briefing-gate-13": 1,
+                "briefing-gate-14": 1,
+                "briefing-gate-15": 1,
+                "briefing-gate-16": 1,
+                "briefing-gate-17": 0,
+                "briefing-gate-18": 1,
+                "briefing-gate-19": 1,
+                "briefing-gate-20": 1,
+                "briefing-gate-21": 1,
+                "briefing-gate-22": 1,
+                "briefing-gate-23": 1,
+                "briefing-gate-24": 1,
+                "briefing-gate-25": 1,
+                "briefing-gate-26": 1,
+                "briefing-gate-27": 1,
+                "briefing-gate-28": 1,
+                "briefing-gate-29": 1,
+                "briefing-gate-30": 1,
+                "briefing-gate-31": 1,
+                "briefing-gate-32": 1,
+                "briefing-gate-33": 1,
+                "briefing-gate-34": 1,
+                "briefing-gate-35": 1,
+                "briefing-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 396,
+                "read": 396,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 149,
+                "usd": 8.1876426,
+                "unpriced_calls": 0,
+                "input_tokens": 4122747,
+                "output_tokens": 78605,
+                "cache_read_tokens": 2916213,
+                "cache_creation_tokens": 1206164,
+                "reasoning_tokens": 11576,
+                "retries": 0,
+                "mean_rollout_usd": 0.22743451666666667,
+                "calls_per_rollout": 4.138888888888889,
+                "cached_input_share": 0.7073470673800745,
+                "reasoning_tokens_per_rollout": 321.55555555555554
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "seed": {
+              "arm": "seed",
+              "split": "gate",
+              "runs": 2,
+              "tasks": 36,
+              "skill_sha8": "551c2f30",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "briefing-gate-01": 1,
+                "briefing-gate-02": 1,
+                "briefing-gate-03": 1,
+                "briefing-gate-04": 1,
+                "briefing-gate-05": 1,
+                "briefing-gate-06": 1,
+                "briefing-gate-07": 1,
+                "briefing-gate-08": 1,
+                "briefing-gate-09": 1,
+                "briefing-gate-10": 1,
+                "briefing-gate-11": 1,
+                "briefing-gate-12": 1,
+                "briefing-gate-13": 1,
+                "briefing-gate-14": 1,
+                "briefing-gate-15": 1,
+                "briefing-gate-16": 1,
+                "briefing-gate-17": 1,
+                "briefing-gate-18": 1,
+                "briefing-gate-19": 1,
+                "briefing-gate-20": 1,
+                "briefing-gate-21": 1,
+                "briefing-gate-22": 1,
+                "briefing-gate-23": 1,
+                "briefing-gate-24": 1,
+                "briefing-gate-25": 1,
+                "briefing-gate-26": 1,
+                "briefing-gate-27": 1,
+                "briefing-gate-28": 1,
+                "briefing-gate-29": 1,
+                "briefing-gate-30": 1,
+                "briefing-gate-31": 1,
+                "briefing-gate-32": 1,
+                "briefing-gate-33": 1,
+                "briefing-gate-34": 1,
+                "briefing-gate-35": 1,
+                "briefing-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 704,
+                "read": 704,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 72,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 72,
+                "calls": 275,
+                "usd": 18.585088799999994,
+                "unpriced_calls": 0,
+                "input_tokens": 8760366,
+                "output_tokens": 214397,
+                "cache_read_tokens": 6146664,
+                "cache_creation_tokens": 2613008,
+                "reasoning_tokens": 32983,
+                "retries": 0,
+                "mean_rollout_usd": 0.25812623333333323,
+                "calls_per_rollout": 3.8194444444444446,
+                "cached_input_share": 0.701644657312263,
+                "reasoning_tokens_per_rollout": 458.09722222222223
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "seed-sel": {
+              "arm": "seed-sel",
+              "split": "sel",
+              "runs": 2,
+              "tasks": 24,
+              "skill_sha8": "551c2f30",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "briefing-sel-01": 1,
+                "briefing-sel-02": 1,
+                "briefing-sel-03": 1,
+                "briefing-sel-04": 1,
+                "briefing-sel-05": 1,
+                "briefing-sel-06": 1,
+                "briefing-sel-07": 1,
+                "briefing-sel-08": 1,
+                "briefing-sel-09": 1,
+                "briefing-sel-10": 1,
+                "briefing-sel-11": 1,
+                "briefing-sel-12": 1,
+                "briefing-sel-13": 1,
+                "briefing-sel-14": 1,
+                "briefing-sel-15": 1,
+                "briefing-sel-16": 1,
+                "briefing-sel-17": 1,
+                "briefing-sel-18": 1,
+                "briefing-sel-19": 1,
+                "briefing-sel-20": 1,
+                "briefing-sel-21": 1,
+                "briefing-sel-22": 1,
+                "briefing-sel-23": 1,
+                "briefing-sel-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 451,
+                "read": 451,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 48,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 48,
+                "calls": 179,
+                "usd": 11.100364800000001,
+                "unpriced_calls": 0,
+                "input_tokens": 5494842,
+                "output_tokens": 131447,
+                "cache_read_tokens": 3958819,
+                "cache_creation_tokens": 1535569,
+                "reasoning_tokens": 19528,
+                "retries": 0,
+                "mean_rollout_usd": 0.23125760000000004,
+                "calls_per_rollout": 3.7291666666666665,
+                "cached_input_share": 0.7204609340905526,
+                "reasoning_tokens_per_rollout": 406.8333333333333
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "seed-train": {
+              "arm": "seed-train",
+              "split": "train",
+              "runs": 1,
+              "tasks": 24,
+              "skill_sha8": "551c2f30",
+              "substance": 1,
+              "full": 0.9583333333333334,
+              "form_fail": 0.041666666666666664,
+              "run1": {
+                "briefing-train-01": 1,
+                "briefing-train-02": 1,
+                "briefing-train-03": 1,
+                "briefing-train-04": 1,
+                "briefing-train-05": 1,
+                "briefing-train-06": 1,
+                "briefing-train-07": 1,
+                "briefing-train-08": 1,
+                "briefing-train-09": 1,
+                "briefing-train-10": 1,
+                "briefing-train-11": 1,
+                "briefing-train-12": 1,
+                "briefing-train-13": 1,
+                "briefing-train-14": 1,
+                "briefing-train-15": 1,
+                "briefing-train-16": 1,
+                "briefing-train-17": 1,
+                "briefing-train-18": 1,
+                "briefing-train-19": 1,
+                "briefing-train-20": 1,
+                "briefing-train-21": 1,
+                "briefing-train-22": 1,
+                "briefing-train-23": 1,
+                "briefing-train-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 215,
+                "read": 215,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 24,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 24,
+                "calls": 88,
+                "usd": 6.882316,
+                "unpriced_calls": 0,
+                "input_tokens": 3138244,
+                "output_tokens": 69398,
+                "cache_read_tokens": 2124300,
+                "cache_creation_tokens": 1013720,
+                "reasoning_tokens": 11468,
+                "retries": 0,
+                "mean_rollout_usd": 0.2867631666666667,
+                "calls_per_rollout": 3.6666666666666665,
+                "cached_input_share": 0.6769072130783967,
+                "reasoning_tokens_per_rollout": 477.8333333333333
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "proposal-1": {
+              "arm": "proposal-1",
+              "split": "sel",
+              "runs": 2,
+              "tasks": 24,
+              "skill_sha8": "1c8852ca",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "briefing-sel-01": 1,
+                "briefing-sel-02": 1,
+                "briefing-sel-03": 1,
+                "briefing-sel-04": 1,
+                "briefing-sel-05": 1,
+                "briefing-sel-06": 1,
+                "briefing-sel-07": 1,
+                "briefing-sel-08": 1,
+                "briefing-sel-09": 1,
+                "briefing-sel-10": 1,
+                "briefing-sel-11": 1,
+                "briefing-sel-12": 1,
+                "briefing-sel-13": 1,
+                "briefing-sel-14": 1,
+                "briefing-sel-15": 1,
+                "briefing-sel-16": 1,
+                "briefing-sel-17": 1,
+                "briefing-sel-18": 1,
+                "briefing-sel-19": 1,
+                "briefing-sel-20": 1,
+                "briefing-sel-21": 1,
+                "briefing-sel-22": 1,
+                "briefing-sel-23": 1,
+                "briefing-sel-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 259,
+                "read": 259,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 48,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 48,
+                "calls": 165,
+                "usd": 9.6189628,
+                "unpriced_calls": 0,
+                "input_tokens": 4656944,
+                "output_tokens": 147714,
+                "cache_read_tokens": 3462419,
+                "cache_creation_tokens": 1194099,
+                "reasoning_tokens": 14272,
+                "retries": 0,
+                "mean_rollout_usd": 0.20039505833333335,
+                "calls_per_rollout": 3.4375,
+                "cached_input_share": 0.7434959492748893,
+                "reasoning_tokens_per_rollout": 297.3333333333333
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "kept-rewrite": {
+              "arm": "kept-rewrite",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "5dbf008e",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "briefing-gate-01": 1,
+                "briefing-gate-02": 1,
+                "briefing-gate-03": 1,
+                "briefing-gate-04": 1,
+                "briefing-gate-05": 1,
+                "briefing-gate-06": 1,
+                "briefing-gate-07": 1,
+                "briefing-gate-08": 1,
+                "briefing-gate-09": 1,
+                "briefing-gate-10": 1,
+                "briefing-gate-11": 1,
+                "briefing-gate-12": 1,
+                "briefing-gate-13": 1,
+                "briefing-gate-14": 1,
+                "briefing-gate-15": 1,
+                "briefing-gate-16": 1,
+                "briefing-gate-17": 1,
+                "briefing-gate-18": 1,
+                "briefing-gate-19": 1,
+                "briefing-gate-20": 1,
+                "briefing-gate-21": 1,
+                "briefing-gate-22": 1,
+                "briefing-gate-23": 1,
+                "briefing-gate-24": 1,
+                "briefing-gate-25": 1,
+                "briefing-gate-26": 1,
+                "briefing-gate-27": 1,
+                "briefing-gate-28": 1,
+                "briefing-gate-29": 1,
+                "briefing-gate-30": 1,
+                "briefing-gate-31": 1,
+                "briefing-gate-32": 1,
+                "briefing-gate-33": 1,
+                "briefing-gate-34": 1,
+                "briefing-gate-35": 1,
+                "briefing-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 334,
+                "read": 334,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 143,
+                "usd": 6.977112799999999,
+                "unpriced_calls": 0,
+                "input_tokens": 3718806,
+                "output_tokens": 72789,
+                "cache_read_tokens": 2723404,
+                "cache_creation_tokens": 995044,
+                "reasoning_tokens": 7185,
+                "retries": 0,
+                "mean_rollout_usd": 0.19380868888888886,
+                "calls_per_rollout": 3.9722222222222223,
+                "cached_input_share": 0.7323329047011325,
+                "reasoning_tokens_per_rollout": 199.58333333333334
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "reachability": {
+              "arm": "reachability",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "551c2f30",
+              "substance": 0.9722222222222222,
+              "full": 0.9722222222222222,
+              "form_fail": 0,
+              "run1": {
+                "briefing-gate-01": 1,
+                "briefing-gate-02": 1,
+                "briefing-gate-03": 1,
+                "briefing-gate-04": 1,
+                "briefing-gate-05": 1,
+                "briefing-gate-06": 1,
+                "briefing-gate-07": 1,
+                "briefing-gate-08": 1,
+                "briefing-gate-09": 1,
+                "briefing-gate-10": 1,
+                "briefing-gate-11": 1,
+                "briefing-gate-12": 1,
+                "briefing-gate-13": 1,
+                "briefing-gate-14": 1,
+                "briefing-gate-15": 1,
+                "briefing-gate-16": 1,
+                "briefing-gate-17": 1,
+                "briefing-gate-18": 1,
+                "briefing-gate-19": 1,
+                "briefing-gate-20": 1,
+                "briefing-gate-21": 1,
+                "briefing-gate-22": 1,
+                "briefing-gate-23": 1,
+                "briefing-gate-24": 1,
+                "briefing-gate-25": 1,
+                "briefing-gate-26": 1,
+                "briefing-gate-27": 1,
+                "briefing-gate-28": 1,
+                "briefing-gate-29": 1,
+                "briefing-gate-30": 1,
+                "briefing-gate-31": 1,
+                "briefing-gate-32": 0,
+                "briefing-gate-33": 1,
+                "briefing-gate-34": 1,
+                "briefing-gate-35": 1,
+                "briefing-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 273,
+                "read": 273,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 119,
+                "usd": 5.448367400000001,
+                "unpriced_calls": 0,
+                "input_tokens": 2345063,
+                "output_tokens": 82603,
+                "cache_read_tokens": 1651812,
+                "cache_creation_tokens": 692941,
+                "reasoning_tokens": 9465,
+                "retries": 0,
+                "mean_rollout_usd": 0.15134353888888893,
+                "calls_per_rollout": 3.3055555555555554,
+                "cached_input_share": 0.7043785177626358,
+                "reasoning_tokens_per_rollout": 262.9166666666667
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            }
+          },
+          "proposals": [
+            {
+              "id": "proposal-1",
+              "outcome": "proposed",
+              "cost_usd": 0.379768,
+              "retries": 0,
+              "text_sha8": "1c8852ca",
+              "audit": {
+                "skill": "briefing",
+                "added_lines": 123,
+                "removed_lines": 131,
+                "flags": [],
+                "disqualified": false
+              },
+              "selection": 1
+            },
+            {
+              "id": "proposal-2",
+              "outcome": "audit-disqualified",
+              "cost_usd": 0.380008,
+              "retries": 0,
+              "text_sha8": "7fc25af5",
+              "audit": {
+                "skill": "briefing",
+                "added_lines": 110,
+                "removed_lines": 134,
+                "flags": [
+                  {
+                    "kind": "date",
+                    "token": "2026-04-01",
+                    "line": "- Format: `[Source: slug, updated DATE]`, for example \"Jane is CTO of Acme [Source: people/jane-doe, updated 2026-04-01]\"."
+                  }
+                ],
+                "disqualified": true
+              }
+            },
+            {
+              "id": "rubric-one-shot",
+              "outcome": "audit-disqualified",
+              "cost_usd": 0.360088,
+              "retries": 0,
+              "text_sha8": "282fe204",
+              "audit": {
+                "skill": "briefing",
+                "added_lines": 73,
+                "removed_lines": 138,
+                "flags": [
+                  {
+                    "kind": "date",
+                    "token": "2026-01-01",
+                    "line": "Jane Doe is with Acme Corp today. [Source: people/jane-doe-123, updated 2026-01-01]"
+                  }
+                ],
+                "disqualified": true
+              }
+            }
+          ],
+          "kept": "seed",
+          "scores": {
+            "no_skill": 0.9722222222222222,
+            "seed_run1": 1,
+            "seed_run2": 1,
+            "seed": 1,
+            "seed_trained_families": 1,
+            "seed_held_out_families": 1,
+            "seed_selection": 1,
+            "one_shot": 1,
+            "kept_rewrite": 1,
+            "rubric_one_shot": null,
+            "reachability": 0.9722222222222222
+          },
+          "gate_pair": {
+            "skill": "briefing",
+            "target": "opus",
+            "form_fail": {
+              "no_skill": 0.027777777777777776,
+              "seed": 0
+            },
+            "proposals_passing_audit": 1,
+            "reachability": 0.9722222222222222,
+            "limited_share": 0,
+            "refusal_limited": false,
+            "one_shot": 1,
+            "seed": 1
+          },
+          "label": "saturated",
+          "gst956": {
+            "difference": {
+              "tasks": 36,
+              "point": 0,
+              "lower": 0,
+              "upper": 0,
+              "wins": 0,
+              "losses": 0,
+              "mcnemar_p": 1,
+              "verdict": "no-difference-shown"
+            },
+            "rule": "#304's rewrite rule (test-stage.ts rewriteVerdict): rewrite-beats-seed when the bootstrap lower bound is above 0 and the exact McNemar p is below 0.05, rewrite-worse when the upper bound is below 0 with p below 0.05, else no-difference-shown; never deciding the gate"
+          },
+          "cost": {
+            "rollouts": 300,
+            "calls": 1118,
+            "usd": 66.7998552,
+            "unpriced_calls": 0,
+            "input_tokens": 32237012,
+            "output_tokens": 796953,
+            "cache_read_tokens": 22983631,
+            "cache_creation_tokens": 9250545,
+            "reasoning_tokens": 106477,
+            "retries": 0,
+            "mean_rollout_usd": 0.222666184,
+            "calls_per_rollout": 3.7266666666666666,
+            "cached_input_share": 0.7129578572604682,
+            "reasoning_tokens_per_rollout": 354.92333333333335
+          },
+          "proposer_usd": 1.119864,
+          "proposer_retries": 0
+        },
+        {
+          "skill": "fact-check",
+          "target": "opus",
+          "status": "scored",
+          "arms": {
+            "no-skill": {
+              "arm": "no-skill",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "4eca50d2",
+              "substance": 0.8611111111111112,
+              "full": 0.3888888888888889,
+              "form_fail": 0.6111111111111112,
+              "run1": {
+                "fact-check-gate-01": 1,
+                "fact-check-gate-02": 1,
+                "fact-check-gate-03": 1,
+                "fact-check-gate-04": 1,
+                "fact-check-gate-05": 1,
+                "fact-check-gate-06": 1,
+                "fact-check-gate-07": 1,
+                "fact-check-gate-08": 1,
+                "fact-check-gate-09": 1,
+                "fact-check-gate-10": 1,
+                "fact-check-gate-11": 1,
+                "fact-check-gate-12": 1,
+                "fact-check-gate-13": 1,
+                "fact-check-gate-14": 1,
+                "fact-check-gate-15": 1,
+                "fact-check-gate-16": 1,
+                "fact-check-gate-17": 1,
+                "fact-check-gate-18": 1,
+                "fact-check-gate-19": 1,
+                "fact-check-gate-20": 1,
+                "fact-check-gate-21": 1,
+                "fact-check-gate-22": 0,
+                "fact-check-gate-23": 1,
+                "fact-check-gate-24": 0,
+                "fact-check-gate-25": 1,
+                "fact-check-gate-26": 0,
+                "fact-check-gate-27": 1,
+                "fact-check-gate-28": 1,
+                "fact-check-gate-29": 0,
+                "fact-check-gate-30": 1,
+                "fact-check-gate-31": 0,
+                "fact-check-gate-32": 1,
+                "fact-check-gate-33": 1,
+                "fact-check-gate-34": 1,
+                "fact-check-gate-35": 1,
+                "fact-check-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 91,
+                "read": 91,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 106,
+                "usd": 4.1866224,
+                "unpriced_calls": 0,
+                "input_tokens": 1733600,
+                "output_tokens": 41297,
+                "cache_read_tokens": 1105632,
+                "cache_creation_tokens": 627684,
+                "reasoning_tokens": 8177,
+                "retries": 0,
+                "mean_rollout_usd": 0.11629506666666667,
+                "calls_per_rollout": 2.9444444444444446,
+                "cached_input_share": 0.6377664974619289,
+                "reasoning_tokens_per_rollout": 227.13888888888889
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "seed": {
+              "arm": "seed",
+              "split": "gate",
+              "runs": 2,
+              "tasks": 36,
+              "skill_sha8": "49f0d356",
+              "substance": 0.8888888888888888,
+              "full": 0.8888888888888888,
+              "form_fail": 0,
+              "run1": {
+                "fact-check-gate-01": 1,
+                "fact-check-gate-02": 1,
+                "fact-check-gate-03": 1,
+                "fact-check-gate-04": 1,
+                "fact-check-gate-05": 1,
+                "fact-check-gate-06": 1,
+                "fact-check-gate-07": 1,
+                "fact-check-gate-08": 1,
+                "fact-check-gate-09": 1,
+                "fact-check-gate-10": 1,
+                "fact-check-gate-11": 1,
+                "fact-check-gate-12": 1,
+                "fact-check-gate-13": 1,
+                "fact-check-gate-14": 1,
+                "fact-check-gate-15": 1,
+                "fact-check-gate-16": 1,
+                "fact-check-gate-17": 1,
+                "fact-check-gate-18": 1,
+                "fact-check-gate-19": 1,
+                "fact-check-gate-20": 1,
+                "fact-check-gate-21": 1,
+                "fact-check-gate-22": 0,
+                "fact-check-gate-23": 1,
+                "fact-check-gate-24": 1,
+                "fact-check-gate-25": 1,
+                "fact-check-gate-26": 0,
+                "fact-check-gate-27": 1,
+                "fact-check-gate-28": 1,
+                "fact-check-gate-29": 0,
+                "fact-check-gate-30": 1,
+                "fact-check-gate-31": 0,
+                "fact-check-gate-32": 1,
+                "fact-check-gate-33": 1,
+                "fact-check-gate-34": 1,
+                "fact-check-gate-35": 1,
+                "fact-check-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 289,
+                "read": 289,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 72,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 72,
+                "calls": 252,
+                "usd": 7.651233200000001,
+                "unpriced_calls": 0,
+                "input_tokens": 5515618,
+                "output_tokens": 124131,
+                "cache_read_tokens": 4668506,
+                "cache_creation_tokens": 846464,
+                "reasoning_tokens": 16479,
+                "retries": 0,
+                "mean_rollout_usd": 0.10626712777777779,
+                "calls_per_rollout": 3.5,
+                "cached_input_share": 0.8464157597571116,
+                "reasoning_tokens_per_rollout": 228.875
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "seed-sel": {
+              "arm": "seed-sel",
+              "split": "sel",
+              "runs": 2,
+              "tasks": 24,
+              "skill_sha8": "49f0d356",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "fact-check-sel-01": 1,
+                "fact-check-sel-02": 1,
+                "fact-check-sel-03": 1,
+                "fact-check-sel-04": 1,
+                "fact-check-sel-05": 1,
+                "fact-check-sel-06": 1,
+                "fact-check-sel-07": 1,
+                "fact-check-sel-08": 1,
+                "fact-check-sel-09": 1,
+                "fact-check-sel-10": 1,
+                "fact-check-sel-11": 1,
+                "fact-check-sel-12": 1,
+                "fact-check-sel-13": 1,
+                "fact-check-sel-14": 1,
+                "fact-check-sel-15": 1,
+                "fact-check-sel-16": 1,
+                "fact-check-sel-17": 1,
+                "fact-check-sel-18": 1,
+                "fact-check-sel-19": 1,
+                "fact-check-sel-20": 1,
+                "fact-check-sel-21": 1,
+                "fact-check-sel-22": 1,
+                "fact-check-sel-23": 1,
+                "fact-check-sel-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 192,
+                "read": 192,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 48,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 48,
+                "calls": 179,
+                "usd": 5.7192082000000015,
+                "unpriced_calls": 0,
+                "input_tokens": 4251243,
+                "output_tokens": 84937,
+                "cache_read_tokens": 3590686,
+                "cache_creation_tokens": 660103,
+                "reasoning_tokens": 11911,
+                "retries": 0,
+                "mean_rollout_usd": 0.11915017083333336,
+                "calls_per_rollout": 3.7291666666666665,
+                "cached_input_share": 0.8446202675311668,
+                "reasoning_tokens_per_rollout": 248.14583333333334
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "seed-train": {
+              "arm": "seed-train",
+              "split": "train",
+              "runs": 1,
+              "tasks": 24,
+              "skill_sha8": "49f0d356",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "fact-check-train-01": 1,
+                "fact-check-train-02": 1,
+                "fact-check-train-03": 1,
+                "fact-check-train-04": 1,
+                "fact-check-train-05": 1,
+                "fact-check-train-06": 1,
+                "fact-check-train-07": 1,
+                "fact-check-train-08": 1,
+                "fact-check-train-09": 1,
+                "fact-check-train-10": 1,
+                "fact-check-train-11": 1,
+                "fact-check-train-12": 1,
+                "fact-check-train-13": 1,
+                "fact-check-train-14": 1,
+                "fact-check-train-15": 1,
+                "fact-check-train-16": 1,
+                "fact-check-train-17": 1,
+                "fact-check-train-18": 1,
+                "fact-check-train-19": 1,
+                "fact-check-train-20": 1,
+                "fact-check-train-21": 1,
+                "fact-check-train-22": 1,
+                "fact-check-train-23": 1,
+                "fact-check-train-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 86,
+                "read": 86,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 24,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 24,
+                "calls": 82,
+                "usd": 3.1289954,
+                "unpriced_calls": 0,
+                "input_tokens": 2007757,
+                "output_tokens": 41818,
+                "cache_read_tokens": 1613737,
+                "cache_creation_tokens": 393808,
+                "reasoning_tokens": 6143,
+                "retries": 0,
+                "mean_rollout_usd": 0.13037480833333334,
+                "calls_per_rollout": 3.4166666666666665,
+                "cached_input_share": 0.8037511511602251,
+                "reasoning_tokens_per_rollout": 255.95833333333334
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "proposal-1": {
+              "arm": "proposal-1",
+              "split": "sel",
+              "runs": 2,
+              "tasks": 24,
+              "skill_sha8": "18da7d3b",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "fact-check-sel-01": 1,
+                "fact-check-sel-02": 1,
+                "fact-check-sel-03": 1,
+                "fact-check-sel-04": 1,
+                "fact-check-sel-05": 1,
+                "fact-check-sel-06": 1,
+                "fact-check-sel-07": 1,
+                "fact-check-sel-08": 1,
+                "fact-check-sel-09": 1,
+                "fact-check-sel-10": 1,
+                "fact-check-sel-11": 1,
+                "fact-check-sel-12": 1,
+                "fact-check-sel-13": 1,
+                "fact-check-sel-14": 1,
+                "fact-check-sel-15": 1,
+                "fact-check-sel-16": 1,
+                "fact-check-sel-17": 1,
+                "fact-check-sel-18": 1,
+                "fact-check-sel-19": 1,
+                "fact-check-sel-20": 1,
+                "fact-check-sel-21": 1,
+                "fact-check-sel-22": 1,
+                "fact-check-sel-23": 1,
+                "fact-check-sel-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 184,
+                "read": 184,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 48,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 48,
+                "calls": 141,
+                "usd": 4.533624799999999,
+                "unpriced_calls": 0,
+                "input_tokens": 2640262,
+                "output_tokens": 82974,
+                "cache_read_tokens": 2151414,
+                "cache_creation_tokens": 488470,
+                "reasoning_tokens": 10411,
+                "retries": 0,
+                "mean_rollout_usd": 0.09445051666666665,
+                "calls_per_rollout": 2.9375,
+                "cached_input_share": 0.8148486778963603,
+                "reasoning_tokens_per_rollout": 216.89583333333334
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "proposal-2": {
+              "arm": "proposal-2",
+              "split": "sel",
+              "runs": 2,
+              "tasks": 24,
+              "skill_sha8": "ca5c4109",
+              "substance": 1,
+              "full": 1,
+              "form_fail": 0,
+              "run1": {
+                "fact-check-sel-01": 1,
+                "fact-check-sel-02": 1,
+                "fact-check-sel-03": 1,
+                "fact-check-sel-04": 1,
+                "fact-check-sel-05": 1,
+                "fact-check-sel-06": 1,
+                "fact-check-sel-07": 1,
+                "fact-check-sel-08": 1,
+                "fact-check-sel-09": 1,
+                "fact-check-sel-10": 1,
+                "fact-check-sel-11": 1,
+                "fact-check-sel-12": 1,
+                "fact-check-sel-13": 1,
+                "fact-check-sel-14": 1,
+                "fact-check-sel-15": 1,
+                "fact-check-sel-16": 1,
+                "fact-check-sel-17": 1,
+                "fact-check-sel-18": 1,
+                "fact-check-sel-19": 1,
+                "fact-check-sel-20": 1,
+                "fact-check-sel-21": 1,
+                "fact-check-sel-22": 1,
+                "fact-check-sel-23": 1,
+                "fact-check-sel-24": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 200,
+                "read": 200,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 48,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 48,
+                "calls": 155,
+                "usd": 4.648255999999999,
+                "unpriced_calls": 0,
+                "input_tokens": 2977018,
+                "output_tokens": 81737,
+                "cache_read_tokens": 2473160,
+                "cache_creation_tokens": 503452,
+                "reasoning_tokens": 8686,
+                "retries": 0,
+                "mean_rollout_usd": 0.09683866666666664,
+                "calls_per_rollout": 3.2291666666666665,
+                "cached_input_share": 0.8307507714095111,
+                "reasoning_tokens_per_rollout": 180.95833333333334
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "kept-rewrite": {
+              "arm": "kept-rewrite",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "9670de01",
+              "substance": 0.8888888888888888,
+              "full": 0.8611111111111112,
+              "form_fail": 0.1111111111111111,
+              "run1": {
+                "fact-check-gate-01": 1,
+                "fact-check-gate-02": 1,
+                "fact-check-gate-03": 1,
+                "fact-check-gate-04": 1,
+                "fact-check-gate-05": 1,
+                "fact-check-gate-06": 1,
+                "fact-check-gate-07": 1,
+                "fact-check-gate-08": 1,
+                "fact-check-gate-09": 1,
+                "fact-check-gate-10": 1,
+                "fact-check-gate-11": 1,
+                "fact-check-gate-12": 1,
+                "fact-check-gate-13": 1,
+                "fact-check-gate-14": 1,
+                "fact-check-gate-15": 1,
+                "fact-check-gate-16": 1,
+                "fact-check-gate-17": 1,
+                "fact-check-gate-18": 1,
+                "fact-check-gate-19": 1,
+                "fact-check-gate-20": 1,
+                "fact-check-gate-21": 1,
+                "fact-check-gate-22": 0,
+                "fact-check-gate-23": 1,
+                "fact-check-gate-24": 1,
+                "fact-check-gate-25": 1,
+                "fact-check-gate-26": 0,
+                "fact-check-gate-27": 1,
+                "fact-check-gate-28": 1,
+                "fact-check-gate-29": 0,
+                "fact-check-gate-30": 1,
+                "fact-check-gate-31": 0,
+                "fact-check-gate-32": 1,
+                "fact-check-gate-33": 1,
+                "fact-check-gate-34": 1,
+                "fact-check-gate-35": 1,
+                "fact-check-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 123,
+                "read": 123,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 107,
+                "usd": 4.484081,
+                "unpriced_calls": 0,
+                "input_tokens": 2197455,
+                "output_tokens": 59289,
+                "cache_read_tokens": 1601810,
+                "cache_creation_tokens": 595359,
+                "reasoning_tokens": 6032,
+                "retries": 0,
+                "mean_rollout_usd": 0.12455780555555555,
+                "calls_per_rollout": 2.9722222222222223,
+                "cached_input_share": 0.7289387040917789,
+                "reasoning_tokens_per_rollout": 167.55555555555554
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "rubric-one-shot": {
+              "arm": "rubric-one-shot",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "16851f50",
+              "substance": 0.8888888888888888,
+              "full": 0.8888888888888888,
+              "form_fail": 0.027777777777777776,
+              "run1": {
+                "fact-check-gate-01": 1,
+                "fact-check-gate-02": 1,
+                "fact-check-gate-03": 1,
+                "fact-check-gate-04": 1,
+                "fact-check-gate-05": 1,
+                "fact-check-gate-06": 1,
+                "fact-check-gate-07": 1,
+                "fact-check-gate-08": 1,
+                "fact-check-gate-09": 1,
+                "fact-check-gate-10": 1,
+                "fact-check-gate-11": 1,
+                "fact-check-gate-12": 1,
+                "fact-check-gate-13": 1,
+                "fact-check-gate-14": 1,
+                "fact-check-gate-15": 1,
+                "fact-check-gate-16": 1,
+                "fact-check-gate-17": 1,
+                "fact-check-gate-18": 1,
+                "fact-check-gate-19": 1,
+                "fact-check-gate-20": 1,
+                "fact-check-gate-21": 1,
+                "fact-check-gate-22": 0,
+                "fact-check-gate-23": 1,
+                "fact-check-gate-24": 1,
+                "fact-check-gate-25": 1,
+                "fact-check-gate-26": 0,
+                "fact-check-gate-27": 1,
+                "fact-check-gate-28": 1,
+                "fact-check-gate-29": 0,
+                "fact-check-gate-30": 1,
+                "fact-check-gate-31": 0,
+                "fact-check-gate-32": 1,
+                "fact-check-gate-33": 1,
+                "fact-check-gate-34": 1,
+                "fact-check-gate-35": 1,
+                "fact-check-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 133,
+                "read": 133,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 104,
+                "usd": 4.108449400000001,
+                "unpriced_calls": 0,
+                "input_tokens": 2062359,
+                "output_tokens": 59044,
+                "cache_read_tokens": 1538322,
+                "cache_creation_tokens": 523757,
+                "reasoning_tokens": 5479,
+                "retries": 0,
+                "mean_rollout_usd": 0.11412359444444448,
+                "calls_per_rollout": 2.888888888888889,
+                "cached_input_share": 0.745904083624626,
+                "reasoning_tokens_per_rollout": 152.19444444444446
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            },
+            "reachability": {
+              "arm": "reachability",
+              "split": "gate",
+              "runs": 1,
+              "tasks": 36,
+              "skill_sha8": "49f0d356",
+              "substance": 0.8888888888888888,
+              "full": 0.8888888888888888,
+              "form_fail": 0.027777777777777776,
+              "run1": {
+                "fact-check-gate-01": 1,
+                "fact-check-gate-02": 1,
+                "fact-check-gate-03": 1,
+                "fact-check-gate-04": 1,
+                "fact-check-gate-05": 1,
+                "fact-check-gate-06": 1,
+                "fact-check-gate-07": 1,
+                "fact-check-gate-08": 1,
+                "fact-check-gate-09": 1,
+                "fact-check-gate-10": 1,
+                "fact-check-gate-11": 1,
+                "fact-check-gate-12": 1,
+                "fact-check-gate-13": 1,
+                "fact-check-gate-14": 1,
+                "fact-check-gate-15": 1,
+                "fact-check-gate-16": 1,
+                "fact-check-gate-17": 1,
+                "fact-check-gate-18": 1,
+                "fact-check-gate-19": 1,
+                "fact-check-gate-20": 1,
+                "fact-check-gate-21": 1,
+                "fact-check-gate-22": 0,
+                "fact-check-gate-23": 1,
+                "fact-check-gate-24": 1,
+                "fact-check-gate-25": 1,
+                "fact-check-gate-26": 0,
+                "fact-check-gate-27": 1,
+                "fact-check-gate-28": 1,
+                "fact-check-gate-29": 0,
+                "fact-check-gate-30": 1,
+                "fact-check-gate-31": 0,
+                "fact-check-gate-32": 1,
+                "fact-check-gate-33": 1,
+                "fact-check-gate-34": 1,
+                "fact-check-gate-35": 1,
+                "fact-check-gate-36": 1
+              },
+              "errored_tasks": [],
+              "refusals": {
+                "calls": 143,
+                "read": 143,
+                "refused": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "recovered": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "abandoned": {
+                  "multi-window-selector": 0,
+                  "known-as-of-with-read-view": 0,
+                  "hop-chain-with-depth": 0,
+                  "other": 0
+                },
+                "by_tool": {}
+              },
+              "stops": {
+                "completed": 36,
+                "turn-limit": 0,
+                "output-length": 0,
+                "other": 0
+              },
+              "cost": {
+                "rollouts": 36,
+                "calls": 107,
+                "usd": 2.776099,
+                "unpriced_calls": 0,
+                "input_tokens": 1870857,
+                "output_tokens": 55111,
+                "cache_read_tokens": 1600025,
+                "cache_creation_tokens": 270546,
+                "reasoning_tokens": 5972,
+                "retries": 0,
+                "mean_rollout_usd": 0.07711386111111111,
+                "calls_per_rollout": 2.9722222222222223,
+                "cached_input_share": 0.8552363970094988,
+                "reasoning_tokens_per_rollout": 165.88888888888889
+              },
+              "voided": {
+                "calls": 0,
+                "usd": 0
+              }
+            }
+          },
+          "proposals": [
+            {
+              "id": "proposal-1",
+              "outcome": "proposed",
+              "cost_usd": 0.319888,
+              "retries": 0,
+              "text_sha8": "18da7d3b",
+              "audit": {
+                "skill": "fact-check",
+                "added_lines": 223,
+                "removed_lines": 297,
+                "flags": [],
+                "disqualified": false
+              },
+              "selection": 1
+            },
+            {
+              "id": "proposal-2",
+              "outcome": "proposed",
+              "cost_usd": 0.325948,
+              "retries": 0,
+              "text_sha8": "ca5c4109",
+              "audit": {
+                "skill": "fact-check",
+                "added_lines": 172,
+                "removed_lines": 294,
+                "flags": [],
+                "disqualified": false
+              },
+              "selection": 1
+            },
+            {
+              "id": "rubric-one-shot",
+              "outcome": "proposed",
+              "cost_usd": 0.329532,
+              "retries": 0,
+              "text_sha8": "16851f50",
+              "audit": {
+                "skill": "fact-check",
+                "added_lines": 182,
+                "removed_lines": 263,
+                "flags": [],
+                "disqualified": false
+              }
+            }
+          ],
+          "kept": "seed",
+          "scores": {
+            "no_skill": 0.8611111111111112,
+            "seed_run1": 0.8888888888888888,
+            "seed_run2": 0.8888888888888888,
+            "seed": 0.8888888888888888,
+            "seed_trained_families": 1,
+            "seed_held_out_families": 0.7777777777777778,
+            "seed_selection": 1,
+            "one_shot": 0.8888888888888888,
+            "kept_rewrite": 0.8888888888888888,
+            "rubric_one_shot": 0.8888888888888888,
+            "reachability": 0.8888888888888888
+          },
+          "gate_pair": {
+            "skill": "fact-check",
+            "target": "opus",
+            "form_fail": {
+              "no_skill": 0.6111111111111112,
+              "seed": 0
+            },
+            "proposals_passing_audit": 2,
+            "reachability": 0.8888888888888888,
+            "limited_share": 0,
+            "refusal_limited": false,
+            "one_shot": 0.8888888888888888,
+            "seed": 0.8888888888888888
+          },
+          "label": "invalid",
+          "gst956": {
+            "difference": {
+              "tasks": 36,
+              "point": 0,
+              "lower": 0,
+              "upper": 0,
+              "wins": 0,
+              "losses": 0,
+              "mcnemar_p": 1,
+              "verdict": "no-difference-shown"
+            },
+            "rule": "#304's rewrite rule (test-stage.ts rewriteVerdict): rewrite-beats-seed when the bootstrap lower bound is above 0 and the exact McNemar p is below 0.05, rewrite-worse when the upper bound is below 0 with p below 0.05, else no-difference-shown; never deciding the gate"
+          },
+          "cost": {
+            "rollouts": 384,
+            "calls": 1233,
+            "usd": 41.23656940000001,
+            "unpriced_calls": 0,
+            "input_tokens": 25256169,
+            "output_tokens": 630338,
+            "cache_read_tokens": 20343292,
+            "cache_creation_tokens": 4909643,
+            "reasoning_tokens": 79290,
+            "retries": 0,
+            "mean_rollout_usd": 0.10738689947916669,
+            "calls_per_rollout": 3.2109375,
+            "cached_input_share": 0.8054781388262012,
+            "reasoning_tokens_per_rollout": 206.484375
+          },
+          "proposer_usd": 0.975368,
+          "proposer_retries": 0
+        },
+        {
+          "skill": "query",
+          "target": "sol",
+          "status": "not-run",
+          "not_run_reason": "sol-gate-not-needed",
+          "arms": {},
+          "proposals": [],
+          "kept": null,
+          "scores": {
+            "no_skill": null,
+            "seed_run1": null,
+            "seed_run2": null,
+            "seed": null,
+            "seed_trained_families": null,
+            "seed_held_out_families": null,
+            "seed_selection": null,
+            "one_shot": null,
+            "kept_rewrite": null,
+            "rubric_one_shot": null,
+            "reachability": null
+          },
+          "gate_pair": null,
+          "label": null,
+          "gst956": null,
+          "cost": {
+            "rollouts": 0,
+            "calls": 0,
+            "usd": 0,
+            "unpriced_calls": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_tokens": 0,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": null,
+            "retries": 0,
+            "mean_rollout_usd": null,
+            "calls_per_rollout": null,
+            "cached_input_share": null,
+            "reasoning_tokens_per_rollout": null
+          },
+          "proposer_usd": null,
+          "proposer_retries": 0
+        },
+        {
+          "skill": "briefing",
+          "target": "sol",
+          "status": "not-run",
+          "not_run_reason": "sol-gate-not-needed",
+          "arms": {},
+          "proposals": [],
+          "kept": null,
+          "scores": {
+            "no_skill": null,
+            "seed_run1": null,
+            "seed_run2": null,
+            "seed": null,
+            "seed_trained_families": null,
+            "seed_held_out_families": null,
+            "seed_selection": null,
+            "one_shot": null,
+            "kept_rewrite": null,
+            "rubric_one_shot": null,
+            "reachability": null
+          },
+          "gate_pair": null,
+          "label": null,
+          "gst956": null,
+          "cost": {
+            "rollouts": 0,
+            "calls": 0,
+            "usd": 0,
+            "unpriced_calls": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_tokens": 0,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": null,
+            "retries": 0,
+            "mean_rollout_usd": null,
+            "calls_per_rollout": null,
+            "cached_input_share": null,
+            "reasoning_tokens_per_rollout": null
+          },
+          "proposer_usd": null,
+          "proposer_retries": 0
+        },
+        {
+          "skill": "fact-check",
+          "target": "sol",
+          "status": "not-run",
+          "not_run_reason": "sol-gate-not-needed",
+          "arms": {},
+          "proposals": [],
+          "kept": null,
+          "scores": {
+            "no_skill": null,
+            "seed_run1": null,
+            "seed_run2": null,
+            "seed": null,
+            "seed_trained_families": null,
+            "seed_held_out_families": null,
+            "seed_selection": null,
+            "one_shot": null,
+            "kept_rewrite": null,
+            "rubric_one_shot": null,
+            "reachability": null
+          },
+          "gate_pair": null,
+          "label": null,
+          "gst956": null,
+          "cost": {
+            "rollouts": 0,
+            "calls": 0,
+            "usd": 0,
+            "unpriced_calls": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_tokens": 0,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": null,
+            "retries": 0,
+            "mean_rollout_usd": null,
+            "calls_per_rollout": null,
+            "cached_input_share": null,
+            "reasoning_tokens_per_rollout": null
+          },
+          "proposer_usd": null,
+          "proposer_retries": 0
+        }
+      ],
+      "sol_gate": {
+        "needed": false,
+        "ran": false
+      },
+      "solvability": {
+        "query": {
+          "tasks": 36,
+          "judge_mismatch": [],
+          "controls_failing": [],
+          "degenerate_passing": []
+        },
+        "briefing": {
+          "tasks": 36,
+          "judge_mismatch": [],
+          "controls_failing": [],
+          "degenerate_passing": []
+        },
+        "fact-check": {
+          "tasks": 36,
+          "judge_mismatch": [],
+          "controls_failing": [],
+          "degenerate_passing": []
+        }
+      },
+      "unsolvable": [],
+      "verdict": {
+        "verdict": "fail",
+        "cause": "saturated",
+        "scope": [
+          "opus"
+        ],
+        "harness_target": null,
+        "required": 2,
+        "counts": {
+          "H": 0,
+          "S": 2,
+          "D": 0,
+          "X": 0,
+          "V": 1,
+          "U": 0
+        },
+        "labels": {
+          "query/opus": "saturated",
+          "briefing/opus": "saturated",
+          "fact-check/opus": "invalid",
+          "query/sol": "not-run",
+          "briefing/sol": "not-run",
+          "fact-check/sol": "not-run"
+        },
+        "headroom_pairs": [],
+        "next": "revise"
+      },
+      "stopped": null,
+      "reprice_trigger": null,
+      "unscored_spend": null,
+      "voided": {
+        "opus": {
+          "arms": 0,
+          "usd": 0
+        },
+        "sol": {
+          "arms": 0,
+          "usd": 0
+        }
+      },
+      "files_read": [
+        {
+          "path": "eval/data/skillopt-method-v3/query/train.jsonl",
+          "use": "proposer input"
+        },
+        {
+          "path": "eval/data/skillopt-method-v3/query/sel.jsonl",
+          "use": "scored"
+        },
+        {
+          "path": "eval/data/skillopt-method-v3/query/gate.jsonl",
+          "use": "scored"
+        },
+        {
+          "path": "eval/data/skillopt-method-v3/briefing/train.jsonl",
+          "use": "proposer input"
+        },
+        {
+          "path": "eval/data/skillopt-method-v3/briefing/sel.jsonl",
+          "use": "scored"
+        },
+        {
+          "path": "eval/data/skillopt-method-v3/briefing/gate.jsonl",
+          "use": "scored"
+        },
+        {
+          "path": "eval/data/skillopt-method-v3/fact-check/train.jsonl",
+          "use": "proposer input"
+        },
+        {
+          "path": "eval/data/skillopt-method-v3/fact-check/sel.jsonl",
+          "use": "scored"
+        },
+        {
+          "path": "eval/data/skillopt-method-v3/fact-check/gate.jsonl",
+          "use": "scored"
+        }
+      ],
+      "models_not_run": [
+        {
+          "model": "particle:particle-1",
+          "reason": "the rollout runs through gbrain's gateway, which has no Particle recipe at the pinned gbrain (GBRA-268, plan decision D); particle-1 joins as a target once that recipe reaches the pin, under a crew paid window"
+        }
+      ],
+      "retrieval": "keyword only: pages imported with noEmbed, embedding_disabled set on the brain, the gateway's embedding model on a provider whose key is not in the process; reranker and query expansion off",
+      "request_settings": [
+        {
+          "host": "api.anthropic.com",
+          "model": "claude-opus-5-5",
+          "sent": {
+            "thinking": null,
+            "max_tokens": 32000,
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "tool_choice": {
+              "type": "auto"
+            },
+            "tools": 11
+          },
+          "requests": 1473
+        },
+        {
+          "host": "api.anthropic.com",
+          "model": "claude-opus-5-5",
+          "sent": {
+            "thinking": null,
+            "max_tokens": 32000,
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "tool_choice": {
+              "type": "auto"
+            },
+            "tools": 13
+          },
+          "requests": 853
+        },
+        {
+          "host": "api.anthropic.com",
+          "model": "claude-opus-5-5",
+          "sent": {
+            "thinking": null,
+            "max_tokens": 32000,
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "tool_choice": null,
+            "tools": 0
+          },
+          "requests": 9
+        },
+        {
+          "host": "api.anthropic.com",
+          "model": "claude-opus-5-5",
+          "sent": {
+            "thinking": null,
+            "max_tokens": 32000,
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "tool_choice": {
+              "type": "auto"
+            },
+            "tools": 12
+          },
+          "requests": 969
+        }
+      ]
+    },
+    "stopped": null,
+    "reprice_trigger": null,
+    "unscored_spend": null,
+    "voided": {
+      "opus": {
+        "arms": 0,
+        "usd": 0
+      },
+      "sol": {
+        "arms": 0,
+        "usd": 0
+      }
+    },
+    "ledger_run": {
+      "run_id": "n15-ceiling-gate-1-2026-11-03T16-27-45-284Z-54bc0fda",
+      "budget_usd": 470,
+      "committed_usd": 133.869675,
+      "stage_committed_usd": 133.869675
+    }
+  },
+  "accounting": {
+    "planned": 3,
+    "attempted": 3,
+    "scored": 3,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "delivered_tokens": null
+}

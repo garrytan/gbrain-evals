@@ -1,0 +1,460 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n15-skillopt-method",
+  "gbrain_version": "0.60.557.0",
+  "gbrain_pin": "github:garrytan/gbrain#62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+  "execution": {
+    "source_tree": {
+      "sha256": "19282d5a02b1d3cd6edcdcb6e96f1f955fa553309554b0313631e56391ec3a64",
+      "scheme": "git-index-blob-v1",
+      "files": 15443,
+      "git_head": "d9649d09aadee0d109bcf1d5896784e04d312ad2",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+      "declared_sha": "62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+      "version": "0.60.557.0",
+      "package_sha256": "d46d3cf4598f5388fb3efcf832575879abeac39b4f79664cd84786dd3bff87d5",
+      "loaded_git_head": null
+    }
+  },
+  "hashes": {
+    "dataset": "skillopt-method-v3",
+    "dataset_manifest_sha256": "5729db40f90d5be7c662f1869ea4a8a346dfae00f65a0ea8d45b0da0300ba615",
+    "skillopt-method-v1_manifest_sha256": "8ff8a0ec97e03e3550de18821d8ebdf08f9dbfd6342f9dc2c5914d33c17e4642",
+    "skillopt-method-v3_manifest_sha256": "5729db40f90d5be7c662f1869ea4a8a346dfae00f65a0ea8d45b0da0300ba615",
+    "criteria_query_sha256": "f4479de11f94303fa45c79a56d09c929f9323241a6a8ac9c5d2cf9803e6b7217",
+    "criteria_briefing_sha256": "456532f2be637f2aaffe1a188accb29f27dfc863106157db9f982e9589eb1c7b",
+    "criteria_fact-check_sha256": "1c335f84aa1f7f886aa82807e3b6400ee9a87d834685d45d01525dc3045880c6",
+    "seeds_gbrain_commit": "311a83bbefb127118acb252fe827cb047126aa4d"
+  },
+  "started_at": "2026-11-03T13:57:34.676Z",
+  "cost": {
+    "usd": 0.474017,
+    "input_tokens": 1257673,
+    "output_tokens": 12881,
+    "basis": "budget ledger n15-ceiling-calibration-2026-11-03T12-54-22-002Z-99f3820d: 64 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "/home/user/.capy/work/gbev30/ledger/ledger.sqlite",
+    "program_cap_usd": 9163,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 10857
+    }
+  },
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 3,
+  "n_scored": 3,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md",
+    "preregistration_commit": "9fc21a229fddaee7d25ea18cd393ea876e830e66",
+    "runner_commit": "d9649d09aadee0d109bcf1d5896784e04d312ad2",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-03T13:57:34.688Z"
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "mode": "ceiling",
+    "dataset": "skillopt-method-v3",
+    "stage": "calibration",
+    "target": "sol",
+    "half": true,
+    "other": null,
+    "resumed": true,
+    "keys_in_process": [
+      "OPENAI_API_KEY"
+    ],
+    "ledger_runner": "n15-ceiling-calibration",
+    "models": {
+      "target": "openai:gpt-6.1-sol",
+      "proposer": null
+    }
+  },
+  "finished_at": "2026-11-03T13:59:26.758Z",
+  "data": {
+    "calibration": {
+      "mode": "live",
+      "stage": "calibration",
+      "target": "sol",
+      "half": true,
+      "dataset": "skillopt-method-v3",
+      "dataset_manifest_sha256": "5729db40f90d5be7c662f1869ea4a8a346dfae00f65a0ea8d45b0da0300ba615",
+      "models": {
+        "target": "openai:gpt-6.1-sol",
+        "proposer": null
+      },
+      "runs": 1,
+      "skills": [
+        {
+          "skill": "query",
+          "tasks": 12,
+          "substance": 1,
+          "full": 1,
+          "form_fail": 0,
+          "in_band": null,
+          "errored_tasks": [],
+          "refusals": {
+            "calls": 16,
+            "read": 16,
+            "refused": {
+              "multi-window-selector": 0,
+              "known-as-of-with-read-view": 0,
+              "hop-chain-with-depth": 0,
+              "other": 0
+            },
+            "recovered": {
+              "multi-window-selector": 0,
+              "known-as-of-with-read-view": 0,
+              "hop-chain-with-depth": 0,
+              "other": 0
+            },
+            "abandoned": {
+              "multi-window-selector": 0,
+              "known-as-of-with-read-view": 0,
+              "hop-chain-with-depth": 0,
+              "other": 0
+            },
+            "by_tool": {}
+          },
+          "stops": {
+            "completed": 12,
+            "turn-limit": 0,
+            "output-length": 0,
+            "other": 0
+          },
+          "cost": {
+            "rollouts": 12,
+            "calls": 28,
+            "usd": 0.16936629999999997,
+            "unpriced_calls": 0,
+            "input_tokens": 230261,
+            "output_tokens": 1513,
+            "cache_read_tokens": 161203,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": 10,
+            "retries": 0,
+            "mean_rollout_usd": 0.014113858333333331,
+            "calls_per_rollout": 2.3333333333333335,
+            "cached_input_share": 0.7000881608261929,
+            "reasoning_tokens_per_rollout": 0.8333333333333334
+          },
+          "mean_call_usd": 0.006048796428571428
+        },
+        {
+          "skill": "briefing",
+          "tasks": 12,
+          "substance": 1,
+          "full": 1,
+          "form_fail": 0,
+          "in_band": null,
+          "errored_tasks": [],
+          "refusals": {
+            "calls": 246,
+            "read": 119,
+            "refused": {
+              "multi-window-selector": 87,
+              "known-as-of-with-read-view": 0,
+              "hop-chain-with-depth": 0,
+              "other": 40
+            },
+            "recovered": {
+              "multi-window-selector": 0,
+              "known-as-of-with-read-view": 0,
+              "hop-chain-with-depth": 0,
+              "other": 0
+            },
+            "abandoned": {
+              "multi-window-selector": 12,
+              "known-as-of-with-read-view": 0,
+              "hop-chain-with-depth": 0,
+              "other": 0
+            },
+            "by_tool": {
+              "get_page": 127
+            }
+          },
+          "stops": {
+            "completed": 12,
+            "turn-limit": 0,
+            "output-length": 0,
+            "other": 0
+          },
+          "cost": {
+            "rollouts": 12,
+            "calls": 119,
+            "usd": 1.3006846,
+            "unpriced_calls": 0,
+            "input_tokens": 3093679,
+            "output_tokens": 32709,
+            "cache_read_tokens": 2744086,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": 1191,
+            "retries": 0,
+            "mean_rollout_usd": 0.10839038333333334,
+            "calls_per_rollout": 9.916666666666666,
+            "cached_input_share": 0.8869976490773607,
+            "reasoning_tokens_per_rollout": 99.25
+          },
+          "mean_call_usd": 0.01093012268907563
+        },
+        {
+          "skill": "fact-check",
+          "tasks": 12,
+          "substance": 0.9166666666666666,
+          "full": 0.9166666666666666,
+          "form_fail": 0.08333333333333333,
+          "in_band": null,
+          "errored_tasks": [],
+          "refusals": {
+            "calls": 212,
+            "read": 34,
+            "refused": {
+              "multi-window-selector": 146,
+              "known-as-of-with-read-view": 0,
+              "hop-chain-with-depth": 0,
+              "other": 32
+            },
+            "recovered": {
+              "multi-window-selector": 0,
+              "known-as-of-with-read-view": 0,
+              "hop-chain-with-depth": 0,
+              "other": 0
+            },
+            "abandoned": {
+              "multi-window-selector": 12,
+              "known-as-of-with-read-view": 0,
+              "hop-chain-with-depth": 0,
+              "other": 0
+            },
+            "by_tool": {
+              "get_page": 178
+            }
+          },
+          "stops": {
+            "completed": 11,
+            "turn-limit": 1,
+            "output-length": 0,
+            "other": 0
+          },
+          "cost": {
+            "rollouts": 12,
+            "calls": 178,
+            "usd": 1.1793083999999998,
+            "unpriced_calls": 0,
+            "input_tokens": 3403811,
+            "output_tokens": 36399,
+            "cache_read_tokens": 3153844,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": 1510,
+            "retries": 0,
+            "mean_rollout_usd": 0.09827569999999998,
+            "calls_per_rollout": 14.833333333333334,
+            "cached_input_share": 0.9265626087934965,
+            "reasoning_tokens_per_rollout": 125.83333333333333
+          },
+          "mean_call_usd": 0.00662532808988764
+        }
+      ],
+      "cost": {
+        "rollouts": 36,
+        "calls": 325,
+        "usd": 2.6493592999999995,
+        "unpriced_calls": 0,
+        "input_tokens": 6727751,
+        "output_tokens": 70621,
+        "cache_read_tokens": 6059133,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": 2711,
+        "retries": 0,
+        "mean_rollout_usd": 0.07359331388888887,
+        "calls_per_rollout": 9.027777777777779,
+        "cached_input_share": 0.9006179033677079,
+        "reasoning_tokens_per_rollout": 75.30555555555556
+      },
+      "mean_call_usd": 0.008151874769230768,
+      "refusals": {
+        "calls": 474,
+        "read": 169,
+        "refused": {
+          "multi-window-selector": 233,
+          "known-as-of-with-read-view": 0,
+          "hop-chain-with-depth": 0,
+          "other": 72
+        },
+        "recovered": {
+          "multi-window-selector": 0,
+          "known-as-of-with-read-view": 0,
+          "hop-chain-with-depth": 0,
+          "other": 0
+        },
+        "abandoned": {
+          "multi-window-selector": 24,
+          "known-as-of-with-read-view": 0,
+          "hop-chain-with-depth": 0,
+          "other": 0
+        },
+        "by_tool": {
+          "get_page": 305
+        }
+      },
+      "stops": {
+        "completed": 35,
+        "turn-limit": 1,
+        "output-length": 0,
+        "other": 0
+      },
+      "repriced": [
+        {
+          "stage": "calibration",
+          "what": "calibration: up to 3 Opus rounds of the seed on the 72 train tasks, and one Sol read of 36",
+          "planning_usd": 46.800000000000004,
+          "repriced_usd": 45.8493593,
+          "cap_usd": 50,
+          "over_cap": false,
+          "rollout_usd": {
+            "opus": {
+              "usd": 0.2,
+              "source": "planning"
+            },
+            "sol": {
+              "usd": 0.07359331388888887,
+              "source": "metered"
+            }
+          },
+          "proposer_call_usd": {
+            "usd": 0.3,
+            "source": "planning"
+          }
+        },
+        {
+          "stage": "gate",
+          "what": "one gate attempt: 456 rollouts and 3 proposer calls on each of six pairs",
+          "planning_usd": 415.8,
+          "repriced_usd": 379.6756534,
+          "cap_usd": 470,
+          "over_cap": false,
+          "rollout_usd": {
+            "opus": {
+              "usd": 0.2,
+              "source": "planning"
+            },
+            "sol": {
+              "usd": 0.07359331388888887,
+              "source": "metered"
+            }
+          },
+          "proposer_call_usd": {
+            "usd": 0.3,
+            "source": "planning"
+          }
+        },
+        {
+          "stage": "stop-read",
+          "what": "stop-path read: 1,728 rollouts per target",
+          "planning_usd": 518.4000000000001,
+          "repriced_usd": 472.7692464,
+          "cap_usd": 650,
+          "over_cap": false,
+          "rollout_usd": {
+            "opus": {
+              "usd": 0.2,
+              "source": "planning"
+            },
+            "sol": {
+              "usd": 0.07359331388888887,
+              "source": "metered"
+            }
+          },
+          "proposer_call_usd": {
+            "usd": 0.3,
+            "source": "planning"
+          }
+        },
+        {
+          "stage": "e1-check",
+          "what": "B0: gbrain's E1 one-shot on up to six headroom pairs, 224 rollouts and one proposer call each",
+          "planning_usd": 203.40000000000003,
+          "repriced_usd": 185.65470693333333,
+          "cap_usd": 300,
+          "over_cap": false,
+          "rollout_usd": {
+            "opus": {
+              "usd": 0.2,
+              "source": "planning"
+            },
+            "sol": {
+              "usd": 0.07359331388888887,
+              "source": "metered"
+            }
+          },
+          "proposer_call_usd": {
+            "usd": 0.3,
+            "source": "planning"
+          }
+        }
+      ],
+      "stopped": null,
+      "files_read": [
+        "eval/data/skillopt-method-v3/query/train.jsonl",
+        "eval/data/skillopt-method-v3/briefing/train.jsonl",
+        "eval/data/skillopt-method-v3/fact-check/train.jsonl"
+      ],
+      "models_not_run": [
+        {
+          "model": "particle:particle-1",
+          "reason": "the rollout runs through gbrain's gateway, which has no Particle recipe at the pinned gbrain (GBRA-268, plan decision D); particle-1 joins as a target once that recipe reaches the pin, under a crew paid window"
+        }
+      ],
+      "retrieval": "keyword only: pages imported with noEmbed, embedding_disabled set on the brain, the gateway's embedding model on a provider whose key is not in the process; reranker and query expansion off",
+      "request_settings": [
+        {
+          "host": "api.openai.com",
+          "model": "gpt-6.1-sol",
+          "sent": {
+            "reasoning": null,
+            "max_output_tokens": 4096,
+            "temperature": null,
+            "top_p": null,
+            "tool_choice": "auto",
+            "parallel_tool_calls": null,
+            "store": null,
+            "service_tier": null,
+            "truncation": null,
+            "text": null,
+            "tools": 11,
+            "instructions_role": "developer"
+          },
+          "applied_reasoning_effort": "medium",
+          "requests": 64
+        }
+      ]
+    },
+    "stopped": null,
+    "ledger_run": {
+      "run_id": "n15-ceiling-calibration-2026-11-03T12-54-22-002Z-99f3820d",
+      "budget_usd": 22.04,
+      "committed_usd": 15.446534,
+      "stage_committed_usd": 43.396682
+    }
+  },
+  "accounting": {
+    "planned": 3,
+    "attempted": 3,
+    "scored": 3,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "delivered_tokens": null
+}
