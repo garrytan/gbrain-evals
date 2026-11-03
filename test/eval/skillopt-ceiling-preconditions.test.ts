@@ -22,7 +22,7 @@
  *   charged at its reservation and never retried.
  */
 // First import: the budget ledger replaces globalThis.fetch before gbrain or an SDK can capture it.
-import { BudgetExceededError, BudgetRun, initLedger, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
+import { BudgetExceededError, BudgetRun, initLedger, installPaidRequestGuard, ledgerTestHooks, readLedger } from '../../eval/runner/budget-ledger.ts';
 import { describe, expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -106,7 +106,7 @@ describe('transient rollout failures', () => {
     expect(refusalKind(apiError(402, proxyBody('budget', 'reserving $0.0500 would take this lease over its cap')))).toBe('budget');
     expect(refusalKind(apiError(503, proxyBody('budget', "ANTHROPIC_API_KEY is not set in the proxy's environment")))).toBe('budget');
     expect(refusalKind(new Error(`${SKILLOPT_HOOK_BUDGET_EXHAUSTED}: the rollout server's cap is spent`))).toBe('budget');
-    expect(refusalKind(apiError(403, proxyBody('budget', 'anthropic:claude-opus-5-5 is not on this cell\'s model allowlist')))).toBe('budget');
+    expect(refusalKind(apiError(403, proxyBody('budget', 'anthropic:claude-opus-5-5 is not on this cell\'s model allowlist')))).toBe('invalid-cell');
     expect(refusalKind(apiError(403, TRIPWIRE))).toBe('invalid-cell');
     expect(refusalKind(new Error('[chat] HTTP 402', { cause: apiError(402, proxyBody('budget', 'over the lease cap')) }))).toBe('budget');
     expect(refusalKind(new Error('wrapped', { cause: new BudgetExceededError('cap') }))).toBe('budget');
@@ -117,6 +117,26 @@ describe('transient rollout failures', () => {
     expect(refusalKind(apiError(402, { error: { message: 'insufficient credits' } }))).toBeNull();
     expect(refusalKind(apiError(503, { type: 'error', error: { type: 'overloaded_error', message: 'Service unavailable' } }))).toBeNull();
     expect(refusalKind(status(429))).toBeNull();
+  });
+
+  test("the ledger's lock timeout is not a refusal: nothing was reserved or sent, so the task errors and a resume reruns it", () => {
+    const dir = mkdtempSync(join(tmpdir(), 'n15-lock-'));
+    try {
+      const ledgerPath = join(dir, 'ledger.sqlite');
+      initLedger({ ledgerPath, programCapUsd: 100 });
+      const run = BudgetRun.open({ runner: 'n15-lock-test', budgetUsd: 10, ledgerPath });
+      ledgerTestHooks.beforeCommit = () => { throw Object.assign(new Error('database is locked'), { code: 'SQLITE_BUSY' }); };
+      let error: unknown;
+      try { run.reserve(0.05, 'rollout'); } catch (e) { error = e; } finally { delete ledgerTestHooks.beforeCommit; }
+      expect(error).toBeInstanceOf(BudgetExceededError);
+      expect(String(error)).toContain('stayed locked by another process');
+      expect(refusalKind(error)).toBeNull();
+      expect(refusalKind(new Error('[chat] failed', { cause: error }))).toBeNull();
+      expect(() => run.reserve(0.05, 'rollout')).not.toThrow();
+      run.close();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   test('a budget refusal is terminal: no later rollout reaches a provider, nothing retries, and the arm reads incomplete', async () => {

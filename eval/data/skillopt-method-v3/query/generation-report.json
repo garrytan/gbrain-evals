@@ -1,0 +1,168 @@
+{
+  "skill": "query",
+  "seed": 30011,
+  "knobs": {
+    "seed": 30001,
+    "chain_depth": {
+      "min": 3,
+      "max": 5
+    },
+    "lookalike_pairs": {
+      "companies": 15,
+      "people": 20
+    },
+    "distractor_count": 2
+  },
+  "candidates": {
+    "as-of": 791,
+    "note-contradicts": 57,
+    "two-hop": 133,
+    "three-hop": 63,
+    "role-on-date": 79,
+    "lookalike": 60,
+    "absent": 115
+  },
+  "dropped_by_oracle": 0,
+  "dropped_by_solvability": 0,
+  "dropped_by_degenerate": 0,
+  "dropped": [],
+  "capacity": [
+    {
+      "family": "as-of",
+      "held_out": false,
+      "candidates": 791,
+      "confirmed": 791,
+      "quota": {
+        "train": 7,
+        "sel": 7,
+        "gate": 5,
+        "test": 14
+      },
+      "placed": {
+        "train": 7,
+        "sel": 7,
+        "gate": 5,
+        "test": 14
+      },
+      "short": 0
+    },
+    {
+      "family": "two-hop",
+      "held_out": false,
+      "candidates": 133,
+      "confirmed": 133,
+      "quota": {
+        "train": 6,
+        "sel": 6,
+        "gate": 5,
+        "test": 12
+      },
+      "placed": {
+        "train": 6,
+        "sel": 6,
+        "gate": 5,
+        "test": 12
+      },
+      "short": 0
+    },
+    {
+      "family": "lookalike",
+      "held_out": false,
+      "candidates": 60,
+      "confirmed": 60,
+      "quota": {
+        "train": 6,
+        "sel": 6,
+        "gate": 4,
+        "test": 12
+      },
+      "placed": {
+        "train": 6,
+        "sel": 6,
+        "gate": 4,
+        "test": 12
+      },
+      "short": 0
+    },
+    {
+      "family": "absent",
+      "held_out": false,
+      "candidates": 115,
+      "confirmed": 115,
+      "quota": {
+        "train": 5,
+        "sel": 5,
+        "gate": 4,
+        "test": 10
+      },
+      "placed": {
+        "train": 5,
+        "sel": 5,
+        "gate": 4,
+        "test": 10
+      },
+      "short": 0
+    },
+    {
+      "family": "three-hop",
+      "held_out": true,
+      "candidates": 63,
+      "confirmed": 63,
+      "quota": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "placed": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "short": 0
+    },
+    {
+      "family": "role-on-date",
+      "held_out": true,
+      "candidates": 79,
+      "confirmed": 79,
+      "quota": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "placed": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "short": 0
+    },
+    {
+      "family": "note-contradicts",
+      "held_out": true,
+      "candidates": 57,
+      "confirmed": 57,
+      "quota": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "placed": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "short": 0
+    }
+  ],
+  "groups": 135,
+  "largest_group": 3,
+  "unused_candidates": 1118,
+  "assembly_attempt": 0
+}

@@ -46,6 +46,9 @@ export const ONE_SHOT_SYSTEM = [
   'Reply with the full SKILL.md and nothing else.',
 ].join(' ');
 
+/** ONE_SHOT_SYSTEM for an input that shows each training task's pass or fail but not its failed checks (`failedChecks: false`, gbrain's shipped feedback). */
+export const ONE_SHOT_SYSTEM_PASS_FAIL = ONE_SHOT_SYSTEM.replace('its final answer, and which checks failed.', 'its final answer, and whether it passed.');
+
 /** A text a forbidden marker was replaced with. */
 export const WITHHELD = '[withheld]';
 
@@ -76,7 +79,8 @@ export function pagesOf(output: unknown): Array<{ slug: string; title: string }>
   return [...out].map(([slug, title]) => ({ slug, title }));
 }
 
-const renderFailed = (c: RuleCheck) => `${(c as Partial<MethodCheck>).kind ?? 'check'} (${renderFailedCheck(c)})`;
+/** A failed check as the proposer reads it: its kind and description, never its argument. */
+export const renderFailed = (c: RuleCheck) => `${(c as Partial<MethodCheck>).kind ?? 'check'} (${renderFailedCheck(c)})`;
 
 /** Step 1: the seed once on each train task, scored by the counted scorer, with each trajectory kept for the proposer. */
 export async function seedOnTrain(o: { engine: PGLiteEngine; seedText: string; train: readonly MethodTask[]; model: string; meter?: MeterTotals; onRetry?: ArmOptions['onRetry'] }): Promise<{ arm: ArmScore; trajectories: TrainTrajectory[] }> {
@@ -102,7 +106,7 @@ const shownValue = (v: GoldValue) => v.kind === 'number' ? `${v.value}${v.unit =
  * selection value that is also a train value, or that a train prompt states,
  * is train's to show.
  */
-export function forbiddenMarkers(withheld: readonly MethodTask[], exposed: readonly MethodTask[]): Marker[] {
+export function forbiddenMarkers(withheld: ReadonlyArray<Pick<MethodTask, 'task' | 'gold'>>, exposed: ReadonlyArray<Pick<MethodTask, 'task' | 'gold'>>): Marker[] {
   const shown = exposed.flatMap(t => [t.task, ...t.gold.slugs, ...t.gold.values.map(shownValue), ...(t.gold.subject ? [t.gold.subject] : [])]).join('\n');
   const markers = new Map<string, Marker>();
   for (const t of withheld) {
@@ -114,7 +118,7 @@ export function forbiddenMarkers(withheld: readonly MethodTask[], exposed: reado
 }
 
 /** The pages the train split itself shows: its gold pages and any page a train prompt names. */
-export const trainPages = (train: readonly MethodTask[]): Set<string> => new Set(train.flatMap(t => [...t.gold.slugs, ...citedSlugs(t.task)]));
+export const trainPages = (train: ReadonlyArray<Pick<MethodTask, 'task' | 'gold'>>): Set<string> => new Set(train.flatMap(t => [...t.gold.slugs, ...citedSlugs(t.task)]));
 
 /** Slug-shaped tokens (`people/adam-lee-19`, `contracts/x.md`). */
 const SLUG_TOKEN = /(?<![\w/.-])[A-Za-z0-9][\w.-]*(?:\/[\w.-]*[\w-])+(?![\w/-])/g;
@@ -122,6 +126,19 @@ const slugKey = (token: string) => token.toLowerCase().replace(/\.md$/, '');
 
 /** The markers that occur in a text. */
 export const markersIn = (text: string, markers: readonly Marker[]) => markers.filter(m => new RegExp(m.pattern, 'm').test(text));
+
+export interface ProposerPages { visible: ReadonlySet<string>; corpus: ReadonlySet<string> }
+
+/**
+ * The check `proposerInput` runs on the texts it passes verbatim: throws if the
+ * seed or the criteria text names a corpus page the train split does not
+ * show. It reads only static inputs, so a stage runs it before the paid
+ * seed-on-train pass.
+ */
+export function assertNoHiddenPages(seedText: string, criteria: string, pages: ProposerPages): void {
+  const named = [...`${seedText}\n${criteria}`.matchAll(SLUG_TOKEN)].filter(m => pages.corpus.has(slugKey(m[0])) && !pages.visible.has(slugKey(m[0]))).length;
+  if (named) throw new Error(`the seed or criteria text names ${named} corpus page(s) the train split does not show`);
+}
 
 /**
  * Step 2: the proposer input. A returned page is named only when it is in
@@ -131,13 +148,14 @@ export const markersIn = (text: string, markers: readonly Marker[]) => markers.f
  * criteria text pass verbatim (GST-903: the fact-check seed's "<5%
  * unverifiable" is the seed's own rule, not gold). Throws if a marker or a
  * hidden slug survives in the block, or if the seed or criteria name a hidden
- * corpus page.
+ * corpus page (`assertNoHiddenPages`). `failedChecks: false` leaves out each
+ * task's failed checks, so the proposer sees pass or fail only (the shipped
+ * feedback of the ceiling attempt's harness one-shot).
  */
-export function proposerInput(o: { seedText: string; criteria: string; trajectories: readonly TrainTrajectory[]; markers: readonly Marker[]; pages: { visible: ReadonlySet<string>; corpus: ReadonlySet<string> } }): { text: string; withheld: number } {
+export function proposerInput(o: { seedText: string; criteria: string; trajectories: readonly TrainTrajectory[]; markers: readonly Marker[]; pages: ProposerPages; failedChecks?: boolean }): { text: string; withheld: number } {
   const passed = o.trajectories.filter(t => t.correct).length;
   const hidden = (slug: string) => o.pages.corpus.has(slugKey(slug)) && !o.pages.visible.has(slugKey(slug));
-  const named = [...`${o.seedText}\n${o.criteria}`.matchAll(SLUG_TOKEN)].filter(m => hidden(m[0])).length;
-  if (named) throw new Error(`the seed or criteria text names ${named} corpus page(s) the train split does not show`);
+  assertNoHiddenPages(o.seedText, o.criteria, o.pages);
   const returned = (pages: TrainToolCall['pages']) => {
     const named = pages.filter(p => !hidden(p.slug)).map(p => (p.title ? `${p.slug} (${p.title})` : p.slug));
     const others = pages.length - named.length;
@@ -152,7 +170,7 @@ export function proposerInput(o: { seedText: string; criteria: string; trajector
       'Task:', t.task,
       'Tool calls:', calls,
       'Final answer:', t.answer ?? '(none: the rollout errored)',
-      `Failed checks: ${t.failed.length ? t.failed.join('; ') : 'none'}`,
+      ...(o.failedChecks === false ? [] : [`Failed checks: ${t.failed.length ? t.failed.join('; ') : 'none'}`]),
     ].join('\n');
   });
   let block = tasks.join('\n\n');
@@ -171,24 +189,34 @@ export function proposerInput(o: { seedText: string; criteria: string; trajector
   return { text, withheld };
 }
 
-export interface ProposedRewrite { text: string | null; cost_usd: number | null; stop_reason: string; error?: string }
+export interface ProposedRewrite {
+  text: string | null;
+  cost_usd: number | null;
+  stop_reason: string;
+  /** Resends after an unbilled failure, before the call that answered. */
+  retries: number;
+  error?: string;
+}
 
 const unfence = (s: string) => /^`{3}[a-zA-Z]*\n([\s\S]*?)\n`{3}\s*$/.exec(s.trim())?.[1] ?? s;
 
 /**
  * Step 3: one proposer call for one full SKILL.md, with the AI SDK's retries
  * off (`withoutSdkRetries`); the harness resends it only after an unbilled
- * failure (`unbilledFailure`), at most `ROLLOUT_RETRIES` times. A refusal, an
- * empty or unchanged reply or a reply cut at the cap yields no text.
+ * failure (`unbilledFailure`), at most `ROLLOUT_RETRIES` times, and counts
+ * each resend in `retries`. A refusal, an empty or unchanged reply or a reply
+ * cut at the cap yields no text.
  */
-export async function proposeRewrite(input: string, seedText: string, o: { retryDelaysMs?: readonly number[]; onRetry?: (attempt: number, error: unknown) => void } = {}): Promise<ProposedRewrite> {
+export async function proposeRewrite(input: string, seedText: string, o: { system?: string; retryDelaysMs?: readonly number[]; onRetry?: (attempt: number, error: unknown) => void } = {}): Promise<ProposedRewrite> {
   const delays = o.retryDelaysMs ?? ROLLOUT_RETRY_DELAYS_MS;
+  let retries = 0;
   const send = async (): Promise<Awaited<ReturnType<typeof chat>>> => {
     for (let attempt = 0; ; attempt++) {
       try {
-        return await withoutSdkRetries(() => chat({ model: PROPOSER_MODEL, system: ONE_SHOT_SYSTEM, messages: [{ role: 'user', content: input }], maxTokens: ONE_SHOT_MAX_TOKENS, allowFallback: false }));
+        return await withoutSdkRetries(() => chat({ model: PROPOSER_MODEL, system: o.system ?? ONE_SHOT_SYSTEM, messages: [{ role: 'user', content: input }], maxTokens: ONE_SHOT_MAX_TOKENS, allowFallback: false }));
       } catch (error) {
         if (attempt >= ROLLOUT_RETRIES || !unbilledFailure(error)) throw error;
+        retries++;
         o.onRetry?.(attempt + 1, error);
       }
       const delay = delays[Math.min(attempt, delays.length - 1)] ?? 0;
@@ -198,8 +226,8 @@ export async function proposeRewrite(input: string, seedText: string, o: { retry
   const r = await send();
   const cost_usd = callCostUsd({ model: r.model || PROPOSER_MODEL, ...r.usage });
   const text = unfence(r.text).trim();
-  if (r.stopReason !== 'end') return { text: null, cost_usd, stop_reason: r.stopReason, error: `the proposer stopped with ${r.stopReason}` };
-  if (!text) return { text: null, cost_usd, stop_reason: r.stopReason, error: 'the proposer returned no text' };
-  if (text === seedText.trim()) return { text: null, cost_usd, stop_reason: r.stopReason, error: 'the proposer returned the seed unchanged' };
-  return { text: text + '\n', cost_usd, stop_reason: r.stopReason };
+  if (r.stopReason !== 'end') return { text: null, cost_usd, stop_reason: r.stopReason, retries, error: `the proposer stopped with ${r.stopReason}` };
+  if (!text) return { text: null, cost_usd, stop_reason: r.stopReason, retries, error: 'the proposer returned no text' };
+  if (text === seedText.trim()) return { text: null, cost_usd, stop_reason: r.stopReason, retries, error: 'the proposer returned the seed unchanged' };
+  return { text: text + '\n', cost_usd, stop_reason: r.stopReason, retries };
 }

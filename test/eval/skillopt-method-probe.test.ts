@@ -17,7 +17,7 @@ import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import { readSealedTestTasks, readSeed, readTasks } from '../../eval/runner/skillopt-method/dataset.ts';
 import { forbiddenMarkers, markersIn, ONE_SHOT_SYSTEM, pagesOf, PROPOSER_MODEL, proposerInput, trainPages, WITHHELD, type TrainTrajectory } from '../../eval/runner/skillopt-method/one-shot.ts';
 import {
-  countedSkills, FAKE_REWRITE_MARKER, fakeReply, fakeTransport, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, frontierGate, lastUserText, NO_SKILL_TEXT, openBrain,
+  countedSkills, FAKE_REWRITE_MARKER, fakeReply, fakeRewrite, fakeTransport, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, frontierGate, lastUserText, NO_SKILL_TEXT, openBrain,
   PINNED_SEARCH_CONFIG, PROBE_EMBEDDING, PROBE_GATE, probeGate, REPRICE_TRIGGER_USD, runFrontierProbe, runProbe, runSmoke, servedTools, sha8, toolCoverage, withProbeGateway,
   type ChatTransport, type FrontierResult, type FrontierRow, type FrontierTarget, type SkillProbe,
 } from '../../eval/runner/skillopt-method/headroom.ts';
@@ -194,7 +194,7 @@ function recordingTransport(seen: Seen, o: { toolTasks?: ReadonlySet<string>; pl
       seen.models.push(opts.model ?? '');
       if (opts.system === ONE_SHOT_SYSTEM) {
         seen.proposerInputs.push(lastUserText(opts));
-        return o.rewrite ? fakeReply(opts, o.rewrite(proposals++)) : base(opts);
+        return o.rewrite ? fakeRewrite(opts, o.rewrite(proposals++)) : base(opts);
       }
       seen.targetSystems.push(opts.system ?? '');
       const first = opts.messages.find(m => m.role === 'user');

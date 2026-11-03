@@ -27,9 +27,11 @@
  * concurrency (4), and arms run one at a time.
  *
  * A refusal (`refusalKind`: a budget refusal from the ledger, gbrain's hook
- * cap or a metering proxy, or the proxy's tripwire) is terminal: no later
- * rollout of the arm calls anything, and the arm reads incomplete
- * (`budget_exhausted`) or invalid (`cell_invalid`), never a score.
+ * cap or a metering proxy, or the proxy's tripwire or model allowlist) is
+ * terminal: no later rollout of the arm calls anything, and the arm reads
+ * incomplete (`budget_exhausted`) or invalid (`cell_invalid`), never a
+ * score. The ledger's lock timeout is not a refusal: nothing was sent, and
+ * the task errors like any other infrastructure failure.
  */
 import { toolLoop } from 'gbrain/ai/gateway';
 import { withAIInvocationGuard } from 'gbrain/ai/invocation-guard';
@@ -37,7 +39,7 @@ import { runRollout, scoreSkillPerTask, SKILLOPT_HOOK_BUDGET_EXHAUSTED, type Ben
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import type { MethodTask } from '../../generators/skillopt-method/common.ts';
 import { BudgetExceededError, chatPrice } from '../budget-ledger.ts';
-import { evaluateJudge, type CheckResult, type ScoreFn, type Trajectory } from './score.ts';
+import { evaluateJudge, type CheckResult, type Judge, type ScoreFn, type Trajectory } from './score.ts';
 
 /** One model call's usage, as gbrain's gateway reports it. */
 export interface CallUsage {
@@ -121,7 +123,7 @@ export interface ArmScore {
   error?: string;
   /** The arm stopped at a budget refusal; read incomplete, never a score. */
   budget_exhausted?: true;
-  /** A request tripped the metering proxy's tripwire; the cell is invalid. */
+  /** A request tripped the metering proxy's tripwire or left its model allowlist; the cell is invalid. */
   cell_invalid?: true;
 }
 
@@ -173,20 +175,24 @@ function proxyError(o: ChainLink): { kind?: unknown; message?: unknown } | null 
   }
 }
 
+/** The ledger's lock timeout: nothing was reserved or sent, so it is an infrastructure error, not a budget refusal. */
+const LEDGER_LOCKED = 'stayed locked';
+
 /**
  * Why a failure must stop the arm, walking its cause chain: `budget` for the
- * ledger's `BudgetExceededError`, gbrain's `SKILLOPT_HOOK_BUDGET_EXHAUSTED`
- * tag, or a metering proxy refusal whose body is `error.kind: 'budget'` (402
- * over the cap, 503 without a key, 403 off the model allowlist);
- * `invalid-cell` for the proxy's 403 tripwire. Null for anything else.
+ * ledger's `BudgetExceededError` (except its lock timeout, an infrastructure
+ * error), gbrain's `SKILLOPT_HOOK_BUDGET_EXHAUSTED` tag, or a metering proxy
+ * refusal whose body is `error.kind: 'budget'` (402 over the cap, 503 without
+ * a key); `invalid-cell` for the proxy's 403 tripwire and its 403 for a model
+ * off the cell's allowlist. Null for anything else.
  */
 export function refusalKind(error: unknown): 'budget' | 'invalid-cell' | null {
   for (const o of causeChain(error)) {
     const status = httpStatus(o);
     const body = proxyError(o);
-    if (o instanceof BudgetExceededError || (typeof o.message === 'string' && o.message.includes(SKILLOPT_HOOK_BUDGET_EXHAUSTED))) return 'budget';
-    if ((status === 402 || status === 403 || status === 503) && body?.kind === 'budget') return 'budget';
-    if (status === 403 && typeof body?.message === 'string' && body.message.includes('tripwire:')) return 'invalid-cell';
+    if ((o instanceof BudgetExceededError && !o.message.includes(LEDGER_LOCKED)) || (typeof o.message === 'string' && o.message.includes(SKILLOPT_HOOK_BUDGET_EXHAUSTED))) return 'budget';
+    if (status === 403 && typeof body?.message === 'string' && (body.message.includes('tripwire:') || body.message.includes('model allowlist'))) return 'invalid-cell';
+    if ((status === 402 || status === 503) && body?.kind === 'budget') return 'budget';
   }
   return null;
 }
@@ -206,22 +212,31 @@ export function unbilledFailure(error: unknown): boolean {
   });
 }
 
+/** What an arm reads of a task: its id, the prompt it sends and its judge. */
+export type ArmTask = Pick<MethodTask, 'task_id' | 'task' | 'judge'>;
+
 export interface ArmOptions {
   engine: PGLiteEngine;
   skillText: string;
-  tasks: readonly MethodTask[];
+  tasks: readonly ArmTask[];
   model: string;
   runs: number;
   meter?: MeterTotals;
-  /** Called with every scored rollout. */
-  onRollout?: (trajectory: Trajectory, result: CheckResult) => void;
+  /** How a rollout's answer is judged (default `evaluateJudge`: every check); v3 passes substance pass. */
+  evaluate?: (text: string, judge: Judge) => CheckResult;
+  /** Called with every scored rollout and the model calls it made. */
+  onRollout?: (trajectory: Trajectory, result: CheckResult, calls: readonly CallUsage[]) => void;
   /** Delays before each retry (tests pass zeros). */
   retryDelaysMs?: readonly number[];
   /** Called before each retry. */
   onRetry?: (taskId: string, attempt: number, error: unknown) => void;
+  /** Called with each task whose rollouts errored, and its first error, when the arm fails on them. */
+  onTaskError?: (taskId: string, error: string) => void;
+  /** Called with the model calls a failed rollout attempt made before it failed (only when it made any), so their spend is not lost with the rollout. */
+  onFailedRollout?: (taskId: string, calls: readonly CallUsage[]) => void;
 }
 
-const benchTask = (t: MethodTask): BenchmarkTask => ({ task_id: t.task_id, task: t.task, judge: t.judge });
+const benchTask = (t: ArmTask): BenchmarkTask => ({ task_id: t.task_id, task: t.task, judge: t.judge });
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -239,10 +254,11 @@ export const logRetries = (log: (line: string) => void) => (id: string, attempt:
  */
 export async function scoreArm(o: ArmOptions): Promise<ArmScore> {
   const per_task: Record<string, number[]> = {};
+  const callsOf = new WeakMap<Trajectory, CallUsage[]>();
   const scoreFn: ScoreFn = async (trajectory, judge) => {
-    const result = evaluateJudge(trajectory.final_text, judge);
+    const result = (o.evaluate ?? evaluateJudge)(trajectory.final_text, judge);
     (per_task[trajectory.task_id] ??= []).push(result.correct ? 1 : 0);
-    o.onRollout?.(trajectory, result);
+    o.onRollout?.(trajectory, result, callsOf.get(trajectory) ?? []);
     return { trajectory, score: result.correct ? 1 : 0 };
   };
   const meter = o.meter;
@@ -261,10 +277,13 @@ export async function scoreArm(o: ArmOptions): Promise<ArmScore> {
       });
       let retry = false;
       try {
-        return await withoutSdkRetries(() => runRollout({ ...opts, toolLoopFn: metered }));
+        const trajectory = await withoutSdkRetries(() => runRollout({ ...opts, toolLoopFn: metered }));
+        callsOf.set(trajectory, calls);
+        return trajectory;
       } catch (error) {
         const kind = refusalKind(error);
         if (kind) refusal ??= { kind, error };
+        if (calls.length) o.onFailedRollout?.(opts.task.task_id, calls);
         retry = attempt < ROLLOUT_RETRIES && calls.length === 0 && unbilledFailure(error);
         if (!retry) throw error;
         o.onRetry?.(opts.task.task_id, attempt + 1, error);
@@ -285,7 +304,10 @@ export async function scoreArm(o: ArmOptions): Promise<ArmScore> {
     });
     if (refusal) return refused(refusal);
     const errored = perTask.filter(t => t.error !== undefined);
-    if (errored.length) return { score: null, per_task, error: `${errored.length} of ${perTask.length} tasks errored (${errored.map(t => t.task_id).join(', ')}); first error: ${errored[0]!.error}` };
+    if (errored.length) {
+      for (const t of errored) o.onTaskError?.(t.task_id, String(t.error));
+      return { score: null, per_task, error: `${errored.length} of ${perTask.length} tasks errored (${errored.map(t => t.task_id).join(', ')}); first error: ${errored[0]!.error}` };
+    }
     return { score, per_task, task_medians: Object.fromEntries(perTask.map(t => [t.task_id, t.median])) };
   } catch (e) {
     const kind = refusalKind(e);
