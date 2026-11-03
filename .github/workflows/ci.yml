@@ -25,11 +25,16 @@ jobs:
   # in the Actions cache: a push to main refreshes it for the new commit, and a
   # pull request builds one only when neither the PR nor main has one yet. Every
   # other job restores it before actions/checkout, which then fetches only what
-  # is new and checks out the same commit with the same depth as before, so each
-  # job checks exactly what it did. The save follows a checkout with
-  # persist-credentials: false and refuses a stored credential. Every other job
-  # runs even when this one fails, and then checks out from GitHub as before, so
-  # a broken cache never turns a required check into a skipped one.
+  # is new and checks out the same commit at the same depth as before. A depth-1
+  # job's .git now also holds older commits' objects, so tests that look for a
+  # pinned commit (five cases in test/eval/q1-reuse-check.test.ts) run instead of
+  # skipping; without a cache they skip, as before. The save follows a checkout
+  # with persist-credentials: false and refuses a stored credential. Every job
+  # that runs a check runs even when this one fails, checking out from GitHub as
+  # before, so a broken cache never turns a check into a skipped one. The run
+  # still fails on git-cache until a rerun rebuilds the cache, and tested-tree,
+  # which runs no tests, keeps its default condition, which reads every upstream
+  # job, so it is skipped and that run carries nothing.
   git-cache:
     runs-on: ubuntu-latest
     timeout-minutes: 20
