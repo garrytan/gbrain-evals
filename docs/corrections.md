@@ -102,7 +102,44 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   [Cat 40 Hard confirmation](benchmarks/2026-10-10-model-ladder-hard-confirmation.md).
   [Notice](benchmarks/2026-10-02-model-ladder.md#retired-2026-10-12).
 
+## Q1 head-to-head scoreboard
+
+- **The file agent's BEAM-10M and BEAM-1M sealed cells left out its context-overflow stops** (2026-11-03). The
+  preregistered outcome rule (`eval/runner/memory-qa/outcomes.ts`) counts an agent's own `turn_cap` and
+  `context_overflow` stops as product failures, scored 0 and kept in the denominator, and the ruling of 2026-11-03 via
+  GBRA-108 is that this rule wins. The first published render (results commit `f15e7302`) counted them as harness
+  failures instead, because `eval/runner/scoreboard.ts` kept its own, shorter list of product failures, so every
+  file-agent question with a stop left that row. All 7 stops are `claude-opus-5-5` answers that the file agent
+  classified `context_overflow` from the provider's error text; none hit the turn cap. No stop's HTTP status was
+  recorded: the answer records, meters and ledger keep neither the status nor the error text, and the proxy logs went
+  with the runner VMs. The custodian, reading the sealed receipt, reports that each stop has the same shape: a first
+  turn of about 1,130 to 1,160 input tokens that succeeded and a second request, carrying the first grep result, that
+  failed, which fits a context-length refusal after an uncapped grep. The custodian re-rendered the receipt under the
+  rule with `scoreboard.ts` at `a1c346e8` (results
+  commit `bf902d9f`), and README's block and the scoreboard tables now show it. On BEAM-10M (S1) the file agent's row
+  goes from 67.96% (193/199) to 67.25% (199/199), printed 68.0% to 67.2%, and its Opus reader from 73.53% to 71.31%; on
+  BEAM-1M sealed (S2b) from 71.13% (239/240) to 71.11% (240/240) and its Opus reader from 76.51% to 76.19%. Its S1
+  sensitivity views move from 68.6% (191/197) to 67.8% (197/197) without the questions of shipped-defaults' 10
+  `harness_invalid` answers and from 69.6% (154/159) to 68.9% (159/159) on temporal-graph's 8 conversations. README's
+  loss bullet, the file agent against gbrain's whole-system row on the questions both scored, moves from 68.3% against
+  59.0% on 192 questions to 67.6% against 58.9% on 198, with a detectable difference of about 12.4 points (was 12.9); the
+  two still cannot be told apart. No other system's row changes. gbrain is Garry Tan's own project.
+  [Report](benchmarks/2026-10-06-scoreboard-report.md), [tables](benchmarks/2026-10-06-scoreboard/scoreboard.md).
+
 ## Changelog
+
+### 2026-11-03: The Q1 file agent's entry after the custody re-render
+
+The Q1 entry now says README's block and the scoreboard tables show the re-render (`bf902d9f`), with the printed
+figures, the file agent's two S1 sensitivity views and the loss bullet's new comparison (67.6% against 58.9% on 198
+questions). It also says no stop's HTTP status was recorded, so "the provider refused at its context limit" became a
+classification from the error text with the stops' shape as the evidence.
+
+### 2026-11-03: The Q1 file agent's context-overflow stops
+
+A new Q1 head-to-head scoreboard section lists the file agent's BEAM-10M and BEAM-1M sealed cells, which counted its 7
+`context_overflow` stops as harness failures instead of product failures scored 0, with the custodian's rescore and
+what the next custody render changes.
 
 ### 2026-11-02: The GPT-6.1 Sol entry carries the gbrain and OpenAI lines
 
