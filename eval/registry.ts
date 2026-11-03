@@ -560,13 +560,13 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Compares a synthesized think answer with raw search results under a judge. The search arm is a strawman and n=5; not a quality claim.',
   },
   {
-    id: 'skillopt', legacy_alias: '30-33', name: 'SkillOpt improvement, ablation, reward hacking, transfer (deprecated with gbrain\'s iterative SkillOpt loop)',
+    id: 'skillopt', legacy_alias: '30-33', name: 'SkillOpt improvement, ablation, reward hacking, transfer (deprecated: gbrain\'s iterative SkillOpt loop is to be removed)',
     family: 'optimization', tier: 'P', script: 'eval/runner/run-skillopt-cats.sh',
-    run: { kind: 'listed', reason: 'deprecated: gbrain deprecated the iterative SkillOpt loop these categories run (Garry Tan, 2026-11-03) and removes it on or after 2026-12-03, and this entry is deleted once that removal reaches the pin; multi-hour paid optimizer runs, dispatched by their own script', command: 'bash eval/runner/run-skillopt-cats.sh' },
+    run: { kind: 'listed', reason: 'deprecated: Garry Tan decided on 2026-11-03 to deprecate gbrain\'s iterative SkillOpt loop, which these categories run, and remove it on or after 2026-12-03 (gbrain#8525 adds gbrain\'s notice), and this entry is deleted once that removal reaches the pin; multi-hour paid optimizer runs, dispatched by their own script', command: 'bash eval/runner/run-skillopt-cats.sh' },
     cost_estimate: UNMEASURED, receipt_path: 'eval/reports/cat30-skillopt-improvement/receipt.json (one per category 30-33)',
     headline: { metric: 'held-out reward lift, ablation deltas, gameable-judge gap, cross-model transfer', denominator: 'per-category seeds' },
     gate: 'report-only', evidence_maturity: 'regression-only',
-    contract: 'Optimizes skills and scores them on held-out tasks. The held-out reward can be satisfied by fabricated citations, so results are not quality claims. Deprecated on 2026-11-03: gbrain deprecated its iterative SkillOpt loop, which Cats 30, 31 and 33 and Cat 32\'s part B run (Cat 32\'s part A, the judge\'s cheat check, goes with its category), and removes it on or after 2026-12-03 (gbrain\'s docs/guides/skillopt.md). This entry and its runners are deleted after that removal release reaches the pin; no run is planned before then (docs/benchmarks/2026-11-03-skillopt-retired.md).',
+    contract: 'Optimizes skills and scores them on held-out tasks. The held-out reward can be satisfied by fabricated citations, so results are not quality claims. Deprecated on 2026-11-03: Garry Tan decided to deprecate gbrain\'s iterative SkillOpt loop, which Cats 30, 31 and 33 and Cat 32\'s part B run (Cat 32\'s part A, the judge\'s cheat check, goes with its category), and remove it on or after 2026-12-03; gbrain#8525 adds gbrain\'s deprecation notice. This entry and its runners are deleted after that removal release reaches the pin; no run is planned before then (docs/benchmarks/2026-11-03-skillopt-retired.md).',
   },
   {
     id: 'brainbench-memory-conformance', legacy_alias: '34', name: 'BrainBench memory conformance (external gbrain checkout)',

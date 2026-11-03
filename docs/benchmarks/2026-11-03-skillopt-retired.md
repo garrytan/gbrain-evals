@@ -10,7 +10,7 @@ Claude Opus 5.5 solved v3 without any skill. On the 36 sealed gate tasks per ski
 
 The result rests on `query` and `briefing` on Opus 5.5. `fact-check` couldn't be read, because of a bug in our own harness, and GPT-6.1 Sol didn't run: the preregistered rule skips it once every Opus pair reads saturated.
 
-Garry also decided, the same day, to retire gbrain's iterative SkillOpt loop ("Ok I guess we should just retire it from gbrain as well. But we should mark it as deprecated and remove it in a month"): gbrain marks it deprecated now and removes it on or after December 3, 2026, and this repository's Cats 30 to 33, which run the loop, are deleted after that release.
+Garry also decided, the same day, to retire gbrain's iterative SkillOpt loop ("Ok I guess we should just retire it from gbrain as well. But we should mark it as deprecated and remove it in a month"): gbrain#8525 adds the deprecation notice, removal is due on or after December 3, 2026, and this repository's Cats 30 to 33, which run the loop, are deleted after that release.
 
 ## The concrete case
 
@@ -40,7 +40,7 @@ A pair is saturated when its kept rewrite scores above 0.80 or within 0.15 of th
 
 Every null result here gets four checks before it is reported.
 
-- **The scorer isn't passing wrong answers.** 191 answers that scored right had a negation within five words of the deciding value (`query` 14, `briefing` 29, `fact-check` 148), the shape a wrong answer such as "it was not Desmond Desai" would take. GPT-6.1 Sol, from a different model family than the Opus answers, judged each one. None was a wrong answer scored right.
+- **The scorer isn't passing wrong answers.** 191 answers that scored right had a negation within five words of the deciding value (`query` 14, `briefing` 29, `fact-check` 148), the shape a wrong answer such as "it was not Desmond Desai" would take. GPT-6.1 Sol, from a different model family than the Opus answers, judged each one as a Capy subagent working from a written brief ([`judge-brief.md`](2026-11-02-skillopt-ceiling/runs/gate-1/refusal-audit/judge-brief.md)). None was a wrong answer scored right.
 - **The harness isn't limiting the model.** Opus made 4,756 tool calls over the gate stage's 1,068 rollouts and none was refused. No rollout hit the turn limit or the output limit, and on no pair does the told-the-pages control beat the shipped skill.
 - **There is no room to measure.** Scores at 1.000 can't show a difference at any sample size.
 - **The frontier model already does the job.** The shipped skill adds at most one task of 36 over no skill, on `briefing` and on `fact-check`.
@@ -63,7 +63,7 @@ Gate 1 cost $133.87 over 3,304 requests, against its $470 cap: `query` $23.74, `
 - It does not measure `fact-check` (above) or GPT-6.1 Sol. At calibration, on 12 practice tasks each, Sol scored 1.000, 1.000 and 0.917 with the shipped skills while gbrain's rollout path refused 52% of its `briefing` tool calls and 84% of its `fact-check` tool calls, and no retry after any of those 305 refusals succeeded. That is a separate harness problem in gbrain's rollout path, which this benchmark never resolved.
 - It does not measure particle-1, which gbrain's gateway can't call at this pin.
 - It ran one gate where the preregistration allowed two. The preregistered path was one task revision, a second gate and then a read of the sealed test split before any cut. Garry's decision ends the study after gate 1, so this is his call on gate 1's evidence, not a preregistered verdict. The revision was built and never run, and the 96 test tasks per skill stay sealed.
-- It never measured the iterative loop, whose arms would have run only after a gate pass. The loop's deprecation rests on two earlier results in which the full loop tied a one-shot rewrite: #304 and the [November 1 re-baseline](2026-11-01-skillopt-rebaseline/REPORT.md).
+- It never measured the iterative loop, whose arms would have run only after a gate pass, so it gives no evidence on the loop either way. The two earlier results that measured it, #304 and the [November 1 re-baseline](2026-11-01-skillopt-rebaseline/REPORT.md), found the full loop tied a one-shot rewrite.
 
 ## What changes in this repository
 
@@ -83,7 +83,7 @@ bun docs/benchmarks/2026-11-02-skillopt-ceiling/runs/gate-1/refusal-audit/flag.t
 bun docs/benchmarks/2026-11-02-skillopt-ceiling/runs/gate-1/refusal-audit/prep.ts "$D" "$D/input.jsonl"
 ```
 
-The first prints each arm's score on all 36 gate tasks and on the 18 held-out ones; the second and third rebuild [`flagged.json`](2026-11-02-skillopt-ceiling/runs/gate-1/refusal-audit/flagged.json) and the judge's input byte for byte. The judge's verdicts, one reason per answer, are in [`judged.jsonl`](2026-11-02-skillopt-ceiling/runs/gate-1/refusal-audit/judged.jsonl).
+The first prints each arm's score on all 36 gate tasks and on the 18 held-out ones; the second and third rebuild [`flagged.json`](2026-11-02-skillopt-ceiling/runs/gate-1/refusal-audit/flagged.json) and the judge's input byte for byte. The judge's verdicts, one reason per answer, are in [`judged.jsonl`](2026-11-02-skillopt-ceiling/runs/gate-1/refusal-audit/judged.jsonl), and its brief in [`judge-brief.md`](2026-11-02-skillopt-ceiling/runs/gate-1/refusal-audit/judge-brief.md). The judging step itself can't be rerun keylessly.
 
 - Receipt: [`runs/gate-1/receipt.json`](2026-11-02-skillopt-ceiling/runs/gate-1/receipt.json): gbrain pin `62637c96a`, dataset `skillopt-method-v3` (MANIFEST `5729db40…a615`), the per-task results of every arm, tool calls, refusals and stop reasons per arm, metered cost per arm and pair, and the gate verdict.
 - Rollouts: [`rows.jsonl.gz`](2026-11-02-skillopt-ceiling/runs/gate-1/rows.jsonl.gz), one row per rollout with its answer and tool calls. The rewrites' inputs and outputs: [`one-shot/`](2026-11-02-skillopt-ceiling/runs/gate-1/one-shot/).

@@ -290,8 +290,9 @@ agent's context in 0 of 100 permission runs; files do in 100, and plain Postgres
   pin.
 - Nothing here measures whether a skill optimizer improves gbrain's shipped skills. On a task set built to leave room,
   Claude Opus 5.5 with no skill already answers 36 of 36 `query` and 35 of 36 `briefing` gate tasks, so the SkillOpt
-  optimizer benchmark is retired, and gbrain's iterative SkillOpt loop is deprecated, to be removed on or after
-  December 3, 2026 ([retirement finding](docs/benchmarks/2026-11-03-skillopt-retired.md)).
+  optimizer benchmark is retired. Garry Tan also decided to deprecate gbrain's iterative SkillOpt loop and remove it on
+  or after December 3, 2026; the notice lands in gbrain#8525, after the pinned commit
+  ([retirement finding](docs/benchmarks/2026-11-03-skillopt-retired.md)).
 
 ## Where to read next
 
@@ -389,7 +390,7 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 Known limits gain one entry: no benchmark here measures a skill optimizer any more, because Opus 5.5 with no skill
 already answers 36 of 36 `query` and 35 of 36 `briefing` gate tasks on the harder SkillOpt task set, so the benchmark
-is retired and gbrain's iterative SkillOpt loop is deprecated ([retirement finding](docs/benchmarks/2026-11-03-skillopt-retired.md)).
+is retired, and Garry Tan decided to deprecate gbrain's iterative SkillOpt loop ([retirement finding](docs/benchmarks/2026-11-03-skillopt-retired.md)).
 No other part changed.
 
 ### 2026-11-03: A pointer to the F6 current-master rerun

@@ -108,8 +108,8 @@ The [September 29 lifecycle report](docs/benchmarks/2026-09-29-lifecycle.md) is 
 
 - [ ] **Retire or repair the historical shootout wrapper** (WS7). The wrapper still refuses reranker cells and Phase 2 lacks its driver. Newer gbrain experiments provide configuration controls, so the old task “add any search-config surface” is no longer an accurate description of all upstream capability. Decide how to update the wrapper against a tested CLI and supported providers before re-enabling cells. See [its operating notes](scripts/RUNBOOK_SHOOTOUT.md).
 
-- [ ] **Delete Cats 30 to 33 after gbrain removes its iterative SkillOpt loop** (GST-1013). gbrain deprecated the loop on
-  2026-11-03 (Garry Tan) and removes it on or after 2026-12-03. Once that removal release reaches the `package.json` pin,
+- [ ] **Delete Cats 30 to 33 after gbrain removes its iterative SkillOpt loop** (GST-1013). Garry Tan decided on
+  2026-11-03 to deprecate the loop and remove it on or after 2026-12-03 (gbrain#8525 adds gbrain's notice). Once that removal release reaches the `package.json` pin,
   delete the `skillopt` registry entry, `eval/runner/cat30-skillopt-improvement.ts` to `cat33-skillopt-transfer.ts`,
   `eval/runner/run-skillopt-cats.sh`, their tests and their entries in `eval/runner/model-defaults.ts` and
   `eval/RUNBOOK.md`, in one change. Published receipts stay.
