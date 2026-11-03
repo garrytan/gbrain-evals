@@ -205,6 +205,10 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 - Full tables, cohorts and exclusions: [scoreboard report](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md).
 <!-- scoreboard:headline:end -->
 
+F6, a current-master rerun of this comparison at 8k (gbrain `0ccf2bdd`, 2026-11-03), is published in
+[docs/benchmarks/2026-10-29-f6-current-master/scoreboard.md](docs/benchmarks/2026-10-29-f6-current-master/scoreboard.md);
+this table stays Q1's until the custodian re-renders it from the F6 receipt (#337).
+
 **Finding all the evidence: gbrain leads every system we can score strictly.** A question counts only if every
 required session is in the top five. gbrain was measured at `109b992`
 ([recount](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md)); the other rows and their sources are in
@@ -376,6 +380,11 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-03: A pointer to the F6 current-master rerun
+
+One line under the Q1 block points to the F6 rerun's published scoreboard (gbrain `0ccf2bdd`). The Q1 block and its
+numbers are unchanged; they stay Q1's until the custodian re-renders them from the F6 receipt (#337).
 
 ### 2026-11-03: The Q1 block is re-rendered under the stop rule
 

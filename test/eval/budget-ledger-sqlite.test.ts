@@ -126,6 +126,24 @@ describe('recorded program cap', () => {
     expect(ledgerStatus({ ledgerPath: created }).totals.program_cap_usd).toBe(400);
   });
 
+  test('reservations that sum exactly to the cap fit despite float rounding; a cent more is refused', () => {
+    const path = join(tmp(), 'ledger.sqlite');
+    const leases = [...Array(10).fill(31.52), ...Array(4).fill(57.62), 7.55];
+    const run = BudgetRun.open({ runner: 'f6', budgetUsd: 553.23, ledgerPath: path, programCapUsd: 553.23 });
+    for (const usd of leases) run.reserve(usd, 'lease');
+    expect(() => run.reserve(0.01, 'one cent over')).toThrow(BudgetExceededError);
+    const exact = join(tmp(), 'ledger.sqlite');
+    const tenths = BudgetRun.open({ runner: 'tenths', budgetUsd: 0.3, ledgerPath: exact, programCapUsd: 0.3 });
+    for (let i = 0; i < 3; i++) tenths.reserve(0.1, `tenth ${i}`);
+    expect(() => BudgetRun.open({ runner: 'more', budgetUsd: 0.01, ledgerPath: exact })).toThrow('program cap');
+    const open = join(tmp(), 'ledger.sqlite');
+    const first = BudgetRun.open({ runner: 'a', budgetUsd: 0.1, ledgerPath: open, programCapUsd: 0.3 });
+    first.reserve(0.1, 'a'); first.close();
+    const second = BudgetRun.open({ runner: 'b', budgetUsd: 0.1, ledgerPath: open });
+    second.reserve(0.1, 'b'); second.close();
+    BudgetRun.open({ runner: 'c', budgetUsd: 0.1, ledgerPath: open }).reserve(0.1, 'c');
+  });
+
   test('set-cap records who and why, refuses a cap below committed spend, and later reserves use it', () => {
     const path = join(tmp(), 'l.sqlite');
     initLedger({ ledgerPath: path, programCapUsd: 10 });

@@ -2,6 +2,17 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### A lease raise keeps its reservation when the VM result is unknown, refuses another campaign's state and runs one at a time (#329, #330)
+
+- **A VM step that ends without a result keeps the host reservation (#329).** `eval/runner/q1/raise-lease.ts` used to give the host reservation back whenever the VM step failed, so a raise that reached the VM but lost its reply left the VM holding more than the campaign ledger counted. It now gives the reservation back only when the VM lease ledger refuses the raise or the VM step fails before its COMMIT; both report as refusals. A timeout, an ssh error or output that does not read back keeps the reservation, records the raise in `<state>/raises.ndjson` with `vm_result: "unknown"` so the campaign and its block cap count the raised amount, and stops for a person to reconcile. When giving the reservation back fails, the error names both failures and the amount the host still holds.
+- **A raise refuses another campaign's or another freeze's state directory (#330).** The state's `campaign_id` and `manifest_sha256` must match the checkout's campaign, and the lease's cell must be in the manifest, so the block cap that applies is always the freeze's own. A mismatched state directory used to skip the block cap.
+- **One raise runs at a time per freeze.** A raise holds `<state>/raise.lock` from reading the lease's amount until its record is written, and any other raise, dry run included, is refused at once. A raise whose record cannot be written keeps the lock. Nothing breaks a lock automatically: `clear-stale-lock --confirm <campaign id>` clears it once its holder is gone, after the check in `eval/RUNBOOK.md`'s new section "Raise a running Q1 lease", which reconciles the two ledgers only in the safe direction.
+- **The Q1 scoreboard preregistration gets amendment A27**, a dated post-hoc documentation correction that records these rules. No outcome rule, cap or cell changes.
+- **Tests.** `test/eval/q1-raise-lease.test.ts` adds keyless tests for each rule above, including an overlap repro in which a second raise is refused while the first holds the lock.
+- **Known gaps.** #344 tracks a write-ahead record and a `reconcile --lease` command, needed before a B2 run that expects more than a couple of lease raises. #345 lists the other review notes this release ships with.
+
 ## [0.10.152] - 2026-11-03
 
 ### A budget stop in the SkillOpt ceiling gate keeps the spend it billed (#331)
@@ -11,6 +22,31 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Each failed rollout's row names its own error.** `onFailedRollout` in `rollouts.ts` now passes the error, so a concurrent upstream 500 reads as itself, not as the budget refusal. The refused rollout keeps the arm's "budget refusal:" or "invalid cell:" label.
 - **Preregistration.** `docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md` gets its own dated section, "2026-11-03, before the gate: refusal audit and refusal rows (#331)", with the refusal audit (GBEV-3's condition), GBEV-3's flipped-pair clause and a sentence on refusal error rows. A pair the audit flips is FIX-METHOD and never evidence for a pass or a cut. It counts as V in the pass test and the cause table, `saturated` stands only if it still holds with every flipped pair counted as H, and a flipped Opus pair behind Sol's skip leaves the attempt `incomplete` until Sol's pairs run. A rollout that billed a call before a refusal keeps an unscored error row with its usage as voided spend. The section changes that one verdict rule and no cap, total, arm or split. No re-price rule, scorer, data or `MANIFEST.json` changes.
 - **Tests.** `test/eval/skillopt-ceiling-stages.test.ts` adds a keyless gate run in which one rollout bills four turns and then hits `BudgetExceededError` while another bills one turn and fails with an upstream 500. Both rows are written with their usage (4 and 1 calls) and their own errors, and `voided` reports the seed arm with 5 calls and their dollars. The test fails on 0.10.149. `test/eval/skillopt-ceiling-gate.test.ts` encodes the flipped-pair clause with `causeOf`: with one saturated pair flipped, Opus alone at (H, S, D) = (1, 2, 0) and six pairs at H = 3, S = 3 read `invalid`, Opus alone at (0, 3, 0) stays `saturated`, and with no flip it is the plain truth table. No paid call ran.
+
+## [0.10.151] - 2026-11-03
+
+### The SkillOpt ceiling preregistration records the calibration re-read and re-prices the later stages (#341)
+
+- **`docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md` adds the dated amendment that the 2026-11-03 section asks for before the gate spends.** Ledger run `n15-ceiling-calibration-2026-11-03T12-54-22-002Z-99f3820d` metered $15.45 of its $22.04 cap over 580 requests and is closed, so the calibration stage holds $43.40 of its $50. It read train at commit `d9649d09`, gbrain `62637c96a` and MANIFEST `5729db40…`, with the knobs frozen. Opus's seed scored 1.000 on query, briefing and fact-check (24 train tasks each) at $0.1647 per rollout, and Sol's scored 1.000, 1.000 and 0.917 on half of train at $0.0736.
+- **Sol still refuses most window reads at this pin.** 127 of its 246 briefing calls (52%) and 178 of its 212 fact-check calls (84%) were refused, and no refusal was followed by a recovered read, close to the first calibration's 48% and 84%. Opus had no refused call.
+- **Every later stage is re-priced from the re-read's metered means and stays inside its cap:** a gate attempt $331.34 (cap $470), the stop-path read $411.71 ($650) and the E1 check $161.91 ($300). A gate attempt where Sol's gate is skipped costs about $227.96. The 1.25x re-price thresholds are $0.2058 per scored rollout on Opus and $0.0920 on Sol.
+- No spend total, stage cap, arm, split or verdict rule changes. This release changes documentation only.
+
+## [0.10.150] - 2026-11-03
+
+### F6: BEAM-10M rerun at gbrain's current release, 8,000-token budget (#321)
+
+- **The F6 scoreboard is published** in `docs/benchmarks/2026-10-29-f6-current-master/`. `scoreboard.md` is the custodian's render, and `publication.json` pins its receipt to results commit `b8b936a1` (SHA256SUMS `09ba1ff8`). Only aggregates are published; the sealed question ids and text stay in custody. It measures GBrain 0.60.493.0 (`0ccf2bdd`, 2026-10-29) on BEAM-10M, which was never used to tune gbrain, with a three-reader mean at 8,000 tokens: `gbrain-defaults` 61.0%, `baseline-file-agent` 68.2%, `ext-extract-first` 58.9%, `ext-memory-bank` 55.4%, `ext-verbatim-session` 50.8%, `ext-temporal-graph` 48.7% and `baseline-none` 25.8%, each on 199 of 199 questions. With ten conversations the comparison can only detect differences of about 13.6 points, so it is descriptive and no row is ranked. `baseline-hybrid` is not published, because its unit ran Q1's definition of that cell (A5 in the publication's disclosures). F6 spend settled at $2,909.74 across the six counted ledgers, within the $3,068.83 counted cap.
+- **The preregistration and amendments A1 to A4b** are in `docs/benchmarks/2026-10-29-f6-current-master-preregistration.md`, with one campaign manifest per amendment under `campaign/`.
+- **Harness.**
+  - The gbrain-defaults shim builds the F6 fact brain under a recorded extraction cap and serves each arm's `{op, args, overlay}` policy, writing and reading back the six search keys.
+  - `cell.ts` retrieves policy-major and refuses a cell id that both cell manifests define unless `--manifest` names one.
+  - `reuse-check.ts` gates the reused A24 rows, and `publish.ts` assembles a publication from several manifests.
+  - Other pieces: the D8 long-history reserve loader with its custody push, the `ext-temporal-graph` shipped-0.31 configuration, VM names that carry their expiry, and ledger rounding where reservations sum exactly to a cap.
+- **Fixes from /ship's review.**
+  - An overlay switch that fails part way now clears the stored overlay hash before it writes, so the next request rewrites and rereads every key instead of trusting a half-written configuration.
+  - The readiness probe's F6-settings branch has a test.
+  - Findings that would change a published number, a manifest, the pin or custody are filed as follow-ups (#332, #333, #334) and not changed here.
 
 ## [0.10.149] - 2026-11-03
 
