@@ -4,6 +4,12 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### /ship's reviewers leave out the regenerated v3 SkillOpt data (#316)
+
+- **`.gstack/ship-policy.json` sets `review_exclude_paths` to the five generated v3 subdirectories**, one pattern each (`eval/data/skillopt-method-v3/briefing/**`, `fact-check/**`, `query/**`, `seeds/**` and `world/**`). The key needs gstack 1.93.33.0 or later, and the policy's `min_gstack_version` of 1.94.4.0 (above) already covers it. gstack reads the policy from the base branch only, so it applies to pull requests reviewed after this lands. #309 regenerates the v3 data, and its reviewer diff was 21,860,233 bytes, over gstack's review ceiling of 2,000,000 bytes. On a local merge of #309 with this policy as its base, 16 data files are left out and the reviewer diff is 70,289 bytes.
+- **CI still checks every excluded file byte for byte.** The patterns name exactly the directories `gen.ts` writes and MANIFEST.json lists, so a subdirectory added later stays in review. In the `tests` job, `test/eval/skillopt-method-v3.test.ts` regenerates v3 and compares it with the committed files and MANIFEST.json. In the `checks` job, `bun run validate` checks the files against MANIFEST's sha256 values. A one-byte change to `query/train.jsonl` fails both. README.md and MANIFEST.json sit at the dataset root, outside the patterns, so reviewers still read them: no check covers the hand-written README.
+- **`eval/runner/skillopt-method/dataset.ts`'s doc comment names the `world/` directory** instead of the full path of `world/pages.jsonl`. gstack keeps an excluded file in review when code that stays in review names its full path, so the old comment would have kept the pages file in #309's diff.
+
 ### gstack's pregate and /ship use CI's test run instead of running the suite again
 
 - **CI's new `tested-tree` job records what the run tested** (`scripts/ci-tested-tree.ts`). After the checks job and all four test shards pass, it uploads `tree.json`: the run, the tree it tested, every test file it ran and how many Bun tests ran. The Bun files come from each shard's JUnit report, so the record lists only files Bun actually ran; the Python file is the one the checks job runs. The job runs no tests. It fails, and uploads nothing, when a file the inventory lists did not run: Bun's report leaves out a test file that registers no tests, and a run missing one file carries no lane, so the job goes red instead of carry stopping quietly. No existing job changes what it checks.
