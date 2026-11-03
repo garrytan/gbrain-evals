@@ -4,6 +4,13 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### pregate lets #321's three false positives through until gstack fixes them
+
+- **`.gstack/pregate.json` accepts the neo4j dummy password under `docs/comparison-systems/ext-temporal-graph/**`.** One `allowlist` entry for `env.kv`, its pattern anchored on that one dummy value, which main's `docs/comparison-systems/ext-temporal-graph/docker-compose.yml` already carries four times. The comparison system's database runs on the container's internal network only. The `secrets` check stays `fail` for every other finding and every other path.
+- **Two files are allowed past the `strays` check by exact path:** `docs/comparison-systems/ext-temporal-graph/shipped-0.31/probe.py` and `test/eval/temporal-graph-shipped.test.ts`. gstack reads any file name starting with `probe` or `temp` as scratch, wherever it sits. Any other stray still fails.
+- **`literals` is a warning.** #321 raises the D8 split's `selection.limit` from 10 to 300, and the check reports 80 test locations that hold an unrelated `10` and name the module.
+- **Both go back once gstack fixes the heuristics.** The two false positives are filed as GST-1211; when that gstack version is the floor, `strays.allow` and `warn` come out of the policy and both checks are `fail` again. gstack reads this policy from the base branch only, so it applies to pull requests that run pregate after this lands. It changes no existing /ship receipt: a receipt is bound to its PR's head, and a pregate record goes stale only when its tree or a user-owned policy outside the repository changes.
+
 ### /ship's reviewers leave out the regenerated v3 SkillOpt data (#316)
 
 - **`.gstack/ship-policy.json` sets `review_exclude_paths` to the five generated v3 subdirectories**, one pattern each (`eval/data/skillopt-method-v3/briefing/**`, `fact-check/**`, `query/**`, `seeds/**` and `world/**`). The key needs gstack 1.93.33.0 or later, and the policy's `min_gstack_version` of 1.94.4.0 (above) already covers it. gstack reads the policy from the base branch only, so it applies to pull requests reviewed after this lands. #309 regenerates the v3 data, and its reviewer diff was 21,860,233 bytes, over gstack's review ceiling of 2,000,000 bytes. On a local merge of #309 with this policy as its base, 16 data files are left out and the reviewer diff is 70,289 bytes.
