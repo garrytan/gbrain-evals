@@ -1,3 +1,10 @@
 {
-  "min_gstack_version": "1.92.35.0"
+  "min_gstack_version": "1.94.4.0",
+  "review_exclude_paths": [
+    "eval/data/skillopt-method-v3/briefing/**",
+    "eval/data/skillopt-method-v3/fact-check/**",
+    "eval/data/skillopt-method-v3/query/**",
+    "eval/data/skillopt-method-v3/seeds/**",
+    "eval/data/skillopt-method-v3/world/**"
+  ]
 }

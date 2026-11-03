@@ -103,6 +103,7 @@ describe('transient rollout failures', () => {
 
   test('refusalKind reads the ledger, gbrain\'s hook cap and the metering proxy\'s budget and tripwire answers, anywhere in the cause chain', () => {
     expect(refusalKind(new BudgetExceededError('cap'))).toBe('budget');
+    expect(refusalKind(new BudgetExceededError('anthropic:claude-opus-5-5 chat: budget run n15-ceiling-gate-1-x already finished'))).toBe('budget');
     expect(refusalKind(apiError(402, proxyBody('budget', 'reserving $0.0500 would take this lease over its cap')))).toBe('budget');
     expect(refusalKind(apiError(503, proxyBody('budget', "ANTHROPIC_API_KEY is not set in the proxy's environment")))).toBe('budget');
     expect(refusalKind(new Error(`${SKILLOPT_HOOK_BUDGET_EXHAUSTED}: the rollout server's cap is spent`))).toBe('budget');
