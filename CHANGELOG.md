@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.155] - 2026-11-03
 
 ### The particle-1 add-on's re-read tool and report close #347's four open review findings
 
