@@ -225,8 +225,40 @@ export const countedScoreFn: ScoreFn = async (trajectory, judge) => ({
   score: evaluateJudge(trajectory.final_text, judge).correct ? 1 : 0,
 });
 
-/** Slug prefixes of the two corpora the tasks draw on (messy-company-v1 page kinds, world-v1 page types). */
-export const CORPUS_SLUG_PREFIXES = ['accounts', 'agent-notes', 'chats', 'contracts', 'crm', 'emails', 'meetings', 'notes', 'tickets', 'updates', 'companies', 'concepts', 'people'];
+/** skillopt-method-v3 tags each check `layer: 'form' | 'substance'`; a judge with no tags has no layers. */
+const layerOf = (c: RuleCheck) => (c as { layer?: string }).layer;
+
+export interface LayerResult {
+  /** Every check passes. */
+  full: boolean;
+  /** Every substance check passes; equals `full` for a judge whose checks carry no layer. */
+  substance: boolean;
+  failed: RuleCheck[];
+  /** The fraction of checks that pass: gbrain's own rule score over the same judge. */
+  fraction: number;
+}
+
+/** Full pass, substance pass and gbrain's rule fraction for one answer (skillopt-method-v3 reads substance pass; full pass is reported beside it). */
+export function evaluateLayers(text: string, judge: Judge): LayerResult {
+  if (judge.kind !== 'rule' || judge.checks.length === 0) return { full: false, substance: false, failed: [], fraction: 0 };
+  const failed = judge.checks.filter(c => !checkPasses(text, c));
+  const tagged = judge.checks.some(c => layerOf(c) !== undefined);
+  return {
+    full: failed.length === 0,
+    substance: tagged ? judge.checks.some(c => layerOf(c) === 'substance') && !failed.some(c => layerOf(c) === 'substance') : failed.length === 0,
+    failed,
+    fraction: (judge.checks.length - failed.length) / judge.checks.length,
+  };
+}
+
+/** gbrain's `scoreFn` seam on substance pass: 1 when every substance check passes, else 0. */
+export const substanceScoreFn: ScoreFn = async (trajectory, judge) => ({
+  trajectory,
+  score: evaluateLayers(trajectory.final_text, judge).substance ? 1 : 0,
+});
+
+/** Slug prefixes of the corpora the tasks draw on (messy-company-v1 page kinds, world-v1 page types, world-v3's announcements). */
+export const CORPUS_SLUG_PREFIXES = ['accounts', 'agent-notes', 'announcements', 'chats', 'contracts', 'crm', 'emails', 'meetings', 'notes', 'tickets', 'updates', 'companies', 'concepts', 'people'];
 const SLUG_RE = new RegExp(`(?<![\\w/-])(?:${CORPUS_SLUG_PREFIXES.join('|')})/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?![\\w/-])`, 'gi');
 
 /** Corpus slugs the answer names, lowercased, in order of first appearance. */
@@ -255,9 +287,35 @@ const FAILED_CHECK_TEXT: Record<CheckKind, string> = {
   abstain: 'the answer does not say that the brain lacks this information',
 };
 
+/** skillopt-method-v3 check kinds (score-v3.ts), described the same way. */
+const FAILED_CHECK_TEXT_V3: Readonly<Record<string, string>> = {
+  answer: 'the first sentence that names a candidate value does not name the right value alone',
+  'answer-form': 'the answer does not come first, on an Answer: line or as the first sentence',
+  citation: 'the answer does not name the brain page that decides the answer',
+  'citation-form': 'a deciding page is not cited as [Source: slug]',
+  abstain: 'the answer does not say, before any other value, that the brain lacks this entity',
+  'abstain-form': 'the abstention does not use the contract\'s wording',
+  candidates: 'the answer does not name every entity the name could refer to',
+  ambiguous: 'the answer commits to one entity before saying the name is ambiguous',
+  'ambiguous-form': 'there is no "ambiguous:" line',
+  'entry-value': 'a meeting\'s entry does not give its own fact first',
+  'entry-citation': 'a meeting\'s entry does not name the page that holds its fact',
+  'entry-abstain': 'a meeting\'s entry does not say the brain has no page for its subject',
+  'entry-form': 'a meeting has no entry starting with its time and title',
+  'entry-citation-form': 'a meeting\'s entry does not cite its page as [Source: slug, updated DATE]',
+  'entry-abstain-form': 'the abstention does not say "No brain page for <name>"',
+  'part-status': 'a claim part has no status the brain supports, or has a status the brain rules out',
+  'part-value': 'a contradicted claim part does not state the value the brain holds',
+  'blocks-form': 'the report has no [N] CLAIM: block',
+  'status-lines-form': 'a claim block does not have exactly one STATUS: line',
+  'status-label-form': 'a STATUS: line does not use the six-level scale',
+  'correction-form': 'a correction is not written as a Correct value: line or "was X, now Y"',
+};
+
 /** A failed check described without its argument, so no gold value or slug reaches an optimizer. */
 export function renderFailedCheck(check: RuleCheck): string {
   const kind = (check as Partial<MethodCheck>).kind;
+  if (layerOf(check) !== undefined) return (kind && FAILED_CHECK_TEXT_V3[kind]) ?? 'a scoring check failed';
   return kind && kind in FAILED_CHECK_TEXT ? FAILED_CHECK_TEXT[kind] : 'a scoring check failed';
 }
 

@@ -278,14 +278,14 @@ export function checkMessyCompany(root = join(REPO_ROOT, 'eval/data/messy-compan
 
 // ─── 7. skillopt-method-v1 and -v2 ──────────────────────────────────
 
-export function checkSkilloptMethod(version: 'v1' | 'v2', root = join(REPO_ROOT, `eval/data/skillopt-method-${version}`)): CheckResult {
-  return { check: `skillopt-method-${version}`, failures: checkSkilloptMethodManifest(root), warnings: [] };
+export function checkSkilloptMethod(version: 'v1' | 'v2' | 'v3', root = join(REPO_ROOT, `eval/data/skillopt-method-${version}`)): CheckResult {
+  return { check: `skillopt-method-${version}`, failures: checkSkilloptMethodManifest(root, version), warnings: [] };
 }
 
 // ─── CLI ────────────────────────────────────────────────────────────
 
 export function runAllChecks(): CheckResult[] {
-  return [checkSyntheticV1(), checkAmaraLife(), checkQrels(), checkBaseline(), checkMultimodalFixtures(), checkGold(), checkMessyCompany(), checkSkilloptMethod('v1'), checkSkilloptMethod('v2')];
+  return [checkSyntheticV1(), checkAmaraLife(), checkQrels(), checkBaseline(), checkMultimodalFixtures(), checkGold(), checkMessyCompany(), checkSkilloptMethod('v1'), checkSkilloptMethod('v2'), checkSkilloptMethod('v3')];
 }
 
 if (import.meta.main) {
