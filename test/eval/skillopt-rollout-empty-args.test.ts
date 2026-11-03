@@ -39,7 +39,10 @@ async function withRegistry<T>(registry: 'read-only' | 'write-capture', fn: (cal
     let out: T | undefined;
     const toolLoopFn = (async ({ toolHandlers }: { toolHandlers: Handlers }) => {
       const call = async (tool: string, args: object) => {
-        try { return { ok: await toolHandlers.get(`brain_${tool}`)!.execute(args, {} as never) }; } catch (e) { return { error: JSON.parse((e as Error).message) as Refusal }; }
+        try { return { ok: await toolHandlers.get(`brain_${tool}`)!.execute(args, {} as never) }; } catch (e) {
+          const text = (e as Error).message;
+          try { return { error: JSON.parse(text) as Refusal }; } catch { return { error: { message: text } }; }
+        }
       };
       out = await fn(call);
       return { messages: [], stopReason: 'end', totalTurns: 0, totalUsage: {} };
