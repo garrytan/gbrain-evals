@@ -4,13 +4,14 @@
  * and the VM lease ledger grow together, the proxy's ledger admits the new lease
  * without reopening, and the frozen settle closes the raised lease.
  */
+import { Database } from 'bun:sqlite';
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { hostname, tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { BudgetRun, closeLedgers, closeRun, ledgerStatus, verifyLedger } from '../../eval/runner/budget-ledger.ts';
 import { Campaign, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
-import { leaseUsd, raise, raises, settle } from '../../eval/runner/q1/raise-lease.ts';
+import { clearStaleLock, leaseUsd, raise, raises, settle } from '../../eval/runner/q1/raise-lease.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'raise-lease-'));
@@ -69,7 +70,7 @@ describe('raise-lease (A17 campaigns)', () => {
     expect(verifyLedger(ledger).ok).toBe(true);
 
     expect(() => raise(c, l.lease_id, 5, 'again', ssh)).toThrow(/--usd must be above it/);
-    expect(() => raise(c, l.lease_id, 6, 'vm gone', (vm, command) => command.includes("'show'") ? ssh(vm, command) : { code: 255, out: '', err: 'ssh: connect refused' })).toThrow(/was not raised.*back at \$5.00/);
+    expect(() => raise(c, l.lease_id, 6, 'vm closed', (vm, command) => { if (command.includes("'raise'")) closeRun(vmLedger(l.lease_id), l.lease_id); return ssh(vm, command); })).toThrow(/was not raised.*back at \$5.00/);
     expect(hostCommitted().committed_usd).toBe(5);
 
     appendFileSync(join(state, 'leases.ndjson'), JSON.stringify({ event: 'finished', lease_id: l.lease_id, at: new Date().toISOString(), exit_code: 0 }) + '\n');
@@ -130,7 +131,8 @@ describe('raise-lease (A17 campaigns)', () => {
     const closedMidRaise = (vm: string, command: string) => {
       if (!command.includes("'raise'")) return ssh(vm, command);
       closeRun(ledger, runId);
-      return { code: 255, out: '', err: 'ssh: connect refused' };
+      closeRun(vmLedger(l.lease_id), l.lease_id);
+      return ssh(vm, command);
     };
 
     expect(() => raise(c, l.lease_id, 5, 'closed mid-raise', closedMidRaise)).toThrow(/was not raised.*back at \$4.00/);
@@ -138,6 +140,166 @@ describe('raise-lease (A17 campaigns)', () => {
     expect(ledgerStatus({ ledgerPath: vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd).toBe(4);
     expect([leaseUsd(c, l.lease_id), raises(state).length]).toEqual([4, 0]);
     expect(verifyLedger(ledger).ok).toBe(true);
+  });
+
+  test('another campaign\'s manifest, another freeze\'s state directory, or a lease whose cell is not in the manifest refuses the raise instead of skipping the block cap (#330)', () => {
+    const { c, state, launch, vmLedger, ssh, hostCommitted, ledger } = setup();
+    const a = launch('cell-0', 'vm-0'), b = launch('cell-1', 'vm-1');
+    for (const l of [a, b]) { mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true }); BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) }); }
+    const raw = JSON.parse(readFileSync(join(dirname(ledger), 'manifest.json'), 'utf8')) as { campaign_id: string; cells: { id: string }[] };
+    const paired = (file: string, campaignId: string) => {
+      writeFileSync(join(dirname(ledger), file), JSON.stringify({ ...raw, campaign_id: campaignId, cells: raw.cells.map(x => ({ ...x, id: `other-${x.id}` })) }));
+      return new Campaign(join(dirname(ledger), file), state);
+    };
+    expect(() => raise(c, b.lease_id, 5.5, 'over the block', ssh)).toThrow(/block T1 would hold \$9.50, over its \$9.00 cap/);
+
+    const other = paired('other.json', `${raw.campaign_id}-other`);
+    for (const dryRun of [true, false]) expect(() => raise(other, b.lease_id, 5.5, 'mismatched pair', ssh, { dryRun })).toThrow(`belongs to campaign ${raw.campaign_id}, not ${raw.campaign_id}-other`);
+    writeFileSync(join(dirname(ledger), 'refrozen.json'), JSON.stringify({ ...raw, blocks: { T1: { estimate_usd: 8, cap_usd: 12 } } }));
+    const refrozen = new Campaign(join(dirname(ledger), 'refrozen.json'), state);
+    for (const dryRun of [true, false]) expect(() => raise(refrozen, b.lease_id, 5.5, 'state of an earlier freeze', ssh, { dryRun })).toThrow(`${state} was frozen at ${c.sha256.slice(0, 12)}, but campaign ${raw.campaign_id} hashes to ${refrozen.sha256.slice(0, 12)} in this checkout`);
+    expect(() => raise(paired('renamed.json', raw.campaign_id), b.lease_id, 5.5, 'cells renamed', ssh)).toThrow(/was frozen at/);
+
+    const ghost = 'ghost-a1-0';
+    appendFileSync(join(state, 'leases.ndjson'), [{ event: 'reserved', lease_id: ghost, cell: 'ghost', attempt: 1, usd: 4, entry_id: b.entry_id, at: new Date().toISOString(), max_output_tokens: null }, { event: 'launched', lease_id: ghost, at: new Date().toISOString(), argv: [], vm: 'vm-1' }].map(x => JSON.stringify(x) + '\n').join(''));
+    mkdirSync(join(vmLedger(ghost), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: ghost, leaseUsd: 4, ledgerPath: vmLedger(ghost) });
+    expect(() => raise(c, ghost, 4.5, 'cell not in the manifest', ssh)).toThrow(`no cell ghost in campaign ${raw.campaign_id}`);
+    expect([hostCommitted().committed_usd, ledgerStatus({ ledgerPath: vmLedger(b.lease_id), runId: b.lease_id }).run!.budget_usd, raises(state).length, existsSync(join(state, 'raise.lock'))]).toEqual([8, 4, 0, false]);
+  });
+
+  /** One launched $4 lease with an open VM ledger, raised to $5 through a VM step that `step` replaces; `run` runs the real one. */
+  function vmStep(step: (run: () => { code: number | null; out: string; err: string }, vm: { ledger: string; lease: string }) => { code: number | null; out: string; err: string }) {
+    const s = setup();
+    const l = s.launch('cell-0', 'vm-0');
+    mkdirSync(join(s.vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: s.vmLedger(l.lease_id) });
+    const raiseTo5 = () => raise(s.c, l.lease_id, 5, 'owner approved $5', (vm, command) => command.includes("'raise'") ? step(() => s.ssh(vm, command), { ledger: s.vmLedger(l.lease_id), lease: l.lease_id }) : s.ssh(vm, command));
+    const ledgers = () => [s.hostCommitted().committed_usd, ledgerStatus({ ledgerPath: s.vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd, raises(s.state).map(r => r.vm_result ?? 'confirmed')];
+    return { ...s, l, raiseTo5, ledgers };
+  }
+
+  test('a VM step that ends without a result keeps the host reservation, records the raise as unknown and says so (#329)', () => {
+    const dropped = vmStep(run => { run(); return { code: 255, out: '', err: 'Connection to vm-0 closed by remote host.' }; });
+    expect(dropped.raiseTo5).toThrow(/ended without a result \(exit 255\): Connection to vm-0 closed.*the host reservation stays at \$5.00 and the raise is recorded with vm_result "unknown".*raise-lease.ts show/);
+    expect(dropped.ledgers()).toEqual([5, 5, ['unknown']]);
+    expect(raises(dropped.state)[0]).toMatchObject({ from_usd: 4, to_usd: 5, vm_ledger: null, vm_cap_usd: null });
+    const timedOut = vmStep(() => ({ code: null, out: '', err: '' }));
+    expect(timedOut.raiseTo5).toThrow(/ended without a result \(exit null\).*stays at \$5.00/);
+    expect(timedOut.ledgers()).toEqual([5, 4, ['unknown']]);
+    const unread = vmStep(run => ({ ...run(), out: 'Welcome to Ubuntu' }));
+    expect(unread.raiseTo5).toThrow(/ended without a result \(exit 0\).*stays at \$5.00/);
+    expect(unread.ledgers()).toEqual([5, 5, ['unknown']]);
+  });
+
+  test('a raise with an unknown VM result counts against its block and stops a retry until the ledgers are reconciled (#329)', () => {
+    const s = vmStep(run => { run(); return { code: null, out: '', err: '' }; });
+    expect(s.raiseTo5).toThrow(/ended without a result/);
+    expect([s.c.lease(s.l.lease_id).raised_usd, s.c.blockSpend('T1'), leaseUsd(s.c, s.l.lease_id)]).toEqual([5, 5, 5]);
+    const m = s.launch('cell-1', 'vm-1');
+    mkdirSync(join(s.vmLedger(m.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: m.lease_id, leaseUsd: 4, ledgerPath: s.vmLedger(m.lease_id) });
+    expect(() => raise(s.c, m.lease_id, 4.5, 'past the block', s.ssh)).toThrow(/block T1 would hold \$9.50, over its \$9.00 cap/);
+
+    const timedOut = vmStep(() => ({ code: null, out: '', err: '' }));
+    expect(timedOut.raiseTo5).toThrow(/ended without a result/);
+    expect(() => raise(timedOut.c, timedOut.l.lease_id, 6, 'retry', timedOut.ssh)).toThrow(/the VM ledger holds lease 4 \(finished: false\), not an open \$5.00/);
+    expect(timedOut.ledgers()).toEqual([5, 4, ['unknown']]);
+  });
+
+  test('a VM step the lease ledger refuses gives the host reservation back (#329)', () => {
+    const refused = vmStep((run, vm) => { closeRun(vm.ledger, vm.lease); return run(); });
+    expect(refused.raiseTo5).toThrow(/was not raised \(exit 3\): lease .* is not open in .*; the host reservation is back at \$4.00/);
+    expect(refused.ledgers()).toEqual([4, 4, []]);
+  });
+
+  test('a VM step that fails before its COMMIT rolls back and counts as a refusal, giving the host reservation back', () => {
+    const failed = vmStep((run, vm) => {
+      const db = new Database(vm.ledger);
+      db.exec("CREATE TRIGGER no_caps BEFORE INSERT ON caps BEGIN SELECT RAISE(ABORT, 'caps are read-only'); END");
+      db.close();
+      return run();
+    });
+    expect(failed.raiseTo5).toThrow(/was not raised \(exit 3\): lease .* was not raised, rolled back before COMMIT: .*caps are read-only.*; the host reservation is back at \$4.00/);
+    expect(failed.ledgers()).toEqual([4, 4, []]);
+  });
+
+  test('a VM refusal whose give-back fails names both errors and the host amount it leaves', () => {
+    let saved = '';
+    const s = vmStep((run, vm) => {
+      closeRun(vm.ledger, vm.lease);
+      saved = readFileSync(join(s.state, 'campaign.json'), 'utf8');
+      writeFileSync(join(s.state, 'campaign.json'), JSON.stringify({ ...JSON.parse(saved), ledger: 'gone/campaign.sqlite' }));
+      return run();
+    });
+    expect(s.raiseTo5).toThrow(/was not raised \(exit 3\): lease .* is not open in .*; giving the host reservation back then failed: .*; the host reservation stays at \$5.00 with no raise recorded, so give the \$1.00 back on the host ledger by hand/);
+    writeFileSync(join(s.state, 'campaign.json'), saved);
+    expect(s.ledgers()).toEqual([5, 4, []]);
+    expect(existsSync(join(s.state, 'raise.lock'))).toBe(false);
+  });
+
+  test('a raise whose record cannot be written keeps the raise lock, so no later raise runs on an undercounted block', () => {
+    const s = vmStep(run => {
+      mkdirSync(join(s.state, 'raises.ndjson'));
+      run();
+      return { code: 255, out: '', err: 'Connection reset' };
+    });
+    expect(s.raiseTo5).toThrow(/ended without a result \(exit 255\), but the raise could not be recorded in .*raises.ndjson: .*; the host reservation stays at \$5.00 and .*raise.lock stays held\. One raise runs at a time per freeze/);
+    rmSync(join(s.state, 'raises.ndjson'), { recursive: true });
+    expect([s.hostCommitted().committed_usd, ledgerStatus({ ledgerPath: s.vmLedger(s.l.lease_id), runId: s.l.lease_id }).run!.budget_usd, leaseUsd(s.c, s.l.lease_id), existsSync(join(s.state, 'raise.lock'))]).toEqual([5, 5, 4, true]);
+    const m = s.launch('cell-1', 'vm-1');
+    mkdirSync(join(s.vmLedger(m.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: m.lease_id, leaseUsd: 4, ledgerPath: s.vmLedger(m.lease_id) });
+    expect(() => raise(s.c, m.lease_id, 4.5, 'while unrecorded', s.ssh)).toThrow(/another raise holds .*raise.lock/);
+    expect(s.hostCommitted().committed_usd).toBe(9);
+  });
+
+  test('one raise runs at a time per freeze: a raise that overlaps another is refused at once, so a lost reply cannot lower the lease or pass the block cap', () => {
+    const { c, state, launch, vmLedger, ssh, hostCommitted } = setup();
+    const a = launch('cell-0', 'vm-0'), b = launch('cell-1', 'vm-1');
+    for (const l of [a, b]) { mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true }); BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) }); }
+    let overlap = '', reached = 0;
+    const lostReply = (vm: string, command: string) => { reached++; ssh(vm, command); return { code: 255, out: '', err: 'Connection reset' }; };
+    const first = (vm: string, command: string) => {
+      if (command.includes("'raise'")) try { raise(c, a.lease_id, 4.5, 'operator B', lostReply); } catch (e) { overlap = (e as Error).message; }
+      return ssh(vm, command);
+    };
+    expect(raise(c, a.lease_id, 5, 'operator A', first)).toMatchObject({ from_usd: 4, to_usd: 5, vm_cap_usd: expect.any(Number) });
+    expect(overlap).toMatch(new RegExp(`raise ${a.lease_id} refused: another raise holds ${join(state, 'raise.lock')} \\(pid ${process.pid} on ${hostname()} since .*, raising ${a.lease_id} to \\$5.00\\)\\. One raise runs at a time per freeze`));
+    expect(reached).toBe(0);
+    expect([leaseUsd(c, a.lease_id), ledgerStatus({ ledgerPath: vmLedger(a.lease_id), runId: a.lease_id }).run!.budget_usd, hostCommitted().committed_usd, raises(state).map(r => r.vm_result ?? 'confirmed')]).toEqual([5, 5, 9, ['confirmed']]);
+    expect(() => raise(c, b.lease_id, 4.5, 'past the block', ssh)).toThrow(/block T1 would hold \$9.50, over its \$9.00 cap/);
+    expect(existsSync(join(state, 'raise.lock'))).toBe(false);
+  });
+
+  test('a held raise lock refuses every raise and is never broken automatically; clear-stale-lock clears it only once its holder is gone and the campaign id is typed out', () => {
+    const { c, state, launch, vmLedger, ssh, hostCommitted } = setup();
+    const l = launch('cell-0', 'vm-0');
+    mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) });
+    const lockFile = join(state, 'raise.lock');
+    const hold = (pid: number) => writeFileSync(lockFile, JSON.stringify({ pid, host: hostname(), started_at: '2026-11-03T00:00:00.000Z', lease_id: l.lease_id, to_usd: 6, reason: 'crashed', dry_run: false }) + '\n');
+    const cli = (...args: string[]) => {
+      const p = Bun.spawnSync([process.execPath, join(ROOT, 'eval/runner/q1/raise-lease.ts'), 'clear-stale-lock', '--campaign', c.manifestPath, '--state', state, ...args], { stdout: 'pipe', stderr: 'pipe' });
+      return { code: p.exitCode, out: p.stdout.toString(), err: p.stderr.toString() };
+    };
+
+    hold(process.pid);
+    for (const dryRun of [true, false]) expect(() => raise(c, l.lease_id, 5, 'while held', ssh, { dryRun })).toThrow(/another raise holds .*raise.lock \(pid \d+ on .* since 2026-11-03T00:00:00.000Z, raising .* to \$6.00\)\. One raise runs at a time per freeze, and nothing breaks a held lock\..*the person running the campaign first runs `bun eval\/runner\/q1\/raise-lease.ts show .*` and compares its lease_usd with the VM's budget_usd\. Only if the VM holds more, .*from lease_usd to the VM's amount\. Otherwise they change nothing, and an unknown raise stands until the lease settles\..*`bun eval\/runner\/q1\/raise-lease.ts clear-stale-lock --campaign .* --confirm raise-\d+`/);
+    expect(() => clearStaleLock(c, c.manifest.campaign_id)).toThrow(/held by pid \d+, which is still running on this host/);
+
+    const gone = Bun.spawnSync(['true']).pid;
+    hold(gone);
+    expect(() => raise(c, l.lease_id, 5, 'stale', ssh)).toThrow(/nothing breaks a held lock/);
+    expect(cli('--confirm', 'raise')).toMatchObject({ code: 1, err: expect.stringMatching(/needs --confirm with the campaign id typed out; "raise" is not raise-\d+/) });
+    expect(existsSync(lockFile)).toBe(true);
+    const cleared = cli('--confirm', c.manifest.campaign_id);
+    expect(cleared.code).toBe(0);
+    expect(JSON.parse(cleared.out)).toMatchObject({ cleared: lockFile, holder: { pid: gone, lease_id: l.lease_id } });
+    expect(() => clearStaleLock(c, c.manifest.campaign_id)).toThrow(/holds no raise lock/);
+    expect([hostCommitted().committed_usd, raises(state).length]).toEqual([4, 0]);
+    expect(raise(c, l.lease_id, 5, 'after the clear', ssh)).toMatchObject({ from_usd: 4, to_usd: 5 });
+    expect(existsSync(lockFile)).toBe(false);
   });
 
   test('a reserved lease cannot be settled and is abandoned at its full reservation; a finished lease is not raised', () => {

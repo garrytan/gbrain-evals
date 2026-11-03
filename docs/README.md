@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.150, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
+gbrain-evals v0.10.153, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -198,7 +198,7 @@ These documents fix a method before measuring. They publish no capability scores
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
 | Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? | [November 1 SkillOpt method preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md) with three amendments: Haiku 5.5 probes 1 and 2 ([probe 1's summary](benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json)), the frontier probe on Opus 5.5 and GPT-6.1 Sol, and the one test-split read reported in the [November 2 report](benchmarks/2026-11-01-skillopt-method/REPORT.md); task sets: [v2](../eval/data/skillopt-method-v2/README.md), which the probe reads, and the frozen [v1](../eval/data/skillopt-method-v1/README.md) |
-| Can a harder task set, scored on substance, leave room above one Opus 5.5 rewrite of the shipped `query`, `briefing` and `fact-check` skills, and if it can, does gbrain's SkillOpt loop beat that rewrite? | [November 2 SkillOpt ceiling preregistration (N15)](benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md) with its calibration and pin amendments; its headroom gate has not run; task set: [v3](../eval/data/skillopt-method-v3/README.md) |
+| Can a harder task set, scored on substance, leave room above one Opus 5.5 rewrite of the shipped `query`, `briefing` and `fact-check` skills, and if it can, does gbrain's SkillOpt loop beat that rewrite? | [November 2 SkillOpt ceiling preregistration (N15)](benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md) with its calibration, pin and calibration re-read amendments; its headroom gate has not run; task set: [v3](../eval/data/skillopt-method-v3/README.md) |
 
 ## Data and methods
 
@@ -270,6 +270,15 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 The F6 route row's preregistration link now reads "amendments A1 to A4b and A6". A6 adds particle-1 rows beside F6's
 published rows and changes no F6 cell, bar, verdict or published number. No other row changed.
+
+### 2026-11-03: Opening names v0.10.153
+
+The opening names v0.10.153 (was v0.10.150). No row changed.
+
+### 2026-11-03: SkillOpt ceiling row names the calibration re-read
+
+The SkillOpt ceiling row in "Protocols and preregistrations" now lists the calibration re-read among the
+preregistration's amendments. Its headroom gate has not run, and no other row changed.
 
 ### 2026-11-03: F6 current-master rerun scoreboard; opening names v0.10.150
 
