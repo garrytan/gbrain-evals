@@ -16,7 +16,8 @@
  *                      worked at C (a later chief executive when there is one,
  *                      else an officer or a team member), contradicted, with
  *                      the real founder; and the real founder's claim,
- *                      supported
+ *                      supported, except for a company with a look-alike
+ *                      name, where lookalike-founder makes that claim
  *   absent             a claim about an entity no page carries, built from a
  *                      real one; the brain cannot support it
  *
@@ -162,7 +163,8 @@ export function factCheckV3Drafts(corpus: WorldCorpus, rng: Rng): DraftV3[] {
     }
   }
 
-  // not-founder: per company, the real founder's claim, and one person who works or worked there claimed as its founder.
+  // not-founder: per company, the real founder's claim (left to lookalike-founder for a look-alike company), and one person who works or worked there claimed as its founder.
+  const lookalikeCompanies = new Set(w.lookalikes.companies.flat());
   for (const c of companies) {
     if (!c.founder) continue;
     const f = founderFromText(pages, c.slug);
@@ -171,7 +173,7 @@ export function factCheckV3Drafts(corpus: WorldCorpus, rng: Rng): DraftV3[] {
     const others = [...w.people.values()].filter(x => x.slug !== c.founder && x.stints.some(s => s.org === c.slug));
     const slugs = [c.slug, f.slug];
     const right = `${f.name} founded ${c.name}.`;
-    ok({
+    if (!lookalikeCompanies.has(c.slug)) ok({
       family: 'not-founder', task: taskTextV3(right), anchor: { kind: 'claim', id: founderAnchor },
       fact_keys: [`founder:${c.slug}`], answerable: true,
       gold: { values: [], slugs, cite: [slugs], status: 'supported', spec: { kind: 'fact-check', status: 'supported', parts: single('supported'), cite: [slugs] } },

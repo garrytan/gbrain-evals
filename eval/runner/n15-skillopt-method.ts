@@ -705,14 +705,14 @@ async function runGateCli(argv: readonly string[], log: (s: string) => void, out
   }
   for (const p of result?.pairs ?? []) {
     const id = `${p.skill}/${p.target}`;
-    if (p.not_run_reason === 'reprice-trigger') errors.push({ probe_id: id, origin: 'harness', message: 'not run: reprice-trigger' });
+    if (p.not_run_reason === 'reprice-trigger' || p.not_run_reason === 'unscored-spend') errors.push({ probe_id: id, origin: 'harness', message: `not run: ${p.not_run_reason}` });
     if (p.status !== 'errored') continue;
     for (const a of Object.values(p.arms)) if (a!.errored_tasks.length) errors.push({ probe_id: `${id}:${a!.arm}`, origin: 'dependency', message: `${a!.errored_tasks.length} ${a!.split} tasks errored (${a!.errored_tasks.join(', ')}); a --resume reruns only those` });
     for (const q of p.proposals) if (q.outcome === 'proposer-error') errors.push({ probe_id: `${id}:${q.id}`, origin: 'dependency', message: q.error ?? 'proposer error' });
   }
   const planned = result ? result.pairs.filter(p => p.not_run_reason !== 'sol-gate-not-needed').length : 0;
   const scored = result ? result.pairs.filter(p => p.status === 'scored').length : 0;
-  const complete = !!result && scored === planned && !result.stopped && !result.reprice_trigger;
+  const complete = !!result && scored === planned && !result.stopped && !result.reprice_trigger && !result.unscored_spend;
   return {
     ...ceilingReceipt(startedAt),
     ...(fake ? noModelSpend('fake transport: no model and no paid request') : { cost: cost ? receiptCost(cost) : null }),
@@ -723,7 +723,7 @@ async function runGateCli(argv: readonly string[], log: (s: string) => void, out
     ...(live ? { preregistration_attestation: live.attestation } : {}),
     resolved_config: { engine: 'pglite-in-memory', decide: DECIDE_OFF, mode: fake ? 'ceiling-fake' : 'ceiling', dataset: datasetName(CEILING_DATASET), stage: 'gate', attempt, prices, calibration, previous, estimate_usd: estimateUsd, resumed: argv.includes('--resume'), keys_in_process: keyNames, ledger_runner: ceilingLedgerRun('gate', attempt), models: result?.models ?? null },
     finished_at: new Date().toISOString(),
-    data: { gate: result ? { ...result, pairs: result.pairs.map(stripTexts) } : null, stopped: result?.stopped ?? null, reprice_trigger: result?.reprice_trigger ?? null, ledger_run: live ? stageLedgerRun(argv, ceilingLedgerRun('gate', attempt)) : null },
+    data: { gate: result ? { ...result, pairs: result.pairs.map(stripTexts) } : null, stopped: result?.stopped ?? null, reprice_trigger: result?.reprice_trigger ?? null, unscored_spend: result?.unscored_spend ?? null, voided: result?.voided ?? null, ledger_run: live ? stageLedgerRun(argv, ceilingLedgerRun('gate', attempt)) : null },
   };
 }
 
@@ -744,7 +744,9 @@ function logGate(g: GateStageResult, log: (s: string) => void): void {
   const v = g.verdict;
   log(`gate ${g.attempt}: ${v.verdict}${v.cause ? ` (${v.cause})` : ''}, scope ${v.scope.join(' and ') || 'none'}, H ${v.counts.H} S ${v.counts.S} D ${v.counts.D} X ${v.counts.X} V ${v.counts.V} U ${v.counts.U} of R ${v.required}, next ${v.next}${g.unsolvable.length ? `; unsolvable: ${g.unsolvable.join(', ')}` : ''}${g.mode === 'fake' ? ' (fake numbers; they prove the path, not the gate)' : ''}`);
   if (g.stopped) log(`gate ${g.attempt} stopped at ${g.stopped.kind} on ${g.stopped.skill}/${g.stopped.target} ${g.stopped.arm}: ${g.stopped.error}`);
-  if (g.reprice_trigger) log(`gate ${g.attempt} reprice trigger on ${g.reprice_trigger.skill}/${g.reprice_trigger.target}: mean rollout $${fmt(g.reprice_trigger.mean_rollout_usd)} over $${fmt(g.reprice_trigger.threshold_usd)}`);
+  if (g.reprice_trigger) log(`gate ${g.attempt} reprice trigger on ${g.reprice_trigger.skill}/${g.reprice_trigger.target}: mean cost per scored rollout $${fmt(g.reprice_trigger.mean_rollout_usd)} over $${fmt(g.reprice_trigger.threshold_usd)}`);
+  if (g.unscored_spend) log(`gate ${g.attempt} unscored spend on ${g.unscored_spend.skill}/${g.unscored_spend.target}: $${fmt(g.unscored_spend.usd)} billed with no scored rollout; a --resume reruns that pair`);
+  for (const t of FRONTIER_TARGET_NAMES) if (g.voided[t].arms) log(`gate ${g.attempt} ${t} voided spend: $${fmt(g.voided[t].usd)} on ${g.voided[t].arms} arms (failed rollouts; on the ledger, outside the re-price mean)`);
   logRequestSettings(g.request_settings, log);
 }
 

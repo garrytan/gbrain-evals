@@ -218,6 +218,17 @@ describe('skillopt-method-v3: frozen data', () => {
       }
     });
 
+    test('no two tasks share prompt text, in any family or split', () => {
+      const seen = new Map<string, string>();
+      const dups: string[][] = [];
+      for (const t of tasks) {
+        const first = seen.get(t.task);
+        if (first) dups.push([first, t.task_id]);
+        else seen.set(t.task, t.task_id);
+      }
+      expect(dups).toEqual([]);
+    });
+
     test('the capacity report meets every family and split, with no solvability or degenerate drop', () => {
       for (const row of report.capacity) {
         expect([row.family, row.short]).toEqual([row.family, 0]);
@@ -421,6 +432,8 @@ describe('skillopt-method-v3: layouts and mutations over train and selection', (
       for (const sp of ['train', 'sel'] as const) expect([report, sp, shares[report][sp]! <= shares[report].gate!]).toEqual([report, sp, true]);
     }
     expect(problems).toEqual([]);
+    const [first] = allTasks('fact-check');
+    expect(() => statusSkewV3([{ ...first!, oracle_answer: first!.oracle_answer.replace(/^STATUS: /gm, '**STATUS:** ') }])).toThrow(`${first!.task_id}'s oracle report has no STATUS: line`);
   });
 });
 
@@ -447,6 +460,17 @@ describe('skillopt-method-v3: scorer cases', () => {
     expect(run('query', qv, 'Answer: the seat count has not changed from 240 [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
     expect(run('query', qv, "Wyncrest Produce has 240 seats, and I don't see the 240 seats changing [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([true, true]);
     expect(run('query', qv, "I don't see the 240 seats changing after the renewal [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([true, true]);
+  });
+  test('query: every refusal built on see stays negated and the as-of trap scores wrong; change, changed or changing in the two words after the value keeps it', () => {
+    const refusals = ['I do not see 240 seats in the brain', "I don't see 240 seats in the brain", 'I don’t see 240 seats in the brain', "I didn't see 240 seats", "I wasn't able to see 240 seats in the brain", 'I can not see 240 seats in the brain', 'I never see 240 seats in the brain', 'I cannot see 240 seats', "I can't see 240 seats", "I couldn't see 240 seats", 'I could not see 240 seats', 'I am unable to see 240 seats', 'I am not able to see 240 seats'];
+    for (const refusal of refusals) expect([refusal, run('query', qv, `${refusal} [Source: contracts/wyncrest-produce-renewal-2025].`)]).toEqual([refusal, [false, false]]);
+    const asOf: GoldV3 = { values: [{ kind: 'number', value: 570 }], slugs: ['contracts/wyncrest-produce-renewal-2025'], spec: { kind: 'value', answer: { kind: 'number', value: 570 }, distractors: [{ kind: 'number', value: 695 }], cite: [['contracts/wyncrest-produce-renewal-2025']] } };
+    expect(run('query', asOf, "I don't see 570 seats in force on that date. The record in force then shows 695 seats. [Source: contracts/wyncrest-produce-renewal-2025]")).toEqual([false, false]);
+    expect(run('query', asOf, 'Answer: 570 seats were in force on that date [Source: contracts/wyncrest-produce-renewal-2025]. The 695 came later.')).toEqual([true, true]);
+    expect(run('query', qv, "I can't see the 240 changing [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([true, true]);
+    expect(run('query', qv, "I don't see 240 seats changed by the amendment [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([true, true]);
+    expect(run('query', qv, "I don't see 240 seats in the brain changing [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([false, false]);
+    expect(run('query', qv, "I don't see 240 seats. Nothing has changed [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([false, false]);
   });
   test('query: abstentions and look-alikes', () => {
     const qa: GoldV3 = { values: [], slugs: [], subject: 'Wyncrest Freight', spec: { kind: 'absent', name: 'Wyncrest Freight', distractors: [{ kind: 'number', value: 240 }] } };
