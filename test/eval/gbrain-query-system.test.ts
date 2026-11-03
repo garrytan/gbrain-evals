@@ -12,10 +12,10 @@
  * frozen-hit path carries every block's date.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { HELD_GBRAIN_DEFAULTS, importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { hashEmbed } from '../../eval/runner/memory-qa/run.ts';
 import { renderSessionPage } from '../../eval/runner/memory-qa/corpus.ts';
-import { GbrainQueryConnector, loadConnectorModules, parity, QUERY_PATH_PINS, wireRequest, WIRE_NAMES, type ConnectorModules } from '../../eval/runner/systems/gbrain-query/connector.ts';
+import { GbrainQueryConnector, loadConnectorModules, parity, QUERY_PATH_PINS, storedText, wireRequest, WIRE_NAMES, type ConnectorModules, type DeliveredRow } from '../../eval/runner/systems/gbrain-query/connector.ts';
 import { DELIVERY_VARIANTS, GbrainQuerySystem, memoKey, parseGrid } from '../../eval/runner/systems/gbrain-query/system.ts';
 import type { GbrainModules } from '../../eval/runner/systems/gbrain.ts';
 
@@ -163,6 +163,53 @@ describe('fixture (fixed in gbrain #6367): auto stays inside an explicit 8,000-t
   }, 120_000);
 });
 
+describe('quote-fenced chat text (gbrain v0.60.507.0 and later): the connector hands on the stored text', () => {
+  const ctx = (engine: unknown) => ({ engine, config: { engine: 'pglite' }, logger: { info() {}, warn() {}, error() {}, debug() {} }, dryRun: false, remote: false, sourceId: 'default' });
+  const stored = async (e: any, ids: number[]) => new Map((await e.executeRaw('SELECT id, chunk_text FROM content_chunks WHERE id = ANY($1::int[])', [ids]) as Array<{ id: number; chunk_text: string }>).map(r => [Number(r.id), r.chunk_text]));
+
+  test('the pinned query handler fences conversation rows; the frozen list carries the stored chunk text and deliveries count the quoted blocks', async () => {
+    const e = await brain(6, 12);
+    const raw = await conn.operations.find(o => o.name === 'query')!.handler(ctx(e), wireRequest('frozen-chunk', Q, { limit: 10 })) as DeliveredRow[];
+    expect(raw.length).toBeGreaterThan(0);
+    expect(raw.every(r => r.quoted === 'transcript' && r.chunk_text.startsWith('[quoted conversation excerpt from '))).toBe(true);
+    const c = new GbrainQueryConnector(conn, e);
+    const f = await c.freeze(Q, 10);
+    const texts = await stored(e, f.rows.map(r => r.chunk_id));
+    expect(f.rows.map(r => r.chunk_text)).toEqual(f.rows.map(r => texts.get(r.chunk_id)!));
+    const d = await c.deliver(f.rows, 'auto', 3000);
+    expect(d.record.quoted_blocks).toBe(d.record.blocks);
+    expect(d.blocks.some(b => b.text.includes('[quoted conversation excerpt'))).toBe(false);
+    const live = await c.live('live-parity', Q, 10, 3000);
+    expect(live.record.quoted_blocks).toBe(live.record.blocks);
+    expect(live.record.evidence_sha256).toBe(d.record.evidence_sha256);
+    const spans = live.rows.flatMap(r => (r.delivered?.match_spans ?? []).map(s => ({ text: r.chunk_text, ...s })));
+    expect(spans.length).toBeGreaterThan(0);
+    expect(spans.every(s => s.start >= 0 && s.start < s.end && s.end <= s.text.length)).toBe(true);
+  }, 60_000);
+
+  test('delivered match spans move back onto the unwrapped text', async () => {
+    const tq = await load<{ fenceTranscriptRows: (rows: DeliveredRow[]) => DeliveredRow[] }>('src/core/search/transcript-quote.ts');
+    const text = 'Alice: the violin by the harbor\nBob: and the trip to Lisbon';
+    const [fenced] = tq.fenceTranscriptRows([{ slug: 'chat/0000000000000001', type: 'conversation', chunk_id: 1, chunk_text: text,
+      delivered: { unit: 'chunk', chunk_ids: [1], match_spans: ['violin', 'Lisbon'].map(w => ({ chunk_id: 1, start: text.indexOf(w), end: text.indexOf(w) + w.length })), tokens: 12, truncated: false } }]);
+    expect(fenced.delivered!.match_spans.map(s => fenced.chunk_text.slice(s.start, s.end))).toEqual(['violin', 'Lisbon']);
+    expect(fenced.delivered!.match_spans[0].start).toBeGreaterThan(text.indexOf('violin'));
+    const [row] = storedText([fenced], conn.unquote);
+    expect(row.chunk_text).toBe(text);
+    expect(row.delivered!.match_spans.map(s => text.slice(s.start, s.end))).toEqual(['violin', 'Lisbon']);
+    const onFence = { ...fenced, delivered: { ...fenced.delivered!, match_spans: [{ chunk_id: 1, start: 5, end: 9 }] } };
+    expect(() => storedText([onFence], conn.unquote)).toThrow(/offset 5 falls on the quote fence/);
+  });
+
+  test('a fenced row the build cannot unwrap, or a quoted row with no fence, is refused; other rows pass unchanged', () => {
+    const row: DeliveredRow = { slug: 'chat/0000000000000001', type: 'conversation', chunk_id: 1, chunk_text: 'Alice: hello', quoted: 'transcript' };
+    expect(() => storedText([row], null)).toThrow(/exports no unquoteTranscriptText/);
+    expect(() => storedText([row], conn.unquote)).toThrow(/carries no fence naming chat\/0000000000000001/);
+    const plain: DeliveredRow = { slug: 'notes/a', type: 'note', chunk_id: 2, chunk_text: 'a note' };
+    expect(storedText([plain], null)[0]).toBe(plain);
+  });
+});
+
 describe('GbrainQuerySystem', () => {
   const identity = { version: gut.version, commit: 'test' };
   const session = (s: number) => ({ source_id: `src-${s.toString(16).padStart(16, '0')}`, turns: Array.from({ length: 30 }, (_, t) => ({ role: (t % 2 ? 'assistant' : 'user') as 'user' | 'assistant', speaker: t % 2 ? 'Bob' : 'Alice',
@@ -175,6 +222,17 @@ describe('GbrainQuerySystem', () => {
   }
   const policy = (settings: Record<string, unknown>) => ({ name: 'gbrain-query:fixed-evidence', mode: 'fixed-evidence' as const, settings: { limit: 25, ...settings } });
   const question = { text: 'Lisbon violin harbor', query_time: '2023-12-01T00:00:00' };
+
+  test('the held gbrain defaults are written to the brain, a caller setting overrides one, and the capability record lists them', async () => {
+    expect(HELD_GBRAIN_DEFAULTS).toEqual({ 'search.query_facts_block': 'false', 'search.saved_facts_supersede': 'false', 'search.remote_page_cap': '0' });
+    const sys = new GbrainQuerySystem(mods, conn, { 'search.remote_page_cap': '3' }, identity, { frozenFrom: null, rerankExpected: false });
+    await sys.reset('ns-a');
+    expect(await sys.brain.getConfig('search.query_facts_block')).toBe('false');
+    expect(await sys.brain.getConfig('search.saved_facts_supersede')).toBe('false');
+    expect(await sys.brain.getConfig('search.remote_page_cap')).toBe('3');
+    expect(((await sys.capabilities()) as unknown as Record<string, unknown>).held_defaults).toEqual({ ...HELD_GBRAIN_DEFAULTS, 'search.remote_page_cap': '3' });
+    await sys.close();
+  });
 
   test('pins are written through the config channel and checked at open; a probe (no stage) is a plain frozen call', async () => {
     const sys = await ingested();

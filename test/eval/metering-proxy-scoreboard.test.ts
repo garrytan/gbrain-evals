@@ -7,8 +7,9 @@
  * as upstream trouble. Keyless: every upstream is a fake and every key a
  * placeholder.
  */
-import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createServer, type AddressInfo, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
@@ -285,7 +286,7 @@ describe('admission control', () => {
     const slow = upstream(() => { throw new DOMException('The operation timed out.', 'TimeoutError'); });
     const two = start(slow.fetchImpl);
     try {
-      expect((await two.post('/s/openai/v1/chat/completions', chat())).status).toBe(502);
+      expect((await two.post('/s/openai/v1/chat/completions', chat())).status).toBe(504);
       expect(slow.seen).toHaveLength(1);
     } finally { two.proxy.stop(); }
   });
@@ -300,5 +301,263 @@ describe('admission control', () => {
   test('a 429 counts as upstream trouble, like a 5xx; a 400 does not', () => {
     expect(upstreamTrouble({ usd: 0, requests: 1, unpriced: 0, byModel: {}, upstream: { statuses: { '429': 1 }, failed: 0, unparseable: 0 } })).toBe(true);
     expect(upstreamTrouble({ usd: 0, requests: 1, unpriced: 0, byModel: {}, upstream: { statuses: { '400': 1 }, failed: 0, unparseable: 0 } })).toBe(false);
+  });
+});
+
+describe('particle-1 through the lease proxy (plan GST-605 Phase 2)', () => {
+  beforeEach(() => closeLedgers());
+  const PARTICLE_ENV = { ...FAKE_ENV, PARTICLE_API_KEY: 'placeholder-particle' };
+  const harness = { routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { harness: 'reader', judge: 'judge', agent: 'agent' }, defaultClass: 'extraction' }, env: PARTICLE_ENV };
+  const particleChat = (extra: Record<string, unknown> = {}) => ({ model: 'particle-1', messages: [{ role: 'user', content: 'hello there' }], reasoning_effort: 'medium', max_completion_tokens: 16000, ...extra });
+  const particleReply = () => Response.json({ id: 'chatcmpl-1', model: 'particle-ai/particle-1', choices: [{ message: { role: 'assistant', content: 'ok' }, finish_reason: 'stop' }], usage: { prompt_tokens: 1000, completion_tokens: 200, completion_tokens_details: { reasoning_tokens: 150 } } });
+
+  // Value: protects=every particle request is metered by the lease that pays for it; fails_when=a particle request is refused as an unknown route, forwarded with the cell's dummy key, or charged to no model; why_new=the lease proxy gains its first OpenAI-compatible upstream; seam=none; no_claim=keyless (a fake upstream), Particle's real billing
+  test('a particle chat on a slot goes to api.particle.ai with the proxy\'s key, is priced at particle-1\'s rates and charged to particle; only the listed routes pass', async () => {
+    const up = upstream(particleReply);
+    const { proxy, post, lines } = start(up.fetchImpl, harness);
+    try {
+      expect((await post('/harness/particle/v1/chat/completions', particleChat(), { authorization: 'Bearer dummy-key-the-proxy-replaces' })).status).toBe(200);
+      expect(up.seen.map(s => [s.url, s.headers.get('authorization')])).toEqual([['https://api.particle.ai/v1/chat/completions', 'Bearer placeholder-particle']]);
+      expect((await fetch(`http://127.0.0.1:${proxy.port}/harness/particle/v1/models`)).status).toBe(200);
+      expect((await post('/harness/particle/v1/responses', particleChat())).status).toBe(403);
+      const forwarded = lines().filter(l => l.outcome === 'forwarded');
+      expect(forwarded.map(l => [l.provider, l.slot, l.route, l.model])).toEqual([['particle', 'harness', '/v1/chat/completions', 'particle-1'], ['particle', 'harness', '/v1/models', null]]);
+      expect(forwarded[0].actual_usd).toBeCloseTo((1000 * 0.25 + 200 * 1.0) / 1e6, 12);
+      expect(proxy.meters.get('slot:harness')!.byModel).toEqual({ 'particle:particle-1': { usd: forwarded[0].actual_usd!, requests: 1 } });
+    } finally { proxy.stop(); }
+    const keyless = start(upstream(particleReply).fetchImpl, { ...harness, env: FAKE_ENV });
+    try {
+      const res = await keyless.post('/harness/particle/v1/chat/completions', particleChat());
+      expect(res.status).toBe(503);
+      expect((await res.json() as any).error.message).toContain('PARTICLE_API_KEY is not set');
+    } finally { keyless.proxy.stop(); }
+  });
+
+  // Value: protects=particle-1 reads at its 16,000-token output floor while every other reader keeps the 2,048 cap; fails_when=the per-model key is ignored (particle refused) or widens the class (Opus admitted at 16,000); why_new=RouteCaps gains its first per-model key; seam=none; no_claim=other route classes
+  test('on the same reader slot particle-1 passes at 16,000 output tokens and Opus at 16,000 is refused; particle stays capped above 16,000 and on the judge slot', async () => {
+    const up = upstream(particleReply);
+    const { proxy, post, lines } = start(up.fetchImpl, harness);
+    try {
+      expect((await post('/harness/particle/v1/chat/completions', particleChat())).status).toBe(200);
+      const opus = await post('/harness/anthropic/v1/messages', { model: 'claude-opus-5-5', max_tokens: 16000, messages: [{ role: 'user', content: 'hi' }] });
+      expect(opus.status).toBe(400);
+      expect((await opus.json() as any).error.message).toContain('reader route cap of 2048');
+      const over = await post('/harness/particle/v1/chat/completions', particleChat({ max_completion_tokens: 16001 }));
+      expect(over.status).toBe(400);
+      expect((await over.json() as any).error.message).toContain('reader route cap of 16000 for particle:particle-1');
+      expect((await post('/judge/particle/v1/chat/completions', particleChat())).status).toBe(400);
+      expect((await post('/harness/particle/v1/chat/completions', particleChat({ max_completion_tokens: undefined }))).status).toBe(200);
+      expect(up.seen.map(s => s.body.max_completion_tokens)).toEqual([16000, 16000]);
+      expect(lines().map(l => [l.model, l.route_class, l.output_cap, l.status])).toEqual([
+        ['particle-1', 'reader', 16000, 200], ['claude-opus-5-5', 'reader', 2048, 400], ['particle-1', 'reader', 16000, 400], ['particle-1', 'judge', 2048, 400], ['particle-1', 'reader', 16000, 200],
+      ]);
+    } finally { proxy.stop(); }
+  });
+
+  // Value: protects=a request that passed the proxy's upstream deadline is never resent by a client (issue #250), and neither is one that failed in a way Bun does not prove happened before sending (issue #288); fails_when=the proxy answers its own upstream timeout, or a failure with no code, with the retryable 502 a refused connection gets, or sends a failure other than a refusal upstream again; why_new=compatTimedOut reads a 504 as a timeout; seam=none; no_claim=Particle's own 504
+  test('an upstream request that times out at the proxy is answered 504, which compatTimedOut reads as a timeout; a certificate the client rejected or a host that did not resolve stays a 502, a failure with no code is a 504, and none is sent upstream again (#288)', async () => {
+    const { compatTimedOut, classifyCompatError, CompatHttpError } = await import('../../eval/runner/providers/openai-compatible.ts');
+    const errors = { TimeoutError: new DOMException('The operation timed out.', 'TimeoutError'), CERT_HAS_EXPIRED: Object.assign(new TypeError('certificate has expired'), { code: 'CERT_HAS_EXPIRED' }),
+      ENOTFOUND: Object.assign(new TypeError('getaddrinfo ENOTFOUND api.particle.ai'), { code: 'ENOTFOUND' }), uncoded: new TypeError('fetch failed') };
+    for (const [name, status] of [['TimeoutError', 504], ['CERT_HAS_EXPIRED', 502], ['ENOTFOUND', 502], ['uncoded', 504]] as const) {
+      const lease = BudgetRun.openLease({ runId: `particle-upstream-${name}`, leaseUsd: 1, ledgerPath: ledgerFile() });
+      let calls = 0;
+      const failing = (async () => { calls++; throw errors[name]; }) as unknown as typeof fetch;
+      const proxy = new MeteringProxy({ fetchImpl: failing, policy: { lease, usageLog: join(tmp, `particle-upstream-${name}.ndjson`), ...harness } });
+      proxy.start();
+      try {
+        const res = await fetch(`http://127.0.0.1:${proxy.port}/harness/particle/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(particleChat()) });
+        expect([name, res.status, calls]).toEqual([name, status, 1]);
+        expect(compatTimedOut(new CompatHttpError(classifyCompatError('particle', res.status, await res.text())))).toBe(status === 504);
+      } finally { proxy.stop(); }
+    }
+    expect([compatTimedOut(new DOMException('x', 'AbortError')), compatTimedOut(new Error('fetch failed')), compatTimedOut(null)]).toEqual([true, false, false]);
+  });
+
+  // Value: protects=an exhausted lease stops particle before any spend; fails_when=a reservation over the lease is forwarded, or its refusal reads to the provider module as Particle's own credit stop; why_new=particle requests reserve 16,000 output tokens each; seam=none; no_claim=Particle's own 402
+  test('a lease that cannot cover the reservation refuses before forwarding, with the marker the provider module reads as a proxy budget stop', async () => {
+    const { classifyCompatError } = await import('../../eval/runner/providers/openai-compatible.ts');
+    const up = upstream(particleReply);
+    const lease = BudgetRun.openLease({ runId: 'particle-exhausted', leaseUsd: 0.01, ledgerPath: ledgerFile() });
+    const proxy = new MeteringProxy({ fetchImpl: up.fetchImpl, policy: { lease, usageLog: join(tmp, 'particle-exhausted.ndjson'), ...harness } });
+    proxy.start();
+    try {
+      const res = await fetch(`http://127.0.0.1:${proxy.port}/harness/particle/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(particleChat()) });
+      expect(res.status).toBe(402);
+      expect(classifyCompatError('particle', 402, await res.text()).kind).toBe('proxy_budget');
+      expect(up.seen).toHaveLength(0);
+    } finally { proxy.stop(); }
+  });
+
+  // Value: protects=every lease-proxy budget refusal stops a particle reader at once (issue #254); fails_when=the 503 for a missing PARTICLE_API_KEY or the 403 for a model off the allowlist reads as a retryable server error or a client error; why_new=a compat budget stop is read by its error name, which only a 402 got; seam=none; no_claim=the harness proxy's refusals
+  test('the lease proxy\'s 503 for a missing key and 403 for a model off the allowlist are budget stops; its other refusals are not', async () => {
+    const { classifyCompatError, compatError } = await import('../../eval/runner/providers/openai-compatible.ts');
+    const missing = start(upstream(particleReply).fetchImpl, { ...harness, env: FAKE_ENV });
+    const offList = start(upstream(particleReply).fetchImpl, { ...harness, allowModels: ['openai:gpt-6.1-sol'] });
+    try {
+      const answers = [await missing.post('/harness/particle/v1/chat/completions', particleChat()), await offList.post('/harness/particle/v1/chat/completions', particleChat()), await offList.post('/harness/particle/v1/responses', particleChat())];
+      const read = await Promise.all(answers.map(async res => {
+        const info = classifyCompatError('particle', res.status, await res.text());
+        const e = compatError(info) as Error & { status?: number };
+        return [res.status, info.kind, e.name, e.status];
+      }));
+      expect(read).toEqual([[503, 'proxy_budget', 'BudgetExceededError', 503], [403, 'proxy_budget', 'BudgetExceededError', 403], [403, 'client', 'CompatHttpError', 403]]);
+    } finally { missing.proxy.stop(); offList.proxy.stop(); }
+  });
+
+  // Value: protects=a particle request whose connection dropped after it reached Particle is never sent again (issue #250's billing risk); fails_when=the proxy's transport retry resends a reset particle request, or answers it with a 502 a client retries; why_new=particle joins the lease proxy's A23 transport retry; seam=none; no_claim=whether Particle bills a dropped request
+  test('a reset particle connection is answered 504 and sent once; a refused one is sent again, like any provider', async () => {
+    const { compatTimedOut, classifyCompatError, CompatHttpError } = await import('../../eval/runner/providers/openai-compatible.ts');
+    const reset = upstream(() => { throw Object.assign(new Error('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' }); });
+    const one = start(reset.fetchImpl, harness);
+    try {
+      const res = await one.post('/harness/particle/v1/chat/completions', particleChat());
+      expect(res.status).toBe(504);
+      expect(compatTimedOut(new CompatHttpError(classifyCompatError('particle', res.status, await res.text())))).toBe(true);
+      expect(reset.seen).toHaveLength(1);
+      expect(one.lines().map(l => [l.outcome, l.charged_reservation])).toEqual([['failed', true]]);
+    } finally { one.proxy.stop(); }
+    let calls = 0;
+    const refused = upstream(() => { if (++calls === 1) throw Object.assign(new Error('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' }); return particleReply(); });
+    const two = start(refused.fetchImpl, harness);
+    try {
+      expect((await two.post('/harness/particle/v1/chat/completions', particleChat())).status).toBe(200);
+      expect(refused.seen).toHaveLength(2);
+    } finally { two.proxy.stop(); }
+  });
+
+  // Value: protects=a response body that fails after the headers settles its lease entry, frees its admission slot and leaves a failed usage line, and a particle client never sends it again (issue #270); fails_when=the body read throws outside the send's catch, so the reservation stays open, the admission slot stays held, no usage line is written and the client gets a 500 it retries; why_new=only the send had a catch; seam=a fake upstream whose body stream errors after the headers; no_claim=whether Particle bills a dropped body
+  test('a body that fails after the headers settles its reservation, frees its admission slot and logs a failed line; particle is answered 504, another provider 502 unless it timed out (#270)', async () => {
+    const { compatTimedOut, classifyCompatError, CompatHttpError } = await import('../../eval/runner/providers/openai-compatible.ts');
+    const reset = Object.assign(new Error('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' });
+    for (const [prov, body, error, status] of [
+      ['particle', particleChat(), reset, 504],
+      ['openai', chat(), reset, 502],
+      ['openai', chat(), new DOMException('The operation timed out.', 'TimeoutError'), 504],
+    ] as const) {
+      const broken = upstream(() => new Response(new ReadableStream({ start(c) { c.error(error); } }), { status: 200, headers: { 'content-type': 'application/json' } }));
+      const admission = new AdmissionController({ [prov]: { concurrency: 1 } }, { maxWaitMs: 100 });
+      const { proxy, post, lines, lease } = start(broken.fetchImpl, { ...harness, admission });
+      try {
+        const res = await post(`/harness/${prov}/v1/chat/completions`, body);
+        expect([prov, error.name, res.status]).toEqual([prov, error.name, status]);
+        expect(compatTimedOut(new CompatHttpError(classifyCompatError(prov, res.status, await res.text())))).toBe(status === 504);
+        expect(broken.seen).toHaveLength(1);
+        expect(lines().map(l => [l.outcome, l.status, l.charged_reservation, l.actual_usd === l.reserved_usd && l.actual_usd! > 0])).toEqual([['failed', 200, true, true]]);
+        const ledger = ledgerStatus({ ledgerPath: lease.ledgerPath, runId: lease.runId });
+        expect([ledger.totals.open_reservations_usd, ledger.run!.committed_usd]).toEqual([0, lines()[0].reserved_usd!]);
+        expect(admission.waitFor(prov, 1)).toBe(0);
+      } finally { proxy.stop(); }
+    }
+  });
+
+  // Value: protects=a particle body that fails after the headers is answered 504 and frees its admission slot even when the ledger cannot record it, so no client sends it again (issue #270); fails_when=a settle that throws escapes the catch and Bun answers 500, which particle clients retry; why_new=the body-read catch settles the ledger first; seam=a lease whose settle throws; no_claim=SQLite's own busy handling
+  test('a particle body failure is still answered 504 with its admission slot freed when the ledger cannot settle it (#270)', async () => {
+    const reset = Object.assign(new Error('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' });
+    const broken = upstream(() => new Response(new ReadableStream({ start(c) { c.error(reset); } }), { status: 200, headers: { 'content-type': 'application/json' } }));
+    const admission = new AdmissionController({ particle: { concurrency: 1 } }, { maxWaitMs: 100 });
+    const { proxy, post, lease } = start(broken.fetchImpl, { ...harness, admission });
+    lease.settle = () => { throw new Error('SQLITE_BUSY: database is locked'); };
+    const logged = spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      expect((await post('/harness/particle/v1/chat/completions', particleChat())).status).toBe(504);
+      expect(broken.seen).toHaveLength(1);
+      expect(admission.waitFor('particle', 1)).toBe(0);
+      expect(String(logged.mock.calls[0]?.[0])).toContain('so its reservation stays open: SQLITE_BUSY');
+    } finally { logged.mockRestore(); proxy.stop(); }
+  });
+
+  // Value: protects=a proxied client always outwaits the lease proxy, so the proxy never sends and bills a request its client gave up on (issue #271); fails_when=an admission wait can exceed the 600 s a proxied client's deadline counts, from the constructor or from --admission-max-wait-s; why_new=clients of a loopback proxy wait PROXIED_DEADLINE_MS, which assumes this bound; seam=a fake clock; no_claim=a real 26-minute wait
+  test('admission waits at most ADMISSION_MAX_WAIT_MS, which the deadline a proxied client waits covers with the upstream deadline (#271)', async () => {
+    const { ADMISSION_MAX_WAIT_MS, PROXIED_DEADLINE_MS, UPSTREAM_DEADLINE_MS, compatDeadlineMs } = await import('../../eval/runner/metering-proxy.ts');
+    const ac = new AdmissionController({}, { now: () => 0, maxWaitMs: 3_600_000 });
+    ac.observe('particle', 'particle-1', new Headers({ 'x-ratelimit-limit-requests': '100', 'x-ratelimit-remaining-requests': '1', 'x-ratelimit-reset-requests': '15m' }));
+    expect(ac.waitFor('particle', 1, 'particle-1')).toBe(900_000);
+    const outcome = await Promise.race([ac.acquire('particle', 1, 'particle-1').then(() => 'admitted', e => (e as Error).name), Bun.sleep(300).then(() => 'still waiting')]);
+    expect(outcome).toBe('AdmissionRefused');
+    const lease = ['--budget-ledger', 'x', '--lease-usd', '1', '--run-id', 'r'];
+    expect(() => parseProxyArgs([...lease, '--admission-max-wait-s', '3600'])).toThrow('--admission-max-wait-s must be a positive number of seconds up to 600');
+    expect(parseProxyArgs([...lease, '--admission-max-wait-s', '600']).admissionMaxWaitMs).toBe(600_000);
+    expect(ADMISSION_MAX_WAIT_MS).toBe(600_000);
+    expect(PROXIED_DEADLINE_MS).toBeGreaterThan(ADMISSION_MAX_WAIT_MS + UPSTREAM_DEADLINE_MS);
+    expect([compatDeadlineMs('http://127.0.0.1:8787/harness/particle/v1/chat/completions'), compatDeadlineMs('https://api.particle.ai/v1/chat/completions')]).toEqual([PROXIED_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
+  });
+
+  // Value: protects=a request's transport retries and its body share one upstream deadline, so a refused-then-slow request ends inside the time a proxied client waits (issues #270, #271); fails_when=the proxy makes a new AbortSignal.timeout per send again; why_new=PROXIED_DEADLINE_MS counts one upstream deadline per request; seam=a stubbed AbortSignal.timeout and a fake upstream that refuses once; no_claim=a real 900 s wait
+  test('a request sent again after a refused connection keeps the one upstream deadline it started with (#270, #271)', async () => {
+    const { UPSTREAM_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+    const signals: Array<AbortSignal | null | undefined> = [];
+    let calls = 0;
+    const refusedOnce = (async (_url: RequestInfo | URL, init?: RequestInit) => {
+      signals.push(init?.signal);
+      if (++calls === 1) throw Object.assign(new Error('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' });
+      return particleReply();
+    }) as unknown as typeof fetch;
+    const timeout = AbortSignal.timeout;
+    const made: number[] = [];
+    AbortSignal.timeout = (ms: number) => { made.push(ms); return timeout.call(AbortSignal, ms); };
+    const { proxy, post } = start(refusedOnce, harness);
+    try {
+      expect((await post('/harness/particle/v1/chat/completions', particleChat())).status).toBe(200);
+    } finally { AbortSignal.timeout = timeout; proxy.stop(); }
+    expect(made.filter(ms => ms === UPSTREAM_DEADLINE_MS)).toHaveLength(1);
+    expect(signals).toHaveLength(2);
+    expect(signals[0]).toBeInstanceOf(AbortSignal);
+    expect(signals[1]).toBe(signals[0]);
+  });
+
+  // Value: protects=a particle request the lease proxy lost after it may have gone out is sent upstream once, by the proxy and by its client (issue #288); fails_when=the proxy answers a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress with the 502 a client sends again; why_new=the proxy answers every particle transport failure 504 unless it is proven to happen before sending; seam=a loopback socket upstream that reads the request and answers badly, and Bun.sleep run at once; no_claim=what Particle's edge sends when it fails
+  test('a particle request whose upstream answers a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress is answered 504 and reaches the upstream once, through qa-v2 too; a refused connection, and another provider, keep the 502 (#288)', async () => {
+    const { ChatClient } = await import('../../eval/runner/memory-qa/qa-v2.ts');
+    const answers: Record<string, (s: Socket) => void> = {
+      'status line': s => s.end('not http at all\r\n\r\n'),
+      'content-length': s => s.end('HTTP/1.1 200 OK\r\ncontent-length: abc\r\n\r\n{}'),
+      chunk: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ntransfer-encoding: chunked\r\n\r\nzz\r\nhello\r\n0\r\n\r\n'),
+      gzip: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-encoding: gzip\r\ncontent-length: 10\r\n\r\nnotgzip!!!'),
+      refused: () => {},
+    };
+    const saved = { url: process.env.PARTICLE_BASE_URL, key: process.env.PARTICLE_API_KEY };
+    const sleep = spyOn(Bun, 'sleep').mockImplementation(async () => {});
+    try {
+      for (const [name, answer] of Object.entries(answers)) {
+        let hits = 0;
+        const up = createServer(s => { s.on('error', () => {}); s.once('data', () => { hits++; answer(s); }); });
+        await new Promise<void>(r => up.listen(0, '127.0.0.1', r));
+        const url = `http://127.0.0.1:${(up.address() as AddressInfo).port}`;
+        if (name === 'refused') await new Promise<void>(r => up.close(() => r()));
+        const lease = BudgetRun.openLease({ runId: `particle-288-${name.replace(/ /g, '-')}`, leaseUsd: 1, ledgerPath: ledgerFile() });
+        const proxy = new MeteringProxy({ upstream: { particle: url, openai: url }, policy: { lease, usageLog: join(tmp, `particle-288-${n}-${name.replace(/ /g, '-')}.ndjson`), ...harness } });
+        proxy.start();
+        const base = `http://127.0.0.1:${proxy.port}`;
+        const post = (path: string, body: unknown) => fetch(`${base}${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+        try {
+          const particle = await post('/harness/particle/v1/chat/completions', particleChat());
+          const openai = await post('/harness/openai/v1/chat/completions', chat());
+          const lost = name !== 'refused';
+          expect([name, particle.status, openai.status, hits]).toEqual([name, lost ? 504 : 502, 502, lost ? 2 : 0]);
+          Object.assign(process.env, { PARTICLE_BASE_URL: `${base}/harness/particle/v1`, PARTICLE_API_KEY: 'placeholder-particle' });
+          if (!lost) continue;
+          const err = await new ChatClient(join(tmp, `qa-cache-288-${n}`), () => 0).chat('particle:particle-1', `Q ${name}?`, { maxTokens: 64, replicate: 0 }).catch(e => e) as Error & { status?: number; attempt_errors?: string[] };
+          expect([name, err.status, err.attempt_errors?.length, hits]).toEqual([name, 504, 1, 3]);
+        } finally { proxy.stop(); if (name !== 'refused') up.close(); }
+      }
+    } finally {
+      sleep.mockRestore();
+      for (const [k, v] of [['PARTICLE_BASE_URL', saved.url], ['PARTICLE_API_KEY', saved.key]] as const) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+    }
+  });
+
+  // Value: protects=the lease proxy never sends a provider's real key over http to a host that is not loopback (issue #277); fails_when=an --upstream or a constructor upstream with an http URL that is not loopback is accepted; why_new=assertMetered guards clients only, and the proxy swaps in the real key itself; seam=none; no_claim=TLS certificate checks
+  test('an upstream that is not loopback must be https, because the proxy sends the real key there (#277)', () => {
+    expect(() => new MeteringProxy({ upstream: { particle: 'http://api.particle.ai' } })).toThrow('upstream particle=http://api.particle.ai would carry the particle key in cleartext');
+    expect(() => new MeteringProxy({ upstream: { openai: 'http://10.0.0.5:8080' } })).toThrow('cleartext');
+    expect(() => new MeteringProxy({ upstream: { particle: 'https://api.particle.ai', openai: 'http://127.0.0.1:9', voyage: 'http://localhost:9' } })).not.toThrow();
+  });
+
+  test('the CLI takes a per-model route cap and a particle upstream', () => {
+    const a = parseProxyArgs(['--budget-ledger', 'x', '--lease-usd', '1', '--run-id', 'r', '--route-caps', 'extraction=4096,reader=2048,reader@particle:particle-1=16000,judge=2048', '--route-class', 'harness=reader,judge=judge', '--upstream', 'particle=http://127.0.0.1:9']);
+    expect(a.routeCaps!.caps).toEqual({ extraction: 4096, reader: 2048, 'reader@particle:particle-1': 16000, judge: 2048 });
+    expect(a.upstream).toEqual({ particle: 'http://127.0.0.1:9' });
+    expect(DEFAULT_ROUTE_CAPS).toMatchObject({ reader: 2048, 'reader@particle:particle-1': 16000 });
   });
 });

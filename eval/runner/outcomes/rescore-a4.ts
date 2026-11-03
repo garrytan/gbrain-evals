@@ -8,7 +8,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { generateA4World, isAnswerable } from '../../generators/a4-abstention-gen.ts';
-import { scoreAnswerV2, type AnswerRow } from '../a4-abstention.ts';
+import { scoreReaderAnswer, type AnswerRow } from '../a4-abstention.ts';
 import { axes, category, scoreA4V3, summarize, v2CategoryOf, type Category, type OutcomeAxes } from './v3.ts';
 
 export function rescoreA4Receipt(receipt: { resolved_config: { seed: number }; data: { paid: { answers: AnswerRow[] } } }) {
@@ -27,11 +27,11 @@ export function rescoreA4Receipt(receipt: { resolved_config: { seed: number }; d
         rows.push(axes({ answerable, executionError: a.error ?? 'error' }));
         continue;
       }
-      const frozen = scoreAnswerV2(q, a.final, world.values).outcome;
+      const frozen = scoreReaderAnswer(q, a.final, a.stop_reason ?? 'end', world.values).outcome_v2!;
       if (a.outcome_v2 && frozen !== a.outcome_v2) throw new Error(`${a.id}/${arm}: scoreAnswerV2 gives ${frozen}, receipt stored ${a.outcome_v2}`);
       const c2 = v2CategoryOf(frozen, answerable);
       v2[c2]++;
-      const r = scoreA4V3(q, a.final, world.values, answerable);
+      const r = scoreA4V3(q, a.final, world.values, answerable, a.truncated ? `output cut off at the limit (stop reason ${a.stop_reason})` : null);
       rows.push(r);
       if (category(r) !== c2) changed.push({ id: a.id, v2: c2, v3: category(r), final: a.final });
     }

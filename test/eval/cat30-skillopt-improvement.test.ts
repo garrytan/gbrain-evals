@@ -140,6 +140,20 @@ describe('runCat30 gate wiring', () => {
     expect(rc.reranker_enabled).toBe(false);
   }, RUN_TIMEOUT);
 
+  test('asks gbrain for the iterative loop by name and records the mode (one-shot is gbrain\'s default since v0.60.542.0)', async () => {
+    const modes: unknown[] = [];
+    const r = await runCat30({
+      seeds: ['seed-missing-structure'],
+      reportsDir: tmpReports(),
+      quiet: true,
+      engineFactory: async () => fakeEngine(),
+      runSkillOptFn: (async (opts: any) => { modes.push(opts.optimizerMode); return goodRunSkillOpt(opts); }) as any,
+      scoreFn: scoreByMarker,
+    });
+    expect(modes).toEqual(['reflect']);
+    expect((r.receipt.resolved_config as any).optimizer_mode).toBe('reflect');
+  }, RUN_TIMEOUT);
+
   test('skillopt-cats-08: isolated GBRAIN_HOME temp dir is removed after the run', async () => {
     await runCat30({
       seeds: ['seed-missing-structure'],

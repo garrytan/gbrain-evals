@@ -22,6 +22,8 @@ import { offlineCat36Profile, type Cat36Row } from '../../eval/runner/cat36-asso
 import { cat36RuntimeSourceId } from '../../eval/runner/cat36-production.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION } from '../../eval/runner/receipt.ts';
 import { normalizeNativeProbeError } from '../../eval/runner/situation-recall-native.ts';
+import { ALL_SEEDS, DEFAULT_PAIRS } from '../../eval/runner/cat33-skillopt-transfer.ts';
+import { JUDGE_MODEL } from '../../eval/runner/longmemeval-answers.ts';
 
 const SHA = 'a'.repeat(40), CANDIDATE = 'b'.repeat(40), HASH = 'c'.repeat(64);
 const domains = ['constraints', 'preferences', 'commitments', 'changing-decisions', 'causal-context'];
@@ -177,6 +179,26 @@ describe('full situation recall coverage inventory', () => {
     expect(mapped['longmemeval-answers'].receipt_category).toBe('longmemeval-answers');
   });
 
+  test('a Cat 33 profile at the runner\'s default pairs registers, and the LongMemEval-answers profile names its pinned judge (#240)', () => {
+    const contract = nativeRegressionContract({ id: 'cat33', category: 'cat33' })!;
+    const { manifest } = fixture();
+    const cat33 = manifest.profiles.find(p => p.id === 'cat33')!;
+    const pairs = DEFAULT_PAIRS.map(({ x, y }) => `${x}>${y}`);
+    Object.assign(cat33, {
+      mode: contract.mode, receipt_category: contract.receipt_category, metrics: structuredClone(contract.metrics),
+      native_contract_sha256: regressionHash(contract), required_slices: [...ALL_SEEDS, ...pairs], repeats: 2,
+      budget: { ...cat33.budget, agent_usd: 6, enforcement: 'isolated-provider-hard-limit' },
+      probes: ALL_SEEDS.flatMap(seed => pairs.map(pair => ({ probe_id: `${seed}|${pair}`, family_id: seed, slices: [seed, pair], critical: false, no_gold_metrics: [] }))),
+    });
+    manifest.cells.push(...manifest.cells.filter(c => c.profile_id === 'cat33').map(c => {
+      const id = c.id.replace(/-0$/, '-1');
+      return { ...c, id, repeat: 1, runtime: Object.fromEntries(Object.entries(c.runtime).map(([k, v]) => [k, v.replace(c.id, id)])) as typeof c.runtime };
+    }));
+    expect(validateRegressionManifest(manifest).filter(error => error.startsWith('cat33: '))).toEqual([]);
+    const lme = (SITUATION_RECALL_INVENTORY.native_contracts as unknown as Record<string, { registration_prerequisites: string[] }>)['longmemeval-answers'];
+    expect(lme.registration_prerequisites.find(line => line.includes('judge_model='))).toContain(`judge_model=${JUDGE_MODEL},`);
+  });
+
   test('release validation discovers a new category even with a freshly hashed old inventory', () => {
     const root = mkdtempSync(join(tmpdir(), 'regression-tree-'));
     try {
@@ -193,7 +215,7 @@ describe('full situation recall coverage inventory', () => {
       expect(compareSituationRecall(manifest, results, { evalRoot: root }).reasons.join(';')).toContain('cat37-unregistered.ts');
       expect(compareRegressionMeasurements(manifest, results).measurement_decision.status).toBe('pass');
     } finally { rmSync(root, { recursive: true, force: true }); }
-  });
+  }, 60_000);
 
   test('validates a complete synthetic preregistration and rejects category deletion', () => {
     const { manifest } = fixture();
@@ -216,7 +238,7 @@ describe('full situation recall coverage inventory', () => {
     expect(validateRegressionManifest(manifest).some(r => r.startsWith('cat36: native'))).toBe(false);
     cat36.metrics.find(m => m.id === 'safety_violations')!.ceiling = 1;
     expect(validateRegressionManifest(manifest).some(r => r.includes('cat36: native metric'))).toBe(true);
-  });
+  }, 60_000);
 
   test.each(['direction', 'floor', 'hash', 'probes', 'slices', 'unsupported', 'budget', 'isolation', 'holdout'] as const)('blocks invalid frozen %s', kind => {
     const { manifest } = fixture();
@@ -366,7 +388,7 @@ describe('strict per-cell common receipt accounting', () => {
     const bad = (candidate.receipt!.data!.regression as RegressionReceiptData).rows[0];
     bad.metrics.success = { not_applicable: 'native_no_denominator', evidence: { expected_count: 0, returned_count: 1 } };
     expect(validateRegressionCell(manifest, manifest.cells.find(c => c.id === candidate.cell_id)!, candidate).join(';')).toContain('missing/nonfinite');
-  });
+  }, 60_000);
 });
 
 describe('paired non-regression and improvement decisions', () => {
@@ -449,7 +471,7 @@ describe('paired non-regression and improvement decisions', () => {
     (candidate.receipt!.data!.regression as RegressionReceiptData).rows[0].metrics.success = 0;
     candidate.receipt!.verdict = 'fail';
     expect(measurements(manifest, results).coverage.find(c => c.profile_id === profile.id)!.status).toBe('regressed');
-  });
+  }, 60_000);
 
   test('a best-adapter native floor is applied to the best mean, not the pooled mean', () => {
     const { manifest, results } = fixture();

@@ -52,6 +52,7 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
 import type { Driver } from './lifecycle/drivers.ts';
+import { loadFactUnquote, storedFactText, type Unquote } from './quoted-reads.ts';
 import {
   breakdown, n1Metrics, recallTokens, scoreExposure, scoreN1Probe, searchRowTokens,
   type ExposureRow, type N1Answer, type N1Metrics, type N1Row,
@@ -149,8 +150,12 @@ export interface Observation { answers: Map<string, N1Answer>; raws: Map<string,
 
 const errAnswer = (e: string | undefined): N1Answer => ({ error: e ?? 'no data' });
 
-/** Ask the probes' questions through `d`, one call per distinct question. */
-export async function observeN1(d: Driver, ledger: N1Ledger, probes: readonly N1Probe[], scope: 'all' | 'current' = 'all'): Promise<Observation> {
+/**
+ * Ask the probes' questions through `d`, one call per distinct question. Since gbrain v0.60.539.0 a remote ontology_get
+ * quotes a value whose fact is below the owner's tier; `unquote` (the build's own, quoted-reads.ts) reads the stored
+ * value inside the fence.
+ */
+export async function observeN1(d: Driver, ledger: N1Ledger, probes: readonly N1Probe[], scope: 'all' | 'current' = 'all', unquote?: Unquote): Promise<Observation> {
   const answers = new Map<string, N1Answer>();
   const raws = new Map<string, string | null>();
   let struckInSearch = 0;
@@ -189,7 +194,7 @@ export async function observeN1(d: Driver, ledger: N1Ledger, probes: readonly N1
         const r = await ask('ontology_get', args);
         if (p.type === 'ontology_current') raws.set(`ontology_get:${p.entity}`, r.ok ? r.raw : null);
         const row = asRows(r.data, ['values', 'ontology', 'rows']).find(x => x.dimension === p.dimension);
-        answers.set(p.id, r.ok ? { value: row ? String(row.value) : null } : errAnswer(r.error));
+        answers.set(p.id, r.ok ? { value: row ? storedFactText(String(row.value), row.quoted, unquote) : null } : errAnswer(r.error));
         break;
       }
       case 'trajectory_current':
@@ -263,6 +268,7 @@ async function runCell(world: N1World, gut: GbrainUnderTest, engine: Engine, ifa
   };
   const acks = new Map<string, boolean>();
   const secret = privateTokens(ledger);
+  const unquote = await loadFactUnquote(gut);
   try {
     await cell.setup();
     out.server_version = cell.serverVersion;
@@ -271,7 +277,7 @@ async function runCell(world: N1World, gut: GbrainUnderTest, engine: Engine, ifa
     out.writes.push(...await applyPlan(cell.primary, writePlan(ledger, 0), '0', false, acks));
     // Presence: the trusted caller reads every world fence and trajectory value written in round 0.
     const round0 = n1Probes(ledger, 'sequential').filter(p => !p.private && (p.type === 'fence_current' || p.type === 'trajectory_current'));
-    const presence = await cell.trusted(d => observeN1(d, ledger, round0, 'current'));
+    const presence = await cell.trusted(d => observeN1(d, ledger, round0, 'current', unquote));
     for (const c of ledger.fence.filter(x => x.visibility === 'world')) {
       const p = round0.find(x => x.type === 'fence_current' && x.surface === 'recall' && x.chain === c.id)!;
       const a = presence.answers.get(p.id);
@@ -292,8 +298,8 @@ async function runCell(world: N1World, gut: GbrainUnderTest, engine: Engine, ifa
     const checkpoint = async (cp: Checkpoint, state: GoldState, withTrusted: boolean) => {
       const probes = n1Probes(ledger, state);
       const exposure = n1ExposureProbes(ledger, state);
-      const obs = await observeN1(cell.primary, ledger, probes);
-      const trusted = !cell.remote ? obs : withTrusted || exposure.length ? await cell.trusted(d => observeN1(d, ledger, probes, 'current')) : null;
+      const obs = await observeN1(cell.primary, ledger, probes, 'all', unquote);
+      const trusted = !cell.remote ? obs : withTrusted || exposure.length ? await cell.trusted(d => observeN1(d, ledger, probes, 'current', unquote)) : null;
       const scored = scoreCheckpoint(probes, exposure, obs, trusted, cell.remote);
       out.checkpoints[cp] = { ...scored, acked_lost: withTrusted && trusted ? lostWrites(probes, trusted, acks) : [], struck_in_search: obs.struckInSearch };
       opts.log(`[n1] ${cell.id} ${cp}: ${scored.rows.filter(r => r.pass).length}/${scored.rows.length} probes pass, ${scored.rows.filter(r => r.stale).length} stale`);
@@ -336,6 +342,7 @@ async function ontologyUnmanagedArm(gut: GbrainUnderTest, ledger: N1Ledger): Pro
   type Op = { name: string; handler: (ctx: OperationContext, p: Record<string, unknown>) => Promise<unknown> };
   const { PGLiteEngine } = await importGbrain<EngineModule>(gut, 'src/core/pglite-engine.ts');
   const { operations } = await importGbrain<{ operations: Op[] }>(gut, 'src/core/operations.ts');
+  const unquote = await loadFactUnquote(gut);
   const engine = new PGLiteEngine();
   try {
     await engine.connect({});
@@ -360,8 +367,8 @@ async function ontologyUnmanagedArm(gut: GbrainUnderTest, ledger: N1Ledger): Pro
     });
     const probe = async (state: GoldState) => {
       const probes = n1Probes(ledger, state).filter(p => p.type === 'ontology_current' || p.type === 'ontology_asof');
-      const local = await observeN1(asDriver(false), ledger, probes);
-      const remote = await observeN1(asDriver(true), ledger, probes);
+      const local = await observeN1(asDriver(false), ledger, probes, 'all', unquote);
+      const remote = await observeN1(asDriver(true), ledger, probes, 'all', unquote);
       out.rows.push(...scoreCheckpoint(probes, [], local, null, false).rows);
       out.exposure.push(...scoreCheckpoint([], n1ExposureProbes(ledger, state).filter(p => p.surface === 'ontology_get'), remote, local, true).exposure);
     };

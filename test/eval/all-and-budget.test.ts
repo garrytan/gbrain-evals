@@ -17,6 +17,7 @@ import { describe, test, expect, afterEach } from 'bun:test';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import {
   CATEGORIES,
+  childArgs,
   parseTier,
   printNotRun,
   runConcurrently,
@@ -37,7 +38,7 @@ describe('CATEGORIES catalog', () => {
   test('lists every category in the repository (drift tripwire, audit tests-audit-01 and C-09)', () => {
     expect(CATEGORIES.map(c => c.id)).toEqual([
       '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '13b', '13b-sit', '14', '15', '18', '18b',
-      '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30-33', '34', '35', '36', '36-live', '37', '37-paid', '38', '38-paid', '39', '39-paid', 'N3', 'temporal-edges', 'P1-E2', 'P1-E3', 'P5-H1', 'P5-H2', 'P5-H4', 'P5-H5a', 'P5-H3', 'P5-H5b', 'P5-H6', 'P8-quotes', 'P8-write-cost', 'R2-facts-absorb', 'N4', 'N6', 'N12', 'N13', 'N14', 'N7', 'N8', 'N2', 'A4', 'SO', 'SO-live',
+      '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30-33', '34', '35', '36', '36-live', '37', '37-paid', '38', '38-paid', '39', '39-paid', 'N3', 'temporal-edges', 'P1-E2', 'P1-E3', 'P5-H1', 'P5-H2', 'P5-H4', 'P5-H5a', 'P5-H3', 'P5-H5b', 'P5-H6', 'P8-quotes', 'P8-write-cost', 'R2-facts-absorb', 'N4', 'N6', 'N12', 'N13', 'N14', 'N15', 'N7', 'N8', 'N2', 'A4', 'SO', 'SO-live',
       'multi-adapter', 'relational-ab', 'constrained-relational', 'ARS', 'N9', 'N9-paid', 'precisionmembench', 'longmemeval', 'longmemeval-answers',
       'longmemeval-m-pilot', 'reading-notes', 'lifecycle', '40', '40-hard', 'T0', 'T0b', 'D6', '41', 'N1', 'N5', 'N1-ci', 'N5-ci', 'evidence-delivery', 'sealed-confirmation', 'situation-recall', 'shootout', 'shootout-P2', 'qrels',
     ]);
@@ -117,7 +118,7 @@ describe('tiers', () => {
     }
     expect(offline.notRun.find(n => n.id === '13')?.reason).toBe('tier P not selected');
     expect(paid.notRun.find(n => n.id === '2')?.reason).toBe('tier H not selected');
-    expect(offline.dispatch.map(c => c.id)).toEqual(['1', '2', '3', '4', '6', '7', '10', '11', '12', '19', '22', '23', '24', '27', '28', '34', '36', '37', '38', '39', 'N3', 'temporal-edges', 'N4', 'N6', 'N12', 'N13', 'N14', 'N7', 'N8', 'N2', 'A4', 'SO', 'ARS', 'N9', 'N1-ci', 'N5-ci']);
+    expect(offline.dispatch.map(c => c.id)).toEqual(['1', '2', '3', '4', '6', '7', '10', '11', '12', '19', '22', '23', '24', '27', '28', '34', '36', '37', '38', '39', 'N3', 'temporal-edges', 'N4', 'N6', 'N12', 'N13', 'N14', 'N15', 'N7', 'N8', 'N2', 'A4', 'SO', 'ARS', 'N9', 'N1-ci', 'N5-ci']);
   });
 
   test('the not-run list is printed with every category and its reason', () => {
@@ -128,6 +129,21 @@ describe('tiers', () => {
     expect(lines).toHaveLength(notRun.length + 1);
     expect(lines.some(l => l.includes('Cat 5') && l.includes('not implemented'))).toBe(true);
     expect(lines.some(l => l.includes('Cat 18b') && l.includes('tier P not selected'))).toBe(true);
+  });
+
+  // Value: protects=all.ts passes --paid --budget-run-id to Cat 15 and Cat 25, which refuse a live run without them, and to no other runner; fails_when=the registry flag or the child argv drops them, so a paid all.ts run of those categories is refused; why_new=the runners started requiring the flags; seam=none; no_claim=argv only, no spawn
+  test('Cat 15 and Cat 25 get --paid --budget-run-id from a paid run; other runners do not', () => {
+    const paid = CATEGORIES.filter(c => c.kind === 'dispatched' && c.paidFlags).map(c => c.id).sort();
+    expect(paid).toEqual(['15', '25']);
+    const cat15 = CATEGORIES.find(c => c.id === '15')!;
+    if (cat15.kind !== 'dispatched') throw new Error('unreachable');
+    expect(childArgs(cat15, 'run-1')).toEqual(['eval/runner/cat15-propose-takes.ts', '--paid', '--budget-run-id', 'run-1']);
+    expect(childArgs(cat15, undefined)).toEqual(['eval/runner/cat15-propose-takes.ts']);
+    const cat14 = CATEGORIES.find(c => c.id === '14')!;
+    if (cat14.kind !== 'dispatched') throw new Error('unreachable');
+    expect(childArgs(cat14, 'run-1')).toEqual(['eval/runner/cat14-calibration.ts']);
+    const { notRun } = selectCategories('offline');
+    expect(notRun.find(n => n.id === '25')?.command).toBe('bun eval/runner/cat25-trajectory-routing.ts --paid --budget-run-id <id>');
   });
 
   test('package.json has no fake N=10 published script (C-08)', () => {

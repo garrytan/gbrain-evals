@@ -12,6 +12,7 @@ import { dirname, join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { beam10mCustodyPush, Campaign, d8CustodyPush, runRemote, type CampaignManifest, type LaunchContext, type LeaseState, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
+import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 import { sealedLaunchChecks } from '../../eval/runner/scoreboard-cli.ts';
 import { d8ManifestPath, d8Source, verifyBeam10mCustody, verifyD8Custody } from '../../eval/runner/memory-qa/corpus.ts';
 import { homedir } from 'node:os';
@@ -91,7 +92,7 @@ describe('defect 2: the sealed Q1 payload', () => {
     const base = join(tmp, 'vm-custody');
     const out = join(base, 'out', 's3-c0', 'lease-x');
     for (const d of ['datasets', 'restore', 'd8']) { mkdirSync(join(base, d), { recursive: true }); writeFileSync(join(base, d, 'f'), 'x'); }
-    const port = 24000 + Math.floor(Math.random() * 9000);
+    const port = await freePort(0);
     const code = await runRemote({ lease_id: 'lease-x', lease_usd: 0.1, out, cell: 's3-c0', sealed: true,
       command: 'printf "%s\\n%s\\n" "$SHOOTOUT_CUSTODY" "$GBRAIN_EVALS_CUSTODY_LOG" > "$SHOOTOUT_OUT/env.txt"; [ -f "$SHOOTOUT_CUSTODY/../datasets/f" ] || exit 9' }, { port, custodyBase: base });
     expect(code).toBe(0);

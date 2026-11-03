@@ -5,6 +5,15 @@
   "inspected_eval_sha": "9238ec8456bc94c3c082db105d7d8169a10a0b0f",
   "declared_historical_pin": "github:garrytan/gbrain#2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d",
   "status": "complete inspected native metric inventory; no live capability or release measurements",
+  "amendments": [
+    {
+      "date": "2026-11-01",
+      "eval_sha": "cb8f46654059e980beea2ddfc66b00401308076d",
+      "issue": "garrytan/gbrain-evals#240",
+      "change": "native_contracts.cat33.required_slices names the pair slices anthropic:claude-haiku-5-5>anthropic:claude-sonnet-5-5 and its reverse (were claude-haiku-4-5 and claude-sonnet-4-6). The longmemeval-answers live-profile prerequisite names judge_model=claude-haiku-5-5 (was claude-haiku-4-5-20251001) and asks a live profile for judge_max_tokens=4096, because a Claude 5 judge thinks inside that limit (was any value in 1..4096, which offline profiles keep). Since PR #255 (#237) the live validators refuse a lower limit.",
+      "reason": "R4 (#243) moved Cat 33's default pairs (DEFAULT_PAIRS in eval/runner/cat33-skillopt-transfer.ts) and the LongMemEval-answers judge (JUDGE_MODEL in eval/runner/longmemeval-answers.ts) to the current Claude generation, so a Cat 33 profile at the new defaults failed the native slice check and the prerequisite named a judge the runner refuses. The inventory hash changes with this amendment; no committed file pins it. Profiles registered against the old hash fail the inventory hash check and must be registered again."
+    }
+  ],
   "unmapped_native_contract_policy": "blocked; supplied metrics, floors or a runner pass verdict cannot substitute for a committed reviewed native mapping",
   "native_contracts": {
     "cat5": {
@@ -8222,8 +8231,8 @@
       "required_slices": [
         "seed-missing-structure",
         "seed-no-verdict",
-        "anthropic:claude-haiku-4-5>anthropic:claude-sonnet-4-6",
-        "anthropic:claude-sonnet-4-6>anthropic:claude-haiku-4-5"
+        "anthropic:claude-haiku-5-5>anthropic:claude-sonnet-5-5",
+        "anthropic:claude-sonnet-5-5>anthropic:claude-haiku-5-5"
       ],
       "evidence_blockers": [],
       "absolute_floor_policy": "Only the explicitly registered native bounds apply; numeric range endpoints are not quality floors.",
@@ -12885,7 +12894,7 @@
         "Generate fresh retained evidence with --retain-evidence and fresh distinct --ndjson, JSON --output, receipt paths. Primary receipt.resolved_config.evidence_capture contains complete source_manifest/planned_pairs/product/run_config_preimages. Legacy session-ID-only receipts cannot be expanded into exact chunks. This is a real evidence prerequisite, not a missing-driver claim.",
         "Retain original native returned chunks and unambiguous NFC/LF source offsets/hashes. Non-sessdiv reader receives first topK returned chunks. Sessdiv reader receives only the first actually returned chunk per selected session. Never refill or replace with whole oracle sessions.",
         "Fresh output directory with immutable admission.json, answers.ndjson and receipt.json; exact full selected-adapter rows and full primary publishable receipt, complete accounting, safe evidence, real live runtime, no injected clients.",
-        "Live profile pins supported answer provider:model (openai/anthropic/google), exact answer model identity and raw usage, judge_model=claude-haiku-4-5-20251001, answer_max_tokens and judge_max_tokens integer1..4096, exact expected product SHA, optional package hash checked against capture.",
+        "Live profile pins supported answer provider:model (openai/anthropic/google), exact answer model identity and raw usage, judge_model=claude-haiku-5-5, answer_max_tokens and judge_max_tokens integer1..4096 with judge_max_tokens=4096 (the Claude 5 judge thinks inside that limit; offline profiles may use any value in 1..4096), exact expected product SHA, optional package hash checked against capture.",
         "Separate answer_budget and judge_budget with kind=isolated-provider-cap, approval_id, positive max_usd. CLI --answer-max-usd and --judge-max-usd must equal approved caps. Actual external enforcement must be verified independently; producer attestations are not local spending meters. Judge has at most two attempts per question and Anthropic SDK retries0.",
         "Official upstream evaluate_qa.py/protocol is not executed. Shared category0 rubric omits official temporal tolerance/preference scoring protocol. An official-accuracy profile requires separately verified official evaluator, versioned prompts/model/settings and authentic data provenance; do not relabel this available secondary driver."
       ],

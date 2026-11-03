@@ -1,0 +1,91 @@
+{
+ "schema_version": 1,
+ "built_at": "2026-11-01T05:30:58.464Z",
+ "gbrain_pin": "github:garrytan/gbrain#3ec766c40664b652b14e39788d177139f5a7b105",
+ "dataset_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+ "comparators": {
+  "w10b-sol-notes": {
+   "manifest": "docs/benchmarks/2026-10-06-longmemeval-w10-manifests/w10b-sol-notes.json",
+   "manifest_sha256": "1f9f4674fda224aabdc87cbf944e54e8fc0038eb6dac20e2fdf56af511dce9b6",
+   "bodies": 500,
+   "matching": 500,
+   "differing_at_pin": 0,
+   "rendered_with": "the pinned gbrain"
+  },
+  "w10b-sonnet55-notes": {
+   "manifest": "docs/benchmarks/2026-10-06-longmemeval-w10-manifests/w10b-sonnet55-notes.json",
+   "manifest_sha256": "115ff06ba147da507d43b7a54234a6c2613aa537d13c048e5bd70130c7d11ded",
+   "bodies": 500,
+   "matching": 500,
+   "differing_at_pin": 0,
+   "rendered_with": "the pinned gbrain"
+  },
+  "w10b-opus55-notes": {
+   "manifest": "docs/benchmarks/2026-10-06-longmemeval-w10-manifests/w10b-opus55-notes.json",
+   "manifest_sha256": "7673b0a312571ec956c8be2c5b5f266d903923fc5f304d36572aedcc28fc3bc3",
+   "bodies": 500,
+   "matching": 500,
+   "differing_at_pin": 0,
+   "rendered_with": "the pinned gbrain"
+  },
+  "w10c-sol-currentpin": {
+   "manifest": "docs/benchmarks/2026-10-06-longmemeval-w10-manifests/w10c-sol-currentpin.json",
+   "manifest_sha256": "9a842d2a885f62aa0c8ae10eb2dd69f58a64f4ea59ef83f60170c4f67b9139bf",
+   "bodies": 150,
+   "matching": 150,
+   "differing_at_pin": 0,
+   "rendered_with": "the pinned gbrain"
+  },
+  "w10a-sonnet55-notes": {
+   "manifest": "docs/benchmarks/2026-10-06-longmemeval-w10-manifests/w10a-sonnet55-notes.json",
+   "manifest_sha256": "03646b9d04770d4aee59399e09660db7de1c4296bcfa3ef011e5eaa0988aabdb",
+   "bodies": 500,
+   "matching": 500,
+   "differing_at_pin": 0,
+   "rendered_with": "the pinned gbrain"
+  },
+  "w10c-sol-full": {
+   "manifest": "docs/benchmarks/2026-10-06-longmemeval-w10-manifests/w10c-sol-full.json",
+   "manifest_sha256": "7efe954945a3da84cf60b6bdfd5b4f79cb121a784b589514883a0107e84f1208",
+   "bodies": 150,
+   "matching": 150,
+   "differing_at_pin": 91,
+   "rendered_with": "a gbrain c5fb0201 checkout: the pinned gbrain renders 91 of 150 bodies differently"
+  },
+  "w10c-sonnet55-full": {
+   "manifest": "docs/benchmarks/2026-10-06-longmemeval-w10-manifests/w10c-sonnet55-full.json",
+   "manifest_sha256": "1b00b0bacc229e09b06550caf3e5bddee9008ef0456e0a5570926bd94354f35c",
+   "bodies": 150,
+   "matching": 150,
+   "differing_at_pin": 91,
+   "rendered_with": "a gbrain c5fb0201 checkout: the pinned gbrain renders 91 of 150 bodies differently"
+  }
+ },
+ "sources": {
+  "r1": {
+   "questions": 500,
+   "text_sha256": "52e3520ca8ec8199daeb561eae5ca46106ef2893a197afcd726cd7821ad05c4d",
+   "arms": [
+    "w10b-sol-notes",
+    "w10b-sonnet55-notes",
+    "w10b-opus55-notes"
+   ]
+  },
+  "currentpin": {
+   "questions": 150,
+   "text_sha256": "f44153dee1c38c3e6cde8de8a7f2459ed99b61964037de087491daf817102cfb",
+   "arms": [
+    "w10c-sol-currentpin",
+    "w10a-sonnet55-notes"
+   ]
+  },
+  "full": {
+   "questions": 150,
+   "text_sha256": "dce4acb7fe76f3b0eb9a69917e2a4c0098a05cb469d2a092ee446c72ea0ad92b",
+   "arms": [
+    "w10c-sol-full",
+    "w10c-sonnet55-full"
+   ]
+  }
+ }
+}

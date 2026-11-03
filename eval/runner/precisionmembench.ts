@@ -26,15 +26,28 @@
  *     precision per the empty-return rules) and kept in the denominator
  *     (probe-accounting policy).
  *
+ *   - gbrain-think asks a chat model (DEFAULT_THINK_MODEL, recorded as
+ *     resolved_config.chat_model) once per case, so it runs only as a paid arm:
+ *     --paid --budget-run-id <id> naming an open budget-ledger run, refused
+ *     before any request otherwise. Every request it makes, the seeding
+ *     embeddings included, passes the ledger's paid-request guard, and the
+ *     receipt's cost comes from the ledger. gbrain's think turns a refused
+ *     request into an empty answer, so a case the ledger refuses is recorded
+ *     as a harness error, never scored, and the run as incomplete. The other
+ *     modes join the ledger the same way when given --paid or --budget-run-id.
+ *
  * Run:
  *   bun eval/runner/precisionmembench.ts --mode gbrain-hybrid
  *   bun eval/runner/precisionmembench.ts --mode gbrain-keyword   # no embed key
+ *   bun eval/runner/precisionmembench.ts --mode gbrain-think --paid --budget-run-id <id>   # metered
  *   bun eval/runner/precisionmembench.ts --mode gbrain-hybrid --limit 10
  *   bun eval/runner/precisionmembench.ts --mode gbrain-hybrid --json
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
+import { PaidArmRefusal, paidRequested, requirePaidArm } from './paid-arm.ts';
 import { buildReportPayload } from '../precisionmembench/scorer/buildRetrievalReport.ts';
 import {
   scoreCases,
@@ -45,7 +58,7 @@ import {
 } from '../precisionmembench/scorer/runCases.ts';
 import type { Belief } from '../precisionmembench/scorer/belief.ts';
 import { GbrainBeliefAdapter } from '../precisionmembench/gbrainAdapter.ts';
-import { GbrainThinkAdapter } from '../precisionmembench/gbrainThinkAdapter.ts';
+import { DEFAULT_THINK_MODEL, GbrainThinkAdapter } from '../precisionmembench/gbrainThinkAdapter.ts';
 import {
   createBenchEngine,
   seedGbrainEngine,
@@ -78,6 +91,8 @@ export const LEADERBOARD: Array<{ name: string; precision: number; active: numbe
 export const MODES = ['gbrain-hybrid', 'gbrain-keyword', 'gbrain-think', 'gbrain-adaptive'] as const;
 export type BenchMode = (typeof MODES)[number];
 export const FIDELITIES = ['body-text', 'structured'] as const satisfies readonly SeedFidelity[];
+/** Ledger estimate for gbrain-think, per case (one Opus 5.5 case cost $0.06 on 2026-11-01). */
+export const THINK_ESTIMATE_USD_PER_CASE = 0.1;
 
 export interface Opts {
   mode: BenchMode;
@@ -149,7 +164,9 @@ export function parseOpts(argv: string[]): Opts {
     else if (a === '--allow-skip') opts.allowSkip = true;
     else if (a === '--report-dir') opts.reportDir = next();
     else if (a === '--receipt-path') opts.receiptFile = next();
-    else throw new Error(`unknown arg: ${a} (valid: --mode --fidelity --limit --json --no-embed --entity-max --other-max --allow-skip --report-dir --receipt-path)`);
+    else if (a === '--paid' || a.startsWith('--budget-run-id=') || a.startsWith('--budget-ledger=')) continue;
+    else if (a === '--budget-run-id' || a === '--budget-ledger') next();
+    else throw new Error(`unknown arg: ${a} (valid: --mode --fidelity --limit --json --no-embed --entity-max --other-max --allow-skip --report-dir --receipt-path --paid --budget-run-id --budget-ledger)`);
   }
   if (!MODES.includes(opts.mode)) {
     throw new Error(`--mode must be one of ${MODES.join(' | ')}, got '${opts.mode}'`);
@@ -259,6 +276,7 @@ export function missingKeys(mode: BenchMode, opts = parseOpts(['--mode', mode]))
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const opts = parseOpts(argv);
+  const paidArm = opts.mode === 'gbrain-think' || paidRequested(argv);
   const startedAt = new Date().toISOString();
   const provider = `${opts.mode}-${opts.fidelity}`;
 
@@ -284,6 +302,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     partial,
     full_case_count: fullCaseCount,
     supersession_seeding: 'live — all beliefs seeded, no ground-truth soft-delete (audit precisionmembench-01)',
+    chat_model: opts.mode === 'gbrain-think' ? DEFAULT_THINK_MODEL : null,
+    paid: paidArm ? { budget_run_id: budgetOptionsFrom(argv).runId ?? null, ledger: budgetOptionsFrom(argv).ledgerPath } : null,
   };
 
   const receiptBase: Omit<Receipt, 'run_status' | 'verdict' | 'skip_reason' | 'publishable'> = {
@@ -316,6 +336,31 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     console.error(`[precisionmembench] SKIPPED — ${reason} ${opts.allowSkip ? '--allow-skip acknowledged.' : 'Exiting non-zero (pass --allow-skip to acknowledge).'}`);
     return opts.allowSkip ? 0 : 2;
   }
+
+  let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
+  if (paidArm) {
+    const estimateUsd = opts.mode === 'gbrain-think' ? THINK_ESTIMATE_USD_PER_CASE * cases.length : null;
+    try {
+      requirePaidArm(argv, { arm: `precisionmembench ${opts.mode}`, estimateUsd, ledgerPath: budgetOptionsFrom(argv).ledgerPath });
+    } catch (err) {
+      if (!(err instanceof PaidArmRefusal)) throw err;
+      writeReceipt(opts.receiptFile, { ...receiptBase, run_status: 'skipped', skip_reason: err.message, publishable: false, finished_at: new Date().toISOString() });
+      console.error(`[precisionmembench] REFUSED — ${err.message}`);
+      return 2;
+    }
+    paid = startPaidRun(`precisionmembench:${opts.mode}`, { ...budgetOptionsFrom(argv), estimateUsd });
+  }
+  const closePaid = () => {
+    if (!paid) return {};
+    const { run, guard } = paid;
+    paid = null;
+    guard.uninstall();
+    try {
+      return { cost: receiptCost(run.close()) };
+    } catch (err) {
+      throw new Error(`closing budget run ${run.runId} failed, so this receipt has no cost; the ledger keeps the run's entries: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
 
   const acc = new ProbeAccounting(cases.length);
 
@@ -367,17 +412,21 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     // Per-case invocation so one adapter throw is a scored miss for THAT case
     // (probe-accounting sut policy) instead of aborting the whole run. The
     // per-case scoring is unchanged: scoreCases iterates cases independently.
+    const budgetStop = 'budget exhausted: the ledger refused a paid request, so this case was not measured';
     const report: ReportEntry[] = [];
     for (const tc of cases) {
       const observationStart = adapter instanceof GbrainBeliefAdapter ? adapter.observations.length : 0;
       try {
+        if (paid?.guard.exhausted) throw new Error(budgetStop);
         const [entry] = await scoreCases(adapter, [tc], pinnedInSeed);
+        if (paid?.guard.exhausted) throw new Error(budgetStop);
         report.push(entry);
         acc.score(tc.caseId, entry.passed ? 1 : 0);
       } catch (err) {
         const msg = String(err);
-        acc.error(tc.caseId, 'sut', msg);
-        report.push(missEntryForCrash(tc, pinnedInSeed, msg));
+        const unmeasured = paid?.guard.exhausted ?? false;
+        acc.error(tc.caseId, unmeasured ? 'harness' : 'sut', msg);
+        if (!unmeasured) report.push(missEntryForCrash(tc, pinnedInSeed, msg));
       } finally {
         if (adapter instanceof GbrainBeliefAdapter) {
           for (const observation of adapter.observations.slice(observationStart)) observation.case_id = tc.caseId;
@@ -387,7 +436,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 
     const observations = adapter instanceof GbrainBeliefAdapter ? adapter.observations : [];
     const searchFailures = observations.filter(o => o.failures.length > 0);
-    const executionIncomplete = searchFailures.length > 0;
+    const budgetExhausted = paid?.guard.exhausted ?? false;
+    const executionIncomplete = searchFailures.length > 0 || budgetExhausted;
     // Reranking an empty result pool is a valid no-op. Nonempty pools are
     // checked per query by the adapter, so a single fallback cannot hide in an average.
     const rerankIncomplete = opts.reranker === 'on' &&
@@ -398,6 +448,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     resolvedConfig.reranker_observed = observations.filter(o => o.rerank_scored).length;
     resolvedConfig.reranker_incomplete = rerankIncomplete;
     resolvedConfig.search_failed_queries = searchFailures.length;
+    resolvedConfig.budget_exhausted = budgetExhausted;
     resolvedConfig.execution_incomplete = executionIncomplete;
     const payload: Record<string, unknown> = {
       ...buildReportPayload({ provider, entries: report, caseCount: cases.length }, report),
@@ -430,6 +481,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     writeFileSync(reportPath, JSON.stringify(payload, null, 2));
 
     await engine.disconnect();
+    const cost = closePaid();
 
     const summary = acc.summary();
     // A prefix-slice partial run is never publishable as a benchmark result.
@@ -444,6 +496,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       errors: summary.errors,
       publishable: summary.publishable && !partial && !executionIncomplete,
       finished_at: new Date().toISOString(),
+      ...cost,
       data: {
         report_path: reportPath,
         mean_precision: r.meanPrecision,
@@ -501,6 +554,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       errors: [...summary.errors, { probe_id: 'run', origin: 'harness', message: String(err).slice(0, 500) }],
       publishable: false,
       finished_at: new Date().toISOString(),
+      ...closePaid(),
     });
     console.error(err);
     return 1;

@@ -6,7 +6,7 @@ autocut off. That setup retrieves all labeled conversations for 451/470 answerab
 with opaque session ids at gbrain `109b992`. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md),
 [original experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-This page describes the gbrain this repository installs, master `7a6bdd357` (v0.60.454.0, declared in
+This page describes the gbrain this repository installs, master `62637c96a` (v0.60.557.0, declared in
 `package.json`). Most experiments here ran at gbrain v0.48.4.0 (`2efaaf8f`) or later commits named beside each
 number. The `balanced`, `conservative` and `tokenmax` mode definitions (`MODE_BUNDLES` in
 `src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `77cf8e111` (v0.60.169.0), apart from three
@@ -22,9 +22,17 @@ queries (v0.60.250.0). The conversation measurements here used `rerank-2.5`; on 
 one document fold into one result row, and organization, OCR and date priors adjust the ranking after the reranker. The
 LongMemEval retrieval rows were measured before v0.60.332.0 and do not test collapse or rank priors; other code differs.
 From v0.60.164.0, `query` also adds up to three matching saved facts as rows of their own (`search.query_facts_arm`,
-on by default and outside the mode bundles); the LongMemEval retrieval rows were measured before it and do not test
-it. Existing per-key overrides take precedence over a mode, so a mode name alone
-is not a complete description of an experiment. Everything above [Changelog](#changelog) is current.
+on by default and outside the mode bundles), and since v0.60.491.0 a `query` with a token budget puts up to 40 dated
+saved facts first instead (`search.query_facts_block`, on by default; since v0.60.555.0 never more than the `query`'s
+`limit`, and none on a `query` without a budget). Four more defaults outside the bundles arrived
+after v0.60.454.0: `search` puts a newer correction ahead of the saved fact it corrects (`search.saved_facts_supersede`,
+v0.60.493.0); a remote `search` or `query` that names no `limit` keeps at most 3 pages that matched only by meaning
+(`search.remote_page_cap`, v0.60.506.0; `0` turns it off); text from conversation, chat, email and meeting pages
+comes back inside a quote fence marked as source material (v0.60.507.0, v0.60.521.0); and a remote reader, such as an
+agent over MCP, gets any text below the owner's own notes (agent-written, tool data, external, or with no recorded
+origin) in the same fence (v0.60.536.0 to v0.60.541.0; local reads are unchanged). No setting turns either fence off. The
+LongMemEval retrieval rows were measured before all of these and do not test them. Existing per-key overrides take
+precedence over a mode, so a mode name alone is not a complete description of an experiment. Everything above [Changelog](#changelog) is current.
 
 ## Choose by the questions you need to answer
 
@@ -64,7 +72,7 @@ as completed reranked measurements.
 | `search.adaptive_return` | Cap results according to query intent | Off for the broad-return baseline. Try it when irrelevant results cost more than missed additional evidence. |
 | `search.adaptive_return_entity_max` / `_other_max` / `_min_keep` | Caps for entity questions, other questions, and the minimum kept | Product defaults are 2, 6, and 1. The tight experiment explicitly uses 1, 1, and 1. |
 | `return_unit` on `search`, `query` and `recall` | How much text comes back around each hit: `chunk`, `window`, `section`, `page` or `auto` | `auto` (the default) returns the whole conversation behind each hit within a 24,000-token budget and leaves other hits as chunks. On a sealed held-out set it answered 192 of 200 against 132 for bare chunks, at about four times the reader input. Use `chunk` when reader tokens matter more than answer quality. [Sealed v2 decision](benchmarks/2026-10-02-sealed-v2-decision-1.md), [delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
-| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | At the pinned `739e5cc` it writes dated follow-ups from meeting notes as events on their future dates (0.96 wrong events per page against gbrain's 0.20 gate); turn it off (`gbrain config set auto_chronicle false`) if meeting notes carry dated action items. From gbrain v0.60.49.0 (`b9ee931`, PR #6010) keep it on: it finds 37 and 38 of 38 labeled events, writes 0 events dated after their page and 0.04 wrong events per judged page, for about $0.01 per page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md), [rerun](benchmarks/2026-10-04-auto-chronicle-rerun.md). |
+| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | Keep it on: gbrain v0.60.49.0 (`b9ee931`, PR #6010), which the installed `62637c96a` postdates, fixed the dated follow-ups that `739e5cc` (the pin from 2026-10-04 to 2026-10-06) wrote from meeting notes as events on their future dates (0.96 wrong events per page against gbrain's 0.20 gate). At `b9ee931` it finds 37 and 38 of 38 labeled events, writes 0 events dated after their page and 0.04 wrong events per judged page, for about $0.01 per page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md), [rerun](benchmarks/2026-10-04-auto-chronicle-rerun.md). |
 | `GBRAIN_SOURCE_BOOST` | Override the source-prefix weight map | This is an environment setting, separate from the search mode. A stale prefix can make an intended preference do nothing. |
 
 The settings are defined in the pinned
@@ -160,6 +168,49 @@ the [refresh report](benchmarks/2026-09-09-retrieval-refresh.md) gives the full
 reproducible matrix used here.
 
 ## Changelog
+
+### 2026-11-03: Installed pin moves to `62637c96a`
+
+gbrain-evals v0.10.145. The installed gbrain commit changed from `311a83bbe` (v0.60.553.0) to `62637c96a` (v0.60.557.0).
+`MODE_BUNDLES` in `src/core/search/mode.ts` is unchanged, so the mode-definition note stands. One default outside the
+bundles changed: since v0.60.555.0 (gbrain#8448) the facts block runs only on a `query` that passes a token budget and
+adds at most `limit` rows, and its rows take the top page's score instead of outscoring it. The note on defaults outside
+the bundles now says so, and the `auto_chronicle` row names the new pin.
+
+### 2026-11-02: Installed pin moves to `311a83bbe`
+
+gbrain-evals v0.10.142. The installed gbrain commit changed from `a131fb20e` (v0.60.549.0) to `311a83bbe` (v0.60.553.0).
+`MODE_BUNDLES` in `src/core/search/mode.ts` is unchanged, so the mode-definition note stands, and no read default
+outside the bundles changed. The range reads empty optional tool arguments that a parameter's schema rules out (`0`,
+`[]`, `{}` on read ops, `false`, and `get_page` `context` without `grep`) as absent (gbrain#8444), and the MCP
+entries and hooks that `gbrain setup` writes now start gbrain through a launcher. No row here depends on either.
+
+### 2026-11-02: Installed pin moves to `a131fb20e`
+
+gbrain-evals v0.10.141. The installed gbrain commit changed from `ca1281a2e` (v0.60.542.0) to `a131fb20e` (v0.60.549.0).
+`MODE_BUNDLES` in `src/core/search/mode.ts` is unchanged, so the mode-definition note stands, and no read default
+outside the bundles changed. The range adds per-page readers and folder rules (`readable_by`, v0.60.543.0), which narrow
+remote reads only on a brain whose pages name readers, and two keys that bind a stdio server to a member
+(`mcp.stdio_member`, `mcp.stdio_may_act_for`). No row here uses them.
+
+### 2026-11-02: Installed pin moves to `ca1281a2e`
+
+gbrain-evals v0.10.140. The installed gbrain commit changed from `3ec766c40` (v0.60.531.0) to `ca1281a2e` (v0.60.542.0).
+`src/core/search/mode.ts` is identical at both commits, so the mode-definition note stands. The note on defaults
+outside the bundles now names a fourth: since v0.60.536.0 a remote reader gets text below the owner's own notes inside
+the quote fence, extended to more read surfaces through v0.60.541.0. The new keys in this range
+(`sources.refresh_fetch_timeout_ms`, `sources.refresh_drain_wait_ms`, `sources.refresh_publish_diverged`) govern source
+refresh, not reads, and no row here uses them.
+
+### 2026-10-31: Installed pin moves to `3ec766c40`
+
+The installed gbrain commit changed from `7a6bdd357` (v0.60.454.0) to `3ec766c40` (v0.60.531.0). `MODE_BUNDLES` in
+`src/core/search/mode.ts` holds the same values at both commits; the file's only change adds the private-readable set to
+the semantic cache key (GBRA-156). The note on defaults outside the bundles now also names the dated facts block of a
+budgeted `query` (v0.60.491.0), correction ordering of saved facts (v0.60.493.0), the remote page cap (v0.60.506.0) and
+quote-fenced chat text (v0.60.507.0, v0.60.521.0), and says no LongMemEval retrieval row tests them. The `auto_chronicle`
+row led with "At the pinned `739e5cc`", which stopped being the pin on 2026-10-06; it now leads with the behavior from
+v0.60.49.0 on and names `739e5cc` as the older measurement.
 
 ### 2026-10-25: Installed pin moves to `7a6bdd357`
 

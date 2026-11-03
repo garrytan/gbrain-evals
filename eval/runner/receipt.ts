@@ -102,7 +102,8 @@ export interface ProbeError {
 
 export interface JudgeProvenance {
   model: string;
-  temperature: number;
+  /** The temperature sent to the judge: null when the model rejects `temperature` and none was sent. */
+  temperature: number | null;
   rubric_version?: string;
   seed?: number;
 }

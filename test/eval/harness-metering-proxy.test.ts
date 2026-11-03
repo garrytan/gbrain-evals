@@ -10,14 +10,16 @@
  * MPW_REQUIRE_HARNESS=1 and the venv is missing (CI sets this), and is
  * skipped with a message otherwise.
  */
-import { afterEach, describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, existsSync, writeFileSync } from 'node:fs';
+import { createServer, type AddressInfo, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
   BudgetRun, closeLedgers, initLedger, ledgerStatus, priceRequest, reservationUsd, streamUsageCost, usageCost,
 } from '../../eval/runner/budget-ledger.ts';
-import { REFUSAL_TYPE, retrySafe, startMeteringProxy, type RequestLogLine } from '../../eval/runner/harness-metering-proxy.ts';
+import { METERED_PROVIDERS, REFUSAL_TYPE, readRequestLog, retrySafe, startMeteringProxy, type RequestLogLine } from '../../eval/runner/harness-metering-proxy.ts';
+import { CompatHttpError, compatRequest, compatSend } from '../../eval/runner/providers/openai-compatible.ts';
 import { assertZeroBalanceBlocks, createMeteredTestCell, waitFor, type MeteredTestCell } from '../../eval/runner/metering-proxy-testkit.ts';
 import { hashVector, schemaInstance, startStubUpstream } from '../../eval/runner/stub-upstream.ts';
 import { ensureHarness, harnessProcessEnv, type HarnessInstall } from '../../eval/runner/harness-env.ts';
@@ -326,6 +328,33 @@ describe('metering proxy', () => {
     expect(c.committed().run).toBeCloseTo(anth.actual_usd! + oai.reserved_usd, 12);
   });
 
+  test('streamed Anthropic, Gemini and Responses answers log the model that served them and their reasoning tokens', async () => {
+    const c = await cell({ labels: ['harness'] });
+    const token = c.proxy.tokens.harness;
+    await (await post(`${c.proxy.baseUrls.anthropic}/v1/messages`, { 'x-api-key': token }, { model: 'claude-sonnet-5-5', max_tokens: 50, stream: true, messages: [{ role: 'user', content: 'hi' }] })).text();
+    await (await post(`${c.proxy.baseUrls.gemini}/v1beta/models/gemini-3.5-flash:streamGenerateContent?alt=sse`, { 'x-goog-api-key': token }, { contents: [{ parts: [{ text: 'hi' }] }] })).text();
+    await (await post(`${c.proxy.baseUrls.openai}/responses`, { authorization: `Bearer ${token}` }, { model: 'gpt-6.1-sol', max_output_tokens: 50, stream: true, reasoning: { effort: 'low' }, input: 'hi' })).text();
+    expect(Array.isArray(await (await post(`${c.proxy.baseUrls.gemini}/v1beta/models/gemini-3.5-flash:streamGenerateContent`, { 'x-goog-api-key': token }, { contents: [{ parts: [{ text: 'hi' }] }] })).json())).toBe(true);
+    await waitFor(() => c.log().length === 4, 5000);
+    const [anth, gem, resp, gemArray] = readRequestLog(c.requestLogPath, c.bodiesDir);
+    expect(gemArray).toMatchObject({ stream: false, provider: 'gemini', settlement: 'reconciled', response_model: 'gemini-3.5-flash', reasoning_tokens: 0 });
+    expect(anth).toMatchObject({ stream: true, provider: 'anthropic', settlement: 'reconciled', response_model: 'claude-sonnet-5-5', reasoning_tokens: null });
+    expect(gem).toMatchObject({ stream: true, provider: 'gemini', settlement: 'reconciled', response_model: 'gemini-3.5-flash', reasoning_tokens: 0 });
+    expect(resp).toMatchObject({ stream: true, provider: 'openai', settlement: 'reconciled', response_model: 'gpt-6.1-sol', reasoning_tokens: 0 });
+    expect(resp.request).toEqual({ effort_sent: 'low', effort_effective: null, effort_effective_source: null, output_limit_field: 'max_output_tokens', output_limit: 50 });
+  });
+
+  test('readRequestLog leaves out a last line cut off mid-append and throws on any other line that is not JSON', async () => {
+    const c = await cell({ labels: ['harness'] });
+    await post(`${c.proxy.baseUrls.openai}/chat/completions`, { authorization: `Bearer ${c.proxy.tokens.harness}` }, { model: 'gpt-6.1-sol', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] });
+    await waitFor(() => c.log().length === 1, 5000);
+    const whole = readFileSync(c.requestLogPath, 'utf8');
+    writeFileSync(c.requestLogPath, whole + whole.slice(0, 40));
+    expect(readRequestLog(c.requestLogPath, c.bodiesDir).map(l => l.response_model)).toEqual(['gpt-6.1-sol']);
+    writeFileSync(c.requestLogPath, whole.slice(0, 40) + '\n' + whole);
+    expect(() => readRequestLog(c.requestLogPath, c.bodiesDir)).toThrow();
+  });
+
   test('the client receives each SSE chunk as the upstream sends it', async () => {
     let release!: () => void;
     const gate = new Promise<void>(r => { release = r; });
@@ -370,6 +399,18 @@ describe('metering proxy', () => {
     expect(rejected).toMatchObject({ settlement: 'rejected-unbilled', actual_usd: 0 });
     expect(failed).toMatchObject({ settlement: 'charged-reservation' });
     expect(c.committed().run).toBeCloseTo(failed.reserved_usd, 12);
+  });
+
+  // Value: protects=the workload-route proxy never sends a provider's real key over http to a host that is not loopback (issue #277); fails_when=an --upstream with an http URL that is not loopback is accepted; why_new=assertMetered guards clients only, and this proxy swaps in the real key itself; seam=none; no_claim=TLS certificate checks
+  test('an upstream that is not loopback must be https, because the proxy sends the real key there (#277)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mp-cleartext-')); dirs.push(dir);
+    const ledgerPath = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath });
+    const run = BudgetRun.open({ runner: 'mp-test', budgetUsd: 1, ledgerPath });
+    const start = (upstreams: Record<string, string>) => startMeteringProxy({ run, cellId: 'c', requestLogPath: join(dir, 'l.jsonl'), bodiesDir: join(dir, 'b'), labels: ['reader'], realKeys: { PARTICLE_API_KEY: 'pk-test' }, upstreams });
+    await expect(start({ particle: 'http://api.particle.ai' })).rejects.toThrow('upstream particle=http://api.particle.ai would carry the particle key in cleartext');
+    await expect(start({ openai: 'http://10.0.0.5:8080/v1' })).rejects.toThrow('cleartext');
+    await (await start({ particle: 'http://127.0.0.1:9', openai: 'https://api.openai.com' })).close();
   });
 
   test('envFor offers only providers with a launcher key or an upstream override', async () => {
@@ -436,6 +477,157 @@ describe('metering proxy', () => {
       stub.close();
     }
   }, 60_000);
+});
+
+// ─── Particle row (plan GST-605, Phase 2 item 4) ──────────────────────
+
+describe('particle through the metering proxy', () => {
+  async function particleProxy() {
+    const dir = mkdtempSync(join(tmpdir(), 'mp-particle-')); dirs.push(dir);
+    const ledgerPath = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath });
+    const run = BudgetRun.open({ runner: 'mp-particle-test', budgetUsd: 1, ledgerPath });
+    const stub = await startStubUpstream();
+    const log = join(dir, 'log.jsonl');
+    const bodies = join(dir, 'bodies');
+    const proxy = await startMeteringProxy({ run, cellId: 'cell-particle', requestLogPath: log, bodiesDir: bodies, labels: ['reader'], upstreams: { particle: stub.upstreams.particle }, realKeys: { PARTICLE_API_KEY: 'pk-test-particle' } });
+    return { dir, ledgerPath, run, stub, proxy, log, bodies, close: async () => { await proxy.close(); stub.close(); } };
+  }
+  const ASK = [{ role: 'user' as const, content: 'When did I move?' }];
+
+  test('the row comes from COMPAT_PROVIDERS; a request is priced at particle rates, sent with the real key and logged with what served it', async () => {
+    const p = await particleProxy();
+    try {
+      expect(METERED_PROVIDERS.particle).toEqual({ prefix: '/particle', upstream: 'https://api.particle.ai', keyEnv: ['PARTICLE_API_KEY'] });
+      const env = p.proxy.envFor('reader');
+      expect(env).toEqual({ PARTICLE_BASE_URL: `${p.proxy.url}/particle/v1`, PARTICLE_API_KEY: p.proxy.tokens.reader });
+      const req = compatRequest('particle:particle-1', ASK, {}, env);
+      const res = await compatSend({ ...req, headers: { ...req.headers, 'x-mpw-tag': 'reader:q1' } });
+      expect(res).toMatchObject({ response_model: 'particle-ai/particle-1', finish: 'stop' });
+      expect(p.stub.requests[0]).toMatchObject({ route: 'particle.chat', path: '/particle/v1/chat/completions', model: 'particle-1' });
+      expect(p.stub.requests[0].headers.get('authorization')).toBe('Bearer pk-test-particle');
+      const [line] = readRequestLog(p.log, p.bodies);
+      expect(line).toMatchObject({ label: 'reader', tag: 'reader:q1', provider: 'particle', model: 'particle-1', kind: 'chat', path: '/v1/chat/completions', status: 200, refused: false, settlement: 'reconciled', response_model: 'particle-ai/particle-1', reasoning_tokens: 24 });
+      expect(line.response_meta).toEqual({ metadata: { weight_version: 'default' }, weight_version: 'default', service_tier: 'default', system_fingerprint: 'fp_stub_particle', non_default_tier: false, truncated: false });
+      expect(line.request).toEqual({ effort_sent: 'high', effort_effective: 'high', effort_effective_source: 'docs.particle.ai and GET /v1/models, checked 2026-10-31', output_limit_field: 'max_completion_tokens', output_limit: 16_000 });
+      expect(line.reserved_usd).toBeCloseTo(reservationUsd(priceRequest('https://api.particle.ai/v1/chat/completions', req.body)!), 12);
+      const usage = res.usage as { prompt_tokens: number; completion_tokens: number };
+      expect(line.actual_usd).toBeCloseTo((usage.prompt_tokens * 0.25 + usage.completion_tokens * 1.0) / 1e6, 12);
+      expect(ledgerStatus({ ledgerPath: p.ledgerPath, runId: p.run.runId }).run!.committed_usd).toBeCloseTo(line.actual_usd!, 12);
+      expect(p.proxy.stats().byProvider.particle).toMatchObject({ requests: 1, refused: 0 });
+    } finally { await p.close(); }
+  });
+
+  test('a failed attempt logs null response fields; an effort is joined as sent and as the level it runs at; a GET has no request side', async () => {
+    const p = await particleProxy();
+    try {
+      const env = p.proxy.envFor('reader');
+      p.stub.respond('particle.chat', () => ({ status: 429, body: { error: { message: 'slow down' } } }));
+      const req = compatRequest('particle:particle-1', ASK, { effort: 'medium', maxOutputTokens: 20_000 }, env);
+      expect(await compatSend(req).catch(e => e)).toBeInstanceOf(CompatHttpError);
+      expect((await fetch(`${env.PARTICLE_BASE_URL}/models`, { headers: { authorization: `Bearer ${env.PARTICLE_API_KEY}` } })).status).toBe(200);
+      const [failed, listing] = readRequestLog(p.log, p.bodies);
+      expect(failed).toMatchObject({ status: 429, settlement: 'rejected-unbilled', response_model: null, reasoning_tokens: null });
+      expect(failed.response_meta).toEqual({ metadata: null, weight_version: null, service_tier: null, system_fingerprint: null, non_default_tier: null, truncated: null });
+      expect(failed.request).toEqual({ effort_sent: 'medium', effort_effective: 'high', effort_effective_source: 'docs.particle.ai and GET /v1/models, checked 2026-10-31', output_limit_field: 'max_completion_tokens', output_limit: 20_000 });
+      expect(listing).toMatchObject({ method: 'GET', path: '/v1/models', settlement: 'free', request: null });
+    } finally { await p.close(); }
+  });
+
+  test('a request the proxy answers slower than the old 255 s idle limit still reaches the client (scaled: any limit runs as 1 s against a 6 s answer)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mp-particle-idle-')); dirs.push(dir);
+    const ledgerPath = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath });
+    const run = BudgetRun.open({ runner: 'mp-particle-idle-test', budgetUsd: 1, ledgerPath });
+    const answerMs = 6_000;
+    const slow = Bun.serve({ hostname: '127.0.0.1', port: 0, idleTimeout: 0, async fetch() { await Bun.sleep(answerMs); return Response.json({ object: 'list', data: [{ id: 'particle-ai/particle-1', object: 'model' }] }); } });
+    const serve = Bun.serve.bind(Bun);
+    const limits: unknown[] = [];
+    const scaled = spyOn(Bun, 'serve').mockImplementation(((o: any) => { limits.push(o.idleTimeout); return serve({ ...o, idleTimeout: o.idleTimeout ? 1 : 0 }); }) as typeof Bun.serve);
+    let proxy: Awaited<ReturnType<typeof startMeteringProxy>>;
+    try {
+      proxy = await startMeteringProxy({ run, cellId: 'cell-particle-idle', requestLogPath: join(dir, 'log.jsonl'), bodiesDir: join(dir, 'bodies'), labels: ['reader'], upstreams: { particle: `http://127.0.0.1:${slow.port}/particle` }, realKeys: { PARTICLE_API_KEY: 'pk-test-particle' } });
+    } finally { scaled.mockRestore(); }
+    try {
+      expect(limits).toEqual([0]);
+      const env = proxy.envFor('reader');
+      const t0 = Date.now();
+      const res = await fetch(`${env.PARTICLE_BASE_URL}/models`, { headers: { authorization: `Bearer ${env.PARTICLE_API_KEY}` } });
+      expect(res.status).toBe(200);
+      expect(await res.json()).toMatchObject({ data: [{ id: 'particle-ai/particle-1' }] });
+      expect(Date.now() - t0).toBeGreaterThanOrEqual(answerMs);
+      expect(readRequestLog(join(dir, 'log.jsonl'), join(dir, 'bodies'))).toMatchObject([{ method: 'GET', path: '/v1/models', status: 200, settlement: 'free' }]);
+    } finally { await proxy.close(); slow.stop(true); }
+  }, 20_000);
+
+  // Value: protects=the workload route's proxy answers a particle request that failed after it went out with a 504, which no particle client sends again (issue #282); fails_when=it answers a timeout, a reset or a body that fails after the headers with the 502 a client retries, or answers a refused connection, which never reached Particle, with a 504; why_new=the lease proxy already answers these 504 (#250, #270); seam=loopback sockets that hang, reset, close mid-body or refuse, and a shortened upstream deadline; no_claim=whether Particle bills a dropped request
+  test('a particle request that times out, resets or loses its body after it went out is answered 504; a refused connection, and another provider, get the 502 (#282)', async () => {
+    const { UPSTREAM_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+    const faults: Record<string, (s: Socket) => void> = {
+      hang: () => {},
+      reset: s => s.resetAndDestroy(),
+      body: s => { s.write('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: 1000\r\n\r\n{"id":"x",'); setTimeout(() => s.destroy(), 20); },
+    };
+    const timeout = AbortSignal.timeout;
+    AbortSignal.timeout = (ms: number) => timeout.call(AbortSignal, ms === UPSTREAM_DEADLINE_MS ? 300 : ms);
+    const seen: string[] = [];
+    const sockets: Socket[] = [];
+    try {
+      for (const fault of ['hang', 'reset', 'body', 'refused']) {
+        const upstream = createServer(s => { sockets.push(s); s.once('data', () => { seen.push(fault); faults[fault]?.(s); }); });
+        await new Promise<void>(r => upstream.listen(0, '127.0.0.1', r));
+        const base = `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`;
+        if (fault === 'refused') await new Promise<void>(r => upstream.close(() => r()));
+        const dir = mkdtempSync(join(tmpdir(), 'mp-particle-lost-')); dirs.push(dir);
+        const ledgerPath = join(dir, 'ledger.sqlite');
+        initLedger({ ledgerPath });
+        const run = BudgetRun.open({ runner: 'mp-particle-lost-test', budgetUsd: 1, ledgerPath });
+        const proxy = await startMeteringProxy({ run, cellId: `cell-${fault}`, requestLogPath: join(dir, 'log.jsonl'), bodiesDir: join(dir, 'bodies'), labels: ['reader'], upstreams: { particle: base, openai: base }, realKeys: { PARTICLE_API_KEY: 'stub-not-a-real-key', OPENAI_API_KEY: 'stub-not-a-real-key' } });
+        try {
+          const env = proxy.envFor('reader');
+          const particle = await post(`${env.PARTICLE_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.PARTICLE_API_KEY}` }, compatRequest('particle:particle-1', ASK, {}, env).body);
+          const openai = await post(`${env.OPENAI_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.OPENAI_API_KEY}` }, { model: 'gpt-6.1-sol', max_completion_tokens: 20, messages: ASK });
+          const lost = fault !== 'refused';
+          expect([fault, particle.status, ((await particle.json()) as any).error.type]).toEqual([fault, lost ? 504 : 502, lost ? 'mpw_proxy_upstream_lost' : 'mpw_proxy_upstream_unreachable']);
+          expect([fault, openai.status, ((await openai.json()) as any).error.type]).toEqual([fault, 502, 'mpw_proxy_upstream_unreachable']);
+          expect(readRequestLog(join(dir, 'log.jsonl'), join(dir, 'bodies')).map(l => [l.provider, l.status, l.settlement])).toEqual([['particle', lost ? 504 : 502, 'charged-reservation'], ['openai', 502, 'charged-reservation']]);
+        } finally { await proxy.close(); if (fault !== 'refused') upstream.close(); }
+      }
+    } finally { AbortSignal.timeout = timeout; for (const s of sockets) s.destroy(); }
+    expect(seen).toEqual(['hang', 'hang', 'reset', 'reset', 'body', 'body']);
+  }, 20_000);
+
+  // Value: protects=the workload route's proxy answers a particle request that may have gone out before it failed with a 504, whatever Bun names the failure (issue #288); fails_when=it answers a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress with the 502 a client sends again, or answers a failure proven to happen before sending (a refused connection, an unresolvable host) with a 504; why_new=compatMayHaveBilled reads every transport failure that is not proven to happen before sending as lost; seam=loopback sockets that read the request and answer badly, a closed port and an .invalid host; no_claim=what Particle's edge sends when it fails
+  test('a particle request whose upstream answers a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress is answered 504 and sent upstream once; a refused connection or an unresolvable host, and another provider, keep the 502 (#288)', async () => {
+    const answers: Record<string, ((s: Socket) => void) | null> = {
+      'status line': s => s.end('not http at all\r\n\r\n'),
+      'content-length': s => s.end('HTTP/1.1 200 OK\r\ncontent-length: abc\r\n\r\n{}'),
+      chunk: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ntransfer-encoding: chunked\r\n\r\nzz\r\nhello\r\n0\r\n\r\n'),
+      gzip: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-encoding: gzip\r\ncontent-length: 10\r\n\r\nnotgzip!!!'),
+      refused: null,
+      dns: null,
+    };
+    for (const [fault, answer] of Object.entries(answers)) {
+      let hits = 0;
+      const upstream = createServer(s => { s.on('error', () => {}); s.once('data', () => { hits++; answer?.(s); }); });
+      await new Promise<void>(r => upstream.listen(0, '127.0.0.1', r));
+      const base = fault === 'dns' ? 'https://particle-288.invalid' : `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`;
+      if (!answer) await new Promise<void>(r => upstream.close(() => r()));
+      const dir = mkdtempSync(join(tmpdir(), 'mp-particle-288-')); dirs.push(dir);
+      const ledgerPath = join(dir, 'ledger.sqlite');
+      initLedger({ ledgerPath });
+      const run = BudgetRun.open({ runner: 'mp-particle-288-test', budgetUsd: 1, ledgerPath });
+      const proxy = await startMeteringProxy({ run, cellId: `cell-288-${fault.replace(/ /g, '-')}`, requestLogPath: join(dir, 'log.jsonl'), bodiesDir: join(dir, 'bodies'), labels: ['reader'], upstreams: { particle: base, openai: base }, realKeys: { PARTICLE_API_KEY: 'stub-not-a-real-key', OPENAI_API_KEY: 'stub-not-a-real-key' } });
+      try {
+        const env = proxy.envFor('reader');
+        const particle = await post(`${env.PARTICLE_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.PARTICLE_API_KEY}` }, compatRequest('particle:particle-1', ASK, {}, env).body);
+        const lost = answer !== null;
+        expect([fault, particle.status, ((await particle.json()) as any).error.type, hits]).toEqual([fault, lost ? 504 : 502, lost ? 'mpw_proxy_upstream_lost' : 'mpw_proxy_upstream_unreachable', lost ? 1 : 0]);
+        const openai = await post(`${env.OPENAI_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.OPENAI_API_KEY}` }, { model: 'gpt-6.1-sol', max_completion_tokens: 20, messages: ASK });
+        expect([fault, openai.status]).toEqual([fault, 502]);
+      } finally { await proxy.close(); if (answer) upstream.close(); }
+    }
+  }, 20_000);
 });
 
 // ─── Zero balance blocks dispatch from each process ──────────────────

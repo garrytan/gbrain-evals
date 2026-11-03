@@ -551,7 +551,7 @@ describe('ClaudeSonnetWithToolsAdapter — teardown bounded disconnect', () => {
 });
 
 describe('runAgentLoop temperature', () => {
-  test('every agent model call is sent at temperature 0', async () => {
+  test('every call to an agent model that takes a temperature is sent at temperature 0', async () => {
     const adapter = new ClaudeSonnetWithToolsAdapter();
     const state = (await adapter.init(SAMPLE_PAGES, { name: 'test' })) as AgentAdapterState;
     const seen: Array<Record<string, unknown>> = [];
@@ -559,7 +559,7 @@ describe('runAgentLoop temperature', () => {
     const client = {
       messages: { create: async (params: Record<string, unknown>) => { seen.push(params); return responses[seen.length - 1]; } },
     } as unknown as Anthropic;
-    await runAgentLoop('q-temp', 'Who is Amara?', state, { client, maxRetries: 1 });
+    await runAgentLoop('q-temp', 'Who is Amara?', state, { client, model: 'claude-sonnet-4-6', maxRetries: 1 });
     expect(seen.length).toBe(2);
     expect(seen.every(p => p.temperature === 0)).toBe(true);
     expect(AGENT_TEMPERATURE).toBe(0);

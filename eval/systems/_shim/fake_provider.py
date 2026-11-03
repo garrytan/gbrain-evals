@@ -17,6 +17,18 @@ Routes (any path prefix, so `/openai/v1/...` and `/<slot>/openai/v1/...` both wo
   GET  .../models            a short model list.   GET /_stats   request counts by route and model.
   GET  /__proxy/status       answers like the metering proxy's status route, so `bootstrap.sh up` accepts it as the proxy.
 
+Particle (any path containing `/particle/v1/`, as PARTICLE_BASE_URL points there) answers like api.particle.ai:
+  POST .../chat/completions  model `particle-ai/particle-1`, `metadata.weight_version`, `service_tier`, `system_fingerprint`,
+                             reasoning tokens inside `completion_tokens` and a `reasoning_content` text unless
+                             `reasoning_effort` is `none`; an output limit below the reasoning returns empty content with
+                             `finish_reason: length`; `tools` with `tool_choice: auto` call the first tool, then `submit_answer`
+                             once a tool result is in the conversation; `logprobs` adds deterministic per-token log probabilities.
+  GET  .../models            Particle's listing shape: particle-1 at its default tier and at the `flex` tier.
+  POST .../responses         405, as Particle serves Responses over WebSocket only.
+  Faults: POST /__fake/particle/faults {"faults": [{"status": 429, "retry_after": "1"}, {"status": 402}, ...]} (or
+  --particle-faults 429:1,429,402) queues answers the next Particle chat requests get, in order: 429 with Retry-After,
+  402 (credit exhausted), 400 `context` (context length exceeded) or any status, each with an optional raw `body`.
+
 Every request is appended to the log (one JSON line: route, model, dimensions, schema name, response format, whether
 the credential is the container's dummy, a body hash), never the body or the credential itself.
 
@@ -45,6 +57,8 @@ NOT_NAMES = {"The", "What", "That", "This", "Last", "Mostly", "Noted", "Please",
 NATIVE_DIMS = {"text-embedding-3-small": 1536, "text-embedding-3-large": 3072, "text-embedding-ada-002": 1536}
 STATS: Counter = Counter()
 LOCK = Lock()
+PARTICLE_FAULTS: list[dict[str, Any]] = []
+PARTICLE_REASONING_TOKENS = 24
 
 
 def words(text: str) -> list[str]:
@@ -246,6 +260,75 @@ def messages(body: dict[str, Any]) -> dict[str, Any]:
             "content": [{"type": "text", "text": "ok"}], "usage": {"input_tokens": max(1, len(prompt) // 4), "output_tokens": 1}}
 
 
+def particle_chat(body: dict[str, Any]) -> dict[str, Any]:
+    msgs = body.get("messages") or []
+    tools = body.get("tools") or []
+    out = chat({**body, "logprobs": False, "tool_choice": None if body.get("tool_choice") in (None, "auto") else body.get("tool_choice")})
+    choice, message = out["choices"][0], out["choices"][0]["message"]
+    if tools and body.get("tool_choice") in (None, "auto"):
+        names = [t["function"]["name"] for t in tools]
+        answered = any(m.get("role") == "tool" for m in msgs)
+        name = "submit_answer" if answered and "submit_answer" in names else None if answered else next((n for n in names if n != "submit_answer"), names[0])
+        if name:
+            fn = next(t["function"] for t in tools if t["function"]["name"] == name)
+            params = fn.get("parameters", {})
+            last = next((content_text(m.get("content")) for m in reversed(msgs) if m.get("role") in ("user", "tool")), "")
+            message.update(content=None, tool_calls=[{"id": f"call_{uuid.uuid4().hex[:12]}", "type": "function", "function": {"name": name, "arguments": json.dumps(SchemaFiller(params, last).fill(params))}}])
+            choice["finish_reason"] = "tool_calls"
+        else:
+            message["content"] = "ok"
+    effort = body.get("reasoning_effort", "high")
+    reasoning = 0 if effort == "none" else PARTICLE_REASONING_TOKENS
+    limit = body.get("max_completion_tokens") or body.get("max_tokens") or 32000
+    total = reasoning + out["usage"]["completion_tokens"]
+    if reasoning:
+        message["reasoning_content"] = f"Fake reasoning at effort {effort}."
+    if total > limit:
+        message["content"] = ""
+        message.pop("tool_calls", None)
+        choice["finish_reason"], total = "length", limit
+    if body.get("logprobs"):
+        tokens = (message.get("content") or "").split() or [""]
+        top = int(body.get("top_logprobs") or 0)
+        lp = [-round((int.from_bytes(hashlib.sha256(f"{i}:{t}".encode()).digest()[:2], "big") % 1000) / 10000, 4) for i, t in enumerate(tokens)]
+        choice["logprobs"] = {"content": [{"token": t, "logprob": p, "bytes": None, "top_logprobs": [{"token": t, "logprob": p, "bytes": None}] + [{"token": f"{t}~{k}", "logprob": p - k, "bytes": None} for k in range(1, top)]} for t, p in zip(tokens, lp)], "refusal": None}
+    prompt = out["usage"]["prompt_tokens"]
+    out.update(model="particle-ai/particle-1" if body.get("model") == "particle-1" else body.get("model", "fake"), service_tier="default",
+               system_fingerprint="fp_fake_particle", metadata={"weight_version": "default"},
+               usage={"prompt_tokens": prompt, "completion_tokens": total, "total_tokens": prompt + total,
+                      "prompt_tokens_details": {"cached_tokens": 0}, "completion_tokens_details": {"reasoning_tokens": min(reasoning, total)}})
+    return out
+
+
+def particle_fault(fault: dict[str, Any]) -> tuple[int, Any, dict[str, str]]:
+    status = int(fault.get("status", 500))
+    message = {402: "Insufficient credits: your prepaid balance is empty", 429: "Rate limit exceeded, retry later",
+               400: "This model's maximum context length is 1048576 tokens; your request has more"}.get(status, "upstream error")
+    body = fault["body"].encode() if isinstance(fault.get("body"), str) else {"error": {"message": message, "type": "invalid_request_error" if status == 400 else "error", "code": status}}
+    return status, body, {"Retry-After": str(fault["retry_after"])} if fault.get("retry_after") is not None else {}
+
+
+def parse_faults(spec: str) -> list[dict[str, Any]]:
+    out = []
+    for item in filter(None, (s.strip() for s in spec.split(","))):
+        status, _, after = item.partition(":")
+        out.append({"status": int(status), **({"retry_after": after} if after else {})})
+    return out
+
+
+def particle_tier(service_tier: str | None, scale: float) -> dict[str, Any]:
+    cost = lambda usd: f"{usd * scale / 1e6:.10f}".rstrip("0")
+    row = {"schema_version": "2.4", "id": "particle-ai/particle-1", "name": "Particle-1", "created": 1793108609, "tokenizer": "DeepSeek",
+           "description": "Particle-1 is Particle AI's token-efficient agentic model, trained to complete software engineering tasks accurately with substantially fewer tokens.",
+           "input_modalities": [{"type": "text", "supported_inputs": {"max_context_length": {"value": 1048576, "unit": "token"}},
+                                 "pricing": [{"type": "prompt", "unit": "token", "cost_usd": cost(0.25)}, {"type": "cached_prompt", "unit": "token", "cost_usd": cost(0.03), "implicit": True}]}],
+           "output_modalities": [{"type": "text", "max_length": {"value": 131072, "unit": "token"}, "pricing": [{"type": "completion", "unit": "token", "cost_usd": cost(1.0)}]}],
+           "is_ready": True, "is_free": False}
+    return {**row, "service_tier": service_tier} if service_tier else row
+
+
+PARTICLE_MODELS = {"object": "list", "data": [particle_tier(None, 1.0), particle_tier("flex", 0.5)]}
+
 ROUTES = {"/chat/completions": ("chat", chat), "/responses": ("responses", responses), "/embeddings": ("embeddings", embeddings), "/messages": ("messages", messages)}
 
 
@@ -253,11 +336,13 @@ def make_handler(log_path: str | None) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
 
-        def _send(self, status: int, out: Any, sse: bool = False) -> None:
+        def _send(self, status: int, out: Any, sse: bool = False, headers: dict[str, str] | None = None) -> None:
             data = out if isinstance(out, bytes) else json.dumps(out).encode()
             self.send_response(status)
             self.send_header("Content-Type", "text/event-stream" if sse else "application/json")
             self.send_header("Content-Length", str(len(data)))
+            for k, v in (headers or {}).items():
+                self.send_header(k, v)
             self.end_headers()
             self.wfile.write(data)
 
@@ -268,6 +353,8 @@ def make_handler(log_path: str | None) -> type[BaseHTTPRequestHandler]:
                     return self._send(200, dict(STATS))
             if path == "/__proxy/status":
                 return self._send(200, {"ok": True, "run_id": "fake-provider", "fake_provider": True})
+            if "/particle/v1/" in path and path.rstrip("/").endswith("/models"):
+                return self._send(200, PARTICLE_MODELS)
             if re.search(r"/models(/[^/]+)?/?$", path):
                 return self._send(200, {"object": "list", "data": [{"id": m, "object": "model"} for m in ("gpt-4.1-mini", "gpt-5-mini", "text-embedding-3-large")]})
             self._send(404, {"error": {"message": f"no route {path}"}})
@@ -279,20 +366,33 @@ def make_handler(log_path: str | None) -> type[BaseHTTPRequestHandler]:
                 body = json.loads(raw or b"{}")
             except json.JSONDecodeError:
                 return self._send(400, {"error": {"message": "body is not JSON"}})
+            if path == "/__fake/particle/faults":
+                with LOCK:
+                    PARTICLE_FAULTS[:] = list(body.get("faults") or [])
+                return self._send(200, {"queued": len(PARTICLE_FAULTS)})
             route = next((r for r in ROUTES if path.endswith(r)), None)
             name = ROUTES[route][0] if route else path
+            particle = "/particle/v1/" in path
             cred = self.headers.get("Authorization") or self.headers.get("x-api-key") or ""
             with LOCK:
+                fault = PARTICLE_FAULTS.pop(0) if particle and name == "chat" and PARTICLE_FAULTS else None
                 STATS[f"{name}:{body.get('model')}"] += 1
                 if log_path:
                     with open(log_path, "a") as f:
                         f.write(json.dumps({"t": round(time.time(), 3), "route": name, "path": path, "model": body.get("model"), "dimensions": body.get("dimensions"),
                                             "schema": ((body.get("text") or {}).get("format") or {}).get("name") or ((body.get("response_format") or {}).get("json_schema") or {}).get("name"),
                                             "response_format": (body.get("response_format") or {}).get("type"), "logprobs": bool(body.get("logprobs")),
+                                            "effort": body.get("reasoning_effort"), "max_completion_tokens": body.get("max_completion_tokens"),
+                                            **({"fault": fault["status"]} if fault else {}),
                                             "auth_is_dummy": "dummy" in cred, "auth_present": bool(cred), "sha256": hashlib.sha256(raw).hexdigest()[:16]}) + "\n")
             if not route:
                 return self._send(404, {"error": {"message": f"no route {path}"}})
-            out = ROUTES[route][1](body)
+            if particle and name == "responses":
+                return self._send(405, {"error": {"message": "the Responses API is served over WebSocket only"}})
+            if fault:
+                status, out, headers = particle_fault(fault)
+                return self._send(status, out, headers=headers)
+            out = particle_chat(body) if particle and name == "chat" else ROUTES[route][1](body)
             if body.get("stream") and name == "chat":
                 chunk = {**out, "object": "chat.completion.chunk", "usage": None,
                          "choices": [{"index": 0, "delta": out["choices"][0]["message"], "finish_reason": out["choices"][0]["finish_reason"]}]}
@@ -310,7 +410,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=int(os.environ.get("FAKE_PROVIDER_PORT", "8787")))
     ap.add_argument("--log", default=os.environ.get("FAKE_PROVIDER_LOG"))
+    ap.add_argument("--particle-faults", default="", help="faults for the first Particle chat requests, e.g. 429:1,429,402")
     a = ap.parse_args()
+    PARTICLE_FAULTS.extend(parse_faults(a.particle_faults))
     ThreadingHTTPServer(("0.0.0.0", a.port), make_handler(a.log)).serve_forever()
 
 

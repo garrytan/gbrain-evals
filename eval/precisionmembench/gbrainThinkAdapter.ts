@@ -11,7 +11,10 @@
  *     UNSCOPED — cross-scope beliefs can enter gather, and scope-disambiguation
  *     cases may be cited wrong. Scope-isolated think needs new plumbing
  *     (filed Phase-2/4). We run unscoped and report it honestly.
- *   - 1 LLM call per case (cheap model pinned). This measures citation
+ *   - One think round per case on DEFAULT_THINK_MODEL, Opus 5.5 (the top
+ *     Anthropic model under CLAUDE.md's model rules, not a cheap one). The
+ *     runner records it as resolved_config.chat_model and runs this mode only
+ *     as a paid arm metered through the budget ledger. This measures citation
  *     behavior + model nondeterminism, not the raw retrieval contract.
  */
 
@@ -20,10 +23,12 @@ import type { Belief } from './scorer/belief.ts';
 import { BaseAdapter } from './scorer/baseAdapter.ts';
 import { runThink } from '../../node_modules/gbrain/src/core/think/index.ts';
 
+export const DEFAULT_THINK_MODEL = 'anthropic:claude-opus-5-5';
+
 export class GbrainThinkAdapter extends BaseAdapter {
   constructor(
     private readonly engine: BrainEngine,
-    private readonly chatModel: string = 'anthropic:claude-haiku-4-5',
+    private readonly chatModel: string = DEFAULT_THINK_MODEL,
   ) {
     super('gbrain');
   }

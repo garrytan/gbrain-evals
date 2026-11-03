@@ -1,0 +1,1 @@
+GBrain is installed as the `gbrain` MCP server. It holds this user's notes, people, companies, meetings and past work. Check it first with search before other sources, and apply your scope rule to its results.

@@ -1,6 +1,8 @@
 # BrainBench credits
 
-BrainBench combines project-authored tests, public benchmark material and comparison implementations. Attribution matters because a test written by a project's authors supplies different evidence from an independent submission. Everything above [Changelog](#changelog) is current as of gbrain-evals v0.10.25.
+BrainBench combines project-authored tests, public benchmark material and comparison implementations.
+Attribution matters because a test written by a project's authors supplies different evidence from an independent submission.
+Everything above [Changelog](#changelog) is current as of the gbrain this repository pins, master `62637c96a` (v0.60.557.0).
 
 ## Project work
 
@@ -23,6 +25,8 @@ The retrieval adapters were implemented within this project:
 
 These are useful controls, but they are not third-party implementations submitted by competing vendors. External adapters should record their author and implementation assumptions here.
 
+**Khaled Aly** (@khalloud, Carafe team) designed the Cat 35 external lane in [#32](https://github.com/garrytan/gbrain-evals/pull/32): it scores another system's notes beside gbrain's lanes under the same judge. The lane was rebuilt on main from that design.
+
 ## Data and upstream work
 
 The committed `eval/data/world-v1/` corpus contains 240 fictional entities. Claude Opus wrote the generated prose. Its historical one-time generation cost was approximately $3.14; that is a recorded cost, not a current regeneration quote.
@@ -41,6 +45,38 @@ A **Codex** review challenged whether the early suite established anything beyon
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-03: The opening names `62637c96a`
+
+The opening names gbrain master `62637c96a` (v0.60.557.0) as the pin the page is current for (was `311a83bbe`,
+v0.60.553.0). No credit changed.
+
+### 2026-11-02: The opening names `311a83bbe`
+
+The opening names gbrain master `311a83bbe` (v0.60.553.0) as the pin the page is current for (was `a131fb20e`,
+v0.60.549.0). No credit changed.
+
+### 2026-11-02: The opening names `a131fb20e`; one sentence per line
+
+The opening names gbrain master `a131fb20e` (v0.60.549.0) as the pin the page is current for (was `ca1281a2e`,
+v0.60.542.0) and puts each sentence on its own line, which renders the same. No credit changed.
+
+### 2026-11-02: The opening names the new pin
+
+The opening names gbrain master `ca1281a2e` (v0.60.542.0) as the pin the page is current for (was `3ec766c40`,
+v0.60.531.0). No credit changed.
+
+### 2026-11-01: Stamped with the gbrain pin
+
+gbrain-evals #241. The opening said the page was current as of gbrain-evals v0.10.25; it now names the gbrain this
+repository pins, master `3ec766c40` (v0.60.531.0), and `scripts/verify-documentation-refresh.py` checks that sentence
+against `package.json` with the other hub pin sentences. Nothing else on the page changed: no external query batch or
+adapter has been contributed since the last entry.
+
+### 2026-10-31: Credit for the Cat 35 external lane
+
+"Questions and adapters" now credits Khaled Aly (@khalloud, Carafe team) for the Cat 35 external lane, designed in
+[#32](https://github.com/garrytan/gbrain-evals/pull/32) and rebuilt on main.
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

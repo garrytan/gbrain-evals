@@ -179,6 +179,9 @@
     "search_pins": {
       "search.mode": "balanced",
       "search.autocut": "false",
+      "search.query_facts_block": "false",
+      "search.saved_facts_supersede": "false",
+      "search.remote_page_cap": "0",
       "search.reranker.enabled": "false"
     },
     "retrieval_path": "hybridSearch (expansion off), chunks reduced to distinct sessions",

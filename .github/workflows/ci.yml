@@ -25,7 +25,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
 
       # Installs gbrain from the pinned SHA in package.json: the
       # packaged-install proof (no bun link anywhere in CI).
@@ -35,14 +35,11 @@ jobs:
       # Unfiltered: dependency sources are type-checked too. Ambient shims
       # for Bun text imports and untyped modules live in types/. The program
       # needs about 4.4 GB of heap, past node's default 4 GB limit, so the
-      # limit is raised; the runner has 16 GB.
+      # package.json `typecheck` script raises the limit itself; the runner
+      # has 16 GB. CI runs that script, the same command every machine runs,
+      # and then the scripts/ program.
       - name: Typecheck
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
-        run: bunx tsc --noEmit
-
-      - name: Typecheck (scripts)
-        run: bunx tsc --noEmit -p tsconfig.scripts.json
+        run: bun run typecheck
 
       - name: Python harness tests
         run: python3 test/retrieval_refresh_orchestrator_test.py
@@ -84,7 +81,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
 
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
@@ -111,7 +108,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
 
       # Every experiment listed in docs/benchmarks/preregistrations.json must
       # have its preregistration committed before any of its result files.
@@ -130,7 +127,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
 
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
@@ -139,9 +136,57 @@ jobs:
       - name: Install ripgrep
         run: sudo apt-get update -q && sudo apt-get install -y ripgrep
 
-      # test/eval/ plus the unit tests colocated under eval/.
+      # test/eval/ plus the unit tests colocated under eval/. The JUnit report
+      # names the files this shard ran, for the tested-tree job below.
       - name: Unit + integration tests (shard ${{ matrix.shard }}/4)
-        run: bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/
+        run: bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/ --reporter=junit --reporter-outfile="$RUNNER_TEMP/tests-${{ matrix.shard }}.xml"
+
+      - name: Upload the files this shard ran
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tested-files-${{ matrix.shard }}
+          path: ${{ runner.temp }}/tests-${{ matrix.shard }}.xml
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
+  # The tested tree for gstack's CI carry (gstack docs/pregate.md#ci-carry).
+  # After the checks job and all four test shards pass, tree.json records this
+  # run, the tree it tested and every test file it ran: the Bun files from the
+  # shards' JUnit reports and the Python tests the checks job runs. gstack's
+  # pregate and /ship read it from a green run at the same clean tree
+  # (.gstack/pregate.json run_profiles and ship_lanes_from) instead of running
+  # the suite again. It runs no tests itself.
+  tested-tree:
+    needs: [checks, tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.4
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: tested-files-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/tested-files
+
+      - name: Record the tested tree
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bun scripts/ci-tested-tree.ts record --junit "$RUNNER_TEMP/tested-files" --out "$RUNNER_TEMP/tested-tree/tree.json"
+
+      - name: Upload the tested tree
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tested-tree
+          path: ${{ runner.temp }}/tested-tree/tree.json
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
 
   # The head-to-head scoreboard's $0 fixture (docs/scoreboard.md): the reference
   # fake system end to end through the shim, the metering proxy in lease mode,
@@ -158,7 +203,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
 
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
@@ -167,15 +212,20 @@ jobs:
         run: timeout 300 bun run eval:scoreboard fixture --stub judge-repeat --json
 
   # Secret scan of published receipts: every receipts/ directory and every
-  # scoreboard receipt tree under docs/benchmarks/. gitleaks is pinned by
-  # version and sha256; findings are redacted in the log.
+  # scoreboard receipt tree under docs/benchmarks/, plus the members of every
+  # tarball or gzip receipt under docs/benchmarks, results, baselines and qrels
+  # that is not reviewed at its current hash and gitleaks version in
+  # test/eval/fixtures/reviewed-compressed-receipts.json; a tarball GNU tar
+  # cannot list cleanly, or one with a repeated name or a special entry, is
+  # refused unread. gitleaks is pinned by version and sha256; findings are
+  # redacted in the log.
   receipt-secrets:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: gitleaks on docs/benchmarks/**/receipts and scoreboard receipts
+      - name: gitleaks on docs/benchmarks/**/receipts, scoreboard receipts and compressed receipts
         run: bash scripts/scan-receipts.sh
 
   # The pinned agent-memory benchmark harness (eval/harness-provider/): CPU-only
@@ -201,7 +251,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
 
       - name: Install uv 0.12.3
         run: pipx install uv==0.12.3

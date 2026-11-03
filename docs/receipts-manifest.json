@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-25",
+  "updated": "2026-11-01",
   "entries": [
     {
       "claim_id": "graph-backend-2026-10-17",
@@ -100,7 +100,7 @@
       "claim_id": "longmemeval-recall-all",
       "readme_anchor": "docs/benchmarks/2026-05-07-longmemeval-s.md: August 31 correction, May hybrid strict recall 392/470 = 83.40% and expansion 84.26%",
       "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rescore-may-2026-08-31.json",
-      "artifact_sha256": "17d23de0ff27203f37e9e73d79e7fa303742b7a85dd6098010a44753d6d8bc22",
+      "artifact_sha256": "1be683948bded653586cd3a8d826946682aa7cf63f8b103f6f70c8a18d7df26f",
       "expected": {
         "/summaries/2/adapter": "gbrain-hybrid",
         "/summaries/2/recall_all_at_k": 0.8340425531914893,
@@ -112,7 +112,7 @@
       },
       "golden_test": "test/eval/longmemeval-golden.test.ts: longmemeval golden regression (committed May NDJSON)",
       "status": "covered",
-      "note": "Published summary of the 2026-08-31 erratum resolution: the May run's raw rows rescored under the official recall_all@5 metric. The golden test re-derives every number in this file from the committed NDJSON via the same summarizeAdapterRows the runner uses."
+      "note": "Published summary of the 2026-08-31 erratum resolution: the May run's raw rows rescored under the official recall_all@5 metric. The golden test re-derives every number in this file from the committed NDJSON via the same summarizeAdapterRows the runner uses. On 2026-10-31 (issue #26) resolved.source_ndjson was repointed from eval/reports/longmemeval/rescore-may-copy.ndjson, the gitignored path the aggregator read, to that committed copy; no other byte changed. The .md twin still names the old path in its first line because it is protected generated evidence (2026-09-09-retrieval-refresh/documentation-integrity.json)."
     },
     {
       "claim_id": "longmemeval-raw-rows",
@@ -698,7 +698,7 @@
       "artifact_path": "docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/judge-calibration-2026-08-25.json",
       "artifact_sha256": "6aefaf365d52c87ea2ef972a73f20b6bd2d5676f209414eb03e307e08488f478",
       "status": "covered",
-      "note": "The annotation file has 40 slots: 24 populated coverage judgments and 16 grounding/distraction placeholders. All human_verdict fields remain null. This preserves a pending calibration sample; it does not establish human agreement or a calibrated judge."
+      "note": "The annotation file has 40 slots: 24 populated coverage judgments and 16 grounding/distraction placeholders. All human_verdict fields remain null. This preserves a pending calibration sample; it does not establish human agreement or a calibrated judge. Its judge_model, claude-sonnet-4-6, is a movable alias, not a snapshot: the 2026-08-25 run predates resolved_model recording (29e9ac9f, 2026-09-01), so the judge_verdict values cannot be tied to fixed judge weights, the same caveat as the Cat 35 baseline and wave receipts."
     },
     {
       "claim_id": "precisionmembench-adaptive",
@@ -864,6 +864,62 @@
       "artifact_sha256": null,
       "status": "disclosed-gap",
       "note": "The original category 30-33 receipts were written to ignored eval/reports/ and cleaned up before publication. The report preserves the figures and discloses that training and held-out tasks originally shared judge rules. August 31 changed the held-out criteria. A fresh run cannot restore missing historical evidence or guarantee the old gates, model scores, or costs."
+    },
+    {
+      "claim_id": "skillopt-2026-11-01-cat30",
+      "readme_anchor": "docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md: all four practice skills improve on held-out tasks (0.00 to 0.50, 0.50 to 0.75, 0.00 to 1.00, 0.00 to 0.33)",
+      "artifact_path": "docs/benchmarks/2026-11-01-skillopt-rebaseline/receipts/cat30.json",
+      "artifact_sha256": "62118bd9f637c44881e3ffdc413220a7694a6aea4d487f2ced405eaa3fa1d4aa",
+      "expected": {
+        "/verdict": "pass",
+        "/data/seeds_improved": 4,
+        "/data/seeds/0/optimized_heldout": 0.5,
+        "/data/gate_pass": true
+      },
+      "status": "covered",
+      "note": "gpt-6.1-sol judge (active only in Cat 32), Haiku 5.5 target, Opus 5.5 optimizer, gbrain 3ec766c40; a new receipt identity that does not pool with the June 3 run. Costs in the report come from the metering proxy (receipts/metered-cost.json)."
+    },
+    {
+      "claim_id": "skillopt-2026-11-01-cat31",
+      "readme_anchor": "docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md: the full loop ties a one-shot rewrite, 0.54 against 0.54 held out, paired bootstrap p = 1.00; the iterative loop is a CUT-CANDIDATE",
+      "artifact_path": "docs/benchmarks/2026-11-01-skillopt-rebaseline/receipts/cat31.json",
+      "artifact_sha256": "fb4697d70ec424935c474a39859de088b9ec667954a35d2616a6defca904f6ec",
+      "expected": {
+        "/verdict": "pass",
+        "/data/configs/A_full/mean_heldout_clean": 0.5416666666666667,
+        "/data/configs/C_one_shot/mean_heldout_clean": 0.5416666666666667,
+        "/data/paired_bootstrap_p_A_vs_C": 1
+      },
+      "status": "covered",
+      "note": "gpt-6.1-sol judge (active only in Cat 32), Haiku 5.5 target, Opus 5.5 optimizer, gbrain 3ec766c40; a new receipt identity that does not pool with the June 3 run. Costs in the report come from the metering proxy (receipts/metered-cost.json)."
+    },
+    {
+      "claim_id": "skillopt-2026-11-01-cat32",
+      "readme_anchor": "docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md: the planted cheat shows a 0.98 gap and the honest control 0.07; Part B held-out quality 0.55 to 0.88 with no gate refusal, so the category is partial",
+      "artifact_path": "docs/benchmarks/2026-11-01-skillopt-rebaseline/receipts/cat32.json",
+      "artifact_sha256": "84fbf55144f69f1435499ac5882da44ef707a986be699d4de80c5aaac07750ee",
+      "expected": {
+        "/verdict": "partial",
+        "/data/part_a/discrimination": 0.98,
+        "/data/part_b/optimized_heldout": 0.875,
+        "/data/part_b/held_out_blocked": 0
+      },
+      "status": "covered",
+      "note": "gpt-6.1-sol judge (active only in Cat 32), Haiku 5.5 target, Opus 5.5 optimizer, gbrain 3ec766c40; a new receipt identity that does not pool with the June 3 run. Costs in the report come from the metering proxy (receipts/metered-cost.json)."
+    },
+    {
+      "claim_id": "skillopt-2026-11-01-cat33",
+      "readme_anchor": "docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md: a skill optimized on Haiku 5.5 or Sonnet 5.5 helps the other model in 4 of 4 pairs",
+      "artifact_path": "docs/benchmarks/2026-11-01-skillopt-rebaseline/receipts/cat33.json",
+      "artifact_sha256": "959e531599d3360dae112c538516f09ff3ceb62cc6548bbe21a5ebc21c717c58",
+      "expected": {
+        "/verdict": "pass",
+        "/data/pairs_transferred": 4,
+        "/data/pairs_scored": 4,
+        "/data/gate_pass": true
+      },
+      "status": "covered",
+      "note": "gpt-6.1-sol judge (active only in Cat 32), Haiku 5.5 target, Opus 5.5 optimizer, gbrain 3ec766c40; a new receipt identity that does not pool with the June 3 run. Costs in the report come from the metering proxy (receipts/metered-cost.json)."
     },
     {
       "claim_id": "stability-snapshot",
@@ -7035,6 +7091,618 @@
       "golden_test": "test/eval/n14-large-page-fidelity.test.ts: pinned 2 MB ledger hash, scorer, mutation suite and Amendment 2 to 6 tests",
       "status": "covered",
       "note": "N14 run at large pages Wave B PR 4 (gbrain 7a6bdd35, v0.60.454.0, default config, exploratory), Postgres 16.15, 100mib to 260mib, gbrain-evals 882eb72 (clean tree), native arm through append_page and upload sessions (Amendments 5 and 6), keyword search and a counting embedder, lifecycle on, $0."
+    },
+    {
+      "claim_id": "mpw-lme-facts0-shard1-cell",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/cells/longmemeval-s-gbrain-rag-a08ee2bbc80d/cell.json",
+      "artifact_sha256": "ab36e008c12efd62cf00086015702b3db3a370657b20ca9bb9e98cc7af794a95",
+      "status": "covered",
+      "expected": {
+        "/identity/pins/gbrain/loaded_git_head": "d7467d1cf822442b965e435aa6979133edc96a72",
+        "/identity/provider_config/lane": "combined",
+        "/identity/provider_config/facts_tokens": 0,
+        "/identity/provider_config/token_budget": 6300,
+        "/identity/target_tokens": 8000,
+        "/identity/models/answer": "gemini:gemini-3.8-flash",
+        "/identity/models/judge": "gemini:gemini-3.5-flash"
+      },
+      "note": "Exploratory, post hoc, decides nothing: wave 1 LongMemEval-S combined shard 1 (100 histories) run again on 2026-10-10 with facts_tokens 0 and the page query budget left at 6,300 tokens, on a fresh ingest at the freeze build d7467d1cf. The spec has the same content as eval/harness-provider/cells/posthoc/longmemeval-s-gbrain-combined-shard1-facts0.json. The receipts were written on branch capy/mpw-harness and copied to main byte for byte on 2026-10-31."
+    },
+    {
+      "claim_id": "mpw-lme-facts0-shard1-summary",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/cells/longmemeval-s-gbrain-rag-a08ee2bbc80d/summary.json",
+      "artifact_sha256": "eb5611e8028c2165fc4b420816274a0cd52de443101249327d8822f51ed261b2",
+      "status": "covered",
+      "expected": {
+        "/score/scheduled": 100,
+        "/score/correct": 71,
+        "/score/counts/abstention": 16,
+        "/score/complete": true,
+        "/delivered_context/mean": 6331.7,
+        "/delivered_context/ok": false,
+        "/gates/delivered_context": false
+      },
+      "note": "In-cell judge counts for the facts_tokens 0 cell. With no facts block it delivers a mean of 6,332 tokens and fails the 8,000-token context gate. The report compares lanes on the joint re-judge (mpw-lme-facts0-shard1-rejudge), which gives the same 71 and 16."
+    },
+    {
+      "claim_id": "mpw-lme-facts0-shard1-rejudge",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/rejudge/analysis.json",
+      "artifact_sha256": "a817d1448364ed0c4f64c3d6d60801c6096e41943fb0d8bb4d632edbce7a0d65",
+      "status": "covered",
+      "expected": {
+        "/cells/facts0 (new store)/correct": 71,
+        "/cells/facts0 (new store)/abstentions": 16,
+        "/cells/combined wave-1 (shard 1)/correct": 71,
+        "/cells/combined wave-1 (shard 1)/abstentions": 14,
+        "/cells/raw wave-1/correct": 80,
+        "/cells/raw wave-1/abstentions": 11,
+        "/cells/comparator wave-1/correct": 83,
+        "/cells/comparator wave-1/abstentions": 12,
+        "/by_type/single-session-user/facts0 (new store)": [
+          52,
+          6,
+          44
+        ],
+        "/by_type/single-session-user/combined wave-1 (shard 1)": [
+          52,
+          5,
+          46
+        ],
+        "/by_type/single-session-user/raw wave-1": [
+          52,
+          4,
+          49
+        ],
+        "/by_type/multi-session/facts0 (new store)": [
+          43,
+          5,
+          22
+        ],
+        "/by_type/multi-session/combined wave-1 (shard 1)": [
+          43,
+          4,
+          20
+        ],
+        "/by_type/multi-session/raw wave-1": [
+          43,
+          2,
+          26
+        ],
+        "/by_type/single-session-user_abs/facts0 (new store)": [
+          5,
+          5,
+          5
+        ],
+        "/by_type/single-session-user_abs/combined wave-1 (shard 1)": [
+          5,
+          5,
+          5
+        ],
+        "/by_type/single-session-user_abs/raw wave-1": [
+          5,
+          5,
+          5
+        ],
+        "/gap_closed/gap_points_shard1": 9,
+        "/gap_closed/facts0_minus_orig_combined": 0,
+        "/gap_closed/facts0_minus_samestore_1800": null
+      },
+      "note": "Joint blinded re-judge (gemini-3.5-flash, seed 20261005) of the facts_tokens 0 answers with the wave 1 shard 1 combined, raw and comparator answers. by_type values are [questions, abstained, correct]. Recounted on 2026-10-31 from the judge records in rejudge/receipt.tgz: 71, 71, 80 and 83 correct, 16, 14, 11 and 12 abstentions, and against wave 1 combined the facts_tokens 0 answers gain 4 questions and lose 4. facts0_minus_samestore_1800 is null because the planned same-store 1,800-token cell was refused by its ledger cap."
+    },
+    {
+      "claim_id": "mpw-lme-facts0-cell-ledger",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/ledger-status.json",
+      "artifact_sha256": "a22d7fe77beb8775c14ee12fe0ba65d9ba6083b8bdae710990168d78cede9105",
+      "status": "covered",
+      "expected": {
+        "/totals/program_cap_usd": 16.16,
+        "/totals/committed_usd": 9.394766155,
+        "/totals/remaining_usd": 6.765233845000001,
+        "/totals/open_reservations_usd": 0,
+        "/runs": 1
+      },
+      "note": "Ledger of the facts_tokens 0 cell, capped at what the approved $90 equivalence check had left ($90 less $73.84). The cell committed $9.39; the $6.77 left was below the $16 budget of the planned same-store cell, which the ledger refused, so only one run is recorded."
+    },
+    {
+      "claim_id": "mpw-lme-facts0-rejudge-ledger",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/rejudge/ledger-status.json",
+      "artifact_sha256": "897a27693d8c7700c89704ae9ef5685b31ec4c964283a823eca0a32e29e420fb",
+      "status": "covered",
+      "expected": {
+        "/totals/program_cap_usd": 1.5,
+        "/totals/committed_usd": 0.2514315,
+        "/totals/open_reservations_usd": 0
+      },
+      "note": "Ledger of the joint re-judge: $0.25 of a $1.50 cap. It records a Capy scratch ledger path, so it is listed in test/eval/fixtures/historical-capy-local-paths.json and kept byte for byte."
+    },
+    {
+      "claim_id": "mpw-equivalence-report",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Equivalence of the shipped build",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-equivalence/report.json",
+      "artifact_sha256": "2e850589228563ffc919ad6879d1f00b4c90a6613bcd066800f1dcc7b9346b7f",
+      "status": "covered",
+      "expected": {
+        "/100k~1combined/answers/r3/baseline/correct": 56,
+        "/100k~1combined/answers/r3/s23/correct": 57,
+        "/500k~1combined/answers/r3/baseline/correct": 100,
+        "/500k~1combined/answers/r3/s23/correct": 100,
+        "/1m~1combined/answers/r3/baseline/correct": 99,
+        "/1m~1combined/answers/r3/s23/correct": 97,
+        "/1m~1combined/context_vs_baseline_answers/r2a/changed": 7,
+        "/1m~1combined/context_vs_baseline_answers/r2b/changed": 11,
+        "/1m~1combined/context_vs_baseline_answers/r3/changed": 140,
+        "/1m~1combined/census/base/totals/facts": 26889,
+        "/1m~1combined/census/new/totals/facts": 27250,
+        "/500k~1combined/census/base/totals/facts": 11625,
+        "/500k~1combined/census/new/totals/facts": 11580,
+        "/1m~1ingest_guard/baseline_ingest_usd": 5.110424005,
+        "/1m~1ingest_guard/new_head_ingest_usd": 5.16438159,
+        "/1m~1ingest_guard/stopped": false
+      },
+      "note": "gbrain#6066 equivalence check, freeze build d7467d1cf against d7d7686de, on the public BEAM dev conversations (2026-10-10). report.json reached main at 95b4e7db; the report section that cites it reached main on 2026-10-31. eval/harness-provider/mpw_tools/equivalence_report.py regenerates every field from the committed receipts except extract_stale, because its extract-stale.log inputs match the *.log ignore rule and were never committed (checked 2026-10-31)."
+    },
+    {
+      "claim_id": "particle-w10b-replay-summary",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/summary.json",
+      "artifact_sha256": "ae6ebf7666f18b1e5b62b18194e81a55c7b94eac79550b273071a9c11679c720",
+      "status": "covered",
+      "expected": {
+        "/arms/w10b-particle-notes/correct": 457,
+        "/arms/w10c-particle-full/correct": 140,
+        "/arms/w10c-particle-currentpin/correct": 135,
+        "/arms/w10c-particle-currentpin-none/correct": 118,
+        "/arms/w10b-particle-notes/list_usd_per_correct": 0.00428,
+        "/arms/w10b-particle-notes/offpeak_paid_rows": 500,
+        "/arms/w10b-particle-notes/reader_errors": 0,
+        "/comparators/w10b-opus55-notes/correct": 474,
+        "/comparators/w10b-sonnet55-notes/correct": 462,
+        "/comparators/w10b-sol-notes/correct": 464,
+        "/w10b/comparisons/0/id": "correct__particle_minus_opus55",
+        "/w10b/comparisons/0/delta": -0.034,
+        "/w10b/comparisons/0/ci95": [
+          -0.056,
+          -0.014
+        ],
+        "/w10b/comparisons/0/mcnemar/wins": 6,
+        "/w10b/comparisons/0/mcnemar/losses": 23,
+        "/w10b/comparisons/1/id": "correct__particle_minus_sonnet55",
+        "/w10b/comparisons/1/delta": -0.01,
+        "/w10b/comparisons/1/ci95": [
+          -0.032,
+          0.01
+        ],
+        "/w10b/comparisons/1/mcnemar/wins": 13,
+        "/w10b/comparisons/1/mcnemar/losses": 18,
+        "/w10b/comparisons/2/id": "correct__particle_minus_sol",
+        "/w10b/comparisons/2/delta": -0.014,
+        "/w10b/comparisons/2/ci95": [
+          -0.036,
+          0.006
+        ],
+        "/w10b/comparisons/2/mcnemar/wins": 11,
+        "/w10b/comparisons/2/mcnemar/losses": 18,
+        "/decision_b/flip": false
+      },
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "The particle-1 replay's summary: 457 of 500 W10b questions, the three paired differences against Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, decision B not firing, and W10c's 140, 135 and 118 of 150. The recheck recounts each value from the rows and stops if summary.json differs."
+    },
+    {
+      "claim_id": "particle-w10b-replay-rows-w10b-particle-notes",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10b-particle-notes/rows.ndjson",
+      "artifact_sha256": "249efdccbe45afbdb6ab93847cbc392012e7d74e92ba8c450a0d6a8482eb5051",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "Per-question rows for R1's 500 W10b answers: the answer, the official gpt-4o judge reply, token usage and list price. The recheck recounts every particle-1 count and cost from them."
+    },
+    {
+      "claim_id": "particle-w10b-replay-receipts-w10b-particle-notes",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Setup",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10b-particle-notes/receipts.ndjson",
+      "artifact_sha256": "113b410e8d5d753c48532c08364b99737728919da2e886c034a5093d9c0c4ad7",
+      "status": "covered",
+      "note": "Request and response receipts for R1's 500 W10b answers, one line per paid Particle call."
+    },
+    {
+      "claim_id": "particle-w10b-replay-receipt-w10b-particle-notes",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Cost",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10b-particle-notes/receipt.json",
+      "artifact_sha256": "a217c89ef22f9a0dca489c6ec13fd7a242564be8cfbc6bbaeb0374d626ce0350",
+      "status": "covered",
+      "note": "Run receipt for R1's 500 W10b answers: settings, ledger spend and the preregistered bars."
+    },
+    {
+      "claim_id": "particle-w10b-replay-rows-w10c-particle-currentpin",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10c-particle-currentpin/rows.ndjson",
+      "artifact_sha256": "b8482a4744142b3537fd3ec3b4240c6e6f5831426d1ad6b9fd64d473e91c3f14",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "Per-question rows for the 150 W10c answers on gbrain c5fb0201 retrieval at effort high: the answer, the official gpt-4o judge reply, token usage and list price. The recheck recounts every particle-1 count and cost from them."
+    },
+    {
+      "claim_id": "particle-w10b-replay-receipts-w10c-particle-currentpin",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Setup",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10c-particle-currentpin/receipts.ndjson",
+      "artifact_sha256": "d5fe71c8a386a48e1d9799ee3708385ba78cccccb280a4da8e0da373038af63a",
+      "status": "covered",
+      "note": "Request and response receipts for the 150 W10c answers on gbrain c5fb0201 retrieval at effort high, one line per paid Particle call."
+    },
+    {
+      "claim_id": "particle-w10b-replay-receipt-w10c-particle-currentpin",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Cost",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10c-particle-currentpin/receipt.json",
+      "artifact_sha256": "b10b475689e8b92228f5c5d7bdad886de923aaba390f73677eea6f0adead290b",
+      "status": "covered",
+      "note": "Run receipt for the 150 W10c answers on gbrain c5fb0201 retrieval at effort high: settings, ledger spend and the preregistered bars."
+    },
+    {
+      "claim_id": "particle-w10b-replay-rows-w10c-particle-full",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10c-particle-full/rows.ndjson",
+      "artifact_sha256": "51d010d8726d6dfcd6482d988d755a77e6239b829ed92adf5dd30c5b75e984cc",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "Per-question rows for the 150 W10c whole-history answers: the answer, the official gpt-4o judge reply, token usage and list price. The recheck recounts every particle-1 count and cost from them."
+    },
+    {
+      "claim_id": "particle-w10b-replay-receipts-w10c-particle-full",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Setup",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10c-particle-full/receipts.ndjson",
+      "artifact_sha256": "3d64e8f8599caf984aa5133ca6f7ab3534ff9e835c92b50207aca186ae97ce8f",
+      "status": "covered",
+      "note": "Request and response receipts for the 150 W10c whole-history answers, one line per paid Particle call."
+    },
+    {
+      "claim_id": "particle-w10b-replay-receipt-w10c-particle-full",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Cost",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10c-particle-full/receipt.json",
+      "artifact_sha256": "095937859af233faa9ef5819f430822d03f9addea9363ae7109a97b99f4a14d3",
+      "status": "covered",
+      "note": "Run receipt for the 150 W10c whole-history answers: settings, ledger spend and the preregistered bars."
+    },
+    {
+      "claim_id": "particle-w10b-replay-rows-w10c-particle-currentpin-none",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10c-particle-currentpin-none/rows.ndjson",
+      "artifact_sha256": "c56a98baaa42d4d35e2f8c40cba9877305a377a12449ee9e3549095dd24b9cf4",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "Per-question rows for the 150 W10c answers at effort none: the answer, the official gpt-4o judge reply, token usage and list price. The recheck recounts every particle-1 count and cost from them."
+    },
+    {
+      "claim_id": "particle-w10b-replay-receipts-w10c-particle-currentpin-none",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Setup",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10c-particle-currentpin-none/receipts.ndjson",
+      "artifact_sha256": "b1e129e4327e3a700cc1e8e4884d4efc8da31d5cca5f9f20c2425ad27c45aa1b",
+      "status": "covered",
+      "note": "Request and response receipts for the 150 W10c answers at effort none, one line per paid Particle call."
+    },
+    {
+      "claim_id": "particle-w10b-replay-receipt-w10c-particle-currentpin-none",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Cost",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/w10c-particle-currentpin-none/receipt.json",
+      "artifact_sha256": "49d481ed4560ea6485143692cbc65d42879198bb70d98788af1d9b88582176c8",
+      "status": "covered",
+      "note": "Run receipt for the 150 W10c answers at effort none: settings, ledger spend and the preregistered bars."
+    },
+    {
+      "claim_id": "particle-w10b-replay-compare-w10b-a",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/compare-w10b-a.ndjson",
+      "artifact_sha256": "e204de0c1a777e556175985604233537a899e0209ba420dbbfb195df0f320df4",
+      "status": "covered",
+      "note": "Paired comparison rows (compare-w10b-a) written by eval/runner/compare.ts for the replay; the recheck's bootstrap reproduces the W10b intervals from the per-question rows."
+    },
+    {
+      "claim_id": "particle-w10b-replay-compare-w10b-b",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/compare-w10b-b.ndjson",
+      "artifact_sha256": "f238d64c67a310f4d3a45f27a9b74ebdeb5e8e882590dc21d95fb416bb01b61f",
+      "status": "covered",
+      "note": "Paired comparison rows (compare-w10b-b) written by eval/runner/compare.ts for the replay; the recheck's bootstrap reproduces the W10b intervals from the per-question rows."
+    },
+    {
+      "claim_id": "particle-w10b-replay-compare-w10c-a",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/compare-w10c-a.ndjson",
+      "artifact_sha256": "4616aa8282b8f26cd82835b36e8824c13f287be41189d4017e0d15736bff193e",
+      "status": "covered",
+      "note": "Paired comparison rows (compare-w10c-a) written by eval/runner/compare.ts for the replay; the recheck's bootstrap reproduces the W10b intervals from the per-question rows."
+    },
+    {
+      "claim_id": "particle-w10b-replay-compare-w10c-b",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/compare-w10c-b.ndjson",
+      "artifact_sha256": "caf636346f8c15b968ba8aeef2bc7b546a4b9d3ef8164e918d935ff5709fa0da",
+      "status": "covered",
+      "note": "Paired comparison rows (compare-w10c-b) written by eval/runner/compare.ts for the replay; the recheck's bootstrap reproduces the W10b intervals from the per-question rows."
+    },
+    {
+      "claim_id": "particle-w10b-replay-compare-g-noninferiority-a",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/compare-g-noninferiority-a.ndjson",
+      "artifact_sha256": "81566a791c0f16ec8d20f7a641534b23b7154e765f6690303930206c407e4b73",
+      "status": "covered",
+      "note": "Paired comparison rows (compare-g-noninferiority-a) written by eval/runner/compare.ts for the replay; the recheck's bootstrap reproduces the W10b intervals from the per-question rows."
+    },
+    {
+      "claim_id": "particle-w10b-replay-compare-g-noninferiority-b",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/compare-g-noninferiority-b.ndjson",
+      "artifact_sha256": "428969762e5fcb36c697028a354f66fc9852369bf2c7c5f9816bb47bc1938b2e",
+      "status": "covered",
+      "note": "Paired comparison rows (compare-g-noninferiority-b) written by eval/runner/compare.ts for the replay; the recheck's bootstrap reproduces the W10b intervals from the per-question rows."
+    },
+    {
+      "claim_id": "particle-w10b-replay-family-g",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/families/g-noninferiority.json",
+      "artifact_sha256": "f99ae2a9796dcf5a06b5b917900d64c9be8c1cf664f731cccca9d0eb846f5856",
+      "status": "covered",
+      "note": "Decision G's Holm family (two non-inferiority tests at 7 points) for the replay's W10c arms."
+    },
+    {
+      "claim_id": "particle-w10b-replay-preflight",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Setup",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/preflight/preflight.json",
+      "artifact_sha256": "7362d9138e5ac50b180b978cfd8392a97c22e553fadf6b6f89bca6131ca6ec63",
+      "status": "covered",
+      "note": "The replay's preflight record: the Particle route, model listing and pricing checked before any counted call."
+    },
+    {
+      "claim_id": "particle-w10b-replay-build",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Setup",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/build.json",
+      "artifact_sha256": "a390625ddd92be1ff0cc08a35af8968cc1f770e0752913a6801f9eb78ac92065",
+      "status": "covered",
+      "note": "The replay's prompt build: every comparator request body rebuilt and matched against W10's manifests (body_sha256), so particle-1 read the same text."
+    },
+    {
+      "claim_id": "particle-w10b-replay-canary-pair-1-a",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Limits and threats",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/canary/pair-1-a/particle-canary.json",
+      "artifact_sha256": "597f6ce4f55a6312ed70cdb8a641650b7d62bb32bb47dd6a95096eeca89c96cb",
+      "status": "covered",
+      "note": "Weight canary run before R1 (12 prompts at effort none, temperature 0, fixed seed); 1 to 3 of 12 answers changed between the runs of a pair."
+    },
+    {
+      "claim_id": "particle-w10b-replay-canary-pair-1-b",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Limits and threats",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/canary/pair-1-b/particle-canary.json",
+      "artifact_sha256": "41e717e61877cd2c0b5d6c85ed2add5a9b9a45bb56112e23935187d4a3b6a255",
+      "status": "covered",
+      "note": "Weight canary run before R1 (12 prompts at effort none, temperature 0, fixed seed); 1 to 3 of 12 answers changed between the runs of a pair."
+    },
+    {
+      "claim_id": "particle-w10b-replay-canary-pair-2-a",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Limits and threats",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/canary/pair-2-a/particle-canary.json",
+      "artifact_sha256": "b978794b397c9e6aa6b4a5c3a32d1a03491c8b8b9042b11d12795f81a155c3a3",
+      "status": "covered",
+      "note": "Weight canary run before R1 (12 prompts at effort none, temperature 0, fixed seed); 1 to 3 of 12 answers changed between the runs of a pair."
+    },
+    {
+      "claim_id": "particle-w10b-replay-canary-pair-2-b",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Limits and threats",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/canary/pair-2-b/particle-canary.json",
+      "artifact_sha256": "1e09499c3c2880b1dc89f37ad66e5f4fb95b14d0de327d54ff86db32be079f03",
+      "status": "covered",
+      "note": "Weight canary run before R1 (12 prompts at effort none, temperature 0, fixed seed); 1 to 3 of 12 answers changed between the runs of a pair."
+    },
+    {
+      "claim_id": "particle-w10b-replay-canary-pair-3-a",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Limits and threats",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/canary/pair-3-a/particle-canary.json",
+      "artifact_sha256": "e23a5c43bdd69e5dbdb25121011b047fa4b0d36acb93672bb53d97549f896d6f",
+      "status": "covered",
+      "note": "Weight canary run before R1 (12 prompts at effort none, temperature 0, fixed seed); 1 to 3 of 12 answers changed between the runs of a pair."
+    },
+    {
+      "claim_id": "particle-w10b-replay-canary-pair-3-b",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Limits and threats",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/canary/pair-3-b/particle-canary.json",
+      "artifact_sha256": "2257085041fd625e6510e097d6c4f23f33f3db4f743f2cb9a122c38ed03f9b50",
+      "status": "covered",
+      "note": "Weight canary run before R1 (12 prompts at effort none, temperature 0, fixed seed); 1 to 3 of 12 answers changed between the runs of a pair."
+    },
+    {
+      "claim_id": "particle-w10b-replay-preregistration",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/PREREGISTRATION.md",
+      "artifact_sha256": "9f002bd920d7f26c9d2d8c280e08becf8ca84ab91363170a8f42f90540530885",
+      "status": "covered",
+      "note": "The replay's preregistration, including decision B's stop rule and the statement that the W10b paired differences are descriptive."
+    },
+    {
+      "claim_id": "particle-w10b-replay-report",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Changelog",
+      "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md",
+      "artifact_sha256": "5cfc883a32b6b630c370979cd663f54169ae60ae11b91c3ffb3a118496c9242b",
+      "status": "covered",
+      "note": "The replay report as merged in #247 (sha256 ee057662743ab8c04dc1d4a07e0f396697f8cf42f3fdabe9a915bba4342b8eca at 095d8711) plus, added on 2026-11-01, the disclosure note under its title and a dated note beside each cost figure docs/corrections.md corrects, and on 2026-11-02 a note with the gbrain and OpenAI disclosure lines and a wording note that the preference questions are the largest share of the gap to Opus 5.5, not most of it. It keeps its original figures; docs/corrections.md carries the three cost corrections the recheck found."
+    },
+    {
+      "claim_id": "particle-w10b-comparator-rows-w10b-opus55-notes",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/w10b-opus55-notes/rows.ndjson",
+      "artifact_sha256": "5e4971cb1cd350e2187a3bd0c207fd0e8820eee32b5e30f7e6175920680c943c",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "W10b's Opus 5.5 answers on the same 500 prompts, with the official and secondary judge replies and token usage; the paired differences and cost per correct answer are recounted from them."
+    },
+    {
+      "claim_id": "particle-w10b-comparator-rows-w10b-sonnet55-notes",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/w10b-sonnet55-notes/rows.ndjson",
+      "artifact_sha256": "a832d2eaca6d5a492d88eae99f9aef47f5fb29fa3edf0331e98372a670d1861a",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "W10b's Sonnet 5.5 answers on the same 500 prompts, with the official and secondary judge replies and token usage; the paired differences and cost per correct answer are recounted from them."
+    },
+    {
+      "claim_id": "particle-w10b-comparator-rows-w10b-sol-notes",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/w10b-sol-notes/rows.ndjson",
+      "artifact_sha256": "9c0f8274786e3821730719580cfb61230503366606d6354ae642b3d461b8a793",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "W10b's GPT-6.1 Sol answers on the same 500 prompts, with the official and secondary judge replies and token usage; the paired differences and cost per correct answer are recounted from them."
+    },
+    {
+      "claim_id": "particle-w10b-sol-repricing-w10c-sol-currentpin",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Cost",
+      "artifact_path": "docs/benchmarks/2026-10-07-longmemeval-w10c-full-context/arms/w10c-sol-currentpin/rows.ndjson",
+      "artifact_sha256": "ce703d774b8b66110ba8b6fd33f4c51f938d5cc9b42549344f7d8309771aeab3",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "W10c's GPT-6.1 Sol answers on gbrain c5fb0201 retrieval; the recheck reprices their cache-write tokens at OpenAI's $2.50 per million for the corrections entry."
+    },
+    {
+      "claim_id": "particle-w10b-sol-repricing-w10c-sol-full",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Cost",
+      "artifact_path": "docs/benchmarks/2026-10-07-longmemeval-w10c-full-context/arms/w10c-sol-full/rows.ndjson",
+      "artifact_sha256": "0cee71e44f3afce94fbb686ce0afbef3b387417742fe78d854bd2bd9cf8d5640",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "W10c's GPT-6.1 Sol answers with the whole history; the recheck reprices their cache-write tokens at OpenAI's $2.50 per million for the corrections entry."
+    },
+    {
+      "claim_id": "particle-w10b-finding-analysis",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/findings/2026-11-01-particle-1-longmemeval-w10b/analysis.json",
+      "artifact_sha256": "f81c77fcf919da82ce02fc59a00e424ef9d4994259836bee8bdaaed1fffcd833",
+      "status": "covered",
+      "expected": {
+        "/w10b_arms/particle-1/correct": 457,
+        "/w10b_arms/particle-1/list_usd_per_correct": 0.00428119,
+        "/w10b_arms/claude-opus-5-5/correct": 474,
+        "/w10b_arms/claude-opus-5-5/list_usd_per_correct": 0.09934887,
+        "/w10b_arms/claude-opus-5-5/batch_usd_per_correct": 0.04967443,
+        "/w10b_arms/claude-sonnet-5-5/correct": 462,
+        "/w10b_arms/claude-sonnet-5-5/list_usd_per_correct": 0.04998187,
+        "/w10b_arms/claude-sonnet-5-5/batch_usd_per_correct": 0.02499093,
+        "/w10b_arms/gpt-6.1-sol/correct": 464,
+        "/w10b_arms/gpt-6.1-sol/list_usd_per_correct": 0.03807501,
+        "/w10b_arms/gpt-6.1-sol/batch_usd_per_correct": 0.01903751,
+        "/w10b_arms/gpt-6.1-sol/recorded_list_usd_per_correct": 0.03069791,
+        "/w10b_paired/claude-opus-5-5/delta": -0.034,
+        "/w10b_paired/claude-opus-5-5/ci95": [
+          -0.056,
+          -0.014
+        ],
+        "/w10b_paired/claude-sonnet-5-5/delta": -0.01,
+        "/w10b_paired/claude-sonnet-5-5/ci95": [
+          -0.032,
+          0.01
+        ],
+        "/w10b_paired/gpt-6.1-sol/delta": -0.014,
+        "/w10b_paired/gpt-6.1-sol/ci95": [
+          -0.036,
+          0.006
+        ],
+        "/second_judge/claude-sonnet-5-5/arms/gpt-6.1-sol/correct": 461,
+        "/second_judge/claude-sonnet-5-5/arms/gpt-6.1-sol/kappa": 0.8702870978900034,
+        "/second_judge/claude-sonnet-5-5/arms/particle-1/correct": 444,
+        "/second_judge/claude-sonnet-5-5/arms/particle-1/kappa": 0.8097753110733147,
+        "/second_judge/claude-sonnet-5-5/comparisons/gpt-6.1-sol/delta": -0.034,
+        "/second_judge/claude-sonnet-5-5/comparisons/gpt-6.1-sol/ci95": [
+          -0.056,
+          -0.012
+        ],
+        "/second_judge/claude-sonnet-5-5/comparisons/gpt-6.1-sol/same_conclusion_as_gpt4o": false,
+        "/second_judge/gpt-6.1-sol/arms/claude-opus-5-5/correct": 480,
+        "/second_judge/gpt-6.1-sol/arms/claude-opus-5-5/kappa": 0.8178506375227688,
+        "/second_judge/gpt-6.1-sol/arms/claude-sonnet-5-5/correct": 468,
+        "/second_judge/gpt-6.1-sol/arms/claude-sonnet-5-5/kappa": 0.8464750675509701,
+        "/second_judge/gpt-6.1-sol/arms/particle-1/correct": 456,
+        "/second_judge/gpt-6.1-sol/arms/particle-1/kappa": 0.8363379997985696,
+        "/second_judge/gpt-6.1-sol/comparisons/claude-opus-5-5/delta": -0.048,
+        "/second_judge/gpt-6.1-sol/comparisons/claude-opus-5-5/ci95": [
+          -0.068,
+          -0.03
+        ],
+        "/second_judge/gpt-6.1-sol/comparisons/claude-opus-5-5/same_conclusion_as_gpt4o": true,
+        "/second_judge/gpt-6.1-sol/comparisons/claude-sonnet-5-5/delta": -0.024,
+        "/second_judge/gpt-6.1-sol/comparisons/claude-sonnet-5-5/ci95": [
+          -0.046,
+          -0.004
+        ],
+        "/second_judge/gpt-6.1-sol/comparisons/claude-sonnet-5-5/same_conclusion_as_gpt4o": false,
+        "/sol_cache_write_repricing/W10b, gbrain a7cb37b notes/list_usd_per_correct": 0.03807501,
+        "/sol_cache_write_repricing/W10b, gbrain a7cb37b notes/list_usd_per_question": 0.03533361,
+        "/sol_cache_write_repricing/W10b, gbrain a7cb37b notes/batch_usd_per_question": 0.01766681,
+        "/sol_cache_write_repricing/W10b, gbrain a7cb37b notes/batch_usd": 8.833403,
+        "/sol_cache_write_repricing/W10c, gbrain c5fb0201/list_usd_per_correct": 0.03900173,
+        "/sol_cache_write_repricing/W10c, gbrain c5fb0201/list_usd_per_question": 0.03562158,
+        "/sol_cache_write_repricing/W10c, gbrain c5fb0201/batch_usd_per_question": 0.01781079,
+        "/sol_cache_write_repricing/W10c, gbrain c5fb0201/batch_usd": 2.671619,
+        "/sol_cache_write_repricing/W10c, whole history/list_usd_per_correct": 0.28495766,
+        "/sol_cache_write_repricing/W10c, whole history/list_usd_per_question": 0.2678602,
+        "/sol_cache_write_repricing/W10c, whole history/batch_usd_per_question": 0.1339301,
+        "/sol_cache_write_repricing/W10c, whole history/batch_usd": 20.089515
+      },
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "The keyless recheck's output: every count, interval, cost per correct answer, second-judge agreement and GPT-6.1 Sol repricing the finding and its corrections entry quote. --check regenerates it from the rows and fails on any byte of difference."
+    },
+    {
+      "claim_id": "particle-w10b-second-judge-receipt",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Cost",
+      "artifact_path": "docs/findings/2026-11-01-particle-1-longmemeval-w10b/second-judge/receipt.json",
+      "artifact_sha256": "7d97590bdd03185b3b18080ada91b0a64238709f9d54fc66d647272a8261ffab",
+      "status": "covered",
+      "expected": {
+        "/judges/gpt-6.1-sol/judged": 1500,
+        "/judges/gpt-6.1-sol/errors": 0,
+        "/judges/gpt-6.1-sol/usd": 0.861364,
+        "/judges/claude-sonnet-5-5/judged": 1000,
+        "/judges/claude-sonnet-5-5/errors": 0,
+        "/judges/claude-sonnet-5-5/usd": 0.749498,
+        "/ledger/usd": 1.606908,
+        "/ledger/program_cap_usd": 25,
+        "/stopped": null
+      },
+      "note": "Receipt of the cross-family second-judge run: 1,500 gpt-6.1-sol and 1,000 claude-sonnet-5-5 judgments, no errors, $1.61 of a $25 cap with a stop at $20. Each judge's listing date and response models are recorded because neither provider offers a dated snapshot."
+    },
+    {
+      "claim_id": "particle-w10b-second-judge-rows-gpt-6.1-sol",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/findings/2026-11-01-particle-1-longmemeval-w10b/second-judge/gpt-6.1-sol/rows.ndjson",
+      "artifact_sha256": "3bb3b053d0cb5d929fa24a256adda1f96a20ef43120bb8e855ceb640aa078f86",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "Every gpt-6.1-sol judgment in the sensitivity: arm, question, raw reply and verdict. The recheck reads them for agreement, flips and each pair's interval."
+    },
+    {
+      "claim_id": "particle-w10b-second-judge-receipts-gpt-6.1-sol",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Setup",
+      "artifact_path": "docs/findings/2026-11-01-particle-1-longmemeval-w10b/second-judge/gpt-6.1-sol/receipts.ndjson",
+      "artifact_sha256": "d59d3d8df14c7513d317ba7f9bca85a435f9b1d0073ea37dd378b9e29b0e9fcd",
+      "status": "covered",
+      "note": "Request and response receipts for the gpt-6.1-sol judge calls."
+    },
+    {
+      "claim_id": "particle-w10b-second-judge-rows-claude-sonnet-5-5",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
+      "artifact_path": "docs/findings/2026-11-01-particle-1-longmemeval-w10b/second-judge/claude-sonnet-5-5/rows.ndjson",
+      "artifact_sha256": "04d35bc66fb8ba47f1d28c4aa00935ad1e1edc238c7f6aca41186818fc7c20e3",
+      "status": "covered",
+      "golden_test": "scripts/finding-particle-w10b.py --check",
+      "note": "Every claude-sonnet-5-5 judgment in the sensitivity: arm, question, raw reply and verdict. The recheck reads them for agreement, flips and each pair's interval."
+    },
+    {
+      "claim_id": "particle-w10b-second-judge-receipts-claude-sonnet-5-5",
+      "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Setup",
+      "artifact_path": "docs/findings/2026-11-01-particle-1-longmemeval-w10b/second-judge/claude-sonnet-5-5/receipts.ndjson",
+      "artifact_sha256": "a46295c2398efad85e8b5dcb702b654a87a39825886aecade58712be0ff5783a",
+      "status": "covered",
+      "note": "Request and response receipts for the claude-sonnet-5-5 judge calls."
     }
   ]
 }

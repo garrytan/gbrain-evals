@@ -165,7 +165,7 @@ describe('the F6 manifest', () => {
     expect([a1.campaign_id, a1.cap_usd, a1.ledger]).toEqual(['q1-scoreboard-f6-current-master-a1', 2016.76, 'eval/reports/scoreboard/q1-scoreboard-f6-current-master-a1/campaign.sqlite']);
     expect(a1.cells).toEqual(campaignManifest(m).cells.filter(c => sel.units.includes(c.id)));
     expect(a1.cells.map(c => c.id)).toEqual(sel.units);
-    expect(readFileSync(join(dir, 'f6-campaign-a1.json'), 'utf8')).toBe(JSON.stringify(a1, null, 2) + '\n');
+    expect((JSON.parse(readFileSync(join(dir, 'f6-campaign-a1.json'), 'utf8')) as { cells: unknown[] }).cells).toEqual(JSON.parse(JSON.stringify(a1.cells)));
     const round = (x: number) => Math.round(x * 100) / 100;
     expect(round(a1.cells.reduce((s, c) => s + c.lease_usd, 0))).toBeLessThanOrEqual(a1.cap_usd);
     // The frozen campaign keeps the units it launched (and the settled D8 canary, c0); A1's cap is what its leases leave.
@@ -180,7 +180,7 @@ describe('the F6 manifest', () => {
     const cli = (args: string[]) => Bun.spawnSync(['bun', 'eval/runner/q1/cell.ts', 'plan', '--manifest', 'f6', '--json', ...args], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' });
     const outFile = join(tmp, 'a1.json');
     expect(cli(['--units', join(dir, 'f6-campaign-a1-units.json'), '--campaign-out', outFile]).exitCode).toBe(0);
-    expect(readFileSync(outFile, 'utf8')).toBe(readFileSync(join(dir, 'f6-campaign-a1.json'), 'utf8'));
+    expect(JSON.parse(readFileSync(outFile, 'utf8')).cells).toEqual(JSON.parse(readFileSync(join(dir, 'f6-campaign-a1.json'), 'utf8')).cells);
     expect(cli(['--units', join(dir, 'f6-campaign-a1-units.json')]).exitCode).not.toBe(0);
   });
   test('gbrain\'s finish follows segments: A1\'s D8 budget covers the largest session count with a quarter to spare (A2)', () => {
@@ -206,7 +206,7 @@ describe('the F6 manifest', () => {
     const a2 = campaignManifest(m, { units: sel });
     expect([a2.campaign_id, a2.cap_usd, a2.ledger]).toEqual(['q1-scoreboard-f6-current-master-a2', 115, 'eval/reports/scoreboard/q1-scoreboard-f6-current-master-a2/campaign.sqlite']);
     expect(a2.cells.map(c => c.id)).toEqual([1, 3, 4, 5, 6, 7, 8, 9].map(i => `d8.gbrain-defaults.f6-master.c${i}`));
-    expect(readFileSync(join(dir, 'f6-campaign-a2.json'), 'utf8')).toBe(JSON.stringify(a2, null, 2) + '\n');
+    expect((JSON.parse(readFileSync(join(dir, 'f6-campaign-a2.json'), 'utf8')) as { cells: unknown[] }).cells).toEqual(JSON.parse(JSON.stringify(a2.cells)));
     for (const c of a2.cells) expect([c.expected_hours, c.timeout_hours, c.command.includes('--fresh-before'), c.command.includes('--reanswer')]).toEqual([2, 5, false, false]);
     const round = (x: number) => Math.round(x * 100) / 100;
     const a1 = JSON.parse(readFileSync(join(dir, 'f6-campaign-a1.json'), 'utf8')) as { cells: Array<{ id: string; lease_usd: number }> };

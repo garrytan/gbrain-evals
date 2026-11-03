@@ -6,7 +6,13 @@
  * and scorer mutation checks.
  */
 import { describe, expect, test } from 'bun:test';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
+import { SMOKE_ONLY_READERS } from '../../eval/runner/systems/baselines.ts';
+import { answerOne, selectQueries, sweep } from '../../eval/workload-suites/bench.ts';
+import type { Bench } from '../../eval/workload-suites/bench-infra.ts';
 import { runChecks, storePresenceFailures } from '../../eval/workload-suites/checks.ts';
 import { SUITES, runSuite } from '../../eval/workload-suites/cli.ts';
 import { bundleFiles, bundleManifest, renderContext } from '../../eval/workload-suites/common.ts';
@@ -15,7 +21,8 @@ import {
   type CorrectionAdapter, type CorrectionItem, type UnrelatedWrite,
 } from '../../eval/workload-suites/corrections.ts';
 import { classifyMiss, generatePassingDetails } from '../../eval/workload-suites/passing-details.ts';
-import { MODEL_CONFIG, frontierSubset, modelRuleViolations } from '../../eval/workload-suites/run-config.ts';
+import { RUN_DIRS, copyReceipts, publishedSuiteAt, summarize } from '../../eval/workload-suites/report.ts';
+import { MODEL_CONFIG, frontierSubset, modelRuleViolations, recordedReaderProblem } from '../../eval/workload-suites/run-config.ts';
 import { schemaErrors } from '../../eval/workload-suites/schema-check.ts';
 import type { ScorerLabel, SuiteBundle, SuiteDefinition, SuiteId } from '../../eval/workload-suites/types.ts';
 
@@ -186,11 +193,85 @@ describe('schema, model rule and frontier subset', () => {
 
   test('the configured readers follow the project model rule, and violations are caught', () => {
     expect(modelRuleViolations()).toEqual([]);
-    expect(MODEL_CONFIG.fixed_reader.family).toBe('sonnet');
+    expect(MODEL_CONFIG.fixed_reader.family).toBe('opus');
     const bad = { ...MODEL_CONFIG, frontier_sweep: [...MODEL_CONFIG.frontier_sweep.slice(0, 3), { id: 'openai:gpt-5.4-mini', family: 'fable' as const }] };
     expect(modelRuleViolations(bad).join(' ')).toContain('gpt-5.4-mini');
     const old = { ...MODEL_CONFIG, fixed_reader: { id: 'anthropic:claude-sonnet-4-6', family: 'sonnet' as const } };
     expect(modelRuleViolations(old).join(' ')).toContain('claude-sonnet-4-6');
+    expect(modelRuleViolations(old)).toContain('the fixed reader must be the newest frontier Opus');
+    expect(MODEL_CONFIG.frontier_sweep.map(m => m.id)).toEqual(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1']);
+  });
+
+  test('the counted sweep reads with the newest frontier GPT, gpt-6.1-sol; gpt-6-astra is only an alternate reader, and a sweep without gpt-6.1-sol is flagged', () => {
+    const ids = MODEL_CONFIG.frontier_sweep.map(m => m.id);
+    expect(ids).toContain('openai:gpt-6.1-sol');
+    expect(ids).not.toContain('openai:gpt-6-astra');
+    expect(MODEL_CONFIG.alternate_readers.map(m => m.id)).toEqual(['openai:gpt-6-astra']);
+    const astraSweep = MODEL_CONFIG.frontier_sweep.map(m => m.id === 'openai:gpt-6.1-sol' ? { id: 'openai:gpt-6-astra', family: 'gpt' as const } : m);
+    expect(modelRuleViolations({ ...MODEL_CONFIG, frontier_sweep: astraSweep })).toEqual(['frontier sweep has no openai:gpt-6.1-sol, one of the newest frontier readers (FRONTIER_READERS)']);
+  });
+
+  test('Fable is smoke-only: out of the counted sweep, flagged in any counted role, and a sweep that names it needs --smoke', () => {
+    const fable = { id: 'anthropic:claude-fable-5-1', family: 'fable' as const };
+    const smokeOnly = `${fable.id} is smoke-only and never reads or judges a counted cell`;
+    expect(MODEL_CONFIG.frontier_sweep.map(m => m.id)).not.toContain(fable.id);
+    expect(MODEL_CONFIG.smoke_only_readers).toEqual([...SMOKE_ONLY_READERS]);
+    expect(modelRuleViolations({ ...MODEL_CONFIG, frontier_sweep: [...MODEL_CONFIG.frontier_sweep, fable] })).toEqual([smokeOnly]);
+    expect(modelRuleViolations({ ...MODEL_CONFIG, alternate_readers: [fable] })).toEqual([smokeOnly]);
+    expect(modelRuleViolations({ ...MODEL_CONFIG, judge: fable })).toEqual([smokeOnly]);
+    const refused = Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--phase', 'sweep', '--models', `openai:gpt-6.1-sol,${fable.id}`], { cwd: resolve(import.meta.dir, '../..') });
+    expect(refused.exitCode).toBe(2);
+    expect(refused.stderr.toString()).toContain(`${fable.id} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`);
+  });
+
+  test('bench.ts refuses a --smoke that is not a positive whole number and a model that is not a configured reader, before it writes anything', () => {
+    const root = resolve(import.meta.dir, '../..');
+    const run = (...flags: string[]) => Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--phase', 'score', ...flags], { cwd: root });
+    for (const [flags, shown] of [[['--smoke', '0'], '0'], [['--smoke', 'x'], 'x'], [['--smoke', '2.5'], '2.5'], [['--smoke', '--stub'], '--stub'], [['--smoke'], 'nothing']] as const) {
+      const r = run(...flags);
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain(`--smoke takes a positive whole number of questions, not ${shown}`);
+    }
+    for (const model of ['openai:gpt-5.4-mini', 'anthropic:claude-fable-5', 'anthropic:claude-sonnet-4-6', 'anthropic:claude-fable-5-1-20261001', 'openai:o4-mini', 'anthropic:claude-haiku-5-5']) {
+      const r = run('--smoke', '5', '--models', `anthropic:claude-opus-5-5, ${model}`);
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain(`${model} is not a reader in run-config.ts, so no score would read its answers`);
+    }
+  });
+
+  test('bench.ts refuses a smoke run into a directory report.ts publishes from, by --out or by its default name, before it writes anything (#245)', () => {
+    const root = resolve(import.meta.dir, '../..');
+    const runJson = (sub: string) => join(root, 'eval/reports/workload-bench', sub, 'run.json');
+    const snapshot = (sub: string) => existsSync(runJson(sub)) ? readFileSync(runJson(sub), 'utf8') : null;
+    expect(Object.values(RUN_DIRS)).toContain('time-relationships-smoke20');
+    const cases: Array<[string[], string, string]> = [
+      ...Object.entries(RUN_DIRS).map(([suite, sub]) => [['beliefs', '--smoke', '5', '--phase', 'score', '--out', `eval/reports/workload-bench/${sub}`], suite, sub] as [string[], string, string]),
+      [['time-relationships', '--smoke', '20', '--phase', 'score'], 'time-relationships', 'time-relationships-smoke20'],
+    ];
+    for (const [args, suite, sub] of cases) {
+      const before = snapshot(sub);
+      const r = Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', ...args], { cwd: root });
+      expect([sub, r.exitCode]).toEqual([sub, 2]);
+      expect(r.stderr.toString()).toContain(`eval/reports/workload-bench/${sub} is the directory report.ts publishes ${suite} from (RUN_DIRS), so a smoke run may not write there; pass --out with another directory`);
+      expect(snapshot(sub)).toBe(before);
+    }
+  });
+
+  test('a published directory reached through a symlinked path is still published, so the smoke guard refuses it too (#245)', () => {
+    const root = resolve(import.meta.dir, '../..');
+    const tmp = mkdtempSync(join(tmpdir(), 'workload-alias-'));
+    try {
+      symlinkSync(root, join(tmp, 'checkout'));
+      for (const [suite, sub] of Object.entries(RUN_DIRS)) expect([sub, publishedSuiteAt(join(tmp, 'checkout/eval/reports/workload-bench', sub))]).toEqual([sub, suite]);
+      expect(publishedSuiteAt(join(tmp, 'checkout/eval/reports/workload-bench/beliefs-smoke5'))).toBeNull();
+      const before = existsSync(join(root, 'eval/reports/workload-bench/beliefs/run.json')) ? readFileSync(join(root, 'eval/reports/workload-bench/beliefs/run.json'), 'utf8') : null;
+      const r = Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--smoke', '5', '--phase', 'score', '--out', join(tmp, 'checkout/eval/reports/workload-bench/beliefs')], { cwd: root });
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain('is the directory report.ts publishes beliefs from (RUN_DIRS), so a smoke run may not write there');
+      expect(existsSync(join(root, 'eval/reports/workload-bench/beliefs/run.json')) ? readFileSync(join(root, 'eval/reports/workload-bench/beliefs/run.json'), 'utf8') : null).toBe(before);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   test('the frontier subset covers every category at about a quarter and is stable', () => {
@@ -199,6 +280,80 @@ describe('schema, model rule and frontier subset', () => {
     expect(subset).toEqual(frontierSubset(structuredClone(b)));
     const cats = new Set(b.queries.filter(q => subset.includes(q.id)).map(q => q.meta.category));
     expect(cats.size).toBe(new Set(b.queries.map(q => q.meta.category)).size);
+  });
+});
+
+describe('recorded fixed reader', () => {
+  test('a run directory answered under another fixed reader is refused before bench.ts touches it', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wl-recorded-'));
+    try {
+      expect(recordedReaderProblem(dir)).toBeNull();
+      writeFileSync(join(dir, 'run.json'), JSON.stringify({ models: { ...MODEL_CONFIG, fixed_reader: { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' } } }));
+      const problem = `${dir} was answered with fixed reader anthropic:claude-sonnet-5-5, and run-config.ts names ${MODEL_CONFIG.fixed_reader.id}`;
+      expect(recordedReaderProblem(dir)).toContain(problem);
+      const before = readFileSync(join(dir, 'run.json'), 'utf8');
+      const refused = Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--phase', 'score', '--out', dir], { cwd: resolve(import.meta.dir, '../..') });
+      expect([refused.exitCode, refused.stderr.toString().includes(problem)]).toEqual([2, true]);
+      expect(readFileSync(join(dir, 'run.json'), 'utf8')).toBe(before);
+      writeFileSync(join(dir, 'run.json'), JSON.stringify({ models: MODEL_CONFIG }));
+      expect(recordedReaderProblem(dir)).toBeNull();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('report.ts refuses such a run directory, and a --copy target that holds one, before writing anything', () => {
+    const root = mkdtempSync(join(tmpdir(), 'wl-report-'));
+    const sonnet = JSON.stringify({ models: { ...MODEL_CONFIG, fixed_reader: { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' } } });
+    try {
+      const run = join(root, 'bench', RUN_DIRS.beliefs!);
+      const target = join(root, 'published');
+      mkdirSync(run, { recursive: true });
+      writeFileSync(join(run, 'results.json'), JSON.stringify({ results: {} }));
+      writeFileSync(join(run, 'run.json'), sonnet);
+      expect(() => summarize(join(root, 'bench'))).toThrow(`${run} was answered with fixed reader anthropic:claude-sonnet-5-5`);
+      expect(() => copyReceipts(target, join(root, 'bench'))).toThrow(`${run} was answered with fixed reader anthropic:claude-sonnet-5-5`);
+      expect(existsSync(target)).toBe(false);
+      writeFileSync(join(run, 'run.json'), JSON.stringify({ models: MODEL_CONFIG }));
+      expect(summarize(join(root, 'bench')).markdown).toContain('### beliefs\n');
+      mkdirSync(join(target, 'beliefs'), { recursive: true });
+      writeFileSync(join(target, 'beliefs', 'run.json'), sonnet);
+      expect(() => copyReceipts(target, join(root, 'bench'))).toThrow(`${join(target, 'beliefs')} was answered with fixed reader anthropic:claude-sonnet-5-5`);
+      expect([readFileSync(join(target, 'beliefs', 'run.json'), 'utf8'), existsSync(join(target, 'beliefs', 'results.json'))]).toEqual([sonnet, false]);
+      rmSync(target, { recursive: true });
+      copyReceipts(target, join(root, 'bench'));
+      expect(JSON.parse(readFileSync(join(target, 'beliefs', 'run.json'), 'utf8')).models.fixed_reader.id).toBe(MODEL_CONFIG.fixed_reader.id);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('bench.ts sweep', () => {
+  const corrections = SUITES.corrections.generate({ seed: SUITES.corrections.defaultSeed, smoke: false });
+  const fixed = MODEL_CONFIG.fixed_reader.id;
+  const fakeBench = (calls: string[]) => ({
+    model: async (model: string, _prompt: string, opts: { tag: string }) => {
+      calls.push(`${model} ${opts.tag}`);
+      return { text: 'Answer: unknown', input_tokens: 1, output_tokens: 1, cached: false, model, finish_reason: 'stop', truncated: false };
+    },
+    proxy: { exhausted: false },
+  }) as unknown as Bench;
+
+  test('a smoke sweep reads the smoke run\'s own answered questions, even when none is in the frontier subset, and a sweep with nothing to read fails (#244)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wl-sweep-'));
+    try {
+      const scheduled = selectQueries(corrections, 3);
+      const subset = new Set(frontierSubset(corrections));
+      expect([scheduled.length, scheduled.filter(q => subset.has(q.id)).length]).toEqual([3, 0]);
+      for (const q of scheduled) await answerOne(fakeBench([]), corrections, dir, 'gbrain-append', fixed, q, 'Context for the question.', null, []);
+      const calls: string[] = [];
+      await sweep(fakeBench(calls), corrections, dir, ['openai:gpt-6.1-sol'], () => {}, scheduled);
+      expect(calls.sort()).toEqual(scheduled.map(q => `openai:gpt-6.1-sol corrections/gbrain-append/reader/${q.id}`).sort());
+      await expect(sweep(fakeBench([]), corrections, dir, ['openai:gpt-6.1-sol'], () => {})).rejects.toThrow(`no ${fixed} answers to sweep`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

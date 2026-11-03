@@ -2,16 +2,22 @@
  * BrainBench Cat 35 — batched forced-tool-use judges.
  *
  * Follows the judge.ts idioms exactly:
- *   - forced tool_choice (structured output, no string parsing)
+ *   - forced tool_choice (structured output, no string parsing); a Claude
+ *     5-family judge gets no temperature and `tool_choice: auto` with an
+ *     instruction to call the tool (fitAnthropicRequest, audit B1)
  *   - system prompt sent with cache_control ephemeral (static per judge type;
  *     per-call content goes in the user message so the prefix caches)
  *   - ONE retry on malformed tool_use, then a STRUCTURED failure — these
  *     functions never throw for malformed model output
  *   - injectable `client` for $0 stub-driven tests
  *   - temperature 0 (judge.ts JUDGE_TEMPERATURE), recorded in the receipt
- *   - per-call token + cost accounting (haiku-4-5 $1/$5 per M,
- *     sonnet-4-6 $3/$15 per M; unknown models priced at sonnet rates as a
- *     conservative overestimate)
+ *   - per-call token + cost accounting, priced from the budget ledger's
+ *     table (judge.ts judgePrice); an unpriced model is refused before the
+ *     call, never priced at another model's rates. The input-token count
+ *     weights cache writes and reads by the model's own cache rates relative
+ *     to its input rate, so input_tokens x input rate + output_tokens x
+ *     output rate equals cost_usd to within a rounded token, at the
+ *     long-context rates when the call crossed that threshold
  *
  * NOT judge.ts `scoreAnswer`: that has a 0-5 rubric contract and bypasses the
  * LLM budget. Every real call here is wrapped in
@@ -32,11 +38,12 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { fitAnthropicRequest, withThinkingRoom } from './anthropic-request.ts';
 import { acceptsTemperature, anthropicModelId, judgeClientFor } from './openai-judge-shim.ts';
 import { getDefaultLlmBudget } from './llm-budget.ts';
-import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUntrusted, newJudgeNonce, unescapeUntrusted } from './judge.ts';
+import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUntrusted, judgePrice, newJudgeNonce, priceOf, unescapeUntrusted } from './judge.ts';
 
-// ─── Version + pricing ────────────────────────────────────────────────────
+// ─── Version ──────────────────────────────────────────────────────────────
 
 /**
  * Pinned prompt version, recorded in the receipt for comparability.
@@ -46,22 +53,9 @@ import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUn
  */
 export const CAT35_JUDGE_PROMPT_VERSION = '2026-09-28-v2';
 
-const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+/** Outside the distill model's family: no model judges its own family's rows (DISTILL_MODEL is Opus 5.5). */
+export const CAT35_DEFAULT_JUDGE_MODEL = 'gpt-6.1-sol';
 const DEFAULT_MAX_TOKENS = 2000;
-
-/** $/1M-token rates, matched by model-id substring (2026-08 prices). */
-const MODEL_PRICES: Array<{ match: RegExp; inputPerM: number; outputPerM: number }> = [
-  { match: /haiku/, inputPerM: 1.0, outputPerM: 5.0 },
-  { match: /sonnet/, inputPerM: 3.0, outputPerM: 15.0 },
-];
-
-function priceOf(model: string, inputTokens: number, outputTokens: number): number {
-  const row = MODEL_PRICES.find((p) => p.match.test(model));
-  // Unknown model → sonnet rates (conservative overestimate for budgeting).
-  const inputPerM = row?.inputPerM ?? 3.0;
-  const outputPerM = row?.outputPerM ?? 15.0;
-  return (inputTokens * inputPerM + outputTokens * outputPerM) / 1_000_000;
-}
 
 // ─── Config + client ──────────────────────────────────────────────────────
 
@@ -92,7 +86,7 @@ function getDefaultClient(): Anthropic {
 }
 
 function resolveModel(cfg?: Cat35JudgeCfg): string {
-  return cfg?.model ?? process.env.CAT35_JUDGE_MODEL ?? DEFAULT_MODEL;
+  return cfg?.model ?? process.env.CAT35_JUDGE_MODEL ?? CAT35_DEFAULT_JUDGE_MODEL;
 }
 
 // ─── Server-reported model accounting (generators-19 pattern) ──────────────
@@ -150,7 +144,7 @@ export function singleResolvedModel(map: unknown): string | null {
 interface JudgeTool {
   name: string;
   description: string;
-  input_schema: Record<string, unknown>;
+  input_schema: Anthropic.Messages.Tool.InputSchema;
 }
 
 interface OneCall {
@@ -168,13 +162,14 @@ async function callJudgeOnce(
   userContent: string,
 ): Promise<OneCall> {
   const requested = resolveModel(cfg);
+  const price = judgePrice(requested);
   const client = cfg?.client ?? judgeClientFor(requested, getDefaultClient);
   const model = anthropicModelId(requested);
-  const maxTokens = cfg?.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const maxTokens = cfg?.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   let response: Anthropic.Messages.Message;
   try {
     response = (await getDefaultLlmBudget().withLlmSlot(() =>
-      client.messages.create({
+      client.messages.create(fitAnthropicRequest({
         model,
         max_tokens: maxTokens,
         ...(acceptsTemperature(requested) ? { temperature: JUDGE_TEMPERATURE } : {}),
@@ -188,7 +183,7 @@ async function callJudgeOnce(
         tools: [tool],
         tool_choice: { type: 'tool', name: tool.name },
         messages: [{ role: 'user', content: userContent }],
-      }),
+      })),
     )) as Anthropic.Messages.Message;
   } catch (e) {
     // Transport-level failure (429/529/network). Same contract as malformed
@@ -230,15 +225,25 @@ async function callJudgeOnce(
     output_tokens?: number;
     cache_creation_input_tokens?: number;
     cache_read_input_tokens?: number;
+    input_tokens_details?: { cached_tokens?: number; cache_write_tokens?: number };
   };
   const output_tokens = usage.output_tokens ?? 0;
-  // Cache tokens are billed separately (creation 1.25x input rate, reads
-  // 0.1x) and are NOT included in usage.input_tokens — omitting them
-  // systematically under-reports spend across hundreds of judge calls.
+  const cost_usd = priceOf(price, response);
+  // Anthropic reports cache writes and reads beside usage.input_tokens; an
+  // OpenAI judge (through openai-judge-shim) counts them inside input_tokens
+  // and itemizes them in input_tokens_details, the fields usageCost reads.
+  // The input count weights them by this model's own cache rates relative to
+  // its input rate (Haiku 5.5 writes at 1.25x and reads at 0.1x; Opus 5.5 and
+  // gpt-6.1-sol read at 0.05x). Every long-context tier keeps its model's
+  // cache ratios, so the weights hold above the threshold too. Each weight is
+  // rounded to six places so 0.01 / 0.1 is exactly 0.1.
+  const openaiRead = usage.input_tokens_details?.cached_tokens ?? 0;
+  const openaiWrite = usage.input_tokens_details?.cache_write_tokens ?? 0;
+  const weight = (rate: number | undefined) => Math.round(((rate ?? price.input) / price.input) * 1e6) / 1e6;
   const input_tokens = Math.round(
-    (usage.input_tokens ?? 0) +
-      (usage.cache_creation_input_tokens ?? 0) * 1.25 +
-      (usage.cache_read_input_tokens ?? 0) * 0.1,
+    (usage.input_tokens ?? 0) - openaiRead - openaiWrite +
+      ((usage.cache_creation_input_tokens ?? 0) + openaiWrite) * weight(price.cache_write) +
+      ((usage.cache_read_input_tokens ?? 0) + openaiRead) * weight(price.cache_read),
   );
   cfg?.evidence?.push({
     tool: tool.name,
@@ -249,9 +254,9 @@ async function callJudgeOnce(
     error: null,
     input_tokens,
     output_tokens,
-    cost_usd: priceOf(model, input_tokens, output_tokens),
+    cost_usd,
   });
-  return { input, input_tokens, output_tokens, cost_usd: priceOf(model, input_tokens, output_tokens) };
+  return { input, input_tokens, output_tokens, cost_usd };
 }
 
 // ═══ 1. Salient-unit coverage ═════════════════════════════════════════════

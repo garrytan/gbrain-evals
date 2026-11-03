@@ -24,6 +24,8 @@ export const R5_LIMIT = 5;
 export const HARNESS_BUDGET_TOKENS = 8000;
 export const FACTS_BLOCK_SHARE = 0.22;
 export const FACTS_BLOCK_MAX_ROWS = 40;
+/** The first gbrain release whose facts block also stops at the caller's `limit` rows (gbrain#8411). */
+export const FACTS_BLOCK_LIMIT_SINCE = '0.60.555.0';
 
 /** The GBRA-205 keys (gbrain 6f82a94e, all default off). Every arm deletes all of them after its calls; no arm sets search.fact_source_pages since spec change 7. */
 export const C8K_KEYS = ['search.query_budget_unit', 'search.evidence_date_header', 'search.evidence_titles', 'search.query_facts_block', 'search.fact_source_pages'] as const;

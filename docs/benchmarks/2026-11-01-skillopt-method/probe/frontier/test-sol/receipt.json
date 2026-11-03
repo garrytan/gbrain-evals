@@ -1,0 +1,2429 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n15-skillopt-method",
+  "gbrain_version": "0.60.542.0",
+  "gbrain_pin": "github:garrytan/gbrain#ca1281a2ed3236ac45adddb2d08e84423769c321",
+  "execution": {
+    "source_tree": {
+      "sha256": "40af29b5179969b4cfc4cdbfb661d8d5fcb74c336731859bd1eee77064e0feee",
+      "scheme": "git-index-blob-v1",
+      "files": 15379,
+      "git_head": "d4ac793b62894c7e2c194f7c1230bedd66c17c86",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#ca1281a2ed3236ac45adddb2d08e84423769c321",
+      "declared_sha": "ca1281a2ed3236ac45adddb2d08e84423769c321",
+      "version": "0.60.542.0",
+      "package_sha256": "52ded02fb79721deb9d3d5788fec67190e7cb5d4fa10b40e254a3db888decfac",
+      "loaded_git_head": null
+    }
+  },
+  "hashes": {
+    "dataset": "skillopt-method-v2",
+    "dataset_manifest_sha256": "df512633dd5d2f28c67ebc3d92c523c361c87747242f9b13713f7b14fe0c3d6d",
+    "skillopt-method-v1_manifest_sha256": "8ff8a0ec97e03e3550de18821d8ebdf08f9dbfd6342f9dc2c5914d33c17e4642",
+    "criteria_query_sha256": "30ea291076101a9ca920f1fa14e267c6e67a2da88141199d67ba6b615ce5b53a",
+    "criteria_briefing_sha256": "6c848a2ed99137a88ed5fdcec237b6337adb1a26fec75e22b99c2667c64e64df",
+    "criteria_fact-check_sha256": "be49c653556c5917e302f91ca80a660cfdd27ba32031b048bc9c2ec9a512d399",
+    "seeds_gbrain_commit": "3ec766c40664b652b14e39788d177139f5a7b105"
+  },
+  "started_at": "2026-11-02T03:04:54.647Z",
+  "cost": {
+    "usd": 41.268333,
+    "input_tokens": 73733433,
+    "output_tokens": 902790,
+    "basis": "budget ledger n15-skillopt-method-test-read-2026-11-02T03-04-45-593Z-f0a9f695: 4590 paid requests, 3 charged at their reservation because usage was unavailable",
+    "ledger": "<work>/ledger.sqlite",
+    "program_cap_usd": 400,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 8203.6
+    }
+  },
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 3,
+  "n_scored": 3,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md",
+    "preregistration_commit": "d4ac793b62894c7e2c194f7c1230bedd66c17c86",
+    "runner_commit": "d4ac793b62894c7e2c194f7c1230bedd66c17c86",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-02T03:04:54.708Z"
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "mode": "probe",
+    "target": "sol",
+    "stage": "test",
+    "skills": null,
+    "from": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/receipt.json",
+    "other": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-opus/receipt.json",
+    "keys_in_process": [
+      "OPENAI_API_KEY"
+    ],
+    "models": {
+      "target": "openai:gpt-6.1-sol",
+      "proposer": null
+    }
+  },
+  "finished_at": "2026-11-02T04:19:35.232Z",
+  "data": {
+    "probe": {
+      "mode": "live",
+      "stage": "test",
+      "target": "sol",
+      "models": {
+        "target": "openai:gpt-6.1-sol",
+        "proposer": null
+      },
+      "dataset": "skillopt-method-v2",
+      "runs": {
+        "no_skill": 1,
+        "seed": 3,
+        "rewrite": 3
+      },
+      "bootstrap": {
+        "resamples": 10000,
+        "seed": 799
+      },
+      "models_not_run": [
+        {
+          "model": "particle:particle-1",
+          "reason": "the rollout runs through gbrain's gateway, which has no Particle recipe at the pinned gbrain (GBRA-268, plan decision D); particle-1 joins as a target once that recipe reaches the pin, under a crew paid window"
+        }
+      ],
+      "skills": [
+        {
+          "skill": "query",
+          "target": "sol",
+          "ceiling": 1,
+          "rewrite_source": "own",
+          "rewrite_target": "sol",
+          "rewrite_number": 2,
+          "rewrite_sha8": "bafc6a5c",
+          "rewrite_selection_score": 1,
+          "served_tools": {
+            "seed": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "get_timeline",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "recall",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ],
+            "rewrite": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "get_timeline",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "recall",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ]
+          },
+          "no_skill": 0.8611111111111112,
+          "seed": 0.7222222222222222,
+          "rewrite": 1,
+          "arms": {
+            "no_skill": {
+              "score": 0.8611111111111112,
+              "per_task": {
+                "query-test-03": [
+                  1
+                ],
+                "query-test-01": [
+                  1
+                ],
+                "query-test-04": [
+                  1
+                ],
+                "query-test-02": [
+                  1
+                ],
+                "query-test-07": [
+                  0
+                ],
+                "query-test-06": [
+                  1
+                ],
+                "query-test-08": [
+                  1
+                ],
+                "query-test-09": [
+                  1
+                ],
+                "query-test-10": [
+                  1
+                ],
+                "query-test-05": [
+                  1
+                ],
+                "query-test-13": [
+                  1
+                ],
+                "query-test-11": [
+                  1
+                ],
+                "query-test-15": [
+                  1
+                ],
+                "query-test-16": [
+                  1
+                ],
+                "query-test-12": [
+                  1
+                ],
+                "query-test-18": [
+                  1
+                ],
+                "query-test-14": [
+                  0
+                ],
+                "query-test-19": [
+                  0
+                ],
+                "query-test-17": [
+                  1
+                ],
+                "query-test-20": [
+                  0
+                ],
+                "query-test-21": [
+                  1
+                ],
+                "query-test-24": [
+                  1
+                ],
+                "query-test-25": [
+                  1
+                ],
+                "query-test-22": [
+                  1
+                ],
+                "query-test-26": [
+                  1
+                ],
+                "query-test-27": [
+                  1
+                ],
+                "query-test-29": [
+                  1
+                ],
+                "query-test-28": [
+                  0
+                ],
+                "query-test-23": [
+                  1
+                ],
+                "query-test-30": [
+                  1
+                ],
+                "query-test-32": [
+                  1
+                ],
+                "query-test-31": [
+                  1
+                ],
+                "query-test-33": [
+                  1
+                ],
+                "query-test-34": [
+                  1
+                ],
+                "query-test-35": [
+                  1
+                ],
+                "query-test-36": [
+                  1
+                ]
+              },
+              "task_medians": {
+                "query-test-01": 1,
+                "query-test-02": 1,
+                "query-test-03": 1,
+                "query-test-04": 1,
+                "query-test-05": 1,
+                "query-test-06": 1,
+                "query-test-07": 0,
+                "query-test-08": 1,
+                "query-test-09": 1,
+                "query-test-10": 1,
+                "query-test-11": 1,
+                "query-test-12": 1,
+                "query-test-13": 1,
+                "query-test-14": 0,
+                "query-test-15": 1,
+                "query-test-16": 1,
+                "query-test-17": 1,
+                "query-test-18": 1,
+                "query-test-19": 0,
+                "query-test-20": 0,
+                "query-test-21": 1,
+                "query-test-22": 1,
+                "query-test-23": 1,
+                "query-test-24": 1,
+                "query-test-25": 1,
+                "query-test-26": 1,
+                "query-test-27": 1,
+                "query-test-28": 0,
+                "query-test-29": 1,
+                "query-test-30": 1,
+                "query-test-31": 1,
+                "query-test-32": 1,
+                "query-test-33": 1,
+                "query-test-34": 1,
+                "query-test-35": 1,
+                "query-test-36": 1
+              },
+              "runs": 1,
+              "correct_rollouts": 31,
+              "cost": {
+                "rollouts": 36,
+                "calls": 138,
+                "usd": 0.8557872999999997,
+                "unpriced_calls": 0,
+                "input_tokens": 1143478,
+                "output_tokens": 9486,
+                "cache_read_tokens": 803173,
+                "cache_creation_tokens": 0,
+                "reasoning_tokens": 377,
+                "mean_rollout_usd": 0.023771869444444437,
+                "calls_per_rollout": 3.8333333333333335,
+                "cached_input_share": 0.7023947990254295,
+                "reasoning_tokens_per_rollout": 10.472222222222221
+              },
+              "cost_per_correct_usd": 0.027606041935483862
+            },
+            "seed": {
+              "score": 0.7222222222222222,
+              "per_task": {
+                "query-test-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-02": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-06": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-07": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-08": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-09": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-10": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-12": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-14": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-15": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-18": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-19": [
+                  1,
+                  0,
+                  0
+                ],
+                "query-test-20": [
+                  1,
+                  1,
+                  0
+                ],
+                "query-test-21": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-22": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-24": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-23": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-25": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-26": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-27": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-29": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-28": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-32": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-31": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-30": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-33": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-35": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-36": [
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "task_medians": {
+                "query-test-01": 1,
+                "query-test-02": 0,
+                "query-test-03": 1,
+                "query-test-04": 1,
+                "query-test-05": 1,
+                "query-test-06": 1,
+                "query-test-07": 0,
+                "query-test-08": 1,
+                "query-test-09": 1,
+                "query-test-10": 0,
+                "query-test-11": 1,
+                "query-test-12": 1,
+                "query-test-13": 1,
+                "query-test-14": 0,
+                "query-test-15": 1,
+                "query-test-16": 1,
+                "query-test-17": 1,
+                "query-test-18": 0,
+                "query-test-19": 0,
+                "query-test-20": 1,
+                "query-test-21": 0,
+                "query-test-22": 1,
+                "query-test-23": 1,
+                "query-test-24": 1,
+                "query-test-25": 1,
+                "query-test-26": 0,
+                "query-test-27": 1,
+                "query-test-28": 0,
+                "query-test-29": 1,
+                "query-test-30": 1,
+                "query-test-31": 1,
+                "query-test-32": 1,
+                "query-test-33": 1,
+                "query-test-34": 1,
+                "query-test-35": 1,
+                "query-test-36": 0
+              },
+              "runs": 3,
+              "correct_rollouts": 78,
+              "cost": {
+                "rollouts": 108,
+                "calls": 465,
+                "usd": 2.5972641999999997,
+                "unpriced_calls": 0,
+                "input_tokens": 5125759,
+                "output_tokens": 34950,
+                "cache_read_tokens": 4212502,
+                "cache_creation_tokens": 0,
+                "reasoning_tokens": 1506,
+                "mean_rollout_usd": 0.02404874259259259,
+                "calls_per_rollout": 4.305555555555555,
+                "cached_input_share": 0.8218298987525555,
+                "reasoning_tokens_per_rollout": 13.944444444444445
+              },
+              "cost_per_correct_usd": 0.03329825897435897
+            },
+            "rewrite": {
+              "score": 1,
+              "per_task": {
+                "query-test-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-02": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-06": [
+                  0,
+                  1,
+                  1
+                ],
+                "query-test-07": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-09": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-08": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-12": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-10": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-15": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-18": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-14": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-19": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-20": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-21": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-22": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-23": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-24": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-27": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-25": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-26": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-29": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-28": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-30": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-31": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-32": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-33": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-35": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-36": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "task_medians": {
+                "query-test-01": 1,
+                "query-test-02": 1,
+                "query-test-03": 1,
+                "query-test-04": 1,
+                "query-test-05": 1,
+                "query-test-06": 1,
+                "query-test-07": 1,
+                "query-test-08": 1,
+                "query-test-09": 1,
+                "query-test-10": 1,
+                "query-test-11": 1,
+                "query-test-12": 1,
+                "query-test-13": 1,
+                "query-test-14": 1,
+                "query-test-15": 1,
+                "query-test-16": 1,
+                "query-test-17": 1,
+                "query-test-18": 1,
+                "query-test-19": 1,
+                "query-test-20": 1,
+                "query-test-21": 1,
+                "query-test-22": 1,
+                "query-test-23": 1,
+                "query-test-24": 1,
+                "query-test-25": 1,
+                "query-test-26": 1,
+                "query-test-27": 1,
+                "query-test-28": 1,
+                "query-test-29": 1,
+                "query-test-30": 1,
+                "query-test-31": 1,
+                "query-test-32": 1,
+                "query-test-33": 1,
+                "query-test-34": 1,
+                "query-test-35": 1,
+                "query-test-36": 1
+              },
+              "runs": 3,
+              "correct_rollouts": 107,
+              "cost": {
+                "rollouts": 108,
+                "calls": 366,
+                "usd": 2.7454848000000003,
+                "unpriced_calls": 0,
+                "input_tokens": 3645904,
+                "output_tokens": 23755,
+                "cache_read_tokens": 2517828,
+                "cache_creation_tokens": 0,
+                "reasoning_tokens": 521,
+                "mean_rollout_usd": 0.025421155555555557,
+                "calls_per_rollout": 3.388888888888889,
+                "cached_input_share": 0.6905908658044754,
+                "reasoning_tokens_per_rollout": 4.824074074074074
+              },
+              "cost_per_correct_usd": 0.025658736448598132
+            }
+          },
+          "seed_minus_no_skill": {
+            "tasks": 36,
+            "point": -0.1388888888888889,
+            "lower": -0.2777777777777778,
+            "upper": 0,
+            "wins": 1,
+            "losses": 6,
+            "mcnemar_p": 0.125,
+            "verdict": "CUT-CANDIDATE"
+          },
+          "rewrite_minus_seed": {
+            "tasks": 36,
+            "point": 0.2777777777777778,
+            "lower": 0.1388888888888889,
+            "upper": 0.4166666666666667,
+            "wins": 10,
+            "losses": 0,
+            "mcnemar_p": 0.001953125,
+            "verdict": "rewrite-beats-seed"
+          },
+          "cost": {
+            "rollouts": 252,
+            "calls": 969,
+            "usd": 6.1985363,
+            "unpriced_calls": 0,
+            "input_tokens": 9915141,
+            "output_tokens": 68191,
+            "cache_read_tokens": 7533503,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": 2404,
+            "mean_rollout_usd": 0.02459736626984127,
+            "calls_per_rollout": 3.8452380952380953,
+            "cached_input_share": 0.7597978687342923,
+            "reasoning_tokens_per_rollout": 9.53968253968254
+          }
+        },
+        {
+          "skill": "briefing",
+          "target": "sol",
+          "ceiling": 1,
+          "rewrite_source": "own",
+          "rewrite_target": "sol",
+          "rewrite_number": 2,
+          "rewrite_sha8": "b35934a9",
+          "rewrite_selection_score": 1,
+          "served_tools": {
+            "seed": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "get_timeline",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ],
+            "rewrite": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "get_timeline",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ]
+          },
+          "no_skill": 0.16666666666666666,
+          "seed": 0.5833333333333334,
+          "rewrite": 1,
+          "arms": {
+            "no_skill": {
+              "score": 0.16666666666666666,
+              "per_task": {
+                "briefing-test-03": [
+                  0
+                ],
+                "briefing-test-04": [
+                  0
+                ],
+                "briefing-test-02": [
+                  0
+                ],
+                "briefing-test-01": [
+                  0
+                ],
+                "briefing-test-05": [
+                  1
+                ],
+                "briefing-test-06": [
+                  0
+                ],
+                "briefing-test-09": [
+                  0
+                ],
+                "briefing-test-07": [
+                  0
+                ],
+                "briefing-test-11": [
+                  1
+                ],
+                "briefing-test-08": [
+                  0
+                ],
+                "briefing-test-10": [
+                  0
+                ],
+                "briefing-test-12": [
+                  0
+                ],
+                "briefing-test-14": [
+                  0
+                ],
+                "briefing-test-15": [
+                  0
+                ],
+                "briefing-test-13": [
+                  0
+                ],
+                "briefing-test-17": [
+                  1
+                ],
+                "briefing-test-16": [
+                  0
+                ],
+                "briefing-test-19": [
+                  0
+                ],
+                "briefing-test-18": [
+                  0
+                ],
+                "briefing-test-20": [
+                  0
+                ],
+                "briefing-test-23": [
+                  0
+                ],
+                "briefing-test-22": [
+                  0
+                ],
+                "briefing-test-21": [
+                  0
+                ],
+                "briefing-test-24": [
+                  0
+                ],
+                "briefing-test-27": [
+                  0
+                ],
+                "briefing-test-25": [
+                  0
+                ],
+                "briefing-test-26": [
+                  0
+                ],
+                "briefing-test-28": [
+                  0
+                ],
+                "briefing-test-29": [
+                  0
+                ],
+                "briefing-test-30": [
+                  0
+                ],
+                "briefing-test-31": [
+                  1
+                ],
+                "briefing-test-34": [
+                  1
+                ],
+                "briefing-test-33": [
+                  0
+                ],
+                "briefing-test-32": [
+                  0
+                ],
+                "briefing-test-36": [
+                  1
+                ],
+                "briefing-test-35": [
+                  0
+                ]
+              },
+              "task_medians": {
+                "briefing-test-01": 0,
+                "briefing-test-02": 0,
+                "briefing-test-03": 0,
+                "briefing-test-04": 0,
+                "briefing-test-05": 1,
+                "briefing-test-06": 0,
+                "briefing-test-07": 0,
+                "briefing-test-08": 0,
+                "briefing-test-09": 0,
+                "briefing-test-10": 0,
+                "briefing-test-11": 1,
+                "briefing-test-12": 0,
+                "briefing-test-13": 0,
+                "briefing-test-14": 0,
+                "briefing-test-15": 0,
+                "briefing-test-16": 0,
+                "briefing-test-17": 1,
+                "briefing-test-18": 0,
+                "briefing-test-19": 0,
+                "briefing-test-20": 0,
+                "briefing-test-21": 0,
+                "briefing-test-22": 0,
+                "briefing-test-23": 0,
+                "briefing-test-24": 0,
+                "briefing-test-25": 0,
+                "briefing-test-26": 0,
+                "briefing-test-27": 0,
+                "briefing-test-28": 0,
+                "briefing-test-29": 0,
+                "briefing-test-30": 0,
+                "briefing-test-31": 1,
+                "briefing-test-32": 0,
+                "briefing-test-33": 0,
+                "briefing-test-34": 1,
+                "briefing-test-35": 0,
+                "briefing-test-36": 1
+              },
+              "runs": 1,
+              "correct_rollouts": 6,
+              "cost": {
+                "rollouts": 36,
+                "calls": 139,
+                "usd": 1.1090387000000002,
+                "unpriced_calls": 0,
+                "input_tokens": 1347311,
+                "output_tokens": 19891,
+                "cache_read_tokens": 939207,
+                "cache_creation_tokens": 0,
+                "reasoning_tokens": 1311,
+                "mean_rollout_usd": 0.03080663055555556,
+                "calls_per_rollout": 3.861111111111111,
+                "cached_input_share": 0.6970974036432568,
+                "reasoning_tokens_per_rollout": 36.416666666666664
+              },
+              "cost_per_correct_usd": 0.18483978333333337
+            },
+            "seed": {
+              "score": 0.5833333333333334,
+              "per_task": {
+                "briefing-test-04": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-02": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-03": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-05": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-06": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-07": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-08": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-09": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-11": [
+                  0,
+                  1,
+                  1
+                ],
+                "briefing-test-10": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-12": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-13": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-14": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-17": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-15": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-18": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-19": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-20": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-21": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-22": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-23": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-24": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-26": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-25": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-27": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-30": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-28": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-29": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-31": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-34": [
+                  1,
+                  0,
+                  0
+                ],
+                "briefing-test-32": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-36": [
+                  0,
+                  0,
+                  1
+                ],
+                "briefing-test-35": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-33": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "task_medians": {
+                "briefing-test-01": 1,
+                "briefing-test-02": 0,
+                "briefing-test-03": 0,
+                "briefing-test-04": 0,
+                "briefing-test-05": 0,
+                "briefing-test-06": 1,
+                "briefing-test-07": 1,
+                "briefing-test-08": 0,
+                "briefing-test-09": 1,
+                "briefing-test-10": 1,
+                "briefing-test-11": 1,
+                "briefing-test-12": 1,
+                "briefing-test-13": 0,
+                "briefing-test-14": 1,
+                "briefing-test-15": 1,
+                "briefing-test-16": 1,
+                "briefing-test-17": 0,
+                "briefing-test-18": 1,
+                "briefing-test-19": 1,
+                "briefing-test-20": 1,
+                "briefing-test-21": 1,
+                "briefing-test-22": 0,
+                "briefing-test-23": 1,
+                "briefing-test-24": 1,
+                "briefing-test-25": 0,
+                "briefing-test-26": 1,
+                "briefing-test-27": 1,
+                "briefing-test-28": 0,
+                "briefing-test-29": 1,
+                "briefing-test-30": 0,
+                "briefing-test-31": 0,
+                "briefing-test-32": 0,
+                "briefing-test-33": 1,
+                "briefing-test-34": 0,
+                "briefing-test-35": 1,
+                "briefing-test-36": 0
+              },
+              "runs": 3,
+              "correct_rollouts": 64,
+              "cost": {
+                "rollouts": 108,
+                "calls": 828,
+                "usd": 9.934960299999982,
+                "unpriced_calls": 0,
+                "input_tokens": 20171042,
+                "output_tokens": 302570,
+                "cache_read_tokens": 17596223,
+                "cache_creation_tokens": 0,
+                "reasoning_tokens": 11381,
+                "mean_rollout_usd": 0.09199037314814798,
+                "calls_per_rollout": 7.666666666666667,
+                "cached_input_share": 0.8723507194125123,
+                "reasoning_tokens_per_rollout": 105.37962962962963
+              },
+              "cost_per_correct_usd": 0.15523375468749973
+            },
+            "rewrite": {
+              "score": 1,
+              "per_task": {
+                "briefing-test-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-02": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-06": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-07": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-08": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-09": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-10": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-12": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-14": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-15": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-18": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-19": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-20": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-21": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-22": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-23": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-24": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-25": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-26": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-27": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-28": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-29": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-31": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-30": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-32": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-33": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-36": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-35": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "task_medians": {
+                "briefing-test-01": 1,
+                "briefing-test-02": 1,
+                "briefing-test-03": 1,
+                "briefing-test-04": 1,
+                "briefing-test-05": 1,
+                "briefing-test-06": 1,
+                "briefing-test-07": 1,
+                "briefing-test-08": 1,
+                "briefing-test-09": 1,
+                "briefing-test-10": 1,
+                "briefing-test-11": 1,
+                "briefing-test-12": 1,
+                "briefing-test-13": 1,
+                "briefing-test-14": 1,
+                "briefing-test-15": 1,
+                "briefing-test-16": 1,
+                "briefing-test-17": 1,
+                "briefing-test-18": 1,
+                "briefing-test-19": 1,
+                "briefing-test-20": 1,
+                "briefing-test-21": 1,
+                "briefing-test-22": 1,
+                "briefing-test-23": 1,
+                "briefing-test-24": 1,
+                "briefing-test-25": 1,
+                "briefing-test-26": 1,
+                "briefing-test-27": 1,
+                "briefing-test-28": 1,
+                "briefing-test-29": 1,
+                "briefing-test-30": 1,
+                "briefing-test-31": 1,
+                "briefing-test-32": 1,
+                "briefing-test-33": 1,
+                "briefing-test-34": 1,
+                "briefing-test-35": 1,
+                "briefing-test-36": 1
+              },
+              "runs": 3,
+              "correct_rollouts": 108,
+              "cost": {
+                "rollouts": 108,
+                "calls": 406,
+                "usd": 3.6503440000000014,
+                "unpriced_calls": 0,
+                "input_tokens": 5186518,
+                "output_tokens": 75814,
+                "cache_read_tokens": 3937280,
+                "cache_creation_tokens": 0,
+                "reasoning_tokens": 1993,
+                "mean_rollout_usd": 0.03379948148148149,
+                "calls_per_rollout": 3.759259259259259,
+                "cached_input_share": 0.7591374405718827,
+                "reasoning_tokens_per_rollout": 18.453703703703702
+              },
+              "cost_per_correct_usd": 0.03379948148148149
+            }
+          },
+          "seed_minus_no_skill": {
+            "tasks": 36,
+            "point": 0.4166666666666667,
+            "lower": 0.16666666666666666,
+            "upper": 0.6388888888888888,
+            "wins": 20,
+            "losses": 5,
+            "mcnemar_p": 0.004077315330505371,
+            "verdict": "KEEP"
+          },
+          "rewrite_minus_seed": {
+            "tasks": 36,
+            "point": 0.4166666666666667,
+            "lower": 0.25,
+            "upper": 0.5833333333333334,
+            "wins": 15,
+            "losses": 0,
+            "mcnemar_p": 0.00006103515625,
+            "verdict": "rewrite-beats-seed"
+          },
+          "cost": {
+            "rollouts": 252,
+            "calls": 1373,
+            "usd": 14.694342999999982,
+            "unpriced_calls": 0,
+            "input_tokens": 26704871,
+            "output_tokens": 398275,
+            "cache_read_tokens": 22472710,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": 14685,
+            "mean_rollout_usd": 0.058310884920634846,
+            "calls_per_rollout": 5.448412698412699,
+            "cached_input_share": 0.8415210094068607,
+            "reasoning_tokens_per_rollout": 58.273809523809526
+          }
+        },
+        {
+          "skill": "fact-check",
+          "target": "sol",
+          "ceiling": 1,
+          "rewrite_source": "own",
+          "rewrite_target": "sol",
+          "rewrite_number": 2,
+          "rewrite_sha8": "50331458",
+          "rewrite_selection_score": 1,
+          "served_tools": {
+            "seed": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ],
+            "rewrite": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ]
+          },
+          "no_skill": 0,
+          "seed": 0.5277777777777778,
+          "rewrite": 1,
+          "arms": {
+            "no_skill": {
+              "score": 0,
+              "per_task": {
+                "fact-check-test-04": [
+                  0
+                ],
+                "fact-check-test-02": [
+                  0
+                ],
+                "fact-check-test-01": [
+                  0
+                ],
+                "fact-check-test-05": [
+                  0
+                ],
+                "fact-check-test-03": [
+                  0
+                ],
+                "fact-check-test-07": [
+                  0
+                ],
+                "fact-check-test-09": [
+                  0
+                ],
+                "fact-check-test-06": [
+                  0
+                ],
+                "fact-check-test-08": [
+                  0
+                ],
+                "fact-check-test-12": [
+                  0
+                ],
+                "fact-check-test-10": [
+                  0
+                ],
+                "fact-check-test-14": [
+                  0
+                ],
+                "fact-check-test-13": [
+                  0
+                ],
+                "fact-check-test-15": [
+                  0
+                ],
+                "fact-check-test-11": [
+                  0
+                ],
+                "fact-check-test-17": [
+                  0
+                ],
+                "fact-check-test-16": [
+                  0
+                ],
+                "fact-check-test-18": [
+                  0
+                ],
+                "fact-check-test-20": [
+                  0
+                ],
+                "fact-check-test-19": [
+                  0
+                ],
+                "fact-check-test-22": [
+                  0
+                ],
+                "fact-check-test-21": [
+                  0
+                ],
+                "fact-check-test-26": [
+                  0
+                ],
+                "fact-check-test-25": [
+                  0
+                ],
+                "fact-check-test-24": [
+                  0
+                ],
+                "fact-check-test-23": [
+                  0
+                ],
+                "fact-check-test-27": [
+                  0
+                ],
+                "fact-check-test-28": [
+                  0
+                ],
+                "fact-check-test-29": [
+                  0
+                ],
+                "fact-check-test-31": [
+                  0
+                ],
+                "fact-check-test-30": [
+                  0
+                ],
+                "fact-check-test-32": [
+                  0
+                ],
+                "fact-check-test-34": [
+                  0
+                ],
+                "fact-check-test-33": [
+                  0
+                ],
+                "fact-check-test-35": [
+                  0
+                ],
+                "fact-check-test-36": [
+                  0
+                ]
+              },
+              "task_medians": {
+                "fact-check-test-01": 0,
+                "fact-check-test-02": 0,
+                "fact-check-test-03": 0,
+                "fact-check-test-04": 0,
+                "fact-check-test-05": 0,
+                "fact-check-test-06": 0,
+                "fact-check-test-07": 0,
+                "fact-check-test-08": 0,
+                "fact-check-test-09": 0,
+                "fact-check-test-10": 0,
+                "fact-check-test-11": 0,
+                "fact-check-test-12": 0,
+                "fact-check-test-13": 0,
+                "fact-check-test-14": 0,
+                "fact-check-test-15": 0,
+                "fact-check-test-16": 0,
+                "fact-check-test-17": 0,
+                "fact-check-test-18": 0,
+                "fact-check-test-19": 0,
+                "fact-check-test-20": 0,
+                "fact-check-test-21": 0,
+                "fact-check-test-22": 0,
+                "fact-check-test-23": 0,
+                "fact-check-test-24": 0,
+                "fact-check-test-25": 0,
+                "fact-check-test-26": 0,
+                "fact-check-test-27": 0,
+                "fact-check-test-28": 0,
+                "fact-check-test-29": 0,
+                "fact-check-test-30": 0,
+                "fact-check-test-31": 0,
+                "fact-check-test-32": 0,
+                "fact-check-test-33": 0,
+                "fact-check-test-34": 0,
+                "fact-check-test-35": 0,
+                "fact-check-test-36": 0
+              },
+              "runs": 1,
+              "correct_rollouts": 0,
+              "cost": {
+                "rollouts": 36,
+                "calls": 224,
+                "usd": 1.7655998999999998,
+                "unpriced_calls": 0,
+                "input_tokens": 2932612,
+                "output_tokens": 39053,
+                "cache_read_tokens": 2363239,
+                "cache_creation_tokens": 0,
+                "reasoning_tokens": 1402,
+                "mean_rollout_usd": 0.04904444166666666,
+                "calls_per_rollout": 6.222222222222222,
+                "cached_input_share": 0.8058478243968176,
+                "reasoning_tokens_per_rollout": 38.94444444444444
+              },
+              "cost_per_correct_usd": null
+            },
+            "seed": {
+              "score": 0.5277777777777778,
+              "per_task": {
+                "fact-check-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-02": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-03": [
+                  1,
+                  0,
+                  1
+                ],
+                "fact-check-test-01": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-06": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-07": [
+                  1,
+                  0,
+                  1
+                ],
+                "fact-check-test-08": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-09": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-10": [
+                  1,
+                  1,
+                  0
+                ],
+                "fact-check-test-11": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-12": [
+                  1,
+                  0,
+                  0
+                ],
+                "fact-check-test-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-14": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-15": [
+                  0,
+                  0,
+                  1
+                ],
+                "fact-check-test-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-16": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-18": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-19": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-20": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-21": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-22": [
+                  1,
+                  0,
+                  1
+                ],
+                "fact-check-test-23": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-24": [
+                  0,
+                  1,
+                  1
+                ],
+                "fact-check-test-25": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-26": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-28": [
+                  1,
+                  1,
+                  0
+                ],
+                "fact-check-test-27": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-29": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-30": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-31": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-32": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-33": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-35": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-36": [
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "task_medians": {
+                "fact-check-test-01": 0,
+                "fact-check-test-02": 0,
+                "fact-check-test-03": 1,
+                "fact-check-test-04": 1,
+                "fact-check-test-05": 1,
+                "fact-check-test-06": 1,
+                "fact-check-test-07": 1,
+                "fact-check-test-08": 1,
+                "fact-check-test-09": 0,
+                "fact-check-test-10": 1,
+                "fact-check-test-11": 0,
+                "fact-check-test-12": 0,
+                "fact-check-test-13": 1,
+                "fact-check-test-14": 1,
+                "fact-check-test-15": 0,
+                "fact-check-test-16": 0,
+                "fact-check-test-17": 1,
+                "fact-check-test-18": 1,
+                "fact-check-test-19": 0,
+                "fact-check-test-20": 0,
+                "fact-check-test-21": 0,
+                "fact-check-test-22": 1,
+                "fact-check-test-23": 0,
+                "fact-check-test-24": 1,
+                "fact-check-test-25": 0,
+                "fact-check-test-26": 0,
+                "fact-check-test-27": 0,
+                "fact-check-test-28": 1,
+                "fact-check-test-29": 1,
+                "fact-check-test-30": 0,
+                "fact-check-test-31": 1,
+                "fact-check-test-32": 1,
+                "fact-check-test-33": 0,
+                "fact-check-test-34": 1,
+                "fact-check-test-35": 1,
+                "fact-check-test-36": 0
+              },
+              "runs": 3,
+              "correct_rollouts": 53,
+              "cost": {
+                "rollouts": 108,
+                "calls": 1644,
+                "usd": 9.367885199999986,
+                "unpriced_calls": 0,
+                "input_tokens": 28677770,
+                "output_tokens": 349264,
+                "cache_read_tokens": 27094892,
+                "cache_creation_tokens": 0,
+                "reasoning_tokens": 22635,
+                "mean_rollout_usd": 0.08673967777777765,
+                "calls_per_rollout": 15.222222222222221,
+                "cached_input_share": 0.9448047041314579,
+                "reasoning_tokens_per_rollout": 209.58333333333334
+              },
+              "cost_per_correct_usd": 0.17675255094339595
+            },
+            "rewrite": {
+              "score": 1,
+              "per_task": {
+                "fact-check-test-02": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-06": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-07": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-08": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-09": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-10": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-12": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-14": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-15": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-19": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-18": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-21": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-20": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-22": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-23": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-24": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-25": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-26": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-27": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-28": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-29": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-30": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-31": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-32": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-33": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-35": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-36": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "task_medians": {
+                "fact-check-test-01": 1,
+                "fact-check-test-02": 1,
+                "fact-check-test-03": 1,
+                "fact-check-test-04": 1,
+                "fact-check-test-05": 1,
+                "fact-check-test-06": 1,
+                "fact-check-test-07": 1,
+                "fact-check-test-08": 1,
+                "fact-check-test-09": 1,
+                "fact-check-test-10": 1,
+                "fact-check-test-11": 1,
+                "fact-check-test-12": 1,
+                "fact-check-test-13": 1,
+                "fact-check-test-14": 1,
+                "fact-check-test-15": 1,
+                "fact-check-test-16": 1,
+                "fact-check-test-17": 1,
+                "fact-check-test-18": 1,
+                "fact-check-test-19": 1,
+                "fact-check-test-20": 1,
+                "fact-check-test-21": 1,
+                "fact-check-test-22": 1,
+                "fact-check-test-23": 1,
+                "fact-check-test-24": 1,
+                "fact-check-test-25": 1,
+                "fact-check-test-26": 1,
+                "fact-check-test-27": 1,
+                "fact-check-test-28": 1,
+                "fact-check-test-29": 1,
+                "fact-check-test-30": 1,
+                "fact-check-test-31": 1,
+                "fact-check-test-32": 1,
+                "fact-check-test-33": 1,
+                "fact-check-test-34": 1,
+                "fact-check-test-35": 1,
+                "fact-check-test-36": 1
+              },
+              "runs": 3,
+              "correct_rollouts": 108,
+              "cost": {
+                "rollouts": 108,
+                "calls": 377,
+                "usd": 3.862643099999998,
+                "unpriced_calls": 0,
+                "input_tokens": 5503039,
+                "output_tokens": 48007,
+                "cache_read_tokens": 4012371,
+                "cache_creation_tokens": 0,
+                "reasoning_tokens": 544,
+                "mean_rollout_usd": 0.03576521388888887,
+                "calls_per_rollout": 3.490740740740741,
+                "cached_input_share": 0.7291191285397033,
+                "reasoning_tokens_per_rollout": 5.037037037037037
+              },
+              "cost_per_correct_usd": 0.03576521388888887
+            }
+          },
+          "seed_minus_no_skill": {
+            "tasks": 36,
+            "point": 0.5277777777777778,
+            "lower": 0.3611111111111111,
+            "upper": 0.6944444444444444,
+            "wins": 19,
+            "losses": 0,
+            "mcnemar_p": 0.000003814697265625,
+            "verdict": "KEEP"
+          },
+          "rewrite_minus_seed": {
+            "tasks": 36,
+            "point": 0.4722222222222222,
+            "lower": 0.3055555555555556,
+            "upper": 0.6388888888888888,
+            "wins": 17,
+            "losses": 0,
+            "mcnemar_p": 0.0000152587890625,
+            "verdict": "rewrite-beats-seed"
+          },
+          "cost": {
+            "rollouts": 252,
+            "calls": 2245,
+            "usd": 14.996128199999983,
+            "unpriced_calls": 0,
+            "input_tokens": 37113421,
+            "output_tokens": 436324,
+            "cache_read_tokens": 33470502,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": 24581,
+            "mean_rollout_usd": 0.05950844523809517,
+            "calls_per_rollout": 8.908730158730158,
+            "cached_input_share": 0.9018436214759076,
+            "reasoning_tokens_per_rollout": 97.5436507936508
+          }
+        }
+      ],
+      "reprice_trigger": null,
+      "files_read": [
+        "eval/data/skillopt-method-v2/query/test.jsonl",
+        "eval/data/skillopt-method-v2/briefing/test.jsonl",
+        "eval/data/skillopt-method-v2/fact-check/test.jsonl",
+        "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/receipt.json",
+        "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-opus/receipt.json",
+        "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot/sol-query-rewrite-2.txt",
+        "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot/sol-briefing-rewrite-2.txt",
+        "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot/sol-fact-check-rewrite-2.txt"
+      ],
+      "retrieval": "keyword only: pages imported with noEmbed, embedding_disabled set on the brain, the gateway's embedding model on a provider whose key is not in the process; reranker and query expansion off",
+      "request_settings": [
+        {
+          "host": "api.openai.com",
+          "model": "gpt-6.1-sol",
+          "sent": {
+            "reasoning": null,
+            "max_output_tokens": 4096,
+            "temperature": null,
+            "top_p": null,
+            "tool_choice": "auto",
+            "parallel_tool_calls": null,
+            "store": null,
+            "service_tier": null,
+            "truncation": null,
+            "text": null,
+            "tools": 11,
+            "instructions_role": "developer"
+          },
+          "applied_reasoning_effort": "medium",
+          "requests": 2522
+        },
+        {
+          "host": "api.openai.com",
+          "model": "gpt-6.1-sol",
+          "sent": {
+            "reasoning": null,
+            "max_output_tokens": 4096,
+            "temperature": null,
+            "top_p": null,
+            "tool_choice": "auto",
+            "parallel_tool_calls": null,
+            "store": null,
+            "service_tier": null,
+            "truncation": null,
+            "text": null,
+            "tools": 13,
+            "instructions_role": "developer"
+          },
+          "applied_reasoning_effort": "medium",
+          "requests": 831
+        },
+        {
+          "host": "api.openai.com",
+          "model": "gpt-6.1-sol",
+          "sent": {
+            "reasoning": null,
+            "max_output_tokens": 4096,
+            "temperature": null,
+            "top_p": null,
+            "tool_choice": "auto",
+            "parallel_tool_calls": null,
+            "store": null,
+            "service_tier": null,
+            "truncation": null,
+            "text": null,
+            "tools": 11,
+            "instructions_role": "developer"
+          },
+          "applied_reasoning_effort": null,
+          "requests": 2
+        },
+        {
+          "host": "api.openai.com",
+          "model": "gpt-6.1-sol",
+          "sent": {
+            "reasoning": null,
+            "max_output_tokens": 4096,
+            "temperature": null,
+            "top_p": null,
+            "tool_choice": "auto",
+            "parallel_tool_calls": null,
+            "store": null,
+            "service_tier": null,
+            "truncation": null,
+            "text": null,
+            "tools": 12,
+            "instructions_role": "developer"
+          },
+          "applied_reasoning_effort": "medium",
+          "requests": 1234
+        },
+        {
+          "host": "api.openai.com",
+          "model": "gpt-6.1-sol",
+          "sent": {
+            "reasoning": null,
+            "max_output_tokens": 4096,
+            "temperature": null,
+            "top_p": null,
+            "tool_choice": "auto",
+            "parallel_tool_calls": null,
+            "store": null,
+            "service_tier": null,
+            "truncation": null,
+            "text": null,
+            "tools": 12,
+            "instructions_role": "developer"
+          },
+          "applied_reasoning_effort": null,
+          "requests": 1
+        }
+      ],
+      "files_read_include_test": true
+    },
+    "reprice_trigger": null
+  },
+  "accounting": {
+    "planned": 3,
+    "attempted": 3,
+    "scored": 3,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "delivered_tokens": null
+}

@@ -32,7 +32,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { CHAT_PRICE_OVERRIDES } from '../../budget-ledger.ts';
 import { lookupEmbeddingPrice } from '../../../../node_modules/gbrain/src/core/embedding-pricing.ts';
-import { FRONTIER_READERS, READER_WINDOWS } from '../../systems/baselines.ts';
+import { READER_WINDOWS } from '../../systems/baselines.ts';
 import type { Outcome } from '../../memory-qa/outcomes.ts';
 
 export const CELL_SCHEMA = 'gbrain-evals/q1-cell/v1';
@@ -433,8 +433,14 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
 
 // ─── Generation (PLAN §7 cells) ──────────────────────────────────────
 
-export const READERS = [...FRONTIER_READERS];
+/**
+ * Q1's counted readers and its single-reader anchor, frozen by the scoreboard preregistration (PREREGISTRATION), whose
+ * campaign is sealed and published. They predate the frontier-first rule (2026-11-01) and stay as frozen; a new Q1
+ * campaign amends its preregistration first.
+ */
+export const COUNTED_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'anthropic:claude-sonnet-5-5'] as const;
 export const SONNET = 'anthropic:claude-sonnet-5-5';
+export const READERS = [...COUNTED_READERS];
 export const FRONTIER_JUDGES = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'];
 const EXT_BEAM = ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph', 'ext-markdown-kb', 'ext-verbatim-session'];
 const EXT_LME = ['ext-markdown-kb', 'ext-verbatim-session'];

@@ -16,6 +16,12 @@ const ROOT = resolve(import.meta.dir, '../..');
 const sh = (args: string[], env: Record<string, string> = {}) => Bun.spawnSync(['bash', 'eval/systems/bootstrap.sh', ...args], { cwd: ROOT, env: { ...process.env, ...env } });
 
 describe('bootstrap.sh', () => {
+  test('the Bun a VM installs by default meets the pinned gbrain CLI\'s minimum, so a pin bump that raises it fails here, not on a paid VM', () => {
+    const vmBun = /^BUN_VERSION=\$\{BUN_VERSION:-([\d.]+)\}$/m.exec(readFileSync(join(ROOT, 'eval/systems/bootstrap.sh'), 'utf8'))![1];
+    const minimum = /MINIMUM_BUN_VERSION = '([\d.]+)'/.exec(readFileSync(join(ROOT, 'node_modules/gbrain/src/core/runtime-version.ts'), 'utf8'))![1];
+    expect(Bun.semver.satisfies(vmBun, `>=${minimum}`)).toBe(true);
+  });
+
   test('parses, and prints its usage for an unknown subcommand', () => {
     expect(Bun.spawnSync(['bash', '-n', 'eval/systems/bootstrap.sh'], { cwd: ROOT }).exitCode).toBe(0);
     const r = sh(['help']);

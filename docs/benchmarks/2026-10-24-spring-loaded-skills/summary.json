@@ -1,0 +1,2931 @@
+{
+  "generated": "2026-10-24T21:06:43.118Z",
+  "cells": {
+    "claude-code|claude-sonnet-5-5|real": {
+      "off": {
+        "trials": 30,
+        "skill_trials": 24,
+        "control_trials": 6,
+        "right_skill_used": 0,
+        "expected_loaded_anytime": 0,
+        "wrong_skill_only": 0,
+        "pass": 0,
+        "control_pass": 2,
+        "over_fetch": 0,
+        "trials_with_denial": 28,
+        "denials": 58,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 0,
+        "harness_errors": 0,
+        "cost_per_trial": 0.034141993333333336,
+        "input_tokens_per_trial": 76496.53333333334,
+        "output_tokens_per_trial": 760.9,
+        "total_cost": 1.0242598
+      },
+      "native": {
+        "trials": 30,
+        "skill_trials": 24,
+        "control_trials": 6,
+        "right_skill_used": 10,
+        "expected_loaded_anytime": 10,
+        "wrong_skill_only": 0,
+        "pass": 3,
+        "control_pass": 2,
+        "over_fetch": 0,
+        "trials_with_denial": 28,
+        "denials": 62,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 0,
+        "harness_errors": 0,
+        "cost_per_trial": 0.055964546666666656,
+        "input_tokens_per_trial": 115696.73333333334,
+        "output_tokens_per_trial": 873.7666666666667,
+        "total_cost": 1.6789363999999998
+      },
+      "spring": {
+        "trials": 30,
+        "skill_trials": 24,
+        "control_trials": 6,
+        "right_skill_used": 17,
+        "expected_loaded_anytime": 17,
+        "wrong_skill_only": 0,
+        "pass": 4,
+        "control_pass": 2,
+        "over_fetch": 0,
+        "trials_with_denial": 26,
+        "denials": 54,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 17,
+        "harness_errors": 0,
+        "cost_per_trial": 0.04835594666666667,
+        "input_tokens_per_trial": 102753.93333333333,
+        "output_tokens_per_trial": 920.9666666666667,
+        "total_cost": 1.4506784000000001
+      }
+    },
+    "codex|gpt-6.1-sol|real": {
+      "off": {
+        "trials": 30,
+        "skill_trials": 24,
+        "control_trials": 6,
+        "right_skill_used": 0,
+        "expected_loaded_anytime": 0,
+        "wrong_skill_only": 0,
+        "pass": 0,
+        "control_pass": 4,
+        "over_fetch": 0,
+        "trials_with_denial": 14,
+        "denials": 20,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 0,
+        "harness_errors": 0,
+        "cost_per_trial": 0.08769485333333334,
+        "input_tokens_per_trial": 147322.96666666667,
+        "output_tokens_per_trial": 621.2666666666667,
+        "total_cost": 2.6308456000000002
+      },
+      "native": {
+        "trials": 30,
+        "skill_trials": 24,
+        "control_trials": 6,
+        "right_skill_used": 22,
+        "expected_loaded_anytime": 22,
+        "wrong_skill_only": 2,
+        "pass": 0,
+        "control_pass": 4,
+        "over_fetch": 6,
+        "trials_with_denial": 16,
+        "denials": 21,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 0,
+        "harness_errors": 0,
+        "cost_per_trial": 0.13463615666666665,
+        "input_tokens_per_trial": 230908.53333333333,
+        "output_tokens_per_trial": 913.5333333333333,
+        "total_cost": 4.039084699999999
+      },
+      "spring": {
+        "trials": 30,
+        "skill_trials": 24,
+        "control_trials": 6,
+        "right_skill_used": 22,
+        "expected_loaded_anytime": 22,
+        "wrong_skill_only": 2,
+        "pass": 2,
+        "control_pass": 3,
+        "over_fetch": 6,
+        "trials_with_denial": 15,
+        "denials": 22,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 30,
+        "harness_errors": 0,
+        "cost_per_trial": 0.11497146333333336,
+        "input_tokens_per_trial": 186810.33333333334,
+        "output_tokens_per_trial": 805.9,
+        "total_cost": 3.4491439000000006
+      }
+    },
+    "claude-code|claude-opus-5-5|real": {
+      "off": {
+        "trials": 15,
+        "skill_trials": 12,
+        "control_trials": 3,
+        "right_skill_used": 0,
+        "expected_loaded_anytime": 0,
+        "wrong_skill_only": 0,
+        "pass": 0,
+        "control_pass": 1,
+        "over_fetch": 0,
+        "trials_with_denial": 14,
+        "denials": 40,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 0,
+        "harness_errors": 0,
+        "cost_per_trial": 0.08868550666666668,
+        "input_tokens_per_trial": 103879.66666666667,
+        "output_tokens_per_trial": 1058.7333333333333,
+        "total_cost": 1.3302826
+      },
+      "native": {
+        "trials": 15,
+        "skill_trials": 12,
+        "control_trials": 3,
+        "right_skill_used": 5,
+        "expected_loaded_anytime": 5,
+        "wrong_skill_only": 0,
+        "pass": 1,
+        "control_pass": 1,
+        "over_fetch": 0,
+        "trials_with_denial": 14,
+        "denials": 39,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 0,
+        "harness_errors": 0,
+        "cost_per_trial": 0.15212748,
+        "input_tokens_per_trial": 171979.66666666666,
+        "output_tokens_per_trial": 1261.0666666666666,
+        "total_cost": 2.2819122000000003
+      },
+      "spring": {
+        "trials": 15,
+        "skill_trials": 12,
+        "control_trials": 3,
+        "right_skill_used": 12,
+        "expected_loaded_anytime": 12,
+        "wrong_skill_only": 0,
+        "pass": 2,
+        "control_pass": 1,
+        "over_fetch": 0,
+        "trials_with_denial": 15,
+        "denials": 40,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 12,
+        "harness_errors": 0,
+        "cost_per_trial": 0.14147384000000002,
+        "input_tokens_per_trial": 138693.46666666667,
+        "output_tokens_per_trial": 1442.7333333333333,
+        "total_cost": 2.1221076
+      }
+    },
+    "claude-code|claude-sonnet-5-5|mcp-allow": {
+      "off": {
+        "trials": 30,
+        "skill_trials": 24,
+        "control_trials": 6,
+        "right_skill_used": 0,
+        "expected_loaded_anytime": 0,
+        "wrong_skill_only": 0,
+        "pass": 0,
+        "control_pass": 4,
+        "over_fetch": 0,
+        "trials_with_denial": 6,
+        "denials": 12,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 0,
+        "harness_errors": 0,
+        "cost_per_trial": 0.048387809999999996,
+        "input_tokens_per_trial": 85286.3,
+        "output_tokens_per_trial": 1011.9333333333333,
+        "total_cost": 1.4516342999999998
+      },
+      "native": {
+        "trials": 30,
+        "skill_trials": 24,
+        "control_trials": 6,
+        "right_skill_used": 9,
+        "expected_loaded_anytime": 9,
+        "wrong_skill_only": 0,
+        "pass": 6,
+        "control_pass": 4,
+        "over_fetch": 0,
+        "trials_with_denial": 6,
+        "denials": 10,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 0,
+        "harness_errors": 0,
+        "cost_per_trial": 0.08011359666666668,
+        "input_tokens_per_trial": 143091.76666666666,
+        "output_tokens_per_trial": 1287.8333333333333,
+        "total_cost": 2.4034079000000004
+      },
+      "spring": {
+        "trials": 30,
+        "skill_trials": 24,
+        "control_trials": 6,
+        "right_skill_used": 15,
+        "expected_loaded_anytime": 16,
+        "wrong_skill_only": 0,
+        "pass": 13,
+        "control_pass": 4,
+        "over_fetch": 0,
+        "trials_with_denial": 4,
+        "denials": 7,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 16,
+        "harness_errors": 0,
+        "cost_per_trial": 0.06910031666666666,
+        "input_tokens_per_trial": 120230.9,
+        "output_tokens_per_trial": 1335.4666666666667,
+        "total_cost": 2.0730095
+      }
+    },
+    "claude-code|claude-opus-5-5|mcp-allow": {
+      "off": {
+        "trials": 15,
+        "skill_trials": 12,
+        "control_trials": 3,
+        "right_skill_used": 0,
+        "expected_loaded_anytime": 0,
+        "wrong_skill_only": 0,
+        "pass": 0,
+        "control_pass": 2,
+        "over_fetch": 0,
+        "trials_with_denial": 3,
+        "denials": 6,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 0,
+        "harness_errors": 0,
+        "cost_per_trial": 0.14703629333333337,
+        "input_tokens_per_trial": 135961.06666666668,
+        "output_tokens_per_trial": 1621.8666666666666,
+        "total_cost": 2.2055444000000004
+      },
+      "native": {
+        "trials": 15,
+        "skill_trials": 12,
+        "control_trials": 3,
+        "right_skill_used": 4,
+        "expected_loaded_anytime": 5,
+        "wrong_skill_only": 0,
+        "pass": 6,
+        "control_pass": 2,
+        "over_fetch": 0,
+        "trials_with_denial": 6,
+        "denials": 9,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 0,
+        "harness_errors": 0,
+        "cost_per_trial": 0.21212224,
+        "input_tokens_per_trial": 209794.93333333332,
+        "output_tokens_per_trial": 1896.4,
+        "total_cost": 3.1818336
+      },
+      "spring": {
+        "trials": 15,
+        "skill_trials": 12,
+        "control_trials": 3,
+        "right_skill_used": 11,
+        "expected_loaded_anytime": 11,
+        "wrong_skill_only": 0,
+        "pass": 8,
+        "control_pass": 2,
+        "over_fetch": 0,
+        "trials_with_denial": 6,
+        "denials": 10,
+        "denied_skill_loads": 0,
+        "bundled_skill_cli_trials": 11,
+        "harness_errors": 0,
+        "cost_per_trial": 0.21279713333333333,
+        "input_tokens_per_trial": 190387.53333333333,
+        "output_tokens_per_trial": 2232.0666666666666,
+        "total_cost": 3.191957
+      }
+    }
+  },
+  "per_task": {
+    "claude-code|claude-sonnet-5-5|real": {
+      "C01": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "C02": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "C03": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "S01": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "data-loss-gate"
+            ],
+            []
+          ]
+        }
+      },
+      "S02": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "correction-pipeline"
+            ],
+            [
+              "correction-pipeline"
+            ]
+          ]
+        }
+      },
+      "S03": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "S04": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "meeting-ingestion"
+            ],
+            [
+              "meeting-ingestion"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "meeting-ingestion"
+            ],
+            [
+              "meeting-ingestion"
+            ]
+          ]
+        }
+      },
+      "S05": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "daily-task-manager"
+            ],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "daily-task-manager"
+            ],
+            [
+              "daily-task-manager"
+            ]
+          ]
+        }
+      },
+      "S06": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [],
+            [
+              "brain-link-discipline"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "S07": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "reports"
+            ],
+            [
+              "reports"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "reports"
+            ],
+            [
+              "reports"
+            ]
+          ]
+        }
+      },
+      "S08": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "idea-ingest"
+            ],
+            [
+              "idea-ingest"
+            ]
+          ]
+        }
+      },
+      "S09": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "ask-user"
+            ],
+            []
+          ]
+        }
+      },
+      "S10": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-taxonomist"
+            ],
+            [
+              "brain-taxonomist"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-taxonomist"
+            ],
+            [
+              "brain-taxonomist",
+              "brain-ingest-gate"
+            ]
+          ]
+        }
+      },
+      "S11": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [],
+            [
+              "enrich"
+            ]
+          ]
+        }
+      },
+      "S12": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 2,
+          "loaded": [
+            [
+              "citation-fixer"
+            ],
+            [
+              "citation-fixer"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 2,
+          "loaded": [
+            [
+              "citation-fixer"
+            ],
+            [
+              "citation-fixer"
+            ]
+          ]
+        }
+      }
+    },
+    "codex|gpt-6.1-sol|real": {
+      "C01": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [
+              "brain-ops"
+            ],
+            [
+              "brain-ops"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [
+              "brain-ops"
+            ],
+            [
+              "brain-ops"
+            ]
+          ]
+        }
+      },
+      "C02": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [
+              "brain-ops",
+              "query"
+            ],
+            [
+              "brain-ops"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            [
+              "brain-ops"
+            ],
+            [
+              "brain-ops"
+            ]
+          ]
+        }
+      },
+      "C03": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops"
+            ],
+            [
+              "brain-ops"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops"
+            ],
+            [
+              "brain-ops"
+            ]
+          ]
+        }
+      },
+      "S01": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "data-loss-gate"
+            ],
+            [
+              "data-loss-gate"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 1,
+          "loaded": [
+            [
+              "data-loss-gate",
+              "brain-ops",
+              "ask-user"
+            ],
+            [
+              "data-loss-gate",
+              "brain-ops",
+              "ask-user"
+            ]
+          ]
+        }
+      },
+      "S02": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "correction-pipeline"
+            ],
+            [
+              "brain-ops",
+              "correction-pipeline"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "correction-pipeline",
+              "brain-ops"
+            ],
+            [
+              "correction-pipeline",
+              "brain-ops"
+            ]
+          ]
+        }
+      },
+      "S03": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "fact-check"
+            ],
+            [
+              "brain-ops",
+              "fact-check"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "fact-check",
+              "brain-ops"
+            ],
+            [
+              "fact-check",
+              "brain-ops"
+            ]
+          ]
+        }
+      },
+      "S04": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "meeting-ingestion",
+              "brain-ops",
+              "enrich",
+              "brain-taxonomist",
+              "brain-ingest-gate",
+              "brain-link-discipline"
+            ],
+            [
+              "meeting-ingestion",
+              "brain-ops",
+              "brain-taxonomist",
+              "brain-ingest-gate",
+              "enrich",
+              "brain-link-discipline"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "meeting-ingestion",
+              "brain-ops",
+              "enrich"
+            ],
+            [
+              "meeting-ingestion",
+              "brain-ops",
+              "enrich"
+            ]
+          ]
+        }
+      },
+      "S05": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "daily-task-manager",
+              "brain-taxonomist"
+            ],
+            [
+              "daily-task-manager",
+              "brain-ops",
+              "brain-taxonomist"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "daily-task-manager",
+              "brain-ops"
+            ],
+            [
+              "daily-task-manager",
+              "brain-ops"
+            ]
+          ]
+        }
+      },
+      "S06": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "brain-link-discipline"
+            ],
+            [
+              "brain-ops",
+              "brain-link-discipline"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "brain-link-discipline"
+            ],
+            [
+              "brain-ops",
+              "brain-link-discipline"
+            ]
+          ]
+        }
+      },
+      "S07": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "reports",
+              "brain-ops",
+              "brain-taxonomist",
+              "brain-ingest-gate",
+              "brain-link-discipline"
+            ],
+            [
+              "reports",
+              "brain-ops",
+              "brain-taxonomist",
+              "brain-ingest-gate"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "reports",
+              "brain-ops"
+            ],
+            [
+              "reports",
+              "brain-ops"
+            ]
+          ]
+        }
+      },
+      "S08": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "idea-ingest",
+              "brain-ingest-gate",
+              "brain-taxonomist",
+              "brain-link-discipline"
+            ],
+            [
+              "brain-ops",
+              "brain-ingest-gate",
+              "idea-ingest",
+              "brain-taxonomist",
+              "brain-link-discipline",
+              "enrich"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [
+              "ingest",
+              "brain-ops"
+            ],
+            [
+              "ingest",
+              "brain-ops"
+            ]
+          ]
+        }
+      },
+      "S09": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops"
+            ],
+            [
+              "brain-ops"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "ask-user"
+            ],
+            [
+              "brain-ops",
+              "ask-user"
+            ]
+          ]
+        }
+      },
+      "S10": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "brain-taxonomist",
+              "brain-ingest-gate",
+              "brain-link-discipline"
+            ],
+            [
+              "brain-ops",
+              "brain-taxonomist",
+              "brain-ingest-gate",
+              "brain-link-discipline"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "brain-taxonomist",
+              "repo-architecture"
+            ],
+            [
+              "brain-taxonomist",
+              "brain-ops",
+              "repo-architecture"
+            ]
+          ]
+        }
+      },
+      "S11": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "brain-ingest-gate",
+              "brain-taxonomist",
+              "brain-link-discipline",
+              "enrich"
+            ],
+            [
+              "brain-ops",
+              "brain-ingest-gate",
+              "brain-taxonomist",
+              "brain-link-discipline",
+              "enrich"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-ops",
+              "enrich"
+            ],
+            [
+              "brain-ops",
+              "enrich"
+            ]
+          ]
+        }
+      },
+      "S12": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "citation-fixer",
+              "brain-ops"
+            ],
+            [
+              "citation-fixer",
+              "brain-ops"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 1,
+          "loaded": [
+            [
+              "citation-fixer",
+              "brain-ops"
+            ],
+            [
+              "citation-fixer",
+              "brain-ops"
+            ]
+          ]
+        }
+      }
+    },
+    "claude-code|claude-opus-5-5|real": {
+      "C01": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        }
+      },
+      "C02": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        }
+      },
+      "C03": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        }
+      },
+      "S01": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "data-loss-gate"
+            ]
+          ]
+        }
+      },
+      "S02": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "correction-pipeline"
+            ]
+          ]
+        }
+      },
+      "S03": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "fact-check"
+            ]
+          ]
+        }
+      },
+      "S04": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "meeting-ingestion"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "meeting-ingestion"
+            ]
+          ]
+        }
+      },
+      "S05": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "daily-task-manager"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "daily-task-manager"
+            ]
+          ]
+        }
+      },
+      "S06": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-link-discipline"
+            ]
+          ]
+        }
+      },
+      "S07": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "reports"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "reports"
+            ]
+          ]
+        }
+      },
+      "S08": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "idea-ingest"
+            ]
+          ]
+        }
+      },
+      "S09": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "ask-user"
+            ]
+          ]
+        }
+      },
+      "S10": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "repo-architecture"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-taxonomist"
+            ]
+          ]
+        }
+      },
+      "S11": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "enrich"
+            ]
+          ]
+        }
+      },
+      "S12": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "citation-fixer"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "citation-fixer"
+            ]
+          ]
+        }
+      }
+    },
+    "claude-code|claude-sonnet-5-5|mcp-allow": {
+      "C01": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "C02": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 2,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "C03": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "S01": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "S02": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "correction-pipeline"
+            ],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 1,
+          "loaded": [
+            [
+              "correction-pipeline"
+            ],
+            [
+              "correction-pipeline"
+            ]
+          ]
+        }
+      },
+      "S03": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "S04": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [],
+            [
+              "meeting-ingestion"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 2,
+          "loaded": [
+            [
+              "meeting-ingestion"
+            ],
+            [
+              "meeting-ingestion"
+            ]
+          ]
+        }
+      },
+      "S05": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 2,
+          "loaded": [
+            [
+              "daily-task-manager"
+            ],
+            [
+              "daily-task-manager"
+            ]
+          ]
+        }
+      },
+      "S06": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 1,
+          "pass": 2,
+          "loaded": [
+            [
+              "brain-link-discipline"
+            ],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 1,
+          "pass": 2,
+          "loaded": [
+            [
+              "brain-link-discipline"
+            ],
+            [
+              "brain-link-discipline"
+            ]
+          ]
+        }
+      },
+      "S07": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "reports"
+            ],
+            [
+              "reports"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 2,
+          "loaded": [
+            [
+              "reports"
+            ],
+            [
+              "reports"
+            ]
+          ]
+        }
+      },
+      "S08": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 2,
+          "loaded": [
+            [
+              "idea-ingest"
+            ],
+            [
+              "idea-ingest"
+            ]
+          ]
+        }
+      },
+      "S09": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "S10": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-taxonomist"
+            ],
+            [
+              "brain-taxonomist"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-taxonomist",
+              "brain-ingest-gate"
+            ],
+            [
+              "brain-taxonomist"
+            ]
+          ]
+        }
+      },
+      "S11": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        }
+      },
+      "S12": {
+        "off": {
+          "n": 2,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            [],
+            []
+          ]
+        },
+        "native": {
+          "n": 2,
+          "right": 2,
+          "pass": 2,
+          "loaded": [
+            [
+              "citation-fixer"
+            ],
+            [
+              "citation-fixer"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 2,
+          "right": 2,
+          "pass": 2,
+          "loaded": [
+            [
+              "citation-fixer"
+            ],
+            [
+              "citation-fixer"
+            ]
+          ]
+        }
+      }
+    },
+    "claude-code|claude-opus-5-5|mcp-allow": {
+      "C01": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        }
+      },
+      "C02": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        }
+      },
+      "C03": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        }
+      },
+      "S01": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "data-loss-gate"
+            ]
+          ]
+        }
+      },
+      "S02": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "correction-pipeline"
+            ]
+          ]
+        }
+      },
+      "S03": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "fact-check"
+            ]
+          ]
+        }
+      },
+      "S04": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "meeting-ingestion"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "meeting-ingestion"
+            ]
+          ]
+        }
+      },
+      "S05": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "daily-task-manager"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "daily-task-manager"
+            ]
+          ]
+        }
+      },
+      "S06": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            [
+              "brain-link-discipline"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "brain-link-discipline"
+            ]
+          ]
+        }
+      },
+      "S07": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "reports"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "reports"
+            ]
+          ]
+        }
+      },
+      "S08": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "idea-ingest"
+            ]
+          ]
+        }
+      },
+      "S09": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "ask-user"
+            ]
+          ]
+        }
+      },
+      "S10": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 0,
+          "loaded": [
+            [
+              "brain-taxonomist"
+            ]
+          ]
+        }
+      },
+      "S11": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 0,
+          "pass": 1,
+          "loaded": [
+            []
+          ]
+        }
+      },
+      "S12": {
+        "off": {
+          "n": 1,
+          "right": 0,
+          "pass": 0,
+          "loaded": [
+            []
+          ]
+        },
+        "native": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "citation-fixer"
+            ]
+          ]
+        },
+        "spring": {
+          "n": 1,
+          "right": 1,
+          "pass": 1,
+          "loaded": [
+            [
+              "citation-fixer"
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "decision": {
+    "claude-code|real": {
+      "trials": {
+        "off": 36,
+        "native": 36,
+        "spring": 36
+      },
+      "right_skill_used": {
+        "off": 0,
+        "native": 15,
+        "spring": 29
+      },
+      "pass": {
+        "off": 0,
+        "native": 4,
+        "spring": 6
+      },
+      "right_ok": true,
+      "pass_ok": true,
+      "standing_tokens_below_native": true,
+      "spring_added_standing_tokens_over_off": {
+        "claude-sonnet-5-5": 2057,
+        "claude-opus-5-5": 2057
+      },
+      "propose_spring_default": true
+    },
+    "claude-code|mcp-allow": {
+      "trials": {
+        "off": 36,
+        "native": 36,
+        "spring": 36
+      },
+      "right_skill_used": {
+        "off": 0,
+        "native": 13,
+        "spring": 26
+      },
+      "pass": {
+        "off": 0,
+        "native": 12,
+        "spring": 21
+      },
+      "right_ok": true,
+      "pass_ok": true,
+      "standing_tokens_below_native": true,
+      "spring_added_standing_tokens_over_off": {
+        "claude-sonnet-5-5": 2057,
+        "claude-opus-5-5": 2057
+      },
+      "propose_spring_default": true
+    },
+    "codex|real": {
+      "trials": {
+        "off": 24,
+        "native": 24,
+        "spring": 24
+      },
+      "right_skill_used": {
+        "off": 0,
+        "native": 22,
+        "spring": 22
+      },
+      "pass": {
+        "off": 0,
+        "native": 0,
+        "spring": 2
+      },
+      "right_ok": true,
+      "pass_ok": true,
+      "standing_tokens_below_native": true,
+      "spring_added_standing_tokens_over_off": {
+        "gpt-6.1-sol": 1429
+      },
+      "propose_spring_default": true
+    }
+  },
+  "standing_tokens": {
+    "claude-code|claude-sonnet-5-5": {
+      "bare": 16638,
+      "bare_samples": [
+        16638,
+        16638
+      ],
+      "off": 18817,
+      "off_samples": [
+        18817,
+        18817
+      ],
+      "native": 27396,
+      "native_samples": [
+        27396,
+        27396
+      ],
+      "spring": 20874,
+      "spring_samples": [
+        20874,
+        20874
+      ]
+    },
+    "claude-code|claude-opus-5-5": {
+      "bare": 16632,
+      "bare_samples": [
+        16632,
+        16632
+      ],
+      "off": 18811,
+      "off_samples": [
+        18811,
+        18811
+      ],
+      "native": 27390,
+      "native_samples": [
+        27390,
+        27390
+      ],
+      "spring": 20868,
+      "spring_samples": [
+        20868,
+        20868
+      ]
+    },
+    "codex|gpt-6.1-sol": {
+      "bare": 13375,
+      "bare_samples": [
+        13375,
+        13375
+      ],
+      "off": 13605,
+      "off_samples": [
+        13605,
+        13605
+      ],
+      "native": 20025,
+      "native_samples": [
+        20025,
+        20025
+      ],
+      "spring": 15034,
+      "spring_samples": [
+        15034,
+        15034
+      ]
+    }
+  }
+}

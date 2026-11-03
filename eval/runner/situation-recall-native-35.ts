@@ -75,6 +75,7 @@ export function collectNativeRows35(artifact: unknown): NativeRegressionObservat
   const envelope = object(artifact, 'Cat35 envelope');
   const receipt = object(envelope.receipt, 'Cat35 receipt');
   requireEvidence(receipt.cat === 'cat35-transcript-distill' && receipt.schema_version === 1, 'wrong native receipt category/version');
+  requireEvidence(receipt.external_lane == null, 'the receipt scored an external lane, whose documents have no recorded provenance; it cannot supply gbrain observations');
   const evidence = object(receipt.native_evidence, 'Cat35 native_evidence');
   requireEvidence(evidence.schema_version === 1, 'native_evidence v1 is required; legacy aggregates cannot supply observations');
   requireEvidence(evidence.judge_accounting_unit === 'runner_judge_invocation_after_retries', 'unsupported judge accounting denominator');

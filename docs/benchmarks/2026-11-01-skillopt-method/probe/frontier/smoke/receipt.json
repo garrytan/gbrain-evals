@@ -1,0 +1,263 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n15-skillopt-method",
+  "gbrain_version": "0.60.542.0",
+  "gbrain_pin": "github:garrytan/gbrain#ca1281a2ed3236ac45adddb2d08e84423769c321",
+  "execution": {
+    "source_tree": {
+      "sha256": "d52d4606f6d943cc88b12c093eaeea936db97a21a1af706c763997676c4cdb62",
+      "scheme": "git-index-blob-v1",
+      "files": 15345,
+      "git_head": "a1147c9709337e90ba0b4231dc2c228d18c86d7a",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#ca1281a2ed3236ac45adddb2d08e84423769c321",
+      "declared_sha": "ca1281a2ed3236ac45adddb2d08e84423769c321",
+      "version": "0.60.542.0",
+      "package_sha256": "52ded02fb79721deb9d3d5788fec67190e7cb5d4fa10b40e254a3db888decfac",
+      "loaded_git_head": null
+    }
+  },
+  "hashes": {
+    "dataset": "skillopt-method-v2",
+    "dataset_manifest_sha256": "df512633dd5d2f28c67ebc3d92c523c361c87747242f9b13713f7b14fe0c3d6d",
+    "skillopt-method-v1_manifest_sha256": "8ff8a0ec97e03e3550de18821d8ebdf08f9dbfd6342f9dc2c5914d33c17e4642",
+    "criteria_query_sha256": "30ea291076101a9ca920f1fa14e267c6e67a2da88141199d67ba6b615ce5b53a",
+    "criteria_briefing_sha256": "6c848a2ed99137a88ed5fdcec237b6337adb1a26fec75e22b99c2667c64e64df",
+    "criteria_fact-check_sha256": "be49c653556c5917e302f91ca80a660cfdd27ba32031b048bc9c2ec9a512d399",
+    "seeds_gbrain_commit": "3ec766c40664b652b14e39788d177139f5a7b105"
+  },
+  "started_at": "2026-11-02T00:00:53.567Z",
+  "cost": {
+    "usd": 0.154182,
+    "input_tokens": 92579,
+    "output_tokens": 1325,
+    "basis": "budget ledger n15-skillopt-method-frontier-probe-2026-11-02T00-00-46-604Z-1ae07142: 8 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<work>/ledger.sqlite",
+    "program_cap_usd": 360,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 5,
+      "max": 5270.7
+    }
+  },
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 2,
+  "n_scored": 2,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md",
+    "preregistration_commit": "a1147c9709337e90ba0b4231dc2c228d18c86d7a",
+    "runner_commit": "a1147c9709337e90ba0b4231dc2c228d18c86d7a",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-02T00:00:53.571Z"
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "mode": "smoke",
+    "skill": "query",
+    "models": {
+      "opus": "anthropic:claude-opus-5-5",
+      "sol": "openai:gpt-6.1-sol"
+    }
+  },
+  "finished_at": "2026-11-02T00:01:28.128Z",
+  "data": {
+    "smoke": [
+      {
+        "target": "opus",
+        "model": "anthropic:claude-opus-5-5",
+        "skill": "query",
+        "task_id": "query-train-01",
+        "turns": 3,
+        "stop_reason": "end",
+        "tool_calls": [
+          "search",
+          "get_page",
+          "get_backlinks",
+          "get_page"
+        ],
+        "correct": true,
+        "usage": {
+          "input_tokens": 64081,
+          "output_tokens": 1162,
+          "cache_read_tokens": 44637,
+          "cache_creation_tokens": 19434
+        },
+        "cost": {
+          "rollouts": 1,
+          "calls": 4,
+          "usd": 0.1293774,
+          "unpriced_calls": 0,
+          "input_tokens": 64081,
+          "output_tokens": 1162,
+          "cache_read_tokens": 44637,
+          "cache_creation_tokens": 19434,
+          "reasoning_tokens": 264,
+          "mean_rollout_usd": 0.1293774,
+          "calls_per_rollout": 4,
+          "cached_input_share": 0.696571526661569,
+          "reasoning_tokens_per_rollout": 264
+        },
+        "request_settings": [
+          {
+            "host": "api.anthropic.com",
+            "model": "claude-opus-5-5",
+            "sent": {
+              "thinking": null,
+              "max_tokens": 32000,
+              "temperature": null,
+              "top_p": null,
+              "top_k": null,
+              "tool_choice": {
+                "type": "auto"
+              },
+              "tools": 13
+            },
+            "requests": 4
+          }
+        ],
+        "files_read": [
+          "eval/data/skillopt-method-v2/query/train.jsonl"
+        ]
+      },
+      {
+        "target": "sol",
+        "model": "openai:gpt-6.1-sol",
+        "skill": "query",
+        "task_id": "query-train-01",
+        "turns": 3,
+        "stop_reason": "end",
+        "tool_calls": [
+          "search",
+          "traverse_graph",
+          "search"
+        ],
+        "correct": false,
+        "usage": {
+          "input_tokens": 28498,
+          "output_tokens": 163,
+          "cache_read_tokens": 20027,
+          "cache_creation_tokens": 0
+        },
+        "cost": {
+          "rollouts": 1,
+          "calls": 4,
+          "usd": 0.020574699999999998,
+          "unpriced_calls": 0,
+          "input_tokens": 28498,
+          "output_tokens": 163,
+          "cache_read_tokens": 20027,
+          "cache_creation_tokens": 0,
+          "reasoning_tokens": 0,
+          "mean_rollout_usd": 0.020574699999999998,
+          "calls_per_rollout": 4,
+          "cached_input_share": 0.702751070250544,
+          "reasoning_tokens_per_rollout": 0
+        },
+        "request_settings": [
+          {
+            "host": "api.openai.com",
+            "model": "gpt-6.1-sol",
+            "sent": {
+              "reasoning": null,
+              "max_output_tokens": 4096,
+              "temperature": null,
+              "top_p": null,
+              "tool_choice": "auto",
+              "parallel_tool_calls": null,
+              "store": null,
+              "service_tier": null,
+              "truncation": null,
+              "text": null,
+              "tools": 13,
+              "instructions_role": "developer"
+            },
+            "applied_reasoning_effort": "medium",
+            "requests": 4
+          }
+        ],
+        "files_read": [
+          "eval/data/skillopt-method-v2/query/train.jsonl"
+        ]
+      }
+    ],
+    "ledger_calls": [
+      {
+        "description": "anthropic:claude-opus-5-5 chat",
+        "input_tokens": 11324,
+        "output_tokens": 54,
+        "usd": 0.057696,
+        "status": "reconciled"
+      },
+      {
+        "description": "anthropic:claude-opus-5-5 chat",
+        "input_tokens": 15718,
+        "output_tokens": 147,
+        "usd": 0.027192,
+        "status": "reconciled"
+      },
+      {
+        "description": "anthropic:claude-opus-5-5 chat",
+        "input_tokens": 17603,
+        "output_tokens": 219,
+        "usd": 0.0169562,
+        "status": "reconciled"
+      },
+      {
+        "description": "anthropic:claude-opus-5-5 chat",
+        "input_tokens": 19436,
+        "output_tokens": 742,
+        "usd": 0.0275332,
+        "status": "reconciled"
+      },
+      {
+        "description": "openai:gpt-6.1-sol chat",
+        "input_tokens": 5673,
+        "output_tokens": 30,
+        "usd": 0.014481,
+        "status": "reconciled"
+      },
+      {
+        "description": "openai:gpt-6.1-sol chat",
+        "input_tokens": 7140,
+        "output_tokens": 53,
+        "usd": 0.0047705,
+        "status": "reconciled"
+      },
+      {
+        "description": "openai:gpt-6.1-sol chat",
+        "input_tokens": 7223,
+        "output_tokens": 34,
+        "usd": 0.0012672,
+        "status": "reconciled"
+      },
+      {
+        "description": "openai:gpt-6.1-sol chat",
+        "input_tokens": 8462,
+        "output_tokens": 46,
+        "usd": 0.0042855,
+        "status": "reconciled"
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 2,
+    "attempted": 2,
+    "scored": 2,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "delivered_tokens": null
+}

@@ -229,8 +229,19 @@ describe('paid-arm guard', () => {
     expect(paidGuard([], selectCategories('offline').dispatch, { ledgerPath })).toEqual({});
     const run = BudgetRun.open({ runner: 'eval-category-wave', budgetUsd: 10, ledgerPath });
     expect(paidGuard(['--paid', '--budget-run-id', run.runId], selectCategories('paid', parseOnly(['--only', 'relational-ab'])).dispatch, { ledgerPath }))
-      .toEqual({ BRAINBENCH_BUDGET_RUN_ID: run.runId });
+      .toEqual({ BRAINBENCH_BUDGET_RUN_ID: run.runId, BRAINBENCH_BUDGET_LEDGER: ledgerPath });
     rmSync(dir, { recursive: true, force: true });
+  });
+
+  // Value: protects=a sweep given --budget-ledger <path> hands its children that ledger, so Cat 15/25 find the run id there instead of refusing it from the default ledger; fails_when=paidGuard returns only the run id; why_new=children got the id but not the ledger, so a custom-ledger sweep was refused; seam=none; no_claim=env only, no spawn
+  test('all.ts hands children the --budget-ledger it checked the run in', () => {
+    const own = join(mkdtempSync(join(tmpdir(), 'paid-arm-ledger-')), 'ledger.sqlite');
+    initLedger({ ledgerPath: own });
+    const run = BudgetRun.open({ runner: 'eval-category-wave', budgetUsd: 10, ledgerPath: own });
+    const dispatch = selectCategories('paid', parseOnly(['--only', 'relational-ab'])).dispatch;
+    expect(paidGuard(['--paid', '--budget-run-id', run.runId, '--budget-ledger', own], dispatch))
+      .toEqual({ BRAINBENCH_BUDGET_RUN_ID: run.runId, BRAINBENCH_BUDGET_LEDGER: own });
+    rmSync(join(own, '..'), { recursive: true, force: true });
   });
 });
 

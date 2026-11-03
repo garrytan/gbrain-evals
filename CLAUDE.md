@@ -31,7 +31,7 @@ The LongMemEval embedding cache is local and uncommitted. Its default location i
 README.md, the hub pages in `docs/` (index, settings, retrieval lessons, comparisons) and the guides in `eval/` (README, CONTRIBUTING, CREDITS) have two parts:
 
 1. **Current state, on top.** A first-time reader, human or agent, learns what gbrain does at the commit `package.json` pins, in present tense. Name the pin once; give each number its gbrain commit when it differs from the pin. Replace a superseded claim instead of appending an "Update" or a dated amendment beside it.
-2. **`## Changelog`, at the bottom.** Newest first, one `### YYYY-MM-DD: <what changed>` entry per change, linking the commit, saying what changed on that page (old value to new value) and why. History, superseded numbers and corrections to earlier wording live here, in dated reports and in CHANGELOG.md.
+2. **`## Changelog`, at the bottom.** Newest first, one `### YYYY-MM-DD: <what changed>` entry per change, linking the commit, saying what changed on that page (old value to new value) and why. History, superseded numbers and corrections to earlier wording live here, in dated reports and in CHANGELOG.md. A published number later found invalid or overstated is listed in [docs/corrections.md](docs/corrections.md), not in a current-state part.
 
 README's current state has three parts, in this order: **what gbrain does** (capabilities in plain words), **current results** (one table, each number with its gbrain commit and report) and **how gbrain compares** with other systems, to the best we know. Put gbrain's best foot forward, exactly: lead with what it does well, keep each comparison on a matched metric, and list known limits after. Never add an "Update, <date>" block; fold a new result into the right table and record the change in the changelog.
 
@@ -79,15 +79,44 @@ For a new report:
 5. Write the report from the results, including unsuccessful candidates.
 6. Run the relevant artifact, data and documentation checks.
 
+### Test lanes and CI
+
+CI is the one full test run. `.gstack/pregate.json` maps these exact /ship lane commands in `ship_lanes_from`: `bun run test`, `TEST_SHARDS=1 bun run test`, `TEST_SHARDS=2 bun run test`, `bun run test:unit` and `bun run test:py`. Once CI has passed at the branch's exact, clean tree, /ship takes that run as the lane's result (`LANE: <label> carried run=<id>/<attempt>`) instead of running the suite again, and the pregate's tests stage does the same for the test files it selects (`CI_CARRY: accepted`). Both read the record that CI's `tested-tree` job writes with `scripts/ci-tested-tree.ts`, which names the tree the run tested and every test file it ran.
+
+Pass the full suite to /ship as `--lane test='bun run test'` and push early, so CI runs beside the review. A pull-request run tests GitHub's merge of the branch into main, so it carries only while the branch contains main's tip. Any other lane command, the typecheck included, runs on your machine. The `tested-tree` job fails when a test file under `test/eval/` or `eval/` registers no tests, because Bun's report leaves the file out and no lane could carry; give it at least one test (a skipped one counts).
+
 ### Choose models
 
-Every model-comparison run (Cat 40 Model Ladder, answer-model benchmarks and any paid agent-task eval) uses current
-frontier models. These rules follow the gbrain project rule of 2026-10-07.
+gbrain and gstack are built for frontier models, so every model-comparison run (Cat 40 Model Ladder, answer-model
+benchmarks and any paid agent-task eval) tests them on the newest frontier Opus and GPT, today `claude-opus-5-5` and
+`gpt-6.1-sol`, plus `particle-1` as the primary low-cost model. These rules follow the gbrain project rule of
+2026-10-07, Garry's decision of 2026-10-31 that `claude-opus-5-5` and `particle-1` are the primary models, and his
+rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
 
-- **Always run the newest frontier model of each family:** Opus, GPT and Sonnet. Today's counted readers are
-  `claude-opus-5-5`, `claude-sonnet-5-5` and `gpt-6.1-sol`. Before a run, check which models are newest
-  (`bun scripts/model-freshness.ts` reads the providers' model lists) and add any that the run doesn't already
-  include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
+- **Run the primary models: `claude-opus-5-5` and the newest Particle model, today `particle-1` (Garry, 2026-10-31).**
+  Every model-comparison run includes both as readers or agents, and its first table shows both with cost per correct
+  answer. A campaign already preregistered adds particle-1 at its next amendment. particle-1 is Particle AI's low-cost
+  model, called as `particle:particle-1` through `https://api.particle.ai/v1` with `PARTICLE_API_KEY` (Chat Completions
+  only; responses name it `particle-ai/particle-1`). Send `reasoning_effort` explicitly (counted cells use `high`, its
+  default, unless the campaign fixes one effort for every reader) and an output limit with room for reasoning; the
+  receipt records the effort sent and effective, the limit and the weight version. A runner with no `particle:` route
+  lists particle-1 under `models_not_run` with the reason. First paired numbers:
+  [particle replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
+- **Always run the newest frontier Opus and GPT.** Today's counted frontier readers are `claude-opus-5-5` and
+  `gpt-6.1-sol`. Before a run, check which models are newest (`bun scripts/model-freshness.ts` reads the providers'
+  model lists, Particle's included) and add any that the run doesn't already include. Register a price for a new model
+  in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
+- **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (for example `gpt-4o-2024-08-06` for
+  LongMemEval and `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes the default reader and agent for a development loop
+  once it passes that loop's preregistered agreement test; development judges are the ones the dataset's harness fixes,
+  else `gpt-6.1-sol`.
+- **Sonnet and Haiku are not models under test (Garry, 2026-11-01).** A comparison run no longer needs them. Never run
+  one as an agent, reader, answer model, optimizer or optimization target, never use one as a stand-in for a frontier
+  model, and never spend a run on transfer between them. The exception is a run that asks a question about that tier
+  and says so in its preregistration or brief.
+- **Judges are separate from the models under test.** A protocol's judge stays. Where the protocol leaves the judge
+  open, a cheaper judge is fine, Sonnet and Haiku included, as long as no model judges its own family's rows: a Claude
+  judge never grades a Claude model's answers, and a GPT judge never grades a GPT model's.
 - **Fable is for smoke tests only (Garry, 2026-10-07).** Opus 5.5 is the top Anthropic model in counted runs. Run
   Fable only in small smoke tests (for example a pre-merge agent smoke), never in paid counted cells, practice
   rounds or held-out runs. A run already preregistered with Fable records the change and its reason in the
@@ -97,10 +126,19 @@ frontier models. These rules follow the gbrain project rule of 2026-10-07.
   results. If a model that appears in both runs already gives that link, add no older model. `gpt-4.1-mini` runs
   only under this exception, as the bridge to earlier BEAM runs.
 - **Do not run gpt-5.4-mini.** Never base a product change, gate or release decision on a gpt-5.4-mini-only finding.
-- **Report the models people use first.** Note a ceiling (a model at 100% on every arm cannot show a difference)
+- **Report the models people use first** after the primary models' first table. A reader-matched comparison with a
+  published system keeps that system's reader. Note a ceiling (a model at 100% on every arm cannot show a difference)
   rather than counting it as a win or a tie.
 - **Preregistered gates keep their model list.** To change the models of an existing preregistered gate, record the
-  change and its reason in the preregistration before any new cell runs.
+  change and its reason in the preregistration before any new cell runs. A preregistered program that names Sonnet or
+  Haiku as a model under test makes that change before its next run: Opus 5.5, GPT-6.1 Sol and, where the runner has a
+  route, particle-1.
+- **Defaults follow the same rules.** A live category's default models are current-generation models, and its default
+  models under test are frontier models, never Sonnet or Haiku. `test/eval/model-defaults.test.ts` holds both, for
+  single defaults and for comparison sets. A default that keeps an older model, or a Sonnet or Haiku model under test,
+  on purpose (a frozen protocol, a mirror of gbrain's own default, or a dated move that waits on named follow-up work)
+  is a named exception with its reason in `eval/runner/model-defaults.ts`. Changing a default is a new receipt
+  identity: never pool its results with the old model's.
 
 To add a category, follow the "Add a category" checklist in [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md): registry row and preregistered promotion rules first, the shared hermetic environment, the paid-arm guard, the scorer mutation kit and the bug ledger.
 
@@ -117,6 +155,7 @@ Follow the current task's branch and review instructions. This guide does not au
 | Source separation | Source-isolation and multi-source tests |
 | Transcript ingestion, fact extraction or synthesis | Cat35 |
 | Automatic memory injection and continuity | Cat34 |
+| A shipped skill (`query`, `briefing`, `fact-check`) or SkillOpt itself | SkillOpt method task sets (`skillopt-method`, N15): `bun eval/runner/n15-skillopt-method.ts` keyless, then the A1 probe |
 
 A feature change should have evidence on the behavior it changes. A benchmark that stays flat can still provide a useful regression check. For changes outside the current task, record follow-up work rather than silently expanding scope.
 

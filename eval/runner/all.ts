@@ -21,7 +21,10 @@
  * **Paid guard:** a selection that includes any K or P category refuses to
  * start without both `--paid` and `--budget-run-id <id>` naming an open run
  * in the budget ledger (eval/runner/paid-arm.ts). The id reaches every child
- * as BRAINBENCH_BUDGET_RUN_ID, so runners that use startPaidRun join it.
+ * as BRAINBENCH_BUDGET_RUN_ID and the ledger path (`--budget-ledger` or the
+ * default) as BRAINBENCH_BUDGET_LEDGER, so runners that use startPaidRun join
+ * that run in that ledger, and a runner whose registry row sets `paidFlags`
+ * also gets `--paid --budget-run-id <id>`.
  *
  * **Shape:** each dispatched runner runs in its own Bun subprocess (isolated
  * PGLite engine, stdout/stderr captured). Subprocesses run concurrently
@@ -74,6 +77,7 @@ import { basename, join } from 'path';
 import { loadReceipt, receiptPath, type Receipt } from './receipt.ts';
 import { REGISTRY, registryEntry, tiersFor, type CategoryEntry, type GateStatus, type PromotionRules, type RegistryTier, type TierSelection } from '../registry.ts';
 import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
+import { budgetOptionsFrom } from './budget-ledger.ts';
 import { describeOutcome, evaluatePromotion } from './promotion.ts';
 
 // ─── Category registry ───────────────────────────────────────────────
@@ -100,6 +104,8 @@ interface DispatchedCategory {
   timeoutMs?: number;
   /** Latency benchmark: runs alone, never alongside another category. */
   exclusive?: boolean;
+  /** The runner refuses a live run without `--paid --budget-run-id <id>`; childArgs passes both. */
+  paidFlags?: true;
   /** report-only: a completed non-pass verdict is reported, not failed (registry gate). */
   gate: GateStatus;
   /** Preregistered promotion rules; all.ts gates on these when present. */
@@ -183,6 +189,11 @@ export function parseOnly(argv: string[]): Set<string> | null {
   return new Set(names.map(n => registryEntry(n)!.id));
 }
 
+/** A dispatched runner's argv: its registry args, plus `--paid --budget-run-id <id>` for a runner that requires them. */
+export function childArgs(cat: Pick<DispatchedCategory, 'script' | 'args' | 'paidFlags'>, budgetRunId: string | undefined): string[] {
+  return [cat.script, ...(cat.args ?? []), ...(cat.paidFlags && budgetRunId ? ['--paid', '--budget-run-id', budgetRunId] : [])];
+}
+
 /** Split the registry into what runs in this tier and what does not, with a reason for each omission. */
 export function selectCategories(tier: TierSelection, only: ReadonlySet<string> | null = null): { dispatch: DispatchedCategory[]; notRun: NotRun[] } {
   const dispatch: DispatchedCategory[] = [];
@@ -196,7 +207,7 @@ export function selectCategories(tier: TierSelection, only: ReadonlySet<string> 
     } else if (selected.has(c.registryTier)) {
       dispatch.push(c);
     } else {
-      notRun.push({ id: c.id, name: c.name, tier: c.tier, reason: `tier ${c.registryTier} not selected`, command: `bun ${[c.script, ...(c.args ?? [])].join(' ')}` });
+      notRun.push({ id: c.id, name: c.name, tier: c.tier, reason: `tier ${c.registryTier} not selected`, command: `bun ${childArgs(c, '<id>').join(' ')}` });
     }
   }
   return { dispatch, notRun };
@@ -325,7 +336,7 @@ function runCatSubprocess(cat: DispatchedCategory): Promise<CategoryRun> {
     let output = '';
     let settled = false;
     const base = { id: cat.id, name: cat.name, tier: cat.tier, script: cat.script };
-    const child = spawn('bun', [cat.script, ...(cat.args ?? []), ...(outputDir ? [cat.outputFlag!, outputDir] : [])], {
+    const child = spawn('bun', [...childArgs(cat, process.env.BRAINBENCH_BUDGET_RUN_ID), ...(outputDir ? [cat.outputFlag!, outputDir] : [])], {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, ...(cat.env ?? {}) },
     });
@@ -510,14 +521,16 @@ export function printNotRun(notRun: NotRun[], log: (s: string) => void = console
 
 /**
  * Refuse a selection that includes a K or P category unless `--paid` and
- * `--budget-run-id` name an open budget run; returns the env every child gets.
+ * `--budget-run-id` name an open budget run; returns the env every child
+ * gets: the run id and the ledger it is in.
  */
 export function paidGuard(argv: readonly string[], dispatch: readonly DispatchedCategory[], ledger: { ledgerPath?: string } = {}): Record<string, string> {
   const paid = dispatch.filter(c => c.registryTier !== 'H');
   if (paid.length === 0) return {};
   const estimate = paid.some(c => c.costUsd === null) ? null : paid.reduce((n, c) => n + (c.costUsd ?? 0), 0);
-  const { budgetRunId } = requirePaidArm(argv, { arm: `all.ts with ${paid.length} paid categor${paid.length > 1 ? 'ies' : 'y'} (${paid.map(c => `Cat ${c.id}`).join(', ')})`, estimateUsd: estimate, ...ledger });
-  return { BRAINBENCH_BUDGET_RUN_ID: budgetRunId };
+  const ledgerPath = ledger.ledgerPath ?? budgetOptionsFrom(argv).ledgerPath;
+  const { budgetRunId } = requirePaidArm(argv, { arm: `all.ts with ${paid.length} paid categor${paid.length > 1 ? 'ies' : 'y'} (${paid.map(c => `Cat ${c.id}`).join(', ')})`, estimateUsd: estimate, ledgerPath });
+  return { BRAINBENCH_BUDGET_RUN_ID: budgetRunId, BRAINBENCH_BUDGET_LEDGER: ledgerPath };
 }
 
 async function main() {

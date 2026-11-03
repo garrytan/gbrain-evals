@@ -1,8 +1,13 @@
 # Contributing to BrainBench
 
-Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, or a reproduction of a published result.
+Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, another system's notes scored on Cat 35, or a reproduction of a published result.
 
-Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `77cf8e111` (v0.60.169.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
+Work from the repository root.
+Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators.
+The gbrain under test is the one `package.json` declares, master `62637c96a` (v0.60.557.0); a category scores what gbrain implements at that commit.
+Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models): gbrain and gstack are built for frontier models, so runs test them on the newest frontier Opus and GPT (today `claude-opus-5-5` and `gpt-6.1-sol`) plus `particle-1` as the primary low-cost model, and never use Sonnet or Haiku as a model under test.
+The primary models are `claude-opus-5-5` and `particle-1`, and a runner that calls models supports both (particle-1 through `eval/runner/providers/openai-compatible.ts`) or lists the one it cannot run under `models_not_run`.
+Everything above [Changelog](#changelog) is current.
 
 ## Write questions in your own words
 
@@ -97,6 +102,68 @@ example capability record, are in [docs/scoreboard.md](../docs/scoreboard.md#add
 `bun run eval:scoreboard fixture` runs the whole pipeline on the fake system for $0 and is the quickest check that a
 harness change did not break the wiring.
 
+## Score another system's Cat 35 documents
+
+Cat 35 plants facts, decisions and distractors in 24 fictional agent conversations, then asks a judge how many of
+the planted facts survive into the notes gbrain writes from each conversation. If your system also turns a conversation
+into Markdown notes, the runner can score those notes with the same judge, on the same items, in the same run as gbrain's
+lanes.
+
+1. Run your system on the conversations in `eval/data/transcript-distill-v1/transcripts/` (Claude Code JSONL; plain-text
+   renderings are in `transcripts-txt/`). Do not read `gold/`: it holds the answer keys.
+2. Write one file per conversation into one folder, named `<transcript_id>.md` (for example `coding-reflection-01.md`).
+   An empty file is a valid answer. A missing file is a lane error for that conversation and scores zero.
+3. Score the folder next to the verbatim lane:
+
+   ```sh
+   CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts --budget-usd 40 \
+     --lanes verbatim --external-lane ext-notes --external-dir path/to/folder
+   ```
+
+   Without `CAT35_FULL=1` the runner scores the two-conversation smoke set. `--lanes none` scores only your folder. A run
+   needs `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` like any Cat 35 run. Before the first judge call the runner prints
+   its pre-flight cost projection, with your lane's share, and refuses to start when the projection exceeds
+   `CAT35_HARD_STOP_USD` (default $40). Your lane's share is priced from the documents it read, as the judge receives
+   them: every judge call that can read a document, its claims or the conversation, at the judge model's rates, each
+   with its full answer allowance and one retry, so a folder of large documents judged by an Opus or GPT model can
+   exceed the default cap. The runner also refuses when the projection exceeds `--budget-usd`. With the default
+   `gpt-6.1-sol` judge, the command above projects $13.80 for the verbatim lane plus your lane's share, about $16 to $20
+   for documents the size of gbrain's published dream and facts pages, so it authorizes $40.
+
+Your lane is judged the way gbrain's dream lane is, on recall of the planted facts with an evidence check that the quote
+the judge cites is in your document and in the conversation, plus claim grounding, distractor leakage, the usability
+checklist, attribution hazards and quote fidelity. Claim grounding grades the sentences of five or more words outside
+code fences, headings and quote lines, as it does for dream, so don't wrap a document in a code fence. A lane with no
+gradable claim gets no hallucination rate, and one with no quotes gets no quote-fidelity rate, rather than a perfect
+score. Read your recall next to the verbatim lane from the same run. Verbatim keeps the whole conversation, so its score
+is the judge's ceiling.
+
+The receipt's `external_lane` block records the lane name, the folder's real path, the size limit, each file's bytes and
+sha256, how many claims the grounding judge grades in each file, the conversations with no file, and a note that the
+harness has no record of how the documents were made. Your lane's scores sit under its name in the per-lane maps, and
+its judge spend is `external_cost_usd`. `lanes`, `mode`, the prior-run deltas, the blended usability, the
+judge-failure gate, `total_cost_usd` and the WS0 receipt's counters, errors and coverage map describe the built-in lanes
+only, and the runner scores every built-in lane before your lane, so your lane's spend and provider errors cannot reach
+gbrain's numbers. Your lane gets its own `external_judge_failed_rate` gate, which the run's exit
+code includes, and a run with an external lane is never publishable as the benchmark. Scrub machine paths with
+`bun eval/runner/receipt.ts scrub` before you share a receipt.
+
+The runner treats the folder as untrusted. It opens only the `<transcript_id>.md` names it expects, and before any
+provider call it refuses the whole run on a symlink, anything that is not a regular file, a hard-linked file, a file
+over 64 KiB, a file with more than 80 claims (what the grounding judge grades in one call), invalid UTF-8, a document
+that contains one of the corpus's answer-key ids (a sign the system read `gold/`), or a folder that was replaced or
+swapped for a link after the run resolved its path. The runner holds the folder open and reads every file through that
+handle's path under `/proc/self/fd`. Bun has no other race-free way to read a folder that could be swapped mid-run, so
+on a system without `/proc/self/fd`, such as macOS, the runner refuses the external lane; run it on Linux. A lane
+name is lowercase letters, digits and dashes, up to 32 characters, and cannot reuse a built-in lane name. Name the lane
+by what the system does, such as `ext-notes`; product names belong only in
+[docs/comparison-systems.md](../docs/comparison-systems.md).
+
+Know the limits before you compare numbers. Your documents go to the judge's provider, so keep private data out of them.
+A document can carry text aimed at the judge; the judge prompts fence every document as untrusted data, label it
+`external` rather than with your lane name, and each call sees one lane's document, so such text can only move that
+lane's own numbers. The harness cannot tell whether your system saw the answer keys.
+
 ## Evaluate a gbrain change
 
 To compare a candidate gbrain build against its baseline on dev splits, and later on held-out data, use the decision kit: [docs/decisions.md](../docs/decisions.md) (`bun run eval:decide`).
@@ -109,12 +176,12 @@ A category is a runner, a seeded generator, a scorer and a dated report that ans
 2. **Write the registry row first** in [registry.ts](registry.ts): a descriptive slug as `id`, the plan id as `legacy_alias`, `tier`, `script` (`runner/n<k>-<slug>.ts`), headline metric and denominator, `evidence_maturity`, and a `contract` saying what it measures, what it does not, and what counts as an error. Start `report-only` unless a rule below gates.
 3. **Preregister promotion rules in the same commit**, before the first counted run: `safety_contracts` (exact safety assertions such as zero leaks or zero prohibited output; they gate at once), `quality_thresholds` (a metric with a fixed threshold; it gates only at that threshold) and `exploratory` metrics (never gate). Each rule names a receipt path, so the runner must write that field. A safety gate also needs a utility floor (a refuse-everything system must fail it). A candidate fix never sets its own threshold, and a wave category may not gate on its bare runner verdict.
 4. **Run hermetic by default.** Wrap the run in `withHermeticEnv` from [runner/hermetic-env.ts](runner/hermetic-env.ts): it strips every provider and TypeSafe key, uses a throwaway `GBRAIN_HOME` and fails if System One could be on. Record `decide: DECIDE_OFF` in `resolved_config`.
-5. **Take the shared flags.** `--seed`, `--output <dir>` and `--gbrain <checkout>[@ref]` (copied overlay through [runner/gbrain-under-test.ts](runner/gbrain-under-test.ts)). A paid arm runs only with `--paid --budget-run-id <id>`: call `requirePaidArm` from [runner/paid-arm.ts](runner/paid-arm.ts), then `startPaidRun` from [runner/budget-ledger.ts](runner/budget-ledger.ts), so the ledger enforces the wave cap.
+5. **Take the shared flags.** `--seed`, `--output <dir>` and `--gbrain <checkout>[@ref]` (copied overlay through [runner/gbrain-under-test.ts](runner/gbrain-under-test.ts)). A paid arm runs only with `--paid --budget-run-id <id>`: call `requirePaidArm` from [runner/paid-arm.ts](runner/paid-arm.ts), then `startPaidRun` from [runner/budget-ledger.ts](runner/budget-ledger.ts), so the ledger enforces the wave cap. If `all.ts` dispatches the runner, set `paidFlags: true` on its registry row so `all.ts` passes both flags. Pass every Anthropic Messages request through `fitAnthropicRequest` from [runner/anthropic-request.ts](runner/anthropic-request.ts), so a Claude 5-family model gets no temperature and no forced tool choice, which it rejects. Export each default model the runner picks, a comparison set as one list, and register it in `DEFAULTS` in [test/eval/model-defaults.test.ts](../test/eval/model-defaults.test.ts), with models under test apart from judges. The test fails on a model that is not current-generation, on a Sonnet or Haiku model under test and on a particle-1 judge. A named exception with its reason in [runner/model-defaults.ts](runner/model-defaults.ts) can excuse the first two, never a particle-1 judge.
 6. **Generate gold, never read it from gbrain.** A seeded generator under `generators/` writes a ledger and derives gold from it with an independent oracle. Add solvability and negative controls, and presence assertions proving the data is reachable before you measure its absence; a failed presence assertion makes the run an error, not a pass. A gbrain exception where an answer is expected is a scored miss.
 7. **Ship the tests** under `test/eval/`: a generator determinism test (same seed, same ledger hash), a scorer test with hand-built gold including a negative that must fail, a deliberately broken adapter the category must fail, and a scorer mutation suite. The mutation suite uses `assertScorerRejectsFakeSystems` from [runner/mutation-kit.ts](runner/mutation-kit.ts): the honest system must pass, and the empty, always-positive, always-refuse, stale and wrong-source fakes must fail (declare a fake not applicable only with a reason). See `test/eval/scorer-mutation.test.ts` for N3, N4 and N6.
 8. **Print in a fixed order:** verdict, safety contracts, quality metrics with denominators, gbrain bugs with a one-line repro, receipt path. Record every gbrain finding with `upsertBug` from [runner/bug-ledger.ts](runner/bug-ledger.ts), classified as a bug against a stated contract, a feature gap or a category defect.
 9. **Measure the run time** of the hermetic arm and keep it under the registry's CI budget (target 60 seconds); `bun eval/runner/all.ts --only <id>` runs just your category through the same gate CI uses.
-10. **Write the report and the docs row.** A dated report in `docs/benchmarks/` following the N3 report outline, with "gbrain bugs found" and "documented limits (not bugs)" sections, and a question-first row in [docs/README.md](../docs/README.md). Copy worthwhile receipts out of `eval/reports/` and scrub machine paths with `bun eval/runner/receipt.ts scrub`.
+10. **Write the report and the docs row.** A dated report in `docs/benchmarks/` following the N3 report outline, with "gbrain bugs found" and "documented limits (not bugs)" sections, and a question-first row in [docs/README.md](../docs/README.md). Copy worthwhile receipts out of `eval/reports/` and scrub machine paths with `bun eval/runner/receipt.ts scrub`. The receipt guards read tarball and gzip receipts member by member: `test/eval/receipt-machine-paths.test.ts` fails on a machine path inside one (other than the harness VM overlay path it declares) and `scripts/scan-receipts.sh` on a key, unless the file is reviewed and listed with its hash in `test/eval/fixtures/reviewed-compressed-receipts.json` (the secret scan skips it only when its entry also names the pinned gitleaks version). Both find a compressed receipt by its name or its leading bytes and fail on a format they cannot open (zip, xz, zstd, bzip2, 7z and similar) and on a member that is not UTF-8 text (a nested archive, a database or another binary file). Both refuse a tarball unread unless GNU tar lists it cleanly, with no warning, it names no member twice and it holds only regular files and directories, so make tarballs with GNU tar from plain files, and unpack, drop or rename anything else before committing.
 
 A category with more than one tier keeps one operator guide per tier. Cat 40 Hard is the example: its generator mode, world contract ([WORLD_SCHEMA.md](../docs/benchmarks/cat40-hard/WORLD_SCHEMA.md)), runner path, scorer and paid steps are documented in the [Cat 40 Hard runbook](../docs/benchmarks/cat40-hard/RUNBOOK.md), and its registry row is `model-ladder-hard`.
 
@@ -157,6 +224,107 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-03: The opening names `62637c96a`
+
+The opening names gbrain master `62637c96a` (v0.60.557.0) as the gbrain under test (was `311a83bbe`, v0.60.553.0).
+Nothing else on the page changed.
+
+### 2026-11-02: The opening names `311a83bbe`
+
+The opening names gbrain master `311a83bbe` (v0.60.553.0) as the gbrain under test (was `a131fb20e`, v0.60.549.0).
+Nothing else on the page changed.
+
+### 2026-11-02: The opening names `a131fb20e`; one sentence per line
+
+The opening names gbrain master `a131fb20e` (v0.60.549.0) as the gbrain under test (was `ca1281a2e`, v0.60.542.0) and
+puts each sentence on its own line, which renders the same. Nothing else on the page changed.
+
+### 2026-11-02: Register comparison sets and judges
+
+Step 5 of "Add a category" now says to register a comparison set as one list, with models under test apart from
+judges, and that `test/eval/model-defaults.test.ts` also fails on a Sonnet or Haiku model under test and on a particle-1
+judge, which no named exception excuses. It said the test fails unless a model is current-generation or a named
+exception, but a current-generation Sonnet or Haiku model under test also fails (since the frontier-first change of
+2026-11-01), and so does a particle-1 judge since `particle-1` joined the current-generation list on 2026-11-02.
+
+### 2026-11-02: The opening names the new pin
+
+The opening names gbrain master `ca1281a2e` (v0.60.542.0) as the gbrain under test (was `3ec766c40`, v0.60.531.0).
+Nothing else on the page changed.
+
+### 2026-11-01: frontier models first
+
+The opening paragraph says runs test gbrain and gstack on the newest frontier Opus and GPT (`claude-opus-5-5` and
+`gpt-6.1-sol`) plus `particle-1`, and never use Sonnet or Haiku as a model under test. Before, it named only the two
+primary models. The change follows Garry's rule of 2026-11-01 that gbrain and gstack are built for frontier models.
+
+The Cat 35 external-lane command now passes `--budget-usd 40` (was 10), and step 3 says the runner also refuses a
+projection above `--budget-usd`. Cat 35's default judge moved from `claude-haiku-5-5` to `gpt-6.1-sol`, so the full
+verbatim lane alone projects $13.80 and a folder of typical notes adds about $16 to $20, which a $10 budget refuses.
+
+### 2026-11-01: primary models named
+
+[`f9b891e3`](https://github.com/garrytan/gbrain-evals/commit/f9b891e3), gbrain-evals
+[#274](https://github.com/garrytan/gbrain-evals/pull/274). The opening paragraph names claude-opus-5-5 and particle-1 as
+the primary models and points to the shared provider module. Before, it pointed only to CLAUDE.md's model rules. The
+change follows Garry's decision of 2026-10-31 that these are the primary models, with the
+[particle-1 replay](../docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md) as their first paired numbers.
+
+### 2026-11-01: The external lane's spend and the WS0 receipt
+
+The Cat 35 external-lane section now says your lane's judge spend is `external_cost_usd`, kept out of `total_cost_usd`,
+and that the WS0 receipt's coverage map, like its counters and errors, covers the built-in lanes only. Before #217 both
+carried your lane: `total_cost_usd` counted its judge spend, and the WS0 coverage map listed it beside counters and
+errors that did not.
+
+### 2026-11-01: Compressed receipts are checked member by member
+
+Step 10 of "Add a category" now says the machine-path test and the receipt secret scan read tarball and gzip receipts
+member by member, that a compressed receipt either passes both or is reviewed and listed by hash in
+`test/eval/fixtures/reviewed-compressed-receipts.json`, that both fail on a format they cannot open or a member that
+is not UTF-8 text, and that both refuse a tarball GNU tar cannot list cleanly, one that names a member twice and one
+holding an entry other than a regular file or directory. Before #221 neither guard opened a compressed receipt.
+
+### 2026-11-01: The external lane's cost projection and platform
+
+The Cat 35 external-lane section now says the pre-flight projection prices your lane from the documents it read and
+names your lane's share, and that the runner refuses the lane on a system without `/proc/self/fd`. It said only that the
+runner printed a projection, and that on Linux it read every file through the folder handle, without saying what
+happened elsewhere: other systems read by path, which a folder swapped mid-run could redirect.
+
+### 2026-11-01: Register a new category's default models
+
+Step 5 of "Add a category" now says to export each default model a runner picks and register it in
+`test/eval/model-defaults.test.ts`, which fails on a default that is neither a current-generation model nor a named
+exception in `eval/runner/model-defaults.ts`. The test's own header asks a new category to do this, and CLAUDE.md's
+model rules now cover defaults.
+
+### 2026-10-31: The opening names the new pin
+
+The opening names gbrain master `3ec766c40` (v0.60.531.0), the new pin (was `7a6bdd357`, v0.60.454.0).
+`scripts/verify-documentation-refresh.py` now checks this sentence against `package.json`, so a re-pin that misses it fails
+`bun run validate`.
+
+### 2026-10-31: Anthropic requests go through fitAnthropicRequest
+
+Step 5 of "Add a category" now says to build every Anthropic Messages request through `fitAnthropicRequest`. Claude
+5-family models reject `temperature` and a forced `tool_choice` with HTTP 400, and the helper leaves requests to older
+models unchanged. Step 5 also says to set `paidFlags: true` on the registry row of a paid runner that `all.ts`
+dispatches, so `all.ts` passes it `--paid --budget-run-id <id>`.
+
+### 2026-10-31: Score another system's Cat 35 documents
+
+A new section explains `--external-lane NAME --external-dir DIR`, which scores another system's Markdown notes beside
+gbrain's Cat 35 lanes under the same judge: the folder layout, the commands, what the receipt's `external_lane` block
+records, how claim grounding counts claims, which fields stay built-in only, the refusals for a hostile folder and the
+limits. The opening now lists this as a way to contribute. The feature was rebuilt on main from Khaled Aly's design in
+[#32](https://github.com/garrytan/gbrain-evals/pull/32).
+
+### 2026-10-31: The opening names the current pin again
+
+The opening names gbrain master `7a6bdd357` (v0.60.454.0) as the gbrain under test, matching `package.json`. It still
+named `77cf8e111` (v0.60.169.0), which stopped being the pin on October 18; the later re-pins had not updated this page.
 
 ### 2026-10-29: The cost tools refuse more inputs
 
