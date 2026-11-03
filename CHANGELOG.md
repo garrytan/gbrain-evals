@@ -2,6 +2,15 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### F6 amendment A6: the particle-1 add-on (GST-1153)
+
+- **A6 in F6's preregistration** adds particle-1 rows beside F6's published rows before any of them runs: re-reads of the frozen 8,000-token contexts on S1 and S2b (gbrain P and A0, the extract-first and memory-bank servers, the temporal-graph library 0.31.2), and the S1 file agent with particle-1 as its agent. It changes no F6 cell, bar, verdict, ledger or published number. Hard cap $150, charged to Q1's eval total.
+- **`eval/runner/q1/reread-cell.ts`** re-reads one packed arm with another reader. Before any request it checks every frozen context against its recorded prompt and context SHA-256, the schedule and the published answers, and refuses the whole run on any mismatch. It writes verify.json, judges with the cell's canonical judge, and reads through the lease proxy.
+- **`s1.baseline-file-agent.particle`** (block F6-P1) is F6's file-agent definition with particle-1 as its only reader. Its campaign is `f6-campaign-p1.json`, with a ledger capped at $16.15. F6's counted cap is unchanged.
+- **`eval/runner/q1/particle-addon-report.ts`** pairs each particle-1 row with its frontier cell. It reports aggregates only: means with clustered intervals, reader dollars per correct answer, and particle-1 minus each frontier reader. Its disclosures close the report.
+
 ## [0.10.150] - 2026-11-03
 
 ### F6: BEAM-10M rerun at gbrain's current release, 8,000-token budget (#321)
