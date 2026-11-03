@@ -1,6 +1,6 @@
 {
   "min_gstack_version": "1.93.33.0",
   "review_exclude_paths": [
-    "eval/data/skillopt-method-v3/**"
+    "eval/data/skillopt-method-v3/*/**"
   ]
 }
