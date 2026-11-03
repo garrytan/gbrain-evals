@@ -85,6 +85,12 @@ describe('decisive reads and harness limits', () => {
     expect(refusedDecisiveReads([ok('get_page', 'people/a'), refused('get_page', 'people/a', WINDOW)], ['people/a'])).toEqual([]);
   });
 
+  test('a successful traverse_graph clears only a refused traverse_graph on its page: its nodes carry no page body, so a refused get_page stays limited', () => {
+    expect(refusedDecisiveReads([refused('get_page', 'contracts/acme-msa', WINDOW), ok('traverse_graph', 'contracts/acme-msa')], ['contracts/acme-msa'])).toHaveLength(1);
+    expect(harnessLimit({ stop_reason: 'end', tool_calls: [refused('get_page', 'contracts/acme-msa', WINDOW), ok('traverse_graph', 'contracts/acme-msa')] }, ['contracts/acme-msa'])).toBe('refused-decisive-read');
+    expect(refusedDecisiveReads([refused('traverse_graph', 'contracts/acme-msa', HOPS), ok('traverse_graph', 'contracts/acme-msa')], ['contracts/acme-msa'])).toEqual([]);
+  });
+
   test('stop reasons: end is completed, max_turns the 20-turn limit, length the output limit; a rollout is harness-limited by either limit or a refused decisive read', () => {
     expect(['end', 'max_turns', 'length', 'error', undefined].map(stopClass)).toEqual(['completed', 'turn-limit', 'output-length', 'other', 'other']);
     expect(countStops(['end', 'end', 'max_turns', 'length', null])).toEqual({ completed: 2, 'turn-limit': 1, 'output-length': 1, other: 1 });

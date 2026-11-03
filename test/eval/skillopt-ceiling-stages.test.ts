@@ -12,7 +12,7 @@ import type { ChatResult } from 'gbrain/ai/gateway';
 import { describeJudges } from 'gbrain/core/skillopt';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import { degenerateAnswers, type MethodTaskV3 } from '../../eval/generators/skillopt-method/common-v3.ts';
-import { BudgetExceededError, BudgetRun, initLedger } from '../../eval/runner/budget-ledger.ts';
+import { BudgetExceededError, BudgetRun, closeRun, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { gbrainInstallTag, gbrainPin } from '../../eval/runner/gbrain-version.ts';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import {
@@ -509,42 +509,70 @@ describe('runner CLI (--dataset v3)', () => {
     expect(existsSync(join(out, 'receipt.json'))).toBe(false);
   }, 120_000);
 
-  /** A ledger at out/ledger.sqlite with one earlier run of `runner` that committed `usd` (closed when `close`), and a new run of it at `budgetUsd`. */
+  /**
+   * A ledger at out/ledger.sqlite with one earlier run of `runner` that committed `usd` (finished when `close`); `newRun` opens
+   * another run of it at `budgetUsd` and leaves it open, as `budget-ledger.ts open` does, and `close` finishes a run.
+   */
   const stageLedger = (out: string, runner: string, earlier: { budgetUsd: number; usd: number; close: boolean }) => {
     const ledgerPath = join(out, 'ledger.sqlite');
     initLedger({ ledgerPath, programCapUsd: 1000 });
     const first = BudgetRun.open({ runner, budgetUsd: earlier.budgetUsd, ledgerPath });
-    first.reserve(earlier.usd, `an earlier leg of ${runner}`);
+    if (earlier.usd) first.reserve(earlier.usd, `an earlier leg of ${runner}`);
     first.close({ finish: earlier.close });
-    return (budgetUsd: number) => { const run = BudgetRun.open({ runner, budgetUsd, ledgerPath }); run.close({ finish: false }); return run.runId; };
+    return {
+      earlier: first.runId,
+      newRun: (budgetUsd: number) => { const run = BudgetRun.open({ runner, budgetUsd, ledgerPath }); run.close({ finish: false }); return run.runId; },
+      close: (runId: string) => closeRun(ledgerPath, runId),
+    };
   };
   /** Admitted past every cap check: the next refusal is the missing key, the last check before a paid call. */
   const pastTheCap = (p: ReturnType<typeof keyless>) => { expect(p.exitCode).toBe(2); expect(p.stderr.toString()).toMatch(/_API_KEY (is|and .* are) not set/); };
+  const calibrate = (out: string, runId: string) => keyless(['--dataset', 'v3', '--stage', 'calibration', '--target', 'opus', '--paid', '--budget-run-id', runId, '--budget-ledger', join(out, 'ledger.sqlite'), '--output', join(out, runId)]);
 
-  test('the gate cap covers the whole stage across ledger runs: after a run spends, a new run is refused the full $470 and admitted for what is left, on a resume whose rows metered the work done', () => {
+  test('the gate cap covers the whole stage across ledger runs: an open earlier run holds its whole budget; once it closes it holds what it spent, so a new run is refused the full $470 and admitted for what is left, on a resume whose rows metered the work done', () => {
     const out = tempDir();
-    const newRun = stageLedger(out, 'n15-ceiling-gate-1', { budgetUsd: 470, usd: 100, close: false });
+    const { earlier, newRun, close } = stageLedger(out, 'n15-ceiling-gate-1', { budgetUsd: 470, usd: 100, close: false });
     const calibration = `${calibrationReceipt(out, 'opus', 0.2)},${calibrationReceipt(out, 'sol', 0.1)}`;
     const header = { kind: 'header', stage: 'gate', attempt: 1, target: null, half: false, mode: 'live', dataset_manifest_sha256: manifest() };
     const usage = { calls: 1, usd: 100, unpriced_calls: 0, input_tokens: 1, output_tokens: 1, cache_read_tokens: 0, cache_creation_tokens: 0, reasoning_tokens: null };
     const row = { kind: 'rollout', target: 'opus', skill: 'query', arm: 'seed', split: 'gate', task_id: 'query-gate-01', run: 1, skill_sha8: '00000000', error: 'upstream 500', usage, at: '2026-11-02T00:00:00.000Z' };
     writeFileSync(join(out, 'rows.jsonl'), `${JSON.stringify(header)}\n${JSON.stringify(row)}\n`);
     const gate = (runId: string) => keyless(gateArgs(out, ['--attempt', '1', '--resume', '--budget-run-id', runId, '--calibration', calibration]));
-    const full = gate(newRun(470));
+    const whileOpen = newRun(370);
+    const held = gate(whileOpen);
+    expect(held.exitCode).toBe(2);
+    expect(held.stderr.toString()).toContain(`other runs of n15-ceiling-gate-1 hold $470.00 of the stage's $470 cap (closed runs what they committed, open runs their budget), so $0.00 is left; still open: ${earlier}`);
+    close(whileOpen);
+    close(earlier);
+    const fullRun = newRun(470);
+    const full = gate(fullRun);
     expect(full.exitCode).toBe(2);
-    expect(full.stderr.toString()).toContain('earlier runs of n15-ceiling-gate-1 committed $100.00 of the stage\'s $470 cap, so $370.00 is left');
+    expect(full.stderr.toString()).toContain('other runs of n15-ceiling-gate-1 hold $100.00 of the stage\'s $470 cap (closed runs what they committed, open runs their budget), so $370.00 is left; open a run with --budget-usd 370.00 or less');
+    close(fullRun);
     pastTheCap(gate(newRun(370)));
     expect(readFileSync(join(out, 'rows.jsonl'), 'utf8').trim().split('\n').length).toBe(2);
   }, 120_000);
 
-  test("calibration's re-read fits what is left of its $50 cap: with $27.95 committed under a closed run, a new $22.05 run is admitted and a $22.06 run is refused", () => {
+  test("calibration's re-read fits what is left of its $50 cap: with $27.95 committed under a closed run, a new $22.06 run is refused and a $22.05 run is admitted", () => {
     const out = tempDir();
-    const newRun = stageLedger(out, 'n15-ceiling-calibration', { budgetUsd: 50, usd: 27.95, close: true });
-    const calibrate = (runId: string) => keyless(['--dataset', 'v3', '--stage', 'calibration', '--target', 'opus', '--paid', '--budget-run-id', runId, '--budget-ledger', join(out, 'ledger.sqlite'), '--output', join(out, runId)]);
-    pastTheCap(calibrate(newRun(22.05)));
-    const over = calibrate(newRun(22.06));
+    const { newRun, close } = stageLedger(out, 'n15-ceiling-calibration', { budgetUsd: 50, usd: 27.95, close: true });
+    const overRun = newRun(22.06);
+    const over = calibrate(out, overRun);
     expect(over.exitCode).toBe(2);
-    expect(over.stderr.toString()).toContain('earlier runs of n15-ceiling-calibration committed $27.95 of the stage\'s $50 cap, so $22.05 is left');
+    expect(over.stderr.toString()).toContain('other runs of n15-ceiling-calibration hold $27.95 of the stage\'s $50 cap (closed runs what they committed, open runs their budget), so $22.05 is left');
+    close(overRun);
+    pastTheCap(calibrate(out, newRun(22.05)));
+  }, 120_000);
+
+  test('two open runs of one stage cannot both hold its cap: a second $50 calibration run is refused while the first is open, and admitted once the first closes having spent nothing', () => {
+    const out = tempDir();
+    const { earlier, newRun, close } = stageLedger(out, 'n15-ceiling-calibration', { budgetUsd: 50, usd: 0, close: false });
+    const second = newRun(50);
+    const refused = calibrate(out, second);
+    expect(refused.exitCode).toBe(2);
+    expect(refused.stderr.toString()).toContain(`other runs of n15-ceiling-calibration hold $50.00 of the stage's $50 cap (closed runs what they committed, open runs their budget), so $0.00 is left; still open: ${earlier}`);
+    close(earlier);
+    pastTheCap(calibrate(out, second));
   }, 120_000);
 
   test("a live attempt 2 takes attempt 1's receipt and refuses the manifest attempt 1 read", () => {
@@ -559,6 +587,25 @@ describe('runner CLI (--dataset v3)', () => {
     const same = keyless(gateArgs(out, [...args, '--previous', previous]));
     expect(same.exitCode).toBe(2);
     expect(same.stderr.toString()).toContain("read this tree's skillopt-method-v3 manifest");
+    expect(existsSync(join(out, 'rows.jsonl'))).toBe(false);
+  }, 120_000);
+
+  test('a live attempt 2 runs only after a complete live attempt 1 whose verdict is revise: such a receipt is admitted, and a fake, partial or stub receipt, or one that read stop, is refused', () => {
+    const out = tempDir();
+    const calibration = `${calibrationReceipt(out, 'opus', 0.2)},${calibrationReceipt(out, 'sol', 0.1)}`;
+    const { newRun } = stageLedger(out, 'n15-ceiling-gate-2', { budgetUsd: 470, usd: 0, close: true });
+    const attempt1 = (name: string, mode: string, publishable: boolean, next: string | null) => {
+      const path = join(out, `${name}.json`);
+      writeFileSync(path, JSON.stringify({ category: 'n15-skillopt-method', publishable, hashes: { dataset_manifest_sha256: 'a'.repeat(64) }, resolved_config: { stage: 'gate', attempt: 1, mode }, data: { gate: next ? { verdict: { next } } : null } }));
+      return path;
+    };
+    const gate2 = (previous: string, runId: string) => keyless(gateArgs(out, ['--attempt', '2', '--budget-run-id', runId, '--calibration', calibration, '--previous', previous]));
+    pastTheCap(gate2(attempt1('revise', 'ceiling', true, 'revise'), newRun(470)));
+    for (const [previous, next] of [[attempt1('fake', 'ceiling-fake', false, 'revise'), 'revise'], [attempt1('partial', 'ceiling', false, 'revise'), 'revise'], [attempt1('stub', 'ceiling', true, null), 'none'], [attempt1('stop', 'ceiling', true, 'stop'), 'stop']] as const) {
+      const p = gate2(previous, 'n15-ceiling-gate-2-test');
+      expect(p.exitCode).toBe(2);
+      expect(p.stderr.toString()).toContain(`is not a complete live attempt 1 whose verdict is revise (next: ${next})`);
+    }
     expect(existsSync(join(out, 'rows.jsonl'))).toBe(false);
   }, 120_000);
 

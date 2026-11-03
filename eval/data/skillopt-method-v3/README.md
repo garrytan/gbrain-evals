@@ -51,8 +51,8 @@ ordered round-robin by family, so each of gbrain's batches of 8 covers every tra
 
 A fact-check family that makes claims right or wrong (compound, role-on-date, three-hop and lookalike-founder) fills
 each split by gold status in the proportion of its confirmed candidates, so true claims sit in every split and a report
-that calls everything false fails them. Fact-check tasks by gold status (supported / contradicted / not-supported) are
-2 / 16 / 6 in train, 2 / 16 / 6 in selection, 10 / 22 / 4 in gate and 27 / 57 / 12 in test.
+that calls everything false fails every task with a true part. Fact-check tasks by gold status (supported / contradicted
+/ not-supported) are 2 / 16 / 6 in train, 2 / 16 / 6 in selection, 10 / 22 / 4 in gate and 27 / 57 / 12 in test.
 
 Every task has its own anchor. Tasks that share an anchor, a gold fact or a gold page form one connected group; a
 group sits in one split with at most three tasks, and each task records its `group_id` for resampling. Abstention
@@ -89,7 +89,7 @@ each tagged `substance` (the value concluded, the deciding page, the abstention,
 contract's markup). A task scores a full pass (every check) and a substance pass (substance checks only); gbrain's own
 rule score is the fraction of the same checks. Substance loci do not depend on layout, so correct content in a table,
 bold lines or prose passes substance and fails form. A query answer passes only when the first sentence naming a
-candidate value states the gold value without negating or refusing it ("not 240" and "cannot confirm 240" fail). In a
+candidate value states the gold value without negating or refusing it ("not 240" and "can't confirm 240" fail). In a
 fact-check report with `CLAIM:` blocks, a block's status is what its `STATUS:` lines say (or, with none, the first word
 after its `CLAIM:` label), and the parts it covers are the ones its `CLAIM:` line names, so status words and part words
 in notes do not count. A block may not give a covered part any status outside the ones that part allows, `DISPUTED`
@@ -121,13 +121,30 @@ regenerate, which makes a new MANIFEST.json and dataset hash.
 ## Known limits
 
 - No model has run on v3 yet; calibration and the headroom gate come first.
-- The task files carry their judges' regexes inline, so v3 is about 10.7 MB (10,733,381 bytes over MANIFEST.json's
+- Among the trained families only compound makes true claims, so train and selection hold few fact-check tasks with a
+  true part (3 and 4, against 13 in gate and 31 in test). The oracle report with every status set to FALSE passes
+  substance on 21 of 24 train, 20 of 24 selection, 23 of 36 gate and 65 of 96 test tasks, so selection can punish a
+  rewrite that rejects too much on only 4 tasks.
+- The task files carry their judges' regexes inline, so v3 is about 10.8 MB (10,763,777 bytes over MANIFEST.json's
   files), mostly the briefing and fact-check judges.
 - Pages are 173 to 309 words, short of the plan's 700-word ceiling: the generator pads each page to a seeded length
   from its bank's filler sentences.
 - Briefing citation dates are not checked against the page.
 
 ## Changelog
+
+### 2026-11-02: Query refusals with "can't", "won't" and common refusal verbs fail
+
+Pass-2 review of #308 found the query negation guard still let refusals of the gold value pass. It built "can't" as
+"cann't" and had no "won't", so "I can't confirm 240 seats" passed substance with a straight or curly apostrophe, and
+"could not find 240", "doesn't show 240", "no record of 240" and "not able to confirm 240" passed too. All of them now
+fail. The status paragraph now says a report calling everything false fails each task with a true part, where it said
+such a report fails the true claims; Known limits gives how few of those tasks train and selection hold and what an
+all-FALSE report scores on each split.
+
+The query judges changed with the scorer; query tasks and their placement did not, and briefing and fact-check are
+byte-identical. MANIFEST.json's sha256 went from `e944b2d8` to `eebc02ff` and `data_sha256` from `eba61eb6` to
+`10a0a282`; the dataset grew from 10,733,381 to 10,763,777 bytes.
 
 ### 2026-11-02: Fact-check places true claims; the fact-check and query scorers read status and negation as meant
 

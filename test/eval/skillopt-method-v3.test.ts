@@ -430,6 +430,9 @@ describe('skillopt-method-v3: scorer cases', () => {
     expect(run('query', qv, 'Answer: Not 240 seats [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([false, false]);
     expect(run('query', qv, 'I cannot confirm 240 seats [Source: contracts/wyncrest-produce-renewal-2025].')).toEqual([false, false]);
     expect(run('query', qv, 'Answer: Wyncrest Produce no longer has 240 seats [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([false, false]);
+    for (const refusal of ["I can't confirm 240 seats", 'I can’t confirm 240 seats', "It won't be 240 seats", 'It won’t be 240 seats', "The brain doesn't show 240 seats", 'I could not find 240 seats', 'There is no record of 240 seats', 'I am not able to confirm 240 seats']) {
+      expect(run('query', qv, `${refusal} [Source: contracts/wyncrest-produce-renewal-2025].`)).toEqual([false, false]);
+    }
     expect(run('query', qv, 'Answer: 240 seats, not the 200 the MSA set [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
     expect(run('query', qv, 'Answer: 240 seats (no change since the renewal) [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
     expect(run('query', qv, 'Answer: the seat count has not changed from 240 [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);

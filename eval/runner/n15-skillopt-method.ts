@@ -499,8 +499,9 @@ function ceilingReceipt(startedAt: string) {
  * the attested preregistration. The cap covers the whole stage across its
  * ledger runs: a run is admitted only when its budget, and the work it has
  * left (the estimate less what its rows already metered), fit in the cap less
- * everything earlier runs of that runner committed. A closed run never
- * reopens, so a resume after one opens a new run inside what is left.
+ * what the runner's other runs hold: a closed run what it committed, an open
+ * one its budget (or more, if it overshot), since it may still spend. A closed
+ * run never reopens, so a resume after one opens a new run inside what is left.
  */
 function startCeilingRun(argv: readonly string[], o: { stage: CeilingStage; attempt?: 1 | 2; arm: string; estimateUsd: number; spentUsd: number; keyNames: readonly string[]; log: (s: string) => void }) {
   const pin = gbrainPin();
@@ -516,9 +517,12 @@ function startCeilingRun(argv: readonly string[], o: { stage: CeilingStage; atte
   }
   const workLeftUsd = Math.max(0, o.estimateUsd - o.spentUsd);
   requirePaidArm(argv, { arm: o.arm, estimateUsd: workLeftUsd });
-  const earlierUsd = [...stageRunsCommitted(options.ledgerPath, runner)].reduce((sum, [id, usd]) => (id === options.runId ? sum : sum + usd), 0);
-  const leftUsd = cap - earlierUsd;
-  const left = `earlier runs of ${runner} committed $${earlierUsd.toFixed(2)} of the stage's $${cap} cap, so $${leftUsd.toFixed(2)} is left`;
+  const others = stageRuns(options.ledgerPath, runner).filter(r => r.run_id !== options.runId);
+  const heldUsd = others.reduce((sum, r) => sum + (r.open ? Math.max(r.budget_usd, r.committed_usd) : r.committed_usd), 0);
+  const leftUsd = cap - heldUsd;
+  const open = others.filter(r => r.open).map(r => r.run_id);
+  const left = `other runs of ${runner} hold $${heldUsd.toFixed(2)} of the stage's $${cap} cap (closed runs what they committed, open runs their budget), so $${leftUsd.toFixed(2)} is left`
+    + (open.length ? `; still open: ${open.join(', ')} (close one that will not spend again with \`bun eval/runner/budget-ledger.ts close --budget-run-id <id>\`)` : '');
   const budgetUsd = ledgerStatus({ ledgerPath: options.ledgerPath, runId: options.runId }).run!.budget_usd;
   if (budgetUsd > leftUsd + 1e-9) throw new PaidArmRefusal(`${o.arm}: ledger run ${options.runId} has a $${budgetUsd.toFixed(2)} budget, but ${left}; open a run with --budget-usd ${Math.max(0, leftUsd).toFixed(2)} or less`);
   if (workLeftUsd > leftUsd + 1e-9) throw new PaidArmRefusal(`${o.arm}: the work left is estimated at $${workLeftUsd.toFixed(2)}, but ${left}, so the stage does not start; the figure goes to the Captain`);
@@ -528,12 +532,13 @@ function startCeilingRun(argv: readonly string[], o: { stage: CeilingStage; atte
   return { keys, attestation, paid };
 }
 
-/** Committed spend (settled, or the reservation while open) of every ledger run of a stage's runner, closed runs included. */
-function stageRunsCommitted(ledgerPath: string, runner: string): Map<string, number> {
+/** Every ledger run of a stage's runner, closed runs included, with its budget, its committed spend (settled, or the reservation while open) and whether it is still open. */
+function stageRuns(ledgerPath: string, runner: string): Array<{ run_id: string; budget_usd: number; committed_usd: number; open: boolean }> {
   const ledger = readLedger(ledgerPath);
-  const committed = new Map(ledger.runs.filter(r => r.run_id === runner || r.run_id.startsWith(`${runner}-`)).map(r => [r.run_id, 0]));
-  for (const e of ledger.entries) if (committed.has(e.run_id)) committed.set(e.run_id, committed.get(e.run_id)! + (e.actual_usd ?? e.reserved_usd));
-  return committed;
+  return ledger.runs.filter(r => r.run_id === runner || r.run_id.startsWith(`${runner}-`)).map(r => ({
+    run_id: r.run_id, budget_usd: r.budget_usd, open: r.finished_at === null,
+    committed_usd: ledger.entries.reduce((sum, e) => (e.run_id === r.run_id ? sum + (e.actual_usd ?? e.reserved_usd) : sum), 0),
+  }));
 }
 
 /** A calibration receipt's target and metered mean rollout cost, from a calibration of this tree's v3 manifest (a live one unless this run is fake). */
@@ -580,7 +585,8 @@ function gatePrices(argv: readonly string[], fake: boolean): { prices: Record<Fr
 /**
  * Attempt 2 reads freshly regenerated splits (section 4), so a live attempt 2
  * takes attempt 1's gate receipt (`--previous`) and refuses a tree whose v3
- * manifest is the one attempt 1 read.
+ * manifest is the one attempt 1 read, or a receipt that is not a complete
+ * live attempt 1 whose verdict sends the attempt to its one revision.
  */
 function requireRegeneratedGate(argv: readonly string[]): string {
   const path = argValue(argv, '--previous');
@@ -589,6 +595,10 @@ function requireRegeneratedGate(argv: readonly string[]): string {
   const config = r.resolved_config as { stage?: unknown; attempt?: unknown } | undefined;
   if (r.category !== CATEGORY || config?.stage !== 'gate' || config.attempt !== 1) throw new PaidArmRefusal(`--previous ${path} is not an N15 ceiling gate attempt 1 receipt`);
   if (r.hashes?.dataset_manifest_sha256 === manifestSha(CEILING_DATASET)) throw new PaidArmRefusal(`--previous ${path} read this tree's ${datasetName(CEILING_DATASET)} manifest; attempt 2 reads regenerated splits, so regenerate them under a dated amendment first`);
+  const next = (r.data as { gate?: { verdict?: { next?: unknown } } } | undefined)?.gate?.verdict?.next;
+  if ((r.resolved_config as { mode?: unknown } | undefined)?.mode !== 'ceiling' || r.publishable !== true || next !== 'revise') {
+    throw new PaidArmRefusal(`--previous ${path} is not a complete live attempt 1 whose verdict is revise (next: ${String(next ?? 'none')}); attempt 2 runs only as the one revision section 4 allows`);
+  }
   return path;
 }
 
@@ -600,7 +610,7 @@ function stageLedgerRun(argv: readonly string[], runner: string): { run_id: stri
   const options = budgetOptionsFrom(argv);
   const run = options.runId ? ledgerStatus({ ledgerPath: options.ledgerPath, runId: options.runId }).run : null;
   if (!run) return null;
-  const stageUsd = [...stageRunsCommitted(options.ledgerPath, runner).values()].reduce((a, b) => a + b, 0);
+  const stageUsd = stageRuns(options.ledgerPath, runner).reduce((sum, r) => sum + r.committed_usd, 0);
   return { run_id: run.run_id, budget_usd: run.budget_usd, committed_usd: Number(run.committed_usd.toFixed(6)), stage_committed_usd: Number(stageUsd.toFixed(6)) };
 }
 

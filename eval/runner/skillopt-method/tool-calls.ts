@@ -18,8 +18,10 @@
  *
  * A decisive read is a get_page or traverse_graph call on a page that decides
  * the task: a gold page, or for an abstention task one of its near-miss pages.
- * A refused decisive read limits the rollout only when no get_page or
- * traverse_graph call on that page succeeds anywhere in the rollout. In the
+ * A refused decisive read limits the rollout only when no call that serves
+ * the page succeeds anywhere in the rollout: a get_page of it clears either
+ * tool's refusal, and a traverse_graph from it clears only a refused
+ * traverse_graph, since its nodes carry no page body. In the
  * refusal tally, a refused call is recovered when the next call to the same
  * tool succeeds.
  * Stop reasons are counted per arm as completed, turn limit (gbrain's 20-turn
@@ -73,13 +75,19 @@ const slugOf = (input: unknown): string | null => {
   return typeof slug === 'string' ? slug.toLowerCase().replace(/\.md$/, '') : null;
 };
 
-/** The refused get_page and traverse_graph calls on a decisive page that no successful get_page or traverse_graph call in the rollout served. */
+/**
+ * The refused get_page and traverse_graph calls on a decisive page that no
+ * successful call in the rollout served: a get_page of the page clears either,
+ * and a traverse_graph from it clears only a refused traverse_graph, since its
+ * nodes carry no page body.
+ */
 export function refusedDecisiveReads(calls: readonly ToolCallRecord[], decisive: readonly string[]): ToolCallRecord[] {
   const pages = new Set(decisive.map(s => s.toLowerCase()));
   const isRead = (c: ToolCallRecord, page: string) => DECISIVE_TOOLS.has(c.name) && slugOf(c.input) === page;
   return calls.filter(c => {
     const page = slugOf(c.input);
-    return c.error !== undefined && page !== null && pages.has(page) && isRead(c, page) && !calls.some(n => n.error === undefined && isRead(n, page));
+    return c.error !== undefined && page !== null && pages.has(page) && isRead(c, page)
+      && !calls.some(n => n.error === undefined && isRead(n, page) && (n.name === 'get_page' || c.name === 'traverse_graph'));
   });
 }
 
