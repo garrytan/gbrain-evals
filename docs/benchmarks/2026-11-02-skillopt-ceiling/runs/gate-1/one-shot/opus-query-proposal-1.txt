@@ -1,0 +1,134 @@
+---
+name: query
+version: 1.0.0
+description: |
+  Answer questions using the brain's knowledge with 3-layer search, synthesis,
+  and citation propagation. Use when the user asks a question, wants a lookup,
+  or needs information from the brain.
+triggers:
+  - "what do we know about"
+  - "tell me about"
+  - "who is"
+  - "what happened"
+  - "search for"
+  - "look up"
+  - "background on"
+  - "notes on"
+  - "who knows who"
+  - "relationship between"
+  - "connections"
+  - "graph query"
+tools:
+  - recall
+  - search
+  - query
+  - get_page
+  - list_pages
+  - get_backlinks
+  - traverse_graph
+  - get_timeline
+mutating: false
+---
+
+# Query Skill
+
+Answer questions from the brain's own pages. Search, read the pages that decide the answer, reason it through, then answer first and cite every deciding page.
+
+> **Memory verbs (MEMORY_VERBS v1, gbrain ≥ 0.43).** When connected over MCP, prefer
+> `recall(query | entity, budget_tokens)` for saved-memory reads, `entity(name)` for a
+> quick person/company card, and `synthesize(question)` only when the answer must
+> combine evidence across pages. Fall back to `search`/`query`/`get_page` when the
+> verbs aren't available.
+
+## Contract
+
+- Every answer is grounded in brain content. Never answer from general knowledge.
+- Every deciding claim cites a page slug as `[Source: slug]`.
+- Gaps are stated explicitly. A missing entity is never filled with a near match.
+- Ambiguous names are flagged, not silently resolved.
+- Conflicting sources are noted with both citations, and the governing one is explained.
+
+## Output format (always)
+
+1. **First line: the answer.** Write `Answer: <value>` or a first sentence that holds only the value you concluded. Do not put caveats, alternatives, or other values in the first sentence.
+2. **Why:** give one to three short sentences with the deciding facts and `[Source: slug]` for each deciding page.
+3. **Other values I found:** list any earlier or later records, snapshots, rumors, look-alike names, or past roles. Give each one its source and say why it doesn't answer the question.
+
+Special first lines:
+- **Entity not in the brain:** write `The brain doesn't have information on <name>.` Do not give any value taken from a near match. You may list near matches afterward, labeled as different entities, and offer to look one up.
+- **Ambiguous name:** write `ambiguous: <name> could be ...` and name each candidate with a distinguishing detail (company, role, city) and its source. Only do this when the question gives nothing that picks one candidate.
+
+## Procedure
+
+### 1. Decompose
+Identify the entity or entities named, the attribute asked for, any as-of date, and any hop. An example hop is "the company that X works with", which first resolves X's company and then asks the attribute of that company.
+
+### 2. Search
+- Start with `search` on the exact name, or on the name plus the attribute (e.g. "<company> renewal", "<company> seats").
+- Use `query` for conceptual questions. Use `get_backlinks` or `traverse_graph` for relationship questions.
+- Read the returned snippets. They often suffice. Open a page with `get_page` only when a snippet shows the page matters and you need more detail, such as a timeline, effective dates, or which terms a document changed.
+
+### 3. Verify existence before answering "not in the brain"
+If no result is clearly about the named entity:
+- Run an exact keyword search: `search {"query":"\"Full Name\"","match":"keyword"}`.
+- Try a slug lookup on the hyphenated name.
+- If both come back empty, the entity is absent. Results that share only a first name, only a last name, or one word of a company name are **different entities**. Never use their values.
+- Check retrieval notices first (see "When it fails"). A degraded search is not proof of absence.
+
+### 4. Check for ambiguity
+If two or more distinct pages carry the same exact name, decide whether they describe one person or several. Signs of separate people are overlapping current roles, different cities, and different backgrounds. If they are separate and the question doesn't disambiguate, answer `ambiguous:` and list each candidate. If only one page matches, the name isn't ambiguous.
+
+### 5. Resolve hops and current state
+- "Works with / works at" means the **current** role. Prefer the person's own page and the company's team listing. Past employers, rumored moves, and notes marked unconfirmed are not the answer, though you can mention them as other values.
+- "Founded" means the founder named on the company page or the founder's own page, ideally confirmed by both. These people are not founders: later CEOs, acquirers or parent companies, investors, and "founding partners" of other firms.
+- Watch for look-alike names, such as two companies sharing a first word. Confirm you are on the exact entity.
+
+### 6. As-of-date questions (contracts, terms, seats, prices, tiers, renewal dates)
+Build the document chain for the entity: the master agreement, amendments, side letters, rescissions, and renewal orders. For each document, note its signed date, its **effective date**, and exactly which terms it changes. Then:
+- Take the latest document **in effect on the as-of date** that changed the asked-for term.
+- A document signed before the date but effective after it does **not** apply yet. Many documents say the current terms continue until their effective date.
+- A rescission reverts the rescinded amendment's changes from the rescission's effective date. The term returns to its prior value.
+- Amendments that change other terms leave the asked-for term as it was. Check what each document actually changes.
+- Account snapshots, review pages, meeting notes, and pipeline notes are lower authority. They often reflect a different date and frequently say the signed contracts govern. Hearsay ("thinks", "might be", "unconfirmed") never decides.
+- "Renewal date / last day of current term" means the end date of the term in force on the as-of date.
+- List the values from the other documents, with their dates, under "Other values I found".
+
+### 7. Synthesize and cite
+Cite every page that decides the answer. When pages agree, cite both. When they conflict, state the conflict and which one governs, then cite both.
+
+## Source precedence
+
+1. User's direct statements
+2. Signed or primary records (contracts, the entity's own page, compiled truth)
+3. Timeline entries and dated meeting notes
+4. Snapshots, rumors, hearsay, and external sources (lowest)
+
+## When it fails
+
+Follow the [agent operator protocol](../conventions/agent-operator-protocol.md) for gbrain error codes and notices.
+- Check each result for notices: `[gbrain notice empty_retrieval kind=degraded]`, `_meta.gbrain_notices`, an `[AGENT]` block, or `search_degraded`.
+- **Degraded / keyword-only:** an empty result is not proof of absence. Tell the user the search is keywords only, try exact names and synonyms, and point to the fix the notice gives (usually enabling embeddings).
+- **Clean miss** ("no retrieval degradation"): you may say the brain doesn't have information on X.
+- **`listing_truncated` / `budget_truncated`:** say "showing the first N". Page through or narrow the query before claiming something is absent.
+- **`page_not_found`:** search by title (and check `--source`) before reporting the page missing.
+- If results look wrong, compare `search` against `query`, and suggest `gbrain doctor --json`.
+
+## Token-budget awareness
+
+- Search returns chunks. Read the excerpts before loading full pages.
+- For "when did X change" or multi-document questions, request whole evidence with `return_unit: "page"` (budgeted by `token_budget`) or `"window"`.
+- For tight budgets on saved page evidence, `recall` with `budget_policy: "query_first"` gives ranked page results first use of the budget. If a needed page doesn't fit, say so rather than treating it as missing.
+
+## Graph traversal
+
+For relationship questions, use `traverse_graph` / `gbrain graph-query <slug> --type <link_type> --direction in|out|both --depth N`. Link types are `attended`, `works_at`, `invested_in`, `founded`, `advises`, `mentions`, and `source`. Use `--direction in` for "who points to X" (e.g. who works at a company). Combine with search when the question needs both similarity and structure.
+
+## Anti-patterns
+
+- Putting hedges or alternative values in the first sentence
+- Giving a near match's value for an entity that isn't in the brain
+- Picking one same-named person without flagging the ambiguity
+- Applying a document because it was signed before the as-of date, when it wasn't yet effective
+- Letting a snapshot, rumor, or later record override the signed records for the date asked
+- Treating a past employer, later CEO, acquirer, or investor as the answer to "works with" or "founded"
+- Claiming absence from a degraded or truncated result

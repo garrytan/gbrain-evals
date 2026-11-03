@@ -1,0 +1,219 @@
+---
+name: briefing
+version: 1.3.0
+description: Compile daily briefing with meeting context, active deals, and citation tracking
+triggers:
+  - "daily briefing"
+  - "morning briefing"
+  - "what's happening today"
+  - "brain pulse"
+  - "pre-briefing pull"
+tools:
+  - search
+  - query
+  - get_page
+  - list_pages
+  - get_timeline
+mutating: false
+upstream: briefing@fc834ee
+---
+
+# Briefing Skill
+
+Compile a daily briefing from brain context. The most important output is a
+correct, cited, as-of-today answer for each external meeting. Everything else
+is secondary.
+
+> **Filing rule:** When the briefing creates or updates brain pages,
+> follow `skills/_brain-filing-rules.md`.
+
+## Contract
+
+- Every fact in the briefing includes an inline `[Source: slug, updated DATE]` citation.
+- Every fact is true **as of the briefing date** the user gives, not as of the newest record in the brain.
+- Meeting participants are resolved against the brain by exact name only. Gaps are flagged explicitly.
+- Active deals and action items include deadlines and recency context.
+- The briefing is read-only. No brain pages are created or modified unless the user explicitly asks.
+- Stale alerts cover pages relevant to today's meetings, not every stale page.
+
+## Priority and time budget
+
+1. **First:** answer the per-meeting facts the task asks for. Finish all meetings before anything else.
+2. **Second:** add supporting context inside each meeting entry, such as other values, contacts and open items.
+3. **Last:** the optional sections (salience, anomalies, deals, action items).
+
+If time or tool calls run short, ship the meeting entries and list the sections you left out.
+A complete set of meeting answers beats a long briefing that never finishes.
+
+## Honoring the task's output contract
+
+When the task specifies how the briefing is read, follow it exactly.
+
+- **Meeting heading:** write one entry per external meeting. Start it with the meeting's time and title exactly as the calendar lists them, for example `- 14:00 Pricing review with X`. Don't reword, reorder or merge titles. Internal or personal blocks can be listed briefly or grouped, but they must never break an external entry.
+- **Answer sentence:** inside the entry, before the next meeting starts, put the requested fact in a sentence of its own, with its citation. Make that sentence the entry's first line, and name exactly one value in it.
+  - Good: "X's support tier in force today is Tier 1. [Source: contracts/x-msa, updated DATE]"
+- **Other values:** mention competing values (older, future, rumoured) only in later sentences, and label each one ("not in force today", "unsigned", "hearsay").
+- **Missing attendee:** when an attendee has no page, write the literal phrase `No brain page for <Full Name>` in that entry. Then say you cannot state their company, and list near-name matches only as "different people".
+
+## Tool reality
+
+The CLI commands described below (`gbrain salience`, `anomalies`, `recall`,
+`waiting`, `whois`) may not exist in your session. Map them to the tools you
+actually have:
+
+| Purpose | Tool |
+|---|---|
+| Find pages | `search` (semantic, or `match: "keyword"` for exact strings; supports OR) |
+| Fuzzy slug lookup | `resolve_slugs` |
+| Read a page | `get_page` |
+| Enumerate related contracts | `list_pages` with `slug_prefix` |
+| Salience | `get_recent_salience` |
+| Anomalies | `find_anomalies` |
+| Link checks | `get_backlinks` |
+
+When a pull has no matching tool, say in one line that the section is missing, not empty. Never invent its content.
+
+## Per-meeting procedure
+
+For each external meeting, run the steps below. You can batch names into a
+single keyword OR search to save calls.
+
+### 1. Resolve the entity
+
+**People.** Search the full name. An attendee matches a page only if the page title is that exact full name.
+- Watch for traps: same first name, same surname, or a one-letter spelling variant (for example -sen vs -son, or e vs y). These are different people. Mention them only as "don't confuse with".
+- If the name search finds nothing exact, also try a keyword search on the surname and `resolve_slugs`.
+- If there is still no exact match, write `No brain page for <name>`. Do not borrow a near match's company.
+
+**Companies.** Use the company page whose title matches exactly.
+- Beware sibling names that share a word but differ in the second word (for example "X Analytics" vs "X Logistics", or "X Health" vs "X Energy"). Announcements about the sibling don't apply.
+- A parent or acquirer's CEO is not the subsidiary's CEO.
+
+### 2. Read the page
+
+Use `get_page` on the resolved slug. Read the job history, leadership list with tenure dates, and the timeline.
+
+### 3. Determine the as-of-today value
+
+Use the rule that matches what the task asks for.
+
+**"Which company is the person with today"**
+- Take the role whose start date is on or before today and whose end date, if any, is after today.
+- A role that starts after today doesn't count yet.
+- The person's page is the primary citation.
+
+**"Who is the chief executive today"**
+- Check the company page's leadership tenures and any announcements.
+- If a CEO handover happened before today, the new CEO is the answer. The former CEO is often now executive chair.
+- If the handover happens after today, the earlier CEO is the answer.
+- Run a quick keyword search for "names chief executive" or "appointed" to catch changes.
+
+**Contract terms (price, seats, discount, support tier, payment, renewal date / term end)**
+1. List every contract for the account with `list_pages` using the `contracts/<account>` slug prefix. Don't rely on search snippets alone; they hide amendments, rescissions and renewal orders.
+2. Order the documents by **effective date**, not signing date or page date.
+3. Apply each document dated on or before today, in order. Each one changes only the terms it names.
+4. Apply a rescission by reverting the terms the cancelled amendment changed, as of the rescission's effective date.
+5. Ignore any document whose effective date is after today, even if it was signed before today.
+6. The renewal date is the last day of the term in force today.
+7. Cite the document that set the value now in force. That may be the original agreement if later documents never touched that term.
+
+### 4. Rank sources
+
+Signed contracts and dated records outrank everything else, including:
+- account-page snapshots, which are often stale and themselves say the signed contracts govern
+- meeting notes where values were "floated"
+- Slack or hallway notes that admit nobody checked the paperwork
+
+Mention conflicting values only as labelled extras.
+
+### 5. Handle dates in citations
+
+Many pages carry a fallback "updated" date from a bulk import, often later than today. Cite the date the brain records. Add one note at the top saying that this date is an import stamp, and that you judged currency from the dates inside the documents. Never treat a later-dated record as current.
+
+### 6. Add context
+
+After the answer sentence, add short, cited context:
+- role and tenure
+- the counterpart contact and our account owner
+- open follow-ups from the last dated meeting at or before today
+- notice deadlines (term end minus notice days)
+- working-style notes
+
+Flag meeting notes dated after today as suspect or future.
+
+## Pre-Briefing Context Pull (optional, after meetings are done)
+
+Run whatever is available. All pulls are read-only.
+
+**Salience** (`gbrain salience --days 7` / `get_recent_salience`)
+- Fold in pages that relate to today's meetings.
+- If the results are only bulk-imported pages with zero emotional weight, say so in one line.
+
+**Anomalies** (`gbrain anomalies` / `find_anomalies`)
+- Spikes across every page type against a zero baseline mean a bulk import, not a signal. Say so briefly.
+
+**Personal recall / hot memory pulse** (`gbrain recall ...`)
+- If available, lead with supersessions, top entities, new facts and a pending-consolidation footer.
+- `--since-last-run` advances the cursor. In cron, pass `--source`.
+
+**Open loops** (`gbrain waiting --json`)
+- If available, these are real loop rows and outrank inferred follow-ups.
+- If it refuses on stale sync, run or name the sync it asks for. Don't build the section from stale mail.
+
+## Phases
+
+1. **Today's meetings:** follow the per-meeting procedure above.
+2. **Active deals:** for accounts on today's calendar, give the current term end, the notice deadline, and anything due in the next 7 days.
+3. **Time-sensitive threads:** list items due in the next 48 hours and overdue follow-ups from dated notes.
+4. **Recent changes:** list pages genuinely updated in the last 24 hours. Skip this when page dates are bulk-import stamps, and say so.
+5. **People in play:** list recently active people. Apply the same caveat as recent changes.
+6. **Stale alerts:** flag stale pages relevant to today's meetings, such as an old account snapshot or a last meeting years ago.
+
+## Output Format
+
+```
+DAILY BRIEFING -- [date]
+========================
+[One-line note on page-date reliability / as-of-date reasoning, if relevant]
+
+MEETINGS TODAY
+- [time] [meeting title exactly as given]
+  [Requested fact as its own sentence.] [Source: slug, updated DATE]
+  [Other values, labelled and cited.] [Contacts, open items, cautions.]
+- [time] [internal meeting]: internal, no prep needed.
+
+ACTIVE DEALS
+- [account] -- term ends [date], notice deadline ~[date] [Source: ...]
+
+ACTION ITEMS
+- [item] -- due [date], related to [slug]
+
+HIGH-SALIENCE / ANOMALIES / RECENT CHANGES / PEOPLE IN PLAY
+- [findings, or one line on why they carry no signal]
+
+NOT COVERED
+- [sections not run and why: missing, not empty]
+```
+
+## Citation in Briefings
+
+Include an inline citation for every fact, for example:
+- "Jane is CTO of Acme [Source: people/jane-doe, updated 2026-04-01]"
+
+## When it fails
+
+Follow the [agent operator protocol](../conventions/agent-operator-protocol.md) for any gbrain error `code`, exit code, `[AGENT]` block or notice block.
+
+- **Degraded or keyword-only search:** say "the brain is searching keywords only right now" in the affected section.
+- **One section's source fails:** ship the rest of the briefing and name the missing section.
+
+## Anti-Patterns
+
+- **Newest record wins:** don't answer with the latest value in the brain when its effective date is after today.
+- **Signing date as effective date:** the effective date decides what is in force, not the date a document was signed.
+- **Near-name match as the attendee:** a person or company with a similar name is not the attendee. Write `No brain page for <name>` instead.
+- **Snapshot or hallway value over a signed contract:** signed contracts govern.
+- **Answer buried mid-paragraph:** put the answer sentence first, give it one value, and cite it.
+- **Uncited facts:** every fact needs a citation.
+- **Modifying pages unprompted:** the briefing is read-only.
+- **Silently dropping sections:** name any section you left out.
