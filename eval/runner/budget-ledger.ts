@@ -934,13 +934,20 @@ export class BudgetRun {
   /** Measure this process's event-loop lag for the run's summary; close() stops it. */
   attachLagMonitor(monitor: LagMonitor): void { this.lag = monitor; }
 
-  /** Reserve before sending. Throws BudgetExceededError, and records nothing, when either cap would be crossed. */
+  /**
+   * Reserve before sending. Throws BudgetExceededError, and records nothing,
+   * when either cap would be crossed or the run is closed. The closed check
+   * reads the run inside the reservation's write transaction, so a close from
+   * any handle or process lands either before it (refused) or after it (the
+   * reservation settles as usual).
+   */
   reserve(usd: number, description: string): string {
     if (!Number.isFinite(usd) || usd < 0) throw new BudgetExceededError(`cannot reserve a non-finite or negative cost for ${description}`);
     const id = randomUUID();
     write(this.ledgerPath, description, db => {
-      const run = db.query('SELECT budget_usd, committed_usd FROM runs WHERE run_id = ?').get(this.runId) as { budget_usd: number; committed_usd: number } | null;
+      const run = db.query('SELECT budget_usd, committed_usd, finished_at FROM runs WHERE run_id = ?').get(this.runId) as { budget_usd: number; committed_usd: number; finished_at: string | null } | null;
       if (!run) throw new BudgetExceededError(`${description}: budget run ${this.runId} is not in ${this.ledgerPath}`);
+      if (run.finished_at !== null) throw new BudgetExceededError(`${description}: budget run ${this.runId} already finished`);
       const cap = currentCap(db);
       const programCommitted = programRow(db).committed_usd;
       ledgerTestHooks.afterCapCheck?.();

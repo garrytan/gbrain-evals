@@ -136,9 +136,57 @@ jobs:
       - name: Install ripgrep
         run: sudo apt-get update -q && sudo apt-get install -y ripgrep
 
-      # test/eval/ plus the unit tests colocated under eval/.
+      # test/eval/ plus the unit tests colocated under eval/. The JUnit report
+      # names the files this shard ran, for the tested-tree job below.
       - name: Unit + integration tests (shard ${{ matrix.shard }}/4)
-        run: bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/
+        run: bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/ --reporter=junit --reporter-outfile="$RUNNER_TEMP/tests-${{ matrix.shard }}.xml"
+
+      - name: Upload the files this shard ran
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tested-files-${{ matrix.shard }}
+          path: ${{ runner.temp }}/tests-${{ matrix.shard }}.xml
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
+  # The tested tree for gstack's CI carry (gstack docs/pregate.md#ci-carry).
+  # After the checks job and all four test shards pass, tree.json records this
+  # run, the tree it tested and every test file it ran: the Bun files from the
+  # shards' JUnit reports and the Python tests the checks job runs. gstack's
+  # pregate and /ship read it from a green run at the same clean tree
+  # (.gstack/pregate.json run_profiles and ship_lanes_from) instead of running
+  # the suite again. It runs no tests itself.
+  tested-tree:
+    needs: [checks, tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.4
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: tested-files-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/tested-files
+
+      - name: Record the tested tree
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bun scripts/ci-tested-tree.ts record --junit "$RUNNER_TEMP/tested-files" --out "$RUNNER_TEMP/tested-tree/tree.json"
+
+      - name: Upload the tested tree
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tested-tree
+          path: ${{ runner.temp }}/tested-tree/tree.json
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
 
   # The head-to-head scoreboard's $0 fixture (docs/scoreboard.md): the reference
   # fake system end to end through the shim, the metering proxy in lease mode,
