@@ -25,6 +25,7 @@ import { measureCalibration, readerTokenizer } from '../systems/render-v2.ts';
 import { calibrate, calibrationSamples } from './calibrate.ts';
 import { findCell, runCell } from './cell.ts';
 import type { CellDefinition } from './cells/definitions.ts';
+import { refuse } from './scoreboard-errors.ts';
 
 /** The cell's packed arm read by `reader` alone, without frontier judges; a cell outside the dev split, or with no packed arm, is refused. */
 export function calibrationCell(def: CellDefinition, reader: string): CellDefinition {
@@ -38,7 +39,8 @@ export function calibrationCell(def: CellDefinition, reader: string): CellDefini
 export function claimOut(out: string, keyless: boolean, kind = 'calibration'): void {
   const marker = join(out, 'upstream.json');
   if (existsSync(marker) && JSON.parse(readFileSync(marker, 'utf8')).keyless !== keyless) {
-    throw new Error(`${out} holds a ${keyless ? 'paid' : 'keyless'} ${kind} run; give this run a fresh --out`);
+    throw refuse({ code: 'USAGE', message: `${out} holds a ${keyless ? 'paid' : 'keyless'} ${kind} run; give this run a fresh --out`,
+      why: 'a keyless rehearsal and a paid run never share an --out, so a paid run\'s records are never mixed with a rehearsal\'s', fix: { next: 'run', argv: ['--out', '<a fresh directory>'] } });
   }
   writeFileSync(marker, JSON.stringify({ keyless }) + '\n');
 }
@@ -69,7 +71,8 @@ if (import.meta.main) {
   catch (e) { console.error((e as Error).message); process.exit(2); }
   const out = resolve(outArg);
   mkdirSync(out, { recursive: true });
-  claimOut(out, !!keyless);
+  try { claimOut(out, !!keyless); }
+  catch (e) { console.error((e as Error).message); process.exit(2); }
   const def = calibrationCell(findCell(one('--cell') ?? 's3-smoke.baseline-hybrid.baseline'), reader);
   const placeholder = 'keyless-not-a-provider-key';
   const keys = keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder, VOYAGE_API_KEY: placeholder, PARTICLE_API_KEY: placeholder } : { ...process.env };

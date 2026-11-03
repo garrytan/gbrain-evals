@@ -4,7 +4,12 @@
  * reader, and each answer is judged with the cell's canonical instrument. Nothing is retrieved or packed again.
  *
  *   bun eval/runner/q1/reread-cell.ts --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader particle:particle-1
- *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> [--manifest q1|f6] [--keyless-upstream <url>]
+ *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6] [--keyless-upstream <url>]
+ *
+ * Each arm and reader gets its own --out (verify.json, the lease usage log and the keyless/paid marker sit at its root),
+ * and each invocation its own --run-id: a lease closes when the run ends and never reopens. `--ledger-cap-usd` is the
+ * ceiling on every lease of --budget-ledger together (A6: $100); a lease that would take the ledger's committed spend
+ * past it is refused before any request.
  *
  * `--source` takes one staging root per shard (or per lease that ran a shard): the `runs/<cell id>` directory of a
  * cell's output, beside its published `cells/` copy, as the launcher pulls it (ubi-runner `--pull` brings back the
@@ -27,9 +32,9 @@
  * receipt.json. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
  */
 import { randomUUID } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
-import { BudgetRun } from '../budget-ledger.ts';
+import { BudgetRun, ledgerPaths, ledgerStatus } from '../budget-ledger.ts';
 import type { FrozenContext } from '../memory-qa/arms.ts';
 import { loadCorpus, type Corpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
@@ -77,7 +82,7 @@ export interface RereadVerify {
 const noContext = (outcome: string) => sha256(`no-context|${outcome}`);
 const armOf = (key: string) => key.slice(key.lastIndexOf('|') + 1);
 const questionOf = (key: string) => key.slice(key.indexOf('|') + 1, key.lastIndexOf('|'));
-const answerIdentity = (xs: AnswerRecord[]) => xs.map(a => `${a.answer_id}|${a.context_sha256}`).sort().join('\n');
+const answerIdentity = (xs: AnswerRecord[]) => xs.map(a => JSON.stringify(a)).sort().join('\n');
 
 /**
  * The byte-for-byte check of every source and the reading plan. Problems are counted, never named by question, since
@@ -186,11 +191,11 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
   return { verify, plan: problems.length ? null : plan };
 }
 
-export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: 'q1' | 'f6'; env?: Record<string, string | undefined> }
+export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: 'q1' | 'f6'; env?: Record<string, string | undefined>; keyless?: boolean }
 export interface RereadDeps { corpus?: Corpus; reader?: ChatLike; judge?: ChatLike; instrument?: Instrument }
-export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: 'q1' | 'f6' | null; instrument: Instrument; verify: RereadVerify; plan: PlannedRead[] }
+export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: 'q1' | 'f6' | null; keyless: boolean; instrument: Instrument; verify: RereadVerify; plan: PlannedRead[] }
 
-/** Everything before the first request: the judge refusal, custody, the corpus and the byte-for-byte check (verify.json). */
+/** Everything before the first request: the judge refusal, custody, one re-read per --out, the --out claim, the corpus and the byte-for-byte check (verify.json). */
 export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: RereadOptions, deps: Pick<RereadDeps, 'corpus' | 'instrument'> = {}): PreparedReread {
   const env = opts.env ?? process.env;
   const out = resolve(opts.out);
@@ -198,13 +203,22 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   refuseCompatJudges(arm.cell_id, [instrument.canonical_judge]);
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
   if (!deps.corpus && needsCustody(def)) custodyGate(def, out, env, `q1 reread ${arm.cell_id} with ${opts.reader}`);
+  const others = existsSync(join(out, 'cells')) ? readdirSync(join(out, 'cells')).sort().filter(d => d !== rereadCellId(arm.cell_id, opts.reader)) : [];
+  if (others.length) throw refuse({ code: 'USAGE', message: `${out} already holds ${others.join(', ')}; give each arm and reader its own --out`,
+    why: 'verify.json, the lease usage log and the keyless/paid marker sit at the --out root, and each re-read receipt points at them', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   mkdirSync(out, { recursive: true });
+  claimOut(out, !!opts.keyless, 'reread');
   const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, devOnly(def) ?? undefined);
   const { verify, plan } = verifySources(def, arm, opts.sources, corpus, opts.reader);
+  const frozen = join(out, 'reread-source.json');
+  const identity = JSON.stringify({ arm_cell_id: arm.cell_id, reader: opts.reader, effort: def.effort, config_sha256: verify.source_config_sha256, contexts_sha256: verify.sources.map(s => s.contexts_sha256) }) + '\n';
+  if (existsSync(frozen) && readFileSync(frozen, 'utf8') !== identity) throw refuse({ code: 'USAGE', message: `${out} holds a re-read of other sources, another run configuration or another effort; give this run a fresh --out`,
+    why: 'a resume keeps the answers already in --out, so it must read the sources they were read from', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   writeFileSync(join(out, 'verify.json'), JSON.stringify(verify, null, 2) + '\n');
   if (!plan) throw refuse({ code: 'PREFLIGHT_FAILED', message: `re-read of ${arm.cell_id} refused before any request: ${verify.problems.join('; ')}`,
     why: 'a re-read sends exactly the bytes the source readers read, so every frozen context, answer and schedule must check out first', fix: { next: 'report', user_message: `the counts are in ${join(out, 'verify.json')}` } });
-  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, instrument, verify, plan };
+  if (!existsSync(frozen)) writeFileSync(frozen, identity);
+  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, verify, plan };
 }
 
 export interface RereadResult { cell_id: string; dir: string; status: 'complete' | 'partial'; stopped: string | null; receipt: Record<string, unknown> }
@@ -271,7 +285,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const usd = (phase: MeterLine['phase']) => Math.round(spent.filter(m => m.phase === phase).reduce((s, m) => s + m.usd, 0) * 1e6) / 1e6;
   const sum = (k: keyof AnswerRecord['usage']) => all.reduce((s, a) => s + a.usage[k], 0);
   const receipt = {
-    schema: REREAD_RECEIPT_SCHEMA, cell_id: cellId, run_status: status, stopped,
+    schema: REREAD_RECEIPT_SCHEMA, cell_id: cellId, run_status: status, stopped, keyless: p.keyless,
     source: { cell: def.id, manifest: p.manifest, arm: arm.id, arm_cell_id: arm.cell_id, config_sha256: p.verify.source_config_sha256, contexts: p.verify.sources.map(s => ({ sha256: s.contexts_sha256, records: s.contexts_records, arm_records: s.arm_records })) },
     set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block,
     system: { kind: def.system, configuration: def.configuration },
@@ -290,13 +304,25 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   return { cell_id: cellId, dir, status, stopped, receipt };
 }
 
+/**
+ * The re-read's lease on the add-on's own ledger. Each lease opens its own run and raises that ledger's cap by its own
+ * amount, so the cap A6 sets on all the leases together is checked here: a lease that would take the ledger's committed
+ * spend (open reservations included) past `capUsd` is refused before it opens.
+ */
+export function openRereadLease(o: { runId: string; leaseUsd: number; ledgerPath: string; capUsd: number }): BudgetRun {
+  const spent = existsSync(ledgerPaths(o.ledgerPath).ledger) ? ledgerStatus({ ledgerPath: o.ledgerPath }).totals.committed_usd : 0;
+  if (!(o.capUsd > 0) || spent + o.leaseUsd > o.capUsd + 1e-9) throw refuse({ code: 'USAGE', message: `a $${o.leaseUsd.toFixed(2)} lease on ${o.ledgerPath}, which holds $${spent.toFixed(2)} committed, would pass its $${o.capUsd.toFixed(2)} ceiling`,
+    why: 'every re-read lease of the add-on ledger shares one ceiling (A6: $100), and a refused lease sends nothing', fix: { next: 'ask_user', user_message: 'the re-reads would pass their preregistered ceiling; tell GBEV-3 before any more run' } });
+  return BudgetRun.openLease({ runId: o.runId, leaseUsd: o.leaseUsd, ledgerPath: o.ledgerPath, runner: 'q1-reread-cell' });
+}
+
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const sources = argv.flatMap((a, i) => (a === '--source' && argv[i + 1] ? [argv[i + 1]] : []));
-  const [cellArg, armArg, reader, outArg, ledger, runId, leaseUsd] = [one('--cell'), one('--arm'), one('--reader'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd'))];
-  if (!cellArg || !armArg || !sources.length || !reader || !outArg || !ledger || !runId || !(leaseUsd > 0)) {
-    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> [--manifest q1|f6] [--keyless-upstream <url>]`);
+  const [cellArg, armArg, reader, outArg, ledger, runId, leaseUsd, ledgerCap] = [one('--cell'), one('--arm'), one('--reader'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
+  if (!cellArg || !armArg || !sources.length || !reader || !outArg || !ledger || !runId || !(leaseUsd > 0) || !(ledgerCap > 0)) {
+    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6] [--keyless-upstream <url>]`);
     process.exit(2);
   }
   let keyless: string | null;
@@ -307,13 +333,12 @@ if (import.meta.main) {
     const def = findCell(cellArg, undefined, manifest);
     const arm = rereadArm(def, armArg);
     const out = resolve(outArg);
-    const prepared = prepareReread(def, arm, { sources, reader, out, manifest });
-    claimOut(out, !!keyless, 'reread');
+    const prepared = prepareReread(def, arm, { sources, reader, out, manifest, keyless: !!keyless });
     const placeholder = 'keyless-not-a-provider-key';
     const keys = keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder, VOYAGE_API_KEY: placeholder, PARTICLE_API_KEY: placeholder } : { ...process.env };
     const [cellToken, controlToken] = [randomUUID(), randomUUID()];
     Object.assign(process.env, { SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
-    const lease = BudgetRun.openLease({ runId, leaseUsd, ledgerPath: resolve(ledger), runner: 'q1-reread-cell' });
+    const lease = openRereadLease({ runId, leaseUsd, ledgerPath: resolve(ledger), capUsd: ledgerCap });
     const usageLog = join(out, 'usage.ndjson');
     const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
       policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });

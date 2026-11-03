@@ -4,6 +4,16 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### The particle-1 add-on's re-read tool and report close #347's four open review findings
+
+- **A resume reads what its answers were read from.** `eval/runner/q1/reread-cell.ts` freezes the sources, run configuration, reader and effort in `<out>/reread-source.json` on the first run, and a resume with other sources or another effort refuses before `verify.json` changes. An `--out` that already holds another arm's or reader's re-read refuses too.
+- **The published-answer check compares whole answers.** A published answer whose text, usage or outcome differs from its staged answer refuses the run; #347 compared ids and context hashes alone.
+- **The report merges one run's shards only.** `eval/runner/q1/particle-addon-report.ts` refuses shards of one cell from different run configurations, sources or keyless markers, and a re-read that is keyless, carries no keyless marker or holds another reader's answers.
+- **Unjudged answers are counted.** An answer whose canonical judgment is missing leaves the denominator and now shows as unjudged among the answers not scored. The first table gives both means over the questions both readers have, with the pair count and particle-1's run status beside them.
+- **One ceiling for all re-read leases.** `--ledger-cap-usd` (A6: $100) refuses a lease that would take the add-on ledger's committed spend past it, before any request. The keyless/paid `--out` check now runs before `verify.json` is written and refuses with a usage message instead of a stack trace.
+- **A6's revision** adds a second-judge sensitivity (gpt-6.1-sol on the same rubric) for a result that favors particle-1, says how the two ledger ceilings keep the add-on under its $150 hard cap, and states that failed tries are not priced. `cell.ts plan --manifest f6` prints the add-on block after F6's counted total, marked as outside it.
+- **Tests.** Each of the four findings has a test that fails at #347's head. `test/eval/q1-f6-cells.test.ts` fails if F6's frozen campaign regenerates to anything but its 61 committed units.
+
 ### F6 amendment A6: the particle-1 add-on (GST-1153)
 
 - **A6 in F6's preregistration** adds particle-1 rows beside F6's published rows before any of them runs: re-reads of the frozen 8,000-token contexts on S1 and S2b (gbrain P and A0, the extract-first and memory-bank servers, the temporal-graph library 0.31.2), and the S1 file agent with particle-1 as its agent. It changes no F6 cell, bar, verdict, ledger or published number. Hard cap $150, charged to Q1's eval total.
