@@ -2,6 +2,22 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.150] - 2026-11-03
+
+### F6: BEAM-10M rerun at gbrain's current release, 8,000-token budget (#321)
+
+- **The F6 scoreboard is published** in `docs/benchmarks/2026-10-29-f6-current-master/`. `scoreboard.md` is the custodian's render, and `publication.json` pins its receipt to results commit `b8b936a1` (SHA256SUMS `09ba1ff8`). Only aggregates are published; the sealed question ids and text stay in custody. It measures GBrain 0.60.493.0 (`0ccf2bdd`, 2026-10-29) on BEAM-10M, which was never used to tune gbrain, with a three-reader mean at 8,000 tokens: `gbrain-defaults` 61.0%, `baseline-file-agent` 68.2%, `ext-extract-first` 58.9%, `ext-memory-bank` 55.4%, `ext-verbatim-session` 50.8%, `ext-temporal-graph` 48.7% and `baseline-none` 25.8%, each on 199 of 199 questions. With ten conversations the comparison can only detect differences of about 13.6 points, so it is descriptive and no row is ranked. `baseline-hybrid` is not published, because its unit ran Q1's definition of that cell (A5 in the publication's disclosures). F6 spend settled at $2,909.74 across the six counted ledgers, within the $3,068.83 counted cap.
+- **The preregistration and amendments A1 to A4b** are in `docs/benchmarks/2026-10-29-f6-current-master-preregistration.md`, with one campaign manifest per amendment under `campaign/`.
+- **Harness.**
+  - The gbrain-defaults shim builds the F6 fact brain under a recorded extraction cap and serves each arm's `{op, args, overlay}` policy, writing and reading back the six search keys.
+  - `cell.ts` retrieves policy-major and refuses a cell id that both cell manifests define unless `--manifest` names one.
+  - `reuse-check.ts` gates the reused A24 rows, and `publish.ts` assembles a publication from several manifests.
+  - Other pieces: the D8 long-history reserve loader with its custody push, the `ext-temporal-graph` shipped-0.31 configuration, VM names that carry their expiry, and ledger rounding where reservations sum exactly to a cap.
+- **Fixes from /ship's review.**
+  - An overlay switch that fails part way now clears the stored overlay hash before it writes, so the next request rewrites and rereads every key instead of trusting a half-written configuration.
+  - The readiness probe's F6-settings branch has a test.
+  - Findings that would change a published number, a manifest, the pin or custody are filed as follow-ups (#332, #333, #334) and not changed here.
+
 ## [0.10.147] - 2026-11-03
 
 ### A closed campaign run refuses a lease raise (#319)
