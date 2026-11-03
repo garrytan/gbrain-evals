@@ -4,14 +4,14 @@
   "knobs": {
     "seed": 30001,
     "chain_depth": {
-      "min": 3,
+      "min": 4,
       "max": 5
     },
     "lookalike_pairs": {
-      "companies": 15,
-      "people": 20
+      "companies": 20,
+      "people": 24
     },
-    "distractor_count": 2
+    "distractor_count": 6
   },
   "candidates": {
     "renewal-pending": 37,
@@ -21,44 +21,39 @@
     "meetings-3-4": 80,
     "meetings-5-6": 40
   },
-  "dropped_by_oracle": 7,
+  "dropped_by_oracle": 6,
   "dropped_by_solvability": 0,
   "dropped_by_degenerate": 0,
   "dropped": [
     {
       "family": "renewal-pending",
-      "anchor": "cal:b001",
+      "anchor": "cal:b005",
       "reason": "the subjects share no span of days"
     },
     {
-      "family": "changed-companies",
-      "anchor": "cal:b019@2025-12-26",
-      "reason": "accounts/velval-moving has no term with more than one value to ask on 2025-12-26"
+      "family": "renewal-pending",
+      "anchor": "cal:b006@2026-06-05",
+      "reason": "accounts/kelmoor-supply has no term with more than one value to ask on 2026-06-05"
+    },
+    {
+      "family": "renewal-pending",
+      "anchor": "cal:b006@2026-06-19",
+      "reason": "accounts/kelmoor-supply has no term with more than one value to ask on 2026-06-19"
+    },
+    {
+      "family": "renewal-pending",
+      "anchor": "cal:b006@2026-06-22",
+      "reason": "accounts/kelmoor-supply has no term with more than one value to ask on 2026-06-22"
+    },
+    {
+      "family": "renewal-pending",
+      "anchor": "cal:b006@2026-06-24",
+      "reason": "accounts/kelmoor-supply has no term with more than one value to ask on 2026-06-24"
     },
     {
       "family": "lookalike-attendee",
-      "anchor": "cal:b025@2026-10-02",
-      "reason": "accounts/oakton-fasteners has no term with more than one value to ask on 2026-10-02"
-    },
-    {
-      "family": "lookalike-attendee",
-      "anchor": "cal:b028@2026-09-25",
-      "reason": "accounts/umbley-lumber has no term with more than one value to ask on 2026-09-25"
-    },
-    {
-      "family": "unknown-attendee",
-      "anchor": "cal:b035@2024-05-17",
-      "reason": "accounts/wilstead-building-supply has no term with more than one value to ask on 2024-05-17"
-    },
-    {
-      "family": "unknown-attendee",
-      "anchor": "cal:b043@2024-06-21",
-      "reason": "accounts/pelline-lumber has no term with more than one value to ask on 2024-06-21"
-    },
-    {
-      "family": "meetings-3-4",
-      "anchor": "cal:b055@2025-05-16",
-      "reason": "accounts/garion-hardware has no term with more than one value to ask on 2025-05-16"
+      "anchor": "cal:b024@2026-01-29",
+      "reason": "accounts/elmmere-building-supply has no term with more than one value to ask on 2026-01-29"
     }
   ],
   "capacity": [
@@ -66,7 +61,7 @@
       "family": "meetings-3-4",
       "held_out": false,
       "candidates": 80,
-      "confirmed": 79,
+      "confirmed": 80,
       "quota": {
         "train": 10,
         "sel": 10,
@@ -85,7 +80,7 @@
       "family": "unknown-attendee",
       "held_out": false,
       "candidates": 56,
-      "confirmed": 54,
+      "confirmed": 56,
       "quota": {
         "train": 7,
         "sel": 7,
@@ -104,7 +99,7 @@
       "family": "lookalike-attendee",
       "held_out": false,
       "candidates": 56,
-      "confirmed": 54,
+      "confirmed": 55,
       "quota": {
         "train": 7,
         "sel": 7,
@@ -123,7 +118,7 @@
       "family": "changed-companies",
       "held_out": true,
       "candidates": 40,
-      "confirmed": 39,
+      "confirmed": 40,
       "quota": {
         "train": 0,
         "sel": 0,
@@ -142,7 +137,7 @@
       "family": "renewal-pending",
       "held_out": true,
       "candidates": 37,
-      "confirmed": 36,
+      "confirmed": 32,
       "quota": {
         "train": 0,
         "sel": 0,
@@ -177,8 +172,8 @@
       "short": 0
     }
   ],
-  "groups": 76,
+  "groups": 75,
   "largest_group": 3,
-  "unused_candidates": 122,
-  "assembly_attempt": 3
+  "unused_candidates": 123,
+  "assembly_attempt": 0
 }

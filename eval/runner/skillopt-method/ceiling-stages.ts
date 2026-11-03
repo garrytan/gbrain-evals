@@ -61,8 +61,14 @@
  * errored task is unscored, and so is its pair; later pairs still run. A
  * budget refusal or a tripwire (`refusalKind`) stops the stage at once: no row
  * is written for the refused rollouts, and the stage reads incomplete. After
- * each pair, when the stage's mean rollout cost on that target passes 1.25
- * times its (re-priced) planning price, the stage stops after that pair.
+ * each pair, the 1.25x re-price rule reads billed spend per scored rollout on
+ * that target over a window from stage start or the last stop (the rollout
+ * rows this process wrote; each --resume opens a new window), voided spend
+ * included: past 1.25 times the (re-priced) planning price, the stage stops
+ * after that pair (`reprice-trigger`), and a window that billed spend but
+ * scored no rollout is the `unscored-spend` stop. All billed spend stays on
+ * the ledger and counts against the run's cap; the stage also reports voided
+ * spend apart, beside the count of arms that carry it.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -260,6 +266,7 @@ function indexRows(store: RowStore) {
   const rollouts = new Map<string, RolloutRow>();
   const failed = new Map<string, RolloutRow[]>();
   const proposals = new Map<string, ProposalRow>();
+  const fresh: RolloutRow[] = [];
   const add = (r: CeilingRow) => {
     if (r.kind === 'proposal') { proposals.set(proposalKey(r.target, r.skill, r.proposal), r); return; }
     const key = rolloutKey(r);
@@ -268,7 +275,9 @@ function indexRows(store: RowStore) {
   };
   store.rows.forEach(add);
   return {
-    append(row: CeilingRow) { store.append(row); add(row); },
+    append(row: CeilingRow) { store.append(row); add(row); if (row.kind === 'rollout') fresh.push(row); },
+    /** The rollout rows on `target` this process wrote: the re-price window since stage start or the --resume that opened it. */
+    fresh: (target: FrontierTarget) => fresh.filter(r => r.target === target),
     rollout: (k: Parameters<typeof rolloutKey>[0]) => rollouts.get(rolloutKey(k)),
     failed: (k: Parameters<typeof rolloutKey>[0]) => failed.get(rolloutKey(k)) ?? [],
     proposal: (target: FrontierTarget, skill: SkillName, id: ProposalId) => proposals.get(proposalKey(target, skill, id)),
@@ -292,7 +301,7 @@ function usageOf(calls: readonly CallUsage[]): RolloutUsage {
   return u;
 }
 
-/** A meter over rollout rows: scored rows count as rollouts, and an error row's paid calls add their calls, tokens and list-price dollars, so a failed rollout's spend raises the mean per scored rollout. */
+/** A meter over rollout rows: scored rows count as rollouts, and an error row's paid calls add their calls, tokens and list-price dollars, so a failed rollout's spend raises the mean per scored rollout. Calibration's mean and the gate's re-price window both read it this way. */
 export function meterOfRows(rows: readonly RolloutRow[]): MeterTotals {
   const m = emptyMeter();
   for (const r of rows) {
@@ -355,6 +364,8 @@ export interface ArmSummary {
   refusals: RefusalTally;
   stops: Record<StopClass, number>;
   cost: MeterSummary;
+  /** The paid calls and list-price dollars of the arm's failed rollouts (in `cost` too): spend that scored nothing. */
+  voided: { calls: number; usd: number };
 }
 
 interface PairContext {
@@ -379,6 +390,7 @@ export function summarizeArm(spec: ArmSpec, cells: ReturnType<typeof armRows>): 
   const scored = all.filter(r => r.error === undefined);
   const complete = cells.every(c => c.runs.every(r => r && r.error === undefined));
   const score = (key: 'substance' | 'full') => (complete ? mean(cells.map(c => median(c.runs.map(r => (r![key] ? 1 : 0))))) : null);
+  const voided = meterOfRows(cells.flatMap(c => c.failed));
   return {
     arm: spec.arm, split: spec.split, runs: spec.runs, tasks: spec.tasks.length, skill_sha8: sha8(spec.skillText),
     substance: score('substance'), full: score('full'),
@@ -388,6 +400,7 @@ export function summarizeArm(spec: ArmSpec, cells: ReturnType<typeof armRows>): 
     refusals: tallyRefusals(scored.map(r => r.tool_calls ?? [])),
     stops: countStops(scored.map(r => r.stop_reason)),
     cost: summarizeMeter(meterOfRows([...scored, ...cells.flatMap(c => c.failed)])),
+    voided: { calls: voided.calls, usd: voided.usd },
   };
 }
 
@@ -608,7 +621,7 @@ export interface GatePairResult {
   skill: SkillName;
   target: FrontierTarget;
   status: 'scored' | 'errored' | 'stopped' | 'not-run';
-  not_run_reason?: 'sol-gate-not-needed' | 'reprice-trigger' | 'stage-stopped' | 'opus-incomplete';
+  not_run_reason?: 'sol-gate-not-needed' | 'reprice-trigger' | 'unscored-spend' | 'stage-stopped' | 'opus-incomplete';
   arms: Partial<Record<GateArm, ArmSummary>>;
   proposals: ProposalSummary[];
   /** The kept one-shot: a proposal that beat the seed on selection, else the seed; null while undecided. */
@@ -630,7 +643,12 @@ export interface GatePairResult {
   texts: { proposer_input?: string; rubric_input?: string; proposals: Partial<Record<ProposalId, string>> };
 }
 
+/** `mean_rollout_usd` is the window's billed spend on the target, voided included, over its scored rollouts. */
 export interface RepriceStop { reason: 'reprice-trigger'; target: FrontierTarget; skill: SkillName; mean_rollout_usd: number; threshold_usd: number }
+/** A window that billed `usd` on the target and scored no rollout; a --resume opens a new window. */
+export interface UnscoredStop { reason: 'unscored-spend'; target: FrontierTarget; skill: SkillName; usd: number }
+/** Failed rollouts' spend on a target and the arms that carry it, reported apart (it is on the ledger and in the re-price window too). */
+export interface VoidedSpend { arms: number; usd: number }
 
 export interface GateStageResult {
   mode: 'fake' | 'live';
@@ -650,6 +668,8 @@ export interface GateStageResult {
   verdict: GateResult;
   stopped: StageStop | null;
   reprice_trigger: RepriceStop | null;
+  unscored_spend: UnscoredStop | null;
+  voided: Record<FrontierTarget, VoidedSpend>;
   /** Every task file the stage read; it never reads test. */
   files_read: Array<{ path: string; use: 'scored' | 'proposer input' }>;
   models_not_run: typeof MODELS_NOT_RUN;
@@ -672,6 +692,12 @@ export interface GateStageOptions {
 }
 
 interface SkillData { train: MethodTaskV3[]; sel: MethodTaskV3[]; gate: MethodTaskV3[]; seed: string; kept: string; criteria: string; feedback: string }
+
+/** The voided spend of `pairs`: their arms' failed-rollout dollars, and how many arms made a paid call that scored nothing. */
+function voidedOf(pairs: readonly GatePairResult[]): VoidedSpend {
+  const arms = pairs.flatMap(p => Object.values(p.arms)).filter(a => a!.voided.calls > 0);
+  return { arms: arms.length, usd: arms.reduce((usd, a) => usd + a!.voided.usd, 0) };
+}
 
 const EMPTY_SCORES: GatePairResult['scores'] = { no_skill: null, seed_run1: null, seed_run2: null, seed: null, seed_trained_families: null, seed_held_out_families: null, seed_selection: null, one_shot: null, kept_rewrite: null, rubric_one_shot: null, reachability: null };
 const emptyPair = (skill: SkillName, target: FrontierTarget, status: GatePairResult['status'], not_run_reason?: GatePairResult['not_run_reason']): GatePairResult =>
@@ -836,6 +862,7 @@ export async function runGateStage(o: GateStageOptions): Promise<GateStageResult
   const pairs: GatePairResult[] = [];
   let stopped: StageStop | null = null;
   let trigger: RepriceStop | null = null;
+  let unscored: UnscoredStop | null = null;
   let solNeeded: boolean | null = null;
   let solRan = false;
   const engine = o.engine ?? await openBrain(CEILING_DATASET);
@@ -843,7 +870,7 @@ export async function runGateStage(o: GateStageOptions): Promise<GateStageResult
   const scoredPairs = () => pairs.filter(p => p.gate_pair).map(p => p.gate_pair!);
   try {
     for (const target of FRONTIER_TARGET_NAMES) {
-      if (target === 'sol' && !stopped && !trigger) {
+      if (target === 'sol' && !stopped && !trigger && !unscored) {
         if (pairs.some(p => p.target === 'opus' && p.status === 'errored')) {
           for (const skill of SKILLS) { const p = emptyPair(skill, target, 'not-run', 'opus-incomplete'); pairs.push(p); o.onPair?.(p); }
           log(`[n15 ceiling] gate ${o.attempt}: an Opus pair errored, so Sol's gate waits for a --resume that completes Opus first; the stage reads incomplete`);
@@ -859,7 +886,7 @@ export async function runGateStage(o: GateStageOptions): Promise<GateStageResult
       }
       await withProbeGateway({ chatModel: FRONTIER_TARGETS[target], fake: o.fake, transport, keys: [...new Set([TARGET_KEY[target], 'ANTHROPIC_API_KEY'])] }, async () => {
         for (const skill of SKILLS) {
-          if (stopped || trigger) { const p = emptyPair(skill, target, 'not-run', stopped ? 'stage-stopped' : 'reprice-trigger'); pairs.push(p); o.onPair?.(p); continue; }
+          if (stopped || trigger || unscored) { const p = emptyPair(skill, target, 'not-run', stopped ? 'stage-stopped' : unscored ? 'unscored-spend' : 'reprice-trigger'); pairs.push(p); o.onPair?.(p); continue; }
           const c: PairContext = { engine, target, skill, rows, log };
           const partial = emptyPair(skill, target, 'errored');
           let pair: GatePairResult;
@@ -876,12 +903,15 @@ export async function runGateStage(o: GateStageOptions): Promise<GateStageResult
           o.onPair?.(pair);
           log(`[n15 ceiling] gate ${o.attempt} ${target} ${skill}: ${pair.status}${pair.label ? `, ${pair.label}` : ''}; one-shot ${pair.scores.one_shot ?? 'n/a'} (kept ${pair.kept ?? 'undecided'}), seed ${pair.scores.seed_run1 ?? 'n/a'}, reachability ${pair.scores.reachability ?? 'n/a'}`);
           if (stopped) continue;
-          const stage = sumMeters(pairs.filter(p => p.target === target).map(p => p.cost));
-          const meanUsd = stage.rollouts ? stage.usd / stage.rollouts : null;
+          const window = meterOfRows(rows.fresh(target));
+          const meanUsd = window.rollouts ? window.usd / window.rollouts : null;
           const threshold = REPRICE_FACTOR * prices[target];
-          if (meanUsd !== null && meanUsd > threshold) {
+          if (meanUsd === null && window.calls > 0) {
+            unscored = { reason: 'unscored-spend', target, skill, usd: window.usd };
+            log(`[n15 ceiling] unscored spend: this window billed $${window.usd.toFixed(4)} on ${target} over ${window.calls} calls and scored no rollout; the stage stops after this pair, and a --resume opens a new window`);
+          } else if (meanUsd !== null && meanUsd > threshold) {
             trigger = { reason: 'reprice-trigger', target, skill, mean_rollout_usd: meanUsd, threshold_usd: threshold };
-            log(`[n15 ceiling] reprice trigger: the stage's mean ${target} rollout is $${meanUsd.toFixed(4)}, above $${threshold.toFixed(4)} (1.25 x $${prices[target].toFixed(4)}); the stage stops after this pair`);
+            log(`[n15 ceiling] reprice trigger: this window's billed spend per scored ${target} rollout, voided included, is $${meanUsd.toFixed(4)}, above $${threshold.toFixed(4)} (1.25 x $${prices[target].toFixed(4)}); the stage stops after this pair`);
           }
         }
       });
@@ -896,7 +926,9 @@ export async function runGateStage(o: GateStageOptions): Promise<GateStageResult
     models: { targets: FRONTIER_TARGETS, proposer: PROPOSER_MODEL }, runs: GATE_RUNS, prices, estimate_usd: gateEstimateUsd(prices),
     pairs, sol_gate: { needed: solNeeded, ran: solRan }, solvability: solv, unsolvable,
     verdict: gateVerdict({ pairs: scoredPairs(), unsolvable, budget_stop: !!stopped, attempt: o.attempt }),
-    stopped, reprice_trigger: trigger, files_read, models_not_run: MODELS_NOT_RUN, retrieval: RETRIEVAL,
+    stopped, reprice_trigger: trigger, unscored_spend: unscored,
+    voided: Object.fromEntries(FRONTIER_TARGET_NAMES.map(t => [t, voidedOf(pairs.filter(p => p.target === t))])) as Record<FrontierTarget, VoidedSpend>,
+    files_read, models_not_run: MODELS_NOT_RUN, retrieval: RETRIEVAL,
     request_settings: observer ? observer.settings() : null,
   };
 }

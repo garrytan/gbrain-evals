@@ -129,7 +129,7 @@ They name no gold value or page.
 ## Regenerating
 
 ```sh
-bun eval/generators/skillopt-method/gen.ts check      # both versions: regeneration reproduces every file, and each manifest matches
+bun eval/generators/skillopt-method/gen.ts check      # v1, v2 and v3: regeneration reproduces every file, and each manifest matches
 bun eval/generators/skillopt-method/gen.ts write v2   # rewrite v2's task files and MANIFEST.json (a new dataset version)
 ```
 
@@ -161,6 +161,11 @@ every quota exactly or the next seed is tried.
 - Citation dates in `briefing` are not checked against the page.
 
 ## Changelog
+
+### 2026-11-03: The check command covers three versions
+
+`gen.ts check` regenerates v1, v2 and v3, so the comment beside it under Regenerating names all three instead of
+"both versions". No data file changed.
 
 ### 2026-11-02: Known limits name the runs and the served tools
 

@@ -5,14 +5,19 @@
  *
  *   superseded         an account's term as of a date, stated with a value
  *                      another record holds (superseded, signed but not yet in
- *                      force, or rescinded); contradicted
+ *                      force, or rescinded), contradicted; or stated with the
+ *                      value in force on the date while a later record holds
+ *                      another, supported (about half the family)
  *   compound           two or three terms of one account as of one date, each
  *                      part right or wrong; the report gives a status per part
  *                      (or one for the whole claim) and the value the brain
  *                      holds for each wrong part
- *   not-founder        "P founded C" where P only works or worked at C (a
- *                      later chief executive, an officer, a team member);
- *                      contradicted, with the real founder
+ *   not-founder        per company, "P founded C" where P only works or
+ *                      worked at C (a later chief executive when there is one,
+ *                      else an officer or a team member), contradicted, with
+ *                      the real founder; and the real founder's claim,
+ *                      supported, except for a company with a look-alike
+ *                      name, where lookalike-founder makes that claim
  *   absent             a claim about an entity no page carries, built from a
  *                      real one; the brain cannot support it
  *
@@ -106,18 +111,23 @@ export function factCheckV3Drafts(corpus: WorldCorpus, rng: Rng): DraftV3[] {
     const d = decide(a, attr, date);
     if (!d) { drafts.push({ ok: false, family: 'superseded', anchor, reason: 'oracle: the contract pages disagree with the chain' }); continue; }
     if (!d.others.length) continue;
-    const claimed = fromString(attr, rng.pick(d.others));
+    const later = w.chains.get(a.slug)!.filter(c => c.effective > date && attr in c.sets && String(c.sets[attr]) !== String(d.value));
+    const right = later.length > 0 && rng.float() < 0.7;
+    const claimed = right ? d.value : fromString(attr, rng.pick(d.others));
     if (attr === 'renewal_date' && (claimed === date || d.value === date)) continue;
     const claim = `As of ${longDate(date)}, ${possessive(a.name)} ${ATTRS[attr].phrase} was ${ATTRS[attr].cell(claimed)}.`;
     const correct = goldOf(attr, d.value);
+    const status: StatusClass = right ? 'supported' : 'contradicted';
     ok({
       family: 'superseded', task: taskTextV3(claim), anchor: { kind: 'claim', id: anchor },
       fact_keys: [`val:${a.slug}:${attr}@${d.slugs[0]}`], answerable: true,
-      gold: { values: [correct], slugs: d.slugs, cite: [d.slugs], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', parts: single('contradicted', correct), cite: [d.slugs] } },
-      distractors: { slugs: w.chains.get(a.slug)!.filter(c => !d.slugs.includes(c.slug) && attr in c.sets).map(c => c.slug), values: [goldOf(attr, claimed)] },
+      gold: { values: right ? [] : [correct], slugs: d.slugs, cite: [d.slugs], status, spec: { kind: 'fact-check', status, parts: single(status, right ? undefined : correct), cite: [d.slugs] } },
+      distractors: { slugs: w.chains.get(a.slug)!.filter(c => !d.slugs.includes(c.slug) && attr in c.sets).map(c => c.slug), values: right ? [] : [goldOf(attr, claimed)] },
       source: `world-v3 ${a.slug} contract chain, ${attr} on ${date}`,
-      oracle: { path: 'the contract pages the account lists: the latest record in force that sets the term, rescinded records dropped', evidence: d.evidence },
-      oracle_answer: report([{ claim, status: 'contradicted', source: d.slugs.join(', '), correct: ATTRS[attr].cell(d.value) }]),
+      oracle: right
+        ? { path: 'the contract pages the account lists: the latest record in force on the date that sets the term, rescinded records dropped; a later record sets another value', evidence: `${d.evidence}\nLater: ${later.map(c => `${c.title}, effective ${longDate(c.effective)}: ${ATTRS[attr].cell(c.sets[attr]!)}`).join('; ')}` }
+        : { path: 'the contract pages the account lists: the latest record in force that sets the term, rescinded records dropped', evidence: d.evidence },
+      oracle_answer: report([{ claim, status, source: d.slugs.join(', '), ...(right ? {} : { correct: ATTRS[attr].cell(d.value) }) }]),
     }, 1);
   }
 
@@ -153,28 +163,41 @@ export function factCheckV3Drafts(corpus: WorldCorpus, rng: Rng): DraftV3[] {
     }
   }
 
-  // not-founder: someone who works or worked at the company, claimed as its founder.
+  // not-founder: per company, the real founder's claim (left to lookalike-founder for a look-alike company), and one person who works or worked there claimed as its founder.
+  const lookalikeCompanies = new Set(w.lookalikes.companies.flat());
   for (const c of companies) {
     if (!c.founder) continue;
     const f = founderFromText(pages, c.slug);
-    for (const p of [...w.people.values()].filter(x => x.slug !== c.founder && x.stints.some(s => s.org === c.slug))) {
-      const anchor = `claim:founder:${c.slug}:${p.slug}`;
-      if ('reason' in f) { drafts.push({ ok: false, family: 'not-founder', anchor, reason: f.reason }); continue; }
-      if (!careerFromText(pages, p.slug).some(s => s.org === c.slug)) { drafts.push({ ok: false, family: 'not-founder', anchor, reason: `${p.slug}'s career list does not name ${c.slug}` }); continue; }
-      const claim = `${p.name} founded ${c.name}.`;
-      const correct = nameValue(f.name);
-      const slugs = [c.slug, f.slug];
-      const ceo = c.ceo.some(t => t.person === p.slug);
-      ok({
-        family: 'not-founder', task: taskTextV3(claim), anchor: { kind: 'claim', id: anchor },
-        fact_keys: [`founder:${c.slug}`, `assoc:${p.slug}@${c.slug}`], answerable: true,
-        gold: { values: [correct], slugs, cite: [slugs], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', parts: single('contradicted', correct), cite: [slugs] } },
-        distractors: { slugs: [p.slug], values: [nameValue(p.name)] },
-        source: `world-v3 ${c.slug} founder and ${p.slug}'s career`,
-        oracle: { path: "the company's founding line, confirmed by the founder's page; the claimed person's career list names the company in another role", evidence: f.evidence },
-        oracle_answer: report([{ claim, status: 'contradicted', source: slugs.join(', '), correct: f.name }]),
-      }, ceo ? 2 : 1);
-    }
+    const founderAnchor = `claim:founder:${c.slug}:${c.founder}`;
+    if ('reason' in f || f.slug !== c.founder) { drafts.push({ ok: false, family: 'not-founder', anchor: founderAnchor, reason: 'reason' in f ? f.reason : 'the founding line names another person' }); continue; }
+    const others = [...w.people.values()].filter(x => x.slug !== c.founder && x.stints.some(s => s.org === c.slug));
+    const slugs = [c.slug, f.slug];
+    const right = `${f.name} founded ${c.name}.`;
+    if (!lookalikeCompanies.has(c.slug)) ok({
+      family: 'not-founder', task: taskTextV3(right), anchor: { kind: 'claim', id: founderAnchor },
+      fact_keys: [`founder:${c.slug}`], answerable: true,
+      gold: { values: [], slugs, cite: [slugs], status: 'supported', spec: { kind: 'fact-check', status: 'supported', parts: single('supported'), cite: [slugs] } },
+      distractors: { slugs: others.map(x => x.slug), values: [] },
+      source: `world-v3 ${c.slug} founder`,
+      oracle: { path: "the company's founding line, confirmed by the founder's page", evidence: f.evidence },
+      oracle_answer: report([{ claim: right, status: 'supported', source: slugs.join(', ') }]),
+    }, 1);
+    if (!others.length) continue;
+    const ceos = others.filter(x => c.ceo.some(t => t.person === x.slug));
+    const p = rng.pick(ceos.length ? ceos : others);
+    const anchor = `claim:founder:${c.slug}:${p.slug}`;
+    if (!careerFromText(pages, p.slug).some(s => s.org === c.slug)) { drafts.push({ ok: false, family: 'not-founder', anchor, reason: `${p.slug}'s career list does not name ${c.slug}` }); continue; }
+    const claim = `${p.name} founded ${c.name}.`;
+    const correct = nameValue(f.name);
+    ok({
+      family: 'not-founder', task: taskTextV3(claim), anchor: { kind: 'claim', id: anchor },
+      fact_keys: [`founder:${c.slug}`, `assoc:${p.slug}@${c.slug}`], answerable: true,
+      gold: { values: [correct], slugs, cite: [slugs], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', parts: single('contradicted', correct), cite: [slugs] } },
+      distractors: { slugs: [p.slug], values: [nameValue(p.name)] },
+      source: `world-v3 ${c.slug} founder and ${p.slug}'s career`,
+      oracle: { path: "the company's founding line, confirmed by the founder's page; the claimed person's career list names the company in another role", evidence: f.evidence },
+      oracle_answer: report([{ claim, status: 'contradicted', source: slugs.join(', '), correct: f.name }]),
+    }, ceos.length ? 2 : 1);
   }
 
   // absent
