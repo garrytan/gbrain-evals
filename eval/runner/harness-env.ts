@@ -16,7 +16,12 @@
  * a fresh repository, where `git index-pack --strict` hashes and checks every
  * object and `git fsck` proves the pinned commit and its whole tree are there.
  * A pack that fails either check is deleted and the commit is fetched again,
- * so a stale or tampered cache cannot change the checked-out files.
+ * so a stale, corrupt or wrong pack cannot change the checked-out files. The
+ * check covers the pack, not the cache entry around it: actions/cache extracts
+ * whatever an entry holds, so a tampered entry is kept out the same way as for
+ * the .git cache, because only main's runs and a pull request's own runs can
+ * write the entries that run restores. Under GitHub Actions a refusal is
+ * printed as a warning, since a refused cache hit is never replaced.
  *
  * Nothing here reads a `.env` file. The harness CLI calls
  * `load_dotenv(..., override=True)`; the Python side (mpw/register.py)
@@ -102,7 +107,7 @@ function restoreFromPack(src: string, pack: string, commit: string, log: (l: str
     log(`[harness] restored ${commit.slice(0, 12)} from the cached pack ${pack}`);
     return true;
   } catch (e) {
-    log(`[harness] refused the cached pack ${pack}: ${(e as Error).message.trim().replace(/\s*\n\s*/g, '; ')}`);
+    log(`${process.env.GITHUB_ACTIONS ? '::warning::' : ''}[harness] refused the cached pack ${pack}: ${(e as Error).message.trim().replace(/\s*\n\s*/g, '; ')}`);
     rmSync(pack, { force: true });
     return false;
   }

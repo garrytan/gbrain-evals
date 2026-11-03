@@ -343,9 +343,13 @@ jobs:
   # job on 2026-11-03 (GST-1266). The setup keeps that commit as a pack, which
   # this job caches under the lock file's hash. A later setup reads the pack into
   # a fresh repository and checks it against the lock's pinned commit (see
-  # eval/runner/harness-env.ts), so the cache can only skip the fetch: a pack
-  # that fails the check is dropped and the commit is fetched as before. The
-  # venv is still built on every run.
+  # eval/runner/harness-env.ts), so a stale, corrupt or wrong pack is dropped
+  # and the commit is fetched as before. That check covers the pack only; like
+  # the .git cache, the entry itself is trusted because only main's runs and a
+  # pull request's own runs write the entries a run restores. A pack refused on
+  # a cache hit is never replaced, since the save runs only on a miss: the setup
+  # prints a warning on the run, and bumping the key's v1 replaces the entry.
+  # The venv is still built on every run.
   harness:
     needs: git-cache
     if: ${{ !cancelled() }}
