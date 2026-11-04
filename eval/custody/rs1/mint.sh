@@ -21,6 +21,10 @@
 #     BEAM's random user profile and the item selection all derive from it.
 #   - Resume without re-sampling. Each conversation's manifest.json records every finished step with the sha256 of
 #     its outputs. A finished step is verified and skipped, never run again; a changed output stops the run.
+#   - No silent gaps. BEAM's question and answer steps swallow model errors, so rs1_mint.py checks each one's output
+#     against what BEAM was asked to write and fails the step, recording nothing, when they differ. A failed answer
+#     step keeps chat.pickle's intact batches for the rerun. 'rs1_mint.py check-gaps --out <dir>' checks a mint's
+#     finished steps.
 #   - One key per step. Each step runs under 'env -i' with an explicit allowlist, from inside --out so a relative
 #     write BEAM makes (its bad_json.log) stays in custody. In real mode a paid step gets a
 #     metering-proxy token for its one provider (gemini-3.8-flash, or OpenAI embeddings for topic_check): mint.sh

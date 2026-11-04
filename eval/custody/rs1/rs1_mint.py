@@ -22,6 +22,15 @@ Nothing BEAM prints reaches stdout or stderr: file descriptors 1 and 2 point at
 /dev/null while a step runs, and an error prints only its class and the sha256
 of its message. The traceback stays in custody beside the conversation
 (errors/<step>.traceback), with the RS1 text it may quote.
+
+Gap checks: BEAM's question and answer steps call the model inside loops that
+swallow any Exception (src/beam/main.py:1531 and 2079), so a transient error
+that outlasts the client's resend loses output without stopping the step. Each
+of those steps compares what BEAM wrote with what it was asked to write and
+fails with counts only when they differ. 'check-gaps --out <dir>' runs the same
+checks over an existing mint's finished steps. Every other model call BEAM makes
+here (plan: profile_creation.py:116, main.py:543, 799 and 989; probe: main.py
+2160, 2330 and 2478) sits outside any try, so an error stops the step.
 """
 import argparse
 import hashlib
@@ -29,6 +38,7 @@ import hmac
 import json
 import math
 import os
+import pickle
 import re
 import shutil
 import sys
@@ -49,6 +59,11 @@ EMBED_MODEL = "text-embedding-3-large"
 TOPIC_COSINE_MAX = 0.85
 TOPIC_JACCARD_MAX = 0.6
 TOPIC_ATTEMPTS = 5
+# BEAM src/beam/run_pipeline.py:205-224, run_question_generation at chat size 1M: 10 batches of 10 sub-batches, and a
+# BATCH_SIZE of 90 (general) or 60 (coding, math), so each sub-batch asks the model for 9 or 6 user messages.
+QUESTION_BATCHES = 10
+QUESTION_SUB_BATCHES = 10
+QUESTION_SUB_BATCH_SIZE = {"general": 9, "coding": 6, "math": 6}
 # The first selection plus two regenerations (draft prereg: a failed item is regenerated up to twice).
 SELECT_ATTEMPTS = 3
 ITEMS_PER_ABILITY = 2
@@ -652,6 +667,131 @@ def usable(ability, item):
     return isinstance(answer, str) and bool(answer.strip()) and (ability == "abstention" or bool(item.get("source_chat_ids")))
 
 
+# ---------------------------------------------------------------------------------------------------- gap checks
+
+
+def read_pickle(path):
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
+
+def write_pickle(path, value):
+    tmp = Path(path).with_name(Path(path).name + ".tmp")
+    with open(tmp, "wb") as f:
+        pickle.dump(value, f)
+    os.replace(tmp, path)
+
+
+def domain_of(conv):
+    """BEAM's domain for a conversation, from its category as run_pipeline.py maps it."""
+    category = read_json(conv / "topic.json")["category"].lower()
+    return category if category in ("math", "coding") else "general"
+
+
+def instruction_line(plan_text, batch_number):
+    """The line BEAM's question step inserts for a batch's User Instruction bullet, between the two lines its last
+    (special) sub-batch asks the model for: main.py:684 extract_plan_bullets, then main.py:1344, 1384 and 1539-1563."""
+    found = re.findall(r"• \*\*(.+?):\*\*(.+?)(?=• \*\*|\n|$)", plan_text, re.DOTALL)
+    bullets = [f"{label.strip()}: {content.strip()}" for label, content in found]
+    if len(bullets) < 3 or "User Instruction:" not in bullets[-2]:
+        return None
+    line = re.sub(r"^\d+\)\s*", "", (bullets[-2] + f" ->-> {len(bullets) - 1}").split("User Instruction:")[1].strip())
+    return line.split("->->")[0].strip() + f" ->-> {batch_number},{line.split('->->')[1].strip()}"
+
+
+def question_gaps(questions, plans, domain):
+    """user_messages.pickle against what BEAM's question step asks for (main.py:1307). Each batch's normal sub-batches
+    ask for QUESTION_SUB_BATCH_SIZE lines each, and its special sub-batch for two lines around the inserted instruction,
+    so a batch holds at most 10 * size + 3 lines. BEAM's dedup drops a few: its 35 published 1M chats hold 87 to 93 lines
+    per general batch and 60 to 63 per coding or math batch. A batch under 85 (general) or 58 (coding, math) lines is
+    short by at least one whole sub-batch, and a batch whose instruction line is not second to last lost a line of its
+    special sub-batch; neither happened in any of those 350 published batches."""
+    size = QUESTION_SUB_BATCH_SIZE[domain]
+    floor = (QUESTION_SUB_BATCHES - 1) * size + 4
+    short, special, gap_batches = 0, 0, []
+    for b, batch in enumerate(questions[:QUESTION_BATCHES], 1):
+        lines = batch["messages"][0]
+        expected = instruction_line(plans[b - 1], b) if b <= len(plans) else None
+        short_here, special_here = len(lines) < floor, len(lines) < 2 or lines[-2] != expected
+        short, special = short + short_here, special + special_here
+        if short_here or special_here:
+            gap_batches.append(b)
+    gap_batches += list(range(len(questions) + 1, QUESTION_BATCHES + 1)) + list(range(QUESTION_BATCHES + 1, len(questions) + 1))
+    return {"batches": f"{len(questions)}/{QUESTION_BATCHES}", "gap_batches": gap_batches, "short": short,
+            "special_missing": special, "min_messages": min((len(b["messages"][0]) for b in questions), default=0),
+            "floor": floor}
+
+
+def answer_batch_gaps(planned, batch):
+    """One chat.pickle batch against the user messages it answers (main.py:1874-2082): main questions missing or out of
+    order (a swallowed error before the first reply drops the question), user turns with no assistant reply right after
+    (one after a follow-up), and messages with no text."""
+    mains = [m.get("content") for m in batch if m.get("role") == "user" and m.get("question_type") == "main_question"]
+    pending = iter(planned)
+    matched = sum(1 for q in mains if q in pending)
+    unanswered = sum(1 for j, m in enumerate(batch) if m.get("role") == "user"
+                     and (j + 1 == len(batch) or batch[j + 1].get("role") != "assistant"))
+    empty = sum(1 for m in batch if not (isinstance(m.get("content"), str) and m["content"].strip()))
+    return {"dropped": len(planned) - matched, "unmatched": len(mains) - matched, "unanswered": unanswered, "empty": empty}
+
+
+def answer_gaps(questions, chat):
+    """chat.pickle against user_messages.pickle: one batch per question batch (main.py:2084-2090 drops a batch that lost
+    more than five questions and stops), each batch intact, and how many leading batches are intact."""
+    totals = {"dropped": 0, "unmatched": 0, "unanswered": 0, "empty": 0}
+    gap_batches = []
+    for b, (planned, batch) in enumerate(zip(questions, chat), 1):
+        gaps = answer_batch_gaps(planned["messages"][0], batch)
+        totals = {k: totals[k] + gaps[k] for k in totals}
+        if any(gaps.values()):
+            gap_batches.append(b)
+    gap_batches += list(range(len(chat) + 1, len(questions) + 1)) + list(range(len(questions) + 1, len(chat) + 1))
+    intact = gap_batches[0] - 1 if gap_batches else len(chat)
+    return {"batches": f"{len(chat)}/{len(questions)}", "intact_batches": intact, "gap_batches": gap_batches,
+            "missing": max(0, len(questions) - len(chat)), **totals}
+
+
+def gap_fields(gaps):
+    return {k: ",".join(map(str, v)) or "none" if isinstance(v, list) else v for k, v in gaps.items()}
+
+
+def gap_text(gaps):
+    return " ".join(f"{k}={v}" for k, v in gap_fields(gaps).items())
+
+
+def check_gaps(out):
+    """The question and answer gap checks over every conversation's finished steps in an existing mint: one line of
+    counts, batch numbers and the checked file's sha256 per step, never text. Returns the number of steps with gaps."""
+    root = Path(out).resolve() / "set" / "conversations"
+    convs = checked = with_gaps = skipped = 0
+    for conv in sorted(root.iterdir()) if root.exists() else []:
+        if not (conv / "manifest.json").exists():
+            continue
+        manifest = read_json(conv / "manifest.json")
+        convs += 1
+        if manifest.get("mode") == "fake":
+            skipped += 1
+            continue
+        beam_chat = conv / "beam" / "1"
+        steps = manifest.get("steps", {})
+        for step, rel in (("question", "user_messages.pickle"), ("answer", "chat.pickle")):
+            entry = steps.get(f"{step}@1") or {}
+            if entry.get("status") != "done":
+                continue
+            if step == "question":
+                gaps = question_gaps(read_pickle(beam_chat / rel), read_pickle(beam_chat / "plan_new.pickle"), domain_of(conv))
+            else:
+                gaps = answer_gaps(read_pickle(beam_chat / "user_messages.pickle"), read_pickle(beam_chat / rel))
+            digest = sha256_file(beam_chat / rel)
+            checked += 1
+            with_gaps += bool(gaps["gap_batches"])
+            emit({"conv": conv.name, "step": step, "gaps": len(gaps["gap_batches"]), **gap_fields(gaps), "sha256": digest,
+                  "recorded": "match" if entry.get("outputs", {}).get(f"beam/1/{rel}") == digest else "changed"})
+    emit({"summary": "check-gaps", "conversations": convs, "steps_checked": checked, "steps_with_gaps": with_gaps,
+          "fake_skipped": skipped})
+    return with_gaps
+
+
 # ---------------------------------------------------------------------------------------------------- steps
 
 
@@ -690,8 +830,7 @@ class Context:
         return self._beam
 
     def domain(self):
-        category = read_json(self.conv / "topic.json")["category"].lower()
-        return category if category in ("math", "coding") else "general"
+        return domain_of(self.conv)
 
 
 def step_topic(ctx, attempt, usage):
@@ -779,19 +918,55 @@ def step_question(ctx, attempt, usage):
         usage.record("fake", 9000, 6000)
         return [ctx.beam_chat / "user_messages.txt"], {}
     ctx.beam(usage).run_pipeline.run_question_generation(str(ctx.beam_root), CHAT_SIZE, 0)
+    gaps = question_gaps(read_pickle(ctx.beam_chat / "user_messages.pickle"),
+                         read_pickle(ctx.beam_chat / "plan_new.pickle"), ctx.domain())
+    if gaps["gap_batches"]:
+        raise StepFailure(f"the question step lost output to a swallowed error: {gap_text(gaps)}")
     return beam_outputs(ctx, ["user_messages.pickle", "user_messages.txt"]), {}
 
 
 def step_answer(ctx, attempt, usage):
-    """BEAM resumes this step itself at batch granularity: answer_generation keeps the batches already in chat.pickle."""
+    """BEAM's answer_generation (main.py:1775), one batch per call. Each call resumes from chat.pickle as BEAM's own
+    resume does (main.py:1799-1804) and gets the user messages up to the next batch only, so it answers that batch and
+    stops. A batch that fails the gap check is cut from chat.pickle and the step fails, so a rerun regenerates that batch
+    and keeps every batch before it, and no batch is answered after a damaged one."""
     if ctx.mode == "fake":
         write_json(ctx.beam_chat / "chat_raw.json", fake_chat(ctx.key))
         usage.record("fake", 90000, 60000)
         return [ctx.beam_chat / "chat_raw.json"], {}
     beam = ctx.beam(usage)
-    # BEAM's run_pipeline.py builds its answer model at temperature 0.1.
-    beam.run_pipeline.run_answer_generation(str(ctx.beam_root), CHAT_SIZE, 0, ctx.model(usage, 0.1))
-    return beam_outputs(ctx, ["chat.pickle"]), {}
+    chat_path, partial = ctx.beam_chat / "chat.pickle", ctx.beam_chat / "answer-input.pickle"
+    questions = read_pickle(ctx.beam_chat / "user_messages.pickle")
+    chat = read_pickle(chat_path) if chat_path.exists() else []
+    intact = answer_gaps(questions, chat)["intact_batches"]
+    if intact < len(chat):
+        chat = chat[:intact]
+        write_pickle(chat_path, chat)
+    # BEAM's run_answer_generation (run_pipeline.py:264-273) builds topic and theme this way, and its run_pipeline.py
+    # builds the answer model at temperature 0.1.
+    topic = read_json(ctx.beam_chat / "topic.json")
+    model = ctx.model(usage, 0.1)
+    try:
+        for b in range(intact, len(questions)):
+            write_pickle(partial, questions[:b + 1])
+            beam.main.answer_generation(input_address=str(partial), output_address=str(chat_path),
+                                        plans_address=str(ctx.beam_chat / "plan_new.pickle"),
+                                        topic=f"{topic['category']} -> {topic['title']}",
+                                        theme=f"{topic['theme']} -> {', '.join(topic['subtopics'])}", llm=model)
+            chat = read_pickle(chat_path)
+            gaps = answer_gaps(questions[:b + 1], chat)
+            if gaps["gap_batches"]:
+                write_pickle(chat_path, chat[:b])
+                raise StepFailure(f"answer batch {b + 1} of {len(questions)} lost output to a swallowed error: "
+                                  f"{gap_text(gaps)}; chat.pickle is cut back to {b} intact batches")
+    finally:
+        partial.unlink(missing_ok=True)
+    # Each call numbers its messages from 0 (main.py:1797) and add_ids_to_chats keeps those ids (utils.py:283-292), so
+    # they are renumbered in chat order, as one uninterrupted run numbers them.
+    for i, message in enumerate(message for batch in chat for message in batch):
+        message["id"] = i
+    write_pickle(chat_path, chat)
+    return [chat_path], {}
 
 
 def step_chat_json(ctx, attempt, usage):
@@ -1163,6 +1338,8 @@ def main(argv):
     c.add_argument("--seed-file", required=True)
     u = sub.add_parser("usage")
     u.add_argument("--out", required=True)
+    g = sub.add_parser("check-gaps")
+    g.add_argument("--out", required=True)
     args = parser.parse_args(argv)
 
     if args.command == "check-seed":
@@ -1180,6 +1357,8 @@ def main(argv):
               "output_tokens": t["output_tokens"], "metered_requests": t["metered_requests"],
               "metered_usd": f"{t['metered_usd']:.6f}", "usage_sha256": digest})
         return 0
+    if args.command == "check-gaps":
+        return 1 if check_gaps(args.out) else 0
 
     cid = f"c{args.conv_index:03d}"
     ctx = None
