@@ -268,6 +268,16 @@ describe('the F6 manifest', () => {
     expect(campaignManifest(m, { units: JSON.parse(readFileSync(join(dir, 'campaign/f6-campaign-a4-units.json'), 'utf8')) }).models).not.toContain('particle:particle-1');
     expect(readFileSync(join(dir, 'campaign/f6-campaign-p1.json'), 'utf8')).toBe(JSON.stringify(camp, null, 2) + '\n');
   });
+
+  // Value: protects=the file-agent add-on's resume campaign (A6 revision 3); fails_when=p1b differs from the regenerated p1 campaign in anything but its id, ledger, cap, the cell's lease and the F6-P1 block cap, or the file agent's two caps stop summing to $84.15; why_new=p1's $16.15 lease ran out at 56 of 200 answers and GBEV-3 approved a $68 resume; seam=none; no_claim=the $68 projection (revision 3 gives its basis)
+  test('the p1b resume campaign is the p1 campaign with only its id, ledger, $68 cap and lease and the F6-P1 block cap changed; the file agent\'s two caps sum to $84.15', () => {
+    const dir = join(ROOT, 'docs/benchmarks/2026-10-29-f6-current-master/campaign');
+    const p1 = campaignManifest(m, { units: JSON.parse(readFileSync(join(dir, 'f6-campaign-p1-units.json'), 'utf8')) as UnitSelection });
+    const id = 'q1-scoreboard-f6-current-master-p1b';
+    const p1b = { ...p1, campaign_id: id, cap_usd: 68, ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`, cells: p1.cells.map(c => ({ ...c, lease_usd: 68 })), blocks: { ...p1.blocks, 'F6-P1': { ...p1.blocks['F6-P1'], cap_usd: 68 } } };
+    expect(readFileSync(join(dir, 'f6-campaign-p1b.json'), 'utf8')).toBe(JSON.stringify(p1b, null, 2) + '\n');
+    expect([p1b.cells.map(c => c.id), Object.keys(p1b.blocks), Math.round((p1.cap_usd + p1b.cap_usd) * 100) / 100]).toEqual([[F6_PARTICLE_ADDON.id], ['F6-P1'], 84.15]);
+  });
 });
 
 describe('the arm policy identity', () => {
