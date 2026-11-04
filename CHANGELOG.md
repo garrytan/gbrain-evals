@@ -2,6 +2,14 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### The RS1 custody mint's question step runs on Gemini, and a provider refusal stops the step instead of being retried away (GST-1154)
+
+- **System-only prompts reach Gemini.** BEAM's question step sends a prompt made only of system messages, and Gemini rejects a request with no contents (HTTP 400). `RecordingModel.invoke` in `eval/custody/rs1/rs1_mint.py` now sends such a prompt as one user turn with the same text, the way an OpenAI chat model reads it.
+- **A refusal stops the step.** BEAM wraps its model calls in `except Exception` retry loops, so a refusal such as the metering proxy's 402 budget refusal was swallowed, and the step could be recorded as done without its output. An HTTP 4xx other than 408 and 429 now raises `ProviderRefusal`, a `BaseException` those loops can't catch. The step exits with an error and records nothing as done, and outside the parts-based probe and rubric steps it prints `rs1-mint refused:` with the status and error class only. A 499 stops the step too: the Google client already resends once, and treating 499 as transient would let BEAM's answer step drop a question while the step records done.
+- `test/eval/custody-rs1-real-mode.test.ts` adds a keyless test of both paths.
+
 ## [0.10.155] - 2026-11-03
 
 ### The particle-1 add-on's re-read tool and report close #347's four open review findings
