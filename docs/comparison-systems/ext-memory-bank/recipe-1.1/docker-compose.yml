@@ -1,0 +1,81 @@
+# Hindsight 1.1.0 with its server defaults behind the shootout shim (eval/systems/PROTOCOL.md). bootstrap.sh uses this
+# file for --config recipe-1.1; recipe and common use ../docker-compose.yml (Hindsight 0.10.2).
+#
+#   SHIM_CONFIG=recipe-1.1  PROXY_URL=http://<metering proxy host:port>  docker compose up -d --build
+#
+# The network layout is the 0.10.2 bundle's: every vendor container sits on `internal`, a Docker network with no route
+# out, and the `egress` relay is the only container on both networks. It publishes the shim on
+# 127.0.0.1:${SHIM_HOST_PORT:-8700} and forwards egress:9000 to the metering proxy at PROXY_URL; provider base URLs point
+# at http://egress:9000${PROXY_OPENAI_PATH}, so a provider call can only reach the proxy. The containers hold a dummy key.
+# A separate project name keeps this stack's volumes apart from the 0.10.2 stack's.
+name: shootout-hindsight-recipe-11
+
+x-proxy-openai: &proxy_openai http://egress:9000${PROXY_OPENAI_PATH:-/openai/v1}
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.1-pg18@sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c
+    environment:
+      POSTGRES_USER: hindsight
+      POSTGRES_PASSWORD: hindsight
+      POSTGRES_DB: hindsight
+    # Docker's 64 MB default /dev/shm makes parallel queries fail, which surfaces as HTTP 500 on bank creates under load.
+    shm_size: 1g
+    # A named volume, so bootstrap.sh snapshot sees the database (amendment A23).
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hindsight -d hindsight"]
+      interval: 2s
+      retries: 60
+    networks: [internal]
+
+  hindsight:
+    image: ghcr.io/vectorize-io/hindsight:1.1.0@sha256:50311d02b4d5d2b7c5242bd336edf8735df8374eaad496a92f49c83b37d2aa06
+    env_file: ["hindsight.recipe-1.1.env"]
+    environment:
+      HINDSIGHT_API_DATABASE_URL: postgresql://hindsight:hindsight@db:5432/hindsight
+      HINDSIGHT_API_LLM_PROVIDER: ${HINDSIGHT_LLM_PROVIDER:-openai}
+      HINDSIGHT_API_LLM_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
+      HINDSIGHT_API_LLM_BASE_URL: *proxy_openai
+      HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: *proxy_openai
+      OPENAI_BASE_URL: *proxy_openai
+      OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
+      HINDSIGHT_API_SKIP_LLM_VERIFICATION: "true"
+      HINDSIGHT_API_OTEL_TRACES_ENABLED: "false"
+      HINDSIGHT_ENABLE_CP: "false"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [internal]
+
+  shim:
+    build: { context: ../../../.., dockerfile: docs/comparison-systems/ext-memory-bank/recipe-1.1/Dockerfile }
+    environment:
+      SHIM_CONFIG: ${SHIM_CONFIG:-recipe-1.1}
+      SHIM_LLM_PROVIDER: ${HINDSIGHT_LLM_PROVIDER:-openai}
+      HINDSIGHT_URL: http://hindsight:8888
+    depends_on: [hindsight]
+    networks: [internal]
+
+  egress:
+    image: alpine/socat@sha256:82ad20f6f6e29b91ff33b6662d24063522b1378f08fd8569cd3ab412cac13f50
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        upstream=$${PROXY_URL#*://}; upstream=$${upstream%%/*}
+        socat TCP-LISTEN:8700,fork,reuseaddr TCP:shim:8700 &
+        exec socat TCP-LISTEN:9000,fork,reuseaddr TCP:$$upstream
+    environment:
+      PROXY_URL: ${PROXY_URL:-http://host.docker.internal:8787}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["127.0.0.1:${SHIM_HOST_PORT:-8700}:8700"]
+    networks: [internal, outside]
+
+networks:
+  internal: { internal: true }
+  outside: {}
+
+volumes:
+  db-data: {}

@@ -14,7 +14,9 @@ Those results give engineers useful choices. They do not establish one universal
 ## Systems in the head-to-head scoreboard
 
 The scoreboard and README describe each external system by kind. This table is the one place that maps a kind id
-(`eval/systems/kinds.json`) to the product, the pinned version and the vendor's own benchmark code. Each product's
+(`eval/systems/kinds.json`) to the product, the pinned version and the vendor's own benchmark code. A newer release
+that runs beside a pinned one is listed under [configurations with their own build](#configurations-with-their-own-build).
+Each product's
 install bundle (Dockerfile, lockfile, compose file, shim and capability record) sits beside this page in
 `docs/comparison-systems/<kind>/`, so a historical install can be rebuilt byte for byte. The harness and the shims
 were first written for the open-source comparison plan (gbrain-evals#73, branch `capy/oss-memory-shootout` at
@@ -108,12 +110,60 @@ and capability-record hashes).
 ]
 ```
 
+### Configurations with their own build
+
+A newer release of a pinned product runs as its own configuration, with its own install bundle in
+`docs/comparison-systems/<kind>/<configuration>/`, so the pinned configurations' files and hashes stay as Q1 recorded
+them. `bash eval/systems/bootstrap.sh <command> --system <kind> --config <configuration>` finds that stack. Each
+bundle's README says what changed from the pinned release.
+
+| Kind id | Configuration | Product | Pinned package | License | Latest release (checked 2026-11-03) |
+|---|---|---|---|---|---|
+| `ext-memory-bank` | [`recipe-1.1`](comparison-systems/ext-memory-bank/recipe-1.1/README.md), the server defaults at 1.1.0 | Hindsight | server 1.1.0 (tag `v1.1.0`, commit `a5a619b5ca59c5c39e0f96be6f7a31fabd136bd5`, released 2026-10-21) and `hindsight-client` 1.1.0; image `ghcr.io/vectorize-io/hindsight:1.1.0@sha256:50311d02b4d5d2b7c5242bd336edf8735df8374eaad496a92f49c83b37d2aa06` | MIT (server and client). The image's default local embedder `BAAI/bge-small-en-v1.5` is MIT and its default local reranker `cross-encoder/ms-marco-MiniLM-L-6-v2` is Apache-2.0 (model cards) | 1.2.0 (tag `v1.2.0`, released 2026-11-03), not used: the RS1 preregistration names 1.1.0 |
+| `ext-temporal-graph` | [`shipped-0.31`](comparison-systems/ext-temporal-graph/shipped-0.31/README.md), the package's shipped defaults | Graphiti (the open-source library, not Zep Cloud) | `graphiti-core` 0.31.2 (tag `v0.31.2`, commit `d72407dcedac911e1be9fc15b55e8c05a3efcc36`, published 2026-10-20) | Apache-2.0 | 0.31.2, this pin |
+
+The configuration pin table below records the same builds by hash: each entry's `lock_sha256` is its bundle's
+`uv.lock` and its `capability_sha256` is `<kind>/<configuration>/capability.json`.
+`test/eval/memory-bank-recipe-1.1.test.ts` checks both entries against the bundle files. `bun run eval:scoreboard check`
+reads only the table above, one entry per kind, so these entries never change a Q1 build label.
+
+```json
+[
+  {
+    "kind": "ext-memory-bank",
+    "config": "recipe-1.1",
+    "product": "Hindsight",
+    "package": "hindsight server 1.1.0 (vectorize-io/hindsight@a5a619b5ca59c5c39e0f96be6f7a31fabd136bd5, tag v1.1.0, released 2026-10-21) + hindsight-client==1.1.0",
+    "image": "ghcr.io/vectorize-io/hindsight:1.1.0@sha256:50311d02b4d5d2b7c5242bd336edf8735df8374eaad496a92f49c83b37d2aa06",
+    "lock_file": "docs/comparison-systems/ext-memory-bank/recipe-1.1/uv.lock",
+    "lock_sha256": "15d765bf957b507805943c638ce7428045953b2d019d9974839450643e804277",
+    "capability_sha256": "01771c3ef4158c2c39d3dc6c440a1ec2542d5c89f01f7efaa2a77d20ca288150",
+    "license": "MIT (server and hindsight-client 1.1.0); default local embedder BAAI/bge-small-en-v1.5 MIT, default local reranker cross-encoder/ms-marco-MiniLM-L-6-v2 Apache-2.0",
+    "latest_release": "1.2.0 (tag v1.2.0, commit 34a138684a899b6ec34175f7a2b633860466d289, released 2026-11-03)",
+    "vendor_benchmark_code": "vectorize-io/agent-memory-benchmark@f618ed7"
+  },
+  {
+    "kind": "ext-temporal-graph",
+    "config": "shipped-0.31",
+    "product": "Graphiti (open-source; the hosted Zep service is built on it)",
+    "package": "graphiti-core==0.31.2 (getzep/graphiti@d72407dcedac911e1be9fc15b55e8c05a3efcc36, tag v0.31.2, published 2026-10-20)",
+    "image": "shim built from shipped-0.31/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "lock_file": "docs/comparison-systems/ext-temporal-graph/shipped-0.31/uv.lock",
+    "lock_sha256": "de6585d0545315cecc4b220e1934ac06cfd30d40490b451384172413394185e0",
+    "capability_sha256": "2c8fd3926dfaff3c96ac31a06577edab6eb9aa8e09dabebc08c93f9fe08c76bb",
+    "license": "Apache-2.0",
+    "latest_release": "0.31.2 (this pin)",
+    "vendor_benchmark_code": "getzep/zep-papers@4b7f26c, LoCoMo scripts"
+  }
+]
+```
+
 ### Builds the Q1 scoreboard measured
 
 The scoreboard report's Build column labels each row with the build it measured, and never with a product name. An
 external row reads `bundle lock <hash>, capabilities <hash>`: the first eight characters of the `lock_sha256` and
-`capability_sha256` values in the table above, which name the kind's product and package. The labels are read from
-this table at the tree each campaign launched from (`eval/runner/q1/publish.ts`); the table is the same at every Q1
+`capability_sha256` values in the machine-readable pin table above, which name the kind's product and package. The
+labels are read from that table at the tree each campaign launched from (`eval/runner/q1/publish.ts`); the table is the same at every Q1
 launch tree. gbrain rows name the commit and version the campaign pinned.
 
 | Kind id | Build label in the Q1 report |
@@ -350,6 +400,17 @@ before A6b use the former environment variable names. The hashes of every file A
 [rename-a6b.json](benchmarks/2026-10-06-oss-memory-shootout/rename-a6b.json).
 
 ## Changelog
+
+### 2026-11-04: Configurations with their own build: the memory-bank server 1.1.0 and the temporal-graph library 0.31.2
+
+GST-1154, the RS1 freeze. A new subsection, "Configurations with their own build", lists the builds that run beside a
+pinned release, with their licenses, latest releases and a configuration pin table of lock and capability hashes. It
+has two entries. `ext-memory-bank` `recipe-1.1` is the memory-bank server 1.1.0 (tag `v1.1.0`, `a5a619b5`, MIT; client
+1.1.0 MIT; default embedder MIT and reranker Apache-2.0) with its server defaults, the build the RS1 preregistration
+names; its bundle is new in `docs/comparison-systems/ext-memory-bank/recipe-1.1/`, and 1.2.0 (released 2026-11-03) is
+recorded as the latest release. `ext-temporal-graph` `shipped-0.31` (0.31.2, tag `v0.31.2`, `d72407dc`, Apache-2.0)
+already had its bundle but no entry on this page. The machine-readable pin table is unchanged, so every Q1 build label
+stays as it was; the Q1 build-label paragraph now names that table explicitly.
 
 ### 2026-11-03: Re-pin to gbrain `62637c96a`
 
