@@ -131,8 +131,8 @@ published intervals sit well inside it).
   two non-inferiority passes stay passes (Holm 0.033 and 0.0058, published 0.035 and 0.014).
 - `c-gates.ts` `superior()` and `noninferior()` in the Q2 kit pass when the oriented lower bound of the cluster-bootstrap
   95% percentile interval is above 0 (above −m for non-inferiority). That is the same construction as the old share, so
-  they are anti-conservative at few clusters in the same way. They are not changed here. `superior()` is half of the Q2
-  selection rule, beside the Holm-adjusted exact p, and both decided the confirmation's superiority and safety checks.
+  they are anti-conservative at few clusters in the same way. They are not changed here. `superior()` and the
+  Holm-adjusted sign-flip p form the Q2 selection rule; the confirmation used `superior()` and `noninferior()` alone.
 - The Q2 C-gate selection and the P1 set C `during` gate need the custodian's rows. Rerunning
   `bun eval/runner/q2/c-gates.ts select` and the P1 family on the custody receipts with this fix is keyless and costs
   nothing.

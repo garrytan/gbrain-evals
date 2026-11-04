@@ -91,7 +91,7 @@ Keyless $0 re-score from the committed rows (verdicts recomputed from the stored
 bun eval/runner/batch/w10-rescore.ts w10a docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay
 ```
 
-Expected: `"official": 468` for `w10a-sonnet55-notes`, `"official": 462` for `w10b-sonnet55-notes`, McNemar wins 11, losses 5 and status `inconclusive`. Since 2026-11-04 the check ends with "re-score differs" and exits 1, and `p_superiority` and `p_holm` are the only fields that differ: the gate now computes the sign-flip p, while `summary.json` keeps the bootstrap-share value as computed. Running it with `--write` would overwrite that receipt.
+Expected: `"official": 468` for `w10a-sonnet55-notes`, `"official": 462` for `w10b-sonnet55-notes`, McNemar wins 11, losses 5 and status `inconclusive`. Since 2026-11-04 the check ends with "re-score differs" and exits 1, and `p_superiority` and `p_holm` are the only fields that differ: the gate now computes the sign-flip p, while `summary.json` keeps the bootstrap-share value as computed. Running it with `--write` would overwrite that receipt. The p it prints is the gate's 10,000-draw Monte Carlo estimate (0.103), not the exact 0.105 this page reports: it is within 0.005 of the exact value and can't go below 1/10,001.
 
 Receipts in [`2026-10-07-longmemeval-w10a-current-pin/`](2026-10-07-longmemeval-w10a-current-pin/):
 
