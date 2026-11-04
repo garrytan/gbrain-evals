@@ -443,6 +443,34 @@ export function d8CustodyPush(env: Record<string, string | undefined> = process.
   return { source: resolve(source), dest: 'custody/d8', list: [...list, rel], env: ['GBRAIN_EVALS_D8_SOURCE=~/custody/d8', `GBRAIN_EVALS_D8_MANIFEST=~/custody/d8/${rel}`] };
 }
 
+/**
+ * RS1: the custodian's RS1 files for a sealed RS1 cell, mirroring d8CustodyPush. GBRAIN_EVALS_RS1_SOURCE names the RS1
+ * set root (mint.sh's <out>/set, outside the checkout) and GBRAIN_EVALS_RS1_MANIFEST a filled manifest inside it (the
+ * committed manifest stays unfilled, so a launch always names the custodian's filled copy). Every listed file's SHA-256
+ * is checked here before any VM exists; ubi-runner pushes the files and the manifest to ~/custody/rs1 before setup,
+ * where setup's fetch (verifyRs1Custody) checks them again, the loader logs each opening to the VM's custody access log
+ * (GBRAIN_EVALS_CUSTODY_LOG, set by the remote command), and the remote command wipes ~/custody/rs1 at teardown.
+ */
+export function rs1CustodyPush(env: Record<string, string | undefined> = process.env, campaign = '<campaign>'): CustodyPush {
+  const source = env.GBRAIN_EVALS_RS1_SOURCE;
+  const fix = { next: 'tell_user_to_run' as const, argv: ['bun', 'run', 'eval:scoreboard', 'doctor', '--for', 'sealed', '--campaign', campaign], user_message: 'on the custodian host, export GBRAIN_EVALS_RS1_SOURCE=<the RS1 set root, outside the checkout> and GBRAIN_EVALS_RS1_MANIFEST=<the filled RS1 manifest inside it>' };
+  if (!source) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'a sealed RS1 cell needs the custodian\'s files and GBRAIN_EVALS_RS1_SOURCE is not set', why: 'RS1 is never downloaded on a VM; the custodian host pushes its verified copy', fix });
+  if (insideRepository(source)) throw refuse({ code: 'CUSTODY_REQUIRED', message: `GBRAIN_EVALS_RS1_SOURCE ${source} is inside the repository`, why: 'sealed files never live where Git could pick them up', fix });
+  const manifest = env.GBRAIN_EVALS_RS1_MANIFEST;
+  if (!manifest) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'a sealed RS1 cell needs the filled RS1 manifest and GBRAIN_EVALS_RS1_MANIFEST is not set', why: 'the committed RS1 manifest stays unfilled; only pinned bytes are pushed', fix });
+  const rel = relative(resolve(source), resolve(manifest));
+  if (rel.startsWith('..') || isAbsolute(rel)) throw refuse({ code: 'USAGE', message: 'the RS1 manifest must sit inside GBRAIN_EVALS_RS1_SOURCE', why: 'it travels with the files it describes', fix });
+  const m = JSON.parse(readFileSync(manifest, 'utf8')) as { status: string; files: Array<{ path: string; sha256: string }> };
+  if (m.status !== 'filled' || !m.files?.length) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'the RS1 manifest has no hashes', why: 'only pinned bytes are pushed', fix });
+  const list: string[] = [];
+  for (const f of m.files) {
+    const abs = join(source, f.path);
+    if (!existsSync(abs) || sha256File(abs) !== f.sha256) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${f.path} under GBRAIN_EVALS_RS1_SOURCE is ${existsSync(abs) ? 'not the pinned bytes' : 'missing'}`, why: 'the push refuses before any VM exists when a file does not match the manifest', fix });
+    list.push(f.path);
+  }
+  return { source: resolve(source), dest: 'custody/rs1', list: [...list, rel], env: ['GBRAIN_EVALS_RS1_SOURCE=~/custody/rs1', `GBRAIN_EVALS_RS1_MANIFEST=~/custody/rs1/${rel}`] };
+}
+
 export class Campaign {
   readonly manifest: CampaignManifest;
   readonly ledger: string;
@@ -587,11 +615,12 @@ export class Campaign {
   /** The cell's output on the VM, relative to the VM user's home: what ubi-runner and reattach pull. */
   remotePath(l: LeaseState) { return this.sealedQ1(l.cell) ? `custody/out/${l.cell}/${l.lease_id}` : `work/${basename(REPO_ROOT)}/${this.remoteOut(l)}`; }
 
-  /** A17: what a sealed BEAM-10M or D8 cell's launch pushes to the VM before setup (null for every other cell). */
+  /** A17: what a sealed BEAM-10M, D8 or RS1 cell's launch pushes to the VM before setup (null for every other cell). */
   custodyPush(cellId: string, env: Record<string, string | undefined> = process.env): CustodyPush | null {
     if (!this.sealedQ1(cellId)) return null;
     const benchmark = this.cell(cellId).benchmark;
-    return benchmark === 'beam-10m' ? beam10mCustodyPush(env, this.manifestPath) : benchmark === 'beam-d8' ? d8CustodyPush(env, this.manifestPath) : null;
+    return benchmark === 'beam-10m' ? beam10mCustodyPush(env, this.manifestPath) : benchmark === 'beam-d8' ? d8CustodyPush(env, this.manifestPath)
+      : benchmark === 'beam-rs1' ? rs1CustodyPush(env, this.manifestPath) : null;
   }
 
   /** Q1: the VM name, in ubi-runner's ownership format so `list --mine` and teardown find it, ending in `-t<hours>`: the cell's timeout, the launcher's backstop and two hours for setup and the final pull, so an age-based sweep of TTL-less `ubirun-*` VMs leaves a running cell alone (A3). */
@@ -1028,7 +1057,7 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     process.off('SIGTERM', onTerm);
     proxy.kill('SIGTERM');
     await proxy.exited;
-    if (custody && payload.cell) for (const d of ['datasets', 'restore', 'd8']) rmSync(join(dirname(custody), d), { recursive: true, force: true });
+    if (custody && payload.cell) for (const d of ['datasets', 'restore', 'd8', 'rs1']) rmSync(join(dirname(custody), d), { recursive: true, force: true });
     const s = ledgerStatus({ ledgerPath: ledger, runId: payload.lease_id });
     writeFileSync(join(out, 'lease-summary.json'), JSON.stringify({ run_id: payload.lease_id, lease_usd: payload.lease_usd, committed_usd: s.run?.committed_usd ?? payload.lease_usd,
       requests: s.run ? BudgetRun.runRequests(ledger, payload.lease_id) : null, max_output_tokens: s.run ? BudgetRun.leaseMaxOutputTokens(ledger, payload.lease_id) ?? DEFAULT_MAX_OUTPUT_TOKENS : null, cell_exit_code: code,
