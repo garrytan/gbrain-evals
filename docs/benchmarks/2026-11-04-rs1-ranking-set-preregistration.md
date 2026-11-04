@@ -307,9 +307,12 @@ minting. judge.ts prints that branch as GBEV-3's next step and never switches ju
 the key rules or labels go back to GBEV-3. `RS1_JUDGE_CHECK_TOO_FEW` means a bar's denominator is under its minimum, and
 more re-reads or more labels grow it.
 
-**Retirement.** Each shard is judged as soon as it lands. If gpt-4.1-mini retires mid-campaign, every row is re-judged
-jointly by the checked fallback judge. Q1's outcome rules apply: product failures score 0, harness failures are excluded
-and reported, and Q1's A24 retired-model rule applies.
+**Retirement.** Each shard is judged as soon as it lands. If either counted judge, gpt-4.1-mini or claude-haiku-5-5,
+retires mid-campaign, every row is re-judged jointly by the checked fallback judge, gemini-3.8-flash (the judge the stage 1
+judge check holds to its keyed-accuracy bar), and the switch is recorded below as a dated amendment with the date the
+model retired. The claude-haiku-5-5 case is GBEV-3's decision of 2026-11-04, made before the freeze, and gives that judge
+the same rule as gpt-4.1-mini. No runner switches judges by itself. Q1's outcome rules apply: product failures score 0,
+harness failures are excluded and reported, and Q1's A24 retired-model rule applies.
 
 ## Estimands and statistics
 
@@ -415,6 +418,11 @@ Stage 1 runs every frozen configuration through the RS1 cell path on public BEAM
 RS1-dev is five conversations, 1m-20, 1m-28, 1m-32, 1m-24 and 1m-21: the first five of the split's dev list in
 sha256("rs1-stage1", NUL, id) order, with 100 questions and 4,793,521 cl100k tokens. Think and the file agent run on the
 first two, 1m-20 and 1m-28 (set RS1-dev2, 40 questions), with every reader.
+
+The 4,793,521 tokens are the corpus loader's turns, the text the systems ingest, and the cells' `corpus_tokens` uses them.
+validate.ts's length gate counts each canonical chat file's messages with its own counter, and the public-dev preview
+gives 4,819,105 for the same five conversations, 0.53% more. The gates use validate.ts's count and the estimates use the
+loader's. Even if every stage 1 dollar scaled with length, the difference would be $0.82 of the $153.94 estimate.
 
 | Cell | Arms (set) | Estimate |
 |---|---|---:|
