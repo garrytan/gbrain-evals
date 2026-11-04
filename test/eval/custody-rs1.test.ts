@@ -498,6 +498,13 @@ describe('validate.ts gates', () => {
     expect(priceRequest(a.url, a.body)).toMatchObject({ provider: 'anthropic', model: 'claude-haiku-5-5', maxOutputTokens: 8192 });
   });
 
+  test('the claude-haiku-5-5 validator request sends no temperature, which the model rejects with HTTP 400', () => {
+    const { body } = anthropicRequest('x', 8192);
+    expect(body).not.toHaveProperty('temperature');
+    expect(body.max_tokens).toBe(8192);
+    expect(geminiRequest('x', 8192).body.generationConfig.temperature).toBe(0);
+  });
+
   test('the CLI refuses paid validation without --paid and an open run, before any request, and never prints a key', () => {
     const set = writeSet(root, [conversation('cli')]);
     const env = { GEMINI_API_KEY: 'test-gemini-key-not-real', ANTHROPIC_API_KEY: 'test-anthropic-key-not-real', BRAINBENCH_BUDGET_LEDGER: join(root, 'ledger.sqlite') };

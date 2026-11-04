@@ -4,6 +4,11 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### RS1 validation's claude-haiku-5-5 validator no longer sends `temperature` (GST-1154)
+
+- **What broke.** `eval/custody/rs1/validate.ts` sent `temperature: 0` to claude-haiku-5-5, which rejects it with HTTP 400 ("`temperature` is deprecated for this model"). In stage 0's diagnostic validate on run `rs1-stage0-2026-11-03T13-59-09-657Z-39d1056b`, all 55 Haiku calls failed at $0, so every item ended `validator_error` and no item-gate rate was measured.
+- **The fix.** The request sends `temperature` only where `acceptsTemperature` says the model takes it, as the other runners already do, so Haiku samples at the provider default. gemini-3.8-flash keeps `temperature: 0`. A test checks the request shape.
+
 ### Keyless replay: gbrain v0.60.570.0 reads 435 of the 436 Sol `get_page` calls it refused for sending several window selectors (GST-1339)
 
 - **What it checks.** `docs/benchmarks/2026-11-02-skillopt-ceiling/runs/get-page-replay/replay.ts` sends every Sol `get_page` call recorded in the SkillOpt frontier probe and the ceiling calibration, and as a control every Opus call in the calibration and gate 1, to the SkillOpt rollout registry, against the brain each run read, with no model and no key. It writes per-call outcomes for one gbrain build and compares two builds.

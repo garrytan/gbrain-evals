@@ -47,6 +47,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { BudgetExceededError, budgetOptionsFrom, chatPrice, startPaidRun } from '../../runner/budget-ledger.ts';
+import { acceptsTemperature } from '../../runner/openai-judge-shim.ts';
 import { PaidArmRefusal, requirePaidArm } from '../../runner/paid-arm.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
 import { readBeamPaths } from './beam-paths.ts';
@@ -342,9 +343,10 @@ export const geminiRequest = (prompt: string, maxOutputTokens: number) => ({
   url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent',
   body: { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens, temperature: 0, responseMimeType: 'application/json' } },
 });
+/** claude-haiku-5-5 rejects `temperature` (HTTP 400, "temperature is deprecated for this model"), so it samples at the provider default. */
 export const anthropicRequest = (prompt: string, maxTokens: number) => ({
   url: 'https://api.anthropic.com/v1/messages',
-  body: { model: 'claude-haiku-5-5', max_tokens: maxTokens, temperature: 0, messages: [{ role: 'user', content: prompt }] },
+  body: { model: 'claude-haiku-5-5', max_tokens: maxTokens, ...(acceptsTemperature('claude-haiku-5-5') ? { temperature: 0 } : {}), messages: [{ role: 'user', content: prompt }] },
 });
 
 /** A provider error names only the host and status: an error body could echo the prompt. */
