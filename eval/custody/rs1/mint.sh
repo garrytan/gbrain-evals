@@ -31,9 +31,13 @@
 #     metering-proxy token for its one provider (gemini-3.8-flash, or OpenAI embeddings for topic_check): mint.sh
 #     starts eval/runner/harness-metering-proxy.ts for that step with only that provider's real key, joined to the
 #     open RS1 budget run, so the ledger prices and reserves every request before it is sent.
-#   - Pinned BEAM and dependencies (real and stub-model). BEAM is fetched at the pinned commit and checked (HEAD and a
-#     clean tree); its Python dependencies install with uv from requirements.lock (--require-hashes) into
-#     <out>/tooling/venv.
+#   - Pinned BEAM and dependencies (real and stub-model). eval/custody/rs1/beam-checkout.sh fetches BEAM at the pinned
+#     commit with a blob filter and checks out only the paths in eval/custody/rs1/beam-paths.txt (BEAM's code, licence,
+#     readme, public topics and dev conversations; no sealed conversation and nothing of the 10M tier, F28), removes the
+#     origin remote so no later git command can fetch an excluded file, then checks HEAD, a clean tree, and that no file
+#     outside the list is on disk or in the object store, deleting the checkout when one is. A full checkout
+#     from before F28 is deleted and fetched again. Its Python dependencies install with uv from requirements.lock
+#     (--require-hashes) into <out>/tooling/venv.
 #
 # Modes: --fake swaps the whole pipeline and every model call for a deterministic stub (no network, system python3;
 # the keyless tests use it). --stub-model runs BEAM's own code with a deterministic stub model. Neither spends.
@@ -41,7 +45,8 @@
 #
 # Layout under --out: set/ (the minted set: set/conversations/cNNN/{manifest.json,topic.json,beam/1/...}),
 # usage.json (counts-only usage per step and conversation), proxy/ (request logs, and request bodies holding RS1
-# text), tooling/ (BEAM checkout, venv, tiktoken cache). Everything but tooling/ belongs in the encrypted archive.
+# text), tooling/ (sparse BEAM checkout, venv, tiktoken cache). Everything but tooling/ belongs in the encrypted
+# archive.
 set -euo pipefail
 umask 077
 
@@ -104,15 +109,7 @@ if [ "$MODE" = fake ]; then
 else
   command -v uv >/dev/null || die "uv is not on PATH"
   BEAM_DIR="$TOOLING/beam"
-  if [ ! -d "$BEAM_DIR/.git" ]; then
-    rm -rf "$BEAM_DIR"
-    git init -q "$BEAM_DIR"
-    git -C "$BEAM_DIR" fetch -q --depth 1 "$BEAM_REPO" "$BEAM_COMMIT" >/dev/null 2>&1 || die "could not fetch BEAM at $BEAM_COMMIT"
-    git -C "$BEAM_DIR" -c advice.detachedHead=false checkout -q --detach FETCH_HEAD
-  fi
-  [ "$(git -C "$BEAM_DIR" rev-parse HEAD)" = "$BEAM_COMMIT" ] || die "the BEAM checkout is not at $BEAM_COMMIT"
-  [ -z "$(git -C "$BEAM_DIR" status --porcelain --untracked-files=all)" ] || die "the BEAM checkout has local changes"
-  say "beam=verified commit=$BEAM_COMMIT tree=$(git -C "$BEAM_DIR" rev-parse 'HEAD^{tree}')"
+  bash "$HERE/beam-checkout.sh" "$BEAM_DIR" "$BEAM_REPO" "$BEAM_COMMIT" "$HERE/beam-paths.txt"
   LOCK="$HERE/requirements.lock"
   LOCK_SHA="$(sha256sum "$LOCK" | cut -d' ' -f1)"
   VENV="$TOOLING/venv"

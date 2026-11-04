@@ -15,10 +15,11 @@
  *   - topic: mint.sh dropped it after every topic it drew was too close to a public BEAM topic;
  *   - length: the cl100k token count of its messages is outside the calibrated bounds [low, high];
  *   - contamination: a share of its distinct 13-grams at or above the calibrated τ appears in one public BEAM chat or
- *     questions file at the pinned commit. A Bloom filter over all of them finds the candidate 13-grams; one more pass
- *     over the public files counts them exactly per file. The union share is reported beside it: independent public
- *     BEAM conversations already share 1.2-2.1% of their 13-grams with the union of the others, so a union gate would
- *     drop every conversation;
+ *     questions file at the pinned commit. The public files are the dev conversations' in eval/custody/rs1/beam-paths.txt,
+ *     the list mint.sh checks out (F28): no sealed conversation and no 10M chat, and the report records the list's
+ *     SHA-256. A Bloom filter over all of them finds the candidate 13-grams; one more pass over the public files counts
+ *     them exactly per file. The union share is reported beside it: independent public BEAM conversations already share
+ *     1.2-2.1% of their 13-grams with the union of the others, so a union gate would drop every conversation;
  *   - duplicate: the same chat bytes as an earlier kept conversation, or a MinHash estimate of 13-gram Jaccard of at
  *     least 0.1 with one.
  *
@@ -38,9 +39,9 @@
  * validate, and replies already cached under --cache are not bought again. The verdict is "stop" (exit 4) when more than
  * 20% of the items of finished conversations (kept, or dropped at the floor) fail.
  *
- * Public files: validate reads only the BEAM conversations eval/decisions/splits lists as dev (F28, 2026-11-04), so the
- * public index, the calibration's pool and its subjects leave out Q1's sealed splits and the 10M tier (all sealed) even
- * when the tree holds them, and never open their files.
+ * Public files: validate reads only the dev conversations' files in eval/custody/rs1/beam-paths.txt (F28, 2026-11-04),
+ * so the public index, the calibration's pool and its subjects leave out Q1's sealed splits and the 10M tier (all
+ * sealed) even when the tree holds them, and never open their files.
  *
  * Gate calibration (plan "Gate recalibration method", written before any RS1 output was read). The subjects are the
  * dev-split public 1M conversations under <beam-dir>/chats/1M, each counted on its canonical chat file
@@ -72,8 +73,8 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { BudgetExceededError, budgetOptionsFrom, chatPrice, startPaidRun } from '../../runner/budget-ledger.ts';
 import { PaidArmRefusal, requirePaidArm } from '../../runner/paid-arm.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
+import { readBeamPaths } from './beam-paths.ts';
 
-const REPO = resolve(import.meta.dir, '../../..');
 
 export const ABILITIES = [
   'abstention', 'contradiction_resolution', 'event_ordering', 'information_extraction', 'instruction_following',
@@ -175,15 +176,7 @@ export class Bloom {
 
 // ─── BEAM's public data ──────────────────────────────────────────────
 
-export interface PublicIndex { bloom: Bloom; questions: Set<string>; paths: string[]; sources: number; ngrams: number; sourcesSha256: string }
-
-function walkFiles(dir: string, keep: (path: string) => boolean, out: string[] = []): string[] {
-  for (const name of readdirSync(dir).sort()) {
-    const path = join(dir, name);
-    if (statSync(path).isDirectory()) walkFiles(path, keep, out); else if (keep(path)) out.push(path);
-  }
-  return out;
-}
+export interface PublicIndex { bloom: Bloom; questions: Set<string>; paths: string[]; sources: number; ngrams: number; sourcesSha256: string; sourceListSha256: string }
 
 /** Every message text in a chat (any nesting), or every string in a questions file. */
 function texts(value: unknown, chat: boolean, out: string[] = []): string[] {
@@ -204,26 +197,16 @@ function questionTexts(value: unknown, out: string[] = []): string[] {
   return out;
 }
 
-/** The public ids (1m-20) eval/decisions/splits lists as dev for a BEAM tier; a tier with no split, such as 10M, has none. */
-function devSplit(tier: string): Set<string> {
-  const split = join(REPO, 'eval/decisions/splits', `beam-${tier.toLowerCase()}.json`);
-  return new Set<string>(existsSync(split) ? readJson(split).dev : []);
-}
-
 /**
- * BEAM's public chats and questions of the dev-split conversations: every chat.json (chat_trunecated.json is a cut of
- * it) and every probing_questions.json under chats/<tier>/<n> whose public id the splits list as dev.
+ * BEAM's public chats and questions: the chat.json (chat_trunecated.json is a cut of it) and probing_questions.json of
+ * each dev conversation, taken from the path list mint.sh checks out (eval/custody/rs1/beam-paths.ts, F28), so no
+ * sealed conversation and no 10M chat is read. A listed file missing from --beam-dir refuses.
  */
 export function publicSources(beamDir: string): string[] {
-  const root = join(beamDir, 'chats');
-  const dev = new Map<string, Set<string>>();
-  const allowed = (path: string) => {
-    const [tier, n] = relative(root, path).split('/');
-    if (!dev.has(tier)) dev.set(tier, devSplit(tier));
-    return dev.get(tier)!.has(`${tier.toLowerCase()}-${n}`);
-  };
-  const sources = existsSync(root) ? walkFiles(root, p => (p.endsWith('/chat.json') || p.endsWith('/probing_questions/probing_questions.json')) && allowed(p)) : [];
-  if (!sources.some(p => p.endsWith('/chat.json'))) throw new ValidateError(`no dev-split public BEAM chats under ${root}`);
+  const sources = readBeamPaths().paths.filter(p => p.startsWith('chats/') && (p.endsWith('/chat.json') || p.endsWith('/probing_questions/probing_questions.json'))).map(p => join(beamDir, p));
+  if (!sources.some(p => p.endsWith('/chat.json'))) throw new ValidateError('the BEAM path list names no public chat');
+  const missing = sources.filter(p => !existsSync(p));
+  if (missing.length) throw new ValidateError(`${missing.length} public BEAM files of the path list are missing under ${beamDir}; run mint.sh to check them out`);
   return sources;
 }
 
@@ -231,12 +214,12 @@ export function publicSources(beamDir: string): string[] {
 const filesSha256 = (beamDir: string, paths: string[]) => sha256(paths.map(p => `${relative(beamDir, p)} ${statSync(p).size}\n`).join(''));
 
 export function buildPublicIndex(beamDir: string, cachePath?: string): PublicIndex {
-  const sources = publicSources(beamDir);
+  const sources = publicSources(beamDir), sourceListSha256 = readBeamPaths().sha256;
   const sourcesSha256 = filesSha256(beamDir, sources);
   if (cachePath && existsSync(cachePath) && existsSync(`${cachePath}.json`)) {
     const head = JSON.parse(readFileSync(`${cachePath}.json`, 'utf8'));
     if (head.schema === 'rs1-public-13gram/v1' && head.sources_sha256 === sourcesSha256) {
-      return { bloom: new Bloom(head.m, head.k, new Uint8Array(readFileSync(cachePath))), questions: new Set(head.questions), paths: sources, sources: sources.length, ngrams: head.ngrams, sourcesSha256 };
+      return { bloom: new Bloom(head.m, head.k, new Uint8Array(readFileSync(cachePath))), questions: new Set(head.questions), paths: sources, sources: sources.length, ngrams: head.ngrams, sourcesSha256, sourceListSha256 };
     }
   }
   // A JSON chat file holds at most one 13-gram per six bytes, so this sizes the filter for its load or better.
@@ -254,7 +237,7 @@ export function buildPublicIndex(beamDir: string, cachePath?: string): PublicInd
     writeFileSync(cachePath, bloom.bits);
     writeFileSync(`${cachePath}.json`, JSON.stringify({ schema: 'rs1-public-13gram/v1', sources_sha256: sourcesSha256, m: bloom.m, k: bloom.k, ngrams: count, questions: [...questions].sort() }));
   }
-  return { bloom, questions, paths: sources, sources: sources.length, ngrams: count, sourcesSha256 };
+  return { bloom, questions, paths: sources, sources: sources.length, ngrams: count, sourcesSha256, sourceListSha256 };
 }
 
 /** A 13-gram's two hashes as one 53-bit number. */
@@ -629,7 +612,7 @@ export interface Report {
   schema: 'rs1-validation/v1';
   validators: string[];
   params: Record<string, number>;
-  public_index: { sources: number; ngrams: number; m: number; k: number; fill: number; est_false_positive: number; sources_sha256: string };
+  public_index: { sources: number; ngrams: number; m: number; k: number; fill: number; est_false_positive: number; sources_sha256: string; source_list_sha256: string };
   calibration: Calibration;
   conversations: Record<string, ConversationResult>;
   totals: Record<string, number>;
@@ -799,7 +782,7 @@ export function planValidation(opts: Options, clients: ModelClient[], index: Pub
       schema: 'rs1-validation/v1',
       validators: clients.map(c => c.id),
       params: { window_tokens: opts.windowTokens, overlap_tokens: opts.overlapTokens, select_attempts: SELECT_ATTEMPTS, ...THRESHOLDS },
-      public_index: { sources: index.sources, ngrams: index.ngrams, m: index.bloom.m, k: index.bloom.k, fill: Number(fill.toFixed(6)), est_false_positive: Number((fill ** index.bloom.k).toExponential(3)), sources_sha256: index.sourcesSha256 },
+      public_index: { sources: index.sources, ngrams: index.ngrams, m: index.bloom.m, k: index.bloom.k, fill: Number(fill.toFixed(6)), est_false_positive: Number((fill ** index.bloom.k).toExponential(3)), sources_sha256: index.sourcesSha256, source_list_sha256: index.sourceListSha256 },
       calibration,
       conversations: results,
       totals,

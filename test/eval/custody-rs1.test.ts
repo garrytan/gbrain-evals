@@ -8,9 +8,11 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { priceRequest } from '../../eval/runner/budget-ledger.ts';
+import { loadSplit } from '../../eval/runner/decisions/splits.ts';
 import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
+import { BEAM_PATHS_FILE, deriveBeamPaths, readBeamPaths, renderBeamPaths } from '../../eval/custody/rs1/beam-paths.ts';
 import { checkTree, hashTree } from '../../eval/custody/rs1/hashlist.ts';
 import {
   ANSWER_FIELD, CALIBRATION, SLOTS, VALIDATOR_IDS, anthropicRequest, buildPublicIndex, calibrate, chunkMessages,
@@ -38,24 +40,33 @@ function run(cmd: string, args: string[], env: Record<string, string> = {}) {
 }
 
 /**
- * A BEAM-shaped public tree: three public topics, one public question, and two public 1M chats of dev-split
- * conversations, 1m-3 holding PASSAGE and the larger 1m-2 quoting 32 of its words. The calibration from it is τ 2% (20 of the first chat's
- * 1,300 13-grams are in the second) and bounds around the fake mint's conversations; --fake does not stop on its range.
+ * A BEAM-shaped public tree: three public topics, a chat and questions file for every dev conversation in the BEAM
+ * path list (the first 1M one holds PASSAGE and PUBLIC_QUESTION, and the second, larger one quotes 32 of PASSAGE's
+ * words), and SEALED_PASSAGE in a sealed 1M conversation and a 10M chat, which the list leaves out. The calibration
+ * from it is τ 2% (20 of the first chat's 1,300 13-grams are in the second) and bounds around the fake mint's
+ * conversations; --fake does not stop on its range.
  */
 const PASSAGE = words('public-passage', 400);
+const SEALED_PASSAGE = words('sealed-passage', 400);
 const PUBLIC_QUESTION = 'Which public dataset question appears in the BEAM release?';
+const BEAM_LIST = readBeamPaths().paths;
+const PUBLIC_CHAT = BEAM_LIST.find(p => p.startsWith('chats/1M/') && p.endsWith('/chat.json'))!;
+const QUOTING_CHAT = BEAM_LIST.filter(p => p.startsWith('chats/1M/') && p.endsWith('/chat.json'))[1];
+/** The calibration subjects of a full tree: the listed 1M conversations, as public ids in list order. */
+const LISTED_1M = BEAM_LIST.filter(p => p.startsWith('chats/1M/') && p.endsWith('/chat.json')).map(p => `1m-${p.split('/')[2]}`);
+const SEALED_CHATS = ['chats/1M/1/chat.json', 'chats/10M/1/chat.json'];
 function fakeBeam(root: string): string {
   const beam = join(root, 'beam');
-  mkdirSync(join(beam, 'topics/1M'), { recursive: true });
-  mkdirSync(join(beam, 'chats/1M/3/probing_questions'), { recursive: true });
-  writeFileSync(join(beam, 'topics/1M/1M_topics.json'), JSON.stringify(['Coding', 'Math', 'Cooking'].map((category, i) => ({ id: i + 1, category, title: `Public ${category} topic`, theme: `Public theme ${i}`, subtopics: ['a', 'b', 'c'] }))));
-  const turns = Array.from({ length: 10 }, (_, i) => [{ role: 'user', id: 2 * i, content: i === 3 ? PASSAGE : words(`public-u${i}`, 60) }, { role: 'assistant', id: 2 * i + 1, content: words(`public-a${i}`, 60) }]);
-  writeFileSync(join(beam, 'chats/1M/3/chat.json'), JSON.stringify([{ batch_number: 1, time_anchor: 'x', turns }]));
-  writeFileSync(join(beam, 'chats/1M/3/probing_questions/probing_questions.json'), JSON.stringify({ information_extraction: [{ question: PUBLIC_QUESTION, answer: 'x', rubric: ['y'] }] }));
+  const write = (rel: string, value: unknown) => { mkdirSync(dirname(join(beam, rel)), { recursive: true }); writeFileSync(join(beam, rel), JSON.stringify(value)); };
+  const chat = (seed: string, passage = '') => [{ batch_number: 1, time_anchor: 'x', turns: Array.from({ length: 10 }, (_, i) => [{ role: 'user', id: 2 * i, content: i === 3 && passage ? passage : words(`${seed}-u${i}`, 60) }, { role: 'assistant', id: 2 * i + 1, content: words(`${seed}-a${i}`, 60) }]) }];
+  write('topics/1M/1M_topics.json', ['Coding', 'Math', 'Cooking'].map((category, i) => ({ id: i + 1, category, title: `Public ${category} topic`, theme: `Public theme ${i}`, subtopics: ['a', 'b', 'c'] })));
+  for (const rel of BEAM_LIST.filter(p => p.startsWith('chats/'))) {
+    if (rel.endsWith('/chat.json') || rel.endsWith('/chat_trunecated.json')) write(rel, chat(`public-${rel}`, rel === PUBLIC_CHAT ? PASSAGE : ''));
+    else write(rel, dirname(dirname(rel)) === dirname(PUBLIC_CHAT) ? { information_extraction: [{ question: PUBLIC_QUESTION, answer: 'x', rubric: ['y'] }] } : {});
+  }
   const quote = PASSAGE.split(' ').slice(0, 32).join(' ');
-  const big = Array.from({ length: 50 }, (_, i) => [{ role: 'user', id: 2 * i, content: i === 7 ? quote : words(`public-big-u${i}`, 100) }, { role: 'assistant', id: 2 * i + 1, content: words(`public-big-a${i}`, 100) }]);
-  mkdirSync(join(beam, 'chats/1M/2'), { recursive: true });
-  writeFileSync(join(beam, 'chats/1M/2/chat.json'), JSON.stringify([{ batch_number: 1, time_anchor: 'x', turns: big }]));
+  write(QUOTING_CHAT, [{ batch_number: 1, time_anchor: 'x', turns: Array.from({ length: 50 }, (_, i) => [{ role: 'user', id: 2 * i, content: i === 7 ? quote : words(`public-big-u${i}`, 100) }, { role: 'assistant', id: 2 * i + 1, content: words(`public-big-a${i}`, 100) }]) }]);
+  for (const rel of SEALED_CHATS) write(rel, chat(`sealed-${rel}`, SEALED_PASSAGE));
   return beam;
 }
 
@@ -164,11 +175,11 @@ describe('RS1 custody scripts end to end (mint.sh --fake)', () => {
     for (const line of r.all.trim().split('\n')) expect(line).toMatch(/^rs1-validate( [a-z0-9_]+=[^ ]*)+$/);
     expect(r.out).toContain('conversations=2 keep=2 regenerate=0 drop=0 incomplete=0');
     expect(r.out).toContain('items=40 pass=40 fail=0');
-    expect(r.out).toContain('calibration_subjects=2 calibration_dropped=0 calibration_accepted=0 ');
+    expect(r.out).toContain(`calibration_subjects=${LISTED_1M.length} calibration_dropped=0 calibration_accepted=0 `);
     expect(r.out).toContain(' tau=0.02 ');
     const written = JSON.parse(readFileSync(report, 'utf8'));
-    expect(written.calibration).toMatchObject({ tau: 0.02, max_share_subject: '1m-3', out_of_range: [{ rule: 'low_below_min' }] });
-    expect(written.calibration.subjects.map((s: { id: string }) => s.id)).toEqual(['1m-2', '1m-3']);
+    expect(written.calibration).toMatchObject({ tau: 0.02, max_share_subject: `1m-${PUBLIC_CHAT.split('/')[2]}`, out_of_range: [{ rule: 'low_below_min' }] });
+    expect(written.calibration.subjects.map((s: { id: string }) => s.id)).toEqual(LISTED_1M);
     expect(Object.keys(written.params)).not.toContain('contamination_max');
     const probes = sealedProbes(set, seedLine('test seed a'));
     expect(leaks(r.all, probes)).toBe(0);
@@ -350,10 +361,27 @@ describe('validate.ts gates', () => {
     expect(c.status).toBe('drop');
     expect(c.reasons).toEqual(['contamination']);
     expect(c.contamination_share!).toBeGreaterThanOrEqual(cal.tau);
-    expect(c.contamination_source).toBe('chats/1M/3/chat.json');
+    expect(c.contamination_source).toBe(PUBLIC_CHAT);
     expect(c.contamination_union_share!).toBeGreaterThanOrEqual(c.contamination_share!);
     expect(report.conversations.c001.contamination_share).toBe(0);
     expect(Object.keys(c.items)).toHaveLength(0);
+  });
+
+  test('the public index reads only the path list (F28): a sealed or 10M chat never counts, and a missing listed file refuses', async () => {
+    const list = readBeamPaths();
+    const indexed = list.paths.filter(p => p.startsWith('chats/') && !p.endsWith('/chat_trunecated.json'));
+    expect(index.sources).toBe(indexed.length);
+    expect(index.paths.map(p => relative(beam, p))).toEqual(indexed);
+    expect(index.sourceListSha256).toBe(list.sha256);
+    const sealed = conversation('sealed');
+    sealed.messages[41] = SEALED_PASSAGE.split(' ').slice(0, 120).join(' ');
+    const report = await validateSet(options(writeSet(root, [sealed])), fakes(), index, cal);
+    expect(report.conversations.c001.contamination_share).toBe(0);
+    expect(report.conversations.c001.status).toBe('keep');
+    expect(report.public_index.source_list_sha256).toBe(list.sha256);
+    const partial = fakeBeam(scratch('partial'));
+    rmSync(join(partial, PUBLIC_CHAT));
+    expect(() => buildPublicIndex(partial)).toThrow(/1 public BEAM files of the path list are missing/);
   });
 
   test('a public question is contaminated, and a repeated question is a duplicate', async () => {
@@ -528,6 +556,13 @@ function beamTree(beam: string, convs: Record<string, { messages: string[]; trun
 /** A message of exactly n distinct 13-grams, and n words of a message from a given word. */
 const grams = (seed: string, n: number) => words(seed, n + 12);
 const cut = (text: string, from: number, n: number) => text.split(' ').slice(from, from + n).join(' ');
+/** The conversations the BEAM path list names (1M/2, 500K/10, ...): validate refuses a tree that lacks one. */
+const LISTED_CONVERSATIONS = BEAM_LIST.filter(p => p.endsWith('/chat.json')).map(p => dirname(p).slice('chats/'.length));
+/** beamTree over every listed conversation, each a filler of nine 100-gram messages unless convs gives it. */
+const listedTree = (beam: string, convs: Parameters<typeof beamTree>[1]) => beamTree(beam, {
+  ...Object.fromEntries(LISTED_CONVERSATIONS.map(dir => [dir, { messages: Array.from({ length: 9 }, (_, i) => grams(`cal-filler/${dir}/${i}`, 100)) }])),
+  ...convs,
+});
 const tokensOf = (messages: string[]) => messages.reduce((s, m) => s + encodingCount('cl100k_base', m), 0);
 /** A 1,000-word message for million-token chats: a cheap 32-bit mix per word, so 13-word runs never repeat across seeds. */
 function bulk(seed: string): string {
@@ -545,11 +580,13 @@ const measure = (subjects: Array<[tokens: number, shared: number, ngrams: number
 const refusal = (fn: () => unknown): ValidateError => { try { fn(); } catch (error) { if (error instanceof ValidateError) return error; throw error; } throw new Error('no refusal'); };
 
 describe('validate.ts gate calibration', () => {
-  // Tree A, dev-split ids only: subject 1m-2 is counted on its truncated chat (8 messages, 800 13-grams) and 16 of them
-  // are in 500k-10's chat; subject 1m-3 (1,000) has 10 there. Each subject's questions quote its own chat.
+  // Tree A holds every listed conversation: subject 1m-2 is counted on its truncated chat (8 messages, 800 13-grams) and
+  // 16 of them are in 500k-10's chat; subject 1m-3 (1,000) has 10 there. Each subject's questions quote its own chat.
+  // The other listed conversations are fillers of nine messages that share nothing, so 1m-2 is the smallest subject and
+  // 1m-3 the largest.
   const A2 = Array.from({ length: 10 }, (_, i) => grams(`cal-a2/${i}`, 100));
   const A3 = Array.from({ length: 10 }, (_, i) => grams(`cal-a3/${i}`, 100));
-  const treeA = (beam: string, extra: Parameters<typeof beamTree>[1] = {}) => beamTree(beam, {
+  const treeA = (beam: string, extra: Parameters<typeof beamTree>[1] = {}) => listedTree(beam, {
     '1M/2': { messages: A2, truncated: 8, questions: [cut(A2[0], 0, 40)] },
     '1M/3': { messages: A3, questions: [cut(A3[0], 0, 30)] },
     '500K/10': { messages: [cut(A2[1], 0, 28), cut(A3[0], 50, 22), grams('cal-a5/filler', 100)] },
@@ -567,13 +604,16 @@ describe('validate.ts gate calibration', () => {
   });
 
   test('s(c) leaves out the subject\'s own chat, truncated chat and questions; bounds and τ follow; every subject passes', () => {
-    expect(calA.subjects.map(s => [s.id, s.file, s.ngrams, s.shared, s.share, s.source])).toEqual([
+    const designed = calA.subjects.filter(s => s.id === '1m-2' || s.id === '1m-3');
+    expect(designed.map(s => [s.id, s.file, s.ngrams, s.shared, s.share, s.source])).toEqual([
       ['1m-2', 'chats/1M/2/chat_trunecated.json', 800, 16, 0.02, 'chats/500K/10/chat.json'],
       ['1m-3', 'chats/1M/3/chat.json', 1000, 10, 0.01, 'chats/500K/10/chat.json'],
     ]);
+    expect(calA.subjects.map(s => s.id)).toEqual(LISTED_CONVERSATIONS.filter(d => d.startsWith('1M/')).map(d => `1m-${d.slice(3)}`));
+    for (const s of calA.subjects) if (!designed.includes(s)) expect([s.id, s.shared, s.source]).toEqual([s.id, 0, null]);
     const t2 = tokensOf(A2.slice(0, 8)), t3 = tokensOf(A3);
-    expect(calA.subjects.map(s => s.tokens)).toEqual([t2, t3]);
-    expect(calA).toMatchObject({ schema: 'rs1-calibration/v1', sources: 6, sources_sha256: indexA.sourcesSha256, low_tokens: Math.floor(95 * Math.min(t2, t3) / 100), high_tokens: Math.ceil(105 * Math.max(t2, t3) / 100), max_share: 0.02, max_share_subject: '1m-2', tau: 0.025, dropped: [], accepted: [] });
+    expect(designed.map(s => s.tokens)).toEqual([t2, t3]);
+    expect(calA).toMatchObject({ schema: 'rs1-calibration/v1', sources: BEAM_LIST.filter(p => p.startsWith('chats/') && !p.endsWith('/chat_trunecated.json')).length, sources_sha256: indexA.sourcesSha256, low_tokens: Math.floor(95 * Math.min(t2, t3) / 100), high_tokens: Math.ceil(105 * Math.max(t2, t3) / 100), max_share: 0.02, max_share_subject: '1m-2', tau: 0.025, dropped: [], accepted: [] });
     for (const s of calA.subjects) {
       expect(s.tokens).toBeGreaterThanOrEqual(calA.low_tokens);
       expect(s.tokens).toBeLessThanOrEqual(calA.high_tokens);
@@ -658,25 +698,29 @@ describe('validate.ts gate calibration', () => {
     treeA(beam, { '1M/3': { messages: [...A3, grams('cal-cache/extra', 100)] } });
     const moved = buildPublicIndex(beam);
     const again = calibrate(beam, moved.paths, moved.sourcesSha256, { cachePath, enforceRange: false });
-    expect(again.subjects.map(s => s.tokens)).toEqual([tokensOf(A2.slice(0, 8)), tokensOf([...A3, grams('cal-cache/extra', 100)])]);
+    expect(again.subjects.slice(0, 2).map(s => s.tokens)).toEqual([tokensOf(A2.slice(0, 8)), tokensOf([...A3, grams('cal-cache/extra', 100)])]);
   });
 
-  test('--calibrate-only reads dev-split files only: a sealed-split conversation and the 10M tier change nothing, and it prints ids, counts and hashes only', () => {
-    // A million-token subject, so the ceiling stop passes: 1m-2 (dev), with 500k-10 quoting it. 1m-1 (a sealed split) and
-    // 10m-1 (the 10M tier has no dev split) each hold whole messages of 1m-2, so reading either would raise τ.
+  test('--calibrate-only reads the listed dev files only: a sealed-split conversation and the 10M tier change nothing, and it prints ids, counts and hashes only', () => {
+    // A million-token subject, so the ceiling stop passes: 1m-2, with 500k-10 quoting it; the other listed 1M subjects are
+    // fillers, dropped. 1m-1 (a sealed split) and 10m-1 (the 10M tier) each hold whole messages of 1m-2, so reading either
+    // would raise τ.
     const C1 = Array.from({ length: 130 }, (_, i) => bulk(`cal-c1/${i}`)), C2 = Array.from({ length: 160 }, (_, i) => bulk(`cal-c2/${i}`));
     const dev = { '1M/2': { messages: C2 }, '500K/10': { messages: [cut(C2[0], 0, 112), cut(C1[0], 0, 62), grams('cal-c5/filler', 100)] } };
-    const full = beamTree(join(root, 'beam-c'), { ...dev, '1M/1': { messages: [...C1, C2[1]] }, '10M/1': { messages: [C2[2], C2[3]] } });
-    const devOnly = beamTree(join(root, 'beam-c-dev'), dev);
-    expect(publicSources(full).map(p => relative(full, p))).toEqual(['chats/1M/2/chat.json', 'chats/1M/2/probing_questions/probing_questions.json', 'chats/500K/10/chat.json', 'chats/500K/10/probing_questions/probing_questions.json']);
-    expect(publicSources(devOnly).map(p => relative(devOnly, p))).toEqual(publicSources(full).map(p => relative(full, p)));
-    const a = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', full]);
+    const full = listedTree(join(root, 'beam-c'), { ...dev, '1M/1': { messages: [...C1, C2[1]] }, '10M/1': { messages: [C2[2], C2[3]] } });
+    const devOnly = listedTree(join(root, 'beam-c-dev'), dev);
+    expect(publicSources(full).filter(p => /\/chats\/(1M\/1|10M)\//.test(p))).toEqual([]);
+    const fillers = LISTED_CONVERSATIONS.filter(d => d.startsWith('1M/') && d !== '1M/2').map(d => `1m-${d.slice(3)}`);
+    const calibrateOnly = (beam: string) => run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', beam, ...fillers.flatMap(id => ['--calibration-drop', id])]);
+    const a = calibrateOnly(full);
     expect(a.err).toBe('');
     expect(a.code).toBe(0);
     const cal = JSON.parse(a.out) as Calibration;
-    expect(cal.subjects.map(s => [s.id, s.shared, s.ngrams, s.source])).toEqual([['1m-2', 100, 160 * 988, 'chats/500K/10/chat.json']]);
-    expect(cal).toMatchObject({ sources: 4, tau: 0.001, out_of_range: [], low_tokens: Math.floor(95 * cal.subjects[0].tokens / 100), high_tokens: Math.ceil(105 * cal.subjects[0].tokens / 100) });
-    const b = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', devOnly]);
+    expect(cal.dropped).toEqual([...fillers].sort());
+    expect(cal.subjects.filter(s => s.id === '1m-2').map(s => [s.id, s.shared, s.ngrams, s.source])).toEqual([['1m-2', 100, 160 * 988, 'chats/500K/10/chat.json']]);
+    const t2 = cal.subjects.find(s => s.id === '1m-2')!.tokens;
+    expect(cal).toMatchObject({ tau: 0.001, out_of_range: [], low_tokens: Math.floor(95 * t2 / 100), high_tokens: Math.ceil(105 * t2 / 100) });
+    const b = calibrateOnly(devOnly);
     expect(b.code).toBe(0);
     expect(b.out).toBe(a.out);
     const allowed = /^([0-9a-f]{64}|1m-\d+|chats\/(1M|500K)\/\d+\/(chat|chat_trunecated|probing_questions\/probing_questions)\.json|rs1-calibration\/v1)$/;
@@ -686,6 +730,148 @@ describe('validate.ts gate calibration', () => {
 });
 
 // ─── mint.sh start_proxy ─────────────────────────────────────────────
+
+// ─── the BEAM path list and the sparse checkout (F28) ────────────────
+
+describe('the BEAM path list (F28)', () => {
+  const manifest = JSON.parse(readFileSync(join(REPO, 'eval/decisions/datasets/beam-b2da22e.json'), 'utf8')).sizes as Record<string, Array<{ conversation: string; chat_path: string; questions_path: string }>>;
+  const folder = (size: string, id: string) => dirname(manifest[size].find(c => c.conversation === id)!.chat_path) + '/';
+
+  test('is the list derived from the committed split and dataset files', () => {
+    expect(readFileSync(BEAM_PATHS_FILE, 'utf8')).toBe(renderBeamPaths());
+  });
+
+  test('names no sealed conversation and nothing of the 10M tier, and every dev conversation and pipeline path', () => {
+    for (const size of ['100k', '500k', '1m']) {
+      const split = loadSplit(`beam-${size}`);
+      for (const id of split.sealed) expect(BEAM_LIST.filter(p => p.startsWith(folder(size, id)))).toEqual([]);
+      for (const id of split.dev) {
+        const { chat_path } = manifest[size].find(c => c.conversation === id)!;
+        const chats = [...new Set([`${folder(size, id)}chat.json`, chat_path])];
+        expect(BEAM_LIST.filter(p => p.startsWith(folder(size, id)))).toEqual([...chats, `${folder(size, id)}probing_questions/probing_questions.json`]);
+      }
+    }
+    expect(loadSplit('beam-10m').dev).toEqual([]);
+    expect(BEAM_LIST.filter(p => /10M/i.test(p))).toEqual([]);
+    expect(BEAM_LIST.filter(p => !p.startsWith('chats/'))).toEqual(['src/', 'requirements.txt', 'LICENSE', 'README.md', 'topics/100k/100k_topics.json', 'topics/500k/500k_topics.json', 'topics/1M/1M_topics.json']);
+  });
+
+  test('refuses a conversation its split names neither dev nor sealed, and a dev conversation the manifest lacks', () => {
+    const entry = (id: string) => ({ conversation: id, chat_path: `chats/1M/${id}/chat.json`, questions_path: `chats/1M/${id}/probing_questions/probing_questions.json` });
+    const only1m = (dev: string[], sealed: string[]) => (name: string) => (name === 'beam-1m' ? { dev, sealed } : { dev: [], sealed: [] });
+    expect(() => deriveBeamPaths({ '1m': [entry('1'), entry('2')] }, only1m(['1'], []))).toThrow('beam-1m: 2 in no split');
+    expect(() => deriveBeamPaths({ '1m': [entry('1')] }, only1m(['1', '3'], []))).toThrow('beam-1m: dev conversations 3 are not in');
+    const paths = deriveBeamPaths({ '1m': [entry('1'), entry('2')] }, only1m(['1'], ['2']));
+    expect(paths).toContain('chats/1M/1/chat.json');
+    expect(paths.filter(p => p.startsWith('chats/1M/2/'))).toEqual([]);
+  });
+});
+
+describe('beam-checkout.sh', () => {
+  const CHECKOUT = join(REPO, 'eval/custody/rs1/beam-checkout.sh');
+  /** BEAM files the list leaves out: a sealed 1M conversation, the 10M tier, a per-tier topics copy and a dev pickle. */
+  const EXCLUDED = ['chats/1M/1/chat.json', 'chats/1M/1/probing_questions/probing_questions.json', 'chats/10M/1/chat.json', 'topics/10M/10M_topics.json', 'chats/1M/topics.json', `${dirname(PUBLIC_CHAT)}/chat.pickle`];
+  /** The modules rs1_mint.py's load_beam imports. */
+  const PIPELINE = ['src/__init__.py', 'src/llm.py', 'src/prompts.py', 'src/beam/__init__.py', 'src/beam/adjust_chats_length.py', 'src/beam/main.py', 'src/beam/run_pipeline.py', 'src/beam/utils.py'];
+  const LISTED = [...BEAM_LIST.filter(p => !p.endsWith('/')), ...PIPELINE].sort();
+  let root = '', url = '', commit = '';
+  const git = (dir: string, args: string[]) => spawnSync('git', ['-C', dir, ...args], { encoding: 'utf8', env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: root, GIT_NO_LAZY_FETCH: '1' } });
+  const checkout = (dir: string, at = commit) => run('bash', [CHECKOUT, dir, url, at, BEAM_PATHS_FILE], { HOME: root });
+  const onDisk = (dir: string) => files(dir).map(p => relative(dir, p)).filter(p => !p.startsWith('.git/')).sort();
+  const blob = (rel: string) => git(join(root, 'origin'), ['rev-parse', `HEAD:${rel}`]).stdout.trim();
+  const hasObject = (dir: string, rel: string) => git(dir, ['cat-file', '-e', blob(rel)]).status === 0;
+
+  beforeAll(() => {
+    root = scratch('beam-checkout');
+    const origin = join(root, 'origin');
+    for (const rel of [...LISTED, ...EXCLUDED]) { mkdirSync(dirname(join(origin, rel)), { recursive: true }); writeFileSync(join(origin, rel), `content of ${rel}\n`); }
+    const ident = ['-c', 'user.name=t', '-c', 'user.email=t@example.invalid', '-c', 'commit.gpgsign=false'];
+    for (const args of [['init', '-q'], ['add', '-A'], [...ident, 'commit', '-qm', 'beam'], ['config', 'uploadpack.allowFilter', 'true'], ['config', 'uploadpack.allowAnySHA1InWant', 'true']]) expect(git(origin, args).status).toBe(0);
+    url = `file://${origin}`;
+    commit = git(origin, ['rev-parse', 'HEAD']).stdout.trim();
+  });
+
+  test('checks out only the listed paths: the excluded files are on neither the disk nor the object store', () => {
+    const dir = join(root, 'out/beam');
+    const r = checkout(dir);
+    expect(r.code).toBe(0);
+    expect(r.all.trim()).toMatch(new RegExp(`^rs1-mint beam=verified commit=${commit} tree=[0-9a-f]{40} sparse_files=${LISTED.length} absent_blobs=${EXCLUDED.length} paths_sha256=[0-9a-f]{64} replaced=0$`));
+    expect(onDisk(dir)).toEqual(LISTED);
+    for (const rel of EXCLUDED) expect(hasObject(dir, rel)).toBe(false);
+    for (const rel of [...PIPELINE, PUBLIC_CHAT, 'topics/1M/1M_topics.json']) expect(hasObject(dir, rel)).toBe(true);
+  });
+
+  test('a rerun verifies without fetching again; a local change, a stray file or a stray object refuses', () => {
+    const dir = join(root, 'rerun/beam');
+    expect(checkout(dir).code).toBe(0);
+    expect(checkout(dir).out).toContain(' replaced=0');
+    writeFileSync(join(dir, 'LICENSE'), 'edited\n');
+    expect(checkout(dir).err).toContain('rs1-mint refused: the BEAM checkout has local changes');
+    expect(git(dir, ['checkout', '-q', 'LICENSE']).status).toBe(0);
+    expect(checkout(dir).code).toBe(0);
+    mkdirSync(join(dir, 'chats/10M/1'), { recursive: true });
+    writeFileSync(join(dir, 'chats/10M/1/chat.json'), 'content of chats/10M/1/chat.json\n');
+    const outside = checkout(dir);
+    expect(outside.code).toBe(2);
+    expect(outside.err).toContain('rs1-mint refused: the BEAM checkout holds 1 files outside the path list; deleted the checkout');
+    expect(existsSync(dir)).toBe(false);
+    expect(checkout(dir).code).toBe(0);
+    const stray = spawnSync('git', ['-C', dir, 'hash-object', '-w', '--stdin'], { input: 'content of chats/10M/1/chat.json\n', encoding: 'utf8' });
+    expect(stray.stdout.trim()).toBe(blob('chats/10M/1/chat.json'));
+    const refused = checkout(dir);
+    expect(refused.code).toBe(2);
+    expect(refused.err).toContain('rs1-mint refused: the BEAM object store holds 1 files outside the path list; deleted the checkout');
+    expect(existsSync(dir)).toBe(false);
+  });
+
+  test('a full checkout from before F28 is deleted and fetched again sparse', () => {
+    const dir = join(root, 'full/beam');
+    mkdirSync(dirname(dir), { recursive: true });
+    expect(spawnSync('git', ['clone', '-q', url, dir]).status).toBe(0);
+    expect(hasObject(dir, 'chats/10M/1/chat.json')).toBe(true);
+    const r = checkout(dir);
+    expect(r.code).toBe(0);
+    expect(r.out).toContain(' replaced=1');
+    expect(onDisk(dir)).toEqual(LISTED);
+    for (const rel of EXCLUDED) expect(hasObject(dir, rel)).toBe(false);
+  });
+
+  test('removes the origin remote, so a later git read cannot fetch an excluded file', () => {
+    const dir = join(root, 'remote/beam');
+    expect(checkout(dir).code).toBe(0);
+    expect(git(dir, ['remote']).stdout.trim()).toBe('');
+    expect(spawnSync('git', ['-C', dir, 'show', '--stat', 'HEAD'], { env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: root } }).status).not.toBe(0);
+    for (const rel of EXCLUDED) expect(hasObject(dir, rel)).toBe(false);
+    expect(git(dir, ['remote', 'add', 'origin', url]).status).toBe(0);
+    expect(checkout(dir).out).toContain(' replaced=0');
+    expect(git(dir, ['remote']).stdout.trim()).toBe('');
+  });
+
+  test('a refusal that finds an excluded file deletes the checkout, and never deletes through a symlink', () => {
+    const plain = join(root, 'nofilter.git');
+    expect(spawnSync('git', ['clone', '-q', '--bare', join(root, 'origin'), plain]).status).toBe(0);
+    for (const [key, value] of [['uploadpack.allowFilter', 'false'], ['uploadpack.allowAnySHA1InWant', 'true']]) expect(git(plain, ['config', key, value]).status).toBe(0);
+    const dir = join(root, 'nofilter/beam');
+    const r = run('bash', [CHECKOUT, dir, `file://${plain}`, commit, BEAM_PATHS_FILE], { HOME: root });
+    expect(r.code).toBe(2);
+    expect(r.err).toMatch(/rs1-mint refused: the BEAM object store holds \d+ files outside the path list; deleted the checkout/);
+    expect(existsSync(dir)).toBe(false);
+    const real = join(root, 'linked/beam'), link = join(root, 'link-to-beam');
+    expect(checkout(real).code).toBe(0);
+    symlinkSync(real, link);
+    spawnSync('git', ['-C', real, 'hash-object', '-w', '--stdin'], { input: 'content of chats/10M/1/chat.json\n' });
+    const refused = checkout(link);
+    expect(refused.code).toBe(2);
+    expect(refused.err).toContain('outside the path list; delete it and run again');
+    expect(existsSync(join(real, '.git'))).toBe(true);
+  });
+
+  test('refuses a commit it cannot fetch', () => {
+    const r = checkout(join(root, 'other/beam'), '0'.repeat(40));
+    expect(r.code).toBe(2);
+    expect(r.err).toContain('rs1-mint refused: could not fetch BEAM at');
+  });
+});
 
 describe('mint.sh start_proxy', () => {
   test('passes the provider key to the metering proxy through the environment, never on a command line', () => {
