@@ -836,6 +836,49 @@ describe('beam-checkout.sh', () => {
     for (const rel of EXCLUDED) expect(hasObject(dir, rel)).toBe(false);
   });
 
+  test('a stale git checkout whose mark names another path list is replaced', () => {
+    const dir = join(root, 'stale-mark/beam');
+    expect(checkout(dir).code).toBe(0);
+    writeFileSync(join(dir, '.git/rs1-beam-paths-sha256'), `${'0'.repeat(64)}\n`);
+    const r = checkout(dir);
+    expect(r.code).toBe(0);
+    expect(r.out).toContain(' replaced=1');
+    expect(readFileSync(join(dir, '.git/rs1-beam-paths-sha256'), 'utf8').trim()).toBe(readBeamPaths().sha256);
+    expect(onDisk(dir)).toEqual(LISTED);
+  });
+
+  test('replaces only a real git directory: a directory without .git, a symlink (with or without a trailing /) and / are refused, and nothing is deleted', () => {
+    const plain = join(root, 'guard/plain');
+    mkdirSync(plain, { recursive: true });
+    writeFileSync(join(plain, 'keep.txt'), 'keep\n');
+    for (const dir of [plain, `${plain}/`]) {
+      const r = checkout(dir);
+      expect(r.code).toBe(2);
+      expect(r.err).toContain('rs1-mint refused: the BEAM directory is not a git checkout to replace');
+      expect(readdirSync(plain)).toEqual(['keep.txt']);
+    }
+    const target = join(root, 'guard/target'), link = join(root, 'guard/link');
+    expect(spawnSync('git', ['clone', '-q', url, target]).status).toBe(0);
+    symlinkSync(target, link);
+    for (const dir of [link, `${link}/`, `${link}//`]) {
+      const r = checkout(dir);
+      expect(r.code).toBe(2);
+      expect(r.err).toContain('rs1-mint refused: the BEAM directory is not a git checkout to replace');
+      expect(existsSync(join(target, '.git'))).toBe(true);
+      expect(existsSync(join(target, 'chats/10M/1/chat.json'))).toBe(true);
+    }
+    // An rm on PATH that records any call and deletes nothing, so a broken guard cannot touch /.
+    const bin = join(root, 'guard/bin'), calls = join(root, 'guard/rm-calls');
+    mkdirSync(bin, { recursive: true });
+    writeFileSync(join(bin, 'rm'), `#!/bin/sh\necho "$*" >> '${calls}'\nexit 1\n`, { mode: 0o755 });
+    const toRoot = root + '/..'.repeat(root.split('/').filter(Boolean).length);
+    for (const [dir, message] of [['/', 'the BEAM directory is /'], ['//', 'the BEAM directory is /'], [toRoot, 'the BEAM directory is not a git checkout to replace']]) {
+      const r = run('bash', [CHECKOUT, dir, url, commit, BEAM_PATHS_FILE], { HOME: root, PATH: `${bin}:${process.env.PATH ?? '/usr/bin:/bin'}` });
+      expect([dir, r.code, r.err.trim()]).toEqual([dir, 2, `rs1-mint refused: ${message}${message.endsWith('/') ? '' : ' (a symlink, /, or no .git); nothing was deleted'}`]);
+    }
+    expect(existsSync(calls)).toBe(false);
+  });
+
   test('removes the origin remote, so a later git read cannot fetch an excluded file', () => {
     const dir = join(root, 'remote/beam');
     expect(checkout(dir).code).toBe(0);
@@ -860,10 +903,12 @@ describe('beam-checkout.sh', () => {
     expect(checkout(real).code).toBe(0);
     symlinkSync(real, link);
     spawnSync('git', ['-C', real, 'hash-object', '-w', '--stdin'], { input: 'content of chats/10M/1/chat.json\n' });
-    const refused = checkout(link);
-    expect(refused.code).toBe(2);
-    expect(refused.err).toContain('outside the path list; delete it and run again');
-    expect(existsSync(join(real, '.git'))).toBe(true);
+    for (const dir of [link, `${link}/`]) {
+      const refused = checkout(dir);
+      expect(refused.code).toBe(2);
+      expect(refused.err).toContain('outside the path list; delete it and run again');
+      expect(existsSync(join(real, '.git'))).toBe(true);
+    }
   });
 
   test('refuses a commit it cannot fetch', () => {
