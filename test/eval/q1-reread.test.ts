@@ -211,6 +211,70 @@ describe('re-read: verification before any request', () => {
     for (const [n, sources, why] of cases) expect([n, refusal(() => prepareReread(def, arm, { sources, reader: PARTICLE, out: join(tmp, `refused-shards-${n}`) }, { corpus })).message]).toEqual([n, expect.stringContaining(why)]);
   });
 
+  // Value: protects=the S1 memory-bank re-read, whose shards froze run configs under A17, A23 and A24; fails_when=launch metadata refuses the shards, or anything else (an unknown field, a reading field, a key in one config only, a launch-control field off the allowlist) passes, or a single config's identity changes; why_new=GBEV-3 decision A (A6 revision); seam=none; no_claim=none
+  test('shards that differ only in REREAD_LAUNCH_FIELDS verify together under one reading identity; any other difference refuses; one config keeps its own sha256', async () => {
+    const shards: string[] = [];
+    for (const index of [0, 1]) {
+      const out = join(tmp, `launch-shard-${index}`);
+      await runCell(def, { out, shard: { index, count: 2 }, ...quiet }, { corpus, system: new FailsOneQuestion(scheduled[1].question), reader: scriptedReader(), judge: scriptedJudge() });
+      shards.push(join(out, 'runs', def.id));
+    }
+    const configOf = (root: string) => join(dirname(dirname(root)), 'cells', arm.cell_id, 'run-config.json');
+    const raw = readFileSync(configOf(shards[0]), 'utf8');
+    expect(readFileSync(configOf(shards[1]), 'utf8')).toBe(raw);
+    const same = prepareReread(def, arm, { sources: shards, reader: PARTICLE, out: join(tmp, 'launch-same') }, { corpus });
+    expect([same.verify.source_config_sha256, same.verify.sources.map(s => s.config_sha256)]).toEqual([sha256(raw), [sha256(raw), sha256(raw)]]);
+    expect(prepareReread(def, arm, { sources: [staging], reader: PARTICLE, out: join(tmp, 'launch-single') }, { corpus }).verify.source_config_sha256).toBe(sha256(readFileSync(configOf(staging))));
+
+    const variant = (n: string, edit: (c: Record<string, any>) => void, base = shards[1]) => {
+      const out = join(tmp, `launch-variant-${n}`);
+      cpSync(dirname(dirname(base)), out, { recursive: true });
+      const c = JSON.parse(raw);
+      edit(c);
+      writeFileSync(join(out, 'cells', arm.cell_id, 'run-config.json'), JSON.stringify(c, null, 2) + '\n');
+      return join(out, 'runs', def.id);
+    };
+    const a23 = (c: Record<string, any>) => {
+      Object.assign(c.cell, { shards: 10, expected_hours: 30, lease: { usd: 4.2, basis: 'A23' }, fresh_before: { at: '2026-10-27T00:00:00Z', basis: 'A23', shards: [0, 1] },
+        snapshot_command: 'bash snapshot.sh', restore_command: 'bash restore.sh' });
+    };
+    const launch = variant('launch', a23);
+    const older = variant('older', c => { Object.assign(c.cell, { shards: 7, expected_hours: 24, snapshot_command: 'bash snapshot-a17.sh', restore_command: 'bash restore-a17.sh' }); }, shards[0]);
+    const ok = prepareReread(def, arm, { sources: [shards[0], launch], reader: PARTICLE, out: join(tmp, 'launch-ok') }, { corpus });
+    const launchRaw = readFileSync(configOf(launch), 'utf8');
+    const reading = JSON.parse(raw);
+    for (const k of ['shards', 'expected_hours', 'lease', 'fresh_before', 'snapshot_command', 'restore_command']) delete reading.cell[k];
+    expect(ok.verify.ok).toBe(true);
+    expect(ok.verify.sources.map(s => s.config_sha256)).toEqual([sha256(raw), sha256(launchRaw)]);
+    expect(ok.verify.source_config_sha256).toBe(sha256(JSON.stringify(reading, null, 2) + '\n'));
+    expect(ok.plan!.map(x => x.question.id).sort()).toEqual(same.plan.map(x => x.question.id).sort());
+    expect(prepareReread(def, arm, { sources: [launch, shards[0]], reader: PARTICLE, out: join(tmp, 'launch-ok') }, { corpus }).verify.source_config_sha256).toBe(ok.verify.source_config_sha256);
+    const read = await runReread(ok, {}, { reader: scriptedReader(), judge: scriptedJudge() });
+    expect(read.receipt.source).toMatchObject({ config_sha256: ok.verify.source_config_sha256, config_sha256s: [sha256(raw), sha256(launchRaw)].sort() });
+    const mixed = prepareReread(def, arm, { sources: [older, launch], reader: PARTICLE, out: join(tmp, 'launch-mixed') }, { corpus });
+    expect([mixed.verify.ok, mixed.verify.source_config_sha256]).toEqual([true, ok.verify.source_config_sha256]);
+    const single = variant('single', a23, staging);
+    const alone = prepareReread(def, arm, { sources: [single], reader: PARTICLE, out: join(tmp, 'launch-alone') }, { corpus });
+    expect([alone.verify.ok, alone.verify.source_config_sha256]).toEqual([true, sha256(readFileSync(configOf(single)))]);
+    expect(alone.verify.source_config_sha256).not.toBe(ok.verify.source_config_sha256);
+
+    const cases: Array<[string, (c: Record<string, any>) => void]> = [
+      ['unknown-field', c => { c.cell.launch_region = 'eu-central-h1'; }],
+      ['unknown-top-level', c => { c.retry_policy = { attempts: 3 }; }],
+      ['reader-effort', c => { c.reader.effort = 'high'; }],
+      ['schedule', c => { c.scheduled_sha256 = sha256('another schedule'); }],
+      ['one-config-only', c => { c.reader.max_tokens_by_reader = { [PARTICLE]: 16000 }; }],
+      ['launch-control-off-the-list', c => { c.cell.reanswer_invalid_before = '2026-10-28T00:00:00Z'; }],
+      ['launch-and-reading', c => { c.cell.shards = 10; c.limit = 3; }],
+    ];
+    for (const [n, edit] of cases) {
+      const out = join(tmp, `launch-refused-${n}`);
+      const op = refusal(() => prepareReread(def, arm, { sources: [shards[0], variant(n, edit)], reader: PARTICLE, out }, { corpus }));
+      expect([n, op.code, op.message]).toEqual([n, 'PREFLIGHT_FAILED', expect.stringContaining('different run configurations')]);
+      expect(JSON.parse(readFileSync(join(out, 'verify.json'), 'utf8'))).toMatchObject({ ok: false, source_config_sha256: null });
+    }
+  });
+
   // Value: protects=one re-read per --out; fails_when=a second arm or reader shares an --out (its receipt would point at another arm's verify.json and lease log); why_new=review of #347 (follow-up); seam=an invented second re-read cell; no_claim=none
   test('an --out holding another re-read refuses before verify.json is written', () => {
     const shared = join(tmp, 'shared-out');

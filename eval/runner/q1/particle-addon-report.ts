@@ -49,7 +49,7 @@ const DISCLOSURE = {
 /** The bootstrap seed: the first 32 bits of sha256(`seed`). */
 export const seedNumber = (seed: string) => parseInt(sha256(seed).slice(0, 8), 16);
 
-interface Receipt { schema?: string; cell_id: string; set?: string; block?: string; run_status?: string; config_sha256?: string | null; system: { kind: string }; instrument: { id: string; sha256: string; judge: string }; source?: { arm_cell_id: string; config_sha256?: string | null }; verify?: Record<string, number>; keyless?: boolean }
+interface Receipt { schema?: string; cell_id: string; set?: string; block?: string; run_status?: string; config_sha256?: string | null; system: { kind: string }; instrument: { id: string; sha256: string; judge: string }; source?: { arm_cell_id: string; config_sha256?: string | null; config_sha256s?: string[] }; verify?: Record<string, number>; keyless?: boolean }
 export interface PublishedCell { id: string; receipt: Receipt; answers: AnswerRecord[]; judgments: JudgmentRecord[] }
 
 const STATUS_RANK = ['complete', 'partial', 'invalid'];
@@ -90,8 +90,9 @@ export interface Unit { particle: PublishedCell; frontier: PublishedCell }
 
 /**
  * Each particle-1 cell with the frontier cell it is compared with. A re-read pairs with the cell whose run configuration
- * it verified (source.config_sha256), and the file-agent add-on only with F6's file-agent rerun (an F6 block), not Q1's
- * cell of the same id; an invalid frontier never pairs.
+ * it verified (source.config_sha256, or any of source.config_sha256s: shards that differ only in their launch fields
+ * publish several), and the file-agent add-on only with F6's file-agent rerun (an F6 block), not Q1's cell of the same
+ * id; an invalid frontier never pairs.
  */
 export function unitsOf(cells: Map<string, PublishedCell>): Unit[] {
   const units: Unit[] = [];
@@ -106,7 +107,7 @@ export function unitsOf(cells: Map<string, PublishedCell>): Unit[] {
     if (!frontier) throw new Error(`particle-1 cell ${c.id} pairs with ${source}, which no --root publishes`);
     if (c.receipt.instrument.id !== frontier.receipt.instrument.id || c.receipt.instrument.sha256 !== frontier.receipt.instrument.sha256) throw new Error(`${c.id} and ${source} are judged by different instruments`);
     if (frontier.receipt.run_status === 'invalid') throw new Error(`${source} is published as invalid, so ${c.id} has nothing to be compared with`);
-    if (c.receipt.schema === REREAD_RECEIPT_SCHEMA && c.receipt.source!.config_sha256 !== frontier.receipt.config_sha256) throw new Error(`${c.id} re-read a run configuration other than the one ${source} publishes`);
+    if (c.receipt.schema === REREAD_RECEIPT_SCHEMA && !(c.receipt.source!.config_sha256s ?? [c.receipt.source!.config_sha256]).includes(frontier.receipt.config_sha256)) throw new Error(`${c.id} re-read a run configuration other than the one ${source} publishes`);
     if (c.receipt.schema !== REREAD_RECEIPT_SCHEMA && !frontier.receipt.block?.startsWith('F6-')) throw new Error(`${c.id} pairs only with F6's file-agent rerun, and ${source} here is from block ${frontier.receipt.block ?? 'none'}`);
     if (!frontier.receipt.set || !Object.hasOwn(ALL_SETS, frontier.receipt.set)) throw new Error(`${source} names no known set, so its preregistered exclusions are unknown`);
     units.push({ particle: c, frontier });

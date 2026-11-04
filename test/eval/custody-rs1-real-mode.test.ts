@@ -52,4 +52,55 @@ describe('rs1_mint.py real-mode keyless steps', () => {
     expect(r.err).toBe('');
     expect(JSON.parse(r.out)).toEqual({ slots: 1, refused: true, chat: true });
   });
+
+  test('RecordingModel sends a system-only prompt as one user turn, and a refusal a resend would not change escapes BEAM', () => {
+    const dir = scratch('recording');
+    const harness = [
+      'import json, sys, types',
+      'from pathlib import Path',
+      `sys.path.insert(0, ${JSON.stringify(join(REPO, 'eval/custody/rs1'))})`,
+      'import rs1_mint as m',
+      'Msg = lambda kind, content: types.SimpleNamespace(type=kind, content=content)',
+      'class ApiError(Exception):',
+      '    def __init__(self, code):',
+      '        super().__init__("provider detail")',
+      '        self.code = code',
+      'class Inner:',
+      '    def __init__(self, code=None):',
+      '        self.seen, self.code = [], code',
+      '    def invoke(self, value, **kwargs):',
+      '        self.seen.append(value if isinstance(value, str) else [(x.type, x.content) for x in value])',
+      '        if self.code is not None:',
+      '            try:',
+      '                raise ApiError(self.code)',
+      '            except ApiError as error:',
+      '                raise RuntimeError("client wrapper") from error',
+      '        return types.SimpleNamespace(content="ok", usage_metadata={"input_tokens": 3, "output_tokens": 1})',
+      'usage = m.Usage(Path(sys.argv[1]) / "usage.jsonl")',
+      'inner = Inner()',
+      'model = m.RecordingModel(inner, "gemini:test", usage)',
+      'model.invoke([Msg("system", "one"), Msg("system", "two")], max_tokens=5)',
+      'model.invoke([Msg("system", "rules"), Msg("human", "hi")])',
+      'model.invoke("plain")',
+      'def beam_loop(code):',
+      '    try:',
+      '        m.RecordingModel(Inner(code), "gemini:test", usage).invoke("p")',
+      '    except Exception as error:',
+      '        return "swallowed " + type(error).__name__',
+      '    except m.ProviderRefusal as error:',
+      '        return "escaped " + str(error)',
+      'print(json.dumps({"seen": inner.seen, "calls": usage.totals()["calls"],',
+      '    "outcomes": {c: beam_loop(c) for c in (400, 402, 403, 408, 429, 503)}}))',
+    ].join('\n');
+    const r = run('python3', ['-c', harness, dir], { PYTHONDONTWRITEBYTECODE: '1' });
+    expect(r.err).toBe('');
+    expect(JSON.parse(r.out)).toEqual({
+      seen: ['one\ntwo', [['system', 'rules'], ['human', 'hi']], 'plain'],
+      calls: 3,
+      outcomes: {
+        400: 'escaped HTTP 400 RuntimeError', 402: 'escaped HTTP 402 RuntimeError', 403: 'escaped HTTP 403 RuntimeError',
+        408: 'swallowed RuntimeError', 429: 'swallowed RuntimeError', 503: 'swallowed RuntimeError',
+      },
+    });
+  });
 });

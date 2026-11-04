@@ -17,12 +17,35 @@ This records what each gbrain-evals release changed and what its measurements me
 - **memory-bank 1.1.0.** `docs/comparison-systems/ext-memory-bank/recipe-1.1/` pins the server image by digest and the 1.1.0 client by `uv.lock`, and `docs/comparison-systems.md` lists both builds in a configuration pin table. `scripts/check-comparator-name.ts` allows the bundle's files as it allows the Q1 bundle's.
 - **Tests.** New: `test/eval/rs1-cells.test.ts`, `rs1-verdict.test.ts`, `scoreboard-rs1.test.ts`, `rs1-power-pricing.test.ts`, `rs1-judge.test.ts`, `rs1-loader.test.ts` and `memory-bank-recipe-1.1.test.ts`, with judging-plan and overlay cases added to the Q1 cell, re-read, custody and gbrain shim tests. This change makes no paid call.
 
+## [0.10.157] - 2026-11-04
+
+### The particle-1 file agent resumes under its own $68 campaign (F6 preregistration A6, Revision 3)
+
+- **Why it resumes.** The file agent's first lease spent $16.08 of its $16.15 and stopped after 56 of 200 answers. particle-1 read about 1.8M prompt tokens per answer, so an answer cost $0.287, about 7 times the estimate. GBEV-3 approved a resume.
+- **The resume has its own campaign.** `q1-scoreboard-f6-current-master-p1b` (`docs/benchmarks/2026-10-29-f6-current-master/campaign/f6-campaign-p1b.json`) is p1's campaign with a $68 cap, a $68 lease for the cell and the F6-P1 block cap at $68. It keeps p1's 56 answered rows and their judgments and answers only the 144 questions left.
+- **Money.** The file agent's two caps total $84.15. The re-read ceiling drops from $100 to $60, so the metered ceilings total $144.15 and the $150 hard cap is unchanged.
+- `test/eval/q1-f6-cells.test.ts` checks that p1b differs from the regenerated p1 campaign only in its id, ledger, cap, the cell's lease and the F6-P1 block cap, and that the file agent's two caps sum to $84.15. No cell, arm, estimate or verdict rule changed.
+
+### The RS1 custody mint's question step runs on Gemini, and a provider refusal stops the step instead of being retried away (GST-1154)
+
+- **System-only prompts reach Gemini.** BEAM's question step sends a prompt made only of system messages, and Gemini rejects a request with no contents (HTTP 400). `RecordingModel.invoke` in `eval/custody/rs1/rs1_mint.py` now sends such a prompt as one user turn with the same text, the way an OpenAI chat model reads it.
+- **A refusal stops the step.** BEAM wraps its model calls in `except Exception` retry loops, so a refusal such as the metering proxy's 402 budget refusal was swallowed, and the step could be recorded as done without its output. An HTTP 4xx other than 408 and 429 now raises `ProviderRefusal`, a `BaseException` those loops can't catch. The step exits with an error and records nothing as done, and outside the parts-based probe and rubric steps it prints `rs1-mint refused:` with the status and error class only. A 499 stops the step too: the Google client already resends once, and treating 499 as transient would let BEAM's answer step drop a question while the step records done.
+- `test/eval/custody-rs1-real-mode.test.ts` adds a keyless test of both paths.
+
 ### CI restores the pinned harness source from a verified cached pack instead of fetching 700 MB from GitHub (GST-1266)
 
 - **What was slow.** Both harness jobs fetch the pinned agent-memory-benchmark commit, about 700 MB at depth 1, from GitHub before building their venv. While GitHub served packs slowly on 2026-11-03, that fetch took from 21 s to 23 minutes, and harness (proxy) used 1,612 s of its 30-minute cap in #354's run 41703426339. Building the venv took 12 to 16 s in every run.
 - **The harness setup keeps the fetched commit as `.harness/packs/<commit>.pack`,** and CI caches that directory under the hash of `eval/harness-provider/harness.lock.json`. When a pack is present, `eval/runner/harness-env.ts` reads it into a fresh repository with `git index-pack --strict`, which hashes and checks every object, then runs `git fsck` on the pinned commit to prove the commit and its whole tree are present, and checks it out. A pack that fails either check is deleted and the commit is fetched from GitHub as before, so a stale, corrupt or wrong pack cannot change the checked-out files. The check covers the pack, not the cache entry around it. As with the `.git` cache, what keeps a tampered entry out is that only main's runs and a pull request's own runs can write the entries a run restores. A pack refused on a cache hit is never replaced, so under GitHub Actions the refusal is printed as a warning on the run, and bumping the key's `v1` replaces the entry. Restoring the real 711 MB pack took 7.5 s on a 4-core machine, and the result matched a GitHub checkout file for file.
 - **The venv is not cached.** It takes about 15 s to build, and nothing in the lock could verify a cached one, so every run still builds it from the verified source.
 - `test/eval/harness-env.test.ts` covers the restore and three refused packs, which are one missing an object of the pinned tree, one of another commit, and one that is not a pack.
+
+## [0.10.156] - 2026-11-03
+
+### A re-read verifies shards that differ only in launch metadata (F6 preregistration A6, Revision 2)
+
+- **Shards launched under different amendments verify together.** `eval/runner/q1/reread-cell.ts` now accepts re-read sources whose run configurations differ only in `cell.expected_hours`, `cell.fresh_before`, `cell.lease`, `cell.restore_command`, `cell.snapshot_command` and `cell.shards` (`REREAD_LAUNCH_FIELDS`), present or absent. Any other difference still refuses the whole re-read before any request, including a new or unknown field and a whitespace change. The S1 memory-bank row's 10 shards froze their run-config.json under A17, A23 and A24, and the byte-for-byte check refused them as three run configurations.
+- **One identity per reading.** A single run configuration keeps its own SHA-256 as the re-read's `source.config_sha256`. Several that agree are identified by the SHA-256 of their shared configuration without the launch fields (`readingConfig`). `verify.json` records each source's own run-config SHA-256, and the receipt lists them as `source.config_sha256s`.
+- **The report pairs the re-read with a frontier cell that publishes one of them.** `eval/runner/q1/particle-addon-report.ts` pairs a re-read with the frontier cell whose run configuration is one of its sources' and refuses any other. No cell, arm, cap, estimate or verdict rule changed.
 
 ## [0.10.155] - 2026-11-03
 
