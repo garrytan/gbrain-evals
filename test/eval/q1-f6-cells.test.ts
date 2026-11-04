@@ -274,7 +274,7 @@ describe('the F6 manifest', () => {
     const dir = join(ROOT, 'docs/benchmarks/2026-10-29-f6-current-master/campaign');
     const p1 = campaignManifest(m, { units: JSON.parse(readFileSync(join(dir, 'f6-campaign-p1-units.json'), 'utf8')) as UnitSelection });
     const id = 'q1-scoreboard-f6-current-master-p1b';
-    const p1b = { ...p1, campaign_id: id, cap_usd: 68, ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`, cells: p1.cells.map(c => ({ ...c, lease_usd: 68 })), blocks: { ...p1.blocks, 'F6-P1': { ...p1.blocks['F6-P1'], cap_usd: 68 } } };
+    const p1b = { ...p1, campaign_id: id, cap_usd: 68, ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`, cells: p1.cells.map(c => ({ ...c, lease_usd: 68 })), blocks: { ...p1.blocks, 'F6-P1': { ...p1.blocks!['F6-P1'], cap_usd: 68 } } };
     expect(readFileSync(join(dir, 'f6-campaign-p1b.json'), 'utf8')).toBe(JSON.stringify(p1b, null, 2) + '\n');
     expect([p1b.cells.map(c => c.id), Object.keys(p1b.blocks), Math.round((p1.cap_usd + p1b.cap_usd) * 100) / 100]).toEqual([[F6_PARTICLE_ADDON.id], ['F6-P1'], 84.15]);
   });
