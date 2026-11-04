@@ -7,7 +7,8 @@
  * Each --root is a cell output directory: its `cells/<cell id>/` answers.ndjson, judgments.ndjson and receipt.json, as
  * runCell and reread-cell.ts publish them (a sharded cell's shards are merged by answer id). A particle-1 cell pairs
  * with its frontier cell: a re-read (receipt schema q1-reread-receipt/v1) with the arm cell it re-read, and the
- * file-agent add-on (f6.ts F6_PARTICLE_ADDON) with the file-agent rerun.
+ * file-agent add-on (f6.ts F6_PARTICLE_ADDON) with F6's file-agent rerun, the cell whose run configuration is
+ * F6_FILE_AGENT_CONFIG_SHA256.
  *
  * Per reader, replicate 0: the questions in its denominator, its mean canonical score with a 95% interval, its correct
  * answers (canonical score at least PASS_THRESHOLD), its reader dollars at list price from the answers' usage
@@ -45,6 +46,13 @@ const DISCLOSURE = {
   gbrain: 'gbrain is Garry Tan\'s own project.',
   openai: 'Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.',
 };
+
+/**
+ * The run-config sha256 of F6's published file-agent row, `s1.baseline-file-agent.baseline.whole-agent`, as F6's
+ * scoreboard.md records it. F6's A4 campaign ran that cell without `--manifest f6`, so its receipt names block T1, as
+ * Q1's own file-agent cell of the same id does; the run configuration tells the two apart.
+ */
+export const F6_FILE_AGENT_CONFIG_SHA256 = '07b938b47f0f71b3e70251da74f9cbfca5e6d666651bac9028b02874d6ca6e28';
 
 /** The bootstrap seed: the first 32 bits of sha256(`seed`). */
 export const seedNumber = (seed: string) => parseInt(sha256(seed).slice(0, 8), 16);
@@ -91,8 +99,8 @@ export interface Unit { particle: PublishedCell; frontier: PublishedCell }
 /**
  * Each particle-1 cell with the frontier cell it is compared with. A re-read pairs with the cell whose run configuration
  * it verified (source.config_sha256, or any of source.config_sha256s: shards that differ only in their launch fields
- * publish several), and the file-agent add-on only with F6's file-agent rerun (an F6 block), not Q1's cell of the same
- * id; an invalid frontier never pairs.
+ * publish several), and the file-agent add-on only with F6's file-agent rerun (run configuration
+ * F6_FILE_AGENT_CONFIG_SHA256), not Q1's cell of the same id; an invalid frontier never pairs.
  */
 export function unitsOf(cells: Map<string, PublishedCell>): Unit[] {
   const units: Unit[] = [];
@@ -108,7 +116,7 @@ export function unitsOf(cells: Map<string, PublishedCell>): Unit[] {
     if (c.receipt.instrument.id !== frontier.receipt.instrument.id || c.receipt.instrument.sha256 !== frontier.receipt.instrument.sha256) throw new Error(`${c.id} and ${source} are judged by different instruments`);
     if (frontier.receipt.run_status === 'invalid') throw new Error(`${source} is published as invalid, so ${c.id} has nothing to be compared with`);
     if (c.receipt.schema === REREAD_RECEIPT_SCHEMA && !(c.receipt.source!.config_sha256s ?? [c.receipt.source!.config_sha256]).includes(frontier.receipt.config_sha256)) throw new Error(`${c.id} re-read a run configuration other than the one ${source} publishes`);
-    if (c.receipt.schema !== REREAD_RECEIPT_SCHEMA && !frontier.receipt.block?.startsWith('F6-')) throw new Error(`${c.id} pairs only with F6's file-agent rerun, and ${source} here is from block ${frontier.receipt.block ?? 'none'}`);
+    if (c.receipt.schema !== REREAD_RECEIPT_SCHEMA && frontier.receipt.config_sha256 !== F6_FILE_AGENT_CONFIG_SHA256) throw new Error(`${c.id} pairs only with F6's file-agent rerun (run configuration ${F6_FILE_AGENT_CONFIG_SHA256.slice(0, 12)}), and ${source} here has run configuration ${frontier.receipt.config_sha256?.slice(0, 12) ?? 'none'}`);
     if (!frontier.receipt.set || !Object.hasOwn(ALL_SETS, frontier.receipt.set)) throw new Error(`${source} names no known set, so its preregistered exclusions are unknown`);
     units.push({ particle: c, frontier });
   }

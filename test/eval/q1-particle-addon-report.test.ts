@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { answerRecord, sha256, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
 import { clusteredPairedDelta } from '../../eval/runner/stats/paired.ts';
-import { loadCells, PARTICLE, renderReport, RESAMPLES, SEED, seedNumber, unitReport, unitsOf, writeReport } from '../../eval/runner/q1/particle-addon-report.ts';
+import { F6_FILE_AGENT_CONFIG_SHA256, loadCells, PARTICLE, renderReport, RESAMPLES, SEED, seedNumber, unitReport, unitsOf, writeReport } from '../../eval/runner/q1/particle-addon-report.ts';
 import { REREAD_RECEIPT_SCHEMA } from '../../eval/runner/q1/reread-cell.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'q1-particle-report-'));
@@ -121,7 +121,7 @@ describe('the particle-1 add-on report', () => {
   test('the Particle line sits under the title, with the gbrain and OpenAI lines when their results are shown; the file-agent add-on pairs with the file-agent rerun', () => {
     const fa = join(tmp, 'file-agent');
     const S1 = { set: 'S1', block: 'F6-S1' };
-    publish(fa, 's1.baseline-file-agent.baseline.whole-agent', 'baseline-file-agent', { [OPUS]: ones(12), [SOL]: ones(12) }, S1);
+    publish(fa, 's1.baseline-file-agent.baseline.whole-agent', 'baseline-file-agent', { [OPUS]: ones(12), [SOL]: ones(12) }, { ...S1, config_sha256: F6_FILE_AGENT_CONFIG_SHA256 });
     publish(fa, 's1.baseline-file-agent.particle.whole-agent', 'baseline-file-agent', { [PARTICLE]: [...ones(6), ...Array(6).fill(0)] }, { ...S1, block: 'F6-P1' });
     const gb = join(tmp, 'gbrain');
     publish(gb, 's1.gbrain-defaults.f6-master.p', 'gbrain-defaults', { [OPUS]: ones(12) }, S1);
@@ -144,7 +144,7 @@ describe('the particle-1 add-on report', () => {
     const S1Q = [{ id: '10m-1:abstention:0', conversation: 'invented-c0' }, ...QUESTIONS.slice(1)];
     const S1 = { set: 'S1', block: 'F6-S1' };
     const ex = join(tmp, 'excluded');
-    publish(ex, 's1.baseline-file-agent.baseline.whole-agent', 'baseline-file-agent', { [OPUS]: [0, ...ones(11)] }, S1, undefined, S1Q);
+    publish(ex, 's1.baseline-file-agent.baseline.whole-agent', 'baseline-file-agent', { [OPUS]: [0, ...ones(11)] }, { ...S1, config_sha256: F6_FILE_AGENT_CONFIG_SHA256 }, undefined, S1Q);
     publish(ex, 's1.baseline-file-agent.particle.whole-agent', 'baseline-file-agent', { [PARTICLE]: [1, 'turn_cap', 'turn_cap', ...ones(9)] }, { ...S1, block: 'F6-P1' }, undefined, S1Q);
     const r = unitReport(unitsOf(loadCells([ex]))[0]);
     const opus = r.readers.find(x => x.reader === OPUS)!, p = r.readers.find(x => x.reader === PARTICLE)!;
@@ -170,7 +170,12 @@ describe('the particle-1 add-on report', () => {
     const q1 = join(tmp, 'q1-file-agent');
     publish(q1, 's1.baseline-file-agent.baseline.whole-agent', 'baseline-file-agent', { [OPUS]: ones(12) }, { set: 'S1', block: 'T1' });
     publish(q1, 's1.baseline-file-agent.particle.whole-agent', 'baseline-file-agent', { [PARTICLE]: ones(12) }, { ...S1, block: 'F6-P1' });
-    expect(() => unitsOf(loadCells([q1]))).toThrow("pairs only with F6's file-agent rerun, and s1.baseline-file-agent.baseline.whole-agent here is from block T1");
+    expect(() => unitsOf(loadCells([q1]))).toThrow(`pairs only with F6's file-agent rerun (run configuration ${F6_FILE_AGENT_CONFIG_SHA256.slice(0, 12)}), and s1.baseline-file-agent.baseline.whole-agent here has run configuration ${CONFIG.slice(0, 12)}`);
+    const f6t1 = join(tmp, 'f6-file-agent-t1');
+    publish(f6t1, 's1.baseline-file-agent.baseline.whole-agent', 'baseline-file-agent', { [OPUS]: ones(12) }, { set: 'S1', block: 'T1', config_sha256: F6_FILE_AGENT_CONFIG_SHA256 });
+    publish(f6t1, 's1.baseline-file-agent.particle.whole-agent', 'baseline-file-agent', { [PARTICLE]: ones(12) }, { ...S1, block: 'F6-P1' });
+    expect(unitsOf(loadCells([f6t1])).map(u => [u.frontier.id, u.frontier.receipt.block])).toEqual([['s1.baseline-file-agent.baseline.whole-agent', 'T1']]);
+    expect(readFileSync(join(import.meta.dir, '../../docs/benchmarks/2026-10-29-f6-current-master/scoreboard.md'), 'utf8')).toContain(`\`cells/s1.baseline-file-agent.baseline.whole-agent/run-config.json\` sha256 \`${F6_FILE_AGENT_CONFIG_SHA256}\``);
     const shardX = join(tmp, 'shard-x');
     publish(shardX, ARM, 'ext-graph-pipeline', FRONTIER, { run_status: 'partial' }, i => i >= 6);
     expect(loadCells([shardA, shardX]).get(ARM)!.receipt.run_status).toBe('partial');
