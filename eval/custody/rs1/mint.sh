@@ -28,8 +28,9 @@
 #     open RS1 budget run, so the ledger prices and reserves every request before it is sent.
 #   - Pinned BEAM and dependencies (real and stub-model). eval/custody/rs1/beam-checkout.sh fetches BEAM at the pinned
 #     commit with a blob filter and checks out only the paths in eval/custody/rs1/beam-paths.txt (BEAM's code, licence,
-#     readme, public topics and dev conversations; no sealed conversation and nothing of the 10M tier, F28), then
-#     checks HEAD, a clean tree, and that no file outside the list is on disk or in the object store. A full checkout
+#     readme, public topics and dev conversations; no sealed conversation and nothing of the 10M tier, F28), removes the
+#     origin remote so no later git command can fetch an excluded file, then checks HEAD, a clean tree, and that no file
+#     outside the list is on disk or in the object store. A full checkout
 #     from before F28 is deleted and fetched again. Its Python dependencies install with uv from requirements.lock
 #     (--require-hashes) into <out>/tooling/venv.
 #

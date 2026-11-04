@@ -12,7 +12,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { priceRequest } from '../../eval/runner/budget-ledger.ts';
 import { loadSplit } from '../../eval/runner/decisions/splits.ts';
 import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
-import { BEAM_PATHS_FILE, readBeamPaths, renderBeamPaths } from '../../eval/custody/rs1/beam-paths.ts';
+import { BEAM_PATHS_FILE, deriveBeamPaths, readBeamPaths, renderBeamPaths } from '../../eval/custody/rs1/beam-paths.ts';
 import { checkTree, hashTree } from '../../eval/custody/rs1/hashlist.ts';
 import {
   ANSWER_FIELD, SLOTS, VALIDATOR_IDS, anthropicRequest, buildPublicIndex, chunkMessages, fakeClient, geminiRequest,
@@ -538,6 +538,16 @@ describe('the BEAM path list (F28)', () => {
     expect(BEAM_LIST.filter(p => /10M/i.test(p))).toEqual([]);
     expect(BEAM_LIST.filter(p => !p.startsWith('chats/'))).toEqual(['src/', 'requirements.txt', 'LICENSE', 'README.md', 'topics/100k/100k_topics.json', 'topics/500k/500k_topics.json', 'topics/1M/1M_topics.json']);
   });
+
+  test('refuses a conversation its split names neither dev nor sealed, and a dev conversation the manifest lacks', () => {
+    const entry = (id: string) => ({ conversation: id, chat_path: `chats/1M/${id}/chat.json`, questions_path: `chats/1M/${id}/probing_questions/probing_questions.json` });
+    const only1m = (dev: string[], sealed: string[]) => (name: string) => (name === 'beam-1m' ? { dev, sealed } : { dev: [], sealed: [] });
+    expect(() => deriveBeamPaths({ '1m': [entry('1'), entry('2')] }, only1m(['1'], []))).toThrow('beam-1m: 2 in no split');
+    expect(() => deriveBeamPaths({ '1m': [entry('1')] }, only1m(['1', '3'], []))).toThrow('beam-1m: dev conversations 3 are not in');
+    const paths = deriveBeamPaths({ '1m': [entry('1'), entry('2')] }, only1m(['1'], ['2']));
+    expect(paths).toContain('chats/1M/1/chat.json');
+    expect(paths.filter(p => p.startsWith('chats/1M/2/'))).toEqual([]);
+  });
 });
 
 describe('beam-checkout.sh', () => {
@@ -604,6 +614,17 @@ describe('beam-checkout.sh', () => {
     expect(r.out).toContain(' replaced=1');
     expect(onDisk(dir)).toEqual(LISTED);
     for (const rel of EXCLUDED) expect(hasObject(dir, rel)).toBe(false);
+  });
+
+  test('removes the origin remote, so a later git read cannot fetch an excluded file', () => {
+    const dir = join(root, 'remote/beam');
+    expect(checkout(dir).code).toBe(0);
+    expect(git(dir, ['remote']).stdout.trim()).toBe('');
+    expect(spawnSync('git', ['-C', dir, 'show', '--stat', 'HEAD'], { env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: root } }).status).not.toBe(0);
+    for (const rel of EXCLUDED) expect(hasObject(dir, rel)).toBe(false);
+    expect(git(dir, ['remote', 'add', 'origin', url]).status).toBe(0);
+    expect(checkout(dir).out).toContain(' replaced=0');
+    expect(git(dir, ['remote']).stdout.trim()).toBe('');
   });
 
   test('refuses a commit it cannot fetch', () => {

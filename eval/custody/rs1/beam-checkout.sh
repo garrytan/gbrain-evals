@@ -2,7 +2,9 @@
 # BEAM for the RS1 mint, checked out sparse (F28): only the paths in a path list (eval/custody/rs1/beam-paths.txt, git
 # sparse-checkout patterns) reach the machine. The fetch is blob-filtered (depth 1, --filter=blob:none), so git
 # downloads the contents of the listed files alone; every other BEAM file, the 10M tier and the sealed conversations
-# included, exists here only as a name and an object id in a tree object.
+# included, exists here only as a name and an object id in a tree object. Once the listed files are checked out, the
+# origin remote is removed, so a later git command in <dir> that needs an excluded file (git show, git log -p) fails
+# instead of fetching it.
 #
 #   eval/custody/rs1/beam-checkout.sh <dir> <repository> <commit> <path list>
 #
@@ -36,6 +38,7 @@ if [ ! -e "$DIR" ]; then
     || die "could not check out BEAM's listed paths at $COMMIT"
   echo "$LIST_SHA" > "$MARK"
 fi
+if git -C "$DIR" remote get-url origin >/dev/null 2>&1; then git -C "$DIR" remote remove origin; fi
 
 export GIT_NO_LAZY_FETCH=1
 [ "$(git -C "$DIR" rev-parse HEAD 2>/dev/null)" = "$COMMIT" ] || die "the BEAM checkout is not at $COMMIT"
@@ -49,7 +52,7 @@ read -r FILES OUTSIDE MISSING < <(cd "$DIR" && find . -path ./.git -prune -o -ty
   END { for (f in files) if (!(f in seen)) miss++
         for (d in dirs) { hit = 0; for (s in seen) if (index(s, d) == 1) { hit = 1; break }; if (!hit) miss++ }
         print n + 0, out + 0, miss + 0 }')
-[ "$OUTSIDE" -eq 0 ] || die "the BEAM checkout holds $OUTSIDE files outside the path list"
+[ "$OUTSIDE" -eq 0 ] || die "the BEAM checkout holds $OUTSIDE files outside the path list; delete it and run again"
 [ "$MISSING" -eq 0 ] || die "the BEAM checkout lacks $MISSING listed paths"
 
 # Which of the commit's files have contents in the object store. rev-list --missing=print reads only what is local and
@@ -61,7 +64,7 @@ read -r ABSENT STRAY < <(awk -v list="$LIST" "$ALLOWED"'
   $2 == "blob" { split($0, f, "\t"); blob[$3] = 1; if (allowed(f[2])) ok[$3] = 1 }
   END { for (b in blob) { if (b in gone) absent++; else if (!(b in ok)) stray++ } print absent + 0, stray + 0 }' \
   <(printf '%s\n' "$MISSING_IDS") <(printf '%s\n' "$TREE"))
-[ "$STRAY" -eq 0 ] || die "the BEAM object store holds $STRAY files outside the path list"
+[ "$STRAY" -eq 0 ] || die "the BEAM object store holds $STRAY files outside the path list; delete it and run again"
 
 printf 'rs1-mint beam=verified commit=%s tree=%s sparse_files=%s absent_blobs=%s paths_sha256=%s replaced=%s\n' \
   "$COMMIT" "$(git -C "$DIR" rev-parse 'HEAD^{tree}')" "$FILES" "$ABSENT" "$LIST_SHA" "$REPLACED"

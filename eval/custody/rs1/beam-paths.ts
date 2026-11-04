@@ -37,12 +37,14 @@ const TIERS = [
 
 interface ManifestEntry { conversation: string; chat_path: string; questions_path: string }
 
-/** The allowed paths, relative to BEAM's root; a directory ends in "/". */
-export function deriveBeamPaths(): string[] {
-  const sizes = JSON.parse(readFileSync(MANIFEST, 'utf8')).sizes as Record<string, ManifestEntry[]>;
+/** The allowed paths, relative to BEAM's root; a directory ends in "/". Defaults to the committed manifest and splits. */
+export function deriveBeamPaths(
+  sizes: Record<string, ManifestEntry[]> = JSON.parse(readFileSync(MANIFEST, 'utf8')).sizes,
+  load: (benchmark: string) => { dev: string[]; sealed: string[] } = loadSplit,
+): string[] {
   const topics: string[] = [], chats: string[] = [];
   for (const tier of TIERS) {
-    const split = loadSplit(tier.split), entries = sizes[tier.size] ?? [];
+    const split = load(tier.split), entries = sizes[tier.size] ?? [];
     const unsplit = entries.filter(e => !split.dev.includes(e.conversation) && !split.sealed.includes(e.conversation));
     if (unsplit.length) throw new Error(`${tier.split}: ${unsplit.map(e => e.conversation).join(', ')} in no split`);
     const unknown = split.dev.filter(id => !entries.some(e => e.conversation === id));
