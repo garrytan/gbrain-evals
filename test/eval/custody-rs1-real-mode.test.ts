@@ -8,6 +8,7 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { priceRequest, reservationUsd } from '../../eval/runner/budget-ledger.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 const seedLine = (name: string) => ['rs1', 'seed', 'v1'].join('-') + ':' + createHash('sha256').update(name).digest('hex');
@@ -102,5 +103,64 @@ describe('rs1_mint.py real-mode keyless steps', () => {
         408: 'swallowed RuntimeError', 429: 'swallowed RuntimeError', 503: 'swallowed RuntimeError',
       },
     });
+  });
+});
+
+describe('rs1_mint.py Gemini output limit and thinking level', () => {
+  test('a BEAM max_tokens=3000 call sends thinking level low and 3000 + 8192 output tokens, the ledger reserves that limit, and a reply stopped at it counts as capped', () => {
+    const dir = scratch('thinking');
+    const harness = [
+      'import json, sys, types',
+      'from pathlib import Path',
+      `sys.path.insert(0, ${JSON.stringify(join(REPO, 'eval/custody/rs1'))})`,
+      'import rs1_mint as m',
+      'MODELS = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash"',
+      'class Session:',
+      '    def __init__(self):',
+      '        self.sent = []',
+      '    def request(self, method, url, data=None, **kwargs):',
+      '        self.sent.append({"url": url, "body": json.loads(data)})',
+      '    def post(self, url, data=None, **kwargs):',
+      '        return self.request("POST", url, data=data, **kwargs)',
+      'class Inner:',
+      '    def __init__(self, session, finish):',
+      '        self.session, self.finish = session, finish',
+      '    def invoke(self, value, generation_config=None, **kwargs):',
+      '        config = {"temperature": 0.0}',
+      '        if generation_config:',
+      '            config["maxOutputTokens"] = generation_config["max_output_tokens"]',
+      '        body = {"contents": [{"role": "user", "parts": [{"text": value}]}], "generationConfig": config}',
+      '        self.session.post(MODELS + ":generateContent", data=json.dumps(body))',
+      '        return types.SimpleNamespace(content="ok", usage_metadata={"input_tokens": 9, "output_tokens": 4},',
+      '                                     response_metadata={"finish_reason": self.finish})',
+      'session = Session()',
+      'm.send_thinking(session)',
+      'session.post(MODELS + ":countTokens", data=json.dumps({"contents": []}))',
+      'usage = m.Usage(Path(sys.argv[1]) / "usage.jsonl")',
+      'for finish, max_tokens in (("STOP", 3000), ("MAX_TOKENS", 3000), ("STOP", None)):',
+      '    m.RecordingModel(Inner(session, finish), "gemini:gemini-3.8-flash", usage).invoke("prompt", max_tokens=max_tokens)',
+      'lines = [json.loads(line) for line in usage.path.read_text().splitlines()]',
+      'print(json.dumps({"thinking": m.GEN_THINKING, "sent": session.sent, "lines": lines, "totals": usage.totals()}))',
+    ].join('\n');
+    const r = run('python3', ['-c', harness, dir], { PYTHONDONTWRITEBYTECODE: '1' });
+    expect(r.err).toBe('');
+    const out = JSON.parse(r.out);
+    expect(out.thinking).toEqual({ thinking_level: 'low', reasoning_headroom: 8192 });
+    const thinking = { thinkingLevel: 'low' };
+    expect(out.sent.map((s: { body: unknown }) => s.body)).toEqual([
+      { contents: [] },
+      ...[0, 1].map(() => ({ contents: [{ role: 'user', parts: [{ text: 'prompt' }] }], generationConfig: { temperature: 0, maxOutputTokens: 11_192, thinkingConfig: thinking } })),
+      { contents: [{ role: 'user', parts: [{ text: 'prompt' }] }], generationConfig: { temperature: 0, thinkingConfig: thinking } },
+    ]);
+    const line = { model: 'gemini:gemini-3.8-flash', input_tokens: 9, output_tokens: 4, thinking_level: 'low' };
+    expect(out.lines).toEqual([
+      { ...line, max_output_tokens: 11_192, capped: false },
+      { ...line, max_output_tokens: 11_192, capped: true },
+      { ...line, max_output_tokens: null, capped: false },
+    ]);
+    expect(out.totals).toEqual({ calls: 3, input_tokens: 27, output_tokens: 12, capped: 1 });
+    const price = priceRequest(out.sent[1].url, out.sent[1].body)!;
+    expect(price).toMatchObject({ provider: 'gemini', model: 'gemini-3.8-flash', input: 0.75, output: 3.75, maxOutputTokens: 11_192 });
+    expect(reservationUsd(price)).toBeCloseTo((price.inputTokens * 0.75 + 11_192 * 3.75) / 1e6, 12);
   });
 });
