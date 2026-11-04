@@ -623,3 +623,17 @@ and the report: a resume from other sources or at another effort, a published-an
 shards of different provenance merging, and unjudged answers missing from the not-scored counts. It also added the
 second-judge sensitivity, the lease ceiling check, the unjudged count, the note on failed tries and the not re-read
 wording above. No cell, arm, cap, estimate or verdict rule changed.
+
+**Revision 2 (2026-11-03, before the S1 memory-bank re-read).** The S1 memory-bank row's 10 shards froze their
+run-config.json under A17 (c2, c4 to c9), A23 (c0, c1) and A24 (c3). The three files agree on every field that sets what
+a reader reads (reader prompt, effort and output limit, instrument and judge, schedule and limit, renderer, dataset and
+arm) and differ only in launch metadata under `cell`, which Q1 stopped writing into run-config.json at A24. The
+byte-for-byte check refused them as three run configurations, before any request. GBEV-3 chose a deny-by-default
+allowance: a re-read's sources may now differ only in `cell.expected_hours`, `cell.fresh_before`, `cell.lease`,
+`cell.restore_command`, `cell.snapshot_command` and `cell.shards`, present or absent. Any other difference still refuses
+the whole re-read, a new or unknown field and a whitespace change included. One run configuration keeps its own SHA-256
+as the re-read's source identity. Several that agree are identified by the SHA-256 of their shared configuration without
+those fields; verify.json records each source's own run-config SHA-256, and the report pairs the re-read with the
+frontier cell that publishes one of them. The S1 memory-bank re-read runs from a fresh clone at this revision's merge
+commit, after the other nine, on the same ledger and ceiling with a $5 lease. No cell, arm, cap, estimate or verdict
+rule changed.

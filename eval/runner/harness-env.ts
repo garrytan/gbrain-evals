@@ -3,12 +3,25 @@
  *
  * The harness is a Python project locked with uv. This module fetches the
  * commit named in eval/harness-provider/harness.lock.json into
- * `.harness/src/<commit>`, exports its lockfile, drops the CUDA-only wheels
- * (nvidia-*, cuda-*, triton) and installs the rest into
+ * `.harness/src/<commit>`, keeps that commit as `.harness/packs/<commit>.pack`,
+ * exports its lockfile, drops the CUDA-only wheels (nvidia-*, cuda-*, triton)
+ * and installs the rest into
  * `.harness/venv/<env-hash>` with `uv pip install --torch-backend cpu`, so torch
  * resolves to its CPU build. The harness package itself installs without
  * dependencies on top. `ready.json` in the venv records what was installed;
  * a venv whose ready.json does not match the lock is rebuilt.
+ *
+ * CI caches `.harness/packs`, so a later setup rebuilds the checkout from the
+ * pack instead of fetching from GitHub. The pack is only data: it is read into
+ * a fresh repository, where `git index-pack --strict` hashes and checks every
+ * object and `git fsck` proves the pinned commit and its whole tree are there.
+ * A pack that fails either check is deleted and the commit is fetched again,
+ * so a stale, corrupt or wrong pack cannot change the checked-out files. The
+ * check covers the pack, not the cache entry around it: actions/cache extracts
+ * whatever an entry holds, so a tampered entry is kept out the same way as for
+ * the .git cache, because only main's runs and a pull request's own runs can
+ * write the entries that run restores. Under GitHub Actions a refusal is
+ * printed as a warning, since a refused cache hit is never replaced.
  *
  * Nothing here reads a `.env` file. The harness CLI calls
  * `load_dotenv(..., override=True)`; the Python side (mpw/register.py)
@@ -18,9 +31,10 @@
  *   bun eval/runner/harness-env.ts            install (idempotent) and print the paths
  *   bun eval/runner/harness-env.ts --check    exit 1 unless the install matches the lock
  */
+import type { BunFile } from 'bun';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 export const REPO_ROOT = resolve(import.meta.dir, '../..');
 export const PROVIDER_DIR = join(REPO_ROOT, 'eval/harness-provider');
@@ -63,12 +77,12 @@ export function readLock(path = LOCK_PATH): { lock: HarnessLock; sha256: string 
   return { lock, sha256: createHash('sha256').update(bytes).digest('hex') };
 }
 
-function run(cmd: string[], opts: { cwd?: string; env?: Record<string, string | undefined> } = {}): string {
-  const proc = Bun.spawnSync(cmd, { cwd: opts.cwd, env: { ...process.env, ...opts.env }, stdout: 'pipe', stderr: 'pipe' });
+function run(cmd: string[], opts: { cwd?: string; env?: Record<string, string | undefined>; stdin?: BunFile | Uint8Array; stdout?: BunFile } = {}): string {
+  const proc = Bun.spawnSync(cmd, { cwd: opts.cwd, env: { ...process.env, ...opts.env }, stdin: opts.stdin, stdout: opts.stdout ?? 'pipe', stderr: 'pipe' });
   if (proc.exitCode !== 0) {
     throw new Error(`${cmd.join(' ')} failed (exit ${proc.exitCode}): ${proc.stderr.toString().slice(-2000)}`);
   }
-  return proc.stdout.toString();
+  return proc.stdout?.toString() ?? '';
 }
 
 /** Lines of `uv export` output with the CUDA-only wheels removed. */
@@ -78,16 +92,40 @@ export function cpuRequirements(exported: string, excluded: readonly string[]): 
     .join('\n');
 }
 
-export function ensureHarnessSource(lock: HarnessLock, log: (l: string) => void = () => {}): string {
-  const src = join(HARNESS_HOME, 'src', lock.harness_commit);
+function freshRepository(dir: string): void {
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  run(['git', 'init', '-q'], { cwd: dir });
+}
+
+function restoreFromPack(src: string, pack: string, commit: string, log: (l: string) => void): boolean {
+  freshRepository(src);
+  try {
+    writeFileSync(join(src, '.git', 'shallow'), `${commit}\n`);
+    run(['git', 'index-pack', '--strict', '--stdin'], { cwd: src, stdin: Bun.file(pack) });
+    run(['git', 'fsck', '--connectivity-only', '--no-dangling', '--no-progress', commit], { cwd: src });
+    log(`[harness] restored ${commit.slice(0, 12)} from the cached pack ${pack}`);
+    return true;
+  } catch (e) {
+    log(`${process.env.GITHUB_ACTIONS ? '::warning::' : ''}[harness] refused the cached pack ${pack}: ${(e as Error).message.trim().replace(/\s*\n\s*/g, '; ')}`);
+    rmSync(pack, { force: true });
+    return false;
+  }
+}
+
+export function ensureHarnessSource(lock: HarnessLock, log: (l: string) => void = () => {}, home = HARNESS_HOME): string {
+  const src = join(home, 'src', lock.harness_commit);
   const head = existsSync(join(src, '.git')) ? Bun.spawnSync(['git', '-C', src, 'rev-parse', 'HEAD']).stdout.toString().trim() : '';
   if (head === lock.harness_commit) return src;
-  rmSync(src, { recursive: true, force: true });
-  mkdirSync(src, { recursive: true });
-  log(`[harness] fetching ${lock.harness_commit.slice(0, 12)} into ${src}`);
-  run(['git', 'init', '-q'], { cwd: src });
-  run(['git', 'fetch', '-q', '--depth', '1', lock.harness_repo, lock.harness_commit], { cwd: src });
-  run(['git', 'checkout', '-q', 'FETCH_HEAD'], { cwd: src });
+  const pack = join(home, 'packs', `${lock.harness_commit}.pack`);
+  if (!(existsSync(pack) && restoreFromPack(src, pack, lock.harness_commit, log))) {
+    freshRepository(src);
+    log(`[harness] fetching ${lock.harness_commit.slice(0, 12)} into ${src}`);
+    run(['git', 'fetch', '-q', '--depth', '1', lock.harness_repo, lock.harness_commit], { cwd: src });
+    mkdirSync(dirname(pack), { recursive: true });
+    run(['git', 'pack-objects', '-q', '--revs', '--stdout'], { cwd: src, stdin: Buffer.from(`${lock.harness_commit}\n`), stdout: Bun.file(pack) });
+  }
+  run(['git', 'checkout', '-q', '--detach', lock.harness_commit], { cwd: src });
   const got = run(['git', 'rev-parse', 'HEAD'], { cwd: src }).trim();
   if (got !== lock.harness_commit) throw new Error(`harness checkout is ${got}, expected ${lock.harness_commit}`);
   return src;
