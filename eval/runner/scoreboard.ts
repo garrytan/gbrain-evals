@@ -50,7 +50,10 @@
  *
  * Derivation rules (preregistered; changing one changes scoreboard.json):
  *   - An answer's canonical score is its judgment from the cell's canonical
- *     instrument at judge_replicate 0. Product failures (memory-qa/outcomes.ts:
+ *     instrument at judge_replicate 0; a cell with a judging plan (`judging`,
+ *     q1/cells/judging.ts) scores it by the mean of its reader's planned judges'
+ *     replicate-0 judgments instead, and those judges are never frontier
+ *     judges. Product failures (memory-qa/outcomes.ts:
  *     retrieval_error, unsupported, and an agent's turn_cap or context_overflow
  *     stop) score 0 and stay in the denominator; ingest_degraded keeps
  *     its judged score; harness failures (reader_error, judge_error,
@@ -134,13 +137,34 @@
  *     `derived.withheld` naming why, and the README line names only correct
  *     abstention. Answers keep their delivered_tokens either way.
  *
+ * RS1 mode (GST-1154): a campaign.json with an `rs1` block (eval/runner/rs1/verdict.ts Rs1Block, copied from
+ * publication.json by q1/publish.ts) is analyzed by the frozen RS1 rules in eval/runner/rs1/verdict.ts instead of Q1's
+ * families, Holm claims and power check (power.json is not read). Loading refuses, for render and check alike, a block
+ * whose margins, interval levels, families, readers, judges, re-reads, gate, sensitivity sample or cost rule differ from
+ * verdict.ts's constants, or cells whose arm, readers or judge plans differ from them (RECEIPT_INVALID), and a
+ * verdict.ts whose sha256 is not the block's, or its last dated amendment's (SCOREBOARD_STALE). Render hands verdict.ts
+ * each row's per-question, per-reader values (readerValues: the outcome rules above, scored by the planned judges) and
+ * writes its verdict lines and first table (Opus and particle-1 with cost per correct answer, then Sol) as the
+ * headline, its families, delivered-context and judge-sensitivity tables in the report, and its analysis as
+ * scoreboard.json `rs1`. Further receipt inputs, each optional:
+ *
+ *   cells/<arm cell id>.reread-particle-particle-1/
+ *                        particle-1's re-read of a packed arm (q1/reread-cell.ts: answers.ndjson, judgments.ndjson,
+ *                        receipt.json), scored by both its planned judges; without it, that row is not run
+ *   cells/<cell_id>/sensitivity-judgments.ndjson
+ *                        the sensitivity judge's replicate-0 judgments of the cell's own answers (rs1/judge.ts)
+ *   rs1-cost.json        {schema gbrain-evals/rs1-cost/v1, vcpu_hour_usd, rows [{cell_id, reader,
+ *                        ingest_usd_per_conversation, read_usd_per_question}]}, metered in custody; without it, cost
+ *                        per correct answer is not measured
+ *
  * scoreboard.json, schema `gbrain-evals/scoreboard/v5` (interface Scoreboard; v2 adds each cell's `not_applicable`;
  * v3 adds each cell's `derived` and the top-level `derived`; v4 takes the classifier from campaign.json
  * `hedge_classifier` and adds `derived.classifier.source` and `derived.classifier.per_answer`; v5 adds
  * `derived.withheld` and, with `hedge_classifier: "none"`, sets `derived.classifier` to null and drops the
  * classifier-based fields from every DerivedColumns; v6 adds each cell's `pin` and `sensitivity`, `appendix` and `sensitivity_notes`;
  * v7 adds each cell's `subset` and a sensitivity note's `conversations`; v8 adds each cell's `product_outcomes` and
- * `frontier` and the top-level `frontier`):
+ * `frontier` and the top-level `frontier`; v9, written only in RS1 mode so Q1 and F6 still render v8 byte for byte,
+ * adds `rs1` and a null `power`):
  *   schema, generator, campaign {id, hash, campaign_sha256, gbrain, measured, readers},
  *   appendix [CellAggregate & {appendix, reason}] (cells published only in an appendix, never compared),
  *   sensitivity_notes [{set, id, label, reason, question_ids}],
@@ -168,11 +192,18 @@ import { wildTest, type ClusterRow } from './stats/wild-cluster.ts';
 import { scanTree, secretMessage } from './q1/secret-scan.ts';
 import type { PowerReport } from './q1/power.ts';
 import { HEDGE_CLASSIFIERS, hedgeClassifier, type HedgeVerdict } from './q1/hedge.ts';
-import { PASS_THRESHOLD } from './memory-qa/instruments.ts';
+import { INSTRUMENTS, PASS_THRESHOLD, RESERVE_INSTRUMENTS } from './memory-qa/instruments.ts';
+import { judgeInstrumentId, plannedScore, scoringJudges, type JudgingPlan } from './q1/cells/judging.ts';
+import { analysisSha256, analyze, blockProblems, cellProblems, COST_READS, GATE, RS1_VERDICT_PATH, SENSITIVITY_JUDGE, type ReaderValue, type Rs1Analysis, type Rs1Block, type Rs1CostRow, type Rs1Estimate, type Rs1Row, type Rs1TableRow } from './rs1/verdict.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v8';
 export const CAMPAIGN_SCHEMA = 'gbrain-evals/q1-campaign/v1';
+/** The schema of an RS1-mode scoreboard.json (header, "RS1 mode"); every other campaign keeps SCOREBOARD_SCHEMA. */
+export const SCOREBOARD_SCHEMA_RS1 = 'gbrain-evals/scoreboard/v9';
+export const RS1_COST_FILE = 'rs1-cost.json';
+export const RS1_COST_SCHEMA = 'gbrain-evals/rs1-cost/v1';
+export const RS1_SENSITIVITY_FILE = 'sensitivity-judgments.ndjson';
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 export const MAX_TREE_BYTES = 60 * 1024 * 1024;
 export const MIN_COVERAGE = 0.95;
@@ -260,6 +291,8 @@ export interface CampaignCell {
   subset?: CellSubset;
   /** Recorded outcomes of one reader counted as the product's own failure (scored 0), with the expected count and why. */
   product_outcomes?: Array<{ reader: string; outcome: 'harness_invalid'; count: number; reason: string }>;
+  /** The judges that score each reader's answers (q1/cells/judging.ts); without it, the canonical judge alone. */
+  judging?: JudgingPlan;
 }
 /** A cell published only in an appendix (the found-and-fixed rows): derived and tabled, never compared, never in a headline. */
 export interface AppendixCell extends CampaignCell { appendix: string; reason: string; dir: string; pin: string }
@@ -287,6 +320,8 @@ export interface CampaignManifest {
   tables?: string;
   disclosures: string[];
   render_targets: string[];
+  /** RS1 mode (header): the frozen analysis's block, copied from publication.json. */
+  rs1?: Rs1Block;
 }
 
 export interface CostSpeedFile {
@@ -423,6 +458,12 @@ function validateCampaign(receipt: string, c: CampaignManifest): void {
       if (!x || x.set !== head.id || x.arm !== anchor.arm || (f.id !== 'F2' && x.budget !== anchor.budget)) throw invalid(receipt, `family ${f.id} comparator ${id} is not in its anchor's set, arm and budget`, why);
     }
   }
+  if (!c.rs1) return;
+  const block = blockProblems(c.rs1);
+  const problems = block.length ? block : [...(sets.has(c.rs1.set) ? [] : [`rs1 names set ${c.rs1.set}, which campaign.json does not list`]), ...(c.families.length ? ['an RS1 campaign carries no Q1 families: its families are the rs1 block\'s'] : []), ...cellProblems(c.rs1, c.cells)];
+  if (problems.length) throw invalid(receipt, `${problems[0]}${problems.length > 1 ? ` (and ${problems.length - 1} more)` : ''}`, 'the RS1 analysis, its readers and its judge plans were frozen before minting (eval/runner/rs1/verdict.ts); a receipt that loosens any of them would be judged by rules chosen after the data', { user_message: 'restore the rs1 block publication.json froze and the cells\' preregistered readers and judges; the frozen analysis changes only by a dated amendment in the preregistration' });
+  const hash = sha256(readFileSync(join(ROOT, RS1_VERDICT_PATH))), frozen = analysisSha256(c.rs1);
+  if (hash !== frozen) throw new ScoreboardError({ code: 'SCOREBOARD_STALE', message: `${RS1_VERDICT_PATH} hashes to ${hash}, but the rs1 block's frozen analysis is ${frozen}${c.rs1.amendments.length ? ` (amendment ${c.rs1.amendments.at(-1)!.id})` : ''}`, why: 'the RS1 analysis is pinned by its file\'s sha256 before minting (review F19), so an edit to it cannot change a verdict after the data', fix: { next: 'ask_user', user_message: `restore ${RS1_VERDICT_PATH} to the frozen hash, or record a dated amendment in the preregistration and add it, with the new hash, to the rs1 block`, verify: checkArgv(receipt) } });
 }
 
 // ─── Layer 1: question values per cell ──────────────────────────────
@@ -448,6 +489,11 @@ interface CellData {
   /** cells/<cell_id>/derived/hedge.ndjson as rendered: one line per judged answer. */
   hedgeLines: string;
   frontier: FrontierCounts[];
+  /** Every answer and, by answer id, every judgment (all instruments, A19 redos applied): RS1's per-reader values read them. */
+  answers: AnswerRecord[];
+  judgmentsOf: Map<string, JudgmentRecord[]>;
+  /** The instrument's canonical judge for a cell with a judging plan (instrumentJudge), else null. */
+  canonicalJudge: string | null;
 }
 export interface FrontierCounts { judge: string; scope: number; judged: number; compared: number; agree: number }
 
@@ -467,7 +513,7 @@ function cellFiles(receipt: string, id: string, under?: string) {
 
 function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): CellData {
   const set = campaign.sets.find(s => s.id === cell.set)!;
-  const empty: CellData = { cell, values: new Map(), judgeRuns: [], readerMeans: {}, missingReaders: [], productFailures: 0, harnessFailures: 0, judgeSd: null, latencies: [], rows: new Map(), problems: [], notApplicable: {}, derived: { ...NO_DERIVED }, hedgeLines: '', frontier: [] };
+  const empty: CellData = { cell, values: new Map(), judgeRuns: [], readerMeans: {}, missingReaders: [], productFailures: 0, harnessFailures: 0, judgeSd: null, latencies: [], rows: new Map(), problems: [], notApplicable: {}, derived: { ...NO_DERIVED }, hedgeLines: '', frontier: [], answers: [], judgmentsOf: new Map(), canonicalJudge: null };
   if (cell.status === 'not-run') return empty;
   const files = cellFiles(r.root, cell.cell_id, cell.dir);
   if (!existsSync(files.runConfig)) throw invalid(r.root, `cell ${cell.cell_id} has no run-config.json`, 'the configuration identity is the run-config.json hash');
@@ -486,6 +532,10 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
   const problems: string[] = [];
   const byAnswer = new Map<string, JudgmentRecord[]>();
   for (const j of judgments) if (j.instrument_id === cell.canonical_instrument) byAnswer.set(j.answer_id, [...(byAnswer.get(j.answer_id) ?? []), j]);
+  const judgmentsOf = new Map<string, JudgmentRecord[]>();
+  for (const j of judgments) { const xs = judgmentsOf.get(j.answer_id); if (xs) xs.push(j); else judgmentsOf.set(j.answer_id, [j]); }
+  const canonicalJudge = cell.judging ? instrumentJudge(r.root, cell) : null;
+  const scoreOf = (a: AnswerRecord) => judgedScore(cell, canonicalJudge, judgmentsOf.get(a.answer_id) ?? [], a.reader);
   const byQuestion = new Map<string, AnswerRecord[]>();
   for (const a of answers) {
     if (a.cell_id !== cell.cell_id) problems.push(`answer ${a.answer_id.slice(0, 12)} names cell ${a.cell_id}`);
@@ -544,21 +594,21 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
         if (PRODUCT_FAILURES.has(a.outcome) || po) { productFailures++; scores.push(0); runScores.forEach(x => x.push(0)); continue; }
         if (HARNESS_FAILURES.has(a.outcome)) { harnessFailures++; reason ??= `harness: ${a.outcome} (${reader})`; continue; }
         const js = byAnswer.get(a.answer_id) ?? [];
-        const canonical = js.find(j => j.judge_replicate === 0);
-        if (!canonical || !canonical.parse_ok || canonical.outcome !== 'scored' || typeof canonical.score !== 'number') { harnessFailures++; reason ??= `harness: judge_error (${reader})`; continue; }
-        scores.push(canonical.score);
+        const score = scoreOf(a);
+        if (score === null) { harnessFailures++; reason ??= `harness: judge_error (${reader})`; continue; }
+        scores.push(score);
         if (rep === 0 && typeof a.latency_ms === 'number') latencies.push(a.latency_ms + (typeof row?.latency_ms === 'number' ? row.latency_ms : 0));
         const repeats = js.filter(j => j.parse_ok && j.outcome === 'scored' && typeof j.score === 'number').map(j => j.score as number);
         if (repeats.length > 1) { const m = mean(repeats)!; sds.push(Math.sqrt(repeats.reduce((s, x) => s + (x - m) ** 2, 0) / (repeats.length - 1))); }
-        runScores.forEach((x, j) => { const alt = js.find(k => k.judge_replicate === j && k.parse_ok && k.outcome === 'scored' && typeof k.score === 'number'); x.push(alt ? alt.score as number : canonical.score as number); });
+        runScores.forEach((x, j) => { const alt = cell.judging ? undefined : js.find(k => k.judge_replicate === j && k.parse_ok && k.outcome === 'scored' && typeof k.score === 'number'); x.push(alt ? alt.score as number : score); });
       }
       if (scores.length === reps(reader)) { const m = mean(scores)!; perReader.push(m); readerScores[reader].push(m); runScores.forEach((x, j) => perReaderRuns[j].push(mean(x)!)); }
     }
     for (const reader of cell.readers) {
       const a = qa.find(x => x.reader === reader && x.replicate === 0);
-      const canonical = a && !NOT_APPLICABLE.has(a.outcome) && !PRODUCT_FAILURES.has(a.outcome) && !HARNESS_FAILURES.has(a.outcome) ? byAnswer.get(a.answer_id)?.find(j => j.judge_replicate === 0) : undefined;
-      if (!a || !canonical?.parse_ok || canonical.outcome !== 'scored' || typeof canonical.score !== 'number') continue;
-      const verdict = verdicts.get(a.answer_id), pass = canonical.score >= PASS_THRESHOLD;
+      const score = a && !NOT_APPLICABLE.has(a.outcome) && !PRODUCT_FAILURES.has(a.outcome) && !HARNESS_FAILURES.has(a.outcome) ? scoreOf(a) : null;
+      if (!a || score === null) continue;
+      const verdict = verdicts.get(a.answer_id), pass = score >= PASS_THRESHOLD;
       derived.answers++;
       if (!pass) { derived.wrong++; if (verdict === 'confident') derived.confident_wrong++; }
       if (row?.abstention) { derived.abstention_answers++; if (pass) derived.correct_abstentions++; }
@@ -570,9 +620,10 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
   }
   for (const p of asProduct.values()) if (p.seen !== p.count) throw invalid(r.root, `cell ${cell.cell_id}: ${p.seen} ${p.reader} answers are recorded ${p.outcome} on scheduled questions, campaign.json counts ${p.count} as product failures`, 'a recorded outcome is counted as the product\'s own failure only for the answers the ruling names, by exact count');
   const scored = (j: JudgmentRecord | undefined) => !!j && j.parse_ok && j.outcome === 'scored' && typeof j.score === 'number';
+  const planned = new Set(canonicalJudge === null ? [] : cell.readers.flatMap(x => scoringJudges(cell, x, { id: cell.canonical_instrument, canonical_judge: canonicalJudge }).map(p => p.instrument_id)));
   const frontierOf = new Map<string, Map<string, JudgmentRecord>>();
   for (const j of judgments) {
-    if (j.judge_replicate !== 0 || !j.instrument_id.startsWith(`${cell.canonical_instrument}@`)) continue;
+    if (j.judge_replicate !== 0 || !j.instrument_id.startsWith(`${cell.canonical_instrument}@`) || planned.has(j.instrument_id)) continue;
     const m = frontierOf.get(j.judge) ?? new Map<string, JudgmentRecord>();
     m.set(j.answer_id, j);
     frontierOf.set(j.judge, m);
@@ -594,8 +645,107 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
   });
   return {
     cell, values, judgeRuns, readerMeans: Object.fromEntries(cell.readers.map(x => [x, mean(readerScores[x])])), missingReaders,
-    productFailures, harnessFailures, judgeSd: mean(sds), latencies, rows, problems, notApplicable, derived, hedgeLines, frontier,
+    productFailures, harnessFailures, judgeSd: mean(sds), latencies, rows, problems, notApplicable, derived, hedgeLines, frontier, answers, judgmentsOf, canonicalJudge,
   };
+}
+
+/**
+ * An answer's judged score: with the cell's judging plan, the mean of its reader's planned judges' replicate-0 scores
+ * (q1/cells/judging.ts, records named by judgeInstrumentId), else its canonical replicate-0 judgment; null while any of them
+ * is missing, unparsed or unscored.
+ */
+function judgedScore(cell: CampaignCell, canonicalJudge: string | null, js: readonly JudgmentRecord[], reader: string): number | null {
+  const scored = (instrument: string) => { const j = js.find(k => k.instrument_id === instrument && k.judge_replicate === 0); return j && j.parse_ok && j.outcome === 'scored' && typeof j.score === 'number' ? j.score : null; };
+  if (!cell.judging) return scored(cell.canonical_instrument);
+  return plannedScore(scoringJudges(cell, reader, { id: cell.canonical_instrument, canonical_judge: canonicalJudge! }), p => scored(p.instrument_id));
+}
+
+/** The canonical judge of a cell's instrument, which names a judging plan's records (the canonical id, else <instrument>@<judge>). */
+function instrumentJudge(receipt: string, cell: CampaignCell): string {
+  const i = INSTRUMENTS[cell.canonical_instrument] ?? RESERVE_INSTRUMENTS[cell.canonical_instrument];
+  if (!i) throw invalid(receipt, `cell ${cell.cell_id} carries a judging plan, but its instrument ${cell.canonical_instrument} is not registered in eval/runner/memory-qa/instruments.ts`, 'a judging plan\'s records carry the canonical instrument id for its canonical judge and <instrument>@<judge> for any other, so matching them needs the registered canonical judge');
+  return i.canonical_judge;
+}
+
+// ─── RS1 mode (header, "RS1 mode") ──────────────────────────────────
+
+/**
+ * Each scheduled question's value per promised reader (replicate 0), for eval/runner/rs1/verdict.ts, under the outcome
+ * rules deriveCell applies: the judged score, 0 for a product failure, else why the reader has none (`unjudged` when
+ * the judges' score is missing).
+ */
+function readerValues(cell: CampaignCell, scheduled: CampaignSet['scheduled'], answers: readonly AnswerRecord[], judged: (a: AnswerRecord) => number | null, unjudged = 'harness: judge_error'): Record<string, Record<string, ReaderValue>> {
+  const product = new Set((cell.product_outcomes ?? []).map(p => `${p.reader}|${p.outcome}`));
+  const byKey = new Map(answers.filter(a => a.replicate === 0).map(a => [`${a.question_id}|${a.reader}`, a]));
+  return Object.fromEntries(scheduled.map(q => [q.question_id, Object.fromEntries(cell.readers.map((reader): [string, ReaderValue] => {
+    const a = byKey.get(`${q.question_id}|${reader}`);
+    if (!a) return [reader, `missing answer (${reader})`];
+    if (NOT_APPLICABLE.has(a.outcome)) return [reader, notApplicableReason([reader])];
+    if (PRODUCT_FAILURES.has(a.outcome) || product.has(`${reader}|${a.outcome}`)) return [reader, 0];
+    if (HARNESS_FAILURES.has(a.outcome)) return [reader, `harness: ${a.outcome} (${reader})`];
+    return [reader, judged(a) ?? `${unjudged} (${reader})`];
+  }))]));
+}
+
+const byAnswerId = (js: readonly JudgmentRecord[]) => { const m = new Map<string, JudgmentRecord[]>(); for (const j of js) { const xs = m.get(j.answer_id); if (xs) xs.push(j); else m.set(j.answer_id, [j]); } return m; };
+
+/** A row's values under the sensitivity judge, from its cells/<cell_id>/sensitivity-judgments.ndjson, or null without one. */
+function sensitivityValues(r: Reader, d: CellData, scheduled: CampaignSet['scheduled']): Record<string, Record<string, ReaderValue>> | null {
+  const path = join(cellFiles(r.root, d.cell.cell_id, d.cell.dir).dir, RS1_SENSITIVITY_FILE);
+  if (!existsSync(path) && !existsSync(`${path}.gz`)) return null;
+  const id = judgeInstrumentId({ id: d.cell.canonical_instrument, canonical_judge: d.canonicalJudge! }, SENSITIVITY_JUDGE);
+  const own = new Set(d.answers.map(a => a.answer_id)), js = readNdjson<JudgmentRecord>(r, path);
+  if (js.some(j => j.instrument_id !== id || !own.has(j.answer_id))) throw invalid(r.root, `cell ${d.cell.cell_id} ${RS1_SENSITIVITY_FILE} holds a record that is not a ${SENSITIVITY_JUDGE} judgment (${id}) of the cell's own answers`, 'the sensitivity file holds only the sensitivity judge\'s grades of the cell\'s counted answers, so the judge comparison reads the same answers the counted judges scored');
+  const plan: CampaignCell = { ...d.cell, judging: { by_reader: Object.fromEntries(d.cell.readers.map(x => [x, [SENSITIVITY_JUDGE]])) } };
+  const by = byAnswerId(js);
+  return readerValues(plan, scheduled, d.answers, a => judgedScore(plan, d.canonicalJudge, by.get(a.answer_id) ?? [], a.reader), `no ${SENSITIVITY_JUDGE} judgment`);
+}
+
+/** particle-1's re-read of a packed arm (q1/reread-cell.ts writes it under cells/<re-read id>/), scored by both its planned judges. */
+function rereadRow(r: Reader, b: Rs1Block, d: CellData, id: string, scheduled: CampaignSet['scheduled'], sourceNotRun: string | null): Rs1Row {
+  const row = { cell_id: id, system: d.cell.system, values: {}, judge_values: null, delivered: [] };
+  const files = cellFiles(r.root, id);
+  if (sourceNotRun) return { ...row, not_run: sourceNotRun };
+  if (!existsSync(files.receipt)) return { ...row, not_run: 'has no particle-1 re-read in the receipt' };
+  const answers = readNdjson<AnswerRecord>(r, files.answers);
+  const contexts = new Map(d.answers.filter(a => a.replicate === 0).map(a => [a.question_id, a.context_sha256]));
+  const bad = answers.filter(a => a.cell_id !== id || a.reader !== b.readers.particle || a.answer_id !== answerId(id, a.question_id, a.reader, a.replicate)
+    || (JUDGED_OUTCOMES.has(a.outcome) && contexts.has(a.question_id) && contexts.get(a.question_id) !== a.context_sha256)).length;
+  if (bad) throw invalid(r.root, `re-read cell ${id}: ${bad} answer${bad === 1 ? ' is' : 's are'} not particle-1 answers under this cell id, or read context bytes the source arm's readers did not`, 'a particle-1 re-read sends the source arm\'s frozen contexts byte for byte under its own cell id (eval/runner/q1/reread-cell.ts)');
+  const plan: CampaignCell = { ...d.cell, cell_id: id, readers: [b.readers.particle], product_outcomes: undefined, judging: { by_reader: { [b.readers.particle]: b.judges[b.readers.particle] } } };
+  const by = byAnswerId(readNdjson<JudgmentRecord>(r, files.judgments));
+  return { ...row, not_run: null, values: readerValues(plan, scheduled, answers, a => judgedScore(plan, d.canonicalJudge, by.get(a.answer_id) ?? [], a.reader)) };
+}
+
+/** rs1-cost.json's rows, or null when the receipt has none; refuses a file at another VM rate or with an unusable dollar figure. */
+function rs1Cost(r: Reader, b: Rs1Block): Rs1CostRow[] | null {
+  const path = join(r.root, RS1_COST_FILE);
+  if (!existsSync(path)) return null;
+  const f = JSON.parse(readInput(r, path).toString('utf8')) as { schema?: string; vcpu_hour_usd?: number; rows?: Rs1CostRow[] };
+  const ok = f.schema === RS1_COST_SCHEMA && f.vcpu_hour_usd === b.cost.vcpu_hour_usd && Array.isArray(f.rows)
+    && f.rows.every(x => typeof x.cell_id === 'string' && typeof x.reader === 'string' && [x.ingest_usd_per_conversation, x.read_usd_per_question].every(v => Number.isFinite(v) && v >= 0));
+  if (!ok) throw invalid(r.root, `${RS1_COST_FILE} is not a ${RS1_COST_SCHEMA} file priced at $${b.cost.vcpu_hour_usd} per vCPU-hour with non-negative dollars on every row`, 'cost per correct answer divides metered dollars per arm and reader, with VM time at the preregistered rate, by graded accuracy');
+  return f.rows!;
+}
+
+/** RS1 mode: every row the block names, as verdict.ts reads it, through the frozen analysis. */
+function deriveRs1(r: Reader, campaign: CampaignManifest, data: Map<string, CellData>): Rs1Analysis {
+  const b = campaign.rs1!, set = campaign.sets.find(s => s.id === b.set)!;
+  const pre = new Set(set.exclusions.map(e => e.question_id));
+  const scheduled = set.scheduled.filter(q => !pre.has(q.question_id));
+  const rows: Record<string, Rs1Row> = {};
+  for (const id of [...b.families.flatMap(f => [f.subject, ...f.comparators]), ...b.descriptive]) {
+    const d = data.get(id)!, cell = d.cell;
+    const notRun = cell.status === 'not-run' ? `did not run: ${cell.not_run_reason}` : cell.status === 'invalid' ? 'is invalid' : null;
+    rows[id] = notRun ? { cell_id: id, system: cell.system, not_run: notRun, values: {}, judge_values: null, delivered: [] } : {
+      cell_id: id, system: cell.system, not_run: null,
+      values: readerValues(cell, scheduled, d.answers, a => judgedScore(cell, d.canonicalJudge, d.judgmentsOf.get(a.answer_id) ?? [], a.reader)),
+      judge_values: sensitivityValues(r, d, scheduled),
+      delivered: scheduled.map(q => d.rows.get(q.question_id)?.delivered_tokens?.[b.gate.encoding]).filter((x): x is number => typeof x === 'number'),
+    };
+    if (b.reread[id]) rows[b.reread[id]] = rereadRow(r, b, d, b.reread[id], scheduled, notRun);
+  }
+  return analyze({ block: b, scheduled, rows, cost: rs1Cost(r, b) });
 }
 
 // ─── Layers 2 to 4: cohorts, comparisons, families ──────────────────
@@ -649,11 +799,12 @@ export interface HeadlineRow {
 }
 
 export interface Scoreboard {
-  schema: typeof SCOREBOARD_SCHEMA; generator: string;
+  schema: typeof SCOREBOARD_SCHEMA | typeof SCOREBOARD_SCHEMA_RS1; generator: string;
   campaign: { id: string; hash: string; campaign_sha256: string; gbrain: CampaignManifest['gbrain']; measured: CampaignManifest['measured']; readers: string[] };
   inputs: Array<{ path: string; sha256: string }>;
   statistics: CampaignManifest['statistics'] & { method: string };
-  power: { family1: string; detectable_difference_points: number | null; shrunk_comparators: string[] | null; sha256: string };
+  /** power.json's decision; null in RS1 mode, which reads no power.json. */
+  power: { family1: string; detectable_difference_points: number | null; shrunk_comparators: string[] | null; sha256: string } | null;
   sets: Array<{ id: string; label: string; benchmark: string; role: CampaignSet['role']; exposure: Exposure; exposure_label: string; cluster_unit: string; clusters: number; scheduled: number; preregistered_exclusions: Array<{ question_id: string; reason: string }> }>;
   cells: CellAggregate[]; comparisons: Comparison[]; families: FamilyResult[];
   appendix: Array<CellAggregate & { appendix: string; reason: string }>;
@@ -674,6 +825,8 @@ export interface Scoreboard {
     /** The one line under the README headline: each headline system's confident-error and correct-abstention rates on the headline set (correct abstention only without a classifier). */
     headline: string;
   };
+  /** RS1 mode only (header): the frozen analysis's result (eval/runner/rs1/verdict.ts Rs1Analysis). */
+  rs1?: Rs1Analysis;
 }
 
 export function derivedColumns(c: DerivedCounts, classified = true): DerivedColumns {
@@ -839,9 +992,8 @@ export interface Derivation { scoreboard: Scoreboard; hedge: Array<{ cell_id: st
 
 export const derive = (receipt: string): Scoreboard => deriveAll(receipt).scoreboard;
 
-export function deriveAll(receipt: string): Derivation {
-  const { campaign, reader } = loadCampaign(receipt);
-  const classifier = campaign.hedge_classifier === HEDGE_NONE ? null : hedgeClassifier(campaign.hedge_classifier);
+/** power.json's Family 1 decision (plan §4.6) and the file's sha256. An RS1 campaign reads none: its verdicts take no power decision. */
+function readPower(receipt: string, reader: Reader): { decision: PowerReport['decision']; sha256: string } {
   const powerPath = join(receipt, 'power.json');
   const rerunPower: Partial<OperatorFix> = { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] };
   if (!existsSync(powerPath)) throw invalid(receipt, 'power.json is missing', 'Family 1 may claim only under the preregistered power result (plan §4.6)', rerunPower);
@@ -857,16 +1009,24 @@ export function deriveAll(receipt: string): Derivation {
   if (power.detectable_difference_points !== null && !(power.detectable_difference_points > 0)) throw invalid(receipt, `power.json records detectable_difference_points ${JSON.stringify(power.detectable_difference_points)}, not above zero`, 'a detectable difference is a positive number of points', rerunPower);
   if (power.family1 !== 'descriptive' && power.detectable_difference_points === null) throw invalid(receipt, `power.json records family1 ${power.family1} with no detectable difference`, 'power.ts ranks Family 1 only when its detectable difference is measured and within the threshold; with none it publishes S1 descriptively', rerunPower);
   if (power.family1 !== 'descriptive' && !(typeof power.threshold_points === 'number' && (power.detectable_difference_points ?? Infinity) <= power.threshold_points)) throw invalid(receipt, `power.json records family1 ${power.family1} with detectable difference ${power.detectable_difference_points} and threshold_points ${JSON.stringify(power.threshold_points ?? null)}, a ranking power.ts never writes`, 'power.ts ranks Family 1 only when its detectable difference is at or under the threshold it records (plan §4.6)', rerunPower);
+  return { decision: power, sha256: sha256(powerBuf) };
+}
+
+export function deriveAll(receipt: string): Derivation {
+  const { campaign, reader } = loadCampaign(receipt);
+  const classifier = campaign.hedge_classifier === HEDGE_NONE ? null : hedgeClassifier(campaign.hedge_classifier);
+  const powerRead = campaign.rs1 ? null : readPower(receipt, reader);
   const kindList = loadKinds();
   const kinds = new Map(kindList.map(k => [k.id, k.description]));
   const headSet = campaign.sets.find(s => s.role === 'headline')!;
   const data = new Map(campaign.cells.map(c => [c.cell_id, deriveCell(reader, campaign, c)]));
-  const ctx: Ctx = { campaign, data, kinds, power, headSet };
+  const power = powerRead?.decision;
+  const ctx: Ctx = { campaign, data, kinds, power: power!, headSet };
   const f1 = campaign.families.find(f => f.id === 'F1');
-  if (f1 && power.family1 === 'shrunk') {
+  if (f1 && power?.family1 === 'shrunk') {
     const systems = f1.comparators.map(c => data.get(c)!.cell.system).sort();
     const want = [...(power.shrunk_comparators ?? [])].sort();
-    if (systems.join() !== want.join()) throw invalid(receipt, `Family 1 compares ${systems.join(', ')}, but power.json's shrink rule kept ${want.join(', ') || 'no comparators yet'}`, 'when the power check shrinks Family 1, its comparators are the four strongest dev rows, fixed before any S1 cell runs', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--dev-strength', '<dev means json>', '--output', rel(powerPath)] });
+    if (systems.join() !== want.join()) throw invalid(receipt, `Family 1 compares ${systems.join(', ')}, but power.json's shrink rule kept ${want.join(', ') || 'no comparators yet'}`, 'when the power check shrinks Family 1, its comparators are the four strongest dev rows, fixed before any S1 cell runs', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--dev-strength', '<dev means json>', '--output', rel(join(receipt, 'power.json'))] });
   }
 
   const familyOf = (cellId: string, metric: Comparison['metric']): Comparison['family'] => {
@@ -874,7 +1034,7 @@ export function deriveAll(receipt: string): Derivation {
     return f ? f.id : null;
   };
   let comparisons: Comparison[] = [];
-  for (const set of campaign.sets) {
+  for (const set of campaign.rs1 ? [] : campaign.sets) {
     const groups = new Map<string, CampaignCell[]>();
     for (const c of campaign.cells.filter(x => x.set === set.id)) { const k = `${c.arm}|${c.budget}`; groups.set(k, [...(groups.get(k) ?? []), c]); }
     for (const cells of groups.values()) {
@@ -893,7 +1053,7 @@ export function deriveAll(receipt: string): Derivation {
     const members = f.comparators.map(c => comparisons.find(x => x.other === c && x.metric === metric)!);
     const adj = holmAdjusted(members.map(m => (m.claim_eligible && m.p !== null ? m.p : 1)));
     members.forEach((m, i) => { comparisons[comparisons.indexOf(m)] = { ...m, p_holm: r6(adj[i]) }; });
-    families.push({ id: f.id, label: f.label, metric, plan: f.id === 'F3' ? 'diagnostic' : f.id === 'F1' ? power.family1 : 'full', comparisons: members.map(m => m.id), verdict_stability: null });
+    families.push({ id: f.id, label: f.label, metric, plan: f.id === 'F3' ? 'diagnostic' : f.id === 'F1' ? ctx.power.family1 : 'full', comparisons: members.map(m => m.id), verdict_stability: null });
   }
   comparisons = comparisons.map(c => sentenceFor(ctx, c));
   const f1Result = families.find(f => f.id === 'F1');
@@ -1002,16 +1162,17 @@ export function deriveAll(receipt: string): Derivation {
   });
   const losses = comparisons.filter(c => c.metric === 'answer' && c.delta !== null && c.delta < 0 && c.ci95 && c.ci95[1] < 0).sort((a, b) => a.delta! - b.delta! || (a.id < b.id ? -1 : 1)).map(c => c.id);
   const f1c = comparisons.filter(c => c.family === 'F1');
-  const verdict = verdictSentence(ctx, f1c, field);
+  const rs1 = campaign.rs1 ? deriveRs1(reader, campaign, data) : null;
+  const verdict = rs1 ? rs1.ranking.sentence : verdictSentence(ctx, f1c, field);
   const pinText = campaign.pins.map(p => `\`${p.system}\` ${p.version}${p.latest_release && p.latest_release !== p.version ? ` (newer release available: ${p.latest_release})` : ''}`).join('; ');
   const staleness = `Measured ${campaign.measured.from} to ${campaign.measured.to} with gbrain ${campaign.gbrain.version} (\`${campaign.gbrain.commit.slice(0, 7)}\`)${pinText ? `; pinned systems: ${pinText}` : ''}.`;
 
   const scoreboard: Scoreboard = {
-    schema: SCOREBOARD_SCHEMA, generator: 'eval/runner/scoreboard.ts',
+    schema: rs1 ? SCOREBOARD_SCHEMA_RS1 : SCOREBOARD_SCHEMA, generator: 'eval/runner/scoreboard.ts',
     campaign: { id: campaign.campaign_id, hash: campaign.campaign_hash, campaign_sha256: reader.inputs.get('campaign.json')!, gbrain: campaign.gbrain, measured: campaign.measured, readers: campaign.readers },
     inputs: [...reader.inputs.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([path, h]) => ({ path, sha256: h })),
-    statistics: { ...campaign.statistics, method: 'headline set: restricted wild cluster bootstrap-t with Webb weights, two-sided, Holm within each family; public sets: cluster bootstrap interval and cluster sign-flip test, descriptive' },
-    power: { family1: power.family1, detectable_difference_points: power.detectable_difference_points, shrunk_comparators: power.shrunk_comparators, sha256: sha256(powerBuf) },
+    statistics: { ...campaign.statistics, method: rs1 ? `RS1 mode, eval/runner/rs1/verdict.ts: ${rs1.method}` : 'headline set: restricted wild cluster bootstrap-t with Webb weights, two-sided, Holm within each family; public sets: cluster bootstrap interval and cluster sign-flip test, descriptive' },
+    power: powerRead && { family1: powerRead.decision.family1, detectable_difference_points: powerRead.decision.detectable_difference_points, shrunk_comparators: powerRead.decision.shrunk_comparators, sha256: powerRead.sha256 },
     sets: campaign.sets.map(s => ({ id: s.id, label: s.label, benchmark: s.benchmark, role: s.role, exposure: s.exposure, exposure_label: EXPOSURE_LABELS[s.exposure], cluster_unit: s.cluster_unit, clusters: new Set(s.scheduled.map(q => q.conversation)).size, scheduled: s.scheduled.length, preregistered_exclusions: s.exclusions })),
     cells, comparisons, families, appendix, sensitivity_notes: campaign.sets.flatMap(s => (s.sensitivity ?? []).map(v => ({ set: s.id, ...v }))), field, verdict, headline,
     size_curve: { sets: curveSets.map(s => ({ id: s.id, label: s.label })), rows: curveRows },
@@ -1022,6 +1183,7 @@ export function deriveAll(receipt: string): Derivation {
       rule: !classifier ? 'replicate-0 answers of every promised reader with a scored canonical judgment; correct-abstention rate = abstention-question answers the canonical instrument passes (score at or above the pass threshold) / abstention-question answers; pooled sums counts over the system\'s head cells on every set; descriptive, no Holm family' : 'replicate-0 answers of every promised reader with a scored canonical judgment; wrong = canonical score below the pass threshold; confident-error rate = wrong answers the classifier calls confident / wrong answers; correct-abstention rate = abstention-question answers the canonical instrument passes / abstention-question answers; false-abstention rate = answers to questions with gold evidence the classifier calls abstain / those answers; pooled sums counts over the system\'s head cells on every set; descriptive, no Holm family',
       systems: derivedSystems, headline: derivedLine,
     },
+    ...(rs1 ? { rs1 } : {}),
   };
   return { scoreboard, hedge: !classifier ? [] : campaign.cells.filter(c => c.status !== 'not-run').map(c => ({ cell_id: c.cell_id, text: data.get(c.cell_id)!.hedgeLines })) };
 }
@@ -1052,13 +1214,53 @@ const money = (x: number | null) => (x === null ? 'not measured' : `$${x.toFixed
 const ms = (x: number | null) => (x === null ? 'not measured' : x >= 1000 ? `${(x / 1000).toFixed(1)} s` : `${Math.round(x)} ms`);
 const cellText = (s: string) => s.replace(/\|/g, '\\|');
 
+const RS1_TABLE_HEAD = [`| Kind and configuration | Arm | Reader | Graded accuracy | Scored | ${COST_READS.map(r => `Cost per correct answer, R = ${r}`).join(' | ')} |`, `|---|---|---|---|---|${COST_READS.map(() => '---|').join('')}`];
+
+/** RS1 mode's headline (header, "RS1 mode"): the verdict lines, the first table (Opus and particle-1, with cost per correct answer), then Sol's. A row's configuration is its cell's, and its arm the rest of its cell id (rs1.<kind>.<configuration>.<arm>). */
+function rs1Headline(sb: Scoreboard): string[] {
+  const rs1 = sb.rs1!;
+  const usd = (x: number | null) => (x === null ? 'no correct answers' : `$${x.toFixed(x < 1 ? 3 : 2)}`);
+  const build = (id: string) => { const { configuration } = sb.cells.find(c => c.cell_id === id)!; return `${configuration} | ${id.slice(id.lastIndexOf(`.${configuration}.`) + configuration.length + 2)}`; };
+  const row = (t: Rs1TableRow) => `| \`${t.system}\` ${build(t.cell_id)} | ${t.reader} | ${t.not_run ? cellText(t.not_run) : t.accuracy === null ? 'no scored answers' : pct(t.accuracy)} | ${t.scored}/${t.scheduled} | ${(t.cost?.map(c => usd(c.usd)) ?? COST_READS.map(() => 'not measured')).join(' | ')} |`;
+  const later = new Set(rs1.families[0].readers.slice(1));
+  return [
+    rs1.lines[0], '', ...rs1.lines.slice(1).map(l => `- ${l}`), '',
+    'Graded accuracy per reader, and cost per correct answer: (ingest dollars per conversation / R + read dollars per question) / graded accuracy, at R reads per stored conversation. The primary readers first:', '',
+    ...RS1_TABLE_HEAD, ...rs1.table.filter(t => !later.has(t.reader)).map(row), '', `Then ${[...later].join(', ')}:`, '', ...RS1_TABLE_HEAD, ...rs1.table.filter(t => later.has(t.reader)).map(row),
+  ];
+}
+
+/** RS1 mode's report sections: each family's comparisons, the delivered-context gate and the judge-sensitivity block. */
+function rs1Report(rs1: Rs1Analysis): string[] {
+  const n = (x: number | null, f: (x: number) => string) => (x === null ? 'n/a' : f(x));
+  const signed = (x: number) => `${x < 0 ? '-' : '+'}${Math.abs(x).toFixed(1)}`;
+  const span = (i: [number, number] | null) => (i ? `${signed(i[0])} to ${signed(i[1])}` : 'n/a');
+  const level = (x: number) => `${Number((100 * x).toFixed(2))}%`;
+  const tokens = (x: number) => Math.round(x).toLocaleString('en-US');
+  const out = ['', '## RS1 verdicts', '', `The frozen analysis, \`${RS1_VERDICT_PATH}\` at sha256 \`${rs1.verdict_sha256}\`${rs1.amendments ? ` (after ${rs1.amendments} dated amendment${rs1.amendments === 1 ? '' : 's'})` : ''}: ${rs1.method}.`];
+  for (const f of rs1.families) {
+    out.push('', `### ${f.group === 'counted' ? `Family ${f.id}` : `particle-1 family ${f.id}, reported apart and never part of the ranking`}`, '', `Readers ${f.readers.join(', ')}; ${level(f.level)} intervals; level within ±${f.margin} points.`, '',
+      '| Comparison | Difference (points) | Interval | p | Holm p | Paired questions | Conversations | Outcome |', '|---|---|---|---|---|---|---|---|');
+    for (const c of f.comparisons) out.push(`| \`${c.system}\` | ${n(c.estimate, signed)} | ${span(c.interval)} | ${n(c.p, x => x.toFixed(4))} | ${n(c.p_holm, x => x.toFixed(4))} | ${c.paired}/${c.scheduled} | ${c.conversations} | ${c.outcome}${c.why ? `: ${cellText(c.why)}` : ''} |`);
+  }
+  out.push('', '## Delivered context of the 8k rows', '', `Delivered context per question in ${GATE.encoding} tokens. A family A comparison whose subject or comparator has a mean or nearest-rank p95 outside ${GATE.low.toLocaleString('en-US')} to ${GATE.high.toLocaleString('en-US')} is descriptive.`, '',
+    '| Cell | System | Rows | Mean | p95 | Within the gate |', '|---|---|---|---|---|---|');
+  for (const g of rs1.gate) out.push(`| \`${g.cell_id}\` | \`${g.system}\` | ${g.rows} | ${n(g.mean, tokens)} | ${n(g.p95, tokens)} | ${g.not_run ? cellText(g.not_run) : g.pass ? 'yes' : 'no'} |`);
+  const s = rs1.judge_sensitivity;
+  const est = (e: Rs1Estimate) => `${e.estimate === null ? cellText(e.why ?? 'n/a') : signed(e.estimate)} | ${span(e.interval)} | ${e.paired}`;
+  out.push('', '## Judge sensitivity', '', `Descriptive only: on the ${s.conversations} conversation positions chosen by seed before minting, each family A and B comparison under the counted judges and under \`${s.judge}\`, at the family's interval level.`, '',
+    `| Comparison | Counted judges (points) | Interval | Paired | ${s.judge} (points) | Interval | Paired |`, '|---|---|---|---|---|---|---|');
+  for (const c of s.comparisons) out.push(`| \`${c.id}\` | ${est(c.counted)} | ${est(c.judge)} |`);
+  return out;
+}
+
 /** The README block: verdict, six-column headline table, size curve, losses, disclosures, staleness. `base` is the receipt path relative to the target file. */
 export function renderHeadline(sb: Scoreboard, base: string, tables: string | null = null): string {
   const head = sb.sets.find(s => s.role === 'headline')!;
-  const lines = [sb.verdict, '', `| Kind and configuration | ${head.label} accuracy at 8k, three-reader mean | Dollars per month, personal agent | p50 answer latency | Write to queryable, p50 | Receipt |`, '|---|---|---|---|---|---|'];
-  for (const r of sb.headline) lines.push(`| ${cellText(r.label)} | ${cellText(r.accuracy)} | ${money(r.personal_month_usd)} | ${ms(r.latency_p50_ms)} | ${ms(r.write_to_queryable_p50_ms)} | ${r.receipt ? `[cell](${tables ? `${tables}#cells` : `${base}/${r.receipt}`})` : 'none'} |`);
-  lines.push('', sb.derived.headline);
-  if (sb.size_curve.sets.length) {
+  const lines = sb.rs1 ? rs1Headline(sb) : [sb.verdict, '', `| Kind and configuration | ${head.label} accuracy at 8k, three-reader mean | Dollars per month, personal agent | p50 answer latency | Write to queryable, p50 | Receipt |`, '|---|---|---|---|---|---|'];
+  if (!sb.rs1) for (const r of sb.headline) lines.push(`| ${cellText(r.label)} | ${cellText(r.accuracy)} | ${money(r.personal_month_usd)} | ${ms(r.latency_p50_ms)} | ${ms(r.write_to_queryable_p50_ms)} | ${r.receipt ? `[cell](${tables ? `${tables}#cells` : `${base}/${r.receipt}`})` : 'none'} |`);
+  if (!sb.rs1) lines.push('', sb.derived.headline);
+  if (!sb.rs1 && sb.size_curve.sets.length) {
     lines.push('', `| System | ${sb.size_curve.sets.map(s => s.label).join(' | ')} |`, `|---|${sb.size_curve.sets.map(() => '---|').join('')}`);
     for (const r of sb.size_curve.rows) lines.push(`| ${cellText(r.label)} | ${r.values.map(cellText).join(' | ')} |`);
   }
@@ -1108,19 +1310,21 @@ export function renderReport(sb: Scoreboard, base = '.', tables: string | null =
     for (const x of s.sets) out.push(`| \`${s.system}\` | ${x.set} | \`${x.cell}\` | ${dcols(x)} |`);
     if (s.sets.length > 1) out.push(`| \`${s.system}\` | all sets, pooled | | ${dcols(s.pooled)} |`);
   }
+  if (sb.rs1) out.push(...rs1Report(sb.rs1));
   for (const f of sb.families) {
     out.push('', `## Family ${f.id}: ${f.label}`, '', `Plan: ${f.plan}. Metric: ${f.metric}. Holm within the family.${f.verdict_stability !== null ? ` Verdict stability over judge runs: ${pct(f.verdict_stability)}.` : ''}`, '');
     out.push('| Comparison | gbrain-defaults | Other | Difference (points) | 95% interval | p | Holm p | Cohort | Conversations | Bounds (points) | Outcome |', '|---|---|---|---|---|---|---|---|---|---|---|');
     for (const id of f.comparisons) out.push(comparisonRow(sb.comparisons.find(c => c.id === id)!));
   }
-  out.push('', '## Descriptive comparisons', '', '| Comparison | gbrain-defaults | Other | Difference (points) | 95% interval | p | Holm p | Cohort | Conversations | Bounds (points) | Outcome |', '|---|---|---|---|---|---|---|---|---|---|---|');
+  if (!sb.rs1) out.push('', '## Descriptive comparisons', '', '| Comparison | gbrain-defaults | Other | Difference (points) | 95% interval | p | Holm p | Cohort | Conversations | Bounds (points) | Outcome |', '|---|---|---|---|---|---|---|---|---|---|---|');
   for (const c of sb.comparisons.filter(x => !x.family)) out.push(comparisonRow(c));
-  out.push('', '## Claim sentences', '');
+  if (!sb.rs1) out.push('', '## Claim sentences', '');
   for (const c of sb.comparisons) out.push(`- \`${c.id}\`: ${c.sentence}`);
   out.push('', '## Exclusions', '');
   const byReason = (xs: Array<{ reason: string }>) => [...xs.reduce((m, x) => m.set(x.reason, (m.get(x.reason) ?? 0) + 1), new Map<string, number>())].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).map(([r, n]) => `${n} ${r}`).join('; ');
   out.push('Counts by reason; question ids stay in the receipt.', '');
   for (const c of sb.comparisons.filter(x => x.cohort?.excluded.length)) out.push(`- \`${c.id}\` (${c.cohort!.excluded.length}): ${byReason(c.cohort!.excluded)}`);
+  for (const c of sb.rs1?.families.flatMap(f => f.comparisons).filter(x => x.excluded.length) ?? []) out.push(`- \`${c.id}\` (${c.excluded.reduce((s, x) => s + x.count, 0)}): ${c.excluded.map(x => `${x.count} ${x.reason}`).join('; ')}`);
   for (const s of sb.sets.filter(x => x.preregistered_exclusions.length)) out.push(`- ${s.label}, preregistered (${s.preregistered_exclusions.length}): ${byReason(s.preregistered_exclusions)}`);
   if (sb.appendix.length) {
     for (const kind of [...new Set(sb.appendix.map(a => a.appendix))]) {

@@ -43,6 +43,11 @@
  * redo judgments: each arm gets the records for its own answers in frontier-redo.ndjson, which the scoreboard uses in
  * place of the logged error under the same key. A source with `reuse_check` (rows measured at an earlier commit and
  * reused in a later run) publishes only when eval/runner/q1/reuse-check.ts passes for every system it lists.
+ *
+ * An RS1 publication (GST-1154) carries `rs1`, the frozen analysis block (eval/runner/rs1/verdict.ts Rs1Block), and
+ * copies it into campaign.json, which puts the scoreboard in RS1 mode: no Q1 families and no power.json, aggregates only.
+ * Each particle-1 re-read the block names is copied into cells/<re-read id>/ from the `rereads` directories under
+ * --results, which hold eval/runner/q1/reread-cell.ts outputs; one that none of them holds is published as not run.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -54,6 +59,7 @@ import type { AppendixCell, CampaignCell, CampaignFamily, CampaignManifest, Camp
 import { scoreboardCampaignCell, selectCellQuestions, splitConversations } from './cell.ts';
 import { loadManifest, MANIFEST_PATH, type ArmDefinition, type CellDefinition, type Manifest } from './cells/definitions.ts';
 import { reuseCheck } from './reuse-check.ts';
+import type { Rs1Block } from '../rs1/verdict.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 const PUBLIC_CORPUS = new Set(['locomo', 'lme-s', 'lme-m']);
@@ -109,6 +115,10 @@ export interface Publication {
   headline_set?: string;
   /** GBrain arm cell ids published as their set's anchor and headline row, for manifests whose arms mark none (F6's preregistered arm P). */
   anchors?: string[];
+  /** RS1: the frozen analysis block, copied into campaign.json `rs1` (scoreboard RS1 mode); needs published.aggregates_only. */
+  rs1?: Rs1Block;
+  /** RS1: directories under --results holding eval/runner/q1/reread-cell.ts outputs (cells/<re-read id>/), searched for the block's re-reads. */
+  rereads?: string[];
 }
 
 type GbrainBuild = Pick<CampaignManifest['gbrain'], 'commit' | 'version' | 'date'>;
@@ -212,6 +222,7 @@ export function loadFrontierRedo(paths: string[]): string[] {
 
 export function assemble(config: Publication, results: string, out: string, trees: string, opts: AssembleOptions = {}): CampaignManifest {
   const preview = !!opts.preview;
+  if (config.rs1 && !config.published.aggregates_only) throw new Error('an RS1 publication is aggregates only (published.aggregates_only: true): the sealed receipt stays in custody');
   if (opts.custody && !process.env.GBRAIN_EVALS_CUSTODY_LOG) throw new Error('--custody schedules the sealed sets from their corpora; set GBRAIN_EVALS_CUSTODY_LOG on the custodian host');
   const m = publicationManifest(config.cells);
   for (const p of [config.pins, ...config.sources.map(s => s.pins ?? {})]) if (p['gbrain-defaults']) throw new Error('publication.json writes a gbrain-defaults pin by hand; the GBrain label comes from its gbrain build (publish.ts gbrainBuildLabel)');
@@ -341,10 +352,10 @@ export function assemble(config: Publication, results: string, out: string, tree
   const head = sets.find(s => s.role === 'headline')!;
   const s1 = cells.filter(c => c.set === head.id);
   const f1Anchor = s1.find(c => c.system === 'gbrain-defaults' && c.arm === 'component' && c.budget === 8000 && c.anchor);
-  if (!f1Anchor) throw new Error(`no gbrain-defaults 8k component cell on ${head.id} is marked anchor; name the preregistered headline arm in publication.json anchors`);
+  if (!f1Anchor && !config.rs1) throw new Error(`no gbrain-defaults 8k component cell on ${head.id} is marked anchor; name the preregistered headline arm in publication.json anchors`);
   const f2Anchor = s1.find(c => c.system === 'gbrain-defaults' && c.arm === 'whole-system' && c.anchor);
   const f1 = s1.filter(c => c.system !== 'gbrain-defaults' && c.arm === 'component' && c.budget === 8000).map(c => c.cell_id);
-  const families: CampaignFamily[] = [
+  const families: CampaignFamily[] = config.rs1 || !f1Anchor ? [] : [
     { id: 'F1', label: `${head.label}, 8k component rows, answers`, anchor: f1Anchor.cell_id, comparators: f1 },
     ...(f2Anchor ? [{ id: 'F2' as const, label: `${head.label}, whole-system rows, answers`, anchor: f2Anchor.cell_id, comparators: s1.filter(c => c.system !== 'gbrain-defaults' && c.arm === 'whole-system').map(c => c.cell_id) }] : []),
     { id: 'F3', label: `${head.label}, 8k component rows, strict recall of all gold sessions at 10 (diagnostic)`, anchor: f1Anchor.cell_id, comparators: f1 },
@@ -357,9 +368,15 @@ export function assemble(config: Publication, results: string, out: string, tree
     ...(retired.length ? { retired: retired.map(r => ({ system: r.system, reason: r.reason, subset: { sets: r.sets, conversations: r.conversations, label: r.subset.label, reason: r.subset.reason } })) } : {}),
     pins: Object.entries(pins).filter(([k]) => listed.some(c => c.system === k) && k.startsWith('ext-')).map(([system, version]) => ({ system, version, latest_release: null })),
     release_assets: [], ...(preview ? {} : config.published.aggregates_only ? { tables: config.render_targets.find(x => x.endsWith('/scoreboard.md')) } : { receipt_base: config.published.url }), disclosures: [...(preview ? [PREVIEW_DISCLOSURE] : []), `GBrain rows measure ${label}. ${config.gbrain.footnote}`, ...config.disclosures], render_targets: preview ? [] : config.render_targets,
+    ...(config.rs1 ? { rs1: config.rs1 } : {}),
   };
+  for (const id of Object.values(config.rs1?.reread ?? {})) {
+    const found = (config.rereads ?? []).map(d => join(results, d, 'cells', id)).filter(p => existsSync(join(p, 'receipt.json')));
+    if (found.length > 1) throw new Error(`re-read ${id} is in ${found.length} of publication.json's rereads directories; list the one that holds its final answers`);
+    if (found.length) cpSync(found[0], join(out, 'cells', id), { recursive: true });
+  }
   writeFileSync(join(out, 'campaign.json'), JSON.stringify(campaign, null, 2) + '\n');
-  cpSync(join(REPO_ROOT, 'docs/benchmarks/2026-10-06-scoreboard/power.json'), join(out, 'power.json'));
+  if (!config.rs1) cpSync(join(REPO_ROOT, 'docs/benchmarks/2026-10-06-scoreboard/power.json'), join(out, 'power.json'));
   return campaign;
 }
 

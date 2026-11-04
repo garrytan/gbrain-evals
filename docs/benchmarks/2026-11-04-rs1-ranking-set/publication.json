@@ -1,0 +1,164 @@
+{
+  "campaign_id": "q1-scoreboard-rs1-ranking-set",
+  "campaign_hash": null,
+  "published": {
+    "branch": "evals/q1-scoreboard-results",
+    "path": "published/q1-scoreboard-rs1-ranking-set",
+    "url": "https://github.com/garrytan/gbrain-evals/tree/evals/q1-scoreboard-results/published/q1-scoreboard-rs1-ranking-set",
+    "commit": null,
+    "sha256": null,
+    "aggregates_only": true
+  },
+  "gbrain": {
+    "commit": "62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+    "version": "0.60.557.0",
+    "date": "2026-11-03",
+    "resolved_search_mode": "tokenmax",
+    "footnote": "That was the repository pin when RS1 was frozen (2026-11-04); later releases are not measured here. The 8,000-token gbrain row is arm P and the whole-system row is gbrain think on the same brain, both fixed by the RS1 preregistration before any conversation was minted."
+  },
+  "hedge_classifier": "none",
+  "statistics": {
+    "alpha": 0.05,
+    "draws": 9999,
+    "descriptive_draws": 9999,
+    "seed": 20261103
+  },
+  "pending": [],
+  "not_run_reason": "pending: RS1 runs after this freeze, under the preregistration",
+  "cells": [
+    "eval/runner/q1/cells/rs1-cells.json"
+  ],
+  "headline_set": "RS1",
+  "anchors": [
+    "rs1.gbrain-defaults.rs1-master.p"
+  ],
+  "sources": [],
+  "sensitivity": [],
+  "not_run": {},
+  "product_outcomes": [],
+  "retired": [],
+  "pins": {
+    "baseline-none": "harness baseline",
+    "baseline-hybrid": "harness baseline",
+    "baseline-file-agent": "harness baseline",
+    "ext-memory-bank": "bundle recipe-1.1, lock 15d765bf, capabilities 01771c3e",
+    "ext-temporal-graph": "bundle shipped-0.31, lock de6585d0, capabilities 2c8fd392"
+  },
+  "disclosures": [
+    "gbrain is Garry Tan's own project.",
+    "Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.",
+    "Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1."
+  ],
+  "render_targets": [
+    "docs/benchmarks/2026-11-04-rs1-ranking-set/scoreboard.md"
+  ],
+  "rereads": [],
+  "rs1": {
+    "verdict_sha256": "9ad0898002e5169c270d2b973981713506856f66190d73b2d6ef0a9e782cce63",
+    "amendments": [],
+    "size": "N",
+    "set": "RS1",
+    "statistics": {
+      "draws": 9999,
+      "seed": 20261103,
+      "weights": "webb"
+    },
+    "families": [
+      {
+        "id": "A",
+        "subject": "rs1.gbrain-defaults.rs1-master.p",
+        "comparators": [
+          "rs1.ext-extract-first.common.component-b8000",
+          "rs1.ext-memory-bank.recipe-1.1.component-b8000",
+          "rs1.ext-temporal-graph.shipped-0.31.component-b8000"
+        ],
+        "interval_level": 0.9833333333333333,
+        "margin_points": 3.5
+      },
+      {
+        "id": "B",
+        "subject": "rs1.gbrain-defaults.rs1-master.whole-think",
+        "comparators": [
+          "rs1.baseline-file-agent.baseline.whole-agent"
+        ],
+        "interval_level": 0.95,
+        "margin_points": 4.1
+      }
+    ],
+    "descriptive": [
+      "rs1.baseline-hybrid.baseline.component-b8000",
+      "rs1.baseline-none.baseline.component-b8000"
+    ],
+    "readers": {
+      "counted": [
+        "anthropic:claude-opus-5-5",
+        "openai:gpt-6.1-sol"
+      ],
+      "particle": "particle:particle-1"
+    },
+    "judges": {
+      "anthropic:claude-opus-5-5": [
+        "openai:gpt-4.1-mini"
+      ],
+      "openai:gpt-6.1-sol": [
+        "anthropic:claude-haiku-5-5"
+      ],
+      "particle:particle-1": [
+        "openai:gpt-4.1-mini",
+        "anthropic:claude-haiku-5-5"
+      ]
+    },
+    "reread": {
+      "rs1.gbrain-defaults.rs1-master.p": "rs1.gbrain-defaults.rs1-master.p.reread-particle-particle-1",
+      "rs1.ext-extract-first.common.component-b8000": "rs1.ext-extract-first.common.component-b8000.reread-particle-particle-1",
+      "rs1.ext-memory-bank.recipe-1.1.component-b8000": "rs1.ext-memory-bank.recipe-1.1.component-b8000.reread-particle-particle-1",
+      "rs1.ext-temporal-graph.shipped-0.31.component-b8000": "rs1.ext-temporal-graph.shipped-0.31.component-b8000.reread-particle-particle-1",
+      "rs1.baseline-hybrid.baseline.component-b8000": "rs1.baseline-hybrid.baseline.component-b8000.reread-particle-particle-1",
+      "rs1.baseline-none.baseline.component-b8000": "rs1.baseline-none.baseline.component-b8000.reread-particle-particle-1"
+    },
+    "gate": {
+      "budget": 8000,
+      "encoding": "cl100k_base",
+      "low": 7200,
+      "high": 8800
+    },
+    "sensitivity": {
+      "judge": "gemini:gemini-3.8-flash",
+      "seed": "rs1-sensitivity",
+      "share": 0.3,
+      "conversations": [
+        "rs1-001",
+        "rs1-002",
+        "rs1-003",
+        "rs1-006",
+        "rs1-007",
+        "rs1-008",
+        "rs1-011",
+        "rs1-013",
+        "rs1-022",
+        "rs1-023",
+        "rs1-025",
+        "rs1-026",
+        "rs1-031",
+        "rs1-036",
+        "rs1-038",
+        "rs1-040",
+        "rs1-046",
+        "rs1-057",
+        "rs1-060",
+        "rs1-061",
+        "rs1-069",
+        "rs1-072",
+        "rs1-075"
+      ]
+    },
+    "cost": {
+      "reads": [
+        1,
+        20,
+        200
+      ],
+      "vcpu_hour_usd": 0.05
+    }
+  }
+}
