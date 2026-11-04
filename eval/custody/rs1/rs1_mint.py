@@ -27,8 +27,11 @@ Gap checks: BEAM's question and answer steps call the model inside loops that
 swallow any Exception (src/beam/main.py:1531 and 2079), so a transient error
 that outlasts the client's resend loses output without stopping the step. Each
 of those steps compares what BEAM wrote with what it was asked to write and
-fails with counts only when they differ. 'check-gaps --out <dir>' runs the same
-checks over an existing mint's finished steps. Every other model call BEAM makes
+fails with counts only when they differ. The answer step also fails a batch
+during which any model call raised: BEAM retries nothing there, so a swallowed
+error can lose a follow-up or a summary and leave no gap in the output.
+'check-gaps --out <dir>' runs the output checks over an existing mint's finished
+steps. Every other model call BEAM makes
 here (plan: profile_creation.py:116, main.py:543, 799 and 989; probe: main.py
 2160, 2330 and 2478) sits outside any try, so an error stops the step.
 """
@@ -261,17 +264,23 @@ class Manifest:
 
 
 class Usage:
-    """Counts-only usage, appended per model call so a crashed step's calls still count."""
+    """Counts-only usage, appended per model call so a crashed step's calls still count, and the number of model calls
+    that raised (in memory only), which the answer step reads per batch."""
 
     def __init__(self, path):
         self.path = path
         self.lock = threading.Lock()
+        self.errors = 0
         path.parent.mkdir(parents=True, exist_ok=True)
 
     def record(self, model, input_tokens, output_tokens):
         line = json.dumps({"model": model, "input_tokens": int(input_tokens or 0), "output_tokens": int(output_tokens or 0)})
         with self.lock, open(self.path, "a", encoding="utf-8") as f:
             f.write(line + "\n")
+
+    def record_error(self):
+        with self.lock:
+            self.errors += 1
 
     def totals(self):
         t = {"calls": 0, "input_tokens": 0, "output_tokens": 0}
@@ -337,6 +346,7 @@ class RecordingModel:
         try:
             reply = self.inner.invoke(value, **kwargs)
         except Exception as error:
+            self.usage.record_error()
             status = refusal_status(error)
             if status is None:
                 raise
@@ -928,8 +938,10 @@ def step_question(ctx, attempt, usage):
 def step_answer(ctx, attempt, usage):
     """BEAM's answer_generation (main.py:1775), one batch per call. Each call resumes from chat.pickle as BEAM's own
     resume does (main.py:1799-1804) and gets the user messages up to the next batch only, so it answers that batch and
-    stops. A batch that fails the gap check is cut from chat.pickle and the step fails, so a rerun regenerates that batch
-    and keeps every batch before it, and no batch is answered after a damaged one."""
+    stops. A batch that fails the gap check, or during which any model call raised, is cut from chat.pickle and the step
+    fails, so a rerun regenerates that batch and keeps every batch before it, and no batch is answered after a damaged
+    one. BEAM's answer step retries no call, so every error it swallowed lost something, even where the output shows no
+    gap: a follow-up whose user turn or yes/no check failed, or a summary that fell back to a placeholder."""
     if ctx.mode == "fake":
         write_json(ctx.beam_chat / "chat_raw.json", fake_chat(ctx.key))
         usage.record("fake", 90000, 60000)
@@ -949,13 +961,14 @@ def step_answer(ctx, attempt, usage):
     try:
         for b in range(intact, len(questions)):
             write_pickle(partial, questions[:b + 1])
+            errors = usage.errors
             beam.main.answer_generation(input_address=str(partial), output_address=str(chat_path),
                                         plans_address=str(ctx.beam_chat / "plan_new.pickle"),
                                         topic=f"{topic['category']} -> {topic['title']}",
                                         theme=f"{topic['theme']} -> {', '.join(topic['subtopics'])}", llm=model)
             chat = read_pickle(chat_path)
-            gaps = answer_gaps(questions[:b + 1], chat)
-            if gaps["gap_batches"]:
+            gaps = {**answer_gaps(questions[:b + 1], chat), "model_errors": usage.errors - errors}
+            if gaps["gap_batches"] or gaps["model_errors"]:
                 write_pickle(chat_path, chat[:b])
                 raise StepFailure(f"answer batch {b + 1} of {len(questions)} lost output to a swallowed error: "
                                   f"{gap_text(gaps)}; chat.pickle is cut back to {b} intact batches")

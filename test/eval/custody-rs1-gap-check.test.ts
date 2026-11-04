@@ -171,6 +171,7 @@ if scenario.startswith("answer-"):
         "answer-drop": {"question 2-3": 503},
         "answer-empty": {"question 2-5": "empty"},
         "answer-unanswered": {"answer to " + SECRET + " reply to follow-up to " + SECRET + " question 1-4": 429},
+        "answer-followup": {"follow-up to " + SECRET + " question 1-4": 429},
         "answer-missing": {"question 3-%d" % i: 502 for i in range(6)},
     }[scenario]
     inner = Inner(faults)
@@ -229,7 +230,7 @@ describe('rs1_mint.py answer-step gap check', () => {
   test('a swallowed 503 drops a question: the step fails with counts only, cuts chat.pickle back, and a rerun regenerates that batch alone', () => {
     const s = scenario('answer-drop');
     expect(s.err).toBe('rs1-mint refused: answer batch 2 of 3 lost output to a swallowed error: batches=2/2 intact_batches=1 '
-      + 'gap_batches=2 missing=0 dropped=1 unmatched=0 unanswered=0 empty=0; chat.pickle is cut back to 1 intact batches\n');
+      + 'gap_batches=2 missing=0 dropped=1 unmatched=0 unanswered=0 empty=0 model_errors=1; chat.pickle is cut back to 1 intact batches\n');
     expect(s.result).toEqual({
       code: 1, batches: 1, prompted: [1, 2], done: null, partial_left: false,
       resume: { code: 0, prompted: [2, 3], batches: 3, done: 'done', kept_batch_1: true, recorded: true, ids_in_order: true, gaps: [] },
@@ -248,6 +249,14 @@ describe('rs1_mint.py answer-step gap check', () => {
       expect(s.err).toContain(`cut back to ${kept} intact batches`);
       expect(s.out.join('\n') + s.err).not.toContain(SECRET);
     }
+  });
+
+  test('a swallowed error that leaves no gap in the output, here a follow-up whose user turn failed, still fails the batch', () => {
+    const s = scenario('answer-followup');
+    expect(s.result).toEqual({ code: 1, batches: 0, prompted: [1], done: null, partial_left: false });
+    expect(s.err).toBe('rs1-mint refused: answer batch 1 of 3 lost output to a swallowed error: batches=1/1 intact_batches=1 '
+      + 'gap_batches=none missing=0 dropped=0 unmatched=0 unanswered=0 empty=0 model_errors=1; chat.pickle is cut back to 0 intact batches\n');
+    expect(s.out.join('\n') + s.err).not.toContain(SECRET);
   });
 });
 
