@@ -289,8 +289,8 @@ agent's context in 0 of 100 permission runs; files do in 100, and plain Postgres
 - The head-to-head scoreboard measured gbrain `f05943e6` (v0.60.138.0); none of its gbrain rows has been rerun at the
   pin.
 - No sealed set here is big enough to rank gbrain among the memory servers. BEAM-10M detects only differences of about
-  13.6 points, and on BEAM-1M sealed, F6's 4.8-point lead for gbrain `0ccf2bdd` over an extract-first memory server
-  comes from 24 conversations, which describe the systems but can't rank them. The sealed ranking set built for this
+  13.6 points, and on BEAM-1M sealed, F6's 24 conversations put gbrain `0ccf2bdd` 1.4 to 9.3 points above four external
+  systems at 8,000 tokens, which describes them but can't rank them. The sealed ranking set built for this
   (RS1) stopped at stage 0 on November 4, 2026: one conversation costs $40.63 to mint and validate ($28.85 when
   generation stops at BEAM's truncation point), the full 75-conversation design about $8,200 all-in, and a version
   inside the $2,000 limit per eval would detect only about 6.5 to 7.7 points
