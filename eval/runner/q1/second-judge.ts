@@ -196,7 +196,7 @@ if (import.meta.main) {
     const outs = many('--out');
     if (!outs.length) { console.error(`usage: ${FRONT.join(' ')} summary --out <dir>...`); process.exit(2); }
     try {
-      process.stdout.write(renderSecondJudge(outs.flatMap(o => readdirSync(join(resolve(o), 'cells')).filter(d => d.endsWith('.second-judge')).map(d => JSON.parse(readFileSync(join(resolve(o), 'cells', d, 'receipt.json'), 'utf8')) as Receipt))));
+      process.stdout.write(renderSecondJudge(outs.flatMap(o => readdirSync(join(resolve(o), 'cells')).sort().filter(d => d.endsWith('.second-judge')).map(d => JSON.parse(readFileSync(join(resolve(o), 'cells', d, 'receipt.json'), 'utf8')) as Receipt))));
     } catch (e) { console.error((e as Error).message); process.exit(2); }
     process.exit(0);
   }
