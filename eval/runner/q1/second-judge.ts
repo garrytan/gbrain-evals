@@ -6,7 +6,7 @@
  * judges use (`<instrument>@openai:gpt-6.1-sol`). OpenAI grades neither reader's rows (GST-767).
  *
  *   bun eval/runner/q1/second-judge.ts --cell <source cell id> --arm <arm id> [--manifest q1|f6] --root <cell output>... --out <dir>
- *     --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--keyless-upstream <url>]
+ *     --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--concurrency <n>] [--keyless-upstream <url>]
  *   bun eval/runner/q1/second-judge.ts summary --out <dir>...
  *
  * --root takes particle-addon-report.ts's roots (the re-read's --out and the frontier cell's output), and the cell is
@@ -16,9 +16,11 @@
  * answers on the questions both have in their canonical denominators (the set's exclusions left out) whose outcome a
  * judge scores; a product failure scores 0 under both judges and sends nothing.
  *
- * Judging (runSecondJudge) is cell.ts's frontier judging: judgeAnswer at the judge's default effort on the `judge` slot
- * through the in-process lease proxy, replicate 0, one answer at a time. A budget refusal stops the run (partial) and a
- * resume skips judged answers. A6 takes the second judge's dollars from the re-read ceiling, so the lease is the
+ * Judging (runSecondJudge) is cell.ts's frontier judging, judgeAnswer at the judge's default effort and replicate 0 on
+ * the `judge` slot through the in-process lease proxy, with --concurrency answers in flight (default 8; one rubric
+ * request takes gpt-6.1-sol about 12 s, and a BEAM cell asks some 6,000). Each pass binds the slot once, around all
+ * of its answers, so the slot's routing and metering key never change while requests are in flight; meters.ndjson has
+ * one line per pass. A budget refusal stops new answers (partial) and a resume skips judged answers. A6 takes the second judge's dollars from the re-read ceiling, so the lease is the
  * re-read ledger's and openRereadLease refuses one that would pass --ledger-cap-usd. Output:
  * `--out/cells/<arm cell id>.second-judge/` with judgments.ndjson and receipt.json, whose comparison holds particle-1
  * minus Opus under each judge over the questions both judges scored for both readers, with the report's seed,
@@ -37,7 +39,7 @@ import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../metering-proxy
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { clusteredPairedDelta } from '../stats/paired.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
-import { custodyGate, devOnly, findCell, frontierInstrumentId, JUDGED, metering, needsCustody, onSlot, type MeterLine } from './cell.ts';
+import { custodyGate, devOnly, findCell, frontierInstrumentId, JUDGED, metering, needsCustody, type MeterLine } from './cell.ts';
 import { ALL_SETS, type ArmDefinition, type CellDefinition, type SetId } from './cells/definitions.ts';
 import { loadCells, OPUS, PARTICLE, RESAMPLES, SEED, seedNumber, SOL, unitReport, unitsOf, valuesOf, type Unit, type Value } from './particle-addon-report.ts';
 import { openRereadLease } from './reread-cell.ts';
@@ -119,7 +121,7 @@ function side(values: Map<string, Map<string, Value>>, questions: string[]) {
 export interface SecondJudgeResult { cell_id: string; dir: string; status: 'complete' | 'partial'; stopped: string | null; receipt: Record<string, unknown> }
 
 /** Judge the plan with gpt-6.1-sol, resuming from --out, then write receipt.json; `lease` names the lease and its proxy's usage log for the receipt. */
-export async function runSecondJudge(p: PreparedSecondJudge, opts: { providerProxy?: string | null; env?: Record<string, string | undefined>; maxAttempts?: number; lease?: { usd: number; usageLog: string } } = {},
+export async function runSecondJudge(p: PreparedSecondJudge, opts: { providerProxy?: string | null; env?: Record<string, string | undefined>; maxAttempts?: number; concurrency?: number; lease?: { usd: number; usageLog: string } } = {},
   deps: { judge?: ChatLike } = {}): Promise<SecondJudgeResult> {
   const env = opts.env ?? process.env;
   const maxAttempts = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
@@ -129,19 +131,19 @@ export async function runSecondJudge(p: PreparedSecondJudge, opts: { providerPro
   const judgments = new RecordLog(join(dir, 'judgments.ndjson'), 'judgment');
   const meters = join(dir, 'meters.ndjson');
   const meter = metering(opts.providerProxy ?? null, { meter: (m: MeterLine) => appendFileSync(meters, JSON.stringify(m) + '\n') }, env);
-  const judgeChat = onSlot(deps.judge ?? new ChatClient(join(p.out, 'cache', 'qa')), meter, 'judge');
+  const judgeChat = deps.judge ?? new ChatClient(join(p.out, 'cache', 'qa'));
   const second = { id: frontierInstrumentId(p.instrument.id, SECOND_JUDGE), sha256: p.instrument.sha256, judge: SECOND_JUDGE };
   const judged = (a: AnswerRecord) => judgments.has(judgmentKey({ answer_id: a.answer_id, instrument_sha256: second.sha256, judge: SECOND_JUDGE, judge_replicate: 0 }));
   let stopped: string | null = null;
+  const one = async (x: PlannedJudgment) => {
+    try { judgments.append({ answer_id: x.answer.answer_id, ...await judgeAnswer(judgeChat, p.instrument, x.question, x.answer.text, { judge: SECOND_JUDGE, judgeReplicate: 0, maxAttempts }), instrument_id: second.id }); }
+    catch (e) { if (/budget/i.test(String((e as Error).message))) stopped ??= `budget: ${String((e as Error).message).slice(0, 200)}`; }
+  };
   for (let pass = 0; pass < maxAttempts && !stopped; pass++) {
-    const todo = p.plan.filter(x => !judged(x.answer));
-    if (!todo.length) break;
-    for (const x of todo) {
-      if (stopped) break;
-      const r = await meter.around('judge', `judge:${x.answer.answer_id.slice(0, 16)}:${SECOND_JUDGE}`, 'judge', () => judgeAnswer(judgeChat, p.instrument, x.question, x.answer.text, { judge: SECOND_JUDGE, judgeReplicate: 0, maxAttempts }));
-      if (r.error !== undefined) { if (/budget/i.test(String((r.error as Error).message))) stopped = `budget: ${String((r.error as Error).message).slice(0, 200)}`; continue; }
-      judgments.append({ answer_id: x.answer.answer_id, ...r.value!, instrument_id: second.id });
-    }
+    const queue = p.plan.filter(x => !judged(x.answer));
+    if (!queue.length) break;
+    const worker = async () => { for (let x = queue.shift(); x && !stopped; x = queue.shift()) await one(x); };
+    await meter.around('judge', `judge:${cellId}:pass-${pass}`, 'judge', () => Promise.all(Array.from({ length: Math.min(opts.concurrency ?? 8, queue.length) }, worker)));
   }
 
   const sol = judgments.all();
@@ -198,10 +200,10 @@ if (import.meta.main) {
     } catch (e) { console.error((e as Error).message); process.exit(2); }
     process.exit(0);
   }
-  const [cellArg, armArg, outArg, ledger, runId, leaseUsd, ledgerCap] = [one('--cell'), one('--arm'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
+  const [cellArg, armArg, outArg, ledger, runId, leaseUsd, ledgerCap, concurrency] = [one('--cell'), one('--arm'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd')), Number(one('--concurrency') ?? 8)];
   const roots = many('--root');
-  if (!cellArg || !armArg || !roots.length || !outArg || !ledger || !runId || !(leaseUsd > 0) || !(ledgerCap > 0)) {
-    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> [--manifest q1|f6] --root <cell output>... --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--keyless-upstream <url>]`);
+  if (!cellArg || !armArg || !roots.length || !outArg || !ledger || !runId || !(leaseUsd > 0) || !(ledgerCap > 0) || !Number.isInteger(concurrency) || concurrency < 1) {
+    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> [--manifest q1|f6] --root <cell output>... --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--concurrency <n>] [--keyless-upstream <url>]`);
     process.exit(2);
   }
   let keyless: string | null;
@@ -223,7 +225,7 @@ if (import.meta.main) {
       policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
     proxy.start();
     try {
-      const res = await runSecondJudge(prepared, { providerProxy: `http://127.0.0.1:${proxy.port}`, lease: { usd: leaseUsd, usageLog } });
+      const res = await runSecondJudge(prepared, { providerProxy: `http://127.0.0.1:${proxy.port}`, concurrency, lease: { usd: leaseUsd, usageLog } });
       const r = res.receipt as { counts: unknown; comparison: unknown; trigger: unknown; spend: unknown; lease: unknown };
       console.log(JSON.stringify({ cell: res.cell_id, status: res.status, stopped: res.stopped, keyless: !!keyless, trigger: r.trigger, counts: r.counts, comparison: r.comparison, spend: r.spend, lease: r.lease }, null, 2));
       process.exitCode = res.status === 'complete' ? 0 : 4;

@@ -165,7 +165,7 @@ describe('the second-judge sensitivity', () => {
   test('a budget refusal stops the run partial, and a resume judges only what is left', async () => {
     const out = join(tmp, 'budget');
     const first = scriptedSol(5);
-    const res = await runSecondJudge(prepareSecondJudge(def, arm, { roots, out }, { corpus }), {}, { judge: first });
+    const res = await runSecondJudge(prepareSecondJudge(def, arm, { roots, out }, { corpus }), { concurrency: 1 }, { judge: first });
     expect([res.status, res.stopped?.startsWith('budget'), first.models.length]).toEqual(['partial', true, 4]);
     expect(ndjson(join(res.dir, 'judgments.ndjson'))).toHaveLength(4);
     expect((res.receipt as any).counts).toMatchObject({ judged: 4, unjudged: 22 });
@@ -173,6 +173,24 @@ describe('the second-judge sensitivity', () => {
     const rest = scriptedSol();
     const done = await runSecondJudge(prepareSecondJudge(def, arm, { roots, out }, { corpus }), {}, { judge: rest });
     expect([done.status, rest.models.length, ndjson(join(done.dir, 'judgments.ndjson')).length]).toEqual(['complete', 22, 26]);
+  });
+
+  // Value: protects=judging several answers at once judges each answer once and holds the cap on requests in flight; fails_when=an answer is judged twice or skipped, or more than --concurrency requests are in flight; why_new=gpt-6.1-sol takes about 12 s a request and a cell asks some 6,000, so the runner judges concurrently; seam=a scripted judge that waits; no_claim=none
+  test('with --concurrency 4, four answers are in flight at most and each is judged once', async () => {
+    let inFlight = 0, peak = 0;
+    const seen: string[] = [];
+    const slow: ChatLike = {
+      async chat(_model, prompt): Promise<ChatResult> {
+        inFlight++; peak = Math.max(peak, inFlight);
+        seen.push(/ANSWER-[^\s"]+/.exec(prompt)?.[0] ?? '');
+        await new Promise(res => setTimeout(res, 5));
+        inFlight--;
+        return { text: prompt.includes('SOL-YES') ? 'yes' : 'no', input_tokens: 100, output_tokens: 1, cached: false, ...NO_META };
+      },
+    };
+    const res = await runSecondJudge(prepareSecondJudge(def, arm, { roots, out: join(tmp, 'concurrent') }, { corpus }), { concurrency: 4 }, { judge: slow });
+    expect([res.status, peak, seen.length, new Set(seen).size, ndjson(join(res.dir, 'judgments.ndjson')).length]).toEqual(['complete', 4, 26, 26, 26]);
+    expect((res.receipt as any).comparison.second.delta).toBe(round(-1 / 14));
   });
 
   // Value: protects=the second judge's dollars go through the lease proxy on the judge slot and the re-read ledger under its own runner name; fails_when=a judgment bypasses the proxy, goes out on another slot or model, or the lease is not the ceiling-checked re-read lease; why_new=new; seam=a scripted OpenAI upstream; no_claim=OpenAI's billing
@@ -191,10 +209,11 @@ describe('the second-judge sensitivity', () => {
     const proxy = new MeteringProxy({ fetchImpl, policy: { lease, usageLog, env: { OPENAI_API_KEY: 'dummy', ANTHROPIC_API_KEY: 'dummy', VOYAGE_API_KEY: 'dummy', PARTICLE_API_KEY: 'dummy-particle' }, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
     proxy.start();
     try {
-      const res = await runSecondJudge(p, { providerProxy: `http://127.0.0.1:${proxy.port}`, lease: { usd: 1, usageLog } });
+      const res = await runSecondJudge(p, { providerProxy: `http://127.0.0.1:${proxy.port}`, concurrency: 4, lease: { usd: 1, usageLog } });
       expect(res.status).toBe('complete');
       expect(sent).toEqual(Array(26).fill('gpt-6.1-sol'));
-      expect(ndjson(usageLog).map(l => [l.provider, l.slot, l.route_class, l.outcome])).toEqual(Array(26).fill(['openai', 'judge', 'judge', 'forwarded']));
+      expect(ndjson(usageLog).map(l => [l.provider, l.slot, l.route_class, l.bucket, l.outcome])).toEqual(Array(26).fill(['openai', 'judge', 'judge', 'attributed', 'forwarded']));
+      expect(ndjson(join(res.dir, 'meters.ndjson')).map(m => [m.phase, m.key, m.requests])).toEqual([['judge', `judge:${secondJudgeCellId(ARM)}:pass-0`, 26]]);
       const r = res.receipt as any;
       expect([r.lease.requests, r.spend.judge_usd > 0, r.comparison.second.delta]).toEqual([26, true, round(-1 / 14)]);
     } finally { proxy.stop(); lease.close(); }
