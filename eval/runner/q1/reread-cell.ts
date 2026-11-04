@@ -336,12 +336,12 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
  * spend (open reservations included) past `capUsd` is refused before it opens. A lease still open under the same run id
  * re-attaches: its own spend was inside its amount when it opened, so only the rest of the ledger's spend is added to it.
  */
-export function openRereadLease(o: { runId: string; leaseUsd: number; ledgerPath: string; capUsd: number }): BudgetRun {
+export function openRereadLease(o: { runId: string; leaseUsd: number; ledgerPath: string; capUsd: number; runner?: string }): BudgetRun {
   const status = existsSync(ledgerPaths(o.ledgerPath).ledger) ? ledgerStatus({ ledgerPath: o.ledgerPath, runId: o.runId }) : null;
   const spent = status ? status.totals.committed_usd - (status.run && !status.run.finished_at ? status.run.committed_usd : 0) : 0;
   if (!(o.capUsd > 0) || spent + o.leaseUsd > o.capUsd + 1e-9) throw refuse({ code: 'USAGE', message: `a $${o.leaseUsd.toFixed(2)} lease on ${o.ledgerPath}, which holds $${spent.toFixed(2)} committed, would pass its $${o.capUsd.toFixed(2)} ceiling`,
     why: 'every re-read lease of the add-on ledger shares one ceiling (A6: $100), and a refused lease sends nothing', fix: { next: 'ask_user', user_message: 'the re-reads would pass their preregistered ceiling; tell GBEV-3 before any more run' } });
-  return BudgetRun.openLease({ runId: o.runId, leaseUsd: o.leaseUsd, ledgerPath: o.ledgerPath, runner: 'q1-reread-cell' });
+  return BudgetRun.openLease({ runId: o.runId, leaseUsd: o.leaseUsd, ledgerPath: o.ledgerPath, runner: o.runner ?? 'q1-reread-cell' });
 }
 
 if (import.meta.main) {
