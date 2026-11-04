@@ -1,0 +1,9 @@
+{
+ "dataset": "RS1 ranking set",
+ "status": "unfilled",
+ "generator": "BEAM generator (https://github.com/mohammadtavakoli78/BEAM at b2da22e), run in custody by eval/custody/rs1/mint.sh",
+ "layout": "conversations/c<NNN>/beam/1/chat.json (chat_trunecated.json when present) and conversations/c<NNN>/beam/1/probing_questions/probing_questions.json under GBRAIN_EVALS_RS1_SOURCE (mint.sh's <out>/set); conversation rs1-<NNN> is conversations/c<NNN>, NNN = 001 to 075",
+ "note": "Hashes only; no RS1 text is committed. Until the custodian fills it on the custody host (GST-1154 PR 3), `files` is empty and beam-rs1 loads with a notice that its bytes are unpinned. Once filled, every file the loader reads must be listed here with a matching SHA-256, and every listed file of a loaded conversation must be present.",
+ "files": [],
+ "filled_at": null
+}
