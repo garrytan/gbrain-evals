@@ -13,8 +13,9 @@ import { priceRequest } from '../../eval/runner/budget-ledger.ts';
 import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
 import { checkTree, hashTree } from '../../eval/custody/rs1/hashlist.ts';
 import {
-  ANSWER_FIELD, SLOTS, VALIDATOR_IDS, anthropicRequest, buildPublicIndex, chunkMessages, fakeClient, geminiRequest,
-  validateSet, writeReport, type ModelClient, type Options, type PublicIndex,
+  ANSWER_FIELD, CALIBRATION, SLOTS, VALIDATOR_IDS, anthropicRequest, buildPublicIndex, calibrate, chunkMessages,
+  deriveCalibration, fakeClient, geminiRequest, ngrams, planValidation, validateSet, writeReport, ValidateError,
+  type Calibration, type CalibrationMeasure, type ModelClient, type Options, type PublicIndex,
 } from '../../eval/custody/rs1/validate.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
@@ -36,7 +37,11 @@ function run(cmd: string, args: string[], env: Record<string, string> = {}) {
   return { code: r.status, out: r.stdout ?? '', err: r.stderr ?? '', all: (r.stdout ?? '') + (r.stderr ?? '') };
 }
 
-/** A BEAM-shaped public tree: three public topics, one public chat holding PASSAGE, and one public question. */
+/**
+ * A BEAM-shaped public tree: three public topics, one public question, and two public 1M chats, the first holding
+ * PASSAGE and the second, larger one quoting 32 of its words. The calibration from it is τ 2% (20 of the first chat's
+ * 1,300 13-grams are in the second) and bounds around the fake mint's conversations; --fake does not stop on its range.
+ */
 const PASSAGE = words('public-passage', 400);
 const PUBLIC_QUESTION = 'Which public dataset question appears in the BEAM release?';
 function fakeBeam(root: string): string {
@@ -47,7 +52,17 @@ function fakeBeam(root: string): string {
   const turns = Array.from({ length: 10 }, (_, i) => [{ role: 'user', id: 2 * i, content: i === 3 ? PASSAGE : words(`public-u${i}`, 60) }, { role: 'assistant', id: 2 * i + 1, content: words(`public-a${i}`, 60) }]);
   writeFileSync(join(beam, 'chats/1M/1/chat.json'), JSON.stringify([{ batch_number: 1, time_anchor: 'x', turns }]));
   writeFileSync(join(beam, 'chats/1M/1/probing_questions/probing_questions.json'), JSON.stringify({ information_extraction: [{ question: PUBLIC_QUESTION, answer: 'x', rubric: ['y'] }] }));
+  const quote = PASSAGE.split(' ').slice(0, 32).join(' ');
+  const big = Array.from({ length: 50 }, (_, i) => [{ role: 'user', id: 2 * i, content: i === 7 ? quote : words(`public-big-u${i}`, 100) }, { role: 'assistant', id: 2 * i + 1, content: words(`public-big-a${i}`, 100) }]);
+  mkdirSync(join(beam, 'chats/1M/2'), { recursive: true });
+  writeFileSync(join(beam, 'chats/1M/2/chat.json'), JSON.stringify([{ batch_number: 1, time_anchor: 'x', turns: big }]));
   return beam;
+}
+
+/** The public index of a tree and its calibration, recording rather than refusing an out-of-range gate (as --fake does). */
+function openCalibration(beam: string): { index: PublicIndex; cal: Calibration } {
+  const index = buildPublicIndex(beam);
+  return { index, cal: calibrate(beam, index.paths, index.sourcesSha256, { enforceRange: false }) };
 }
 
 /** Every string value in a JSON tree. */
@@ -144,11 +159,17 @@ describe('RS1 custody scripts end to end (mint.sh --fake)', () => {
   test('validate.ts --fake keeps the fake set and prints counts and hashes only', () => {
     const set = join(root, 'rs1-custody-a/set');
     const report = join(root, 'rs1-custody-a/validation/report.json');
-    const r = run('bun', [VALIDATE, '--set', set, '--beam-dir', beam, '--report', report, '--fake', '--target-tokens', '30000', '--tolerance', '0.5', '--window-tokens', '4000', '--overlap-tokens', '400']);
+    const r = run('bun', [VALIDATE, '--set', set, '--beam-dir', beam, '--report', report, '--fake', '--window-tokens', '4000', '--overlap-tokens', '400']);
     expect(r.code).toBe(0);
     for (const line of r.all.trim().split('\n')) expect(line).toMatch(/^rs1-validate( [a-z0-9_]+=[^ ]*)+$/);
     expect(r.out).toContain('conversations=2 keep=2 regenerate=0 drop=0 incomplete=0');
     expect(r.out).toContain('items=40 pass=40 fail=0');
+    expect(r.out).toContain('calibration_subjects=2 calibration_dropped=0 calibration_accepted=0 ');
+    expect(r.out).toContain(' tau=0.02 ');
+    const written = JSON.parse(readFileSync(report, 'utf8'));
+    expect(written.calibration).toMatchObject({ tau: 0.02, max_share_subject: '1m-1', out_of_range: [{ rule: 'low_below_min' }] });
+    expect(written.calibration.subjects.map((s: { id: string }) => s.id)).toEqual(['1m-1', '1m-2']);
+    expect(Object.keys(written.params)).not.toContain('contamination_max');
     const probes = sealedProbes(set, seedLine('test seed a'));
     expect(leaks(r.all, probes)).toBe(0);
     expect(leaks(readFileSync(report, 'utf8'), probes)).toBe(0);
@@ -159,12 +180,17 @@ describe('RS1 custody scripts end to end (mint.sh --fake)', () => {
     const set = join(root, 'rs1-custody-a/set');
     const cache = join(root, 'rs1-custody-a/shared-cache');
     const report = (name: string) => join(root, 'rs1-custody-a/validation', name);
-    const args = (mode: string, name: string) => [VALIDATE, '--set', set, '--beam-dir', beam, '--report', report(name), '--cache', cache, mode, '--target-tokens', '30000', '--tolerance', '0.5', '--window-tokens', '4000', '--overlap-tokens', '400'];
+    const args = (mode: string, name: string) => [VALIDATE, '--set', set, '--beam-dir', beam, '--report', report(name), '--cache', cache, mode, '--window-tokens', '4000', '--overlap-tokens', '400'];
     expect(run('bun', args('--fake', 'fake-cached.json')).code).toBe(0);
     expect(JSON.parse(readFileSync(report('fake-cached.json'), 'utf8')).validators).toEqual(VALIDATOR_IDS.map(id => `fake-${id}`));
+    const { index, cal } = openCalibration(beam);
+    const paidPlan = planValidation({ setDir: set, beamDir: beam, reportPath: report('unused.json'), cacheDir: cache, windowTokens: 4000, overlapTokens: 400, concurrency: 1 }, VALIDATOR_IDS.map(id => fakeClient(id)), index, cal);
+    expect(paidPlan.calls.length).toBeGreaterThan(0);
+    expect(paidPlan.calls.filter(c => c.cached)).toHaveLength(0);
     const paid = run('bun', args('--paid', 'paid.json'), { GEMINI_API_KEY: 'test-gemini-key-not-real', ANTHROPIC_API_KEY: 'test-anthropic-key-not-real', BRAINBENCH_BUDGET_LEDGER: join(root, 'ledger.sqlite') });
     expect(paid.code).toBe(2);
     expect(paid.err).toMatch(/^rs1-validate refused: /);
+    expect(paid.err).toContain('RS1_CALIBRATION_OUT_OF_RANGE');
     expect(paid.all).not.toContain('not-real');
     expect(existsSync(report('paid.json'))).toBe(false);
   });
@@ -174,8 +200,9 @@ describe('RS1 custody scripts end to end (mint.sh --fake)', () => {
     const target = 'temporal_reasoning#1';
     const failing = JSON.parse(readFileSync(join(set, 'conversations/c001/rubric/1', `${target}.json`), 'utf8')).item.question as string;
     const picky: ModelClient = { id: VALIDATOR_IDS[0], complete: async (p, m) => (p.includes(`<question>${failing}</question>`) ? '{"supported": false}' : fakeClient(VALIDATOR_IDS[0]).complete(p, m)) };
-    const opts: Options = { setDir: set, beamDir: beam, reportPath: join(root, 'b-report.json'), targetTokens: 30_000, tolerance: 0.5, windowTokens: 4000, overlapTokens: 400, concurrency: 4 };
-    const report = await validateSet(opts, [picky, fakeClient(VALIDATOR_IDS[1])]);
+    const opts: Options = { setDir: set, beamDir: beam, reportPath: join(root, 'b-report.json'), windowTokens: 4000, overlapTokens: 400, concurrency: 4 };
+    const { index, cal } = openCalibration(beam);
+    const report = await validateSet(opts, [picky, fakeClient(VALIDATOR_IDS[1])], index, cal);
     expect(report.conversations.c001.status).toBe('regenerate');
     expect(report.conversations.c001.items[target].gates).toEqual([`support:${VALIDATOR_IDS[0]}`]);
     expect(report.conversations.c002.status).toBe('keep');
@@ -186,7 +213,7 @@ describe('RS1 custody scripts end to end (mint.sh --fake)', () => {
     const after = JSON.parse(readFileSync(join(set, 'conversations/c001/selection/2.json'), 'utf8')).slots;
     for (const slot of SLOTS) expect(after[slot] === before[slot]).toBe(slot !== target);
     expect(existsSync(join(set, 'conversations/c002/selection/2.json'))).toBe(false);
-    const revalidated = await validateSet(opts, [fakeClient(VALIDATOR_IDS[0]), fakeClient(VALIDATOR_IDS[1])]);
+    const revalidated = await validateSet(opts, [fakeClient(VALIDATOR_IDS[0]), fakeClient(VALIDATOR_IDS[1])], index, cal);
     expect(revalidated.conversations.c001.select_attempt).toBe(2);
     expect(revalidated.conversations.c001.status).toBe('keep');
     expect(leaks(r.all, sealedProbes(set, seedLine('test seed b')))).toBe(0);
@@ -299,13 +326,13 @@ function counting(inner: ModelClient) {
 const fakes = () => [counting(fakeClient(VALIDATOR_IDS[0])), counting(fakeClient(VALIDATOR_IDS[1]))];
 
 describe('validate.ts gates', () => {
-  let root = '', beam = '', index: PublicIndex;
-  const options = (set: string, extra: Partial<Options> = {}): Options => ({ setDir: set, beamDir: beam, reportPath: join(root, 'report.json'), targetTokens: 1_000_000, tolerance: 0.9999, windowTokens: 600, overlapTokens: 60, concurrency: 4, ...extra });
-  beforeAll(() => { root = scratch('gates'); beam = fakeBeam(root); index = buildPublicIndex(beam); });
+  let root = '', beam = '', index: PublicIndex, cal: Calibration;
+  const options = (set: string, extra: Partial<Options> = {}): Options => ({ setDir: set, beamDir: beam, reportPath: join(root, 'report.json'), windowTokens: 600, overlapTokens: 60, concurrency: 4, ...extra });
+  beforeAll(() => { root = scratch('gates'); beam = fakeBeam(root); ({ index, cal } = openCalibration(beam)); });
 
   test('a clean set keeps every conversation and asks both validators about every item', async () => {
     const clients = fakes();
-    const report = await validateSet(options(writeSet(root, [conversation('one'), conversation('two')])), clients, index);
+    const report = await validateSet(options(writeSet(root, [conversation('one'), conversation('two')])), clients, index, cal);
     expect(Object.values(report.conversations).map(c => c.status)).toEqual(['keep', 'keep']);
     expect(report.totals.items).toBe(40);
     expect(report.totals.pass).toBe(40);
@@ -318,11 +345,11 @@ describe('validate.ts gates', () => {
   test('13-gram contamination: a conversation holding a public passage is dropped, and the public file is named', async () => {
     const dirty = conversation('dirty');
     dirty.messages[41] = PASSAGE.split(' ').slice(0, 120).join(' ');
-    const report = await validateSet(options(writeSet(root, [conversation('clean'), dirty])), fakes(), index);
+    const report = await validateSet(options(writeSet(root, [conversation('clean'), dirty])), fakes(), index, cal);
     const c = report.conversations.c002;
     expect(c.status).toBe('drop');
     expect(c.reasons).toEqual(['contamination']);
-    expect(c.contamination_share!).toBeGreaterThan(0.01);
+    expect(c.contamination_share!).toBeGreaterThanOrEqual(cal.tau);
     expect(c.contamination_source).toBe('chats/1M/1/chat.json');
     expect(c.contamination_union_share!).toBeGreaterThanOrEqual(c.contamination_share!);
     expect(report.conversations.c001.contamination_share).toBe(0);
@@ -333,28 +360,28 @@ describe('validate.ts gates', () => {
     const a = conversation('qa'), b = conversation('qb');
     a.items['information_extraction#0']!.question = PUBLIC_QUESTION;
     b.items['event_ordering#1']!.question = a.items['event_ordering#1']!.question;
-    const report = await validateSet(options(writeSet(root, [a, b])), fakes(), index);
+    const report = await validateSet(options(writeSet(root, [a, b])), fakes(), index, cal);
     expect(report.conversations.c001.items['information_extraction#0'].gates).toEqual(['contamination']);
     expect(report.conversations.c002.items['event_ordering#1'].gates).toEqual(['duplicate']);
     expect(report.conversations.c001.status).toBe('regenerate');
     expect(report.conversations.c002.status).toBe('regenerate');
   });
 
-  test('length gate: outside the target ± tolerance in cl100k tokens drops the conversation', async () => {
+  test('length gate: a cl100k count at the calibrated low or high bound passes, and one token outside drops it', async () => {
     const conv = conversation('len');
     const tokens = conv.messages.reduce((s, m) => s + encodingCount('cl100k_base', m), 0);
-    const keep = await validateSet(options(writeSet(root, [conv]), { targetTokens: tokens, tolerance: 0.15 }), fakes(), index);
-    expect(keep.conversations.c001.tokens).toBe(tokens);
-    expect(keep.conversations.c001.status).toBe('keep');
-    const drop = await validateSet(options(writeSet(root, [conv]), { targetTokens: Math.round(tokens * 1.2), tolerance: 0.15 }), fakes(), index);
-    expect(drop.conversations.c001.reasons).toEqual(['length']);
+    const gate = async (low_tokens: number, high_tokens: number) => (await validateSet(options(writeSet(root, [conv])), fakes(), index, { ...cal, low_tokens, high_tokens })).conversations.c001;
+    expect(await gate(tokens, tokens + 10)).toMatchObject({ tokens, status: 'keep' });
+    expect(await gate(tokens - 10, tokens)).toMatchObject({ tokens, status: 'keep' });
+    expect((await gate(tokens + 1, tokens + 10)).reasons).toEqual(['length']);
+    expect((await gate(tokens - 10, tokens - 1)).reasons).toEqual(['length']);
   });
 
   test('exact and near-duplicate conversations are dropped', async () => {
     const a = conversation('dup');
     const near = conversation('dup');
     for (let i = 1; i < 60; i += 10) near.messages[i] = words(`near/${i}`, 40);
-    const report = await validateSet(options(writeSet(root, [a, conversation('dup'), near, conversation('fresh')])), fakes(), index);
+    const report = await validateSet(options(writeSet(root, [a, conversation('dup'), near, conversation('fresh')])), fakes(), index, cal);
     expect(report.conversations.c002.reasons).toEqual(['duplicate']);
     expect(report.conversations.c003.reasons).toEqual(['duplicate']);
     expect(report.conversations.c003.near_duplicate_of).toBe('c001');
@@ -368,7 +395,7 @@ describe('validate.ts gates', () => {
     conv.items['temporal_reasoning#0'] = null;
     const blindSpot = ['<answer>', String(conv.items['multi_session_reasoning#0']!.answer), '</answer>'].join('');
     const halfBlind: ModelClient = { id: VALIDATOR_IDS[1], complete: async (p, m) => (p.includes(blindSpot) ? '{"supported": false}' : fakeClient(VALIDATOR_IDS[1]).complete(p, m)) };
-    const report = await validateSet(options(writeSet(root, [conv])), [fakeClient(VALIDATOR_IDS[0]), halfBlind], index);
+    const report = await validateSet(options(writeSet(root, [conv])), [fakeClient(VALIDATOR_IDS[0]), halfBlind], index, cal);
     const items = report.conversations.c001.items;
     expect(items['knowledge_update#0'].gates).toEqual(VALIDATOR_IDS.map(id => `support:${id}`));
     expect(items['multi_session_reasoning#0'].gates).toEqual([`support:${VALIDATOR_IDS[1]}`]);
@@ -383,7 +410,7 @@ describe('validate.ts gates', () => {
     const nonce = /nonce-[0-9a-f]+/.exec(String(conv.items['abstention#1']!.question))![0];
     conv.messages[77] += ` I decided on ${nonce} after all.`;
     const clients = fakes();
-    const report = await validateSet(options(writeSet(root, [conv])), clients, index);
+    const report = await validateSet(options(writeSet(root, [conv])), clients, index, cal);
     const c = report.conversations.c001;
     expect(c.windows).toBeGreaterThan(4);
     expect(c.items['abstention#1'].gates).toEqual(VALIDATOR_IDS.map(id => `absence:${id}`));
@@ -414,15 +441,15 @@ describe('validate.ts gates', () => {
       SLOTS.filter(s => !s.startsWith('abstention')).slice(0, n).forEach(s => { conv.items[s] = { ...conv.items[s]!, [ANSWER_FIELD[s.split('#')[0] as keyof typeof ANSWER_FIELD]]: 'nothing cited says this' }; });
       return conv;
     };
-    const early = await validateSet(options(writeSet(root, [fail('f1', 1, 2), fail('f2', 2, 2)])), fakes(), index);
+    const early = await validateSet(options(writeSet(root, [fail('f1', 1, 2), fail('f2', 2, 2)])), fakes(), index, cal);
     expect(Object.values(early.conversations).map(c => c.status)).toEqual(['regenerate', 'regenerate']);
     expect(early.verdict).toBe('continue');
-    const late = await validateSet(options(writeSet(root, [fail('f3', 3, 2), conversation('ok', 60)])), fakes(), index);
+    const late = await validateSet(options(writeSet(root, [fail('f3', 3, 2), conversation('ok', 60)])), fakes(), index, cal);
     expect(late.conversations.c001.status).toBe('drop');
     expect(late.conversations.c001.reasons).toEqual(['floor']);
     expect(late.totals.finished_fail).toBe(2);
     expect(late.verdict).toBe('continue');
-    const stop = await validateSet(options(writeSet(root, [fail('f4', 3, 9), conversation('ok2', 60)])), fakes(), index);
+    const stop = await validateSet(options(writeSet(root, [fail('f4', 3, 9), conversation('ok2', 60)])), fakes(), index, cal);
     expect(stop.totals.finished_fail / stop.totals.finished_items).toBeGreaterThan(0.2);
     expect(stop.verdict).toBe('stop');
   });
@@ -432,14 +459,14 @@ describe('validate.ts gates', () => {
     const cacheDir = join(root, 'cache');
     let broken = true;
     const flaky: ModelClient = { id: VALIDATOR_IDS[0], complete: async (p, m) => { if (broken && p.includes('<question>')) throw new Error('HTTP 503'); return fakeClient(VALIDATOR_IDS[0]).complete(p, m); } };
-    const first = await validateSet(options(set, { cacheDir }), [flaky, fakeClient(VALIDATOR_IDS[1])], index);
+    const first = await validateSet(options(set, { cacheDir }), [flaky, fakeClient(VALIDATOR_IDS[1])], index, cal);
     expect(first.conversations.c001.status).toBe('incomplete');
     expect(first.conversations.c001.reasons).toEqual(['validator_error']);
     expect(first.conversations.c002.reasons).toEqual(['unfinished']);
     expect(first.totals.validator_errors).toBe(18);
     broken = false;
     const clients = [counting(flaky), counting(fakeClient(VALIDATOR_IDS[1]))];
-    const second = await validateSet(options(set, { cacheDir }), clients, index);
+    const second = await validateSet(options(set, { cacheDir }), clients, index, cal);
     expect(second.conversations.c001.status).toBe('keep');
     expect(clients[0].calls).toBe(18);
     expect(clients[1].calls).toBe(0);
@@ -451,16 +478,16 @@ describe('validate.ts gates', () => {
     const manifest = join(set, 'conversations/c002/manifest.json');
     const checks = Object.fromEntries([1, 2, 3, 4, 5].map(a => [`topic_check@${a}`, { status: 'done', verdict: 'rejected' }]));
     writeFileSync(manifest, JSON.stringify({ steps: checks }));
-    const report = await validateSet(options(set), fakes(), index);
+    const report = await validateSet(options(set), fakes(), index, cal);
     expect(report.conversations.c002).toMatchObject({ status: 'drop', reasons: ['topic'] });
     expect(report.totals.drop_topic).toBe(1);
     writeFileSync(manifest, JSON.stringify({ steps: { ...checks, 'topic_check@5': { status: 'done', verdict: 'accepted' } } }));
-    expect((await validateSet(options(set), fakes(), index)).conversations.c002).toMatchObject({ status: 'incomplete', reasons: ['unfinished'] });
+    expect((await validateSet(options(set), fakes(), index, cal)).conversations.c002).toMatchObject({ status: 'incomplete', reasons: ['unfinished'] });
   });
 
   test('refuses two validators from one family', async () => {
     const set = writeSet(root, [conversation('family')]);
-    await expect(validateSet(options(set), [fakeClient(VALIDATOR_IDS[0]), fakeClient('gemini:gemini-3.7-flash')], index)).rejects.toThrow('different families');
+    await expect(validateSet(options(set), [fakeClient(VALIDATOR_IDS[0]), fakeClient('gemini:gemini-3.7-flash')], index, cal)).rejects.toThrow('different families');
   });
 
   test('the budget ledger prices both validator requests (gemini-3.8-flash and claude-haiku-5-5)', () => {
@@ -472,7 +499,7 @@ describe('validate.ts gates', () => {
   test('the CLI refuses paid validation without --paid and an open run, before any request, and never prints a key', () => {
     const set = writeSet(root, [conversation('cli')]);
     const env = { GEMINI_API_KEY: 'test-gemini-key-not-real', ANTHROPIC_API_KEY: 'test-anthropic-key-not-real', BRAINBENCH_BUDGET_LEDGER: join(root, 'ledger.sqlite') };
-    const base = [VALIDATE, '--set', set, '--beam-dir', beam, '--report', join(root, 'cli-report.json'), '--target-tokens', '1000000', '--tolerance', '0.9999'];
+    const base = [VALIDATE, '--set', set, '--beam-dir', beam, '--report', join(root, 'cli-report.json')];
     for (const args of [base, [...base, '--paid'], [...base, '--fake', '--paid']]) {
       const r = run('bun', args, env);
       expect(r.code).toBe(2);
@@ -481,6 +508,187 @@ describe('validate.ts gates', () => {
     }
     expect(existsSync(join(root, 'cli-report.json'))).toBe(false);
   });
+});
+
+// ─── validate.ts gate calibration ────────────────────────────────────
+
+/** A BEAM tree of chats/<tier>/<n> directories; chat_trunecated.json, when asked for, holds the first `truncated` messages. */
+function beamTree(beam: string, convs: Record<string, { messages: string[]; truncated?: number; questions?: string[] }>): string {
+  rmSync(beam, { recursive: true, force: true });
+  const chat = (messages: string[]) => JSON.stringify([{ batch_number: 1, time_anchor: 'x', turns: messages.map((content, id) => [{ role: id % 2 ? 'assistant' : 'user', id, content }]) }]);
+  for (const [dir, conv] of Object.entries(convs)) {
+    const d = join(beam, 'chats', dir);
+    mkdirSync(join(d, 'probing_questions'), { recursive: true });
+    writeFileSync(join(d, 'chat.json'), chat(conv.messages));
+    if (conv.truncated) writeFileSync(join(d, 'chat_trunecated.json'), chat(conv.messages.slice(0, conv.truncated)));
+    writeFileSync(join(d, 'probing_questions/probing_questions.json'), JSON.stringify({ information_extraction: (conv.questions ?? []).map(question => ({ question, answer: 'x' })) }));
+  }
+  return beam;
+}
+/** A message of exactly n distinct 13-grams, and n words of a message from a given word. */
+const grams = (seed: string, n: number) => words(seed, n + 12);
+const cut = (text: string, from: number, n: number) => text.split(' ').slice(from, from + n).join(' ');
+const tokensOf = (messages: string[]) => messages.reduce((s, m) => s + encodingCount('cl100k_base', m), 0);
+/** A 1,000-word message for million-token chats: a cheap 32-bit mix per word, so 13-word runs never repeat across seeds. */
+function bulk(seed: string): string {
+  const s = parseInt(sha(seed).slice(0, 8), 16);
+  return Array.from({ length: 1000 }, (_, i) => {
+    let h = (i + 0x6a09e667) | 0;
+    h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
+    return 'v' + ((h ^ s) >>> 0).toString(16).padStart(8, '0');
+  }).join(' ');
+}
+const measure = (subjects: Array<[tokens: number, shared: number, ngrams: number]>): CalibrationMeasure => ({
+  sources: 9, sources_sha256: 'a'.repeat(64), subjects_sha256: 'b'.repeat(64),
+  subjects: subjects.map(([tokens, shared, ngrams], i) => ({ id: `1m-${i + 2}`, file: `chats/1M/${i + 2}/chat.json`, tokens, ngrams, shared, share: shared / ngrams, source: shared ? 'chats/500K/10/chat.json' : null })),
+});
+const refusal = (fn: () => unknown): ValidateError => { try { fn(); } catch (error) { if (error instanceof ValidateError) return error; throw error; } throw new Error('no refusal'); };
+
+describe('validate.ts gate calibration', () => {
+  // Tree A, dev-split ids only: subject 1m-2 is counted on its truncated chat (8 messages, 800 13-grams) and 16 of them
+  // are in 500k-10's chat; subject 1m-3 (1,000) has 10 there. Each subject's questions quote its own chat.
+  const A2 = Array.from({ length: 10 }, (_, i) => grams(`cal-a2/${i}`, 100));
+  const A3 = Array.from({ length: 10 }, (_, i) => grams(`cal-a3/${i}`, 100));
+  const treeA = (beam: string, extra: Parameters<typeof beamTree>[1] = {}) => beamTree(beam, {
+    '1M/2': { messages: A2, truncated: 8, questions: [cut(A2[0], 0, 40)] },
+    '1M/3': { messages: A3, questions: [cut(A3[0], 0, 30)] },
+    '500K/10': { messages: [cut(A2[1], 0, 28), cut(A3[0], 50, 22), grams('cal-a5/filler', 100)] },
+    ...extra,
+  });
+  // Tree B adds 500k-12, holding three whole messages of 1m-3 (300 of its 1,000 13-grams) beside 300 of its own.
+  const B12 = { messages: [A3[2], A3[3], A3[4], ...[1, 2, 3].map(i => grams(`cal-b12/${i}`, 100))] };
+  let root = '', beamA = '', beamB = '', indexA: PublicIndex, calA: Calibration;
+  beforeAll(() => {
+    root = scratch('calibration');
+    beamA = treeA(join(root, 'beam-a'));
+    beamB = treeA(join(root, 'beam-b'), { '500K/12': B12 });
+    indexA = buildPublicIndex(beamA);
+    calA = calibrate(beamA, indexA.paths, indexA.sourcesSha256, { enforceRange: false });
+  });
+
+  test('s(c) leaves out the subject\'s own chat, truncated chat and questions; bounds and τ follow; every subject passes', () => {
+    expect(calA.subjects.map(s => [s.id, s.file, s.ngrams, s.shared, s.share, s.source])).toEqual([
+      ['1m-2', 'chats/1M/2/chat_trunecated.json', 800, 16, 0.02, 'chats/500K/10/chat.json'],
+      ['1m-3', 'chats/1M/3/chat.json', 1000, 10, 0.01, 'chats/500K/10/chat.json'],
+    ]);
+    const t2 = tokensOf(A2.slice(0, 8)), t3 = tokensOf(A3);
+    expect(calA.subjects.map(s => s.tokens)).toEqual([t2, t3]);
+    expect(calA).toMatchObject({ schema: 'rs1-calibration/v1', sources: 6, sources_sha256: indexA.sourcesSha256, low_tokens: Math.floor(95 * Math.min(t2, t3) / 100), high_tokens: Math.ceil(105 * Math.max(t2, t3) / 100), max_share: 0.02, max_share_subject: '1m-2', tau: 0.025, dropped: [], accepted: [] });
+    for (const s of calA.subjects) {
+      expect(s.tokens).toBeGreaterThanOrEqual(calA.low_tokens);
+      expect(s.tokens).toBeLessThanOrEqual(calA.high_tokens);
+      expect(s.share).toBeLessThan(calA.tau);
+    }
+    expect(calA.out_of_range).toEqual([{ rule: 'low_below_min', value: calA.low_tokens, limit: CALIBRATION.low_min, subject: '1m-2' }]);
+  });
+
+  test('τ is 1.25 × the largest share rounded up to a whole 0.1 percentage point; the bounds widen by 5%', () => {
+    const tau = (shared: number, ngrams: number) => deriveCalibration(measure([[1_000_000, shared, ngrams], [1_200_000, 0, 1000]])).tau;
+    expect(tau(16, 1000)).toBe(0.02);
+    expect(tau(17, 1000)).toBe(0.022);
+    expect(tau(1601, 100_000)).toBe(0.021);
+    expect(tau(1, 100_000)).toBe(0.001);
+    expect(tau(40, 1000)).toBe(0.05);
+    const cal = deriveCalibration(measure([[1_000_000, 16, 1000], [1_200_000, 5, 1000]]));
+    expect(cal).toMatchObject({ low_tokens: 950_000, high_tokens: 1_260_000, max_share_subject: '1m-2', out_of_range: [] });
+    expect(deriveCalibration(measure([[1_000_001, 3, 1000], [1_199_999, 5, 1000]]))).toMatchObject({ low_tokens: 950_000, high_tokens: 1_259_999, tau: 0.007, max_share_subject: '1m-3' });
+    expect(deriveCalibration(measure([[1_000_000, 16, 1000], [1_200_000, 5, 1000]]), { drop: ['1m-2'] })).toMatchObject({ dropped: ['1m-2'], low_tokens: 1_140_000, tau: 0.007 });
+    expect(() => deriveCalibration(measure([[1_000_000, 16, 1000]]), { drop: ['1m-9'] })).toThrow('name no calibration subject 1m-9');
+  });
+
+  test('the ceiling stop: τ above 5%, τ of 0, or bounds outside 600,000 to 1,600,000 tokens', () => {
+    const ranges = (subjects: Array<[number, number, number]>) => deriveCalibration(measure(subjects)).out_of_range.map(o => [o.rule, o.value, o.subject]);
+    expect(ranges([[631_579, 40, 1000], [1_523_809, 1, 1000]])).toEqual([]);
+    expect(ranges([[631_578, 41, 1000], [1_523_810, 1, 1000]])).toEqual([['tau_above_max', 0.052, '1m-2'], ['low_below_min', 599_999, '1m-2'], ['high_above_max', 1_600_001, '1m-3']]);
+    expect(ranges([[1_000_000, 0, 1000], [1_100_000, 0, 1000]])).toEqual([['tau_zero', 0, null]]);
+    const r = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', beamA]);
+    expect(r.code).toBe(2);
+    expect(r.out).toBe('');
+    expect(r.err).toMatch(/^rs1-validate refused: RS1_CALIBRATION_OUT_OF_RANGE: /);
+    for (const s of [`low_below_min value=${calA.low_tokens} limit=600000 subject=1m-2`, `sources_sha256=${indexA.sourcesSha256}`, 'No gate ran and no report was written.', `drop: bun eval/custody/rs1/validate.ts --calibrate-only --beam-dir ${beamA} --calibration-drop 1m-2`]) expect(r.err).toContain(s);
+  });
+
+  test('the related-file guard refuses before any gate with the pair, both shares and the pool hash; no report is written', () => {
+    const index = buildPublicIndex(beamB);
+    const error = refusal(() => calibrate(beamB, index.paths, index.sourcesSha256, { enforceRange: false }));
+    expect(error.code).toBe('RS1_CALIBRATION_RELATED_FILES');
+    const set = writeSet(root, [conversation('related')]);
+    const report = join(root, 'related-report.json');
+    const r = run('bun', [VALIDATE, '--set', set, '--beam-dir', beamB, '--report', report, '--fake']);
+    expect(r.code).toBe(2);
+    expect(r.out).toBe('');
+    expect(r.err).toMatch(/^rs1-validate refused: RS1_CALIBRATION_RELATED_FILES: /);
+    const args = `bun eval/custody/rs1/validate.ts --set ${set} --beam-dir ${beamB} --report ${report} --fake`;
+    for (const s of [
+      'pair subject=1m-3 file=chats/500K/12/chat.json file_id=500k-12 subject_share=0.300000 file_share=0.500000', `sources_sha256=${index.sourcesSha256}`,
+      'No gate ran and no report was written.', 'keep it and accept the larger tau (0.375, above the 0.05 ceiling', `drop: ${args} --calibration-drop 1m-3`, `accept: ${args} --calibration-accept 1m-3`,
+    ]) expect(r.err).toContain(s);
+    expect(existsSync(report)).toBe(false);
+    const dropped = calibrate(beamB, index.paths, index.sourcesSha256, { drop: ['1m-3'], enforceRange: false });
+    expect(dropped).toMatchObject({ dropped: ['1m-3'], tau: 0.025, max_share_subject: '1m-2', low_tokens: Math.floor(95 * tokensOf(A2.slice(0, 8)) / 100) });
+    expect(calibrate(beamB, index.paths, index.sourcesSha256, { accept: ['1m-3'], enforceRange: false })).toMatchObject({ accepted: ['1m-3'], tau: 0.375 });
+    const kept = refusal(() => calibrate(beamB, index.paths, index.sourcesSha256, { accept: ['1m-3'] }));
+    expect(kept.code).toBe('RS1_CALIBRATION_OUT_OF_RANGE');
+    expect(kept.message).toContain('tau_above_max value=0.375 limit=0.05 subject=1m-3');
+  });
+
+  test('a minted conversation whose single-file share is exactly τ is dropped, and one 13-gram under is kept', async () => {
+    const atShare = (seed: string, shared: number) => {
+      const conv = conversation(seed);
+      const own = new Set(conv.messages.flatMap(m => ngrams(m).map(([a, b]) => `${a}:${b}`))).size;
+      conv.messages.push(cut(A3[5], 0, shared + 12), words(`${seed}/filler`, 2000 - shared - own + 12));
+      return conv;
+    };
+    const report = await validateSet({ setDir: writeSet(root, [atShare('at-tau', 50), atShare('under-tau', 49)]), beamDir: beamA, reportPath: join(root, 'tau.json'), windowTokens: 600, overlapTokens: 60, concurrency: 4 }, fakes(), indexA, { ...calA, low_tokens: 1, high_tokens: 10_000_000 });
+    expect(report.conversations.c001).toMatchObject({ status: 'drop', reasons: ['contamination'], contamination_share: 0.025, contamination_source: 'chats/1M/3/chat.json' });
+    expect(report.conversations.c002).toMatchObject({ status: 'keep', reasons: [], contamination_share: 0.0245 });
+    expect(report.conversations.c002.contamination_union_share).toBe(0.0245);
+    expect(report.calibration.tau).toBe(0.025);
+  });
+
+  test('the measurements are cached beside the public index by the pool and subject hashes', () => {
+    const beam = treeA(join(root, 'beam-cache'));
+    const index = buildPublicIndex(beam), cachePath = join(root, 'cache/public-13gram.bin');
+    const first = calibrate(beam, index.paths, index.sourcesSha256, { cachePath, enforceRange: false });
+    const file = `${cachePath}.calibration.json`;
+    const head = JSON.parse(readFileSync(file, 'utf8'));
+    expect(head).toMatchObject({ schema: 'rs1-calibration-measure/v1', sources_sha256: index.sourcesSha256, subjects_sha256: first.subjects_sha256 });
+    writeFileSync(file, JSON.stringify({ ...head, subjects: head.subjects.map((s: { tokens: number }) => ({ ...s, tokens: s.tokens + 1 })) }));
+    expect(calibrate(beam, index.paths, index.sourcesSha256, { cachePath, enforceRange: false }).subjects[0].tokens).toBe(first.subjects[0].tokens + 1);
+    treeA(beam, { '1M/3': { messages: [...A3, grams('cal-cache/extra', 100)] } });
+    const moved = buildPublicIndex(beam);
+    const again = calibrate(beam, moved.paths, moved.sourcesSha256, { cachePath, enforceRange: false });
+    expect(again.subjects.map(s => s.tokens)).toEqual([tokensOf(A2.slice(0, 8)), tokensOf([...A3, grams('cal-cache/extra', 100)])]);
+  });
+
+  test('--calibrate-only refuses sealed-split conversations outside custody, logs them inside, and prints ids, counts and hashes only', () => {
+    // Million-token subjects, so the ceiling stop passes: 1m-1 (sealed split) and 1m-2 (dev), and 500k-10 quoting both.
+    const C1 = Array.from({ length: 130 }, (_, i) => bulk(`cal-c1/${i}`)), C2 = Array.from({ length: 160 }, (_, i) => bulk(`cal-c2/${i}`));
+    const beam = beamTree(join(root, 'beam-c'), { '1M/1': { messages: C1 }, '1M/2': { messages: C2 }, '500K/10': { messages: [cut(C2[0], 0, 112), cut(C1[0], 0, 62), grams('cal-c5/filler', 100)] } });
+    const log = join(root, 'custody/access.log');
+    const outside = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', beam]);
+    expect(outside.code).toBe(2);
+    expect(outside.out).toBe('');
+    expect(outside.err).toMatch(/^rs1-validate refused: RS1_CALIBRATION_CUSTODY_REQUIRED: .* holds 1 BEAM conversation\(s\) the splits do not list as dev \(1m-1\)/);
+    const inside = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', beam], { GBRAIN_EVALS_CUSTODY_LOG: log });
+    expect(inside.err).toBe('');
+    expect(inside.code).toBe(0);
+    const cal = JSON.parse(inside.out) as Calibration;
+    expect(cal.subjects.map(s => [s.id, s.shared, s.ngrams, s.source])).toEqual([['1m-1', 50, 130 * 988, 'chats/500K/10/chat.json'], ['1m-2', 100, 160 * 988, 'chats/500K/10/chat.json']]);
+    expect(cal).toMatchObject({ tau: 0.001, out_of_range: [], low_tokens: Math.floor(95 * cal.subjects[0].tokens / 100), high_tokens: Math.ceil(105 * cal.subjects[1].tokens / 100) });
+    const entries = readFileSync(log, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ action: 'open', labels_sha256: cal.sources_sha256 });
+    rmSync(join(beam, 'chats/1M/1'), { recursive: true });
+    const dev = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', beam]);
+    expect(dev.code).toBe(0);
+    expect((JSON.parse(dev.out) as Calibration).subjects.map(s => s.id)).toEqual(['1m-2']);
+    const allowed = /^([0-9a-f]{64}|1m-\d+|chats\/(1M|500K)\/\d+\/(chat|chat_trunecated|probing_questions\/probing_questions)\.json|rs1-calibration\/v1)$/;
+    for (const out of [inside.out, dev.out]) {
+      for (const s of strings(JSON.parse(out))) expect(s).toMatch(allowed);
+      expect(leaks(out, [...C1, ...C2].flatMap(m => [m.slice(0, 9), cut(m, 500, 1)]))).toBe(0);
+    }
+  }, 120_000);
 });
 
 // ─── mint.sh start_proxy ─────────────────────────────────────────────

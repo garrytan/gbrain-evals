@@ -5,17 +5,20 @@
  *
  *   bun eval/custody/rs1/validate.ts --set <out>/set --beam-dir <out>/tooling/beam --report <out>/validation/report.json
  *       (--fake | --paid --budget-run-id <id> --budget-ledger <RS1 ledger>)
- *       [--cache <dir>, default <set>/../validate-cache] [--public-index <file>] [--target-tokens 1070000] [--tolerance 0.15]
+ *       [--cache <dir>, default <set>/../validate-cache] [--public-index <file>]
+ *       [--calibration-drop <id>]... [--calibration-accept <id>]...
  *       [--window-tokens 60000] [--overlap-tokens 2000] [--concurrency 8]
+ *   bun eval/custody/rs1/validate.ts --calibrate-only --beam-dir <BEAM tree> [--public-index <file>]
+ *       [--calibration-drop <id>]... [--calibration-accept <id>]...
  *
  * Conversation gates; a failure drops the conversation and its items are not checked:
  *   - topic: mint.sh dropped it after every topic it drew was too close to a public BEAM topic;
- *   - length: the cl100k token count of its messages is outside the target ± tolerance (draft prereg: 1.07M ± 15%);
- *   - contamination: 1% or more of its distinct 13-grams appear in one public BEAM chat or questions file at the pinned
- *     commit (the draft prereg's rule). A Bloom filter over all of them finds the candidate 13-grams; one more pass over
- *     the public files counts them exactly per file. The union share is reported beside it: independent public BEAM
- *     conversations already share 1.2-2.1% of their 13-grams with the union of the others, so a union gate would drop
- *     every conversation;
+ *   - length: the cl100k token count of its messages is outside the calibrated bounds [low, high];
+ *   - contamination: a share of its distinct 13-grams at or above the calibrated τ appears in one public BEAM chat or
+ *     questions file at the pinned commit. A Bloom filter over all of them finds the candidate 13-grams; one more pass
+ *     over the public files counts them exactly per file. The union share is reported beside it: independent public
+ *     BEAM conversations already share 1.2-2.1% of their 13-grams with the union of the others, so a union gate would
+ *     drop every conversation;
  *   - duplicate: the same chat bytes as an earlier kept conversation, or a MinHash estimate of 13-gram Jaccard of at
  *     least 0.1 with one.
  *
@@ -35,6 +38,25 @@
  * validate, and replies already cached under --cache are not bought again. The verdict is "stop" (exit 4) when more than
  * 20% of the items of finished conversations (kept, or dropped at the floor) fail.
  *
+ * Gate calibration (plan "Gate recalibration method", written before any RS1 output was read). The subjects are BEAM's
+ * public 1M conversations under <beam-dir>/chats/1M, each counted on its canonical chat file (chat_trunecated.json when
+ * present, else chat.json). Length: low = floor(0.95 × the smallest subject's cl100k count), high = ceil(1.05 × the
+ * largest). Contamination: s(c) is the largest share of subject c's distinct 13-grams found in one public source file
+ * outside c's own directory (its chat, truncated chat and questions files), over the gate's own pool; τ is 1.25 × the
+ * largest s(c), rounded up to a whole 0.1 percentage point. So every subject passes both gates. The calibration stops
+ * before any gate runs, and no report is written, when:
+ *   - a subject shares 20% or more of its 13-grams with one other public file (RS1_CALIBRATION_RELATED_FILES). Files
+ *     that contain each other would inflate τ, so a human drops the pair (--calibration-drop) or keeps it and accepts
+ *     the larger τ (--calibration-accept); the report records the decision;
+ *   - τ is above 5% or is 0, or the bounds reach outside 600,000 to 1,600,000 tokens (RS1_CALIBRATION_OUT_OF_RANGE),
+ *     since a gate that loose decides nothing. A --fake run records the reason in the report instead of stopping: its
+ *     trees are tiny, and mint.sh never regenerates a real set from a fake report.
+ * The subjects' measurements are cached beside --public-index, keyed by the pool's sources_sha256 and the subjects' own
+ * paths and sizes, and the report carries the calibration. --calibrate-only prints the calibration as JSON (public BEAM
+ * ids, paths, counts and hashes, never text) and touches no minted set. It refuses a tree holding any conversation the
+ * BEAM splits (eval/decisions/splits) do not list as dev unless GBRAIN_EVALS_CUSTODY_LOG is set, and logs the opening
+ * there, so a development machine calibrates on dev-split files only.
+ *
  * Model calls sit behind one interface (ModelClient), so tests inject fakes. --fake's stand-ins carry their own ids
  * (fake-gemini:…, fake-anthropic:…), so their cached replies never answer a --paid run and a fake report never names the
  * paid validators. Paid calls follow the q1 cells' ledger
@@ -47,7 +69,10 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { dirname, join, relative, resolve } from 'node:path';
 import { BudgetExceededError, budgetOptionsFrom, chatPrice, startPaidRun } from '../../runner/budget-ledger.ts';
 import { PaidArmRefusal, requirePaidArm } from '../../runner/paid-arm.ts';
+import { appendAccessLog } from '../../runner/sealed-confirmation-lib.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
+
+const REPO = resolve(import.meta.dir, '../../..');
 
 export const ABILITIES = [
   'abstention', 'contradiction_resolution', 'event_ordering', 'information_extraction', 'instruction_following',
@@ -75,17 +100,18 @@ export interface Options {
   reportPath: string;
   cacheDir?: string;
   publicIndexPath?: string;
-  targetTokens: number;
-  tolerance: number;
   windowTokens: number;
   overlapTokens: number;
   concurrency: number;
 }
-export const DEFAULTS = { targetTokens: 1_070_000, tolerance: 0.15, windowTokens: 60_000, overlapTokens: 2_000, concurrency: 8 };
-export const THRESHOLDS = {
-  contamination_max: 0.01, item_contamination_max: 0.5, item_near_duplicate: 0.7, conversation_near_duplicate: 0.1,
-  stop_share: 0.2,
-};
+export const DEFAULTS = { windowTokens: 60_000, overlapTokens: 2_000, concurrency: 8 };
+export const THRESHOLDS = { item_contamination_max: 0.5, item_near_duplicate: 0.7, conversation_near_duplicate: 0.1, stop_share: 0.2 };
+/**
+ * The frozen calibration rule: bounds widened by length_margin_pct percent, τ as tau_factor × the largest subject share
+ * rounded up to a multiple of 1/tau_steps (0.1 percentage point), the related-file stop at related_share, and the
+ * ceiling stop at tau_max and [low_min, high_max] tokens.
+ */
+export const CALIBRATION = { length_margin_pct: 5, tau_factor: 1.25, tau_steps: 1000, related_share: 0.2, tau_max: 0.05, low_min: 600_000, high_max: 1_600_000 };
 const MAX_OUTPUT_TOKENS = 8192;
 /** Per-message framing in a window prompt ("[id N] ROLE: "), in cl100k tokens. */
 const MESSAGE_FRAME_TOKENS = 8;
@@ -96,7 +122,10 @@ export interface ModelClient {
   complete(prompt: string, maxOutputTokens: number): Promise<string>;
 }
 
-export class ValidateError extends Error {}
+/** A refusal. A stable code (RS1_CALIBRATION_…) leads the message when the operator has a decision to make. */
+export class ValidateError extends Error {
+  constructor(message: string, readonly code?: string) { super(code ? `${code}: ${message}` : message); }
+}
 
 const sha256 = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex');
 
@@ -185,9 +214,12 @@ export function publicSources(beamDir: string): string[] {
   return sources;
 }
 
+/** A list of files' identity: each path (relative to the BEAM tree) and size. */
+const filesSha256 = (beamDir: string, paths: string[]) => sha256(paths.map(p => `${relative(beamDir, p)} ${statSync(p).size}\n`).join(''));
+
 export function buildPublicIndex(beamDir: string, cachePath?: string): PublicIndex {
   const sources = publicSources(beamDir);
-  const sourcesSha256 = sha256(sources.map(p => `${relative(beamDir, p)} ${statSync(p).size}\n`).join(''));
+  const sourcesSha256 = filesSha256(beamDir, sources);
   if (cachePath && existsSync(cachePath) && existsSync(`${cachePath}.json`)) {
     const head = JSON.parse(readFileSync(`${cachePath}.json`, 'utf8'));
     if (head.schema === 'rs1-public-13gram/v1' && head.sources_sha256 === sourcesSha256) {
@@ -215,24 +247,28 @@ export function buildPublicIndex(beamDir: string, cachePath?: string): PublicInd
 /** A 13-gram's two hashes as one 53-bit number. */
 const gramKey = (h1: number, h2: number) => h1 * 2 ** 21 + (h2 >>> 11);
 
+/** The BEAM conversation directory a chat, truncated chat or questions file belongs to. */
+const conversationDir = (path: string) => path.replace(/\/(?:chat|chat_trunecated|probing_questions\/probing_questions)\.json$/, '');
+
 /**
- * For each conversation, the largest share of its distinct 13-grams that one public file holds, and that file's index.
- * Only the 13-grams the Bloom filter flagged (hits) can be in a public file, so one pass over the public files counts
- * them exactly per file.
+ * For each conversation, the largest share of its distinct 13-grams that one public file holds, that count, and that
+ * file's index. Only the 13-grams the Bloom filter flagged (hits) can be in a public file, so one pass over the public
+ * files counts them exactly per file. A calibration subject names its own directory (own), whose files never count.
  */
-export function singleSourceShares(paths: string[], conversations: Array<{ size: number; hits: number[] }>): Array<{ share: number; source: number }> {
+export function singleSourceShares(paths: string[], conversations: Array<{ size: number; hits: number[]; own?: string }>): Array<{ share: number; shared: number; source: number }> {
   const owners = new Map<number, number[]>();
   conversations.forEach((c, i) => { for (const k of c.hits) { const o = owners.get(k); if (o) o.push(i); else owners.set(k, [i]); } });
-  const best = conversations.map(() => ({ share: 0, source: -1 }));
+  const best = conversations.map(() => ({ share: 0, shared: 0, source: -1 }));
   if (!owners.size) return best;
   paths.forEach((path, source) => {
+    const dir = conversationDir(path);
     const seen = new Set<number>();
     for (const text of texts(readJson(path), path.endsWith('/chat.json'))) {
       for (const [h1, h2] of ngrams(text)) { const k = gramKey(h1, h2); if (owners.has(k)) seen.add(k); }
     }
     const counts = new Map<number, number>();
     for (const k of seen) for (const i of owners.get(k)!) counts.set(i, (counts.get(i) ?? 0) + 1);
-    for (const [i, n] of counts) if (n / conversations[i].size > best[i].share) best[i] = { share: n / conversations[i].size, source };
+    for (const [i, n] of counts) if (conversations[i].own !== dir && n / conversations[i].size > best[i].share) best[i] = { share: n / conversations[i].size, shared: n, source };
   });
   return best;
 }
@@ -278,6 +314,176 @@ export function loadConversation(setDir: string, cid: string): Conversation {
   const chatDir = join(dir, 'beam', '1');
   const raw = readFileSync(join(chatDir, existsSync(join(chatDir, 'chat_trunecated.json')) ? 'chat_trunecated.json' : 'chat.json'));
   return { cid, complete: true, topicDropped, selectAttempt, chatSha256: sha256(raw), messages: messagesOf(JSON.parse(raw.toString('utf8'))), items };
+}
+
+// ─── gate calibration ────────────────────────────────────────────────
+
+export interface CalibrationSubject {
+  /** The public BEAM id, as eval/decisions/splits names it (1m-<n>). */
+  id: string;
+  /** Its canonical chat file, relative to the BEAM tree. */
+  file: string;
+  tokens: number;
+  ngrams: number;
+  /** s(c), the count of 13-grams behind it, and the public file that holds them (null when no other file holds any). */
+  share: number;
+  shared: number;
+  source: string | null;
+}
+export interface CalibrationMeasure { sources: number; sources_sha256: string; subjects_sha256: string; subjects: CalibrationSubject[] }
+export interface OutOfRange { rule: 'tau_above_max' | 'tau_zero' | 'low_below_min' | 'high_above_max'; value: number; limit: number; subject: string | null }
+export interface Calibration extends CalibrationMeasure {
+  schema: 'rs1-calibration/v1';
+  /** Human decisions after a related-file stop: subjects left out of the bounds and τ, and subjects kept past the stop. */
+  dropped: string[];
+  accepted: string[];
+  low_tokens: number;
+  high_tokens: number;
+  max_share: number;
+  max_share_subject: string;
+  tau: number;
+  /** What the ceiling stop refuses; a --fake run records it here instead of stopping. */
+  out_of_range: OutOfRange[];
+}
+const MEASURE_SCHEMA = 'rs1-calibration-measure/v1';
+
+const isChat = (path: string) => !path.endsWith('/probing_questions.json');
+/** The public id (500k-12) of a file given relative to the BEAM tree (chats/500K/12/chat.json). */
+const publicIdOf = (file: string) => { const [, tier, n] = conversationDir(file).split('/'); return `${tier.toLowerCase()}-${n}`; };
+/** A 13-gram key's two Bloom hashes (gramKey keeps h1 and the top 21 bits of h2). */
+const keyHashes = (k: number): [number, number] => [Math.floor(k / 2 ** 21), (k % 2 ** 21) * 2 ** 11];
+
+function gramKeys(value: unknown, chat: boolean, keep: (key: number) => boolean = () => true, out = new Set<number>()): Set<number> {
+  for (const text of texts(value, chat)) for (const [h1, h2] of ngrams(text)) { const k = gramKey(h1, h2); if (keep(k)) out.add(k); }
+  return out;
+}
+
+/** BEAM's public 1M conversations (chats/1M/<n>), each with its canonical chat file. */
+export function calibrationSubjects(beamDir: string): Array<{ id: string; dir: string; file: string }> {
+  const root = join(beamDir, 'chats', '1M');
+  const names = existsSync(root) ? readdirSync(root).filter(n => /^\d+$/.test(n)).sort((a, b) => Number(a) - Number(b)) : [];
+  return names.flatMap(n => {
+    const dir = join(root, n), file = ['chat_trunecated.json', 'chat.json'].map(f => join(dir, f)).find(p => existsSync(p));
+    return file ? [{ id: `1m-${n}`, dir, file }] : [];
+  });
+}
+
+/**
+ * Each subject's cl100k count and s(c). A 13-gram counts toward s(c) only if it appears in two conversation directories,
+ * the subject's own and another, so one pass over every directory (keeping only subject 13-grams) marks those in Bloom
+ * filters, and singleSourceShares then counts the marked ones exactly per public file.
+ */
+function measureSubjects(beamDir: string, sources: string[], subjects: Array<{ id: string; dir: string; file: string }>): CalibrationSubject[] {
+  const measured = subjects.map(s => {
+    const value = readJson(s.file);
+    return { ...s, tokens: messagesOf(value).reduce((n, m) => n + encodingCount('cl100k_base', m.content), 0), keys: Float64Array.from(gramKeys(value, true)) };
+  });
+  const total = measured.reduce((n, s) => n + s.keys.length, 0);
+  const inSubjects = Bloom.forCount(total), once = Bloom.forCount(total), twice = Bloom.forCount(total);
+  for (const s of measured) for (const k of s.keys) inSubjects.add(...keyHashes(k));
+  const dirs = new Map<string, string[]>();
+  for (const path of new Set([...sources, ...subjects.map(s => s.file)])) dirs.set(conversationDir(path), [...(dirs.get(conversationDir(path)) ?? []), path]);
+  for (const files of dirs.values()) {
+    const keys = new Set<number>();
+    for (const path of files) gramKeys(readJson(path), isChat(path), k => inSubjects.has(...keyHashes(k)), keys);
+    for (const k of keys) { const [h1, h2] = keyHashes(k); if (once.has(h1, h2)) twice.add(h1, h2); else once.add(h1, h2); }
+  }
+  const best = singleSourceShares(sources, measured.map(s => ({ size: s.keys.length, hits: Array.from(s.keys).filter(k => twice.has(...keyHashes(k))), own: s.dir })));
+  return measured.map((s, i) => ({ id: s.id, file: relative(beamDir, s.file), tokens: s.tokens, ngrams: s.keys.length, share: best[i].share, shared: best[i].shared, source: best[i].source >= 0 ? relative(beamDir, sources[best[i].source]) : null }));
+}
+
+/**
+ * The bounds and τ from the subjects a human has not dropped, and what the ceiling stop refuses. τ is computed from the
+ * integer counts (tau_factor × tau_steps × shared ÷ ngrams, rounded up), so a share already on a 0.1-point step stays.
+ */
+export function deriveCalibration(measure: CalibrationMeasure, decisions: { drop?: string[]; accept?: string[] } = {}): Calibration {
+  const dropped = [...new Set(decisions.drop ?? [])].sort(), accepted = [...new Set(decisions.accept ?? [])].sort();
+  const unknown = [...dropped, ...accepted].filter(id => !measure.subjects.some(s => s.id === id));
+  if (unknown.length) throw new ValidateError(`--calibration-drop and --calibration-accept name no calibration subject ${unknown.join(', ')}`);
+  if (dropped.some(id => accepted.includes(id))) throw new ValidateError('a calibration subject cannot be both dropped and accepted');
+  const used = measure.subjects.filter(s => !dropped.includes(s.id));
+  if (!used.length) throw new ValidateError('every calibration subject was dropped');
+  const smallest = used.reduce((a, b) => (b.tokens < a.tokens ? b : a)), largest = used.reduce((a, b) => (b.tokens > a.tokens ? b : a));
+  const top = used.reduce((a, b) => (b.share > a.share ? b : a));
+  const low = Math.floor((100 - CALIBRATION.length_margin_pct) * smallest.tokens / 100), high = Math.ceil((100 + CALIBRATION.length_margin_pct) * largest.tokens / 100);
+  const tau = top.shared ? Math.ceil(CALIBRATION.tau_factor * CALIBRATION.tau_steps * top.shared / top.ngrams) / CALIBRATION.tau_steps : 0;
+  const out_of_range: OutOfRange[] = [
+    ...(tau > CALIBRATION.tau_max ? [{ rule: 'tau_above_max' as const, value: tau, limit: CALIBRATION.tau_max, subject: top.id }] : []),
+    ...(tau === 0 ? [{ rule: 'tau_zero' as const, value: 0, limit: 0, subject: null }] : []),
+    ...(low < CALIBRATION.low_min ? [{ rule: 'low_below_min' as const, value: low, limit: CALIBRATION.low_min, subject: smallest.id }] : []),
+    ...(high > CALIBRATION.high_max ? [{ rule: 'high_above_max' as const, value: high, limit: CALIBRATION.high_max, subject: largest.id }] : []),
+  ];
+  return {
+    schema: 'rs1-calibration/v1', sources: measure.sources, sources_sha256: measure.sources_sha256, subjects_sha256: measure.subjects_sha256,
+    dropped, accepted, low_tokens: low, high_tokens: high, max_share: top.share, max_share_subject: top.id, tau, out_of_range, subjects: measure.subjects,
+  };
+}
+
+export interface CalibrateOptions {
+  /** The public-index cache path; the subjects' measurements are cached at <cachePath>.calibration.json. */
+  cachePath?: string;
+  drop?: string[];
+  accept?: string[];
+  /** false records the ceiling stop in the calibration instead of refusing (--fake). */
+  enforceRange?: boolean;
+  /** This run's arguments, for the rerun commands a refusal prints. */
+  argv?: string[];
+}
+
+/**
+ * The calibration over the gate's own pool (sources and sourcesSha256 as the public index lists them). Refuses a
+ * related-file pair first, since it would inflate τ, then an out-of-range gate; either refusal comes before any gate.
+ */
+export function calibrate(beamDir: string, sources: string[], sourcesSha256: string, opts: CalibrateOptions = {}): Calibration {
+  const subjects = calibrationSubjects(beamDir);
+  if (!subjects.length) throw new ValidateError(`no calibration subjects: no BEAM 1M conversation under ${join(beamDir, 'chats', '1M')}`);
+  const subjectsSha256 = filesSha256(beamDir, subjects.map(s => s.file));
+  const cacheFile = opts.cachePath ? `${opts.cachePath}.calibration.json` : null;
+  const cached = cacheFile && existsSync(cacheFile) ? readJson(cacheFile) : null;
+  const hit = cached?.schema === MEASURE_SCHEMA && cached.sources_sha256 === sourcesSha256 && cached.subjects_sha256 === subjectsSha256;
+  const measure: CalibrationMeasure = { sources: sources.length, sources_sha256: sourcesSha256, subjects_sha256: subjectsSha256, subjects: hit ? cached.subjects : measureSubjects(beamDir, sources, subjects) };
+  if (cacheFile && !hit) { mkdirSync(dirname(cacheFile), { recursive: true }); writeFileSync(cacheFile, JSON.stringify({ schema: MEASURE_SCHEMA, ...measure })); }
+  const cal = deriveCalibration(measure, opts);
+  const rerun = (flag: string, ids: string[]) => ['bun', 'eval/custody/rs1/validate.ts', ...(opts.argv ?? ['<arguments>']), ...ids.flatMap(id => [flag, id])].join(' ');
+  const decided = (id: string) => cal.dropped.includes(id) || cal.accepted.includes(id);
+  const related = cal.subjects.filter(s => s.share >= CALIBRATION.related_share && !decided(s.id));
+  if (related.length) {
+    const pairs = related.map(s => ({ s, other: publicIdOf(s.source!), fileShare: s.shared / gramKeys(readJson(join(beamDir, s.source!)), isChat(s.source!)).size }));
+    const drop = [...new Set(pairs.flatMap(p => [p.s.id, ...(cal.subjects.some(s => s.id === p.other) ? [p.other] : [])]))];
+    const kept = deriveCalibration(measure, { drop: cal.dropped, accept: [...cal.accepted, ...related.map(s => s.id)] });
+    throw new ValidateError([
+      `${related.length} calibration subject(s) share ${CALIBRATION.related_share * 100}% or more of their distinct 13-grams with one other public BEAM file, and files that contain each other would inflate tau`,
+      ...pairs.map(p => `  pair subject=${p.s.id} file=${p.s.source} file_id=${p.other} subject_share=${p.s.share.toFixed(6)} file_share=${p.fileShare.toFixed(6)}`),
+      `  sources_sha256=${cal.sources_sha256}`,
+      '  No gate ran and no report was written.',
+      `  A human decides: drop the pair from the subjects, or keep it and accept the larger tau (${kept.tau}${kept.tau > CALIBRATION.tau_max ? `, above the ${CALIBRATION.tau_max} ceiling, so the rerun stops with RS1_CALIBRATION_OUT_OF_RANGE` : ''}). Rerun with one of:`,
+      `  drop: ${rerun('--calibration-drop', drop)}`,
+      `  accept: ${rerun('--calibration-accept', related.map(s => s.id))}`,
+    ].join('\n'), 'RS1_CALIBRATION_RELATED_FILES');
+  }
+  if (cal.out_of_range.length && opts.enforceRange !== false) {
+    const outliers = [...new Set(cal.out_of_range.flatMap(o => (o.subject ? [o.subject] : [])))];
+    throw new ValidateError([
+      `the calibrated gates are too loose to decide anything (tau at most ${CALIBRATION.tau_max}, bounds inside [${CALIBRATION.low_min}, ${CALIBRATION.high_max}] tokens)`,
+      ...cal.out_of_range.map(o => `  ${o.rule} value=${o.value} limit=${o.limit} subject=${o.subject ?? 'none'}`),
+      `  low_tokens=${cal.low_tokens} high_tokens=${cal.high_tokens} tau=${cal.tau} max_share=${cal.max_share.toFixed(6)} subjects=${cal.subjects.length - cal.dropped.length}`,
+      `  sources_sha256=${cal.sources_sha256}`,
+      '  No gate ran and no report was written.',
+      '  A human decides: check that --beam-dir is the pinned public BEAM tree, then drop the outlying subject or take the rule back to GBEV-3 for a reviewed change.',
+      ...(outliers.length ? [`  drop: ${rerun('--calibration-drop', outliers)}`] : []),
+    ].join('\n'), 'RS1_CALIBRATION_OUT_OF_RANGE');
+  }
+  return cal;
+}
+
+/** Conversation directories under chats/ that eval/decisions/splits does not list as dev, as public ids; a tier with no split counts as sealed. */
+function sealedConversations(beamDir: string): string[] {
+  const dirs = (dir: string) => (existsSync(dir) ? readdirSync(dir).filter(n => statSync(join(dir, n)).isDirectory()).sort() : []);
+  return dirs(join(beamDir, 'chats')).flatMap(tier => {
+    const split = join(REPO, 'eval/decisions/splits', `beam-${tier.toLowerCase()}.json`);
+    const dev = new Set<string>(existsSync(split) ? readJson(split).dev : []);
+    return dirs(join(beamDir, 'chats', tier)).map(n => `${tier.toLowerCase()}-${n}`).filter(id => !dev.has(id));
+  });
 }
 
 // ─── windows for the absence scan ────────────────────────────────────
@@ -422,6 +628,7 @@ export interface Report {
   validators: string[];
   params: Record<string, number>;
   public_index: { sources: number; ngrams: number; m: number; k: number; fill: number; est_false_positive: number; sources_sha256: string };
+  calibration: Calibration;
   conversations: Record<string, ConversationResult>;
   totals: Record<string, number>;
   abilities: Record<string, { pass: number; fail: number }>;
@@ -453,7 +660,7 @@ function citedIds(value: unknown, out: number[] = []): number[] {
   return out;
 }
 
-export function planValidation(opts: Options, clients: ModelClient[], index: PublicIndex): Plan {
+export function planValidation(opts: Options, clients: ModelClient[], index: PublicIndex, calibration: Calibration): Plan {
   if (clients.length !== 2 || clients[0].id.split(':')[0] === clients[1].id.split(':')[0]) throw new ValidateError('validation needs two validators from different families');
   const root = join(opts.setDir, 'conversations');
   const cids = existsSync(root) ? readdirSync(root).filter(n => /^c\d{3,}$/.test(n)).sort() : [];
@@ -462,7 +669,6 @@ export function planValidation(opts: Options, clients: ModelClient[], index: Pub
   const keptChats = new Map<string, string>();
   const signatures: Array<[string, Uint32Array]> = [];
   const seenQuestions: Array<{ norm: string; shingles: Set<string> }> = [];
-  const low = Math.round(opts.targetTokens * (1 - opts.tolerance)), high = Math.round(opts.targetTokens * (1 + opts.tolerance));
   const call = (client: number, prompt: string, tokens: number, settle: Call['settle']) => {
     const cacheFile = opts.cacheDir ? join(opts.cacheDir, `${sha256(`${CACHE_VERSION}\0${clients[client].id}\0${prompt}`)}.json`) : null;
     calls.push({ client, prompt, tokens, cacheFile, cached: !!cacheFile && existsSync(cacheFile), settle });
@@ -475,7 +681,7 @@ export function planValidation(opts: Options, clients: ModelClient[], index: Pub
     if (!conv.complete) { result.reasons.push(conv.topicDropped ? 'topic' : 'unfinished'); return []; }
     const contentTokens = conv.messages.map(m => encodingCount('cl100k_base', m.content));
     result.tokens = contentTokens.reduce((s, t) => s + t, 0);
-    if (result.tokens < low || result.tokens > high) result.reasons.push('length');
+    if (result.tokens < calibration.low_tokens || result.tokens > calibration.high_tokens) result.reasons.push('length');
     const grams = new Map<number, [number, number]>();
     for (const m of conv.messages) for (const [h1, h2] of ngrams(m.content)) grams.set(gramKey(h1, h2), [h1, h2]);
     const hits = [...grams].filter(([, [h1, h2]]) => index.bloom.has(h1, h2)).map(([k]) => k);
@@ -486,7 +692,7 @@ export function planValidation(opts: Options, clients: ModelClient[], index: Pub
     const { result } = measured[i];
     result.contamination_share = share;
     result.contamination_source = source >= 0 ? relative(opts.beamDir, index.paths[source]) : null;
-    if (share >= THRESHOLDS.contamination_max) result.reasons.push('contamination');
+    if (share >= calibration.tau) result.reasons.push('contamination');
   });
 
   for (const { cid, conv, result, contentTokens, sig } of measured) {
@@ -590,8 +796,9 @@ export function planValidation(opts: Options, clients: ModelClient[], index: Pub
     return {
       schema: 'rs1-validation/v1',
       validators: clients.map(c => c.id),
-      params: { target_tokens: opts.targetTokens, tolerance: opts.tolerance, window_tokens: opts.windowTokens, overlap_tokens: opts.overlapTokens, select_attempts: SELECT_ATTEMPTS, ...THRESHOLDS },
+      params: { window_tokens: opts.windowTokens, overlap_tokens: opts.overlapTokens, select_attempts: SELECT_ATTEMPTS, ...THRESHOLDS },
       public_index: { sources: index.sources, ngrams: index.ngrams, m: index.bloom.m, k: index.bloom.k, fill: Number(fill.toFixed(6)), est_false_positive: Number((fill ** index.bloom.k).toExponential(3)), sources_sha256: index.sourcesSha256 },
+      calibration,
       conversations: results,
       totals,
       abilities,
@@ -623,8 +830,11 @@ export async function runCalls(calls: Call[], clients: ModelClient[], concurrenc
   return { errors, cached };
 }
 
-export async function validateSet(opts: Options, clients: ModelClient[], index = buildPublicIndex(opts.beamDir, opts.publicIndexPath)): Promise<Report> {
-  const plan = planValidation(opts, clients, index);
+export async function validateSet(
+  opts: Options, clients: ModelClient[], index = buildPublicIndex(opts.beamDir, opts.publicIndexPath),
+  calibration = calibrate(opts.beamDir, index.paths, index.sourcesSha256, { cachePath: opts.publicIndexPath }),
+): Promise<Report> {
+  const plan = planValidation(opts, clients, index, calibration);
   return plan.finish(await runCalls(plan.calls, clients, opts.concurrency));
 }
 
@@ -636,7 +846,7 @@ export function writeReport(path: string, report: Report): string {
 }
 
 export function summaryLines(report: Report, reportSha256: string): string[] {
-  const t = report.totals;
+  const t = report.totals, c = report.calibration;
   const kv = (o: Record<string, unknown>) => Object.entries(o).map(([k, v]) => `${k}=${v}`).join(' ');
   const tokens = Object.values(report.conversations).map(c => c.tokens).filter((n): n is number => n !== null).sort((a, b) => a - b);
   const gates = Object.fromEntries(Object.entries(t).filter(([k]) => k.startsWith('gate_')).sort());
@@ -649,6 +859,7 @@ export function summaryLines(report: Report, reportSha256: string): string[] {
     `rs1-validate ${kv({ tokens_min: tokens[0] ?? 0, tokens_median: tokens[Math.floor(tokens.length / 2)] ?? 0, tokens_max: tokens.at(-1) ?? 0, contamination_max_share: Math.max(0, ...shares).toFixed(6), contamination_union_max_share: Math.max(0, ...unionShares).toFixed(6) })}`,
     `rs1-validate ${kv({ calls: t.calls, cached_calls: t.cached_calls, validator_errors: t.validator_errors, windows: t.windows })}`,
     `rs1-validate ${kv({ public_sources: report.public_index.sources, public_ngrams: report.public_index.ngrams, bloom_fill: report.public_index.fill, bloom_est_false_positive: report.public_index.est_false_positive })}`,
+    `rs1-validate ${kv({ calibration_subjects: c.subjects.length - c.dropped.length, calibration_dropped: c.dropped.length, calibration_accepted: c.accepted.length, length_low: c.low_tokens, length_high: c.high_tokens, tau: c.tau, max_subject_share: c.max_share.toFixed(6), calibration_out_of_range: c.out_of_range.length, sources_sha256: c.sources_sha256 })}`,
     `rs1-validate ${kv({ finished_fail: t.finished_fail, finished_items: t.finished_items, verdict: report.verdict, report_sha256: reportSha256 })}`,
   ];
 }
@@ -660,14 +871,27 @@ async function main(argv: string[]): Promise<number> {
     if (!Number.isFinite(n) || n <= 0) throw new ValidateError(`${name} must be a positive number`);
     return n;
   };
+  const flags = (name: string) => argv.flatMap((a, i) => (a === name && i + 1 < argv.length ? [argv[i + 1]] : []));
+  for (const gone of ['--target-tokens', '--tolerance']) if (argv.includes(gone)) throw new ValidateError(`${gone} is gone: the length and contamination gates are calibrated from BEAM's public 1M conversations (--calibrate-only prints them)`);
+  const decisions = { drop: flags('--calibration-drop'), accept: flags('--calibration-accept'), argv };
   const setDir = flag('--set'), beamDir = flag('--beam-dir'), reportPath = flag('--report');
+  if (argv.includes('--calibrate-only')) {
+    if (!beamDir) throw new ValidateError('--calibrate-only needs --beam-dir');
+    const beam = resolve(beamDir), sealed = sealedConversations(beam), log = process.env.GBRAIN_EVALS_CUSTODY_LOG;
+    if (sealed.length && !log) {
+      throw new ValidateError(`${beam} holds ${sealed.length} BEAM conversation(s) the splits do not list as dev (${sealed.join(', ')}). Calibrate on them only in custody, with GBRAIN_EVALS_CUSTODY_LOG set, or on a tree of dev-split files`, 'RS1_CALIBRATION_CUSTODY_REQUIRED');
+    }
+    const sources = publicSources(beam), sourcesSha256 = filesSha256(beam, sources);
+    if (sealed.length) appendAccessLog(log!, { action: 'open', purpose: `rs1-validate --calibrate-only: ${sealed.length} sealed-split BEAM conversations in the calibration pool`, decision_id: process.env.GBRAIN_EVALS_DECISION_ID ?? 'GST-1154', labels_sha256: sourcesSha256, run_sha256: null });
+    console.log(JSON.stringify(calibrate(beam, sources, sourcesSha256, { cachePath: flag('--public-index'), ...decisions }), null, 2));
+    return 0;
+  }
   if (!setDir || !beamDir || !reportPath) throw new ValidateError('--set, --beam-dir and --report are required');
   const fake = argv.includes('--fake');
   if (fake === argv.includes('--paid')) throw new ValidateError('pass exactly one of --fake and --paid');
   const opts: Options = {
     setDir: resolve(setDir), beamDir: resolve(beamDir), reportPath: resolve(reportPath),
     cacheDir: resolve(flag('--cache') ?? join(dirname(resolve(setDir)), 'validate-cache')), publicIndexPath: flag('--public-index'),
-    targetTokens: num('--target-tokens', DEFAULTS.targetTokens), tolerance: num('--tolerance', DEFAULTS.tolerance),
     windowTokens: num('--window-tokens', DEFAULTS.windowTokens), overlapTokens: num('--overlap-tokens', DEFAULTS.overlapTokens),
     concurrency: num('--concurrency', DEFAULTS.concurrency),
   };
@@ -675,7 +899,9 @@ async function main(argv: string[]): Promise<number> {
   const geminiKey = process.env.GEMINI_API_KEY, anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (!fake && (!geminiKey || !anthropicKey)) throw new ValidateError('paid validation needs GEMINI_API_KEY and ANTHROPIC_API_KEY');
   const clients = fake ? VALIDATOR_IDS.map(id => fakeClient(`fake-${id}`)) : [geminiClient(geminiKey!), anthropicClient(anthropicKey!)];
-  const plan = planValidation(opts, clients, buildPublicIndex(opts.beamDir, opts.publicIndexPath));
+  const index = buildPublicIndex(opts.beamDir, opts.publicIndexPath);
+  const calibration = calibrate(opts.beamDir, index.paths, index.sourcesSha256, { cachePath: opts.publicIndexPath, ...decisions, enforceRange: !fake });
+  const plan = planValidation(opts, clients, index, calibration);
   const paid = !fake && plan.calls.some(c => !c.cached);
   if (paid) requirePaidArm(argv, { arm: 'rs1 validate', estimateUsd: plan.estimateUsd });
   const started = paid ? startPaidRun('rs1-validate', { ...budgetOptionsFrom(argv), estimateUsd: plan.estimateUsd }) : null;
