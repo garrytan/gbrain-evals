@@ -91,7 +91,7 @@ Keyless $0 re-score from the committed rows (verdicts recomputed from the stored
 bun eval/runner/batch/w10-rescore.ts w10a docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay
 ```
 
-Expected: `"official": 468` for `w10a-sonnet55-notes`, `"official": 462` for `w10b-sonnet55-notes`, McNemar wins 11, losses 5, status `inconclusive`, and "re-score matches".
+Expected: `"official": 468` for `w10a-sonnet55-notes`, `"official": 462` for `w10b-sonnet55-notes`, McNemar wins 11, losses 5 and status `inconclusive`. Since 2026-11-04 the check ends with "re-score differs" and exits 1, and `p_superiority` and `p_holm` are the only fields that differ: the gate now computes the sign-flip p, while `summary.json` keeps the bootstrap-share value as computed. Running it with `--write` would overwrite that receipt.
 
 Receipts in [`2026-10-07-longmemeval-w10a-current-pin/`](2026-10-07-longmemeval-w10a-current-pin/):
 
@@ -120,4 +120,4 @@ Through gbrain's own CLI, the same retrieval with the reader live: `gbrain eval 
 The preregistered one-sided p is 0.105 (was 0.081). The superiority gate returned the share of bootstrap draws at or
 below zero, which is not a p-value and runs low. The exact one-sided sign-flip p on the 16 questions where the two
 runs disagree (11 won, 5 lost) is 0.105. The result, no change shown, stands. `summary.json` keeps the value as
-computed. The disclosure note under the title is added. [Audit](../audit/2026-11-04-superiority-p.md).
+computed, so the keyless re-score check under "Reproduce and inspect" now reports that difference. The disclosure note under the title is added. [Audit](../audit/2026-11-04-superiority-p.md).

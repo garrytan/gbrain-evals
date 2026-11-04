@@ -319,11 +319,13 @@ export function nonInferiorityP(stats: PairedDelta, tolerance: number, direction
  * oriented summed difference, less `minEffect` times its item count, keeps or
  * flips its sign, and p is the share of sign patterns whose mean is at least
  * the observed one. That tests H0: delta <= minEffect at its boundary; with
- * `minEffect` 0 it is the test behind p_greater (p_less for 'lower'). Up to 20
- * clusters all 2^clusters patterns are enumerated, so p is exact and never
- * below 2^-clusters; above that p is (k + 1) / (draws + 1) over `draws`
- * patterns drawn from the recorded seed, with a Monte Carlo standard error of
- * at most 0.5 / sqrt(draws). Null with fewer than two clusters.
+ * `minEffect` 0 it is the test behind p_greater (p_less for 'lower'), though
+ * above 20 clusters the two are separate Monte Carlo estimates of it and can
+ * differ by Monte Carlo error. Up to 20 clusters all 2^clusters patterns are
+ * enumerated, so p is exact and never below 2^-clusters; above that p is
+ * (k + 1) / (draws + 1) over `draws` patterns drawn from the recorded seed,
+ * with a Monte Carlo standard error of at most 0.5 / sqrt(draws). Null with
+ * fewer than two clusters.
  */
 export function superiorityP(stats: PairedDelta, minEffect: number, direction: 'higher' | 'lower'): number | null {
   if (!finite(minEffect) || minEffect < 0) throw new Error('superiority minimum effect must be a finite number >= 0');

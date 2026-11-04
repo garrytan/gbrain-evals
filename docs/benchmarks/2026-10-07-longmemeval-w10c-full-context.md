@@ -87,7 +87,7 @@ Keyless $0 re-score from the committed rows (verdicts recomputed from the stored
 bun eval/runner/batch/w10-rescore.ts w10c docs/benchmarks/2026-10-07-longmemeval-w10c-full-context docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin
 ```
 
-Expected: official 139, 137, 144 and 141 for the four arms, non-inferiority `pass` for both readers, loss family `inconclusive`, and "re-score matches".
+Expected: official 139, 137, 144 and 141 for the four arms, non-inferiority `pass` for both readers and loss family `inconclusive`. Since 2026-11-04 the check ends with "re-score differs" and exits 1, and the loss family's `p_superiority` values are the only fields that differ: the gate now computes the sign-flip p, while `summary.json` keeps the bootstrap-share values as computed. Running it with `--write` would overwrite that receipt.
 
 Receipts in [`2026-10-07-longmemeval-w10c-full-context/`](2026-10-07-longmemeval-w10c-full-context/): `arms/<arm>/rows.ndjson` (answers, usage, cost, both judges' replies), `arms/<arm>/receipt.json` (batch ids, reservations, settlement, attestation), `summary.json` and the paired `compare-*.ndjson` files. Manifests (with per-question session counts for the whole-history prompts in `.meta.json`): [`2026-10-06-longmemeval-w10-manifests/w10c-*`](2026-10-06-longmemeval-w10-manifests/). Families: [`w10c-noninferiority.json`](2026-10-06-longmemeval-w10-families/w10c-noninferiority.json), [`w10c-loss.json`](2026-10-06-longmemeval-w10-families/w10c-loss.json).
 
@@ -110,5 +110,6 @@ done
 The two tests that the whole history beats gbrain by more than 7 points have exact one-sided sign-flip p values of
 0.97 with Sonnet 5.5 and 0.997 with `gpt-6.1-sol` (was 0.96 and 0.99). The superiority gate had returned the share of
 bootstrap draws at or below the 7-point margin, which is not a p-value. Both tests stay "not shown", and the
-non-inferiority passes, which use a different test, are unchanged. `summary.json` keeps the values as computed. The
+non-inferiority passes, which use a different test, are unchanged. `summary.json` keeps the values as computed, so the
+keyless re-score check under "Reproduce and inspect" now reports those differences. The
 disclosure note under the title is added. [Audit](../audit/2026-11-04-superiority-p.md).

@@ -27,7 +27,9 @@ so the numbers move but the calls hold:
   published aggregates say the P1 E1 round-2 pass (set C) and the P5 H7 pass stand. H7 is certain. P1 is certain on two
   gates, exact on a third and approximate on the fourth, `during`. The Q2 C-gate selection publishes no p values, so
   only the custodian can recompute it, keyless and at no cost. Its shipped units were decided by the fixed-sequence
-  confirmation, which never called `superiorityP`.
+  confirmation's cluster-bootstrap percentile intervals. Those never called `superiorityP`, but they share the old
+  share's few-cluster weakness (see Limits). Their published intervals sit well clear of zero, and no number or verdict
+  changes.
 - **gbrain's own dev records change on two three-conversation LoCoMo sources** (P2 date grounding and P6 `think`
   dates). Each recorded a pass at p = 0.0001 where the exact p is 0.125. Both decisions' overall dev verdicts were
   already inconclusive and stay so. Those files live in gbrain's repository, and this repository's pages never state
@@ -39,8 +41,9 @@ For a superiority comparison with minimum effect `m`, each cluster's oriented su
 count subtracted, and then its sign is kept or flipped. The p-value is the share of sign patterns whose mean is at
 least the observed mean. That tests "B beats A by no more than `m`" at its boundary, at the same unit of randomization
 the gate clusters by (`cluster_by`). With `m` = 0 it is the test behind `p_greater` (`p_less` for a lower-is-better
-metric), which every comparison already reported. With 0/1 outcomes and one item per cluster it is the exact one-sided
-binomial test on the discordant pairs. Holm adjusts these p values exactly as it adjusted the old ones.
+metric), which every comparison already reported. Above 20 clusters the gate's p and `p_greater` are separate Monte Carlo
+estimates of that test, so they can differ by Monte Carlo error. With 0/1 outcomes and one item per cluster it is the
+exact one-sided binomial test on the discordant pairs. Holm adjusts these p values exactly as it adjusted the old ones.
 [`test/eval/decide-kit.test.ts`](../../test/eval/decide-kit.test.ts) pins HARN-1's three-cluster case (p = 0.125,
 Holm 0.25 across two gates, inconclusive) and the minimum-effect shift.
 
@@ -104,7 +107,7 @@ published intervals sit well inside it).
 | [P1 E1 set E](../benchmarks/2026-10-05-heldout-verdicts/p1-e1-sete-2026-10-05.json) (reported after the trap gate failed) | 36 to 240 | now-precision ≤ 0.089 and as-of ≤ 1.8e-5 (bounds), during ≈ 0.72, correction 1 (exact) | fail (trap gate) | fail | No: the exact gate decides |
 | [P5 delta H7](../benchmarks/2026-10-05-heldout-verdicts/p5-delta-heldout-2026-10-05.json), as-of on range pages, `m` 0.10 (also below 1e-19 at `m` 0) | 117 clusters of 3 | ≤ 5e-19 (bound) | pass | pass | No |
 | [P5 set G](../benchmarks/2026-10-05-heldout-verdicts/p5-delta-set-g-2026-10-05.json), P1 superiority report (report-only) | 36 to 240 | now-precision ≈ 2e-7, as-of ≤ 0.00085 (bound), during ≈ 0.80, correction 0.53 (exact) | report-only | report-only | No |
-| [Q2 C-gate selection](../benchmarks/2026-10-05-heldout-program/q2.md) (U34, U1, U25 selected; Holm across 4 units at one-sided 0.025) | probe clusters on I1 | not published | U34, U1, U25 selected | unknown | Only the custodian's receipts can say. Shipping (U34, U1) was decided by the confirmation's bootstrap intervals, which never used `superiorityP` |
+| [Q2 C-gate selection](../benchmarks/2026-10-05-heldout-program/q2.md) (U34, U1, U25 selected; Holm across 4 units at one-sided 0.025) | probe clusters on I1 | not published | U34, U1, U25 selected | unknown | Only the custodian's receipts can say. Shipping (U34, U1) was decided by the confirmation's cluster-bootstrap percentile intervals (`c-gates.ts` `superior()`), which share the old share's few-cluster weakness (see Limits). The published intervals, −0.41 [−0.50, −0.31] false employment starts per probe person for U34 and +0.43 [+0.27, +0.59] advisor-trap accuracy for U34 + U1, sit well clear of zero. No number or verdict changes |
 
 ### Checked and not from `superiorityP`
 
@@ -126,6 +129,10 @@ published intervals sit well inside it).
 - `nonInferiorityP` uses the same bootstrap-share construction for non-inferiority gates and is anti-conservative at
   few clusters in the same way. It is not changed here. Recomputed with the exact sign-flip p at the tolerance, W10c's
   two non-inferiority passes stay passes (Holm 0.033 and 0.0058, published 0.035 and 0.014).
+- `c-gates.ts` `superior()` and `noninferior()` in the Q2 kit pass when the oriented lower bound of the cluster-bootstrap
+  95% percentile interval is above 0 (above −m for non-inferiority). That is the same construction as the old share, so
+  they are anti-conservative at few clusters in the same way. They are not changed here. `superior()` is half of the Q2
+  selection rule, beside the Holm-adjusted exact p, and both decided the confirmation's superiority and safety checks.
 - The Q2 C-gate selection and the P1 set C `during` gate need the custodian's rows. Rerunning
   `bun eval/runner/q2/c-gates.ts select` and the P1 family on the custody receipts with this fix is keyless and costs
   nothing.

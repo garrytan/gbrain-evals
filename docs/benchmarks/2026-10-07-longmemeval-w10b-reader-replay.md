@@ -122,7 +122,7 @@ Keyless $0 re-score from the committed rows (verdicts recomputed from the stored
 bun eval/runner/batch/w10-rescore.ts w10b docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay
 ```
 
-Expected: official 462, 465, 464, 460, 474 and 181 for the six arms, Opus and Sonnet 5.5 direct `pass`, the rest `inconclusive`, and "re-score matches".
+Expected: official 462, 465, 464, 460, 474 and 181 for the six arms, Opus and Sonnet 5.5 direct `pass` and the rest `inconclusive`. Since 2026-11-04 the check ends with "re-score differs" and exits 1, and `p_superiority` and `p_holm` are the only fields that differ: the gate now computes the sign-flip p, while `summary.json` keeps the bootstrap-share values as computed. Running it with `--write` would overwrite that receipt.
 
 Receipts in [`2026-10-07-longmemeval-w10b-reader-replay/`](2026-10-07-longmemeval-w10b-reader-replay/): `arms/<arm>/rows.ndjson` (answers, finish reasons, usage, cost, both judges' replies per question), `arms/<arm>/receipt.json` (batch ids, reservations, settlements, the pilot's batch-price evidence, the preregistration attestation), `baselines/r1-sonnet46|r2-sonnet46/` (secondary-judge verdicts on the September answers), `summary.json` and the paired `compare-*.ndjson` files. Manifests: [`2026-10-06-longmemeval-w10-manifests/w10b-*`](2026-10-06-longmemeval-w10-manifests/).
 
@@ -149,5 +149,5 @@ which is not a p-value and runs low. Opus 5.5 and Sonnet 5.5 direct are 0.00003 
 0.097). GPT-5.4 is 0.094, Holm 0.19 (was 0.076 and 0.15). Fable 5.1 is 0.29 (was 0.25). Every preregistered result
 stands. The sensitivity note said that removing Fable would have let Holm over five arms count `gpt-6.1-sol` as
 higher (adjusted p = 0.041). With the exact p the value is 0.061, so it would not. `summary.json` keeps the values as
-computed. The disclosure note under the title is added.
+computed, so the keyless re-score check under "Reproduce and inspect" now reports those differences. The disclosure note under the title is added.
 [Audit](../audit/2026-11-04-superiority-p.md), [correction](../corrections.md#longmemeval).
