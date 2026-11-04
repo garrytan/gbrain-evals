@@ -1,0 +1,125 @@
+{
+  "schema": "gbrain-evals/f6-particle-addon-file-agent-usage/v1",
+  "note": "Aggregates only, computed in custody from each leg's answers.ndjson (particle-1) and F6's published file-agent cell (claude-opus-5-5, replicate 0) on the same questions. All 200 scheduled questions, before the set's 1 preregistered exclusion. Prompt tokens are provider_input_tokens (uncached input plus cache reads and writes). recorded_usd is each answer's usd field.",
+  "legs": [
+    {
+      "leg": "a1",
+      "lease": "s1.baseline-file-agent.particle-a1-1d4d91ac",
+      "particle-1": {
+        "answers": 56,
+        "conversations": 3,
+        "prompt_tokens_per_answer": 1800486,
+        "cache_read_share": 0.448,
+        "output_tokens_per_answer": 9655,
+        "turns_per_answer": 18.8,
+        "recorded_usd_per_answer": 0.2825,
+        "outcomes": {
+          "scored": 49,
+          "turn_cap": 7
+        }
+      },
+      "claude-opus-5-5": {
+        "answers": 56,
+        "conversations": 3,
+        "prompt_tokens_per_answer": 474207,
+        "cache_read_share": 0.673,
+        "output_tokens_per_answer": 1887,
+        "turns_per_answer": 5.1,
+        "recorded_usd_per_answer": 0.8764,
+        "outcomes": {
+          "scored": 56
+        }
+      }
+    },
+    {
+      "leg": "a2",
+      "lease": "s1.baseline-file-agent.particle-a1-6b01afc7",
+      "particle-1": {
+        "answers": 64,
+        "conversations": 4,
+        "prompt_tokens_per_answer": 1511521,
+        "cache_read_share": 0.282,
+        "output_tokens_per_answer": 7807,
+        "turns_per_answer": 16.6,
+        "recorded_usd_per_answer": 0.2918,
+        "outcomes": {
+          "reader_error": 1,
+          "scored": 59,
+          "turn_cap": 4
+        }
+      },
+      "claude-opus-5-5": {
+        "answers": 64,
+        "conversations": 4,
+        "prompt_tokens_per_answer": 382873,
+        "cache_read_share": 0.673,
+        "output_tokens_per_answer": 2224,
+        "turns_per_answer": 5.2,
+        "recorded_usd_per_answer": 0.7214,
+        "outcomes": {
+          "context_overflow": 3,
+          "scored": 61
+        }
+      }
+    },
+    {
+      "leg": "a3",
+      "lease": "s1.baseline-file-agent.particle-a1-24a910e1",
+      "particle-1": {
+        "answers": 80,
+        "conversations": 4,
+        "prompt_tokens_per_answer": 1986644,
+        "cache_read_share": 0.417,
+        "output_tokens_per_answer": 9214,
+        "turns_per_answer": 19.9,
+        "recorded_usd_per_answer": 0.3234,
+        "outcomes": {
+          "scored": 68,
+          "turn_cap": 12
+        }
+      },
+      "claude-opus-5-5": {
+        "answers": 80,
+        "conversations": 4,
+        "prompt_tokens_per_answer": 688837,
+        "cache_read_share": 0.71,
+        "output_tokens_per_answer": 1892,
+        "turns_per_answer": 5.1,
+        "recorded_usd_per_answer": 1.1346,
+        "outcomes": {
+          "context_overflow": 2,
+          "scored": 78
+        }
+      }
+    }
+  ],
+  "all": {
+    "particle-1": {
+      "answers": 200,
+      "conversations": 10,
+      "prompt_tokens_per_answer": 1782481,
+      "cache_read_share": 0.389,
+      "output_tokens_per_answer": 8887,
+      "turns_per_answer": 18.6,
+      "recorded_usd_per_answer": 0.3019,
+      "outcomes": {
+        "reader_error": 1,
+        "scored": 176,
+        "turn_cap": 23
+      }
+    },
+    "claude-opus-5-5": {
+      "answers": 200,
+      "conversations": 10,
+      "prompt_tokens_per_answer": 530832,
+      "cache_read_share": 0.692,
+      "output_tokens_per_answer": 1997,
+      "turns_per_answer": 5.1,
+      "recorded_usd_per_answer": 0.9301,
+      "outcomes": {
+        "context_overflow": 5,
+        "scored": 195
+      }
+    }
+  }
+}

@@ -61,8 +61,17 @@ first.
 - The [SkillOpt retirement finding](benchmarks/2026-11-03-skillopt-retired.md) carries the gbrain, OpenAI and Particle
   lines in its closing Disclosures section. It reports gbrain's result and GPT-6.1 Sol's calibration result, and says
   particle-1 was not run.
+- The [particle-1 F6 add-on finding](findings/2026-11-04-particle-1-f6-addon.md) carries the Particle, gbrain and OpenAI
+  lines in its closing Disclosures section, and its [report](findings/2026-11-04-particle-1-f6-addon/report.md) carries
+  them up front. The docs index row carries all three. README's known-limits entry on BEAM's judge carries the Particle
+  line, since it reports particle-1's result and uses GPT-6.1 Sol only as a judge.
 
 ## Changelog
+
+### 2026-11-04: The particle-1 F6 add-on finding
+
+"In this repository" lists the [particle-1 F6 add-on finding](findings/2026-11-04-particle-1-f6-addon.md), its report,
+its docs index row and README's known-limits entry on BEAM's judge, with the lines each carries.
 
 ### 2026-11-03: The SkillOpt retirement finding
 

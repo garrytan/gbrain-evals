@@ -207,7 +207,9 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 
 F6, a current-master rerun of this comparison at 8k (gbrain `0ccf2bdd`, 2026-11-03), is published in
 [docs/benchmarks/2026-10-29-f6-current-master/scoreboard.md](docs/benchmarks/2026-10-29-f6-current-master/scoreboard.md);
-this table stays Q1's until the custodian re-renders it from the F6 receipt (#337).
+this table stays Q1's until the custodian re-renders it from the F6 receipt (#337). F6's particle-1 add-on re-reads
+ten of its frozen contexts with particle-1 and runs its file agent with particle-1
+([finding](docs/findings/2026-11-04-particle-1-f6-addon.md)).
 
 **Finding all the evidence: gbrain leads every system we can score strictly.** A question counts only if every
 required session is in the top five. gbrain was measured at `109b992`
@@ -293,6 +295,11 @@ agent's context in 0 of 100 permission runs; files do in 100, and plain Postgres
   optimizer benchmark is retired. Garry Tan also decided to deprecate gbrain's iterative SkillOpt loop and remove it on
   or after December 3, 2026; gbrain#8525, open as of November 3, adds the notice after the pinned commit
   ([retirement finding](docs/benchmarks/2026-11-03-skillopt-retired.md)).
+- BEAM's canonical judge, gpt-4.1-mini, does not reliably compare answer models. On the eight F6 cells judged twice,
+  it scores particle-1 0.9 to 8.0 points above Opus 5.5, and GPT-6.1 Sol, judging the same answers on the same rubric,
+  scores it 4.9 to 8.0 points below, with every interval below zero. So the reader gaps on those cells depend on the
+  judge, and this test checked neither judge against human grades
+  ([particle-1 F6 add-on finding](docs/findings/2026-11-04-particle-1-f6-addon.md)). Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
 
 ## Where to read next
 
@@ -385,6 +392,13 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-04: A known limit on BEAM's judge for comparing answer models; the F6 pointer names the particle-1 add-on
+
+Known limits gain one entry. On the eight F6 cells that the particle-1 add-on judged twice, gpt-4.1-mini scores
+particle-1 above Opus 5.5 and GPT-6.1 Sol scores it below, so reader gaps under BEAM's canonical judge depend on the
+judge ([finding](docs/findings/2026-11-04-particle-1-f6-addon.md)). The entry carries the Particle line. The F6 pointer
+under the Q1 block links the finding. No number in the current-state tables changed.
 
 ### 2026-11-03: Known limits name the retired SkillOpt benchmark
 

@@ -2,6 +2,29 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### particle-1 F6 add-on finding: the judge decides whether particle-1 scores above or below Opus 5.5 (GST-1153)
+
+- **`docs/findings/2026-11-04-particle-1-f6-addon.md`, new.** It leads with the second-judge check A6 preregistered. On
+  the eight cells where BEAM's canonical judge, gpt-4.1-mini, put particle-1 above Opus 5.5 (+0.9 to +8.0 points),
+  gpt-6.1-sol on the same rubric puts it 4.9 to 8.0 points below, with every 95% interval below zero. So the canonical
+  judge's reader-model gaps on these cells are not reliable. Cost per correct answer sits beside Opus 5.5's: 12 to 19
+  times less on the re-reads under either judge, and 2.7 times less as the file agent. The file-agent row is complete
+  after three legs (leases `…-1d4d91ac`, `…-6b01afc7`, `…-24a910e1`, $61.07 together): 63.4% against Opus 5.5's 72.3%
+  (−8.7 points, −14.0 to −3.2), with 23 turn caps and 1 reader error. It also explains why A6's $0.04 per answer was
+  about 7.6 times too low (1.78M prompt tokens and 8,887 output tokens per answer, over 18.6 turns). Aggregates only,
+  in `docs/findings/2026-11-04-particle-1-f6-addon/` with SHA256SUMS. The Particle, gbrain and OpenAI lines close it.
+- **F6's scoreboard carries a dated label line.** `publication.json` adds one disclosure, dated 2026-11-04: the S1
+  file-agent row's receipt names block T1 because its A4 unit ran without `--manifest f6`. Its run configuration
+  (`07b938b4`) is the one F6 publishes, so this is a label fix, not a re-run. The custodian re-rendered the receipt
+  with the note. As in #343, four `SHA256SUMS` entries changed (`campaign.json`, `scoreboard.json`, `scoreboard.md`
+  and the `render/` entry for the public `scoreboard.md`), and every cell's rows, answers and judgments hash as before.
+  `publication.json` now pins results commit `de415001`, whose `SHA256SUMS` hashes to `b60cde2e…6e09` (was
+  `9862f0e4`, `e95f36a8…ff9c`). `scoreboard.md` is the custodian's render, byte for byte.
+- README's known limits gain an entry on BEAM's judge for comparing answer models. The docs index gains a row, and the
+  disclosures page lists the new finding.
+
 ## [0.10.158] - 2026-11-04
 
 ### A6 revision 4: the file agent's second resume runs as campaign p1c at $49.08, and any unspent part moves to the second judge (GST-1153)
