@@ -302,8 +302,8 @@ agent's context in 0 of 100 permission runs; files do in 100, and plain Postgres
   optimizer benchmark is retired. Garry Tan also decided to deprecate gbrain's iterative SkillOpt loop and remove it on
   or after December 3, 2026; gbrain#8525, open as of November 3, adds the notice after the pinned commit
   ([retirement finding](docs/benchmarks/2026-11-03-skillopt-retired.md)).
-- BEAM's canonical judge, gpt-4.1-mini, does not reliably compare answer models. On the eight F6 cells judged twice,
-  it scores particle-1 0.9 to 8.0 points above Opus 5.5, and GPT-6.1 Sol, judging the same answers on the same rubric,
+- On the eight F6 cells judged twice, BEAM's canonical judge, gpt-4.1-mini, does not reliably compare answer models.
+  It scores particle-1 0.9 to 8.0 points above Opus 5.5, and GPT-6.1 Sol, judging the same answers on the same rubric,
   scores it 4.9 to 8.0 points below, with every interval below zero. So the reader gaps on those cells depend on the
   judge, and this test checked neither judge against human grades
   ([particle-1 F6 add-on finding](docs/findings/2026-11-04-particle-1-f6-addon.md)). Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
