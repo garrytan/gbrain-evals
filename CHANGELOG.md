@@ -2,6 +2,17 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### The RS1 custody mint checks out only BEAM's code, public topics and dev conversations, and validation reads only those chats (F28, GST-1154)
+
+- **What was exposed.** `eval/custody/rs1/mint.sh` fetched and checked out the whole public BEAM repository at b2da22e into `<out>/tooling/beam`. That put the BEAM-10M tier and every conversation our splits hold as sealed on any machine that ran a mint, cloud development machines included, and `eval/custody/rs1/validate.ts` read every BEAM chat and questions file to build its public index.
+- **The path list.** `eval/custody/rs1/beam-paths.txt` lists what a mint may check out: `src/`, `requirements.txt`, `LICENSE`, `README.md`, the topics files of BEAM-100K, 500K and 1M, and for each of their 28 dev conversations its `chat.json`, its `chat_trunecated.json` where BEAM ships one (the canonical chat in the dataset manifest) and its `probing_questions.json`. `eval/custody/rs1/beam-paths.ts` derives it from `eval/decisions/splits/beam-*.json` and `eval/decisions/datasets/beam-b2da22e.json`, and a test fails when the committed list differs. It leaves out the 62 sealed conversations (14 of BEAM-100K, 24 of 500K, 24 of 1M), the whole 10M tier with `topics/10M`, and every other file in a dev conversation's folder. A conversation that its split file names neither dev nor sealed refuses the list.
+- **The sparse checkout.** `eval/custody/rs1/beam-checkout.sh` fetches BEAM at the pinned commit with `--depth 1 --filter=blob:none` and a non-cone sparse checkout of the list, so git downloads only the listed files' contents. It still checks HEAD and a clean tree, and it now also checks that the files on disk are exactly the listed ones and that the object store holds no other BEAM file, without fetching. A checkout made from another list, or a full checkout from before this change, is deleted and fetched again. Stub-model mints of two conversations, one per topic source, completed on the sparse tree (93 files on disk, 2,551 BEAM files absent), and replacing a checkout made from an earlier list worked.
+- **Validation.** `validate.ts` builds its counts-only public index from the same list (the 56 `chat.json` and `probing_questions.json` files), and its report records the list's SHA-256 as `public_index.source_list_sha256`. A listed file missing under `--beam-dir` refuses. Gate thresholds are unchanged.
+- **What changes in the gates.** The contamination gates compare a minted conversation with the dev conversations only, and the topic-collision check compares a drawn topic with the 90 topics of BEAM-100K, 500K and 1M, without BEAM-10M's 10.
+- `test/eval/custody-rs1.test.ts` adds keyless tests of the list, the sparse checkout against a local BEAM-shaped repository (excluded files absent from disk and object store, pipeline modules present, a full checkout replaced, local changes and stray files refused) and the index reading only listed files.
+
 ## [0.10.157] - 2026-11-04
 
 ### The particle-1 file agent resumes under its own $68 campaign (F6 preregistration A6, Revision 3)
