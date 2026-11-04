@@ -38,9 +38,13 @@
  * validate, and replies already cached under --cache are not bought again. The verdict is "stop" (exit 4) when more than
  * 20% of the items of finished conversations (kept, or dropped at the floor) fail.
  *
- * Gate calibration (plan "Gate recalibration method", written before any RS1 output was read). The subjects are BEAM's
- * public 1M conversations under <beam-dir>/chats/1M, each counted on its canonical chat file (chat_trunecated.json when
- * present, else chat.json). Length: low = floor(0.95 × the smallest subject's cl100k count), high = ceil(1.05 × the
+ * Public files: validate reads only the BEAM conversations eval/decisions/splits lists as dev (F28, 2026-11-04), so the
+ * public index, the calibration's pool and its subjects leave out Q1's sealed splits and the 10M tier (all sealed) even
+ * when the tree holds them, and never open their files.
+ *
+ * Gate calibration (plan "Gate recalibration method", written before any RS1 output was read). The subjects are the
+ * dev-split public 1M conversations under <beam-dir>/chats/1M, each counted on its canonical chat file
+ * (chat_trunecated.json when present, else chat.json). Length: low = floor(0.95 × the smallest subject's cl100k count), high = ceil(1.05 × the
  * largest). Contamination: s(c) is the largest share of subject c's distinct 13-grams found in one public source file
  * outside c's own directory (its chat, truncated chat and questions files), over the gate's own pool; τ is 1.25 × the
  * largest s(c), rounded up to a whole 0.1 percentage point. So every subject passes both gates. The calibration stops
@@ -53,9 +57,7 @@
  *     trees are tiny, and mint.sh never regenerates a real set from a fake report.
  * The subjects' measurements are cached beside --public-index, keyed by the pool's sources_sha256 and the subjects' own
  * paths and sizes, and the report carries the calibration. --calibrate-only prints the calibration as JSON (public BEAM
- * ids, paths, counts and hashes, never text) and touches no minted set. It refuses a tree holding any conversation the
- * BEAM splits (eval/decisions/splits) do not list as dev unless GBRAIN_EVALS_CUSTODY_LOG is set, and logs the opening
- * there, so a development machine calibrates on dev-split files only.
+ * ids, paths, counts and hashes, never text) and touches no minted set.
  *
  * Model calls sit behind one interface (ModelClient), so tests inject fakes. --fake's stand-ins carry their own ids
  * (fake-gemini:…, fake-anthropic:…), so their cached replies never answer a --paid run and a fake report never names the
@@ -69,7 +71,6 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { dirname, join, relative, resolve } from 'node:path';
 import { BudgetExceededError, budgetOptionsFrom, chatPrice, startPaidRun } from '../../runner/budget-ledger.ts';
 import { PaidArmRefusal, requirePaidArm } from '../../runner/paid-arm.ts';
-import { appendAccessLog } from '../../runner/sealed-confirmation-lib.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
@@ -203,14 +204,26 @@ function questionTexts(value: unknown, out: string[] = []): string[] {
   return out;
 }
 
+/** The public ids (1m-20) eval/decisions/splits lists as dev for a BEAM tier; a tier with no split, such as 10M, has none. */
+function devSplit(tier: string): Set<string> {
+  const split = join(REPO, 'eval/decisions/splits', `beam-${tier.toLowerCase()}.json`);
+  return new Set<string>(existsSync(split) ? readJson(split).dev : []);
+}
+
 /**
- * BEAM's public chats and questions: every chat.json (chat_trunecated.json is a cut of it, and a 10M chat's plan-N
- * chats repeat its messages) and every probing_questions.json.
+ * BEAM's public chats and questions of the dev-split conversations: every chat.json (chat_trunecated.json is a cut of
+ * it) and every probing_questions.json under chats/<tier>/<n> whose public id the splits list as dev.
  */
 export function publicSources(beamDir: string): string[] {
   const root = join(beamDir, 'chats');
-  const sources = existsSync(root) ? walkFiles(root, p => !/\/plan-\d+\//.test(p) && (p.endsWith('/chat.json') || p.endsWith('/probing_questions/probing_questions.json'))) : [];
-  if (!sources.some(p => p.endsWith('/chat.json'))) throw new ValidateError(`no public BEAM chats under ${root}`);
+  const dev = new Map<string, Set<string>>();
+  const allowed = (path: string) => {
+    const [tier, n] = relative(root, path).split('/');
+    if (!dev.has(tier)) dev.set(tier, devSplit(tier));
+    return dev.get(tier)!.has(`${tier.toLowerCase()}-${n}`);
+  };
+  const sources = existsSync(root) ? walkFiles(root, p => (p.endsWith('/chat.json') || p.endsWith('/probing_questions/probing_questions.json')) && allowed(p)) : [];
+  if (!sources.some(p => p.endsWith('/chat.json'))) throw new ValidateError(`no dev-split public BEAM chats under ${root}`);
   return sources;
 }
 
@@ -358,13 +371,12 @@ function gramKeys(value: unknown, chat: boolean, keep: (key: number) => boolean 
   return out;
 }
 
-/** BEAM's public 1M conversations (chats/1M/<n>), each with its canonical chat file. */
-export function calibrationSubjects(beamDir: string): Array<{ id: string; dir: string; file: string }> {
-  const root = join(beamDir, 'chats', '1M');
-  const names = existsSync(root) ? readdirSync(root).filter(n => /^\d+$/.test(n)).sort((a, b) => Number(a) - Number(b)) : [];
-  return names.flatMap(n => {
-    const dir = join(root, n), file = ['chat_trunecated.json', 'chat.json'].map(f => join(dir, f)).find(p => existsSync(p));
-    return file ? [{ id: `1m-${n}`, dir, file }] : [];
+/** The pool's 1M conversations (chats/1M/<n>/chat.json among the sources), each with its canonical chat file. */
+export function calibrationSubjects(beamDir: string, sources: string[]): Array<{ id: string; dir: string; file: string }> {
+  const names = sources.flatMap(p => /^chats\/1M\/(\d+)\/chat\.json$/.exec(relative(beamDir, p))?.slice(1) ?? []).sort((a, b) => Number(a) - Number(b));
+  return names.map(n => {
+    const dir = join(beamDir, 'chats', '1M', n), truncated = join(dir, 'chat_trunecated.json');
+    return { id: `1m-${n}`, dir, file: existsSync(truncated) ? truncated : join(dir, 'chat.json') };
   });
 }
 
@@ -435,8 +447,8 @@ export interface CalibrateOptions {
  * related-file pair first, since it would inflate τ, then an out-of-range gate; either refusal comes before any gate.
  */
 export function calibrate(beamDir: string, sources: string[], sourcesSha256: string, opts: CalibrateOptions = {}): Calibration {
-  const subjects = calibrationSubjects(beamDir);
-  if (!subjects.length) throw new ValidateError(`no calibration subjects: no BEAM 1M conversation under ${join(beamDir, 'chats', '1M')}`);
+  const subjects = calibrationSubjects(beamDir, sources);
+  if (!subjects.length) throw new ValidateError(`no calibration subjects: no dev-split BEAM 1M conversation under ${join(beamDir, 'chats', '1M')}`);
   const subjectsSha256 = filesSha256(beamDir, subjects.map(s => s.file));
   const cacheFile = opts.cachePath ? `${opts.cachePath}.calibration.json` : null;
   const cached = cacheFile && existsSync(cacheFile) ? readJson(cacheFile) : null;
@@ -474,16 +486,6 @@ export function calibrate(beamDir: string, sources: string[], sourcesSha256: str
     ].join('\n'), 'RS1_CALIBRATION_OUT_OF_RANGE');
   }
   return cal;
-}
-
-/** Conversation directories under chats/ that eval/decisions/splits does not list as dev, as public ids; a tier with no split counts as sealed. */
-function sealedConversations(beamDir: string): string[] {
-  const dirs = (dir: string) => (existsSync(dir) ? readdirSync(dir).filter(n => statSync(join(dir, n)).isDirectory()).sort() : []);
-  return dirs(join(beamDir, 'chats')).flatMap(tier => {
-    const split = join(REPO, 'eval/decisions/splits', `beam-${tier.toLowerCase()}.json`);
-    const dev = new Set<string>(existsSync(split) ? readJson(split).dev : []);
-    return dirs(join(beamDir, 'chats', tier)).map(n => `${tier.toLowerCase()}-${n}`).filter(id => !dev.has(id));
-  });
 }
 
 // ─── windows for the absence scan ────────────────────────────────────
@@ -872,17 +874,12 @@ async function main(argv: string[]): Promise<number> {
     return n;
   };
   const flags = (name: string) => argv.flatMap((a, i) => (a === name && i + 1 < argv.length ? [argv[i + 1]] : []));
-  for (const gone of ['--target-tokens', '--tolerance']) if (argv.includes(gone)) throw new ValidateError(`${gone} is gone: the length and contamination gates are calibrated from BEAM's public 1M conversations (--calibrate-only prints them)`);
+  for (const gone of ['--target-tokens', '--tolerance']) if (argv.includes(gone)) throw new ValidateError(`${gone} is gone: the length and contamination gates are calibrated from BEAM's dev-split public 1M conversations (--calibrate-only prints them)`);
   const decisions = { drop: flags('--calibration-drop'), accept: flags('--calibration-accept'), argv };
   const setDir = flag('--set'), beamDir = flag('--beam-dir'), reportPath = flag('--report');
   if (argv.includes('--calibrate-only')) {
     if (!beamDir) throw new ValidateError('--calibrate-only needs --beam-dir');
-    const beam = resolve(beamDir), sealed = sealedConversations(beam), log = process.env.GBRAIN_EVALS_CUSTODY_LOG;
-    if (sealed.length && !log) {
-      throw new ValidateError(`${beam} holds ${sealed.length} BEAM conversation(s) the splits do not list as dev (${sealed.join(', ')}). Calibrate on them only in custody, with GBRAIN_EVALS_CUSTODY_LOG set, or on a tree of dev-split files`, 'RS1_CALIBRATION_CUSTODY_REQUIRED');
-    }
-    const sources = publicSources(beam), sourcesSha256 = filesSha256(beam, sources);
-    if (sealed.length) appendAccessLog(log!, { action: 'open', purpose: `rs1-validate --calibrate-only: ${sealed.length} sealed-split BEAM conversations in the calibration pool`, decision_id: process.env.GBRAIN_EVALS_DECISION_ID ?? 'GST-1154', labels_sha256: sourcesSha256, run_sha256: null });
+    const beam = resolve(beamDir), sources = publicSources(beam), sourcesSha256 = filesSha256(beam, sources);
     console.log(JSON.stringify(calibrate(beam, sources, sourcesSha256, { cachePath: flag('--public-index'), ...decisions }), null, 2));
     return 0;
   }

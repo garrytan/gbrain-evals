@@ -14,7 +14,7 @@ import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
 import { checkTree, hashTree } from '../../eval/custody/rs1/hashlist.ts';
 import {
   ANSWER_FIELD, CALIBRATION, SLOTS, VALIDATOR_IDS, anthropicRequest, buildPublicIndex, calibrate, chunkMessages,
-  deriveCalibration, fakeClient, geminiRequest, ngrams, planValidation, validateSet, writeReport, ValidateError,
+  deriveCalibration, fakeClient, geminiRequest, ngrams, planValidation, publicSources, validateSet, writeReport, ValidateError,
   type Calibration, type CalibrationMeasure, type ModelClient, type Options, type PublicIndex,
 } from '../../eval/custody/rs1/validate.ts';
 
@@ -38,8 +38,8 @@ function run(cmd: string, args: string[], env: Record<string, string> = {}) {
 }
 
 /**
- * A BEAM-shaped public tree: three public topics, one public question, and two public 1M chats, the first holding
- * PASSAGE and the second, larger one quoting 32 of its words. The calibration from it is τ 2% (20 of the first chat's
+ * A BEAM-shaped public tree: three public topics, one public question, and two public 1M chats of dev-split
+ * conversations, 1m-3 holding PASSAGE and the larger 1m-2 quoting 32 of its words. The calibration from it is τ 2% (20 of the first chat's
  * 1,300 13-grams are in the second) and bounds around the fake mint's conversations; --fake does not stop on its range.
  */
 const PASSAGE = words('public-passage', 400);
@@ -47,11 +47,11 @@ const PUBLIC_QUESTION = 'Which public dataset question appears in the BEAM relea
 function fakeBeam(root: string): string {
   const beam = join(root, 'beam');
   mkdirSync(join(beam, 'topics/1M'), { recursive: true });
-  mkdirSync(join(beam, 'chats/1M/1/probing_questions'), { recursive: true });
+  mkdirSync(join(beam, 'chats/1M/3/probing_questions'), { recursive: true });
   writeFileSync(join(beam, 'topics/1M/1M_topics.json'), JSON.stringify(['Coding', 'Math', 'Cooking'].map((category, i) => ({ id: i + 1, category, title: `Public ${category} topic`, theme: `Public theme ${i}`, subtopics: ['a', 'b', 'c'] }))));
   const turns = Array.from({ length: 10 }, (_, i) => [{ role: 'user', id: 2 * i, content: i === 3 ? PASSAGE : words(`public-u${i}`, 60) }, { role: 'assistant', id: 2 * i + 1, content: words(`public-a${i}`, 60) }]);
-  writeFileSync(join(beam, 'chats/1M/1/chat.json'), JSON.stringify([{ batch_number: 1, time_anchor: 'x', turns }]));
-  writeFileSync(join(beam, 'chats/1M/1/probing_questions/probing_questions.json'), JSON.stringify({ information_extraction: [{ question: PUBLIC_QUESTION, answer: 'x', rubric: ['y'] }] }));
+  writeFileSync(join(beam, 'chats/1M/3/chat.json'), JSON.stringify([{ batch_number: 1, time_anchor: 'x', turns }]));
+  writeFileSync(join(beam, 'chats/1M/3/probing_questions/probing_questions.json'), JSON.stringify({ information_extraction: [{ question: PUBLIC_QUESTION, answer: 'x', rubric: ['y'] }] }));
   const quote = PASSAGE.split(' ').slice(0, 32).join(' ');
   const big = Array.from({ length: 50 }, (_, i) => [{ role: 'user', id: 2 * i, content: i === 7 ? quote : words(`public-big-u${i}`, 100) }, { role: 'assistant', id: 2 * i + 1, content: words(`public-big-a${i}`, 100) }]);
   mkdirSync(join(beam, 'chats/1M/2'), { recursive: true });
@@ -167,8 +167,8 @@ describe('RS1 custody scripts end to end (mint.sh --fake)', () => {
     expect(r.out).toContain('calibration_subjects=2 calibration_dropped=0 calibration_accepted=0 ');
     expect(r.out).toContain(' tau=0.02 ');
     const written = JSON.parse(readFileSync(report, 'utf8'));
-    expect(written.calibration).toMatchObject({ tau: 0.02, max_share_subject: '1m-1', out_of_range: [{ rule: 'low_below_min' }] });
-    expect(written.calibration.subjects.map((s: { id: string }) => s.id)).toEqual(['1m-1', '1m-2']);
+    expect(written.calibration).toMatchObject({ tau: 0.02, max_share_subject: '1m-3', out_of_range: [{ rule: 'low_below_min' }] });
+    expect(written.calibration.subjects.map((s: { id: string }) => s.id)).toEqual(['1m-2', '1m-3']);
     expect(Object.keys(written.params)).not.toContain('contamination_max');
     const probes = sealedProbes(set, seedLine('test seed a'));
     expect(leaks(r.all, probes)).toBe(0);
@@ -350,7 +350,7 @@ describe('validate.ts gates', () => {
     expect(c.status).toBe('drop');
     expect(c.reasons).toEqual(['contamination']);
     expect(c.contamination_share!).toBeGreaterThanOrEqual(cal.tau);
-    expect(c.contamination_source).toBe('chats/1M/1/chat.json');
+    expect(c.contamination_source).toBe('chats/1M/3/chat.json');
     expect(c.contamination_union_share!).toBeGreaterThanOrEqual(c.contamination_share!);
     expect(report.conversations.c001.contamination_share).toBe(0);
     expect(Object.keys(c.items)).toHaveLength(0);
@@ -661,33 +661,27 @@ describe('validate.ts gate calibration', () => {
     expect(again.subjects.map(s => s.tokens)).toEqual([tokensOf(A2.slice(0, 8)), tokensOf([...A3, grams('cal-cache/extra', 100)])]);
   });
 
-  test('--calibrate-only refuses sealed-split conversations outside custody, logs them inside, and prints ids, counts and hashes only', () => {
-    // Million-token subjects, so the ceiling stop passes: 1m-1 (sealed split) and 1m-2 (dev), and 500k-10 quoting both.
+  test('--calibrate-only reads dev-split files only: a sealed-split conversation and the 10M tier change nothing, and it prints ids, counts and hashes only', () => {
+    // A million-token subject, so the ceiling stop passes: 1m-2 (dev), with 500k-10 quoting it. 1m-1 (a sealed split) and
+    // 10m-1 (the 10M tier has no dev split) each hold whole messages of 1m-2, so reading either would raise τ.
     const C1 = Array.from({ length: 130 }, (_, i) => bulk(`cal-c1/${i}`)), C2 = Array.from({ length: 160 }, (_, i) => bulk(`cal-c2/${i}`));
-    const beam = beamTree(join(root, 'beam-c'), { '1M/1': { messages: C1 }, '1M/2': { messages: C2 }, '500K/10': { messages: [cut(C2[0], 0, 112), cut(C1[0], 0, 62), grams('cal-c5/filler', 100)] } });
-    const log = join(root, 'custody/access.log');
-    const outside = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', beam]);
-    expect(outside.code).toBe(2);
-    expect(outside.out).toBe('');
-    expect(outside.err).toMatch(/^rs1-validate refused: RS1_CALIBRATION_CUSTODY_REQUIRED: .* holds 1 BEAM conversation\(s\) the splits do not list as dev \(1m-1\)/);
-    const inside = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', beam], { GBRAIN_EVALS_CUSTODY_LOG: log });
-    expect(inside.err).toBe('');
-    expect(inside.code).toBe(0);
-    const cal = JSON.parse(inside.out) as Calibration;
-    expect(cal.subjects.map(s => [s.id, s.shared, s.ngrams, s.source])).toEqual([['1m-1', 50, 130 * 988, 'chats/500K/10/chat.json'], ['1m-2', 100, 160 * 988, 'chats/500K/10/chat.json']]);
-    expect(cal).toMatchObject({ tau: 0.001, out_of_range: [], low_tokens: Math.floor(95 * cal.subjects[0].tokens / 100), high_tokens: Math.ceil(105 * cal.subjects[1].tokens / 100) });
-    const entries = readFileSync(log, 'utf8').trim().split('\n').map(l => JSON.parse(l));
-    expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ action: 'open', labels_sha256: cal.sources_sha256 });
-    rmSync(join(beam, 'chats/1M/1'), { recursive: true });
-    const dev = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', beam]);
-    expect(dev.code).toBe(0);
-    expect((JSON.parse(dev.out) as Calibration).subjects.map(s => s.id)).toEqual(['1m-2']);
+    const dev = { '1M/2': { messages: C2 }, '500K/10': { messages: [cut(C2[0], 0, 112), cut(C1[0], 0, 62), grams('cal-c5/filler', 100)] } };
+    const full = beamTree(join(root, 'beam-c'), { ...dev, '1M/1': { messages: [...C1, C2[1]] }, '10M/1': { messages: [C2[2], C2[3]] } });
+    const devOnly = beamTree(join(root, 'beam-c-dev'), dev);
+    expect(publicSources(full).map(p => relative(full, p))).toEqual(['chats/1M/2/chat.json', 'chats/1M/2/probing_questions/probing_questions.json', 'chats/500K/10/chat.json', 'chats/500K/10/probing_questions/probing_questions.json']);
+    expect(publicSources(devOnly).map(p => relative(devOnly, p))).toEqual(publicSources(full).map(p => relative(full, p)));
+    const a = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', full]);
+    expect(a.err).toBe('');
+    expect(a.code).toBe(0);
+    const cal = JSON.parse(a.out) as Calibration;
+    expect(cal.subjects.map(s => [s.id, s.shared, s.ngrams, s.source])).toEqual([['1m-2', 100, 160 * 988, 'chats/500K/10/chat.json']]);
+    expect(cal).toMatchObject({ sources: 4, tau: 0.001, out_of_range: [], low_tokens: Math.floor(95 * cal.subjects[0].tokens / 100), high_tokens: Math.ceil(105 * cal.subjects[0].tokens / 100) });
+    const b = run('bun', [VALIDATE, '--calibrate-only', '--beam-dir', devOnly]);
+    expect(b.code).toBe(0);
+    expect(b.out).toBe(a.out);
     const allowed = /^([0-9a-f]{64}|1m-\d+|chats\/(1M|500K)\/\d+\/(chat|chat_trunecated|probing_questions\/probing_questions)\.json|rs1-calibration\/v1)$/;
-    for (const out of [inside.out, dev.out]) {
-      for (const s of strings(JSON.parse(out))) expect(s).toMatch(allowed);
-      expect(leaks(out, [...C1, ...C2].flatMap(m => [m.slice(0, 9), cut(m, 500, 1)]))).toBe(0);
-    }
+    for (const s of strings(cal)) expect(s).toMatch(allowed);
+    expect(leaks(a.out, [...C1, ...C2].flatMap(m => [m.slice(0, 9), cut(m, 500, 1)]))).toBe(0);
   }, 120_000);
 });
 

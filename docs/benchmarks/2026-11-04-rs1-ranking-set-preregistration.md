@@ -105,9 +105,16 @@ aggregates are published. All 75 conversations are sealed (`eval/decisions/split
 The draft's two set gates, a 1% single-file 13-gram share and 1.07 million tokens ± 15%, reject BEAM's own public 1M
 conversations: in GBEV-31's stage 0 record, 2 of 3 failed the 13-gram gate and 2 of 5 fell outside the length window.
 Calibrated rules replace both. The method was written on 2026-11-03, before any RS1 output was read, and is frozen in
-validate.ts (`CALIBRATION`).
+validate.ts (`CALIBRATION`). On 2026-11-04 its subjects and pool were narrowed to BEAM's dev-split conversations (the
+allowed set below). The narrowing follows GBEV-3's F28 decision about which BEAM files custody holds, and no RS1 output
+informed it.
 
-- **Subjects.** BEAM's public 1M-tier conversations at `b2da22e`, each counted on its canonical chat file:
+- **Allowed set (F28, 2026-11-04).** validate.ts reads only the BEAM conversations `eval/decisions/splits` lists as dev.
+  Q1's sealed BEAM splits and the 10M tier, which has no dev split, are left out of the public index, the pool and the
+  subjects even when a tree holds them, and their files are never opened. F28's sparse custody checkout holds none of
+  them.
+- **Subjects.** The 11 public BEAM-1M conversations at `b2da22e` that the split lists as dev, each counted on its
+  canonical chat file:
   `chat_trunecated.json` when present, else `chat.json`. That is the corpus loader's rule, and the file a minted
   conversation's truncate step produces.
 - **Length gate.** low = floor(0.95 × the smallest subject's cl100k count) and high = ceil(1.05 × the largest), by
@@ -115,9 +122,9 @@ validate.ts (`CALIBRATION`).
   covers sizes the public tier happens to lack, and every subject passes by construction.
 - **Contamination gate.** For each subject c, s(c) is the largest share of c's distinct 13-grams found in any one public
   source file outside c's own directory (its chat, truncated chat and questions files). The pool is the one the gate
-  reads on RS1: every `chat.json` and `probing_questions.json` under `chats/`, plan-N chats excluded. τ = 1.25 × the
-  largest s(c), rounded up to the next 0.1 percentage point. A minted conversation fails when its single-file share is at
-  least τ. Every subject passes by construction.
+  reads on RS1: every `chat.json` and `probing_questions.json` of an allowed conversation under `chats/`, which at
+  `b2da22e` are the dev-split conversations of the 100K, 500K and 1M tiers. τ = 1.25 × the largest s(c), rounded up to
+  the next 0.1 percentage point. A minted conversation fails when its single-file share is at least τ. Every subject passes by construction.
 - **Related-file guard.** If any subject shares 20% or more of its 13-grams with one other public file, calibration stops
   with `RS1_CALIBRATION_RELATED_FILES`, because files that contain each other would inflate τ. It prints the pair, both
   shares and the pool's sources_sha256, runs no gate and writes no report. A person decides: drop the pair
@@ -125,14 +132,13 @@ validate.ts (`CALIBRATION`).
   at least 25%, which the ceiling below always stops, so dropping is the only path to a working gate.
 - **Ceiling.** Calibration also stops, with `RS1_CALIBRATION_OUT_OF_RANGE`, when τ is above 5% or is 0, or when the
   bounds reach outside 600,000 to 1,600,000 tokens, because a gate that loose decides nothing.
-- **Where it runs.** In custody, inside the validate run that gates RS1, over all 35 public BEAM-1M conversations and the
-  whole public pool. That run sets the gate. It is cached by the pool's sources_sha256 and the subjects' paths and sizes,
-  and the validation report carries it: the bounds, every subject's share, τ and sources_sha256. On a development
-  machine, `--calibrate-only` refuses a tree that holds any sealed-split conversation.
+- **Where it runs.** In custody, inside the validate run that gates RS1, over the allowed subjects and pool. That run sets
+  the gate. It is cached by the pool's sources_sha256 and the subjects' paths and sizes, and the validation report
+  carries it: the bounds, every subject's share, τ and sources_sha256.
 - **Unchanged.** The topic cosine of 0.85, the item 13-gram share of 50%, the item near-duplicate Jaccard of 0.7, the
   conversation near-duplicate Jaccard of 0.1, the 20% stop rule and the per-ability floor.
 
-**Preview on public dev data. It does not set the gate.** `bun eval/custody/rs1/validate.ts --calibrate-only` ran on the
+**Preview on public dev data.** `bun eval/custody/rs1/validate.ts --calibrate-only` ran on the
 11 dev-split BEAM-1M conversations, with a tree of the dev-split files of the 100K, 500K and 1M tiers (65 files, no 10M
 file, no sealed-split file, each checked against the pinned dataset manifest). The pool held 56 sources (sources_sha256
 `c72aa232aafb5f9e6ba1b0533d3fc84bbdf40a59a4ad4caa02b3922d71e1daa5`).
@@ -147,9 +153,8 @@ file, no sealed-split file, each checked against the pinned dataset manifest). T
 | Pairs at 20% or more | none (the largest pair share is that same 0.61%) |
 | Out of range | none |
 
-The custody run adds the 24 sealed BEAM-1M conversations as subjects and the sealed and 10M-tier files to the pool, so
-its bounds can only widen and its τ can only rise from these values. The preview's τ is already stricter than the old 1%
-gate.
+The custody run reads the same subjects and pool, so on the same files it reproduces these values. That run, not this
+preview, sets the gate. The preview's τ is stricter than the old 1% gate.
 
 RS1's largest-conversation ratio in the cell manifest, 1.37, comes from the length gate's preview bounds (1,050,026 over
 770,801, rounded up), because the largest a conversation may be over the smallest bounds any conversation over the mean.
@@ -171,6 +176,11 @@ and cap are a dated amendment before any counted cell runs.
 - **Cells.** Counted cells launch from the custody host. The RS1 loader (`beam-rs1`) reads only the custody root named
   by `GBRAIN_EVALS_RS1_SOURCE` and refuses a root inside the checkout. Cell VMs get hash-checked copies outside the
   checkout (Q1's A17 delivery), deleted at teardown.
+
+**Stage 0 exposure (2026-11-04).** During stage 0, the full public BEAM tree at `b2da22e`, Q1's sealed BEAM-1M splits
+and the 10M tier included, was checked out on a cloud development machine. Every read was counts-only, no text was
+printed, and nothing was tuned on it. GBEV-3 decided, with GBRA-108 informed, that the sealed splits are not treated as
+touched and that nothing is re-minted. The checkouts were deleted or made sparse on 2026-11-04 (F28).
 
 **Provider data use.** Each provider's data use is confirmed and dated before any RS1 text reaches it.
 
