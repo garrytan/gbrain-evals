@@ -169,12 +169,14 @@ export async function runSecondJudge(p: PreparedSecondJudge, opts: { providerPro
 }
 
 type Side = ReturnType<typeof side>;
-interface Receipt { frontier_cell: string; run_status: string; judge: string; canonical_judge: string; comparison: { pairs: number; clusters: number; canonical: Side; second: Side } | null; spend: { judge_usd: number } }
+interface Receipt { frontier_cell: string; run_status: string; keyless: boolean; judge: string; canonical_judge: string; comparison: { pairs: number; clusters: number; canonical: Side; second: Side } | null; spend: { judge_usd: number } }
 const pts = (x: number) => `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}`;
 const delta = (s: Side) => `${pts(s.delta)} (${s.ci95 ? `${pts(s.ci95[0])} to ${pts(s.ci95[1])}` : 'n/a'})`;
 
 /** The second judge's table, one row per receipt in the order given: both judges on the same questions, in points. */
 export function renderSecondJudge(receipts: Receipt[]): string {
+  const rehearsals = receipts.filter(r => r.keyless !== false).map(r => r.frontier_cell);
+  if (rehearsals.length) throw new Error(`the receipts for ${rehearsals.join(', ')} are keyless rehearsals, whose scores come from a fake upstream and never enter the table`);
   const name = (m: string) => m.slice(m.indexOf(':') + 1);
   const judges = [...new Set(receipts.map(r => `${name(r.canonical_judge)}|${name(r.judge)}`))];
   if (judges.length !== 1) throw new Error(`the receipts name ${judges.length} canonical and second judge pairs, and one table compares one pair`);

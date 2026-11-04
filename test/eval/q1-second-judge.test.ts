@@ -235,5 +235,6 @@ describe('the second-judge sensitivity', () => {
     expect(rows[3]).toBe('| second-row | partial | 0 | n/a | n/a | n/a | n/a | $0.00 |');
     for (const q of QUESTIONS) expect(table).not.toContain(q.id);
     expect(() => renderSecondJudge([r, { ...r, judge: 'anthropic:claude-opus-5-5' }])).toThrow('one table compares one pair');
+    expect(() => renderSecondJudge([r, { ...r, keyless: true }])).toThrow('keyless rehearsals');
   });
 });
