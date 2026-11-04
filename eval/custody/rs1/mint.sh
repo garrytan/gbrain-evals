@@ -26,6 +26,13 @@
 #     fails a batch during which any model call raised. A failed answer step keeps chat.pickle's intact batches for the
 #     rerun. 'rs1_mint.py check-gaps --out <dir>' checks a mint's
 #     finished steps.
+#   - Early stop. BEAM's truncate step keeps a chat's turns only until its running token count passes 1,040,000, and
+#     BEAM answers each batch from that batch's plan and the ones before it, so no later batch feeds a kept turn. After
+#     each answer batch rs1_mint.py runs BEAM's own chat_json and truncate code on a scratch copy of the chat and stops
+#     answering once that truncate cuts; the truncate step then writes the same files it would for the full chat. The
+#     manifest records the stop (early_stop), check-gaps checks the batches answered, and
+#     'rs1_mint.py check-early-stop --out <dir>' (run with <dir>/tooling/venv/bin/python) replays the stop on finished
+#     answer steps and compares the truncate output of the full chat and of the prefix the stop keeps.
 #   - One key per step. Each step runs under 'env -i' with an explicit allowlist, from inside --out so a relative
 #     write BEAM makes (its bad_json.log) stays in custody. In real mode a paid step gets a
 #     metering-proxy token for its one provider (gemini-3.8-flash, or OpenAI embeddings for topic_check): mint.sh
