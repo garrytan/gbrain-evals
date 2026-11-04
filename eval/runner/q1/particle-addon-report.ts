@@ -37,8 +37,8 @@ export const REPORT_SCHEMA = 'gbrain-evals/q1-particle-addon-report/v1';
 export const SEED = 'f6-p1';
 export const RESAMPLES = 10_000;
 export const PARTICLE = 'particle:particle-1';
-const OPUS = 'anthropic:claude-opus-5-5';
-const SOL = 'openai:gpt-6.1-sol';
+export const OPUS = 'anthropic:claude-opus-5-5';
+export const SOL = 'openai:gpt-6.1-sol';
 /** The frontier readers particle-1 is compared with, in table order after Opus and particle-1. */
 const FRONTIER = [OPUS, SOL];
 const DISCLOSURE = {
@@ -124,11 +124,14 @@ export function unitsOf(cells: Map<string, PublishedCell>): Unit[] {
   return units.sort((a, b) => (a.frontier.id < b.frontier.id ? -1 : 1));
 }
 
-interface Value { conversation: string; context: string; outcome: Outcome; value: number | null; correct: boolean; usd: number }
+export interface Value { conversation: string; context: string; outcome: Outcome; value: number | null; correct: boolean; usd: number }
 
-/** Each reader's replicate-0 answers by question, leaving out the set's preregistered exclusions: the canonical score, 0 for a product failure, or null outside the denominator. */
-function valuesOf(cell: PublishedCell, excluded: ReadonlySet<string>): Map<string, Map<string, Value>> {
-  const { id, sha256: isha, judge } = cell.receipt.instrument;
+/**
+ * Each reader's replicate-0 answers by question, leaving out the set's preregistered exclusions: the score `instrument`
+ * gives (the canonical judgment unless another is named), 0 for a product failure, or null outside the denominator.
+ */
+export function valuesOf(cell: PublishedCell, excluded: ReadonlySet<string>, instrument: { id: string; sha256: string; judge: string } = cell.receipt.instrument): Map<string, Map<string, Value>> {
+  const { id, sha256: isha, judge } = instrument;
   const canonical = new Map(cell.judgments.filter(j => j.instrument_id === id && j.instrument_sha256 === isha && j.judge === judge && j.judge_replicate === 0).map(j => [j.answer_id, j]));
   const out = new Map<string, Map<string, Value>>();
   for (const a of cell.answers.filter(x => x.replicate === 0 && !excluded.has(x.question_id))) {
