@@ -283,9 +283,9 @@ def text_of(value):
 
 
 class ProviderRefusal(BaseException):
-    """A model call refused with an HTTP status a resend would not change: a 4xx other than 408, 429 and 499, the
-    metering proxy's 402 budget refusal included. A BaseException, so BEAM's 'except Exception' retry loops cannot
-    swallow it and leave a step recorded as done without its output. Its message is the status and the error class only."""
+    """A model call refused with an HTTP status a resend would not change: a 4xx other than 408 and 429, the metering
+    proxy's 402 budget refusal included. A BaseException, so BEAM's 'except Exception' retry loops cannot swallow it
+    and leave a step recorded as done without its output. Its message is the status and the error class only."""
 
 
 def refusal_status(error):
@@ -293,7 +293,7 @@ def refusal_status(error):
     while error is not None and id(error) not in seen:
         seen.add(id(error))
         code = getattr(error, "code", None)
-        if isinstance(code, int) and 400 <= code < 500 and code not in (408, 429, 499):
+        if isinstance(code, int) and 400 <= code < 500 and code not in (408, 429):
             return code
         error = error.__cause__ or error.__context__
     return None
