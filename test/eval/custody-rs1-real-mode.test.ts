@@ -91,7 +91,7 @@ describe('rs1_mint.py real-mode keyless steps', () => {
       '    except m.ProviderRefusal as error:',
       '        return "escaped " + str(error)',
       'print(json.dumps({"seen": inner.seen, "calls": usage.totals()["calls"],',
-      '    "outcomes": {c: beam_loop(c) for c in (400, 402, 403, 408, 429, 503)}}))',
+      '    "outcomes": {c: beam_loop(c) for c in (400, 402, 403, 408, 429, 499, 503)}}))',
     ].join('\n');
     const r = run('python3', ['-c', harness, dir], { PYTHONDONTWRITEBYTECODE: '1' });
     expect(r.err).toBe('');
@@ -100,7 +100,7 @@ describe('rs1_mint.py real-mode keyless steps', () => {
       calls: 3,
       outcomes: {
         400: 'escaped HTTP 400 RuntimeError', 402: 'escaped HTTP 402 RuntimeError', 403: 'escaped HTTP 403 RuntimeError',
-        408: 'swallowed RuntimeError', 429: 'swallowed RuntimeError', 503: 'swallowed RuntimeError',
+        408: 'swallowed RuntimeError', 429: 'swallowed RuntimeError', 499: 'escaped HTTP 499 RuntimeError', 503: 'swallowed RuntimeError',
       },
     });
   });
