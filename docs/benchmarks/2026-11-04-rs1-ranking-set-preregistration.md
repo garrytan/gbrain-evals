@@ -179,10 +179,13 @@ and cap are a dated amendment before any counted cell runs.
   by `GBRAIN_EVALS_RS1_SOURCE` and refuses a root inside the checkout. Cell VMs get hash-checked copies outside the
   checkout (Q1's A17 delivery), deleted at teardown.
 
-**Stage 0 exposure (2026-11-04).** During stage 0, the full public BEAM tree at `b2da22e`, Q1's sealed BEAM-1M splits
+**BEAM tree exposure (2026-11-04).** During stage 0, the full public BEAM tree at `b2da22e`, Q1's sealed BEAM-1M splits
 and the 10M tier included, was checked out on a cloud development machine. Every read was counts-only, no text was
 printed, and nothing was tuned on it. GBEV-3 decided, with GBRA-108 informed, that the sealed splits are not treated as
-touched and that nothing is re-minted. The checkouts were deleted or made sparse on 2026-11-04 (F28).
+touched and that nothing is re-minted. The checkouts were deleted or made sparse on 2026-11-04 (F28). On the same day,
+during /ship of garrytan/gbrain-evals#362, gstack's native adversarial reader cloned the full public BEAM tree at
+`b2da22e` on its own, on that lane's cloud machine. Its reads were counts-only and nothing was tuned on it. The clone
+was deleted, and a `find` for BEAM chats then returned nothing.
 
 **What F28 changes in the gates.** Since F28 (garrytan/gbrain-evals#363), custody's BEAM checkout holds only a committed
 path list: BEAM's code, licence and readme, the topics of BEAM-100K, 500K and 1M, and the chat, truncated chat and
