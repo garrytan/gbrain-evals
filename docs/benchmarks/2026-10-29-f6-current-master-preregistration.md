@@ -637,3 +637,33 @@ those fields; verify.json records each source's own run-config SHA-256, and the 
 frontier cell that publishes one of them. The S1 memory-bank re-read runs from a fresh clone at this revision's merge
 commit, after the other nine, on the same ledger and ceiling with a $5 lease. No cell, arm, cap, estimate or verdict
 rule changed.
+
+**Revision 3 (2026-11-04, before the file agent resumes).** The file agent's paid lease
+`s1.baseline-file-agent.particle-a1-1d4d91ac` spent $16.08 of its $16.15 and stopped partial after 56 of 200 answers (49
+scored, 7 turn_cap), when the lease proxy refused the next request for budget. particle-1 read about 1.8M prompt tokens
+per answer (45% of them cache reads) and wrote about 9,700, so an answer cost $0.287. The estimate assumed 130,000 input
+and 2,000 output tokens per answer, about $0.04 at particle-1's list price, so it was about 7 times too low. GBEV-3
+approved a resume on 2026-11-04.
+
+- **Projection.** The 144 unanswered questions are the last 4 of one conversation and all of seven others, which are
+  heavier: on them Opus read 0.56M prompt tokens per answer in F6's file-agent cell, against 0.46M on the 56 answered.
+  Scaled by Opus's tokens per conversation, the 144 cost about $48.88 in reader dollars plus $0.47 of judging. With A6's
+  margin (1.25 times, plus twice the $3.05 peak reservation) that is $67.78, rounded up to $68.
+- **Campaign.** `q1-scoreboard-f6-current-master-p1b`, manifest
+  `2026-10-29-f6-current-master/campaign/f6-campaign-p1b.json`: p1's campaign with a $68 cap, a $68 lease for the cell
+  and the F6-P1 block cap at $68. Nothing else differs, and `test/eval/q1-f6-cells.test.ts` checks that. It launches
+  with `bun eval/runner/shootout-cell.ts resume --cell s1.baseline-file-agent.particle --from-campaign
+  <p1 manifest> --from-state <p1 state>`. As in A4, the store is ingested again, the 56 answered rows and their
+  judgments are kept, and only the 144 questions without them are answered. The custodian computes the campaign hash
+  from a fresh clone at this revision's merge commit before the unit launches. The files the cell executes differ
+  from p1's freeze only in the `version` field of package.json. The resume runs in its own paid window, after the nine
+  re-reads and the S1 memory-bank re-read.
+- **Money.** The file agent's two caps total $84.15 ($16.15 and $68). The re-read ceiling drops from $100 to $60. The
+  S1 memory-bank re-read and any second-judge lease pass `--ledger-cap-usd 60`. The nine re-reads already running
+  carry `--ledger-cap-usd 100` and project to about $14 together, so the custodian holds them to $60 by stopping the
+  sequence (`p1/STOP-reread`) before any lease that would take the ledger past it. The metered ceilings total $144.15,
+  and with VM time the $150 hard cap is unchanged.
+- **If the resume runs out.** Nothing is raised again: the findings file reports the row as partial, with its count of
+  answers. It also gives particle-1's file-agent dollars per answer and per correct answer next to Opus's F6 row.
+
+No cell, arm, estimate or verdict rule changed, and the hard cap stays $150.
