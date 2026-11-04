@@ -278,6 +278,18 @@ describe('the F6 manifest', () => {
     expect(readFileSync(join(dir, 'f6-campaign-p1b.json'), 'utf8')).toBe(JSON.stringify(p1b, null, 2) + '\n');
     expect([p1b.cells.map(c => c.id), Object.keys(p1b.blocks), Math.round((p1.cap_usd + p1b.cap_usd) * 100) / 100]).toEqual([[F6_PARTICLE_ADDON.id], ['F6-P1'], 84.15]);
   });
+
+  // Value: protects=the file agent's second resume campaign (A6 revision 4); fails_when=p1c differs from the regenerated p1 campaign in anything but its id, ledger, cap, the cell's lease and the F6-P1 block cap, or p1c's cap is not p1b's unspent $49.08 so the file agent's ceilings stop totalling $84.15; why_new=p1b's lease settled at $18.92 when Particle's credit ran out and GBEV-3 approved option A+; seam=none; no_claim=the $37.50 projection (revision 4 gives its basis)
+  test('the p1c resume campaign is the p1 campaign with only its id, ledger, $49.08 cap and lease and the F6-P1 block cap changed; its cap is p1b\'s unspent $49.08', () => {
+    const dir = join(ROOT, 'docs/benchmarks/2026-10-29-f6-current-master/campaign');
+    const p1 = campaignManifest(m, { units: JSON.parse(readFileSync(join(dir, 'f6-campaign-p1-units.json'), 'utf8')) as UnitSelection });
+    const id = 'q1-scoreboard-f6-current-master-p1c';
+    const p1c = { ...p1, campaign_id: id, cap_usd: 49.08, ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`, cells: p1.cells.map(c => ({ ...c, lease_usd: 49.08 })), blocks: { ...p1.blocks, 'F6-P1': { ...p1.blocks!['F6-P1'], cap_usd: 49.08 } } };
+    expect(readFileSync(join(dir, 'f6-campaign-p1c.json'), 'utf8')).toBe(JSON.stringify(p1c, null, 2) + '\n');
+    const p1b = JSON.parse(readFileSync(join(dir, 'f6-campaign-p1b.json'), 'utf8')) as { cap_usd: number };
+    const p1bSettled = 18.92;
+    expect([p1c.cells.map(c => c.id), Object.keys(p1c.blocks!), Math.round((p1b.cap_usd - p1bSettled) * 100) / 100, Math.round((p1.cap_usd + p1bSettled + p1c.cap_usd) * 100) / 100]).toEqual([[F6_PARTICLE_ADDON.id], ['F6-P1'], 49.08, 84.15]);
+  });
 });
 
 describe('the arm policy identity', () => {

@@ -2,7 +2,13 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.158] - 2026-11-04
+
+### A6 revision 4: the file agent's second resume runs as campaign p1c at $49.08, and any unspent part moves to the second judge (GST-1153)
+
+- **What changed.** Revision 3's resume of the particle-1 file-agent cell stopped at $18.92 of its $68 lease when Particle answered HTTP 402 (the key's credit ran out, not the lease), with 120 of the 200 questions answered. `reserve` checks held spend plus a new lease against both the F6-P1 block cap and the campaign cap, so p1b cannot take another lease. The new campaign `docs/benchmarks/2026-10-29-f6-current-master/campaign/f6-campaign-p1c.json` is p1's campaign with the cap, the cell's lease and the F6-P1 block cap at p1b's unspent $49.08. It resumes from p1b's state, keeps the 120 recorded answers and asks only the 80 without one.
+- **The money.** Revision 4 of the F6 preregistration keeps the file agent's ceilings at $84.15 ($16.15, $18.92 as settled and $49.08) and the metered ceilings at $144.15 under the unchanged $150 hard cap. If the p1c lease settles below $49.08, the remainder moves to the second judge for the cells the $60 re-read ceiling left unjudged, so money moves between ledgers and nothing is added.
+- `test/eval/q1-f6-cells.test.ts` checks that p1c is the regenerated p1 campaign with only its id, ledger, cap, lease and block cap changed, and that its cap is p1b's unspent $49.08.
 
 ### A6's second judge for the particle-1 add-on: gpt-6.1-sol grades both readers on cells where particle-1 is above Opus (GST-1153)
 
