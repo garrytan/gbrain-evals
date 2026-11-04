@@ -60,8 +60,8 @@ written by the MIT code from new private topics, is never shared and publishes a
 to no RS1 file. An earlier draft of this document called BEAM's data MIT, which was wrong.
 
 **Topics.** New topics are generated in custody from a private seed across BEAM's domains, with up to five attempts per
-conversation. A topic is rejected when it duplicates a BEAM public topic (any tier) or an accepted RS1 topic: the same
-normalized title, word overlap (Jaccard) of at least 0.6, or text-embedding-3-large cosine of at least 0.85
+conversation. A topic is rejected when it duplicates one of the 90 public topics of BEAM-100K, 500K and 1M (F28 leaves
+out BEAM-10M's 10; see "Custody and exposure") or an accepted RS1 topic: the same normalized title, word overlap (Jaccard) of at least 0.6, or text-embedding-3-large cosine of at least 0.85
 (`eval/custody/rs1/rs1_mint.py`).
 
 **Questions.** Two per ability for BEAM's ten abilities (abstention, contradiction resolution, event ordering,
@@ -73,8 +73,9 @@ checked:
 
 - **Topic:** mint.sh dropped it after every topic it drew was too close to a public one.
 - **Length:** its cl100k token count is outside the calibrated bounds (next section).
-- **Contamination:** its largest share of distinct 13-grams found in any one public BEAM chat or questions file at the
-  pinned commit is at or above the calibrated τ (next section). The share against the union of public files is
+- **Contamination:** its largest share of distinct 13-grams found in any one chat or questions file of the 28 dev-split
+  public BEAM conversations at the pinned commit is at or above the calibrated τ (next section; F28 in "Custody and
+  exposure"). The share against the union of public files is
   reported, not gated, because independent public BEAM conversations already share 1.2 to 2.1% of their 13-grams with
   the union of the others.
 - **Duplicate:** the same chat bytes as an earlier kept conversation, or an estimated 13-gram Jaccard of at least 0.1
@@ -153,7 +154,8 @@ file, no sealed-split file, each checked against the pinned dataset manifest). T
 | Pairs at 20% or more | none (the largest pair share is that same 0.61%) |
 | Out of range | none |
 
-The custody run reads the same subjects and pool, so on the same files it reproduces these values. That run, not this
+The custody run reads the same subjects and pool, so on the same files it reproduces the bounds, shares and τ above
+(its sources_sha256 follows the order of F28's path list, so it can differ from the preview's). That run, not this
 preview, sets the gate. The preview's τ is stricter than the old 1% gate.
 
 RS1's largest-conversation ratio in the cell manifest, 1.37, comes from the length gate's preview bounds (1,050,026 over
@@ -181,6 +183,16 @@ and cap are a dated amendment before any counted cell runs.
 and the 10M tier included, was checked out on a cloud development machine. Every read was counts-only, no text was
 printed, and nothing was tuned on it. GBEV-3 decided, with GBRA-108 informed, that the sealed splits are not treated as
 touched and that nothing is re-minted. The checkouts were deleted or made sparse on 2026-11-04 (F28).
+
+**What F28 changes in the gates.** Since F28 (garrytan/gbrain-evals#363), custody's BEAM checkout holds only a committed
+path list: BEAM's code, licence and readme, the topics of BEAM-100K, 500K and 1M, and the chat, truncated chat and
+questions files of their 28 dev-split conversations. The gates read only those files:
+
+- **Contamination** compares a minted conversation with the 28 dev conversations only, their 56 chat and questions
+  files. Text copied from a sealed or 10M conversation would not be flagged.
+- **Topic collision** compares a drawn topic with the 90 public topics of BEAM-100K, 500K and 1M, without BEAM-10M's 10.
+- **Calibration.** The set gates' subjects (the 11 dev-split BEAM-1M conversations) and pool are the same dev set
+  ("Set gate calibration").
 
 **Provider data use.** Each provider's data use is confirmed and dated before any RS1 text reaches it.
 
@@ -530,7 +542,7 @@ projected total, the line and the shortfall.
    the merge.
 4. **Mint blockers (review d4).** The Gemini billing probe on the custody host (Dyson) has not run. The custody host has
    no uv and only Python 3.9.6, and mint.sh needs uv and Python 3.12. Both must clear before any minting.
-5. **Mint and validate in custody**, with the gate calibration over all 35 public BEAM-1M conversations; then the restore
+5. **Mint and validate in custody**, with the gate calibration over the 11 dev-split BEAM-1M conversations; then the restore
    drill and PR 3 (the hashes).
 6. **Gate B, then ingest** (stage 3).
 7. **Gate C, then the reads and judges** (stages 4 and 5), and the sensitivity judge in custody.
