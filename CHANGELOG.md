@@ -11,6 +11,12 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Money.** The file agent's two caps total $84.15. The re-read ceiling drops from $100 to $60, so the metered ceilings total $144.15 and the $150 hard cap is unchanged.
 - `test/eval/q1-f6-cells.test.ts` checks that p1b differs from the regenerated p1 campaign only in its id, ledger, cap, the cell's lease and the F6-P1 block cap, and that the file agent's two caps sum to $84.15. No cell, arm, estimate or verdict rule changed.
 
+### The RS1 custody mint's question step runs on Gemini, and a provider refusal stops the step instead of being retried away (GST-1154)
+
+- **System-only prompts reach Gemini.** BEAM's question step sends a prompt made only of system messages, and Gemini rejects a request with no contents (HTTP 400). `RecordingModel.invoke` in `eval/custody/rs1/rs1_mint.py` now sends such a prompt as one user turn with the same text, the way an OpenAI chat model reads it.
+- **A refusal stops the step.** BEAM wraps its model calls in `except Exception` retry loops, so a refusal such as the metering proxy's 402 budget refusal was swallowed, and the step could be recorded as done without its output. An HTTP 4xx other than 408 and 429 now raises `ProviderRefusal`, a `BaseException` those loops can't catch. The step exits with an error and records nothing as done, and outside the parts-based probe and rubric steps it prints `rs1-mint refused:` with the status and error class only. A 499 stops the step too: the Google client already resends once, and treating 499 as transient would let BEAM's answer step drop a question while the step records done.
+- `test/eval/custody-rs1-real-mode.test.ts` adds a keyless test of both paths.
+
 ### CI restores the pinned harness source from a verified cached pack instead of fetching 700 MB from GitHub (GST-1266)
 
 - **What was slow.** Both harness jobs fetch the pinned agent-memory-benchmark commit, about 700 MB at depth 1, from GitHub before building their venv. While GitHub served packs slowly on 2026-11-03, that fetch took from 21 s to 23 minutes, and harness (proxy) used 1,612 s of its 30-minute cap in #354's run 41703426339. Building the venv took 12 to 16 s in every run.
