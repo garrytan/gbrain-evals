@@ -146,9 +146,13 @@ def step(out, name, inner=None, question_batches=None):
     def run_question_generation(chats_directory, chat_size, index):
         m.write_pickle(Path(chats_directory) / "1" / "user_messages.pickle", question_batches)
 
+    # BEAM's chat_json and truncate code for the answer step's early-stop check: a chat this short never passes the limit.
     m.load_beam = lambda beam_dir, slot: types.SimpleNamespace(
         main=types.SimpleNamespace(answer_generation=answer_generation),
-        run_pipeline=types.SimpleNamespace(run_question_generation=run_question_generation))
+        run_pipeline=types.SimpleNamespace(run_question_generation=run_question_generation),
+        utils=types.SimpleNamespace(convert_chats_pickle_to_json=lambda src, dst: m.write_json(dst, []),
+                                    add_ids_to_chats=lambda src, dst: m.write_json(dst, [])),
+        adjust=types.SimpleNamespace(count_chats_tokens=lambda chat_directory, model_name, token_limit: None))
     m.gemini_model = lambda temperature, usage: m.RecordingModel(inner, "gemini:test", usage)
     return m.main(["step", "--out", str(out), "--conv-index", "1", "--step", name, "--seed-file", seed_file,
                    "--mode", "real", "--beam-dir", str(out)])
@@ -285,7 +289,7 @@ describe('rs1_mint.py check-gaps', () => {
     const lines = r.out.trim().split('\n');
     expect(lines.every(l => /^rs1-mint( [a-z0-9_]+=[0-9a-z,/-]+)+$/.test(l))).toBe(true);
     expect(lines).toHaveLength(5);
-    expect(lines[1]).toMatch(/^rs1-mint conv=c001 step=answer gaps=1 batches=10\/10 intact_batches=1 gap_batches=2 missing=0 dropped=1 unmatched=0 unanswered=0 empty=0 sha256=[0-9a-f]{64} recorded=match$/);
+    expect(lines[1]).toMatch(/^rs1-mint conv=c001 step=answer gaps=1 batches=10\/10 intact_batches=1 gap_batches=2 missing=0 dropped=1 unmatched=0 unanswered=0 empty=0 early_stop=none sha256=[0-9a-f]{64} recorded=match$/);
     expect(lines.filter(l => l.includes(' gaps=0 '))).toHaveLength(3);
     expect(lines[4]).toBe('rs1-mint summary=check-gaps conversations=3 steps_checked=4 steps_with_gaps=1 fake_skipped=1');
   });

@@ -34,9 +34,21 @@ error can lose a follow-up or a summary and leave no gap in the output.
 steps. Every other model call BEAM makes
 here (plan: profile_creation.py:116, main.py:543, 799 and 989; probe: main.py
 2160, 2330 and 2478) sits outside any try, so an error stops the step.
+
+Early stop: the truncate step keeps the chat's turns until BEAM's running count
+passes TRUNCATE_TOKENS and drops the rest, and BEAM answers batch b from plans 0
+to b only, so no later batch feeds a kept turn. After each batch the answer step
+runs BEAM's own chat_json and truncate code on a scratch copy of the chat, and
+stops once that truncate cuts. The truncate step then runs unchanged on the
+shorter chat and writes the same files it writes for the full one. The manifest
+records the stop. 'check-early-stop --out <dir>' replays the stop on a mint's
+finished answer steps and compares the truncate output of the full chat and of
+the prefix the stop keeps.
 """
 import argparse
+import contextlib
 import hashlib
+import io
 import hmac
 import json
 import math
@@ -55,6 +67,7 @@ CHAT_SIZE = "1M"
 # BEAM src/beam/adjust_chats_length.py terunicate_chats: the 1M tier's limit, counted for a gemini model with tiktoken's
 # gpt-4o-mini encoding.
 TRUNCATE_TOKENS = 1_040_000
+TRUNCATED_FILES = ["chat_trunecated.json", "chat_trunecated.pickle", "plan_new_trunecated.pickle", "plan_new_trunecated.txt"]
 GEN_MODEL = "gemini-3.8-flash"
 # gemini-3.8-flash reasons before it answers and counts those tokens against maxOutputTokens, while BEAM sized each
 # max_tokens for a non-reasoning model. Every call sends the lowest thinking level the model accepts ("minimal" returns
@@ -584,6 +597,42 @@ def seed_rngs(key):
     Faker.seed(n)
 
 
+def beam_chat_json(beam, chat_pickle, chat_json):
+    """BEAM's chat.pickle to chat.json: one turn per main question, then message ids (utils.py:195 and 277)."""
+    plain = chat_json.with_name("chat_without_ids.json")
+    beam.utils.convert_chats_pickle_to_json(str(chat_pickle), str(plain))
+    beam.utils.add_ids_to_chats(str(plain), str(chat_json))
+    plain.unlink()
+
+
+def truncation_cut(beam, chat_pickle, plan_pickle, scratch):
+    """Where BEAM's truncate step would cut this chat, or None when it would keep every turn. BEAM's chat_json and
+    truncate code (count_chats_tokens with GEN_MODEL and TRUNCATE_TOKENS, as step_truncate calls it) run on a copy in
+    scratch, a directory inside custody that is deleted afterwards. The cut comes from the chat_trunecated.json BEAM
+    writes there: the batches it kept and the turns in the last of them. The first turn it drops is the next one in chat
+    order, the first turn of the next batch when the last kept batch is whole. The count BEAM prints last (its running
+    total at that turn) is recorded for information only."""
+    shutil.rmtree(scratch, ignore_errors=True)
+    scratch.mkdir(parents=True)
+    try:
+        shutil.copyfile(plan_pickle, scratch / "plan_new.pickle")
+        beam_chat_json(beam, chat_pickle, scratch / "chat.json")
+        printed = io.StringIO()
+        with contextlib.redirect_stdout(printed):
+            beam.adjust.count_chats_tokens(str(scratch), GEN_MODEL, TRUNCATE_TOKENS)
+        if not (scratch / "chat_trunecated.json").exists():
+            return None
+        kept = read_json(scratch / "chat_trunecated.json")
+        last = len(kept[-1]["turns"])
+        whole = last == len(read_json(scratch / "chat.json")[len(kept) - 1]["turns"])
+        tail = printed.getvalue().split()[-1:]
+        return {"batch": len(kept) + 1 if whole else len(kept), "turn": 1 if whole else last + 1,
+                "kept_batches": len(kept), "kept_turns_in_last_batch": last,
+                "beam_printed_tokens": int(tail[0]) if tail and tail[0].isdigit() else None, "limit": TRUNCATE_TOKENS}
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 # ---------------------------------------------------------------------------------------------------- topics
 
 
@@ -805,7 +854,8 @@ def gap_text(gaps):
 
 def check_gaps(out):
     """The question and answer gap checks over every conversation's finished steps in an existing mint: one line of
-    counts, batch numbers and the checked file's sha256 per step, never text. Returns the number of steps with gaps."""
+    counts, batch numbers and the checked file's sha256 per step, never text. An answer step that stopped early is checked
+    against the batches it answered, the number its manifest entry records. Returns the number of steps with gaps."""
     root = Path(out).resolve() / "set" / "conversations"
     convs = checked = with_gaps = skipped = 0
     for conv in sorted(root.iterdir()) if root.exists() else []:
@@ -825,7 +875,9 @@ def check_gaps(out):
             if step == "question":
                 gaps = question_gaps(read_pickle(beam_chat / rel), read_pickle(beam_chat / "plan_new.pickle"), domain_of(conv))
             else:
-                gaps = answer_gaps(read_pickle(beam_chat / "user_messages.pickle"), read_pickle(beam_chat / rel))
+                stop = (entry.get("early_stop") or {}).get("batches_answered")
+                gaps = {**answer_gaps(read_pickle(beam_chat / "user_messages.pickle")[:stop], read_pickle(beam_chat / rel)),
+                        "early_stop": stop or "none"}
             digest = sha256_file(beam_chat / rel)
             checked += 1
             with_gaps += bool(gaps["gap_batches"])
@@ -975,7 +1027,12 @@ def step_answer(ctx, attempt, usage):
     stops. A batch that fails the gap check, or during which any model call raised, is cut from chat.pickle and the step
     fails, so a rerun regenerates that batch and keeps every batch before it, and no batch is answered after a damaged
     one. BEAM's answer step retries no call, so every error it swallowed lost something, even where the output shows no
-    gap: a follow-up whose user turn or yes/no check failed, or a summary that fell back to a placeholder."""
+    gap: a follow-up whose user turn or yes/no check failed, or a summary that fell back to a placeholder.
+
+    Before each batch and after the last, truncation_cut asks BEAM's own truncate code where it would cut the chat so
+    far. Once it cuts, the step answers no more batches, since none of them could reach the truncated chat, and records
+    the stop in its manifest entry (early_stop: the batches answered and planned, and where BEAM cuts). A rerun of a
+    chat that already passed the limit answers nothing."""
     if ctx.mode == "fake":
         write_json(ctx.beam_chat / "chat_raw.json", fake_chat(ctx.key))
         usage.record("fake", 90000, 60000)
@@ -992,8 +1049,12 @@ def step_answer(ctx, attempt, usage):
     # builds the answer model at temperature 0.1.
     topic = read_json(ctx.beam_chat / "topic.json")
     model = ctx.model(usage, 0.1)
+    plans, scratch = ctx.beam_chat / "plan_new.pickle", ctx.conv / "early-stop-check"
+    cut = truncation_cut(beam, chat_path, plans, scratch) if chat else None
     try:
         for b in range(intact, len(questions)):
+            if cut:
+                break
             write_pickle(partial, questions[:b + 1])
             errors = usage.errors
             beam.main.answer_generation(input_address=str(partial), output_address=str(chat_path),
@@ -1006,6 +1067,7 @@ def step_answer(ctx, attempt, usage):
                 write_pickle(chat_path, chat[:b])
                 raise StepFailure(f"answer batch {b + 1} of {len(questions)} lost output to a swallowed error: "
                                   f"{gap_text(gaps)}; chat.pickle is cut back to {b} intact batches")
+            cut = truncation_cut(beam, chat_path, plans, scratch)
     finally:
         partial.unlink(missing_ok=True)
     # Each call numbers its messages from 0 (main.py:1797) and add_ids_to_chats keeps those ids (utils.py:283-292), so
@@ -1013,18 +1075,15 @@ def step_answer(ctx, attempt, usage):
     for i, message in enumerate(message for batch in chat for message in batch):
         message["id"] = i
     write_pickle(chat_path, chat)
-    return [chat_path], {}
+    early_stop = {"batches_answered": len(chat), "batches_planned": len(questions), **cut} if cut else None
+    return [chat_path], {"early_stop": early_stop}
 
 
 def step_chat_json(ctx, attempt, usage):
     if ctx.mode == "fake":
         shutil.copyfile(ctx.beam_chat / "chat_raw.json", ctx.beam_chat / "chat.json")
         return [ctx.beam_chat / "chat.json"], {}
-    beam = ctx.beam(usage)
-    plain = ctx.beam_chat / "chat_without_ids.json"
-    beam.utils.convert_chats_pickle_to_json(str(ctx.beam_chat / "chat.pickle"), str(plain))
-    beam.utils.add_ids_to_chats(str(plain), str(ctx.beam_chat / "chat.json"))
-    plain.unlink()
+    beam_chat_json(ctx.beam(usage), ctx.beam_chat / "chat.pickle", ctx.beam_chat / "chat.json")
     return [ctx.beam_chat / "chat.json"], {}
 
 
@@ -1032,8 +1091,7 @@ def step_truncate(ctx, attempt, usage):
     if ctx.mode == "fake":
         return [], {"truncated": False}
     ctx.beam(usage).adjust.count_chats_tokens(str(ctx.beam_chat), GEN_MODEL, TRUNCATE_TOKENS)
-    outputs = beam_outputs(ctx, ["chat_trunecated.json", "chat_trunecated.pickle", "plan_new_trunecated.pickle",
-                                 "plan_new_trunecated.txt"])
+    outputs = beam_outputs(ctx, TRUNCATED_FILES)
     return outputs, {"truncated": bool(outputs)}
 
 
@@ -1367,6 +1425,69 @@ def usage_summary(out):
     return summary, counts, sha256_file(out / "usage.json")
 
 
+# ---------------------------------------------------------------------------------------------------- early-stop replay
+
+
+def check_early_stop(out, beam_dir=None, only=None):
+    """The early stop replayed on the finished answer steps of an existing mint, or of one conversation: the batch after
+    which truncation_cut first cuts the growing chat, as step_answer checks it, then BEAM's chat_json and truncate on the
+    full chat and on that prefix. Prints where the stop falls and, for each file truncate writes, whether the two runs
+    wrote the same bytes, as counts and sha256 only. Runs in the mint's venv, makes no model call and changes no recorded
+    output: the copies sit in a scratch directory inside the conversation, deleted afterwards. Returns the number of
+    files that differ."""
+    os.umask(0o077)
+    out = Path(out).resolve()
+    os.environ.setdefault("TIKTOKEN_CACHE_DIR", str(out / "tooling" / "tiktoken"))
+    with quiet():
+        beam = load_beam(Path(beam_dir).resolve() if beam_dir else out / "tooling" / "beam", UnmeteredSlot())
+    root = out / "set" / "conversations"
+    convs = differ = 0
+    for conv in sorted(root.iterdir()) if root.exists() else []:
+        if (only and conv.name != only) or not (conv / "manifest.json").exists():
+            continue
+        manifest = read_json(conv / "manifest.json")
+        entry = manifest["steps"].get("answer@1") or {}
+        if manifest.get("mode") == "fake" or entry.get("status") != "done":
+            continue
+        convs += 1
+        beam_chat, scratch = conv / "beam" / "1", conv / "early-stop-replay"
+        chat, plans = read_pickle(beam_chat / "chat.pickle"), beam_chat / "plan_new.pickle"
+        shutil.rmtree(scratch, ignore_errors=True)
+        try:
+            with quiet():
+                (scratch / "full").mkdir(parents=True)
+                (scratch / "prefix").mkdir()
+                cut, stop = None, len(chat)
+                for b in range(1, len(chat) + 1):
+                    write_pickle(scratch / "prefix" / "chat.pickle", chat[:b])
+                    cut = truncation_cut(beam, scratch / "prefix" / "chat.pickle", plans, scratch / "check")
+                    if cut:
+                        stop = b
+                        break
+                shutil.copyfile(beam_chat / "chat.pickle", scratch / "full" / "chat.pickle")
+                for d in (scratch / "full", scratch / "prefix"):
+                    shutil.copyfile(plans, d / "plan_new.pickle")
+                    beam_chat_json(beam, d / "chat.pickle", d / "chat.json")
+                    beam.adjust.count_chats_tokens(str(d), GEN_MODEL, TRUNCATE_TOKENS)
+            where = {**dict.fromkeys(["batch", "turn", "kept_batches", "kept_turns_in_last_batch", "beam_printed_tokens"]),
+                     "limit": TRUNCATE_TOKENS, **(cut or {})}
+            digest = sha256_file(beam_chat / "chat.pickle")
+            emit({"conv": conv.name, "check": "early-stop", "batches": len(chat), "stop_after": stop if cut else "none",
+                  **{k: "none" if v is None else v for k, v in where.items()},
+                  "recorded": "match" if entry.get("outputs", {}).get("beam/1/chat.pickle") == digest else "changed"})
+            for name in TRUNCATED_FILES:
+                full, prefix = scratch / "full" / name, scratch / "prefix" / name
+                same = full.exists() == prefix.exists() and (not full.exists() or full.read_bytes() == prefix.read_bytes())
+                differ += not same
+                emit({"conv": conv.name, "file": name, "equal": "yes" if same else "no",
+                      "full_sha256": sha256_file(full) if full.exists() else "absent",
+                      "prefix_sha256": sha256_file(prefix) if prefix.exists() else "absent"})
+        finally:
+            shutil.rmtree(scratch, ignore_errors=True)
+    emit({"summary": "check-early-stop", "conversations": convs, "files_differ": differ})
+    return differ
+
+
 # ---------------------------------------------------------------------------------------------------- CLI
 
 
@@ -1388,6 +1509,10 @@ def main(argv):
     u.add_argument("--out", required=True)
     g = sub.add_parser("check-gaps")
     g.add_argument("--out", required=True)
+    e = sub.add_parser("check-early-stop")
+    e.add_argument("--out", required=True)
+    e.add_argument("--beam-dir")
+    e.add_argument("--conv")
     args = parser.parse_args(argv)
 
     if args.command == "check-seed":
@@ -1407,6 +1532,16 @@ def main(argv):
         return 0
     if args.command == "check-gaps":
         return 1 if check_gaps(args.out) else 0
+    if args.command == "check-early-stop":
+        try:
+            return 1 if check_early_stop(args.out, args.beam_dir, args.conv) else 0
+        except BaseException as error:
+            path = Path(args.out).resolve() / "errors" / "check-early-stop.traceback"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(traceback.format_exc(), encoding="utf-8")
+            emit({"summary": "check-early-stop", "status": "error", "error_class": type(error).__name__,
+                  "error_sha256": sha256_bytes(str(error).encode("utf-8"))[:16]})
+            return 2
 
     cid = f"c{args.conv_index:03d}"
     ctx = None
