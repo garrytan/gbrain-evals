@@ -4,8 +4,8 @@
   "published": {
     "branch": "evals/q1-scoreboard-results",
     "path": "published/q1-scoreboard-f6-current-master",
-    "commit": "9862f0e4c0ccabe4a595dd19bde256f58473fb4f",
-    "sha256": "e95f36a831b1332f685c5dae44dd8aa5f2308fae7af799b4f5b140cab7ebff9c",
+    "commit": "de415001be24318ca60d189c7bdde9c9ea00646c",
+    "sha256": "b60cde2e4deace45e510328035d027638e8ed78b54d30fe6489786037c366e09",
     "url": "https://github.com/garrytan/gbrain-evals/tree/evals/q1-scoreboard-results/published/q1-scoreboard-f6-current-master",
     "aggregates_only": true
   },
