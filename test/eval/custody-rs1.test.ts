@@ -594,14 +594,17 @@ describe('beam-checkout.sh', () => {
     expect(checkout(dir).code).toBe(0);
     mkdirSync(join(dir, 'chats/10M/1'), { recursive: true });
     writeFileSync(join(dir, 'chats/10M/1/chat.json'), 'content of chats/10M/1/chat.json\n');
-    expect(checkout(dir).code).toBe(2);
-    rmSync(dir, { recursive: true });
+    const outside = checkout(dir);
+    expect(outside.code).toBe(2);
+    expect(outside.err).toContain('rs1-mint refused: the BEAM checkout holds 1 files outside the path list; deleted the checkout');
+    expect(existsSync(dir)).toBe(false);
     expect(checkout(dir).code).toBe(0);
     const stray = spawnSync('git', ['-C', dir, 'hash-object', '-w', '--stdin'], { input: 'content of chats/10M/1/chat.json\n', encoding: 'utf8' });
     expect(stray.stdout.trim()).toBe(blob('chats/10M/1/chat.json'));
     const refused = checkout(dir);
     expect(refused.code).toBe(2);
-    expect(refused.err).toContain('rs1-mint refused: the BEAM object store holds 1 files outside the path list');
+    expect(refused.err).toContain('rs1-mint refused: the BEAM object store holds 1 files outside the path list; deleted the checkout');
+    expect(existsSync(dir)).toBe(false);
   });
 
   test('a full checkout from before F28 is deleted and fetched again sparse', () => {
@@ -625,6 +628,25 @@ describe('beam-checkout.sh', () => {
     expect(git(dir, ['remote', 'add', 'origin', url]).status).toBe(0);
     expect(checkout(dir).out).toContain(' replaced=0');
     expect(git(dir, ['remote']).stdout.trim()).toBe('');
+  });
+
+  test('a refusal that finds an excluded file deletes the checkout, and never deletes through a symlink', () => {
+    const plain = join(root, 'nofilter.git');
+    expect(spawnSync('git', ['clone', '-q', '--bare', join(root, 'origin'), plain]).status).toBe(0);
+    for (const [key, value] of [['uploadpack.allowFilter', 'false'], ['uploadpack.allowAnySHA1InWant', 'true']]) expect(git(plain, ['config', key, value]).status).toBe(0);
+    const dir = join(root, 'nofilter/beam');
+    const r = run('bash', [CHECKOUT, dir, `file://${plain}`, commit, BEAM_PATHS_FILE], { HOME: root });
+    expect(r.code).toBe(2);
+    expect(r.err).toMatch(/rs1-mint refused: the BEAM object store holds \d+ files outside the path list; deleted the checkout/);
+    expect(existsSync(dir)).toBe(false);
+    const real = join(root, 'linked/beam'), link = join(root, 'link-to-beam');
+    expect(checkout(real).code).toBe(0);
+    symlinkSync(real, link);
+    spawnSync('git', ['-C', real, 'hash-object', '-w', '--stdin'], { input: 'content of chats/10M/1/chat.json\n' });
+    const refused = checkout(link);
+    expect(refused.code).toBe(2);
+    expect(refused.err).toContain('outside the path list; delete it and run again');
+    expect(existsSync(join(real, '.git'))).toBe(true);
   });
 
   test('refuses a commit it cannot fetch', () => {

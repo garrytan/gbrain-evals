@@ -30,7 +30,7 @@
 #     commit with a blob filter and checks out only the paths in eval/custody/rs1/beam-paths.txt (BEAM's code, licence,
 #     readme, public topics and dev conversations; no sealed conversation and nothing of the 10M tier, F28), removes the
 #     origin remote so no later git command can fetch an excluded file, then checks HEAD, a clean tree, and that no file
-#     outside the list is on disk or in the object store. A full checkout
+#     outside the list is on disk or in the object store, deleting the checkout when one is. A full checkout
 #     from before F28 is deleted and fetched again. Its Python dependencies install with uv from requirements.lock
 #     (--require-hashes) into <out>/tooling/venv.
 #

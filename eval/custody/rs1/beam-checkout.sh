@@ -11,11 +11,21 @@
 # A <dir> made from another path list, or a full checkout from before F28, is deleted and fetched again, because its
 # working tree or object store can hold files the list excludes. Then, with git's lazy fetching off, it checks that
 # HEAD is <commit>, the tree has no local changes, the files on disk are exactly the listed ones and the object store
-# holds no file outside the list, and prints one counts-only line.
+# holds no file outside the list, and prints one counts-only line. A refusal that finds a file outside the list, on
+# disk or in the object store, deletes <dir> first: only a real directory (never a symlink) that holds this script's
+# marker, removed at its resolved path by rm, which never follows a symlink inside it.
 set -euo pipefail
 umask 077
 
 die() { printf 'rs1-mint refused: %s\n' "$*" >&2; exit 2; }
+discard() {
+  local real
+  if [ -L "$DIR" ] || [ ! -f "$MARK" ] || ! real="$(cd "$DIR" && pwd -P)" || [ "$real" = / ]; then
+    die "$1; delete it and run again"
+  fi
+  rm -rf -- "$real" || die "$1; could not delete the checkout"
+  die "$1; deleted the checkout, run again"
+}
 [ $# -eq 4 ] || die "usage: beam-checkout.sh <dir> <repository> <commit> <path list>"
 DIR="$1" URL="$2" COMMIT="$3" LIST="$4"
 [ -f "$LIST" ] || die "the BEAM path list does not exist"
@@ -52,7 +62,7 @@ read -r FILES OUTSIDE MISSING < <(cd "$DIR" && find . -path ./.git -prune -o -ty
   END { for (f in files) if (!(f in seen)) miss++
         for (d in dirs) { hit = 0; for (s in seen) if (index(s, d) == 1) { hit = 1; break }; if (!hit) miss++ }
         print n + 0, out + 0, miss + 0 }')
-[ "$OUTSIDE" -eq 0 ] || die "the BEAM checkout holds $OUTSIDE files outside the path list; delete it and run again"
+[ "$OUTSIDE" -eq 0 ] || discard "the BEAM checkout holds $OUTSIDE files outside the path list"
 [ "$MISSING" -eq 0 ] || die "the BEAM checkout lacks $MISSING listed paths"
 
 # Which of the commit's files have contents in the object store. rev-list --missing=print reads only what is local and
@@ -64,7 +74,7 @@ read -r ABSENT STRAY < <(awk -v list="$LIST" "$ALLOWED"'
   $2 == "blob" { split($0, f, "\t"); blob[$3] = 1; if (allowed(f[2])) ok[$3] = 1 }
   END { for (b in blob) { if (b in gone) absent++; else if (!(b in ok)) stray++ } print absent + 0, stray + 0 }' \
   <(printf '%s\n' "$MISSING_IDS") <(printf '%s\n' "$TREE"))
-[ "$STRAY" -eq 0 ] || die "the BEAM object store holds $STRAY files outside the path list; delete it and run again"
+[ "$STRAY" -eq 0 ] || discard "the BEAM object store holds $STRAY files outside the path list"
 
 printf 'rs1-mint beam=verified commit=%s tree=%s sparse_files=%s absent_blobs=%s paths_sha256=%s replaced=%s\n' \
   "$COMMIT" "$(git -C "$DIR" rev-parse 'HEAD^{tree}')" "$FILES" "$ABSENT" "$LIST_SHA" "$REPLACED"
