@@ -8,9 +8,11 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { priceRequest } from '../../eval/runner/budget-ledger.ts';
+import { loadSplit } from '../../eval/runner/decisions/splits.ts';
 import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
+import { BEAM_PATHS_FILE, deriveBeamPaths, readBeamPaths, renderBeamPaths } from '../../eval/custody/rs1/beam-paths.ts';
 import { checkTree, hashTree } from '../../eval/custody/rs1/hashlist.ts';
 import {
   ANSWER_FIELD, SLOTS, VALIDATOR_IDS, anthropicRequest, buildPublicIndex, chunkMessages, fakeClient, geminiRequest,
@@ -36,17 +38,27 @@ function run(cmd: string, args: string[], env: Record<string, string> = {}) {
   return { code: r.status, out: r.stdout ?? '', err: r.stderr ?? '', all: (r.stdout ?? '') + (r.stderr ?? '') };
 }
 
-/** A BEAM-shaped public tree: three public topics, one public chat holding PASSAGE, and one public question. */
+/**
+ * A BEAM-shaped public tree: three public topics, a chat and questions file for every dev conversation in the BEAM
+ * path list (the first 1M one holds PASSAGE and PUBLIC_QUESTION), and SEALED_PASSAGE in a sealed 1M conversation and a
+ * 10M chat, which the list leaves out.
+ */
 const PASSAGE = words('public-passage', 400);
+const SEALED_PASSAGE = words('sealed-passage', 400);
 const PUBLIC_QUESTION = 'Which public dataset question appears in the BEAM release?';
+const BEAM_LIST = readBeamPaths().paths;
+const PUBLIC_CHAT = BEAM_LIST.find(p => p.startsWith('chats/1M/') && p.endsWith('/chat.json'))!;
+const SEALED_CHATS = ['chats/1M/1/chat.json', 'chats/10M/1/chat.json'];
 function fakeBeam(root: string): string {
   const beam = join(root, 'beam');
-  mkdirSync(join(beam, 'topics/1M'), { recursive: true });
-  mkdirSync(join(beam, 'chats/1M/1/probing_questions'), { recursive: true });
-  writeFileSync(join(beam, 'topics/1M/1M_topics.json'), JSON.stringify(['Coding', 'Math', 'Cooking'].map((category, i) => ({ id: i + 1, category, title: `Public ${category} topic`, theme: `Public theme ${i}`, subtopics: ['a', 'b', 'c'] }))));
-  const turns = Array.from({ length: 10 }, (_, i) => [{ role: 'user', id: 2 * i, content: i === 3 ? PASSAGE : words(`public-u${i}`, 60) }, { role: 'assistant', id: 2 * i + 1, content: words(`public-a${i}`, 60) }]);
-  writeFileSync(join(beam, 'chats/1M/1/chat.json'), JSON.stringify([{ batch_number: 1, time_anchor: 'x', turns }]));
-  writeFileSync(join(beam, 'chats/1M/1/probing_questions/probing_questions.json'), JSON.stringify({ information_extraction: [{ question: PUBLIC_QUESTION, answer: 'x', rubric: ['y'] }] }));
+  const write = (rel: string, value: unknown) => { mkdirSync(dirname(join(beam, rel)), { recursive: true }); writeFileSync(join(beam, rel), JSON.stringify(value)); };
+  const chat = (seed: string, passage = '') => [{ batch_number: 1, time_anchor: 'x', turns: Array.from({ length: 10 }, (_, i) => [{ role: 'user', id: 2 * i, content: i === 3 && passage ? passage : words(`${seed}-u${i}`, 60) }, { role: 'assistant', id: 2 * i + 1, content: words(`${seed}-a${i}`, 60) }]) }];
+  write('topics/1M/1M_topics.json', ['Coding', 'Math', 'Cooking'].map((category, i) => ({ id: i + 1, category, title: `Public ${category} topic`, theme: `Public theme ${i}`, subtopics: ['a', 'b', 'c'] })));
+  for (const rel of BEAM_LIST.filter(p => p.startsWith('chats/'))) {
+    if (rel.endsWith('/chat.json') || rel.endsWith('/chat_trunecated.json')) write(rel, chat(`public-${rel}`, rel === PUBLIC_CHAT ? PASSAGE : ''));
+    else write(rel, dirname(dirname(rel)) === dirname(PUBLIC_CHAT) ? { information_extraction: [{ question: PUBLIC_QUESTION, answer: 'x', rubric: ['y'] }] } : {});
+  }
+  for (const rel of SEALED_CHATS) write(rel, chat(`sealed-${rel}`, SEALED_PASSAGE));
   return beam;
 }
 
@@ -323,10 +335,27 @@ describe('validate.ts gates', () => {
     expect(c.status).toBe('drop');
     expect(c.reasons).toEqual(['contamination']);
     expect(c.contamination_share!).toBeGreaterThan(0.01);
-    expect(c.contamination_source).toBe('chats/1M/1/chat.json');
+    expect(c.contamination_source).toBe(PUBLIC_CHAT);
     expect(c.contamination_union_share!).toBeGreaterThanOrEqual(c.contamination_share!);
     expect(report.conversations.c001.contamination_share).toBe(0);
     expect(Object.keys(c.items)).toHaveLength(0);
+  });
+
+  test('the public index reads only the path list (F28): a sealed or 10M chat never counts, and a missing listed file refuses', async () => {
+    const list = readBeamPaths();
+    const indexed = list.paths.filter(p => p.startsWith('chats/') && !p.endsWith('/chat_trunecated.json'));
+    expect(index.sources).toBe(indexed.length);
+    expect(index.paths.map(p => relative(beam, p))).toEqual(indexed);
+    expect(index.sourceListSha256).toBe(list.sha256);
+    const sealed = conversation('sealed');
+    sealed.messages[41] = SEALED_PASSAGE.split(' ').slice(0, 120).join(' ');
+    const report = await validateSet(options(writeSet(root, [sealed])), fakes(), index);
+    expect(report.conversations.c001.contamination_share).toBe(0);
+    expect(report.conversations.c001.status).toBe('keep');
+    expect(report.public_index.source_list_sha256).toBe(list.sha256);
+    const partial = fakeBeam(scratch('partial'));
+    rmSync(join(partial, PUBLIC_CHAT));
+    expect(() => buildPublicIndex(partial)).toThrow(/1 public BEAM files of the path list are missing/);
   });
 
   test('a public question is contaminated, and a repeated question is a duplicate', async () => {
@@ -484,6 +513,148 @@ describe('validate.ts gates', () => {
 });
 
 // ─── mint.sh start_proxy ─────────────────────────────────────────────
+
+// ─── the BEAM path list and the sparse checkout (F28) ────────────────
+
+describe('the BEAM path list (F28)', () => {
+  const manifest = JSON.parse(readFileSync(join(REPO, 'eval/decisions/datasets/beam-b2da22e.json'), 'utf8')).sizes as Record<string, Array<{ conversation: string; chat_path: string; questions_path: string }>>;
+  const folder = (size: string, id: string) => dirname(manifest[size].find(c => c.conversation === id)!.chat_path) + '/';
+
+  test('is the list derived from the committed split and dataset files', () => {
+    expect(readFileSync(BEAM_PATHS_FILE, 'utf8')).toBe(renderBeamPaths());
+  });
+
+  test('names no sealed conversation and nothing of the 10M tier, and every dev conversation and pipeline path', () => {
+    for (const size of ['100k', '500k', '1m']) {
+      const split = loadSplit(`beam-${size}`);
+      for (const id of split.sealed) expect(BEAM_LIST.filter(p => p.startsWith(folder(size, id)))).toEqual([]);
+      for (const id of split.dev) {
+        const { chat_path } = manifest[size].find(c => c.conversation === id)!;
+        const chats = [...new Set([`${folder(size, id)}chat.json`, chat_path])];
+        expect(BEAM_LIST.filter(p => p.startsWith(folder(size, id)))).toEqual([...chats, `${folder(size, id)}probing_questions/probing_questions.json`]);
+      }
+    }
+    expect(loadSplit('beam-10m').dev).toEqual([]);
+    expect(BEAM_LIST.filter(p => /10M/i.test(p))).toEqual([]);
+    expect(BEAM_LIST.filter(p => !p.startsWith('chats/'))).toEqual(['src/', 'requirements.txt', 'LICENSE', 'README.md', 'topics/100k/100k_topics.json', 'topics/500k/500k_topics.json', 'topics/1M/1M_topics.json']);
+  });
+
+  test('refuses a conversation its split names neither dev nor sealed, and a dev conversation the manifest lacks', () => {
+    const entry = (id: string) => ({ conversation: id, chat_path: `chats/1M/${id}/chat.json`, questions_path: `chats/1M/${id}/probing_questions/probing_questions.json` });
+    const only1m = (dev: string[], sealed: string[]) => (name: string) => (name === 'beam-1m' ? { dev, sealed } : { dev: [], sealed: [] });
+    expect(() => deriveBeamPaths({ '1m': [entry('1'), entry('2')] }, only1m(['1'], []))).toThrow('beam-1m: 2 in no split');
+    expect(() => deriveBeamPaths({ '1m': [entry('1')] }, only1m(['1', '3'], []))).toThrow('beam-1m: dev conversations 3 are not in');
+    const paths = deriveBeamPaths({ '1m': [entry('1'), entry('2')] }, only1m(['1'], ['2']));
+    expect(paths).toContain('chats/1M/1/chat.json');
+    expect(paths.filter(p => p.startsWith('chats/1M/2/'))).toEqual([]);
+  });
+});
+
+describe('beam-checkout.sh', () => {
+  const CHECKOUT = join(REPO, 'eval/custody/rs1/beam-checkout.sh');
+  /** BEAM files the list leaves out: a sealed 1M conversation, the 10M tier, a per-tier topics copy and a dev pickle. */
+  const EXCLUDED = ['chats/1M/1/chat.json', 'chats/1M/1/probing_questions/probing_questions.json', 'chats/10M/1/chat.json', 'topics/10M/10M_topics.json', 'chats/1M/topics.json', `${dirname(PUBLIC_CHAT)}/chat.pickle`];
+  /** The modules rs1_mint.py's load_beam imports. */
+  const PIPELINE = ['src/__init__.py', 'src/llm.py', 'src/prompts.py', 'src/beam/__init__.py', 'src/beam/adjust_chats_length.py', 'src/beam/main.py', 'src/beam/run_pipeline.py', 'src/beam/utils.py'];
+  const LISTED = [...BEAM_LIST.filter(p => !p.endsWith('/')), ...PIPELINE].sort();
+  let root = '', url = '', commit = '';
+  const git = (dir: string, args: string[]) => spawnSync('git', ['-C', dir, ...args], { encoding: 'utf8', env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: root, GIT_NO_LAZY_FETCH: '1' } });
+  const checkout = (dir: string, at = commit) => run('bash', [CHECKOUT, dir, url, at, BEAM_PATHS_FILE], { HOME: root });
+  const onDisk = (dir: string) => files(dir).map(p => relative(dir, p)).filter(p => !p.startsWith('.git/')).sort();
+  const blob = (rel: string) => git(join(root, 'origin'), ['rev-parse', `HEAD:${rel}`]).stdout.trim();
+  const hasObject = (dir: string, rel: string) => git(dir, ['cat-file', '-e', blob(rel)]).status === 0;
+
+  beforeAll(() => {
+    root = scratch('beam-checkout');
+    const origin = join(root, 'origin');
+    for (const rel of [...LISTED, ...EXCLUDED]) { mkdirSync(dirname(join(origin, rel)), { recursive: true }); writeFileSync(join(origin, rel), `content of ${rel}\n`); }
+    const ident = ['-c', 'user.name=t', '-c', 'user.email=t@example.invalid', '-c', 'commit.gpgsign=false'];
+    for (const args of [['init', '-q'], ['add', '-A'], [...ident, 'commit', '-qm', 'beam'], ['config', 'uploadpack.allowFilter', 'true'], ['config', 'uploadpack.allowAnySHA1InWant', 'true']]) expect(git(origin, args).status).toBe(0);
+    url = `file://${origin}`;
+    commit = git(origin, ['rev-parse', 'HEAD']).stdout.trim();
+  });
+
+  test('checks out only the listed paths: the excluded files are on neither the disk nor the object store', () => {
+    const dir = join(root, 'out/beam');
+    const r = checkout(dir);
+    expect(r.code).toBe(0);
+    expect(r.all.trim()).toMatch(new RegExp(`^rs1-mint beam=verified commit=${commit} tree=[0-9a-f]{40} sparse_files=${LISTED.length} absent_blobs=${EXCLUDED.length} paths_sha256=[0-9a-f]{64} replaced=0$`));
+    expect(onDisk(dir)).toEqual(LISTED);
+    for (const rel of EXCLUDED) expect(hasObject(dir, rel)).toBe(false);
+    for (const rel of [...PIPELINE, PUBLIC_CHAT, 'topics/1M/1M_topics.json']) expect(hasObject(dir, rel)).toBe(true);
+  });
+
+  test('a rerun verifies without fetching again; a local change, a stray file or a stray object refuses', () => {
+    const dir = join(root, 'rerun/beam');
+    expect(checkout(dir).code).toBe(0);
+    expect(checkout(dir).out).toContain(' replaced=0');
+    writeFileSync(join(dir, 'LICENSE'), 'edited\n');
+    expect(checkout(dir).err).toContain('rs1-mint refused: the BEAM checkout has local changes');
+    expect(git(dir, ['checkout', '-q', 'LICENSE']).status).toBe(0);
+    expect(checkout(dir).code).toBe(0);
+    mkdirSync(join(dir, 'chats/10M/1'), { recursive: true });
+    writeFileSync(join(dir, 'chats/10M/1/chat.json'), 'content of chats/10M/1/chat.json\n');
+    const outside = checkout(dir);
+    expect(outside.code).toBe(2);
+    expect(outside.err).toContain('rs1-mint refused: the BEAM checkout holds 1 files outside the path list; deleted the checkout');
+    expect(existsSync(dir)).toBe(false);
+    expect(checkout(dir).code).toBe(0);
+    const stray = spawnSync('git', ['-C', dir, 'hash-object', '-w', '--stdin'], { input: 'content of chats/10M/1/chat.json\n', encoding: 'utf8' });
+    expect(stray.stdout.trim()).toBe(blob('chats/10M/1/chat.json'));
+    const refused = checkout(dir);
+    expect(refused.code).toBe(2);
+    expect(refused.err).toContain('rs1-mint refused: the BEAM object store holds 1 files outside the path list; deleted the checkout');
+    expect(existsSync(dir)).toBe(false);
+  });
+
+  test('a full checkout from before F28 is deleted and fetched again sparse', () => {
+    const dir = join(root, 'full/beam');
+    mkdirSync(dirname(dir), { recursive: true });
+    expect(spawnSync('git', ['clone', '-q', url, dir]).status).toBe(0);
+    expect(hasObject(dir, 'chats/10M/1/chat.json')).toBe(true);
+    const r = checkout(dir);
+    expect(r.code).toBe(0);
+    expect(r.out).toContain(' replaced=1');
+    expect(onDisk(dir)).toEqual(LISTED);
+    for (const rel of EXCLUDED) expect(hasObject(dir, rel)).toBe(false);
+  });
+
+  test('removes the origin remote, so a later git read cannot fetch an excluded file', () => {
+    const dir = join(root, 'remote/beam');
+    expect(checkout(dir).code).toBe(0);
+    expect(git(dir, ['remote']).stdout.trim()).toBe('');
+    expect(spawnSync('git', ['-C', dir, 'show', '--stat', 'HEAD'], { env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: root } }).status).not.toBe(0);
+    for (const rel of EXCLUDED) expect(hasObject(dir, rel)).toBe(false);
+    expect(git(dir, ['remote', 'add', 'origin', url]).status).toBe(0);
+    expect(checkout(dir).out).toContain(' replaced=0');
+    expect(git(dir, ['remote']).stdout.trim()).toBe('');
+  });
+
+  test('a refusal that finds an excluded file deletes the checkout, and never deletes through a symlink', () => {
+    const plain = join(root, 'nofilter.git');
+    expect(spawnSync('git', ['clone', '-q', '--bare', join(root, 'origin'), plain]).status).toBe(0);
+    for (const [key, value] of [['uploadpack.allowFilter', 'false'], ['uploadpack.allowAnySHA1InWant', 'true']]) expect(git(plain, ['config', key, value]).status).toBe(0);
+    const dir = join(root, 'nofilter/beam');
+    const r = run('bash', [CHECKOUT, dir, `file://${plain}`, commit, BEAM_PATHS_FILE], { HOME: root });
+    expect(r.code).toBe(2);
+    expect(r.err).toMatch(/rs1-mint refused: the BEAM object store holds \d+ files outside the path list; deleted the checkout/);
+    expect(existsSync(dir)).toBe(false);
+    const real = join(root, 'linked/beam'), link = join(root, 'link-to-beam');
+    expect(checkout(real).code).toBe(0);
+    symlinkSync(real, link);
+    spawnSync('git', ['-C', real, 'hash-object', '-w', '--stdin'], { input: 'content of chats/10M/1/chat.json\n' });
+    const refused = checkout(link);
+    expect(refused.code).toBe(2);
+    expect(refused.err).toContain('outside the path list; delete it and run again');
+    expect(existsSync(join(real, '.git'))).toBe(true);
+  });
+
+  test('refuses a commit it cannot fetch', () => {
+    const r = checkout(join(root, 'other/beam'), '0'.repeat(40));
+    expect(r.code).toBe(2);
+    expect(r.err).toContain('rs1-mint refused: could not fetch BEAM at');
+  });
+});
 
 describe('mint.sh start_proxy', () => {
   test('passes the provider key to the metering proxy through the environment, never on a command line', () => {
