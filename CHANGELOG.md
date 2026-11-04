@@ -4,6 +4,11 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### The particle-1 add-on report pairs its file-agent row with F6's file-agent rerun by run configuration (GST-1153)
+
+- **What broke.** `eval/runner/q1/particle-addon-report.ts` paired the file-agent add-on only with a frontier cell whose receipt named an F6 block. F6's A4 campaign ran its file-agent cell (`s1.baseline-file-agent.baseline.whole-agent`) without `--manifest f6`, so that receipt names block T1, as Q1's own file-agent cell of the same id does, and the report refused the add-on's row.
+- **The fix.** The report pairs the add-on with the cell whose run-config SHA-256 is F6's published file-agent definition (`F6_FILE_AGENT_CONFIG_SHA256`, `07b938b4…`, the value F6's scoreboard records), and still refuses Q1's cell of the same id. The test checks both pairings and that the constant matches the scoreboard. No published number changes.
+
 ### RS1 validation's claude-haiku-5-5 validator no longer sends `temperature` (GST-1154)
 
 - **What broke.** `eval/custody/rs1/validate.ts` sent `temperature: 0` to claude-haiku-5-5, which rejects it with HTTP 400 ("`temperature` is deprecated for this model"). In stage 0's diagnostic validate on run `rs1-stage0-2026-11-03T13-59-09-657Z-39d1056b`, all 55 Haiku calls failed at $0, so every item ended `validator_error` and no item-gate rate was measured.
