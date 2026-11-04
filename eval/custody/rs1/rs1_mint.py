@@ -43,6 +43,12 @@ CHAT_SIZE = "1M"
 # gpt-4o-mini encoding.
 TRUNCATE_TOKENS = 1_040_000
 GEN_MODEL = "gemini-3.8-flash"
+# gemini-3.8-flash reasons before it answers and counts those tokens against maxOutputTokens, while BEAM sized each
+# max_tokens for a non-reasoning model. Every call sends the lowest thinking level the model accepts ("minimal" returns
+# an error on 3.8 Flash, and thinkingBudget, which could cap reasoning, is deprecated on Gemini 3 and refused beside a
+# level). No level caps reasoning, so a call with BEAM's max_tokens asks for that many tokens plus reasoning_headroom,
+# sized from stage 0: answer-step reasoning had a p99 under 6,000 tokens at the default level, medium.
+GEN_THINKING = {"thinking_level": "low", "reasoning_headroom": 8192}
 # validate.ts VALIDATOR_IDS: the two paid validators a real mint's regeneration report must name.
 PAID_VALIDATORS = ["gemini:gemini-3.8-flash", "anthropic:claude-haiku-5-5"]
 EMBED_MODEL = "text-embedding-3-large"
@@ -253,19 +259,21 @@ class Usage:
         self.lock = threading.Lock()
         path.parent.mkdir(parents=True, exist_ok=True)
 
-    def record(self, model, input_tokens, output_tokens):
-        line = json.dumps({"model": model, "input_tokens": int(input_tokens or 0), "output_tokens": int(output_tokens or 0)})
+    def record(self, model, input_tokens, output_tokens, **request):
+        line = json.dumps({"model": model, "input_tokens": int(input_tokens or 0),
+                           "output_tokens": int(output_tokens or 0), **request})
         with self.lock, open(self.path, "a", encoding="utf-8") as f:
             f.write(line + "\n")
 
     def totals(self):
-        t = {"calls": 0, "input_tokens": 0, "output_tokens": 0}
+        t = {"calls": 0, "input_tokens": 0, "output_tokens": 0, "capped": 0}
         if self.path.exists():
             for line in self.path.read_text(encoding="utf-8").splitlines():
                 r = json.loads(line)
                 t["calls"] += 1
                 t["input_tokens"] += r["input_tokens"]
                 t["output_tokens"] += r["output_tokens"]
+                t["capped"] += int(r.get("capped", False))
         return t
 
 
@@ -306,17 +314,22 @@ class Reply:
 
 
 class RecordingModel:
-    """What BEAM sees as an LLM: '.invoke()' that records usage. BEAM's 'max_tokens=' keyword becomes Gemini's
-    'max_output_tokens', the one generation setting BEAM passes per call. BEAM's question step sends a prompt made only
-    of system messages; Gemini rejects a request with no contents (HTTP 400), so such a prompt goes as one user turn of
-    the same text, as an OpenAI chat model would read it. A refusal a resend would not change raises ProviderRefusal."""
+    """What BEAM sees as an LLM: '.invoke()' that records usage. BEAM's 'max_tokens=' keyword, the one generation
+    setting BEAM passes per call, becomes Gemini's 'max_output_tokens' plus GEN_THINKING's reasoning headroom, so
+    reasoning cannot shrink the reply BEAM asked for. Each call's usage line records the thinking level, the limit sent
+    and whether the reply stopped at that limit (finish reason MAX_TOKENS). BEAM's question step sends a prompt made
+    only of system messages; Gemini rejects a request with no contents (HTTP 400), so such a prompt goes as one user
+    turn of the same text, as an OpenAI chat model would read it. A refusal a resend would not change raises
+    ProviderRefusal."""
 
     def __init__(self, inner, model_id, usage):
         self.inner, self.model_id, self.usage = inner, model_id, usage
 
     def invoke(self, value, max_tokens=None, **kwargs):
+        limit = None
         if max_tokens is not None:
-            kwargs["generation_config"] = {**kwargs.get("generation_config", {}), "max_output_tokens": max_tokens}
+            limit = max_tokens + GEN_THINKING["reasoning_headroom"]
+            kwargs["generation_config"] = {**kwargs.get("generation_config", {}), "max_output_tokens": limit}
         if isinstance(value, (list, tuple)) and value and all(getattr(m, "type", None) == "system" for m in value):
             value = text_of(value)
         try:
@@ -327,7 +340,10 @@ class RecordingModel:
                 raise
             raise ProviderRefusal(f"HTTP {status} {type(error).__name__}") from error
         meta = getattr(reply, "usage_metadata", None) or {}
-        self.usage.record(self.model_id, meta.get("input_tokens", 0), meta.get("output_tokens", 0))
+        finish = (getattr(reply, "response_metadata", None) or {}).get("finish_reason")
+        self.usage.record(self.model_id, meta.get("input_tokens", 0), meta.get("output_tokens", 0),
+                          thinking_level=GEN_THINKING["thinking_level"], max_output_tokens=limit,
+                          capped=finish == "MAX_TOKENS")
         return reply
 
 
@@ -353,7 +369,25 @@ def gemini_model(temperature, usage):
     base, token = proxy_endpoint("gemini")
     inner = ChatGoogleGenerativeAI(model=GEN_MODEL, google_api_key=token, transport="rest",
                                    client_options={"api_endpoint": base}, temperature=temperature)
+    send_thinking(inner.client.transport._session)
     return RecordingModel(inner, f"gemini:{GEN_MODEL}", usage)
+
+
+def send_thinking(session):
+    """Add GEN_THINKING's level to the JSON body of every generateContent request an HTTP session sends.
+    langchain-google-genai 2.0.10, BEAM's pin, builds each request from a google-ai-generativelanguage 0.6.15 protobuf
+    that has no thinkingConfig field, so the setting cannot travel through the client itself."""
+    request = session.request
+
+    def with_thinking(method, url, data=None, **kwargs):
+        if data and re.search(r":(generateContent|streamGenerateContent)\b", url):
+            body = json.loads(data)
+            config = body.setdefault("generationConfig", {})
+            config["thinkingConfig"] = {"thinkingLevel": GEN_THINKING["thinking_level"]}
+            data = json.dumps(body)
+        return request(method, url, data=data, **kwargs)
+
+    session.request = with_thinking
 
 
 class UnmeteredSlot:
@@ -1103,10 +1137,11 @@ def outputs_digest(outputs):
 
 
 def usage_summary(out):
-    """Counts-only usage per conversation and step: model calls and tokens from the driver, requests and dollars from
-    the metering proxy's request logs (real mode). Written to <out>/usage.json for stage 0's mint-cost measurement."""
+    """Counts-only usage per conversation and step: model calls, tokens and replies stopped at their output limit
+    ('capped') from the driver, requests and dollars from the metering proxy's request logs (real mode). Written to
+    <out>/usage.json for stage 0's mint-cost measurement."""
     out = Path(out).resolve()
-    keys = ("calls", "input_tokens", "output_tokens", "metered_requests", "metered_usd")
+    keys = ("calls", "input_tokens", "output_tokens", "capped", "metered_requests", "metered_usd")
     convs, by_step, totals = {}, {}, dict.fromkeys(keys, 0)
     root = out / "set" / "conversations"
     for conv in sorted(root.iterdir()) if root.exists() else []:
@@ -1177,7 +1212,7 @@ def main(argv):
         summary, counts, digest = usage_summary(args.out)
         t = summary["totals"]
         emit({"summary": "usage", **counts, "calls": t["calls"], "input_tokens": t["input_tokens"],
-              "output_tokens": t["output_tokens"], "metered_requests": t["metered_requests"],
+              "output_tokens": t["output_tokens"], "capped": t["capped"], "metered_requests": t["metered_requests"],
               "metered_usd": f"{t['metered_usd']:.6f}", "usage_sha256": digest})
         return 0
 
@@ -1188,7 +1223,8 @@ def main(argv):
         status, attempt, outputs, usage, code = run_step(ctx, args.step)
         emit({"conv": cid, "step": args.step, "status": status, "attempt": attempt, "outputs": len(outputs),
               "calls": usage.get("calls", 0), "input_tokens": usage.get("input_tokens", 0),
-              "output_tokens": usage.get("output_tokens", 0), "outputs_sha256": outputs_digest(outputs)})
+              "output_tokens": usage.get("output_tokens", 0), "capped": usage.get("capped", 0),
+              "outputs_sha256": outputs_digest(outputs)})
         return code
     except BaseException as error:
         detail = traceback.format_exc()

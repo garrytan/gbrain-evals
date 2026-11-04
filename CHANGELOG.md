@@ -2,6 +2,18 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### The RS1 mint keeps BEAM's visible output budget on gemini-3.8-flash (GST-1154)
+
+- **What went wrong.** BEAM sized each `max_tokens` for a non-reasoning model, and `eval/custody/rs1/rs1_mint.py` passed it to gemini-3.8-flash unchanged as `maxOutputTokens`. gemini-3.8-flash reasons before it answers, at its default level (medium) since no level was sent, and those reasoning tokens count against the limit. In stage 0, 317 of 319 question calls for one conversation and 319 of 320 for the other stopped at BEAM's 3,000-token limit, with a median of 2,876 reasoning tokens (the metering proxy's `reasoning_tokens`). That left about 120 visible tokens per call, so a coding or math sub-batch got about 4 user messages instead of 6. Batches came out at 34 to 47 questions, against 60 to 63 in BEAM's published chats, and the conversations were heading for about 720k to 840k tokens instead of about 1.07M.
+- **Every call now sends `GEN_THINKING`.** The thinking level is `low`, the lowest gemini-3.8-flash accepts (Google's Gemini 3.8 Flash guide: `minimal` returns an error). A call that carries BEAM's `max_tokens` asks for that many tokens plus 8,192 of reasoning headroom. No thinking level caps reasoning, and `thinkingBudget`, which could, is deprecated on Gemini 3 and refused beside a level, so the headroom is sized from stage 0: answer-step reasoning had a p99 under 6,000 tokens at the default level. RS1's own topic and rubric prompts get the same level and still send no limit.
+- **The level reaches the wire through the client's HTTP session.** langchain-google-genai 2.0.10, BEAM's pin, builds requests from a google-ai-generativelanguage 0.6.15 protobuf with no thinkingConfig field, so `send_thinking` adds `generationConfig.thinkingConfig` to the JSON of each generateContent request.
+- **Each call's usage line records** the thinking level, the limit sent and `capped`, which is true when the reply stopped at its limit (finish reason `MAX_TOKENS`). Step lines, each step's usage in the manifest, `usage.json` and the usage summary line count capped replies.
+- **Money.** The metering proxy reserves a generateContent request at its `maxOutputTokens`, so a question call now reserves 11,192 output tokens (about $0.042 at $3.75 per million) and settles at the tokens actually used. The ledger needed no change.
+- **Finished steps keep their old outputs.** A step recorded as done is never run again, so stage 0's finished question and answer steps pick up this change only in a fresh output directory.
+- A one-call smoke (HTTP 200, finish reason STOP, 8 prompt, 1 reply and 93 reasoning tokens) shows the API accepts the setting. `test/eval/custody-rs1-real-mode.test.ts` checks keylessly that a BEAM `max_tokens=3000` call sends thinking level `low` and an 11,192-token limit, that the ledger reserves 11,192 output tokens for it, and that a reply stopped at the limit counts as capped.
+
 ## [0.10.157] - 2026-11-04
 
 ### The particle-1 file agent resumes under its own $68 campaign (F6 preregistration A6, Revision 3)
