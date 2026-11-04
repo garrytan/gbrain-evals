@@ -2,7 +2,14 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.157] - 2026-11-04
+
+### The particle-1 file agent resumes under its own $68 campaign (F6 preregistration A6, Revision 3)
+
+- **Why it resumes.** The file agent's first lease spent $16.08 of its $16.15 and stopped after 56 of 200 answers. particle-1 read about 1.8M prompt tokens per answer, so an answer cost $0.287, about 7 times the estimate. GBEV-3 approved a resume.
+- **The resume has its own campaign.** `q1-scoreboard-f6-current-master-p1b` (`docs/benchmarks/2026-10-29-f6-current-master/campaign/f6-campaign-p1b.json`) is p1's campaign with a $68 cap, a $68 lease for the cell and the F6-P1 block cap at $68. It keeps p1's 56 answered rows and their judgments and answers only the 144 questions left.
+- **Money.** The file agent's two caps total $84.15. The re-read ceiling drops from $100 to $60, so the metered ceilings total $144.15 and the $150 hard cap is unchanged.
+- `test/eval/q1-f6-cells.test.ts` checks that p1b differs from the regenerated p1 campaign only in its id, ledger, cap, the cell's lease and the F6-P1 block cap, and that the file agent's two caps sum to $84.15. No cell, arm, estimate or verdict rule changed.
 
 ### CI restores the pinned harness source from a verified cached pack instead of fetching 700 MB from GitHub (GST-1266)
 
