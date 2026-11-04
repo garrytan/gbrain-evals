@@ -1,5 +1,7 @@
 # LongMemEval end to end on today's gbrain: 468/500 with a Sonnet 5.5 reader
 
+*Note added 2026-11-04, after publication:* gbrain is Garry Tan's own project. See [disclosures](../disclosures.md).
+
 Measured 2026-10-06 on gbrain `c5fb0201` (v0.60.95.0), the pin in `package.json`. Status: **Complete** (500 of 500 questions). Evidence class: development (LongMemEval-S was used to tune gbrain's retrieval). Reader: `claude-sonnet-5-5` through gbrain's benchmark notes reader; **benchmark notes reader; not production `think`**. The result applies to Sonnet 5.5, not to gbrain's default Sonnet 4.6.
 
 [gbrain](https://github.com/garrytan/gbrain) is a Markdown-first memory system for agents. [LongMemEval](https://arxiv.org/abs/2410.10813) asks 500 questions about long histories of old conversations (about 50 conversations and 115,000 tokens per question in the `_s` split). gbrain imports each question's history, retrieves the conversations that look relevant, and a reader model answers from them. A judge model grades each answer against the dataset's reference.
@@ -8,7 +10,7 @@ Measured 2026-10-06 on gbrain `c5fb0201` (v0.60.95.0), the pin in `package.json`
 
 **Today's gbrain, with its release retrieval and a Sonnet 5.5 reader, answers 468 of 500 questions correctly (93.6%, exact 95% interval 91.1% to 95.6%) under LongMemEval's official judge.** The round's secondary judge (`gpt-6.1-sol`) gives 475 of 500. The two judges agree on 493 of 500 answers.
 
-**That is no measurable change from the September retrieval.** The same reader on the 2026-09-29 retrieval from gbrain `a7cb37b` answered 462 of 500. Paired question by question, today's build won 11 and lost 5 (preregistered one-sided test, p = 0.081): "no change shown at the measured power" (80% power for about 2.2 points at the observed discordance). The difference combines everything that changed between the two builds and their configurations, including the nine P-series features; it is not attributed to any one of them.
+**That is no measurable change from the September retrieval.** The same reader on the 2026-09-29 retrieval from gbrain `a7cb37b` answered 462 of 500. Paired question by question, today's build won 11 and lost 5 (preregistered one-sided test, p = 0.105): "no change shown at the measured power" (80% power for about 2.2 points at the observed discordance). The difference combines everything that changed between the two builds and their configurations, including the nine P-series features; it is not attributed to any one of them.
 
 **Retrieval itself is unchanged on this benchmark.** Strict retrieval (every labeled evidence conversation in the top 5) is 449 of 470 answerable questions today against 450 of 470 at `a7cb37b` (+0 / -1). For 401 of 500 questions, the reader received byte-for-byte the same request text as in September, and on those 401 the two runs still disagreed on 13 answers (9 one way, 4 the other). That is the run-to-run variation of a single sample at the provider's default temperature, and it is about as large as the whole build difference.
 
@@ -35,7 +37,7 @@ Measured 2026-10-06 on gbrain `c5fb0201` (v0.60.95.0), the pin in `package.json`
 
 | Paired, `c5fb0201` against `a7cb37b` | Wins | Losses | Test | Result |
 |---|---|---|---|---|
-| Official judge (preregistered) | 11 | 5 | one-sided superiority, p = 0.081 | no change shown |
+| Official judge (preregistered) | 11 | 5 | one-sided superiority, p = 0.105 | no change shown |
 | Secondary judge (report-only) | 11 | 4 | | |
 | Only the 401 questions with identical request text | 9 | 4 | | run-to-run variation |
 | Only the 99 questions whose request text changed | 2 | 1 | | |
@@ -110,3 +112,12 @@ bun eval/runner/batch/w10.ts export w10a-sonnet55-notes <dir>
 ```
 
 Through gbrain's own CLI, the same retrieval with the reader live: `gbrain eval longmemeval longmemeval_s_cleaned.json --top-k 5 --no-trajectory --mode balanced --reranker on --autocut off --model anthropic:claude-sonnet-5-5 --reader-mode notes --reader-max-tokens 1024 --judge --judge-model openai:gpt-4o` (the harness sends 1,024 tokens and no effort setting, so its numbers can differ from this report's).
+
+## Changelog
+
+### 2026-11-04: The one-sided p is exact
+
+The preregistered one-sided p is 0.105 (was 0.081). The superiority gate returned the share of bootstrap draws at or
+below zero, which is not a p-value and runs low. The exact one-sided sign-flip p on the 16 questions where the two
+runs disagree (11 won, 5 lost) is 0.105. The result, no change shown, stands. `summary.json` keeps the value as
+computed. The disclosure note under the title is added. [Audit](../audit/2026-11-04-superiority-p.md).

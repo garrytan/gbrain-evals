@@ -48,10 +48,21 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   [recheck](findings/2026-11-01-particle-1-longmemeval-w10b.md).
 - **The W10b reader-replay report calls Opus 5.5 "the strongest reader on this retrieval"** (2026-11-01). Its
   preregistered test compares each reader with the replayed Sonnet 4.6 run only (one-sided, Holm across six arms), so
-  it supports "Opus 5.5 scored higher than Sonnet 4.6" (474 against 451, Holm p = 0.0006), not a ranking of the newer
+  it supports "Opus 5.5 scored higher than Sonnet 4.6" (474 against 451, Holm p = 0.0002), not a ranking of the newer
   readers against each other. README's row says this; the report keeps its original sentence.
   [Report](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md),
   [preregistration](benchmarks/2026-10-06-longmemeval-w10-preregistration.md).
+- **The W10b report's Fable sensitivity note is wrong, and W10's superiority p values ran low** (2026-11-04). The
+  superiority gate's p was the share of bootstrap draws at or below the minimum effect, which is not a p-value and is
+  too small with few clusters. The note said that removing the Fable arm after the fact would have let Holm over five
+  arms count `gpt-6.1-sol` as higher (adjusted p = 0.041). With the exact one-sided sign-flip p the value is 0.061, so
+  it would not. Every preregistered W10 result stands. The reported p values move: W10a's one-sided p is 0.105 (was
+  0.081), W10b's Holm values are 0.0002, 0.0002, 0.082, 0.12, 0.19 and 0.29 (were 0.0006, 0.0006, 0.055, 0.097, 0.15
+  and 0.25), and W10c's two loss tests are 0.97 and 0.997 (were 0.96 and 0.99). The reports now give the exact values
+  and list the old ones in their changelogs; their `summary.json` files keep the values as computed. gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+  [Audit](audit/2026-11-04-superiority-p.md), [W10b](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md),
+  [W10a](benchmarks/2026-10-07-longmemeval-w10a-current-pin.md),
+  [W10c](benchmarks/2026-10-07-longmemeval-w10c-full-context.md).
 
 ## Relationships and calibration
 
@@ -127,6 +138,13 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   [Report](benchmarks/2026-10-06-scoreboard-report.md), [tables](benchmarks/2026-10-06-scoreboard/scoreboard.md).
 
 ## Changelog
+
+### 2026-11-04: W10's superiority p values and the Fable sensitivity note
+
+A LongMemEval entry is added: the superiority gate's p was a bootstrap share, not a p-value. With the exact one-sided
+sign-flip p no W10 verdict changes, but W10b's Fable sensitivity note no longer holds (0.061, was 0.041), and the
+entry lists the p values that move. The W10b ranking entry's Holm p is 0.0002 (was 0.0006).
+[Audit](audit/2026-11-04-superiority-p.md).
 
 ### 2026-11-03: The Q1 file agent's entry after the custody re-render
 

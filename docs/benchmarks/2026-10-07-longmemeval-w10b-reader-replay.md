@@ -1,22 +1,24 @@
 # Frontier readers on gbrain's September retrieval: Opus 5.5 answers 474/500
 
+*Note added 2026-11-04, after publication:* gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. See [disclosures](../disclosures.md).
+
 Measured 2026-10-06 and 2026-10-07. Status: **Complete** (six reader arms, every manifest question answered and judged). Evidence class: development (LongMemEval-S was used to tune the retrieval being replayed). **Retrieval from gbrain `a7cb37b` (2026-09-29)**, not today's gbrain; today's end-to-end number is in the [W10a report](2026-10-07-longmemeval-w10a-current-pin.md). These are benchmark readers, not gbrain's production `think`, and a result for a model applies to that model only.
 
 [gbrain](https://github.com/garrytan/gbrain) is a Markdown-first memory system for agents. [LongMemEval](https://arxiv.org/abs/2410.10813) asks 500 questions about long histories of old conversations: gbrain retrieves the relevant conversations, a reader model answers from them, and a judge grades the answer. On 2026-09-29 we recorded the exact text every reader request carried (the R1 notes run and the R2 direct run, gbrain `a7cb37b`, reranker on, opaque session ids). This report sends that same text to today's frontier readers, changing only the model, so every arm is paired question by question with the Sonnet 4.6 reader that produced the published 451/500 (official judge).
 
 ## The finding
 
-**Claude Opus 5.5 is the strongest reader on this retrieval: 474 of 500 (94.8%) under LongMemEval's official judge, against Sonnet 4.6's 451.** Paired, Opus won 28 and lost 5 (Holm-adjusted p = 0.0006). The secondary judge agrees (480 against 455).
+**Claude Opus 5.5 is the strongest reader on this retrieval: 474 of 500 (94.8%) under LongMemEval's official judge, against Sonnet 4.6's 451.** Paired, Opus won 28 and lost 5 (Holm-adjusted p = 0.0002). The secondary judge agrees (480 against 455).
 
 **Every current reader scores higher than Sonnet 4.6 on the same text, but only Opus 5.5 and Sonnet 5.5 direct clear the preregistered test across all six arms.** In order of how people use them:
 
 | Reader (prompt) | Official judge (gpt-4o) | Paired with Sonnet 4.6 | Preregistered result |
 |---|---|---|---|
-| Sonnet 5.5 (notes) | 462/500 (92.4%) | +22 / −11 | no reader difference shown (Holm p = 0.097) |
-| Sonnet 5.5 (direct) | 465/500 (93.0%) | +38 / −10 against Sonnet 4.6 direct (437) | **higher** (Holm p = 0.0006) |
-| GPT-6.1 Sol (notes) | 464/500 (92.8%) | +24 / −11 | no reader difference shown (Holm p = 0.055) |
-| GPT-5.4 (official prompt) | 460/500 (92.0%) | +23 / −14 | no reader difference shown (Holm p = 0.15) |
-| Opus 5.5 (notes) | **474/500 (94.8%)** | +28 / −5 | **higher** (Holm p = 0.0006) |
+| Sonnet 5.5 (notes) | 462/500 (92.4%) | +22 / −11 | no reader difference shown (Holm p = 0.12) |
+| Sonnet 5.5 (direct) | 465/500 (93.0%) | +38 / −10 against Sonnet 4.6 direct (437) | **higher** (Holm p = 0.0002) |
+| GPT-6.1 Sol (notes) | 464/500 (92.8%) | +24 / −11 | no reader difference shown (Holm p = 0.082) |
+| GPT-5.4 (official prompt) | 460/500 (92.0%) | +23 / −14 | no reader difference shown (Holm p = 0.19) |
+| Opus 5.5 (notes) | **474/500 (94.8%)** | +28 / −5 | **higher** (Holm p = 0.0002) |
 
 **Notes no longer beat direct answers with Sonnet 5.5.** In September, Sonnet 4.6 scored 451 with notes and 437 direct on identical retrieval (p = 0.049, official judge). With Sonnet 5.5 the two are 462 and 465 (notes +7 / −10, p = 0.63): the note-taking step that helped the older reader makes no measurable difference to the newer one, which thinks before answering either way.
 
@@ -54,18 +56,18 @@ Output tokens include reasoning or thinking tokens. Mean input tokens: 22,077 fo
 
 | Paired with Sonnet 4.6 (official judge) | Wins | Losses | One-sided p | Holm p | 95% CI of the difference | Result |
 |---|---|---|---|---|---|---|
-| Opus 5.5 notes | 28 | 5 | 0.0001 | 0.0006 | +2.6 to +6.8 points | higher |
-| Sonnet 5.5 direct (against R2) | 38 | 10 | 0.0001 | 0.0006 | +3.0 to +8.4 | higher |
-| GPT-6.1 Sol notes | 24 | 11 | 0.014 | 0.055 | +0.4 to +5.0 | no difference shown |
-| Sonnet 5.5 notes | 22 | 11 | 0.032 | 0.097 | 0.0 to +4.4 | no difference shown |
-| GPT-5.4 official prompt | 23 | 14 | 0.076 | 0.15 | −0.6 to +4.2 | no difference shown |
-| Fable 5.1 notes (200 subset) | 8 | 5 | 0.25 | 0.25 | −2.0 to +5.0 | no difference shown |
+| Opus 5.5 notes | 28 | 5 | 0.00003 | 0.0002 | +2.6 to +6.8 points | higher |
+| Sonnet 5.5 direct (against R2) | 38 | 10 | 0.00003 | 0.0002 | +3.0 to +8.4 | higher |
+| GPT-6.1 Sol notes | 24 | 11 | 0.020 | 0.082 | +0.4 to +5.0 | no difference shown |
+| Sonnet 5.5 notes | 22 | 11 | 0.040 | 0.12 | 0.0 to +4.4 | no difference shown |
+| GPT-5.4 official prompt | 23 | 14 | 0.094 | 0.19 | −0.6 to +4.2 | no difference shown |
+| Fable 5.1 notes (200 subset) | 8 | 5 | 0.29 | 0.29 | −2.0 to +5.0 | no difference shown |
 
 Under the secondary judge (report-only) the same comparisons are: Opus +28 / −3, Sonnet 5.5 direct +41 / −7, Sonnet 5.5 notes +25 / −12, `gpt-6.1-sol` +22 / −13, `gpt-5.4` +18 / −14, Fable +6 / −5.
 
 `compare.ts` power notes at the observed discordance: with 500 pairs, a two-sided 0.05 test has 80% power for differences of about 3.2 to 3.8 points (5.1 points for Fable's 200); Holm's stricter levels for the lower-ranked arms need more. Sonnet 5.5 notes (+2.2 points), `gpt-6.1-sol` (+2.6) and `gpt-5.4` (+1.8) sit below what this design can confirm, so "no difference shown" is not evidence of no difference.
 
-**Sensitivity to the Fable rule.** The family keeps the Fable comparison as preregistered. Had Fable been removed after the fact, Holm over five arms would also have counted `gpt-6.1-sol` as higher (adjusted p = 0.041). We report the preregistered result and note this here so the reader can see it.
+**Sensitivity to the Fable rule.** The family keeps the Fable comparison as preregistered. Removing Fable after the fact would not change any result: Holm over the other five arms gives `gpt-6.1-sol` an adjusted p of 0.061, still above 0.05 ([corrected 2026-11-04](../corrections.md#longmemeval)).
 
 By type (official judge):
 
@@ -135,3 +137,17 @@ for arm in w10b-sonnet55-notes w10b-sonnet55-direct w10b-sol-notes w10b-gpt54-of
   bun eval/runner/batch/w10.ts export $arm docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/$arm
 done
 ```
+
+## Changelog
+
+### 2026-11-04: Exact one-sided p values, and the Fable sensitivity note no longer holds
+
+The one-sided p values are now the exact sign-flip p values on the questions where each pair of runs disagrees, and
+the Holm values follow from them. The superiority gate had returned the share of bootstrap draws at or below zero,
+which is not a p-value and runs low. Opus 5.5 and Sonnet 5.5 direct are 0.00003 each, Holm 0.0002 (was 0.0001 and
+0.0006). GPT-6.1 Sol is 0.020, Holm 0.082 (was 0.014 and 0.055). Sonnet 5.5 notes is 0.040, Holm 0.12 (was 0.032 and
+0.097). GPT-5.4 is 0.094, Holm 0.19 (was 0.076 and 0.15). Fable 5.1 is 0.29 (was 0.25). Every preregistered result
+stands. The sensitivity note said that removing Fable would have let Holm over five arms count `gpt-6.1-sol` as
+higher (adjusted p = 0.041). With the exact p the value is 0.061, so it would not. `summary.json` keeps the values as
+computed. The disclosure note under the title is added.
+[Audit](../audit/2026-11-04-superiority-p.md), [correction](../corrections.md#longmemeval).

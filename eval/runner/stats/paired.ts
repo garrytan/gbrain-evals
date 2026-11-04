@@ -127,6 +127,8 @@ export interface PairedDelta {
   effective_n: number | null;
   /** Sorted bootstrap draws of delta, for non-inferiority tests. Not serialized by the CLI. */
   bootstrap: number[];
+  /** Each cluster's summed B - A and item count, in cluster-id order, with the seed and draws, for superiorityP. Not serialized by the CLI. */
+  sign_flip: { sums: number[]; counts: number[]; seed: number; draws: number };
 }
 
 const EXACT_CLUSTER_LIMIT = 20;
@@ -149,7 +151,8 @@ export function clusteredPairedDelta(pairs: readonly PairedItem[], options: Pair
   const meanB = pairs.reduce((s, p) => s + p.b, 0) / n;
   const delta = clusters.reduce((s, c) => s + c.sum, 0) / n;
   const diffs = pairs.map(p => p.b - p.a);
-  const base = { n_pairs: n, n_clusters: g, mean_a: meanA, mean_b: meanB, delta };
+  const signFlip = { sums: clusters.map(c => c.sum), counts: clusters.map(c => c.count), seed: options.seed, draws: options.draws };
+  const base = { n_pairs: n, n_clusters: g, mean_a: meanA, mean_b: meanB, delta, sign_flip: signFlip };
 
   const seIid = n > 1 ? Math.sqrt(diffs.reduce((s, d) => s + (d - delta) ** 2, 0) / (n - 1) / n) : null;
   const seCluster = g > 1 ? Math.sqrt(g / (g - 1) * clusters.reduce((s, c) => s + (c.sum - delta * c.count) ** 2, 0)) / n : null;
@@ -310,19 +313,37 @@ export function nonInferiorityP(stats: PairedDelta, tolerance: number, direction
 }
 
 /**
- * One-sided cluster-bootstrap p-value for superiority by at least `minEffect`
- * (in metric units, oriented so a larger value is better): the share of
- * bootstrap deltas at or below `minEffect`. Rejecting (p <= alpha) means the
- * lower bound of a (1 - 2 * alpha) interval sits above `minEffect`. With
- * `minEffect` 0 this is a plain one-sided superiority test.
+ * One-sided cluster sign-flip p-value for superiority by more than `minEffect`
+ * (in metric units, oriented so a larger value is better). The unit of
+ * randomization is the cluster, as in clusteredPairedDelta: each cluster's
+ * oriented summed difference, less `minEffect` times its item count, keeps or
+ * flips its sign, and p is the share of sign patterns whose mean is at least
+ * the observed one. That tests H0: delta <= minEffect at its boundary; with
+ * `minEffect` 0 it is the test behind p_greater (p_less for 'lower'). Up to 20
+ * clusters all 2^clusters patterns are enumerated, so p is exact and never
+ * below 2^-clusters; above that p is (k + 1) / (draws + 1) over `draws`
+ * patterns drawn from the recorded seed, with a Monte Carlo standard error of
+ * at most 0.5 / sqrt(draws). Null with fewer than two clusters.
  */
 export function superiorityP(stats: PairedDelta, minEffect: number, direction: 'higher' | 'lower'): number | null {
   if (!finite(minEffect) || minEffect < 0) throw new Error('superiority minimum effect must be a finite number >= 0');
-  if (!stats.bootstrap.length) return null;
+  const { sums, counts, seed, draws } = stats.sign_flip;
+  const g = sums.length;
+  if (g < 2) return null;
   const sign = direction === 'higher' ? 1 : -1;
-  const draws = stats.bootstrap.length;
-  if (draws === 1) return sign * stats.bootstrap[0] > minEffect ? 0 : 1;
-  let atOrBelow = 0;
-  for (const d of stats.bootstrap) if (sign * d <= minEffect + 1e-12) atOrBelow++;
-  return (atOrBelow + 1) / (draws + 1);
+  const shifted = sums.map((s, j) => sign * s - minEffect * counts[j]);
+  const observed = shifted.reduce((s, x) => s + x, 0) / stats.n_pairs;
+  const exact = g <= EXACT_CLUSTER_LIMIT;
+  const patterns = exact ? 2 ** g : draws;
+  const rng = seededRandom(seed);
+  let atLeast = 0;
+  for (let i = 0; i < patterns; i++) {
+    let sum = 0;
+    for (let j = 0; j < g; j++) {
+      const flip = exact ? ((i >>> j) & 1) === 1 : rng() < 0.5;
+      sum += flip ? -shifted[j] : shifted[j];
+    }
+    if (sum / stats.n_pairs >= observed - 1e-12) atLeast++;
+  }
+  return exact ? atLeast / patterns : (atLeast + 1) / (patterns + 1);
 }
