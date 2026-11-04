@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.160] - 2026-11-04
 
 ### particle-1 F6 add-on finding: the judge decides whether particle-1 scores above or below Opus 5.5 (GST-1153)
 
