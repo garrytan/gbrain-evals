@@ -44,6 +44,8 @@ export const ALLOWED: Record<string, Needle['id'][]> = {
   'docs/comparison-systems.md': ['product', 'maker'],
   // Frozen Q1 comparison bundles at 008b83fe; capability hash labels published scoreboard rows (GBRA-108, 2026-10-27).
   'docs/comparison-systems/ext-memory-bank/': ['product', 'maker'],
+  // RS1's memory-bank 1.1.0 configuration bundle (GST-1154): pins the server image and client like the Q1 bundle above.
+  'docs/comparison-systems/ext-memory-bank/recipe-1.1/': ['product', 'maker'],
   'docs/comparison-systems/ext-temporal-graph/README.md': ['product'],
   'docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md': ['product', 'maker'],
   'docs/plans/2026-09-28-gbrain-10x/audit/evals-docs-infra.md': ['product'],
