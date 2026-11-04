@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.158] - 2026-11-04
+## [0.10.159] - 2026-11-04
 
 ### RS1 stopped at stage 0, and its finding is written up (GST-1154)
 
@@ -10,6 +10,14 @@ This records what each gbrain-evals release changed and what its measurements me
 - **What the finding records.** `docs/benchmarks/2026-11-04-rs1-stage0.md` gives stage 0's measurements: one conversation minted on fixed code (c003) cost $40.63 to mint and validate, or $28.85 when generation stops at BEAM's truncation point, which throws away the last three of its ten answer batches. c003 passes every conversation gate, and 15 of its 20 items pass validation. The page also records the five fixes that merged (#357, #361, #362, #363, #366), the F28 custody record, what the 75-conversation and $2,000 designs would cost, stage 0's spend and what a revisit needs.
 - **Where it's linked.** README's Known limits gain an entry: no sealed set here is big enough to rank gbrain among the memory servers, and RS1 stopped at stage 0. The docs hub gains a route row after the F6 row, and `docs/disclosures.md` lists the finding, which carries the gbrain line in its closing Disclosures section.
 - **The drafts.** Draft PRs #364 (the freeze) and #367 (the early stop) are closed without merging. Their branches, `capy/gst1154-rs1-freeze` at `a316e7ae` and `capy/gst1154-rs1-early-stop` at `6c026efc`, are kept for a revisit once judge robustness (GST-1365) is settled.
+
+## [0.10.158] - 2026-11-04
+
+### A6 revision 4: the file agent's second resume runs as campaign p1c at $49.08, and any unspent part moves to the second judge (GST-1153)
+
+- **What changed.** Revision 3's resume of the particle-1 file-agent cell stopped at $18.92 of its $68 lease when Particle answered HTTP 402 (the key's credit ran out, not the lease), with 120 of the 200 questions answered. `reserve` checks held spend plus a new lease against both the F6-P1 block cap and the campaign cap, so p1b cannot take another lease. The new campaign `docs/benchmarks/2026-10-29-f6-current-master/campaign/f6-campaign-p1c.json` is p1's campaign with the cap, the cell's lease and the F6-P1 block cap at p1b's unspent $49.08. It resumes from p1b's state, keeps the 120 recorded answers and asks only the 80 without one.
+- **The money.** Revision 4 of the F6 preregistration keeps the file agent's ceilings at $84.15 ($16.15, $18.92 as settled and $49.08) and the metered ceilings at $144.15 under the unchanged $150 hard cap. If the p1c lease settles below $49.08, the remainder moves to the second judge for the cells the $60 re-read ceiling left unjudged, so money moves between ledgers and nothing is added.
+- `test/eval/q1-f6-cells.test.ts` checks that p1c is the regenerated p1 campaign with only its id, ledger, cap, lease and block cap changed, and that its cap is p1b's unspent $49.08.
 
 ### A6's second judge for the particle-1 add-on: gpt-6.1-sol grades both readers on cells where particle-1 is above Opus (GST-1153)
 

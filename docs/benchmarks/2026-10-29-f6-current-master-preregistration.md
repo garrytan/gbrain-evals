@@ -667,3 +667,44 @@ approved a resume on 2026-11-04.
   answers. It also gives particle-1's file-agent dollars per answer and per correct answer next to Opus's F6 row.
 
 No cell, arm, estimate or verdict rule changed, and the hard cap stays $150.
+
+**Revision 4 (2026-11-04, before the file agent's second resume).** Revision 3's resume, lease
+`s1.baseline-file-agent.particle-a1-6b01afc7`, settled at $18.92 of its $68 when Particle answered HTTP 402: the key's
+credit balance ran out, not the lease. It answered 64 more questions, so 120 of the 200 have an answer: 108 scored, 11
+turn_cap and 1 reader_error, the answer the 402 cut off. That is $0.296 an answer with judging, under revision 3's
+projection of about $0.34. Garry topped up the credit, and GBEV-3 approved option A+ on 2026-11-04.
+
+- **Why a new campaign.** `reserve` checks what the ledger already holds plus the new lease against both the F6-P1
+  block cap and the campaign cap, so with $18.92 held of p1b's $68, no lease above $49.08 fits, and p1b's manifest
+  fixes the cell's lease at $68. So the resume runs as a new campaign that holds p1b's unspent $49.08, and p1b's
+  frozen manifest and hash stay as they are. p1b takes no further lease.
+- **Campaign.** `q1-scoreboard-f6-current-master-p1c`, manifest
+  `2026-10-29-f6-current-master/campaign/f6-campaign-p1c.json`: p1's campaign with a $49.08 cap, a $49.08 lease for the
+  cell and the F6-P1 block cap at $49.08. Nothing else differs, and `test/eval/q1-f6-cells.test.ts` checks that. It
+  launches with `bun eval/runner/shootout-cell.ts resume --cell s1.baseline-file-agent.particle --from-campaign
+  <p1b manifest> --from-state <p1b state>`. As in revision 3, the store is ingested again, the 120 recorded answers and
+  their judgments are kept, and only the 80 questions without an answer are asked. The files the cell executes differ
+  from p1b's freeze at 2813fcb3 at most in the `version` field of package.json. The reader_error is a recorded answer,
+  so it is not asked again; the outcome rule counts it as a harness failure, not a product failure, and the report
+  counts it among the answers not scored. The custodian computes the campaign hash from a fresh clone at this
+  revision's merge commit before the unit launches.
+- **Projection.** The 80 are all of four conversations, where Opus read 0.69M prompt tokens per answer in F6's
+  file-agent cell, against 0.43M on the 120 answered. particle-1's reader dollars on the 120 average $0.2875 an answer;
+  scaled by that ratio (1.62), the 80 cost about $37.23 in reader dollars plus $0.27 of judging, about $37.50. $49.08
+  is 1.31 times that, less than A6's usual margin (1.25 times plus twice the $3.05 peak reservation, $53), so the rule
+  for running out below applies if the heavier conversations cost more than scaled.
+- **Money.** The file agent's ceilings are p1's $16.15, p1b's $18.92 as settled and p1c's $49.08, which total the $84.15
+  approved in revision 3. The re-read ceiling stays $60. The metered ceilings total $144.15, and with VM time the $150
+  hard cap is unchanged.
+- **Unspent file-agent money goes to the second judge.** If the p1c lease settles below $49.08, the unspent remainder
+  ($49.08 minus the lease's settled spend on the p1c ledger) moves to the second judge, for the cells the $60 ceiling
+  left unjudged, in the same descending order (largest canonical particle-1 minus Opus delta first). Those leases run
+  only after the p1c lease has settled, on the same re-read ledger, and pass `--ledger-cap-usd` at $60 plus the
+  remainder. Nothing more runs under p1c, so the metered ceilings still total $144.15 or less and the $150 hard cap is
+  unchanged: money moves between ledgers and nothing is added. A lease that is abandoned is charged at its full
+  reservation, so nothing moves. Each moved lease gets its own start note, and a cell that still does not fit is listed
+  as not judged.
+- **If the resume runs out.** Nothing is raised again: the findings file reports the row as partial, with its count of
+  answers, and whatever the lease left unspent still moves under the clause above.
+
+No cell, arm, estimate or verdict rule changed, and the hard cap stays $150.
