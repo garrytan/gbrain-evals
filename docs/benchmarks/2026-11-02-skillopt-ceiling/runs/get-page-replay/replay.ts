@@ -1,5 +1,6 @@
 /**
- * Keyless replay of every get_page call recorded in the SkillOpt runs, through gbrain's SkillOpt rollout
+ * Keyless replay of the get_page calls recorded in the SkillOpt runs (Sol's in the frontier probe and the
+ * ceiling calibration, and as a control Opus's in the calibration and gate 1), through gbrain's SkillOpt rollout
  * registry (the read-only one the rollouts used), against the brain each run read. No model is called and no
  * key is read. The probe's one-shot input names a page the proposer was not shown as `[withheld]`; those calls
  * replay against the stand-in page the acceptance test uses, and are counted apart. Run it once per gbrain build,
