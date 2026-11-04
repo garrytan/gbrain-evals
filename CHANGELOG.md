@@ -25,6 +25,15 @@ This records what each gbrain-evals release changed and what its measurements me
 - README's known limits gain an entry on BEAM's judge for comparing answer models. The docs index gains a row, and the
   disclosures page lists the new finding.
 
+## [0.10.159] - 2026-11-04
+
+### RS1 stopped at stage 0, and its finding is written up (GST-1154)
+
+- **What stopped.** RS1, the sealed ranking set planned at 75 BEAM-format conversations to rank gbrain among memory servers, stopped at stage 0 on 2026-11-04. Its full design costs about $8,200 all-in, and a version inside the $2,000 limit per eval detects only gaps of about 6.5 to 7.7 points, too coarse for a gap the size of F6's 4.8-point lead over the extract-first server.
+- **What the finding records.** `docs/benchmarks/2026-11-04-rs1-stage0.md` gives stage 0's measurements: one conversation minted on fixed code (c003) cost $40.63 to mint and validate, or $28.85 when generation stops at BEAM's truncation point, which throws away the last three of its ten answer batches. c003 passes every conversation gate, and 15 of its 20 items pass validation. The page also records the five fixes that merged (#357, #361, #362, #363, #366), the F28 custody record, what the 75-conversation and $2,000 designs would cost, stage 0's spend and what a revisit needs.
+- **Where it's linked.** README's Known limits gain an entry: no sealed set here is big enough to rank gbrain among the memory servers, and RS1 stopped at stage 0. The docs hub gains a route row after the F6 row, and `docs/disclosures.md` lists the finding, which carries the gbrain line in its closing Disclosures section.
+- **The drafts.** Draft PRs #364 (the freeze) and #367 (the early stop) are closed without merging. Their branches, `capy/gst1154-rs1-freeze` at `a316e7ae` and `capy/gst1154-rs1-early-stop` at `6c026efc`, are kept for a revisit once judge robustness (GST-1365) is settled.
+
 ## [0.10.158] - 2026-11-04
 
 ### A6 revision 4: the file agent's second resume runs as campaign p1c at $49.08, and any unspent part moves to the second judge (GST-1153)
