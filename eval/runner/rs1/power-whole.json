@@ -1,0 +1,1603 @@
+{
+ "schema": "gbrain-evals/rs1-power/v1",
+ "family": "whole",
+ "subject": "gbrain-defaults (whole-system think)",
+ "comparators": [
+  "baseline-file-agent"
+ ],
+ "alpha": 0.05,
+ "comparisons": 1,
+ "power": 0.8,
+ "tau_points": 2.28,
+ "decisive_rule": "p <= 0.05 (the 95% interval excludes 0)",
+ "secondary_rule": "Holm over the family",
+ "command": "bun eval/runner/rs1/power.ts --family whole --sims 1000 --draws 999",
+ "scenarios": [
+  {
+   "name": "optimistic",
+   "sd20": 6.87,
+   "source": "wave 2: 72 public BEAM conversations, gbrain vs memory-bank, one-sided 95% bounds +2.63 and +5.33 (ni-stats.ts:13), SE 1.35/t(0.95,71)=0.81"
+  },
+  {
+   "name": "central",
+   "sd20": 7.72,
+   "source": "wave 1 sealed: 54 BEAM conversations, gbrain vs memory-bank, SE 1.05 points"
+  },
+  {
+   "name": "pessimistic",
+   "sd20": 9.14,
+   "source": "dev pairs: docs/benchmarks/2026-10-05-memory-proof-wave-dev/power/two-sample-505a.json estimate: diff_variance 0.15653, tau 2.28 points (18 conversations, 360 questions)"
+  },
+  {
+   "name": "file-agent",
+   "sd20": 10.6,
+   "source": "Q1 Family F2: gbrain whole-default vs file agent, 10 conversations, 95% interval -17.2 to -2.1 (half-width 7.55 at t(0.975,9))"
+  }
+ ],
+ "analytic": [
+  {
+   "scenario": "optimistic",
+   "questions_per_conversation": 20,
+   "tau_points": 2.28,
+   "sd_conversation_points": 6.87,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 4.42,
+     "level_margin80": 5.11,
+     "holm_half_width": 3.13,
+     "mdd80_single": 4.42
+    },
+    {
+     "n": 25,
+     "mdd80": 4.01,
+     "level_margin80": 4.65,
+     "holm_half_width": 2.84,
+     "mdd80_single": 4.01
+    },
+    {
+     "n": 30,
+     "mdd80": 3.64,
+     "level_margin80": 4.21,
+     "holm_half_width": 2.57,
+     "mdd80_single": 3.64
+    },
+    {
+     "n": 35,
+     "mdd80": 3.35,
+     "level_margin80": 3.88,
+     "holm_half_width": 2.36,
+     "mdd80_single": 3.35
+    },
+    {
+     "n": 40,
+     "mdd80": 3.12,
+     "level_margin80": 3.61,
+     "holm_half_width": 2.2,
+     "mdd80_single": 3.12
+    },
+    {
+     "n": 50,
+     "mdd80": 2.78,
+     "level_margin80": 3.21,
+     "holm_half_width": 1.95,
+     "mdd80_single": 2.78
+    },
+    {
+     "n": 60,
+     "mdd80": 2.53,
+     "level_margin80": 2.92,
+     "holm_half_width": 1.77,
+     "mdd80_single": 2.53
+    },
+    {
+     "n": 75,
+     "mdd80": 2.25,
+     "level_margin80": 2.61,
+     "holm_half_width": 1.58,
+     "mdd80_single": 2.25
+    },
+    {
+     "n": 100,
+     "mdd80": 1.94,
+     "level_margin80": 2.25,
+     "holm_half_width": 1.36,
+     "mdd80_single": 1.94
+    },
+    {
+     "n": 125,
+     "mdd80": 1.74,
+     "level_margin80": 2.01,
+     "holm_half_width": 1.22,
+     "mdd80_single": 1.74
+    },
+    {
+     "n": 150,
+     "mdd80": 1.58,
+     "level_margin80": 1.83,
+     "holm_half_width": 1.11,
+     "mdd80_single": 1.58
+    },
+    {
+     "n": 200,
+     "mdd80": 1.37,
+     "level_margin80": 1.58,
+     "holm_half_width": 0.96,
+     "mdd80_single": 1.37
+    }
+   ]
+  },
+  {
+   "scenario": "optimistic",
+   "questions_per_conversation": 20,
+   "tau_points": 5,
+   "sd_conversation_points": 6.87,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 4.42,
+     "level_margin80": 5.11,
+     "holm_half_width": 3.13,
+     "mdd80_single": 4.42
+    },
+    {
+     "n": 25,
+     "mdd80": 4.01,
+     "level_margin80": 4.65,
+     "holm_half_width": 2.84,
+     "mdd80_single": 4.01
+    },
+    {
+     "n": 30,
+     "mdd80": 3.64,
+     "level_margin80": 4.21,
+     "holm_half_width": 2.57,
+     "mdd80_single": 3.64
+    },
+    {
+     "n": 35,
+     "mdd80": 3.35,
+     "level_margin80": 3.88,
+     "holm_half_width": 2.36,
+     "mdd80_single": 3.35
+    },
+    {
+     "n": 40,
+     "mdd80": 3.12,
+     "level_margin80": 3.61,
+     "holm_half_width": 2.2,
+     "mdd80_single": 3.12
+    },
+    {
+     "n": 50,
+     "mdd80": 2.78,
+     "level_margin80": 3.21,
+     "holm_half_width": 1.95,
+     "mdd80_single": 2.78
+    },
+    {
+     "n": 60,
+     "mdd80": 2.53,
+     "level_margin80": 2.92,
+     "holm_half_width": 1.77,
+     "mdd80_single": 2.53
+    },
+    {
+     "n": 75,
+     "mdd80": 2.25,
+     "level_margin80": 2.61,
+     "holm_half_width": 1.58,
+     "mdd80_single": 2.25
+    },
+    {
+     "n": 100,
+     "mdd80": 1.94,
+     "level_margin80": 2.25,
+     "holm_half_width": 1.36,
+     "mdd80_single": 1.94
+    },
+    {
+     "n": 125,
+     "mdd80": 1.74,
+     "level_margin80": 2.01,
+     "holm_half_width": 1.22,
+     "mdd80_single": 1.74
+    },
+    {
+     "n": 150,
+     "mdd80": 1.58,
+     "level_margin80": 1.83,
+     "holm_half_width": 1.11,
+     "mdd80_single": 1.58
+    },
+    {
+     "n": 200,
+     "mdd80": 1.37,
+     "level_margin80": 1.58,
+     "holm_half_width": 0.96,
+     "mdd80_single": 1.37
+    }
+   ]
+  },
+  {
+   "scenario": "optimistic",
+   "questions_per_conversation": 40,
+   "tau_points": 2.28,
+   "sd_conversation_points": 5.12,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 3.29,
+     "level_margin80": 3.81,
+     "holm_half_width": 2.33,
+     "mdd80_single": 3.29
+    },
+    {
+     "n": 25,
+     "mdd80": 2.99,
+     "level_margin80": 3.46,
+     "holm_half_width": 2.11,
+     "mdd80_single": 2.99
+    },
+    {
+     "n": 30,
+     "mdd80": 2.71,
+     "level_margin80": 3.14,
+     "holm_half_width": 1.91,
+     "mdd80_single": 2.71
+    },
+    {
+     "n": 35,
+     "mdd80": 2.5,
+     "level_margin80": 2.89,
+     "holm_half_width": 1.76,
+     "mdd80_single": 2.5
+    },
+    {
+     "n": 40,
+     "mdd80": 2.33,
+     "level_margin80": 2.69,
+     "holm_half_width": 1.64,
+     "mdd80_single": 2.33
+    },
+    {
+     "n": 50,
+     "mdd80": 2.07,
+     "level_margin80": 2.39,
+     "holm_half_width": 1.45,
+     "mdd80_single": 2.07
+    },
+    {
+     "n": 60,
+     "mdd80": 1.88,
+     "level_margin80": 2.18,
+     "holm_half_width": 1.32,
+     "mdd80_single": 1.88
+    },
+    {
+     "n": 75,
+     "mdd80": 1.68,
+     "level_margin80": 1.94,
+     "holm_half_width": 1.18,
+     "mdd80_single": 1.68
+    },
+    {
+     "n": 100,
+     "mdd80": 1.45,
+     "level_margin80": 1.68,
+     "holm_half_width": 1.02,
+     "mdd80_single": 1.45
+    },
+    {
+     "n": 125,
+     "mdd80": 1.29,
+     "level_margin80": 1.5,
+     "holm_half_width": 0.91,
+     "mdd80_single": 1.29
+    },
+    {
+     "n": 150,
+     "mdd80": 1.18,
+     "level_margin80": 1.36,
+     "holm_half_width": 0.83,
+     "mdd80_single": 1.18
+    },
+    {
+     "n": 200,
+     "mdd80": 1.02,
+     "level_margin80": 1.18,
+     "holm_half_width": 0.71,
+     "mdd80_single": 1.02
+    }
+   ]
+  },
+  {
+   "scenario": "optimistic",
+   "questions_per_conversation": 40,
+   "tau_points": 5,
+   "sd_conversation_points": 6.01,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 3.86,
+     "level_margin80": 4.47,
+     "holm_half_width": 2.73,
+     "mdd80_single": 3.86
+    },
+    {
+     "n": 25,
+     "mdd80": 3.51,
+     "level_margin80": 4.06,
+     "holm_half_width": 2.48,
+     "mdd80_single": 3.51
+    },
+    {
+     "n": 30,
+     "mdd80": 3.18,
+     "level_margin80": 3.68,
+     "holm_half_width": 2.24,
+     "mdd80_single": 3.18
+    },
+    {
+     "n": 35,
+     "mdd80": 2.93,
+     "level_margin80": 3.39,
+     "holm_half_width": 2.06,
+     "mdd80_single": 2.93
+    },
+    {
+     "n": 40,
+     "mdd80": 2.73,
+     "level_margin80": 3.16,
+     "holm_half_width": 1.92,
+     "mdd80_single": 2.73
+    },
+    {
+     "n": 50,
+     "mdd80": 2.43,
+     "level_margin80": 2.81,
+     "holm_half_width": 1.71,
+     "mdd80_single": 2.43
+    },
+    {
+     "n": 60,
+     "mdd80": 2.21,
+     "level_margin80": 2.56,
+     "holm_half_width": 1.55,
+     "mdd80_single": 2.21
+    },
+    {
+     "n": 75,
+     "mdd80": 1.97,
+     "level_margin80": 2.28,
+     "holm_half_width": 1.38,
+     "mdd80_single": 1.97
+    },
+    {
+     "n": 100,
+     "mdd80": 1.7,
+     "level_margin80": 1.97,
+     "holm_half_width": 1.19,
+     "mdd80_single": 1.7
+    },
+    {
+     "n": 125,
+     "mdd80": 1.52,
+     "level_margin80": 1.76,
+     "holm_half_width": 1.06,
+     "mdd80_single": 1.52
+    },
+    {
+     "n": 150,
+     "mdd80": 1.38,
+     "level_margin80": 1.6,
+     "holm_half_width": 0.97,
+     "mdd80_single": 1.38
+    },
+    {
+     "n": 200,
+     "mdd80": 1.2,
+     "level_margin80": 1.38,
+     "holm_half_width": 0.84,
+     "mdd80_single": 1.2
+    }
+   ]
+  },
+  {
+   "scenario": "central",
+   "questions_per_conversation": 20,
+   "tau_points": 2.28,
+   "sd_conversation_points": 7.72,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 4.96,
+     "level_margin80": 5.75,
+     "holm_half_width": 3.51,
+     "mdd80_single": 4.96
+    },
+    {
+     "n": 25,
+     "mdd80": 4.51,
+     "level_margin80": 5.22,
+     "holm_half_width": 3.19,
+     "mdd80_single": 4.51
+    },
+    {
+     "n": 30,
+     "mdd80": 4.09,
+     "level_margin80": 4.73,
+     "holm_half_width": 2.88,
+     "mdd80_single": 4.09
+    },
+    {
+     "n": 35,
+     "mdd80": 3.76,
+     "level_margin80": 4.36,
+     "holm_half_width": 2.65,
+     "mdd80_single": 3.76
+    },
+    {
+     "n": 40,
+     "mdd80": 3.51,
+     "level_margin80": 4.06,
+     "holm_half_width": 2.47,
+     "mdd80_single": 3.51
+    },
+    {
+     "n": 50,
+     "mdd80": 3.12,
+     "level_margin80": 3.61,
+     "holm_half_width": 2.19,
+     "mdd80_single": 3.12
+    },
+    {
+     "n": 60,
+     "mdd80": 2.84,
+     "level_margin80": 3.29,
+     "holm_half_width": 1.99,
+     "mdd80_single": 2.84
+    },
+    {
+     "n": 75,
+     "mdd80": 2.53,
+     "level_margin80": 2.93,
+     "holm_half_width": 1.78,
+     "mdd80_single": 2.53
+    },
+    {
+     "n": 100,
+     "mdd80": 2.18,
+     "level_margin80": 2.53,
+     "holm_half_width": 1.53,
+     "mdd80_single": 2.18
+    },
+    {
+     "n": 125,
+     "mdd80": 1.95,
+     "level_margin80": 2.26,
+     "holm_half_width": 1.37,
+     "mdd80_single": 1.95
+    },
+    {
+     "n": 150,
+     "mdd80": 1.78,
+     "level_margin80": 2.06,
+     "holm_half_width": 1.25,
+     "mdd80_single": 1.78
+    },
+    {
+     "n": 200,
+     "mdd80": 1.54,
+     "level_margin80": 1.78,
+     "holm_half_width": 1.08,
+     "mdd80_single": 1.54
+    }
+   ]
+  },
+  {
+   "scenario": "central",
+   "questions_per_conversation": 20,
+   "tau_points": 5,
+   "sd_conversation_points": 7.72,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 4.96,
+     "level_margin80": 5.75,
+     "holm_half_width": 3.51,
+     "mdd80_single": 4.96
+    },
+    {
+     "n": 25,
+     "mdd80": 4.51,
+     "level_margin80": 5.22,
+     "holm_half_width": 3.19,
+     "mdd80_single": 4.51
+    },
+    {
+     "n": 30,
+     "mdd80": 4.09,
+     "level_margin80": 4.73,
+     "holm_half_width": 2.88,
+     "mdd80_single": 4.09
+    },
+    {
+     "n": 35,
+     "mdd80": 3.76,
+     "level_margin80": 4.36,
+     "holm_half_width": 2.65,
+     "mdd80_single": 3.76
+    },
+    {
+     "n": 40,
+     "mdd80": 3.51,
+     "level_margin80": 4.06,
+     "holm_half_width": 2.47,
+     "mdd80_single": 3.51
+    },
+    {
+     "n": 50,
+     "mdd80": 3.12,
+     "level_margin80": 3.61,
+     "holm_half_width": 2.19,
+     "mdd80_single": 3.12
+    },
+    {
+     "n": 60,
+     "mdd80": 2.84,
+     "level_margin80": 3.29,
+     "holm_half_width": 1.99,
+     "mdd80_single": 2.84
+    },
+    {
+     "n": 75,
+     "mdd80": 2.53,
+     "level_margin80": 2.93,
+     "holm_half_width": 1.78,
+     "mdd80_single": 2.53
+    },
+    {
+     "n": 100,
+     "mdd80": 2.18,
+     "level_margin80": 2.53,
+     "holm_half_width": 1.53,
+     "mdd80_single": 2.18
+    },
+    {
+     "n": 125,
+     "mdd80": 1.95,
+     "level_margin80": 2.26,
+     "holm_half_width": 1.37,
+     "mdd80_single": 1.95
+    },
+    {
+     "n": 150,
+     "mdd80": 1.78,
+     "level_margin80": 2.06,
+     "holm_half_width": 1.25,
+     "mdd80_single": 1.78
+    },
+    {
+     "n": 200,
+     "mdd80": 1.54,
+     "level_margin80": 1.78,
+     "holm_half_width": 1.08,
+     "mdd80_single": 1.54
+    }
+   ]
+  },
+  {
+   "scenario": "central",
+   "questions_per_conversation": 40,
+   "tau_points": 2.28,
+   "sd_conversation_points": 5.69,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 3.66,
+     "level_margin80": 4.24,
+     "holm_half_width": 2.59,
+     "mdd80_single": 3.66
+    },
+    {
+     "n": 25,
+     "mdd80": 3.32,
+     "level_margin80": 3.85,
+     "holm_half_width": 2.35,
+     "mdd80_single": 3.32
+    },
+    {
+     "n": 30,
+     "mdd80": 3.01,
+     "level_margin80": 3.49,
+     "holm_half_width": 2.13,
+     "mdd80_single": 3.01
+    },
+    {
+     "n": 35,
+     "mdd80": 2.78,
+     "level_margin80": 3.21,
+     "holm_half_width": 1.96,
+     "mdd80_single": 2.78
+    },
+    {
+     "n": 40,
+     "mdd80": 2.59,
+     "level_margin80": 2.99,
+     "holm_half_width": 1.82,
+     "mdd80_single": 2.59
+    },
+    {
+     "n": 50,
+     "mdd80": 2.3,
+     "level_margin80": 2.66,
+     "holm_half_width": 1.62,
+     "mdd80_single": 2.3
+    },
+    {
+     "n": 60,
+     "mdd80": 2.09,
+     "level_margin80": 2.42,
+     "holm_half_width": 1.47,
+     "mdd80_single": 2.09
+    },
+    {
+     "n": 75,
+     "mdd80": 1.87,
+     "level_margin80": 2.16,
+     "holm_half_width": 1.31,
+     "mdd80_single": 1.87
+    },
+    {
+     "n": 100,
+     "mdd80": 1.61,
+     "level_margin80": 1.86,
+     "holm_half_width": 1.13,
+     "mdd80_single": 1.61
+    },
+    {
+     "n": 125,
+     "mdd80": 1.44,
+     "level_margin80": 1.66,
+     "holm_half_width": 1.01,
+     "mdd80_single": 1.44
+    },
+    {
+     "n": 150,
+     "mdd80": 1.31,
+     "level_margin80": 1.52,
+     "holm_half_width": 0.92,
+     "mdd80_single": 1.31
+    },
+    {
+     "n": 200,
+     "mdd80": 1.13,
+     "level_margin80": 1.31,
+     "holm_half_width": 0.79,
+     "mdd80_single": 1.13
+    }
+   ]
+  },
+  {
+   "scenario": "central",
+   "questions_per_conversation": 40,
+   "tau_points": 5,
+   "sd_conversation_points": 6.5,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 4.18,
+     "level_margin80": 4.84,
+     "holm_half_width": 2.96,
+     "mdd80_single": 4.18
+    },
+    {
+     "n": 25,
+     "mdd80": 3.8,
+     "level_margin80": 4.4,
+     "holm_half_width": 2.68,
+     "mdd80_single": 3.8
+    },
+    {
+     "n": 30,
+     "mdd80": 3.44,
+     "level_margin80": 3.99,
+     "holm_half_width": 2.43,
+     "mdd80_single": 3.44
+    },
+    {
+     "n": 35,
+     "mdd80": 3.17,
+     "level_margin80": 3.67,
+     "holm_half_width": 2.23,
+     "mdd80_single": 3.17
+    },
+    {
+     "n": 40,
+     "mdd80": 2.96,
+     "level_margin80": 3.42,
+     "holm_half_width": 2.08,
+     "mdd80_single": 2.96
+    },
+    {
+     "n": 50,
+     "mdd80": 2.63,
+     "level_margin80": 3.04,
+     "holm_half_width": 1.85,
+     "mdd80_single": 2.63
+    },
+    {
+     "n": 60,
+     "mdd80": 2.39,
+     "level_margin80": 2.77,
+     "holm_half_width": 1.68,
+     "mdd80_single": 2.39
+    },
+    {
+     "n": 75,
+     "mdd80": 2.13,
+     "level_margin80": 2.47,
+     "holm_half_width": 1.5,
+     "mdd80_single": 2.13
+    },
+    {
+     "n": 100,
+     "mdd80": 1.84,
+     "level_margin80": 2.13,
+     "holm_half_width": 1.29,
+     "mdd80_single": 1.84
+    },
+    {
+     "n": 125,
+     "mdd80": 1.64,
+     "level_margin80": 1.9,
+     "holm_half_width": 1.15,
+     "mdd80_single": 1.64
+    },
+    {
+     "n": 150,
+     "mdd80": 1.5,
+     "level_margin80": 1.73,
+     "holm_half_width": 1.05,
+     "mdd80_single": 1.5
+    },
+    {
+     "n": 200,
+     "mdd80": 1.29,
+     "level_margin80": 1.5,
+     "holm_half_width": 0.91,
+     "mdd80_single": 1.29
+    }
+   ]
+  },
+  {
+   "scenario": "pessimistic",
+   "questions_per_conversation": 20,
+   "tau_points": 2.28,
+   "sd_conversation_points": 9.14,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 5.88,
+     "level_margin80": 6.8,
+     "holm_half_width": 4.16,
+     "mdd80_single": 5.88
+    },
+    {
+     "n": 25,
+     "mdd80": 5.34,
+     "level_margin80": 6.18,
+     "holm_half_width": 3.77,
+     "mdd80_single": 5.34
+    },
+    {
+     "n": 30,
+     "mdd80": 4.84,
+     "level_margin80": 5.6,
+     "holm_half_width": 3.41,
+     "mdd80_single": 4.84
+    },
+    {
+     "n": 35,
+     "mdd80": 4.46,
+     "level_margin80": 5.16,
+     "holm_half_width": 3.14,
+     "mdd80_single": 4.46
+    },
+    {
+     "n": 40,
+     "mdd80": 4.15,
+     "level_margin80": 4.81,
+     "holm_half_width": 2.92,
+     "mdd80_single": 4.15
+    },
+    {
+     "n": 50,
+     "mdd80": 3.69,
+     "level_margin80": 4.28,
+     "holm_half_width": 2.6,
+     "mdd80_single": 3.69
+    },
+    {
+     "n": 60,
+     "mdd80": 3.36,
+     "level_margin80": 3.89,
+     "holm_half_width": 2.36,
+     "mdd80_single": 3.36
+    },
+    {
+     "n": 75,
+     "mdd80": 3,
+     "level_margin80": 3.47,
+     "holm_half_width": 2.1,
+     "mdd80_single": 3
+    },
+    {
+     "n": 100,
+     "mdd80": 2.59,
+     "level_margin80": 2.99,
+     "holm_half_width": 1.81,
+     "mdd80_single": 2.59
+    },
+    {
+     "n": 125,
+     "mdd80": 2.31,
+     "level_margin80": 2.67,
+     "holm_half_width": 1.62,
+     "mdd80_single": 2.31
+    },
+    {
+     "n": 150,
+     "mdd80": 2.1,
+     "level_margin80": 2.44,
+     "holm_half_width": 1.47,
+     "mdd80_single": 2.1
+    },
+    {
+     "n": 200,
+     "mdd80": 1.82,
+     "level_margin80": 2.11,
+     "holm_half_width": 1.27,
+     "mdd80_single": 1.82
+    }
+   ]
+  },
+  {
+   "scenario": "pessimistic",
+   "questions_per_conversation": 20,
+   "tau_points": 5,
+   "sd_conversation_points": 9.14,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 5.88,
+     "level_margin80": 6.8,
+     "holm_half_width": 4.16,
+     "mdd80_single": 5.88
+    },
+    {
+     "n": 25,
+     "mdd80": 5.34,
+     "level_margin80": 6.18,
+     "holm_half_width": 3.77,
+     "mdd80_single": 5.34
+    },
+    {
+     "n": 30,
+     "mdd80": 4.84,
+     "level_margin80": 5.6,
+     "holm_half_width": 3.41,
+     "mdd80_single": 4.84
+    },
+    {
+     "n": 35,
+     "mdd80": 4.46,
+     "level_margin80": 5.16,
+     "holm_half_width": 3.14,
+     "mdd80_single": 4.46
+    },
+    {
+     "n": 40,
+     "mdd80": 4.15,
+     "level_margin80": 4.81,
+     "holm_half_width": 2.92,
+     "mdd80_single": 4.15
+    },
+    {
+     "n": 50,
+     "mdd80": 3.69,
+     "level_margin80": 4.28,
+     "holm_half_width": 2.6,
+     "mdd80_single": 3.69
+    },
+    {
+     "n": 60,
+     "mdd80": 3.36,
+     "level_margin80": 3.89,
+     "holm_half_width": 2.36,
+     "mdd80_single": 3.36
+    },
+    {
+     "n": 75,
+     "mdd80": 3,
+     "level_margin80": 3.47,
+     "holm_half_width": 2.1,
+     "mdd80_single": 3
+    },
+    {
+     "n": 100,
+     "mdd80": 2.59,
+     "level_margin80": 2.99,
+     "holm_half_width": 1.81,
+     "mdd80_single": 2.59
+    },
+    {
+     "n": 125,
+     "mdd80": 2.31,
+     "level_margin80": 2.67,
+     "holm_half_width": 1.62,
+     "mdd80_single": 2.31
+    },
+    {
+     "n": 150,
+     "mdd80": 2.1,
+     "level_margin80": 2.44,
+     "holm_half_width": 1.47,
+     "mdd80_single": 2.1
+    },
+    {
+     "n": 200,
+     "mdd80": 1.82,
+     "level_margin80": 2.11,
+     "holm_half_width": 1.27,
+     "mdd80_single": 1.82
+    }
+   ]
+  },
+  {
+   "scenario": "pessimistic",
+   "questions_per_conversation": 40,
+   "tau_points": 2.28,
+   "sd_conversation_points": 6.66,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 4.28,
+     "level_margin80": 4.96,
+     "holm_half_width": 3.03,
+     "mdd80_single": 4.28
+    },
+    {
+     "n": 25,
+     "mdd80": 3.89,
+     "level_margin80": 4.51,
+     "holm_half_width": 2.75,
+     "mdd80_single": 3.89
+    },
+    {
+     "n": 30,
+     "mdd80": 3.53,
+     "level_margin80": 4.08,
+     "holm_half_width": 2.49,
+     "mdd80_single": 3.53
+    },
+    {
+     "n": 35,
+     "mdd80": 3.25,
+     "level_margin80": 3.76,
+     "holm_half_width": 2.29,
+     "mdd80_single": 3.25
+    },
+    {
+     "n": 40,
+     "mdd80": 3.03,
+     "level_margin80": 3.5,
+     "holm_half_width": 2.13,
+     "mdd80_single": 3.03
+    },
+    {
+     "n": 50,
+     "mdd80": 2.69,
+     "level_margin80": 3.12,
+     "holm_half_width": 1.89,
+     "mdd80_single": 2.69
+    },
+    {
+     "n": 60,
+     "mdd80": 2.45,
+     "level_margin80": 2.84,
+     "holm_half_width": 1.72,
+     "mdd80_single": 2.45
+    },
+    {
+     "n": 75,
+     "mdd80": 2.18,
+     "level_margin80": 2.53,
+     "holm_half_width": 1.53,
+     "mdd80_single": 2.18
+    },
+    {
+     "n": 100,
+     "mdd80": 1.88,
+     "level_margin80": 2.18,
+     "holm_half_width": 1.32,
+     "mdd80_single": 1.88
+    },
+    {
+     "n": 125,
+     "mdd80": 1.68,
+     "level_margin80": 1.95,
+     "holm_half_width": 1.18,
+     "mdd80_single": 1.68
+    },
+    {
+     "n": 150,
+     "mdd80": 1.53,
+     "level_margin80": 1.77,
+     "holm_half_width": 1.07,
+     "mdd80_single": 1.53
+    },
+    {
+     "n": 200,
+     "mdd80": 1.33,
+     "level_margin80": 1.53,
+     "holm_half_width": 0.93,
+     "mdd80_single": 1.33
+    }
+   ]
+  },
+  {
+   "scenario": "pessimistic",
+   "questions_per_conversation": 40,
+   "tau_points": 5,
+   "sd_conversation_points": 7.37,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 4.74,
+     "level_margin80": 5.48,
+     "holm_half_width": 3.35,
+     "mdd80_single": 4.74
+    },
+    {
+     "n": 25,
+     "mdd80": 4.3,
+     "level_margin80": 4.98,
+     "holm_half_width": 3.04,
+     "mdd80_single": 4.3
+    },
+    {
+     "n": 30,
+     "mdd80": 3.9,
+     "level_margin80": 4.51,
+     "holm_half_width": 2.75,
+     "mdd80_single": 3.9
+    },
+    {
+     "n": 35,
+     "mdd80": 3.59,
+     "level_margin80": 4.16,
+     "holm_half_width": 2.53,
+     "mdd80_single": 3.59
+    },
+    {
+     "n": 40,
+     "mdd80": 3.35,
+     "level_margin80": 3.87,
+     "holm_half_width": 2.36,
+     "mdd80_single": 3.35
+    },
+    {
+     "n": 50,
+     "mdd80": 2.98,
+     "level_margin80": 3.45,
+     "holm_half_width": 2.09,
+     "mdd80_single": 2.98
+    },
+    {
+     "n": 60,
+     "mdd80": 2.71,
+     "level_margin80": 3.14,
+     "holm_half_width": 1.9,
+     "mdd80_single": 2.71
+    },
+    {
+     "n": 75,
+     "mdd80": 2.42,
+     "level_margin80": 2.79,
+     "holm_half_width": 1.69,
+     "mdd80_single": 2.42
+    },
+    {
+     "n": 100,
+     "mdd80": 2.08,
+     "level_margin80": 2.41,
+     "holm_half_width": 1.46,
+     "mdd80_single": 2.08
+    },
+    {
+     "n": 125,
+     "mdd80": 1.86,
+     "level_margin80": 2.15,
+     "holm_half_width": 1.3,
+     "mdd80_single": 1.86
+    },
+    {
+     "n": 150,
+     "mdd80": 1.7,
+     "level_margin80": 1.96,
+     "holm_half_width": 1.19,
+     "mdd80_single": 1.7
+    },
+    {
+     "n": 200,
+     "mdd80": 1.47,
+     "level_margin80": 1.7,
+     "holm_half_width": 1.03,
+     "mdd80_single": 1.47
+    }
+   ]
+  },
+  {
+   "scenario": "file-agent",
+   "questions_per_conversation": 20,
+   "tau_points": 2.28,
+   "sd_conversation_points": 10.6,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 6.81,
+     "level_margin80": 7.89,
+     "holm_half_width": 4.83,
+     "mdd80_single": 6.81
+    },
+    {
+     "n": 25,
+     "mdd80": 6.19,
+     "level_margin80": 7.17,
+     "holm_half_width": 4.38,
+     "mdd80_single": 6.19
+    },
+    {
+     "n": 30,
+     "mdd80": 5.61,
+     "level_margin80": 6.5,
+     "holm_half_width": 3.96,
+     "mdd80_single": 5.61
+    },
+    {
+     "n": 35,
+     "mdd80": 5.17,
+     "level_margin80": 5.98,
+     "holm_half_width": 3.64,
+     "mdd80_single": 5.17
+    },
+    {
+     "n": 40,
+     "mdd80": 4.82,
+     "level_margin80": 5.57,
+     "holm_half_width": 3.39,
+     "mdd80_single": 4.82
+    },
+    {
+     "n": 50,
+     "mdd80": 4.29,
+     "level_margin80": 4.96,
+     "holm_half_width": 3.01,
+     "mdd80_single": 4.29
+    },
+    {
+     "n": 60,
+     "mdd80": 3.9,
+     "level_margin80": 4.51,
+     "holm_half_width": 2.74,
+     "mdd80_single": 3.9
+    },
+    {
+     "n": 75,
+     "mdd80": 3.47,
+     "level_margin80": 4.02,
+     "holm_half_width": 2.44,
+     "mdd80_single": 3.47
+    },
+    {
+     "n": 100,
+     "mdd80": 3,
+     "level_margin80": 3.47,
+     "holm_half_width": 2.1,
+     "mdd80_single": 3
+    },
+    {
+     "n": 125,
+     "mdd80": 2.68,
+     "level_margin80": 3.1,
+     "holm_half_width": 1.88,
+     "mdd80_single": 2.68
+    },
+    {
+     "n": 150,
+     "mdd80": 2.44,
+     "level_margin80": 2.82,
+     "holm_half_width": 1.71,
+     "mdd80_single": 2.44
+    },
+    {
+     "n": 200,
+     "mdd80": 2.11,
+     "level_margin80": 2.44,
+     "holm_half_width": 1.48,
+     "mdd80_single": 2.11
+    }
+   ]
+  },
+  {
+   "scenario": "file-agent",
+   "questions_per_conversation": 20,
+   "tau_points": 5,
+   "sd_conversation_points": 10.6,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 6.81,
+     "level_margin80": 7.89,
+     "holm_half_width": 4.83,
+     "mdd80_single": 6.81
+    },
+    {
+     "n": 25,
+     "mdd80": 6.19,
+     "level_margin80": 7.17,
+     "holm_half_width": 4.38,
+     "mdd80_single": 6.19
+    },
+    {
+     "n": 30,
+     "mdd80": 5.61,
+     "level_margin80": 6.5,
+     "holm_half_width": 3.96,
+     "mdd80_single": 5.61
+    },
+    {
+     "n": 35,
+     "mdd80": 5.17,
+     "level_margin80": 5.98,
+     "holm_half_width": 3.64,
+     "mdd80_single": 5.17
+    },
+    {
+     "n": 40,
+     "mdd80": 4.82,
+     "level_margin80": 5.57,
+     "holm_half_width": 3.39,
+     "mdd80_single": 4.82
+    },
+    {
+     "n": 50,
+     "mdd80": 4.29,
+     "level_margin80": 4.96,
+     "holm_half_width": 3.01,
+     "mdd80_single": 4.29
+    },
+    {
+     "n": 60,
+     "mdd80": 3.9,
+     "level_margin80": 4.51,
+     "holm_half_width": 2.74,
+     "mdd80_single": 3.9
+    },
+    {
+     "n": 75,
+     "mdd80": 3.47,
+     "level_margin80": 4.02,
+     "holm_half_width": 2.44,
+     "mdd80_single": 3.47
+    },
+    {
+     "n": 100,
+     "mdd80": 3,
+     "level_margin80": 3.47,
+     "holm_half_width": 2.1,
+     "mdd80_single": 3
+    },
+    {
+     "n": 125,
+     "mdd80": 2.68,
+     "level_margin80": 3.1,
+     "holm_half_width": 1.88,
+     "mdd80_single": 2.68
+    },
+    {
+     "n": 150,
+     "mdd80": 2.44,
+     "level_margin80": 2.82,
+     "holm_half_width": 1.71,
+     "mdd80_single": 2.44
+    },
+    {
+     "n": 200,
+     "mdd80": 2.11,
+     "level_margin80": 2.44,
+     "holm_half_width": 1.48,
+     "mdd80_single": 2.11
+    }
+   ]
+  },
+  {
+   "scenario": "file-agent",
+   "questions_per_conversation": 40,
+   "tau_points": 2.28,
+   "sd_conversation_points": 7.67,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 4.93,
+     "level_margin80": 5.71,
+     "holm_half_width": 3.49,
+     "mdd80_single": 4.93
+    },
+    {
+     "n": 25,
+     "mdd80": 4.48,
+     "level_margin80": 5.19,
+     "holm_half_width": 3.16,
+     "mdd80_single": 4.48
+    },
+    {
+     "n": 30,
+     "mdd80": 4.06,
+     "level_margin80": 4.7,
+     "holm_half_width": 2.86,
+     "mdd80_single": 4.06
+    },
+    {
+     "n": 35,
+     "mdd80": 3.74,
+     "level_margin80": 4.33,
+     "holm_half_width": 2.63,
+     "mdd80_single": 3.74
+    },
+    {
+     "n": 40,
+     "mdd80": 3.48,
+     "level_margin80": 4.03,
+     "holm_half_width": 2.45,
+     "mdd80_single": 3.48
+    },
+    {
+     "n": 50,
+     "mdd80": 3.1,
+     "level_margin80": 3.59,
+     "holm_half_width": 2.18,
+     "mdd80_single": 3.1
+    },
+    {
+     "n": 60,
+     "mdd80": 2.82,
+     "level_margin80": 3.26,
+     "holm_half_width": 1.98,
+     "mdd80_single": 2.82
+    },
+    {
+     "n": 75,
+     "mdd80": 2.51,
+     "level_margin80": 2.91,
+     "holm_half_width": 1.76,
+     "mdd80_single": 2.51
+    },
+    {
+     "n": 100,
+     "mdd80": 2.17,
+     "level_margin80": 2.51,
+     "holm_half_width": 1.52,
+     "mdd80_single": 2.17
+    },
+    {
+     "n": 125,
+     "mdd80": 1.94,
+     "level_margin80": 2.24,
+     "holm_half_width": 1.36,
+     "mdd80_single": 1.94
+    },
+    {
+     "n": 150,
+     "mdd80": 1.77,
+     "level_margin80": 2.04,
+     "holm_half_width": 1.24,
+     "mdd80_single": 1.77
+    },
+    {
+     "n": 200,
+     "mdd80": 1.53,
+     "level_margin80": 1.77,
+     "holm_half_width": 1.07,
+     "mdd80_single": 1.53
+    }
+   ]
+  },
+  {
+   "scenario": "file-agent",
+   "questions_per_conversation": 40,
+   "tau_points": 5,
+   "sd_conversation_points": 8.29,
+   "rows": [
+    {
+     "n": 21,
+     "mdd80": 5.33,
+     "level_margin80": 6.17,
+     "holm_half_width": 3.77,
+     "mdd80_single": 5.33
+    },
+    {
+     "n": 25,
+     "mdd80": 4.84,
+     "level_margin80": 5.61,
+     "holm_half_width": 3.42,
+     "mdd80_single": 4.84
+    },
+    {
+     "n": 30,
+     "mdd80": 4.39,
+     "level_margin80": 5.08,
+     "holm_half_width": 3.09,
+     "mdd80_single": 4.39
+    },
+    {
+     "n": 35,
+     "mdd80": 4.04,
+     "level_margin80": 4.68,
+     "holm_half_width": 2.85,
+     "mdd80_single": 4.04
+    },
+    {
+     "n": 40,
+     "mdd80": 3.77,
+     "level_margin80": 4.36,
+     "holm_half_width": 2.65,
+     "mdd80_single": 3.77
+    },
+    {
+     "n": 50,
+     "mdd80": 3.35,
+     "level_margin80": 3.88,
+     "holm_half_width": 2.36,
+     "mdd80_single": 3.35
+    },
+    {
+     "n": 60,
+     "mdd80": 3.05,
+     "level_margin80": 3.53,
+     "holm_half_width": 2.14,
+     "mdd80_single": 3.05
+    },
+    {
+     "n": 75,
+     "mdd80": 2.72,
+     "level_margin80": 3.14,
+     "holm_half_width": 1.91,
+     "mdd80_single": 2.72
+    },
+    {
+     "n": 100,
+     "mdd80": 2.34,
+     "level_margin80": 2.71,
+     "holm_half_width": 1.64,
+     "mdd80_single": 2.34
+    },
+    {
+     "n": 125,
+     "mdd80": 2.09,
+     "level_margin80": 2.42,
+     "holm_half_width": 1.47,
+     "mdd80_single": 2.09
+    },
+    {
+     "n": 150,
+     "mdd80": 1.91,
+     "level_margin80": 2.21,
+     "holm_half_width": 1.34,
+     "mdd80_single": 1.91
+    },
+    {
+     "n": 200,
+     "mdd80": 1.65,
+     "level_margin80": 1.91,
+     "holm_half_width": 1.16,
+     "mdd80_single": 1.65
+    }
+   ]
+  }
+ ],
+ "needed": [
+  {
+   "scenario": "optimistic",
+   "q": 20,
+   "n_for_5": 21,
+   "n_for_3": 44,
+   "n_for_2": 95
+  },
+  {
+   "scenario": "optimistic",
+   "q": 40,
+   "n_for_5": 21,
+   "n_for_3": 25,
+   "n_for_2": 54
+  },
+  {
+   "scenario": "central",
+   "q": 20,
+   "n_for_5": 21,
+   "n_for_3": 54,
+   "n_for_2": 119
+  },
+  {
+   "scenario": "central",
+   "q": 40,
+   "n_for_5": 21,
+   "n_for_3": 31,
+   "n_for_2": 66
+  },
+  {
+   "scenario": "pessimistic",
+   "q": 20,
+   "n_for_5": 29,
+   "n_for_3": 75,
+   "n_for_2": 166
+  },
+  {
+   "scenario": "pessimistic",
+   "q": 40,
+   "n_for_5": 21,
+   "n_for_3": 41,
+   "n_for_2": 90
+  },
+  {
+   "scenario": "file-agent",
+   "q": 20,
+   "n_for_5": 38,
+   "n_for_3": 100,
+   "n_for_2": 223
+  },
+  {
+   "scenario": "file-agent",
+   "q": 40,
+   "n_for_5": 21,
+   "n_for_3": 54,
+   "n_for_2": 118
+  }
+ ],
+ "simulation_checks": [
+  {
+   "n": 75,
+   "q": 20,
+   "scenario": "file-agent",
+   "analytic_mdd80": 3.47,
+   "sims": 1000,
+   "draws": 999,
+   "bonferroni": {
+    "simulated_power_at_mdd": 0.795,
+    "simulated_fwer_at_zero": 0.053
+   },
+   "holm": {
+    "simulated_power_at_mdd": 0.795,
+    "simulated_fwer_at_zero": 0.053
+   }
+  },
+  {
+   "n": 200,
+   "q": 20,
+   "scenario": "file-agent",
+   "analytic_mdd80": 2.11,
+   "sims": 1000,
+   "draws": 999,
+   "bonferroni": {
+    "simulated_power_at_mdd": 0.802,
+    "simulated_fwer_at_zero": 0.065
+   },
+   "holm": {
+    "simulated_power_at_mdd": 0.802,
+    "simulated_fwer_at_zero": 0.065
+   }
+  }
+ ]
+}

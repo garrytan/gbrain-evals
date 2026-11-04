@@ -1,0 +1,478 @@
+{
+ "schema": "gbrain-evals/rs1-pricing/v1",
+ "stage0_inputs": {
+  "mint_usd_per_conversation": 20,
+  "conversation_pass_rate": 1,
+  "item_regeneration_rate": 0,
+  "mtok_per_conversation": 1.07
+ },
+ "assumptions": {
+  "questions_per_conversation": 20,
+  "ingest_usd_per_mtok": {
+   "gbrain-defaults": 1.1600000000000001,
+   "ext-extract-first": 2.8,
+   "ext-memory-bank": 1.72,
+   "ext-temporal-graph": 4.01,
+   "baseline-hybrid": 0.14
+  },
+  "ingest_measured_factor": {
+   "gbrain-defaults": 1.36,
+   "ext-extract-first": 0.99,
+   "ext-memory-bank": 1.01,
+   "ext-temporal-graph": 1,
+   "baseline-hybrid": 1.69
+  },
+  "probe_usd_per_conversation": {
+   "gbrain-defaults": 1.3,
+   "ext-temporal-graph": 0.13
+  },
+  "ingest_hours_per_mtok": {
+   "gbrain-defaults": 1.92,
+   "ext-extract-first": 1.74,
+   "ext-memory-bank": 2.32,
+   "ext-temporal-graph": 2.26
+  },
+  "vcpus": {
+   "gbrain-defaults": 4,
+   "ext-extract-first": 16,
+   "ext-memory-bank": 16,
+   "ext-temporal-graph": 16
+  },
+  "usd_per_vcpu_hour": 0.05,
+  "reading_8k": {
+   "anthropic:claude-opus-5-5": 0.06215999999999999,
+   "openai:gpt-6.1-sol": 0.01741,
+   "particle:particle-1": 0.0034750000000000002
+  },
+  "reading_none": {
+   "anthropic:claude-opus-5-5": 0.01587,
+   "openai:gpt-6.1-sol": 0.0020499999999999997,
+   "particle:particle-1": 0.0012
+  },
+  "component_systems": [
+   "gbrain-defaults",
+   "ext-extract-first",
+   "ext-memory-bank",
+   "ext-temporal-graph",
+   "baseline-hybrid"
+  ],
+  "query_usd_per_question": 0.01076,
+  "file_agent": {
+   "anthropic:claude-opus-5-5": 0.33199999999999996,
+   "openai:gpt-6.1-sol": 0.16599999999999998,
+   "particle:particle-1": 0.0211625,
+   "measured_factor": 1.12
+  },
+  "think": {
+   "anthropic:claude-opus-5-5": 0.2576,
+   "openai:gpt-6.1-sol": 0.1288,
+   "particle:particle-1": 0.01564,
+   "measured_factor": 1.25
+  },
+  "judge_per_answer": {
+   "openai:gpt-4.1-mini": 0.0028,
+   "anthropic:claude-haiku-5-5": 0.00072,
+   "gemini:gemini-3.8-flash": 0.008
+  },
+  "sensitivity_share": 0.3,
+  "regen_reserve_share": 0.1,
+  "read_vm_usd_per_question_row": 0.004
+ },
+ "program_cap_usd": {
+  "N": 7000,
+  "O": 18000
+ },
+ "stage_cap_usd": {
+  "stage0": 60,
+  "stage1": 220
+ },
+ "gate_a_factor": 1.1,
+ "N": {
+  "conversations": 75,
+  "questions": 1500,
+  "with_gbrain_think": true,
+  "ingest_by_system": {
+   "gbrain-defaults": 224.1,
+   "ext-extract-first": 222.45,
+   "ext-memory-bank": 139.41,
+   "ext-temporal-graph": 331.55,
+   "baseline-hybrid": 18.99
+  },
+  "stages": [
+   {
+    "stage": "0",
+    "what": "Pricing pilot on public data (mint cost, gate pass rates, chunked abstention scan); fixed stage cap",
+    "est": 60
+   },
+   {
+    "stage": "1",
+    "what": "Dry run of every frozen configuration through the RS1 cell path on 5 public BEAM-1M dev conversations; judge check; same-build check at the freeze pin; fixed stage cap",
+    "est": 220
+   },
+   {
+    "stage": "2",
+    "what": "Mint and validate in custody: conversations / pass rate x mint cost x (1 + item regeneration rate)",
+    "est": 1500
+   },
+   {
+    "stage": "2",
+    "what": "Regeneration reserve, 10% of the mint line, the contingency on top of the measured regeneration rate (held on the ledger from the start)",
+    "est": 150
+   },
+   {
+    "stage": "3",
+    "what": "Ingest, API (five stores)",
+    "est": 936.5
+   },
+   {
+    "stage": "3",
+    "what": "Ingest, VM time",
+    "est": 436.56
+   },
+   {
+    "stage": "4",
+    "what": "Reads: five 8k stores x three readers, plus system query calls",
+    "est": 638.98
+   },
+   {
+    "stage": "4",
+    "what": "Reads: file agent x three agents",
+    "est": 872.19
+   },
+   {
+    "stage": "4",
+    "what": "Reads: gbrain think (whole system) x three readers",
+    "est": 753.83
+   },
+   {
+    "stage": "4",
+    "what": "Reads: no-memory floor",
+    "est": 28.68
+   },
+   {
+    "stage": "4",
+    "what": "Reads: VM time",
+    "est": 48
+   },
+   {
+    "stage": "5",
+    "what": "Judges (held on the ledger from the start)",
+    "est": 84.48
+   },
+   {
+    "stage": "5",
+    "what": "Sensitivity judge, 30% conversation sample (held from the start)",
+    "est": 43.2
+   }
+  ],
+  "total_estimate": 5772.42,
+  "gate_a": {
+   "program_cap_usd": 7000,
+   "line_usd": 6363.64,
+   "pass": true,
+   "headroom_usd": 591.22
+  }
+ },
+ "N_without_think": {
+  "conversations": 75,
+  "questions": 1500,
+  "with_gbrain_think": false,
+  "ingest_by_system": {
+   "gbrain-defaults": 224.1,
+   "ext-extract-first": 222.45,
+   "ext-memory-bank": 139.41,
+   "ext-temporal-graph": 331.55,
+   "baseline-hybrid": 18.99
+  },
+  "stages": [
+   {
+    "stage": "0",
+    "what": "Pricing pilot on public data (mint cost, gate pass rates, chunked abstention scan); fixed stage cap",
+    "est": 60
+   },
+   {
+    "stage": "1",
+    "what": "Dry run of every frozen configuration through the RS1 cell path on 5 public BEAM-1M dev conversations; judge check; same-build check at the freeze pin; fixed stage cap",
+    "est": 220
+   },
+   {
+    "stage": "2",
+    "what": "Mint and validate in custody: conversations / pass rate x mint cost x (1 + item regeneration rate)",
+    "est": 1500
+   },
+   {
+    "stage": "2",
+    "what": "Regeneration reserve, 10% of the mint line, the contingency on top of the measured regeneration rate (held on the ledger from the start)",
+    "est": 150
+   },
+   {
+    "stage": "3",
+    "what": "Ingest, API (five stores)",
+    "est": 936.5
+   },
+   {
+    "stage": "3",
+    "what": "Ingest, VM time",
+    "est": 436.56
+   },
+   {
+    "stage": "4",
+    "what": "Reads: five 8k stores x three readers, plus system query calls",
+    "est": 638.98
+   },
+   {
+    "stage": "4",
+    "what": "Reads: file agent x three agents",
+    "est": 872.19
+   },
+   {
+    "stage": "4",
+    "what": "Reads: no-memory floor",
+    "est": 28.68
+   },
+   {
+    "stage": "4",
+    "what": "Reads: VM time",
+    "est": 42
+   },
+   {
+    "stage": "5",
+    "what": "Judges (held on the ledger from the start)",
+    "est": 73.92
+   },
+   {
+    "stage": "5",
+    "what": "Sensitivity judge, 30% conversation sample (held from the start)",
+    "est": 36
+   }
+  ],
+  "total_estimate": 4994.83,
+  "gate_a": {
+   "program_cap_usd": 7000,
+   "line_usd": 6363.64,
+   "pass": true,
+   "headroom_usd": 1368.81
+  }
+ },
+ "O": {
+  "conversations": 200,
+  "questions": 4000,
+  "with_gbrain_think": true,
+  "ingest_by_system": {
+   "gbrain-defaults": 597.61,
+   "ext-extract-first": 593.21,
+   "ext-memory-bank": 371.76,
+   "ext-temporal-graph": 884.14,
+   "baseline-hybrid": 50.63
+  },
+  "stages": [
+   {
+    "stage": "0",
+    "what": "Pricing pilot on public data (mint cost, gate pass rates, chunked abstention scan); fixed stage cap",
+    "est": 60
+   },
+   {
+    "stage": "1",
+    "what": "Dry run of every frozen configuration through the RS1 cell path on 5 public BEAM-1M dev conversations; judge check; same-build check at the freeze pin; fixed stage cap",
+    "est": 220
+   },
+   {
+    "stage": "2",
+    "what": "Mint and validate in custody: conversations / pass rate x mint cost x (1 + item regeneration rate)",
+    "est": 4000
+   },
+   {
+    "stage": "2",
+    "what": "Regeneration reserve, 10% of the mint line, the contingency on top of the measured regeneration rate (held on the ledger from the start)",
+    "est": 400
+   },
+   {
+    "stage": "3",
+    "what": "Ingest, API (five stores)",
+    "est": 2497.35
+   },
+   {
+    "stage": "3",
+    "what": "Ingest, VM time",
+    "est": 1164.16
+   },
+   {
+    "stage": "4",
+    "what": "Reads: five 8k stores x three readers, plus system query calls",
+    "est": 1703.94
+   },
+   {
+    "stage": "4",
+    "what": "Reads: file agent x three agents",
+    "est": 2325.85
+   },
+   {
+    "stage": "4",
+    "what": "Reads: gbrain think (whole system) x three readers",
+    "est": 2010.2
+   },
+   {
+    "stage": "4",
+    "what": "Reads: no-memory floor",
+    "est": 76.48
+   },
+   {
+    "stage": "4",
+    "what": "Reads: VM time",
+    "est": 128
+   },
+   {
+    "stage": "5",
+    "what": "Judges (held on the ledger from the start)",
+    "est": 225.28
+   },
+   {
+    "stage": "5",
+    "what": "Sensitivity judge, 30% conversation sample (held from the start)",
+    "est": 115.2
+   }
+  ],
+  "total_estimate": 14926.46,
+  "gate_a": {
+   "program_cap_usd": 18000,
+   "line_usd": 16363.64,
+   "pass": true,
+   "headroom_usd": 1437.18
+  }
+ },
+ "O_without_think": {
+  "conversations": 200,
+  "questions": 4000,
+  "with_gbrain_think": false,
+  "ingest_by_system": {
+   "gbrain-defaults": 597.61,
+   "ext-extract-first": 593.21,
+   "ext-memory-bank": 371.76,
+   "ext-temporal-graph": 884.14,
+   "baseline-hybrid": 50.63
+  },
+  "stages": [
+   {
+    "stage": "0",
+    "what": "Pricing pilot on public data (mint cost, gate pass rates, chunked abstention scan); fixed stage cap",
+    "est": 60
+   },
+   {
+    "stage": "1",
+    "what": "Dry run of every frozen configuration through the RS1 cell path on 5 public BEAM-1M dev conversations; judge check; same-build check at the freeze pin; fixed stage cap",
+    "est": 220
+   },
+   {
+    "stage": "2",
+    "what": "Mint and validate in custody: conversations / pass rate x mint cost x (1 + item regeneration rate)",
+    "est": 4000
+   },
+   {
+    "stage": "2",
+    "what": "Regeneration reserve, 10% of the mint line, the contingency on top of the measured regeneration rate (held on the ledger from the start)",
+    "est": 400
+   },
+   {
+    "stage": "3",
+    "what": "Ingest, API (five stores)",
+    "est": 2497.35
+   },
+   {
+    "stage": "3",
+    "what": "Ingest, VM time",
+    "est": 1164.16
+   },
+   {
+    "stage": "4",
+    "what": "Reads: five 8k stores x three readers, plus system query calls",
+    "est": 1703.94
+   },
+   {
+    "stage": "4",
+    "what": "Reads: file agent x three agents",
+    "est": 2325.85
+   },
+   {
+    "stage": "4",
+    "what": "Reads: no-memory floor",
+    "est": 76.48
+   },
+   {
+    "stage": "4",
+    "what": "Reads: VM time",
+    "est": 112
+   },
+   {
+    "stage": "5",
+    "what": "Judges (held on the ledger from the start)",
+    "est": 197.12
+   },
+   {
+    "stage": "5",
+    "what": "Sensitivity judge, 30% conversation sample (held from the start)",
+    "est": 96
+   }
+  ],
+  "total_estimate": 12852.9,
+  "gate_a": {
+   "program_cap_usd": 18000,
+   "line_usd": 16363.64,
+   "pass": true,
+   "headroom_usd": 3510.74
+  }
+ },
+ "options": [
+  {
+   "mint_usd_per_conversation": 29,
+   "conversation_pass_rate": 1,
+   "item_regeneration_rate": 0,
+   "with_gbrain_think": true,
+   "total_estimate": 6514.92,
+   "gate_a": {
+    "program_cap_usd": 7000,
+    "line_usd": 6363.64,
+    "pass": false,
+    "headroom_usd": -151.28
+   }
+  },
+  {
+   "mint_usd_per_conversation": 29,
+   "conversation_pass_rate": 1,
+   "item_regeneration_rate": 0,
+   "with_gbrain_think": false,
+   "total_estimate": 5737.33,
+   "gate_a": {
+    "program_cap_usd": 7000,
+    "line_usd": 6363.64,
+    "pass": true,
+    "headroom_usd": 626.31
+   }
+  },
+  {
+   "mint_usd_per_conversation": 29,
+   "conversation_pass_rate": 0.9,
+   "item_regeneration_rate": 0,
+   "with_gbrain_think": true,
+   "total_estimate": 6780.76,
+   "gate_a": {
+    "program_cap_usd": 7000,
+    "line_usd": 6363.64,
+    "pass": false,
+    "headroom_usd": -417.12
+   }
+  },
+  {
+   "mint_usd_per_conversation": 29,
+   "conversation_pass_rate": 0.9,
+   "item_regeneration_rate": 0,
+   "with_gbrain_think": false,
+   "total_estimate": 6003.17,
+   "gate_a": {
+    "program_cap_usd": 7000,
+    "line_usd": 6363.64,
+    "pass": true,
+    "headroom_usd": 360.47
+   }
+  }
+ ]
+}

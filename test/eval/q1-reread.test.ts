@@ -397,3 +397,39 @@ describe('re-read: particle-1 through the lease proxy', () => {
     } finally { room.stop(); }
   });
 });
+
+describe('re-read: a judging plan (RS1, review d5)', () => {
+  test('particle-1\'s answers are judged by the arm\'s plan for particle-1, each judge under its own instrument id, and score their mean; a resume asks only the missing judge; a reader the plan leaves out is refused', async () => {
+    const CANON = instrumentFor('locomo').canonical_judge, HAIKU = 'anthropic:claude-haiku-5-5';
+    const plan = { by_reader: { [OPUS]: [CANON], [SOL]: [HAIKU], [PARTICLE]: [CANON, HAIKU] } };
+    const pdef = cellDef([{ id: 'component-b8000', mode: 'packed', budget: 8000, judging: plan }]);
+    const parm = pdef.arms[0];
+    const psource = join(tmp, 'plan-source');
+    expect((await runCell(pdef, { out: psource, ...quiet }, { corpus, system: new FakeMemorySystem(), reader: scriptedReader(), judge: scriptedJudge() })).status).toBe('complete');
+    const pstaging = join(psource, 'runs', pdef.id);
+    const leftOut = refusal(() => prepareReread(pdef, { ...parm, judging: { by_reader: { [OPUS]: [CANON], [SOL]: [HAIKU] } } }, { sources: [pstaging], reader: PARTICLE, out: join(tmp, 'plan-left-out') }, { corpus }));
+    expect(leftOut.message).toContain('names no judge for particle:particle-1');
+    expect(existsSync(join(tmp, 'plan-left-out'))).toBe(false);
+    const lp = leaseProxy('plan', { upstream: fakeBase });
+    try {
+      const out = join(tmp, 'plan-reread');
+      const inner = scriptedJudge();
+      const flaky: ChatLike = { chat: async (model, prompt, opts) => { if (model === HAIKU) throw new Error('upstream 503'); return inner.chat(model, prompt, opts); } };
+      const first = await runReread(prepareReread(pdef, parm, { sources: [pstaging], reader: PARTICLE, out }, { corpus }), { providerProxy: lp.url, maxAttempts: 1 }, { judge: flaky });
+      expect(first.status).toBe('partial');
+      const judge = scriptedJudge();
+      const second = await runReread(prepareReread(pdef, parm, { sources: [pstaging], reader: PARTICLE, out }, { corpus }), { providerProxy: lp.url }, { judge });
+      expect(second.status).toBe('complete');
+      const dir = join(out, 'cells', rereadCellId(parm.cell_id, PARTICLE));
+      const answers = ndjson(join(dir, 'answers.ndjson'));
+      expect(judge.judges).toEqual(answers.map(() => HAIKU));
+      const judgments = ndjson(join(dir, 'judgments.ndjson'));
+      for (const a of answers) expect(judgments.filter(j => j.answer_id === a.answer_id).map(j => j.instrument_id).sort()).toEqual(['locomo', `locomo@${HAIKU}`]);
+      const r = second.receipt as { judging: unknown; counts: { unjudged: number }; per_reader_mean: Record<string, number> };
+      expect(r.judging).toEqual({ by_reader: { [PARTICLE]: [CANON, HAIKU] }, instrument_ids: { [PARTICLE]: ['locomo', `locomo@${HAIKU}`] } });
+      expect(r.counts.unjudged).toBe(0);
+      const mean = answers.reduce((s, a) => s + judgments.filter(j => j.answer_id === a.answer_id).reduce((t, j) => t + j.score / 2, 0), 0) / answers.length;
+      expect(r.per_reader_mean[PARTICLE]).toBeCloseTo(mean, 6);
+    } finally { lp.stop(); }
+  });
+});

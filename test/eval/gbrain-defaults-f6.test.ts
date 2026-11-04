@@ -7,6 +7,8 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { resolve } from 'node:path';
+import { answerOverlay, type ArmDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { F6_ARMS } from '../../eval/runner/q1/cells/f6.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const SHIM = `${ROOT}/eval/systems/gbrain-defaults/shim.py`;
@@ -150,6 +152,15 @@ result = {"again": again, "sets": len([c for c in f.cli_calls[n:] if c[1] == "se
     expect(r.again.switched).toBe(true);
     expect(r.again.resolved['search.query_facts_block']).toBe('false');
     expect([r.sets, r.gets]).toEqual([6, 6]);
+  });
+
+  test('an own answer reports the overlay active when it answered, hashed as the cell definition hashes arm P\'s (RS1 think, review d6)', () => {
+    const r = f6(`f = Fake(results=[mcp_result({"answer": "In December.", "synthesis_status": "ok"})]); before = f.state().get("overlay_sha256")
+a = f.apply_overlay("ns-a", overlay(query_facts_block=True)); ans = f.answer("ns-a", "When?", None, "synthesize", None)
+result = {"before": before, "applied": a["overlay_sha256"], "answered": ans["overlay_sha256"]}`).ok;
+    expect(r.before).toBeNull();
+    expect(r.answered).toBe(r.applied);
+    expect(r.answered).toBe(answerOverlay({ arms: [{ id: 'p', retrieval: F6_ARMS.p.retrieval } as ArmDefinition] })!.sha256);
   });
 });
 

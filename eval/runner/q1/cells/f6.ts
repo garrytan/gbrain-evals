@@ -24,8 +24,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { CHAT_PRICE_OVERRIDES, reservationUsd } from '../../budget-ledger.ts';
 import { DEFAULT_ROUTE_CAPS } from '../../metering-proxy.ts';
+import { planJudges } from './judging.ts';
 import {
-  ALL_SETS, ASSUMPTIONS, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, FRONTIER_JUDGES, hoursPerMtok, loadManifest, makeCell, MANIFEST_SCHEMA, OVERLAY_KEYS, priceOf, READERS, SONNET,
+  ALL_SETS, ASSUMPTIONS, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, FRONTIER_JUDGES, hoursPerMtok, loadManifest, makeCell, MANIFEST_SCHEMA, OVERLAY_KEYS, priceOf, READERS, RS1_ASSUMPTIONS, SONNET,
   type ArmSpec, type BlockId, type CellDefinition, type F6BlockId, type Manifest, type RetrievalIdentity, type SetId,
 } from './definitions.ts';
 
@@ -106,9 +107,9 @@ export function peakReservationUsd(c: CellDefinition): { usd: number; by: string
     const turns = a.readers.map(r => F6_ASSUMPTIONS.agent_first_turn_usd[r] ?? F6_ASSUMPTIONS.agent_first_turn_usd.default);
     calls.push([`file agent: one first turn per reader at once (${a.readers.length})`, turns.reduce((s, x) => s + x, 0)]);
   }
-  const judges = [c.benchmark.startsWith('beam') ? ASSUMPTIONS.judge.beam.model : ASSUMPTIONS.judge.lme.model, ...c.arms.flatMap(a => a.frontier?.judges ?? [])];
+  const judges = [c.benchmark.startsWith('beam') ? ASSUMPTIONS.judge.beam.model : ASSUMPTIONS.judge.lme.model, ...c.arms.flatMap(a => [...(a.frontier?.judges ?? []), ...planJudges(a)])];
   for (const j of judges) calls.push([`judge ${j}`, one(j, L.judge_bytes, DEFAULT_ROUTE_CAPS.judge)]);
-  if (c.configuration === 'f6-master') calls.push([`extraction ${F6_ASSUMPTIONS.extraction.model}`, one(F6_ASSUMPTIONS.extraction.model, 64_000, DEFAULT_ROUTE_CAPS.extraction)]);
+  if (c.configuration === 'f6-master' || c.configuration === 'rs1-master') calls.push([`extraction ${F6_ASSUMPTIONS.extraction.model}`, one(F6_ASSUMPTIONS.extraction.model, 64_000, DEFAULT_ROUTE_CAPS.extraction)]);
   if (c.configuration === 'shipped-0.31') calls.push(['temporal graph 8 x openai:gpt-6-luna', 8 * one('openai:gpt-6-luna', 40_000, 16_384)]);
   const [by, usd] = calls.sort((a, b) => b[1] - a[1])[0];
   return { usd: Math.round(usd * 10_000) / 10_000, by };
@@ -125,12 +126,12 @@ export function maxShardUsd(c: CellDefinition): number {
   return c.estimate.usd / c.shards + sized / ALL_SETS[c.set].conversations * (largestRatio(c.set) - 1);
 }
 function largestRatio(set: SetId): number {
-  const r = F6_ASSUMPTIONS.max_conversation_ratio[set];
-  if (!(r >= 1)) throw new Error(`F6_ASSUMPTIONS.max_conversation_ratio has no ratio for ${set}`);
+  const r = F6_ASSUMPTIONS.max_conversation_ratio[set] ?? RS1_ASSUMPTIONS.max_conversation_ratio[set];
+  if (!(r >= 1)) throw new Error(`F6_ASSUMPTIONS.max_conversation_ratio and RS1_ASSUMPTIONS.max_conversation_ratio have no ratio for ${set}`);
   return r;
 }
 /** A unit's lease: its estimate per shard with the lease margin, plus twice the peak reservation, so the last calls of a unit near its estimate still fit. */
-function withLease(c: CellDefinition): CellDefinition {
+export function withLease(c: CellDefinition): CellDefinition {
   const peak = peakReservationUsd(c);
   const lease = (shardUsd: number) => Math.ceil((shardUsd * F6_ASSUMPTIONS.lease.margin + 2 * peak.usd) * 100) / 100;
   const usd = lease(c.estimate.usd / c.shards);
@@ -153,7 +154,7 @@ export function maxShardHours(c: CellDefinition): number {
  * unit timeout cover the largest conversation's build rather than the mean's. Expected hours are a launch-control field,
  * so a cell's configuration identity is unchanged.
  */
-function withHours(c: CellDefinition): CellDefinition {
+export function withHours(c: CellDefinition): CellDefinition {
   return c.shards === 1 ? c : { ...c, expected_hours: Math.max(c.expected_hours, Math.ceil(maxShardHours(c))) };
 }
 const gbrain = (set: SetId, block: BlockId, ids: string[], frontier: string[] = []) =>

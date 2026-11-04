@@ -1,10 +1,11 @@
 /**
  * Re-read one packed arm of a Q1 or F6 cell with another reader (the particle-1 add-on, GBEV-31 / GST-1153): every
  * frozen context the source cell's readers read (`runs/<cell id>/contexts.ndjson`) is sent byte for byte to the new
- * reader, and each answer is judged with the cell's canonical instrument. Nothing is retrieved or packed again.
+ * reader, and each answer is judged with the cell's canonical instrument. Nothing is retrieved or packed again. RS1's
+ * particle-1 re-reads (GST-1154) take their judges from the arm's judging plan for the new reader.
  *
  *   bun eval/runner/q1/reread-cell.ts --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader particle:particle-1
- *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6] [--keyless-upstream <url>]
+ *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] [--keyless-upstream <url>]
  *
  * Each arm and reader gets its own --out (verify.json, the lease usage log and the keyless/paid marker sit at its root),
  * and each invocation its own --run-id: a lease closes when the run ends and never reopens. `--ledger-cap-usd` is the
@@ -27,7 +28,8 @@
  * in-process lease proxy, an OpenAI-compatible reader through `chatWithReceipts`, `readerMaxTokens(reader)`, the
  * cell's effort, replicate 0. A reading the provider may have billed is final and never sent again, a budget refusal
  * stops the run (`budget_not_run`, not a try), and a resume skips answered ids. Each answer is judged by the cell's
- * canonical judge (replicate 0, no frontier judges); an OpenAI-compatible judge is refused. Output:
+ * canonical judge, or by the arm's judging plan for the new reader where the arm has one (eval/runner/q1/cells/judging.ts;
+ * replicate 0, no frontier judges); an OpenAI-compatible judge is refused. Output:
  * `--out/cells/<arm cell id>.reread-<reader>/` with answers.ndjson and judgments.ndjson in Q1's record schemas, and
  * receipt.json. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
  */
@@ -48,6 +50,7 @@ import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { answerAppender, custodyGate, devOnly, findCell, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, scheduledQuestions,
   selectCellQuestions, type MeterLine, type StagedRetrieval } from './cell.ts';
 import { policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { plannedScore, planJudges, scoringJudges } from './cells/judging.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 
 export const REREAD_VERIFY_SCHEMA = 'gbrain-evals/q1-reread-verify/v1';
@@ -191,16 +194,18 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
   return { verify, plan: problems.length ? null : plan };
 }
 
-export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: 'q1' | 'f6'; env?: Record<string, string | undefined>; keyless?: boolean }
+export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: 'q1' | 'f6' | 'rs1'; env?: Record<string, string | undefined>; keyless?: boolean }
 export interface RereadDeps { corpus?: Corpus; reader?: ChatLike; judge?: ChatLike; instrument?: Instrument }
-export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: 'q1' | 'f6' | null; keyless: boolean; instrument: Instrument; verify: RereadVerify; plan: PlannedRead[] }
+export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: 'q1' | 'f6' | 'rs1' | null; keyless: boolean; instrument: Instrument; verify: RereadVerify; plan: PlannedRead[] }
 
 /** Everything before the first request: the judge refusal, custody, one re-read per --out, the --out claim, the corpus and the byte-for-byte check (verify.json). */
 export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: RereadOptions, deps: Pick<RereadDeps, 'corpus' | 'instrument'> = {}): PreparedReread {
   const env = opts.env ?? process.env;
   const out = resolve(opts.out);
   const instrument = deps.instrument ?? instrumentFor(def.canonical_instrument);
-  refuseCompatJudges(arm.cell_id, [instrument.canonical_judge]);
+  refuseCompatJudges(arm.cell_id, [instrument.canonical_judge, ...planJudges(arm)]);
+  if (!scoringJudges(arm, opts.reader, instrument).length) throw refuse({ code: 'USAGE', message: `${arm.cell_id}'s judging plan names no judge for ${opts.reader}`,
+    why: 'a re-read answer is scored by the judges the arm plans for its reader, so a reader the plan leaves out would be read and never scored', fix: { next: 'report', user_message: `add ${opts.reader} to ${arm.cell_id}'s judging.by_reader in its cell manifest, or re-read with a reader it names` } });
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
   if (!deps.corpus && needsCustody(def)) custodyGate(def, out, env, `q1 reread ${arm.cell_id} with ${opts.reader}`);
   const others = existsSync(join(out, 'cells')) ? readdirSync(join(out, 'cells')).sort().filter(d => d !== rereadCellId(arm.cell_id, opts.reader)) : [];
@@ -245,7 +250,9 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const chat = new ChatClient(join(p.out, 'cache', 'qa'));
   const readerChat = onSlot(deps.reader ?? chat, meter, 'harness');
   const judgeChat = onSlot(deps.judge ?? chat, meter, 'judge');
-  const judged = (id: string) => judgments.has(judgmentKey({ answer_id: id, instrument_sha256: instrument.sha256, judge: instrument.canonical_judge, judge_replicate: 0 }));
+  const planned = scoringJudges(arm, reader, instrument);
+  const judgedBy = (id: string, judge: string) => judgments.has(judgmentKey({ answer_id: id, instrument_sha256: instrument.sha256, judge, judge_replicate: 0 }));
+  const judged = (id: string) => planned.every(j => judgedBy(id, j.judge));
   const idOf = (x: PlannedRead) => answerId(cellId, x.question.id, reader, 0);
   let stopped: string | null = null;
 
@@ -266,10 +273,13 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
       }
     }
     const a = answers.get(aid);
-    if (!a || !JUDGED.has(a.outcome) || judged(aid)) return;
-    const r = await meter.around('judge', `judge:${aid.slice(0, 16)}:${instrument.canonical_judge}`, 'judge', () => judgeAnswer(judgeChat, instrument, x.question, a.text, { judge: instrument.canonical_judge, judgeReplicate: 0, maxAttempts }));
-    if (r.error !== undefined) { if (/budget/i.test(String((r.error as Error).message))) stopped = `budget: ${String((r.error as Error).message).slice(0, 200)}`; return; }
-    judgments.append({ answer_id: aid, ...r.value!, instrument_id: instrument.id });
+    if (!a || !JUDGED.has(a.outcome)) return;
+    for (const j of planned) {
+      if (judgedBy(aid, j.judge)) continue;
+      const r = await meter.around('judge', `judge:${aid.slice(0, 16)}:${j.judge}`, 'judge', () => judgeAnswer(judgeChat, instrument, x.question, a.text, { judge: j.judge, judgeReplicate: 0, maxAttempts }));
+      if (r.error !== undefined) { if (/budget/i.test(String((r.error as Error).message))) stopped = `budget: ${String((r.error as Error).message).slice(0, 200)}`; return; }
+      judgments.append({ answer_id: aid, ...r.value!, instrument_id: j.instrument_id });
+    }
   };
   const needs = (x: PlannedRead) => { const a = answers.get(idOf(x)); return !a || (JUDGED.has(a.outcome) && !judged(a.answer_id)); };
   for (let pass = 0; pass < maxAttempts && !stopped; pass++) {
@@ -280,11 +290,13 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
 
   const order = new Map(plan.map((x, i) => [idOf(x), i]));
   const all = answers.all().sort((a, b) => (order.get(a.answer_id) ?? 0) - (order.get(b.answer_id) ?? 0));
-  const canonical = new Map(judgments.all().filter(j => j.instrument_id === instrument.id && j.judge_replicate === 0).map(j => [j.answer_id, j]));
-  const scores = all.map(a => canonical.get(a.answer_id)?.score).filter((s): s is number => typeof s === 'number');
+  const scoreOf = new Map<string, number | null | undefined>();
+  for (const j of judgments.all()) if (j.judge_replicate === 0 && !scoreOf.has(`${j.answer_id}|${j.instrument_id}`)) scoreOf.set(`${j.answer_id}|${j.instrument_id}`, j.score);
+  const isJudged = (a: AnswerRecord) => planned.every(j => scoreOf.has(`${a.answer_id}|${j.instrument_id}`));
+  const scores = all.filter(isJudged).map(a => plannedScore(planned, j => scoreOf.get(`${a.answer_id}|${j.instrument_id}`))).filter((s): s is number => typeof s === 'number');
   const outcomes: Record<string, number> = {};
   for (const a of all) outcomes[a.outcome] = (outcomes[a.outcome] ?? 0) + 1;
-  const unjudged = all.filter(a => JUDGED.has(a.outcome) && !canonical.has(a.answer_id)).length;
+  const unjudged = all.filter(a => JUDGED.has(a.outcome) && !isJudged(a)).length;
   const status = !stopped && all.length === plan.length && !unjudged ? 'complete' as const : 'partial' as const;
   const spent = existsSync(meters) ? readFileSync(meters, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as MeterLine) : [];
   const usd = (phase: MeterLine['phase']) => Math.round(spent.filter(m => m.phase === phase).reduce((s, m) => s + m.usd, 0) * 1e6) / 1e6;
@@ -297,6 +309,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
     arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, label: arm.label },
     readers: [reader], reader_replicates: {}, effort: def.effort, max_tokens: readerMaxTokens(reader),
     instrument: { id: instrument.id, sha256: instrument.sha256, judge: instrument.canonical_judge }, frontier: null,
+    ...(arm.judging ? { judging: { by_reader: { [reader]: planned.map(j => j.judge) }, instrument_ids: { [reader]: planned.map(j => j.instrument_id) } } } : {}),
     verify: p.verify.counts,
     counts: { answers: all.length, answers_promised: plan.length, judgments: judgments.size, unjudged, outcomes, truncated: all.filter(a => a.truncated).length },
     per_reader_mean: { [reader]: scores.length ? Math.round(scores.reduce((s, x) => s + x, 0) / scores.length * 1e6) / 1e6 : null },
@@ -329,13 +342,13 @@ if (import.meta.main) {
   const sources = argv.flatMap((a, i) => (a === '--source' && argv[i + 1] ? [argv[i + 1]] : []));
   const [cellArg, armArg, reader, outArg, ledger, runId, leaseUsd, ledgerCap] = [one('--cell'), one('--arm'), one('--reader'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
   if (!cellArg || !armArg || !sources.length || !reader || !outArg || !ledger || !runId || !(leaseUsd > 0) || !(ledgerCap > 0)) {
-    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6] [--keyless-upstream <url>]`);
+    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] [--keyless-upstream <url>]`);
     process.exit(2);
   }
   let keyless: string | null;
   try { keyless = keylessUpstreamArg(argv); }
   catch (e) { console.error((e as Error).message); process.exit(2); }
-  const manifest = one('--manifest') as 'q1' | 'f6' | undefined;
+  const manifest = one('--manifest') as 'q1' | 'f6' | 'rs1' | undefined;
   try {
     const def = findCell(cellArg, undefined, manifest);
     const arm = rereadArm(def, armArg);

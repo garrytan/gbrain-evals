@@ -34,6 +34,8 @@ import { CHAT_PRICE_OVERRIDES } from '../../budget-ledger.ts';
 import { lookupEmbeddingPrice } from '../../../../node_modules/gbrain/src/core/embedding-pricing.ts';
 import { READER_WINDOWS } from '../../systems/baselines.ts';
 import type { Outcome } from '../../memory-qa/outcomes.ts';
+import { hasChatRoute, isCompatModel } from '../../memory-qa/qa-v2.ts';
+import { modelFamily, type JudgingPlan } from './judging.ts';
 
 export const CELL_SCHEMA = 'gbrain-evals/q1-cell/v1';
 export const MANIFEST_SCHEMA = 'gbrain-evals/q1-cell-manifest/v1';
@@ -42,12 +44,16 @@ export const SCHEMA_PATH = resolve(import.meta.dir, 'schema.json');
 export const PREREGISTRATION = 'docs/benchmarks/2026-10-06-scoreboard-preregistration.md';
 
 export type Q1SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S3-smoke-default' | 'S2b-ingest';
+/** RS1's sets (eval/runner/q1/cells/rs1.ts): the sealed ranking set and stage 1's public dev conversations. */
+export type RS1SetId = 'RS1' | 'RS1-dev' | 'RS1-dev2';
 /** F6's own set (eval/runner/q1/cells/f6.ts): the D8 long-history reserve. */
-export type SetId = Q1SetId | 'D8';
+export type SetId = Q1SetId | 'D8' | RS1SetId;
 export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
 /** F6's spend blocks (eval/runner/q1/cells/f6.ts), charged to F6's own cap; F6-P1 is the particle-1 add-on's (GBEV-31). */
 export type F6BlockId = 'F6-S1' | 'F6-T2' | 'F6-D8' | 'F6-S4' | 'F6-dry' | 'F6-P1';
-export type BlockId = Q1BlockId | F6BlockId;
+/** RS1's spend blocks (eval/runner/q1/cells/rs1.ts), charged to RS1's own cap. */
+export type RS1BlockId = 'RS1-dry' | 'RS1-8k' | 'RS1-whole' | 'RS1-desc';
+export type BlockId = Q1BlockId | F6BlockId | RS1BlockId;
 export type Split = 'dev' | 'sealed' | 'all';
 
 export type Selection =
@@ -57,7 +63,9 @@ export type Selection =
   /** `limit` questions round-robin over strata (category, or conversation then category), each stratum in sha256(seed, id) order; `min` reserves a floor per category first. */
   | { kind: 'stratified'; limit: number; stratify: 'category' | 'conversation-category'; seed: string; min?: Record<string, number> }
   /** The shootout's slice: `selectQuestions(questions, limit, seed)` from eval/runner/memory-qa/run.ts. */
-  | { kind: 'shootout-slice'; limit: number; seed: number };
+  | { kind: 'shootout-slice'; limit: number; seed: number }
+  /** Every question of these conversations: an arm's sub-selection of a dev cell (RS1 stage 1's think arm on two of its five conversations). */
+  | { kind: 'conversations'; conversations: string[] };
 
 export type ArmMode = 'packed' | 'native-default' | 'own-answer' | 'agent' | 'full-context' | 'retrieval-only';
 
@@ -77,6 +85,15 @@ const canonicalJson = (v: unknown): string => Array.isArray(v) ? `[${v.map(canon
   : v && typeof v === 'object' ? `{${Object.keys(v).sort().map(k => `${JSON.stringify(k)}:${canonicalJson((v as Record<string, unknown>)[k])}`).join(',')}}` : JSON.stringify(v);
 /** sha256 of an identity's canonical JSON, the overlay's included. */
 export const retrievalSha = (r: RetrievalIdentity) => createHash('sha256').update(canonicalJson(r)).digest('hex');
+/**
+ * The search overlay an own-answer arm answers under on a cell whose arms name retrieval identities (RS1's think,
+ * review d6): the cell retrieves policy-major, so the overlay of its one retrieval identity is active when it answers.
+ * The sha256 is the shim's (sha256 of the overlay's canonical JSON); null on a cell that names no retrieval identity.
+ */
+export function answerOverlay(d: Pick<CellDefinition, 'arms'>): { from_arm: string; sha256: string } | null {
+  const named = d.arms.find(a => a.retrieval);
+  return named ? { from_arm: named.id, sha256: createHash('sha256').update(canonicalJson(named.retrieval!.overlay)).digest('hex') } : null;
+}
 /**
  * The key an arm's retrievals are staged under (`<question>|<key>`): its policy mode, or for an arm with a retrieval
  * identity `<mode>@<op>-<12 hex of its identity hash>`, so two arms share a retrieval only when they name the same one.
@@ -110,6 +127,12 @@ export interface ArmDefinition {
   judge_repeats: { count: number; readers: string[] | null } | null;
   label: string;
   anchor?: boolean;
+  /**
+   * RS1 arms: the judges that score each reader's answers (eval/runner/q1/cells/judging.ts), for every reader of the arm and
+   * for any reader that only re-reads its packed contexts (eval/runner/q1/reread-cell.ts). Absent on every Q1 and F6
+   * arm, whose answers the canonical judge scores.
+   */
+  judging?: JudgingPlan;
 }
 
 export interface CellEstimate { usd: number; lines: Record<string, number> }
@@ -140,7 +163,7 @@ export interface CellDefinition {
   shards: number;
   expected_hours: number;
   /** Shim cells: the stack's bootstrap environment and config (`GBRAIN_FULL_SURFACE=1` for gbrain's full-surface cell). */
-  launch?: { env: Record<string, string>; config: 'recipe' | 'common' | 'shipped-0.31' };
+  launch?: { env: Record<string, string>; config: 'recipe' | 'common' | 'shipped-0.31' | 'recipe-1.1' };
   /** Shim cells: tar the stack's named volumes into the realization once ingest is complete (the launcher sets SHOOTOUT_SNAPSHOT_DIR). */
   snapshot_command?: string;
   /** Shim cells: load that snapshot into a fresh stack before a resumed cell runs (the launcher sets SHOOTOUT_RESTORE_DIR). */
@@ -210,8 +233,21 @@ export const SETS: Record<Q1SetId, SetFacts> = {
 export const F6_SETS: Record<'D8', SetFacts> = {
   D8: { id: 'D8', benchmark: 'beam-d8', split: 'sealed', questions: 300, conversations: 10, corpus_tokens: 4_226_928, messages: 18_938, block: 'F6-D8', selection: { kind: 'stratified', limit: 300, stratify: 'conversation-category', seed: 'f6-d8' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'D8 long-history reserve' },
 };
-/** Every set a cell may name: Q1's and F6's. */
-export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS };
+/** Stage 1's public BEAM-1M dev conversations: the first five of the split's dev list in sha256('rs1-stage1', NUL, id) order; the file agent and think run on the first two. */
+export const RS1_STAGE1_CONVERSATIONS = ['1m-20', '1m-28', '1m-32', '1m-24', '1m-21'];
+/**
+ * RS1's sets (eval/runner/q1/cells/rs1.ts). RS1 is the sealed ranking set in owner custody (loader beam-rs1): 75
+ * conversations minted with BEAM's generator at 1.07M cl100k tokens each, 20 questions each; its message count is a
+ * placeholder (75 times the public BEAM-1M mean) until the custodian reports the aggregates. RS1-dev and RS1-dev2 are
+ * stage 1's public conversations, counted in cl100k over their turn contents.
+ */
+export const RS1_SETS: Record<RS1SetId, SetFacts> = {
+  RS1: { id: 'RS1', benchmark: 'beam-rs1', split: 'sealed', questions: 1_500, conversations: 75, corpus_tokens: 80_250_000, messages: 152_300, block: 'RS1-8k', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'RS1 ranking set' },
+  'RS1-dev': { id: 'RS1-dev', benchmark: 'beam-1m', split: 'dev', questions: 100, conversations: 5, corpus_tokens: 4_793_521, messages: 10_234, block: 'RS1-dry', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'RS1 stage 1, five public BEAM-1M dev conversations', only_conversations: RS1_STAGE1_CONVERSATIONS },
+  'RS1-dev2': { id: 'RS1-dev2', benchmark: 'beam-1m', split: 'dev', questions: 40, conversations: 2, corpus_tokens: 1_966_206, messages: 4_322, block: 'RS1-dry', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'RS1 stage 1, two public BEAM-1M dev conversations (file agent and think)', only_conversations: RS1_STAGE1_CONVERSATIONS.slice(0, 2) },
+};
+/** Every set a cell may name: Q1's, F6's and RS1's. */
+export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS };
 
 /** PLAN §7 block lines (the approved estimate the re-priced manifest is compared with). */
 export const PLAN_BLOCKS: Record<Q1BlockId, { label: string; plan_usd: number }> = {
@@ -338,6 +374,32 @@ export const F6_ASSUMPTIONS = {
   lease: { bytes_per_token: 4.2, template_bytes: 4_000, judge_bytes: 12_000, margin: 1.25 },
 };
 
+/**
+ * RS1's rates (eval/runner/q1/cells/rs1.ts), each a named assumption stage 1 replaces with a measurement. They live
+ * apart from ASSUMPTIONS and F6_ASSUMPTIONS so Q1's and F6's manifests stay byte-identical.
+ */
+export const RS1_ASSUMPTIONS = {
+  /** gbrain at the repository pin (package.json) on freeze day; arm P's same-build check runs F6's pin beside it. */
+  gbrain_sha: '62637c96a5a5c2e9d55594f87a33d79c2f30b54f',
+  /** rs1-master takes F6's measured f6-master rates; recipe-1.1 takes the memory-bank recipe's (0.10.2) until stage 1 measures it. */
+  ingest_usd_per_mtok: { 'gbrain-defaults:rs1-master': 0.08, 'ext-memory-bank:recipe-1.1': 1.72 } as Record<string, number>,
+  hours_per_mtok: { 'gbrain-defaults:rs1-master': 1.92, 'ext-memory-bank:recipe-1.1': 2.32 } as Record<string, number>,
+  /** Agent loops on BEAM-1M-sized conversations: Q1's S2b (BEAM-1M) input tokens per question per reader; output stays ASSUMPTIONS.agent's. */
+  agent: {
+    'baseline-file-agent': { RS1: 73_000, 'RS1-dev': 73_000, 'RS1-dev2': 73_000 },
+    think: { RS1: 55_200, 'RS1-dev': 55_200, 'RS1-dev2': 55_200 },
+  } as Record<string, Record<string, number>>,
+  /**
+   * The largest conversation's size over the set's mean, rounded up: RS1 from the length gate's bounds (the largest a
+   * conversation may be over the smallest, which bounds any mean; eval/custody/rs1/validate.ts, preview bounds 770,801
+   * to 1,050,026 cl100k tokens on the public BEAM-1M dev conversations, until the custody calibration sets the gate);
+   * stage 1's from the public files.
+   */
+  max_conversation_ratio: { RS1: 1.37, 'RS1-dev': 1.04, 'RS1-dev2': 1.01 } as Record<string, number>,
+  /** The judge check's fallback judge (gemini-3.8-flash) per answer graded, as eval/runner/rs1/pricing.ts prices it. */
+  check_judge_usd_per_answer: 0.008,
+};
+
 /** An embedding model's list price per million tokens (gbrain's own price table, as budget-ledger prices embeddings). */
 function embeddingPrice(model: string): number {
   const p = lookupEmbeddingPrice(model);
@@ -397,12 +459,12 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
   const lines: Record<string, number> = {};
   const add = (k: string, v: number) => { if (v) lines[k] = (lines[k] ?? 0) + v; };
   const family = def.benchmark.startsWith('beam') ? 'beam' : def.benchmark;
-  const rate = ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? F6_ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? 0;
+  const rate = ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? F6_ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? RS1_ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? 0;
   const tokens = def.ingest_sessions ? set.corpus_tokens * Math.min(1, def.ingest_sessions / Math.max(1, set.sessions ?? def.ingest_sessions)) : set.corpus_tokens;
   add('ingest', rate * tokens / 1e6);
   const probe = ASSUMPTIONS.probe_usd[def.system];
   if (probe) add('ingest_probes', Math.min(probe.max_per_conversation, probe.per_mtok * tokens / set.conversations / 1e6) * Math.min(set.conversations, def.probes.conversations ?? set.conversations));
-  if (def.configuration === 'f6-master') {
+  if (def.configuration === 'f6-master' || def.configuration === 'rs1-master') {
     add('extraction', f6ExtractionUsd(tokens));
     add('fact_embeddings', tokens / 1e6 * F6_ASSUMPTIONS.facts_per_mtok * F6_ASSUMPTIONS.tokens_per_fact * embeddingPrice(F6_ASSUMPTIONS.embedding_model) / 1e6);
   }
@@ -415,13 +477,14 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
       if (arm.mode === 'packed') add('readers', answers(r) * call(r, arm.budget! * byReader(ASSUMPTIONS.reader_tokens_per_budget_token, r) + overhead(r), outTokens(r)));
       else if (arm.mode === 'native-default') add('readers', answers(r) * call(r, byReader(ASSUMPTIONS.vendor_default_tokens, def.system) * perCl100k(r) + overhead(r), outTokens(r)));
       else if (arm.mode === 'full-context') add('full_context', fullContextCost(set, r, n));
-      else if (arm.mode === 'agent') { const a = ASSUMPTIONS.agent[def.system]; add('agent', n * call(r, agentTokens(a[def.set], r), agentTokens(a[`output_${def.set}`] ?? a.output, r))); }
-      else if (arm.mode === 'own-answer' && arm.variant === 'think') { const a = ASSUMPTIONS.agent.think; add('own_answer', n * call(r, agentTokens(a[def.set], r), agentTokens(a[`output_${def.set}`] ?? a.output, r))); }
+      else if (arm.mode === 'agent') { const a = { ...ASSUMPTIONS.agent[def.system], ...RS1_ASSUMPTIONS.agent[def.system] }; add('agent', n * call(r, agentTokens(a[def.set], r), agentTokens(a[`output_${def.set}`] ?? a.output, r))); }
+      else if (arm.mode === 'own-answer' && arm.variant === 'think') { const a = { ...ASSUMPTIONS.agent.think, ...RS1_ASSUMPTIONS.agent.think }; add('own_answer', n * call(r, agentTokens(a[def.set], r), agentTokens(a[`output_${def.set}`] ?? a.output, r))); }
     }
     if (arm.mode === 'own-answer' && arm.variant === 'synthesize') { const s = ASSUMPTIONS.synthesize; add('own_answer', n * (s.input * s.price.input + s.output * s.price.output) / 1e6); }
     if (arm.mode === 'retrieval-only') continue;
-    const judged = arm.readers.reduce((s, r) => s + answers(r), 0);
-    add('judges', judged * judgeCost(def.benchmark));
+    const canonical = def.benchmark.startsWith('beam') ? ASSUMPTIONS.judge.beam.model : ASSUMPTIONS.judge.lme.model;
+    if (arm.judging) for (const r of arm.readers) for (const j of arm.judging.by_reader[r] ?? []) add('judges', answers(r) * judgeCost(def.benchmark, j === canonical ? undefined : j));
+    else add('judges', arm.readers.reduce((s, r) => s + answers(r), 0) * judgeCost(def.benchmark));
     if (arm.frontier) {
       const fr = arm.frontier.readers ?? arm.readers;
       const items = arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) * fr.length : n * fr.length;
@@ -509,12 +572,12 @@ export const HOURS_OVERRIDES: Record<string, { hours: number; basis: string }> =
 /** A system's ingest hours per million corpus tokens: for its benchmark family, then its configuration (Q1's, then F6's), then its runner's default. */
 export function hoursPerMtok(system: string, configuration: string, benchmark: string, runner: 'shim' | 'in-process'): number {
   const family = benchmark.startsWith('beam') ? 'beam' : benchmark;
-  return ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
+  return ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? RS1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
 }
 
 /** One cell. `extra`: F6 cells name their own block, probes and launch environment (Q1 cells pass none of these). */
 export function makeCell(set: SetId, system: string, configuration: string, armSpecs: ArmSpec[],
-  extra: { ingest_replicate?: number; block?: BlockId; probes?: CellDefinition['probes']; launchEnv?: Record<string, string> } = {}): CellDefinition {
+  extra: { ingest_replicate?: number; block?: BlockId; probes?: CellDefinition['probes']; launchEnv?: Record<string, string>; shards?: number } = {}): CellDefinition {
   const s = ALL_SETS[set];
   const id = `${set.toLowerCase()}.${system}.${configuration}${extra.ingest_replicate && extra.ingest_replicate > 1 ? `.r${extra.ingest_replicate}` : ''}`;
   const runner = SHIMS.has(system) ? 'shim' as const : 'in-process' as const;
@@ -527,14 +590,14 @@ export function makeCell(set: SetId, system: string, configuration: string, armS
       ...(a.retrieval ? { retrieval: a.retrieval } : {}),
       budget: a.budget ?? null, ...(a.variant ? { variant: a.variant } : {}),
       questions: a.questions ?? null, readers: a.readers ?? (a.mode === 'retrieval-only' ? [] : READERS), reader_replicates: a.reader_replicates ?? {},
-      frontier: a.frontier ?? null, judge_repeats: a.judge_repeats ?? null, label: a.label ?? a.id, ...(a.anchor ? { anchor: true } : {}),
+      frontier: a.frontier ?? null, judge_repeats: a.judge_repeats ?? null, label: a.label ?? a.id, ...(a.anchor ? { anchor: true } : {}), ...(a.judging ? { judging: a.judging } : {}),
     };
   });
   const shim = runner === 'shim' ? shimLaunch(system, configuration) : null;
   const launch = shim && extra.launchEnv ? { ...shim, env: { ...shim.env, ...extra.launchEnv } } : shim;
   const perMtok = hoursPerMtok(system, configuration, s.benchmark, runner);
   const single = perMtok * s.corpus_tokens / 1e6;
-  const shards = runner === 'shim' && (set === 'S1' || set === 'D8') ? s.conversations : runner === 'shim' && single > UNIT_LIMIT_HOURS ? Math.min(s.conversations, Math.ceil(single / 48)) : 1;
+  const shards = extra.shards ?? (runner === 'shim' && (set === 'S1' || set === 'D8') ? s.conversations : runner === 'shim' && single > UNIT_LIMIT_HOURS ? Math.min(s.conversations, Math.ceil(single / 48)) : 1);
   const hours = Math.max(1, Math.ceil(single / shards));
   const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: extra.block ?? s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
     ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: extra.probes ?? { sample: 20, seed: `q1-probes-${set.toLowerCase()}`, conversations: set === 'S4' || set === 'S4-slice' || set === 'S5' ? 50 : null },
@@ -545,7 +608,8 @@ export function makeCell(set: SetId, system: string, configuration: string, armS
 /** How a shim cell's stack starts: bootstrap.sh --config and any environment the configuration needs. */
 export function shimLaunch(system: string, configuration: string): NonNullable<CellDefinition['launch']> {
   if (configuration === 'f6-master') return { env: { GBRAIN_BUN_IMAGE: F6_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_SHA: F6_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
-  if (configuration === 'shipped-0.31') return { env: {}, config: 'shipped-0.31' };
+  if (configuration === 'rs1-master') return { env: { GBRAIN_BUN_IMAGE: F6_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_FULL_SURFACE: '1', GBRAIN_SHA: RS1_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
+  if (configuration === 'shipped-0.31' || configuration === 'recipe-1.1') return { env: {}, config: configuration };
   return { env: configuration === 'full-surface' ? { GBRAIN_FULL_SURFACE: '1' } : {}, config: configuration === 'common' || configuration === 'common-embedder' ? 'common' : 'recipe' };
 }
 
@@ -557,8 +621,8 @@ function shimCommands(system: string, launch: NonNullable<CellDefinition['launch
   const pre = launchPrefix(launch);
   return {
     launch,
-    // A configuration with its own bundle directory (shipped-0.31) names it on every bootstrap call, or the call reaches the pinned stack.
-    snapshot_command: `${pre}bash eval/systems/bootstrap.sh snapshot --system ${system}${launch.config === 'shipped-0.31' ? ' --config shipped-0.31' : ''} --out "$SHOOTOUT_SNAPSHOT_DIR/${system}.tar"`,
+    // A configuration with its own bundle directory (shipped-0.31, recipe-1.1) names it on every bootstrap call, or the call reaches the pinned stack.
+    snapshot_command: `${pre}bash eval/systems/bootstrap.sh snapshot --system ${system}${launch.config === 'shipped-0.31' || launch.config === 'recipe-1.1' ? ` --config ${launch.config}` : ''} --out "$SHOOTOUT_SNAPSHOT_DIR/${system}.tar"`,
     restore_command: `${pre}bash eval/systems/bootstrap.sh restore --system ${system} --config ${launch.config} --from "$SHOOTOUT_RESTORE_DIR/${system}.tar"`,
   };
 }
@@ -704,10 +768,12 @@ function selectionProblems(s: Selection, where: string): string[] {
   if (s.kind === 'per-conversation') return Number.isInteger(s.per_conversation) && s.per_conversation > 0 && typeof s.seed === 'string' && s.seed ? [] : [`${where}: per-conversation needs a positive per_conversation and a seed`];
   if (s.kind === 'stratified') return Number.isInteger(s.limit) && s.limit > 0 && ['category', 'conversation-category'].includes(s.stratify) && typeof s.seed === 'string' && s.seed ? [] : [`${where}: stratified needs a positive limit, stratify category|conversation-category and a seed`];
   if (s.kind === 'shootout-slice') return Number.isInteger(s.limit) && s.limit > 0 && Number.isInteger(s.seed) ? [] : [`${where}: shootout-slice needs an integer limit and seed`];
+  if (s.kind === 'conversations') return Array.isArray(s.conversations) && s.conversations.length && s.conversations.every(c => typeof c === 'string' && c) ? [] : [`${where}: conversations needs a list of conversation ids`];
   return [`${where}: unknown selection kind ${JSON.stringify((s as { kind?: unknown }).kind)}`];
 }
 
 export const F6_BLOCK_IDS: readonly F6BlockId[] = ['F6-S1', 'F6-T2', 'F6-D8', 'F6-S4', 'F6-dry', 'F6-P1'];
+export const RS1_BLOCK_IDS: readonly RS1BlockId[] = ['RS1-dry', 'RS1-8k', 'RS1-whole', 'RS1-desc'];
 
 /** An arm's retrieval identity: only on gbrain cells whose stack runs F6 (GBRAIN_F6=1), on a packed or retrieval-only arm, naming a known op, its own arguments and all six overlay keys. */
 function retrievalProblems(d: CellDefinition, a: ArmDefinition, w: string): string[] {
@@ -731,7 +797,7 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.schema !== CELL_SCHEMA) p.push(`schema must be ${CELL_SCHEMA}`);
   if (!ID.test(d.id ?? '')) p.push(`id ${JSON.stringify(d.id)} must be 1-80 characters of [a-z0-9.-]`);
   if (!ALL_SETS[d.set]) p.push(`set ${d.set} is unknown`);
-  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !(F6_BLOCK_IDS as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
+  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && ![...F6_BLOCK_IDS, ...RS1_BLOCK_IDS].includes(d.block as F6BlockId | RS1BlockId)) p.push(`block ${d.block} is unknown`);
   if (!['dev', 'sealed', 'all'].includes(d.split)) p.push('split must be dev, sealed or all');
   p.push(...selectionProblems(d.selection, 'selection'));
   if (!kinds.has(d.system)) p.push(`system ${d.system} is not a kind id in eval/systems/kinds.json`);
@@ -741,6 +807,7 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.ingest_sessions !== undefined && !(Number.isInteger(d.ingest_sessions) && d.ingest_sessions > 0)) p.push('ingest_sessions must be a positive whole number of sessions');
   if (d.only_conversations !== undefined && !(Array.isArray(d.only_conversations) && d.only_conversations.length && d.only_conversations.every(c => typeof c === 'string' && c) && d.split === 'dev')) p.push('only_conversations must list dev conversation ids on a dev-split cell');
   if (!Array.isArray(d.arms) || !d.arms.length) p.push('arms must list at least one arm');
+  if (d.arms?.some(a => a.mode === 'own-answer') && new Set(d.arms.filter(a => a.retrieval).map(a => canonicalJson(a.retrieval!.overlay))).size > 1) p.push('an own-answer arm answers under the active search overlay, so its cell names one overlay across its retrieval identities');
   const ids = new Set<string>();
   for (const a of d.arms ?? []) {
     const w = `arm ${a.id}`;
@@ -758,6 +825,19 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
     if (a.mode !== 'retrieval-only' && !a.readers?.length) p.push(`${w}: a judged arm needs at least one reader`);
     if (a.questions) p.push(...selectionProblems(a.questions, `${w} questions`));
     for (const [r, n] of Object.entries(a.reader_replicates ?? {})) if (!a.readers.includes(r) || !(Number.isInteger(n) && n >= 1)) p.push(`${w}: reader_replicates.${r} must name one of its readers with a positive count`);
+    if (a.judging === undefined) continue;
+    if (a.mode === 'retrieval-only') p.push(`${w}: a retrieval-only arm is never judged, so it carries no judging plan`);
+    const plan = a.judging?.by_reader;
+    if (!plan || typeof plan !== 'object') { p.push(`${w}: judging.by_reader must map each reader to its judges`); continue; }
+    for (const r of new Set([...a.readers, ...Object.keys(plan)])) {
+      const judges = plan[r];
+      if (!Array.isArray(judges) || !judges.length || new Set(judges).size !== judges.length) { p.push(`${w}: judging.by_reader.${r} must list at least one judge, each once`); continue; }
+      for (const j of judges) {
+        if (modelFamily(j) === modelFamily(r)) p.push(`${w}: ${j} judges ${r}, a reader of its own family (GST-767)`);
+        if (isCompatModel(j)) p.push(`${w}: ${j} is an OpenAI-compatible model, which never judges a counted cell`);
+        else if (!hasChatRoute(j)) p.push(`${w}: ${j} has no chat route (anthropic, openai or an OpenAI-compatible provider)`);
+      }
+    }
   }
   return p;
 }

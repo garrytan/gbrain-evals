@@ -604,6 +604,79 @@ describe('shards and aggregates', () => {
   });
 });
 
+describe('judging plans (RS1, review d5)', () => {
+  const OPUS = 'anthropic:claude-opus-5-5', SOL = 'openai:gpt-6.1-sol', MINI = 'openai:gpt-4.1-mini', HAIKU = 'anthropic:claude-haiku-5-5';
+  const CANON = instrumentFor('locomo').canonical_judge;
+  const plan = { by_reader: { [OPUS]: [CANON, MINI], [SOL]: [HAIKU] } };
+  const expectedIds: Record<string, string[]> = { [OPUS]: ['locomo', `locomo@${MINI}`], [SOL]: [`locomo@${HAIKU}`] };
+  /** The scripted judge, except that gpt-4.1-mini always says no and \`failing\` judges throw (a provider error): an Opus answer scores the mean of its two judges. */
+  const planJudge = (failing: string[] = []) => {
+    const inner = scriptedJudge();
+    return { judges: inner.judges, async chat(model: string, prompt: string, opts: ChatOptions) {
+      if (failing.includes(model)) throw new Error('upstream 503');
+      const res = await inner.chat(model, prompt, opts);
+      return model === MINI ? { ...res, text: 'no' } : res;
+    } };
+  };
+  const idsByAnswer = (judgments: Array<{ answer_id: string; instrument_id: string }>) => {
+    const m = new Map<string, string[]>();
+    for (const j of judgments) m.set(j.answer_id, [...(m.get(j.answer_id) ?? []), j.instrument_id].sort());
+    return m;
+  };
+
+  test('two shards: each answer is judged by its reader\'s planned judges alone, the canonical judge under the instrument id and any other under <instrument>@<judge>; both shares and the merge are complete; Opus scores the mean of its two judges', async () => {
+    const server = serveProtocol(new FakeMemorySystem());
+    try {
+      const def = cellDef('ext-memory-bank', 'shim', [component({ readers: [OPUS, SOL], reader_replicates: {}, judging: plan })]);
+      const outs = [join(tmp, 'plan-shard0'), join(tmp, 'plan-shard1')];
+      const shares = [];
+      for (const [i, out] of outs.entries()) shares.push((await runCell(def, { out, systemUrl: server.url, shard: { index: i, count: 2 }, ...quiet }, { corpus, reader: scriptedReader(), judge: planJudge() })).share!);
+      expect(shares.map(s => [s.complete, s.gaps])).toEqual([[true, []], [true, []]]);
+      const cell = def.arms[0].cell_id;
+      const answers = outs.flatMap(o => ndjson(join(o, 'cells', cell, 'answers.ndjson')));
+      const byAnswer = idsByAnswer(outs.flatMap(o => ndjson(join(o, 'cells', cell, 'judgments.ndjson'))));
+      expect(answers).toHaveLength(15 * 2);
+      for (const a of answers) expect(byAnswer.get(a.answer_id)).toEqual(expectedIds[a.reader]);
+      const merged = publishCell(def, def.arms, outs, join(tmp, 'plan-merged'), { instrument: instrumentFor('locomo'), selected: selectCellQuestions(corpus.questions, { kind: 'all' }), invalidReasons: [],
+        configs: new Map([[def.arms[0].id, { text: readFileSync(join(outs[0], 'cells', cell, 'run-config.json'), 'utf8'), sha: 'x' }]]), capabilities: FAKE_CAPABILITIES, stopped: null, maxAttempts: 3 });
+      expect(merged[0].status).toBe('complete');
+      const receipt = JSON.parse(readFileSync(join(tmp, 'plan-merged', 'cells', cell, 'receipt.json'), 'utf8'));
+      expect(receipt.counts.unjudged).toBe(0);
+      expect(receipt.judging).toEqual({ by_reader: plan.by_reader, instrument_ids: expectedIds });
+      const canonical = outs.flatMap(o => ndjson(join(o, 'cells', cell, 'judgments.ndjson'))).filter(j => j.instrument_id === 'locomo');
+      const opusCanonical = canonical.reduce((s, j) => s + j.score, 0) / canonical.length;
+      expect(receipt.per_reader_mean[OPUS]).toBeCloseTo(opusCanonical / 2, 6);
+      expect(scoreboardCampaignCell(def, def.arms[0], merged[0]).judging).toEqual(plan);
+    } finally { server.stop(); }
+  });
+
+  test('resume: an answer that lacks one planned judgment is partial, and the next run asks that judge alone', async () => {
+    const def = cellDef('baseline-recency', 'in-process', [component({ readers: [OPUS, SOL], reader_replicates: {}, judging: plan })], { configuration: 'baseline' });
+    const out = join(tmp, 'plan-resume');
+    const first = await runCell(def, { out, maxAttempts: 1, ...quiet }, { corpus, system: new FullContextSystem('recency'), reader: scriptedReader(), judge: planJudge([HAIKU]) });
+    expect(first.status).toBe('partial');
+    const judge = planJudge();
+    const reader = scriptedReader();
+    const second = await runCell(def, { out, ...quiet }, { corpus, system: new FullContextSystem('recency'), reader, judge });
+    expect(second.status).toBe('complete');
+    expect(reader.calls).toHaveLength(0);
+    expect(judge.judges).toHaveLength(15);
+    expect(new Set(judge.judges)).toEqual(new Set([HAIKU]));
+    const cell = def.arms[0].cell_id;
+    const byAnswer = idsByAnswer(ndjson(join(out, 'cells', cell, 'judgments.ndjson')));
+    for (const a of ndjson(join(out, 'cells', cell, 'answers.ndjson'))) expect(byAnswer.get(a.answer_id)).toEqual(expectedIds[a.reader]);
+  });
+
+  test('an arm without a plan is judged by the canonical judge alone, as before', async () => {
+    const def = cellDef('baseline-recency', 'in-process', [component({ readers: [OPUS, SOL], reader_replicates: {} })], { configuration: 'baseline' });
+    const judge = planJudge();
+    const res = await runCell(def, { out: join(tmp, 'plan-none'), ...quiet }, { corpus, system: new FullContextSystem('recency'), reader: scriptedReader(), judge });
+    expect(res.status).toBe('complete');
+    expect(new Set(judge.judges)).toEqual(new Set([CANON]));
+    expect(JSON.parse(readFileSync(join(tmp, 'plan-none', 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8')).judging).toBeUndefined();
+  });
+});
+
 describe('metering through a lease proxy', () => {
   test('readers on the harness slot, judges on the judge slot, the cell token as the key, ingest and query phases on the system slot', async () => {
     const control: Array<{ path: string; body: Record<string, unknown> }> = [];

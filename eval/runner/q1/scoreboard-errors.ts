@@ -35,7 +35,12 @@ export type ScoreboardCode =
   | 'FIXTURE_FAILED'
   | 'RESUME_REFUSED'
   | 'INPUT_MISSING'
-  | 'PAID_FLAGS_MISSING';
+  | 'PAID_FLAGS_MISSING'
+  | 'RS1_GATE_A_FAIL'
+  | 'RS1_STAGE1_OVER_CAP'
+  | 'RS1_JUDGE_CHECK_FAIL'
+  | 'RS1_JUDGE_CHECK_KEY_INVALID'
+  | 'RS1_JUDGE_CHECK_TOO_FEW';
 
 export interface ScoreboardMessage extends Omit<OperatorMessage, 'code'> {
   code: ScoreboardCode;

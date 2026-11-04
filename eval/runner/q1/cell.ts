@@ -101,8 +101,10 @@ import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render-v2.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
-import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, launchPrefix, loadManifest, MANIFEST_PATH, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
+import { ALL_SETS, answerOverlay, definitionProblems, F6_ASSUMPTIONS, launchPrefix, loadManifest, MANIFEST_PATH, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
+import { loadRS1Manifest, RS1_MANIFEST_PATH, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
+import { plannedScore, planJudges, scoringJudges } from './cells/judging.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
 import { answerUsage, normalizeUsage, readerConvention } from './usage.ts';
@@ -168,6 +170,7 @@ export function selectCellQuestions(questions: readonly MemoryQuestion[], sel: S
   const order = (qs: MemoryQuestion[]) => [...qs].sort((a, b) => (a.conversation === b.conversation ? (a.id < b.id ? -1 : 1) : a.conversation < b.conversation ? -1 : 1));
   if (sel.kind === 'all') return order([...questions]);
   if (sel.kind === 'shootout-slice') return order(selectQuestions([...questions], sel.limit, sel.seed));
+  if (sel.kind === 'conversations') return order(questions.filter(q => sel.conversations.includes(q.conversation)));
   if (sel.kind === 'per-conversation') return order([...groupBy(questions, q => q.conversation).values()].flatMap(qs => roundRobin(groupBy(qs, q => q.category), sel.per_conversation, sel.seed)));
   const floor: MemoryQuestion[] = [];
   for (const [cat, n] of Object.entries(sel.min ?? {})) floor.push(...roundRobin(groupBy(questions.filter(q => q.category === cat), q => q.conversation), n, sel.seed));
@@ -504,6 +507,7 @@ export function runConfigText(def: CellDefinition, arm: ArmDefinition, ctx: { in
     instrument: { id: ctx.instrument.id, sha256: ctx.instrument.sha256, judge: ctx.instrument.canonical_judge },
     reader: { effort: def.effort, max_tokens: READER_MAX_TOKENS, prompt_sha256: prompt ? sha256(prompt) : null, ...(raised.length ? { max_tokens_by_reader: Object.fromEntries(raised.map(r => [r, readerMaxTokens(r)])) } : {}) },
     renderer: RENDERER_VERSION, counter, dataset: ctx.dataset, scheduled_sha256: ctx.scheduledSha, limit: ctx.limit,
+    ...(arm.mode === 'own-answer' && answerOverlay(def) ? { answer_overlay: answerOverlay(def) } : {}),
   }, null, 2) + '\n';
 }
 
@@ -597,7 +601,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const arms = def.arms.filter(a => !opts.arms || opts.arms.includes(a.id));
   if (!arms.length) throw refuse({ code: 'USAGE', message: `--arms ${opts.arms?.join(',')} names no arm of ${def.id}`, why: 'a run needs at least one arm', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', def.id] } });
   const instrument = instrumentFor(def.canonical_instrument);
-  refuseCompatJudges(def.id, [instrument.canonical_judge, ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))]);
+  refuseCompatJudges(def.id, [instrument.canonical_judge, ...arms.flatMap(a => planJudges(a)), ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))]);
 
   // Custody before anything reads the corpus.
   const custody = !deps.corpus && needsCustody(def);
@@ -780,9 +784,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       const qs = new Set([...armQs.get(a.id)!].filter(id => mineQs.has(id)));
       const rows = new Set(readLines<Q1Row>(join(dir, 'rows.ndjson')).filter(r => qs.has(r.id)).map(r => r.id));
       const ans = readRecords(join(dir, 'answers.ndjson'), 'answer').filter(x => qs.has(x.question_id));
-      const judged = new Set(readRecords(join(dir, 'judgments.ndjson'), 'judgment').filter(j => j.instrument_id === instrument.id && j.judge_replicate === 0).map(j => j.answer_id));
+      const judged = new Set(readRecords(join(dir, 'judgments.ndjson'), 'judgment').filter(j => j.judge_replicate === 0).map(j => `${j.answer_id}|${j.instrument_id}`));
       const promised = a.mode === 'retrieval-only' ? 0 : readersOf.get(a.id)!.reduce((n, r) => n + (a.reader_replicates[r] ?? 1), 0) * qs.size;
-      return { cell_id: a.cell_id, rows_missing: qs.size - rows.size, answers_missing: Math.max(0, promised - ans.length), unjudged: ans.filter(x => JUDGED.has(x.outcome) && !judged.has(x.answer_id)).length };
+      return { cell_id: a.cell_id, rows_missing: qs.size - rows.size, answers_missing: Math.max(0, promised - ans.length), unjudged: ans.filter(x => JUDGED.has(x.outcome) && !scoringJudges(a, x.reader, instrument).every(p => judged.has(`${x.answer_id}|${p.instrument_id}`))).length };
     });
     share = { shard: `${shard.index}/${shard.count}`, questions: mineQs.size, complete: !stopped && !invalidReasons.length && gaps.every(g => !g.rows_missing && !g.answers_missing && !g.unjudged), gaps: gaps.filter(g => g.rows_missing || g.answers_missing || g.unjudged) };
   }
@@ -929,7 +933,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
     const judgeOne = async (q: MemoryQuestion, a: AnswerRecord, arm: ArmDefinition) => {
       if (!JUDGED.has(a.outcome)) return;
-      const tasks: Array<{ judgeModel: string; instrumentId: string }> = [{ judgeModel: instrument.canonical_judge, instrumentId: instrument.id }];
+      const tasks: Array<{ judgeModel: string; instrumentId: string }> = scoringJudges(arm, a.reader, instrument).map(p => ({ judgeModel: p.judge, instrumentId: p.instrument_id }));
       const f = arm.frontier;
       if (f && opts.frontier !== false && a.replicate === 0 && (!f.readers || f.readers.includes(a.reader)) && inFrontierSample(arm, q.id)) for (const j of f.judges) tasks.push({ judgeModel: j, instrumentId: frontierInstrumentId(instrument.id, j) });
       for (const t of tasks) {
@@ -1050,7 +1054,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
             continue;
           }
           const a = res.value!;
-          const drift = own && a.model && a.model !== own ? `answered with ${a.model}, not the resolved ${own}` : null;
+          const overlay = answerOverlay(def);
+          const drift = own && a.model && a.model !== own ? `answered with ${a.model}, not the resolved ${own}`
+            : overlay && a.raw?.overlay_sha256 !== overlay.sha256 ? `answered under search overlay ${String(a.raw?.overlay_sha256 ?? 'none')}, not arm ${overlay.from_arm}'s ${overlay.sha256}` : null;
           const cited = a.source_ids.filter(s => ingested.has(s));
           const gold = new Set(q.gold.map(g => sanitizer.source(q.conversation, g)));
           extra.own_answer = { ...(extra.own_answer ?? {}), [rd]: { degraded: a.degraded, model: a.model, cited: cited.length, cited_gold: gold.size ? cited.filter(s => gold.has(s)).length / gold.size : null } };
@@ -1101,7 +1107,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         for (const rd of readersOf.get(arm.id)!) for (let rep = 0; rep < (arm.reader_replicates[rd] ?? 1); rep++) {
           const a = answers.get(answerId(arm.cell_id, q.id, rd, rep));
           if (!a) return true;
-          if (JUDGED.has(a.outcome) && !judgments.has(judgmentKey({ answer_id: a.answer_id, instrument_sha256: instrument.sha256, judge: instrument.canonical_judge, judge_replicate: 0 }))) return true;
+          if (JUDGED.has(a.outcome) && !scoringJudges(arm, rd, instrument).every(p => judgments.has(judgmentKey({ answer_id: a.answer_id, instrument_sha256: instrument.sha256, judge: p.judge, judge_replicate: 0 })))) return true;
         }
       }
       return false;
@@ -1275,14 +1281,16 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
     writeAtomic(join(dir, 'judgments.ndjson'), nd(judgments));
     writeAtomic(join(dir, 'readiness.ndjson'), nd(found.map(ms => ({ write_start_to_queryable_ms: ms }))));
     const promised = readers.reduce((s, r) => s + (arm.reader_replicates[r] ?? 1), 0) * qs.size;
-    const canonical = new Set(judgments.filter(j => j.instrument_id === ctx.instrument.id && j.judge_replicate === 0).map(j => j.answer_id));
-    const unjudged = answers.filter(a => JUDGED.has(a.outcome) && !canonical.has(a.answer_id)).length;
+    const scoreOf = new Map<string, number | null | undefined>();
+    for (const j of judgments) if (j.judge_replicate === 0 && !scoreOf.has(`${j.answer_id}|${j.instrument_id}`)) scoreOf.set(`${j.answer_id}|${j.instrument_id}`, j.score);
+    const judged = new Set(answers.filter(a => scoringJudges(arm, a.reader, ctx.instrument).every(p => scoreOf.has(`${a.answer_id}|${p.instrument_id}`))).map(a => a.answer_id));
+    const unjudged = answers.filter(a => JUDGED.has(a.outcome) && !judged.has(a.answer_id)).length;
     const outcomes: Record<string, number> = {};
     for (const a of answers) outcomes[a.outcome] = (outcomes[a.outcome] ?? 0) + 1;
     const complete = rows.length === qs.size && (arm.mode === 'retrieval-only' || (answers.length === promised && unjudged === 0));
     const status: ArmResult['status'] = ctx.invalidReasons.length ? 'invalid' : complete ? 'complete' : 'partial';
     const config = ctx.configs.get(arm.id) ?? (existsSync(join(dir, 'run-config.json')) ? { text: readFileSync(join(dir, 'run-config.json'), 'utf8'), sha: sha256(readFileSync(join(dir, 'run-config.json'))) } : null);
-    const scores = (reader: string) => { const xs = answers.filter(a => a.reader === reader && canonical.has(a.answer_id)).map(a => judgments.find(j => j.answer_id === a.answer_id && j.instrument_id === ctx.instrument.id && j.judge_replicate === 0)!.score).filter((x): x is number => typeof x === 'number'); return xs.length ? Math.round(xs.reduce((s, x) => s + x, 0) / xs.length * 1e6) / 1e6 : null; };
+    const scores = (reader: string) => { const planned = scoringJudges(arm, reader, ctx.instrument); const xs = answers.filter(a => a.reader === reader && judged.has(a.answer_id)).map(a => plannedScore(planned, p => scoreOf.get(`${a.answer_id}|${p.instrument_id}`))).filter((x): x is number => typeof x === 'number'); return xs.length ? Math.round(xs.reduce((s, x) => s + x, 0) / xs.length * 1e6) / 1e6 : null; };
     const receipt = {
       schema: CELL_RECEIPT_SCHEMA, cell_id: arm.cell_id, run_cell: def.id, config_sha256: config?.sha ?? null, run_status: status, invalid_reasons: ctx.invalidReasons, stopped: ctx.stopped,
       set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block,
@@ -1290,6 +1298,8 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
       arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, variant: arm.variant ?? null, label: arm.label },
       readers, reader_replicates: arm.reader_replicates, effort: arm.mode === 'own-answer' ? null : def.effort,
       instrument: { id: ctx.instrument.id, sha256: ctx.instrument.sha256, judge: ctx.instrument.canonical_judge }, frontier: arm.frontier ? { ...arm.frontier, instrument_ids: arm.frontier.judges.map(j => frontierInstrumentId(ctx.instrument.id, j)) } : null,
+      ...(arm.mode === 'own-answer' && answerOverlay(def) ? { answer_overlay: answerOverlay(def) } : {}),
+      ...(arm.judging ? { judging: { by_reader: arm.judging.by_reader, instrument_ids: Object.fromEntries(readers.map(r => [r, scoringJudges(arm, r, ctx.instrument).map(p => p.instrument_id)])) } } : {}),
       selection: { questions: qs.size, conversations: new Set(rows.map(r => r.conversation)).size, scheduled_sha256: sha256([...qs].join('\n')) },
       counts: { rows: rows.length, answers: answers.length, answers_promised: promised, judgments: judgments.length, unjudged, outcomes,
         ...(answers.some(a => a.truncated !== undefined) ? { truncated: answers.filter(a => a.truncated).length } : {}) },
@@ -1332,7 +1342,8 @@ export function cellAggregates(results: ArmResult[]): Record<string, unknown> {
 export function scoreboardCampaignCell(def: CellDefinition, arm: ArmDefinition, result: Pick<ArmResult, 'status' | 'config_sha256'> & Partial<Pick<ArmResult, 'readers'>>) {
   return { cell_id: arm.cell_id, set: arm.set, system: def.system, arm: arm.arm === 'diagnostic' ? 'component' as const : arm.arm, budget: arm.budget, configuration: def.configuration, label: arm.label,
     ...(arm.anchor ? { anchor: true } : {}), status: result.status === 'invalid' ? 'invalid' as const : 'complete' as const, readers: result.readers ?? arm.readers,
-    ...(Object.keys(arm.reader_replicates).length ? { reader_replicates: arm.reader_replicates } : {}), canonical_instrument: def.canonical_instrument, config_sha256: result.config_sha256 };
+    ...(Object.keys(arm.reader_replicates).length ? { reader_replicates: arm.reader_replicates } : {}), canonical_instrument: def.canonical_instrument, config_sha256: result.config_sha256,
+    ...(arm.judging ? { judging: arm.judging } : {}) };
 }
 
 // ─── Plan and the Q1 campaign manifest ───────────────────────────────
@@ -1378,7 +1389,7 @@ const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3,
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
-export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: 'q1' | 'f6'; addons?: boolean } = {}): CellSpec[] {
+export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: 'q1' | 'f6' | 'rs1'; addons?: boolean } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
   const headline = (c: CellDefinition) => c.block === 'T1' || c.block === 'F6-S1';
   const t1Units = m.cells.filter(headline).flatMap(c => Array.from({ length: c.shards }, (_, i) => ({ c, i }))).sort((a, b) => b.c.estimate.usd / b.c.shards - a.c.estimate.usd / a.c.shards || (a.c.id < b.c.id ? -1 : 1) || a.i - b.i);
@@ -1390,8 +1401,8 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
     const providers: Array<keyof typeof PROVIDER_KEYS> = [...(c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] as const : ['openai', 'anthropic'] as const), ...(c.arms.some(a => a.readers.some(r => r.startsWith('particle:'))) ? ['particle'] as const : [])];
     const stack = c.runner === 'shim' || IN_PROCESS_STACKS.has(c.system);
-    // A configuration with its own bundle directory (shipped-0.31) names it on down too, or down reaches the pinned stack.
-    const downConfig = launch.config === 'shipped-0.31' ? ` --config ${launch.config}` : '';
+    // A configuration with its own bundle directory (shipped-0.31, recipe-1.1) names it on down too, or down reaches the pinned stack.
+    const downConfig = launch.config === 'shipped-0.31' || launch.config === 'recipe-1.1' ? ` --config ${launch.config}` : '';
     const command = stack ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}${downConfig}; exit $rc` : run;
     /** A smoke measures what the estimate assumes, so its lease holds twice the estimate; a counted unit takes its cell's lease override (A20), else the estimate per shard. */
     const lease = !smoke && c.lease ? c.lease.usd : Math.max(0.01, Math.ceil((smoke ? 2 : 1) * c.estimate.usd / c.shards * 100) / 100);
@@ -1413,8 +1424,8 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
 }
 
 /** A campaign over named launch units alone, under its own id and ledger cap (plan --units; F6 amendment A1). */
-/** cell_manifest: the manifest each unit's `cell.ts run` resolves its cell from (`--manifest`), for ids q1-cells.json and f6-cells.json both define (A5). */
-export interface UnitSelection { campaign_id: string; cap_usd: number; units: string[]; cell_manifest?: 'q1' | 'f6' }
+/** cell_manifest: the manifest each unit's `cell.ts run` resolves its cell from (`--manifest`), for ids q1-cells.json and f6-cells.json both define (A5), and RS1's (rs1-cells.json). */
+export interface UnitSelection { campaign_id: string; cap_usd: number; units: string[]; cell_manifest?: 'q1' | 'f6' | 'rs1' }
 
 /** The Q1 scoreboard campaign manifest (shootout-cell.ts `q1-scoreboard-campaign`) for the cell manifest. */
 export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: UnitSelection } = {}): Q1Campaign {
@@ -1425,7 +1436,7 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
   const u = opts.units;
   if (u) {
     const unknown = u.units.filter(id => !all.some(c => c.id === id));
-    if (!Q1_CAMPAIGN_ID.test(u.campaign_id) || !(u.cap_usd > 0) || (u.cell_manifest !== undefined && u.cell_manifest !== 'q1' && u.cell_manifest !== 'f6') || !u.units.length || new Set(u.units).size !== u.units.length || unknown.length) {
+    if (!Q1_CAMPAIGN_ID.test(u.campaign_id) || !(u.cap_usd > 0) || (u.cell_manifest !== undefined && !['q1', 'f6', 'rs1'].includes(u.cell_manifest)) || !u.units.length || new Set(u.units).size !== u.units.length || unknown.length) {
       throw new Error(`a unit selection needs a q1-scoreboard campaign_id, a positive cap_usd and distinct known unit ids${unknown.length ? ` (unknown: ${unknown.join(', ')})` : ''}`);
     }
   }
@@ -1451,11 +1462,20 @@ export function renderPlan(m: Manifest): string {
   const waves = [...new Set(cells.map(c => c.wave!))].sort((a, b) => a - b).map(w => ({ w, n: cells.filter(c => c.wave === w).length, hours: Math.max(...cells.filter(c => c.wave === w).map(c => c.expected_hours ?? 0)), blocks: [...new Set(cells.filter(c => c.wave === w).map(c => c.block))].join(', ') }));
   const usd = (x: number) => `$${x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const addon = m.blocks.filter(b => (m.addon_cells ?? []).some(c => c.block === b.id));
-  return [
+  const rs1 = 'stage1_cap_usd' in m ? m as RS1Manifest : null;
+  const head = rs1 ? [
+    `RS1 cell manifest: ${m.cells.length} cells, ${m.cells.reduce((s, c) => s + c.arms.length, 0)} scoreboard cells, estimate ${usd(m.total_usd)} plus stage 1 at ${usd(rs1.stage1_estimate_usd)} of its ${usd(rs1.stage1_cap_usd)} cap; ${usd(m.plan_total_usd)} total less stage 0's ${usd(rs1.stage0_cap_usd)} and stage 1's caps leaves the counted cap ${usd(m.cap_usd)}.`,
+    `Readers ${m.readers.join(', ')} at effort ${m.effort}; prices from eval/runner/budget-ledger.ts; token assumptions in eval/runner/q1/cells/rs1-cells.json.`, '',
+    '| Block | Estimate | Hard cap (1.5x; stage 1 fixed) |', '|---|---:|---:|', ...m.blocks.map(b => `| ${b.label} | ${usd(b.estimate_usd)} | ${usd(b.cap_usd)} |`),
+    `| Total (counted cells, stage 1 outside) | ${usd(m.total_usd)} | ${usd(m.cap_usd)} |`,
+  ] : [
     `Q1 cell manifest: ${m.cells.length} cells, ${m.cells.reduce((s, c) => s + c.arms.length, 0)} scoreboard cells, estimate ${usd(m.total_usd)} (PLAN §7 total ${usd(m.plan_total_usd)} including $260 shared work outside the cells), cap ${usd(m.cap_usd)}.`,
     `Readers ${m.readers.join(', ')} at effort ${m.effort}; prices from eval/runner/budget-ledger.ts; token assumptions in eval/runner/q1/cells/q1-cells.json.`, '',
     '| Block | PLAN §7 | Estimate | Hard cap (1.5x) |', '|---|---:|---:|---:|', ...m.blocks.filter(b => !addon.includes(b)).map(b => `| ${b.label} | ${usd(b.plan_usd)} | ${usd(b.estimate_usd)} | ${usd(b.cap_usd)} |`),
-    `| Total (cells) | ${usd(m.plan_total_usd - 260)} | ${usd(m.total_usd)} | |`, ...addon.map(b => `| ${b.label}, outside the total | ${usd(b.plan_usd)} | ${usd(b.estimate_usd)} | ${usd(b.cap_usd)} |`), '',
+    `| Total (cells) | ${usd(m.plan_total_usd - 260)} | ${usd(m.total_usd)} | |`, ...addon.map(b => `| ${b.label}, outside the total | ${usd(b.plan_usd)} | ${usd(b.estimate_usd)} | ${usd(b.cap_usd)} |`),
+  ];
+  return [
+    ...head, '',
     `| Wave | Launch units | Blocks | Expected hours |`, '|---:|---:|---|---:|', ...waves.map(w => `| ${w.w} | ${w.n} | ${w.blocks} | ${w.hours} |`), '',
     '| Cell | Block | System | Configuration | Arms | Shards | Estimate |', '|---|---|---|---|---:|---:|---:|',
     ...m.cells.map(c => `| ${c.id} | ${c.block} | ${c.system} | ${c.configuration} | ${c.arms.length} | ${c.shards} | ${usd(c.estimate.usd)} |`), '',
@@ -1466,14 +1486,16 @@ export function renderPlan(m: Manifest): string {
 // ─── CLI ─────────────────────────────────────────────────────────────
 
 export function findCell(id: string, given?: Manifest, manifest?: string): CellDefinition {
-  if (manifest !== undefined && manifest !== 'q1' && manifest !== 'f6') throw refuse(usage(`--manifest takes q1 or f6, not ${manifest}`));
-  const m = given ?? (manifest === 'f6' ? loadF6Manifest() : loadManifest());
+  if (manifest !== undefined && manifest !== 'q1' && manifest !== 'f6' && manifest !== 'rs1') throw refuse(usage(`--manifest takes q1 or f6, or rs1 for RS1's cells, not ${manifest}`));
+  const m = given ?? (manifest === 'f6' ? loadF6Manifest() : manifest === 'rs1' ? loadRS1Manifest() : loadManifest());
   const inManifest = (x: Manifest) => x.cells.find(c => c.id === id) ?? (x.smoke_cells ?? []).find(c => c.id === id) ?? (x.addon_cells ?? []).find(c => c.id === id);
   const c = inManifest(m);
   const f6 = !given && !manifest && existsSync(F6_MANIFEST_PATH) ? loadF6Manifest() : null;
   const hit = f6 ? inManifest(f6) : undefined;
   if (c && hit) throw refuse({ code: 'USAGE', message: `cell ${id} is defined in both ${rel(MANIFEST_PATH)} and ${rel(F6_MANIFEST_PATH)}, with different arms or judging`, why: 'a cell runs the definition its campaign was planned from; an id both manifests define cannot be resolved without naming the manifest', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', id, '--manifest', 'f6'], user_message: 'pass --manifest q1 or --manifest f6' } });
-  if (c ?? hit) return (c ?? hit)!;
+  // RS1's ids (rs1.*, rs1-dev.*, rs1-dev2.*) are its own, so an unnamed manifest finds them too.
+  const rs1 = !given && !manifest && existsSync(RS1_MANIFEST_PATH) ? inManifest(loadRS1Manifest()) : undefined;
+  if (c ?? hit ?? rs1) return (c ?? hit ?? rs1)!;
   const near = [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])].filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
   throw refuse({ code: 'USAGE', message: `no cell ${id} in ${rel(MANIFEST_PATH)}`, why: 'run, show and merge take a cell id from the generated manifest', fix: { next: 'run', argv: [...FRONT, 'plan'], user_message: near.length ? `did you mean ${near.join(', ')}?` : 'list the cells with plan' } });
 }
@@ -1509,8 +1531,12 @@ export async function main(argv: string[]): Promise<number> {
   const sub = argv[0];
   if (sub === 'plan') {
     // --manifest f6: F6's manifest (eval/runner/q1/cells/f6-cells.json); --dry-run-only keeps its dry-run cells alone;
+    // --manifest rs1: RS1's (rs1-cells.json), refused while its stage 1 estimate is above stage 1's cap;
     // --units <file>: a UnitSelection (JSON), the named units alone under its own campaign id and cap.
-    const m = one('--manifest') === 'f6' ? loadF6Manifest() : loadManifest();
+    const which = one('--manifest');
+    const m = which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : loadManifest();
+    const over = which === 'rs1' ? stage1OverCap(m as RS1Manifest) : null;
+    if (over) throw refuse(over);
     const campaignOut = one('--campaign-out');
     const sealedCap = one('--sealed-cap-usd');
     if (sealedCap !== undefined && !(Number(sealedCap) > 0)) throw refuse(usage('--sealed-cap-usd needs a positive dollar amount'));

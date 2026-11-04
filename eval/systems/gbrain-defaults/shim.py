@@ -20,7 +20,8 @@ quiesce barrier: stop serve, run `gbrain doctor --json` with the brain to itself
 be queued after its outbox effect completed, src/core/persistence/effect-facts.ts) are drained by a resident serve or
 outlast the finish horizon, and whatever is left is recorded as `background_liabilities`; restart serve. /retrieve calls `query` (never with `token_budget`, which switches gbrain to
 chunk delivery) and classifies the response meta; /answer is gbrain's own answer (`synthesize`, or `think` on the
-full surface when GBRAIN_FULL_SURFACE=1).
+full surface when GBRAIN_FULL_SURFACE=1), reporting the search overlay active when it answered (RS1's think arm answers
+under arm P's six search keys and is invalid under any other).
 
 F6 (GBRAIN_F6=1, docs/benchmarks/2026-10-29-f6-current-master-preregistration.md) serves the full surface and adds a
 brain build to /finish and per-arm retrieval policies to /retrieve, leaving every Q1 path as it was. The install also
@@ -1214,7 +1215,9 @@ class GbrainDefaultsAdapter(Adapter):
                 args["reference_date"] = when.astimezone(timezone.utc).date().isoformat()
         with self.lock:
             self.activate(ns)
-            sources = {v["slug"]: sid for sid, v in self.state()["sessions"].items()}
+            st = self.state()
+            sources = {v["slug"]: sid for sid, v in st["sessions"].items()}
+            overlay_sha256 = st.get("overlay_sha256")
             try:
                 body, meta, notices, ms = self.call(mode, args)
                 error_code = None
@@ -1226,13 +1229,13 @@ class GbrainDefaultsAdapter(Adapter):
             status = body.get("synthesis_status") or ("ok" if mode == "think" and body.get("answer") else None)
             verdict = classify_synthesis(status, error_code)
             slugs = [s if isinstance(s, str) else s.get("page_slug") for s in body.get("sources") or body.get("citations") or []]
-            self.receipt("answer", mode=mode, gbrain_ms=ms, classification=verdict)
+            self.receipt("answer", mode=mode, gbrain_ms=ms, classification=verdict, overlay_sha256=overlay_sha256)
             cost = body.get("cost") if isinstance(body.get("cost"), dict) else {}
             usage = body.get("usage") if isinstance(body.get("usage"), dict) else {}
             return {"answer": str(body.get("answer") or ""), **verdict, "source_ids": sorted({sources[s] for s in slugs if s in sources}),
                     "model": cost.get("model") or body.get("modelUsed") or None,
                     "usage": {"input": int(cost.get("input_tokens") or usage.get("input_tokens") or 0), "output": int(cost.get("output_tokens") or usage.get("output_tokens") or 0)},
-                    "usd": cost.get("usd_estimate"), "cost": body.get("cost"), "args": args, "gbrain_ms": ms, "notices": notices, "serve_session": self.serve_session,
+                    "usd": cost.get("usd_estimate"), "cost": body.get("cost"), "args": args, "gbrain_ms": ms, "notices": notices, "serve_session": self.serve_session, "overlay_sha256": overlay_sha256,
                     "raw": {k: body.get(k) for k in ("gaps", "warnings", "pages_gathered", "takes_gathered", "sources", "error", "reason", "message") if k in body}}
 
     def delete_source(self, ns: str, source_id: str) -> dict[str, Any]:
