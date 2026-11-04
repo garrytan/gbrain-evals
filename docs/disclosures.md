@@ -61,8 +61,15 @@ first.
 - The [SkillOpt retirement finding](benchmarks/2026-11-03-skillopt-retired.md) carries the gbrain, OpenAI and Particle
   lines in its closing Disclosures section. It reports gbrain's result and GPT-6.1 Sol's calibration result, and says
   particle-1 was not run.
+- The [RS1 stage 0 finding](benchmarks/2026-11-04-rs1-stage0.md) carries the gbrain line in its closing Disclosures
+  section. It reports no particle-1 or OpenAI model result.
 
 ## Changelog
+
+### 2026-11-04: The RS1 stage 0 finding
+
+"In this repository" lists the [RS1 stage 0 finding](benchmarks/2026-11-04-rs1-stage0.md), which carries the gbrain
+line in its closing Disclosures section.
 
 ### 2026-11-03: The SkillOpt retirement finding
 

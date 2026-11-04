@@ -288,6 +288,13 @@ agent's context in 0 of 100 permission runs; files do in 100, and plain Postgres
   confirmation exists for evidence delivery, not yet for the retrieval configuration.
 - The head-to-head scoreboard measured gbrain `f05943e6` (v0.60.138.0); none of its gbrain rows has been rerun at the
   pin.
+- No sealed set here is big enough to rank gbrain among the memory servers. BEAM-10M detects only differences of about
+  13.6 points, and on BEAM-1M sealed, F6's 4.8-point lead for gbrain `0ccf2bdd` over an extract-first memory server
+  comes from 24 conversations, which describe the systems but can't rank them. The sealed ranking set built for this
+  (RS1) stopped at stage 0 on November 4, 2026: one conversation costs $40.63 to mint and validate ($28.85 when
+  generation stops at BEAM's truncation point), the full 75-conversation design about $8,200 all-in, and a version
+  inside the $2,000 limit per eval would detect only about 6.5 to 7.7 points
+  ([stage 0 finding](docs/benchmarks/2026-11-04-rs1-stage0.md)).
 - Nothing here measures whether a skill optimizer improves gbrain's shipped skills. On a task set built to leave room,
   Claude Opus 5.5 with no skill already answers 36 of 36 `query` and 35 of 36 `briefing` gate tasks, so the SkillOpt
   optimizer benchmark is retired. Garry Tan also decided to deprecate gbrain's iterative SkillOpt loop and remove it on
@@ -385,6 +392,13 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-04: Known limits name the stopped RS1 ranking set
+
+Known limits gain one entry: no sealed set here is big enough to rank gbrain among the memory servers, and RS1, the
+sealed ranking set built for that, stopped at stage 0 on November 4, because its full design costs about $8,200 all-in
+and a $2,000 version would detect only about 6.5 to 7.7 points ([stage 0 finding](docs/benchmarks/2026-11-04-rs1-stage0.md)).
+No other part changed.
 
 ### 2026-11-03: Known limits name the retired SkillOpt benchmark
 
