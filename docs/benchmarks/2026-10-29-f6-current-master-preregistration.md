@@ -683,9 +683,10 @@ projection of about $0.34. Garry topped up the credit, and GBEV-3 approved optio
   cell and the F6-P1 block cap at $49.08. Nothing else differs, and `test/eval/q1-f6-cells.test.ts` checks that. It
   launches with `bun eval/runner/shootout-cell.ts resume --cell s1.baseline-file-agent.particle --from-campaign
   <p1b manifest> --from-state <p1b state>`. As in revision 3, the store is ingested again, the 120 recorded answers and
-  their judgments are kept, and only the 80 questions without an answer are asked. The reader_error is a recorded
-  answer, so it is not asked again; the outcome rule counts it as a harness failure, not a product failure, and the
-  report counts it among the answers not scored. The custodian computes the campaign hash from a fresh clone at this
+  their judgments are kept, and only the 80 questions without an answer are asked. The files the cell executes differ
+  from p1b's freeze at 2813fcb3 at most in the `version` field of package.json. The reader_error is a recorded answer,
+  so it is not asked again; the outcome rule counts it as a harness failure, not a product failure, and the report
+  counts it among the answers not scored. The custodian computes the campaign hash from a fresh clone at this
   revision's merge commit before the unit launches.
 - **Projection.** The 80 are all of four conversations, where Opus read 0.69M prompt tokens per answer in F6's
   file-agent cell, against 0.43M on the 120 answered. particle-1's reader dollars on the 120 average $0.2875 an answer;
@@ -704,6 +705,6 @@ projection of about $0.34. Garry topped up the credit, and GBEV-3 approved optio
   reservation, so nothing moves. Each moved lease gets its own start note, and a cell that still does not fit is listed
   as not judged.
 - **If the resume runs out.** Nothing is raised again: the findings file reports the row as partial, with its count of
-  answers, and nothing moves to the second judge.
+  answers, and whatever the lease left unspent still moves under the clause above.
 
 No cell, arm, estimate or verdict rule changed, and the hard cap stays $150.
