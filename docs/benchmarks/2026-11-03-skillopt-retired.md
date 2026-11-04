@@ -60,10 +60,38 @@ Gate 1 cost $133.87 over 3,304 requests, against its $470 cap: `query` $23.74, `
 ## What this does not show
 
 - It does not show that skill optimization is useless on harder, real work. It measures this benchmark: a synthetic brain of short pages (173 to 309 words) searched by keyword, where Opus with no skill averaged 1.7 tool calls per `query` task. A real brain with long pages and messier records could leave room that v3 does not.
-- It does not measure `fact-check` (above) or GPT-6.1 Sol. At calibration, on 12 practice tasks each, Sol scored 1.000, 1.000 and 0.917 with the shipped skills while gbrain's rollout path refused 52% of its `briefing` tool calls and 84% of its `fact-check` tool calls, and no retry after any of those 305 refusals succeeded. That is a separate harness problem in gbrain's rollout path, which this benchmark never resolved.
+- It does not measure `fact-check` (above) or GPT-6.1 Sol. At calibration, on 12 practice tasks each, Sol scored 1.000, 1.000 and 0.917 with the shipped skills while gbrain's rollout path refused 52% of its `briefing` tool calls and 84% of its `fact-check` tool calls, and no retry after any of those 305 refusals succeeded. That is a separate harness problem in gbrain's rollout path, which this benchmark never resolved. Most of it was a gbrain bug, since fixed: see the addendum below.
 - It does not measure particle-1, which gbrain's gateway can't call at this pin.
 - It ran one gate where the preregistration allowed two. The preregistered path was one task revision, a second gate and then a read of the sealed test split before any cut. Garry's decision ends the study after gate 1, so this is his call on gate 1's evidence, not a preregistered verdict. The revision was built and never run, and the 96 test tasks per skill stay sealed.
 - It never measured the iterative loop, whose arms would have run only after a gate pass, so it gives no evidence on the loop either way. The two earlier results that measured it, the [June 3 run](2026-06-03-skillopt.md) and the [November 1 re-baseline](2026-11-01-skillopt-rebaseline/REPORT.md), found the full loop tied a one-shot rewrite.
+
+## Addendum (2026-11-04): most of Sol's `get_page` refusals were a gbrain bug, fixed in v0.60.570.0
+
+Most of these refusals were gbrain rejecting a call shape it now accepts. Sol fills in every optional argument of `get_page`, so most of its page reads sent two or three window selectors (`lines` and `bytes`, often `around_chunk_id` too) beside `body: "full"`. gbrain v0.60.557.0, the pin here, refused any call with more than one selector (`invalid_params`). gbrain v0.60.570.0 ([gbrain#8509](https://github.com/garrytan/gbrain/pull/8509), `241cef5a`) reads one window instead. It applies the first usable selector in the order cursor, `around_chunk_id`, `lines`, `bytes`, and its `window_selector` field says which one applied and what it set aside.
+
+A keyless replay sent every recorded Sol `get_page` call to the SkillOpt rollout registry at both gbrain builds, against the brain each run read. No model ran, so the replay shows what gbrain now does with the calls Sol made. It can't show whether Sol would answer differently.
+
+| Recorded Sol `get_page` calls | Refused at v0.60.557.0 | With two or three selectors | Of those, read at v0.60.570.0 | Still refused at v0.60.570.0 |
+|---|---|---|---|---|
+| This benchmark's calibration (v3 brain) | 305 of 305 | 233 | 233: 221 `lines` windows, 12 `around_chunk_id` windows | 72: 61 sent `bytes: {offset: 0, length: 0}` beside `lines`, 8 a `section` and 3 a `grep` beside `lines` |
+| The [frontier probe](2026-11-01-skillopt-method/REPORT.md#tool-errors-in-the-skillopt-rollout-path) (v2 brain) | 606 of 607 (one call's arguments aren't JSON) | 436 | 435: 285 `lines` windows, 150 `around_chunk_id` windows | 170: 169 `known_as_of` beside read-view arguments, 1 a `grep` beside `lines` |
+
+The one probe call with several selectors that doesn't read asks for `people/chris-davis-49`, a page that isn't in the brain. It now gets `page_not_found` instead of `invalid_params`. The calls that still refuse break rules this fix didn't change. `known_as_of` beside read-view arguments and `section` or `grep` beside a window refuse by design. A zero-length `bytes` is rejected as a malformed selector even when a usable `lines` comes with it.
+
+Not every call that sent `around_chunk_id` reads that window. 89 of the probe's three-selector reads asked for `view: "markdown"`, which has no `around_chunk_id` window, so gbrain set it aside and read `lines`. The probe's committed input shows 86 page names as `[withheld]`, because the one-shot proposer wasn't shown those pages. Those calls replay against a stand-in page (`people/vera-chen-14`, the one the acceptance test uses), where 14 recorded chunk ids don't exist, so those reads fell through to `lines`.
+
+Two controls back the replay. At v0.60.557.0 it reproduces the recorded outcome of all 305 calibration calls. Opus's 1,193 `get_page` calls in calibration and gate 1 read at both builds, and each returns the same result once revision ids and timestamps are masked. Gate 1 ran Opus only, so it has no Sol calls.
+
+Reproduce, with no keys, in about 25 seconds per build:
+
+```sh
+R=docs/benchmarks/2026-11-02-skillopt-ceiling/runs/get-page-replay/replay.ts
+bun $R before.json.gz                  # at this repository's pin, gbrain 62637c96a
+bun $R after.json.gz                   # in a checkout with package.json pinning gbrain 241cef5a, after bun install
+bun $R --compare before.json.gz after.json.gz
+```
+
+The per-call outcomes at both builds and their comparison are in [`runs/get-page-replay/`](2026-11-02-skillopt-ceiling/runs/get-page-replay/). This repository stays pinned at v0.60.557.0, and the benchmark stays retired.
 
 ## What changes in this repository
 

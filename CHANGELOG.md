@@ -4,6 +4,12 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### Keyless replay: gbrain v0.60.570.0 reads 435 of Sol's 436 multi-selector `get_page` calls (GST-1339)
+
+- **What it checks.** `docs/benchmarks/2026-11-02-skillopt-ceiling/runs/get-page-replay/replay.ts` sends every `get_page` call recorded in the SkillOpt frontier probe, the ceiling calibration and gate 1 to the SkillOpt rollout registry, against the brain each run read, with no model and no key. It writes per-call outcomes for one gbrain build and compares two builds.
+- **What it found.** At gbrain v0.60.557.0, the pin, 436 of the probe's 607 Sol calls and 233 of the calibration's 305 refused because they sent two or three window selectors. At v0.60.570.0 (gbrain#8509, `241cef5a`), 435 of the 436 and all 233 read one window. The other probe call asks for a page that isn't in the brain. The other refusals (`known_as_of` beside read-view arguments, `section` or `grep` beside `lines`, and a zero-length `bytes`) are unchanged. Opus's 1,193 recorded calls read the same at both builds.
+- **Where it's written up.** A dated addendum in `docs/benchmarks/2026-11-03-skillopt-retired.md`, with the outcomes at both builds in `runs/get-page-replay/`. The gbrain pin stays at v0.60.557.0, and `test/eval/skillopt-rollout-empty-args.test.ts` keeps its v0.60.557.0 counts until the pin moves.
+
 ### The RS1 custody mint checks out only BEAM's code, public topics and dev conversations, and validation reads only those chats (F28, GST-1154)
 
 - **What was exposed.** `eval/custody/rs1/mint.sh` fetched and checked out the whole public BEAM repository at b2da22e into `<out>/tooling/beam`. That put the BEAM-10M tier and every conversation our splits hold as sealed on any machine that ran a mint, cloud development machines included, and `eval/custody/rs1/validate.ts` read every BEAM chat and questions file to build its public index.
