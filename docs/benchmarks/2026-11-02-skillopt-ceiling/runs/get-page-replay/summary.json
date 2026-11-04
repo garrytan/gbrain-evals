@@ -1,0 +1,214 @@
+{
+ "before": "0.60.557.0",
+ "after": "0.60.570.0",
+ "rows": [
+  {
+   "source": "probe-sol (slug withheld, stand-in people/vera-chen-14)",
+   "class": "pass one window selector, not 2 (got lines and bytes)",
+   "total": 67,
+   "refused_before": 67,
+   "read_after": 67,
+   "applied_after": {
+    "lines": 67
+   },
+   "refused_after": {},
+   "read_both": 0,
+   "same_read": 0
+  },
+  {
+   "source": "probe-sol",
+   "class": "pass one window selector, not 3 (got lines and bytes and around_chunk_id)",
+   "total": 234,
+   "refused_before": 234,
+   "read_after": 234,
+   "applied_after": {
+    "around_chunk_id": 150,
+    "lines (view markdown)": 84
+   },
+   "refused_after": {},
+   "read_both": 0,
+   "same_read": 0
+  },
+  {
+   "source": "probe-sol",
+   "class": "pass one window selector, not 2 (got lines and bytes)",
+   "total": 116,
+   "refused_before": 116,
+   "read_after": 115,
+   "applied_after": {
+    "lines": 115
+   },
+   "refused_after": {
+    "page_not_found: Page not found: <slug>": 1
+   },
+   "read_both": 0,
+   "same_read": 0
+  },
+  {
+   "source": "probe-sol",
+   "class": "known_as_of does not combine with read-view arguments",
+   "total": 127,
+   "refused_before": 127,
+   "read_after": 0,
+   "applied_after": {},
+   "refused_after": {
+    "invalid_params: known_as_of does not combine with read-view arguments": 127
+   },
+   "read_both": 0,
+   "same_read": 0
+  },
+  {
+   "source": "probe-sol (slug withheld, stand-in people/vera-chen-14)",
+   "class": "known_as_of does not combine with read-view arguments",
+   "total": 42,
+   "refused_before": 42,
+   "read_after": 0,
+   "applied_after": {},
+   "refused_after": {
+    "invalid_params: known_as_of does not combine with read-view arguments": 42
+   },
+   "read_both": 0,
+   "same_read": 0
+  },
+  {
+   "source": "probe-sol",
+   "class": "grep returns part of the read view; it does not combine with lines",
+   "total": 1,
+   "refused_before": 1,
+   "read_after": 0,
+   "applied_after": {},
+   "refused_after": {
+    "invalid_params: grep returns part of the read view; it does not combine with lines": 1
+   },
+   "read_both": 0,
+   "same_read": 0
+  },
+  {
+   "source": "probe-sol (slug withheld, stand-in people/vera-chen-14)",
+   "class": "pass one window selector, not 3 (got lines and bytes and around_chunk_id)",
+   "total": 19,
+   "refused_before": 19,
+   "read_after": 19,
+   "applied_after": {
+    "lines (after a fall-through)": 14,
+    "lines (view markdown)": 5
+   },
+   "refused_after": {},
+   "read_both": 0,
+   "same_read": 0
+  },
+  {
+   "source": "probe-sol",
+   "class": "arguments are not JSON",
+   "total": 1,
+   "refused_before": 1,
+   "read_after": 0,
+   "applied_after": {},
+   "refused_after": {
+    "no code: arguments are not JSON": 1
+   },
+   "read_both": 0,
+   "same_read": 0
+  },
+  {
+   "source": "calibration-sol",
+   "class": "bytes must be { offset: <byte offset >= 0>, length: <bytes >= 1> }",
+   "total": 61,
+   "refused_before": 61,
+   "read_after": 0,
+   "applied_after": {},
+   "refused_after": {
+    "invalid_params: bytes must be { offset: <byte offset >= 0>, length: <bytes >= 1> }": 61
+   },
+   "read_both": 0,
+   "same_read": 0,
+   "matches_record": 61
+  },
+  {
+   "source": "calibration-sol",
+   "class": "pass one window selector, not 2 (got lines and bytes)",
+   "total": 221,
+   "refused_before": 221,
+   "read_after": 221,
+   "applied_after": {
+    "lines": 161,
+    "lines (view markdown)": 60
+   },
+   "refused_after": {},
+   "read_both": 0,
+   "same_read": 0,
+   "matches_record": 221
+  },
+  {
+   "source": "calibration-sol",
+   "class": "section returns part of the read view; it does not combine with lines",
+   "total": 8,
+   "refused_before": 8,
+   "read_after": 0,
+   "applied_after": {},
+   "refused_after": {
+    "invalid_params: section returns part of the read view; it does not combine with lines": 8
+   },
+   "read_both": 0,
+   "same_read": 0,
+   "matches_record": 8
+  },
+  {
+   "source": "calibration-sol",
+   "class": "pass one window selector, not 3 (got lines and bytes and around_chunk_id)",
+   "total": 12,
+   "refused_before": 12,
+   "read_after": 12,
+   "applied_after": {
+    "around_chunk_id": 12
+   },
+   "refused_after": {},
+   "read_both": 0,
+   "same_read": 0,
+   "matches_record": 12
+  },
+  {
+   "source": "calibration-sol",
+   "class": "grep returns part of the read view; it does not combine with lines",
+   "total": 3,
+   "refused_before": 3,
+   "read_after": 0,
+   "applied_after": {},
+   "refused_after": {
+    "invalid_params: grep returns part of the read view; it does not combine with lines": 3
+   },
+   "read_both": 0,
+   "same_read": 0,
+   "matches_record": 3
+  },
+  {
+   "source": "calibration-opus",
+   "class": "read",
+   "total": 37,
+   "refused_before": 0,
+   "read_after": 37,
+   "applied_after": {
+    "whole page": 37
+   },
+   "refused_after": {},
+   "read_both": 37,
+   "same_read": 37,
+   "matches_record": 37
+  },
+  {
+   "source": "gate-1-opus",
+   "class": "read",
+   "total": 1156,
+   "refused_before": 0,
+   "read_after": 1156,
+   "applied_after": {
+    "whole page": 1155,
+    "lines": 1
+   },
+   "refused_after": {},
+   "read_both": 1156,
+   "same_read": 1156,
+   "matches_record": 1156
+  }
+ ]
+}
