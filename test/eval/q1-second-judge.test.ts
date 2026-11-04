@@ -13,7 +13,7 @@ import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { answerRecord, judgmentProblems, sha256, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
-import { DEFAULT_ROUTE_CAPS, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
+import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../../eval/runner/metering-proxy.ts';
 import type { ArmDefinition, CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { PARTICLE, RESAMPLES, SEED, seedNumber } from '../../eval/runner/q1/particle-addon-report.ts';
 import { openRereadLease, REREAD_RECEIPT_SCHEMA } from '../../eval/runner/q1/reread-cell.ts';
@@ -131,18 +131,23 @@ describe('the second-judge sensitivity', () => {
       canonical: { opus_mean: round(9 / 14), particle_mean: round(12 / 14), delta: round(3 / 14), ci95: [round(canonical.ci95![0]), round(canonical.ci95![1])], opus_correct: 9, particle_correct: 12 },
       second: { opus_mean: round(9 / 14), particle_mean: round(8 / 14), delta: round(-1 / 14), ci95: [round(second.ci95![0]), round(second.ci95![1])], opus_correct: 9, particle_correct: 8 } });
     expect(r).toMatchObject({ run_status: 'complete', judge: SOL, canonical_judge: locomo.canonical_judge, instrument: { id: `locomo@${SOL}`, base: 'locomo', sha256: locomo.sha256 },
-      frontier_cell: ARM, particle_cell: REREAD, counts: { paired_questions: 14, answers_to_judge: 26, judged: 26, judge_errors: 0, unjudged: 0 } });
+      frontier_cell: ARM, particle_cell: REREAD, source_status: { frontier: 'complete', particle: 'complete' }, last_error: null, counts: { paired_questions: 14, answers_to_judge: 26, judged: 26, judge_errors: 0, request_errors: 0, unjudged: 0 } });
     const text = readFileSync(join(res.dir, 'receipt.json'), 'utf8');
     for (const q of QUESTIONS) expect(text).not.toContain(q.id);
     expect(text).not.toContain('ANSWER-');
   });
 
-  // Value: protects=A6's trigger and the checks before any request; fails_when=a cell where particle-1 is not above Opus, another instrument, an unpaired arm, a shared --out, a resume of other answers, or a sealed cell without custody reaches a request or writes --out; why_new=new; seam=invented cells; no_claim=none
-  test('a cell where particle-1 is not above Opus, another instrument, an unpaired arm, a shared --out, a resume of other answers and a sealed cell without custody are refused before any request', () => {
+  // Value: protects=A6's trigger and the checks before any request; fails_when=a cell where particle-1 is not above Opus, a partial source cell, another instrument, an unpaired arm, a shared --out, a resume of other answers or other gold answers, or a sealed cell without custody reaches a request or writes --out; why_new=new; seam=invented cells; no_claim=none
+  test('a cell where particle-1 is not above Opus, a partial source cell, another instrument, an unpaired arm, a shared --out, a resume of other answers or gold answers and a sealed cell without custody are refused before any request', () => {
     const behind = join(tmp, 'behind');
     publish(behind, REREAD, { [PARTICLE]: OPUS_PLAN }, { schema: REREAD_RECEIPT_SCHEMA, keyless: false, source: { arm_cell_id: ARM, config_sha256: CONFIG } });
     const out = join(tmp, 'refused');
     expect(refusal(() => prepareSecondJudge(def, arm, { roots: [frontier, behind], out }, { corpus })).message).toContain('particle-1 minus Opus on s3.ext-graph-pipeline.recipe.component-b8000 is 0 under the canonical judge, so A6 asks for no second judge there');
+    const partialParticle = join(tmp, 'partial-particle'), partialFrontier = join(tmp, 'partial-frontier');
+    publish(partialParticle, REREAD, { [PARTICLE]: PARTICLE_PLAN }, { schema: REREAD_RECEIPT_SCHEMA, keyless: false, run_status: 'partial', source: { arm_cell_id: ARM, config_sha256: CONFIG } });
+    publish(partialFrontier, ARM, { [OPUS]: OPUS_PLAN, [SOL]: SOL_PLAN }, { run_status: 'partial' });
+    expect(refusal(() => prepareSecondJudge(def, arm, { roots: [frontier, partialParticle], out }, { corpus })).message).toContain(`${ARM}'s source cells are frontier complete and particle-1 partial, not both complete`);
+    expect(refusal(() => prepareSecondJudge(def, arm, { roots: [partialFrontier, reread], out }, { corpus })).message).toContain('are frontier partial and particle-1 complete');
     expect(refusal(() => prepareSecondJudge(def, arm, { roots, out }, { corpus, instrument: instrumentFor('lme-s') })).message).toContain(`was judged with locomo (${locomo.sha256.slice(0, 12)})`);
     expect(refusal(() => prepareSecondJudge(def, { ...arm, cell_id: `${ARM}-other` }, { roots, out }, { corpus })).code).toBe('INPUT_MISSING');
     expect(existsSync(out)).toBe(false);
@@ -158,6 +163,11 @@ describe('the second-judge sensitivity', () => {
     const edited = join(tmp, 'edited');
     publish(edited, REREAD, { [PARTICLE]: PARTICLE_PLAN.map((x, i) => (i === 5 ? [1, 0] : x)) as Cell }, { schema: REREAD_RECEIPT_SCHEMA, keyless: false, source: { arm_cell_id: ARM, config_sha256: CONFIG } });
     expect(refusal(() => prepareSecondJudge(def, arm, { roots: [frontier, edited], out: resumed }, { corpus })).code).toBe('RESUME_REFUSED');
+    const corrected = { ...corpus, questions: corpus.questions.map(q => (q.id === QUESTIONS[0].id ? { ...q, answer: 'a corrected gold answer' } : q)) };
+    expect(refusal(() => prepareSecondJudge(def, arm, { roots, out: resumed }, { corpus: corrected })).message).toContain('other gold answers or rubrics');
+    const rubric = { ...corpus, questions: corpus.questions.map(q => (q.id === QUESTIONS[0].id ? { ...q, rubric: ['an added rubric item'] } : q)) };
+    expect(refusal(() => prepareSecondJudge(def, arm, { roots, out: resumed }, { corpus: rubric })).code).toBe('RESUME_REFUSED');
+    expect(prepareSecondJudge(def, arm, { roots, out: resumed }, { corpus }).plan).toHaveLength(26);
     expect(refusal(() => prepareSecondJudge(def, arm, { roots, out: resumed, keyless: true }, { corpus })).message).toContain('holds a paid second-judge run');
   });
 
@@ -173,6 +183,18 @@ describe('the second-judge sensitivity', () => {
     const rest = scriptedSol();
     const done = await runSecondJudge(prepareSecondJudge(def, arm, { roots, out }, { corpus }), {}, { judge: rest });
     expect([done.status, rest.models.length, ndjson(join(done.dir, 'judgments.ndjson')).length]).toEqual(['complete', 22, 26]);
+  });
+
+  // Value: protects=a judge error that is not a budget refusal leaves a trace in the receipt; fails_when=the run swallows it silently, records a judgment for it, or calls the run complete; why_new=review finding adversarial-native#2; seam=a scripted judge that fails; no_claim=any provider's error text
+  test('a judge error that is not a budget refusal is counted in the receipt with its last message, and the run stays partial', async () => {
+    let calls = 0;
+    const failing: ChatLike = { async chat() { calls++; throw new Error(`openai 500: upstream unavailable ${'x'.repeat(300)}`); } };
+    const res = await runSecondJudge(prepareSecondJudge(def, arm, { roots, out: join(tmp, 'errors') }, { corpus }), { concurrency: 1, maxAttempts: 2 }, { judge: failing });
+    const r = res.receipt as any;
+    expect([res.status, res.stopped, calls, ndjson(join(res.dir, 'judgments.ndjson')).length]).toEqual(['partial', null, 52, 0]);
+    expect(r.counts).toMatchObject({ judged: 0, unjudged: 26, judge_errors: 0, request_errors: 52 });
+    expect(r.last_error).toBe(`openai 500: upstream unavailable ${'x'.repeat(300)}`.slice(0, 200));
+    expect(JSON.parse(readFileSync(join(res.dir, 'receipt.json'), 'utf8')).counts.request_errors).toBe(52);
   });
 
   // Value: protects=judging several answers at once judges each answer once and holds the cap on requests in flight; fails_when=an answer is judged twice or skipped, or more than --concurrency requests are in flight; why_new=gpt-6.1-sol takes about 12 s a request and a cell asks some 6,000, so the runner judges concurrently; seam=a scripted judge that waits; no_claim=none
@@ -193,8 +215,8 @@ describe('the second-judge sensitivity', () => {
     expect((res.receipt as any).comparison.second.delta).toBe(round(-1 / 14));
   });
 
-  // Value: protects=the second judge's dollars go through the lease proxy on the judge slot and the re-read ledger under its own runner name; fails_when=a judgment bypasses the proxy, goes out on another slot or model, or the lease is not the ceiling-checked re-read lease; why_new=new; seam=a scripted OpenAI upstream; no_claim=OpenAI's billing
-  test('each judgment goes to gpt-6.1-sol through the lease proxy on the judge slot, under a ceiling-checked lease named q1-second-judge', async () => {
+  // Value: protects=the second judge's dollars go through the lease proxy on the judge slot and the re-read ledger under its own runner name; fails_when=a judgment bypasses the proxy, goes out on another slot or model, the lease is not the ceiling-checked re-read lease, or the receipt's dollars drop a pass whose meter line was lost; why_new=new; seam=a scripted OpenAI upstream; no_claim=OpenAI's billing
+  test('each judgment goes to gpt-6.1-sol through the lease proxy on the judge slot, under a ceiling-checked lease named q1-second-judge, and its dollars survive a pass whose meter line was lost', async () => {
     const ledgerPath = join(tmp, 'ledger.sqlite');
     const lease = openRereadLease({ runId: 'second-judge-1', leaseUsd: 1, ledgerPath, capUsd: 60, runner: 'q1-second-judge' });
     const sent: string[] = [];
@@ -215,7 +237,12 @@ describe('the second-judge sensitivity', () => {
       expect(ndjson(usageLog).map(l => [l.provider, l.slot, l.route_class, l.bucket, l.outcome])).toEqual(Array(26).fill(['openai', 'judge', 'judge', 'attributed', 'forwarded']));
       expect(ndjson(join(res.dir, 'meters.ndjson')).map(m => [m.phase, m.key, m.requests])).toEqual([['judge', `judge:${secondJudgeCellId(ARM)}:pass-0`, 26]]);
       const r = res.receipt as any;
+      const usage = usageSplit(usageLog);
       expect([r.lease.requests, r.spend.judge_usd > 0, r.comparison.second.delta]).toEqual([26, true, round(-1 / 14)]);
+      expect(r.spend).toEqual({ source: 'lease usage log', judge_usd: Math.round((usage.billed_usd + usage.reserved_unsettled_usd) * 1e6) / 1e6 });
+      rmSync(join(res.dir, 'meters.ndjson'));
+      const resumed = await runSecondJudge(prepareSecondJudge(def, arm, { roots, out }, { corpus }), { providerProxy: `http://127.0.0.1:${proxy.port}`, lease: { usd: 1, usageLog } });
+      expect([resumed.status, sent.length, (resumed.receipt as any).spend]).toEqual(['complete', 26, r.spend]);
     } finally { proxy.stop(); lease.close(); }
     expect(ledgerStatus({ ledgerPath, runId: 'second-judge-1' }).run?.runner).toBe('q1-second-judge');
     expect(refusal(() => openRereadLease({ runId: 'second-judge-2', leaseUsd: 60, ledgerPath, capUsd: 60, runner: 'q1-second-judge' })).message).toContain('would pass its $60.00 ceiling');

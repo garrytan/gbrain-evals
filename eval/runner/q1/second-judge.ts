@@ -11,8 +11,8 @@
  *
  * --root takes particle-addon-report.ts's roots (the re-read's --out and the frontier cell's output), and the cell is
  * the particle-1 cell the report pairs with the arm's cell. Before any request (prepareSecondJudge): the custody gate a
- * sealed cell needs, one cell per --out, the pairing, the frontier cell's instrument being this tree's, and A6's
- * trigger, particle-1 minus Opus above 0 under the canonical judge. The answers judged are each reader's replicate-0
+ * sealed cell needs, one cell per --out, the pairing, both source cells complete, the frontier cell's instrument being
+ * this tree's, and A6's trigger, particle-1 minus Opus above 0 under the canonical judge. The answers judged are each reader's replicate-0
  * answers on the questions both have in their canonical denominators (the set's exclusions left out) whose outcome a
  * judge scores; a product failure scores 0 under both judges and sends nothing.
  *
@@ -20,7 +20,9 @@
  * the `judge` slot through the in-process lease proxy, with --concurrency answers in flight (default 8; one rubric
  * request takes gpt-6.1-sol about 12 s, and a BEAM cell asks some 6,000). Each pass binds the slot once, around all
  * of its answers, so the slot's routing and metering key never change while requests are in flight; meters.ndjson has
- * one line per pass. A budget refusal stops new answers (partial) and a resume skips judged answers. A6 takes the second judge's dollars from the re-read ceiling, so the lease is the
+ * one line per pass, and the receipt's dollars come from the lease's per-request usage log, which a killed pass keeps. A
+ * budget refusal stops new answers (partial), other judge errors are counted with the last message, and a resume skips
+ * judged answers of the same answers and questions. A6 takes the second judge's dollars from the re-read ceiling, so the lease is the
  * re-read ledger's and openRereadLease refuses one that would pass --ledger-cap-usd. Output:
  * `--out/cells/<arm cell id>.second-judge/` with judgments.ndjson and receipt.json, whose comparison holds particle-1
  * minus Opus under each judge over the questions both judges scored for both readers, with the report's seed,
@@ -53,11 +55,11 @@ export const secondJudgeCellId = (armCellId: string) => `${armCellId}.second-jud
 
 export interface PlannedJudgment { question: MemoryQuestion; answer: AnswerRecord }
 export interface PreparedSecondJudge {
-  arm: ArmDefinition; unit: Unit; out: string; keyless: boolean; instrument: Instrument; excluded: Set<string>;
+  arm: ArmDefinition; unit: Unit; out: string; keyless: boolean; instrument: Instrument; excluded: Set<string>; source_status: { frontier: string | null; particle: string | null };
   canonical: Map<string, Map<string, Value>>; paired: string[]; trigger: { pairs: number; delta: number; ci95: [number, number] | null }; plan: PlannedJudgment[];
 }
 
-/** Everything before the first request: custody, one cell per --out, the --out claim, the pairing, the instrument, A6's trigger and the answers to judge. */
+/** Everything before the first request: custody, one cell per --out, the --out claim, the pairing, both source cells complete, the instrument, A6's trigger and the answers to judge. */
 export function prepareSecondJudge(def: CellDefinition, arm: ArmDefinition, opts: { roots: string[]; out: string; env?: Record<string, string | undefined>; keyless?: boolean },
   deps: { corpus?: Corpus; instrument?: Instrument } = {}): PreparedSecondJudge {
   const env = opts.env ?? process.env;
@@ -71,6 +73,9 @@ export function prepareSecondJudge(def: CellDefinition, arm: ArmDefinition, opts
   const unit = unitsOf(loadCells(opts.roots)).find(u => u.frontier.id === arm.cell_id);
   if (!unit) throw refuse({ code: 'INPUT_MISSING', message: `no particle-1 cell under the roots pairs with ${arm.cell_id}`,
     why: 'the second judge grades the answers of a particle-1 cell and of the frontier cell the report pairs it with', fix: { next: 'run', argv: [...FRONT, '--root', '<the re-read --out>', '--root', '<the frontier cell output>'] } });
+  const source_status = { frontier: unit.frontier.receipt.run_status ?? null, particle: unit.particle.receipt.run_status ?? null };
+  if (source_status.frontier !== 'complete' || source_status.particle !== 'complete') throw refuse({ code: 'PREFLIGHT_FAILED', message: `${arm.cell_id}'s source cells are frontier ${source_status.frontier ?? 'n/a'} and particle-1 ${source_status.particle ?? 'n/a'}, not both complete`,
+    why: 'A6 judges a finished cell again: a partial source cell moves the trigger, and its resume changes the answers a second judge froze', fix: { next: 'report', user_message: `finish both source cells of ${arm.cell_id} before its second judge` } });
   const judgedBy = unit.frontier.receipt.instrument;
   if (judgedBy.id !== instrument.id || judgedBy.sha256 !== instrument.sha256) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${arm.cell_id} was judged with ${judgedBy.id} (${judgedBy.sha256.slice(0, 12)}), not this tree's ${instrument.id} (${instrument.sha256.slice(0, 12)})`,
     why: 'A6 judges again on the same instrument the canonical scores came from', fix: { next: 'report', user_message: 'run the second judge from a tree whose instrument is the one the cell was judged with' } });
@@ -100,11 +105,12 @@ export function prepareSecondJudge(def: CellDefinition, arm: ArmDefinition, opts
   claimOut(out, !!opts.keyless, 'second-judge');
   const frozen = join(out, 'second-judge-source.json');
   const identity = JSON.stringify({ frontier_cell: unit.frontier.id, particle_cell: unit.particle.id, judge: SECOND_JUDGE, instrument_sha256: instrument.sha256,
-    answers_sha256: sha256(plan.map(x => JSON.stringify(x.answer)).sort().join('\n')) }) + '\n';
-  if (existsSync(frozen) && readFileSync(frozen, 'utf8') !== identity) throw refuse({ code: 'RESUME_REFUSED', message: `${out} holds a second judge of other answers, another judge or another instrument; give this run a fresh --out`,
+    answers_sha256: sha256(plan.map(x => JSON.stringify(x.answer)).sort().join('\n')),
+    questions_sha256: sha256([...new Map(plan.map(x => [x.question.id, x.question])).values()].map(q => JSON.stringify([q.id, q.answer ?? null, q.rubric ?? null])).sort().join('\n')) }) + '\n';
+  if (existsSync(frozen) && readFileSync(frozen, 'utf8') !== identity) throw refuse({ code: 'RESUME_REFUSED', message: `${out} holds a second judge of other answers, other gold answers or rubrics, another judge or another instrument; give this run a fresh --out`,
     why: 'a resume keeps the judgments already in --out, so it must judge the answers they were made on', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   if (!existsSync(frozen)) writeFileSync(frozen, identity);
-  return { arm, unit, out, keyless: !!opts.keyless, instrument, excluded, canonical, paired, trigger: { pairs: trigger.pairs, delta: trigger.delta, ci95: trigger.ci95 }, plan };
+  return { arm, unit, out, keyless: !!opts.keyless, instrument, excluded, source_status, canonical, paired, trigger: { pairs: trigger.pairs, delta: trigger.delta, ci95: trigger.ci95 }, plan };
 }
 
 const round = (x: number, d = 4) => Math.round(x * 10 ** d) / 10 ** d;
@@ -134,10 +140,14 @@ export async function runSecondJudge(p: PreparedSecondJudge, opts: { providerPro
   const judgeChat = deps.judge ?? new ChatClient(join(p.out, 'cache', 'qa'));
   const second = { id: frontierInstrumentId(p.instrument.id, SECOND_JUDGE), sha256: p.instrument.sha256, judge: SECOND_JUDGE };
   const judged = (a: AnswerRecord) => judgments.has(judgmentKey({ answer_id: a.answer_id, instrument_sha256: second.sha256, judge: SECOND_JUDGE, judge_replicate: 0 }));
-  let stopped: string | null = null;
+  let stopped: string | null = null, requestErrors = 0, lastError: string | null = null;
   const one = async (x: PlannedJudgment) => {
     try { judgments.append({ answer_id: x.answer.answer_id, ...await judgeAnswer(judgeChat, p.instrument, x.question, x.answer.text, { judge: SECOND_JUDGE, judgeReplicate: 0, maxAttempts }), instrument_id: second.id }); }
-    catch (e) { if (/budget/i.test(String((e as Error).message))) stopped ??= `budget: ${String((e as Error).message).slice(0, 200)}`; }
+    catch (e) {
+      const message = String((e as Error).message);
+      if (/budget/i.test(message)) stopped ??= `budget: ${message.slice(0, 200)}`;
+      else { requestErrors++; lastError = message.slice(0, 200); }
+    }
   };
   for (let pass = 0; pass < maxAttempts && !stopped; pass++) {
     const queue = p.plan.filter(x => !judged(x.answer));
@@ -152,15 +162,18 @@ export async function runSecondJudge(p: PreparedSecondJudge, opts: { providerPro
   const unjudged = p.plan.filter(x => !judged(x.answer)).length;
   const status = !stopped && !unjudged ? 'complete' as const : 'partial' as const;
   const spent = existsSync(meters) ? readFileSync(meters, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as MeterLine) : [];
+  const usageLog = join(p.out, 'usage.ndjson');
+  const usage = existsSync(usageLog) ? usageSplit(usageLog) : null;
   const receipt = {
-    schema: SECOND_JUDGE_RECEIPT_SCHEMA, cell_id: cellId, run_status: status, stopped, keyless: p.keyless,
-    frontier_cell: p.unit.frontier.id, particle_cell: p.unit.particle.id, system: { kind: p.unit.frontier.receipt.system.kind },
+    schema: SECOND_JUDGE_RECEIPT_SCHEMA, cell_id: cellId, run_status: status, stopped, last_error: lastError, keyless: p.keyless,
+    frontier_cell: p.unit.frontier.id, particle_cell: p.unit.particle.id, source_status: p.source_status, system: { kind: p.unit.frontier.receipt.system.kind },
     judge: SECOND_JUDGE, canonical_judge: p.unit.frontier.receipt.instrument.judge, instrument: { id: second.id, base: p.instrument.id, sha256: second.sha256 },
     trigger: p.trigger,
-    counts: { paired_questions: p.paired.length, answers_to_judge: p.plan.length, judged: p.plan.length - unjudged, judge_errors: sol.filter(j => !j.parse_ok).length, unjudged },
+    counts: { paired_questions: p.paired.length, answers_to_judge: p.plan.length, judged: p.plan.length - unjudged, judge_errors: sol.filter(j => !j.parse_ok).length, request_errors: requestErrors, unjudged },
     comparison: both.length ? { pairs: both.length, clusters: new Set(both.map(q => values.get(PARTICLE)!.get(q)!.conversation)).size, seed: SEED, resamples: RESAMPLES,
       canonical: side(p.canonical, both), second: side(values, both) } : null,
-    spend: { source: opts.providerProxy ? 'metering proxy' : null, judge_usd: round(spent.reduce((s, m) => s + m.usd, 0), 6) },
+    spend: usage ? { source: 'lease usage log', judge_usd: round(usage.billed_usd + usage.reserved_unsettled_usd, 6) }
+      : { source: opts.providerProxy ? 'metering proxy' : null, judge_usd: round(spent.reduce((s, m) => s + m.usd, 0), 6) },
     lease: opts.lease ? { usd: opts.lease.usd, ...(existsSync(opts.lease.usageLog) ? usageSplit(opts.lease.usageLog) : {}) } : null,
     files: { judgments: 'judgments.ndjson' },
   };
