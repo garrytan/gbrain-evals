@@ -662,11 +662,12 @@ export function plan(s: Sources, rates: Record<string, number> = {}) {
   const rate = (j: string, k: 'central' | 'conservative') => rates[j] ?? RATES[j][k];
   const disagreementRate = agree + disagree ? disagree / (agree + disagree) : 0.14;
   const needed = (x: Stratum) => Object.values(strata[x].by_judge).reduce((y, b) => y + b.needed, 0);
+  const earlier = new Set<string>();
+  const fresh = Object.fromEntries((['A', 'B', 'C', 'D'] as Stratum[]).map(x => { const t = strata[x].tasks.filter(task => !earlier.has(task.answer_id)); for (const id of strata[x].scope) earlier.add(id); return [x, t]; }));
   const project = (k: 'central' | 'conservative') => {
-    const census = Object.fromEntries((['A', 'B', 'C', 'D'] as Stratum[]).map(x => [x, strata[x].tasks.reduce((y, t) => y + rate(t.judge, k), 0)]));
+    const census = Object.fromEntries((['A', 'B', 'C', 'D'] as Stratum[]).map(x => [x, fresh[x].reduce((y, t) => y + rate(t.judge, k), 0)]));
     const onlyQ1 = (set: string) => strata.C.tasks.filter(t => t.set === set && !CONTRASTS.some(c => c.root === 'f6' && (c.anchor === t.cell || c.other === t.cell))).reduce((y, t) => y + rate(t.judge, k), 0);
-    const all = (['A', 'B', 'C', 'D'] as Stratum[]).reduce((y, x) => y + needed(x), 0);
-    const referee = (all * disagreementRate + 600) * rate(REFEREE, k);
+    const referee = (scope.size * disagreementRate + 600) * rate(REFEREE, k);
     const controls = 600 * (rate(CANONICAL, k) + rate(SOL, k) + rate(OPUS, k) + rate(REFEREE, k));
     const lines: Record<string, number> = { ...census, referee, controls };
     const total = Object.values(lines).reduce((a, b) => a + b, 0);
@@ -677,7 +678,7 @@ export function plan(s: Sources, rates: Record<string, number> = {}) {
   };
   const results = contrastResults(s, cuts);
   return {
-    strata: Object.fromEntries(Object.entries(strata).map(([x, v]) => [x, { reusable: v.reusable, product_failures: v.product_failures, by_judge: v.by_judge }])),
+    strata: Object.fromEntries(Object.entries(strata).map(([x, v]) => [x, { reusable: v.reusable, product_failures: v.product_failures, by_judge: v.by_judge, new_to_judge: fresh[x].length }])),
     cuts, instrument_mismatch: [...instrumentMismatch].sort(),
     measured: { compared: agree + disagree, disagreement_rate: agree + disagree ? disagreementRate : null, rms_shift_disagreeing: disagree ? Math.sqrt(shiftDis / disagree) : null, rms_shift_agreeing: agree ? Math.sqrt(shiftAgree / agree) : null },
     rates: Object.fromEntries(Object.keys(RATES).map(j => [j, { central: rate(j, 'central'), conservative: rate(j, 'conservative'), measured: rates[j] ?? null }])),

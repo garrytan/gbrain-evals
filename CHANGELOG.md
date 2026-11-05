@@ -2,6 +2,13 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.163] - 2026-11-05
+
+### GST-1365 Stage 0: the preregistration's dated note, and plan counts each shared answer once (GST-1365)
+
+- **The note.** `docs/benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md` gains its Stage 0 amendment, written before any spend. On the custody host at 989bb472 the reproduction check passed. The census still has 6,933 answers for gpt-6.1-sol and 4,506 for claude-opus-5-5 to judge. Existing judgments disagree at the pass threshold on 15.9% of 5,440 answers, with root-mean-square score shifts of 0.69 on disagreeing answers and 0.16 on agreeing ones. At those values the three-reader minimum detectable judge effect is 6.1 points on S1, 5.5 on S2b and 4.9 on D8, so F6's S1 memory-bank, S2b extract-first and D8 contrasts and Q1's S1 verbatim-session contrast are reported as intervals. The rule, cells, judges, cut order and ceiling are unchanged.
+- **The fix.** `eval/runner/q1/rejudge-systems.ts plan` counted the answers Q1 shares with F6 twice, in stratum C's census line and in the referee line, which overstated the projection by about $85 at central rates and fired one cut step too many at conservative rates. Each stratum's line now counts only answers that no earlier stratum holds, the referee line counts the census's distinct answers, and each stratum reports `new_to_judge`. `test/eval/q1-rejudge-systems.test.ts` checks that the census lines sum to the cost of the distinct answers and that the referee line counts each answer once.
+
 ## [0.10.162] - 2026-11-04
 
 ### GST-1365's judge-robustness check is preregistered, with its runner and a gemini-4-argon judge route (GST-1365)
