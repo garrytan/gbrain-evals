@@ -12,8 +12,8 @@
  *
  * Statistics: cluster bootstrap (10,000 draws, recorded seed) of paired rows; superior means the two-sided 95% lower
  * bound of the oriented difference is above 0, noninferior at m means it is above -m. Holm is applied to one-sided
- * bootstrap p-values at alpha = 0.025 per family (the preregistration's family-wise 0.05 with each test one-sided at
- * 0.025), recorded in the receipt.
+ * cluster sign-flip p-values (stats/paired.ts superiorityP) at alpha = 0.025 per family (the preregistration's
+ * family-wise 0.05 with each test one-sided at 0.025), recorded in the receipt.
  *
  * Each arm is given as `te=<temporal-edges receipt>[+<receipt>...],w=<line-grammar-typing receipt on W>,world=<line-grammar-typing
  * receipt on world-v1>`; the three phrasing files of I1 (or I2), one seed each, are joined with `+`. A temporal-edges receipt must come from a `--c-gate` run (general single-value pass, E5

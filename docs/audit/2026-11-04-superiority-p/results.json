@@ -1,0 +1,1069 @@
+{
+  "generated_by": "docs/audit/2026-11-04-superiority-p/recompute.ts",
+  "rows": [
+    {
+      "result": "W10a current pin vs 2026-09-29 retrieval (Sonnet 5.5 reader, official judge)",
+      "doc": "docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin.md",
+      "family": "docs/benchmarks/2026-10-06-longmemeval-w10-families/w10a-official.json",
+      "family_id": "w10a-current-pin-vs-replay",
+      "alpha": 0.05,
+      "draws": 10000,
+      "seed": 20261006,
+      "old_verdict": "inconclusive",
+      "exact_verdict": "inconclusive",
+      "comparisons": [
+        {
+          "id": "w10a-vs-w10b-sonnet55",
+          "units": 500,
+          "n_pairs": 500,
+          "unit": "question_id",
+          "min_effect": 0,
+          "direction": "higher",
+          "wins": 11,
+          "losses": 5,
+          "old_p": 0.08139186081391861,
+          "published_old_p": 0.08139186081391861,
+          "published_old_holm": 0.08139186081391861,
+          "published_old_status": "inconclusive",
+          "exact_p": 0.1050567626953125,
+          "gate_p": 0.10328967103289671,
+          "old_holm": 0.08139186081391861,
+          "exact_holm": 0.1050567626953125,
+          "gate_holm": 0.10328967103289671,
+          "old_status": "inconclusive",
+          "exact_status": "inconclusive",
+          "gate_status": "inconclusive",
+          "gate_mc_se": 0.0030662654697089305
+        }
+      ]
+    },
+    {
+      "result": "W10b reader replay against Sonnet 4.6 (official judge, Holm across six arms)",
+      "doc": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md",
+      "family": "docs/benchmarks/2026-10-06-longmemeval-w10-families/w10b-official.json",
+      "family_id": "w10b-reader-replay-official-judge",
+      "alpha": 0.05,
+      "draws": 10000,
+      "seed": 20261006,
+      "old_verdict": "inconclusive",
+      "exact_verdict": "inconclusive",
+      "comparisons": [
+        {
+          "id": "correct__sonnet55_notes-vs-sonnet46",
+          "units": 500,
+          "n_pairs": 500,
+          "unit": "question_id",
+          "min_effect": 0,
+          "direction": "higher",
+          "wins": 22,
+          "losses": 11,
+          "old_p": 0.0321967803219678,
+          "published_old_p": 0.0321967803219678,
+          "published_old_holm": 0.09659034096590341,
+          "published_old_status": "inconclusive",
+          "exact_p": 0.04007165622897446,
+          "gate_p": 0.03849615038496151,
+          "old_holm": 0.09659034096590341,
+          "exact_holm": 0.12021496868692338,
+          "gate_holm": 0.11548845115488451,
+          "old_status": "inconclusive",
+          "exact_status": "inconclusive",
+          "gate_status": "inconclusive",
+          "gate_mc_se": 0.001961273020159135
+        },
+        {
+          "id": "correct__sonnet55_direct-vs-sonnet46",
+          "units": 500,
+          "n_pairs": 500,
+          "unit": "question_id",
+          "min_effect": 0,
+          "direction": "higher",
+          "wins": 38,
+          "losses": 10,
+          "old_p": 0.00009999000099990002,
+          "published_old_p": 0.00009999000099990002,
+          "published_old_holm": 0.0005999400059994001,
+          "published_old_status": "pass",
+          "exact_p": 0.000030848203888211856,
+          "gate_p": 0.00009999000099990002,
+          "old_holm": 0.0005999400059994001,
+          "exact_holm": 0.00018508922332927114,
+          "gate_holm": 0.0005999400059994001,
+          "old_status": "pass",
+          "exact_status": "pass",
+          "gate_status": "pass",
+          "gate_mc_se": 0.00005554030273281622
+        },
+        {
+          "id": "correct__sol_notes-vs-sonnet46",
+          "units": 500,
+          "n_pairs": 500,
+          "unit": "question_id",
+          "min_effect": 0,
+          "direction": "higher",
+          "wins": 24,
+          "losses": 11,
+          "old_p": 0.0136986301369863,
+          "published_old_p": 0.0136986301369863,
+          "published_old_holm": 0.0547945205479452,
+          "published_old_status": "inconclusive",
+          "exact_p": 0.020479795755818486,
+          "gate_p": 0.020597940205979402,
+          "old_holm": 0.0547945205479452,
+          "exact_holm": 0.08191918302327394,
+          "gate_holm": 0.08239176082391761,
+          "old_status": "inconclusive",
+          "exact_status": "inconclusive",
+          "gate_status": "inconclusive",
+          "gate_mc_se": 0.0014163464873264045
+        },
+        {
+          "id": "correct__gpt54_official-vs-sonnet46",
+          "units": 500,
+          "n_pairs": 500,
+          "unit": "question_id",
+          "min_effect": 0,
+          "direction": "higher",
+          "wins": 23,
+          "losses": 14,
+          "old_p": 0.0761923807619238,
+          "published_old_p": 0.0761923807619238,
+          "published_old_holm": 0.1523847615238476,
+          "published_old_status": "inconclusive",
+          "exact_p": 0.09387077949941158,
+          "gate_p": 0.097990200979902,
+          "old_holm": 0.1523847615238476,
+          "exact_holm": 0.18774155899882317,
+          "gate_holm": 0.195980401959804,
+          "old_status": "inconclusive",
+          "exact_status": "inconclusive",
+          "gate_status": "inconclusive",
+          "gate_mc_se": 0.002916488577992111
+        },
+        {
+          "id": "correct__opus55_notes-vs-sonnet46",
+          "units": 500,
+          "n_pairs": 500,
+          "unit": "question_id",
+          "min_effect": 0,
+          "direction": "higher",
+          "wins": 28,
+          "losses": 5,
+          "old_p": 0.00009999000099990002,
+          "published_old_p": 0.00009999000099990002,
+          "published_old_holm": 0.0005999400059994001,
+          "published_old_status": "pass",
+          "exact_p": 0.00003309384919703007,
+          "gate_p": 0.00009999000099990002,
+          "old_holm": 0.0005999400059994001,
+          "exact_holm": 0.00018508922332927114,
+          "gate_holm": 0.0005999400059994001,
+          "old_status": "pass",
+          "exact_status": "pass",
+          "gate_status": "pass",
+          "gate_mc_se": 0.00005752630180550058
+        },
+        {
+          "id": "correct__fable51_notes-vs-sonnet46",
+          "units": 200,
+          "n_pairs": 200,
+          "unit": "question_id",
+          "min_effect": 0,
+          "direction": "higher",
+          "wins": 8,
+          "losses": 5,
+          "old_p": 0.24597540245975402,
+          "published_old_p": 0.24597540245975402,
+          "published_old_holm": 0.24597540245975402,
+          "published_old_status": "inconclusive",
+          "exact_p": 0.29052734375,
+          "gate_p": 0.29547045295470453,
+          "old_holm": 0.24597540245975402,
+          "exact_holm": 0.29052734375,
+          "gate_holm": 0.29547045295470453,
+          "old_status": "inconclusive",
+          "exact_status": "inconclusive",
+          "gate_status": "inconclusive",
+          "gate_mc_se": 0.004540057337562703
+        }
+      ]
+    },
+    {
+      "result": "W10c whole history better than gbrain by more than 7 points (Holm across two readers)",
+      "doc": "docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md",
+      "family": "docs/benchmarks/2026-10-06-longmemeval-w10-families/w10c-loss.json",
+      "family_id": "w10c-full-context-better-beyond-margin",
+      "alpha": 0.05,
+      "draws": 10000,
+      "seed": 20261006,
+      "old_verdict": "inconclusive",
+      "exact_verdict": "inconclusive",
+      "comparisons": [
+        {
+          "id": "full-vs-gbrain-sonnet55",
+          "units": 150,
+          "n_pairs": 150,
+          "unit": "question_id",
+          "min_effect": 0.07,
+          "direction": "higher",
+          "wins": 7,
+          "losses": 2,
+          "old_p": 0.9648035196480352,
+          "published_old_p": 0.9648035196480352,
+          "published_old_holm": 1,
+          "published_old_status": "inconclusive",
+          "exact_p": 0.9669159112165137,
+          "gate_p": 0.966003399660034,
+          "old_holm": 1,
+          "exact_holm": 1,
+          "gate_holm": 1,
+          "old_status": "inconclusive",
+          "exact_status": "inconclusive",
+          "gate_status": "inconclusive",
+          "gate_mc_se": 0.0017885617644591628
+        },
+        {
+          "id": "full-vs-gbrain-sol",
+          "units": 150,
+          "n_pairs": 150,
+          "unit": "question_id",
+          "min_effect": 0.07,
+          "direction": "higher",
+          "wins": 5,
+          "losses": 1,
+          "old_p": 0.9933006699330067,
+          "published_old_p": 0.9933006699330067,
+          "published_old_holm": 1,
+          "published_old_status": "inconclusive",
+          "exact_p": 0.9971120111067737,
+          "gate_p": 0.998000199980002,
+          "old_holm": 1,
+          "exact_holm": 1,
+          "gate_holm": 1,
+          "old_status": "inconclusive",
+          "exact_status": "inconclusive",
+          "gate_status": "inconclusive",
+          "gate_mc_se": 0.0005366235564507843
+        }
+      ]
+    }
+  ],
+  "w10b_sensitivity": {
+    "result": "W10b sensitivity: Holm over five arms without Fable (report-only)",
+    "doc": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md",
+    "arms": [
+      {
+        "id": "correct__sonnet55_notes-vs-sonnet46",
+        "old_holm": 0.0643935606439356,
+        "exact_holm": 0.08014331245794892
+      },
+      {
+        "id": "correct__sonnet55_direct-vs-sonnet46",
+        "old_holm": 0.0004999500049995,
+        "exact_holm": 0.00015424101944105928
+      },
+      {
+        "id": "correct__sol_notes-vs-sonnet46",
+        "old_holm": 0.0410958904109589,
+        "exact_holm": 0.06143938726745546
+      },
+      {
+        "id": "correct__gpt54_official-vs-sonnet46",
+        "old_holm": 0.0761923807619238,
+        "exact_holm": 0.09387077949941158
+      },
+      {
+        "id": "correct__opus55_notes-vs-sonnet46",
+        "old_holm": 0.0004999500049995,
+        "exact_holm": 0.00015424101944105928
+      }
+    ]
+  },
+  "recorded": [
+    {
+      "decision": "p1-dev-2026-10-04",
+      "path": "node_modules/gbrain/docs/eval/decisions/p1-dev-2026-10-04",
+      "old_overall": "blocked",
+      "exact_overall": "blocked",
+      "sources": [
+        {
+          "source": "temporal-edges",
+          "old_verdict": "pass",
+          "exact_verdict": "pass",
+          "comparisons": [
+            {
+              "id": "now-precision",
+              "gate": "superiority",
+              "units": 24,
+              "unit": "cluster",
+              "min_effect": 0.1,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 0.000011423050366612598,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 0.00001351629282609921,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "asof",
+              "gate": "superiority",
+              "units": 160,
+              "unit": "cluster",
+              "min_effect": 0.15,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 5.309673118301631e-22,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 3)",
+              "new_holm": 2.1238692473206523e-21,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "during",
+              "gate": "superiority",
+              "units": 160,
+              "unit": "cluster",
+              "min_effect": 0.15,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 1.130149006164742e-8,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 3.390447018494226e-8,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "correction",
+              "gate": "superiority",
+              "units": 30,
+              "unit": "cluster",
+              "min_effect": 0.2,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 0.000006758146413049605,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 0.00001351629282609921,
+              "old_status": "pass",
+              "new_status": "pass"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "decision": "p1-dev-2026-10-04-r2",
+      "path": "node_modules/gbrain/docs/eval/decisions/p1-dev-2026-10-04-r2",
+      "old_overall": "inconclusive",
+      "exact_overall": "inconclusive",
+      "sources": [
+        {
+          "source": "temporal-edges-a",
+          "old_verdict": "pass",
+          "exact_verdict": "pass",
+          "comparisons": [
+            {
+              "id": "now-precision",
+              "gate": "superiority",
+              "units": 24,
+              "unit": "cluster",
+              "min_effect": 0.1,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 0.000011423050366612598,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 0.00001351629282609921,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "asof",
+              "gate": "superiority",
+              "units": 160,
+              "unit": "cluster",
+              "min_effect": 0.15,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 5.309673118301631e-22,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 3)",
+              "new_holm": 2.1238692473206523e-21,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "during",
+              "gate": "superiority",
+              "units": 160,
+              "unit": "cluster",
+              "min_effect": 0.15,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 1.130149006164742e-8,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 3.390447018494226e-8,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "correction",
+              "gate": "superiority",
+              "units": 30,
+              "unit": "cluster",
+              "min_effect": 0.2,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 0.000006758146413049605,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 0.00001351629282609921,
+              "old_status": "pass",
+              "new_status": "pass"
+            }
+          ]
+        },
+        {
+          "source": "temporal-edges-a2",
+          "old_verdict": "pass",
+          "exact_verdict": "pass",
+          "comparisons": [
+            {
+              "id": "now-precision",
+              "gate": "superiority",
+              "units": 24,
+              "unit": "cluster",
+              "min_effect": 0.1,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 0.00001244630516268372,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 0.00002489261032536744,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "asof",
+              "gate": "superiority",
+              "units": 160,
+              "unit": "cluster",
+              "min_effect": 0.15,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 4.352972136559625e-22,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 3)",
+              "new_holm": 1.74118885462385e-21,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "during",
+              "gate": "superiority",
+              "units": 160,
+              "unit": "cluster",
+              "min_effect": 0.15,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 2.7233922062431597e-9,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 8.17017661872948e-9,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "correction",
+              "gate": "superiority",
+              "units": 30,
+              "unit": "cluster",
+              "min_effect": 0.2,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 0.00028810835583658397,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 0.00028810835583658397,
+              "old_status": "pass",
+              "new_status": "pass"
+            }
+          ]
+        },
+        {
+          "source": "temporal-edges-a3",
+          "old_verdict": "pass",
+          "exact_verdict": "pass",
+          "comparisons": [
+            {
+              "id": "now-precision",
+              "gate": "superiority",
+              "units": 24,
+              "unit": "cluster",
+              "min_effect": 0.1,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 0.00004412488132169416,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 0.00013237464396508247,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "asof",
+              "gate": "superiority",
+              "units": 160,
+              "unit": "cluster",
+              "min_effect": 0.15,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00039996000399960006,
+              "new_p": 1.3653898087868815e-13,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 3)",
+              "new_holm": 5.461559235147526e-13,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "during",
+              "gate": "superiority",
+              "units": 160,
+              "unit": "cluster",
+              "min_effect": 0.15,
+              "direction": "higher",
+              "old_p": 0.00029997000299970003,
+              "old_holm": 0.0005999400059994001,
+              "new_p": 0.007055662730718581,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 0.014111325461437162,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "correction",
+              "gate": "superiority",
+              "units": 30,
+              "unit": "cluster",
+              "min_effect": 0.2,
+              "direction": "higher",
+              "old_p": 0.00039996000399960006,
+              "old_holm": 0.0005999400059994001,
+              "new_p": 0.00975837264521781,
+              "new_p_method": "Hoeffding upper bound from the recorded cluster SE (equal clusters of 1)",
+              "new_holm": 0.014111325461437162,
+              "old_status": "pass",
+              "new_status": "pass"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "decision": "p2-attribution-dev",
+      "path": "node_modules/gbrain/docs/eval/decisions/p2-attribution-dev",
+      "old_overall": "pass",
+      "exact_overall": "pass",
+      "sources": [
+        {
+          "source": "lme-s-dev-assistant-facts",
+          "old_verdict": "pass",
+          "exact_verdict": "pass",
+          "comparisons": [
+            {
+              "id": "assistant-qa-from-facts",
+              "gate": "superiority",
+              "units": 30,
+              "unit": "conversation",
+              "min_effect": 0,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00009999000099990002,
+              "new_p": 0.0005999400059994001,
+              "new_p_method": "recorded Monte Carlo sign-flip p, 10,000 draws (MC SE <= 0.005)",
+              "new_holm": 0.0005999400059994001,
+              "old_status": "pass",
+              "new_status": "pass"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "decision": "p2-date-grounding-dev",
+      "path": "node_modules/gbrain/docs/eval/decisions/p2-date-grounding-dev",
+      "old_overall": "inconclusive",
+      "exact_overall": "inconclusive",
+      "sources": [
+        {
+          "source": "locomo-dev-temporal-facts",
+          "old_verdict": "inconclusive",
+          "exact_verdict": "inconclusive",
+          "comparisons": [
+            {
+              "id": "facts-unresolved-relative",
+              "gate": "superiority",
+              "units": 3,
+              "unit": "conversation",
+              "min_effect": 0,
+              "direction": "lower",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00019998000199980003,
+              "new_p": 0.125,
+              "new_p_method": "exact (recorded sign-flip p)",
+              "new_holm": 0.25,
+              "old_status": "pass",
+              "new_status": "inconclusive"
+            },
+            {
+              "id": "temporal-qa-from-facts",
+              "gate": "superiority",
+              "units": 3,
+              "unit": "conversation",
+              "min_effect": 0,
+              "direction": "higher",
+              "old_p": 0.2602739726027397,
+              "old_holm": 0.2602739726027397,
+              "new_p": 0.5,
+              "new_p_method": "exact (recorded sign-flip p)",
+              "new_holm": 0.5,
+              "old_status": "inconclusive",
+              "new_status": "inconclusive"
+            }
+          ]
+        },
+        {
+          "source": "lme-s-dev-temporal-facts",
+          "old_verdict": "inconclusive",
+          "exact_verdict": "inconclusive",
+          "comparisons": [
+            {
+              "id": "facts-unresolved-relative",
+              "gate": "superiority",
+              "units": 11,
+              "unit": "conversation",
+              "min_effect": 0,
+              "direction": "lower",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00019998000199980003,
+              "new_p": 0.00048828125,
+              "new_p_method": "exact (recorded sign-flip p)",
+              "new_holm": 0.0009765625,
+              "old_status": "pass",
+              "new_status": "pass"
+            },
+            {
+              "id": "temporal-qa-from-facts",
+              "gate": "superiority",
+              "units": 11,
+              "unit": "conversation",
+              "min_effect": 0,
+              "direction": "higher",
+              "old_p": 1,
+              "old_holm": 1,
+              "new_p": 1,
+              "new_p_method": "degenerate: every paired difference is 0 or fewer than two clusters",
+              "new_holm": 1,
+              "old_status": "inconclusive",
+              "new_status": "inconclusive"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "decision": "p6-think-dates",
+      "path": "node_modules/gbrain/docs/eval/decisions/p6-think-dates",
+      "old_overall": "inconclusive",
+      "exact_overall": "inconclusive",
+      "sources": [
+        {
+          "source": "lme-s-dev-think",
+          "old_verdict": "pass",
+          "exact_verdict": "pass",
+          "comparisons": [
+            {
+              "id": "qa-score",
+              "gate": "superiority",
+              "units": 150,
+              "unit": "conversation",
+              "min_effect": 0,
+              "direction": "higher",
+              "old_p": 0.00029997000299970003,
+              "old_holm": 0.00029997000299970003,
+              "new_p": 0.000999900009999,
+              "new_p_method": "recorded Monte Carlo sign-flip p, 10,000 draws (MC SE <= 0.005)",
+              "new_holm": 0.000999900009999,
+              "old_status": "pass",
+              "new_status": "pass"
+            }
+          ]
+        },
+        {
+          "source": "locomo-dev-think",
+          "old_verdict": "pass",
+          "exact_verdict": "inconclusive",
+          "comparisons": [
+            {
+              "id": "qa-score",
+              "gate": "superiority",
+              "units": 3,
+              "unit": "conversation",
+              "min_effect": 0,
+              "direction": "higher",
+              "old_p": 0.00009999000099990002,
+              "old_holm": 0.00009999000099990002,
+              "new_p": 0.125,
+              "new_p_method": "exact (recorded sign-flip p)",
+              "new_holm": 0.125,
+              "old_status": "pass",
+              "new_status": "inconclusive"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "decision": "p6-think-notes",
+      "path": "node_modules/gbrain/docs/eval/decisions/p6-think-notes",
+      "old_overall": "inconclusive",
+      "exact_overall": "inconclusive",
+      "sources": [
+        {
+          "source": "lme-s-dev-think",
+          "old_verdict": "inconclusive",
+          "exact_verdict": "inconclusive",
+          "comparisons": [
+            {
+              "id": "qa-score",
+              "gate": "superiority",
+              "units": 150,
+              "unit": "conversation",
+              "min_effect": 0,
+              "direction": "higher",
+              "old_p": 0.7486251374862514,
+              "old_holm": 0.7486251374862514,
+              "new_p": 0.8164183581641836,
+              "new_p_method": "recorded Monte Carlo sign-flip p, 10,000 draws (MC SE <= 0.005)",
+              "new_holm": 0.8164183581641836,
+              "old_status": "inconclusive",
+              "new_status": "inconclusive"
+            }
+          ]
+        },
+        {
+          "source": "locomo-dev-think",
+          "old_verdict": "inconclusive",
+          "exact_verdict": "inconclusive",
+          "comparisons": [
+            {
+              "id": "qa-score",
+              "gate": "superiority",
+              "units": 3,
+              "unit": "conversation",
+              "min_effect": 0,
+              "direction": "higher",
+              "old_p": 1,
+              "old_holm": 1,
+              "new_p": 1,
+              "new_p_method": "exact (recorded sign-flip p)",
+              "new_holm": 1,
+              "old_status": "inconclusive",
+              "new_status": "inconclusive"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "decision": "beam-1m-dates-2026-10-06",
+      "path": "docs/benchmarks/2026-10-06-beam-1m-dates",
+      "old_overall": "inconclusive",
+      "exact_overall": "inconclusive",
+      "sources": [
+        {
+          "source": "beam-1m",
+          "old_verdict": "inconclusive",
+          "exact_verdict": "inconclusive",
+          "comparisons": [
+            {
+              "id": "recall-all-5",
+              "gate": "superiority",
+              "units": 11,
+              "unit": "conversation",
+              "min_effect": 0,
+              "direction": "higher",
+              "old_p": 1,
+              "old_holm": 1,
+              "new_p": 1,
+              "new_p_method": "degenerate: every paired difference is 0 or fewer than two clusters",
+              "new_holm": 1,
+              "old_status": "inconclusive",
+              "new_status": "inconclusive"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "custody": [
+    {
+      "result": "P1 E1 round 2 held-out (set C), verdict pass",
+      "file": "docs/benchmarks/2026-10-05-heldout-verdicts/p1-e1-r2-heldout-2026-10-04.json",
+      "rows": "in custody, not published",
+      "decides_verdict": true,
+      "comparisons": [
+        {
+          "id": "now-precision",
+          "units": 36,
+          "n": 36,
+          "min_effect": 0.1,
+          "delta": 0.5670478682346586,
+          "ci95": [
+            0.49773238863151115,
+            0.6324028065062637
+          ],
+          "old_status": "pass",
+          "exact_p": null,
+          "exact_p_upper_bound": 0.0011274799817087447,
+          "bonferroni_bound": 0.006764879890252469,
+          "exact_p_normal_approx": 2.024262419414448e-8,
+          "holm_approx_worst": 1.2145574516486686e-7
+        },
+        {
+          "id": "asof",
+          "units": 240,
+          "n": 720,
+          "min_effect": 0.15,
+          "delta": 0.46944444444444444,
+          "ci95": [
+            0.4111111111111111,
+            0.5291666666666667
+          ],
+          "old_status": "pass",
+          "exact_p": null,
+          "exact_p_upper_bound": 1.1841060212095965e-7,
+          "bonferroni_bound": 7.104636127257579e-7,
+          "exact_p_normal_approx": 1.0617781386068126e-18,
+          "holm_approx_worst": 6.370668831640876e-18
+        },
+        {
+          "id": "during",
+          "units": 240,
+          "n": 240,
+          "min_effect": 0.15,
+          "delta": 0.1975000000000001,
+          "ci95": [
+            0.16444444444444448,
+            0.23291666666666686
+          ],
+          "old_status": "pass",
+          "exact_p": null,
+          "exact_p_upper_bound": 0.7286260317602318,
+          "bonferroni_bound": 1,
+          "exact_p_normal_approx": 0.003699307845592895,
+          "holm_approx_worst": 0.02219584707355737
+        },
+        {
+          "id": "correction",
+          "units": 44,
+          "n": 44,
+          "min_effect": 0.2,
+          "delta": 0.36363636363636365,
+          "ci95": [
+            0.22727272727272727,
+            0.5
+          ],
+          "old_status": "pass",
+          "exact_p": 0.018287629233782354,
+          "exact_p_upper_bound": 0.10211147800900064,
+          "bonferroni_bound": 0.6126688680540038,
+          "exact_p_normal_approx": 0.013320508330602106,
+          "holm_approx_worst": 0.07992304998361263
+        }
+      ]
+    },
+    {
+      "result": "P1 E1 set E (reported after the exact trap gate failed)",
+      "file": "docs/benchmarks/2026-10-05-heldout-verdicts/p1-e1-sete-2026-10-05.json",
+      "rows": "in custody, not published",
+      "decides_verdict": false,
+      "comparisons": [
+        {
+          "id": "now-precision",
+          "units": 36,
+          "n": 36,
+          "min_effect": 0.1,
+          "delta": 0.432,
+          "ci95": [
+            0.374,
+            0.491
+          ],
+          "old_status": "pass",
+          "exact_p": null,
+          "exact_p_upper_bound": 0.08885654492847554,
+          "bonferroni_bound": 0.5331392695708532,
+          "exact_p_normal_approx": 6.446730929170935e-8,
+          "holm_approx_worst": 3.868038557502561e-7
+        },
+        {
+          "id": "asof",
+          "units": 240,
+          "n": 720,
+          "min_effect": 0.15,
+          "delta": 0.389,
+          "ci95": [
+            0.332,
+            0.449
+          ],
+          "old_status": "pass",
+          "exact_p": null,
+          "exact_p_upper_bound": 0.000018440629577472525,
+          "bonferroni_bound": 0.00011064377746483515,
+          "exact_p_normal_approx": 5.701624466885355e-13,
+          "holm_approx_worst": 3.420974680131213e-12
+        },
+        {
+          "id": "during",
+          "units": 240,
+          "n": 240,
+          "min_effect": 0.15,
+          "delta": 0.137,
+          "ci95": [
+            0.094,
+            0.18
+          ],
+          "old_status": "inconclusive",
+          "exact_p": null,
+          "exact_p_upper_bound": 1,
+          "bonferroni_bound": 1,
+          "exact_p_normal_approx": 0.7231130217302075,
+          "holm_approx_worst": 1
+        },
+        {
+          "id": "correction",
+          "units": 45,
+          "n": 45,
+          "min_effect": 0.2,
+          "delta": 0,
+          "ci95": [
+            0,
+            0
+          ],
+          "old_status": "inconclusive",
+          "exact_p": 1,
+          "exact_p_upper_bound": 1,
+          "bonferroni_bound": 1,
+          "exact_p_normal_approx": 0.9999999999900936,
+          "holm_approx_worst": 1
+        }
+      ]
+    },
+    {
+      "result": "P5 delta H7 validity ranges, range pages",
+      "file": "docs/benchmarks/2026-10-05-heldout-verdicts/p5-delta-heldout-2026-10-05.json",
+      "rows": "in custody, not published",
+      "decides_verdict": true,
+      "comparisons": [
+        {
+          "id": "asof",
+          "units": 117,
+          "n": 351,
+          "min_effect": 0.1,
+          "delta": 0.7720797720797721,
+          "ci95": [
+            0.6951566951566952,
+            0.8461538461538461
+          ],
+          "old_status": "pass",
+          "exact_p": null,
+          "exact_p_upper_bound": 5.208273951084611e-19,
+          "bonferroni_bound": 1.0416547902169222e-18,
+          "exact_p_normal_approx": 1.9351379435470415e-20,
+          "holm_approx_worst": 3.870275887094083e-20
+        }
+      ]
+    },
+    {
+      "result": "P5 set G, P1 superiority against 6622a119e (report-only)",
+      "file": "docs/benchmarks/2026-10-05-heldout-verdicts/p5-delta-set-g-2026-10-05.json",
+      "rows": "in custody, not published",
+      "decides_verdict": false,
+      "comparisons": [
+        {
+          "id": "now-precision",
+          "units": 36,
+          "n": 36,
+          "min_effect": 0.1,
+          "delta": 0.4001,
+          "ci95": [
+            0.3374,
+            0.4607
+          ],
+          "old_status": "pass",
+          "exact_p": null,
+          "exact_p_upper_bound": 0.15538407737469326,
+          "bonferroni_bound": 0.9323044642481595,
+          "exact_p_normal_approx": 1.8993224059253444e-7,
+          "holm_approx_worst": 0.0000011395934435552067
+        },
+        {
+          "id": "asof",
+          "units": 240,
+          "n": 720,
+          "min_effect": 0.15,
+          "delta": 0.3444,
+          "ci95": [
+            0.2903,
+            0.4014
+          ],
+          "old_status": "pass",
+          "exact_p": null,
+          "exact_p_upper_bound": 0.0008496942784792422,
+          "bonferroni_bound": 0.005098165670875453,
+          "exact_p_normal_approx": 1.7924467433314843e-10,
+          "holm_approx_worst": 1.0754680459988906e-9
+        },
+        {
+          "id": "during",
+          "units": 240,
+          "n": 240,
+          "min_effect": 0.15,
+          "delta": 0.1299,
+          "ci95": [
+            0.0829,
+            0.1765
+          ],
+          "old_status": "inconclusive",
+          "exact_p": null,
+          "exact_p_upper_bound": 1,
+          "bonferroni_bound": 1,
+          "exact_p_normal_approx": 0.7996970697851267,
+          "holm_approx_worst": 1
+        },
+        {
+          "id": "correction",
+          "units": 45,
+          "n": 45,
+          "min_effect": 0.2,
+          "delta": 0.2,
+          "ci95": [
+            0.0889,
+            0.3111
+          ],
+          "old_status": "inconclusive",
+          "exact_p": 0.529189741185462,
+          "exact_p_upper_bound": 1,
+          "bonferroni_bound": 1,
+          "exact_p_normal_approx": 0.49999999947519136,
+          "holm_approx_worst": 1
+        }
+      ]
+    }
+  ]
+}

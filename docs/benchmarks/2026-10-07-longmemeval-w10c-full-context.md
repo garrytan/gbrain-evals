@@ -1,5 +1,7 @@
 # gbrain against pasting the whole history: within 7 points on LongMemEval, at about one seventh of the reader cost
 
+*Note added 2026-11-04, after publication:* gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. See [disclosures](../disclosures.md).
+
 Measured 2026-10-06. Status: **Complete** (150 of 150 questions in all four arms). Evidence class: development (LongMemEval-S was used to tune gbrain's retrieval). Builds: gbrain `c5fb0201` (v0.60.95.0) for retrieval and for rendering the full history. Readers: `claude-sonnet-5-5` and `gpt-6.1-sol`. **This table compares 150-question pairs only; do not set it beside the 500-question numbers.**
 
 [gbrain](https://github.com/garrytan/gbrain) is a Markdown-first memory system for agents. [LongMemEval](https://arxiv.org/abs/2410.10813) asks questions about long histories of old conversations. The simplest alternative to a memory system is to skip retrieval and paste the whole history into a model with a long context window. On LongMemEval-S that is about 50 conversations per question, which fits in today's frontier context windows. This experiment asks what gbrain's retrieval costs and buys against that alternative, with the reader held fixed.
@@ -45,8 +47,8 @@ Exact 95% intervals (official judge): Sonnet whole history 91.5% to 98.5%, gbrai
 |---|---|---|---|---|
 | gbrain non-inferior at 7 points | Sonnet 5.5 | 2 | 7 | **pass**, Holm p = 0.035 |
 | gbrain non-inferior at 7 points | `gpt-6.1-sol` | 1 | 5 | **pass**, Holm p = 0.014 |
-| whole history better by more than 7 points | Sonnet 5.5 | | | not shown (unadjusted p = 0.96, Holm 1.0) |
-| whole history better by more than 7 points | `gpt-6.1-sol` | | | not shown (unadjusted p = 0.99, Holm 1.0) |
+| whole history better by more than 7 points | Sonnet 5.5 | | | not shown (unadjusted p = 0.97, Holm 1.0) |
+| whole history better by more than 7 points | `gpt-6.1-sol` | | | not shown (unadjusted p = 0.997, Holm 1.0) |
 
 By type (official judge):
 
@@ -85,7 +87,7 @@ Keyless $0 re-score from the committed rows (verdicts recomputed from the stored
 bun eval/runner/batch/w10-rescore.ts w10c docs/benchmarks/2026-10-07-longmemeval-w10c-full-context docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin
 ```
 
-Expected: official 139, 137, 144 and 141 for the four arms, non-inferiority `pass` for both readers, loss family `inconclusive`, and "re-score matches".
+Expected: official 139, 137, 144 and 141 for the four arms, non-inferiority `pass` for both readers and loss family `inconclusive`. Since 2026-11-04 the check ends with "re-score differs" and exits 1, and the loss family's `p_superiority` values are the only fields that differ: the gate now computes the sign-flip p, while `summary.json` keeps the bootstrap-share values as computed. Running it with `--write` would overwrite that receipt. The p values it prints are the gate's 10,000-draw Monte Carlo estimates (0.966 and 0.998), not the exact 0.97 and 0.997 this page reports; each is within 0.005 of the exact value.
 
 Receipts in [`2026-10-07-longmemeval-w10c-full-context/`](2026-10-07-longmemeval-w10c-full-context/): `arms/<arm>/rows.ndjson` (answers, usage, cost, both judges' replies), `arms/<arm>/receipt.json` (batch ids, reservations, settlement, attestation), `summary.json` and the paired `compare-*.ndjson` files. Manifests (with per-question session counts for the whole-history prompts in `.meta.json`): [`2026-10-06-longmemeval-w10-manifests/w10c-*`](2026-10-06-longmemeval-w10-manifests/). Families: [`w10c-noninferiority.json`](2026-10-06-longmemeval-w10-families/w10c-noninferiority.json), [`w10c-loss.json`](2026-10-06-longmemeval-w10-families/w10c-loss.json).
 
@@ -100,3 +102,14 @@ for arm in w10c-sol-currentpin w10c-sol-full w10c-sonnet55-full; do
   bun eval/runner/batch/w10.ts export $arm docs/benchmarks/2026-10-07-longmemeval-w10c-full-context/arms/$arm
 done
 ```
+
+## Changelog
+
+### 2026-11-04: Exact p for the "whole history better" tests
+
+The two tests that the whole history beats gbrain by more than 7 points have exact one-sided sign-flip p values of
+0.97 with Sonnet 5.5 and 0.997 with `gpt-6.1-sol` (was 0.96 and 0.99). The superiority gate had returned the share of
+bootstrap draws at or below the 7-point margin, which is not a p-value. Both tests stay "not shown", and the
+non-inferiority passes, which use a different test, are unchanged. `summary.json` keeps the values as computed, so the
+keyless re-score check under "Reproduce and inspect" now reports those differences. The
+disclosure note under the title is added. [Audit](../audit/2026-11-04-superiority-p.md).

@@ -254,6 +254,8 @@ explains the saved LongMemEval files and what their compacted records retain.
 
 The [October 28 eval cost audit](audit/2026-10-28-eval-cost-audit.md) shows where about $10,400 of model spend went
 from October 14 to 28 and how a preregistered Cat 40 run can [reuse an arm or size it by simulation](../eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run).
+The [November 4 superiority p audit](audit/2026-11-04-superiority-p.md) recomputes every published superiority gate
+with the exact one-sided sign-flip p that replaced a bootstrap share: no verdict changes, and the W10 p values move.
 The [August audit](audit/2026-08-31-eval-audit.md) describes earlier problems in
 scoring and execution. Corrections to published numbers, from the September 28, 2026 audit on, are listed in
 [corrections](corrections.md), with a dated note in each affected report. [Open work](../TODOS.md) distinguishes unfinished
@@ -266,6 +268,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-04: The superiority p audit
+
+"Checking the evidence" links the [November 4 superiority p audit](audit/2026-11-04-superiority-p.md), which
+recomputes every published superiority gate with the exact one-sided sign-flip p. No other part changed.
 
 ### 2026-11-04: RS1 stage 0 finding
 
