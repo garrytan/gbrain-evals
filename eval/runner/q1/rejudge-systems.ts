@@ -294,16 +294,22 @@ export function frontierTasks(s: Sources, strata: readonly Stratum[], cuts: Cuts
 
 const order = (seed: string, id: string) => createHash('sha256').update(`${seed}|${id}`).digest('hex');
 
-/** A seeded sample of n items stratified by set, system and category: each stratum in seeded order, taken round-robin over sorted strata. */
-export function stratifiedSample<T extends { answer_id: string; set: string; system: string }>(xs: readonly T[], n: number, seed: string, category: (x: T) => string): T[] {
-  const groups = new Map<string, T[]>();
-  for (const x of [...xs].sort((a, b) => order(seed, a.answer_id).localeCompare(order(seed, b.answer_id)))) {
-    const g = `${x.set}|${x.system}|${category(x)}`;
-    groups.set(g, [...(groups.get(g) ?? []), x]);
-  }
-  const keys = [...groups.keys()].sort(), out: T[] = [];
-  for (let i = 0; out.length < Math.min(n, xs.length); i++) for (const k of keys) { const g = groups.get(k)!; if (i < g.length && out.length < n) out.push(g[i]); }
+/** Items taken round-robin over groups in sorted key order, each group in its given order. */
+const roundRobin = <T>(groups: ReadonlyMap<string, readonly T[]>): T[] => {
+  const keys = [...groups.keys()].sort(), out: T[] = [], total = [...groups.values()].reduce((a, g) => a + g.length, 0);
+  for (let i = 0; out.length < total; i++) for (const k of keys) { const g = groups.get(k)!; if (i < g.length) out.push(g[i]); }
   return out;
+};
+
+/** A seeded sample of n items stratified by set, then by system and category within each set: sets take turns, and each set takes its strata in turn, each stratum in seeded order. */
+export function stratifiedSample<T extends { answer_id: string; set: string; system: string }>(xs: readonly T[], n: number, seed: string, category: (x: T) => string): T[] {
+  const bySet = new Map<string, Map<string, T[]>>();
+  for (const x of [...xs].sort((a, b) => order(seed, a.answer_id).localeCompare(order(seed, b.answer_id)))) {
+    const set = bySet.get(x.set) ?? new Map<string, T[]>(), g = `${x.system}|${category(x)}`;
+    set.set(g, [...(set.get(g) ?? []), x]);
+    bySet.set(x.set, set);
+  }
+  return roundRobin(new Map([...bySet].map(([set, groups]) => [set, roundRobin(groups)]))).slice(0, n);
 }
 
 // ─── Controls (d6) ───────────────────────────────────────────────────
