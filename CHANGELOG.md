@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.160] - 2026-11-04
+## [0.10.161] - 2026-11-04
 
 ### particle-1 F6 add-on finding: the judge decides whether particle-1 scores above or below Opus 5.5 (GST-1153)
 
@@ -25,6 +25,16 @@ This records what each gbrain-evals release changed and what its measurements me
   `9862f0e4`, `e95f36a8…ff9c`). `scoreboard.md` is the custodian's render, byte for byte.
 - README's known limits gain an entry on BEAM's judge for comparing answer models. The docs index gains a row, and the
   disclosures page lists the new finding.
+
+## [0.10.160] - 2026-11-04
+
+### The superiority gate's p value is the exact one-sided sign-flip p, and the W10 p values are corrected (GST-1373)
+
+- **What changed.** `superiorityP` (`eval/runner/stats/paired.ts`) returned the share of cluster-bootstrap draws at or below the minimum effect. That is not a p-value, and with few clusters it runs low. Three clusters that all improve gave about 1/(draws + 1), where the exact one-sided p is 1/8. It now returns the one-sided cluster sign-flip p of delta > `min_effect`, enumerating all 2^clusters sign patterns up to 20 clusters and running a seeded Monte Carlo with the family's draws above that. Every superiority gate (`eval:compare`, `eval:decide`, the batch receipt families and Q2 `c-gates.ts select`) uses it, so a gate needs at least 5 clusters to pass at 0.05. Non-inferiority (`nonInferiorityP`) is unchanged.
+- **What it means for published results.** No published verdict changes. [`docs/audit/2026-11-04-superiority-p.md`](docs/audit/2026-11-04-superiority-p.md) recomputes every published superiority gate with a keyless `recompute.ts`. W10a's one-sided p is 0.105 (was 0.081). W10b's Holm values are 0.0002, 0.0002, 0.082, 0.12, 0.19 and 0.29 (were 0.0006, 0.0006, 0.055, 0.097, 0.15 and 0.25). W10c's two loss tests are 0.97 and 0.997 (were 0.96 and 0.99). The three W10 reports, README's W10b row and `docs/corrections.md` carry the new values. W10b's sensitivity note no longer holds. Dropping Fable would give Holm 0.061 for `gpt-6.1-sol`, not 0.041, and corrections.md lists it.
+- **Receipts and the re-score check.** The W10 `summary.json` receipts keep the values as computed, so each report's keyless `w10-rescore.ts` check now ends "re-score differs" with exit 1, and only `p_superiority` and `p_holm` differ. The check prints the gate's Monte Carlo p, within 0.005 of the exact values the reports give.
+- **Limits.** The Q2 kit's `superior()` and `noninferior()` use the cluster-bootstrap percentile bound, the same construction, and are not changed here. The audit lists them beside `nonInferiorityP` as follow-ups.
+- `test/eval/decide-kit.test.ts` pins HARN-1's three-cluster case (p = 0.125, Holm 0.25 across two gates, inconclusive), the minimum-effect shift and the Monte Carlo path above 20 clusters.
 
 ## [0.10.159] - 2026-11-04
 

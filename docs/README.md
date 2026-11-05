@@ -255,6 +255,8 @@ explains the saved LongMemEval files and what their compacted records retain.
 
 The [October 28 eval cost audit](audit/2026-10-28-eval-cost-audit.md) shows where about $10,400 of model spend went
 from October 14 to 28 and how a preregistered Cat 40 run can [reuse an arm or size it by simulation](../eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run).
+The [November 4 superiority p audit](audit/2026-11-04-superiority-p.md) recomputes every published superiority gate
+with the exact one-sided sign-flip p that replaced a bootstrap share: no verdict changes, and the W10 p values move.
 The [August audit](audit/2026-08-31-eval-audit.md) describes earlier problems in
 scoring and execution. Corrections to published numbers, from the September 28, 2026 audit on, are listed in
 [corrections](corrections.md), with a dated note in each affected report. [Open work](../TODOS.md) distinguishes unfinished
@@ -274,6 +276,11 @@ Retrieval experiments gain a row for the [particle-1 F6 add-on finding](findings
 after the November 1 particle-1 replay row. It leads with the two judges' disagreement on particle-1 against Opus 5.5,
 gives cost per correct answer and the file-agent row, and carries the Particle, gbrain and OpenAI lines. No existing row
 changed.
+
+### 2026-11-04: The superiority p audit
+
+"Checking the evidence" links the [November 4 superiority p audit](audit/2026-11-04-superiority-p.md), which
+recomputes every published superiority gate with the exact one-sided sign-flip p. No other part changed.
 
 ### 2026-11-04: RS1 stage 0 finding
 

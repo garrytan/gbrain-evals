@@ -125,12 +125,19 @@ would record:
   a pass, because failing to find a difference is not proof that none exists. An
   interval entirely below minus the tolerance is a fail. Fewer clusters than
   `min_clusters` is inconclusive.
+- **Superiority gates** cover a claimed improvement. B passes only when it is
+  shown to beat A by more than `min_effect`: the Holm-adjusted p of an exact
+  one-sided sign-flip test is at most alpha. The test subtracts `min_effect` from
+  every item, sums each cluster, and counts the sign patterns of those cluster
+  sums whose mean reaches the observed one: all 2^clusters patterns up to 20
+  clusters, a seeded Monte Carlo above that. With three clusters the smallest
+  possible p is 1/8. An interval entirely on the losing side of zero is a fail.
 - **Exploratory metrics** are reported with unadjusted p-values and never affect
   the verdict. Metrics given on the command line but missing from the family are
   added as exploratory and labeled as outside it.
 
-Holm correction runs over the non-inferiority comparisons, the family's
-confirmatory tests. Exit status: 0 pass (or exploratory only), 1 fail, 2
+Holm correction runs over the non-inferiority and superiority comparisons, the
+family's confirmatory tests. Exit status: 0 pass (or exploratory only), 1 fail, 2
 inconclusive or blocked.
 
 ## The independent evaluator

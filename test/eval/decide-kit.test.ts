@@ -42,11 +42,42 @@ describe('superiority gate', () => {
     expect(() => validateFamily(family([{ id: 'r', metric: 'r', gate: 'superiority', direction: 'higher', cluster_by: 'id' } as never]))).toThrow('min_effect');
     expect(() => validateFamily(family([{ id: 'r', metric: 'r', gate: 'superiority', direction: 'higher', min_effect: 0 } as never]))).toThrow('cluster_by');
   });
-  test('superiorityP is the share of bootstrap draws at or below the minimum effect', () => {
+  test('superiorityP is the exact one-sided cluster sign-flip p, with the minimum effect taken off every item', () => {
+    // HARN-1's small-n case: three clusters, each one a gain. Only the all-positive pattern of the 2^3 reaches the
+    // observed mean, so p = 1/8; the bootstrap share it replaces was 1/(draws + 1) here.
+    const pair = (cluster: string, i: number, a: number, b: number) => ({ id: `${cluster}-${i}`, cluster, a, b });
+    const three = [pair('t1', 0, 0, 1), pair('t1', 1, 1, 1), pair('t2', 0, 0, 1), pair('t2', 1, 0, 1), pair('t3', 0, 0, 1), pair('t3', 1, 0, 0)];
+    const s3 = clusteredPairedDelta(three, { seed: 1, draws: 2000 });
+    expect(superiorityP(s3, 0, 'higher')).toBe(0.125);
+    expect(superiorityP(s3, 0, 'higher')).toBe(s3.p_greater);
+    expect(superiorityP(s3, 0, 'lower')).toBe(s3.p_less);
+    // Cluster sums 1, 2, 1 over two items each: less 0.5 per item they are 0, 1, 0 (4 of 8 patterns reach 1/6);
+    // less 0.75 they are -0.5, 0.5, -0.5 (7 of 8 reach the observed -0.5/6).
+    expect(superiorityP(s3, 0.5, 'higher')).toBe(0.5);
+    expect(superiorityP(s3, 0.75, 'higher')).toBe(0.875);
+    expect(superiorityP(clusteredPairedDelta(three.slice(0, 2), { seed: 1, draws: 2000 }), 0, 'higher')).toBeNull();
+  });
+  test('above 20 clusters superiorityP is a seeded Monte Carlo sign flip', () => {
     const pairs = Array.from({ length: 200 }, (_, i) => ({ id: `q${i}`, cluster: `c${i % 40}`, a: 0, b: i % 2 }));
     const stats = clusteredPairedDelta(pairs, { seed: 1, draws: 2000 });
-    expect(superiorityP(stats, 0, 'higher')!).toBeLessThan(0.01);
+    expect(superiorityP(stats, 0, 'higher')).toBe(1 / 2001);
+    expect(superiorityP(stats, 0, 'higher')).toBe(superiorityP(clusteredPairedDelta(pairs, { seed: 1, draws: 2000 }), 0, 'higher'));
     expect(superiorityP(stats, 0.9, 'higher')!).toBeGreaterThan(0.99);
+    const mixed = Array.from({ length: 200 }, (_, i) => ({ id: `q${i}`, cluster: `c${i % 40}`, a: i % 3 === 0 ? 1 : 0, b: i % 5 === 0 ? 0 : i % 2 }));
+    const m = clusteredPairedDelta(mixed, { seed: 3, draws: 20_000 });
+    expect(Math.abs(superiorityP(m, 0, 'higher')! - m.p_greater)).toBeLessThan(4 * 0.5 / Math.sqrt(20_000));
+  });
+  test('Holm adjusts the exact p: three clusters cannot pass two gates at 0.05, twelve can (HARN-1)', () => {
+    const two = (minClusters: number) => family([
+      { id: 'r', metric: 'r', gate: 'superiority', direction: 'higher', min_effect: 0, cluster_by: 'conv' },
+      { id: 's', metric: 's', gate: 'superiority', direction: 'higher', min_effect: 0, cluster_by: 'conv' },
+    ], { min_clusters: minClusters });
+    const few = evaluateFamily(rows(30, () => ({ r: 0, s: 0 })), rows(30, () => ({ r: 1, s: 1 })), two(3));
+    expect(few.comparisons.map(c => [c.p_superiority, c.p_holm, c.status])).toEqual([[0.125, 0.25, 'inconclusive'], [0.125, 0.25, 'inconclusive']]);
+    expect(few.verdict).toBe('inconclusive');
+    const twelve = evaluateFamily(rows(120, () => ({ r: 0, s: 0 })), rows(120, () => ({ r: 1, s: 1 })), two(10));
+    expect(twelve.comparisons.map(c => [c.p_superiority, c.p_holm])).toEqual([[1 / 4096, 2 / 4096], [1 / 4096, 2 / 4096]]);
+    expect(twelve.verdict).toBe('pass');
   });
 });
 

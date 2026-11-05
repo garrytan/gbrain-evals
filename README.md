@@ -79,7 +79,7 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 |---|---|---|---|
 | Finding every conversation a question needs (LongMemEval, strict `recall_all@5`) | **451 of 470 (95.96%)** | `109b992` | [Recount](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md) |
 | Answer accuracy on LongMemEval, release retrieval, benchmark notes reader (`claude-sonnet-5-5`, official `gpt-4o` judge) | **468 of 500 (93.6%)** | `c5fb0201` | [Current pin](docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) |
-| A newer reader on the same retrieval (`claude-opus-5-5`, frozen 2026-09-29 retrieval, official `gpt-4o` judge) | **474 of 500 (94.8%)**, higher than the replayed Sonnet 4.6 run's 451 (Holm p = 0.0006). The preregistered test compares each reader with Sonnet 4.6 only, so it does not rank the newer readers against each other | `a7cb37b` retrieval | [Reader replay](docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
+| A newer reader on the same retrieval (`claude-opus-5-5`, frozen 2026-09-29 retrieval, official `gpt-4o` judge) | **474 of 500 (94.8%)**, higher than the replayed Sonnet 4.6 run's 451 (Holm p = 0.0002). The preregistered test compares each reader with Sonnet 4.6 only, so it does not rank the newer readers against each other | `a7cb37b` retrieval | [Reader replay](docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
 | Whole-conversation delivery against bare chunks, sealed held-out set | **192 vs 132 of 200** (+60/−0) | `d44296c` | [Sealed decision](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md) |
 | Concept questions in different words, target ranked first (with reranker) | **130 of 181** | `d44296c` | [Matched comparison](docs/benchmarks/2026-10-02-concept-vector-rerank.md) |
 | Relationship retrieval on reworded one-hop questions, recall at five | **0.411 → 0.537**, 19 better, 0 worse | `3a284ae` | [N9](docs/benchmarks/2026-10-01-n9-multi-hop.md) |
@@ -406,6 +406,13 @@ Known limits gain one entry. On the eight F6 cells that the particle-1 add-on ju
 particle-1 above Opus 5.5 and GPT-6.1 Sol scores it below, so reader gaps under BEAM's canonical judge depend on the
 judge ([finding](docs/findings/2026-11-04-particle-1-f6-addon.md)). The entry carries the Particle line. The F6 pointer
 under the Q1 block links the finding. No number in the current-state tables changed.
+
+### 2026-11-04: The reader replay row's Holm p is exact
+
+The Opus 5.5 reader replay row's Holm p is 0.0002 (was 0.0006). The superiority gate returned the share of bootstrap
+draws at or below zero, which is not a p-value; the exact one-sided sign-flip p replaces it
+([audit](docs/audit/2026-11-04-superiority-p.md)). The row's claim, higher than Sonnet 4.6, stands. No other part
+changed.
 
 ### 2026-11-04: Known limits name the stopped RS1 ranking set
 

@@ -46,7 +46,9 @@ Fixture scores prove the plumbing works. They say nothing about retrieval qualit
   feature flag). They apply to `memory-qa` sources. Category sources run each build as it is.
 - `sources`: the evidence. Each source has a `comparisons` list in the same format as
   [`eval/runner/stats/gates.ts`](../eval/runner/stats/gates.ts):
-  - `superiority` (a claimed improvement larger than `min_effect`),
+  - `superiority` (a claimed improvement larger than `min_effect`, tested with the exact one-sided sign-flip p over
+    `cluster_by` units after `min_effect` is taken off every item: all 2^clusters sign patterns up to 20 clusters, a
+    seeded Monte Carlo above that),
   - `noninferiority` (a guardrail that may not drop by more than `tolerance`),
   - `exact` (a safety or correctness assertion),
   - `exploratory` (reported, never decisive).
