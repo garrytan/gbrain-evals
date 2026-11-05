@@ -11,9 +11,10 @@ This records what each gbrain-evals release changed and what its measurements me
   gpt-6.1-sol on the same rubric puts it 4.9 to 8.0 points below, with every 95% interval below zero. So the canonical
   judge's reader-model gaps on these cells are not reliable. Cost per correct answer sits beside Opus 5.5's: 12 to 19
   times less on the re-reads under either judge, and 2.7 times less as the file agent. The file-agent row is complete
-  after three legs (leases `…-1d4d91ac`, `…-6b01afc7`, `…-24a910e1`, $61.07 together): 63.4% against Opus 5.5's 72.3%
-  (−8.7 points, −14.0 to −3.2), with 23 turn caps and 1 reader error. It also explains why A6's $0.04 per answer was
-  about 7.6 times too low (1.78M prompt tokens and 8,887 output tokens per answer, over 18.6 turns). Aggregates only,
+  after three legs (leases `…-1d4d91ac`, `…-6b01afc7`, `…-24a910e1`, $61.07 together): on the same 198 questions,
+  63.4% against Opus 5.5's 72.1% (−8.7 points, −14.0 to −3.2), with 23 turn caps and 1 reader error. It also explains
+  why A6's $0.04 per answer was about 7.6 times too low (1.78M prompt tokens and 8,887 output tokens per answer, over
+  18.6 turns), and gives each system's build and ingest dollars once, as A6 asks. Aggregates only,
   in `docs/findings/2026-11-04-particle-1-f6-addon/` with SHA256SUMS. The Particle, gbrain and OpenAI lines close it.
 - **F6's scoreboard carries a dated label line.** `publication.json` adds one disclosure, dated 2026-11-04: the S1
   file-agent row's receipt names block T1 because its A4 unit ran without `--manifest f6`. Its run configuration

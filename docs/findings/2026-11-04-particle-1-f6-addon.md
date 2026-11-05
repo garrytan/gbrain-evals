@@ -1,4 +1,4 @@
-# On sealed BEAM, the judge decides whether particle-1 scores above or below Opus 5.5
+# On eight sealed BEAM cells, the judge decides whether particle-1 scores above or below Opus 5.5
 
 On the eight F6 cells that got a second judge, BEAM's canonical judge, gpt-4.1-mini, scores particle-1 above Claude
 Opus 5.5 by 0.9 to 8.0 points. GPT-6.1 Sol, judging the same answers on the same rubric, scores it 4.9 to 8.0 points
@@ -6,8 +6,8 @@ below, and every one of its eight 95% intervals is below zero. So on these cells
 answer models are not reliable. They flip sign when the judge changes, and a reader-model comparison on them is
 judge-dependent. Under either judge, particle-1 costs 12 to 19 times less than Opus 5.5 per correct answer.
 
-As the agent in F6's file-agent system, particle-1 scores 63.4% against Opus 5.5's 72.3% under the canonical judge
-(−8.7 points, 95% interval −14.0 to −3.2), at $0.44 against $1.19 per correct answer.
+As the agent in F6's file-agent system, on the same 198 questions, particle-1 scores 63.4% against Opus 5.5's 72.1%
+under the canonical judge (−8.7 points, 95% interval −14.0 to −3.2), at $0.44 against $1.19 per correct answer.
 
 ## The test
 
@@ -86,6 +86,18 @@ On the re-reads, particle-1 costs 13 to 19 times less per correct answer under t
 judged twice, it costs 12 to 16 times less under gpt-6.1-sol. As the file agent it costs 2.7 times less. The full
 per-reader tables, including F6's other readers on the same questions, are in [report.md](2026-11-04-particle-1-f6-addon/report.md).
 
+**Build and ingest dollars, once per system.** Building a system's store and retrieving from it cost the same whatever
+the reader, so they don't enter the per-reader figures above. Each published F6 receipt's metering proxy recorded them
+for the whole cell (for the two memory servers, their A24 cells, which F6 reuses):
+
+| System | S1 ingest | S1 retrieval | S2b ingest | S2b retrieval |
+|---|---:|---:|---:|---:|
+| gbrain (arms P and A0 read the same brain) | $85.91 | $0.80 | $18.53 | $0.94 |
+| extract-first server | $252.28 | $0.00 | $57.18 | $0.00 |
+| memory-bank server | $156.84 | $0.00 | $33.66 | $0.00 |
+| temporal graph 0.31.2 | $386.18 | $8.87 | $84.94 | $8.70 |
+| file agent (greps the raw files) | $0.00 | $0.00 | not run | not run |
+
 ## The file agent
 
 particle-1 ran F6's file-agent cell, `s1.baseline-file-agent.particle`, in three paid legs. Each resume ingested the
@@ -117,7 +129,7 @@ so far, so prompt tokens grow much faster than the turn count. The estimate came
 than from a measured agent run.
 
 **More tokens, fewer dollars.** On the same questions, Opus 5.5 read 0.53 million prompt tokens per answer (69% cache
-reads) and wrote 1,997, over 5.1 turns. So particle-1 reads 3.4 times Opus 5.5's prompt tokens (2.9 to 4.0 times in
+reads) and wrote 1,997, over 5.1 turns. So particle-1 reads 3.4 times Opus 5.5's prompt tokens (2.9 to 3.9 times in
 each leg), yet costs about a third as much per answer: $0.30 against $0.93 at list price, and $0.28 to $0.32 against
 $0.72 to $1.13 per leg from the answers' recorded dollars ([file-agent-usage.json](2026-11-04-particle-1-f6-addon/file-agent-usage.json)).
 
@@ -171,6 +183,8 @@ $0.72 to $1.13 per leg from the answers' recorded dollars ([file-agent-usage.jso
 - Only cells where the canonical judge put particle-1 above Opus 5.5 were judged twice. The other two re-read cells
   and the file agent have the canonical judge alone.
 - One answer per question, every reader at effort medium. Other efforts would change scores and costs.
+- report.md rounds each mean to four decimals before formatting it, so Opus 5.5's own file-agent mean reads 72.3% there
+  and 72.2% in F6's scoreboard. The paired means (72.1% and 63.4%) and every difference are unaffected.
 - Reader dollars are list prices on recorded usage. Failed tries are not priced, since only OpenAI-compatible readers
   record their usage. Each cell's metered spend, failed tries included, is in its receipt.
 - The file agent ran in three legs, each resuming from the last. The comparison with Opus 5.5's F6 row is like for like

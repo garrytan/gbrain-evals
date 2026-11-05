@@ -208,7 +208,7 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 F6, a current-master rerun of this comparison at 8k (gbrain `0ccf2bdd`, 2026-11-03), is published in
 [docs/benchmarks/2026-10-29-f6-current-master/scoreboard.md](docs/benchmarks/2026-10-29-f6-current-master/scoreboard.md);
 this table stays Q1's until the custodian re-renders it from the F6 receipt (#337). F6's particle-1 add-on re-reads
-ten of its frozen contexts with particle-1 and runs its file agent with particle-1
+the frozen contexts of ten of its rows with particle-1 and runs its file agent with particle-1
 ([finding](docs/findings/2026-11-04-particle-1-f6-addon.md)).
 
 **Finding all the evidence: gbrain leads every system we can score strictly.** A question counts only if every
