@@ -294,8 +294,8 @@ cell, a judge, the cut order or the ceiling.
 
 - **Coverage.** Q1's competitor rows are the same answers as F6's, so each answer is counted once, in the first stratum
   that holds it (A, then B, C, D). Still to judge: 2,130 in A, 3,301 in B, 2,408 in C and 3,600 in D, or 6,933 by
-  gpt-6.1-sol and 4,506 by claude-opus-5-5 (the estimate above was 7,133 and 4,354). The census covers 15,382 answers,
-  of which 3,943 already have a reusable family-clean frontier judgment.
+  gpt-6.1-sol and 4,506 by claude-opus-5-5 (the plan behind this preregistration estimated 7,133 and 4,354). The
+  census covers 15,382 answers, of which 3,943 already have a reusable family-clean frontier judgment.
 - **Measured from existing judgments.** 5,440 answers have both a canonical and a family-clean frontier judgment. They
   disagree at the pass threshold on 15.9%, with a root-mean-square score shift of 0.69 on disagreeing answers and 0.16
   on the rest (assumed above: 14%, 0.6 and 0.1).
@@ -322,3 +322,20 @@ cell, a judge, the cut order or the ceiling.
 - **Runner fix.** Stage 0 found that `plan` counted the answers Q1 shares with F6 twice, in stratum C's census line and
   in the referee line. That would have overstated the projection by about $85 at central rates and fired one cut step
   too many at conservative rates. The projection now counts each answer once.
+
+**2026-11-05: Three runner fixes before the summary.** Found in custody after the census, referee and controls runs and
+before any result was rendered; fixed in [#376](https://github.com/garrytan/gbrain-evals/pull/376). Nothing here changes
+the rule, a cell, a judge, the cut order or the ceiling.
+
+- **Controls.** The control builder took only questions with rubric items. D8's questions have none (BEAM's instrument
+  scores them against the gold answer), so the first controls run held S1 and S2b only. A second run judged D8's 50
+  questions under the fixed builder and reused S1's and S2b's judgments.
+- **Shared answer ids.** "Q1's competitor rows are the same answers as F6's" holds for every shared cell but the
+  BEAM-10M file agent: F6 reran it under Q1's cell id, and the answer id names the cell, question, reader and replicate,
+  not the campaign, so 577 of its 600 first answers hold different texts under ids both receipts use. Q1's frontier
+  judgments had scored F6's texts. Each answer now keeps its own receipt's judgments. The referee's population was
+  rebuilt with the fix (2,280 disagreements and a 600-answer agreement sample) and its 123 unjudged answers judged. Read
+  with the fix, the reuse checks agree on 97 (gpt-6.1-sol) and 99 (claude-opus-5-5) of 100, where they recorded 96 and
+  96.
+- **Summary outputs.** The summary now writes what this document's report lists and it had left out: p_F for each
+  frontier judge's rows, each cell's absolute level and the control counts.
