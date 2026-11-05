@@ -211,6 +211,16 @@ this table stays Q1's until the custodian re-renders it from the F6 receipt (#33
 the frozen contexts of ten of its rows with particle-1 and runs its file agent with particle-1
 ([finding](docs/findings/2026-11-04-particle-1-f6-addon.md)).
 
+Every accuracy in the block above, and in F6, is scored by BEAM's protocol judge, gpt-4.1-mini. Judged again by frontier
+judges (gpt-6.1-sol on the Claude readers' answers, claude-opus-5-5 on gpt-6.1-sol's), 20 of F6's and Q1's 21 published
+gbrain comparisons on BEAM keep their sign, rank and size. The exception is BEAM-100K sealed: the file agent's lead over
+gbrain's 8,000-token component row (72.8% against 67.8% in the table above) is 5.1 points (95% interval 1.3 to 8.6) under
+gpt-4.1-mini and 3.4 points (-1.2 to 8.3) under frontier judges, so it depends on the judge. Where the two judges
+disagree, a gemini-4-argon referee sided with the frontier judge on 73.2% of 2,280 answers, and on known-answer controls
+gpt-4.1-mini was no more accurate than either frontier judge
+([judge-robustness results](docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md)). gbrain is Garry Tan's own project.
+([Disclosures](docs/disclosures.md).)
+
 **Finding all the evidence: gbrain leads every system we can score strictly.** A question counts only if every
 required session is in the top five. gbrain was measured at `109b992`
 ([recount](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md)); the other rows and their sources are in
@@ -399,6 +409,14 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-05: The Q1 block's comparisons under frontier judges
+
+A paragraph after the F6 pointer under the Q1 block reports GST-1365: under frontier judges, 20 of F6's and Q1's 21
+published gbrain comparisons on BEAM hold, and the BEAM-100K file agent's lead over gbrain's component row depends on
+the judge, 5.1 points (1.3 to 8.6) under gpt-4.1-mini and 3.4 (-1.2 to 8.3) under frontier judges
+([results](docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md)). It carries the gbrain line. The rendered block and
+every number in it are unchanged.
 
 ### 2026-11-04: A known limit on BEAM's judge for comparing answer models; the F6 pointer names the particle-1 add-on
 
