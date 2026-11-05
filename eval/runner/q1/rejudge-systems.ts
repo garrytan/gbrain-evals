@@ -8,7 +8,7 @@
  *   bun eval/runner/q1/rejudge-systems.ts cut --out <dir> --through <1-5> --reason <text>
  *   bun eval/runner/q1/rejudge-systems.ts judge --stratum A|B|C|D [--limit <n>] <roots> --out <dir> <lease>
  *   bun eval/runner/q1/rejudge-systems.ts reuse-check --judge <provider:model> [--n 100] <roots> --out <dir> <lease>
- *   bun eval/runner/q1/rejudge-systems.ts referee <roots> --out <dir> <lease>
+ *   bun eval/runner/q1/rejudge-systems.ts referee [--limit <n>] <roots> --out <dir> <lease>
  *   bun eval/runner/q1/rejudge-systems.ts controls <roots> --out <dir> <lease>
  *   bun eval/runner/q1/rejudge-systems.ts summary <roots> --out <dir> [--report <dir>]
  *     <roots>: --root f6=<receipt> --root q1=<receipt> [--root second-judge=<out>]...
@@ -40,7 +40,7 @@ import { ChatClient, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { judgmentKey, RecordLog, sha256, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit, type UsageLine } from '../metering-proxy.ts';
 import { attestPreregistration } from '../prereg.ts';
-import { JUDGE_PROVIDERS } from '../providers/openai-compatible.ts';
+import { compatMayHaveBilled, JUDGE_PROVIDERS } from '../providers/openai-compatible.ts';
 import { derive } from '../scoreboard.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
@@ -121,7 +121,8 @@ export const readCuts = (out: string): Cuts | null => existsSync(join(out, 'cuts
 interface CampaignCellLite { cell_id: string; set: string; system: string; readers: string[]; reader_replicates?: Record<string, number>; canonical_instrument: string; status: string; dir?: string; subset?: { conversations: string[] }; product_outcomes?: Array<{ reader: string; outcome: string }> }
 interface CampaignLite { sets: Array<{ id: string; scheduled: Array<{ question_id: string; conversation: string }>; exclusions: Array<{ question_id: string }> }>; cells: CampaignCellLite[] }
 export interface LoadedCell { def: CampaignCellLite; root: 'f6' | 'q1'; instrument: { id: string; sha256: string }; answers: AnswerRecord[]; judgments: JudgmentRecord[] }
-export interface Sources { receipts: Record<'f6' | 'q1', string>; campaigns: Record<'f6' | 'q1', CampaignLite>; cells: Map<string, LoadedCell>; secondJudge: JudgmentRecord[]; out: string; own: JudgmentRecord[] }
+/** distrust: judges whose reuse check failed, whose judgments from the receipts and second-judge outs are not reused (this run's own still are). */
+export interface Sources { receipts: Record<'f6' | 'q1', string>; campaigns: Record<'f6' | 'q1', CampaignLite>; cells: Map<string, LoadedCell>; secondJudge: JudgmentRecord[]; out: string; own: JudgmentRecord[]; distrust: string[] }
 
 const ndjson = <T>(path: string): T[] => existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as T) : [];
 const cellKey = (root: string, cell: string) => `${root}:${cell}`;
@@ -155,19 +156,29 @@ export function loadSources(roots: string[], out: string): Sources {
     if (keyless) throw refuse({ code: 'USAGE', message: `KEYLESS_SOURCE: ${sj} is not a paid second-judge out (its upstream marker or a receipt does not say keyless: false)`, why: 'a keyless rehearsal\'s scores come from a fake upstream and never count', fix: { next: 'report', user_message: 'pass only paid second-judge outs' } });
     for (const d of dirs) secondJudge.push(...ndjson<JudgmentRecord>(join(sj, 'cells', d, 'judgments.ndjson')));
   }
-  return { receipts, campaigns, cells, secondJudge, out, own: ndjson<JudgmentRecord>(join(out, 'judgments.ndjson')) };
+  return { receipts, campaigns, cells, secondJudge, out, own: ndjson<JudgmentRecord>(join(out, 'judgments.ndjson')), distrust: reuseResults(out).filter(r => !r.pass).map(r => r.judge).sort() };
 }
 
 const scored = (j: JudgmentRecord | undefined): j is JudgmentRecord & { score: number } => !!j && j.parse_ok && j.outcome === 'scored' && typeof j.score === 'number';
 const reuseKey = (answer: string, instrumentId: string, sha: string) => `${answer}|${instrumentId}|${sha}`;
 
-/** Every usable replicate-0 judgment by answer, instrument id and instrument sha256: the receipts', then second-judge outs', then this run's own. */
-export function judgmentIndex(s: Pick<Sources, 'cells' | 'secondJudge' | 'own'>): Map<string, JudgmentRecord & { score: number }> {
+/** Every usable replicate-0 judgment by answer, instrument id and instrument sha256: the receipts', then second-judge outs' (unless their judge failed its reuse check), then this run's own. */
+export function judgmentIndex(s: Pick<Sources, 'cells' | 'secondJudge' | 'own'> & { distrust?: string[] }): Map<string, JudgmentRecord & { score: number }> {
   const m = new Map<string, JudgmentRecord & { score: number }>();
-  for (const j of [...[...s.cells.values()].flatMap(c => c.judgments), ...s.secondJudge, ...s.own]) {
+  const distrust = new Set(s.distrust ?? []);
+  const external = [...[...s.cells.values()].flatMap(c => c.judgments), ...s.secondJudge].filter(j => !distrust.has(j.judge));
+  for (const j of [...external, ...s.own]) {
     if (j.judge_replicate === 0 && scored(j)) m.set(reuseKey(j.answer_id, j.instrument_id, j.instrument_sha256), j);
   }
   return m;
+}
+
+export const REUSE_BAR = 0.95;
+export interface ReuseResult { judge: string; sample: number; agreement: { share: number | null; ci95: [number, number] | null }; bar: number; pass: boolean }
+/** The recorded reuse checks: a judge's old judgments are reused when its re-judged sample agrees on pass or fail at 95% or more. */
+export function reuseResults(out: string): ReuseResult[] {
+  const dir = join(out, 'reuse-check');
+  return existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith('.json')).sort().map(f => JSON.parse(readFileSync(join(dir, f), 'utf8')) as ReuseResult) : [];
 }
 
 /** Per-question values of one cell under M (published, every replicate), M0, F and R, by scoreboard.ts's own outcome rules. */
@@ -254,9 +265,9 @@ export function reproduce(s: Sources, deriveFn: (receipt: string) => DerivedBoar
 export interface Task { answer_id: string; question_id: string; set: string; cell: string; system: string; reader: string | null; text: string; judge: string; instrument: string; instrument_id: string; instrument_sha256: string }
 
 /** The frontier judgments strata still need: each reader's replicate-0 judged answer in its contrasts' published cohorts without a usable frontier judgment. */
-export function frontierTasks(s: Sources, strata: readonly Stratum[], cuts: Cuts | null): { tasks: Task[]; reusable: number; productFailures: number; byJudge: Record<string, { needed: number; reusable: number; to_judge: number }> } {
+export function frontierTasks(s: Sources, strata: readonly Stratum[], cuts: Cuts | null): { tasks: Task[]; scope: string[]; reusable: number; productFailures: number; byJudge: Record<string, { needed: number; reusable: number; to_judge: number }> } {
   const index = judgmentIndex(s);
-  const seen = new Set<string>(), tasks: Task[] = [];
+  const seen = new Set<string>(), tasks: Task[] = [], scope: string[] = [];
   let reusable = 0, productFailures = 0;
   const byJudge: Record<string, { needed: number; reusable: number; to_judge: number }> = {};
   for (const c of CONTRASTS.filter(x => strata.includes(x.stratum) && !cutContrast(x, cuts))) {
@@ -272,12 +283,13 @@ export function frontierTasks(s: Sources, strata: readonly Stratum[], cuts: Cuts
       const id = frontierId(cell.def.canonical_instrument, judge);
       const b = byJudge[judge] ??= { needed: 0, reusable: 0, to_judge: 0 };
       b.needed++;
+      scope.push(a.answer_id);
       if (index.has(reuseKey(a.answer_id, id, cell.instrument.sha256))) { b.reusable++; reusable++; continue; }
       b.to_judge++;
       tasks.push({ answer_id: a.answer_id, question_id: a.question_id, set: cell.def.set, cell: cell.def.cell_id, system: cell.def.system, reader: a.reader, text: a.text, judge, instrument: cell.def.canonical_instrument, instrument_id: id, instrument_sha256: cell.instrument.sha256 });
     }
   }
-  return { tasks, reusable, productFailures, byJudge };
+  return { tasks, scope, reusable, productFailures, byJudge };
 }
 
 const order = (seed: string, id: string) => createHash('sha256').update(`${seed}|${id}`).digest('hex');
@@ -342,29 +354,39 @@ export function controlTasks(s: Sources, built: ControlAnswer[], done: (t: Task)
 
 export const refereeStrata = (cuts: Cuts | null): Stratum[] => (['A', 'B', 'C', 'D'] as Stratum[]).filter(x => !(x === 'D' && cuts && cuts.through >= 3));
 
-/** The referee's population: every canonical/frontier disagreement at 0.5 and a seeded 600-answer agreement sample stratified by set, reader family and system. Refuses until its strata are frozen. */
-export function refereePopulation(s: Sources, cuts: Cuts | null): { tasks: Task[]; disagreements: string[]; agreements: string[] } {
-  const strata = refereeStrata(cuts);
-  const left = frontierTasks(s, strata, cuts).tasks.length;
-  if (left) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${left} frontier judgments are still missing in strata ${strata.join(', ')}`, why: 'the referee judges a frozen population of disagreements (complete strata, or strata the cut order dropped)', fix: { next: 'run', argv: [...FRONT, 'judge', '--stratum', '<stratum>'] } });
-  const index = judgmentIndex(s);
-  const rows = new Map<string, { task: Task; group: string; disagree: boolean }>();
+/** The census answers of strata as referee tasks, with their canonical and frontier scores where judged and their sampling group (set, reader family, system). */
+function censusAnswers(s: Sources, strata: readonly Stratum[], cuts: Cuts | null): Array<{ task: Task; group: string; m: number | null; f: number | null }> {
+  const scope = new Set(frontierTasks(s, strata, cuts).scope), index = judgmentIndex(s), rows = new Map<string, { task: Task; group: string; m: number | null; f: number | null }>();
   for (const c of CONTRASTS.filter(x => strata.includes(x.stratum) && !cutContrast(x, cuts))) for (const id of [c.anchor, c.other]) {
-    const cell = cellOf(s, c.root, id), readers = readersOf(s, c);
-    const canonical = new Map(cell.judgments.filter(j => j.instrument_id === cell.def.canonical_instrument && j.judge_replicate === 0).map(j => [j.answer_id, j]));
+    const cell = cellOf(s, c.root, id), readers = readersOf(s, c), inst = cell.def.canonical_instrument;
+    const canonical = new Map(cell.judgments.filter(j => j.instrument_id === inst && j.judge_replicate === 0).map(j => [j.answer_id, j]));
     for (const a of cell.answers) {
-      if (a.replicate !== 0 || rows.has(a.answer_id) || !JUDGED.has(a.outcome as Outcome) || !readers.includes(a.reader)) continue;
-      const m = canonical.get(a.answer_id), f = index.get(reuseKey(a.answer_id, frontierId(cell.def.canonical_instrument, judgeFor(a.reader)), cell.instrument.sha256));
-      if (!scored(m) || !f) continue;
-      rows.set(a.answer_id, { group: `${cell.def.set}|${family(a.reader)}|${cell.def.system}`, disagree: (m.score >= PASS_THRESHOLD) !== (f.score >= PASS_THRESHOLD),
-        task: { answer_id: a.answer_id, question_id: a.question_id, set: cell.def.set, cell: cell.def.cell_id, system: cell.def.system, reader: a.reader, text: a.text, judge: REFEREE, instrument: cell.def.canonical_instrument, instrument_id: frontierId(cell.def.canonical_instrument, REFEREE), instrument_sha256: cell.instrument.sha256 } });
+      if (!scope.has(a.answer_id) || rows.has(a.answer_id) || !readers.includes(a.reader)) continue;
+      const m = canonical.get(a.answer_id), f = index.get(reuseKey(a.answer_id, frontierId(inst, judgeFor(a.reader)), cell.instrument.sha256));
+      rows.set(a.answer_id, { group: `${cell.def.set}|${family(a.reader)}|${cell.def.system}`, m: scored(m) ? m.score : null, f: f ? f.score : null,
+        task: { answer_id: a.answer_id, question_id: a.question_id, set: cell.def.set, cell: cell.def.cell_id, system: cell.def.system, reader: a.reader, text: a.text, judge: REFEREE, instrument: inst, instrument_id: frontierId(inst, REFEREE), instrument_sha256: cell.instrument.sha256 } });
     }
   }
-  const all = [...rows.values()];
-  const disagreements = all.filter(r => r.disagree).map(r => r.task.answer_id).sort();
-  const agreements = proportional(all.filter(r => !r.disagree), 600, 'gst-1365-referee').sort();
+  return [...rows.values()];
+}
+
+/** The referee's population, within the census's answers: every canonical/frontier disagreement at 0.5 and a seeded 600-answer agreement sample stratified by set, reader family and system. Refuses until its strata are frozen. */
+export function refereePopulation(s: Sources, cuts: Cuts | null): { tasks: Task[]; disagreements: string[]; agreements: string[] } {
+  const strata = refereeStrata(cuts), left = frontierTasks(s, strata, cuts).tasks.length;
+  if (left) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${left} frontier judgments are still missing in strata ${strata.join(', ')}`, why: 'the referee judges a frozen population of disagreements (complete strata, or strata the cut order dropped)', fix: { next: 'run', argv: [...FRONT, 'judge', '--stratum', '<stratum>'] } });
+  const all = censusAnswers(s, strata, cuts).filter(r => r.m !== null && r.f !== null);
+  const disagree = (r: { m: number | null; f: number | null }) => (r.m! >= PASS_THRESHOLD) !== (r.f! >= PASS_THRESHOLD);
+  const disagreements = all.filter(disagree).map(r => r.task.answer_id).sort();
+  const agreements = proportional(all.filter(r => !disagree(r)), 600, 'gst-1365-referee').sort();
   const chosen = new Set([...disagreements, ...agreements]);
   return { tasks: all.filter(r => chosen.has(r.task.answer_id)).map(r => r.task).sort((a, b) => a.answer_id.localeCompare(b.answer_id)), disagreements, agreements };
+}
+
+/** The paid smoke's referee sample: n census answers, seeded and stratified by set, system and reader family, judged before the census so Gemini's route and rate are measured first. */
+export function refereeSmoke(s: Sources, n: number, cuts: Cuts | null): Task[] {
+  const all = censusAnswers(s, refereeStrata(cuts), cuts);
+  const group = new Map(all.map(r => [r.task.answer_id, r.group]));
+  return stratifiedSample(all.map(r => r.task), n, 'gst-1365-smoke|referee', t => group.get(t.answer_id)!);
 }
 
 /** n answer ids allocated across groups in proportion to their size (largest remainder), each group's in seeded order over sorted ids. */
@@ -381,8 +403,8 @@ function proportional(xs: ReadonlyArray<{ task: Task; group: string }>, n: numbe
 
 // ─── Identity (one per stage) ────────────────────────────────────────
 
-/** A stage's identity: every task's answer, answer text, judge, instrument id and sha256. A resume onto any other set is refused. */
-export function checkIdentity(path: string, tasks: readonly Task[]): string {
+/** A stage's identity: every task's answer, answer text, judge, instrument id and sha256. A resume onto any other set is refused; write false only checks an identity already pinned. */
+export function checkIdentity(path: string, tasks: readonly Task[], write = true): string {
   const id = sha256([...tasks].map(t => [t.answer_id, sha256(t.text), t.judge, t.instrument_id, t.instrument_sha256].join('|')).sort().join('\n'));
   if (existsSync(path)) {
     const prior = JSON.parse(readFileSync(path, 'utf8')) as { identity: string; tasks: number };
@@ -390,13 +412,13 @@ export function checkIdentity(path: string, tasks: readonly Task[]): string {
       why: 'a resume continues the same answers, judges and instruments; other roots or another tree would mix two populations', fix: { next: 'report', user_message: 'resume with the same roots and tree, or use a fresh --out' } });
     return id;
   }
-  writeFileSync(path, JSON.stringify({ identity: id, tasks: tasks.length, at: new Date().toISOString() }) + '\n');
+  if (write) writeFileSync(path, JSON.stringify({ identity: id, tasks: tasks.length, at: new Date().toISOString() }) + '\n');
   return id;
 }
 
 // ─── Judging (one loop for every paid subcommand) ────────────────────
 
-export interface JudgeRun { judged: number; remaining: number; request_errors: number; last_error: string | null; budget_stop: boolean; stop_file: boolean; per_judge: Record<string, number> }
+export interface JudgeRun { judged: number; remaining: number; request_errors: number; held: number; last_error: string | null; budget_stop: boolean; stop_file: boolean; per_judge: Record<string, number> }
 
 /** A budget refusal: the ledger's own error, or the lease proxy's 402 or 502 whose error body has type "budget" (qa-v2 quotes that body first). */
 export function isBudgetStop(e: unknown): boolean {
@@ -405,15 +427,20 @@ export function isBudgetStop(e: unknown): boolean {
   return (status === 402 || status === 502) && new RegExp(`^[a-z]+ ${status}: \\{"kind":"budget","type":"budget",`).test(String((e as Error)?.message ?? ''));
 }
 
-/** Judge tasks into a record log, concurrency at a time, binding the judge slot once per pass; a budget stop or the STOP file ends the run, and a resume skips judged tasks. */
+/**
+ * Judge tasks into a record log, concurrency at a time, binding the judge slot once per pass; a budget stop or the STOP
+ * file ends the run, and a resume skips judged tasks. A request that may have reached the provider before it failed is
+ * held for the rest of the invocation rather than sent again in a later pass (the ledger already charged its reservation).
+ */
 export async function judgeTasks(tasks: readonly Task[], question: (t: Task) => MemoryQuestion, log: RecordLog<'judgment'>, opts: { client: ChatLike; around?: (key: string, fn: () => Promise<unknown>) => Promise<unknown>; concurrency?: number; stopFile?: string; maxAttempts?: number; instruments?: (id: string) => Instrument }): Promise<JudgeRun> {
   const inst = opts.instruments ?? instrumentFor;
   const key = (t: Task) => judgmentKey({ answer_id: t.answer_id, instrument_sha256: inst(t.instrument).sha256, judge: t.judge, judge_replicate: 0 });
-  const run: JudgeRun = { judged: 0, remaining: 0, request_errors: 0, last_error: null, budget_stop: false, stop_file: false, per_judge: {} };
+  const run: JudgeRun = { judged: 0, remaining: 0, request_errors: 0, held: 0, last_error: null, budget_stop: false, stop_file: false, per_judge: {} };
+  const held = new Set<string>();
   const stopped = () => run.budget_stop || (!!opts.stopFile && existsSync(opts.stopFile) && (run.stop_file = true));
   const maxAttempts = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
   for (let pass = 0; pass < maxAttempts && !stopped(); pass++) {
-    const queue = tasks.filter(t => !log.has(key(t)));
+    const queue = tasks.filter(t => !log.has(key(t)) && !held.has(key(t)));
     if (!queue.length) break;
     const one = async (t: Task) => {
       try {
@@ -422,7 +449,7 @@ export async function judgeTasks(tasks: readonly Task[], question: (t: Task) => 
         run.per_judge[t.judge] = (run.per_judge[t.judge] ?? 0) + 1;
       } catch (e) {
         if (isBudgetStop(e)) run.budget_stop = true;
-        else { run.request_errors++; run.last_error = String((e as Error).message).slice(0, 200); }
+        else { run.request_errors++; run.last_error = String((e as Error).message).slice(0, 200); if (compatMayHaveBilled(e)) held.add(key(t)); }
       }
     };
     const worker = async () => { for (let t = queue.shift(); t && !stopped(); t = queue.shift()) await one(t); };
@@ -430,6 +457,7 @@ export async function judgeTasks(tasks: readonly Task[], question: (t: Task) => 
     await (opts.around ? opts.around(`gst-1365:pass-${pass}`, all) : all());
   }
   run.remaining = tasks.filter(t => !log.has(key(t))).length;
+  run.held = held.size;
   return run;
 }
 
@@ -571,7 +599,8 @@ export function measuredRates(outs: readonly string[]): Record<string, number> {
 /** Coverage, what each stratum still needs, projected dollars and the cut steps they fire, the measured disagreement and score shifts, and the contrasts the reusable judgments already allow. */
 export function plan(s: Sources, rates: Record<string, number> = {}) {
   const cuts = readCuts(s.out), none = { ...s, own: [] };
-  const strata = Object.fromEntries((['A', 'B', 'C', 'D'] as Stratum[]).map(x => { const t = frontierTasks(none, [x], null); return [x, { reusable: t.reusable, product_failures: t.productFailures, by_judge: t.byJudge, tasks: t.tasks }]; }));
+  const strata = Object.fromEntries((['A', 'B', 'C', 'D'] as Stratum[]).map(x => { const t = frontierTasks(none, [x], null); return [x, { reusable: t.reusable, product_failures: t.productFailures, by_judge: t.byJudge, tasks: t.tasks, scope: t.scope }]; }));
+  const scope = new Set(Object.values(strata).flatMap(x => x.scope));
   const index = judgmentIndex(s);
   let agree = 0, disagree = 0, shiftDis = 0, shiftAgree = 0;
   const instrumentMismatch = new Set<string>();
@@ -579,7 +608,7 @@ export function plan(s: Sources, rates: Record<string, number> = {}) {
     if (instrumentFor(cell.def.canonical_instrument).sha256 !== cell.instrument.sha256) instrumentMismatch.add(cell.def.cell_id);
     const canonical = new Map(cell.judgments.filter(j => j.instrument_id === cell.def.canonical_instrument && j.judge_replicate === 0).map(j => [j.answer_id, j]));
     for (const a of cell.answers) {
-      if (a.replicate !== 0 || !JUDGED.has(a.outcome as Outcome) || !['anthropic', 'openai'].includes(family(a.reader))) continue;
+      if (!scope.has(a.answer_id)) continue;
       const m = canonical.get(a.answer_id), f = index.get(reuseKey(a.answer_id, frontierId(cell.def.canonical_instrument, judgeFor(a.reader)), cell.instrument.sha256));
       if (!scored(m) || !f) continue;
       const d = (f.score - m.score) ** 2;
@@ -595,7 +624,7 @@ export function plan(s: Sources, rates: Record<string, number> = {}) {
     const all = (['A', 'B', 'C', 'D'] as Stratum[]).reduce((y, x) => y + needed(x), 0);
     const referee = (all * disagreementRate + 600) * rate(REFEREE, k);
     const controls = 600 * (rate(CANONICAL, k) + rate(SOL, k) + rate(OPUS, k) + rate(REFEREE, k));
-    const lines = { ...census, referee, controls };
+    const lines: Record<string, number> = { ...census, referee, controls };
     const total = Object.values(lines).reduce((a, b) => a + b, 0);
     const savings = [300 * (rate(OPUS, k) + rate(REFEREE, k)), onlyQ1('S2a'), needed('D') * disagreementRate * rate(REFEREE, k), census.D, onlyQ1('S2b')];
     let after = total, through = 0;
@@ -696,18 +725,20 @@ if (import.meta.main) {
       const stratum = one('--stratum') as Stratum;
       if (!['A', 'B', 'C', 'D'].includes(stratum)) throw refuse({ code: 'USAGE', message: '--stratum takes A, B, C or D', why: 'the census runs one stratum per lease', fix: { next: 'run', argv: [...FRONT, 'judge', '--stratum', 'A'] } });
       if (stratum === 'D' && cuts && cuts.through >= 4) throw refuse({ code: 'USAGE', message: 'the cut order dropped the D8 census', why: 'a cut is never undone', fix: { next: 'report', user_message: 'report D8 not run (cut order)' } });
+      const limit = one('--limit');
       const full = frontierTasks({ ...s, own: [] }, [stratum], cuts).tasks;
-      checkIdentity(join(out, `identity-${stratum}.json`), full);
+      const unchecked = Object.entries(frontierTasks({ ...s, own: [], distrust: [] }, [stratum], cuts).byJudge).filter(([j, b]) => b.reusable > 0 && !reuseResults(out).some(r => r.judge === j)).map(([j]) => j);
+      if (!limit && unchecked.length) throw refuse({ code: 'PREFLIGHT_FAILED', message: `the census reuses ${unchecked.join(' and ')} judgments no reuse check has measured`, why: 'old judgments are reused only after their judge re-judges 100 of them and agrees at 95% or more', fix: { next: 'run', argv: [...FRONT, 'reuse-check', '--judge', unchecked[0], '--n', '100'] } });
+      checkIdentity(join(out, `identity-${stratum}.json`), full, !limit);
       const q = questionsFor(full.map(t => t.set), out, process.env);
       question = t => q(t.set, t.question_id);
       const left = frontierTasks(s, [stratum], cuts).tasks;
-      const limit = one('--limit');
       tasks = limit ? stratifiedSample(left, Number(limit), `gst-1365-smoke|${stratum}`, t => question(t).category) : left;
       extra = { stratum, stratum_tasks: full.length, left_before: left.length };
     } else if (sub === 'reuse-check') {
       const judge = one('--judge') ?? '', n = Number(one('--n') ?? 100);
       if (![SOL, OPUS].includes(judge) || !(n > 0)) throw refuse({ code: 'USAGE', message: `--judge takes ${SOL} or ${OPUS}, --n a positive count`, why: 'the reuse check re-judges answers a frontier judge already judged', fix: { next: 'run', argv: [...FRONT, 'reuse-check', '--judge', SOL, '--n', '100'] } });
-      const index = judgmentIndex({ ...s, own: [] }), pool = new Map<string, Task>();
+      const index = judgmentIndex({ ...s, own: [], distrust: [] }), pool = new Map<string, Task>();
       for (const c of CONTRASTS) for (const id of [c.anchor, c.other]) {
         const cell = cellOf(s, c.root, id);
         for (const a of cell.answers) {
@@ -724,6 +755,13 @@ if (import.meta.main) {
       mkdirSync(join(out, 'reuse-check'), { recursive: true });
       checkIdentity(join(out, `identity-reuse-${family(judge)}.json`), tasks);
       extra = { judge, prior: Object.fromEntries(tasks.map(t => [t.answer_id, index.get(reuseKey(t.answer_id, t.instrument_id, t.instrument_sha256))!.score >= PASS_THRESHOLD])) };
+    } else if (sub === 'referee' && one('--limit')) {
+      const smoke = refereeSmoke(s, Number(one('--limit')), cuts);
+      const q = questionsFor(smoke.map(t => t.set), out, process.env);
+      question = t => q(t.set, t.question_id);
+      const done = judgmentIndex(s);
+      tasks = smoke.filter(t => !done.has(reuseKey(t.answer_id, t.instrument_id, t.instrument_sha256)));
+      extra = { smoke: smoke.length };
     } else if (sub === 'referee') {
       const pop = refereePopulation(s, cuts);
       freeze(join(out, 'referee.json'), { disagreements: pop.disagreements, agreements: pop.agreements });
@@ -774,10 +812,13 @@ if (import.meta.main) {
       if (sub === 'reuse-check') {
         const prior = extra.prior as Record<string, boolean>;
         const now = new RecordLog(logPath, 'judgment').all().filter(scored);
-        extra = { judge: extra.judge, sample: tasks.length, agreement: wilson(now.filter(j => prior[j.answer_id] === (j.score >= PASS_THRESHOLD)).length, now.length), bar: 0.95 };
+        const agreement = wilson(now.filter(j => prior[j.answer_id] === (j.score >= PASS_THRESHOLD)).length, now.length);
+        const result: ReuseResult = { judge: extra.judge as string, sample: tasks.length, agreement, bar: REUSE_BAR, pass: agreement.share !== null && agreement.share >= REUSE_BAR };
+        if (!run.remaining && now.length === tasks.length) writeFileSync(join(out, 'reuse-check', `${family(result.judge)}.json`), JSON.stringify(result) + '\n');
+        extra = { ...result };
       }
       const receipt = { schema: 'gbrain-evals/gst-1365-receipt/v1', subcommand: sub, run_id: runId, keyless: !!keyless, attestation, ceiling_usd: ceiling, reserve_grant: grant, cuts, ...extra,
-        counts: { tasks: tasks.length, judged: run.judged, remaining: run.remaining, request_errors: run.request_errors }, last_error: run.last_error, stop: code,
+        counts: { tasks: tasks.length, judged: run.judged, remaining: run.remaining, request_errors: run.request_errors, held_may_have_billed: run.held }, last_error: run.last_error, stop: code,
         spend: split ? { source: 'lease usage log', ledger_usd: split.billed_usd + split.reserved_unsettled_usd, gemini_list_usd: (perModel['gemini-4-argon']?.ledger_usd ?? 0) / 2, note: 'the ledger books Gemini at twice list before 2026-12-01' } : null,
         per_judge: perJudge, per_model: perModel, lease: { usd: leaseUsd, ledger_committed_usd: committed(resolve(ledger)) } };
       mkdirSync(join(out, 'receipts'), { recursive: true });

@@ -15,6 +15,7 @@ import {
   CANARY_MAX_OUTPUT_TOKENS, COMPAT_PROVIDERS, CompatHttpError, PRIMARY_MODELS, ParticleCreditExhausted, RETRY_AFTER_CAP_MS,
   assertMetered, classifyCompatError, compatError, compatMayHaveBilled, compatRequest, compatSend, modelsNotRun, parseCompatResponse, type CanarySampling,
 } from '../../eval/runner/providers/openai-compatible.ts';
+import { hasChatRoute, sendsTemperature } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { normalizeUsage, receipt, responseMeta, usageSourceOf } from '../../eval/runner/usage-receipt.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -40,6 +41,22 @@ function mockFetch(replies: Array<{ status?: number; body: unknown; headers?: Re
   }) as typeof fetch;
   return { impl, calls };
 }
+
+describe('the Gemini judge request (JUDGE_PROVIDERS)', () => {
+  // Value: protects=GST-1365's referee request: Gemini's OpenAI-compatible URL and bearer key, effort high by default, an output limit with room for thinking and no temperature, while Gemini stays out of every reader route; fails_when=the request goes elsewhere, is clamped below its floor, carries a temperature, or a reader suite can pick Gemini; why_new=GST-1365 adds the row; seam=compatRequest/hasChatRoute; no_claim=does not call Gemini
+  test('URL, bearer key, effort high, max_completion_tokens at the 8,192 floor, no temperature; a judge only', () => {
+    const req = compatRequest('gemini:gemini-4-argon', ASK, { maxOutputTokens: 1024 }, { GEMINI_API_KEY: 'test-key' });
+    expect(req.url).toBe('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
+    expect(req.headers).toEqual({ 'content-type': 'application/json', authorization: 'Bearer test-key' });
+    expect(req.body).toEqual({ model: 'gemini-4-argon', messages: ASK, reasoning_effort: 'high', max_completion_tokens: 8192 });
+    expect(compatRequest('gemini:gemini-4-argon', ASK, { maxOutputTokens: 1024 }, { GEMINI_API_KEY: 'k', GEMINI_OPENAI_BASE_URL: 'http://127.0.0.1:9/slot/gemini/v1beta/openai/' }).url).toBe('http://127.0.0.1:9/slot/gemini/v1beta/openai/chat/completions');
+    expect(() => compatRequest('gemini:gemini-4-argon', ASK, { effort: 'xhigh' }, { GEMINI_API_KEY: 'k' })).toThrow();
+    expect(() => compatRequest('gemini:gemini-4-argon', ASK, {}, {})).toThrow('GEMINI_API_KEY');
+    expect(Object.keys(COMPAT_PROVIDERS)).toEqual(['particle']);
+    expect([hasChatRoute('gemini:gemini-4-argon'), sendsTemperature('gemini:gemini-4-argon')]).toEqual([false, false]);
+    expect(priceRequest(req.url, req.body)).toMatchObject({ provider: 'gemini', maxOutputTokens: 8192 });
+  });
+});
 
 describe('the particle request (compatRequest)', () => {
   test('URL, key header, explicit effort, max_completion_tokens at the 16,000 floor, and no temperature or seed', () => {
