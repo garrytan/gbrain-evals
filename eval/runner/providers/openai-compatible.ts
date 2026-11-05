@@ -1,6 +1,7 @@
 /**
  * Transport facts for OpenAI-compatible providers other than OpenAI itself: the first piece of one provider client
- * (audit R1, plan GST-605 Phase 1). One row per provider in COMPAT_PROVIDERS; today one row, Particle AI.
+ * (audit R1, plan GST-605 Phase 1). One row per reader provider in COMPAT_PROVIDERS, today Particle AI, and one per
+ * judge-only provider in JUDGE_PROVIDERS, today Google's Gemini API on its OpenAI-compatible endpoint (GST-1365's referee).
  *
  * The module builds a request (`compatRequest`), sends it exactly once (`compatSend`), parses the response
  * (`parseCompatResponse`) and classifies an error (`classifyCompatError`, `compatError`). It never retries and
@@ -14,6 +15,11 @@
  * room for reasoning. It is never sent `temperature` or `seed` (Particle then samples with top_p 0.85), except by
  * the weight canary's explicit `canary` sampling mode. Its `/v1/responses` route is WebSocket-only (HTTP answers
  * 405), so nothing here calls it.
+ *
+ * Gemini (ai.google.dev/gemini-api/docs/openai, checked 2026-11-04): Chat Completions at
+ * https://generativelanguage.googleapis.com/v1beta/openai with the bearer key GEMINI_API_KEY. gemini-4-argon thinks
+ * at the effort sent (`low`, `medium` or `high`), and its thinking shares the output limit, so every request sends an
+ * output limit with room for thinking (the row's output floor). It is a judge only: GST-1365's third-family referee.
  *
  * Credit stop: Particle is prepaid, and an empty balance answers HTTP 402. Any 402 on a request here that carries
  * neither metering proxy's own marker is credit exhaustion and becomes `ParticleCreditExhausted`, which keeps
@@ -80,6 +86,38 @@ export const COMPAT_PROVIDERS: Readonly<Record<string, CompatProvider>> = {
   },
 };
 
+/**
+ * OpenAI-compatible providers that only judge: built and sent by the same pieces as COMPAT_PROVIDERS, but never a reader,
+ * agent or answer model, so nothing that routes readers (qa-v2's hasChatRoute, the workload suites, baselines) sees them.
+ * Today Gemini, GST-1365's third-family referee.
+ */
+export const JUDGE_PROVIDERS: Readonly<Record<string, CompatProvider>> = {
+  gemini: {
+    label: 'Gemini',
+    base_url_env: 'GEMINI_OPENAI_BASE_URL',
+    base_url_default: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    base_url_alternates: [],
+    key_env: 'GEMINI_API_KEY',
+    output_limit_field: 'max_completion_tokens',
+    usage: 'openai',
+    source: 'ai.google.dev/gemini-api/docs/openai and GET /v1beta/models (gemini-4-argon listed), checked 2026-11-04',
+    models: {
+      'gemini-4-argon': {
+        request_id: 'gemini-4-argon',
+        response_model: 'gemini-4-argon',
+        context_tokens: 1_048_576,
+        output_ceiling: 65_536,
+        default_effort: 'high',
+        output_floor: 8_192,
+        efforts: { low: 'low', medium: 'medium', high: 'high' },
+      },
+    },
+  },
+};
+
+/** The row of an OpenAI-compatible provider, reader or judge-only. */
+export const compatProviderRow = (provider: string): CompatProvider | undefined => own(COMPAT_PROVIDERS, provider) ?? own(JUDGE_PROVIDERS, provider);
+
 /** The models every model-comparison run includes (plan GST-605, decision B). A runner lists any it cannot route under `models_not_run`. */
 export const PRIMARY_MODELS = ['anthropic:claude-opus-5-5', 'particle:particle-1'] as const;
 
@@ -97,8 +135,8 @@ function own<T>(table: Readonly<Record<string, T>>, key: string): T | undefined 
 
 /** A provider's base URL, read from the passed environment when called (a metering proxy sets it per slot). */
 export function compatBaseUrl(provider: string, env: Record<string, string | undefined> = process.env): string {
-  const row = own(COMPAT_PROVIDERS, provider);
-  if (!row) throw new Error(`no OpenAI-compatible provider ${JSON.stringify(provider)} in COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts)`);
+  const row = compatProviderRow(provider);
+  if (!row) throw new Error(`no OpenAI-compatible provider ${JSON.stringify(provider)} in COMPAT_PROVIDERS or JUDGE_PROVIDERS (eval/runner/providers/openai-compatible.ts)`);
   return (env[row.base_url_env] || row.base_url_default).replace(/\/+$/, '');
 }
 
@@ -146,8 +184,8 @@ export interface CompatRequest {
 export function compatRequest(model: string, messages: CompatMessage[], opts: CompatOptions = {}, env: Record<string, string | undefined> = process.env): CompatRequest {
   const at = model.indexOf(':');
   const providerName = at > 0 ? model.slice(0, at) : '';
-  const provider = own(COMPAT_PROVIDERS, providerName);
-  if (!provider) throw new Error(`${model}: no OpenAI-compatible provider ${JSON.stringify(providerName)} in COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts)`);
+  const provider = compatProviderRow(providerName);
+  if (!provider) throw new Error(`${model}: no OpenAI-compatible provider ${JSON.stringify(providerName)} in COMPAT_PROVIDERS or JUDGE_PROVIDERS (eval/runner/providers/openai-compatible.ts)`);
   const row = own(provider.models, model.slice(at + 1));
   if (!row) throw new Error(`${model}: not a ${provider.label} model in COMPAT_PROVIDERS; add its row (context, output ceiling, efforts) from the provider's model list first`);
   const key = env[provider.key_env];
@@ -371,7 +409,7 @@ export function carriesKeyInCleartext(url: string): boolean {
 export function assertMetered(req: CompatRequest): void {
   if (isLoopbackUrl(req.url)) return;
   const { protocol, hostname } = new URL(req.url);
-  const label = own(COMPAT_PROVIDERS, req.provider)?.label ?? req.provider;
+  const label = compatProviderRow(req.provider)?.label ?? req.provider;
   if (!priceRequest(req.url, req.body)) throw new BudgetExceededError(`budget: the ledger cannot price ${hostname.replace(/\.$/, '')}, so this ${label} request would spend unmetered; register the host and the model's price in eval/runner/budget-ledger.ts first`);
   if (carriesKeyInCleartext(req.url)) throw new BudgetExceededError(`budget: ${protocol}//${hostname} would carry the ${label} key in cleartext; a host that is not loopback is reached only over https`);
 }
