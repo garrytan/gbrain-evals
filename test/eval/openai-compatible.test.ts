@@ -12,7 +12,7 @@ import { join, relative, resolve } from 'node:path';
 import { BudgetExceededError, chatPrice, priceRequest } from '../../eval/runner/budget-ledger.ts';
 import { REFUSAL_TYPE } from '../../eval/runner/harness-metering-proxy.ts';
 import {
-  CANARY_MAX_OUTPUT_TOKENS, COMPAT_PROVIDERS, CompatHttpError, PRIMARY_MODELS, ParticleCreditExhausted, RETRY_AFTER_CAP_MS,
+  CANARY_MAX_OUTPUT_TOKENS, COMPAT_PROVIDERS, CompatHttpError, JUDGE_PROVIDERS, PRIMARY_MODELS, ParticleCreditExhausted, RETRY_AFTER_CAP_MS,
   assertMetered, classifyCompatError, compatError, compatMayHaveBilled, compatRequest, compatSend, modelsNotRun, parseCompatResponse, type CanarySampling,
 } from '../../eval/runner/providers/openai-compatible.ts';
 import { hasChatRoute, sendsTemperature } from '../../eval/runner/memory-qa/qa-v2.ts';
@@ -477,7 +477,7 @@ describe('which particle transport failures may be sent again (#288)', () => {
 
 describe('receipts', () => {
   test('every provider in the table follows the usage convention usage-receipt.ts gives it', () => {
-    for (const [provider, row] of Object.entries(COMPAT_PROVIDERS)) for (const model of Object.keys(row.models)) expect(usageSourceOf(`${provider}:${model}`)).toBe(row.usage);
+    for (const [provider, row] of Object.entries({ ...COMPAT_PROVIDERS, ...JUDGE_PROVIDERS })) for (const model of Object.keys(row.models)) expect(usageSourceOf(`${provider}:${model}`)).toBe(row.usage);
   });
 
   test('a receipt carries request and response_meta; a failed attempt\'s response_meta is all null', () => {

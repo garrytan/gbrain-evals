@@ -45,7 +45,7 @@ export const USAGE_RECEIPT_SCHEMA = 'usage-receipt/v1';
 
 export type UsageSource = 'anthropic' | 'openai' | 'gbrain-think';
 
-/** The providers in COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts), whose usage follows OpenAI chat; a test keeps the two in step. */
+/** The providers in COMPAT_PROVIDERS and JUDGE_PROVIDERS (eval/runner/providers/openai-compatible.ts), whose usage follows OpenAI chat; a test keeps them in step. */
 const OPENAI_CHAT_COMPATIBLE = new Set(['particle', 'gemini']);
 
 export interface NormalizedUsage {

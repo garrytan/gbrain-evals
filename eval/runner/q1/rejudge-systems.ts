@@ -181,6 +181,33 @@ export function reuseResults(out: string): ReuseResult[] {
   return existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith('.json')).sort().map(f => JSON.parse(readFileSync(join(dir, f), 'utf8')) as ReuseResult) : [];
 }
 
+/**
+ * Score a reuse check from its log and, once every task has a record, write its result. A judge_error is final and
+ * counts as a disagreement, so it can only make the check fail.
+ */
+export function recordReuseCheck(out: string, judge: string, tasks: readonly Task[], prior: Record<string, boolean>, remaining: number): ReuseResult {
+  const ids = new Set(tasks.map(t => t.answer_id));
+  const records = new RecordLog(join(out, 'reuse-check', `${family(judge)}.ndjson`), 'judgment').all().filter(j => j.judge_replicate === 0 && ids.has(j.answer_id));
+  const agreement = wilson(records.filter(j => scored(j) && prior[j.answer_id] === (j.score >= PASS_THRESHOLD)).length, records.length);
+  const result: ReuseResult = { judge, sample: tasks.length, agreement, bar: REUSE_BAR, pass: agreement.share !== null && agreement.share >= REUSE_BAR };
+  if (!remaining && records.length === tasks.length) writeFileSync(join(out, 'reuse-check', `${family(judge)}.json`), JSON.stringify(result) + '\n');
+  return result;
+}
+
+/** The first paid subcommand on an out records its ledger, and any other ledger is refused, so a second ledger never starts a second ceiling. */
+export function tieLedger(out: string, ledgerPath: string): void {
+  const tie = join(out, 'ledger.json');
+  const tied = existsSync(tie) ? (JSON.parse(readFileSync(tie, 'utf8')) as { ledger: string }).ledger : null;
+  if (tied && tied !== ledgerPath) throw refuse({ code: 'USAGE', message: `${out} spends on the ledger ${tied}, not ${ledgerPath}`, why: 'one ledger holds the GST-1365 ceiling for every stage of an out; a second ledger would start another', fix: { next: 'run', argv: [...FRONT, '<subcommand>', '--budget-ledger', tied] } });
+  if (!tied) writeFileSync(tie, JSON.stringify({ ledger: ledgerPath }) + '\n');
+}
+
+/** The tasks with no record in this run's own log; a logged judge_error is attempted and unscored, so it never leaves its stratum partial. */
+export function unattempted(s: Pick<Sources, 'own'>, tasks: readonly Task[]): Task[] {
+  const logged = new Set(s.own.filter(j => j.judge_replicate === 0).map(j => reuseKey(j.answer_id, j.instrument_id, j.instrument_sha256)));
+  return tasks.filter(t => !logged.has(reuseKey(t.answer_id, t.instrument_id, t.instrument_sha256)));
+}
+
 /** Per-question values of one cell under M (published, every replicate), M0, F and R, by scoreboard.ts's own outcome rules. */
 export function cellValues(s: Pick<Sources, 'campaigns'>, cell: LoadedCell, index: Map<string, JudgmentRecord & { score: number }>): CellValues {
   const set = s.campaigns[cell.root].sets.find(x => x.id === cell.def.set)!;
@@ -378,7 +405,7 @@ function censusAnswers(s: Sources, strata: readonly Stratum[], cuts: Cuts | null
 
 /** The referee's population, within the census's answers: every canonical/frontier disagreement at 0.5 and a seeded 600-answer agreement sample stratified by set, reader family and system. Refuses until its strata are frozen. */
 export function refereePopulation(s: Sources, cuts: Cuts | null): { tasks: Task[]; disagreements: string[]; agreements: string[] } {
-  const strata = refereeStrata(cuts), left = frontierTasks(s, strata, cuts).tasks.length;
+  const strata = refereeStrata(cuts), left = unattempted(s, frontierTasks(s, strata, cuts).tasks).length;
   if (left) throw refuse({ code: 'PREFLIGHT_FAILED', message: `${left} frontier judgments are still missing in strata ${strata.join(', ')}`, why: 'the referee judges a frozen population of disagreements (complete strata, or strata the cut order dropped)', fix: { next: 'run', argv: [...FRONT, 'judge', '--stratum', '<stratum>'] } });
   const all = censusAnswers(s, strata, cuts).filter(r => r.m !== null && r.f !== null);
   const disagree = (r: { m: number | null; f: number | null }) => (r.m! >= PASS_THRESHOLD) !== (r.f! >= PASS_THRESHOLD);
@@ -683,18 +710,21 @@ if (import.meta.main) {
       const through = Number(one('--through')), reason = one('--reason') ?? '', prior = readCuts(out);
       if (!Number.isInteger(through) || through < 1 || through > CUT_STEPS.length || !reason.trim()) throw refuse({ code: 'USAGE', message: '--through takes 1 to 5 and --reason the measured projection', why: 'cuts follow the preregistered order, first to last', fix: { next: 'run', argv: [...FRONT, 'plan', '--rates-from', out] } });
       if (prior && prior.through > through) throw refuse({ code: 'USAGE', message: `cut ${prior.through} already applies`, why: 'a cut is never undone', fix: { next: 'report', user_message: 'keep the recorded cut' } });
+      const begun = (['A', 'B', 'C', 'D'] as Stratum[]).filter(x => existsSync(join(out, `identity-${x}.json`)));
+      if (begun.length) throw refuse({ code: 'USAGE', message: `the census of stratum ${begun.join(', ')} has begun`, why: 'cuts are made before any census lease (preregistration section 7); the smoke and the reuse checks pin no census', fix: { next: 'report', user_message: 'keep the recorded cuts' } });
       writeFileSync(join(out, 'cuts.json'), JSON.stringify({ through, reason, at: new Date().toISOString() }) + '\n');
       console.log(JSON.stringify({ cut: CUT_STEPS.slice(0, through) }));
       process.exit(0);
     }
     const s = loadSources(many('--root'), out);
-    if (sub === 'plan' || sub === 'summary') reproduce(s);
+    if (['plan', 'summary', 'judge', 'reuse-check', 'referee', 'controls'].includes(sub)) reproduce(s);
     if (sub === 'plan') { console.log(JSON.stringify(plan(s, measuredRates(many('--rates-from').map(o => resolve(o)))), null, 2)); process.exit(0); }
     const cuts = readCuts(out);
     if (sub === 'summary') {
       const report = resolve(one('--report') ?? join(out, 'report'));
       mkdirSync(report, { recursive: true });
-      const partial = (['A', 'B', 'C', 'D'] as Stratum[]).filter(x => frontierTasks(s, [x], cuts).tasks.length > 0);
+      const partial = (['A', 'B', 'C', 'D'] as Stratum[]).filter(x => unattempted(s, frontierTasks(s, [x], cuts).tasks).length > 0);
+      const keyless = readJson<{ keyless: boolean }>(join(out, 'upstream.json'))?.keyless ?? null;
       const r = contrastResults(s, cuts, partial);
       const ref = readJson<{ disagreements: string[]; agreements: string[]; categories?: Record<string, string> }>(join(out, 'referee.json'));
       const disagreeRows = ref ? refereeRows(s, ref.disagreements, ref.categories) : [];
@@ -708,8 +738,8 @@ if (import.meta.main) {
       const verdict = (frontier: string[], p: ReturnType<typeof wilson>) => !refereeResult ? 'unsettled' : whichJudge({ valid: refereeResult.valid, pF: p,
         canonicalMoreAccurate: frontier.some(f => more(CANONICAL, f) === CANONICAL), frontierMoreAccurate: frontier.some(f => more(CANONICAL, f) === f) });
       const which = { pooled: verdict([SOL, OPUS], pF(disagreeRows)), claude_rows: verdict([SOL], pF(disagreeRows.filter(x => x.group.startsWith('Claude rows')))), sol_rows: verdict([OPUS], pF(disagreeRows.filter(x => x.group.startsWith('Sol rows')))) };
-      const json = JSON.stringify({ schema: 'gbrain-evals/gst-1365-summary/v1', preregistration: PREREGISTRATION, partial_strata: partial, cuts, families: r.families, ranks: r.ranks, contrasts: r.contrasts, referee: refereeResult, controls: ctlResult, which_judge: which }, null, 2) + '\n';
-      const md = `# GST-1365 summary\n\nFamily verdicts: ${Object.entries(r.families).map(([f, v]) => `${f} ${v}`).join('; ')}. Which judge: ${Object.entries(which).map(([k, v]) => `${k} ${v}`).join('; ')}.\n\n${renderContrasts(r.contrasts)}`;
+      const json = JSON.stringify({ schema: 'gbrain-evals/gst-1365-summary/v1', preregistration: PREREGISTRATION, keyless, partial_strata: partial, cuts, families: r.families, ranks: r.ranks, contrasts: r.contrasts, referee: refereeResult, controls: ctlResult, which_judge: which }, null, 2) + '\n';
+      const md = `# GST-1365 summary\n\n${keyless ? 'Keyless rehearsal: a fake upstream gave these judgments, so nothing here is a measurement.\n\n' : ''}Family verdicts: ${Object.entries(r.families).map(([f, v]) => `${f} ${v}`).join('; ')}. Which judge: ${Object.entries(which).map(([k, v]) => `${k} ${v}`).join('; ')}.\n\n${renderContrasts(r.contrasts)}`;
       guardIds(json + md, s);
       writeFileSync(join(report, 'summary.json'), json);
       writeFileSync(join(report, 'summary.md'), md);
@@ -725,6 +755,7 @@ if (import.meta.main) {
     if (one('--ledger-cap-usd') !== undefined && Number(one('--ledger-cap-usd')) !== ceiling) throw refuse({ code: 'USAGE', message: `the GST-1365 ledger ceiling is $${ceiling}; --ledger-cap-usd may only repeat it`, why: 'the API ceiling is pinned in code and rises only with a recorded reserve grant (R71)', fix: { next: 'run', argv: [...FRONT, sub, '--reserve-grant', '<usd>=<GBEV-3\'s words>'] } });
     const keyless = keylessUpstreamArg(argv);
     claimOut(out, !!keyless, 'gst-1365');
+    tieLedger(out, resolve(ledger));
     let tasks: Task[], extra: Record<string, unknown> = {}, logPath = join(out, 'judgments.ndjson'), cache = join(out, 'cache', 'qa');
     let question: (t: Task) => MemoryQuestion;
     if (sub === 'judge') {
@@ -809,19 +840,14 @@ if (import.meta.main) {
       const meters = join(out, 'meters.ndjson');
       const meter = metering(`http://127.0.0.1:${proxy.port}`, { meter: (m: MeterLine) => appendFileSync(meters, JSON.stringify(m) + '\n') }, process.env);
       const log = new RecordLog(logPath, 'judgment');
-      const run = await judgeTasks(tasks, question, log, { client: new ChatClient(cache), around: (key, fn) => meter.around('judge', key, 'judge', fn), concurrency, stopFile: join(out, 'STOP') });
+      const run = await judgeTasks(tasks, question, log, { client: new ChatClient(cache, undefined, undefined, { holdMayHaveBilled: true }), around: (key, fn) => meter.around('judge', key, 'judge', fn), concurrency, stopFile: join(out, 'STOP') });
       const code = stopCode(run, committed(resolve(ledger)), ceiling);
       const usage = ndjson<UsageLine>(usageLog), split = existsSync(usageLog) ? usageSplit(usageLog) : null;
       const perModel: Record<string, { ledger_usd: number; requests: number; output_over_cap: number }> = {};
       for (const u of usage) { if (u.outcome === 'refused') continue; const m = perModel[u.model ?? 'unknown'] ??= { ledger_usd: 0, requests: 0, output_over_cap: 0 }; m.ledger_usd += u.actual_usd ?? 0; m.requests++; if (u.output_cap && (u.output_tokens ?? 0) > u.output_cap) m.output_over_cap++; }
       const perJudge = Object.fromEntries(Object.entries(run.per_judge).map(([j, n]) => [j, { answers: n, ledger_usd: perModel[j.slice(j.indexOf(':') + 1)]?.ledger_usd ?? 0 }]));
       if (sub === 'reuse-check') {
-        const prior = extra.prior as Record<string, boolean>;
-        const now = new RecordLog(logPath, 'judgment').all().filter(scored);
-        const agreement = wilson(now.filter(j => prior[j.answer_id] === (j.score >= PASS_THRESHOLD)).length, now.length);
-        const result: ReuseResult = { judge: extra.judge as string, sample: tasks.length, agreement, bar: REUSE_BAR, pass: agreement.share !== null && agreement.share >= REUSE_BAR };
-        if (!run.remaining && now.length === tasks.length) writeFileSync(join(out, 'reuse-check', `${family(result.judge)}.json`), JSON.stringify(result) + '\n');
-        extra = { ...result };
+        extra = { ...recordReuseCheck(out, extra.judge as string, tasks, extra.prior as Record<string, boolean>, run.remaining) };
       }
       const receipt = { schema: 'gbrain-evals/gst-1365-receipt/v1', subcommand: sub, run_id: runId, keyless: !!keyless, attestation, ceiling_usd: ceiling, reserve_grant: grant, cuts, ...extra,
         counts: { tasks: tasks.length, judged: run.judged, remaining: run.remaining, request_errors: run.request_errors, held_may_have_billed: run.held }, last_error: run.last_error, stop: code,

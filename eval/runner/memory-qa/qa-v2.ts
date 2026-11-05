@@ -163,8 +163,13 @@ export function chatCacheKey(model: string, prompt: string, opts: ChatOptions): 
 }
 
 export class ChatClient extends BaseChatClient implements ChatLike {
-  /** `compatTimeoutMs`: each attempt's deadline for an OpenAI-compatible provider (`compatDeadlineMs` of its URL when unset). */
-  constructor(private cacheRoot: string, private retryDelayMs: (attempt: number) => number = attempt => 2000 * 2 ** attempt, private compatTimeoutMs?: number) { super(cacheRoot, retryDelayMs); }
+  /**
+   * `compatTimeoutMs`: each attempt's deadline for an OpenAI-compatible provider (`compatDeadlineMs` of its URL when unset).
+   * `holdMayHaveBilled`: an OpenAI or Anthropic request that may have reached the provider (a 504, a timeout, a lost
+   * connection; `compatMayHaveBilled`) is not sent again, as an OpenAI-compatible provider's never is.
+   */
+  constructor(private cacheRoot: string, private retryDelayMs: (attempt: number) => number = attempt => 2000 * 2 ** attempt, private compatTimeoutMs?: number,
+    private options: { holdMayHaveBilled?: boolean } = {}) { super(cacheRoot, retryDelayMs); }
 
   /**
    * A failure after retries throws the last error with `attempt_errors` (one message per attempt) attached, and for an
@@ -189,7 +194,7 @@ export class ChatClient extends BaseChatClient implements ChatLike {
         const status = (e as { status?: number }).status;
         const retryable = compat ? (e as { retryable?: boolean }).retryable !== false : status === undefined || status >= 500 || status === 429;
         const budget = compat ? (e as Error).name === 'BudgetExceededError' : /budget|BudgetExceeded/i.test(String((e as Error).message));
-        const billed = compat !== null && compatMayHaveBilled(e);
+        const billed = (compat !== null || this.options.holdMayHaveBilled === true) && compatMayHaveBilled(e);
         const stop = budget || !retryable || billed || attempt === 4;
         const retryAfterMs = compat && !stop ? (e as { retryAfterMs?: number | null }).retryAfterMs ?? null : null;
         if (compat) compatAttempts.push({ retry_after_ms: retryAfterMs, usage: (e as { usage?: Record<string, unknown> | null }).usage ?? null });

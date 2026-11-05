@@ -18,7 +18,8 @@ import { DEFAULT_ROUTE_CAPS, MeteringProxy } from '../../eval/runner/metering-pr
 import { metering } from '../../eval/runner/q1/cell.ts';
 import { cohorts, questionView } from '../../eval/runner/q1/rejudge-rule.ts';
 import { buildControls, CANONICAL, cellOf, cellValues, ceilingUsd, checkIdentity, checkInstruments, checkPair, contrastResults, CONTRASTS, controlTasks, exitFor, frontierTasks, guardIds, isBudgetStop, judgeFor,
-  judgeTasks, judgmentIndex, loadSources, OPUS, openLease, plan, preflightKeys, refereePopulation, refereeSmoke, REFEREE, renderContrasts, reproduce, SOL, stopCode, type Published, type Task } from '../../eval/runner/q1/rejudge-systems.ts';
+  judgeTasks, judgmentIndex, loadSources, OPUS, openLease, plan, preflightKeys, recordReuseCheck, refereePopulation, refereeSmoke, REFEREE, renderContrasts, reproduce, SOL, stopCode, tieLedger, unattempted, type Published,
+  type Task } from '../../eval/runner/q1/rejudge-systems.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../../eval/runner/shootout-cell.ts';
 
@@ -263,6 +264,43 @@ describe('judging, resume and stops', () => {
     const cut = refereePopulation(s, { through: 3, reason: 'projection', at: 'now' });
     expect(cut.tasks.some(t => t.set === 'D8' || t.set === 'S2a')).toBe(false);
   });
+
+  // Value: protects=the preregistration's judge-error rule: a judgment still unparsable after three attempts is final and unscored, is never asked again, leaves no stratum partial, and the referee still runs on the pairs with both scores; fails_when=a logged judge_error counts as missing forever, so the referee refuses and every family resting on its stratum reads INCOMPLETE; why_new=/ship review finding (red team, judge_error); seam=judgeTasks/unattempted/refereePopulation; no_claim=none
+  test('a judge_error is final: never asked again, no stratum left partial, and the referee still runs', async () => {
+    const out = join(tmp, 'judge-error');
+    const all = frontierTasks(loadSources(roots, out), ['A', 'B', 'C', 'D'], null);
+    const target = all.tasks[0];
+    let garbledCalls = 0;
+    const garbled: ChatLike = { async chat(): Promise<ChatResult> { garbledCalls++; return { text: 'no verdict here', input_tokens: 10, output_tokens: 2, cached: false, ...NO_META }; } };
+    const failed = await judgeTasks([target], question, log(out), { client: garbled });
+    expect([failed.judged, failed.remaining, failed.request_errors, garbledCalls]).toEqual([1, 0, 0, 3]);
+    const rest = scripted();
+    const run = await judgeTasks(all.tasks, question, log(out), { client: rest, concurrency: 8 });
+    expect([run.judged, run.remaining]).toEqual([all.tasks.length - 1, 0]);
+    const s = loadSources(roots, out);
+    expect(s.own.find(j => j.answer_id === target.answer_id)?.outcome).toBe('judge_error');
+    const left = frontierTasks(s, ['A', 'B', 'C', 'D'], null).tasks;
+    expect([left.map(t => t.answer_id), unattempted(s, left)]).toEqual([[target.answer_id], []]);
+    const pop = refereePopulation(s, null);
+    expect([pop.disagreements.length > 0, pop.tasks.some(t => t.answer_id === target.answer_id)]).toEqual([true, false]);
+  });
+
+  // Value: protects=a reuse check whose sample holds a judge_error still writes its result, the judge_error counted as a disagreement, so the census is never blocked for good; fails_when=a judge_error keeps the result file from being written, or counts as an agreement; why_new=/ship review finding (red team, judge_error); seam=recordReuseCheck; no_claim=none
+  test('a reuse check that holds a judge_error still writes its result, counting it as a disagreement', () => {
+    const out = join(tmp, 'reuse-error');
+    const tasks = frontierTasks(loadSources(roots, out), ['A'], null).tasks.filter(t => t.judge === SOL).slice(0, 100);
+    const prior = Object.fromEntries(tasks.map(t => [t.answer_id, true]));
+    const reuse = log(join(out, 'reuse-check'), 'openai.ndjson'), file = join(out, 'reuse-check', 'openai.json');
+    tasks.forEach((t, i) => {
+      const j = judgment(t.answer_id, t.instrument_id, t.instrument_sha256, SOL, 1);
+      reuse.append(i ? j : { ...j, score: null, parse_ok: false, outcome: 'judge_error' });
+    });
+    recordReuseCheck(out, SOL, tasks, prior, 1);
+    expect([tasks.length, existsSync(file)]).toEqual([100, false]);
+    const result = recordReuseCheck(out, SOL, tasks, prior, 0);
+    expect([result.sample, result.agreement.share, result.pass]).toEqual([100, 0.99, true]);
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual(result);
+  });
 });
 
 describe('known-answer controls (d6)', () => {
@@ -342,6 +380,39 @@ describe('money, keys and the proxy', () => {
     expect(seen.sort()).toEqual(['https://api.anthropic.com/v1/models/claude-opus-5-5', 'https://api.openai.com/v1/models/gpt-6.1-sol']);
   });
 
+  // Value: protects=d7's one ledger per out: a paid subcommand on an out that already spent on one ledger refuses any other ledger path; fails_when=a mistyped or relative --budget-ledger starts a fresh $850 ceiling for the same out; why_new=/ship review finding (red team, ledger tie); seam=tieLedger; no_claim=none
+  test('an out is tied to its first ledger, and another ledger path is refused', () => {
+    const out = join(tmp, 'tie'), first = join(tmp, 'tie-ledger.sqlite'), other = join(tmp, 'other-ledger.sqlite');
+    mkdirSync(out, { recursive: true });
+    tieLedger(out, first);
+    tieLedger(out, first);
+    expect(JSON.parse(readFileSync(join(out, 'ledger.json'), 'utf8'))).toEqual({ ledger: first });
+    const op = refusal(() => tieLedger(out, other));
+    expect([op.code, op.message]).toEqual(['USAGE', `${out} spends on the ledger ${first}, not ${other}`]);
+  });
+
+  // Value: protects=a Sol or Opus judge request that may have reached its provider (the proxy's 504 on an upstream timeout) is sent once, as a Gemini or Particle request is; fails_when=qa-v2's chat client resends it up to five times, each attempt charged its reservation; why_new=/ship review finding (testing specialist, money-retry); seam=ChatClient holdMayHaveBilled through MeteringProxy; no_claim=does not call a live provider
+  test('a Sol judge request the proxy answers 504 is sent once with holdMayHaveBilled, five times without it', async () => {
+    const out = join(tmp, 'hold');
+    const claude = frontierTasks(loadSources(roots, out), ['A'], null).tasks.find(t => t.judge === SOL)!;
+    let sends = 0;
+    const fetchImpl = (async () => { sends++; throw Object.assign(new Error('The operation timed out.'), { name: 'TimeoutError' }); }) as unknown as typeof fetch;
+    mkdirSync(out, { recursive: true });
+    const lease = openLease({ runId: 'gst-1365-hold', leaseUsd: 5, ledgerPath: join(tmp, 'hold-ledger.sqlite'), ceiling: 850 });
+    const proxy = new MeteringProxy({ fetchImpl, policy: { lease, usageLog: join(out, 'usage.ndjson'), env: { OPENAI_API_KEY: 'dummy', ANTHROPIC_API_KEY: 'dummy', GEMINI_API_KEY: 'dummy-gemini' },
+      routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
+    proxy.start();
+    try {
+      const meter = metering(`http://127.0.0.1:${proxy.port}`, { meter: () => {} }, process.env);
+      const around = (key: string, fn: () => Promise<unknown>) => meter.around('judge', key, 'judge', fn);
+      const held = await judgeTasks([claude], question, log(join(out, 'held')), { client: new ChatClient(join(out, 'cache-held'), () => 0, undefined, { holdMayHaveBilled: true }), around });
+      expect([held.held, held.remaining, sends]).toEqual([1, 1, 1]);
+      sends = 0;
+      const resent = await judgeTasks([claude], question, log(join(out, 'resent')), { client: new ChatClient(join(out, 'cache-resent'), () => 0), around });
+      expect([resent.held, resent.remaining, sends]).toEqual([1, 1, 5]);
+    } finally { proxy.stop(); lease.close(); }
+  });
+
   // Value: protects=a judgment is sent only under the instrument the canonical judgment used; fails_when=a tree whose instrument hash moved judges answers whose reuse key it can never meet; why_new=new; seam=checkInstruments; no_claim=none
   test('a task whose receipt instrument is not this tree\'s is refused', () => {
     const tasks = frontierTasks(loadSources(roots, join(tmp, 'inst')), ['A'], null).tasks;
@@ -392,6 +463,33 @@ describe('money, keys and the proxy', () => {
       const lost = await judgeTasks([referee(other)], question, log(out), { client: new ChatClient(join(out, 'cache')), around });
       expect([lost.judged, lost.held, lost.remaining, by('generativelanguage.googleapis.com').length - before]).toEqual([0, 1, 1, 1]);
     } finally { proxy.stop(); lease.close(); }
+  });
+});
+
+describe('the command line', () => {
+  const cli = (args: string[]) => {
+    const r = Bun.spawnSync(['bun', 'eval/runner/q1/rejudge-systems.ts', ...args], { cwd: join(import.meta.dir, '..', '..'), env: { PATH: process.env.PATH ?? '', HOME: process.env.HOME ?? '' } });
+    return { code: r.exitCode, text: r.stdout.toString() + r.stderr.toString() };
+  };
+
+  // Value: protects=preregistration section 7: cuts are made before any census lease, while the smoke and the reuse checks, which pin no census, leave the cut open; fails_when=a contrast is cut after its census began, or a reuse check blocks the cut it informs; why_new=/ship review finding (red team, cut order); seam=rejudge-systems.ts cut; no_claim=none
+  test('cut refuses once a census identity file exists, and not after a reuse check', () => {
+    const out = join(tmp, 'cut-cli');
+    mkdirSync(out, { recursive: true });
+    writeFileSync(join(out, 'identity-reuse-openai.json'), '{}');
+    expect(cli(['cut', '--through', '1', '--reason', 'projection', '--out', out]).code).toBe(0);
+    writeFileSync(join(out, 'identity-B.json'), '{}');
+    const refused = cli(['cut', '--through', '2', '--reason', 'projection', '--out', out]);
+    expect([refused.code !== 0, refused.text.includes('the census of stratum B has begun')]).toEqual([true, true]);
+    expect(JSON.parse(readFileSync(join(out, 'cuts.json'), 'utf8')).through).toBe(1);
+  });
+
+  // Value: protects=a failed reproduction costs nothing: a paid subcommand runs the reproduction check (scoreboard.ts's derive() on each receipt) before its key preflight, its ledger and its lease; fails_when=a paid stage opens a lease or calls a provider on receipts that do not reproduce the published contrasts; why_new=/ship review finding (red team, reproduce on paid paths); seam=rejudge-systems.ts judge; no_claim=the fixture receipts fail derive()'s schema check, so this shows the order, not a REPRODUCTION_FAILED message
+  test('a paid subcommand runs the reproduction check first and refuses before any ledger, key or lease', () => {
+    const out = join(tmp, 'repro-cli'), ledger = join(tmp, 'repro-cli-ledger.sqlite');
+    const r = cli(['judge', '--stratum', 'A', ...roots.flatMap(x => ['--root', x]), '--out', out, '--budget-ledger', ledger, '--run-id', 'gst-1365-repro', '--lease-usd', '1', '--keyless-upstream', 'http://127.0.0.1:9']);
+    expect([r.code !== 0, r.text.includes('RECEIPT_INVALID') && r.text.includes('campaign.json schema')]).toEqual([true, true]);
+    expect([existsSync(ledger), existsSync(join(out, 'ledger.json'))]).toEqual([false, false]);
   });
 });
 

@@ -105,7 +105,9 @@ with replicates (Sonnet x3 on Q1's S1 competitor rows) is compared on the same a
 **One cohort.** Every view of a contrast is computed on one common cohort: the published cohort's questions where every
 reader's value exists for both systems under M0 and F (and the referee, for K). It is reported beside the published
 cohort. A contrast whose common cohort is short of the published cohort by more than 2% of its questions, or loses any
-whole conversation, is INCOMPLETE and gets no outcome class.
+whole conversation, is INCOMPLETE and gets no outcome class. A judge error (a judgment still unparsable after three
+attempts) is final: the answer counts as judged and unscored, so it leaves the common cohort like any missing value and
+leaves no stratum partial, and in a reuse check it counts as a disagreement.
 
 **Reproduction first.** Before any frontier number, `plan` and `summary` run scoreboard.ts's own derive() on each
 receipt, require every in-scope comparison's Δ, interval and cohort to equal the committed scoreboards' values below to
