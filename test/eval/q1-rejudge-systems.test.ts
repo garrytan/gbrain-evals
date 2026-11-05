@@ -522,6 +522,13 @@ describe('reports', () => {
     expect(p.strata.A.by_judge).toEqual({ [SOL]: { needed: 129, reusable: 11, to_judge: 118 }, [OPUS]: { needed: 65, reusable: 0, to_judge: 65 } });
     expect(p.projection.central.lines.A).toBeCloseTo(118 * 0.0188 + 65 * 0.068, 9);
     expect([p.instrument_mismatch, p.measured.compared, p.projection.central.cut_through, p.projection.central.fits]).toEqual([[], 11, 0, true]);
+    const none = { ...s, own: [] }, usd = (ts: Task[]) => ts.reduce((y, t) => y + (t.judge === SOL ? 0.0188 : 0.068), 0);
+    const census = (['A', 'B', 'C', 'D'] as const).reduce((y, x) => y + p.projection.central.lines[x], 0);
+    expect(usd(frontierTasks(none, ['C'], null).tasks)).toBeGreaterThan(p.projection.central.lines.C + 1);
+    expect(census).toBeCloseTo(usd(frontierTasks(none, ['A', 'B', 'C', 'D'], null).tasks), 9);
+    expect(p.strata.C.new_to_judge).toBe(frontierTasks(none, ['A', 'B', 'C'], null).tasks.length - frontierTasks(none, ['A', 'B'], null).tasks.length);
+    const answers = new Set(frontierTasks(none, ['A', 'B', 'C', 'D'], null).scope);
+    expect(p.projection.central.lines.referee).toBeCloseTo((answers.size * p.measured.disagreement_rate! + 600) * 0.03, 9);
     const table = renderContrasts(contrastResults(s, null).contrasts);
     expect(() => guardIds(table + JSON.stringify(p.contrasts), s)).not.toThrow();
     expect(refusal(() => guardIds(`mean 0.5 on ${qid('S2a', 0, 0)}`, s)).message).toContain('question id');

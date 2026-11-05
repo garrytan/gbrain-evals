@@ -287,4 +287,38 @@ particle-1 call, so the Particle line does not apply.
 
 ## Amendments
 
-None yet. Stage 0's dated note goes here before any spend.
+**2026-11-05: Stage 0, before any spend.** `plan` ran on the custody host at 989bb472 with F6's receipt, Q1's receipt
+and the eight paid second-judge outs from the particle-1 add-on (each `keyless: false`). The reproduction check passed:
+every in-scope published contrast and canonical cell matched scoreboard.ts's derive(). Nothing here changes the rule, a
+cell, a judge, the cut order or the ceiling.
+
+- **Coverage.** Q1's competitor rows are the same answers as F6's, so each answer is counted once, in the first stratum
+  that holds it (A, then B, C, D). Still to judge: 2,130 in A, 3,301 in B, 2,408 in C and 3,600 in D, or 6,933 by
+  gpt-6.1-sol and 4,506 by claude-opus-5-5 (the estimate above was 7,133 and 4,354). The census covers 15,382 answers,
+  of which 3,943 already have a reusable family-clean frontier judgment.
+- **Measured from existing judgments.** 5,440 answers have both a canonical and a family-clean frontier judgment. They
+  disagree at the pass threshold on 15.9%, with a root-mean-square score shift of 0.69 on disagreeing answers and 0.16
+  on the rest (assumed above: 14%, 0.6 and 0.1).
+- **Power at the measured values**, with the same model (correlation 0.2 between systems and between readers, design
+  effect 1.3):
+
+  | Set | Per reader | Three-reader mean |
+  |---|---:|---:|
+  | S1 (199) | 8.9 points | 6.1 points |
+  | S2b (240) | 8.1 | 5.5 |
+  | D8 (300) | 7.2 | 4.9 |
+  | S2a, Q1 only (140) | 10.6 | 7.2 |
+  | S1 and S2b pooled | 6.0 | 4.1 |
+
+  Contrasts at or above their set's three-reader figure: F6's S1 verbatim-session, temporal graph and file agent, F6's
+  S2b verbatim-session and temporal graph, and Q1's S1 file agent. Now below it, and reported as intervals like the
+  level contrasts: F6's S1 memory-bank (5.7 against 6.1), F6's S2b extract-first (4.8 against 5.5), D8's three
+  contrasts (3.8 to 4.3 against 4.9) and Q1's S1 verbatim-session (5.1 against 6.1).
+- **Money, before the smoke.** With each answer counted once, the API lines come to $600 at central rates (census
+  $437, referee $91 on about 2,450 expected disagreements plus the 600-answer agreement sample, controls $72) and
+  $1,066 at conservative rates, which would fire cut steps 1 to 4 and leave $728. The smoke's measured rates replace
+  these before any census lease, and the cut decision counts the smoke's and reuse checks' settled spend against the
+  $850 ceiling as well.
+- **Runner fix.** Stage 0 found that `plan` counted the answers Q1 shares with F6 twice, in stratum C's census line and
+  in the referee line. That would have overstated the projection by about $85 at central rates and fired one cut step
+  too many at conservative rates. The projection now counts each answer once.
