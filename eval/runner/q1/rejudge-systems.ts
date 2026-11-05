@@ -46,7 +46,7 @@ import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { custodyGate, frontierInstrumentId, JUDGED, metering, type MeterLine } from './cell.ts';
 import { ALL_SETS, type SetId } from './cells/definitions.ts';
-import { cohorts, contrast, controls as controlStats, familyVerdict, judgeEffect, outcome, questionView, ranks, referee as refereeStats, whichJudge, wilson,
+import { cohorts, contrast, controls as controlStats, familyVerdict, judgeEffect, level, outcome, questionView, ranks, referee as refereeStats, whichJudge, wilson,
   type CellValues, type ControlRow, type Interval, type Outcome as RuleOutcome, type RankedContrast, type ReaderValue, type RefereeRow } from './rejudge-rule.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 
@@ -128,7 +128,13 @@ const ndjson = <T>(path: string): T[] => existsSync(path) ? readFileSync(path, '
 const cellKey = (root: string, cell: string) => `${root}:${cell}`;
 export const cellOf = (s: Sources, root: string, id: string) => s.cells.get(cellKey(root, id))!;
 
-/** The receipts, every cell a contrast names (judgments with A19's frontier redo applied), and the paid second-judge judgments. */
+/**
+ * The receipts, every cell a contrast names (judgments with A19's frontier redo applied), and the paid second-judge
+ * judgments. An answer id names one answer: answerId hashes the cell, question, reader and replicate but not the
+ * campaign, and F6 reran Q1's S1 file agent under the same cell id, so where Q1's receipt holds another text under an id
+ * F6's also uses, Q1's answer and its judgments take a root-qualified id. Neither receipt's judgments then score the
+ * other's text, while answers both receipts hold verbatim keep one id and are judged once.
+ */
 export function loadSources(roots: string[], out: string): Sources {
   const named = (k: string) => roots.filter(r => r.startsWith(`${k}=`)).map(r => resolve(r.slice(k.length + 1)));
   const [f6Root] = named('f6'), [q1Root] = named('q1');
@@ -146,6 +152,13 @@ export function loadSources(roots: string[], out: string): Sources {
     const redo = new Map(ndjson<JudgmentRecord>(join(dir, 'frontier-redo.ndjson')).map(j => [jkey(j), j]));
     cells.set(cellKey(c.root, id), { def, root: c.root, instrument: receipt.instrument, answers: ndjson<AnswerRecord>(join(dir, 'answers.ndjson')),
       judgments: ndjson<JudgmentRecord>(join(dir, 'judgments.ndjson')).map(j => redo.get(jkey(j)) ?? j) });
+  }
+  const f6Text = new Map([...cells.values()].filter(c => c.root === 'f6').flatMap(c => c.answers.map(a => [a.answer_id, a.text] as const)));
+  for (const c of [...cells.values()].filter(x => x.root === 'q1')) {
+    const moved = new Map(c.answers.filter(a => f6Text.has(a.answer_id) && f6Text.get(a.answer_id) !== a.text).map(a => [a.answer_id, sha256(`q1|${a.answer_id}`)]));
+    if (!moved.size) continue;
+    c.answers = c.answers.map(a => ({ ...a, answer_id: moved.get(a.answer_id) ?? a.answer_id }));
+    c.judgments = c.judgments.map(j => ({ ...j, answer_id: moved.get(j.answer_id) ?? j.answer_id }));
   }
   const secondJudge: JudgmentRecord[] = [];
   for (const sj of named('second-judge')) {
@@ -363,7 +376,7 @@ export function buildControls(questions: Record<string, MemoryQuestion[]>, perSe
   const answers: ControlAnswer[] = [];
   let skipped = 0, abstention = 0;
   for (const set of Object.keys(questions).sort()) {
-    const pool = questions[set].filter(q => q.answer && q.rubric?.length && q.category !== 'event_ordering').map(q => ({ answer_id: q.id, set, system: 'controls', q }));
+    const pool = questions[set].filter(q => q.answer && q.category !== 'event_ordering').map(q => ({ answer_id: q.id, set, system: 'controls', q }));
     for (const { q } of stratifiedSample(pool, perSet, `${seed}|${set}`, x => x.q.category)) {
       const gold = q.answer!;
       const id = (k: string) => sha256(`gst-1365-control|${set}|${q.id}|${k}`);
@@ -559,7 +572,7 @@ export function checkInstruments(tasks: readonly Task[], instruments: (id: strin
 
 // ─── Results ─────────────────────────────────────────────────────────
 
-export interface ContrastResult { id: string; family: string; set: string; cut: boolean; published_cohort: number; common_cohort: number; canonical: Interval; M0: Interval | null; F: Interval | null; K: Interval | null; effect: Interval | null; sol_two_reader: Interval | null; per_reader: Record<string, { M0: Interval; F: Interval }>; outcome: RuleOutcome | 'NOT RUN (CUT ORDER)'; separated: boolean; reasons: string[] }
+export interface ContrastResult { id: string; family: string; set: string; cut: boolean; published_cohort: number; common_cohort: number; canonical: Interval; M0: Interval | null; F: Interval | null; K: Interval | null; effect: Interval | null; sol_two_reader: Interval | null; per_reader: Record<string, { M0: Interval; F: Interval }>; levels: Record<'anchor' | 'other', { M0: number | null; F: number | null }> | null; outcome: RuleOutcome | 'NOT RUN (CUT ORDER)'; separated: boolean; reasons: string[] }
 
 /** Every contrast under M, M0, F and K on its common cohort, its outcome, the per-set ranks and the family verdicts. */
 export function contrastResults(s: Sources, cuts: Cuts | null, partial: readonly Stratum[] = [], publishedOf: (c: ContrastDef) => Published | null = c => c.published): { contrasts: ContrastResult[]; families: Record<string, string>; ranks: Record<string, unknown> } {
@@ -570,14 +583,15 @@ export function contrastResults(s: Sources, cuts: Cuts | null, partial: readonly
     const coh = cohorts(A, Bv, readers, scheduledOf(s, c));
     const p = publishedOf(c);
     const canonical = p ? { delta: p.delta, ci95: p.ci95 } : contrast(A, Bv, readers, coh.published, 'M');
-    const base = { id: c.id, family: c.family, set: c.set, published_cohort: coh.published.length, common_cohort: coh.common.length, canonical, M0: null, F: null, K: null, effect: null, sol_two_reader: null, per_reader: {} };
+    const base = { id: c.id, family: c.family, set: c.set, published_cohort: coh.published.length, common_cohort: coh.common.length, canonical, M0: null, F: null, K: null, effect: null, sol_two_reader: null, per_reader: {}, levels: null };
     if (cutContrast(c, cuts)) return { ...base, cut: true, outcome: 'NOT RUN (CUT ORDER)', separated: false, reasons: [`cut order: ${CUT_STEPS.slice(0, cuts!.through).join('; ')}`] };
     if (coh.incomplete || !coh.common.length) return { ...base, cut: false, ...outcome({ canonical, F: canonical, effect: canonical, perReader: {}, incomplete: coh.incomplete ?? 'no common cohort' }) };
     const per_reader = Object.fromEntries(readers.map(r => [r, { M0: contrast(A, Bv, [r], coh.common, 'M0'), F: contrast(A, Bv, [r], coh.common, 'F') }]));
     const F = contrast(A, Bv, readers, coh.common, 'F'), effect = judgeEffect(A, Bv, readers, coh.common);
     const kCoh = refereeStrata(cuts).includes(c.stratum) ? cohorts(A, Bv, readers, scheduledOf(s, c), true) : null;
     const sol = readers.filter(r => judgeFor(r) === SOL);
-    return { ...base, cut: false, M0: contrast(A, Bv, readers, coh.common, 'M0'), F, effect, per_reader,
+    const levels = { anchor: { M0: level(A, readers, coh.common, 'M0'), F: level(A, readers, coh.common, 'F') }, other: { M0: level(Bv, readers, coh.common, 'M0'), F: level(Bv, readers, coh.common, 'F') } };
+    return { ...base, cut: false, M0: contrast(A, Bv, readers, coh.common, 'M0'), F, effect, per_reader, levels,
       K: kCoh && !kCoh.incomplete && kCoh.common.length ? contrast(A, Bv, readers, kCoh.common, 'K') : null,
       sol_two_reader: sol.length > 1 && sol.length < readers.length ? contrast(A, Bv, sol, coh.common, 'F') : null,
       ...outcome({ canonical, F, effect, perReader: Object.fromEntries(Object.entries(per_reader).map(([r, v]) => [r, v.F])), incomplete: null }) };
@@ -619,6 +633,9 @@ const iv = (i: Interval | null) => (!i ? 'n/a' : `${pts(i.delta)} (${i.ci95 ? `$
 export function renderContrasts(results: readonly ContrastResult[]): string {
   const lines = ['| Contrast | Published cohort | Common cohort | Δ_M (canonical) | Δ_M0 | Δ_F | δ = Δ_F − Δ_M0 | Δ_K | Outcome |', '|---|---:|---:|---:|---:|---:|---:|---:|---|'];
   for (const c of results) lines.push(`| ${c.id} | ${c.published_cohort} | ${c.common_cohort} | ${iv(c.canonical)} | ${iv(c.M0)} | ${iv(c.F)} | ${iv(c.effect)} | ${iv(c.K)} | ${c.outcome}${c.reasons.length ? `: ${c.reasons.join('; ')}` : ''} |`);
+  const pct = (x: number | null | undefined) => (x === null || x === undefined ? 'n/a' : `${(x * 100).toFixed(1)}%`);
+  lines.push('', 'Levels on the common cohort, three-reader mean (reported, not ruled on):', '', '| Contrast | gbrain under M0 | gbrain under F | Comparator under M0 | Comparator under F |', '|---|---:|---:|---:|---:|');
+  for (const c of results) lines.push(`| ${c.id} | ${pct(c.levels?.anchor.M0)} | ${pct(c.levels?.anchor.F)} | ${pct(c.levels?.other.M0)} | ${pct(c.levels?.other.F)} |`);
   return lines.join('\n') + '\n';
 }
 
@@ -739,17 +756,16 @@ if (import.meta.main) {
       const keyless = readJson<{ keyless: boolean }>(join(out, 'upstream.json'))?.keyless ?? null;
       const r = contrastResults(s, cuts, partial);
       const ref = readJson<{ disagreements: string[]; agreements: string[]; categories?: Record<string, string> }>(join(out, 'referee.json'));
-      const disagreeRows = ref ? refereeRows(s, ref.disagreements, ref.categories) : [];
-      const refereeResult = ref ? refereeStats(refereeRows(s, ref.agreements, ref.categories), disagreeRows) : null;
+      const refereeResult = ref ? refereeStats(refereeRows(s, ref.agreements, ref.categories), refereeRows(s, ref.disagreements, ref.categories)) : null;
       const ctl = readJson<ControlAnswer[]>(join(out, 'controls.json'));
       const ctlJudged = ndjson<JudgmentRecord>(join(out, 'controls-judgments.ndjson')).filter(scored);
-      const ctlRows: ControlRow[] = (ctl ?? []).map(c => ({ question: sha256(`${c.set}|${c.question_id}`).slice(0, 16), control: c.control, correct: Object.fromEntries(ctlJudged.filter(j => j.answer_id === c.answer_id).map(j => [j.judge, (j.score >= PASS_THRESHOLD) === (c.expected === 'pass')])) }));
+      const abstaining = new Set((ctl ?? []).filter(c => c.control === 'C3' && c.expected === 'pass').map(c => `${c.set}|${c.question_id}`));
+      const ctlRows: ControlRow[] = (ctl ?? []).map(c => ({ question: sha256(`${c.set}|${c.question_id}`).slice(0, 16), set: c.set, abstention: abstaining.has(`${c.set}|${c.question_id}`), control: c.control, correct: Object.fromEntries(ctlJudged.filter(j => j.answer_id === c.answer_id).map(j => [j.judge, (j.score >= PASS_THRESHOLD) === (c.expected === 'pass')])) }));
       const ctlResult = ctl ? controlStats(ctlRows, [CANONICAL, SOL, OPUS, REFEREE]) : null;
       const more = (a: string, b: string) => ctlResult?.paired[[a, b].sort().join(' minus ')]?.more_accurate ?? null;
-      const pF = (rows: RefereeRow[]) => wilson(rows.filter(x => x.r === x.f).length, rows.length);
-      const verdict = (frontier: string[], p: ReturnType<typeof wilson>) => !refereeResult ? 'unsettled' : whichJudge({ valid: refereeResult.valid, pF: p,
+      const verdict = (frontier: string[], p: ReturnType<typeof wilson> | undefined) => !refereeResult || !p ? 'unsettled' : whichJudge({ valid: refereeResult.valid, pF: p,
         canonicalMoreAccurate: frontier.some(f => more(CANONICAL, f) === CANONICAL), frontierMoreAccurate: frontier.some(f => more(CANONICAL, f) === f) });
-      const which = { pooled: verdict([SOL, OPUS], pF(disagreeRows)), claude_rows: verdict([SOL], pF(disagreeRows.filter(x => x.group.startsWith('Claude rows')))), sol_rows: verdict([OPUS], pF(disagreeRows.filter(x => x.group.startsWith('Sol rows')))) };
+      const which = { pooled: verdict([SOL, OPUS], refereeResult?.p_F), claude_rows: verdict([SOL], refereeResult?.by_row.claude_rows), sol_rows: verdict([OPUS], refereeResult?.by_row.sol_rows) };
       const json = JSON.stringify({ schema: 'gbrain-evals/gst-1365-summary/v1', preregistration: PREREGISTRATION, keyless, partial_strata: partial, cuts, families: r.families, ranks: r.ranks, contrasts: r.contrasts, referee: refereeResult, controls: ctlResult, which_judge: which }, null, 2) + '\n';
       const md = `# GST-1365 summary\n\n${keyless ? 'Keyless rehearsal: a fake upstream gave these judgments, so nothing here is a measurement.\n\n' : ''}Family verdicts: ${Object.entries(r.families).map(([f, v]) => `${f} ${v}`).join('; ')}. Which judge: ${Object.entries(which).map(([k, v]) => `${k} ${v}`).join('; ')}.\n\n${renderContrasts(r.contrasts)}`;
       guardIds(json + md, s);

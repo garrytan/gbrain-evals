@@ -72,6 +72,11 @@ export function contrast(anchor: CellValues, other: CellValues, readers: readonl
   return delta(questions.map(q => ({ id: q, cluster: anchor.get(q)!.conversation, a: questionView(other.get(q), view, readers)!, b: questionView(anchor.get(q), view, readers)! })));
 }
 
+/** A cell's mean under a view on the given questions: an absolute level, reported beside the contrasts and never ruled on. */
+export function level(cell: CellValues, readers: readonly string[], questions: readonly string[], view: View): number | null {
+  return questions.length ? round(questions.reduce((a, q) => a + questionView(cell.get(q), view, readers)!, 0) / questions.length) : null;
+}
+
 /** δ = Δ_F − Δ_M0, paired by question, with the same bootstrap. */
 export function judgeEffect(anchor: CellValues, other: CellValues, readers: readonly string[], questions: readonly string[]): Interval {
   const d = (v: View, q: string) => questionView(anchor.get(q), v, readers)! - questionView(other.get(q), v, readers)!;
@@ -161,15 +166,16 @@ export function referee(agreements: readonly RefereeRow[], disagreements: readon
   const groups = [...new Set(disagreements.map(x => x.group))].sort();
   const categories = [...new Set(disagreements.flatMap(x => x.category ? [x.category] : []))].sort();
   return { agreement_sample: agreements.length, validity, valid, disagreements: disagreements.length, p_F: pF(disagreements),
+    by_row: { claude_rows: pF(disagreements.filter(x => x.group.startsWith('Claude rows'))), sol_rows: pF(disagreements.filter(x => x.group.startsWith('Sol rows'))) },
     by_group: Object.fromEntries(groups.map(g => [g, pF(disagreements.filter(x => x.group === g))])),
     by_category: Object.fromEntries(categories.map(c => [c, pF(disagreements.filter(x => x.category === c))])),
     by_direction: { frontier_stricter: pF(disagreements.filter(x => x.m && !x.f)), frontier_more_lenient: pF(disagreements.filter(x => !x.m && x.f)) } };
 }
 
 /** One control answer's verdict per judge: whether that judge's verdict matched the known one. */
-export interface ControlRow { question: string; control: string; correct: Record<string, boolean> }
+export interface ControlRow { question: string; set: string; abstention: boolean; control: string; correct: Record<string, boolean> }
 
-/** Error rates per judge and control, and paired differences between judges (clustered by question, same bootstrap). */
+/** Error rates per judge and control, paired differences between judges (clustered by question, same bootstrap), and per set the questions, the C2 answers and the C2 answers on abstention questions. */
 export function controls(rows: readonly ControlRow[], judges: readonly string[]) {
   const err = (j: string, xs: readonly ControlRow[]) => { const n = xs.filter(x => j in x.correct); return { n: n.length, error: n.length ? round(n.filter(x => !x.correct[j]).length / n.length) : null }; };
   const kinds = [...new Set(rows.map(r => r.control))].sort();
@@ -183,7 +189,11 @@ export function controls(rows: readonly ControlRow[], judges: readonly string[])
     const more = excludesZero(d) && Math.abs(d.delta) >= MORE_ACCURATE_POINTS ? (d.delta < 0 ? a : b) : null;
     pairs[`${a} minus ${b}`] = { ...d, n: both.length, more_accurate: more };
   }
-  return { error_rates: per, paired: pairs };
+  const counts = Object.fromEntries([...new Set(rows.map(r => r.set))].sort().map(set => {
+    const xs = rows.filter(r => r.set === set), c2 = xs.filter(r => r.control === 'C2');
+    return [set, { questions: new Set(xs.map(r => r.question)).size, c2: c2.length, c2_on_abstention: c2.filter(r => r.abstention).length }];
+  }));
+  return { error_rates: per, paired: pairs, counts };
 }
 
 export type WhichJudge = 'frontier' | 'canonical' | 'unsettled';

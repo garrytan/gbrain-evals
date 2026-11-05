@@ -323,13 +323,20 @@ cell, a judge, the cut order or the ceiling.
   in the referee line. That would have overstated the projection by about $85 at central rates and fired one cut step
   too many at conservative rates. The projection now counts each answer once.
 
+**2026-11-05: what "rubric-scored" means in the controls.** In the known-answer controls, "rubric-scored" means scored
+by BEAM's rubric instrument, as opposed to event_ordering's rank-order score. D8's questions carry no rubric items, and
+the instrument scores each against its gold answer as one rubric item (`eval/runner/memory-qa/instruments.ts`), so they
+are eligible, as the 50 D8 questions this section names require. The controls runner had read the word as "carries
+rubric items" and drew no D8 question; 0.10.164 fixes it before the D8 controls run. Nothing here changes the rule, a
+cell, a judge, the cut order or the ceiling.
+
 **2026-11-05: Three runner fixes before the summary.** Found in custody after the census, referee and controls runs and
 before any result was rendered; fixed in [#376](https://github.com/garrytan/gbrain-evals/pull/376). Nothing here changes
 the rule, a cell, a judge, the cut order or the ceiling.
 
-- **Controls.** The control builder took only questions with rubric items. D8's questions have none (BEAM's instrument
-  scores them against the gold answer), so the first controls run held S1 and S2b only. A second run judged D8's 50
-  questions under the fixed builder and reused S1's and S2b's judgments.
+- **Controls.** The control builder took only questions with rubric items (see the note above), so the first controls
+  run held S1 and S2b only: 356 answers. A second run from f61894b9 judged D8's 50 questions under the fixed builder,
+  198 answers because 2 of them have no eligible C2 text, and reused S1's and S2b's judgments.
 - **Shared answer ids.** "Q1's competitor rows are the same answers as F6's" holds for every shared cell but the
   BEAM-10M file agent: F6 reran it under Q1's cell id, and the answer id names the cell, question, reader and replicate,
   not the campaign, so 577 of its 600 first answers hold different texts under ids both receipts use. Q1's frontier

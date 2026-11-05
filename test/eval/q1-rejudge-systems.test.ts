@@ -6,7 +6,7 @@
  * through the real lease proxy including Gemini's, and the guard that keeps question ids out of reports.
  */
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetExceededError, closeLedgers, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
@@ -141,6 +141,28 @@ describe('what each frontier judge grades', () => {
     }
   });
 
+  // Value: protects=an answer id names one answer: F6 reran Q1's S1 file agent under the same cell id, so the two receipts share answer ids (answerId hashes cell, question, reader and replicate) but not texts; fails_when=one receipt's frontier judgment scores the other's text, Q1's moved answers lose their judgments or canonical values, or answers both receipts hold verbatim are judged twice; why_new=custody found F6's S1 file-agent F reading Q1's frontier judgments; seam=loadSources; no_claim=none
+  test('a Q1 answer whose id F6 uses for another text takes its own id with its judgments; verbatim-shared answers keep one id', () => {
+    const q1x = join(tmp, 'q1x'), dir = join(q1x, 'cells', PRODUCT.cell), inst = instrumentFor('beam-10m');
+    cpSync(q1, q1x, { recursive: true });
+    const rerun = (a: AnswerRecord) => a.reader !== SOL && a.conversation !== 'S1-c2';
+    const answers = readFileSync(join(dir, 'answers.ndjson'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as AnswerRecord).map(a => (rerun(a) ? { ...a, text: `${a.text} Q1RUN` } : a));
+    writeFileSync(join(dir, 'answers.ndjson'), lines(answers));
+    writeFileSync(join(dir, 'judgments.ndjson'), readFileSync(join(dir, 'judgments.ndjson'), 'utf8') + lines(answers.filter(a => a.reader !== SOL && a.outcome === 'scored').map(a => judgment(a.answer_id, `${inst.id}@${SOL}`, inst.sha256, SOL, 0))));
+    const s = loadSources([`f6=${f6}`, `q1=${q1x}`], join(tmp, 'ids'));
+    const [F6c, Q1c] = [cellOf(s, 'f6', PRODUCT.cell), cellOf(s, 'q1', PRODUCT.cell)];
+    const f6Id = new Map(F6c.answers.map(a => [`${a.question_id}|${a.reader}|${a.replicate}`, a.answer_id]));
+    const moved = Q1c.answers.filter(a => a.answer_id !== f6Id.get(`${a.question_id}|${a.reader}|${a.replicate}`));
+    expect([moved.length, moved.every(a => a.text.endsWith(' Q1RUN')), Q1c.answers.filter(a => a.text.endsWith(' Q1RUN')).length]).toEqual([18, true, 18]);
+    const ids = new Set(Q1c.answers.map(a => a.answer_id));
+    expect(Q1c.judgments.every(j => ids.has(j.answer_id))).toBe(true);
+    const plain = loadSources(roots, join(tmp, 'ids')), M = (x: typeof s) => [...cellValues(x, cellOf(x, 'q1', PRODUCT.cell), judgmentIndex(x)).values()].map(q => questionView(q, 'M', READERS));
+    expect(M(s)).toEqual(M(plain));
+    const q1Extract = new Set(cellOf(s, 'q1', EXTRACT).answers.map(a => a.answer_id));
+    expect(cellOf(s, 'f6', EXTRACT).answers.every(a => q1Extract.has(a.answer_id))).toBe(true);
+    expect([frontierTasks(s, ['A'], null).tasks.length, frontierTasks(s, ['A'], null).reusable]).toEqual([177, 17]);
+  });
+
   // Value: protects=the reuse check's consequence: a judge whose re-judged sample agrees below 95% has its old judgments judged again, while this run's own stay reused; fails_when=a failed check still reuses receipt or second-judge judgments, or discards the run's own; why_new=plan section 4 reuse check; seam=reuseResults/loadSources distrust; no_claim=none
   test('a failed reuse check for gpt-6.1-sol sends its 11 receipt judgments again; a passed one keeps them', () => {
     const write = (out: string, pass: boolean) => { mkdirSync(join(out, 'reuse-check'), { recursive: true }); writeFileSync(join(out, 'reuse-check', 'openai.json'), JSON.stringify({ judge: SOL, sample: 100, agreement: { share: pass ? 0.97 : 0.9, ci95: null }, bar: 0.95, pass })); };
@@ -196,6 +218,8 @@ describe('judging, resume and stops', () => {
     const mean = (cell: string, q: string) => READERS.reduce((a, rd) => a + fOf(cell, rd, q), 0) / 3;
     expect([extract.published_cohort, extract.common_cohort, extract.outcome === 'INCOMPLETE']).toEqual([10, 10, false]);
     expect(extract.F!.delta).toBeCloseTo(qs.reduce((a, q) => a + mean(ANCHOR, q) - mean(EXTRACT, q), 0) / qs.length, 6);
+    expect(extract.levels!.anchor.F).toBeCloseTo(qs.reduce((a, q) => a + mean(ANCHOR, q), 0) / qs.length, 6);
+    expect(extract.levels!.other.F).toBeCloseTo(qs.reduce((a, q) => a + mean(EXTRACT, q), 0) / qs.length, 6);
     expect(Object.keys(extract.per_reader).sort()).toEqual([...READERS].sort());
     expect(extract.K).toBeNull();
     expect(r.contrasts.filter(x => x.family === 'F6' && x.set === 'S2b').every(x => x.outcome === 'INCOMPLETE')).toBe(true);
@@ -307,11 +331,11 @@ describe('known-answer controls (d6)', () => {
   const CATS = ['information_extraction', 'multi_session_reasoning', 'event_ordering', 'abstention'];
   const controlQuestions = (set: string): MemoryQuestion[] => [0, 1, 2, 3].flatMap(c => Array.from({ length: 20 }, (_, i) => ({
     id: `${set}-k${c}-${i}`, conversation: `${set}-k${c}`, question: 'q?', category: CATS[i % 4], gold: [], abstention: CATS[i % 4] === 'abstention',
-    answer: i === 4 ? `Gold ${set}-k${c}-0!` : `gold ${set}-k${c}-${i}`, rubric: ['item'] })));
+    answer: i === 4 ? `Gold ${set}-k${c}-0!` : `gold ${set}-k${c}-${i}`, ...(set === 'D8' ? {} : { rubric: ['item'] }) })));
   const questions = { S1: controlQuestions('S1'), S2b: controlQuestions('S2b'), D8: controlQuestions('D8') };
   const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
-  // Value: protects=the 600 control answers and their known verdicts, with C2's abstention fix and the duplicate-gold skip; fails_when=a control is nondeterministic, includes event_ordering, gives a C2 equal to the question's own gold, draws an abstention question's C2 from another abstention question, or scores C3 wrong; why_new=autoplan finding (d6); seam=buildControls; no_claim=none
+  // Value: protects=the 600 control answers and their known verdicts, with C2's abstention fix and the duplicate-gold skip; fails_when=a control is nondeterministic, drops D8 (its questions carry no rubric items, so its instrument scores the gold answer), includes event_ordering, gives a C2 equal to the question's own gold, draws an abstention question's C2 from another abstention question, or scores C3 wrong; why_new=autoplan finding (d6); seam=buildControls; no_claim=none
   test('50 questions per set, four controls each, deterministic, C2 never the own gold and never from an abstention question', () => {
     const b = buildControls(questions);
     expect(buildControls(questions)).toEqual(b);

@@ -4,7 +4,7 @@
  * accuracy and the which-judge verdict.
  */
 import { describe, expect, test } from 'bun:test';
-import { cohorts, contrast, controls, familyVerdict, judgeEffect, outcome, questionView, ranks, readerView, referee, whichJudge, wilson, type CellValues, type Interval, type RankedContrast, type ReaderValue } from '../../eval/runner/q1/rejudge-rule.ts';
+import { cohorts, contrast, controls, familyVerdict, judgeEffect, level, outcome, questionView, ranks, readerView, referee, whichJudge, wilson, type CellValues, type Interval, type RankedContrast, type ReaderValue } from '../../eval/runner/q1/rejudge-rule.ts';
 
 const v = (M: number | null, F: number | null = M, R: number | null = null, M0: number | null = M): ReaderValue => ({ M, M0, F, R });
 /** n questions over conversations of size per, each with one reader whose value comes from fn. */
@@ -41,12 +41,13 @@ describe('views and the common cohort', () => {
     expect(cohorts(cell(10, 5, () => null), other, ['r'], ids(10)).incomplete).toBe('no published cohort');
   });
 
-  // Value: protects=the signs of Δ and δ; fails_when=anchor and comparator swap, or δ is Δ_M0 − Δ_F; why_new=new; seam=contrast/judgeEffect over clusteredPairedDelta; no_claim=none
-  test('Δ is anchor minus comparator and δ is Δ_F minus Δ_M0', () => {
+  // Value: protects=the signs of Δ and δ, and each cell's absolute level on the same cohort; fails_when=anchor and comparator swap, δ is Δ_M0 − Δ_F, or a level averages another view or cohort; why_new=levels are new (the preregistration reports them); seam=contrast/judgeEffect over clusteredPairedDelta, level; no_claim=none
+  test('Δ is anchor minus comparator, δ is Δ_F minus Δ_M0, and levels are each cell\'s mean on the cohort', () => {
     const anchor = cell(20, 5, i => v(1, i < 10 ? 0 : 1)), other = cell(20, 5, () => v(0));
     expect(contrast(anchor, other, ['r'], ids(20), 'M0')).toEqual({ delta: 1, ci95: [1, 1] });
     expect(contrast(anchor, other, ['r'], ids(20), 'F').delta).toBe(0.5);
     expect(judgeEffect(anchor, other, ['r'], ids(20)).delta).toBe(-0.5);
+    expect([level(anchor, ['r'], ids(20), 'M0'), level(anchor, ['r'], ids(20), 'F'), level(anchor, ['r'], ids(10), 'F'), level(other, ['r'], ids(20), 'F'), level(anchor, ['r'], [], 'F')]).toEqual([1, 0.5, 0, 0, null]);
   });
 });
 
@@ -101,15 +102,17 @@ describe('which judge is right', () => {
     expect(referee(agree(84), dis).valid).toBe(false);
     const res = referee(agree(90), dis);
     expect([res.disagreements, res.p_F.share, res.by_group['Claude rows|a'].share, res.by_group['Sol rows|b'].share]).toEqual([4, 0.75, 1, 0.5]);
+    expect([res.by_row.claude_rows.share, res.by_row.sol_rows.share]).toEqual([1, 0.5]);
     expect([res.by_direction.frontier_stricter.share, res.by_direction.frontier_more_lenient.share]).toEqual([0.5, 1]);
     expect(res.by_category.x.share).toBeCloseTo(2 / 3, 3);
     expect(res.by_category.y.share).toBe(1);
   });
 
   // Value: protects=a judge is more accurate on known answers only by 3 points with a paired interval excluding 0; fails_when=a small or noisy difference crowns a judge, or the pair key or sign flips; why_new=new; seam=controls; no_claim=none
-  test('control error rates per judge and control, and the paired more-accurate call', () => {
-    const rows = Array.from({ length: 200 }, (_, i) => ({ question: `q${Math.floor(i / 4)}`, control: `C${(i % 4) + 1}`, correct: { a: true, b: i % 10 !== 0, c: i % 100 !== 0 } }));
+  test('control error rates per judge and control, the paired more-accurate call, and the C2 counts per set', () => {
+    const rows = Array.from({ length: 200 }, (_, i) => ({ question: `q${Math.floor(i / 4)}`, set: i < 100 ? 'S1' : 'D8', abstention: i % 40 < 4, control: `C${(i % 4) + 1}`, correct: { a: true, b: i % 10 !== 0, c: i % 100 !== 0 } }));
     const res = controls(rows, ['a', 'b', 'c']);
+    expect(controls(rows.filter(r => !(r.control === 'C2' && r.question === 'q1')), ['a']).counts).toEqual({ D8: { questions: 25, c2: 25, c2_on_abstention: 2 }, S1: { questions: 25, c2: 24, c2_on_abstention: 3 } });
     expect([res.error_rates.a.total.error, res.error_rates.b.total.error, res.error_rates.c.total.error]).toEqual([0, 0.1, 0.01]);
     expect(res.paired['a minus b'].more_accurate).toBe('a');
     expect(res.paired['a minus b'].delta).toBeCloseTo(-0.1, 6);
