@@ -165,8 +165,9 @@ export function chatCacheKey(model: string, prompt: string, opts: ChatOptions): 
 export class ChatClient extends BaseChatClient implements ChatLike {
   /**
    * `compatTimeoutMs`: each attempt's deadline for an OpenAI-compatible provider (`compatDeadlineMs` of its URL when unset).
-   * `holdMayHaveBilled`: an OpenAI or Anthropic request that may have reached the provider (a 504, a timeout, a lost
-   * connection; `compatMayHaveBilled`) is not sent again, as an OpenAI-compatible provider's never is.
+   * `holdMayHaveBilled`: an OpenAI or Anthropic request whose error says it may have reached the provider
+   * (`compatMayHaveBilled`: a 504, a timeout or a connection lost after sending) is not sent again, as an OpenAI-compatible
+   * provider's never is. A lease proxy's own transport retries, and the 502 it answers after them, are outside this rule.
    */
   constructor(private cacheRoot: string, private retryDelayMs: (attempt: number) => number = attempt => 2000 * 2 ** attempt, private compatTimeoutMs?: number,
     private options: { holdMayHaveBilled?: boolean } = {}) { super(cacheRoot, retryDelayMs); }
