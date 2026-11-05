@@ -2,6 +2,13 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.164] - 2026-11-05
+
+### GST-1365's known-answer controls include D8 (GST-1365)
+
+- **What was wrong.** `buildControls` in `eval/runner/q1/rejudge-systems.ts` took only questions that carry rubric items. D8's questions carry none, because BEAM's rubric instrument scores a question without rubric items against its gold answer, so the controls run on 2026-11-05 held 356 answers from S1 and S2b and none from D8, where the preregistration names 50 questions from each of S1, S2b and D8.
+- **The fix.** A control question now needs a gold answer and a category other than event_ordering, as the preregistration says. S1's and S2b's questions all carry rubric items, so their controls are unchanged, and the judgments already made on them are reused. `test/eval/q1-rejudge-systems.test.ts` now gives its invented D8 questions no rubric items, as the real corpus has, so the controls tests fail on the old filter.
+
 ## [0.10.163] - 2026-11-05
 
 ### GST-1365 Stage 0: the preregistration's dated note, and plan counts each shared answer once (GST-1365)

@@ -307,11 +307,11 @@ describe('known-answer controls (d6)', () => {
   const CATS = ['information_extraction', 'multi_session_reasoning', 'event_ordering', 'abstention'];
   const controlQuestions = (set: string): MemoryQuestion[] => [0, 1, 2, 3].flatMap(c => Array.from({ length: 20 }, (_, i) => ({
     id: `${set}-k${c}-${i}`, conversation: `${set}-k${c}`, question: 'q?', category: CATS[i % 4], gold: [], abstention: CATS[i % 4] === 'abstention',
-    answer: i === 4 ? `Gold ${set}-k${c}-0!` : `gold ${set}-k${c}-${i}`, rubric: ['item'] })));
+    answer: i === 4 ? `Gold ${set}-k${c}-0!` : `gold ${set}-k${c}-${i}`, ...(set === 'D8' ? {} : { rubric: ['item'] }) })));
   const questions = { S1: controlQuestions('S1'), S2b: controlQuestions('S2b'), D8: controlQuestions('D8') };
   const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
-  // Value: protects=the 600 control answers and their known verdicts, with C2's abstention fix and the duplicate-gold skip; fails_when=a control is nondeterministic, includes event_ordering, gives a C2 equal to the question's own gold, draws an abstention question's C2 from another abstention question, or scores C3 wrong; why_new=autoplan finding (d6); seam=buildControls; no_claim=none
+  // Value: protects=the 600 control answers and their known verdicts, with C2's abstention fix and the duplicate-gold skip; fails_when=a control is nondeterministic, drops D8 (its questions carry no rubric items, so its instrument scores the gold answer), includes event_ordering, gives a C2 equal to the question's own gold, draws an abstention question's C2 from another abstention question, or scores C3 wrong; why_new=autoplan finding (d6); seam=buildControls; no_claim=none
   test('50 questions per set, four controls each, deterministic, C2 never the own gold and never from an abstention question', () => {
     const b = buildControls(questions);
     expect(buildControls(questions)).toEqual(b);

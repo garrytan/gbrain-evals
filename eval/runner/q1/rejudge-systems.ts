@@ -363,7 +363,7 @@ export function buildControls(questions: Record<string, MemoryQuestion[]>, perSe
   const answers: ControlAnswer[] = [];
   let skipped = 0, abstention = 0;
   for (const set of Object.keys(questions).sort()) {
-    const pool = questions[set].filter(q => q.answer && q.rubric?.length && q.category !== 'event_ordering').map(q => ({ answer_id: q.id, set, system: 'controls', q }));
+    const pool = questions[set].filter(q => q.answer && q.category !== 'event_ordering').map(q => ({ answer_id: q.id, set, system: 'controls', q }));
     for (const { q } of stratifiedSample(pool, perSet, `${seed}|${set}`, x => x.q.category)) {
       const gold = q.answer!;
       const id = (k: string) => sha256(`gst-1365-control|${set}|${q.id}|${k}`);
