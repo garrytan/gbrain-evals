@@ -19,8 +19,8 @@ One comparison changes. On BEAM-100K sealed (Q1's S2a set, 140 questions), the f
 the other cannot. The judge's shift on it, +1.7 points (-2.8 to +5.8), is itself within noise.
 
 Every other comparison holds: F6's ten comparisons on BEAM-10M and BEAM-1M sealed, its three on D8, and Q1's other
-seven. Under frontier judges the 14 that separated the two systems keep their sign, their rank and their size, and the
-6 that were level stay level. The family verdicts are F6 HOLDS, D8 HOLDS and Q1 WEAKENED, the last only through that
+seven. Under frontier judges the 14 whose protocol-judge interval excluded 0 keep their sign, their rank and their size,
+and the 6 whose interval included 0 stay level. The family verdicts are F6 HOLDS, D8 HOLDS and Q1 WEAKENED, the last only through that
 BEAM-100K row.
 
 By the preregistered rule the frontier judges are the right ones where the judges disagree, pooled and for each judge's
@@ -56,8 +56,9 @@ this check measures.
   each written up to four ways with a known verdict: the gold answer (pass), another question's gold answer (fail), "I
   can't find that in our conversation history." (fail, or pass on an abstention question), and the gold answer inside a
   hedge (pass). All four judges judge every control.
-- **Rule.** Fixed in the preregistration. A comparison is separated if its published interval excludes 0. A separated
-  comparison HOLDS if, under frontier judges, it keeps its sign, its interval still excludes 0 and its size has not
+- **Rule.** Fixed in the preregistration. A comparison is separated if its protocol-judge interval excludes 0, with no
+  correction for multiple comparisons: Q1's BEAM-10M file-agent loss, which Q1 reports as not separated after Holm's
+  correction, is separated here. A separated comparison HOLDS if, under frontier judges, it keeps its sign, its interval still excludes 0 and its size has not
   changed; a level one holds unless frontier judges separate it on the other side. The size has changed when δ (below)
   has an interval excluding 0 and is at least the larger of 3 points and half the published difference. A comparison is
   WEAKENED if a separated one's frontier interval includes 0, or if any one reader confidently reverses it, and REVERSED
