@@ -344,7 +344,7 @@ export async function runPool<T>(items: readonly T[], n: number, fn: (x: T, work
   if (failure) throw (failure as { error: unknown }).error;
 }
 
-export interface MetricComparison extends Omit<PairedDelta, 'bootstrap'> { metric: string; group: string; relative_change: number | null; excluded: number }
+export interface MetricComparison extends Omit<PairedDelta, 'bootstrap' | 'sign_flip'> { metric: string; group: string; relative_change: number | null; excluded: number }
 
 /**
  * Paired comparison of two receipts' data.rows (A = reference arm, B = treatment) per metric,
@@ -369,7 +369,7 @@ export function compareReceipts(aPath: string, bPath: string, metrics: readonly 
       if (e instanceof PairingError && e.problems.every(p => p === 'no eligible pairs')) continue;
       throw e;
     }
-    const { bootstrap: _bootstrap, ...stats } = clusteredPairedDelta(pairing.pairs, { seed: opts.seed ?? 20261005, draws: opts.draws ?? 10_000 });
+    const { bootstrap: _bootstrap, sign_flip: _signFlip, ...stats } = clusteredPairedDelta(pairing.pairs, { seed: opts.seed ?? 20261005, draws: opts.draws ?? 10_000 });
     out.push({ metric, group, ...stats, relative_change: stats.mean_a > 0 ? stats.delta / stats.mean_a : null, excluded: pairing.excluded.length });
   }
   return out;

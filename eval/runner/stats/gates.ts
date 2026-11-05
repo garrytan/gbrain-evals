@@ -14,11 +14,11 @@
  *                   pass. An interval entirely below -tolerance is a fail.
  *   superiority     A claimed improvement. B passes only when it is shown to
  *                   beat A by more than the preregistered minimum effect: the
- *                   Holm-adjusted one-sided p-value is at or below alpha
- *                   (equivalently, the lower interval bound clears
- *                   +min_effect). An interval entirely on the losing side of
- *                   zero is a fail; anything else short of a pass is
- *                   "inconclusive".
+ *                   Holm-adjusted one-sided cluster sign-flip p-value of
+ *                   delta > min_effect (stats/paired.ts superiorityP, exact up
+ *                   to 20 clusters) is at or below alpha. An interval entirely
+ *                   on the losing side of zero is a fail; anything else short
+ *                   of a pass is "inconclusive".
  *   exploratory     Dashboards. Reported with intervals and unadjusted
  *                   p-values, and never part of the verdict.
  *
@@ -73,7 +73,7 @@ export interface ComparisonResult {
   n_pairs?: number;
   n_clusters?: number;
   n_excluded?: number;
-  stats?: Omit<PairedDelta, 'bootstrap'>;
+  stats?: Omit<PairedDelta, 'bootstrap' | 'sign_flip'>;
   mcnemar?: McNemarResult;
   power?: PowerNote;
   tolerance?: number;
@@ -143,8 +143,8 @@ export function loadFamily(path: string): ComparisonFamily {
   return validateFamily(JSON.parse(readFileSync(path, 'utf8')));
 }
 
-function strip(stats: PairedDelta): Omit<PairedDelta, 'bootstrap'> {
-  const { bootstrap: _bootstrap, ...rest } = stats;
+function strip(stats: PairedDelta): Omit<PairedDelta, 'bootstrap' | 'sign_flip'> {
+  const { bootstrap: _bootstrap, sign_flip: _signFlip, ...rest } = stats;
   return rest;
 }
 
