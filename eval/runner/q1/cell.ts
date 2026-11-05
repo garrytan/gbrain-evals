@@ -91,7 +91,7 @@ import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, Recor
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
-import { COMPAT_PROVIDERS, compatMayHaveBilled } from '../providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, JUDGE_PROVIDERS, compatMayHaveBilled } from '../providers/openai-compatible.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { DEFAULT_ROUTE_CLASSES, Q1_CAMPAIGN_ID, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
 import { AgentRuntimeSystem } from '../systems/agent-runtime.ts';
@@ -402,11 +402,11 @@ export function metering(proxy: string | null, sink: { meter(m: MeterLine): void
     async tail() {},
   };
   const ctl = new ProxyControl(proxy);
-  const compat = Object.entries(COMPAT_PROVIDERS);
+  const compat = [...Object.entries(COMPAT_PROVIDERS), ...Object.entries(JUDGE_PROVIDERS)];
   for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', ...compat.map(([, c]) => c.key_env)]) env[k] = env.SHOOTOUT_CELL_TOKEN || 'dummy-key-the-proxy-replaces';
   const slotEnv = async <T>(slot: string, fn: () => Promise<T>): Promise<T> => {
     const urls: Record<string, string> = { OPENAI_BASE_URL: `${proxy}/${slot}/openai/v1`, ANTHROPIC_BASE_URL: `${proxy}/${slot}/anthropic`, VOYAGE_BASE_URL: `${proxy}/${slot}/voyage/v1`,
-      ...Object.fromEntries(compat.map(([name, c]) => [c.base_url_env, `${proxy}/${slot}/${name}/v1`])) };
+      ...Object.fromEntries(compat.map(([name, c]) => [c.base_url_env, `${proxy}/${slot}/${name}${new URL(c.base_url_default).pathname}`])) };
     const prior = Object.fromEntries(Object.keys(urls).map(k => [k, env[k]]));
     Object.assign(env, urls);
     try { return await fn(); } finally { for (const [k, v] of Object.entries(prior)) if (v === undefined) delete env[k]; else env[k] = v; }

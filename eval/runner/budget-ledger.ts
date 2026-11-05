@@ -1161,6 +1161,10 @@ export const CHAT_PRICE_OVERRIDES: Record<string, ChatPrice> = {
   // inside completion_tokens, and a 32,000-token output cap when a request sends no limit. Off-peak (20:30-04:00 New York)
   // bills half and is settled here at the peak rates. Hosted web search ($0.0025 a search) is not in usage, so priceRequest refuses it.
   'particle:particle-1': { input: 0.25, output: 1.0, cache_read: 0.03, max_output: 32_000 },
+  // ai.google.dev/gemini-api/docs/pricing (read 2026-11-04): $2/$10 per million through 2026-11-30 and $4/$20 from
+  // 2026-12-01, thinking billed as output. GST-1365 registers the 2026-12-01 rate so a reservation is never short; until
+  // then the ledger books twice the list spend, and the run reports list spend from usage beside it.
+  'gemini:gemini-4-argon': { input: 4, output: 20, cache_read: 0.2, max_output: 65_536 },
 };
 
 /**
@@ -1214,6 +1218,8 @@ export interface RequestPrice {
   /** Conservative input-token estimate (3 bytes per token), including tool schemas and continuation context. */
   inputTokens: number;
   maxOutputTokens: number;
+  /** `openai`: a Gemini request on its OpenAI-compatible endpoint, whose response reports usage the Chat Completions way. */
+  usage?: 'openai';
 }
 
 function textBytes(value: unknown): number {
@@ -1285,6 +1291,27 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
 }
 
 const GEMINI_METHOD = /\/models\/([^/:]+):([A-Za-z]+)$/;
+const GEMINI_OPENAI = /^\/v1beta\/openai(\/.*)$/;
+
+/**
+ * Price a request to Gemini's OpenAI-compatible endpoint (`/v1beta/openai/chat/completions`): the model comes from the
+ * body, the output allowance from `max_completion_tokens` (thinking shares it), else the model's output ceiling. A
+ * model listing is free.
+ */
+function priceGeminiCompat(route: string, body: unknown): RequestPrice | null {
+  if (/^\/models(\/[^/]+)?\/?$/.test(route) && (body === undefined || body === null)) return null;
+  if (route !== '/chat/completions') throw new BudgetExceededError(`cannot price the Gemini OpenAI-compatible route ${route}: only /chat/completions is priced`);
+  const b = (body ?? {}) as Record<string, unknown>;
+  const model = typeof b.model === 'string' ? b.model.replace(/^models\//, '') : '';
+  if (!model) throw new BudgetExceededError(`Gemini OpenAI-compatible request names no model; cannot reserve its cost`);
+  const price = chatPrice(`gemini:${model}`);
+  if (!price) throw new BudgetExceededError(`no chat price for gemini:${model}; cannot reserve its cost`);
+  const toolBytes = b.tools === undefined ? 0 : Buffer.byteLength(JSON.stringify(b.tools));
+  const inputTokens = Math.ceil((textBytes(b.messages) + toolBytes) / 3) + 16;
+  const limit = [b.max_completion_tokens, b.max_tokens].find(v => typeof v === 'number') as number | undefined;
+  return { provider: 'gemini', model, kind: 'chat', input: price.input, output: price.output, cache_read: price.cache_read, inputTokens, maxOutputTokens: limit ?? price.max_output ?? 65_536, usage: 'openai',
+    ...(price.long ? { long: price.long } : {}) };
+}
 
 /**
  * Price a Gemini request. The model and method come from the URL path
@@ -1295,6 +1322,8 @@ const GEMINI_METHOD = /\/models\/([^/:]+):([A-Za-z]+)$/;
  */
 function priceGemini(url: string, body: unknown): RequestPrice | null {
   const path = new URL(url).pathname;
+  const compat = path.match(GEMINI_OPENAI);
+  if (compat) return priceGeminiCompat(compat[1], body);
   const match = path.match(GEMINI_METHOD);
   if (!match) {
     if (/\/models(\/[^/:]+)?\/?$/.test(path) && (body === undefined || body === null)) return null;
@@ -1335,13 +1364,16 @@ export function reservationUsd(price: RequestPrice): number {
 
 /** Cost from provider-reported usage, or null when the response carries none. */
 export function usageCost(price: RequestPrice, responseBody: unknown): { usd: number; input_tokens: number; output_tokens: number } | null {
-  if (price.provider === 'gemini') return geminiUsageCost(price, responseBody);
+  if (price.provider === 'gemini' && price.usage !== 'openai') return geminiUsageCost(price, responseBody);
   const usage = (responseBody as { usage?: Record<string, unknown> } | null)?.usage;
   if (!usage || typeof usage !== 'object') return null;
   const n = (key: string) => (typeof usage[key] === 'number' ? usage[key] as number : 0);
   const inputTokens = n('input_tokens') + n('prompt_tokens') + n('cache_creation_input_tokens') + n('cache_read_input_tokens')
     + (usage.input_tokens === undefined && usage.prompt_tokens === undefined ? n('total_tokens') : 0);
-  const outputTokens = n('output_tokens') + n('completion_tokens');
+  // Gemini's OpenAI-compatible usage may leave thinking out of completion_tokens while total_tokens counts it, so its
+  // output is whichever of the two accounts is larger.
+  const outputTokens = price.provider === 'gemini' ? Math.max(n('completion_tokens'), n('total_tokens') - n('prompt_tokens'))
+    : n('output_tokens') + n('completion_tokens');
   if (inputTokens === 0 && outputTokens === 0) return null;
   const reported = price.provider === 'openrouter' && typeof usage.cost === 'number' ? usage.cost as number : null;
   if (reported !== null) return { usd: reported, input_tokens: inputTokens, output_tokens: outputTokens };

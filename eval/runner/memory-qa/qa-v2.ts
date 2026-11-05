@@ -66,7 +66,7 @@ import type { MemoryQuestion } from './corpus.ts';
 import type { Instrument, JudgeCall } from './instruments.ts';
 import { rawSha256, type JudgmentRecord } from './records.ts';
 import { normalizeUsage, responseMeta, usageSourceOf, type ReceiptRequest, type ResponseMeta, type UsageReceipt } from '../usage-receipt.ts';
-import { COMPAT_PROVIDERS, compatMayHaveBilled, compatRequest, compatSend, type CompatRequest } from '../providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, compatMayHaveBilled, compatProviderRow, compatRequest, compatSend, type CompatRequest } from '../providers/openai-compatible.ts';
 import { compatDeadlineMs } from '../metering-proxy.ts';
 import { ChatClient as BaseChatClient, sendsTemperature as baseSendsTemperature, chatReceipts, judgePromptsFor, judgeYes, type ChatResult } from './qa.ts';
 
@@ -113,11 +113,14 @@ export interface ChatLike { chat(model: string, prompt: string, opts: ChatOption
 /** True for a `provider:model` whose provider is in COMPAT_PROVIDERS. */
 export const isCompatModel = (model: string) => model.includes(':') && Object.hasOwn(COMPAT_PROVIDERS, model.slice(0, model.indexOf(':')));
 
+/** True for a `provider:model` sent through the provider module: a reader provider (COMPAT_PROVIDERS) or a judge-only one (JUDGE_PROVIDERS, today Gemini). */
+const sentCompat = (model: string) => model.includes(':') && compatProviderRow(model.slice(0, model.indexOf(':'))) !== undefined;
+
 /** Whether ChatClient has a transport for `provider:model`: Anthropic, OpenAI, or a provider in COMPAT_PROVIDERS. */
 export const hasChatRoute = (model: string) => model.startsWith('anthropic:') || model.startsWith('openai:') || isCompatModel(model);
 
 /** qa.ts's rule, except that an OpenAI-compatible provider is never sent a temperature (it samples at its own default). */
-export const sendsTemperature = (model: string) => !isCompatModel(model) && baseSendsTemperature(model);
+export const sendsTemperature = (model: string) => !sentCompat(model) && baseSendsTemperature(model);
 
 /** The reasoning efforts Anthropic (`output_config.effort`) and OpenAI (`reasoning_effort`) accept (their API references, 2026-11-01). */
 const EFFORTS: Record<string, readonly string[]> = { anthropic: ['low', 'medium', 'high', 'xhigh', 'max'], openai: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'] };
@@ -152,7 +155,7 @@ export const anthropicMaxTokens = (name: string, maxTokens: number) => !sendsTem
  */
 export function chatCacheKey(model: string, prompt: string, opts: ChatOptions): string {
   const [provider, name] = model.includes(':') ? [model.slice(0, model.indexOf(':')), model.slice(model.indexOf(':') + 1)] : ['openai', model];
-  const sent = isCompatModel(model) ? compatCall(model, prompt, opts, { [COMPAT_PROVIDERS[provider].key_env]: 'cache-key' }).sent : null;
+  const sent = sentCompat(model) ? compatCall(model, prompt, opts, { [compatProviderRow(provider)!.key_env]: 'cache-key' }).sent : null;
   return createHash('sha256').update(JSON.stringify({ provider, name, prompt, maxTokens: opts.maxTokens, temperature: opts.temperature === null ? 'default' : opts.temperature ?? 0, replicate: opts.replicate,
     ...(provider === 'anthropic' && anthropicMaxTokens(name, opts.maxTokens) !== opts.maxTokens ? { sent_max_tokens: anthropicMaxTokens(name, opts.maxTokens) } : {}),
     ...(sent ? { sent_effort: sent.effort_sent, sent_output_limit: sent.output_limit } : {}),
@@ -160,8 +163,14 @@ export function chatCacheKey(model: string, prompt: string, opts: ChatOptions): 
 }
 
 export class ChatClient extends BaseChatClient implements ChatLike {
-  /** `compatTimeoutMs`: each attempt's deadline for an OpenAI-compatible provider (`compatDeadlineMs` of its URL when unset). */
-  constructor(private cacheRoot: string, private retryDelayMs: (attempt: number) => number = attempt => 2000 * 2 ** attempt, private compatTimeoutMs?: number) { super(cacheRoot, retryDelayMs); }
+  /**
+   * `compatTimeoutMs`: each attempt's deadline for an OpenAI-compatible provider (`compatDeadlineMs` of its URL when unset).
+   * `holdMayHaveBilled`: an OpenAI or Anthropic request whose error says it may have reached the provider
+   * (`compatMayHaveBilled`: a 504, a timeout or a connection lost after sending) is not sent again, as an OpenAI-compatible
+   * provider's never is. A lease proxy's own transport retries, and the 502 it answers after them, are outside this rule.
+   */
+  constructor(private cacheRoot: string, private retryDelayMs: (attempt: number) => number = attempt => 2000 * 2 ** attempt, private compatTimeoutMs?: number,
+    private options: { holdMayHaveBilled?: boolean } = {}) { super(cacheRoot, retryDelayMs); }
 
   /**
    * A failure after retries throws the last error with `attempt_errors` (one message per attempt) attached, and for an
@@ -171,7 +180,7 @@ export class ChatClient extends BaseChatClient implements ChatLike {
     const [provider, name] = model.includes(':') ? [model.slice(0, model.indexOf(':')), model.slice(model.indexOf(':') + 1)] : ['openai', model];
     const path = join(this.cacheRoot, `${chatCacheKey(model, prompt, opts)}.json`);
     if (existsSync(path)) return { finish: null, usage: null, response_model: null, ...JSON.parse(readFileSync(path, 'utf8')), cached: true, attempt_errors: [] };
-    const compat = isCompatModel(model) ? compatCall(model, prompt, opts) : null;
+    const compat = sentCompat(model) ? compatCall(model, prompt, opts) : null;
     let lastError: unknown = null;
     const attemptErrors: string[] = [];
     const compatAttempts: CompatAttempt[] = [];
@@ -186,7 +195,7 @@ export class ChatClient extends BaseChatClient implements ChatLike {
         const status = (e as { status?: number }).status;
         const retryable = compat ? (e as { retryable?: boolean }).retryable !== false : status === undefined || status >= 500 || status === 429;
         const budget = compat ? (e as Error).name === 'BudgetExceededError' : /budget|BudgetExceeded/i.test(String((e as Error).message));
-        const billed = compat !== null && compatMayHaveBilled(e);
+        const billed = (compat !== null || this.options.holdMayHaveBilled === true) && compatMayHaveBilled(e);
         const stop = budget || !retryable || billed || attempt === 4;
         const retryAfterMs = compat && !stop ? (e as { retryAfterMs?: number | null }).retryAfterMs ?? null : null;
         if (compat) compatAttempts.push({ retry_after_ms: retryAfterMs, usage: (e as { usage?: Record<string, unknown> | null }).usage ?? null });

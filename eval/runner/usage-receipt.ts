@@ -45,8 +45,8 @@ export const USAGE_RECEIPT_SCHEMA = 'usage-receipt/v1';
 
 export type UsageSource = 'anthropic' | 'openai' | 'gbrain-think';
 
-/** The providers in COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts), whose usage follows OpenAI chat; a test keeps the two in step. */
-const OPENAI_CHAT_COMPATIBLE = new Set(['particle']);
+/** The providers in COMPAT_PROVIDERS and JUDGE_PROVIDERS (eval/runner/providers/openai-compatible.ts), whose usage follows OpenAI chat; a test keeps them in step. */
+const OPENAI_CHAT_COMPATIBLE = new Set(['particle', 'gemini']);
 
 export interface NormalizedUsage {
   /** Which provider rule produced these numbers; `legacy-cache` is a cached response stored before raw usage was kept (totals only). */

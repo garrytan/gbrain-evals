@@ -25,8 +25,8 @@
  *     responses from their usage events (or charges the reservation), settles
  *     a 4xx answer without usage at $0 (providers do not bill rejected
  *     requests; a 5xx, a timeout, a lost connection or a response body that
- *     fails to read keeps the reservation, and a particle request that may
- *     have gone out before it failed is answered 504, which no client sends
+ *     fails to read keeps the reservation, and a particle or gemini request
+ *     that may have gone out before it failed is answered 504, which no client sends
  *     again), refuses
  *     bodies carrying a forbidden marker (the sanitizer's leak tripwire), and
  *     appends one usage line per request (never a body or a key).
@@ -100,11 +100,13 @@
  *     any response (a closed or reset socket) is sent again up to twice, after
  *     1 and 4 seconds; each failed attempt is charged at its reservation (A23:
  *     `socket connection closed unexpectedly` failed temporal-graph c9's
- *     sessions). A timeout is never retried. A particle request is sent again
- *     only when its connection was refused. Another failure proven to happen
+ *     sessions). A timeout is never retried. A particle or gemini (any
+ *     COMPAT_PROVIDERS or JUDGE_PROVIDERS row) request is sent again only
+ *     when its connection was refused. Another failure proven to happen
  *     before any byte was sent (`compatNeverSent`: a host name that did not
  *     resolve, a rejected TLS certificate) is answered 502, which a client may
- *     send again, and any other particle transport failure 504 (issue #288).
+ *     send again, and any other particle or gemini transport failure 504
+ *     (issue #288).
  */
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { appendFileSync, readFileSync } from 'node:fs';
@@ -112,13 +114,17 @@ import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservation
 
 export { sseUsage };
 import { findLeaks } from './systems/sanitize.ts';
-import { COMPAT_PROVIDERS, carriesKeyInCleartext, compatMayHaveBilled, compatNeverSent, isLoopbackUrl } from './providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, JUDGE_PROVIDERS, carriesKeyInCleartext, compatMayHaveBilled, compatNeverSent, compatProviderRow, isLoopbackUrl } from './providers/openai-compatible.ts';
 
-/** Particle's row comes from COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts): its upstream, key variable, output field and output floor. */
+/** Particle's row (COMPAT_PROVIDERS) and Gemini's (JUDGE_PROVIDERS) come from eval/runner/providers/openai-compatible.ts: upstream, key variable and output field. */
 const PARTICLE = COMPAT_PROVIDERS.particle;
+const GEMINI = JUDGE_PROVIDERS.gemini;
 
-export const UPSTREAM: Record<string, string> = { anthropic: 'https://api.anthropic.com', openai: 'https://api.openai.com', voyage: 'https://api.voyageai.com', particle: new URL(PARTICLE.base_url_default).origin };
-export type ProviderName = 'anthropic' | 'openai' | 'voyage' | 'particle';
+export const UPSTREAM: Record<string, string> = { anthropic: 'https://api.anthropic.com', openai: 'https://api.openai.com', voyage: 'https://api.voyageai.com', particle: new URL(PARTICLE.base_url_default).origin,
+  gemini: new URL(GEMINI.base_url_default).origin };
+export type ProviderName = 'anthropic' | 'openai' | 'voyage' | 'particle' | 'gemini';
+/** An OpenAI-compatible provider, reader or judge-only: a request that may have reached it is never sent again, because it may have billed it (issue #288). */
+const isCompat = (prov: ProviderName) => compatProviderRow(prov) !== undefined;
 type Send = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 /** Lease mode forwards only these routes. GET model listings are free metadata reads. */
@@ -130,8 +136,9 @@ const ROUTES: Record<ProviderName, Array<{ method: string; path: RegExp }>> = {
   anthropic: [{ method: 'POST', path: /^\/v1\/messages$/ }],
   voyage: [{ method: 'POST', path: /^\/v1\/embeddings$/ }, { method: 'POST', path: /^\/v1\/rerank$/ }],
   particle: [{ method: 'POST', path: /^\/v1\/chat\/completions$/ }, { method: 'GET', path: /^\/v1\/models(\/[^/]+)?$/ }],
+  gemini: [{ method: 'POST', path: /^\/v1beta\/openai\/chat\/completions$/ }, { method: 'GET', path: /^\/v1beta\/openai\/models(\/[^/]+)?$/ }],
 };
-const KEY_ENV: Record<ProviderName, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: PARTICLE.key_env };
+const KEY_ENV: Record<ProviderName, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: PARTICLE.key_env, gemini: GEMINI.key_env };
 const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-organization', 'openai-project', 'cookie', 'proxy-authorization'];
 export const DEFAULT_MAX_OUTPUT_TOKENS = 32_768;
 /** A provider call may run this long, transport retries and the body included (Bun's own 300-second fetch timeout is off; long reasoning calls exceed it). */
@@ -388,6 +395,7 @@ function outputField(provider: ProviderName, route: string): string | null {
   if (provider === 'openai' && route === '/v1/chat/completions') return 'max_completion_tokens';
   if (provider === 'openai' && route === '/v1/responses') return 'max_output_tokens';
   if (provider === 'particle' && route === '/v1/chat/completions') return PARTICLE.output_limit_field;
+  if (provider === 'gemini' && route === '/v1beta/openai/chat/completions') return GEMINI.output_limit_field;
   return null;
 }
 
@@ -476,7 +484,7 @@ export class MeteringProxy {
         if (url.pathname.startsWith('/__proxy/') && req.method === 'POST') return this.control(url.pathname, req);
         const t = url.pathname.match(/^\/_t\/([^/]+)(\/.*)$/);
         const path = t ? t[2] : url.pathname;
-        const m = path.match(/^\/(?:([^/]+)\/)?(anthropic|openai|voyage|particle)(\/.*)$/);
+        const m = path.match(/^\/(?:([^/]+)\/)?(anthropic|openai|voyage|particle|gemini)(\/.*)$/);
         if (!m) return json(404, 'invalid_request', `no provider route ${t ? '/_t/<token>' + path : path}`);
         const [, slot = 'default', prov, rest] = m as unknown as [string, string | undefined, ProviderName, string];
         if (!this.authorized(req, t ? decodeURIComponent(t[1]) : null, server.requestIP(req)?.address ?? null)) {
@@ -668,8 +676,8 @@ export class MeteringProxy {
       catch (e) {
         if (entry) p.lease.settle(entry, null);
         this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded, tag);
-        const midFlight = prov === 'particle' && compatMayHaveBilled(e);
-        const again = retries < TRANSPORT_RETRY_MS.length && transportFailure(e) && (prov !== 'particle' || compatNeverSent(e));
+        const midFlight = isCompat(prov) && compatMayHaveBilled(e);
+        const again = retries < TRANSPORT_RETRY_MS.length && transportFailure(e) && (!isCompat(prov) || compatNeverSent(e));
         this.log({ at, key, provider: prov, route, model, outcome: 'failed', reason: `${(e as Error).message.slice(0, 280)}${again ? ' (sent again)' : ''}`, reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded, ...tagged });
         if (!again) {
           admitted?.release();
@@ -702,7 +710,7 @@ export class MeteringProxy {
     try { text = await res.text(); }
     catch (e) {
       admitted?.release();
-      const answer = json((e as Error).name === 'TimeoutError' || prov === 'particle' ? 504 : 502, 'product_error', `upstream body failed: ${(e as Error).message}`);
+      const answer = json((e as Error).name === 'TimeoutError' || isCompat(prov) ? 504 : 502, 'product_error', `upstream body failed: ${(e as Error).message}`);
       try {
         if (entry) p.lease.settle(entry, null);
         this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded, tag);

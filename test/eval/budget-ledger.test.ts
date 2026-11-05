@@ -130,6 +130,23 @@ describe('pricing', () => {
     expect(priceRequest('https://api.particle.ai/v1/models', undefined)).toBeNull();
   });
 
+  // Value: protects=GST-1365's Gemini referee is metered on its OpenAI-compatible route at the 2026-12-01 rate, with thinking billed whichever way usage reports it, and the native route keeps its price; fails_when=a compatible request spends unmetered, thinking outside completion_tokens goes unbilled, a cached prefix bills at the full rate, or the native route loses its price; why_new=GST-1365 adds the route; seam=priceRequest/usageCost; no_claim=does not call Gemini (the paid smoke checks completion_tokens against the limit sent)
+  test('gemini-4-argon on its OpenAI-compatible route is priced at $4/$20 and settles thinking from total_tokens or completion_tokens; the native route still prices', () => {
+    const url = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+    const p = priceRequest(url, { model: 'gemini-4-argon', max_completion_tokens: 8192, messages: [{ role: 'user', content: 'x'.repeat(900) }] })!;
+    expect(p).toMatchObject({ provider: 'gemini', model: 'gemini-4-argon', kind: 'chat', input: 4, output: 20, cache_read: 0.2, maxOutputTokens: 8192, usage: 'openai' });
+    expect(priceRequest(url, { model: 'gemini-4-argon', messages: [] })!.maxOutputTokens).toBe(65_536);
+    const outside = usageCost(p, { usage: { prompt_tokens: 100, completion_tokens: 5, total_tokens: 905 } })!;
+    expect(outside).toMatchObject({ input_tokens: 100, output_tokens: 805 });
+    expect(outside.usd).toBeCloseTo((100 * 4 + 805 * 20) / 1e6, 12);
+    expect(usageCost(p, { usage: { prompt_tokens: 100, completion_tokens: 805, total_tokens: 905 } })!.output_tokens).toBe(805);
+    expect(usageCost(p, { usage: { prompt_tokens: 1000, completion_tokens: 10, total_tokens: 1010, prompt_tokens_details: { cached_tokens: 800 } } })!.usd).toBeCloseTo((200 * 4 + 800 * 0.2 + 10 * 20) / 1e6, 12);
+    expect(priceRequest('https://generativelanguage.googleapis.com/v1beta/openai/models', undefined)).toBeNull();
+    expect(() => priceRequest(url, { model: 'gemini-9-unknown', messages: [] })).toThrow('no chat price for gemini:gemini-9-unknown');
+    expect(() => priceRequest('https://generativelanguage.googleapis.com/v1beta/openai/embeddings', { model: 'gemini-4-argon', input: 'x' })).toThrow('only /chat/completions is priced');
+    expect(priceRequest('https://generativelanguage.googleapis.com/v1beta/models/gemini-4-argon:generateContent', { contents: [{ parts: [{ text: 'x' }] }] })).toMatchObject({ provider: 'gemini', model: 'gemini-4-argon', input: 4, output: 20 });
+  });
+
   test("Particle's hosted web search is refused: it bills $0.0025 a search outside usage, so the ledger could neither reserve nor settle it", () => {
     const url = 'https://api.particle.ai/v1/chat/completions';
     const body = { model: 'particle-1', max_tokens: 64, messages: [{ role: 'user', content: 'What happened today?' }] };

@@ -25,10 +25,16 @@ deflates a token count.
 - **OpenAI** reports `prompt_tokens` (Chat Completions) or `input_tokens` (Responses) as the total input
   already. Cached reads (`cached_tokens`) and cache writes (`cache_write_tokens`) are subsets of that total.
   Adding them on top counts them twice: a 100-token prompt with 60 cached tokens becomes 160.
-- **Particle** (`particle:particle-1`), like every provider in the OpenAI-compatible provider module
+- **Particle** (`particle:particle-1`), like every reader provider in the OpenAI-compatible provider module
   ([`eval/runner/providers/openai-compatible.ts`](../eval/runner/providers/openai-compatible.ts)), reports OpenAI
   Chat Completions usage: cached reads inside `prompt_tokens`, and reasoning inside `completion_tokens`, which it
   bills as output. `usageSourceOf('particle:…')` returns the OpenAI convention.
+- **Gemini** (`gemini:gemini-4-argon`) is the same module's judge-only provider (`JUDGE_PROVIDERS`), the referee of the
+  [GST-1365 judge-robustness check](benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md). On its
+  OpenAI-compatible endpoint it reports Chat Completions usage, and `usageSourceOf('gemini:…')` returns the OpenAI
+  convention too. Its `completion_tokens` may leave thinking out while `total_tokens` counts it, so the budget ledger
+  bills output as the larger of `completion_tokens` and `total_tokens` minus `prompt_tokens`. The receipt's
+  `output_total` is still `completion_tokens`.
 
 The same formula, `input + cache_read + cache_write`, is right for Anthropic and wrong for OpenAI. The committed
 W10b `gpt-5.4` arm shows the size of the error: its 500 requests read 1,272,832 tokens from the cache, so the

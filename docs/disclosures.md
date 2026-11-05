@@ -67,8 +67,17 @@ first.
   lines in its closing Disclosures section, and its [report](findings/2026-11-04-particle-1-f6-addon/report.md) carries
   them up front. The docs index row carries all three. README's known-limits entry on BEAM's judge carries the Particle
   line, since it reports particle-1's result and uses GPT-6.1 Sol only as a judge.
+- The [GST-1365 judge-robustness preregistration](benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md)
+  reports no result. Its judges are OpenAI, Anthropic and Google models (gpt-6.1-sol, claude-opus-5-5 and
+  gemini-4-argon, with gpt-4.1-mini on the known-answer controls), and judges trigger no line. Its results file will
+  carry the gbrain and OpenAI lines in a closing Disclosures section.
 
 ## Changelog
+
+### 2026-11-04: The GST-1365 judge-robustness preregistration
+
+"In this repository" lists the [GST-1365 preregistration](benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md),
+which names its judges' vendors and carries no line, since judges trigger none.
 
 ### 2026-11-04: The particle-1 F6 add-on finding
 
