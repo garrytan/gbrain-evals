@@ -69,10 +69,19 @@ first.
   line, since it reports particle-1's result and uses GPT-6.1 Sol only as a judge.
 - The [GST-1365 judge-robustness preregistration](benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md)
   reports no result. Its judges are OpenAI, Anthropic and Google models (gpt-6.1-sol, claude-opus-5-5 and
-  gemini-4-argon, with gpt-4.1-mini on the known-answer controls), and judges trigger no line. Its results file will
-  carry the gbrain and OpenAI lines in a closing Disclosures section.
+  gemini-4-argon, with gpt-4.1-mini on the known-answer controls), and judges trigger no line. Its
+  [results file](benchmarks/2026-11-05-gst-1365-judge-robustness.md) carries the gbrain and OpenAI lines in its closing
+  Disclosures section, because it reports gbrain's comparisons and gpt-6.1-sol's reader rows. README's paragraph on it
+  under the Q1 block and its docs index row carry the same two lines, since their three-reader comparisons include
+  gpt-6.1-sol's reader rows.
 
 ## Changelog
+
+### 2026-11-05: The GST-1365 judge-robustness results
+
+"In this repository" says the [GST-1365 results file](benchmarks/2026-11-05-gst-1365-judge-robustness.md) carries the
+gbrain and OpenAI lines in its closing Disclosures section (it said the file will), and that README's paragraph on it
+and its docs index row carry the same two lines.
 
 ### 2026-11-04: The GST-1365 judge-robustness preregistration
 

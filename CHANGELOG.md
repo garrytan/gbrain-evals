@@ -2,6 +2,42 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.165] - 2026-11-05
+
+### GST-1365 results: F6's and Q1's BEAM comparisons hold under frontier judges, except BEAM-100K's file agent, which depends on the judge (GST-1365)
+
+- **The results.** `docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md`, new, reports the preregistered check with the
+  final summary copied byte for byte from custody (`docs/benchmarks/2026-11-05-gst-1365-judge-robustness/summary.json`
+  and `summary.md`, rendered by the runner at f61894b9). Every answer behind F6's and Q1's 21 published gbrain
+  comparisons, 15,382 in all, was judged by a frontier judge from a family that grades none of its readers. The family
+  verdicts are F6 HOLDS, D8 HOLDS and Q1 WEAKENED. Twenty comparisons hold: those whose interval under gpt-4.1-mini
+  excluded 0 keep their sign, rank and size, and the rest stay level. On BEAM-100K sealed
+  the file agent's lead over gbrain's 8,000-token component row is 5.1 points (95% interval 1.3 to 8.6) under
+  gpt-4.1-mini and 3.4 points (-1.2 to 8.3) under frontier judges, so it depends on the judge.
+- **Which judge is right.** The gemini-4-argon referee matched the shared verdict on 94.8% of a 600-answer agreement
+  sample, so it counts, and sided with the frontier judge on 73.2% (71.3% to 75.0%) of 2,280 disagreements: 75.3% on
+  the Claude readers' rows and 69.3% on gpt-6.1-sol's. On 554 known-answer controls gpt-4.1-mini was not more accurate
+  than either frontier judge. So the frontier judges are right, pooled and per row, and the results recommend them as
+  canonical or co-primary for new BEAM work, with gpt-4.1-mini kept as the bridge to earlier results.
+- **The preregistration.** Its dated note "Three runner fixes before the summary" records the D8 controls, the shared
+  answer ids (577 of 600 in the BEAM-10M file-agent cell; F6's file-agent Δ_F moves from -8.1 to -9.2 points and still
+  holds; the referee population was refrozen; the reuse checks read 97 and 99 of 100, was 96 and 96) and the three
+  summary outputs, all fixed in 0.10.164 before any result was rendered. The Stage 0 note's "the estimate above" now
+  reads "the plan behind this preregistration estimated".
+- **What is restated.** README gains a paragraph after the F6 pointer under the Q1 block, and `docs/README.md` moves the
+  check from its preregistrations table to retrieval experiments, with the verdicts, and names v0.10.165. The rendered
+  F6 and Q1 scoreboards, their `publication.json` and README's rendered block make no claim about the BEAM-100K
+  file-agent gap and are unchanged. The F6 scoreboard section the preregistration planned for this view is not rendered,
+  because the renderer has no such section; the results file's comparisons table is that view, and a dated note in the
+  preregistration says so. Nothing REVERSED, so `docs/corrections.md` is unchanged.
+- **Disclosures and the ordering check.** README's paragraph and the docs index row carry the gbrain and OpenAI lines,
+  because their three-reader comparisons include gpt-6.1-sol's reader rows, and `docs/disclosures.md` lists them.
+  `docs/benchmarks/preregistrations.d/gst-1365-judge-robustness.json` named results under 2026-11-04 paths, so
+  `prereg-order` matched no results file for this experiment; it now names the 2026-11-05 results file and directory.
+- **Spend.** $614.87 booked on the GST-1365 ledger against the $850 API ceiling, $462.15 at list: the ledger books
+  gemini-4-argon at its 2026-12-01 price, twice list. The $250 reserve was not used. The results file carries the gbrain
+  and OpenAI disclosure lines in its closing section.
+
 ## [0.10.164] - 2026-11-05
 
 ### GST-1365: known-answer controls include D8, F6's and Q1's S1 file agents keep their own judgments, and the summary writes everything the preregistration reports (GST-1365)

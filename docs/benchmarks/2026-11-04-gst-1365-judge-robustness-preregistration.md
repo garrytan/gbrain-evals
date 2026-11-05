@@ -294,8 +294,8 @@ cell, a judge, the cut order or the ceiling.
 
 - **Coverage.** Q1's competitor rows are the same answers as F6's, so each answer is counted once, in the first stratum
   that holds it (A, then B, C, D). Still to judge: 2,130 in A, 3,301 in B, 2,408 in C and 3,600 in D, or 6,933 by
-  gpt-6.1-sol and 4,506 by claude-opus-5-5 (the estimate above was 7,133 and 4,354). The census covers 15,382 answers,
-  of which 3,943 already have a reusable family-clean frontier judgment.
+  gpt-6.1-sol and 4,506 by claude-opus-5-5 (the plan behind this preregistration estimated 7,133 and 4,354). The
+  census covers 15,382 answers, of which 3,943 already have a reusable family-clean frontier judgment.
 - **Measured from existing judgments.** 5,440 answers have both a canonical and a family-clean frontier judgment. They
   disagree at the pass threshold on 15.9%, with a root-mean-square score shift of 0.69 on disagreeing answers and 0.16
   on the rest (assumed above: 14%, 0.6 and 0.1).
@@ -329,3 +329,29 @@ the instrument scores each against its gold answer as one rubric item (`eval/run
 are eligible, as the 50 D8 questions this section names require. The controls runner had read the word as "carries
 rubric items" and drew no D8 question; 0.10.164 fixes it before the D8 controls run. Nothing here changes the rule, a
 cell, a judge, the cut order or the ceiling.
+
+**2026-11-05: Three runner fixes before the summary.** Found in custody after the census, referee and controls runs and
+before any result was rendered; fixed in [#376](https://github.com/garrytan/gbrain-evals/pull/376). Nothing here changes
+the rule, a cell, a judge, the cut order or the ceiling.
+
+- **Controls.** The control builder took only questions with rubric items (see the note above), so the first controls
+  run held S1 and S2b only: 356 answers. A second run from f61894b9 judged D8's 50 questions under the fixed builder,
+  198 answers because 2 of them have no eligible C2 text, and reused S1's and S2b's judgments.
+- **Shared answer ids.** "Q1's competitor rows are the same answers as F6's" holds for every shared cell but the
+  BEAM-10M file agent: F6 reran it under Q1's cell id, and the answer id names the cell, question, reader and replicate,
+  not the campaign, so 577 of its 600 first answers hold different texts under ids both receipts use. Q1's frontier
+  judgments had scored F6's texts. Each answer now keeps its own receipt's judgments, which moves F6's BEAM-10M
+  file-agent Δ_F from -8.1 to -9.2 points (-12.8 to -5.7); it still HOLDS. The referee's population was refrozen with the
+  fix (2,280 disagreements, 2,177 of the earlier 2,230 kept, and a 600-answer agreement sample, 576 kept) and its 123
+  unjudged answers judged. Read with the fix, the reuse checks agree on 97 (gpt-6.1-sol) and 99 (claude-opus-5-5) of
+  100, where they recorded 96 and 96, so both still pass. Every number in the summary comes from the fixed loader.
+- **Summary outputs.** The summary now writes what this document's report lists and it had left out: p_F for each
+  frontier judge's rows, each cell's absolute level and the control counts.
+
+**2026-11-05: Where the HOLDS restatement is published.** "What gets restated" gives the F6 scoreboard a dated
+"Frontier-judge sensitivity (GST-1365)" section with Δ under M, F and K and each outcome, rendered in custody. The F6
+scoreboard is a hash-pinned render of F6's receipt, and scoreboard.ts has no such section, so rendering one would take
+new renderer code and a new F6 publication. That view is published instead as the results file's comparisons table
+(frontier judges first, then the published Δ, δ and K, with each outcome) and in summary.json, and README and
+docs/README.md say the comparisons hold under frontier judges, as the section requires. Nothing here changes the rule,
+a cell, a judge, the cut order or the ceiling.
