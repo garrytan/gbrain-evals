@@ -128,7 +128,13 @@ const ndjson = <T>(path: string): T[] => existsSync(path) ? readFileSync(path, '
 const cellKey = (root: string, cell: string) => `${root}:${cell}`;
 export const cellOf = (s: Sources, root: string, id: string) => s.cells.get(cellKey(root, id))!;
 
-/** The receipts, every cell a contrast names (judgments with A19's frontier redo applied), and the paid second-judge judgments. */
+/**
+ * The receipts, every cell a contrast names (judgments with A19's frontier redo applied), and the paid second-judge
+ * judgments. An answer id names one answer: answerId hashes the cell, question, reader and replicate but not the
+ * campaign, and F6 reran Q1's S1 file agent under the same cell id, so where Q1's receipt holds another text under an id
+ * F6's also uses, Q1's answer and its judgments take a root-qualified id. Neither receipt's judgments then score the
+ * other's text, while answers both receipts hold verbatim keep one id and are judged once.
+ */
 export function loadSources(roots: string[], out: string): Sources {
   const named = (k: string) => roots.filter(r => r.startsWith(`${k}=`)).map(r => resolve(r.slice(k.length + 1)));
   const [f6Root] = named('f6'), [q1Root] = named('q1');
@@ -146,6 +152,13 @@ export function loadSources(roots: string[], out: string): Sources {
     const redo = new Map(ndjson<JudgmentRecord>(join(dir, 'frontier-redo.ndjson')).map(j => [jkey(j), j]));
     cells.set(cellKey(c.root, id), { def, root: c.root, instrument: receipt.instrument, answers: ndjson<AnswerRecord>(join(dir, 'answers.ndjson')),
       judgments: ndjson<JudgmentRecord>(join(dir, 'judgments.ndjson')).map(j => redo.get(jkey(j)) ?? j) });
+  }
+  const f6Text = new Map([...cells.values()].filter(c => c.root === 'f6').flatMap(c => c.answers.map(a => [a.answer_id, a.text] as const)));
+  for (const c of [...cells.values()].filter(x => x.root === 'q1')) {
+    const moved = new Map(c.answers.filter(a => f6Text.has(a.answer_id) && f6Text.get(a.answer_id) !== a.text).map(a => [a.answer_id, sha256(`q1|${a.answer_id}`)]));
+    if (!moved.size) continue;
+    c.answers = c.answers.map(a => ({ ...a, answer_id: moved.get(a.answer_id) ?? a.answer_id }));
+    c.judgments = c.judgments.map(j => ({ ...j, answer_id: moved.get(j.answer_id) ?? j.answer_id }));
   }
   const secondJudge: JudgmentRecord[] = [];
   for (const sj of named('second-judge')) {
