@@ -333,9 +333,10 @@ the rule, a cell, a judge, the cut order or the ceiling.
 - **Shared answer ids.** "Q1's competitor rows are the same answers as F6's" holds for every shared cell but the
   BEAM-10M file agent: F6 reran it under Q1's cell id, and the answer id names the cell, question, reader and replicate,
   not the campaign, so 577 of its 600 first answers hold different texts under ids both receipts use. Q1's frontier
-  judgments had scored F6's texts. Each answer now keeps its own receipt's judgments. The referee's population was
-  rebuilt with the fix (2,280 disagreements and a 600-answer agreement sample) and its 123 unjudged answers judged. Read
-  with the fix, the reuse checks agree on 97 (gpt-6.1-sol) and 99 (claude-opus-5-5) of 100, where they recorded 96 and
-  96.
+  judgments had scored F6's texts. Each answer now keeps its own receipt's judgments, which moves F6's BEAM-10M
+  file-agent Δ_F from -8.1 to -9.2 points (-12.8 to -5.7); it still HOLDS. The referee's population was refrozen with the
+  fix (2,280 disagreements, 2,177 of the earlier 2,230 kept, and a 600-answer agreement sample, 576 kept) and its 123
+  unjudged answers judged. Read with the fix, the reuse checks agree on 97 (gpt-6.1-sol) and 99 (claude-opus-5-5) of
+  100, where they recorded 96 and 96, so both still pass. Every number in the summary comes from the fixed loader.
 - **Summary outputs.** The summary now writes what this document's report lists and it had left out: p_F for each
   frontier judge's rows, each cell's absolute level and the control counts.
