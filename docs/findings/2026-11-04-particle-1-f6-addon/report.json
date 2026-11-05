@@ -1,0 +1,1192 @@
+{
+  "schema": "gbrain-evals/q1-particle-addon-report/v1",
+  "seed": "f6-p1",
+  "seed_number": 1248705093,
+  "resamples": 10000,
+  "clusters": "conversation",
+  "units": [
+    {
+      "frontier_cell": "s1.baseline-file-agent.baseline.whole-agent",
+      "particle_cell": "s1.baseline-file-agent.particle.whole-agent",
+      "system": "baseline-file-agent",
+      "kind": "file agent",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 1,
+      "verify": null,
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.7225,
+          "ci95": [
+            0.6707,
+            0.7728
+          ],
+          "correct": 156,
+          "reader_usd": 185.8535,
+          "usd_per_correct": 1.1914,
+          "not_scored": {
+            "context_overflow": 5
+          }
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 199,
+          "scored": 198,
+          "mean": 0.6342,
+          "ci95": [
+            0.5855,
+            0.6822
+          ],
+          "correct": 138,
+          "reader_usd": 60.2823,
+          "usd_per_correct": 0.4368,
+          "not_scored": {
+            "reader_error": 1,
+            "turn_cap": 23
+          }
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.6741,
+          "ci95": [
+            0.6305,
+            0.7193
+          ],
+          "correct": 142,
+          "reader_usd": 15.6105,
+          "usd_per_correct": 0.1099,
+          "not_scored": {}
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.6484,
+          "ci95": [
+            0.5851,
+            0.7152
+          ],
+          "correct": 138,
+          "reader_usd": 35.3742,
+          "usd_per_correct": 0.2563,
+          "not_scored": {}
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 198,
+          "clusters": 10,
+          "frontier_mean": 0.7211,
+          "particle_mean": 0.6342,
+          "delta": -0.0869,
+          "ci95": [
+            -0.14,
+            -0.0321
+          ],
+          "p_two_sided": 0.0215
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 198,
+          "clusters": 10,
+          "frontier_mean": 0.6724,
+          "particle_mean": 0.6342,
+          "delta": -0.0382,
+          "ci95": [
+            -0.0928,
+            0.0199
+          ],
+          "p_two_sided": 0.2402
+        }
+      ]
+    },
+    {
+      "frontier_cell": "s1.ext-extract-first.common.component-b8000",
+      "particle_cell": "s1.ext-extract-first.common.component-b8000.reread-particle-particle-1",
+      "system": "ext-extract-first",
+      "kind": "re-read",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 1,
+      "verify": {
+        "contexts_checked": 200,
+        "contexts_matched": 200,
+        "scheduled_questions": 200,
+        "questions_with_context": 200,
+        "questions_without_context": 0,
+        "stored_answers_cross_checked": 1000,
+        "published_answers": 1000,
+        "contexts_not_read": 0
+      },
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.5423,
+          "ci95": [
+            0.4926,
+            0.5882
+          ],
+          "correct": 111,
+          "reader_usd": 11.3081,
+          "usd_per_correct": 0.1019,
+          "not_scored": {}
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.6069,
+          "ci95": [
+            0.5675,
+            0.6482
+          ],
+          "correct": 127,
+          "reader_usd": 0.8173,
+          "usd_per_correct": 0.0064,
+          "not_scored": {}
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.6042,
+          "ci95": [
+            0.5557,
+            0.6487
+          ],
+          "correct": 130,
+          "reader_usd": 3.1843,
+          "usd_per_correct": 0.0245,
+          "not_scored": {}
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.6129,
+          "ci95": [
+            0.5748,
+            0.6556
+          ],
+          "correct": 128,
+          "reader_usd": 4.8204,
+          "usd_per_correct": 0.0377,
+          "not_scored": {}
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 199,
+          "clusters": 10,
+          "frontier_mean": 0.5423,
+          "particle_mean": 0.6069,
+          "delta": 0.0646,
+          "ci95": [
+            0.024,
+            0.1118
+          ],
+          "p_two_sided": 0.0098
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 199,
+          "clusters": 10,
+          "frontier_mean": 0.6042,
+          "particle_mean": 0.6069,
+          "delta": 0.0027,
+          "ci95": [
+            -0.0401,
+            0.0527
+          ],
+          "p_two_sided": 0.9297
+        }
+      ]
+    },
+    {
+      "frontier_cell": "s1.ext-memory-bank.recipe.component-b8000",
+      "particle_cell": "s1.ext-memory-bank.recipe.component-b8000.reread-particle-particle-1",
+      "system": "ext-memory-bank",
+      "kind": "re-read",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 1,
+      "verify": {
+        "contexts_checked": 200,
+        "contexts_matched": 200,
+        "scheduled_questions": 200,
+        "questions_with_context": 200,
+        "questions_without_context": 0,
+        "stored_answers_cross_checked": 1000,
+        "published_answers": 1000,
+        "contexts_not_read": 0
+      },
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.5193,
+          "ci95": [
+            0.4815,
+            0.5593
+          ],
+          "correct": 110,
+          "reader_usd": 10.4297,
+          "usd_per_correct": 0.0948,
+          "not_scored": {}
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.5286,
+          "ci95": [
+            0.4922,
+            0.5656
+          ],
+          "correct": 113,
+          "reader_usd": 0.7898,
+          "usd_per_correct": 0.007,
+          "not_scored": {}
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.5774,
+          "ci95": [
+            0.5266,
+            0.6213
+          ],
+          "correct": 124,
+          "reader_usd": 3.0282,
+          "usd_per_correct": 0.0244,
+          "not_scored": {}
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.5707,
+          "ci95": [
+            0.5366,
+            0.6041
+          ],
+          "correct": 117,
+          "reader_usd": 4.4277,
+          "usd_per_correct": 0.0378,
+          "not_scored": {}
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 199,
+          "clusters": 10,
+          "frontier_mean": 0.5193,
+          "particle_mean": 0.5286,
+          "delta": 0.0093,
+          "ci95": [
+            -0.028,
+            0.058
+          ],
+          "p_two_sided": 0.7832
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 199,
+          "clusters": 10,
+          "frontier_mean": 0.5774,
+          "particle_mean": 0.5286,
+          "delta": -0.0488,
+          "ci95": [
+            -0.091,
+            -0.0064
+          ],
+          "p_two_sided": 0.0664
+        }
+      ]
+    },
+    {
+      "frontier_cell": "s1.ext-temporal-graph.shipped-0.31.component-b8000",
+      "particle_cell": "s1.ext-temporal-graph.shipped-0.31.component-b8000.reread-particle-particle-1",
+      "system": "ext-temporal-graph",
+      "kind": "re-read",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 1,
+      "verify": {
+        "contexts_checked": 200,
+        "contexts_matched": 200,
+        "scheduled_questions": 200,
+        "questions_with_context": 200,
+        "questions_without_context": 0,
+        "stored_answers_cross_checked": 600,
+        "published_answers": 600,
+        "contexts_not_read": 0
+      },
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.4761,
+          "ci95": [
+            0.4403,
+            0.5125
+          ],
+          "correct": 102,
+          "reader_usd": 11.3884,
+          "usd_per_correct": 0.1117,
+          "not_scored": {}
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.4537,
+          "ci95": [
+            0.4084,
+            0.5007
+          ],
+          "correct": 97,
+          "reader_usd": 0.8364,
+          "usd_per_correct": 0.0086,
+          "not_scored": {}
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.4826,
+          "ci95": [
+            0.4564,
+            0.5143
+          ],
+          "correct": 103,
+          "reader_usd": 2.9569,
+          "usd_per_correct": 0.0287,
+          "not_scored": {}
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.5008,
+          "ci95": [
+            0.4609,
+            0.5388
+          ],
+          "correct": 106,
+          "reader_usd": 4.893,
+          "usd_per_correct": 0.0462,
+          "not_scored": {}
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 199,
+          "clusters": 10,
+          "frontier_mean": 0.4761,
+          "particle_mean": 0.4537,
+          "delta": -0.0224,
+          "ci95": [
+            -0.0745,
+            0.0342
+          ],
+          "p_two_sided": 0.459
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 199,
+          "clusters": 10,
+          "frontier_mean": 0.4826,
+          "particle_mean": 0.4537,
+          "delta": -0.0289,
+          "ci95": [
+            -0.0794,
+            0.0246
+          ],
+          "p_two_sided": 0.3223
+        }
+      ]
+    },
+    {
+      "frontier_cell": "s1.gbrain-defaults.f6-master.a0",
+      "particle_cell": "s1.gbrain-defaults.f6-master.a0.reread-particle-particle-1",
+      "system": "gbrain-defaults",
+      "kind": "re-read",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 1,
+      "verify": {
+        "contexts_checked": 198,
+        "contexts_matched": 198,
+        "scheduled_questions": 200,
+        "questions_with_context": 198,
+        "questions_without_context": 2,
+        "stored_answers_cross_checked": 600,
+        "published_answers": 600,
+        "contexts_not_read": 0
+      },
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 199,
+          "scored": 197,
+          "mean": 0.4855,
+          "ci95": [
+            0.4337,
+            0.5431
+          ],
+          "correct": 101,
+          "reader_usd": 11.3084,
+          "usd_per_correct": 0.112,
+          "not_scored": {
+            "harness_invalid": 2
+          }
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 199,
+          "scored": 197,
+          "mean": 0.5659,
+          "ci95": [
+            0.5171,
+            0.6175
+          ],
+          "correct": 119,
+          "reader_usd": 0.6962,
+          "usd_per_correct": 0.0059,
+          "not_scored": {
+            "harness_invalid": 2
+          }
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 199,
+          "scored": 197,
+          "mean": 0.5672,
+          "ci95": [
+            0.5185,
+            0.6176
+          ],
+          "correct": 113,
+          "reader_usd": 2.947,
+          "usd_per_correct": 0.0261,
+          "not_scored": {
+            "harness_invalid": 2
+          }
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 199,
+          "scored": 197,
+          "mean": 0.5625,
+          "ci95": [
+            0.5225,
+            0.608
+          ],
+          "correct": 116,
+          "reader_usd": 4.8526,
+          "usd_per_correct": 0.0418,
+          "not_scored": {
+            "harness_invalid": 2
+          }
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 197,
+          "clusters": 10,
+          "frontier_mean": 0.4855,
+          "particle_mean": 0.5659,
+          "delta": 0.0804,
+          "ci95": [
+            0.0523,
+            0.1125
+          ],
+          "p_two_sided": 0.002
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 197,
+          "clusters": 10,
+          "frontier_mean": 0.5672,
+          "particle_mean": 0.5659,
+          "delta": -0.0012,
+          "ci95": [
+            -0.0415,
+            0.0369
+          ],
+          "p_two_sided": 0.9551
+        }
+      ]
+    },
+    {
+      "frontier_cell": "s1.gbrain-defaults.f6-master.p",
+      "particle_cell": "s1.gbrain-defaults.f6-master.p.reread-particle-particle-1",
+      "system": "gbrain-defaults",
+      "kind": "re-read",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 1,
+      "verify": {
+        "contexts_checked": 200,
+        "contexts_matched": 200,
+        "scheduled_questions": 200,
+        "questions_with_context": 200,
+        "questions_without_context": 0,
+        "stored_answers_cross_checked": 600,
+        "published_answers": 600,
+        "contexts_not_read": 0
+      },
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.6069,
+          "ci95": [
+            0.5686,
+            0.6529
+          ],
+          "correct": 128,
+          "reader_usd": 11.1172,
+          "usd_per_correct": 0.0869,
+          "not_scored": {}
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.5639,
+          "ci95": [
+            0.516,
+            0.6144
+          ],
+          "correct": 120,
+          "reader_usd": 0.7531,
+          "usd_per_correct": 0.0063,
+          "not_scored": {}
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.6164,
+          "ci95": [
+            0.5917,
+            0.6402
+          ],
+          "correct": 133,
+          "reader_usd": 2.8985,
+          "usd_per_correct": 0.0218,
+          "not_scored": {}
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 199,
+          "scored": 199,
+          "mean": 0.6078,
+          "ci95": [
+            0.5641,
+            0.6557
+          ],
+          "correct": 127,
+          "reader_usd": 4.7304,
+          "usd_per_correct": 0.0372,
+          "not_scored": {}
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 199,
+          "clusters": 10,
+          "frontier_mean": 0.6069,
+          "particle_mean": 0.5639,
+          "delta": -0.043,
+          "ci95": [
+            -0.0862,
+            0.0055
+          ],
+          "p_two_sided": 0.1172
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 199,
+          "clusters": 10,
+          "frontier_mean": 0.6164,
+          "particle_mean": 0.5639,
+          "delta": -0.0525,
+          "ci95": [
+            -0.0962,
+            -0.0006
+          ],
+          "p_two_sided": 0.0801
+        }
+      ]
+    },
+    {
+      "frontier_cell": "s2b.ext-extract-first.common.component-b8000",
+      "particle_cell": "s2b.ext-extract-first.common.component-b8000.reread-particle-particle-1",
+      "system": "ext-extract-first",
+      "kind": "re-read",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 0,
+      "verify": {
+        "contexts_checked": 240,
+        "contexts_matched": 240,
+        "scheduled_questions": 240,
+        "questions_with_context": 240,
+        "questions_without_context": 0,
+        "stored_answers_cross_checked": 720,
+        "published_answers": 720,
+        "contexts_not_read": 0
+      },
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.5886,
+          "ci95": [
+            0.5456,
+            0.6289
+          ],
+          "correct": 149,
+          "reader_usd": 14.0472,
+          "usd_per_correct": 0.0943,
+          "not_scored": {}
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 240,
+          "scored": 239,
+          "mean": 0.6506,
+          "ci95": [
+            0.6166,
+            0.6876
+          ],
+          "correct": 166,
+          "reader_usd": 0.8914,
+          "usd_per_correct": 0.0054,
+          "not_scored": {
+            "reader_error": 1
+          }
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6252,
+          "ci95": [
+            0.5862,
+            0.6641
+          ],
+          "correct": 162,
+          "reader_usd": 3.8999,
+          "usd_per_correct": 0.0241,
+          "not_scored": {}
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6885,
+          "ci95": [
+            0.6544,
+            0.7232
+          ],
+          "correct": 177,
+          "reader_usd": 5.9688,
+          "usd_per_correct": 0.0337,
+          "not_scored": {}
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 239,
+          "clusters": 24,
+          "frontier_mean": 0.5911,
+          "particle_mean": 0.6506,
+          "delta": 0.0595,
+          "ci95": [
+            0.0125,
+            0.1088
+          ],
+          "p_two_sided": 0.03
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 239,
+          "clusters": 24,
+          "frontier_mean": 0.6278,
+          "particle_mean": 0.6506,
+          "delta": 0.0228,
+          "ci95": [
+            -0.0237,
+            0.0672
+          ],
+          "p_two_sided": 0.3387
+        }
+      ]
+    },
+    {
+      "frontier_cell": "s2b.ext-memory-bank.recipe.component-b8000",
+      "particle_cell": "s2b.ext-memory-bank.recipe.component-b8000.reread-particle-particle-1",
+      "system": "ext-memory-bank",
+      "kind": "re-read",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 0,
+      "verify": {
+        "contexts_checked": 240,
+        "contexts_matched": 240,
+        "scheduled_questions": 240,
+        "questions_with_context": 240,
+        "questions_without_context": 0,
+        "stored_answers_cross_checked": 720,
+        "published_answers": 720,
+        "contexts_not_read": 0
+      },
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6271,
+          "ci95": [
+            0.5842,
+            0.6667
+          ],
+          "correct": 155,
+          "reader_usd": 12.793,
+          "usd_per_correct": 0.0825,
+          "not_scored": {}
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6614,
+          "ci95": [
+            0.6236,
+            0.7005
+          ],
+          "correct": 171,
+          "reader_usd": 0.8014,
+          "usd_per_correct": 0.0047,
+          "not_scored": {}
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6785,
+          "ci95": [
+            0.647,
+            0.7102
+          ],
+          "correct": 176,
+          "reader_usd": 3.7698,
+          "usd_per_correct": 0.0214,
+          "not_scored": {}
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6992,
+          "ci95": [
+            0.6655,
+            0.7329
+          ],
+          "correct": 180,
+          "reader_usd": 5.4923,
+          "usd_per_correct": 0.0305,
+          "not_scored": {}
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 240,
+          "clusters": 24,
+          "frontier_mean": 0.6271,
+          "particle_mean": 0.6614,
+          "delta": 0.0343,
+          "ci95": [
+            -0.0022,
+            0.0722
+          ],
+          "p_two_sided": 0.0927
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 240,
+          "clusters": 24,
+          "frontier_mean": 0.6785,
+          "particle_mean": 0.6614,
+          "delta": -0.0171,
+          "ci95": [
+            -0.0557,
+            0.0181
+          ],
+          "p_two_sided": 0.4038
+        }
+      ]
+    },
+    {
+      "frontier_cell": "s2b.ext-temporal-graph.shipped-0.31.component-b8000",
+      "particle_cell": "s2b.ext-temporal-graph.shipped-0.31.component-b8000.reread-particle-particle-1",
+      "system": "ext-temporal-graph",
+      "kind": "re-read",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 0,
+      "verify": {
+        "contexts_checked": 240,
+        "contexts_matched": 240,
+        "scheduled_questions": 240,
+        "questions_with_context": 240,
+        "questions_without_context": 0,
+        "stored_answers_cross_checked": 720,
+        "published_answers": 720,
+        "contexts_not_read": 0
+      },
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.5599,
+          "ci95": [
+            0.5163,
+            0.6022
+          ],
+          "correct": 140,
+          "reader_usd": 14.1592,
+          "usd_per_correct": 0.1011,
+          "not_scored": {}
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.592,
+          "ci95": [
+            0.5667,
+            0.6175
+          ],
+          "correct": 157,
+          "reader_usd": 0.8979,
+          "usd_per_correct": 0.0057,
+          "not_scored": {}
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.5744,
+          "ci95": [
+            0.538,
+            0.6098
+          ],
+          "correct": 148,
+          "reader_usd": 3.7779,
+          "usd_per_correct": 0.0255,
+          "not_scored": {}
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6331,
+          "ci95": [
+            0.6021,
+            0.6661
+          ],
+          "correct": 162,
+          "reader_usd": 6.0532,
+          "usd_per_correct": 0.0374,
+          "not_scored": {}
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 240,
+          "clusters": 24,
+          "frontier_mean": 0.5599,
+          "particle_mean": 0.592,
+          "delta": 0.0321,
+          "ci95": [
+            -0.0056,
+            0.07
+          ],
+          "p_two_sided": 0.1134
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 240,
+          "clusters": 24,
+          "frontier_mean": 0.5744,
+          "particle_mean": 0.592,
+          "delta": 0.0176,
+          "ci95": [
+            -0.015,
+            0.0489
+          ],
+          "p_two_sided": 0.2934
+        }
+      ]
+    },
+    {
+      "frontier_cell": "s2b.gbrain-defaults.f6-master.a0",
+      "particle_cell": "s2b.gbrain-defaults.f6-master.a0.reread-particle-particle-1",
+      "system": "gbrain-defaults",
+      "kind": "re-read",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 0,
+      "verify": {
+        "contexts_checked": 240,
+        "contexts_matched": 240,
+        "scheduled_questions": 240,
+        "questions_with_context": 240,
+        "questions_without_context": 0,
+        "stored_answers_cross_checked": 720,
+        "published_answers": 720,
+        "contexts_not_read": 0
+      },
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6407,
+          "ci95": [
+            0.6085,
+            0.6736
+          ],
+          "correct": 159,
+          "reader_usd": 14.0895,
+          "usd_per_correct": 0.0886,
+          "not_scored": {}
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6669,
+          "ci95": [
+            0.6285,
+            0.704
+          ],
+          "correct": 170,
+          "reader_usd": 0.802,
+          "usd_per_correct": 0.0047,
+          "not_scored": {}
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6764,
+          "ci95": [
+            0.6426,
+            0.709
+          ],
+          "correct": 176,
+          "reader_usd": 3.7516,
+          "usd_per_correct": 0.0213,
+          "not_scored": {}
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6716,
+          "ci95": [
+            0.6422,
+            0.7028
+          ],
+          "correct": 173,
+          "reader_usd": 6.0396,
+          "usd_per_correct": 0.0349,
+          "not_scored": {}
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 240,
+          "clusters": 24,
+          "frontier_mean": 0.6407,
+          "particle_mean": 0.6669,
+          "delta": 0.0262,
+          "ci95": [
+            -0.0092,
+            0.0617
+          ],
+          "p_two_sided": 0.1681
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 240,
+          "clusters": 24,
+          "frontier_mean": 0.6764,
+          "particle_mean": 0.6669,
+          "delta": -0.0094,
+          "ci95": [
+            -0.0432,
+            0.0223
+          ],
+          "p_two_sided": 0.5823
+        }
+      ]
+    },
+    {
+      "frontier_cell": "s2b.gbrain-defaults.f6-master.p",
+      "particle_cell": "s2b.gbrain-defaults.f6-master.p.reread-particle-particle-1",
+      "system": "gbrain-defaults",
+      "kind": "re-read",
+      "run_status": {
+        "frontier": "complete",
+        "particle": "complete"
+      },
+      "excluded": 0,
+      "verify": {
+        "contexts_checked": 240,
+        "contexts_matched": 240,
+        "scheduled_questions": 240,
+        "questions_with_context": 240,
+        "questions_without_context": 0,
+        "stored_answers_cross_checked": 720,
+        "published_answers": 720,
+        "contexts_not_read": 0
+      },
+      "readers": [
+        {
+          "reader": "anthropic:claude-opus-5-5",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6283,
+          "ci95": [
+            0.5955,
+            0.6592
+          ],
+          "correct": 160,
+          "reader_usd": 13.5079,
+          "usd_per_correct": 0.0844,
+          "not_scored": {}
+        },
+        {
+          "reader": "particle:particle-1",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6722,
+          "ci95": [
+            0.6347,
+            0.7107
+          ],
+          "correct": 172,
+          "reader_usd": 0.7625,
+          "usd_per_correct": 0.0044,
+          "not_scored": {}
+        },
+        {
+          "reader": "openai:gpt-6.1-sol",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.6947,
+          "ci95": [
+            0.6647,
+            0.7253
+          ],
+          "correct": 180,
+          "reader_usd": 3.5978,
+          "usd_per_correct": 0.02,
+          "not_scored": {}
+        },
+        {
+          "reader": "anthropic:claude-sonnet-5-5",
+          "answers": 240,
+          "scored": 240,
+          "mean": 0.722,
+          "ci95": [
+            0.6949,
+            0.7483
+          ],
+          "correct": 186,
+          "reader_usd": 5.767,
+          "usd_per_correct": 0.031,
+          "not_scored": {}
+        }
+      ],
+      "particle_minus": [
+        {
+          "minus": "anthropic:claude-opus-5-5",
+          "pairs": 240,
+          "clusters": 24,
+          "frontier_mean": 0.6283,
+          "particle_mean": 0.6722,
+          "delta": 0.0438,
+          "ci95": [
+            0.0078,
+            0.081
+          ],
+          "p_two_sided": 0.0264
+        },
+        {
+          "minus": "openai:gpt-6.1-sol",
+          "pairs": 240,
+          "clusters": 24,
+          "frontier_mean": 0.6947,
+          "particle_mean": 0.6722,
+          "delta": -0.0225,
+          "ci95": [
+            -0.0608,
+            0.0168
+          ],
+          "p_two_sided": 0.2739
+        }
+      ]
+    }
+  ]
+}
