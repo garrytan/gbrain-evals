@@ -201,6 +201,7 @@ These documents fix a method before measuring. They publish no capability scores
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
 | Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? | [November 1 SkillOpt method preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md) with three amendments: Haiku 5.5 probes 1 and 2 ([probe 1's summary](benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json)), the frontier probe on Opus 5.5 and GPT-6.1 Sol, and the one test-split read reported in the [November 2 report](benchmarks/2026-11-01-skillopt-method/REPORT.md); task sets: [v2](../eval/data/skillopt-method-v2/README.md), which the probe reads, and the frozen [v1](../eval/data/skillopt-method-v1/README.md) |
+| Do F6's and Q1's published comparisons of gbrain with other memory systems on BEAM hold in sign, rank and rough size when a frontier judge from a family that grades none of the readers judges every answer, and which judge is right where they disagree? | [November 4 GST-1365 judge-robustness preregistration](benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md): the answers behind those comparisons judged again, a gemini-4-argon referee on each disagreement and known-answer controls built from BEAM's gold answers, frozen before any paid call |
 
 ## Data and methods
 
@@ -269,6 +270,15 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-04: GST-1365 judge-robustness preregistration row
+
+"Protocols and preregistrations" gained a row for the
+[GST-1365 judge-robustness preregistration](benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md), which
+only the disclosures page linked before. It asks whether F6's and Q1's published comparisons on BEAM hold when a
+frontier judge from a family that grades none of the readers judges every answer, and which judge is right where they
+disagree. It reports no result and carries no disclosure line, like the preregistration itself. No existing row
+changed.
 
 ### 2026-11-04: Row for the particle-1 F6 add-on finding
 
