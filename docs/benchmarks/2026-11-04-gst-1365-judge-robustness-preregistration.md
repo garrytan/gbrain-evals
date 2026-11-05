@@ -322,3 +322,10 @@ cell, a judge, the cut order or the ceiling.
 - **Runner fix.** Stage 0 found that `plan` counted the answers Q1 shares with F6 twice, in stratum C's census line and
   in the referee line. That would have overstated the projection by about $85 at central rates and fired one cut step
   too many at conservative rates. The projection now counts each answer once.
+
+**2026-11-05: what "rubric-scored" means in the controls.** In the known-answer controls, "rubric-scored" means scored
+by BEAM's rubric instrument, as opposed to event_ordering's rank-order score. D8's questions carry no rubric items, and
+the instrument scores each against its gold answer as one rubric item (`eval/runner/memory-qa/instruments.ts`), so they
+are eligible, as the 50 D8 questions this section names require. The controls runner had read the word as "carries
+rubric items" and drew no D8 question; 0.10.164 fixes it before the D8 controls run. Nothing here changes the rule, a
+cell, a judge, the cut order or the ceiling.
