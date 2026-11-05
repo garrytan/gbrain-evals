@@ -555,7 +555,7 @@ export function contrastResults(s: Sources, cuts: Cuts | null, partial: readonly
 }
 
 /** The referee rows of a set of answers: the canonical, frontier and referee verdicts with the reader's family, reader and system. */
-function refereeRows(s: Sources, ids: readonly string[]): RefereeRow[] {
+function refereeRows(s: Sources, ids: readonly string[], categories: Record<string, string> = {}): RefereeRow[] {
   const index = judgmentIndex(s), want = new Set(ids), rows: RefereeRow[] = [];
   for (const cell of s.cells.values()) {
     const canonical = new Map(cell.judgments.filter(j => j.instrument_id === cell.def.canonical_instrument && j.judge_replicate === 0).map(j => [j.answer_id, j]));
@@ -564,7 +564,7 @@ function refereeRows(s: Sources, ids: readonly string[]): RefereeRow[] {
       want.delete(a.answer_id);
       const m = canonical.get(a.answer_id), inst = cell.def.canonical_instrument, sha = cell.instrument.sha256;
       const f = index.get(reuseKey(a.answer_id, frontierId(inst, judgeFor(a.reader)), sha)), r = index.get(reuseKey(a.answer_id, frontierId(inst, REFEREE), sha));
-      if (scored(m) && f && r) rows.push({ group: `${family(a.reader) === 'openai' ? 'Sol rows' : 'Claude rows'}|${a.reader}|${cell.def.system}`, m: m.score >= PASS_THRESHOLD, f: f.score >= PASS_THRESHOLD, r: r.score >= PASS_THRESHOLD });
+      if (scored(m) && f && r) rows.push({ group: `${family(a.reader) === 'openai' ? 'Sol rows' : 'Claude rows'}|${a.reader}|${cell.def.system}`, category: categories[a.answer_id], m: m.score >= PASS_THRESHOLD, f: f.score >= PASS_THRESHOLD, r: r.score >= PASS_THRESHOLD });
     }
   }
   return rows;
@@ -696,9 +696,9 @@ if (import.meta.main) {
       mkdirSync(report, { recursive: true });
       const partial = (['A', 'B', 'C', 'D'] as Stratum[]).filter(x => frontierTasks(s, [x], cuts).tasks.length > 0);
       const r = contrastResults(s, cuts, partial);
-      const ref = readJson<{ disagreements: string[]; agreements: string[] }>(join(out, 'referee.json'));
-      const disagreeRows = ref ? refereeRows(s, ref.disagreements) : [];
-      const refereeResult = ref ? refereeStats(refereeRows(s, ref.agreements), disagreeRows) : null;
+      const ref = readJson<{ disagreements: string[]; agreements: string[]; categories?: Record<string, string> }>(join(out, 'referee.json'));
+      const disagreeRows = ref ? refereeRows(s, ref.disagreements, ref.categories) : [];
+      const refereeResult = ref ? refereeStats(refereeRows(s, ref.agreements, ref.categories), disagreeRows) : null;
       const ctl = readJson<ControlAnswer[]>(join(out, 'controls.json'));
       const ctlJudged = ndjson<JudgmentRecord>(join(out, 'controls-judgments.ndjson')).filter(scored);
       const ctlRows: ControlRow[] = (ctl ?? []).map(c => ({ question: sha256(`${c.set}|${c.question_id}`).slice(0, 16), control: c.control, correct: Object.fromEntries(ctlJudged.filter(j => j.answer_id === c.answer_id).map(j => [j.judge, (j.score >= PASS_THRESHOLD) === (c.expected === 'pass')])) }));
@@ -770,9 +770,9 @@ if (import.meta.main) {
       extra = { smoke: smoke.length };
     } else if (sub === 'referee') {
       const pop = refereePopulation(s, cuts);
-      freeze(join(out, 'referee.json'), { disagreements: pop.disagreements, agreements: pop.agreements });
-      checkIdentity(join(out, 'identity-referee.json'), pop.tasks);
       const q = questionsFor(pop.tasks.map(t => t.set), out, process.env);
+      freeze(join(out, 'referee.json'), { disagreements: pop.disagreements, agreements: pop.agreements, categories: Object.fromEntries(pop.tasks.map(t => [t.answer_id, q(t.set, t.question_id).category])) });
+      checkIdentity(join(out, 'identity-referee.json'), pop.tasks);
       question = t => q(t.set, t.question_id);
       const done = judgmentIndex(s);
       tasks = pop.tasks.filter(t => !done.has(reuseKey(t.answer_id, t.instrument_id, t.instrument_sha256)));

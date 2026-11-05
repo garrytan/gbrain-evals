@@ -93,15 +93,17 @@ describe('which judge is right', () => {
     expect(wilson(10, 10).ci95![1]).toBe(1);
   });
 
-  // Value: protects=the referee counts only when it matches the unanimous verdict on 85% of the agreement sample, and p_F splits by direction; fails_when=an invalid referee is used, or p_F counts the canonical side; why_new=new; seam=referee; no_claim=none
-  test('referee validity at 85%, p_F pooled, by group and by direction', () => {
+  // Value: protects=the referee counts only when it matches the unanimous verdict on 85% of the agreement sample, and p_F splits by group, category and direction; fails_when=an invalid referee is used, or p_F counts the canonical side; why_new=new; seam=referee; no_claim=none
+  test('referee validity at 85%, p_F pooled, by group, by category and by direction', () => {
     const agree = (k: number) => Array.from({ length: 100 }, (_, i) => ({ group: 'g', m: true, f: true, r: i < k }));
-    const dis = [{ group: 'Claude rows|a', m: true, f: false, r: false }, { group: 'Claude rows|a', m: false, f: true, r: true }, { group: 'Sol rows|b', m: false, f: true, r: true }, { group: 'Sol rows|b', m: true, f: false, r: true }];
+    const dis = [{ group: 'Claude rows|a', category: 'x', m: true, f: false, r: false }, { group: 'Claude rows|a', category: 'y', m: false, f: true, r: true }, { group: 'Sol rows|b', category: 'x', m: false, f: true, r: true }, { group: 'Sol rows|b', category: 'x', m: true, f: false, r: true }];
     expect(referee(agree(85), dis).valid).toBe(true);
     expect(referee(agree(84), dis).valid).toBe(false);
     const res = referee(agree(90), dis);
     expect([res.disagreements, res.p_F.share, res.by_group['Claude rows|a'].share, res.by_group['Sol rows|b'].share]).toEqual([4, 0.75, 1, 0.5]);
     expect([res.by_direction.frontier_stricter.share, res.by_direction.frontier_more_lenient.share]).toEqual([0.5, 1]);
+    expect(res.by_category.x.share).toBeCloseTo(2 / 3, 3);
+    expect(res.by_category.y.share).toBe(1);
   });
 
   // Value: protects=a judge is more accurate on known answers only by 3 points with a paired interval excluding 0; fails_when=a small or noisy difference crowns a judge, or the pair key or sign flips; why_new=new; seam=controls; no_claim=none

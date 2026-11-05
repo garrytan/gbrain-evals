@@ -63,8 +63,17 @@ first.
   particle-1 was not run.
 - The [RS1 stage 0 finding](benchmarks/2026-11-04-rs1-stage0.md) carries the gbrain line in its closing Disclosures
   section. It reports no particle-1 or OpenAI model result.
+- The [GST-1365 judge-robustness preregistration](benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md)
+  reports no result. Its judges are OpenAI, Anthropic and Google models (gpt-6.1-sol, claude-opus-5-5 and
+  gemini-4-argon, with gpt-4.1-mini on the known-answer controls), and judges trigger no line. Its results file will
+  carry the gbrain and OpenAI lines in a closing Disclosures section.
 
 ## Changelog
+
+### 2026-11-04: The GST-1365 judge-robustness preregistration
+
+"In this repository" lists the [GST-1365 preregistration](benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md),
+which names its judges' vendors and carries no line, since judges trigger none.
 
 ### 2026-11-04: The RS1 stage 0 finding
 

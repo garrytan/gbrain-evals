@@ -150,7 +150,7 @@ export function wilson(k: number, n: number): { share: number | null; ci95: [num
 }
 
 /** One answer the referee judged: the canonical (M0), frontier and referee verdicts at the pass threshold. */
-export interface RefereeRow { group: string; m: boolean; f: boolean; r: boolean }
+export interface RefereeRow { group: string; category?: string; m: boolean; f: boolean; r: boolean }
 
 /** Referee validity on the agreement sample, and p_F (the referee siding with the frontier judge) on the disagreements. */
 export function referee(agreements: readonly RefereeRow[], disagreements: readonly RefereeRow[]) {
@@ -159,8 +159,10 @@ export function referee(agreements: readonly RefereeRow[], disagreements: readon
   const valid = validity.share !== null && validity.share >= REFEREE_VALIDITY;
   const pF = (rows: readonly RefereeRow[]) => wilson(rows.filter(x => x.r === x.f).length, rows.length);
   const groups = [...new Set(disagreements.map(x => x.group))].sort();
+  const categories = [...new Set(disagreements.flatMap(x => x.category ? [x.category] : []))].sort();
   return { agreement_sample: agreements.length, validity, valid, disagreements: disagreements.length, p_F: pF(disagreements),
     by_group: Object.fromEntries(groups.map(g => [g, pF(disagreements.filter(x => x.group === g))])),
+    by_category: Object.fromEntries(categories.map(c => [c, pF(disagreements.filter(x => x.category === c))])),
     by_direction: { frontier_stricter: pF(disagreements.filter(x => x.m && !x.f)), frontier_more_lenient: pF(disagreements.filter(x => !x.m && x.f)) } };
 }
 
