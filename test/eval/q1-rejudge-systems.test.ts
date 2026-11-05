@@ -196,6 +196,8 @@ describe('judging, resume and stops', () => {
     const mean = (cell: string, q: string) => READERS.reduce((a, rd) => a + fOf(cell, rd, q), 0) / 3;
     expect([extract.published_cohort, extract.common_cohort, extract.outcome === 'INCOMPLETE']).toEqual([10, 10, false]);
     expect(extract.F!.delta).toBeCloseTo(qs.reduce((a, q) => a + mean(ANCHOR, q) - mean(EXTRACT, q), 0) / qs.length, 6);
+    expect(extract.levels!.anchor.F).toBeCloseTo(qs.reduce((a, q) => a + mean(ANCHOR, q), 0) / qs.length, 6);
+    expect(extract.levels!.other.F).toBeCloseTo(qs.reduce((a, q) => a + mean(EXTRACT, q), 0) / qs.length, 6);
     expect(Object.keys(extract.per_reader).sort()).toEqual([...READERS].sort());
     expect(extract.K).toBeNull();
     expect(r.contrasts.filter(x => x.family === 'F6' && x.set === 'S2b').every(x => x.outcome === 'INCOMPLETE')).toBe(true);
