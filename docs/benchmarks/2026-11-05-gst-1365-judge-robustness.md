@@ -73,7 +73,9 @@ this check measures.
 question in every cohort was judged by every judge the view needs. "Frontier judges" is Δ_F, which the rule reads. "BEAM
 protocol judge" is the published Δ, or the run's own where the campaign published the two rows but no paired difference
 (F6's BEAM-10M file agent and Q1's BEAM-1M and BEAM-100K file agent). δ is the frontier judges' Δ minus the protocol
-judge's on the same answers. "Two of three" is K, each answer's verdict by at least two of the three judges, reported
+judge's on the same first answers. The published Δ counts every reader replicate, so the protocol judge's Δ on the
+first answers alone can differ from it, here by at most 0.4 points, and Δ_F minus the published Δ can differ from δ by
+as much. "Two of three" is K, each answer's verdict by at least two of the three judges, reported
 beside the rule.
 
 | Family | Set | Comparator | Questions | Frontier judges, Δ_F | BEAM protocol judge, Δ | Judge shift, δ | Two of three, K | Outcome |
@@ -216,7 +218,7 @@ records each in a dated note.
    frontier judgments had scored F6's file-agent texts. With each answer keeping its own judgments, F6's BEAM-10M
    file-agent Δ_F is -9.2 points (-12.8 to -5.7), where the mismatched judgments gave -8.1. The referee's population was
    refrozen with the fix (2,280 disagreements, 2,177 of the earlier 2,230 kept, and a 600-answer agreement sample, 576
-   kept) and its 123 unjudged answers judged. The reuse checks, read again, agree on 97 (gpt-6.1-sol) and 99
+   kept) and the 123 of its members that had no referee judgment yet were judged. The reuse checks, read again, agree on 97 (gpt-6.1-sol) and 99
    (claude-opus-5-5) of 100, where they recorded 96 and 96, so both still clear their 95% bar.
 3. **The summary left out three outputs** the preregistration reports: p_F for each frontier judge's rows, absolute
    levels, and the control counts. `summary.json` now holds `referee.by_row`, a `levels` entry per comparison and
@@ -242,6 +244,9 @@ records each in a dated note.
   receipts in custody, with their hashes pinned, and none of them makes a claim about the BEAM-100K file-agent gap:
   Q1's table shows the two rows (72.8% and 67.8%) and draws no comparison. They stay as they are, and the
   judge-dependent statement sits beside them.
+- The preregistration gave the F6 scoreboard a dated "Frontier-judge sensitivity (GST-1365)" section, rendered in
+  custody. The renderer has no such section, so that view (Δ under each judge and each outcome, frontier judges first)
+  is this file's comparisons table, with summary.json beside it. A dated note in the preregistration records the change.
 - No comparison REVERSED, so [corrections](../corrections.md) lists nothing new.
 
 ## Spend

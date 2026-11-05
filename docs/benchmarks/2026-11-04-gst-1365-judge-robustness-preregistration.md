@@ -347,3 +347,11 @@ the rule, a cell, a judge, the cut order or the ceiling.
   100, where they recorded 96 and 96, so both still pass. Every number in the summary comes from the fixed loader.
 - **Summary outputs.** The summary now writes what this document's report lists and it had left out: p_F for each
   frontier judge's rows, each cell's absolute level and the control counts.
+
+**2026-11-05: Where the HOLDS restatement is published.** "What gets restated" gives the F6 scoreboard a dated
+"Frontier-judge sensitivity (GST-1365)" section with Δ under M, F and K and each outcome, rendered in custody. The F6
+scoreboard is a hash-pinned render of F6's receipt, and scoreboard.ts has no such section, so rendering one would take
+new renderer code and a new F6 publication. That view is published instead as the results file's comparisons table
+(frontier judges first, then the published Δ, δ and K, with each outcome) and in summary.json, and README and
+docs/README.md say the comparisons hold under frontier judges, as the section requires. Nothing here changes the rule,
+a cell, a judge, the cut order or the ceiling.

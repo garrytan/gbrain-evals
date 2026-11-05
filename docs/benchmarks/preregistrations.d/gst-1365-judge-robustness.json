@@ -5,8 +5,8 @@
       "id": "2026-11-04-gst-1365-judge-robustness",
       "preregistration": "docs/benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md",
       "results": [
-        "docs/benchmarks/2026-11-04-gst-1365-judge-robustness/*",
-        "docs/benchmarks/2026-11-04-gst-1365-judge-robustness.md"
+        "docs/benchmarks/2026-11-05-gst-1365-judge-robustness/*",
+        "docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md"
       ]
     }
   ]

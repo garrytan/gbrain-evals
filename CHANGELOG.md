@@ -27,7 +27,13 @@ This records what each gbrain-evals release changed and what its measurements me
 - **What is restated.** README gains a paragraph after the F6 pointer under the Q1 block, and `docs/README.md` moves the
   check from its preregistrations table to retrieval experiments, with the verdicts, and names v0.10.165. The rendered
   F6 and Q1 scoreboards, their `publication.json` and README's rendered block make no claim about the BEAM-100K
-  file-agent gap and are unchanged. Nothing REVERSED, so `docs/corrections.md` is unchanged.
+  file-agent gap and are unchanged. The F6 scoreboard section the preregistration planned for this view is not rendered,
+  because the renderer has no such section; the results file's comparisons table is that view, and a dated note in the
+  preregistration says so. Nothing REVERSED, so `docs/corrections.md` is unchanged.
+- **Disclosures and the ordering check.** README's paragraph and the docs index row carry the gbrain and OpenAI lines,
+  because their three-reader comparisons include gpt-6.1-sol's reader rows, and `docs/disclosures.md` lists them.
+  `docs/benchmarks/preregistrations.d/gst-1365-judge-robustness.json` named results under 2026-11-04 paths, so
+  `prereg-order` matched no results file for this experiment; it now names the 2026-11-05 results file and directory.
 - **Spend.** $614.87 booked on the GST-1365 ledger against the $850 API ceiling, $462.15 at list: the ledger books
   gemini-4-argon at its 2026-12-01 price, twice list. The $250 reserve was not used. The results file carries the gbrain
   and OpenAI disclosure lines in its closing section.
