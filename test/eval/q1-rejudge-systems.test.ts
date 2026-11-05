@@ -386,9 +386,30 @@ describe('money, keys and the proxy', () => {
     mkdirSync(out, { recursive: true });
     tieLedger(out, first);
     tieLedger(out, first);
-    expect(JSON.parse(readFileSync(join(out, 'ledger.json'), 'utf8'))).toEqual({ ledger: first });
+    expect(JSON.parse(readFileSync(join(out, 'ledger-tie.json'), 'utf8'))).toEqual({ ledger: first });
     const op = refusal(() => tieLedger(out, other));
     expect([op.code, op.message]).toEqual(['USAGE', `${out} spends on the ledger ${first}, not ${other}`]);
+  });
+
+  // Value: protects=a ledger kept in the out itself still holds the ceiling: the tie never lands in the budget ledger's legacy slot (<out>/ledger.json beside <out>/ledger.sqlite); fails_when=tying <out>/ledger.sqlite writes <out>/ledger.json and every lease on that out refuses as an unreadable ledger; why_new=/ship review finding (native adversarial, tie in the legacy slot); seam=tieLedger then openLease; no_claim=none
+  test('a ledger at <out>/ledger.sqlite is tied without touching its legacy slot, and its lease opens', () => {
+    const out = join(tmp, 'tie-in-out'), ledger = join(out, 'ledger.sqlite');
+    mkdirSync(out, { recursive: true });
+    tieLedger(out, ledger);
+    expect([existsSync(join(out, 'ledger.json')), JSON.parse(readFileSync(join(out, 'ledger-tie.json'), 'utf8'))]).toEqual([false, { ledger }]);
+    const lease = openLease({ runId: 'gst-1365-tie-in-out', leaseUsd: 1, ledgerPath: ledger, ceiling: 850 });
+    lease.close();
+  });
+
+  // Value: protects=the tie is created exclusively and validated, never replaced: a start that finds a tie it did not write (another first start's, still empty, or a file with no ledger path) refuses instead of writing its own; fails_when=a second first start overwrites the tie and opens a second $850 ceiling, or a tombstone at the tie path is overwritten; why_new=/ship review finding (outside voice, tie race); seam=tieLedger; no_claim=does not race two processes
+  test('a tie with no string ledger is refused and left as it was', () => {
+    const out = join(tmp, 'tie-bad'), ledger = join(tmp, 'tie-bad-ledger.sqlite'), tie = join(out, 'ledger-tie.json');
+    mkdirSync(out, { recursive: true });
+    for (const text of ['', '{"schema":1}\n', 'null\n', '{"ledger":7}\n']) {
+      writeFileSync(tie, text);
+      const op = refusal(() => tieLedger(out, ledger));
+      expect([op.code, op.message, readFileSync(tie, 'utf8')]).toEqual(['USAGE', `${tie} names no ledger`, text]);
+    }
   });
 
   // Value: protects=a Sol or Opus judge request that may have reached its provider (the proxy's 504 on an upstream timeout) is sent once, as a Gemini or Particle request is; fails_when=qa-v2's chat client resends it up to five times, each attempt charged its reservation; why_new=/ship review finding (testing specialist, money-retry); seam=ChatClient holdMayHaveBilled through MeteringProxy; no_claim=does not call a live provider
@@ -489,7 +510,7 @@ describe('the command line', () => {
     const out = join(tmp, 'repro-cli'), ledger = join(tmp, 'repro-cli-ledger.sqlite');
     const r = cli(['judge', '--stratum', 'A', ...roots.flatMap(x => ['--root', x]), '--out', out, '--budget-ledger', ledger, '--run-id', 'gst-1365-repro', '--lease-usd', '1', '--keyless-upstream', 'http://127.0.0.1:9']);
     expect([r.code !== 0, r.text.includes('RECEIPT_INVALID') && r.text.includes('campaign.json schema')]).toEqual([true, true]);
-    expect([existsSync(ledger), existsSync(join(out, 'ledger.json'))]).toEqual([false, false]);
+    expect([existsSync(ledger), existsSync(join(out, 'ledger-tie.json'))]).toEqual([false, false]);
   });
 });
 

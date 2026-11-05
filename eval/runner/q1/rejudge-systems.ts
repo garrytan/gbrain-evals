@@ -194,12 +194,23 @@ export function recordReuseCheck(out: string, judge: string, tasks: readonly Tas
   return result;
 }
 
-/** The first paid subcommand on an out records its ledger, and any other ledger is refused, so a second ledger never starts a second ceiling. */
+/**
+ * The first paid subcommand on an out records its ledger in <out>/ledger-tie.json, outside any ledger's legacy slot, and any
+ * other ledger is refused, so a second ledger never starts a second ceiling. The tie is created exclusively: a start that
+ * finds one already there validates it, and a tie with no ledger path is refused, never replaced.
+ */
 export function tieLedger(out: string, ledgerPath: string): void {
-  const tie = join(out, 'ledger.json');
-  const tied = existsSync(tie) ? (JSON.parse(readFileSync(tie, 'utf8')) as { ledger: string }).ledger : null;
-  if (tied && tied !== ledgerPath) throw refuse({ code: 'USAGE', message: `${out} spends on the ledger ${tied}, not ${ledgerPath}`, why: 'one ledger holds the GST-1365 ceiling for every stage of an out; a second ledger would start another', fix: { next: 'run', argv: [...FRONT, '<subcommand>', '--budget-ledger', tied] } });
-  if (!tied) writeFileSync(tie, JSON.stringify({ ledger: ledgerPath }) + '\n');
+  const tie = join(out, 'ledger-tie.json');
+  try {
+    writeFileSync(tie, JSON.stringify({ ledger: ledgerPath }) + '\n', { flag: 'wx' });
+    return;
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
+  }
+  let tied: unknown;
+  try { tied = (JSON.parse(readFileSync(tie, 'utf8')) as { ledger?: unknown } | null)?.ledger; } catch { tied = undefined; }
+  if (typeof tied !== 'string') throw refuse({ code: 'USAGE', message: `${tie} names no ledger`, why: 'the tie is the only record of which ledger holds this out\'s ceiling, so one without a ledger path is never replaced', fix: { next: 'report', user_message: `inspect ${tie}` } });
+  if (tied !== ledgerPath) throw refuse({ code: 'USAGE', message: `${out} spends on the ledger ${tied}, not ${ledgerPath}`, why: 'one ledger holds the GST-1365 ceiling for every stage of an out; a second ledger would start another', fix: { next: 'run', argv: [...FRONT, '<subcommand>', '--budget-ledger', tied] } });
 }
 
 /** The tasks with no record in this run's own log; a logged judge_error is attempted and unscored, so it never leaves its stratum partial. */
