@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.161] - 2026-11-04
+## [0.10.162] - 2026-11-04
 
 ### GST-1365's judge-robustness check is preregistered, with its runner and a gemini-4-argon judge route (GST-1365)
 
@@ -11,6 +11,30 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Money.** One GST-1365 ledger with its ceiling pinned at $850 in code; a recorded reserve grant raises it by at most $250. A lease that would pass the ceiling is refused before it opens, CEILING_REACHED (exit 5) is final, and a request that may have billed is never sent again in the same invocation.
 - **The gemini-4-argon route.** `JUDGE_PROVIDERS` in `eval/runner/providers/openai-compatible.ts` adds Gemini's OpenAI-compatible endpoint as a judge-only provider (it stays out of `COMPAT_PROVIDERS`, so no reader routes to it). The budget ledger prices `gemini:gemini-4-argon` at its 2026-12-01 rate ($4 in, $20 out, $0.20 cache read per million tokens), twice the list price before then, and counts output as the larger of `completion_tokens` and `total_tokens` minus `prompt_tokens`, so thinking is billed. The metering proxy routes `/gemini/v1beta/openai/chat/completions` and its free model listing, and treats a Gemini request that may have reached the provider as billed, as it does Particle's (issue #288).
 - **Tests.** `test/eval/q1-rejudge-rule.test.ts` and `test/eval/q1-rejudge-systems.test.ts` cover the rule, the cohorts, the reproduction check, reuse and the reuse check, the referee population and sample, the controls, the ceiling, budget stops and resume, and Sol, Opus and Gemini through the lease proxy; `test/eval/budget-ledger.test.ts` and `test/eval/openai-compatible.test.ts` cover the Gemini price and request.
+
+## [0.10.161] - 2026-11-04
+
+### particle-1 F6 add-on finding: the judge decides whether particle-1 scores above or below Opus 5.5 (GST-1153)
+
+- **`docs/findings/2026-11-04-particle-1-f6-addon.md`, new.** It leads with the second-judge check A6 preregistered. On
+  the eight cells where BEAM's canonical judge, gpt-4.1-mini, put particle-1 above Opus 5.5 (+0.9 to +8.0 points),
+  gpt-6.1-sol on the same rubric puts it 4.9 to 8.0 points below, with every 95% interval below zero. So the canonical
+  judge's reader-model gaps on these cells are not reliable. Cost per correct answer sits beside Opus 5.5's: 12 to 19
+  times less on the re-reads under either judge, and 2.7 times less as the file agent. The file-agent row is complete
+  after three legs (leases `…-1d4d91ac`, `…-6b01afc7`, `…-24a910e1`, $61.07 together): on the same 198 questions,
+  63.4% against Opus 5.5's 72.1% (−8.7 points, −14.0 to −3.2), with 23 turn caps and 1 reader error. It also explains
+  why A6's $0.04 per answer was about 7.6 times too low (1.78M prompt tokens and 8,887 output tokens per answer, over
+  18.6 turns), and gives each system's build and ingest dollars once, as A6 asks. Aggregates only,
+  in `docs/findings/2026-11-04-particle-1-f6-addon/` with SHA256SUMS. The Particle, gbrain and OpenAI lines close it.
+- **F6's scoreboard carries a dated label line.** `publication.json` adds one disclosure, dated 2026-11-04: the S1
+  file-agent row's receipt names block T1 because its A4 unit ran without `--manifest f6`. Its run configuration
+  (`07b938b4`) is the one F6 publishes, so this is a label fix, not a re-run. The custodian re-rendered the receipt
+  with the note. As in #343, four `SHA256SUMS` entries changed (`campaign.json`, `scoreboard.json`, `scoreboard.md`
+  and the `render/` entry for the public `scoreboard.md`), and every cell's rows, answers and judgments hash as before.
+  `publication.json` now pins results commit `de415001`, whose `SHA256SUMS` hashes to `b60cde2e…6e09` (was
+  `9862f0e4`, `e95f36a8…ff9c`). `scoreboard.md` is the custodian's render, byte for byte.
+- README's known limits gain an entry on BEAM's judge for comparing answer models. The docs index gains a row, and the
+  disclosures page lists the new finding.
 
 ## [0.10.160] - 2026-11-04
 
