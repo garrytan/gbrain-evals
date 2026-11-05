@@ -213,7 +213,8 @@ the frozen contexts of ten of its rows with particle-1 and runs its file agent w
 
 Every accuracy in the block above, and in F6, is scored by BEAM's protocol judge, gpt-4.1-mini. Judged again by frontier
 judges (gpt-6.1-sol on the Claude readers' answers, claude-opus-5-5 on gpt-6.1-sol's), 20 of F6's and Q1's 21 published
-gbrain comparisons on BEAM keep their sign, rank and size. The exception is BEAM-100K sealed: the file agent's lead over
+gbrain comparisons on BEAM hold: those that separated the two systems keep their sign, rank and size, and those that
+were level stay level. The exception is BEAM-100K sealed: the file agent's lead over
 gbrain's 8,000-token component row (72.8% against 67.8% in the table above) is 5.1 points (95% interval 1.3 to 8.6) under
 gpt-4.1-mini and 3.4 points (-1.2 to 8.3) under frontier judges, so it depends on the judge. Where the two judges
 disagree, a gemini-4-argon referee sided with the frontier judge on 73.2% of 2,280 answers, and on known-answer controls

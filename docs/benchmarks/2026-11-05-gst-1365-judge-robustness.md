@@ -18,9 +18,10 @@ One comparison changes. On BEAM-100K sealed (Q1's S2a set, 140 questions), the f
 (interval -1.2 to 8.3) under frontier judges. That gap is now judge-dependent: one judge separates the two systems and
 the other cannot. The judge's shift on it, +1.7 points (-2.8 to +5.8), is itself within noise.
 
-Every other comparison holds. F6's ten comparisons on BEAM-10M and BEAM-1M sealed, its three on D8, and Q1's other
-seven keep their sign, their rank and their size under frontier judges. The family verdicts are F6 HOLDS, D8 HOLDS and
-Q1 WEAKENED, the last only through that BEAM-100K row.
+Every other comparison holds: F6's ten comparisons on BEAM-10M and BEAM-1M sealed, its three on D8, and Q1's other
+seven. Under frontier judges the 14 that separated the two systems keep their sign, their rank and their size, and the
+6 that were level stay level. The family verdicts are F6 HOLDS, D8 HOLDS and Q1 WEAKENED, the last only through that
+BEAM-100K row.
 
 By the preregistered rule the frontier judges are the right ones where the judges disagree, pooled and for each judge's
 rows. A third model, gemini-4-argon, sided with the frontier judge on 73.2% of 2,280 disagreements (71.3% to 75.0%).
@@ -192,7 +193,7 @@ and on gpt-6.1-sol's rows.
 ### Why the BEAM-100K file-agent gap weakened
 
 Every one of the set's 140 questions was judged, so nothing is missing. The set is small: its three-reader comparison
-detects only differences of about 7.2 points at the measured disagreement, above the 5.1-point published gap. The judge's
+detects only judge shifts of about 7.2 points at the measured disagreement, more than the 5.1-point published gap. The judge's
 shift on this comparison is +1.7 points (-2.8 to +5.8), not separated from zero. By reader, under frontier judges, the
 Opus reader still puts the file agent ahead (-6.6, -10.8 to -2.8), the Sol reader's interval crosses zero (-5.4, -13.9
 to +2.1), and the Sonnet reader puts gbrain slightly ahead (+1.9, -4.0 to +8.1), as it did under the protocol judge
@@ -209,7 +210,7 @@ records each in a dated note.
 1. **D8 had no controls.** The control builder took only questions with rubric items, and D8's questions have none, so
    the first controls run held 356 answers from S1 and S2b only. The fixed builder takes any question with a gold
    answer, and a second run judged D8's 198 control answers; S1's and S2b's were reused.
-2. **Two answers shared ids.** F6 reran Q1's BEAM-10M file agent under the same cell id, and the answer id does not name
+2. **Two campaigns' answers shared ids.** F6 reran Q1's BEAM-10M file agent under the same cell id, and the answer id does not name
    the campaign, so 577 of that cell's 600 first answers held different texts under ids both receipts use. Q1's
    frontier judgments had scored F6's file-agent texts. With each answer keeping its own judgments, F6's BEAM-10M
    file-agent Δ_F is -9.2 points (-12.8 to -5.7), where the mismatched judgments gave -8.1. The referee's population was
@@ -222,7 +223,8 @@ records each in a dated note.
 
 ## What to use and what to avoid
 
-- Read F6's and Q1's comparisons as published. Under frontier judges they keep their sign, rank and size.
+- Read F6's and Q1's comparisons as published. Under frontier judges the separated ones keep their sign, rank and size,
+  and the level ones stay level.
 - Do not read the BEAM-100K file-agent row as ahead of gbrain without naming the judge.
 - Compare systems under one judge. Absolute levels move with the judge.
 - For new BEAM work, RS1's revisit or any new ranking set, make the per-row frontier judges canonical or co-primary

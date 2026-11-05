@@ -10,7 +10,8 @@ This records what each gbrain-evals release changed and what its measurements me
   final summary copied byte for byte from custody (`docs/benchmarks/2026-11-05-gst-1365-judge-robustness/summary.json`
   and `summary.md`, rendered by the runner at f61894b9). Every answer behind F6's and Q1's 21 published gbrain
   comparisons, 15,382 in all, was judged by a frontier judge from a family that grades none of its readers. The family
-  verdicts are F6 HOLDS, D8 HOLDS and Q1 WEAKENED. Twenty comparisons keep their sign, rank and size. On BEAM-100K sealed
+  verdicts are F6 HOLDS, D8 HOLDS and Q1 WEAKENED. Twenty comparisons hold: the separated ones keep their sign, rank and
+  size, and the level ones stay level. On BEAM-100K sealed
   the file agent's lead over gbrain's 8,000-token component row is 5.1 points (95% interval 1.3 to 8.6) under
   gpt-4.1-mini and 3.4 points (-1.2 to 8.3) under frontier judges, so it depends on the judge.
 - **Which judge is right.** The gemini-4-argon referee matched the shared verdict on 94.8% of a 600-answer agreement
