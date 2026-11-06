@@ -51,9 +51,12 @@ and retries a statement refused with SQLSTATE 25006 inside one. On top of the ba
 transaction read-only, puts an allowlist in front of raw SQL (reads; `SET LOCAL` only in the form `SET LOCAL <name> =`
 or `TO`, for a plain setting name; `set_config` only with a literal setting name and `is_local` true at every nesting
 level; and transaction control other than starting a read-write transaction; neither setting form may name the role,
-the session authorization or a read-only setting, and SQL with a Unicode escape, `U&`, is refused), disables the direct
-pool and blanks the database variables gbrain's config loader would otherwise fill from
-`~/.gbrain/.env`. gbrain's search path flushes per-query counters into `search_telemetry`; the guard refuses those
+the session authorization or a read-only setting, and SQL containing `U&'` or `U&"` anywhere, even inside a literal or a
+comment, is refused), disables the direct pool and blanks the database variables gbrain's config loader would otherwise
+fill from `~/.gbrain/.env`. The allowlist is a second layer and does not refuse every route around itself: it accepts
+the settings that change how Postgres reads later SQL (`standard_conforming_strings`, `client_encoding`,
+`backslash_quote`), after which the guard and the server can disagree about where a literal ends. The barrier above is
+what custody rests on. gbrain's search path flushes per-query counters into `search_telemetry`; the guard refuses those
 writes and the scorecard counts them as `telemetry_write`.
 
 Because the copy is a snapshot, pages still waiting for an index or projection stay that way during the run. gbrain
