@@ -2,6 +2,22 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.167] - 2026-11-06
+
+### Live recall: the frozen sample and the counted run's barrier are in the preregistration (GBEV-43)
+
+- **The frozen sample.** `docs/benchmarks/live-recall/PREREGISTRATION.md` now records the sample for the first counted
+  live-recall run, taken from Wintermute's `run.ts freeze` output at gbrain-evals `d4651999` before any counted search:
+  50 questions (100 question forms), 10 of each type, all 10 time_window questions windowed, and the question file's
+  sha256 (`88eaa30c34d85d303aff2a0faf81e9adfe6a5815dadc5196879c827e6f02ae9f`), which the runner checks before it
+  searches. A table gives the minimum detectable difference in success@5 at N = 50 for P1 and P2 at 10%, 20% and 30%
+  discordant pairs, and Wintermute's aggregate notes on how the questions were written sit beside it.
+- **The counted run's barrier.** Wintermute's box has no Docker, so `snapshot.sh` cannot make a copy there. The counted
+  run reads the live brain through a role that cannot write (`no_write_privilege`), which GBRA-108 approved, and the
+  runner proves that barrier before any search. The Corpus section and the Limits now say that pages written during the
+  run can change what it finds, and that latency on that run is measured through Supabase's session pooler.
+- No code, number or decision rule changed. The preregistration still reports no result.
+
 ## [0.10.166] - 2026-11-06
 
 ### Live recall: a read-only recall@k and ablation harness for Garry's brain, with its preregistration (GBEV-43)
