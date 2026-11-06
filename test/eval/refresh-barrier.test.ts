@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { failureClasses, pairedBootstrap, pooledBootstrap, reached, upperBound } from '../../eval/runner/refresh-barrier/analyze.ts';
+import { dirname, join } from 'node:path';
+import { analyze, failureClasses, pairedBootstrap, pooledBootstrap, reached, upperBound } from '../../eval/runner/refresh-barrier/analyze.ts';
+import { harnessDigest } from '../../eval/runner/refresh-barrier/fixture.ts';
 import { B_KINDS, planJobs, type RunArgs } from '../../eval/runner/refresh-barrier/run.ts';
 import { allOps, generateSchedule } from '../../eval/runner/refresh-barrier/schedule.ts';
 import { CELLS, MARGIN, compare, compareLatency } from '../../eval/runner/refresh-barrier/retrieval.ts';
@@ -91,7 +92,7 @@ describe('refresh-barrier analysis', () => {
     expect(failureClasses({ ...ok, flags: { ...ok.flags, converge: undefined } }, 'trial')).toEqual(['no_converge']);
     expect(failureClasses({ ...ok, child_errors: [{ role: 'tick', code: 'refresh_diverged' }] }, 'trial')).toEqual([]);
     expect(failureClasses({ ...ok, child_errors: [{ role: 'writer', code: null }] }, 'trial')).toEqual(['harness_error']);
-    expect(failureClasses({ ...ok, strata: { writer_kill: true }, flags: { ...ok.flags, writer_exits: { w0: -1, w1: 0 } } }, 'trial')).toEqual([]);
+    expect(failureClasses({ ...ok, strata: { writer_kill: true }, faults: { writer_killed: 1 }, flags: { ...ok.flags, writer_exits: { w0: -1, w1: 0 } } }, 'trial')).toEqual([]);
     expect(failureClasses({ ...ok, strata: { writer_kill: false }, flags: { ...ok.flags, writer_exits: { w0: -1, w1: 0 } } }, 'trial')).toEqual(['harness_error']);
     expect(failureClasses({ harness_error: { exit: 1 }, ops: [] }, 'trial')).toEqual(['harness_error']);
     expect(failureClasses({ ...ok, flags: { ...ok.flags, push_errors: 1 } }, 'trial')).toEqual(['harness_error']);
@@ -219,5 +220,97 @@ describe('refresh-barrier run plan', () => {
     expect(jobs.map(j => j.id)).toEqual(['quiet-postgres-on-2001', 'quiet-postgres-off-2001', 'quiet-postgres-off-2002', 'quiet-postgres-on-2002',
       'quiet-postgres-on-2003', 'quiet-postgres-off-2003', 'quiet-postgres-off-2004', 'quiet-postgres-on-2004']);
     expect(jobs.every(j => j.args.includes('--quiet') && /^\/o\/quiet\/postgres\/(off|on)\/200\d\.json$/.test(j.result))).toBe(true);
+  });
+});
+
+describe('refresh-barrier counted-run integrity', () => {
+  const REPO = `${import.meta.dir}/../..`;
+  const put = (dir: string, rel: string, x: unknown) => { mkdirSync(dirname(join(dir, rel)), { recursive: true }); writeFileSync(join(dir, rel), JSON.stringify(x)); };
+  const gitRoot = () => {
+    const root = mkdtempSync(join(tmpdir(), 'rb-g-'));
+    for (const args of [['init', '-q'], ['config', 'user.name', 'Example'], ['config', 'user.email', 'example@example.invalid'], ['config', 'commit.gpgsign', 'false'], ['commit', '-q', '--allow-empty', '-m', 'init']]) Bun.spawnSync(['git', '-C', root, ...args]);
+    return { root, sha: Bun.spawnSync(['git', '-C', root, 'rev-parse', 'HEAD']).stdout.toString().trim() };
+  };
+  const run = (args: string[]) => Bun.spawnSync(['bun', '--no-env-file', 'eval/runner/refresh-barrier/run.ts', ...args], { cwd: REPO });
+
+  test('only a writer kill that fired excuses a writer exit', () => {
+    const t = { arm: 'on', ops: [], child_errors: [], switches: [{ refresh_barrier: true }], upstream: { missing_head: 0 }, strata: { writer_kill: true },
+      flags: { quiesce: { ok: true }, quiesce_final: { ok: true }, converge: { ok: true }, writer_exits: { w0: 1, w1: 0 } } };
+    expect(failureClasses({ ...t, faults: { writer_killed: 0 } }, 'trial')).toContain('harness_error');
+    expect(failureClasses({ ...t, faults: { writer_killed: 1 } }, 'trial')).not.toContain('harness_error');
+    expect(failureClasses({ ...t, flags: { ...t.flags, writer_exits: { w0: 1, w1: 1 } }, faults: { writer_killed: 1 } }, 'trial')).toContain('harness_error');
+  });
+
+  test('the named bound counts failures over the runs in the window; every run still counts toward the verdict', () => {
+    const out = mkdtempSync(join(tmpdir(), 'rb-a-'));
+    const r = { arm: 'on', ops: [], switches: [{ refresh_barrier: true }] };
+    put(out, 'named/postgres/on/order-put_update-101.json', { ...r, b: 'put_update', rep: 101, flags: { writers_done: true }, observed: { window_hit: true } });
+    put(out, 'named/postgres/on/order-put_update-102.json', { ...r, b: 'put_update', rep: 102, flags: { writers_done: false }, observed: { window_hit: false } });
+    const { bounds } = analyze(out);
+    expect([bounds.named_in_window.n, bounds.named_in_window.failures]).toEqual([1, 0]);
+    expect([bounds.named_all_runs.n, bounds.named_all_runs.failures]).toEqual([2, 1]);
+    rmSync(out, { recursive: true, force: true });
+  });
+
+  test('a run is counted only with a counted receipt for every block and engine, and complete only on the preregistered seeds', () => {
+    const out = mkdtempSync(join(tmpdir(), 'rb-a-'));
+    put(out, 'receipt-trials-postgres.json', { counted: true, block: 'trials', engine: 'postgres' });
+    put(out, 'trials/postgres/on/7.json', { seed: 7, arm: 'on', ops: [] });
+    const first = analyze(out);
+    expect(first.counted).toBe(false);
+    expect(first.incomplete).toContain('trials postgres/on 0 of 500, 1 outside the preregistered seeds');
+    for (const block of ['trials', 'named', 'quiet']) for (const engine of ['postgres', 'pglite']) put(out, `receipt-${block}-${engine}.json`, { counted: true, block, engine });
+    expect(analyze(out).counted).toBe(true);
+    rmSync(out, { recursive: true, force: true });
+  });
+
+  test('PC2 holds only at the detector build with ten runs per kind of write B and engine', () => {
+    const out = mkdtempSync(join(tmpdir(), 'rb-a-')), pc2 = mkdtempSync(join(tmpdir(), 'rb-pc2-'));
+    for (const e of ['postgres', 'pglite']) for (const b of B_KINDS) for (let rep = 1; rep <= 10; rep++) {
+      put(pc2, `named/${e}/on/order-${b}-${rep}.json`, { b, rep, provenance: { gbrain_sha: 'de22702a0000' }, observed: { window_hit: true }, ops: [{ overwritten: true }] });
+    }
+    expect(analyze(out, pc2).positive_controls.PC2.pass).toBe(true);
+    put(pc2, 'named/pglite/on/order-put_blind-10.json', { b: 'put_blind', rep: 10, provenance: { gbrain_sha: 'f04429da0000' }, observed: { window_hit: true }, ops: [{ overwritten: true }] });
+    expect(analyze(out, pc2).positive_controls.PC2).toMatchObject({ at_detector_build: false, pass: false });
+    rmSync(join(pc2, 'named/pglite/on/order-put_blind-10.json'));
+    expect(analyze(out, pc2).positive_controls.PC2).toMatchObject({ at_detector_build: true, planned_runs: false, pass: false });
+    rmSync(out, { recursive: true, force: true }); rmSync(pc2, { recursive: true, force: true });
+  });
+
+  test("the analysis records whether this analyzer's harness digest matches the results'", () => {
+    const out = mkdtempSync(join(tmpdir(), 'rb-a-'));
+    put(out, 'trials/postgres/on/1001.json', { seed: 1001, arm: 'on', ops: [], provenance: { gbrain_sha: 'g', harness_digest: 'h' } });
+    expect(analyze(out).provenance).toMatchObject({ analyzer_digest: harnessDigest(), analyzer_matches_results: false });
+    put(out, 'trials/postgres/on/1001.json', { seed: 1001, arm: 'on', ops: [], provenance: { gbrain_sha: 'g', harness_digest: harnessDigest() } });
+    expect(analyze(out).provenance.analyzer_matches_results).toBe(true);
+    rmSync(out, { recursive: true, force: true });
+  });
+
+  test("a job that leaves no result counts as a harness error under the block's provenance, not as mixed provenance", () => {
+    const g = gitRoot(), out = mkdtempSync(join(tmpdir(), 'rb-o-'));
+    const r = run(['--block', 'trials', '--engine', 'pglite', '--gbrain-root', g.root, '--out', out, '--seeds', '1001-1001', '--arms', 'on', '--dry']);
+    expect(r.exitCode).toBe(0);
+    const result = JSON.parse(readFileSync(join(out, 'trials/pglite/on/1001.json'), 'utf8'));
+    expect(result.harness_error.exit).toBe(2);
+    expect(result.provenance).toEqual({ gbrain_sha: g.sha, harness_digest: harnessDigest() });
+    const a = analyze(out);
+    expect(a.provenance.mixed).toBe(false);
+    expect(a.bounds.trials_both_engines.failures).toBe(1);
+    expect(existsSync(join(out, 'run-trials-pglite.lock'))).toBe(false);
+    rmSync(g.root, { recursive: true, force: true }); rmSync(out, { recursive: true, force: true });
+  });
+
+  test('run.ts refuses a counted quiet run off the preregistered concurrency, an --out mixing dry and counted runs, and a live lock', () => {
+    const g = gitRoot(), out = mkdtempSync(join(tmpdir(), 'rb-o-'));
+    const quiet = run(['--block', 'quiet', '--engine', 'pglite', '--gbrain-root', g.root, '--out', out, '--gbrain-sha', g.sha, '--concurrency', '6']);
+    expect(quiet.exitCode).not.toBe(0);
+    expect(quiet.stderr.toString()).toContain('refusing a counted quiet run at --concurrency 6: the preregistration runs 2 at a time');
+    const dry = ['--block', 'trials', '--engine', 'pglite', '--gbrain-root', g.root, '--out', out, '--seeds', '1001-1001', '--arms', 'on', '--dry'];
+    put(out, 'run-trials-pglite.jsonl', { ev: 'start', dry: false });
+    expect(run(dry).stderr.toString()).toContain('records a counted run of this block; dry and counted runs never share an --out');
+    rmSync(join(out, 'run-trials-pglite.jsonl'));
+    put(out, 'run-trials-pglite.lock', { pid: process.pid, groups: [] });
+    expect(run(dry).stderr.toString()).toContain(`names a run.ts or jobs still running (pid ${process.pid})`);
+    rmSync(g.root, { recursive: true, force: true }); rmSync(out, { recursive: true, force: true });
   });
 });

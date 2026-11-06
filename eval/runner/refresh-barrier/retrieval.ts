@@ -28,6 +28,8 @@ type Rec = Record<string, any>;
 function prepare(work: string, gbrainRoot: string | null): string {
   const evals = join(work, 'evals');
   if (!existsSync(evals)) execFileSync('git', ['-C', REPO, 'worktree', 'add', '--detach', evals, 'HEAD'], { stdio: 'ignore' });
+  const head = (cwd: string) => execFileSync('git', ['-C', cwd, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  if (head(evals) !== head(REPO)) throw new Error(`refusing to reuse ${evals}: it is at ${head(evals)}, not this checkout's HEAD ${head(REPO)}; remove it or use another --work`);
   const nm = join(evals, 'node_modules');
   rmSync(nm, { recursive: true, force: true }); mkdirSync(nm);
   for (const entry of readdirSync(join(REPO, 'node_modules')).sort()) if (entry !== 'gbrain') symlinkSync(join(REPO, 'node_modules', entry), join(nm, entry));

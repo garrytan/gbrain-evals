@@ -11,8 +11,9 @@
  */
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { harnessDigest } from './fixture.ts';
 import { TICK_RETRY_CODES } from './runtime.ts';
-import { rng } from './schedule.ts';
+import { B_KINDS, rng } from './schedule.ts';
 
 export const OP_CLASSES = ['lost', 'lost_git', 'phantom', 'duplicated', 'stuck', 'overwritten', 'wrong_expiry', 'unindexed', 'unpublished', 'false_refusal', 'unexpected_outcome'] as const;
 export const LATENCY_MARGIN_MS = 25;
@@ -21,8 +22,13 @@ export const REFRESHING_SHARE_MAX = 0.001;
 export const RUN_CLASSES = ['hang', 'deadlock', 'no_converge', 'harness_error'] as const;
 const ENGINES = ['postgres', 'pglite'] as const;
 const ARMS = ['off', 'on'] as const;
-/** Preregistered results per engine and arm: seeds 1001-1500, 25 repetitions of each of the three B kinds, quiet seeds 2001-2100. */
-const PLANNED = { trials: 500, named: 75, quiet: 100 } as const;
+const span = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+/** Preregistered results per engine and arm, by seed or by B kind and repetition: seeds 1001-1500, repetitions 101-125 of each of the three B kinds, quiet seeds 2001-2100. */
+const PLANNED = { trials: span(1001, 1500).map(String), named: span(101, 125).flatMap(rep => B_KINDS.map(b => `${b}-${rep}`)), quiet: span(2001, 2100).map(String) };
+const resultKey = (r: Record<string, any>) => r.b !== undefined ? `${r.b}-${r.rep}` : String(r.seed);
+/** PC2's detector check build (#8705 at de22702a) and its preregistered runs per B kind and engine. */
+const PC2_SHA = 'de22702a';
+const PC2_RUNS = 10;
 type Rec = Record<string, any>;
 
 /** One-sided upper confidence bound on a binomial proportion (Clopper-Pearson): the p with P(X <= k | n, p) = alpha. */
@@ -54,7 +60,7 @@ export function failureClasses(t: Rec, kind: 'trial' | 'named'): string[] {
   // without a code, or any writer error, is the harness's.
   const unexpected = (t.child_errors ?? []).filter((e: Rec) => !(['tick', 'sync'].includes(e.role) && e.code));
   const exits = Object.values(f.writer_exits ?? {}) as number[];
-  const badExits = exits.filter(x => x !== 0).length - (t.strata?.writer_kill ? 1 : 0);
+  const badExits = exits.filter(x => x !== 0).length - (reached(t, 'writer_kill') ? Number(t.faults.writer_killed) : 0);
   const switchMismatch = (t.switches ?? []).some((s: Rec) => s.refresh_barrier !== (t.arm === 'on'));
   if (t.harness_error || unexpected.length > 0 || badExits > 0 || ops.some(o => o.harness_error) || f.writers_not_ready === true || Number(f.too_many_clients ?? 0) > 0
     || Number(f.push_errors ?? 0) > 0 || Number(f.foreign_commit_errors ?? 0) > 0 || Number(f.unplanned_child_exits ?? 0) > 0
@@ -204,16 +210,21 @@ export function analyze(out: string, pc2Dir?: string): Rec {
     // Each stratum's bound is on the trials that reached its fault: a tick actually killed, a writer actually killed, write A
     // actually held for the import.
     ...Object.fromEntries((['crash', 'writer_kill', 'import_sequence'] as const).map(s => { const ts = onTrials.filter(t => reached(t, s)); return [`stratum_${s}`, unit(ts.length, failedOn(ts))]; })),
-    named_in_window: unit(onNamed.filter(r => r.observed?.window_hit).length, onNamed.filter(r => failureClasses(r, 'named').length).length),
+    named_in_window: unit(onNamed.filter(r => r.observed?.window_hit).length, onNamed.filter(r => r.observed?.window_hit && failureClasses(r, 'named').length).length),
+    named_all_runs: unit(onNamed.length, onNamed.filter(r => failureClasses(r, 'named').length).length),
     quiet_trials_on: unit(ENGINES.flatMap(e => quiet[`${e}/on`] as Rec[]).length, failedOn(ENGINES.flatMap(e => quiet[`${e}/on`] as Rec[]))),
   };
 
   const pcs: Rec = {};
   pcs.PC1 = Object.fromEntries(ENGINES.map(e => { const s = summary[`${e}/off`]; const share = s ? s.trials_with_worktree_refreshing / s.trials : null; return [e, { share, pass: share !== null && share >= 0.05 }]; }));
   if (pc2Dir) {
-    const runs = ENGINES.flatMap(e => load(join(resolve(pc2Dir), 'named', e, 'on'))).filter(r => r.observed?.window_hit);
+    const byEngine = ENGINES.map(e => load(join(resolve(pc2Dir), 'named', e, 'on')));
+    const all = byEngine.flat(), runs = all.filter(r => r.observed?.window_hit);
     const caught = runs.filter(r => (r.ops ?? []).some((o: Rec) => o.overwritten)).length;
-    pcs.PC2 = { in_window: runs.length, overwritten: caught, share: runs.length ? caught / runs.length : null, pass: runs.length > 0 && caught / runs.length >= 0.8 };
+    const atDetector = all.length > 0 && all.every(r => String(r.provenance?.gbrain_sha ?? '').startsWith(PC2_SHA));
+    const planned = byEngine.every(rs => B_KINDS.every(b => rs.filter(r => r.b === b).length === PC2_RUNS));
+    pcs.PC2 = { runs: all.length, in_window: runs.length, overwritten: caught, share: runs.length ? caught / runs.length : null, at_detector_build: atDetector, planned_runs: planned,
+      pass: runs.length > 0 && caught / runs.length >= 0.8 && atDetector && planned };
   } else pcs.PC2 = { pass: null, note: 'no --pc2 directory given' };
   pcs.PC3 = Object.fromEntries(Object.entries(namedSummary).filter(([k]) => k.endsWith('/on')).flatMap(([k, cells]) => Object.entries(cells as Rec).map(([b, c]: [string, any]) => [`${k}/${b}`, { share: c.in_window / c.runs, pass: c.in_window / c.runs >= 0.9 }])));
   pcs.PC4 = Object.fromEntries(ARMS.map(a => { const ts = ENGINES.flatMap(e => trials[`${e}/${a}`] as Rec[]); const k = ts.filter(t => failureClasses(t, 'trial').includes('harness_error')).length; return [a, { trials: ts.length, harness_errors: k, pass: ts.length > 0 && k / ts.length < 0.01 }]; }));
@@ -226,17 +237,21 @@ export function analyze(out: string, pc2Dir?: string): Rec {
       pass: share >= 0.05 && s.worktree_refreshing_first_outside_expiry === 0 && switchesOk }];
   }));
   const pcPass = [pcs.PC1, pcs.PC3, pcs.PC4, pcs.PC5].every(m => Object.values(m).every((v: any) => v.pass === true)) && pcs.PC2.pass === true;
-  const flagOnFailures = bounds.trials_both_engines.failures + bounds.named_in_window.failures + bounds.quiet_trials_on.failures;
+  const flagOnFailures = bounds.trials_both_engines.failures + bounds.named_all_runs.failures + bounds.quiet_trials_on.failures;
   const latencyMissing = ENGINES.some(e => !quietLatency[e]?.runs);
   // Every result must come from one gbrain commit and one harness tree, the ones its block's receipt names.
   const results = [...Object.values(trials), ...Object.values(named), ...Object.values(quiet)].flat() as Rec[];
   const provenance = { gbrain_shas: [...new Set(results.map(r => r.provenance?.gbrain_sha ?? null))], harness_digests: [...new Set(results.map(r => r.provenance?.harness_digest ?? null))] };
   const latencyPass = ENGINES.every(e => quietLatency[e]?.pass === true);
   const receipts = readdirSync(out).sort().filter(f => f.startsWith('receipt-')).map(f => JSON.parse(readFileSync(join(out, f), 'utf8')));
-  const counted = receipts.length > 0 && receipts.every(r => r.counted === true);
+  const blockNames = Object.keys(PLANNED) as (keyof typeof PLANNED)[];
+  const counted = receipts.every(r => r.counted === true) && ENGINES.every(e => blockNames.every(b => receipts.some(r => r.block === b && r.engine === e)));
   const blocks: Record<keyof typeof PLANNED, Rec> = { trials, named, quiet };
-  const incomplete = ENGINES.flatMap(e => ARMS.flatMap(a => (Object.keys(PLANNED) as (keyof typeof PLANNED)[])
-    .filter(b => blocks[b][`${e}/${a}`].length !== PLANNED[b]).map(b => `${b} ${e}/${a} ${blocks[b][`${e}/${a}`].length} of ${PLANNED[b]}`)));
+  const incomplete = ENGINES.flatMap(e => ARMS.flatMap(a => blockNames.flatMap(b => {
+    const got = new Set((blocks[b][`${e}/${a}`] as Rec[]).map(resultKey)), want = new Set(PLANNED[b]);
+    const missing = PLANNED[b].filter(k => !got.has(k)).length, outside = [...got].filter(k => !want.has(k)).length;
+    return missing || outside ? [`${b} ${e}/${a} ${got.size - outside} of ${want.size}${outside ? `, ${outside} outside the preregistered seeds` : ''}`] : [];
+  })));
   const mixed = provenance.gbrain_shas.length !== 1 || provenance.harness_digests.length !== 1 || provenance.gbrain_shas[0] === null
     || receipts.some(r => r.gbrain?.sha !== provenance.gbrain_shas[0] || r.harness_digest !== provenance.harness_digests[0]);
   const verdict = !pcPass ? 'FIX-METHOD' : mixed ? 'FIX-METHOD (results from more than one gbrain commit or harness tree)'
@@ -249,7 +264,8 @@ export function analyze(out: string, pc2Dir?: string): Rec {
     return [e, { worktree_refreshing_share_outside_expiry: share, blocked_p95_ms: p95, pass: share !== null && share <= REFRESHING_SHARE_MAX && p95 !== null && p95 < BLOCKED_P95_MS }];
   }));
   const recommendFlagOn = verdict === 'PASS' && Object.values(benefit).every((b: any) => b.pass === true);
-  const result = { counted, incomplete, provenance: { ...provenance, mixed }, receipts: receipts.map(r => ({ block: r.block, engine: r.engine, gbrain: r.gbrain, counted: r.counted, jobs: r.jobs })), verdict_part_a: verdict,
+  const analyzerDigest = harnessDigest();
+  const result = { counted, incomplete, provenance: { ...provenance, mixed, analyzer_digest: analyzerDigest, analyzer_matches_results: provenance.harness_digests.length === 1 && provenance.harness_digests[0] === analyzerDigest }, receipts: receipts.map(r => ({ block: r.block, engine: r.engine, gbrain: r.gbrain, counted: r.counted, jobs: r.jobs })), verdict_part_a: verdict,
     recommend_flag_on: recommendFlagOn, benefit, bounds, positive_controls: pcs, quiet_latency: quietLatency, summary, quiet_summary: quietSummary, paired, named: namedSummary };
   writeFileSync(join(out, 'analysis.json'), JSON.stringify(result, null, 2));
   return result;
@@ -260,7 +276,8 @@ if (import.meta.main) {
   const get = (k: string) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
   const r = analyze(resolve(get('--out')!), get('--pc2'));
   const f = (x: number | null) => x == null ? 'n/a' : `${(100 * x).toFixed(3)}%`;
-  console.log(`# Part A: ${r.verdict_part_a}${r.counted ? '' : ' (uncounted: development receipts)'}; recommend flag on: ${r.recommend_flag_on}\n\n| Unit | n | failures | 95% upper bound |\n|---|---|---|---|`);
+  if (!r.provenance.analyzer_matches_results) console.log(`Warning: this analyzer's harness digest ${r.provenance.analyzer_digest} differs from the results' (${r.provenance.harness_digests.join(', ')}).\n`);
+  console.log(`# Part A: ${r.verdict_part_a}${r.counted ? '' : ' (uncounted: development receipts, or a block without a receipt)'}; recommend flag on: ${r.recommend_flag_on}\n\n| Unit | n | failures | 95% upper bound |\n|---|---|---|---|`);
   for (const [k, u] of Object.entries(r.bounds as Rec)) console.log(`| ${k} | ${u.n} | ${u.failures} | ${f(u.upper95)} |`);
   console.log(`\nPositive controls: ${JSON.stringify(r.positive_controls)}`);
   for (const [k, s] of Object.entries(r.summary as Rec)) console.log(`\n## ${k}\n${JSON.stringify({ trials: s.trials, failed: s.failed_trials, classes: s.classes, writes: s.writes, first_call: s.first_call, blocked_ms: s.blocked_ms, defer_to_apply_ms: s.defer_to_apply_ms, ticks: s.ticks, failures: s.failures.slice(0, 10) })}`);

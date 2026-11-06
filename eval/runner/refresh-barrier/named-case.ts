@@ -15,13 +15,13 @@ import { join, resolve } from 'node:path';
 import { git, gitHead, harnessDigest, insertTopLine, notePage } from './fixture.ts';
 import { failureClasses } from './analyze.ts';
 import { jsonlLogger, logSwitch, runWriter, sleep, type Session } from './runtime.ts';
-import type { Engine, OpKind, ScheduledOp, TrialSchedule } from './schedule.ts';
+import { B_KINDS, type Engine, type OpKind, type ScheduledOp, type TrialSchedule } from './schedule.ts';
 import { checkCommonArgs, integerArg, openBrain, quiesce } from './trial.ts';
 import { readEvents, verifyTrial } from './verify.ts';
 
 export interface NamedArgs { b: OpKind; rep: number; arm: 'off' | 'on'; engine: Engine; out: string; gbrainRoot: string; pgAdmin?: string; template?: string; keep?: boolean }
 
-export const B_KINDS = ['put_update', 'remember_entity', 'put_blind'] as const;
+export { B_KINDS };
 export const NAMED = { page: 'people/alice-example', later_pages: 6, wait_ms: 180_000 };
 
 const waitFor = async (pred: () => boolean, ms: number) => { const end = Date.now() + ms; while (!pred() && Date.now() < end) await sleep(100); return pred(); };

@@ -13,6 +13,8 @@ import { PEOPLE, SEED_SLUGS, type SourceKey } from './fixture.ts';
 export const SCHEDULE_VERSION = 2;
 export type Engine = 'postgres' | 'pglite';
 export type OpKind = 'remember_entity' | 'remember_unattributed' | 'put_create' | 'put_update' | 'put_blind';
+/** The named case's kinds of write B. */
+export const B_KINDS = ['put_update', 'remember_entity', 'put_blind'] as const satisfies readonly OpKind[];
 export type Boundary = 'none' | 'drained' | 'fenced' | 'merged' | 'syncing';
 
 export interface ScheduledOp { index: number; at_ms: number; kind: OpKind; source: SourceKey; slug: string | null; marker: string; request_id: string }
