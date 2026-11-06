@@ -2,6 +2,33 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.168] - 2026-11-06
+
+### Live recall: batch 1 results, an arm preflight, and batch 2's preregistered primary (GBEV-43)
+
+- **Batch 1 results.** `docs/benchmarks/2026-11-06-live-recall-batch1.md`, new, reports the first counted live-recall
+  run on Garry's brain (gbrain 0.60.577.0 at `52b9ccae`, 50 questions in 100 forms, 2026-11-06). Configured search
+  (`tokenmax` with rerank-2.5) finds the answer page in its top five for 76% of forms (95% interval 66 to 85): 90% of
+  exact forms and 62% of paraphrases. P2, `configured` minus `hybrid_lexical` on paraphrases, holds at +50 points
+  (36 to 64, Holm p 0.0002). P1, `hybrid` minus `hybrid_lexical` over both forms, is +10 (1 to 20, Holm p 0.092)
+  and does not hold; its R48 verdict is KEEP (underpowered). The first counted attempt measured nothing, because the
+  role lacked EXECUTE on one of gbrain's helper functions. Both scorecards sit beside the report.
+- **Arm preflight.** `run.ts run` now sends one public probe query through every arm before the first question. If
+  any arm errors, is refused a model call, fails its reranker open or reports a failure stage, the run aborts with the
+  new `LR_ARM_PREFLIGHT`, naming the arms and gbrain's stage names. A missing grant like the one in batch 1's first
+  attempt now stops the run before it uses the question set.
+- **Batch 2's protocol.** `run.ts freeze --protocol batch2` records the protocol in `freeze.json`. The counted run
+  takes it from there and refuses a `--protocol` flag that disagrees (`LR_FREEZE_MISMATCH`). Under `batch2` the
+  scorecard's P1 is `hybrid` minus `hybrid_lexical` on paraphrases (`p1_hybrid_vs_hybrid_lexical_paraphrase`), P2
+  is unchanged, and batch 1's both-forms P1 becomes the secondary `batch1_p1_hybrid_vs_hybrid_lexical`. Every
+  scorecard now carries a top-level `protocol`. The preregistration's new batch 2 amendment fixes all this before
+  batch 2 is frozen.
+- **Pooling.** `run.ts pool --a <run dir> --b <run dir>` scores two counted runs on different question files as one
+  set, with batch 2's comparisons all secondary, and writes an aggregate `pool.json`. It refuses fixture controls, and
+  runs on the same file or with different gbrain commits or search settings (`LR_POOL_MISMATCH`).
+- Arms, metrics, eligibility and custody are unchanged. The fixture control still scores success@5 of 35.0%, 75.0%,
+  87.5%, 77.5% and 85.0%.
+
 ## [0.10.167] - 2026-11-06
 
 ### Live recall: the frozen sample and the counted run's barrier are in the preregistration (GBEV-43)

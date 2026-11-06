@@ -27,8 +27,9 @@ The Markdown is rendered from the validated JSON alone. The per-query detail beh
 
 ## scorecard.json
 
-Top level: `schema` (`"live-recall-scorecard/v1"`), `run`, `custody`, `questions`, `eligibility`, `arms`,
-`comparisons`.
+Top level: `schema` (`"live-recall-scorecard/v1"`), `protocol` (`batch1` or `batch2`: from `freeze.json` on a
+counted run, from `--protocol` on the fixture, and `batch1` when neither names one), `run`, `custody`, `questions`,
+`eligibility`, `arms`, `comparisons`.
 
 **`run`**: what ran. `started_at`, `finished_at`; `runner_commit` and `runner_dirty` (gbrain-evals); the declared
 pin (`gbrain_pin_version`, `gbrain_pin_commit`) and what was loaded (`gbrain_loaded_version`,
@@ -76,8 +77,10 @@ each excluded form), `invalid_arms` (`rerank_fail_open_over_cap`, `embedding_opt
 `id`, `metric`, `a`, `b`, `form` (`all`, `exact`, `paraphrase` or `exact_vs_paraphrase` with `arm`),
 `n_pairs`, `n_clusters`, `mean_a`, `mean_b`, `delta` (B minus A), `ci95`, `p_two_sided` and `p_method` (cluster
 sign flip), `mcnemar` (exact, when there is one pair per question), `mde` (the minimum detectable difference at this
-n), `primary` (`P1`, `P2` or `null`) and, on the two primary success@5 rows, `p_holm`. The primaries are
-`p1_hybrid_vs_hybrid_lexical` and `p2_configured_vs_hybrid_lexical_paraphrase`; the keyword contrasts
+n), `primary` (`P1`, `P2` or `null`) and, on the two primary success@5 rows, `p_holm`. Under `batch1` the primaries are
+`p1_hybrid_vs_hybrid_lexical` (both forms) and `p2_configured_vs_hybrid_lexical_paraphrase`. Under `batch2` they are
+`p1_hybrid_vs_hybrid_lexical_paraphrase` and `p2_configured_vs_hybrid_lexical_paraphrase`, and batch 1's both-forms
+contrast is the secondary `batch1_p1_hybrid_vs_hybrid_lexical`. Under both, the keyword contrasts
 (`hybrid_lexical_vs_keyword`, `hybrid_vs_keyword`, `configured_vs_keyword_paraphrase` and the rest) are descriptive.
 A comparison whose arm is invalid or absent is `{"id": ..., "skipped": "arm_invalid_or_absent"}`; a skipped primary
 still counts in the Holm family of two, as p = 1.
@@ -88,7 +91,7 @@ Rates, deltas and intervals are fractions rounded to four decimals; the Markdown
 
 A header naming the gbrain version and commit, schema, engine, barrier, pgvector version and mode (with a control
 warning for the fixture, and a warning that vector search on the copy may differ from the live brain when the source's
-pgvector differs from the copy's or the restore reported errors); a table of every arm on all question forms (success@1, 5, 10, 20, MRR, pages returned); success@5 by type and
+pgvector differs from the copy's or the restore reported errors); a line naming the protocol and its two primary comparisons; a table of every arm on all question forms (success@1, 5, 10, 20, MRR, pages returned); success@5 by type and
 form; every paired comparison with its interval, p, Holm p and MDE; and a custody paragraph (read-only checks, guard
 refusals, exclusions).
 
@@ -102,6 +105,18 @@ fixture control. `run_a` and `run_b` carry each run's `gbrain_loaded_version`, `
 its fail-open cap, say) is not paired: each of its rows is `{"id": ..., "skipped": "arm_invalid_or_absent"}`. Each row has the comparison fields above
 with `a: "run_a"`, `b: "run_b"`, `id` `run_b_vs_run_a_<arm>_<form>`, and `top5_changed` (how many forms' first
 five pages differ). It passes the same structural check.
+
+## pool.json (live-recall-pool/v1)
+
+`run.ts pool --a <run dir> --b <run dir>` scores two counted runs on different question files (batch 1 and batch 2) as
+one set, for the batch 2 amendment's pooled secondary. It reads both runs' `scorecard.json` and detail files on the
+box and opens no database. It refuses with `LR_POOL_MISMATCH` when the runs share a question file or differ in
+`gbrain_loaded_commit`, `search_mode`, `reranker_enabled`, `reranker_model`, `embedding_model` or
+`embedding_column`, and with `LR_COMPARE_CONTROL` when either is a fixture control. It holds `schema`, then
+`eligibility`, `arms` and `comparisons` as in `scorecard.json`, over the pooled question forms with `batch2`'s
+comparison list, then `run_a` and `run_b` as in `compare.json`. Every comparison has `primary: null` and no
+`p_holm`, because the pooled analysis is secondary. An arm invalid in either run is
+`{"invalid": "invalid_in_one_run"}` and its comparisons are skipped. It passes the same structural check.
 
 ## A release gate (proposal, not wired)
 

@@ -1,8 +1,10 @@
 # Live recall on Garry's brain: preregistration (phase 1)
 
-This fixes the method, comparisons and decision rules for the first live-recall run before any number exists. It
-reports no result. The sample size (50 questions), the question file's hash and the minimum detectable difference at
-that size are under [Frozen sample](#frozen-sample), taken from Wintermute's freeze output before the counted run.
+This fixes the method, comparisons and decision rules for each live-recall question set before that set is searched.
+It reports no result; batch 1's results are in the [batch 1 findings](../2026-11-06-live-recall-batch1.md). Batch 1's
+sample size (50 questions), question file hash and minimum detectable difference are under
+[Frozen sample](#frozen-sample), taken from Wintermute's freeze output before the counted run. A second, independent
+question set, batch 2, runs under the [batch 2 amendment](#batch-2-amendment), fixed before that set was frozen.
 
 ## The question
 
@@ -221,6 +223,59 @@ Wintermute's notes on the sample, aggregates only:
 `snapshot.sh` cannot make a copy there. GBRA-108 approved a role with SELECT on gbrain's tables, USAGE on the
 `extensions` schema, BYPASSRLS, no sequence grants and no role memberships. The runner connects as that role through
 Supabase's session pooler and proves the barrier itself before any search.
+
+## Batch 2 amendment
+
+Fixed on 2026-11-06 by GBEV-3, after batch 1's results and before the batch 2 question set was frozen. Batch 2 is a
+second, independent set of 50 questions. Arms, metrics, eligibility, custody and the decision rules are unchanged; the
+primary comparison and the declared secondaries change.
+
+**Why.** Batch 1's P1, `hybrid` minus `hybrid_lexical` over both forms, came out at +10 points (95% interval 1 to
+20, Holm p 0.092) against a minimum detectable difference of 14.4, so it does not hold, and its R48 verdict is KEEP
+(underpowered). Exact forms leave vectors little room: `hybrid_lexical` already found 82% of them. On paraphrases the
+two arms found 12% and 34%. That reading comes from batch 1's data, so the sharper primary is tested on new questions,
+never on batch 1's.
+
+**Primary (Holm-corrected across the two, on success@5):**
+
+- **P1: `hybrid` minus `hybrid_lexical`**, paraphrase forms only (one pair per question): what vectors add to
+  gbrain's own lexical search where the words differ. Comparison id `p1_hybrid_vs_hybrid_lexical_paraphrase`.
+- **P2: `configured` minus `hybrid_lexical`**, paraphrase forms only, unchanged from batch 1.
+
+**Declared secondaries** (reported with intervals, not Holm-adjusted):
+
+- `batch1_p1_hybrid_vs_hybrid_lexical`: batch 1's P1, both forms, on batch 2's questions, as a replication.
+- The pooled analysis: batch 1's counted run (attempt 2) and batch 2's scored as one set of 100 questions with batch 2's
+  comparisons, by `run.ts pool` on the box. It refuses two runs on the same question file, a fixture control, and runs
+  whose gbrain commit or search settings differ.
+- Every descriptive comparison listed under [Comparisons](#comparisons).
+
+**The protocol is frozen with the questions.** Wintermute freezes batch 2 with `run.ts freeze --protocol batch2`.
+`freeze.json` records the protocol, the counted run takes it from there and refuses a `--protocol` flag that
+disagrees (`LR_FREEZE_MISMATCH`), and the scorecard records it beside the comparisons.
+
+**Questions.** Written fresh on the box in the same format and under the same rules as batch 1, plus: no batch 1 gold
+page reused, gold chosen page first from a new seeded sample that includes recent pages wherever the brain's import is
+current, error_string questions drawn from more than 6 pages, 10 questions of each type, and a window on every
+time_window question.
+
+**Arm preflight.** Before the first question the runner sends one public probe query through every arm and stops with
+`LR_ARM_PREFLIGHT` if any arm errors, is refused a model call, fails its reranker open or reports a failure stage. It
+changes no counted number. It stops a run like batch 1's first attempt, which lost every hybrid-search arm to a missing
+grant, before the run uses the question set.
+
+**Barrier.** A new `no_write_privilege` role from GBRA-108 with batch 1's final grants: SELECT on gbrain's tables,
+USAGE on `extensions`, BYPASSRLS, EXECUTE on the five helper functions that are not SECURITY DEFINER (listed in
+[RUN-KIT.md](RUN-KIT.md#other-barriers)), no sequence grants and no role memberships.
+
+**Power.** At N = 50 the new P1 has the paraphrase-only minimum detectable differences: 12.5, 17.7 and 21.7 points at
+10%, 20% and 30% discordant pairs. Batch 1's paraphrase rates (12% and 34%) imply at least 22% discordant pairs, where
+the minimum detectable difference is 18.6 points, so batch 2 can detect an effect the size batch 1 showed and not much
+smaller. The pooled analysis, at N = 100, detects 8.9, 12.5 and 15.3 points at the same shares.
+
+**Before the counted run.** Batch 2's freeze numbers (N, the question file's hash and the minimum detectable
+differences) are committed here before its counted run, as batch 1's were. Phase 2 stays held until batch 2 lands and
+GBRA-108 answers on the paraphrase gap.
 
 ## Limits
 
