@@ -2,12 +2,12 @@ import { describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { analyze, failureClasses, pairedBootstrap, pooledBootstrap, reached, upperBound } from '../../eval/runner/refresh-barrier/analyze.ts';
+import { analyze, failureClasses, pairedBootstrap, pooledBootstrap, quietLatencyMs, reached, upperBound } from '../../eval/runner/refresh-barrier/analyze.ts';
 import { harnessDigest } from '../../eval/runner/refresh-barrier/fixture.ts';
-import { B_KINDS, planJobs, type RunArgs } from '../../eval/runner/refresh-barrier/run.ts';
+import { B_KINDS, planJobs, runBlock, type RunArgs } from '../../eval/runner/refresh-barrier/run.ts';
 import { allOps, generateSchedule } from '../../eval/runner/refresh-barrier/schedule.ts';
 import { CELLS, MARGIN, compare, compareLatency } from '../../eval/runner/refresh-barrier/retrieval.ts';
-import { classifyResult } from '../../eval/runner/refresh-barrier/runtime.ts';
+import { POLL_LIMIT_MS, classifyResult } from '../../eval/runner/refresh-barrier/runtime.ts';
 import { allowedCode, removedByBlindPut, removerOf } from '../../eval/runner/refresh-barrier/verify.ts';
 
 describe('refresh-barrier schedule', () => {
@@ -81,6 +81,16 @@ describe('refresh-barrier analysis', () => {
     expect(a.lo!).toBeLessThanOrEqual(a.mean!); expect(a.hi!).toBeGreaterThanOrEqual(a.mean!);
     expect(pooledBootstrap([[[50], [50]], [[70], [70]]])).toEqual({ runs: 2, writes_on: 2, writes_off: 2, mean: 0, lo: 0, hi: 0 });
     expect(pooledBootstrap([]).hi).toBeNull();
+  });
+
+  test('the quiet gate times every write that ended committed to its committed answer, so a slowed write stays in the sample', () => {
+    const w = { issued: true, state: 'committed' };
+    expect(quietLatencyMs({ ...w, first: 'committed', first_ms: 240, committed_ms: 240 })).toBe(240);
+    expect(quietLatencyMs({ ...w, first: 'pending', first_ms: 30, committed_ms: 2_400 })).toBe(2_400);
+    expect(quietLatencyMs({ ...w, first: 'refused_retryable', first_ms: 20, committed_ms: 1_300 })).toBe(1_300);
+    expect(quietLatencyMs({ ...w, first: 'pending', first_ms: 30, committed_ms: null })).toBe(POLL_LIMIT_MS);
+    expect(quietLatencyMs({ issued: true, state: 'conflict', first: 'refused', first_ms: 25 })).toBeNull();
+    expect(quietLatencyMs({ issued: false, state: 'committed', first: null })).toBeNull();
   });
   test('failure classes come from ops and from run flags', () => {
     const ok = { flags: { quiesce: { ok: true }, quiesce_final: { ok: true }, converge: { ok: true }, deadlocks: 0, deadlock_mentions: 0 }, upstream: { missing_head: 0 }, child_errors: [], ops: [{ lost: false }] };
@@ -259,18 +269,27 @@ describe('refresh-barrier counted-run integrity', () => {
     const first = analyze(out);
     expect(first.counted).toBe(false);
     expect(first.incomplete).toContain('trials postgres/on 0 of 500, 1 outside the preregistered seeds');
+    expect(first.verdict_part_a).toStartWith('UNCOUNTED (would read ');
+    expect(first.recommend_flag_on).toBe(false);
+    put(out, 'trials/postgres/on/1001.json', { seed: 1001, arm: 'on', ops: [] });
+    put(out, 'trials/postgres/on/1001-replay.json', { seed: 1001, arm: 'on', ops: [] });
+    expect(analyze(out).incomplete).toContain('trials postgres/on 1 of 500, 1 outside the preregistered seeds, 1 duplicated');
     for (const block of ['trials', 'named', 'quiet']) for (const engine of ['postgres', 'pglite']) put(out, `receipt-${block}-${engine}.json`, { counted: true, block, engine });
-    expect(analyze(out).counted).toBe(true);
+    const counted = analyze(out);
+    expect(counted.counted).toBe(true);
+    expect(counted.verdict_part_a).not.toStartWith('UNCOUNTED');
     rmSync(out, { recursive: true, force: true });
   });
 
   test('PC2 holds only at the detector build with ten runs per kind of write B and engine', () => {
     const out = mkdtempSync(join(tmpdir(), 'rb-a-')), pc2 = mkdtempSync(join(tmpdir(), 'rb-pc2-'));
     for (const e of ['postgres', 'pglite']) for (const b of B_KINDS) for (let rep = 1; rep <= 10; rep++) {
-      put(pc2, `named/${e}/on/order-${b}-${rep}.json`, { b, rep, provenance: { gbrain_sha: 'de22702a0000' }, observed: { window_hit: true }, ops: [{ overwritten: true }] });
+      put(pc2, `named/${e}/on/order-${b}-${rep}.json`, { b, rep, provenance: { gbrain_sha: 'de22702a0000', harness_digest: harnessDigest() }, observed: { window_hit: true }, ops: [{ overwritten: true }] });
     }
     expect(analyze(out, pc2).positive_controls.PC2.pass).toBe(true);
-    put(pc2, 'named/pglite/on/order-put_blind-10.json', { b: 'put_blind', rep: 10, provenance: { gbrain_sha: 'f04429da0000' }, observed: { window_hit: true }, ops: [{ overwritten: true }] });
+    put(pc2, 'named/pglite/on/order-put_blind-10.json', { b: 'put_blind', rep: 10, provenance: { gbrain_sha: 'de22702a0000', harness_digest: 'another-tree' }, observed: { window_hit: true }, ops: [{ overwritten: true }] });
+    expect(analyze(out, pc2).positive_controls.PC2).toMatchObject({ at_detector_build: true, same_harness: false, pass: false });
+    put(pc2, 'named/pglite/on/order-put_blind-10.json', { b: 'put_blind', rep: 10, provenance: { gbrain_sha: 'f04429da0000', harness_digest: harnessDigest() }, observed: { window_hit: true }, ops: [{ overwritten: true }] });
     expect(analyze(out, pc2).positive_controls.PC2).toMatchObject({ at_detector_build: false, pass: false });
     rmSync(join(pc2, 'named/pglite/on/order-put_blind-10.json'));
     expect(analyze(out, pc2).positive_controls.PC2).toMatchObject({ at_detector_build: true, planned_runs: false, pass: false });
@@ -297,6 +316,9 @@ describe('refresh-barrier counted-run integrity', () => {
     expect(a.provenance.mixed).toBe(false);
     expect(a.bounds.trials_both_engines.failures).toBe(1);
     expect(existsSync(join(out, 'run-trials-pglite.lock'))).toBe(false);
+    const events = readFileSync(join(out, 'run-trials-pglite.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
+    expect(events.some(e => e.ev === 'job_start' && e.id === 'trial-pglite-on-1001')).toBe(true);
+    expect(events.find(e => e.ev === 'job')).toMatchObject({ result: 'trials/pglite/on/1001.json', placeholder: true, post_result_exit: false });
     rmSync(g.root, { recursive: true, force: true }); rmSync(out, { recursive: true, force: true });
   });
 
@@ -311,6 +333,33 @@ describe('refresh-barrier counted-run integrity', () => {
     rmSync(join(out, 'run-trials-pglite.jsonl'));
     put(out, 'run-trials-pglite.lock', { pid: process.pid, groups: [] });
     expect(run(dry).stderr.toString()).toContain(`names a run.ts or jobs still running (pid ${process.pid})`);
+    put(out, 'run-trials-pglite.lock', { pid: 2 ** 22 + 1, groups: [] });
+    expect(run(dry).stderr.toString()).toContain('was left by a run.ts that did not exit cleanly and nothing it names is running; delete it and rerun');
+    const trials = run(['--block', 'trials', '--engine', 'pglite', '--gbrain-root', g.root, '--out', out, '--gbrain-sha', g.sha, '--concurrency', '4']);
+    expect(trials.stderr.toString()).toContain('refusing a counted trials run at --concurrency 4: the preregistration runs 6 at a time');
     rmSync(g.root, { recursive: true, force: true }); rmSync(out, { recursive: true, force: true });
+  });
+
+  test('a counted run refuses a harness with local changes and results no counted run of this preregistration started', async () => {
+    const g = gitRoot(), out = mkdtempSync(join(tmpdir(), 'rb-o-'));
+    const a: RunArgs = { block: 'trials', engine: 'pglite', gbrainRoot: g.root, out, seeds: [1001, 1001], reps: [101, 101], arms: ['on'], concurrency: 6,
+      prereg: 'docs/benchmarks/2026-11-06-refresh-barrier-preregistration.md', dry: false, gbrainSha: g.sha };
+    const attest = () => ({ preregistration_commit: 'c'.repeat(40) }) as unknown as ReturnType<typeof import('../../eval/runner/prereg.ts').attestPreregistration>;
+    await expect(runBlock(a, { attest, harnessStatus: () => ' M eval/runner/refresh-barrier/trial.ts' })).rejects.toThrow('has uncommitted or untracked changes');
+    put(out, 'trials/pglite/on/1001.json', { seed: 1001, arm: 'on', ops: [] });
+    await expect(runBlock(a, { attest, harnessStatus: () => '' })).rejects.toThrow(`holds 1 results that no counted run of preregistration commit ${'c'.repeat(12)} started`);
+    expect(existsSync(join(out, 'run-trials-pglite.lock'))).toBe(false);
+    rmSync(g.root, { recursive: true, force: true }); rmSync(out, { recursive: true, force: true });
+  });
+
+  test('a result whose job exited abnormally after writing it counts as a harness error', () => {
+    const out = mkdtempSync(join(tmpdir(), 'rb-a-'));
+    const clean = { seed: 1001, arm: 'on', ops: [], child_errors: [], switches: [{ refresh_barrier: true }], upstream: { missing_head: 0 },
+      flags: { quiesce: { ok: true }, quiesce_final: { ok: true }, converge: { ok: true } } };
+    put(out, 'trials/postgres/on/1001.json', clean);
+    put(out, 'trials/postgres/on/1002.json', { ...clean, seed: 1002 });
+    writeFileSync(join(out, 'run-trials-postgres.jsonl'), `${JSON.stringify({ ev: 'job', result: 'trials/postgres/on/1002.json', exit: 1, signal: null, placeholder: false, post_result_exit: true })}\n`);
+    expect(analyze(out).summary['postgres/on'].failures).toEqual([{ seed: 1002, classes: ['harness_error'] }]);
+    rmSync(out, { recursive: true, force: true });
   });
 });

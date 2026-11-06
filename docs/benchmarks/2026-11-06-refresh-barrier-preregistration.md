@@ -144,8 +144,12 @@ seed or run pass on the same G; then the verdict is FIX-METHOD and that engine's
 an amendment. A failed trial is never dropped, and every failure is reported with its seed and the repro command below.
 
 **Provenance.** Every result records G's sha and a digest of the harness files, and every block's receipt records both;
-results from more than one gbrain commit or harness tree make the verdict FIX-METHOD. A result file is never overwritten:
-`trial.ts` and `named-case.ts` refuse an existing one, so a replay goes to another directory.
+results from more than one gbrain commit or harness tree, or from a tree other than the analyzer's, make the verdict
+FIX-METHOD, and an analysis without a counted receipt for every block and engine reads UNCOUNTED. A block with a seed or
+run missing, duplicated or outside the preregistered set is incomplete. A result file is never overwritten: `trial.ts` and
+`named-case.ts` refuse an existing one, so a replay goes to another directory. A job that exits abnormally after writing
+its result counts as `harness_error`. A job interrupted by stopping `run.ts` leaves no result and reruns when the block
+resumes; the receipt and the analysis list every interrupted job.
 
 **Primary gate.** Zero failed flag-on trials across all 1,000 flag-on trials and all 150 flag-on named-case runs. With
 zero failures in n independent trials, the one-sided 95% upper bound on the failure probability per trial is
@@ -170,8 +174,10 @@ one.
 **Write-latency gate (quiet latency block).** The barrier must not slow writes when no refresh is running, and a dedicated
 block measures that. Per engine, seeds 2001 to 2100 replay their Part A writers and writes with no tick, upstream
 push, foreign commit, sync or fault (`trial.ts --quiet`), in both arms. Take the seeds whose two runs both showed no
-failure class and, from them, every write answered committed at once. The pooled per-write mean first-answer latency of
-the on runs minus that of the off runs, with a 95% bootstrap interval that resamples whole seeds (10,000 resamples, seed
+failure class and, from them, every write that ended committed, timed from its first call to its committed answer: at once,
+after a retried refusal, or from polling a pending answer. A write the database committed whose writer never saw it
+committed counts at the 180 s poll limit, so a write the barrier slows past gbrain's inline wait raises the on-arm mean
+instead of leaving the sample. The pooled per-write mean latency of the on runs minus that of the off runs, with a 95% bootstrap interval that resamples whole seeds (10,000 resamples, seed
 1), must have an upper bound of at most 25 ms on each engine. Quiet runs are flag-on trials like the others, so a failure
 in one counts as a flag-on failure. The run count comes from the pre-freeze quiet smoke (below): it is the smallest count
 at which a true difference of zero passes with more than 99% probability, given the spread the smoke measured.
@@ -196,7 +202,8 @@ resamples, seed 1).
   `worktree_refreshing` refusal. (Over seeds 1001 to 1500, 102 Postgres and 110 PGLite schedules place a write inside a
   paused tick early enough to be refused.)
 - **PC2, the detector sees a real bug.** Before the counted run, the flag-on named case at de22702a, 10 runs per B kind
-  per engine, reports `overwritten` in at least 80% of runs in the window.
+  per engine, through the counted harness tree (the same harness digest), reports `overwritten` in at least 80% of runs in
+  the window.
 - **PC3, the named case reaches its window.** At least 90% of each flag-on named-case cell (engine and B kind) is in the
   window. Only runs in the window count toward the 150.
 - **PC4, the harness is sound.** `harness_error` in under 1% of trials in either arm.
@@ -221,6 +228,8 @@ of G (both runners import the pinned package), and compares them query by query:
   Part C's runner, and until then `retrieval.ts` runs only B1.
 - A query that errored scores 0 in its arm. Both runners build their brains by inline import, which the flag should not
   touch, so any difference is a finding. G against the pin (`--label pin`) is reported, not gated.
+- Before each arm, `retrieval.ts` resolves the switch through gbrain's own reader for a fresh brain in that arm's
+  environment and gbrain copy, and records it; an arm that does not resolve to its value is not scored and is redone.
 - **B3, inside Part A:** the `unindexed` class checks that every committed write is searchable, which is where the flag
   can change retrieval.
 
@@ -419,6 +428,10 @@ side: 0 failed runs and 0 `harness_error` in 120.
 | Postgres | 524 | 249.7 against 244.3 ms | +5.4 ms (-16.2 to +23.9) | 10.2 ms | 93 |
 | PGLite | 841 and 842 | 242.6 against 226.8 ms | +15.7 ms (-3.3 to +35.1) | 9.8 ms | 85 |
 
+Every quiet write in the smoke was answered committed at once or refused for a revision conflict, none pending or retried,
+so timing to the committed answer gives the same numbers: re-analysed with this harness, +5.4 ms and +15.7 ms with the same
+intervals.
+
 The standard error is the interval's half-width over 1.96; a true difference of zero passes with more than 99% probability
 when 1.96 plus 2.33 standard errors fit within 25 ms. The counted block uses 100 seeds per engine (2001 to 2100), about 2
 VM-hours. The smoke ran on a smaller machine than the counted VMs, so its spread is an estimate; the count is fixed here and
@@ -438,30 +451,3 @@ compatibility fix as described under "Build and data", and the smoke reruns. PC2
 
 Every result names its seed or repetition, engine and arm, and `run.ts`'s receipt names G and the sha256 of every harness
 file. To replay one on a test machine with Docker:
-
-1. Start Postgres: `docker run -d --name rb-pg -p 5434:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=gbrain_test
-   pgvector/pgvector:pg16 -c max_connections=500 -c shared_buffers=512MB`.
-2. Check out G (`git -C <gbrain> checkout <sha> && bun install`) and build a template database with G's schema (a fresh
-   database on which `PostgresEngine.initSchema()` ran).
-3. Replay with the work directory kept: `bun --no-env-file eval/runner/refresh-barrier/trial.ts --seed <n> --arm on
-   --engine postgres --out <dir> --gbrain-root <gbrain> --pg-admin postgres://postgres:postgres@localhost:5434/gbrain_test
-   --template <template> --keep` (PGLite: `--engine pglite`, no database). For a named-case run, `named-case.ts --b <kind>
-   --rep <n>` with the same options.
-4. Read `<dir>/trials/<engine>/<arm>/<seed>.json` (the classes per write) and `<dir>/work/<engine>-<arm>-<seed>/` (every
-   actor's event log, the three Git repositories, and the database left in place by `--keep`).
-
-A schedule is a pure function of its seed, so the replay issues the same writes at the same offsets; timing between
-processes is not replayed exactly, which is why a failure is triaged on the same seed rather than assumed to repeat.
-
-## Disclosures
-
-gbrain is Garry Tan's own project.
-
-Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry
-Tan runs Y Combinator.
-
-Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
-
-## Amendments
-
-None yet.

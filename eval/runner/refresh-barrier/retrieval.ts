@@ -11,6 +11,9 @@
  *
  *   bun eval/runner/refresh-barrier/retrieval.ts --gbrain-root <G> --work <dir> --stub-embed [--label g|pin]
  *
+ * Before each arm it resolves the switch through gbrain's own reader in that arm's environment and gbrain copy, and a gated
+ * run refuses an arm that does not resolve to it. It refuses a reused worktree at another commit or with local edits.
+ *
  * --label pin runs the same against the pinned gbrain (the descriptive comparator, never gated). B2 makes paid embedding
  * calls, which must go through the budget ledger; until that path lands this runner refuses to run without --stub-embed.
  */
@@ -30,6 +33,7 @@ function prepare(work: string, gbrainRoot: string | null): string {
   if (!existsSync(evals)) execFileSync('git', ['-C', REPO, 'worktree', 'add', '--detach', evals, 'HEAD'], { stdio: 'ignore' });
   const head = (cwd: string) => execFileSync('git', ['-C', cwd, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   if (head(evals) !== head(REPO)) throw new Error(`refusing to reuse ${evals}: it is at ${head(evals)}, not this checkout's HEAD ${head(REPO)}; remove it or use another --work`);
+  if (execFileSync('git', ['-C', evals, 'status', '--porcelain', '--untracked-files=no'], { encoding: 'utf8' }).trim()) throw new Error(`refusing to reuse ${evals}: it has local edits; remove it or use another --work`);
   const nm = join(evals, 'node_modules');
   rmSync(nm, { recursive: true, force: true }); mkdirSync(nm);
   for (const entry of readdirSync(join(REPO, 'node_modules')).sort()) if (entry !== 'gbrain') symlinkSync(join(REPO, 'node_modules', entry), join(nm, entry));
@@ -42,11 +46,22 @@ function prepare(work: string, gbrainRoot: string | null): string {
   return evals;
 }
 
-function runArm(evals: string, arm: 'off' | 'on', stubEmbed: boolean, keep: string): void {
+/** The refresh_barrier value gbrain resolves for a fresh in-memory brain in one arm's environment and gbrain copy; null when the probe fails. */
+function resolvedSwitch(evals: string, env: Record<string, string>): boolean | null {
+  const core = join(evals, 'node_modules', 'gbrain', 'src', 'core');
+  const script = `const { PGLiteEngine } = await import(${JSON.stringify(join(core, 'pglite-engine.ts'))}); const sw = await import(${JSON.stringify(join(core, 'persistence', 'switches.ts'))});
+const e = new PGLiteEngine(); await e.connect({}); await e.initSchema(); const s = await sw.readWriteSwitches(sw.viewedEngine(e)); await e.disconnect(); console.log(JSON.stringify(s.refresh_barrier === true));`;
+  try { return JSON.parse(execFileSync('bun', ['-e', script], { cwd: evals, env, encoding: 'utf8', timeout: 120_000 }).trim().split('\n').pop()!); } catch { return null; }
+}
+
+/** Runs both runners in one arm and keeps their reports; a gated run refuses an arm whose environment does not resolve the switch to that arm. */
+function runArm(evals: string, arm: 'off' | 'on', stubEmbed: boolean, keep: string, gated: boolean): boolean | null {
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env)) if (v !== undefined && k !== 'GBRAIN_REFRESH_BARRIER') env[k] = v;
   if (arm === 'on') env.GBRAIN_REFRESH_BARRIER = '1';
   env.CAT18_PROVIDERS = 'openai,voyage';
+  const resolved = resolvedSwitch(evals, env);
+  if (gated && resolved !== (arm === 'on')) throw new Error(`refusing to score the ${arm} arm: gbrain resolved refresh_barrier=${resolved} in its environment; redo the arm`);
   const reports = join(evals, 'eval', 'reports');
   rmSync(reports, { recursive: true, force: true });
   for (const runner of ['cat18-embedding-providers.ts', 'cat26-contextual-retrieval.ts']) {
@@ -55,6 +70,7 @@ function runArm(evals: string, arm: 'off' | 'on', stubEmbed: boolean, keep: stri
   }
   rmSync(keep, { recursive: true, force: true });
   cpSync(reports, keep, { recursive: true });
+  return resolved;
 }
 
 /** Per cell and metric: query id to score, from one arm's kept reports. */
@@ -125,11 +141,11 @@ if (import.meta.main) {
   }
   const evals = prepare(work, gbrainRoot);
   const kept = (arm: string) => join(work, 'out', label, arm);
-  for (const arm of ['off', 'on'] as const) runArm(evals, arm, stubEmbed, kept(arm));
+  const switches = Object.fromEntries((['off', 'on'] as const).map(arm => [arm, runArm(evals, arm, stubEmbed, kept(arm), label === 'g')]));
   const scores = compare(readScores(kept('off')), readScores(kept('on')), stubEmbed ? MARGIN.b1 : MARGIN.b2);
   const latency = stubEmbed ? compareLatency(readLatency(kept('off')), readLatency(kept('on'))) : null;
   const result = { label, stub_embed: stubEmbed, gbrain: gbrainRoot ? execFileSync('git', ['-C', gbrainRoot, 'rev-parse', 'HEAD']).toString().trim() : 'pin',
-    pass: scores.pass && (latency === null || latency.pass), scores, latency };
+    switches, pass: scores.pass && (latency === null || latency.pass), scores, latency };
   writeFileSync(join(work, 'out', label, 'retrieval.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify({ label, pass: result.pass, latency: latency?.cells ?? null,
     cells: Object.fromEntries(Object.entries(scores.cells as Rec).map(([k, c]: [string, any]) => [k, { off: c.off, on: c.on, lo: c.diff.lo, pass: c.pass }])) }));

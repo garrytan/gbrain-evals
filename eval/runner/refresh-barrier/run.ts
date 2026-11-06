@@ -11,15 +11,18 @@
  *
  * It refuses a gbrain root with uncommitted changes, and a counted run refuses a root whose HEAD is not --gbrain-sha, a
  * concurrency other than the preregistered one (trials 6, quiet 2), a harness with uncommitted changes, and an --out holding
- * a dry run of the block or results that no counted run of this preregistration commit started. A lock file keeps a second
- * run.ts off a block whose run.ts or jobs are still running, and run.ts kills its jobs when it exits or is interrupted.
+ * a dry run of the block or results that no counted run of this preregistration commit started. A lock file, created
+ * exclusively, keeps a second run.ts off a block and engine (one left by a run.ts that died is deleted by hand). run.ts logs
+ * each job's start; when it exits or gets SIGINT or SIGTERM it kills its jobs and logs each as interrupted, so a resumed run
+ * reruns them, and the receipt lists them. A job that exits abnormally after writing its result is logged, and analyze.ts
+ * counts that result as a harness_error.
  * Every job runs as `bun --no-env-file` with provider keys removed from its environment.
  * --dry skips the preregistration attestation (development runs only; analyze.ts marks their receipts uncounted).
  */
 import { spawn } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { cpus, totalmem, type as osType } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { attestPreregistration } from '../prereg.ts';
 import { PROVIDER_KEYS, harnessDigest, harnessFiles } from './fixture.ts';
 import { B_KINDS } from './named-case.ts';
@@ -32,7 +35,7 @@ const JOB_TIMEOUT_MS = { trials: 1_800_000, named: 600_000, quiet: 1_200_000 } a
 export const QUIET_SEEDS = '2001-2100';
 /** Jobs at a time: the preregistered six for trials and two for the quiet block; named runs have no preregistered value. */
 export const CONCURRENCY = { trials: 6, named: 6, quiet: 2 } as const;
-const SIGNALS = ['SIGINT', 'SIGTERM', 'SIGHUP'] as const;
+const SIGNALS = ['SIGINT', 'SIGTERM'] as const;
 const ORDER_SEED = 2026;
 const HERE = import.meta.dir;
 const REPO = resolve(HERE, '../../..');
@@ -77,8 +80,8 @@ const gitInfo = (root: string) => {
 };
 
 interface JobContext {
-  timeoutMs: number; logDir: string; log: (e: Record<string, unknown>) => void; dbPrefix: string;
-  provenance: { gbrain_sha: string; harness_digest: string }; groups: Set<number>; saveLock: () => void;
+  timeoutMs: number; out: string; logDir: string; log: (e: Record<string, unknown>) => void; dbPrefix: string;
+  provenance: { gbrain_sha: string; harness_digest: string }; inFlight: Map<number, { id: string; started: number }>; saveLock: () => void;
 }
 
 async function runJob(job: Job, c: JobContext): Promise<void> {
@@ -89,20 +92,25 @@ async function runJob(job: Job, c: JobContext): Promise<void> {
   const started = Date.now();
   // Its own process group, so a timeout kills the trial's writer, tick and sync processes with it.
   const proc = spawn('bun', ['--no-env-file', job.script, ...job.args], { env, stdio: ['ignore', fd, fd], detached: true });
-  c.groups.add(proc.pid!); c.saveLock();
+  c.inFlight.set(proc.pid!, { id: job.id, started }); c.saveLock();
+  c.log({ ev: 'job_start', id: job.id, pid: proc.pid });
   let timedOut = false;
   const timer = setTimeout(() => { timedOut = true; try { process.kill(-proc.pid!, 'SIGKILL'); } catch { proc.kill('SIGKILL'); } }, c.timeoutMs);
   const [code, signal] = await new Promise<[number | null, string | null]>(res => proc.on('exit', (x, s) => res([x, s])));
   clearTimeout(timer);
-  c.groups.delete(proc.pid!); c.saveLock();
+  try { process.kill(-proc.pid!, 'SIGKILL'); } catch {}
+  c.inFlight.delete(proc.pid!); c.saveLock();
   const ms = Date.now() - started;
-  // A job that left no result gets one carrying the block's provenance; an existing result is never rewritten.
-  if (!existsSync(job.result)) {
+  // A job that left no result gets one carrying the block's provenance; an existing result is never rewritten, so an abnormal
+  // exit after it was written is logged for analyze.ts, which counts that result as a harness_error.
+  const hadResult = existsSync(job.result);
+  if (!hadResult) {
     const tail = readFileSync(join(c.logDir, `${job.id}.log`), 'utf8').split('\n').slice(-30).join('\n').slice(-3_000);
     mkdirSync(dirname(job.result), { recursive: true });
     writeFileSync(job.result, JSON.stringify({ ...job.meta, ops: [], provenance: c.provenance, harness_error: { exit: code, signal, timed_out: timedOut, ms, log_tail: tail } }), { flag: 'wx' });
   }
-  c.log({ ev: 'job', id: job.id, exit: code, signal, timed_out: timedOut, ms, result: existsSync(job.result) });
+  c.log({ ev: 'job', id: job.id, result: relative(c.out, job.result), exit: code, signal, timed_out: timedOut, ms, placeholder: !hadResult,
+    post_result_exit: hadResult && (code !== 0 || signal !== null || timedOut) });
 }
 
 const alive = (pid: number) => { try { process.kill(pid, 0); return true; } catch { return false; } };
@@ -120,7 +128,9 @@ async function dropTrialDatabases(gbrainRoot: string, pgAdmin: string, prefix: s
   return rows.length;
 }
 
-export async function runBlock(a: RunArgs): Promise<Record<string, unknown>> {
+const harnessStatus = () => Bun.spawnSync(['git', '-C', REPO, 'status', '--porcelain', '--', HERE]).stdout.toString().trim();
+
+export async function runBlock(a: RunArgs, deps = { attest: attestPreregistration, harnessStatus }): Promise<Record<string, unknown>> {
   const g = gitInfo(a.gbrainRoot);
   if (g.dirty) throw new Error(`refusing to run: the gbrain root ${a.gbrainRoot} has uncommitted changes`);
   if (!a.dry && !a.gbrainSha) throw new Error('a counted run needs --gbrain-sha <G>');
@@ -128,61 +138,68 @@ export async function runBlock(a: RunArgs): Promise<Record<string, unknown>> {
   if (!a.dry && a.block !== 'named' && a.concurrency !== CONCURRENCY[a.block]) {
     throw new Error(`refusing a counted ${a.block} run at --concurrency ${a.concurrency}: the preregistration runs ${CONCURRENCY[a.block]} at a time`);
   }
-  if (!a.dry && Bun.spawnSync(['git', '-C', REPO, 'status', '--porcelain', '--', HERE]).stdout.toString().trim()) {
-    throw new Error(`refusing a counted run: the harness ${HERE} has uncommitted or untracked changes`);
-  }
-  const attestation = a.dry ? null : attestPreregistration(a.prereg, REPO);
+  if (!a.dry && deps.harnessStatus()) throw new Error(`refusing a counted run: the harness ${HERE} has uncommitted or untracked changes`);
+  const attestation = a.dry ? null : deps.attest(a.prereg, REPO);
   const jobs = planJobs(a);
-  const logPath = join(a.out, `run-${a.block}-${a.engine}.jsonl`);
-  const starts = existsSync(logPath) ? readFileSync(logPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)).filter(e => e.ev === 'start') : [];
-  if (starts.some(e => e.dry !== a.dry)) throw new Error(`refusing to run: ${logPath} records a ${a.dry ? 'counted' : 'dry'} run of this block; dry and counted runs never share an --out`);
-  const todo = jobs.filter(j => !existsSync(j.result));
-  if (attestation && todo.length < jobs.length && !starts.some(e => e.preregistration_commit === attestation.preregistration_commit)) {
-    throw new Error(`refusing to run: ${a.out} holds ${jobs.length - todo.length} results that no counted run of preregistration commit ${attestation.preregistration_commit.slice(0, 12)} started`);
-  }
+  const logDir = join(a.out, 'logs'); mkdirSync(logDir, { recursive: true });
   const lockPath = join(a.out, `run-${a.block}-${a.engine}.lock`);
-  if (existsSync(lockPath)) {
+  try { writeFileSync(lockPath, JSON.stringify({ pid: process.pid, groups: [] }), { flag: 'wx' }); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
     const prev = JSON.parse(readFileSync(lockPath, 'utf8')) as { pid: number; groups: number[] };
     const running = [prev.pid, ...prev.groups.map(x => -x)].filter(alive);
-    if (running.length) throw new Error(`refusing to run: ${lockPath} names a run.ts or jobs still running (${running.map(p => p < 0 ? `process group ${-p}` : `pid ${p}`).join(', ')}); stop them or wait`);
+    throw new Error(running.length
+      ? `refusing to run: ${lockPath} names a run.ts or jobs still running (${running.map(p => p < 0 ? `process group ${-p}` : `pid ${p}`).join(', ')}); stop them or wait`
+      : `refusing to run: ${lockPath} was left by a run.ts that did not exit cleanly and nothing it names is running; delete it and rerun`);
   }
-  const logDir = join(a.out, 'logs'); mkdirSync(logDir, { recursive: true });
+  const logPath = join(a.out, `run-${a.block}-${a.engine}.jsonl`);
   const log = (e: Record<string, unknown>) => appendFileSync(logPath, `${JSON.stringify({ t: Date.now(), ...e })}\n`);
-  const startedAt = new Date().toISOString();
-  const groups = new Set<number>();
-  const saveLock = () => writeFileSync(lockPath, JSON.stringify({ pid: process.pid, groups: [...groups] }));
-  const stop = () => { for (const x of groups) if (alive(-x)) process.kill(-x, 'SIGKILL'); rmSync(lockPath, { force: true }); };
+  const inFlight = new Map<number, { id: string; started: number }>();
+  const release = () => {
+    for (const [pid, j] of inFlight) if (alive(-pid)) { process.kill(-pid, 'SIGKILL'); log({ ev: 'job_interrupted', id: j.id, ms: Date.now() - j.started }); }
+    rmSync(lockPath, { force: true });
+  };
   const interrupted = () => process.exit(130);
-  process.on('exit', stop);
+  process.on('exit', release);
   for (const s of SIGNALS) process.on(s, interrupted);
-  saveLock();
-  log({ ev: 'start', block: a.block, engine: a.engine, jobs: jobs.length, todo: todo.length, dry: a.dry, preregistration_commit: attestation?.preregistration_commit ?? null });
-  const dbPrefix = `rb_test_${a.block}_${process.pid}_`;
-  const ctx: JobContext = { timeoutMs: JOB_TIMEOUT_MS[a.block], logDir, log, dbPrefix, provenance: { gbrain_sha: g.sha, harness_digest: harnessDigest() }, groups, saveLock };
-  let next = 0;
   try {
+    const events = () => existsSync(logPath) ? readFileSync(logPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
+    const starts = events().filter(e => e.ev === 'start');
+    if (starts.some(e => e.dry !== a.dry)) throw new Error(`refusing to run: ${logPath} records a ${a.dry ? 'counted' : 'dry'} run of this block; dry and counted runs never share an --out`);
+    const todo = jobs.filter(j => !existsSync(j.result));
+    if (attestation && todo.length < jobs.length && !starts.some(e => e.preregistration_commit === attestation.preregistration_commit)) {
+      throw new Error(`refusing to run: ${a.out} holds ${jobs.length - todo.length} results that no counted run of preregistration commit ${attestation.preregistration_commit.slice(0, 12)} started`);
+    }
+    const startedAt = new Date().toISOString();
+    const saveLock = () => writeFileSync(lockPath, JSON.stringify({ pid: process.pid, groups: [...inFlight.keys()] }));
+    log({ ev: 'start', block: a.block, engine: a.engine, jobs: jobs.length, todo: todo.length, dry: a.dry, preregistration_commit: attestation?.preregistration_commit ?? null });
+    const dbPrefix = `rb_test_${a.block}_${process.pid}_`;
+    const ctx: JobContext = { timeoutMs: JOB_TIMEOUT_MS[a.block], out: a.out, logDir, log, dbPrefix, provenance: { gbrain_sha: g.sha, harness_digest: harnessDigest() }, inFlight, saveLock };
+    let next = 0;
     await Promise.all(Array.from({ length: Math.min(a.concurrency, todo.length) }, async () => {
       while (next < todo.length) { const job = todo[next++]!; await runJob(job, ctx); }
     }));
+    const droppedDatabases = a.engine === 'postgres' && a.pgAdmin ? await dropTrialDatabases(a.gbrainRoot, a.pgAdmin, dbPrefix) : 0;
+    const harnessErrors = jobs.filter(j => existsSync(j.result) && JSON.parse(readFileSync(j.result, 'utf8')).harness_error).length;
+    const logged = events();
+    const receipt = {
+      preregistration: a.prereg, attestation, counted: !a.dry, block: a.block, engine: a.engine, arms: a.arms,
+      ...(a.block === 'named' ? { reps: a.reps, b_kinds: B_KINDS } : { seeds: a.seeds }), concurrency: a.concurrency, order_seed: ORDER_SEED,
+      started_at: startedAt, finished_at: new Date().toISOString(),
+      gbrain: { root: a.gbrainRoot, ...gitInfo(a.gbrainRoot) }, gbrain_evals: gitInfo(REPO), files: harnessFiles(), harness_digest: harnessDigest(), schedule_version: SCHEDULE_VERSION, params: PARAMS,
+      host: { os: osType(), cpus: cpus().length, mem_gb: Math.round(totalmem() / 2 ** 30), bun: Bun.version },
+      jobs: { total: jobs.length, skipped_existing: jobs.length - todo.length, ran: todo.length, harness_errors: harnessErrors,
+        interrupted: logged.filter(e => e.ev === 'job_interrupted').map(e => e.id), post_result_exits: logged.filter(e => e.ev === 'job' && e.post_result_exit).map(e => e.result) },
+      dropped_databases: droppedDatabases,
+    };
+    writeFileSync(join(a.out, `receipt-${a.block}-${a.engine}.json`), JSON.stringify(receipt, null, 2));
+    log({ ev: 'end', harness_errors: harnessErrors });
+    return receipt;
   } finally {
-    process.off('exit', stop);
+    process.off('exit', release);
     for (const s of SIGNALS) process.off(s, interrupted);
-    stop();
+    release();
   }
-  const droppedDatabases = a.engine === 'postgres' && a.pgAdmin ? await dropTrialDatabases(a.gbrainRoot, a.pgAdmin, dbPrefix) : 0;
-  const harnessErrors = jobs.filter(j => existsSync(j.result) && JSON.parse(readFileSync(j.result, 'utf8')).harness_error).length;
-  const files = harnessFiles();
-  const receipt = {
-    preregistration: a.prereg, attestation, counted: !a.dry, block: a.block, engine: a.engine, arms: a.arms,
-    ...(a.block === 'named' ? { reps: a.reps, b_kinds: B_KINDS } : { seeds: a.seeds }), concurrency: a.concurrency, order_seed: ORDER_SEED,
-    started_at: startedAt, finished_at: new Date().toISOString(),
-    gbrain: { root: a.gbrainRoot, ...gitInfo(a.gbrainRoot) }, gbrain_evals: gitInfo(REPO), files, harness_digest: harnessDigest(), schedule_version: SCHEDULE_VERSION, params: PARAMS,
-    host: { os: osType(), cpus: cpus().length, mem_gb: Math.round(totalmem() / 2 ** 30), bun: Bun.version },
-    jobs: { total: jobs.length, skipped_existing: jobs.length - todo.length, ran: todo.length, harness_errors: harnessErrors }, dropped_databases: droppedDatabases,
-  };
-  writeFileSync(join(a.out, `receipt-${a.block}-${a.engine}.json`), JSON.stringify(receipt, null, 2));
-  log({ ev: 'end', harness_errors: harnessErrors });
-  return receipt;
 }
 
 if (import.meta.main) {

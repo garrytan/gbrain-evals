@@ -55,7 +55,7 @@ export function allowedCode(code: string, ctx: { expiryPossible: boolean; heldFo
 export interface OpRecord {
   writer: number; op: number; kind: string; source: string; slug: string | null; marker: string; request_id: string;
   issued: boolean; attempts: number; first: string | null; first_code: string | null; first_deferred: boolean;
-  first_ms: number | null; first_t: number | null; first_slip_ms: number | null;
+  first_ms: number | null; first_t: number | null; first_slip_ms: number | null; committed_ms: number | null;
   codes: string[]; acknowledged: boolean; client_committed: boolean; call_timeouts: number; client_final: string | null;
   rows: number; state: string | null; error_code: string | null; deferred_refresh: boolean; deferred_import: boolean;
   write_through: boolean | null;
@@ -189,6 +189,10 @@ export async function verifyTrial(engine: any, schedule: TrialSchedule, paths: B
     const applied = factsAll.length > 0 || pages_occ > 0 || versionsN > 0 || git_hist > 0;
     const acknowledged = responses.some(r => r.cls === 'committed' || r.cls === 'pending');
     const client_committed = responses.some(r => r.cls === 'committed') || finals.some(f => f.state === 'committed');
+    const firstT = first ? Number(first.t) - Number(first.ms ?? 0) : null;
+    const committedResponse = responses.find(r => r.cls === 'committed'), committedFinal = finals.find(f => f.state === 'committed');
+    const committed_ms = first?.cls === 'committed' ? first.ms ?? null : committedResponse && firstT !== null ? Number(committedResponse.t) - firstT
+      : committedFinal ? Number(committedFinal.after_ms) : null;
     const origin_occ = origin.get(m) ?? 0;
     const state = row?.state ?? null;
     const wt = row?.outcome?.write_through?.written;
@@ -218,7 +222,7 @@ export async function verifyTrial(engine: any, schedule: TrialSchedule, paths: B
       writer: op.writer, op: op.index, kind: op.kind, source: op.source, slug: op.slug, marker: m, request_id: op.request_id,
       issued: responses.length > 0 || ev.some(e => e.ev === 'call_timeout'), attempts: responses.length,
       first: first?.cls ?? null, first_code: first?.code ?? null, first_deferred: Boolean(first?.deferred),
-      first_ms: first?.ms ?? null, first_t: first ? Number(first.t) - Number(first.ms ?? 0) : null, first_slip_ms: first?.slip_ms ?? null,
+      first_ms: first?.ms ?? null, first_t: firstT, first_slip_ms: first?.slip_ms ?? null, committed_ms,
       codes: responses.map(r => r.code).filter(Boolean), acknowledged, client_committed, call_timeouts: ev.filter(e => e.ev === 'call_timeout' || e.ev === 'poll_timeout').length,
       client_final: finals[finals.length - 1]?.state ?? (responses.find(r => r.cls === 'committed') ? 'committed' : null),
       rows: rs.length, state, error_code: row?.error_code ?? null,
