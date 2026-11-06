@@ -180,15 +180,24 @@ const TELEMETRY_WRITE = /^(insert into|update|delete from) (public\.)?search_tel
 
 /**
  * The executeRaw allowlist: reads, transaction-local settings and transaction
- * control only. Keyword checks read the structure with every literal blanked;
+ * control only. SET LOCAL passes only as `set local <plain name> = | to …`
+ * for an unprotected name, and SQL with a Unicode escape (U&) is refused. Keyword checks read the structure with every literal blanked;
  * setting names are read from a second pass that keeps name-shaped literals and
  * quoted names, because set_config and SET name the setting there.
  */
 export function classifySql(sql: string): SqlVerdict {
+  if (/u&['"]/i.test(sql)) return { ok: false, verb: 'unicode_escape' };
+  return classifyStructure(structure(sql), structure(sql, true));
+}
+
+/** classifySql on the two structure passes; passes that split into different statements are refused. */
+export function classifyStructure(plain: string, withNamesKept: string): SqlVerdict {
   const statements = (s: string) => s.split(';').map(x => x.trim()).filter(Boolean);
-  const named = statements(structure(sql, true));
-  for (const [k, statement] of statements(structure(sql)).entries()) {
-    const withNames = named[k] ?? '';
+  const named = statements(withNamesKept);
+  const plainStatements = statements(plain);
+  if (named.length !== plainStatements.length) return { ok: false, verb: 'unparsed' };
+  for (const [k, statement] of plainStatements.entries()) {
+    const withNames = named[k]!;
     if (/\b(default_transaction_read_only|transaction_read_only|session characteristics)\b/.test(statement)) return { ok: false, verb: 'read_only_setting' };
     const lead = statement.split(' ')[0]!;
     if (READ_LEADS.has(lead)) {
@@ -206,9 +215,11 @@ export function classifySql(sql: string): SqlVerdict {
     if (lead === 'set') {
       const [, scope, ...rest] = withNames.split(' ');
       if (scope !== 'local') return { ok: false, verb: 'set_session' };
-      const name = /^[a-z_][a-z0-9_.]*/.exec(rest.join(' '))?.[0] ?? '';
+      const setting = rest.join(' ');
+      const name = /^[a-z_][a-z0-9_.]*/.exec(setting)?.[0] ?? '';
       if (name === 'session') return { ok: false, verb: 'set_role' };
       if (PROTECTED_SETTINGS[name]) return { ok: false, verb: PROTECTED_SETTINGS[name]! };
+      if (!/^[a-z_][a-z0-9_.]* ?(=|to\b)/.test(setting)) return { ok: false, verb: 'set_local_other' };
       continue;
     }
     if (lead === 'begin' || lead === 'start') {

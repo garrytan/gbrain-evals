@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
-import { ABORT_CODES, GuardRefusal, LiveRecallAbort, classifySql, installGuards, proveBarrier, readOnlyUrl, verifyReadOnly } from '../../eval/runner/live-recall/brain.ts';
+import { ABORT_CODES, GuardRefusal, LiveRecallAbort, classifySql, classifyStructure, installGuards, proveBarrier, readOnlyUrl, verifyReadOnly } from '../../eval/runner/live-recall/brain.ts';
 import { FIXTURE_DIR, buildFixtureBrain, compareRunDirs, freezeSummary, liveRecall, parseQuestions, presenceCheck, runQuestions, type Question, type SearchContext } from '../../eval/runner/live-recall/run.ts';
 import { ARMS, buildScorecard, compareRuns, renderMarkdown, scanForLeaks, validateScorecard, type QueryRecord } from '../../eval/runner/live-recall/scorecard.ts';
 
@@ -126,9 +126,13 @@ describe('live-recall guards on PGLite', () => {
       ["SELECT set_config('role', 'postgres', true)", 'set_role'], ["SELECT set_config('ROLE', 'postgres', true)", 'set_role'], ["SELECT set_config('session_authorization', 'postgres', true)", 'set_role'],
       ["SELECT set_config('default_transaction_read_only', 'off', true)", 'read_only_setting'], ["SELECT set_config(E'transaction_read_only', 'off', true)", 'read_only_setting'],
       ["SELECT set_config('ro' || 'le', 'postgres', true)", 'set_config_dynamic'], ["SELECT set_config($1, 'off', true)", 'set_config_dynamic'],
+      ['SET LOCAL TRANSACTION READ WRITE', 'set_local_other'], ['SET LOCAL TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ WRITE', 'set_local_other'], ["SET LOCAL TIME ZONE 'UTC'", 'set_local_other'],
+      ['SET LOCAL U&"\\0072ole" TO postgres', 'unicode_escape'], ['SET LOCAL U&"transaction_read_onl\\0079" = off', 'unicode_escape'], [`SELECT U&"\\0073et_config"('statement_timeout', '0', false)`, 'unicode_escape'],
       ['SET LOCAL role=postgres', 'set_role'], ['SET LOCAL session_authorization = postgres', 'set_role'], ['SET LOCAL "ROLE" TO postgres', 'set_role'], ['SET LOCAL "TRANSACTION_READ_ONLY" = off', 'read_only_setting'],
     ];
     for (const [sql, verb] of refused) expect([sql, classifySql(sql)]).toEqual([sql, { ok: false, verb }]);
+    expect(classifyStructure('select 1; select 2', 'select 1')).toEqual({ ok: false, verb: 'unparsed' });
+    expect(classifyStructure('select 1; select 2', 'select 1; select 2')).toEqual({ ok: true });
   });
 
   test('readOnlyUrl moves a transaction-pooler URL to the session pooler and asks for read-only sessions', () => {
