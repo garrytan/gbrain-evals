@@ -4,8 +4,8 @@ This is everything needed to run the live-recall harness on the box that holds G
 gbrain's search finds the right page for real questions, arm by arm, and writes an aggregate scorecard. The method and
 decision rules are in [PREREGISTRATION.md](PREREGISTRATION.md); the scorecard format is in [SCORECARD.md](SCORECARD.md).
 
-Only three files ever leave the box: `freeze.json` (counts, a hash and power numbers) and the run's `scorecard.json`
-and `scorecard.md` (aggregates). The question file, the per-query detail, gbrain's log and the brain copy stay.
+Only these files ever leave the box: `freeze.json` (counts, a hash and power numbers), the run's `scorecard.json`
+and `scorecard.md` (aggregates), and `compare.json` or `pool.json` when you make one (aggregates too). The question file, the per-query detail, gbrain's log and the brain copy stay.
 
 ## What you need
 
@@ -59,6 +59,14 @@ All commands run from the repository root.
 
    Changing the question file after this needs a new freeze.
 
+   For batch 2, freeze with `--protocol batch2`. `freeze.json` then records the protocol, and the counted run takes
+   its primary comparisons from it ([batch 2 amendment](PREREGISTRATION.md#batch-2-amendment)); a `--protocol` flag on
+   `run` that disagrees with the freeze is refused.
+
+   ```bash
+   bun eval/runner/live-recall/run.ts freeze --questions <questions.jsonl> --out freeze.json --protocol batch2
+   ```
+
 5. **Run**, after we confirm the freeze is committed:
 
    ```bash
@@ -67,8 +75,15 @@ All commands run from the repository root.
      --gbrain <gbrain checkout>@52b9ccae42cd81e16c21624c545a9c02c3505c11 --database-url-env LIVE_RECALL_DATABASE_URL
    ```
 
-   The terminal shows only allowlisted lines: the gbrain version, schema version and barrier, progress every 10
-   questions, and the output paths. Everything gbrain prints goes to `gbrain.local.log` in the run directory
+   For batch 2's counted run, pass the gbrain commit of v0.60.593.0, the release the box runs after its 2026-11-07
+   upgrade, instead of `52b9ccae` ([batch 2 amendment](PREREGISTRATION.md#batch-2-amendment)). A second run of the
+   same batch 2 file at `52b9ccae` is what the pooled and version-change secondaries need.
+
+   Before the first question, the runner sends one public probe query through every arm and stops with
+   [`LR_ARM_PREFLIGHT`](#lr_arm_preflight) if any arm errors, is refused a model call, fails its reranker open or
+   reports a failure stage, so a missing grant ends the run
+   before it uses the question set. The terminal shows only allowlisted lines: the gbrain version, schema version and
+   barrier, the preflight result, progress every 10 questions, and the output paths. Everything gbrain prints goes to `gbrain.local.log` in the run directory
    (`eval/reports/live-recall/<timestamp>/` unless you pass `--out`), and gbrain's own audit files land there too.
 
 6. **Send** `scorecard.json` and `scorecard.md` from the run directory. Keep everything else in it on the box:
@@ -86,6 +101,12 @@ run-to-run noise): `bun eval/runner/live-recall/run.ts compare --a <run dir> --b
 aggregate `compare.json`. It refuses with `LR_FREEZE_MISMATCH` when the two runs used different question files and
 with `LR_COMPARE_CONTROL` when either is a `--fixture` control. `run_a` and `run_b` in `compare.json` name each run's
 gbrain version and commit, barrier and freeze, so a swapped `--a` and `--b` shows.
+
+To pool batch 1 and batch 2 for the preregistered N = 100 secondary:
+`bun eval/runner/live-recall/run.ts pool --a <batch 1 run dir> --b <batch 2 run dir> --out <dir>` writes an aggregate
+`pool.json` from the two runs' `scorecard.json` and `detail.local.jsonl`, and opens no database. It refuses with
+`LR_POOL_MISMATCH` when the two runs used the same question file or differ in gbrain commit or search settings, and
+with `LR_COMPARE_CONTROL` when either is a `--fixture` control.
 
 ## The question file
 
@@ -126,7 +147,10 @@ The runner searches only a database that proves, by itself, that this run cannot
   foreign table (column grants included), no CREATE on any schema or on the database, no UPDATE or USAGE on any
   sequence, no EXECUTE on a SECURITY DEFINER function in `public`, membership in no other role (a member can switch
   to a role that writes, which the runner's check of the role itself does not see), and BYPASSRLS so it can read tables
-  with row-level security. Creating that role changes Garry's database, so ask through
+  with row-level security. It also needs EXECUTE on gbrain's five helper functions that are not SECURITY DEFINER
+  (`gbrain_fts_input`, `gbrain_fact_fingerprint`, `gbrain_fact_fingerprint_v1`, `gbrain_fact_normalize`,
+  `gbrain_try_jsonb`): without `gbrain_fts_input` every hybrid-search arm fails with `title_arm_failed`, which the
+  arm preflight catches. Creating that role changes Garry's database, so ask through
   ALPH-11 first; it is GBRA-108's or Garry's decision.
 
 ## Abort codes
@@ -171,6 +195,14 @@ gbrain found no explicit embedding model, so the brain's vectors cannot be searc
 Embedding one preflight query (the fixed text `live-recall preflight`) failed. Export the key for the brain's
 embedding provider and rerun.
 
+### LR_ARM_PREFLIGHT
+
+An arm failed on the public probe query before any question ran. The detail names each failing arm, its status and
+gbrain's failure stages, for example `hybrid_lexical degraded (title_arm_failed)`. `title_arm_failed` or
+`keyword_arm_failed` usually means the role lacks EXECUTE on one of the helper functions listed under
+[Other barriers](#other-barriers); an `embed_` or `rerank_` stage points at the provider's key or service. Fix it and
+rerun. Nothing was counted.
+
 ### LR_RERANK_NEEDS_TYPESAFE
 
 The configured reranker is a TypeSafe recipe, which this harness does not call. Ask GBEV-3 through ALPH-11 how to
@@ -188,8 +220,14 @@ run directories were made on different question files.
 
 ### LR_COMPARE_CONTROL
 
-One of the two run directories passed to `compare` is a `--fixture` control, whose numbers say nothing about search
-quality. Compare two counted runs made on the same frozen question file.
+One of the two run directories passed to `compare` or `pool` is a `--fixture` control, whose numbers say nothing
+about search quality. Compare or pool counted runs only.
+
+### LR_POOL_MISMATCH
+
+The two run directories passed to `pool` were made on the same question file, or differ in gbrain commit, search mode,
+reranker or embedding settings (the detail names which). Pool a batch 1 run and a batch 2 run made with the same gbrain
+and settings.
 
 ### LR_GOLD_MISSING_CAP
 

@@ -171,10 +171,11 @@ function compare(id: string, a: Map<string, QueryRecord>, b: Map<string, QueryRe
   };
 }
 
-/** The comparisons the preregistration names, in its order. P1 and P2 are the only Holm family. */
-export const COMPARISONS: Array<{ id: string; a: Arm; b: Arm; form: Form | 'all' | 'exact_vs_paraphrase'; primary?: 'P1' | 'P2'; windowed?: boolean }> = [
-  { id: 'p1_hybrid_vs_hybrid_lexical', a: 'hybrid_lexical', b: 'hybrid', form: 'all', primary: 'P1' },
-  { id: 'p2_configured_vs_hybrid_lexical_paraphrase', a: 'hybrid_lexical', b: 'configured', form: 'paraphrase', primary: 'P2' },
+export const PROTOCOLS = ['batch1', 'batch2'] as const;
+export type Protocol = (typeof PROTOCOLS)[number];
+type Comparison = { id: string; a: Arm; b: Arm; form: Form | 'all' | 'exact_vs_paraphrase'; primary?: 'P1' | 'P2'; windowed?: boolean };
+const P2: Comparison = { id: 'p2_configured_vs_hybrid_lexical_paraphrase', a: 'hybrid_lexical', b: 'configured', form: 'paraphrase', primary: 'P2' };
+const SECONDARIES: Comparison[] = [
   { id: 'hybrid_lexical_vs_keyword', a: 'keyword', b: 'hybrid_lexical', form: 'all' },
   { id: 'hybrid_vs_keyword', a: 'keyword', b: 'hybrid', form: 'all' },
   { id: 'configured_vs_keyword_paraphrase', a: 'keyword', b: 'configured', form: 'paraphrase' },
@@ -185,17 +186,33 @@ export const COMPARISONS: Array<{ id: string; a: Arm; b: Arm; form: Form | 'all'
   { id: 'window_vs_configured', a: 'configured', b: 'configured_window', form: 'all', windowed: true },
   ...(['keyword', 'vector', 'hybrid_lexical', 'hybrid', 'configured'] as const).map(arm => ({ id: 'paraphrase_vs_exact_' + arm, a: arm, b: arm, form: 'exact_vs_paraphrase' as const })),
 ];
+/**
+ * The comparisons each protocol's preregistration names, in its order. P1 and P2
+ * are the only Holm family. batch2 (the second, independent question set)
+ * sharpens P1 to paraphrases and keeps batch 1's all-forms P1 as a secondary
+ * replication; the freeze names the protocol, so a counted run cannot pick it.
+ */
+export const COMPARISONS: Record<Protocol, Comparison[]> = {
+  batch1: [{ id: 'p1_hybrid_vs_hybrid_lexical', a: 'hybrid_lexical', b: 'hybrid', form: 'all', primary: 'P1' }, P2, ...SECONDARIES],
+  batch2: [
+    { id: 'p1_hybrid_vs_hybrid_lexical_paraphrase', a: 'hybrid_lexical', b: 'hybrid', form: 'paraphrase', primary: 'P1' },
+    P2,
+    { id: 'batch1_p1_hybrid_vs_hybrid_lexical', a: 'hybrid_lexical', b: 'hybrid', form: 'all' },
+    ...SECONDARIES,
+  ],
+};
 
-export function buildScorecard(records: QueryRecord[], questions: QuestionSummary, identity: RunIdentity, custody: Custody) {
+/** Eligibility, per-arm cells and the listed comparisons over a set of records. An arm named in seedInvalid is invalid before any record is read. */
+function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: Record<string, string> = {}) {
   const byArm = new Map<Arm, QueryRecord[]>(ARMS.map(a => [a, records.filter(r => r.arm === a)]));
-  const invalid: Record<string, string> = {};
+  const invalid: Record<string, string> = { ...seedInvalid };
   for (const arm of ['configured', 'configured_window'] as const) {
     const rows = byArm.get(arm)!;
     const failOpen = rows.filter(r => r.status === 'rerank_fail_open').length;
-    if (rows.length && failOpen / rows.length > RERANK_FAIL_OPEN_CAP) invalid[arm] = 'rerank_fail_open_over_cap';
+    if (rows.length && failOpen / rows.length > RERANK_FAIL_OPEN_CAP) invalid[arm] ??= 'rerank_fail_open_over_cap';
   }
-  if (byArm.get('vector')!.length && byArm.get('vector')!.every(r => r.status === 'skipped')) invalid.vector = 'embedding_opted_out';
-  if (byArm.get('hybrid')!.length && byArm.get('hybrid')!.every(r => r.status === 'skipped')) invalid.hybrid = 'embedding_opted_out';
+  if (byArm.get('vector')!.length && byArm.get('vector')!.every(r => r.status === 'skipped')) invalid.vector ??= 'embedding_opted_out';
+  if (byArm.get('hybrid')!.length && byArm.get('hybrid')!.every(r => r.status === 'skipped')) invalid.hybrid ??= 'embedding_opted_out';
 
   const common = (['keyword', 'vector', 'hybrid_lexical', 'hybrid', 'configured'] as const).filter(a => !invalid[a] && byArm.get(a)!.length);
   const statusBy = new Map<string, Map<Arm, QueryRecord>>();
@@ -230,7 +247,7 @@ export function buildScorecard(records: QueryRecord[], questions: QuestionSummar
   }
 
   const comparisons: Array<Record<string, unknown>> = [];
-  for (const c of COMPARISONS) {
+  for (const c of list) {
     if (invalid[c.a] || invalid[c.b] || !byArm.get(c.a)!.length || !byArm.get(c.b)!.length) {
       comparisons.push({ id: c.id, skipped: 'arm_invalid_or_absent' });
       continue;
@@ -249,20 +266,15 @@ export function buildScorecard(records: QueryRecord[], questions: QuestionSummar
       comparisons.push({ ...compare(c.id, mapA, mapB, keys, metric, c.form !== 'all'), a: c.a, b: c.b, form: c.form, primary: c.primary ?? null });
     }
   }
-  const primaryIds = COMPARISONS.filter(c => c.primary).map(c => c.id);
+  const primaryIds = list.filter(c => c.primary).map(c => c.id);
   const primaries = comparisons.filter(c => c.primary && c.metric === 'success_at_5' && typeof c.p_two_sided === 'number');
   const holm = holmAdjusted(primaryIds.map(id => (primaries.find(c => c.id === id)?.p_two_sided as number | undefined) ?? 1));
   primaries.forEach(c => { c.p_holm = round(holm[primaryIds.indexOf(c.id as string)]!); });
+  return { eligibility: { eligible_question_forms: eligible.size, exclusions, invalid_arms: invalid, common_arms: common }, arms, comparisons };
+}
 
-  const scorecard = {
-    schema: SCHEMA,
-    run: identity,
-    custody,
-    questions,
-    eligibility: { eligible_question_forms: eligible.size, exclusions, invalid_arms: invalid, common_arms: common },
-    arms,
-    comparisons,
-  };
+export function buildScorecard(records: QueryRecord[], questions: QuestionSummary, identity: RunIdentity, custody: Custody, protocol: Protocol = 'batch1') {
+  const scorecard = { schema: SCHEMA, protocol, run: identity, custody, questions, ...scoreRecords(records, COMPARISONS[protocol]) };
   validateScorecard(scorecard);
   return scorecard;
 }
@@ -298,8 +310,23 @@ export function compareRuns(a: QueryRecord[], b: QueryRecord[], invalidArms: Rea
   return { schema: COMPARE_SCHEMA, comparisons };
 }
 
+export const POOL_SCHEMA = 'live-recall-pool/v1';
+
+/**
+ * Two counted runs on independent question files (batch 1 and batch 2) scored
+ * as one set with batch2's comparisons. Question ids are prefixed per run so
+ * they stay distinct, an arm invalid in either run stays invalid, and every
+ * comparison is secondary, so none is Holm-adjusted. Reads the two
+ * detail.local.jsonl files on the box; emits aggregates only.
+ */
+export function poolRuns(a: QueryRecord[], b: QueryRecord[], invalidArms: ReadonlySet<string> = new Set()) {
+  const records = [...a.map(r => ({ ...r, qid: 'a:' + r.qid })), ...b.map(r => ({ ...r, qid: 'b:' + r.qid }))];
+  const list = COMPARISONS.batch2.map(({ primary: _primary, ...c }) => c);
+  return { schema: POOL_SCHEMA, ...scoreRecords(records, list, Object.fromEntries([...invalidArms].map(arm => [arm, 'invalid_in_one_run']))) };
+}
+
 const KEY_WORDS = new Set<string>([
-  'schema', 'run', 'custody', 'questions', 'eligibility', 'arms', 'comparisons', 'overall', 'by_type', 'all', 'exact', 'paraphrase',
+  'schema', 'protocol', 'run', 'custody', 'questions', 'eligibility', 'arms', 'comparisons', 'overall', 'by_type', 'all', 'exact', 'paraphrase',
   'n', 'success_at', 'mrr', 'mean', 'ci95', 'hits', 'rate', 'interval', 'recall_all_at', 'chunk_success_at', 'mean_pages_returned',
   'harness_latency_ms', 'p50', 'p95', 'model_calls', 'invalid', 'id', 'metric', 'n_pairs', 'n_clusters', 'mean_a', 'mean_b', 'delta',
   'p_two_sided', 'p_method', 'mcnemar', 'wins', 'losses', 'discordant', 'mde', 'a', 'b', 'arm', 'form', 'primary', 'p_holm', 'skipped',
@@ -317,9 +344,9 @@ const STRING_WORDS = new Set<string>([
   SCHEMA, ...ARMS, ...TYPES, ...FORMS, 'exact_vs_paraphrase', 'P1', 'P2', 'success_at_5', 'mrr', 'wilson', 'cluster_bootstrap', 'none',
   'exact-sign-flip', 'monte-carlo-sign-flip', 'degenerate', 'postgres', 'pglite', 'copy', 'standby', 'no_write_privilege',
   'session_pooler', 'transaction_pooler_rewritten', 'direct_or_local', 'in_process', 'conservative', 'balanced', 'tokenmax',
-  'rerank_fail_open_over_cap', 'embedding_opted_out', 'no_eligible_queries', 'arm_invalid_or_absent', 'unknown',
-  ...COMPARISONS.map(c => c.id), ...Object.keys(ABORT_CODES),
-  COMPARE_SCHEMA, 'run_a', 'run_b', 'all', ...ARMS.flatMap(arm => COMPARE_FORMS.map(form => compareId(arm, form))),
+  'rerank_fail_open_over_cap', 'embedding_opted_out', 'no_eligible_queries', 'arm_invalid_or_absent', 'invalid_in_one_run', 'unknown',
+  ...PROTOCOLS, ...Object.values(COMPARISONS).flat().map(c => c.id), ...Object.keys(ABORT_CODES),
+  COMPARE_SCHEMA, POOL_SCHEMA, 'run_a', 'run_b', 'all', ...ARMS.flatMap(arm => COMPARE_FORMS.map(form => compareId(arm, form))),
 ]);
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(\.\d+)?$/;
 export const versionOrNull = (v: unknown): string | null => (typeof v === 'string' && VERSION_PATTERN.test(v) ? v : null);
@@ -390,6 +417,7 @@ export function renderMarkdown(s: ReturnType<typeof buildScorecard>): string {
   const r = s.run;
   lines.push('# Live-recall scorecard', '');
   lines.push('gbrain ' + r.gbrain_loaded_version + ' (' + r.gbrain_loaded_commit.slice(0, 9) + '), schema ' + r.schema_version + ', ' + r.engine + ', barrier: ' + r.barrier + ', pgvector ' + (r.pgvector_version ?? 'n/a') + ', mode: ' + r.search_mode + (r.control ? '. CONTROL RUN (hash embeddings): numbers say nothing about search quality.' : '.'));
+  lines.push('Protocol: ' + s.protocol + '; primary comparisons (Holm family of two): ' + COMPARISONS[s.protocol].filter(c => c.primary).map(c => c.id + ' (' + c.primary + ')').join(', ') + '.');
   if ((r.source_pgvector !== null && r.source_pgvector !== r.pgvector_version) || (r.restore_errors ?? 0) > 0) lines.push('Warning: vector search on this copy may differ from the live brain (source pgvector ' + (r.source_pgvector ?? 'unknown') + ', copy pgvector ' + (r.pgvector_version ?? 'none') + ', restore errors ' + (r.restore_errors ?? 'unknown') + ').');
   lines.push('Question forms eligible: ' + s.eligibility.eligible_question_forms + ' of ' + (s.questions.loaded - s.questions.gold_missing) * 2 + ' (questions loaded: ' + s.questions.loaded + ', dropped for an absent gold page: ' + s.questions.gold_missing + ').', '');
   lines.push('## Arms, all queries (both forms)', '', '| Arm | n | success@1 | success@5 (95% CI) | success@10 | success@20 | MRR | pages returned |', '|---|---|---|---|---|---|---|---|');
