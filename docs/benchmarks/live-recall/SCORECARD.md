@@ -18,8 +18,9 @@ question, a slug, a chunk id or a per-question row. The method behind the number
    `run.embedding_column`. Every number is finite. A question form or slug has no field it could land in.
 2. **Needle scan.** The JSON and the Markdown are searched for every question form, gold slug and retrieved slug of the
    run. Distinctive needles are scanned (a space, slash or digit, or at least 12 characters); a short single word
-   cannot be told apart from the format's own vocabulary, and a bare date, version or hex string (a daily page's slug,
-   say) cannot be told apart from the run's own timestamps and commits. The structure check already keeps both out.
+   cannot be told apart from the format's own vocabulary, nor can a needle that is itself one of the format's words, and
+   a bare date, version or hex string (a daily page's slug, say) cannot be told apart from the run's own timestamps and
+   commits. The structure check already keeps all of these out.
 
 The Markdown is rendered from the validated JSON alone. The per-query detail behind the aggregates
 (`detail.local.jsonl`, pointers only) stays on the box.

@@ -368,13 +368,14 @@ export function validateScorecard(value: unknown, path = '$'): void {
  * appears in an outbound text. Only distinctive needles are scanned: ones with a
  * space, a slash or a digit, or at least 12 characters. A short single word
  * (a slug like `people`) cannot be told apart from the scorecard's own
- * vocabulary, and a bare date, version or hex string (a daily page's slug)
+ * vocabulary, a needle that is itself one of the format's words cannot be told
+ * apart from it, and a bare date, version or hex string (a daily page's slug)
  * cannot be told apart from the run's own timestamps and commits; the
- * structural check already keeps both out.
+ * structural check already keeps all three out.
  */
 export function scanForLeaks(outbound: string, needles: Iterable<string>): void {
   for (const needle of needles) {
-    if (STRING_PATTERNS.some(p => p.test(needle)) || /^\d{4}-\d{2}-\d{2}$/.test(needle)) continue;
+    if (STRING_WORDS.has(needle) || KEY_WORDS.has(needle) || STRING_PATTERNS.some(p => p.test(needle)) || /^\d{4}-\d{2}-\d{2}$/.test(needle)) continue;
     const distinctive = needle.length >= 12 || (needle.length >= 5 && /[\s/0-9]/.test(needle));
     if (distinctive && outbound.includes(needle)) throw new LiveRecallAbort('LR_CUSTODY_LEAK', 'a private string matched an outbound file');
   }

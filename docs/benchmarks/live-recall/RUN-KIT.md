@@ -27,7 +27,9 @@ All commands run from the repository root.
 
 1. **Make the copy.** Point `LIVE_RECALL_SOURCE_URL` at the brain's Postgres (a session or direct connection, not the
    `:6543` transaction pooler). `snapshot.sh` reads it once with `pg_dump` in one read-only transaction and writes
-   nothing to it.
+   nothing to it. The dump holds shared locks on the brain's tables while it runs, so a gbrain migration that needs an
+   exclusive lock would wait for it, and queries would queue behind that migration: make the copy when no gbrain
+   upgrade is due.
 
    ```bash
    LIVE_RECALL_SOURCE_URL='<brain url>' eval/runner/live-recall/snapshot.sh make

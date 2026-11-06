@@ -69,7 +69,7 @@ describe('live-recall fixture control (keyless)', () => {
     expect(() => scanForLeaks('| keyword | ' + CANARY_FORM + ' |', [CANARY_FORM])).toThrow(LiveRecallAbort);
     expect(() => scanForLeaks('pages returned', ['pages'])).not.toThrow();
     const outbound = readFileSync(paths.scorecard, 'utf8');
-    expect(() => scanForLeaks(outbound, [card.run.started_at.slice(0, 10), card.run.runner_commit, card.run.gbrain_loaded_version])).not.toThrow();
+    expect(() => scanForLeaks(outbound, [card.run.started_at.slice(0, 10), card.run.runner_commit, card.run.gbrain_loaded_version, 'configured_window', 'p1_hybrid_vs_hybrid_lexical'])).not.toThrow();
   });
 
   test('the scorecard accepts provider model ids with slashes, underscores and capitals at the model fields only', () => {
