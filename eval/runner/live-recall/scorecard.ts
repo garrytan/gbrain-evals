@@ -69,6 +69,11 @@ export interface RunIdentity {
   /** The mode's own expansion default; every arm passes expansion: false regardless. */
   mode_expansion: boolean;
   control: boolean;
+  pgvector_version: string | null;
+  source_pgvector: string | null;
+  source_server_version_num: number | null;
+  copy_server_version_num: number | null;
+  restore_errors: number | null;
 }
 
 export interface QuestionSummary {
@@ -199,9 +204,9 @@ export function buildScorecard(records: QueryRecord[], questions: QuestionSummar
   const exclusions: Record<string, number> = {};
   const eligible = new Set<string>();
   for (const [key, arms] of statusBy) {
-    const failing = common.map(a => arms.get(a)).find(r => !r || r.status !== 'ok');
-    if (failing === undefined) eligible.add(key);
-    else exclusions[failing ? failing.arm + '_' + failing.status : 'missing_record'] = (exclusions['' + (failing ? failing.arm + '_' + failing.status : 'missing_record')] ?? 0) + 1;
+    const reason = common.map(a => { const r = arms.get(a); return !r ? 'missing_record' : r.status === 'ok' ? '' : a + '_' + r.status; }).find(Boolean);
+    if (!reason) eligible.add(key);
+    else exclusions[reason] = (exclusions[reason] ?? 0) + 1;
   }
   const ok = (arm: Arm) => byArm.get(arm)!.filter(r => eligible.has(keyOf(r)) && r.status === 'ok');
 
@@ -241,9 +246,10 @@ export function buildScorecard(records: QueryRecord[], questions: QuestionSummar
       comparisons.push({ ...compare(c.id, mapA, mapB, keys, metric, c.form !== 'all'), a: c.a, b: c.b, form: c.form, primary: c.primary ?? null });
     }
   }
+  const primaryIds = COMPARISONS.filter(c => c.primary).map(c => c.id);
   const primaries = comparisons.filter(c => c.primary && c.metric === 'success_at_5' && typeof c.p_two_sided === 'number');
-  const holm = holmAdjusted(primaries.map(c => c.p_two_sided as number));
-  primaries.forEach((c, i) => { c.p_holm = round(holm[i]!); });
+  const holm = holmAdjusted(primaryIds.map(id => (primaries.find(c => c.id === id)?.p_two_sided as number | undefined) ?? 1));
+  primaries.forEach(c => { c.p_holm = round(holm[primaryIds.indexOf(c.id as string)]!); });
 
   const scorecard = {
     schema: SCHEMA,
@@ -294,6 +300,7 @@ const KEY_WORDS = new Set<string>([
   'started_at', 'finished_at', 'runner_commit', 'runner_dirty', 'gbrain_pin_version', 'gbrain_pin_commit', 'gbrain_loaded_version',
   'gbrain_loaded_commit', 'gbrain_overlay', 'schema_version', 'engine', 'barrier', 'connection', 'search_mode', 'reranker_enabled',
   'reranker_model', 'embedding_model', 'mode_expansion', 'control', 'top5_changed', 'degraded_stages',
+  'pgvector_version', 'source_pgvector', 'source_server_version_num', 'copy_server_version_num', 'restore_errors', 'run_a', 'run_b',
   'chat', 'embedding', 'rerank', 'multimodal', 'decide', 'transcription',
   ...ARMS, ...TYPES, ...KS.map(k => 'k' + k), ...STATUSES, ...GOLD_FOUND_BY,
 ]);
@@ -306,10 +313,12 @@ const STRING_WORDS = new Set<string>([
   ...COMPARISONS.map(c => c.id), ...Object.keys(ABORT_CODES),
   COMPARE_SCHEMA, 'run_a', 'run_b', 'all', ...ARMS.flatMap(arm => COMPARE_FORMS.map(form => compareId(arm, form))),
 ]);
+const VERSION_PATTERN = /^\d+\.\d+\.\d+(\.\d+)?$/;
+export const versionOrNull = (v: unknown): string | null => (typeof v === 'string' && VERSION_PATTERN.test(v) ? v : null);
 const STRING_PATTERNS = [
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/,
   /^[0-9a-f]{7,64}$/,
-  /^\d+\.\d+\.\d+(\.\d+)?$/,
+  VERSION_PATTERN,
   /^[a-z0-9-]+:[a-z0-9][a-z0-9.\-]*$/,
 ];
 
@@ -362,7 +371,8 @@ export function renderMarkdown(s: ReturnType<typeof buildScorecard>): string {
   const lines: string[] = [];
   const r = s.run;
   lines.push('# Live-recall scorecard', '');
-  lines.push('gbrain ' + r.gbrain_loaded_version + ' (' + r.gbrain_loaded_commit.slice(0, 9) + '), schema ' + r.schema_version + ', ' + r.engine + ', barrier: ' + r.barrier + ', mode: ' + r.search_mode + (r.control ? '. CONTROL RUN (hash embeddings): numbers say nothing about search quality.' : '.'));
+  lines.push('gbrain ' + r.gbrain_loaded_version + ' (' + r.gbrain_loaded_commit.slice(0, 9) + '), schema ' + r.schema_version + ', ' + r.engine + ', barrier: ' + r.barrier + ', pgvector ' + (r.pgvector_version ?? 'n/a') + ', mode: ' + r.search_mode + (r.control ? '. CONTROL RUN (hash embeddings): numbers say nothing about search quality.' : '.'));
+  if ((r.source_pgvector !== null && r.source_pgvector !== r.pgvector_version) || (r.restore_errors ?? 0) > 0) lines.push('Warning: vector search on this copy may differ from the live brain (source pgvector ' + (r.source_pgvector ?? 'unknown') + ', copy pgvector ' + (r.pgvector_version ?? 'none') + ', restore errors ' + (r.restore_errors ?? 'unknown') + ').');
   lines.push('Question forms eligible: ' + s.eligibility.eligible_question_forms + ' of ' + (s.questions.loaded - s.questions.gold_missing) * 2 + ' (questions loaded: ' + s.questions.loaded + ', dropped for an absent gold page: ' + s.questions.gold_missing + ').', '');
   lines.push('## Arms, all queries (both forms)', '', '| Arm | n | success@1 | success@5 (95% CI) | success@10 | success@20 | MRR | pages returned |', '|---|---|---|---|---|---|---|---|');
   for (const arm of ARMS) {

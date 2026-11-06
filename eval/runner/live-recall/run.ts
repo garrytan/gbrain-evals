@@ -26,7 +26,7 @@ import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderT
 import { gbrainPin } from '../gbrain-version.ts';
 import { normalQuantile } from '../stats/paired.ts';
 import { ABORT_CODES, COPY_MARKER_TABLE, LiveRecallAbort, checkSchema, installGuards, openPostgresBrain, verifyReadOnly, type GuardCounters } from './brain.ts';
-import { ARMS, GOLD_FOUND_BY, KS, TYPES, buildScorecard, compareRuns, renderMarkdown, scanForLeaks, validateScorecard, type Arm, type Form, type QType, type QueryRecord, type Status } from './scorecard.ts';
+import { ARMS, GOLD_FOUND_BY, KS, TYPES, buildScorecard, compareRuns, renderMarkdown, scanForLeaks, validateScorecard, versionOrNull, type Arm, type Form, type QType, type QueryRecord, type Status } from './scorecard.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const FIXTURE_DIR = join(REPO_ROOT, 'eval/data/live-recall-v1');
@@ -297,6 +297,21 @@ function git(args: string[]): string {
 interface RunOptions { fixture: boolean; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest }
 
 /** One counted or control run. Returns the outbound file paths. */
+/** pgvector in the database searched and, on a copy, the versions and restore error count snapshot.sh wrote into the marker row. */
+async function copyFacts(engine: any, barrier: string) {
+  const [vector] = await engine.executeRaw("SELECT extversion FROM pg_extension WHERE extname = 'vector'");
+  const [marker] = barrier === 'copy' ? await engine.executeRaw('SELECT to_jsonb(m) AS row FROM public.' + COPY_MARKER_TABLE + ' m LIMIT 1') : [];
+  const row: Record<string, unknown> = (typeof marker?.row === 'string' ? JSON.parse(marker.row) : marker?.row) ?? {};
+  const int = (v: unknown) => (Number.isInteger(v) ? (v as number) : null);
+  return {
+    pgvector_version: versionOrNull(vector?.extversion),
+    source_pgvector: versionOrNull(row.source_pgvector),
+    source_server_version_num: int(row.source_server_version_num),
+    copy_server_version_num: int(row.copy_server_version_num),
+    restore_errors: int(row.restore_errors),
+  };
+}
+
 export async function liveRecall(o: RunOptions, say: (line: string) => void): Promise<{ scorecard: string; markdown: string; detail: string }> {
   const startedAt = new Date().toISOString();
   const counters: GuardCounters = { refusals: {} };
@@ -327,6 +342,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
   }
   say('gbrain ' + o.gut.version + ', schema ' + schemaVersion + ', barrier ' + barrier + ', connection ' + connection + '; read-only verified');
   try {
+    const facts = await copyFacts(engine, barrier);
     const { loadSearchModeConfig, resolveSearchMode } = await importGbrain<any>(o.gut, 'src/core/search/mode.ts');
     const knobs = resolveSearchMode(await loadSearchModeConfig(engine));
     if (knobs.reranker_enabled && String(knobs.reranker_model).startsWith('typesafe:')) throw new LiveRecallAbort('LR_RERANK_NEEDS_TYPESAFE', 'configured reranker is a TypeSafe recipe');
@@ -376,6 +392,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       embedding_model: embeddingModel,
       mode_expansion: Boolean(knobs.expansion),
       control: o.fixture,
+      ...facts,
     };
     const summary = {
       loaded: questions.length,
@@ -402,6 +419,23 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
   }
 }
 
+/** Pair two run directories, refusing runs on different question files or a fixture control; compare.json carries each run's identity. */
+export function compareRunDirs(a: string, b: string) {
+  const load = (dir: string) => {
+    const card = JSON.parse(readFileSync(join(dir, 'scorecard.json'), 'utf8'));
+    const records = readFileSync(join(dir, 'detail.local.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as QueryRecord);
+    const identity = { gbrain_loaded_version: card.run.gbrain_loaded_version, gbrain_loaded_commit: card.run.gbrain_loaded_commit, barrier: card.run.barrier, control: card.run.control, freeze_sha_prefix: card.questions.freeze_sha_prefix };
+    return { identity, records };
+  };
+  const runA = load(a), runB = load(b);
+  if (runA.identity.freeze_sha_prefix !== runB.identity.freeze_sha_prefix) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'run_a and run_b were made on different question files (freeze_sha_prefix differs)');
+  if (runA.identity.control === true || runB.identity.control === true) throw new LiveRecallAbort('LR_COMPARE_CONTROL', (runA.identity.control === true ? 'run_a' : 'run_b') + ' is a fixture control run');
+  const { schema, comparisons } = compareRuns(runA.records, runB.records);
+  const result = { schema, run_a: runA.identity, run_b: runB.identity, comparisons };
+  validateScorecard(result);
+  return result;
+}
+
 function flag(argv: string[], name: string): string | undefined {
   const at = argv.indexOf(name);
   return at >= 0 ? argv[at + 1] : undefined;
@@ -420,10 +454,16 @@ async function main(argv: string[]): Promise<number> {
   }
   if (command === 'compare') {
     const a = flag(argv, '--a'), b = flag(argv, '--b'), out = flag(argv, '--out');
-    if (!a || !b || !out) { console.error('usage: run.ts compare --a <run dir> --b <run dir> --out <dir>'); return 2; }
-    const read = (dir: string) => readFileSync(join(dir, 'detail.local.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as QueryRecord);
-    const result = compareRuns(read(a), read(b));
-    validateScorecard(result);
+    if (!a || !b || !out) { console.error('usage: run.ts compare --a <run dir> --b <run dir> --out <dir> (refuses with LR_FREEZE_MISMATCH or LR_COMPARE_CONTROL)'); return 2; }
+    let result;
+    try {
+      result = compareRunDirs(a, b);
+    } catch (error) {
+      if (!(error instanceof LiveRecallAbort)) throw error;
+      console.error('live-recall: ABORT ' + error.code + ': ' + error.detail);
+      console.error('live-recall: fix: ' + ABORT_CODES[error.code] + ' (docs/benchmarks/live-recall/RUN-KIT.md#' + error.code.toLowerCase() + ')');
+      return 3;
+    }
     mkdirSync(out, { recursive: true });
     writeFileSync(join(out, 'compare.json'), JSON.stringify(result, null, 2) + '\n');
     console.log('live-recall: compare ' + join(out, 'compare.json'));

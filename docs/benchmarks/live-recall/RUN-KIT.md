@@ -79,7 +79,9 @@ All commands run from the repository root.
 
 To compare two runs on the box (two gbrain versions on the same night's copy, or the same version twice for
 run-to-run noise): `bun eval/runner/live-recall/run.ts compare --a <run dir> --b <run dir> --out <dir>` writes an
-aggregate `compare.json`.
+aggregate `compare.json`. It refuses with `LR_FREEZE_MISMATCH` when the two runs used different question files and
+with `LR_COMPARE_CONTROL` when either is a `--fixture` control. `run_a` and `run_b` in `compare.json` name each run's
+gbrain version and commit, barrier and freeze, so a swapped `--a` and `--b` shows.
 
 ## The question file
 
@@ -172,7 +174,13 @@ The question file has a problem at the line and field named. Fix it and freeze a
 ### LR_FREEZE_MISMATCH
 
 The question file's hash differs from `freeze.json`, or a counted run was started without `--questions` and
-`--freeze`. Freeze this exact file and send the new numbers before the counted run.
+`--freeze`. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
+run directories were made on different question files.
+
+### LR_COMPARE_CONTROL
+
+One of the two run directories passed to `compare` is a `--fixture` control, whose numbers say nothing about search
+quality. Compare two counted runs made on the same frozen question file.
 
 ### LR_GOLD_MISSING_CAP
 
@@ -192,7 +200,8 @@ Something unexpected failed. The terminal shows only the error's class name; the
 
 `snapshot.sh` aborts with exit status 3 and one of: `LR_SNAPSHOT_NO_SOURCE` (set `LIVE_RECALL_SOURCE_URL`),
 `LR_SNAPSHOT_POOLER` (use a session or direct URL), `LR_SNAPSHOT_NO_DOCKER` (use another barrier),
-`LR_SNAPSHOT_EXISTS` (run `teardown` first), `LR_SNAPSHOT_SOURCE_READ` or `LR_SNAPSHOT_DUMP` (check the URL and
+`LR_SNAPSHOT_EXISTS` (run `teardown` first), `LR_SNAPSHOT_WORKDIR` (the workdir is not one `make` created, so `make`
+will not write into it and `teardown` will not delete it; pass a new or `make`-created directory), `LR_SNAPSHOT_SOURCE_READ` or `LR_SNAPSHOT_DUMP` (check the URL and
 network; pg_dump's messages are in the workdir's `dump.log`), `LR_SNAPSHOT_COPY_START`, and `LR_SNAPSHOT_COUNTS`
 (row counts differ; restore messages are in the workdir's `restore.log`, which can quote row data and stays on the
 box). After any snapshot abort, run `teardown`.

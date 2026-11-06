@@ -32,7 +32,12 @@ pin (`gbrain_pin_version`, `gbrain_pin_commit`) and what was loaded (`gbrain_loa
 the fixture); `barrier` (`copy`, `standby` or `no_write_privilege`) and `connection` (`direct_or_local`,
 `session_pooler`, `transaction_pooler_rewritten`, or `in_process`); the brain's `search_mode`, `reranker_enabled`,
 `reranker_model`, `embedding_model` and `mode_expansion` (the mode's own expansion default; every arm runs with
-expansion off); `control` (true for the hash-embedding fixture, whose numbers say nothing about search quality).
+expansion off); `control` (true for the hash-embedding fixture, whose numbers say nothing about search quality);
+`pgvector_version` (the pgvector extension version in the database searched, for every barrier); and, on a copy,
+`source_pgvector`, `source_server_version_num`, `copy_server_version_num` and `restore_errors`, read from the row
+`snapshot.sh` writes into the marker table (the copy runs the container image's pgvector, which can differ from the
+source's). Versions are `null` unless they are plain version numbers; each of the five is `null` when unknown or not a
+copy.
 
 **`custody`**: `readonly_verified_start` and `readonly_verified_end` (the session reported
 `default_transaction_read_only = on` and gbrain's direct pool was off, before the first search and after the last),
@@ -73,15 +78,19 @@ Rates, deltas and intervals are fractions rounded to four decimals; the Markdown
 
 ## scorecard.md
 
-A header naming the gbrain version and commit, schema, engine, barrier and mode (and a control warning for the
-fixture); a table of every arm on all question forms (success@1, 5, 10, 20, MRR, pages returned); success@5 by type and
+A header naming the gbrain version and commit, schema, engine, barrier, pgvector version and mode (with a control
+warning for the fixture, and a warning that vector search on the copy may differ from the live brain when the source's
+pgvector differs from the copy's or the restore reported errors); a table of every arm on all question forms (success@1, 5, 10, 20, MRR, pages returned); success@5 by type and
 form; every paired comparison with its interval, p, Holm p and MDE; and a custody paragraph (read-only checks, guard
 refusals, exclusions).
 
 ## compare.json (live-recall-compare/v1)
 
-`run.ts compare --a <run dir> --b <run dir>` reads two runs' detail files on the box and pairs them per arm and form
-(`all`, `exact`, `paraphrase`) on question forms that are `ok` in both. Each row has the comparison fields above
+`run.ts compare --a <run dir> --b <run dir>` reads two runs' `scorecard.json` and detail files on the box. It refuses
+with `LR_FREEZE_MISMATCH` when the runs used different question files and with `LR_COMPARE_CONTROL` when either is a
+fixture control. `run_a` and `run_b` carry each run's `gbrain_loaded_version`, `gbrain_loaded_commit`, `barrier`,
+`control` and `freeze_sha_prefix`, so a swapped pair shows. It pairs the runs per arm and form (`all`, `exact`,
+`paraphrase`) on question forms that are `ok` in both. Each row has the comparison fields above
 with `a: "run_a"`, `b: "run_b"`, `id` `run_b_vs_run_a_<arm>_<form>`, and `top5_changed` (how many forms' first
 five pages differ). It passes the same structural check.
 

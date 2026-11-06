@@ -28,6 +28,7 @@ export const ABORT_CODES = {
   LR_SCHEMA_MISMATCH: 'Run with --gbrain <checkout>@<commit> at the gbrain version that wrote the brain.',
   LR_QUESTIONS_INVALID: 'Fix the question file at the reported line and field, then rerun freeze.',
   LR_FREEZE_MISMATCH: 'Rerun freeze on this exact question file and send the new freeze numbers before the counted run.',
+  LR_COMPARE_CONTROL: 'One run directory is a --fixture control; compare two counted runs made on the same frozen question file.',
   LR_GOLD_MISSING_CAP: 'More than 10% of gold pages are absent from the brain; fix the gold slugs or use a fresher copy.',
   LR_RERANK_NEEDS_TYPESAFE: 'The configured reranker needs a TypeSafe key; ask GBEV-3 how to measure the configured arm.',
   LR_CUSTODY_LEAK: 'An output file would have carried private text; nothing was written. Report the field name to GBEV-3.',
@@ -57,8 +58,9 @@ export async function proveBarrier(raw: Raw): Promise<BarrierKind> {
   if (role && role.superuser === false) {
     const [writable] = await raw(
       "SELECT count(*)::int AS n FROM pg_class c JOIN pg_namespace s ON s.oid = c.relnamespace " +
-      "WHERE c.relkind IN ('r', 'p') AND s.nspname NOT IN ('pg_catalog', 'information_schema') AND s.nspname NOT LIKE 'pg_toast%' " +
-      "AND (has_table_privilege(c.oid, 'INSERT') OR has_table_privilege(c.oid, 'UPDATE') OR has_table_privilege(c.oid, 'DELETE') OR has_table_privilege(c.oid, 'TRUNCATE'))",
+      "WHERE c.relkind IN ('r', 'p', 'v', 'm', 'f') AND s.nspname NOT IN ('pg_catalog', 'information_schema') AND s.nspname NOT LIKE 'pg_toast%' " +
+      "AND (has_table_privilege(c.oid, 'INSERT') OR has_table_privilege(c.oid, 'UPDATE') OR has_table_privilege(c.oid, 'DELETE') OR has_table_privilege(c.oid, 'TRUNCATE') " +
+      "OR has_any_column_privilege(c.oid, 'INSERT') OR has_any_column_privilege(c.oid, 'UPDATE'))",
     );
     const [creatable] = await raw(
       "SELECT count(*)::int AS n FROM pg_namespace s WHERE s.nspname NOT IN ('pg_catalog', 'information_schema') AND s.nspname NOT LIKE 'pg_%' AND has_schema_privilege(s.oid, 'CREATE')",
@@ -83,7 +85,7 @@ function structure(sql: string): string {
 
 const READ_LEADS = new Set(['select', 'with', 'values', 'show', 'explain', 'table']);
 const TX_CONTROL = new Set(['commit', 'rollback', 'end', 'savepoint', 'release']);
-const DATA_MODIFYING = /\b(insert\s+into|update\s+[a-z_."]+(\s+[a-z_]+)?\s+set|delete\s+from|merge\s+into|truncate)\b/;
+const DATA_MODIFYING = /\b(insert\s+into|update\s+(only\s+)?[a-z_."]+(\s+(as\s+)?[a-z_]+)?\s+set|delete\s+from|merge\s+into|truncate)\b/;
 const WRITE_FUNCTIONS = /\b(nextval|setval|lo_[a-z_]+|dblink[a-z_]*|pg_file_write|pg_terminate_backend|pg_cancel_backend|pg_reload_conf)\s*\(/;
 
 export type SqlVerdict = { ok: true } | { ok: false; verb: string };
@@ -98,6 +100,7 @@ export function classifySql(sql: string): SqlVerdict {
     const lead = statement.split(' ')[0]!;
     if (READ_LEADS.has(lead)) {
       if (DATA_MODIFYING.test(statement)) return { ok: false, verb: 'data_modifying_cte' };
+      if (/\binto\b/.test(statement)) return { ok: false, verb: 'select_into' };
       if (WRITE_FUNCTIONS.test(statement)) return { ok: false, verb: 'write_function' };
       for (const call of statement.matchAll(/\bset_config\s*\(([^()]*)\)/g)) {
         if (call[1]!.split(',').at(-1)!.trim() !== 'true') return { ok: false, verb: 'set_config_session' };

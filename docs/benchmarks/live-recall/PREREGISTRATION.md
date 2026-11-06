@@ -176,5 +176,7 @@ differs from the freeze.
 - A snapshot is static. A brain whose index is still building is measured in that state, and the degraded-stage counts
   show it.
 - The copy runs in a local container, so latency is harness latency, not what Garry sees.
+- The copy runs the container image's pgvector, which can differ from the live brain's, and the scorecard records both
+  versions and the restore error count.
 - The fixture control in CI uses hash embeddings and a token-overlap reranker. It proves the harness, not search
   quality.
