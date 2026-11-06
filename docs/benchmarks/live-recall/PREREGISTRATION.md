@@ -227,14 +227,19 @@ Supabase's session pooler and proves the barrier itself before any search.
 ## Batch 2 amendment
 
 Fixed on 2026-11-06 by GBEV-3, after batch 1's results and before the batch 2 question set was frozen. Batch 2 is a
-second, independent set of 50 questions. Arms, metrics, eligibility, custody and the decision rules are unchanged; the
-primary comparison and the declared secondaries change.
+second, independent set of 50 questions. Arms, metrics, eligibility, custody and the decision rules are unchanged. The
+primary comparison, the declared secondaries and the gbrain version under test change.
 
 **Why.** Batch 1's P1, `hybrid` minus `hybrid_lexical` over both forms, came out at +10 points (95% interval 1 to
 20, Holm p 0.092) against a minimum detectable difference of 14.4, so it does not hold, and its R48 verdict is KEEP
 (underpowered). Exact forms leave vectors little room: `hybrid_lexical` already found 82% of them. On paraphrases the
 two arms found 12% and 34%. That reading comes from batch 1's data, so the sharper primary is tested on new questions,
 never on batch 1's.
+
+**System under test.** Batch 2's counted run measures the gbrain that Wintermute's box runs after its scheduled upgrade
+to the stable release v0.60.593.0 (2026-11-07, 11:20 UTC), so it measures what is deployed, as GBRA-108 asked. The
+runner loads it with `--gbrain <checkout>@<commit>` at that release and refuses a brain whose schema version differs
+from the loaded code, as for batch 1. The scorecard records the loaded version and commit beside the repository's pin.
 
 **Primary (Holm-corrected across the two, on success@5):**
 
@@ -244,10 +249,16 @@ never on batch 1's.
 
 **Declared secondaries** (reported with intervals, not Holm-adjusted):
 
-- `batch1_p1_hybrid_vs_hybrid_lexical`: batch 1's P1, both forms, on batch 2's questions, as a replication.
-- The pooled analysis: batch 1's counted run (attempt 2) and batch 2's scored as one set of 100 questions with batch 2's
-  comparisons, by `run.ts pool` on the box. It refuses two runs on the same question file, a fixture control, and runs
-  whose gbrain commit or search settings differ.
+- `batch1_p1_hybrid_vs_hybrid_lexical`: batch 1's P1, both forms, on batch 2's questions, as a replication. It is
+  compared across versions: batch 1 measured gbrain 0.60.577.0 and batch 2 measures 0.60.593.0.
+- The pooled analysis: batch 1's counted run (attempt 2, gbrain 0.60.577.0 at `52b9ccae`) and a batch 2 run on the
+  same gbrain, scored as one set of 100 questions with batch 2's comparisons, by `run.ts pool` on the box. `pool`
+  refuses two runs on the same question file, a fixture control, and runs whose gbrain commit or search settings
+  differ, so its batch 2 half is a second run of the frozen batch 2 file at `52b9ccae`, made before the upgrade or
+  afterwards if the brain's schema version still matches. Without such a run the pooled analysis is reported as not
+  computable.
+- The version change: `run.ts compare` between batch 2's two runs (`52b9ccae` and 0.60.593.0, the same questions),
+  reported as a descriptive row, when both runs exist.
 - Every descriptive comparison listed under [Comparisons](#comparisons).
 
 **The protocol is frozen with the questions.** Wintermute freezes batch 2 with `run.ts freeze --protocol batch2`.
@@ -263,6 +274,10 @@ time_window question.
 `LR_ARM_PREFLIGHT` if any arm errors, is refused a model call, fails its reranker open or reports a failure stage. It
 changes no counted number. It stops a run like batch 1's first attempt, which lost every hybrid-search arm to a missing
 grant, before the run uses the question set.
+
+**Synopsis coverage.** GBRA-295 is to send, as aggregates, the share of the brain's chunks that carry `tokenmax`'s
+per-chunk synopsis vectors and which of its triggers set `keyword_candidates_incomplete`. The batch 2 report carries
+them as a note; no arm is added.
 
 **Barrier.** A new `no_write_privilege` role from GBRA-108 with batch 1's final grants: SELECT on gbrain's tables,
 USAGE on `extensions`, BYPASSRLS, EXECUTE on the five helper functions that are not SECURITY DEFINER (listed in

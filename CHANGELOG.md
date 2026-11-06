@@ -22,7 +22,8 @@ This records what each gbrain-evals release changed and what its measurements me
   scorecard's P1 is `hybrid` minus `hybrid_lexical` on paraphrases (`p1_hybrid_vs_hybrid_lexical_paraphrase`), P2
   is unchanged, and batch 1's both-forms P1 becomes the secondary `batch1_p1_hybrid_vs_hybrid_lexical`. Every
   scorecard now carries a top-level `protocol`. The preregistration's new batch 2 amendment fixes all this before
-  batch 2 is frozen.
+  batch 2 is frozen. It also moves batch 2's counted run to the gbrain the box runs after its upgrade to v0.60.593.0,
+  keeps the pool to runs on one gbrain commit, and labels batch 1's P1 replication as compared across versions.
 - **Pooling.** `run.ts pool --a <run dir> --b <run dir>` scores two counted runs on different question files as one
   set, with batch 2's comparisons all secondary, and writes an aggregate `pool.json`. It refuses fixture controls, and
   runs on the same file or with different gbrain commits or search settings (`LR_POOL_MISMATCH`).
