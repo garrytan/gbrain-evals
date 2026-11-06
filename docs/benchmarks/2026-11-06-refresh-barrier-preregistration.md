@@ -28,7 +28,10 @@ tasks never run before, on the build named below.
   GBRA-347's two findings, for the crash-resume refusal found by the G-compatibility smoke below (seed 33), which
   GBRA-108 routed to GBRA-341 on 2026-11-06, and for GST-1674: the two crash-resume shapes that still ended
   `refresh_recovery_required` at f04429da (a plain-git foreign commit in the fence window, and a commit landing between the
-  merge and its bookkeeping). Amendment 1 records its sha before the first counted trial. Besides the sha it may carry only
+  merge and its bookkeeping). It must also contain GST-1623's fixes for the flag-on items #8705 landed with (held writes
+  that take managed sync's outstanding slots and stall the importer, an expiry recheck race, and capture's supersedes), so
+  the verdict judges the build that turns the flag on. Amendment 1 records its sha before the first counted trial. Besides
+  the sha it may carry only
   compatibility fixes that the G-compatibility smoke below calls for and that touch no classifier, threshold or schedule,
   with the changed files re-hashed and one reviewer. Trials load G from a clean checkout with `bun install`
   (`--gbrain-root`); `run.ts` refuses a checkout with uncommitted changes, and a counted run refuses one whose HEAD is not
