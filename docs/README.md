@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.168, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
+gbrain-evals v0.10.169, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -271,6 +271,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-06: Opening names v0.10.169
+
+The opening names gbrain-evals v0.10.169 (was v0.10.168). That release records batch 2's frozen sample in the
+live-recall preregistration's batch 2 amendment; no row changes.
 
 ### 2026-11-06: Live-recall batch 1 results row; opening names v0.10.168
 

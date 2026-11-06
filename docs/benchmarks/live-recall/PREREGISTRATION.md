@@ -4,7 +4,8 @@ This fixes the method, comparisons and decision rules for each live-recall quest
 It reports no result; batch 1's results are in the [batch 1 findings](../2026-11-06-live-recall-batch1.md). Batch 1's
 sample size (50 questions), question file hash and minimum detectable difference are under
 [Frozen sample](#frozen-sample), taken from Wintermute's freeze output before the counted run. A second, independent
-question set, batch 2, runs under the [batch 2 amendment](#batch-2-amendment), fixed before that set was frozen.
+question set, batch 2, runs under the [batch 2 amendment](#batch-2-amendment), fixed before that set was frozen; its
+frozen sample (N, question file hash and minimum detectable differences) closes the amendment.
 
 ## The question
 
@@ -288,9 +289,42 @@ USAGE on `extensions`, BYPASSRLS, EXECUTE on the five helper functions that are 
 the minimum detectable difference is 18.6 points, so batch 2 can detect an effect the size batch 1 showed and not much
 smaller. The pooled analysis, at N = 100, detects 8.9, 12.5 and 15.3 points at the same shares.
 
-**Before the counted run.** Batch 2's freeze numbers (N, the question file's hash and the minimum detectable
-differences) are committed here before its counted run, as batch 1's were. Phase 2 stays held until batch 2 lands and
-GBRA-108 answers on the paraphrase gap.
+**Batch 2 frozen sample.** Frozen on 2026-11-06 from Wintermute's `run.ts freeze --protocol batch2` output at
+gbrain-evals `07bed75d`, before any batch 2 search. The runner refuses a question file whose hash differs from this
+one, or a run whose protocol differs from `batch2`.
+
+- **N = 50 questions** (100 question forms), 10 of each type. All 10 time_window questions carry a window, so
+  `configured_window` runs on 20 forms.
+- **Question file sha256:** `dd69701c55534429fb758ca8335af175a3dfcc3c9aca6c9c2d2fc81bf3f11099`.
+- **Minimum detectable difference** in success@5 at N = 50 (two-sided alpha 0.05, 80% power), in points:
+
+| Comparison | 10% discordant | 20% discordant | 30% discordant |
+|---|---|---|---|
+| P1, `hybrid` minus `hybrid_lexical`, paraphrase forms | 12.5 | 17.7 | 21.7 |
+| P2, `configured` minus `hybrid_lexical`, paraphrase forms | 12.5 | 17.7 | 21.7 |
+| `batch1_p1_hybrid_vs_hybrid_lexical`, both forms (forms independent to fully correlated) | 8.9 to 12.5 | 12.5 to 17.7 | 15.3 to 21.7 |
+
+Wintermute's notes on the sample, aggregates only:
+
+- 58 distinct gold pages, none of them a batch 1 gold page, and no question id shared with batch 1 (checked against
+  batch 1's question file).
+- Gold was chosen page first from a seeded sample (seed 4302) of 70 recent and 70 older pages, skipping held pages,
+  READMEs, transcripts and batch 1's gold pages. One cross_source gold page is off-sample: Wintermute followed it from a
+  sampled page. An earlier draw was discarded unused, and the question file was checked unchanged afterwards.
+- The 10 error_string questions have 10 distinct gold pages, one each, drawn from a separate seeded shuffle of 310
+  matches outside ops: 9 archived chat transcripts and 1 meeting page.
+- 33 of the 58 gold pages are dated 2026-10-09 or later, by the date in their path.
+- Import lag: email pages from 2026-10-30 onward do not resolve on the box, while email pages through 10-28 and
+  meeting pages through 11-06 do. Five gold pages that failed to resolve were swapped for pages that resolve, so the
+  newest email pages are not in the sample. GBRA-108 and GBRA-295 have been told.
+- By source (a field the runner ignores): meeting 27, brain 13, conversation 9, ops 1.
+- None of the 50 is a real ask that once failed: every such ask Wintermute could recall was answered only in a
+  session, never on a page.
+- Wintermute again rates some cross_source pairings as weak; the count is reported with the results.
+- Its own checks before the freeze: every gold slug resolves, every exact form's key tokens are in its gold page, no
+  paraphrase contains them, and ids are unique.
+
+Phase 2 stays held until batch 2 lands and GBRA-108 answers on the paraphrase gap.
 
 ## Limits
 

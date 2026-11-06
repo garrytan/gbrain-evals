@@ -2,6 +2,22 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.169] - 2026-11-06
+
+### Live recall: batch 2's frozen sample is in the preregistration (GBEV-43)
+
+- **The frozen sample.** Wintermute froze batch 2 with `run.ts freeze --protocol batch2` at gbrain-evals `07bed75d`,
+  before any batch 2 search, and the batch 2 amendment in `docs/benchmarks/live-recall/PREREGISTRATION.md` now records
+  it: 50 questions (100 question forms), 10 of each type, all 10 time_window questions windowed, and the question
+  file's sha256 (`dd69701c55534429fb758ca8335af175a3dfcc3c9aca6c9c2d2fc81bf3f11099`). The runner refuses a different
+  question file or a run whose protocol is not `batch2`.
+- **Minimum detectable differences.** A table gives the minimum detectable difference in success@5 at N = 50: 12.5,
+  17.7 and 21.7 points for P1 and P2 on paraphrase forms at 10%, 20% and 30% discordant pairs, and 8.9 to 12.5, 12.5
+  to 17.7 and 15.3 to 21.7 points for batch 1's P1 replicated on both forms. Wintermute's aggregate notes on the sample
+  sit beside it, including the five gold pages swapped out because email pages from 2026-10-30 onward do not resolve.
+- No code, existing number or decision rule changed. Phase 2 stays held until batch 2 lands and GBRA-108 answers on
+  the paraphrase gap. The preregistration still reports no batch 2 result.
+
 ## [0.10.168] - 2026-11-06
 
 ### Live recall: batch 1 results, an arm preflight, and batch 2's preregistered primary (GBEV-43)
