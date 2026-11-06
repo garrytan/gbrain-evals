@@ -202,6 +202,7 @@ These documents fix a method before measuring. They publish no capability scores
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
 | Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? | [November 1 SkillOpt method preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md) with three amendments: Haiku 5.5 probes 1 and 2 ([probe 1's summary](benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json)), the frontier probe on Opus 5.5 and GPT-6.1 Sol, and the one test-split read reported in the [November 2 report](benchmarks/2026-11-01-skillopt-method/REPORT.md); task sets: [v2](../eval/data/skillopt-method-v2/README.md), which the probe reads, and the frozen [v1](../eval/data/skillopt-method-v1/README.md) |
+| Does gbrain's refresh write barrier (`persistence.refresh_barrier`) land every write made during a refresh exactly once and in order, without slowing writes, changing retrieval or confusing agents? | [November 6 refresh write barrier preregistration](benchmarks/2026-11-06-refresh-barrier-preregistration.md): keyless concurrency trials (2,000), a quiet write-latency block and GBRA-108's named case on both engines, Cat 18 and Cat 26 off against on, and an agent check on claude-opus-5-5, gpt-6.1-sol and particle-1; the build under test is pinned by its first amendment. gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. ([Disclosures](disclosures.md)) |
 | How often does gbrain's search put the right page first on Garry's own brain, by kind of question and by exact or paraphrased wording, and what do vectors and the configured reranker add over gbrain's own lexical search (keyword search is a descriptive contrast)? | [Live-recall preregistration](benchmarks/live-recall/PREREGISTRATION.md) (phase 1, gbrain 0.60.577.0 on the box that holds the brain), with its [run kit](benchmarks/live-recall/RUN-KIT.md) and [scorecard format](benchmarks/live-recall/SCORECARD.md); the questions stay private on that box, which reads the brain behind a read-only barrier (a disposable copy by default, a role that cannot write for the counted run) and sends back aggregates only. CI runs the same harness keyless on the public [live-recall-v1 fixture](../eval/data/live-recall-v1/README.md) |
 
 ## Data and methods
@@ -271,6 +272,12 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-06: refresh write barrier preregistration row
+
+"Protocols and preregistrations" gains a row for the
+[refresh write barrier preregistration](benchmarks/2026-11-06-refresh-barrier-preregistration.md) (GBEV-44, for
+GBRA-108).
 
 ### 2026-11-06: Opening names v0.10.167
 
