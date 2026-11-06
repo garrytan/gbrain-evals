@@ -1,0 +1,458 @@
+#!/usr/bin/env bun
+/**
+ * Live recall: recall@k and per-query-type retrieval ablations on a private
+ * question set, run on the box that holds the brain. Only an aggregate
+ * scorecard leaves that box.
+ *
+ *   bun eval/runner/live-recall/run.ts run --fixture
+ *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json>
+ *   bun eval/runner/live-recall/run.ts run --questions <private.jsonl> --freeze <freeze.json> \
+ *     --gbrain <gbrain checkout>@<commit> [--database-url-env LIVE_RECALL_DATABASE_URL] [--out <dir>]
+ *   bun eval/runner/live-recall/run.ts compare --a <run dir> --b <run dir> --out <dir>
+ *
+ * --fixture builds the public 30-page fixture brain in memory with hash
+ * embeddings and a token-overlap reranker (with --questions, it asks those
+ * questions of the fixture instead of its own): a keyless harness control whose
+ * numbers say nothing about search quality. A real run opens a Postgres brain
+ * only after brain.ts proves a server-side read-only barrier. The run kit,
+ * abort codes and scorecard format are in docs/benchmarks/live-recall/.
+ */
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, statSync, writeFileSync, writeSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
+import { rankOfFirstHit, recallAllAtK, uniqueInOrder } from '../metrics.ts';
+import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
+import { gbrainPin } from '../gbrain-version.ts';
+import { normalQuantile } from '../stats/paired.ts';
+import { ABORT_CODES, COPY_MARKER_TABLE, LiveRecallAbort, checkSchema, installGuards, openPostgresBrain, verifyReadOnly, type GuardCounters } from './brain.ts';
+import { ARMS, GOLD_FOUND_BY, KS, TYPES, buildScorecard, compareRuns, renderMarkdown, scanForLeaks, validateScorecard, type Arm, type Form, type QType, type QueryRecord, type Status } from './scorecard.ts';
+
+const REPO_ROOT = resolve(import.meta.dir, '../../..');
+export const FIXTURE_DIR = join(REPO_ROOT, 'eval/data/live-recall-v1');
+export const FIXTURE_DIM = 256;
+/** Chunks fetched by every arm except configured, which keeps gbrain's own default limit. */
+export const CHUNK_FETCH = 50;
+const PAGE_DEPTH = 20;
+/** More than this share of questions with an absent gold page aborts the run. */
+export const GOLD_MISSING_CAP = 0.1;
+
+export interface Question {
+  id: string;
+  type: QType;
+  forms: Record<Form, string>;
+  gold: Array<{ slug: string; chunk_ids?: number[] }>;
+  gold_found_by: string;
+  window?: { since: string; until: string };
+}
+
+/** Parse the private question file. A refusal names the line and the field, never the content. */
+export function parseQuestions(text: string): Question[] {
+  const out: Question[] = [];
+  const ids = new Set<string>();
+  text.split('\n').forEach((line, i) => {
+    if (!line.trim()) return;
+    const bad = (field: string) => new LiveRecallAbort('LR_QUESTIONS_INVALID', 'line ' + (i + 1) + ' field ' + field);
+    let q: any;
+    try { q = JSON.parse(line); } catch { throw bad('json'); }
+    if (typeof q?.id !== 'string' || !/^[A-Za-z0-9_.-]{1,64}$/.test(q.id) || ids.has(q.id)) throw bad('id');
+    if (!(TYPES as readonly string[]).includes(q.type)) throw bad('type');
+    const forms = {} as Record<Form, string>;
+    for (const form of ['exact', 'paraphrase'] as const) {
+      const v = q.forms?.[form];
+      if (typeof v !== 'string' || !v.trim()) throw bad('forms.' + form);
+      forms[form] = v;
+    }
+    if (!Array.isArray(q.gold) || q.gold.length === 0) throw bad('gold');
+    const gold = q.gold.map((g: any, j: number) => {
+      if (typeof g?.slug !== 'string' || !g.slug.trim()) throw bad('gold[' + j + '].slug');
+      if (g.chunk_ids !== undefined && (!Array.isArray(g.chunk_ids) || !g.chunk_ids.every((c: unknown) => Number.isInteger(c)))) throw bad('gold[' + j + '].chunk_ids');
+      return g.chunk_ids ? { slug: g.slug, chunk_ids: g.chunk_ids } : { slug: g.slug };
+    });
+    const foundBy = q.gold_found_by ?? 'unknown';
+    if (!(GOLD_FOUND_BY as readonly string[]).includes(foundBy)) throw bad('gold_found_by');
+    let window: Question['window'];
+    if (q.window !== undefined) {
+      const iso = /^\d{4}-\d{2}-\d{2}/;
+      if (typeof q.window?.since !== 'string' || typeof q.window?.until !== 'string' || !iso.test(q.window.since) || !iso.test(q.window.until)) throw bad('window');
+      window = { since: q.window.since, until: q.window.until };
+    }
+    ids.add(q.id);
+    out.push({ id: q.id, type: q.type, forms, gold, gold_found_by: foundBy, ...(window ? { window } : {}) });
+  });
+  if (out.length === 0) throw new LiveRecallAbort('LR_QUESTIONS_INVALID', 'no questions');
+  return out;
+}
+
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+
+/** Tokens that look like identifiers or error codes: digits, underscores, or a leading run of capitals. */
+export function identifierTokens(text: string): Set<string> {
+  return new Set(text.split(/[\s,;()"]+/).filter(t => /[0-9_]/.test(t) || /^[A-Z]{3,}/.test(t)).map(t => t.toLowerCase().replace(/[.,:;'"?]+$/, '')).filter(t => t.length >= 3));
+}
+
+function paraphraseOverlapShare(questions: Question[]): number {
+  if (!questions.length) return 0;
+  const leaky = questions.filter(q => [...identifierTokens(q.forms.exact)].some(t => q.forms.paraphrase.toLowerCase().includes(t)));
+  return Math.round((leaky.length / questions.length) * 10000) / 10000;
+}
+
+/** Minimum detectable difference in success@5 for a paired comparison: two-sided 0.05, 80% power. */
+export function mde(pairs: number, discordant: number): number {
+  return Math.round((normalQuantile(0.975) + normalQuantile(0.8)) * Math.sqrt(discordant / pairs) * 10000) / 10000;
+}
+
+/** The numbers Wintermute sends before a counted run; we commit them to the preregistration. */
+export function freezeSummary(text: string, questions: Question[]) {
+  const n = questions.length;
+  const byPd = (f: (pd: number) => unknown) => ({ pd10: f(0.1), pd20: f(0.2), pd30: f(0.3) });
+  return {
+    schema: 'live-recall-freeze/v1',
+    questions_sha256: sha256(text),
+    n_questions: n,
+    by_type: Object.fromEntries(TYPES.map(t => [t, questions.filter(q => q.type === t).length])),
+    windowed_time_window: questions.filter(q => q.type === 'time_window' && q.window).length,
+    mde_success_at_5: {
+      p1_both_forms_range: byPd(pd => [mde(2 * n, pd), mde(n, pd)]),
+      p2_paraphrase: byPd(pd => mde(n, pd)),
+    },
+  };
+}
+
+type Kind = 'chat' | 'embedding' | 'rerank' | 'multimodal' | 'decide' | 'transcription';
+export interface SearchContext {
+  engine: any;
+  hybridSearch: (engine: any, query: string, opts: Record<string, unknown>) => Promise<any[]>;
+  withGuard: <T>(guard: (call: { kind: Kind }) => Promise<{ settle: (u: unknown) => Promise<void> }>, run: () => Promise<T>) => Promise<T>;
+  rerankerEnabled: boolean;
+  embeddingOptedOut: boolean;
+}
+
+/**
+ * Degraded stages that mean a provider or an arm failed, so the query did not
+ * run as the arm promises and is excluded. Every other stage gbrain reports
+ * (keyword_zero, budget_truncated, a pending index and so on) is how the brain
+ * behaves; those queries count, and the scorecard reports each stage's count.
+ */
+export const FAILURE_STAGES: ReadonlySet<string> = new Set(['embed_unavailable', 'embed_timeout', 'vector_arm_failed', 'keyword_arm_failed', 'title_arm_failed', 'rerank_failed', 'rerank_passthrough']);
+
+interface Gold { pages: Set<string>; chunks: Set<string> }
+
+async function runArm(ctx: SearchContext, arm: Arm, base: Pick<QueryRecord, 'qid' | 'type' | 'form' | 'gold_pages' | 'has_chunk_gold'>, gold: Gold, allowed: Kind[], search: (onMeta: (m: any) => void) => Promise<any[]>): Promise<QueryRecord> {
+  const calls: Record<string, number> = {};
+  let refused = false;
+  let meta: any;
+  const guard = async (call: { kind: Kind }) => {
+    calls[call.kind] = (calls[call.kind] ?? 0) + 1;
+    if (!allowed.includes(call.kind)) {
+      refused = true;
+      throw new Error('live-recall refused a ' + call.kind + ' call');
+    }
+    return { settle: async () => {} };
+  };
+  let results: any[] = [];
+  let status: Status = 'ok';
+  const t0 = performance.now();
+  try {
+    results = (await ctx.withGuard(guard, () => search(m => { meta = m; }))) ?? [];
+  } catch {
+    status = 'error';
+  }
+  const ms = Math.round(performance.now() - t0);
+  if (refused) status = 'ai_refused';
+  const degraded = ((meta?.degraded ?? []) as Array<{ stage?: unknown }>).map(d => String(d.stage)).filter(s => /^[a-z_]+$/.test(s));
+  if (status === 'ok' && degraded.some(s => FAILURE_STAGES.has(s))) status = 'degraded';
+  if (status === 'ok' && arm.startsWith('configured') && ctx.rerankerEnabled && results.length > 0 && !results.some(r => typeof r.rerank_score === 'number')) status = 'rerank_fail_open';
+  const pages = uniqueInOrder(results.map(r => String(r.slug))).slice(0, PAGE_DEPTH);
+  const chunks = uniqueInOrder(results.map(r => String(r.chunk_id))).slice(0, CHUNK_FETCH);
+  const pageRank = rankOfFirstHit(pages, gold.pages);
+  const chunkRank = gold.chunks.size ? rankOfFirstHit(chunks, gold.chunks) : Infinity;
+  return {
+    ...base, arm, status, pages, chunks,
+    page_rank: Number.isFinite(pageRank) ? pageRank : null,
+    chunk_rank: Number.isFinite(chunkRank) ? chunkRank : null,
+    all_found_at: Object.fromEntries(KS.map(k => ['k' + k, recallAllAtK(pages, gold.pages, k) === 1])),
+    ms, returned: pages.length, calls, degraded_stages: degraded,
+  };
+}
+
+/** Every arm for every question form, sequentially. The hybrid arm runs first so vector reuses its query embedding. */
+export async function runQuestions(ctx: SearchContext, questions: Question[], progress?: (done: number) => void): Promise<QueryRecord[]> {
+  const records: QueryRecord[] = [];
+  const hybridOpts = { limit: CHUNK_FETCH, expansion: false, crossModal: 'text', autocut: false, reranker: { enabled: false, topNIn: 25, topNOut: null } };
+  for (const [i, q] of questions.entries()) {
+    const gold: Gold = { pages: new Set(q.gold.map(g => g.slug)), chunks: new Set(q.gold.flatMap(g => (g.chunk_ids ?? []).map(String))) };
+    for (const form of ['exact', 'paraphrase'] as const) {
+      const text = q.forms[form];
+      const base = { qid: q.id, type: q.type, form, gold_pages: gold.pages.size, has_chunk_gold: gold.chunks.size > 0 };
+      let embedding: Float32Array | null = null;
+      const skipped = (arm: Arm): QueryRecord => ({ ...base, arm, status: 'skipped', pages: [], chunks: [], page_rank: null, chunk_rank: null, all_found_at: {}, ms: 0, returned: 0, calls: {}, degraded_stages: [] });
+      if (ctx.embeddingOptedOut) records.push(skipped('hybrid'));
+      else records.push(await runArm(ctx, 'hybrid', base, gold, ['embedding'], onMeta => ctx.hybridSearch(ctx.engine, text, { ...hybridOpts, onMeta, onQueryEmbedding: (e: Float32Array) => { embedding = e; } })));
+      records.push(await runArm(ctx, 'keyword', base, gold, [], () => ctx.engine.searchKeyword(text, { limit: CHUNK_FETCH })));
+      records.push(await runArm(ctx, 'hybrid_lexical', base, gold, [], onMeta => ctx.hybridSearch(ctx.engine, text, { ...hybridOpts, onMeta, decide: { keywordOnly: true } })));
+      if (ctx.embeddingOptedOut) records.push(skipped('vector'));
+      else if (!embedding) records.push({ ...skipped('vector'), status: 'error' });
+      else {
+        const vector = embedding;
+        records.push(await runArm(ctx, 'vector', base, gold, [], () => ctx.engine.searchVector(vector, { limit: CHUNK_FETCH })));
+      }
+      records.push(await runArm(ctx, 'configured', base, gold, ['embedding', 'rerank'], onMeta => ctx.hybridSearch(ctx.engine, text, { expansion: false, crossModal: 'text', onMeta })));
+      if (q.type === 'time_window' && q.window) {
+        const w = q.window;
+        records.push(await runArm(ctx, 'configured_window', base, gold, ['embedding', 'rerank'], onMeta => ctx.hybridSearch(ctx.engine, text, { expansion: false, crossModal: 'text', since: w.since, until: w.until, onMeta })));
+      }
+    }
+    progress?.(i + 1);
+  }
+  return records;
+}
+
+/** Drop questions whose gold pages the brain does not hold; abort past the cap. */
+export async function presenceCheck(engine: any, questions: Question[]): Promise<{ kept: Question[]; missing: number }> {
+  const kept: Question[] = [];
+  for (const q of questions) {
+    let present = true;
+    for (const g of q.gold) if (!(await engine.getPage(g.slug))) present = false;
+    if (present) kept.push(q);
+  }
+  const missing = questions.length - kept.length;
+  if (missing / questions.length > GOLD_MISSING_CAP) throw new LiveRecallAbort('LR_GOLD_MISSING_CAP', missing + ' of ' + questions.length + ' questions have an absent gold page');
+  return { kept, missing };
+}
+
+function walkPages(dir: string, root = dir): Array<{ slug: string; body: string }> {
+  return readdirSync(dir).sort().flatMap(name => {
+    const full = join(dir, name);
+    if (statSync(full).isDirectory()) return walkPages(full, root);
+    return name.endsWith('.md') ? [{ slug: relative(root, full).replace(/\.md$/, ''), body: readFileSync(full, 'utf8') }] : [];
+  });
+}
+
+/** Point gbrain's gateway at keyless transports: hash embeddings and a token-overlap reranker. Returns the reset. */
+export async function useFixtureTransports(gut: GbrainUnderTest): Promise<() => void> {
+  const { hashEmbedVector } = await import('../cat18-embedding-providers.ts');
+  const { makeOverlapRerankTransport } = await import('../cat18b-embedding-rerank-matrix.ts');
+  const gateway = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
+  gateway.configureGateway({ embedding_model: 'openai:text-embedding-3-small', embedding_dimensions: FIXTURE_DIM, env: { OPENAI_API_KEY: 'fixture', VOYAGE_API_KEY: 'fixture' } });
+  gateway.__setEmbedTransportForTests(async (params: { values: string[] }) => ({ embeddings: params.values.map(t => hashEmbedVector(t, FIXTURE_DIM)), values: params.values, warnings: [] }));
+  gateway.__setRerankTransportForTests(makeOverlapRerankTransport());
+  return () => {
+    gateway.__setEmbedTransportForTests(null);
+    gateway.__setRerankTransportForTests(null);
+  };
+}
+
+/** Import the fixture pages, embedded, into an engine whose schema is initialised. */
+export async function ingestFixture(gut: GbrainUnderTest, engine: any): Promise<void> {
+  const { assertEmbedded } = await import('../import-embedded.ts');
+  const { importFromContent } = await importGbrain<any>(gut, 'src/core/import-file.ts');
+  for (const page of walkPages(join(FIXTURE_DIR, 'pages'))) assertEmbedded(await importFromContent(engine, page.slug, page.body, { noEmbed: false }), page.slug);
+}
+
+/** The public fixture as an in-memory PGLite brain with keyless transports, marked as a copy and set read-only. */
+export async function buildFixtureBrain(gut: GbrainUnderTest): Promise<{ engine: any; close: () => Promise<void> }> {
+  const reset = await useFixtureTransports(gut);
+  const { PGLiteEngine } = await importGbrain<any>(gut, 'src/core/pglite-engine.ts');
+  const engine = new PGLiteEngine();
+  await engine.connect({});
+  await engine.initSchema();
+  await ingestFixture(gut, engine);
+  await engine.executeRaw('CREATE TABLE public.' + COPY_MARKER_TABLE + ' (made_at timestamptz NOT NULL DEFAULT now())');
+  await engine.executeRaw('SET default_transaction_read_only = on');
+  return {
+    engine,
+    close: async () => {
+      reset();
+      await engine.disconnect();
+    },
+  };
+}
+
+/** Route every write to stdout, stderr and console into the run's local log; say() reaches the terminal. */
+export function captureOutput(logPath: string): { say: (line: string) => void; restore: () => void } {
+  const fd = openSync(logPath, 'a', 0o600);
+  const out = process.stdout.write.bind(process.stdout);
+  const saved = { out: process.stdout.write, err: process.stderr.write, log: console.log, info: console.info, warn: console.warn, error: console.error, debug: console.debug };
+  const sink = (chunk: unknown) => { writeSync(fd, typeof chunk === 'string' ? Buffer.from(chunk) : Buffer.from(chunk as Uint8Array)); return true; };
+  const line = (...args: unknown[]) => { writeSync(fd, args.map(a => (typeof a === 'string' ? a : String(a))).join(' ') + '\n'); };
+  process.stdout.write = sink as typeof process.stdout.write;
+  process.stderr.write = sink as typeof process.stderr.write;
+  console.log = console.info = console.warn = console.error = console.debug = line;
+  return {
+    say: (text: string) => { out('live-recall: ' + text + '\n'); },
+    restore: () => {
+      Object.assign(process.stdout, { write: saved.out });
+      Object.assign(process.stderr, { write: saved.err });
+      Object.assign(console, { log: saved.log, info: saved.info, warn: saved.warn, error: saved.error, debug: saved.debug });
+      closeSync(fd);
+    },
+  };
+}
+
+function git(args: string[]): string {
+  try { return execFileSync('git', ['-C', REPO_ROOT, ...args], { encoding: 'utf8' }).trim(); } catch { return ''; }
+}
+
+interface RunOptions { fixture: boolean; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest }
+
+/** One counted or control run. Returns the outbound file paths. */
+export async function liveRecall(o: RunOptions, say: (line: string) => void): Promise<{ scorecard: string; markdown: string; detail: string }> {
+  const startedAt = new Date().toISOString();
+  const counters: GuardCounters = { refusals: {} };
+  let questionsText: string;
+  if (o.fixture) questionsText = readFileSync(o.questionsPath ?? join(FIXTURE_DIR, 'questions.jsonl'), 'utf8');
+  else {
+    if (!o.questionsPath || !o.freezePath) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'a counted run needs --questions and --freeze');
+    questionsText = readFileSync(o.questionsPath, 'utf8');
+    const frozen = JSON.parse(readFileSync(o.freezePath, 'utf8'));
+    if (frozen?.questions_sha256 !== sha256(questionsText)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'question file hash differs from the freeze');
+  }
+  const questions = parseQuestions(questionsText);
+
+  let engine: any, barrier: string, connection: string, schemaVersion: number, close: () => Promise<void>;
+  if (o.fixture) {
+    const brain = await buildFixtureBrain(o.gut);
+    engine = brain.engine;
+    barrier = 'copy';
+    connection = 'in_process';
+    close = brain.close;
+    installGuards(engine, counters);
+    await verifyReadOnly(engine);
+    schemaVersion = (await checkSchema(engine, o.gut)).schema_version;
+  } else {
+    const brain = await openPostgresBrain(o.gut, o.databaseUrlEnv, counters);
+    ({ engine, barrier, connection, close } = brain);
+    schemaVersion = brain.schema_version;
+  }
+  say('gbrain ' + o.gut.version + ', schema ' + schemaVersion + ', barrier ' + barrier + ', connection ' + connection + '; read-only verified');
+  try {
+    const { loadSearchModeConfig, resolveSearchMode } = await importGbrain<any>(o.gut, 'src/core/search/mode.ts');
+    const knobs = resolveSearchMode(await loadSearchModeConfig(engine));
+    if (knobs.reranker_enabled && String(knobs.reranker_model).startsWith('typesafe:')) throw new LiveRecallAbort('LR_RERANK_NEEDS_TYPESAFE', 'configured reranker is a TypeSafe recipe');
+    const { hybridSearch } = await importGbrain<any>(o.gut, 'src/core/search/hybrid.ts');
+    const { withAIInvocationGuard } = await importGbrain<any>(o.gut, 'src/core/ai/invocation-guard.ts');
+    const { factEmbeddingDisabled } = await importGbrain<any>(o.gut, 'src/core/embedding-disabled.ts');
+    const { getEmbeddingModelProvenance } = await importGbrain<any>(o.gut, 'src/core/ai/gateway.ts');
+    const embeddingModel: string | null = getEmbeddingModelProvenance();
+    if (!embeddingModel) throw new LiveRecallAbort('LR_EMBEDDING_UNVERIFIED', 'no explicit embedding_model in the loaded gbrain config');
+    const ctx: SearchContext = { engine, hybridSearch, withGuard: withAIInvocationGuard, rerankerEnabled: knobs.reranker_enabled, embeddingOptedOut: await factEmbeddingDisabled(engine) };
+    if (!ctx.embeddingOptedOut) {
+      const { embed } = await importGbrain<any>(o.gut, 'src/core/ai/gateway.ts');
+      const embedOnly = async (call: { kind: Kind }) => {
+        if (call.kind !== 'embedding') throw new Error('live-recall refused a ' + call.kind + ' call');
+        return { settle: async () => {} };
+      };
+      try {
+        await withAIInvocationGuard(embedOnly, () => embed(['live-recall preflight']));
+      } catch {
+        throw new LiveRecallAbort('LR_EMBEDDING_UNAVAILABLE', 'one preflight query embedding failed');
+      }
+    }
+
+    const { kept, missing } = await presenceCheck(engine, questions);
+    say(questions.length + ' questions loaded, ' + missing + ' with an absent gold page; arms ' + ARMS.join(','));
+    const records = await runQuestions(ctx, kept, done => { if (done % 10 === 0 || done === kept.length) say(done + '/' + kept.length + ' questions'); });
+    await verifyReadOnly(engine);
+
+    const pinCommit = (gbrainPin().split('#')[1] ?? 'unknown').toLowerCase();
+    const identity = {
+      started_at: startedAt,
+      finished_at: new Date().toISOString(),
+      runner_commit: git(['rev-parse', 'HEAD']) || 'unknown',
+      runner_dirty: git(['status', '--porcelain', '--untracked-files=no']) !== '',
+      gbrain_pin_version: JSON.parse(readFileSync(join(REPO_ROOT, 'node_modules/gbrain/package.json'), 'utf8')).version,
+      gbrain_pin_commit: /^[0-9a-f]{7,64}$/.test(pinCommit) ? pinCommit : 'unknown',
+      gbrain_loaded_version: o.gut.version,
+      gbrain_loaded_commit: o.gut.overlay?.build.commit ?? (/^[0-9a-f]{7,64}$/.test(pinCommit) ? pinCommit : 'unknown'),
+      gbrain_overlay: o.gut.overlay !== null,
+      schema_version: schemaVersion,
+      engine: (o.fixture ? 'pglite' : 'postgres') as 'pglite' | 'postgres',
+      barrier,
+      connection,
+      search_mode: String(knobs.resolved_mode),
+      reranker_enabled: Boolean(knobs.reranker_enabled),
+      reranker_model: String(knobs.reranker_model),
+      embedding_model: embeddingModel,
+      mode_expansion: Boolean(knobs.expansion),
+      control: o.fixture,
+    };
+    const summary = {
+      loaded: questions.length,
+      gold_missing: missing,
+      by_type: Object.fromEntries(TYPES.map(t => [t, kept.filter(q => q.type === t).length])),
+      gold_found_by: Object.fromEntries(GOLD_FOUND_BY.map(g => [g, kept.filter(q => q.gold_found_by === g).length])),
+      paraphrase_shares_identifier_token: paraphraseOverlapShare(kept),
+      freeze_sha_prefix: sha256(questionsText).slice(0, 12),
+    };
+    mkdirSync(o.out, { recursive: true });
+    const detail = join(o.out, 'detail.local.jsonl');
+    writeFileSync(detail, records.map(r => JSON.stringify(r)).join('\n') + '\n', { mode: 0o600 });
+    const scorecard = buildScorecard(records, summary, identity, { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: counters.refusals });
+    const json = JSON.stringify(scorecard, null, 2) + '\n';
+    const markdown = renderMarkdown(scorecard);
+    const needles = new Set<string>([...questions.flatMap(q => [...Object.values(q.forms), ...q.gold.map(g => g.slug)]), ...records.flatMap(r => r.pages)]);
+    scanForLeaks(json + markdown, needles);
+    const jsonPath = join(o.out, 'scorecard.json'), mdPath = join(o.out, 'scorecard.md');
+    writeFileSync(jsonPath, json);
+    writeFileSync(mdPath, markdown);
+    return { scorecard: jsonPath, markdown: mdPath, detail };
+  } finally {
+    await close();
+  }
+}
+
+function flag(argv: string[], name: string): string | undefined {
+  const at = argv.indexOf(name);
+  return at >= 0 ? argv[at + 1] : undefined;
+}
+
+async function main(argv: string[]): Promise<number> {
+  const command = argv[0];
+  if (command === 'freeze') {
+    const path = flag(argv, '--questions'), out = flag(argv, '--out');
+    if (!path || !out) { console.error('usage: run.ts freeze --questions <file> --out <freeze.json>'); return 2; }
+    const text = readFileSync(path, 'utf8');
+    const summary = freezeSummary(text, parseQuestions(text));
+    writeFileSync(out, JSON.stringify(summary, null, 2) + '\n');
+    console.log('live-recall: freeze ' + out + ' (' + summary.n_questions + ' questions)');
+    return 0;
+  }
+  if (command === 'compare') {
+    const a = flag(argv, '--a'), b = flag(argv, '--b'), out = flag(argv, '--out');
+    if (!a || !b || !out) { console.error('usage: run.ts compare --a <run dir> --b <run dir> --out <dir>'); return 2; }
+    const read = (dir: string) => readFileSync(join(dir, 'detail.local.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as QueryRecord);
+    const result = compareRuns(read(a), read(b));
+    validateScorecard(result);
+    mkdirSync(out, { recursive: true });
+    writeFileSync(join(out, 'compare.json'), JSON.stringify(result, null, 2) + '\n');
+    console.log('live-recall: compare ' + join(out, 'compare.json'));
+    return 0;
+  }
+  if (command !== 'run') { console.error('usage: run.ts run|freeze|compare (see the header of this file)'); return 2; }
+  const fixture = argv.includes('--fixture');
+  const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall', new Date().toISOString().replace(/[:.]/g, '-') + (fixture ? '-fixture' : '')));
+  mkdirSync(out, { recursive: true, mode: 0o700 });
+  process.env.GBRAIN_AUDIT_DIR = out;
+  const { say, restore } = captureOutput(join(out, 'gbrain.local.log'));
+  try {
+    const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+    const paths = await liveRecall({ fixture, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut }, say);
+    say('scorecard (send these two files): ' + paths.scorecard + ' and ' + paths.markdown);
+    say('detail and gbrain log (stay on this box): ' + paths.detail + ' and ' + join(out, 'gbrain.local.log'));
+    return 0;
+  } catch (error) {
+    if (error instanceof LiveRecallAbort) {
+      say('ABORT ' + error.code + ': ' + error.detail);
+      say('fix: ' + ABORT_CODES[error.code] + ' (docs/benchmarks/live-recall/RUN-KIT.md#' + error.code.toLowerCase() + '). Side effects: none outside ' + out + '.');
+      return 3;
+    }
+    say('ABORT LR_INTERNAL: ' + (error instanceof Error ? error.name : 'unknown') + '; the full message is in ' + join(out, 'gbrain.local.log') + ', which stays on this box.');
+    console.error(error instanceof Error ? error.stack : String(error));
+    return 4;
+  } finally {
+    restore();
+  }
+}
+
+if (import.meta.main) process.exit(await main(process.argv.slice(2)));
