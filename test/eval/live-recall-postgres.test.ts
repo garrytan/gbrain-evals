@@ -1,8 +1,8 @@
 /**
  * Opt-in: the live-recall barrier and guards against a real Postgres server.
  *
- *   docker run -d --name lr-pg -e POSTGRES_PASSWORD=lrtest -p 127.0.0.1:55440:5432 pgvector/pgvector:pg17
- *   LIVE_RECALL_PG_TEST_URL=postgresql://postgres:lrtest@127.0.0.1:55440/postgres bun test test/eval/live-recall-postgres.test.ts
+ *   docker run -d --name lr-pg -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:55440:5432 pgvector/pgvector:pg17
+ *   LIVE_RECALL_PG_TEST_URL=postgresql://postgres:postgres@127.0.0.1:55440/postgres bun test test/eval/live-recall-postgres.test.ts
  *
  * The URL must name a superuser on a scratch server. The test builds the public
  * fixture brain in a database of its own, then runs the counted-run path
@@ -71,8 +71,8 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
   beforeAll(async () => {
     for (const k of ENV_KEYS) savedEnv[k] = process.env[k];
     for (const k of ENV_KEYS) delete process.env[k];
-    process.env.OPENAI_API_KEY = 'fixture-not-a-key';
-    process.env.VOYAGE_API_KEY = 'fixture-not-a-key';
+    process.env.OPENAI_API_KEY = 'fixture';
+    process.env.VOYAGE_API_KEY = 'fixture';
     dir = mkdtempSync(join(tmpdir(), 'live-recall-pg-'));
     process.env.GBRAIN_HOME = dir;
     mkdirSync(join(dir, '.gbrain'));
@@ -259,6 +259,8 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
       await expect(brain.engine.executeRaw("INSERT INTO search_telemetry (date) VALUES (now())")).rejects.toBeInstanceOf(GuardRefusal);
       await expect(brain.engine.executeRaw('SET default_transaction_read_only = off')).rejects.toBeInstanceOf(GuardRefusal);
       await expect(brain.engine.executeRaw("SELECT set_config('default_transaction_read_only', 'off', false)")).rejects.toBeInstanceOf(GuardRefusal);
+      await expect(brain.engine.executeRaw("SELECT set_config('default_transaction_read_only', 'off', true)")).rejects.toBeInstanceOf(GuardRefusal);
+      await expect(brain.engine.executeRaw("SELECT set_config('role', 'postgres', true)")).rejects.toBeInstanceOf(GuardRefusal);
       await expect(brain.engine.executeRaw('WITH x AS (DELETE FROM pages RETURNING 1) SELECT count(*) FROM x')).rejects.toBeInstanceOf(GuardRefusal);
       expect(await brain.engine.transaction(async (tx: any) => (await tx.executeRaw("SELECT current_setting('transaction_read_only') AS ro"))[0].ro)).toBe('on');
       await expect(brain.engine.setConfig('live_recall_probe', 'x')).rejects.toThrow(/read-only transaction/);

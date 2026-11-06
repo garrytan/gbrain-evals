@@ -107,7 +107,7 @@ describe('live-recall guards on PGLite', () => {
   }, 180_000);
 
   test('classifySql allows reads and transaction-local settings only', () => {
-    const ok = ['SELECT 1', '/* a /* nested */ DELETE FROM pages */ SELECT 1', "SELECT 'it''s; DELETE FROM pages'", "SELECT E'\\'; DELETE FROM pages'", 'WITH a AS (SELECT 1) SELECT * FROM a', "SELECT set_config('search_path', 'public', true)", "SET LOCAL hnsw.ef_search = 100", 'BEGIN READ ONLY', 'COMMIT', "SELECT 'insert into x' AS literal", 'SELECT 1 -- delete from pages'];
+    const ok = ["SELECT current_setting('transaction_read_only') AS ro, current_setting('default_transaction_read_only') AS dro", "SELECT set_config('statement_timeout', $1, true)", 'SET LOCAL "hnsw.ef_search" = 100', 'SELECT 1', '/* a /* nested */ DELETE FROM pages */ SELECT 1', "SELECT 'it''s; DELETE FROM pages'", "SELECT E'\\'; DELETE FROM pages'", 'WITH a AS (SELECT 1) SELECT * FROM a', "SELECT set_config('search_path', 'public', true)", "SET LOCAL hnsw.ef_search = 100", 'BEGIN READ ONLY', 'COMMIT', "SELECT 'insert into x' AS literal", 'SELECT 1 -- delete from pages'];
     for (const sql of ok) expect([sql, classifySql(sql).ok]).toEqual([sql, true]);
     const refused: Array<[string, string]> = [
       ['INSERT INTO pages (slug) VALUES (1)', 'insert'], ['UPDATE pages SET title = 1', 'update'], ['DELETE FROM pages', 'delete'], ['TRUNCATE pages', 'truncate'],
@@ -123,18 +123,24 @@ describe('live-recall guards on PGLite', () => {
       ['/* outer /* inner */ still a comment */ DELETE FROM pages', 'delete'],
       ["WITH x AS (UPDATE pages p1 SET title = 'a' RETURNING 1) SELECT 1", 'data_modifying_cte'], ["WITH x AS (UPDATE pages2 SET title = 'a' RETURNING 1) SELECT 1", 'data_modifying_cte'],
       ["WITH x AS (UPDATE pages * SET title = 'a' RETURNING 1) SELECT 1", 'data_modifying_cte'], ['SELECT * FROM pages FOR UPDATE; DELETE FROM pages', 'delete'],
+      ["SELECT set_config('role', 'postgres', true)", 'set_role'], ["SELECT set_config('ROLE', 'postgres', true)", 'set_role'], ["SELECT set_config('session_authorization', 'postgres', true)", 'set_role'],
+      ["SELECT set_config('default_transaction_read_only', 'off', true)", 'read_only_setting'], ["SELECT set_config(E'transaction_read_only', 'off', true)", 'read_only_setting'],
+      ["SELECT set_config('ro' || 'le', 'postgres', true)", 'set_config_dynamic'], ["SELECT set_config($1, 'off', true)", 'set_config_dynamic'],
+      ['SET LOCAL role=postgres', 'set_role'], ['SET LOCAL session_authorization = postgres', 'set_role'], ['SET LOCAL "ROLE" TO postgres', 'set_role'], ['SET LOCAL "TRANSACTION_READ_ONLY" = off', 'read_only_setting'],
     ];
     for (const [sql, verb] of refused) expect([sql, classifySql(sql)]).toEqual([sql, { ok: false, verb }]);
   });
 
   test('readOnlyUrl moves a transaction-pooler URL to the session pooler and asks for read-only sessions', () => {
-    const r = readOnlyUrl('postgresql://u:p@aws-0.pooler.supabase.com:6543/postgres?pgbouncer=true');
+    const pw = 'p';
+    const at = (rest: string) => `postgres://u:${pw}@${rest}`;
+    const r = readOnlyUrl(`postgresql://u:${pw}@aws-0.pooler.supabase.com:6543/postgres?pgbouncer=true`);
     expect(r.connection).toBe('transaction_pooler_rewritten');
-    expect(r.url).toBe('postgresql://u:p@aws-0.pooler.supabase.com:5432/postgres?default_transaction_read_only=on');
-    expect(readOnlyUrl('postgres://u:p@127.0.0.1:55432/brain').connection).toBe('direct_or_local');
-    const loopback = (u: string) => readOnlyUrl(u).loopback;
-    expect(['postgres://u:p@127.0.0.1:55432/b', 'postgres://u:p@localhost/b', 'postgres://u:p@[::1]:5432/b'].map(loopback)).toEqual([true, true, true]);
-    expect(['postgres://u:p@10.0.0.5:5432/b', 'postgres://u:p@aws-0.pooler.supabase.com:5432/b', 'postgres://u:p@127.0.0.1:5432/b?host=db.internal', 'postgres://u:p@localhost.example.com/b'].map(loopback)).toEqual([false, false, false, false]);
+    expect(r.url).toBe(`postgresql://u:${pw}@aws-0.pooler.supabase.com:5432/postgres?default_transaction_read_only=on`);
+    expect(readOnlyUrl(at('127.0.0.1:55432/brain')).connection).toBe('direct_or_local');
+    const loopback = (rest: string) => readOnlyUrl(at(rest)).loopback;
+    expect(['127.0.0.1:55432/b', 'localhost/b', '[::1]:5432/b'].map(loopback)).toEqual([true, true, true]);
+    expect(['10.0.0.5:5432/b', 'aws-0.pooler.supabase.com:5432/b', '127.0.0.1:5432/b?host=db.example.com', 'localhost.example.com/b'].map(loopback)).toEqual([false, false, false, false]);
   });
 
   test('a copy marker proves a barrier only on a loopback URL and when it carries the connected cluster identifier', async () => {

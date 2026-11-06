@@ -130,7 +130,8 @@ make_copy() {
   read -r copy_sv copy_pv <<<"$copy_facts"
   PGPASSWORD="$password" pg psql -X -q -v ON_ERROR_STOP=1 "$url" \
     -c "CREATE TABLE public.$marker (made_at timestamptz NOT NULL DEFAULT now(), copy_system_identifier text NOT NULL, source_server_version_num int, source_pgvector text, copy_server_version_num int, copy_pgvector text, restore_errors int); INSERT INTO public.$marker (copy_system_identifier, source_server_version_num, source_pgvector, copy_server_version_num, copy_pgvector, restore_errors) SELECT system_identifier::text, $(sql_int "$src_sv"), $(sql_version "$src_pv"), $(sql_int "$copy_sv"), $(sql_version "$copy_pv"), $(sql_int "$errors") FROM pg_control_system();" >/dev/null
-  printf "export LIVE_RECALL_DATABASE_URL='postgresql://postgres:%s@127.0.0.1:%s/brain'\n" "$password" "$port" >"$workdir/copy.env"
+  local copy_url="postgresql://postgres:${password}@127.0.0.1:${port}/brain"
+  printf "export LIVE_RECALL_DATABASE_URL='%s'\n" "$copy_url" >"$workdir/copy.env"
   chmod 600 "$workdir/copy.env"
   say "copy ready: row counts check out against the source ($count_tables: $copy_counts); restore errors: $errors (see $workdir/restore.log); pgvector source ${src_pv:--}, copy ${copy_pv:--}"
   say "next: source $workdir/copy.env, run the runner, then: eval/runner/live-recall/snapshot.sh teardown $workdir"

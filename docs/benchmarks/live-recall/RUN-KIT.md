@@ -124,8 +124,9 @@ The runner searches only a database that proves, by itself, that this run cannot
   `pg_is_in_recovery()`.
 - **A role with no write privilege**: no INSERT, UPDATE, DELETE or TRUNCATE on any table, view, materialized view or
   foreign table (column grants included), no CREATE on any schema or on the database, no UPDATE or USAGE on any
-  sequence, no EXECUTE on a SECURITY DEFINER function in `public`, and BYPASSRLS so it can read tables with row-level
-  security. Creating that role changes Garry's database, so ask through
+  sequence, no EXECUTE on a SECURITY DEFINER function in `public`, membership in no other role (a member can switch
+  to a role that writes, which the runner's check of the role itself does not see), and BYPASSRLS so it can read tables
+  with row-level security. Creating that role changes Garry's database, so ask through
   ALPH-11 first; it is GBRA-108's or Garry's decision.
 
 ## Abort codes

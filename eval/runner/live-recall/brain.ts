@@ -94,11 +94,14 @@ export async function proveBarrier(raw: Raw, loopback: boolean): Promise<Barrier
  * string literals ('', E'' with backslash escapes, dollar quotes) become '',
  * a quoted identifier keeps its name when quoting changes nothing ("set_config"
  * is set_config) and otherwise becomes ident. Keyword checks then see only
- * structure.
+ * structure. With keepNames, a literal or quoted name shaped like a setting
+ * name keeps its text, so the setting a statement names can be read.
  */
 const DOLLAR_TAG = /^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$/;
 
-function structure(sql: string): string {
+const NAME = /^[A-Za-z_][A-Za-z0-9_.]*$/;
+
+function structure(sql: string, keepNames = false): string {
   let out = '';
   let i = 0;
   while (i < sql.length) {
@@ -116,13 +119,14 @@ function structure(sql: string): string {
       out += ' ';
     } else if (c === "'") {
       const escapes = /[eE]/.test(sql[i - 1] ?? '') && !/[A-Za-z0-9_$]/.test(sql[i - 2] ?? '');
-      i++;
+      const start = ++i;
       while (i < sql.length) {
         if (escapes && sql[i] === '\\') i += 2;
         else if (sql[i] === "'" && sql[i + 1] === "'") i += 2;
         else if (sql[i] === "'") { i++; break; } else i++;
       }
-      out += "''";
+      const body = sql.slice(start, i - 1);
+      out += keepNames && NAME.test(body) ? "'" + body + "'" : "''";
     } else if (c === '"') {
       const start = ++i;
       while (i < sql.length) {
@@ -130,7 +134,7 @@ function structure(sql: string): string {
         else if (sql[i] === '"') { i++; break; } else i++;
       }
       const name = sql.slice(start, i - 1);
-      out += /^[a-z_][a-z0-9_]*$/.test(name) ? name : 'ident';
+      out += /^[a-z_][a-z0-9_]*$/.test(name) || (keepNames && NAME.test(name)) ? name : 'ident';
     } else if (c === '$' && !/[A-Za-z0-9_]/.test(sql[i - 1] ?? '') && DOLLAR_TAG.test(sql.slice(i, i + 66))) {
       const tag = sql.slice(i, i + 66).match(DOLLAR_TAG)![0];
       const end = sql.indexOf(tag, i + tag.length);
@@ -144,21 +148,25 @@ function structure(sql: string): string {
   return out.replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
-/** The last top-level argument of each set_config( ... ) call, after structure(). */
-function setConfigScopes(statement: string): string[] {
-  const scopes: string[] = [];
+/** The top-level arguments of each set_config( ... ) call, after structure(). */
+function setConfigCalls(statement: string): string[][] {
+  const calls: string[][] = [];
   for (const m of statement.matchAll(/\bset_config\s*\(/g)) {
-    let depth = 1, i = m.index! + m[0].length, start = i, last = '';
+    const args: string[] = [];
+    let depth = 1, i = m.index! + m[0].length, start = i;
     for (; i < statement.length && depth > 0; i++) {
       const ch = statement[i];
       if (ch === '(') depth++;
-      else if (ch === ')') { depth--; if (depth === 0) last = statement.slice(start, i); }
-      else if (ch === ',' && depth === 1) start = i + 1;
+      else if (ch === ')') { depth--; if (depth === 0) args.push(statement.slice(start, i).trim()); }
+      else if (ch === ',' && depth === 1) { args.push(statement.slice(start, i).trim()); start = i + 1; }
     }
-    scopes.push(last.trim());
+    calls.push(args);
   }
-  return scopes;
+  return calls;
 }
+
+/** Settings no statement may change, even for one transaction, and the verb each refusal counts under. */
+const PROTECTED_SETTINGS: Record<string, string> = { role: 'set_role', session_authorization: 'set_role', default_transaction_read_only: 'read_only_setting', transaction_read_only: 'read_only_setting' };
 
 const READ_LEADS = new Set(['select', 'with', 'values', 'show', 'explain', 'table']);
 const TX_CONTROL = new Set(['commit', 'rollback', 'end', 'savepoint', 'release']);
@@ -170,22 +178,37 @@ export type SqlVerdict = { ok: true } | { ok: false; verb: string };
 /** gbrain's search path flushes per-query counters into this table; the guard names it so a refusal count reads plainly. */
 const TELEMETRY_WRITE = /^(insert into|update|delete from) (public\.)?search_telemetry\b/;
 
-/** The executeRaw allowlist: reads, transaction-local settings and transaction control only. */
+/**
+ * The executeRaw allowlist: reads, transaction-local settings and transaction
+ * control only. Keyword checks read the structure with every literal blanked;
+ * setting names are read from a second pass that keeps name-shaped literals and
+ * quoted names, because set_config and SET name the setting there.
+ */
 export function classifySql(sql: string): SqlVerdict {
-  for (const statement of structure(sql).split(';').map(s => s.trim()).filter(Boolean)) {
+  const statements = (s: string) => s.split(';').map(x => x.trim()).filter(Boolean);
+  const named = statements(structure(sql, true));
+  for (const [k, statement] of statements(structure(sql)).entries()) {
+    const withNames = named[k] ?? '';
     if (/\b(default_transaction_read_only|transaction_read_only|session characteristics)\b/.test(statement)) return { ok: false, verb: 'read_only_setting' };
     const lead = statement.split(' ')[0]!;
     if (READ_LEADS.has(lead)) {
       if (DATA_MODIFYING.test(statement)) return { ok: false, verb: 'data_modifying_cte' };
       if (/\binto\b/.test(statement)) return { ok: false, verb: 'select_into' };
       if (WRITE_FUNCTIONS.test(statement)) return { ok: false, verb: 'write_function' };
-      if (setConfigScopes(statement).some(scope => scope !== 'true')) return { ok: false, verb: 'set_config_session' };
+      for (const args of setConfigCalls(withNames)) {
+        const name = /^e?'([a-z_][a-z0-9_.]*)'$/.exec(args[0] ?? '')?.[1];
+        if (!name) return { ok: false, verb: 'set_config_dynamic' };
+        if (PROTECTED_SETTINGS[name]) return { ok: false, verb: PROTECTED_SETTINGS[name]! };
+        if (args.at(-1) !== 'true') return { ok: false, verb: 'set_config_session' };
+      }
       continue;
     }
     if (lead === 'set') {
-      const [, scope, name] = statement.split(' ');
+      const [, scope, ...rest] = withNames.split(' ');
       if (scope !== 'local') return { ok: false, verb: 'set_session' };
-      if (name === 'role' || name === 'session') return { ok: false, verb: 'set_role' };
+      const name = /^[a-z_][a-z0-9_.]*/.exec(rest.join(' '))?.[0] ?? '';
+      if (name === 'session') return { ok: false, verb: 'set_role' };
+      if (PROTECTED_SETTINGS[name]) return { ok: false, verb: PROTECTED_SETTINGS[name]! };
       continue;
     }
     if (lead === 'begin' || lead === 'start') {

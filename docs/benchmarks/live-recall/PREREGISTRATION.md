@@ -48,8 +48,9 @@ Each table's count in the copy must lie between the two, and when the source cha
 
 A session flag alone is not a barrier on Postgres: gbrain opens transactions not marked read-only as `BEGIN READ WRITE`
 and retries a statement refused with SQLSTATE 25006 inside one. On top of the barrier the runner forces every gbrain
-transaction read-only, puts an allowlist in front of raw SQL (reads, `SET LOCAL` other than `ROLE` and
-`SESSION AUTHORIZATION`, `set_config` with `is_local` true at every nesting level, and transaction control only),
+transaction read-only, puts an allowlist in front of raw SQL (reads, `SET LOCAL`, `set_config` with a literal setting
+name and `is_local` true at every nesting level, and transaction control only; neither may change the role, the session
+authorization or a read-only setting),
 disables the direct pool and blanks the database variables gbrain's config loader would otherwise fill from
 `~/.gbrain/.env`. gbrain's search path flushes per-query counters into `search_telemetry`; the guard refuses those
 writes and the scorecard counts them as `telemetry_write`.
