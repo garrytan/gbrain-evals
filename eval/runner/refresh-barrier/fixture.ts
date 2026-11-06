@@ -124,7 +124,7 @@ export function harnessFiles(): Record<string, string> {
 }
 export const harnessDigest = (): string => createHash('sha256').update(JSON.stringify(harnessFiles())).digest('hex');
 /** Whether a block directory holds a counted run (a run.ts start event that was not --dry). */
-export const countedRunIn = (out: string): boolean => existsSync(out) && readdirSync(out).filter(f => /^run-.*\.jsonl$/.test(f))
+export const countedRunIn = (out: string): boolean => existsSync(out) && readdirSync(out).filter(f => /^run-.*\.jsonl$/.test(f)).sort()
   .some(f => readFileSync(join(out, f), 'utf8').split('\n').filter(Boolean).some(l => { const e = JSON.parse(l); return e.ev === 'start' && e.dry === false; }));
 export const gitHead = (root: string): string => execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 
