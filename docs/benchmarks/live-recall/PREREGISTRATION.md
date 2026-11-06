@@ -13,8 +13,9 @@ does each layer of search add over gbrain's own lexical search: vectors, and the
 
 gbrain is a personal knowledge brain: it stores Markdown pages in Postgres (or PGLite) and finds them with keyword,
 vector and hybrid search. Wintermute is the agent that runs on Garry's box beside his live brain. It writes the
-questions from real retrieval needs, picks the answer page for each, runs this harness against a disposable copy of the
-brain and sends back an aggregate scorecard. No question, page text, slug or result leaves the box.
+questions from real retrieval needs, picks the answer page for each, runs this harness against the brain behind a
+read-only barrier (a disposable copy by default; the counted run reads the live database through a role that cannot
+write) and sends back an aggregate scorecard. No question, page text, slug or result leaves the box.
 
 ## System under test
 
