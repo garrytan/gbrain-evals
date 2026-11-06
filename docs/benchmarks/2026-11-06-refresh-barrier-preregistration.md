@@ -226,8 +226,9 @@ of G (both runners import the pinned package), and compares them query by query:
 
 ## Part C: agent experience (paid, gating against harm)
 
-Runner: `eval/runner/refresh-barrier/agent.ts`, which lands in its own pull request, reviewed at full depth, before the
-first Part C paid window (this one freezes the protocol).
+Runner: `eval/runner/refresh-barrier/agent.ts`, with its analyzer (the paired bootstrap below and the errored, rerun and
+unexposed counts), which land in their own pull request, reviewed at full depth, before the first Part C paid window (this
+one freezes the protocol).
 
 - **Subjects:** `claude-opus-5-5` and `gpt-6.1-sol` (primary, gating) and `particle-1` (counted, reported in the first
   table with cost per correct answer beside `claude-opus-5-5`, not gating, run in its own crew paid window), at medium
@@ -252,10 +253,11 @@ first Part C paid window (this one freezes the protocol).
   misreports, tool calls, retries, and for each refused write whether the agent retried under the same request id, how
   long it waited and whether that reached `retry_after_ms`; pending answers delivered as errors (`write_pending`) and
   whether a reissue followed; wall time, tokens and cost.
-- **Errored episodes:** an episode that ends on a provider error, a network failure or a context overflow measured the
-  provider, not the agent, so it is written as uncounted with its stop reason and rerun under the same task id inside the
-  same paid window. A cap stop is terminal: it ends that model's Part C INCOMPLETE, and nothing reruns. Errored and rerun
-  counts are reported per model and arm.
+- **Errored episodes:** an episode that ends on a provider error or a network failure measured the provider, not the
+  agent, so it is written as uncounted with its stop reason and rerun under the same task id inside the same paid window,
+  at most twice; a task still errored after that leaves that model's Part C incomplete. A context overflow is the agent's
+  own trajectory, which the flag can lengthen, so it counts as a failed episode in its arm. A cap stop is terminal: it
+  ends that model's Part C INCOMPLETE, and nothing reruns. Errored and rerun counts are reported per model and arm.
 - **Rule, per primary model:** paired bootstrap over tasks (10,000 resamples, seed 1) of on minus off strict success.
   Non-inferior when the lower bound is at least -0.10. Harm when the upper bound is below 0. Otherwise inconclusive.
 - **Power:** with 60 paired tasks and strict success near 0.9 in both arms with independent errors, the standard error of
