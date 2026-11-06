@@ -1,8 +1,8 @@
 # Live recall on Garry's brain: preregistration (phase 1)
 
 This fixes the method, comparisons and decision rules for the first live-recall run before any number exists. It
-reports no result. The sample size, the question file's hash and the minimum detectable difference at that size are
-added under [Frozen sample](#frozen-sample) from Wintermute's freeze output before the counted run starts.
+reports no result. The sample size (50 questions), the question file's hash and the minimum detectable difference at
+that size are under [Frozen sample](#frozen-sample), taken from Wintermute's freeze output before the counted run.
 
 ## The question
 
@@ -29,8 +29,9 @@ brain and sends back an aggregate scorecard. No question, page text, slug or res
 
 ## Corpus and the read-only barrier
 
-The run reads a disposable copy of the brain, never the live database. `eval/runner/live-recall/snapshot.sh make`
-reads the live database once with `pg_dump` (one read-only transaction), restores its public schema into a local
+By default the run reads a disposable copy of the brain, not the live database. Where a copy cannot be made, it reads
+the live database through a role that cannot write (barrier 3 below); the counted run on Wintermute's box does that, see
+[Frozen sample](#frozen-sample). `eval/runner/live-recall/snapshot.sh make` reads the live database once with `pg_dump` (one read-only transaction), restores its public schema into a local
 pgvector container, checks row counts against the source and creates a marker table. The runner refuses to search
 until the database itself proves one of three barriers, in this order of preference:
 
@@ -187,9 +188,38 @@ charged to phase 1's $300 cap.
 
 ## Frozen sample
 
-To be filled from Wintermute's `freeze` output before the counted run: N, counts by type, the number of windowed
-time_window questions, the question file's sha256, and the MDD at N. The runner refuses a question file whose hash
-differs from the freeze.
+Frozen on 2026-11-06 from Wintermute's `run.ts freeze` output at gbrain-evals `d4651999`, before any counted search.
+The runner refuses a question file whose hash differs from this one.
+
+- **N = 50 questions** (100 question forms), 10 of each type: identifier, error_string, time_window, cross_source and
+  topic. All 10 time_window questions carry a window, so `configured_window` runs on 20 forms.
+- **Question file sha256:** `88eaa30c34d85d303aff2a0faf81e9adfe6a5815dadc5196879c827e6f02ae9f`.
+- **Minimum detectable difference** in success@5 at N = 50 (two-sided alpha 0.05, 80% power), in points, by the share
+  of pairs where the two arms disagree:
+
+| Comparison | 10% discordant | 20% discordant | 30% discordant |
+|---|---|---|---|
+| P1, both forms clustered by question (forms independent to fully correlated) | 8.9 to 12.5 | 12.5 to 17.7 | 15.3 to 21.7 |
+| P2, paraphrase forms only | 12.5 | 17.7 | 21.7 |
+
+Wintermute's notes on the sample, aggregates only:
+
+- All 50 gold pages were found page first. Wintermute drew a seeded random sample of real pages and wrote each question
+  after reading its page, so none of the 50 is a real ask that once failed. Its 45 earlier session-search questions were
+  not reused, because their gold lives only in OpenClaw's session index.
+- Wintermute rates 2 of the 10 cross_source pairings as weak: each page holds half the answer, but the pairing is its
+  own choice.
+- The 10 error_string questions come from 6 pages, and several share a gold page, so that type tests fewer than 10
+  pages.
+- Its own checks before the freeze: every gold slug resolves through `gbrain get`, every exact form's key tokens are
+  in its gold page, no paraphrase contains them, ids are unique, and every time_window question carries a window.
+- By source (a field the runner ignores): ops 15, brain 14, meeting 13, conversation 8. No page from the week of the
+  freeze is in the sample.
+
+**Barrier for the counted run:** `no_write_privilege`. Wintermute's box is a container with no Docker, so
+`snapshot.sh` cannot make a copy there. GBRA-108 approved a role with SELECT on gbrain's tables, USAGE on the
+`extensions` schema, BYPASSRLS, no sequence grants and no role memberships. The runner connects as that role through
+Supabase's session pooler and proves the barrier itself before any search.
 
 ## Limits
 
@@ -197,8 +227,10 @@ differs from the freeze.
   follow Wintermute's sense of the brain. The identifier-overlap share and the `gold_found_by` shares are reported for
   that reason.
 - A snapshot is static. A brain whose index is still building is measured in that state, and the degraded-stage counts
-  show it.
-- The copy runs in a local container, so latency is harness latency, not what Garry sees.
+  show it. The counted run on Wintermute's box reads the live brain instead, so pages written during the run can change
+  what it finds.
+- Latency is harness latency (pool size 2; a local container for a copy, Supabase's session pooler for the counted
+  run), not what Garry sees.
 - The copy runs the container image's pgvector, which can differ from the live brain's, and the scorecard records both
   versions and the restore error count.
 - The fixture control in CI uses hash embeddings and a token-overlap reranker. It proves the harness, not search
