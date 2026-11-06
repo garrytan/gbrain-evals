@@ -323,7 +323,7 @@ Wintermute's notes on the sample, aggregates only:
 - Its own checks before the freeze: every gold slug resolves, every exact form's key tokens are in its gold page, no
   paraphrase contains them, and ids are unique.
 
-Phase 2 stays held until batch 2 lands.
+Phase 2 stays held until batch 2 lands and GBRA-108 answers on the paraphrase gap.
 
 ## Limits
 
