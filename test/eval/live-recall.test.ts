@@ -121,6 +121,8 @@ describe('live-recall guards on PGLite', () => {
       ["SELECT '--'; DELETE FROM pages", 'delete'], ["SELECT '/*'; DELETE FROM pages; SELECT '*/'", 'delete'],
       ["SELECT E'\\''; DELETE FROM pages; SELECT ''", 'delete'], ['SELECT $q$ \' $q$; DELETE FROM pages', 'delete'],
       ['/* outer /* inner */ still a comment */ DELETE FROM pages', 'delete'],
+      ["WITH x AS (UPDATE pages p1 SET title = 'a' RETURNING 1) SELECT 1", 'data_modifying_cte'], ["WITH x AS (UPDATE pages2 SET title = 'a' RETURNING 1) SELECT 1", 'data_modifying_cte'],
+      ["WITH x AS (UPDATE pages * SET title = 'a' RETURNING 1) SELECT 1", 'data_modifying_cte'], ['SELECT * FROM pages FOR UPDATE; DELETE FROM pages', 'delete'],
     ];
     for (const [sql, verb] of refused) expect([sql, classifySql(sql)]).toEqual([sql, { ok: false, verb }]);
   });

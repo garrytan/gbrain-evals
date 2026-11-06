@@ -40,8 +40,8 @@ runs with expansion off); `control` (true for the hash-embedding fixture, whose 
 `pgvector_version` (the pgvector extension version in the database searched, for every barrier); and, on a copy,
 `source_pgvector`, `source_server_version_num`, `copy_server_version_num` and `restore_errors`, read from the row
 `snapshot.sh` writes into the marker table (the copy runs the container image's pgvector, which can differ from the
-source's). Versions are `null` unless they are plain version numbers; each of the five is `null` when unknown or not a
-copy.
+source's). Versions are `null` unless they are plain version numbers; `pgvector_version` is `null` when unknown, and the
+four copy fields are `null` when unknown or not a copy.
 
 **`custody`**: `readonly_verified_start` and `readonly_verified_end` (the session reported
 `default_transaction_read_only = on` and gbrain's direct pool was off, before the first search and after the last),

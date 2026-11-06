@@ -162,7 +162,7 @@ function setConfigScopes(statement: string): string[] {
 
 const READ_LEADS = new Set(['select', 'with', 'values', 'show', 'explain', 'table']);
 const TX_CONTROL = new Set(['commit', 'rollback', 'end', 'savepoint', 'release']);
-const DATA_MODIFYING = /\b(insert\s+into|update\s+(only\s+)?[a-z_."]+(\s+(as\s+)?[a-z_]+)?\s+set|delete\s+from|merge\s+into|truncate)\b/;
+const DATA_MODIFYING = /\b(insert\s+into|update\s+(only\s+)?[a-z0-9_."]+(\s*\*)?(\s+(as\s+)?[a-z0-9_]+)?\s+set|delete\s+from|merge\s+into|truncate)\b/;
 const WRITE_FUNCTIONS = /\b(nextval|setval|lo_[a-z_]+|dblink[a-z_]*|pg_file_write|pg_terminate_backend|pg_cancel_backend|pg_reload_conf)\s*\(/;
 
 export type SqlVerdict = { ok: true } | { ok: false; verb: string };
