@@ -139,8 +139,8 @@ These are reported with intervals and were not tested.
   forms (delta 0, interval -30 to +30).
 - Vector search alone (40%) is not distinguishable from keyword search alone (36%), and it is the only arm that loses
   less than 25 points on paraphrases (50% to 30%).
-- gbrain marked 57 of the 100 forms `keyword_candidates_incomplete` in every hybrid arm, and 13 of the 20 windowed
-  forms. That stage means gbrain's Postgres keyword ranking stopped at its 50,000-match bound, retried with fewer words,
+- gbrain marked 57 of the 100 forms `keyword_candidates_incomplete` in every hybrid arm (48 of the 50 paraphrases and
+  9 of the 50 exact forms), and 13 of the 20 windowed forms. That stage means gbrain's Postgres keyword ranking stopped at its 50,000-match bound, retried with fewer words,
   or hit its CJK deadline. The preregistration counts it as how the brain behaves, not as a failure, so those forms
   count. It went to GBRA-108 with the paraphrase gap, as an observation.
 - Harness latency for configured search was 0.92 s at the median and 1.28 s at p95, through the session pooler with a
@@ -168,10 +168,17 @@ a sixth of the brain in every top five, so it can't show a gap that depends on m
 One attempt to raise the ceiling added 304 template-written distractor pages (334 chunks in all) that share
 vocabulary with the gold pages but don't answer the questions. They pulled the lexical hybrid's paraphrase score from
 75% to 45%, and the hash-embedding control's configured paraphrase score from 70% to 45%. Configured search with
-Voyage stayed at 100% on both forms, with identical gold ranks across two runs, for about $0.017. So the private gap
-depends on something this synthetic setup lacks: real scale, real near-duplicate prose, longer pages, or settings we
-could not copy, such as `tokenmax`'s per-chunk synopses. Neither run is evidence of a gbrain bug, and the gap went to
-GBRA-108 as an observation. The reproduction scripts are not part of this repository.
+Voyage stayed at 100% on both forms, with identical gold ranks across two runs, for about $0.017.
+
+Afterwards GBRA-295 read aggregates from the production brain (2026-11-06, 22:25 to 22:30 UTC). No page there carries
+`tokenmax`'s per-chunk synopsis vectors: 24.7% of chunks are on the title tier and 75.3% record no tier, so the
+reproduction, which also ran on the title tier, did not miss synopses the brain has. 10% of the brain's 883,974 chunks
+have no vector at all. GBRA-295 also found that `keyword_candidates_incomplete` fires when a question's strict keyword
+match is empty and gbrain falls back to a broader OR search, and that eight typical recall questions never reached
+it. In this run the stage marked 48 of the 50 paraphrases and 9 of the 50 exact forms in every hybrid arm, which fits
+paraphrases written to avoid their page's words. So the private gap depends on something this synthetic setup lacks,
+such as real scale, near-duplicate prose, longer pages or chunks without vectors. Neither run is evidence of a gbrain
+bug, and the gap went to GBRA-108 as an observation. The reproduction scripts are not part of this repository.
 
 ## What to use and what to avoid
 
