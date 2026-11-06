@@ -28,11 +28,13 @@ export const ABORT_CODES = {
   LR_SCHEMA_MISMATCH: 'Run with --gbrain <checkout>@<commit> at the gbrain version that wrote the brain.',
   LR_QUESTIONS_INVALID: 'Fix the question file at the reported line and field, then rerun freeze.',
   LR_FREEZE_MISMATCH: 'Rerun freeze on this exact question file and send the new freeze numbers before the counted run.',
-  LR_COMPARE_CONTROL: 'One run directory is a --fixture control; compare two counted runs made on the same frozen question file.',
+  LR_COMPARE_CONTROL: 'One run directory is a --fixture control; compare or pool counted runs only.',
+  LR_POOL_MISMATCH: 'Pool two counted runs made on different frozen question files with the same gbrain commit and search settings; the detail names what differs.',
   LR_GOLD_MISSING_CAP: 'More than 10% of questions name a gold page the brain does not hold; fix the gold slugs or use a fresher copy.',
   LR_RERANK_NEEDS_TYPESAFE: 'The configured reranker needs a TypeSafe key; ask GBEV-3 how to measure the configured arm.',
   LR_CUSTODY_LEAK: 'An output file would have carried private text; nothing was written. Report the field name to GBEV-3.',
   LR_EMBEDDING_UNAVAILABLE: 'Embedding the preflight query failed; export the key for the brain\'s embedding provider (the same one gbrain uses on this box) and rerun.',
+  LR_ARM_PREFLIGHT: 'An arm failed on the public probe query before any question ran; the detail names the arm and gbrain\'s failure stage. title_arm_failed or keyword_arm_failed usually means the role lacks EXECUTE on one of gbrain\'s non-definer helper functions (RUN-KIT lists them); embed_* or rerank_* means the provider key or service. Fix it and rerun.',
   LR_EMBEDDING_UNVERIFIED: 'gbrain found no explicit embedding model; run as the user whose ~/.gbrain/config.json serves this brain, or set GBRAIN_HOME to its parent directory.',
 } as const;
 export type AbortCode = keyof typeof ABORT_CODES;

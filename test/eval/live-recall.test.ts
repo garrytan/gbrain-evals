@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { ABORT_CODES, GuardRefusal, LiveRecallAbort, classifySql, classifyStructure, installGuards, proveBarrier, readOnlyUrl, verifyReadOnly } from '../../eval/runner/live-recall/brain.ts';
-import { FIXTURE_DIR, buildFixtureBrain, compareRunDirs, freezeSummary, liveRecall, parseQuestions, presenceCheck, runQuestions, type Question, type SearchContext } from '../../eval/runner/live-recall/run.ts';
+import { FIXTURE_DIR, PREFLIGHT_PROBE, armPreflight, buildFixtureBrain, compareRunDirs, freezeSummary, liveRecall, parseQuestions, poolRunDirs, presenceCheck, runQuestions, type Question, type SearchContext } from '../../eval/runner/live-recall/run.ts';
 import { ARMS, buildScorecard, compareRuns, renderMarkdown, scanForLeaks, validateScorecard, type QueryRecord } from '../../eval/runner/live-recall/scorecard.ts';
 
 const gut = resolveGbrainUnderTest(null);
@@ -33,6 +33,8 @@ describe('live-recall fixture control (keyless)', () => {
     const card = JSON.parse(readFileSync(paths.scorecard, 'utf8'));
     expect(() => validateScorecard(card)).not.toThrow();
     expect(card.run.control).toBe(true);
+    expect(card.protocol).toBe('batch1');
+    expect(terminal).toContain('arm preflight passed: one public probe query ran clean through every arm');
     expect(card.run.barrier).toBe('copy');
     expect(card.run.pgvector_version).toBe('0.8.1');
     expect([card.run.source_pgvector, card.run.source_server_version_num, card.run.copy_server_version_num, card.run.restore_errors]).toEqual([null, null, null, null]);
@@ -238,6 +240,43 @@ describe('live-recall scoring and refusals', () => {
     expect(p1.p_holm).toBeCloseTo(Math.min(1, 2 * p1.p_two_sided), 4);
   });
 
+  test('the arm preflight aborts on a failure stage before any question, naming arms, statuses and stage names only', async () => {
+    const seen: string[] = [];
+    const ctx = fakeCtx(t => { seen.push(t); return [goldFor(t)]; });
+    await armPreflight(ctx);
+    expect(new Set(seen)).toEqual(new Set([PREFLIGHT_PROBE]));
+    const plain = ctx.hybridSearch;
+    ctx.hybridSearch = async (e, text, opts) => { const rows = await plain(e, text, opts); (opts.onMeta as ((m: unknown) => void) | undefined)?.({ degraded: [{ stage: 'keyword_candidates_incomplete' }] }); return rows; };
+    await armPreflight(ctx);
+    ctx.hybridSearch = async (e, text, opts) => { const rows = await plain(e, text, opts); (opts.onMeta as ((m: unknown) => void) | undefined)?.({ degraded: [{ stage: 'title_arm_failed' }, { stage: 'keyword_candidates_incomplete' }] }); return rows; };
+    try { await armPreflight(ctx); throw new Error('passed'); } catch (e) {
+      expect(e).toBeInstanceOf(LiveRecallAbort);
+      expect((e as Error).message).toBe('LR_ARM_PREFLIGHT: hybrid degraded (title_arm_failed); hybrid_lexical degraded (title_arm_failed); configured degraded (title_arm_failed); configured_window degraded (title_arm_failed)');
+    }
+    ctx.hybridSearch = plain;
+    ctx.engine.searchVector = async () => { throw new Error('permission denied for function zebracanary7731'); };
+    try { await armPreflight(ctx); throw new Error('passed'); } catch (e) {
+      expect((e as Error).message).toBe('LR_ARM_PREFLIGHT: vector error');
+    }
+  });
+
+  test('batch2 makes hybrid minus hybrid_lexical on paraphrases P1, keeps P2, and reports batch 1\'s all-forms P1 as a secondary', async () => {
+    const records = await runQuestions(fakeCtx(t => (t.startsWith('para') ? [] : [goldFor(t)])), questions);
+    const card = buildScorecard(records, summary, identity, custody, 'batch2') as any;
+    expect(() => validateScorecard(card)).not.toThrow();
+    expect(card.protocol).toBe('batch2');
+    expect(card.comparisons.filter((c: any) => c.primary && c.metric === 'success_at_5').map((c: any) => [c.id, c.primary, c.form, c.n_pairs])).toEqual([
+      ['p1_hybrid_vs_hybrid_lexical_paraphrase', 'P1', 'paraphrase', 3], ['p2_configured_vs_hybrid_lexical_paraphrase', 'P2', 'paraphrase', 3],
+    ]);
+    const secondary = card.comparisons.find((c: any) => c.id === 'batch1_p1_hybrid_vs_hybrid_lexical' && c.metric === 'success_at_5');
+    expect([secondary.primary, secondary.form, secondary.n_pairs, secondary.p_holm]).toEqual([null, 'all', 6, undefined]);
+    expect(card.comparisons.some((c: any) => c.id === 'p1_hybrid_vs_hybrid_lexical')).toBe(false);
+    expect(renderMarkdown(card)).toContain('Protocol: batch2; primary comparisons (Holm family of two): p1_hybrid_vs_hybrid_lexical_paraphrase (P1), p2_configured_vs_hybrid_lexical_paraphrase (P2).');
+    const batch1 = buildScorecard(records, summary, identity, custody) as any;
+    expect(batch1.protocol).toBe('batch1');
+    expect(batch1.comparisons.filter((c: any) => c.primary === 'P1').map((c: any) => c.id)).toEqual(['p1_hybrid_vs_hybrid_lexical', 'p1_hybrid_vs_hybrid_lexical']);
+  });
+
   test('the AI guard refuses a chat call inside an arm and marks the query', async () => {
     const { invokeAI, withAIInvocationGuard } = await importGbrain<any>(gut, 'src/core/ai/invocation-guard.ts');
     const ctx = fakeCtx(t => [goldFor(t)], () => invokeAI({ operation: 'probe', model: 'x', kind: 'chat' }, async () => 'answer', () => null));
@@ -265,6 +304,26 @@ describe('live-recall scoring and refusals', () => {
     }
   });
 
+  test('a counted run takes its protocol from the freeze and refuses a different --protocol or an unknown one, before opening any database', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'live-recall-protocol-'));
+    try {
+      writeFileSync(join(dir, 'q.jsonl'), fixtureText);
+      const run = (freeze: unknown, protocol?: 'batch1' | 'batch2') => {
+        writeFileSync(join(dir, 'freeze.json'), JSON.stringify(freeze));
+        return abortCode(liveRecall({ fixture: false, questionsPath: join(dir, 'q.jsonl'), freezePath: join(dir, 'freeze.json'), databaseUrlEnv: 'LIVE_RECALL_TEST_UNSET', out: join(dir, 'out'), gut, protocol }, () => {}));
+      };
+      const batch2 = freezeSummary(fixtureText, fixtureQuestions, 'batch2');
+      expect(await run(batch2, 'batch1')).toBe('LR_FREEZE_MISMATCH');
+      expect(await run({ ...batch2, protocol: 'batch3' })).toBe('LR_FREEZE_MISMATCH');
+      expect(await run(batch2)).toBe('LR_NO_DATABASE_URL');
+      expect(await run(batch2, 'batch2')).toBe('LR_NO_DATABASE_URL');
+      const { protocol: _p, ...legacy } = freezeSummary(fixtureText, fixtureQuestions);
+      expect(await run(legacy)).toBe('LR_NO_DATABASE_URL');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   test('question-file refusals name the line and field, never the content', () => {
     const bad = [JSON.stringify({ id: 'x', type: 'not-a-type', forms: { exact: 'zebracanary7731' }, gold: [{ slug: 'secret/slug' }] })];
     try { parseQuestions(bad.join('\n')); throw new Error('accepted'); } catch (e) {
@@ -285,6 +344,12 @@ describe('live-recall scoring and refusals', () => {
     expect(f.questions_sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(f.mde_success_at_5.p2_paraphrase.pd20).toBeCloseTo(2.8016 * Math.sqrt(0.2 / 20), 3);
     expect(JSON.stringify(f)).not.toContain('HRN-2041');
+    expect(f.protocol).toBe('batch1');
+    const b2 = freezeSummary(fixtureText, fixtureQuestions, 'batch2');
+    expect(b2.protocol).toBe('batch2');
+    expect(Object.keys(b2.mde_success_at_5)).toEqual(['p1_paraphrase', 'p2_paraphrase', 'batch1_p1_both_forms_range']);
+    expect((b2.mde_success_at_5 as any).p1_paraphrase).toEqual(f.mde_success_at_5.p2_paraphrase);
+    expect((b2.mde_success_at_5 as any).batch1_p1_both_forms_range).toEqual((f.mde_success_at_5 as any).p1_both_forms_range);
   });
 
   test('compare pairs two runs per arm and form and emits aggregates only', async () => {
@@ -323,6 +388,41 @@ describe('live-recall scoring and refusals', () => {
       expect(() => validateScorecard(capped)).not.toThrow();
       expect(capped.comparisons.filter((c: any) => c.id.includes('_configured_'))).toEqual(['configured', 'configured_window'].flatMap(arm => ['all', 'exact', 'paraphrase'].map(form => ({ id: 'run_b_vs_run_a_' + arm + '_' + form, skipped: 'arm_invalid_or_absent' }))));
       expect(capped.comparisons.find((c: any) => c.id === 'run_b_vs_run_a_hybrid_all' && c.metric === 'success_at_5').n_pairs).toBe(6);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+  test('pool scores two counted runs on independent question files as one secondary set, and refuses a shared file, a control or different settings', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'live-recall-pool-'));
+    try {
+      const write = async (name: string, freeze: string, extra: Record<string, unknown> = {}, failOpen = false) => {
+        const ctx = fakeCtx(t => (t.startsWith('para') ? [] : [goldFor(t)]));
+        const plain = ctx.hybridSearch;
+        if (failOpen) ctx.hybridSearch = async (e, text, opts) => (await plain(e, text, opts)).map(({ rerank_score: _r, ...rest }) => rest);
+        const records = await runQuestions(ctx, questions);
+        const card = buildScorecard(records, { ...summary, freeze_sha_prefix: freeze }, { ...identity, control: false, ...extra }, custody, freeze === 'abcdef123456' ? 'batch1' : 'batch2');
+        mkdirSync(join(tmp, name));
+        writeFileSync(join(tmp, name, 'scorecard.json'), JSON.stringify(card));
+        writeFileSync(join(tmp, name, 'detail.local.jsonl'), records.map(r => JSON.stringify(r)).join('\n') + '\n');
+        return join(tmp, name);
+      };
+      const a = await write('a', 'abcdef123456'), b = await write('b', '123456abcdef');
+      const result = poolRunDirs(a, b) as any;
+      expect(() => validateScorecard(result)).not.toThrow();
+      expect(result.schema).toBe('live-recall-pool/v1');
+      expect(result.eligibility.eligible_question_forms).toBe(12);
+      expect(result.comparisons.every((c: any) => c.skipped || (c.primary === null && c.p_holm === undefined))).toBe(true);
+      const p1 = result.comparisons.find((c: any) => c.id === 'p1_hybrid_vs_hybrid_lexical_paraphrase' && c.metric === 'success_at_5');
+      expect([p1.n_pairs, p1.n_clusters]).toEqual([6, 6]);
+      expect(result.run_b.freeze_sha_prefix).toBe('123456abcdef');
+      expect(JSON.stringify(result)).not.toContain('p/a');
+      expect(await abortCode(() => poolRunDirs(a, a))).toBe('LR_POOL_MISMATCH');
+      const control = await write('c', '1111aaaa2222', { control: true }), otherCommit = await write('d', '3333bbbb4444', { gbrain_loaded_commit: 'abcdef3' });
+      expect(await abortCode(() => poolRunDirs(a, control))).toBe('LR_COMPARE_CONTROL');
+      expect(await abortCode(() => poolRunDirs(a, otherCommit))).toBe('LR_POOL_MISMATCH');
+      const capped = poolRunDirs(a, await write('e', '5555cccc6666', {}, true)) as any;
+      expect([capped.arms.configured, capped.arms.configured_window]).toEqual([{ invalid: 'invalid_in_one_run' }, { invalid: 'invalid_in_one_run' }]);
+      expect(capped.comparisons.find((c: any) => c.id === 'p2_configured_vs_hybrid_lexical_paraphrase')).toEqual({ id: 'p2_configured_vs_hybrid_lexical_paraphrase', skipped: 'arm_invalid_or_absent' });
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }

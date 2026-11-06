@@ -5,15 +5,17 @@
  * scorecard leaves that box.
  *
  *   bun eval/runner/live-recall/run.ts run --fixture
- *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json>
+ *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json> [--protocol batch1|batch2]
  *   bun eval/runner/live-recall/run.ts run --questions <private.jsonl> --freeze <freeze.json> \
  *     --gbrain <gbrain checkout>@<commit> [--database-url-env LIVE_RECALL_DATABASE_URL] [--out <dir>]
  *   bun eval/runner/live-recall/run.ts compare --a <run dir> --b <run dir> --out <dir>
+ *   bun eval/runner/live-recall/run.ts pool --a <run dir> --b <run dir> --out <dir>
  *
  * --fixture builds the public 30-page fixture brain in memory with hash
  * embeddings and a token-overlap reranker (with --questions, it asks those
- * questions of the fixture instead of its own): a keyless harness control whose
- * numbers say nothing about search quality. A real run opens a Postgres brain
+ * questions of the fixture instead of its own; with --protocol, it scores them
+ * under that protocol): a keyless harness control whose numbers say nothing
+ * about search quality. A counted run takes its protocol from the freeze. A real run opens a Postgres brain
  * only after brain.ts proves a server-side read-only barrier. The run kit,
  * abort codes and scorecard format are in docs/benchmarks/live-recall/.
  */
@@ -26,7 +28,7 @@ import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderT
 import { gbrainPin } from '../gbrain-version.ts';
 import { normalQuantile } from '../stats/paired.ts';
 import { ABORT_CODES, COPY_MARKER_TABLE, LiveRecallAbort, checkSchema, installGuards, openPostgresBrain, verifyReadOnly, type GuardCounters } from './brain.ts';
-import { ARMS, GOLD_FOUND_BY, KS, TYPES, buildScorecard, compareRuns, renderMarkdown, scanForLeaks, validateScorecard, versionOrNull, type Arm, type Form, type QType, type QueryRecord, type Status } from './scorecard.ts';
+import { ARMS, GOLD_FOUND_BY, KS, PROTOCOLS, TYPES, buildScorecard, compareRuns, poolRuns, renderMarkdown, scanForLeaks, validateScorecard, versionOrNull, type Arm, type Form, type Protocol, type QType, type QueryRecord, type Status } from './scorecard.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const FIXTURE_DIR = join(REPO_ROOT, 'eval/data/live-recall-v1');
@@ -102,20 +104,22 @@ export function mde(pairs: number, discordant: number): number {
   return Math.round((normalQuantile(0.975) + normalQuantile(0.8)) * Math.sqrt(discordant / pairs) * 10000) / 10000;
 }
 
-/** The numbers Wintermute sends before a counted run; we commit them to the preregistration. */
-export function freezeSummary(text: string, questions: Question[]) {
+/** The numbers Wintermute sends before a counted run; we commit them to the preregistration. The protocol fixes which comparisons are primary. */
+export function freezeSummary(text: string, questions: Question[], protocol: Protocol = 'batch1') {
   const n = questions.length;
   const byPd = (f: (pd: number) => unknown) => ({ pd10: f(0.1), pd20: f(0.2), pd30: f(0.3) });
+  const bothForms = byPd(pd => [mde(2 * n, pd), mde(n, pd)]);
+  const paraphrase = byPd(pd => mde(n, pd));
   return {
     schema: 'live-recall-freeze/v1',
+    protocol,
     questions_sha256: sha256(text),
     n_questions: n,
     by_type: Object.fromEntries(TYPES.map(t => [t, questions.filter(q => q.type === t).length])),
     windowed_time_window: questions.filter(q => q.type === 'time_window' && q.window).length,
-    mde_success_at_5: {
-      p1_both_forms_range: byPd(pd => [mde(2 * n, pd), mde(n, pd)]),
-      p2_paraphrase: byPd(pd => mde(n, pd)),
-    },
+    mde_success_at_5: protocol === 'batch1'
+      ? { p1_both_forms_range: bothForms, p2_paraphrase: paraphrase }
+      : { p1_paraphrase: paraphrase, p2_paraphrase: paraphrase, batch1_p1_both_forms_range: bothForms },
   };
 }
 
@@ -213,6 +217,28 @@ export async function runQuestions(ctx: SearchContext, questions: Question[], pr
   return records;
 }
 
+/** Public text every arm searches before any question; it names no page in any brain. */
+export const PREFLIGHT_PROBE = 'live-recall arm preflight probe';
+
+/**
+ * One public probe through every arm, windowed so configured_window runs too,
+ * before any counted search. An arm that errors, is refused a model call, fails
+ * its reranker open or reports a failure stage aborts the run, naming only the
+ * arms, their statuses and gbrain's stage names: batch 1's first counted attempt
+ * lost every hybrid arm to title_arm_failed (a missing EXECUTE grant) and
+ * measured nothing.
+ */
+export async function armPreflight(ctx: SearchContext): Promise<void> {
+  const probe: Question = { id: 'preflight', type: 'time_window', forms: { exact: PREFLIGHT_PROBE, paraphrase: PREFLIGHT_PROBE }, gold: [{ slug: 'live-recall-preflight' }], gold_found_by: 'unknown', window: { since: '1970-01-01', until: '2100-01-01' } };
+  const failed = new Map<string, string>();
+  for (const r of await runQuestions(ctx, [probe])) {
+    if (r.status === 'ok' || r.status === 'skipped') continue;
+    const stages = [...new Set(r.degraded_stages.filter(s => FAILURE_STAGES.has(s)))];
+    failed.set(r.arm, r.arm + ' ' + r.status + (stages.length ? ' (' + stages.join(', ') + ')' : ''));
+  }
+  if (failed.size) throw new LiveRecallAbort('LR_ARM_PREFLIGHT', [...failed.values()].join('; '));
+}
+
 /** Drop questions whose gold pages the brain does not hold; abort past the cap. */
 export async function presenceCheck(engine: any, questions: Question[]): Promise<{ kept: Question[]; missing: number }> {
   const kept: Question[] = [];
@@ -299,7 +325,7 @@ function git(args: string[]): string {
   try { return execFileSync('git', ['-C', REPO_ROOT, ...args], { encoding: 'utf8' }).trim(); } catch { return ''; }
 }
 
-interface RunOptions { fixture: boolean; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest }
+interface RunOptions { fixture: boolean; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest; protocol?: Protocol }
 
 /** One counted or control run. Returns the outbound file paths. */
 /** pgvector in the database searched and, on a copy, the versions and restore error count snapshot.sh wrote into the marker row. */
@@ -321,12 +347,17 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
   const startedAt = new Date().toISOString();
   const counters: GuardCounters = { refusals: {} };
   let questionsText: string;
+  let protocol: Protocol = o.protocol ?? 'batch1';
   if (o.fixture) questionsText = readFileSync(o.questionsPath ?? join(FIXTURE_DIR, 'questions.jsonl'), 'utf8');
   else {
     if (!o.questionsPath || !o.freezePath) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'a counted run needs --questions and --freeze');
     questionsText = readFileSync(o.questionsPath, 'utf8');
     const frozen = JSON.parse(readFileSync(o.freezePath, 'utf8'));
     if (frozen?.questions_sha256 !== sha256(questionsText)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'question file hash differs from the freeze');
+    const frozenProtocol = frozen.protocol ?? 'batch1';
+    if (!(PROTOCOLS as readonly string[]).includes(frozenProtocol)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the freeze names an unknown protocol');
+    if (o.protocol && o.protocol !== frozenProtocol) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', '--protocol differs from the protocol in the freeze');
+    protocol = frozenProtocol;
   }
   const questions = parseQuestions(questionsText);
 
@@ -378,6 +409,8 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       }
     }
 
+    await armPreflight(ctx);
+    say('arm preflight passed: one public probe query ran clean through every arm');
     const { kept, missing } = await presenceCheck(engine, questions);
     say(questions.length + ' questions loaded, ' + missing + ' with an absent gold page; arms ' + ARMS.join(','));
     const records = await runQuestions(ctx, kept, done => { if (done % 10 === 0 || done === kept.length) say(done + '/' + kept.length + ' questions'); });
@@ -418,7 +451,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     mkdirSync(o.out, { recursive: true });
     const detail = join(o.out, 'detail.local.jsonl');
     writeFileSync(detail, records.map(r => JSON.stringify(r)).join('\n') + '\n', { mode: 0o600 });
-    const scorecard = buildScorecard(records, summary, identity, { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: counters.refusals });
+    const scorecard = buildScorecard(records, summary, identity, { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: counters.refusals }, protocol);
     const json = JSON.stringify(scorecard, null, 2) + '\n';
     const markdown = renderMarkdown(scorecard);
     const needles = new Set<string>([...questions.flatMap(q => [...Object.values(q.forms), ...q.gold.map(g => g.slug)]), ...records.flatMap(r => r.pages)]);
@@ -432,20 +465,40 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
   }
 }
 
+function loadRunDir(dir: string) {
+  const card = JSON.parse(readFileSync(join(dir, 'scorecard.json'), 'utf8'));
+  const records = readFileSync(join(dir, 'detail.local.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as QueryRecord);
+  const identity = { gbrain_loaded_version: card.run.gbrain_loaded_version, gbrain_loaded_commit: card.run.gbrain_loaded_commit, barrier: card.run.barrier, control: card.run.control, freeze_sha_prefix: card.questions.freeze_sha_prefix };
+  const invalid = ARMS.filter(arm => card.arms?.[arm]?.invalid);
+  return { card, identity, records, invalid };
+}
+
+function refuseControl(runA: ReturnType<typeof loadRunDir>, runB: ReturnType<typeof loadRunDir>) {
+  if (runA.identity.control === true || runB.identity.control === true) throw new LiveRecallAbort('LR_COMPARE_CONTROL', (runA.identity.control === true ? 'run_a' : 'run_b') + ' is a fixture control run');
+}
+
 /** Pair two run directories, refusing runs on different question files or a fixture control, and skipping an arm invalid in either; compare.json carries each run's identity. */
 export function compareRunDirs(a: string, b: string) {
-  const load = (dir: string) => {
-    const card = JSON.parse(readFileSync(join(dir, 'scorecard.json'), 'utf8'));
-    const records = readFileSync(join(dir, 'detail.local.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as QueryRecord);
-    const identity = { gbrain_loaded_version: card.run.gbrain_loaded_version, gbrain_loaded_commit: card.run.gbrain_loaded_commit, barrier: card.run.barrier, control: card.run.control, freeze_sha_prefix: card.questions.freeze_sha_prefix };
-    const invalid = ARMS.filter(arm => card.arms?.[arm]?.invalid);
-    return { identity, records, invalid };
-  };
-  const runA = load(a), runB = load(b);
+  const runA = loadRunDir(a), runB = loadRunDir(b);
   if (runA.identity.freeze_sha_prefix !== runB.identity.freeze_sha_prefix) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'run_a and run_b were made on different question files (freeze_sha_prefix differs)');
-  if (runA.identity.control === true || runB.identity.control === true) throw new LiveRecallAbort('LR_COMPARE_CONTROL', (runA.identity.control === true ? 'run_a' : 'run_b') + ' is a fixture control run');
+  refuseControl(runA, runB);
   const { schema, comparisons } = compareRuns(runA.records, runB.records, new Set([...runA.invalid, ...runB.invalid]));
   const result = { schema, run_a: runA.identity, run_b: runB.identity, comparisons };
+  validateScorecard(result);
+  return result;
+}
+
+/** Run settings two pooled runs must share, so the pool measures one gbrain configuration. */
+const POOL_SAME = ['gbrain_loaded_commit', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model', 'embedding_column'] as const;
+
+/** Pool two counted runs on independent question files made with the same gbrain and search settings; pool.json carries each run's identity and secondary comparisons only. */
+export function poolRunDirs(a: string, b: string) {
+  const runA = loadRunDir(a), runB = loadRunDir(b);
+  if (runA.identity.freeze_sha_prefix === runB.identity.freeze_sha_prefix) throw new LiveRecallAbort('LR_POOL_MISMATCH', 'run_a and run_b were made on the same question file');
+  refuseControl(runA, runB);
+  const differs = POOL_SAME.filter(field => runA.card.run[field] !== runB.card.run[field]);
+  if (differs.length) throw new LiveRecallAbort('LR_POOL_MISMATCH', 'run_a and run_b differ in ' + differs.join(', '));
+  const result = { ...poolRuns(runA.records, runB.records, new Set([...runA.invalid, ...runB.invalid])), run_a: runA.identity, run_b: runB.identity };
   validateScorecard(result);
   return result;
 }
@@ -457,21 +510,23 @@ function flag(argv: string[], name: string): string | undefined {
 
 async function main(argv: string[]): Promise<number> {
   const command = argv[0];
+  const protocol = flag(argv, '--protocol');
+  if (protocol !== undefined && !(PROTOCOLS as readonly string[]).includes(protocol)) { console.error('usage: --protocol ' + PROTOCOLS.join('|')); return 2; }
   if (command === 'freeze') {
     const path = flag(argv, '--questions'), out = flag(argv, '--out');
-    if (!path || !out) { console.error('usage: run.ts freeze --questions <file> --out <freeze.json>'); return 2; }
+    if (!path || !out) { console.error('usage: run.ts freeze --questions <file> --out <freeze.json> [--protocol ' + PROTOCOLS.join('|') + ']'); return 2; }
     const text = readFileSync(path, 'utf8');
-    const summary = freezeSummary(text, parseQuestions(text));
+    const summary = freezeSummary(text, parseQuestions(text), (protocol ?? 'batch1') as Protocol);
     writeFileSync(out, JSON.stringify(summary, null, 2) + '\n');
-    console.log('live-recall: freeze ' + out + ' (' + summary.n_questions + ' questions)');
+    console.log('live-recall: freeze ' + out + ' (' + summary.n_questions + ' questions, protocol ' + summary.protocol + ')');
     return 0;
   }
-  if (command === 'compare') {
+  if (command === 'compare' || command === 'pool') {
     const a = flag(argv, '--a'), b = flag(argv, '--b'), out = flag(argv, '--out');
-    if (!a || !b || !out) { console.error('usage: run.ts compare --a <run dir> --b <run dir> --out <dir> (refuses with LR_FREEZE_MISMATCH or LR_COMPARE_CONTROL)'); return 2; }
+    if (!a || !b || !out) { console.error('usage: run.ts ' + command + ' --a <run dir> --b <run dir> --out <dir> (refuses with ' + (command === 'compare' ? 'LR_FREEZE_MISMATCH' : 'LR_POOL_MISMATCH') + ' or LR_COMPARE_CONTROL)'); return 2; }
     let result;
     try {
-      result = compareRunDirs(a, b);
+      result = command === 'compare' ? compareRunDirs(a, b) : poolRunDirs(a, b);
     } catch (error) {
       if (!(error instanceof LiveRecallAbort)) throw error;
       console.error('live-recall: ABORT ' + error.code + ': ' + error.detail);
@@ -479,11 +534,11 @@ async function main(argv: string[]): Promise<number> {
       return 3;
     }
     mkdirSync(out, { recursive: true });
-    writeFileSync(join(out, 'compare.json'), JSON.stringify(result, null, 2) + '\n');
-    console.log('live-recall: compare ' + join(out, 'compare.json'));
+    writeFileSync(join(out, command + '.json'), JSON.stringify(result, null, 2) + '\n');
+    console.log('live-recall: ' + command + ' ' + join(out, command + '.json'));
     return 0;
   }
-  if (command !== 'run') { console.error('usage: run.ts run|freeze|compare (see the header of this file)'); return 2; }
+  if (command !== 'run') { console.error('usage: run.ts run|freeze|compare|pool (see the header of this file)'); return 2; }
   const fixture = argv.includes('--fixture');
   const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall', new Date().toISOString().replace(/[:.]/g, '-') + (fixture ? '-fixture' : '')));
   mkdirSync(out, { recursive: true, mode: 0o700 });
@@ -491,7 +546,7 @@ async function main(argv: string[]): Promise<number> {
   const { say, restore } = captureOutput(join(out, 'gbrain.local.log'));
   try {
     const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-    const paths = await liveRecall({ fixture, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut }, say);
+    const paths = await liveRecall({ fixture, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut, protocol: protocol as Protocol | undefined }, say);
     say('scorecard (send these two files): ' + paths.scorecard + ' and ' + paths.markdown);
     say('detail and gbrain log (stay on this box): ' + paths.detail + ' and ' + join(out, 'gbrain.local.log'));
     return 0;

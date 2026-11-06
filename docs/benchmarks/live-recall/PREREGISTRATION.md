@@ -1,8 +1,11 @@
 # Live recall on Garry's brain: preregistration (phase 1)
 
-This fixes the method, comparisons and decision rules for the first live-recall run before any number exists. It
-reports no result. The sample size (50 questions), the question file's hash and the minimum detectable difference at
-that size are under [Frozen sample](#frozen-sample), taken from Wintermute's freeze output before the counted run.
+This fixes the method, comparisons and decision rules for each live-recall question set before that set is searched.
+It reports no result; batch 1's results are in the [batch 1 findings](../2026-11-06-live-recall-batch1.md). Batch 1's
+sample size (50 questions), question file hash and minimum detectable difference are under
+[Frozen sample](#frozen-sample), taken from Wintermute's freeze output before the counted run. A second, independent
+question set, batch 2, runs under the [batch 2 amendment](#batch-2-amendment), fixed before that set was frozen; its
+frozen sample (N, question file hash and minimum detectable differences) closes the amendment.
 
 ## The question
 
@@ -221,6 +224,107 @@ Wintermute's notes on the sample, aggregates only:
 `snapshot.sh` cannot make a copy there. GBRA-108 approved a role with SELECT on gbrain's tables, USAGE on the
 `extensions` schema, BYPASSRLS, no sequence grants and no role memberships. The runner connects as that role through
 Supabase's session pooler and proves the barrier itself before any search.
+
+## Batch 2 amendment
+
+Fixed on 2026-11-06 by GBEV-3, after batch 1's results and before the batch 2 question set was frozen. Batch 2 is a
+second, independent set of 50 questions. Arms, metrics, eligibility, custody and the decision rules are unchanged. The
+primary comparison, the declared secondaries and the gbrain version under test change.
+
+**Why.** Batch 1's P1, `hybrid` minus `hybrid_lexical` over both forms, came out at +10 points (95% interval 1 to
+20, Holm p 0.092) against a minimum detectable difference of 14.4, so it does not hold, and its R48 verdict is KEEP
+(underpowered). Exact forms leave vectors little room: `hybrid_lexical` already found 82% of them. On paraphrases the
+two arms found 12% and 34%. That reading comes from batch 1's data, so the sharper primary is tested on new questions,
+never on batch 1's.
+
+**System under test.** Batch 2's counted run measures the gbrain that Wintermute's box runs after its scheduled upgrade
+to the stable release v0.60.593.0 (2026-11-07, 11:20 UTC), so it measures what is deployed, as GBRA-108 asked. The
+runner loads it with `--gbrain <checkout>@<commit>` at that release and refuses a brain whose schema version differs
+from the loaded code, as for batch 1. The scorecard records the loaded version and commit beside the repository's pin.
+
+**Primary (Holm-corrected across the two, on success@5):**
+
+- **P1: `hybrid` minus `hybrid_lexical`**, paraphrase forms only (one pair per question): what vectors add to
+  gbrain's own lexical search where the words differ. Comparison id `p1_hybrid_vs_hybrid_lexical_paraphrase`.
+- **P2: `configured` minus `hybrid_lexical`**, paraphrase forms only, unchanged from batch 1.
+
+**Declared secondaries** (reported with intervals, not Holm-adjusted):
+
+- `batch1_p1_hybrid_vs_hybrid_lexical`: batch 1's P1, both forms, on batch 2's questions, as a replication. It is
+  compared across versions: batch 1 measured gbrain 0.60.577.0 and batch 2 measures 0.60.593.0.
+- The pooled analysis: batch 1's counted run (attempt 2, gbrain 0.60.577.0 at `52b9ccae`) and a batch 2 run on the
+  same gbrain, scored as one set of 100 questions with batch 2's comparisons, by `run.ts pool` on the box. `pool`
+  refuses two runs on the same question file, a fixture control, and runs whose gbrain commit or search settings
+  differ, so its batch 2 half is a second run of the frozen batch 2 file at `52b9ccae`, made before the upgrade or
+  afterwards if the brain's schema version still matches. Without such a run the pooled analysis is reported as not
+  computable.
+- The version change: `run.ts compare` between batch 2's two runs (`52b9ccae` and 0.60.593.0, the same questions),
+  reported as a descriptive row, when both runs exist.
+- Every descriptive comparison listed under [Comparisons](#comparisons).
+
+**The protocol is frozen with the questions.** Wintermute freezes batch 2 with `run.ts freeze --protocol batch2`.
+`freeze.json` records the protocol, the counted run takes it from there and refuses a `--protocol` flag that
+disagrees (`LR_FREEZE_MISMATCH`), and the scorecard records it beside the comparisons.
+
+**Questions.** Written fresh on the box in the same format and under the same rules as batch 1, plus: no batch 1 gold
+page reused, gold chosen page first from a new seeded sample that includes recent pages wherever the brain's import is
+current, error_string questions drawn from more than 6 pages, 10 questions of each type, and a window on every
+time_window question.
+
+**Arm preflight.** Before the first question the runner sends one public probe query through every arm and stops with
+`LR_ARM_PREFLIGHT` if any arm errors, is refused a model call, fails its reranker open or reports a failure stage. It
+changes no counted number. It stops a run like batch 1's first attempt, which lost every hybrid-search arm to a missing
+grant, before the run uses the question set.
+
+**Synopsis coverage.** GBRA-295 is to send, as aggregates, the share of the brain's chunks that carry `tokenmax`'s
+per-chunk synopsis vectors and which of its triggers set `keyword_candidates_incomplete`. The batch 2 report carries
+them as a note; no arm is added.
+
+**Barrier.** A new `no_write_privilege` role from GBRA-108 with batch 1's final grants: SELECT on gbrain's tables,
+USAGE on `extensions`, BYPASSRLS, EXECUTE on the five helper functions that are not SECURITY DEFINER (listed in
+[RUN-KIT.md](RUN-KIT.md#other-barriers)), no sequence grants and no role memberships.
+
+**Power.** At N = 50 the new P1 has the paraphrase-only minimum detectable differences: 12.5, 17.7 and 21.7 points at
+10%, 20% and 30% discordant pairs. Batch 1's paraphrase rates (12% and 34%) imply at least 22% discordant pairs, where
+the minimum detectable difference is 18.6 points, so batch 2 can detect an effect the size batch 1 showed and not much
+smaller. The pooled analysis, at N = 100, detects 8.9, 12.5 and 15.3 points at the same shares.
+
+**Batch 2 frozen sample.** Frozen on 2026-11-06 from Wintermute's `run.ts freeze --protocol batch2` output at
+gbrain-evals `07bed75d`, before any batch 2 search. The runner refuses a question file whose hash differs from this
+one, or a run whose protocol differs from `batch2`.
+
+- **N = 50 questions** (100 question forms), 10 of each type. All 10 time_window questions carry a window, so
+  `configured_window` runs on 20 forms.
+- **Question file sha256:** `dd69701c55534429fb758ca8335af175a3dfcc3c9aca6c9c2d2fc81bf3f11099`.
+- **Minimum detectable difference** in success@5 at N = 50 (two-sided alpha 0.05, 80% power), in points:
+
+| Comparison | 10% discordant | 20% discordant | 30% discordant |
+|---|---|---|---|
+| P1, `hybrid` minus `hybrid_lexical`, paraphrase forms | 12.5 | 17.7 | 21.7 |
+| P2, `configured` minus `hybrid_lexical`, paraphrase forms | 12.5 | 17.7 | 21.7 |
+| `batch1_p1_hybrid_vs_hybrid_lexical`, both forms (forms independent to fully correlated) | 8.9 to 12.5 | 12.5 to 17.7 | 15.3 to 21.7 |
+
+Wintermute's notes on the sample, aggregates only:
+
+- 58 distinct gold pages, none of them a batch 1 gold page, and no question id shared with batch 1 (checked against
+  batch 1's question file).
+- Gold was chosen page first from a seeded sample (seed 4302) of 70 recent and 70 older pages, skipping held pages,
+  READMEs, transcripts and batch 1's gold pages. One cross_source gold page is off-sample: Wintermute followed it from a
+  sampled page. An earlier draw was discarded unused, and the question file was checked unchanged afterwards.
+- The 10 error_string questions have 10 distinct gold pages, one each, drawn from a separate seeded shuffle of 310
+  matches outside ops: 9 archived chat transcripts and 1 meeting page.
+- 33 of the 58 gold pages are dated 2026-10-09 or later, by the date in their path.
+- Import lag: email pages from 2026-10-30 onward do not resolve on the box, while email pages through 10-28 and
+  meeting pages through 11-06 do. Five gold pages that failed to resolve were swapped for pages that resolve, so the
+  newest email pages are not in the sample. GBRA-108 and GBRA-295 have been told.
+- By source (a field the runner ignores): meeting 27, brain 13, conversation 9, ops 1.
+- None of the 50 is a real ask that once failed: every such ask Wintermute could recall was answered only in a
+  session, never on a page.
+- Wintermute again rates some cross_source pairings as weak; the count is reported with the results.
+- Its own checks before the freeze: every gold slug resolves, every exact form's key tokens are in its gold page, no
+  paraphrase contains them, and ids are unique.
+
+Phase 2 stays held until batch 2 lands and GBRA-108 answers on the paraphrase gap.
 
 ## Limits
 
