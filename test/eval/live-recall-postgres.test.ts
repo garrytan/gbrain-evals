@@ -7,8 +7,9 @@
  * The URL must name a superuser on a scratch server. The test builds the public
  * fixture brain in a database of its own, then runs the counted-run path
  * (openPostgresBrain, the guards, every arm) against it as a superuser (refused),
- * as a SELECT-only role (barrier no_write_privilege) and on a marked copy
- * (barrier copy), and checks that no table changed. Keyless: hash embeddings and
+ * as roles holding one write path each (refused), as a SELECT-only role (barrier
+ * no_write_privilege), on a marked copy (barrier copy) and on a copy whose marker
+ * names another cluster (refused), and checks that no table changed. Keyless: hash embeddings and
  * the overlap reranker stand in for the providers.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
@@ -28,6 +29,9 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
   const suffix = String(process.pid);
   const src = 'lr_src_' + suffix, copy = 'lr_copy_' + suffix, reader = 'lr_reader_' + suffix;
   const columnWriter = 'lr_colw_' + suffix, viewWriter = 'lr_vieww_' + suffix, view = 'lr_view_' + suffix;
+  const seqWriter = 'lr_seqw_' + suffix, dbCreator = 'lr_dbc_' + suffix, definerCaller = 'lr_defc_' + suffix, definer = 'lr_definer_' + suffix;
+  const selectOnly = 'lr_ctl_' + suffix;
+  const roles = [reader, columnWriter, viewWriter, seqWriter, dbCreator, definerCaller, selectOnly];
   const dbUrl = (db: string, user = 'postgres', password?: string) => {
     const u = new URL(ADMIN_URL!);
     u.pathname = '/' + db;
@@ -82,7 +86,7 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
     admin = postgres(ADMIN_URL!, { max: 1, onnotice: () => {} });
     await admin.unsafe('DROP DATABASE IF EXISTS ' + copy);
     await admin.unsafe('DROP DATABASE IF EXISTS ' + src);
-    for (const role of [reader, columnWriter, viewWriter]) await admin.unsafe('DROP ROLE IF EXISTS ' + role);
+    for (const role of roles) await admin.unsafe('DROP ROLE IF EXISTS ' + role);
     await admin.unsafe('CREATE DATABASE ' + src);
 
     resetTransports = await useFixtureTransports(gut);
@@ -95,8 +99,8 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
 
     await admin.unsafe('CREATE DATABASE ' + copy + ' TEMPLATE ' + src);
     const c = postgres(dbUrl(copy), { max: 1, onnotice: () => {} });
-    await c.unsafe('CREATE TABLE public.' + COPY_MARKER_TABLE + ' (made_at timestamptz NOT NULL DEFAULT now(), source_server_version_num int, source_pgvector text, copy_server_version_num int, copy_pgvector text, restore_errors int)');
-    await c.unsafe('INSERT INTO public.' + COPY_MARKER_TABLE + " (source_server_version_num, source_pgvector, copy_server_version_num, copy_pgvector, restore_errors) VALUES (160004, '0.7.4', 170002, '0.8.0', 2)");
+    await c.unsafe('CREATE TABLE public.' + COPY_MARKER_TABLE + ' (made_at timestamptz NOT NULL DEFAULT now(), copy_system_identifier text NOT NULL, source_server_version_num int, source_pgvector text, copy_server_version_num int, copy_pgvector text, restore_errors int)');
+    await c.unsafe('INSERT INTO public.' + COPY_MARKER_TABLE + " (copy_system_identifier, source_server_version_num, source_pgvector, copy_server_version_num, copy_pgvector, restore_errors) SELECT system_identifier::text, 160004, '0.7.4', 170002, '0.8.0', 2 FROM pg_control_system()");
     await c.end();
 
     await admin.unsafe("CREATE ROLE " + reader + " LOGIN PASSWORD 'reader-pw' BYPASSRLS");
@@ -113,7 +117,7 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
     if (admin) {
       await admin.unsafe('DROP DATABASE IF EXISTS ' + copy + ' WITH (FORCE)');
       await admin.unsafe('DROP DATABASE IF EXISTS ' + src + ' WITH (FORCE)');
-      for (const role of [reader, columnWriter, viewWriter]) await admin.unsafe('DROP ROLE IF EXISTS ' + role);
+      for (const role of roles) await admin.unsafe('DROP ROLE IF EXISTS ' + role);
       await admin.end();
     }
     if (dir) rmSync(dir, { recursive: true, force: true });
@@ -134,7 +138,9 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
     const s = postgres(dbUrl(src), { max: 1, onnotice: () => {} });
     try {
       await s.unsafe('CREATE OR REPLACE VIEW public.' + view + ' AS SELECT slug, title FROM pages');
-      await admin.unsafe('CREATE ROLE ' + role + " LOGIN PASSWORD 'writer-pw'");
+      await s.unsafe('CREATE OR REPLACE FUNCTION public.' + definer + "() RETURNS int LANGUAGE sql SECURITY DEFINER AS 'SELECT 1'");
+      await s.unsafe('REVOKE EXECUTE ON FUNCTION public.' + definer + '() FROM PUBLIC');
+      await admin.unsafe('CREATE ROLE ' + role + " LOGIN PASSWORD 'writer-pw' BYPASSRLS");
       await admin.unsafe('GRANT CONNECT ON DATABASE ' + src + ' TO ' + role);
       await s.unsafe('GRANT USAGE ON SCHEMA public TO ' + role);
       await s.unsafe('GRANT SELECT ON ALL TABLES IN SCHEMA public TO ' + role);
@@ -145,11 +151,18 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
       return code;
     } finally {
       await s.unsafe('DROP VIEW IF EXISTS public.' + view);
+      await s.unsafe('DROP FUNCTION IF EXISTS public.' + definer + '()');
       await s.unsafe('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM ' + role);
+      await s.unsafe('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM ' + role);
       await s.unsafe('REVOKE ALL ON SCHEMA public FROM ' + role);
+      await s.unsafe('REVOKE ALL ON DATABASE ' + src + ' FROM ' + role);
       await s.end();
     }
   }
+
+  test('the same setup with only a SELECT grant passes the barrier, so each refusal below is its one write path', async () => {
+    expect(await writerRefused(selectOnly, 'GRANT SELECT ON public.' + view)).toBe('no abort');
+  }, 300_000);
 
   test('refuses a role with a column-level UPDATE grant as no barrier', async () => {
     expect(await writerRefused(columnWriter, 'GRANT UPDATE (title) ON public.pages')).toBe('LR_NO_BARRIER');
@@ -157,6 +170,30 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
 
   test('refuses a role with INSERT on an updatable view as no barrier', async () => {
     expect(await writerRefused(viewWriter, 'GRANT INSERT ON public.' + view)).toBe('LR_NO_BARRIER');
+  }, 120_000);
+
+  test('refuses a role that can advance a sequence as no barrier', async () => {
+    expect(await writerRefused(seqWriter, 'GRANT USAGE ON ALL SEQUENCES IN SCHEMA public')).toBe('LR_NO_BARRIER');
+  }, 120_000);
+
+  test('refuses a role with CREATE on the database as no barrier', async () => {
+    expect(await writerRefused(dbCreator, 'GRANT CREATE ON DATABASE ' + src)).toBe('LR_NO_BARRIER');
+  }, 120_000);
+
+  test('refuses a role that can run a SECURITY DEFINER function in public as no barrier', async () => {
+    expect(await writerRefused(definerCaller, 'GRANT EXECUTE ON FUNCTION public.' + definer + '()')).toBe('LR_NO_BARRIER');
+  }, 120_000);
+
+  test('refuses a copy marker stamped by another cluster as no barrier', async () => {
+    const c = postgres(dbUrl(copy), { max: 1, onnotice: () => {} });
+    const [{ id }] = await c.unsafe('SELECT copy_system_identifier AS id FROM public.' + COPY_MARKER_TABLE);
+    await c.unsafe('UPDATE public.' + COPY_MARKER_TABLE + " SET copy_system_identifier = '1'");
+    try {
+      expect(await abortCode(run(dbUrl(copy), 'foreign-marker'))).toBe('LR_NO_BARRIER');
+    } finally {
+      await c.unsafe('UPDATE public.' + COPY_MARKER_TABLE + ' SET copy_system_identifier = $1', [id]);
+      await c.end();
+    }
   }, 120_000);
 
   test('refuses when GBRAIN_DIRECT_DATABASE_URL is set', async () => {

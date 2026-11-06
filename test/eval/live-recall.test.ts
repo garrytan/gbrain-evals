@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
-import { ABORT_CODES, GuardRefusal, LiveRecallAbort, classifySql, installGuards, readOnlyUrl, verifyReadOnly } from '../../eval/runner/live-recall/brain.ts';
+import { ABORT_CODES, GuardRefusal, LiveRecallAbort, classifySql, installGuards, proveBarrier, readOnlyUrl, verifyReadOnly } from '../../eval/runner/live-recall/brain.ts';
 import { FIXTURE_DIR, buildFixtureBrain, compareRunDirs, freezeSummary, liveRecall, parseQuestions, presenceCheck, runQuestions, type Question, type SearchContext } from '../../eval/runner/live-recall/run.ts';
 import { ARMS, buildScorecard, compareRuns, renderMarkdown, scanForLeaks, validateScorecard, type QueryRecord } from '../../eval/runner/live-recall/scorecard.ts';
 
@@ -42,7 +42,7 @@ describe('live-recall fixture control (keyless)', () => {
     for (const arm of ['keyword', 'vector', 'hybrid_lexical', 'hybrid', 'configured']) expect(card.arms[arm].overall.all.n).toBe(42);
     expect(card.arms.configured_window.overall.all.n).toBe(8);
     expect(card.comparisons.filter((c: any) => c.primary === 'P1' || c.primary === 'P2').map((c: any) => c.id + ':' + c.metric)).toEqual([
-      'p1_hybrid_vs_keyword:success_at_5', 'p1_hybrid_vs_keyword:mrr', 'p2_configured_vs_keyword_paraphrase:success_at_5', 'p2_configured_vs_keyword_paraphrase:mrr',
+      'p1_hybrid_vs_hybrid_lexical:success_at_5', 'p1_hybrid_vs_hybrid_lexical:mrr', 'p2_configured_vs_hybrid_lexical_paraphrase:success_at_5', 'p2_configured_vs_hybrid_lexical_paraphrase:mrr',
     ]);
     expect(card.custody.readonly_verified_end).toBe(true);
     expect(card.arms.configured.overall.all.model_calls.rerank).toBe(42);
@@ -68,6 +68,18 @@ describe('live-recall fixture control (keyless)', () => {
     try { validateScorecard(withString); } catch (e) { expect(String((e as Error).message)).not.toContain('zebracanary7731'); }
     expect(() => scanForLeaks('| keyword | ' + CANARY_FORM + ' |', [CANARY_FORM])).toThrow(LiveRecallAbort);
     expect(() => scanForLeaks('pages returned', ['pages'])).not.toThrow();
+    const outbound = readFileSync(paths.scorecard, 'utf8');
+    expect(() => scanForLeaks(outbound, [card.run.started_at.slice(0, 10), card.run.runner_commit, card.run.gbrain_loaded_version])).not.toThrow();
+  });
+
+  test('the scorecard accepts provider model ids with slashes, underscores and capitals at the model fields only', () => {
+    const card = JSON.parse(readFileSync(paths.scorecard, 'utf8'));
+    for (const id of ['ollama:nomic-embed-text', 'openrouter:BAAI/bge-reranker-v2-m3', 'ollama:mxbai_embed_large:latest']) {
+      expect(() => validateScorecard({ ...card, run: { ...card.run, reranker_model: id, embedding_model: id } })).not.toThrow();
+    }
+    expect(card.run.embedding_column).toBe('embedding');
+    expect(() => validateScorecard({ ...card, run: { ...card.run, embedding_column: 'BAAI/bge' } })).toThrow(LiveRecallAbort);
+    expect(() => validateScorecard({ ...card, run: { ...card.run, search_mode: 'openrouter:BAAI/bge-reranker-v2-m3' } })).toThrow(LiveRecallAbort);
   });
 });
 
@@ -85,7 +97,7 @@ describe('live-recall guards on PGLite', () => {
       expect(await engine.transaction(async (tx: any) => { await tx.executeRaw("SET LOCAL statement_timeout = '5s'"); return true; })).toBe(true);
       const { hybridSearch } = await importGbrain<any>(gut, 'src/core/search/hybrid.ts');
       const { withAIInvocationGuard } = await importGbrain<any>(gut, 'src/core/ai/invocation-guard.ts');
-      await runQuestions({ engine, hybridSearch, withGuard: withAIInvocationGuard, rerankerEnabled: true, embeddingOptedOut: false }, fixtureQuestions);
+      await runQuestions({ engine, hybridSearch, withGuard: withAIInvocationGuard, rerankerEnabled: true, embeddingOptedOut: false, vectorOpts: {} }, fixtureQuestions);
       expect(counters.refusals.telemetry_write).toBeGreaterThan(0);
       const [row] = await engine.executeRaw('SELECT count(*)::int AS n FROM search_telemetry');
       expect(row.n).toBe(0);
@@ -95,7 +107,7 @@ describe('live-recall guards on PGLite', () => {
   }, 180_000);
 
   test('classifySql allows reads and transaction-local settings only', () => {
-    const ok = ['SELECT 1', 'WITH a AS (SELECT 1) SELECT * FROM a', "SELECT set_config('search_path', 'public', true)", "SET LOCAL hnsw.ef_search = 100", 'BEGIN READ ONLY', 'COMMIT', "SELECT 'insert into x' AS literal", 'SELECT 1 -- delete from pages'];
+    const ok = ['SELECT 1', '/* a /* nested */ DELETE FROM pages */ SELECT 1', "SELECT 'it''s; DELETE FROM pages'", "SELECT E'\\'; DELETE FROM pages'", 'WITH a AS (SELECT 1) SELECT * FROM a', "SELECT set_config('search_path', 'public', true)", "SET LOCAL hnsw.ef_search = 100", 'BEGIN READ ONLY', 'COMMIT', "SELECT 'insert into x' AS literal", 'SELECT 1 -- delete from pages'];
     for (const sql of ok) expect([sql, classifySql(sql).ok]).toEqual([sql, true]);
     const refused: Array<[string, string]> = [
       ['INSERT INTO pages (slug) VALUES (1)', 'insert'], ['UPDATE pages SET title = 1', 'update'], ['DELETE FROM pages', 'delete'], ['TRUNCATE pages', 'truncate'],
@@ -103,6 +115,12 @@ describe('live-recall guards on PGLite', () => {
       ['BEGIN READ WRITE', 'begin_read_write'], ['WITH x AS (DELETE FROM pages RETURNING 1) SELECT 1', 'data_modifying_cte'], ["SELECT nextval('s')", 'write_function'],
       ["WITH x AS (UPDATE pages AS p SET title = 'a' RETURNING 1) SELECT 1", 'data_modifying_cte'], ["WITH x AS (UPDATE ONLY pages p SET title = 'a' RETURNING 1) SELECT 1", 'data_modifying_cte'], ['SELECT * INTO newt FROM pages', 'select_into'],
       ['CREATE TABLE t (a int)', 'create'], ['SELECT 1; DROP TABLE pages', 'drop'], ['INSERT INTO search_telemetry (date) VALUES (now())', 'telemetry_write'],
+      ['SET LOCAL ROLE postgres', 'set_role'], ['SET LOCAL SESSION AUTHORIZATION postgres', 'set_role'], ['SET ROLE postgres', 'set_session'],
+      ["SELECT set_config('search_path', set_config('statement_timeout', '0', false), true)", 'set_config_session'],
+      [`SELECT "set_config"('statement_timeout', '0', false)`, 'set_config_session'], [`SELECT "nextval"('s')`, 'write_function'],
+      ["SELECT '--'; DELETE FROM pages", 'delete'], ["SELECT '/*'; DELETE FROM pages; SELECT '*/'", 'delete'],
+      ["SELECT E'\\''; DELETE FROM pages; SELECT ''", 'delete'], ['SELECT $q$ \' $q$; DELETE FROM pages', 'delete'],
+      ['/* outer /* inner */ still a comment */ DELETE FROM pages', 'delete'],
     ];
     for (const [sql, verb] of refused) expect([sql, classifySql(sql)]).toEqual([sql, { ok: false, verb }]);
   });
@@ -112,6 +130,21 @@ describe('live-recall guards on PGLite', () => {
     expect(r.connection).toBe('transaction_pooler_rewritten');
     expect(r.url).toBe('postgresql://u:p@aws-0.pooler.supabase.com:5432/postgres?default_transaction_read_only=on');
     expect(readOnlyUrl('postgres://u:p@127.0.0.1:55432/brain').connection).toBe('direct_or_local');
+    const loopback = (u: string) => readOnlyUrl(u).loopback;
+    expect(['postgres://u:p@127.0.0.1:55432/b', 'postgres://u:p@localhost/b', 'postgres://u:p@[::1]:5432/b'].map(loopback)).toEqual([true, true, true]);
+    expect(['postgres://u:p@10.0.0.5:5432/b', 'postgres://u:p@aws-0.pooler.supabase.com:5432/b', 'postgres://u:p@127.0.0.1:5432/b?host=db.internal', 'postgres://u:p@localhost.example.com/b'].map(loopback)).toEqual([false, false, false, false]);
+  });
+
+  test('a copy marker proves a barrier only on a loopback URL and when it carries the connected cluster identifier', async () => {
+    const fakeRaw = (sameCluster: boolean) => async (sql: string) => {
+      if (sql.includes('to_regclass')) return [{ present: true }];
+      if (sql.includes('copy_system_identifier')) return [{ same_cluster: sameCluster }];
+      if (sql.includes('pg_is_in_recovery')) return [{ standby: false }];
+      return [{ superuser: true }];
+    };
+    expect(await proveBarrier(fakeRaw(true), true)).toBe('copy');
+    expect(await abortCode(proveBarrier(fakeRaw(true), false))).toBe('LR_NO_BARRIER');
+    expect(await abortCode(proveBarrier(fakeRaw(false), true))).toBe('LR_NO_BARRIER');
   });
 });
 
@@ -128,9 +161,10 @@ describe('live-recall scoring and refusals', () => {
       withGuard: async (_g, run) => run(),
       rerankerEnabled: true,
       embeddingOptedOut: false,
+      vectorOpts: { embeddingColumn: 'embedding' },
     };
   };
-  const identity = { started_at: '2026-11-06T00:00:00.000Z', finished_at: '2026-11-06T00:00:01.000Z', runner_commit: 'abcdef1', runner_dirty: false, gbrain_pin_version: '0.60.557.0', gbrain_pin_commit: 'abcdef1', gbrain_loaded_version: '0.60.577.0', gbrain_loaded_commit: 'abcdef2', gbrain_overlay: true, schema_version: 286, engine: 'pglite' as const, barrier: 'copy', connection: 'in_process', search_mode: 'balanced', reranker_enabled: true, reranker_model: 'voyage:rerank-3-lite', embedding_model: 'openai:text-embedding-3-small', mode_expansion: false, control: true, pgvector_version: '0.8.1', source_pgvector: null, source_server_version_num: null, copy_server_version_num: null, restore_errors: null };
+  const identity = { started_at: '2026-11-06T00:00:00.000Z', finished_at: '2026-11-06T00:00:01.000Z', runner_commit: 'abcdef1', runner_dirty: false, gbrain_pin_version: '0.60.557.0', gbrain_pin_commit: 'abcdef1', gbrain_loaded_version: '0.60.577.0', gbrain_loaded_commit: 'abcdef2', gbrain_overlay: true, schema_version: 286, engine: 'pglite' as const, barrier: 'copy', connection: 'in_process', search_mode: 'balanced', reranker_enabled: true, reranker_model: 'voyage:rerank-3-lite', embedding_model: 'openai:text-embedding-3-small', embedding_column: 'embedding', mode_expansion: false, control: true, pgvector_version: '0.8.1', source_pgvector: null, source_server_version_num: null, copy_server_version_num: null, restore_errors: null };
   const summary = { loaded: 3, gold_missing: 0, by_type: {}, gold_found_by: {}, paraphrase_shares_identifier_token: 0, freeze_sha_prefix: 'abcdef123456' };
   const custody = { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: {} };
 
@@ -160,14 +194,34 @@ describe('live-recall scoring and refusals', () => {
     expect(card.arms.configured).toEqual({ invalid: 'rerank_fail_open_over_cap' });
   });
 
+  test('a configured query whose rerank stage failed open counts toward the cap; the same stage elsewhere is degraded', async () => {
+    const ctx = fakeCtx(t => [goldFor(t)]);
+    const plain = ctx.hybridSearch;
+    ctx.hybridSearch = async (e, text, opts) => { const rows = await plain(e, text, opts); (opts.onMeta as ((m: unknown) => void) | undefined)?.({ degraded: [{ stage: 'rerank_failed' }] }); return rows; };
+    const records = await runQuestions(ctx, questions);
+    expect([...new Set(records.filter(r => r.arm === 'configured').map(r => r.status))]).toEqual(['rerank_fail_open']);
+    expect([...new Set(records.filter(r => r.arm === 'hybrid').map(r => r.status))]).toEqual(['degraded']);
+    const card = buildScorecard(records, summary, identity, custody) as any;
+    expect(card.arms.configured).toEqual({ invalid: 'rerank_fail_open_over_cap' });
+  });
+
+  test('the vector arm searches with the options hybrid search hands its own vector leg', async () => {
+    const ctx = fakeCtx(t => [goldFor(t)]);
+    ctx.vectorOpts = { embeddingColumn: 'embedding_voyage', vectorLegacyGuard: false };
+    const seen: unknown[] = [];
+    const plain = ctx.engine.searchVector;
+    ctx.engine.searchVector = async (v: unknown, opts: unknown) => { seen.push(opts); return plain(v, opts); };
+    await runQuestions(ctx, questions.slice(0, 1));
+    expect(seen).toEqual([{ embeddingColumn: 'embedding_voyage', vectorLegacyGuard: false, limit: 50 }, { embeddingColumn: 'embedding_voyage', vectorLegacyGuard: false, limit: 50 }]);
+  });
+
   test('a skipped P2 still counts in the Holm family of two, so P1 is adjusted as min(1, 2p)', async () => {
     const ctx = fakeCtx(t => [goldFor(t)]);
-    ctx.engine.searchKeyword = async () => [];
     const plain = ctx.hybridSearch;
-    ctx.hybridSearch = async (e, text, opts) => (await plain(e, text, opts)).map(({ rerank_score: _r, ...rest }) => rest);
+    ctx.hybridSearch = async (e, text, opts) => (opts.decide ? [] : (await plain(e, text, opts)).map(({ rerank_score: _r, ...rest }) => rest));
     const card = buildScorecard(await runQuestions(ctx, questions), summary, identity, custody) as any;
-    expect(card.comparisons.find((c: any) => c.id === 'p2_configured_vs_keyword_paraphrase')).toEqual({ id: 'p2_configured_vs_keyword_paraphrase', skipped: 'arm_invalid_or_absent' });
-    const p1 = card.comparisons.find((c: any) => c.id === 'p1_hybrid_vs_keyword' && c.metric === 'success_at_5');
+    expect(card.comparisons.find((c: any) => c.id === 'p2_configured_vs_hybrid_lexical_paraphrase')).toEqual({ id: 'p2_configured_vs_hybrid_lexical_paraphrase', skipped: 'arm_invalid_or_absent' });
+    const p1 = card.comparisons.find((c: any) => c.id === 'p1_hybrid_vs_hybrid_lexical' && c.metric === 'success_at_5');
     expect(p1.p_two_sided).toBeLessThan(0.5);
     expect(p1.p_holm).toBeCloseTo(Math.min(1, 2 * p1.p_two_sided), 4);
   });
@@ -234,8 +288,11 @@ describe('live-recall scoring and refusals', () => {
   test('compare reads two run directories, carries each identity, and refuses a freeze mismatch or a control run', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'live-recall-compare-'));
     try {
-      const write = async (name: string, freeze: string, control: boolean) => {
-        const records = await runQuestions(fakeCtx(t => [goldFor(t)]), questions);
+      const write = async (name: string, freeze: string, control: boolean, failOpen = false) => {
+        const ctx = fakeCtx(t => [goldFor(t)]);
+        const plain = ctx.hybridSearch;
+        if (failOpen) ctx.hybridSearch = async (e, text, opts) => (await plain(e, text, opts)).map(({ rerank_score: _r, ...rest }) => rest);
+        const records = await runQuestions(ctx, questions);
         const card = buildScorecard(records, { ...summary, freeze_sha_prefix: freeze }, { ...identity, control }, custody);
         mkdirSync(join(tmp, name));
         writeFileSync(join(tmp, name, 'scorecard.json'), JSON.stringify(card));
@@ -250,6 +307,10 @@ describe('live-recall scoring and refusals', () => {
       expect(result.run_b).toEqual(result.run_a);
       expect(await abortCode(() => compareRunDirs(a, otherFreeze))).toBe('LR_FREEZE_MISMATCH');
       expect(await abortCode(() => compareRunDirs(control, b))).toBe('LR_COMPARE_CONTROL');
+      const capped = compareRunDirs(a, await write('e', 'abcdef123456', false, true)) as any;
+      expect(() => validateScorecard(capped)).not.toThrow();
+      expect(capped.comparisons.filter((c: any) => c.id.includes('_configured_'))).toEqual(['configured', 'configured_window'].flatMap(arm => ['all', 'exact', 'paraphrase'].map(form => ({ id: 'run_b_vs_run_a_' + arm + '_' + form, skipped: 'arm_invalid_or_absent' }))));
+      expect(capped.comparisons.find((c: any) => c.id === 'run_b_vs_run_a_hybrid_all' && c.metric === 'success_at_5').n_pairs).toBe(6);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }

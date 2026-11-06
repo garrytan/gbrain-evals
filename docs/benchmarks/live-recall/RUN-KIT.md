@@ -33,7 +33,9 @@ All commands run from the repository root.
    LIVE_RECALL_SOURCE_URL='<brain url>' eval/runner/live-recall/snapshot.sh make
    ```
 
-   It prints row counts for `pages`, `content_chunks` and `links` (they must match the source) and writes
+   It counts rows in `pages`, `content_chunks` and `links` on the source just before and just after the dump, and each
+   count in the copy must lie between the two (they match exactly when nothing wrote to the brain meanwhile; the script
+   says so when something did). It writes
    `~/.gbrain-evals-live-recall-copy/copy.env` (mode 600). If the source runs a newer Postgres major version than 17,
    set `LIVE_RECALL_PG_IMAGE` to the matching `pgvector/pgvector` image.
 
@@ -114,11 +116,14 @@ page's slug; if the answer lives only in the session index, leave the question o
 
 The runner searches only a database that proves, by itself, that this run cannot change Garry's brain:
 
-- **A copy** (default, `snapshot.sh`), proven by its marker table.
+- **A copy** (default, `snapshot.sh`), proven by its marker table, which must carry the system identifier of the
+  cluster the runner is connected to, reached on a loopback address (`copy.env` points at `127.0.0.1`).
 - **A hot standby**, such as a Supabase read replica: set `LIVE_RECALL_DATABASE_URL` to the replica's URL. Proven by
   `pg_is_in_recovery()`.
-- **A role with no write privilege**: no INSERT, UPDATE, DELETE or TRUNCATE on any table, no CREATE on any schema, and
-  BYPASSRLS so it can read tables with row-level security. Creating that role changes Garry's database, so ask through
+- **A role with no write privilege**: no INSERT, UPDATE, DELETE or TRUNCATE on any table, view, materialized view or
+  foreign table (column grants included), no CREATE on any schema or on the database, no UPDATE or USAGE on any
+  sequence, no EXECUTE on a SECURITY DEFINER function in `public`, and BYPASSRLS so it can read tables with row-level
+  security. Creating that role changes Garry's database, so ask through
   ALPH-11 first; it is GBRA-108's or Garry's decision.
 
 ## Abort codes
@@ -134,8 +139,9 @@ it to the standby or read-only-role URL.
 
 ### LR_NO_BARRIER
 
-The database is not a marked copy, not a standby, and the role can write. Make a copy with `snapshot.sh` or use
-another barrier above. The runner connected, ran read-only catalog queries and disconnected.
+The database is not a marked copy reached on a loopback address, not a standby, and the role can write. A copy whose
+marker names another cluster (a copy's dump restored somewhere else) does not count. Make a copy with `snapshot.sh`
+and use the URL in its `copy.env`, or use another barrier above. The runner connected, ran read-only catalog queries and disconnected.
 
 ### LR_READONLY_UNVERIFIED
 
@@ -203,5 +209,6 @@ Something unexpected failed. The terminal shows only the error's class name; the
 `LR_SNAPSHOT_EXISTS` (run `teardown` first), `LR_SNAPSHOT_WORKDIR` (the workdir is not one `make` created, so `make`
 will not write into it and `teardown` will not delete it; pass a new or `make`-created directory), `LR_SNAPSHOT_SOURCE_READ` or `LR_SNAPSHOT_DUMP` (check the URL and
 network; pg_dump's messages are in the workdir's `dump.log`), `LR_SNAPSHOT_COPY_START`, and `LR_SNAPSHOT_COUNTS`
-(row counts differ; restore messages are in the workdir's `restore.log`, which can quote row data and stays on the
-box). After any snapshot abort, run `teardown`.
+(a copy's row count falls outside the source's counts before and after the dump, or the counts could not be read;
+restore messages are in the workdir's `restore.log`, which can quote row data and stays on the box; if the brain was
+busy, rerun when it is quieter). After any snapshot abort, run `teardown`.

@@ -126,6 +126,8 @@ export interface SearchContext {
   withGuard: <T>(guard: (call: { kind: Kind }) => Promise<{ settle: (u: unknown) => Promise<void> }>, run: () => Promise<T>) => Promise<T>;
   rerankerEnabled: boolean;
   embeddingOptedOut: boolean;
+  /** What hybridSearch hands its own vector leg (embedding column, legacy guard, iterative scan), so the vector arm searches the same column. */
+  vectorOpts: Record<string, unknown>;
 }
 
 /**
@@ -135,6 +137,8 @@ export interface SearchContext {
  * behaves; those queries count, and the scorecard reports each stage's count.
  */
 export const FAILURE_STAGES: ReadonlySet<string> = new Set(['embed_unavailable', 'embed_timeout', 'vector_arm_failed', 'keyword_arm_failed', 'title_arm_failed', 'rerank_failed', 'rerank_passthrough']);
+/** In the configured arms these are the reranker failing open, so they count toward the arm's fail-open cap. */
+const RERANK_FAILURE_STAGES: ReadonlySet<string> = new Set(['rerank_failed', 'rerank_passthrough']);
 
 interface Gold { pages: Set<string>; chunks: Set<string> }
 
@@ -161,6 +165,7 @@ async function runArm(ctx: SearchContext, arm: Arm, base: Pick<QueryRecord, 'qid
   const ms = Math.round(performance.now() - t0);
   if (refused) status = 'ai_refused';
   const degraded = ((meta?.degraded ?? []) as Array<{ stage?: unknown }>).map(d => String(d.stage)).filter(s => /^[a-z_]+$/.test(s));
+  if (status === 'ok' && arm.startsWith('configured') && degraded.some(s => RERANK_FAILURE_STAGES.has(s))) status = 'rerank_fail_open';
   if (status === 'ok' && degraded.some(s => FAILURE_STAGES.has(s))) status = 'degraded';
   if (status === 'ok' && arm.startsWith('configured') && ctx.rerankerEnabled && results.length > 0 && !results.some(r => typeof r.rerank_score === 'number')) status = 'rerank_fail_open';
   const pages = uniqueInOrder(results.map(r => String(r.slug))).slice(0, PAGE_DEPTH);
@@ -195,7 +200,7 @@ export async function runQuestions(ctx: SearchContext, questions: Question[], pr
       else if (!embedding) records.push({ ...skipped('vector'), status: 'error' });
       else {
         const vector = embedding;
-        records.push(await runArm(ctx, 'vector', base, gold, [], () => ctx.engine.searchVector(vector, { limit: CHUNK_FETCH })));
+        records.push(await runArm(ctx, 'vector', base, gold, [], () => ctx.engine.searchVector(vector, { ...ctx.vectorOpts, limit: CHUNK_FETCH })));
       }
       records.push(await runArm(ctx, 'configured', base, gold, ['embedding', 'rerank'], onMeta => ctx.hybridSearch(ctx.engine, text, { expansion: false, crossModal: 'text', onMeta })));
       if (q.type === 'time_window' && q.window) {
@@ -352,7 +357,14 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     const { getEmbeddingModelProvenance } = await importGbrain<any>(o.gut, 'src/core/ai/gateway.ts');
     const embeddingModel: string | null = getEmbeddingModelProvenance();
     if (!embeddingModel) throw new LiveRecallAbort('LR_EMBEDDING_UNVERIFIED', 'no explicit embedding_model in the loaded gbrain config');
-    const ctx: SearchContext = { engine, hybridSearch, withGuard: withAIInvocationGuard, rerankerEnabled: knobs.reranker_enabled, embeddingOptedOut: await factEmbeddingDisabled(engine) };
+    const { loadConfig, loadConfigWithEngine } = await importGbrain<any>(o.gut, 'src/core/config.ts');
+    const { resolveEmbeddingColumn } = await importGbrain<any>(o.gut, 'src/core/search/embedding-column.ts');
+    const { resolveVectorLegacyGuard } = await importGbrain<any>(o.gut, 'src/core/search/vector-legacy-guard.ts');
+    const { resolveHnswIterativeScan } = await importGbrain<any>(o.gut, 'src/core/search/hnsw-iterative-scan.ts');
+    const columnConfig = (await loadConfigWithEngine(engine).catch(() => null)) ?? loadConfig() ?? null;
+    const column = resolveEmbeddingColumn(undefined, columnConfig ?? { engine: 'pglite' });
+    const vectorOpts = { embeddingColumn: column, vectorLegacyGuard: resolveVectorLegacyGuard(engine, columnConfig), hnswIterativeScan: resolveHnswIterativeScan(engine, columnConfig) };
+    const ctx: SearchContext = { engine, hybridSearch, withGuard: withAIInvocationGuard, rerankerEnabled: knobs.reranker_enabled, embeddingOptedOut: await factEmbeddingDisabled(engine), vectorOpts };
     if (!ctx.embeddingOptedOut) {
       const { embed } = await importGbrain<any>(o.gut, 'src/core/ai/gateway.ts');
       const embedOnly = async (call: { kind: Kind }) => {
@@ -390,6 +402,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       reranker_enabled: Boolean(knobs.reranker_enabled),
       reranker_model: String(knobs.reranker_model),
       embedding_model: embeddingModel,
+      embedding_column: /^[a-z_][a-z0-9_]{0,62}$/.test(String(column.name)) ? String(column.name) : 'unknown',
       mode_expansion: Boolean(knobs.expansion),
       control: o.fixture,
       ...facts,
@@ -419,18 +432,19 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
   }
 }
 
-/** Pair two run directories, refusing runs on different question files or a fixture control; compare.json carries each run's identity. */
+/** Pair two run directories, refusing runs on different question files or a fixture control, and skipping an arm invalid in either; compare.json carries each run's identity. */
 export function compareRunDirs(a: string, b: string) {
   const load = (dir: string) => {
     const card = JSON.parse(readFileSync(join(dir, 'scorecard.json'), 'utf8'));
     const records = readFileSync(join(dir, 'detail.local.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as QueryRecord);
     const identity = { gbrain_loaded_version: card.run.gbrain_loaded_version, gbrain_loaded_commit: card.run.gbrain_loaded_commit, barrier: card.run.barrier, control: card.run.control, freeze_sha_prefix: card.questions.freeze_sha_prefix };
-    return { identity, records };
+    const invalid = ARMS.filter(arm => card.arms?.[arm]?.invalid);
+    return { identity, records, invalid };
   };
   const runA = load(a), runB = load(b);
   if (runA.identity.freeze_sha_prefix !== runB.identity.freeze_sha_prefix) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'run_a and run_b were made on different question files (freeze_sha_prefix differs)');
   if (runA.identity.control === true || runB.identity.control === true) throw new LiveRecallAbort('LR_COMPARE_CONTROL', (runA.identity.control === true ? 'run_a' : 'run_b') + ' is a fixture control run');
-  const { schema, comparisons } = compareRuns(runA.records, runB.records);
+  const { schema, comparisons } = compareRuns(runA.records, runB.records, new Set([...runA.invalid, ...runB.invalid]));
   const result = { schema, run_a: runA.identity, run_b: runB.identity, comparisons };
   validateScorecard(result);
   return result;

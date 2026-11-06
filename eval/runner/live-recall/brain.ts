@@ -22,14 +22,14 @@ export const COPY_MARKER_TABLE = 'gbrain_evals_live_recall_copy';
 
 export const ABORT_CODES = {
   LR_NO_DATABASE_URL: 'Set the env var named by --database-url-env to the copy, standby or read-only-role URL.',
-  LR_NO_BARRIER: 'Make a copy with eval/runner/live-recall/snapshot.sh, or use a hot standby or a role without write privileges.',
+  LR_NO_BARRIER: 'Make a copy with eval/runner/live-recall/snapshot.sh and connect to it on 127.0.0.1, or use a hot standby or a role without write privileges.',
   LR_READONLY_UNVERIFIED: 'The session did not report read-only, or the direct pool is active; rerun against the copy and report the detail.',
   LR_DIRECT_URL_OVERRIDE: 'Unset GBRAIN_DIRECT_DATABASE_URL in the shell that runs the runner.',
   LR_SCHEMA_MISMATCH: 'Run with --gbrain <checkout>@<commit> at the gbrain version that wrote the brain.',
   LR_QUESTIONS_INVALID: 'Fix the question file at the reported line and field, then rerun freeze.',
   LR_FREEZE_MISMATCH: 'Rerun freeze on this exact question file and send the new freeze numbers before the counted run.',
   LR_COMPARE_CONTROL: 'One run directory is a --fixture control; compare two counted runs made on the same frozen question file.',
-  LR_GOLD_MISSING_CAP: 'More than 10% of gold pages are absent from the brain; fix the gold slugs or use a fresher copy.',
+  LR_GOLD_MISSING_CAP: 'More than 10% of questions name a gold page the brain does not hold; fix the gold slugs or use a fresher copy.',
   LR_RERANK_NEEDS_TYPESAFE: 'The configured reranker needs a TypeSafe key; ask GBEV-3 how to measure the configured arm.',
   LR_CUSTODY_LEAK: 'An output file would have carried private text; nothing was written. Report the field name to GBEV-3.',
   LR_EMBEDDING_UNAVAILABLE: 'Embedding the preflight query failed; export the key for the brain\'s embedding provider (the same one gbrain uses on this box) and rerun.',
@@ -48,10 +48,22 @@ export class LiveRecallAbort extends Error {
 export type BarrierKind = 'copy' | 'standby' | 'no_write_privilege';
 type Raw = (sql: string) => Promise<Array<Record<string, unknown>>>;
 
-/** Prove that the server, not this process, refuses writes. Throws LR_NO_BARRIER otherwise. */
-export async function proveBarrier(raw: Raw): Promise<BarrierKind> {
+/**
+ * Prove that the server, not this process, refuses writes. Throws LR_NO_BARRIER otherwise.
+ * A copy counts only on a loopback URL (snapshot.sh publishes its container on
+ * 127.0.0.1; the server itself sees the container's address, so the host is
+ * read from the URL) and only when its marker carries the connected cluster's
+ * system identifier, so a marker table restored into, or created on, another
+ * cluster proves nothing.
+ */
+export async function proveBarrier(raw: Raw, loopback: boolean): Promise<BarrierKind> {
   const [marker] = await raw("SELECT to_regclass('public." + COPY_MARKER_TABLE + "') IS NOT NULL AS present");
-  if (marker?.present === true) return 'copy';
+  if (marker?.present === true && loopback) {
+    const [copy] = await raw(
+      "SELECT (SELECT copy_system_identifier FROM public." + COPY_MARKER_TABLE + " LIMIT 1) = (SELECT system_identifier::text FROM pg_control_system()) AS same_cluster",
+    ).catch(() => []);
+    if (copy?.same_cluster === true) return 'copy';
+  }
   const [standby] = await raw('SELECT pg_is_in_recovery() AS standby');
   if (standby?.standby === true) return 'standby';
   const [role] = await raw('SELECT rolsuper AS superuser FROM pg_roles WHERE rolname = current_user');
@@ -65,22 +77,87 @@ export async function proveBarrier(raw: Raw): Promise<BarrierKind> {
     const [creatable] = await raw(
       "SELECT count(*)::int AS n FROM pg_namespace s WHERE s.nspname NOT IN ('pg_catalog', 'information_schema') AND s.nspname NOT LIKE 'pg_%' AND has_schema_privilege(s.oid, 'CREATE')",
     );
-    if (Number(writable?.n) === 0 && Number(creatable?.n) === 0) return 'no_write_privilege';
+    const [other] = await raw(
+      "SELECT (SELECT count(*)::int FROM pg_class c JOIN pg_namespace s ON s.oid = c.relnamespace WHERE c.relkind = 'S' AND s.nspname NOT IN ('pg_catalog', 'information_schema') " +
+      "AND (has_sequence_privilege(c.oid, 'UPDATE') OR has_sequence_privilege(c.oid, 'USAGE'))) AS sequences, " +
+      "has_database_privilege(current_database(), 'CREATE') AS create_db, " +
+      "(SELECT count(*)::int FROM pg_proc p JOIN pg_namespace s ON s.oid = p.pronamespace WHERE p.prosecdef AND s.nspname = 'public' AND has_function_privilege(p.oid, 'EXECUTE')) AS definer_functions",
+    );
+    if (Number(writable?.n) === 0 && Number(creatable?.n) === 0 && Number(other?.sequences) === 0 && other?.create_db === false && Number(other?.definer_functions) === 0) return 'no_write_privilege';
   }
   throw new LiveRecallAbort('LR_NO_BARRIER', 'no copy marker, not a standby, and the role can write');
 }
 
-/** Replace string literals, dollar quotes and comments so keyword checks see only SQL structure. */
+/**
+ * Reduce SQL to its structure in one left-to-right pass, the way Postgres's
+ * lexer reads it: comments (nested block comments included) become a space,
+ * string literals ('', E'' with backslash escapes, dollar quotes) become '',
+ * a quoted identifier keeps its name when quoting changes nothing ("set_config"
+ * is set_config) and otherwise becomes ident. Keyword checks then see only
+ * structure.
+ */
+const DOLLAR_TAG = /^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$/;
+
 function structure(sql: string): string {
-  return sql
-    .replace(/\/\*[\s\S]*?\*\//g, ' ')
-    .replace(/--[^\n]*/g, ' ')
-    .replace(/\$([A-Za-z_]*)\$[\s\S]*?\$\1\$/g, "''")
-    .replace(/'(?:[^']|'')*'/g, "''")
-    .replace(/"(?:[^"]|"")*"/g, 'ident')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
+  let out = '';
+  let i = 0;
+  while (i < sql.length) {
+    const c = sql[i]!;
+    if (c === '-' && sql[i + 1] === '-') {
+      const end = sql.indexOf('\n', i);
+      i = end < 0 ? sql.length : end;
+      out += ' ';
+    } else if (c === '/' && sql[i + 1] === '*') {
+      let depth = 1;
+      i += 2;
+      while (i < sql.length && depth > 0) {
+        if (sql.startsWith('/*', i)) { depth++; i += 2; } else if (sql.startsWith('*/', i)) { depth--; i += 2; } else i++;
+      }
+      out += ' ';
+    } else if (c === "'") {
+      const escapes = /[eE]/.test(sql[i - 1] ?? '') && !/[A-Za-z0-9_$]/.test(sql[i - 2] ?? '');
+      i++;
+      while (i < sql.length) {
+        if (escapes && sql[i] === '\\') i += 2;
+        else if (sql[i] === "'" && sql[i + 1] === "'") i += 2;
+        else if (sql[i] === "'") { i++; break; } else i++;
+      }
+      out += "''";
+    } else if (c === '"') {
+      const start = ++i;
+      while (i < sql.length) {
+        if (sql[i] === '"' && sql[i + 1] === '"') i += 2;
+        else if (sql[i] === '"') { i++; break; } else i++;
+      }
+      const name = sql.slice(start, i - 1);
+      out += /^[a-z_][a-z0-9_]*$/.test(name) ? name : 'ident';
+    } else if (c === '$' && !/[A-Za-z0-9_]/.test(sql[i - 1] ?? '') && DOLLAR_TAG.test(sql.slice(i, i + 66))) {
+      const tag = sql.slice(i, i + 66).match(DOLLAR_TAG)![0];
+      const end = sql.indexOf(tag, i + tag.length);
+      i = end < 0 ? sql.length : end + tag.length;
+      out += "''";
+    } else {
+      out += c;
+      i++;
+    }
+  }
+  return out.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+/** The last top-level argument of each set_config( ... ) call, after structure(). */
+function setConfigScopes(statement: string): string[] {
+  const scopes: string[] = [];
+  for (const m of statement.matchAll(/\bset_config\s*\(/g)) {
+    let depth = 1, i = m.index! + m[0].length, start = i, last = '';
+    for (; i < statement.length && depth > 0; i++) {
+      const ch = statement[i];
+      if (ch === '(') depth++;
+      else if (ch === ')') { depth--; if (depth === 0) last = statement.slice(start, i); }
+      else if (ch === ',' && depth === 1) start = i + 1;
+    }
+    scopes.push(last.trim());
+  }
+  return scopes;
 }
 
 const READ_LEADS = new Set(['select', 'with', 'values', 'show', 'explain', 'table']);
@@ -102,13 +179,13 @@ export function classifySql(sql: string): SqlVerdict {
       if (DATA_MODIFYING.test(statement)) return { ok: false, verb: 'data_modifying_cte' };
       if (/\binto\b/.test(statement)) return { ok: false, verb: 'select_into' };
       if (WRITE_FUNCTIONS.test(statement)) return { ok: false, verb: 'write_function' };
-      for (const call of statement.matchAll(/\bset_config\s*\(([^()]*)\)/g)) {
-        if (call[1]!.split(',').at(-1)!.trim() !== 'true') return { ok: false, verb: 'set_config_session' };
-      }
+      if (setConfigScopes(statement).some(scope => scope !== 'true')) return { ok: false, verb: 'set_config_session' };
       continue;
     }
     if (lead === 'set') {
-      if (statement.split(' ')[1] !== 'local') return { ok: false, verb: 'set_session' };
+      const [, scope, name] = statement.split(' ');
+      if (scope !== 'local') return { ok: false, verb: 'set_session' };
+      if (name === 'role' || name === 'session') return { ok: false, verb: 'set_role' };
       continue;
     }
     if (lead === 'begin' || lead === 'start') {
@@ -163,7 +240,7 @@ export async function verifyReadOnly(engine: any): Promise<void> {
 }
 
 /** A Supabase transaction-pooler URL becomes the session pooler; the read-only startup parameter is appended. */
-export function readOnlyUrl(url: string): { url: string; connection: 'session_pooler' | 'transaction_pooler_rewritten' | 'direct_or_local' } {
+export function readOnlyUrl(url: string): { url: string; connection: 'session_pooler' | 'transaction_pooler_rewritten' | 'direct_or_local'; loopback: boolean } {
   const parsed = new URL(url.replace(/^postgres(ql)?:\/\//, 'http://'));
   const scheme = url.slice(0, url.indexOf('://'));
   let connection: 'session_pooler' | 'transaction_pooler_rewritten' | 'direct_or_local' = parsed.hostname.includes('pooler.') ? 'session_pooler' : 'direct_or_local';
@@ -173,7 +250,8 @@ export function readOnlyUrl(url: string): { url: string; connection: 'session_po
   }
   parsed.searchParams.delete('pgbouncer');
   parsed.searchParams.set('default_transaction_read_only', 'on');
-  return { url: scheme + '://' + parsed.toString().slice('http://'.length), connection };
+  const loopback = /^(localhost|127(\.\d{1,3}){3}|\[::1\])$/.test(parsed.hostname) && !parsed.searchParams.has('host') && !parsed.searchParams.has('hostaddr');
+  return { url: scheme + '://' + parsed.toString().slice('http://'.length), connection, loopback };
 }
 
 export interface OpenedBrain {
@@ -217,7 +295,7 @@ export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: st
   const { configureGateway } = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
   const { createEngine } = await importGbrain<any>(gut, 'src/core/engine-factory.ts');
 
-  const { url, connection } = readOnlyUrl(source);
+  const { url, connection, loopback } = readOnlyUrl(source);
   const config = { ...(loadConfig() ?? {}), engine: 'postgres', database_url: url };
   if (BLANKED_ENV.some(key => process.env[key] !== '')) throw new LiveRecallAbort('LR_DIRECT_URL_OVERRIDE', 'a blanked database variable was set again while loading gbrain config');
   configureGateway(buildGatewayConfig(config));
@@ -226,7 +304,7 @@ export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: st
   await engine.connect(engineConfig);
   try {
     const raw: Raw = sql => engine.executeRaw(sql);
-    const barrier = await proveBarrier(raw);
+    const barrier = await proveBarrier(raw, loopback);
     installGuards(engine, counters);
     await verifyReadOnly(engine);
     const schema = await checkSchema(engine, gut);

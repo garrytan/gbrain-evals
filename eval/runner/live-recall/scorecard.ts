@@ -66,6 +66,8 @@ export interface RunIdentity {
   reranker_enabled: boolean;
   reranker_model: string;
   embedding_model: string;
+  /** The embedding column the vector and hybrid arms search, resolved the way hybridSearch resolves it. */
+  embedding_column: string;
   /** The mode's own expansion default; every arm passes expansion: false regardless. */
   mode_expansion: boolean;
   control: boolean;
@@ -171,10 +173,11 @@ function compare(id: string, a: Map<string, QueryRecord>, b: Map<string, QueryRe
 
 /** The comparisons the preregistration names, in its order. P1 and P2 are the only Holm family. */
 export const COMPARISONS: Array<{ id: string; a: Arm; b: Arm; form: Form | 'all' | 'exact_vs_paraphrase'; primary?: 'P1' | 'P2'; windowed?: boolean }> = [
-  { id: 'p1_hybrid_vs_keyword', a: 'keyword', b: 'hybrid', form: 'all', primary: 'P1' },
-  { id: 'p2_configured_vs_keyword_paraphrase', a: 'keyword', b: 'configured', form: 'paraphrase', primary: 'P2' },
+  { id: 'p1_hybrid_vs_hybrid_lexical', a: 'hybrid_lexical', b: 'hybrid', form: 'all', primary: 'P1' },
+  { id: 'p2_configured_vs_hybrid_lexical_paraphrase', a: 'hybrid_lexical', b: 'configured', form: 'paraphrase', primary: 'P2' },
   { id: 'hybrid_lexical_vs_keyword', a: 'keyword', b: 'hybrid_lexical', form: 'all' },
-  { id: 'hybrid_vs_hybrid_lexical', a: 'hybrid_lexical', b: 'hybrid', form: 'all' },
+  { id: 'hybrid_vs_keyword', a: 'keyword', b: 'hybrid', form: 'all' },
+  { id: 'configured_vs_keyword_paraphrase', a: 'keyword', b: 'configured', form: 'paraphrase' },
   { id: 'configured_vs_hybrid', a: 'hybrid', b: 'configured', form: 'all' },
   { id: 'vector_vs_keyword', a: 'keyword', b: 'vector', form: 'all' },
   { id: 'configured_vs_keyword_exact', a: 'keyword', b: 'configured', form: 'exact' },
@@ -272,11 +275,16 @@ const compareId = (arm: Arm, form: (typeof COMPARE_FORMS)[number]) => 'run_b_vs_
  * Two runs on the same questions (a baseline and a candidate gbrain, or the
  * same gbrain twice for run-to-run noise), paired per arm on question forms
  * that are ok in both. Reads two detail.local.jsonl files on the box; emits
- * aggregates only, through the same structural check as the scorecard.
+ * aggregates only, through the same structural check as the scorecard. An arm
+ * invalid in either run's scorecard is skipped.
  */
-export function compareRuns(a: QueryRecord[], b: QueryRecord[]) {
+export function compareRuns(a: QueryRecord[], b: QueryRecord[], invalidArms: ReadonlySet<string> = new Set()) {
   const comparisons: Array<Record<string, unknown>> = [];
   for (const arm of ARMS) {
+    if (invalidArms.has(arm)) {
+      for (const form of COMPARE_FORMS) comparisons.push({ id: compareId(arm, form), skipped: 'arm_invalid_or_absent' });
+      continue;
+    }
     const okA = new Map(a.filter(r => r.arm === arm && r.status === 'ok').map(r => [keyOf(r), r] as const));
     const okB = new Map(b.filter(r => r.arm === arm && r.status === 'ok').map(r => [keyOf(r), r] as const));
     for (const form of COMPARE_FORMS) {
@@ -299,7 +307,7 @@ const KEY_WORDS = new Set<string>([
   'paraphrase_shares_identifier_token', 'freeze_sha_prefix', 'readonly_verified_start', 'readonly_verified_end', 'guard_refusals',
   'started_at', 'finished_at', 'runner_commit', 'runner_dirty', 'gbrain_pin_version', 'gbrain_pin_commit', 'gbrain_loaded_version',
   'gbrain_loaded_commit', 'gbrain_overlay', 'schema_version', 'engine', 'barrier', 'connection', 'search_mode', 'reranker_enabled',
-  'reranker_model', 'embedding_model', 'mode_expansion', 'control', 'top5_changed', 'degraded_stages',
+  'reranker_model', 'embedding_model', 'embedding_column', 'mode_expansion', 'control', 'top5_changed', 'degraded_stages',
   'pgvector_version', 'source_pgvector', 'source_server_version_num', 'copy_server_version_num', 'restore_errors', 'run_a', 'run_b',
   'chat', 'embedding', 'rerank', 'multimodal', 'decide', 'transcription',
   ...ARMS, ...TYPES, ...KS.map(k => 'k' + k), ...STATUSES, ...GOLD_FOUND_BY,
@@ -319,8 +327,14 @@ const STRING_PATTERNS = [
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/,
   /^[0-9a-f]{7,64}$/,
   VERSION_PATTERN,
-  /^[a-z0-9-]+:[a-z0-9][a-z0-9.\-]*$/,
 ];
+/** Shapes allowed only at one path: a provider:model id (Ollama, OpenRouter and similar ids carry slashes, underscores and capitals) and a column name. */
+const MODEL_PATTERN = /^[a-z0-9-]+:[A-Za-z0-9][A-Za-z0-9._\/:-]*$/;
+const FIELD_PATTERNS: Record<string, RegExp> = {
+  '$.run.reranker_model': MODEL_PATTERN,
+  '$.run.embedding_model': MODEL_PATTERN,
+  '$.run.embedding_column': /^[a-z_][a-z0-9_]{0,62}$/,
+};
 
 /** Structural custody check: known keys, allowlisted strings, finite numbers. Throws LR_CUSTODY_LEAK naming only the path. */
 export function validateScorecard(value: unknown, path = '$'): void {
@@ -330,7 +344,7 @@ export function validateScorecard(value: unknown, path = '$'): void {
     return;
   }
   if (typeof value === 'string') {
-    if (STRING_WORDS.has(value) || STRING_PATTERNS.some(p => p.test(value))) return;
+    if (STRING_WORDS.has(value) || STRING_PATTERNS.some(p => p.test(value)) || FIELD_PATTERNS[path]?.test(value)) return;
     throw new LiveRecallAbort('LR_CUSTODY_LEAK', 'unexpected string at ' + path);
   }
   if (Array.isArray(value)) {
@@ -354,10 +368,13 @@ export function validateScorecard(value: unknown, path = '$'): void {
  * appears in an outbound text. Only distinctive needles are scanned: ones with a
  * space, a slash or a digit, or at least 12 characters. A short single word
  * (a slug like `people`) cannot be told apart from the scorecard's own
- * vocabulary, and the structural check already keeps it out.
+ * vocabulary, and a bare date, version or hex string (a daily page's slug)
+ * cannot be told apart from the run's own timestamps and commits; the
+ * structural check already keeps both out.
  */
 export function scanForLeaks(outbound: string, needles: Iterable<string>): void {
   for (const needle of needles) {
+    if (STRING_PATTERNS.some(p => p.test(needle)) || /^\d{4}-\d{2}-\d{2}$/.test(needle)) continue;
     const distinctive = needle.length >= 12 || (needle.length >= 5 && /[\s/0-9]/.test(needle));
     if (distinctive && outbound.includes(needle)) throw new LiveRecallAbort('LR_CUSTODY_LEAK', 'a private string matched an outbound file');
   }

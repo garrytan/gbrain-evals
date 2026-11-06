@@ -9,8 +9,7 @@ added under [Frozen sample](#frozen-sample) from Wintermute's freeze output befo
 How often does gbrain's search put the page that answers a real question at the top of its results, on Garry Tan's own
 brain? How does that change with the kind of question (an identifier, an error string, a time window, a question that
 needs two sources, a topic) and with its wording (the words the page uses, or a paraphrase that avoids them)? And what
-does each layer of search add over plain keyword search: vectors, the hybrid fusion, and the brain's configured
-reranker?
+does each layer of search add over gbrain's own lexical search: vectors, and the brain's configured reranker?
 
 gbrain is a personal knowledge brain: it stores Markdown pages in Postgres (or PGLite) and finds them with keyword,
 vector and hybrid search. Wintermute is the agent that runs on Garry's box beside his live brain. It writes the
@@ -35,15 +34,22 @@ reads the live database once with `pg_dump` (one read-only transaction), restore
 pgvector container, checks row counts against the source and creates a marker table. The runner refuses to search
 until the database itself proves one of three barriers, in this order of preference:
 
-1. **copy**: the marker table exists (only `snapshot.sh` creates it);
+1. **copy**: the marker table exists (only `snapshot.sh` creates it), it carries the system identifier of the cluster
+   the runner is connected to (from `pg_control_system()`, so a marker restored into or created on another cluster
+   proves nothing), and the runner reached it on a loopback address;
 2. **standby**: `pg_is_in_recovery()` is true (a Supabase read replica);
-3. **no_write_privilege**: a non-superuser role with no INSERT, UPDATE, DELETE or TRUNCATE on any table and no CREATE on
-   any schema. Making such a role on Garry's database is a change to his database, so it is GBRA-108's or Garry's call,
-   not Wintermute's.
+3. **no_write_privilege**: a non-superuser role with no INSERT, UPDATE, DELETE or TRUNCATE on any table, view,
+   materialized view or foreign table (column-level grants included), no CREATE on any schema or on the database, no
+   UPDATE or USAGE on any sequence, and no EXECUTE on a SECURITY DEFINER function in `public`. Making such a role on
+   Garry's database is a change to his database, so it is GBRA-108's or Garry's call, not Wintermute's.
+
+`snapshot.sh` takes the source's row counts in their own read-only transactions just before and just after the dump.
+Each table's count in the copy must lie between the two, and when the source changed during the dump the script says so.
 
 A session flag alone is not a barrier on Postgres: gbrain opens transactions not marked read-only as `BEGIN READ WRITE`
 and retries a statement refused with SQLSTATE 25006 inside one. On top of the barrier the runner forces every gbrain
-transaction read-only, puts an allowlist in front of raw SQL (reads, `SET LOCAL` and transaction control only),
+transaction read-only, puts an allowlist in front of raw SQL (reads, `SET LOCAL` other than `ROLE` and
+`SESSION AUTHORIZATION`, `set_config` with `is_local` true at every nesting level, and transaction control only),
 disables the direct pool and blanks the database variables gbrain's config loader would otherwise fill from
 `~/.gbrain/.env`. gbrain's search path flushes per-query counters into `search_telemetry`; the guard refuses those
 writes and the scorecard counts them as `telemetry_write`.
@@ -78,7 +84,7 @@ Each question form is searched by every arm, one at a time.
 | Arm | What runs | Model calls allowed |
 |---|---|---|
 | `keyword` | `engine.searchKeyword`, 50 chunks | none |
-| `vector` | `engine.searchVector` with the `hybrid` arm's own query embedding, 50 chunks | none (reuses the embedding) |
+| `vector` | `engine.searchVector` with the `hybrid` arm's own query embedding and the embedding column, legacy guard and iterative-scan settings `hybridSearch` gives its own vector leg, 50 chunks | none (reuses the embedding) |
 | `hybrid_lexical` | `hybridSearch` with its vector leg off (`decide.keywordOnly`), reranker, expansion and autocut off, 50 chunks | none |
 | `hybrid` | `hybridSearch` keyword plus vector fusion, reranker, expansion and autocut off, 50 chunks | query embedding |
 | `configured` | `hybridSearch` as the brain is configured (its mode, reranker and default limit), expansion forced off | query embedding, rerank |
@@ -86,7 +92,8 @@ Each question form is searched by every arm, one at a time.
 
 Every arm runs inside gbrain's AI invocation guard: an arm that tries a model call it is not allowed (chat, decide,
 multimodal, or a rerank outside the configured arms) is refused and the query is marked `ai_refused`. A configured
-result with no rerank score counts as a rerank fail-open; past 10% of queries the configured arm is invalid.
+result with no rerank score, or one where gbrain reports `rerank_failed` or `rerank_passthrough`, counts as a rerank
+fail-open; past 10% of queries the configured arm is invalid.
 
 ## Metrics
 
@@ -116,13 +123,24 @@ p, two-sided).
 
 **Primary (Holm-corrected across the two, on success@5):**
 
-- **P1: `hybrid` minus `keyword`**, all question forms (both forms, clustered by question).
-- **P2: `configured` minus `keyword`**, paraphrase forms only (one pair per question).
+- **P1: `hybrid` minus `hybrid_lexical`**, all question forms (both forms, clustered by question): what vectors add
+  to gbrain's own lexical search.
+- **P2: `configured` minus `hybrid_lexical`**, paraphrase forms only (one pair per question): what the brain's
+  configured search adds where the words differ.
 
-**Descriptive (reported with intervals, never tested):** `hybrid_lexical` minus `keyword`, `hybrid` minus
-`hybrid_lexical`, `configured` minus `hybrid`, `vector` minus `keyword`, `configured` minus `keyword` on exact
-forms, `hybrid` minus `keyword` on paraphrases, `configured_window` minus `configured` on windowed time_window
-questions, paraphrase minus exact within each arm (this mostly measures how hard the paraphrases were written), MRR for
+A comparison whose arm is invalid or absent is reported as skipped and still counts as one of the two in the Holm family
+(as p = 1).
+
+The baseline is gbrain's lexical hybrid, not plain keyword search. On the public fixture, `keyword` returned no page
+at all for any of the 20 paraphrases (0 of 20; 0.70 pages per exact form), while `hybrid_lexical` put the gold page in
+its first five for 15 of them (`--fixture` control at 52b9ccae). A baseline that finds nothing on paraphrases would make
+P2 a foregone conclusion. This was amended before any counted run (GBEV-3, 2026-11-06); the first draft named
+`keyword` as the baseline for both.
+
+**Descriptive (reported with intervals, never tested):** the keyword contrasts, `hybrid_lexical` minus `keyword`,
+`hybrid` minus `keyword` and `configured` minus `keyword` on paraphrases, plus `configured` minus `hybrid`,
+`vector` minus `keyword`, `configured` minus `keyword` on exact forms, `hybrid` minus `keyword` on paraphrases,
+`configured_window` minus `configured` on windowed time_window questions, paraphrase minus exact within each arm (this mostly measures how hard the paraphrases were written), MRR for
 every comparison, and every per-type cell.
 
 ## Decision rules
@@ -131,7 +149,7 @@ every comparison, and every per-type cell.
   with its size, interval and the minimum detectable difference at the frozen N.
 - A primary comparison that does not hold gets one R48 "Why null?" cycle before it is reported (exposure: did the arm
   run as described, from model-call and degraded-stage counts; task fit; power and saturation, from the MDD and any
-  ceiling in keyword's exact-form rate; and whether keyword alone already does the job), with a verdict of KEEP,
+  ceiling in `hybrid_lexical`'s rate; and whether lexical search alone already does the job), with a verdict of KEEP,
   FIX-METHOD or CUT-CANDIDATE.
 - **Paraphrase gap.** If `configured` success@5 on paraphrases trails its own exact forms by 20 points or more with the
   interval excluding 0, we write a public, synthetic reproduction in the style of the fixture and route it to gbrain's

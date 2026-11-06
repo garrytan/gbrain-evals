@@ -7,10 +7,11 @@
 # make reads the source once with pg_dump, which runs in a single read-only
 # repeatable-read transaction and writes nothing to the source. It restores the
 # public schema into a pgvector container bound to 127.0.0.1, creates the
-# marker table the runner's barrier check requires (its one row records the
+# marker table the runner's barrier check requires (its one row carries the
+# copy cluster's system identifier, which the runner matches, and records the
 # source's and the copy's server and pgvector versions and the restore error
-# count, which the scorecard reports), compares row counts with
-# the source, deletes the dump file and writes <workdir>/copy.env (mode 600)
+# count, which the scorecard reports), checks row counts against counts taken
+# on the source before and after the dump, deletes the dump file and writes <workdir>/copy.env (mode 600)
 # with LIVE_RECALL_DATABASE_URL. Restore output stays in <workdir>/restore.log
 # because pg_restore errors can quote row data; the terminal gets counts only.
 # teardown removes the container, its volume and the workdir, and refuses a
@@ -66,7 +67,7 @@ make_copy() {
   local q_ext="SELECT e.extname || ' ' || n.nspname FROM pg_extension e JOIN pg_namespace n ON n.oid = e.extnamespace WHERE e.extname IN ('vector', 'pg_trgm', 'pgcrypto') ORDER BY 1"
   local q_counts="SELECT $(for t in $count_tables; do printf "(SELECT count(*) FROM public.%s) || ' ' || " "$t"; done) ''"
   local q_facts="SELECT current_setting('server_version_num') || ' ' || coalesce((SELECT extversion FROM pg_extension WHERE extname = 'vector'), '-')"
-  local exts src_counts src_facts copy_facts
+  local exts src_counts src_after src_facts copy_facts
   exts="$(pg sh -c 'psql -X -q -t -A -v ON_ERROR_STOP=1 --dbname="$LIVE_RECALL_SOURCE_URL" -c "BEGIN READ ONLY" -c "$1" -c COMMIT' _ "$q_ext")" \
     || die "LR_SNAPSHOT_SOURCE_READ: could not query the source; check the URL and network"
   src_counts="$(pg sh -c 'psql -X -q -t -A -v ON_ERROR_STOP=1 --dbname="$LIVE_RECALL_SOURCE_URL" -c "BEGIN READ ONLY" -c "$1" -c COMMIT' _ "$q_counts" | tr -s ' ' | sed 's/ $//')"
@@ -75,6 +76,7 @@ make_copy() {
   say "dumping the public schema (pg_dump, one read-only transaction)"
   pg sh -c 'pg_dump --dbname="$LIVE_RECALL_SOURCE_URL" --format=custom --schema=public --no-owner --no-privileges --file=/work/brain.dump' 2>"$workdir/dump.log" \
     || die "LR_SNAPSHOT_DUMP: pg_dump failed; details in $workdir/dump.log (stays on this box)"
+  src_after="$(pg sh -c 'psql -X -q -t -A -v ON_ERROR_STOP=1 --dbname="$LIVE_RECALL_SOURCE_URL" -c "BEGIN READ ONLY" -c "$1" -c COMMIT' _ "$q_counts" | tr -s ' ' | sed 's/ $//')"
 
   local password
   password="$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')"
@@ -107,18 +109,30 @@ make_copy() {
 
   local copy_counts
   copy_counts="$(PGPASSWORD="$password" pg psql -X -q -t -A "$url" -c "$q_counts" | tr -s ' ' | sed 's/ $//')"
-  [ -n "$src_counts" ] && [ "$src_counts" = "$copy_counts" ] \
-    || die "LR_SNAPSHOT_COUNTS: row counts differ (source: ${src_counts:-none}; copy: ${copy_counts:-none}; tables: $count_tables); $errors restore errors in $workdir/restore.log. Run teardown."
+  # The counts bracket the dump: with no writes in between they must match exactly; if the source changed while
+  # pg_dump ran, each copy count must lie between the counts taken before and after it.
+  local before after copied i lo hi
+  read -r -a before <<<"$src_counts"
+  read -r -a after <<<"$src_after"
+  read -r -a copied <<<"$copy_counts"
+  [ "${#before[@]}" -gt 0 ] && [ "${#before[@]}" = "${#after[@]}" ] && [ "${#before[@]}" = "${#copied[@]}" ] \
+    || die "LR_SNAPSHOT_COUNTS: row counts unavailable (source: ${src_counts:-none}; copy: ${copy_counts:-none}); $errors restore errors in $workdir/restore.log. Run teardown."
+  for i in "${!before[@]}"; do
+    lo=$(( before[i] < after[i] ? before[i] : after[i] )); hi=$(( before[i] > after[i] ? before[i] : after[i] ))
+    [ "${copied[i]}" -ge "$lo" ] && [ "${copied[i]}" -le "$hi" ] \
+      || die "LR_SNAPSHOT_COUNTS: row counts differ (source before: $src_counts; after: $src_after; copy: $copy_counts; tables: $count_tables); $errors restore errors in $workdir/restore.log. Run teardown."
+  done
+  [ "$src_counts" = "$src_after" ] || say "the source changed while pg_dump ran (before: $src_counts; after: $src_after); the copy holds pg_dump's consistent snapshot"
 
   copy_facts="$(PGPASSWORD="$password" pg psql -X -q -t -A "$url" -c "$q_facts")"
   local src_sv src_pv copy_sv copy_pv
   read -r src_sv src_pv <<<"$src_facts"
   read -r copy_sv copy_pv <<<"$copy_facts"
   PGPASSWORD="$password" pg psql -X -q -v ON_ERROR_STOP=1 "$url" \
-    -c "CREATE TABLE public.$marker (made_at timestamptz NOT NULL DEFAULT now(), source_server_version_num int, source_pgvector text, copy_server_version_num int, copy_pgvector text, restore_errors int); INSERT INTO public.$marker (source_server_version_num, source_pgvector, copy_server_version_num, copy_pgvector, restore_errors) VALUES ($(sql_int "$src_sv"), $(sql_version "$src_pv"), $(sql_int "$copy_sv"), $(sql_version "$copy_pv"), $(sql_int "$errors"));" >/dev/null
+    -c "CREATE TABLE public.$marker (made_at timestamptz NOT NULL DEFAULT now(), copy_system_identifier text NOT NULL, source_server_version_num int, source_pgvector text, copy_server_version_num int, copy_pgvector text, restore_errors int); INSERT INTO public.$marker (copy_system_identifier, source_server_version_num, source_pgvector, copy_server_version_num, copy_pgvector, restore_errors) SELECT system_identifier::text, $(sql_int "$src_sv"), $(sql_version "$src_pv"), $(sql_int "$copy_sv"), $(sql_version "$copy_pv"), $(sql_int "$errors") FROM pg_control_system();" >/dev/null
   printf "export LIVE_RECALL_DATABASE_URL='postgresql://postgres:%s@127.0.0.1:%s/brain'\n" "$password" "$port" >"$workdir/copy.env"
   chmod 600 "$workdir/copy.env"
-  say "copy ready: row counts match the source ($count_tables: $copy_counts); restore errors: $errors (see $workdir/restore.log); pgvector source ${src_pv:--}, copy ${copy_pv:--}"
+  say "copy ready: row counts check out against the source ($count_tables: $copy_counts); restore errors: $errors (see $workdir/restore.log); pgvector source ${src_pv:--}, copy ${copy_pv:--}"
   say "next: source $workdir/copy.env, run the runner, then: eval/runner/live-recall/snapshot.sh teardown $workdir"
 }
 

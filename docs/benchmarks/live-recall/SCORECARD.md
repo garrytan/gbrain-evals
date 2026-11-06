@@ -12,11 +12,14 @@ question, a slug, a chunk id or a per-question row. The method behind the number
 
 1. **Structure.** Every key is one the format defines (gbrain's degraded-stage names and the guard's verbs are allowed
    as keys in their two count maps). Every string is an allowlisted word (arm, type, form, status, comparison id,
-   barrier, mode and so on) or matches a fixed shape: an ISO timestamp, a hex commit, a version number, or a
-   `provider:model` id. Every number is finite. A question form or slug has no field it could land in.
+   barrier, mode and so on) or matches a fixed shape: an ISO timestamp, a hex commit or a version number anywhere, a
+   `provider:model` id (the model part may carry `/`, `_`, `.`, `:` and capitals, as Ollama and OpenRouter ids
+   do) only at `run.reranker_model` and `run.embedding_model`, and a lower-case column name only at
+   `run.embedding_column`. Every number is finite. A question form or slug has no field it could land in.
 2. **Needle scan.** The JSON and the Markdown are searched for every question form, gold slug and retrieved slug of the
    run. Distinctive needles are scanned (a space, slash or digit, or at least 12 characters); a short single word
-   cannot be told apart from the format's own vocabulary and is already kept out by the structure check.
+   cannot be told apart from the format's own vocabulary, and a bare date, version or hex string (a daily page's slug,
+   say) cannot be told apart from the run's own timestamps and commits. The structure check already keeps both out.
 
 The Markdown is rendered from the validated JSON alone. The per-query detail behind the aggregates
 (`detail.local.jsonl`, pointers only) stays on the box.
@@ -31,8 +34,9 @@ pin (`gbrain_pin_version`, `gbrain_pin_commit`) and what was loaded (`gbrain_loa
 `gbrain_loaded_commit`, `gbrain_overlay`); `schema_version` of the brain; `engine` (`postgres`, or `pglite` for
 the fixture); `barrier` (`copy`, `standby` or `no_write_privilege`) and `connection` (`direct_or_local`,
 `session_pooler`, `transaction_pooler_rewritten`, or `in_process`); the brain's `search_mode`, `reranker_enabled`,
-`reranker_model`, `embedding_model` and `mode_expansion` (the mode's own expansion default; every arm runs with
-expansion off); `control` (true for the hash-embedding fixture, whose numbers say nothing about search quality);
+`reranker_model`, `embedding_model`, `embedding_column` (the column `hybridSearch` and the `vector` arm search;
+`unknown` when its name is not a plain column name) and `mode_expansion` (the mode's own expansion default; every arm
+runs with expansion off); `control` (true for the hash-embedding fixture, whose numbers say nothing about search quality);
 `pgvector_version` (the pgvector extension version in the database searched, for every barrier); and, on a copy,
 `source_pgvector`, `source_server_version_num`, `copy_server_version_num` and `restore_errors`, read from the row
 `snapshot.sh` writes into the marker table (the copy runs the container image's pgvector, which can differ from the
@@ -71,8 +75,11 @@ each excluded form), `invalid_arms` (`rerank_fail_open_over_cap`, `embedding_opt
 `id`, `metric`, `a`, `b`, `form` (`all`, `exact`, `paraphrase` or `exact_vs_paraphrase` with `arm`),
 `n_pairs`, `n_clusters`, `mean_a`, `mean_b`, `delta` (B minus A), `ci95`, `p_two_sided` and `p_method` (cluster
 sign flip), `mcnemar` (exact, when there is one pair per question), `mde` (the minimum detectable difference at this
-n), `primary` (`P1`, `P2` or `null`) and, on the two primary success@5 rows, `p_holm`. A comparison whose arm is
-invalid is `{"id": ..., "skipped": "arm_invalid_or_absent"}`.
+n), `primary` (`P1`, `P2` or `null`) and, on the two primary success@5 rows, `p_holm`. The primaries are
+`p1_hybrid_vs_hybrid_lexical` and `p2_configured_vs_hybrid_lexical_paraphrase`; the keyword contrasts
+(`hybrid_lexical_vs_keyword`, `hybrid_vs_keyword`, `configured_vs_keyword_paraphrase` and the rest) are descriptive.
+A comparison whose arm is invalid or absent is `{"id": ..., "skipped": "arm_invalid_or_absent"}`; a skipped primary
+still counts in the Holm family of two, as p = 1.
 
 Rates, deltas and intervals are fractions rounded to four decimals; the Markdown shows them as percentages.
 
@@ -90,7 +97,8 @@ refusals, exclusions).
 with `LR_FREEZE_MISMATCH` when the runs used different question files and with `LR_COMPARE_CONTROL` when either is a
 fixture control. `run_a` and `run_b` carry each run's `gbrain_loaded_version`, `gbrain_loaded_commit`, `barrier`,
 `control` and `freeze_sha_prefix`, so a swapped pair shows. It pairs the runs per arm and form (`all`, `exact`,
-`paraphrase`) on question forms that are `ok` in both. Each row has the comparison fields above
+`paraphrase`) on question forms that are `ok` in both. An arm invalid in either run's scorecard (a configured arm past
+its fail-open cap, say) is not paired: each of its rows is `{"id": ..., "skipped": "arm_invalid_or_absent"}`. Each row has the comparison fields above
 with `a: "run_a"`, `b: "run_b"`, `id` `run_b_vs_run_a_<arm>_<form>`, and `top5_changed` (how many forms' first
 five pages differ). It passes the same structural check.
 
