@@ -2,6 +2,29 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.166] - 2026-11-06
+
+### Live recall: a read-only recall@k and ablation harness for Garry's brain, with its preregistration (GBEV-43)
+
+- **What it measures.** `eval/runner/live-recall/run.ts` asks how often gbrain's search puts the page that answers a
+  real question in its top results, split by question type and by exact or paraphrased wording, across five arms:
+  keyword, vector, gbrain's own lexical hybrid, hybrid, and the brain's configured search. The preregistered
+  comparisons are P1, hybrid minus hybrid_lexical over all forms, and P2, configured minus hybrid_lexical over
+  paraphrases; the keyword contrasts are descriptive. `docs/benchmarks/live-recall/PREREGISTRATION.md`, new, fixes the
+  method and decision rules before any number exists, and reports no result.
+- **Custody.** The runner reads a disposable copy of the brain made by `eval/runner/live-recall/snapshot.sh` (or a
+  standby, or a role with no write privilege) and refuses to search until the database proves that barrier. On top of
+  it, every gbrain transaction is forced read-only, raw SQL passes an allowlist, the direct pool is off and gbrain's
+  database variables are blanked. Only an aggregate scorecard leaves the box; it is checked for private text before it
+  is written. `docs/benchmarks/live-recall/RUN-KIT.md` and `SCORECARD.md` are the operator's guide and the format.
+- **The fixture control.** `eval/data/live-recall-v1/` is a public 30-page brain with 20 questions (40 forms) for a
+  keyless check of the harness. Its success@5 is keyword 35.0%, vector 75.0%, hybrid_lexical 87.5%, hybrid 77.5% and
+  configured 85.0%. These are harness checks, not a result about gbrain.
+- **Tests.** `test/eval/live-recall.test.ts` runs keyless in CI. `test/eval/live-recall-postgres.test.ts` covers the
+  barrier and guards against a real Postgres and is opt-in (`LIVE_RECALL_PG_TEST_URL`), so it does not run in CI.
+- **Index.** `docs/README.md` lists the preregistration and names v0.10.166. `eval/registry.ts` adds `live-recall` to
+  `RUNNER_HELPER_DIRS`.
+
 ## [0.10.165] - 2026-11-05
 
 ### GST-1365 results: F6's and Q1's BEAM comparisons hold under frontier judges, except BEAM-100K's file agent, which depends on the judge (GST-1365)

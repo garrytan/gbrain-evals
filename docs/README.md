@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.165, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
+gbrain-evals v0.10.166, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -202,6 +202,7 @@ These documents fix a method before measuring. They publish no capability scores
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
 | Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? | [November 1 SkillOpt method preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md) with three amendments: Haiku 5.5 probes 1 and 2 ([probe 1's summary](benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json)), the frontier probe on Opus 5.5 and GPT-6.1 Sol, and the one test-split read reported in the [November 2 report](benchmarks/2026-11-01-skillopt-method/REPORT.md); task sets: [v2](../eval/data/skillopt-method-v2/README.md), which the probe reads, and the frozen [v1](../eval/data/skillopt-method-v1/README.md) |
+| How often does gbrain's search put the right page first on Garry's own brain, by kind of question and by exact or paraphrased wording, and what do vectors and the configured reranker add over gbrain's own lexical search (keyword search is a descriptive contrast)? | [Live-recall preregistration](benchmarks/live-recall/PREREGISTRATION.md) (phase 1, gbrain 0.60.577.0 on the box that holds the brain), with its [run kit](benchmarks/live-recall/RUN-KIT.md) and [scorecard format](benchmarks/live-recall/SCORECARD.md); the questions stay private on that box, which runs against a disposable copy and sends back aggregates only. CI runs the same harness keyless on the public [live-recall-v1 fixture](../eval/data/live-recall-v1/README.md) |
 
 ## Data and methods
 
@@ -270,6 +271,16 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-06: Live-recall preregistration row; opening names v0.10.166
+
+"Protocols and preregistrations" gains a row for the
+[live-recall preregistration](benchmarks/live-recall/PREREGISTRATION.md), its run kit and its scorecard format. It
+asks how often gbrain's search finds the right page for real questions on Garry's brain, split by question type and by
+exact or paraphrased wording, and what vectors and the configured reranker add over gbrain's own lexical search, with
+keyword search as a descriptive contrast. It reports no result and carries no
+disclosure line, like the preregistration itself. No existing row changed. The opening names gbrain-evals v0.10.166 (was
+v0.10.165).
 
 ### 2026-11-05: GST-1365 judge-robustness results; opening names v0.10.165
 
