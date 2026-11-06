@@ -75,8 +75,13 @@ All commands run from the repository root.
      --gbrain <gbrain checkout>@52b9ccae42cd81e16c21624c545a9c02c3505c11 --database-url-env LIVE_RECALL_DATABASE_URL
    ```
 
+   For batch 2's counted run, pass the gbrain commit of v0.60.593.0, the release the box runs after its 2026-11-07
+   upgrade, instead of `52b9ccae` ([batch 2 amendment](PREREGISTRATION.md#batch-2-amendment)). A second run of the
+   same batch 2 file at `52b9ccae` is what the pooled and version-change secondaries need.
+
    Before the first question, the runner sends one public probe query through every arm and stops with
-   [`LR_ARM_PREFLIGHT`](#lr_arm_preflight) if any arm errors or reports a failure stage, so a missing grant ends the run
+   [`LR_ARM_PREFLIGHT`](#lr_arm_preflight) if any arm errors, is refused a model call, fails its reranker open or
+   reports a failure stage, so a missing grant ends the run
    before it uses the question set. The terminal shows only allowlisted lines: the gbrain version, schema version and
    barrier, the preflight result, progress every 10 questions, and the output paths. Everything gbrain prints goes to `gbrain.local.log` in the run directory
    (`eval/reports/live-recall/<timestamp>/` unless you pass `--out`), and gbrain's own audit files land there too.
