@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.165, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
+gbrain-evals v0.10.166, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -272,14 +272,15 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
 
-### 2026-11-06: Live-recall preregistration row
+### 2026-11-06: Live-recall preregistration row; opening names v0.10.166
 
 "Protocols and preregistrations" gains a row for the
 [live-recall preregistration](benchmarks/live-recall/PREREGISTRATION.md), its run kit and its scorecard format. It
 asks how often gbrain's search finds the right page for real questions on Garry's brain, split by question type and by
 exact or paraphrased wording, and what vectors and the configured reranker add over gbrain's own lexical search, with
 keyword search as a descriptive contrast. It reports no result and carries no
-disclosure line, like the preregistration itself. No existing row changed.
+disclosure line, like the preregistration itself. No existing row changed. The opening names gbrain-evals v0.10.166 (was
+v0.10.165).
 
 ### 2026-11-05: GST-1365 judge-robustness results; opening names v0.10.165
 
