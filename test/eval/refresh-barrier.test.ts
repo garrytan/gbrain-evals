@@ -8,7 +8,7 @@ import { B_KINDS, planJobs, runBlock, type RunArgs } from '../../eval/runner/ref
 import { allOps, generateSchedule } from '../../eval/runner/refresh-barrier/schedule.ts';
 import { CELLS, MARGIN, compare, compareLatency } from '../../eval/runner/refresh-barrier/retrieval.ts';
 import { POLL_LIMIT_MS, classifyResult } from '../../eval/runner/refresh-barrier/runtime.ts';
-import { allowedCode, removedByBlindPut, removerOf } from '../../eval/runner/refresh-barrier/verify.ts';
+import { allowedCode, clientView, removedByBlindPut, removerOf } from '../../eval/runner/refresh-barrier/verify.ts';
 
 describe('refresh-barrier schedule', () => {
   test('a quiet schedule keeps the seed\'s writers and writes and drops every refresh, push, sync and fault', () => {
@@ -91,6 +91,23 @@ describe('refresh-barrier analysis', () => {
     expect(quietLatencyMs({ ...w, first: 'pending', first_ms: 30, committed_ms: null })).toBe(POLL_LIMIT_MS);
     expect(quietLatencyMs({ issued: true, state: 'conflict', first: 'refused', first_ms: 25 })).toBeNull();
     expect(quietLatencyMs({ issued: false, state: 'committed', first: null })).toBeNull();
+  });
+
+  test('the writer\'s view times a write to its committed answer, and to the database commit when the writer stopped polling first', () => {
+    const call = (t: number, ms: number, cls: string, attempt = 1) => ({ ev: 'response', t, ms, cls, attempt });
+    const committed = { state: 'committed', updated_at: new Date(10_500).toISOString() };
+    expect(clientView([call(1_240, 240, 'committed')], committed).committed_ms).toBe(240);
+    expect(clientView([call(1_030, 30, 'refused_retryable'), call(2_300, 50, 'committed', 2)], committed).committed_ms).toBe(1_300);
+    expect(clientView([call(1_030, 30, 'pending'), { ev: 'final', state: 'committed', after_ms: 2_400 }], committed).committed_ms).toBe(2_400);
+    expect(clientView([call(1_030, 30, 'pending'), { ev: 'poll_gave_up' }], committed).committed_ms).toBe(9_500);
+    expect(clientView([call(1_030, 30, 'pending'), { ev: 'poll_gave_up' }], { state: 'pending' }).committed_ms).toBeNull();
+  });
+
+  test('a failed read before an update leaves the write issued and unexpected, so it stays in the denominator', () => {
+    const v = clientView([{ ev: 'read_failed', code: 'worktree_refreshing' }], null);
+    expect(v.issued).toBe(true);
+    expect(v.clientReasons).toEqual(['read_failed:worktree_refreshing']);
+    expect(clientView([], null)).toMatchObject({ issued: false, clientReasons: [] });
   });
   test('failure classes come from ops and from run flags', () => {
     const ok = { flags: { quiesce: { ok: true }, quiesce_final: { ok: true }, converge: { ok: true }, deadlocks: 0, deadlock_mentions: 0 }, upstream: { missing_head: 0 }, child_errors: [], ops: [{ lost: false }] };
@@ -349,6 +366,16 @@ describe('refresh-barrier counted-run integrity', () => {
     put(out, 'trials/pglite/on/1001.json', { seed: 1001, arm: 'on', ops: [] });
     await expect(runBlock(a, { attest, harnessStatus: () => '' })).rejects.toThrow(`holds 1 results that no counted run of preregistration commit ${'c'.repeat(12)} started`);
     expect(existsSync(join(out, 'run-trials-pglite.lock'))).toBe(false);
+    rmSync(g.root, { recursive: true, force: true }); rmSync(out, { recursive: true, force: true });
+  });
+
+  test('a development --replace refuses inside a directory that holds a counted run', () => {
+    const g = gitRoot(), out = mkdtempSync(join(tmpdir(), 'rb-o-'));
+    put(out, 'run-trials-pglite.jsonl', { ev: 'start', dry: false });
+    mkdirSync(join(g.root, 'src')); writeFileSync(join(g.root, 'src/cli.ts'), '');
+    const r = Bun.spawnSync(['bun', '--no-env-file', 'eval/runner/refresh-barrier/trial.ts', '--seed', '1001', '--arm', 'on', '--engine', 'pglite', '--out', out, '--gbrain-root', g.root, '--replace'], { cwd: REPO });
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr.toString()).toContain(`--replace refuses inside ${out}, which holds a counted run`);
     rmSync(g.root, { recursive: true, force: true }); rmSync(out, { recursive: true, force: true });
   });
 

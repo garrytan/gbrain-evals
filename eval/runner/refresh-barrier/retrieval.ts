@@ -21,6 +21,7 @@ import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pairedBootstrap } from './analyze.ts';
+import { gitHead, harnessDigest } from './fixture.ts';
 
 /** The preregistered margins: B1 (stub embeddings, deterministic) and B2 (real embedders, provider noise). */
 export const MARGIN = { b1: -0.01, b2: -0.02 } as const;
@@ -145,7 +146,7 @@ if (import.meta.main) {
   const scores = compare(readScores(kept('off')), readScores(kept('on')), stubEmbed ? MARGIN.b1 : MARGIN.b2);
   const latency = stubEmbed ? compareLatency(readLatency(kept('off')), readLatency(kept('on'))) : null;
   const result = { label, stub_embed: stubEmbed, gbrain: gbrainRoot ? execFileSync('git', ['-C', gbrainRoot, 'rev-parse', 'HEAD']).toString().trim() : 'pin',
-    switches, pass: scores.pass && (latency === null || latency.pass), scores, latency };
+    gbrain_evals: gitHead(REPO), harness_digest: harnessDigest(), switches, pass: scores.pass && (latency === null || latency.pass), scores, latency };
   writeFileSync(join(work, 'out', label, 'retrieval.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify({ label, pass: result.pass, latency: latency?.cells ?? null,
     cells: Object.fromEntries(Object.entries(scores.cells as Rec).map(([k, c]: [string, any]) => [k, { off: c.off, on: c.on, lo: c.diff.lo, pass: c.pass }])) }));

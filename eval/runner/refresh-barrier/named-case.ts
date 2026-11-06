@@ -12,7 +12,7 @@
 import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { git, gitHead, harnessDigest, insertTopLine, notePage } from './fixture.ts';
+import { countedRunIn, git, gitHead, harnessDigest, insertTopLine, notePage } from './fixture.ts';
 import { failureClasses } from './analyze.ts';
 import { jsonlLogger, logSwitch, runWriter, sleep, type Session } from './runtime.ts';
 import { B_KINDS, type Engine, type OpKind, type ScheduledOp, type TrialSchedule } from './schedule.ts';
@@ -103,6 +103,10 @@ if (import.meta.main) {
     pgAdmin: get('--pg-admin'), template: get('--template'), keep: argv.includes('--keep') };
   const outDir = join(a.out, 'named', a.engine, a.arm);
   const resultPath = join(outDir, `order-${a.b}-${a.rep}.json`);
+  if (argv.includes('--replace') && countedRunIn(a.out)) {
+    process.stderr.write(`named-case: --replace refuses inside ${a.out}, which holds a counted run; replay into another --out\n`);
+    process.exit(2);
+  }
   if (existsSync(resultPath) && !argv.includes('--replace')) {
     process.stderr.write(`named-case: ${resultPath} already holds a result, which a replay must not overwrite; use another --out (or --replace in a development directory)\n`);
     process.exit(2);

@@ -14,7 +14,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, openSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { PROVIDER_KEYS, brainPaths, createRepos, gitHead, harnessDigest, hermeticGit, loadGbrain, registerBrain } from './fixture.ts';
+import { PROVIDER_KEYS, brainPaths, countedRunIn, createRepos, gitHead, harnessDigest, hermeticGit, loadGbrain, registerBrain } from './fixture.ts';
 import { KNOWN_SYNC_STATUSES, KNOWN_TICK_STATUSES, foreignCommit, jsonlLogger, logSwitch, pushTick, runConverge, runSync, runTick, runWriter, sleep, type Session } from './runtime.ts';
 import { failureClasses } from './analyze.ts';
 import { generateSchedule, type Engine, type TrialSchedule } from './schedule.ts';
@@ -328,6 +328,10 @@ if (import.meta.main) {
   const a = parseArgs(process.argv.slice(2));
   const outDir = join(a.out, a.quiet ? 'quiet' : 'trials', a.engine, a.arm);
   const resultPath = join(outDir, `${a.seed}.json`);
+  if (process.argv.includes('--replace') && countedRunIn(a.out)) {
+    process.stderr.write(`trial: --replace refuses inside ${a.out}, which holds a counted run; replay into another --out\n`);
+    process.exit(2);
+  }
   if (existsSync(resultPath) && !process.argv.includes('--replace')) {
     process.stderr.write(`trial: ${resultPath} already holds a result, which a replay must not overwrite; use another --out (or --replace in a development directory)\n`);
     process.exit(2);

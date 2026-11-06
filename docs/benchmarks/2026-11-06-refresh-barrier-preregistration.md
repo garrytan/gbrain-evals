@@ -125,7 +125,7 @@ checkpoint had not moved when B was issued.
 | unindexed | committed and in its page, but keyword search for its marker returns no chunk holding it |
 | unpublished | committed and at the checkout's Git HEAD, but absent from the tracking remote's `main` after every Git effect settled and the sources converged (Git durability publishes every commit) |
 | false_refusal | the writer's last answer was a non-retryable refusal and no poll reported it committed, yet it committed (an agent told "not saved" may save it again) |
-| unexpected_outcome | an outcome outside the allow-list below: a refusal or final code not on it, a pending write ending failed or cancelled with another code, retries exhausted, or a call or poll that timed out (60 s) |
+| unexpected_outcome | an outcome outside the allow-list below: a refusal or final code not on it, a pending write ending failed or cancelled with another code, retries exhausted, a call or poll that timed out (60 s), or a read before an update that failed (the write still counts in the denominator) |
 | hang | an actor past its deadline (writer 270 s past the window, tick 120 s past its pause, stop 30 s, convergence 150 s) or the settle wait not reached |
 | deadlock | any Postgres deadlock (`pg_stat_database.deadlocks`) or any deadlock or 40P01 message |
 | no_converge | after the load stops, a source cannot reach its upstream in 40 refreshes, or a pushed upstream marker is missing from Git HEAD, unless a committed blind put replaced its file after the import (the commit that dropped the marker added only committed blind-put markers; last writer wins, as for `overwritten`) |
@@ -147,7 +147,8 @@ an amendment. A failed trial is never dropped, and every failure is reported wit
 results from more than one gbrain commit or harness tree, or from a tree other than the analyzer's, make the verdict
 FIX-METHOD, and an analysis without a counted receipt for every block and engine reads UNCOUNTED. A block with a seed or
 run missing, duplicated or outside the preregistered set is incomplete. A result file is never overwritten: `trial.ts` and
-`named-case.ts` refuse an existing one, so a replay goes to another directory. A job that exits abnormally after writing
+`named-case.ts` refuse an existing one, so a replay goes to another directory (their development `--replace` refuses inside
+a directory that holds a counted run). A job that exits abnormally after writing
 its result counts as `harness_error`. A job interrupted by stopping `run.ts` leaves no result and reruns when the block
 resumes; the receipt and the analysis list every interrupted job.
 
@@ -175,9 +176,9 @@ one.
 block measures that. Per engine, seeds 2001 to 2100 replay their Part A writers and writes with no tick, upstream
 push, foreign commit, sync or fault (`trial.ts --quiet`), in both arms. Take the seeds whose two runs both showed no
 failure class and, from them, every write that ended committed, timed from its first call to its committed answer: at once,
-after a retried refusal, or from polling a pending answer. A write the database committed whose writer never saw it
-committed counts at the 180 s poll limit, so a write the barrier slows past gbrain's inline wait raises the on-arm mean
-instead of leaving the sample. The pooled per-write mean latency of the on runs minus that of the off runs, with a 95% bootstrap interval that resamples whole seeds (10,000 resamples, seed
+after a retried refusal, or from polling a pending answer. A write whose writer stopped polling before it saw the commit is
+timed to the database's commit time, and one with no commit time counts at the 180 s poll limit, so a write the barrier
+slows past gbrain's inline wait raises the on-arm mean instead of leaving the sample. The pooled per-write mean latency of the on runs minus that of the off runs, with a 95% bootstrap interval that resamples whole seeds (10,000 resamples, seed
 1), must have an upper bound of at most 25 ms on each engine. Quiet runs are flag-on trials like the others, so a failure
 in one counts as a flag-on failure. The run count comes from the pre-freeze quiet smoke (below): it is the smallest count
 at which a true difference of zero passes with more than 99% probability, given the spread the smoke measured.
@@ -229,7 +230,8 @@ of G (both runners import the pinned package), and compares them query by query:
 - A query that errored scores 0 in its arm. Both runners build their brains by inline import, which the flag should not
   touch, so any difference is a finding. G against the pin (`--label pin`) is reported, not gated.
 - Before each arm, `retrieval.ts` resolves the switch through gbrain's own reader for a fresh brain in that arm's
-  environment and gbrain copy, and records it; an arm that does not resolve to its value is not scored and is redone.
+  environment and gbrain copy, and records it; an arm that does not resolve to its value is not scored and is redone. The
+  result records G, the harness digest and the gbrain-evals commit.
 - **B3, inside Part A:** the `unindexed` class checks that every committed write is searchable, which is where the flag
   can change retrieval.
 
@@ -451,3 +453,30 @@ compatibility fix as described under "Build and data", and the smoke reruns. PC2
 
 Every result names its seed or repetition, engine and arm, and `run.ts`'s receipt names G and the sha256 of every harness
 file. To replay one on a test machine with Docker:
+
+1. Start Postgres: `docker run -d --name rb-pg -p 5434:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=gbrain_test
+   pgvector/pgvector:pg16 -c max_connections=500 -c shared_buffers=512MB`.
+2. Check out G (`git -C <gbrain> checkout <sha> && bun install`) and build a template database with G's schema (a fresh
+   database on which `PostgresEngine.initSchema()` ran).
+3. Replay with the work directory kept: `bun --no-env-file eval/runner/refresh-barrier/trial.ts --seed <n> --arm on
+   --engine postgres --out <dir> --gbrain-root <gbrain> --pg-admin postgres://postgres:postgres@localhost:5434/gbrain_test
+   --template <template> --keep` (PGLite: `--engine pglite`, no database). For a named-case run, `named-case.ts --b <kind>
+   --rep <n>` with the same options.
+4. Read `<dir>/trials/<engine>/<arm>/<seed>.json` (the classes per write) and `<dir>/work/<engine>-<arm>-<seed>/` (every
+   actor's event log, the three Git repositories, and the database left in place by `--keep`).
+
+A schedule is a pure function of its seed, so the replay issues the same writes at the same offsets; timing between
+processes is not replayed exactly, which is why a failure is triaged on the same seed rather than assumed to repeat.
+
+## Disclosures
+
+gbrain is Garry Tan's own project.
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry
+Tan runs Y Combinator.
+
+Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+
+## Amendments
+
+None yet.

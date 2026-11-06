@@ -30,7 +30,8 @@
  *   unexpected_outcome an outcome outside the preregistered allow-list (ALLOWED_CODES, expiry codes only where the
  *               schedule or the write's hold makes them possible, retryable refusals that a retry resolved): a refusal or
  *               final code outside it, a pending write ending failed or cancelled with another code, retries exhausted,
- *               or a call or poll that timed out. A pending write whose issuing process died must still commit (gbrain
+ *               a call or poll that timed out, or a read before an update that failed (the write stays issued, so it
+ *               stays in the denominator). A pending write whose issuing process died must still commit (gbrain
  *               cancels a write only through an explicit cancel or admission_paused), so cancelled is never allowed.
  *   harness_error an answer the harness could not read (an OK body with no known state, an error with no code).
  */
@@ -141,6 +142,30 @@ export function ledgerCommits(root: string): Map<string, number> {
   return out;
 }
 
+/**
+ * What one write's writer saw, from its events: its answers in order, when its first call started, the time to its committed
+ * answer (at once, after a retried refusal, or from polling a pending answer; when the writer stopped polling before it saw
+ * the commit, the database's commit time) and the client-side reasons it is unexpected. A failed read before an update
+ * leaves the write issued and unexpected, so it stays in the denominator.
+ */
+export function clientView(ev: Array<Record<string, any>>, row: Record<string, any> | null) {
+  const responses = ev.filter(e => e.ev === 'response').sort((a, b) => a.attempt - b.attempt);
+  const first = responses[0] ?? null;
+  const finals = ev.filter(e => e.ev === 'final');
+  const firstT = first ? Number(first.t) - Number(first.ms ?? 0) : null;
+  const committedResponse = responses.find(r => r.cls === 'committed'), committedFinal = finals.find(f => f.state === 'committed');
+  const committedAt = row?.state === 'committed' && row.updated_at ? new Date(row.updated_at).getTime() : null;
+  const committed_ms: number | null = first?.cls === 'committed' ? first.ms ?? null : committedResponse && firstT !== null ? Number(committedResponse.t) - firstT
+    : committedFinal ? Number(committedFinal.after_ms) : committedAt !== null && firstT !== null ? committedAt - firstT : null;
+  const clientReasons = [
+    ...ev.filter(e => e.ev === 'retries_exhausted').map(() => 'retries_exhausted'),
+    ...ev.filter(e => e.ev === 'call_timeout' || e.ev === 'poll_timeout').map(e => e.ev as string),
+    ...ev.filter(e => e.ev === 'read_failed').map(e => `read_failed:${e.code ?? ''}`),
+  ];
+  const issued = responses.length > 0 || ev.some(e => e.ev === 'call_timeout' || e.ev === 'read_failed');
+  return { responses, first, finals, firstT, committed_ms, issued, clientReasons };
+}
+
 export async function verifyTrial(engine: any, schedule: TrialSchedule, paths: BrainPaths, ids: BrainIds, dir: string): Promise<{ ops: OpRecord[]; upstream: { pushed: number; missing_head: number; removed_by_blind_put: number }; ledger_present: boolean }> {
   const ops = allOps(schedule);
   const events = readEvents(dir);
@@ -174,11 +199,9 @@ export async function verifyTrial(engine: any, schedule: TrialSchedule, paths: B
   const opByMarker = new Map(ops.map(o => [o.marker, o]));
   const records = ops.map((op): OpRecord => {
     const ev = byReq.get(op.request_id) ?? [];
-    const responses = ev.filter(e => e.ev === 'response').sort((a, b) => a.attempt - b.attempt);
-    const first = responses[0] ?? null;
-    const finals = ev.filter(e => e.ev === 'final');
     const rs = rowsBy.get(op.request_id) ?? [];
     const row = rs[0] ?? null;
+    const { responses, first, finals, firstT, committed_ms, issued, clientReasons } = clientView(ev, row);
     const m = op.marker;
     const factsAll = facts.filter((f: any) => exact(f.fact, m) > 0);
     const facts_live = factsAll.filter((f: any) => f.live).length;
@@ -189,10 +212,6 @@ export async function verifyTrial(engine: any, schedule: TrialSchedule, paths: B
     const applied = factsAll.length > 0 || pages_occ > 0 || versionsN > 0 || git_hist > 0;
     const acknowledged = responses.some(r => r.cls === 'committed' || r.cls === 'pending');
     const client_committed = responses.some(r => r.cls === 'committed') || finals.some(f => f.state === 'committed');
-    const firstT = first ? Number(first.t) - Number(first.ms ?? 0) : null;
-    const committedResponse = responses.find(r => r.cls === 'committed'), committedFinal = finals.find(f => f.state === 'committed');
-    const committed_ms = first?.cls === 'committed' ? first.ms ?? null : committedResponse && firstT !== null ? Number(committedResponse.t) - firstT
-      : committedFinal ? Number(committedFinal.after_ms) : null;
     const origin_occ = origin.get(m) ?? 0;
     const state = row?.state ?? null;
     const wt = row?.outcome?.write_through?.written;
@@ -213,14 +232,13 @@ export async function verifyTrial(engine: any, schedule: TrialSchedule, paths: B
     const unexpected_reasons = [
       ...responses.filter(r => r.cls === 'refused' && !allowedCode(String(r.code), { ...ctx, final: false })).map(r => `refused:${r.code}`),
       ...(state && TERMINAL.has(state) && state !== 'committed' && !allowedCode(String(row?.error_code), { ...ctx, final: true }) ? [`final:${state}:${row?.error_code ?? ''}`] : []),
-      ...ev.filter(e => e.ev === 'retries_exhausted').map(() => 'retries_exhausted'),
-      ...ev.filter(e => e.ev === 'call_timeout' || e.ev === 'poll_timeout').map(e => e.ev as string),
+      ...clientReasons,
     ];
     const wrong_expiry = (row?.error_code === 'refresh_barrier_expired' && row.released_at != null && committedAt !== null && new Date(row.released_at).getTime() < committedAt)
       || (row?.error_code === 'pending_import_expired' && createdAt !== null && committedAt !== null && completions.some(t => t > createdAt && t < committedAt - 2_000));
     return {
       writer: op.writer, op: op.index, kind: op.kind, source: op.source, slug: op.slug, marker: m, request_id: op.request_id,
-      issued: responses.length > 0 || ev.some(e => e.ev === 'call_timeout'), attempts: responses.length,
+      issued, attempts: responses.length,
       first: first?.cls ?? null, first_code: first?.code ?? null, first_deferred: Boolean(first?.deferred),
       first_ms: first?.ms ?? null, first_t: firstT, first_slip_ms: first?.slip_ms ?? null, committed_ms,
       codes: responses.map(r => r.code).filter(Boolean), acknowledged, client_committed, call_timeouts: ev.filter(e => e.ev === 'call_timeout' || e.ev === 'poll_timeout').length,

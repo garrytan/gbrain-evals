@@ -183,7 +183,7 @@ export async function runBlock(a: RunArgs, deps = { attest: attestPreregistratio
     const harnessErrors = jobs.filter(j => existsSync(j.result) && JSON.parse(readFileSync(j.result, 'utf8')).harness_error).length;
     const logged = events();
     const receipt = {
-      preregistration: a.prereg, attestation, counted: !a.dry, block: a.block, engine: a.engine, arms: a.arms,
+      preregistration: a.prereg, preregistration_attestation: attestation, counted: !a.dry, block: a.block, engine: a.engine, arms: a.arms,
       ...(a.block === 'named' ? { reps: a.reps, b_kinds: B_KINDS } : { seeds: a.seeds }), concurrency: a.concurrency, order_seed: ORDER_SEED,
       started_at: startedAt, finished_at: new Date().toISOString(),
       gbrain: { root: a.gbrainRoot, ...gitInfo(a.gbrainRoot) }, gbrain_evals: gitInfo(REPO), files: harnessFiles(), harness_digest: harnessDigest(), schedule_version: SCHEDULE_VERSION, params: PARAMS,
