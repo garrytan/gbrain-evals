@@ -46,11 +46,13 @@ rules. They're described in the [batch 1 findings](2026-11-06-live-recall-batch1
   question. P2 is unchanged: `configured` minus `hybrid_lexical` on paraphrases. The two are Holm-adjusted together.
 - **The questions.** 50 new questions, 10 of each type, 100 forms in all, question file sha256 `dd69701c…`. There are
   58 distinct gold pages, none of them a batch 1 gold page. Gold was chosen page first from a seeded sample of 70
-  recent and 70 older pages. The 10 error_string questions have 10 distinct gold pages. All 50 gold pages were present
-  at run time, all 10 time_window questions carried a window, and no paraphrase shares an identifier-like token with
+  recent and 70 older pages. The 10 error_string questions have 10 distinct gold pages. No question lost a gold page
+  at run time (0 of 50 dropped), all 10 time_window questions carried a window, and no paraphrase shares an identifier-like token with
   its exact form.
 - **The gbrain.** The counted run measures 0.60.593.0, the version deployed on the box, as gbrain's maintainers asked.
-  A second run of the same file on 0.60.577.0 supplies the pooled analysis and the version comparison.
+  Another run of the same file on 0.60.577.0 supplies the pooled analysis and the version comparison. That run came
+  first, at 01:26 UTC before the upgrade, and its scorecard was read before the counted run. After that read, the only
+  change before the counted run was the preflight probe's text, which never counts.
 - **The barrier.** A fresh `no_write_privilege` role with batch 1's final grants. The runner proved it before any
   search, forced every gbrain transaction read-only, and found the session still read-only at the end. The guard
   refused 16 writes to gbrain's `search_telemetry` counters, as designed. The role was torn down at 21:26 UTC.
