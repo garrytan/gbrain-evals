@@ -224,9 +224,10 @@ export async function runQuestions(ctx: SearchContext, questions: Question[], pr
  * bound. Each arm's search statements still run, so a missing grant on them
  * still fails; the stages that need results, the reranker among them, run only
  * on the vector leg's candidates. The first probe ('live-recall arm preflight
- * probe') shared common words with Garry's brain, and on gbrain 0.60.593.0 its
- * all-time windowed keyword statement hit that bound twice, once with no gbrain
- * job running.
+ * probe') shared common words with Garry's brain. On gbrain 0.60.593.0 it
+ * stopped two runs with keyword_arm_failed on configured_window: the first log
+ * shows its all-time windowed keyword statement hitting that bound, and the
+ * second run started with no gbrain job active.
  */
 export const PREFLIGHT_PROBE = 'zqxjvk wfpqyz';
 

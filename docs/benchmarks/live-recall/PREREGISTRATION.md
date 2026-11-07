@@ -276,6 +276,14 @@ time_window question.
 changes no counted number. It stops a run like batch 1's first attempt, which lost every hybrid-search arm to a missing
 grant, before the run uses the question set.
 
+**Preflight probe change** (2026-11-07, before batch 2's counted run). The counted run on 0.60.593.0 stopped twice at
+the arm preflight, at 18:54 and 19:21 UTC, with `configured_window degraded (keyword_arm_failed)`, and no question ran
+in either attempt. The first attempt's log shows the probe's all-time windowed keyword statement hitting gbrain's own
+keyword statement bound (`search.keyword_statement_timeout_ms`, 8 s by default); the second started with no gbrain job
+active. The probe changed from `live-recall arm preflight probe` to two made-up words, `zqxjvk wfpqyz`. The probe never
+counts, and the arms, questions, metrics and decision rules are unchanged. The batch 2 run at `52b9ccae` used the old
+probe, at gbrain-evals `07bed75d`.
+
 **Synopsis coverage.** GBRA-295 is to send, as aggregates, the share of the brain's chunks that carry `tokenmax`'s
 per-chunk synopsis vectors and which of its triggers set `keyword_candidates_incomplete`. The batch 2 report carries
 them as a note; no arm is added.
