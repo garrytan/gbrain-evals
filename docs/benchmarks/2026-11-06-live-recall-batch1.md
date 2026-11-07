@@ -216,12 +216,11 @@ From the design:
 
 ## Batch 2
 
-A second set of 50 questions, written fresh with no batch-1 gold page reused, runs under the
-[batch 2 amendment](live-recall/PREREGISTRATION.md#batch-2-amendment) on the gbrain the box runs after its upgrade to
-v0.60.593.0. Its P1 is `hybrid` minus `hybrid_lexical` on paraphrases; P2 is unchanged, and the two are
-Holm-adjusted together. Batch 1's all-forms P1 is reported as a secondary replication across versions. The two batches
-pooled (N = 100) are a declared secondary when batch 2 also runs on batch 1's gbrain; otherwise the pool is reported as
-not computable.
+A second set of 50 questions, written fresh with no batch 1 gold page reused, ran under the
+[batch 2 amendment](live-recall/PREREGISTRATION.md#batch-2-amendment) on gbrain 0.60.593.0, with P1 retested on
+paraphrases. Both of its preregistered comparisons hold: vectors add 18 points to the lexical hybrid on paraphrases
+(interval 4 to 32), and configured search adds 32. See the [batch 2 findings](2026-11-07-live-recall-batch2.md), which
+also pool both batches on 0.60.577.0.
 
 ## Reproduce and inspect
 

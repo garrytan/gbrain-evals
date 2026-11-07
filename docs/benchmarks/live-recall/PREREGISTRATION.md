@@ -1,7 +1,8 @@
 # Live recall on Garry's brain: preregistration (phase 1)
 
 This fixes the method, comparisons and decision rules for each live-recall question set before that set is searched.
-It reports no result; batch 1's results are in the [batch 1 findings](../2026-11-06-live-recall-batch1.md). Batch 1's
+It reports no result; batch 1's results are in the [batch 1 findings](../2026-11-06-live-recall-batch1.md) and batch
+2's in the [batch 2 findings](../2026-11-07-live-recall-batch2.md). Batch 1's
 sample size (50 questions), question file hash and minimum detectable difference are under
 [Frozen sample](#frozen-sample), taken from Wintermute's freeze output before the counted run. A second, independent
 question set, batch 2, runs under the [batch 2 amendment](#batch-2-amendment), fixed before that set was frozen; its
