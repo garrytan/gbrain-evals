@@ -1,0 +1,871 @@
+{
+  "schema": "live-recall-compare/v1",
+  "run_a": {
+    "gbrain_loaded_version": "0.60.577.0",
+    "gbrain_loaded_commit": "52b9ccae42cd81e16c21624c545a9c02c3505c11",
+    "barrier": "no_write_privilege",
+    "control": false,
+    "freeze_sha_prefix": "dd69701c5553"
+  },
+  "run_b": {
+    "gbrain_loaded_version": "0.60.593.0",
+    "gbrain_loaded_commit": "27f8b9d6287c2ba635532c7d3bc015c50e1d769b",
+    "barrier": "no_write_privilege",
+    "control": false,
+    "freeze_sha_prefix": "dd69701c5553"
+  },
+  "comparisons": [
+    {
+      "id": "run_b_vs_run_a_keyword_all",
+      "metric": "success_at_5",
+      "n_pairs": 100,
+      "n_clusters": 50,
+      "mean_a": 0.32,
+      "mean_b": 0.32,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "keyword",
+      "form": "all",
+      "top5_changed": 0
+    },
+    {
+      "id": "run_b_vs_run_a_keyword_all",
+      "metric": "mrr",
+      "n_pairs": 100,
+      "n_clusters": 50,
+      "mean_a": 0.289,
+      "mean_b": 0.289,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "keyword",
+      "form": "all",
+      "top5_changed": 0
+    },
+    {
+      "id": "run_b_vs_run_a_keyword_exact",
+      "metric": "success_at_5",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.64,
+      "mean_b": 0.64,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "keyword",
+      "form": "exact",
+      "top5_changed": 0
+    },
+    {
+      "id": "run_b_vs_run_a_keyword_exact",
+      "metric": "mrr",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.578,
+      "mean_b": 0.578,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "keyword",
+      "form": "exact",
+      "top5_changed": 0
+    },
+    {
+      "id": "run_b_vs_run_a_keyword_paraphrase",
+      "metric": "success_at_5",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0,
+      "mean_b": 0,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "keyword",
+      "form": "paraphrase",
+      "top5_changed": 0
+    },
+    {
+      "id": "run_b_vs_run_a_keyword_paraphrase",
+      "metric": "mrr",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0,
+      "mean_b": 0,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "keyword",
+      "form": "paraphrase",
+      "top5_changed": 0
+    },
+    {
+      "id": "run_b_vs_run_a_vector_all",
+      "metric": "success_at_5",
+      "n_pairs": 100,
+      "n_clusters": 50,
+      "mean_a": 0.44,
+      "mean_b": 0.44,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "vector",
+      "form": "all",
+      "top5_changed": 8
+    },
+    {
+      "id": "run_b_vs_run_a_vector_all",
+      "metric": "mrr",
+      "n_pairs": 100,
+      "n_clusters": 50,
+      "mean_a": 0.3169,
+      "mean_b": 0.3167,
+      "delta": -0.0002,
+      "ci95": [
+        -0.0006,
+        0
+      ],
+      "p_two_sided": 0.4894,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0005,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "vector",
+      "form": "all",
+      "top5_changed": 8
+    },
+    {
+      "id": "run_b_vs_run_a_vector_exact",
+      "metric": "success_at_5",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.56,
+      "mean_b": 0.56,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "vector",
+      "form": "exact",
+      "top5_changed": 3
+    },
+    {
+      "id": "run_b_vs_run_a_vector_exact",
+      "metric": "mrr",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.4095,
+      "mean_b": 0.4092,
+      "delta": -0.0004,
+      "ci95": [
+        -0.0011,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.001,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "vector",
+      "form": "exact",
+      "top5_changed": 3
+    },
+    {
+      "id": "run_b_vs_run_a_vector_paraphrase",
+      "metric": "success_at_5",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.32,
+      "mean_b": 0.32,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "vector",
+      "form": "paraphrase",
+      "top5_changed": 5
+    },
+    {
+      "id": "run_b_vs_run_a_vector_paraphrase",
+      "metric": "mrr",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.2243,
+      "mean_b": 0.2242,
+      "delta": -0.0001,
+      "ci95": [
+        -0.0002,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0002,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "vector",
+      "form": "paraphrase",
+      "top5_changed": 5
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_lexical_all",
+      "metric": "success_at_5",
+      "n_pairs": 100,
+      "n_clusters": 50,
+      "mean_a": 0.48,
+      "mean_b": 0.48,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid_lexical",
+      "form": "all",
+      "top5_changed": 11
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_lexical_all",
+      "metric": "mrr",
+      "n_pairs": 100,
+      "n_clusters": 50,
+      "mean_a": 0.3865,
+      "mean_b": 0.387,
+      "delta": 0.0005,
+      "ci95": [
+        0,
+        0.0016
+      ],
+      "p_two_sided": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0015,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid_lexical",
+      "form": "all",
+      "top5_changed": 11
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_lexical_exact",
+      "metric": "success_at_5",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.8,
+      "mean_b": 0.8,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid_lexical",
+      "form": "exact",
+      "top5_changed": 4
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_lexical_exact",
+      "metric": "mrr",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.6412,
+      "mean_b": 0.6412,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid_lexical",
+      "form": "exact",
+      "top5_changed": 4
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_lexical_paraphrase",
+      "metric": "success_at_5",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.16,
+      "mean_b": 0.16,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid_lexical",
+      "form": "paraphrase",
+      "top5_changed": 7
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_lexical_paraphrase",
+      "metric": "mrr",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.1317,
+      "mean_b": 0.1328,
+      "delta": 0.0011,
+      "ci95": [
+        0,
+        0.0032
+      ],
+      "p_two_sided": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0029,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid_lexical",
+      "form": "paraphrase",
+      "top5_changed": 7
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_all",
+      "metric": "success_at_5",
+      "n_pairs": 100,
+      "n_clusters": 50,
+      "mean_a": 0.54,
+      "mean_b": 0.54,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid",
+      "form": "all",
+      "top5_changed": 8
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_all",
+      "metric": "mrr",
+      "n_pairs": 100,
+      "n_clusters": 50,
+      "mean_a": 0.4289,
+      "mean_b": 0.4271,
+      "delta": -0.0018,
+      "ci95": [
+        -0.0052,
+        0
+      ],
+      "p_two_sided": 0.5022,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0047,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid",
+      "form": "all",
+      "top5_changed": 8
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_exact",
+      "metric": "success_at_5",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.74,
+      "mean_b": 0.74,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid",
+      "form": "exact",
+      "top5_changed": 3
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_exact",
+      "metric": "mrr",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.6124,
+      "mean_b": 0.6091,
+      "delta": -0.0033,
+      "ci95": [
+        -0.01,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0093,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid",
+      "form": "exact",
+      "top5_changed": 3
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_paraphrase",
+      "metric": "success_at_5",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.34,
+      "mean_b": 0.34,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid",
+      "form": "paraphrase",
+      "top5_changed": 5
+    },
+    {
+      "id": "run_b_vs_run_a_hybrid_paraphrase",
+      "metric": "mrr",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.2453,
+      "mean_b": 0.2452,
+      "delta": -0.0002,
+      "ci95": [
+        -0.0005,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0005,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "hybrid",
+      "form": "paraphrase",
+      "top5_changed": 5
+    },
+    {
+      "id": "run_b_vs_run_a_configured_all",
+      "metric": "success_at_5",
+      "n_pairs": 100,
+      "n_clusters": 50,
+      "mean_a": 0.68,
+      "mean_b": 0.68,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured",
+      "form": "all",
+      "top5_changed": 3
+    },
+    {
+      "id": "run_b_vs_run_a_configured_all",
+      "metric": "mrr",
+      "n_pairs": 100,
+      "n_clusters": 50,
+      "mean_a": 0.6124,
+      "mean_b": 0.6124,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured",
+      "form": "all",
+      "top5_changed": 3
+    },
+    {
+      "id": "run_b_vs_run_a_configured_exact",
+      "metric": "success_at_5",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.88,
+      "mean_b": 0.88,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured",
+      "form": "exact",
+      "top5_changed": 0
+    },
+    {
+      "id": "run_b_vs_run_a_configured_exact",
+      "metric": "mrr",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.7752,
+      "mean_b": 0.7752,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured",
+      "form": "exact",
+      "top5_changed": 0
+    },
+    {
+      "id": "run_b_vs_run_a_configured_paraphrase",
+      "metric": "success_at_5",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.48,
+      "mean_b": 0.48,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured",
+      "form": "paraphrase",
+      "top5_changed": 3
+    },
+    {
+      "id": "run_b_vs_run_a_configured_paraphrase",
+      "metric": "mrr",
+      "n_pairs": 50,
+      "n_clusters": 50,
+      "mean_a": 0.4495,
+      "mean_b": 0.4495,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured",
+      "form": "paraphrase",
+      "top5_changed": 3
+    },
+    {
+      "id": "run_b_vs_run_a_configured_window_all",
+      "metric": "success_at_5",
+      "n_pairs": 20,
+      "n_clusters": 10,
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured_window",
+      "form": "all",
+      "top5_changed": 2
+    },
+    {
+      "id": "run_b_vs_run_a_configured_window_all",
+      "metric": "mrr",
+      "n_pairs": 20,
+      "n_clusters": 10,
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured_window",
+      "form": "all",
+      "top5_changed": 2
+    },
+    {
+      "id": "run_b_vs_run_a_configured_window_exact",
+      "metric": "success_at_5",
+      "n_pairs": 10,
+      "n_clusters": 10,
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured_window",
+      "form": "exact",
+      "top5_changed": 1
+    },
+    {
+      "id": "run_b_vs_run_a_configured_window_exact",
+      "metric": "mrr",
+      "n_pairs": 10,
+      "n_clusters": 10,
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured_window",
+      "form": "exact",
+      "top5_changed": 1
+    },
+    {
+      "id": "run_b_vs_run_a_configured_window_paraphrase",
+      "metric": "success_at_5",
+      "n_pairs": 10,
+      "n_clusters": 10,
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured_window",
+      "form": "paraphrase",
+      "top5_changed": 1
+    },
+    {
+      "id": "run_b_vs_run_a_configured_window_paraphrase",
+      "metric": "mrr",
+      "n_pairs": 10,
+      "n_clusters": 10,
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": null,
+      "mde": null,
+      "a": "run_a",
+      "b": "run_b",
+      "arm": "configured_window",
+      "form": "paraphrase",
+      "top5_changed": 1
+    }
+  ]
+}

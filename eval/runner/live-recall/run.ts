@@ -217,8 +217,19 @@ export async function runQuestions(ctx: SearchContext, questions: Question[], pr
   return records;
 }
 
-/** Public text every arm searches before any question; it names no page in any brain. */
-export const PREFLIGHT_PROBE = 'live-recall arm preflight probe';
+/**
+ * Public text every arm searches before any question: two made-up words, rare
+ * enough that each keyword, title and windowed statement finds nothing or next
+ * to nothing through the index and stays far inside gbrain's keyword statement
+ * bound. Each arm's search statements still run, so a missing grant on them
+ * still fails; the stages that need results, the reranker among them, run only
+ * on the vector leg's candidates. The first probe ('live-recall arm preflight
+ * probe') shared common words with Garry's brain. On gbrain 0.60.593.0 it
+ * stopped two runs with keyword_arm_failed on configured_window: the first log
+ * shows its all-time windowed keyword statement hitting that bound, and the
+ * second run started with no gbrain job active.
+ */
+export const PREFLIGHT_PROBE = 'zqxjvk wfpqyz';
 
 /**
  * One public probe through every arm, windowed so configured_window runs too,

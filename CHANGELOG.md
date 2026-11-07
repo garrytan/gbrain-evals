@@ -2,6 +2,34 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.172] - 2026-11-07
+
+### Live recall batch 2: results, and a preflight probe that stays inside gbrain's keyword bound (GBEV-43)
+
+- **Results.** [Batch 2 findings](docs/benchmarks/2026-11-07-live-recall-batch2.md): 50 new questions run on Garry's
+  brain on gbrain 0.60.593.0. Both preregistered comparisons hold. On paraphrases, vectors lift the lexical hybrid from
+  16% to 34% (+18, interval 4 to 32, Holm p 0.036), and configured search lifts it to 48% (+32, interval 16 to 48, Holm
+  p 0.0024). Configured search finds the page in its top five for 68% of forms, with 88% exact and 48% paraphrased. Its
+  paraphrase gap is 40 points, which went to GBRA-108 as an observation. Batch 1's all-forms P1 doesn't replicate (+6,
+  interval −4 to 16; R48 KEEP).
+- **Secondaries.** The same questions on 0.60.577.0 give identical success@5 in every arm and form, so the upgrade
+  changed nothing measurable. Pooled with batch 1 on 0.60.577.0 (100 questions), vectors' paraphrase gain is 20 points
+  (10 to 30).
+- **Scorecards.** `docs/benchmarks/2026-11-07-live-recall-batch2/` holds both runs' scorecards, the pooled analysis
+  and the version comparison. All of them pass `validateScorecard`.
+- **Preregistration.** The batch 2 amendment records the probe change, plus the counted run's commit (`bbde967d`) and
+  harness digest, written before the run. Batch 1's findings and the docs index point at the batch 2 results.
+- **The probe.** `PREFLIGHT_PROBE` is now `zqxjvk wfpqyz`. The old probe, `live-recall arm preflight probe`, shared
+  common words with Garry's brain. On gbrain 0.60.593.0 it stopped two attempts with
+  `LR_ARM_PREFLIGHT: configured_window degraded (keyword_arm_failed)` before any question ran. The first attempt's log
+  shows its all-time windowed keyword statement hitting gbrain's keyword statement bound (8 s by default). The second
+  started with no gbrain job active. Made-up words are rare enough that the keyword, title and windowed statements find
+  nothing or next to nothing through the index. Each arm's search statements still run, so a missing grant still fails
+  the preflight, and the reranker still runs on the vector leg's candidates. A keyless test checks that neither word
+  appears in any fixture page or question. RUN-KIT's step 2 describes the probe, and its `LR_ARM_PREFLIGHT` entry says
+  `keyword_arm_failed` can also be the keyword statement timeout and how to tell the two apart. The probe never
+  counts.
+
 ## [0.10.171] - 2026-11-07
 
 ### Refresh barrier Amendment 1: harness fixes, the Part C runner and the B2 ledger path (GBEV-44)
