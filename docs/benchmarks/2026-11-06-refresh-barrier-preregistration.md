@@ -562,6 +562,10 @@ cap, records a standing money-cut rule for Part C, and adds the run procedures b
   findings in gbrain's `laterWriteRefusal` (a caller-set `managed_sync_` kind, and a compacted receipt read as a later
   write) that are fixed in #8766, not in G. Neither case occurs in this harness, and `refresh_barrier` stays off everywhere
   real until #8766 lands.
+- **Counted code (R77, 2026-11-07):** the results ship in the same pull request as this amendment, #384, instead of after
+  a merge. Counted runs use a pushed head of #384 with harness digest `8e8520f8b606`, never a merge commit, and every
+  receipt records that head (`gbrain_evals.sha`, with `dirty` false) and the digest. Pushes after the first counted
+  trial add results and findings only and change no harness file.
 - **Harness fixes (digest `8e8520f8b606`):** three fixes since Amendment 1, each found by an uncounted smoke. None changes
   a failure class, threshold or count.
   1. *Writers start gbrain's persistence consumer* (`child.ts`), as `gbrain serve` does. At f6e8a9f4, seed 271's on arm
@@ -578,10 +582,20 @@ cap, records a standing money-cut rule for Part C, and adds the run procedures b
   With these fixes the uncounted smoke at #8765's head 1efd624d passed 86 of 86: seed 355 14 of 14 per arm, seed 271
   6 of 6 per arm, the crash stratum (seeds 33, 271, 798, 963, 355, 408 and 222) 7 of 7 per arm, and seeds 1 to 8 on both
   engines and arms 32 of 32.
-- **G-compatibility smoke at G (uncounted):** running; its result is recorded here before the first counted trial.
+- **G-compatibility smoke at G (development evidence, uncounted):** harness digest `8e8520f8b606`, on a 4-vCPU Capy
+  machine. Seeds 1 to 24 on both engines and arms (96 trials) had 0 failures and 0 `harness_error`; PC1 to PC5 held, with
+  PC2 at de22702a overwritten in 60 of 60 runs; 48 named-case runs (repetitions 1 to 4) and 16 quiet runs (seeds 101 to
+  104) had 0 failures. On Postgres the crash stratum (seeds 33, 271, 798, 963, 355, 408 and 222) passed 7 of 7 per arm,
+  seed 355 passed 14 of 14 per arm and seed 271 passed 6 of 6 per arm. Seed 1 on both engines and arms passed on a
+  Ubicloud standard-16 VM, which was then deleted. The smoke passes.
+
+  Its four quiet seeds put Postgres's on-minus-off write latency at +55.4 ms (26 to 71.5), above the 25 ms margin. The
+  gate uses 100 seeds, so 30 more quiet seeds (105 to 134, Postgres) ran at G: +1.0 ms (-17.5 to +19.1) with this harness
+  and +0.5 ms (-14.5 to +15.3) with Amendment 1's (main 489e140d, before the consumer fix). Both intervals hold zero and
+  sit inside the margin, so the consumer fix does not slow quiet writes and the four-seed reading did not repeat.
 - **Cap:** $390 all-in, GBRA-108 picked (c) on 2026-11-07; GBEV-3 confirmed it fits R71. It replaces the $300 under
   **Budget** and is the hard stop. Every paid line keeps its cap there: Part C claude-opus-5-5 $65, gpt-6.1-sol $35, the
-  Part C smoke $5, B2 $5 and Ubicloud VMs $20. All-in spend when this entry was written: about $260.
+  Part C smoke $5, B2 $5 and Ubicloud VMs $20. All-in spend when this entry was written: about $266.
 - **Part C money cut (standing rule):** if the Part C smoke's measured cost per episode projects the run past $390, Part
   C's task count is cut by the same number of tasks for each model so the projection lands at about $380. A dated
   amendment records it as "money cut ordered by GBEV-3 (2026-11-07)", with the task count and the minimum detectable
