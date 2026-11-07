@@ -547,3 +547,55 @@ count, seed range, cap, arm or verdict rule.
   Part C runs claude-opus-5-5 and gpt-6.1-sol only, the `particle:particle-1` budget item ($6) is removed, and `agent.ts`
   refuses a particle model. The verdict always read the two gating models, so no verdict rule changes. With particle-1
   gone, no Part C episode puts a key into the environment gbrain runs in.
+
+### Amendment 2, 2026-11-07: G's sha, three harness fixes, the $390 cap and five run procedures
+
+Recorded before any counted trial. It changes no threshold, count, seed range, arm or verdict rule. It raises the all-in
+cap, records a standing money-cut rule for Part C, and adds the run procedures below.
+
+- **G:** `431cb3f91c615a6409d695d12f8af3ffec742475` (gbrain master v0.60.608.0, the merge of #8765), the first master commit
+  containing #8765 and GST-1674's live-retry fix (GBRA-360: a plain-git commit that lands in a live refresh retry's fence
+  window ends in a retry or an abort, never in a stuck `refresh_recovery_required`). GBRA-108 sent the sha on 2026-11-07.
+  Every counted block and `analyze.ts` take it as `--gbrain-sha`. Its source differs from #8765's head 1efd624d, where the smoke below ran, only by master merges outside
+  refresh, recovery and the barrier (upgrade channels, Git LFS during clones, a stall line's wording), and the
+  G-compatibility smoke at G reruns the crash stratum regardless. For the record, GBRA-108 notes two accepted review
+  findings in gbrain's `laterWriteRefusal` (a caller-set `managed_sync_` kind, and a compacted receipt read as a later
+  write) that are fixed in #8766, not in G. Neither case occurs in this harness, and `refresh_barrier` stays off everywhere
+  real until #8766 lands.
+- **Harness fixes (digest `8e8520f8b606`):** three fixes since Amendment 1, each found by an uncounted smoke. None changes
+  a failure class, threshold or count.
+  1. *Writers start gbrain's persistence consumer* (`child.ts`), as `gbrain serve` does. At f6e8a9f4, seed 271's on arm
+     hung in 3 of 4 runs with 7 or 8 Git effects still open at 120 s while the writer was alive. GBRA-360 traced it to
+     the harness: the writer never ran the consumer that drains the effects it queues, a process shape gbrain does not ship.
+  2. *The crash hold stays rooted* (`runtime.ts`). A crash tick's pause waited on a promise nothing referenced, so
+     garbage collection could end the hold and release the refresh's file lock before the parent killed the process. The
+     pause now waits on a promise held from a global. (GBRA-360's patch carries fixes 1 and 2.)
+  3. *A foreign commit retries on gbrain's index lock* (`runtime.ts`, `trial.ts`). With fix 1, gbrain's own Git effects
+     can hold `.git/index.lock` at the moment the plain-git cron commits. At 1efd624d, seed 222's foreign commit failed on
+     it and the trial scored `harness_error`. The cron now tries again up to 40 times, 250 ms apart, as its next run would,
+     and logs its attempts. A test covers it.
+
+  With these fixes the uncounted smoke at #8765's head 1efd624d passed 86 of 86: seed 355 14 of 14 per arm, seed 271
+  6 of 6 per arm, the crash stratum (seeds 33, 271, 798, 963, 355, 408 and 222) 7 of 7 per arm, and seeds 1 to 8 on both
+  engines and arms 32 of 32.
+- **G-compatibility smoke at G (uncounted):** running; its result is recorded here before the first counted trial.
+- **Cap:** $390 all-in, GBRA-108 picked (c) on 2026-11-07; GBEV-3 confirmed it fits R71. It replaces the $300 under
+  **Budget** and is the hard stop. Every paid line keeps its cap there: Part C claude-opus-5-5 $65, gpt-6.1-sol $35, the
+  Part C smoke $5, B2 $5 and Ubicloud VMs $20. All-in spend when this entry was written: about $260.
+- **Part C money cut (standing rule):** if the Part C smoke's measured cost per episode projects the run past $390, Part
+  C's task count is cut by the same number of tasks for each model so the projection lands at about $380. A dated
+  amendment records it as "money cut ordered by GBEV-3 (2026-11-07)", with the task count and the minimum detectable
+  difference it leaves, before the first counted episode.
+- **Run procedures:**
+  1. B2 runs once, and its ledger run `gbev44-refresh-barrier-b2` is finished right after, so no later process can
+     join it.
+  2. Each counted Part C invocation first checks that the gbrain checkout is clean and at G (`git status --porcelain`
+     empty, HEAD equal to G), and does not start otherwise.
+  3. Before each paid invocation, the run environment is checked by name, never by value, for variables whose name
+     contains AUTH (such as AUTHORIZATION, HTTP_AUTHORIZATION or an OAUTH variable), which `PROVIDER_KEYS` does not match.
+     The invocation starts only when none is set.
+  4. A Part C episode with a fact's token more than once in Git HEAD is not a strict success, even when `scoreEpisode`
+     scores it one (its `duplicates` field lists the fact, but `success` reads current pages only). The episode is
+     rescored by hand, and the adjudication (episode id, fact, the Git HEAD count) is recorded beside the results.
+  5. One invocation runs per model and arm at a time, because two concurrent runs of one model and arm share a work
+     directory and would delete each other's work and pay twice.
