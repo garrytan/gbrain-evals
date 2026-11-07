@@ -332,6 +332,13 @@ Wintermute's notes on the sample, aggregates only:
 - Its own checks before the freeze: every gold slug resolves, every exact form's key tokens are in its gold page, no
   paraphrase contains them, and ids are unique.
 
+**Batch 2 counted run commit** (recorded 2026-11-07, before the counted run on 0.60.593.0). The run uses gbrain-evals
+`bbde967d458f6f2a9f0d6ea6e1ab647895db1fff` on a clean tree, which the scorecard records as `runner_commit` and
+`runner_dirty`, and loads gbrain at tag v0.60.593.0 (`27f8b9d6`). Harness digest:
+`aee6a663997ce893ee8e10018d7dd45d8f7e88d785b8c1cbeaf6fba658d98549`, the sha256 of the output of
+`git ls-tree -r bbde967d458f6f2a9f0d6ea6e1ab647895db1fff -- eval/runner bun.lock` (537 entries: every runner file and
+the lockfile).
+
 Phase 2 stays held until batch 2 lands and GBRA-108 answers on the paraphrase gap.
 
 ## Limits
