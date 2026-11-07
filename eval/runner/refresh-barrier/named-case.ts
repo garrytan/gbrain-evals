@@ -86,7 +86,7 @@ export async function runNamedCase(a: NamedArgs): Promise<Record<string, unknown
   const result = { case: 'order', b: a.b, rep: a.rep, arm: a.arm, engine: a.engine, provenance: { gbrain_sha: gitHead(a.gbrainRoot), harness_digest: harnessDigest() },
     observed, flags: { ...flags, deadlocks },
     switches: events().filter(e => e.ev === 'switch').map(e => ({ role: e.role, refresh_barrier: e.refresh_barrier })),
-    child_errors: events().filter(e => e.ev === 'child_error').map(e => ({ role: e.role, code: e.code, message: String(e.message ?? '').slice(0, 300) })), ops: verdict.ops };
+    child_errors: events().filter(e => e.ev === 'child_error').map(e => ({ role: e.role, code: e.code, message: String(e.message ?? '').slice(0, 300) })), ledger_present: verdict.ledger_present, ops: verdict.ops };
   if (a.engine === 'postgres') { await engine.disconnect(); if (!a.keep) await dropDb?.(); }
   else { await g.service.disposePersistenceConsumer(engine); await engine.disconnect(); }
   return result;
@@ -113,7 +113,7 @@ if (import.meta.main) {
   }
   const result = await runNamedCase(a);
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(resultPath, JSON.stringify(result));
+  writeFileSync(resultPath, JSON.stringify(result), { flag: argv.includes('--replace') ? 'w' : 'wx' });
   if (!a.keep && failureClasses(result, 'named').length === 0) rmSync(join(a.out, 'work', `named-${a.engine}-${a.arm}-order-${a.b}-${a.rep}`), { recursive: true, force: true });
   process.exit(0);
 }

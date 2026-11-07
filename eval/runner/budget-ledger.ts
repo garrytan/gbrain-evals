@@ -220,7 +220,7 @@ function lockOwner(lock: string): LockOwner | null {
  * the same mtime) has held it past the stale window. Release removes the lock
  * only while it still carries this holder's nonce.
  */
-function withFileLock<T>(lock: string, fn: () => T): T {
+export function withFileLock<T>(lock: string, fn: () => T): T {
   mkdirSync(dirname(lock), { recursive: true });
   const nonce = randomUUID();
   const deadline = Date.now() + LOCK_WAIT_MS;

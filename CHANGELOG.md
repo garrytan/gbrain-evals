@@ -2,6 +2,24 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.171] - 2026-11-07
+
+### Refresh barrier Amendment 1: harness fixes, the Part C runner and the B2 ledger path (GBEV-44)
+
+- **Amendment 1.** G is now the first gbrain master commit that contains #8765 (barrier wave 2). Every result carries
+  G's sha and the harness digest. `analyze.ts` needs `--gbrain-sha`, applies the decision rule to Parts A, B and C
+  together and lists every reason.
+- **Part A harness fixes.** They close the integrity notes PR #379 shipped open: one `PROVIDER_KEYS` rule for every child
+  and in-process run, `bun --no-env-file` for the publish child, resume refusals for a result without this run's
+  provenance or a finished result that is gone, failure classes that no longer depend on gbrain's write-through report,
+  and a settle wait that also covers non-Git effects.
+- **Part B.** B2's real-embedder run goes through its own budget ledger run, `gbev44-refresh-barrier-b2` ($5). Two
+  invocations started together share one ledger run and one cap. A cap stop reads INCOMPLETE, and a ledger refusal
+  without one reads FIX-METHOD, with no margin read from partial scores.
+- **Part C.** `agent.ts` runs agent episodes per model and arm under the budget-ledger guard, and `analyzePartC` runs
+  the paired bootstrap. particle-1 is dropped from Part C, a money cut ordered by GBEV-3.
+- **Not measured yet.** No counted trial and no paid call has run. PR #383 lists its review findings as open notes.
+
 ## [0.10.170] - 2026-11-06
 
 ### Refresh barrier: a preregistered test of gbrain's write barrier, with a keyless harness (GBEV-44)

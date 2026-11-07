@@ -482,4 +482,68 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 
 ## Amendments
 
-None yet.
+### Amendment 1, 2026-11-06: G, and harness fixes before the first counted trial
+
+Recorded before any counted trial. Apart from the particle-1 money cut under **Part C models**, it changes no threshold,
+count, seed range, cap, arm or verdict rule.
+
+- **G:** the first gbrain master commit containing #8765 (barrier wave 2). GBRA-108 set this on 2026-11-07: #8765 folds in
+  GBRA-360's fix for a foreign commit that lands between a refresh's merge and its bookkeeping on the live path, which
+  GST-1674 fixed only on the recovery path. The G-compatibility smoke at `deef2593` (master v0.60.600.0, #8748, GST-1623's
+  fixes) found that shape ending `refresh_recovery_required` without a crash (seed 355, off arm, 1 of 4 runs), and the outcome
+  does not depend on the flag. G therefore contains everything the list above names plus #8765. GBRA-108 sends its sha when
+  #8765 lands, and a dated entry records that sha before the first counted trial. Every counted block passes it to
+  `run.ts` as `--gbrain-sha`, and `analyze.ts` now needs it too (`--gbrain-sha`, the full 40-character sha): a
+  result, receipt, Part B result or Part C episode from another gbrain commit makes the verdict FIX-METHOD.
+- **G-compatibility smoke at deef2593 (development evidence, uncounted):** with this harness, seeds 1 to 24 on both engines
+  and arms (96 trials) had 0 failures and 0 harness errors; PC1 to PC5 held, with PC2 at de22702a overwritten in 60 of 60
+  runs; 48 named-case runs had 0 failures; one trial per engine on a Ubicloud standard-16 VM passed. On Postgres the crash
+  stratum passed on the on arm (seeds 33, 271, 798, 963, 355, 408 and 222, and seed 33 four times); seed 355 failed once
+  on the off arm as described under **G**. The smoke reruns at G.
+- **Hermetic environment:** the gbrain CLI that the owner's publish child runs is started as `bun --no-env-file`, like every
+  other trial process. One rule (`PROVIDER_KEYS` in `fixture.ts`) names a key-like variable: any name containing KEY,
+  TOKEN, SECRET, PASSWORD, PASSWD, CREDENTIAL, BEARER or AUTH, or a provider's name. `run.ts` keeps those variables out of
+  every job, `openBrain` deletes them before any in-process brain opens (PGLite trials, named-case runs and Part C), and a
+  child that still sees one exits 3. `agent.ts` reads the model's key once, before any brain opens, and hands each episode only
+  the provider fetch built from it, never the key.
+- **Verdict:** `analyze.ts` applies the decision rule to Parts A, B and C together and lists every reason, so a missed
+  positive control reads FIX-METHOD and still lists each flag-on failure. It recommends the flag only on PASS with the
+  benefit test.
+- **Resuming a counted block:** `run.ts` refuses an existing result that lacks this run's G sha and harness digest, and a
+  job the run log records as finished whose result is gone, so a counted result is never deleted and run again.
+- **Crash placeholders:** PC5 leaves a job that wrote no result out of its switch and deferral checks; the placeholder
+  still counts as a harness_error.
+- **Failure classes:** `lost_git` and `unpublished` no longer depend on gbrain's own write-through report, so a committed
+  write missing from Git HEAD or from `main` counts even when gbrain reported it not written through. A write that ends
+  `cancelled` is always `unexpected_outcome`, as "`cancelled` is never allowed" says. A trial that has no commit ledger
+  (no commit record in gbrain's `commit-ledger.jsonl`) but has a write that ended committed is a harness_error. At
+  df7fca85 the ledger records every commit with a null request_id (writers `effect` and `merge`), so its per-request duplicate
+  signal cannot fire there; `duplicated` still reads requests per id, live facts, pages and Git HEAD.
+- **Settle wait:** approved by GBEV-3 (2026-11-07) at GBRA-108's request; changes no gate class, threshold or count. The sentence
+  "After the window the trial waits up to 120 s for every request and Git effect to settle" now reads: after the window the
+  trial waits up to 120 s for every request, refresh and Git effect to settle, and also for non-Git effects (`links`,
+  `facts-backstop`) while a process that runs their retries is alive (on Postgres, the wait before the writers stop; on
+  PGLite, both waits). Only requests, refreshes and Git effects decide `hang`; a non-Git effect still open at 120 s is
+  reported under **Residual non-Git effects** and never counted. GBRA-356 found that these effects requeue on a 30 s retry
+  after meeting a concurrent publication's recovery record, so they lag rather than stick (gbrain #8754).
+- **Residual non-Git effects:** `analyze.ts` reports, per engine and arm, how many trials end with a non-Git effect still
+  queued or running with error_code `recovery_required`, and how many such rows. They are not a failure class, since the
+  classes above cover requests and Git effects only (GBRA-108 and GBEV-3, 2026-11-07, after the uncounted smoke at
+  df7fca85 showed them in both arms). The verdict reports both counts per arm beside `trials_with_publish_consent`.
+- **Part B:** B2 now runs, only on a named budget ledger: `retrieval.ts` opens or joins ledger run
+  `gbev44-refresh-barrier-b2` ($5), every runner process joins it, and a cap stop finishes the run and records
+  `cap_stop`, which reads INCOMPLETE. B1 and B2 results go to separate directories (`out/<label>-b1` and
+  `out/<label>-b2`). A preregistered cell missing from an arm makes that result incomplete, which the decision rule reads
+  as FIX-METHOD.
+- **Part C:** `agent.ts` and its analysis follow "Errored episodes" above. An episode that stopped on a provider error or
+  a network failure is written uncounted with its stop reason and the task reruns under the same id, at most twice;
+  attempts from an earlier invocation count toward those two. A context overflow is a counted failure. A cap stop writes
+  `cap-stop.json`, finishes that model's ledger run and leaves its Part C INCOMPLETE. A ledger lock timeout or a failed
+  ledger write is not a cap stop: the run stops without writing the episode, so a resume runs it. Counted runs take only
+  tasks 1 to 60, and smoke and `--fake` runs only ids above 60. Every episode records G's sha and the harness digest.
+  `analyze.ts --partc` reports, per model and arm, the episodes, strict successes, errored, rerun, unexposed and
+  context-overflow counts and the spend, and per model the paired bootstrap described above.
+- **Part C models:** particle-1 is dropped from Part C: money cut ordered by GBEV-3 (2026-11-07); particle-1 did not gate.
+  Part C runs claude-opus-5-5 and gpt-6.1-sol only, the `particle:particle-1` budget item ($6) is removed, and `agent.ts`
+  refuses a particle model. The verdict always read the two gating models, so no verdict rule changes. With particle-1
+  gone, no Part C episode puts a key into the environment gbrain runs in.

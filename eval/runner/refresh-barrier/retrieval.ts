@@ -9,23 +9,30 @@
  * and -0.02 with real embedders (B2). A query that errored scores 0 in its arm. B1 also gates search latency: in every
  * Cat 18 cell, the median query_ms on the on arm is at most 1.2 times the off arm's.
  *
- *   bun eval/runner/refresh-barrier/retrieval.ts --gbrain-root <G> --work <dir> --stub-embed [--label g|pin]
+ *   bun eval/runner/refresh-barrier/retrieval.ts --gbrain-root <G> --work <dir> --stub-embed [--label g|pin]          (B1)
+ *   bun eval/runner/refresh-barrier/retrieval.ts --gbrain-root <G> --work <dir> --budget-ledger <path> [--label g|pin] (B2)
  *
  * Before each arm it resolves the switch through gbrain's own reader in that arm's environment and gbrain copy, and a gated
  * run refuses an arm that does not resolve to it. It refuses a reused worktree at another commit or with local edits.
+ * Results go to <work>/out/<label>-<b1|b2>/retrieval.json.
  *
  * --label pin runs the same against the pinned gbrain (the descriptive comparator, never gated). B2 makes paid embedding
- * calls, which must go through the budget ledger; until that path lands this runner refuses to run without --stub-embed.
+ * calls, so it runs only on a named budget ledger (--budget-ledger or BRAINBENCH_BUDGET_LEDGER): it opens or joins the
+ * ledger run gbev44-refresh-barrier-b2 (cap $5) and each runner process preloads ledger-preload.ts, which joins that run, so
+ * every embedding request is reserved and capped. A cap stop finishes the run (it is never retried) and the result records
+ * it (cap_stop), which reads INCOMPLETE.
  */
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { pairedBootstrap } from './analyze.ts';
+import { budgetOptionsFrom } from '../budget-ledger.ts';
+import { LATENCY_RATIO_MAX, PART_B_CELLS, PART_B_MARGIN, pairedBootstrap } from './analyze.ts';
 import { gitHead, harnessDigest } from './fixture.ts';
+import { isCapStop, openBudgetItem, type BudgetItem } from './ledger.ts';
 
 /** The preregistered margins: B1 (stub embeddings, deterministic) and B2 (real embedders, provider noise). */
-export const MARGIN = { b1: -0.01, b2: -0.02 } as const;
-export const LATENCY_RATIO_MAX = 1.2;
+export const MARGIN = PART_B_MARGIN;
+export { LATENCY_RATIO_MAX };
 const REPO = resolve(import.meta.dir, '../../..');
 type Rec = Record<string, any>;
 
@@ -55,8 +62,18 @@ const e = new PGLiteEngine(); await e.connect({}); await e.initSchema(); const s
   try { return JSON.parse(execFileSync('bun', ['-e', script], { cwd: evals, env, encoding: 'utf8', timeout: 120_000 }).trim().split('\n').pop()!); } catch { return null; }
 }
 
+/** B2's budget-ledger item (preregistration, "Budget"): the real embedders' calls, both arms, one ledger run. */
+export const B2_BUDGET: BudgetItem = { runner: 'gbev44-refresh-barrier-b2', cap_usd: 5 };
+const LEDGER_PRELOAD = join(import.meta.dir, 'ledger-preload.ts');
+
+/** One Part B runner's bun arguments; a B2 runner preloads ledger-preload.ts, which joins B2's ledger run, so every embedding request is reserved and capped. */
+export const runnerArgs = (script: string, stubEmbed: boolean, ledger: boolean) => [...(ledger ? ['--preload', LEDGER_PRELOAD] : []), script, ...(stubEmbed ? ['--stub-embed'] : [])];
+
+/** What a B2 runner's environment adds: the ledger run to join, and the file that collects the ledger's refusals. */
+export const ledgerEnv = (run: { runId: string; ledgerPath: string }, stops: string) => ({ BRAINBENCH_BUDGET_RUN_ID: run.runId, BRAINBENCH_BUDGET_LEDGER: run.ledgerPath, RB_LEDGER_STOPS: stops });
+
 /** Runs both runners in one arm and keeps their reports; a gated run refuses an arm whose environment does not resolve the switch to that arm. */
-function runArm(evals: string, arm: 'off' | 'on', stubEmbed: boolean, keep: string, gated: boolean): boolean | null {
+function runArm(evals: string, arm: 'off' | 'on', stubEmbed: boolean, keep: string, gated: boolean, ledger: Record<string, string> | null): boolean | null {
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env)) if (v !== undefined && k !== 'GBRAIN_REFRESH_BARRIER') env[k] = v;
   if (arm === 'on') env.GBRAIN_REFRESH_BARRIER = '1';
@@ -66,7 +83,7 @@ function runArm(evals: string, arm: 'off' | 'on', stubEmbed: boolean, keep: stri
   const reports = join(evals, 'eval', 'reports');
   rmSync(reports, { recursive: true, force: true });
   for (const runner of ['cat18-embedding-providers.ts', 'cat26-contextual-retrieval.ts']) {
-    try { execFileSync('bun', [join('eval/runner', runner), ...(stubEmbed ? ['--stub-embed'] : [])], { cwd: evals, env, stdio: ['ignore', 'inherit', 'inherit'], timeout: 3_600_000 }); }
+    try { execFileSync('bun', runnerArgs(join('eval/runner', runner), stubEmbed, ledger !== null), { cwd: evals, env: { ...env, ...ledger }, stdio: ['ignore', 'inherit', 'inherit'], timeout: 3_600_000 }); }
     catch (error) { console.error(`[retrieval] ${runner} ${arm} exited ${(error as { status?: number }).status ?? 'abnormally'}; its receipt keeps the reason`); }
   }
   rmSync(keep, { recursive: true, force: true });
@@ -113,7 +130,7 @@ export function compareLatency(off: Record<string, number[]>, on: Record<string,
 }
 
 /** The preregistered Part B cells: Cat 18's two providers and Cat 26's three modes, per metric. */
-export const CELLS = ['cat18/openai/recall_at_10', 'cat18/voyage/recall_at_10', ...['none', 'title', 'per_chunk_synopsis'].flatMap(m => [`cat26/${m}/r_at_3`, `cat26/${m}/mrr`])];
+export const CELLS = PART_B_CELLS;
 
 /** The margin check per cell: paired over the queries both arms scored, a query missing from one arm scoring 0 there; a preregistered cell missing from either arm fails. */
 export function compare(off: Record<string, Record<string, number>>, on: Record<string, Record<string, number>>, margin: number = MARGIN.b1): Rec {
@@ -123,8 +140,9 @@ export function compare(off: Record<string, Record<string, number>>, on: Record<
     const ids = [...new Set([...Object.keys(a), ...Object.keys(b)])].sort();
     const mean = (m: Record<string, number>) => ids.length ? ids.reduce((s, id) => s + (m[id] ?? 0), 0) / ids.length : null;
     const diff = pairedBootstrap(ids.map(id => (b[id] ?? 0) - (a[id] ?? 0)));
-    cells[key] = { queries: ids.length, off: mean(a), on: mean(b), diff, identical: ids.every(id => a[id] === b[id]),
-      pass: ids.length > 0 && key in off && key in on && diff.lo !== null && diff.lo >= margin };
+    const missing = !(key in off) || !(key in on) || !ids.length;
+    cells[key] = { queries: ids.length, off: mean(a), on: mean(b), diff, identical: ids.every(id => a[id] === b[id]), missing,
+      pass: !missing && diff.lo !== null && diff.lo >= margin };
   }
   return { margin, pass: Object.values(cells).length > 0 && Object.values(cells).every((c: any) => c.pass), cells };
 }
@@ -136,18 +154,32 @@ if (import.meta.main) {
   const work = resolve(get('--work')!);
   const gbrainRoot = label === 'pin' ? null : resolve(get('--gbrain-root')!);
   const stubEmbed = argv.includes('--stub-embed');
-  if (!stubEmbed) {
-    process.stderr.write('retrieval: B2 (real embedders) makes paid calls, which go through the budget ledger; that path is not in this runner yet, so run B1 with --stub-embed\n');
+  if (!stubEmbed && get('--budget-ledger') === undefined && process.env.BRAINBENCH_BUDGET_LEDGER === undefined) {
+    process.stderr.write(`retrieval: B2 (real embedders) makes paid calls, which go through the budget ledger (run ${B2_BUDGET.runner}, cap $${B2_BUDGET.cap_usd}); pass --budget-ledger <path> to run B2, or --stub-embed for B1\n`);
     process.exit(2);
   }
+  const kind = stubEmbed ? 'b1' : 'b2';
+  const dir = join(work, 'out', `${label}-${kind}`);
+  const kept = (arm: string) => join(dir, arm);
+  const stops = join(dir, 'ledger-stops.jsonl');
   const evals = prepare(work, gbrainRoot);
-  const kept = (arm: string) => join(work, 'out', label, arm);
-  const switches = Object.fromEntries((['off', 'on'] as const).map(arm => [arm, runArm(evals, arm, stubEmbed, kept(arm), label === 'g')]));
-  const scores = compare(readScores(kept('off')), readScores(kept('on')), stubEmbed ? MARGIN.b1 : MARGIN.b2);
-  const latency = stubEmbed ? compareLatency(readLatency(kept('off')), readLatency(kept('on'))) : null;
-  const result = { label, stub_embed: stubEmbed, gbrain: gbrainRoot ? execFileSync('git', ['-C', gbrainRoot, 'rev-parse', 'HEAD']).toString().trim() : 'pin',
-    gbrain_evals: gitHead(REPO), harness_digest: harnessDigest(), switches, pass: scores.pass && (latency === null || latency.pass), scores, latency };
-  writeFileSync(join(work, 'out', label, 'retrieval.json'), JSON.stringify(result, null, 2));
-  console.log(JSON.stringify({ label, pass: result.pass, latency: latency?.cells ?? null,
-    cells: Object.fromEntries(Object.entries(scores.cells as Rec).map(([k, c]: [string, any]) => [k, { off: c.off, on: c.on, lo: c.diff.lo, pass: c.pass }])) }));
+  mkdirSync(dir, { recursive: true }); rmSync(stops, { force: true });
+  const paid = stubEmbed ? null : openBudgetItem(B2_BUDGET, budgetOptionsFrom(argv));
+  let capStop = false;
+  try {
+    const ledger = paid ? ledgerEnv(paid.run, stops) : null;
+    const switches = Object.fromEntries((['off', 'on'] as const).map(arm => [arm, runArm(evals, arm, stubEmbed, kept(arm), label === 'g', ledger)]));
+    const ledgerStops = existsSync(stops) ? readFileSync(stops, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as string) : [];
+    capStop = ledgerStops.some(isCapStop);
+    const scores = compare(readScores(kept('off')), readScores(kept('on')), MARGIN[kind]);
+    const latency = stubEmbed ? compareLatency(readLatency(kept('off')), readLatency(kept('on'))) : null;
+    const result = { label, kind, stub_embed: stubEmbed, gbrain: gbrainRoot ? execFileSync('git', ['-C', gbrainRoot, 'rev-parse', 'HEAD']).toString().trim() : 'pin',
+      gbrain_evals: gitHead(REPO), harness_digest: harnessDigest(), switches, budget: paid ? { ...B2_BUDGET, run_id: paid.run.runId, ledger: paid.run.ledgerPath } : null,
+      ledger_stops: ledgerStops, cap_stop: capStop, pass: !capStop && scores.pass && (latency === null || latency.pass), scores, latency };
+    writeFileSync(join(dir, 'retrieval.json'), JSON.stringify(result, null, 2));
+    console.log(JSON.stringify({ label, kind, pass: result.pass, cap_stop: capStop, latency: latency?.cells ?? null,
+      cells: Object.fromEntries(Object.entries(scores.cells as Rec).map(([k, c]: [string, any]) => [k, { off: c.off, on: c.on, lo: c.diff.lo, pass: c.pass }])) }));
+  } finally {
+    if (paid) { paid.guard.uninstall(); console.log(JSON.stringify({ budget: paid.run.close({ finish: capStop }) })); }
+  }
 }

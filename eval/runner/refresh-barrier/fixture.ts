@@ -14,8 +14,12 @@ import { createHash, randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** Environment names that may hold a provider key or secret: never passed to a trial process. */
-export const PROVIDER_KEYS = /(_API_KEY|_API_TOKEN|_SECRET|ANTHROPIC|OPENAI|VOYAGE|GEMINI|PARTICLE|UBICLOUD)/;
+/**
+ * Environment names that may hold a key, token, password or other secret, or name a provider: never passed to a trial
+ * process (run.ts, the Postgres children's allowlist) and deleted from every in-process run (openBrain), so every child and
+ * in-process path uses this one rule. child.ts exits 3 when it still sees one.
+ */
+export const PROVIDER_KEYS = /KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|BEARER|(^|_)AUTH(_|$)|ANTHROPIC|OPENAI|VOYAGE|GEMINI|PARTICLE|UBICLOUD|TYPESAFE/i;
 export const GIT_IDENTITY = { name: 'Example', email: 'example@example.invalid' };
 
 /**
