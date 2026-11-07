@@ -82,8 +82,9 @@ All commands run from the repository root.
    Before the first question, the runner sends one public probe query through every arm and stops with
    [`LR_ARM_PREFLIGHT`](#lr_arm_preflight) if any arm errors, is refused a model call, fails its reranker open or
    reports a failure stage, so a missing grant ends the run
-   before it uses the question set. The probe is two made-up words that no page holds, so its keyword, title and
-   windowed statements match nothing and finish well inside gbrain's 8 s keyword statement bound. The terminal shows only allowlisted lines: the gbrain version, schema version and
+   before it uses the question set. The probe is two made-up words, rare enough that its keyword, title and
+   windowed statements find nothing or next to nothing through the index and finish well inside gbrain's 8 s keyword
+   statement bound. The terminal shows only allowlisted lines: the gbrain version, schema version and
    barrier, the preflight result, progress every 10 questions, and the output paths. Everything gbrain prints goes to `gbrain.local.log` in the run directory
    (`eval/reports/live-recall/<timestamp>/` unless you pass `--out`), and gbrain's own audit files land there too.
 

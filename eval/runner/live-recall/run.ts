@@ -218,12 +218,15 @@ export async function runQuestions(ctx: SearchContext, questions: Question[], pr
 }
 
 /**
- * Public text every arm searches before any question: two made-up words no page
- * holds, so each keyword, title and windowed statement finds nothing and stays
- * far inside gbrain's keyword statement bound, while every grant and code path
- * still runs. The first probe ('live-recall arm preflight probe') shared common
- * words with Garry's brain, and on gbrain 0.60.593.0 its all-time windowed
- * keyword statement hit that bound twice, once with no gbrain job running.
+ * Public text every arm searches before any question: two made-up words, rare
+ * enough that each keyword, title and windowed statement finds nothing or next
+ * to nothing through the index and stays far inside gbrain's keyword statement
+ * bound. Each arm's search statements still run, so a missing grant on them
+ * still fails; the stages that need results, the reranker among them, run only
+ * on the vector leg's candidates. The first probe ('live-recall arm preflight
+ * probe') shared common words with Garry's brain, and on gbrain 0.60.593.0 its
+ * all-time windowed keyword statement hit that bound twice, once with no gbrain
+ * job running.
  */
 export const PREFLIGHT_PROBE = 'zqxjvk wfpqyz';
 
