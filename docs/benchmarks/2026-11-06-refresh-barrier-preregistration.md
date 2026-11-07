@@ -484,7 +484,8 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 
 ### Amendment 1, 2026-11-06: G, and harness fixes before the first counted trial
 
-Recorded before any counted trial. It changes no threshold, count, seed range, cap, arm or verdict rule.
+Recorded before any counted trial. Apart from the particle-1 money cut under **Part C models**, it changes no threshold,
+count, seed range, cap, arm or verdict rule.
 
 - **G:** `<G sha pending GST-1623's landing>`. Every counted block passes it to `run.ts` as `--gbrain-sha`, and `analyze.ts`
   now needs it too (`--gbrain-sha`, the full 40-character sha): a result, receipt, Part B result or Part C episode from
@@ -493,7 +494,8 @@ Recorded before any counted trial. It changes no threshold, count, seed range, c
   other trial process. One rule (`PROVIDER_KEYS` in `fixture.ts`) names a key-like variable: any name containing KEY,
   TOKEN, SECRET, PASSWORD, PASSWD, CREDENTIAL, BEARER or AUTH, or a provider's name. `run.ts` keeps those variables out of
   every job, `openBrain` deletes them before any in-process brain opens (PGLite trials, named-case runs and Part C), and a
-  child that still sees one exits 3.
+  child that still sees one exits 3. `agent.ts` reads the model's key once, before any brain opens, and hands each episode only
+  the provider fetch built from it, never the key.
 - **Verdict:** `analyze.ts` applies the decision rule to Parts A, B and C together and lists every reason, so a missed
   positive control reads FIX-METHOD and still lists each flag-on failure. It recommends the flag only on PASS with the
   benefit test.
@@ -505,6 +507,10 @@ Recorded before any counted trial. It changes no threshold, count, seed range, c
   write missing from Git HEAD or from `main` counts even when gbrain reported it not written through. A write that ends
   `cancelled` is always `unexpected_outcome`, as "`cancelled` is never allowed" says. A trial that has no commit ledger
   but has a write that ended committed is a harness_error.
+- **Residual non-Git effects:** `analyze.ts` reports, per engine and arm, how many trials end with a non-Git effect still
+  queued or running with error_code `recovery_required`, and how many such rows. They are not a failure class, since the
+  classes above cover requests and Git effects only (GBRA-108 and GBEV-3, 2026-11-07, after the uncounted smoke at
+  df7fca85 showed them in both arms). The verdict reports both counts per arm beside `trials_with_publish_consent`.
 - **Part B:** B2 now runs, only on a named budget ledger: `retrieval.ts` opens or joins ledger run
   `gbev44-refresh-barrier-b2` ($5), every runner process joins it, and a cap stop finishes the run and records
   `cap_stop`, which reads INCOMPLETE. B1 and B2 results go to separate directories (`out/<label>-b1` and
@@ -518,3 +524,7 @@ Recorded before any counted trial. It changes no threshold, count, seed range, c
   tasks 1 to 60, and smoke and `--fake` runs only ids above 60. Every episode records G's sha and the harness digest.
   `analyze.ts --partc` reports, per model and arm, the episodes, strict successes, errored, rerun, unexposed and
   context-overflow counts and the spend, and per model the paired bootstrap described above.
+- **Part C models:** particle-1 is dropped from Part C: money cut ordered by GBEV-3 (2026-11-07); particle-1 did not gate.
+  Part C runs claude-opus-5-5 and gpt-6.1-sol only, the `particle:particle-1` budget item ($6) is removed, and `agent.ts`
+  refuses a particle model. The verdict always read the two gating models, so no verdict rule changes. With particle-1
+  gone, no Part C episode puts a key into the environment gbrain runs in.

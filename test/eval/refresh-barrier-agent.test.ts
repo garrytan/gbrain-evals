@@ -282,7 +282,7 @@ describe('episodes, reruns and cap stops (runTasks)', () => {
 
 describe('Part C analysis (analyzePartC)', () => {
   const G = 'a'.repeat(40);
-  const OPUS = 'anthropic:claude-opus-5-5', SOL = 'openai:gpt-6.1-sol', PARTICLE = 'particle:particle-1';
+  const OPUS = 'anthropic:claude-opus-5-5', SOL = 'openai:gpt-6.1-sol';
   const write = (out: string, model: string, arm: string, name: string, x: unknown) => {
     const d = join(out, 'agent', modelSlug(model), arm); mkdirSync(d, { recursive: true }); writeFileSync(join(d, name), JSON.stringify(x));
   };
@@ -292,21 +292,21 @@ describe('Part C analysis (analyzePartC)', () => {
     for (const t of PART_C_TASKS) { write(out, model, 'on', `task-${t}.json`, ep(t, 'on', onOk(t))); write(out, model, 'off', `task-${t}.json`, ep(t, 'off', offOk(t))); }
   };
 
-  test('per model, the paired bootstrap of on minus off strict success reads non-inferior, harm or inconclusive; only the primary models reach the verdict', () => {
+  test('per model, the paired bootstrap of on minus off strict success reads non-inferior, harm or inconclusive; Part C analyzes the two gating models only', () => {
     const out = mkdtempSync(join(tmpdir(), 'rb-c-'));
     fill(out, OPUS, () => true);
     fill(out, SOL, () => false);
-    fill(out, PARTICLE, t => t > 8, t => t < 9 || t > 12);
     const { models, reasons } = analyzePartC(out, G);
     expect(models[OPUS]).toMatchObject({ gating: true, paired: 60, status: 'non_inferior', non_inferior: true, harm: false, on_minus_off: { mean: 0, lo: 0, hi: 0 } });
     expect(models[SOL]).toMatchObject({ gating: true, status: 'harm', harm: true, on_minus_off: { mean: -1, lo: -1, hi: -1 } });
-    expect(models[PARTICLE]).toMatchObject({ gating: false, status: 'inconclusive', non_inferior: false, harm: false });
-    expect(models[PARTICLE].on_minus_off.lo).toBeLessThan(NON_INFERIOR_LO);
-    expect(models[PARTICLE].on_minus_off.hi).toBeGreaterThan(0);
+    expect(Object.keys(models)).toEqual([OPUS, SOL]);
     expect(models[OPUS].arms.on).toMatchObject({ episodes: 60, successes: 60, errored: 0, reruns: 0, unexposed: 0, missing: 0, usd: 30, cap_stop: false });
     expect(reasons).toEqual({ fix_method: [], fail: [`Part C harm for ${SOL} (on minus off -1.000, 95% -1.000 to -1.000)`], incomplete: [], incomplete_method: [], inconclusive: [] });
     fill(out, SOL, t => t > 8, t => t < 9 || t > 12);
-    expect(analyzePartC(out, G).reasons.inconclusive).toEqual([`Part C inconclusive for ${SOL}`]);
+    const mixed = analyzePartC(out, G);
+    expect(mixed.reasons.inconclusive).toEqual([`Part C inconclusive for ${SOL}`]);
+    expect(mixed.models[SOL].on_minus_off.lo).toBeLessThan(NON_INFERIOR_LO);
+    expect(mixed.models[SOL].on_minus_off.hi).toBeGreaterThan(0);
     rmSync(out, { recursive: true, force: true });
   });
 

@@ -24,7 +24,8 @@
  * on the wrong side. Paid runs check model freshness (scripts/model-freshness.ts) and attest the preregistration, then send
  * every request through the budget-ledger guard on the ledger run of their Budget-table item (BUDGET_ITEMS, ledger.ts),
  * opened by the first invocation and joined by later ones on the same ledger. gbrain stays keyless: main reads the model's key
- * once, before any brain opens, and hands it only to the loop's requests (keyedFetch); openBrain then deletes every key-like
+ * once, before any brain opens, builds the loop's provider fetch from it (keyedFetch) and passes each episode only that fetch;
+ * openBrain then deletes every key-like
  * variable from this process's environment (fixture.ts PROVIDER_KEYS). --fake swaps the provider for a scripted careful
  * agent that answers the loop's Anthropic Messages requests through its fetch hook: no key, no ledger, no network.
  *
@@ -71,7 +72,6 @@ export type FactState = typeof STATES[number];
 export const BUDGET_ITEMS: Record<string, { runner: string; cap_usd: number }> = {
   'anthropic:claude-opus-5-5': { runner: 'gbev44-refresh-barrier-c-opus', cap_usd: 65 },
   'openai:gpt-6.1-sol': { runner: 'gbev44-refresh-barrier-c-sol', cap_usd: 35 },
-  'particle:particle-1': { runner: 'gbev44-refresh-barrier-c-particle', cap_usd: 6 },
 };
 export const SMOKE_ITEM = { runner: 'gbev44-refresh-barrier-c-smoke', cap_usd: 5 };
 /** The counted task ids are 1 to 60; smoke and --fake runs use ids above them. */
@@ -79,7 +79,7 @@ export const COUNTED_TASKS_MAX = 60;
 /** Stops that measured the provider, not the agent: a provider error or a network failure (cat40/loop.ts classifyStops). They are rerun. */
 export const ERRORED_STOPS: ReadonlySet<AgentRun['stop']> = new Set(['error', 'harness_error']);
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
-const KEY_ENV = { anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', particle: 'PARTICLE_API_KEY' } as const;
+const KEY_ENV = { anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY' } as const;
 /** The loop route the fake answers: the Anthropic Messages format. Its usage is zero, so the loop prices it at $0. */
 const FAKE_LOOP_MODEL = 'claude-opus-5-5';
 
@@ -576,8 +576,8 @@ export interface EpisodeOptions {
   arm: 'off' | 'on'; gbrainRoot: string; out: string;
   /** provider:id, or 'fake'. */
   model: string; smoke: boolean;
-  /** The model's key, for a paid run. */
-  key?: string;
+  /** The loop's provider fetch with the model's key set (keyedFetch), for a paid run. */
+  providerFetch?: typeof fetch;
   budget?: { runner: string; cap_usd: number; run_id: string } | null;
   attestation?: Attestation | null;
   model_freshness?: { command: string; exit: number | null; output: string } | null;
@@ -587,9 +587,8 @@ export interface EpisodeOptions {
 
 export async function runEpisode(task: AgentTask, o: EpisodeOptions): Promise<Record<string, unknown>> {
   const fake = o.model === 'fake';
-  const prov = (fake ? 'anthropic' : o.model.slice(0, o.model.indexOf(':'))) as keyof typeof KEY_ENV;
   const loopModel = fake ? FAKE_LOOP_MODEL : o.model.slice(o.model.indexOf(':') + 1);
-  if (!fake && !o.key) throw new Error(`${o.model}: no key`);
+  if (!fake && !o.providerFetch) throw new Error(`${o.model}: no provider fetch`);
   const dir = join(o.out, 'work', `${modelSlug(o.model)}-${o.arm}-${task.id}`);
   const started = Date.now();
   const b = await openBrain({ arm: o.arm, engine: 'pglite', gbrainRoot: o.gbrainRoot }, dir, `agent_${o.arm}_${task.id}`);
@@ -607,13 +606,8 @@ export async function runEpisode(task: AgentTask, o: EpisodeOptions): Promise<Re
     const system = systemPrompt(arm);
     const attempts: unknown[] = [];
     const onAttempt = (a: ProviderAttempt) => attempts.push(attemptReceipt(loopModel, a, { lane: 'refresh-barrier-agent', role: 'reader', question_id: `task-${task.id}`, replicate: 0, attempt: attempts.length }));
-    // Particle's request builder reads its key from the environment; gbrain never reads PARTICLE_API_KEY.
-    if (prov === 'particle') process.env[KEY_ENV.particle] = o.key;
-    let run;
-    try {
-      run = await runAgent({ model: loopModel, system, user: task.user, arm, maxTurns: MAX_TURNS, maxOutputTokens: MAX_OUTPUT_TOKENS, effort: EFFORT, submitTool: REPORT_TOOL, classifyStops: true,
-        fetchImpl: fake ? fakeProvider(task) : keyedFetch(prov, o.key!), onAttempt });
-    } finally { if (prov === 'particle') delete process.env[KEY_ENV.particle]; }
+    const run = await runAgent({ model: loopModel, system, user: task.user, arm, maxTurns: MAX_TURNS, maxOutputTokens: MAX_OUTPUT_TOKENS, effort: EFFORT, submitTool: REPORT_TOOL, classifyStops: true,
+      fetchImpl: fake ? fakeProvider(task) : o.providerFetch!, onAttempt });
     timings.loop_ms = Date.now() - t0;
     if (arm.fault) await arm.fault.done;
     timings.refresh_wait_ms = Date.now() - t0 - timings.loop_ms;
@@ -727,15 +721,15 @@ async function main(argv: string[]): Promise<number> {
     : `smoke and --fake runs take ids above ${COUNTED_TASKS_MAX}, so they never share an id with a counted task; got ${wrong.join(', ')}`);
   const out = resolve(get('--out')!), gbrainRoot = resolve(get('--gbrain-root')!);
   const model = fake ? 'fake' : get('--model') ?? '';
-  let key: string | undefined, paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null, budget: EpisodeOptions['budget'] = null, attestation: Attestation | null = null;
+  let providerFetch: typeof fetch | undefined, paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null, budget: EpisodeOptions['budget'] = null, attestation: Attestation | null = null;
   let freshness: EpisodeOptions['model_freshness'] = null;
   if (!fake) {
     const prov = model.slice(0, Math.max(0, model.indexOf(':'))) as keyof typeof KEY_ENV;
-    if (!(prov in KEY_ENV) || provider(model.slice(model.indexOf(':') + 1)) !== prov) throw new Error(`--model takes provider:id (anthropic, openai or particle), got ${JSON.stringify(model)}`);
+    if (!(prov in KEY_ENV) || provider(model.slice(model.indexOf(':') + 1)) !== prov) throw new Error(`--model takes provider:id (anthropic or openai), got ${JSON.stringify(model)}`);
     const item = smoke ? SMOKE_ITEM : BUDGET_ITEMS[model];
     if (!item) throw new Error(`${model} has no Part C budget item; the preregistration budgets ${Object.keys(BUDGET_ITEMS).join(', ')}`);
-    key = process.env[KEY_ENV[prov]];
-    if (!key) throw new Error(`${KEY_ENV[prov]} is not set`);
+    if (!process.env[KEY_ENV[prov]]) throw new Error(`${KEY_ENV[prov]} is not set`);
+    providerFetch = keyedFetch(prov, process.env[KEY_ENV[prov]]!);
     if (existsSync(join(REPO_ROOT, 'scripts/model-freshness.ts'))) {
       const proc = spawnSync('bun', ['scripts/model-freshness.ts', '--models', model], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
       freshness = { command: `bun scripts/model-freshness.ts --models ${model}`, exit: proc.status, output: `${proc.stdout ?? ''}${proc.stderr ?? ''}`.slice(-4_000) };
@@ -748,7 +742,7 @@ async function main(argv: string[]): Promise<number> {
   let code = 1;
   try {
     code = await runTasks({ dir: join(out, 'agent', modelSlug(model), arm), tasks, budget,
-      episode: (task, attempt) => runEpisode(task, { arm, gbrainRoot, out, model, smoke, key, budget, attestation, model_freshness: freshness, attempt }) });
+      episode: (task, attempt) => runEpisode(task, { arm, gbrainRoot, out, model, smoke, providerFetch, budget, attestation, model_freshness: freshness, attempt }) });
     return code;
   } finally {
     // A cap stop finishes the item's ledger run, so neither arm can join it again; otherwise it stays open for the other arm and a resume.

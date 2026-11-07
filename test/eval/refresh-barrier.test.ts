@@ -282,6 +282,17 @@ describe('refresh-barrier counted-run integrity', () => {
     rmSync(out, { recursive: true, force: true });
   });
 
+  test('non-Git effects left queued or running with recovery_required are reported per engine and arm, not counted as failures', () => {
+    const out = mkdtempSync(join(tmpdir(), 'rb-a-'));
+    const eff = (kind: string, state: string, error_code: string | null, n: number) => ({ kind, state, error_code, parked: false, push: null, n });
+    put(out, 'trials/postgres/on/1001.json', { seed: 1001, arm: 'on', ops: [], effects: [eff('links', 'queued', 'recovery_required', 2), eff('facts-backstop', 'running', 'recovery_required', 1), eff('links', 'completed', null, 9)] });
+    put(out, 'trials/postgres/on/1002.json', { seed: 1002, arm: 'on', ops: [], effects: [eff('git', 'queued', 'recovery_required', 4), eff('links', 'completed', 'recovery_required', 5)] });
+    const s = analyze(out).summary['postgres/on'];
+    expect(s.residual_recovery_required).toEqual({ trials: 1, rows: 3 });
+    expect(s.failures.flatMap((f: { classes: string[] }) => f.classes).some((c: string) => c.includes('recovery'))).toBe(false);
+    rmSync(out, { recursive: true, force: true });
+  });
+
   test('a run is counted only with a counted receipt for every block and engine, and complete only on the preregistered seeds', () => {
     const out = mkdtempSync(join(tmpdir(), 'rb-a-'));
     put(out, 'receipt-trials-postgres.json', { counted: true, block: 'trials', engine: 'postgres' });

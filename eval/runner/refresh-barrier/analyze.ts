@@ -40,9 +40,9 @@ const PC2_RUNS = 10;
 export const PART_B_CELLS = ['cat18/openai/recall_at_10', 'cat18/voyage/recall_at_10', ...['none', 'title', 'per_chunk_synopsis'].flatMap(m => [`cat26/${m}/r_at_3`, `cat26/${m}/mrr`])];
 export const PART_B_MARGIN = { b1: -0.01, b2: -0.02 } as const;
 export const LATENCY_RATIO_MAX = 1.2;
-/** Part C's subjects (the first two gate, particle-1 is counted and reported), its counted tasks, one run and at most two reruns per task, and the non-inferiority bound. */
+/** Part C's subjects (both gate; Amendment 1 dropped particle-1), its counted tasks, one run and at most two reruns per task, and the non-inferiority bound. */
 export const PART_C_GATING = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'] as const;
-export const PART_C_MODELS: readonly string[] = [...PART_C_GATING, 'particle:particle-1'];
+export const PART_C_MODELS: readonly string[] = PART_C_GATING;
 export const PART_C_TASKS = span(1, 60);
 export const PART_C_ATTEMPTS = 3;
 export const NON_INFERIOR_LO = -0.10;
@@ -160,6 +160,8 @@ function armSummary(trials: Rec[]) {
   const ops = trials.flatMap(t => (t.ops ?? []).filter((o: Rec) => o.issued));
   const fails = trials.map(t => failureClasses(t, 'trial'));
   const ticks = trials.flatMap(t => t.ticks ?? []);
+  const residual = trials.map(t => (t.effects ?? []).filter((e: Rec) => e.kind !== 'git' && e.error_code === 'recovery_required' && ['queued', 'running'].includes(e.state))
+    .reduce((n: number, e: Rec) => n + Number(e.n ?? 0), 0));
   return {
     trials: trials.length, failed_trials: fails.filter(f => f.length).length,
     classes: Object.fromEntries([...OP_CLASSES, ...RUN_CLASSES].map(c => [c, fails.filter(f => f.includes(c)).length])),
@@ -179,6 +181,7 @@ function armSummary(trials: Rec[]) {
     ticks: { total: ticks.length, completed: ticks.filter((k: Rec) => k.ev === 'tick_result').length, refused: tally(ticks.filter((k: Rec) => k.ev !== 'tick_result').map((k: Rec) => String(k.code))) },
     converge_attempts: dist(trials.flatMap(t => Object.values(t.flags?.converge?.sources ?? {}).map((s: any) => Number(s.attempts ?? 0)))),
     trials_with_publish_consent: trials.filter(t => Object.values(t.flags?.converge?.sources ?? {}).some((s: any) => s.consented_publish === true)).length,
+    residual_recovery_required: { trials: residual.filter(n => n > 0).length, rows: residual.reduce((a, b) => a + b, 0) },
     failures: trials.map((t, i) => ({ seed: t.seed, classes: fails[i] })).filter(x => x.classes.length),
   };
 }
@@ -395,7 +398,7 @@ export function partBReasons(kind: 'b1' | 'b2', r: Rec | null, gbrainSha: string
  * tasks (10,000 resamples, seed 1) of on minus off strict success: non-inferior when the lower bound is at least -0.10,
  * harm when the upper bound is below 0, otherwise inconclusive. A cap stop in either arm makes the model INCOMPLETE; a task
  * without a counted episode in both arms, a counted episode outside tasks 1 to 60, or an episode not from G and this
- * harness tree makes it incomplete. Only the primary models reach the verdict; particle-1 is reported.
+ * harness tree makes it incomplete. Both models reach the verdict.
  */
 export function analyzePartC(dir: string, gbrainSha: string | undefined): { models: Rec; reasons: Partial<VerdictReasons> } {
   const digest = harnessDigest();
@@ -457,6 +460,6 @@ if (import.meta.main) {
   console.log(`# Verdict: ${r.verdict}; recommend flag on: ${r.recommend_flag_on}\n\nPart A: ${r.verdict_part_a}${r.interrupted.length ? `; interrupted and rerun: ${r.interrupted.join(', ')}` : ''}\n\n| Unit | n | failures | 95% upper bound |\n|---|---|---|---|`);
   for (const [k, u] of Object.entries(r.bounds as Rec)) console.log(`| ${k} | ${u.n} | ${u.failures} | ${f(u.upper95)} |`);
   console.log(`\nPositive controls: ${JSON.stringify(r.positive_controls)}`);
-  for (const [k, s] of Object.entries(r.summary as Rec)) console.log(`\n## ${k}\n${JSON.stringify({ trials: s.trials, failed: s.failed_trials, classes: s.classes, writes: s.writes, first_call: s.first_call, blocked_ms: s.blocked_ms, defer_to_apply_ms: s.defer_to_apply_ms, ticks: s.ticks, failures: s.failures.slice(0, 10) })}`);
+  for (const [k, s] of Object.entries(r.summary as Rec)) console.log(`\n## ${k}\n${JSON.stringify({ trials: s.trials, failed: s.failed_trials, classes: s.classes, writes: s.writes, first_call: s.first_call, blocked_ms: s.blocked_ms, defer_to_apply_ms: s.defer_to_apply_ms, ticks: s.ticks, trials_with_publish_consent: s.trials_with_publish_consent, residual_recovery_required: s.residual_recovery_required, failures: s.failures.slice(0, 10) })}`);
   console.log(`\n## quiet latency (gate)\n${JSON.stringify(r.quiet_latency)}\n\n## paired\n${JSON.stringify(r.paired)}\n\n## named\n${JSON.stringify(r.named)}\n\n## Part B\n${JSON.stringify(r.part_b)}\n\n## Part C\n${JSON.stringify(r.part_c)}`);
 }
