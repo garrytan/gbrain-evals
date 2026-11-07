@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
@@ -238,6 +238,12 @@ describe('live-recall scoring and refusals', () => {
     const p1 = card.comparisons.find((c: any) => c.id === 'p1_hybrid_vs_hybrid_lexical' && c.metric === 'success_at_5');
     expect(p1.p_two_sided).toBeLessThan(0.5);
     expect(p1.p_holm).toBeCloseTo(Math.min(1, 2 * p1.p_two_sided), 4);
+  });
+
+  test('the preflight probe is made of words no fixture page or question holds, so its keyword statements match nothing', () => {
+    const pages = (readdirSync(join(FIXTURE_DIR, 'pages'), { recursive: true }) as string[]).filter(f => f.endsWith('.md')).map(f => readFileSync(join(FIXTURE_DIR, 'pages', f), 'utf8'));
+    expect(pages.length).toBe(30);
+    for (const word of PREFLIGHT_PROBE.split(' ')) expect([fixtureText, ...pages].some(text => text.toLowerCase().includes(word))).toBe(false);
   });
 
   test('the arm preflight aborts on a failure stage before any question, naming arms, statuses and stage names only', async () => {

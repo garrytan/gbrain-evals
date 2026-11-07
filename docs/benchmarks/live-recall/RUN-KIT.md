@@ -82,7 +82,8 @@ All commands run from the repository root.
    Before the first question, the runner sends one public probe query through every arm and stops with
    [`LR_ARM_PREFLIGHT`](#lr_arm_preflight) if any arm errors, is refused a model call, fails its reranker open or
    reports a failure stage, so a missing grant ends the run
-   before it uses the question set. The terminal shows only allowlisted lines: the gbrain version, schema version and
+   before it uses the question set. The probe is two made-up words that no page holds, so its keyword, title and
+   windowed statements match nothing and finish well inside gbrain's 8 s keyword statement bound. The terminal shows only allowlisted lines: the gbrain version, schema version and
    barrier, the preflight result, progress every 10 questions, and the output paths. Everything gbrain prints goes to `gbrain.local.log` in the run directory
    (`eval/reports/live-recall/<timestamp>/` unless you pass `--out`), and gbrain's own audit files land there too.
 
@@ -200,8 +201,11 @@ embedding provider and rerun.
 An arm failed on the public probe query before any question ran. The detail names each failing arm, its status and
 gbrain's failure stages, for example `hybrid_lexical degraded (title_arm_failed)`. `title_arm_failed` or
 `keyword_arm_failed` usually means the role lacks EXECUTE on one of the helper functions listed under
-[Other barriers](#other-barriers); an `embed_` or `rerank_` stage points at the provider's key or service. Fix it and
-rerun. Nothing was counted.
+[Other barriers](#other-barriers); an `embed_` or `rerank_` stage points at the provider's key or service.
+`keyword_arm_failed` can also be gbrain's keyword statement timeout (`search.keyword_statement_timeout_ms`, 8 s by
+default), and then `gbrain.local.log` says `canceling statement due to statement timeout`: rerun when gbrain's
+maintenance jobs are idle, and report it if it repeats on an idle database. Fix the cause and rerun. Nothing was
+counted.
 
 ### LR_RERANK_NEEDS_TYPESAFE
 

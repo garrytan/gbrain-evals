@@ -217,8 +217,15 @@ export async function runQuestions(ctx: SearchContext, questions: Question[], pr
   return records;
 }
 
-/** Public text every arm searches before any question; it names no page in any brain. */
-export const PREFLIGHT_PROBE = 'live-recall arm preflight probe';
+/**
+ * Public text every arm searches before any question: two made-up words no page
+ * holds, so each keyword, title and windowed statement finds nothing and stays
+ * far inside gbrain's keyword statement bound, while every grant and code path
+ * still runs. The first probe ('live-recall arm preflight probe') shared common
+ * words with Garry's brain, and on gbrain 0.60.593.0 its all-time windowed
+ * keyword statement hit that bound twice, once with no gbrain job running.
+ */
+export const PREFLIGHT_PROBE = 'zqxjvk wfpqyz';
 
 /**
  * One public probe through every arm, windowed so configured_window runs too,
