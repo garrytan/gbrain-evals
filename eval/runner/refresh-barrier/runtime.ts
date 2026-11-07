@@ -191,7 +191,7 @@ export async function runTick(s: Session, tick: TickPlan, mode: 'tick' | 'resume
       paused = true;
       s.log({ ev: 'tick_paused', tick: tick.index, point, pause_ms: tick.pause_ms });
       onPaused?.();
-      if (tick.crash) await new Promise(() => undefined);
+      if (tick.crash) await new Promise(resolve => { (globalThis as any).__rbHold = resolve; });
       await sleep(tick.pause_ms);
     },
   };
