@@ -487,10 +487,19 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 Recorded before any counted trial. Apart from the particle-1 money cut under **Part C models**, it changes no threshold,
 count, seed range, cap, arm or verdict rule.
 
-- **G:** `deef2593dc3717907a1f17d7db6eb558747bfc0f`, gbrain master v0.60.600.0 (#8748, GST-1623's fixes), sent by GBRA-108 on
-  2026-11-07. It contains #8682, #8705 (df7fca85), GBRA-347's fix (03b89121) and GST-1674's crash recovery (149455d4). Every counted block passes it to `run.ts` as `--gbrain-sha`, and `analyze.ts`
-  now needs it too (`--gbrain-sha`, the full 40-character sha): a result, receipt, Part B result or Part C episode from
-  another gbrain commit makes the verdict FIX-METHOD.
+- **G:** the first gbrain master commit containing #8765 (barrier wave 2). GBRA-108 set this on 2026-11-07: #8765 folds in
+  GBRA-360's fix for a foreign commit that lands between a refresh's merge and its bookkeeping on the live path, which
+  GST-1674 fixed only on the recovery path. The G-compatibility smoke at `deef2593` (master v0.60.600.0, #8748, GST-1623's
+  fixes) found that shape ending `refresh_recovery_required` without a crash (seed 355, off arm, 1 of 4 runs), and the outcome
+  does not depend on the flag. G therefore contains everything the list above names plus #8765. GBRA-108 sends its sha when
+  #8765 lands, and a dated entry records that sha before the first counted trial. Every counted block passes it to
+  `run.ts` as `--gbrain-sha`, and `analyze.ts` now needs it too (`--gbrain-sha`, the full 40-character sha): a
+  result, receipt, Part B result or Part C episode from another gbrain commit makes the verdict FIX-METHOD.
+- **G-compatibility smoke at deef2593 (development evidence, uncounted):** with this harness, seeds 1 to 24 on both engines
+  and arms (96 trials) had 0 failures and 0 harness errors; PC1 to PC5 held, with PC2 at de22702a overwritten in 60 of 60
+  runs; 48 named-case runs had 0 failures; one trial per engine on a Ubicloud standard-16 VM passed. On Postgres the crash
+  stratum passed on the on arm (seeds 33, 271, 798, 963, 355, 408 and 222, and seed 33 four times); seed 355 failed once
+  on the off arm as described under **G**. The smoke reruns at G.
 - **Hermetic environment:** the gbrain CLI that the owner's publish child runs is started as `bun --no-env-file`, like every
   other trial process. One rule (`PROVIDER_KEYS` in `fixture.ts`) names a key-like variable: any name containing KEY,
   TOKEN, SECRET, PASSWORD, PASSWD, CREDENTIAL, BEARER or AUTH, or a provider's name. `run.ts` keeps those variables out of
