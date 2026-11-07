@@ -11,7 +11,7 @@ import { allOps, generateSchedule } from '../../eval/runner/refresh-barrier/sche
 import { B2_BUDGET, CELLS, MARGIN, compare, compareLatency, ledgerEnv, runnerArgs } from '../../eval/runner/refresh-barrier/retrieval.ts';
 import { POLL_LIMIT_MS, classifyResult } from '../../eval/runner/refresh-barrier/runtime.ts';
 import { cliWrapperScript } from '../../eval/runner/refresh-barrier/trial.ts';
-import { allowedCode, clientView, removedByBlindPut, removerOf, verifyTrial } from '../../eval/runner/refresh-barrier/verify.ts';
+import { allowedCode, clientView, ledgerCommits, removedByBlindPut, removerOf, verifyTrial } from '../../eval/runner/refresh-barrier/verify.ts';
 
 describe('refresh-barrier schedule', () => {
   test('a quiet schedule keeps the seed\'s writers and writes and drops every refresh, push, sync and fault', () => {
@@ -487,6 +487,19 @@ describe('refresh-barrier Amendment 1', () => {
     expect(failureClasses({ ...t, ledger_present: false }, 'trial')).toContain('harness_error');
     expect(failureClasses({ ...t, ledger_present: true }, 'trial')).not.toContain('harness_error');
     expect(failureClasses({ ...t, ops: [{ state: 'failed' }], ledger_present: false }, 'trial')).not.toContain('harness_error');
+  });
+
+  test('T3: a ledger whose commits carry no request id is still present (gbrain records effect and merge commits that way)', () => {
+    const root = mkdtempSync(join(tmpdir(), 'rb-ledger-'));
+    Bun.spawnSync(['git', 'init', '-q', root]);
+    expect(ledgerCommits(root)).toEqual({ byRequest: new Map(), commits: 0 });
+    mkdirSync(join(root, '.git', 'gbrain'));
+    const line = (x: object) => JSON.stringify({ v: 1, t: '2026-11-07T00:00:00Z', ...x });
+    writeFileSync(join(root, '.git', 'gbrain', 'commit-ledger.jsonl'), [line({ e: 'start' }), line({ e: 'intent', writer: 'effect' }),
+      line({ e: 'commit', sha: 'a', writer: 'effect', request_id: null }), line({ e: 'commit', sha: 'b', writer: 'merge', request_id: null }),
+      line({ e: 'commit', sha: 'c', writer: 'request', request_id: 'r1' }), line({ e: 'commit', sha: 'd', writer: 'request', request_id: 'r1' })].join('\n') + '\n');
+    expect(ledgerCommits(root)).toEqual({ byRequest: new Map([['r1', 2]]), commits: 4 });
+    rmSync(root, { recursive: true, force: true });
   });
 
   test('T1, T2: lost_git and unpublished ignore write_through, and a cancelled write is always unexpected', async () => {

@@ -506,7 +506,9 @@ count, seed range, cap, arm or verdict rule.
 - **Failure classes:** `lost_git` and `unpublished` no longer depend on gbrain's own write-through report, so a committed
   write missing from Git HEAD or from `main` counts even when gbrain reported it not written through. A write that ends
   `cancelled` is always `unexpected_outcome`, as "`cancelled` is never allowed" says. A trial that has no commit ledger
-  but has a write that ended committed is a harness_error.
+  (no commit record in gbrain's `commit-ledger.jsonl`) but has a write that ended committed is a harness_error. At
+  df7fca85 the ledger records every commit with a null request_id (writers `effect` and `merge`), so its per-request duplicate
+  signal cannot fire there; `duplicated` still reads requests per id, live facts, pages and Git HEAD.
 - **Residual non-Git effects:** `analyze.ts` reports, per engine and arm, how many trials end with a non-Git effect still
   queued or running with error_code `recovery_required`, and how many such rows. They are not a failure class, since the
   classes above cover requests and Git effects only (GBRA-108 and GBEV-3, 2026-11-07, after the uncounted smoke at

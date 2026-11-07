@@ -125,9 +125,11 @@ export function gitMarkers(root: string, markers: string[]): { head: Map<string,
   return { head, hist };
 }
 
-export function ledgerCommits(root: string): Map<string, number> {
+/** gbrain's commit ledger: commits per request id, and how many commit records it holds (records with a null request_id count only there). */
+export function ledgerCommits(root: string): { byRequest: Map<string, number>; commits: number } {
   const common = execFileSync('git', ['-C', root, 'rev-parse', '--path-format=absolute', '--git-common-dir'], { encoding: 'utf8' }).trim();
   const out = new Map<string, number>();
+  let commits = 0;
   for (const name of ['commit-ledger.1.jsonl', 'commit-ledger.jsonl']) {
     const path = join(common, 'gbrain', name);
     if (!existsSync(path)) continue;
@@ -135,11 +137,12 @@ export function ledgerCommits(root: string): Map<string, number> {
       if (!line.trim()) continue;
       let rec: Record<string, unknown>; try { rec = JSON.parse(line); } catch { continue; }
       if (rec.e !== 'commit') continue;
+      commits++;
       const ids = Array.isArray(rec.request_ids) ? rec.request_ids : rec.request_id ? [rec.request_id] : [];
       for (const id of ids as string[]) out.set(id, (out.get(id) ?? 0) + 1);
     }
   }
-  return out;
+  return { byRequest: out, commits };
 }
 
 /**
@@ -208,7 +211,7 @@ export async function verifyTrial(engine: any, schedule: TrialSchedule, paths: B
     const pages_occ = pageText.reduce((n: number, t: string) => n + exact(t, m), 0);
     const versionsN = versionText.filter((t: string) => exact(t, m) > 0).length;
     const git_head_occ = git.head.get(m) ?? 0, git_hist = git.hist.get(m) ?? 0;
-    const ledger_commits = ledger.get(op.request_id) ?? 0;
+    const ledger_commits = ledger.byRequest.get(op.request_id) ?? 0;
     const applied = factsAll.length > 0 || pages_occ > 0 || versionsN > 0 || git_hist > 0;
     const acknowledged = responses.some(r => r.cls === 'committed' || r.cls === 'pending');
     const client_committed = responses.some(r => r.cls === 'committed') || finals.some(f => f.state === 'committed');
@@ -273,5 +276,5 @@ export async function verifyTrial(engine: any, schedule: TrialSchedule, paths: B
   const committedBlindPut = (x: string) => { const o = opByMarker.get(x); return o?.kind === 'put_blind' && rowsBy.get(o.request_id)?.[0]?.state === 'committed'; };
   const missingUp = upMarkers.filter(m => (git.head.get(m) ?? 0) === 0);
   const removed_by_blind_put = missingUp.filter(m => removedByBlindPut(fileHistory(paths.root, pushPath.get(m)!), m, committedBlindPut)).length;
-  return { ops: records, upstream: { pushed: upMarkers.length, missing_head: missingUp.length - removed_by_blind_put, removed_by_blind_put }, ledger_present: ledger.size > 0 };
+  return { ops: records, upstream: { pushed: upMarkers.length, missing_head: missingUp.length - removed_by_blind_put, removed_by_blind_put }, ledger_present: ledger.commits > 0 };
 }
