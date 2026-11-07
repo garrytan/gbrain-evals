@@ -250,11 +250,24 @@ export async function logSwitch(s: Session, role: string): Promise<void> {
   s.log({ ev: 'switch', role, refresh_barrier: switches.refresh_barrier === true });
 }
 
-/** A plain-git commit straight into the managed checkout (a cron that bypasses gbrain), then later a scheduled sync. */
-export function foreignCommit(paths: BrainPaths, f: ForeignCommit): string {
+/**
+ * A plain-git commit straight into the managed checkout (a cron that bypasses gbrain), then later a scheduled sync. When
+ * gbrain's own git holds the index lock, the cron tries again shortly, as its next run would.
+ */
+export const FOREIGN_LOCK_ATTEMPTS = 40;
+export const FOREIGN_LOCK_RETRY_MS = 250;
+
+export async function foreignCommit(paths: BrainPaths, f: ForeignCommit): Promise<{ head: string; attempts: number }> {
   insertTopLine(paths.root, f.path, `Cron note ${f.marker}.`, () => notePage('Cron note', `Committed by a cron with plain git. ${f.marker}`));
-  git(paths.root, 'add', '--', f.path); git(paths.root, 'commit', '-qm', `cron ${f.marker}`);
-  return git(paths.root, 'rev-parse', 'HEAD');
+  for (let attempt = 1; ; attempt++) {
+    try {
+      git(paths.root, 'add', '--', f.path); git(paths.root, 'commit', '-qm', `cron ${f.marker}`);
+      return { head: git(paths.root, 'rev-parse', 'HEAD'), attempts: attempt };
+    } catch (error) {
+      if (attempt >= FOREIGN_LOCK_ATTEMPTS || !String(error).includes("index.lock': File exists")) throw error;
+      await sleep(FOREIGN_LOCK_RETRY_MS);
+    }
+  }
 }
 
 export async function runSync(s: Session, source: 'alpha' | 'beta'): Promise<Record<string, unknown>> {

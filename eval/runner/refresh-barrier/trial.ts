@@ -186,7 +186,7 @@ export async function runTrial(a: TrialArgs): Promise<Record<string, unknown>> {
     })();
     const foreignLine = Promise.all(schedule.foreign.map(async (f, i) => {
       await sleep(t0 + f.at_ms - Date.now());
-      try { log({ ev: 'foreign_commit', index: i, head: foreignCommit(paths, f) }); } catch (error) { log({ ev: 'foreign_commit_error', index: i, message: String(error).slice(0, 400) }); }
+      try { log({ ev: 'foreign_commit', index: i, ...await foreignCommit(paths, f) }); } catch (error) { log({ ev: 'foreign_commit_error', index: i, message: String(error).slice(0, 400) }); }
       await sleep(f.sync_after_ms);
       await timed(() => withDeadline(spawnChild(`sync${i}`, ['sync', 'alpha']), TICK_SLACK_MS));
     }));
@@ -234,7 +234,7 @@ export async function runTrial(a: TrialArgs): Promise<Record<string, unknown>> {
     })();
     const foreignLine = Promise.all(schedule.foreign.map(async (f, i) => {
       await sleep(t0 + f.at_ms - Date.now());
-      try { log({ ev: 'foreign_commit', index: i, head: foreignCommit(paths, f) }); } catch (error) { log({ ev: 'foreign_commit_error', index: i, message: String(error).slice(0, 400) }); }
+      try { log({ ev: 'foreign_commit', index: i, ...await foreignCommit(paths, f) }); } catch (error) { log({ ev: 'foreign_commit_error', index: i, message: String(error).slice(0, 400) }); }
       await sleep(f.sync_after_ms);
       try { const r = await timed(() => runSync(session, 'alpha')); log({ ev: 'sync_result', status: (r as any).status ?? null }); }
       catch (error) { log({ ev: 'child_error', role: 'sync', code: (error as any)?.code ?? null, message: String((error as any)?.message ?? error).slice(0, 400) }); }
