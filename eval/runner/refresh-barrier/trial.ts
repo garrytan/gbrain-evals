@@ -72,7 +72,8 @@ function parseArgs(argv: string[]): TrialArgs {
 const QUIESCE_SQL = `SELECT
   (SELECT count(*) FROM persistence_requests WHERE state NOT IN ('committed','conflict','failed','cancelled'))::int AS open_requests,
   (SELECT count(*) FROM persistence_worktree_refreshes WHERE state IN ('draining','fenced','merged','syncing','recovery_required'))::int AS active_refreshes,
-  (SELECT count(*) FROM persistence_effects WHERE kind='git' AND state IN ('queued','running'))::int AS open_effects`;
+  (SELECT count(*) FROM persistence_effects WHERE kind='git' AND state IN ('queued','running'))::int AS open_effects,
+  (SELECT count(*) FROM persistence_effects WHERE kind<>'git' AND state IN ('queued','running'))::int AS open_derived`;
 
 /** The gbrain CLI the owner's publish child runs: bun with --no-env-file, as every trial process runs, so no .env file can put a key back. */
 export const cliWrapperScript = (gbrainRoot: string) => `#!/bin/sh\nexec bun --no-env-file ${JSON.stringify(join(gbrainRoot, 'src/cli.ts'))} "$@"\n`;
@@ -201,7 +202,7 @@ export async function runTrial(a: TrialArgs): Promise<Record<string, unknown>> {
     // With one writer and that writer killed, no live process holds a consumer for its accepted writes; a deployment's
     // resident consumer (`gbrain serve`) would, so the parent starts one for the settle phase.
     if (schedule.strata.writer_kill && schedule.writers.length === 1) { g.service.startPersistenceConsumer(engine, { engine: engine.kind }); flags.settle_consumer = true; }
-    flags.quiesce = await quiesce(engine);
+    flags.quiesce = await quiesce(engine, { derived: true });
     timings.quiesce_ms = Date.now() - t0 - timings.schedule_ms;
     writeFileSync(stopFile, '');
     await Promise.all(writers.map(w => withDeadline(w, STOP_LIMIT_MS)));
@@ -241,13 +242,13 @@ export async function runTrial(a: TrialArgs): Promise<Record<string, unknown>> {
     const deadline = sleep(schedule.ops_window_ms + WRITER_OPS_LIMIT_MS + STARTUP_MS).then(() => 'deadline' as const);
     if (await Promise.race([Promise.all([opsDone, pushLine, tickLine, foreignLine]), deadline]) === 'deadline') flags.inprocess_hang = true;
     timings.schedule_ms = Date.now() - t0;
-    flags.quiesce = await quiesce(engine);
+    flags.quiesce = await quiesce(engine, { derived: true });
     timings.quiesce_ms = Date.now() - t0 - timings.schedule_ms;
     const convergeStart = Date.now();
     const converge = await Promise.race([runConverge(session).then(r => { log({ ev: 'converge_result', ...r }); return 'done' as const; }),
       sleep(CONVERGE_LIMIT_MS).then(() => 'deadline' as const)]);
     if (converge === 'deadline') flags.converge_hang = true;
-    flags.quiesce_final = await quiesce(engine);
+    flags.quiesce_final = await quiesce(engine, { derived: true });
     timings.converge_ms = Date.now() - convergeStart;
     writeFileSync(stopFile, '');
   }
@@ -316,15 +317,21 @@ function upstreamLine(schedule: TrialSchedule, paths: ReturnType<typeof brainPat
   })();
 }
 
-export async function quiesce(engine: any): Promise<Record<string, unknown>> {
+/**
+ * Waits up to QUIESCE_LIMIT_MS for every request, refresh and Git effect to settle, and with derived also for non-Git effects
+ * (links, facts-backstop) while a consumer is still alive to run their retries. Only requests, refreshes and Git effects
+ * decide ok; a non-Git effect still open at the limit is reported (analyze.ts residual_recovery_required), never a failure.
+ */
+export async function quiesce(engine: any, opts: { derived?: boolean } = {}): Promise<Record<string, unknown>> {
   const startedAt = Date.now();
   let last: Record<string, number> = {};
+  const settled = () => !last.open_requests && !last.active_refreshes && !last.open_effects;
   while (Date.now() - startedAt < QUIESCE_LIMIT_MS) {
     last = (await engine.executeRaw(QUIESCE_SQL))[0];
-    if (!last.open_requests && !last.active_refreshes && !last.open_effects) return { ok: true, ms: Date.now() - startedAt };
+    if (settled() && (!opts.derived || !last.open_derived)) return { ok: true, ms: Date.now() - startedAt };
     await sleep(500);
   }
-  return { ok: false, ms: Date.now() - startedAt, ...last };
+  return { ok: settled(), ms: Date.now() - startedAt, ...last };
 }
 
 if (import.meta.main) {

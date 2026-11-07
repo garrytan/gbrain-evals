@@ -10,7 +10,7 @@ import { B_KINDS, planJobs, runBlock, type RunArgs } from '../../eval/runner/ref
 import { allOps, generateSchedule } from '../../eval/runner/refresh-barrier/schedule.ts';
 import { B2_BUDGET, CELLS, MARGIN, compare, compareLatency, ledgerEnv, runnerArgs } from '../../eval/runner/refresh-barrier/retrieval.ts';
 import { POLL_LIMIT_MS, classifyResult } from '../../eval/runner/refresh-barrier/runtime.ts';
-import { cliWrapperScript } from '../../eval/runner/refresh-barrier/trial.ts';
+import { cliWrapperScript, quiesce } from '../../eval/runner/refresh-barrier/trial.ts';
 import { allowedCode, clientView, ledgerCommits, removedByBlindPut, removerOf, verifyTrial } from '../../eval/runner/refresh-barrier/verify.ts';
 
 describe('refresh-barrier schedule', () => {
@@ -487,6 +487,17 @@ describe('refresh-barrier Amendment 1', () => {
     expect(failureClasses({ ...t, ledger_present: false }, 'trial')).toContain('harness_error');
     expect(failureClasses({ ...t, ledger_present: true }, 'trial')).not.toContain('harness_error');
     expect(failureClasses({ ...t, ops: [{ state: 'failed' }], ledger_present: false }, 'trial')).not.toContain('harness_error');
+  });
+
+  test('the settle wait waits for non-Git effects only when asked, and they never decide ok', async () => {
+    const engine = (rows: Array<Record<string, number>>) => { let i = 0; return { polls: () => i, executeRaw: async () => [rows[Math.min(i++, rows.length - 1)]] }; };
+    const open = { open_requests: 0, active_refreshes: 0, open_effects: 0, open_derived: 2 }, done = { ...open, open_derived: 0 };
+    const plain = engine([open, open, done]);
+    expect(await quiesce(plain)).toMatchObject({ ok: true });
+    expect(plain.polls()).toBe(1);
+    const derived = engine([open, open, done]);
+    expect(await quiesce(derived, { derived: true })).toMatchObject({ ok: true });
+    expect(derived.polls()).toBe(3);
   });
 
   test('T3: a ledger whose commits carry no request id is still present (gbrain records effect and merge commits that way)', () => {

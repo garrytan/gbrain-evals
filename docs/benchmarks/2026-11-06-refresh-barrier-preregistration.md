@@ -509,6 +509,13 @@ count, seed range, cap, arm or verdict rule.
   (no commit record in gbrain's `commit-ledger.jsonl`) but has a write that ended committed is a harness_error. At
   df7fca85 the ledger records every commit with a null request_id (writers `effect` and `merge`), so its per-request duplicate
   signal cannot fire there; `duplicated` still reads requests per id, live facts, pages and Git HEAD.
+- **Settle wait:** approved by GBEV-3 (2026-11-07) at GBRA-108's request; changes no gate class, threshold or count. The sentence
+  "After the window the trial waits up to 120 s for every request and Git effect to settle" now reads: after the window the
+  trial waits up to 120 s for every request, refresh and Git effect to settle, and also for non-Git effects (`links`,
+  `facts-backstop`) while a process that runs their retries is alive (on Postgres, the wait before the writers stop; on
+  PGLite, both waits). Only requests, refreshes and Git effects decide `hang`; a non-Git effect still open at 120 s is
+  reported under **Residual non-Git effects** and never counted. GBRA-356 found that these effects requeue on a 30 s retry
+  after meeting a concurrent publication's recovery record, so they lag rather than stick (gbrain #8754).
 - **Residual non-Git effects:** `analyze.ts` reports, per engine and arm, how many trials end with a non-Git effect still
   queued or running with error_code `recovery_required`, and how many such rows. They are not a failure class, since the
   classes above cover requests and Git effects only (GBRA-108 and GBEV-3, 2026-11-07, after the uncounted smoke at
