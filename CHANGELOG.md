@@ -2,6 +2,23 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.172] - 2026-11-07
+
+### Live recall: the arm preflight probes with two made-up words (GBEV-43)
+
+- **The probe.** `PREFLIGHT_PROBE` is now `zqxjvk wfpqyz`. The old probe, `live-recall arm preflight probe`, shared
+  common words with Garry's brain. On gbrain 0.60.593.0 its all-time windowed keyword statement hit gbrain's keyword
+  statement bound (8 s by default) twice, once with no gbrain job running, and each attempt stopped with
+  `LR_ARM_PREFLIGHT: configured_window degraded (keyword_arm_failed)` before any question ran. Made-up words are rare
+  enough that the keyword, title and windowed statements find nothing or next to nothing through the index. Each arm's
+  search statements still run, so a missing grant still fails the preflight, and the reranker still runs on the vector
+  leg's candidates.
+- **The test.** A keyless test checks that neither word appears in any fixture page or question.
+- **RUN-KIT.** Step 2 describes the probe. The `LR_ARM_PREFLIGHT` entry says `keyword_arm_failed` can also be the keyword
+  statement timeout, and how to tell that apart from a missing grant.
+- **Nothing counted changes.** The probe never counts. b2-577 ran with the old probe at `07bed75d`, and b2-593 will run
+  with this one.
+
 ## [0.10.171] - 2026-11-07
 
 ### Refresh barrier Amendment 1: harness fixes, the Part C runner and the B2 ledger path (GBEV-44)
