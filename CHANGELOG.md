@@ -2,6 +2,23 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.170] - 2026-11-06
+
+### Refresh barrier: a preregistered test of gbrain's write barrier, with a keyless harness (GBEV-44)
+
+- **The preregistration.** `docs/benchmarks/2026-11-06-refresh-barrier-preregistration.md` fixes the question before any
+  counted trial: does `persistence.refresh_barrier` keep writes from being lost, stuck or overwritten while a worktree
+  refresh runs, without slowing quiet writes? It names the arms (flag off and on, on Postgres and PGLite), the failure
+  classes, the bars, the quiet-latency gate and the stop rules. G, the gbrain build under test, is the first master
+  commit that contains #8682, #8705, GBRA-341's fixes and GST-1623's fixes for the flag-on items; Amendment 1 records
+  its sha before the first counted trial.
+- **The harness.** `eval/runner/refresh-barrier/` runs seeded concurrency trials, named cases and quiet latency blocks
+  as child processes and checks every write against the database, the client's view and Git. It needs no model or
+  embedding keys. `test/eval/refresh-barrier.test.ts` covers the schedule, the analysis gates and bounds, the run plan
+  and counted-run integrity.
+- **Not measured yet.** No counted trial has run. The review notes on PR #379 go into Amendment 1 before any counted
+  trial.
+
 ## [0.10.169] - 2026-11-06
 
 ### Live recall: batch 2's frozen sample is in the preregistration (GBEV-43)
