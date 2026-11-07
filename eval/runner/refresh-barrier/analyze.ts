@@ -1,14 +1,18 @@
 /**
- * Part A analysis and verdict for the refresh-barrier validation (docs/benchmarks/2026-11-06-refresh-barrier-preregistration.md,
- * "Part A" and "Decision rule"): failure classes per trial (failureClasses, the one failure predicate trial.ts, named-case.ts
- * and this file share), one-sided 95% Clopper-Pearson bounds, the secondary measures, the write-latency gate, positive
- * controls PC1 to PC5, the Part A verdict and the flag-on recommendation. Reads what run.ts, trial.ts and named-case.ts wrote.
- * The write-latency gate reads the quiet latency block (quiet/), timing each write that ended committed to its committed
- * answer; Part A's in-trial no-tick latency is reported, not gated. The verdict reads FIX-METHOD when the results come from
- * more than one gbrain commit or harness tree or from a tree other than this analyzer's, and UNCOUNTED without a counted
- * receipt for every block and engine. Jobs run.ts logged as interrupted are listed.
+ * Analysis and verdict for the refresh-barrier validation (docs/benchmarks/2026-11-06-refresh-barrier-preregistration.md,
+ * "Part A", "Part B", "Part C" and "Decision rule"): failure classes per trial (failureClasses, the one failure predicate
+ * trial.ts, named-case.ts and this file share), one-sided 95% Clopper-Pearson bounds, the secondary measures, the
+ * write-latency gate, positive controls PC1 to PC5 and the Part A verdict; B1 and B2 from retrieval.ts's results; the Part C
+ * analysis (analyzePartC); and the overall verdict (overallVerdict) with the flag-on recommendation, which needs PASS and the
+ * benefit test. Reads what run.ts, trial.ts, named-case.ts, retrieval.ts and agent.ts wrote. The write-latency gate reads the
+ * quiet latency block (quiet/), timing each write that ended committed to its committed answer; Part A's in-trial no-tick
+ * latency is reported, not gated. The verdict reads FIX-METHOD when a result's gbrain sha is not G (--gbrain-sha, as
+ * Amendment 1 records it), when the results come from more than one gbrain commit or harness tree or from a tree other than
+ * this analyzer's, and UNCOUNTED without a counted receipt for every block and engine. Jobs run.ts logged as interrupted are
+ * listed.
  *
- *   bun eval/runner/refresh-barrier/analyze.ts --out <dir> [--pc2 <dir with named runs at de22702a>]
+ *   bun eval/runner/refresh-barrier/analyze.ts --out <dir> --gbrain-sha <G> [--pc2 <dir with named runs at de22702a>]
+ *     [--b1 <B1 retrieval.json>] [--b2 <B2 retrieval.json>] [--partc <agent.ts --out dir>]
  *
  * Writes <dir>/analysis.json and prints a markdown summary.
  */
@@ -32,6 +36,18 @@ const resultKey = (r: Record<string, any>) => r.b !== undefined ? `${r.b}-${r.re
 /** PC2's detector check build (#8705 at de22702a) and its preregistered runs per B kind and engine. */
 const PC2_SHA = 'de22702a';
 const PC2_RUNS = 10;
+/** Part B's preregistered cells (Cat 18's two providers, Cat 26's three modes, per metric), margins (B1 stub embeddings, B2 real embedders) and B1's latency ratio. */
+export const PART_B_CELLS = ['cat18/openai/recall_at_10', 'cat18/voyage/recall_at_10', ...['none', 'title', 'per_chunk_synopsis'].flatMap(m => [`cat26/${m}/r_at_3`, `cat26/${m}/mrr`])];
+export const PART_B_MARGIN = { b1: -0.01, b2: -0.02 } as const;
+export const LATENCY_RATIO_MAX = 1.2;
+/** Part C's subjects (the first two gate, particle-1 is counted and reported), its counted tasks, one run and at most two reruns per task, and the non-inferiority bound. */
+export const PART_C_GATING = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'] as const;
+export const PART_C_MODELS: readonly string[] = [...PART_C_GATING, 'particle:particle-1'];
+export const PART_C_TASKS = span(1, 60);
+export const PART_C_ATTEMPTS = 3;
+export const NON_INFERIOR_LO = -0.10;
+/** The directory name of a model's Part C episodes: agent.ts writes <out>/agent/<modelSlug>/<arm>/task-<id>.json. */
+export const modelSlug = (model: string) => model.replace(/[^A-Za-z0-9.-]+/g, '_');
 type Rec = Record<string, any>;
 
 /** One-sided upper confidence bound on a binomial proportion (Clopper-Pearson): the p with P(X <= k | n, p) = alpha. */
@@ -67,7 +83,8 @@ export function failureClasses(t: Rec, kind: 'trial' | 'named'): string[] {
   const switchMismatch = (t.switches ?? []).some((s: Rec) => s.refresh_barrier !== (t.arm === 'on'));
   if (t.harness_error || t.post_result_exit || unexpected.length > 0 || badExits > 0 || ops.some(o => o.harness_error) || f.writers_not_ready === true || Number(f.too_many_clients ?? 0) > 0
     || Number(f.push_errors ?? 0) > 0 || Number(f.foreign_commit_errors ?? 0) > 0 || Number(f.unplanned_child_exits ?? 0) > 0
-    || (t.unknown_statuses ?? []).length > 0 || Number(t.pause_misses ?? 0) > 0 || switchMismatch || (t.switches !== undefined && t.switches.length === 0)) out.add('harness_error');
+    || (t.unknown_statuses ?? []).length > 0 || Number(t.pause_misses ?? 0) > 0 || switchMismatch || (t.switches !== undefined && t.switches.length === 0)
+    || (t.ledger_present === false && ops.some(o => o.state === 'committed'))) out.add('harness_error');
   return [...out];
 }
 
@@ -166,7 +183,7 @@ function armSummary(trials: Rec[]) {
   };
 }
 
-export function analyze(out: string, pc2Dir?: string): Rec {
+export function analyze(out: string, pc2Dir?: string, opts: { gbrainSha?: string; b1?: string; b2?: string; partc?: string } = {}): Rec {
   const runLog = readdirSync(out).sort().filter(f => /^run-.*\.jsonl$/.test(f))
     .flatMap(f => readFileSync(join(out, f), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as Rec));
   const postResultExits = new Set(runLog.filter(e => e.ev === 'job' && e.post_result_exit).map(e => String(e.result)));
@@ -250,21 +267,23 @@ export function analyze(out: string, pc2Dir?: string): Rec {
   } else pcs.PC2 = { pass: null, note: 'no --pc2 directory given' };
   pcs.PC3 = Object.fromEntries(Object.entries(namedSummary).filter(([k]) => k.endsWith('/on')).flatMap(([k, cells]) => Object.entries(cells as Rec).map(([b, c]: [string, any]) => [`${k}/${b}`, { share: c.in_window / c.runs, pass: c.in_window / c.runs >= 0.9 }])));
   pcs.PC4 = Object.fromEntries(ARMS.map(a => { const ts = ENGINES.flatMap(e => trials[`${e}/${a}`] as Rec[]); const k = ts.filter(t => failureClasses(t, 'trial').includes('harness_error')).length; return [a, { trials: ts.length, harness_errors: k, pass: ts.length > 0 && k / ts.length < 0.01 }]; }));
+  const ran = (ts: Rec[]) => ts.filter(t => !t.placeholder);
   pcs.PC5 = Object.fromEntries(ENGINES.map(e => {
     const s = summary[`${e}/on`];
     if (!s) return [e, { pass: false, note: 'no on-arm trials' }];
-    const switchesOk = ARMS.every(a => (trials[`${e}/${a}`] as Rec[]).every(t => (t.switches ?? []).length > 0 && t.switches.every((x: Rec) => x.refresh_barrier === (a === 'on'))));
-    const share = s.trials_with_deferral / s.trials;
+    const switchesOk = ARMS.every(a => ran(trials[`${e}/${a}`] as Rec[]).every(t => (t.switches ?? []).length > 0 && t.switches.every((x: Rec) => x.refresh_barrier === (a === 'on'))));
+    const onRan = ran(trials[`${e}/on`] as Rec[]).length;
+    const share = onRan ? s.trials_with_deferral / onRan : 0;
     return [e, { deferral_share: share, worktree_refreshing_first_outside_expiry: s.worktree_refreshing_first_outside_expiry, switches_match_arm: switchesOk,
       pass: share >= 0.05 && s.worktree_refreshing_first_outside_expiry === 0 && switchesOk }];
   }));
-  const pcPass = [pcs.PC1, pcs.PC3, pcs.PC4, pcs.PC5].every(m => Object.values(m).every((v: any) => v.pass === true)) && pcs.PC2.pass === true;
-  const flagOnFailures = bounds.trials_both_engines.failures + bounds.named_all_runs.failures + bounds.quiet_trials_on.failures;
-  const latencyMissing = ENGINES.some(e => !quietLatency[e]?.runs);
+  const pcMissed = [...(['PC1', 'PC3', 'PC4', 'PC5'] as const).flatMap(pc => Object.entries(pcs[pc] as Rec).filter(([, v]) => (v as Rec).pass !== true).map(([k]) => `${pc} ${k}`)),
+    ...(pcs.PC2.pass === true ? [] : ['PC2'])];
+  const flagOnFailures = ENGINES.flatMap(e => ([['trials', trials], ['named', named], ['quiet', quiet]] as const).flatMap(([block, rs]) => (rs[`${e}/on`] as Rec[])
+    .flatMap(r => { const classes = failureClasses(r, block === 'named' ? 'named' : 'trial'); return classes.length ? [{ block, engine: e, run: resultKey(r), classes }] : []; })));
   // Every result must come from one gbrain commit and one harness tree, the ones its block's receipt names.
   const results = [...Object.values(trials), ...Object.values(named), ...Object.values(quiet)].flat() as Rec[];
   const provenance = { gbrain_shas: [...new Set(results.map(r => r.provenance?.gbrain_sha ?? null))], harness_digests: [...new Set(results.map(r => r.provenance?.harness_digest ?? null))] };
-  const latencyPass = ENGINES.every(e => quietLatency[e]?.pass === true);
   const receipts = readdirSync(out).sort().filter(f => f.startsWith('receipt-')).map(f => JSON.parse(readFileSync(join(out, f), 'utf8')));
   const blockNames = Object.keys(PLANNED) as (keyof typeof PLANNED)[];
   const counted = receipts.every(r => r.counted === true) && ENGINES.every(e => blockNames.every(b => receipts.some(r => r.block === b && r.engine === e)));
@@ -277,10 +296,27 @@ export function analyze(out: string, pc2Dir?: string): Rec {
   const mixed = provenance.gbrain_shas.length !== 1 || provenance.harness_digests.length !== 1 || provenance.gbrain_shas[0] === null
     || receipts.some(r => r.gbrain?.sha !== provenance.gbrain_shas[0] || r.harness_digest !== provenance.harness_digests[0]);
   const analyzerMatches = provenance.harness_digests.length === 1 && provenance.harness_digests[0] === analyzerDigest;
-  const partA = !pcPass ? 'FIX-METHOD' : mixed ? 'FIX-METHOD (results from more than one gbrain commit or harness tree)'
-    : !analyzerMatches ? 'FIX-METHOD (this analyzer is not the harness tree that wrote the results)' : flagOnFailures > 0 ? 'FAIL (triage: gbrain or harness)' : latencyMissing ? 'INCOMPLETE (no quiet latency block)'
-    : !latencyPass ? 'FAIL (no-tick write latency)' : incomplete.length ? `FIX-METHOD (incomplete: ${incomplete.join(', ')}; INCOMPLETE instead if the cap stopped the run)` : 'PASS';
-  const verdict = counted ? partA : `UNCOUNTED (would read ${partA}; development receipts, or a block without a counted receipt)`;
+  const notG = opts.gbrainSha === undefined ? 'no --gbrain-sha, so the results were not checked against G'
+    : provenance.gbrain_shas.some(s => s !== opts.gbrainSha) || receipts.some(r => r.gbrain?.sha !== opts.gbrainSha)
+      ? `results or receipts not from G ${opts.gbrainSha.slice(0, 12)} (results from ${provenance.gbrain_shas.map(s => String(s).slice(0, 12)).join(', ')})` : null;
+  const partA: VerdictReasons = {
+    counted,
+    fix_method: [...(pcMissed.length ? [`positive control missed: ${pcMissed.join(', ')}`] : []), ...(notG ? [notG] : []),
+      ...(mixed ? ['results from more than one gbrain commit or harness tree'] : []), ...(analyzerMatches ? [] : ['this analyzer is not the harness tree that wrote the results'])],
+    fail: [...(flagOnFailures.length ? [`${flagOnFailures.length} failed flag-on trials, quiet runs and named-case runs (triage: gbrain or harness; first: ${flagOnFailures.slice(0, 5).map(f => `${f.block} ${f.engine} ${f.run} ${f.classes.join('+')}`).join(', ')})`] : []),
+      ...ENGINES.filter(e => quietLatency[e]?.runs && quietLatency[e].pass !== true).map(e => `write-latency gate missed on ${e}`)],
+    incomplete: ENGINES.filter(e => !quietLatency[e]?.runs).map(e => `no quiet latency runs on ${e}`),
+    incomplete_method: incomplete.map(x => `Part A ${x}`),
+    inconclusive: [],
+  };
+  const verdictPartA = overallVerdict(partA);
+  const readResult = (path?: string) => path && existsSync(resolve(path)) ? JSON.parse(readFileSync(resolve(path), 'utf8')) as Rec : null;
+  const partB = { b1: readResult(opts.b1), b2: readResult(opts.b2) };
+  const partC = opts.partc ? analyzePartC(resolve(opts.partc), opts.gbrainSha) : null;
+  const reasons = [partA, partBReasons('b1', partB.b1, opts.gbrainSha, analyzerDigest), partBReasons('b2', partB.b2, opts.gbrainSha, analyzerDigest),
+    partC ? partC.reasons : { incomplete_method: ['Part C has no results (no --partc directory)'] }];
+  const all: VerdictReasons = { counted, ...Object.fromEntries((['fix_method', 'fail', 'incomplete', 'incomplete_method', 'inconclusive'] as const).map(k => [k, reasons.flatMap(r => r[k] ?? [])])) } as VerdictReasons;
+  const verdict = overallVerdict(all);
   const benefit = Object.fromEntries(ENGINES.map(e => {
     const s = summary[`${e}/on`];
     const share = s && s.writes_outside_expiry ? s.worktree_refreshing_first_outside_expiry / s.writes_outside_expiry : null;
@@ -289,20 +325,138 @@ export function analyze(out: string, pc2Dir?: string): Rec {
   }));
   const recommendFlagOn = verdict === 'PASS' && Object.values(benefit).every((b: any) => b.pass === true);
   const interrupted = runLog.filter(e => e.ev === 'job_interrupted').map(e => String(e.id));
-  const result = { counted, incomplete, interrupted, provenance: { ...provenance, mixed, analyzer_digest: analyzerDigest, analyzer_matches_results: analyzerMatches }, receipts: receipts.map(r => ({ block: r.block, engine: r.engine, gbrain: r.gbrain, counted: r.counted, jobs: r.jobs })), verdict_part_a: verdict,
-    recommend_flag_on: recommendFlagOn, benefit, bounds, positive_controls: pcs, quiet_latency: quietLatency, summary, quiet_summary: quietSummary, paired, named: namedSummary };
+  const result = { counted, incomplete, interrupted, provenance: { ...provenance, mixed, g: opts.gbrainSha ?? null, results_from_g: opts.gbrainSha !== undefined && !notG, analyzer_digest: analyzerDigest, analyzer_matches_results: analyzerMatches },
+    receipts: receipts.map(r => ({ block: r.block, engine: r.engine, gbrain: r.gbrain, counted: r.counted, jobs: r.jobs })), verdict, verdict_reasons: all, verdict_part_a: verdictPartA,
+    recommend_flag_on: recommendFlagOn, benefit, flag_on_failures: flagOnFailures, bounds, positive_controls: pcs, quiet_latency: quietLatency, summary, quiet_summary: quietSummary, paired, named: namedSummary,
+    part_b: Object.fromEntries(Object.entries(partB).map(([k, r]) => [k, r && { pass: r.pass, gbrain: r.gbrain, cap_stop: r.cap_stop ?? false, budget: r.budget ?? null }])), part_c: partC?.models ?? null };
   writeFileSync(join(out, 'analysis.json'), JSON.stringify(result, null, 2));
   return result;
+}
+
+export interface VerdictReasons { counted: boolean; fix_method: string[]; fail: string[]; incomplete: string[]; incomplete_method: string[]; inconclusive: string[] }
+
+/**
+ * The preregistration's decision rule over every part's reasons. A missed positive control or results that are not all
+ * from G and this harness tree read FIX-METHOD; otherwise a failure reads FAIL; otherwise a cap stop or an engine without
+ * quiet runs reads INCOMPLETE; otherwise a counted cell incomplete for another reason reads FIX-METHOD; otherwise PASS, or
+ * "PASS, agent experience inconclusive" when Part C is inconclusive for a primary model without harm. Every reason is
+ * listed, so a flag-on failure shows even when a control missed. Without a counted receipt for every block and engine it
+ * reads UNCOUNTED.
+ */
+export function overallVerdict(r: VerdictReasons): string {
+  const all = [...r.fix_method, ...r.fail, ...r.incomplete, ...r.incomplete_method, ...r.inconclusive];
+  const say = (kind: string, primary: string[]) => {
+    const rest = all.filter(x => !primary.includes(x));
+    return `${kind} (${primary.join('; ')}${rest.length ? `; also: ${rest.join('; ')}` : ''})`;
+  };
+  const v = r.fix_method.length ? say('FIX-METHOD', r.fix_method) : r.fail.length ? say('FAIL', r.fail) : r.incomplete.length ? say('INCOMPLETE', r.incomplete)
+    : r.incomplete_method.length ? say('FIX-METHOD', r.incomplete_method) : r.inconclusive.length ? 'PASS, agent experience inconclusive' : 'PASS';
+  return r.counted ? v : `UNCOUNTED (would read ${v}; development receipts, or a block without a counted receipt)`;
+}
+
+/**
+ * What one Part B result (retrieval.ts's retrieval.json) adds to the verdict. B1 is the stub-embedding run and B2 the
+ * real-embedder run, both of G (label g) from this harness tree with each arm's switch resolved to its value. A
+ * preregistered cell missing from either arm makes the result incomplete; a present cell whose lower bound is below the
+ * margin, or a Cat 18 cell whose median on-arm query time is above 1.2 times the off arm's (B1), fails; a cap stop leaves
+ * it INCOMPLETE.
+ */
+export function partBReasons(kind: 'b1' | 'b2', r: Rec | null, gbrainSha: string | undefined, digest: string): Partial<VerdictReasons> {
+  const name = kind.toUpperCase();
+  if (!r) return { incomplete_method: [`${name} has no result`] };
+  const cells = r.scores?.cells ?? {};
+  const latency = kind === 'b1' ? PART_B_CELLS.filter(c => c.startsWith('cat18/')).map(c => c.split('/')[1]!) : [];
+  const ratio = (cell: string) => r.latency?.cells?.[cell]?.ratio;
+  return {
+    fix_method: [
+      ...(r.label !== 'g' || r.stub_embed !== (kind === 'b1') ? [`${name} is not the ${kind === 'b1' ? 'stub-embedding' : 'real-embedder'} run of G (label ${r.label}, stub_embed ${r.stub_embed})`] : []),
+      ...(gbrainSha === undefined || r.gbrain !== gbrainSha ? [`${name} ran gbrain ${String(r.gbrain).slice(0, 12)}, not G`] : []),
+      ...(r.harness_digest !== digest ? [`${name} came from another harness tree`] : []),
+      ...(r.switches?.off !== false || r.switches?.on !== true ? [`${name}'s arms did not resolve the switch to off and on`] : []),
+      ...(r.scores?.margin !== PART_B_MARGIN[kind] ? [`${name} used margin ${r.scores?.margin}, not ${PART_B_MARGIN[kind]}`] : []),
+    ],
+    fail: [
+      ...PART_B_CELLS.filter(c => cells[c]?.missing === false && cells[c].pass !== true).map(c => `${name} margin missed in ${c}`),
+      ...latency.filter(c => typeof ratio(c) === 'number' && ratio(c) > LATENCY_RATIO_MAX).map(c => `B1 latency ratio above ${LATENCY_RATIO_MAX} in Cat 18 ${c}`),
+    ],
+    incomplete: r.cap_stop === true ? [`${name} stopped at its budget cap`] : [],
+    incomplete_method: [
+      ...PART_B_CELLS.filter(c => cells[c]?.missing !== false).map(c => `${name} cell ${c} missing from an arm`),
+      ...latency.filter(c => typeof ratio(c) !== 'number').map(c => `B1 latency missing for Cat 18 ${c}`),
+      ...((r.ledger_stops ?? []).length && r.cap_stop !== true ? [`${name}'s budget ledger refused requests without a cap stop`] : []),
+    ],
+  };
+}
+
+/**
+ * Part C (preregistration, "Part C: agent experience"), per model and arm, from agent.ts's --out directory: the counted
+ * episodes of tasks 1 to 60, their strict successes, the errored episodes, the reruns, the tasks still errored after two
+ * reruns, the unexposed episodes (the fault never paused a refresh) and the spend. Per model, the paired bootstrap over
+ * tasks (10,000 resamples, seed 1) of on minus off strict success: non-inferior when the lower bound is at least -0.10,
+ * harm when the upper bound is below 0, otherwise inconclusive. A cap stop in either arm makes the model INCOMPLETE; a task
+ * without a counted episode in both arms, a counted episode outside tasks 1 to 60, or an episode not from G and this
+ * harness tree makes it incomplete. Only the primary models reach the verdict; particle-1 is reported.
+ */
+export function analyzePartC(dir: string, gbrainSha: string | undefined): { models: Rec; reasons: Partial<VerdictReasons> } {
+  const digest = harnessDigest();
+  const read = (path: string) => JSON.parse(readFileSync(path, 'utf8')) as Rec;
+  const success = (r: Rec) => r.score?.success === true && r.loop?.stop !== 'context_overflow';
+  const models = Object.fromEntries(PART_C_MODELS.map(model => {
+    const raw = Object.fromEntries(ARMS.map(arm => {
+      const d = join(dir, 'agent', modelSlug(model), arm);
+      const files = existsSync(d) ? readdirSync(d).sort() : [];
+      return [arm, { episodes: files.filter(f => /^task-\d+\.json$/.test(f)).map(f => read(join(d, f))).filter(r => r.counted === true),
+        errored: files.filter(f => /^task-\d+\.errored-\d+\.json$/.test(f)).map(f => read(join(d, f))), cap_stop: files.includes('cap-stop.json') }];
+    })) as Record<'off' | 'on', { episodes: Rec[]; errored: Rec[]; cap_stop: boolean }>;
+    const arms = Object.fromEntries(ARMS.map(a => {
+      const { episodes, errored, cap_stop } = raw[a];
+      const attempts = new Map<number, number>();
+      for (const r of [...episodes, ...errored]) attempts.set(r.task, Math.max(attempts.get(r.task) ?? 0, Number(r.attempt ?? 1)));
+      return [a, { episodes: episodes.length, successes: episodes.filter(success).length, errored: errored.length, reruns: [...attempts.values()].reduce((n, k) => n + k - 1, 0),
+        errored_out: PART_C_TASKS.filter(t => !episodes.some(r => r.task === t) && errored.filter(r => r.task === t).length >= PART_C_ATTEMPTS).length,
+        unexposed: episodes.filter(r => !r.fault || r.fault.refresh_paused_ms == null).length, context_overflow: episodes.filter(r => r.loop?.stop === 'context_overflow').length,
+        missing: PART_C_TASKS.filter(t => !episodes.some(r => r.task === t)).length, outside: episodes.filter(r => !PART_C_TASKS.includes(r.task)).length,
+        usd: [...episodes, ...errored].reduce((s, r) => s + Number(r.usd ?? 0), 0), cap_stop }];
+    })) as Rec;
+    const on = new Map(raw.on.episodes.map(r => [r.task, r])), off = new Map(raw.off.episodes.map(r => [r.task, r]));
+    const paired = PART_C_TASKS.filter(t => on.has(t) && off.has(t));
+    const diff = pairedBootstrap(paired.map(t => Number(success(on.get(t)!)) - Number(success(off.get(t)!))));
+    const all = [...raw.off.episodes, ...raw.on.episodes, ...raw.off.errored, ...raw.on.errored];
+    const fromG = gbrainSha !== undefined && all.every(r => r.provenance?.gbrain_sha === gbrainSha && r.provenance?.harness_digest === digest);
+    const incomplete = ARMS.flatMap(a => [...(arms[a].missing ? [`${arms[a].missing} of 60 tasks without a counted ${a} episode (${arms[a].errored_out} still errored after two reruns)`] : []),
+      ...(arms[a].outside ? [`${arms[a].outside} counted ${a} episodes outside tasks 1 to 60`] : [])]);
+    const nonInferior = diff.lo !== null && diff.lo >= NON_INFERIOR_LO, harm = diff.hi !== null && diff.hi < 0;
+    const capStop = raw.off.cap_stop || raw.on.cap_stop;
+    return [model, { gating: (PART_C_GATING as readonly string[]).includes(model), arms, paired: paired.length, on_minus_off: diff, non_inferior: nonInferior, harm, from_g: fromG, incomplete,
+      status: capStop ? 'INCOMPLETE' : incomplete.length ? 'incomplete' : harm ? 'harm' : nonInferior ? 'non_inferior' : 'inconclusive' }];
+  })) as Rec;
+  const gating = PART_C_GATING.map(m => [m, models[m]] as const);
+  const pct = (x: number | null) => x === null ? 'n/a' : x.toFixed(3);
+  return {
+    models,
+    reasons: {
+      fix_method: gating.filter(([, m]) => !m.from_g).map(([model]) => `Part C ${model} episodes not all from G and this harness tree`),
+      fail: gating.filter(([, m]) => m.status === 'harm').map(([model, m]) => `Part C harm for ${model} (on minus off ${pct(m.on_minus_off.mean)}, 95% ${pct(m.on_minus_off.lo)} to ${pct(m.on_minus_off.hi)})`),
+      incomplete: gating.filter(([, m]) => m.status === 'INCOMPLETE').map(([model]) => `Part C ${model} stopped at its budget cap`),
+      incomplete_method: gating.filter(([, m]) => m.status === 'incomplete').map(([model, m]) => `Part C ${model}: ${m.incomplete.join('; ')}`),
+      inconclusive: gating.filter(([, m]) => m.status === 'inconclusive').map(([model]) => `Part C inconclusive for ${model}`),
+    },
+  };
 }
 
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const get = (k: string) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
-  const r = analyze(resolve(get('--out')!), get('--pc2'));
+  const gbrainSha = get('--gbrain-sha');
+  if (!gbrainSha || !/^[0-9a-f]{40}$/.test(gbrainSha)) {
+    process.stderr.write(`analyze: --gbrain-sha must be G's full 40-character sha, as Amendment 1 records it (got ${JSON.stringify(gbrainSha ?? null)})\n`);
+    process.exit(2);
+  }
+  const r = analyze(resolve(get('--out')!), get('--pc2'), { gbrainSha, b1: get('--b1'), b2: get('--b2'), partc: get('--partc') });
   const f = (x: number | null) => x == null ? 'n/a' : `${(100 * x).toFixed(3)}%`;
-  console.log(`# Part A: ${r.verdict_part_a}; recommend flag on: ${r.recommend_flag_on}${r.interrupted.length ? `; interrupted and rerun: ${r.interrupted.join(', ')}` : ''}\n\n| Unit | n | failures | 95% upper bound |\n|---|---|---|---|`);
+  console.log(`# Verdict: ${r.verdict}; recommend flag on: ${r.recommend_flag_on}\n\nPart A: ${r.verdict_part_a}${r.interrupted.length ? `; interrupted and rerun: ${r.interrupted.join(', ')}` : ''}\n\n| Unit | n | failures | 95% upper bound |\n|---|---|---|---|`);
   for (const [k, u] of Object.entries(r.bounds as Rec)) console.log(`| ${k} | ${u.n} | ${u.failures} | ${f(u.upper95)} |`);
   console.log(`\nPositive controls: ${JSON.stringify(r.positive_controls)}`);
   for (const [k, s] of Object.entries(r.summary as Rec)) console.log(`\n## ${k}\n${JSON.stringify({ trials: s.trials, failed: s.failed_trials, classes: s.classes, writes: s.writes, first_call: s.first_call, blocked_ms: s.blocked_ms, defer_to_apply_ms: s.defer_to_apply_ms, ticks: s.ticks, failures: s.failures.slice(0, 10) })}`);
-  console.log(`\n## quiet latency (gate)\n${JSON.stringify(r.quiet_latency)}\n\n## paired\n${JSON.stringify(r.paired)}\n\n## named\n${JSON.stringify(r.named)}`);
+  console.log(`\n## quiet latency (gate)\n${JSON.stringify(r.quiet_latency)}\n\n## paired\n${JSON.stringify(r.paired)}\n\n## named\n${JSON.stringify(r.named)}\n\n## Part B\n${JSON.stringify(r.part_b)}\n\n## Part C\n${JSON.stringify(r.part_c)}`);
 }

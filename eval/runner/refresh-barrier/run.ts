@@ -11,7 +11,9 @@
  *
  * It refuses a gbrain root with uncommitted changes, and a counted run refuses a root whose HEAD is not --gbrain-sha, a
  * concurrency other than the preregistered one (trials 6, quiet 2), a harness with uncommitted changes, and an --out holding
- * a dry run of the block or results that no counted run of this preregistration commit started. A lock file, created
+ * a dry run of the block or results that no counted run of this preregistration commit started. A counted resume also
+ * refuses a result without this run's provenance (another gbrain commit or harness tree, or none), and a job whose result
+ * the run log records as written but which is gone, so a deleted counted result is never rerun. A lock file, created
  * exclusively, keeps a second run.ts off a block and engine (one left by a run.ts that died is deleted by hand). run.ts logs
  * each job's start; when it exits or gets SIGINT or SIGTERM it kills its jobs and logs each as interrupted, so a resumed run
  * reruns them, and the receipt lists them. A job that exits abnormally after writing its result is logged, and analyze.ts
@@ -107,7 +109,7 @@ async function runJob(job: Job, c: JobContext): Promise<void> {
   if (!hadResult) {
     const tail = readFileSync(join(c.logDir, `${job.id}.log`), 'utf8').split('\n').slice(-30).join('\n').slice(-3_000);
     mkdirSync(dirname(job.result), { recursive: true });
-    writeFileSync(job.result, JSON.stringify({ ...job.meta, ops: [], provenance: c.provenance, harness_error: { exit: code, signal, timed_out: timedOut, ms, log_tail: tail } }), { flag: 'wx' });
+    writeFileSync(job.result, JSON.stringify({ ...job.meta, ops: [], provenance: c.provenance, placeholder: true, harness_error: { exit: code, signal, timed_out: timedOut, ms, log_tail: tail } }), { flag: 'wx' });
   }
   c.log({ ev: 'job', id: job.id, result: relative(c.out, job.result), exit: code, signal, timed_out: timedOut, ms, placeholder: !hadResult,
     post_result_exit: hadResult && (code !== 0 || signal !== null || timedOut) });
@@ -170,11 +172,22 @@ export async function runBlock(a: RunArgs, deps = { attest: attestPreregistratio
     if (attestation && todo.length < jobs.length && !starts.some(e => e.preregistration_commit === attestation.preregistration_commit)) {
       throw new Error(`refusing to run: ${a.out} holds ${jobs.length - todo.length} results that no counted run of preregistration commit ${attestation.preregistration_commit.slice(0, 12)} started`);
     }
+    const provenance = { gbrain_sha: g.sha, harness_digest: harnessDigest() };
+    if (attestation) {
+      const foreign = jobs.filter(j => existsSync(j.result)).filter(j => {
+        const p = JSON.parse(readFileSync(j.result, 'utf8')).provenance;
+        return p?.gbrain_sha !== provenance.gbrain_sha || p?.harness_digest !== provenance.harness_digest;
+      });
+      if (foreign.length) throw new Error(`refusing to resume: ${foreign.length} results carry no provenance or another gbrain commit's or harness tree's (first: ${relative(a.out, foreign[0]!.result)})`);
+      const finished = new Set(events().filter(e => e.ev === 'job').map(e => String(e.result)));
+      const deleted = todo.filter(j => finished.has(relative(a.out, j.result)));
+      if (deleted.length) throw new Error(`refusing to run: ${deleted.length} jobs finished in ${logPath} but their results are gone (first: ${relative(a.out, deleted[0]!.result)}); a counted result is never deleted and rerun`);
+    }
     const startedAt = new Date().toISOString();
     const saveLock = () => writeFileSync(lockPath, JSON.stringify({ pid: process.pid, groups: [...inFlight.keys()] }));
     log({ ev: 'start', block: a.block, engine: a.engine, jobs: jobs.length, todo: todo.length, dry: a.dry, preregistration_commit: attestation?.preregistration_commit ?? null });
     const dbPrefix = `rb_test_${a.block}_${process.pid}_`;
-    const ctx: JobContext = { timeoutMs: JOB_TIMEOUT_MS[a.block], out: a.out, logDir, log, dbPrefix, provenance: { gbrain_sha: g.sha, harness_digest: harnessDigest() }, inFlight, saveLock };
+    const ctx: JobContext = { timeoutMs: JOB_TIMEOUT_MS[a.block], out: a.out, logDir, log, dbPrefix, provenance, inFlight, saveLock };
     let next = 0;
     await Promise.all(Array.from({ length: Math.min(a.concurrency, todo.length) }, async () => {
       while (next < todo.length) { const job = todo[next++]!; await runJob(job, ctx); }

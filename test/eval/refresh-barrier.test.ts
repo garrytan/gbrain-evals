@@ -2,13 +2,16 @@ import { describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { analyze, failureClasses, pairedBootstrap, pooledBootstrap, quietLatencyMs, reached, upperBound } from '../../eval/runner/refresh-barrier/analyze.ts';
-import { harnessDigest } from '../../eval/runner/refresh-barrier/fixture.ts';
+import { BudgetExceededError, closeLedgers, initLedger, readLedger } from '../../eval/runner/budget-ledger.ts';
+import { analyze, failureClasses, overallVerdict, pairedBootstrap, partBReasons, pooledBootstrap, quietLatencyMs, reached, upperBound, PART_B_CELLS } from '../../eval/runner/refresh-barrier/analyze.ts';
+import { PROVIDER_KEYS, brainPaths, createRepos, harnessDigest, hermeticGit } from '../../eval/runner/refresh-barrier/fixture.ts';
+import { isCapStop, openBudgetItem } from '../../eval/runner/refresh-barrier/ledger.ts';
 import { B_KINDS, planJobs, runBlock, type RunArgs } from '../../eval/runner/refresh-barrier/run.ts';
 import { allOps, generateSchedule } from '../../eval/runner/refresh-barrier/schedule.ts';
-import { CELLS, MARGIN, compare, compareLatency } from '../../eval/runner/refresh-barrier/retrieval.ts';
+import { B2_BUDGET, CELLS, MARGIN, compare, compareLatency, ledgerEnv, runnerArgs } from '../../eval/runner/refresh-barrier/retrieval.ts';
 import { POLL_LIMIT_MS, classifyResult } from '../../eval/runner/refresh-barrier/runtime.ts';
-import { allowedCode, clientView, removedByBlindPut, removerOf } from '../../eval/runner/refresh-barrier/verify.ts';
+import { cliWrapperScript } from '../../eval/runner/refresh-barrier/trial.ts';
+import { allowedCode, clientView, removedByBlindPut, removerOf, verifyTrial } from '../../eval/runner/refresh-barrier/verify.ts';
 
 describe('refresh-barrier schedule', () => {
   test('a quiet schedule keeps the seed\'s writers and writes and drops every refresh, push, sync and fault', () => {
@@ -388,5 +391,213 @@ describe('refresh-barrier counted-run integrity', () => {
     writeFileSync(join(out, 'run-trials-postgres.jsonl'), `${JSON.stringify({ ev: 'job', result: 'trials/postgres/on/1002.json', exit: 1, signal: null, placeholder: false, post_result_exit: true })}\n`);
     expect(analyze(out).summary['postgres/on'].failures).toEqual([{ seed: 1002, classes: ['harness_error'] }]);
     rmSync(out, { recursive: true, force: true });
+  });
+});
+
+describe('refresh-barrier Amendment 1', () => {
+  const REPO = `${import.meta.dir}/../..`;
+  const put = (dir: string, rel: string, x: unknown) => { mkdirSync(dirname(join(dir, rel)), { recursive: true }); writeFileSync(join(dir, rel), JSON.stringify(x)); };
+  const G = 'a'.repeat(40);
+  const reasons = (r: Partial<Parameters<typeof overallVerdict>[0]> = {}) => ({ counted: true, fix_method: [], fail: [], incomplete: [], incomplete_method: [], inconclusive: [], ...r });
+
+  test('A6: the publish child runs the gbrain CLI under bun --no-env-file', () => {
+    expect(cliWrapperScript('/g')).toBe('#!/bin/sh\nexec bun --no-env-file "/g/src/cli.ts" "$@"\n');
+  });
+
+  test('A7: one rule names every key-like variable, and a trial child that still sees one exits 3', () => {
+    for (const k of ['ANTHROPIC_API_KEY', 'OPENAI_BASE_URL', 'VOYAGE_API_KEY', 'GEMINI_API_KEY', 'PARTICLE_API_KEY', 'UBICLOUD_API_KEY', 'TYPESAFE_API_KEY', 'JEV_TYPESAFE_API_KEY',
+      'EXAMPLE_TOKEN', 'AWS_SECRET_ACCESS_KEY', 'PGPASSWORD', 'DB_PASSWD', 'GOOGLE_APPLICATION_CREDENTIALS', 'X_BEARER', 'HTTP_AUTH', 'AUTH', 'openai_api_key']) expect(PROVIDER_KEYS.test(k)).toBe(true);
+    for (const k of ['PATH', 'HOME', 'TMPDIR', 'LANG', 'TZ', 'GBRAIN_HOME', 'GBRAIN_REFRESH_BARRIER', 'GBRAIN_JOB_CHILD_CLI', 'GIT_CONFIG_GLOBAL', 'GIT_AUTHOR_NAME',
+      'RB_DIR', 'RB_DB_URL', 'RB_DB_PREFIX', 'RB_POOL', 'RB_GBRAIN_ROOT', 'RB_LEDGER_STOPS', 'BRAINBENCH_BUDGET_LEDGER', 'BRAINBENCH_BUDGET_RUN_ID']) expect(PROVIDER_KEYS.test(k)).toBe(false);
+    const dir = mkdtempSync(join(tmpdir(), 'rb-leak-'));
+    const r = Bun.spawnSync(['bun', '--no-env-file', 'eval/runner/refresh-barrier/child.ts', 'writer', '0'], { cwd: REPO, env: { PATH: process.env.PATH!, RB_DIR: dir, EXAMPLE_TOKEN: 'not-a-key' } });
+    expect(r.exitCode).toBe(3);
+    expect(JSON.parse(readFileSync(join(dir, `env-leak-${r.pid}.json`), 'utf8'))).toEqual(['EXAMPLE_TOKEN']);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('O2: the overall verdict follows the decision rule, lists every reason and reads UNCOUNTED without counted receipts', () => {
+    expect(overallVerdict(reasons())).toBe('PASS');
+    expect(overallVerdict(reasons({ inconclusive: ['Part C inconclusive for openai:gpt-6.1-sol'] }))).toBe('PASS, agent experience inconclusive');
+    expect(overallVerdict(reasons({ fail: ['B1 margin missed in cat18/openai/recall_at_10'], incomplete: ['B2 stopped at its budget cap'] })))
+      .toBe('FAIL (B1 margin missed in cat18/openai/recall_at_10; also: B2 stopped at its budget cap)');
+    expect(overallVerdict(reasons({ incomplete: ['Part C anthropic:claude-opus-5-5 stopped at its budget cap'], incomplete_method: ['B1 has no result'] })))
+      .toBe('INCOMPLETE (Part C anthropic:claude-opus-5-5 stopped at its budget cap; also: B1 has no result)');
+    expect(overallVerdict(reasons({ incomplete_method: ['B1 has no result'] }))).toBe('FIX-METHOD (B1 has no result)');
+    expect(overallVerdict(reasons({ fix_method: ['positive control missed: PC2'], fail: ['3 failed flag-on trials'] }))).toBe('FIX-METHOD (positive control missed: PC2; also: 3 failed flag-on trials)');
+    expect(overallVerdict(reasons({ counted: false }))).toStartWith('UNCOUNTED (would read PASS;');
+  });
+
+  test('A9: results or receipts not from G read FIX-METHOD, and the CLI needs G\'s full sha', () => {
+    const out = mkdtempSync(join(tmpdir(), 'rb-a-'));
+    put(out, 'trials/postgres/on/1001.json', { seed: 1001, arm: 'on', ops: [], provenance: { gbrain_sha: 'b'.repeat(40), harness_digest: harnessDigest() } });
+    const notG = analyze(out, undefined, { gbrainSha: G });
+    expect(notG.verdict_reasons.fix_method.some((x: string) => x.startsWith(`results or receipts not from G ${G.slice(0, 12)}`))).toBe(true);
+    expect(notG.verdict).toStartWith('UNCOUNTED (would read FIX-METHOD (');
+    expect(notG.provenance.results_from_g).toBe(false);
+    put(out, 'trials/postgres/on/1001.json', { seed: 1001, arm: 'on', ops: [], provenance: { gbrain_sha: G, harness_digest: harnessDigest() } });
+    const atG = analyze(out, undefined, { gbrainSha: G });
+    expect(atG.verdict_reasons.fix_method.some((x: string) => x.includes('not from G'))).toBe(false);
+    expect(atG.provenance.results_from_g).toBe(true);
+    for (const sha of [[], ['--gbrain-sha', 'abc123']]) {
+      const r = Bun.spawnSync(['bun', '--no-env-file', 'eval/runner/refresh-barrier/analyze.ts', '--out', out, ...sha], { cwd: REPO });
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain("--gbrain-sha must be G's full 40-character sha");
+    }
+    rmSync(out, { recursive: true, force: true });
+  });
+
+  test('A2/R2: a missed positive control reads FIX-METHOD and still lists the flag-on failures', () => {
+    const out = mkdtempSync(join(tmpdir(), 'rb-a-'));
+    put(out, 'trials/postgres/on/1001.json', { seed: 1001, arm: 'on', ops: [{ issued: true, lost: true }], provenance: { gbrain_sha: G, harness_digest: harnessDigest() } });
+    const a = analyze(out, undefined, { gbrainSha: G });
+    expect(a.flag_on_failures).toEqual([{ block: 'trials', engine: 'postgres', run: '1001', classes: expect.arrayContaining(['lost']) }]);
+    expect(a.verdict_part_a).toContain('would read FIX-METHOD (positive control missed: ');
+    expect(a.verdict_part_a).toContain('also: 1 failed flag-on trials, quiet runs and named-case runs');
+    rmSync(out, { recursive: true, force: true });
+  });
+
+  test('S1: PC5 leaves crash placeholders out of its switch and deferral checks, and a placeholder still counts as a harness error', () => {
+    const out = mkdtempSync(join(tmpdir(), 'rb-a-'));
+    const placeholder = { seed: 1001, arm: 'on', ops: [], placeholder: true, harness_error: { exit: 1, signal: null, timed_out: false, ms: 5, log_tail: '' } };
+    put(out, 'trials/pglite/on/1001.json', placeholder);
+    put(out, 'trials/pglite/on/1002.json', { seed: 1002, arm: 'on', switches: [{ refresh_barrier: true }], ops: [{ issued: true, deferred_refresh: true, first: 'pending' }] });
+    put(out, 'trials/pglite/off/1002.json', { seed: 1002, arm: 'off', switches: [{ refresh_barrier: false }], ops: [] });
+    const a = analyze(out);
+    expect(a.positive_controls.PC5.pglite).toMatchObject({ deferral_share: 1, switches_match_arm: true, pass: true });
+    expect(failureClasses(placeholder, 'trial')).toContain('harness_error');
+    expect(a.positive_controls.PC4.on).toMatchObject({ trials: 2, harness_errors: 1 });
+    rmSync(out, { recursive: true, force: true });
+  });
+
+  test('T3: a write that ended committed in a trial without a commit ledger is a harness error', () => {
+    const t = { arm: 'on', ops: [{ state: 'committed' }], child_errors: [], switches: [{ refresh_barrier: true }], upstream: { missing_head: 0 },
+      flags: { quiesce: { ok: true }, quiesce_final: { ok: true }, converge: { ok: true } } };
+    expect(failureClasses({ ...t, ledger_present: false }, 'trial')).toContain('harness_error');
+    expect(failureClasses({ ...t, ledger_present: true }, 'trial')).not.toContain('harness_error');
+    expect(failureClasses({ ...t, ops: [{ state: 'failed' }], ledger_present: false }, 'trial')).not.toContain('harness_error');
+  });
+
+  test('T1, T2: lost_git and unpublished ignore write_through, and a cancelled write is always unexpected', async () => {
+    const saved = { GIT_CONFIG_GLOBAL: process.env.GIT_CONFIG_GLOBAL, GIT_CONFIG_NOSYSTEM: process.env.GIT_CONFIG_NOSYSTEM };
+    const dir = mkdtempSync(join(tmpdir(), 'rb-v-'));
+    try {
+      const gitEnv = hermeticGit(join(dir, 'git'));
+      const paths = brainPaths(dir);
+      createRepos(paths);
+      const schedule = generateSchedule(1001, 'pglite', true);
+      const [op] = allOps(schedule);
+      const events = join(dir, 'events'); mkdirSync(events);
+      const verify = async (state: string, errorCode: string | null) => {
+        const at = new Date().toISOString();
+        const engine = { searchKeyword: async () => [], executeRaw: async (sql: string) => sql.includes('UNION ALL') ? []
+          : sql.includes('FROM persistence_requests') ? [{ request_id: op!.request_id, state, error_code: errorCode, deferred_refresh_id: null, deferred_import_from: null,
+            outcome: { write_through: { written: false } }, created_at: at, updated_at: at, sequence: '1', released_at: null }]
+          : sql.includes('FROM pages WHERE') ? [{ body: `x ${op!.marker} y` }] : [] };
+        return (await verifyTrial(engine, schedule, paths, {} as never, events)).ops.find(o => o.request_id === op!.request_id)!;
+      };
+      expect(await verify('committed', null)).toMatchObject({ write_through: false, lost_git: true, unpublished: false });
+      writeFileSync(join(paths.root, 'marker.md'), `${op!.marker}\n`);
+      Bun.spawnSync(['git', '-C', paths.root, 'add', '-A'], { env: { ...process.env, ...gitEnv } });
+      Bun.spawnSync(['git', '-C', paths.root, 'commit', '-qm', 'marker'], { env: { ...process.env, ...gitEnv } });
+      expect(await verify('committed', null)).toMatchObject({ write_through: false, lost_git: false, unpublished: true });
+      expect((await verify('cancelled', 'revision_conflict')).unexpected_reasons).toContain('final:cancelled:revision_conflict');
+      expect((await verify('conflict', 'revision_conflict')).unexpected_reasons).not.toContain('final:conflict:revision_conflict');
+    } finally {
+      for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k]; else process.env[k] = v;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('O1, A1: a counted resume refuses results from another gbrain commit or harness tree, and a job whose logged result is gone', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'rb-g-'));
+    for (const args of [['init', '-q'], ['config', 'user.name', 'Example'], ['config', 'user.email', 'example@example.invalid'], ['config', 'commit.gpgsign', 'false'], ['commit', '-q', '--allow-empty', '-m', 'init']]) Bun.spawnSync(['git', '-C', root, ...args]);
+    const sha = Bun.spawnSync(['git', '-C', root, 'rev-parse', 'HEAD']).stdout.toString().trim();
+    const out = mkdtempSync(join(tmpdir(), 'rb-o-'));
+    const a: RunArgs = { block: 'trials', engine: 'pglite', gbrainRoot: root, out, seeds: [1001, 1002], reps: [101, 101], arms: ['on'], concurrency: 6,
+      prereg: 'docs/benchmarks/2026-11-06-refresh-barrier-preregistration.md', dry: false, gbrainSha: sha };
+    const commit = 'c'.repeat(40);
+    const deps = { attest: () => ({ preregistration_commit: commit }) as unknown as ReturnType<typeof import('../../eval/runner/prereg.ts').attestPreregistration>, harnessStatus: () => '' };
+    writeFileSync(join(out, 'run-trials-pglite.jsonl'), `${JSON.stringify({ ev: 'start', dry: false, preregistration_commit: commit })}\n`);
+    for (const provenance of [undefined, { gbrain_sha: 'd'.repeat(40), harness_digest: harnessDigest() }, { gbrain_sha: sha, harness_digest: 'another-tree' }]) {
+      put(out, 'trials/pglite/on/1001.json', { seed: 1001, arm: 'on', ops: [], provenance });
+      await expect(runBlock(a, deps)).rejects.toThrow('refusing to resume: 1 results carry no provenance or another gbrain commit');
+    }
+    put(out, 'trials/pglite/on/1001.json', { seed: 1001, arm: 'on', ops: [], provenance: { gbrain_sha: sha, harness_digest: harnessDigest() } });
+    writeFileSync(join(out, 'run-trials-pglite.jsonl'), [{ ev: 'start', dry: false, preregistration_commit: commit }, { ev: 'job', result: 'trials/pglite/on/1002.json', placeholder: false }].map(e => JSON.stringify(e)).join('\n') + '\n');
+    await expect(runBlock(a, deps)).rejects.toThrow('refusing to run: 1 jobs finished in');
+    expect(existsSync(join(out, 'run-trials-pglite.lock'))).toBe(false);
+    rmSync(root, { recursive: true, force: true }); rmSync(out, { recursive: true, force: true });
+  });
+
+  test('a cap stop is a reservation over a cap, a finished run or a provider budget stop; a ledger failure is not', () => {
+    expect(isCapStop(new BudgetExceededError('POST api.openai.com: reserving $0.0100 would take this run to $5.0100, over its $5.00 budget'))).toBe(true);
+    expect(isCapStop(new BudgetExceededError('POST: reserving $0.0100 would take the program to $2000.0100, over its $2000.00 cap (/l.sqlite)'))).toBe(true);
+    expect(isCapStop(new BudgetExceededError('POST: budget run 1234 already finished'))).toBe(true);
+    expect(isCapStop('budget: Particle credit exhausted (HTTP 402); top up the balance')).toBe(true);
+    expect(isCapStop('budget: the metering proxy refused the openai request (HTTP 402): over budget')).toBe(true);
+    expect(isCapStop(new BudgetExceededError('budget ledger lock /l.sqlite.lock has been held for over 30 s by pid 7 on h; another process is creating or migrating the ledger.'))).toBe(false);
+    expect(isCapStop(new BudgetExceededError('POST: the budget ledger /l.sqlite stayed locked by another process for 30 s; nothing was reserved.'))).toBe(false);
+    expect(isCapStop(new BudgetExceededError('POST: writing the budget ledger /l.sqlite failed (disk I/O error); this process refuses further spending.'))).toBe(false);
+    expect(isCapStop('budget: the ledger cannot price example.com, so this request would spend unmetered')).toBe(false);
+    expect(isCapStop(new Error('over its $5.00 budget'))).toBe(false);
+  });
+
+  test('B2: refused without a budget ledger; with one, every embedding request is reserved on run gbev44-refresh-barrier-b2 and a cap stop is recorded', () => {
+    const work = mkdtempSync(join(tmpdir(), 'rb-b2-'));
+    const env = { PATH: process.env.PATH!, HOME: work };
+    const refused = Bun.spawnSync(['bun', '--no-env-file', 'eval/runner/refresh-barrier/retrieval.ts', '--gbrain-root', work, '--work', work], { cwd: REPO, env });
+    expect(refused.exitCode).toBe(2);
+    expect(refused.stderr.toString()).toContain('pass --budget-ledger <path> to run B2, or --stub-embed for B1');
+    expect(runnerArgs('eval/runner/cat18-embedding-providers.ts', false, true)).toEqual(['--preload', join(import.meta.dir, '../../eval/runner/refresh-barrier/ledger-preload.ts'), 'eval/runner/cat18-embedding-providers.ts']);
+    expect(runnerArgs('eval/runner/cat18-embedding-providers.ts', true, false)).toEqual(['eval/runner/cat18-embedding-providers.ts', '--stub-embed']);
+    const fake = join(work, 'fake-fetch.ts'), script = join(work, 'embed.ts');
+    writeFileSync(fake, "globalThis.fetch = (async () => Response.json({ object: 'list', data: [{ object: 'embedding', index: 0, embedding: [0.1] }], model: 'text-embedding-3-large', usage: { prompt_tokens: 1000, total_tokens: 1000 } })) as unknown as typeof fetch;\n");
+    writeFileSync(script, "const r = await fetch('https://api.openai.com/v1/embeddings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'text-embedding-3-large', input: ['alpha beta'] }) });\nconsole.log(r.status);\n");
+    const embed = (ledger: Record<string, string>) => Bun.spawnSync(['bun', '--no-env-file', '--preload', fake, ...runnerArgs(script, false, true)], { cwd: REPO, env: { ...env, ...ledger } });
+    const ledgerPath = join(work, 'ledger.sqlite');
+    initLedger({ ledgerPath });
+    const paid = openBudgetItem(B2_BUDGET, { budgetUsd: null, ledgerPath, programCapUsd: null, programCapSource: null, runId: null });
+    paid.guard.uninstall();
+    const stops = join(work, 'stops.jsonl');
+    const ok = embed(ledgerEnv(paid.run, stops));
+    expect(ok.exitCode).toBe(0);
+    let run = readLedger(ledgerPath).runs.find(r => r.run_id === paid.run.runId)!;
+    expect(run).toMatchObject({ runner: 'gbev44-refresh-barrier-b2', budget_usd: 5, finished_at: null });
+    const entries = readLedger(ledgerPath).entries.filter(e => e.run_id === run.run_id);
+    expect(entries.map(e => e.status)).toEqual(['reconciled']);
+    expect(entries[0]!.actual_usd).toBeGreaterThan(0);
+    expect(existsSync(stops)).toBe(false);
+    const again = openBudgetItem(B2_BUDGET, { budgetUsd: null, ledgerPath, programCapUsd: null, programCapSource: null, runId: null });
+    again.guard.uninstall();
+    expect(again.run.runId).toBe(paid.run.runId);
+    const tiny = openBudgetItem({ runner: 'gbev44-test-tiny', cap_usd: 1e-9 }, { budgetUsd: null, ledgerPath, programCapUsd: null, programCapSource: null, runId: null });
+    tiny.guard.uninstall();
+    const capped = embed(ledgerEnv(tiny.run, stops));
+    expect(capped.exitCode).not.toBe(0);
+    const messages = readFileSync(stops, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as string);
+    expect(messages.length).toBe(1);
+    expect(isCapStop(messages[0]!)).toBe(true);
+    tiny.run.close({ finish: true });
+    expect(() => openBudgetItem({ runner: 'gbev44-test-tiny', cap_usd: 1e-9 }, { budgetUsd: null, ledgerPath, programCapUsd: null, programCapSource: null, runId: null }))
+      .toThrow('a cap stop ends that part INCOMPLETE and is never retried');
+    paid.run.close({ finish: false }); again.run.close({ finish: false });
+    run = readLedger(ledgerPath).runs.find(r => r.run_id === paid.run.runId)!;
+    expect(run.finished_at).toBeNull();
+    closeLedgers();
+    rmSync(work, { recursive: true, force: true });
+  });
+
+  test('Part B reasons: a missing cell is incomplete, a missed margin fails, a cap stop is INCOMPLETE, and a run not of G or not this tree is FIX-METHOD', () => {
+    const digest = harnessDigest();
+    const cells = Object.fromEntries(PART_B_CELLS.map(c => [c, { missing: false, pass: true }]));
+    const b2 = { label: 'g', stub_embed: false, gbrain: G, harness_digest: digest, switches: { off: false, on: true }, scores: { margin: -0.02, cells }, cap_stop: false, ledger_stops: [] };
+    expect(partBReasons('b2', b2, G, digest)).toEqual({ fix_method: [], fail: [], incomplete: [], incomplete_method: [] });
+    expect(partBReasons('b2', null, G, digest).incomplete_method).toEqual(['B2 has no result']);
+    expect(partBReasons('b2', { ...b2, scores: { margin: -0.02, cells: { ...cells, 'cat18/voyage/recall_at_10': { missing: true, pass: false } } } }, G, digest).incomplete_method).toEqual(['B2 cell cat18/voyage/recall_at_10 missing from an arm']);
+    expect(partBReasons('b2', { ...b2, scores: { margin: -0.02, cells: { ...cells, 'cat26/title/mrr': { missing: false, pass: false } } } }, G, digest).fail).toEqual(['B2 margin missed in cat26/title/mrr']);
+    expect(partBReasons('b2', { ...b2, cap_stop: true, ledger_stops: ['x: over its $5.00 budget'] }, G, digest)).toMatchObject({ incomplete: ['B2 stopped at its budget cap'], incomplete_method: [] });
+    expect(partBReasons('b2', { ...b2, ledger_stops: ['budget ledger lock held'] }, G, digest).incomplete_method).toEqual(["B2's budget ledger refused requests without a cap stop"]);
+    expect(partBReasons('b2', { ...b2, gbrain: 'b'.repeat(40), harness_digest: 'x', scores: { margin: -0.01, cells } }, G, digest).fix_method).toHaveLength(3);
   });
 });

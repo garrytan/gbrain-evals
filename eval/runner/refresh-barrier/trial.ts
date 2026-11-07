@@ -74,6 +74,9 @@ const QUIESCE_SQL = `SELECT
   (SELECT count(*) FROM persistence_worktree_refreshes WHERE state IN ('draining','fenced','merged','syncing','recovery_required'))::int AS active_refreshes,
   (SELECT count(*) FROM persistence_effects WHERE kind='git' AND state IN ('queued','running'))::int AS open_effects`;
 
+/** The gbrain CLI the owner's publish child runs: bun with --no-env-file, as every trial process runs, so no .env file can put a key back. */
+export const cliWrapperScript = (gbrainRoot: string) => `#!/bin/sh\nexec bun --no-env-file ${JSON.stringify(join(gbrainRoot, 'src/cli.ts'))} "$@"\n`;
+
 export interface OpenBrain { g: Awaited<ReturnType<typeof loadGbrain>>; engine: any; paths: ReturnType<typeof brainPaths>; ids: Awaited<ReturnType<typeof registerBrain>>;
   dbUrl: string | null; dropDb: (() => Promise<void>) | null; cliWrapper: string; gitEnv: Record<string, string>; started: number; timings: Record<string, number> }
 
@@ -90,7 +93,7 @@ export async function openBrain(a: Pick<TrialArgs, 'arm' | 'engine' | 'gbrainRoo
   // The owner publishes over a moved remote through a child `gbrain git commit-push --push-only --keep-checkout`; it finds
   // that CLI through GBRAIN_JOB_CHILD_CLI when the process is not gbrain's own cli.ts.
   const cliWrapper = join(dir, 'gbrain-cli.sh');
-  writeFileSync(cliWrapper, `#!/bin/sh\nexec bun ${JSON.stringify(join(a.gbrainRoot, 'src/cli.ts'))} "$@"\n`, { mode: 0o755 });
+  writeFileSync(cliWrapper, cliWrapperScript(a.gbrainRoot), { mode: 0o755 });
   process.env.GBRAIN_JOB_CHILD_CLI = cliWrapper;
   if (a.arm === 'on') process.env.GBRAIN_REFRESH_BARRIER = '1'; else delete process.env.GBRAIN_REFRESH_BARRIER;
   const g = await loadGbrain(a.gbrainRoot);
@@ -338,7 +341,7 @@ if (import.meta.main) {
   }
   const result = await runTrial(a);
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(resultPath, JSON.stringify(result));
+  writeFileSync(resultPath, JSON.stringify(result), { flag: process.argv.includes('--replace') ? 'w' : 'wx' });
   if (!a.keep && failureClasses(result, 'trial').length === 0) rmSync(join(a.out, 'work', workName(a)), { recursive: true, force: true });
   process.exit(0);
 }
