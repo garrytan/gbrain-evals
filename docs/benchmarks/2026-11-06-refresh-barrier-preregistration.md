@@ -487,7 +487,8 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 Recorded before any counted trial. Apart from the particle-1 money cut under **Part C models**, it changes no threshold,
 count, seed range, cap, arm or verdict rule.
 
-- **G:** `<G sha pending GST-1623's landing>`. Every counted block passes it to `run.ts` as `--gbrain-sha`, and `analyze.ts`
+- **G:** `deef2593dc3717907a1f17d7db6eb558747bfc0f`, gbrain master v0.60.600.0 (#8748, GST-1623's fixes), sent by GBRA-108 on
+  2026-11-07. It contains #8682, #8705 (df7fca85), GBRA-347's fix (03b89121) and GST-1674's crash recovery (149455d4). Every counted block passes it to `run.ts` as `--gbrain-sha`, and `analyze.ts`
   now needs it too (`--gbrain-sha`, the full 40-character sha): a result, receipt, Part B result or Part C episode from
   another gbrain commit makes the verdict FIX-METHOD.
 - **Hermetic environment:** the gbrain CLI that the owner's publish child runs is started as `bun --no-env-file`, like every
