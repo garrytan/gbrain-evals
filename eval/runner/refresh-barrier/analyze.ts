@@ -362,7 +362,7 @@ export function overallVerdict(r: VerdictReasons): string {
  * real-embedder run, both of G (label g) from this harness tree with each arm's switch resolved to its value. A
  * preregistered cell missing from either arm makes the result incomplete; a present cell whose lower bound is below the
  * margin, or a Cat 18 cell whose median on-arm query time is above 1.2 times the off arm's (B1), fails; a cap stop leaves
- * it INCOMPLETE.
+ * it INCOMPLETE, and a ledger refusal without one leaves it FIX-METHOD, with no margin read from the partial scores.
  */
 export function partBReasons(kind: 'b1' | 'b2', r: Rec | null, gbrainSha: string | undefined, digest: string): Partial<VerdictReasons> {
   const name = kind.toUpperCase();
@@ -379,7 +379,7 @@ export function partBReasons(kind: 'b1' | 'b2', r: Rec | null, gbrainSha: string
       ...(r.scores?.margin !== PART_B_MARGIN[kind] ? [`${name} used margin ${r.scores?.margin}, not ${PART_B_MARGIN[kind]}`] : []),
     ],
     fail: [
-      ...PART_B_CELLS.filter(c => cells[c]?.missing === false && cells[c].pass !== true).map(c => `${name} margin missed in ${c}`),
+      ...(r.cap_stop === true || (r.ledger_stops ?? []).length ? [] : PART_B_CELLS.filter(c => cells[c]?.missing === false && cells[c].pass !== true).map(c => `${name} margin missed in ${c}`)),
       ...latency.filter(c => typeof ratio(c) === 'number' && ratio(c) > LATENCY_RATIO_MAX).map(c => `B1 latency ratio above ${LATENCY_RATIO_MAX} in Cat 18 ${c}`),
     ],
     incomplete: r.cap_stop === true ? [`${name} stopped at its budget cap`] : [],

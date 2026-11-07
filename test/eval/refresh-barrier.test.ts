@@ -634,5 +634,23 @@ describe('refresh-barrier Amendment 1', () => {
     expect(partBReasons('b2', { ...b2, cap_stop: true, ledger_stops: ['x: over its $5.00 budget'] }, G, digest)).toMatchObject({ incomplete: ['B2 stopped at its budget cap'], incomplete_method: [] });
     expect(partBReasons('b2', { ...b2, ledger_stops: ['budget ledger lock held'] }, G, digest).incomplete_method).toEqual(["B2's budget ledger refused requests without a cap stop"]);
     expect(partBReasons('b2', { ...b2, gbrain: 'b'.repeat(40), harness_digest: 'x', scores: { margin: -0.01, cells } }, G, digest).fix_method).toHaveLength(3);
+    const missed = { margin: -0.02, cells: { ...cells, 'cat18/openai/recall_at_10': { missing: false, pass: false } } };
+    expect(partBReasons('b2', { ...b2, scores: missed, cap_stop: true, ledger_stops: ['x: over its $5.00 budget'] }, G, digest)).toMatchObject({ fail: [], incomplete: ['B2 stopped at its budget cap'] });
+    expect(partBReasons('b2', { ...b2, scores: missed, ledger_stops: ['budget ledger lock held'] }, G, digest)).toMatchObject({ fail: [], incomplete_method: ["B2's budget ledger refused requests without a cap stop"] });
+    expect(overallVerdict({ counted: true, fix_method: [], fail: [], incomplete: ['B2 stopped at its budget cap'], incomplete_method: [], inconclusive: [] })).toStartWith('INCOMPLETE');
+  });
+
+  test('two invocations that open one budget item together share one ledger run', async () => {
+    const work = mkdtempSync(join(tmpdir(), 'rb-race-'));
+    const ledgerPath = join(work, 'ledger.sqlite');
+    initLedger({ ledgerPath });
+    const script = join(work, 'open.ts');
+    writeFileSync(script, `import { openBudgetItem } from ${JSON.stringify(join(REPO, 'eval/runner/refresh-barrier/ledger.ts'))};\nconst p = openBudgetItem({ runner: 'gbev44-test-race', cap_usd: 5 }, { budgetUsd: null, ledgerPath: ${JSON.stringify(ledgerPath)}, programCapUsd: null, programCapSource: null, runId: null });\np.guard.uninstall();\nconsole.log(p.run.runId);\n`);
+    const procs = [0, 1, 2].map(() => Bun.spawn(['bun', '--no-env-file', script], { cwd: REPO, stdout: 'pipe', stderr: 'pipe' }));
+    const ids = await Promise.all(procs.map(async p => { expect(await p.exited).toBe(0); return (await new Response(p.stdout).text()).trim(); }));
+    expect(new Set(ids).size).toBe(1);
+    expect(readLedger(ledgerPath).runs.filter(r => r.runner === 'gbev44-test-race').length).toBe(1);
+    closeLedgers();
+    rmSync(work, { recursive: true, force: true });
   });
 });
