@@ -39,13 +39,17 @@ When you change one of these documents, update the current state and add its cha
 
 ## Shape of a benchmark report
 
-Use the structure that makes the result easiest to assess. The default is:
+Every report, finding file and investigation write-up opens with its takeaways. After them, use the structure that makes the result easiest to assess. The default is:
 
-1. **The finding.** State the useful conclusion, the tested configuration, the date and the main measurement. Distinguish a result we recommend from an experiment that remains inconclusive.
+1. **Two or three takeaways, then the finding.** Open with 2 or 3 plain bullets, each in the form "We learned X. You should do X." What works comes first: where gbrain, gstack or our harness help, and why that matters to someone building agents. What didn't work comes second, stated plainly and never buried. When the main result is a null, lead with the useful lesson the data supports, with its number (for example "you don't need X; plain Opus already does Y"), and state the null right after it. Then give the tested configuration, the date and the main measurement, and say whether the result is one we recommend or an experiment that remains inconclusive. Our own mechanics (issue codes, ledger paths, gate details) go at the end of the report or in the pull request's closing Agent notes section.
 2. **The concrete case.** Show the sort of question or input involved, explain what the system has to do, and define unfamiliar terms. Clearly label invented examples.
 3. **The experiment and results.** Describe the corpus, comparison arms, metric and sample size. Include the head-to-head table, relevant breakdowns and the settings that changed behavior. Explain what each important number means.
 4. **What to use and what to avoid.** Connect the evidence to a workload. Report losses, errors, tuning, weak controls and incomplete measurements beside the claims they qualify.
-5. **Reproduce and inspect.** Give repository-root commands, dependency and dataset identities, required keys, output paths and observed time/cost. Link the raw results and any charts.
+5. **Reproduce and inspect.** Give repository-root commands, dependency and dataset identities, required keys, output paths and observed run time. Link the raw results and any charts.
+
+The takeaways change the order, not the evidence. The preregistered primary result is always one of the bullets, with its interval, and a secondary or exploratory result is labeled as such and shows its interval. A null is not proof that two setups are equal: unless a preregistered margin shows they are, call it no measurable difference at that sample size. No number is rounded in our favor, no caveat is dropped, and disclosures follow [docs/disclosures.md](docs/disclosures.md), both where the lines go (a finding file keeps them in its closing Disclosures section) and what a result favoring a disclosed company must also show.
+
+Don't publish what a finding cost. Show a cost only where it is part of the lesson, such as cost per correct answer between two setups or a per-task price the design depends on. Program totals, budgets, caps and spend stay out of public docs (CHANGELOG.md included), commit messages and pull request bodies; they belong in the tracking issue and private notes. This covers what we write; raw receipts and ledger files keep the fields they recorded, as the evidence rules below require.
 
 A report must make sense on its own. Introduce gbrain and any external benchmark briefly, with links to their primary sources. Explain each compared adapter in terms of what it does, the feature it exercises, and the practical reason to test it.
 
@@ -72,7 +76,7 @@ Use the task's authorized budget and scope. Preserve failed and partial measurem
 
 For a new report:
 
-1. Write down the question, comparison and decision rule before running.
+1. Write down the question, the public lesson it is after, the comparison and the decision rule before running.
 2. Verify the scorer and a small setup run.
 3. Run the agreed comparison with explicit configuration.
 4. Save the raw output, resolved settings and code identities.

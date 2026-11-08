@@ -2,6 +2,26 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.177] - 2026-11-08
+
+### Every report opens with its two or three takeaways (GST-1933)
+
+- **What report writers do now.** `CLAUDE.md`'s "Shape of a benchmark report" opens every report, finding file and
+  investigation write-up with 2 or 3 bullets in the form "We learned X. You should do X." What works comes first,
+  including where gbrain, gstack or our harness help people building agents, and what didn't work comes second, stated
+  plainly. A null result leads with the useful lesson the data supports, with its number, and states the null right
+  after it. The preregistered primary result is always one of the bullets, with its interval; a secondary or
+  exploratory result is labeled and shows its interval; a null without a preregistered margin reads "no measurable
+  difference"; and disclosures follow `docs/disclosures.md`.
+- **Costs.** A report shows a cost only where it is part of the lesson, such as cost per correct answer, and
+  "Reproduce and inspect" asks for observed run time instead of time and cost. Program totals, budgets, caps and spend
+  stay out of public docs, commit messages and PR bodies. Raw receipts and ledger files keep their recorded fields.
+- **Templates.** `docs/benchmarks/PREREGISTRATION-TEMPLATE.md` adds a required "Public lesson" section (what a
+  builder would learn and do differently either way), and its Budget section describes the ledger, a cap that pauses
+  the run until it is extended and how the run resumes, instead of asking for dollar amounts.
+  `docs/benchmarks/cat40-hard/REPORT_TEMPLATE.md` opens section 1 with the takeaways, moves ledger reconciliation to
+  the tracking issue and asks for observed run time. No existing report, finding, README result or number changes.
+
 ## [0.10.176] - 2026-11-08
 
 ### RS1 is preregistered again as one claim: is gbrain within 3.5 points of the two leading memory servers (GST-1886)
