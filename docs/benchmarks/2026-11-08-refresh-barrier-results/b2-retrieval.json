@@ -9,12 +9,6 @@
     "off": false,
     "on": true
   },
-  "budget": {
-    "runner": "gbev44-refresh-barrier-b2",
-    "cap_usd": 5,
-    "run_id": "gbev44-refresh-barrier-b2-2026-11-08T17-43-08-537Z-edae3558",
-    "ledger": "<work>/ledger2/b2.db"
-  },
   "ledger_stops": [],
   "cap_stop": false,
   "pass": true,

@@ -1104,19 +1104,12 @@
     "b1": {
       "pass": true,
       "gbrain": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
-      "cap_stop": false,
-      "budget": null
+      "cap_stop": false
     },
     "b2": {
       "pass": true,
       "gbrain": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
-      "cap_stop": false,
-      "budget": {
-        "runner": "gbev44-refresh-barrier-b2",
-        "cap_usd": 5,
-        "run_id": "gbev44-refresh-barrier-b2-2026-11-08T17-43-08-537Z-edae3558",
-        "ledger": "<work>/ledger2/b2.db"
-      }
+      "cap_stop": false
     }
   },
   "part_c": {
@@ -1133,7 +1126,6 @@
           "context_overflow": 0,
           "missing": 0,
           "outside": 0,
-          "usd": 6.7186850000000025,
           "cap_stop": false
         },
         "on": {
@@ -1146,7 +1138,6 @@
           "context_overflow": 0,
           "missing": 0,
           "outside": 0,
-          "usd": 9.805234600000002,
           "cap_stop": false
         }
       },
@@ -1175,7 +1166,6 @@
           "context_overflow": 0,
           "missing": 0,
           "outside": 0,
-          "usd": 1.6628803000000003,
           "cap_stop": false
         },
         "on": {
@@ -1188,7 +1178,6 @@
           "context_overflow": 0,
           "missing": 0,
           "outside": 0,
-          "usd": 2.169317799999999,
           "cap_stop": false
         }
       },

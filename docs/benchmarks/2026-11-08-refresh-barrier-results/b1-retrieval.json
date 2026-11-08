@@ -9,7 +9,6 @@
     "off": false,
     "on": true
   },
-  "budget": null,
   "ledger_stops": [],
   "cap_stop": false,
   "pass": true,
