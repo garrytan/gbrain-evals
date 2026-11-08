@@ -170,7 +170,7 @@ function findReceipts(dirs: readonly string[]): CellFiles[] {
   return dirs.flatMap(root => {
     const cells = join(root, 'cells');
     if (!existsSync(cells)) refuse(`${root} has no cells/ directory`);
-    return readdirSync(cells).filter(d => existsSync(join(cells, d, 'receipt.json'))).map(d => {
+    return readdirSync(cells).sort().filter(d => existsSync(join(cells, d, 'receipt.json'))).map(d => {
       const dir = join(cells, d);
       const config = existsSync(join(dir, 'run-config.json')) ? JSON.parse(readFileSync(join(dir, 'run-config.json'), 'utf8')) : null;
       return { dir, root, receipt: JSON.parse(readFileSync(join(dir, 'receipt.json'), 'utf8')), config };
