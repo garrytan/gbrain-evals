@@ -1,0 +1,76 @@
+<!-- gbrain skills v1 catalog af53e135648f: managed by gbrain; edit outside these markers. Refresh: gbrain setup <harness> --skill-loading spring. Opt out: gbrain setup <harness> --skill-loading off -->
+## GBrain skills: load on demand
+
+GBrain ships step-by-step procedures for brain work. When a task matches a line below, run `gbrain bundled-skill <name>` and follow the procedure it prints before acting. Print a file the skill names with `gbrain bundled-skill <name> --asset <path>`. Load nothing for a task no line matches.
+
+- academic-verify: verify this academic claim; check this study; validate citation
+- archive-crawler: crawl my archive; find gold in my archive; archive crawler
+- article-enrichment: enrich this article; enrich the article; enriching the article
+- ask-user: present options; ask before proceeding; choice gate
+- blog-ingest: ingest this publication; ingest this whole blog; ingest this feed
+- book-mirror: personalized version of this book; mirror this book; two-column book analysis
+- brain-ingest-gate: move this to brain; migrate to brain; copy these files into the brain
+- brain-link-discipline: give me the link; where is the page; why does this link 404
+- brain-ops: any brain read/write/lookup/citation
+- brain-pdf: make pdf from brain; convert brain page to pdf; publish this page as pdf
+- brain-taxonomist: where does this brain page go; file this in the brain; brain taxonomist
+- briefing: daily briefing; morning briefing; what's happening today
+- bulk-ingestion: bulk ingest; bulk import; ingest all
+- capture: capture this; save this thought; remember this
+- chat-connectors: connect my chatgpt; connect my claude account; sync my chat history
+- citation-fixer: fix citations; fix broken citations; citation audit
+- citation-graph-ingest: citation graph; citation graph ingest; typed citation graph
+- cold-start: cold start; fill my brain; bootstrap brain
+- company-brainify: company brain; team brain; brainify
+- concept-synthesis: concept synthesis; synthesize my concepts; find patterns across my notes
+- context-audit: context audit; context diet; system prompt audit
+- conversation-archive: chatgpt export; claude export; perplexity export
+- correction-pipeline: that's wrong; that's not true; I never said that
+- cron-scheduler: schedule a job; cron; quiet hours
+- cross-modal-review: second opinion; cross-modal review; double check this
+- daily-task-manager: add task; complete task; what are my tasks
+- daily-task-prep: morning prep; prepare for today; what's on my plate
+- data-loss-gate: bulk delete; wipe the; rm -rf
+- data-research: research; track; extract from email
+- db-repair: GBRAIN_DB_ACCESS; gbrain database error; gbrain connection refused
+- draft-in-voice: draft in voice; write this as; make this sound like
+- eiirp: everything in its right place; eiirp; store this research
+- enrich: enrich; create person page; update company page
+- fact-check: fact check; verify the facts; check the claims
+- frontmatter-guard: validate frontmatter; check frontmatter; fix frontmatter
+- functional-area-resolver: compress agents.md; compress my resolver; resolver too big
+- gbrain-advisor: what should I do to get more out of gbrain; is my brain set up right; gbrain advisor
+- gbrain-upgrade: gbrain update available; UPGRADE_AVAILABLE; gbrain is out of date
+- google-loops: connect gmail; connect google; connect calendar
+- idea-ingest: shares a link or URL; read this; save this
+- idea-lineage: idea lineage; trace the lineage of this idea; how my thinking about
+- ingest: ingest this; save this to brain; process this meeting
+- maintain: brain health; check backlinks; maintenance
+- mcp-access: GBrain admin login link; open the MCP admin panel; manage MCP clients
+- measure-before-you-fix: keeps timing out; ETIMEDOUT; why is this data stale
+- media-ingest: watch this video; process this YouTube link; ingest this PDF
+- meeting-ingestion: meeting transcript; process this meeting; meeting notes
+- migrate: migrate from; import from obsidian; import from notion
+- minion-orchestrator: gbrain jobs submit; submit a gbrain job; submit a shell job
+- perplexity-research: perplexity research; what's new about; current state of
+- postgres-adopt: which gbrain engine; pglite or postgres; gbrain engine status
+- publish: share this page; publish page; create shareable link
+- query: what do we know about; tell me about; who is
+- remote-mcp: use my brain over mcp; serve my brain over mcp; expose my brain over mcp
+- repo-architecture: where does this go; filing rules; create new page
+- reports: save report; load latest report; what's the latest briefing
+- research-compendium: compendium; research everything about; read them all and summarize
+- resolve-before-asking: resolve before asking; before asking the user; unidentified contact
+- schema-author: add a page type; add a type to my schema; my brain has untyped pages
+- schema-unify: unify my types; migrate to gbrain-base-v2; 94 types to 14
+- setup: set up gbrain; initialize brain; gbrain setup
+- signal-detector: every substantive inbound message after automatic-capture o…
+- skill-creator: create a skill; new skill; improve this skill
+- skill-optimizer: optimize this skill; tune the skill against the benchmark; make the skill better
+- skillpack-check: skillpack check; is gbrain healthy; gbrain health
+- smoke-test: smoke test; run smoke tests; container restart check
+- soul-audit: soul audit; customize agent; who am I
+- strategic-reading: strategic reading; read this through the lens of; apply this to my problem
+- two-tier-extraction: two-tier extraction; triage then deep read; smart model routing
+- voice-note-ingest: voice note; ingest this voice memo; transcribe and file
+- webhook-transforms: set up webhook; process webhook event; transform this event

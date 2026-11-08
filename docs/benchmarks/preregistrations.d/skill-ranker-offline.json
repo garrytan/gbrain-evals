@@ -1,0 +1,17 @@
+{
+ "schema_version": 1,
+ "experiments": [
+  {
+   "id": "2026-11-07-skill-ranker-offline",
+   "preregistration": "docs/benchmarks/2026-11-07-skill-ranker-offline-preregistration.md",
+   "results": [
+    "docs/benchmarks/2026-11-07-skill-ranker-offline/results/**",
+    "docs/benchmarks/2026-11-07-skill-ranker-offline/data/turns.jsonl",
+    "docs/benchmarks/2026-11-07-skill-ranker-offline/data/dev.jsonl",
+    "docs/benchmarks/2026-11-07-skill-ranker-offline/data/test.jsonl",
+    "docs/benchmarks/2026-11-07-skill-ranker-offline/data/stress-*.jsonl",
+    "docs/benchmarks/2026-11-07-skill-ranker-offline.md"
+   ]
+  }
+ ]
+}
