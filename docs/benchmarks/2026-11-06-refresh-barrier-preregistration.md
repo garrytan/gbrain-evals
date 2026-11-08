@@ -667,3 +667,22 @@ or arm. It fixes one detector, records the harness digest every later counted ce
   reads the adjudicated number. If the two disagree on the verdict, the findings say so in their first lines. The
   reason: in the smoke, claude-opus-5-5 passed an unknown `source` parameter to `remember`, gbrain refused it and wrote
   nothing, and the corrected resend was scored as a reissue, which failed both of Opus's on-arm smoke episodes.
+
+### Amendment 4, 2026-11-08: the next G, recorded before its G-compatibility smoke
+
+Recorded before the G-compatibility smoke at the new G and before any counted cell there. It changes no threshold,
+count, seed range, cap, arm or verdict rule.
+
+- **G:** `773a29eede3b3ea91e0e2cba4012078b5d42c602` (gbrain master v0.60.614.0, #8827), the first master commit
+  containing GST-1853's fix: a write held behind a refresh that ends without completing (aborted, abandoned, or rolled
+  back after its process died) is decided in the run that ends the refresh, instead of staying pending until a later
+  refresh. GBRA-108 sent the sha on 2026-11-08. Every counted block and `analyze.ts` take it as `--gbrain-sha`. Since
+  `431cb3f9`, master also took #8766 (the two `laterWriteRefusal` findings Amendment 2 names), #8798, #8825 and #8833
+  (`/ingest` captures) and #8830 (fact edits).
+- **Harness:** digest `17b629b49ea5` (Amendment 3), run from a pushed #384 head, never a merge commit.
+- **Order:** the G-compatibility smoke as in Amendment 2, with PC2 at `de22702a` rerun on this digest; then a fresh
+  counted Part A, every block on both engines and arms at the preregistered seeds and repetitions, on Ubicloud
+  standard-16 VMs; then B1 and B2 at G; then counted Part C only if PASS is still reachable, in a paid window GBEV-3
+  grants. Results at `431cb3f9` are never pooled with results at this G.
+- **Money:** GBRA-108 approved the full step on 2026-11-08: about $75 more, for about $364 all-in against the $390 cap,
+  with Amendment 2's equal Part C cut if Opus runs over. All-in spend before this step was about $289.
