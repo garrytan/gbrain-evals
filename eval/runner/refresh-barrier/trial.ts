@@ -12,7 +12,7 @@
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, openSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { PROVIDER_KEYS, brainPaths, countedRunIn, createRepos, gitHead, harnessDigest, hermeticGit, loadGbrain, registerBrain } from './fixture.ts';
 import { KNOWN_SYNC_STATUSES, KNOWN_TICK_STATUSES, foreignCommit, jsonlLogger, logSwitch, pushTick, runConverge, runSync, runTick, runWriter, sleep, type Session } from './runtime.ts';
@@ -170,7 +170,8 @@ export async function runTrial(a: TrialArgs): Promise<Record<string, unknown>> {
     if (!schedule.writers.every(w => existsSync(join(dir, `w${w.index}.ready`)))) flags.writers_not_ready = true;
     timings.ready_ms = Date.now() - readyStart;
     t0 = Date.now() + READY_LEAD_MS;
-    writeFileSync(join(dir, 't0.json'), JSON.stringify({ t0 }));
+    writeFileSync(join(dir, 't0.json.tmp'), JSON.stringify({ t0 }));
+    renameSync(join(dir, 't0.json.tmp'), join(dir, 't0.json'));
     const pushLine = upstreamLine(schedule, paths, t0, log);
     const tickLine = (async () => {
       for (const tick of schedule.ticks) {
