@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.174, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
+gbrain-evals v0.10.172, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -275,11 +275,9 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
 
-### 2026-11-08: Skill-listing truncation row; opening names v0.10.174
+### 2026-11-08: Skill-listing truncation row
 
-"Saving, using, and improving memory" gains a row for the
-[skill-listing truncation report](benchmarks/skill-listing-truncation.md): at what catalog size Claude Code, Codex,
-OpenClaw and Hermes stop listing every installed skill (GST-1860). It carries the Hermes, OpenAI and OpenClaw lines.
+"Saving, using, and improving memory" gains a row for the [skill-listing truncation report](benchmarks/skill-listing-truncation.md) (GST-1860), with the Hermes, OpenAI and OpenClaw lines.
 
 ### 2026-11-08: Live recall phase 2 preregistration row
 
