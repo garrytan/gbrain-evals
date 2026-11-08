@@ -14,7 +14,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } fr
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
+import { BudgetRun, closeLedgers, priceRequest } from '../../eval/runner/budget-ledger.ts';
 import { doctor, plan, priceProbe, runCells } from '../../eval/runner/scoreboard-cli.ts';
 import { answerId } from '../../eval/runner/scoreboard.ts';
 import { exitCodeOf, ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
@@ -166,6 +166,8 @@ describe('doctor', () => {
     const ok = await doctor(['--for', 'run'], { PATH: process.env.PATH, OPENAI_API_KEY: 'x', UBI_OWNER: 'gbra49', UBICLOUD_API_TOKEN: 'x' });
     expect(Object.fromEntries(ok.checks.map(c => [c.id, c])).executor).toMatchObject({ ok: true, detail: expect.stringContaining('scripts/ubicloud/ubi-runner.sh') });
     expect(priceProbe('voyage:rerank-2.5').url).toContain('/rerank');
+    const particle = priceProbe('particle:particle-1');
+    expect(priceRequest(particle.url, particle.body)).toMatchObject({ provider: 'particle', model: 'particle-1' });
   });
 
   test('dataset checks cover only the named cells, and a dev smoke only its own conversations\' files', async () => {
