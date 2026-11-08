@@ -147,3 +147,11 @@ Budget: about $3 more (writer and one judge pass over 100 turns). Ledger before 
 - `data/stress-test.jsonl` stress-test.jsonl sha256 a6000dfd6e12c46459efa10988df1f2a169cd1db743ebb7e3d7a249773b3b3ac (80 turns)
 
 Judge outcome: 43 of 45 terse skill turns got an acceptable skill; 39 of 45 long no-skill turns and all 10 long generic turns got none (6 long "no-skill" turns were judged to have a fitting skill, and count as skill turns, as preregistered). Ledger: $11.06.
+
+### Amendment 4, 2026-11-08: path scrub in catalog bodies (non-substantive, made after the results)
+
+CI's `test/eval/receipt-machine-paths.test.ts` flagged `data/catalog.jsonl.gz`: 16 skill bodies quote example paths that look machine-local (`/tmp/...` and `/Users/you/...`, from the skills' own text, not from this machine). `scripts/build-catalog.ts` now rewrites them so that every word token survives (`<tmp>/...`, `<Users>/you/...`; also `/home/<user>/`, `/root/`, `/private/var/`, `/var/folders/` and `C:\Users\`), after the 4 KB cut, so 15 of those bodies now run 1 or 2 bytes past 4,096. Only the `body` field of those 16 skills changed; ids, names, descriptions, triggers, routing rows and the lexical tokens of every body are identical.
+
+- `data/catalog.jsonl` is now sha256 `36a70d083935fa73ba7334c193a506844d15ea21a684f8c312a76420c465d022` (was `5b9b29a4...`). The judge and the embeddings read only ids and descriptions, so labels and vectors are unaffected.
+- `data/test.jsonl` (`8b4588f2...`), `data/stress-test.jsonl` (`a6000dfd...`), `data/dev.jsonl` and every label file are unchanged.
+- Rescored with the scrubbed catalog: calibration, every per-arm number, both verdicts, the diagnostics and `results/per-turn-test.jsonl` are byte-identical. Only each receipt's `catalog_jsonl_sha256` and the wall-clock latency samples differ.

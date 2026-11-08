@@ -50,11 +50,27 @@ export interface Skill {
 const h = (s: string) => createHash('sha256').update(s).digest('hex');
 const clean = (s: unknown) => String(s ?? '').replace(/\s+/g, ' ').trim();
 
+/**
+ * Rewrite example paths that look machine-local ("/tmp/x", "/Users/you/x") so
+ * the committed catalog passes test/eval/receipt-machine-paths.test.ts. Each
+ * rewrite keeps every word token ("<tmp>/x", "<Users>/you/x"), so ranking is
+ * unchanged. Applied after the 4 KB cut, so a body may run a few bytes over.
+ */
+export function scrubPaths(s: string): string {
+  const pre = '(^|[\\s"\'=(:,\\[])';
+  return s
+    .replace(new RegExp(`${pre}/(tmp|root)/`, 'g'), '$1<$2>/')
+    .replace(new RegExp(`${pre}/(home|Users)/(?=[^/\\s"']+/)`, 'g'), '$1<$2>/')
+    .replace(new RegExp(`${pre}/(private)/var/`, 'g'), '$1<$2>/var/')
+    .replace(new RegExp(`${pre}/var/folders/`, 'g'), '$1<var>/folders/')
+    .replace(/([A-Za-z]):\\Users\\/g, '$1:<Users>\\');
+}
+
 function boundBody(text: string): string {
   const body = text.replace(/^---\n[\s\S]*?\n---\n?/, '').trim();
   const buf = Buffer.from(body, 'utf8');
-  if (buf.length <= BODY_BYTES) return body;
-  return buf.subarray(0, BODY_BYTES).toString('utf8').replace(/\uFFFD+$/, '');
+  if (buf.length <= BODY_BYTES) return scrubPaths(body);
+  return scrubPaths(buf.subarray(0, BODY_BYTES).toString('utf8').replace(/\uFFFD+$/, ''));
 }
 
 function frontmatter(text: string): Record<string, unknown> | null {
