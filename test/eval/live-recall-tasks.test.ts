@@ -1198,7 +1198,7 @@ describe('phase 2 judge check (R78)', () => {
     expect(labelsShort(judgeCheck([...rows('claude-opus-5-5', 'B', 60, 25, 12, 10), ...rows('gpt-6.1-sol', 'B', 60, 25, 0, 0)]))).toBe(false);
   });
 
-  test('the label floor adds frozen tasks ten at a time in one run directory, and judge-check.json lists every step', async () => {
+  test('the label floor adds frozen tasks ten at a time in one run directory, and judge-check.json lists every step; a fixture check runs once', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'lr2-floor-'));
     process.env.GBRAIN_AUDIT_DIR = dir;
     const providers = scriptedProviders(fixtureTasks);
@@ -1206,7 +1206,10 @@ describe('phase 2 judge check (R78)', () => {
     const out = join(dir, 'run');
     const lines: string[] = [];
     try {
-      const { result, check } = await runJudgeCheck({ out, gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'], arms: ['B'], models: ['claude-opus-5-5'], limit: 2, concurrency: 2, resume: false, windowNote: null, paid }, l => lines.push(l));
+      const opts = { out, gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['B'] as any, models: ['claude-opus-5-5'], limit: 2, concurrency: 2, resume: false, windowNote: null, paid };
+      const once = await runJudgeCheck({ ...opts, out: join(dir, 'once') }, () => {});
+      expect([once.result, once.check!.steps.map(s => s.n_tasks)]).toEqual(['complete', [2]]);
+      const { result, check } = await runJudgeCheck(opts, l => lines.push(l), true);
       expect(result).toBe('complete');
       const n = check!.n_tasks_checked;
       expect([n > 12, n <= fixtureTasks.length]).toEqual([true, true]);

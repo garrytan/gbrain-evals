@@ -850,15 +850,16 @@ export const labelsShort = (c: ReturnType<typeof judgeCheck>) => Object.values(c
  * The judge check with its label floor (R78): paraphrase answers on JUDGE_CHECK_TASKS frozen tasks, then, while any
  * counted judge has fewer than JUDGE_CHECK_MIN_LABELS labels on either primary metric, JUDGE_CHECK_STEP more at a time
  * up to JUDGE_CHECK_MAX_TASKS, in the same run directory and ledger run. Only the label count extends it; the pass rule
- * is applied once, to the final set, and judge-check.json lists every step.
+ * is applied once, to the final set, and judge-check.json lists every step. The floor is for the box's check: a fixture
+ * check runs its tasks once, so the paid smoke stays inside its cap.
  */
-export async function runJudgeCheck(o: RunOptions, say: (line: string) => void): Promise<{ result: RunResult; check: ReturnType<typeof writeJudgeCheck> | null }> {
+export async function runJudgeCheck(o: RunOptions, say: (line: string) => void, floor = !o.fixture): Promise<{ result: RunResult; check: ReturnType<typeof writeJudgeCheck> | null }> {
   let n = Math.max(o.limit ?? JUDGE_CHECK_TASKS, existsSync(paths(o.out).run) ? readRun(o.out).kept_ids.length : 0);
   for (let first = true; ; first = false) {
     const r = await runTaskSet({ ...o, forms: ['paraphrase'], judgeCheck: true, limit: n, resume: o.resume || !first, continuing: o.continuing || !first }, say);
     if (r.result !== 'complete') return { result: r.result, check: null };
     const c = writeJudgeCheck(o.out);
-    if (!labelsShort(c) || n >= JUDGE_CHECK_MAX_TASKS || c.n_tasks_checked < n) return { result: r.result, check: c };
+    if (!floor || !labelsShort(c) || n >= JUDGE_CHECK_MAX_TASKS || c.n_tasks_checked < n) return { result: r.result, check: c };
     n = Math.min(n + JUDGE_CHECK_STEP, JUDGE_CHECK_MAX_TASKS);
     say('judge check: a judge has fewer than ' + JUDGE_CHECK_MIN_LABELS + ' labels on a primary metric; adding frozen tasks up to ' + n);
   }

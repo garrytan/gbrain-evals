@@ -254,7 +254,7 @@ All commands run from the repository root.
    prints one line per judge and metric, one per judge model with its calls truncated at the output cap, and writes
    `judge-check.json` in its own run directory. If after 20 tasks a judge has fewer than 40 labels on either metric, it
    adds 10 more frozen tasks at a time, up to 40, by itself in the same directory and under the same cap (the label
-   floor); `judge-check.json` lists every step. Exit status 0 means it passed; send `judge-check.json`. Exit status 7
+   floor; a `--fixture` check runs its tasks once); `judge-check.json` lists every step. Exit status 0 means it passed; send `judge-check.json`. Exit status 7
    means a judge did not pass: send `judge-check.json` to GBEV-3 and run nothing counted until GBEV-3 answers. Exit
    status 1 means some answer is missing or unjudged (re-judge, step 6). A cap stop (6), a truncation stop
    ([`LR_JUDGE_TRUNCATED`](#lr_judge_truncated)) and a resume work as for the run.

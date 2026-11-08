@@ -290,7 +290,8 @@ check adds 10 frozen tasks at a time, the next ones in the same spread over the 
 same run directory and ledger run under its $200 cap, up to 40 tasks. Only the label count extends the check, never a
 kappa, and the pass rule is applied once, to the final set. `judge-check.json` lists every step with each judge's label
 counts on both metrics. Opus judges only Sol rows, so its `correct and grounded` pool is 60 answers at 20 tasks, and
-labellers agreeing on fewer than about two in three would otherwise fail it on sample size alone.
+labellers agreeing on fewer than about two in three would otherwise fail it on sample size alone. The floor applies to
+the box's check; the fixture check in the paid smoke runs its five tasks once, so it stays inside its $10 cap.
 
 **Truncated judge calls.** Every judge and label row records the output-token cap it was sent (8192) and whether the
 call hit it. A truncated call is a `judge_error` and is not tried again. `judge-check.json` reports each judge model's
@@ -750,7 +751,7 @@ detectable differences for the four primaries at the kept N, and the counted run
 
 **Counted-run identity (recorded 2026-11-08, before the freeze; updated the same day for R78 and again for the label
 floor and truncation rules).** The counted run's and the judge check's harness digest must be
-`a7dea8c38a82a0216f5b97800bdcab1cb102d792405db0c1cbcf145aa0d5a727`. The digest covers the twenty files in
+`8c694fd8be1a68f379605b79543876a045f3b82f5b6e88d7d0a28edb494b8505`. The digest covers the twenty files in
 `HARNESS_FILES` (`eval/runner/live-recall/tasks.ts`): the runner, the judge, the agent loop, the budget ledger and the
 cost path they price with, including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json`
 must also show a `runner_commit` that contains 320db88b, the R78 commit and the label-floor and truncation commit, and
