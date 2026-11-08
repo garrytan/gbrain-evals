@@ -522,6 +522,115 @@ all six fixes above. At that commit, `eval/runner/q1/cells/rs1-cells.json` has S
 `d97c13018693b5fefaf537df7efb1e37df96e2afccacb5fcdadfb080b81bfd33`. Later docs-only commits don't change it. Each run
 records the commit it actually ran, and a run from any other code needs a further amendment.
 
+### 2026-11-08: R78, the gating judges and the judge check
+
+R78 (GBEV-3, 2026-11-08, from Garry: "Use Astra vs opus") replaces the frontier judges and adds a judge check before any
+counted run. GBEV-3 answered the plan's gate with its recommendations (reply "rec e1", gate_rev 1, rec_hash
+29f49b920e87), which adds d1a, d2a, d3a and e1 below. This amendment was decided and written before any RS1
+conversation was minted. Stage 1, on public data, was running at the code of `e07ddfc6` when R78 was decided, and
+nothing here uses a stage 1 result. Each change below has a test that fails on the code before its commit and passes at
+it, except the Q1 and F6 manifest pin in item 1, a guard that passes at both.
+
+1. **Gating judges** (`6fb905eb`). The frontier judge is now a gating judge, picked by the reader's family as before:
+
+   | Reader | Gating judge | Bridge judge (descriptive) |
+   |---|---|---|
+   | claude-opus-5-5 | gpt-6-astra | gpt-4.1-mini |
+   | gpt-6.1-sol | claude-opus-5-5 | gpt-4.1-mini |
+   | particle-1 | claude-opus-5-5 | gpt-4.1-mini |
+
+   No gating judge grades its own family's answers (GST-767), and particle-1 never judges. The map is RS1's alone
+   (`rs1JudgeOf` in `eval/runner/q1/cells/rs1.ts`, `3479f702`): every RS1 per-reader arm carries it as
+   `frontier.judge_by_reader`, and the cell definitions refuse an unmapped reader or a same-family mapping. The shared
+   `frontierJudgeOf` is unchanged from `e07ddfc6`, so the crew's BEAM judge rule (gpt-6.1-sol judges Claude and particle-1
+   rows) still holds for any other benchmark. Q1's and F6's cells are unchanged: no Q1 or F6 arm judges per reader, and a
+   test pins both manifests to the digests they had before R78 (`a922376b`).
+2. **The verdict rests on the gating view alone** (d1a; `81c4d24c`). The primary is now two tests, gbrain against the
+   memory-bank server and against the extract-first server, each under the gating view, and it passes only when both
+   lower bounds are above -3.5. The gpt-4.1-mini bridge view is reported beside it with its own bounds and never gates.
+   The common question set and the 5% drop cap are built from the gating view; the bridge view is scored on its own
+   subset with its own drop counts, so a missing bridge judgment can't drop a question from the verdict. The
+   secondaries, the worst-case sensitivity, the bootstrap agreement flag and the pilot's SDs and 2 x 2 correlation all
+   use the gating view. **The claim narrows**: "under both BEAM's judge and frontier judges" in "The question" and in
+   "What it can and can't claim" now reads "under the Astra/Opus judge view". The pre-pilot joint N under two tests is
+   24, 27 and 32 conversations (optimistic, central, pessimistic; `bun eval/runner/rs1/power.ts`, seed 20261108),
+   against 28 central under four tests. pricing.ts keeps N = 28 for its expected figure, and the pilot sets N_final as
+   before.
+3. **Judge settings** (e1; `ddf22396`, `e5bf6de5`). Both gating judges run at medium reasoning effort with an 8,000-token
+   output cap, in the judge check and in counted judging alike. A reply cut off at the cap is a `judge_error` at once and
+   counts against the drop cap. Truncated, refused and filtered replies never enter the judge cache. The metering proxy's
+   judge route admits 8,000 output tokens for these two judges only; every other judge keeps its 2,048-token cap, and Q1
+   and F6 campaigns keep the default caps.
+4. **What every judgment records** (`956dcae8`). Each judgment on a per-reader arm records its view (gating or
+   descriptive), the model versions the provider returned, and, for a gating judgment, the settings it was sent at, its
+   call count and its cache hits. verdict.ts refuses to count a gating judgment graded by the reader's family, by a judge
+   the map does not name, without a recorded view, without the pinned settings, or without a model version, and names
+   each such row.
+5. **Paired reporting** (d3a; `05b8a15a`). Every comparison (overall, per reader, per ability; each server; each view)
+   is reported as gbrain minus the server on the same questions: the mean paired difference over conversation means
+   with its two-sided 95% t interval on n - 1 degrees of freedom and, beside it, the labelled 90% interval, whose lower
+   end is the one-sided bound the verdict uses. Each row counts the questions where gbrain scored lower, higher and tied
+   (on the three-reader mean per question; on that reader's score for a reader row) and reads "no measurable difference"
+   when the 95% interval includes zero. Subgroup rows are descriptive, with no multiplicity correction, and a row with
+   fewer than 5 conversations reads "too few conversations".
+6. **The judge check** (R78 point 1, d2a; `d6e2a1f5`, `eval/runner/rs1/judge-check.ts`), on public data only, before
+   wave A:
+   - **Pool, about 160 answers, seeded.** (a) 80 of stage 1's real answers from all four rows and all three readers,
+     stratified by row, reader and stage 1's bridge outcome; (b) 40 BEAM-1M dev gold answers that pass the gold screen
+     (each rubric item's content appears in the gold; every exclusion is recorded); (c) 40 corruptions of screened gold,
+     each aimed at one rubric item. On the public BEAM-1M dev conversations the screen keeps 89 of 220 questions.
+     Event-ordering, instruction-following and preference-following questions stay out of (b) and (c), because their
+     score is not a rubric mean or their gold describes an answer instead of being one; their rubric calls stay in (a).
+   - **Corruptions are scripted, not written by a model, and weighted toward plausible wrong answers.** This differs
+     from the plan, which had gemini-3.8-flash write the wrong-entity and contradicted-fact edits; GBEV-49 asked for
+     scripted edits with no new model (`1e8b7422`). Each edit targets one named rubric item. The wrong-value
+     edits shift a number or date in the item (an hour stays an hour, a day stays a day), swap a name in it for a name
+     from another question's gold in the same conversation, replace the item's value with a value of the same kind from
+     another question's gold in the same conversation (the contradiction), or negate the item's statement. The rest drop
+     the item, replace the answer with an abstention or, on abstention questions, write an invented answer. Kinds take
+     turns, seven wrong-value turns, two drops and one abstention in ten, and a question that can't take its turn's kind
+     takes another wrong-value edit before a drop. The script checks that every edit removes its target item's content,
+     keeps every other item's and leaves at least 20 letters. At seed 20261108 on the public BEAM-1M dev conversations
+     the 40 come out as 18 wrong-value edits (10 number shifts, 4 contradictions, 3 name swaps, 1 date shift), 9 drops,
+     3 abstentions and 10 invented answers. No negation fits at this seed, and some name swaps cross entity types (a
+     product name for a person's).
+   - **Unit and split.** The rubric-item judgment, pass at a score of 1.0 and fail below it; weighted kappa on the 0,
+     0.5 and 1 scale is reported beside it. Construction labels: every item of a gold answer should pass; in a
+     corruption the targeted item should fail (every item, for an abstention or an invented answer) and the rest pass.
+   - **Grading.** gpt-6-astra and claude-opus-5-5 grade every answer with the production request at the pinned
+     settings; gpt-4.1-mini grades every answer with its protocol request, descriptively. Every call goes through the
+     judge cache and one ledger lease.
+   - **Labelled set.** The items Astra and Opus grade the same way. It should hold at least 40 items and 15 of each
+     class; a class below 15 reports n/a for its per-class numbers, and every shortfall goes to GBEV-3.
+   - **Gates.** (i) The Astra-Opus Cohen's kappa on every item both graded, at least 0.6; (ii) each gating judge's kappa
+     against the construction labels (classes b and c), at least 0.6; and each gating judge's truncation rate, at most
+     1%. Point estimates gate; their 95% intervals are reported.
+   - **Stop rule.** Any failed gate stops wave A (the check exits 3 with `JUDGE_CHECK_STOP`), and every number goes to
+     GBEV-3. Moving particle-1's rows to Astra is an option GBEV-3 may choose after the check, never applied
+     automatically, and it is not built yet.
+   - **Reported for every judge:** catch rate on bad items, false-fail rate on good items, and kappa against the
+     labelled set, overall and by class, with 95% intervals (Wilson for rates, the large-sample kappa SE), plus each
+     judge's errors, truncations, cache hits and model versions.
+   - **Licence.** BEAM's data is CC BY-SA 4.0. The published `judge-check.json` and `judge-check.md` hold ids, hashes,
+     labels and scores, never answer, gold or corruption text.
+7. **Money: two budget lines** (R78 point 9, GBEV-3 from Garry, 2026-11-08: "If we use Astra, then feel free to double
+   the eval cost. It's fine."; `97c45d18`). The **Astra line** is the whole judge check (every grader's calls) plus
+   gpt-6-astra's share of counted judging. It is priced on its own, reported beside the rest, and sits outside the
+   check-in. Everything else is the **other line**, Opus's and gpt-4.1-mini's counted judging included. The check-in
+   compares the other line's projected spend against its fixed line, as before, and goes to GBEV-3 when the projection
+   passes it. Each gating judge is priced at its own ledger rate, at 3 calls of 900 input and 582 output tokens per
+   answer, a figure back-solved from GST-1365's census and not yet measured for Astra. The judge check is priced from
+   its planned calls (826 per judge) at each grader's rate, and its paid-window cap is that estimate plus a 50% runaway
+   margin. The cells' estimate in `rs1-cells.json` and the caps derived from it are regenerated by their generator, and
+   stage 1 still fits its fixed cap. No provider prompt caching is added: the judge bodies stay as they are, and
+   pricing assumes no cache discount. After the judge check, pricing.ts reruns with the check's measured tokens and
+   `--spent-usd` and `--astra-spent-usd` from the ledger.
+8. **Order.** The judge check runs in its own paid window. Wave A waits on the check passing, the Voyage check, and
+   GBEV-3's go if the check-in projection passes its line.
+9. **The code counted runs start from changes.** These commits change `rs1-cells.json`, so the commit and digest
+   recorded in the amendment above no longer apply. A further amendment records the pushed commit and the new
+   `rs1-cells.json` SHA-256 before any counted run.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
