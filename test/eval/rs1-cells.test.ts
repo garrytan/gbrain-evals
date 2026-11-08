@@ -43,12 +43,14 @@ describe('rs1-cells.json', () => {
       const arm = c.arms[0];
       if (c.system === 'baseline-none') { expect(arm.frontier ?? null).toBeNull(); continue; }
       expect(arm.frontier?.per_reader).toBe(true);
-      expect(frontierJudgesFor(arm, OPUS)).toEqual(['openai:gpt-6.1-sol']);
+      expect(frontierJudgesFor(arm, OPUS)).toEqual(['openai:gpt-6-astra']);
       expect(frontierJudgesFor(arm, SOL)).toEqual(['anthropic:claude-opus-5-5']);
+      expect(arm.frontier?.settings).toEqual({ effort: 'medium', max_tokens: 8000 });
     }
     const plans = m.reread_plans.filter(p => p.set === 'RS1');
     expect(plans.map(p => p.reader)).toEqual([PARTICLE, PARTICLE, PARTICLE, PARTICLE]);
-    expect(plans.map(p => p.judges)).toEqual([...Array(3).fill(['openai:gpt-4.1-mini', 'openai:gpt-6.1-sol']), ['openai:gpt-4.1-mini']]);
+    expect(plans.map(p => p.judges)).toEqual([...Array(3).fill(['openai:gpt-4.1-mini', 'anthropic:claude-opus-5-5']), ['openai:gpt-4.1-mini']]);
+    expect(m.frontier_judges).toEqual({ [OPUS]: 'openai:gpt-6-astra', [SOL]: 'anthropic:claude-opus-5-5', [PARTICLE]: 'anthropic:claude-opus-5-5' });
   });
 
   test('stage 1 fits its $60 cap, and an estimate above it refuses with RS1_STAGE1_OVER_CAP', () => {
@@ -62,7 +64,7 @@ describe('rs1-cells.json', () => {
     const cellsUsd = m.cells.reduce((s, c) => s + c.estimate.usd, 0);
     const leases = m.cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0);
     expect(counted.cap_usd).toBe(Math.round(Math.max(cellsUsd * 1.5, leases) * 100) / 100);
-    expect(counted.cap_usd).toBe(760.79);
+    expect(counted.cap_usd).toBe(1032.17);
     expect(m.cap_usd).toBe(counted.cap_usd);
     expect(counted.estimate_usd).toBe(Math.round((cellsUsd + m.reread_plans.filter(p => p.block === 'RS1').reduce((s, p) => s + p.estimate.usd, 0)) * 100) / 100);
   });
@@ -70,26 +72,36 @@ describe('rs1-cells.json', () => {
   test('stage 1\'s $60 covers the dry-run campaign and its re-reads together, and a larger stage 1 re-read ledger cap refuses', () => {
     const rereads = Math.round(m.reread_plans.filter(p => p.block === 'RS1-S1').reduce((s, p) => s + p.estimate.usd, 0) * 100) / 100;
     expect(m.stage1_reread_cap_usd).toBe(rereads);
-    expect(m.stage1_reread_cap_usd).toBe(4.95);
-    expect(m.dry_run_cap_usd).toBe(55.05);
+    expect(m.stage1_reread_cap_usd).toBe(6.33);
+    expect(m.dry_run_cap_usd).toBe(53.67);
     expect(m.dry_run_cap_usd + m.stage1_reread_cap_usd).toBe(m.stage1_cap_usd);
     expect(m.smoke_cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0)).toBeLessThanOrEqual(m.dry_run_cap_usd);
     const out = mkdtempSync(join(tmpdir(), 'rs1-stage1-reread-'));
     const run = (cap: string) => Bun.spawnSync(['bun', 'eval/runner/q1/reread-cell.ts', '--cell', 'rs1-dev2.gbrain-defaults.rs1-stable', '--arm', 'p', '--source', join(out, 'missing'), '--reader', PARTICLE,
       '--out', join(out, `o${cap}`), '--budget-ledger', join(out, 'ledger'), '--run-id', `r${cap}`, '--lease-usd', '1', '--ledger-cap-usd', cap, '--manifest', 'rs1', '--keyless-upstream', 'http://127.0.0.1:9'], { cwd: ROOT }).stderr.toString();
     try {
-      expect(run('5')).toContain('above the $4.95 stage 1 keeps for its re-reads');
-      expect(run('4.95')).not.toContain('stage 1 keeps for its re-reads');
+      expect(run('7')).toContain('above the $6.33 stage 1 keeps for its re-reads');
+      expect(run('6.33')).not.toContain('stage 1 keeps for its re-reads');
     } finally { rmSync(out, { recursive: true, force: true }); }
   }, 60_000);
 });
 
 describe('judges', () => {
-  test('the frontier judge is picked by the reader family; other families are refused', () => {
-    expect(frontierJudgeOf(OPUS)).toBe('openai:gpt-6.1-sol');
-    expect(frontierJudgeOf(PARTICLE)).toBe('openai:gpt-6.1-sol');
+  test('the gating judge is picked by the reader family (R78: Astra for Claude, Opus for Sol and particle-1); other families are refused', () => {
+    expect(frontierJudgeOf(OPUS)).toBe('openai:gpt-6-astra');
+    expect(frontierJudgeOf(PARTICLE)).toBe('anthropic:claude-opus-5-5');
     expect(frontierJudgeOf(SOL)).toBe('anthropic:claude-opus-5-5');
     expect(() => frontierJudgeOf('gemini:gemini-3.8-flash')).toThrow(/no per-reader frontier judge/);
+  });
+
+  test('a per-reader plan without the pinned judge settings is refused', () => {
+    const c = gbrain();
+    delete c.arms[0].frontier!.settings;
+    expect(definitionProblems(c, KINDS).join('\n')).toContain('frontier.settings must pin the per-reader judges');
+    const d = gbrain();
+    d.arms[0].frontier!.settings = { effort: 'high', max_tokens: 8000 };
+    expect(definitionProblems(d, KINDS).join('\n')).toContain('frontier.settings must pin the per-reader judges');
+    expect(definitionProblems(gbrain(), KINDS)).toEqual([]);
   });
 
   test('completeness needs the canonical judge and, at replicate 0 on a per-reader arm, the frontier judge', () => {

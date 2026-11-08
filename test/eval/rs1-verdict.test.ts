@@ -15,7 +15,7 @@ const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 const HEX = sha('x');
 const INSTRUMENT = 'beam-rs1';
 const INST = instrumentFor(INSTRUMENT);
-const JUDGE = { [OPUS]: 'openai:gpt-6.1-sol', [PARTICLE]: 'openai:gpt-6.1-sol', [SOL]: 'anthropic:claude-opus-5-5' } as Record<string, string>;
+const JUDGE = { [OPUS]: 'openai:gpt-6-astra', [PARTICLE]: 'anthropic:claude-opus-5-5', [SOL]: 'anthropic:claude-opus-5-5' } as Record<string, string>;
 const tmp = mkdtempSync(join(tmpdir(), 'rs1-verdict-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 const nd = (xs: unknown[]) => xs.map(x => JSON.stringify(x) + '\n').join('');

@@ -475,9 +475,9 @@ describe('re-read: particle-1 through the lease proxy', () => {
 });
 
 describe('re-read: RS1 per-reader frontier judging', () => {
-  // Value: protects=RS1's particle-1 rows get both judge views (gpt-4.1-mini and gpt-6.1-sol) and count as complete only when both graded; fails_when=a per-reader arm's re-read is judged by the canonical judge alone or by another frontier judge, or its receipt leaves out the frontier view; why_new=GST-1886; seam=fake_provider.py as Particle, scripted judges; no_claim=the judges' grades
-  test('each particle-1 answer on a per-reader arm is judged by the canonical judge and by gpt-6.1-sol, and the receipt names that judge', async () => {
-    const d = cellDef([{ id: 'component-b8000', mode: 'packed', budget: 8000, frontier: { judges: ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'], readers: null, sample: null, per_reader: true } }]);
+  // Value: protects=RS1's particle-1 rows get both judge views (gpt-4.1-mini and claude-opus-5-5) and count as complete only when both graded; fails_when=a per-reader arm's re-read is judged by the canonical judge alone or by another frontier judge, or its receipt leaves out the frontier view; why_new=GST-1886; seam=fake_provider.py as Particle, scripted judges; no_claim=the judges' grades
+  test('each particle-1 answer on a per-reader arm is judged by the canonical judge and by claude-opus-5-5, and the receipt names that judge', async () => {
+    const d = cellDef([{ id: 'component-b8000', mode: 'packed', budget: 8000, frontier: { judges: ['anthropic:claude-opus-5-5', 'openai:gpt-6-astra'], readers: null, sample: null, per_reader: true, settings: { effort: 'medium', max_tokens: 8000 } } }]);
     const a = d.arms[0];
     const src = join(tmp, 'source-per-reader');
     const ran = await runCell(d, { out: src, ...quiet }, { corpus, system: new FakeMemorySystem(), reader: scriptedReader(), judge: scriptedJudge() });
@@ -488,12 +488,12 @@ describe('re-read: RS1 per-reader frontier judging', () => {
       const res = await runReread(prepareReread(d, a, { sources: [join(src, 'runs', d.id)], reader: PARTICLE, out: join(tmp, 'reread-per-reader') }, { corpus }), { providerProxy: lp.url, lease: { usd: 1, usageLog: lp.usageLog } }, { judge });
       expect(res.status).toBe('complete');
       const canonical = instrumentFor('locomo');
-      expect(new Set(judge.judges)).toEqual(new Set([canonical.canonical_judge, 'openai:gpt-6.1-sol']));
+      expect(new Set(judge.judges)).toEqual(new Set([canonical.canonical_judge, 'anthropic:claude-opus-5-5']));
       const answers = ndjson(join(res.dir, 'answers.ndjson')).filter(x => x.outcome === 'scored');
       const judgments = ndjson(join(res.dir, 'judgments.ndjson'));
-      expect(judgments.map(j => j.instrument_id).sort()).toEqual([...answers.map(() => canonical.id), ...answers.map(() => `${canonical.id}@openai:gpt-6.1-sol`)].sort());
+      expect(judgments.map(j => j.instrument_id).sort()).toEqual([...answers.map(() => canonical.id), ...answers.map(() => `${canonical.id}@anthropic:claude-opus-5-5`)].sort());
       const rec = JSON.parse(readFileSync(join(res.dir, 'receipt.json'), 'utf8'));
-      expect(rec.frontier).toEqual({ per_reader: true, judge_by_reader: { [PARTICLE]: 'openai:gpt-6.1-sol' }, instrument_ids: [`${canonical.id}@openai:gpt-6.1-sol`] });
+      expect(rec.frontier).toEqual({ per_reader: true, judge_by_reader: { [PARTICLE]: 'anthropic:claude-opus-5-5' }, instrument_ids: [`${canonical.id}@anthropic:claude-opus-5-5`] });
       expect(rec.counts.unjudged).toBe(0);
     } finally { lp.stop(); }
   });

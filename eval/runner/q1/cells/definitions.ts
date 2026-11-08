@@ -111,9 +111,10 @@ export interface ArmDefinition {
   /**
    * Frontier judges re-judging this arm's answers (replicate 0) under their own instrument ids: every answer of `readers`
    * (null: every reader), or a seeded sample of `sample` questions. With `per_reader` (RS1) each answer gets exactly one
-   * frontier judge, frontierJudgeOf(its reader), and `judges` is the derived set of those judges.
+   * frontier judge, frontierJudgeOf(its reader), `judges` is the derived set of those judges, and `settings` pins every
+   * one of their calls (PER_READER_JUDGE_SETTINGS).
    */
-  frontier: { judges: string[]; readers: string[] | null; sample: number | null; per_reader?: true } | null;
+  frontier: { judges: string[]; readers: string[] | null; sample: number | null; per_reader?: true; settings?: JudgeSettings } | null;
   /** Judge-only repeats on fixed answers (eval/runner/judge-repeat.ts), planned here, run after the cell. */
   judge_repeats: { count: number; readers: string[] | null } | null;
   label: string;
@@ -387,12 +388,21 @@ export const RS1_ASSUMPTIONS = {
    */
   conversation_tokens: { RS1: 1_070_000 } as Record<string, number>,
   /**
-   * Judging dollars per answer on RS1's sets, measured on F6's BEAM-1M answers: a per-row frontier judgment $113.31 over
-   * 3,301 answers (GST-1365 census B), about 3.2 times what Q1's token assumption gives, and the canonical gpt-4.1-mini
-   * judgment $0.0028 (F6 dry run). They size RS1's estimates and leases; Q1's and F6's keep their token assumptions.
+   * The canonical gpt-4.1-mini judgment per answer on RS1's sets, $0.0028 (F6 dry run). It sizes RS1's estimates and
+   * leases; Q1's and F6's keep their token assumptions.
    */
-  judge_usd_per_answer: { frontier: 113.31 / 3301, canonical: 0.0028 },
+  judge_usd_per_answer: { canonical: 0.0028 },
+  /**
+   * A gating judgment's tokens on RS1's sets: BEAM's three rubric calls of 900 input tokens, and 582 output tokens per call
+   * (reasoning included), back-solved so that an even gpt-6.1-sol and claude-opus-5-5 mix gives GST-1365 census B's
+   * measured $113.31 over 3,301 answers. Priced at each judge's own rate (rs1GatingJudgeUsd), so gpt-6-astra costs about
+   * $0.114 an answer and claude-opus-5-5 about $0.046, until the judge check measures each judge's tokens.
+   */
+  gating_judge: { calls: 3, input: 900, output: 582 },
 };
+
+/** One RS1 gating judgment's dollars per answer at the judge's own price (RS1_ASSUMPTIONS.gating_judge). */
+export const rs1GatingJudgeUsd = (judge: string) => { const g = RS1_ASSUMPTIONS.gating_judge; const p = priceOf(judge); return g.calls * (g.input * p.input + g.output * p.output) / 1e6; };
 
 /** An embedding model's list price per million tokens (gbrain's own price table, as budget-ledger prices embeddings). */
 function embeddingPrice(model: string): number {
@@ -463,16 +473,20 @@ export function ingestRate(def: Pick<CellDefinition, 'system' | 'configuration' 
 }
 
 /**
- * RS1's per-row frontier judge (GST-767; CREW.md's BEAM judge rule): one frontier judge per answer, never the reader's own
- * family and never particle-1. Anthropic and particle readers are judged by gpt-6.1-sol, OpenAI readers by
- * claude-opus-5-5; any other reader is refused, since no judge is preregistered for it.
+ * RS1's per-row gating judge (R78 as amended by GBEV-3, 2026-11-08: "Use Astra vs opus"; GST-767): one judge per answer,
+ * never the reader's own family and never particle-1. Anthropic readers are judged by gpt-6-astra, OpenAI and particle
+ * readers by claude-opus-5-5; any other reader is refused, since no judge is preregistered for it.
  */
 export function frontierJudgeOf(reader: string): string {
   const family = reader.split(':')[0];
-  if (family === 'anthropic' || family === 'particle') return 'openai:gpt-6.1-sol';
-  if (family === 'openai') return 'anthropic:claude-opus-5-5';
-  throw new Error(`no per-reader frontier judge is preregistered for ${reader} (anthropic and particle readers: openai:gpt-6.1-sol; openai readers: anthropic:claude-opus-5-5)`);
+  if (family === 'anthropic') return 'openai:gpt-6-astra';
+  if (family === 'openai' || family === 'particle') return 'anthropic:claude-opus-5-5';
+  throw new Error(`no per-reader frontier judge is preregistered for ${reader} (anthropic readers: openai:gpt-6-astra; openai and particle readers: anthropic:claude-opus-5-5)`);
 }
+
+/** The request settings every per-reader judge is pinned to (GBEV-3, 2026-11-08, gate reply e1): medium effort, an 8,000-token output cap. */
+export const PER_READER_JUDGE_SETTINGS = { effort: 'medium', max_tokens: 8000 } as const;
+export type JudgeSettings = { effort: string; max_tokens: number };
 
 /** The frontier judges one answer of `reader` gets on this arm (replicate 0, in the sample): none, the per-reader judge, or every listed judge. */
 export function frontierJudgesFor(arm: Pick<ArmDefinition, 'frontier'>, reader: string): string[] {
@@ -510,7 +524,7 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
     if (arm.mode === 'retrieval-only') continue;
     const judged = arm.readers.reduce((s, r) => s + answers(r), 0);
     add('judges', judged * (measured?.canonical ?? judgeCost(def.benchmark)));
-    if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured?.frontier ?? judgeCost(def.benchmark, frontierJudgeOf(r))));
+    if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured ? rs1GatingJudgeUsd(frontierJudgeOf(r)) : judgeCost(def.benchmark, frontierJudgeOf(r))));
     else if (arm.frontier) {
       const fr = arm.frontier.readers ?? arm.readers;
       const items = arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) * fr.length : n * fr.length;
@@ -833,6 +847,7 @@ function perReaderProblems(a: ArmDefinition, w: string): string[] {
     derived.add(j);
   }
   if ([...f.judges].sort().join() !== [...derived].sort().join()) p.push(`${w}: frontier.judges must be the per-reader judges of its readers (${[...derived].sort().join(', ')})`);
+  if (JSON.stringify(f.settings ?? null) !== JSON.stringify(PER_READER_JUDGE_SETTINGS)) p.push(`${w}: frontier.settings must pin the per-reader judges to ${JSON.stringify(PER_READER_JUDGE_SETTINGS)}, not ${JSON.stringify(f.settings ?? null)}`);
   return p;
 }
 

@@ -13,9 +13,11 @@
  *   Re-read plans: particle-1 re-reads every row's frozen contexts byte for byte (reread-cell.ts), each with its own
  *     estimate; they run only in paid windows.
  *
- * Judging: every answer gets BEAM's canonical judge (gpt-4.1-mini). The three system rows also get exactly one frontier
- * judge per answer by the reader's family (frontier.per_reader, definitions.ts frontierJudgeOf); the floor gets the
- * canonical judge only. The two judge views are scored apart (eval/runner/rs1/verdict.ts), never averaged.
+ * Judging: every answer gets BEAM's canonical judge (gpt-4.1-mini), descriptive only since the R78 amendment. The three
+ * system rows also get exactly one gating judge per answer by the reader's family (frontier.per_reader, definitions.ts
+ * frontierJudgeOf: gpt-6-astra for claude-opus-5-5, claude-opus-5-5 for gpt-6.1-sol and particle-1), pinned to medium
+ * effort and an 8,000-token output cap; the floor gets the canonical judge only. The two judge views are scored apart
+ * (eval/runner/rs1/verdict.ts), never averaged, and only the gating view decides.
  *
  * `bun eval/runner/q1/cells/rs1.ts` regenerates rs1-cells.json; a test fails when the committed file is stale.
  */
@@ -23,7 +25,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { ScoreboardMessage } from '../scoreboard-errors.ts';
 import {
-  ALL_SETS, ASSUMPTIONS, estimateCell, F6_ASSUMPTIONS, frontierJudgeOf, makeCell, MANIFEST_SCHEMA, priceOf, RS1_ASSUMPTIONS,
+  ALL_SETS, ASSUMPTIONS, estimateCell, F6_ASSUMPTIONS, frontierJudgeOf, makeCell, MANIFEST_SCHEMA, PER_READER_JUDGE_SETTINGS, priceOf, RS1_ASSUMPTIONS,
   type ArmDefinition, type ArmSpec, type BlockId, type CellDefinition, type CellEstimate, type Manifest, type RS1BlockId, type SetId,
 } from './definitions.ts';
 import { extractionCapUsd, F6_ARMS, withHours, withLease } from './f6.ts';
@@ -45,7 +47,7 @@ export const PARTICLE = 'particle:particle-1';
 /** Live readers; particle-1 re-reads the frozen contexts (reread-cell.ts), so it is the third reader of every row. */
 export const RS1_READERS = [OPUS, SOL];
 
-const perReader = (readers: string[]): NonNullable<ArmDefinition['frontier']> => ({ judges: [...new Set(readers.map(frontierJudgeOf))].sort(), readers: null, sample: null, per_reader: true });
+const perReader = (readers: string[]): NonNullable<ArmDefinition['frontier']> => ({ judges: [...new Set(readers.map(frontierJudgeOf))].sort(), readers: null, sample: null, per_reader: true, settings: { ...PER_READER_JUDGE_SETTINGS } });
 const p = (): ArmSpec => ({ id: 'p', mode: 'packed', budget: 8000, label: F6_ARMS.p.label, retrieval: F6_ARMS.p.retrieval, readers: RS1_READERS, frontier: perReader(RS1_READERS) });
 const b8 = (frontier: boolean): ArmSpec => ({ id: 'component-b8000', mode: 'packed', budget: 8000, label: 'component, 8,000 tokens', readers: RS1_READERS, frontier: frontier ? perReader(RS1_READERS) : null });
 
