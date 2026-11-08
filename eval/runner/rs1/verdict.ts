@@ -286,7 +286,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
         const byKey = new Map(ans.map(a => [`read:${a.answer_id.slice(0, 16)}`, a.reader]));
         for (const m of readRecordsLoose(meters)) { const reader = m.phase === 'reader' ? byKey.get(String(m.key)) : undefined; if (reader) { readerUsd.set(reader, (readerUsd.get(reader) ?? 0) + Number(m.usd)); metered.add(reader); } }
       }
-      for (const a of ans) if (!metered.has(a.reader)) unmetered.add(a.reader);
+      for (const a of ans) if (a.context_sha256 !== sha256(`no-context|${a.outcome}`) && !metered.has(a.reader)) unmetered.add(a.reader);
     }
     if (finalSet) {
       const absent = finalSet.filter(c => !held.has(c)), extra = [...held.keys()].filter(c => !finalSet!.includes(c)).sort();
@@ -318,7 +318,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
     if (role !== 'floor') fill[role] = meanOf(fills);
     for (const reader of READERS) {
       const n = answered.get(reader) ?? 0;
-      costs.push({ row: role, reader, usd_per_question: !sharedKnown || unmetered.has(reader) || !readerUsd.has(reader) || !n || !questionsInRow ? null : shared / questionsInRow + readerUsd.get(reader)! / n });
+      costs.push({ row: role, reader, usd_per_question: !sharedKnown || unmetered.has(reader) || !n || !questionsInRow ? null : shared / questionsInRow + (readerUsd.get(reader) ?? 0) / n });
     }
   }
   for (const [row, n] of scheduled) if (n > planned.size) refuse(`${row} scheduled ${n} questions and only ${planned.size} have a row in any system row, so ${n - planned.size} would leave the planned set unseen; resume the launch units that are missing rows`);

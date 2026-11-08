@@ -40,7 +40,7 @@ interface Opts {
   rereadPatch?: (system: string, unit: number, receipt: Record<string, any>) => void;
   /** Write the unit's meters.ndjson (a reader meter per live answer). */
   meters?: (system: string, unit: number) => boolean;
-  /** A question whose retrieval failed: its row records fill_rate null. */
+  /** A question whose retrieval failed: its row records fill_rate null, and its answers are written as cell.ts writes them (no context, zero usage, no reader meter). */
   failedRetrieval?: (system: string, c: number, q: number) => boolean;
 }
 
@@ -73,8 +73,9 @@ function build(name: string, o: Opts = {}) {
       const qids = scheduledQids.filter(([c, q]) => !o.noRow?.(system, c, q));
       const rows = qids.map(([c, q]) => ({ id: `${conv(c)}:ability${q % 2}:${q}`, conversation: conv(c), cell_id: armCell, realization_id: 'r', fill_rate: o.failedRetrieval?.(system, c, q) ? null : o.fill?.[system] ?? 0.95, delivered_tokens: { cl100k_base: 7600 }, packing_loss: null, provenance_status: 'exact', fanout: { mean: 1, max: 1 } }));
       const answersFor = (cellId: string, readers: string[]) => readers.flatMap(reader => qids.map(([c, q]) => {
-        const s = score(system, reader, c, q);
         const question_id = `${conv(c)}:ability${q % 2}:${q}`;
+        if (o.failedRetrieval?.(system, c, q)) return { answer: { answer_id: answerId(cellId, question_id, reader, 0), cell_id: cellId, realization_id: 'r', question_id, conversation: conv(c), system, arm: 'b8000', reader, replicate: 0, effort: 'medium', context_sha256: sha('no-context|retrieval_error'), text: '', usage: { input: 0, output: 0, cache_read: 0, cache_write: 0 }, provider_input_tokens: null, latency_ms: 0, outcome: 'retrieval_error' }, score: 'retrieval_error' as number | string };
+        const s = score(system, reader, c, q);
         return { answer: { answer_id: answerId(cellId, question_id, reader, 0), cell_id: cellId, realization_id: 'r', question_id, conversation: conv(c), system, arm: 'b8000', reader, replicate: 0, effort: 'medium', context_sha256: HEX, text: 'a', usage: { input: 1, output: 1, cache_read: 0, cache_write: 0 }, provider_input_tokens: 1, latency_ms: 1, outcome: typeof s === 'string' ? s : 'scored' }, score: s };
       }));
       const judgmentsFor = (xs: ReturnType<typeof answersFor>) => xs.flatMap(({ answer, score: s }) => typeof s === 'string' ? [] : [
@@ -94,7 +95,7 @@ function build(name: string, o: Opts = {}) {
       writeFileSync(join(dir, 'receipt.json'), JSON.stringify(receipt));
       if (o.meters?.(system, u)) {
         mkdirSync(join(out, 'runs', def.id), { recursive: true });
-        writeFileSync(join(out, 'runs', def.id, 'meters.ndjson'), nd(live.map(x => ({ phase: 'reader', key: `read:${x.answer.answer_id.slice(0, 16)}`, usd: 0.01 }))));
+        writeFileSync(join(out, 'runs', def.id, 'meters.ndjson'), nd(live.filter(x => x.answer.context_sha256 === HEX).map(x => ({ phase: 'reader', key: `read:${x.answer.answer_id.slice(0, 16)}`, usd: 0.01 }))));
       }
       if (o.dropReread === system && u === 0) continue;
       const rid = rereadCellId(armCell, PARTICLE);
@@ -206,6 +207,15 @@ describe('verdict.ts receipts', () => {
     expect(markdown(part)).toContain('| anthropic:claude-opus-5-5 | gbrain | n/a |');
     const reread = analyze(load(build('meters-reread', { meters: () => true, rereadPatch: (s, u, r) => { if (s === 'gbrain-defaults' && u === 0) delete r.spend; } })));
     expect(reread.table.find(t => t.reader === PARTICLE && t.row === 'gbrain')!.usd_per_question).toBeNull();
+  });
+
+  test('a unit where every retrieval failed for a reader prices that reader\'s spend there at $0, not n/a', () => {
+    const a = analyze(load(build('meters-failed-unit', { meters: () => true, failedRetrieval: (s, c) => s === 'ext-memory-bank' && c < 5 })));
+    const row = a.table.find(t => t.reader === OPUS && t.row === 'memory-bank')!;
+    expect(row.usd_per_question).toBe(0.1175);
+    expect(markdown(a)).toContain('| anthropic:claude-opus-5-5 | memory-bank | 0.1175 |');
+    const missing = analyze(load(build('meters-failed-missing', { meters: (s, u) => !(s === 'ext-memory-bank' && u === 1), failedRetrieval: (s, c) => s === 'ext-memory-bank' && c < 5 })));
+    expect(missing.table.find(t => t.reader === OPUS && t.row === 'memory-bank')!.usd_per_question).toBeNull();
   });
 
   test('a product failure scores 0 and stays; harness drops over 5% make the comparisons invalid', () => {
