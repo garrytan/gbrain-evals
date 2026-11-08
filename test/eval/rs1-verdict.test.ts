@@ -236,9 +236,11 @@ describe('verdict.ts receipts', () => {
   test('refuses receipts whose gating judgment was made under the pre-R78 mapping (gpt-6.1-sol on claude-opus-5-5 rows)', () => {
     const b = build('old-mapping');
     const fs = require('node:fs') as typeof import('node:fs');
-    const file = b.dirs.flatMap(d => fs.readdirSync(join(d, 'cells')).map(c => join(d, 'cells', c, 'judgments.ndjson'))).find(f => f.includes('gbrain-defaults') && fs.existsSync(f))!;
+    const file = b.dirs.flatMap(d => fs.readdirSync(join(d, 'cells')).sort().map(c => join(d, 'cells', c, 'judgments.ndjson')))
+      .find(f => f.includes('gbrain-defaults') && fs.existsSync(f) && fs.readFileSync(f, 'utf8').includes('"judge":"openai:gpt-6-astra"'))!;
     const lines = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
     const i = lines.findIndex(j => j.judge === 'openai:gpt-6-astra');
+    expect(i).toBeGreaterThanOrEqual(0);
     lines[i] = { ...lines[i], judge: 'openai:gpt-6.1-sol', instrument_id: `${INSTRUMENT}@openai:gpt-6.1-sol` };
     fs.writeFileSync(file, lines.map(l => JSON.stringify(l)).join('\n') + '\n');
     expect(() => load(b)).toThrow(/not its mapped judge openai:gpt-6-astra/);
