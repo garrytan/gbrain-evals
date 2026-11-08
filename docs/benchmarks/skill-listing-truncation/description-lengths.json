@@ -1,0 +1,663 @@
+{
+  "schema_version": 1,
+  "measure": "characters (code points) of the frontmatter description after collapsing whitespace",
+  "sources": [
+    {
+      "name": "gbrain bundled skills",
+      "repo": "github.com/garrytan/gbrain",
+      "commit": "ff11cb911c7434690bb40124372906773238d9c9",
+      "licence": "MIT (repository LICENSE)",
+      "glob": "skills/*/SKILL.md",
+      "count": 75,
+      "skills": [
+        {
+          "skill": "academic-verify",
+          "chars": 383
+        },
+        {
+          "skill": "archive-crawler",
+          "chars": 299
+        },
+        {
+          "skill": "article-enrichment",
+          "chars": 222
+        },
+        {
+          "skill": "ask-user",
+          "chars": 290
+        },
+        {
+          "skill": "blog-ingest",
+          "chars": 497
+        },
+        {
+          "skill": "book-mirror",
+          "chars": 639
+        },
+        {
+          "skill": "brain-ingest-gate",
+          "chars": 459
+        },
+        {
+          "skill": "brain-link-discipline",
+          "chars": 480
+        },
+        {
+          "skill": "brain-ops",
+          "chars": 197
+        },
+        {
+          "skill": "brain-pdf",
+          "chars": 232
+        },
+        {
+          "skill": "brain-taxonomist",
+          "chars": 282
+        },
+        {
+          "skill": "briefing",
+          "chars": 80
+        },
+        {
+          "skill": "bulk-ingestion",
+          "chars": 437
+        },
+        {
+          "skill": "capture",
+          "chars": 195
+        },
+        {
+          "skill": "chat-connectors",
+          "chars": 381
+        },
+        {
+          "skill": "citation-fixer",
+          "chars": 283
+        },
+        {
+          "skill": "citation-graph-ingest",
+          "chars": 584
+        },
+        {
+          "skill": "cold-start",
+          "chars": 406
+        },
+        {
+          "skill": "company-brainify",
+          "chars": 480
+        },
+        {
+          "skill": "concept-synthesis",
+          "chars": 416
+        },
+        {
+          "skill": "context-audit",
+          "chars": 712
+        },
+        {
+          "skill": "conversation-archive",
+          "chars": 478
+        },
+        {
+          "skill": "correction-pipeline",
+          "chars": 355
+        },
+        {
+          "skill": "cron-scheduler",
+          "chars": 152
+        },
+        {
+          "skill": "cross-modal-review",
+          "chars": 305
+        },
+        {
+          "skill": "daily-task-manager",
+          "chars": 211
+        },
+        {
+          "skill": "daily-task-prep",
+          "chars": 153
+        },
+        {
+          "skill": "data-loss-gate",
+          "chars": 397
+        },
+        {
+          "skill": "data-research",
+          "chars": 257
+        },
+        {
+          "skill": "db-repair",
+          "chars": 392
+        },
+        {
+          "skill": "draft-in-voice",
+          "chars": 509
+        },
+        {
+          "skill": "eiirp",
+          "chars": 751
+        },
+        {
+          "skill": "enrich",
+          "chars": 211
+        },
+        {
+          "skill": "fact-check",
+          "chars": 637
+        },
+        {
+          "skill": "frontmatter-guard",
+          "chars": 385
+        },
+        {
+          "skill": "functional-area-resolver",
+          "chars": 358
+        },
+        {
+          "skill": "gbrain-advisor",
+          "chars": 302
+        },
+        {
+          "skill": "gbrain-upgrade",
+          "chars": 388
+        },
+        {
+          "skill": "google-loops",
+          "chars": 335
+        },
+        {
+          "skill": "idea-ingest",
+          "chars": 276
+        },
+        {
+          "skill": "idea-lineage",
+          "chars": 276
+        },
+        {
+          "skill": "ingest",
+          "chars": 80
+        },
+        {
+          "skill": "maintain",
+          "chars": 203
+        },
+        {
+          "skill": "mcp-access",
+          "chars": 164
+        },
+        {
+          "skill": "measure-before-you-fix",
+          "chars": 345
+        },
+        {
+          "skill": "media-ingest",
+          "chars": 217
+        },
+        {
+          "skill": "meeting-ingestion",
+          "chars": 652
+        },
+        {
+          "skill": "migrate",
+          "chars": 76
+        },
+        {
+          "skill": "minion-orchestrator",
+          "chars": 573
+        },
+        {
+          "skill": "perplexity-research",
+          "chars": 346
+        },
+        {
+          "skill": "postgres-adopt",
+          "chars": 359
+        },
+        {
+          "skill": "publish",
+          "chars": 74
+        },
+        {
+          "skill": "query",
+          "chars": 190
+        },
+        {
+          "skill": "remote-mcp",
+          "chars": 548
+        },
+        {
+          "skill": "repo-architecture",
+          "chars": 151
+        },
+        {
+          "skill": "reports",
+          "chars": 289
+        },
+        {
+          "skill": "research-compendium",
+          "chars": 570
+        },
+        {
+          "skill": "resolve-before-asking",
+          "chars": 428
+        },
+        {
+          "skill": "schema-author",
+          "chars": 307
+        },
+        {
+          "skill": "schema-unify",
+          "chars": 388
+        },
+        {
+          "skill": "setup",
+          "chars": 117
+        },
+        {
+          "skill": "signal-detector",
+          "chars": 254
+        },
+        {
+          "skill": "skill-autobench",
+          "chars": 685
+        },
+        {
+          "skill": "skill-creator",
+          "chars": 217
+        },
+        {
+          "skill": "skill-optimizer",
+          "chars": 82
+        },
+        {
+          "skill": "skillify",
+          "chars": 822
+        },
+        {
+          "skill": "skillpack-check",
+          "chars": 464
+        },
+        {
+          "skill": "skillpack-harvest",
+          "chars": 324
+        },
+        {
+          "skill": "smoke-test",
+          "chars": 346
+        },
+        {
+          "skill": "soul-audit",
+          "chars": 530
+        },
+        {
+          "skill": "strategic-reading",
+          "chars": 260
+        },
+        {
+          "skill": "testing",
+          "chars": 317
+        },
+        {
+          "skill": "two-tier-extraction",
+          "chars": 432
+        },
+        {
+          "skill": "voice-note-ingest",
+          "chars": 235
+        },
+        {
+          "skill": "webhook-transforms",
+          "chars": 227
+        }
+      ]
+    },
+    {
+      "name": "gstack skills",
+      "repo": "github.com/garrytan/gstack",
+      "commit": "118207f0f762ac8aa9bfbd2b93417f34d8f199e6",
+      "licence": "MIT (repository LICENSE)",
+      "glob": "SKILL.md, */SKILL.md",
+      "count": 63,
+      "skills": [
+        {
+          "skill": "autoplan",
+          "chars": 162
+        },
+        {
+          "skill": "benchmark",
+          "chars": 46
+        },
+        {
+          "skill": "benchmark-models",
+          "chars": 49
+        },
+        {
+          "skill": "browse",
+          "chars": 128
+        },
+        {
+          "skill": "canary",
+          "chars": 39
+        },
+        {
+          "skill": "captain",
+          "chars": 205
+        },
+        {
+          "skill": "careful",
+          "chars": 52
+        },
+        {
+          "skill": "codex",
+          "chars": 48
+        },
+        {
+          "skill": "context-restore",
+          "chars": 64
+        },
+        {
+          "skill": "context-save",
+          "chars": 30
+        },
+        {
+          "skill": "cso",
+          "chars": 110
+        },
+        {
+          "skill": "design-consultation",
+          "chars": 208
+        },
+        {
+          "skill": "design-html",
+          "chars": 83
+        },
+        {
+          "skill": "design-motion",
+          "chars": 84
+        },
+        {
+          "skill": "design-review",
+          "chars": 188
+        },
+        {
+          "skill": "design-shotgun",
+          "chars": 129
+        },
+        {
+          "skill": "deslop-shared-libs",
+          "chars": 64
+        },
+        {
+          "skill": "devex-review",
+          "chars": 41
+        },
+        {
+          "skill": "diagram",
+          "chars": 177
+        },
+        {
+          "skill": "document-generate",
+          "chars": 94
+        },
+        {
+          "skill": "document-release",
+          "chars": 37
+        },
+        {
+          "skill": "eval-plan",
+          "chars": 160
+        },
+        {
+          "skill": "freeze",
+          "chars": 69
+        },
+        {
+          "skill": "gstack",
+          "chars": 43
+        },
+        {
+          "skill": "gstack-upgrade",
+          "chars": 37
+        },
+        {
+          "skill": "guard",
+          "chars": 81
+        },
+        {
+          "skill": "health",
+          "chars": 32
+        },
+        {
+          "skill": "ios-clean",
+          "chars": 85
+        },
+        {
+          "skill": "ios-design-review",
+          "chars": 59
+        },
+        {
+          "skill": "ios-fix",
+          "chars": 34
+        },
+        {
+          "skill": "ios-qa",
+          "chars": 45
+        },
+        {
+          "skill": "ios-sync",
+          "chars": 86
+        },
+        {
+          "skill": "land-and-deploy",
+          "chars": 34
+        },
+        {
+          "skill": "landing-report",
+          "chars": 60
+        },
+        {
+          "skill": "learn",
+          "chars": 25
+        },
+        {
+          "skill": "make-pdf",
+          "chars": 63
+        },
+        {
+          "skill": "modernize",
+          "chars": 88
+        },
+        {
+          "skill": "office-hours",
+          "chars": 37
+        },
+        {
+          "skill": "open-gstack-browser",
+          "chars": 83
+        },
+        {
+          "skill": "pair-agent",
+          "chars": 50
+        },
+        {
+          "skill": "plan-ceo-review",
+          "chars": 38
+        },
+        {
+          "skill": "plan-design-review",
+          "chars": 75
+        },
+        {
+          "skill": "plan-devex-review",
+          "chars": 54
+        },
+        {
+          "skill": "plan-eng-review",
+          "chars": 38
+        },
+        {
+          "skill": "plan-tune",
+          "chars": 99
+        },
+        {
+          "skill": "qa",
+          "chars": 61
+        },
+        {
+          "skill": "qa-only",
+          "chars": 56
+        },
+        {
+          "skill": "retro",
+          "chars": 42
+        },
+        {
+          "skill": "review",
+          "chars": 44
+        },
+        {
+          "skill": "runaway-stopper",
+          "chars": 98
+        },
+        {
+          "skill": "scrape",
+          "chars": 101
+        },
+        {
+          "skill": "setup-browser-cookies",
+          "chars": 89
+        },
+        {
+          "skill": "setup-deploy",
+          "chars": 51
+        },
+        {
+          "skill": "setup-gbrain",
+          "chars": 154
+        },
+        {
+          "skill": "ship",
+          "chars": 111
+        },
+        {
+          "skill": "skillify",
+          "chars": 95
+        },
+        {
+          "skill": "spec",
+          "chars": 74
+        },
+        {
+          "skill": "sync-gbrain",
+          "chars": 98
+        },
+        {
+          "skill": "test-audit",
+          "chars": 82
+        },
+        {
+          "skill": "ubicloud",
+          "chars": 140
+        },
+        {
+          "skill": "unfreeze",
+          "chars": 91
+        },
+        {
+          "skill": "verify",
+          "chars": 75
+        },
+        {
+          "skill": "write-skill",
+          "chars": 122
+        }
+      ]
+    },
+    {
+      "name": "anthropics/skills",
+      "repo": "github.com/anthropics/skills",
+      "commit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "licence": "Apache-2.0 (per-skill LICENSE.txt); skills without a licence file are excluded",
+      "glob": "skills/*/SKILL.md with an Apache-2.0 LICENSE.txt",
+      "excluded": [
+        "doc-coauthoring"
+      ],
+      "count": 18,
+      "skills": [
+        {
+          "skill": "academy-guide",
+          "chars": 992
+        },
+        {
+          "skill": "algorithmic-art",
+          "chars": 324
+        },
+        {
+          "skill": "brand-guidelines",
+          "chars": 236
+        },
+        {
+          "skill": "canvas-design",
+          "chars": 289
+        },
+        {
+          "skill": "claude-api",
+          "chars": 1068
+        },
+        {
+          "skill": "discernment-nudge",
+          "chars": 983
+        },
+        {
+          "skill": "docx",
+          "chars": 835
+        },
+        {
+          "skill": "frontend-design",
+          "chars": 204
+        },
+        {
+          "skill": "internal-comms",
+          "chars": 329
+        },
+        {
+          "skill": "mcp-builder",
+          "chars": 277
+        },
+        {
+          "skill": "pdf",
+          "chars": 437
+        },
+        {
+          "skill": "pptx",
+          "chars": 732
+        },
+        {
+          "skill": "skill-creator",
+          "chars": 319
+        },
+        {
+          "skill": "slack-gif-creator",
+          "chars": 227
+        },
+        {
+          "skill": "theme-factory",
+          "chars": 262
+        },
+        {
+          "skill": "web-artifacts-builder",
+          "chars": 288
+        },
+        {
+          "skill": "webapp-testing",
+          "chars": 204
+        },
+        {
+          "skill": "xlsx",
+          "chars": 948
+        }
+      ]
+    }
+  ]
+}
