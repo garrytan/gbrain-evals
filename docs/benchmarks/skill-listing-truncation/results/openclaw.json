@@ -3,6 +3,10 @@
   "version": "2026.10.6",
   "fixed_per_skill_description_cap": null,
   "prompt": "Reply with the single word OK",
+  "path_placeholders": {
+    "<HOME-alice-16c>": "the cell's scratch home, 16 characters",
+    "<harness-node_modules>/": "the harness install's node_modules directory, 23 characters"
+  },
   "cells": [
     {
       "size": 50,
@@ -13,17 +17,17 @@
       "listed": 50,
       "dropped": 0,
       "descriptions": {
-        "full": 14,
-        "cut": 36,
+        "full": 18,
+        "cut": 32,
         "omitted": 0,
         "altered": 0,
         "cut_at_fixed_per_skill_cap": 0
       },
       "description_chars": {
         "original_mean": 275,
-        "kept_mean": 68,
-        "kept_median": 75,
-        "kept_max": 75
+        "kept_mean": 74,
+        "kept_median": 83,
+        "kept_max": 83
       },
       "first_listed_without_description": null,
       "described_after_first_undescribed": 0,
@@ -52,9 +56,9 @@
         "visualize",
         "weather"
       ],
-      "listing_chars": 18692,
-      "listing_tokens_approx": 4673,
-      "listing_sha256": "26515bb00ddeb6220fb0b2b245dc1acadc92cb53455b97f43a48612db466ba01",
+      "listing_chars": 18731,
+      "listing_tokens_approx": 4683,
+      "listing_sha256": "2959a98dbb2f8a1b5a907b7fca186a62a37f33e8cde34e287c97576ed4fc345d",
       "order": {
         "alphabetical": true,
         "kept_is_alphabetical_prefix": null,
@@ -66,21 +70,21 @@
       "first_entries": [
         {
           "name": "add-model-provider",
-          "description": "Add and live-prove a model provider with non-interactive config one-liners,..."
+          "description": "Add and live-prove a model provider with non-interactive config one-liners, without..."
         },
         {
           "name": "audit-sitemap",
-          "description": "Use when the user asks to local to for placeholders clean clean recent draf..."
+          "description": "Use when the user asks to local to for placeholders clean clean recent draft dates."
         }
       ],
       "last_entries": [
         {
           "name": "weekly-migrate",
-          "description": "Use when the user asks to totals compare sheet invoice for meeting ticket v..."
+          "description": "Use when the user asks to totals compare sheet invoice for meeting ticket vendor re..."
         },
         {
           "name": "wiki-onboard",
-          "description": "Use when the user asks to for summarize update then ticket user changes use..."
+          "description": "Use when the user asks to for summarize update then ticket user changes user clean..."
         }
       ]
     },
@@ -90,12 +94,12 @@
       "model": "claude-opus-5-5",
       "deterministic": true,
       "catalog": 150,
-      "listed": 113,
-      "dropped": 37,
+      "listed": 115,
+      "dropped": 35,
       "descriptions": {
         "full": 0,
         "cut": 0,
-        "omitted": 113,
+        "omitted": 115,
         "altered": 0,
         "cut_at_fixed_per_skill_cap": 0
       },
@@ -128,16 +132,16 @@
         "python-debugpy",
         "skill-creator"
       ],
-      "listing_chars": 18720,
-      "listing_tokens_approx": 4680,
-      "listing_sha256": "5005a0d044e1c77c1df0425b3530e2b1bafc212d1494b2c5915882ef1d7a747c",
+      "listing_chars": 18660,
+      "listing_tokens_approx": 4665,
+      "listing_sha256": "7b126b7029e3d2038f02b9a1cdfaf8bca1a5222b3ee1616b414aa628aa9daa66",
       "order": {
         "alphabetical": true,
         "kept_is_alphabetical_prefix": true,
         "kept_is_install_order_prefix": false
       },
       "notices": [
-        "⚠️ Skills truncated: included 131 of 172 (compact format, descriptions omitted). Run `openclaw skills check` to audit."
+        "⚠️ Skills truncated: included 133 of 172 (compact format, descriptions omitted). Run `openclaw skills check` to audit."
       ],
       "first_entries": [
         {
@@ -151,11 +155,11 @@
       ],
       "last_entries": [
         {
-          "name": "sitemap-ticket",
+          "name": "slides-outline",
           "description": null
         },
         {
-          "name": "skill-creator",
+          "name": "snapshot-deck",
           "description": null
         }
       ]
@@ -166,12 +170,12 @@
       "model": "claude-opus-5-5",
       "deterministic": true,
       "catalog": 300,
-      "listed": 120,
-      "dropped": 180,
+      "listed": 122,
+      "dropped": 178,
       "descriptions": {
         "full": 0,
         "cut": 0,
-        "omitted": 120,
+        "omitted": 122,
         "altered": 0,
         "cut_at_fixed_per_skill_cap": 0
       },
@@ -198,16 +202,16 @@
         "github",
         "healthcheck"
       ],
-      "listing_chars": 18659,
-      "listing_tokens_approx": 4665,
-      "listing_sha256": "8be97e0db143cddfce717b826a2becd7bd00f1a2f0e2de6859fb2f2fc57001a6",
+      "listing_chars": 18717,
+      "listing_tokens_approx": 4680,
+      "listing_sha256": "3e6b77765b00b0c7f9b91f819a65bef215cd86f14bf799438745e72c2bd05922",
       "order": {
         "alphabetical": true,
         "kept_is_alphabetical_prefix": true,
         "kept_is_install_order_prefix": false
       },
       "notices": [
-        "⚠️ Skills truncated: included 132 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit."
+        "⚠️ Skills truncated: included 134 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit."
       ],
       "first_entries": [
         {
@@ -221,11 +225,11 @@
       ],
       "last_entries": [
         {
-          "name": "journal-report",
+          "name": "ledger-pitch",
           "description": null
         },
         {
-          "name": "ledger-meeting",
+          "name": "ledger-profile",
           "description": null
         }
       ]
@@ -236,12 +240,12 @@
       "model": "claude-opus-5-5",
       "deterministic": true,
       "catalog": 750,
-      "listed": 126,
-      "dropped": 624,
+      "listed": 127,
+      "dropped": 623,
       "descriptions": {
         "full": 0,
         "cut": 0,
-        "omitted": 126,
+        "omitted": 127,
         "altered": 0,
         "cut_at_fixed_per_skill_cap": 0
       },
@@ -263,18 +267,18 @@
         "configure-channel",
         "control-ui"
       ],
-      "listing_chars": 18692,
-      "listing_tokens_approx": 4673,
-      "listing_sha256": "855259514056f0e330aa84ba8562a46b6d15fb2ce5dc7c68b71a7c210dfa3fd1",
+      "listing_chars": 18725,
+      "listing_tokens_approx": 4682,
+      "listing_sha256": "ae519774a0180175073d775ff48a1ff738f4cb085f7629201f7967d41de05414",
       "order": {
         "alphabetical": true,
         "kept_is_alphabetical_prefix": true,
         "kept_is_install_order_prefix": false
       },
       "notices": [
-        "⚠️ Skills truncated: included 133 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit.",
-        "[skills] root has many entries, truncating discovery. dir=/tmp/sl/op/alice/.openclaw/workspace/skills baseDir=/tmp/sl/op/alice/.openclaw/workspace/skills childDirCount=750 maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200",
-        "[skills] root hit recursive discovery budget, truncating discovery. dir=/tmp/sl/op/alice/.openclaw/workspace/skills baseDir=/tmp/sl/op/alice/.openclaw/workspace/skills maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200 maxGroupedSkillScanDepth=6"
+        "⚠️ Skills truncated: included 134 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit.",
+        "[skills] root has many entries, truncating discovery. dir=<HOME-alice-16c>/.openclaw/workspace/skills baseDir=<HOME-alice-16c>/.openclaw/workspace/skills childDirCount=750 maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200",
+        "[skills] root hit recursive discovery budget, truncating discovery. dir=<HOME-alice-16c>/.openclaw/workspace/skills baseDir=<HOME-alice-16c>/.openclaw/workspace/skills maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200 maxGroupedSkillScanDepth=6"
       ],
       "first_entries": [
         {
@@ -288,11 +292,11 @@
       ],
       "last_entries": [
         {
-          "name": "deck-outline",
+          "name": "deploy-budget",
           "description": null
         },
         {
-          "name": "deploy-budget",
+          "name": "deploy-forecast",
           "description": null
         }
       ]
@@ -303,12 +307,12 @@
       "model": "claude-opus-5-5",
       "deterministic": true,
       "catalog": 1500,
-      "listed": 131,
-      "dropped": 1369,
+      "listed": 132,
+      "dropped": 1368,
       "descriptions": {
         "full": 0,
         "cut": 0,
-        "omitted": 131,
+        "omitted": 132,
         "altered": 0,
         "cut_at_fixed_per_skill_cap": 0
       },
@@ -325,18 +329,18 @@
         "add-model-provider",
         "browser-automation"
       ],
-      "listing_chars": 18619,
-      "listing_tokens_approx": 4655,
-      "listing_sha256": "64f5df73a8818ffaeb2ef7eb2325f026b342eee0a82e403566382dee826483f6",
+      "listing_chars": 18728,
+      "listing_tokens_approx": 4682,
+      "listing_sha256": "f41c526eb32c6d7e2060cfa8cf9369089fea756993273f4062dab0337567a471",
       "order": {
         "alphabetical": true,
         "kept_is_alphabetical_prefix": true,
         "kept_is_install_order_prefix": false
       },
       "notices": [
-        "⚠️ Skills truncated: included 133 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit.",
-        "[skills] root has many entries, truncating discovery. dir=/tmp/sl/op/alice/.openclaw/workspace/skills baseDir=/tmp/sl/op/alice/.openclaw/workspace/skills childDirCount=1500 maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200",
-        "[skills] root hit recursive discovery budget, truncating discovery. dir=/tmp/sl/op/alice/.openclaw/workspace/skills baseDir=/tmp/sl/op/alice/.openclaw/workspace/skills maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200 maxGroupedSkillScanDepth=6"
+        "⚠️ Skills truncated: included 134 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit.",
+        "[skills] root has many entries, truncating discovery. dir=<HOME-alice-16c>/.openclaw/workspace/skills baseDir=<HOME-alice-16c>/.openclaw/workspace/skills childDirCount=1500 maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200",
+        "[skills] root hit recursive discovery budget, truncating discovery. dir=<HOME-alice-16c>/.openclaw/workspace/skills baseDir=<HOME-alice-16c>/.openclaw/workspace/skills maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200 maxGroupedSkillScanDepth=6"
       ],
       "first_entries": [
         {
@@ -350,11 +354,11 @@
       ],
       "last_entries": [
         {
-          "name": "calendar-vendor-2",
+          "name": "calendar-video",
           "description": null
         },
         {
-          "name": "calendar-video",
+          "name": "canary-canary",
           "description": null
         }
       ]

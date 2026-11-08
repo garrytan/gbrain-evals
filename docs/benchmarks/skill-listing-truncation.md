@@ -15,7 +15,7 @@ never drops a name. No model was called: each harness ran one turn against a loc
 |---|---|---|---|
 | Claude Code 2.1.312 | 150 (78 of 150 descriptions omitted) | Descriptions, names never | **yes** |
 | Codex 0.165.0 | 150 (105 of 150 descriptions shortened) | Descriptions from 150, names from 750 | **yes** |
-| OpenClaw 2026.10.6 | 50 (36 of 50 descriptions shortened) | Descriptions from 50, names from 150 | **yes** |
+| OpenClaw 2026.10.6 | 50 (32 of 50 descriptions shortened) | Descriptions from 50, names from 150 | **yes** |
 | Hermes v2026.9.24 | 50 (fixed 60-character cap on every description) | Descriptions only, at any size | **yes**, by a fixed per-skill cap rather than a budget |
 
 Under the plan's rule, Claude Code and Codex, the two harnesses PR B targets, both qualify for the per-turn hook lane.
@@ -49,7 +49,10 @@ Only names and lengths are stored ([description-lengths.json](skill-listing-trun
 **Harnesses.** The npm packages `@anthropic-ai/claude-code@2.1.312`, `@openai/codex@0.165.0` and `openclaw@2026.10.6`,
 and Hermes Agent built from tag `v2026.9.24`. Each cell gets a fresh home directory, the catalog goes where the harness reads
 a user's own skills (`~/.claude/skills`, `~/.agents/skills`, `~/.hermes/skills/synthetic`, the OpenClaw workspace's
-`skills/`), and skills the harness ships itself stay installed and are counted separately as "other".
+`skills/`), and skills the harness ships itself stay installed and are counted separately as "other". Paths count
+toward OpenClaw's character budget, so every cell's home is `/tmp/sl/<two letters>/alice` (16 characters) and the npm
+harnesses are installed under `/tmp/sl-h`; the published results replace those prefixes with placeholders of the same
+length (`<HOME-alice-16c>`, `<harness-node_modules>/`), so the recorded listing sizes match the run.
 
 **Capture.** [capture-server.ts](skill-listing-truncation/capture-server.ts) stands in for the model API: Claude Code
 through `ANTHROPIC_BASE_URL`, Codex through `openai_base_url` in its config, OpenClaw through
@@ -121,11 +124,11 @@ signal is that debug-log warning.
 
 | Catalog | Listed | Names dropped | Descriptions full / cut / omitted | Description chars kept, mean (original mean) | Listing chars | Approx tokens | Other listed |
 |---|---|---|---|---|---|---|---|
-| 50 | 50 | 0 | 14 / 36 / 0 | 68 (275) | 18,692 | 4,673 | 22 |
-| 150 | 113 | 37 | 0 / 0 / 113 | 0 (294) | 18,720 | 4,680 | 18 |
-| 300 | 120 | 180 | 0 / 0 / 120 | 0 (313) | 18,659 | 4,665 | 12 |
-| 750 | 126 | 624 | 0 / 0 / 126 | 0 (301) | 18,692 | 4,673 | 7 |
-| 1,500 | 131 | 1,369 | 0 / 0 / 131 | 0 (303) | 18,619 | 4,655 | 2 |
+| 50 | 50 | 0 | 18 / 32 / 0 | 74 (275) | 18,731 | 4,683 | 22 |
+| 150 | 115 | 35 | 0 / 0 / 115 | 0 (294) | 18,660 | 4,665 | 18 |
+| 300 | 122 | 178 | 0 / 0 / 122 | 0 (313) | 18,717 | 4,680 | 12 |
+| 750 | 127 | 623 | 0 / 0 / 127 | 0 (301) | 18,725 | 4,682 | 7 |
+| 1,500 | 132 | 1,368 | 0 / 0 / 132 | 0 (303) | 18,728 | 4,682 | 2 |
 
 **Rule** (source at tag `v2026.10.6`):
 - Discovery: from a skills folder with more than 300 subfolders (`maxCandidatesPerRoot`) only 300 are scanned, and at most
@@ -141,9 +144,10 @@ signal is that debug-log warning.
   format: when even names alone overflow, it keeps the longest fitting prefix of names with no descriptions; otherwise it
   shortens every description to the longest common length that fits, at most 220 characters
   ([:127-173](https://github.com/openclaw/openclaw/blob/v2026.10.6/src/skills/loading/skill-prompt-limits.ts#L127-L173),
-  [skill-contract.ts:42](https://github.com/openclaw/openclaw/blob/v2026.10.6/src/skills/loading/skill-contract.ts#L42)). At 50 skills that common length was 75 characters.
-  The 18,000 characters include each skill's file path, so a longer home directory lists fewer skills.
-- Signal: the prompt itself carries the notice, for example `⚠️ Skills truncated: included 132 of 222 (compact format,
+  [skill-contract.ts:42](https://github.com/openclaw/openclaw/blob/v2026.10.6/src/skills/loading/skill-contract.ts#L42)). At 50 skills that common length was 83 characters.
+  The 18,000 characters include each skill's file path, so a longer home directory or install path lists fewer skills;
+  these counts hold for the fixed paths described under Harnesses.
+- Signal: the prompt itself carries the notice, for example `⚠️ Skills truncated: included 134 of 222 (compact format,
   descriptions omitted)` at 300 skills; the discovery cut is only a stderr warning (`Skills root has many entries,
   truncating discovery. ... childDirCount=750 maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200`).
 
@@ -177,7 +181,7 @@ calls. Where the two differ, the cause is the catalog, not the harness:
 |---|---|---|---|
 | Claude Code | 349 listed, last 111 entries without a description, budget about 29,550 chars | All 300 listed, 237 without a description, budget 30,000 chars | 30,000 is the number Claude Code's own debug log prints for the default model with no settings; HARN-52 computed theirs from the formula. Both see alphabetical first-fit filling. |
 | Codex | All 351 listed, descriptions about 10 chars, no log line | All 300 listed, descriptions 18 chars on average, no log line | More skills share the same 5,440-token budget at 351. Both see no message until names are dropped (from 750 here). |
-| OpenClaw | 141 names, no descriptions; first 200 by name loaded past 300 folders | 120 of ours plus 12 bundled (132), no descriptions; the 300/200 cut seen at 750 and 1,500 | The 18,000-character cap counts names and file paths, so name and path length set the count. |
+| OpenClaw | 141 names, no descriptions; first 200 by name loaded past 300 folders | 122 of ours plus 12 bundled (134), no descriptions; the 300/200 cut seen at 750 and 1,500 | The 18,000-character cap counts names and file paths, so name and path length set the count. |
 | Hermes | 342 listed; 9 hidden by their own conditions, 41 names twice, 60-char cap | All 300 listed, 60-char cap, no duplicates | Our invented names never collide with Hermes's bundled skills and carry no conditions; real catalogs do. |
 
 ## Catalog sizes real installs reach (public data only)
@@ -201,7 +205,7 @@ So 300 skills is a size users reach, and the plan's 300-skill line holds on publ
 
 - **Claude Code and Codex qualify for PR B's per-turn hook lane.** Both cut descriptions from 150 skills, silently on
   Claude Code and silently on Codex until names start dropping.
-- **OpenClaw is the most aggressive**: at 300 skills it shows 120 of ours as bare names, and past 300 skill folders it
+- **OpenClaw is the most aggressive**: at 300 skills it shows 122 of ours as bare names, and past 300 skill folders it
   never loads most of them. Its per-turn path is AlphaClaw's `before_prompt_build` adapter, not PR B.
 - **Hermes never hides a name**, but every description is 60 characters at any size and its listing grows without a
   limit, so at 1,500 skills it spends about 31,000 tokens per turn on the list. Its per-turn path is `pre_llm_call`.

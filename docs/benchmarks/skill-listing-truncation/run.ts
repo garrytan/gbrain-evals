@@ -197,8 +197,17 @@ const harnesses: Harness[] = [
   },
 ];
 
-// Listings name the harness's own install path for its bundled skills; publish it as a placeholder.
-const scrub = (s: string) => s.replace(/\/[^\s<>"']*\/node_modules\//g, "<node_modules>/");
+// Published outputs replace machine paths with placeholders of the same length, because OpenClaw counts each
+// skill's file path toward its 18,000-character budget. The scratch home is always /tmp/sl/<2 letters>/alice
+// (16 characters); install the harnesses under /tmp/sl-h (see README) so OpenClaw's bundled-skill paths start with
+// /tmp/sl-h/node_modules/ (23 characters). Any other install path is shortened to <node_modules>/ and is not
+// length-preserving.
+export const PATH_PLACEHOLDERS: Array<[RegExp, string, string]> = [
+  [/\/tmp\/sl\/[a-z]{2}\/alice/g, "<HOME-alice-16c>", "the cell's scratch home, 16 characters"],
+  [/\/tmp\/sl-h\/node_modules\//g, "<harness-node_modules>/", "the harness install's node_modules directory, 23 characters"],
+];
+const scrub = (s: string) =>
+  PATH_PLACEHOLDERS.reduce((out, [re, placeholder]) => out.replace(re, placeholder), s).replace(/\/[^\s<>"']*\/node_modules\//g, "<node_modules>/");
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 const norm = (s: string) => s.replace(/\s+/g, " ").trim();
 const median = (xs: number[]) => {
@@ -261,7 +270,7 @@ function measure(skills: SyntheticSkill[], ex: Extracted, fixedCap: number | nul
     other_listed_names: other.map((e) => e.name),
     listing_chars: ex.block.length,
     listing_tokens_approx: Math.ceil(ex.block.length / 4),
-    listing_sha256: sha(ex.block),
+    listing_sha256: sha(scrub(ex.block)),
     order: {
       alphabetical: isSorted(names, byteCmp),
       kept_is_alphabetical_prefix: dropped.length > 0 ? names.every((n, i) => n === alpha[i]) : null,
@@ -285,7 +294,12 @@ async function runCell(h: Harness, skills: SyntheticSkill[], port: number, probe
   const capture = join(SCRATCH, `${h.id}-${skills.length}.jsonl`);
   rmSync(capture, { force: true });
   const server = Bun.spawn(["bun", join(HERE, "capture-server.ts"), String(port), capture], { stdout: "ignore", stderr: "inherit" });
-  await Bun.sleep(500);
+  for (let tries = 0; ; tries++) {
+    const up = await fetch(`http://127.0.0.1:${port}/ready`).then(() => true, () => false);
+    if (up) break;
+    if (tries >= 100) throw new Error(`capture server did not start on port ${port}`);
+    await Bun.sleep(100);
+  }
   const { argv: baseArgv, env } = h.command(cell);
   const argv = probe && h.budgetProbe ? h.budgetProbe(cell).argv : baseArgv;
   const proc = Bun.spawn([h.bin, ...argv], { cwd: h.id === "openclaw" ? join(home, ".openclaw/workspace") : cell.cwd, env, stdout: "pipe", stderr: "pipe", stdin: "ignore" });
@@ -296,7 +310,7 @@ async function runCell(h: Harness, skills: SyntheticSkill[], port: number, probe
   server.kill();
   await server.exited;
   const probeLines = probe && h.budgetProbe ? h.budgetProbe(cell).read() : [];
-  const requests = readFileSync(capture, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
+  const requests = readFileSync(capture, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l)).filter((r) => r.path !== "/ready");
   const ex = h.extract(requests);
   const harnessNotices = (stdout + "\n" + stderr).split("\n").filter((l) => /skill/i.test(l) && /(budget|truncat|not included|omitted)/i.test(l)).map((l) => l.trim().slice(0, 400));
   const model = requests.map((r) => r.body?.model).find((m) => typeof m === "string" && m !== "") ?? null;
@@ -317,7 +331,7 @@ for (const [i, h] of harnesses.entries()) {
     const b = await runCell(h, skills, 18800 + i);
     const m = measure(skills, a.ex, h.fixedCap);
     const probe = h.budgetProbe ? (await runCell(h, skills, 18800 + i, true)).probeLines : undefined;
-    cells.push({ size: n, exit: a.exit, model: a.model, deterministic: sha(a.ex.block) === sha(b.ex.block), ...m, ...(probe ? { debug_log: probe } : {}) });
+    cells.push({ size: n, exit: a.exit, model: a.model, deterministic: a.ex.block === b.ex.block, ...m, ...(probe ? { debug_log: probe } : {}) });
     if (n === 300) writeFileSync(join(HERE, `results/listings/${h.id}-300.txt`), scrub(a.ex.block) + "\n");
     console.log(`${h.id} n=${n} exit=${a.exit} listed=${m.listed} dropped=${m.dropped} full=${m.descriptions.full} cut=${m.descriptions.cut} omitted=${m.descriptions.omitted} altered=${m.descriptions.altered} kept_mean=${m.description_chars.kept_mean} chars=${m.listing_chars} other=${m.other_listed} det=${sha(a.ex.block) === sha(b.ex.block)}`);
   }
@@ -325,6 +339,6 @@ for (const [i, h] of harnesses.entries()) {
   const previous = existsSync(out) && only && arg("sizes") ? JSON.parse(readFileSync(out, "utf8")).cells.filter((c: any) => !sizes.includes(c.size)) : [];
   writeFileSync(
     out,
-    JSON.stringify({ harness: h.label, version: h.version, fixed_per_skill_description_cap: h.fixedCap, prompt: PROMPT, cells: [...previous, ...cells].sort((x, y) => x.size - y.size) }, null, 2) + "\n",
+    JSON.stringify({ harness: h.label, version: h.version, fixed_per_skill_description_cap: h.fixedCap, prompt: PROMPT, path_placeholders: Object.fromEntries(PATH_PLACEHOLDERS.map(([, placeholder, what]) => [placeholder, what])), cells: [...previous, ...cells].sort((x, y) => x.size - y.size) }, null, 2) + "\n",
   );
 }

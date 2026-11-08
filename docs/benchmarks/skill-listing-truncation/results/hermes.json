@@ -3,6 +3,10 @@
   "version": "v2026.9.24",
   "fixed_per_skill_description_cap": 60,
   "prompt": "Reply with the single word OK",
+  "path_placeholders": {
+    "<HOME-alice-16c>": "the cell's scratch home, 16 characters",
+    "<harness-node_modules>/": "the harness install's node_modules directory, 23 characters"
+  },
   "cells": [
     {
       "size": 50,

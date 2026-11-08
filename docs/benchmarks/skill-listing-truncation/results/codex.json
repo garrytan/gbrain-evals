@@ -3,6 +3,10 @@
   "version": "0.165.0",
   "fixed_per_skill_description_cap": 1024,
   "prompt": "Reply with the single word OK",
+  "path_placeholders": {
+    "<HOME-alice-16c>": "the cell's scratch home, 16 characters",
+    "<harness-node_modules>/": "the harness install's node_modules directory, 23 characters"
+  },
   "cells": [
     {
       "size": 50,
@@ -36,7 +40,7 @@
       ],
       "listing_chars": 18436,
       "listing_tokens_approx": 4609,
-      "listing_sha256": "519bbb3911e7114383963c0d8ed8ab54d5b6a430cdcf825612cf52d2caa56334",
+      "listing_sha256": "dc1a105eec00700dc95f3a4333e6bfe8e7c479e7894d79f1c8e4fb6b82630b66",
       "order": {
         "alphabetical": true,
         "kept_is_alphabetical_prefix": null,
@@ -96,7 +100,7 @@
       ],
       "listing_chars": 22147,
       "listing_tokens_approx": 5537,
-      "listing_sha256": "424f92412fa55214aa31ab5ed855bd8aaaf6ac07f3780c30dd7732e69c17bdbf",
+      "listing_sha256": "0bb8ae79d9ad8817ce1441aab0e6f76395c61f2ac71970bb13719ea6f00ff04c",
       "order": {
         "alphabetical": true,
         "kept_is_alphabetical_prefix": null,
@@ -156,7 +160,7 @@
       ],
       "listing_chars": 22206,
       "listing_tokens_approx": 5552,
-      "listing_sha256": "67e3e74d23552f0cf223f2cfb63a1dcd26f0655dfb5dfaf20fec9ec730f75ab5",
+      "listing_sha256": "33da43c4636013386f913c5846cc68baa7ac42bda48641cf2dd5adb66e45f2a2",
       "order": {
         "alphabetical": true,
         "kept_is_alphabetical_prefix": null,
@@ -216,7 +220,7 @@
       ],
       "listing_chars": 21385,
       "listing_tokens_approx": 5347,
-      "listing_sha256": "6e4386bf429974af73e437fc1d2d490b2d021a90bb885b5053b471bb8a733e6c",
+      "listing_sha256": "363d13f0d1d43a3f35496b408c8d4bcec03f688fb4de76ed381c22f4f25f7055",
       "order": {
         "alphabetical": true,
         "kept_is_alphabetical_prefix": true,
@@ -278,7 +282,7 @@
       ],
       "listing_chars": 21414,
       "listing_tokens_approx": 5354,
-      "listing_sha256": "43d2ea9b61d2a5475c622bae983e59010fd1262ffb556fc587da57cb91896fe7",
+      "listing_sha256": "80b669e918e5bff6e24b366a314bfbaf328e22e5dba01d2f95be561491324b37",
       "order": {
         "alphabetical": true,
         "kept_is_alphabetical_prefix": false,

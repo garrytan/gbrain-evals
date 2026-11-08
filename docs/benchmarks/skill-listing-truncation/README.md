@@ -12,10 +12,10 @@ Scripts behind [skill-listing-truncation.md](../skill-listing-truncation.md). No
 
 ## Rerun
 
-Install the pinned harnesses in a scratch directory (the npm postinstall scripts must run; npm 12 asks for approval):
+Install the pinned harnesses under `/tmp/sl-h` (the npm postinstall scripts must run; npm 12 asks for approval). The path matters for OpenClaw: its listing counts each skill's file path toward an 18,000-character budget, and its own skills live under the install directory.
 
 ```bash
-mkdir -p /tmp/h && cd /tmp/h
+mkdir -p /tmp/sl-h && cd /tmp/sl-h
 npm i @anthropic-ai/claude-code@2.1.312 @openai/codex@0.165.0 openclaw@2026.10.6
 npm install-scripts approve @anthropic-ai/claude-code && node node_modules/@anthropic-ai/claude-code/install.cjs
 git clone --depth 1 --branch v2026.9.24 https://github.com/NousResearch/hermes-agent.git hermes
@@ -26,13 +26,15 @@ Then, from the gbrain-evals root (about 25 minutes; each cell runs twice to chec
 
 ```bash
 bun docs/benchmarks/skill-listing-truncation/run.ts \
-  --claude /tmp/h/node_modules/.bin/claude --codex /tmp/h/node_modules/.bin/codex \
-  --openclaw /tmp/h/node_modules/.bin/openclaw --hermes /tmp/h/hermes/.venv/bin/hermes
+  --claude /tmp/sl-h/node_modules/.bin/claude --codex /tmp/sl-h/node_modules/.bin/codex \
+  --openclaw /tmp/sl-h/node_modules/.bin/openclaw --hermes /tmp/sl-h/hermes/.venv/bin/hermes
 ```
 
-`--only <claude-code|codex|hermes|openclaw>` and `--sizes 50,300` narrow the run. Scratch homes live under `/tmp/sl`
-(short, so file paths in listings have a realistic length, and outside any directory with its own `.claude/skills`,
-which Claude Code would also read). No provider key is needed: every harness gets a dummy key and a local base URL.
+`--only <claude-code|codex|hermes|openclaw>` and `--sizes 50,300` narrow the run. Each cell's home is `/tmp/sl/<two letters>/alice`
+(16 characters, about as long as `/home/alice-example`, and outside any directory with its own `.claude/skills`, which
+Claude Code would also read). Published results and listings replace that home with `<HOME-alice-16c>` and
+`/tmp/sl-h/node_modules/` with `<harness-node_modules>/`, placeholders of the same length, so every character count in
+`results/` matches the listing files byte for byte. No provider key is needed: every harness gets a dummy key and a local base URL.
 
 To regenerate the length distribution: `bun lengths.ts --gbrain <gbrain checkout> --gstack <gstack checkout>
 --anthropic <anthropics/skills checkout> > description-lengths.json`. The catalogs change only if this file does.

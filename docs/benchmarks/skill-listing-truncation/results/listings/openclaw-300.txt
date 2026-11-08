@@ -6,7 +6,7 @@ Search by the task goal and distinctive terms. Simple conversation or a self-con
 Several: most specific. No relevant skill: read none.
 Up-front max one. Never invent paths.
 External writes: batch safely; no tight loops; honor 429/Retry-After.
-⚠️ Skills truncated: included 132 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit.
+⚠️ Skills truncated: included 134 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit.
 
 
 The following skills provide specialized instructions for specific tasks.
@@ -16,7 +16,7 @@ When a skill file references a relative path, resolve it against the skill direc
 <available_skills>
   <skill>
     <name>add-model-provider</name>
-    <location><node_modules>/openclaw/custodian-skills/add-model-provider/SKILL.md</location>
+    <location><harness-node_modules>/openclaw/custodian-skills/add-model-provider/SKILL.md</location>
   </skill>
   <skill>
     <name>audit-backup</name>
@@ -208,7 +208,7 @@ When a skill file references a relative path, resolve it against the skill direc
   </skill>
   <skill>
     <name>clawhub</name>
-    <location><node_modules>/openclaw/skills/clawhub/SKILL.md</location>
+    <location><harness-node_modules>/openclaw/skills/clawhub/SKILL.md</location>
   </skill>
   <skill>
     <name>cleanup-cleanup</name>
@@ -228,11 +228,11 @@ When a skill file references a relative path, resolve it against the skill direc
   </skill>
   <skill>
     <name>cloud-image-bake</name>
-    <location><node_modules>/openclaw/custodian-skills/cloud-image-bake/SKILL.md</location>
+    <location><harness-node_modules>/openclaw/custodian-skills/cloud-image-bake/SKILL.md</location>
   </skill>
   <skill>
     <name>configure-channel</name>
-    <location><node_modules>/openclaw/custodian-skills/configure-channel/SKILL.md</location>
+    <location><harness-node_modules>/openclaw/custodian-skills/configure-channel/SKILL.md</location>
   </skill>
   <skill>
     <name>contract-meeting</name>
@@ -268,7 +268,7 @@ When a skill file references a relative path, resolve it against the skill direc
   </skill>
   <skill>
     <name>control-ui</name>
-    <location><node_modules>/openclaw/skills/control-ui/SKILL.md</location>
+    <location><harness-node_modules>/openclaw/skills/control-ui/SKILL.md</location>
   </skill>
   <skill>
     <name>crm-chart</name>
@@ -316,11 +316,11 @@ When a skill file references a relative path, resolve it against the skill direc
   </skill>
   <skill>
     <name>diagnose-gateway</name>
-    <location><node_modules>/openclaw/custodian-skills/diagnose-gateway/SKILL.md</location>
+    <location><harness-node_modules>/openclaw/custodian-skills/diagnose-gateway/SKILL.md</location>
   </skill>
   <skill>
     <name>diagram-maker</name>
-    <location><node_modules>/openclaw/skills/diagram-maker/SKILL.md</location>
+    <location><harness-node_modules>/openclaw/skills/diagram-maker/SKILL.md</location>
   </skill>
   <skill>
     <name>digest-audit</name>
@@ -452,11 +452,11 @@ When a skill file references a relative path, resolve it against the skill direc
   </skill>
   <skill>
     <name>gh-issues</name>
-    <location><node_modules>/openclaw/skills/gh-issues/SKILL.md</location>
+    <location><harness-node_modules>/openclaw/skills/gh-issues/SKILL.md</location>
   </skill>
   <skill>
     <name>github</name>
-    <location><node_modules>/openclaw/skills/github/SKILL.md</location>
+    <location><harness-node_modules>/openclaw/skills/github/SKILL.md</location>
   </skill>
   <skill>
     <name>grant-budget</name>
@@ -464,7 +464,7 @@ When a skill file references a relative path, resolve it against the skill direc
   </skill>
   <skill>
     <name>healthcheck</name>
-    <location><node_modules>/openclaw/skills/healthcheck/SKILL.md</location>
+    <location><harness-node_modules>/openclaw/skills/healthcheck/SKILL.md</location>
   </skill>
   <skill>
     <name>hiring-canary</name>
@@ -541,5 +541,13 @@ When a skill file references a relative path, resolve it against the skill direc
   <skill>
     <name>ledger-meeting</name>
     <location>~/.openclaw/workspace/skills/ledger-meeting/SKILL.md</location>
+  </skill>
+  <skill>
+    <name>ledger-pitch</name>
+    <location>~/.openclaw/workspace/skills/ledger-pitch/SKILL.md</location>
+  </skill>
+  <skill>
+    <name>ledger-profile</name>
+    <location>~/.openclaw/workspace/skills/ledger-profile/SKILL.md</location>
   </skill>
 </available_skills>
