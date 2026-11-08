@@ -6,9 +6,11 @@ The dated report `docs/benchmarks/<date>-model-ladder-hard.md` follows this outl
 scripts/cat40-hard.sh step report
 ```
 
-## 1. The finding
+## 1. Takeaways and the finding
 
-One paragraph: the primary endpoint (pooled 50k paired difference, gbrain minus fs, with its task-clustered 95% CI: `holdout_stats.py <cells-50k attempts> --hard-headline gbrain-hard,fs --simple fs`, with pg's attempts and `--simple fs,pg` when the pg batch ran), the decision sentence it triggers from the preregistration, the date, the gbrain commit and the models. Say whether the result is a recommendation or inconclusive.
+Two or three bullets first, each in the form "We learned X. You should do X." (the report shape in CLAUDE.md). What works comes first, such as the families or models where gbrain helps the agent more than the simple arms, and why that matters to someone building agents. What didn't work comes second, stated plainly. If the primary endpoint is inconclusive, lead with the lesson the data supports, with its number, and state the null right after it.
+
+Then one paragraph: the primary endpoint (pooled 50k paired difference, gbrain minus fs, with its task-clustered 95% CI: `holdout_stats.py <cells-50k attempts> --hard-headline gbrain-hard,fs --simple fs`, with pg's attempts and `--simple fs,pg` when the pg batch ran), the decision sentence it triggers from the preregistration, the date, the gbrain commit and the models. Say whether the result is a recommendation or inconclusive. Issue codes, ledger paths and gate details go in section 6.
 
 ## 2. The concrete case
 
@@ -32,8 +34,8 @@ Connect the evidence to workloads. Report losses, harness-error retries per arm 
 
 ## 5. Cost and latency
 
-Cost per task and per successful task; incremental cost per extra correct answer against the comparator (reported, no gate); agent latency without slot-restore time; setup cost (slot builds, pg embeddings) and end-to-end latency beside agent-only latency. Reconcile cell costs with the Hard ledger.
+Cost per task and per successful task; incremental cost per extra correct answer against the comparator (reported, no gate); agent latency without slot-restore time; setup cost (slot builds, pg embeddings) and end-to-end latency beside agent-only latency. Reconcile cell costs with the Hard ledger in the tracking issue; the report shows per-task costs, not ledger or program totals.
 
 ## 6. Reproduce and inspect
 
-Repository-root commands, the gbrain commit and config, dataset identities (world digests and file hashes), required keys, output paths, observed time and cost, and links to raw results, receipts and transcripts. After the results, the 50k manifest and its 4k base world are committed, as for `model-ladder-v1-large`.
+Repository-root commands, the gbrain commit and config, dataset identities (world digests and file hashes), required keys, output paths, observed run time, and links to raw results, receipts and transcripts. After the results, the 50k manifest and its 4k base world are committed, as for `model-ladder-v1-large`.

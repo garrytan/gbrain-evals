@@ -8,6 +8,10 @@ A change after a cell has run is a dated amendment appended at the end, never an
 
 What decision this measurement informs, in one or two sentences.
 
+## Public lesson
+
+What someone building agents would learn, and what they would do differently, if the result goes either way: one sentence for a win and one for a loss or null, in the "We learned X. You should do X." form the report will open with (see "Shape of a benchmark report" in [CLAUDE.md](../../CLAUDE.md)).
+
 ## Evidence class
 
 Regression check, development evidence (data used in earlier tuning or written around known failures), label validation, or held-out confirmation.
@@ -35,7 +39,7 @@ The primary comparison, one primary judge where judges apply, the multiple-compa
 
 ## Budget
 
-Ledger path, budget run, per-arm worst-case reservation and cap. What happens when the cap is reached.
+Ledger path and budget run, and how each request is reserved against the ledger before it is sent. State that a cap exists, that reaching it pauses the run until the cap is extended rather than ending it incomplete, and how the run resumes. Dollar amounts for the cap, reservations and any program budget stay in the tracking issue, not here. Give unit prices only where the design depends on them, such as a per-task price that sets the sample size.
 
 ## Amendments
 
