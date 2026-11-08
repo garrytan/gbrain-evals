@@ -285,21 +285,22 @@ export async function useFixtureTransports(gut: GbrainUnderTest): Promise<() => 
   };
 }
 
-/** Import the fixture pages, embedded, into an engine whose schema is initialised. */
-export async function ingestFixture(gut: GbrainUnderTest, engine: any): Promise<void> {
+/** Import the fixture pages (and any extra page directory), embedded, into an engine whose schema is initialised. */
+export async function ingestFixture(gut: GbrainUnderTest, engine: any, extraPagesDir?: string): Promise<void> {
   const { assertEmbedded } = await import('../import-embedded.ts');
   const { importFromContent } = await importGbrain<any>(gut, 'src/core/import-file.ts');
-  for (const page of walkPages(join(FIXTURE_DIR, 'pages'))) assertEmbedded(await importFromContent(engine, page.slug, page.body, { noEmbed: false }), page.slug);
+  const pages = [...walkPages(join(FIXTURE_DIR, 'pages')), ...(extraPagesDir ? walkPages(extraPagesDir) : [])];
+  for (const page of pages) assertEmbedded(await importFromContent(engine, page.slug, page.body, { noEmbed: false }), page.slug);
 }
 
-/** The public fixture as an in-memory PGLite brain with keyless transports, marked as a copy and set read-only. */
-export async function buildFixtureBrain(gut: GbrainUnderTest): Promise<{ engine: any; close: () => Promise<void> }> {
+/** The public fixture as an in-memory PGLite brain with keyless transports, marked as a copy and set read-only. Phase 2 adds its own pages. */
+export async function buildFixtureBrain(gut: GbrainUnderTest, extraPagesDir?: string): Promise<{ engine: any; close: () => Promise<void> }> {
   const reset = await useFixtureTransports(gut);
   const { PGLiteEngine } = await importGbrain<any>(gut, 'src/core/pglite-engine.ts');
   const engine = new PGLiteEngine();
   await engine.connect({});
   await engine.initSchema();
-  await ingestFixture(gut, engine);
+  await ingestFixture(gut, engine, extraPagesDir);
   await engine.executeRaw('CREATE TABLE public.' + COPY_MARKER_TABLE + ' (made_at timestamptz NOT NULL DEFAULT now())');
   await engine.executeRaw('SET default_transaction_read_only = on');
   return {

@@ -2,6 +2,72 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.173] - 2026-11-08
+
+### Live recall phase 2: a preregistered harness for whether gbrain retrieval changes answers (GBEV-46)
+
+- **What it measures.** `eval/runner/live-recall/tasks.ts` sends each private task, in an exact and a paraphrased form,
+  to claude-opus-5-5, particle-1 and gpt-6.1-sol in four arms: no retrieval (A), gbrain's own `query`, `search` and
+  `get_page` (B), a summariser with B's tools in front of a tool-less answerer (C), and the top five pages of one search
+  pasted in (D). A judge from another family (gpt-6.1-sol for Opus and particle-1, claude-opus-5-5 for Sol; particle-1
+  never judges) grades each answer against Wintermute's gold facts and checks every cited page against a snapshot taken
+  when the answer was given. An inline `[x]` counts as a citation only when x holds a `/` or names a page the episode
+  saw, so a note such as `[TBD]` is not one. The [preregistration](docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md) fixes four
+  Holm-corrected primaries on the paraphrase form (B minus A on correct, C minus B on correct and grounded, for Opus and
+  particle-1), the prompts and judge prompt verbatim, a $360 starting cap for the counted run and a cost gate. No counted
+  run has happened.
+- **Privacy.** Every gbrain read runs as gbrain's untrusted remote caller (`remote: true` through the MCP dispatcher), so
+  gbrain hides pages flagged private and unsafe chunks from the models and the judge. The runner deletes
+  `GBRAIN_REMOTE_PRIVATE_PAGES` from its process and refuses a brain whose config relaxes it (`LR_PRIVACY_RELAXED`),
+  at the start, before every task and after every episode, writing nothing for that episode. gbrain caches the setting
+  for 30 seconds, so pages it serves inside that window can reach a model before the runner notices. B and C's tools
+  carry no `source_id` or `source_ids` and D's search is scoped the same way, so every read stays in the reader's own
+  source. The freeze drops tasks whose gold page a remote caller cannot open there, records only the count, and prints
+  `gold pages reachable from the reader's source: k of n`; a gold page that lives only in another source stops the
+  freeze, or the run, with `LR_GOLD_OUT_OF_SOURCE` before anything is written. A freeze that keeps fewer than 100
+  tasks prints a notice to replace tasks and freeze again before accepting lower power; under 60 still exits 5.
+- **Money.** Every request, gbrain's embeddings and rerank calls included, goes through the budget ledger's paid-request
+  guard. A refused reservation is a cap stop (`LR_CAP_STOP`, exit 6), including a refusal inside an embedding, which
+  gbrain would otherwise absorb as a keyword-only search. A cap stop pauses the run at its cap instead of ending it
+  (Garry, 2026-11-07: "Eh don't cut corners to stay just under the limits we treat it as a guideline"): once GBEV-3
+  extends the cap, `--resume --window-note <extension id> --budget-usd <new cap>` (or `tasks.ts judge` with the same two
+  flags) raises the ledger run's budget through the ledger, records the extension in `run.json` and in the scorecard's
+  run identity (`final_cap_usd`, `cap_extensions`), and reruns only the episodes the cap refused. Each run directory has
+  its own ledger run, so every cost sum (the scorecard's ledger total, `cap-stop.json`, the `LR_CAP_STOP` line and the
+  final ledger line) counts that directory's spend across all its sessions and nothing else on the ledger. The
+  paraphrase pass runs before the exact pass, so a cap stop cannot cut a primary. `tasks.ts estimate` projects the
+  counted cost from the smoke and stops with `LR_COST_GATE` past 75% of the cap.
+- **Errors.** Only a model-caused 400 counts as a no-answer, and the scorecard shows each cell's count of them. A
+  provider that refuses the key, the model or the account (401, 403, 404, another 4xx, a credit or billing 400,
+  OpenAI's 429 `insufficient_quota` after the retries, or particle-1's own 402 for an empty prepaid balance) on an
+  answer, summary or judge call stops the run with `LR_PROVIDER_REJECTED` (exit 3) and no record, so `--resume`
+  reruns the episode; a metering proxy's 402 stays a cap stop. A network failure, an unreadable response or a
+  non-retryable 5xx is a harness error that reruns; particle-1 requests that may have billed stay `timed_out` and are
+  never resent. A B, C or D episode whose searches report a failure stage, or in B and C return no meta, is degraded
+  whatever its stop, unless it timed out or hit a harness error. An episode that degrades sends the public probe again,
+  and if the probe degrades too the run stops (`LR_EMBEDDING_UNAVAILABLE` or `LR_ARM_PREFLIGHT`) with that episode
+  unwritten, so a refused embedding or rerank key leaves no degraded records behind. A judge failure other than a cap
+  stop during `tasks.ts judge` stops new judge calls and is raised only after the calls in flight finish, so the
+  paid-request guard outlives every call. A records file whose last record lost its newline gets one before the next
+  append. A `--resume` whose harness digest, gbrain version or commit, schema version, barrier kind, reader's source,
+  configured retrieval settings, models, arms, forms or kept tasks differ from the first session stops with
+  `LR_FREEZE_MISMATCH`.
+- **Custody.** `task-scorecard.ts` writes `live-recall-task-scorecard/v1` only after a structural allowlist check and a
+  needle scan over every task form, gold fact, task id and slug the run saw.
+- **Cat 40 loop.** An opt-in `openaiStore: false` sends `store: false`, asks for encrypted reasoning items and resends
+  the accumulated input instead of `previous_response_id`. With it unset, request bodies are unchanged (the existing
+  byte-identity test passes). With `classifyStops` on, a run that ends on a provider error records its status and
+  whether it refused credit or billing (`provider_error`); OpenAI's 429 `insufficient_quota` records it too, and its
+  stop stays `harness_error`.
+- **Fixture and tests.** `eval/data/live-recall-v1/tasks.jsonl` holds the twenty public questions as tasks plus one whose
+  gold page (`phase2-pages/notes/board-compensation.md`) is flagged private. `test/eval/live-recall-tasks.test.ts` runs the
+  whole harness keyless with scripted providers behind the guard, including each provider-error path, a privacy
+  relaxation during the run, a resume with changed identity, a gold page in a second source, a failed search before a
+  turn cap, the citation rule, a judge key refused while re-judging, a records file cut before its last newline, a cap
+  stop paused and continued past an extension without re-answering, a cap stop while judging resumed judge-only, and cost
+  sums that leave out a second run directory on the same ledger.
+  `brain.ts` gains nine abort codes; RUN-KIT and SCORECARD gain phase 2 sections.
+
 ## [0.10.172] - 2026-11-07
 
 ### Live recall batch 2: results, and a preflight probe that stays inside gbrain's keyword bound (GBEV-43)
