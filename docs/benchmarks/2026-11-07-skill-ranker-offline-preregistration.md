@@ -119,3 +119,20 @@ Turns and pass-1 labels are written; no arm has run on any turn. Recorded hashes
 Judge outcome by written intent (pass 1): 212 of 225 skill turns got at least one acceptable skill and 13 got none; 44 of 45 near-miss turns and all 30 generic turns got none. So 87 turns are no_skill_needed under the preregistered definition (judge's empty set wins over the writer's intent). The judge's cached catalog block measured 188,837 input tokens. Ledger after pass 1: $4.97.
 
 No change to arms, bars, grids or decision rule.
+
+### Amendment 2, 2026-11-07: the preregistered gate fails on dev; a secondary gate analysis and a gate-stress set, added before any test cell
+
+Calibration on the 60 dev turns (catalog 750) ran; no arm has run on a test turn.
+
+**What dev showed.** Under the preregistered gate (normalized top score, tau chosen for dev false-suggestion rate at most 15%), every per-turn arm in both variants gets dev gated hit@5 = 0: the only thresholds that keep false suggestions at or under 15% also suppress every skill turn. The cause is length. bm25n divides by the summed idf of the query's terms, and A2's feature divides by the number of query tokens, so short messages score high. The 17 dev no_skill_needed turns are short (median about 6 content tokens) and the dev skill turns are long (at least 22, median about 45), because the writer was asked for short near-miss questions and wrote long skill requests. The preregistered gate therefore ranks no-skill turns above skill turns. Probe: `scripts/_probe.ts`.
+
+**Primary analysis unchanged.** The test split is scored exactly as preregistered and that result is the primary verdict.
+
+**Secondary analysis, fixed now, before any test cell:**
+
+1. Extra gate features for every per-turn arm: *raw* (the arm's unnormalized top score; for A6 and A7, the raw top score of their A4 BM25 component), *ratio* (top score over the mean of ranks 2 to 10, zero-filled; length-free), and a *length-only control* (the turn's content-token count, which ignores the catalog). The control is never selectable; it shows whether a gate does more than measure message length.
+2. A gate-stress set that breaks the confound, written by the same writer under the same rules (`scripts/gen-stress.ts`): per area, 1 terse skill-seeking turn (at most 12 words) and 1 long no-skill turn (3 to 6 sentences of background before a simple question), plus 10 long generic no-skill turns: 100 turns. Labelled by the same judge, instructions, catalog listing and batch size as pass 1 (`scripts/judge-stress.ts`) and split 20/80 within each intent by the same hash rule. Its hashes are recorded in Amendment 3 before any test cell.
+3. Secondary calibration: ranking parameters stay as tuned (ungated, dev only). For each gate feature, tau is chosen on dev plus stress-dev (80 turns) by the preregistered rule. The secondary chosen pair is the (deployable arm, gate feature in {raw, ratio}) with the highest gated hit@5 on dev plus stress-dev at 750 in variant D; ties go to the simpler arm, then raw before ratio.
+4. Secondary verdict: the same four bars, on test plus stress-test (320 turns), also reported for each set alone. It is labelled as amended and post-dev and never replaces the primary verdict.
+
+Budget: about $3 more (writer and one judge pass over 100 turns). Ledger before this amendment: $8.80.
