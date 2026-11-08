@@ -486,6 +486,12 @@ export function frontierJudgeOf(reader: string): string {
 
 /** The request settings every per-reader judge is pinned to (GBEV-3, 2026-11-08, gate reply e1): medium effort, an 8,000-token output cap. */
 export const PER_READER_JUDGE_SETTINGS = { effort: 'medium', max_tokens: 8000 } as const;
+/**
+ * The judge route's output cap for each per-reader judge (metering-proxy `judge@<provider>:<model>` route caps). The
+ * proxy's default judge cap is 2,048 tokens and refuses a request that states more, so a campaign, re-read or judge check
+ * whose judges are pinned adds these caps; every other judge on the route keeps the default.
+ */
+export const PER_READER_JUDGE_ROUTE_CAPS: Record<string, number> = Object.fromEntries(['anthropic', 'openai', 'particle'].map(f => [`judge@${frontierJudgeOf(`${f}:`)}`, PER_READER_JUDGE_SETTINGS.max_tokens]));
 export type JudgeSettings = { effort: string; max_tokens: number };
 
 /** The frontier judges one answer of `reader` gets on this arm (replicate 0, in the sample): none, the per-reader judge, or every listed judge. */

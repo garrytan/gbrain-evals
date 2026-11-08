@@ -11,6 +11,12 @@ import { join } from 'node:path';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { ChatClient, judgeAnswer, type ChatLike, type ChatOptions, type ChatResultV2 } from '../../eval/runner/memory-qa/qa-v2.ts';
 import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
+import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
+import { DEFAULT_ROUTE_CAPS, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
+import { campaignManifest } from '../../eval/runner/q1/cell.ts';
+import { frontierJudgeOf, loadManifest, PER_READER_JUDGE_ROUTE_CAPS, PER_READER_JUDGE_SETTINGS } from '../../eval/runner/q1/cells/definitions.ts';
+import { loadF6Manifest } from '../../eval/runner/q1/cells/f6.ts';
+import { loadRS1Manifest } from '../../eval/runner/q1/cells/rs1.ts';
 
 const realFetch = globalThis.fetch;
 const dirs: string[] = [];
@@ -109,3 +115,38 @@ describe('pinned judge settings', () => {
   });
 });
 
+
+describe('the judge route admits the pinned cap', () => {
+  const caps = (m: Parameters<typeof campaignManifest>[0]) => campaignManifest(m).output_caps!;
+  async function admitted(outputCaps: Record<string, number>) {
+    const seen: Array<Record<string, unknown>> = [];
+    const fetchImpl = (async (_u: unknown, init?: RequestInit) => { seen.push(JSON.parse(String(init?.body))); return Response.json({ usage: { prompt_tokens: 10, completion_tokens: 5, input_tokens: 10, output_tokens: 5 } }); }) as unknown as typeof fetch;
+    const lease = BudgetRun.openLease({ runId: 'judge-cap', leaseUsd: 5, ledgerPath: join(tmp(), 'lease.sqlite') });
+    const proxy = new MeteringProxy({ fetchImpl, policy: { lease, env: { OPENAI_API_KEY: 'placeholder-openai', ANTHROPIC_API_KEY: 'placeholder-anthropic' }, usageLog: join(tmp(), 'usage.ndjson'),
+      routeCaps: { caps: outputCaps, slots: { judge: 'judge' }, defaultClass: 'extraction' } } });
+    proxy.start();
+    const post = (path: string, body: unknown) => fetch(`http://127.0.0.1:${proxy.port}${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    try {
+      const astra = await post('/judge/openai/v1/chat/completions', { model: 'gpt-6-astra', messages: [{ role: 'user', content: 'grade' }], max_completion_tokens: 8000, reasoning_effort: 'medium' });
+      const opus = await post('/judge/anthropic/v1/messages', { model: 'claude-opus-5-5', max_tokens: 8000, output_config: { effort: 'medium' }, messages: [{ role: 'user', content: 'grade' }] });
+      const bridge = await post('/judge/openai/v1/chat/completions', { model: 'gpt-4.1-mini', messages: [{ role: 'user', content: 'grade' }], max_tokens: 8000 });
+      return { astra: astra.status, opus: opus.status, bridge: bridge.status, forwarded: seen.length };
+    } finally { proxy.stop(); closeLedgers(); }
+  }
+
+  test('an RS1 campaign admits each gating judge at its pinned 8,000-token cap, and only those judges', async () => {
+    const rs1 = caps(loadRS1Manifest());
+    expect(Object.fromEntries(Object.entries(rs1).filter(([k]) => k.startsWith('judge@')))).toEqual({ 'judge@anthropic:claude-opus-5-5': 8000, 'judge@openai:gpt-6-astra': 8000 });
+    expect(await admitted(rs1)).toEqual({ astra: 200, opus: 200, bridge: 400, forwarded: 2 });
+  });
+
+  test('Q1 and F6 campaigns keep the default caps, under which a pinned judge call is refused before it is sent', async () => {
+    expect(caps(loadManifest())).toEqual({ ...DEFAULT_ROUTE_CAPS });
+    expect(caps(loadF6Manifest())).toEqual({ ...DEFAULT_ROUTE_CAPS });
+    expect(await admitted({ ...DEFAULT_ROUTE_CAPS })).toEqual({ astra: 400, opus: 400, bridge: 400, forwarded: 0 });
+  });
+
+  test('the caps follow the judge map: one entry per per-reader judge at the pinned output cap', () => {
+    expect(PER_READER_JUDGE_ROUTE_CAPS).toEqual(Object.fromEntries(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'].map(r => [`judge@${frontierJudgeOf(r)}`, PER_READER_JUDGE_SETTINGS.max_tokens])));
+  });
+});
