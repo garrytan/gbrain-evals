@@ -6,7 +6,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { BudgetRun, initLedger, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
 import { NUDGE, runAgent, type Arm } from '../../eval/runner/cat40/loop.ts';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
@@ -17,7 +17,7 @@ import { ANSWER_TOOL, PROMPTS, SUMMARY_TOOL, citedSlugs, judgeEpisode, openReade
 import { JUDGE_SYSTEM, VERDICT_TOOL, assertJudge, derive, judgeFor, parseVerdict, secondJudgeFor } from '../../eval/runner/live-recall/task-judge.ts';
 import { checkOutbound, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
 import {
-  FIXTURE_TASKS, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, assertPrivate, estimateCost, freezeSummary, goldCheck, judgeRunDir, ledgerRunner, loadRecords, parseTasks, runTaskSet, scoreRunDir, spread,
+  FIXTURE_TASKS, HARNESS_FILES, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, assertPrivate, estimateCost, freezeSummary, goldCheck, judgeRunDir, ledgerRunner, loadRecords, parseTasks, runTaskSet, scoreRunDir, spread,
   watchRefusals, writeFreeze, type Paid, type RunRecord,
 } from '../../eval/runner/live-recall/tasks.ts';
 
@@ -1019,5 +1019,19 @@ describe('phase 2 cost estimate', () => {
   });
   test('spread takes tasks across the five types in turn', () => {
     expect(spread(fixtureTasks, 5).map(t => t.type)).toEqual(['identifier', 'error_string', 'time_window', 'cross_source', 'topic']);
+  });
+});
+
+describe('phase 2 harness digest', () => {
+  test('covers the cost path: every runtime import of the agent loop, the budget ledger and the usage parser', () => {
+    const repo = resolve(import.meta.dir, '../..');
+    for (const file of ['eval/runner/cat40/loop.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/q1/usage.ts']) {
+      expect(HARNESS_FILES).toContain(file);
+      for (const m of readFileSync(join(repo, file), 'utf8').matchAll(/^import\s+(?!type\s)([^;]*?)\s+from\s+'((?:\.|gbrain\/)[^']+)'/gm)) {
+        const names = m[1]!.trim();
+        if (names.startsWith('{') && names.slice(1, -1).split(',').every(n => !n.trim() || n.trim().startsWith('type '))) continue;
+        expect(HARNESS_FILES).toContain(relative(repo, Bun.resolveSync(m[2]!, dirname(join(repo, file)))));
+      }
+    }
   });
 });

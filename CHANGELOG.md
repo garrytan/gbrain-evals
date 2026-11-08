@@ -17,6 +17,12 @@ This records what each gbrain-evals release changed and what its measurements me
   `eval/data/live-recall-v1/provider-usage-2026-11-08.jsonl` both ways: the loop's price equals the ledger's for every
   response, and the totals equal that capture's ledger ($0.0831378 Anthropic, $0.013817 OpenAI, $0.00152595
   particle-1). It fails on the old parser.
+- **Harness digest.** `HARNESS_FILES` now also hashes the cost path the runner prices with (`q1/usage.ts`,
+  `usage-receipt.ts`, `metering-proxy.ts`, and gbrain's `model-pricing.ts`, `model-id.ts` and `embedding-pricing.ts`)
+  and the shared `metrics.ts` its scorecard uses. Before this, the digest was the same with and without the cost fix. A
+  keyless test checks that every runtime import of the agent loop, the budget ledger and the usage parser, relative or
+  from gbrain, is in the list. The counted run's digest and commit requirements are under the
+  preregistration's Frozen sample.
 
 ## [0.10.175] - 2026-11-08
 

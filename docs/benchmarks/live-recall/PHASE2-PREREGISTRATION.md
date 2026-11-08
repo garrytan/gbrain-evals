@@ -653,6 +653,12 @@ Filled on the results branch from Wintermute's `freeze.json`, as a dated, pushed
 submitted, N kept, the count dropped as unreachable, counts by type, the task file's sha256 prefix, the minimum
 detectable differences for the four primaries at the kept N, and the counted run's runner commit and harness digest.
 
+**Counted-run identity (recorded 2026-11-08, before the freeze).** The counted run's harness digest must be
+`6cb8b40f3a010f46cf3533d027f354a6e529c69dbde11ca61c44dc9e98094de9`. The digest covers the twenty files in `HARNESS_FILES`
+(`eval/runner/live-recall/tasks.ts`): the runner, the agent loop, the budget ledger and the cost path they price with,
+including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json` must also show a
+`runner_commit` that contains 320db88b and `runner_dirty: false`.
+
 ## Disclosures
 
 Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.

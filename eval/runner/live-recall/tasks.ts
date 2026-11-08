@@ -73,15 +73,21 @@ const RESUME_IDENTITY = [
 ] as const;
 const AUDIT_ROWS = 30;
 const KEY_ENV = { anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', particle: 'PARTICLE_API_KEY' } as const;
-const HARNESS_FILES = [
+export const HARNESS_FILES = [
   'eval/runner/live-recall/tasks.ts', 'eval/runner/live-recall/task-arms.ts', 'eval/runner/live-recall/task-judge.ts', 'eval/runner/live-recall/task-scorecard.ts',
   'eval/runner/live-recall/brain.ts', 'eval/runner/live-recall/run.ts', 'eval/runner/live-recall/scorecard.ts', 'eval/runner/cat40/loop.ts',
   'eval/runner/budget-ledger.ts', 'eval/runner/refresh-barrier/ledger.ts', 'eval/runner/providers/openai-compatible.ts', 'eval/runner/stats/paired.ts', 'eval/runner/q2/stats.ts',
+  'eval/runner/q1/usage.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/metering-proxy.ts', 'eval/runner/metrics.ts',
+  'node_modules/gbrain/src/core/embedding-pricing.ts', 'node_modules/gbrain/src/core/model-pricing.ts', 'node_modules/gbrain/src/core/model-id.ts',
 ];
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
-/** sha256 over the runner's own source files, recorded in run identity so a counted run names the exact harness. */
+/**
+ * sha256 over the runner's own source files, the cost path it prices with (the usage parser, receipts, the metering
+ * deadline and gbrain's model and embedding prices) and the shared metrics its scorecard uses, recorded in run identity
+ * so a counted run names the exact harness.
+ */
 export function harnessDigest(): string {
   const h = createHash('sha256');
   for (const f of HARNESS_FILES) h.update(f + '\0').update(readFileSync(join(REPO_ROOT, f))).update('\0');
