@@ -155,6 +155,129 @@ The runner searches only a database that proves, by itself, that this run cannot
   arm preflight catches. Creating that role changes Garry's database, so ask through
   ALPH-11 first; it is GBRA-108's or Garry's decision.
 
+## Phase 2
+
+Phase 2 asks whether gbrain retrieval changes the answers a model gives about Garry's brain
+([preregistration](PHASE2-PREREGISTRATION.md)). Each task goes to claude-opus-5-5, particle-1 and gpt-6.1-sol in four
+arms (no retrieval, gbrain's own read tools, a summarising helper, and the top five pages pasted in), a judge from
+another model family grades each answer against the gold answer, and the runner writes an aggregate scorecard. Every
+model call carries task text, and the gbrain arms carry retrieved page text, to Anthropic, OpenAI and Particle; Garry
+agreed to that for this eval (T1, 2026-11-07). The runner reads the brain only as gbrain's untrusted remote caller, so
+pages flagged private never reach a model or the judge.
+
+Only these leave the box: `freeze.json` (counts, a hash and power numbers), the `estimate` line (dollars), and the
+run's `scorecard.json` and `scorecard.md` (aggregates). The task file, `tasks.meta.json`, the run's records, page
+snapshots, audit rows and gbrain's log stay.
+
+### Phase 2: what you need
+
+- This repository at the commit named in the run request, installed with `bun install`.
+- The gbrain checkout the box runs, passed as `--gbrain /data/gbrain@27f8b9d6287c` (0.60.593.0). The runner loads that
+  commit from a verified overlay copy; the checkout is not changed.
+- A read-only barrier, as for phase 1. For the counted run, the no-write role ALPH-72 creates just before the run, its
+  URL in `LIVE_RECALL_DATABASE_URL`. `freeze` and `estimate` read the brain too; a `snapshot.sh` copy (phase 1, step
+  1) works for them.
+- The model keys `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `PARTICLE_API_KEY`, and the keys gbrain uses here for query
+  embeddings and reranking, exported in the shell. Check each with `test -n "$NAME"`; never print one.
+- The shell rules from phase 1: run as the user whose `~/.gbrain/config.json` serves the brain, with
+  `GBRAIN_DIRECT_DATABASE_URL` unset. `GBRAIN_REMOTE_PRIVATE_PAGES` is removed from the runner's own process; if the
+  brain's config sets `search.remote_private_pages`, the runner refuses to start.
+- A budget ledger on the box, for example `/data/ops/live-recall/phase2/ledger.sqlite`. The first paid command on a new
+  ledger also takes `--program-cap-usd 360`.
+
+### Phase 2: the task file
+
+JSONL, one task per line, kept on the box outside this repository. This line is from the public fixture
+(`eval/data/live-recall-v1/tasks.jsonl`; the company and its pages are invented):
+
+```json
+{"id":"time-1","type":"time_window","source_question":"time-1","forms":{"exact":"What did the 2026-03-02 pricing review decide?","paraphrase":"What did we decide in early March about what to charge customers?"},"gold_pages":["meetings/2026-03-02-pricing-review"],"gold_answer":{"text":"The usage tier moves to $4 per robot-hour, billed monthly, with a floor of $500.","required_facts":[{"id":"f1","fact":"Usage pricing of $4 per robot-hour, billed monthly."},{"id":"f2","fact":"A floor of $500."}]},"window":{"since":"2026-03-01","until":"2026-03-07"},"gold_found_by":"page_first"}
+```
+
+- `id`: letters, digits, `.`, `_` or `-`, unique, at most 64 characters. Keep it opaque.
+- `type`: `identifier`, `error_string`, `time_window`, `cross_source` or `topic`.
+- `source_question`: the phase 1 question id it came from, or `null` for a new task.
+- `forms.exact` and `forms.paraphrase`: the same question twice. The exact form uses the gold page's own words,
+  identifiers or strings; the paraphrase asks for the same thing without them.
+- `gold_pages`: one or more gbrain page slugs that hold the answer. Every one must be readable by a remote caller: not
+  `visibility: private`, not a derived atom or synthesized concept without a visibility, not a pinned question, and not
+  restricted to named readers.
+- `gold_answer.text`: the short answer. `gold_answer.required_facts`: one to four `{"id", "fact"}` entries, each a fact a
+  correct answer must state, taken from text outside the page's protected facts and takes fences.
+  `gold_answer.acceptable_variants` (optional): other wordings of the answer that also count.
+- `gold_found_by`: `page_first`, `memory`, `gbrain_search`, `other_search` or `unknown`, as in phase 1.
+- `window` (optional): `{"since": "YYYY-MM-DD", "until": "YYYY-MM-DD"}`.
+
+### Phase 2: steps
+
+All commands run from the repository root.
+
+1. **Check the task file.** Keyless, and it opens nothing.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts check --tasks <tasks.jsonl>
+   ```
+
+2. **Freeze it** through a barrier and send `freeze.json` back through ALPH-72. It checks every gold page as a remote
+   caller and drops any task whose page a remote caller cannot open, counting the drop without naming the task. It
+   makes no model call. Exit status 5 means fewer than 60 tasks are kept: tell GBEV-3 before the freeze is used. Any
+   change to the task file after this needs a new freeze.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts freeze --tasks <tasks.jsonl> --out freeze.json \
+     --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL
+   ```
+
+3. **Estimate the cost** (the cost gate). `--smoke` is the public smoke's run directory, which comes with the run
+   request. It reads the frozen gold pages' sizes and makes no model call. It ends with `cost gate passed`, or stops
+   with [`LR_COST_GATE`](#lr_cost_gate); send the line either way.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts estimate --tasks <tasks.jsonl> --freeze freeze.json --smoke <smoke run dir> \
+     --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL --out estimate.json
+   ```
+
+4. **Run**, in the window GBEV-3 grants, after we confirm the freeze numbers are committed. Start it detached (for
+   example in `tmux`): it takes hours, and the paraphrase pass finishes before the exact pass starts.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts run --tasks <tasks.jsonl> --freeze freeze.json \
+     --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL \
+     --budget-usd 360 --budget-ledger <ledger> --program-cap-usd 360 --out <run dir>
+   ```
+
+   Before the first task the runner proves the barrier, refuses a brain that shows private pages to remote callers,
+   repeats the gold-page check, and sends one public probe query through D's search and B's `query` tool. The terminal
+   shows only the gbrain version and barrier, the task counts, the preflight result, progress every 10 tasks per pass,
+   any [`LR_JUDGE_ERROR`](#lr_judge_error) or [`LR_CELL_INVALID`](#lr_cell_invalid) count, the output paths and the
+   ledger total. Exit status: 0 complete, 1 incomplete (some episode is missing or unjudged), 6 cap stop
+   ([`LR_CAP_STOP`](#lr_cap_stop)), 3 abort, 4 unexpected error.
+
+5. **Re-judge, if asked.** If the run printed `LR_JUDGE_ERROR`, re-judge those answers without re-answering. It joins
+   the run's ledger run and cap.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts judge <run dir>
+   ```
+
+6. **Audit 30 answers.** This draws 30 judged answers, blind to arm and model, into `audit-rows.local.jsonl` in the run
+   directory. Grade each against its gold answer and write one line per row, `{"row": 1, "correct": true}`, to a file
+   on the box. Then rescore with the grades; only the agreement count reaches the scorecard.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts audit <run dir>
+   bun eval/runner/live-recall/tasks.ts score <run dir> --audit-grades <grades.jsonl>
+   ```
+
+7. **Send** `scorecard.json` and `scorecard.md` from the run directory. Keep everything else in it on the box.
+
+8. **Remove the role** (ALPH-72) and send the teardown proof to GBRA-108.
+
+If the run stops for any reason other than a cap stop (the machine restarted, a key failed), continue it with the same
+command plus `--resume --window-note <id>`, where the id is from GBEV-3's window note. A resume judges answered episodes
+that have no verdict, reruns only episodes with no record or an unfinished harness error, and never reruns a particle-1
+answer that may have been billed. A run directory with a cap stop refuses to continue.
+
 ## Abort codes
 
 Every abort prints its code, a one-line detail built only from counts, field names and line numbers, the fix below,
@@ -221,7 +344,8 @@ The question file has a problem at the line and field named. Fix it and freeze a
 
 The question file's hash differs from `freeze.json`, or a counted run was started without `--questions` and
 `--freeze`. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
-run directories were made on different question files.
+run directories were made on different question files. In phase 2 it means the task file's hash differs from
+`freeze.json`, or the kept line count does not match it: run with the frozen file, or freeze again.
 
 ### LR_COMPARE_CONTROL
 
@@ -236,7 +360,9 @@ and settings.
 
 ### LR_GOLD_MISSING_CAP
 
-More than 10% of questions name a gold page the copy does not hold. Fix the slugs or make a fresher copy.
+More than 10% of questions name a gold page the copy does not hold. Fix the slugs or make a fresher copy. In phase 2,
+more than 10% of the frozen tasks lost their gold page to a remote caller since the freeze: freeze again and send the new
+numbers.
 
 ### LR_CUSTODY_LEAK
 
@@ -247,6 +373,41 @@ written. Send the detail line (a field path) to GBEV-3 through ALPH-11.
 
 Something unexpected failed. The terminal shows only the error's class name; the full message is in
 `gbrain.local.log`, which stays on the box. Read it there and describe the problem without quoting private text.
+
+### LR_TASKS_INVALID
+
+Phase 2: the task file has a problem at the line and field named. Fix it and freeze again.
+
+### LR_PRIVACY_RELAXED
+
+Phase 2: the brain's config shows private pages to remote callers (`search.remote_private_pages`). Nothing ran. The
+runner never relaxes or works around it; GBEV-3 decides.
+
+### LR_CAP_STOP
+
+Phase 2: the budget ledger refused a reservation at the cap. The runner wrote `cap-stop.json`, scored what finished as
+an incomplete scorecard, and exited with status 6. Send the scorecard and the spent line. Nothing reruns, and the run
+directory refuses `--resume`.
+
+### LR_CELL_INVALID
+
+Phase 2, not an abort: a form, arm and model cell lost more than 5% of its episodes to errors or more than 10% to
+degraded searches. The scorecard marks it invalid and reports its comparisons untested. Send the scorecard as it is.
+
+### LR_JUDGE_ERROR
+
+Phase 2, not an abort: some judge outputs failed to parse twice. Run `tasks.ts judge <run dir>` (step 5), which
+re-judges them without re-answering, then send the new scorecard.
+
+### LR_RESUME_NEEDS_WINDOW
+
+Phase 2: `--resume` on a counted run needs `--window-note <id>`, because a resume can make paid calls again. Ask GBEV-3
+through ALPH-72 for a window note.
+
+### LR_COST_GATE
+
+Phase 2: the projected counted cost breaks the cost gate (the paraphrase pass over $270, 75% of the $360 cap, or the
+total over the cap). Send the estimate line to GBEV-3 through ALPH-72; no counted call runs until GBEV-3 answers.
 
 ### Snapshot codes
 

@@ -36,6 +36,13 @@ export const ABORT_CODES = {
   LR_EMBEDDING_UNAVAILABLE: 'Embedding the preflight query failed; export the key for the brain\'s embedding provider (the same one gbrain uses on this box) and rerun.',
   LR_ARM_PREFLIGHT: 'An arm failed on the public probe query before any question ran; the detail names the arm and gbrain\'s failure stage. title_arm_failed or keyword_arm_failed usually means the role lacks EXECUTE on one of gbrain\'s non-definer helper functions (RUN-KIT lists them); embed_* or rerank_* means the provider key or service. Fix it and rerun.',
   LR_EMBEDDING_UNVERIFIED: 'gbrain found no explicit embedding model; run as the user whose ~/.gbrain/config.json serves this brain, or set GBRAIN_HOME to its parent directory.',
+  LR_TASKS_INVALID: 'Fix the task file at the reported line and field, then freeze again.',
+  LR_PRIVACY_RELAXED: 'The brain shows private pages to remote callers (search.remote_private_pages); nothing ran. GBEV-3 decides; the runner never relaxes it.',
+  LR_CAP_STOP: 'The budget ledger refused a reservation at the cap. The run is reported incomplete with what finished and is never rerun.',
+  LR_CELL_INVALID: 'A cell passed its error or degraded-search cap; the scorecard reports it invalid (not an abort).',
+  LR_JUDGE_ERROR: 'Judge output failed to parse twice; `tasks.ts judge <run dir>` re-judges those answers without re-answering.',
+  LR_RESUME_NEEDS_WINDOW: 'A counted --resume needs --window-note <id> from GBEV-3\'s window note; ask GBEV-3 for one.',
+  LR_COST_GATE: 'The projected counted cost breaks the cost gate (paraphrase pass over 75% of the cap, or the total over the cap); send the projection to GBEV-3 before any counted call.',
 } as const;
 export type AbortCode = keyof typeof ABORT_CODES;
 

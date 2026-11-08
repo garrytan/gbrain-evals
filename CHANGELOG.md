@@ -2,6 +2,37 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### Live recall phase 2: a preregistered harness for whether gbrain retrieval changes answers (GBEV-46)
+
+- **What it measures.** `eval/runner/live-recall/tasks.ts` sends each private task, in an exact and a paraphrased form,
+  to claude-opus-5-5, particle-1 and gpt-6.1-sol in four arms: no retrieval (A), gbrain's own `query`, `search` and
+  `get_page` (B), a summariser with B's tools in front of a tool-less answerer (C), and the top five pages of one search
+  pasted in (D). A judge from another family (gpt-6.1-sol for Opus and particle-1, claude-opus-5-5 for Sol; particle-1
+  never judges) grades each answer against Wintermute's gold facts and checks every cited page against a snapshot taken
+  when the answer was given. The [preregistration](docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md) fixes four
+  Holm-corrected primaries on the paraphrase form (B minus A on correct, C minus B on correct and grounded, for Opus and
+  particle-1), the prompts and judge prompt verbatim, a $360 counted cap and a cost gate. No counted run has happened.
+- **Privacy.** Every gbrain read runs as gbrain's untrusted remote caller (`remote: true` through the MCP dispatcher), so
+  pages flagged private and unsafe chunks never reach a model or the judge. The runner deletes
+  `GBRAIN_REMOTE_PRIVATE_PAGES` from its process and refuses a brain whose config relaxes it (`LR_PRIVACY_RELAXED`).
+  The freeze drops tasks whose gold page a remote caller cannot open and records only the count.
+- **Money.** Every request, gbrain's embeddings and rerank calls included, goes through the budget ledger's paid-request
+  guard. A refused reservation is a cap stop (`LR_CAP_STOP`, exit 6) that is never rerun, including a refusal inside an
+  embedding, which gbrain would otherwise absorb as a keyword-only search. The paraphrase pass runs before the exact
+  pass, so a cap stop cannot cut a primary. `tasks.ts estimate` projects the counted cost from the smoke and stops with
+  `LR_COST_GATE` past 75% of the cap.
+- **Custody.** `task-scorecard.ts` writes `live-recall-task-scorecard/v1` only after a structural allowlist check and a
+  needle scan over every task form, gold fact, task id and slug the run saw.
+- **Cat 40 loop.** An opt-in `openaiStore: false` sends `store: false`, asks for encrypted reasoning items and resends
+  the accumulated input instead of `previous_response_id`. With it unset, request bodies are unchanged (the existing
+  byte-identity test passes).
+- **Fixture and tests.** `eval/data/live-recall-v1/tasks.jsonl` holds the twenty public questions as tasks plus one whose
+  gold page (`phase2-pages/notes/board-compensation.md`) is flagged private. `test/eval/live-recall-tasks.test.ts` runs the
+  whole harness keyless with scripted providers behind the guard. `brain.ts` gains seven abort codes; RUN-KIT and
+  SCORECARD gain phase 2 sections.
+
 ## [0.10.172] - 2026-11-07
 
 ### Live recall batch 2: results, and a preflight probe that stays inside gbrain's keyword bound (GBEV-43)
