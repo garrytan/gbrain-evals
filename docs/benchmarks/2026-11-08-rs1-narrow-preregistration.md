@@ -482,8 +482,34 @@ Nothing above changes after the freeze except by a dated amendment below.
 
 ## Amendments
 
-None yet. The first expected one regenerates wave B's cells once N_final is known. The pricing rerun after stage 1 is
-recorded here too.
+Wave B's regeneration once N_final is known and the pricing rerun after stage 1 are recorded here too.
+
+### 2026-11-08: five harness fixes before any counted run
+
+These land on the results branch before any counted run. Each has a test that fails on `325a1c04` and passes at its
+commit. They change no bar, arm, reader, judge, margin or cap.
+
+1. **Wave A's run identity survives wave B's regeneration** (`e1320de4`). The gbrain cell's extraction cap,
+   `GBRAIN_F6_EXTRACT_CAP_USD`, is part of the run identity verdict.ts compares, and it was derived from the RS1 set's
+   conversation count and token total. Regenerating the cells at a new N_final could move it from $4 to $3, $5 or $6,
+   and verdict.ts would then refuse wave A's receipts. It now sizes from a fixed figure, the length gate's 1.07M tokens
+   per conversation, so it stays $4. The test regenerates the cells at every N_final from 20 to 33, with the set's
+   token total unchanged and at 0.85, 1.00 and 1.15 times 1.07M per conversation, and checks that every field
+   verdict.ts compares for wave A's units (the run config without launch-control fields, `dataset`,
+   `scheduled_sha256` and `limit`) is byte-identical to the committed `rs1-cells.json`. It proves that changing the
+   set's size or token total cannot refuse wave A. It does not cover hand edits to other cell fields, which a
+   regeneration amendment must not make.
+2. **No false n/a cost** (`ab9cee75`). A reader whose only answers in a unit are failed retrievals (no context, zero
+   usage, no reader call) now adds $0 there instead of making its cost per question n/a. A reader with an answer that
+   read a context and no meter row is still unmetered, so its cost stays n/a.
+3. **particle-1 re-reads are tied to the filled manifest** (`b866f375`). A re-read receipt records the dataset it
+   loaded (the manifest's SHA-256 and each file's SHA-256), verdict.ts checks it against the filled manifest as it
+   checks unit receipts, and a beam-rs1 re-read is refused while the manifest is unfilled.
+4. **The check-in projection needs the spend to date** (`074901f9`). pricing.ts exits 2 when `--kept-done` or
+   `--stage1-done` is given without `--spent-usd`.
+5. **check-early-stop says when it tested nothing** (`baf8e082`). It exits 3 (untested) when it checked no
+   conversation or only early-stopped ones. It can only test mints that answered every batch: an early-stopped mint's
+   chat already ends at the stop, so its files match by construction.
 
 ## Disclosures
 
