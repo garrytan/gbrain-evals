@@ -57,8 +57,14 @@ export const TASK_CONCURRENCY = 4;
 export const PROVIDER_CONCURRENCY = 4;
 /** The descriptive second judge reads particle-1's paraphrase rows of these arms. */
 export const SECOND_JUDGE_ARMS: readonly TaskArm[] = ['B', 'C', 'D'];
-/** Run identity a --resume must share with the session that started the run directory. */
-const RESUME_IDENTITY = ['harness_digest', 'gbrain_loaded_version', 'gbrain_loaded_commit', 'models', 'arms', 'forms', 'kept_ids'] as const;
+/**
+ * Run identity a --resume must share with the session that started the run directory: the harness, gbrain, the brain's
+ * configured retrieval settings (result_cache is gbrain's own availability flag, never a health probe) and the task set.
+ */
+const RESUME_IDENTITY = [
+  'harness_digest', 'gbrain_loaded_version', 'gbrain_loaded_commit', 'schema_version', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model',
+  'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest', 'models', 'arms', 'forms', 'kept_ids',
+] as const;
 const AUDIT_ROWS = 30;
 const KEY_ENV = { anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', particle: 'PARTICLE_API_KEY' } as const;
 const HARNESS_FILES = [
@@ -176,7 +182,7 @@ export async function assertPrivate(gut: GbrainUnderTest, engine: any): Promise<
 /**
  * Open the fixture or the counted brain behind phase 1's barrier and guards, and refuse a brain that relaxes remote
  * private-page visibility. The env escape hatch is deleted from this process first, so only the brain's config could
- * relax it; runTaskSet checks again before every task.
+ * relax it; runTaskSet checks again before every task and after every episode.
  */
 async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUrlEnv: string }, capped: () => boolean): Promise<Brain> {
   delete process.env.GBRAIN_REMOTE_PRIVATE_PAGES;
@@ -218,7 +224,11 @@ async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUr
   }
 }
 
-/** The public probe query through D's search and B's query tool: a broken embedding or rerank path stops the run before any task. */
+/**
+ * The public probe query through D's search and B's query tool: a broken embedding or rerank path stops the run before
+ * any task. runTaskSet sends it again after an episode degrades, so a failure that persists stops the run with that
+ * episode unwritten, and only a failure the probe no longer sees leaves the episode degraded.
+ */
 async function preflight(reader: GbrainReader): Promise<void> {
   const top = await reader.top(PREFLIGHT_PROBE);
   const failed = top.degraded.filter(s => FAILURE_STAGES.has(s));
@@ -473,6 +483,8 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       while (!a || (a.status === 'harness_error' && a.attempt < MAX_ATTEMPTS)) {
         if (stopped()) return;
         a = await runEpisode(ctx, task, form, arm, model, (a?.attempt ?? 0) + 1);
+        await assertPrivate(o.gut, brain.engine);
+        if (a.status === 'degraded') await preflight(brain.reader).catch(e => { ctx.capCheck(); throw e; });
         store.write(a);
       }
       if (a.status !== 'answered') return;

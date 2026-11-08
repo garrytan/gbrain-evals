@@ -4,7 +4,7 @@
  * ledger's paid-request guard (a fake fetch on a temporary ledger). Nothing here reaches a provider.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
@@ -577,6 +577,17 @@ describe('phase 2 provider errors (keyless)', () => {
     }
   });
 
+  test('OpenAI\'s 429 insufficient_quota stops the run after the retries; a rate-limit 429 is still a harness error', async () => {
+    const realSetTimeout = globalThis.setTimeout;
+    globalThis.setTimeout = ((fn: () => void) => realSetTimeout(fn, 0)) as unknown as typeof setTimeout;
+    try {
+      const quota: Failure = w => (w === 'openai' ? Response.json({ error: { message: 'You exceeded your current quota, please check your plan and billing details.', type: 'insufficient_quota', code: 'insufficient_quota' } }, { status: 429 }) : undefined);
+      expect(await guarded(quota, async (ctx, sent) => [await abortCode(() => answer(ctx, 'gpt-6.1-sol')), sent.length])).toEqual(['LR_PROVIDER_REJECTED', 6]);
+      const busy = await guarded(w => (w === 'openai' ? Response.json({ error: { message: 'Rate limit reached for requests', type: 'requests', code: 'rate_limit_exceeded' } }, { status: 429 }) : undefined), ctx => answer(ctx, 'gpt-6.1-sol'));
+      expect(busy.status).toBe('harness_error');
+    } finally { globalThis.setTimeout = realSetTimeout; }
+  });
+
   test('a judge whose key is refused stops the run instead of recording a judge error', async () => {
     const rec = await guarded(() => undefined, ctx => answer(ctx, 'claude-opus-5-5'));
     expect(rec.status).toBe('answered');
@@ -612,6 +623,61 @@ describe('phase 2 provider errors (keyless)', () => {
       expect((await runTaskSet({ ...opts, resume: true }, () => {})).result).toBe('complete');
       expect(loadRecords(records).records.filter(r => r.kind === 'answer').map(r => [(r as AnswerRecord).status, (r as AnswerRecord).attempt])).toEqual([['answered', 1]]);
     } finally {
+      paid.guard.uninstall();
+      paid.run.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 300_000);
+
+  test('Particle\'s own 402 stops the run with no record and --resume answers it; a metering proxy\'s 402 is still a cap stop', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-credit-'));
+    process.env.GBRAIN_AUDIT_DIR = dir;
+    let refusal: string | null = 'Insufficient credits';
+    const { fetchImpl } = withFailures(fixtureTasks, w => (w === 'particle' && refusal ? Response.json({ error: { message: refusal } }, { status: 402 }) : undefined));
+    const paid = scriptedPaid(dir, fetchImpl, 5);
+    const records = join(dir, 'run', 'records.local.jsonl');
+    const opts = { out: join(dir, 'run'), gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['A'] as any, models: ['particle-1'], limit: 1, concurrency: 1, windowNote: null, paid };
+    try {
+      expect(await abortCode(() => runTaskSet({ ...opts, resume: false }, () => {}))).toBe('LR_PROVIDER_REJECTED');
+      expect([loadRecords(records).records.length, existsSync(join(dir, 'run', 'cap-stop.json'))]).toEqual([0, false]);
+      refusal = null;
+      expect((await runTaskSet({ ...opts, resume: true }, () => {})).result).toBe('complete');
+      expect(loadRecords(records).records.filter(r => r.kind === 'answer').map(r => (r as AnswerRecord).status)).toEqual(['answered']);
+      refusal = 'metering proxy: the lease cannot cover this request';
+      expect((await runTaskSet({ ...opts, out: join(dir, 'proxy'), resume: false }, () => {})).result).toBe('cap_stop');
+    } finally {
+      paid.guard.uninstall();
+      paid.run.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 300_000);
+
+  test('a degraded episode resends the probe: a one-off failure stays degraded, one that persists stops the run unwritten and --resume answers it', async () => {
+    const gateway = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
+    const { hashEmbedVector } = await import('../../eval/runner/cat18-embedding-providers.ts');
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-probe-'));
+    process.env.GBRAIN_AUDIT_DIR = dir;
+    const up = async (params: { values: string[] }) => ({ embeddings: params.values.map(v => hashEmbedVector(v, 256)), values: params.values, warnings: [] });
+    let failure: 'once' | 'persists' | null = 'once';
+    const { fetchImpl } = withFailures(fixtureTasks, (_w, c) => {
+      if (failure && c.system !== JUDGE_SYSTEM && c.results === 0) gateway.__setEmbedTransportForTests(async () => { throw new Error('embedding service down'); });
+      if (failure === 'once' && c.system !== JUDGE_SYSTEM && c.results === 2) gateway.__setEmbedTransportForTests(up);
+      return undefined;
+    });
+    const paid = scriptedPaid(dir, fetchImpl, 5);
+    const answers = (run: string) => loadRecords(join(dir, run, 'records.local.jsonl')).records.filter((r): r is AnswerRecord => r.kind === 'answer').map(a => a.status);
+    const opts = { gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['B'] as any, models: ['claude-opus-5-5'], limit: 1, concurrency: 1, windowNote: null, paid };
+    try {
+      await runTaskSet({ ...opts, out: join(dir, 'once'), resume: false }, () => {});
+      expect(answers('once')).toEqual(['degraded']);
+      failure = 'persists';
+      expect(await abortCode(() => runTaskSet({ ...opts, out: join(dir, 'persists'), resume: false }, () => {}))).toBe('LR_EMBEDDING_UNAVAILABLE');
+      expect(answers('persists')).toEqual([]);
+      failure = null;
+      expect((await runTaskSet({ ...opts, out: join(dir, 'persists'), resume: true }, () => {})).result).toBe('complete');
+      expect(answers('persists')).toEqual(['answered']);
+    } finally {
+      gateway.__setEmbedTransportForTests(up);
       paid.guard.uninstall();
       paid.run.close();
       rmSync(dir, { recursive: true, force: true });
@@ -658,7 +724,7 @@ describe('phase 2 provider errors (keyless)', () => {
     }
   }, 300_000);
 
-  test('the env hatch is cleared at open, and a privacy relaxation during the run stops it before the next task', async () => {
+  test('the env hatch is cleared at open, and a privacy relaxation during an episode stops the run before that episode is written', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'lr2-relaxed-'));
     process.env.GBRAIN_AUDIT_DIR = dir;
     process.env.GBRAIN_REMOTE_PRIVATE_PAGES = '1';
@@ -667,7 +733,8 @@ describe('phase 2 provider errors (keyless)', () => {
     const opts = { out: join(dir, 'run'), gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['A'] as any, models: ['claude-opus-5-5'], limit: 2, concurrency: 1, windowNote: null, paid };
     try {
       expect(await abortCode(() => runTaskSet({ ...opts, resume: false }, () => {}))).toBe('LR_PRIVACY_RELAXED');
-      expect(sent.filter(s => conversation(s.wire, s.body).system !== JUDGE_SYSTEM)).toHaveLength(1);
+      expect(sent).toHaveLength(1);
+      expect(loadRecords(join(dir, 'run', 'records.local.jsonl')).records).toHaveLength(0);
     } finally {
       delete process.env.GBRAIN_REMOTE_PRIVATE_PAGES;
       paid.guard.uninstall();
@@ -676,7 +743,7 @@ describe('phase 2 provider errors (keyless)', () => {
     }
   }, 300_000);
 
-  test('--resume refuses a session with another harness, gbrain, model, arm, form or task set', async () => {
+  test('--resume refuses a session with another harness, gbrain, retrieval setting, model, arm, form or task set', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'lr2-identity-'));
     process.env.GBRAIN_AUDIT_DIR = dir;
     const { fetchImpl } = withFailures(fixtureTasks, () => undefined);
@@ -688,7 +755,13 @@ describe('phase 2 provider errors (keyless)', () => {
       const run = JSON.parse(readFileSync(runPath, 'utf8'));
       expect(await abortCode(() => runTaskSet({ ...opts, models: ['claude-opus-5-5', 'gpt-6.1-sol'], resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
       expect(await abortCode(() => runTaskSet({ ...opts, limit: 1, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
+      expect(await abortCode(() => runTaskSet({ ...opts, arms: ['A', 'D'] as any, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
+      expect(await abortCode(() => runTaskSet({ ...opts, forms: ['paraphrase', 'exact'] as any, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
       expect(await abortCode(() => runTaskSet({ ...opts, resume: true }, () => {}))).toBe('no abort');
+      for (const field of ['gbrain_loaded_version', 'gbrain_loaded_commit', 'schema_version', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model', 'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest']) {
+        writeFileSync(runPath, JSON.stringify({ ...run, identity: { ...run.identity, [field]: 'changed' } }));
+        expect([field, await abortCode(() => runTaskSet({ ...opts, resume: true }, () => {}))]).toEqual([field, 'LR_FREEZE_MISMATCH']);
+      }
       writeFileSync(runPath, JSON.stringify({ ...run, identity: { ...run.identity, harness_digest: '0'.repeat(64) } }));
       expect(await abortCode(() => runTaskSet({ ...opts, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
       expect(JSON.parse(readFileSync(runPath, 'utf8')).identity.harness_digest).toBe('0'.repeat(64));

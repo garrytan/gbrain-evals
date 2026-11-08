@@ -54,8 +54,10 @@ visibility, pinned-question pages, private lineage, and pages restricted to name
   same remote `get_page`, so a page a remote caller cannot open is never pasted.
 - The env escape hatch `GBRAIN_REMOTE_PRIVATE_PAGES` is deleted from the runner's process before the brain opens, and
   the runner refuses to start ([`LR_PRIVACY_RELAXED`](RUN-KIT.md#lr_privacy_relaxed)) if the brain's config relaxes
-  remote private-page visibility (`search.remote_private_pages`). The runner never relaxes it. It reads the policy again
-  before every task, so a relaxation during the run stops the run before the next task.
+  remote private-page visibility (`search.remote_private_pages`). The runner never relaxes it. It reads the policy again,
+  uncached, before every task and after every episode, before that episode's record is written; a relaxation found then
+  writes nothing for the episode and stops the run. gbrain itself caches the setting for 30 seconds, so pages it serves
+  inside that window can reach a model before the runner notices.
 - A keyless test builds the public fixture with one extra page flagged `visibility: private` and shows it unreachable
   to B and C's `query`, `search` and `get_page`, absent from D's search and unreadable for the judge.
 
@@ -498,11 +500,11 @@ cents.
 | `turn_cap` or `no_tool_call` | counted, not correct, reported as no answer; not judged |
 | `context_overflow` | counted, not correct, reported as no answer |
 | a model-caused 400 (the provider rejected the request, not the key, model or account) | counted, not correct, reported as no answer and counted per cell in the scorecard |
-| the provider refuses the key, the model or the account (401, 403, 404, another 4xx, or a credit or billing 400) on an answer, summary or judge call | the run stops ([`LR_PROVIDER_REJECTED`](RUN-KIT.md#lr_provider_rejected)) with no record for that episode; `--resume` reruns it |
-| `harness_error` (gbrain timing out; a provider 5xx or 429 after the loop's retries, or another 5xx; a network failure or an unreadable response, unless particle-1 may have billed it) | written uncounted; the episode reruns, at most three attempts in all; still failing, excluded with its count |
+| the provider refuses the key, the model or the account (401, 403, 404, another 4xx, a credit or billing 400, OpenAI's 429 `insufficient_quota` after the loop's retries, or particle-1's own 402 for an empty prepaid balance) on an answer, summary or judge call | the run stops ([`LR_PROVIDER_REJECTED`](RUN-KIT.md#lr_provider_rejected)) with no record for that episode; `--resume` reruns it |
+| `harness_error` (gbrain timing out; a provider 5xx or a 429 other than `insufficient_quota` after the loop's retries, or another 5xx; a network failure or an unreadable response, unless particle-1 may have billed it) | written uncounted; the episode reruns, at most three attempts in all; still failing, excluded with its count |
 | particle-1 `timed_out` (the request may have been billed) | excluded with its count, never rerun |
 | a degraded search (below) | excluded with its count |
-| a cap refusal | cap stop |
+| a cap refusal (the ledger's, or a metering proxy's budget refusal) | cap stop |
 | `judge_error` | the answer stays; excluded from verdicts with its count; re-judged with `tasks.ts judge` without re-answering |
 
 **Degraded searches.** Every `query` and `search` call in B and C, and D's search, keeps gbrain's retrieval meta. A call
@@ -510,7 +512,9 @@ that reports one of phase 1's failure stages (embedding unavailable or timed out
 a failed reranker, or a reranker that passed results through unscored) marks its episode degraded, and so does a `query`
 or `search` call in B or C that returns no meta at all. A D search that throws is a harness error. Before the first task the runner sends a public probe query (two made-up words) through D's search and B's
 `query` tool and stops ([`LR_EMBEDDING_UNAVAILABLE`](RUN-KIT.md#lr_embedding_unavailable),
-[`LR_ARM_PREFLIGHT`](RUN-KIT.md#lr_arm_preflight)) if either degrades.
+[`LR_ARM_PREFLIGHT`](RUN-KIT.md#lr_arm_preflight)) if either degrades. When an episode degrades, the runner sends the same
+probe again before writing it: if the probe degrades too, the run stops with the same codes and that episode has no
+record, so `--resume` reruns it; if the probe passes, the episode stays degraded and is excluded as above.
 
 **Invalid cells.** A form, arm and model cell with more than 5% of its run episodes excluded for errors (harness error,
 timeout or judge error), or more than 10% excluded as degraded, is invalid and reported so; comparisons that use it are
@@ -524,7 +528,9 @@ Every record is appended to the run directory before the next step. `--resume` s
 but unjudged ones, and reruns only episodes with no record or an unfinished harness error (never a particle-1
 `timed_out`). A counted `--resume` needs `--window-note <id>` from GBEV-3's window note
 ([`LR_RESUME_NEEDS_WINDOW`](RUN-KIT.md#lr_resume_needs_window)), recorded in run identity. A resume must match the first
-session's harness digest, loaded gbrain version and commit, models, arms, forms and kept tasks, or it stops
+session's harness digest, loaded gbrain version and commit, schema version, configured retrieval settings (search
+mode, reranker and embedding models, CRAG settings, the result cache flag and the tool definitions' digest), models,
+arms, forms and kept tasks, or it stops
 ([`LR_FREEZE_MISMATCH`](RUN-KIT.md#lr_freeze_mismatch)). A run directory with a cap stop refuses to continue.
 
 ## Custody
@@ -565,8 +571,10 @@ in the run directory on the box.
   marking episodes degraded, a cap refusal inside an embedding becoming a cap stop, the judge parser, derivation and
   routing, `store: false` on every OpenAI request, the ledger reconciling with the scorecard, a tiny budget ending in
   `LR_CAP_STOP` with no rerun, paraphrase before exact, particle-1 `timed_out` never rerun, judge-only resume, a refused
-  key stopping the run and `--resume` answering the episode, a model-caused 400 counted, lost requests rerun, a privacy
-  relaxation during the run, a resume with changed identity refused, the leak
+  key stopping the run and `--resume` answering the episode, OpenAI's 429 `insufficient_quota` and particle-1's own
+  402 stopping the run (a metering proxy's 402 stays a cap stop), a degraded episode's probe (a one-off failure stays
+  degraded, a lasting one stops the run with the episode unwritten), a model-caused 400 counted, lost requests rerun, a
+  privacy relaxation during an episode, a resume with changed identity or retrieval settings refused, the leak
   canaries (a form, a fact and a slug), a numeric fact, an oracle answerer scoring 1.0 and an empty one 0.0, and the
   abort codes. Cat 40's existing byte-identity test shows its own request bodies unchanged.
 - **Paid smoke**, after the harness merges, on crew keys under one paid window with a $10 cap: five fixture tasks (one

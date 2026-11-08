@@ -78,9 +78,13 @@ export function isContextOverflow(e: unknown): boolean {
   return e instanceof ProviderError && e.status === 400 && /context[_ ]length|context window|prompt is too long|too many tokens|maximum context|input is too long|exceeds the context/i.test(e.body);
 }
 
-/** A provider 400 that refuses the account's credit or billing rather than the request, such as Anthropic's "credit balance is too low". */
+/**
+ * A provider answer that refuses the account's credit or billing rather than the request: a 400 such as Anthropic's
+ * "credit balance is too low", or OpenAI's 429 `insufficient_quota` (still failing after the retries, as every 429 is).
+ */
 export function isBillingRefusal(e: unknown): boolean {
-  return e instanceof ProviderError && e.status === 400 && /credit balance|billing|insufficient[_ ]quota|purchase credits/i.test(e.body);
+  if (!(e instanceof ProviderError)) return false;
+  return e.status === 400 ? /credit balance|billing|insufficient[_ ]quota|purchase credits/i.test(e.body) : e.status === 429 && /insufficient[_ ]quota/i.test(e.body);
 }
 
 export interface AgentRun {
@@ -101,8 +105,9 @@ export interface AgentRun {
   /** Particle runs only: turns with at least one tool call whose arguments were not a JSON object (run with `{}`). */
   unparseable_tool_turns?: number;
   /**
-   * `classifyStops` only, on stop `error`: the status of the provider answer that ended the run and whether it refused the
-   * account's credit or billing. Absent when no provider answer ended it (a network failure, an unreadable body).
+   * `classifyStops` only, on stop `error`, or on stop `harness_error` from a 429 that refuses billing (`isBillingRefusal`): the
+   * status of the provider answer that ended the run and whether it refused the account's credit or billing. Absent when
+   * no provider answer ended it (a network failure, an unreadable body).
    */
   provider_error?: { status: number; billing: boolean };
   /**
@@ -317,7 +322,7 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
       : e instanceof HarnessError || (e instanceof ProviderError && RETRYABLE_STATUS.includes(e.status)) ? 'harness_error'
       : 'error';
     run.error = (e as Error).message;
-    if (cfg.classifyStops && run.stop === 'error' && e instanceof ProviderError) run.provider_error = { status: e.status, billing: isBillingRefusal(e) };
+    if (cfg.classifyStops && e instanceof ProviderError && (run.stop === 'error' || isBillingRefusal(e))) run.provider_error = { status: e.status, billing: isBillingRefusal(e) };
   }
   run.ms = Date.now() - t0;
   run.usd = cfg.scripted ? 0 : priceUsage(cfg.model, run.usage);

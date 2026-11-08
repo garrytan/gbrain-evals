@@ -163,7 +163,8 @@ arms (no retrieval, gbrain's own read tools, a summarising helper, and the top f
 another model family grades each answer against the gold answer, and the runner writes an aggregate scorecard. Every
 model call carries task text, and the gbrain arms carry retrieved page text, to Anthropic, OpenAI and Particle; Garry
 agreed to that for this eval (T1, 2026-11-07). The runner reads the brain only as gbrain's untrusted remote caller, so
-pages flagged private never reach a model or the judge.
+gbrain hides pages flagged private from the models and the judge. gbrain caches its privacy setting for 30 seconds, so
+if someone relaxes it mid-run, pages served inside that window can reach a model before the runner notices.
 
 Only these leave the box: `freeze.json` (counts, a hash and power numbers), the `estimate` line (dollars), and the
 run's `scorecard.json` and `scorecard.md` (aggregates). The task file, `tasks.meta.json`, the run's records, page
@@ -247,7 +248,7 @@ All commands run from the repository root.
    ```
 
    Before the first task the runner proves the barrier, refuses a brain that shows private pages to remote callers
-   (and checks that again before every task), repeats the gold-page check, and sends one public probe query through D's search and B's `query` tool. The terminal
+   (and checks that again before every task and after every episode), repeats the gold-page check, and sends one public probe query through D's search and B's `query` tool (and again whenever an episode degrades). The terminal
    shows only the gbrain version and barrier, the task counts, the preflight result, progress every 10 tasks per pass,
    any [`LR_JUDGE_ERROR`](#lr_judge_error) or [`LR_CELL_INVALID`](#lr_cell_invalid) count, the output paths and the
    ledger total. Exit status: 0 complete, 1 incomplete (some episode is missing or unjudged), 6 cap stop
@@ -318,7 +319,10 @@ gbrain found no explicit embedding model, so the brain's vectors cannot be searc
 ### LR_EMBEDDING_UNAVAILABLE
 
 Embedding one preflight query (the fixed text `live-recall preflight`) failed. Export the key for the brain's
-embedding provider and rerun.
+embedding provider and rerun. In phase 2 the runner also sends its public probe again whenever an episode degrades; if
+the probe fails then, the embedding key or service failed during the run (refused, revoked or out of credit). That
+episode has no record. Fix or top up the key, then continue with the same command plus `--resume --window-note <id>`,
+which reruns it.
 
 ### LR_ARM_PREFLIGHT
 
@@ -329,7 +333,8 @@ gbrain's failure stages, for example `hybrid_lexical degraded (title_arm_failed)
 `keyword_arm_failed` can also be gbrain's keyword statement timeout (`search.keyword_statement_timeout_ms`, 8 s by
 default), and then `gbrain.local.log` says `canceling statement due to statement timeout`: rerun when gbrain's
 maintenance jobs are idle, and report it if it repeats on an idle database. Fix the cause and rerun. Nothing was
-counted.
+counted. In phase 2 the probe is also sent again whenever an episode degrades; a failure then has no record for that
+episode, so fix the cause and continue with `--resume --window-note <id>`.
 
 ### LR_RERANK_NEEDS_TYPESAFE
 
@@ -347,8 +352,9 @@ The question file's hash differs from `freeze.json`, or a counted run was starte
 run directories were made on different question files. In phase 2 it means the task file's hash differs from
 `freeze.json`, or the kept line count does not match it: run with the frozen file, or freeze again. On a phase 2
 `--resume` it means the resume differs from the session that started the run directory in its harness digest, loaded
-gbrain version or commit, models, arms, forms or kept tasks (the detail names which). Resume with the same harness and
-flags, or start a new run directory.
+gbrain version or commit, schema version, configured retrieval settings (search mode, reranker or embedding model, CRAG
+settings, result cache flag, tool definitions), models, arms, forms or kept tasks (the detail names which). Resume with
+the same harness, brain configuration and flags, or start a new run directory.
 
 ### LR_COMPARE_CONTROL
 
@@ -384,8 +390,9 @@ Phase 2: the task file has a problem at the line and field named. Fix it and fre
 ### LR_PRIVACY_RELAXED
 
 Phase 2: the brain's config shows private pages to remote callers (`search.remote_private_pages`). At the start nothing
-runs. The runner reads the policy again before every task, so a change during the run stops it before the next task.
-The runner never relaxes or works around it; GBEV-3 decides.
+runs. The runner reads the policy again before every task and after every episode, so a change during the run stops it
+with no record for the episode that just ran. gbrain caches the setting for 30 seconds, so pages it served inside that
+window may have reached a model. The runner never relaxes or works around it; GBEV-3 decides.
 
 ### LR_CAP_STOP
 
@@ -416,7 +423,8 @@ total over the cap). Send the estimate line to GBEV-3 through ALPH-72; no counte
 ### LR_PROVIDER_REJECTED
 
 Phase 2: a provider refused the key, the model or the account on an answer, summary or judge call (401, 403, 404,
-another 4xx, or a 400 about credit or billing). The detail names the model and the HTTP status. The episode has no
+another 4xx, a 400 about credit or billing, OpenAI's 429 `insufficient_quota`, or particle-1's own 402 for an empty
+prepaid balance; a metering proxy's 402 is a cap stop instead). The detail names the model and the HTTP status. The episode has no
 record, so nothing was counted. Fix the key, the model access or the balance, then continue with the same command plus
 `--resume --window-note <id>`, which reruns that episode.
 

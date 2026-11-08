@@ -20,6 +20,7 @@
 import { HarnessError, runAgent, type AgentRun, type Arm, type ToolSpec, type Usage } from '../cat40/loop.ts';
 import { importGbrain, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { uniqueInOrder } from '../metrics.ts';
+import { ParticleCreditExhausted } from '../providers/openai-compatible.ts';
 import { LiveRecallAbort } from './brain.ts';
 import { FAILURE_STAGES } from './run.ts';
 import { JUDGE_PAGE_CHARS, JUDGE_SYSTEM, JUDGED_CITATIONS, VERDICT_TOOL, derive, judgeUser, parseVerdict, type Derived, type Verdict } from './task-judge.ts';
@@ -265,8 +266,9 @@ export interface EpisodeContext {
 }
 
 /**
- * Stops the run when the provider refused the key, the model or the account (401, 403, 404, any other 4xx but 400, or a
- * 400 that refuses credit or billing): nothing the model did, so it is never a counted answer or a judge error.
+ * Stops the run when the provider refused the key, the model or the account (401, 403, 404, any other 4xx but 400, a
+ * 400 that refuses credit or billing, or OpenAI's 429 `insufficient_quota` after the retries): nothing the model did, so
+ * it is never a counted answer, a harness error or a judge error.
  */
 function assertAccepted(run: AgentRun): void {
   const p = run.provider_error;
@@ -275,11 +277,11 @@ function assertAccepted(run: AgentRun): void {
 
 /** Only a model-caused 400 is a counted model_error; a network failure, an unreadable answer or a non-retryable 5xx is a harness error. */
 function statusOf(run: AgentRun): Status {
+  assertAccepted(run);
   if (run.timed_out) return 'timed_out';
   if (run.stop === 'submitted') return 'answered';
   if (run.stop === 'turn_cap' || run.stop === 'no_tool_call') return 'no_answer';
   if (run.stop === 'context_overflow' || run.stop === 'harness_error') return run.stop;
-  assertAccepted(run);
   return run.provider_error?.status === 400 ? 'model_error' : 'harness_error';
 }
 
@@ -289,7 +291,7 @@ const loopConfig = (model: string) => ({ model, effort: EFFORT, maxTurns: MAX_TU
 /**
  * One answer for one task form, arm and model. Model calls that fail for the provider's reasons come back as a status, a
  * HarnessError (gbrain timing out) comes back as harness_error, and a cap refusal or a provider rejection
- * (LR_PROVIDER_REJECTED) throws, so no record is written.
+ * (LR_PROVIDER_REJECTED, Particle's empty prepaid balance included) throws, so no record is written.
  */
 export async function runEpisode(ctx: EpisodeContext, task: Task, form: TaskForm, arm: TaskArm, model: string, attempt: number): Promise<AnswerRecord> {
   const question = task.forms[form];
@@ -318,6 +320,7 @@ export async function runEpisode(ctx: EpisodeContext, task: Task, form: TaskForm
   } catch (e) {
     ctx.capCheck();
     if (e instanceof HarnessError) return record('harness_error', null, { error: e.message });
+    if (e instanceof ParticleCreditExhausted) throw new LiveRecallAbort('LR_PROVIDER_REJECTED', model + ' answered HTTP 402: the Particle prepaid balance is empty');
     throw e;
   }
 
