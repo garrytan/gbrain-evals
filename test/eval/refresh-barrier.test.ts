@@ -200,6 +200,11 @@ describe('refresh-barrier analysis', () => {
     expect(removerOf(['RBM1w0o0q', 'RBM1w0o0q RBM1w1o0q', 'RBM1w0o0q RBM1iaq'], 'RBM1w1o0q')).toEqual(['RBM1iaq']);
     expect(removerOf(['RBM1w0o0q', 'RBM1w0o0q RBM1w1o0q'], 'RBM1w1o0q')).toBeNull();
   });
+  test('removerOf leaves out markers that a blind put carried back from the copy it read', () => {
+    const page = ['seed', 'FCM1491f1q seed', 'seed RBM1491w0o3q', 'FCM1491f1q seed RBM1491iaq'];
+    expect(removerOf(page, 'RBM1491w0o3q')).toEqual(['RBM1491iaq']);
+    expect(removerOf(['RBM2033w7o3q', 'RBM2033w5o7q', 'RBM2033w7o3q RBM2033w2o1q'], 'RBM2033w5o7q')).toEqual(['RBM2033w2o1q']);
+  });
   test('an upstream marker a committed blind put replaced after its import is not a convergence fault', () => {
     const file = ['seed', 'UPM16t1p0q\nseed', 'UPM16t1p0q\nseed RBM16w0o1q', 'RBM16w2o0q'];
     const blind = new Set(['RBM16w2o0q']);

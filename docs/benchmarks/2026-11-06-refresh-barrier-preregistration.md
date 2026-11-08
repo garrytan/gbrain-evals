@@ -613,3 +613,57 @@ cap, records a standing money-cut rule for Part C, and adds the run procedures b
      rescored by hand, and the adjudication (episode id, fact, the Git HEAD count) is recorded beside the results.
   5. One invocation runs per model and arm at a time, because two concurrent runs of one model and arm share a work
      directory and would delete each other's work and pay twice.
+### Amendment 3, 2026-11-07: the counted Part A at G, its triage, a detector fix and a new harness digest
+
+Recorded after the counted Part A at G and before any new counted cell. It changes no threshold, count, seed range, cap
+or arm. It fixes one detector, records the harness digest every later counted cell uses, and adds a Part C scoring rule
+(GBEV-3's B1, which the Part C verdict reads) before any counted Part C episode.
+
+- **Counted Part A at G, scored as frozen:** #384 head `b3bbb0a8`, digest `8e8520f8b606`, on four Ubicloud standard-16
+  VMs that were then deleted. The run had 2,000 trials, 300 named-case runs and 400 quiet runs, half of each flag-on,
+  all with 0 `harness_error`. It reads **FAIL**, with 6 flag-on failures: `overwritten` in trials 1491 on both engines,
+  PGLite trial 1075 and Postgres quiet run 2033, and `hang` in Postgres trial 1142 and PGLite trial 1192. PC1 to PC5,
+  the write-latency gate, B1 and B2 held. GBRA-108 (2026-11-07): "Score the counted Part A at G 431cb3f9 exactly as the
+  frozen prereg says. If that's FAIL, it's FAIL; don't re-score it." The findings report every number `analyze.ts`
+  gives.
+- **The two hangs are gbrain's.** A write held behind a refresh that ends `aborted` (seed 1192: `refresh_diverged` five
+  times) or `abandoned` (seed 1142: the crash's resume) is not released or refused. It stays pending until a later
+  refresh completes, which here is the convergence step, up to about 300 s after its first call. GBRA-108 ruled it a
+  gbrain bug to fix before the flag turns on (GST-1853, GBRA-372). No harness change applies.
+- **The four overwrites match a detector fault, and three are shown.** `removerOf` (`verify.ts`) named as removers every
+  marker in the dropping revision that the revision just before it lacked. A blind put writes back the copy of the file
+  it read, so its revision can carry an older marker back in: the cron line `FCM1491f1q` in seed 1491, or the earlier
+  write `RBM2033w7o3q` in quiet seed 2033. The detector credited that older marker as a remover, so a blind put admitted
+  later, which the `overwritten` row allows (last writer wins), read as an overwrite. `removerOf` now counts only
+  markers that no earlier revision held. A new unit test on a four-revision page modelled on seed 1491 ("removerOf
+  leaves out markers that a blind put carried back from the copy it read") gets `[FCM1491f1q, RBM1491iaq]` from the old
+  code and `[RBM1491iaq]` from the fix. Replays at G on the same schedules, three per seed: with the old detector, seed
+  1491 read `overwritten` in 3 of 3 on each engine and off-arm quiet 2033 in 2 of 3; with the fixed detector, all 12
+  replays of 1491 (both engines) and quiet 2033 (both arms) pass, and 1491's replays credit `RBM1491iaq` alone. On-arm
+  quiet 2033 passed its three old-detector replays, but its counted record settles it: of its removers `[RBM2033w7o3q,
+  RBM2033w2o1q]`, the first (seq 72) committed before the dropped write (seq 73), so the new rule leaves it out, and the
+  second is a blind put admitted later (seq 75). PGLite 1075 passed all three old-detector replays and its page history
+  wasn't kept, so it is attributed to the detector by its signature only, not by a replay: its counted record credits
+  the cron line `FCM1075f1q` beside `RBM1075iaq`, a blind put admitted later (seq 38 against 37), as in 1491.
+  `removedByBlindPut`, the exemption in `no_converge`, uses the same function. PC2 at digest `17b629b49ea5`: the fixed
+  detector still catches the admission-order bug at gbrain `de22702a` in 60 of 60 named runs. One reader reviewed the
+  fix (subagent, claude-opus-5-5, 2026-11-07) and approved it with notes, which this text carries.
+- **How Triage applies.** A failure that a reviewed harness-only fix clears would make the verdict FIX-METHOD, with that
+  engine's block rerun at the same G. The two hangs are gbrain's, so the verdict at G stays FAIL, and the rerun moves to
+  the next G with the fixed detector.
+- **Harness digest from here on:** `17b629b49ea5`, which changes `verify.ts` only. Every later counted cell runs with
+  it, and its results are never pooled with results from `8e8520f8b606`.
+- **Next G:** the first gbrain master commit containing GST-1853's fix. GBRA-108 sends the sha, and a dated entry
+  records it before the G-compatibility smoke and a fresh counted Part A run there. The projected cost goes to GBRA-108
+  against the $390 cap before anything is spent.
+- **Part C at G:** not run. GBEV-3 decided on 2026-11-07 (A1) that counted Part C runs only at a G where PASS is still
+  reachable. The smoke at G (two episodes per model and arm, $1.33) is development evidence. The paid window closed
+  after B2 and the smoke, with $1.37 on the budget ledger (B2 $0.033, smoke $1.334).
+- **Part C adjudication (GBEV-3, B1, 2026-11-07), recorded before any counted Part C episode:** a write refused
+  `invalid_params` with gbrain's "nothing was written", followed by a corrected call carrying the same fact token,
+  counts as one write attempt and its resend, not a reissue. A resend after a success, a timeout, a busy or barrier
+  answer, or any other error still counts as a reissue. A recorded script applies the rule identically to both arms and
+  both models. The findings report the raw preregistered strict success beside the adjudicated number, and the verdict
+  reads the adjudicated number. If the two disagree on the verdict, the findings say so in their first lines. The
+  reason: in the smoke, claude-opus-5-5 passed an unknown `source` parameter to `remember`, gbrain refused it and wrote
+  nothing, and the corrected resend was scored as a reissue, which failed both of Opus's on-arm smoke episodes.
