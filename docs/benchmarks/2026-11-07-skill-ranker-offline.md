@@ -1,6 +1,6 @@
-# Offline skill ranker eval: ranking works, the no-skill gate does not (GBRA-377 Step 1)
+# Offline skill ranker eval: Step 1 fails on the no-skill gate, though ranking beats static lists (GBRA-377 Step 1)
 
-Written 2026-11-07 for GBRA-377 (GST-1860), the plan for a general-purpose skill resolver in [gbrain](https://github.com/garrytan/gbrain). Agents now carry hundreds of skills (written procedures they can load before acting), but harnesses show the model only a short list, and some cut that list alphabetically. The plan is a per-turn resolver: a prebuilt word index ranks the harness's skills against each user message, shows the top 5 in a small block, and shows nothing when no skill applies. This offline eval was to decide whether that resolver gets built and to freeze its constants. Plan and decision rule: [the preregistration](2026-11-07-skill-ranker-offline-preregistration.md) (its three amendments win where they differ from the text above them). Raw results: [2026-11-07-skill-ranker-offline/](2026-11-07-skill-ranker-offline/).
+Written 2026-11-07 for GBRA-377 (GST-1860), the plan for a general-purpose skill resolver in [gbrain](https://github.com/garrytan/gbrain). Agents now carry hundreds of skills (written procedures they can load before acting), but harnesses show the model only a short list, and some cut that list alphabetically. The plan is a per-turn resolver: a prebuilt word index ranks the harness's skills against each user message, shows the top 5 in a small block, and shows nothing when no skill applies. This offline eval was to decide whether that resolver gets built and to freeze its constants. Plan and decision rule: [the preregistration](2026-11-07-skill-ranker-offline-preregistration.md) (its four amendments win where they differ from the text above them). Raw results: [2026-11-07-skill-ranker-offline/](2026-11-07-skill-ranker-offline/).
 
 **Finding: as preregistered, Step 1 fails. No deployable arm passes, so PR A should not start as planned.** The failure is the "no skill applies" gate, not the ranking. With the gate off, word matching over name, description and a 4 KB slice of the skill body (arm A5) puts an acceptable skill in its top 5 on 48%, 52% and 58% of skill-seeking turns at 250, 750 and 1,500 skills, against 33%, 28% and 18% for the best static list of the same size (about 200 tokens). But the preregistered gate turned out to be inverted (it favours short messages, and the no-skill turns are short), so it suppressed every skill turn and every arm scored 0. A repaired gate fixed after the dev run and before any test cell (raw top score) still fails: it keeps false suggestions under 20% only by hiding most correct blocks, it drops almost every terse request such as "Audit this repo's dependencies and CI configuration", and its false-suggestion rate climbs from 2% to 18% as the catalog grows. Even a threshold tuned on the test set itself tops out at 27 to 32% gated hit@5 for the deployable arms.
 
@@ -63,13 +63,13 @@ Cause: the preregistered gate divides the top score by how much of the message c
 
 Three gate features were added, all tuned on dev plus stress-dev: the raw top score, a length-free "how much does the top hit stand out" ratio, and a length-only control that ignores the catalog. The chosen pair was A3 with the raw top score (threshold 9.25).
 
-| Skills | Gated hit@5, test + stress | Best static | Difference (95% CI) | FSR | Gated hit@5, terse stress turns only |
+| Skills | Gated hit@5, test + stress | Best static | Difference (95% CI) | FSR | Gated hit@5, stress-set skill turns |
 |---|---|---|---|---|---|
 | 250 | 12.9% | 34.7% | -21.8 (-33.7 to -9.9) | 1.8% | 5.0% |
 | 750 | 22.0% | 27.2% | -5.2 (-14.5 to +4.0) | 8.9% | 3.1% |
 | 1,500 | 30.3% | 17.8% | +12.5 (+3.8 to +20.7) | 17.9% | 5.3% |
 
-It fails bar 1 at 250 and 750 and bar 3 (FSR spread 16.1 points against at most 5). A raw score grows with message length and with catalog size, so it mostly measures length: terse requests get through 3 to 5% of the time, and long no-skill messages are flagged 14% to 31% of the time at the two larger sizes on the stress set. The ratio feature keeps FSR low but reaches only 1 to 2% gated hit@5. Even the best threshold picked on the test set itself, which is not a valid estimate, reaches only 27 to 32% gated hit@5 for A3 and A5 at FSR at most 20% (A7: 36 to 41%).
+It fails bar 1 at 250 and 750 and bar 3 (FSR spread 16.1 points against at most 5). A raw score grows with message length and with catalog size, so it mostly measures length: the stress set's skill requests, mostly terse, get through 3 to 5% of the time, and long no-skill messages are flagged 14% to 31% of the time at the two larger sizes on the stress set. The ratio feature reaches at most 6% gated hit@5 (A3 5.9%, 1.7% and 0.5%; A5 4.0%, 0.6% and 1.0% at 250, 750 and 1,500 skills). Even the best threshold picked on the test set itself, which is not a valid estimate, reaches only 27 to 32% gated hit@5 for A3 and A5 at FSR at most 20% (A7: 36 to 41%).
 
 ### Arm cuts (variant D, 750 skills, gate off)
 
@@ -121,3 +121,11 @@ bun scripts/score.ts                             # free and deterministic, about
 `score.ts` refuses to run if the test or stress-test file differs from the hash frozen in the preregistration. The paid steps (`gen-turns.ts`, `judge.ts 1|2`, `gen-stress.ts`, `judge-stress.ts`) are written once and refuse to overwrite their output. Results: [verdict.json](2026-11-07-skill-ranker-offline/results/verdict.json) (bars, cut rules, diagnostics, label stability, latency), [secondary.json](2026-11-07-skill-ranker-offline/results/secondary.json), [calibration.json](2026-11-07-skill-ranker-offline/results/calibration.json), [arms-test.json](2026-11-07-skill-ranker-offline/results/arms-test.json), [per-turn-test.jsonl](2026-11-07-skill-ranker-offline/results/per-turn-test.jsonl) (750 skills, variant D) and the spend ledger [spend.jsonl](2026-11-07-skill-ranker-offline/results/spend.jsonl).
 
 Cost: $11.07 of the $50 cap, from provider-reported usage: judge $10.62 (140 calls, 26.1M cached input tokens), writer $0.44 (92 calls), embeddings $0.005. Local embedding took about 4 minutes on a 4-CPU machine with no GPU.
+
+## Disclosures
+
+gbrain is Garry Tan's own project.
+
+gstack is Garry Tan's own project.
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.

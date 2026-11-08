@@ -8,3 +8,5 @@ Rerun the scoring (free, deterministic, about a minute) from this directory: `gu
 - `data/`: catalog, areas, turns, dev and test splits, stress set, spring block.
 - `results/`: writer and judge outputs, freeze hashes, calibration, per-arm results, verdict, spend ledger.
 - `SOURCES.md` and `licenses/`: every catalog source with its pinned commit and licence.
+
+The paid steps' spend stop (`lib.ts`) checks the ledger of completed calls only. Calls started together (`gen-turns.ts` and `gen-stress.ts` send 45 at once) all pass the same check, and a billed reply that fails to parse never reaches the ledger. Neither happened in this run: every ledger row reconciles with the providers' usage fields, for $11.07 in all. Fix both before reusing `lib.ts` for a run that could come near its $45 stop.
