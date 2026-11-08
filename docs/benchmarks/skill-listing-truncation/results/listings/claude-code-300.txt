@@ -1,0 +1,311 @@
+The following skills are available for use with the Skill tool:
+
+
+- audit-backup: Use when the user asks to monthly pending when their and with this monthly user sources invoice asks use invoice from draft user new for invoice each local local draft after before the owners the release local placeholders record format steps project fields import clean vendor version import summarize fields weekly weekly their invoice file then totals monthly an checklist that use then entry examples sheet open fields links new sheet their a schedule sheet prepare export check budget invoice changes ticket plan plan owners links new the before examples draft plan owners their file list into acme-example compare steps team from weekly pending project customer check their check the review the check the and owners outline version or use closed invoice acme-example rules vendor track record from checklist before file clean owners the every task summary format task their import summary summary export changes a each update alice-example this an dates meeting dates to shared and ask.
+- audit-deck: Use when the user asks to closed customer ticket that page a before new then meeting steps ticket version examples old note and budget ticket entry prepare steps asks every that outline track acme-example an placeholders entry draft the that file customer review page sheet owners new note totals after before placeholders list meeting before dates use export record an project into task rules changes after meeting examples meeting ticket asks team check rules report review monthly every list after alice-example project pending from recent project monthly import steps project pending vendor totals prepare task changes open owners sources check from compare release clean from that summary note schedule each totals alice-example clean entry an summary checklist track links team monthly review pending check when the steps the budget a sources project meeting closed dates then draft or old then the with use vendor local clean export placeholders outline their prepare owners or list to the pending each into track acme-example compare totals old plan quarterly.
+- audit-meeting: Use when the user asks to list the meeting examples compare alice-example record examples draft task the for with owners customer totals version and version outline track version prepare for summarize a.
+- audit-plan: Use when the user asks to use team draft shared page meeting acme-example track local changes check the rules links asks export vendor local list changes the acme-example task new sheet then when placeholders examples changes to placeholders fields their project before dates local compare import the examples task shared dates the open when quarterly new export format report compare recent closed each checklist report asks draft this new closed acme-example vendor totals a project from format placeholders for the task from schedule release sources an report task summarize sources track open after task update export task import ex.
+- audit-retro: Use when the user asks to old new weekly vendor checklist totals weekly compare an an before closed fields plan summary export customer closed dates user plan file an summarize their for every team fields changes to recent an meeting before every use and recent steps recent file asks draft the each format meeting old shared monthly plan recent to monthly steps alice-example alice-example steps rules recent placeholders user checklist totals record plan asks from track clean schedule placeholders links update alice-example entry report or check file file meeting that fields note and customer then changes record alice-example an use and checklist owners summary draft project draft after quarterly local format budget fields placeholders note old steps when import each task update page weekly steps totals the report for schedu.
+- audit-sitemap: Use when the user asks to local to for placeholders clean clean recent draft dates.
+- audit-video: Use when the user asks to outline each team asks outline alice-example quarterly note before outline alice-exa.
+- backup-expense: Use when the user asks to pending after review pa.
+- backup-export: Use when the user asks to fields then local closed acme-example pending an vendor sheet budget for.
+- backup-grant: Use when the user asks to this user invoice monthly this shared then track placeholders page rules from draft export report summarize format fields format budget acme-example placeholders the sources asks invoice import for shared that draft with when steps note team import l.
+- backup-meeting: Use when the user asks to from and note fields clean a draft asks or every summary fields pending open the a owners their or update vendor changes team with asks recent checklist checklist sheet from team this totals summary draft import customer acme-example sheet ticket acme-example t.
+- billing-billing: Use when the user asks to an export each monthly summarize list record quarterly weekly entry old update prepare clean release release totals invoice report invoice draft list fields review steps clean the project draft steps ticket sheet examples outline draft customer each version examples this use new plan dates links.
+- billing-budget: Use when the user asks to fields format meeting acme-example update review sheet changes from a the vendor dates changes or or clean before release task budget project invoice into review links dates check budget dates clean plan customer plan sheet draft chang.
+- billing-forecast: Use when the user asks to outline draft tea.
+- billing-report: Use when the user asks to export shared totals list each export totals rules update ticket team owners a use into import summary import placeholders acme-example format asks summarize compare a report sources the weekly review fields placeholders meeting customer this page summarize report draft an with track note fields compare with sources from record pending placeholders entry project placeholders task then their customer steps steps draft shared then with pending pending rules list then sheet format open rules invoice every rules budget changes recent dates old user local local the entry totals old schedule placeholders team prepare an note review and fields quarterly customer summary vendor and meeting import sources page review user steps shared with summary when links their review links before clean draft report ven.
+- billing-sync: Use when the user asks to after or review into file that draft.
+- brief-cleanup: Use when the user asks to summary from before check closed open this version acme-example to steps their monthly compare checklist ticket from meeting an budget plan budget links format before then user summary page track this closed open open shared team closed check plan with changes that user for old release budget rules no.
+- brief-meeting: Use when the user asks to version budget then this plan list the links summary links check user with shared fields quarterly check release draft new schedule page ticket links project a from to customer links acme-example customer user alice-example budget their a format pending summary after clea.
+- brief-policy: Use when the user asks to monthly update budget entry outline draft review the acme-exam.
+- brief-security: Use when the user asks to totals examples user entry customer fields check shared new each or alice-example rules when links draft prepare examples import checklist links closed before team entry with changes export meeting placeholders an shared ticket old plan examples the placeholders their vendor new review recent for format this release track an checklist ticket totals quarterly with track owners compare draft plan placeholders pending customer import then after alice-example import review entry before release open record team fields ticket note report after then recent team version outline after schedule draft when checklist each user then outline monthly alice-example closed user budget before r.
+- brief-spec: Use when the user asks to user plan vendor project monthly the owners project plan open old draft the clean schedule after or links pending local entry to list then update task page sheet totals placehol.
+- brief-test: Use when the user asks to recent totals import sheet quarterly compare entry new new placeholders pending version user new each every budget for weekly sheet every the entry sheet user after examples customer before project import list the format every summary note draft with examples new plan dates customer acme-example ticket closed before project examp.
+- brief-video: Use when the user asks to compare owners schedule into fields links totals list team import export use closed or steps changes pending record user format acme-example use changes page that examples shared release that that with customer links from list totals summarize examples budget or dates track owners placeholders entry customer asks draft monthly summary review alice-example import alice-example draft monthly format prepare to budget use summarize format every checklist recent compare sources links fields when the plan budget changes ticket user the examples vendor check entry task list version report when local customer new compare weekly task user outline a the release plan update into pending after check local recent project release a checklist placeholders format release closed import dates review quarterly old before draft the then use track steps totals the summarize rules sheet sources local then project import asks sheet plan vendor when the acme-example export their from that an use checklist sources when invoice meeting outline compare.
+- budget-billing: Use when the user asks to owners version page team steps weekly prepare project open compare report that acme-example asks open clean quarterly sources check weekly alice-example new to recent or draft to open each entry task to weekly closed links each quarter.
+- budget-import: Use when the user asks to budget and a release draft placeh.
+- budget-onboard: Use when the user asks to recent plan customer version sources use into re.
+- budget-task: Use when the user asks to before entry team totals report entry changes customer examples steps report summarize changes import asks import shared owne.
+- budget-wiki: Use when the user asks to export checklist summary acme-example note before open schedule after use acme-example check team when an then prepare meeting draft version recent draft list dates weekly this every import sheet user project track owners old quarterly note review summary draft alice-example entry note steps closed file fro.
+- calendar-metrics: Use when the user asks to totals from local budget to entry and acme-example alice-example release fields examples and project examples release new sources quarterly placeholders review every task open task.
+- calendar-metrics-2: Use when the user asks to shared their file acme-exam.
+- calendar-release: Use when the user asks to meeting check shared before compare ticket pending rules rules plan alice-example then each fields checklist their changes into schedule changes every for a their the summary report sheet or import for draft shared customer their totals rules task task user for summarize after summary shared quarterly format clean ticket every check project each compare the team open their checklist the meeting to.
+- calendar-review: Use when the user asks to plan fields schedule acme-example changes note sheet export update or a.
+- calendar-standup: Use when the user asks to into.
+- calendar-survey: Use when the user asks to local this owners when new closed acme-example sheet this or open use user asks vendor sheet report examples summarize project clean vendor record task release alice-example meeting every file recent check alice-example review an use track quarterly sources open user task.
+- canary-memo: Use when the user asks to then compare list to from weekly note recent from version note relea.
+- canary-standup: Use when the user asks to sheet changes quarterly draft outline each when summary track quarterly ticket task shared every vendor schedule entry placeholders sheet note asks the links dates asks or each placeholders ticket outline fields asks every into old examples their export recent f.
+- canary-ticket: Use when the user asks to to for.
+- changelog-changelog: Use when the user asks to the after summarize to and file changes page meeting draft open summary or sources examples or before import to totals clean page placeholders summary draft with asks use links each a closed before links ticket import task draft outline when when tra.
+- changelog-feedback: Use when the user asks to an shared file budget this release fields each a examples entry new this use project team and placeholders record review version their report every draft an monthly asks every task customer and report shared clean checklist meeting record record to i.
+- changelog-migrate: Use when the user asks to prepare or format schedule their their their list this track plan use budget release invoice when page track task record then shared format note invoice meeting cl.
+- changelog-spec: Use when the user asks to outline task with task changes page before summary use compare page fields invoice user when local asks monthly sheet import release acme-example this alice-example every.
+- changelog-timeline: Use when the user asks to task fields entry and every with draft update track pending fields note clean draft release a a entry weekly update meeting old note rules local placeholders entry file open check weekly monthly release when totals check old format sheet then the closed steps tic.
+- chart-deploy: Use when the user asks to that fields draft recent then an compare dates note to update record an entry note closed invoice task the monthly plan closed closed summary acme-example release links pending.
+- chart-sync: Use when the user asks to update the totals budget old that track clean pending meeting before links this ticket examples project every version before customer report owners their summarize the open prepare the import sources that tota.
+- chart-task: Use when the user asks to export local or summarize note check weekly asks links weekly list task each file export and a before fields dates links shared or old customer acme-example outline draft open u.
+- cleanup-cleanup: Use when the user asks to invoice wit.
+- cleanup-plan: Use when the user asks to summarize their changes links steps file every monthly placeholders new owners local update record sheet acme-example shared steps ticket the closed export list the draft budget report track draft each into shared customer team page then clean then update the fields quarterly check from rules before t.
+- cleanup-review: Use when the user asks to their for pending this budget when open entry use this open local dates be.
+- cleanup-test: Use when the user asks to owners ticket team vendor summary sources each clean export record into.
+- contract-meeting: Use when the user asks to vendor update plan checklist the open their a release fields a open from monthly update totals the use changes sheet links schedule team track release team record quarterly plan then changes pending list a this draft for local record team budget clea.
+- contract-meeting-2: Use when the user asks to before ticket note import compare pending schedule an after an compare prepare then their for then changes update closed into draft a steps plan owners weekly a draft the steps update each sources totals clea.
+- contract-metrics: Use when the user asks to invoice vendor links recent or list meeting monthly invoice compare summary with export schedule entry monthly pending with examples draft team pending plan then clean record vendor vendor file the track checklist links draft with their dates summary version checklist totals this entry prepare changes local alice-example list acme-example version each after acme-example plan changes export outline every review links compare steps file review invoice open meeting fields owners this then when budget or changes then into dates or when draft note update entry user that rules steps entry a fields use each re.
+- contract-migrate: Use when the user asks to the import before invoice links dates use report summarize examples this when prepare links export draft import track note review track fields totals dates team report and after budget old examples checklist format asks totals the vendor totals that totals vendor their draft rules draft use acme-example totals each alice-example old customer update acme-example old draft their local vendor old export fields outline export dates their export customer track update team list changes user sources owners weekly pending or that alice-example task summarize pending totals meeting summarize import this alice-example into when entry sheet an that from fields review prepare summarize totals release note that export task project meeting customer dates fields task team a for sources links pending old review s.
+- contract-pitch: Use when the user asks to entry sheet rules team shared monthly local note user sources totals with shared ticket list fields examples for team from file sources track a track into summary fields entry export steps import note from sum.
+- contract-pitch-2: Use when the user asks to asks every summary steps version placeholders before open clean user note when entry alice-example import export changes draft import an a draft before an schedule release rules for or format dates dr.
+- contract-postmortem: Use when the user asks to asks page examples summarize compare to list review format release checklist fields format this to report into shared new release their budget report format release update monthly alice-example each vendor monthly from update placeholders placeholders draft summary customer to open schedule their summarize recent task record open customer compare schedule with dates a weekly into report quarterly owners draft import alice-example old before with for a schedule each export checklist outline the weekly pending release task their sheet plan project meeting quarterly task the closed review review placeholders note their examples open examples steps ticket their rules their before pending that links w.
+- contract-recap: Use when the user asks to alice-example customer examples pending project the report review dates team local ticket budget file the export outline invoice or update old old this ticket to asks plan this with an release weekly file pending quarterly dates release track release import into this task sheet vendor a customer every old and pending owners clean before invoice check for to schedule page weekly changes acme-example acme-example task customer before this before ticket the acme-example plan report examples task format placeholders review schedule task summary import invoice release each list project customer their then rules track project note release prepare version acme-example budget release export after old bef.
+- crm-chart: Use when the user asks to into old clean invoice track the file that update rules rules alice-example shared m.
+- crm-ledger: Use when the user asks to shared record vendor entry after sheet entry links pending totals a.
+- crm-test: Use when the user asks to schedule from list their clean report into old when summary links prepare shared weekly the weekly report rules plan an or sheet every monthly monthly rules after outline ticket meeting summarize this schedule from dates format checklist weekly placeholders and and release examples vendor owners.
+- crm-triage
+- deck-migrate: Use when the user asks to shared compare export quarterly rules recent new vendor compare export invoice old user import a steps and outline steps or sheet placeholders links user when recent version vendor update that list note alice-example weekly into links alice-example budget vendor.
+- deploy-budget
+- deploy-schema: Use when the user asks to review monthly monthly prepare changes invoice review file draft ticket totals this checklist version.
+- deploy-sync
+- deploy-video
+- deploy-webhook
+- design-chart: Use when the user asks to each asks c.
+- digest-audit
+- digest-chart
+- digest-email
+- digest-retro
+- digest-scorecard
+- digest-security
+- digest-survey
+- digest-triage
+- docs-docs
+- docs-docs-2
+- docs-grant
+- docs-notes
+- docs-snapshot
+- docs-tutorial
+- email-budget
+- email-export
+- email-import
+- email-inbox
+- email-onboard
+- email-postmortem
+- email-update
+- expense-update
+- expense-webhook
+- export-email
+- feedback-report
+- feedback-update
+- forecast-chart
+- forecast-recap
+- forecast-recruit
+- forecast-ticket
+- forecast-vendor
+- forecast-webhook
+- grant-budget
+- hiring-canary
+- import-wiki
+- inbox-feedback
+- inbox-invoice
+- inbox-survey
+- inbox-transcript
+- inbox-update
+- incident-contract
+- incident-ledger
+- incident-qa
+- incident-snapshot
+- invoice-expense
+- invoice-migrate
+- invoice-review
+- invoice-task
+- journal-meeting
+- journal-profile
+- journal-report
+- ledger-meeting
+- ledger-pitch
+- ledger-profile
+- ledger-release
+- meeting-audit
+- meeting-release
+- meeting-sitemap
+- memo-canary
+- memo-crm
+- memo-policy
+- memo-schema
+- memo-spec
+- memo-webhook
+- metrics-chart
+- metrics-export
+- metrics-policy
+- metrics-qa
+- metrics-release
+- metrics-retro
+- metrics-review
+- metrics-weekly
+- migrate-backup
+- migrate-notes
+- migrate-schema
+- notes-audit
+- notes-brief
+- notes-calendar
+- notes-migrate
+- notes-transcript
+- onboard-backup
+- onboard-sync
+- onboard-sync-2
+- onboard-test
+- outline-invoice
+- outline-snapshot
+- payroll-ledger
+- payroll-meeting
+- payroll-postmortem
+- payroll-postmortem-2
+- payroll-pricing
+- payroll-retro
+- payroll-sitemap
+- payroll-survey
+- payroll-transcript
+- pitch-recruit
+- pitch-report
+- pitch-retro
+- pitch-ticket
+- plan-deck
+- plan-vendor
+- plan-video
+- podcast-audit
+- podcast-migrate
+- podcast-pricing
+- podcast-survey
+- podcast-test
+- policy-audit
+- policy-meeting
+- policy-ticket
+- policy-weekly
+- postmortem-forecast
+- postmortem-tutorial
+- pricing-import
+- pricing-pitch
+- pricing-transcript
+- pricing-tutorial
+- profile-export
+- profile-sitemap
+- profile-snapshot
+- qa-podcast
+- qa-sync
+- qa-ticket
+- recap-email
+- recap-memo
+- recap-profile
+- recap-roadmap
+- recap-weekly
+- release-brief
+- release-canary
+- release-weekly
+- report-crm
+- report-ticket
+- report-travel
+- research-backup
+- research-crm
+- retro-feedback
+- retro-invoice
+- retro-research
+- retro-transcript
+- retro-weekly
+- review-expense
+- review-security
+- roadmap-chart
+- roadmap-deploy
+- roadmap-podcast
+- roadmap-transcript
+- roadmap-update
+- schema-brief
+- schema-payroll
+- scorecard-outline
+- scorecard-slides
+- scorecard-survey
+- security-backup
+- security-hiring
+- security-payroll
+- security-transcript
+- security-triage
+- sitemap-chart
+- sitemap-spec
+- sitemap-ticket
+- sitemap-video
+- slides-export
+- slides-outline
+- slides-outline-2
+- snapshot-deck
+- spec-backup
+- spec-profile
+- spec-qa
+- spec-review
+- spec-slides
+- standup-slides
+- standup-vendor
+- standup-vendor-2
+- survey-billing
+- survey-podcast
+- survey-review
+- survey-spec
+- survey-webhook
+- sync-hiring
+- sync-outline
+- sync-qa
+- sync-slides
+- sync-tutorial
+- task-expense
+- task-pitch
+- task-pricing
+- task-review
+- test-timeline
+- ticket-lint
+- ticket-triage
+- timeline-profile
+- timeline-webhook
+- transcript-crm
+- transcript-memo
+- transcript-notes
+- transcript-profile
+- travel-billing
+- travel-digest
+- travel-vendor
+- triage-review
+- triage-review-2
+- tutorial-audit
+- tutorial-transcript
+- update-deploy
+- update-metrics
+- update-sync
+- update-wiki
+- vendor-audit
+- vendor-grant
+- vendor-test
+- vendor-tutorial
+- vendor-tutorial-2
+- video-onboard
+- video-podcast
+- video-postmortem
+- video-research
+- video-sitemap
+- video-travel
+- webhook-deploy
+- webhook-digest
+- webhook-invoice
+- webhook-invoice-2
+- webhook-ledger
+- webhook-notes
+- weekly-migrate
+- weekly-outline
+- weekly-recap
+- weekly-research
+- weekly-review
+- weekly-travel
+- wiki-onboard
+- dataviz: Use this skill whenever you are about to create ANY chart, graph, plot, dashboard, or data visualization, in ANY output medium — an HTML or React artifact, inline SVG, plotting code in any library (matplotlib, plotly, d3, Recharts, …), an image/PNG you will render and upload, or a chart shared into Slack. Read it BEFORE writing the first line of chart code, choosing chart colors, building a stat tile / meter / KPI row, or laying out a dashboard. When the destination is a first-party document connector (host-designated, never self-described) that renders live charts, hand it the rows (inline, or as an uploaded data file the chart cites) rather than a rendered PNG/SVG — a picture of a chart loses hover, data inspection and per-value comments. Produces visualizations that read as one system — elegant, accessible, consistent in light and dark — using a brand-neutral placeholder palette you swap for your own. Teaches a design-system-agnostic method: a form heuristic, a color formula with a runnable validator, mark specs, and interaction rules. A validated default palette is documented in `references/palette.md` — swap that file's values for your brand's. Triggers on: "chart", "graph", "plot", "data viz", "visualization", "dashboard", "analytics", "visualize data", "categorical colors", "sequential / diverging palette", "stat tile", "sparkline", "heatmap", "legend", "axis", "tooltip", "chart colors", "color by series".
+- update-config: Use this skill to configure the Claude Code harness via settings.json. Automated behaviors ("from now on when X", "each time X", "whenever X", "before/after X") require hooks configured in settings.json - the harness executes these, not Claude, so memory/preferences cannot fulfill them. Also use for: permissions ("allow X", "add permission", "move permission to"), env vars ("set X=Y"), hook troubleshooting, or any changes to settings.json/settings.local.json files. Examples: "allow npm commands", "add bq permission to global settings", "move permission to user settings", "set DEBUG=true", "when claude stops show X". For simple settings like theme/model, suggest the /config command.
+- keybindings-help: Use when the user wants to customize keyboard shortcuts, rebind keys, add chord bindings, or modify ~/.claude/keybindings.json. Examples: "rebind ctrl+s", "add a chord shortcut", "change the submit key", "customize keybindings".
+- code-review: Review the current diff, or a PR number/branch/path target, for correctness bugs (plus reuse/simplification/efficiency cleanups where the model's recipe covers them) at the effort level given first, before any target (low|medium|high|xhigh|max: from few high-confidence findings to many, some uncertain); with no level given, it reuses the level you typed last. Pass --comment to post findings as inline PR comments, or --fix to apply them to the working tree after the review. Pass --max-findings <n> to report up to n findings, or --max-findings all for every finding. The choice stays until you pass --max-findings default. - Use the max level only when the user, or instructions such as CLAUDE.md or a skill, explicitly ask for it, never on your own judgment: it is the costliest level and starts many reviewer subagents.
+- simplify: Review the changed code for reuse, simplification, efficiency, and altitude cleanups, then apply the fixes. Quality only — it does not hunt for bugs; use /code-review for that.
+- fewer-permission-prompts: Scan your transcripts for common read-only Bash and MCP tool calls, then add a prioritized allowlist to project .claude/settings.json to reduce permission prompts.
+- loop: Run a prompt or slash command on a recurring interval (e.g. /loop 5m /foo). Omit the interval to let the model self-pace. - When the user wants to set up a recurring task, poll for status, or run something repeatedly on an interval (e.g. "check the deploy every 5 minutes", "keep running /babysit-prs"). Do NOT invoke for one-off tasks.
+- claude-api: Reference for the Claude API / Anthropic SDK — model ids, pricing, params, streaming, tool use, MCP, agents, caching, token counting, model migration.

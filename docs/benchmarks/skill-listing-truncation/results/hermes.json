@@ -1,0 +1,557 @@
+{
+  "harness": "Hermes",
+  "version": "v2026.9.24",
+  "fixed_per_skill_description_cap": 60,
+  "prompt": "Reply with the single word OK",
+  "path_placeholders": {
+    "<HOME-alice-16c>": "the cell's scratch home, 16 characters",
+    "<harness-node_modules>/": "the harness install's node_modules directory, 23 characters"
+  },
+  "cells": [
+    {
+      "size": 50,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 50,
+      "listed": 50,
+      "dropped": 0,
+      "descriptions": {
+        "full": 10,
+        "cut": 40,
+        "omitted": 0,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 40
+      },
+      "description_chars": {
+        "original_mean": 275,
+        "kept_mean": 55,
+        "kept_median": 57,
+        "kept_max": 60
+      },
+      "first_listed_without_description": null,
+      "described_after_first_undescribed": 0,
+      "other_listed": 53,
+      "other_listed_names": [
+        "claude-code",
+        "codex",
+        "computer-use",
+        "hermes-agent",
+        "opencode",
+        "architecture-diagram",
+        "ascii-video",
+        "baoyu-infographic",
+        "claude-design",
+        "design-md",
+        "humanizer",
+        "manim-video",
+        "p5js",
+        "popular-web-designs",
+        "songwriting-and-ai-music",
+        "email-inbox-triage",
+        "himalaya",
+        "gif-search",
+        "songsee",
+        "youtube-content",
+        "obsidian",
+        "airtable",
+        "box",
+        "document-to-action-items",
+        "docx",
+        "google-workspace",
+        "maps",
+        "meeting-action-items",
+        "notion",
+        "pdf",
+        "powerpoint",
+        "product-price-monitor",
+        "teams-meeting-pipeline",
+        "weekly-review-planning",
+        "xlsx",
+        "arxiv",
+        "competitor-news-monitor",
+        "grounded-citations",
+        "llm-wiki",
+        "xurl",
+        "codebase-inspection",
+        "dogfood",
+        "github",
+        "hermes-agent-skill-authoring",
+        "inspecting-hermes-desktop-dom",
+        "node-inspect-debugger",
+        "python-debugpy",
+        "requesting-code-review",
+        "simplify-code",
+        "spike",
+        "systematic-debugging",
+        "test-driven-development",
+        "blocked-page-recovery"
+      ],
+      "listing_chars": 9742,
+      "listing_tokens_approx": 2436,
+      "listing_sha256": "51f4280fda553af5a0d3d45e754f52b319f002949fbfb7b48b7ea786b28adbae",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [],
+      "first_entries": [
+        {
+          "name": "claude-code",
+          "description": "Delegate coding to Claude Code CLI (features, PRs)."
+        },
+        {
+          "name": "codex",
+          "description": "Delegate coding to OpenAI Codex CLI (features, PRs)."
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "wiki-onboard",
+          "description": "Use when the user asks to for summarize update then ticke..."
+        },
+        {
+          "name": "blocked-page-recovery",
+          "description": "Use when a fetch fails: 403/429, paywall, WAF, bot wall."
+        }
+      ]
+    },
+    {
+      "size": 150,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 150,
+      "listed": 150,
+      "dropped": 0,
+      "descriptions": {
+        "full": 21,
+        "cut": 129,
+        "omitted": 0,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 129
+      },
+      "description_chars": {
+        "original_mean": 294,
+        "kept_mean": 55,
+        "kept_median": 57,
+        "kept_max": 60
+      },
+      "first_listed_without_description": null,
+      "described_after_first_undescribed": 0,
+      "other_listed": 53,
+      "other_listed_names": [
+        "claude-code",
+        "codex",
+        "computer-use",
+        "hermes-agent",
+        "opencode",
+        "architecture-diagram",
+        "ascii-video",
+        "baoyu-infographic",
+        "claude-design",
+        "design-md",
+        "humanizer",
+        "manim-video",
+        "p5js",
+        "popular-web-designs",
+        "songwriting-and-ai-music",
+        "email-inbox-triage",
+        "himalaya",
+        "gif-search",
+        "songsee",
+        "youtube-content",
+        "obsidian",
+        "airtable",
+        "box",
+        "document-to-action-items",
+        "docx",
+        "google-workspace",
+        "maps",
+        "meeting-action-items",
+        "notion",
+        "pdf",
+        "powerpoint",
+        "product-price-monitor",
+        "teams-meeting-pipeline",
+        "weekly-review-planning",
+        "xlsx",
+        "arxiv",
+        "competitor-news-monitor",
+        "grounded-citations",
+        "llm-wiki",
+        "xurl",
+        "codebase-inspection",
+        "dogfood",
+        "github",
+        "hermes-agent-skill-authoring",
+        "inspecting-hermes-desktop-dom",
+        "node-inspect-debugger",
+        "python-debugpy",
+        "requesting-code-review",
+        "simplify-code",
+        "spike",
+        "systematic-debugging",
+        "test-driven-development",
+        "blocked-page-recovery"
+      ],
+      "listing_chars": 17805,
+      "listing_tokens_approx": 4452,
+      "listing_sha256": "217293dae2d8aca97e0a4336325e98983b7d21de3202c4497624cd10cc986be2",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [],
+      "first_entries": [
+        {
+          "name": "claude-code",
+          "description": "Delegate coding to Claude Code CLI (features, PRs)."
+        },
+        {
+          "name": "codex",
+          "description": "Delegate coding to OpenAI Codex CLI (features, PRs)."
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "wiki-onboard",
+          "description": "Use when the user asks to for summarize update then ticke..."
+        },
+        {
+          "name": "blocked-page-recovery",
+          "description": "Use when a fetch fails: 403/429, paywall, WAF, bot wall."
+        }
+      ]
+    },
+    {
+      "size": 300,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 300,
+      "listed": 300,
+      "dropped": 0,
+      "descriptions": {
+        "full": 38,
+        "cut": 262,
+        "omitted": 0,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 262
+      },
+      "description_chars": {
+        "original_mean": 313,
+        "kept_mean": 55,
+        "kept_median": 57,
+        "kept_max": 60
+      },
+      "first_listed_without_description": null,
+      "described_after_first_undescribed": 0,
+      "other_listed": 53,
+      "other_listed_names": [
+        "claude-code",
+        "codex",
+        "computer-use",
+        "hermes-agent",
+        "opencode",
+        "architecture-diagram",
+        "ascii-video",
+        "baoyu-infographic",
+        "claude-design",
+        "design-md",
+        "humanizer",
+        "manim-video",
+        "p5js",
+        "popular-web-designs",
+        "songwriting-and-ai-music",
+        "email-inbox-triage",
+        "himalaya",
+        "gif-search",
+        "songsee",
+        "youtube-content",
+        "obsidian",
+        "airtable",
+        "box",
+        "document-to-action-items",
+        "docx",
+        "google-workspace",
+        "maps",
+        "meeting-action-items",
+        "notion",
+        "pdf",
+        "powerpoint",
+        "product-price-monitor",
+        "teams-meeting-pipeline",
+        "weekly-review-planning",
+        "xlsx",
+        "arxiv",
+        "competitor-news-monitor",
+        "grounded-citations",
+        "llm-wiki",
+        "xurl",
+        "codebase-inspection",
+        "dogfood",
+        "github",
+        "hermes-agent-skill-authoring",
+        "inspecting-hermes-desktop-dom",
+        "node-inspect-debugger",
+        "python-debugpy",
+        "requesting-code-review",
+        "simplify-code",
+        "spike",
+        "systematic-debugging",
+        "test-driven-development",
+        "blocked-page-recovery"
+      ],
+      "listing_chars": 29776,
+      "listing_tokens_approx": 7444,
+      "listing_sha256": "09213fad33ddc4d0941f9083f26dbe783587ee49cc53098894c586258df6bb78",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [],
+      "first_entries": [
+        {
+          "name": "claude-code",
+          "description": "Delegate coding to Claude Code CLI (features, PRs)."
+        },
+        {
+          "name": "codex",
+          "description": "Delegate coding to OpenAI Codex CLI (features, PRs)."
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "wiki-onboard",
+          "description": "Use when the user asks to for summarize update then ticke..."
+        },
+        {
+          "name": "blocked-page-recovery",
+          "description": "Use when a fetch fails: 403/429, paywall, WAF, bot wall."
+        }
+      ]
+    },
+    {
+      "size": 750,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 750,
+      "listed": 750,
+      "dropped": 0,
+      "descriptions": {
+        "full": 103,
+        "cut": 647,
+        "omitted": 0,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 647
+      },
+      "description_chars": {
+        "original_mean": 301,
+        "kept_mean": 55,
+        "kept_median": 57,
+        "kept_max": 60
+      },
+      "first_listed_without_description": null,
+      "described_after_first_undescribed": 0,
+      "other_listed": 53,
+      "other_listed_names": [
+        "claude-code",
+        "codex",
+        "computer-use",
+        "hermes-agent",
+        "opencode",
+        "architecture-diagram",
+        "ascii-video",
+        "baoyu-infographic",
+        "claude-design",
+        "design-md",
+        "humanizer",
+        "manim-video",
+        "p5js",
+        "popular-web-designs",
+        "songwriting-and-ai-music",
+        "email-inbox-triage",
+        "himalaya",
+        "gif-search",
+        "songsee",
+        "youtube-content",
+        "obsidian",
+        "airtable",
+        "box",
+        "document-to-action-items",
+        "docx",
+        "google-workspace",
+        "maps",
+        "meeting-action-items",
+        "notion",
+        "pdf",
+        "powerpoint",
+        "product-price-monitor",
+        "teams-meeting-pipeline",
+        "weekly-review-planning",
+        "xlsx",
+        "arxiv",
+        "competitor-news-monitor",
+        "grounded-citations",
+        "llm-wiki",
+        "xurl",
+        "codebase-inspection",
+        "dogfood",
+        "github",
+        "hermes-agent-skill-authoring",
+        "inspecting-hermes-desktop-dom",
+        "node-inspect-debugger",
+        "python-debugpy",
+        "requesting-code-review",
+        "simplify-code",
+        "spike",
+        "systematic-debugging",
+        "test-driven-development",
+        "blocked-page-recovery"
+      ],
+      "listing_chars": 65864,
+      "listing_tokens_approx": 16466,
+      "listing_sha256": "b4e5d1dc382564defbec04f178b32cefa3c90f93a045575cacec29b2498f2d2e",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [],
+      "first_entries": [
+        {
+          "name": "claude-code",
+          "description": "Delegate coding to Claude Code CLI (features, PRs)."
+        },
+        {
+          "name": "codex",
+          "description": "Delegate coding to OpenAI Codex CLI (features, PRs)."
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "wiki-spec",
+          "description": "Use when the user asks to this entry totals every this lo..."
+        },
+        {
+          "name": "blocked-page-recovery",
+          "description": "Use when a fetch fails: 403/429, paywall, WAF, bot wall."
+        }
+      ]
+    },
+    {
+      "size": 1500,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 1500,
+      "listed": 1500,
+      "dropped": 0,
+      "descriptions": {
+        "full": 213,
+        "cut": 1287,
+        "omitted": 0,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 1287
+      },
+      "description_chars": {
+        "original_mean": 303,
+        "kept_mean": 55,
+        "kept_median": 57,
+        "kept_max": 60
+      },
+      "first_listed_without_description": null,
+      "described_after_first_undescribed": 0,
+      "other_listed": 53,
+      "other_listed_names": [
+        "claude-code",
+        "codex",
+        "computer-use",
+        "hermes-agent",
+        "opencode",
+        "architecture-diagram",
+        "ascii-video",
+        "baoyu-infographic",
+        "claude-design",
+        "design-md",
+        "humanizer",
+        "manim-video",
+        "p5js",
+        "popular-web-designs",
+        "songwriting-and-ai-music",
+        "email-inbox-triage",
+        "himalaya",
+        "gif-search",
+        "songsee",
+        "youtube-content",
+        "obsidian",
+        "airtable",
+        "box",
+        "document-to-action-items",
+        "docx",
+        "google-workspace",
+        "maps",
+        "meeting-action-items",
+        "notion",
+        "pdf",
+        "powerpoint",
+        "product-price-monitor",
+        "teams-meeting-pipeline",
+        "weekly-review-planning",
+        "xlsx",
+        "arxiv",
+        "competitor-news-monitor",
+        "grounded-citations",
+        "llm-wiki",
+        "xurl",
+        "codebase-inspection",
+        "dogfood",
+        "github",
+        "hermes-agent-skill-authoring",
+        "inspecting-hermes-desktop-dom",
+        "node-inspect-debugger",
+        "python-debugpy",
+        "requesting-code-review",
+        "simplify-code",
+        "spike",
+        "systematic-debugging",
+        "test-driven-development",
+        "blocked-page-recovery"
+      ],
+      "listing_chars": 125967,
+      "listing_tokens_approx": 31492,
+      "listing_sha256": "fa055f5104588b4154b4c20e8e7360c62935aec6ad22df9fa66529dfb990a21d",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [],
+      "first_entries": [
+        {
+          "name": "claude-code",
+          "description": "Delegate coding to Claude Code CLI (features, PRs)."
+        },
+        {
+          "name": "codex",
+          "description": "Delegate coding to OpenAI Codex CLI (features, PRs)."
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "wiki-video",
+          "description": "Use when the user asks to chang."
+        },
+        {
+          "name": "blocked-page-recovery",
+          "description": "Use when a fetch fails: 403/429, paywall, WAF, bot wall."
+        }
+      ]
+    }
+  ]
+}
