@@ -303,7 +303,10 @@ Only after the primary passes, in a fixed sequence (`eval/runner/stats/fixed-seq
 - **Each row's fill rate** and the gate result.
 - **Dropped questions** by reason and side.
 - **The first table:** cost per correct answer for claude-opus-5-5 and particle-1 first, then gpt-6.1-sol, from the
-  metering proxy's usage fields.
+  metering proxy's usage fields. For each reader and row it is (the row's ingest, retrieval and background dollars
+  divided by its questions, plus the reader's own dollars per answer) divided by that reader's graded accuracy under the
+  protocol judge. Judge dollars are left out, because they buy the measurement, not the answer. A receipts directory
+  without the cells' `runs/<cell>/meters.ndjson` reports the cost as missing rather than zero.
 - **Null results.** A failed or invalid primary gets R48's "Why null?" cycle in custody before it is reported: exposure,
   task fit, power and saturation, and the bare model.
 
@@ -393,7 +396,9 @@ extension and does not end the test.
 
 ## Stage 1
 
-About $51, public data only. Set `RS1-dev2` holds two public BEAM-1M dev conversations, `1m-20` and `1m-28`, and the same
+About $51 all-in, public data only: the cells' API estimate is $34.71 (`rs1-cells.json`, the figure the $60 cap checks),
+and pricing.ts's $51.31 prices the same work at GBEV-48's per-conversation plan rates, VM time included, plus a $5
+judge smoke allowance. Set `RS1-dev2` holds two public BEAM-1M dev conversations, `1m-20` and `1m-28`, and the same
 four cells as set RS1.
 
 - All four rows, Opus and Sol live, particle-1 re-read plans, both judge views.
