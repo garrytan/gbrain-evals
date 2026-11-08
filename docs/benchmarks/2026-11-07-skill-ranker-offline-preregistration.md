@@ -105,4 +105,17 @@ Ledger: `results/spend.jsonl`, one line per paid call with provider-reported usa
 
 ## Amendments
 
-None yet.
+### Amendment 1, 2026-11-07: data frozen before any arm runs
+
+Turns and pass-1 labels are written; no arm has run on any turn. Recorded hashes (sha256), also in `results/freeze.json`:
+
+- `data/turns.jsonl` `12465c52a202a857dee98683377ed5226d05b98d28e10d4f7229c5a690ab0843` (300 turns, gpt-6.1-sol)
+- `results/judge-pass1.jsonl` `bdcb49c9d0513afde8b36ae4f2c897a7b9802c0359355a54b364db545aaddf51` (300 rows, claude-opus-5-5, no retries, 1 out-of-catalog id dropped)
+- `data/dev.jsonl` `7b39cb156940ea522d0d7053c67a550c40ef18170df4499f2961cf163742ba76` (60 turns, 17 no_skill_needed)
+- `data/test.jsonl` test.jsonl sha256 8b4588f2aed83bf6e2bbdef00220793ecf77a7045cbd7c3c733e3e4dcbbe0b02 (240 turns, 70 no_skill_needed)
+- `data/catalog.jsonl` `5b9b29a47ca6cd34ed36a23b6e4d8101c12ccb53ca4115f143bc17acb5de8254` (unchanged)
+- `data/spring-block.txt` `3af0f0c0e81c91b2e23eb1e97674288c3043e15b1fab04f6eb91d7716aff9252`: A1s's block as gbrain ff11cb91 renders it, saved so A1s does not need a gbrain checkout.
+
+Judge outcome by written intent (pass 1): 212 of 225 skill turns got at least one acceptable skill and 13 got none; 44 of 45 near-miss turns and all 30 generic turns got none. So 87 turns are no_skill_needed under the preregistered definition (judge's empty set wins over the writer's intent). The judge's cached catalog block measured 188,837 input tokens. Ledger after pass 1: $4.97.
+
+No change to arms, bars, grids or decision rule.
