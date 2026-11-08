@@ -18,3 +18,8 @@ is flagged `visibility: private`. gbrain hides that page from a remote caller, s
 freeze --fixture` drops that task and counts the drop. `test/eval/live-recall-tasks.test.ts` runs the phase 2 runner on
 these tasks with scripted models; the format is in
 [RUN-KIT.md](../../../docs/benchmarks/live-recall/RUN-KIT.md#phase-2-the-task-file).
+
+`provider-usage-2026-11-08.jsonl` holds the raw `usage` object, with its endpoint and model and nothing else, of each
+of the 13 provider responses from one paid fixture task in arm B on 2026-11-08 (claude-opus-5-5, gpt-6.1-sol and
+particle-1 answering, both judges; $0.0985 on its ledger). `test/eval/q1-usage.test.ts` checks that the loop prices
+every one exactly as the budget ledger does, OpenAI's nested `input_tokens_details.cache_write_tokens` included.

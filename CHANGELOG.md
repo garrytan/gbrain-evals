@@ -2,6 +2,22 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### Live recall phase 2: OpenAI cache writes priced as the budget ledger prices them (GBEV-46)
+
+- **Fix.** `eval/runner/q1/usage.ts` now reads `cache_write_tokens` inside `input_tokens_details` (and Chat
+  Completions' `prompt_tokens_details`) as well as at the top level, so an OpenAI response's cache writes are priced
+  at the model's cache-write rate ($2.50 per million for gpt-6.1-sol) instead of as plain input. The paid fixture smoke
+  on 2026-11-08 had priced gpt-6.1-sol at $0.2853 from its records against $0.3325 on the ledger, while Anthropic and
+  particle-1 matched to the cent. The parser is shared, so Cat 40's agent loop and q1's readers, including the memory-qa
+  results q1 reads, get the same fix; Cat 40's text-only claims judge (`runAgentText`) and `p5-agent.ts` still price an
+  OpenAI judge's cache writes as plain input.
+- **Test.** `test/eval/q1-usage.test.ts` prices the 13 real `usage` objects in
+  `eval/data/live-recall-v1/provider-usage-2026-11-08.jsonl` both ways: the loop's price equals the ledger's for every
+  response, and the totals equal that capture's ledger ($0.0831378 Anthropic, $0.013817 OpenAI, $0.00152595
+  particle-1). It fails on the old parser.
+
 ## [0.10.173] - 2026-11-08
 
 ### Live recall phase 2: a preregistered harness for whether gbrain retrieval changes answers (GBEV-46)
