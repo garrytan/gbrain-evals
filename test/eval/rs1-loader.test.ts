@@ -1,5 +1,5 @@
 /**
- * beam-rs1, the RS1 ranking set: 75 conversations minted in custody with BEAM's generator by eval/custody/rs1/mint.sh,
+ * beam-rs1, the RS1 set: 48 mint slots minted in custody with BEAM's generator by eval/custody/rs1/mint.sh,
  * all sealed. Its loader, manifest, split, instrument and custody refusals, on synthetic fixtures written in the mint's
  * set layout (tiny invented content), and on a set mint.sh --fake mints from a test seed. No RS1 byte is used here.
  */
@@ -13,7 +13,7 @@ import { closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { DecideError } from '../../eval/runner/decisions/errors.ts';
 import { devConversations, loadSplit } from '../../eval/runner/decisions/splits.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
-import { DATASET_ROOT, RS1_CONVERSATIONS, beamManifest, fetchDataset, fileSha256, filesFor, loadBeam, loadCorpus, loadRs1, rs1ConversationFiles, rs1ManifestFiles, rs1ManifestPath, rs1Source, verifyRs1Custody, type Corpus } from '../../eval/runner/memory-qa/corpus.ts';
+import { DATASET_ROOT, RS1_CONVERSATIONS, beamManifest, fetchDataset, fileSha256, filesFor, loadBeam, loadCorpus, loadRs1, rs1ConversationFiles, rs1Kept, rs1ManifestFiles, rs1ManifestPath, rs1Source, rs1UnitConversations, verifyRs1Custody, type Corpus } from '../../eval/runner/memory-qa/corpus.ts';
 import { INSTRUMENTS, instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { exportAggregates } from '../../eval/runner/memory-qa/sealed-profile.ts';
 import { needsCustody, splitConversations } from '../../eval/runner/q1/cell.ts';
@@ -92,8 +92,8 @@ const custody = (log: string) => ({ log, decisionId: 'test', purpose: 'unit test
 describe('beam-rs1 loader', () => {
   test('conversation rs1-<NNN> is conversations/c<NNN>/beam/1; sessions are loadBeam\'s: one per turn group, group or batch date, markers stripped', () => {
     const f = fixture();
-    expect(RS1_CONVERSATIONS).toHaveLength(75);
-    expect([RS1_CONVERSATIONS[0], RS1_CONVERSATIONS[74]]).toEqual(['rs1-001', 'rs1-075']);
+    expect(RS1_CONVERSATIONS).toHaveLength(48);
+    expect([RS1_CONVERSATIONS[0], RS1_CONVERSATIONS[47]]).toEqual(['rs1-001', 'rs1-048']);
     expect(rs1ConversationFiles(f.root, 'rs1-002')).toEqual({ chat: 'conversations/c002/beam/1/chat.json', questions: 'conversations/c002/beam/1/probing_questions/probing_questions.json' });
     const c = quiet(() => loadCorpus('beam-rs1', undefined, new Set(['rs1-001', 'rs1-002'])));
     expect(c.benchmark).toBe('beam-rs1');
@@ -212,16 +212,16 @@ describe('beam-rs1 manifest', () => {
   test('rs1ManifestFiles pins every file the loader reads; a filled manifest refuses tampered, unlisted and missing files', async () => {
     const f = fixture(RS1_CONVERSATIONS.map((_, i) => i + 1));
     const files = rs1ManifestFiles(f.root);
-    expect(files).toHaveLength(150);
+    expect(files).toHaveLength(96);
     expect(files.slice(0, 2).map(x => x.path)).toEqual(['conversations/c001/beam/1/chat.json', 'conversations/c001/beam/1/probing_questions/probing_questions.json']);
     const template = JSON.parse(readFileSync(f.manifest, 'utf8'));
     writeFileSync(f.manifest, JSON.stringify({ ...template, status: 'filled', files, filled_at: '2026-11-03T00:00:00Z' }, null, 1) + '\n');
     const all = loadRs1(custody(f.log));
-    expect(all.conversations).toHaveLength(75);
-    expect(all.questions).toHaveLength(375);
+    expect(all.conversations).toHaveLength(48);
+    expect(all.questions).toHaveLength(240);
     expect(all.source.revision).toBe(fileSha256(f.manifest).slice(0, 7));
-    expect(verifyRs1Custody(() => {})).toBe(150);
-    expect(await fetchDataset('beam-rs1', { log: () => {} })).toEqual({ fetched: 0, verified: 150 });
+    expect(verifyRs1Custody(() => {})).toBe(96);
+    expect(await fetchDataset('beam-rs1', { log: () => {} })).toEqual({ fetched: 0, verified: 96 });
 
     const chat = join(f.root, 'conversations/c003/beam/1/chat.json');
     const original = readFileSync(chat);
@@ -244,8 +244,34 @@ describe('beam-rs1 manifest', () => {
   });
 });
 
+describe('beam-rs1 kept list (the custodian names the kept conversations in the filled manifest)', () => {
+  const filled = (root: string, kept: number[], extra: Record<string, unknown> = {}) => ({ dataset: 'RS1', status: 'filled' as const, layout: '', note: '', filled_at: '2026-11-08T00:00:00Z',
+    files: rs1ManifestFiles(root, kept.map(n => `rs1-${String(n).padStart(3, '0')}`)), kept: kept.map(n => `rs1-${String(n).padStart(3, '0')}`), ...extra });
+
+  test('rs1Kept returns the kept ids in slot order and refuses an unfilled manifest, an id outside the 48 slots, an unpinned id and a bad order', () => {
+    const f = fixture([1, 2, 3, 5, 7]);
+    expect(rs1Kept(filled(f.root, [1, 2, 3, 5]))).toEqual({ kept: ['rs1-001', 'rs1-002', 'rs1-003', 'rs1-005'], n_final: null });
+    expect(code(() => rs1Kept({ ...filled(f.root, [1]), status: 'unfilled' }))).toBe('DATASET_MISSING');
+    expect(decide(() => rs1Kept({ ...filled(f.root, [1]), kept: ['rs1-001', 'rs1-049'] })).op.message).toContain('rs1-049 is not one of the 48 mint slots');
+    expect(decide(() => rs1Kept({ ...filled(f.root, [1, 2]), kept: ['rs1-001', 'rs1-002', 'rs1-007'] })).op.message).toContain('rs1-007 has no pinned chat or questions file');
+    expect(decide(() => rs1Kept({ ...filled(f.root, [1, 2]), kept: ['rs1-002', 'rs1-001'] })).op.message).toContain('strictly increasing slot order');
+    expect(code(() => rs1Kept(filled(f.root, [1, 2], { n_final: 1 })))).toBe('DATASET_MISSING');
+  });
+
+  test('a launch unit takes five kept conversations in slot order; a short last unit runs only once n_final completes the list', () => {
+    const slots = Array.from({ length: 23 }, (_, i) => i + 1).filter(n => n !== 4 && n !== 9);
+    const f = fixture(slots);
+    const m = filled(f.root, slots);
+    expect(rs1UnitConversations(m, 0, 5)).toEqual(['rs1-001', 'rs1-002', 'rs1-003', 'rs1-005', 'rs1-006']);
+    expect(rs1UnitConversations(m, 3, 5)).toEqual(['rs1-018', 'rs1-019', 'rs1-020', 'rs1-021', 'rs1-022']);
+    expect(decide(() => rs1UnitConversations(m, 4, 5)).op.message).toContain('launch unit 4 needs kept conversations 21 to 25, and the kept list holds 21');
+    expect(rs1UnitConversations({ ...m, n_final: 21 }, 4, 5)).toEqual(['rs1-023']);
+    expect(code(() => rs1UnitConversations({ ...m, n_final: 21 }, 5, 5))).toBe('DATASET_MISSING');
+  });
+});
+
 describe('beam-rs1 split, instrument and reuse pin', () => {
-  test('all 75 conversations are sealed and none is dev', () => {
+  test('all 48 mint slots are sealed and none is dev', () => {
     const s = loadSplit('beam-rs1');
     expect(s.dev).toEqual([]);
     expect(s.dev_fraction).toBe(0);
