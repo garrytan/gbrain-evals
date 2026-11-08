@@ -7,8 +7,8 @@ Written 2026-11-07 for Step 0 of the gbrain skill resolver plan (GBRA-377, GST-1
 tells the model which skills are installed with a listing in its prompt: each skill's name and a short description of when
 to use it. The model can only pick a skill it can see described. With synthetic catalogs whose description lengths follow
 public skill repositories, Claude Code 2.1.312 keeps every name but drops descriptions from 150 skills on, Codex 0.165.0
-shortens every description from 150 skills on and drops names from 750, OpenClaw 2026.10.6 shortens descriptions at 50
-skills and drops names from 150, and Hermes v2026.9.24 cuts every description to 60 characters at any catalog size but
+shortens descriptions from 150 skills on (every one from 300) and drops names from 750, OpenClaw 2026.10.6 shortens descriptions at 50
+skills and drops names from 150, and Hermes v2026.9.24 caps every description at 60 characters at any catalog size but
 never drops a name. No model was called: each harness ran one turn against a local server that recorded the request.
 
 | Harness | First catalog size with a cut | What is cut | Truncates or compacts at <= 300 skills |
@@ -43,7 +43,7 @@ use that skill's description length. `lengths.ts` measured the sources at these 
 | gstack skills | 118207f0 | MIT | 63 | 74 | 81 | 208 |
 | anthropics/skills (`skills/*/SKILL.md`) | 2c5958ec | Apache-2.0 per skill; `doc-coauthoring` has no licence file and is excluded | 18 | 322 | 497 | 1,068 |
 
-The resulting catalogs have a median description of 232 characters and a mean of 275 to 313 depending on size.
+The resulting catalogs have a median description of 200 to 232 characters and a mean of 275 to 313, depending on size.
 Only names and lengths are stored ([description-lengths.json](skill-listing-truncation/description-lengths.json)).
 
 **Harnesses.** The npm packages `@anthropic-ai/claude-code@2.1.312`, `@openai/codex@0.165.0` and `openclaw@2026.10.6`,
@@ -86,7 +86,7 @@ default 0.01), or `SLASH_COMMAND_TOOL_CHAR_BUDGET` when set. Claude Code's own d
 budget: 313 skills, 105634 chars > 30000 budget` at 300 skills. Each description is first capped at 1,536 characters
 (`skillListingMaxDescChars`) with an ellipsis. When the listing is over budget, every skill becomes a bare name; skills
 Claude Code ships keep their descriptions; the others get theirs back in priority order (a usage score, equal on a fresh
-install) for as long as each fits, first fit. Names are never dropped, so at 1,500 skills the names alone pass the budget.
+install) for as long as each fits, first fit. Names are never dropped, so at 1,500 skills the listing is names only and keeps no description.
 Order: user skills alphabetically, then Claude Code's own skills. With no usage history, descriptions go to the first
 skills alphabetically: at 150 the 72nd skill is the first without one, and one later skill still fits. Claude Code is not
 open source; the rule is the JavaScript bundled in `bin/claude.exe` (sha256 4f4178ce…), printed by
@@ -207,7 +207,7 @@ So 300 skills is a size users reach, and the plan's 300-skill line holds on publ
   Claude Code and silently on Codex until names start dropping.
 - **OpenClaw is the most aggressive**: at 300 skills it shows 122 of ours as bare names, and past 300 skill folders it
   never loads most of them. Its per-turn path is AlphaClaw's `before_prompt_build` adapter, not PR B.
-- **Hermes never hides a name**, but every description is 60 characters at any size and its listing grows without a
+- **Hermes never hides a name**, but every description is capped at 60 characters at any size and its listing grows without a
   limit, so at 1,500 skills it spends about 31,000 tokens per turn on the list. Its per-turn path is `pre_llm_call`.
 - **Ordering is alphabetical in all four.** With no usage history, the skills that keep their descriptions in Claude Code,
   and the names that survive in Codex and OpenClaw, are the alphabetically first ones, unrelated to the task.
@@ -229,3 +229,11 @@ A full run takes about 25 minutes on a 4-core machine and needs no API key; it m
 machine time. Per-cell results: [results/](skill-listing-truncation/results/) (`claude-code.json`, `codex.json`,
 `hermes.json`, `openclaw.json`, each with the listing's sha256, ordering checks and any notice). The full listing each
 harness sent at 300 skills is in [results/listings/](skill-listing-truncation/results/listings/).
+
+## Disclosures
+
+Disclosure: Y Combinator, which Garry Tan runs, is an investor in Hermes.
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
+Disclosure: OpenAI is now the key benefactor of OpenClaw, and OpenClaw's creator, Peter Steinberger, works for OpenAI.

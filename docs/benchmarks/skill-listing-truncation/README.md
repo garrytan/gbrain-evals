@@ -36,5 +36,10 @@ Claude Code would also read). Published results and listings replace that home w
 `/tmp/sl-h/node_modules/` with `<harness-node_modules>/`, placeholders of the same length, so every character count in
 `results/` matches the listing files byte for byte. No provider key is needed: every harness gets a dummy key and a local base URL.
 
+Run one invocation at a time. Every run reuses the same scratch homes, capture files and local port, and deletes the
+previous cell's scratch state first. `run.ts` writes each harness's version label from its own pins, not from the binary,
+so check that each binary's `--version` matches those pins before a rerun. A run narrowed with `--only` and `--sizes`
+merges its cells into the existing results file.
+
 To regenerate the length distribution: `bun lengths.ts --gbrain <gbrain checkout> --gstack <gstack checkout>
 --anthropic <anthropics/skills checkout> > description-lengths.json`. The catalogs change only if this file does.
