@@ -5,7 +5,7 @@
  * resume, cache hits, and published files that hold no answer text.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
@@ -279,6 +279,25 @@ describe('the command line', () => {
     const ok = run(['report', '--out', stage(passing.grades, passing.pool)]);
     expect(ok.exitCode).toBe(0);
     expect(ok.stdout.toString()).toContain('**Every gate passed.**');
+  });
+
+  test('a keyless rehearsal and a paid run never share an --out: the second refuses before it builds a pool or opens a lease, and report records which kind it read', () => {
+    const out = dir(), stage1 = dir();
+    mkdirSync(join(stage1, 'cells'));
+    writeFileSync(join(out, 'upstream.json'), JSON.stringify({ keyless: false }) + '\n');
+    const r = Bun.spawnSync(['bun', 'eval/runner/rs1/judge-check.ts', 'run', '--stage1', stage1, '--out', out, '--budget-ledger', join(out, 'ledger.ndjson'), '--run-id', 'jc-test',
+      '--lease-usd', '1', '--ledger-cap-usd', '2', '--keyless-upstream', 'http://127.0.0.1:9'], { cwd: join(import.meta.dir, '..', '..'), stdout: 'pipe', stderr: 'pipe', env: { ...process.env, OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '' } });
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr.toString()).toContain('holds a paid judge-check run');
+    expect(existsSync(join(out, 'pool.json'))).toBe(false);
+    expect(existsSync(join(out, 'ledger.ndjson'))).toBe(false);
+    const passing = setup();
+    const staged = stage(passing.grades, passing.pool), pub = dir();
+    writeFileSync(join(staged, 'upstream.json'), JSON.stringify({ keyless: true }) + '\n');
+    const ok = run(['report', '--out', staged, '--publish', pub]);
+    expect(ok.exitCode).toBe(0);
+    expect(ok.stderr.toString()).toContain('JUDGE_CHECK_KEYLESS');
+    expect(JSON.parse(readFileSync(join(pub, 'judge-check.json'), 'utf8')).spend.keyless).toBe(true);
   });
 
   test('without --out or --stage1 it prints its usage and exits 2', () => {

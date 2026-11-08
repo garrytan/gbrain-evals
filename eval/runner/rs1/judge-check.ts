@@ -44,7 +44,7 @@ import { ChatClient, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { readRecords, sha256, type JudgmentRecord } from '../memory-qa/records.ts';
 import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../metering-proxy.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
-import { keylessUpstreamArg } from '../q1/calibration-cell.ts';
+import { claimOut, keylessUpstreamArg } from '../q1/calibration-cell.ts';
 import { metering, onSlot, type MeterLine } from '../q1/cell.ts';
 import { PER_READER_JUDGE_SETTINGS } from '../q1/cells/definitions.ts';
 import { loadRS1Manifest } from '../q1/cells/rs1.ts';
@@ -411,6 +411,13 @@ if (import.meta.main) {
   const seed = Number(one('--seed') ?? SEED);
   if (!out || !['plan', 'run', 'report'].includes(mode ?? '') || (mode !== 'report' && !stage1.length)) { console.error('usage: bun eval/runner/rs1/judge-check.ts plan|run --stage1 <dir>... --out <dir> [--seed <n>] [run: --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--keyless-upstream <url>]]; report --out <dir> [--publish <dir>]'); process.exit(2); }
   mkdirSync(out, { recursive: true });
+  const [ledger, runId, leaseUsd, cap] = [one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
+  const keyless = mode === 'run' ? keylessUpstreamArg(argv) : null;
+  if (mode === 'run') {
+    if (!ledger || !runId || !(leaseUsd > 0) || !(cap > 0)) { console.error('run needs --budget-ledger, --run-id, --lease-usd and --ledger-cap-usd'); process.exit(2); }
+    try { claimOut(out, !!keyless, 'judge-check'); }
+    catch (e) { console.error((e as Error).message); process.exit(2); }
+  }
   if (mode !== 'report') {
     const instrument = instrumentFor(loadRS1Manifest().smoke_cells[0].canonical_instrument);
     const questions = loadBeam('1m', new Set(DEV_CONVERSATIONS)).questions;
@@ -419,13 +426,10 @@ if (import.meta.main) {
     const items = pool.reduce((s, c) => s + c.labels.length, 0);
     console.log(JSON.stringify({ seed, candidates: pool.length, by_class: Object.fromEntries(CLASSES.map(c => [c, pool.filter(x => x.class === c).length])), rubric_items: items, rubric_calls: items * JUDGES.length, gold_screen_exclusions: exclusions.length }, null, 2));
     if (mode === 'plan') process.exit(0);
-    const [ledger, runId, leaseUsd, cap] = [one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
-    if (!ledger || !runId || !(leaseUsd > 0) || !(cap > 0)) { console.error('run needs --budget-ledger, --run-id, --lease-usd and --ledger-cap-usd'); process.exit(2); }
-    const keyless = keylessUpstreamArg(argv);
     const placeholder = 'keyless-not-a-provider-key';
     const [cellToken, controlToken] = [randomUUID(), randomUUID()];
     Object.assign(process.env, { SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
-    const lease = openRereadLease({ runId, leaseUsd, ledgerPath: resolve(ledger), capUsd: cap, runner: 'rs1-judge-check' });
+    const lease = openRereadLease({ runId: runId!, leaseUsd, ledgerPath: resolve(ledger!), capUsd: cap, runner: 'rs1-judge-check' });
     const usageLog = join(out, 'usage.ndjson');
     const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
       policy: { lease, usageLog, env: keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder } : { ...process.env }, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS, ...Object.fromEntries(GATING_JUDGES.map(j => [`judge@${j}`, PER_READER_JUDGE_SETTINGS.max_tokens])) }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
@@ -437,7 +441,10 @@ if (import.meta.main) {
   }
   const saved = JSON.parse(readFileSync(join(out, 'pool.json'), 'utf8')) as { pool: Candidate[]; exclusions: Exclusion[] };
   const report = analyzeCheck(saved.pool, gradesFrom(readGraded(join(out, 'judgments.ndjson'))));
-  const spend = { source: 'metering proxy usage log (provider usage fields)', usage: existsSync(join(out, 'usage.ndjson')) ? usageSplit(join(out, 'usage.ndjson')) : null };
+  const marker = join(out, 'upstream.json');
+  const spend = { source: 'metering proxy usage log (provider usage fields)', keyless: existsSync(marker) ? JSON.parse(readFileSync(marker, 'utf8')).keyless === true : null,
+    usage: existsSync(join(out, 'usage.ndjson')) ? usageSplit(join(out, 'usage.ndjson')) : null };
+  if (spend.keyless) process.stderr.write('JUDGE_CHECK_KEYLESS: a keyless rehearsal; its grades come from a fake provider and unblock nothing\n');
   publish(one('--publish') ? resolve(one('--publish')!) : out, report, saved.pool, saved.exclusions, spend);
   process.stdout.write(checkMarkdown(report, spend));
   if (report.stop) { process.stderr.write(`JUDGE_CHECK_STOP: ${report.gates.filter(g => !g.pass).map(g => `${g.gate} ${g.value ?? 'n/a'} (line ${g.line})`).join('; ')}; wave A waits and every number goes to GBEV-3\n`); process.exit(3); }
