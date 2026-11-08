@@ -9,7 +9,7 @@ import { answerId } from '../../eval/runner/memory-qa/records.ts';
 import { runConfigText } from '../../eval/runner/q1/cell.ts';
 import { loadRS1Manifest, OPUS, PARTICLE, SOL } from '../../eval/runner/q1/cells/rs1.ts';
 import { rereadCellId } from '../../eval/runner/q1/reread-cell.ts';
-import { analyze, loadInput, markdown, readerValue, receiptManifestProblems, verdictMain, VerdictError } from '../../eval/runner/rs1/verdict.ts';
+import { analyze, loadInput, markdown, pairedRow, readerValue, receiptManifestProblems, verdictMain, VerdictError, type VerdictInput } from '../../eval/runner/rs1/verdict.ts';
 
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 const HEX = sha('x');
@@ -122,6 +122,41 @@ describe('verdict.ts reader values', () => {
     expect(readerValue(a, new Map([[`a1|${INSTRUMENT}`, 1]]), INSTRUMENT)).toEqual({ drop: 'judgment_missing:frontier' });
     expect(readerValue(a, new Map([[`a1|${INSTRUMENT}@openai:gpt-6.1-sol`, 1], [`a1|${INSTRUMENT}`, 1]]), INSTRUMENT)).toEqual({ drop: 'judgment_missing:frontier' });
     expect(readerValue(a, new Map([[gating, 0.5]]), INSTRUMENT, true)).toEqual({ drop: 'judgment_missing:bridge' });
+  });
+});
+
+describe('verdict.ts paired reporting', () => {
+  test('a paired row gives the conversation-mean difference, hand-computed 95% and 90% t intervals and the lower, higher and tied counts', () => {
+    const pairs = [{ conversation: 'c1', d: -2 }, { conversation: 'c1', d: 0 }, { conversation: 'c2', d: 4 }, { conversation: 'c3', d: 1 }, { conversation: 'c3', d: 3 }];
+    const p = pairedRow({ server: 'memory-bank', view: 'frontier', subset: 'overall' }, pairs);
+    // conversation means -1, 4, 2: mean 5/3, SD sqrt(19/3), SE sqrt(19/9); t(0.975, 2) = 4.3027, t(0.95, 2) = 2.9200
+    expect([p.conversations, p.questions, p.lower, p.higher, p.tied]).toEqual([3, 5, 1, 3, 1]);
+    expect(p.mean).toBeCloseTo(1.6667, 4);
+    expect(p.ci95![0]).toBeCloseTo(5 / 3 - 4.3027 * Math.sqrt(19 / 9), 2);
+    expect(p.ci95![1]).toBeCloseTo(5 / 3 + 4.3027 * Math.sqrt(19 / 9), 2);
+    expect(p.ci90![0]).toBeCloseTo(5 / 3 - 2.92 * Math.sqrt(19 / 9), 2);
+    expect(p.reading).toBe('no measurable difference');
+    const low = pairedRow({ server: 'extract-first', view: 'bridge', subset: 'overall' }, [{ conversation: 'a', d: -5 }, { conversation: 'b', d: -6 }, { conversation: 'c', d: -4 }]);
+    expect([low.reading, low.lower, low.higher]).toEqual(['gbrain lower', 3, 0]);
+    expect(pairedRow({ server: 'memory-bank', view: 'frontier', subset: 'reader x' }, pairs, 5).reading).toBe('too few conversations');
+  });
+
+  test('every comparison is reported paired, overall, per reader and per ability, under both views, with "no measurable difference" in the table', () => {
+    const v = (x: number) => ({ frontier: x, bridge: x });
+    const questions: VerdictInput['questions'] = [];
+    for (let c = 0; c < 6; c++) for (let i = 0; i < 4; i++) {
+      const g = 0.5 + ((c + i) % 3) / 10, s = 0.5 + ((c * 2 + i) % 3) / 10;
+      questions.push({ id: `c${c}:ab${i % 2}:${i}`, conversation: `c${c}`, rows: { gbrain: Object.fromEntries([OPUS, SOL, PARTICLE].map(r => [r, v(g)])), 'memory-bank': Object.fromEntries([OPUS, SOL, PARTICLE].map(r => [r, v(s)])), 'extract-first': Object.fromEntries([OPUS, SOL, PARTICLE].map(r => [r, v(s)])) } });
+    }
+    const a = analyze({ set: 'RS1', questions, floor: [], fill: { gbrain: 0.95, 'memory-bank': 0.95, 'extract-first': 0.95 }, costs: [] });
+    const subsets = [...new Set(a.paired.map(p => p.subset))];
+    expect(subsets).toEqual(['overall', `reader ${OPUS}`, `reader ${SOL}`, `reader ${PARTICLE}`, 'ability ab0', 'ability ab1']);
+    expect(a.paired).toHaveLength(2 * 2 * 6);
+    const overall = a.paired.find(p => p.server === 'memory-bank' && p.view === 'frontier' && p.subset === 'overall')!;
+    expect(overall.lower + overall.higher + overall.tied).toBe(24);
+    expect(overall.ci90).not.toBeNull();
+    expect(markdown(a)).toContain('| memory-bank | gating | overall | 6 | 24 |');
+    expect(markdown(a)).toContain('gbrain lower / higher / tied');
   });
 });
 

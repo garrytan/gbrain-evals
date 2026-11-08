@@ -28,6 +28,12 @@
  *   Gate      a system row passes the delivered-context gate when its mean fill rate (rows.ndjson fill_rate, a failed
  *             retrieval's null counted as 0) is at least 0.90; a row that fails makes every comparison it enters
  *             descriptive (no verdict).
+ *   Paired    every comparison (overall, per reader, per ability; each server; each view) as gbrain minus the server on the
+ *             same questions: the mean paired difference over conversation means with its two-sided 95% t interval (and
+ *             the 90% interval, whose lower end is the one-sided bound the verdict uses), the count of questions where
+ *             gbrain scored lower, higher and tied (per question on the three-reader mean; per reader on that reader's
+ *             score), and "no measurable difference" when the 95% interval includes zero. Subgroup rows are descriptive,
+ *             with no multiplicity correction, and read "too few conversations" below MIN_SUBGROUP_CONVERSATIONS.
  *   Reported  iut.ts's decision, the worst-case sensitivity and a flag when it disagrees, the restricted wild cluster
  *             bootstrap-t on the question-weighted estimate (Webb weights, 9,999 draws, one-sided 95% lower bound),
  *             per-reader and per-ability means, the floor, each row's fill rate, drops by reason and side, and the first
@@ -50,8 +56,8 @@ import { frontierJudgeOf } from '../q1/cells/definitions.ts';
 import { loadRS1Manifest, OPUS, PARTICLE, RS1_WAVE_A, SOL } from '../q1/cells/rs1.ts';
 import { rereadCellId } from '../q1/reread-cell.ts';
 import { wildTest, type ClusterRow } from '../stats/wild-cluster.ts';
-import { COMPARISONS, conversationDifferences, decide, dropValidity, GATING, inBridgeSet, inCommonSet, questionScores, RS1_MARGIN, SERVERS, VIEWS, worstCase,
-  type ComparisonKey, type Decision, type Drop, type QuestionInput, type ReaderValue, type Row, type Scored, type View } from './iut.ts';
+import { COMPARISONS, conversationDifferences, decide, dropValidity, GATING, inBridgeSet, inCommonSet, questionScores, RS1_MARGIN, SERVERS, tQuantile, viewValue, VIEWS, worstCase,
+  type ComparisonKey, type Decision, type Drop, type QuestionInput, type ReaderValue, type Row, type Scored, type Server, type View } from './iut.ts';
 import { N_CAP, pilotSize } from './power.ts';
 import { priceAt } from './pricing.ts';
 
@@ -62,6 +68,9 @@ export const FILL_GATE = 0.9;
 export const DRAWS = 9999;
 export const SEED = 20261108;
 export const ROLES: Record<string, Row | 'floor'> = { 'gbrain-defaults': 'gbrain', 'ext-memory-bank': 'memory-bank', 'ext-extract-first': 'extract-first', 'baseline-none': 'floor' };
+/** Below this many conversations a per-reader or per-ability paired row reads "too few conversations". */
+export const MIN_SUBGROUP_CONVERSATIONS = 5;
+const TIE = 1e-9;
 
 export class VerdictError extends Error {}
 const refuse = (m: string): never => { throw new VerdictError(m); };
@@ -102,6 +111,31 @@ function bootstrap(scored: readonly Scored[]) {
     const t = wildTest(rows, { draws: DRAWS, seed: SEED, weights: 'webb', alpha: 0.1 });
     return { key, estimate: r4(t.theta), lower: r4(t.ci95[0]), agrees: null as boolean | null };
   });
+}
+
+export interface PairedRow {
+  server: Server; view: View; subset: string; conversations: number; questions: number;
+  mean: number | null; ci95: [number, number] | null; ci90: [number, number] | null;
+  lower: number; higher: number; tied: number;
+  reading: 'no measurable difference' | 'gbrain lower' | 'gbrain higher' | 'too few conversations';
+}
+
+/**
+ * One paired comparison from per-question differences (gbrain minus server, points): conversation means, their mean and
+ * two-sided t intervals on n - 1 df, and the lower, higher and tied counts over the questions.
+ */
+export function pairedRow(key: { server: Server; view: View; subset: string }, pairs: ReadonlyArray<{ conversation: string; d: number }>, minConversations = 2): PairedRow {
+  const byConv = new Map<string, number[]>();
+  for (const p of pairs) byConv.set(p.conversation, [...(byConv.get(p.conversation) ?? []), p.d]);
+  const means = [...byConv.values()].map(xs => xs.reduce((a, b) => a + b, 0) / xs.length);
+  const counts = { lower: pairs.filter(p => p.d < -TIE).length, higher: pairs.filter(p => p.d > TIE).length, tied: pairs.filter(p => Math.abs(p.d) <= TIE).length };
+  const base = { ...key, conversations: means.length, questions: pairs.length, ...counts };
+  if (means.length < Math.max(2, minConversations)) return { ...base, mean: means.length ? r4(meanOf(means)!) : null, ci95: null, ci90: null, reading: 'too few conversations' };
+  const n = means.length, m = meanOf(means)!;
+  const se = Math.sqrt(means.reduce((s, x) => s + (x - m) ** 2, 0) / (n - 1)) / Math.sqrt(n);
+  const ci = (level: number): [number, number] => { const h = tQuantile(1 - (1 - level) / 2, n - 1) * se; return [r4(m - h), r4(m + h)]; };
+  const ci95 = ci(0.95);
+  return { ...base, mean: r4(m), ci95, ci90: ci(0.9), reading: ci95[0] <= 0 && ci95[1] >= 0 ? 'no measurable difference' : m < 0 ? 'gbrain lower' : 'gbrain higher' };
 }
 
 export function analyze(input: VerdictInput) {
@@ -148,6 +182,22 @@ export function analyze(input: VerdictInput) {
     const view = (v: View) => { const a = accuracy(row, reader, v); return { accuracy: r4n(a), usd_per_correct: usd === null || !a ? null : r4(usd / (a / 100)) }; };
     return { reader, row, usd_per_question: r4n(usd), frontier: view('frontier'), bridge: view('bridge') };
   }));
+  const ability = (id: string) => id.split(':')[1] ?? 'unknown';
+  const inView = (view: View) => (view === 'frontier' ? inCommonSet : inBridgeSet);
+  const byKey = new Map(input.questions.map(q => [q.id, q]));
+  const paired = SERVERS.flatMap(server => VIEWS.flatMap(view => {
+    const qs = scored.filter(inView(view));
+    const rowPairs = (sel: readonly Scored[]) => sel.map(s => ({ conversation: s.conversation, d: viewValue(s, 'gbrain', view)! - viewValue(s, server, view)! }));
+    const readerPairs = (reader: string) => qs.flatMap(s => {
+      const g = byKey.get(s.id)!.rows.gbrain[reader], x = byKey.get(s.id)!.rows[server][reader];
+      return !g || !x || 'drop' in g || 'drop' in x || g[view] === null || x[view] === null ? [] : [{ conversation: s.conversation, d: 100 * (g[view]! - x[view]!) }];
+    });
+    return [
+      pairedRow({ server, view, subset: 'overall' }, rowPairs(qs)),
+      ...READERS.map(reader => pairedRow({ server, view, subset: `reader ${reader}` }, readerPairs(reader), MIN_SUBGROUP_CONVERSATIONS)),
+      ...[...new Set(qs.map(s => ability(s.id)))].sort().map(a => pairedRow({ server, view, subset: `ability ${a}` }, rowPairs(qs.filter(s => ability(s.id) === a)), MIN_SUBGROUP_CONVERSATIONS)),
+    ];
+  }));
   const disagrees = decision.verdict !== 'invalid' && worst.verdict !== decision.verdict;
   return {
     schema: 'gbrain-evals/rs1-verdict/v1', set: input.set, margin: RS1_MARGIN, readers: READERS, conversations: conversations.length,
@@ -156,7 +206,7 @@ export function analyze(input: VerdictInput) {
     verdict: decision.verdict, tests: roundTests(decision), secondaries: decision.secondaries.map(s => ({ id: s.id, status: s.status })),
     worst_case: { verdict: worst.verdict, tests: roundTests(worst), disagrees },
     bootstrap: { method: `restricted wild cluster bootstrap-t, Webb weights, ${DRAWS} draws, seed ${SEED}, one-sided 95% lower bound`, tests: boot },
-    gate, drops: dropCounts, per_reader: perReader, per_ability: perAbility, floor, table,
+    paired, gate, drops: dropCounts, per_reader: perReader, per_ability: perAbility, floor, table,
   };
 }
 const roundTests = (d: Decision) => d.tests.map(t => ({ key: t.key, gating: t.gating, n: t.n, estimate: r4(t.mean), sd: r4(t.sd), lower: r4(t.lower), pass: t.pass, valid: t.valid, invalid_reasons: t.invalid_reasons }));
@@ -369,6 +419,11 @@ export function markdown(a: Analysis): string {
     lines.push(`| gbrain minus ${t.key.replace('/', ', ')} | ${t.gating ? 'gating' : 'descriptive'} | ${t.n} | ${fmt(t.estimate)} | ${fmt(t.sd)} | ${fmt(t.lower)} | ${t.pass ? 'yes' : 'no'} | ${fmt(b.lower)} | ${fmt(w.lower)} | ${t.valid ? 'valid' : t.invalid_reasons.join('; ')} |`);
   }
   lines.push('', `Secondaries: ${a.secondaries.length ? a.secondaries.map(s => `${s.id} ${s.status}`).join(', ') : 'not tested (the primary did not pass)'}.`, '');
+  const ci = (c: [number, number] | null) => (c ? `${fmt(c[0])} to ${fmt(c[1])}` : 'n/a');
+  lines.push('Paired comparisons, gbrain minus the server on the same questions, in points. The gating view is gpt-6-astra on claude-opus-5-5 rows and claude-opus-5-5 on gpt-6.1-sol and particle-1 rows; the bridge view (gpt-4.1-mini) is descriptive and breaks the family rule on gpt-6.1-sol rows. Reader and ability rows are descriptive, with no multiplicity correction. The 90% interval\'s lower end is the one-sided bound the verdict uses.', '');
+  lines.push('| Server | View | Subset | Conversations | Questions | Mean difference | 95% interval | 90% interval | gbrain lower / higher / tied | Reading |', '|---|---|---|---:|---:|---:|---|---|---|---|');
+  for (const p of a.paired) lines.push(`| ${p.server} | ${p.view === 'frontier' ? 'gating' : 'bridge'} | ${p.subset} | ${p.conversations} | ${p.questions} | ${fmt(p.mean)} | ${ci(p.ci95)} | ${ci(p.ci90)} | ${p.lower} / ${p.higher} / ${p.tied} | ${p.reading} |`);
+  lines.push('');
   lines.push('| Reader | Row | Cost per question | Accuracy, frontier | Cost per correct, frontier | Accuracy, bridge | Cost per correct, bridge |', '|---|---|---:|---:|---:|---:|---:|');
   for (const t of a.table) lines.push(`| ${t.reader} | ${t.row} | ${fmt(t.usd_per_question, 4)} | ${fmt(t.frontier.accuracy)} | ${fmt(t.frontier.usd_per_correct, 4)} | ${fmt(t.bridge.accuracy)} | ${fmt(t.bridge.usd_per_correct, 4)} |`);
   lines.push('', '| Row | Mean fill rate | Gate |', '|---|---:|---|', ...a.gate.map(g => `| ${g.row} | ${fmt(g.fill_rate, 3)} | ${g.pass ? 'pass' : 'fail'} |`));
