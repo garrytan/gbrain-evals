@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.178] - 2026-11-08
 
 ### gbrain's refresh write barrier passes its preregistered test, and the findings recommend turning it on
 
