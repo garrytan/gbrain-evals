@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.173] - 2026-11-08
 
 ### Live recall phase 2: a preregistered harness for whether gbrain retrieval changes answers (GBEV-46)
 
