@@ -1,10 +1,12 @@
 import { describe, expect, test } from 'bun:test';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { keptUnit, requiredJudges, runConfigIdentity, runConfigText } from '../../eval/runner/q1/cell.ts';
-import { ALL_SETS, definitionProblems, frontierJudgeOf, frontierJudgesFor, ingestRate, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { ALL_SETS, buildManifest, definitionProblems, frontierJudgeOf, frontierJudgesFor, ingestRate, MANIFEST_PATH, manifestText, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { buildF6Manifest, F6_MANIFEST_PATH, f6ManifestText } from '../../eval/runner/q1/cells/f6.ts';
 import { buildRS1Manifest, generateRS1Cells, loadRS1Manifest, OPUS, PARTICLE, RS1_MANIFEST_PATH, rs1ManifestText, SOL, stage1OverCap } from '../../eval/runner/q1/cells/rs1.ts';
 import type { Rs1Manifest } from '../../eval/runner/memory-qa/corpus.ts';
 
@@ -116,6 +118,21 @@ describe('judges', () => {
     const c = structuredClone(m.cells[1]) as CellDefinition;
     c.arms[0].readers = [OPUS, 'gemini:gemini-3.8-flash'];
     expect(definitionProblems(c, KINDS).join(' ')).toContain('no per-reader frontier judge');
+  });
+});
+
+describe('the R78 judge map reaches RS1 alone (F5)', () => {
+  // Value: protects=Q1's and F6's published cell manifests and digests; fails_when=the R78 gating-judge map, the pinned settings or their route caps change a Q1 or F6 cell; why_new=R78 review F5; seam=none; no_claim=RS1's own cells
+  test('Q1 and F6 generate byte-identical manifests to the ones published before R78, and none of their arms judges per reader', () => {
+    const digest = (s: string) => createHash('sha256').update(s).digest('hex');
+    expect(digest(manifestText())).toBe('29f6cf497b494239a303ed4d869f0df317119231c8a86c98144127871251787c');
+    expect(digest(f6ManifestText())).toBe('fea479a014cdb5dcb352511f00999d5422d55ef759d265bf9a36c176509ca87e');
+    expect(readFileSync(MANIFEST_PATH, 'utf8')).toBe(manifestText());
+    expect(readFileSync(F6_MANIFEST_PATH, 'utf8')).toBe(f6ManifestText());
+    const q1 = buildManifest(), f6 = buildF6Manifest();
+    const arms = [q1, f6].flatMap(m => [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])].flatMap(c => c.arms));
+    expect(arms.length).toBeGreaterThan(0);
+    expect(arms.filter(a => a.frontier?.per_reader || a.frontier?.settings).map(a => a.cell_id)).toEqual([]);
   });
 });
 
