@@ -2,6 +2,22 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.175] - 2026-11-08
+
+### The offline skill ranker eval fails its preregistered bars on the no-skill gate (GST-1860)
+
+- **What it measures.** `docs/benchmarks/2026-11-07-skill-ranker-offline.md` tests whether a word-matching ranker can
+  pick an acceptable skill from catalogs of 250, 750 and 1,500 public skills for 300 synthetic turns, and whether a
+  "no skill applies" gate can tell when none fits. Labels come from a blind judge, and the test split was frozen by hash
+  before scoring. Spend was $11.07 of a $50 cap.
+- **What it found.** As preregistered, Step 1 fails: no deployable arm passes, because the preregistered gate hides
+  every skill turn and the repaired gate still fails bar 1 at 250 and 750 skills and the false-suggestion spread bar.
+  With the gate off, BM25F over name, description and a 4 KB body slice puts an acceptable skill in its top 5 on 48%,
+  52% and 58% of skill turns, 14.8 to 40.0 points above the best static list at matched tokens. The R48 verdict is
+  FIX-METHOD, with the word-matching gate a CUT-CANDIDATE.
+- **How to rerun it.** Scripts, frozen data, results and licences are in `docs/benchmarks/2026-11-07-skill-ranker-offline/`.
+  Rescoring is free and refuses a test file whose hash changed.
+
 ## [0.10.174] - 2026-11-08
 
 ### Where four coding harnesses stop listing every installed skill (GST-1860)
