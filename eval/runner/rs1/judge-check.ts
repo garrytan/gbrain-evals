@@ -11,10 +11,12 @@
  *   Pool      (a) real answers: stage 1's scored answers (set RS1-dev2), stratified by row, reader and stage 1's bridge
  *             outcome (fail, partial, pass); (b) BEAM gold answers of the public BEAM-1M dev conversations whose every
  *             rubric item's content appears in the gold (the gold screen; every exclusion is recorded); (c) scripted
- *             corruptions of screened gold, each aimed at one named rubric item: the item's content dropped, its number
- *             or date changed or a name in it swapped (the script checks that the target item's content is gone and
- *             every other item's is intact), the whole answer replaced by an abstention, or, on abstention questions, an
- *             invented answer. Event-ordering, instruction-following and preference-following questions are left out of
+ *             corruptions of screened gold, each aimed at one named rubric item. Most leave a confident, plausible wrong
+ *             fact in the item's place: a number or date shifted, a name swapped for another from the same conversation's
+ *             gold, the item's value replaced by a value of the same kind from another question's gold in the same
+ *             conversation, or the statement negated. The rest drop the item, replace the whole answer with an abstention or, on abstention questions,
+ *             write an invented answer. The script checks that every edit removes the target item's content and keeps
+ *             every other item's. Event-ordering, instruction-following and preference-following questions are left out of
  *             (b) and (c): their score is not a rubric mean, or their gold describes an answer instead of being one.
  *             No sealed text is used. The pool and every answer text stay in --out, never in the published files.
  *   Grading   gpt-6-astra and claude-opus-5-5 grade every candidate with the production request (the cells' canonical
@@ -67,13 +69,20 @@ export const DEV_CONVERSATIONS = ['1m-16', '1m-2', '1m-20', '1m-21', '1m-22', '1
 export const CONSTRUCTED_CATEGORIES = ['abstention', 'contradiction_resolution', 'information_extraction', 'knowledge_update', 'multi_session_reasoning', 'temporal_reasoning', 'summarization'];
 export const ABSTAIN_TEXT = 'Based on the provided chat, there is no information that answers this question.';
 export const INVENTED_TEXT = 'Yes. According to the chat, it happened as you describe: you went ahead with it, it went well, and you mentioned it again a week later.';
-const NAMES = ['Marcus', 'Priya', 'Tobias', 'Elena', 'Rafael', 'Ingrid'];
 /** Capitalized words an entity swap leaves alone: months, weekdays and common sentence words. */
 const NOT_NAMES = /^(?:January|February|March|April|May|June|July|August|September|October|November|December|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|The|This|That|These|Those|And|But|For|With|You|Your|They|Their|She|Her|His|Its|Our|Based|According|Initially|Finally|Then|After|Before|When|While)$/;
 
 export type ItemClass = 'real' | 'gold' | 'corrupt';
-export type CorruptionKind = 'drop' | 'number' | 'entity' | 'abstain' | 'invented';
-export const KINDS: CorruptionKind[] = ['drop', 'number', 'entity', 'abstain'];
+export type CorruptionKind = 'number' | 'date' | 'entity' | 'contradiction' | 'negation' | 'drop' | 'abstain' | 'invented';
+/** Edits that leave a confident, plausible wrong fact where the target item's was. */
+export const WRONG_VALUE: CorruptionKind[] = ['number', 'date', 'entity', 'contradiction', 'negation'];
+export const KINDS: CorruptionKind[] = [...WRONG_VALUE, 'drop', 'abstain', 'invented'];
+/** The turn order on questions whose answer exists: seven wrong-value turns, two drops and one abstention in ten. */
+export const TURNS: CorruptionKind[] = ['number', 'entity', 'contradiction', 'drop', 'negation', 'date', 'contradiction', 'entity', 'drop', 'abstain'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+/** Another question of the same conversation, whose gold lends entities and statements to wrong-value edits. */
+export type Donor = Pick<MemoryQuestion, 'id' | 'answer' | 'rubric'>;
 export interface Candidate {
   id: string; class: ItemClass; question_id: string; conversation: string; category: string; text: string; text_sha256: string;
   /** Construction labels per rubric item: true should pass, false should fail; null for real answers. */
@@ -99,10 +108,16 @@ const bump = (digits: string) => { const v = Number(digits.replace(/,/g, '')); c
 
 /**
  * One scripted corruption of a screened gold answer aimed at rubric item `target`, or null when this kind cannot touch
- * that item alone. Drop, number and entity edits must remove the target's content, keep every other item's and leave
- * at least 20 letters, so a corruption is never an empty or near-empty answer.
+ * that item alone. number shifts the item's first number (an hour before AM or PM stays an hour, a day after a month
+ * stays a day); date moves its first month three on or its weekday two on; entity swaps its first mid-sentence name for
+ * a mid-sentence name from another question's gold in the same conversation (`donors`);
+ * contradiction replaces a short value (at most eight words with a digit in them, or at most three words) with another
+ * question's rubric value from the same conversation of the same kind (money, percent, time, date, link; another number only with a unit word in common;
+ * plain words only with the same capitalization) and within two words;
+ * negation puts "not" after the item's first auxiliary verb. Every edit must remove the target's content, keep every
+ * other item's and leave at least 20 letters, so a corruption is never an empty or near-empty answer.
  */
-export function corrupt(q: Pick<MemoryQuestion, 'rubric' | 'abstention'>, gold: string, target: number, kind: CorruptionKind): string | null {
+export function corrupt(q: Pick<MemoryQuestion, 'rubric' | 'abstention'>, gold: string, target: number, kind: CorruptionKind, donors: readonly Donor[] = []): string | null {
   const items = q.rubric ?? [];
   if (kind === 'abstain') return q.abstention ? null : ABSTAIN_TEXT;
   if (kind === 'invented') return q.abstention ? INVENTED_TEXT : null;
@@ -111,14 +126,53 @@ export function corrupt(q: Pick<MemoryQuestion, 'rubric' | 'abstention'>, gold: 
   if (!span) return null;
   const part = gold.slice(span[0], span[1]);
   const splice = (at: number, len: number, by: string) => gold.slice(0, span[0]) + part.slice(0, at) + by + part.slice(at + len) + gold.slice(span[1]);
-  let edited: string | null = null;
-  if (kind === 'drop') edited = gold.slice(0, span[0]) + gold.slice(span[1]);
-  if (kind === 'number') { const m = /\d[\d,]*\d|\d/.exec(part); if (m) edited = splice(m.index, m[0].length, bump(m[0])); }
-  if (kind === 'entity') { const m = [...part.matchAll(/(?<=\s)[A-Z][a-z]{2,}\b/g)].find(x => !NOT_NAMES.test(x[0])); const swap = NAMES.find(n => !gold.includes(n)); if (m && swap) edited = splice(m.index!, m[0].length, swap); }
-  if (edited === null || edited === gold) return null;
-  const tidy = edited.replace(/\s+([.,])/g, '$1').replace(/\s{2,}/g, ' ').replace(/^[\s.,;:]+/, '').trim();
-  if (tidy.replace(/[^A-Za-z]/g, '').length < 20) return null;
-  return !covers(tidy, items[target]) && items.every((it, i) => i === target || covers(tidy, it)) ? tidy : null;
+  const edits: string[] = [];
+  if (kind === 'drop') edits.push(gold.slice(0, span[0]) + gold.slice(span[1]));
+  if (kind === 'number') {
+    const m = /\d[\d,]*\d|\d/.exec(part);
+    if (m) {
+      const before = gold.slice(0, span[0]) + part.slice(0, m.index), after = part.slice(m.index + m[0].length) + gold.slice(span[1]);
+      const v = Number(m[0].replace(/,/g, ''));
+      const shifted = /^\s*(AM|PM|a\.m\.|p\.m\.)/i.test(after) && v >= 1 && v <= 12 ? String((v + 1) % 12 + 1)
+        : new RegExp(`\\b(${MONTHS.join('|')})\\s+$`).test(before) && v >= 1 && v <= 31 ? String(v > 25 ? v - 5 : v + 3)
+        : bump(m[0]);
+      edits.push(splice(m.index, m[0].length, shifted));
+    }
+  }
+  if (kind === 'date') {
+    const m = new RegExp(`\\b(${[...MONTHS, ...WEEKDAYS].join('|')})\\b`).exec(part);
+    if (m) { const months = MONTHS.indexOf(m[1]) >= 0; const list = months ? MONTHS : WEEKDAYS; edits.push(splice(m.index, m[1].length, list[(list.indexOf(m[1]) + (months ? 3 : 2)) % list.length])); }
+  }
+  if (kind === 'entity') {
+    const lone = [...gold.matchAll(/(?<![A-Z][a-z]* )(?<=[a-z,;:] )[A-Z][a-z]{2,}\b(?! [A-Z])/g)].find(x => x.index! >= span[0] && x.index! + x[0].length <= span[1] && !NOT_NAMES.test(x[0]));
+    const m = lone ? Object.assign([lone[0]], { index: lone.index! - span[0] }) : undefined;
+    const swaps = [...new Set(donors.flatMap(d => [...(d.answer ?? '').matchAll(/(?<![A-Z][a-z]* )(?<=[a-z,;:] )[A-Z][a-z]{2,}\b(?! [A-Z])/g)].map(x => x[0])))].filter(n => !NOT_NAMES.test(n) && !gold.includes(n));
+    if (m) for (const s of swaps) edits.push(splice(m.index!, m[0].length, s));
+  }
+  if (kind === 'contradiction') {
+    const kindOf = (s: string) => /:\/\/|www\./.test(s) ? 'link' : /\$/.test(s) ? 'money' : /%/.test(s) ? 'percent' : /\b(AM|PM|a\.m\.|p\.m\.)\b|\d:\d\d/i.test(s) ? 'time'
+      : new RegExp(`\\b(${[...MONTHS, ...WEEKDAYS].join('|')})\\b`).test(s) ? 'date' : /\d/.test(s) ? 'number' : 'words';
+    const shape = (s: string) => ({ kind: kindOf(s), digits: /\d/.test(s), words: s.split(/\s+/).length });
+    const target_ = contentOf(items[target]);
+    const t = shape(target_);
+    if (t.words <= 8 && (t.digits || t.words <= 3)) for (const d of donors) for (const it of d.rubric ?? []) {
+      const c = contentOf(it), s = shape(c);
+      const units = (x: string) => new Set(x.toLowerCase().match(/[a-z]{3,}/g) ?? []);
+      const alike = t.kind === 'number' ? [...units(c)].some(u => units(target_).has(u)) : t.kind === 'words' ? /^[A-Z]/.test(c) === /^[A-Z]/.test(target_) : true;
+      if (!(s.kind === t.kind && alike && Math.abs(s.words - t.words) <= 2 && !/contradict|information|clarif|mention|response|LLM|statement|correct|which|whether|\?/i.test(c) && !covers(gold, it))) continue;
+      const first = c.split(/\s+/)[0];
+      const midSentence = span[0] > 0 && !/[.!?]\s*$/.test(gold.slice(0, span[0]));
+      const proper = new RegExp(`[a-z,;:] ${escape(first)}\\b`).test(d.answer ?? '');
+      edits.push(gold.slice(0, span[0]) + (midSentence && !proper ? c[0].toLowerCase() + c.slice(1) : c) + gold.slice(span[1]));
+    }
+  }
+  if (kind === 'negation') { const m = /\b(is|was|are|were|has|have|had|will|can|could|did|does|do|should|would)\b(?! not\b)/i.exec(part); if (m) edits.push(splice(m.index + m[0].length, 0, ' not')); }
+  for (const edited of edits) {
+    if (edited === gold) continue;
+    const tidy = edited.replace(/\s+([.,])/g, '$1').replace(/\s{2,}/g, ' ').replace(/^[\s.,;:]+/, '').trim();
+    if (tidy.replace(/[^A-Za-z]/g, '').length >= 20 && !covers(tidy, items[target]) && items.every((it, i) => i === target || covers(tidy, it))) return tidy;
+  }
+  return null;
 }
 
 /** The gold screen: a constructed-category question whose gold states every rubric item's content, else why not. */
@@ -139,8 +193,8 @@ export interface RealAnswer { answer_id: string; question_id: string; conversati
 
 /**
  * The seeded pool: real answers stratified by row, reader and bridge outcome, then screened gold and its corruptions.
- * Corruption kinds take turns (drop, number, entity, abstain); a question that cannot take its turn's kind takes the next
- * edit kind, never an abstention, so abstentions stay at a quarter of the non-abstention-question corruptions at most.
+ * Corruption kinds take TURNS; a question that cannot take its turn's kind takes another wrong-value edit, then a drop,
+ * never an abstention, so abstentions stay at one in ten of the non-abstention-question corruptions at most.
  */
 export function buildPool(questions: readonly MemoryQuestion[], real: readonly RealAnswer[], seed = SEED, sizes: { real: number; gold: number; corrupt: number } = SIZES): { pool: Candidate[]; exclusions: Exclusion[] } {
   const rand = seededRandom(seed);
@@ -159,15 +213,17 @@ export function buildPool(questions: readonly MemoryQuestion[], real: readonly R
   const exclusions: Exclusion[] = [];
   const screened = shuffle(questions.filter(q => { const why = screen(q); if (why) exclusions.push({ question_id: q.id, reason: why }); return !why; }), rand);
   for (const q of screened.slice(0, sizes.gold)) pool.push({ id: `gold:${q.id}`, class: 'gold', question_id: q.id, conversation: q.conversation, category: q.category, text: q.answer!, text_sha256: sha256(q.answer!), labels: q.rubric!.map(() => true) });
-  let made = 0;
+  let made = 0, turns = 0;
   for (const q of [...screened.slice(sizes.gold), ...screened.slice(0, sizes.gold)]) {
     if (made >= sizes.corrupt) break;
-    const turn = KINDS[made % KINDS.length];
-    const kinds: CorruptionKind[] = q.abstention ? ['invented'] : turn === 'abstain' ? ['abstain'] : [turn, ...KINDS.filter(k => k !== turn && k !== 'abstain')];
+    const turn = TURNS[turns % TURNS.length];
+    const kinds: CorruptionKind[] = q.abstention ? ['invented'] : turn === 'abstain' ? ['abstain'] : [turn, ...WRONG_VALUE.filter(k => k !== turn), ...(turn === 'drop' ? [] : ['drop' as const])];
+    const donors = questions.filter(d => d.conversation === q.conversation && d.id !== q.id && !d.abstention && d.answer);
     const n = q.rubric!.length, start = Math.floor(rand() * n);
     const tries = kinds.flatMap(kind => Array.from({ length: n }, (_, i) => ({ kind, target: (start + i) % n })));
-    const hit = tries.map(t => ({ ...t, text: corrupt(q, q.answer!, t.target, t.kind) })).find(t => t.text !== null);
+    const hit = tries.map(t => ({ ...t, text: corrupt(q, q.answer!, t.target, t.kind, donors) })).find(t => t.text !== null);
     if (!hit) continue;
+    if (!q.abstention) turns++;
     const all = hit.kind === 'abstain' || hit.kind === 'invented';
     pool.push({ id: `corrupt:${q.id}:${hit.kind}:${hit.target}`, class: 'corrupt', question_id: q.id, conversation: q.conversation, category: q.category, text: hit.text!, text_sha256: sha256(hit.text!), labels: q.rubric!.map((_, i) => !(all || i === hit.target)), kind: hit.kind, target: hit.target });
     made++;
@@ -275,7 +331,7 @@ export function analyzeCheck(pool: readonly Candidate[], grades: Grades) {
   ];
   return {
     schema: JUDGE_CHECK_SCHEMA, judges: { gating: GATING_JUDGES, descriptive: [BRIDGE] }, settings: PER_READER_JUDGE_SETTINGS, unit: 'rubric-item judgment; pass = 1.0, fail below',
-    pool: { candidates: pool.length, by_class: Object.fromEntries(CLASSES.map(c => [c, pool.filter(x => x.class === c).length])), corruption_kinds: Object.fromEntries([...KINDS, 'invented'].map(k => [k, pool.filter(c => c.kind === k).length])), items: units.length },
+    pool: { candidates: pool.length, by_class: Object.fromEntries(CLASSES.map(c => [c, pool.filter(x => x.class === c).length])), corruption_kinds: Object.fromEntries(KINDS.map(k => [k, pool.filter(c => c.kind === k).length])), items: units.length },
     inter_judge: { kappa: r4(inter.kappa), ci95: r4p(inter.ci95), items: inter.n, agreement: r4(inter.po), weighted_kappa: r4(weightedKappa(both.map(u => u.scores[ASTRA]!), both.map(u => u.scores[OPUS_JUDGE]!))) },
     labelled_set: { items: labelled.length, by_class: mix, pass: labelled.filter(u => u.agreed).length, fail: labelled.filter(u => !u.agreed).length },
     per_judge: judges, gates, stop: gates.some(g => !g.pass), shortfalls,

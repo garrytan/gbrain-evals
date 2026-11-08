@@ -12,7 +12,7 @@ import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import type { ChatLike, ChatOptions, ChatResultV2 } from '../../eval/runner/memory-qa/qa-v2.ts';
 import {
-  ABSTAIN_TEXT, analyzeCheck, ASTRA, BRIDGE, buildPool, cohenKappa, corrupt, covers, gradePool, INVENTED_TEXT, OPUS_JUDGE, screen, weightedKappa, wilson,
+  ABSTAIN_TEXT, analyzeCheck, ASTRA, BRIDGE, buildPool, cohenKappa, corrupt, covers, gradePool, INVENTED_TEXT, OPUS_JUDGE, screen, weightedKappa, wilson, WRONG_VALUE,
   type Candidate, type Grade, type Grades, type RealAnswer,
 } from '../../eval/runner/rs1/judge-check.ts';
 
@@ -37,17 +37,34 @@ describe('the gold screen and the scripted corruptions', () => {
 
   test('each edit removes its target item and keeps every other item; an edit that cannot do that, or leaves too little, is refused', () => {
     const q = question('q1');
+    const donors = [question('d1', { answer: 'Your sister said her friend Rosa visits every summer, and the repairs cost $1,200.', rubric: ['LLM response should state: Rosa visits every summer', 'LLM response should state: $1,200'] })];
     const number = corrupt(q, q.answer!, 0, 'number')!;
     expect(number).toBe('Maria moved to Lisbon in 2829, and she works as a nurse at the city hospital.');
-    const entity = corrupt(q, q.answer!, 0, 'entity')!;
-    expect(entity).toBe('Maria moved to Marcus in 2021, and she works as a nurse at the city hospital.');
+    const entity = corrupt(q, q.answer!, 0, 'entity', donors)!;
+    expect(entity).toBe('Maria moved to Rosa in 2021, and she works as a nurse at the city hospital.');
+    expect(corrupt(q, q.answer!, 0, 'entity')).toBeNull();
+    const clock = question('q11', { answer: 'The train leaves at 11 PM on May 30, from the north platform.', rubric: ['LLM response should state: 11 PM', 'LLM response should state: May 30'] });
+    expect(corrupt(clock, clock.answer!, 0, 'number')).toBe('The train leaves at 1 PM on May 30, from the north platform.');
+    expect(corrupt(clock, clock.answer!, 1, 'number')).toBe('The train leaves at 11 PM on May 25, from the north platform.');
     const drop = corrupt(q, q.answer!, 1, 'drop')!;
     expect(drop).toBe('Maria moved to Lisbon in 2021, and at the city hospital.');
-    for (const [text, target] of [[number, 0], [entity, 0], [drop, 1]] as const) {
-      expect(covers(text, q.rubric![target])).toBe(false);
-      expect(covers(text, q.rubric![1 - target])).toBe(true);
+    const paid = question('q8', { answer: 'You paid $500 for the repairs, and the plumber came on Tuesday.', rubric: ['LLM response should state: $500', 'LLM response should state: the plumber came on Tuesday'] });
+    const contradiction = corrupt(paid, paid.answer!, 0, 'contradiction', donors)!;
+    expect(contradiction).toBe('You paid $1,200 for the repairs, and the plumber came on Tuesday.');
+    const date = corrupt(paid, paid.answer!, 1, 'date')!;
+    expect(date).toBe('You paid $500 for the repairs, and the plumber came on Thursday.');
+    const lease = question('q9', { answer: 'The lease was signed in March, and the rent is due on the first of each month.', rubric: ['LLM response should state: the rent is due on the first of each month', 'LLM response should state: The lease was signed in March'] });
+    const negation = corrupt(lease, lease.answer!, 0, 'negation')!;
+    expect(negation).toBe('The lease was signed in March, and the rent is not due on the first of each month.');
+    expect(corrupt(lease, lease.answer!, 1, 'date')).toBe('The lease was signed in June, and the rent is due on the first of each month.');
+    for (const [qq, text, target] of [[q, number, 0], [q, entity, 0], [q, drop, 1], [paid, contradiction, 0], [paid, date, 1], [lease, negation, 0]] as const) {
+      expect(covers(text, qq.rubric![target])).toBe(false);
+      expect(covers(text, qq.rubric![1 - target])).toBe(true);
     }
     expect(corrupt(q, q.answer!, 1, 'number')).toBeNull();
+    expect(corrupt(q, q.answer!, 1, 'contradiction', donors)).toBeNull();
+    const place = question('q10', { answer: 'Four cities: Hanoi, Luang Prabang, Siem Reap, and Bangkok.', rubric: ['LLM response should state: Luang Prabang'] });
+    expect(corrupt(place, place.answer!, 0, 'entity', donors)).toBeNull();
     const short = question('q5', { answer: '97% success rate', rubric: ['LLM response should state: 97% success rate'] });
     expect(corrupt(short, short.answer!, 0, 'drop')).toBeNull();
     const dated = question('q6', { answer: 'The tour starts at 11 AM on April 13 with the group.', rubric: ['LLM response should state: 11 AM on April 13'] });
@@ -86,7 +103,9 @@ describe('the seeded pool', () => {
       const all = c.kind === 'abstain' || c.kind === 'invented';
       expect(c.labels).toEqual(c.labels.map((_, i) => !(all || i === c.target)));
     }
-    expect(bad.filter(c => c.kind === 'abstain').length).toBeLessThanOrEqual(Math.ceil(bad.filter(c => c.kind !== 'invented').length / 4));
+    const answered = bad.filter(c => c.kind !== 'invented');
+    expect(bad.filter(c => c.kind === 'abstain').length).toBeLessThanOrEqual(Math.ceil(answered.length / 10));
+    expect(answered.filter(c => WRONG_VALUE.includes(c.kind!)).length).toBeGreaterThanOrEqual(answered.length / 2);
     expect(exclusions).toEqual([{ question_id: 'bad', reason: 'gold does not state rubric item 0' }, { question_id: 'order', reason: 'category event_ordering is not built from gold' }]);
   });
 
