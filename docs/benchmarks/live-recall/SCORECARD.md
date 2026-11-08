@@ -118,6 +118,64 @@ comparison list, then `run_a` and `run_b` as in `compare.json`. Every comparison
 `p_holm`, because the pooled analysis is secondary. An arm invalid in either run is
 `{"invalid": "invalid_in_one_run"}` and its comparisons are skipped. It passes the same structural check.
 
+## Phase 2 task scorecard (live-recall-task-scorecard/v1)
+
+`tasks.ts run` (and `tasks.ts score <run dir>`, which rebuilds it from the run directory alone) writes phase 2's
+`scorecard.json` and renders `scorecard.md` from it. The method is in
+[PHASE2-PREREGISTRATION.md](PHASE2-PREREGISTRATION.md). `eval/runner/live-recall/task-scorecard.ts` builds and checks
+it the same two ways as phase 1's, before anything is written, refusing with `LR_CUSTODY_LEAK` and the field path:
+
+1. **Structure.** Every key is one the format defines (gbrain's degraded-stage names, the guard's verbs and refused AI
+   call kinds are allowed as keys in their three count maps), every string is an allowlisted word (arm, form, model,
+   status, comparison id, barrier, abort code and so on) or a timestamp, hex digest or version, a `provider:model` id
+   only at `run.reranker_model` and `run.embedding_model`, and a short token only at `run.window_note`. Every number is
+   finite. A task, answer, fact or slug has no field it could land in.
+2. **Needle scan.** Both files are searched for every task form, gold answer, required fact, acceptable variant and
+   task id, and every slug the run saw, searched or cited. Needles with no letter (a number or a date) are left to the
+   structure check.
+
+Top level:
+
+- `schema`: `"live-recall-task-scorecard/v1"`. `status`: `complete` once every task, form, arm and model has an
+  outcome (counted, or excluded for a reason other than `not_run` or `unjudged`) and no cap stop is outstanding, else
+  `incomplete`. A cap stop that GBEV-3 extended and a resume continued past is no longer outstanding. `stop`:
+  `LR_CAP_STOP` while a cap stop is outstanding, else null.
+- `run`: identity. Start and finish times, runner commit and whether it was dirty, `harness_digest` (sha256 over the
+  runner's source files), gbrain's pinned and loaded versions and commits, schema version, engine, barrier, connection,
+  `control` (true for the public fixture), search mode, reranker, embedding model, `privacy_posture` (`remote`),
+  `remote_private_pages` (false), `crag_escalation`, `crag_think`, `result_cache`, `tool_defs_digest` (sha256 of the
+  gbrain tool definitions sent), models, arms, forms, `judges` (model to counted judge), the second judge, effort, output
+  and turn limits, tool result, paste and page caps, `budget_usd` (the starting cap), `final_cap_usd` (the cap the run's
+  ledger run records after any extensions), `cap_extensions` (how many times GBEV-3 extended the cap after a cap stop),
+  `window_note`, concurrency and `openai_store`.
+- `tasks`: submitted, kept at the freeze, dropped as unreachable, lost since the freeze, kept at the run, the task file's
+  sha256 prefix, N frozen, counts by type and by how each gold page was found, and `mdd_primaries` (the minimum
+  detectable difference at N frozen for 10%, 20% and 30% discordant pairs, at alpha 0.05 and at Holm's 0.0125).
+- `cost`: `model_calls_usd` and `by_role_usd` (answer, summariser, judge, second judge), each priced from the response's
+  usage at the ledger's list prices; `ledger_usd`, the ledger's total for this run directory's own ledger run across
+  all its sessions (never another run directory's or runner's spend); and `other_usd`, the difference
+  (gbrain's embedding and rerank calls, and requests retried after a failure).
+- `cells`: form (`paraphrase`, `exact`, and `pooled` when both ran) to arm to model. Each cell has `n_tasks`, `counted`,
+  `model_errors` (counted no-answers from a model-caused 400), `excluded` by reason (`harness_error`, `timed_out`, `degraded`, `judge_error`, `unjudged`, `not_run`), `invalid` and
+  `invalid_reason` (`errors_over_cap` or `degraded_over_cap`), and `rates`: `correct`, `correct_grounded` (null for A),
+  `partial`, `abstained`, `no_answer`, `confidently_wrong` and `contradicted`, each as `k`, `n`, `point` and `ci95` (Wilson;
+  a cluster bootstrap over tasks when pooled). Then `citations` (mean per answer, supported share), `exposure` (shares
+  that `searched`, saw, opened and cited a gold page, `summary_gold_cited` for C and `pasted_gold` for D), turns and tool
+  calls per episode, latency p50 and p95 in milliseconds, `tokens` by kind, `cost_usd` by role and
+  `answer_cost_per_correct_usd`. Pooled cells carry no tokens or cost.
+- `comparisons`: the four primaries (`primary` `P1` or `P2`) and the descriptive set. Each has its id, form, model, arms
+  `a` and `b`, metric, `untested`, `n_pairs`, `mean_a`, `mean_b`, `delta` (b minus a), `ci95` (cluster bootstrap), `mcnemar`
+  (wins, losses, discordant pairs, exact two-sided p; per form only), `p_two_sided`, `p_holm` (primaries only, Holm over
+  the four) and `mde` (the observed minimum detectable difference).
+- `judge_agreement`: `second_judge_correct` (`n`, `agree`, `kappa` between the counted judge and claude-opus-5-5 on
+  particle-1's paraphrase rows of B, C and D) and `audit` (Wintermute's `n` and `agree`, or null).
+- `custody`: read-only verified at the start and the end, `guard_refusals` by verb, `ai_refusals` by call kind and
+  `degraded_stages` by stage.
+
+`scorecard.md` opens with the status and identity line, then the primary models' paraphrase table with answer cost per
+correct answer, the four primaries with Holm p, every cell, the descriptive comparisons, and the judge, cost and custody
+lines.
+
 ## A release gate (proposal, not wired)
 
 Nothing here is wired into gbrain. Whether a gbrain release gate uses this scorecard is GBRA-108's decision, after at

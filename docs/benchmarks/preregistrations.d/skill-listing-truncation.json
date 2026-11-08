@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "skill-listing-truncation",
+      "preregistration": "docs/benchmarks/2026-11-07-skill-listing-truncation-preregistration.md",
+      "results": [
+        "docs/benchmarks/skill-listing-truncation/results/**",
+        "docs/benchmarks/skill-listing-truncation.md"
+      ]
+    }
+  ]
+}

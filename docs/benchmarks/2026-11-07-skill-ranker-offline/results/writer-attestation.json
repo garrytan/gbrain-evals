@@ -1,0 +1,15 @@
+{
+ "preregistration": "docs/benchmarks/2026-11-07-skill-ranker-offline-preregistration.md",
+ "preregistration_commit": "22c3ad44bcfa8fab52cff38c679217cc0ec5fc2a",
+ "runner_commit": "22c3ad44bcfa8fab52cff38c679217cc0ec5fc2a",
+ "worktree_clean_for_preregistration": true,
+ "on_origin": true,
+ "attested_at": "2026-11-08T03:11:24.255Z",
+ "writer": {
+  "provider": "openai",
+  "model": "gpt-6.1-sol",
+  "effort": "medium"
+ },
+ "turns": 300,
+ "ledger_usd_after": 0.256942
+}

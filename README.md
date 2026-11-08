@@ -302,12 +302,19 @@ agent's context in 0 of 100 permission runs; files do in 100, and plain Postgres
 - The head-to-head scoreboard measured gbrain `f05943e6` (v0.60.138.0); none of its gbrain rows has been rerun at the
   pin.
 - No sealed set here is big enough to rank gbrain among the memory servers. BEAM-10M detects only differences of about
-  13.6 points, and on BEAM-1M sealed, F6's 24 conversations put gbrain `0ccf2bdd` 1.4 to 9.3 points above four external
-  systems at 8,000 tokens, which describes them but can't rank them. The sealed ranking set built for this
-  (RS1) stopped at stage 0 on November 4, 2026: one conversation costs $40.63 to mint and validate ($28.85 when
-  generation stops at BEAM's truncation point), the full 75-conversation design about $8,200 all-in, and a version
-  inside the $2,000 limit per eval would detect only about 6.5 to 7.7 points
-  ([stage 0 finding](docs/benchmarks/2026-11-04-rs1-stage0.md)).
+  13.6 points. On BEAM-1M sealed at 8,000 tokens, F6's 24 conversations put gbrain `0ccf2bdd` 2.0 points above the
+  memory-bank server (95% interval -1.4 to +5.4) and 3.5 points above the extract-first server (+0.4 to +6.5) under
+  frontier judges, and 1.3 points (-0.9 to +3.7) and 4.8 points (+2.6 to +7.1) above them under BEAM's judge,
+  gpt-4.1-mini ([GST-1365 results](docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md)). F6 preregistered these
+  comparisons as descriptive, and gbrain's settings were chosen on this same set, so they describe the systems at
+  `0ccf2bdd` and support no claim that gbrain is no worse than either server; no such claim exists until RS1 reports.
+  The sealed ranking set built for this (RS1) stopped at stage 0 on November 4, 2026: one conversation costs $40.63 to
+  mint and validate ($28.85 when generation stops at BEAM's truncation point), the full 75-conversation design about
+  $8,200 all-in, and a version inside the $2,000 limit per eval would detect only about 6.5 to 7.7 points
+  ([stage 0 finding](docs/benchmarks/2026-11-04-rs1-stage0.md)). RS1 is now revived as a narrowed test, which is the test
+  of that claim ([preregistration](docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md)): about 28 new conversations,
+  at most 33, ask whether gbrain's stable release is at most 3.5 points behind each of those two servers under both
+  judges.
 - Nothing here measures whether a skill optimizer improves gbrain's shipped skills. On a task set built to leave room,
   Claude Opus 5.5 with no skill already answers 36 of 36 `query` and 35 of 36 `briefing` gate tasks, so the SkillOpt
   optimizer benchmark is retired. Garry Tan also decided to deprecate gbrain's iterative SkillOpt loop and remove it on
@@ -410,6 +417,19 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-08: The F6 BEAM-1M known limit gives its intervals and points to the narrowed RS1 test
+
+The known limit on ranking gbrain among the memory servers said "F6's 24 conversations put gbrain `0ccf2bdd` 1.4 to 9.3
+points above four external systems at 8,000 tokens, which describes them but can't rank them". It now gives F6's
+BEAM-1M gaps to the two leading servers with their 95% intervals under both judges, from the
+[GST-1365 results](docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md): memory-bank +2.0 (-1.4 to +5.4) and
+extract-first +3.5 (+0.4 to +6.5) under frontier judges, +1.3 (-0.9 to +3.7) and +4.8 (+2.6 to +7.1) under
+gpt-4.1-mini. It says those comparisons were preregistered as descriptive, on the set gbrain's settings were chosen on,
+at `0ccf2bdd`, and that no non-inferiority claim exists until RS1 reports. The stage 0 sentence stays, and a new one
+links the [narrowed RS1 preregistration](docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md), which revives RS1 as
+that test. Why: the old range had no intervals, put four systems in one range and came from BEAM's judge alone, so it read as a
+ranking it could not support. No number in the current-state tables changed.
 
 ### 2026-11-05: The Q1 block's comparisons under frontier judges
 

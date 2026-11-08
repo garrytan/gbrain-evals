@@ -1,10 +1,11 @@
 /**
- * Re-read one packed arm of a Q1 or F6 cell with another reader (the particle-1 add-on, GBEV-31 / GST-1153): every
- * frozen context the source cell's readers read (`runs/<cell id>/contexts.ndjson`) is sent byte for byte to the new
- * reader, and each answer is judged with the cell's canonical instrument. Nothing is retrieved or packed again.
+ * Re-read one packed arm of a Q1, F6 or RS1 cell with another reader (the particle-1 add-on, GBEV-31 / GST-1153; RS1's
+ * particle-1 re-reads, GST-1886): every frozen context the source cell's readers read (`runs/<cell id>/contexts.ndjson`)
+ * is sent byte for byte to the new reader, and each answer is judged with the cell's canonical instrument, plus, on an
+ * arm with a per-reader frontier plan (RS1), the new reader's frontier judge. Nothing is retrieved or packed again.
  *
  *   bun eval/runner/q1/reread-cell.ts --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader particle:particle-1
- *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6] [--keyless-upstream <url>]
+ *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] [--keyless-upstream <url>]
  *
  * Each arm and reader gets its own --out (verify.json, the lease usage log and the keyless/paid marker sit at its root),
  * and each invocation its own --run-id: a lease closes when the run ends and never reopens. `--ledger-cap-usd` is the
@@ -28,7 +29,9 @@
  * in-process lease proxy, an OpenAI-compatible reader through `chatWithReceipts`, `readerMaxTokens(reader)`, the
  * cell's effort, replicate 0. A reading the provider may have billed is final and never sent again, a budget refusal
  * stops the run (`budget_not_run`, not a try), and a resume skips answered ids. Each answer is judged by the cell's
- * canonical judge (replicate 0, no frontier judges); an OpenAI-compatible judge is refused. Output:
+ * canonical judge (replicate 0) and, on an arm with a per-reader frontier plan, by the new reader's frontier judge
+ * (definitions.ts frontierJudgeOf, under `<instrument>@<judge>`); no other frontier judge runs, and an OpenAI-compatible
+ * judge is refused. Output:
  * `--out/cells/<arm cell id>.reread-<reader>/` with answers.ndjson and judgments.ndjson in Q1's record schemas, and
  * receipt.json. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
  */
@@ -46,9 +49,10 @@ import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../metering-proxy
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
-import { answerAppender, custodyGate, devOnly, findCell, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, scheduledQuestions,
-  selectCellQuestions, type MeterLine, type StagedRetrieval } from './cell.ts';
-import { policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { answerAppender, custodyGate, devOnly, findCell, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
+  selectCellQuestions, type CellManifestId, type MeterLine, type StagedRetrieval } from './cell.ts';
+import { frontierJudgesFor, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 
 export const REREAD_VERIFY_SCHEMA = 'gbrain-evals/q1-reread-verify/v1';
@@ -212,16 +216,19 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
   return { verify, plan: problems.length ? null : plan };
 }
 
-export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: 'q1' | 'f6'; env?: Record<string, string | undefined>; keyless?: boolean }
+export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: CellManifestId; env?: Record<string, string | undefined>; keyless?: boolean }
 export interface RereadDeps { corpus?: Corpus; reader?: ChatLike; judge?: ChatLike; instrument?: Instrument }
-export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: 'q1' | 'f6' | null; keyless: boolean; instrument: Instrument; verify: RereadVerify; plan: PlannedRead[] }
+export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: CellManifestId | null; keyless: boolean; instrument: Instrument; verify: RereadVerify; plan: PlannedRead[] }
 
 /** Everything before the first request: the judge refusal, custody, one re-read per --out, the --out claim, the corpus and the byte-for-byte check (verify.json). */
 export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: RereadOptions, deps: Pick<RereadDeps, 'corpus' | 'instrument'> = {}): PreparedReread {
   const env = opts.env ?? process.env;
   const out = resolve(opts.out);
   const instrument = deps.instrument ?? instrumentFor(def.canonical_instrument);
-  refuseCompatJudges(arm.cell_id, [instrument.canonical_judge]);
+  let frontier: string[];
+  try { frontier = arm.frontier?.per_reader ? frontierJudgesFor(arm, opts.reader) : []; }
+  catch (e) { throw refuse({ code: 'USAGE', message: `${arm.cell_id} judges each reader with its family's frontier judge: ${(e as Error).message}`, why: 'a re-read answer on a per-reader frontier arm is scored by both judge views, so a reader without a preregistered judge would be read and never fully scored', fix: { next: 'report', user_message: 're-read with particle:particle-1, whose frontier judge is openai:gpt-6.1-sol' } }); }
+  refuseCompatJudges(arm.cell_id, [instrument.canonical_judge, ...frontier]);
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
   if (!deps.corpus && needsCustody(def)) custodyGate(def, out, env, `q1 reread ${arm.cell_id} with ${opts.reader}`);
   const others = existsSync(join(out, 'cells')) ? readdirSync(join(out, 'cells')).sort().filter(d => d !== rereadCellId(arm.cell_id, opts.reader)) : [];
@@ -229,7 +236,9 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
     why: 'verify.json, the lease usage log and the keyless/paid marker sit at the --out root, and each re-read receipt points at them', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   mkdirSync(out, { recursive: true });
   claimOut(out, !!opts.keyless, 'reread');
-  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, devOnly(def) ?? undefined);
+  // RS1 kept cells load only the conversations the sources staged (one launch unit's); later slots may never have been minted.
+  const staged = def.kept_units ? new Set(opts.sources.flatMap(s => [...gatherStaging(def.id, [dirname(dirname(resolve(s)))]).keys()])) : null;
+  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, staged ?? devOnly(def) ?? undefined);
   const { verify, plan } = verifySources(def, arm, opts.sources, corpus, opts.reader);
   const frozen = join(out, 'reread-source.json');
   const resuming = existsSync(frozen);
@@ -266,7 +275,9 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const chat = new ChatClient(join(p.out, 'cache', 'qa'));
   const readerChat = onSlot(deps.reader ?? chat, meter, 'harness');
   const judgeChat = onSlot(deps.judge ?? chat, meter, 'judge');
-  const judged = (id: string) => judgments.has(judgmentKey({ answer_id: id, instrument_sha256: instrument.sha256, judge: instrument.canonical_judge, judge_replicate: 0 }));
+  const planned = requiredJudges(arm, { reader, replicate: 0 }, instrument);
+  const judgedBy = (id: string, judge: string) => judgments.has(judgmentKey({ answer_id: id, instrument_sha256: instrument.sha256, judge, judge_replicate: 0 }));
+  const judged = (id: string) => planned.every(j => judgedBy(id, j.judge));
   const idOf = (x: PlannedRead) => answerId(cellId, x.question.id, reader, 0);
   let stopped: string | null = null;
 
@@ -287,10 +298,13 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
       }
     }
     const a = answers.get(aid);
-    if (!a || !JUDGED.has(a.outcome) || judged(aid)) return;
-    const r = await meter.around('judge', `judge:${aid.slice(0, 16)}:${instrument.canonical_judge}`, 'judge', () => judgeAnswer(judgeChat, instrument, x.question, a.text, { judge: instrument.canonical_judge, judgeReplicate: 0, maxAttempts }));
-    if (r.error !== undefined) { if (/budget/i.test(String((r.error as Error).message))) stopped = `budget: ${String((r.error as Error).message).slice(0, 200)}`; return; }
-    judgments.append({ answer_id: aid, ...r.value!, instrument_id: instrument.id });
+    if (!a || !JUDGED.has(a.outcome)) return;
+    for (const j of planned) {
+      if (judgedBy(aid, j.judge)) continue;
+      const r = await meter.around('judge', `judge:${aid.slice(0, 16)}:${j.judge}`, 'judge', () => judgeAnswer(judgeChat, instrument, x.question, a.text, { judge: j.judge, judgeReplicate: 0, maxAttempts }));
+      if (r.error !== undefined) { if (/budget/i.test(String((r.error as Error).message))) stopped = `budget: ${String((r.error as Error).message).slice(0, 200)}`; return; }
+      judgments.append({ answer_id: aid, ...r.value!, instrument_id: j.instrument_id });
+    }
   };
   const needs = (x: PlannedRead) => { const a = answers.get(idOf(x)); return !a || (JUDGED.has(a.outcome) && !judged(a.answer_id)); };
   for (let pass = 0; pass < maxAttempts && !stopped; pass++) {
@@ -303,9 +317,12 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const all = answers.all().sort((a, b) => (order.get(a.answer_id) ?? 0) - (order.get(b.answer_id) ?? 0));
   const canonical = new Map(judgments.all().filter(j => j.instrument_id === instrument.id && j.judge_replicate === 0).map(j => [j.answer_id, j]));
   const scores = all.map(a => canonical.get(a.answer_id)?.score).filter((s): s is number => typeof s === 'number');
+  const view = planned[1];
+  const viewScores = view ? all.map(a => judgments.all().find(j => j.answer_id === a.answer_id && j.instrument_id === view.instrument_id && j.judge_replicate === 0)?.score).filter((s): s is number => typeof s === 'number') : [];
+  const mean = (xs: number[]) => xs.length ? Math.round(xs.reduce((s, x) => s + x, 0) / xs.length * 1e6) / 1e6 : null;
   const outcomes: Record<string, number> = {};
   for (const a of all) outcomes[a.outcome] = (outcomes[a.outcome] ?? 0) + 1;
-  const unjudged = all.filter(a => JUDGED.has(a.outcome) && !canonical.has(a.answer_id)).length;
+  const unjudged = all.filter(a => JUDGED.has(a.outcome) && !judged(a.answer_id)).length;
   const status = !stopped && all.length === plan.length && !unjudged ? 'complete' as const : 'partial' as const;
   const spent = existsSync(meters) ? readFileSync(meters, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as MeterLine) : [];
   const usd = (phase: MeterLine['phase']) => Math.round(spent.filter(m => m.phase === phase).reduce((s, m) => s + m.usd, 0) * 1e6) / 1e6;
@@ -317,10 +334,12 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
     system: { kind: def.system, configuration: def.configuration },
     arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, label: arm.label },
     readers: [reader], reader_replicates: {}, effort: def.effort, max_tokens: readerMaxTokens(reader),
-    instrument: { id: instrument.id, sha256: instrument.sha256, judge: instrument.canonical_judge }, frontier: null,
+    instrument: { id: instrument.id, sha256: instrument.sha256, judge: instrument.canonical_judge },
+    frontier: view ? { per_reader: true, judge_by_reader: { [reader]: view.judge }, instrument_ids: [view.instrument_id] } : null,
     verify: p.verify.counts,
     counts: { answers: all.length, answers_promised: plan.length, judgments: judgments.size, unjudged, outcomes, truncated: all.filter(a => a.truncated).length },
-    per_reader_mean: { [reader]: scores.length ? Math.round(scores.reduce((s, x) => s + x, 0) / scores.length * 1e6) / 1e6 : null },
+    per_reader_mean: { [reader]: mean(scores) },
+    ...(view ? { per_reader_frontier_mean: { [reader]: mean(viewScores) } } : {}),
     usage: { input: sum('input'), output: sum('output'), cache_read: sum('cache_read'), cache_write: sum('cache_write') },
     spend: { source: opts.providerProxy ? 'metering proxy' : null, reader_usd: usd('reader'), judge_usd: usd('judge') },
     lease: opts.lease ? { usd: opts.lease.usd, ...(existsSync(opts.lease.usageLog) ? usageSplit(opts.lease.usageLog) : {}) } : null,
@@ -350,15 +369,18 @@ if (import.meta.main) {
   const sources = argv.flatMap((a, i) => (a === '--source' && argv[i + 1] ? [argv[i + 1]] : []));
   const [cellArg, armArg, reader, outArg, ledger, runId, leaseUsd, ledgerCap] = [one('--cell'), one('--arm'), one('--reader'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
   if (!cellArg || !armArg || !sources.length || !reader || !outArg || !ledger || !runId || !(leaseUsd > 0) || !(ledgerCap > 0)) {
-    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6] [--keyless-upstream <url>]`);
+    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] [--keyless-upstream <url>]`);
     process.exit(2);
   }
   let keyless: string | null;
   try { keyless = keylessUpstreamArg(argv); }
   catch (e) { console.error((e as Error).message); process.exit(2); }
-  const manifest = one('--manifest') as 'q1' | 'f6' | undefined;
+  const manifest = one('--manifest') as CellManifestId | undefined;
   try {
     const def = findCell(cellArg, undefined, manifest);
+    const stage1 = manifest === 'rs1' && def.block === 'RS1-S1' ? loadRS1Manifest().stage1_reread_cap_usd : null;
+    if (stage1 !== null && ledgerCap > stage1 + 1e-9) throw refuse({ code: 'USAGE', message: `a $${ledgerCap.toFixed(2)} --ledger-cap-usd for stage 1 re-read ${def.id} is above the $${stage1.toFixed(2)} stage 1 keeps for its re-reads`,
+      why: 'stage 1\'s $60 cap covers the dry-run campaign and its particle-1 re-reads together: the campaign is capped at $60 less the re-reads\' estimate, and the re-reads share one ledger capped at that estimate', fix: { next: 'run', user_message: `rerun with --ledger-cap-usd ${stage1.toFixed(2)} or less, on the one ledger every stage 1 re-read shares` } });
     const arm = rereadArm(def, armArg);
     const out = resolve(outArg);
     const prepared = prepareReread(def, arm, { sources, reader, out, manifest, keyless: !!keyless });

@@ -48,9 +48,10 @@ export const BASELINE_FILES: Readonly<Record<string, readonly string[]>> = {
 };
 const SPLITS = 'eval/decisions/splits/';
 const DATASETS = 'eval/decisions/datasets/';
-/** Dataset pins read by named benchmarks' loaders only (D8: eval/runner/memory-qa/corpus.ts D8_MANIFEST). Such a pin is compared only for a system whose cells run one of them; every other pin is compared for every system. */
+/** Dataset pins read by named benchmarks' loaders only (D8 and RS1: eval/runner/memory-qa/corpus.ts D8_MANIFEST and RS1_MANIFEST). Such a pin is compared only for a system whose cells run one of them; every other pin is compared for every system. */
 export const DATASET_PINS: Readonly<Record<string, readonly string[]>> = {
   'eval/decisions/datasets/d8-manifest.json': ['beam-d8'],
+  'eval/decisions/datasets/rs1-manifest.json': ['beam-rs1'],
 };
 
 /** Whether a repository path is one of the system's own files; null when the system has no competitor-path rule. */

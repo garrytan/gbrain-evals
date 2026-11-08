@@ -148,6 +148,8 @@ export function filesFor(benchmark: string, only?: ReadonlySet<string>): Dataset
       fix: { next: 'tell_user_to_run', argv: ['bun', 'eval/runner/q1/beam10m-manifest.ts', 'fetch', '--write'], user_message: 'the custodian fetches BEAM-10M at the pinned revision and fills the manifest' } });
     case 'beam-d8': throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-d8 is sealed: its files are never downloaded',
       why: 'every D8 conversation is in the sealed split and lives only in owner custody (GBRAIN_EVALS_D8_SOURCE on the custodian host)', fix: d8Ask });
+    case 'beam-rs1': throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-rs1 is sealed: its files are never downloaded',
+      why: 'every RS1 conversation is in the sealed split and lives only in owner custody (GBRAIN_EVALS_RS1_SOURCE on the custodian host)', fix: rs1Ask });
     case 'fixture': return [];
     default: throw new Error(`unknown benchmark ${benchmark}`);
   }
@@ -203,6 +205,7 @@ export async function fetchDataset(benchmark: string, opts: { force?: boolean; v
   let fetched = 0; let verified = 0;
   if (benchmark === 'beam-10m') return { fetched: 0, verified: verifyBeam10mCustody(log) };
   if (benchmark === 'beam-d8') return { fetched: 0, verified: verifyD8Custody(log) };
+  if (benchmark === 'beam-rs1') return { fetched: 0, verified: verifyRs1Custody(log) };
   const { mkdirSync, renameSync, rmSync, createWriteStream } = await import('node:fs');
   const { dirname } = await import('node:path');
   for (const f of filesFor(benchmark, opts.only)) {
@@ -496,6 +499,176 @@ export function verifyD8Custody(log: (s: string) => void = s => process.stderr.w
   return manifest.files.length;
 }
 
+// ─── RS1 ranking set ────────────────────────────────────────────────
+
+/**
+ * RS1 (benchmark `beam-rs1`): 48 mint slots, rs1-001 to rs1-048, minted in slot order with BEAM's generator (b2da22e) by
+ * eval/custody/rs1/mint.sh and held in owner custody, all sealed (eval/decisions/splits/beam-rs1.json;
+ * docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md). Minting stops once the kept set is complete, so later slots
+ * may never exist. GBRAIN_EVALS_RS1_SOURCE names a root outside
+ * the checkout that holds the mint's set (mint.sh's <out>/set, the root eval/custody/rs1/validate.ts and hashlist.ts
+ * read):
+ *
+ *   conversations/c<NNN>/beam/1/chat.json                                 (chat_trunecated.json instead when present, as BEAM reads it)
+ *   conversations/c<NNN>/beam/1/probing_questions/probing_questions.json  (the selected items with their rubrics, in BEAM's published format)
+ *
+ * Conversation `rs1-<NNN>` is conversations/c<NNN>. Unlike D8, the questions are probing_questions.json, the mint's
+ * final selection, never the per-ability candidate files beside it. Sessions, gold, references and rubrics are
+ * loadBeam's (beamSessions, beamQuestion); items are numbered per ability in file order. Nothing is ever downloaded.
+ * The manifest (eval/decisions/datasets/rs1-manifest.json) stays `unfilled` until the custodian records every file's
+ * SHA-256 (rs1ManifestFiles); once filled, a file it does not list, a listed file that is missing and a hash mismatch
+ * all refuse. The filled manifest also carries the custodian's kept list (`kept`, the first slots that passed
+ * validation, in slot order) and, once the pilot sets it, `n_final`; the cells run on that list alone (rs1Kept).
+ * A later fill only adds files and records the earlier fill's sha256 under `earlier_fills`.
+ */
+export const RS1_MANIFEST = 'eval/decisions/datasets/rs1-manifest.json';
+export const RS1_CONVERSATIONS: readonly string[] = Array.from({ length: 48 }, (_, i) => `rs1-${String(i + 1).padStart(3, '0')}`);
+export const rs1ManifestPath = () => fromHome(process.env.GBRAIN_EVALS_RS1_MANIFEST) ?? join(REPO_ROOT, RS1_MANIFEST);
+export interface Rs1Manifest {
+  dataset: string; status: 'unfilled' | 'filled'; layout: string; note: string; files: Array<{ path: string; sha256: string }>; filled_at: string | null;
+  /** The kept conversations in slot order (filled manifests): the first slots that passed validation. */
+  kept?: string[];
+  /** The kept set's final size once the pilot sets it (20 to 33); absent while only wave A is kept. */
+  n_final?: number;
+  /** The sha256 of each earlier fill of this manifest, oldest first (a refill only adds files). */
+  earlier_fills?: string[];
+}
+const rs1Fill = { next: 'ask_user' as const, user_message: 'the custodian fills (or refills) the RS1 manifest from the set root on the custody host: every file rs1ManifestFiles lists, with its SHA-256' };
+const rs1Ask = { next: 'ask_user' as const, user_message: 'run beam-rs1 on the custody host with GBRAIN_EVALS_RS1_SOURCE set to the RS1 set root (mint.sh\'s <out>/set; it holds conversations/c<NNN> for the minted slots)' };
+
+/** The RS1 custody root, refusing when GBRAIN_EVALS_RS1_SOURCE is unset or inside the repository. */
+export function rs1Source(env: Record<string, string | undefined> = process.env): string {
+  const source = fromHome(env.GBRAIN_EVALS_RS1_SOURCE);
+  if (!source) throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-rs1: GBRAIN_EVALS_RS1_SOURCE is not set',
+    why: 'every RS1 conversation is sealed (eval/decisions/splits/beam-rs1.json) and lives only in owner custody; nothing is downloaded', fix: rs1Ask });
+  const abs = resolve(source);
+  const rel = relative(REPO_ROOT, abs);
+  if (rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))) throw decideError({ code: 'CUSTODY_MISSING', message: `beam-rs1: GBRAIN_EVALS_RS1_SOURCE ${abs} is inside the repository`,
+    why: 'sealed files never live where Git could pick them up', fix: rs1Ask });
+  return abs;
+}
+
+export function readRs1Manifest(path = rs1ManifestPath()): { manifest: Rs1Manifest; sha256: string } {
+  const bytes = readFileSync(path);
+  return { manifest: JSON.parse(bytes.toString('utf8')) as Rs1Manifest, sha256: sha256(bytes) };
+}
+
+/** The files one RS1 conversation is read from, as paths relative to the root; refuses when any part of the layout is missing. */
+export function rs1ConversationFiles(root: string, conversation: string): { chat: string; questions: string } {
+  if (!RS1_CONVERSATIONS.includes(conversation)) throw new Error(`beam-rs1 has no conversation ${conversation}`);
+  const dir = `conversations/c${conversation.slice(4)}/beam/1`;
+  const missing = (what: string) => decideError({ code: 'DATASET_MISSING', message: `beam-rs1: ${what} is not under GBRAIN_EVALS_RS1_SOURCE`,
+    why: 'each RS1 conversation is a mint directory whose beam/1 holds BEAM\'s chat file and probing_questions/probing_questions.json', fix: rs1Ask });
+  if (!existsSync(join(root, dir))) throw missing(dir);
+  const chat = ['chat_trunecated.json', 'chat.json'].map(f => `${dir}/${f}`).find(p => existsSync(join(root, p)));
+  if (!chat) throw missing(`${dir}/chat.json`);
+  const questions = `${dir}/probing_questions/probing_questions.json`;
+  if (!existsSync(join(root, questions))) throw missing(questions);
+  return { chat, questions };
+}
+
+/** Every file the given conversations (default: every slot) are read from with its SHA-256, the entries a filled manifest holds (bytes are hashed, never parsed). */
+export function rs1ManifestFiles(root: string, ids: readonly string[] = RS1_CONVERSATIONS): Array<{ path: string; sha256: string }> {
+  return ids.flatMap(id => { const f = rs1ConversationFiles(root, id); return [f.chat, f.questions]; })
+    .map(path => ({ path, sha256: fileSha256(join(root, path)) }));
+}
+
+/**
+ * Load RS1 (sealed): appends one custody access-log line per conversation before its files are read. `only` keeps
+ * those conversations. With a filled manifest every file must be listed and match; with an unfilled one the files'
+ * hashes are recorded in the corpus source and a notice says they were not pinned.
+ */
+export function loadRs1(custody: { log: string; decisionId: string; purpose: string }, opts: { only?: ReadonlySet<string>; root?: string; manifestPath?: string } = {}): Corpus {
+  const root = opts.root ?? rs1Source();
+  if (!custody.log) throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-rs1 opens only on the custodian host', why: 'every opening of a sealed set is logged first',
+    fix: { next: 'ask_user', user_message: 'request the beam-rs1 cells from the custodian (decision q1-scoreboard)' } });
+  const unknown = opts.only ? [...opts.only].filter(id => !RS1_CONVERSATIONS.includes(id)) : [];
+  if (unknown.length) throw new Error(`beam-rs1 has no conversation ${unknown.join(', ')}`);
+  const { manifest, sha256: manifestSha } = readRs1Manifest(opts.manifestPath);
+  const pinned = manifest.status === 'filled' ? new Map(manifest.files.map(f => [f.path, f.sha256])) : null;
+  const files: DatasetIdentity['files'] = [];
+  const read = (path: string) => {
+    const bytes = readFileSync(join(root, path));
+    const got = sha256(bytes);
+    const want = pinned?.get(path);
+    if (pinned && got !== want) throw decideError({ code: 'DATASET_HASH_MISMATCH', message: want ? `beam-rs1: ${path} has SHA-256 ${got.slice(0, 12)}, expected ${want.slice(0, 12)}` : `beam-rs1: ${path} is not in the filled manifest`,
+      why: 'only the pinned bytes are scored', fix: rs1Fill });
+    files.push({ path, sha256: got });
+    return bytes.toString('utf8');
+  };
+  const conversations: Conversation[] = [];
+  const questions: MemoryQuestion[] = [];
+  for (const id of RS1_CONVERSATIONS.filter(c => !opts.only || opts.only.has(c))) {
+    const f = rs1ConversationFiles(root, id);
+    if (pinned) {
+      const reading = new Set([f.chat, f.questions]);
+      const absent = [...pinned.keys()].filter(p => p.startsWith(`conversations/c${id.slice(4)}/`) && !reading.has(p));
+      if (absent.length) throw decideError({ code: 'DATASET_MISSING', message: `beam-rs1: ${absent.length} file(s) the manifest pins for ${id} are not under GBRAIN_EVALS_RS1_SOURCE`, why: 'a pinned conversation loads whole or not at all', fix: rs1Ask });
+    }
+    appendAccessLog(custody.log, { action: 'open', purpose: `beam-rs1 ${id}: ${custody.purpose}`, decision_id: custody.decisionId, labels_sha256: manifestSha, run_sha256: null });
+    const { sessions, sessionOfMessage } = beamSessions(JSON.parse(read(f.chat)) as BeamChat);
+    conversations.push({ id, sessions });
+    for (const [ability, items] of Object.entries(JSON.parse(read(f.questions)) as Record<string, unknown>)) {
+      flatItems(items).forEach((item, i) => {
+        if (!item || typeof item !== 'object' || typeof (item as BeamProbingItem).question !== 'string') throw new Error(`beam-rs1: ${f.questions} ${ability} item ${i} has no question`);
+        questions.push(beamQuestion(id, ability, item as BeamProbingItem, i, sessionOfMessage));
+      });
+    }
+  }
+  if (!pinned) process.stderr.write(`[custody] beam-rs1: the manifest is unfilled, so ${files.length} file(s) loaded without pinned hashes (the custodian fills it with rs1ManifestFiles before a counted run)\n`);
+  return { benchmark: 'beam-rs1', conversations, questions,
+    source: { name: 'RS1 ranking set (BEAM generator, minted in custody)', files: [{ path: RS1_MANIFEST, sha256: manifestSha }, ...files], revision: pinned ? manifestSha.slice(0, 7) : 'unfilled', license: 'custodian-held' } };
+}
+
+/**
+ * The custodian's kept list from a filled manifest: slot ids in strictly increasing slot order, each with both of its
+ * files pinned, at most n_final of them. Refuses an unfilled manifest, a kept id outside the 48 slots and a kept id the
+ * manifest does not pin, so a cell never runs a conversation the custodian did not keep and hash.
+ */
+export function rs1Kept(manifest: Rs1Manifest): { kept: string[]; n_final: number | null } {
+  const bad = (message: string) => decideError({ code: 'DATASET_MISSING', message: `beam-rs1: ${message}`, why: 'RS1 cells run only on the custodian\'s kept list, checked against the filled manifest', fix: rs1Fill });
+  if (manifest.status !== 'filled') throw bad('the manifest is unfilled, so it has no kept list');
+  const kept = manifest.kept;
+  if (!Array.isArray(kept) || !kept.length) throw bad('the filled manifest has no kept list');
+  const outside = kept.filter(id => !RS1_CONVERSATIONS.includes(id));
+  if (outside.length) throw bad(`kept ${outside.join(', ')} is not one of the 48 mint slots`);
+  if (kept.some((id, i) => i > 0 && !(kept[i - 1] < id))) throw bad('the kept list is not in strictly increasing slot order');
+  const unpinned = kept.filter(id => ['chat', 'probing_questions/probing_questions.json'].some(f => !manifest.files.some(x => x.path.startsWith(`conversations/c${id.slice(4)}/beam/1/${f}`))));
+  if (unpinned.length) throw bad(`kept ${unpinned.join(', ')} has no pinned chat or questions file in the filled manifest`);
+  const n = manifest.n_final ?? null;
+  if (n !== null && !(Number.isInteger(n) && n >= 20 && n <= 33 && kept.length <= n)) throw bad(`n_final ${n} must be a whole number from 20 to 33, at least the kept list's ${kept.length}`);
+  return { kept: [...kept], n_final: n };
+}
+
+/**
+ * The conversations of one RS1 launch unit: kept conversations unit x perUnit to (unit + 1) x perUnit - 1. A unit runs
+ * only once all of its conversations are kept; the last unit may be partial once n_final says the list is complete.
+ */
+export function rs1UnitConversations(manifest: Rs1Manifest, unit: number, perUnit: number): string[] {
+  const { kept, n_final } = rs1Kept(manifest);
+  const slice = kept.slice(unit * perUnit, (unit + 1) * perUnit);
+  const complete = n_final !== null && kept.length === n_final;
+  if (!slice.length || (slice.length < perUnit && !complete)) throw decideError({ code: 'DATASET_MISSING',
+    message: `beam-rs1: launch unit ${unit} needs kept conversations ${unit * perUnit + 1} to ${(unit + 1) * perUnit}, and the kept list holds ${kept.length}${complete ? ' (final)' : ''}`,
+    why: 'a launch unit runs whole: its kept conversations in slot order, the last unit partial only once n_final completes the list', fix: rs1Fill });
+  return slice;
+}
+
+/** `decide fetch` for RS1: nothing is downloaded; every file the filled manifest pins must be under the custody root with its hash. */
+export function verifyRs1Custody(log: (s: string) => void = s => process.stderr.write(s + '\n')): number {
+  const root = rs1Source();
+  const { manifest } = readRs1Manifest();
+  if (manifest.status !== 'filled') throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-rs1: the manifest has no hashes yet', why: 'only pinned bytes are verified', fix: rs1Fill });
+  for (const f of manifest.files) {
+    const abs = join(root, f.path);
+    if (!existsSync(abs)) throw decideError({ code: 'DATASET_MISSING', message: `beam-rs1: ${f.path} is not under GBRAIN_EVALS_RS1_SOURCE`, why: 'every pinned file must be present', fix: rs1Ask });
+    const got = fileSha256(abs);
+    if (got !== f.sha256) throw decideError({ code: 'DATASET_HASH_MISMATCH', message: `beam-rs1: ${f.path} has SHA-256 ${got.slice(0, 12)}, expected ${f.sha256.slice(0, 12)}`, why: 'only the pinned bytes are scored', fix: rs1Fill });
+  }
+  log(`[custody] beam-rs1: ${manifest.files.length} file(s) match their pinned sha256 under GBRAIN_EVALS_RS1_SOURCE`);
+  return manifest.files.length;
+}
+
 // ─── LongMemEval-M ──────────────────────────────────────────────────
 
 /**
@@ -675,7 +848,7 @@ export function loadCustodyCorpus(path: string): Corpus {
     source: { name: `custodian sealed corpus ${raw.id}`, files: [{ path: 'custody', sha256: sha256(bytes) }], revision: raw.id, license: 'custodian-authored' } };
 }
 
-/** `only` restricts LoCoMo, BEAM and D8 to those conversations (a split), so a BEAM or D8 conversation outside it is never read. */
+/** `only` restricts LoCoMo, BEAM, D8 and RS1 to those conversations (a split), so a BEAM, D8 or RS1 conversation outside it is never read. */
 export function loadCorpus(benchmark: string, corpusFile?: string, only?: ReadonlySet<string>): Corpus {
   if (benchmark === 'custody') {
     if (!corpusFile) throw new Error('benchmark custody needs --corpus-file <custody path>');
@@ -702,6 +875,13 @@ export function loadCorpus(benchmark: string, corpusFile?: string, only?: Readon
       if (!log) throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-d8 questions open only on the custodian host',
         why: 'all ten D8 conversations are sealed (eval/decisions/splits/beam-d8.json); every opening is logged', fix: { next: 'ask_user', user_message: 'request the beam-d8 cells from the custodian (decision q1-scoreboard)' } });
       return loadD8({ log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', purpose: 'memory-qa loadCorpus beam-d8' }, { only });
+    }
+    case 'beam-rs1': {
+      rs1Source();
+      const log = process.env.GBRAIN_EVALS_CUSTODY_LOG;
+      if (!log) throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-rs1 questions open only on the custodian host',
+        why: 'every RS1 conversation is sealed (eval/decisions/splits/beam-rs1.json); every opening is logged', fix: { next: 'ask_user', user_message: 'request the beam-rs1 cells from the custodian (decision q1-scoreboard)' } });
+      return loadRs1({ log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', purpose: 'memory-qa loadCorpus beam-rs1' }, { only });
     }
     case 'fixture': return loadFixture();
     default: throw new Error(`unknown benchmark ${benchmark}`);

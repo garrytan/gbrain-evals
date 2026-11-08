@@ -82,7 +82,7 @@ import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
-import { loadCorpus, type Corpus, type MemoryQuestion, type Session } from '../memory-qa/corpus.ts';
+import { loadCorpus, readRs1Manifest, rs1UnitConversations, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
@@ -101,8 +101,9 @@ import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render-v2.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
-import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, launchPrefix, loadManifest, MANIFEST_PATH, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
+import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
+import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
 import { answerUsage, normalizeUsage, readerConvention } from './usage.ts';
@@ -145,6 +146,23 @@ const pct = (xs: number[], p: number) => xs.length ? Math.round(percentile(xs, p
 export const realizationId = (cellId: string, conversation: string, attempt: number) => sha256(`${cellId}|${conversation}|${attempt}`);
 export const frontierInstrumentId = (instrument: string, judge: string) => `${instrument}@${judge}`;
 export const contextKey = (realization: string, questionId: string, armId: string) => `${realization}|${questionId}|${armId}`;
+
+/**
+ * The judgments an answer needs before it counts as judged: the canonical judge's, and on a per-reader frontier arm
+ * (RS1) its reader's frontier judge's as well, so completeness, resume and the receipt count a missing frontier
+ * judgment as unjudged there. Q1 and F6 arms need the canonical judgment alone.
+ */
+export function requiredJudges(arm: Pick<ArmDefinition, 'frontier'>, a: { reader: string; replicate: number }, instrument: Pick<Instrument, 'id' | 'canonical_judge'>): Array<{ judge: string; instrument_id: string }> {
+  const out = [{ judge: instrument.canonical_judge, instrument_id: instrument.id }];
+  if (arm.frontier?.per_reader && a.replicate === 0) for (const j of frontierJudgesFor(arm, a.reader)) out.push({ judge: j, instrument_id: frontierInstrumentId(instrument.id, j) });
+  return out;
+}
+
+/** RS1: this launch unit's conversations from the custodian's kept list (corpus.ts rs1UnitConversations); the shard must be one of the cell's units. */
+export function keptUnit(def: Pick<CellDefinition, 'id' | 'shards' | 'kept_units'>, shard: { index: number; count: number }, manifest: Rs1Manifest = readRs1Manifest().manifest): string[] {
+  if (shard.count !== def.shards) throw refuse(usage(`${def.id} runs as ${def.shards} launch units of ${def.kept_units} kept conversations; --shard must be i/${def.shards}`));
+  return rs1UnitConversations(manifest, shard.index, def.kept_units!);
+}
 
 // ─── Selection ───────────────────────────────────────────────────────
 
@@ -292,6 +310,8 @@ export interface CellDeps {
   fullContextFetch?: typeof fetch;
   /** Full-context fit check tokenizer per reader (default: the reader's local encoding times its calibration). */
   fitTokenizer?: (reader: string) => FitTokenizer;
+  /** RS1 kept cells: the filled manifest whose kept list names the unit's conversations (default: corpus.ts readRs1Manifest). */
+  rs1Manifest?: Rs1Manifest;
 }
 
 export interface ArmResult { cell_id: string; dir: string; status: 'complete' | 'partial' | 'invalid'; config_sha256: string; answers: number; judgments: number; rows: number; readers: string[] }
@@ -603,10 +623,11 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const custody = !deps.corpus && needsCustody(def);
   if (custody) custodyGate(def, out, env, `q1 cell ${def.id}`);
   mkdirSync(out, { recursive: true });
-  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, devOnly(def) ?? undefined);
-  const selected = scheduledQuestions(def, corpus, opts.limit ?? null);
   const shard = opts.shard ?? { index: 0, count: 1 };
-  const convIds = [...new Set(selected.map(q => q.conversation))].sort().filter((_, i) => i % shard.count === shard.index);
+  const unitConvs = def.kept_units ? keptUnit(def, shard, deps.rs1Manifest) : null;
+  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, unitConvs ? new Set(unitConvs) : devOnly(def) ?? undefined);
+  const selected = scheduledQuestions(def, corpus, opts.limit ?? null).filter(q => !unitConvs || unitConvs.includes(q.conversation));
+  const convIds = [...new Set(selected.map(q => q.conversation))].sort().filter((_, i) => unitConvs || i % shard.count === shard.index);
   const armQs = new Map(arms.map(a => [a.id, new Set((a.questions ? selectCellQuestions(selected, a.questions) : selected).map(q => q.id))]));
   const scheduledSha = sha256(selected.map(q => q.id).join('\n'));
 
@@ -780,9 +801,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       const qs = new Set([...armQs.get(a.id)!].filter(id => mineQs.has(id)));
       const rows = new Set(readLines<Q1Row>(join(dir, 'rows.ndjson')).filter(r => qs.has(r.id)).map(r => r.id));
       const ans = readRecords(join(dir, 'answers.ndjson'), 'answer').filter(x => qs.has(x.question_id));
-      const judged = new Set(readRecords(join(dir, 'judgments.ndjson'), 'judgment').filter(j => j.instrument_id === instrument.id && j.judge_replicate === 0).map(j => j.answer_id));
+      const judged = new Set(readRecords(join(dir, 'judgments.ndjson'), 'judgment').filter(j => j.judge_replicate === 0).map(j => `${j.answer_id}|${j.instrument_id}`));
       const promised = a.mode === 'retrieval-only' ? 0 : readersOf.get(a.id)!.reduce((n, r) => n + (a.reader_replicates[r] ?? 1), 0) * qs.size;
-      return { cell_id: a.cell_id, rows_missing: qs.size - rows.size, answers_missing: Math.max(0, promised - ans.length), unjudged: ans.filter(x => JUDGED.has(x.outcome) && !judged.has(x.answer_id)).length };
+      return { cell_id: a.cell_id, rows_missing: qs.size - rows.size, answers_missing: Math.max(0, promised - ans.length), unjudged: ans.filter(x => JUDGED.has(x.outcome) && !requiredJudges(a, x, instrument).every(j => judged.has(`${x.answer_id}|${j.instrument_id}`))).length };
     });
     share = { shard: `${shard.index}/${shard.count}`, questions: mineQs.size, complete: !stopped && !invalidReasons.length && gaps.every(g => !g.rows_missing && !g.answers_missing && !g.unjudged), gaps: gaps.filter(g => g.rows_missing || g.answers_missing || g.unjudged) };
   }
@@ -930,8 +951,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const judgeOne = async (q: MemoryQuestion, a: AnswerRecord, arm: ArmDefinition) => {
       if (!JUDGED.has(a.outcome)) return;
       const tasks: Array<{ judgeModel: string; instrumentId: string }> = [{ judgeModel: instrument.canonical_judge, instrumentId: instrument.id }];
-      const f = arm.frontier;
-      if (f && opts.frontier !== false && a.replicate === 0 && (!f.readers || f.readers.includes(a.reader)) && inFrontierSample(arm, q.id)) for (const j of f.judges) tasks.push({ judgeModel: j, instrumentId: frontierInstrumentId(instrument.id, j) });
+      if (opts.frontier !== false && a.replicate === 0 && inFrontierSample(arm, q.id)) for (const j of frontierJudgesFor(arm, a.reader)) tasks.push({ judgeModel: j, instrumentId: frontierInstrumentId(instrument.id, j) });
       for (const t of tasks) {
         if (judgments.has(judgmentKey({ answer_id: a.answer_id, instrument_sha256: instrument.sha256, judge: t.judgeModel, judge_replicate: 0 }))) continue;
         const r = await meter.around('judge', `judge:${a.answer_id.slice(0, 16)}:${t.judgeModel}`, 'judge', () => judgeAnswer(judge, instrument, q, a.text, { judge: t.judgeModel, judgeReplicate: 0, maxAttempts }));
@@ -1101,7 +1121,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         for (const rd of readersOf.get(arm.id)!) for (let rep = 0; rep < (arm.reader_replicates[rd] ?? 1); rep++) {
           const a = answers.get(answerId(arm.cell_id, q.id, rd, rep));
           if (!a) return true;
-          if (JUDGED.has(a.outcome) && !judgments.has(judgmentKey({ answer_id: a.answer_id, instrument_sha256: instrument.sha256, judge: instrument.canonical_judge, judge_replicate: 0 }))) return true;
+          if (JUDGED.has(a.outcome) && !requiredJudges(arm, a, instrument).every(j => judgments.has(judgmentKey({ answer_id: a.answer_id, instrument_sha256: instrument.sha256, judge: j.judge, judge_replicate: 0 })))) return true;
         }
       }
       return false;
@@ -1276,24 +1296,33 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
     writeAtomic(join(dir, 'readiness.ndjson'), nd(found.map(ms => ({ write_start_to_queryable_ms: ms }))));
     const promised = readers.reduce((s, r) => s + (arm.reader_replicates[r] ?? 1), 0) * qs.size;
     const canonical = new Set(judgments.filter(j => j.instrument_id === ctx.instrument.id && j.judge_replicate === 0).map(j => j.answer_id));
-    const unjudged = answers.filter(a => JUDGED.has(a.outcome) && !canonical.has(a.answer_id)).length;
+    const judgedBy = new Set(judgments.filter(j => j.judge_replicate === 0).map(j => `${j.answer_id}|${j.instrument_id}`));
+    const unjudged = answers.filter(a => JUDGED.has(a.outcome) && !requiredJudges(arm, a, ctx.instrument).every(j => judgedBy.has(`${a.answer_id}|${j.instrument_id}`))).length;
     const outcomes: Record<string, number> = {};
     for (const a of answers) outcomes[a.outcome] = (outcomes[a.outcome] ?? 0) + 1;
     const complete = rows.length === qs.size && (arm.mode === 'retrieval-only' || (answers.length === promised && unjudged === 0));
     const status: ArmResult['status'] = ctx.invalidReasons.length ? 'invalid' : complete ? 'complete' : 'partial';
     const config = ctx.configs.get(arm.id) ?? (existsSync(join(dir, 'run-config.json')) ? { text: readFileSync(join(dir, 'run-config.json'), 'utf8'), sha: sha256(readFileSync(join(dir, 'run-config.json'))) } : null);
     const scores = (reader: string) => { const xs = answers.filter(a => a.reader === reader && canonical.has(a.answer_id)).map(a => judgments.find(j => j.answer_id === a.answer_id && j.instrument_id === ctx.instrument.id && j.judge_replicate === 0)!.score).filter((x): x is number => typeof x === 'number'); return xs.length ? Math.round(xs.reduce((s, x) => s + x, 0) / xs.length * 1e6) / 1e6 : null; };
+    /** RS1: each reader's mean under its own frontier judge, the second judge view, kept apart from the canonical mean. */
+    const frontierScores = (reader: string) => {
+      const j = frontierJudgesFor(arm, reader)[0];
+      const xs = j ? answers.filter(a => a.reader === reader && a.replicate === 0).map(a => judgments.find(x => x.answer_id === a.answer_id && x.instrument_id === frontierInstrumentId(ctx.instrument.id, j) && x.judge_replicate === 0)?.score).filter((x): x is number => typeof x === 'number') : [];
+      return xs.length ? Math.round(xs.reduce((s, x) => s + x, 0) / xs.length * 1e6) / 1e6 : null;
+    };
     const receipt = {
       schema: CELL_RECEIPT_SCHEMA, cell_id: arm.cell_id, run_cell: def.id, config_sha256: config?.sha ?? null, run_status: status, invalid_reasons: ctx.invalidReasons, stopped: ctx.stopped,
       set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block,
       system: { kind: def.system, configuration: def.configuration, runner: def.runner, capability_system: ctx.capabilities.system, versions: ctx.capabilities.versions, capabilities: ctx.capabilities },
       arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, variant: arm.variant ?? null, label: arm.label },
       readers, reader_replicates: arm.reader_replicates, effort: arm.mode === 'own-answer' ? null : def.effort,
-      instrument: { id: ctx.instrument.id, sha256: ctx.instrument.sha256, judge: ctx.instrument.canonical_judge }, frontier: arm.frontier ? { ...arm.frontier, instrument_ids: arm.frontier.judges.map(j => frontierInstrumentId(ctx.instrument.id, j)) } : null,
+      instrument: { id: ctx.instrument.id, sha256: ctx.instrument.sha256, judge: ctx.instrument.canonical_judge },
+      frontier: arm.frontier ? { ...arm.frontier, instrument_ids: arm.frontier.judges.map(j => frontierInstrumentId(ctx.instrument.id, j)), ...(arm.frontier.per_reader ? { judge_by_reader: Object.fromEntries(readers.map(r => [r, frontierJudgesFor(arm, r)[0] ?? null])) } : {}) } : null,
       selection: { questions: qs.size, conversations: new Set(rows.map(r => r.conversation)).size, scheduled_sha256: sha256([...qs].join('\n')) },
       counts: { rows: rows.length, answers: answers.length, answers_promised: promised, judgments: judgments.length, unjudged, outcomes,
         ...(answers.some(a => a.truncated !== undefined) ? { truncated: answers.filter(a => a.truncated).length } : {}) },
       per_reader_mean: Object.fromEntries(readers.map(r => [r, scores(r)])),
+      ...(arm.frontier?.per_reader ? { per_reader_frontier_mean: Object.fromEntries(readers.map(r => [r, frontierScores(r)])) } : {}),
       realizations: staged.map(s => ({ conversation: s.conv, realization_id: s.rid, attempts: s.attempts, restored_from: s.restored_from ?? null, ...(s.carried_from ? { carried_from: s.carried_from } : {}), degraded: s.ingest?.degraded ?? null,
         background_liabilities: s.ingest?.finish.background_liabilities ?? null })).sort((a, b) => (a.conversation < b.conversation ? -1 : 1)),
       ingest: {
@@ -1372,13 +1401,16 @@ const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
 const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: COMPAT_PROVIDERS.particle.key_env } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
-const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1 };
+const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1 };
 
 /** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
-export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: 'q1' | 'f6'; addons?: boolean } = {}): CellSpec[] {
+export type CellManifestId = 'q1' | 'f6' | 'rs1';
+const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1'];
+
+export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
   const headline = (c: CellDefinition) => c.block === 'T1' || c.block === 'F6-S1';
   const t1Units = m.cells.filter(headline).flatMap(c => Array.from({ length: c.shards }, (_, i) => ({ c, i }))).sort((a, b) => b.c.estimate.usd / b.c.shards - a.c.estimate.usd / a.c.shards || (a.c.id < b.c.id ? -1 : 1) || a.i - b.i);
@@ -1413,19 +1445,20 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
 }
 
 /** A campaign over named launch units alone, under its own id and ledger cap (plan --units; F6 amendment A1). */
-/** cell_manifest: the manifest each unit's `cell.ts run` resolves its cell from (`--manifest`), for ids q1-cells.json and f6-cells.json both define (A5). */
-export interface UnitSelection { campaign_id: string; cap_usd: number; units: string[]; cell_manifest?: 'q1' | 'f6' }
+/** cell_manifest: the manifest each unit's `cell.ts run` resolves its cell from (`--manifest`), for ids q1-cells.json and f6-cells.json both define (A5), and RS1's (rs1-cells.json). */
+export interface UnitSelection { campaign_id: string; cap_usd: number; units: string[]; cell_manifest?: CellManifestId }
 
 /** The Q1 scoreboard campaign manifest (shootout-cell.ts `q1-scoreboard-campaign`) for the cell manifest. */
 export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: UnitSelection } = {}): Q1Campaign {
   const f6 = (m as { campaign_id?: string }).campaign_id;
   // F6 adds the temporal graph's 0.31.2 defaults (gpt-6-luna, text-embedding-3-small) to the models its campaign admits.
   const base = [...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5', ...(f6 ? ['openai:gpt-6-luna', 'openai:text-embedding-3-small'] : [])];
-  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly, cellManifest: opts.units?.cell_manifest, addons: !!opts.units }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
+  // RS1's cells live only in rs1-cells.json, so every unit's run names that manifest.
+  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly, cellManifest: opts.units?.cell_manifest ?? ('rs1_assumptions' in m ? 'rs1' : undefined), addons: !!opts.units }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
   const u = opts.units;
   if (u) {
     const unknown = u.units.filter(id => !all.some(c => c.id === id));
-    if (!Q1_CAMPAIGN_ID.test(u.campaign_id) || !(u.cap_usd > 0) || (u.cell_manifest !== undefined && u.cell_manifest !== 'q1' && u.cell_manifest !== 'f6') || !u.units.length || new Set(u.units).size !== u.units.length || unknown.length) {
+    if (!Q1_CAMPAIGN_ID.test(u.campaign_id) || !(u.cap_usd > 0) || (u.cell_manifest !== undefined && !CELL_MANIFESTS.includes(u.cell_manifest)) || !u.units.length || new Set(u.units).size !== u.units.length || unknown.length) {
       throw new Error(`a unit selection needs a q1-scoreboard campaign_id, a positive cap_usd and distinct known unit ids${unknown.length ? ` (unknown: ${unknown.join(', ')})` : ''}`);
     }
   }
@@ -1435,7 +1468,7 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
   const models = [...new Set([...base, ...compat])].sort();
   const id = u ? u.campaign_id : f6 ? `${f6}${opts.smokeOnly ? '-dry-run' : opts.sealed ? '-sealed' : ''}` : opts.sealed ? 'q1-scoreboard-sealed' : 'q1-scoreboard';
   const dryCap = (m as { dry_run_cap_usd?: number }).dry_run_cap_usd;
-  const blocks = [...m.blocks, ...(opts.smokeOnly && dryCap ? [{ id: 'F6-dry' as const, estimate_usd: Math.round(m.smoke_cells.reduce((s, c) => s + c.estimate.usd, 0) * 100) / 100, cap_usd: dryCap }] : [])];
+  const blocks = [...m.blocks, ...(opts.smokeOnly && dryCap ? [{ id: m.smoke_cells[0]?.block ?? 'F6-dry', estimate_usd: Math.round(m.smoke_cells.reduce((s, c) => s + c.estimate.usd, 0) * 100) / 100, cap_usd: dryCap }] : [])];
   return {
     kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: id, cap_usd: u?.cap_usd ?? opts.sealed?.cap_usd ?? (opts.smokeOnly && dryCap ? dryCap : m.cap_usd), ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`,
     parameters: {}, hedge_classifier: 'none', cells, executes: EXECUTES,
@@ -1451,6 +1484,13 @@ export function renderPlan(m: Manifest): string {
   const waves = [...new Set(cells.map(c => c.wave!))].sort((a, b) => a - b).map(w => ({ w, n: cells.filter(c => c.wave === w).length, hours: Math.max(...cells.filter(c => c.wave === w).map(c => c.expected_hours ?? 0)), blocks: [...new Set(cells.filter(c => c.wave === w).map(c => c.block))].join(', ') }));
   const usd = (x: number) => `$${x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const addon = m.blocks.filter(b => (m.addon_cells ?? []).some(c => c.block === b.id));
+  const rs1 = 'rs1_assumptions' in m ? m as RS1Manifest : null;
+  if (rs1) return [
+    `RS1 cell manifest: ${m.cells.length} cells at the cap of 33 kept conversations, estimate ${usd(m.total_usd)} (hard cap ${usd(m.cap_usd)}); stage 1 ${usd(rs1.stage1_estimate_usd)} of its ${usd(rs1.stage1_cap_usd)} cap; ${rs1.reread_plans.length} particle-1 re-read plans.`,
+    `Readers ${m.readers.join(', ')} at effort ${m.effort}; per-reader frontier judges ${Object.entries(rs1.frontier_judges).map(([r, j]) => `${r} -> ${j}`).join(', ')}; wave A units ${rs1.waves.A.length}, wave B units ${rs1.waves.B.length}.`, '',
+    '| Cell | Block | System | Configuration | Shards | Estimate |', '|---|---|---|---|---:|---:|',
+    ...[...m.cells, ...m.smoke_cells].map(c => `| ${c.id} | ${c.block} | ${c.system} | ${c.configuration} | ${c.shards} | ${usd(c.estimate.usd)} |`),
+  ].join('\n');
   return [
     `Q1 cell manifest: ${m.cells.length} cells, ${m.cells.reduce((s, c) => s + c.arms.length, 0)} scoreboard cells, estimate ${usd(m.total_usd)} (PLAN §7 total ${usd(m.plan_total_usd)} including $260 shared work outside the cells), cap ${usd(m.cap_usd)}.`,
     `Readers ${m.readers.join(', ')} at effort ${m.effort}; prices from eval/runner/budget-ledger.ts; token assumptions in eval/runner/q1/cells/q1-cells.json.`, '',
@@ -1465,9 +1505,14 @@ export function renderPlan(m: Manifest): string {
 
 // ─── CLI ─────────────────────────────────────────────────────────────
 
+/** The cell manifest `--manifest` names: q1 (default), f6 or rs1. */
+export function loadCellManifest(which?: string): Manifest {
+  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells), not ${which}`));
+  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : loadManifest();
+}
+
 export function findCell(id: string, given?: Manifest, manifest?: string): CellDefinition {
-  if (manifest !== undefined && manifest !== 'q1' && manifest !== 'f6') throw refuse(usage(`--manifest takes q1 or f6, not ${manifest}`));
-  const m = given ?? (manifest === 'f6' ? loadF6Manifest() : loadManifest());
+  const m = given ?? loadCellManifest(manifest);
   const inManifest = (x: Manifest) => x.cells.find(c => c.id === id) ?? (x.smoke_cells ?? []).find(c => c.id === id) ?? (x.addon_cells ?? []).find(c => c.id === id);
   const c = inManifest(m);
   const f6 = !given && !manifest && existsSync(F6_MANIFEST_PATH) ? loadF6Manifest() : null;
@@ -1509,8 +1554,11 @@ export async function main(argv: string[]): Promise<number> {
   const sub = argv[0];
   if (sub === 'plan') {
     // --manifest f6: F6's manifest (eval/runner/q1/cells/f6-cells.json); --dry-run-only keeps its dry-run cells alone;
+    // --manifest rs1: RS1's (rs1-cells.json), refused while its stage 1 estimate is above stage 1's cap;
     // --units <file>: a UnitSelection (JSON), the named units alone under its own campaign id and cap.
-    const m = one('--manifest') === 'f6' ? loadF6Manifest() : loadManifest();
+    const m = loadCellManifest(one('--manifest'));
+    const over = one('--manifest') === 'rs1' ? stage1OverCap(m as RS1Manifest) : null;
+    if (over) throw refuse(over);
     const campaignOut = one('--campaign-out');
     const sealedCap = one('--sealed-cap-usd');
     if (sealedCap !== undefined && !(Number(sealedCap) > 0)) throw refuse(usage('--sealed-cap-usd needs a positive dollar amount'));
@@ -1540,7 +1588,8 @@ export async function main(argv: string[]): Promise<number> {
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
       if (!from.length) throw refuse(usage('merge needs --from <shard out dir>...'));
-      const corpus = loadCorpus(def.benchmark);
+      // RS1 kept cells load only the kept conversations the shards staged; later slots may never have been minted.
+      const corpus = loadCorpus(def.benchmark, undefined, def.kept_units ? new Set(from.flatMap(f => [...gatherStaging(def.id, [f]).keys()])) : undefined);
       const selected = selectCellQuestions(corpus.questions.filter(q => splitConversations(def.benchmark, def.split, corpus).has(q.conversation)), def.selection);
       const capabilities = JSON.parse(readFileSync(join(from[0], 'cells', def.arms[0].cell_id, 'receipt.json'), 'utf8')).system.capabilities as CapabilityRecord;
       const configs = new Map(def.arms.map(a => { const t = readFileSync(join(from[0], 'cells', a.cell_id, 'run-config.json'), 'utf8'); writeAtomic(join(out, 'cells', a.cell_id, 'run-config.json'), t); return [a.id, { text: t, sha: sha256(t) }]; }));

@@ -2,6 +2,165 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.176] - 2026-11-08
+
+### RS1 is preregistered again as one claim: is gbrain within 3.5 points of the two leading memory servers (GST-1886)
+
+- **What it will test.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` asks whether gbrain at its `stable`
+  tag (`27f8b9d6`), reading 8,000 tokens of memory, is at most 3.5 points behind both the memory-bank server and the
+  extract-first server on up to 33 newly minted, sealed BEAM-1M conversations, under BEAM's judge and frontier judges.
+  It is a non-inferiority test, so all four one-sided 95% lower bounds must sit above -3.5. Nothing has been minted and no
+  RS1 cell has run.
+- **The harness.** `eval/runner/q1/cells/rs1-cells.json` (from `bun eval/runner/q1/cells/rs1.ts`) holds the four
+  counted cells, the four stage 1 cells and particle-1's re-read plans. The `beam-rs1` loader reads the custodian's
+  kept list from the filled manifest across 48 mint slots, and cells run in launch units of five kept conversations.
+  `eval/runner/rs1/iut.ts` is the decision rule, `power.ts` the power model and pilot sizing, `pricing.ts` the price and
+  the $2,300 check-in, and `verdict.ts` the verdict and pilot reports.
+- **What the verdict refuses.** `verdict.ts` reads only receipts that hold exactly the first N_final kept conversations
+  of the filled manifest, from whole launch units (no `--limit`) whose run config and instrument match the committed
+  cell definition, with paid, valid, non-overlapping particle-1 re-reads. A question that one system row lacks is a
+  `row_missing` drop on that side, a failed retrieval counts as 0 in the delivered-context gate, and the first table
+  prints n/a where a unit's meters or a re-read's spend are missing. The pilot refuses a kept list shorter than wave A's 20.
+- **Caps.** The counted block stops at $760.79, 1.5 times its cells' own estimate (the re-reads spend from their own
+  ledgers). Stage 1's $60 covers the dry-run campaign ($55.05) and its re-reads ($4.95) together, and
+  `reread-cell.ts` refuses a stage 1 re-read ledger cap above $4.95.
+
+### The RS1 mint stops answering once the chat passes BEAM's truncation limit (GST-1154, GBEV-36)
+
+- **What it wasted.** The truncate step of `eval/custody/rs1/rs1_mint.py` runs BEAM's `count_chats_tokens` (b2da22e), which keeps a chat's turns in order until the running count (tiktoken's gpt-4o-mini encoding over each turn, for a gemini model) passes 1,040,000 tokens, and drops the rest. Stage 0 measured about 168k tokens a batch on a fixed-code conversation, so the cut falls inside batch 7, and batches 8 to 10, about $10 a conversation at stage 0's $3.47 a batch, were generated and thrown away.
+- **The stop.** BEAM answers batch b from plans 0 to b only (the `previous_plans` loop in `main.answer_generation`), so no later batch feeds a kept turn. Before each answer batch and after the last, the answer step runs BEAM's own `convert_chats_pickle_to_json`, `add_ids_to_chats` and `count_chats_tokens` (with `GEN_MODEL` and `TRUNCATE_TOKENS`, as the truncate step calls it) on a scratch copy of the chat inside custody, and stops once that truncate writes `chat_trunecated.json`. The batches it kept and the turns in the last one are read from that file. BEAM's printed count is recorded for information only. A rerun of a chat that has already passed the limit answers nothing. The check takes about a second a batch. The truncate, probe, select and rubric steps are unchanged, and message ids are still renumbered in chat order.
+- **Where the stop is recorded.** The answer step's manifest entry records `early_stop`: the batches answered and planned, the batch and turn at which BEAM's truncate cuts, the batches and turns it keeps, BEAM's printed count and the limit, or null when the chat never passes the limit. `check-gaps` checks an early-stopped answer step against the batches it answered and prints `early_stop=<batches>` or `early_stop=none` on each answer line. `validate.ts` already counts a conversation complete once its rubric step is done, whatever its batch count.
+- **`rs1_mint.py check-early-stop --out <dir> [--conv cNNN] [--beam-dir <dir>]`** replays the stop on a mint's finished answer steps with no model call. It finds the batch after which the stop would have ended the step, runs chat_json and truncate on the full chat and on that prefix in scratch directories inside the conversation, and prints byte equality and both sha256s for each of the four files truncate writes, counts and hashes only. It exits 1 when a file differs. Run it with the mint's venv python, `<dir>/tooling/venv/bin/python`.
+- **Tests.** `test/eval/custody-rs1-early-stop.test.ts` checks keylessly, with a stubbed BEAM, that a chat passing the limit in batch 7 requests no later batch (on main it requested batches 8 to 10), that the stop is recorded, that a rerun answers nothing with or without the manifest entry, that a chat that never passes answers all 10 batches, that `check-gaps` passes and that `validate.ts` loads the conversation as complete. Where a BEAM checkout and venv exist (`RS1_BEAM_DIR`, `RS1_BEAM_PYTHON`), it also runs BEAM's own code and tokenizer on 80-turn chats: `chat_trunecated.json`, `chat_trunecated.pickle`, `plan_new_trunecated.pickle` and `plan_new_trunecated.txt` come out byte-identical for the early-stopped chat and the full one with the cut at batch 7's first, last and fourth turn, and a chat that never passes the limit writes no truncated files and the same `chat.json`. CI's test shards have neither, so they skip that block. The stub BEAM in `test/eval/custody-rs1-gap-check.test.ts` gains the chat_json and truncate calls the answer step now makes, and its `check-gaps` line the `early_stop` field.
+- **Cost.** Stage 0 projected the mint at about $42.78 a conversation without the stop and about $32.10 with it. c003's finished run measures where the cut actually falls. RS1's pricing (`eval/runner/rs1/pricing.ts`) is updated on its own branch.
+
+### beam-checkout.sh replaces a stale BEAM directory only when it is a real git directory (GST-1154)
+
+- **Replacing a stale checkout deletes only a real git directory.** `beam-checkout.sh` strips trailing slashes from `<dir>`, then deletes a directory made from another path list, or a full checkout from before F28, only when it is not a symlink, `pwd -P` does not resolve it to `/`, and it holds `.git`. Anything else is refused and nothing in it is deleted, so a wrong `<dir>` can't lose files. The same check guards the refusal that deletes a checkout holding an excluded file, and stripping the slash closes the bypass where `link/` passed the symlink test. `test/eval/custody-rs1.test.ts` checks each case on disk: a directory without `.git` and a symlink, with or without a trailing `/`, keep their contents; `/` and a path resolving to it are refused before any `rm`; and a stale checkout whose mark names another list is still replaced.
+
+## [0.10.175] - 2026-11-08
+
+### The offline skill ranker eval fails its preregistered bars on the no-skill gate (GST-1860)
+
+- **What it measures.** `docs/benchmarks/2026-11-07-skill-ranker-offline.md` tests whether a word-matching ranker can
+  pick an acceptable skill from catalogs of 250, 750 and 1,500 public skills for 300 synthetic turns, and whether a
+  "no skill applies" gate can tell when none fits. Labels come from a blind judge, and the test split was frozen by hash
+  before scoring. Spend was $11.07 of a $50 cap.
+- **What it found.** As preregistered, Step 1 fails: no deployable arm passes, because the preregistered gate hides
+  every skill turn and the repaired gate still fails bar 1 at 250 and 750 skills and the false-suggestion spread bar.
+  With the gate off, BM25F over name, description and a 4 KB body slice puts an acceptable skill in its top 5 on 48%,
+  52% and 58% of skill turns, 14.8 to 40.0 points above the best static list at matched tokens. The R48 verdict is
+  FIX-METHOD, with the word-matching gate a CUT-CANDIDATE.
+- **How to rerun it.** Scripts, frozen data, results and licences are in `docs/benchmarks/2026-11-07-skill-ranker-offline/`.
+  Rescoring is free and refuses a test file whose hash changed.
+
+## [0.10.174] - 2026-11-08
+
+### Where four coding harnesses stop listing every installed skill (GST-1860)
+
+- **What it measures.** `docs/benchmarks/skill-listing-truncation.md` records how the skill listing that Claude Code
+  2.1.312, Codex 0.165.0, OpenClaw 2026.10.6 and Hermes v2026.9.24 put in their own prompt changes as a catalog grows from
+  50 to 1,500 synthetic skills: the names listed, the descriptions cut and the listing's size. Each harness ran one turn
+  against a local capture server, so no model was called.
+- **What it found.** All four list skills alphabetically, and all four cut descriptions, drop names, or both, at 300
+  skills or fewer. Claude Code and Codex meet the plan's preregistered rule for a per-turn resolver hook.
+- **How to rerun it.** The catalog generator, capture server, runner and per-harness results are in
+  `docs/benchmarks/skill-listing-truncation/`. Its README says how to rerun with the pinned versions, one run at a time.
+
+## [0.10.173] - 2026-11-08
+
+### Live recall phase 2: a preregistered harness for whether gbrain retrieval changes answers (GBEV-46)
+
+- **What it measures.** `eval/runner/live-recall/tasks.ts` sends each private task, in an exact and a paraphrased form,
+  to claude-opus-5-5, particle-1 and gpt-6.1-sol in four arms: no retrieval (A), gbrain's own `query`, `search` and
+  `get_page` (B), a summariser with B's tools in front of a tool-less answerer (C), and the top five pages of one search
+  pasted in (D). A judge from another family (gpt-6.1-sol for Opus and particle-1, claude-opus-5-5 for Sol; particle-1
+  never judges) grades each answer against Wintermute's gold facts and checks every cited page against a snapshot taken
+  when the answer was given. An inline `[x]` counts as a citation only when x holds a `/` or names a page the episode
+  saw, so a note such as `[TBD]` is not one. The [preregistration](docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md) fixes four
+  Holm-corrected primaries on the paraphrase form (B minus A on correct, C minus B on correct and grounded, for Opus and
+  particle-1), the prompts and judge prompt verbatim, a $360 starting cap for the counted run and a cost gate. No counted
+  run has happened.
+- **Privacy.** Every gbrain read runs as gbrain's untrusted remote caller (`remote: true` through the MCP dispatcher), so
+  gbrain hides pages flagged private and unsafe chunks from the models and the judge. The runner deletes
+  `GBRAIN_REMOTE_PRIVATE_PAGES` from its process and refuses a brain whose config relaxes it (`LR_PRIVACY_RELAXED`),
+  at the start, before every task and after every episode, writing nothing for that episode. gbrain caches the setting
+  for 30 seconds, so pages it serves inside that window can reach a model before the runner notices. B and C's tools
+  carry no `source_id` or `source_ids` and D's search is scoped the same way, so every read stays in the reader's own
+  source. The freeze drops tasks whose gold page a remote caller cannot open there, records only the count, and prints
+  `gold pages reachable from the reader's source: k of n`; a gold page that lives only in another source stops the
+  freeze, or the run, with `LR_GOLD_OUT_OF_SOURCE` before anything is written. A freeze that keeps fewer than 100
+  tasks prints a notice to replace tasks and freeze again before accepting lower power; under 60 still exits 5.
+- **Money.** Every request, gbrain's embeddings and rerank calls included, goes through the budget ledger's paid-request
+  guard. A refused reservation is a cap stop (`LR_CAP_STOP`, exit 6), including a refusal inside an embedding, which
+  gbrain would otherwise absorb as a keyword-only search. A cap stop pauses the run at its cap instead of ending it
+  (Garry, 2026-11-07: "Eh don't cut corners to stay just under the limits we treat it as a guideline"): once GBEV-3
+  extends the cap, `--resume --window-note <extension id> --budget-usd <new cap>` (or `tasks.ts judge` with the same two
+  flags) raises the ledger run's budget through the ledger, records the extension in `run.json` and in the scorecard's
+  run identity (`final_cap_usd`, `cap_extensions`), and reruns only the episodes the cap refused. Each run directory has
+  its own ledger run, so every cost sum (the scorecard's ledger total, `cap-stop.json`, the `LR_CAP_STOP` line and the
+  final ledger line) counts that directory's spend across all its sessions and nothing else on the ledger. The
+  paraphrase pass runs before the exact pass, so a cap stop cannot cut a primary. `tasks.ts estimate` projects the
+  counted cost from the smoke and stops with `LR_COST_GATE` past 75% of the cap.
+- **Errors.** Only a model-caused 400 counts as a no-answer, and the scorecard shows each cell's count of them. A
+  provider that refuses the key, the model or the account (401, 403, 404, another 4xx, a credit or billing 400,
+  OpenAI's 429 `insufficient_quota` after the retries, or particle-1's own 402 for an empty prepaid balance) on an
+  answer, summary or judge call stops the run with `LR_PROVIDER_REJECTED` (exit 3) and no record, so `--resume`
+  reruns the episode; a metering proxy's 402 stays a cap stop. A network failure, an unreadable response or a
+  non-retryable 5xx is a harness error that reruns; particle-1 requests that may have billed stay `timed_out` and are
+  never resent. A B, C or D episode whose searches report a failure stage, or in B and C return no meta, is degraded
+  whatever its stop, unless it timed out or hit a harness error. An episode that degrades sends the public probe again,
+  and if the probe degrades too the run stops (`LR_EMBEDDING_UNAVAILABLE` or `LR_ARM_PREFLIGHT`) with that episode
+  unwritten, so a refused embedding or rerank key leaves no degraded records behind. A judge failure other than a cap
+  stop during `tasks.ts judge` stops new judge calls and is raised only after the calls in flight finish, so the
+  paid-request guard outlives every call. A records file whose last record lost its newline gets one before the next
+  append. A `--resume` whose harness digest, gbrain version or commit, schema version, barrier kind, reader's source,
+  configured retrieval settings, models, arms, forms or kept tasks differ from the first session stops with
+  `LR_FREEZE_MISMATCH`.
+- **Custody.** `task-scorecard.ts` writes `live-recall-task-scorecard/v1` only after a structural allowlist check and a
+  needle scan over every task form, gold fact, task id and slug the run saw.
+- **Cat 40 loop.** An opt-in `openaiStore: false` sends `store: false`, asks for encrypted reasoning items and resends
+  the accumulated input instead of `previous_response_id`. With it unset, request bodies are unchanged (the existing
+  byte-identity test passes). With `classifyStops` on, a run that ends on a provider error records its status and
+  whether it refused credit or billing (`provider_error`); OpenAI's 429 `insufficient_quota` records it too, and its
+  stop stays `harness_error`.
+- **Fixture and tests.** `eval/data/live-recall-v1/tasks.jsonl` holds the twenty public questions as tasks plus one whose
+  gold page (`phase2-pages/notes/board-compensation.md`) is flagged private. `test/eval/live-recall-tasks.test.ts` runs the
+  whole harness keyless with scripted providers behind the guard, including each provider-error path, a privacy
+  relaxation during the run, a resume with changed identity, a gold page in a second source, a failed search before a
+  turn cap, the citation rule, a judge key refused while re-judging, a records file cut before its last newline, a cap
+  stop paused and continued past an extension without re-answering, a cap stop while judging resumed judge-only, and cost
+  sums that leave out a second run directory on the same ledger.
+  `brain.ts` gains nine abort codes; RUN-KIT and SCORECARD gain phase 2 sections.
+
+## [0.10.172] - 2026-11-07
+
+### Live recall batch 2: results, and a preflight probe that stays inside gbrain's keyword bound (GBEV-43)
+
+- **Results.** [Batch 2 findings](docs/benchmarks/2026-11-07-live-recall-batch2.md): 50 new questions run on Garry's
+  brain on gbrain 0.60.593.0. Both preregistered comparisons hold. On paraphrases, vectors lift the lexical hybrid from
+  16% to 34% (+18, interval 4 to 32, Holm p 0.036), and configured search lifts it to 48% (+32, interval 16 to 48, Holm
+  p 0.0024). Configured search finds the page in its top five for 68% of forms, with 88% exact and 48% paraphrased. Its
+  paraphrase gap is 40 points, which went to GBRA-108 as an observation. Batch 1's all-forms P1 doesn't replicate (+6,
+  interval −4 to 16; R48 KEEP).
+- **Secondaries.** The same questions on 0.60.577.0 give identical success@5 in every arm and form, so the upgrade
+  changed nothing measurable. Pooled with batch 1 on 0.60.577.0 (100 questions), vectors' paraphrase gain is 20 points
+  (10 to 30).
+- **Scorecards.** `docs/benchmarks/2026-11-07-live-recall-batch2/` holds both runs' scorecards, the pooled analysis
+  and the version comparison. All of them pass `validateScorecard`.
+- **Preregistration.** The batch 2 amendment records the probe change, plus the counted run's commit (`bbde967d`) and
+  harness digest, written before the run. Batch 1's findings and the docs index point at the batch 2 results.
+- **The probe.** `PREFLIGHT_PROBE` is now `zqxjvk wfpqyz`. The old probe, `live-recall arm preflight probe`, shared
+  common words with Garry's brain. On gbrain 0.60.593.0 it stopped two attempts with
+  `LR_ARM_PREFLIGHT: configured_window degraded (keyword_arm_failed)` before any question ran. The first attempt's log
+  shows its all-time windowed keyword statement hitting gbrain's keyword statement bound (8 s by default). The second
+  started with no gbrain job active. Made-up words are rare enough that the keyword, title and windowed statements find
+  nothing or next to nothing through the index. Each arm's search statements still run, so a missing grant still fails
+  the preflight, and the reranker still runs on the vector leg's candidates. A keyless test checks that neither word
+  appears in any fixture page or question. RUN-KIT's step 2 describes the probe, and its `LR_ARM_PREFLIGHT` entry says
+  `keyword_arm_failed` can also be the keyword statement timeout and how to tell the two apart. The probe never
+  counts.
+
 ## [0.10.171] - 2026-11-07
 
 ### Refresh barrier Amendment 1: harness fixes, the Part C runner and the B2 ledger path (GBEV-44)

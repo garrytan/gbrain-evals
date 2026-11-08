@@ -1,7 +1,8 @@
 # Live recall on Garry's brain: preregistration (phase 1)
 
 This fixes the method, comparisons and decision rules for each live-recall question set before that set is searched.
-It reports no result; batch 1's results are in the [batch 1 findings](../2026-11-06-live-recall-batch1.md). Batch 1's
+It reports no result; batch 1's results are in the [batch 1 findings](../2026-11-06-live-recall-batch1.md) and batch
+2's in the [batch 2 findings](../2026-11-07-live-recall-batch2.md). Batch 1's
 sample size (50 questions), question file hash and minimum detectable difference are under
 [Frozen sample](#frozen-sample), taken from Wintermute's freeze output before the counted run. A second, independent
 question set, batch 2, runs under the [batch 2 amendment](#batch-2-amendment), fixed before that set was frozen; its
@@ -276,6 +277,14 @@ time_window question.
 changes no counted number. It stops a run like batch 1's first attempt, which lost every hybrid-search arm to a missing
 grant, before the run uses the question set.
 
+**Preflight probe change** (2026-11-07, before batch 2's counted run). The counted run on 0.60.593.0 stopped twice at
+the arm preflight, at 18:54 and 19:21 UTC, with `configured_window degraded (keyword_arm_failed)`, and no question ran
+in either attempt. The first attempt's log shows the probe's all-time windowed keyword statement hitting gbrain's own
+keyword statement bound (`search.keyword_statement_timeout_ms`, 8 s by default); the second started with no gbrain job
+active. The probe changed from `live-recall arm preflight probe` to two made-up words, `zqxjvk wfpqyz`. The probe never
+counts, and the arms, questions, metrics and decision rules are unchanged. The batch 2 run at `52b9ccae` used the old
+probe, at gbrain-evals `07bed75d`.
+
 **Synopsis coverage.** GBRA-295 is to send, as aggregates, the share of the brain's chunks that carry `tokenmax`'s
 per-chunk synopsis vectors and which of its triggers set `keyword_candidates_incomplete`. The batch 2 report carries
 them as a note; no arm is added.
@@ -323,6 +332,13 @@ Wintermute's notes on the sample, aggregates only:
 - Wintermute again rates some cross_source pairings as weak; the count is reported with the results.
 - Its own checks before the freeze: every gold slug resolves, every exact form's key tokens are in its gold page, no
   paraphrase contains them, and ids are unique.
+
+**Batch 2 counted run commit** (recorded 2026-11-07, before the counted run on 0.60.593.0). The run uses gbrain-evals
+`bbde967d458f6f2a9f0d6ea6e1ab647895db1fff` on a clean tree, which the scorecard records as `runner_commit` and
+`runner_dirty`, and loads gbrain at tag v0.60.593.0 (`27f8b9d6`). Harness digest:
+`aee6a663997ce893ee8e10018d7dd45d8f7e88d785b8c1cbeaf6fba658d98549`, the sha256 of the output of
+`git ls-tree -r bbde967d458f6f2a9f0d6ea6e1ab647895db1fff -- eval/runner bun.lock` (537 entries: every runner file and
+the lockfile).
 
 Phase 2 stays held until batch 2 lands and GBRA-108 answers on the paraphrase gap.
 

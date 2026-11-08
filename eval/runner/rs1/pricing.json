@@ -1,0 +1,99 @@
+{
+  "schema": "gbrain-evals/rs1-pricing/v1",
+  "rates": {
+    "mint_usd": 28.85,
+    "regeneration_usd": 1,
+    "yield": 0.85,
+    "mtok_per_conversation": 1.07,
+    "vcpu_hour_usd": 0.05,
+    "questions_per_conversation": 20,
+    "read_usd_per_question": 0.083045,
+    "floor_read_usd_per_question": 0.019119999999999998,
+    "frontier_judge_usd": 0.034325961829748564,
+    "bridge_judge_usd": 0.0028,
+    "query_usd_per_question": 0.005,
+    "read_vm_usd_per_question": 0.004,
+    "readers": 3,
+    "systems": {
+      "gbrain": {
+        "api_usd_per_mtok": 1.5776000000000001,
+        "vm_hours_per_mtok": 1.92,
+        "vcpu": 4
+      },
+      "memory-bank": {
+        "api_usd_per_mtok": 1.7372,
+        "vm_hours_per_mtok": 2.32,
+        "vcpu": 16
+      },
+      "extract-first": {
+        "api_usd_per_mtok": 2.772,
+        "vm_hours_per_mtok": 1.74,
+        "vcpu": 16
+      }
+    },
+    "stage1_overhead_usd": 5,
+    "reserve": 0.1,
+    "crew_usd": {
+      "prereg_pr": 150,
+      "run_orchestration": 100,
+      "custodian": 40,
+      "results_pr": 40,
+      "plan": 20
+    },
+    "crew_cap_usd": 550
+  },
+  "per_conversation": 58.27,
+  "stage1": 51.31,
+  "crew_usd": 350,
+  "central": {
+    "mint": 983.29,
+    "ingest_api": 182.36,
+    "ingest_vm": 108.81,
+    "reads": 154.64,
+    "judges": 187.11,
+    "floor": 15.41,
+    "stage1": 51.31,
+    "n": 28,
+    "paid": 1682.94,
+    "expected_all_in": 2032.94,
+    "projection": 2201.23
+  },
+  "cap": {
+    "mint": 1158.88,
+    "ingest_api": 214.92,
+    "ingest_vm": 128.25,
+    "reads": 182.25,
+    "judges": 220.53,
+    "floor": 18.16,
+    "stage1": 51.31,
+    "n": 33,
+    "paid": 1974.3,
+    "expected_all_in": 2324.3,
+    "projection": 2521.73
+  },
+  "expected": {
+    "n": 28,
+    "paid": 1682.94,
+    "crew": 350,
+    "all_in": 2032.94
+  },
+  "ceiling": {
+    "n": 33,
+    "paid": 1974.3,
+    "reserve": 197.43,
+    "crew_cap": 550,
+    "all_in": 2721.73
+  },
+  "checkin": {
+    "planned_n": 28,
+    "progress": {
+      "spent_usd": 0,
+      "kept_done": 0,
+      "stage1_done": false,
+      "crew_remaining_usd": null
+    },
+    "projection": 2201.23,
+    "line": 2300,
+    "over": false
+  }
+}
