@@ -704,3 +704,41 @@ count, seed range, cap, arm or verdict rule.
   trial per engine and arm (seed 1) passed on a Ubicloud standard-16 VM, the counted shape, after a first VM request
   found no capacity. The smoke's four quiet seeds per engine read -42 ms on Postgres and +9.3 ms on PGLite, too few
   seeds to read the latency gate, which the counted quiet block decides.
+
+### Amendment 5, 2026-11-08: B1 at G, and the rule for its one binding rerun
+
+Recorded before the binding B1 run. It changes no threshold, count, seed range, cap or arm. It sets aside one B1 reading
+as a method fault and fixes how the one rerun runs (GBEV-3, 2026-11-08).
+
+- **First B1 reading at G (FIX-METHOD, reported, not scored):** #384 at `8dc1cbd6`, digest `500cc5ba4b97`, 15:19:13 to
+  15:20:40 UTC. Every score cell was identical off and on. Cat 18 median `query_ms`, off/on: OpenAI 54/64 (ratio 1.19),
+  Voyage 35/59 (ratio 1.69, above the 1.2 gate). The run overlapped this machine creating the four counted Part A VMs
+  and syncing code to them, so GBEV-3 ruled the reading a method fault, not a result about gbrain.
+- **Four uncounted diagnostics** on the same machine, idle, from 15:31 to 15:36 UTC: medians off/on of OpenAI 39/39,
+  41/39, 39/40 and 39/39, and Voyage 36/36, 35/35, 35/41 and 37/36 (ratios 0.95 to 1.17), with identical scores each
+  time. They are development evidence and are never scored.
+- **The binding run:** exactly one fresh counted B1 run, after the counted Part A finishes and its VMs are deleted, on
+  this machine with the Postgres container stopped and nothing else running, from a pushed #384 head with digest
+  `500cc5ba4b97`. It runs under `scripts/refresh-barrier-b1-guard.ts`, which writes `guard.json` and `samples.jsonl`
+  beside the result: `bun scripts/refresh-barrier-b1-guard.ts --out <dir> --max-wait-min 60 -- bun --no-env-file
+  eval/runner/refresh-barrier/retrieval.ts --gbrain-root <G> --work <dir> --stub-embed --label g`.
+- **Start:** the guard starts B1 only once the 1-, 5- and 15-minute load averages in `/proc/loadavg` are all below 0.5,
+  polling every 10 s for up to 60 minutes. If the machine doesn't get there, B1 doesn't start, and nothing is read.
+- **Load record:** the guard records the three load averages once a second and reports them immediately before and after
+  each arm (the samples just before the arm's first sample and just after its last; the start check's reading when the
+  arm opens the run, and the reading at exit when it closes it). They are not held to 0.5 once B1 starts, because B1's
+  own process lifts the 1-minute average to about 1.0 within a minute on an otherwise idle machine.
+- **Contention test:** once a second the guard counts foreign runnable tasks. B1's process tree is the `retrieval.ts`
+  process the guard spawns plus every process whose chain of parents (field 4 of `/proc/<pid>/stat`) reaches it, rebuilt
+  at each sample. A foreign runnable task is a thread (`/proc/<pid>/task/<tid>/stat`) in state `R` whose process is
+  neither in that tree nor the guard's own process; kernel threads count as foreign. A sample's arm is `on` while a
+  process in the tree runs the switch probe (`bun -e`) or the Cat 18 or Cat 26 runner with `GBRAIN_REFRESH_BARRIER=1` in
+  its environment, `off` while one runs without it, and empty otherwise; the guard checks an environment only for that
+  one entry and records nothing from it.
+- **Validity:** the run is invalid if, in either arm (from its first sample to its last), foreign runnable tasks appear
+  in 3 or more consecutive samples. An invalid run is rerun once, for that reason only.
+- **Binding:** a valid run decides B1. If it misses the 1.2 latency gate or a score margin, B1 fails and the verdict
+  says so, with no rerun for any other reason. The gate, the 25 queries and the median stay as preregistered.
+- **Reporting:** the findings report all five readings: the first reading as FIX-METHOD, the four diagnostics marked
+  uncounted, and the binding run, with one limitation line: the gate is a single median of 25 queries per arm, so one
+  reading is noisy.
