@@ -1,5 +1,5 @@
 {
-  "schema": "gbrain-evals/rs1-pricing/v1",
+  "schema": "gbrain-evals/rs1-pricing/v2",
   "rates": {
     "mint_usd": 28.85,
     "regeneration_usd": 1,
@@ -9,8 +9,20 @@
     "questions_per_conversation": 20,
     "read_usd_per_question": 0.083045,
     "floor_read_usd_per_question": 0.019119999999999998,
-    "frontier_judge_usd": 0.034325961829748564,
+    "gating_judges": [
+      {
+        "judge": "openai:gpt-6-astra",
+        "readers": 1,
+        "usd": 0.1143
+      },
+      {
+        "judge": "anthropic:claude-opus-5-5",
+        "readers": 2,
+        "usd": 0.04572
+      }
+    ],
     "bridge_judge_usd": 0.0028,
+    "judge_check_calls": 826,
     "query_usd_per_question": 0.005,
     "read_vm_usd_per_question": 0.004,
     "readers": 3,
@@ -42,47 +54,67 @@
     },
     "crew_cap_usd": 550
   },
-  "per_conversation": 58.27,
-  "stage1": 51.31,
+  "per_conversation": 64.44,
+  "astra_per_conversation": 6.86,
+  "stage1": 63.64,
+  "judge_check": {
+    "usd": 44.83,
+    "window_cap_usd": 67.24,
+    "calls_per_judge": 826
+  },
   "crew_usd": 350,
   "central": {
     "mint": 983.29,
     "ingest_api": 182.36,
     "ingest_vm": 108.81,
     "reads": 154.64,
-    "judges": 187.11,
+    "judges": 167.73,
+    "judges_astra": 192.02,
     "floor": 15.41,
-    "stage1": 51.31,
+    "stage1": 63.64,
+    "judge_check": 44.83,
     "n": 28,
-    "paid": 1682.94,
-    "expected_all_in": 2032.94,
-    "projection": 2201.23
+    "paid": 1912.74,
+    "paid_other": 1662.17,
+    "astra_line": 250.57,
+    "expected_all_in": 2262.74,
+    "projection": 2178.39,
+    "astra_projection": 275.63
   },
   "cap": {
     "mint": 1158.88,
     "ingest_api": 214.92,
     "ingest_vm": 128.25,
     "reads": 182.25,
-    "judges": 220.53,
+    "judges": 197.68,
+    "judges_astra": 226.31,
     "floor": 18.16,
-    "stage1": 51.31,
+    "stage1": 63.64,
+    "judge_check": 44.83,
     "n": 33,
-    "paid": 1974.3,
-    "expected_all_in": 2324.3,
-    "projection": 2521.73
+    "paid": 2234.93,
+    "paid_other": 1950.07,
+    "astra_line": 284.86,
+    "expected_all_in": 2584.93,
+    "projection": 2495.08,
+    "astra_projection": 313.35
   },
   "expected": {
     "n": 28,
-    "paid": 1682.94,
+    "paid": 1912.74,
+    "astra_line": 250.57,
+    "other_line": 1662.17,
     "crew": 350,
-    "all_in": 2032.94
+    "all_in": 2262.74
   },
   "ceiling": {
     "n": 33,
-    "paid": 1974.3,
-    "reserve": 197.43,
+    "paid": 2234.93,
+    "astra_line": 284.86,
+    "other_line": 1950.07,
+    "reserve": 223.49,
     "crew_cap": 550,
-    "all_in": 2721.73
+    "all_in": 3008.42
   },
   "checkin": {
     "planned_n": 28,
@@ -92,8 +124,14 @@
       "stage1_done": false,
       "crew_remaining_usd": null
     },
-    "projection": 2201.23,
+    "projection": 2178.39,
     "line": 2300,
-    "over": false
+    "over": false,
+    "counts": "every line but the Astra line"
+  },
+  "astra_line": {
+    "planned_n": 28,
+    "projection": 275.63,
+    "counts": "the whole judge check and gpt-6-astra's share of counted judging; outside the check-in"
   }
 }

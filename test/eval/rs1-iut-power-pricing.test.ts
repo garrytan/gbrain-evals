@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { COMPARISONS, conversationDifferences, decide, dropValidity, GATING, questionScores, RS1_MARGIN, tLowerBound, tQuantile, worstCase, type ComparisonKey, type QuestionInput } from '../../eval/runner/rs1/iut.ts';
 import { analyticN, corr2, corr4, jointN, jointPower, MC_TOLERANCE, minMargin, pilotSize, RHO_JUDGE, SD10, sdAtItems, sdsAt, simulatedPass, TAUS } from '../../eval/runner/rs1/power.ts';
-import { priceAt, pricing, PRICING_PATH, STAGE0_RATES, unitCosts } from '../../eval/runner/rs1/pricing.ts';
+import { ASTRA_JUDGE, GBEV48_RATES, judgeCheckUsd, priceAt, pricing, PRICING_PATH, STAGE0_RATES, unitCosts } from '../../eval/runner/rs1/pricing.ts';
+import { frontierJudgeOf, rs1GatingJudgeUsd } from '../../eval/runner/q1/cells/definitions.ts';
 import { analyze, READERS, type VerdictInput } from '../../eval/runner/rs1/verdict.ts';
 
 const ROOT = join(import.meta.dir, '..', '..');
@@ -159,21 +160,54 @@ describe('power.ts and verdict.ts share iut.ts', () => {
 
 describe('pricing.ts', () => {
   test("reproduces GBEV-48's option 2b at its inputs", () => {
-    const u = unitCosts(STAGE0_RATES);
+    const u = unitCosts(GBEV48_RATES);
     expect(u.per_conversation).toBeCloseTo(58.27, 2);
     expect(u.stage1).toBeCloseTo(51.31, 2);
-    const p = pricing();
+    const p = pricing(28, GBEV48_RATES);
     expect(Math.abs(p.expected.all_in - 2032.94)).toBeLessThan(3);
     expect(Math.abs(p.ceiling.all_in - 2721.73)).toBeLessThan(3);
     expect(p.checkin.over).toBe(false);
   });
 
   test('the check-in projection is all-in and trips past $2,300', () => {
-    expect(priceAt(28).projection).toBeCloseTo(1682.94 * 1.1 + 350, 1);
-    expect(pricing(29).checkin.over).toBe(false);
-    expect(pricing(30).checkin.over).toBe(true);
-    const later = priceAt(28, STAGE0_RATES, { spent_usd: 500, kept_done: 5, stage1_done: true, crew_remaining_usd: 200 });
-    expect(later.projection).toBeCloseTo(500 + unitCosts(STAGE0_RATES).per_conversation * 23 * 1.1 + 200, 1);
+    expect(priceAt(28, GBEV48_RATES).projection).toBeCloseTo(1682.94 * 1.1 + 350, 1);
+    expect(pricing(29, GBEV48_RATES).checkin.over).toBe(false);
+    expect(pricing(30, GBEV48_RATES).checkin.over).toBe(true);
+    const later = priceAt(28, GBEV48_RATES, { spent_usd: 500, kept_done: 5, stage1_done: true, crew_remaining_usd: 200 });
+    expect(later.projection).toBeCloseTo(500 + unitCosts(GBEV48_RATES).per_conversation * 23 * 1.1 + 200, 1);
+  });
+
+  // Value: protects=the $2,300 check-in and the judge check's window cap; fails_when=Astra's judging is priced at another judge's rate, the judge check or Astra's share leaks into the check-in, or Opus's and the bridge's counted judging leave it; why_new=R78 point 9 (GBEV-3, 2026-11-08); seam=none; no_claim=the judges' real token counts
+  test('R78 point 9: the Astra line holds the whole judge check and Astra\'s counted share, at Astra\'s price, outside the check-in', () => {
+    const readers = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'];
+    expect(STAGE0_RATES.gating_judges).toEqual([...new Set(readers.map(frontierJudgeOf))].sort((a, b) => (a === ASTRA_JUDGE ? -1 : b === ASTRA_JUDGE ? 1 : 0)).map(j => ({ judge: j, readers: readers.filter(r => frontierJudgeOf(r) === j).length, usd: rs1GatingJudgeUsd(j) })));
+    expect(rs1GatingJudgeUsd(ASTRA_JUDGE)).toBeCloseTo(3 * (900 * 10 + 582 * 50) / 1e6, 10);
+    expect(judgeCheckUsd(STAGE0_RATES)).toBeCloseTo(826 * ((900 * 10 + 582 * 50) / 1e6 + (900 * 4 + 582 * 20) / 1e6 + 0.0028 / 3), 6);
+    const u = unitCosts(STAGE0_RATES);
+    expect(u.astra_per_conversation).toBeCloseTo(3 * 20 * rs1GatingJudgeUsd(ASTRA_JUDGE), 10);
+    expect(u.lines.judges).toBeCloseTo(3 * 20 * (2 * rs1GatingJudgeUsd('anthropic:claude-opus-5-5') + 3 * 0.0028), 10);
+    const at = priceAt(28);
+    expect(at.astra_line).toBeCloseTo(28 * u.astra_per_conversation + 2 * u.astra_per_conversation + u.judge_check, 1);
+    expect(at.paid).toBeCloseTo(at.astra_line + at.paid_other, 1);
+    expect(at.projection).toBeCloseTo(at.paid_other * 1.1 + 350, 1);
+    const base = { kept_done: 5, stage1_done: true, crew_remaining_usd: 200 };
+    expect(priceAt(28, STAGE0_RATES, { ...base, spent_usd: 600, astra_spent_usd: 100 }).projection).toBe(priceAt(28, STAGE0_RATES, { ...base, spent_usd: 500 }).projection);
+    expect(priceAt(28, STAGE0_RATES, { ...base, spent_usd: 600, astra_spent_usd: 100, judge_check_done: true }).astra_projection).toBeCloseTo(100 + 23 * u.astra_per_conversation * 1.1, 1);
+    const p = pricing();
+    expect(p.judge_check).toEqual({ usd: Math.round(u.judge_check * 100) / 100, window_cap_usd: Math.round(u.judge_check * 1.5 * 100) / 100, calls_per_judge: 826 });
+    expect(p.checkin.projection).toBe(at.projection);
+    expect(p.expected.all_in).toBeCloseTo(at.paid + 350, 1);
+  });
+
+  test('--judge-check-done needs --astra-spent-usd, which may not pass --spent-usd', () => {
+    const cli = (...args: string[]) => Bun.spawnSync(['bun', 'eval/runner/rs1/pricing.ts', '--n', '28', '--out', '/dev/null', ...args], { cwd: ROOT });
+    const done = cli('--judge-check-done', '--spent-usd', '100');
+    expect(done.exitCode).toBe(2);
+    expect(done.stderr.toString()).toContain('needs --astra-spent-usd');
+    const over = cli('--spent-usd', '100', '--astra-spent-usd', '150');
+    expect(over.exitCode).toBe(2);
+    expect(over.stderr.toString()).toContain('may not pass --spent-usd');
+    expect(cli('--spent-usd', '100', '--astra-spent-usd', '50', '--judge-check-done').exitCode).toBe(0);
   });
 
   test('exits 3 with RS1_CHECKIN past the line', () => {
