@@ -136,3 +136,14 @@ Calibration on the 60 dev turns (catalog 750) ran; no arm has run on a test turn
 4. Secondary verdict: the same four bars, on test plus stress-test (320 turns), also reported for each set alone. It is labelled as amended and post-dev and never replaces the primary verdict.
 
 Budget: about $3 more (writer and one judge pass over 100 turns). Ledger before this amendment: $8.80.
+
+### Amendment 3, 2026-11-07: gate-stress set frozen before any test cell
+
+`scripts/gen-stress.ts` and `scripts/judge-stress.ts` ran as Amendment 2 describes; still no arm has run on a test turn. Hashes (sha256):
+
+- `data/stress-turns.jsonl` `89274b6bc2dff6edbb1e4a37561c6c06c61e8d4bd4ec71f4796c247809cd869f` (100 turns)
+- `results/judge-stress.jsonl` `da2a1e56ab5f829b2a879187077a4767cd75706c202efdc62206dfbd1be7963c`
+- `data/stress-dev.jsonl` `b6a86c4424ec2e6814cc6ab0a6cb08515eb2826a87acc8a10c008ad86372a405` (20 turns)
+- `data/stress-test.jsonl` stress-test.jsonl sha256 a6000dfd6e12c46459efa10988df1f2a169cd1db743ebb7e3d7a249773b3b3ac (80 turns)
+
+Judge outcome: 43 of 45 terse skill turns got an acceptable skill; 39 of 45 long no-skill turns and all 10 long generic turns got none (6 long "no-skill" turns were judged to have a fitting skill, and count as skill turns, as preregistered). Ledger: $11.06.
