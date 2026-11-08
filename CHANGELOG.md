@@ -50,6 +50,11 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Readings follow Holm.** A primary comparison whose interval excludes zero but whose Holm-adjusted p is 0.05 or more
   reads "not significant after correcting for multiple comparisons" (`not_significant_after_correction`), never as a
   measured difference; descriptive comparisons still read from their interval.
+- **Truncation by model and effort, and GBEV-3's waiver.** The 1% truncation rule now applies separately to each judge
+  model's medium-effort counted verdicts and its high-effort labels: a counted-judge split stops a run, and a label
+  split fails the judge check. `--truncation-waiver <note>` on `run`, `judge-check` or `judge` lifts a stop for the
+  truncations recorded so far, only with GBEV-3's note, recorded as `agent:GBEV-3` in `run.json` and the scorecard; the
+  stop re-arms on new truncations, and truncated rows stay judge errors.
 
 ## [0.10.175] - 2026-11-08
 

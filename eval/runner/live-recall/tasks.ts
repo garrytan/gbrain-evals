@@ -10,11 +10,13 @@
  *     --smoke-check <smoke judge-check dir> --gbrain <checkout>@<commit> [--database-url-env ...] [--out <estimate.json>]
  *   bun eval/runner/live-recall/tasks.ts judge-check (--fixture | --tasks <private.jsonl> --freeze <freeze.json> --gbrain ...)
  *     --budget-usd <dollars> --budget-ledger <ledger> [--limit 20] [--out <judge-check dir>] [--resume [--window-note <id>]]
+ *     [--truncation-waiver <GBEV-3 note>]
  *   bun eval/runner/live-recall/tasks.ts run (--fixture | --tasks <private.jsonl> --freeze <freeze.json> --gbrain ...
  *     --judge-check <judge-check.json> [--judge-check-waiver <GBEV-3 note>]) --budget-usd <dollars> --budget-ledger <ledger>
  *     [--forms paraphrase,exact] [--arms A,B,C,D] [--models <ids>] [--limit <tasks>] [--concurrency 4] [--out <run dir>]
- *     [--resume [--window-note <id>]]
+ *     [--resume [--window-note <id>] [--truncation-waiver <GBEV-3 note>]]
  *   bun eval/runner/live-recall/tasks.ts judge <run dir> [--window-note <extension id> --budget-usd <new cap>]
+ *     [--truncation-waiver <GBEV-3 note>]
  *   bun eval/runner/live-recall/tasks.ts audit <run dir> [--n 30]
  *   bun eval/runner/live-recall/tasks.ts score <run dir> [--audit-grades <grades.jsonl>]
  *
@@ -303,6 +305,9 @@ export function loadRecords(path: string): { records: RunRecord[]; torn: number 
 }
 
 /** The run's records by key. Opening ends an unterminated last line, torn or whole, so the next record starts its own line. */
+/** One judge, second-judge or label call as the truncation rule counts it. */
+export interface JudgeCall { judge: string; effort?: string; kind?: string; truncated?: boolean }
+
 export class RecordStore {
   readonly answers = new Map<string, AnswerRecord>();
   readonly judges = new Map<string, JudgeRecord>();
@@ -310,7 +315,7 @@ export class RecordStore {
   readonly labels = new Map<string, JudgeRecord>();
   readonly judges2 = new Map<string, JudgeRecord>();
   /** Every judge, second-judge and label call ever recorded, superseded ones included, for the truncation stop. */
-  readonly calls: Array<{ judge: string; truncated: boolean }> = [];
+  readonly calls: JudgeCall[] = [];
   readonly torn: number;
   constructor(private readonly path: string) {
     const { records, torn } = loadRecords(path);
@@ -322,7 +327,7 @@ export class RecordStore {
   get size() { return this.answers.size; }
   private index(r: RunRecord) {
     if (r.kind === 'answer') { this.answers.set(r.key, r); return; }
-    this.calls.push({ judge: r.judge, truncated: r.truncated === true });
+    this.calls.push({ judge: r.judge, effort: r.effort, kind: r.kind, truncated: r.truncated === true });
     if (r.kind === 'label') this.labels.set(r.key + '|' + r.judge, r);
     else (r.kind === 'judge' ? this.judges : this.judges2).set(r.key, r);
   }
@@ -413,23 +418,43 @@ const needsSecondJudge = (a: AnswerRecord) => a.form === 'paraphrase' && SECOND_
 const labelOrder = (model: string) => [judgeFor(model), ...LABELLERS.filter(l => l !== judgeFor(model))];
 
 /**
- * Stop the check or run once any judge model's truncated calls pass TRUNCATION_CAP of all its calls, earlier attempts at
- * a re-judged answer included, so judging again never clears a stop. While judging,
- * the share is taken of at least `floor` rows, so one truncation among a judge's first calls does not stop a run whose
- * rate cannot be read yet; a finished counted run is checked with floor 1, the plain rate.
+ * Stop the check or run once a judge model's truncated counted-judge calls (judge and second judge, split by model and
+ * effort; labels only fail the judge check) pass TRUNCATION_CAP of all its calls in that split, earlier attempts at a
+ * re-judged answer included, so judging again never clears a stop. While judging, the share is taken of at least
+ * `floor` calls, so one truncation among a judge's first calls does not stop a run whose rate cannot be read yet; a
+ * finished counted run is checked with floor 1, the plain rate. Only GBEV-3's waiver lifts a stop: `waived` holds the
+ * truncations it covered, per model and effort, and the stop re-arms on the next ones past the share.
  */
-export function checkTruncation(rows: Iterable<{ judge: string; truncated?: boolean }>, floor = TRUNCATION_FLOOR): void {
-  const by = new Map<string, { rows: number; truncated: number }>();
+export function checkTruncation(rows: Iterable<JudgeCall>, floor = TRUNCATION_FLOOR, waived: Waived = {}): void {
+  const by = new Map<string, { judge: string; effort: string; rows: number; truncated: number }>();
   for (const r of rows) {
-    const c = by.get(r.judge) ?? { rows: 0, truncated: 0 };
+    if (r.kind === 'label') continue;
+    const effort = r.effort ?? EFFORT, key = r.judge + '|' + effort;
+    const c = by.get(key) ?? { judge: r.judge, effort, rows: 0, truncated: 0 };
     c.rows++;
     if (r.truncated) c.truncated++;
-    by.set(r.judge, c);
+    by.set(key, c);
   }
-  for (const [judge, c] of by) if (c.truncated > TRUNCATION_CAP * Math.max(floor, c.rows)) {
-    throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', judge + ' hit its ' + MAX_OUTPUT_TOKENS + '-token output cap on ' + c.truncated + ' of ' + c.rows + ' judge calls, above ' + 100 * TRUNCATION_CAP + '%');
+  for (const c of by.values()) if (c.truncated - (waived[c.judge]?.[c.effort] ?? 0) > TRUNCATION_CAP * Math.max(floor, c.rows)) {
+    throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', c.judge + ' at effort ' + c.effort + ' hit its ' + MAX_OUTPUT_TOKENS + '-token output cap on ' + c.truncated + ' of ' + c.rows + ' judge calls' + (waived[c.judge]?.[c.effort] ? ' (' + waived[c.judge]![c.effort] + ' waived by GBEV-3)' : '') + ', above ' + 100 * TRUNCATION_CAP + '%');
   }
 }
+
+/** Truncations per judge model and effort, by model then effort. */
+export type Waived = Record<string, Record<string, number>>;
+/** GBEV-3's written note lifting a truncation stop: the truncated counted-judge calls it covers, per model and effort. */
+export interface TruncationWaiver { note: string; by: 'agent:GBEV-3'; at: string; waived: Waived }
+
+/** The waivers so far, plus a new one from --truncation-waiver covering every truncated counted-judge call recorded now. */
+export function truncationWaivers(previous: TruncationWaiver[] | null | undefined, note: string | null | undefined, calls: Iterable<JudgeCall>): TruncationWaiver[] {
+  const out = [...(previous ?? [])];
+  if (note === null || note === undefined) return out;
+  if (!NOTE.test(note)) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', '--truncation-waiver takes GBEV-3\'s note id');
+  const waived: Waived = {};
+  for (const c of calls) if (c.kind !== 'label' && c.truncated) (waived[c.judge] ??= {})[c.effort ?? EFFORT] = (waived[c.judge]?.[c.effort ?? EFFORT] ?? 0) + 1;
+  return [...out, { note, by: 'agent:GBEV-3', at: new Date().toISOString(), waived }];
+}
+const waivedOf = (w: TruncationWaiver[]): Waived => w[w.length - 1]?.waived ?? {};
 
 // ─── run ───────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -448,6 +473,8 @@ export interface RunOptions {
   continuing?: boolean;
   /** A counted run's judge-check.json, and GBEV-3's waiver note when that check did not pass. */
   judgeCheckPath?: string | null; judgeCheckWaiver?: string | null;
+  /** GBEV-3's note lifting an LR_JUDGE_TRUNCATED stop for the truncations recorded so far. */
+  truncationWaiver?: string | null;
 }
 
 interface RunFile {
@@ -462,6 +489,8 @@ interface RunFile {
   judge_check?: Record<string, unknown> | null;
   /** A judge-check run's task counts, one per label-floor step. */
   judge_check_steps?: number[] | null;
+  /** GBEV-3's truncation waivers, oldest first. */
+  truncation_waivers?: TruncationWaiver[];
 }
 
 /** One extension past a cap stop: the cap it lifted, the new cap, GBEV-3's extension id and the cap stop it supersedes. */
@@ -552,7 +581,8 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
   const p = paths(o.out);
   mkdirSync(o.out, { recursive: true, mode: 0o700 });
   const store = new RecordStore(p.records);
-  checkTruncation(store.calls);
+  const waivers = truncationWaivers(existsSync(p.run) ? readRun(o.out).truncation_waivers : null, o.truncationWaiver, store.calls), waived = waivedOf(waivers);
+  checkTruncation(store.calls, TRUNCATION_FLOOR, waived);
   if (existsSync(p.capStop)) extendCap(o.out, o.paid, o.resume ? o.windowNote : null, say);
   if (o.resume && !o.fixture && !o.windowNote && !o.continuing) throw new LiveRecallAbort('LR_RESUME_NEEDS_WINDOW', 'a counted --resume needs --window-note');
   if (store.size > 0 && !o.resume) throw new Error('the run directory already holds records; pass --resume to continue it');
@@ -624,6 +654,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       budget: { runner: o.paid.runner, run_id: o.paid.run.runId, ledger_path: o.paid.ledgerPath, cap_usd: ledgerSpend(o.paid.ledgerPath, o.paid.run.runId).cap_usd, extensions: previous?.budget.extensions ?? [] },
       forms: o.forms, arms: o.arms, models: o.models, judge_check: judgeCheckRef,
       judge_check_steps: o.judgeCheck ? [...new Set([...(previous?.judge_check_steps ?? []), tasks.length])] : null,
+      truncation_waivers: waivers,
     };
     if (previous) {
       const was: Record<string, unknown> = { ...previous.identity, kept_ids: previous.kept_ids, source_id: previous.source_id }, now: Record<string, unknown> = { ...run.identity, kept_ids: run.kept_ids, source_id: run.source_id };
@@ -647,7 +678,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
         store.write(a);
       }
       if (a.status !== 'answered') return;
-      const judged = (r: JudgeRecord) => { store.write(r); checkTruncation(store.calls); };
+      const judged = (r: JudgeRecord) => { store.write(r); checkTruncation(store.calls, TRUNCATION_FLOOR, waived); };
       if (!judgedAfter(a, store.judges.get(a.key))) judged(await judgeEpisode(ctx, task, a, judgeFor(model), 'judge'));
       if (o.judgeCheck) {
         for (const l of labelOrder(model)) if (!stopped() && !judgedAfter(a, store.labels.get(a.key + '|' + l))) judged(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT));
@@ -682,7 +713,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
     run.custody.readonly_verified_end = true;
     run.identity.finished_at = new Date().toISOString();
     writeJson(p.run, run);
-    if (!o.judgeCheck && !halt.cap) checkTruncation(store.calls, 1);
+    if (!o.judgeCheck && !halt.cap) checkTruncation(store.calls, 1, waived);
   } finally {
     refusals.restore();
     await brain.close();
@@ -707,12 +738,14 @@ function runTasksOf(run: RunFile): Task[] {
  * flight finish, so the caller never uninstalls the paid-request guard under a live call. An outstanding cap stop needs
  * an extension, as a --resume does.
  */
-export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) => void, windowNote: string | null = null): Promise<number> {
+export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) => void, windowNote: string | null = null, truncationWaiver: string | null = null): Promise<number> {
   const p = paths(dir);
   const store = new RecordStore(p.records);
-  checkTruncation(store.calls);
+  const waivers = truncationWaivers(readRun(dir).truncation_waivers, truncationWaiver, store.calls), waived = waivedOf(waivers);
+  checkTruncation(store.calls, TRUNCATION_FLOOR, waived);
   if (existsSync(p.capStop)) extendCap(dir, paid, windowNote, say);
   const run = readRun(dir);
+  if (truncationWaiver !== null) { run.truncation_waivers = waivers; writeJson(p.run, run); }
   const tasks = new Map(runTasksOf(run).map(t => [t.id, t]));
   const refusals = watchRefusals();
   const ctx = { limit: limiter(), capCheck: refusals.check };
@@ -721,7 +754,7 @@ export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) =
   const stopped = () => halt.cap !== null || halt.fatal !== null;
   try {
     const todo = [...store.answers.values()].filter(a => a.status === 'answered' && tasks.has(a.task));
-    const write = (r: JudgeRecord) => { store.write(r); judged++; checkTruncation(store.calls); };
+    const write = (r: JudgeRecord) => { store.write(r); judged++; checkTruncation(store.calls, TRUNCATION_FLOOR, waived); };
     await pool(todo, TASK_CONCURRENCY, async a => {
       if (stopped()) return;
       const task = tasks.get(a.task)!;
@@ -751,7 +784,7 @@ export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) =
   }
   if (halt.fatal) throw halt.fatal;
   say(judged + ' judge calls made');
-  if (!run.identity.labellers && !halt.cap) checkTruncation(store.calls, 1);
+  if (!run.identity.labellers && !halt.cap) checkTruncation(store.calls, 1, waived);
   return judged;
 }
 
@@ -799,7 +832,7 @@ export function scoreRunDir(dir: string, opts: { auditGrades?: string } = {}): {
   const { records } = loadRecords(p.records);
   const card = buildTaskScorecard({
     tasks, forms: run.forms, arms: run.arms, models: run.models, records, task_summary: run.task_summary, custody: run.custody,
-    identity: { ...run.identity, final_cap_usd: run.budget.cap_usd, cap_extensions: run.budget.extensions?.length ?? 0 },
+    identity: { ...run.identity, final_cap_usd: run.budget.cap_usd, cap_extensions: run.budget.extensions?.length ?? 0, truncation_waivers: run.truncation_waivers ?? [] },
     stop: existsSync(p.capStop) ? 'LR_CAP_STOP' : null, ledger_usd: ledgerUsd(run.budget), audit: opts.auditGrades ? auditAgreement(dir, opts.auditGrades) : null,
     judge_check: run.judge_check ?? null,
   });
@@ -848,7 +881,7 @@ export function writeJudgeCheck(dir: string) {
     run: {
       started_at: id.started_at, finished_at: id.finished_at, runner_commit: id.runner_commit, runner_dirty: id.runner_dirty, harness_digest: id.harness_digest,
       gbrain_loaded_version: id.gbrain_loaded_version, gbrain_loaded_commit: id.gbrain_loaded_commit, schema_version: id.schema_version, control: id.control,
-      effort: id.effort, labellers: id.labellers, label_effort: id.label_effort, models: id.models, arms: id.arms,
+      effort: id.effort, labellers: id.labellers, label_effort: id.label_effort, models: id.models, arms: id.arms, truncation_waivers: run.truncation_waivers ?? [],
     },
     cost: { model_calls_usd: r4(roles.answer + roles.summariser + roles.judge + roles.label), by_role_usd: { answer: r4(roles.answer), summariser: r4(roles.summariser), judge: r4(roles.judge), label: r4(roles.label) }, ledger_usd: (u => (u === null ? null : r4(u)))(ledgerUsd(run.budget)) },
   };
@@ -891,7 +924,7 @@ function sayJudgeCheck(c: ReturnType<typeof writeJudgeCheck>, say: (line: string
     }
   }
   if (!c.complete) say('judge check INCOMPLETE: ' + c.n_tasks_checked + ' of ' + c.steps[c.steps.length - 1]!.n_tasks + ' tasks finished' + (c.stop ? ', paused at its cap' : '') + '; it cannot pass until `tasks.ts judge-check --resume` finishes it in a window GBEV-3 grants');
-  for (const [judge, t] of Object.entries(c.truncation)) say('judge check ' + judge + ': ' + t.truncated + ' of ' + t.rows + ' calls truncated at the output cap');
+  for (const [judge, byEffort] of Object.entries(c.truncation)) for (const [effort, t] of Object.entries(byEffort)) say('judge check ' + judge + ' at effort ' + effort + ': ' + t.truncated + ' of ' + t.rows + ' calls truncated at the output cap');
   say('judge check over ' + c.steps.map(s => s.n_tasks).join(', then ') + ' tasks ' + (c.passed ? 'passed' : 'NOT PASSED: send judge-check.json to GBEV-3 before any counted call') + '; model calls $' + c.cost.model_calls_usd.toFixed(4) + ' (labels $' + c.cost.by_role_usd.label.toFixed(4) + ')');
 }
 
@@ -1092,7 +1125,7 @@ async function main(argv: string[]): Promise<number> {
         const run = readRun(dir);
         if (run.identity.labellers) rmSync(paths(dir).judgeCheck, { force: true });
         const paid = openPaid(['--budget-ledger', run.budget.ledger_path, ...argv], run.budget.runner, budgetOptionsFrom(argv).budgetUsd ?? run.budget.cap_usd);
-        try { await judgeRunDir(dir, paid, say, flag(argv, '--window-note') ?? null); } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); }
+        try { await judgeRunDir(dir, paid, say, flag(argv, '--window-note') ?? null, flag(argv, '--truncation-waiver') ?? null); } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); }
         if (run.identity.labellers) {
           const c = writeJudgeCheck(dir);
           sayJudgeCheck(c, say);
@@ -1132,7 +1165,7 @@ async function main(argv: string[]): Promise<number> {
         out, gut, fixture, tasksPath, freezePath: flag(argv, '--freeze') ?? null, databaseUrlEnv, forms, arms, models,
         limit: flag(argv, '--limit') ? Number(flag(argv, '--limit')) : checking ? JUDGE_CHECK_TASKS : null, concurrency: Number(flag(argv, '--concurrency') ?? TASK_CONCURRENCY),
         resume: argv.includes('--resume'), windowNote: flag(argv, '--window-note') ?? null, paid,
-        judgeCheckPath: flag(argv, '--judge-check') ?? null, judgeCheckWaiver: flag(argv, '--judge-check-waiver') ?? null,
+        judgeCheckPath: flag(argv, '--judge-check') ?? null, judgeCheckWaiver: flag(argv, '--judge-check-waiver') ?? null, truncationWaiver: flag(argv, '--truncation-waiver') ?? null,
       };
       if (checking) {
         const { result, check } = await runJudgeCheck(opts, say);

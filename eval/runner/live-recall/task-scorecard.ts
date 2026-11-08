@@ -235,7 +235,8 @@ const CHECK_METRICS = { correct: ARMS, correct_grounded: ARMS.filter(a => a !== 
  * bad answers caught, good answers failed, and kappa. A judge passes a metric with at least JUDGE_CHECK_MIN_LABELS
  * labels, and both kappas at least JUDGE_CHECK_KAPPA. correct_grounded leaves out A, which cites nothing. Every judge
  * model must also keep its truncated calls (judge errors at the output-token cap) at or under TRUNCATION_CAP of all its
- * calls, a re-judged call's earlier attempts included, so judging again never washes a truncation out.
+ * calls at each effort (the medium-effort counted verdicts and the high-effort labels apart), a re-judged call's earlier
+ * attempts included, so judging again never washes a truncation out.
  */
 export function judgeCheck(records: Array<AnswerRecord | JudgeRecord>) {
   const counted = new Map<string, JudgeRecord>(), labels = new Map<string, JudgeRecord>();
@@ -278,8 +279,15 @@ export function judgeCheck(records: Array<AnswerRecord | JudgeRecord>) {
     };
   }
   const calls = records.filter((r): r is JudgeRecord => r.kind === 'judge' || r.kind === 'label');
-  const truncation = Object.fromEntries(Object.entries(judgeVersions(calls)).map(([m, v]) => [m, { rows: v.rows, truncated: v.truncated, rate: round(v.truncated / v.rows) }]));
-  passed &&= Object.values(truncation).every(t => t.truncated <= TRUNCATION_CAP * t.rows);
+  const truncation: Record<string, Record<string, { rows: number; truncated: number; rate: number | null }>> = {};
+  for (const r of calls) {
+    const t = ((truncation[r.judge] ??= {})[r.effort] ??= { rows: 0, truncated: 0, rate: null });
+    t.rows++;
+    if (r.truncated) t.truncated++;
+  }
+  const splits = Object.values(truncation).flatMap(e => Object.values(e));
+  for (const t of splits) t.rate = round(t.truncated / t.rows);
+  passed &&= splits.every(t => t.truncated <= TRUNCATION_CAP * t.rows);
   return { schema: JUDGE_CHECK_SCHEMA, passed, thresholds: { min_labels: JUDGE_CHECK_MIN_LABELS, kappa: JUDGE_CHECK_KAPPA, truncation: TRUNCATION_CAP }, n_answers: answers.length, judges, truncation, versions: judgeVersions(calls) };
 }
 
@@ -393,13 +401,13 @@ const KEY_WORDS = new Set<string>([
   'worse_tasks', 'reading', 'label', 'rows', 'versions', 'judge_check', 'labellers', 'label_effort', ...LABELLERS,
   'passed', 'waiver', 'thresholds', 'min_labels', 'n_answers', 'n_tasks_checked', 'answer_models', 'by_model', 'n_rows', 'unusable', 'labeller_agree', 'labeller_kappa',
   'n_labelled', 'n_bad', 'n_good', 'caught', 'false_fails', 'catch_rate', 'false_fail_rate', 'tasks_sha256', 'judge_check_sha256',
-  'truncated', 'truncation', 'rate', 'steps', 'labels', 'stop', 'complete',
+  'truncated', 'truncation', 'rate', 'steps', 'labels', 'stop', 'complete', 'medium', 'high', 'truncation_waivers', 'note', 'by', 'at', 'waived',
 ]);
 const STRING_WORDS = new Set<string>([
   TASK_SCHEMA, 'complete', 'incomplete', ...FORMS, POOLED, ...ARMS, ...MODELS, 'correct', 'correct_grounded', 'P1', 'P2', 'errors_over_cap', 'degraded_over_cap',
   ...PRIMARIES.map(p => p.id), ...SPECS.map(p => p.id), 'postgres', 'pglite', 'copy', 'standby', 'no_write_privilege', 'session_pooler', 'transaction_pooler_rewritten', 'direct_or_local', 'in_process',
   'conservative', 'balanced', 'tokenmax', 'remote', 'medium', 'unknown', 'default', ...Object.keys(ABORT_CODES), ...STATUSES,
-  'no_measurable_difference', 'b_higher', 'b_lower', 'not_significant_after_correction', JUDGE_CHECK_SCHEMA, 'high', ...LABELLERS,
+  'no_measurable_difference', 'b_higher', 'b_lower', 'not_significant_after_correction', JUDGE_CHECK_SCHEMA, 'high', ...LABELLERS, 'agent:GBEV-3',
 ]);
 const JUDGE_VERSION = new RegExp('^(' + [...LABELLERS, ...MODELS].map(m => m.replaceAll('.', '\\.')).join('|') + ')[A-Za-z0-9._-]{0,40}$');
 const STRING_PATTERNS = [/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/, /^[0-9a-f]{7,64}$/, /^\d+\.\d+\.\d+(\.\d+)?$/];
@@ -418,6 +426,7 @@ export function validateTaskScorecard(value: unknown, path = '$'): void {
   if (typeof value === 'string') {
     if (STRING_WORDS.has(value) || STRING_PATTERNS.some(p => p.test(value)) || FIELD_PATTERNS[path]?.test(value)) return;
     if (/\.versions\[\d+\]$/.test(path) && JUDGE_VERSION.test(value)) return;
+    if (/\.truncation_waivers\[\d+\]\.note$/.test(path) && NOTE_PATTERN.test(value)) return;
     throw new LiveRecallAbort('LR_CUSTODY_LEAK', 'unexpected string at ' + path);
   }
   if (Array.isArray(value)) { value.forEach((v, i) => validateTaskScorecard(v, path + '[' + i + ']')); return; }
@@ -485,7 +494,9 @@ export function renderTaskMarkdown(s: ReturnType<typeof buildTaskScorecard>): st
   const ja = s.judge_agreement;
   L.push('', '## Judges and cost', '');
   L.push('Second judge (claude-opus-5-5 on particle-1 rows of B, C and D, paraphrase): ' + ja.second_judge_correct.agree + ' of ' + ja.second_judge_correct.n + ' agree on correct, kappa ' + (ja.second_judge_correct.kappa ?? 'n/a') + '. Wintermute audit: ' + (ja.audit ? ja.audit.agree + ' of ' + ja.audit.n : 'not run') + '.');
-  L.push('', 'Judge versions: ' + (Object.entries(s.judges).map(([m, j]) => m + ' ' + j.rows + ' rows (' + (j.versions.join(', ') || 'no version reported') + ')').join('; ') || 'none') + '.');
+  L.push('', 'Judge versions: ' + (Object.entries(s.judges).map(([m, j]) => m + ' ' + j.rows + ' rows, ' + j.truncated + ' truncated (' + (j.versions.join(', ') || 'no version reported') + ')').join('; ') || 'none') + '.');
+  const waivers = (s.run as { truncation_waivers?: Array<{ note: string; at: string }> }).truncation_waivers ?? [];
+  if (waivers.length) L.push('', 'Truncation stop lifted by GBEV-3: ' + waivers.map(w => w.note + ' at ' + w.at).join('; ') + '. The truncated calls stay judge errors.');
   const jc = s.judge_check as any;
   if (jc) L.push('', 'Judge check before the run: ' + (jc.passed ? 'passed' : 'not passed' + (jc.waiver ? ', run under GBEV-3 waiver ' + jc.waiver : '')) + '. ' + Object.entries(jc.judges ?? {}).map(([m, j]: [string, any]) => m + ': ' + (['correct', 'correct_grounded'] as const).map(k => k + ' kappa ' + (j[k].kappa ?? 'n/a') + ' on ' + j[k].n_labelled + ' labels (caught ' + j[k].caught + ' of ' + j[k].n_bad + ' bad, failed ' + j[k].false_fails + ' of ' + j[k].n_good + ' good; labellers agree kappa ' + (j[k].labeller_kappa ?? 'n/a') + ')').join(', ')).join('; ') + '.');
   L.push('', 'Model calls ' + usd(s.cost.model_calls_usd) + ' (answers ' + usd(s.cost.by_role_usd.answer) + ', summariser ' + usd(s.cost.by_role_usd.summariser) + ', judge ' + usd(s.cost.by_role_usd.judge) + ', second judge ' + usd(s.cost.by_role_usd.second_judge) + (s.cost.by_role_usd.label ? ', judge-check labels ' + usd(s.cost.by_role_usd.label) : '') + '), priced from each response\'s usage at list prices. Ledger total ' + usd(s.cost.ledger_usd) + '; the difference ' + usd(s.cost.other_usd) + ' is gbrain\'s embedding and rerank calls and any retried requests.');

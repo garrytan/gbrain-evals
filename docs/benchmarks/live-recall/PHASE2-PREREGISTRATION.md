@@ -295,14 +295,19 @@ labellers agreeing on fewer than about two in three would otherwise fail it on s
 the box's check; the fixture check in the paid smoke runs its five tasks once, so it stays inside its $10 cap.
 
 **Truncated judge calls.** Every judge and label row records the output-token cap it was sent (8192) and whether the
-call hit it. A truncated call is a `judge_error` and is not tried again. `judge-check.json` reports each judge model's
-truncation rate over all its judge and label calls, the earlier calls on an answer judged again included, so re-judging
-never washes a truncation out, and a rate above 1% for either model fails the check. While judging, the
-check or the counted run stops with [`LR_JUDGE_TRUNCATED`](RUN-KIT.md#lr_judge_truncated) once a judge model's
-truncated calls pass 1% of its calls, counted over at least 100 calls, so a single truncation among a judge's first
-calls does not stop a run whose rate cannot be read yet; a finished counted run or re-judge stops on the plain rate
-above 1%. The same count is checked when a session starts, so a resume or re-judge past the stop stops again before
-any new call.
+call hit it. A truncated call is a `judge_error` and is not tried again; when the loop's nudge turn after a truncated
+first turn still returns a verdict, that verdict is paid for, recorded and discarded. The truncation rate is split by
+model and effort, so each model's medium-effort counted verdicts (counted and second judge) and its high-effort labels
+are separate splits, and it counts every call, the earlier calls on an answer judged again included, so re-judging
+never washes a truncation out. The 1% rule applies to each split: `judge-check.json` reports every split, and any
+split above 1% fails the check. A counted-judge split also stops the check or the counted run with
+[`LR_JUDGE_TRUNCATED`](RUN-KIT.md#lr_judge_truncated) once its truncated calls pass 1% of its calls, counted over at
+least 100 calls while judging, so a single truncation among a judge's first calls does not stop a run whose rate cannot
+be read yet; a finished counted run or re-judge stops on the plain rate above 1%. The same count is checked when a
+session starts, before any cap extension, so a resume or re-judge past the stop stops again before any new call. Only
+GBEV-3's written note lifts a stop: `--truncation-waiver <note>` covers the truncations recorded so far, is recorded
+as `agent:GBEV-3` in `run.json` and the scorecard's run identity, and the stop re-arms when new truncations pass the
+share again. The truncated rows stay judge errors.
 
 **A finished check.** The check is complete only when every planned task has its final answer in every arm and model
 and, for each answer, its counted verdict and both labels, with no cap stop outstanding; `n_tasks_checked` counts the
@@ -680,10 +685,12 @@ in the run directory on the box.
   canaries (a form, a fact and a slug), a numeric fact, an oracle answerer scoring 1.0 and an empty one 0.0, the
   judge check (its catches, false fails and kappas on a constructed label set, its failures under 40 labels or a kappa
   under 0.6, both labellers at effort high after the counted judge with no second judge, and `judge-check.json` free of
-  task text, its truncation rates over every call with more than 1% failing and a re-judge not clearing one, the label
+  task text, its truncation rates over every call split by model and effort with more than 1% in any split failing and
+  a re-judge not clearing one, the label
   floor adding fixture tasks ten at a time with every step listed, an unfinished check (a missing answer or label)
   failing, and no scorecard from a judge-check run), a truncated judge call recorded as a `judge_error` with its cap and
-  not tried again, the truncation stop while judging and at the end, a counted run's refusal without a passing judge
+  not tried again, the truncation stop while judging and at the end on counted-judge calls only, checked before a cap
+  extension and lifted only by GBEV-3's waiver note for the truncations it covers, a counted run's refusal without a passing judge
   check or with one that is unfinished, stopped early or misses a model, an arm or 20 tasks, each comparison's tasks
   worse and reading (a primary whose interval excludes zero reading "not significant after correcting for multiple
   comparisons" when its Holm p is 0.05 or more, while the same descriptive comparison reads as higher), the
@@ -749,6 +756,13 @@ start and end times are recorded, and the judge grades the snapshot each model s
   primary comparison's reading follows its Holm result, so an interval that excludes zero with a Holm p of 0.05 or more
   reads "not significant after correcting for multiple comparisons"; and each model's own kappa under Astra is
   reported, and flagged in the findings' first lines when it is under 0.6 with at least 40 labels, without gating.
+- 2026-11-08, before the freeze and before any counted call, from GBEV-3: the truncation rate is split by model and
+  effort, with the 1% rule on each split, so a judge's high-effort labels can no longer hide behind its medium-effort
+  verdicts; a counted-judge split stops a run, and a label split fails the judge check. A truncation stop can be lifted
+  only by GBEV-3's written note (`--truncation-waiver`), recorded as `agent:GBEV-3` in `run.json` and the scorecard, and
+  the truncated rows stay judge errors. A verdict from the nudge turn after a truncated first turn stays a judge error,
+  paid for and recorded. The scoped reader's third read also moved the truncation check ahead of any cap extension,
+  cleared a stale `judge-check.json` before a re-judge, and marked the descriptive copy of each primary.
 - 2026-11-08, before the freeze and before any counted call, approved by GBEV-3: the gbrain under test moves from
   0.60.593.0 (`27f8b9d6287c`, schema 291) to 0.60.613.0 (`98dda48fb9fd`, schema 296). GBRA-108 upgraded Wintermute's
   box to 613, and its schema migration ends the 593 pin: the runner refuses a brain whose schema differs from the loaded
@@ -769,7 +783,7 @@ detectable differences for the four primaries at the kept N, and the counted run
 
 **Counted-run identity (recorded 2026-11-08, before the freeze; updated the same day for R78 and again for the label
 floor and truncation rules).** The counted run's and the judge check's harness digest must be
-`f5e88ce5feb6a17b88a3097c591377ea07ddb547cdb8c6c39c2e5efe6ac22308`. The digest covers the twenty files in
+`11042b86ad7096dd453c44b3d2197a46cfaa78406025b43e00d711c588efc5a8`. The digest covers the twenty files in
 `HARNESS_FILES` (`eval/runner/live-recall/tasks.ts`): the runner, the judge, the agent loop, the budget ledger and the
 cost path they price with, including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json`
 must also show a `runner_commit` that contains 320db88b, the R78 commit and the label-floor and truncation commit, and

@@ -149,7 +149,8 @@ Top level:
   and `label_effort` (a judge-check run only, else null), effort, output
   and turn limits, tool result, paste and page caps, `budget_usd` (the starting cap), `final_cap_usd` (the cap the run's
   ledger run records after any extensions), `cap_extensions` (how many times GBEV-3 extended the cap after a cap stop),
-  `window_note`, concurrency and `openai_store`.
+  `window_note`, concurrency, `openai_store` and `truncation_waivers` (each GBEV-3 note that lifted a truncation stop:
+  `note`, `by` `agent:GBEV-3`, `at`, and `waived`, the truncated counted-judge calls it covered by model and effort).
 - `tasks`: submitted, kept at the freeze, dropped as unreachable, lost since the freeze, kept at the run, the task file's
   sha256 prefix, N frozen, counts by type and by how each gold page was found, and `mdd_primaries` (the minimum
   detectable difference at N frozen for 10%, 20% and 30% discordant pairs, at alpha 0.05 and at Holm's 0.0125).
@@ -195,15 +196,15 @@ and the judge (versions and the judge check), cost and custody lines.
 checked by the same structure check and needle scan as the scorecard:
 
 - `schema`, `passed` (the check is complete, every counted judge passed both metrics and no judge model's truncation
-  rate is above 1%), `thresholds` (`min_labels` 40, `kappa` 0.6, `truncation` 0.01), `n_answers` (answered episodes),
+  split is above 1%), `thresholds` (`min_labels` 40, `kappa` 0.6, `truncation` 0.01), `n_answers` (answered episodes),
   `n_tasks_checked` (finished tasks: every arm and model has its final answer and, when answered, its counted verdict and
   both labels; at least 20 for a counted run to use it), `complete` (every planned task finished and no cap stop
   outstanding; a counted run refuses an incomplete check), `tasks_sha256` (the task file's sha256, which the counted run
   must match) and `stop` (`LR_CAP_STOP` while a cap stop is outstanding, else null).
 - `steps`: the label floor's steps in order, each with `n_tasks` and `labels`, counted judge to its label counts on
   `correct` and `correct_grounded` over that step's tasks. One step when the first 20 tasks gave every judge 40 labels.
-- `truncation`: each judge model's `rows` (every judge and label call it made, earlier calls on an answer judged again
-  included), `truncated` and `rate`.
+- `truncation`: judge model to effort (`medium` for counted verdicts, `high` for labels) to `rows` (every call at that
+  effort, earlier calls on an answer judged again included), `truncated` and `rate`. Any split above 1% fails the check.
 - `judges`: counted judge to `answer_models` (the models whose rows it judges), `correct` and `correct_grounded` (B, C and
   D only), and `by_model` with the same two blocks per answering model. Each block has `n_rows`, `unusable` (a counted
   verdict or a label missing or a judge error), `labeller_agree` and `labeller_kappa` (the two labellers over every
@@ -212,8 +213,8 @@ checked by the same structure check and needle scan as the scorecard:
   verdict against the labels) and `passed`.
 - `versions`: each judge and labeller's rows, truncated rows and served model versions.
 - `run`: start and finish times, runner commit and dirty flag, `harness_digest` (the counted run must match it),
-  gbrain's loaded version and commit, schema version, `control`, effort, `labellers`, `label_effort`, and the `models`
-  and `arms` it covered (the counted run's must be among them).
+  gbrain's loaded version and commit, schema version, `control`, effort, `labellers`, `label_effort`, the `models`
+  and `arms` it covered (the counted run's must be among them) and its `truncation_waivers`.
 - `cost`: `model_calls_usd`, `by_role_usd` (answer, summariser, judge, label) and `ledger_usd`.
 
 ## A release gate (proposal, not wired)

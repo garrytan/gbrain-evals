@@ -18,7 +18,7 @@ import { ANSWER_TOOL, PROMPTS, SUMMARY_TOOL, citedSlugs, judgeEpisode, openReade
 import { JUDGE_SYSTEM, LABELLERS, VERDICT_TOOL, assertJudge, derive, judgeFor, parseVerdict, secondJudgeFor } from '../../eval/runner/live-recall/task-judge.ts';
 import { JUDGE_CHECK_SCHEMA, TRUNCATION_CAP, buildTaskScorecard, renderTaskMarkdown, checkOutbound, judgeCheck, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
 import {
-  FIXTURE_TASKS, HARNESS_FILES, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, TRUNCATION_FLOOR, assertPrivate, checkTruncation, estimateCost, freezeSummary, goldCheck, harnessDigest, judgeRunDir, labelsShort, ledgerRunner,
+  FIXTURE_TASKS, HARNESS_FILES, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, TRUNCATION_FLOOR, assertPrivate, checkTruncation, truncationWaivers, estimateCost, freezeSummary, goldCheck, harnessDigest, judgeRunDir, labelsShort, ledgerRunner,
   loadRecords, parseTasks, readJudgeCheck, runJudgeCheck, runTaskSet, scoreRunDir, spread, watchRefusals, writeFreeze, writeJudgeCheck, type Paid, type RunRecord,
 } from '../../eval/runner/live-recall/tasks.ts';
 
@@ -1158,7 +1158,8 @@ describe('phase 2 judge check (R78)', () => {
       expect([c.passed, c.n_tasks_checked, c.run.control, c.cost.by_role_usd.label > 0]).toEqual([false, 2, true, true]);
       expect((c.judges as any)['gpt-6-astra'].correct.n_rows).toBe(16);
       expect([c.stop, c.run.models, c.run.arms, c.steps]).toEqual([null, ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], ['A', 'B', 'C', 'D'], [{ n_tasks: 2, labels: { 'gpt-6-astra': { correct: (c.judges as any)['gpt-6-astra'].correct.n_labelled, correct_grounded: (c.judges as any)['gpt-6-astra'].correct_grounded.n_labelled }, 'claude-opus-5-5': { correct: (c.judges as any)['claude-opus-5-5'].correct.n_labelled, correct_grounded: (c.judges as any)['claude-opus-5-5'].correct_grounded.n_labelled } } }]]);
-      expect(c.truncation).toEqual({ 'gpt-6-astra': { rows: 16 + 24, truncated: 0, rate: 0 }, 'claude-opus-5-5': { rows: 8 + 24, truncated: 0, rate: 0 } });
+      expect(c.truncation).toEqual({ 'gpt-6-astra': { medium: { rows: 16, truncated: 0, rate: 0 }, high: { rows: 24, truncated: 0, rate: 0 } }, 'claude-opus-5-5': { medium: { rows: 8, truncated: 0, rate: 0 }, high: { rows: 24, truncated: 0, rate: 0 } } });
+      expect(c.run.truncation_waivers).toEqual([]);
       expect(c.complete).toBe(true);
       const path = join(out, 'records.local.jsonl'), full = readFileSync(path, 'utf8');
       const lines = full.trimEnd().split('\n');
@@ -1191,8 +1192,8 @@ describe('phase 2 judge check (R78)', () => {
     expect([ok.status, ok.truncated, ok.max_output_tokens]).toEqual(['ok', false, 8192]);
   });
 
-  test('truncation stops a judge model past 1% of its calls: while judging over at least 100 of them, at the end over all of them', () => {
-    const calls = (judge: string, n: number, cut: number): any[] => Array.from({ length: n }, (_, i) => ({ ...verdict('judge', 'paraphrase|t' + i + '|B|claude-opus-5-5', judge, true), truncated: i < cut }));
+  test('truncation stops a judge model past 1% of its counted-judge calls at that effort: while judging over at least 100, at the end over all; labels never stop it; GBEV-3\'s waiver lifts what it covers', () => {
+    const calls = (judge: string, n: number, cut: number, kind = 'judge'): any[] => Array.from({ length: n }, (_, i) => ({ ...verdict(kind, 'paraphrase|t' + i + '|B|claude-opus-5-5', judge, true), truncated: i < cut }));
     const code = (f: () => void) => { try { f(); return 'no abort'; } catch (e) { return e instanceof LiveRecallAbort ? e.code : String(e); } };
     expect([TRUNCATION_CAP, TRUNCATION_FLOOR]).toEqual([0.01, 100]);
     expect(code(() => checkTruncation(calls('gpt-6-astra', 50, 1)))).toBe('no abort');
@@ -1201,32 +1202,57 @@ describe('phase 2 judge check (R78)', () => {
     expect(code(() => checkTruncation([...calls('gpt-6-astra', 300, 0), ...calls('claude-opus-5-5', 300, 4)]))).toBe('LR_JUDGE_TRUNCATED');
     expect(code(() => checkTruncation(calls('gpt-6-astra', 50, 1), 1))).toBe('LR_JUDGE_TRUNCATED');
     expect(code(() => checkTruncation(calls('gpt-6-astra', 100, 1), 1))).toBe('no abort');
+    expect(code(() => checkTruncation(calls('gpt-6-astra', 50, 10, 'label'), 1))).toBe('no abort');
+    expect(code(() => checkTruncation([...calls('gpt-6-astra', 150, 0), ...calls('gpt-6-astra', 50, 2, 'label')], 1))).toBe('no abort');
+    expect(code(() => checkTruncation(calls('gpt-6-astra', 50, 2), TRUNCATION_FLOOR, { 'gpt-6-astra': { medium: 2 } }))).toBe('no abort');
+    expect(code(() => checkTruncation(calls('gpt-6-astra', 50, 4), TRUNCATION_FLOOR, { 'gpt-6-astra': { medium: 2 } }))).toBe('LR_JUDGE_TRUNCATED');
+    expect(code(() => checkTruncation(calls('gpt-6-astra', 50, 2), TRUNCATION_FLOOR, { 'claude-opus-5-5': { medium: 2 } }))).toBe('LR_JUDGE_TRUNCATED');
+    const w = truncationWaivers([], 'gbev3-trunc-1', [...calls('gpt-6-astra', 50, 2), ...calls('claude-opus-5-5', 50, 1), ...calls('gpt-6-astra', 50, 3, 'label')]);
+    expect(w.map(x => [x.note, x.by, x.waived])).toEqual([['gbev3-trunc-1', 'agent:GBEV-3', { 'gpt-6-astra': { medium: 2 }, 'claude-opus-5-5': { medium: 1 } }]]);
+    expect(truncationWaivers(w, null, [])).toEqual(w);
+    expect(code(() => truncationWaivers([], 'not a note', []))).toBe('LR_JUDGE_TRUNCATED');
   });
 
   test('judge-check.json reports each judge model\'s truncation rate, and more than 1% fails the check', async () => {
     const cut = (n: number) => { let k = 0; return both().map(r => (r.kind === 'label' && r.judge === 'gpt-6-astra' && k++ < n ? { ...r, status: 'judge_error', derived: null, truncated: true } : r)); };
     const one = judgeCheck(cut(1)), two = judgeCheck(cut(2));
-    expect(one.truncation['gpt-6-astra']).toEqual({ rows: 180, truncated: 1, rate: 0.0056 });
-    expect([one.passed, two.passed, two.truncation['gpt-6-astra']!.rate]).toEqual([true, false, 0.0111]);
-    expect(two.truncation['claude-opus-5-5']).toEqual({ rows: 180, truncated: 0, rate: 0 });
+    expect(one.truncation['gpt-6-astra']).toEqual({ medium: { rows: 60, truncated: 0, rate: 0 }, high: { rows: 120, truncated: 1, rate: 0.0083 } });
+    expect([one.passed, two.passed, two.truncation['gpt-6-astra']!.high!.rate]).toEqual([true, false, 0.0167]);
+    expect(two.truncation['claude-opus-5-5']).toEqual({ medium: { rows: 60, truncated: 0, rate: 0 }, high: { rows: 120, truncated: 0, rate: 0 } });
     expect(() => validateTaskScorecard(two)).not.toThrow();
+    const judgeCut = both().map((r, i) => (i === 1 ? { ...r, status: 'judge_error', derived: null, truncated: true } : r));
+    expect([judgeCheck(judgeCut).truncation['gpt-6-astra']!.medium, judgeCheck(judgeCut).passed]).toEqual([{ rows: 60, truncated: 1, rate: 0.0167 }, false]);
     const redone = cut(2).filter(r => r.truncated).map(r => ({ ...verdict('label', r.key, r.judge, true), at: '2026-11-08T00:00:02.000Z' }));
     const rejudged = judgeCheck([...cut(2), ...redone]);
-    expect([rejudged.truncation['gpt-6-astra'], rejudged.passed]).toEqual([{ rows: 182, truncated: 2, rate: 0.011 }, false]);
+    expect([rejudged.truncation['gpt-6-astra']!.high, rejudged.passed]).toEqual([{ rows: 122, truncated: 2, rate: 0.0164 }, false]);
     const dir = mkdtempSync(join(tmpdir(), 'lr2-trunc-'));
     try {
       const path = join(dir, 'records.local.jsonl');
-      writeFileSync(path, [...cut(1).slice(0, 4), ...redone.slice(0, 1)].map(r => JSON.stringify(r)).join('\n') + '\n');
+      const cutJudges = both().slice(0, 8).map((r, i) => (i === 1 || i === 5 ? { ...r, status: 'judge_error', derived: null, truncated: true } : r));
+      writeFileSync(path, [...cutJudges.slice(0, 4), { ...verdict('judge', cutJudges[1].key, 'gpt-6-astra', true), at: '2026-11-08T00:00:02.000Z' }].map(r => JSON.stringify(r)).join('\n') + '\n');
       const store = new RecordStore(path);
       expect([store.calls.length, store.calls.filter(c => c.truncated).length]).toEqual([4, 1]);
       expect(() => checkTruncation(store.calls, 1)).toThrow();
-      writeFileSync(path, [...cut(2).slice(0, 8)].map(r => JSON.stringify(r)).join('\n') + '\n');
+      writeFileSync(path, cutJudges.map(r => JSON.stringify(r)).join('\n') + '\n');
+      writeFileSync(join(dir, 'run.json'), '{}');
       writeFileSync(join(dir, 'cap-stop.json'), '{}');
       const paused = { out: dir, gut, fixture: false, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['A'] as any, models: ['claude-opus-5-5'], limit: null, concurrency: 1, resume: true, windowNote: 'gbev3-ext-1', paid: {} as Paid };
       expect(await abortCode(() => runTaskSet(paused, () => {}))).toBe('LR_JUDGE_TRUNCATED');
       expect(await abortCode(() => judgeRunDir(dir, {} as Paid, () => {}, 'gbev3-ext-1'))).toBe('LR_JUDGE_TRUNCATED');
       expect(existsSync(join(dir, 'cap-stop.json'))).toBe(true);
+      expect(await abortCode(() => runTaskSet({ ...paused, truncationWaiver: 'gbev3-trunc-1' }, () => {}))).not.toBe('LR_JUDGE_TRUNCATED');
+      writeFileSync(join(dir, 'cap-stop.json'), '{}');
+      expect(await abortCode(() => judgeRunDir(dir, {} as Paid, () => {}, 'gbev3-ext-1', 'gbev3-trunc-1'))).not.toBe('LR_JUDGE_TRUNCATED');
     } finally { rmSync(dir, { recursive: true, force: true }); }
+    const waivers = [{ note: 'gbev3-trunc-1', by: 'agent:GBEV-3', at: '2026-11-08T00:00:03.000Z', waived: { 'gpt-6-astra': { medium: 2 } } }];
+    const card = (identity: Record<string, unknown>) => buildTaskScorecard({
+      tasks: [], forms: ['paraphrase'], arms: ['A', 'B'], models: ['claude-opus-5-5'], identity, stop: null, ledger_usd: null, audit: null, records: [],
+      task_summary: { submitted: 0, kept_at_freeze: 0, dropped_unreachable: 0, gold_missing_at_run: 0, sha_prefix: '0'.repeat(12), n_frozen: 0 },
+      custody: { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: {} },
+    });
+    expect(() => validateTaskScorecard(card({ truncation_waivers: waivers }))).not.toThrow();
+    expect(renderTaskMarkdown(card({ truncation_waivers: waivers }))).toContain('Truncation stop lifted by GBEV-3: gbev3-trunc-1');
+    expect(await abortCode(() => validateTaskScorecard(card({ truncation_waivers: [{ ...waivers[0], note: 'a private sentence' }] })))).toBe('LR_CUSTODY_LEAK');
   });
 
   test('only a short label count extends the check: under 40 labels on either primary metric for any counted judge', () => {

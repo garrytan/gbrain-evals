@@ -495,11 +495,14 @@ scorecard reports the waiver.
 
 ### LR_JUDGE_TRUNCATED
 
-Phase 2: a judge model hit its 8192-token output cap on more than 1% of its judge calls (while it has fewer than 100
-calls, on more than one), so the judge check or the run stopped; the line names the model and the counts. Each
-truncated call is recorded as a judge error and nothing in it is counted. Judging again does not clear the count: it
-covers every judge call, and a resume or re-judge checks it before any new call. Send the line to GBEV-3 through ALPH-72 and run
-nothing more until GBEV-3 answers.
+Phase 2: a judge model hit its 8192-token output cap on more than 1% of its counted-judge calls at one effort (while it
+has fewer than 100, on more than one), so the judge check or the run stopped; the line names the model, the effort and
+the counts. Each truncated call is recorded as a judge error and nothing in it is counted. Judging again does not clear
+the count: it covers every judge call, and a resume or re-judge checks it before any new call or cap extension. Send
+the line to GBEV-3 through ALPH-77 and run nothing more until GBEV-3 answers. If GBEV-3 decides to go on, it gives a
+written note id; continue with the same command plus `--truncation-waiver <note id>` (and, for a counted resume, the
+`--window-note` it needs anyway). The waiver covers only the truncations recorded so far, `run.json` and the scorecard
+record it, and the stop comes back if new truncations pass 1% again.
 
 ### LR_PROVIDER_REJECTED
 
