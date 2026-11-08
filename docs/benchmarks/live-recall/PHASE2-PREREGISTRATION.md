@@ -54,7 +54,8 @@ visibility, pinned-question pages, private lineage, and pages restricted to name
   same remote `get_page`, so a page a remote caller cannot open is never pasted.
 - The env escape hatch `GBRAIN_REMOTE_PRIVATE_PAGES` is deleted from the runner's process before the brain opens, and
   the runner refuses to start ([`LR_PRIVACY_RELAXED`](RUN-KIT.md#lr_privacy_relaxed)) if the brain's config relaxes
-  remote private-page visibility (`search.remote_private_pages`). The runner never relaxes it.
+  remote private-page visibility (`search.remote_private_pages`). The runner never relaxes it. It reads the policy again
+  before every task, so a relaxation during the run stops the run before the next task.
 - A keyless test builds the public fixture with one extra page flagged `visibility: private` and shows it unreachable
   to B and C's `query`, `search` and `get_page`, absent from D's search and unreadable for the judge.
 
@@ -475,7 +476,7 @@ cents.
 
 - **The cap.** Every request in the counted run (answers, summaries, judges, and gbrain's embedding and rerank calls)
   goes through the budget ledger's paid-request guard on a box-local ledger with a $360 cap. A refused reservation is a
-  cap stop: `cap-stop.json` is written, the run exits with status 2 and prints `LR_CAP_STOP` with the dollars spent,
+  cap stop: `cap-stop.json` is written, the run exits with status 6 and prints `LR_CAP_STOP` with the dollars spent,
   and the scorecard is marked incomplete with what finished. Nothing reruns. gbrain catches a refused embedding or rerank
   call and would quietly search by keyword alone, so the runner watches every refusal the guard raises and ends the
   episode as a cap stop instead.
@@ -496,8 +497,9 @@ cents.
 | `submitted` | judged |
 | `turn_cap` or `no_tool_call` | counted, not correct, reported as no answer; not judged |
 | `context_overflow` | counted, not correct, reported as no answer |
-| a model-caused error (such as a rejected request) | counted, not correct, reported as no answer |
-| `harness_error` (gbrain timing out, or a provider 5xx or 429 after the loop's retries) | written uncounted; the episode reruns, at most three attempts in all; still failing, excluded with its count |
+| a model-caused 400 (the provider rejected the request, not the key, model or account) | counted, not correct, reported as no answer and counted per cell in the scorecard |
+| the provider refuses the key, the model or the account (401, 403, 404, another 4xx, or a credit or billing 400) on an answer, summary or judge call | the run stops ([`LR_PROVIDER_REJECTED`](RUN-KIT.md#lr_provider_rejected)) with no record for that episode; `--resume` reruns it |
+| `harness_error` (gbrain timing out; a provider 5xx or 429 after the loop's retries, or another 5xx; a network failure or an unreadable response, unless particle-1 may have billed it) | written uncounted; the episode reruns, at most three attempts in all; still failing, excluded with its count |
 | particle-1 `timed_out` (the request may have been billed) | excluded with its count, never rerun |
 | a degraded search (below) | excluded with its count |
 | a cap refusal | cap stop |
@@ -521,8 +523,9 @@ arm-and-model cells run one after another in an order seeded from the task id, e
 Every record is appended to the run directory before the next step. `--resume` skips judged episodes, judges answered
 but unjudged ones, and reruns only episodes with no record or an unfinished harness error (never a particle-1
 `timed_out`). A counted `--resume` needs `--window-note <id>` from GBEV-3's window note
-([`LR_RESUME_NEEDS_WINDOW`](RUN-KIT.md#lr_resume_needs_window)), recorded in run identity. A run directory with a cap
-stop refuses to continue.
+([`LR_RESUME_NEEDS_WINDOW`](RUN-KIT.md#lr_resume_needs_window)), recorded in run identity. A resume must match the first
+session's harness digest, loaded gbrain version and commit, models, arms, forms and kept tasks, or it stops
+([`LR_FREEZE_MISMATCH`](RUN-KIT.md#lr_freeze_mismatch)). A run directory with a cap stop refuses to continue.
 
 ## Custody
 
@@ -561,7 +564,9 @@ in the run directory on the box.
   page's exclusion, the freeze drop, writes allowed against writes refused, a failing embedding and a failing reranker
   marking episodes degraded, a cap refusal inside an embedding becoming a cap stop, the judge parser, derivation and
   routing, `store: false` on every OpenAI request, the ledger reconciling with the scorecard, a tiny budget ending in
-  `LR_CAP_STOP` with no rerun, paraphrase before exact, particle-1 `timed_out` never rerun, judge-only resume, the leak
+  `LR_CAP_STOP` with no rerun, paraphrase before exact, particle-1 `timed_out` never rerun, judge-only resume, a refused
+  key stopping the run and `--resume` answering the episode, a model-caused 400 counted, lost requests rerun, a privacy
+  relaxation during the run, a resume with changed identity refused, the leak
   canaries (a form, a fact and a slug), a numeric fact, an oracle answerer scoring 1.0 and an empty one 0.0, and the
   abort codes. Cat 40's existing byte-identity test shows its own request bodies unchanged.
 - **Paid smoke**, after the harness merges, on crew keys under one paid window with a $10 cap: five fixture tasks (one
@@ -585,7 +590,8 @@ start and end times are recorded, and the judge grades the snapshot each model s
   `runAgent` with no tools but its verdict tool and at most two turns. That gives the same retries, usage receipts,
   effort, `store: false` and fetch seam with no new loop code; the loop's only change is the opt-in `openaiStore: false`.
 - "No answer" covers every counted episode without a submitted answer: a turn cap, no tool call, a context overflow or
-  a model-caused error. Each is counted and not correct, as the plan's stop mapping says.
+  a model-caused 400. Each is counted and not correct, as the plan's stop mapping says. Other provider errors are not
+  counted: a refused key, model or account stops the run, and a lost or unreadable request is a harness error.
 - `tasks.ts audit` draws Wintermute's 30 audit rows and `tasks.ts score --audit-grades` reads the grades back, so only
   the agreement count leaves the box.
 

@@ -20,6 +20,7 @@
 import { HarnessError, runAgent, type AgentRun, type Arm, type ToolSpec, type Usage } from '../cat40/loop.ts';
 import { importGbrain, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { uniqueInOrder } from '../metrics.ts';
+import { LiveRecallAbort } from './brain.ts';
 import { FAILURE_STAGES } from './run.ts';
 import { JUDGE_PAGE_CHARS, JUDGE_SYSTEM, JUDGED_CITATIONS, VERDICT_TOOL, derive, judgeUser, parseVerdict, type Derived, type Verdict } from './task-judge.ts';
 
@@ -263,12 +264,23 @@ export interface EpisodeContext {
   capCheck: () => void;
 }
 
+/**
+ * Stops the run when the provider refused the key, the model or the account (401, 403, 404, any other 4xx but 400, or a
+ * 400 that refuses credit or billing): nothing the model did, so it is never a counted answer or a judge error.
+ */
+function assertAccepted(run: AgentRun): void {
+  const p = run.provider_error;
+  if (p && p.status >= 400 && p.status < 500 && (p.status !== 400 || p.billing)) throw new LiveRecallAbort('LR_PROVIDER_REJECTED', run.model + ' answered HTTP ' + p.status + (p.billing ? ' refusing credit or billing' : ''));
+}
+
+/** Only a model-caused 400 is a counted model_error; a network failure, an unreadable answer or a non-retryable 5xx is a harness error. */
 function statusOf(run: AgentRun): Status {
   if (run.timed_out) return 'timed_out';
   if (run.stop === 'submitted') return 'answered';
   if (run.stop === 'turn_cap' || run.stop === 'no_tool_call') return 'no_answer';
   if (run.stop === 'context_overflow' || run.stop === 'harness_error') return run.stop;
-  return 'model_error';
+  assertAccepted(run);
+  return run.provider_error?.status === 400 ? 'model_error' : 'harness_error';
 }
 
 const use = (run: AgentRun, toolCalls: number): RoleUse => ({ usage: run.usage, usd: run.usd, turns: run.turns, ms: run.ms, stop: run.stop, tool_calls: toolCalls });
@@ -276,7 +288,8 @@ const loopConfig = (model: string) => ({ model, effort: EFFORT, maxTurns: MAX_TU
 
 /**
  * One answer for one task form, arm and model. Model calls that fail for the provider's reasons come back as a status, a
- * HarnessError (gbrain timing out) comes back as harness_error, and a cap refusal throws.
+ * HarnessError (gbrain timing out) comes back as harness_error, and a cap refusal or a provider rejection
+ * (LR_PROVIDER_REJECTED) throws, so no record is written.
  */
 export async function runEpisode(ctx: EpisodeContext, task: Task, form: TaskForm, arm: TaskArm, model: string, attempt: number): Promise<AnswerRecord> {
   const question = task.forms[form];
@@ -376,7 +389,7 @@ function exposure(task: Task, calls: ToolCall[], cited: string[], summaryCited: 
 
 const ZERO: Usage = { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 };
 
-/** One judge verdict for an answered episode: at most two judge calls, then judge_error. A has no citations to judge. */
+/** One judge verdict for an answered episode: at most two judge calls, then judge_error; a provider rejection throws. A has no citations to judge. */
 export async function judgeEpisode(ctx: Pick<EpisodeContext, 'limit' | 'capCheck'>, task: Task, rec: AnswerRecord, judge: string, kind: JudgeRecord['kind']): Promise<JudgeRecord> {
   const cited = rec.arm === 'A' ? [] : rec.cited;
   const user = judgeUser({ question: task.forms[rec.form], gold: task.gold_answer, answer: rec.answer, cited, pages: new Map(rec.snapshots.map(s => [s.slug, s.text])) });
@@ -386,6 +399,7 @@ export async function judgeEpisode(ctx: Pick<EpisodeContext, 'limit' | 'capCheck
   for (let i = 0; i < 2; i++) {
     const run = await ctx.limit(judge, () => runAgent({ model: judge, system: JUDGE_SYSTEM, user, arm: NO_TOOLS, submitTool: VERDICT_TOOL, maxTurns: 2, maxOutputTokens: MAX_OUTPUT_TOKENS, effort: EFFORT, classifyStops: true, openaiStore: false }));
     ctx.capCheck();
+    assertAccepted(run);
     usd += run.usd; ms += run.ms;
     for (const k of Object.keys(usage) as Array<keyof Usage>) usage[k] += run.usage[k];
     const verdict = run.stop === 'submitted' ? parseVerdict(run.final, task.gold_answer.required_facts.map(f => f.id), shown) : null;

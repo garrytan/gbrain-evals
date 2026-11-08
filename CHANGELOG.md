@@ -16,21 +16,31 @@ This records what each gbrain-evals release changed and what its measurements me
   particle-1), the prompts and judge prompt verbatim, a $360 counted cap and a cost gate. No counted run has happened.
 - **Privacy.** Every gbrain read runs as gbrain's untrusted remote caller (`remote: true` through the MCP dispatcher), so
   pages flagged private and unsafe chunks never reach a model or the judge. The runner deletes
-  `GBRAIN_REMOTE_PRIVATE_PAGES` from its process and refuses a brain whose config relaxes it (`LR_PRIVACY_RELAXED`).
-  The freeze drops tasks whose gold page a remote caller cannot open and records only the count.
+  `GBRAIN_REMOTE_PRIVATE_PAGES` from its process and refuses a brain whose config relaxes it (`LR_PRIVACY_RELAXED`),
+  at the start and again before every task. The freeze drops tasks whose gold page a remote caller cannot open and
+  records only the count.
 - **Money.** Every request, gbrain's embeddings and rerank calls included, goes through the budget ledger's paid-request
   guard. A refused reservation is a cap stop (`LR_CAP_STOP`, exit 6) that is never rerun, including a refusal inside an
   embedding, which gbrain would otherwise absorb as a keyword-only search. The paraphrase pass runs before the exact
   pass, so a cap stop cannot cut a primary. `tasks.ts estimate` projects the counted cost from the smoke and stops with
   `LR_COST_GATE` past 75% of the cap.
+- **Errors.** Only a model-caused 400 counts as a no-answer, and the scorecard shows each cell's count of them. A
+  provider that refuses the key, the model or the account (401, 403, 404, another 4xx, or a credit or billing 400) on
+  an answer, summary or judge call stops the run with `LR_PROVIDER_REJECTED` (exit 3) and no record, so `--resume`
+  reruns the episode. A network failure, an unreadable response or a non-retryable 5xx is a harness error that reruns;
+  particle-1 requests that may have billed stay `timed_out` and are never resent. A `--resume` whose harness digest,
+  gbrain version or commit, models, arms, forms or kept tasks differ from the first session stops with
+  `LR_FREEZE_MISMATCH`.
 - **Custody.** `task-scorecard.ts` writes `live-recall-task-scorecard/v1` only after a structural allowlist check and a
   needle scan over every task form, gold fact, task id and slug the run saw.
 - **Cat 40 loop.** An opt-in `openaiStore: false` sends `store: false`, asks for encrypted reasoning items and resends
   the accumulated input instead of `previous_response_id`. With it unset, request bodies are unchanged (the existing
-  byte-identity test passes).
+  byte-identity test passes). With `classifyStops` on, a run that ends on a provider error records its status and
+  whether it refused credit or billing (`provider_error`).
 - **Fixture and tests.** `eval/data/live-recall-v1/tasks.jsonl` holds the twenty public questions as tasks plus one whose
   gold page (`phase2-pages/notes/board-compensation.md`) is flagged private. `test/eval/live-recall-tasks.test.ts` runs the
-  whole harness keyless with scripted providers behind the guard. `brain.ts` gains seven abort codes; RUN-KIT and
+  whole harness keyless with scripted providers behind the guard, including each provider-error path, a privacy
+  relaxation during the run and a resume with changed identity. `brain.ts` gains eight abort codes; RUN-KIT and
   SCORECARD gain phase 2 sections.
 
 ## [0.10.172] - 2026-11-07

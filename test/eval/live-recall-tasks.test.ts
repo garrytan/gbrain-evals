@@ -8,16 +8,16 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
-import { runAgent, type Arm } from '../../eval/runner/cat40/loop.ts';
+import { NUDGE, runAgent, type Arm } from '../../eval/runner/cat40/loop.ts';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { LiveRecallAbort, installGuards } from '../../eval/runner/live-recall/brain.ts';
 import { isCapStop } from '../../eval/runner/refresh-barrier/ledger.ts';
 import { buildFixtureBrain } from '../../eval/runner/live-recall/run.ts';
-import { ANSWER_TOOL, PROMPTS, SUMMARY_TOOL, citedSlugs, openReader, runEpisode, type AnswerRecord, type Task } from '../../eval/runner/live-recall/task-arms.ts';
+import { ANSWER_TOOL, PROMPTS, SUMMARY_TOOL, citedSlugs, judgeEpisode, openReader, runEpisode, type AnswerRecord, type EpisodeContext, type Task } from '../../eval/runner/live-recall/task-arms.ts';
 import { JUDGE_SYSTEM, VERDICT_TOOL, assertJudge, derive, judgeFor, parseVerdict, secondJudgeFor } from '../../eval/runner/live-recall/task-judge.ts';
 import { checkOutbound, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
 import {
-  FIXTURE_TASKS, PHASE2_PAGES, estimateCost, freezeSummary, goldCheck, loadRecords, parseTasks, runTaskSet, scoreRunDir, spread, watchRefusals, type Paid,
+  FIXTURE_TASKS, PHASE2_PAGES, assertPrivate, estimateCost, freezeSummary, goldCheck, loadRecords, parseTasks, runTaskSet, scoreRunDir, spread, watchRefusals, type Paid,
 } from '../../eval/runner/live-recall/tasks.ts';
 
 const gut = resolveGbrainUnderTest(null);
@@ -113,6 +113,42 @@ function scriptedPaid(dir: string, fetchImpl: typeof fetch, capUsd: number): Pai
   return { run, guard: installPaidRequestGuard(run, { fetchImpl }), runner: 'live-recall-phase2-test', capUsd, ledgerPath };
 }
 
+type Failure = (wire: Wire, c: ReturnType<typeof conversation>) => Response | Error | undefined;
+
+/** The scripted provider with some model requests answered by `fail`: a Response it returns, an error it throws, or undefined to answer as usual. */
+function withFailures(tasks: Task[], fail: Failure) {
+  const providers = scriptedProviders(tasks);
+  const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = input instanceof Request ? input.url : String(input);
+    if (!url.endsWith('/embeddings')) {
+      const wire: Wire = url.includes('anthropic.com') ? 'anthropic' : url.includes('openai.com') ? 'openai' : 'particle';
+      const body = JSON.parse(String(init?.body ?? '{}'));
+      const f = fail(wire, conversation(wire, body));
+      if (f) providers.sent.push({ wire, url, body });
+      if (f instanceof Error) throw f;
+      if (f) return f;
+    }
+    return providers.fetchImpl(input, init);
+  }) as unknown as typeof fetch;
+  return { fetchImpl, sent: providers.sent };
+}
+
+/** One guarded episode-level call with `fail` in front of the scripted provider; arm A and the judge never read gbrain. */
+async function guarded<T>(fail: Failure, body: (ctx: EpisodeContext, sent: Sent[]) => Promise<T>): Promise<T> {
+  const { fetchImpl, sent } = withFailures(fixtureTasks, fail);
+  const dir = mkdtempSync(join(tmpdir(), 'lr2-provider-'));
+  const paid = scriptedPaid(dir, fetchImpl, 5);
+  try {
+    return await body({ reader: null as unknown as EpisodeContext['reader'], limit: (_m, f) => f(), capCheck: () => {} }, sent);
+  } finally {
+    paid.guard.uninstall();
+    paid.run.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+const anthropicError = (status: number, message: string) => Response.json({ type: 'error', error: { type: 'invalid_request_error', message } }, { status });
+
 const savedKey = process.env.PARTICLE_API_KEY;
 beforeAll(() => { process.env.PARTICLE_API_KEY ??= 'scripted'; });
 afterAll(() => { if (savedKey === undefined) delete process.env.PARTICLE_API_KEY; else process.env.PARTICLE_API_KEY = savedKey; });
@@ -184,6 +220,16 @@ describe('phase 2 privacy posture on the fixture (keyless)', () => {
     expect(summary.kept_lines).not.toContain(parsed.find(t => t.task.gold_pages.includes(PRIVATE_SLUG))!.line);
     expect(JSON.stringify(summary)).not.toContain(PRIVATE_SLUG);
   });
+
+  test('a brain whose config shows private pages to remote callers is refused', async () => {
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      expect(await abortCode(() => assertPrivate(gut, open.engine))).toBe('no abort');
+      await open.engine.executeRaw('SET default_transaction_read_only = off');
+      await open.engine.setConfig('search.remote_private_pages', 'true');
+      expect(await abortCode(() => assertPrivate(gut, open.engine))).toBe('LR_PRIVACY_RELAXED');
+    } finally { await open.close(); }
+  }, 120_000);
 
   test('B\'s tools are gbrain\'s query, search and get_page, with expansion and images removed', () => {
     expect(reader.tools.map(t => t.name).sort()).toEqual(['get_page', 'query', 'search']);
@@ -314,6 +360,23 @@ describe('Cat 40 loop, openaiStore false', () => {
       expect(b.previous_response_id).toBeUndefined();
     }
     expect(bodies[1].input.map((i: any) => i.type ?? i.role)).toEqual(['user', 'reasoning', 'function_call', 'function_call_output']);
+  });
+
+  test('a turn with no tool call resends the accumulated input, that turn\'s output and the nudge', async () => {
+    const bodies: any[] = [];
+    const first = [{ type: 'reasoning', id: 'rs_1', encrypted_content: 'opaque' }, { type: 'message', id: 'msg_1', role: 'assistant', content: [{ type: 'output_text', text: 'Let me think.' }] }];
+    const fetchImpl = (async (_url: string, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body)));
+      const output = bodies.length === 1 ? first : [{ type: 'function_call', call_id: 'call_2', name: 'submit_answer', arguments: '{"answer":"42","sources":[]}' }];
+      return Response.json({ id: 'resp_' + bodies.length, status: 'completed', output, usage: { input_tokens: 10, output_tokens: 5 } });
+    }) as unknown as typeof fetch;
+    const arm: Arm = { name: 't', systemHint: () => '', writeTools: () => [], tools: () => [], call: async () => '' };
+    const run = await runAgent({ model: 'gpt-6.1-sol', system: 's', user: 'u', arm, fetchImpl, openaiStore: false, effort: 'medium' });
+    expect(run.stop).toBe('submitted');
+    expect(bodies).toHaveLength(2);
+    expect(bodies[1].previous_response_id).toBeUndefined();
+    expect(bodies[1].store).toBe(false);
+    expect(bodies[1].input).toEqual([{ role: 'user', content: 'u' }, ...first, { role: 'user', content: NUDGE }]);
   });
 });
 
@@ -492,6 +555,143 @@ describe('phase 2 stops (keyless)', () => {
       const particleCalls = providers.sent.filter(s => s.wire === 'particle').length;
       await runTaskSet({ ...opts, resume: true }, () => {});
       expect(providers.sent.filter(s => s.wire === 'particle').length).toBe(particleCalls);
+    } finally {
+      paid.guard.uninstall();
+      paid.run.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 300_000);
+});
+
+describe('phase 2 provider errors (keyless)', () => {
+  const task = fixtureTasks[0]!;
+  const answer = (ctx: EpisodeContext, model: string) => runEpisode(ctx, task, 'paraphrase', 'A', model, 1);
+
+  test('only a model-caused 400 is a counted model_error; a refused key, model or account stops the run', async () => {
+    const plain = await guarded(w => (w === 'anthropic' ? anthropicError(400, 'messages.1: unexpected tool_use_id') : undefined), ctx => answer(ctx, 'claude-opus-5-5'));
+    expect(plain.status).toBe('model_error');
+    const credit = anthropicError(400, 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.');
+    expect(await abortCode(() => guarded(w => (w === 'anthropic' ? credit : undefined), ctx => answer(ctx, 'claude-opus-5-5')))).toBe('LR_PROVIDER_REJECTED');
+    for (const status of [401, 403, 404, 422]) {
+      expect(await abortCode(() => guarded(w => (w === 'anthropic' ? anthropicError(status, 'refused') : undefined), ctx => answer(ctx, 'claude-opus-5-5')))).toBe('LR_PROVIDER_REJECTED');
+    }
+  });
+
+  test('a judge whose key is refused stops the run instead of recording a judge error', async () => {
+    const rec = await guarded(() => undefined, ctx => answer(ctx, 'claude-opus-5-5'));
+    expect(rec.status).toBe('answered');
+    const refused: Failure = (w, c) => (w === 'openai' && c.system === JUDGE_SYSTEM ? Response.json({ error: { message: 'Incorrect API key provided', code: 'invalid_api_key' } }, { status: 401 }) : undefined);
+    expect(await abortCode(() => guarded(refused, ctx => judgeEpisode(ctx, task, rec, judgeFor('claude-opus-5-5'), 'judge')))).toBe('LR_PROVIDER_REJECTED');
+  });
+
+  test('a lost or unreadable request is a harness error; a particle-1 504 is timed_out and sent once', async () => {
+    const lost = await guarded(w => (w === 'anthropic' ? new TypeError('fetch failed') : undefined), ctx => answer(ctx, 'claude-opus-5-5'));
+    expect(lost.status).toBe('harness_error');
+    const unreadable = await guarded(w => (w === 'openai' ? new Response('<html>bad gateway</html>', { status: 200 }) : undefined), ctx => answer(ctx, 'gpt-6.1-sol'));
+    expect(unreadable.status).toBe('harness_error');
+    const server = await guarded(w => (w === 'anthropic' ? anthropicError(501, 'not implemented') : undefined), ctx => answer(ctx, 'claude-opus-5-5'));
+    expect(server.status).toBe('harness_error');
+    const neverSent = await guarded(w => (w === 'particle' ? Object.assign(new Error('Unable to connect'), { code: 'ECONNREFUSED' }) : undefined), ctx => answer(ctx, 'particle-1'));
+    expect(neverSent.status).toBe('harness_error');
+    const gateway = await guarded(w => (w === 'particle' ? new Response('upstream timed out', { status: 504 }) : undefined), async (ctx, sent) => ({ rec: await answer(ctx, 'particle-1'), sent: sent.length }));
+    expect([gateway.rec.status, gateway.sent]).toEqual(['timed_out', 1]);
+  });
+
+  test('a run stops on a refused key with no record for that episode, and --resume answers it', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-rejected-'));
+    process.env.GBRAIN_AUDIT_DIR = dir;
+    let refuse = true;
+    const { fetchImpl } = withFailures(fixtureTasks, (w, c) => (refuse && w === 'anthropic' && c.system !== JUDGE_SYSTEM ? anthropicError(401, 'invalid x-api-key') : undefined));
+    const paid = scriptedPaid(dir, fetchImpl, 5);
+    const records = join(dir, 'run', 'records.local.jsonl');
+    const opts = { out: join(dir, 'run'), gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['A'] as any, models: ['claude-opus-5-5'], limit: 1, concurrency: 1, windowNote: null, paid };
+    try {
+      expect(await abortCode(() => runTaskSet({ ...opts, resume: false }, () => {}))).toBe('LR_PROVIDER_REJECTED');
+      expect(loadRecords(records).records).toHaveLength(0);
+      refuse = false;
+      expect((await runTaskSet({ ...opts, resume: true }, () => {})).result).toBe('complete');
+      expect(loadRecords(records).records.filter(r => r.kind === 'answer').map(r => [(r as AnswerRecord).status, (r as AnswerRecord).attempt])).toEqual([['answered', 1]]);
+    } finally {
+      paid.guard.uninstall();
+      paid.run.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 300_000);
+
+  test('a lost request reruns; a particle-1 504 is never sent again, even on --resume', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-lost-'));
+    process.env.GBRAIN_AUDIT_DIR = dir;
+    const failed = new Set<Wire>();
+    let particleFirst: string | null = null;
+    const { fetchImpl, sent } = withFailures(fixtureTasks, (w, c) => {
+      if (c.system === JUDGE_SYSTEM) return undefined;
+      if (w === 'particle') {
+        particleFirst ??= c.user;
+        if (c.user !== particleFirst) return new Response('upstream timed out', { status: 504 });
+      }
+      if (failed.has(w)) return undefined;
+      failed.add(w);
+      return w === 'anthropic' ? new TypeError('fetch failed') : w === 'openai' ? new Response('<html>bad gateway</html>', { status: 200 }) : Object.assign(new Error('Unable to connect'), { code: 'ECONNREFUSED' });
+    });
+    const paid = scriptedPaid(dir, fetchImpl, 5);
+    const records = join(dir, 'run', 'records.local.jsonl');
+    const opts = { out: join(dir, 'run'), gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['A'] as any, models: ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], limit: 2, concurrency: 1, windowNote: null, paid };
+    try {
+      await runTaskSet({ ...opts, resume: false }, () => {});
+      const answers = loadRecords(records).records.filter((r): r is AnswerRecord => r.kind === 'answer');
+      const last = new Map(answers.map(a => [a.key, a]));
+      for (const model of ['claude-opus-5-5', 'gpt-6.1-sol']) {
+        const lostOnce = answers.find(a => a.model === model && a.status === 'harness_error')!;
+        expect(lostOnce.attempt).toBe(1);
+        expect([last.get(lostOnce.key)!.status, last.get(lostOnce.key)!.attempt]).toEqual(['answered', 2]);
+      }
+      const particle = [...last.values()].filter(a => a.model === 'particle-1').map(a => [a.status, a.attempt]).sort();
+      expect(particle).toEqual([['answered', 2], ['timed_out', 1]]);
+      const particleSent = () => sent.filter(s => s.wire === 'particle').length;
+      expect(particleSent()).toBe(3);
+      await runTaskSet({ ...opts, resume: true }, () => {});
+      expect(particleSent()).toBe(3);
+    } finally {
+      paid.guard.uninstall();
+      paid.run.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 300_000);
+
+  test('the env hatch is cleared at open, and a privacy relaxation during the run stops it before the next task', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-relaxed-'));
+    process.env.GBRAIN_AUDIT_DIR = dir;
+    process.env.GBRAIN_REMOTE_PRIVATE_PAGES = '1';
+    const { fetchImpl, sent } = withFailures(fixtureTasks, () => { process.env.GBRAIN_REMOTE_PRIVATE_PAGES = '1'; return undefined; });
+    const paid = scriptedPaid(dir, fetchImpl, 5);
+    const opts = { out: join(dir, 'run'), gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['A'] as any, models: ['claude-opus-5-5'], limit: 2, concurrency: 1, windowNote: null, paid };
+    try {
+      expect(await abortCode(() => runTaskSet({ ...opts, resume: false }, () => {}))).toBe('LR_PRIVACY_RELAXED');
+      expect(sent.filter(s => conversation(s.wire, s.body).system !== JUDGE_SYSTEM)).toHaveLength(1);
+    } finally {
+      delete process.env.GBRAIN_REMOTE_PRIVATE_PAGES;
+      paid.guard.uninstall();
+      paid.run.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 300_000);
+
+  test('--resume refuses a session with another harness, gbrain, model, arm, form or task set', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-identity-'));
+    process.env.GBRAIN_AUDIT_DIR = dir;
+    const { fetchImpl } = withFailures(fixtureTasks, () => undefined);
+    const paid = scriptedPaid(dir, fetchImpl, 5);
+    const opts = { out: join(dir, 'run'), gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['A'] as any, models: ['claude-opus-5-5'], limit: 2, concurrency: 1, windowNote: null, paid };
+    try {
+      await runTaskSet({ ...opts, resume: false }, () => {});
+      const runPath = join(dir, 'run', 'run.json');
+      const run = JSON.parse(readFileSync(runPath, 'utf8'));
+      expect(await abortCode(() => runTaskSet({ ...opts, models: ['claude-opus-5-5', 'gpt-6.1-sol'], resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
+      expect(await abortCode(() => runTaskSet({ ...opts, limit: 1, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
+      expect(await abortCode(() => runTaskSet({ ...opts, resume: true }, () => {}))).toBe('no abort');
+      writeFileSync(runPath, JSON.stringify({ ...run, identity: { ...run.identity, harness_digest: '0'.repeat(64) } }));
+      expect(await abortCode(() => runTaskSet({ ...opts, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
+      expect(JSON.parse(readFileSync(runPath, 'utf8')).identity.harness_digest).toBe('0'.repeat(64));
     } finally {
       paid.guard.uninstall();
       paid.run.close();

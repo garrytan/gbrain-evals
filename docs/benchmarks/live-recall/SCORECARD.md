@@ -152,7 +152,7 @@ Top level:
   usage at the ledger's list prices; `ledger_usd`, the ledger's total for the run; and `other_usd`, the difference
   (gbrain's embedding and rerank calls, and requests retried after a failure).
 - `cells`: form (`paraphrase`, `exact`, and `pooled` when both ran) to arm to model. Each cell has `n_tasks`, `counted`,
-  `excluded` by reason (`harness_error`, `timed_out`, `degraded`, `judge_error`, `unjudged`, `not_run`), `invalid` and
+  `model_errors` (counted no-answers from a model-caused 400), `excluded` by reason (`harness_error`, `timed_out`, `degraded`, `judge_error`, `unjudged`, `not_run`), `invalid` and
   `invalid_reason` (`errors_over_cap` or `degraded_over_cap`), and `rates`: `correct`, `correct_grounded` (null for A),
   `partial`, `abstained`, `no_answer`, `confidently_wrong` and `contradicted`, each as `k`, `n`, `point` and `ci95` (Wilson;
   a cluster bootstrap over tasks when pooled). Then `citations` (mean per answer, supported share), `exposure` (shares

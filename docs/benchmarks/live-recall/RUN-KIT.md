@@ -246,8 +246,8 @@ All commands run from the repository root.
      --budget-usd 360 --budget-ledger <ledger> --program-cap-usd 360 --out <run dir>
    ```
 
-   Before the first task the runner proves the barrier, refuses a brain that shows private pages to remote callers,
-   repeats the gold-page check, and sends one public probe query through D's search and B's `query` tool. The terminal
+   Before the first task the runner proves the barrier, refuses a brain that shows private pages to remote callers
+   (and checks that again before every task), repeats the gold-page check, and sends one public probe query through D's search and B's `query` tool. The terminal
    shows only the gbrain version and barrier, the task counts, the preflight result, progress every 10 tasks per pass,
    any [`LR_JUDGE_ERROR`](#lr_judge_error) or [`LR_CELL_INVALID`](#lr_cell_invalid) count, the output paths and the
    ledger total. Exit status: 0 complete, 1 incomplete (some episode is missing or unjudged), 6 cap stop
@@ -273,8 +273,8 @@ All commands run from the repository root.
 
 8. **Remove the role** (ALPH-72) and send the teardown proof to GBRA-108.
 
-If the run stops for any reason other than a cap stop (the machine restarted, a key failed), continue it with the same
-command plus `--resume --window-note <id>`, where the id is from GBEV-3's window note. A resume judges answered episodes
+If the run stops for any reason other than a cap stop (the machine restarted, a provider refused a key:
+[`LR_PROVIDER_REJECTED`](#lr_provider_rejected)), continue it with the same command plus `--resume --window-note <id>`, where the id is from GBEV-3's window note. A resume judges answered episodes
 that have no verdict, reruns only episodes with no record or an unfinished harness error, and never reruns a particle-1
 answer that may have been billed. A run directory with a cap stop refuses to continue.
 
@@ -345,7 +345,10 @@ The question file has a problem at the line and field named. Fix it and freeze a
 The question file's hash differs from `freeze.json`, or a counted run was started without `--questions` and
 `--freeze`. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
 run directories were made on different question files. In phase 2 it means the task file's hash differs from
-`freeze.json`, or the kept line count does not match it: run with the frozen file, or freeze again.
+`freeze.json`, or the kept line count does not match it: run with the frozen file, or freeze again. On a phase 2
+`--resume` it means the resume differs from the session that started the run directory in its harness digest, loaded
+gbrain version or commit, models, arms, forms or kept tasks (the detail names which). Resume with the same harness and
+flags, or start a new run directory.
 
 ### LR_COMPARE_CONTROL
 
@@ -380,8 +383,9 @@ Phase 2: the task file has a problem at the line and field named. Fix it and fre
 
 ### LR_PRIVACY_RELAXED
 
-Phase 2: the brain's config shows private pages to remote callers (`search.remote_private_pages`). Nothing ran. The
-runner never relaxes or works around it; GBEV-3 decides.
+Phase 2: the brain's config shows private pages to remote callers (`search.remote_private_pages`). At the start nothing
+runs. The runner reads the policy again before every task, so a change during the run stops it before the next task.
+The runner never relaxes or works around it; GBEV-3 decides.
 
 ### LR_CAP_STOP
 
@@ -408,6 +412,13 @@ through ALPH-72 for a window note.
 
 Phase 2: the projected counted cost breaks the cost gate (the paraphrase pass over $270, 75% of the $360 cap, or the
 total over the cap). Send the estimate line to GBEV-3 through ALPH-72; no counted call runs until GBEV-3 answers.
+
+### LR_PROVIDER_REJECTED
+
+Phase 2: a provider refused the key, the model or the account on an answer, summary or judge call (401, 403, 404,
+another 4xx, or a 400 about credit or billing). The detail names the model and the HTTP status. The episode has no
+record, so nothing was counted. Fix the key, the model access or the balance, then continue with the same command plus
+`--resume --window-note <id>`, which reruns that episode.
 
 ### Snapshot codes
 

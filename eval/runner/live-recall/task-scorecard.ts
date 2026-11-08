@@ -46,6 +46,8 @@ export function primaryMdd(n: number) {
 export interface Outcome {
   task: string; type: string; form: TaskForm; arm: TaskArm; model: string;
   state: 'counted' | 'excluded'; exclusion: Exclusion | null;
+  /** A counted no-answer whose model call ended on a model-caused 400. */
+  model_error: boolean;
   values: Record<Rate, number | null>;
   citations: number; supported: number;
   exposure: Record<(typeof EXPOSURES)[number], number | null>;
@@ -73,7 +75,7 @@ export function outcomes(tasks: Task[], forms: readonly TaskForm[], arms: readon
     const a = idx.answers.get(keyOf(form, task.id, arm, model));
     const empty = Object.fromEntries(RATES.map(r => [r, null])) as Record<Rate, number | null>;
     const base: Outcome = {
-      task: task.id, type: task.type, form, arm, model, state: 'excluded', exclusion: 'not_run', values: empty, citations: 0, supported: 0,
+      task: task.id, type: task.type, form, arm, model, state: 'excluded', exclusion: 'not_run', model_error: false, values: empty, citations: 0, supported: 0,
       exposure: Object.fromEntries(EXPOSURES.map(e => [e, null])) as Outcome['exposure'], turns: 0, tool_calls: 0, ms: 0,
     };
     if (!a) { out.push(base); continue; }
@@ -89,7 +91,7 @@ export function outcomes(tasks: Task[], forms: readonly TaskForm[], arms: readon
     if (a.status === 'timed_out' || a.status === 'degraded') { out.push({ ...filled, exclusion: a.status }); continue; }
     if (a.status !== 'answered') {
       const values = { correct: 0, correct_grounded: arm === 'A' ? null : 0, partial: 0, abstained: 0, no_answer: 1, confidently_wrong: 0, contradicted: 0 };
-      out.push({ ...filled, state: 'counted', exclusion: null, values });
+      out.push({ ...filled, state: 'counted', exclusion: null, model_error: a.status === 'model_error', values });
       continue;
     }
     const j = idx.judges.get(a.key);
@@ -131,7 +133,7 @@ function cell(rows: Outcome[], pooled: boolean, cost: CellCost | null, usage: { 
   const correct = counted.reduce((s, o) => s + (o.values.correct ?? 0), 0);
   const answeringUsd = cost ? cost.answer_usd + cost.summariser_usd : null;
   return {
-    n_tasks: rows.length, counted: counted.length, excluded, invalid: invalid !== null, invalid_reason: invalid,
+    n_tasks: rows.length, counted: counted.length, model_errors: counted.filter(o => o.model_error).length, excluded, invalid: invalid !== null, invalid_reason: invalid,
     rates: Object.fromEntries(RATES.map(r => [r, rate(counted, r, pooled)])),
     citations: { mean_per_answer: round(answered.length ? answered.reduce((s, o) => s + o.citations, 0) / answered.length : null), supported_share: round(answered.reduce((s, o) => s + o.citations, 0) ? answered.reduce((s, o) => s + o.supported, 0) / answered.reduce((s, o) => s + o.citations, 0) : null) },
     exposure: Object.fromEntries(EXPOSURES.map(e => {
@@ -283,7 +285,7 @@ const KEY_WORDS = new Set<string>([
   'pd10', 'pd20', 'pd30', 'alpha_05', 'holm_0125', ...TYPES, 'page_first', 'memory', 'gbrain_search', 'other_search', 'unknown',
   'model_calls_usd', 'by_role_usd', 'ledger_usd', 'other_usd', 'answer', 'summariser', 'judge', 'second_judge',
   ...FORMS, POOLED, ...ARMS, ...MODELS,
-  'n_tasks', 'counted', 'excluded', 'invalid', 'invalid_reason', 'rates', 'citations', 'exposure', 'turns_mean', 'tool_calls_mean', 'latency_ms', 'tokens', 'cost_usd', 'answer_cost_per_correct_usd',
+  'n_tasks', 'counted', 'model_errors', 'excluded', 'invalid', 'invalid_reason', 'rates', 'citations', 'exposure', 'turns_mean', 'tool_calls_mean', 'latency_ms', 'tokens', 'cost_usd', 'answer_cost_per_correct_usd',
   ...EXCLUSIONS, ...RATES, 'k', 'n', 'point', 'ci95', 'mean_per_answer', 'supported_share', ...EXPOSURES, 'p50', 'p95', 'input', 'output', 'cache_read', 'cache_write',
   'id', 'primary', 'form', 'model', 'a', 'b', 'metric', 'untested', 'n_pairs', 'mean_a', 'mean_b', 'delta', 'mcnemar', 'wins', 'losses', 'discordant', 'p_two_sided', 'p_holm', 'mde',
   'second_judge_correct', 'audit', 'agree', 'kappa',
@@ -370,7 +372,7 @@ export function renderTaskMarkdown(s: ReturnType<typeof buildTaskScorecard>): st
   for (const [form, byArm] of Object.entries(s.cells)) for (const [arm, byModel] of Object.entries(byArm as any)) for (const [model, c] of Object.entries(byModel as any) as Array<[string, any]>) {
     const ex = Object.entries(c.excluded).filter(([, n]) => (n as number) > 0).map(([k, n]) => k + ' ' + n).join(', ') || '0';
     const e = c.exposure;
-    L.push('| ' + form + ' | ' + arm + ' | ' + model + ' | ' + c.counted + (c.invalid ? ' (invalid: ' + c.invalid_reason + ')' : '') + ' | ' + ex + ' | ' + pct(c.rates.correct?.point) + ' | ' + pct(c.rates.correct_grounded?.point) + ' | ' + pct(c.rates.abstained?.point) + ' | ' + pct(c.rates.confidently_wrong?.point) + ' | ' + pct(e.gold_seen) + ' / ' + pct(e.gold_opened) + ' / ' + pct(e.gold_cited) + ' | ' + (c.cost_usd ? usd(c.cost_usd.answer + c.cost_usd.summariser) : 'n/a') + ' |');
+    L.push('| ' + form + ' | ' + arm + ' | ' + model + ' | ' + c.counted + (c.model_errors ? ' (' + c.model_errors + ' model errors)' : '') + (c.invalid ? ' (invalid: ' + c.invalid_reason + ')' : '') + ' | ' + ex + ' | ' + pct(c.rates.correct?.point) + ' | ' + pct(c.rates.correct_grounded?.point) + ' | ' + pct(c.rates.abstained?.point) + ' | ' + pct(c.rates.confidently_wrong?.point) + ' | ' + pct(e.gold_seen) + ' / ' + pct(e.gold_opened) + ' / ' + pct(e.gold_cited) + ' | ' + (c.cost_usd ? usd(c.cost_usd.answer + c.cost_usd.summariser) : 'n/a') + ' |');
   }
   L.push('', '## Descriptive comparisons', '', '| Comparison | Pairs | B − A (95% CI) | p |', '|---|---|---|---|');
   for (const c of s.comparisons.filter(c => !c.primary)) L.push('| ' + c.id + (c.untested ? ' (untested)' : '') + ' | ' + c.n_pairs + ' | ' + pct(c.delta) + (Array.isArray(c.ci95) ? ' (' + pct(c.ci95[0]) + ' to ' + pct(c.ci95[1]) + ')' : '') + ' | ' + (c.p_two_sided ?? 'n/a') + ' |');

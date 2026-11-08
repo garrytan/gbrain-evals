@@ -57,6 +57,8 @@ export const TASK_CONCURRENCY = 4;
 export const PROVIDER_CONCURRENCY = 4;
 /** The descriptive second judge reads particle-1's paraphrase rows of these arms. */
 export const SECOND_JUDGE_ARMS: readonly TaskArm[] = ['B', 'C', 'D'];
+/** Run identity a --resume must share with the session that started the run directory. */
+const RESUME_IDENTITY = ['harness_digest', 'gbrain_loaded_version', 'gbrain_loaded_commit', 'models', 'arms', 'forms', 'kept_ids'] as const;
 const AUDIT_ROWS = 30;
 const KEY_ENV = { anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', particle: 'PARTICLE_API_KEY' } as const;
 const HARNESS_FILES = [
@@ -164,10 +166,17 @@ interface Brain {
   crag: { escalation: boolean; think: boolean }; resultCache: boolean | null; close: () => Promise<void>;
 }
 
+/** Refuse a brain whose remote read policy, read fresh, shows private pages to remote callers. */
+export async function assertPrivate(gut: GbrainUnderTest, engine: any): Promise<void> {
+  const visibility = await importGbrain<any>(gut, 'src/core/search/private-visibility.ts');
+  const relaxed = typeof visibility.readRemotePolicyNow === 'function' ? (await visibility.readRemotePolicyNow(engine)).privacyRelaxed : await visibility.remotePrivacyRelaxed(engine);
+  if (relaxed !== false) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'search.remote_private_pages relaxes remote private-page visibility');
+}
+
 /**
  * Open the fixture or the counted brain behind phase 1's barrier and guards, and refuse a brain that relaxes remote
  * private-page visibility. The env escape hatch is deleted from this process first, so only the brain's config could
- * relax it.
+ * relax it; runTaskSet checks again before every task.
  */
 async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUrlEnv: string }, capped: () => boolean): Promise<Brain> {
   delete process.env.GBRAIN_REMOTE_PRIVATE_PAGES;
@@ -188,9 +197,7 @@ async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUr
     schemaVersion = brain.schema_version;
   }
   try {
-    const visibility = await importGbrain<any>(o.gut, 'src/core/search/private-visibility.ts');
-    const relaxed = typeof visibility.readRemotePolicyNow === 'function' ? (await visibility.readRemotePolicyNow(engine)).privacyRelaxed : await visibility.remotePrivacyRelaxed(engine);
-    if (relaxed !== false) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'search.remote_private_pages relaxes remote private-page visibility');
+    await assertPrivate(o.gut, engine);
     const { loadSearchModeConfig, resolveSearchMode } = await importGbrain<any>(o.gut, 'src/core/search/mode.ts');
     const knobs = resolveSearchMode(await loadSearchModeConfig(engine));
     if (knobs.reranker_enabled && String(knobs.reranker_model).startsWith('typesafe:')) throw new LiveRecallAbort('LR_RERANK_NEEDS_TYPESAFE', 'configured reranker is a TypeSafe recipe');
@@ -449,6 +456,12 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       budget: { runner: o.paid.runner, run_id: o.paid.run.runId, ledger_path: o.paid.ledgerPath, cap_usd: o.paid.capUsd },
       forms: o.forms, arms: o.arms, models: o.models,
     };
+    if (previous) {
+      const was: Record<string, unknown> = { ...previous.identity, kept_ids: previous.kept_ids }, now: Record<string, unknown> = { ...run.identity, kept_ids: run.kept_ids };
+      const norm = (v: unknown) => JSON.stringify(Array.isArray(v) ? [...v].sort() : v);
+      const changed = RESUME_IDENTITY.filter(k => norm(was[k]) !== norm(now[k]));
+      if (changed.length) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the resume differs from the first session in ' + changed.join(', '));
+    }
     writeJson(p.run, run);
     if (store.torn) say(store.torn + ' torn record line(s) from an interrupted write were skipped');
 
@@ -469,13 +482,17 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
     for (const form of FORMS.filter(f => o.forms.includes(f))) {
       let done = 0;
       await pool(tasks, o.concurrency, async task => {
-        for (const [arm, model] of cellOrder(task.id, o.arms, o.models)) {
+        try {
           if (stopped()) return;
-          try { await cell(form, task, arm, model); } catch (e) {
-            if (isCapStop(e)) halt.cap ??= e as Error;
-            else halt.fatal ??= e;
-            return;
+          await assertPrivate(o.gut, brain.engine);
+          for (const [arm, model] of cellOrder(task.id, o.arms, o.models)) {
+            if (stopped()) return;
+            await cell(form, task, arm, model);
           }
+        } catch (e) {
+          if (isCapStop(e)) halt.cap ??= e as Error;
+          else halt.fatal ??= e;
+          return;
         }
         done++;
         if (done % 10 === 0 || done === tasks.length) say(form + ' pass: ' + done + '/' + tasks.length + ' tasks');
