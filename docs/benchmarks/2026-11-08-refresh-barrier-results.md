@@ -14,8 +14,7 @@
   retry.
 - **What didn't work: the first counted run failed, and our scorer penalises untitled captures.** At gbrain
   `431cb3f9` the test read **FAIL**: two writes held behind refreshes that aborted stayed pending for up to about 300 s
-  (GST-1853), and four overwrites matched a fault in our own detector, three of them shown by replay. gbrain fixed the
-  hangs in `773a29ee`, the two runs are never pooled, and the first stays FAIL. B1's latency gate also failed its first
+  (GST-1853), and four overwrites matched a fault in our own detector. gbrain fixed the hangs in `773a29ee`, the two runs are never pooled, and the first stays FAIL. B1's latency gate also failed its first
   reading (Voyage 1.69 times flag-off, taken while this machine was creating VMs); Amendment 5 then added an idle-machine
   guard, and the guarded rerun passed. Separately,
   when an agent calls `capture` without a title, gbrain titles the note with its content, so the preregistered scorer

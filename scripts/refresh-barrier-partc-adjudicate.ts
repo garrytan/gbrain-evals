@@ -4,9 +4,10 @@
  * written", followed by a corrected call carrying the same fact token, counts as one write attempt and its resend, not a
  * reissue. A resend after a success, a timeout, a busy or barrier answer, or any other error still counts as a reissue.
  * The rule applies identically to both arms and both models; the result keeps the raw preregistered strict success beside
- * the adjudicated one, and the verdict reads the adjudicated number. A fact token more than once in Git HEAD (Amendment 2,
- * procedure 4) or a context overflow fails an episode under both readings, as the analyzer's success does. A model's status
- * is incomplete unless all 60 tasks in both arms are counted episodes at G and the counted harness digest.
+ * the adjudicated one, and the verdict reads the adjudicated number. A fact token more than once in pages or Git HEAD
+ * (Amendment 2, procedure 4) or a context overflow fails an episode under both readings; the analyzer's success excludes
+ * only the context overflow. A model's status is incomplete unless all 60 tasks in both arms are counted episodes at G and
+ * the counted harness digest.
  *
  *   bun scripts/refresh-barrier-partc-adjudicate.ts --partc <agent.ts --out dir> [--out <adjudication.json>]
  *
