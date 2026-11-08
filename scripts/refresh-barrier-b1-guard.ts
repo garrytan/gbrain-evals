@@ -40,7 +40,7 @@ mkdirSync(out, { recursive: true });
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 const loadavg = () => readFileSync('/proc/loadavg', 'utf8').split(' ').slice(0, 3).map(Number);
 const read = (p: string) => { try { return readFileSync(p, 'utf8'); } catch { return null; } };
-const pids = () => readdirSync('/proc').filter(d => /^\d+$/.test(d)).map(Number);
+const pids = () => readdirSync('/proc').filter(d => /^\d+$/.test(d)).map(Number).sort((a, b) => a - b);
 const statFields = (s: string) => { const close = s.lastIndexOf(')'); return { comm: s.slice(s.indexOf('(') + 1, close), rest: s.slice(close + 2).split(' ') }; };
 
 function tree(root: number): Set<number> {
@@ -76,7 +76,7 @@ function foreignRunnable(inTree: Set<number>): string[] {
   for (const pid of pids()) {
     if (pid === process.pid || inTree.has(pid)) continue;
     let tids: string[] = [];
-    try { tids = readdirSync(`/proc/${pid}/task`); } catch { continue; }
+    try { tids = readdirSync(`/proc/${pid}/task`).sort(); } catch { continue; }
     for (const tid of tids) {
       const s = read(`/proc/${pid}/task/${tid}/stat`);
       if (!s) continue;
