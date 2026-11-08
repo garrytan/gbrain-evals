@@ -20,7 +20,7 @@
       "block": "named",
       "engine": "pglite",
       "gbrain": {
-        "root": "/home/ubi/work/gbrain-g-shallow",
+        "root": "~/work/gbrain-g-shallow",
         "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
         "dirty": false
       },
@@ -38,7 +38,7 @@
       "block": "named",
       "engine": "postgres",
       "gbrain": {
-        "root": "/home/ubi/work/gbrain-g-shallow",
+        "root": "~/work/gbrain-g-shallow",
         "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
         "dirty": false
       },
@@ -56,7 +56,7 @@
       "block": "quiet",
       "engine": "pglite",
       "gbrain": {
-        "root": "/home/ubi/work/gbrain-g-shallow",
+        "root": "~/work/gbrain-g-shallow",
         "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
         "dirty": false
       },
@@ -74,7 +74,7 @@
       "block": "quiet",
       "engine": "postgres",
       "gbrain": {
-        "root": "/home/ubi/work/gbrain-g-shallow",
+        "root": "~/work/gbrain-g-shallow",
         "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
         "dirty": false
       },
@@ -92,7 +92,7 @@
       "block": "trials",
       "engine": "pglite",
       "gbrain": {
-        "root": "/home/ubi/work/gbrain-g-shallow",
+        "root": "~/work/gbrain-g-shallow",
         "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
         "dirty": false
       },
@@ -110,7 +110,7 @@
       "block": "trials",
       "engine": "postgres",
       "gbrain": {
-        "root": "/home/ubi/work/gbrain-g-shallow",
+        "root": "~/work/gbrain-g-shallow",
         "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
         "dirty": false
       },
