@@ -415,6 +415,9 @@ if (import.meta.main) {
   const keyless = mode === 'run' ? keylessUpstreamArg(argv) : null;
   if (mode === 'run') {
     if (!ledger || !runId || !(leaseUsd > 0) || !(cap > 0)) { console.error('run needs --budget-ledger, --run-id, --lease-usd and --ledger-cap-usd'); process.exit(2); }
+    if (!existsSync(join(out, 'upstream.json')) && ['judgments.ndjson', 'cache'].some(f => existsSync(join(out, f)))) {
+      console.error(`${out} holds judgments or a cache but no keyless/paid marker, so it may hold a keyless rehearsal; give this run a fresh --out`); process.exit(2);
+    }
     try { claimOut(out, !!keyless, 'judge-check'); }
     catch (e) { console.error((e as Error).message); process.exit(2); }
   }

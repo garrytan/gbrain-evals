@@ -289,6 +289,13 @@ describe('the command line', () => {
       '--lease-usd', '1', '--ledger-cap-usd', '2', '--keyless-upstream', 'http://127.0.0.1:9'], { cwd: join(import.meta.dir, '..', '..'), stdout: 'pipe', stderr: 'pipe', env: { ...process.env, OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '' } });
     expect(r.exitCode).toBe(2);
     expect(r.stderr.toString()).toContain('holds a paid judge-check run');
+    const legacy = dir();
+    writeFileSync(join(legacy, 'judgments.ndjson'), '');
+    const l = Bun.spawnSync(['bun', 'eval/runner/rs1/judge-check.ts', 'run', '--stage1', stage1, '--out', legacy, '--budget-ledger', join(legacy, 'ledger.ndjson'), '--run-id', 'jc-test',
+      '--lease-usd', '1', '--ledger-cap-usd', '2', '--keyless-upstream', 'http://127.0.0.1:9'], { cwd: join(import.meta.dir, '..', '..'), stdout: 'pipe', stderr: 'pipe', env: { ...process.env, OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '' } });
+    expect(l.exitCode).toBe(2);
+    expect(l.stderr.toString()).toContain('no keyless/paid marker');
+    expect(existsSync(join(legacy, 'upstream.json'))).toBe(false);
     expect(existsSync(join(out, 'pool.json'))).toBe(false);
     expect(existsSync(join(out, 'ledger.ndjson'))).toBe(false);
     const passing = setup();
