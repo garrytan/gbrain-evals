@@ -484,21 +484,22 @@ Nothing above changes after the freeze except by a dated amendment below.
 
 Wave B's regeneration once N_final is known and the pricing rerun after stage 1 are recorded here too.
 
-### 2026-11-08: five harness fixes before any counted run
+### 2026-11-08: six harness fixes before any counted run
 
-These land on the results branch before any counted run. Each has a test that fails on `325a1c04` and passes at its
-commit. They change no bar, arm, reader, judge, margin or cap.
+These land on the results branch before any counted run. Each has a test that fails on the code at `325a1c04` (the
+sixth, on the code at `572109ba`) and passes at its commit. They change no bar, arm, reader, judge, margin or cap
+value.
 
 1. **Wave A's run identity survives wave B's regeneration** (`e1320de4`). The gbrain cell's extraction cap,
    `GBRAIN_F6_EXTRACT_CAP_USD`, is part of the run identity verdict.ts compares, and it was derived from the RS1 set's
    conversation count and token total. Regenerating the cells at a new N_final could move it from $4 to $3, $5 or $6,
-   and verdict.ts would then refuse wave A's receipts. It now sizes from a fixed figure, the length gate's 1.07M tokens
-   per conversation, so it stays $4. The test regenerates the cells at every N_final from 20 to 33, with the set's
-   token total unchanged and at 0.85, 1.00 and 1.15 times 1.07M per conversation, and checks that every field
-   verdict.ts compares for wave A's units (the run config without launch-control fields, `dataset`,
-   `scheduled_sha256` and `limit`) is byte-identical to the committed `rs1-cells.json`. It proves that changing the
-   set's size or token total cannot refuse wave A. It does not cover hand edits to other cell fields, which a
-   regeneration amendment must not make.
+   and verdict.ts would then refuse wave A's receipts. It now sizes from a fixed figure, the length gate's centre of
+   1.07M tokens per conversation, not read from the filled set, so it stays $4. The test regenerates the cells at every
+   N_final from 20 to 33, with the set's token total unchanged and at 0.85, 1.00 and 1.15 times 1.07M per conversation,
+   and checks that every field verdict.ts compares for wave A's units (the run config without launch-control fields,
+   `dataset`, `scheduled_sha256` and `limit`) is byte-identical to the committed `rs1-cells.json`. It proves that
+   changing the set's size or token total cannot refuse wave A. It does not cover hand edits to other cell fields, which
+   a regeneration amendment must not make.
 2. **No false n/a cost** (`ab9cee75`). A reader whose only answers in a unit are failed retrievals (no context, zero
    usage, no reader call) now adds $0 there instead of making its cost per question n/a. A reader with an answer that
    read a context and no meter row is still unmetered, so its cost stays n/a.
@@ -510,6 +511,9 @@ commit. They change no bar, arm, reader, judge, margin or cap.
 5. **check-early-stop says when it tested nothing** (`baf8e082`). It exits 3 (untested) when it checked no
    conversation or only early-stopped ones. It can only test mints that answered every batch: an early-stopped mint's
    chat already ends at the stop, so its files match by construction.
+6. **The launch preflight prices particle-1** (`f076a992`). The preflight priced every model that was not Anthropic or
+   Voyage at OpenAI's address, so it refused every RS1 campaign, which names particle-1, with `MODEL_UNPRICED` before
+   any lease. Stage 1's first launch stopped there at $0. particle-1 is now priced at Particle's own address.
 
 ## Disclosures
 
