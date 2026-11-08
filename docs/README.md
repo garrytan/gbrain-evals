@@ -155,6 +155,7 @@ gap does not isolate the effect of a graph alone.
 | Does a short skill index in the harness's instruction file get agents to load and follow the right gbrain skill, against every skill in the native skills directory? | [October 24 spring-loaded skills](benchmarks/2026-10-24-spring-loaded-skills.md) (gbrain branch `12669180`, not on master; three models, 360 trials; [preregistration](benchmarks/2026-10-24-spring-loaded-skills/preregistration.md)): the index loaded the right skill before acting in 29 of 36 Claude Code trials, against 15 for native skills and 0 with none, and tied native on Codex at 22 of 24, at about a quarter of native's standing tokens. Pass sits near the floor in the harnesses' real permission modes in every arm. |
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
 | What did the earlier ingestion worker comparisons measure? | [Subagent comparison](benchmarks/2026-04-18-minions-vs-openclaw-subagents.md), [production comparison](benchmarks/2026-04-18-minions-vs-openclaw-production.md) |
+| Does gbrain's refresh write barrier (`persistence.refresh_barrier`) land every write made during a refresh exactly once and in order, without slowing writes, changing retrieval or confusing agents? | [November 8 refresh write barrier results](benchmarks/2026-11-08-refresh-barrier-results.md) at gbrain `773a29ee`, under the [November 6 preregistration](benchmarks/2026-11-06-refresh-barrier-preregistration.md) and its six amendments: PASS. No write was lost, stuck, duplicated or overwritten in 2,000 concurrency trials on Postgres and PGLite in either arm; with the flag on, `worktree_refreshing` refusals went to 0 and p95 blocked time from about 10 s to under 0.1 s, with quiet writes no slower and retrieval unchanged. Agents did at least as well with it on (claude-opus-5-5 +36.7 points strict success, 95% +18.3 to +55.0; gpt-6.1-sol +93.3, +86.7 to +98.3), so the findings recommend the flag on. The first counted run, at `431cb3f9`, read FAIL on two hangs gbrain then fixed (GST-1853). gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. ([Disclosures](disclosures.md)) |
 
 ## Correctness and access checks (keyless, synthetic worlds)
 
@@ -203,7 +204,6 @@ These documents fix a method before measuring. They publish no capability scores
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
 | Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? | [November 1 SkillOpt method preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md) with three amendments: Haiku 5.5 probes 1 and 2 ([probe 1's summary](benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json)), the frontier probe on Opus 5.5 and GPT-6.1 Sol, and the one test-split read reported in the [November 2 report](benchmarks/2026-11-01-skillopt-method/REPORT.md); task sets: [v2](../eval/data/skillopt-method-v2/README.md), which the probe reads, and the frozen [v1](../eval/data/skillopt-method-v1/README.md) |
-| Does gbrain's refresh write barrier (`persistence.refresh_barrier`) land every write made during a refresh exactly once and in order, without slowing writes, changing retrieval or confusing agents? | [November 6 refresh write barrier preregistration](benchmarks/2026-11-06-refresh-barrier-preregistration.md): keyless concurrency trials (2,000), a quiet write-latency block and GBRA-108's named case on both engines, Cat 18 and Cat 26 off against on, and an agent check on claude-opus-5-5 and gpt-6.1-sol (its first amendment drops particle-1); the build under test is pinned by that amendment. gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. ([Disclosures](disclosures.md)) |
 
 ## Data and methods
 
@@ -272,6 +272,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-08: Refresh write barrier results row
+
+The refresh write barrier row moves from "Protocols and preregistrations" to "Saving, using, and improving memory" and
+links the November 8 results at gbrain `773a29ee`: PASS, with the flag recommended on.
 
 ### 2026-11-07: Opening names v0.10.171; refresh barrier row names Part C's two models
 

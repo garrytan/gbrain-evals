@@ -1,0 +1,132 @@
+{
+  "label": "g",
+  "kind": "b2",
+  "stub_embed": false,
+  "gbrain": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+  "gbrain_evals": "2d5fafb826c4eb1be77e8f9969411f1a9edd343a",
+  "harness_digest": "500cc5ba4b978e18d695683a39ef51714ff4c1626249b1594e88eb91629035e3",
+  "switches": {
+    "off": false,
+    "on": true
+  },
+  "budget": {
+    "runner": "gbev44-refresh-barrier-b2",
+    "cap_usd": 5,
+    "run_id": "gbev44-refresh-barrier-b2-2026-11-08T17-43-08-537Z-edae3558",
+    "ledger": "<work>/ledger2/b2.db"
+  },
+  "ledger_stops": [],
+  "cap_stop": false,
+  "pass": true,
+  "scores": {
+    "margin": -0.02,
+    "pass": true,
+    "cells": {
+      "cat18/openai/recall_at_10": {
+        "queries": 25,
+        "off": 0.2831111111111111,
+        "on": 0.2831111111111111,
+        "diff": {
+          "mean": 0,
+          "lo": 0,
+          "hi": 0
+        },
+        "identical": true,
+        "missing": false,
+        "pass": true
+      },
+      "cat18/voyage/recall_at_10": {
+        "queries": 25,
+        "off": 0.4498571428571428,
+        "on": 0.4498571428571428,
+        "diff": {
+          "mean": 0,
+          "lo": 0,
+          "hi": 0
+        },
+        "identical": true,
+        "missing": false,
+        "pass": true
+      },
+      "cat26/none/r_at_3": {
+        "queries": 10,
+        "off": 1,
+        "on": 1,
+        "diff": {
+          "mean": 0,
+          "lo": 0,
+          "hi": 0
+        },
+        "identical": true,
+        "missing": false,
+        "pass": true
+      },
+      "cat26/none/mrr": {
+        "queries": 10,
+        "off": 1,
+        "on": 1,
+        "diff": {
+          "mean": 0,
+          "lo": 0,
+          "hi": 0
+        },
+        "identical": true,
+        "missing": false,
+        "pass": true
+      },
+      "cat26/title/r_at_3": {
+        "queries": 10,
+        "off": 1,
+        "on": 1,
+        "diff": {
+          "mean": 0,
+          "lo": 0,
+          "hi": 0
+        },
+        "identical": true,
+        "missing": false,
+        "pass": true
+      },
+      "cat26/title/mrr": {
+        "queries": 10,
+        "off": 1,
+        "on": 1,
+        "diff": {
+          "mean": 0,
+          "lo": 0,
+          "hi": 0
+        },
+        "identical": true,
+        "missing": false,
+        "pass": true
+      },
+      "cat26/per_chunk_synopsis/r_at_3": {
+        "queries": 10,
+        "off": 1,
+        "on": 1,
+        "diff": {
+          "mean": 0,
+          "lo": 0,
+          "hi": 0
+        },
+        "identical": true,
+        "missing": false,
+        "pass": true
+      },
+      "cat26/per_chunk_synopsis/mrr": {
+        "queries": 10,
+        "off": 1,
+        "on": 1,
+        "diff": {
+          "mean": 0,
+          "lo": 0,
+          "hi": 0
+        },
+        "identical": true,
+        "missing": false,
+        "pass": true
+      }
+    }
+  },
+  "latency": null
+}
