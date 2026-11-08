@@ -1,0 +1,363 @@
+{
+  "harness": "OpenClaw",
+  "version": "2026.10.6",
+  "fixed_per_skill_description_cap": null,
+  "prompt": "Reply with the single word OK",
+  "cells": [
+    {
+      "size": 50,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 50,
+      "listed": 50,
+      "dropped": 0,
+      "descriptions": {
+        "full": 14,
+        "cut": 36,
+        "omitted": 0,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 0
+      },
+      "description_chars": {
+        "original_mean": 275,
+        "kept_mean": 68,
+        "kept_median": 75,
+        "kept_max": 75
+      },
+      "first_listed_without_description": null,
+      "described_after_first_undescribed": 0,
+      "other_listed": 22,
+      "other_listed_names": [
+        "add-model-provider",
+        "browser-automation",
+        "canvas",
+        "clawhub",
+        "cloud-image-bake",
+        "configure-channel",
+        "control-ui",
+        "diagnose-gateway",
+        "diagram-maker",
+        "gh-issues",
+        "github",
+        "healthcheck",
+        "meme-maker",
+        "node-connect",
+        "node-inspect-debugger",
+        "notion",
+        "python-debugpy",
+        "skill-creator",
+        "spike",
+        "tmux",
+        "visualize",
+        "weather"
+      ],
+      "listing_chars": 18692,
+      "listing_tokens_approx": 4673,
+      "listing_sha256": "26515bb00ddeb6220fb0b2b245dc1acadc92cb53455b97f43a48612db466ba01",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [
+        "⚠️ Skills catalog using compact format (descriptions shortened). Run `openclaw skills check` to audit."
+      ],
+      "first_entries": [
+        {
+          "name": "add-model-provider",
+          "description": "Add and live-prove a model provider with non-interactive config one-liners,..."
+        },
+        {
+          "name": "audit-sitemap",
+          "description": "Use when the user asks to local to for placeholders clean clean recent draf..."
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "weekly-migrate",
+          "description": "Use when the user asks to totals compare sheet invoice for meeting ticket v..."
+        },
+        {
+          "name": "wiki-onboard",
+          "description": "Use when the user asks to for summarize update then ticket user changes use..."
+        }
+      ]
+    },
+    {
+      "size": 150,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 150,
+      "listed": 113,
+      "dropped": 37,
+      "descriptions": {
+        "full": 0,
+        "cut": 0,
+        "omitted": 113,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 0
+      },
+      "description_chars": {
+        "original_mean": 294,
+        "kept_mean": 0,
+        "kept_median": 0,
+        "kept_max": 0
+      },
+      "first_listed_without_description": 1,
+      "described_after_first_undescribed": 0,
+      "other_listed": 18,
+      "other_listed_names": [
+        "add-model-provider",
+        "browser-automation",
+        "canvas",
+        "clawhub",
+        "cloud-image-bake",
+        "configure-channel",
+        "control-ui",
+        "diagnose-gateway",
+        "diagram-maker",
+        "gh-issues",
+        "github",
+        "healthcheck",
+        "meme-maker",
+        "node-connect",
+        "node-inspect-debugger",
+        "notion",
+        "python-debugpy",
+        "skill-creator"
+      ],
+      "listing_chars": 18720,
+      "listing_tokens_approx": 4680,
+      "listing_sha256": "5005a0d044e1c77c1df0425b3530e2b1bafc212d1494b2c5915882ef1d7a747c",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": true,
+        "kept_is_install_order_prefix": false
+      },
+      "notices": [
+        "⚠️ Skills truncated: included 131 of 172 (compact format, descriptions omitted). Run `openclaw skills check` to audit."
+      ],
+      "first_entries": [
+        {
+          "name": "add-model-provider",
+          "description": null
+        },
+        {
+          "name": "audit-deck",
+          "description": null
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "sitemap-ticket",
+          "description": null
+        },
+        {
+          "name": "skill-creator",
+          "description": null
+        }
+      ]
+    },
+    {
+      "size": 300,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 300,
+      "listed": 120,
+      "dropped": 180,
+      "descriptions": {
+        "full": 0,
+        "cut": 0,
+        "omitted": 120,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 0
+      },
+      "description_chars": {
+        "original_mean": 313,
+        "kept_mean": 0,
+        "kept_median": 0,
+        "kept_max": 0
+      },
+      "first_listed_without_description": 1,
+      "described_after_first_undescribed": 0,
+      "other_listed": 12,
+      "other_listed_names": [
+        "add-model-provider",
+        "browser-automation",
+        "canvas",
+        "clawhub",
+        "cloud-image-bake",
+        "configure-channel",
+        "control-ui",
+        "diagnose-gateway",
+        "diagram-maker",
+        "gh-issues",
+        "github",
+        "healthcheck"
+      ],
+      "listing_chars": 18659,
+      "listing_tokens_approx": 4665,
+      "listing_sha256": "8be97e0db143cddfce717b826a2becd7bd00f1a2f0e2de6859fb2f2fc57001a6",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": true,
+        "kept_is_install_order_prefix": false
+      },
+      "notices": [
+        "⚠️ Skills truncated: included 132 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit."
+      ],
+      "first_entries": [
+        {
+          "name": "add-model-provider",
+          "description": null
+        },
+        {
+          "name": "audit-backup",
+          "description": null
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "journal-report",
+          "description": null
+        },
+        {
+          "name": "ledger-meeting",
+          "description": null
+        }
+      ]
+    },
+    {
+      "size": 750,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 750,
+      "listed": 126,
+      "dropped": 624,
+      "descriptions": {
+        "full": 0,
+        "cut": 0,
+        "omitted": 126,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 0
+      },
+      "description_chars": {
+        "original_mean": 301,
+        "kept_mean": 0,
+        "kept_median": 0,
+        "kept_max": 0
+      },
+      "first_listed_without_description": 1,
+      "described_after_first_undescribed": 0,
+      "other_listed": 7,
+      "other_listed_names": [
+        "add-model-provider",
+        "browser-automation",
+        "canvas",
+        "clawhub",
+        "cloud-image-bake",
+        "configure-channel",
+        "control-ui"
+      ],
+      "listing_chars": 18692,
+      "listing_tokens_approx": 4673,
+      "listing_sha256": "855259514056f0e330aa84ba8562a46b6d15fb2ce5dc7c68b71a7c210dfa3fd1",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": true,
+        "kept_is_install_order_prefix": false
+      },
+      "notices": [
+        "⚠️ Skills truncated: included 133 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit.",
+        "[skills] root has many entries, truncating discovery. dir=/tmp/sl/op/alice/.openclaw/workspace/skills baseDir=/tmp/sl/op/alice/.openclaw/workspace/skills childDirCount=750 maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200",
+        "[skills] root hit recursive discovery budget, truncating discovery. dir=/tmp/sl/op/alice/.openclaw/workspace/skills baseDir=/tmp/sl/op/alice/.openclaw/workspace/skills maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200 maxGroupedSkillScanDepth=6"
+      ],
+      "first_entries": [
+        {
+          "name": "add-model-provider",
+          "description": null
+        },
+        {
+          "name": "audit-backup",
+          "description": null
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "deck-outline",
+          "description": null
+        },
+        {
+          "name": "deploy-budget",
+          "description": null
+        }
+      ]
+    },
+    {
+      "size": 1500,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 1500,
+      "listed": 131,
+      "dropped": 1369,
+      "descriptions": {
+        "full": 0,
+        "cut": 0,
+        "omitted": 131,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 0
+      },
+      "description_chars": {
+        "original_mean": 303,
+        "kept_mean": 0,
+        "kept_median": 0,
+        "kept_max": 0
+      },
+      "first_listed_without_description": 1,
+      "described_after_first_undescribed": 0,
+      "other_listed": 2,
+      "other_listed_names": [
+        "add-model-provider",
+        "browser-automation"
+      ],
+      "listing_chars": 18619,
+      "listing_tokens_approx": 4655,
+      "listing_sha256": "64f5df73a8818ffaeb2ef7eb2325f026b342eee0a82e403566382dee826483f6",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": true,
+        "kept_is_install_order_prefix": false
+      },
+      "notices": [
+        "⚠️ Skills truncated: included 133 of 222 (compact format, descriptions omitted). Run `openclaw skills check` to audit.",
+        "[skills] root has many entries, truncating discovery. dir=/tmp/sl/op/alice/.openclaw/workspace/skills baseDir=/tmp/sl/op/alice/.openclaw/workspace/skills childDirCount=1500 maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200",
+        "[skills] root hit recursive discovery budget, truncating discovery. dir=/tmp/sl/op/alice/.openclaw/workspace/skills baseDir=/tmp/sl/op/alice/.openclaw/workspace/skills maxCandidatesPerRoot=300 maxSkillsLoadedPerSource=200 maxGroupedSkillScanDepth=6"
+      ],
+      "first_entries": [
+        {
+          "name": "add-model-provider",
+          "description": null
+        },
+        {
+          "name": "audit-backup",
+          "description": null
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "calendar-vendor-2",
+          "description": null
+        },
+        {
+          "name": "calendar-video",
+          "description": null
+        }
+      ]
+    }
+  ]
+}

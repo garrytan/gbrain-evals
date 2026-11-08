@@ -1,0 +1,347 @@
+{
+  "harness": "Claude Code",
+  "version": "2.1.312",
+  "fixed_per_skill_description_cap": 1536,
+  "prompt": "Reply with the single word OK",
+  "cells": [
+    {
+      "size": 50,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 50,
+      "listed": 50,
+      "dropped": 0,
+      "descriptions": {
+        "full": 50,
+        "cut": 0,
+        "omitted": 0,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 0
+      },
+      "description_chars": {
+        "original_mean": 275,
+        "kept_mean": 275,
+        "kept_median": 199.5,
+        "kept_max": 983
+      },
+      "first_listed_without_description": null,
+      "described_after_first_undescribed": 0,
+      "other_listed": 8,
+      "other_listed_names": [
+        "dataviz",
+        "update-config",
+        "keybindings-help",
+        "code-review",
+        "simplify",
+        "fewer-permission-prompts",
+        "loop",
+        "claude-api"
+      ],
+      "listing_chars": 18886,
+      "listing_tokens_approx": 4722,
+      "listing_sha256": "75fa7bb4d1045ff46fef154cfedc9255ed3ad477dfb4004b666db50ad220905e",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [],
+      "first_entries": [
+        {
+          "name": "audit-sitemap",
+          "description": "Use when the user asks to local to for placeholders clean clean recent draft dates."
+        },
+        {
+          "name": "billing-forecast",
+          "description": "Use when the user asks to outline draft tea."
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "loop",
+          "description": "Run a prompt or slash command on a recurring interval (e.g. /loop 5m /foo). Omit the interval to let the model self-pace. - When the user wants to set up a recurring task, poll for status, or run something repeatedly on an interval (e.g. \"check the deploy every 5 minutes\", \"keep running /babysit-prs\"). Do NOT invoke for one-off tasks."
+        },
+        {
+          "name": "claude-api",
+          "description": "Reference for the Claude API / Anthropic SDK — model ids, pricing, params, streaming, tool use, MCP, agents, caching, token counting, model migration."
+        }
+      ],
+      "debug_log": [
+        "[DEBUG] Sending 63 skills via attachment (initial)"
+      ]
+    },
+    {
+      "size": 150,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 150,
+      "listed": 150,
+      "dropped": 0,
+      "descriptions": {
+        "full": 72,
+        "cut": 0,
+        "omitted": 78,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 0
+      },
+      "description_chars": {
+        "original_mean": 294,
+        "kept_mean": 143,
+        "kept_median": 0,
+        "kept_max": 1068
+      },
+      "first_listed_without_description": 72,
+      "described_after_first_undescribed": 1,
+      "other_listed": 8,
+      "other_listed_names": [
+        "dataviz",
+        "update-config",
+        "keybindings-help",
+        "code-review",
+        "simplify",
+        "fewer-permission-prompts",
+        "loop",
+        "claude-api"
+      ],
+      "listing_chars": 28222,
+      "listing_tokens_approx": 7056,
+      "listing_sha256": "78946fb3c4716d13ed066332810a50afb220fd595a9977da8a926a382d82845d",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [],
+      "first_entries": [
+        {
+          "name": "audit-deck",
+          "description": "Use when the user asks to closed customer ticket that page a before new then meeting steps ticket version examples old note and budget ticket entry prepare steps asks every that outline track acme-example an placeholders entry draft the that file customer review page sheet owners new note totals after before placeholders list meeting before dates use export record an project into task rules changes after meeting examples meeting ticket asks team check rules report review monthly every list after alice-example project pending from recent project monthly import steps project pending vendor totals prepare task changes open owners sources check from compare release clean from that summary note schedule each totals alice-example clean entry an summary checklist track links team monthly review pending check when the steps the budget a sources project meeting closed dates then draft or old then the with use vendor local clean export placeholders outline their prepare owners or list to the pending each into track acme-example compare totals old plan quarterly."
+        },
+        {
+          "name": "audit-sitemap",
+          "description": "Use when the user asks to local to for placeholders clean clean recent draft dates."
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "loop",
+          "description": "Run a prompt or slash command on a recurring interval (e.g. /loop 5m /foo). Omit the interval to let the model self-pace. - When the user wants to set up a recurring task, poll for status, or run something repeatedly on an interval (e.g. \"check the deploy every 5 minutes\", \"keep running /babysit-prs\"). Do NOT invoke for one-off tasks."
+        },
+        {
+          "name": "claude-api",
+          "description": "Reference for the Claude API / Anthropic SDK — model ids, pricing, params, streaming, tool use, MCP, agents, caching, token counting, model migration."
+        }
+      ],
+      "debug_log": [
+        "[DEBUG] Sending 163 skills via attachment (initial)",
+        "[WARN] Skill listing over budget: 163 skills, 52981 chars > 30000 budget — descriptions will be truncated. Run /skills to disable some, or raise skillListingBudgetFraction in settings."
+      ]
+    },
+    {
+      "size": 300,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 300,
+      "listed": 300,
+      "dropped": 0,
+      "descriptions": {
+        "full": 63,
+        "cut": 0,
+        "omitted": 237,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 0
+      },
+      "description_chars": {
+        "original_mean": 313,
+        "kept_mean": 63,
+        "kept_median": 0,
+        "kept_max": 1068
+      },
+      "first_listed_without_description": 61,
+      "described_after_first_undescribed": 3,
+      "other_listed": 8,
+      "other_listed_names": [
+        "dataviz",
+        "update-config",
+        "keybindings-help",
+        "code-review",
+        "simplify",
+        "fewer-permission-prompts",
+        "loop",
+        "claude-api"
+      ],
+      "listing_chars": 28234,
+      "listing_tokens_approx": 7059,
+      "listing_sha256": "6e8ae7cbe18d31f68d5daec31e2197d87c76028b10bfd420fadf23533a551656",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [],
+      "first_entries": [
+        {
+          "name": "audit-backup",
+          "description": "Use when the user asks to monthly pending when their and with this monthly user sources invoice asks use invoice from draft user new for invoice each local local draft after before the owners the release local placeholders record format steps project fields import clean vendor version import summarize fields weekly weekly their invoice file then totals monthly an checklist that use then entry examples sheet open fields links new sheet their a schedule sheet prepare export check budget invoice changes ticket plan plan owners links new the before examples draft plan owners their file list into acme-example compare steps team from weekly pending project customer check their check the review the check the and owners outline version or use closed invoice acme-example rules vendor track record from checklist before file clean owners the every task summary format task their import summary summary export changes a each update alice-example this an dates meeting dates to shared and ask."
+        },
+        {
+          "name": "audit-deck",
+          "description": "Use when the user asks to closed customer ticket that page a before new then meeting steps ticket version examples old note and budget ticket entry prepare steps asks every that outline track acme-example an placeholders entry draft the that file customer review page sheet owners new note totals after before placeholders list meeting before dates use export record an project into task rules changes after meeting examples meeting ticket asks team check rules report review monthly every list after alice-example project pending from recent project monthly import steps project pending vendor totals prepare task changes open owners sources check from compare release clean from that summary note schedule each totals alice-example clean entry an summary checklist track links team monthly review pending check when the steps the budget a sources project meeting closed dates then draft or old then the with use vendor local clean export placeholders outline their prepare owners or list to the pending each into track acme-example compare totals old plan quarterly."
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "loop",
+          "description": "Run a prompt or slash command on a recurring interval (e.g. /loop 5m /foo). Omit the interval to let the model self-pace. - When the user wants to set up a recurring task, poll for status, or run something repeatedly on an interval (e.g. \"check the deploy every 5 minutes\", \"keep running /babysit-prs\"). Do NOT invoke for one-off tasks."
+        },
+        {
+          "name": "claude-api",
+          "description": "Reference for the Claude API / Anthropic SDK — model ids, pricing, params, streaming, tool use, MCP, agents, caching, token counting, model migration."
+        }
+      ],
+      "debug_log": [
+        "[DEBUG] Sending 313 skills via attachment (initial)",
+        "[WARN] Skill listing over budget: 313 skills, 105634 chars > 30000 budget — descriptions will be truncated. Run /skills to disable some, or raise skillListingBudgetFraction in settings."
+      ]
+    },
+    {
+      "size": 750,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 750,
+      "listed": 750,
+      "dropped": 0,
+      "descriptions": {
+        "full": 39,
+        "cut": 0,
+        "omitted": 711,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 0
+      },
+      "description_chars": {
+        "original_mean": 301,
+        "kept_mean": 15,
+        "kept_median": 0,
+        "kept_max": 1068
+      },
+      "first_listed_without_description": 39,
+      "described_after_first_undescribed": 1,
+      "other_listed": 8,
+      "other_listed_names": [
+        "dataviz",
+        "update-config",
+        "keybindings-help",
+        "code-review",
+        "simplify",
+        "fewer-permission-prompts",
+        "loop",
+        "claude-api"
+      ],
+      "listing_chars": 28210,
+      "listing_tokens_approx": 7053,
+      "listing_sha256": "8831369d033bb5c342bedb9397951f595ec0162422b7ab92abeb3f4247d81a57",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [],
+      "first_entries": [
+        {
+          "name": "audit-backup",
+          "description": "Use when the user asks to monthly pending when their and with this monthly user sources invoice asks use invoice from draft user new for invoice each local local draft after before the owners the release local placeholders record format steps project fields import clean vendor version import summarize fields weekly weekly their invoice file then totals monthly an checklist that use then entry examples sheet open fields links new sheet their a schedule sheet prepare export check budget invoice changes ticket plan plan owners links new the before examples draft plan owners their file list into acme-example compare steps team from weekly pending project customer check their check the review the check the and owners outline version or use closed invoice acme-example rules vendor track record from checklist before file clean owners the every task summary format task their import summary summary export changes a each update alice-example this an dates meeting dates to shared and ask."
+        },
+        {
+          "name": "audit-budget",
+          "description": "Use when the user asks to release recent monthly review with open report then use new import totals when plan list project sourc."
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "loop",
+          "description": "Run a prompt or slash command on a recurring interval (e.g. /loop 5m /foo). Omit the interval to let the model self-pace. - When the user wants to set up a recurring task, poll for status, or run something repeatedly on an interval (e.g. \"check the deploy every 5 minutes\", \"keep running /babysit-prs\"). Do NOT invoke for one-off tasks."
+        },
+        {
+          "name": "claude-api",
+          "description": "Reference for the Claude API / Anthropic SDK — model ids, pricing, params, streaming, tool use, MCP, agents, caching, token counting, model migration."
+        }
+      ],
+      "debug_log": [
+        "[DEBUG] Sending 763 skills via attachment (initial)",
+        "[WARN] Skill listing over budget: 763 skills, 245809 chars > 30000 budget — descriptions will be truncated. Run /skills to disable some, or raise skillListingBudgetFraction in settings."
+      ]
+    },
+    {
+      "size": 1500,
+      "exit": 0,
+      "model": "claude-opus-5-5",
+      "deterministic": true,
+      "catalog": 1500,
+      "listed": 1500,
+      "dropped": 0,
+      "descriptions": {
+        "full": 0,
+        "cut": 0,
+        "omitted": 1500,
+        "altered": 0,
+        "cut_at_fixed_per_skill_cap": 0
+      },
+      "description_chars": {
+        "original_mean": 303,
+        "kept_mean": 0,
+        "kept_median": 0,
+        "kept_max": 0
+      },
+      "first_listed_without_description": 1,
+      "described_after_first_undescribed": 0,
+      "other_listed": 8,
+      "other_listed_names": [
+        "dataviz",
+        "update-config",
+        "keybindings-help",
+        "code-review",
+        "simplify",
+        "fewer-permission-prompts",
+        "loop",
+        "claude-api"
+      ],
+      "listing_chars": 29135,
+      "listing_tokens_approx": 7284,
+      "listing_sha256": "13508878a77db1f57e8cf3a454bb1a425dffe1b7b8ba8809bd9c8a5f4d104cc3",
+      "order": {
+        "alphabetical": true,
+        "kept_is_alphabetical_prefix": null,
+        "kept_is_install_order_prefix": null
+      },
+      "notices": [],
+      "first_entries": [
+        {
+          "name": "audit-backup",
+          "description": null
+        },
+        {
+          "name": "audit-budget",
+          "description": null
+        }
+      ],
+      "last_entries": [
+        {
+          "name": "loop",
+          "description": "Run a prompt or slash command on a recurring interval (e.g. /loop 5m /foo). Omit the interval to let the model self-pace. - When the user wants to set up a recurring task, poll for status, or run something repeatedly on an interval (e.g. \"check the deploy every 5 minutes\", \"keep running /babysit-prs\"). Do NOT invoke for one-off tasks."
+        },
+        {
+          "name": "claude-api",
+          "description": "Reference for the Claude API / Anthropic SDK — model ids, pricing, params, streaming, tool use, MCP, agents, caching, token counting, model migration."
+        }
+      ],
+      "debug_log": [
+        "[DEBUG] Sending 1513 skills via attachment (initial)",
+        "[WARN] Skill listing over budget: 1513 skills, 489014 chars > 30000 budget — descriptions will be truncated. Run /skills to disable some, or raise skillListingBudgetFraction in settings."
+      ]
+    }
+  ]
+}
