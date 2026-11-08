@@ -686,3 +686,21 @@ count, seed range, cap, arm or verdict rule.
   grants. Results at `431cb3f9` are never pooled with results at this G.
 - **Money:** GBRA-108 approved the full step on 2026-11-08: about $75 more, for about $364 all-in against the $390 cap,
   with Amendment 2's equal Part C cut if Opus runs over. All-in spend before this step was about $289.
+- **G-compatibility smoke at G, first pass (uncounted, digest `17b629b49ea5`, #384 at `b7aa8b2e`):** 96 trials (seeds 1
+  to 24, both engines and arms), 48 named-case runs (repetitions 1 to 4) and 16 quiet runs (seeds 101 to 104) had one
+  failure: a `harness_error` in Postgres flag-on trial 23. Its writer 0 polled for `t0.json`, read the file between its
+  creation and its write, and exited on "JSON Parse error: Unexpected EOF" before issuing an op. The crash stratum
+  passed 7 of 7 per arm, seed 355 passed 14 of 14 runs per arm and seed 271 6 of 6. PC1, PC3 and PC5 held, PC2 at
+  `de22702a` caught 60 of 60, and PC4 missed on that one trial.
+- **Harness fix (2026-11-08):** `trial.ts` writes `t0.json` to a temporary name and renames it into place (#384 at
+  `8cbd80d7`), so a writer never reads it half-written. One reader (subagent, claude-opus-5-5) approved it with notes:
+  the evidence fits only this race (the error is stamped at the moment the parent computed t0, about 6.7 s before writer
+  0's first call), no other file is read while it is written, and no counted number changes except that this
+  `harness_error` can't recur. The harness digest from here on is `500cc5ba4b97`, which changes `trial.ts` only, and
+  results on `17b629b49ea5` are never pooled with it.
+- **G-compatibility smoke at G on `500cc5ba4b97` (uncounted, #384 at `8cbd80d7`):** the same 96 trials, 48 named-case
+  runs and 16 quiet runs had 0 failures and 0 `harness_error`, and every flag-on named case landed in its window. The
+  crash stratum passed 7 of 7 per arm. PC1 to PC5 held, with PC2 at `de22702a` catching 60 of 60 on this digest. One
+  trial per engine and arm (seed 1) passed on a Ubicloud standard-16 VM, the counted shape, after a first VM request
+  found no capacity. The smoke's four quiet seeds per engine read -42 ms on Postgres and +9.3 ms on PGLite, too few
+  seeds to read the latency gate, which the counted quiet block decides.
