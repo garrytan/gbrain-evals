@@ -8,7 +8,7 @@ scripts/cat40-hard.sh step report
 
 ## 1. Takeaways and the finding
 
-Two or three bullets first, each in the form "We learned X. You should do X." (the report shape in CLAUDE.md), and the primary endpoint is always one of them. What works comes first, such as a family where gbrain's advantage over the simple arms meets the preregistration's family rule (labeled secondary, with its interval), and why that matters to someone building agents. What didn't work comes second, stated plainly. If the primary endpoint is inconclusive, lead with the lesson the data supports, with its number, and state the null right after it.
+Two or three bullets first, each in the form "We learned X. You should do X." (the report shape in CLAUDE.md), and the primary endpoint is always one of them. What works comes first, such as a family where gbrain beats the simple arms (a secondary result: label it, give its interval and say the interval is not adjusted across the five families), and why that matters to someone building agents. What didn't work comes second, stated plainly. If the primary endpoint is inconclusive, lead with the lesson the data supports, with its number, and state the null right after it.
 
 Then one paragraph: the primary endpoint (pooled 50k paired difference, gbrain minus fs, with its task-clustered 95% CI: `holdout_stats.py <cells-50k attempts> --hard-headline gbrain-hard,fs --simple fs`, with pg's attempts and `--simple fs,pg` when the pg batch ran), the decision sentence it triggers from the preregistration, the date, the gbrain commit and the models. Say whether the result is a recommendation or inconclusive. Issue codes, ledger paths and gate details go in section 6.
 
