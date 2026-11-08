@@ -86,7 +86,7 @@ default 0.01), or `SLASH_COMMAND_TOOL_CHAR_BUDGET` when set. Claude Code's own d
 budget: 313 skills, 105634 chars > 30000 budget` at 300 skills. Each description is first capped at 1,536 characters
 (`skillListingMaxDescChars`) with an ellipsis. When the listing is over budget, every skill becomes a bare name; skills
 Claude Code ships keep their descriptions; the others get theirs back in priority order (a usage score, equal on a fresh
-install) for as long as each fits, first fit. Names are never dropped, so at 1,500 skills the listing is names only and keeps no description.
+install) for as long as each fits, first fit. Names are never dropped, so at 1,500 skills every one of our skills is a bare name.
 Order: user skills alphabetically, then Claude Code's own skills. With no usage history, descriptions go to the first
 skills alphabetically: at 150 the 72nd skill is the first without one, and one later skill still fits. Claude Code is not
 open source; the rule is the JavaScript bundled in `bin/claude.exe` (sha256 4f4178ce…), printed by
