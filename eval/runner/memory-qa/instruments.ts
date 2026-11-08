@@ -257,10 +257,12 @@ export const INSTRUMENTS: Readonly<Record<string, Instrument>> = Object.freeze({
 /**
  * Instruments for reserve sets added after the Q1 registry above was pinned (test/eval/q1-instruments.test.ts holds
  * its hashes). beam-d8, the D8 long-history reserve in BEAM's generator format, is judged by BEAM's rubric
- * instrument under its own id.
+ * instrument under its own id. beam-rs1, the RS1 ranking set minted in custody with BEAM's generator, is judged the
+ * same way under its own id, with BEAM's canonical judge (gpt-4.1-mini).
  */
 export const RESERVE_INSTRUMENTS: Readonly<Record<string, Instrument>> = Object.freeze({
   'beam-d8': beamInstrument('beam-d8'),
+  'beam-rs1': beamInstrument('beam-rs1'),
 });
 
 /** The instrument for a benchmark; explicit per benchmark, no prefix guessing. */
