@@ -7,7 +7,7 @@ import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { keptUnit, requiredJudges, runConfigIdentity, runConfigText } from '../../eval/runner/q1/cell.ts';
 import { ALL_SETS, buildManifest, definitionProblems, frontierJudgeOf, frontierJudgesFor, ingestRate, MANIFEST_PATH, manifestText, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { buildF6Manifest, F6_MANIFEST_PATH, f6ManifestText } from '../../eval/runner/q1/cells/f6.ts';
-import { buildRS1Manifest, generateRS1Cells, loadRS1Manifest, OPUS, PARTICLE, RS1_MANIFEST_PATH, rs1ManifestText, SOL, stage1OverCap } from '../../eval/runner/q1/cells/rs1.ts';
+import { buildRS1Manifest, generateRS1Cells, loadRS1Manifest, OPUS, PARTICLE, RS1_JUDGE_BY_READER, rs1JudgeOf, RS1_MANIFEST_PATH, rs1ManifestText, SOL, stage1OverCap } from '../../eval/runner/q1/cells/rs1.ts';
 import type { Rs1Manifest } from '../../eval/runner/memory-qa/corpus.ts';
 
 const ROOT = join(import.meta.dir, '..', '..');
@@ -90,10 +90,22 @@ describe('rs1-cells.json', () => {
 
 describe('judges', () => {
   test('the gating judge is picked by the reader family (R78: Astra for Claude, Opus for Sol and particle-1); other families are refused', () => {
-    expect(frontierJudgeOf(OPUS)).toBe('openai:gpt-6-astra');
-    expect(frontierJudgeOf(PARTICLE)).toBe('anthropic:claude-opus-5-5');
-    expect(frontierJudgeOf(SOL)).toBe('anthropic:claude-opus-5-5');
-    expect(() => frontierJudgeOf('gemini:gemini-3.8-flash')).toThrow(/no per-reader frontier judge/);
+    expect(rs1JudgeOf(OPUS)).toBe('openai:gpt-6-astra');
+    expect(rs1JudgeOf(PARTICLE)).toBe('anthropic:claude-opus-5-5');
+    expect(rs1JudgeOf(SOL)).toBe('anthropic:claude-opus-5-5');
+    expect(() => rs1JudgeOf('gemini:gemini-3.8-flash')).toThrow(/no RS1 gating judge/);
+  });
+
+  // Value: protects=the crew's BEAM judge rule outside RS1 (Sol judges Claude rows); fails_when=R78's Astra/Opus map leaks into the shared frontierJudgeOf, so a future Q1 or F6 per-reader campaign picks up Astra; why_new=R78 review F5 as approved; seam=none; no_claim=RS1's own map
+  test('the shared frontierJudgeOf keeps the crew\'s BEAM rule, a per-reader arm without its own map uses it, and every RS1 arm carries RS1\'s map', () => {
+    expect([OPUS, PARTICLE, SOL].map(frontierJudgeOf)).toEqual(['openai:gpt-6.1-sol', 'openai:gpt-6.1-sol', 'anthropic:claude-opus-5-5']);
+    const plain = { frontier: { judges: ['openai:gpt-6.1-sol'], readers: null, sample: null, per_reader: true as const } };
+    expect([frontierJudgesFor(plain, OPUS), frontierJudgesFor(plain, PARTICLE)]).toEqual([['openai:gpt-6.1-sol'], ['openai:gpt-6.1-sol']]);
+    const arms = [...m.cells, ...m.smoke_cells].flatMap(x => x.arms).filter(a => a.frontier);
+    expect(arms.length).toBeGreaterThan(0);
+    for (const a of arms) expect(a.frontier!.judge_by_reader).toEqual(RS1_JUDGE_BY_READER);
+    expect(RS1_JUDGE_BY_READER).toEqual({ [OPUS]: 'openai:gpt-6-astra', [SOL]: 'anthropic:claude-opus-5-5', [PARTICLE]: 'anthropic:claude-opus-5-5' });
+    expect(m.frontier_judges).toEqual(RS1_JUDGE_BY_READER);
   });
 
   test('a per-reader plan without the pinned judge settings is refused', () => {
@@ -117,7 +129,10 @@ describe('judges', () => {
   test('a per-reader plan that breaks the family rule is refused', () => {
     const c = structuredClone(m.cells[1]) as CellDefinition;
     c.arms[0].readers = [OPUS, 'gemini:gemini-3.8-flash'];
-    expect(definitionProblems(c, KINDS).join(' ')).toContain('no per-reader frontier judge');
+    expect(definitionProblems(c, KINDS).join(' ')).toContain('no per-reader judge is mapped for gemini:gemini-3.8-flash');
+    const d = structuredClone(m.cells[1]) as CellDefinition;
+    d.arms[0].frontier!.judge_by_reader = { ...d.arms[0].frontier!.judge_by_reader, [OPUS]: 'anthropic:claude-opus-5-5' };
+    expect(definitionProblems(d, KINDS).join(' ')).toContain('anthropic:claude-opus-5-5 would judge anthropic:claude-opus-5-5, a reader of its own family (GST-767)');
   });
 });
 

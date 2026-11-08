@@ -44,7 +44,7 @@ import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../metering-proxy
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { keylessUpstreamArg } from '../q1/calibration-cell.ts';
 import { metering, onSlot, type MeterLine } from '../q1/cell.ts';
-import { PER_READER_JUDGE_ROUTE_CAPS, PER_READER_JUDGE_SETTINGS } from '../q1/cells/definitions.ts';
+import { PER_READER_JUDGE_SETTINGS } from '../q1/cells/definitions.ts';
 import { loadRS1Manifest } from '../q1/cells/rs1.ts';
 import { openRereadLease } from '../q1/reread-cell.ts';
 import { seededRandom } from '../stats/paired.ts';
@@ -372,7 +372,7 @@ if (import.meta.main) {
     const lease = openRereadLease({ runId, leaseUsd, ledgerPath: resolve(ledger), capUsd: cap, runner: 'rs1-judge-check' });
     const usageLog = join(out, 'usage.ndjson');
     const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
-      policy: { lease, usageLog, env: keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder } : { ...process.env }, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS, ...PER_READER_JUDGE_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
+      policy: { lease, usageLog, env: keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder } : { ...process.env }, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS, ...Object.fromEntries(GATING_JUDGES.map(j => [`judge@${j}`, PER_READER_JUDGE_SETTINGS.max_tokens])) }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
     proxy.start();
     try {
       const meter = metering(`http://127.0.0.1:${proxy.port}`, { meter: (m: MeterLine) => appendFileSync(join(out, 'meters.ndjson'), JSON.stringify(m) + '\n') }, process.env);

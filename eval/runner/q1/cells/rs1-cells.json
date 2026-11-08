@@ -403,6 +403,11 @@
             "readers": null,
             "sample": null,
             "per_reader": true,
+            "judge_by_reader": {
+              "anthropic:claude-opus-5-5": "openai:gpt-6-astra",
+              "openai:gpt-6.1-sol": "anthropic:claude-opus-5-5",
+              "particle:particle-1": "anthropic:claude-opus-5-5"
+            },
             "settings": {
               "effort": "medium",
               "max_tokens": 8000
@@ -483,6 +488,11 @@
             "readers": null,
             "sample": null,
             "per_reader": true,
+            "judge_by_reader": {
+              "anthropic:claude-opus-5-5": "openai:gpt-6-astra",
+              "openai:gpt-6.1-sol": "anthropic:claude-opus-5-5",
+              "particle:particle-1": "anthropic:claude-opus-5-5"
+            },
             "settings": {
               "effort": "medium",
               "max_tokens": 8000
@@ -560,6 +570,11 @@
             "readers": null,
             "sample": null,
             "per_reader": true,
+            "judge_by_reader": {
+              "anthropic:claude-opus-5-5": "openai:gpt-6-astra",
+              "openai:gpt-6.1-sol": "anthropic:claude-opus-5-5",
+              "particle:particle-1": "anthropic:claude-opus-5-5"
+            },
             "settings": {
               "effort": "medium",
               "max_tokens": 8000
@@ -719,6 +734,11 @@
             "readers": null,
             "sample": null,
             "per_reader": true,
+            "judge_by_reader": {
+              "anthropic:claude-opus-5-5": "openai:gpt-6-astra",
+              "openai:gpt-6.1-sol": "anthropic:claude-opus-5-5",
+              "particle:particle-1": "anthropic:claude-opus-5-5"
+            },
             "settings": {
               "effort": "medium",
               "max_tokens": 8000
@@ -802,6 +822,11 @@
             "readers": null,
             "sample": null,
             "per_reader": true,
+            "judge_by_reader": {
+              "anthropic:claude-opus-5-5": "openai:gpt-6-astra",
+              "openai:gpt-6.1-sol": "anthropic:claude-opus-5-5",
+              "particle:particle-1": "anthropic:claude-opus-5-5"
+            },
             "settings": {
               "effort": "medium",
               "max_tokens": 8000
@@ -882,6 +907,11 @@
             "readers": null,
             "sample": null,
             "per_reader": true,
+            "judge_by_reader": {
+              "anthropic:claude-opus-5-5": "openai:gpt-6-astra",
+              "openai:gpt-6.1-sol": "anthropic:claude-opus-5-5",
+              "particle:particle-1": "anthropic:claude-opus-5-5"
+            },
             "settings": {
               "effort": "medium",
               "max_tokens": 8000

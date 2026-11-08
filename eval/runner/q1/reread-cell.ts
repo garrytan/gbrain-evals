@@ -30,7 +30,7 @@
  * cell's effort, replicate 0. A reading the provider may have billed is final and never sent again, a budget refusal
  * stops the run (`budget_not_run`, not a try), and a resume skips answered ids. Each answer is judged by the cell's
  * canonical judge (replicate 0) and, on an arm with a per-reader frontier plan, by the new reader's frontier judge
- * (definitions.ts frontierJudgeOf, under `<instrument>@<judge>`); no other frontier judge runs, and an OpenAI-compatible
+ * (definitions.ts frontierJudgesFor, RS1's map on its arms, under `<instrument>@<judge>`); no other frontier judge runs, and an OpenAI-compatible
  * judge is refused. Output:
  * `--out/cells/<arm cell id>.reread-<reader>/` with answers.ndjson and judgments.ndjson in Q1's record schemas, and
  * receipt.json. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
@@ -51,7 +51,7 @@ import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { answerAppender, custodyGate, devOnly, findCell, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
   selectCellQuestions, type CellManifestId, type MeterLine, type StagedRetrieval } from './cell.ts';
-import { frontierJudgesFor, PER_READER_JUDGE_ROUTE_CAPS, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { frontierJudgesFor, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 
@@ -393,7 +393,7 @@ if (import.meta.main) {
     const lease = openRereadLease({ runId, leaseUsd, ledgerPath: resolve(ledger), capUsd: ledgerCap });
     const usageLog = join(out, 'usage.ndjson');
     const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
-      policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS, ...(arm.frontier?.settings ? PER_READER_JUDGE_ROUTE_CAPS : {}) }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
+      policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps([arm]) }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
     proxy.start();
     try {
       const res = await runReread(prepared, { providerProxy: `http://127.0.0.1:${proxy.port}`, lease: { usd: leaseUsd, usageLog } });

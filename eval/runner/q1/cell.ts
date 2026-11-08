@@ -101,7 +101,7 @@ import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render-v2.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
-import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, PER_READER_JUDGE_ROUTE_CAPS, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
+import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
@@ -1479,7 +1479,7 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
     // F6's gbrain pin builds on a newer Bun image, named in its launch environment rather than in the bundle files.
     images: f6 ? Object.fromEntries(Object.entries({ ...pinnedImages(), 'gbrain-defaults/base:1.4.4-slim': F6_ASSUMPTIONS.bun_image.split('@')[1] }).sort(([a], [b]) => (a < b ? -1 : 1))) : pinnedImages(),
     blocks: Object.fromEntries(blocks.filter(b => cells.some(c => c.block === b.id)).map(b => [b.id, { estimate_usd: b.estimate_usd, cap_usd: b.cap_usd }])),
-    output_caps: { ...DEFAULT_ROUTE_CAPS, ...([...m.cells, ...(m.smoke_cells ?? [])].some(c => c.arms.some(a => a.frontier?.settings)) ? PER_READER_JUDGE_ROUTE_CAPS : {}) }, route_classes: { ...DEFAULT_ROUTE_CLASSES }, schedule: { vcpu_cap_day: 128, vcpu_cap_night: 200 }, row_pull_every: ROW_FLUSH_EVERY, pull_interval_minutes: 10, models,
+    output_caps: { ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps([...m.cells, ...(m.smoke_cells ?? [])].flatMap(c => c.arms)) }, route_classes: { ...DEFAULT_ROUTE_CLASSES }, schedule: { vcpu_cap_day: 128, vcpu_cap_night: 200 }, row_pull_every: ROW_FLUSH_EVERY, pull_interval_minutes: 10, models,
   };
 }
 

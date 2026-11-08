@@ -14,8 +14,8 @@
  *     estimate; they run only in paid windows.
  *
  * Judging: every answer gets BEAM's canonical judge (gpt-4.1-mini), descriptive only since the R78 amendment. The three
- * system rows also get exactly one gating judge per answer by the reader's family (frontier.per_reader, definitions.ts
- * frontierJudgeOf: gpt-6-astra for claude-opus-5-5, claude-opus-5-5 for gpt-6.1-sol and particle-1), pinned to medium
+ * system rows also get exactly one gating judge per answer by the reader's family (frontier.per_reader with RS1's own map,
+ * rs1JudgeOf: gpt-6-astra for claude-opus-5-5, claude-opus-5-5 for gpt-6.1-sol and particle-1), pinned to medium
  * effort and an 8,000-token output cap; the floor gets the canonical judge only. The two judge views are scored apart
  * (eval/runner/rs1/verdict.ts), never averaged, and only the gating view decides.
  *
@@ -25,7 +25,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { ScoreboardMessage } from '../scoreboard-errors.ts';
 import {
-  ALL_SETS, ASSUMPTIONS, estimateCell, F6_ASSUMPTIONS, frontierJudgeOf, makeCell, MANIFEST_SCHEMA, PER_READER_JUDGE_SETTINGS, priceOf, RS1_ASSUMPTIONS,
+  ALL_SETS, ASSUMPTIONS, estimateCell, F6_ASSUMPTIONS, makeCell, MANIFEST_SCHEMA, PER_READER_JUDGE_SETTINGS, priceOf, RS1_ASSUMPTIONS,
   type ArmDefinition, type ArmSpec, type BlockId, type CellDefinition, type CellEstimate, type Manifest, type RS1BlockId, type SetId,
 } from './definitions.ts';
 import { extractionCapUsd, F6_ARMS, withHours, withLease } from './f6.ts';
@@ -47,7 +47,22 @@ export const PARTICLE = 'particle:particle-1';
 /** Live readers; particle-1 re-reads the frozen contexts (reread-cell.ts), so it is the third reader of every row. */
 export const RS1_READERS = [OPUS, SOL];
 
-const perReader = (readers: string[]): NonNullable<ArmDefinition['frontier']> => ({ judges: [...new Set(readers.map(frontierJudgeOf))].sort(), readers: null, sample: null, per_reader: true, settings: { ...PER_READER_JUDGE_SETTINGS } });
+/**
+ * RS1's gating judge for a reader (R78 as amended by GBEV-3, 2026-11-08: "Use Astra vs opus"; GST-767): never the
+ * reader's own family and never particle-1. Anthropic readers are judged by gpt-6-astra, OpenAI and particle readers by
+ * claude-opus-5-5; any other reader is refused. It is RS1's alone: the shared definitions.ts frontierJudgeOf keeps the
+ * crew's BEAM judge rule for every other benchmark, and RS1's arms carry this map as frontier.judge_by_reader.
+ */
+export function rs1JudgeOf(reader: string): string {
+  const family = reader.split(':')[0];
+  if (family === 'anthropic') return 'openai:gpt-6-astra';
+  if (family === 'openai' || family === 'particle') return 'anthropic:claude-opus-5-5';
+  throw new Error(`no RS1 gating judge is preregistered for ${reader} (anthropic readers: openai:gpt-6-astra; openai and particle readers: anthropic:claude-opus-5-5)`);
+}
+/** Every RS1 reader's gating judge: the live readers and particle-1's re-read. */
+export const RS1_JUDGE_BY_READER: Record<string, string> = Object.fromEntries([OPUS, SOL, PARTICLE].map(r => [r, rs1JudgeOf(r)]));
+
+const perReader = (readers: string[]): NonNullable<ArmDefinition['frontier']> => ({ judges: [...new Set(readers.map(rs1JudgeOf))].sort(), readers: null, sample: null, per_reader: true, judge_by_reader: { ...RS1_JUDGE_BY_READER }, settings: { ...PER_READER_JUDGE_SETTINGS } });
 const p = (): ArmSpec => ({ id: 'p', mode: 'packed', budget: 8000, label: F6_ARMS.p.label, retrieval: F6_ARMS.p.retrieval, readers: RS1_READERS, frontier: perReader(RS1_READERS) });
 const b8 = (frontier: boolean): ArmSpec => ({ id: 'component-b8000', mode: 'packed', budget: 8000, label: 'component, 8,000 tokens', readers: RS1_READERS, frontier: frontier ? perReader(RS1_READERS) : null });
 
@@ -78,7 +93,7 @@ export interface RereadPlan { id: string; cell: string; arm: string; arm_cell_id
  */
 export function rereadPlans(cells: CellDefinition[]): RereadPlan[] {
   return cells.flatMap(c => c.arms.filter(a => a.mode === 'packed').map(a => {
-    const frontier = a.frontier ? { ...a.frontier, judges: [frontierJudgeOf(PARTICLE)] } : null;
+    const frontier = a.frontier ? { ...a.frontier, judges: [rs1JudgeOf(PARTICLE)] } : null;
     const e = estimateCell({ ...c, arms: [{ ...a, readers: [PARTICLE], reader_replicates: {}, frontier }] });
     const lines = Object.fromEntries(['readers', 'judges', 'frontier_judges'].filter(k => e.lines[k]).map(k => [k, e.lines[k]]));
     return { id: `${a.cell_id}.reread-${PARTICLE.replace(/[^a-z0-9.-]+/gi, '-')}`, cell: c.id, arm: a.id, arm_cell_id: a.cell_id, reader: PARTICLE, set: a.set, block: c.block,
@@ -116,7 +131,7 @@ export function buildRS1Manifest(): RS1Manifest {
   const stage1Rereads = round(rereadsUsd('RS1-S1'));
   const units = (from: number, to: number) => cells.flatMap(c => Array.from({ length: c.shards }, (_, i) => i).filter(i => i >= from && i < to).map(i => `${c.id}.c${i}`));
   const waveA = RS1_WAVE_A / RS1_KEPT_UNITS;
-  const models = [...RS1_READERS, PARTICLE, ...[...RS1_READERS, PARTICLE].map(frontierJudgeOf), ASSUMPTIONS.judge.beam.model, F6_ASSUMPTIONS.extraction.model].map(m => [m, priceOf(m)] as const);
+  const models = [...RS1_READERS, PARTICLE, ...[...RS1_READERS, PARTICLE].map(rs1JudgeOf), ASSUMPTIONS.judge.beam.model, F6_ASSUMPTIONS.extraction.model].map(m => [m, priceOf(m)] as const);
   const counted = blocks.find(b => b.id === 'RS1')!;
   return {
     schema: MANIFEST_SCHEMA, generated_by: 'bun eval/runner/q1/cells/rs1.ts', preregistration: RS1_PREREGISTRATION, readers: RS1_READERS, effort: 'medium',
@@ -125,7 +140,7 @@ export function buildRS1Manifest(): RS1Manifest {
     total_usd: counted.estimate_usd, plan_total_usd: RS1_PLAN_USD, cap_usd: counted.cap_usd,
     stage1_cap_usd: RS1_STAGE1_CAP_USD, stage1_estimate_usd: blocks.find(b => b.id === 'RS1-S1')!.estimate_usd, dry_run_cap_usd: round(RS1_STAGE1_CAP_USD - stage1Rereads),
     stage1_reread_cap_usd: stage1Rereads, campaign_id: RS1_CAMPAIGN_ID,
-    frontier_judges: Object.fromEntries([...RS1_READERS, PARTICLE].map(r => [r, frontierJudgeOf(r)])), reread_plans: rereads,
+    frontier_judges: { ...RS1_JUDGE_BY_READER }, reread_plans: rereads,
     waves: { A: units(0, waveA), B: units(waveA, Infinity) },
   };
 }

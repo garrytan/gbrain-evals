@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { findCell, runCell, scheduledQuestions } from '../../eval/runner/q1/cell.ts';
 import { estimateCell, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { RS1_JUDGE_BY_READER } from '../../eval/runner/q1/cells/rs1.ts';
 import { openRereadLease, prepareReread, rereadArm, rereadCellId, runReread, REREAD_VERIFY_SCHEMA, type PreparedReread } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
@@ -477,7 +478,7 @@ describe('re-read: particle-1 through the lease proxy', () => {
 describe('re-read: RS1 per-reader frontier judging', () => {
   // Value: protects=RS1's particle-1 rows get both judge views (gpt-4.1-mini and claude-opus-5-5) and count as complete only when both graded; fails_when=a per-reader arm's re-read is judged by the canonical judge alone or by another frontier judge, or its receipt leaves out the frontier view; why_new=GST-1886; seam=fake_provider.py as Particle, scripted judges; no_claim=the judges' grades
   test('each particle-1 answer on a per-reader arm is judged by the canonical judge and by claude-opus-5-5, and the receipt names that judge', async () => {
-    const d = cellDef([{ id: 'component-b8000', mode: 'packed', budget: 8000, frontier: { judges: ['anthropic:claude-opus-5-5', 'openai:gpt-6-astra'], readers: null, sample: null, per_reader: true, settings: { effort: 'medium', max_tokens: 8000 } } }]);
+    const d = cellDef([{ id: 'component-b8000', mode: 'packed', budget: 8000, frontier: { judges: ['anthropic:claude-opus-5-5', 'openai:gpt-6-astra'], readers: null, sample: null, per_reader: true, judge_by_reader: { ...RS1_JUDGE_BY_READER }, settings: { effort: 'medium', max_tokens: 8000 } } }]);
     const a = d.arms[0];
     const src = join(tmp, 'source-per-reader');
     const ran = await runCell(d, { out: src, ...quiet }, { corpus, system: new FakeMemorySystem(), reader: scriptedReader(), judge: scriptedJudge() });

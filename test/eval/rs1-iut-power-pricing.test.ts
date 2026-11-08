@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import { COMPARISONS, conversationDifferences, decide, dropValidity, GATING, questionScores, RS1_MARGIN, tLowerBound, tQuantile, worstCase, type ComparisonKey, type QuestionInput } from '../../eval/runner/rs1/iut.ts';
 import { analyticN, corr2, corr4, jointN, jointPower, MC_TOLERANCE, minMargin, pilotSize, RHO_JUDGE, SD10, sdAtItems, sdsAt, simulatedPass, TAUS } from '../../eval/runner/rs1/power.ts';
 import { ASTRA_JUDGE, GBEV48_RATES, judgeCheckUsd, priceAt, pricing, PRICING_PATH, STAGE0_RATES, unitCosts } from '../../eval/runner/rs1/pricing.ts';
-import { frontierJudgeOf, rs1GatingJudgeUsd } from '../../eval/runner/q1/cells/definitions.ts';
+import { rs1GatingJudgeUsd } from '../../eval/runner/q1/cells/definitions.ts';
+import { rs1JudgeOf } from '../../eval/runner/q1/cells/rs1.ts';
 import { analyze, READERS, type VerdictInput } from '../../eval/runner/rs1/verdict.ts';
 
 const ROOT = join(import.meta.dir, '..', '..');
@@ -180,7 +181,7 @@ describe('pricing.ts', () => {
   // Value: protects=the $2,300 check-in and the judge check's window cap; fails_when=Astra's judging is priced at another judge's rate, the judge check or Astra's share leaks into the check-in, or Opus's and the bridge's counted judging leave it; why_new=R78 point 9 (GBEV-3, 2026-11-08); seam=none; no_claim=the judges' real token counts
   test('R78 point 9: the Astra line holds the whole judge check and Astra\'s counted share, at Astra\'s price, outside the check-in', () => {
     const readers = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'];
-    expect(STAGE0_RATES.gating_judges).toEqual([...new Set(readers.map(frontierJudgeOf))].sort((a, b) => (a === ASTRA_JUDGE ? -1 : b === ASTRA_JUDGE ? 1 : 0)).map(j => ({ judge: j, readers: readers.filter(r => frontierJudgeOf(r) === j).length, usd: rs1GatingJudgeUsd(j) })));
+    expect(STAGE0_RATES.gating_judges).toEqual([...new Set(readers.map(rs1JudgeOf))].sort((a, b) => (a === ASTRA_JUDGE ? -1 : b === ASTRA_JUDGE ? 1 : 0)).map(j => ({ judge: j, readers: readers.filter(r => rs1JudgeOf(r) === j).length, usd: rs1GatingJudgeUsd(j) })));
     expect(rs1GatingJudgeUsd(ASTRA_JUDGE)).toBeCloseTo(3 * (900 * 10 + 582 * 50) / 1e6, 10);
     expect(judgeCheckUsd(STAGE0_RATES)).toBeCloseTo(826 * ((900 * 10 + 582 * 50) / 1e6 + (900 * 4 + 582 * 20) / 1e6 + 0.0028 / 3), 6);
     const u = unitCosts(STAGE0_RATES);

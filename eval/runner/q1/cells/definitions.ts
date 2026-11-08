@@ -111,10 +111,11 @@ export interface ArmDefinition {
   /**
    * Frontier judges re-judging this arm's answers (replicate 0) under their own instrument ids: every answer of `readers`
    * (null: every reader), or a seeded sample of `sample` questions. With `per_reader` (RS1) each answer gets exactly one
-   * frontier judge, frontierJudgeOf(its reader), `judges` is the derived set of those judges, and `settings` pins every
-   * one of their calls (PER_READER_JUDGE_SETTINGS).
+   * frontier judge, `judge_by_reader[its reader]` where the arm carries its own map (RS1's R78 map, rs1.ts rs1JudgeOf),
+   * else frontierJudgeOf(its reader); `judges` is the derived set of those judges, and `settings` pins every one of
+   * their calls (PER_READER_JUDGE_SETTINGS), required with a map.
    */
-  frontier: { judges: string[]; readers: string[] | null; sample: number | null; per_reader?: true; settings?: JudgeSettings } | null;
+  frontier: { judges: string[]; readers: string[] | null; sample: number | null; per_reader?: true; judge_by_reader?: Record<string, string>; settings?: JudgeSettings } | null;
   /** Judge-only repeats on fixed answers (eval/runner/judge-repeat.ts), planned here, run after the cell. */
   judge_repeats: { count: number; readers: string[] | null } | null;
   label: string;
@@ -473,32 +474,38 @@ export function ingestRate(def: Pick<CellDefinition, 'system' | 'configuration' 
 }
 
 /**
- * RS1's per-row gating judge (R78 as amended by GBEV-3, 2026-11-08: "Use Astra vs opus"; GST-767): one judge per answer,
- * never the reader's own family and never particle-1. Anthropic readers are judged by gpt-6-astra, OpenAI and particle
- * readers by claude-opus-5-5; any other reader is refused, since no judge is preregistered for it.
+ * RS1's per-row frontier judge (GST-767; CREW.md's BEAM judge rule): one frontier judge per answer, never the reader's own
+ * family and never particle-1. Anthropic and particle readers are judged by gpt-6.1-sol, OpenAI readers by
+ * claude-opus-5-5; any other reader is refused, since no judge is preregistered for it.
  */
 export function frontierJudgeOf(reader: string): string {
   const family = reader.split(':')[0];
-  if (family === 'anthropic') return 'openai:gpt-6-astra';
-  if (family === 'openai' || family === 'particle') return 'anthropic:claude-opus-5-5';
-  throw new Error(`no per-reader frontier judge is preregistered for ${reader} (anthropic readers: openai:gpt-6-astra; openai and particle readers: anthropic:claude-opus-5-5)`);
+  if (family === 'anthropic' || family === 'particle') return 'openai:gpt-6.1-sol';
+  if (family === 'openai') return 'anthropic:claude-opus-5-5';
+  throw new Error(`no per-reader frontier judge is preregistered for ${reader} (anthropic and particle readers: openai:gpt-6.1-sol; openai readers: anthropic:claude-opus-5-5)`);
 }
 
 /** The request settings every per-reader judge is pinned to (GBEV-3, 2026-11-08, gate reply e1): medium effort, an 8,000-token output cap. */
 export const PER_READER_JUDGE_SETTINGS = { effort: 'medium', max_tokens: 8000 } as const;
 /**
- * The judge route's output cap for each per-reader judge (metering-proxy `judge@<provider>:<model>` route caps). The
- * proxy's default judge cap is 2,048 tokens and refuses a request that states more, so a campaign, re-read or judge check
- * whose judges are pinned adds these caps; every other judge on the route keeps the default.
+ * The judge route's output cap for each pinned frontier judge of `arms` (metering-proxy `judge@<provider>:<model>` route
+ * caps). The proxy's default judge cap is 2,048 tokens and refuses a request that states more, so a campaign or re-read
+ * whose judges are pinned adds these caps; every other judge on the route keeps the default, and arms without pinned
+ * settings (Q1, F6) add none.
  */
-export const PER_READER_JUDGE_ROUTE_CAPS: Record<string, number> = Object.fromEntries(['anthropic', 'openai', 'particle'].map(f => [`judge@${frontierJudgeOf(`${f}:`)}`, PER_READER_JUDGE_SETTINGS.max_tokens]));
+export const pinnedJudgeRouteCaps = (arms: ReadonlyArray<Pick<ArmDefinition, 'frontier'>>): Record<string, number> =>
+  Object.fromEntries(arms.flatMap(a => (a.frontier?.settings ? a.frontier.judges.map(j => [`judge@${j}`, a.frontier!.settings!.max_tokens] as const) : [])));
 export type JudgeSettings = { effort: string; max_tokens: number };
 
 /** The frontier judges one answer of `reader` gets on this arm (replicate 0, in the sample): none, the per-reader judge, or every listed judge. */
 export function frontierJudgesFor(arm: Pick<ArmDefinition, 'frontier'>, reader: string): string[] {
   const f = arm.frontier;
   if (!f || (f.readers && !f.readers.includes(reader))) return [];
-  return f.per_reader ? [frontierJudgeOf(reader)] : f.judges;
+  if (!f.per_reader) return f.judges;
+  if (!f.judge_by_reader) return [frontierJudgeOf(reader)];
+  const j = f.judge_by_reader[reader];
+  if (!j) throw new Error(`no per-reader judge is mapped for ${reader} on this arm (mapped: ${Object.keys(f.judge_by_reader).join(', ')})`);
+  return [j];
 }
 
 export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimate {
@@ -530,7 +537,7 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
     if (arm.mode === 'retrieval-only') continue;
     const judged = arm.readers.reduce((s, r) => s + answers(r), 0);
     add('judges', judged * (measured?.canonical ?? judgeCost(def.benchmark)));
-    if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured ? rs1GatingJudgeUsd(frontierJudgeOf(r)) : judgeCost(def.benchmark, frontierJudgeOf(r))));
+    if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured ? rs1GatingJudgeUsd(frontierJudgesFor(arm, r)[0]) : judgeCost(def.benchmark, frontierJudgesFor(arm, r)[0])));
     else if (arm.frontier) {
       const fr = arm.frontier.readers ?? arm.readers;
       const items = arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) * fr.length : n * fr.length;
@@ -847,13 +854,13 @@ function perReaderProblems(a: ArmDefinition, w: string): string[] {
   const derived = new Set<string>();
   for (const r of f.readers ?? a.readers) {
     let j: string;
-    try { j = frontierJudgeOf(r); } catch (e) { p.push(`${w}: ${(e as Error).message}`); continue; }
+    try { j = frontierJudgesFor(a, r)[0]; } catch (e) { p.push(`${w}: ${(e as Error).message}`); continue; }
     if (j.split(':')[0] === r.split(':')[0]) p.push(`${w}: ${j} would judge ${r}, a reader of its own family (GST-767)`);
     if (j.startsWith('particle:')) p.push(`${w}: particle-1 never judges a counted cell`);
     derived.add(j);
   }
   if ([...f.judges].sort().join() !== [...derived].sort().join()) p.push(`${w}: frontier.judges must be the per-reader judges of its readers (${[...derived].sort().join(', ')})`);
-  if (JSON.stringify(f.settings ?? null) !== JSON.stringify(PER_READER_JUDGE_SETTINGS)) p.push(`${w}: frontier.settings must pin the per-reader judges to ${JSON.stringify(PER_READER_JUDGE_SETTINGS)}, not ${JSON.stringify(f.settings ?? null)}`);
+  if ((f.judge_by_reader || f.settings) && JSON.stringify(f.settings ?? null) !== JSON.stringify(PER_READER_JUDGE_SETTINGS)) p.push(`${w}: frontier.settings must pin the per-reader judges to ${JSON.stringify(PER_READER_JUDGE_SETTINGS)}, not ${JSON.stringify(f.settings ?? null)}`);
   return p;
 }
 

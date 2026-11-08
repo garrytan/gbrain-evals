@@ -14,9 +14,9 @@ import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { DEFAULT_ROUTE_CAPS, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import { campaignManifest } from '../../eval/runner/q1/cell.ts';
-import { frontierJudgeOf, loadManifest, PER_READER_JUDGE_ROUTE_CAPS, PER_READER_JUDGE_SETTINGS } from '../../eval/runner/q1/cells/definitions.ts';
+import { loadManifest, pinnedJudgeRouteCaps } from '../../eval/runner/q1/cells/definitions.ts';
 import { loadF6Manifest } from '../../eval/runner/q1/cells/f6.ts';
-import { loadRS1Manifest } from '../../eval/runner/q1/cells/rs1.ts';
+import { loadRS1Manifest, RS1_JUDGE_BY_READER } from '../../eval/runner/q1/cells/rs1.ts';
 
 const realFetch = globalThis.fetch;
 const dirs: string[] = [];
@@ -146,7 +146,9 @@ describe('the judge route admits the pinned cap', () => {
     expect(await admitted({ ...DEFAULT_ROUTE_CAPS })).toEqual({ astra: 400, opus: 400, bridge: 400, forwarded: 0 });
   });
 
-  test('the caps follow the judge map: one entry per per-reader judge at the pinned output cap', () => {
-    expect(PER_READER_JUDGE_ROUTE_CAPS).toEqual(Object.fromEntries(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'].map(r => [`judge@${frontierJudgeOf(r)}`, PER_READER_JUDGE_SETTINGS.max_tokens])));
+  test('the caps follow the arms: one entry per pinned judge at its pinned output cap, none for arms without pinned settings', () => {
+    const rs1 = loadRS1Manifest();
+    expect(pinnedJudgeRouteCaps([...rs1.cells, ...rs1.smoke_cells].flatMap(c => c.arms))).toEqual(Object.fromEntries([...new Set(Object.values(RS1_JUDGE_BY_READER))].map(j => ['judge@' + j, 8000])));
+    expect(pinnedJudgeRouteCaps(loadManifest().cells.flatMap(c => c.arms))).toEqual({});
   });
 });

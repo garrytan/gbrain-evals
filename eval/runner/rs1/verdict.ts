@@ -54,8 +54,8 @@ import { instrumentFor } from '../memory-qa/instruments.ts';
 import { readRecords, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { RS1_MANIFEST, rs1Kept, type Rs1Manifest } from '../memory-qa/corpus.ts';
 import { frontierInstrumentId, runConfigIdentity, runConfigText } from '../q1/cell.ts';
-import { frontierJudgeOf, PER_READER_JUDGE_SETTINGS } from '../q1/cells/definitions.ts';
-import { loadRS1Manifest, OPUS, PARTICLE, RS1_WAVE_A, SOL } from '../q1/cells/rs1.ts';
+import { PER_READER_JUDGE_SETTINGS } from '../q1/cells/definitions.ts';
+import { loadRS1Manifest, OPUS, PARTICLE, rs1JudgeOf, RS1_WAVE_A, SOL } from '../q1/cells/rs1.ts';
 import { rereadCellId } from '../q1/reread-cell.ts';
 import { wildTest, type ClusterRow } from '../stats/wild-cluster.ts';
 import { COMPARISONS, conversationDifferences, decide, dropValidity, GATING, inBridgeSet, inCommonSet, questionScores, RS1_MARGIN, SERVERS, tQuantile, viewValue, VIEWS, worstCase,
@@ -402,12 +402,12 @@ function readRecordsLoose(path: string): Array<Record<string, any>> {
 
 /**
  * Why a gating judgment (<instrument>@<judge>) cannot count: its judge shares the reader's family or is not the reader's
- * mapped judge (definitions.ts frontierJudgeOf), it does not record the gating view, it was not sent at the pinned
+ * mapped judge (rs1.ts rs1JudgeOf), it does not record the gating view, it was not sent at the pinned
  * settings, or a scored judgment records no model version. Other judgments, and answers outside the set read, pass.
  */
 export function gatingProblems(j: Pick<JudgmentRecord, 'answer_id' | 'instrument_id' | 'judge' | 'outcome' | 'view' | 'settings' | 'judge_versions'>, reader: string | undefined, instrument: string): string[] {
   if (!reader || !j.instrument_id.startsWith(`${instrument}@`)) return [];
-  const mapped = frontierJudgeOf(reader);
+  const mapped = rs1JudgeOf(reader);
   const who = `answer ${j.answer_id.slice(0, 12)} (${reader})`;
   const p: string[] = [];
   if (j.judge.split(':')[0] === reader.split(':')[0]) p.push(`${who} has a gating judgment by ${j.judge}, a judge of its own family (GST-767)`);
@@ -425,7 +425,7 @@ export function readerValue(a: Pick<AnswerRecord, 'answer_id' | 'reader' | 'outc
   if (HARNESS_FAILURES.has(outcome) || (outcome !== 'scored' && outcome !== 'ingest_degraded')) return { drop: outcome };
   const bridge = score.get(`${a.answer_id}|${instrument}`);
   if (bridgeOnly) return typeof bridge === 'number' ? { frontier: bridge, bridge } : { drop: 'judgment_missing:bridge' };
-  const frontier = score.get(`${a.answer_id}|${frontierInstrumentId(instrument, frontierJudgeOf(a.reader))}`);
+  const frontier = score.get(`${a.answer_id}|${frontierInstrumentId(instrument, rs1JudgeOf(a.reader))}`);
   if (typeof frontier !== 'number') return { drop: 'judgment_missing:frontier' };
   return { frontier, bridge: typeof bridge === 'number' ? bridge : null };
 }
