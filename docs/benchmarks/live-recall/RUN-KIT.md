@@ -256,7 +256,9 @@ All commands run from the repository root.
    adds 10 more frozen tasks at a time, up to 40, by itself in the same directory and under the same cap (the label
    floor; a `--fixture` check runs its tasks once); `judge-check.json` lists every step. Exit status 0 means it passed; send `judge-check.json`. Exit status 7
    means a judge did not pass: send `judge-check.json` to GBEV-3 and run nothing counted until GBEV-3 answers. Exit
-   status 1 means some answer is missing or unjudged (re-judge, step 6). A cap stop (6), a truncation stop
+   status 1 means the check is unfinished: some answer, verdict or label is missing. It cannot pass until the same
+   command with `--resume` finishes it in a window GBEV-3 grants; re-judging (step 6) repairs judge errors but never
+   answers. A cap stop (6), a truncation stop
    ([`LR_JUDGE_TRUNCATED`](#lr_judge_truncated)) and a resume work as for the run.
 
    ```bash
@@ -288,8 +290,8 @@ All commands run from the repository root.
    [`LR_JUDGE_TRUNCATED`](#lr_judge_truncated)), 4 unexpected error.
 
 6. **Re-judge, if asked.** If the run or the judge check printed `LR_JUDGE_ERROR`, re-judge those answers without
-   re-answering (`tasks.ts judge <judge-check dir>` also re-labels, rewrites `judge-check.json` and exits 7 if the check
-   still does not pass). It joins the run's
+   re-answering (`tasks.ts judge <judge-check dir>` also re-labels, rewrites `judge-check.json`, exits 1 if an answer is
+   still missing and 7 if the finished check does not pass). It joins the run's
    ledger run and cap, and after a cap stop it needs the extension's two flags ([`LR_CAP_STOP`](#lr_cap_stop)).
 
    ```bash
@@ -484,8 +486,9 @@ runs until GBEV-3 answers.
 ### LR_JUDGE_CHECK
 
 Phase 2: the counted run has no passing judge check. `tasks.ts run` needs `--judge-check <judge-check.json>` from
-`tasks.ts judge-check` on the same task file and harness digest, covering at least 20 tasks and every model and arm the
-run asks for, with no cap stop, and that check must have passed. A check paused at its cap is finished first (resume it
+`tasks.ts judge-check` on the same task file and harness digest, finished (every planned task answered, judged and
+labelled), covering at least 20 tasks and every model and arm the run asks for, with no cap stop, and that check must
+have passed. A check paused at its cap is finished first (resume it
 in the window GBEV-3 grants). If the judge check did not pass (it exits with status 7), send `judge-check.json` to GBEV-3 through ALPH-72 and run
 nothing counted. If GBEV-3 decides to go ahead anyway, add `--judge-check-waiver <note id>` with GBEV-3's note id; the
 scorecard reports the waiver.
@@ -494,7 +497,8 @@ scorecard reports the waiver.
 
 Phase 2: a judge model hit its 8192-token output cap on more than 1% of its judge calls (while it has fewer than 100
 calls, on more than one), so the judge check or the run stopped; the line names the model and the counts. Each
-truncated call is recorded as a judge error and nothing in it is counted. Send the line to GBEV-3 through ALPH-72 and run
+truncated call is recorded as a judge error and nothing in it is counted. Judging again does not clear the count: it
+covers every judge call, and a resume or re-judge checks it before any new call. Send the line to GBEV-3 through ALPH-72 and run
 nothing more until GBEV-3 answers.
 
 ### LR_PROVIDER_REJECTED

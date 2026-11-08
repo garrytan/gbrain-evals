@@ -169,8 +169,9 @@ Top level:
 - `comparisons`: the four primaries (`primary` `P1` or `P2`) and the descriptive set. Each has its id, form, model, arms
   `a` and `b`, metric, `untested`, `n_pairs`, `mean_a`, `mean_b`, `delta` (b minus a), `ci95` (cluster bootstrap),
   `worse_tasks` (tasks where b scored below a, both forms summed when pooled), `reading` (`no_measurable_difference`
-  when the interval includes zero, else `b_higher` or `b_lower`; it reads the unadjusted interval, while a primary's
-  verdict uses `p_holm`), `mcnemar`
+  when the interval includes zero, else `b_higher` or `b_lower`; a primary whose interval excludes zero but whose
+  `p_holm` is 0.05 or more reads `not_significant_after_correction`, so the reading never contradicts the verdict),
+  `mcnemar`
   (wins, losses, discordant pairs, exact two-sided p; per form only), `p_two_sided`, `p_holm` (primaries only, Holm over
   the four) and `mde` (the observed minimum detectable difference).
 - `judge_agreement`: `second_judge_correct` (`n`, `agree`, `kappa` between the counted judge and claude-opus-5-5 on
@@ -192,13 +193,16 @@ and the judge (versions and the judge check), cost and custody lines.
 `judge-check.json`, the R78 check in [PHASE2-PREREGISTRATION.md](PHASE2-PREREGISTRATION.md#judge-check-before-the-counted-run-r78),
 checked by the same structure check and needle scan as the scorecard:
 
-- `schema`, `passed` (every counted judge passed both metrics and no judge model's truncation rate is above 1%),
-  `thresholds` (`min_labels` 40, `kappa` 0.6, `truncation` 0.01), `n_answers` (answered episodes), `n_tasks_checked`
-  (at least 20 for a counted run to use it), `tasks_sha256` (the task file's sha256, which the counted run must match)
-  and `stop` (`LR_CAP_STOP` while a cap stop is outstanding, which a counted run refuses, else null).
+- `schema`, `passed` (the check is complete, every counted judge passed both metrics and no judge model's truncation
+  rate is above 1%), `thresholds` (`min_labels` 40, `kappa` 0.6, `truncation` 0.01), `n_answers` (answered episodes),
+  `n_tasks_checked` (finished tasks: every arm and model has its final answer and, when answered, its counted verdict and
+  both labels; at least 20 for a counted run to use it), `complete` (every planned task finished and no cap stop
+  outstanding; a counted run refuses an incomplete check), `tasks_sha256` (the task file's sha256, which the counted run
+  must match) and `stop` (`LR_CAP_STOP` while a cap stop is outstanding, else null).
 - `steps`: the label floor's steps in order, each with `n_tasks` and `labels`, counted judge to its label counts on
   `correct` and `correct_grounded` over that step's tasks. One step when the first 20 tasks gave every judge 40 labels.
-- `truncation`: each judge model's `rows` (its latest judge and label rows), `truncated` and `rate`.
+- `truncation`: each judge model's `rows` (every judge and label call it made, earlier calls on an answer judged again
+  included), `truncated` and `rate`.
 - `judges`: counted judge to `answer_models` (the models whose rows it judges), `correct` and `correct_grounded` (B, C and
   D only), and `by_model` with the same two blocks per answering model. Each block has `n_rows`, `unusable` (a counted
   verdict or a label missing or a judge error), `labeller_agree` and `labeller_kappa` (the two labellers over every

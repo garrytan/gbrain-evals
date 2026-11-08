@@ -168,6 +168,13 @@ export const SPECS: Spec[] = [
   ...MODELS.flatMap(model => [...FORMS, POOLED].flatMap(form => DESCRIPTIVE.map(d => ({ ...d, model, form: form as Spec['form'], id: d.b.toLowerCase() + '_vs_' + d.a.toLowerCase() + '_' + d.metric + '_' + form + '_' + shortModel(model) })))),
 ];
 
+/**
+ * How a comparison reads: from its unadjusted 95% interval, except that a primary whose interval excludes zero but whose
+ * Holm-adjusted p is HOLM_ALPHA or more reads not_significant_after_correction, never as a measured difference.
+ */
+type Reading = 'no_measurable_difference' | 'b_higher' | 'b_lower' | 'not_significant_after_correction' | null;
+const HOLM_ALPHA = 0.05;
+
 function compare(spec: Spec, rows: Outcome[], invalidCells: Set<string>) {
   const pick = (arm: TaskArm) => new Map(rows.filter(o => o.arm === arm && o.model === spec.model && (spec.form === POOLED || o.form === spec.form) && o.state === 'counted' && o.values[spec.metric] !== null).map(o => [o.form + '|' + o.task, o]));
   const ma = pick(spec.a), mb = pick(spec.b);
@@ -185,7 +192,7 @@ function compare(spec: Spec, rows: Outcome[], invalidCells: Set<string>) {
   return {
     ...head, n_pairs: d.n_pairs, mean_a: round(d.mean_a), mean_b: round(d.mean_b), delta: round(d.delta), ci95: ci,
     worse_tasks: [...byTask.values()].filter(x => x < 0).length,
-    reading: !ci ? null : ci[0] <= 0 && ci[1] >= 0 ? 'no_measurable_difference' : ci[0] > 0 ? 'b_higher' : 'b_lower',
+    reading: (!ci ? null : ci[0] <= 0 && ci[1] >= 0 ? 'no_measurable_difference' : ci[0] > 0 ? 'b_higher' : 'b_lower') as Reading,
     mcnemar: m ? { wins: m.wins, losses: m.losses, discordant: m.discordant, p_two_sided: round(m.p_two_sided) } : null,
     p_two_sided: round(m ? m.p_two_sided : d.p_two_sided), p_holm: null as number | null, mde: round(powerNote(d, { binary: true }).mde),
   };
@@ -227,7 +234,8 @@ const CHECK_METRICS = { correct: ARMS, correct_grounded: ARMS.filter(a => a !== 
  * every usable row), the label set (rows both labellers grade alike), and the counted verdict against those labels:
  * bad answers caught, good answers failed, and kappa. A judge passes a metric with at least JUDGE_CHECK_MIN_LABELS
  * labels, and both kappas at least JUDGE_CHECK_KAPPA. correct_grounded leaves out A, which cites nothing. Every judge
- * model must also keep its truncated calls (judge errors at the output-token cap) at or under TRUNCATION_CAP of its rows.
+ * model must also keep its truncated calls (judge errors at the output-token cap) at or under TRUNCATION_CAP of all its
+ * calls, a re-judged call's earlier attempts included, so judging again never washes a truncation out.
  */
 export function judgeCheck(records: Array<AnswerRecord | JudgeRecord>) {
   const counted = new Map<string, JudgeRecord>(), labels = new Map<string, JudgeRecord>();
@@ -269,10 +277,10 @@ export function judgeCheck(records: Array<AnswerRecord | JudgeRecord>) {
       by_model: Object.fromEntries(models.map(m => [m, { correct: stats(rows.filter(a => a.model === m), 'correct'), correct_grounded: stats(rows.filter(a => a.model === m), 'correct_grounded') }])),
     };
   }
-  const latest = [...counted.values(), ...labels.values()];
-  const truncation = Object.fromEntries(Object.entries(judgeVersions(latest)).map(([m, v]) => [m, { rows: v.rows, truncated: v.truncated, rate: round(v.truncated / v.rows) }]));
-  passed &&= Object.values(truncation).every(t => (t.rate ?? 1) <= TRUNCATION_CAP);
-  return { schema: JUDGE_CHECK_SCHEMA, passed, thresholds: { min_labels: JUDGE_CHECK_MIN_LABELS, kappa: JUDGE_CHECK_KAPPA, truncation: TRUNCATION_CAP }, n_answers: answers.length, judges, truncation, versions: judgeVersions(latest) };
+  const calls = records.filter((r): r is JudgeRecord => r.kind === 'judge' || r.kind === 'label');
+  const truncation = Object.fromEntries(Object.entries(judgeVersions(calls)).map(([m, v]) => [m, { rows: v.rows, truncated: v.truncated, rate: round(v.truncated / v.rows) }]));
+  passed &&= Object.values(truncation).every(t => t.truncated <= TRUNCATION_CAP * t.rows);
+  return { schema: JUDGE_CHECK_SCHEMA, passed, thresholds: { min_labels: JUDGE_CHECK_MIN_LABELS, kappa: JUDGE_CHECK_KAPPA, truncation: TRUNCATION_CAP }, n_answers: answers.length, judges, truncation, versions: judgeVersions(calls) };
 }
 
 export interface ScoreInput {
@@ -332,7 +340,10 @@ export function buildTaskScorecard(s: ScoreInput) {
   const comparisons = SPECS.filter(sp => s.arms.includes(sp.a) && s.arms.includes(sp.b) && s.models.includes(sp.model) && (sp.form === POOLED ? s.forms.length > 1 : s.forms.includes(sp.form))).map(sp => compare(sp, rows, invalidCells));
   const prim = comparisons.filter(c => c.primary !== null);
   const holm = holmAdjusted(PRIMARIES.map(p => prim.find(c => c.id === p.id)?.p_two_sided ?? 1));
-  for (const c of prim) c.p_holm = round(holm[PRIMARIES.findIndex(p => p.id === c.id)]);
+  for (const c of prim) {
+    c.p_holm = round(holm[PRIMARIES.findIndex(p => p.id === c.id)]);
+    if ((c.reading === 'b_higher' || c.reading === 'b_lower') && !((c.p_holm ?? 1) < HOLM_ALPHA)) c.reading = 'not_significant_after_correction';
+  }
   const second = [...idx.judges2.values()].flatMap(j2 => {
     const j = idx.judges.get(j2.key);
     return j?.derived && j2.derived ? [[j.derived.correct ? 1 : 0, j2.derived.correct ? 1 : 0] as [number, number]] : [];
@@ -382,13 +393,13 @@ const KEY_WORDS = new Set<string>([
   'worse_tasks', 'reading', 'label', 'rows', 'versions', 'judge_check', 'labellers', 'label_effort', ...LABELLERS,
   'passed', 'waiver', 'thresholds', 'min_labels', 'n_answers', 'n_tasks_checked', 'answer_models', 'by_model', 'n_rows', 'unusable', 'labeller_agree', 'labeller_kappa',
   'n_labelled', 'n_bad', 'n_good', 'caught', 'false_fails', 'catch_rate', 'false_fail_rate', 'tasks_sha256', 'judge_check_sha256',
-  'truncated', 'truncation', 'rate', 'steps', 'labels',
+  'truncated', 'truncation', 'rate', 'steps', 'labels', 'stop', 'complete',
 ]);
 const STRING_WORDS = new Set<string>([
   TASK_SCHEMA, 'complete', 'incomplete', ...FORMS, POOLED, ...ARMS, ...MODELS, 'correct', 'correct_grounded', 'P1', 'P2', 'errors_over_cap', 'degraded_over_cap',
   ...PRIMARIES.map(p => p.id), ...SPECS.map(p => p.id), 'postgres', 'pglite', 'copy', 'standby', 'no_write_privilege', 'session_pooler', 'transaction_pooler_rewritten', 'direct_or_local', 'in_process',
   'conservative', 'balanced', 'tokenmax', 'remote', 'medium', 'unknown', 'default', ...Object.keys(ABORT_CODES), ...STATUSES,
-  'no_measurable_difference', 'b_higher', 'b_lower', JUDGE_CHECK_SCHEMA, 'high', ...LABELLERS,
+  'no_measurable_difference', 'b_higher', 'b_lower', 'not_significant_after_correction', JUDGE_CHECK_SCHEMA, 'high', ...LABELLERS,
 ]);
 const JUDGE_VERSION = new RegExp('^(' + [...LABELLERS, ...MODELS].map(m => m.replaceAll('.', '\\.')).join('|') + ')[A-Za-z0-9._-]{0,40}$');
 const STRING_PATTERNS = [/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/, /^[0-9a-f]{7,64}$/, /^\d+\.\d+\.\d+(\.\d+)?$/];
@@ -441,7 +452,7 @@ export function checkOutbound(json: string, markdown: string, needles: string[])
 
 const pct = (x: unknown) => (typeof x === 'number' ? (100 * x).toFixed(1) : 'n/a');
 const usd = (x: unknown) => (typeof x === 'number' ? '$' + x.toFixed(4) : 'n/a');
-const readingText = (c: { reading: unknown; a: string; b: string }) => (c.reading === 'no_measurable_difference' ? 'no measurable difference' : c.reading === 'b_higher' ? c.b + ' above ' + c.a : c.reading === 'b_lower' ? c.b + ' below ' + c.a : 'n/a');
+const readingText = (c: { reading: unknown; a: string; b: string }) => (c.reading === 'no_measurable_difference' ? 'no measurable difference' : c.reading === 'not_significant_after_correction' ? 'not significant after correcting for multiple comparisons' : c.reading === 'b_higher' ? c.b + ' above ' + c.a : c.reading === 'b_lower' ? c.b + ' below ' + c.a : 'n/a');
 const rateText = (r: any) => (r ? pct(r.point) + (Array.isArray(r.ci95) ? ' (' + pct(r.ci95[0]) + '–' + pct(r.ci95[1]) + ')' : '') + ', n=' + r.n : 'n/a');
 
 /** Markdown view of a validated task scorecard. Reads only the JSON. */

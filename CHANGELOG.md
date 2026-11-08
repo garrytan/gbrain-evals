@@ -42,6 +42,14 @@ This records what each gbrain-evals release changed and what its measurements me
   rate, and above 1% the check fails and a judge check or counted run stops (`LR_JUDGE_TRUNCATED`). A counted run also
   refuses a judge check that stopped at its cap or misses one of its models, arms or the first 20 tasks, a judge-check
   run no longer writes a scorecard, and `tasks.ts judge` on a judge-check directory exits 7 when the check fails.
+- **A judge check must finish, and truncation is never washed out.** `judge-check.json` counts only finished tasks
+  (answered, judged and labelled in every arm and model) and passes only when every planned task finished, so a check
+  cut short and then re-judged cannot pass on the tasks it reached. The truncation rate counts every judge call, earlier
+  attempts on a re-judged answer included, and a resume or re-judge checks it before any new call. The terminal shows
+  each model's own kappa under Astra.
+- **Readings follow Holm.** A primary comparison whose interval excludes zero but whose Holm-adjusted p is 0.05 or more
+  reads "not significant after correcting for multiple comparisons" (`not_significant_after_correction`), never as a
+  measured difference; descriptive comparisons still read from their interval.
 
 ## [0.10.175] - 2026-11-08
 

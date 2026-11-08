@@ -282,7 +282,8 @@ and each primary metric (`correct` over all four arms; `correct and grounded` ov
 labels, the bad answers the counted judge caught (catch rate), the good answers it failed (false-fail rate), and Cohen's
 kappa between the counted verdict and the labels, with each model's rows broken out. A judge's numbers pool the rows it
 judges (Astra's pool Opus and particle-1 rows), and the pass rule applies to that pool; the per-model rows are reported,
-not gated. A judge passes a metric with at least 40 labels and both kappas at least 0.6, and a kappa that cannot be
+not gated. If one model's own kappa against the labels is under 0.6 with at least 40 labels of its own, the findings say
+so in their first lines, beside that model's results. A judge passes a metric with at least 40 labels and both kappas at least 0.6, and a kappa that cannot be
 computed (every rating in one class) fails. Every judge must pass both metrics.
 
 **Label floor.** If, after the first 20 tasks, any counted judge has fewer than 40 labels on either primary metric, the
@@ -295,16 +296,21 @@ the box's check; the fixture check in the paid smoke runs its five tasks once, s
 
 **Truncated judge calls.** Every judge and label row records the output-token cap it was sent (8192) and whether the
 call hit it. A truncated call is a `judge_error` and is not tried again. `judge-check.json` reports each judge model's
-truncation rate over its judge and label rows, and a rate above 1% for either model fails the check. While judging, the
+truncation rate over all its judge and label calls, the earlier calls on an answer judged again included, so re-judging
+never washes a truncation out, and a rate above 1% for either model fails the check. While judging, the
 check or the counted run stops with [`LR_JUDGE_TRUNCATED`](RUN-KIT.md#lr_judge_truncated) once a judge model's
 truncated calls pass 1% of its calls, counted over at least 100 calls, so a single truncation among a judge's first
 calls does not stop a run whose rate cannot be read yet; a finished counted run or re-judge stops on the plain rate
-above 1%.
+above 1%. The same count is checked when a session starts, so a resume or re-judge past the stop stops again before
+any new call.
 
-If the check does not pass, `judge-check` exits 7 and `judge-check.json` goes to GBEV-3 before the counted run.
+**A finished check.** The check is complete only when every planned task has its final answer in every arm and model
+and, for each answer, its counted verdict and both labels, with no cap stop outstanding; `n_tasks_checked` counts the
+finished tasks. An unfinished check cannot pass and exits 1, and only `judge-check --resume` can finish it, since
+`tasks.ts judge` re-judges answers but never answers. If the check does not pass, `judge-check` exits 7 and `judge-check.json` goes to GBEV-3 before the counted run.
 `tasks.ts run` refuses to start without a passing `judge-check.json` made on the same task file and harness digest
-([`LR_JUDGE_CHECK`](RUN-KIT.md#lr_judge_check)), covering at least 20 tasks and all of the run's models and arms, with
-no cap stop, unless GBEV-3 waives a failed check with a note, which the scorecard reports. A judge-check run writes no
+([`LR_JUDGE_CHECK`](RUN-KIT.md#lr_judge_check)), complete, covering at least 20 tasks and all of the run's models and
+arms, unless GBEV-3 waives a failed check with a note, which the scorecard reports. A judge-check run writes no
 scorecard, so no arm comparison is seen before GBEV-3 decides. Only `judge-check.json` (counts, rates and kappas,
 checked like the scorecard) leaves the box; the answers, labels and verdicts stay in the judge-check run directory, and
 none of its answers is counted.
@@ -471,8 +477,11 @@ particle-1 on the paraphrase form with answer cost per correct answer.
 
 Each reports the paired difference with a cluster-bootstrap 95% interval, the number of tasks that got worse (the
 second arm below the first on that task, both forms summed when pooled) and the exact McNemar two-sided p, then Holm's
-adjusted p. An interval that includes zero reads "no measurable difference"; the reading uses the unadjusted interval, as
-R78 asks, while each primary's verdict uses Holm's adjusted p. A primary whose cell is invalid (below) is reported untested and enters Holm at p = 1.
+adjusted p. An interval that includes zero reads "no measurable difference". The reading never contradicts the verdict:
+a primary, which sits in the Holm family of four, reads as a measured difference only when its interval excludes zero
+and its Holm-adjusted p is under 0.05; an interval that excludes zero with a Holm p of 0.05 or more reads "not
+significant after correcting for multiple comparisons". Descriptive comparisons, outside any Holm family, read from the
+interval alone. A primary whose cell is invalid (below) is reported untested and enters Holm at p = 1.
 
 **Descriptive**, with intervals, tasks worse, the same reading and unadjusted p: for each model and for the paraphrase form, the exact form and both
 pooled, B minus A on correct, C minus B on correct and grounded and on plain correctness, and D minus B on correct and on
@@ -671,11 +680,13 @@ in the run directory on the box.
   canaries (a form, a fact and a slug), a numeric fact, an oracle answerer scoring 1.0 and an empty one 0.0, the
   judge check (its catches, false fails and kappas on a constructed label set, its failures under 40 labels or a kappa
   under 0.6, both labellers at effort high after the counted judge with no second judge, and `judge-check.json` free of
-  task text, its truncation rates with more than 1% failing, the label floor adding fixture tasks ten at a time with
-  every step listed, and no scorecard from a judge-check run), a truncated judge call recorded as a `judge_error` with
-  its cap and not tried again, the truncation stop while judging and at the end, a counted run's refusal without a
-  passing judge check or with one that stopped early or misses a model, an arm or 20 tasks, each comparison's tasks
-  worse and reading, the
+  task text, its truncation rates over every call with more than 1% failing and a re-judge not clearing one, the label
+  floor adding fixture tasks ten at a time with every step listed, an unfinished check (a missing answer or label)
+  failing, and no scorecard from a judge-check run), a truncated judge call recorded as a `judge_error` with its cap and
+  not tried again, the truncation stop while judging and at the end, a counted run's refusal without a passing judge
+  check or with one that is unfinished, stopped early or misses a model, an arm or 20 tasks, each comparison's tasks
+  worse and reading (a primary whose interval excludes zero reading "not significant after correcting for multiple
+  comparisons" when its Holm p is 0.05 or more, while the same descriptive comparison reads as higher), the
   estimate's separate judge lines and its refusal of a smoke judged by another model, and the abort codes. Cat 40's existing byte-identity test shows its own request bodies unchanged.
 - **Paid smoke**, after the harness merges, on crew keys under one paid window with a $10 cap: five fixture tasks (one
   of each type), the paraphrase form, all four arms, all three models and both judges. It proves the three provider paths,
@@ -731,6 +742,13 @@ start and end times are recorded, and the judge grades the snapshot each model s
   read of the R78 commit added three guards: a counted run also refuses a judge check that stopped at its cap, covers
   fewer than 20 tasks or misses one of its models or arms; a judge-check run writes no scorecard; and `tasks.ts judge`
   on a judge-check directory exits 7 when the check does not pass.
+- 2026-11-08, before the freeze and before any counted call, from GBEV-3 and the scoped reader's second read: a judge
+  check passes only when it is finished (every planned task answered, judged and labelled in every arm and model, no cap
+  stop outstanding), so a check cut short and then re-judged cannot pass on the tasks it reached; truncation is counted
+  over every judge call, earlier attempts on a re-judged answer included, and checked again when a session starts; a
+  primary comparison's reading follows its Holm result, so an interval that excludes zero with a Holm p of 0.05 or more
+  reads "not significant after correcting for multiple comparisons"; and each model's own kappa under Astra is
+  reported, and flagged in the findings' first lines when it is under 0.6 with at least 40 labels, without gating.
 - 2026-11-08, before the freeze and before any counted call, approved by GBEV-3: the gbrain under test moves from
   0.60.593.0 (`27f8b9d6287c`, schema 291) to 0.60.613.0 (`98dda48fb9fd`, schema 296). GBRA-108 upgraded Wintermute's
   box to 613, and its schema migration ends the 593 pin: the runner refuses a brain whose schema differs from the loaded
@@ -751,7 +769,7 @@ detectable differences for the four primaries at the kept N, and the counted run
 
 **Counted-run identity (recorded 2026-11-08, before the freeze; updated the same day for R78 and again for the label
 floor and truncation rules).** The counted run's and the judge check's harness digest must be
-`8c694fd8be1a68f379605b79543876a045f3b82f5b6e88d7d0a28edb494b8505`. The digest covers the twenty files in
+`47ce06a5d3103c2aba1218ae0b57a14207ebac4f9cdc4568ba54001cf60ece1a`. The digest covers the twenty files in
 `HARNESS_FILES` (`eval/runner/live-recall/tasks.ts`): the runner, the judge, the agent loop, the budget ledger and the
 cost path they price with, including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json`
 must also show a `runner_commit` that contains 320db88b, the R78 commit and the label-floor and truncation commit, and

@@ -1090,7 +1090,7 @@ describe('phase 2 judge check (R78)', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lr2-jc-'));
     const write = (c: unknown) => { const p = join(dir, 'judge-check.json'); writeFileSync(p, JSON.stringify(c)); return p; };
     const models = ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], arms = ['A', 'B', 'C', 'D'], need = { models, arms };
-    const good = { schema: JUDGE_CHECK_SCHEMA, passed: true, stop: null, n_tasks_checked: 20, tasks_sha256: createHash('sha256').update(fixtureText).digest('hex'), run: { harness_digest: harnessDigest(), control: false, models, arms }, judges: {} };
+    const good = { schema: JUDGE_CHECK_SCHEMA, passed: true, stop: null, complete: true, n_tasks_checked: 20, tasks_sha256: createHash('sha256').update(fixtureText).digest('hex'), run: { harness_digest: harnessDigest(), control: false, models, arms }, judges: {} };
     try {
       expect(await abortCode(() => readJudgeCheck(null, fixtureText, null, need))).toBe('LR_JUDGE_CHECK');
       expect(readJudgeCheck(write(good), fixtureText, null, need)).toMatchObject({ passed: true, waiver: null });
@@ -1100,7 +1100,7 @@ describe('phase 2 judge check (R78)', () => {
       expect(await abortCode(() => readJudgeCheck(write({ ...good, passed: false }), fixtureText, null, need))).toBe('LR_JUDGE_CHECK');
       expect(await abortCode(() => readJudgeCheck(write({ ...good, passed: false }), fixtureText, 'not a note', need))).toBe('LR_JUDGE_CHECK');
       expect(readJudgeCheck(write({ ...good, passed: false }), fixtureText, 'gbev3-waiver-1', need)).toMatchObject({ passed: false, waiver: 'gbev3-waiver-1' });
-      for (const partial of [{ ...good, stop: 'LR_CAP_STOP' }, { ...good, n_tasks_checked: 19 }, { ...good, run: { ...good.run, models: models.slice(0, 2) } }, { ...good, run: { ...good.run, arms: ['A', 'B', 'D'] } }]) {
+      for (const partial of [{ ...good, stop: 'LR_CAP_STOP' }, { ...good, complete: false }, { ...good, n_tasks_checked: 19 }, { ...good, run: { ...good.run, models: models.slice(0, 2) } }, { ...good, run: { ...good.run, arms: ['A', 'B', 'D'] } }]) {
         expect(await abortCode(() => readJudgeCheck(write(partial), fixtureText, 'gbev3-waiver-1', need))).toBe('LR_JUDGE_CHECK');
       }
       expect(readJudgeCheck(write(good), fixtureText, null, { models: ['claude-opus-5-5'], arms: ['A', 'B'] })).toMatchObject({ passed: true });
@@ -1114,15 +1114,20 @@ describe('phase 2 judge check (R78)', () => {
 
   test('comparisons count the tasks that got worse and read an interval spanning zero as no measurable difference', () => {
     const tasks = Array.from({ length: 30 }, (_, i) => ({ id: 't' + i, type: 'topic', gold_found_by: 'unknown' })) as any;
-    const card = (aRight: (i: number) => boolean, bRight: (i: number) => boolean) => buildTaskScorecard({
+    const cards = (aRight: (i: number) => boolean, bRight: (i: number) => boolean) => buildTaskScorecard({
       tasks, forms: ['paraphrase'], arms: ['A', 'B'], models: ['claude-opus-5-5'], identity: {}, stop: null, ledger_usd: null, audit: null,
       records: tasks.flatMap((t: any, i: number) => [answer(t.id, 'A', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'A', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', aRight(i)), answer(t.id, 'B', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'B', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', bRight(i))]),
       task_summary: { submitted: 30, kept_at_freeze: 30, dropped_unreachable: 0, gold_missing_at_run: 0, sha_prefix: '0'.repeat(12), n_frozen: 30 },
       custody: { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: {} },
-    }).comparisons.find(c => c.id === 'p1_b_vs_a_opus')!;
+    }).comparisons;
+    const card = (aRight: (i: number) => boolean, bRight: (i: number) => boolean) => cards(aRight, bRight).find(c => c.id === 'p1_b_vs_a_opus')!;
     expect(card(i => i < 3, i => i >= 2)).toMatchObject({ worse_tasks: 2, reading: 'b_higher' });
     expect(card(i => i < 15, i => i >= 15)).toMatchObject({ worse_tasks: 15, reading: 'no_measurable_difference' });
     expect(card(i => i >= 2, i => i < 3)).toMatchObject({ reading: 'b_lower' });
+    const six = cards(i => i < 10, i => i < 16);
+    const primary = six.find(c => c.id === 'p1_b_vs_a_opus')!, descriptive = six.find(c => !c.primary && c.a === 'A' && c.b === 'B' && c.metric === 'correct' && c.form === 'paraphrase')!;
+    expect([primary.ci95![0] > 0, primary.p_two_sided! < 0.05, primary.p_holm! >= 0.05, primary.reading]).toEqual([true, true, true, 'not_significant_after_correction']);
+    expect([descriptive.ci95![0] > 0, descriptive.reading]).toEqual([true, 'b_higher']);
   });
 
   test('a fixture judge check labels every answer with both labellers at effort high after its counted judge, with no second judge', async () => {
@@ -1150,6 +1155,17 @@ describe('phase 2 judge check (R78)', () => {
       expect((c.judges as any)['gpt-6-astra'].correct.n_rows).toBe(16);
       expect([c.stop, c.run.models, c.run.arms, c.steps]).toEqual([null, ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], ['A', 'B', 'C', 'D'], [{ n_tasks: 2, labels: { 'gpt-6-astra': { correct: (c.judges as any)['gpt-6-astra'].correct.n_labelled, correct_grounded: (c.judges as any)['gpt-6-astra'].correct_grounded.n_labelled }, 'claude-opus-5-5': { correct: (c.judges as any)['claude-opus-5-5'].correct.n_labelled, correct_grounded: (c.judges as any)['claude-opus-5-5'].correct_grounded.n_labelled } } }]]);
       expect(c.truncation).toEqual({ 'gpt-6-astra': { rows: 16 + 24, truncated: 0, rate: 0 }, 'claude-opus-5-5': { rows: 8 + 24, truncated: 0, rate: 0 } });
+      expect(c.complete).toBe(true);
+      const path = join(out, 'records.local.jsonl'), full = readFileSync(path, 'utf8');
+      const lines = full.trimEnd().split('\n');
+      const lastLabel = lines.findLastIndex(l => JSON.parse(l).kind === 'label');
+      writeFileSync(path, lines.filter((_, i) => i !== lastLabel).join('\n') + '\n');
+      expect([writeJudgeCheck(out)].map(x => [x.complete, x.passed, x.n_tasks_checked])).toEqual([[false, false, 1]]);
+      const someTask = JSON.parse(lines[0]!).task;
+      writeFileSync(path, lines.filter(l => !(JSON.parse(l).kind === 'answer' && JSON.parse(l).task === someTask)).join('\n') + '\n');
+      expect([writeJudgeCheck(out)].map(x => [x.complete, x.n_tasks_checked])).toEqual([[false, 1]]);
+      writeFileSync(path, full);
+      expect(writeJudgeCheck(out).complete).toBe(true);
       expect(records.filter(x => x.kind !== 'answer').every(x => x.max_output_tokens === 8192 && x.truncated === false)).toBe(true);
       expect([existsSync(join(out, 'scorecard.json')), existsSync(join(out, 'scorecard.md'))]).toEqual([false, false]);
       const text = readFileSync(join(out, 'judge-check.json'), 'utf8');
@@ -1190,6 +1206,17 @@ describe('phase 2 judge check (R78)', () => {
     expect([one.passed, two.passed, two.truncation['gpt-6-astra']!.rate]).toEqual([true, false, 0.0111]);
     expect(two.truncation['claude-opus-5-5']).toEqual({ rows: 180, truncated: 0, rate: 0 });
     expect(() => validateTaskScorecard(two)).not.toThrow();
+    const redone = cut(2).filter(r => r.truncated).map(r => ({ ...verdict('label', r.key, r.judge, true), at: '2026-11-08T00:00:02.000Z' }));
+    const rejudged = judgeCheck([...cut(2), ...redone]);
+    expect([rejudged.truncation['gpt-6-astra'], rejudged.passed]).toEqual([{ rows: 182, truncated: 2, rate: 0.011 }, false]);
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-trunc-'));
+    try {
+      const path = join(dir, 'records.local.jsonl');
+      writeFileSync(path, [...cut(1).slice(0, 4), ...redone.slice(0, 1)].map(r => JSON.stringify(r)).join('\n') + '\n');
+      const store = new RecordStore(path);
+      expect([store.calls.length, store.calls.filter(c => c.truncated).length]).toEqual([4, 1]);
+      expect(() => checkTruncation(store.calls, 1)).toThrow();
+    } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 
   test('only a short label count extends the check: under 40 labels on either primary metric for any counted judge', () => {
