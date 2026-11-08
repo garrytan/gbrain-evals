@@ -2,6 +2,30 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### gbrain's refresh write barrier passes its preregistered test, and the findings recommend turning it on
+
+- **What we learned.** With `persistence.refresh_barrier` on, gbrain at `773a29ee` holds a write made during a refresh
+  instead of refusing it. It lost, stuck, duplicated or overwrote no write in 2,000 counted concurrency trials on Postgres
+  and PGLite. `worktree_refreshing` refusals went to 0, and the p95 wait for a write's first answer during a refresh fell
+  from about 10 s to 76 ms (Postgres) and 35 ms (PGLite). Retrieval scores didn't change. Agents did far better with a
+  held write than a refused one: gpt-6.1-sol's strict success went from 4 to 60 of 60 tasks, and claude-opus-5-5's from
+  15 to 37 adjudicated (14 to 28 raw). The report is `docs/benchmarks/2026-11-08-refresh-barrier-results.md`, and the
+  docs index row moves to "Saving, using, and improving memory".
+- **What didn't work.** The first counted run, at gbrain `431cb3f9`, read FAIL on two writes that stayed pending after an
+  aborted refresh, which gbrain fixed in `773a29ee`, and on four overwrites that matched a fault in our own detector. The
+  two runs are never pooled. The preregistered scorer counts an untitled capture as a duplicate fact, which works against
+  the flag, and the results stand as scored.
+- **Harness changes, each made before the counted run it affects.** Writers start gbrain's persistence consumer as
+  `gbrain serve` does, a scripted cron commit waits for gbrain's Git index lock instead of failing the trial, the trial
+  start time is written atomically, and the overwrite detector no longer blames a marker that a blind put carried back.
+  The preregistration's Amendments 1 to 6 record each change before the counted run it affects.
+- **New scripts.** `scripts/refresh-barrier-b1-guard.ts` waits for an idle machine before it runs the retrieval
+  latency check, and marks the run invalid if other work ran during either arm. `scripts/refresh-barrier-partc-adjudicate.ts` applies the agent check's
+  preregistered adjudication rule; it reads a model as incomplete unless all 60 counted task pairs are present at the
+  tested build, and keeps a fact written twice or a context overflow as a failure.
+
 ## [0.10.176] - 2026-11-08
 
 ### RS1 is preregistered again as one claim: is gbrain within 3.5 points of the two leading memory servers (GST-1886)
