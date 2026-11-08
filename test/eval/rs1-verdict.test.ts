@@ -104,7 +104,7 @@ function build(name: string, o: Opts = {}) {
       const reread = answersFor(rid, [PARTICLE]);
       writeFileSync(join(rdir, 'answers.ndjson'), nd(reread.map(x => x.answer)));
       writeFileSync(join(rdir, 'judgments.ndjson'), nd(judgmentsFor(reread)));
-      const rereadReceipt: Record<string, any> = { schema: 'reread', cell_id: rid, run_status: 'complete', keyless: false, source: { arm_cell_id: armCell, config_sha256s: [config] }, instrument: { id: INST.id, sha256: INST.sha256 }, spend: { reader_usd: 0.5 } };
+      const rereadReceipt: Record<string, any> = { schema: 'reread', cell_id: rid, run_status: 'complete', keyless: false, source: { arm_cell_id: armCell, config_sha256s: [config] }, dataset, instrument: { id: INST.id, sha256: INST.sha256 }, spend: { reader_usd: 0.5 } };
       o.rereadPatch?.(system, u, rereadReceipt);
       writeFileSync(join(rdir, 'receipt.json'), JSON.stringify(rereadReceipt));
     }
@@ -207,6 +207,15 @@ describe('verdict.ts receipts', () => {
     expect(markdown(part)).toContain('| anthropic:claude-opus-5-5 | gbrain | n/a |');
     const reread = analyze(load(build('meters-reread', { meters: () => true, rereadPatch: (s, u, r) => { if (s === 'gbrain-defaults' && u === 0) delete r.spend; } })));
     expect(reread.table.find(t => t.reader === PARTICLE && t.row === 'gbrain')!.usd_per_question).toBeNull();
+  });
+
+  test('a particle-1 re-read receipt is checked against the filled manifest like a unit receipt', () => {
+    const refused = (name: string, edit: (r: Record<string, any>) => void) => { try { load(build(name, { rereadPatch: (s, u, r) => { if (s === 'ext-extract-first' && u === 1) edit(r); } })); } catch (e) { if (e instanceof VerdictError) return e.message; throw e; } return 'accepted'; };
+    expect(refused('reread-no-dataset', r => { delete r.dataset; })).toContain('it records no dataset');
+    expect(refused('reread-unfilled', r => { r.dataset = { ...r.dataset, revision: 'unfilled' }; })).toContain('its dataset revision is unfilled');
+    expect(refused('reread-foreign', r => { r.dataset = { ...r.dataset, files: [{ path: RS1_MANIFEST, sha256: 'f'.repeat(64) }, ...r.dataset.files.slice(1)] }; })).toContain('is not the filled manifest');
+    expect(refused('reread-bytes', r => { r.dataset = { ...r.dataset, files: [r.dataset.files[0], { ...r.dataset.files[1], sha256: 'f'.repeat(64) }] }; })).toContain('the manifest pins');
+    expect(refused('reread-ok', () => {})).toBe('accepted');
   });
 
   test('a unit where every retrieval failed for a reader prices that reader\'s spend there at $0, not n/a', () => {

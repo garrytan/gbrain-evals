@@ -136,6 +136,17 @@ beforeAll(async () => {
 afterAll(() => fake?.kill());
 
 describe('re-read: verification before any request', () => {
+  test('an RS1 re-read is refused while the RS1 manifest is unfilled, before custody or any source is read', () => {
+    const rs1 = findCell('rs1.ext-memory-bank.recipe', undefined, 'rs1');
+    const rs1Arm = rereadArm(rs1, 'component-b8000');
+    const unfilled = refusal(() => prepareReread(rs1, rs1Arm, { sources: [join(tmp, 'no-rs1-source', 'runs', rs1.id)], reader: PARTICLE, out: join(tmp, 'rs1-unfilled'), env: {} }));
+    expect(unfilled.code).toBe('PREFLIGHT_FAILED');
+    expect(unfilled.message).toContain('the RS1 manifest is unfilled');
+    const source = (revision: string): Corpus => ({ ...corpus, benchmark: 'beam-rs1', source: { ...corpus.source, revision } });
+    expect(refusal(() => prepareReread(rs1, rs1Arm, { sources: [join(tmp, 'no-rs1-source', 'runs', rs1.id)], reader: PARTICLE, out: join(tmp, 'rs1-unfilled-corpus') }, { corpus: source('unfilled') })).message).toContain('the RS1 manifest is unfilled');
+    expect(refusal(() => prepareReread(rs1, rs1Arm, { sources: [join(tmp, 'no-rs1-source', 'runs', rs1.id)], reader: PARTICLE, out: join(tmp, 'rs1-filled-corpus') }, { corpus: source('abcdef0') })).message).not.toContain('unfilled');
+  });
+
   // Value: protects=a re-read reads exactly the source cell's bytes and schedule; fails_when=a frozen context, the schedule or the stored answers are taken on trust; why_new=reread-cell.ts is new; seam=none; no_claim=a sealed source (custody is runCell's gate, reused)
   test('every frozen context of the arm hashes to its prompt and to the answers\' context_sha256; the plan keeps the failed retrieval without a context; verify.json carries counts and hashes, never a question', () => {
     const out = join(tmp, 'verify');
@@ -412,6 +423,7 @@ describe('re-read: particle-1 through the lease proxy', () => {
       const rec = JSON.parse(readFileSync(join(res.dir, 'receipt.json'), 'utf8'));
       expect(rec).toMatchObject({ run_status: 'complete', keyless: false, readers: [PARTICLE], max_tokens: 16_000, effort: 'medium', source: { cell: def.id, arm: arm.id, arm_cell_id: arm.cell_id },
         counts: { answers: 6, answers_promised: 6, judgments: 5, unjudged: 0, outcomes: { scored: 5, retrieval_error: 1 } }, verify: p.verify.counts });
+      expect(rec.dataset).toEqual(corpus.source);
       expect(rec.spend.reader_usd).toBeGreaterThan(0);
       expect(rec.lease.requests).toBe(5);
 

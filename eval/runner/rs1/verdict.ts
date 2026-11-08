@@ -190,7 +190,7 @@ function findReceipts(dirs: readonly string[]): CellFiles[] {
 /** F10: a set-RS1 receipt must come from the filled manifest (or one of its earlier fills) and load only its pinned bytes. */
 export function receiptManifestProblems(config: Record<string, any> | null, manifest: Rs1Manifest, manifestSha: string): string[] {
   const ds = config?.dataset;
-  if (!ds) return ['its run-config.json has no dataset'];
+  if (!ds) return ['it records no dataset'];
   if (ds.revision === 'unfilled') return ['its dataset revision is unfilled'];
   const [head, ...files] = (ds.files ?? []) as Array<{ path: string; sha256: string }>;
   if (head?.path !== RS1_MANIFEST) return [`its dataset is not the RS1 manifest (${head?.path ?? 'no files'})`];
@@ -306,6 +306,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
     for (const r of rereads) {
       if (r.receipt.keyless !== false) refuse(`${r.dir} is not a paid re-read (keyless ${r.receipt.keyless ?? 'unrecorded'}); a verdict reads only re-reads whose receipt says keyless: false`);
       if (r.receipt.run_status === 'invalid') refuse(`${r.dir} is invalid: ${(r.receipt.invalid_reasons ?? []).join('; ')}`);
+      if (manifest) { const p = receiptManifestProblems(r.receipt, manifest, manifestSha); if (p.length) refuse(`${r.dir}: ${p.join('; ')}`); }
       if (wrongInstrument(r)) refuse(`${r.dir} was judged under instrument ${r.receipt.instrument?.id}, not ${instrument.id} (${instrument.sha256.slice(0, 12)})`);
       const ans = readRecords(join(r.dir, 'answers.ndjson'), 'answer');
       for (const conv of new Set(ans.map(a => a.conversation))) { if (reheld.has(conv)) refuse(`${rereadId}: conversation ${conv} is re-read in both ${reheld.get(conv)} and ${r.dir}`); reheld.set(conv, r.dir); }
