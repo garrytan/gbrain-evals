@@ -148,6 +148,18 @@ describe('pricing.ts', () => {
     expect(run.stderr.toString()).toContain('RS1_CHECKIN');
   });
 
+  test('--kept-done and --stage1-done need --spent-usd, so completed work never leaves the projection at $0 spent', () => {
+    const cli = (...args: string[]) => Bun.spawnSync(['bun', 'eval/runner/rs1/pricing.ts', '--n', '28', '--out', '/dev/null', ...args], { cwd: ROOT });
+    for (const progress of [['--stage1-done'], ['--kept-done', '5'], ['--kept-done', '5', '--stage1-done']]) {
+      const run = cli(...progress);
+      expect([progress.join(' '), run.exitCode]).toEqual([progress.join(' '), 2]);
+      expect(run.stderr.toString()).toContain('need --spent-usd');
+    }
+    expect(cli('--stage1-done', '--spent-usd', '60').exitCode).toBe(0);
+    expect(cli('--kept-done', '5', '--spent-usd', '2000').exitCode).toBe(3);
+    expect(cli('--kept-done', '0').exitCode).toBe(0);
+  });
+
   test('the committed pricing.json is the default output', () => {
     expect(JSON.parse(readFileSync(PRICING_PATH, 'utf8'))).toEqual(JSON.parse(JSON.stringify(pricing())));
   });

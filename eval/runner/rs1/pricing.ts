@@ -11,7 +11,8 @@
  *
  *   projection = spent-to-date + (paid still to spend) x 1.10 reserve + crew credits still to spend
  *
- * VM time is inside paid. It exits 3 with RS1_CHECKIN when the projection passes $2,300. After stage 1, the measured
+ * VM time is inside paid. --kept-done and --stage1-done need --spent-usd (exit 2 without it), because they take work out
+ * of the remaining spend that only the spend to date can put back. It exits 3 with RS1_CHECKIN when the projection passes $2,300. After stage 1, the measured
  * rs1-stable ingest rates replace F6's f6-master placeholders through --gbrain-api-per-mtok and --gbrain-hours-per-mtok,
  * and both projections are recorded in the preregistration's amendments.
  */
@@ -127,6 +128,7 @@ if (import.meta.main) {
   const rates: Rates = { ...STAGE0_RATES, systems: { ...STAGE0_RATES.systems, gbrain: { ...g, api_usd_per_mtok: num('--gbrain-api-per-mtok', g.api_usd_per_mtok), vm_hours_per_mtok: num('--gbrain-hours-per-mtok', g.vm_hours_per_mtok) } } };
   const crewLeft = flag('--crew-remaining-usd');
   const progress: Progress = { spent_usd: num('--spent-usd', 0), kept_done: num('--kept-done', 0), stage1_done: args.includes('--stage1-done'), crew_remaining_usd: crewLeft === undefined ? null : num('--crew-remaining-usd', 0) };
+  if (flag('--spent-usd') === undefined && (progress.kept_done > 0 || progress.stage1_done)) { process.stderr.write('pricing.ts: --kept-done and --stage1-done take completed work out of the remaining spend, so they need --spent-usd with the spend to date from the ledger\n'); process.exit(2); }
   const out = pricing(num('--n', N_CENTRAL), rates, progress);
   const path = resolve(flag('--out') ?? PRICING_PATH);
   writeFileSync(path, JSON.stringify(out, null, 2) + '\n');
