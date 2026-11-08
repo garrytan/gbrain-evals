@@ -2,6 +2,19 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.174] - 2026-11-08
+
+### Where four coding harnesses stop listing every installed skill (GST-1860)
+
+- **What it measures.** `docs/benchmarks/skill-listing-truncation.md` records how the skill listing that Claude Code
+  2.1.312, Codex 0.165.0, OpenClaw 2026.10.6 and Hermes v2026.9.24 put in their own prompt changes as a catalog grows from
+  50 to 1,500 synthetic skills: the names listed, the descriptions cut and the listing's size. Each harness ran one turn
+  against a local capture server, so no model was called.
+- **What it found.** All four list skills alphabetically, and all four cut descriptions, drop names, or both, at 300
+  skills or fewer. Claude Code and Codex meet the plan's preregistered rule for a per-turn resolver hook.
+- **How to rerun it.** The catalog generator, capture server, runner and per-harness results are in
+  `docs/benchmarks/skill-listing-truncation/`. Its README says how to rerun with the pinned versions, one run at a time.
+
 ## [0.10.173] - 2026-11-08
 
 ### Live recall phase 2: a preregistered harness for whether gbrain retrieval changes answers (GBEV-46)
