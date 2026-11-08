@@ -101,7 +101,7 @@ import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render-v2.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
-import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
+import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
@@ -149,12 +149,12 @@ export const contextKey = (realization: string, questionId: string, armId: strin
 
 /**
  * The judgments an answer needs before it counts as judged: the canonical judge's, and on a per-reader frontier arm
- * (RS1) its reader's frontier judge's as well, so completeness, resume and the receipt count a missing frontier
- * judgment as unjudged there. Q1 and F6 arms need the canonical judgment alone.
+ * (RS1) its reader's frontier judge's as well, sent at the arm's pinned settings, so completeness, resume and the
+ * receipt count a missing frontier judgment as unjudged there. Q1 and F6 arms need the canonical judgment alone.
  */
-export function requiredJudges(arm: Pick<ArmDefinition, 'frontier'>, a: { reader: string; replicate: number }, instrument: Pick<Instrument, 'id' | 'canonical_judge'>): Array<{ judge: string; instrument_id: string }> {
-  const out = [{ judge: instrument.canonical_judge, instrument_id: instrument.id }];
-  if (arm.frontier?.per_reader && a.replicate === 0) for (const j of frontierJudgesFor(arm, a.reader)) out.push({ judge: j, instrument_id: frontierInstrumentId(instrument.id, j) });
+export function requiredJudges(arm: Pick<ArmDefinition, 'frontier'>, a: { reader: string; replicate: number }, instrument: Pick<Instrument, 'id' | 'canonical_judge'>): Array<{ judge: string; instrument_id: string; settings?: JudgeSettings }> {
+  const out: Array<{ judge: string; instrument_id: string; settings?: JudgeSettings }> = [{ judge: instrument.canonical_judge, instrument_id: instrument.id }];
+  if (arm.frontier?.per_reader && a.replicate === 0) for (const j of frontierJudgesFor(arm, a.reader)) out.push({ judge: j, instrument_id: frontierInstrumentId(instrument.id, j), ...(arm.frontier.settings ? { settings: arm.frontier.settings } : {}) });
   return out;
 }
 
@@ -950,11 +950,11 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
     const judgeOne = async (q: MemoryQuestion, a: AnswerRecord, arm: ArmDefinition) => {
       if (!JUDGED.has(a.outcome)) return;
-      const tasks: Array<{ judgeModel: string; instrumentId: string }> = [{ judgeModel: instrument.canonical_judge, instrumentId: instrument.id }];
-      if (opts.frontier !== false && a.replicate === 0 && inFrontierSample(arm, q.id)) for (const j of frontierJudgesFor(arm, a.reader)) tasks.push({ judgeModel: j, instrumentId: frontierInstrumentId(instrument.id, j) });
+      const tasks: Array<{ judgeModel: string; instrumentId: string; settings?: JudgeSettings }> = [{ judgeModel: instrument.canonical_judge, instrumentId: instrument.id }];
+      if (opts.frontier !== false && a.replicate === 0 && inFrontierSample(arm, q.id)) for (const j of frontierJudgesFor(arm, a.reader)) tasks.push({ judgeModel: j, instrumentId: frontierInstrumentId(instrument.id, j), ...(arm.frontier?.per_reader && arm.frontier.settings ? { settings: arm.frontier.settings } : {}) });
       for (const t of tasks) {
         if (judgments.has(judgmentKey({ answer_id: a.answer_id, instrument_sha256: instrument.sha256, judge: t.judgeModel, judge_replicate: 0 }))) continue;
-        const r = await meter.around('judge', `judge:${a.answer_id.slice(0, 16)}:${t.judgeModel}`, 'judge', () => judgeAnswer(judge, instrument, q, a.text, { judge: t.judgeModel, judgeReplicate: 0, maxAttempts }));
+        const r = await meter.around('judge', `judge:${a.answer_id.slice(0, 16)}:${t.judgeModel}`, 'judge', () => judgeAnswer(judge, instrument, q, a.text, { judge: t.judgeModel, judgeReplicate: 0, maxAttempts, ...(t.settings ? { settings: t.settings } : {}) }));
         if (r.error !== undefined) { if (/budget/i.test(String((r.error as Error).message))) stopped = `budget: ${(r.error as Error).message.slice(0, 200)}`; continue; }
         judgments.append({ answer_id: a.answer_id, ...r.value!, instrument_id: t.instrumentId });
       }

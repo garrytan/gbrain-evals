@@ -303,7 +303,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
     if (!a || !JUDGED.has(a.outcome)) return;
     for (const j of planned) {
       if (judgedBy(aid, j.judge)) continue;
-      const r = await meter.around('judge', `judge:${aid.slice(0, 16)}:${j.judge}`, 'judge', () => judgeAnswer(judgeChat, instrument, x.question, a.text, { judge: j.judge, judgeReplicate: 0, maxAttempts }));
+      const r = await meter.around('judge', `judge:${aid.slice(0, 16)}:${j.judge}`, 'judge', () => judgeAnswer(judgeChat, instrument, x.question, a.text, { judge: j.judge, judgeReplicate: 0, maxAttempts, ...(j.settings ? { settings: j.settings } : {}) }));
       if (r.error !== undefined) { if (/budget/i.test(String((r.error as Error).message))) stopped = `budget: ${String((r.error as Error).message).slice(0, 200)}`; return; }
       judgments.append({ answer_id: aid, ...r.value!, instrument_id: j.instrument_id });
     }

@@ -88,6 +88,8 @@ export interface ChatOptions {
   system?: string;
   /** Retry of a malformed judgment: a fresh call, never the cached malformed reply. */
   attempt?: number;
+  /** Finish reasons whose reply is returned but never written to the cache (outside the key; a pinned judge's truncations and refusals). */
+  uncachedFinishes?: readonly string[];
 }
 
 /** One failed attempt to an OpenAI-compatible provider, in attempt order. */
@@ -187,7 +189,7 @@ export class ChatClient extends BaseChatClient implements ChatLike {
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
         const r = compat ? await compatChat(compat, this.compatTimeoutMs) : provider === 'anthropic' ? await anthropicChat(name, prompt, opts) : await openaiChat(name, prompt, opts);
-        writeFileSync(path, JSON.stringify(r));
+        if (!opts.uncachedFinishes?.includes(String(r.finish))) writeFileSync(path, JSON.stringify(r));
         return { ...r, cached: false, attempt_errors: attemptErrors, ...(compat ? { compat_attempts: compatAttempts } : {}) };
       } catch (e) {
         lastError = e;
@@ -294,6 +296,18 @@ export class MalformedJudgment extends Error {
   constructor(readonly raws: string[], reason: string) { super(`malformed judgment after ${raws.length} attempt(s): ${reason}`); this.name = 'MalformedJudgment'; }
 }
 
+/** A pinned judge's reply cut off at its output cap: a judge_error, never retried or cached. */
+export class TruncatedJudgment extends Error {
+  constructor(readonly raws: string[], finish: string, maxTokens: number) { super(`judgment truncated at its ${maxTokens}-token output cap (finish ${finish})`); this.name = 'TruncatedJudgment'; }
+}
+
+/** A pinned judge's request settings (definitions.ts PER_READER_JUDGE_SETTINGS): every call's reasoning effort and output cap. */
+export interface PinnedJudgeSettings { effort: string; max_tokens: number }
+/** Provider finish reasons for a reply cut off at the output cap (OpenAI `length`, Anthropic `max_tokens`). */
+export const TRUNCATED_FINISHES = ['length', 'max_tokens'] as const;
+/** A pinned judge's replies kept out of the cache: truncations and refusals (Anthropic `refusal`, OpenAI `content_filter`). */
+export const UNCACHED_JUDGE_FINISHES = [...TRUNCATED_FINISHES, 'refusal', 'content_filter'] as const;
+
 /** The temperature a judge is sent: the instrument's, or null for a judge that accepts only its default. */
 export const judgeTemperature = (judge: string, instrument: Pick<Instrument, 'temperature'>): number | null => sendsTemperature(judge) ? instrument.temperature : null;
 
@@ -303,19 +317,31 @@ export const judgeTemperature = (judge: string, instrument: Pick<Instrument, 'te
  * malformed; after `maxAttempts` the judgment is a `judge_error` with a null
  * score. Provider errors propagate, so the caller records nothing and a
  * restart retries the call.
+ *
+ * With `settings` (RS1's pinned per-reader judges) every call is sent at that
+ * effort and output cap instead of the instrument's limit, a truncated reply
+ * makes the judgment a `judge_error` at once, truncated and refused replies
+ * are never cached, and the record carries the settings, its call count and
+ * how many calls the cache answered (a hit costs nothing).
  */
 export async function judgeAnswer(client: ChatLike, instrument: Instrument, q: MemoryQuestion, response: string,
-  opts: { judge?: string; judgeReplicate: number; maxAttempts?: number }): Promise<Omit<JudgmentRecord, 'answer_id'>> {
+  opts: { judge?: string; judgeReplicate: number; maxAttempts?: number; settings?: PinnedJudgeSettings }): Promise<Omit<JudgmentRecord, 'answer_id'>> {
   const judge = opts.judge ?? instrument.canonical_judge;
   const temperature = judgeTemperature(judge, instrument);
   const maxAttempts = opts.maxAttempts ?? 3;
+  const pinned = opts.settings;
   const raw: string[] = [];
+  let calls = 0, hits = 0;
   const ask = async (call: JudgeCall) => {
     const tries: string[] = [];
     let reason = '';
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const res = await client.chat(judge, call.prompt, { maxTokens: call.max_tokens, replicate: opts.judgeReplicate, temperature, ...(call.system !== undefined ? { system: call.system } : {}), ...(attempt ? { attempt } : {}) });
+      const sent = pinned ? { maxTokens: pinned.max_tokens, effort: pinned.effort, uncachedFinishes: UNCACHED_JUDGE_FINISHES } : { maxTokens: call.max_tokens };
+      const res = await client.chat(judge, call.prompt, { ...sent, replicate: opts.judgeReplicate, temperature, ...(call.system !== undefined ? { system: call.system } : {}), ...(attempt ? { attempt } : {}) });
+      calls++;
+      if (res.cached) hits++;
       tries.push(res.text);
+      if (pinned && (TRUNCATED_FINISHES as readonly string[]).includes(String(res.finish))) { raw.push(...tries); throw new TruncatedJudgment(tries, String(res.finish), pinned.max_tokens); }
       const parsed = call.parse(res.text);
       if (parsed.ok) { raw.push(res.text); return { raw: res.text, value: parsed.value }; }
       reason = parsed.reason;
@@ -324,11 +350,12 @@ export async function judgeAnswer(client: ChatLike, instrument: Instrument, q: M
     throw new MalformedJudgment(tries, reason);
   };
   const base = { instrument_id: instrument.id, instrument_sha256: instrument.sha256, judge, judge_replicate: opts.judgeReplicate, temperature };
+  const sent = () => (pinned ? { settings: { ...pinned }, calls, cache_hits: hits } : {});
   try {
     const r = await instrument.score(q, response, ask);
-    return { ...base, score: r.score, parse_ok: true, raw_sha256: rawSha256(raw), outcome: 'scored', raw, ...(r.detail ? { detail: r.detail } : {}) };
+    return { ...base, score: r.score, parse_ok: true, raw_sha256: rawSha256(raw), outcome: 'scored', raw, ...(r.detail ? { detail: r.detail } : {}), ...sent() };
   } catch (e) {
-    if (!(e instanceof MalformedJudgment)) throw e;
-    return { ...base, score: null, parse_ok: false, raw_sha256: rawSha256(raw), outcome: 'judge_error', raw, detail: { error: e.message } };
+    if (!(e instanceof MalformedJudgment) && !(e instanceof TruncatedJudgment)) throw e;
+    return { ...base, score: null, parse_ok: false, raw_sha256: rawSha256(raw), outcome: 'judge_error', raw, detail: { error: e.message, ...(e instanceof TruncatedJudgment ? { truncated: true } : {}) }, ...sent() };
   }
 }

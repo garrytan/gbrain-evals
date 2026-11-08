@@ -151,6 +151,11 @@ export interface JudgmentRecord {
   raw?: string[];
   /** Instrument-specific breakdown (per-rubric scores, event-ordering tau). */
   detail?: Record<string, unknown>;
+  /** A pinned judge's request settings (RS1's per-reader judges): every call's reasoning effort and output cap. */
+  settings?: { effort: string; max_tokens: number };
+  /** A pinned judge's calls for this judgment, and how many of them the cache answered at no cost. */
+  calls?: number;
+  cache_hits?: number;
 }
 
 export interface Q1RowFields {
