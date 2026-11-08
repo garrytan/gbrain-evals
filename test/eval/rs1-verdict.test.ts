@@ -9,7 +9,7 @@ import { answerId } from '../../eval/runner/memory-qa/records.ts';
 import { runConfigText } from '../../eval/runner/q1/cell.ts';
 import { loadRS1Manifest, OPUS, PARTICLE, SOL } from '../../eval/runner/q1/cells/rs1.ts';
 import { rereadCellId } from '../../eval/runner/q1/reread-cell.ts';
-import { analyze, loadInput, markdown, pairedRow, readerValue, receiptManifestProblems, verdictMain, VerdictError, type VerdictInput } from '../../eval/runner/rs1/verdict.ts';
+import { analyze, gatingProblems, loadInput, markdown, pairedRow, readerValue, receiptManifestProblems, verdictMain, VerdictError, type VerdictInput } from '../../eval/runner/rs1/verdict.ts';
 
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 const HEX = sha('x');
@@ -80,7 +80,7 @@ function build(name: string, o: Opts = {}) {
       }));
       const judgmentsFor = (xs: ReturnType<typeof answersFor>) => xs.flatMap(({ answer, score: s }) => typeof s === 'string' ? [] : [
         { answer_id: answer.answer_id, instrument_id: INSTRUMENT, instrument_sha256: HEX, judge: 'openai:gpt-4.1-mini', judge_replicate: 0, temperature: 0, score: s, parse_ok: true, raw_sha256: HEX, outcome: 'scored' },
-        ...(frontier ? [{ answer_id: answer.answer_id, instrument_id: `${INSTRUMENT}@${JUDGE[answer.reader]}`, instrument_sha256: HEX, judge: JUDGE[answer.reader], judge_replicate: 0, temperature: 0, score: Math.min(1, Math.max(0, s + (parseInt(answer.answer_id.slice(0, 4), 16) / 65535 - 0.5) * 0.04)), parse_ok: true, raw_sha256: HEX, outcome: 'scored' }] : []),
+        ...(frontier ? [{ answer_id: answer.answer_id, instrument_id: `${INSTRUMENT}@${JUDGE[answer.reader]}`, instrument_sha256: HEX, judge: JUDGE[answer.reader], judge_replicate: 0, temperature: 0, score: Math.min(1, Math.max(0, s + (parseInt(answer.answer_id.slice(0, 4), 16) / 65535 - 0.5) * 0.04)), parse_ok: true, raw_sha256: HEX, outcome: 'scored', view: 'gating', settings: { effort: 'medium', max_tokens: 8000 }, judge_versions: [`${JUDGE[answer.reader].split(':')[1]}-2026-10-01`] }] : []),
       ]);
       const live = answersFor(armCell, [OPUS, SOL]);
       writeFileSync(join(dir, 'rows.ndjson'), nd(rows));
@@ -122,6 +122,22 @@ describe('verdict.ts reader values', () => {
     expect(readerValue(a, new Map([[`a1|${INSTRUMENT}`, 1]]), INSTRUMENT)).toEqual({ drop: 'judgment_missing:frontier' });
     expect(readerValue(a, new Map([[`a1|${INSTRUMENT}@openai:gpt-6.1-sol`, 1], [`a1|${INSTRUMENT}`, 1]]), INSTRUMENT)).toEqual({ drop: 'judgment_missing:frontier' });
     expect(readerValue(a, new Map([[gating, 0.5]]), INSTRUMENT, true)).toEqual({ drop: 'judgment_missing:bridge' });
+  });
+});
+
+describe('verdict.ts gating judgments', () => {
+  const good = { answer_id: HEX, instrument_id: `${INSTRUMENT}@openai:gpt-6-astra`, judge: 'openai:gpt-6-astra', outcome: 'scored' as const, view: 'gating' as const, settings: { effort: 'medium', max_tokens: 8000 }, judge_versions: ['gpt-6-astra-2026-10-01'] };
+  test('a gating judgment by the mapped judge, in the gating view, at the pinned settings, with a model version, counts', () => {
+    expect(gatingProblems(good, OPUS, INSTRUMENT)).toEqual([]);
+    expect(gatingProblems({ ...good, instrument_id: INSTRUMENT, judge: 'openai:gpt-4.1-mini', view: undefined, settings: undefined, judge_versions: undefined }, SOL, INSTRUMENT)).toEqual([]);
+  });
+  test('a same-family, unmapped, unrecorded or unpinned gating judgment refuses', () => {
+    const sol = { ...good, instrument_id: `${INSTRUMENT}@openai:gpt-6.1-sol`, judge: 'openai:gpt-6.1-sol' };
+    expect(gatingProblems(sol, OPUS, INSTRUMENT).join('\n')).toContain('not its mapped judge openai:gpt-6-astra');
+    expect(gatingProblems(good, SOL, INSTRUMENT).join('\n')).toContain('a judge of its own family');
+    expect(gatingProblems({ ...good, view: undefined }, OPUS, INSTRUMENT).join('\n')).toContain('does not record the gating view');
+    expect(gatingProblems({ ...good, settings: { effort: 'high', max_tokens: 8000 } }, OPUS, INSTRUMENT).join('\n')).toContain('not the pinned');
+    expect(gatingProblems({ ...good, judge_versions: [] }, OPUS, INSTRUMENT).join('\n')).toContain('no judge model version');
   });
 });
 
@@ -215,6 +231,17 @@ describe('verdict.ts receipts', () => {
     const dup = join(b.root, 'reread-again');
     cpSync(join(b.root, 'ext-extract-first-u1', 'cells', rid), join(dup, 'cells', rid), { recursive: true });
     expect(() => loadInput([...b.dirs, dup], { set: 'RS1', manifestPath: b.manifestPath })).toThrow(/conversation rs1-006 is re-read in both/);
+  });
+
+  test('refuses receipts whose gating judgment was made under the pre-R78 mapping (gpt-6.1-sol on claude-opus-5-5 rows)', () => {
+    const b = build('old-mapping');
+    const fs = require('node:fs') as typeof import('node:fs');
+    const file = b.dirs.flatMap(d => fs.readdirSync(join(d, 'cells')).map(c => join(d, 'cells', c, 'judgments.ndjson'))).find(f => f.includes('gbrain-defaults') && fs.existsSync(f))!;
+    const lines = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
+    const i = lines.findIndex(j => j.judge === 'openai:gpt-6-astra');
+    lines[i] = { ...lines[i], judge: 'openai:gpt-6.1-sol', instrument_id: `${INSTRUMENT}@openai:gpt-6.1-sol` };
+    fs.writeFileSync(file, lines.map(l => JSON.stringify(l)).join('\n') + '\n');
+    expect(() => load(b)).toThrow(/not its mapped judge openai:gpt-6-astra/);
   });
 
   test('refuses a unit whose run config or instrument differs from the committed definition; launch-control fields may differ', () => {

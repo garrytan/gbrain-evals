@@ -322,16 +322,19 @@ export const judgeTemperature = (judge: string, instrument: Pick<Instrument, 'te
  * effort and output cap instead of the instrument's limit, a truncated reply
  * makes the judgment a `judge_error` at once, truncated and refused replies
  * are never cached, and the record carries the settings, its call count and
- * how many calls the cache answered (a hit costs nothing).
+ * how many calls the cache answered (a hit costs nothing). With `view` (RS1's
+ * judges, gating or descriptive) the record also names its view and the model
+ * versions the provider returned.
  */
 export async function judgeAnswer(client: ChatLike, instrument: Instrument, q: MemoryQuestion, response: string,
-  opts: { judge?: string; judgeReplicate: number; maxAttempts?: number; settings?: PinnedJudgeSettings }): Promise<Omit<JudgmentRecord, 'answer_id'>> {
+  opts: { judge?: string; judgeReplicate: number; maxAttempts?: number; settings?: PinnedJudgeSettings; view?: 'gating' | 'descriptive' }): Promise<Omit<JudgmentRecord, 'answer_id'>> {
   const judge = opts.judge ?? instrument.canonical_judge;
   const temperature = judgeTemperature(judge, instrument);
   const maxAttempts = opts.maxAttempts ?? 3;
   const pinned = opts.settings;
   const raw: string[] = [];
   let calls = 0, hits = 0;
+  const versions = new Set<string>();
   const ask = async (call: JudgeCall) => {
     const tries: string[] = [];
     let reason = '';
@@ -340,6 +343,7 @@ export async function judgeAnswer(client: ChatLike, instrument: Instrument, q: M
       const res = await client.chat(judge, call.prompt, { ...sent, replicate: opts.judgeReplicate, temperature, ...(call.system !== undefined ? { system: call.system } : {}), ...(attempt ? { attempt } : {}) });
       calls++;
       if (res.cached) hits++;
+      if (res.response_model) versions.add(res.response_model);
       tries.push(res.text);
       if (pinned && (TRUNCATED_FINISHES as readonly string[]).includes(String(res.finish))) { raw.push(...tries); throw new TruncatedJudgment(tries, String(res.finish), pinned.max_tokens); }
       const parsed = call.parse(res.text);
@@ -350,7 +354,7 @@ export async function judgeAnswer(client: ChatLike, instrument: Instrument, q: M
     throw new MalformedJudgment(tries, reason);
   };
   const base = { instrument_id: instrument.id, instrument_sha256: instrument.sha256, judge, judge_replicate: opts.judgeReplicate, temperature };
-  const sent = () => (pinned ? { settings: { ...pinned }, calls, cache_hits: hits } : {});
+  const sent = () => ({ ...(pinned ? { settings: { ...pinned }, calls, cache_hits: hits } : {}), ...(opts.view ? { view: opts.view, judge_versions: [...versions] } : {}) });
   try {
     const r = await instrument.score(q, response, ask);
     return { ...base, score: r.score, parse_ok: true, raw_sha256: rawSha256(raw), outcome: 'scored', raw, ...(r.detail ? { detail: r.detail } : {}), ...sent() };

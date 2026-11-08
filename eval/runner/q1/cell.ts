@@ -152,11 +152,14 @@ export const contextKey = (realization: string, questionId: string, armId: strin
  * (RS1) its reader's frontier judge's as well, sent at the arm's pinned settings, so completeness, resume and the
  * receipt count a missing frontier judgment as unjudged there. Q1 and F6 arms need the canonical judgment alone.
  */
-export function requiredJudges(arm: Pick<ArmDefinition, 'frontier'>, a: { reader: string; replicate: number }, instrument: Pick<Instrument, 'id' | 'canonical_judge'>): Array<{ judge: string; instrument_id: string; settings?: JudgeSettings }> {
-  const out: Array<{ judge: string; instrument_id: string; settings?: JudgeSettings }> = [{ judge: instrument.canonical_judge, instrument_id: instrument.id }];
-  if (arm.frontier?.per_reader && a.replicate === 0) for (const j of frontierJudgesFor(arm, a.reader)) out.push({ judge: j, instrument_id: frontierInstrumentId(instrument.id, j), ...(arm.frontier.settings ? { settings: arm.frontier.settings } : {}) });
+export function requiredJudges(arm: Pick<ArmDefinition, 'frontier'>, a: { reader: string; replicate: number }, instrument: Pick<Instrument, 'id' | 'canonical_judge'>): RequiredJudge[] {
+  const perReader = arm.frontier?.per_reader === true;
+  const out: RequiredJudge[] = [{ judge: instrument.canonical_judge, instrument_id: instrument.id, ...(perReader ? { view: 'descriptive' as const } : {}) }];
+  if (perReader && a.replicate === 0) for (const j of frontierJudgesFor(arm, a.reader)) out.push({ judge: j, instrument_id: frontierInstrumentId(instrument.id, j), view: 'gating', ...(arm.frontier!.settings ? { settings: arm.frontier!.settings } : {}) });
   return out;
 }
+/** One judgment an answer needs; on a per-reader arm (RS1) it names its view, and the gating judge its pinned settings. */
+export interface RequiredJudge { judge: string; instrument_id: string; settings?: JudgeSettings; view?: 'gating' | 'descriptive' }
 
 /** RS1: this launch unit's conversations from the custodian's kept list (corpus.ts rs1UnitConversations); the shard must be one of the cell's units. */
 export function keptUnit(def: Pick<CellDefinition, 'id' | 'shards' | 'kept_units'>, shard: { index: number; count: number }, manifest: Rs1Manifest = readRs1Manifest().manifest): string[] {
@@ -950,11 +953,12 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
     const judgeOne = async (q: MemoryQuestion, a: AnswerRecord, arm: ArmDefinition) => {
       if (!JUDGED.has(a.outcome)) return;
-      const tasks: Array<{ judgeModel: string; instrumentId: string; settings?: JudgeSettings }> = [{ judgeModel: instrument.canonical_judge, instrumentId: instrument.id }];
-      if (opts.frontier !== false && a.replicate === 0 && inFrontierSample(arm, q.id)) for (const j of frontierJudgesFor(arm, a.reader)) tasks.push({ judgeModel: j, instrumentId: frontierInstrumentId(instrument.id, j), ...(arm.frontier?.per_reader && arm.frontier.settings ? { settings: arm.frontier.settings } : {}) });
+      const perReader = arm.frontier?.per_reader === true;
+      const tasks: Array<{ judgeModel: string; instrumentId: string; settings?: JudgeSettings; view?: 'gating' | 'descriptive' }> = [{ judgeModel: instrument.canonical_judge, instrumentId: instrument.id, ...(perReader ? { view: 'descriptive' as const } : {}) }];
+      if (opts.frontier !== false && a.replicate === 0 && inFrontierSample(arm, q.id)) for (const j of frontierJudgesFor(arm, a.reader)) tasks.push({ judgeModel: j, instrumentId: frontierInstrumentId(instrument.id, j), ...(perReader ? { view: 'gating' as const, ...(arm.frontier!.settings ? { settings: arm.frontier!.settings } : {}) } : {}) });
       for (const t of tasks) {
         if (judgments.has(judgmentKey({ answer_id: a.answer_id, instrument_sha256: instrument.sha256, judge: t.judgeModel, judge_replicate: 0 }))) continue;
-        const r = await meter.around('judge', `judge:${a.answer_id.slice(0, 16)}:${t.judgeModel}`, 'judge', () => judgeAnswer(judge, instrument, q, a.text, { judge: t.judgeModel, judgeReplicate: 0, maxAttempts, ...(t.settings ? { settings: t.settings } : {}) }));
+        const r = await meter.around('judge', `judge:${a.answer_id.slice(0, 16)}:${t.judgeModel}`, 'judge', () => judgeAnswer(judge, instrument, q, a.text, { judge: t.judgeModel, judgeReplicate: 0, maxAttempts, ...(t.settings ? { settings: t.settings } : {}), ...(t.view ? { view: t.view } : {}) }));
         if (r.error !== undefined) { if (/budget/i.test(String((r.error as Error).message))) stopped = `budget: ${(r.error as Error).message.slice(0, 200)}`; continue; }
         judgments.append({ answer_id: a.answer_id, ...r.value!, instrument_id: t.instrumentId });
       }

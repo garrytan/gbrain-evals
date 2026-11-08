@@ -492,7 +492,7 @@ describe('re-read: RS1 per-reader frontier judging', () => {
       const answers = ndjson(join(res.dir, 'answers.ndjson')).filter(x => x.outcome === 'scored');
       const judgments = ndjson(join(res.dir, 'judgments.ndjson'));
       expect(judgments.map(j => j.instrument_id).sort()).toEqual([...answers.map(() => canonical.id), ...answers.map(() => `${canonical.id}@anthropic:claude-opus-5-5`)].sort());
-      expect(judgments.map(j => [j.judge, j.settings ?? null])).toEqual(judgments.map(j => [j.judge, j.judge === 'anthropic:claude-opus-5-5' ? { effort: 'medium', max_tokens: 8000 } : null]));
+      expect(judgments.map(j => [j.judge, j.settings ?? null, j.view])).toEqual(judgments.map(j => [j.judge, j.judge === 'anthropic:claude-opus-5-5' ? { effort: 'medium', max_tokens: 8000 } : null, j.judge === 'anthropic:claude-opus-5-5' ? 'gating' : 'descriptive']));
       const rec = JSON.parse(readFileSync(join(res.dir, 'receipt.json'), 'utf8'));
       expect(rec.frontier).toEqual({ per_reader: true, judge_by_reader: { [PARTICLE]: 'anthropic:claude-opus-5-5' }, instrument_ids: [`${canonical.id}@anthropic:claude-opus-5-5`] });
       expect(rec.counts.unjudged).toBe(0);

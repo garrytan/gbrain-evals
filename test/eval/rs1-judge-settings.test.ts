@@ -81,12 +81,19 @@ describe('pinned judge settings', () => {
     }
   });
 
+  test('an RS1 judgment records its view and the model versions the provider returned', async () => {
+    const gating = await judgeAnswer(scripted([{}]), BEAM, Q, 'answer', { judge: ASTRA, judgeReplicate: 0, settings: SETTINGS, view: 'gating' });
+    expect([gating.view, gating.judge_versions, gating.judge]).toEqual(['gating', ['gpt-6-astra-2026-10-01'], ASTRA]);
+    const bridge = await judgeAnswer(scripted([{}]), BEAM, Q, 'answer', { judge: 'openai:gpt-4.1-mini', judgeReplicate: 0, view: 'descriptive' });
+    expect([bridge.view, bridge.judge_versions, 'settings' in bridge]).toEqual(['descriptive', ['gpt-6-astra-2026-10-01'], false]);
+  });
+
   test('a judge without pinned settings sends what it sent before and records no settings', async () => {
     const judge = scripted([{ finish: 'length' }]);
     const j = await judgeAnswer(judge, BEAM, Q, 'answer', { judge: 'openai:gpt-4.1-mini', judgeReplicate: 0 });
     expect(judge.opts).toEqual([{ maxTokens: 1024, replicate: 0, temperature: 0 }, { maxTokens: 1024, replicate: 0, temperature: 0 }]);
     expect(j.outcome).toBe('scored');
-    expect(['settings', 'calls', 'cache_hits'].filter(k => k in j)).toEqual([]);
+    expect(['settings', 'calls', 'cache_hits', 'view', 'judge_versions'].filter(k => k in j)).toEqual([]);
   });
 
   test('through the chat client, a pinned judge\'s truncated reply is not cached, so a resume asks again', async () => {
@@ -101,3 +108,4 @@ describe('pinned judge settings', () => {
     expect(bodies).toHaveLength(2);
   });
 });
+

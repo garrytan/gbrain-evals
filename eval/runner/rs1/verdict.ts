@@ -25,6 +25,8 @@
  *             view's own drops; a scheduled question with no row in any system row refuses the verdict. The gating view
  *             ('frontier') is the reader's per-reader judge (<instrument>@<judge>: gpt-6-astra for claude-opus-5-5,
  *             claude-opus-5-5 for gpt-6.1-sol and particle-1); the descriptive bridge view is the canonical instrument's.
+ *   Judges    a gating judgment whose judge shares the reader's family or is not the reader's mapped judge, that does not
+ *             record the gating view, that was not sent at the pinned settings, or that records no model version, refuses.
  *   Gate      a system row passes the delivered-context gate when its mean fill rate (rows.ndjson fill_rate, a failed
  *             retrieval's null counted as 0) is at least 0.90; a row that fails makes every comparison it enters
  *             descriptive (no verdict).
@@ -49,10 +51,10 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join, resolve } from 'node:path';
 import { HARNESS_FAILURES, PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
 import { instrumentFor } from '../memory-qa/instruments.ts';
-import { readRecords, type AnswerRecord } from '../memory-qa/records.ts';
+import { readRecords, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { RS1_MANIFEST, rs1Kept, type Rs1Manifest } from '../memory-qa/corpus.ts';
 import { frontierInstrumentId, runConfigIdentity, runConfigText } from '../q1/cell.ts';
-import { frontierJudgeOf } from '../q1/cells/definitions.ts';
+import { frontierJudgeOf, PER_READER_JUDGE_SETTINGS } from '../q1/cells/definitions.ts';
 import { loadRS1Manifest, OPUS, PARTICLE, RS1_WAVE_A, SOL } from '../q1/cells/rs1.ts';
 import { rereadCellId } from '../q1/reread-cell.ts';
 import { wildTest, type ClusterRow } from '../stats/wild-cluster.ts';
@@ -305,7 +307,11 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
     const byQuestion = new Map<string, Record<string, ReaderValue>>();
     const answered = new Map<string, number>();
     const take = (dir: string, ans: AnswerRecord[]) => {
-      const score = new Map(readRecords(join(dir, 'judgments.ndjson'), 'judgment').filter(j => j.judge_replicate === 0).map(j => [`${j.answer_id}|${j.instrument_id}`, j.score]));
+      const records = readRecords(join(dir, 'judgments.ndjson'), 'judgment').filter(j => j.judge_replicate === 0);
+      const readerOf = new Map(ans.map(a => [a.answer_id, a.reader]));
+      const problems = records.flatMap(j => gatingProblems(j, readerOf.get(j.answer_id), instrument.id));
+      if (problems.length) refuse(`${dir}: ${problems.slice(0, 3).join('; ')}${problems.length > 3 ? ` (and ${problems.length - 3} more)` : ''}`);
+      const score = new Map(records.map(j => [`${j.answer_id}|${j.instrument_id}`, j.score]));
       for (const a of ans.filter(x => x.replicate === 0 && READERS.includes(x.reader))) {
         byQuestion.set(a.question_id, { ...(byQuestion.get(a.question_id) ?? {}), [a.reader]: readerValue(a, score, instrument.id, role === 'floor') });
         answered.set(a.reader, (answered.get(a.reader) ?? 0) + 1);
@@ -392,6 +398,24 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
 
 function readRecordsLoose(path: string): Array<Record<string, any>> {
   return existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l)) : [];
+}
+
+/**
+ * Why a gating judgment (<instrument>@<judge>) cannot count: its judge shares the reader's family or is not the reader's
+ * mapped judge (definitions.ts frontierJudgeOf), it does not record the gating view, it was not sent at the pinned
+ * settings, or a scored judgment records no model version. Other judgments, and answers outside the set read, pass.
+ */
+export function gatingProblems(j: Pick<JudgmentRecord, 'answer_id' | 'instrument_id' | 'judge' | 'outcome' | 'view' | 'settings' | 'judge_versions'>, reader: string | undefined, instrument: string): string[] {
+  if (!reader || !j.instrument_id.startsWith(`${instrument}@`)) return [];
+  const mapped = frontierJudgeOf(reader);
+  const who = `answer ${j.answer_id.slice(0, 12)} (${reader})`;
+  const p: string[] = [];
+  if (j.judge.split(':')[0] === reader.split(':')[0]) p.push(`${who} has a gating judgment by ${j.judge}, a judge of its own family (GST-767)`);
+  if (j.judge !== mapped || j.instrument_id !== frontierInstrumentId(instrument, mapped)) p.push(`${who} has a gating judgment by ${j.judge} under ${j.instrument_id}, not its mapped judge ${mapped}`);
+  if (j.view !== 'gating') p.push(`${who} has a gating judgment that does not record the gating view`);
+  if (JSON.stringify(j.settings ?? null) !== JSON.stringify(PER_READER_JUDGE_SETTINGS)) p.push(`${who} has a gating judgment sent at ${JSON.stringify(j.settings ?? null)}, not the pinned ${JSON.stringify(PER_READER_JUDGE_SETTINGS)}`);
+  if (j.outcome === 'scored' && !j.judge_versions?.length) p.push(`${who} has a gating judgment that records no judge model version`);
+  return p;
 }
 
 /** One answer's value: product failures 0, harness failures and missing gating judgments dropped by reason, a missing bridge judgment null. */
