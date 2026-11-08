@@ -502,7 +502,8 @@ the count: it covers every judge call, and a resume or re-judge checks it before
 the line to GBEV-3 through ALPH-77 and run nothing more until GBEV-3 answers. If GBEV-3 decides to go on, it gives a
 written note id; continue with the same command plus `--truncation-waiver <note id>` (and, for a counted resume, the
 `--window-note` it needs anyway). The waiver covers only the truncations recorded so far, `run.json` and the scorecard
-record it, and the stop comes back if new truncations pass 1% again.
+record it, and the stop comes back if new truncations pass 1% again. A note works once and only while a stop is
+outstanding: drop the flag on any later resume, and bring a new stop back to GBEV-3 for a new note.
 
 ### LR_PROVIDER_REJECTED
 

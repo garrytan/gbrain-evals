@@ -307,7 +307,8 @@ be read yet; a finished counted run or re-judge stops on the plain rate above 1%
 session starts, before any cap extension, so a resume or re-judge past the stop stops again before any new call. Only
 GBEV-3's written note lifts a stop: `--truncation-waiver <note>` covers the truncations recorded so far, is recorded
 as `agent:GBEV-3` in `run.json` and the scorecard's run identity, and the stop re-arms when new truncations pass the
-share again. The truncated rows stay judge errors.
+share again. A note works once and only while a stop is outstanding, so it never lifts a later stop. The truncated rows
+stay judge errors.
 
 **A finished check.** The check is complete only when every planned task has its final answer in every arm and model
 and, for each answer, its counted verdict and both labels, with no cap stop outstanding; `n_tasks_checked` counts the
@@ -783,7 +784,7 @@ detectable differences for the four primaries at the kept N, and the counted run
 
 **Counted-run identity (recorded 2026-11-08, before the freeze; updated the same day for R78 and again for the label
 floor and truncation rules).** The counted run's and the judge check's harness digest must be
-`11042b86ad7096dd453c44b3d2197a46cfaa78406025b43e00d711c588efc5a8`. The digest covers the twenty files in
+`c2e0841a0d24761a4bd4e317a539b0afb3a8d5be567161689651d987c0d7efce`. The digest covers the twenty files in
 `HARNESS_FILES` (`eval/runner/live-recall/tasks.ts`): the runner, the judge, the agent loop, the budget ledger and the
 cost path they price with, including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json`
 must also show a `runner_commit` that contains 320db88b, the R78 commit and the label-floor and truncation commit, and

@@ -1210,7 +1210,11 @@ describe('phase 2 judge check (R78)', () => {
     const w = truncationWaivers([], 'gbev3-trunc-1', [...calls('gpt-6-astra', 50, 2), ...calls('claude-opus-5-5', 50, 1), ...calls('gpt-6-astra', 50, 3, 'label')]);
     expect(w.map(x => [x.note, x.by, x.waived])).toEqual([['gbev3-trunc-1', 'agent:GBEV-3', { 'gpt-6-astra': { medium: 2 }, 'claude-opus-5-5': { medium: 1 } }]]);
     expect(truncationWaivers(w, null, [])).toEqual(w);
-    expect(code(() => truncationWaivers([], 'not a note', []))).toBe('LR_JUDGE_TRUNCATED');
+    expect(code(() => truncationWaivers([], 'not a note', calls('gpt-6-astra', 50, 2)))).toBe('LR_JUDGE_TRUNCATED');
+    expect(code(() => truncationWaivers(w, 'gbev3-trunc-1', calls('gpt-6-astra', 50, 5)))).toBe('LR_JUDGE_TRUNCATED');
+    expect(code(() => truncationWaivers([], 'gbev3-trunc-2', calls('gpt-6-astra', 200, 1)))).toBe('LR_JUDGE_TRUNCATED');
+    expect(code(() => truncationWaivers(w, 'gbev3-trunc-2', [...calls('gpt-6-astra', 50, 2), ...calls('claude-opus-5-5', 50, 1)]))).toBe('LR_JUDGE_TRUNCATED');
+    expect(truncationWaivers(w, 'gbev3-trunc-2', [...calls('gpt-6-astra', 50, 4), ...calls('claude-opus-5-5', 50, 1)]).map(x => x.waived)).toEqual([w[0]!.waived, { 'gpt-6-astra': { medium: 4 }, 'claude-opus-5-5': { medium: 1 } }]);
   });
 
   test('judge-check.json reports each judge model\'s truncation rate, and more than 1% fails the check', async () => {

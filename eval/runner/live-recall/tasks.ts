@@ -445,11 +445,19 @@ export type Waived = Record<string, Record<string, number>>;
 /** GBEV-3's written note lifting a truncation stop: the truncated counted-judge calls it covers, per model and effort. */
 export interface TruncationWaiver { note: string; by: 'agent:GBEV-3'; at: string; waived: Waived }
 
-/** The waivers so far, plus a new one from --truncation-waiver covering every truncated counted-judge call recorded now. */
-export function truncationWaivers(previous: TruncationWaiver[] | null | undefined, note: string | null | undefined, calls: Iterable<JudgeCall>): TruncationWaiver[] {
+/**
+ * The waivers so far, plus a new one from --truncation-waiver covering every truncated counted-judge call recorded now.
+ * Each note is used once, and only while a stop is outstanding, so a note never lifts a later stop.
+ */
+export function truncationWaivers(previous: TruncationWaiver[] | null | undefined, note: string | null | undefined, calls: JudgeCall[]): TruncationWaiver[] {
   const out = [...(previous ?? [])];
   if (note === null || note === undefined) return out;
   if (!NOTE.test(note)) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', '--truncation-waiver takes GBEV-3\'s note id');
+  if (out.some(w => w.note === note)) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', 'truncation waiver ' + note + ' was already used; drop the flag, and a new stop needs a new note from GBEV-3');
+  const live = (() => {
+    try { checkTruncation(calls, 1, waivedOf(out)); return false; } catch (e) { if (e instanceof LiveRecallAbort && e.code === 'LR_JUDGE_TRUNCATED') return true; throw e; }
+  })();
+  if (!live) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', '--truncation-waiver given with no truncation stop outstanding; run without it');
   const waived: Waived = {};
   for (const c of calls) if (c.kind !== 'label' && c.truncated) (waived[c.judge] ??= {})[c.effort ?? EFFORT] = (waived[c.judge]?.[c.effort ?? EFFORT] ?? 0) + 1;
   return [...out, { note, by: 'agent:GBEV-3', at: new Date().toISOString(), waived }];
