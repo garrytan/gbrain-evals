@@ -20,9 +20,11 @@
  *             of one arm both hold.
  *   Values    readers claude-opus-5-5 and gpt-6.1-sol from the cell and particle-1 from its re-read, joined by question id,
  *             replicate 0, each answer scored only by its own receipt's judgments. A product failure scores 0 under
- *             both views; a harness failure, a missing row, a missing answer or a missing judgment is a drop, by reason
- *             and side; a scheduled question with no row in any system row refuses the verdict. The bridge view is the
- *             canonical instrument's judgment, the frontier view the reader's frontier judge (<instrument>@<judge>).
+ *             both views; a harness failure, a missing row, a missing answer or a missing gating judgment is a drop, by
+ *             reason and side; a missing bridge judgment leaves the gating view whole and is counted among the bridge
+ *             view's own drops; a scheduled question with no row in any system row refuses the verdict. The gating view
+ *             ('frontier') is the reader's per-reader judge (<instrument>@<judge>: gpt-6-astra for claude-opus-5-5,
+ *             claude-opus-5-5 for gpt-6.1-sol and particle-1); the descriptive bridge view is the canonical instrument's.
  *   Gate      a system row passes the delivered-context gate when its mean fill rate (rows.ndjson fill_rate, a failed
  *             retrieval's null counted as 0) is at least 0.90; a row that fails makes every comparison it enters
  *             descriptive (no verdict).
@@ -31,8 +33,8 @@
  *             per-reader and per-ability means, the floor, each row's fill rate, drops by reason and side, and the first
  *             table (cost per correct answer, claude-opus-5-5 and particle-1 first, then gpt-6.1-sol; n/a where a unit's
  *             meters or a re-read's reader spend are missing).
- *   Pilot     wave A only (the first 20 kept conversations; a shorter kept list refuses): the four SDs of the
- *             per-conversation differences and their 4 x 4 correlation, no means; then power.ts's N_required and
+ *   Pilot     wave A only (the first 20 kept conversations; a shorter kept list refuses): the two gating tests' SDs of the
+ *             per-conversation differences and their correlation, no means; then power.ts's N_required and
  *             N_final = min(33, max(20, N_required)). Above 33 it exits 3 with RS1_PILOT_OVER_CAP, the margin reachable
  *             at 33 and the price of N_required.
  */
@@ -48,7 +50,7 @@ import { frontierJudgeOf } from '../q1/cells/definitions.ts';
 import { loadRS1Manifest, OPUS, PARTICLE, RS1_WAVE_A, SOL } from '../q1/cells/rs1.ts';
 import { rereadCellId } from '../q1/reread-cell.ts';
 import { wildTest, type ClusterRow } from '../stats/wild-cluster.ts';
-import { COMPARISONS, conversationDifferences, decide, dropValidity, inCommonSet, questionScores, RS1_MARGIN, SERVERS, VIEWS, worstCase,
+import { COMPARISONS, conversationDifferences, decide, dropValidity, GATING, inBridgeSet, inCommonSet, questionScores, RS1_MARGIN, SERVERS, VIEWS, worstCase,
   type ComparisonKey, type Decision, type Drop, type QuestionInput, type ReaderValue, type Row, type Scored, type View } from './iut.ts';
 import { N_CAP, pilotSize } from './power.ts';
 import { priceAt } from './pricing.ts';
@@ -85,14 +87,14 @@ export interface VerdictInput {
 
 const ROWS: Row[] = ['gbrain', ...SERVERS];
 
-/** The four tests' one-sided 95% bootstrap lower bounds (restricted wild cluster bootstrap-t, question-weighted). */
+/** The four bounds' one-sided 95% bootstrap lower bounds (restricted wild cluster bootstrap-t, question-weighted), each view on its own set. */
 function bootstrap(scored: readonly Scored[]) {
   return COMPARISONS.map(key => {
     const [server, view] = key.split('/') as [Row, View];
     const byConv = new Map<string, { n: number; sum: number }>();
-    for (const q of scored.filter(inCommonSet)) {
+    for (const q of scored.filter(view === 'frontier' ? inCommonSet : inBridgeSet)) {
       const c = byConv.get(q.conversation) ?? { n: 0, sum: 0 };
-      c.n++; c.sum += q.scores.gbrain![view] - q.scores[server]![view];
+      c.n++; c.sum += q.scores.gbrain![view]! - q.scores[server]![view]!;
       byConv.set(q.conversation, c);
     }
     const rows: ClusterRow[] = [...byConv].map(([id, c]) => ({ id, stratum: 'all', n: c.n, sum: c.sum }));
@@ -106,6 +108,7 @@ export function analyze(input: VerdictInput) {
   const scoredAll = input.questions.map(q => questionScores(q, READERS));
   const scored = scoredAll.map(s => s.scored);
   const drops: Drop[] = scoredAll.flatMap(s => s.drops);
+  const bridgeDrops: Drop[] = scoredAll.flatMap(s => s.bridge_drops);
   const validity = dropValidity(scored);
   const gate = ROWS.map(row => ({ row, fill_rate: r4n(input.fill[row]), pass: input.fill[row] !== null && input.fill[row]! >= FILL_GATE }));
   const invalid: Partial<Record<ComparisonKey, string[]>> = {};
@@ -114,30 +117,31 @@ export function analyze(input: VerdictInput) {
     const reasons = [...(validity.invalid[key] ?? []), ...gate.filter(g => !g.pass && (g.row === 'gbrain' || g.row === server)).map(g => `descriptive: ${g.row} failed the delivered-context gate (mean fill rate ${g.fill_rate ?? 'not recorded'}, needs ${FILL_GATE})`)];
     if (reasons.length) invalid[key] = reasons;
   }
-  const { conversations, diffs } = conversationDifferences(scored);
+  const { conversations, bridge_conversations, diffs } = conversationDifferences(scored);
   if (conversations.length < 2) refuse(`fewer than two conversations have a common question (${conversations.length})`);
-  const decision = decide(diffs, { invalid });
+  const reported = COMPARISONS.filter(k => GATING.includes(k) || bridge_conversations.length >= 2);
+  const decision = decide(Object.fromEntries(reported.map(k => [k, diffs[k]])), { invalid });
   const worst = decide(conversationDifferences(scored, worstCase).diffs, { invalid });
   const boot = bootstrap(scored).map(b => ({ ...b, agrees: b.lower === null ? null : (b.lower > -RS1_MARGIN) === decision.tests.find(t => t.key === b.key)!.pass }));
   const common = scored.filter(inCommonSet);
   const perReader = READERS.flatMap(reader => ROWS.flatMap(row => VIEWS.map(view => {
-    const xs = input.questions.filter(q => common.some(c => c.id === q.id)).map(q => q.rows[row][reader]).filter((v): v is { frontier: number; bridge: number } => !!v && !('drop' in v)).map(v => 100 * v[view]);
+    const xs = input.questions.filter(q => common.some(c => c.id === q.id)).map(q => q.rows[row][reader]).flatMap(v => (!v || 'drop' in v || v[view] === null ? [] : [100 * v[view]!]));
     return { reader, row, view, questions: xs.length, mean: r4n(meanOf(xs)) };
   })));
   const abilities = [...new Set(common.map(q => q.id.split(':')[1] ?? 'unknown'))].sort();
   const perAbility = abilities.flatMap(ability => ROWS.flatMap(row => VIEWS.map(view => {
-    const xs = common.filter(q => (q.id.split(':')[1] ?? 'unknown') === ability).map(q => q.scores[row]![view]);
+    const xs = common.filter(q => (q.id.split(':')[1] ?? 'unknown') === ability).flatMap(q => (q.scores[row]![view] === null ? [] : [q.scores[row]![view]!]));
     return { ability, row, view, questions: xs.length, mean: r4n(meanOf(xs)) };
   })));
   const floorScores = input.floor.map(f => { const vs = READERS.map(r => f.values[r]); return vs.every(v => typeof v === 'number') ? 100 * (vs as number[]).reduce((a, b) => a + b, 0) / vs.length : null; }).filter((x): x is number => x !== null);
   const floorMean = meanOf(floorScores);
-  const rowBridge = (row: Row) => meanOf(scored.filter(s => s.scores[row]).map(s => s.scores[row]!.bridge));
+  const rowBridge = (row: Row) => meanOf(scored.flatMap(s => (s.scores[row]?.bridge == null ? [] : [s.scores[row]!.bridge!])));
   const floor = { questions: floorScores.length, mean_bridge: r4n(floorMean), below_every_system_row: floorMean !== null && ROWS.every(row => { const m = rowBridge(row); return m !== null && floorMean < m; }) };
-  const dropCounts: Record<string, number> = {};
-  for (const d of drops) dropCounts[`${d.side}|${d.reason}`] = (dropCounts[`${d.side}|${d.reason}`] ?? 0) + 1;
+  const counts = (ds: readonly Drop[]) => { const out: Record<string, number> = {}; for (const d of ds) out[`${d.side}|${d.reason}`] = (out[`${d.side}|${d.reason}`] ?? 0) + 1; return out; };
+  const dropCounts = counts(drops);
   const accuracy = (row: Row | 'floor', reader: string, view: View): number | null => {
     if (row === 'floor') return view === 'bridge' ? meanOf(input.floor.map(f => f.values[reader]).filter((v): v is number => typeof v === 'number').map(v => 100 * v)) : null;
-    return meanOf(input.questions.map(q => q.rows[row][reader]).filter((v): v is { frontier: number; bridge: number } => !!v && !('drop' in v)).map(v => 100 * v[view]));
+    return meanOf(input.questions.map(q => q.rows[row][reader]).flatMap(v => (!v || 'drop' in v || v[view] === null ? [] : [100 * v[view]!])));
   };
   const table = TABLE_READERS.flatMap(reader => [...ROWS, 'floor' as const].map(row => {
     const usd = input.costs.find(c => c.row === row && c.reader === reader)?.usd_per_question ?? null;
@@ -148,26 +152,27 @@ export function analyze(input: VerdictInput) {
   return {
     schema: 'gbrain-evals/rs1-verdict/v1', set: input.set, margin: RS1_MARGIN, readers: READERS, conversations: conversations.length,
     planned_questions: validity.planned, common_questions: validity.common, drop_share: r4(validity.share),
+    gating: GATING, bridge: { conversations: bridge_conversations.length, common_questions: validity.bridge_common, drop_share: r4(validity.bridge_share), drops: counts(bridgeDrops) },
     verdict: decision.verdict, tests: roundTests(decision), secondaries: decision.secondaries.map(s => ({ id: s.id, status: s.status })),
     worst_case: { verdict: worst.verdict, tests: roundTests(worst), disagrees },
     bootstrap: { method: `restricted wild cluster bootstrap-t, Webb weights, ${DRAWS} draws, seed ${SEED}, one-sided 95% lower bound`, tests: boot },
     gate, drops: dropCounts, per_reader: perReader, per_ability: perAbility, floor, table,
   };
 }
-const roundTests = (d: Decision) => d.tests.map(t => ({ key: t.key, n: t.n, estimate: r4(t.mean), sd: r4(t.sd), lower: r4(t.lower), pass: t.pass, valid: t.valid, invalid_reasons: t.invalid_reasons }));
+const roundTests = (d: Decision) => d.tests.map(t => ({ key: t.key, gating: t.gating, n: t.n, estimate: r4(t.mean), sd: r4(t.sd), lower: r4(t.lower), pass: t.pass, valid: t.valid, invalid_reasons: t.invalid_reasons }));
 export type Analysis = ReturnType<typeof analyze>;
 
-/** The pilot's output: the four SDs of the per-conversation differences and their correlation, no means. */
+/** The pilot's output: the two gating tests' SDs of the per-conversation differences and their correlation, no means. */
 export function pilotStats(input: VerdictInput) {
   const scored = input.questions.map(q => questionScores(q, READERS).scored);
   const { conversations, diffs } = conversationDifferences(scored);
   const n = conversations.length;
   if (n < 3) refuse(`the pilot needs at least three conversations with common questions, got ${n}`);
-  const centred = COMPARISONS.map(k => { const xs = diffs[k]; const m = xs.reduce((a, b) => a + b, 0) / n; return xs.map(x => x - m); });
+  const centred = GATING.map(k => { const xs = diffs[k]; const m = xs.reduce((a, b) => a + b, 0) / n; return xs.map(x => x - m); });
   const cov = (i: number, j: number) => centred[i].reduce((s, x, c) => s + x * centred[j][c], 0) / (n - 1);
-  const sds = COMPARISONS.map((_, i) => Math.sqrt(cov(i, i)));
+  const sds = GATING.map((_, i) => Math.sqrt(cov(i, i)));
   if (sds.some(sd => !(sd > 0))) refuse(`a test's per-conversation differences do not vary (SDs ${sds.map(sd => sd.toFixed(2)).join(', ')}), so no correlation can be estimated`);
-  const corr = COMPARISONS.map((_, i) => COMPARISONS.map((_, j) => cov(i, j) / (sds[i] * sds[j])));
+  const corr = GATING.map((_, i) => GATING.map((_, j) => cov(i, j) / (sds[i] * sds[j])));
   return { conversations: n, sds, corr };
 }
 
@@ -339,17 +344,16 @@ function readRecordsLoose(path: string): Array<Record<string, any>> {
   return existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l)) : [];
 }
 
-/** One answer's value: product failures 0, harness failures and missing judgments dropped by reason. */
+/** One answer's value: product failures 0, harness failures and missing gating judgments dropped by reason, a missing bridge judgment null. */
 export function readerValue(a: Pick<AnswerRecord, 'answer_id' | 'reader' | 'outcome'>, score: ReadonlyMap<string, number | null>, instrument: string, bridgeOnly = false): ReaderValue {
   const outcome = a.outcome as Outcome;
   if (PRODUCT_FAILURES.has(outcome)) return { frontier: 0, bridge: 0 };
   if (HARNESS_FAILURES.has(outcome) || (outcome !== 'scored' && outcome !== 'ingest_degraded')) return { drop: outcome };
   const bridge = score.get(`${a.answer_id}|${instrument}`);
-  if (typeof bridge !== 'number') return { drop: 'judgment_missing:bridge' };
-  if (bridgeOnly) return { frontier: bridge, bridge };
+  if (bridgeOnly) return typeof bridge === 'number' ? { frontier: bridge, bridge } : { drop: 'judgment_missing:bridge' };
   const frontier = score.get(`${a.answer_id}|${frontierInstrumentId(instrument, frontierJudgeOf(a.reader))}`);
   if (typeof frontier !== 'number') return { drop: 'judgment_missing:frontier' };
-  return { frontier, bridge };
+  return { frontier, bridge: typeof bridge === 'number' ? bridge : null };
 }
 
 // ─── Reports ─────────────────────────────────────────────────────────
@@ -358,11 +362,11 @@ const fmt = (x: number | null, d = 2) => (x === null ? 'n/a' : x.toFixed(d));
 export function markdown(a: Analysis): string {
   const lines = [`# RS1 verdict (set ${a.set})`, ''];
   if (a.worst_case.disagrees) lines.push(`**The worst-case sensitivity disagrees with the verdict:** ${a.worst_case.verdict} against ${a.verdict}.`, '');
-  lines.push(`Verdict: **${a.verdict}** (all four one-sided 95% t lower bounds above -${a.margin}). ${a.conversations} conversations, ${a.common_questions} of ${a.planned_questions} planned questions in the common set.`, '');
-  lines.push('| Test | n | Estimate | SD | Lower bound | Pass | Bootstrap lower | Worst-case lower | Validity |', '|---|---:|---:|---:|---:|---|---:|---:|---|');
+  lines.push(`Verdict: **${a.verdict}** (both gating one-sided 95% t lower bounds, Astra/Opus view, above -${a.margin}; the bridge view is descriptive). ${a.conversations} conversations, ${a.common_questions} of ${a.planned_questions} planned questions in the common set; the bridge view has ${a.bridge.common_questions} questions over ${a.bridge.conversations} conversations.`, '');
+  lines.push('| Test | Role | n | Estimate | SD | Lower bound | Pass | Bootstrap lower | Worst-case lower | Validity |', '|---|---|---:|---:|---:|---:|---|---:|---:|---|');
   for (const t of a.tests) {
     const b = a.bootstrap.tests.find(x => x.key === t.key)!, w = a.worst_case.tests.find(x => x.key === t.key)!;
-    lines.push(`| gbrain minus ${t.key.replace('/', ', ')} | ${t.n} | ${fmt(t.estimate)} | ${fmt(t.sd)} | ${fmt(t.lower)} | ${t.pass ? 'yes' : 'no'} | ${fmt(b.lower)} | ${fmt(w.lower)} | ${t.valid ? 'valid' : t.invalid_reasons.join('; ')} |`);
+    lines.push(`| gbrain minus ${t.key.replace('/', ', ')} | ${t.gating ? 'gating' : 'descriptive'} | ${t.n} | ${fmt(t.estimate)} | ${fmt(t.sd)} | ${fmt(t.lower)} | ${t.pass ? 'yes' : 'no'} | ${fmt(b.lower)} | ${fmt(w.lower)} | ${t.valid ? 'valid' : t.invalid_reasons.join('; ')} |`);
   }
   lines.push('', `Secondaries: ${a.secondaries.length ? a.secondaries.map(s => `${s.id} ${s.status}`).join(', ') : 'not tested (the primary did not pass)'}.`, '');
   lines.push('| Reader | Row | Cost per question | Accuracy, frontier | Cost per correct, frontier | Accuracy, bridge | Cost per correct, bridge |', '|---|---|---:|---:|---:|---:|---:|');
@@ -370,6 +374,7 @@ export function markdown(a: Analysis): string {
   lines.push('', '| Row | Mean fill rate | Gate |', '|---|---:|---|', ...a.gate.map(g => `| ${g.row} | ${fmt(g.fill_rate, 3)} | ${g.pass ? 'pass' : 'fail'} |`));
   lines.push('', `Floor (bridge view): ${fmt(a.floor.mean_bridge)} over ${a.floor.questions} questions; below every system row: ${a.floor.below_every_system_row ? 'yes' : 'no'}.`, '');
   lines.push('| Side and reason | Drops |', '|---|---:|', ...Object.entries(a.drops).sort().map(([k, n]) => `| ${k.replace('|', ', ')} | ${n} |`));
+  lines.push('', '| Bridge view only: side and reason | Drops |', '|---|---:|', ...Object.entries(a.bridge.drops).sort().map(([k, n]) => `| ${k.replace('|', ', ')} | ${n} |`));
   return lines.join('\n') + '\n';
 }
 
@@ -392,8 +397,8 @@ function main(argv: string[]): number {
     const stats = pilotStats(loadInput(receipts, { set: 'RS1', manifestPath, waveA: true }));
     const size = pilotSize(stats.sds, stats.corr);
     const price = size.n_required === null ? null : priceAt(size.n_required);
-    const report = { schema: 'gbrain-evals/rs1-pilot/v1', conversations: stats.conversations, comparisons: COMPARISONS, sds: stats.sds.map(r4), corr: stats.corr.map(row => row.map(r4)), ...size, price_at_required: price };
-    const md = [`# RS1 pilot (wave A, ${stats.conversations} conversations)`, '', '| Test | SD |', '|---|---:|', ...COMPARISONS.map((k, i) => `| ${k} | ${fmt(stats.sds[i])} |`),
+    const report = { schema: 'gbrain-evals/rs1-pilot/v1', conversations: stats.conversations, comparisons: GATING, sds: stats.sds.map(r4), corr: stats.corr.map(row => row.map(r4)), ...size, price_at_required: price };
+    const md = [`# RS1 pilot (wave A, ${stats.conversations} conversations)`, '', '| Gating test | SD |', '|---|---:|', ...GATING.map((k, i) => `| ${k} | ${fmt(stats.sds[i])} |`),
       '', `N_required: ${size.n_required ?? 'above 400'}; N_final: ${size.n_final ?? 'none (over the cap)'}.`, ''].join('\n');
     write('pilot', report, md);
     if (size.over_cap) { process.stderr.write(`RS1_PILOT_OVER_CAP: N_required ${size.n_required ?? '> 400'} is above ${N_CAP}; the margin reachable at ${N_CAP} is ${size.margin_at_cap} points; N_required would cost ${price ? `$${price.projection} (projection), $${price.expected_all_in} expected all-in` : 'more than the model prices'}. GBEV-3 decides.\n`); return 3; }

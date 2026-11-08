@@ -9,7 +9,7 @@ import { answerId } from '../../eval/runner/memory-qa/records.ts';
 import { runConfigText } from '../../eval/runner/q1/cell.ts';
 import { loadRS1Manifest, OPUS, PARTICLE, SOL } from '../../eval/runner/q1/cells/rs1.ts';
 import { rereadCellId } from '../../eval/runner/q1/reread-cell.ts';
-import { analyze, loadInput, markdown, receiptManifestProblems, verdictMain, VerdictError } from '../../eval/runner/rs1/verdict.ts';
+import { analyze, loadInput, markdown, readerValue, receiptManifestProblems, verdictMain, VerdictError } from '../../eval/runner/rs1/verdict.ts';
 
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 const HEX = sha('x');
@@ -112,6 +112,18 @@ function build(name: string, o: Opts = {}) {
   return { root, dirs, manifestPath, manifestText };
 }
 const load = (b: ReturnType<typeof build>, waveA = false) => loadInput(b.dirs, { set: 'RS1', manifestPath: b.manifestPath, waveA });
+
+describe('verdict.ts reader values', () => {
+  test('a missing bridge judgment keeps the gating value; a missing gating judgment drops; the floor needs its bridge judgment', () => {
+    const a = { answer_id: 'a1', reader: SOL, outcome: 'scored' as const };
+    const gating = `a1|${INSTRUMENT}@anthropic:claude-opus-5-5`;
+    expect(readerValue(a, new Map([[gating, 0.5]]), INSTRUMENT)).toEqual({ frontier: 0.5, bridge: null });
+    expect(readerValue(a, new Map([[gating, 0.5], [`a1|${INSTRUMENT}`, 1]]), INSTRUMENT)).toEqual({ frontier: 0.5, bridge: 1 });
+    expect(readerValue(a, new Map([[`a1|${INSTRUMENT}`, 1]]), INSTRUMENT)).toEqual({ drop: 'judgment_missing:frontier' });
+    expect(readerValue(a, new Map([[`a1|${INSTRUMENT}@openai:gpt-6.1-sol`, 1], [`a1|${INSTRUMENT}`, 1]]), INSTRUMENT)).toEqual({ drop: 'judgment_missing:frontier' });
+    expect(readerValue(a, new Map([[gating, 0.5]]), INSTRUMENT, true)).toEqual({ drop: 'judgment_missing:bridge' });
+  });
+});
 
 describe('verdict.ts receipts', () => {
   test('reads every row, reader and judge view, and passes when gbrain matches both servers', () => {
@@ -227,7 +239,7 @@ describe('verdict.ts receipts', () => {
     expect(missing.table.find(t => t.reader === OPUS && t.row === 'memory-bank')!.usd_per_question).toBeNull();
   });
 
-  test('a product failure scores 0 and stays; harness drops over 5% make the comparisons invalid', () => {
+  test('a product failure scores 0 and stays; harness drops over 5% make the gating comparisons invalid', () => {
     const product = analyze(load(build('product', { score: (s, r, c, q) => (s === 'gbrain-defaults' && c === 0 && q === 0 ? 'retrieval_error' : s === 'baseline-none' ? 0.3 : 0.7) })));
     expect(product.common_questions).toBe(40);
     expect(product.tests[0].estimate).toBeLessThan(0);
@@ -235,7 +247,7 @@ describe('verdict.ts receipts', () => {
     expect(harness.common_questions).toBe(37);
     expect(harness.drops).toEqual({ 'server|reader_error': 3 });
     expect(harness.verdict).toBe('invalid');
-    expect(harness.tests.every(t => !t.valid)).toBe(true);
+    expect(harness.tests.map(t => [t.key, t.gating, t.valid])).toEqual([['memory-bank/frontier', true, false], ['memory-bank/bridge', false, true], ['extract-first/frontier', true, false], ['extract-first/bridge', false, true]]);
   });
 
   test('a row failing the delivered-context gate makes every comparison it enters descriptive', () => {
@@ -267,8 +279,9 @@ describe('verdict.ts receipts', () => {
     const walk = (x: unknown) => { if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) { keys.push(k); walk(v); } };
     walk(report);
     expect(keys.filter(k => /mean|estimate|lower|accuracy/i.test(k))).toEqual([]);
-    expect(report.sds).toHaveLength(4);
-    expect(report.corr).toHaveLength(4);
+    expect(report.comparisons).toEqual(['memory-bank/frontier', 'extract-first/frontier']);
+    expect(report.sds).toHaveLength(2);
+    expect(report.corr).toHaveLength(2);
     expect(report.n_final).toBe(20);
   }, 60_000);
 

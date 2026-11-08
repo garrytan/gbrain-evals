@@ -1,14 +1,14 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { COMPARISONS, conversationDifferences, decide, dropValidity, questionScores, RS1_MARGIN, tLowerBound, tQuantile, worstCase, type ComparisonKey, type QuestionInput } from '../../eval/runner/rs1/iut.ts';
-import { analyticN, corr4, jointN, jointPower, MC_TOLERANCE, minMargin, pilotSize, RHO_JUDGE, SD10, sdAtItems, sdsAt, simulatedPass, TAUS } from '../../eval/runner/rs1/power.ts';
+import { COMPARISONS, conversationDifferences, decide, dropValidity, GATING, questionScores, RS1_MARGIN, tLowerBound, tQuantile, worstCase, type ComparisonKey, type QuestionInput } from '../../eval/runner/rs1/iut.ts';
+import { analyticN, corr2, corr4, jointN, jointPower, MC_TOLERANCE, minMargin, pilotSize, RHO_JUDGE, SD10, sdAtItems, sdsAt, simulatedPass, TAUS } from '../../eval/runner/rs1/power.ts';
 import { priceAt, pricing, PRICING_PATH, STAGE0_RATES, unitCosts } from '../../eval/runner/rs1/pricing.ts';
 import { analyze, READERS, type VerdictInput } from '../../eval/runner/rs1/verdict.ts';
 
 const ROOT = join(import.meta.dir, '..', '..');
 const FIXTURE = JSON.parse(readFileSync(join(ROOT, 'test/fixtures/rs1/gbev48-power.json'), 'utf8'));
-const sdFor = (scen: string, i: number) => (scen === 'bound' ? SD10[COMPARISONS[i]] : sdsAt(20, TAUS[scen as keyof typeof TAUS])[i]);
+const sdFor = (scen: string, i: number) => (scen === 'bound' ? SD10[COMPARISONS[i]] : sdsAt(20, TAUS[scen as keyof typeof TAUS], COMPARISONS)[i]);
 
 describe('iut.ts', () => {
   test('the t bound and quantile match the textbook values', () => {
@@ -19,22 +19,30 @@ describe('iut.ts', () => {
     expect(b.lower).toBeCloseTo(2.5 - 2.3534 * 1.2910 / 2, 3);
   });
 
-  test('the claim passes only when all four lower bounds clear -3.5', () => {
+  test('the claim passes only when both gating (Astra/Opus) lower bounds clear -3.5; the bridge bounds are reported, never gating', () => {
     const base = Object.fromEntries(COMPARISONS.map(k => [k, [0, 1, -1, 0.5, -0.5]])) as Record<ComparisonKey, number[]>;
+    expect(GATING).toEqual(['memory-bank/frontier', 'extract-first/frontier']);
     expect(decide(base).verdict).toBe('pass');
-    const one = { ...base, 'extract-first/bridge': [-6, -4, -5, -3, -7] };
-    expect(decide(one).verdict).toBe('fail');
+    expect(decide(base).tests.map(t => [t.key, t.gating])).toEqual(COMPARISONS.map(k => [k, GATING.includes(k)]));
+    const bridgeLow = decide({ ...base, 'extract-first/bridge': [-6, -4, -5, -3, -7] });
+    expect(bridgeLow.verdict).toBe('pass');
+    expect(bridgeLow.tests.find(t => t.key === 'extract-first/bridge')!.pass).toBe(false);
+    expect(decide({ ...base, 'extract-first/frontier': [-6, -4, -5, -3, -7] }).verdict).toBe('fail');
     expect(decide(base, { invalid: { 'memory-bank/frontier': ['drops'] } }).verdict).toBe('invalid');
+    expect(decide(base, { invalid: { 'memory-bank/bridge': ['drops'] } }).verdict).toBe('pass');
+    expect(decide({ 'memory-bank/frontier': base['memory-bank/frontier'], 'extract-first/frontier': base['extract-first/frontier'] }).tests).toHaveLength(2);
+    expect(() => decide({ 'memory-bank/frontier': base['memory-bank/frontier'] })).toThrow(/gating comparison extract-first\/frontier/);
   });
 
-  test('secondaries run extract-first then memory-bank, only after the primary passes', () => {
+  test('secondaries run extract-first then memory-bank under the gating view, only after the primary passes', () => {
     const up = [3, 4, 5, 4, 3];
     const flat = [-1, 1, 0, 0.5, -0.5];
-    const d = { 'memory-bank/frontier': flat, 'memory-bank/bridge': flat, 'extract-first/frontier': up, 'extract-first/bridge': up };
+    const d = { 'memory-bank/frontier': flat, 'memory-bank/bridge': flat, 'extract-first/frontier': up, 'extract-first/bridge': flat };
     expect(decide(d).secondaries.map(s => [s.id, s.status])).toEqual([['superiority/extract-first', 'pass'], ['superiority/memory-bank', 'fail']]);
     const d2 = { 'memory-bank/frontier': up, 'memory-bank/bridge': up, 'extract-first/frontier': flat, 'extract-first/bridge': flat };
     expect(decide(d2).secondaries.map(s => s.status)).toEqual(['fail', 'not_tested']);
-    expect(decide({ ...d, 'memory-bank/bridge': [-9, -8, -9, -8, -9] }).secondaries).toEqual([]);
+    expect(decide({ ...d, 'memory-bank/bridge': [-9, -8, -9, -8, -9] }).secondaries.map(s => s.status)).toEqual(['pass', 'fail']);
+    expect(decide({ ...d, 'memory-bank/frontier': [-9, -8, -9, -8, -9] }).secondaries).toEqual([]);
   });
 
   test('product failures score 0, harness failures drop, over 5% drops make every comparison invalid', () => {
@@ -47,9 +55,34 @@ describe('iut.ts', () => {
     expect(dropped.drops).toEqual([{ question: 'q2', conversation: 'c1', row: 'gbrain', side: 'gbrain', reason: 'reader_error' }]);
     const many = [...Array.from({ length: 19 }, (_, i) => questionScores(q(`ok${i}`, { a: v(1), b: v(1) }), ['a', 'b']).scored), dropped.scored];
     expect(dropValidity(many).invalid).toEqual({});
-    expect(Object.keys(dropValidity([...many, dropped.scored]).invalid)).toEqual(COMPARISONS);
+    expect(Object.keys(dropValidity([...many, dropped.scored]).invalid)).toEqual(GATING);
     expect(worstCase(dropped.scored, 'gbrain', 'frontier')).toBe(0);
     expect(worstCase(dropped.scored, 'memory-bank', 'frontier')).toBe(100);
+  });
+
+  test('a bridge-only judge_error on 10% of questions leaves the gating verdict valid and unchanged, and is counted on the bridge side', () => {
+    let seed = 11;
+    const rand = () => { seed = (seed * 1103515245 + 12345) % 2 ** 31; return seed / 2 ** 31; };
+    const readers = ['a', 'b', 'c'];
+    const questions: QuestionInput[] = [];
+    for (let c = 0; c < 10; c++) for (let i = 0; i < 10; i++) {
+      const val = (shift: number) => Object.fromEntries(readers.map(r => { const x = Math.min(1, Math.max(0, 0.6 + shift + (rand() - 0.5) * 0.5)); return [r, { frontier: x, bridge: x }]; }));
+      questions.push({ id: `c${c}:q${i}`, conversation: `c${c}`, rows: { gbrain: val(0), 'memory-bank': val(0), 'extract-first': val(0.01) } });
+    }
+    const scoredOf = (qs: QuestionInput[]) => qs.map(q => questionScores(q, readers));
+    const before = scoredOf(questions);
+    const hit = questions.map((q, i) => (i % 10 === 3 ? { ...q, rows: { ...q.rows, gbrain: { ...q.rows.gbrain, b: { ...(q.rows.gbrain.b as { frontier: number }), bridge: null } } } } : q));
+    const after = scoredOf(hit);
+    expect(after.flatMap(s => s.drops)).toEqual([]);
+    expect(after.flatMap(s => s.bridge_drops)).toHaveLength(10);
+    const v = dropValidity(after.map(s => s.scored));
+    expect([v.common, v.share, v.invalid]).toEqual([100, 0, {}]);
+    expect([v.bridge_common, v.bridge_share]).toEqual([90, 0.1]);
+    const d0 = conversationDifferences(before.map(s => s.scored)), d1 = conversationDifferences(after.map(s => s.scored));
+    expect(d1.conversations).toEqual(d0.conversations);
+    for (const k of GATING) expect(d1.diffs[k]).toEqual(d0.diffs[k]);
+    expect(decide(d1.diffs).verdict).toBe(decide(d0.diffs).verdict);
+    expect(decide(d1.diffs).tests.filter(t => t.gating).map(t => t.lower)).toEqual(decide(d0.diffs).tests.filter(t => t.gating).map(t => t.lower));
   });
 });
 
@@ -81,19 +114,20 @@ describe('power.ts against GBEV-48 power.json', () => {
 
   test('the joint intersection-union N at M = 3.5 is within one conversation and its power within the Monte Carlo tolerance', () => {
     for (const r of FIXTURE.design2.filter((x: any) => x.margin === 3.5)) {
-      const s = { sds: sdsAt(20, TAUS[r.scen as keyof typeof TAUS]), corr: corr4(r.rho_cross), deltas: [0, 0, r.delta_EF, r.delta_EF] };
+      const s = { sds: sdsAt(20, TAUS[r.scen as keyof typeof TAUS], COMPARISONS), corr: corr4(r.rho_cross), deltas: [0, 0, r.delta_EF, r.delta_EF], keys: COMPARISONS, gating: COMPARISONS };
       const got = jointN(s, r.margin);
       expect(Math.abs(got.n! - r.n_joint)).toBeLessThanOrEqual(1);
       expect(Math.abs(jointPower(r.n_joint, s, r.margin) - r.p_joint)).toBeLessThanOrEqual(MC_TOLERANCE);
     }
   }, 120_000);
 
-  test('the pilot sizes central SDs near 28 and pauses over the cap with the margin reachable at 33', () => {
-    const central = pilotSize(sdsAt(20, TAUS.central), corr4());
-    expect(Math.abs(central.n_required! - 28)).toBeLessThanOrEqual(1);
+  test('the two-test pilot sizes central SDs near 27 and pauses over the cap with the margin reachable at 33', () => {
+    expect(sdsAt(20, TAUS.central)).toHaveLength(2);
+    const central = pilotSize(sdsAt(20, TAUS.central), corr2());
+    expect(Math.abs(central.n_required! - 27)).toBeLessThanOrEqual(1);
     expect(central.n_final).toBe(central.n_required);
-    expect(pilotSize(sdsAt(20, 0).map(x => x / 2), corr4()).n_final).toBe(20);
-    const wide = pilotSize(sdsAt(20, TAUS.central).map(x => x * 1.6), corr4());
+    expect(pilotSize(sdsAt(20, 0).map(x => x / 2), corr2()).n_final).toBe(20);
+    const wide = pilotSize(sdsAt(20, TAUS.central).map(x => x * 1.6), corr2());
     expect(wide.over_cap).toBe(true);
     expect(wide.n_final).toBeNull();
     expect(wide.margin_at_cap!).toBeGreaterThan(RS1_MARGIN);
