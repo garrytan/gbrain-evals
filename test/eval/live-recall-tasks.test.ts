@@ -16,10 +16,10 @@ import { isCapStop, openBudgetItem } from '../../eval/runner/refresh-barrier/led
 import { buildFixtureBrain, useFixtureTransports } from '../../eval/runner/live-recall/run.ts';
 import { ANSWER_TOOL, PROMPTS, SUMMARY_TOOL, citedSlugs, judgeEpisode, openReader, runEpisode, type AnswerRecord, type EpisodeContext, type Task } from '../../eval/runner/live-recall/task-arms.ts';
 import { JUDGE_SYSTEM, LABELLERS, VERDICT_TOOL, assertJudge, derive, judgeFor, parseVerdict, secondJudgeFor } from '../../eval/runner/live-recall/task-judge.ts';
-import { JUDGE_CHECK_SCHEMA, buildTaskScorecard, checkOutbound, judgeCheck, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
+import { JUDGE_CHECK_SCHEMA, TRUNCATION_CAP, buildTaskScorecard, checkOutbound, judgeCheck, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
 import {
-  FIXTURE_TASKS, HARNESS_FILES, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, assertPrivate, estimateCost, freezeSummary, goldCheck, harnessDigest, judgeRunDir, ledgerRunner, loadRecords, parseTasks,
-  readJudgeCheck, runTaskSet, scoreRunDir, spread, watchRefusals, writeFreeze, writeJudgeCheck, type Paid, type RunRecord,
+  FIXTURE_TASKS, HARNESS_FILES, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, TRUNCATION_FLOOR, assertPrivate, checkTruncation, estimateCost, freezeSummary, goldCheck, harnessDigest, judgeRunDir, labelsShort, ledgerRunner,
+  loadRecords, parseTasks, readJudgeCheck, runJudgeCheck, runTaskSet, scoreRunDir, spread, watchRefusals, writeFreeze, writeJudgeCheck, type Paid, type RunRecord,
 } from '../../eval/runner/live-recall/tasks.ts';
 
 const gut = resolveGbrainUnderTest(null);
@@ -1089,16 +1089,26 @@ describe('phase 2 judge check (R78)', () => {
   test('a counted run needs a passing judge check for its task file and harness, or GBEV-3\'s waiver', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'lr2-jc-'));
     const write = (c: unknown) => { const p = join(dir, 'judge-check.json'); writeFileSync(p, JSON.stringify(c)); return p; };
-    const good = { schema: JUDGE_CHECK_SCHEMA, passed: true, tasks_sha256: createHash('sha256').update(fixtureText).digest('hex'), run: { harness_digest: harnessDigest(), control: false }, judges: {} };
+    const models = ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], arms = ['A', 'B', 'C', 'D'], need = { models, arms };
+    const good = { schema: JUDGE_CHECK_SCHEMA, passed: true, stop: null, n_tasks_checked: 20, tasks_sha256: createHash('sha256').update(fixtureText).digest('hex'), run: { harness_digest: harnessDigest(), control: false, models, arms }, judges: {} };
     try {
-      expect(await abortCode(() => readJudgeCheck(null, fixtureText, null))).toBe('LR_JUDGE_CHECK');
-      expect(readJudgeCheck(write(good), fixtureText, null)).toMatchObject({ passed: true, waiver: null });
-      expect(await abortCode(() => readJudgeCheck(write({ ...good, tasks_sha256: '0'.repeat(64) }), fixtureText, null))).toBe('LR_JUDGE_CHECK');
-      expect(await abortCode(() => readJudgeCheck(write({ ...good, run: { ...good.run, harness_digest: '0'.repeat(64) } }), fixtureText, null))).toBe('LR_JUDGE_CHECK');
-      expect(await abortCode(() => readJudgeCheck(write({ ...good, run: { ...good.run, control: true } }), fixtureText, null))).toBe('LR_JUDGE_CHECK');
-      expect(await abortCode(() => readJudgeCheck(write({ ...good, passed: false }), fixtureText, null))).toBe('LR_JUDGE_CHECK');
-      expect(await abortCode(() => readJudgeCheck(write({ ...good, passed: false }), fixtureText, 'not a note'))).toBe('LR_JUDGE_CHECK');
-      expect(readJudgeCheck(write({ ...good, passed: false }), fixtureText, 'gbev3-waiver-1')).toMatchObject({ passed: false, waiver: 'gbev3-waiver-1' });
+      expect(await abortCode(() => readJudgeCheck(null, fixtureText, null, need))).toBe('LR_JUDGE_CHECK');
+      expect(readJudgeCheck(write(good), fixtureText, null, need)).toMatchObject({ passed: true, waiver: null });
+      expect(await abortCode(() => readJudgeCheck(write({ ...good, tasks_sha256: '0'.repeat(64) }), fixtureText, null, need))).toBe('LR_JUDGE_CHECK');
+      expect(await abortCode(() => readJudgeCheck(write({ ...good, run: { ...good.run, harness_digest: '0'.repeat(64) } }), fixtureText, null, need))).toBe('LR_JUDGE_CHECK');
+      expect(await abortCode(() => readJudgeCheck(write({ ...good, run: { ...good.run, control: true } }), fixtureText, null, need))).toBe('LR_JUDGE_CHECK');
+      expect(await abortCode(() => readJudgeCheck(write({ ...good, passed: false }), fixtureText, null, need))).toBe('LR_JUDGE_CHECK');
+      expect(await abortCode(() => readJudgeCheck(write({ ...good, passed: false }), fixtureText, 'not a note', need))).toBe('LR_JUDGE_CHECK');
+      expect(readJudgeCheck(write({ ...good, passed: false }), fixtureText, 'gbev3-waiver-1', need)).toMatchObject({ passed: false, waiver: 'gbev3-waiver-1' });
+      for (const partial of [{ ...good, stop: 'LR_CAP_STOP' }, { ...good, n_tasks_checked: 19 }, { ...good, run: { ...good.run, models: models.slice(0, 2) } }, { ...good, run: { ...good.run, arms: ['A', 'B', 'D'] } }]) {
+        expect(await abortCode(() => readJudgeCheck(write(partial), fixtureText, 'gbev3-waiver-1', need))).toBe('LR_JUDGE_CHECK');
+      }
+      expect(readJudgeCheck(write(good), fixtureText, null, { models: ['claude-opus-5-5'], arms: ['A', 'B'] })).toMatchObject({ passed: true });
+      const freezePath = join(dir, 'freeze.json');
+      writeFileSync(freezePath, JSON.stringify({ schema: 'live-recall-task-freeze/v1', tasks_sha256: good.tasks_sha256 }));
+      const counted = { out: join(dir, 'counted'), gut, fixture: false, tasksPath: FIXTURE_TASKS, freezePath, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: arms as any, models, limit: null, concurrency: 1, resume: false, windowNote: null, paid: {} as Paid };
+      expect(await abortCode(() => runTaskSet({ ...counted, judgeCheckPath: null }, () => {}))).toBe('LR_JUDGE_CHECK');
+      expect(await abortCode(() => runTaskSet({ ...counted, judgeCheckPath: write({ ...good, run: { ...good.run, models: models.slice(0, 2) } }) }, () => {}))).toBe('LR_JUDGE_CHECK');
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 
@@ -1138,8 +1148,75 @@ describe('phase 2 judge check (R78)', () => {
       const c = writeJudgeCheck(out);
       expect([c.passed, c.n_tasks_checked, c.run.control, c.cost.by_role_usd.label > 0]).toEqual([false, 2, true, true]);
       expect((c.judges as any)['gpt-6-astra'].correct.n_rows).toBe(16);
+      expect([c.stop, c.run.models, c.run.arms, c.steps]).toEqual([null, ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], ['A', 'B', 'C', 'D'], [{ n_tasks: 2, labels: { 'gpt-6-astra': { correct: (c.judges as any)['gpt-6-astra'].correct.n_labelled, correct_grounded: (c.judges as any)['gpt-6-astra'].correct_grounded.n_labelled }, 'claude-opus-5-5': { correct: (c.judges as any)['claude-opus-5-5'].correct.n_labelled, correct_grounded: (c.judges as any)['claude-opus-5-5'].correct_grounded.n_labelled } } }]]);
+      expect(c.truncation).toEqual({ 'gpt-6-astra': { rows: 16 + 24, truncated: 0, rate: 0 }, 'claude-opus-5-5': { rows: 8 + 24, truncated: 0, rate: 0 } });
+      expect(records.filter(x => x.kind !== 'answer').every(x => x.max_output_tokens === 8192 && x.truncated === false)).toBe(true);
+      expect([existsSync(join(out, 'scorecard.json')), existsSync(join(out, 'scorecard.md'))]).toEqual([false, false]);
       const text = readFileSync(join(out, 'judge-check.json'), 'utf8');
       for (const t of fixtureTasks) for (const x of [t.forms.paraphrase, t.gold_answer.text, ...t.gold_pages]) expect(text).not.toContain(x);
+    } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); rmSync(dir, { recursive: true, force: true }); }
+  }, 120_000);
+
+  test('a judge call cut off at the output cap is a judge_error marked truncated, with its cap, and the episode makes no second judge call', async () => {
+    const task = fixtureTasks[0]!;
+    const cut: Failure = (w, c) => (c.system !== JUDGE_SYSTEM ? undefined
+      : w === 'anthropic' ? Response.json({ id: 'msg_cut', type: 'message', role: 'assistant', model: 'claude-opus-5-5', content: [{ type: 'text', text: 'Weighing the facts' }], stop_reason: 'max_tokens', usage: { input_tokens: 1000, output_tokens: 8192, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } })
+      : Response.json({ id: 'resp_cut', object: 'response', model: 'gpt-6-astra', status: 'incomplete', incomplete_details: { reason: 'max_output_tokens' }, output: [{ type: 'reasoning', id: 'rs_cut', encrypted_content: 'opaque', summary: [] }], usage: { input_tokens: 1000, output_tokens: 8192, input_tokens_details: { cached_tokens: 0 } } }));
+    for (const model of ['claude-opus-5-5', 'gpt-6.1-sol']) {
+      const rec = await guarded(() => undefined, ctx => runEpisode(ctx, task, 'paraphrase', 'A', model, 1));
+      const { j, sent } = await guarded(cut, async (ctx, sent) => ({ j: await judgeEpisode(ctx, task, rec, judgeFor(model), 'judge'), sent: sent.filter(s => conversation(s.wire, s.body).system === JUDGE_SYSTEM && !JSON.stringify(s.body).includes(NUDGE)).length }));
+      expect([model, j.status, j.truncated, j.max_output_tokens, sent]).toEqual([model, 'judge_error', true, 8192, 1]);
+    }
+    const ok = await guarded(() => undefined, async ctx => judgeEpisode(ctx, task, await runEpisode(ctx, task, 'paraphrase', 'A', 'claude-opus-5-5', 1), 'gpt-6-astra', 'judge'));
+    expect([ok.status, ok.truncated, ok.max_output_tokens]).toEqual(['ok', false, 8192]);
+  });
+
+  test('truncation stops a judge model past 1% of its calls: while judging over at least 100 of them, at the end over all of them', () => {
+    const calls = (judge: string, n: number, cut: number): any[] => Array.from({ length: n }, (_, i) => ({ ...verdict('judge', 'paraphrase|t' + i + '|B|claude-opus-5-5', judge, true), truncated: i < cut }));
+    const code = (f: () => void) => { try { f(); return 'no abort'; } catch (e) { return e instanceof LiveRecallAbort ? e.code : String(e); } };
+    expect([TRUNCATION_CAP, TRUNCATION_FLOOR]).toEqual([0.01, 100]);
+    expect(code(() => checkTruncation(calls('gpt-6-astra', 50, 1)))).toBe('no abort');
+    expect(code(() => checkTruncation(calls('gpt-6-astra', 50, 2)))).toBe('LR_JUDGE_TRUNCATED');
+    expect(code(() => checkTruncation([...calls('gpt-6-astra', 300, 3), ...calls('claude-opus-5-5', 300, 0)]))).toBe('no abort');
+    expect(code(() => checkTruncation([...calls('gpt-6-astra', 300, 0), ...calls('claude-opus-5-5', 300, 4)]))).toBe('LR_JUDGE_TRUNCATED');
+    expect(code(() => checkTruncation(calls('gpt-6-astra', 50, 1), 1))).toBe('LR_JUDGE_TRUNCATED');
+    expect(code(() => checkTruncation(calls('gpt-6-astra', 100, 1), 1))).toBe('no abort');
+  });
+
+  test('judge-check.json reports each judge model\'s truncation rate, and more than 1% fails the check', () => {
+    const cut = (n: number) => { let k = 0; return both().map(r => (r.kind === 'label' && r.judge === 'gpt-6-astra' && k++ < n ? { ...r, status: 'judge_error', derived: null, truncated: true } : r)); };
+    const one = judgeCheck(cut(1)), two = judgeCheck(cut(2));
+    expect(one.truncation['gpt-6-astra']).toEqual({ rows: 180, truncated: 1, rate: 0.0056 });
+    expect([one.passed, two.passed, two.truncation['gpt-6-astra']!.rate]).toEqual([true, false, 0.0111]);
+    expect(two.truncation['claude-opus-5-5']).toEqual({ rows: 180, truncated: 0, rate: 0 });
+    expect(() => validateTaskScorecard(two)).not.toThrow();
+  });
+
+  test('only a short label count extends the check: under 40 labels on either primary metric for any counted judge', () => {
+    expect(labelsShort(judgeCheck(both()))).toBe(false);
+    expect(labelsShort(judgeCheck([...rows('claude-opus-5-5', 'B', 44, 20, 0, 0), ...rows('gpt-6.1-sol', 'B', 60, 25, 0, 0)]))).toBe(true);
+    expect(labelsShort(judgeCheck([...rows('claude-opus-5-5', 'B', 60, 25, 12, 10), ...rows('gpt-6.1-sol', 'B', 60, 25, 0, 0)]))).toBe(false);
+  });
+
+  test('the label floor adds frozen tasks ten at a time in one run directory, and judge-check.json lists every step', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-floor-'));
+    process.env.GBRAIN_AUDIT_DIR = dir;
+    const providers = scriptedProviders(fixtureTasks);
+    const paid = scriptedPaid(dir, providers.fetchImpl, 9);
+    const out = join(dir, 'run');
+    const lines: string[] = [];
+    try {
+      const { result, check } = await runJudgeCheck({ out, gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'], arms: ['B'], models: ['claude-opus-5-5'], limit: 2, concurrency: 2, resume: false, windowNote: null, paid }, l => lines.push(l));
+      expect(result).toBe('complete');
+      const n = check!.n_tasks_checked;
+      expect([n > 12, n <= fixtureTasks.length]).toEqual([true, true]);
+      expect(check!.steps.map(s => s.n_tasks)).toEqual([2, 12, n]);
+      expect(check!.steps.map(s => s.labels['gpt-6-astra']!.correct)).toEqual([2, 12, n]);
+      expect(lines.filter(l => l.includes('adding frozen tasks up to'))).toHaveLength(2);
+      const run = JSON.parse(readFileSync(join(out, 'run.json'), 'utf8'));
+      expect([run.kept_ids.slice(0, 12), run.judge_check_steps]).toEqual([spread(fixtureTasks, 12).map(t => t.id), [2, 12, n]]);
+      const answers = loadRecords(join(out, 'records.local.jsonl')).records.filter((x: any) => x.kind === 'answer');
+      expect(answers).toHaveLength(n);
     } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); rmSync(dir, { recursive: true, force: true }); }
   }, 120_000);
 });

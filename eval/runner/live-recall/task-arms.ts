@@ -267,7 +267,10 @@ export interface JudgeRecord {
   /** judge: the counted verdict; judge2: the descriptive second judge; label: a judge-check labeller. */
   kind: 'judge' | 'judge2' | 'label'; key: string; judge: string;
   /** The model version the provider reports serving (its response's `model`), null when no response carried one. */
-  judge_version: string | null; effort: string; status: 'ok' | 'judge_error'; verdict: Verdict | null; derived: Derived | null;
+  judge_version: string | null; effort: string;
+  /** The output-token cap sent, and whether a call hit it; a truncated call is a judge_error and is not retried. */
+  max_output_tokens: number; truncated: boolean;
+  status: 'ok' | 'judge_error'; verdict: Verdict | null; derived: Derived | null;
   usd: number; usage: Usage; ms: number; at: string;
 }
 
@@ -408,23 +411,31 @@ function exposure(task: Task, calls: ToolCall[], cited: string[], summaryCited: 
 
 const ZERO: Usage = { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 };
 
-/** One judge verdict for an answered episode: at most two judge calls, then judge_error; a provider rejection throws. A has no citations to judge. */
+/**
+ * One judge verdict for an answered episode: at most two judge calls, then judge_error; a call that hits the output-token
+ * cap is a judge_error at once, marked truncated. A provider rejection throws. A has no citations to judge.
+ */
 export async function judgeEpisode(ctx: Pick<EpisodeContext, 'limit' | 'capCheck'>, task: Task, rec: AnswerRecord, judge: string, kind: JudgeRecord['kind'], effort: string = EFFORT): Promise<JudgeRecord> {
   const cited = rec.arm === 'A' ? [] : rec.cited;
   const user = judgeUser({ question: task.forms[rec.form], gold: task.gold_answer, answer: rec.answer, cited, pages: new Map(rec.snapshots.map(s => [s.slug, s.text])) });
   const shown = cited.slice(0, JUDGED_CITATIONS);
   const usage = { ...ZERO };
-  let usd = 0, ms = 0, version: string | null = null;
-  const onAttempt = (a: ProviderAttempt) => { if (typeof a.response?.model === 'string') version = a.response.model; };
-  const head = { kind, key: rec.key, judge, effort };
+  let usd = 0, ms = 0, version: string | null = null, truncated = false;
+  const onAttempt = (a: ProviderAttempt) => {
+    const r = a.response;
+    if (typeof r?.model === 'string') version = r.model;
+    if (r?.stop_reason === 'max_tokens' || (r?.status === 'incomplete' && (r.incomplete_details as { reason?: unknown } | undefined)?.reason === 'max_output_tokens')) truncated = true;
+  };
+  const head = { kind, key: rec.key, judge, effort, max_output_tokens: MAX_OUTPUT_TOKENS };
   for (let i = 0; i < 2; i++) {
     const run = await ctx.limit(judge, () => runAgent({ model: judge, system: JUDGE_SYSTEM, user, arm: NO_TOOLS, submitTool: VERDICT_TOOL, maxTurns: 2, maxOutputTokens: MAX_OUTPUT_TOKENS, effort, classifyStops: true, openaiStore: false, onAttempt }));
     ctx.capCheck();
     assertAccepted(run);
     usd += run.usd; ms += run.ms;
     for (const k of Object.keys(usage) as Array<keyof Usage>) usage[k] += run.usage[k];
+    if (truncated) break;
     const verdict = run.stop === 'submitted' ? parseVerdict(run.final, task.gold_answer.required_facts.map(f => f.id), shown) : null;
-    if (verdict) return { ...head, judge_version: version, status: 'ok', verdict, derived: derive(verdict, cited), usd, usage, ms, at: new Date().toISOString() };
+    if (verdict) return { ...head, judge_version: version, truncated, status: 'ok', verdict, derived: derive(verdict, cited), usd, usage, ms, at: new Date().toISOString() };
   }
-  return { ...head, judge_version: version, status: 'judge_error', verdict: null, derived: null, usd, usage, ms, at: new Date().toISOString() };
+  return { ...head, judge_version: version, truncated, status: 'judge_error', verdict: null, derived: null, usd, usage, ms, at: new Date().toISOString() };
 }

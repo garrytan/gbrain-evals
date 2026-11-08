@@ -202,10 +202,11 @@ function kappa(pairs: Array<[number, number]>) {
 
 /** Every judge model's row count and the model versions its providers reported serving. */
 function judgeVersions(records: JudgeRecord[]) {
-  const out: Record<string, { rows: number; versions: string[] }> = {};
+  const out: Record<string, { rows: number; truncated: number; versions: string[] }> = {};
   for (const r of records) {
-    const j = (out[r.judge] ??= { rows: 0, versions: [] });
+    const j = (out[r.judge] ??= { rows: 0, truncated: 0, versions: [] });
     j.rows++;
+    if (r.truncated) j.truncated++;
     if (r.judge_version && !j.versions.includes(r.judge_version)) j.versions.push(r.judge_version);
   }
   for (const j of Object.values(out)) j.versions.sort();
@@ -216,6 +217,8 @@ export const JUDGE_CHECK_SCHEMA = 'live-recall-judge-check/v1';
 /** R78: a counted judge gates a primary only with at least this many labelled answers and this kappa against the labels. */
 export const JUDGE_CHECK_MIN_LABELS = 40;
 export const JUDGE_CHECK_KAPPA = 0.6;
+/** R78: a judge model whose calls hit the output-token cap on more than this share of its rows fails the check, and stops a run. */
+export const TRUNCATION_CAP = 0.01;
 const CHECK_METRICS = { correct: ARMS, correct_grounded: ARMS.filter(a => a !== 'A') } as const;
 
 /**
@@ -223,7 +226,8 @@ const CHECK_METRICS = { correct: ARMS, correct_grounded: ARMS.filter(a => a !== 
  * verdict and one verdict from each labeller. Per counted judge and metric: the labellers' own agreement (kappa over
  * every usable row), the label set (rows both labellers grade alike), and the counted verdict against those labels:
  * bad answers caught, good answers failed, and kappa. A judge passes a metric with at least JUDGE_CHECK_MIN_LABELS
- * labels, and both kappas at least JUDGE_CHECK_KAPPA. correct_grounded leaves out A, which cites nothing.
+ * labels, and both kappas at least JUDGE_CHECK_KAPPA. correct_grounded leaves out A, which cites nothing. Every judge
+ * model must also keep its truncated calls (judge errors at the output-token cap) at or under TRUNCATION_CAP of its rows.
  */
 export function judgeCheck(records: Array<AnswerRecord | JudgeRecord>) {
   const counted = new Map<string, JudgeRecord>(), labels = new Map<string, JudgeRecord>();
@@ -265,7 +269,10 @@ export function judgeCheck(records: Array<AnswerRecord | JudgeRecord>) {
       by_model: Object.fromEntries(models.map(m => [m, { correct: stats(rows.filter(a => a.model === m), 'correct'), correct_grounded: stats(rows.filter(a => a.model === m), 'correct_grounded') }])),
     };
   }
-  return { schema: JUDGE_CHECK_SCHEMA, passed, thresholds: { min_labels: JUDGE_CHECK_MIN_LABELS, kappa: JUDGE_CHECK_KAPPA }, n_answers: answers.length, judges, versions: judgeVersions(records.filter((r): r is JudgeRecord => r.kind === 'judge' || r.kind === 'label')) };
+  const latest = [...counted.values(), ...labels.values()];
+  const truncation = Object.fromEntries(Object.entries(judgeVersions(latest)).map(([m, v]) => [m, { rows: v.rows, truncated: v.truncated, rate: round(v.truncated / v.rows) }]));
+  passed &&= Object.values(truncation).every(t => (t.rate ?? 1) <= TRUNCATION_CAP);
+  return { schema: JUDGE_CHECK_SCHEMA, passed, thresholds: { min_labels: JUDGE_CHECK_MIN_LABELS, kappa: JUDGE_CHECK_KAPPA, truncation: TRUNCATION_CAP }, n_answers: answers.length, judges, truncation, versions: judgeVersions(latest) };
 }
 
 export interface ScoreInput {
@@ -375,6 +382,7 @@ const KEY_WORDS = new Set<string>([
   'worse_tasks', 'reading', 'label', 'rows', 'versions', 'judge_check', 'labellers', 'label_effort', ...LABELLERS,
   'passed', 'waiver', 'thresholds', 'min_labels', 'n_answers', 'n_tasks_checked', 'answer_models', 'by_model', 'n_rows', 'unusable', 'labeller_agree', 'labeller_kappa',
   'n_labelled', 'n_bad', 'n_good', 'caught', 'false_fails', 'catch_rate', 'false_fail_rate', 'tasks_sha256', 'judge_check_sha256',
+  'truncated', 'truncation', 'rate', 'steps', 'labels',
 ]);
 const STRING_WORDS = new Set<string>([
   TASK_SCHEMA, 'complete', 'incomplete', ...FORMS, POOLED, ...ARMS, ...MODELS, 'correct', 'correct_grounded', 'P1', 'P2', 'errors_over_cap', 'degraded_over_cap',

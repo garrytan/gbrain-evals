@@ -34,7 +34,14 @@ This records what each gbrain-evals release changed and what its measurements me
   (`LR_JUDGE_CHECK`) unless GBEV-3 waives it. Every judge row records its served model version, every comparison
   reports the tasks that got worse and reads an interval that includes zero as "no measurable difference", and
   `tasks.ts estimate` shows each judge's cost on its own line and projects the judge check. The counted run's starting
-  cap moves from $360 to $600, and the judge check has its own $200 cap.
+  cap moves from $360 to $700, the judge check has its own $200 cap, and the box ledger's program cap is $900.
+- **Label floor and truncated judge calls.** If a counted judge has fewer than 40 labels on either primary metric after
+  20 tasks, the judge check adds 10 frozen tasks at a time, up to 40, under the same $200 cap, and applies the pass
+  rule once to the final set; `judge-check.json` lists every step. Every judge row records its 8192-token output cap and
+  whether the call hit it. A truncated call is a judge error, `judge-check.json` reports each judge model's truncation
+  rate, and above 1% the check fails and a judge check or counted run stops (`LR_JUDGE_TRUNCATED`). A counted run also
+  refuses a judge check that stopped at its cap or misses one of its models, arms or the first 20 tasks, a judge-check
+  run no longer writes a scorecard, and `tasks.ts judge` on a judge-check directory exits 7 when the check fails.
 
 ## [0.10.175] - 2026-11-08
 

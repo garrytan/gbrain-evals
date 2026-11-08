@@ -187,7 +187,7 @@ snapshots, audit rows and gbrain's log stay.
   `GBRAIN_DIRECT_DATABASE_URL` unset. `GBRAIN_REMOTE_PRIVATE_PAGES` is removed from the runner's own process; if the
   brain's config sets `search.remote_private_pages`, the runner refuses to start.
 - A budget ledger on the box, for example `/data/ops/live-recall/phase2/ledger.sqlite`. The first paid command on a new
-  ledger also takes `--program-cap-usd 800`, which covers the judge check's $200 cap and the counted run's $600.
+  ledger also takes `--program-cap-usd 900`, which covers the judge check's $200 cap and the counted run's $700.
 
 ### Phase 2: the task file
 
@@ -240,8 +240,8 @@ All commands run from the repository root.
 
 3. **Estimate the cost** (the cost gate). `--smoke` and `--smoke-check` are the public smoke's run directory and its
    fixture judge check's, which come with the run request. It reads the frozen gold pages' sizes and makes no model
-   call. It prints each judge's share on its own line and the judge check's projection, and ends with `cost gate
-   passed`, or stops with [`LR_COST_GATE`](#lr_cost_gate); send the lines either way.
+   call. It prints each judge's share on its own line and the judge check's projection over 20 tasks and over 40 (the
+   most the label floor can add), and ends with `cost gate passed`, or stops with [`LR_COST_GATE`](#lr_cost_gate); send the lines either way.
 
    ```bash
    bun eval/runner/live-recall/tasks.ts estimate --tasks <tasks.jsonl> --freeze freeze.json --smoke <smoke run dir> \
@@ -251,26 +251,30 @@ All commands run from the repository root.
 
 4. **Judge check**, in the window GBEV-3 grants, before the run. It answers the paraphrase form of 20 frozen tasks in
    every arm and model, judges each answer as the run will, and has both judge models grade every answer again. It
-   prints one line per judge and metric and writes `judge-check.json` in its own run directory. Exit status 0 means it
-   passed; send `judge-check.json`. Exit status 7 means a judge did not pass: send `judge-check.json` to GBEV-3 and run
-   nothing counted until GBEV-3 answers. A cap stop (6) and a resume work as for the run.
+   prints one line per judge and metric, one per judge model with its calls truncated at the output cap, and writes
+   `judge-check.json` in its own run directory. If after 20 tasks a judge has fewer than 40 labels on either metric, it
+   adds 10 more frozen tasks at a time, up to 40, by itself in the same directory and under the same cap (the label
+   floor); `judge-check.json` lists every step. Exit status 0 means it passed; send `judge-check.json`. Exit status 7
+   means a judge did not pass: send `judge-check.json` to GBEV-3 and run nothing counted until GBEV-3 answers. Exit
+   status 1 means some answer is missing or unjudged (re-judge, step 6). A cap stop (6), a truncation stop
+   ([`LR_JUDGE_TRUNCATED`](#lr_judge_truncated)) and a resume work as for the run.
 
    ```bash
    bun eval/runner/live-recall/tasks.ts judge-check --tasks <tasks.jsonl> --freeze freeze.json \
      --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL \
-     --budget-usd 200 --budget-ledger <ledger> --program-cap-usd 800 --out <judge-check dir>
+     --budget-usd 200 --budget-ledger <ledger> --program-cap-usd 900 --out <judge-check dir>
    ```
 
 5. **Run**, in the same window, after we confirm the freeze numbers are committed and the judge check passed. Start it
    detached (for example in `tmux`): it takes hours, and the paraphrase pass finishes before the exact pass starts. It
-   refuses to start without a passing judge check for the same task file and runner commit
+   refuses to start without a passing judge check made on the same task file and harness digest
    ([`LR_JUDGE_CHECK`](#lr_judge_check)).
 
    ```bash
    bun eval/runner/live-recall/tasks.ts run --tasks <tasks.jsonl> --freeze freeze.json \
      --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL \
      --judge-check <judge-check dir>/judge-check.json \
-     --budget-usd 600 --budget-ledger <ledger> --program-cap-usd 800 --out <run dir>
+     --budget-usd 700 --budget-ledger <ledger> --program-cap-usd 900 --out <run dir>
    ```
 
    Before the first task the runner proves the barrier, refuses a brain that shows private pages to remote callers
@@ -280,10 +284,12 @@ All commands run from the repository root.
    line, the task counts, the preflight result, progress every 10 tasks per pass,
    any [`LR_JUDGE_ERROR`](#lr_judge_error) or [`LR_CELL_INVALID`](#lr_cell_invalid) count, the output paths and the
    ledger total for this run directory across all its sessions. Exit status: 0 complete, 1 incomplete (some episode is
-   missing or unjudged), 6 cap stop, paused at the cap ([`LR_CAP_STOP`](#lr_cap_stop)), 3 abort, 4 unexpected error.
+   missing or unjudged), 6 cap stop, paused at the cap ([`LR_CAP_STOP`](#lr_cap_stop)), 3 abort (including
+   [`LR_JUDGE_TRUNCATED`](#lr_judge_truncated)), 4 unexpected error.
 
 6. **Re-judge, if asked.** If the run or the judge check printed `LR_JUDGE_ERROR`, re-judge those answers without
-   re-answering (`tasks.ts judge <judge-check dir>` also re-labels and rewrites `judge-check.json`). It joins the run's
+   re-answering (`tasks.ts judge <judge-check dir>` also re-labels, rewrites `judge-check.json` and exits 7 if the check
+   still does not pass). It joins the run's
    ledger run and cap, and after a cap stop it needs the extension's two flags ([`LR_CAP_STOP`](#lr_cap_stop)).
 
    ```bash
@@ -442,7 +448,7 @@ bun eval/runner/live-recall/tasks.ts run --tasks <tasks.jsonl> --freeze freeze.j
 
 The resume raises the ledger run's budget through the ledger, records the old cap, the new cap, the extension id and
 the time in `run.json`, and reruns the episodes the cap refused; finished episodes are never answered again. The ledger
-refuses a run budget above its program cap, which the first paid command set to 800, so first raise the program cap with
+refuses a run budget above its program cap, which the first paid command set to 900, so first raise the program cap with
 the ledger's own command, the extension id as the reason, and pass the same number as `--program-cap-usd` above and in
 any later resume:
 
@@ -471,17 +477,25 @@ through ALPH-72 for a window note.
 
 ### LR_COST_GATE
 
-Phase 2: the projected counted cost breaks the cost gate (the paraphrase pass over $450, 75% of the $600 cap, the total
-over the cap, or the judge check over its $200 cap). Send the estimate lines to GBEV-3 through ALPH-72; no counted call
+Phase 2: the projected counted cost breaks the cost gate (the paraphrase pass over $525, 75% of the $700 cap, the total
+over the cap, or the judge check's 20 tasks over its $200 cap). Send the estimate lines to GBEV-3 through ALPH-72; no counted call
 runs until GBEV-3 answers.
 
 ### LR_JUDGE_CHECK
 
 Phase 2: the counted run has no passing judge check. `tasks.ts run` needs `--judge-check <judge-check.json>` from
-`tasks.ts judge-check` on the same task file and the same runner commit's harness, and that check must have passed.
-If the judge check did not pass (it exits with status 7), send `judge-check.json` to GBEV-3 through ALPH-72 and run
+`tasks.ts judge-check` on the same task file and harness digest, covering at least 20 tasks and every model and arm the
+run asks for, with no cap stop, and that check must have passed. A check paused at its cap is finished first (resume it
+in the window GBEV-3 grants). If the judge check did not pass (it exits with status 7), send `judge-check.json` to GBEV-3 through ALPH-72 and run
 nothing counted. If GBEV-3 decides to go ahead anyway, add `--judge-check-waiver <note id>` with GBEV-3's note id; the
 scorecard reports the waiver.
+
+### LR_JUDGE_TRUNCATED
+
+Phase 2: a judge model hit its 8192-token output cap on more than 1% of its judge calls (while it has fewer than 100
+calls, on more than one), so the judge check or the run stopped; the line names the model and the counts. Each
+truncated call is recorded as a judge error and nothing in it is counted. Send the line to GBEV-3 through ALPH-72 and run
+nothing more until GBEV-3 answers.
 
 ### LR_PROVIDER_REJECTED
 

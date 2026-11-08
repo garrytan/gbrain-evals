@@ -46,7 +46,7 @@ import {
   type AnswerRecord, type EpisodeContext, type GbrainReader, type JudgeRecord, type Task, type TaskArm, type TaskForm,
 } from './task-arms.ts';
 import { JUDGE_PAGE_CHARS, LABELLERS, LABEL_EFFORT, MODELS, judgeFor, secondJudgeFor } from './task-judge.ts';
-import { JUDGE_CHECK_SCHEMA, SEED, TYPES, buildTaskScorecard, checkOutbound, judgeCheck, primaryMdd, renderTaskMarkdown, taskNeedles } from './task-scorecard.ts';
+import { JUDGE_CHECK_MIN_LABELS, JUDGE_CHECK_SCHEMA, SEED, TRUNCATION_CAP, TYPES, buildTaskScorecard, checkOutbound, judgeCheck, primaryMdd, renderTaskMarkdown, taskNeedles } from './task-scorecard.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const FIXTURE_TASKS = join(FIXTURE_DIR, 'tasks.jsonl');
@@ -57,10 +57,15 @@ export const MIN_TASKS = 60;
 /** Fewer kept tasks than this prints a notice: replacement tasks and a new freeze come before accepting lower power. */
 export const TARGET_TASKS = 100;
 /** The counted run's starting cap; a higher cap comes only from a --resume that extends a cap stop (extendCap). */
-export const COUNTED_CAP_USD = 600;
+export const COUNTED_CAP_USD = 700;
 export const SMOKE_CAP_USD = 10;
 /** The judge check (R78): paraphrase answers on this many frozen tasks, spread over the types, labelled before the run. */
 export const JUDGE_CHECK_TASKS = 20;
+/** The label floor: under JUDGE_CHECK_MIN_LABELS labels, the check adds this many tasks at a time, up to the maximum. */
+export const JUDGE_CHECK_STEP = 10;
+export const JUDGE_CHECK_MAX_TASKS = 40;
+/** A judge whose truncated calls pass TRUNCATION_CAP of its rows, counted over at least this many rows, stops the check or run. */
+export const TRUNCATION_FLOOR = 100;
 /** The judge check's starting cap, a runaway stop like the counted run's. */
 export const JUDGE_CHECK_CAP_USD = 200;
 /** The cost gate: the projected paraphrase pass may use at most this share of the cap, and the total at most the cap. */
@@ -404,6 +409,25 @@ const needsSecondJudge = (a: AnswerRecord) => a.form === 'paraphrase' && SECOND_
 /** The labellers for a model's answer, its counted judge first, so that judge's prompt is still in the provider's cache. */
 const labelOrder = (model: string) => [judgeFor(model), ...LABELLERS.filter(l => l !== judgeFor(model))];
 
+/**
+ * Stop the check or run once any judge model's truncated calls pass TRUNCATION_CAP of its latest rows. While judging,
+ * the share is taken of at least `floor` rows, so one truncation among a judge's first calls does not stop a run whose
+ * rate cannot be read yet; a finished counted run is checked with floor 1, the plain rate.
+ */
+export function checkTruncation(rows: Iterable<JudgeRecord>, floor = TRUNCATION_FLOOR): void {
+  const by = new Map<string, { rows: number; truncated: number }>();
+  for (const r of rows) {
+    const c = by.get(r.judge) ?? { rows: 0, truncated: 0 };
+    c.rows++;
+    if (r.truncated) c.truncated++;
+    by.set(r.judge, c);
+  }
+  for (const [judge, c] of by) if (c.truncated > TRUNCATION_CAP * Math.max(floor, c.rows)) {
+    throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', judge + ' hit its ' + MAX_OUTPUT_TOKENS + '-token output cap on ' + c.truncated + ' of ' + c.rows + ' judge calls, above ' + 100 * TRUNCATION_CAP + '%');
+  }
+}
+const judgeRows = (store: RecordStore) => [...store.judges.values(), ...store.judges2.values(), ...store.labels.values()];
+
 // ─── run ───────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /** The session's ledger run and guard. capUsd is this session's --budget-usd: the new cap when it extends a cap stop. */
@@ -417,6 +441,8 @@ export interface RunOptions {
   paid: Paid;
   /** A judge-check run: every answer also gets both labellers' verdicts, and no second judge. */
   judgeCheck?: boolean;
+  /** The judge check's own label-floor extension, inside the session that started it, so it needs no new window note. */
+  continuing?: boolean;
   /** A counted run's judge-check.json, and GBEV-3's waiver note when that check did not pass. */
   judgeCheckPath?: string | null; judgeCheckWaiver?: string | null;
 }
@@ -431,6 +457,8 @@ interface RunFile {
   forms: TaskForm[]; arms: TaskArm[]; models: string[];
   /** The judge check a counted run started from: its file hash, verdicts and any waiver. */
   judge_check?: Record<string, unknown> | null;
+  /** A judge-check run's task counts, one per label-floor step. */
+  judge_check_steps?: number[] | null;
 }
 
 /** One extension past a cap stop: the cap it lifted, the new cap, GBEV-3's extension id and the cap stop it supersedes. */
@@ -459,12 +487,16 @@ const NOTE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/;
  * A counted run's judge check (R78): the judge-check.json `tasks.ts judge-check` wrote for this task file and harness.
  * A check that did not pass stops the run unless GBEV-3 waives it with a note, which the scorecard reports.
  */
-export function readJudgeCheck(path: string | null | undefined, source: string, waiver: string | null | undefined) {
+export function readJudgeCheck(path: string | null | undefined, source: string, waiver: string | null | undefined, need: { models: string[]; arms: string[] }) {
   if (!path) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'a counted run needs --judge-check <judge-check.json>');
   const text = readFileSync(path, 'utf8');
   const c = JSON.parse(text);
   if (c?.schema !== JUDGE_CHECK_SCHEMA || c.tasks_sha256 !== sha256(source)) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json was not made on this task file');
   if (c.run?.harness_digest !== harnessDigest() || c.run?.control !== false) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json was made on another harness or on the fixture');
+  const covers = (have: unknown, want: string[]) => Array.isArray(have) && want.every(x => have.includes(x));
+  if (c.stop !== null || !(c.n_tasks_checked >= JUDGE_CHECK_TASKS) || !covers(c.run?.models, need.models) || !covers(c.run?.arms, need.arms)) {
+    throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json stopped early, or does not cover ' + JUDGE_CHECK_TASKS + ' tasks and this run\'s models and arms');
+  }
   if (waiver !== null && waiver !== undefined && !NOTE.test(waiver)) throw new LiveRecallAbort('LR_JUDGE_CHECK', '--judge-check-waiver takes GBEV-3\'s note id');
   if (c.passed !== true && !waiver) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'the judge check did not pass; send judge-check.json to GBEV-3 before any counted call');
   return { judge_check_sha256: sha256(text), passed: c.passed === true, waiver: c.passed === true ? null : waiver!, judges: c.judges };
@@ -517,7 +549,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
   const p = paths(o.out);
   mkdirSync(o.out, { recursive: true, mode: 0o700 });
   if (existsSync(p.capStop)) extendCap(o.out, o.paid, o.resume ? o.windowNote : null, say);
-  if (o.resume && !o.fixture && !o.windowNote) throw new LiveRecallAbort('LR_RESUME_NEEDS_WINDOW', 'a counted --resume needs --window-note');
+  if (o.resume && !o.fixture && !o.windowNote && !o.continuing) throw new LiveRecallAbort('LR_RESUME_NEEDS_WINDOW', 'a counted --resume needs --window-note');
   const store = new RecordStore(p.records);
   if (store.size > 0 && !o.resume) throw new Error('the run directory already holds records; pass --resume to continue it');
   const source = readFileSync(o.tasksPath, 'utf8');
@@ -530,7 +562,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
   }
   const previous = o.resume && existsSync(p.run) ? readRun(o.out) : null;
   if (previous && previous.tasks_sha256 !== sha256(source)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the resumed run was made on another task file');
-  const judgeCheckRef = o.fixture || o.judgeCheck ? null : previous?.judge_check ?? readJudgeCheck(o.judgeCheckPath, source, o.judgeCheckWaiver);
+  const judgeCheckRef = o.fixture || o.judgeCheck ? null : previous?.judge_check ?? readJudgeCheck(o.judgeCheckPath, source, o.judgeCheckWaiver, { models: o.models, arms: o.arms });
   const startedAt = new Date().toISOString();
   const refusals = watchRefusals();
   const brain = await openBrain(o, refusals.capped).catch(e => { refusals.restore(); throw e; });
@@ -554,7 +586,10 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
     }
     let tasks = candidates.map(c => c.task);
     if (o.limit !== null) tasks = spread(tasks, o.limit);
-    if (previous) {
+    if (previous && o.judgeCheck) {
+      const ids = new Set(tasks.map(t => t.id));
+      if (!previous.kept_ids.every(id => ids.has(id))) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the judge check\'s tasks are not a superset of its first session\'s');
+    } else if (previous) {
       const ids = new Set(previous.kept_ids);
       tasks = tasks.filter(t => ids.has(t.id));
     }
@@ -584,11 +619,12 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       custody: { readonly_verified_start: true, readonly_verified_end: null, guard_refusals: brain.counters.refusals },
       budget: { runner: o.paid.runner, run_id: o.paid.run.runId, ledger_path: o.paid.ledgerPath, cap_usd: ledgerSpend(o.paid.ledgerPath, o.paid.run.runId).cap_usd, extensions: previous?.budget.extensions ?? [] },
       forms: o.forms, arms: o.arms, models: o.models, judge_check: judgeCheckRef,
+      judge_check_steps: o.judgeCheck ? [...new Set([...(previous?.judge_check_steps ?? []), tasks.length])] : null,
     };
     if (previous) {
       const was: Record<string, unknown> = { ...previous.identity, kept_ids: previous.kept_ids, source_id: previous.source_id }, now: Record<string, unknown> = { ...run.identity, kept_ids: run.kept_ids, source_id: run.source_id };
       const norm = (v: unknown) => JSON.stringify(Array.isArray(v) ? [...v].sort() : v);
-      const changed = RESUME_IDENTITY.filter(k => norm(was[k]) !== norm(now[k]));
+      const changed = RESUME_IDENTITY.filter(k => !(o.judgeCheck && k === 'kept_ids') && norm(was[k]) !== norm(now[k]));
       if (changed.length) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the resume differs from the first session in ' + changed.join(', '));
     }
     writeJson(p.run, run);
@@ -607,10 +643,11 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
         store.write(a);
       }
       if (a.status !== 'answered') return;
-      if (!judgedAfter(a, store.judges.get(a.key))) store.write(await judgeEpisode(ctx, task, a, judgeFor(model), 'judge'));
+      const judged = (r: JudgeRecord) => { store.write(r); checkTruncation(judgeRows(store)); };
+      if (!judgedAfter(a, store.judges.get(a.key))) judged(await judgeEpisode(ctx, task, a, judgeFor(model), 'judge'));
       if (o.judgeCheck) {
-        for (const l of labelOrder(model)) if (!stopped() && !judgedAfter(a, store.labels.get(a.key + '|' + l))) store.write(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT));
-      } else if (needsSecondJudge(a) && !judgedAfter(a, store.judges2.get(a.key))) store.write(await judgeEpisode(ctx, task, a, secondJudgeFor(model)!, 'judge2'));
+        for (const l of labelOrder(model)) if (!stopped() && !judgedAfter(a, store.labels.get(a.key + '|' + l))) judged(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT));
+      } else if (needsSecondJudge(a) && !judgedAfter(a, store.judges2.get(a.key))) judged(await judgeEpisode(ctx, task, a, secondJudgeFor(model)!, 'judge2'));
     };
     for (const form of FORMS.filter(f => o.forms.includes(f))) {
       let done = 0;
@@ -641,6 +678,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
     run.custody.readonly_verified_end = true;
     run.identity.finished_at = new Date().toISOString();
     writeJson(p.run, run);
+    if (!o.judgeCheck && !halt.cap) checkTruncation(judgeRows(store), 1);
   } finally {
     refusals.restore();
     await brain.close();
@@ -678,23 +716,24 @@ export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) =
   const stopped = () => halt.cap !== null || halt.fatal !== null;
   try {
     const todo = [...store.answers.values()].filter(a => a.status === 'answered' && tasks.has(a.task));
+    const write = (r: JudgeRecord) => { store.write(r); judged++; checkTruncation(judgeRows(store)); };
     await pool(todo, TASK_CONCURRENCY, async a => {
       if (stopped()) return;
       const task = tasks.get(a.task)!;
       try {
         const j = store.judges.get(a.key);
-        if (!judgedAfter(a, j) || j!.status === 'judge_error') { store.write(await judgeEpisode(ctx, task, a, judgeFor(a.model), 'judge')); judged++; }
+        if (!judgedAfter(a, j) || j!.status === 'judge_error') write(await judgeEpisode(ctx, task, a, judgeFor(a.model), 'judge'));
         if (run.identity.labellers) {
           for (const l of labelOrder(a.model)) {
             if (stopped()) return;
             const x = store.labels.get(a.key + '|' + l);
-            if (!judgedAfter(a, x) || x!.status === 'judge_error') { store.write(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT)); judged++; }
+            if (!judgedAfter(a, x) || x!.status === 'judge_error') write(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT));
           }
           return;
         }
         if (stopped()) return;
         const j2 = store.judges2.get(a.key);
-        if (needsSecondJudge(a) && (!judgedAfter(a, j2) || j2!.status === 'judge_error')) { store.write(await judgeEpisode(ctx, task, a, secondJudgeFor(a.model)!, 'judge2')); judged++; }
+        if (needsSecondJudge(a) && (!judgedAfter(a, j2) || j2!.status === 'judge_error')) write(await judgeEpisode(ctx, task, a, secondJudgeFor(a.model)!, 'judge2'));
       } catch (e) {
         if (isCapStop(e)) halt.cap ??= e as Error;
         else halt.fatal ??= e;
@@ -707,6 +746,7 @@ export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) =
   }
   if (halt.fatal) throw halt.fatal;
   say(judged + ' judge calls made');
+  if (!run.identity.labellers && !halt.cap) checkTruncation(judgeRows(store), 1);
   return judged;
 }
 
@@ -758,6 +798,7 @@ export function scoreRunDir(dir: string, opts: { auditGrades?: string } = {}): {
     stop: existsSync(p.capStop) ? 'LR_CAP_STOP' : null, ledger_usd: ledgerUsd(run.budget), audit: opts.auditGrades ? auditAgreement(dir, opts.auditGrades) : null,
     judge_check: run.judge_check ?? null,
   });
+  if (run.identity.labellers) return { scorecard: '', markdown: '', complete: card.status === 'complete' };
   const json = JSON.stringify(card, null, 2) + '\n';
   const markdown = renderTaskMarkdown(card);
   checkOutbound(json, markdown, taskNeedles(tasks, records));
@@ -782,12 +823,17 @@ export function writeJudgeCheck(dir: string) {
     else if (r.kind === 'judge' || r.kind === 'label') roles[r.kind] += r.usd;
   }
   const r4 = (x: number) => Math.round(x * 1e4) / 1e4;
+  const steps = (run.judge_check_steps ?? [run.kept_ids.length]).map(n => {
+    const ids = new Set(run.kept_ids.slice(0, n));
+    const c = judgeCheck(records.filter(r => ids.has(r.key.split('|')[1]!)));
+    return { n_tasks: n, labels: Object.fromEntries(Object.entries(c.judges).map(([j, x]: [string, any]) => [j, { correct: x.correct.n_labelled, correct_grounded: x.correct_grounded.n_labelled }])) };
+  });
   const check = {
-    ...judgeCheck(records), tasks_sha256: run.tasks_sha256, n_tasks_checked: run.kept_ids.length,
+    ...judgeCheck(records), tasks_sha256: run.tasks_sha256, n_tasks_checked: run.kept_ids.length, steps, stop: existsSync(paths(dir).capStop) ? 'LR_CAP_STOP' : null,
     run: {
       started_at: id.started_at, finished_at: id.finished_at, runner_commit: id.runner_commit, runner_dirty: id.runner_dirty, harness_digest: id.harness_digest,
       gbrain_loaded_version: id.gbrain_loaded_version, gbrain_loaded_commit: id.gbrain_loaded_commit, schema_version: id.schema_version, control: id.control,
-      effort: id.effort, labellers: id.labellers, label_effort: id.label_effort,
+      effort: id.effort, labellers: id.labellers, label_effort: id.label_effort, models: id.models, arms: id.arms,
     },
     cost: { model_calls_usd: r4(roles.answer + roles.summariser + roles.judge + roles.label), by_role_usd: { answer: r4(roles.answer), summariser: r4(roles.summariser), judge: r4(roles.judge), label: r4(roles.label) }, ledger_usd: (u => (u === null ? null : r4(u)))(ledgerUsd(run.budget)) },
   };
@@ -797,20 +843,42 @@ export function writeJudgeCheck(dir: string) {
   return check;
 }
 
+/** True when any counted judge has fewer than JUDGE_CHECK_MIN_LABELS labels on either primary metric. */
+export const labelsShort = (c: ReturnType<typeof judgeCheck>) => Object.values(c.judges).some((j: any) => j.correct.n_labelled < JUDGE_CHECK_MIN_LABELS || j.correct_grounded.n_labelled < JUDGE_CHECK_MIN_LABELS);
+
+/**
+ * The judge check with its label floor (R78): paraphrase answers on JUDGE_CHECK_TASKS frozen tasks, then, while any
+ * counted judge has fewer than JUDGE_CHECK_MIN_LABELS labels on either primary metric, JUDGE_CHECK_STEP more at a time
+ * up to JUDGE_CHECK_MAX_TASKS, in the same run directory and ledger run. Only the label count extends it; the pass rule
+ * is applied once, to the final set, and judge-check.json lists every step.
+ */
+export async function runJudgeCheck(o: RunOptions, say: (line: string) => void): Promise<{ result: RunResult; check: ReturnType<typeof writeJudgeCheck> | null }> {
+  let n = Math.max(o.limit ?? JUDGE_CHECK_TASKS, existsSync(paths(o.out).run) ? readRun(o.out).kept_ids.length : 0);
+  for (let first = true; ; first = false) {
+    const r = await runTaskSet({ ...o, forms: ['paraphrase'], judgeCheck: true, limit: n, resume: o.resume || !first, continuing: o.continuing || !first }, say);
+    if (r.result !== 'complete') return { result: r.result, check: null };
+    const c = writeJudgeCheck(o.out);
+    if (!labelsShort(c) || n >= JUDGE_CHECK_MAX_TASKS || c.n_tasks_checked < n) return { result: r.result, check: c };
+    n = Math.min(n + JUDGE_CHECK_STEP, JUDGE_CHECK_MAX_TASKS);
+    say('judge check: a judge has fewer than ' + JUDGE_CHECK_MIN_LABELS + ' labels on a primary metric; adding frozen tasks up to ' + n);
+  }
+}
+
 /** The judge check as terminal lines: per counted judge and metric, labels, kappas, catches and false fails. */
 function sayJudgeCheck(c: ReturnType<typeof writeJudgeCheck>, say: (line: string) => void): void {
   for (const [judge, j] of Object.entries(c.judges) as Array<[string, any]>) for (const metric of ['correct', 'correct_grounded'] as const) {
     const s = j[metric];
     say('judge check ' + judge + ' on ' + j.answer_models.join(' and ') + ', ' + metric + ': ' + (s.passed ? 'pass' : 'FAIL') + '; ' + s.n_labelled + ' labels of ' + s.n_rows + ' rows (' + s.unusable + ' unusable), labellers kappa ' + (s.labeller_kappa ?? 'n/a') + ', judge kappa ' + (s.kappa ?? 'n/a') + ', caught ' + s.caught + ' of ' + s.n_bad + ' bad, failed ' + s.false_fails + ' of ' + s.n_good + ' good');
   }
-  say('judge check ' + (c.passed ? 'passed' : 'NOT PASSED: send judge-check.json to GBEV-3 before any counted call') + '; model calls $' + c.cost.model_calls_usd.toFixed(4) + ' (labels $' + c.cost.by_role_usd.label.toFixed(4) + ')');
+  for (const [judge, t] of Object.entries(c.truncation)) say('judge check ' + judge + ': ' + t.truncated + ' of ' + t.rows + ' calls truncated at the output cap');
+  say('judge check over ' + c.steps.map(s => s.n_tasks).join(', then ') + ' tasks ' + (c.passed ? 'passed' : 'NOT PASSED: send judge-check.json to GBEV-3 before any counted call') + '; model calls $' + c.cost.model_calls_usd.toFixed(4) + ' (labels $' + c.cost.by_role_usd.label.toFixed(4) + ')');
 }
 
 // ─── estimate ──────────────────────────────────────────────────────────────────────────────────────────────────────
 
 export interface Estimate {
   per_task_form_usd: number; judge_per_task_form_usd: Record<string, number>; second_judge_per_task_usd: number; paraphrase_usd: number; total_usd: number; cap_usd: number;
-  judge_check_tasks: number; judge_check_labels_per_task_usd: number | null; judge_check_usd: number | null; judge_check_cap_usd: number;
+  judge_check_tasks: number; judge_check_labels_per_task_usd: number | null; judge_check_usd: number | null; judge_check_max_usd: number | null; judge_check_cap_usd: number;
   page_factor: Record<string, number>; passed: boolean;
 }
 
@@ -876,7 +944,8 @@ export function estimateCost(smoke: RunRecord[], smokePageChars: number, pageCha
   return {
     per_task_form_usd: r2(perTaskForm), judge_per_task_form_usd: Object.fromEntries(Object.entries(byJudge).map(([j, x]) => [j, r2(x)])), second_judge_per_task_usd: r2(secondJudge),
     paraphrase_usd: r2(paraphrase), total_usd: r2(total), cap_usd: capUsd,
-    judge_check_tasks: checkTasks, judge_check_labels_per_task_usd: labels === null ? null : r2(labels), judge_check_usd: judgeCheckUsd === null ? null : r2(judgeCheckUsd), judge_check_cap_usd: JUDGE_CHECK_CAP_USD,
+    judge_check_tasks: checkTasks, judge_check_labels_per_task_usd: labels === null ? null : r2(labels), judge_check_usd: judgeCheckUsd === null ? null : r2(judgeCheckUsd),
+    judge_check_max_usd: labels === null ? null : r2(Math.min(JUDGE_CHECK_MAX_TASKS, n) * (perTaskForm + labels)), judge_check_cap_usd: JUDGE_CHECK_CAP_USD,
     page_factor: { tool_result: r2(f.tool), paste: r2(f.paste), judge: r2(f.judge) },
     passed: paraphrase <= COST_GATE_SHARE * capUsd && total <= capUsd && (judgeCheckUsd === null || judgeCheckUsd <= JUDGE_CHECK_CAP_USD),
   };
@@ -979,7 +1048,7 @@ async function main(argv: string[]): Promise<number> {
         const e = estimateCost(loadRecords(paths(smokeDir).records).records, smokeRun.gold_page_chars_mean, await goldPageChars(brain.reader, kept), kept.length, FORMS.length, COUNTED_CAP_USD, MODELS, ARMS, loadRecords(paths(checkDir).records).records);
         if (out) writeJson(out, e);
         say('estimate: $' + e.per_task_form_usd.toFixed(2) + ' per task form, of which judges ' + Object.entries(e.judge_per_task_form_usd).map(([j, x]) => j + ' $' + x.toFixed(2)).join(', ') + ' (+$' + e.second_judge_per_task_usd.toFixed(2) + ' second judge per paraphrase task), page factors ' + JSON.stringify(e.page_factor) + '; projected paraphrase pass $' + e.paraphrase_usd.toFixed(2) + ', total $' + e.total_usd.toFixed(2) + ' against the $' + e.cap_usd + ' cap');
-        say('judge check: ' + e.judge_check_tasks + ' tasks at $' + (e.judge_check_labels_per_task_usd ?? 0).toFixed(2) + ' of labels per task, projected $' + (e.judge_check_usd ?? 0).toFixed(2) + ' against its $' + e.judge_check_cap_usd + ' cap');
+        say('judge check: ' + e.judge_check_tasks + ' tasks at $' + (e.judge_check_labels_per_task_usd ?? 0).toFixed(2) + ' of labels per task, projected $' + (e.judge_check_usd ?? 0).toFixed(2) + ' ($' + (e.judge_check_max_usd ?? 0).toFixed(2) + ' if the label floor adds tasks up to ' + JUDGE_CHECK_MAX_TASKS + ') against its $' + e.judge_check_cap_usd + ' cap');
         if (!e.passed) throw new LiveRecallAbort('LR_COST_GATE', 'projected paraphrase pass $' + e.paraphrase_usd.toFixed(2) + ' (gate $' + (COST_GATE_SHARE * e.cap_usd).toFixed(2) + '), total $' + e.total_usd.toFixed(2) + ' (cap $' + e.cap_usd + '), judge check $' + (e.judge_check_usd ?? 0).toFixed(2) + ' (cap $' + e.judge_check_cap_usd + ')');
         say('cost gate passed');
         return 0;
@@ -991,6 +1060,7 @@ async function main(argv: string[]): Promise<number> {
   if (command === 'judge' || command === 'score' || command === 'audit') {
     const dir = argv[1] && !argv[1].startsWith('--') ? resolve(argv[1]) : null;
     if (!dir || !existsSync(paths(dir).run)) { console.error('usage: tasks.ts ' + command + ' <run dir>'); return 2; }
+    if (command !== 'judge' && readRun(dir).identity.labellers) { console.error(dir + ' is a judge-check run: it writes judge-check.json through `tasks.ts judge`, never a scorecard or an audit'); return 2; }
     return withLog(dir, async say => {
       if (command === 'audit') {
         const n = drawAudit(dir, Number(flag(argv, '--n') ?? AUDIT_ROWS));
@@ -1002,9 +1072,10 @@ async function main(argv: string[]): Promise<number> {
         const paid = openPaid(['--budget-ledger', run.budget.ledger_path, ...argv], run.budget.runner, budgetOptionsFrom(argv).budgetUsd ?? run.budget.cap_usd);
         try { await judgeRunDir(dir, paid, say, flag(argv, '--window-note') ?? null); } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); }
         if (run.identity.labellers) {
-          sayJudgeCheck(writeJudgeCheck(dir), say);
+          const c = writeJudgeCheck(dir);
+          sayJudgeCheck(c, say);
           say('send only ' + paths(dir).judgeCheck + '; everything else stays on this box');
-          return existsSync(paths(dir).capStop) ? 6 : 0;
+          return c.stop ? 6 : c.passed ? 0 : 7;
         }
       }
       const s = scoreRunDir(dir, { auditGrades: flag(argv, '--audit-grades') });
@@ -1035,18 +1106,19 @@ async function main(argv: string[]): Promise<number> {
     const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
     const paid = openPaid(prior ? ['--budget-ledger', prior.ledger_path, ...argv] : argv, ledgerRunner(out, fixture, checking), budgetUsd);
     try {
-      const r = await runTaskSet({
+      const opts: RunOptions = {
         out, gut, fixture, tasksPath, freezePath: flag(argv, '--freeze') ?? null, databaseUrlEnv, forms, arms, models,
         limit: flag(argv, '--limit') ? Number(flag(argv, '--limit')) : checking ? JUDGE_CHECK_TASKS : null, concurrency: Number(flag(argv, '--concurrency') ?? TASK_CONCURRENCY),
         resume: argv.includes('--resume'), windowNote: flag(argv, '--window-note') ?? null, paid,
-        judgeCheck: checking, judgeCheckPath: flag(argv, '--judge-check') ?? null, judgeCheckWaiver: flag(argv, '--judge-check-waiver') ?? null,
-      }, say);
+        judgeCheckPath: flag(argv, '--judge-check') ?? null, judgeCheckWaiver: flag(argv, '--judge-check-waiver') ?? null,
+      };
       if (checking) {
-        const c = writeJudgeCheck(out);
-        sayJudgeCheck(c, say);
+        const { result, check } = await runJudgeCheck(opts, say);
+        if (check) sayJudgeCheck(check, say);
         say('send only ' + paths(out).judgeCheck + '; records, run.json and the gbrain log stay on this box');
-        return r.result === 'cap_stop' ? 6 : r.result !== 'complete' ? 1 : c.passed ? 0 : 7;
+        return result === 'cap_stop' ? 6 : result !== 'complete' || !check ? 1 : check.passed ? 0 : 7;
       }
+      const r = await runTaskSet(opts, say);
       sayScorecard(r.scorecard, say);
       say('scorecard (' + r.result + '; send these two files): ' + r.scorecard + ' and ' + r.markdown);
       say('records, run.json and the gbrain log stay on this box: ' + out);

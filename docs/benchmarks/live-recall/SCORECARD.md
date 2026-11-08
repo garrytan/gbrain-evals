@@ -169,12 +169,14 @@ Top level:
 - `comparisons`: the four primaries (`primary` `P1` or `P2`) and the descriptive set. Each has its id, form, model, arms
   `a` and `b`, metric, `untested`, `n_pairs`, `mean_a`, `mean_b`, `delta` (b minus a), `ci95` (cluster bootstrap),
   `worse_tasks` (tasks where b scored below a, both forms summed when pooled), `reading` (`no_measurable_difference`
-  when the interval includes zero, else `b_higher` or `b_lower`), `mcnemar`
+  when the interval includes zero, else `b_higher` or `b_lower`; it reads the unadjusted interval, while a primary's
+  verdict uses `p_holm`), `mcnemar`
   (wins, losses, discordant pairs, exact two-sided p; per form only), `p_two_sided`, `p_holm` (primaries only, Holm over
   the four) and `mde` (the observed minimum detectable difference).
 - `judge_agreement`: `second_judge_correct` (`n`, `agree`, `kappa` between the counted judge and claude-opus-5-5 on
   particle-1's paraphrase rows of B, C and D) and `audit` (Wintermute's `n` and `agree`, or null).
-- `judges`: each judge model's `rows` and the `versions` its provider reported serving.
+- `judges`: each judge model's `rows`, how many of them were `truncated` at the output-token cap (each a judge error),
+  and the `versions` its provider reported serving.
 - `judge_check`: the judge check the counted run started from (`judge_check_sha256`, `passed`, GBEV-3's `waiver` note
   or null, and its `judges` block as below), or null for the fixture and for a judge-check run.
 - `custody`: read-only verified at the start and the end, `guard_refusals` by verb, `ai_refusals` by call kind and
@@ -190,18 +192,23 @@ and the judge (versions and the judge check), cost and custody lines.
 `judge-check.json`, the R78 check in [PHASE2-PREREGISTRATION.md](PHASE2-PREREGISTRATION.md#judge-check-before-the-counted-run-r78),
 checked by the same structure check and needle scan as the scorecard:
 
-- `schema`, `passed` (every counted judge passed both metrics), `thresholds` (`min_labels` 40, `kappa` 0.6),
-  `n_answers` (answered episodes), `n_tasks_checked` and `tasks_sha256` (the task file's sha256, which the counted run
-  must match).
+- `schema`, `passed` (every counted judge passed both metrics and no judge model's truncation rate is above 1%),
+  `thresholds` (`min_labels` 40, `kappa` 0.6, `truncation` 0.01), `n_answers` (answered episodes), `n_tasks_checked`
+  (at least 20 for a counted run to use it), `tasks_sha256` (the task file's sha256, which the counted run must match)
+  and `stop` (`LR_CAP_STOP` while a cap stop is outstanding, which a counted run refuses, else null).
+- `steps`: the label floor's steps in order, each with `n_tasks` and `labels`, counted judge to its label counts on
+  `correct` and `correct_grounded` over that step's tasks. One step when the first 20 tasks gave every judge 40 labels.
+- `truncation`: each judge model's `rows` (its latest judge and label rows), `truncated` and `rate`.
 - `judges`: counted judge to `answer_models` (the models whose rows it judges), `correct` and `correct_grounded` (B, C and
   D only), and `by_model` with the same two blocks per answering model. Each block has `n_rows`, `unusable` (a counted
   verdict or a label missing or a judge error), `labeller_agree` and `labeller_kappa` (the two labellers over every
   usable row), `n_labelled` (rows both labellers grade alike), `n_bad`, `n_good`, `caught` and `catch_rate` (bad
   answers the counted judge failed), `false_fails` and `false_fail_rate` (good answers it failed), `kappa` (counted
   verdict against the labels) and `passed`.
-- `versions`: each judge and labeller's rows and served model versions.
+- `versions`: each judge and labeller's rows, truncated rows and served model versions.
 - `run`: start and finish times, runner commit and dirty flag, `harness_digest` (the counted run must match it),
-  gbrain's loaded version and commit, schema version, `control`, effort, `labellers` and `label_effort`.
+  gbrain's loaded version and commit, schema version, `control`, effort, `labellers`, `label_effort`, and the `models`
+  and `arms` it covered (the counted run's must be among them).
 - `cost`: `model_calls_usd`, `by_role_usd` (answer, summariser, judge, label) and `ledger_usd`.
 
 ## A release gate (proposal, not wired)
