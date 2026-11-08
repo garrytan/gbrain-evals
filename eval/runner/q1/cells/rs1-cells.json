@@ -305,7 +305,7 @@
       "label": "RS1 counted cells at the cap of 33 kept conversations (gbrain arm P at the stable tag, the two servers, the floor)",
       "plan_usd": 589.01,
       "estimate_usd": 589.01,
-      "cap_usd": 883.52
+      "cap_usd": 760.79
     }
   ],
   "cells": [
@@ -924,10 +924,11 @@
   ],
   "total_usd": 589.01,
   "plan_total_usd": 2033,
-  "cap_usd": 883.52,
+  "cap_usd": 760.79,
   "stage1_cap_usd": 60,
   "stage1_estimate_usd": 34.71,
-  "dry_run_cap_usd": 60,
+  "dry_run_cap_usd": 55.05,
+  "stage1_reread_cap_usd": 4.95,
   "campaign_id": "q1-scoreboard-rs1-narrow",
   "frontier_judges": {
     "anthropic:claude-opus-5-5": "openai:gpt-6.1-sol",

@@ -278,7 +278,8 @@ F6 reports each component row's fill rate (mean delivered cl100k tokens over the
 the lower half of the memory-proof waves' 8,000 plus or minus 10% gate; the packer's cap makes the upper half hold by
 construction. A row that fails the gate makes every comparison it enters descriptive: an estimate and an interval, no
 verdict, not a pass. On F6's S2b the fill rates were 0.938 for gbrain arm P, 0.983 for the memory-bank server and 0.992
-for the extract-first server.
+for the extract-first server. A failed retrieval delivers no context, so its row (`fill_rate` null) counts as 0 in the
+mean.
 
 ### Receipts
 

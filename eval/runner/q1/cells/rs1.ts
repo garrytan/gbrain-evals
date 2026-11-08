@@ -92,6 +92,8 @@ const RS1_BLOCKS: Record<RS1BlockId, string> = {
 export interface RS1Manifest extends Manifest {
   rs1_assumptions: typeof RS1_ASSUMPTIONS; f6_assumptions: typeof F6_ASSUMPTIONS; campaign_id: string;
   stage1_cap_usd: number; stage1_estimate_usd: number; dry_run_cap_usd: number;
+  /** The most stage 1's particle-1 re-reads may hold on their ledger: their estimate, kept out of the dry-run campaign's cap so both fit $60. */
+  stage1_reread_cap_usd: number;
   frontier_judges: Record<string, string>; reread_plans: RereadPlan[];
   /** Launch units by wave: A runs the first 20 kept conversations (units 0 to 3), B the rest up to N_final. */
   waves: { A: string[]; B: string[] };
@@ -102,10 +104,14 @@ export function buildRS1Manifest(): RS1Manifest {
   const smoke = generateRS1Stage1Cells();
   const rereads = [...rereadPlans(cells), ...rereadPlans(smoke)];
   const round = (x: number) => Math.round(x * 100) / 100;
-  const blockUsd = (id: RS1BlockId) => round([...cells, ...smoke].filter(c => c.block === id).reduce((s, c) => s + c.estimate.usd, 0) + rereads.filter(r => r.block === id).reduce((s, r) => s + r.estimate.usd, 0));
-  // The counted block stops at 1.5 times its estimate, or at its units' leases where they hold more; stage 1 at its own cap.
+  const cellsUsd = (id: RS1BlockId) => [...cells, ...smoke].filter(c => c.block === id).reduce((s, c) => s + c.estimate.usd, 0);
+  const rereadsUsd = (id: RS1BlockId) => rereads.filter(r => r.block === id).reduce((s, r) => s + r.estimate.usd, 0);
+  const blockUsd = (id: RS1BlockId) => round(cellsUsd(id) + rereadsUsd(id));
+  // The counted block stops at 1.5 times its cells' estimate (its re-reads spend from their own ledgers, not the block), or at
+  // its units' leases where they hold more; stage 1 at its own cap, shared by the dry-run campaign and the stage 1 re-reads.
   const blocks = (Object.keys(RS1_BLOCKS) as RS1BlockId[]).map(id => ({ id: id as BlockId, label: RS1_BLOCKS[id], plan_usd: blockUsd(id), estimate_usd: blockUsd(id),
-    cap_usd: id === 'RS1-S1' ? RS1_STAGE1_CAP_USD : round(Math.max(blockUsd(id) * 1.5, cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0))) }));
+    cap_usd: id === 'RS1-S1' ? RS1_STAGE1_CAP_USD : round(Math.max(cellsUsd(id) * 1.5, cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0))) }));
+  const stage1Rereads = round(rereadsUsd('RS1-S1'));
   const units = (from: number, to: number) => cells.flatMap(c => Array.from({ length: c.shards }, (_, i) => i).filter(i => i >= from && i < to).map(i => `${c.id}.c${i}`));
   const waveA = RS1_WAVE_A / RS1_KEPT_UNITS;
   const models = [...RS1_READERS, PARTICLE, ...[...RS1_READERS, PARTICLE].map(frontierJudgeOf), ASSUMPTIONS.judge.beam.model, F6_ASSUMPTIONS.extraction.model].map(m => [m, priceOf(m)] as const);
@@ -115,7 +121,8 @@ export function buildRS1Manifest(): RS1Manifest {
     prices: Object.fromEntries([...new Map(models)].sort(([a], [b]) => (a < b ? -1 : 1))), assumptions: ASSUMPTIONS, f6_assumptions: F6_ASSUMPTIONS, rs1_assumptions: RS1_ASSUMPTIONS,
     sets: [ALL_SETS.RS1, ALL_SETS['RS1-dev2']], blocks, cells, smoke_cells: smoke,
     total_usd: counted.estimate_usd, plan_total_usd: RS1_PLAN_USD, cap_usd: counted.cap_usd,
-    stage1_cap_usd: RS1_STAGE1_CAP_USD, stage1_estimate_usd: blocks.find(b => b.id === 'RS1-S1')!.estimate_usd, dry_run_cap_usd: RS1_STAGE1_CAP_USD, campaign_id: RS1_CAMPAIGN_ID,
+    stage1_cap_usd: RS1_STAGE1_CAP_USD, stage1_estimate_usd: blocks.find(b => b.id === 'RS1-S1')!.estimate_usd, dry_run_cap_usd: round(RS1_STAGE1_CAP_USD - stage1Rereads),
+    stage1_reread_cap_usd: stage1Rereads, campaign_id: RS1_CAMPAIGN_ID,
     frontier_judges: Object.fromEntries([...RS1_READERS, PARTICLE].map(r => [r, frontierJudgeOf(r)])), reread_plans: rereads,
     waves: { A: units(0, waveA), B: units(waveA, Infinity) },
   };

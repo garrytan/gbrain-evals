@@ -52,6 +52,7 @@ import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { answerAppender, custodyGate, devOnly, findCell, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
   selectCellQuestions, type CellManifestId, type MeterLine, type StagedRetrieval } from './cell.ts';
 import { frontierJudgesFor, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 
 export const REREAD_VERIFY_SCHEMA = 'gbrain-evals/q1-reread-verify/v1';
@@ -377,6 +378,9 @@ if (import.meta.main) {
   const manifest = one('--manifest') as CellManifestId | undefined;
   try {
     const def = findCell(cellArg, undefined, manifest);
+    const stage1 = manifest === 'rs1' && def.block === 'RS1-S1' ? loadRS1Manifest().stage1_reread_cap_usd : null;
+    if (stage1 !== null && ledgerCap > stage1 + 1e-9) throw refuse({ code: 'USAGE', message: `a $${ledgerCap.toFixed(2)} --ledger-cap-usd for stage 1 re-read ${def.id} is above the $${stage1.toFixed(2)} stage 1 keeps for its re-reads`,
+      why: 'stage 1\'s $60 cap covers the dry-run campaign and its particle-1 re-reads together: the campaign is capped at $60 less the re-reads\' estimate, and the re-reads share one ledger capped at that estimate', fix: { next: 'run', user_message: `rerun with --ledger-cap-usd ${stage1.toFixed(2)} or less, on the one ledger every stage 1 re-read shares` } });
     const arm = rereadArm(def, armArg);
     const out = resolve(outArg);
     const prepared = prepareReread(def, arm, { sources, reader, out, manifest, keyless: !!keyless });

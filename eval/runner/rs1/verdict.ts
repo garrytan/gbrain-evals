@@ -16,21 +16,25 @@
  *             run with --limit, a run config that differs from the committed rs1-cells.json definition, and an
  *             instrument other than the cell's canonical one are refused. Every system row and the floor needs
  *             particle-1's re-read (reread-cell.ts, under rereadCellId) covering each of its receipts' run configs; a
- *             missing re-read refuses the run, and so does a conversation two re-reads of one arm both hold.
+ *             missing re-read refuses the run, and so do a keyless or invalid re-read and a conversation two re-reads
+ *             of one arm both hold.
  *   Values    readers claude-opus-5-5 and gpt-6.1-sol from the cell and particle-1 from its re-read, joined by question id,
  *             replicate 0, each answer scored only by its own receipt's judgments. A product failure scores 0 under
  *             both views; a harness failure, a missing row, a missing answer or a missing judgment is a drop, by reason
  *             and side; a scheduled question with no row in any system row refuses the verdict. The bridge view is the
  *             canonical instrument's judgment, the frontier view the reader's frontier judge (<instrument>@<judge>).
- *   Gate      a system row passes the delivered-context gate when its mean fill rate (rows.ndjson fill_rate) is at
- *             least 0.90; a row that fails makes every comparison it enters descriptive (no verdict).
+ *   Gate      a system row passes the delivered-context gate when its mean fill rate (rows.ndjson fill_rate, a failed
+ *             retrieval's null counted as 0) is at least 0.90; a row that fails makes every comparison it enters
+ *             descriptive (no verdict).
  *   Reported  iut.ts's decision, the worst-case sensitivity and a flag when it disagrees, the restricted wild cluster
  *             bootstrap-t on the question-weighted estimate (Webb weights, 9,999 draws, one-sided 95% lower bound),
  *             per-reader and per-ability means, the floor, each row's fill rate, drops by reason and side, and the first
- *             table (cost per correct answer, claude-opus-5-5 and particle-1 first, then gpt-6.1-sol).
- *   Pilot     wave A only (the first 20 kept conversations): the four SDs of the per-conversation differences and their
- *             4 x 4 correlation, no means; then power.ts's N_required and N_final = min(33, max(20, N_required)). Above
- *             33 it exits 3 with RS1_PILOT_OVER_CAP, the margin reachable at 33 and the price of N_required.
+ *             table (cost per correct answer, claude-opus-5-5 and particle-1 first, then gpt-6.1-sol; n/a where a unit's
+ *             meters or a re-read's reader spend are missing).
+ *   Pilot     wave A only (the first 20 kept conversations; a shorter kept list refuses): the four SDs of the
+ *             per-conversation differences and their 4 x 4 correlation, no means; then power.ts's N_required and
+ *             N_final = min(33, max(20, N_required)). Above 33 it exits 3 with RS1_PILOT_OVER_CAP, the margin reachable
+ *             at 33 and the price of N_required.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -219,7 +223,10 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
     if (manifest.status !== 'filled') refuse(`the RS1 manifest ${o.manifestPath} is unfilled; verdict.ts reads receipts only against the filled manifest`);
     manifestSha = sha256(bytes);
     const { kept, n_final } = rs1Kept(manifest);
-    if (o.waveA) wave = new Set(kept.slice(0, RS1_WAVE_A));
+    if (o.waveA) {
+      if (kept.length < RS1_WAVE_A) refuse(`the pilot needs the first ${RS1_WAVE_A} kept conversations (wave A), and the kept list holds ${kept.length}`);
+      wave = new Set(kept.slice(0, RS1_WAVE_A));
+    }
     else if (n_final === null || kept.length < n_final) refuse(`the filled manifest's kept list is not final (n_final ${n_final ?? 'unset'}, ${kept.length} kept); a verdict reads exactly the first N_final kept conversations`);
     else finalSet = kept.slice(0, n_final);
   } else if (o.waveA) refuse('the pilot reads set RS1 only');
@@ -252,6 +259,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
     const fills: number[] = [];
     let shared = 0, sharedKnown = true, scheduledInRow = 0;
     const readerUsd = new Map<string, number>();
+    const unmetered = new Set<string>();
     let questionsInRow = 0;
     for (const u of units) {
       if (u.receipt.run_status === 'invalid') refuse(`${u.dir} is invalid: ${(u.receipt.invalid_reasons ?? []).join('; ')}`);
@@ -265,7 +273,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
       const rows = allRows.filter(r => !wave || wave.has(String(r.conversation)));
       const convs = new Set([...allRows.map(r => String(r.conversation)), ...((u.receipt.realizations ?? []) as Array<{ conversation: string }>).map(r => String(r.conversation))]);
       for (const conv of [...convs].filter(c => !wave || wave.has(c))) { if (held.has(conv)) refuse(`${armCell}: conversation ${conv} is in both ${held.get(conv)} and ${u.dir}`); held.set(conv, u.dir); }
-      for (const r of rows) { ids.add(String(r.id)); if (role !== 'floor') planned.set(String(r.id), String(r.conversation)); if (typeof r.fill_rate === 'number') fills.push(r.fill_rate); }
+      for (const r of rows) { ids.add(String(r.id)); if (role !== 'floor') planned.set(String(r.id), String(r.conversation)); fills.push(typeof r.fill_rate === 'number' ? r.fill_rate : 0); }
       questionsInRow += rows.length;
       scheduledInRow += Number(u.receipt.selection?.questions);
       const ans = readRecords(join(u.dir, 'answers.ndjson'), 'answer').filter(a => !wave || wave.has(a.conversation));
@@ -273,10 +281,12 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
       const spend = u.receipt.spend?.usd as Record<string, number> | undefined;
       if (spend) shared += (spend.ingest ?? 0) + (spend.retrieval ?? 0) + (spend.background_tail ?? 0); else sharedKnown = false;
       const meters = join(u.root, 'runs', String(u.receipt.run_cell), 'meters.ndjson');
+      const metered = new Set<string>();
       if (existsSync(meters)) {
         const byKey = new Map(ans.map(a => [`read:${a.answer_id.slice(0, 16)}`, a.reader]));
-        for (const m of readRecordsLoose(meters)) { const reader = m.phase === 'reader' ? byKey.get(String(m.key)) : undefined; if (reader) readerUsd.set(reader, (readerUsd.get(reader) ?? 0) + Number(m.usd)); }
+        for (const m of readRecordsLoose(meters)) { const reader = m.phase === 'reader' ? byKey.get(String(m.key)) : undefined; if (reader) { readerUsd.set(reader, (readerUsd.get(reader) ?? 0) + Number(m.usd)); metered.add(reader); } }
       }
+      for (const a of ans) if (!metered.has(a.reader)) unmetered.add(a.reader);
     }
     if (finalSet) {
       const absent = finalSet.filter(c => !held.has(c)), extra = [...held.keys()].filter(c => !finalSet!.includes(c)).sort();
@@ -294,19 +304,21 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
     if (!rereads.length || uncovered.length) refuse(`missing particle-1 re-read: ${armCell} has ${uncovered.length || configs.size} receipt(s) no ${rereadId} covers`);
     const reheld = new Map<string, string>();
     for (const r of rereads) {
+      if (r.receipt.keyless !== false) refuse(`${r.dir} is not a paid re-read (keyless ${r.receipt.keyless ?? 'unrecorded'}); a verdict reads only re-reads whose receipt says keyless: false`);
+      if (r.receipt.run_status === 'invalid') refuse(`${r.dir} is invalid: ${(r.receipt.invalid_reasons ?? []).join('; ')}`);
       if (wrongInstrument(r)) refuse(`${r.dir} was judged under instrument ${r.receipt.instrument?.id}, not ${instrument.id} (${instrument.sha256.slice(0, 12)})`);
       const ans = readRecords(join(r.dir, 'answers.ndjson'), 'answer');
       for (const conv of new Set(ans.map(a => a.conversation))) { if (reheld.has(conv)) refuse(`${rereadId}: conversation ${conv} is re-read in both ${reheld.get(conv)} and ${r.dir}`); reheld.set(conv, r.dir); }
       take(r.dir, ans.filter(a => !wave || wave.has(a.conversation)));
       const usd = r.receipt.spend?.reader_usd;
-      if (typeof usd === 'number') readerUsd.set(PARTICLE, (readerUsd.get(PARTICLE) ?? 0) + usd);
+      if (typeof usd === 'number') readerUsd.set(PARTICLE, (readerUsd.get(PARTICLE) ?? 0) + usd); else unmetered.add(PARTICLE);
     }
     values.set(role, byQuestion);
     rowIds.set(role, ids);
     if (role !== 'floor') fill[role] = meanOf(fills);
     for (const reader of READERS) {
       const n = answered.get(reader) ?? 0;
-      costs.push({ row: role, reader, usd_per_question: !sharedKnown || !readerUsd.has(reader) || !n || !questionsInRow ? null : shared / questionsInRow + readerUsd.get(reader)! / n });
+      costs.push({ row: role, reader, usd_per_question: !sharedKnown || unmetered.has(reader) || !readerUsd.has(reader) || !n || !questionsInRow ? null : shared / questionsInRow + readerUsd.get(reader)! / n });
     }
   }
   for (const [row, n] of scheduled) if (n > planned.size) refuse(`${row} scheduled ${n} questions and only ${planned.size} have a row in any system row, so ${n - planned.size} would leave the planned set unseen; resume the launch units that are missing rows`);

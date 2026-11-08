@@ -36,6 +36,12 @@ interface Opts {
   noRow?: (system: string, c: number, q: number) => boolean;
   /** Edit a unit's run config or receipt before they are written. */
   patch?: (system: string, unit: number, config: Record<string, any>, receipt: Record<string, any>) => void;
+  /** Edit a unit's particle-1 re-read receipt before it is written. */
+  rereadPatch?: (system: string, unit: number, receipt: Record<string, any>) => void;
+  /** Write the unit's meters.ndjson (a reader meter per live answer). */
+  meters?: (system: string, unit: number) => boolean;
+  /** A question whose retrieval failed: its row records fill_rate null. */
+  failedRetrieval?: (system: string, c: number, q: number) => boolean;
 }
 
 /** A filled manifest pinning the kept conversations, and receipts for the four RS1 rows plus their particle-1 re-reads. */
@@ -65,7 +71,7 @@ function build(name: string, o: Opts = {}) {
       const config = sha(`${armCell}|${u}`);
       const scheduledQids = convs.flatMap(c => Array.from({ length: nQ }, (_, q) => [c, q] as const));
       const qids = scheduledQids.filter(([c, q]) => !o.noRow?.(system, c, q));
-      const rows = qids.map(([c, q]) => ({ id: `${conv(c)}:ability${q % 2}:${q}`, conversation: conv(c), cell_id: armCell, realization_id: 'r', fill_rate: o.fill?.[system] ?? 0.95, delivered_tokens: { cl100k_base: 7600 }, packing_loss: null, provenance_status: 'exact', fanout: { mean: 1, max: 1 } }));
+      const rows = qids.map(([c, q]) => ({ id: `${conv(c)}:ability${q % 2}:${q}`, conversation: conv(c), cell_id: armCell, realization_id: 'r', fill_rate: o.failedRetrieval?.(system, c, q) ? null : o.fill?.[system] ?? 0.95, delivered_tokens: { cl100k_base: 7600 }, packing_loss: null, provenance_status: 'exact', fanout: { mean: 1, max: 1 } }));
       const answersFor = (cellId: string, readers: string[]) => readers.flatMap(reader => qids.map(([c, q]) => {
         const s = score(system, reader, c, q);
         const question_id = `${conv(c)}:ability${q % 2}:${q}`;
@@ -86,6 +92,10 @@ function build(name: string, o: Opts = {}) {
       o.patch?.(system, u, runConfig, receipt);
       writeFileSync(join(dir, 'run-config.json'), JSON.stringify(runConfig, null, 2) + '\n');
       writeFileSync(join(dir, 'receipt.json'), JSON.stringify(receipt));
+      if (o.meters?.(system, u)) {
+        mkdirSync(join(out, 'runs', def.id), { recursive: true });
+        writeFileSync(join(out, 'runs', def.id, 'meters.ndjson'), nd(live.map(x => ({ phase: 'reader', key: `read:${x.answer.answer_id.slice(0, 16)}`, usd: 0.01 }))));
+      }
       if (o.dropReread === system && u === 0) continue;
       const rid = rereadCellId(armCell, PARTICLE);
       const rdir = join(out, 'cells', rid);
@@ -93,7 +103,9 @@ function build(name: string, o: Opts = {}) {
       const reread = answersFor(rid, [PARTICLE]);
       writeFileSync(join(rdir, 'answers.ndjson'), nd(reread.map(x => x.answer)));
       writeFileSync(join(rdir, 'judgments.ndjson'), nd(judgmentsFor(reread)));
-      writeFileSync(join(rdir, 'receipt.json'), JSON.stringify({ schema: 'reread', cell_id: rid, source: { arm_cell_id: armCell, config_sha256s: [config] }, instrument: { id: INST.id, sha256: INST.sha256 }, spend: { reader_usd: 0.5 } }));
+      const rereadReceipt: Record<string, any> = { schema: 'reread', cell_id: rid, run_status: 'complete', keyless: false, source: { arm_cell_id: armCell, config_sha256s: [config] }, instrument: { id: INST.id, sha256: INST.sha256 }, spend: { reader_usd: 0.5 } };
+      o.rereadPatch?.(system, u, rereadReceipt);
+      writeFileSync(join(rdir, 'receipt.json'), JSON.stringify(rereadReceipt));
     }
   }
   return { root, dirs, manifestPath, manifestText };
@@ -164,6 +176,36 @@ describe('verdict.ts receipts', () => {
     expect(() => load(build('instrument', { patch: judged }))).toThrow(/judged under instrument beam-rs1 \(ffffffffffff\)/);
     const shards = (system: string, u: number, config: Record<string, any>) => { if (u === 0) config.cell.shards = 99; };
     expect(analyze(load(build('launch-control', { patch: shards }))).verdict).toBe('pass');
+  });
+
+  test('refuses a keyless or invalid particle-1 re-read', () => {
+    expect(() => load(build('reread-keyless', { rereadPatch: (s, u, r) => { if (s === 'gbrain-defaults' && u === 2) r.keyless = true; } }))).toThrow(/is not a paid re-read \(keyless true\)/);
+    expect(() => load(build('reread-unrecorded', { rereadPatch: (s, u, r) => { if (s === 'baseline-none' && u === 0) delete r.keyless; } }))).toThrow(/keyless unrecorded/);
+    expect(() => load(build('reread-invalid', { rereadPatch: (s, u, r) => { if (s === 'ext-memory-bank' && u === 1) { r.run_status = 'invalid'; r.invalid_reasons = ['contexts changed']; } } }))).toThrow(/is invalid: contexts changed/);
+  });
+
+  test('pilot mode refuses a kept list shorter than wave A', () => {
+    const short = build('pilot-short', { conversations: 15 });
+    expect(() => load(short, true)).toThrow(/needs the first 20 kept conversations \(wave A\), and the kept list holds 15/);
+  });
+
+  test('a failed retrieval counts as 0 delivered tokens in the delivered-context gate', () => {
+    const a = analyze(load(build('fill-failed', { failedRetrieval: (s, c, q) => s === 'gbrain-defaults' && c < 4 && q === 0 })));
+    expect(a.gate.find(g => g.row === 'gbrain')).toEqual({ row: 'gbrain', fill_rate: 0.855, pass: false });
+    expect(a.tests.every(t => !t.valid)).toBe(true);
+  });
+
+  test('a row whose units are not all metered reports n/a cost per question', () => {
+    const all = analyze(load(build('meters-all', { meters: () => true })));
+    expect(all.table.find(t => t.reader === OPUS && t.row === 'gbrain')!.usd_per_question).toBe(0.12);
+    const part = analyze(load(build('meters-part', { meters: (s, u) => !(s === 'gbrain-defaults' && u > 0) })));
+    const row = part.table.find(t => t.reader === OPUS && t.row === 'gbrain')!;
+    expect(row.usd_per_question).toBeNull();
+    expect(row.frontier.usd_per_correct).toBeNull();
+    expect(part.table.find(t => t.reader === OPUS && t.row === 'memory-bank')!.usd_per_question).toBe(0.12);
+    expect(markdown(part)).toContain('| anthropic:claude-opus-5-5 | gbrain | n/a |');
+    const reread = analyze(load(build('meters-reread', { meters: () => true, rereadPatch: (s, u, r) => { if (s === 'gbrain-defaults' && u === 0) delete r.spend; } })));
+    expect(reread.table.find(t => t.reader === PARTICLE && t.row === 'gbrain')!.usd_per_question).toBeNull();
   });
 
   test('a product failure scores 0 and stays; harness drops over 5% make the comparisons invalid', () => {

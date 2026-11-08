@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { keptUnit, requiredJudges } from '../../eval/runner/q1/cell.ts';
 import { definitionProblems, frontierJudgeOf, frontierJudgesFor, ingestRate, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
@@ -54,6 +55,32 @@ describe('rs1-cells.json', () => {
     expect(stage1OverCap(m)).toBeNull();
     expect(stage1OverCap({ stage1_estimate_usd: 60.01, stage1_cap_usd: 60 })?.code).toBe('RS1_STAGE1_OVER_CAP');
   });
+
+  test('the counted block caps at 1.5 times its cells\' own estimate; its re-reads spend from their own ledgers', () => {
+    const counted = m.blocks.find(b => b.id === 'RS1')!;
+    const cellsUsd = m.cells.reduce((s, c) => s + c.estimate.usd, 0);
+    const leases = m.cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0);
+    expect(counted.cap_usd).toBe(Math.round(Math.max(cellsUsd * 1.5, leases) * 100) / 100);
+    expect(counted.cap_usd).toBe(760.79);
+    expect(m.cap_usd).toBe(counted.cap_usd);
+    expect(counted.estimate_usd).toBe(Math.round((cellsUsd + m.reread_plans.filter(p => p.block === 'RS1').reduce((s, p) => s + p.estimate.usd, 0)) * 100) / 100);
+  });
+
+  test('stage 1\'s $60 covers the dry-run campaign and its re-reads together, and a larger stage 1 re-read ledger cap refuses', () => {
+    const rereads = Math.round(m.reread_plans.filter(p => p.block === 'RS1-S1').reduce((s, p) => s + p.estimate.usd, 0) * 100) / 100;
+    expect(m.stage1_reread_cap_usd).toBe(rereads);
+    expect(m.stage1_reread_cap_usd).toBe(4.95);
+    expect(m.dry_run_cap_usd).toBe(55.05);
+    expect(m.dry_run_cap_usd + m.stage1_reread_cap_usd).toBe(m.stage1_cap_usd);
+    expect(m.smoke_cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0)).toBeLessThanOrEqual(m.dry_run_cap_usd);
+    const out = mkdtempSync(join(tmpdir(), 'rs1-stage1-reread-'));
+    const run = (cap: string) => Bun.spawnSync(['bun', 'eval/runner/q1/reread-cell.ts', '--cell', 'rs1-dev2.gbrain-defaults.rs1-stable', '--arm', 'p', '--source', join(out, 'missing'), '--reader', PARTICLE,
+      '--out', join(out, `o${cap}`), '--budget-ledger', join(out, 'ledger'), '--run-id', `r${cap}`, '--lease-usd', '1', '--ledger-cap-usd', cap, '--manifest', 'rs1', '--keyless-upstream', 'http://127.0.0.1:9'], { cwd: ROOT }).stderr.toString();
+    try {
+      expect(run('5')).toContain('above the $4.95 stage 1 keeps for its re-reads');
+      expect(run('4.95')).not.toContain('stage 1 keeps for its re-reads');
+    } finally { rmSync(out, { recursive: true, force: true }); }
+  }, 60_000);
 });
 
 describe('judges', () => {
