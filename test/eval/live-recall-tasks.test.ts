@@ -16,7 +16,7 @@ import { isCapStop, openBudgetItem } from '../../eval/runner/refresh-barrier/led
 import { buildFixtureBrain, useFixtureTransports } from '../../eval/runner/live-recall/run.ts';
 import { ANSWER_TOOL, PROMPTS, SUMMARY_TOOL, citedSlugs, judgeEpisode, openReader, runEpisode, type AnswerRecord, type EpisodeContext, type Task } from '../../eval/runner/live-recall/task-arms.ts';
 import { JUDGE_SYSTEM, LABELLERS, VERDICT_TOOL, assertJudge, derive, judgeFor, parseVerdict, secondJudgeFor } from '../../eval/runner/live-recall/task-judge.ts';
-import { JUDGE_CHECK_SCHEMA, TRUNCATION_CAP, buildTaskScorecard, checkOutbound, judgeCheck, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
+import { JUDGE_CHECK_SCHEMA, TRUNCATION_CAP, buildTaskScorecard, renderTaskMarkdown, checkOutbound, judgeCheck, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
 import {
   FIXTURE_TASKS, HARNESS_FILES, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, TRUNCATION_FLOOR, assertPrivate, checkTruncation, estimateCost, freezeSummary, goldCheck, harnessDigest, judgeRunDir, labelsShort, ledgerRunner,
   loadRecords, parseTasks, readJudgeCheck, runJudgeCheck, runTaskSet, scoreRunDir, spread, watchRefusals, writeFreeze, writeJudgeCheck, type Paid, type RunRecord,
@@ -1114,12 +1114,13 @@ describe('phase 2 judge check (R78)', () => {
 
   test('comparisons count the tasks that got worse and read an interval spanning zero as no measurable difference', () => {
     const tasks = Array.from({ length: 30 }, (_, i) => ({ id: 't' + i, type: 'topic', gold_found_by: 'unknown' })) as any;
-    const cards = (aRight: (i: number) => boolean, bRight: (i: number) => boolean) => buildTaskScorecard({
+    const scorecard = (aRight: (i: number) => boolean, bRight: (i: number) => boolean) => buildTaskScorecard({
       tasks, forms: ['paraphrase'], arms: ['A', 'B'], models: ['claude-opus-5-5'], identity: {}, stop: null, ledger_usd: null, audit: null,
       records: tasks.flatMap((t: any, i: number) => [answer(t.id, 'A', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'A', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', aRight(i)), answer(t.id, 'B', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'B', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', bRight(i))]),
       task_summary: { submitted: 30, kept_at_freeze: 30, dropped_unreachable: 0, gold_missing_at_run: 0, sha_prefix: '0'.repeat(12), n_frozen: 30 },
       custody: { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: {} },
-    }).comparisons;
+    });
+    const cards = (aRight: (i: number) => boolean, bRight: (i: number) => boolean) => scorecard(aRight, bRight).comparisons;
     const card = (aRight: (i: number) => boolean, bRight: (i: number) => boolean) => cards(aRight, bRight).find(c => c.id === 'p1_b_vs_a_opus')!;
     expect(card(i => i < 3, i => i >= 2)).toMatchObject({ worse_tasks: 2, reading: 'b_higher' });
     expect(card(i => i < 15, i => i >= 15)).toMatchObject({ worse_tasks: 15, reading: 'no_measurable_difference' });
@@ -1128,6 +1129,9 @@ describe('phase 2 judge check (R78)', () => {
     const primary = six.find(c => c.id === 'p1_b_vs_a_opus')!, descriptive = six.find(c => !c.primary && c.a === 'A' && c.b === 'B' && c.metric === 'correct' && c.form === 'paraphrase')!;
     expect([primary.ci95![0] > 0, primary.p_two_sided! < 0.05, primary.p_holm! >= 0.05, primary.reading]).toEqual([true, true, true, 'not_significant_after_correction']);
     expect([descriptive.ci95![0] > 0, descriptive.reading]).toEqual([true, 'b_higher']);
+    const md = renderTaskMarkdown(scorecard(i => i < 10, i => i < 16)).split('\n');
+    expect(md.find(l => l.startsWith('| p1_b_vs_a_opus '))).toContain('not significant after correcting for multiple comparisons');
+    expect(md.find(l => l.startsWith('| ' + descriptive.id + ' '))).toContain('(a primary: read it above, with Holm)');
   });
 
   test('a fixture judge check labels every answer with both labellers at effort high after its counted judge, with no second judge', async () => {
@@ -1199,7 +1203,7 @@ describe('phase 2 judge check (R78)', () => {
     expect(code(() => checkTruncation(calls('gpt-6-astra', 100, 1), 1))).toBe('no abort');
   });
 
-  test('judge-check.json reports each judge model\'s truncation rate, and more than 1% fails the check', () => {
+  test('judge-check.json reports each judge model\'s truncation rate, and more than 1% fails the check', async () => {
     const cut = (n: number) => { let k = 0; return both().map(r => (r.kind === 'label' && r.judge === 'gpt-6-astra' && k++ < n ? { ...r, status: 'judge_error', derived: null, truncated: true } : r)); };
     const one = judgeCheck(cut(1)), two = judgeCheck(cut(2));
     expect(one.truncation['gpt-6-astra']).toEqual({ rows: 180, truncated: 1, rate: 0.0056 });
@@ -1216,6 +1220,12 @@ describe('phase 2 judge check (R78)', () => {
       const store = new RecordStore(path);
       expect([store.calls.length, store.calls.filter(c => c.truncated).length]).toEqual([4, 1]);
       expect(() => checkTruncation(store.calls, 1)).toThrow();
+      writeFileSync(path, [...cut(2).slice(0, 8)].map(r => JSON.stringify(r)).join('\n') + '\n');
+      writeFileSync(join(dir, 'cap-stop.json'), '{}');
+      const paused = { out: dir, gut, fixture: false, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['A'] as any, models: ['claude-opus-5-5'], limit: null, concurrency: 1, resume: true, windowNote: 'gbev3-ext-1', paid: {} as Paid };
+      expect(await abortCode(() => runTaskSet(paused, () => {}))).toBe('LR_JUDGE_TRUNCATED');
+      expect(await abortCode(() => judgeRunDir(dir, {} as Paid, () => {}, 'gbev3-ext-1'))).toBe('LR_JUDGE_TRUNCATED');
+      expect(existsSync(join(dir, 'cap-stop.json'))).toBe(true);
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 

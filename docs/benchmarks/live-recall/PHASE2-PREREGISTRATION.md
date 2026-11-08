@@ -477,11 +477,11 @@ particle-1 on the paraphrase form with answer cost per correct answer.
 
 Each reports the paired difference with a cluster-bootstrap 95% interval, the number of tasks that got worse (the
 second arm below the first on that task, both forms summed when pooled) and the exact McNemar two-sided p, then Holm's
-adjusted p. An interval that includes zero reads "no measurable difference". The reading never contradicts the verdict:
-a primary, which sits in the Holm family of four, reads as a measured difference only when its interval excludes zero
-and its Holm-adjusted p is under 0.05; an interval that excludes zero with a Holm p of 0.05 or more reads "not
+adjusted p. An interval that includes zero reads "no measurable difference". A primary, which sits in the Holm family
+of four, reads as a measured difference only when its interval excludes zero and its Holm-adjusted p is under 0.05; an interval that excludes zero with a Holm p of 0.05 or more reads "not
 significant after correcting for multiple comparisons". Descriptive comparisons, outside any Holm family, read from the
-interval alone. A primary whose cell is invalid (below) is reported untested and enters Holm at p = 1.
+interval alone, and the markdown marks the descriptive copy of each primary so it is read with the primary's Holm
+result. A primary whose cell is invalid (below) is reported untested and enters Holm at p = 1.
 
 **Descriptive**, with intervals, tasks worse, the same reading and unadjusted p: for each model and for the paraphrase form, the exact form and both
 pooled, B minus A on correct, C minus B on correct and grounded and on plain correctness, and D minus B on correct and on
@@ -769,7 +769,7 @@ detectable differences for the four primaries at the kept N, and the counted run
 
 **Counted-run identity (recorded 2026-11-08, before the freeze; updated the same day for R78 and again for the label
 floor and truncation rules).** The counted run's and the judge check's harness digest must be
-`47ce06a5d3103c2aba1218ae0b57a14207ebac4f9cdc4568ba54001cf60ece1a`. The digest covers the twenty files in
+`f5e88ce5feb6a17b88a3097c591377ea07ddb547cdb8c6c39c2e5efe6ac22308`. The digest covers the twenty files in
 `HARNESS_FILES` (`eval/runner/live-recall/tasks.ts`): the runner, the judge, the agent loop, the budget ledger and the
 cost path they price with, including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json`
 must also show a `runner_commit` that contains 320db88b, the R78 commit and the label-floor and truncation commit, and

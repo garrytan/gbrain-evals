@@ -551,11 +551,11 @@ export type RunResult = 'complete' | 'incomplete' | 'cap_stop';
 export async function runTaskSet(o: RunOptions, say: (line: string) => void): Promise<{ result: RunResult; scorecard: string; markdown: string }> {
   const p = paths(o.out);
   mkdirSync(o.out, { recursive: true, mode: 0o700 });
+  const store = new RecordStore(p.records);
+  checkTruncation(store.calls);
   if (existsSync(p.capStop)) extendCap(o.out, o.paid, o.resume ? o.windowNote : null, say);
   if (o.resume && !o.fixture && !o.windowNote && !o.continuing) throw new LiveRecallAbort('LR_RESUME_NEEDS_WINDOW', 'a counted --resume needs --window-note');
-  const store = new RecordStore(p.records);
   if (store.size > 0 && !o.resume) throw new Error('the run directory already holds records; pass --resume to continue it');
-  checkTruncation(store.calls);
   const source = readFileSync(o.tasksPath, 'utf8');
   const parsed = parseTasks(source);
   let frozen: ReturnType<typeof freezeSummary> | null = null;
@@ -709,11 +709,11 @@ function runTasksOf(run: RunFile): Task[] {
  */
 export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) => void, windowNote: string | null = null): Promise<number> {
   const p = paths(dir);
+  const store = new RecordStore(p.records);
+  checkTruncation(store.calls);
   if (existsSync(p.capStop)) extendCap(dir, paid, windowNote, say);
   const run = readRun(dir);
   const tasks = new Map(runTasksOf(run).map(t => [t.id, t]));
-  const store = new RecordStore(p.records);
-  checkTruncation(store.calls);
   const refusals = watchRefusals();
   const ctx = { limit: limiter(), capCheck: refusals.check };
   let judged = 0;
@@ -1090,6 +1090,7 @@ async function main(argv: string[]): Promise<number> {
       }
       if (command === 'judge') {
         const run = readRun(dir);
+        if (run.identity.labellers) rmSync(paths(dir).judgeCheck, { force: true });
         const paid = openPaid(['--budget-ledger', run.budget.ledger_path, ...argv], run.budget.runner, budgetOptionsFrom(argv).budgetUsd ?? run.budget.cap_usd);
         try { await judgeRunDir(dir, paid, say, flag(argv, '--window-note') ?? null); } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); }
         if (run.identity.labellers) {

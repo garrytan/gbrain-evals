@@ -170,7 +170,8 @@ Top level:
   `a` and `b`, metric, `untested`, `n_pairs`, `mean_a`, `mean_b`, `delta` (b minus a), `ci95` (cluster bootstrap),
   `worse_tasks` (tasks where b scored below a, both forms summed when pooled), `reading` (`no_measurable_difference`
   when the interval includes zero, else `b_higher` or `b_lower`; a primary whose interval excludes zero but whose
-  `p_holm` is 0.05 or more reads `not_significant_after_correction`, so the reading never contradicts the verdict),
+  `p_holm` is 0.05 or more reads `not_significant_after_correction`, so it never reads as a difference Holm does not
+  support; the markdown marks the descriptive copy of each primary),
   `mcnemar`
   (wins, losses, discordant pairs, exact two-sided p; per form only), `p_two_sided`, `p_holm` (primaries only, Holm over
   the four) and `mde` (the observed minimum detectable difference).
