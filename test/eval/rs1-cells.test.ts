@@ -2,9 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { keptUnit, requiredJudges } from '../../eval/runner/q1/cell.ts';
-import { definitionProblems, frontierJudgeOf, frontierJudgesFor, ingestRate, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
-import { buildRS1Manifest, OPUS, PARTICLE, RS1_MANIFEST_PATH, rs1ManifestText, SOL, stage1OverCap } from '../../eval/runner/q1/cells/rs1.ts';
+import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
+import { keptUnit, requiredJudges, runConfigIdentity, runConfigText } from '../../eval/runner/q1/cell.ts';
+import { ALL_SETS, definitionProblems, frontierJudgeOf, frontierJudgesFor, ingestRate, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { buildRS1Manifest, generateRS1Cells, loadRS1Manifest, OPUS, PARTICLE, RS1_MANIFEST_PATH, rs1ManifestText, SOL, stage1OverCap } from '../../eval/runner/q1/cells/rs1.ts';
 import type { Rs1Manifest } from '../../eval/runner/memory-qa/corpus.ts';
 
 const ROOT = join(import.meta.dir, '..', '..');
@@ -141,5 +142,37 @@ describe('launch units (kept list)', () => {
     expect(() => keptUnit(def, { index: 2, count: 7 }, manifest)).toThrow(/launch unit 2/);
     expect(() => keptUnit(def, { index: 0, count: 7 }, { ...manifest, status: 'unfilled' })).toThrow(/unfilled/);
     expect(() => keptUnit(def, { index: 0, count: 7 }, { ...manifest, kept: ['rs1-049', ...kept] })).toThrow(/48 mint slots/);
+  });
+});
+
+describe('wave A run identity across the wave B regeneration (2026-11-08 amendment)', () => {
+  /** What verdict.ts compares for a unit: the run config without its launch-control fields, dataset, scheduled_sha256 and limit. */
+  const identity = (def: CellDefinition) => {
+    const c = JSON.parse(runConfigIdentity(runConfigText(def, def.arms[0], { instrument: instrumentFor(def.canonical_instrument), dataset: null as never, scheduledSha: '', limit: null })));
+    delete c.dataset; delete c.scheduled_sha256; delete c.limit;
+    return JSON.stringify(c);
+  };
+  const committed = loadRS1Manifest().cells;
+  const waveA = new Set(loadRS1Manifest().waves.A.map(u => u.replace(/\.c\d+$/, '')));
+
+  test('regenerating the cells at every N_final from 20 to 33 leaves every identity field of wave A\'s units byte-identical', () => {
+    expect([...waveA].sort()).toEqual(committed.map(c => c.id).sort());
+    const facts = { ...ALL_SETS.RS1 };
+    const moved: string[] = [];
+    try {
+      for (let n = 20; n <= 33; n++) {
+        const totals = { unchanged: facts.corpus_tokens, low: Math.round(n * 1_070_000 * 0.85), mean: n * 1_070_000, high: Math.round(n * 1_070_000 * 1.15) };
+        for (const [basis, corpus_tokens] of Object.entries(totals)) {
+          Object.assign(ALL_SETS.RS1, { conversations: n, questions: 20 * n, corpus_tokens });
+          for (const def of generateRS1Cells()) {
+            const was = committed.find(c => c.id === def.id)!;
+            if (identity(def) !== identity(was)) moved.push(`N=${n} ${basis}: ${def.id} ${JSON.stringify(def.launch?.env)} vs ${JSON.stringify(was.launch?.env)}`);
+          }
+        }
+      }
+    } finally {
+      Object.assign(ALL_SETS.RS1, facts);
+    }
+    expect(moved).toEqual([]);
   });
 });

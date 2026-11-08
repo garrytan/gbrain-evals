@@ -85,7 +85,8 @@ const noProbes = (set: SetId) => ({ sample: 0, seed: `f6-probes-${set.toLowerCas
  */
 export function extractionCapUsd(set: SetId): number {
   const s = ALL_SETS[set];
-  return Math.max(1, Math.ceil(F6_ASSUMPTIONS.extraction_cap_multiple * f6ExtractionLedgerUsd(s.corpus_tokens / s.conversations * largestRatio(set))));
+  const mean = RS1_ASSUMPTIONS.conversation_tokens[set] ?? s.corpus_tokens / s.conversations;
+  return Math.max(1, Math.ceil(F6_ASSUMPTIONS.extraction_cap_multiple * f6ExtractionLedgerUsd(mean * largestRatio(set))));
 }
 /**
  * The largest single reservation a unit's metering proxy holds at once, as the proxy prices it: input reserved at the

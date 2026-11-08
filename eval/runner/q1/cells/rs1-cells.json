@@ -247,6 +247,9 @@
       "RS1": 1.36,
       "RS1-dev2": 1.01
     },
+    "conversation_tokens": {
+      "RS1": 1070000
+    },
     "judge_usd_per_answer": {
       "frontier": 0.034325961829748564,
       "canonical": 0.0028

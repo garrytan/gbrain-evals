@@ -380,6 +380,13 @@ export const RS1_ASSUMPTIONS = {
    */
   max_conversation_ratio: { RS1: 1.36, 'RS1-dev2': 1.01 } as Record<string, number>,
   /**
+   * The mean conversation size the extraction cap is sized from: RS1's is validate.ts's length gate centre (1.07M cl100k
+   * tokens), fixed by the preregistration rather than read from the set's facts. The amendment that regenerates wave B's
+   * cells at N_final changes RS1's conversation count, and a cap derived from the set's facts would then move
+   * GBRAIN_F6_EXTRACT_CAP_USD, an identity field of wave A's units, so verdict.ts would refuse wave A's receipts.
+   */
+  conversation_tokens: { RS1: 1_070_000 } as Record<string, number>,
+  /**
    * Judging dollars per answer on RS1's sets, measured on F6's BEAM-1M answers: a per-row frontier judgment $113.31 over
    * 3,301 answers (GST-1365 census B), about 3.2 times what Q1's token assumption gives, and the canonical gpt-4.1-mini
    * judgment $0.0028 (F6 dry run). They size RS1's estimates and leases; Q1's and F6's keep their token assumptions.
