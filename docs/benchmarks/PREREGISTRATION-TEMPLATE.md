@@ -39,7 +39,7 @@ The primary comparison, one primary judge where judges apply, the multiple-compa
 
 ## Budget
 
-Ledger path and budget run, and how each request is reserved against the ledger before it is sent. State that a cap exists, that reaching it pauses the run until the cap is extended rather than ending it incomplete, and how the run resumes. Dollar amounts for the cap, reservations and any program budget stay in the tracking issue, not here. Give unit prices only where the design depends on them, such as a per-task price that sets the sample size.
+Ledger path and budget run, and how each request is reserved against the ledger before it is sent. State that a cap is set in the ledger, that reaching it pauses the run until the cap is extended rather than ending it incomplete, and how the run resumes. Dollar amounts for the cap, reservations and any program budget stay in the tracking issue, not here. Give unit prices only where the design depends on them, such as a per-task price that sets the sample size.
 
 ## Amendments
 

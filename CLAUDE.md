@@ -47,9 +47,9 @@ Every report, finding file and investigation write-up opens with its takeaways. 
 4. **What to use and what to avoid.** Connect the evidence to a workload. Report losses, errors, tuning, weak controls and incomplete measurements beside the claims they qualify.
 5. **Reproduce and inspect.** Give repository-root commands, dependency and dataset identities, required keys, output paths and observed run time. Link the raw results and any charts.
 
-The takeaways change the order, not the evidence. No number is rounded in our favor, no caveat is dropped, and disclosures stay in the closing Disclosures section, worded as in [docs/disclosures.md](docs/disclosures.md).
+The takeaways change the order, not the evidence. The preregistered primary result is always one of the bullets, and a secondary or exploratory result is labeled as such and shows its interval. A null is not proof that two setups are equal: unless a preregistered margin shows they are, call it no measurable difference at that sample size. No number is rounded in our favor, no caveat is dropped, and disclosures go where [docs/disclosures.md](docs/disclosures.md) places them (a finding file keeps them in its closing Disclosures section).
 
-Don't publish what a finding cost. Show a cost only where it is part of the lesson, such as cost per correct answer between two setups or a per-task price the design depends on. Program totals, budgets, caps and spend stay out of public docs (CHANGELOG.md included), commit messages and pull request bodies; they belong in the tracking issue and private notes.
+Don't publish what a finding cost. Show a cost only where it is part of the lesson, such as cost per correct answer between two setups or a per-task price the design depends on. Program totals, budgets, caps and spend stay out of public docs (CHANGELOG.md included), commit messages and pull request bodies; they belong in the tracking issue and private notes. This covers what we write; raw receipts and ledger files keep the fields they recorded, as the evidence rules below require.
 
 A report must make sense on its own. Introduce gbrain and any external benchmark briefly, with links to their primary sources. Explain each compared adapter in terms of what it does, the feature it exercises, and the practical reason to test it.
 
