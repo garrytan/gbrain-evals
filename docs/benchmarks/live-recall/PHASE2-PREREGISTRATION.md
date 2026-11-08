@@ -28,10 +28,10 @@ own history:
 
 ## System under test
 
-- gbrain on Wintermute's box: version 0.60.593.0 at commit `27f8b9d6287c`, loaded with `--gbrain /data/gbrain@27f8b9d6287c`
-  from a verified overlay copy. The scorecard records the loaded version and commit beside gbrain-evals' own pin
-  (0.60.557.0). Phase 1's schema check applies: the runner refuses a brain whose schema version differs from the loaded
-  code's.
+- gbrain on Wintermute's box: version 0.60.613.0 at commit `98dda48fb9fd`, schema 296, loaded with
+  `--gbrain /data/gbrain@98dda48fb9fd` from a verified overlay copy. The scorecard records the loaded version and commit
+  beside gbrain-evals' own pin (0.60.557.0). Phase 1's schema check applies: the runner refuses a brain whose schema
+  version differs from the loaded code's.
 - The brain's own search configuration (mode, reranker, embedding model), read from the database and the box's
   `~/.gbrain/config.json` and recorded in the scorecard, with `search.crag_escalation`, `search.crag_think` and whether
   gbrain's semantic result cache is available. ALPH-72 reports `search.crag_escalation` and `search.crag_think` unset
@@ -646,6 +646,17 @@ start and end times are recorded, and the judge grades the snapshot each model s
   and the extension (old cap, new cap, extension id, time) is recorded in `run.json` and as `final_cap_usd` and
   `cap_extensions` in the scorecard's run identity. The counted run still starts at $360. With it, every cost sum covers
   only the run directory's own ledger run, and a freeze under 100 tasks prints a notice to replace tasks and freeze again.
+- 2026-11-08, before the freeze and before any counted call, approved by GBEV-3: the gbrain under test moves from
+  0.60.593.0 (`27f8b9d6287c`, schema 291) to 0.60.613.0 (`98dda48fb9fd`, schema 296). GBRA-108 upgraded Wintermute's
+  box to 613, and its schema migration ends the 593 pin: the runner refuses a brain whose schema differs from the loaded
+  code's, and a rollback restores code only. Phase 2 measures the gbrain the brain runs, so phase 1 ran on 593 and
+  phase 2 runs on 613, and the scorecard and findings say so. Migrations 292 to 296 change the write ledger, access
+  tokens, a refresh-history index and a new ingest table, and touch none of the tables search reads (pages, chunks,
+  embeddings, links, facts, timeline). Hybrid search, the query planner, `src/mcp/tool-defs.ts` and the tool names and
+  descriptions in `src/core/operations.ts` are unchanged. Two changes reach what arm B can see: fact recall now picks
+  the terms of a question with more than 12 content terms differently (it searches on the last 24 and scores on the up
+  to 12 the candidates hold, where 593 used the first 12; GST-1304), and a tool call with an unknown parameter no longer
+  gets the warning as an extra text block, only in `_meta.warnings` (GST-900).
 
 ## Frozen sample
 

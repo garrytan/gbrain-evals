@@ -23,6 +23,9 @@ This records what each gbrain-evals release changed and what its measurements me
   keyless test checks that every runtime import of the agent loop, the budget ledger and the usage parser, relative or
   from gbrain, is in the list. The counted run's digest and commit requirements are under the
   preregistration's Frozen sample.
+- **gbrain re-pin.** Phase 2 now measures gbrain 0.60.613.0 (`98dda48fb9fd`, schema 296), the version Wintermute's box
+  runs after GBRA-108's upgrade, instead of 0.60.593.0. The preregistration's dated amendment, recorded before the
+  freeze, lists the two changes arm B can see. The run kit's phase 2 commands load the new commit.
 
 ## [0.10.175] - 2026-11-08
 

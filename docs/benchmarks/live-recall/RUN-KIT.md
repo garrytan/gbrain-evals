@@ -173,8 +173,8 @@ snapshots, audit rows and gbrain's log stay.
 ### Phase 2: what you need
 
 - This repository at the commit named in the run request, installed with `bun install`.
-- The gbrain checkout the box runs, passed as `--gbrain /data/gbrain@27f8b9d6287c` (0.60.593.0). The runner loads that
-  commit from a verified overlay copy; the checkout is not changed.
+- The gbrain checkout the box runs, passed as `--gbrain /data/gbrain@98dda48fb9fd` (0.60.613.0, schema 296). The runner
+  loads that commit from a verified overlay copy; the checkout is not changed.
 - A read-only barrier, as for phase 1. For the counted run, the no-write role ALPH-72 creates just before the run, its
   URL in `LIVE_RECALL_DATABASE_URL`. `freeze` and `estimate` read the brain too; a `snapshot.sh` copy (phase 1, step
   1) works for them.
@@ -232,7 +232,7 @@ All commands run from the repository root.
 
    ```bash
    bun eval/runner/live-recall/tasks.ts freeze --tasks <tasks.jsonl> --out freeze.json \
-     --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL
+     --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL
    ```
 
 3. **Estimate the cost** (the cost gate). `--smoke` is the public smoke's run directory, which comes with the run
@@ -241,7 +241,7 @@ All commands run from the repository root.
 
    ```bash
    bun eval/runner/live-recall/tasks.ts estimate --tasks <tasks.jsonl> --freeze freeze.json --smoke <smoke run dir> \
-     --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL --out estimate.json
+     --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL --out estimate.json
    ```
 
 4. **Run**, in the window GBEV-3 grants, after we confirm the freeze numbers are committed. Start it detached (for
@@ -249,7 +249,7 @@ All commands run from the repository root.
 
    ```bash
    bun eval/runner/live-recall/tasks.ts run --tasks <tasks.jsonl> --freeze freeze.json \
-     --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL \
+     --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL \
      --budget-usd 360 --budget-ledger <ledger> --program-cap-usd 360 --out <run dir>
    ```
 
@@ -414,7 +414,7 @@ command, `--budget-usd` set to the new cap, plus `--resume --window-note <extens
 
 ```bash
 bun eval/runner/live-recall/tasks.ts run --tasks <tasks.jsonl> --freeze freeze.json \
-  --gbrain /data/gbrain@27f8b9d6287c --database-url-env LIVE_RECALL_DATABASE_URL \
+  --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL \
   --budget-ledger <ledger> --program-cap-usd <program cap> --out <run dir> \
   --resume --window-note <extension id> --budget-usd <new cap>
 ```
