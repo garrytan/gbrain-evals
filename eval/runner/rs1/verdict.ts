@@ -390,7 +390,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
   }));
   const floor: FloorQuestion[] = questions.map(q => ({ id: q.id, conversation: q.conversation, values: Object.fromEntries(READERS.map(r => {
     const v = value('floor', q.id, r);
-    return [r, 'drop' in v ? v : v.bridge];
+    return [r, 'drop' in v ? v : v.bridge ?? { drop: 'judgment_missing:bridge' }];
   })) }));
   if (wave) { const seen = new Set(questions.map(q => q.conversation)); const absent = [...wave].filter(c => !seen.has(c)); if (absent.length) refuse(`the pilot needs every wave A conversation; ${absent.join(', ')} has no rows`); }
   return { set: o.set, questions, floor, fill, costs };
