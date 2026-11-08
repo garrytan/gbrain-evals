@@ -1,0 +1,198 @@
+{
+ "note": "Task areas for the turn writer. Written by hand from ordinary agent workloads, without reading any catalog skill's description. Each area gets 5 skill-seeking turns and 1 near-miss no-skill turn; 30 generic no-skill turns come on top (225 + 75 = 300).",
+ "setting": "The user works with a general-purpose AI agent (in the style of Claude Code, Codex or OpenClaw) that can run shell commands, edit code, browse the web, call APIs and keep a personal knowledge base of notes about people, companies, meetings and ideas.",
+ "areas": [
+  {
+   "id": "meeting-notes",
+   "scenario": "Right after a meeting or call, the user wants what was said captured, and the people, companies and follow-ups in it connected to what they already know."
+  },
+  {
+   "id": "person-prep",
+   "scenario": "The user is about to meet or email someone and wants to know who they are and what has happened with them before."
+  },
+  {
+   "id": "company-research",
+   "scenario": "The user is looking into a company (a startup, a vendor, a competitor) and wants a solid picture of it, drawing on both their own notes and the web."
+  },
+  {
+   "id": "reading-capture",
+   "scenario": "The user found an article, paper, book, video or podcast and wants it saved, summarized and connected to their notes."
+  },
+  {
+   "id": "daily-planning",
+   "scenario": "The user wants help organizing their day: their task list, priorities, what to prepare and what is overdue."
+  },
+  {
+   "id": "inbox-followups",
+   "scenario": "The user is behind on email and messages and wants to know who is waiting on them and what they promised."
+  },
+  {
+   "id": "archive-import",
+   "scenario": "The user has a large pile of old material (exports, folders of documents, old chat history, a drive dump) and wants it brought into their knowledge base."
+  },
+  {
+   "id": "fact-checking",
+   "scenario": "The user has a claim, statistic or citation and wants to know whether it holds up and where it came from."
+  },
+  {
+   "id": "voice-writing",
+   "scenario": "The user wants something written the way they write: a post, a reply, an essay, a newsletter."
+  },
+  {
+   "id": "knowledge-base-ops",
+   "scenario": "The user's personal knowledge base needs care: installing it, upgrading it, fixing a broken sync or search, cleaning up messy pages."
+  },
+  {
+   "id": "topic-synthesis",
+   "scenario": "The user wants to think through a topic or idea, pulling together everything they and others have written about it."
+  },
+  {
+   "id": "recurring-jobs",
+   "scenario": "The user wants the agent to do something on a schedule or whenever some event happens, without being asked each time."
+  },
+  {
+   "id": "ship-change",
+   "scenario": "A code change is ready and the user wants it tested, versioned, described and put up for merge."
+  },
+  {
+   "id": "code-review",
+   "scenario": "The user wants a careful review of a diff or branch before it merges."
+  },
+  {
+   "id": "web-qa",
+   "scenario": "The user wants their web app clicked through in a real browser to find what is broken."
+  },
+  {
+   "id": "debugging",
+   "scenario": "Something is broken (a failing test, a crash, a production error) and the user wants the root cause found and fixed."
+  },
+  {
+   "id": "feature-planning",
+   "scenario": "The user has an idea for a feature or product change and wants the plan pressure-tested before anyone builds it."
+  },
+  {
+   "id": "ui-design",
+   "scenario": "The user wants a screen, page or component to look better, or wants a design system or mockups made."
+  },
+  {
+   "id": "security-audit",
+   "scenario": "The user wants their code, dependencies or infrastructure checked for security problems."
+  },
+  {
+   "id": "performance",
+   "scenario": "Something is slow (a page, a query, a build, a service) and the user wants it measured and made faster."
+  },
+  {
+   "id": "code-docs",
+   "scenario": "The user wants documentation for their code: a README, API docs, architecture notes or release notes."
+  },
+  {
+   "id": "mobile-app",
+   "scenario": "The user is building or fixing an iOS or Android app."
+  },
+  {
+   "id": "frontend-web",
+   "scenario": "The user is building a web front end with a modern JavaScript framework."
+  },
+  {
+   "id": "backend-api",
+   "scenario": "The user is designing or building a backend service or API."
+  },
+  {
+   "id": "databases",
+   "scenario": "The user is working with a database: schema design, migrations, slow queries, a data fix."
+  },
+  {
+   "id": "cloud-infra",
+   "scenario": "The user is setting up or changing cloud infrastructure: containers, clusters, infrastructure as code, a cloud provider's services."
+  },
+  {
+   "id": "ci-cd",
+   "scenario": "The user wants their build and deploy pipeline set up, fixed or sped up."
+  },
+  {
+   "id": "data-analysis",
+   "scenario": "The user has a dataset and wants it cleaned, analyzed and charted."
+  },
+  {
+   "id": "ml-training",
+   "scenario": "The user wants to train, fine-tune or evaluate a machine learning model."
+  },
+  {
+   "id": "science-research",
+   "scenario": "The user is a scientist (biology, chemistry, medicine, physics) who wants help with an analysis, a database lookup or a literature search in their field."
+  },
+  {
+   "id": "llm-apps",
+   "scenario": "The user is building something on top of language models: an agent, a prompt, a retrieval pipeline, an eval."
+  },
+  {
+   "id": "git-workflow",
+   "scenario": "The user needs help with version control: branches, a messy merge, history, a release tag."
+  },
+  {
+   "id": "testing",
+   "scenario": "The user wants tests written, fixed or made more reliable."
+  },
+  {
+   "id": "agent-tooling",
+   "scenario": "The user wants to extend their agent itself: write a new reusable procedure for it, connect a tool or server, tune its configuration."
+  },
+  {
+   "id": "team-retro",
+   "scenario": "The user leads a team and wants to look back at what shipped, how the week went, or how the team is working."
+  },
+  {
+   "id": "marketing-seo",
+   "scenario": "The user wants marketing work: landing page copy, search ranking, a launch, an email campaign."
+  },
+  {
+   "id": "social-media",
+   "scenario": "The user wants help with social media: what to post, how to answer replies, how a post is doing."
+  },
+  {
+   "id": "startup-strategy",
+   "scenario": "The user is a founder thinking about strategy: what to build, pricing, fundraising, a board update."
+  },
+  {
+   "id": "sales-crm",
+   "scenario": "The user is working deals: prospect lists, outreach, pipeline review, call prep."
+  },
+  {
+   "id": "finance-spreadsheets",
+   "scenario": "The user has money or numbers work: a budget, a financial model, invoices, a spreadsheet to fix."
+  },
+  {
+   "id": "legal-compliance",
+   "scenario": "The user needs a contract, policy or compliance question handled."
+  },
+  {
+   "id": "documents-files",
+   "scenario": "The user needs a document produced or converted: a PDF, a slide deck, a word-processor file, a diagram."
+  },
+  {
+   "id": "hiring-people",
+   "scenario": "The user is hiring or managing people: a job description, interview loop, performance review, onboarding."
+  },
+  {
+   "id": "customer-support",
+   "scenario": "The user handles customer issues: support tickets, a help center, user feedback themes."
+  },
+  {
+   "id": "project-management",
+   "scenario": "The user wants a project organized: a roadmap, a spec, tickets, status reporting."
+  }
+ ],
+ "generic_no_skill": [
+  "small talk or a thank-you",
+  "a quick general-knowledge question",
+  "simple arithmetic or a unit conversion",
+  "translating one sentence",
+  "a definition of a common word or concept",
+  "a yes/no clarification about something the agent just said",
+  "an opinion on a light everyday choice",
+  "rewording one short sentence",
+  "a quick question about the current conversation",
+  "a one-line instruction to stop, wait or continue"
+ ]
+}

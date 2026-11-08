@@ -1,0 +1,9 @@
+{
+ "turns_jsonl": "12465c52a202a857dee98683377ed5226d05b98d28e10d4f7229c5a690ab0843",
+ "judge_pass1_jsonl": "bdcb49c9d0513afde8b36ae4f2c897a7b9802c0359355a54b364db545aaddf51",
+ "dev_jsonl": "7b39cb156940ea522d0d7053c67a550c40ef18170df4499f2961cf163742ba76",
+ "test_jsonl": "8b4588f2aed83bf6e2bbdef00220793ecf77a7045cbd7c3c733e3e4dcbbe0b02",
+ "catalog_jsonl": "5b9b29a47ca6cd34ed36a23b6e4d8101c12ccb53ca4115f143bc17acb5de8254",
+ "dev": 60,
+ "test": 240
+}
