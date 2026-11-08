@@ -136,20 +136,24 @@ it the same two ways as phase 1's, before anything is written, refusing with `LR
 
 Top level:
 
-- `schema`: `"live-recall-task-scorecard/v1"`. `status`: `complete` when there was no cap stop and every task, form, arm
-  and model has an outcome (counted, or excluded for a reason other than `not_run` or `unjudged`), else `incomplete`.
-  `stop`: `LR_CAP_STOP` or null.
+- `schema`: `"live-recall-task-scorecard/v1"`. `status`: `complete` once every task, form, arm and model has an
+  outcome (counted, or excluded for a reason other than `not_run` or `unjudged`) and no cap stop is outstanding, else
+  `incomplete`. A cap stop that GBEV-3 extended and a resume continued past is no longer outstanding. `stop`:
+  `LR_CAP_STOP` while a cap stop is outstanding, else null.
 - `run`: identity. Start and finish times, runner commit and whether it was dirty, `harness_digest` (sha256 over the
   runner's source files), gbrain's pinned and loaded versions and commits, schema version, engine, barrier, connection,
   `control` (true for the public fixture), search mode, reranker, embedding model, `privacy_posture` (`remote`),
   `remote_private_pages` (false), `crag_escalation`, `crag_think`, `result_cache`, `tool_defs_digest` (sha256 of the
   gbrain tool definitions sent), models, arms, forms, `judges` (model to counted judge), the second judge, effort, output
-  and turn limits, tool result, paste and page caps, `budget_usd`, `window_note`, concurrency and `openai_store`.
+  and turn limits, tool result, paste and page caps, `budget_usd` (the starting cap), `final_cap_usd` (the cap the run's
+  ledger run records after any extensions), `cap_extensions` (how many times GBEV-3 extended the cap after a cap stop),
+  `window_note`, concurrency and `openai_store`.
 - `tasks`: submitted, kept at the freeze, dropped as unreachable, lost since the freeze, kept at the run, the task file's
   sha256 prefix, N frozen, counts by type and by how each gold page was found, and `mdd_primaries` (the minimum
   detectable difference at N frozen for 10%, 20% and 30% discordant pairs, at alpha 0.05 and at Holm's 0.0125).
 - `cost`: `model_calls_usd` and `by_role_usd` (answer, summariser, judge, second judge), each priced from the response's
-  usage at the ledger's list prices; `ledger_usd`, the ledger's total for the run; and `other_usd`, the difference
+  usage at the ledger's list prices; `ledger_usd`, the ledger's total for this run directory's own ledger run across
+  all its sessions (never another run directory's or runner's spend); and `other_usd`, the difference
   (gbrain's embedding and rerank calls, and requests retried after a failure).
 - `cells`: form (`paraphrase`, `exact`, and `pooled` when both ran) to arm to model. Each cell has `n_tasks`, `counted`,
   `model_errors` (counted no-answers from a model-caused 400), `excluded` by reason (`harness_error`, `timed_out`, `degraded`, `judge_error`, `unjudged`, `not_run`), `invalid` and

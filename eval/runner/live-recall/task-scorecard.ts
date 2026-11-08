@@ -293,7 +293,7 @@ const KEY_WORDS = new Set<string>([
   'started_at', 'finished_at', 'runner_commit', 'runner_dirty', 'harness_digest', 'gbrain_pin_version', 'gbrain_pin_commit', 'gbrain_loaded_version', 'gbrain_loaded_commit', 'gbrain_overlay',
   'schema_version', 'engine', 'barrier', 'connection', 'control', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model', 'source_scope_default',
   'privacy_posture', 'remote_private_pages', 'crag_escalation', 'crag_think', 'models', 'arms', 'forms', 'judges', 'second_judge_model', 'effort', 'max_output_tokens', 'max_turns',
-  'tool_result_chars', 'paste_pages', 'paste_chars', 'budget_usd', 'window_note', 'concurrency', 'openai_store', 'result_cache', 'tool_defs_digest',
+  'tool_result_chars', 'paste_pages', 'paste_chars', 'budget_usd', 'final_cap_usd', 'cap_extensions', 'window_note', 'concurrency', 'openai_store', 'result_cache', 'tool_defs_digest',
 ]);
 const STRING_WORDS = new Set<string>([
   TASK_SCHEMA, 'complete', 'incomplete', ...FORMS, POOLED, ...ARMS, ...MODELS, 'correct', 'correct_grounded', 'P1', 'P2', 'errors_over_cap', 'degraded_over_cap',

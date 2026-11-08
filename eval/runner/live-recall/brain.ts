@@ -27,7 +27,7 @@ export const ABORT_CODES = {
   LR_DIRECT_URL_OVERRIDE: 'Unset GBRAIN_DIRECT_DATABASE_URL in the shell that runs the runner.',
   LR_SCHEMA_MISMATCH: 'Run with --gbrain <checkout>@<commit> at the gbrain version that wrote the brain.',
   LR_QUESTIONS_INVALID: 'Fix the question file at the reported line and field, then rerun freeze.',
-  LR_FREEZE_MISMATCH: 'Rerun freeze on this exact question file and send the new freeze numbers before the counted run. On a phase 2 --resume, resume with the first session\'s harness, gbrain, retrieval settings, models, arms, forms and tasks, or start a new run directory.',
+  LR_FREEZE_MISMATCH: 'Rerun freeze on this exact question file and send the new freeze numbers before the counted run. On a phase 2 --resume, resume with the first session\'s harness, gbrain, barrier kind, source, retrieval settings, models, arms, forms and tasks, or start a new run directory.',
   LR_COMPARE_CONTROL: 'One run directory is a --fixture control; compare or pool counted runs only.',
   LR_POOL_MISMATCH: 'Pool two counted runs made on different frozen question files with the same gbrain commit and search settings; the detail names what differs.',
   LR_GOLD_MISSING_CAP: 'More than 10% of questions name a gold page the brain does not hold; fix the gold slugs or use a fresher copy.',
@@ -38,12 +38,13 @@ export const ABORT_CODES = {
   LR_EMBEDDING_UNVERIFIED: 'gbrain found no explicit embedding model; run as the user whose ~/.gbrain/config.json serves this brain, or set GBRAIN_HOME to its parent directory.',
   LR_TASKS_INVALID: 'Fix the task file at the reported line and field, then freeze again.',
   LR_PRIVACY_RELAXED: 'The brain shows private pages to remote callers (search.remote_private_pages), at the start, before a task or after an episode; that episode has no record and no later task ran. GBEV-3 decides; the runner never relaxes it.',
-  LR_CAP_STOP: 'The budget ledger refused a reservation at the cap. The run is reported incomplete with what finished and is never rerun.',
+  LR_CAP_STOP: 'The budget ledger refused a reservation at the cap, so the run is paused there, incomplete: ask GBEV-3 for an extension, then continue with --resume --window-note <extension id> --budget-usd <new cap> (tasks.ts judge takes the same two flags).',
   LR_CELL_INVALID: 'A cell passed its error or degraded-search cap; the scorecard reports it invalid (not an abort).',
   LR_JUDGE_ERROR: 'Judge output failed to parse twice; `tasks.ts judge <run dir>` re-judges those answers without re-answering.',
   LR_RESUME_NEEDS_WINDOW: 'A counted --resume needs --window-note <id> from GBEV-3\'s window note; ask GBEV-3 for one.',
   LR_COST_GATE: 'The projected counted cost breaks the cost gate (paraphrase pass over 75% of the cap, or the total over the cap); send the projection to GBEV-3 before any counted call.',
   LR_PROVIDER_REJECTED: 'A provider refused the key, the model or the account (401, 403, 404, another 4xx, a credit or billing 400, OpenAI\'s 429 insufficient_quota, or Particle\'s 402 for an empty prepaid balance); that episode has no record. Fix the key, model access or balance, then continue with --resume.',
+  LR_GOLD_OUT_OF_SOURCE: 'A gold page lives only in a source other than the one the runner reads (the source `gbrain sources current` names from the repository root in this shell); nothing was written and no task was dropped. Send the detail line to GBEV-3, which decides between fixing the gold slug and reading another source.',
 } as const;
 export type AbortCode = keyof typeof ABORT_CODES;
 

@@ -49,9 +49,10 @@ visibility, pinned-question pages, private lineage, and pages restricted to name
 (no protected facts or takes fences). The runner enforces this:
 
 - B and C's tools go through gbrain's MCP dispatcher (`dispatchToolCall`) with `remote: true`, so they get exactly what
-  a remote agent gets, including gbrain's remote result caps.
-- D's search calls gbrain's hybrid search with `excludePrivate` and `requireSafeChunks`, and opens each page through the
-  same remote `get_page`, so a page a remote caller cannot open is never pasted.
+  a remote agent gets, including gbrain's remote result caps, in the source gbrain resolves for the runner (the
+  reader's source, `default` on the fixture).
+- D's search calls gbrain's hybrid search with `excludePrivate`, `requireSafeChunks` and the reader's source, and opens
+  each page through the same remote `get_page`, so a page a remote caller cannot open is never pasted.
 - The env escape hatch `GBRAIN_REMOTE_PRIVATE_PAGES` is deleted from the runner's process before the brain opens, and
   the runner refuses to start ([`LR_PRIVACY_RELAXED`](RUN-KIT.md#lr_privacy_relaxed)) if the brain's config relaxes
   remote private-page visibility (`search.remote_private_pages`). The runner never relaxes it. It reads the policy again,
@@ -61,12 +62,16 @@ visibility, pinned-question pages, private lineage, and pages restricted to name
 - A keyless test builds the public fixture with one extra page flagged `visibility: private` and shows it unreachable
   to B and C's `query`, `search` and `get_page`, absent from D's search and unreadable for the judge.
 
-A task whose gold page a remote caller cannot open (`get_page` does not return it, or it has no chunk a remote caller
-may read) is dropped at the freeze and counted, never scored as a retrieval miss. Wintermute may replace it with a
-reachable task and freeze again. The freeze records the number dropped, never which tasks. If fewer than 60 tasks
-remain, the runner says so and GBEV-3 hears before the freeze is committed or used. At run time the check repeats; a
-task whose gold page became unreachable since the freeze is excluded and counted, and more than 10% aborts the run
-([`LR_GOLD_MISSING_CAP`](RUN-KIT.md#lr_gold_missing_cap)).
+A task whose gold page a remote caller cannot open in the reader's source (`get_page` does not return it, or it has no
+chunk a remote caller may read) is dropped at the freeze and counted, never scored as a retrieval miss. Wintermute may
+replace it with a reachable task and freeze again. The freeze records the number dropped, never which tasks, and prints
+`gold pages reachable from the reader's source: k of n`, where n counts every distinct gold page across the submitted
+tasks. A gold page that lives in the brain only in another source is never dropped: the freeze stops before it writes
+anything ([`LR_GOLD_OUT_OF_SOURCE`](RUN-KIT.md#lr_gold_out_of_source)) and GBEV-3 decides. If fewer than 60 tasks
+remain, the runner says so and GBEV-3 hears before the freeze is committed or used. At run time the check repeats and
+prints the same line for the frozen tasks; a task whose gold page became unreachable since the freeze is excluded and
+counted, more than 10% aborts the run ([`LR_GOLD_MISSING_CAP`](RUN-KIT.md#lr_gold_missing_cap)), and a gold page found
+only in another source aborts it with `LR_GOLD_OUT_OF_SOURCE`.
 
 Garry agreed on 2026-11-07 (recommendation T1) that retrieved page text from his brain may go to Anthropic, OpenAI and
 Particle through their APIs for this eval. GBEV-3 confirmed (F1, 2026-11-07) that the task text, Wintermute's gold
@@ -94,8 +99,8 @@ protected facts and takes fences. Questions with no checkable answer, or whose g
 are replaced by new tasks of the same type with `source_question: null`, to 100 tasks (60 at least). Tasks are pinned to
 the brain at its commit when the file is written, recorded in Wintermute's `tasks.meta.json` beside the file.
 
-The format is in [RUN-KIT.md](RUN-KIT.md#phase-2-the-task-file). `tasks.ts freeze` writes N submitted, N kept, the count
-dropped as unreachable, counts by type, the file's sha256, the sorted line numbers kept and the minimum detectable
+The format is in [RUN-KIT.md](RUN-KIT.md#phase-2-the-task-file). `tasks.ts freeze` prints the reachability line above and
+writes N submitted, N kept, the count dropped as unreachable, counts by type, the file's sha256, the sorted line numbers kept and the minimum detectable
 differences for the four primaries at the kept N, numbers only. `tasks.ts run` refuses a task file whose hash differs
 from the freeze ([`LR_FREEZE_MISMATCH`](RUN-KIT.md#lr_freeze_mismatch)).
 
@@ -109,14 +114,15 @@ Each arm ends when the model calls `submit_answer`.
 
 - **A, no retrieval.** No tools but `submit_answer`. The model is told Garry's notes are not available.
 - **B, gbrain tools.** gbrain's own `query`, `search` and `get_page` operations, with the names, descriptions and
-  parameter schemas of the loaded gbrain, minus `expand`, `image` and `image_mime`. The runner forces `expand: false` on
-  every `query` call. The model decides what to search and open.
+  parameter schemas of the loaded gbrain, minus `expand`, `image`, `image_mime`, `source_id` and `source_ids`. The runner
+  forces `expand: false` on every `query` call and drops any source parameter a model sends, so every call reads the
+  reader's own source, where gbrain reports its retrieval meta. The model decides what to search and open.
 - **C, summariser then answerer.** A summariser loop with B's tools, on the same model as the answerer, submits a cited
   summary of at most 300 words. A second call with no tools but `submit_answer` gets the question and the summary only.
 - **D, one search, top five pasted.** The runner runs phase 1's configured-arm search (gbrain's hybrid search as the
-  brain is configured, expansion off) on the question under the remote posture, takes the first five distinct pages,
-  opens each with the remote `get_page`, and pastes up to 8,000 characters of each under a slug header. One call with no
-  tools but `submit_answer`.
+  brain is configured, expansion off) on the question under the remote posture in the reader's source, takes the first
+  five distinct pages, opens each with the remote `get_page`, and pastes up to 8,000 characters of each under a slug
+  header. One call with no tools but `submit_answer`.
 
 gbrain's `query` operation adds its result cache, alias fan-out, query arms and its CRAG grade on top of hybrid search.
 That is gbrain as an agent sees it, so B and C keep it. gbrain's AI invocation guard allows only embedding and rerank
@@ -222,22 +228,22 @@ The summary tool (C's summariser):
 ```
 
 gbrain's tools for B and C come from the loaded gbrain. On the pinned 0.60.557.0 their descriptions are below; the
-counted run records the sha256 of the exact definitions it sent (`tool_defs_digest`; `bd8011992574cdeebabb21628998a5f87318853f560ee02f52c0cffa189942d8` on 0.60.557.0), and
+counted run records the sha256 of the exact definitions it sent (`tool_defs_digest`; `0f8205635d0f705efa8aa6f8b9dc386436d04bc7f81fb254452e2776dec3ee46` on 0.60.557.0), and
 the results branch adds the box version's descriptions if they differ.
 
-**get_page** (parameters: `slug`, `fuzzy`, `include_content`, `content_only`, `body`, `lines`, `bytes`, `around_chunk_id`, `context_lines`, `cursor`, `max_bytes`, `view`, `outline_from`, `section`, `grep`, `context`, `include_deleted`, `include_timeline_entries`, `grammar_diagnostics`, `source_id`, `include_quarantined`, `min_trust`, `known_as_of`)
+**get_page** (parameters: `slug`, `fuzzy`, `include_content`, `content_only`, `body`, `lines`, `bytes`, `around_chunk_id`, `context_lines`, `cursor`, `max_bytes`, `view`, `outline_from`, `section`, `grep`, `context`, `include_deleted`, `include_timeline_entries`, `grammar_diagnostics`, `include_quarantined`, `min_trust`, `known_as_of`)
 
 ```text
 Read a page; `section`/`grep` reads one part. Pass at most one window selector: lines, bytes, around_chunk_id or cursor (context only with grep). Edit: include_content:true, `content` to put_page, or edit_page. >256 KB: outline+window, then `next`.
 ```
 
-**search** (parameters: `query`, `limit`, `offset`, `match`, `cursor`, `mode`, `source_id`, `source_ids`, `types`, `where`, `snippet_chars`, `return_unit`, `return_window`, `token_budget`, `salience`, `recency`, `fields`, `min_trust`)
+**search** (parameters: `query`, `limit`, `offset`, `match`, `cursor`, `mode`, `types`, `where`, `snippet_chars`, `return_unit`, `return_window`, `token_budget`, `salience`, `recency`, `fields`, `min_trust`)
 
 ```text
 Cheap hybrid search, no LLM expansion, top 20: exact tokens, names, field values. NOT proof of coverage; match: "keyword" pages every keyword match and takes OR across quoted names or codes ("A" OR "B" OR …): one call lists every page matching any. Name lists: entity names. Concepts/landscape or people/companies/projects by topic: `query`; lists: list_pages; personal: get_recent_salience. return_unit: sections or conversations. fields: "full" adds diagnostics.
 ```
 
-**query** (parameters: `query`, `limit`, `offset`, `types`, `where`, `snippet_chars`, `return_unit`, `return_window`, `token_budget`, `detail`, `fields`, `mode`, `lang`, `symbol_kind`, `near_symbol`, `walk_depth`, `salience`, `recency`, `since`, `until`, `source_id`, `source_ids`, `cross_modal`, `embedding_column`, `adaptive_return`, `autocut`, `relational`, `min_trust`, `explain`, `explain_target`)
+**query** (parameters: `query`, `limit`, `offset`, `types`, `where`, `snippet_chars`, `return_unit`, `return_window`, `token_budget`, `detail`, `fields`, `mode`, `lang`, `symbol_kind`, `near_symbol`, `walk_depth`, `salience`, `recency`, `since`, `until`, `cross_modal`, `embedding_column`, `adaptive_return`, `autocut`, `relational`, `min_trust`, `explain`, `explain_target`)
 
 ```text
 Hybrid search for concept/landscape questions and people/companies/projects by topic; adds fact rows. expand: one LLM call (expansion recovers synonyms; rarely helps). Still top-K; return_unit: sections or conversations. Lists: list_pages. Exact tokens: `search` is cheaper. Personal: get_recent_salience, find_anomalies; transcripts: `gbrain transcripts recent`. Do NOT assume 'crazy' means impressive (often difficult or emotionally charged). Needs an embedding key (else keyword-only); expansion needs a chat key. Fact rows: use follow_up. fields: "full" adds diagnostics.
@@ -256,6 +262,11 @@ text of up to eight cited pages (each capped at 12,000 characters). Those page t
 answer the runner reads every cited page through the remote `get_page` and stores it with the episode, so the judge
 grades what existed when the model answered. Every quoted piece is wrapped as data, and the prompt tells the judge to
 ignore instructions inside it.
+
+An answer's citations are its inline `[slug]` markers, then its `sources` list, in order and deduplicated. An inline
+marker counts as a citation only when it contains `/` or names a page the episode saw (a slug in one of its tool
+results, or a page pasted into D), so a bracketed note such as `[TBD]` is not a citation; every `sources` entry shaped
+like a slug counts. The same rule reads C's summary.
 
 ### Judge prompt (verbatim)
 
@@ -453,11 +464,15 @@ A single rate near 50% at n = 100 has a Wilson interval of about plus or minus 1
 large, because the tasks ask for private facts, so P1 is well powered. C minus B is the test most likely to sit near its
 minimum detectable difference: a summariser effect of 5 to 10 points would not be detected.
 
+A freeze that keeps fewer than 100 tasks prints a notice: Wintermute writes replacement tasks and freezes again before
+lower power is accepted. A freeze under 60 still goes to GBEV-3 before it is committed or used (exit status 5).
+
 ## Cost, cap and gates
 
-The whole of phase 2 has an $850 all-in hard stop: crew build, two /ship runs and coordination $320; the public fixture
-smoke $10 on crew keys under one paid window; the counted run $360 on the box's keys; one R48/R61 cycle $110; $50
-unallocated.
+The whole of phase 2 has an $850 all-in plan, a guideline rather than a hard stop (Garry, 2026-11-07: "Eh don't cut
+corners to stay just under the limits we treat it as a guideline"): crew build, two /ship runs and coordination $320;
+the public fixture smoke $10 on crew keys under one paid window; the counted run $360 on the box's keys to start; one
+R48/R61 cycle $110; $50 unallocated. Nothing in the design is cut to stay under it.
 
 Assumptions per answer at effort medium, from phase 1's page sizes and Cat 40's tool loops: A about 1.2k tokens in and
 1.5k out; B about 39k in over four turns (most of it cache reads on Anthropic and OpenAI) and 3k out; C a B-sized
@@ -477,11 +492,17 @@ paraphrase pass: about $290 expected, $157 of it in the paraphrase pass. gbrain'
 cents.
 
 - **The cap.** Every request in the counted run (answers, summaries, judges, and gbrain's embedding and rerank calls)
-  goes through the budget ledger's paid-request guard on a box-local ledger with a $360 cap. A refused reservation is a
-  cap stop: `cap-stop.json` is written, the run exits with status 6 and prints `LR_CAP_STOP` with the dollars spent,
-  and the scorecard is marked incomplete with what finished. Nothing reruns. gbrain catches a refused embedding or rerank
-  call and would quietly search by keyword alone, so the runner watches every refusal the guard raises and ends the
-  episode as a cap stop instead.
+  goes through the budget ledger's paid-request guard on a box-local ledger with a $360 starting cap. The cap is a
+  runaway-spend stop, not the end of the test. A refused reservation is a cap stop: `cap-stop.json` is written, the run
+  exits with status 6 and prints `LR_CAP_STOP` with the run directory's spend and the cap its ledger run records, and the
+  scorecard is marked incomplete with what finished. The run is then paused at its cap until GBEV-3 extends it. The same
+  command with `--resume --window-note <extension id> --budget-usd <new cap>` (the new cap above the one
+  `cap-stop.json` records) raises the ledger run's budget through the ledger itself, records the old cap, the new cap,
+  the extension id and the time in `run.json`, and continues; a new cap above the ledger's program cap needs the
+  ledger's `set-cap` first. Without both flags the resume stops with `LR_CAP_STOP`. An episode refused at the cap has
+  no record, so the resume reruns it, and a cap stop during judging resumes judge-only (`tasks.ts judge <run dir>` takes
+  the same two flags). gbrain catches a refused embedding or rerank call and would quietly search by keyword alone, so
+  the runner watches every refusal the guard raises and ends the episode as a cap stop instead.
 - **Order.** The paraphrase pass runs to the end before the exact pass starts, so a cap stop cannot cut a primary. The
   paraphrase pass alone ($157 expected) fits in the cap even at 2.3 times the estimate.
 - **Cost gate.** After the public smoke, `tasks.ts estimate` on the box projects the counted cost from the smoke's
@@ -491,6 +512,10 @@ cents.
   [`LR_COST_GATE`](RUN-KIT.md#lr_cost_gate) and goes back to GBEV-3 before any counted call.
 - **Cost reported.** Each response's usage priced at the ledger's list prices, by role, and the ledger's own total for
   the run, with the difference (gbrain's embeddings and rerank calls, and any retried requests) reported.
+- **Cost sums.** Every cost sum (the scorecard's ledger total and difference, `cap-stop.json`, the `LR_CAP_STOP` line
+  and the run's final ledger line) covers only this run directory's ledger spend, across all its sessions. Each run
+  directory has its own ledger run, named in `run.json` and joined by every session, so spend by another run directory
+  or another runner on the same ledger is never counted, and neither is one session's spend alone.
 
 ## Errors and the stop mapping
 
@@ -504,13 +529,15 @@ cents.
 | `harness_error` (gbrain timing out; a provider 5xx or a 429 other than `insufficient_quota` after the loop's retries, or another 5xx; a network failure or an unreadable response, unless particle-1 may have billed it) | written uncounted; the episode reruns, at most three attempts in all; still failing, excluded with its count |
 | particle-1 `timed_out` (the request may have been billed) | excluded with its count, never rerun |
 | a degraded search (below) | excluded with its count |
-| a cap refusal (the ledger's, or a metering proxy's budget refusal) | cap stop |
+| a cap refusal (the ledger's, or a metering proxy's budget refusal) | cap stop: the run pauses at its cap with no record for that episode; after GBEV-3 extends the cap, `--resume --window-note <extension id> --budget-usd <new cap>` reruns it |
 | `judge_error` | the answer stays; excluded from verdicts with its count; re-judged with `tasks.ts judge` without re-answering |
 
 **Degraded searches.** Every `query` and `search` call in B and C, and D's search, keeps gbrain's retrieval meta. A call
 that reports one of phase 1's failure stages (embedding unavailable or timed out, a failed vector, keyword or title leg,
-a failed reranker, or a reranker that passed results through unscored) marks its episode degraded, and so does a `query`
-or `search` call in B or C that returns no meta at all. A D search that throws is a harness error. Before the first task the runner sends a public probe query (two made-up words) through D's search and B's
+a failed reranker, or a reranker that passed results through unscored) marks its episode degraded whatever its stop (a
+submitted answer, a turn cap, no tool call, a context overflow or a model-caused 400), and so does a `query` or `search`
+call in B or C that returns no meta at all. A particle-1 `timed_out` stays timed out (never rerun) and a harness error
+stays a harness error (rerun). A D search that throws is a harness error. Before the first task the runner sends a public probe query (two made-up words) through D's search and B's
 `query` tool and stops ([`LR_EMBEDDING_UNAVAILABLE`](RUN-KIT.md#lr_embedding_unavailable),
 [`LR_ARM_PREFLIGHT`](RUN-KIT.md#lr_arm_preflight)) if either degrades. When an episode degrades, the runner sends the same
 probe again before writing it: if the probe degrades too, the run stops with the same codes and that episode has no
@@ -528,15 +555,19 @@ Every record is appended to the run directory before the next step. `--resume` s
 but unjudged ones, and reruns only episodes with no record or an unfinished harness error (never a particle-1
 `timed_out`). A counted `--resume` needs `--window-note <id>` from GBEV-3's window note
 ([`LR_RESUME_NEEDS_WINDOW`](RUN-KIT.md#lr_resume_needs_window)), recorded in run identity. A resume must match the first
-session's harness digest, loaded gbrain version and commit, schema version, configured retrieval settings (search
-mode, reranker and embedding models, CRAG settings, the result cache flag and the tool definitions' digest), models,
-arms, forms and kept tasks, or it stops
-([`LR_FREEZE_MISMATCH`](RUN-KIT.md#lr_freeze_mismatch)). A run directory with a cap stop refuses to continue.
+session's harness digest, loaded gbrain version and commit, schema version, barrier kind, the reader's source,
+configured retrieval settings (search mode, reranker and embedding models, CRAG settings, the result cache flag and the
+tool definitions' digest), models, arms, forms and kept tasks, or it stops
+([`LR_FREEZE_MISMATCH`](RUN-KIT.md#lr_freeze_mismatch)). The cap is not part of that identity. A run directory with an
+outstanding cap stop continues only once GBEV-3 extends the cap, with `--resume --window-note <extension id>
+--budget-usd <new cap>` and the new cap above the one `cap-stop.json` records; otherwise it stops with
+[`LR_CAP_STOP`](RUN-KIT.md#lr_cap_stop). The extension supersedes `cap-stop.json`, whose contents move into
+`run.json` beside it, so the cap stop is no longer outstanding.
 
 ## Custody
 
-Only `scorecard.json` (`live-recall-task-scorecard/v1`) and `scorecard.md` leave the box, plus `freeze.json` and the
-`tasks.ts estimate` line (numbers only). The scorecard is built by `tasks.ts score` from the run directory and checked
+Only `scorecard.json` (`live-recall-task-scorecard/v1`) and `scorecard.md` leave the box, plus `freeze.json`, the
+freeze's reachability line and the `tasks.ts estimate` line (numbers only). The scorecard is built by `tasks.ts score` from the run directory and checked
 twice before anything is written: a structural check that accepts only keys the format defines and strings from an
 allowlist (so a task, an answer, a fact or a slug has nowhere to sit), and a scan of both files for every task form,
 gold answer, required fact, acceptable variant, task id and every slug the run saw. Needles with no letter are left to
@@ -567,12 +598,18 @@ in the run directory on the box.
 - **CI, keyless.** `test/eval/live-recall-tasks.test.ts` builds the public fixture (`eval/data/live-recall-v1`, thirty
   invented pages plus one flagged private) with hash embeddings, and answers through scripted providers in each
   provider's wire format behind the paid-request guard on a temporary ledger. It covers every arm end to end, the private
-  page's exclusion, the freeze drop, writes allowed against writes refused, a failing embedding and a failing reranker
-  marking episodes degraded, a cap refusal inside an embedding becoming a cap stop, the judge parser, derivation and
-  routing, `store: false` on every OpenAI request, the ledger reconciling with the scorecard, a tiny budget ending in
-  `LR_CAP_STOP` with no rerun, paraphrase before exact, particle-1 `timed_out` never rerun, judge-only resume, a refused
-  key stopping the run and `--resume` answering the episode, OpenAI's 429 `insufficient_quota` and particle-1's own
-  402 stopping the run (a metering proxy's 402 stays a cap stop), a degraded episode's probe (a one-off failure stays
+  page's exclusion, the freeze drop, the freeze's reachability line and its abort on a gold page that lives only in a
+  second source (nothing written), B's tools without source parameters, writes allowed against writes refused, a
+  failing embedding and a failing reranker marking episodes degraded, a failed search before a turn cap marking its
+  episode degraded, a cap refusal inside an embedding becoming a cap stop, the judge parser, derivation and routing,
+  the citation rule (`[TBD]` is not a citation, a slug the episode saw is), `store: false` on every OpenAI request, the
+  ledger reconciling with the scorecard, a tiny budget pausing in `LR_CAP_STOP` (a resume at the same cap refused, one
+  past an extension finishing without re-answering a finished episode), a cap stop while judging resuming judge-only
+  after an extension, cost sums leaving out a second run directory on the same ledger, paraphrase before exact,
+  particle-1 `timed_out` never rerun, judge-only resume, a judge key refused while re-judging throwing only after the
+  judge calls in flight finish, a records file whose last record lost its newline taking the next record on its own
+  line, a refused key stopping the run and `--resume` answering the episode, OpenAI's 429 `insufficient_quota` and
+  particle-1's own 402 stopping the run (a metering proxy's 402 stays a cap stop), a degraded episode's probe (a one-off failure stays
   degraded, a lasting one stops the run with the episode unwritten), a model-caused 400 counted, lost requests rerun, a
   privacy relaxation during an episode, a resume with changed identity or retrieval settings refused, the leak
   canaries (a form, a fact and a slug), a numeric fact, an oracle answerer scoring 1.0 and an empty one 0.0, and the
@@ -602,6 +639,13 @@ start and end times are recorded, and the judge grades the snapshot each model s
   counted: a refused key, model or account stops the run, and a lost or unreadable request is a harness error.
 - `tasks.ts audit` draws Wintermute's 30 audit rows and `tasks.ts score --audit-grades` reads the grades back, so only
   the agreement count leaves the box.
+- 2026-11-07, before any counted call: Garry changed the money rule through FOUN-32: "Eh don't cut corners to stay just
+  under the limits we treat it as a guideline". The plan's $850 all-in hard stop (D7) is now a planning guideline, and a
+  cap stop no longer ends the test incomplete for good. The ledger caps stay as runaway-spend stops: a cap refusal still
+  writes `cap-stop.json`, prints `LR_CAP_STOP` and exits 6, but the run is paused at its cap until GBEV-3 extends it,
+  and the extension (old cap, new cap, extension id, time) is recorded in `run.json` and as `final_cap_usd` and
+  `cap_extensions` in the scorecard's run identity. The counted run still starts at $360. With it, every cost sum covers
+  only the run directory's own ledger run, and a freeze under 100 tasks prints a notice to replace tasks and freeze again.
 
 ## Frozen sample
 

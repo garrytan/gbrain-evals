@@ -7,17 +7,18 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BudgetRun, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
+import { BudgetRun, initLedger, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
 import { NUDGE, runAgent, type Arm } from '../../eval/runner/cat40/loop.ts';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { LiveRecallAbort, installGuards } from '../../eval/runner/live-recall/brain.ts';
-import { isCapStop } from '../../eval/runner/refresh-barrier/ledger.ts';
-import { buildFixtureBrain } from '../../eval/runner/live-recall/run.ts';
+import { isCapStop, openBudgetItem } from '../../eval/runner/refresh-barrier/ledger.ts';
+import { buildFixtureBrain, useFixtureTransports } from '../../eval/runner/live-recall/run.ts';
 import { ANSWER_TOOL, PROMPTS, SUMMARY_TOOL, citedSlugs, judgeEpisode, openReader, runEpisode, type AnswerRecord, type EpisodeContext, type Task } from '../../eval/runner/live-recall/task-arms.ts';
 import { JUDGE_SYSTEM, VERDICT_TOOL, assertJudge, derive, judgeFor, parseVerdict, secondJudgeFor } from '../../eval/runner/live-recall/task-judge.ts';
 import { checkOutbound, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
 import {
-  FIXTURE_TASKS, PHASE2_PAGES, assertPrivate, estimateCost, freezeSummary, goldCheck, loadRecords, parseTasks, runTaskSet, scoreRunDir, spread, watchRefusals, type Paid,
+  FIXTURE_TASKS, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, assertPrivate, estimateCost, freezeSummary, goldCheck, judgeRunDir, ledgerRunner, loadRecords, parseTasks, runTaskSet, scoreRunDir, spread,
+  watchRefusals, writeFreeze, type Paid, type RunRecord,
 } from '../../eval/runner/live-recall/tasks.ts';
 
 const gut = resolveGbrainUnderTest(null);
@@ -184,6 +185,21 @@ describe('phase 2 task file', () => {
   });
 });
 
+describe('phase 2 records', () => {
+  test('a whole last record cut before its newline gets one before the next append, so both records load', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-records-'));
+    const record = (key: string) => ({ kind: 'judge', key, judge: 'gpt-6.1-sol', status: 'judge_error', verdict: null, derived: null, usd: 0, usage: { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 }, ms: 0, at: '2026-11-07T00:00:00.000Z' }) as RunRecord;
+    try {
+      const path = join(dir, 'records.local.jsonl');
+      writeFileSync(path, (JSON.stringify(record('first')) + '\n').slice(0, -1));
+      const store = new RecordStore(path);
+      expect([store.torn, store.judges.has('first')]).toEqual([0, true]);
+      store.write(record('second'));
+      expect(loadRecords(path)).toEqual({ records: [record('first'), record('second')], torn: 0 });
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+});
+
 // ─── Privacy posture ───────────────────────────────────────────────────────────────────────────────────────────────
 
 describe('phase 2 privacy posture on the fixture (keyless)', () => {
@@ -231,10 +247,38 @@ describe('phase 2 privacy posture on the fixture (keyless)', () => {
     } finally { await open.close(); }
   }, 120_000);
 
-  test('B\'s tools are gbrain\'s query, search and get_page, with expansion and images removed', () => {
+  test('B\'s tools are gbrain\'s query, search and get_page, with expansion, images and source ids removed', () => {
     expect(reader.tools.map(t => t.name).sort()).toEqual(['get_page', 'query', 'search']);
-    for (const t of reader.tools) for (const k of ['expand', 'image', 'image_mime']) expect(Object.keys((t.input_schema as any).properties)).not.toContain(k);
+    for (const t of reader.tools) for (const k of ['expand', 'image', 'image_mime', 'source_id', 'source_ids']) expect(Object.keys((t.input_schema as any).properties)).not.toContain(k);
   });
+
+  test('freeze reports the gold pages reachable from the reader\'s source, and a gold page only in another source aborts it with nothing written', async () => {
+    const other = await buildFixtureBrain(gut, PHASE2_PAGES);
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-source-'));
+    try {
+      const { importFromContent } = await importGbrain<any>(gut, 'src/core/import-file.ts');
+      await other.engine.executeRaw('SET default_transaction_read_only = off');
+      await other.engine.executeRaw("INSERT INTO sources (id, name) VALUES ('archive', 'archive')");
+      await importFromContent(other.engine, 'notes/archived-roadmap', '---\ntype: note\ntitle: Archived roadmap\n---\n\n# Archived roadmap\n\nFictional page in a second source. The 2025 roadmap shipped the field gateway in May.\n', { noEmbed: false, sourceId: 'archive' });
+      await other.engine.executeRaw('SET default_transaction_read_only = on');
+      installGuards(other.engine, { refusals: {} });
+      const scoped = await openReader(gut, other.engine, true);
+      const said: string[] = [];
+      const kept = join(dir, 'kept.json');
+      await writeFreeze(scoped, fixtureText, parseTasks(fixtureText), gut, kept, line => said.push(line));
+      const gold = new Set(fixtureTasks.flatMap(t => t.gold_pages)).size;
+      expect(said[0]).toBe('gold pages reachable from the reader\'s source: ' + (gold - 1) + ' of ' + gold);
+      expect(JSON.parse(readFileSync(kept, 'utf8')).dropped_unreachable).toBe(1);
+      const moved = { ...JSON.parse(fixtureText.trim().split('\n')[0]!), id: 'moved-1', gold_pages: ['notes/archived-roadmap'] };
+      const text = fixtureText.trim() + '\n' + JSON.stringify(moved) + '\n';
+      const out = join(dir, 'freeze.json');
+      expect(await abortCode(() => writeFreeze(scoped, text, parseTasks(text), gut, out, () => {}))).toBe('LR_GOLD_OUT_OF_SOURCE');
+      expect(existsSync(out)).toBe(false);
+    } finally {
+      await other.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 120_000);
 
   test('writes allowed and writes refused return the same results for every fixture query', async () => {
     const open = await buildFixtureBrain(gut, PHASE2_PAGES);
@@ -264,6 +308,48 @@ describe('phase 2 privacy posture on the fixture (keyless)', () => {
     } finally {
       const { hashEmbedVector } = await import('../../eval/runner/cat18-embedding-providers.ts');
       gateway.__setEmbedTransportForTests(async (params: { values: string[] }) => ({ embeddings: params.values.map(v => hashEmbedVector(v, 256)), values: params.values, warnings: [] }));
+      paid.guard.uninstall();
+      paid.run.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test('a failed search marks the episode degraded whatever its stop: a turn cap after one is degraded, without one it is no answer', async () => {
+    const gateway = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
+    const { hashEmbedVector } = await import('../../eval/runner/cat18-embedding-providers.ts');
+    const task = fixtureTasks[0]!;
+    await useFixtureTransports(gut);
+    const { fetchImpl } = withFailures(fixtureTasks, (w, c) => (w === 'anthropic' && c.system !== JUDGE_SYSTEM ? Response.json(reply(w, 'claude-opus-5-5', { name: 'query', args: { query: task.forms.paraphrase } }, c.results + 1)) : undefined));
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-turncap-'));
+    const paid = scriptedPaid(dir, fetchImpl, 5);
+    const ctx = { reader, limit: <T>(_m: string, f: () => Promise<T>) => f(), capCheck: () => {} };
+    try {
+      const clean = await runEpisode(ctx, task, 'paraphrase', 'B', 'claude-opus-5-5', 1);
+      expect([clean.status, clean.roles.answer?.stop]).toEqual(['no_answer', 'turn_cap']);
+      gateway.__setEmbedTransportForTests(async () => { throw new Error('embedding service down'); });
+      const failed = await runEpisode(ctx, task, 'paraphrase', 'B', 'claude-opus-5-5', 1);
+      expect([failed.status, failed.roles.answer?.stop]).toEqual(['degraded', 'turn_cap']);
+    } finally {
+      gateway.__setEmbedTransportForTests(async (params: { values: string[] }) => ({ embeddings: params.values.map(v => hashEmbedVector(v, 256)), values: params.values, warnings: [] }));
+      paid.guard.uninstall();
+      paid.run.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test('citations in an episode: an inline [TBD] is no citation, and a slug the episode saw is', async () => {
+    const task = fixtureTasks[0]!;
+    const gold = task.gold_pages[0]!;
+    await useFixtureTransports(gut);
+    const { fetchImpl } = withFailures(fixtureTasks, (w, c) => (w === 'anthropic' && c.system === PROMPTS.B && c.results === 2 ? Response.json(reply(w, 'claude-opus-5-5', { name: 'submit_answer', args: { answer: task.gold_answer.text + ' [TBD] [' + gold + ']', sources: [] } }, 3)) : undefined));
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-cite-'));
+    const paid = scriptedPaid(dir, fetchImpl, 5);
+    try {
+      const rec = await runEpisode({ reader, limit: (_m, f) => f(), capCheck: () => {} }, task, 'paraphrase', 'B', 'claude-opus-5-5', 1);
+      expect(rec.status).toBe('answered');
+      expect(rec.slugs_seen).toContain(gold);
+      expect(rec.cited).toEqual([gold]);
+    } finally {
       paid.guard.uninstall();
       paid.run.close();
       rmSync(dir, { recursive: true, force: true });
@@ -334,7 +420,12 @@ describe('phase 2 judge', () => {
   });
 
   test('citations: inline markers then the sources list, deduplicated, numbers and spaces dropped', () => {
-    expect(citedSlugs('Heron [projects/project-heron] and [1] and [people/maya-okafor].', ['[people/maya-okafor]', 'notes/x', 'has space'])).toEqual(['projects/project-heron', 'people/maya-okafor', 'notes/x']);
+    expect(citedSlugs('Heron [projects/project-heron] and [1] and [people/maya-okafor].', ['[people/maya-okafor]', 'notes/x', 'has space'], [])).toEqual(['projects/project-heron', 'people/maya-okafor', 'notes/x']);
+  });
+
+  test('citations: an inline marker counts only with a \'/\' or when it names a page the episode saw', () => {
+    expect(citedSlugs('Heron [TBD] [readme] [people/maya-okafor].', [], ['readme'])).toEqual(['readme', 'people/maya-okafor']);
+    expect(citedSlugs('Heron [TBD] [readme].', [], [])).toEqual([]);
   });
 });
 
@@ -512,31 +603,145 @@ describe('phase 2 fixture run with scripted models (keyless)', () => {
     writeFileSync(freezePath, JSON.stringify({ schema: 'live-recall-task-freeze/v1', tasks_sha256: '0'.repeat(64) }));
     expect(await abortCode(() => runTaskSet({ ...base, out: fresh, freezePath, resume: false }, () => {}))).toBe('LR_FREEZE_MISMATCH');
   });
+
+  test('a judge key refused while re-judging stops new judge calls and throws only after the calls in flight finish', async () => {
+    const path = join(dir, 'run', 'records.local.jsonl');
+    writeFileSync(path, readFileSync(path, 'utf8').trim().split('\n').filter(l => JSON.parse(l).kind === 'answer').join('\n') + '\n');
+    let inFlight = 0, judgeCalls = 0;
+    const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (url.endsWith('/embeddings')) return providers.fetchImpl(input, init);
+      if (judgeCalls++ === 0) return url.includes('anthropic.com') ? anthropicError(401, 'invalid x-api-key') : Response.json({ error: { message: 'Incorrect API key provided', code: 'invalid_api_key' } }, { status: 401 });
+      inFlight++;
+      try { await new Promise(resolve => setTimeout(resolve, 300)); return await providers.fetchImpl(input, init); } finally { inFlight--; }
+    }) as unknown as typeof fetch;
+    const ledger = join(dir, 'ledger.sqlite');
+    const run = BudgetRun.open({ runner: 'live-recall-phase2-judge', budgetUsd: 1, ledgerPath: ledger, programCapUsd: 100 });
+    const paid: Paid = { run, guard: installPaidRequestGuard(run, { fetchImpl }), runner: 'live-recall-phase2-judge', capUsd: 1, ledgerPath: ledger };
+    let inFlightAtThrow = -1;
+    try {
+      expect(await abortCode(() => judgeRunDir(join(dir, 'run'), paid, () => {}).finally(() => { inFlightAtThrow = inFlight; }))).toBe('LR_PROVIDER_REJECTED');
+    } finally { paid.guard.uninstall(); run.close(); }
+    expect(inFlightAtThrow).toBe(0);
+    expect(judgeCalls).toBeLessThanOrEqual(TASK_CONCURRENCY);
+  });
+
+  test('a cap stop while judging pauses the run, and after an extension tasks.ts judge resumes judge-only', async () => {
+    const path = join(dir, 'run', 'records.local.jsonl');
+    writeFileSync(path, readFileSync(path, 'utf8').trim().split('\n').filter(l => JSON.parse(l).kind === 'answer').join('\n') + '\n');
+    const ledger = join(dir, 'ledger.sqlite');
+    const run = BudgetRun.open({ runner: 'live-recall-phase2-judge-cap', budgetUsd: 1e-9, ledgerPath: ledger, programCapUsd: 100 });
+    const paid: Paid = { run, guard: installPaidRequestGuard(run, { fetchImpl: providers.fetchImpl }), runner: 'live-recall-phase2-judge-cap', capUsd: 1e-9, ledgerPath: ledger };
+    const before = providers.sent.length;
+    try {
+      expect(await judgeRunDir(join(dir, 'run'), paid, () => {})).toBe(0);
+      expect(existsSync(join(dir, 'run', 'cap-stop.json'))).toBe(true);
+      expect(scoreRunDir(join(dir, 'run')).complete).toBe(false);
+      expect(await abortCode(() => judgeRunDir(join(dir, 'run'), { ...paid, capUsd: 5 }, () => {}))).toBe('LR_CAP_STOP');
+      expect(providers.sent.length).toBe(before);
+      expect(await judgeRunDir(join(dir, 'run'), { ...paid, capUsd: 5 }, () => {}, 'gbev3-ext-2')).toBeGreaterThan(0);
+    } finally { paid.guard.uninstall(); run.close(); }
+    const made = providers.sent.slice(before);
+    expect(made.length).toBeGreaterThan(0);
+    expect(made.every(s => conversation(s.wire, s.body).system === JUDGE_SYSTEM)).toBe(true);
+    const scored = scoreRunDir(join(dir, 'run'));
+    const card = JSON.parse(readFileSync(scored.scorecard, 'utf8'));
+    expect([scored.complete, card.stop, card.run.final_cap_usd, card.run.cap_extensions]).toEqual([true, null, 5, 1]);
+  });
 });
 
 // ─── Stops ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 describe('phase 2 stops (keyless)', () => {
-  test('a tiny budget ends in LR_CAP_STOP with an incomplete scorecard, and the run never reruns', async () => {
+  test('a tiny budget pauses in LR_CAP_STOP; a resume at the same cap aborts, and one past an extension finishes without re-answering', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'lr2-cap-'));
     process.env.GBRAIN_AUDIT_DIR = dir;
     const providers = scriptedProviders(fixtureTasks);
     const paid = scriptedPaid(dir, providers.fetchImpl, 0.5);
-    const opts = { out: join(dir, 'run'), gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase', 'exact'] as any, arms: ['A', 'B', 'C', 'D'] as any, models: ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], limit: 5, concurrency: 2, windowNote: null, paid };
+    const runDir = join(dir, 'run');
+    const opts = { out: runDir, gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase', 'exact'] as any, arms: ['A', 'B', 'C', 'D'] as any, models: ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], limit: 5, concurrency: 2, windowNote: null, paid };
+    const model: Record<Wire, string> = { anthropic: 'claude-opus-5-5', openai: 'gpt-6.1-sol', particle: 'particle-1' };
+    const answering = () => {
+      const counts = new Map<string, number>();
+      for (const s of providers.sent) {
+        const c = conversation(s.wire, s.body);
+        if (c.system === JUDGE_SYSTEM) continue;
+        const question = c.user.startsWith('Question:\n') ? c.user.split('\n')[1]! : c.user;
+        const task = fixtureTasks.find(t => t.forms.paraphrase === question || t.forms.exact === question)!;
+        const arm = c.system === PROMPTS.A ? 'A' : c.system === PROMPTS.B ? 'B' : c.system === PROMPTS.D ? 'D' : 'C';
+        const key = [task.forms.paraphrase === question ? 'paraphrase' : 'exact', task.id, arm, model[s.wire]].join('|');
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+      return counts;
+    };
     try {
       const r = await runTaskSet({ ...opts, resume: false }, () => {});
       expect(r.result).toBe('cap_stop');
       const card = JSON.parse(readFileSync(r.scorecard, 'utf8'));
       expect([card.status, card.stop]).toEqual(['incomplete', 'LR_CAP_STOP']);
-      expect(providers.sent.length).toBeGreaterThan(0);
+      const stop = JSON.parse(readFileSync(join(runDir, 'cap-stop.json'), 'utf8'));
+      const spent = readLedger(join(dir, 'ledger.sqlite')).entries.filter(e => e.run_id === paid.run.runId).reduce((s, e) => s + (e.actual_usd ?? e.reserved_usd), 0);
+      expect(stop.cap_usd).toBe(0.5);
+      expect(stop.actual_usd).toBeCloseTo(spent, 6);
       const sent = providers.sent.length;
+      expect(sent).toBeGreaterThan(0);
       expect(await abortCode(() => runTaskSet({ ...opts, resume: true }, () => {}))).toBe('LR_CAP_STOP');
+      expect(await abortCode(() => runTaskSet({ ...opts, resume: true, windowNote: 'gbev3-ext-1' }, () => {}))).toBe('LR_CAP_STOP');
+      expect(await abortCode(() => runTaskSet({ ...opts, resume: true, paid: { ...paid, capUsd: 10 } }, () => {}))).toBe('LR_CAP_STOP');
       expect(providers.sent.length).toBe(sent);
+      const finished = loadRecords(join(runDir, 'records.local.jsonl')).records.filter((a): a is AnswerRecord => a.kind === 'answer' && a.status !== 'harness_error').map(a => a.key);
+      expect(finished.length).toBeGreaterThan(0);
+      const before = answering();
+      const resumed = await runTaskSet({ ...opts, resume: true, windowNote: 'gbev3-ext-1', paid: { ...paid, capUsd: 10 } }, () => {});
+      expect(resumed.result).toBe('complete');
+      const after = answering();
+      for (const key of finished) expect([key, after.get(key)]).toEqual([key, before.get(key)]);
+      expect(after.size).toBe(120);
+      expect(existsSync(join(runDir, 'cap-stop.json'))).toBe(false);
+      const run = JSON.parse(readFileSync(join(runDir, 'run.json'), 'utf8'));
+      expect(run.budget.cap_usd).toBe(10);
+      expect(run.budget.extensions).toMatchObject([{ from_usd: 0.5, to_usd: 10, window_note: 'gbev3-ext-1', cap_stop: { cap_usd: 0.5, message: stop.message } }]);
+      const done = JSON.parse(readFileSync(resumed.scorecard, 'utf8'));
+      expect([done.status, done.stop, done.run.budget_usd, done.run.final_cap_usd, done.run.cap_extensions]).toEqual(['complete', null, 0.5, 10, 1]);
     } finally {
       paid.guard.uninstall();
-      paid.run.close({ finish: true });
+      paid.run.close({ finish: false });
       rmSync(dir, { recursive: true, force: true });
     }
+  }, 300_000);
+
+  test('cost sums cover every session of this run directory\'s own ledger run, never a second directory on the same ledger', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-ledger-'));
+    process.env.GBRAIN_AUDIT_DIR = dir;
+    const providers = scriptedProviders(fixtureTasks);
+    const ledgerPath = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 100 });
+    const session = async (out: string, resume: boolean) => {
+      const runner = ledgerRunner(out, true);
+      const item = openBudgetItem({ runner, cap_usd: 5 }, { budgetUsd: null, ledgerPath, programCapUsd: null, programCapSource: null, runId: null });
+      item.guard.uninstall();
+      const paid: Paid = { run: item.run, guard: installPaidRequestGuard(item.run, { fetchImpl: providers.fetchImpl }), runner, capUsd: 5, ledgerPath };
+      try {
+        return await runTaskSet({ out, gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'], arms: ['A'], models: ['claude-opus-5-5'], limit: 2, concurrency: 1, resume, windowNote: null, paid }, () => {});
+      } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); }
+    };
+    const one = join(dir, 'one'), two = join(dir, 'two');
+    const runOf = (out: string) => JSON.parse(readFileSync(join(out, 'run.json'), 'utf8')).budget.run_id as string;
+    try {
+      await session(one, false);
+      const records = join(one, 'records.local.jsonl');
+      writeFileSync(records, readFileSync(records, 'utf8').trim().split('\n').filter(l => JSON.parse(l).kind === 'answer').join('\n') + '\n');
+      await session(two, false);
+      const card = JSON.parse(readFileSync((await session(one, true)).scorecard, 'utf8'));
+      expect(runOf(one)).not.toBe(runOf(two));
+      const entries = readLedger(ledgerPath).entries;
+      const spent = (runId: string) => entries.filter(e => e.run_id === runId).reduce((s, e) => s + (e.actual_usd ?? e.reserved_usd), 0);
+      expect(spent(runOf(two))).toBeGreaterThan(0);
+      expect(new Set(entries.filter(e => e.run_id === runOf(one)).map(e => e.participant ?? 'opener')).size).toBe(2);
+      expect(card.cost.ledger_usd).toBeCloseTo(spent(runOf(one)), 4);
+      expect(card.cost.other_usd).toBeCloseTo(spent(runOf(one)) - card.cost.model_calls_usd, 4);
+      expect(JSON.parse(readFileSync(join(two, 'scorecard.json'), 'utf8')).cost.ledger_usd).toBeCloseTo(spent(runOf(two)), 4);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
   }, 300_000);
 
   test('an empty answerer scores 0.0; a particle-1 answer that may have billed is excluded and never rerun', async () => {
@@ -750,18 +955,22 @@ describe('phase 2 provider errors (keyless)', () => {
     const paid = scriptedPaid(dir, fetchImpl, 5);
     const opts = { out: join(dir, 'run'), gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'] as any, arms: ['A'] as any, models: ['claude-opus-5-5'], limit: 2, concurrency: 1, windowNote: null, paid };
     try {
-      await runTaskSet({ ...opts, resume: false }, () => {});
+      const first = await runTaskSet({ ...opts, resume: false }, () => {});
       const runPath = join(dir, 'run', 'run.json');
       const run = JSON.parse(readFileSync(runPath, 'utf8'));
+      expect(run.source_id).toBe('default');
+      expect(JSON.parse(readFileSync(first.scorecard, 'utf8')).run).not.toHaveProperty('source_id');
       expect(await abortCode(() => runTaskSet({ ...opts, models: ['claude-opus-5-5', 'gpt-6.1-sol'], resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
       expect(await abortCode(() => runTaskSet({ ...opts, limit: 1, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
       expect(await abortCode(() => runTaskSet({ ...opts, arms: ['A', 'D'] as any, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
       expect(await abortCode(() => runTaskSet({ ...opts, forms: ['paraphrase', 'exact'] as any, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
       expect(await abortCode(() => runTaskSet({ ...opts, resume: true }, () => {}))).toBe('no abort');
-      for (const field of ['gbrain_loaded_version', 'gbrain_loaded_commit', 'schema_version', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model', 'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest']) {
+      for (const field of ['gbrain_loaded_version', 'gbrain_loaded_commit', 'schema_version', 'barrier', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model', 'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest']) {
         writeFileSync(runPath, JSON.stringify({ ...run, identity: { ...run.identity, [field]: 'changed' } }));
         expect([field, await abortCode(() => runTaskSet({ ...opts, resume: true }, () => {}))]).toEqual([field, 'LR_FREEZE_MISMATCH']);
       }
+      writeFileSync(runPath, JSON.stringify({ ...run, source_id: 'changed' }));
+      expect(await abortCode(() => runTaskSet({ ...opts, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
       writeFileSync(runPath, JSON.stringify({ ...run, identity: { ...run.identity, harness_digest: '0'.repeat(64) } }));
       expect(await abortCode(() => runTaskSet({ ...opts, resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH');
       expect(JSON.parse(readFileSync(runPath, 'utf8')).identity.harness_digest).toBe('0'.repeat(64));

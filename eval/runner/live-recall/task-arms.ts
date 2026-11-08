@@ -6,14 +6,15 @@
  * hidden. The dispatcher runs on phase 1's guarded engine (brain.ts), inside gbrain's AI invocation guard, which allows
  * only embedding and rerank calls; a refused call (query expansion, a chat or decide call) is counted. Each query and
  * search call's retrieval meta is captured through the dispatcher's metaHook, and a call that reports one of phase 1's
- * FAILURE_STAGES, or returns no meta at all, marks its episode degraded, so a silent embedding or rerank failure never
- * becomes a counted keyword-only answer.
+ * FAILURE_STAGES, or returns no meta at all, marks its episode degraded whatever its stop, so a silent embedding or
+ * rerank failure never becomes a counted keyword-only answer or no-answer.
  *
  *   A  no retrieval: no tools but submit_answer.
- *   B  gbrain's query, search and get_page tools, as gbrain's tool definitions describe them (expand removed and forced off).
+ *   B  gbrain's query, search and get_page tools, as gbrain's tool definitions describe them (expand removed and forced off;
+ *      source_id and source_ids removed, so every call reads the reader's own source).
  *   C  a summariser loop with B's tools that submits a cited summary, then a tool-less answerer given the summary alone.
- *   D  phase 1's configured-arm hybridSearch on the question (expansion off, private pages excluded), the first five
- *      distinct pages opened with get_page and pasted in; one tool-less call.
+ *   D  phase 1's configured-arm hybridSearch on the question (expansion off, private pages excluded, the reader's own
+ *      source), the first five distinct pages opened with get_page and pasted in; one tool-less call.
  *
  * Every model call goes through Cat 40's loop (eval/runner/cat40/loop.ts) at medium effort, with store false on OpenAI.
  */
@@ -30,8 +31,11 @@ export type TaskArm = (typeof ARMS)[number];
 export const FORMS = ['paraphrase', 'exact'] as const;
 export type TaskForm = (typeof FORMS)[number];
 export const TOOL_NAMES = ['query', 'search', 'get_page'] as const;
-/** Parameters removed from gbrain's tool definitions: expansion is forced off, and images are out of scope. */
-const DROPPED_PARAMS = ['expand', 'image', 'image_mime'];
+/**
+ * Parameters removed from gbrain's tool definitions: expansion is forced off, images are out of scope, and every call
+ * stays in the reader's own source.
+ */
+const DROPPED_PARAMS = ['expand', 'image', 'image_mime', 'source_id', 'source_ids'];
 export const EFFORT = 'medium';
 export const MAX_TURNS = 12;
 export const MAX_OUTPUT_TOKENS = 8192;
@@ -103,7 +107,9 @@ export interface GbrainReader {
   page(slug: string): Promise<string | null>;
   /** The page is returned to a remote caller and has at least one chunk it may read. */
   reachable(slug: string): Promise<boolean>;
-  /** D's search: phase 1's configured arm with private pages excluded. */
+  /** The page is live in another source and not in the reader's, so no call from the reader's source can reach it. */
+  outOfSource(slug: string): Promise<boolean>;
+  /** D's search: phase 1's configured arm with private pages excluded, in the reader's source. */
   top(text: string): Promise<{ slugs: string[]; degraded: string[]; aiRefused: string[] }>;
 }
 
@@ -173,12 +179,16 @@ export async function openReader(gut: GbrainUnderTest, engine: any, rerankerEnab
   return {
     tools, sourceId, call, page,
     reachable: async (slug: string) => (await page(slug)) !== null && (await chunkCount(slug)) > 0,
+    outOfSource: async (slug: string) => {
+      const [row] = await engine.executeRaw('SELECT bool_or(source_id = $2) AS own, bool_or(source_id <> $2) AS other FROM pages WHERE slug = $1 AND deleted_at IS NULL', [slug, sourceId]) as Array<{ own: boolean | null; other: boolean | null }>;
+      return row?.other === true && row.own !== true;
+    },
     top: async (text: string) => {
       let meta: unknown = null;
       const refused: string[] = [];
       let results: Array<{ slug: string; rerank_score?: unknown }>;
       try {
-        results = ((await guarded(refused, () => hybrid.hybridSearch(engine, text, { expansion: false, crossModal: 'text', excludePrivate: true, requireSafeChunks: true, onMeta: (m: unknown) => { meta = m; } }))) ?? []) as typeof results;
+        results = ((await guarded(refused, () => hybrid.hybridSearch(engine, text, { expansion: false, crossModal: 'text', excludePrivate: true, requireSafeChunks: true, sourceId, onMeta: (m: unknown) => { meta = m; } }))) ?? []) as typeof results;
       } catch (e) {
         if (e instanceof HarnessError || (e as Error).name === 'BudgetExceededError') throw e;
         throw new HarnessError('gbrain search failed: ' + (e as Error).message);
@@ -221,9 +231,12 @@ const NO_TOOLS: Arm = { name: 'none', systemHint: () => '', tools: () => [], wri
 const slugsIn = (text: string) => uniqueInOrder([...text.matchAll(/"slug"\s*:\s*"([^"\\]{1,300})"/g)].map(m => m[1]!));
 const SLUG = /^(?!\d+$)[A-Za-z0-9][A-Za-z0-9._\/-]{0,299}$/;
 
-/** Slugs an answer cites: inline [slug] markers, then its sources list, in order, deduplicated. */
-export function citedSlugs(answer: string, sources: unknown): string[] {
-  const inline = [...answer.matchAll(/\[([^\[\]\s]{1,300})\]/g)].map(m => m[1]!);
+/**
+ * Slugs an answer cites: inline [slug] markers that hold a '/' or name a page the episode saw (so [TBD] is no citation),
+ * then its sources list, in order, deduplicated.
+ */
+export function citedSlugs(answer: string, sources: unknown, seen: readonly string[]): string[] {
+  const inline = [...answer.matchAll(/\[([^\[\]\s]{1,300})\]/g)].map(m => m[1]!).filter(s => s.includes('/') || seen.includes(s));
   const listed = Array.isArray(sources) ? sources.filter((s): s is string => typeof s === 'string').map(s => s.trim().replace(/^\[|\]$/g, '')) : [];
   return uniqueInOrder([...inline, ...listed].filter(s => SLUG.test(s)));
 }
@@ -341,7 +354,7 @@ export async function runEpisode(ctx: EpisodeContext, task: Task, form: TaskForm
       if (sStatus === 'harness_error' || sStatus === 'timed_out') return record(sStatus, s);
       const final = (s.final ?? {}) as { summary?: unknown; sources?: unknown };
       const summary = s.stop === 'submitted' && typeof final.summary === 'string' ? final.summary : '';
-      summaryCited = citedSlugs(summary, final.sources);
+      summaryCited = citedSlugs(summary, final.sources, calls.flatMap(c => c.slugs));
       const user = 'Question:\n' + question + '\n\nSummary from the research helper:\n' + (summary.trim() || '(The research helper returned no summary.)') + (summaryCited.length ? '\n\nSlugs the summary cites: ' + summaryCited.join(', ') : '');
       run = await ask({ ...loopConfig(model), system: PROMPTS.C_ANSWERER, user, arm: NO_TOOLS, submitTool: ANSWER_TOOL });
     } else {
@@ -360,10 +373,10 @@ export async function runEpisode(ctx: EpisodeContext, task: Task, form: TaskForm
     }
     roles.answer = use(run, arm === 'B' ? calls.length : 0);
     let status = statusOf(run);
-    if (status === 'answered' && (stages.some(s => FAILURE_STAGES.has(s)) || metaMissing > 0)) status = 'degraded';
+    if (status !== 'timed_out' && status !== 'harness_error' && (stages.some(s => FAILURE_STAGES.has(s)) || metaMissing > 0)) status = 'degraded';
     const final = (run.final ?? {}) as { answer?: unknown; sources?: unknown };
     const answer = status === 'answered' || status === 'degraded' ? (typeof final.answer === 'string' ? final.answer : '') : '';
-    const cited = citedSlugs(answer, final.sources);
+    const cited = citedSlugs(answer, final.sources, [...calls.flatMap(c => c.slugs), ...(pasted ?? [])]);
     const snapshots: AnswerRecord['snapshots'] = [];
     if (status === 'answered' && arm !== 'A') {
       for (const slug of cited.slice(0, JUDGED_CITATIONS)) snapshots.push({ slug, text: (await ctx.reader.page(slug))?.slice(0, JUDGE_PAGE_CHARS) ?? null });

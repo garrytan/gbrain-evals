@@ -11,7 +11,7 @@
  *   bun eval/runner/live-recall/tasks.ts run (--fixture | --tasks <private.jsonl> --freeze <freeze.json> --gbrain ...)
  *     --budget-usd <dollars> --budget-ledger <ledger> [--forms paraphrase,exact] [--arms A,B,C,D] [--models <ids>]
  *     [--limit <tasks>] [--concurrency 4] [--out <run dir>] [--resume [--window-note <id>]]
- *   bun eval/runner/live-recall/tasks.ts judge <run dir>
+ *   bun eval/runner/live-recall/tasks.ts judge <run dir> [--window-note <extension id> --budget-usd <new cap>]
  *   bun eval/runner/live-recall/tasks.ts audit <run dir> [--n 30]
  *   bun eval/runner/live-recall/tasks.ts score <run dir> [--audit-grades <grades.jsonl>]
  *
@@ -20,15 +20,17 @@
  * Garry's brain. A counted run opens the Postgres brain only after brain.ts proves a server-side read-only barrier, reads
  * it as gbrain's untrusted remote caller, and refuses a brain that shows private pages to remote callers. Every model
  * call, and every embedding and rerank call gbrain makes, goes through the budget ledger's paid-request guard; a refused
- * reservation is a cap stop that ends the run incomplete. The protocol is docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md;
+ * reservation is a cap stop that pauses the run, incomplete, at its cap until GBEV-3 extends it and a --resume (or judge)
+ * with --window-note <extension id> and a higher --budget-usd continues it. Each run directory has its own ledger run, so
+ * its cost sums count only its own spend. The protocol is docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md;
  * the steps, abort codes and recovery are in RUN-KIT.md, "Phase 2". Exit status: 0 complete, 1 incomplete, 2 usage error,
  * 3 abort, 4 unexpected error, 5 a freeze under 60 kept tasks, 6 cap stop.
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { budgetOptionsFrom, readLedger, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
+import { budgetOptionsFrom, readLedger, setRunBudget, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
 import { priceUsage, provider, type Usage } from '../cat40/loop.ts';
 import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { gbrainPin } from '../gbrain-version.ts';
@@ -49,6 +51,9 @@ export const PHASE2_PAGES = join(FIXTURE_DIR, 'phase2-pages');
 export const FREEZE_SCHEMA = 'live-recall-task-freeze/v1';
 /** Fewer kept tasks than this goes to GBEV-3 before the freeze is committed. */
 export const MIN_TASKS = 60;
+/** Fewer kept tasks than this prints a notice: replacement tasks and a new freeze come before accepting lower power. */
+export const TARGET_TASKS = 100;
+/** The counted run's starting cap; a higher cap comes only from a --resume that extends a cap stop (extendCap). */
 export const COUNTED_CAP_USD = 360;
 export const SMOKE_CAP_USD = 10;
 /** The cost gate: the projected paraphrase pass may use at most this share of the cap, and the total at most the cap. */
@@ -58,11 +63,12 @@ export const PROVIDER_CONCURRENCY = 4;
 /** The descriptive second judge reads particle-1's paraphrase rows of these arms. */
 export const SECOND_JUDGE_ARMS: readonly TaskArm[] = ['B', 'C', 'D'];
 /**
- * Run identity a --resume must share with the session that started the run directory: the harness, gbrain, the brain's
- * configured retrieval settings (result_cache is gbrain's own availability flag, never a health probe) and the task set.
+ * Run identity a --resume must share with the session that started the run directory: the harness, gbrain, the barrier
+ * kind, the reader's source (run.json's local source_id, which the scorecard never carries), the brain's configured
+ * retrieval settings (result_cache is gbrain's own availability flag, never a health probe) and the task set.
  */
 const RESUME_IDENTITY = [
-  'harness_digest', 'gbrain_loaded_version', 'gbrain_loaded_commit', 'schema_version', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model',
+  'harness_digest', 'gbrain_loaded_version', 'gbrain_loaded_commit', 'schema_version', 'barrier', 'source_id', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model',
   'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest', 'models', 'arms', 'forms', 'kept_ids',
 ] as const;
 const AUDIT_ROWS = 30;
@@ -132,20 +138,23 @@ export function parseTasks(source: string): Array<{ line: number; task: Task }> 
 
 const byType = (tasks: Task[]) => Object.fromEntries(TYPES.map(t => [t, tasks.filter(x => x.type === t).length]));
 
-/** Every gold page reachable for a remote caller, for every task: kept and dropped, by line. */
+/**
+ * Every distinct gold page of every task, checked for a remote caller in the reader's source: the tasks kept and dropped,
+ * by line, and how many gold pages the reader reaches. A page in the reader's source that a remote caller cannot open
+ * (private, or no safe chunk) drops its task, counted; a page that lives only in another source aborts with
+ * LR_GOLD_OUT_OF_SOURCE, so no task is dropped for the reader's source scope.
+ */
 export async function goldCheck(reader: GbrainReader, tasks: Array<{ line: number; task: Task }>) {
-  const cache = new Map<string, boolean>();
-  const reachable = async (slug: string) => {
-    if (!cache.has(slug)) cache.set(slug, await reader.reachable(slug));
-    return cache.get(slug)!;
-  };
-  const kept: Array<{ line: number; task: Task }> = [];
-  for (const t of tasks) {
-    let ok = true;
-    for (const slug of t.task.gold_pages) if (!(await reachable(slug))) { ok = false; break; }
-    if (ok) kept.push(t);
+  const slugs = [...new Set(tasks.flatMap(t => t.task.gold_pages))];
+  const reachable = new Set<string>();
+  let outside = 0;
+  for (const slug of slugs) {
+    if (await reader.reachable(slug)) reachable.add(slug);
+    else if (await reader.outOfSource(slug)) outside++;
   }
-  return { kept, dropped: tasks.length - kept.length };
+  if (outside) throw new LiveRecallAbort('LR_GOLD_OUT_OF_SOURCE', outside + ' of ' + slugs.length + ' gold pages live only in a source other than the reader\'s');
+  const kept = tasks.filter(t => t.task.gold_pages.every(s => reachable.has(s)));
+  return { kept, dropped: tasks.length - kept.length, reachable: reachable.size, gold: slugs.length };
 }
 
 /** freeze.json: numbers only. */
@@ -162,6 +171,16 @@ export function freezeSummary(source: string, parsed: Array<{ line: number; task
     by_type: byType(kept.map(k => k.task)),
     mdd_primaries: primaryMdd(kept.length),
   };
+}
+
+/** The freeze command: every gold page checked, then freeze.json written. An abort in the check writes nothing. */
+export async function writeFreeze(reader: GbrainReader, source: string, parsed: Array<{ line: number; task: Task }>, gut: GbrainUnderTest, out: string, say: (line: string) => void) {
+  const gold = await goldCheck(reader, parsed);
+  say('gold pages reachable from the reader\'s source: ' + gold.reachable + ' of ' + gold.gold);
+  const summary = freezeSummary(source, parsed, gold.kept, gut);
+  writeJson(out, summary);
+  say('freeze ' + out + ': ' + summary.n_submitted + ' submitted, ' + summary.n_kept + ' kept, ' + summary.dropped_unreachable + ' dropped as unreachable to a remote caller; MDD at alpha 0.05 with 20% discordant pairs ' + (100 * (summary.mdd_primaries.pd20.alpha_05 ?? 0)).toFixed(1) + ' points (' + (100 * (summary.mdd_primaries.pd20.holm_0125 ?? 0)).toFixed(1) + ' at Holm\'s tightest)');
+  return summary;
 }
 
 // ─── The brain ─────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -265,7 +284,8 @@ export function loadRecords(path: string): { records: RunRecord[]; torn: number 
   return { records, torn };
 }
 
-class RecordStore {
+/** The run's records by key. Opening ends an unterminated last line, torn or whole, so the next record starts its own line. */
+export class RecordStore {
   readonly answers = new Map<string, AnswerRecord>();
   readonly judges = new Map<string, JudgeRecord>();
   readonly judges2 = new Map<string, JudgeRecord>();
@@ -273,7 +293,8 @@ class RecordStore {
   constructor(private readonly path: string) {
     const { records, torn } = loadRecords(path);
     this.torn = torn;
-    if (torn && !readFileSync(path, 'utf8').endsWith('\n')) appendFileSync(path, '\n');
+    const text = existsSync(path) ? readFileSync(path, 'utf8') : '';
+    if (text && !text.endsWith('\n')) appendFileSync(path, '\n');
     for (const r of records) this.index(r);
   }
   get size() { return this.answers.size; }
@@ -367,6 +388,7 @@ const needsSecondJudge = (a: AnswerRecord) => a.form === 'paraphrase' && SECOND_
 
 // ─── run ───────────────────────────────────────────────────────────────────────────────────────────────────────────
 
+/** The session's ledger run and guard. capUsd is this session's --budget-usd: the new cap when it extends a cap stop. */
 export interface Paid { run: BudgetRun; guard: PaidRequestGuard; runner: string; capUsd: number; ledgerPath: string }
 
 export interface RunOptions {
@@ -379,13 +401,16 @@ export interface RunOptions {
 
 interface RunFile {
   identity: Record<string, unknown>;
-  tasks_path: string; tasks_sha256: string; kept_ids: string[];
+  tasks_path: string; tasks_sha256: string; kept_ids: string[]; source_id: string;
   task_summary: { submitted: number; kept_at_freeze: number; dropped_unreachable: number; gold_missing_at_run: number; sha_prefix: string; n_frozen: number };
   gold_page_chars_mean: number;
   custody: { readonly_verified_start: boolean; readonly_verified_end: boolean | null; guard_refusals: Record<string, number> };
-  budget: { runner: string; run_id: string; ledger_path: string; cap_usd: number };
+  budget: { runner: string; run_id: string; ledger_path: string; cap_usd: number; extensions?: CapExtension[] };
   forms: TaskForm[]; arms: TaskArm[]; models: string[];
 }
+
+/** One extension past a cap stop: the cap it lifted, the new cap, GBEV-3's extension id and the cap stop it supersedes. */
+interface CapExtension { from_usd: number; to_usd: number; window_note: string; at: string; cap_stop: Record<string, unknown> }
 
 const paths = (dir: string) => ({ run: join(dir, 'run.json'), records: join(dir, 'records.local.jsonl'), capStop: join(dir, 'cap-stop.json'), auditKey: join(dir, 'audit-key.local.json'), auditRows: join(dir, 'audit-rows.local.jsonl') });
 const readRun = (dir: string): RunFile => JSON.parse(readFileSync(paths(dir).run, 'utf8'));
@@ -395,13 +420,62 @@ function git(args: string[]): string {
   try { return execFileSync('git', ['-C', REPO_ROOT, ...args], { encoding: 'utf8' }).trim(); } catch { return ''; }
 }
 
+/**
+ * The ledger runner of a run directory: the one its run.json records, else one named for the directory. Every session of
+ * a directory joins that ledger run, which a cap stop leaves open for an extension, and no other directory shares it.
+ */
+export function ledgerRunner(dir: string, fixture: boolean): string {
+  if (existsSync(paths(dir).run)) return readRun(dir).budget.runner;
+  return (fixture ? 'live-recall-phase2-smoke-' : 'live-recall-phase2-') + sha256(resolve(dir)).slice(0, 12);
+}
+
+/** One ledger run's spend across every session that joined it, never another run's, and the cap it records now. */
+function ledgerSpend(ledgerPath: string, runId: string) {
+  const ledger = readLedger(ledgerPath);
+  const entries = ledger.entries.filter(e => e.run_id === runId);
+  return {
+    cap_usd: ledger.runs.find(r => r.run_id === runId)!.budget_usd,
+    actual_usd: entries.reduce((s, e) => s + (e.actual_usd ?? e.reserved_usd), 0),
+    reserved_usd: entries.reduce((s, e) => s + e.reserved_usd, 0),
+    charged_reservations: entries.filter(e => e.status !== 'reconciled').length,
+    requests: entries.length,
+  };
+}
+
+/** cap-stop.json: the refusal, the cap the ledger run records and the run directory's spend across all its sessions. */
+function writeCapStop(dir: string, paid: Paid, refusal: Error) {
+  const s = ledgerSpend(paid.ledgerPath, paid.run.runId);
+  writeJson(paths(dir).capStop, { at: new Date().toISOString(), message: refusal.message, cap_usd: s.cap_usd, actual_usd: s.actual_usd, reserved_usd: s.reserved_usd, charged_reservations: s.charged_reservations });
+  return s;
+}
+
+/**
+ * Lift an outstanding cap stop once GBEV-3 extends the cap: with an extension id and a --budget-usd above the cap the stop
+ * recorded, raise the ledger run's budget through the ledger (setRunBudget refuses a cap above the program cap), record
+ * the extension and the stop it supersedes in run.json, and remove cap-stop.json. Without both it stops with LR_CAP_STOP.
+ */
+function extendCap(dir: string, paid: Paid, windowNote: string | null, say: (line: string) => void): void {
+  const p = paths(dir);
+  const run = readRun(dir);
+  const stop = JSON.parse(readFileSync(p.capStop, 'utf8'));
+  const from: number = stop.cap_usd ?? run.budget.cap_usd;
+  if (!windowNote || !(paid.capUsd > from)) throw new LiveRecallAbort('LR_CAP_STOP', 'this run directory is paused at its $' + from.toFixed(2) + ' cap; continuing needs --window-note <extension id> and a --budget-usd above it');
+  let to: number;
+  try { to = setRunBudget({ ledgerPath: paid.ledgerPath, runId: paid.run.runId, budgetUsd: paid.capUsd }).budget_usd; } catch (e) { throw new LiveRecallAbort('LR_CAP_STOP', (e as Error).message); }
+  run.budget.cap_usd = to;
+  run.budget.extensions = [...(run.budget.extensions ?? []), { from_usd: from, to_usd: to, window_note: windowNote, at: new Date().toISOString(), cap_stop: stop }];
+  writeJson(p.run, run);
+  rmSync(p.capStop);
+  say('cap extended from $' + from.toFixed(2) + ' to $' + to.toFixed(2) + ' under ' + windowNote + '; run.json records it and the cap stop it lifts');
+}
+
 export type RunResult = 'complete' | 'incomplete' | 'cap_stop';
 
 /** One counted run or fixture smoke: answers, judges and the scorecard. The caller owns the paid-request guard. */
 export async function runTaskSet(o: RunOptions, say: (line: string) => void): Promise<{ result: RunResult; scorecard: string; markdown: string }> {
   const p = paths(o.out);
   mkdirSync(o.out, { recursive: true, mode: 0o700 });
-  if (existsSync(p.capStop)) throw new LiveRecallAbort('LR_CAP_STOP', 'this run directory records a cap stop; nothing reruns');
+  if (existsSync(p.capStop)) extendCap(o.out, o.paid, o.resume ? o.windowNote : null, say);
   if (o.resume && !o.fixture && !o.windowNote) throw new LiveRecallAbort('LR_RESUME_NEEDS_WINDOW', 'a counted --resume needs --window-note');
   const store = new RecordStore(p.records);
   if (store.size > 0 && !o.resume) throw new Error('the run directory already holds records; pass --resume to continue it');
@@ -422,14 +496,16 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
   try {
     let candidates: Array<{ line: number; task: Task }>, summary: RunFile['task_summary'];
     if (o.fixture) {
-      const { kept, dropped } = await goldCheck(brain.reader, parsed);
+      const { kept, dropped, reachable, gold } = await goldCheck(brain.reader, parsed);
+      say('gold pages reachable from the reader\'s source: ' + reachable + ' of ' + gold);
       candidates = kept;
       summary = { submitted: parsed.length, kept_at_freeze: kept.length, dropped_unreachable: dropped, gold_missing_at_run: 0, sha_prefix: sha256(source).slice(0, 12), n_frozen: kept.length };
     } else {
       const lines = new Set(frozen!.kept_lines);
       const atFreeze = parsed.filter(t => lines.has(t.line));
       if (atFreeze.length !== frozen!.n_kept) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'kept line count differs from the freeze');
-      const { kept, dropped } = await goldCheck(brain.reader, atFreeze);
+      const { kept, dropped, reachable, gold } = await goldCheck(brain.reader, atFreeze);
+      say('gold pages reachable from the reader\'s source: ' + reachable + ' of ' + gold);
       if (dropped / Math.max(1, atFreeze.length) > GOLD_MISSING_CAP) throw new LiveRecallAbort('LR_GOLD_MISSING_CAP', dropped + ' of ' + atFreeze.length + ' kept tasks lost a gold page since the freeze');
       candidates = kept;
       summary = { submitted: frozen!.n_submitted, kept_at_freeze: frozen!.n_kept, dropped_unreachable: frozen!.dropped_unreachable, gold_missing_at_run: dropped, sha_prefix: sha256(source).slice(0, 12), n_frozen: frozen!.n_kept };
@@ -458,16 +534,16 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
         crag_escalation: brain.crag.escalation, crag_think: brain.crag.think, result_cache: brain.resultCache, tool_defs_digest: sha256(JSON.stringify(brain.reader.tools)),
         models: o.models, arms: o.arms, forms: o.forms, judges: Object.fromEntries(o.models.map(m => [m, judgeFor(m)])), second_judge_model: 'claude-opus-5-5',
         effort: EFFORT, max_output_tokens: MAX_OUTPUT_TOKENS, max_turns: MAX_TURNS, tool_result_chars: TOOL_RESULT_CHARS, paste_pages: PASTE_PAGES, paste_chars: PASTE_CHARS,
-        budget_usd: o.paid.capUsd, window_note: o.windowNote, concurrency: o.concurrency, openai_store: false,
+        budget_usd: previous?.identity.budget_usd ?? o.paid.capUsd, window_note: o.windowNote, concurrency: o.concurrency, openai_store: false,
       },
-      tasks_path: resolve(o.tasksPath), tasks_sha256: sha256(source), kept_ids: tasks.map(t => t.id), task_summary: summary,
+      tasks_path: resolve(o.tasksPath), tasks_sha256: sha256(source), kept_ids: tasks.map(t => t.id), source_id: brain.reader.sourceId, task_summary: summary,
       gold_page_chars_mean: await goldPageChars(brain.reader, tasks),
       custody: { readonly_verified_start: true, readonly_verified_end: null, guard_refusals: brain.counters.refusals },
-      budget: { runner: o.paid.runner, run_id: o.paid.run.runId, ledger_path: o.paid.ledgerPath, cap_usd: o.paid.capUsd },
+      budget: { runner: o.paid.runner, run_id: o.paid.run.runId, ledger_path: o.paid.ledgerPath, cap_usd: ledgerSpend(o.paid.ledgerPath, o.paid.run.runId).cap_usd, extensions: previous?.budget.extensions ?? [] },
       forms: o.forms, arms: o.arms, models: o.models,
     };
     if (previous) {
-      const was: Record<string, unknown> = { ...previous.identity, kept_ids: previous.kept_ids }, now: Record<string, unknown> = { ...run.identity, kept_ids: run.kept_ids };
+      const was: Record<string, unknown> = { ...previous.identity, kept_ids: previous.kept_ids, source_id: previous.source_id }, now: Record<string, unknown> = { ...run.identity, kept_ids: run.kept_ids, source_id: run.source_id };
       const norm = (v: unknown) => JSON.stringify(Array.isArray(v) ? [...v].sort() : v);
       const changed = RESUME_IDENTITY.filter(k => norm(was[k]) !== norm(now[k]));
       if (changed.length) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the resume differs from the first session in ' + changed.join(', '));
@@ -511,12 +587,11 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       });
       if (stopped()) break;
     }
-    if (halt.fatal) throw halt.fatal;
     if (halt.cap) {
-      const s = o.paid.run.summary();
-      writeJson(p.capStop, { at: new Date().toISOString(), message: halt.cap.message, actual_usd: s.actual_usd, reserved_usd: s.reserved_usd, charged_reservations: s.charged_reservations });
-      say('LR_CAP_STOP: the ledger refused a reservation; spent $' + s.actual_usd.toFixed(2) + ' of $' + o.paid.capUsd.toFixed(2) + ' (' + s.charged_reservations + ' requests charged at their reservation). The run is incomplete and is never rerun.');
+      const s = writeCapStop(o.out, o.paid, halt.cap);
+      say('LR_CAP_STOP: the ledger refused a reservation; this run directory has spent $' + s.actual_usd.toFixed(2) + ' of its $' + s.cap_usd.toFixed(2) + ' cap (' + s.charged_reservations + ' requests charged at their reservation). The run is paused at its cap until GBEV-3 extends it; then continue with --resume --window-note <extension id> --budget-usd <new cap>.');
     }
+    if (halt.fatal) throw halt.fatal;
     await verifyReadOnly(brain.engine);
     run.custody.readonly_verified_end = true;
     run.identity.finished_at = new Date().toISOString();
@@ -539,38 +614,45 @@ function runTasksOf(run: RunFile): Task[] {
   return run.kept_ids.map(id => byId.get(id)!).filter(Boolean);
 }
 
-/** Judge every answered episode whose judge is missing, older than the answer, or a judge_error; never re-answers. */
-export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) => void): Promise<number> {
+/**
+ * Judge every answered episode whose judge is missing, older than the answer, or a judge_error; never re-answers. A
+ * failure other than a cap stop (LR_PROVIDER_REJECTED included) stops new judge calls and is thrown once the calls in
+ * flight finish, so the caller never uninstalls the paid-request guard under a live call. An outstanding cap stop needs
+ * an extension, as a --resume does.
+ */
+export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) => void, windowNote: string | null = null): Promise<number> {
   const p = paths(dir);
-  if (existsSync(p.capStop)) throw new LiveRecallAbort('LR_CAP_STOP', 'this run directory records a cap stop; nothing reruns');
+  if (existsSync(p.capStop)) extendCap(dir, paid, windowNote, say);
   const run = readRun(dir);
   const tasks = new Map(runTasksOf(run).map(t => [t.id, t]));
   const store = new RecordStore(p.records);
   const refusals = watchRefusals();
   const ctx = { limit: limiter(), capCheck: refusals.check };
   let judged = 0;
-  const halt: { cap: Error | null } = { cap: null };
+  const halt: { cap: Error | null; fatal: unknown } = { cap: null, fatal: null };
+  const stopped = () => halt.cap !== null || halt.fatal !== null;
   try {
     const todo = [...store.answers.values()].filter(a => a.status === 'answered' && tasks.has(a.task));
     await pool(todo, TASK_CONCURRENCY, async a => {
-      if (halt.cap) return;
+      if (stopped()) return;
       const task = tasks.get(a.task)!;
       try {
         const j = store.judges.get(a.key);
         if (!judgedAfter(a, j) || j!.status === 'judge_error') { store.write(await judgeEpisode(ctx, task, a, judgeFor(a.model), 'judge')); judged++; }
+        if (stopped()) return;
         const j2 = store.judges2.get(a.key);
         if (needsSecondJudge(a) && (!judgedAfter(a, j2) || j2!.status === 'judge_error')) { store.write(await judgeEpisode(ctx, task, a, secondJudgeFor(a.model)!, 'judge2')); judged++; }
       } catch (e) {
-        if (!isCapStop(e)) throw e;
-        halt.cap ??= e as Error;
+        if (isCapStop(e)) halt.cap ??= e as Error;
+        else halt.fatal ??= e;
       }
     });
   } finally { refusals.restore(); }
   if (halt.cap) {
-    const s = paid.run.summary();
-    writeJson(p.capStop, { at: new Date().toISOString(), message: halt.cap.message, actual_usd: s.actual_usd, reserved_usd: s.reserved_usd, charged_reservations: s.charged_reservations });
-    say('LR_CAP_STOP during judging; the run is incomplete and is never rerun.');
+    const s = writeCapStop(dir, paid, halt.cap);
+    say('LR_CAP_STOP during judging: this run directory has spent $' + s.actual_usd.toFixed(2) + ' of its $' + s.cap_usd.toFixed(2) + ' cap. The run is paused at its cap until GBEV-3 extends it; then judge again with --window-note <extension id> --budget-usd <new cap>.');
   }
+  if (halt.fatal) throw halt.fatal;
   say(judged + ' judge calls made');
   return judged;
 }
@@ -608,10 +690,7 @@ function auditAgreement(dir: string, gradesPath: string): { n: number; agree: nu
 }
 
 function ledgerUsd(budget: RunFile['budget']): number | null {
-  try {
-    const entries = readLedger(budget.ledger_path).entries.filter(e => e.run_id === budget.run_id);
-    return entries.reduce((s, e) => s + (e.actual_usd ?? e.reserved_usd), 0);
-  } catch { return null; }
+  try { return ledgerSpend(budget.ledger_path, budget.run_id).actual_usd; } catch { return null; }
 }
 
 /** Build, check and write scorecard.json and scorecard.md from the run directory alone. Re-runnable. */
@@ -621,7 +700,8 @@ export function scoreRunDir(dir: string, opts: { auditGrades?: string } = {}): {
   const tasks = runTasksOf(run);
   const { records } = loadRecords(p.records);
   const card = buildTaskScorecard({
-    tasks, forms: run.forms, arms: run.arms, models: run.models, records, identity: run.identity, task_summary: run.task_summary, custody: run.custody,
+    tasks, forms: run.forms, arms: run.arms, models: run.models, records, task_summary: run.task_summary, custody: run.custody,
+    identity: { ...run.identity, final_cap_usd: run.budget.cap_usd, cap_extensions: run.budget.extensions?.length ?? 0 },
     stop: existsSync(p.capStop) ? 'LR_CAP_STOP' : null, ledger_usd: ledgerUsd(run.budget), audit: opts.auditGrades ? auditAgreement(dir, opts.auditGrades) : null,
   });
   const json = JSON.stringify(card, null, 2) + '\n';
@@ -764,10 +844,8 @@ async function main(argv: string[]): Promise<number> {
       const brain = await openBrain({ fixture, gut, databaseUrlEnv }, () => false);
       try {
         if (command === 'freeze') {
-          const { kept } = await goldCheck(brain.reader, parsed);
-          const summary = freezeSummary(source, parsed, kept, gut);
-          writeJson(out!, summary);
-          say('freeze ' + out + ': ' + summary.n_submitted + ' submitted, ' + summary.n_kept + ' kept, ' + summary.dropped_unreachable + ' dropped as unreachable to a remote caller; MDD at alpha 0.05 with 20% discordant pairs ' + (100 * (summary.mdd_primaries.pd20.alpha_05 ?? 0)).toFixed(1) + ' points (' + (100 * (summary.mdd_primaries.pd20.holm_0125 ?? 0)).toFixed(1) + ' at Holm\'s tightest)');
+          const summary = await writeFreeze(brain.reader, source, parsed, gut, out!, say);
+          if (!fixture && summary.n_kept < TARGET_TASKS) say('FREEZE UNDER ' + TARGET_TASKS + ': ' + summary.n_kept + ' kept; ask Wintermute for replacement tasks and freeze again before accepting lower power.');
           if (!fixture && summary.n_kept < MIN_TASKS) { say('FREEZE UNDER MINIMUM: ' + summary.n_kept + ' kept is under ' + MIN_TASKS + '; tell GBEV-3 before this freeze is committed or used.'); return 5; }
           return 0;
         }
@@ -799,13 +877,13 @@ async function main(argv: string[]): Promise<number> {
       }
       if (command === 'judge') {
         const run = readRun(dir);
-        const paid = openPaid(['--budget-ledger', run.budget.ledger_path, ...argv], run.budget.runner, run.budget.cap_usd);
-        try { await judgeRunDir(dir, paid, say); } finally { paid.guard.uninstall(); paid.run.close({ finish: existsSync(paths(dir).capStop) }); }
+        const paid = openPaid(['--budget-ledger', run.budget.ledger_path, ...argv], run.budget.runner, budgetOptionsFrom(argv).budgetUsd ?? run.budget.cap_usd);
+        try { await judgeRunDir(dir, paid, say, flag(argv, '--window-note') ?? null); } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); }
       }
       const s = scoreRunDir(dir, { auditGrades: flag(argv, '--audit-grades') });
       sayScorecard(s.scorecard, say);
       say('scorecard (' + (s.complete ? 'complete' : 'incomplete') + '; send these two files): ' + s.scorecard + ' and ' + s.markdown);
-      return 0;
+      return command === 'judge' && existsSync(paths(dir).capStop) ? 6 : 0;
     });
   }
   if (command !== 'run') { console.error('usage: tasks.ts check|freeze|estimate|run|judge|audit|score (see the header of this file)'); return 2; }
@@ -821,27 +899,28 @@ async function main(argv: string[]): Promise<number> {
   if (missing.length) { console.error('live-recall: set ' + missing.join(', ') + ' (test -n only; never print them)'); return 2; }
   const capUsd = fixture ? SMOKE_CAP_USD : COUNTED_CAP_USD;
   const budgetUsd = budgetOptionsFrom(argv).budgetUsd;
-  if (budgetUsd === null || budgetUsd > capUsd) { console.error('live-recall: pass --budget-usd at most ' + capUsd + ' (the ' + (fixture ? 'smoke' : 'counted') + ' cap) and --budget-ledger'); return 2; }
+  const prior = existsSync(paths(out).run) ? readRun(out).budget : null;
+  const extending = argv.includes('--resume') && existsSync(paths(out).capStop);
+  if (budgetUsd === null || (budgetUsd > Math.max(capUsd, prior?.cap_usd ?? 0) && !extending)) { console.error('live-recall: pass --budget-usd at most ' + capUsd + ' (the ' + (fixture ? 'smoke' : 'counted') + ' starting cap; only a --resume that extends a cap stop goes higher) and --budget-ledger'); return 2; }
   return withLog(out, async say => {
     process.env.GBRAIN_AUDIT_DIR = out;
     const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-    const paid = openPaid(argv, fixture ? 'live-recall-phase2-smoke' : 'live-recall-phase2', budgetUsd);
-    let result: RunResult = 'incomplete';
+    const paid = openPaid(prior ? ['--budget-ledger', prior.ledger_path, ...argv] : argv, ledgerRunner(out, fixture), budgetUsd);
     try {
       const r = await runTaskSet({
         out, gut, fixture, tasksPath, freezePath: flag(argv, '--freeze') ?? null, databaseUrlEnv, forms, arms, models,
         limit: flag(argv, '--limit') ? Number(flag(argv, '--limit')) : null, concurrency: Number(flag(argv, '--concurrency') ?? TASK_CONCURRENCY),
-        resume: argv.includes('--resume'), windowNote: flag(argv, '--window-note') ?? null, paid: { ...paid, capUsd: budgetUsd },
+        resume: argv.includes('--resume'), windowNote: flag(argv, '--window-note') ?? null, paid,
       }, say);
-      result = r.result;
       sayScorecard(r.scorecard, say);
       say('scorecard (' + r.result + '; send these two files): ' + r.scorecard + ' and ' + r.markdown);
       say('records, run.json and the gbrain log stay on this box: ' + out);
-      return result === 'cap_stop' ? 6 : result === 'complete' ? 0 : 1;
+      return r.result === 'cap_stop' ? 6 : r.result === 'complete' ? 0 : 1;
     } finally {
       paid.guard.uninstall();
-      const s = paid.run.close({ finish: result === 'cap_stop' });
-      say('ledger run ' + s.run_id + ': $' + s.actual_usd.toFixed(4) + ' over ' + s.requests + ' requests');
+      paid.run.close({ finish: false });
+      const s = ledgerSpend(paid.ledgerPath, paid.run.runId);
+      say('ledger run ' + paid.run.runId + ', every session of this run directory: $' + s.actual_usd.toFixed(4) + ' of its $' + s.cap_usd.toFixed(2) + ' cap over ' + s.requests + ' requests');
     }
   });
 }
