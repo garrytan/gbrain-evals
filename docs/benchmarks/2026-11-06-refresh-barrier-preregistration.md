@@ -742,3 +742,41 @@ as a method fault and fixes how the one rerun runs (GBEV-3, 2026-11-08).
 - **Reporting:** the findings report all five readings: the first reading as FIX-METHOD, the four diagnostics marked
   uncounted, and the binding run, with one limitation line: the gate is a single median of 25 queries per arm, so one
   reading is noisy.
+
+### Amendment 6, 2026-11-08: Part C money rules and how the counted Part C runs at G
+
+Recorded after B2 and the Part C smoke at G and before any counted Part C episode (GBEV-3, paid window GST-1644-step2,
+2026-11-08). It changes no threshold, task count, arm or verdict rule.
+
+- **Paid window:** $47 in lines: B2 $0.50, Part C smoke $1.50, claude-opus-5-5 $38, gpt-6.1-sol $7, particle-1 $0.
+  All-in spend when this entry was written: about $325, against the $390 cap.
+- **No task cut (replaces Amendment 2's money cut):** Part C runs all 60 tasks per model and arm. If the smoke's
+  measured cost projects all-in spend past $390, the counted episodes don't start; the run pauses and GBEV-3 takes the
+  extra to GBRA-108, whose cap it is.
+- **A stop on money pauses (replaces "A cap stop is terminal" under Part C):** a spend stop pauses that model's Part C
+  and goes to GBEV-3 for an extension; it never ends Part C INCOMPLETE. With an extension the model resumes: completed
+  episodes stay, and the episode the stop interrupted reruns under its task id. Without one, the model's Part C is
+  INCOMPLETE as before. The findings report every pause and the spend at it.
+- **How the lines are held:** a ledger run's budget must fit its ledger's program cap, and `agent.ts` and `retrieval.ts`
+  open their runs at the coded caps (B2 $5, smoke $5, Opus $65, Sol $35); changing those would change the harness
+  digest. So each ledger's program cap is the coded cap it must hold (B2 $5, smoke $5, counted Part C $100), which stays
+  the runaway stop, and the counted job holds the granted lines itself: every 30 s it sums each model's ledger entries
+  (settled cost, or the reservation where a request is unsettled) and, once Opus reaches $37.00 or Sol $6.75 (the line
+  less about one episode), sends SIGTERM to that model's two `agent.ts` processes and writes `pause-<model>.json`. A
+  killed episode writes nothing, so a resume reruns it, and its ledger run stays open, so the resume joins it. A coded
+  cap stop, if one ever came first, writes `cap-stop.json` and finishes the run; with an extension that file is renamed
+  `cap-stop-<n>.json` beside the results and the model's remaining tasks run on a continuation ledger.
+- **B2 at G (counted):** #384 at `2d5fafb8`, digest `500cc5ba4b97`, 17:43 to 17:47 UTC, ledger run
+  `gbev44-refresh-barrier-b2-2026-11-08T17-43-08-537Z-edae3558`, $0.033 over 960 requests. Both switches resolved to
+  their arm, and all eight cells are identical off and on.
+- **Part C smoke at G (uncounted):** the same head, tasks 61 and 62 per model and arm on this Capy machine, 17:48 to
+  17:50 UTC, ledger $0.987 (claude-opus-5-5 $0.763, gpt-6.1-sol $0.196, from the episodes' usage). Per episode: $0.191
+  and $0.049, against $0.283 and $0.044 in the smoke at 431cb3f9. No episode errored, and the fault fired in all eight.
+- **Projection:** from the mean of both smokes' cost per episode, 120 counted episodes cost about $28 for
+  claude-opus-5-5 and $6 for gpt-6.1-sol, under each line, and all-in lands near $375, under $390. The counted episodes
+  start.
+- **Where it runs:** one Ubicloud standard-16 VM, through `ubi-runner.sh run`, whose phases run on the VM detached from
+  the controller. Keys reach it only through `--pass`. It runs from a full clone of #384 at the pushed head carrying
+  this entry, with gbrain fetched at G from github.com/garrytan/gbrain and checked to be `773a29ee`. There are four
+  invocations, one per model and arm, each running tasks 1 to 60, in parallel, on one ledger file. The outputs and the
+  ledger are pulled, and the VM is deleted.
