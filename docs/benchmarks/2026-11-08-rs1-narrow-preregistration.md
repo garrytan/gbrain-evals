@@ -515,6 +515,13 @@ value.
    Voyage at OpenAI's address, so it refused every RS1 campaign, which names particle-1, with `MODEL_UNPRICED` before
    any lease. Stage 1's first launch stopped there at $0. particle-1 is now priced at Particle's own address.
 
+### 2026-11-08: the code counted runs start from
+
+Counted runs start from `80518b253bd09c4802d23448e301ecab4dd77c97` on the results branch, the pushed commit that holds
+all six fixes above. At that commit, `eval/runner/q1/cells/rs1-cells.json` has SHA-256
+`d97c13018693b5fefaf537df7efb1e37df96e2afccacb5fcdadfb080b81bfd33`. Later docs-only commits don't change it. Each run
+records the commit it actually ran, and a run from any other code needs a further amendment.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
