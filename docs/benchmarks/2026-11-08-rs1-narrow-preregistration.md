@@ -522,6 +522,21 @@ all six fixes above. At that commit, `eval/runner/q1/cells/rs1-cells.json` has S
 `d97c13018693b5fefaf537df7efb1e37df96e2afccacb5fcdadfb080b81bfd33`. Later docs-only commits don't change it. Each run
 records the commit it actually ran, and a run from any other code needs a further amendment.
 
+### 2026-11-08: pricing rerun after stage 1
+
+Stage 1 ran from `80518b25` and completed every row and re-read; the run log in the results file records it.
+`eval/runner/rs1/pricing.ts` was rerun with gbrain's measured `rs1-stable` ingest rates in place of F6's f6-master
+placeholders:
+
+- **VM time:** 1.771 VM hours per million tokens (from 12,591 s for 1,974,748 tokens), against 1.92.
+- **API rate:** taken from the gbrain row's metered ingest spend, and below the placeholder.
+
+The run used `--stage1-done` and `--spent-usd` set to the window's ledger total. The check-in projection at N = 28
+stays under its line, so pricing.ts exited 0 and there is no RS1_CHECKIN. The measured rates lower the expected all-in
+spend and the ceiling at N = 33. The memory-bank and extract-first servers each ingested the same 1,974,748 tokens at
+metered rates below their placeholders, but pricing.ts keeps those placeholders, so their share of the model stays
+conservative. Dollar amounts are kept out of this public file. No bar, arm, reader, judge, margin or cap changes.
+
 ### 2026-11-08: R78, the gating judges and the judge check
 
 R78 (GBEV-3, 2026-11-08, from Garry: "Use Astra vs opus") replaces the frontier judges and adds a judge check before any
