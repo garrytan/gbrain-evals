@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import { adjudicateEpisode } from '../../scripts/refresh-barrier-partc-adjudicate.ts';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { PART_C_GATING, PART_C_TASKS, modelSlug } from '../../eval/runner/refresh-barrier/analyze.ts';
+import { COUNTED_GBRAIN_SHA, COUNTED_HARNESS_DIGEST, adjudicate, adjudicateEpisode } from '../../scripts/refresh-barrier-partc-adjudicate.ts';
 
 const invalid = 'Error: {"error":"invalid_params","message":"1 unknown parameter not declared in the remember tool schema (write operations always reject unknown parameters; nothing was written)."}';
 const episode = (o: { reissues?: object[]; writes?: object[]; results?: string[]; score?: object }) => ({
@@ -38,5 +42,35 @@ describe('refresh-barrier Part C adjudication (Amendment 3)', () => {
     const r = adjudicateEpisode(episode({ score: { tokens_once: false } }));
     expect(r).toEqual({ raw: false, adjudicated: false, reissues: 0, excused: 0 });
     expect(adjudicateEpisode(episode({ score: { success: true, report_correct: true } })).adjudicated).toBe(true);
+  });
+
+  test('a Git HEAD duplicate or a context overflow stays a failure under both readings, even when the resend is excused', () => {
+    const excused = { reissues: [{ call: 1, fact: 'F1', earlier: 0 }], writes: [{ i: 0, code: 'invalid_params', tokens: ['F1'] }, { i: 1, code: null, tokens: ['F1'] }], results: [invalid, '{"status":"pending"}'] };
+    expect(adjudicateEpisode(episode({ ...excused, score: { duplicates: ['F1'] } }))).toEqual({ raw: false, adjudicated: false, reissues: 1, excused: 1 });
+    expect(adjudicateEpisode({ ...episode({ score: { success: true } }), loop: { stop: 'context_overflow' } })).toEqual({ raw: false, adjudicated: false, reissues: 0, excused: 0 });
+  });
+
+  test('a model reads incomplete unless all 60 counted pairs are present at G and the counted digest', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rb-partc-'));
+    const write = (model: string, arm: string, id: number, o: Record<string, unknown> = {}) => {
+      const p = join(dir, 'agent', modelSlug(model), arm);
+      mkdirSync(p, { recursive: true });
+      writeFileSync(join(p, `task-${id}.json`), JSON.stringify({ ...episode({ score: { success: true } }), counted: true, model, arm,
+        provenance: { gbrain_sha: COUNTED_GBRAIN_SHA, harness_digest: COUNTED_HARNESS_DIGEST }, ...o }));
+    };
+    try {
+      for (const model of PART_C_GATING) for (const arm of ['off', 'on']) for (const id of PART_C_TASKS) write(model, arm, id);
+      const [opus, sol] = PART_C_GATING;
+      expect(adjudicate(dir).models[opus].adjudicated.status).toBe('non_inferior');
+      rmSync(join(dir, 'agent', modelSlug(opus), 'on', 'task-60.json'));
+      write(sol, 'off', 7, { counted: false });
+      const m = adjudicate(dir).models;
+      expect([m[opus].paired, m[opus].raw.status, m[opus].adjudicated.status, m[opus].incomplete]).toEqual([59, 'incomplete', 'incomplete', ['on/task-60: missing']]);
+      expect([m[sol].paired, m[sol].adjudicated.status, m[sol].incomplete.length]).toEqual([59, 'incomplete', 1]);
+      write(sol, 'off', 7, { provenance: { gbrain_sha: '431cb3f9', harness_digest: COUNTED_HARNESS_DIGEST } });
+      expect(adjudicate(dir).models[sol].adjudicated.status).toBe('incomplete');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

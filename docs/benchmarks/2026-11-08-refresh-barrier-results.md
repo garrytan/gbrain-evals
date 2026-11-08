@@ -14,7 +14,10 @@
   retry.
 - **What didn't work: the first counted run failed, and our scorer penalises untitled captures.** At gbrain
   `431cb3f9` the test read **FAIL**: two writes held behind refreshes that aborted stayed pending for up to about 300 s
-  (GST-1853). gbrain fixed that in `773a29ee`, the two runs are never pooled, and the first stays FAIL. Separately,
+  (GST-1853), and four overwrites matched a fault in our own detector, three of them shown by replay. gbrain fixed the
+  hangs in `773a29ee`, the two runs are never pooled, and the first stays FAIL. B1's latency gate also failed its first
+  reading (Voyage 1.69 times flag-off, taken while this machine was creating VMs); Amendment 5 then added an idle-machine
+  guard, and the guarded rerun passed. Separately,
   when an agent calls `capture` without a title, gbrain titles the note with its content, so the preregistered scorer
   counts the fact twice. That failed claude-opus-5-5 in 16 flag-off and 23 flag-on episodes and gpt-6.1-sol in 2
   flag-off ones. It works against the flag, and the results stand as scored. If you score agent writes, you should
@@ -129,7 +132,8 @@ On minus off, paired over the 60 tasks (10,000 resamples, seed 1):
 Both models are non-inferior (the lower bound is above -10 points) under both readings, so the verdict doesn't depend on
 the adjudication. Amendment 3's rule excuses a resend that follows a write refused `invalid_params` with gbrain's
 "nothing was written", and `scripts/refresh-barrier-partc-adjudicate.ts` applies it the same way to every arm and model.
-No episode errored, overflowed its context or ran unexposed.
+No episode errored, overflowed its context or ran unexposed. Amendment 2's procedure 4 rescored no episode: no raw or
+adjudicated success had a fact token twice in Git HEAD. No Part C run paused.
 
 The flag-off failures are mostly agents resending a refused write under a new request id. gbrain answered every one of
 Sol's 60 held flag-off writes with `worktree_refreshing`, and Sol reissued in 56 of them. With the flag on, Sol got

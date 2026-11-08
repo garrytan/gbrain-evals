@@ -4,7 +4,9 @@
  * written", followed by a corrected call carrying the same fact token, counts as one write attempt and its resend, not a
  * reissue. A resend after a success, a timeout, a busy or barrier answer, or any other error still counts as a reissue.
  * The rule applies identically to both arms and both models; the result keeps the raw preregistered strict success beside
- * the adjudicated one, and the verdict reads the adjudicated number.
+ * the adjudicated one, and the verdict reads the adjudicated number. A fact token more than once in Git HEAD (Amendment 2,
+ * procedure 4) or a context overflow fails an episode under both readings, as the analyzer's success does. A model's status
+ * is incomplete unless all 60 tasks in both arms are counted episodes at G and the counted harness digest.
  *
  *   bun scripts/refresh-barrier-partc-adjudicate.ts --partc <agent.ts --out dir> [--out <adjudication.json>]
  *
@@ -17,6 +19,9 @@ import { modelSlug, NON_INFERIOR_LO, PART_C_GATING, PART_C_TASKS, pairedBootstra
 
 type Rec = Record<string, any>;
 
+export const COUNTED_GBRAIN_SHA = '773a29eede3b3ea91e0e2cba4012078b5d42c602';
+export const COUNTED_HARNESS_DIGEST = '500cc5ba4b978e18d695683a39ef51714ff4c1626249b1594e88eb91629035e3';
+
 export function adjudicateEpisode(r: Rec): { raw: boolean; adjudicated: boolean; reissues: number; excused: number } {
   const reissues: Rec[] = r.behavior?.reissues ?? [];
   const writes: Rec[] = r.write_calls ?? [];
@@ -25,14 +30,22 @@ export function adjudicateEpisode(r: Rec): { raw: boolean; adjudicated: boolean;
     return prior !== undefined && prior.code === 'invalid_params' && String(r.transcript?.[prior.i]?.result ?? '').includes('nothing was written');
   }).length;
   const s = r.score ?? {};
-  return { raw: s.success === true, adjudicated: s.tokens_once === true && s.report_correct === true && excused === reissues.length, reissues: reissues.length, excused };
+  const kept = (s.duplicates ?? []).length === 0 && r.loop?.stop !== 'context_overflow';
+  return { raw: s.success === true && kept, adjudicated: s.tokens_once === true && s.report_correct === true && excused === reissues.length && kept, reissues: reissues.length, excused };
 }
 
 export function adjudicate(partc: string): Rec {
   const models = Object.fromEntries(PART_C_GATING.map(model => {
+    const incomplete: string[] = [];
     const arm = (a: 'off' | 'on') => PART_C_TASKS.map(id => {
       const p = join(partc, 'agent', modelSlug(model), a, `task-${id}.json`);
-      return existsSync(p) ? adjudicateEpisode(JSON.parse(readFileSync(p, 'utf8'))) : null;
+      if (!existsSync(p)) { incomplete.push(`${a}/task-${id}: missing`); return null; }
+      const r = JSON.parse(readFileSync(p, 'utf8'));
+      if (r.counted !== true || r.model !== model || r.arm !== a || r.provenance?.gbrain_sha !== COUNTED_GBRAIN_SHA || r.provenance?.harness_digest !== COUNTED_HARNESS_DIGEST) {
+        incomplete.push(`${a}/task-${id}: not a counted episode of this model and arm at G and the counted digest`);
+        return null;
+      }
+      return adjudicateEpisode(r);
     });
     const off = arm('off'), on = arm('on');
     const paired = PART_C_TASKS.map((_, i) => [off[i], on[i]] as const).filter(([a, b]) => a && b) as Array<readonly [Rec, Rec]>;
@@ -41,9 +54,9 @@ export function adjudicate(partc: string): Rec {
       raw_inconsistent: xs.filter(x => x && x.raw && !x.adjudicated).length });
     const read = (key: 'raw' | 'adjudicated') => {
       const diff = pairedBootstrap(paired.map(([a, b]) => Number(b[key]) - Number(a[key])));
-      return { on_minus_off: diff, status: diff.lo === null ? 'incomplete' : diff.hi! < 0 ? 'harm' : diff.lo >= NON_INFERIOR_LO ? 'non_inferior' : 'inconclusive' };
+      return { on_minus_off: diff, status: incomplete.length || diff.lo === null ? 'incomplete' : diff.hi! < 0 ? 'harm' : diff.lo >= NON_INFERIOR_LO ? 'non_inferior' : 'inconclusive' };
     };
-    return [model, { paired: paired.length, off: summary(off), on: summary(on), raw: read('raw'), adjudicated: read('adjudicated') }];
+    return [model, { paired: paired.length, off: summary(off), on: summary(on), raw: read('raw'), adjudicated: read('adjudicated'), ...(incomplete.length ? { incomplete } : {}) }];
   }));
   return { partc: resolve(partc), rule: 'Amendment 3, Part C adjudication', models };
 }
