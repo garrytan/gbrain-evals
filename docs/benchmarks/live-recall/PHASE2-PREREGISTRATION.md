@@ -251,8 +251,10 @@ Hybrid search for concept/landscape questions and people/companies/projects by t
 
 ## Grading
 
-One judge call per answered episode. `gpt-6.1-sol` judges claude-opus-5-5 and particle-1 rows; `claude-opus-5-5` judges
-gpt-6.1-sol rows. particle-1 never judges, and the routing function refuses a same-family judge or a particle judge. The
+One judge call per answered episode. `gpt-6-astra` judges claude-opus-5-5 and particle-1 rows; `claude-opus-5-5` judges
+gpt-6.1-sol rows. particle-1 never judges, and the routing function refuses a same-family judge or a particle judge.
+Every judge record keeps the judge model, its effort and the model version the provider reported serving, and the
+scorecard lists each judge's rows and versions. The
 judge runs through the same loop at effort medium (`store: false` on OpenAI) with no tools but a verdict tool named
 `submit_answer`, at most two turns. If the verdict is missing or malformed, the judge is called once more; a second
 failure is a `judge_error`, and `tasks.ts judge <run dir>` re-judges such answers later without re-answering.
@@ -267,6 +269,24 @@ An answer's citations are its inline `[slug]` markers, then its `sources` list, 
 marker counts as a citation only when it contains `/` or names a page the episode saw (a slug in one of its tool
 results, or a page pasted into D), so a bracketed note such as `[TBD]` is not a citation; every `sources` entry shaped
 like a slug counts. The same rule reads C's summary.
+
+### Judge check before the counted run (R78)
+
+Before any counted call, `tasks.ts judge-check` runs on the box from the same freeze: the paraphrase form of 20 frozen
+tasks spread over the five types, all four arms and all three models (240 answers), each judged by its counted judge as
+in the run. Both labellers, `gpt-6-astra` and `claude-opus-5-5`, then grade every answer again with the same judge
+prompt at effort high, the counted judge's model first so its prompt is still in the provider's cache. The answers both
+labellers grade alike are the label set. For each counted judge (Astra on Opus and particle-1 rows, Opus on Sol rows)
+and each primary metric (`correct` over all four arms; `correct and grounded` over B, C and D, since A cites nothing),
+`judge-check.json` reports the labellers' own agreement and Cohen's kappa over every usable answer, the number of
+labels, the bad answers the counted judge caught (catch rate), the good answers it failed (false-fail rate), and Cohen's
+kappa between the counted verdict and the labels, with each model's rows broken out. A judge passes a metric with at
+least 40 labels and both kappas at least 0.6, and every judge must pass both metrics. Otherwise `judge-check` exits 7
+and `judge-check.json` goes to GBEV-3 before the counted run. `tasks.ts run` refuses to start without a passing
+`judge-check.json` made on the same task file and harness digest ([`LR_JUDGE_CHECK`](RUN-KIT.md#lr_judge_check)),
+unless GBEV-3 waives it with a note, which the scorecard reports. Only `judge-check.json` (counts, rates and kappas,
+checked like the scorecard) leaves the box; the answers, labels and verdicts stay in the judge-check run directory, and
+none of its answers is counted.
 
 ### Judge prompt (verbatim)
 
@@ -399,7 +419,7 @@ QUOTED>>>
 - **correct and grounded**: both.
 - **confidently wrong**: answered, not correct and not abstained.
 
-Two descriptive checks of the judge, because no one on our side ever reads a judged row:
+Beside the judge check, two descriptive checks of the judge, because no one on our side ever reads a judged row:
 
 - `claude-opus-5-5` also judges particle-1's paraphrase rows of B, C and D. The scorecard reports agreement on correct
   and Cohen's kappa against the counted judge.
@@ -428,10 +448,11 @@ particle-1 on the paraphrase form with answer cost per correct answer.
 | p2_c_vs_b_opus | C minus B | correct and grounded | claude-opus-5-5 |
 | p2_c_vs_b_particle | C minus B | correct and grounded | particle-1 |
 
-Each reports the paired difference with a cluster-bootstrap 95% interval and the exact McNemar two-sided p, then Holm's
-adjusted p. A primary whose cell is invalid (below) is reported untested and enters Holm at p = 1.
+Each reports the paired difference with a cluster-bootstrap 95% interval, the number of tasks that got worse (the
+second arm below the first on that task, both forms summed when pooled) and the exact McNemar two-sided p, then Holm's
+adjusted p. An interval that includes zero reads "no measurable difference". A primary whose cell is invalid (below) is reported untested and enters Holm at p = 1.
 
-**Descriptive**, with intervals and unadjusted p: for each model and for the paraphrase form, the exact form and both
+**Descriptive**, with intervals, tasks worse, the same reading and unadjusted p: for each model and for the paraphrase form, the exact form and both
 pooled, B minus A on correct, C minus B on correct and grounded and on plain correctness, and D minus B on correct and on
 correct and grounded. gpt-6.1-sol, the exact form, pooled forms, D, task types and every other cell are descriptive.
 
@@ -440,8 +461,8 @@ correct and grounded. gpt-6.1-sol, the exact form, pooled forms, D, task types a
 - P1 holding for a model says retrieval through gbrain changes that model's answers on this brain. B's and D's exposure
   numbers then say whether misses come from search (no gold page seen) or from reading (seen but not used).
 - A Holm-significant P2 drop (C below B) is evidence against putting a summarising helper in front of gbrain for that
-  model. A P2 null is reported as "no difference detected, minimum detectable difference x points", never as
-  "summarisers are fine". C minus B on plain correctness is reported beside it, since P2 also charges C for citing
+  model. A P2 interval that includes zero is reported as "no measurable difference, minimum detectable difference x
+  points", never as "summarisers are fine". C minus B on plain correctness is reported beside it, since P2 also charges C for citing
   through a 300-word summary.
 - D minus B, descriptive, says whether letting the model search again recovers paraphrase misses.
 - Every null or negative result gets one "Why null?" cycle before it is reported (exposure, task fit, power and
@@ -472,27 +493,34 @@ lower power is accepted. A freeze under 60 still goes to GBEV-3 before it is com
 The whole of phase 2 has an $850 all-in plan, a guideline rather than a hard stop (Garry, 2026-11-07: "Eh don't cut
 corners to stay just under the limits we treat it as a guideline"): crew build, two /ship runs and coordination $320;
 the public fixture smoke $10 on crew keys under one paid window; the counted run $360 on the box's keys to start; one
-R48/R61 cycle $110; $50 unallocated. Nothing in the design is cut to stay under it.
+R48/R61 cycle $110; $50 unallocated. The R78 amendment (2026-11-08) adds the judge check with a $200 cap and a second
+fixture smoke ($10), and moves two of the three judge roles to `gpt-6-astra`, so the counted run starts at $600: about
+$1,300 in all. Nothing in the design is cut to stay under it.
 
 Assumptions per answer at effort medium, from phase 1's page sizes and Cat 40's tool loops: A about 1.2k tokens in and
 1.5k out; B about 39k in over four turns (most of it cache reads on Anthropic and OpenAI) and 3k out; C a B-sized
 summariser plus 3k in and 1.5k out for the answerer; D about 12k in and 1.5k out; the judge about 11k in (2k for A) and
-2k out. At the ledger's list prices (claude-opus-5-5 $4 and $20, gpt-6.1-sol $2 and $10, particle-1 $0.25 and $1 per
-million input and output tokens):
+2k out. At the ledger's list prices (claude-opus-5-5 $4 and $20, gpt-6-astra $10 and $50, gpt-6.1-sol $2 and $10,
+particle-1 $0.25 and $1 per million input and output tokens):
 
 | Per task form | A | B | C | D |
 |---|---|---|---|---|
 | claude-opus-5-5 answers | $0.035 | $0.16 | $0.19 | $0.078 |
 | gpt-6.1-sol answers | $0.017 | $0.07 | $0.09 | $0.04 |
 | particle-1 answers | $0.002 | $0.013 | $0.016 | $0.004 |
-| Judges | $0.096 | $0.168 | $0.168 | $0.168 |
+| gpt-6-astra judging Opus and particle-1 | $0.24 | $0.42 | $0.42 | $0.42 |
+| claude-opus-5-5 judging Sol | $0.048 | $0.084 | $0.084 | $0.084 |
 
-That is about $1.32 per task form, $263 for 100 tasks in two forms, plus about $25 for the second judge on the
-paraphrase pass: about $290 expected, $157 of it in the paraphrase pass. gbrain's own embedding and rerank calls add
-cents.
+That is about $2.52 per task form, $1.50 of it Astra's judging, so $503 for 100 tasks in two forms, plus about $25 for
+the second judge on the paraphrase pass: about $528 expected, $277 of it in the paraphrase pass. The judge check adds
+20 tasks of a paraphrase pass ($50) and two labels per answer at effort high, assumed at twice a counted judge's
+output: about $4.80 a task, $97, so about $150 expected under its $200 cap. These assume 2k output tokens per judge
+call; the fixture smoke's judges wrote 75 to 300, so the box's estimate is likely lower. gbrain's own embedding and
+rerank calls add cents.
 
 - **The cap.** Every request in the counted run (answers, summaries, judges, and gbrain's embedding and rerank calls)
-  goes through the budget ledger's paid-request guard on a box-local ledger with a $360 starting cap. The cap is a
+  goes through the budget ledger's paid-request guard on a box-local ledger with a $600 starting cap; the judge check
+  has its own run directory and ledger run with a $200 starting cap, paused and extended the same way. The cap is a
   runaway-spend stop, not the end of the test. A refused reservation is a cap stop: `cap-stop.json` is written, the run
   exits with status 6 and prints `LR_CAP_STOP` with the run directory's spend and the cap its ledger run records, and the
   scorecard is marked incomplete with what finished. The run is then paused at its cap until GBEV-3 extends it. The same
@@ -504,12 +532,14 @@ cents.
   the same two flags). gbrain catches a refused embedding or rerank call and would quietly search by keyword alone, so
   the runner watches every refusal the guard raises and ends the episode as a cap stop instead.
 - **Order.** The paraphrase pass runs to the end before the exact pass starts, so a cap stop cannot cut a primary. The
-  paraphrase pass alone ($157 expected) fits in the cap even at 2.3 times the estimate.
+  paraphrase pass alone ($277 expected) fits in the cap even at 2.1 times the estimate.
 - **Cost gate.** After the public smoke, `tasks.ts estimate` on the box projects the counted cost from the smoke's
   measured tokens per episode, scaling the input of every role that reads pages by the ratio of the frozen gold pages'
-  mean size to the fixture's (each capped at what that role reads of a page). If the projected paraphrase pass exceeds
-  75% of the cap ($270) or the projected total exceeds the cap, it stops with
-  [`LR_COST_GATE`](RUN-KIT.md#lr_cost_gate) and goes back to GBEV-3 before any counted call.
+  mean size to the fixture's (each capped at what that role reads of a page). It prints each judge's share of a task
+  form on its own line, Astra's separately, and projects the judge check from the fixture judge check's labels. If the
+  projected paraphrase pass exceeds 75% of the cap ($450), the projected total exceeds the cap, or the projected judge
+  check exceeds its cap, it stops with [`LR_COST_GATE`](RUN-KIT.md#lr_cost_gate) and goes back to GBEV-3 before any
+  counted call.
 - **Cost reported.** Each response's usage priced at the ledger's list prices, by role, and the ledger's own total for
   the run, with the difference (gbrain's embeddings and rerank calls, and any retried requests) reported.
 - **Cost sums.** Every cost sum (the scorecard's ledger total and difference, `cap-stop.json`, the `LR_CAP_STOP` line
@@ -567,7 +597,8 @@ outstanding cap stop continues only once GBEV-3 extends the cap, with `--resume 
 ## Custody
 
 Only `scorecard.json` (`live-recall-task-scorecard/v1`) and `scorecard.md` leave the box, plus `freeze.json`, the
-freeze's reachability line and the `tasks.ts estimate` line (numbers only). The scorecard is built by `tasks.ts score` from the run directory and checked
+freeze's reachability line, the `tasks.ts estimate` lines and `judge-check.json` (`live-recall-judge-check/v1`), all
+numbers only. The scorecard is built by `tasks.ts score` from the run directory and checked
 twice before anything is written: a structural check that accepts only keys the format defines and strings from an
 allowlist (so a task, an answer, a fact or a slug has nowhere to sit), and a scan of both files for every task form,
 gold answer, required fact, acceptable variant, task id and every slug the run saw. Needles with no letter are left to
@@ -612,12 +643,16 @@ in the run directory on the box.
   particle-1's own 402 stopping the run (a metering proxy's 402 stays a cap stop), a degraded episode's probe (a one-off failure stays
   degraded, a lasting one stops the run with the episode unwritten), a model-caused 400 counted, lost requests rerun, a
   privacy relaxation during an episode, a resume with changed identity or retrieval settings refused, the leak
-  canaries (a form, a fact and a slug), a numeric fact, an oracle answerer scoring 1.0 and an empty one 0.0, and the
-  abort codes. Cat 40's existing byte-identity test shows its own request bodies unchanged.
+  canaries (a form, a fact and a slug), a numeric fact, an oracle answerer scoring 1.0 and an empty one 0.0, the
+  judge check (its catches, false fails and kappas on a constructed label set, its failures under 40 labels or a kappa
+  under 0.6, both labellers at effort high after the counted judge with no second judge, and `judge-check.json` free of
+  task text), a counted run's refusal without a passing judge check, each comparison's tasks worse and reading, the
+  estimate's separate judge lines and its refusal of a smoke judged by another model, and the abort codes. Cat 40's existing byte-identity test shows its own request bodies unchanged.
 - **Paid smoke**, after the harness merges, on crew keys under one paid window with a $10 cap: five fixture tasks (one
   of each type), the paraphrase form, all four arms, all three models and both judges. It proves the three provider paths,
   `store: false`, the judge routing and the cost accounting against each provider's usage, and measures the tokens per
-  episode that `tasks.ts estimate` scales. Its scores say nothing about Garry's brain.
+  episode that `tasks.ts estimate` scales. Its scores say nothing about Garry's brain. After the R78 amendment it runs
+  again with Astra judging, beside `tasks.ts judge-check --fixture --limit 5`, whose labels the estimate prices.
 
 ## Limits
 
@@ -625,7 +660,10 @@ One brain, one owner and one agent writing the tasks; Wintermute also uses gbrai
 was found are reported. One trial per cell, so model randomness sits inside the discordance. Query expansion is off in
 every arm, as in phase 1. B and C get three of gbrain's read operations, not all of them. Private-flagged pages and
 unsafe chunks are out of scope by consent, so the result covers what gbrain shows a remote agent, not what Garry's local
-CLI sees. The judge's quality rests on the two agreement checks, since we never see a judged row. The run reads the
+CLI sees. The judge's quality rests on the judge check and the two descriptive checks, since we never see a judged
+row. Each counted judge is also one of its own labellers, so its kappa against the labels partly measures agreement with
+itself at a higher effort. The labellers' cross-family kappa, which must also reach 0.6, is the stronger test, and the
+answers they disagree on are left out of the labels, which tilts the label set toward easier answers. The run reads the
 live database through the no-write role, so pages change only as Garry's own brain changes during the run; the run's
 start and end times are recorded, and the judge grades the snapshot each model saw.
 
@@ -646,6 +684,14 @@ start and end times are recorded, and the judge grades the snapshot each model s
   and the extension (old cap, new cap, extension id, time) is recorded in `run.json` and as `final_cap_usd` and
   `cap_extensions` in the scorecard's run identity. The counted run still starts at $360. With it, every cost sum covers
   only the run directory's own ledger run, and a freeze under 100 tasks prints a notice to replace tasks and freeze again.
+- 2026-11-08, before any counted call, R78 (Garry, "Check the grader, not just the product", amended "Use Astra vs
+  opus"), relayed by GBEV-3: `gpt-6-astra` replaces `gpt-6.1-sol` as the judge of claude-opus-5-5 and particle-1 rows
+  (Astra is picked for particle-1 rows too, so both primaries' models share one judge), and Sol no longer judges.
+  The judge check above runs on the box before the counted run and gates it; every judge row records its model and
+  version; each comparison reports the tasks that got worse and reads an interval that includes zero as "no
+  measurable difference". The counted run's starting cap moves from $360 to $600 and the judge check gets its own $200
+  cap, both runaway stops, so the cost gate tests Astra's prices; GBEV-3 decides the window. Wintermute's blind audit
+  of 30 answers stays as an extra check.
 - 2026-11-08, before the freeze and before any counted call, approved by GBEV-3: the gbrain under test moves from
   0.60.593.0 (`27f8b9d6287c`, schema 291) to 0.60.613.0 (`98dda48fb9fd`, schema 296). GBRA-108 upgraded Wintermute's
   box to 613, and its schema migration ends the 593 pin: the runner refuses a brain whose schema differs from the loaded
@@ -664,11 +710,11 @@ Filled on the results branch from Wintermute's `freeze.json`, as a dated, pushed
 submitted, N kept, the count dropped as unreachable, counts by type, the task file's sha256 prefix, the minimum
 detectable differences for the four primaries at the kept N, and the counted run's runner commit and harness digest.
 
-**Counted-run identity (recorded 2026-11-08, before the freeze).** The counted run's harness digest must be
-`6cb8b40f3a010f46cf3533d027f354a6e529c69dbde11ca61c44dc9e98094de9`. The digest covers the twenty files in `HARNESS_FILES`
-(`eval/runner/live-recall/tasks.ts`): the runner, the agent loop, the budget ledger and the cost path they price with,
-including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json` must also show a
-`runner_commit` that contains 320db88b and `runner_dirty: false`.
+**Counted-run identity (recorded 2026-11-08, before the freeze; updated the same day for R78).** The counted run's and
+the judge check's harness digest must be `7b538e35bbc9648ff5336eff761387eba989955303452c9b44c8baca9f64f754`. The digest covers the twenty files in
+`HARNESS_FILES` (`eval/runner/live-recall/tasks.ts`): the runner, the judge, the agent loop, the budget ledger and the
+cost path they price with, including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json`
+must also show a `runner_commit` that contains 320db88b and the R78 commit, and `runner_dirty: false`.
 
 ## Disclosures
 

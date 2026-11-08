@@ -160,14 +160,17 @@ The runner searches only a database that proves, by itself, that this run cannot
 Phase 2 asks whether gbrain retrieval changes the answers a model gives about Garry's brain
 ([preregistration](PHASE2-PREREGISTRATION.md)). Each task goes to claude-opus-5-5, particle-1 and gpt-6.1-sol in four
 arms (no retrieval, gbrain's own read tools, a summarising helper, and the top five pages pasted in), a judge from
-another model family grades each answer against the gold answer, and the runner writes an aggregate scorecard. Every
+another model family (gpt-6-astra for claude-opus-5-5 and particle-1, claude-opus-5-5 for gpt-6.1-sol) grades each
+answer against the gold answer, and the runner writes an aggregate scorecard. Before the counted run, a judge check
+grades 240 answers on 20 of the frozen tasks twice more, once by each judge model, to measure the judges. Every
 model call carries task text, and the gbrain arms carry retrieved page text, to Anthropic, OpenAI and Particle; Garry
 agreed to that for this eval (T1, 2026-11-07). The runner reads the brain only as gbrain's untrusted remote caller, so
 gbrain hides pages flagged private from the models and the judge. gbrain caches its privacy setting for 30 seconds, so
 if someone relaxes it mid-run, pages served inside that window can reach a model before the runner notices.
 
 Only these leave the box: `freeze.json` (counts, a hash and power numbers), the freeze's reachability line (two counts),
-the `estimate` line (dollars), and the run's `scorecard.json` and `scorecard.md` (aggregates). The task file, `tasks.meta.json`, the run's records, page
+the `estimate` lines (dollars), the judge check's `judge-check.json` (counts, rates and kappas), and the run's
+`scorecard.json` and `scorecard.md` (aggregates). The task file, `tasks.meta.json`, the run's records, page
 snapshots, audit rows and gbrain's log stay.
 
 ### Phase 2: what you need
@@ -184,7 +187,7 @@ snapshots, audit rows and gbrain's log stay.
   `GBRAIN_DIRECT_DATABASE_URL` unset. `GBRAIN_REMOTE_PRIVATE_PAGES` is removed from the runner's own process; if the
   brain's config sets `search.remote_private_pages`, the runner refuses to start.
 - A budget ledger on the box, for example `/data/ops/live-recall/phase2/ledger.sqlite`. The first paid command on a new
-  ledger also takes `--program-cap-usd 360`.
+  ledger also takes `--program-cap-usd 800`, which covers the judge check's $200 cap and the counted run's $600.
 
 ### Phase 2: the task file
 
@@ -235,22 +238,39 @@ All commands run from the repository root.
      --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL
    ```
 
-3. **Estimate the cost** (the cost gate). `--smoke` is the public smoke's run directory, which comes with the run
-   request. It reads the frozen gold pages' sizes and makes no model call. It ends with `cost gate passed`, or stops
-   with [`LR_COST_GATE`](#lr_cost_gate); send the line either way.
+3. **Estimate the cost** (the cost gate). `--smoke` and `--smoke-check` are the public smoke's run directory and its
+   fixture judge check's, which come with the run request. It reads the frozen gold pages' sizes and makes no model
+   call. It prints each judge's share on its own line and the judge check's projection, and ends with `cost gate
+   passed`, or stops with [`LR_COST_GATE`](#lr_cost_gate); send the lines either way.
 
    ```bash
    bun eval/runner/live-recall/tasks.ts estimate --tasks <tasks.jsonl> --freeze freeze.json --smoke <smoke run dir> \
-     --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL --out estimate.json
+     --smoke-check <smoke judge-check dir> --gbrain /data/gbrain@98dda48fb9fd \
+     --database-url-env LIVE_RECALL_DATABASE_URL --out estimate.json
    ```
 
-4. **Run**, in the window GBEV-3 grants, after we confirm the freeze numbers are committed. Start it detached (for
-   example in `tmux`): it takes hours, and the paraphrase pass finishes before the exact pass starts.
+4. **Judge check**, in the window GBEV-3 grants, before the run. It answers the paraphrase form of 20 frozen tasks in
+   every arm and model, judges each answer as the run will, and has both judge models grade every answer again. It
+   prints one line per judge and metric and writes `judge-check.json` in its own run directory. Exit status 0 means it
+   passed; send `judge-check.json`. Exit status 7 means a judge did not pass: send `judge-check.json` to GBEV-3 and run
+   nothing counted until GBEV-3 answers. A cap stop (6) and a resume work as for the run.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts judge-check --tasks <tasks.jsonl> --freeze freeze.json \
+     --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL \
+     --budget-usd 200 --budget-ledger <ledger> --program-cap-usd 800 --out <judge-check dir>
+   ```
+
+5. **Run**, in the same window, after we confirm the freeze numbers are committed and the judge check passed. Start it
+   detached (for example in `tmux`): it takes hours, and the paraphrase pass finishes before the exact pass starts. It
+   refuses to start without a passing judge check for the same task file and runner commit
+   ([`LR_JUDGE_CHECK`](#lr_judge_check)).
 
    ```bash
    bun eval/runner/live-recall/tasks.ts run --tasks <tasks.jsonl> --freeze freeze.json \
      --gbrain /data/gbrain@98dda48fb9fd --database-url-env LIVE_RECALL_DATABASE_URL \
-     --budget-usd 360 --budget-ledger <ledger> --program-cap-usd 360 --out <run dir>
+     --judge-check <judge-check dir>/judge-check.json \
+     --budget-usd 600 --budget-ledger <ledger> --program-cap-usd 800 --out <run dir>
    ```
 
    Before the first task the runner proves the barrier, refuses a brain that shows private pages to remote callers
@@ -262,14 +282,15 @@ All commands run from the repository root.
    ledger total for this run directory across all its sessions. Exit status: 0 complete, 1 incomplete (some episode is
    missing or unjudged), 6 cap stop, paused at the cap ([`LR_CAP_STOP`](#lr_cap_stop)), 3 abort, 4 unexpected error.
 
-5. **Re-judge, if asked.** If the run printed `LR_JUDGE_ERROR`, re-judge those answers without re-answering. It joins
-   the run's ledger run and cap, and after a cap stop it needs the extension's two flags ([`LR_CAP_STOP`](#lr_cap_stop)).
+6. **Re-judge, if asked.** If the run or the judge check printed `LR_JUDGE_ERROR`, re-judge those answers without
+   re-answering (`tasks.ts judge <judge-check dir>` also re-labels and rewrites `judge-check.json`). It joins the run's
+   ledger run and cap, and after a cap stop it needs the extension's two flags ([`LR_CAP_STOP`](#lr_cap_stop)).
 
    ```bash
    bun eval/runner/live-recall/tasks.ts judge <run dir>
    ```
 
-6. **Audit 30 answers.** This draws 30 judged answers, blind to arm and model, into `audit-rows.local.jsonl` in the run
+7. **Audit 30 answers.** This draws 30 judged answers, blind to arm and model, into `audit-rows.local.jsonl` in the run
    directory. Grade each against its gold answer and write one line per row, `{"row": 1, "correct": true}`, to a file
    on the box. Then rescore with the grades; only the agreement count reaches the scorecard.
 
@@ -278,9 +299,9 @@ All commands run from the repository root.
    bun eval/runner/live-recall/tasks.ts score <run dir> --audit-grades <grades.jsonl>
    ```
 
-7. **Send** `scorecard.json` and `scorecard.md` from the run directory. Keep everything else in it on the box.
+8. **Send** `scorecard.json` and `scorecard.md` from the run directory. Keep everything else in it on the box.
 
-8. **Remove the role** (ALPH-72) and send the teardown proof to GBRA-108.
+9. **Remove the role** (ALPH-72) and send the teardown proof to GBRA-108.
 
 If the run stops for any reason other than a cap stop (the machine restarted, a provider refused a key:
 [`LR_PROVIDER_REJECTED`](#lr_provider_rejected)), continue it with the same command plus `--resume --window-note <id>`, where the id is from GBEV-3's window note. A resume judges answered episodes
@@ -421,7 +442,7 @@ bun eval/runner/live-recall/tasks.ts run --tasks <tasks.jsonl> --freeze freeze.j
 
 The resume raises the ledger run's budget through the ledger, records the old cap, the new cap, the extension id and
 the time in `run.json`, and reruns the episodes the cap refused; finished episodes are never answered again. The ledger
-refuses a run budget above its program cap, which the counted command set to 360, so first raise the program cap with
+refuses a run budget above its program cap, which the first paid command set to 800, so first raise the program cap with
 the ledger's own command, the extension id as the reason, and pass the same number as `--program-cap-usd` above and in
 any later resume:
 
@@ -440,7 +461,7 @@ degraded searches. The scorecard marks it invalid and reports its comparisons un
 
 ### LR_JUDGE_ERROR
 
-Phase 2, not an abort: some judge outputs failed to parse twice. Run `tasks.ts judge <run dir>` (step 5), which
+Phase 2, not an abort: some judge outputs failed to parse twice. Run `tasks.ts judge <run dir>` (step 6), which
 re-judges them without re-answering, then send the new scorecard.
 
 ### LR_RESUME_NEEDS_WINDOW
@@ -450,8 +471,17 @@ through ALPH-72 for a window note.
 
 ### LR_COST_GATE
 
-Phase 2: the projected counted cost breaks the cost gate (the paraphrase pass over $270, 75% of the $360 cap, or the
-total over the cap). Send the estimate line to GBEV-3 through ALPH-72; no counted call runs until GBEV-3 answers.
+Phase 2: the projected counted cost breaks the cost gate (the paraphrase pass over $450, 75% of the $600 cap, the total
+over the cap, or the judge check over its $200 cap). Send the estimate lines to GBEV-3 through ALPH-72; no counted call
+runs until GBEV-3 answers.
+
+### LR_JUDGE_CHECK
+
+Phase 2: the counted run has no passing judge check. `tasks.ts run` needs `--judge-check <judge-check.json>` from
+`tasks.ts judge-check` on the same task file and the same runner commit's harness, and that check must have passed.
+If the judge check did not pass (it exits with status 7), send `judge-check.json` to GBEV-3 through ALPH-72 and run
+nothing counted. If GBEV-3 decides to go ahead anyway, add `--judge-check-waiver <note id>` with GBEV-3's note id; the
+scorecard reports the waiver.
 
 ### LR_PROVIDER_REJECTED
 

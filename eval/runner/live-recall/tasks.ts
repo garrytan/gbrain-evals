@@ -7,10 +7,13 @@
  *   bun eval/runner/live-recall/tasks.ts freeze (--fixture | --tasks <private.jsonl> --gbrain <checkout>@<commit>
  *     [--database-url-env LIVE_RECALL_DATABASE_URL]) --out <freeze.json>
  *   bun eval/runner/live-recall/tasks.ts estimate --tasks <private.jsonl> --freeze <freeze.json> --smoke <smoke run dir>
- *     --gbrain <checkout>@<commit> [--database-url-env ...] [--out <estimate.json>]
- *   bun eval/runner/live-recall/tasks.ts run (--fixture | --tasks <private.jsonl> --freeze <freeze.json> --gbrain ...)
- *     --budget-usd <dollars> --budget-ledger <ledger> [--forms paraphrase,exact] [--arms A,B,C,D] [--models <ids>]
- *     [--limit <tasks>] [--concurrency 4] [--out <run dir>] [--resume [--window-note <id>]]
+ *     --smoke-check <smoke judge-check dir> --gbrain <checkout>@<commit> [--database-url-env ...] [--out <estimate.json>]
+ *   bun eval/runner/live-recall/tasks.ts judge-check (--fixture | --tasks <private.jsonl> --freeze <freeze.json> --gbrain ...)
+ *     --budget-usd <dollars> --budget-ledger <ledger> [--limit 20] [--out <judge-check dir>] [--resume [--window-note <id>]]
+ *   bun eval/runner/live-recall/tasks.ts run (--fixture | --tasks <private.jsonl> --freeze <freeze.json> --gbrain ...
+ *     --judge-check <judge-check.json> [--judge-check-waiver <GBEV-3 note>]) --budget-usd <dollars> --budget-ledger <ledger>
+ *     [--forms paraphrase,exact] [--arms A,B,C,D] [--models <ids>] [--limit <tasks>] [--concurrency 4] [--out <run dir>]
+ *     [--resume [--window-note <id>]]
  *   bun eval/runner/live-recall/tasks.ts judge <run dir> [--window-note <extension id> --budget-usd <new cap>]
  *   bun eval/runner/live-recall/tasks.ts audit <run dir> [--n 30]
  *   bun eval/runner/live-recall/tasks.ts score <run dir> [--audit-grades <grades.jsonl>]
@@ -24,7 +27,7 @@
  * with --window-note <extension id> and a higher --budget-usd continues it. Each run directory has its own ledger run, so
  * its cost sums count only its own spend. The protocol is docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md;
  * the steps, abort codes and recovery are in RUN-KIT.md, "Phase 2". Exit status: 0 complete, 1 incomplete, 2 usage error,
- * 3 abort, 4 unexpected error, 5 a freeze under 60 kept tasks, 6 cap stop.
+ * 3 abort, 4 unexpected error, 5 a freeze under 60 kept tasks, 6 cap stop, 7 a judge check that did not pass (R78).
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -42,8 +45,8 @@ import {
   ARMS, EFFORT, FORMS, MAX_ATTEMPTS, MAX_OUTPUT_TOKENS, MAX_TURNS, PASTE_CHARS, PASTE_PAGES, TOOL_RESULT_CHARS, episodeKey, judgeEpisode, openReader, runEpisode,
   type AnswerRecord, type EpisodeContext, type GbrainReader, type JudgeRecord, type Task, type TaskArm, type TaskForm,
 } from './task-arms.ts';
-import { JUDGE_PAGE_CHARS, MODELS, judgeFor, secondJudgeFor } from './task-judge.ts';
-import { SEED, TYPES, buildTaskScorecard, checkOutbound, primaryMdd, renderTaskMarkdown, taskNeedles } from './task-scorecard.ts';
+import { JUDGE_PAGE_CHARS, LABELLERS, LABEL_EFFORT, MODELS, judgeFor, secondJudgeFor } from './task-judge.ts';
+import { JUDGE_CHECK_SCHEMA, SEED, TYPES, buildTaskScorecard, checkOutbound, judgeCheck, primaryMdd, renderTaskMarkdown, taskNeedles } from './task-scorecard.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const FIXTURE_TASKS = join(FIXTURE_DIR, 'tasks.jsonl');
@@ -54,8 +57,12 @@ export const MIN_TASKS = 60;
 /** Fewer kept tasks than this prints a notice: replacement tasks and a new freeze come before accepting lower power. */
 export const TARGET_TASKS = 100;
 /** The counted run's starting cap; a higher cap comes only from a --resume that extends a cap stop (extendCap). */
-export const COUNTED_CAP_USD = 360;
+export const COUNTED_CAP_USD = 600;
 export const SMOKE_CAP_USD = 10;
+/** The judge check (R78): paraphrase answers on this many frozen tasks, spread over the types, labelled before the run. */
+export const JUDGE_CHECK_TASKS = 20;
+/** The judge check's starting cap, a runaway stop like the counted run's. */
+export const JUDGE_CHECK_CAP_USD = 200;
 /** The cost gate: the projected paraphrase pass may use at most this share of the cap, and the total at most the cap. */
 export const COST_GATE_SHARE = 0.75;
 export const TASK_CONCURRENCY = 4;
@@ -69,7 +76,7 @@ export const SECOND_JUDGE_ARMS: readonly TaskArm[] = ['B', 'C', 'D'];
  */
 const RESUME_IDENTITY = [
   'harness_digest', 'gbrain_loaded_version', 'gbrain_loaded_commit', 'schema_version', 'barrier', 'source_id', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model',
-  'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest', 'models', 'arms', 'forms', 'kept_ids',
+  'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest', 'models', 'arms', 'forms', 'kept_ids', 'judges', 'labellers', 'label_effort',
 ] as const;
 const AUDIT_ROWS = 30;
 const KEY_ENV = { anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', particle: 'PARTICLE_API_KEY' } as const;
@@ -294,6 +301,8 @@ export function loadRecords(path: string): { records: RunRecord[]; torn: number 
 export class RecordStore {
   readonly answers = new Map<string, AnswerRecord>();
   readonly judges = new Map<string, JudgeRecord>();
+  /** Judge-check labels by episode key and labeller. */
+  readonly labels = new Map<string, JudgeRecord>();
   readonly judges2 = new Map<string, JudgeRecord>();
   readonly torn: number;
   constructor(private readonly path: string) {
@@ -306,6 +315,7 @@ export class RecordStore {
   get size() { return this.answers.size; }
   private index(r: RunRecord) {
     if (r.kind === 'answer') this.answers.set(r.key, r);
+    else if (r.kind === 'label') this.labels.set(r.key + '|' + r.judge, r);
     else (r.kind === 'judge' ? this.judges : this.judges2).set(r.key, r);
   }
   /** One record, appended synchronously, so concurrent episodes never interleave a line. */
@@ -391,6 +401,8 @@ function limiter() {
 
 const judgedAfter = (a: AnswerRecord, j: JudgeRecord | undefined) => j !== undefined && j.at >= a.at;
 const needsSecondJudge = (a: AnswerRecord) => a.form === 'paraphrase' && SECOND_JUDGE_ARMS.includes(a.arm) && secondJudgeFor(a.model) !== null;
+/** The labellers for a model's answer, its counted judge first, so that judge's prompt is still in the provider's cache. */
+const labelOrder = (model: string) => [judgeFor(model), ...LABELLERS.filter(l => l !== judgeFor(model))];
 
 // ─── run ───────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -403,6 +415,10 @@ export interface RunOptions {
   forms: TaskForm[]; arms: TaskArm[]; models: string[];
   limit: number | null; concurrency: number; resume: boolean; windowNote: string | null;
   paid: Paid;
+  /** A judge-check run: every answer also gets both labellers' verdicts, and no second judge. */
+  judgeCheck?: boolean;
+  /** A counted run's judge-check.json, and GBEV-3's waiver note when that check did not pass. */
+  judgeCheckPath?: string | null; judgeCheckWaiver?: string | null;
 }
 
 interface RunFile {
@@ -413,12 +429,14 @@ interface RunFile {
   custody: { readonly_verified_start: boolean; readonly_verified_end: boolean | null; guard_refusals: Record<string, number> };
   budget: { runner: string; run_id: string; ledger_path: string; cap_usd: number; extensions?: CapExtension[] };
   forms: TaskForm[]; arms: TaskArm[]; models: string[];
+  /** The judge check a counted run started from: its file hash, verdicts and any waiver. */
+  judge_check?: Record<string, unknown> | null;
 }
 
 /** One extension past a cap stop: the cap it lifted, the new cap, GBEV-3's extension id and the cap stop it supersedes. */
 interface CapExtension { from_usd: number; to_usd: number; window_note: string; at: string; cap_stop: Record<string, unknown> }
 
-const paths = (dir: string) => ({ run: join(dir, 'run.json'), records: join(dir, 'records.local.jsonl'), capStop: join(dir, 'cap-stop.json'), auditKey: join(dir, 'audit-key.local.json'), auditRows: join(dir, 'audit-rows.local.jsonl') });
+const paths = (dir: string) => ({ run: join(dir, 'run.json'), records: join(dir, 'records.local.jsonl'), capStop: join(dir, 'cap-stop.json'), auditKey: join(dir, 'audit-key.local.json'), auditRows: join(dir, 'audit-rows.local.jsonl'), judgeCheck: join(dir, 'judge-check.json') });
 const readRun = (dir: string): RunFile => JSON.parse(readFileSync(paths(dir).run, 'utf8'));
 const writeJson = (path: string, value: unknown) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n', { mode: 0o600 });
 
@@ -430,9 +448,26 @@ function git(args: string[]): string {
  * The ledger runner of a run directory: the one its run.json records, else one named for the directory. Every session of
  * a directory joins that ledger run, which a cap stop leaves open for an extension, and no other directory shares it.
  */
-export function ledgerRunner(dir: string, fixture: boolean): string {
+export function ledgerRunner(dir: string, fixture: boolean, judgeCheck = false): string {
   if (existsSync(paths(dir).run)) return readRun(dir).budget.runner;
-  return (fixture ? 'live-recall-phase2-smoke-' : 'live-recall-phase2-') + sha256(resolve(dir)).slice(0, 12);
+  return 'live-recall-phase2-' + (fixture ? 'smoke-' : '') + (judgeCheck ? 'judge-check-' : '') + sha256(resolve(dir)).slice(0, 12);
+}
+
+const NOTE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/;
+
+/**
+ * A counted run's judge check (R78): the judge-check.json `tasks.ts judge-check` wrote for this task file and harness.
+ * A check that did not pass stops the run unless GBEV-3 waives it with a note, which the scorecard reports.
+ */
+export function readJudgeCheck(path: string | null | undefined, source: string, waiver: string | null | undefined) {
+  if (!path) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'a counted run needs --judge-check <judge-check.json>');
+  const text = readFileSync(path, 'utf8');
+  const c = JSON.parse(text);
+  if (c?.schema !== JUDGE_CHECK_SCHEMA || c.tasks_sha256 !== sha256(source)) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json was not made on this task file');
+  if (c.run?.harness_digest !== harnessDigest() || c.run?.control !== false) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json was made on another harness or on the fixture');
+  if (waiver !== null && waiver !== undefined && !NOTE.test(waiver)) throw new LiveRecallAbort('LR_JUDGE_CHECK', '--judge-check-waiver takes GBEV-3\'s note id');
+  if (c.passed !== true && !waiver) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'the judge check did not pass; send judge-check.json to GBEV-3 before any counted call');
+  return { judge_check_sha256: sha256(text), passed: c.passed === true, waiver: c.passed === true ? null : waiver!, judges: c.judges };
 }
 
 /** One ledger run's spend across every session that joined it, never another run's, and the cap it records now. */
@@ -495,6 +530,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
   }
   const previous = o.resume && existsSync(p.run) ? readRun(o.out) : null;
   if (previous && previous.tasks_sha256 !== sha256(source)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the resumed run was made on another task file');
+  const judgeCheckRef = o.fixture || o.judgeCheck ? null : previous?.judge_check ?? readJudgeCheck(o.judgeCheckPath, source, o.judgeCheckWaiver);
   const startedAt = new Date().toISOString();
   const refusals = watchRefusals();
   const brain = await openBrain(o, refusals.capped).catch(e => { refusals.restore(); throw e; });
@@ -538,7 +574,8 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
         search_mode: String(brain.knobs.resolved_mode), reranker_enabled: Boolean(brain.knobs.reranker_enabled), reranker_model: String(brain.knobs.reranker_model), embedding_model: brain.embeddingModel,
         source_scope_default: brain.reader.sourceId === 'default', privacy_posture: 'remote', remote_private_pages: false,
         crag_escalation: brain.crag.escalation, crag_think: brain.crag.think, result_cache: brain.resultCache, tool_defs_digest: sha256(JSON.stringify(brain.reader.tools)),
-        models: o.models, arms: o.arms, forms: o.forms, judges: Object.fromEntries(o.models.map(m => [m, judgeFor(m)])), second_judge_model: 'claude-opus-5-5',
+        models: o.models, arms: o.arms, forms: o.forms, judges: Object.fromEntries(o.models.map(m => [m, judgeFor(m)])), second_judge_model: o.judgeCheck ? null : 'claude-opus-5-5',
+        labellers: o.judgeCheck ? [...LABELLERS] : null, label_effort: o.judgeCheck ? LABEL_EFFORT : null,
         effort: EFFORT, max_output_tokens: MAX_OUTPUT_TOKENS, max_turns: MAX_TURNS, tool_result_chars: TOOL_RESULT_CHARS, paste_pages: PASTE_PAGES, paste_chars: PASTE_CHARS,
         budget_usd: previous?.identity.budget_usd ?? o.paid.capUsd, window_note: o.windowNote, concurrency: o.concurrency, openai_store: false,
       },
@@ -546,7 +583,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       gold_page_chars_mean: await goldPageChars(brain.reader, tasks),
       custody: { readonly_verified_start: true, readonly_verified_end: null, guard_refusals: brain.counters.refusals },
       budget: { runner: o.paid.runner, run_id: o.paid.run.runId, ledger_path: o.paid.ledgerPath, cap_usd: ledgerSpend(o.paid.ledgerPath, o.paid.run.runId).cap_usd, extensions: previous?.budget.extensions ?? [] },
-      forms: o.forms, arms: o.arms, models: o.models,
+      forms: o.forms, arms: o.arms, models: o.models, judge_check: judgeCheckRef,
     };
     if (previous) {
       const was: Record<string, unknown> = { ...previous.identity, kept_ids: previous.kept_ids, source_id: previous.source_id }, now: Record<string, unknown> = { ...run.identity, kept_ids: run.kept_ids, source_id: run.source_id };
@@ -571,7 +608,9 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       }
       if (a.status !== 'answered') return;
       if (!judgedAfter(a, store.judges.get(a.key))) store.write(await judgeEpisode(ctx, task, a, judgeFor(model), 'judge'));
-      if (needsSecondJudge(a) && !judgedAfter(a, store.judges2.get(a.key))) store.write(await judgeEpisode(ctx, task, a, secondJudgeFor(model)!, 'judge2'));
+      if (o.judgeCheck) {
+        for (const l of labelOrder(model)) if (!stopped() && !judgedAfter(a, store.labels.get(a.key + '|' + l))) store.write(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT));
+      } else if (needsSecondJudge(a) && !judgedAfter(a, store.judges2.get(a.key))) store.write(await judgeEpisode(ctx, task, a, secondJudgeFor(model)!, 'judge2'));
     };
     for (const form of FORMS.filter(f => o.forms.includes(f))) {
       let done = 0;
@@ -645,6 +684,14 @@ export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) =
       try {
         const j = store.judges.get(a.key);
         if (!judgedAfter(a, j) || j!.status === 'judge_error') { store.write(await judgeEpisode(ctx, task, a, judgeFor(a.model), 'judge')); judged++; }
+        if (run.identity.labellers) {
+          for (const l of labelOrder(a.model)) {
+            if (stopped()) return;
+            const x = store.labels.get(a.key + '|' + l);
+            if (!judgedAfter(a, x) || x!.status === 'judge_error') { store.write(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT)); judged++; }
+          }
+          return;
+        }
         if (stopped()) return;
         const j2 = store.judges2.get(a.key);
         if (needsSecondJudge(a) && (!judgedAfter(a, j2) || j2!.status === 'judge_error')) { store.write(await judgeEpisode(ctx, task, a, secondJudgeFor(a.model)!, 'judge2')); judged++; }
@@ -709,6 +756,7 @@ export function scoreRunDir(dir: string, opts: { auditGrades?: string } = {}): {
     tasks, forms: run.forms, arms: run.arms, models: run.models, records, task_summary: run.task_summary, custody: run.custody,
     identity: { ...run.identity, final_cap_usd: run.budget.cap_usd, cap_extensions: run.budget.extensions?.length ?? 0 },
     stop: existsSync(p.capStop) ? 'LR_CAP_STOP' : null, ledger_usd: ledgerUsd(run.budget), audit: opts.auditGrades ? auditAgreement(dir, opts.auditGrades) : null,
+    judge_check: run.judge_check ?? null,
   });
   const json = JSON.stringify(card, null, 2) + '\n';
   const markdown = renderTaskMarkdown(card);
@@ -719,30 +767,79 @@ export function scoreRunDir(dir: string, opts: { auditGrades?: string } = {}): {
   return { scorecard, markdown: md, complete: card.status === 'complete' };
 }
 
+/**
+ * judge-check.json from a judge-check run directory: the R78 numbers, the identity a counted run checks it against and
+ * the cost, checked like the scorecard before it is written. Re-runnable after `tasks.ts judge` repairs a judge error.
+ */
+export function writeJudgeCheck(dir: string) {
+  const run = readRun(dir);
+  if (!run.identity.labellers) throw new Error(dir + ' is not a judge-check run');
+  const { records } = loadRecords(paths(dir).records);
+  const id = run.identity;
+  const roles = { answer: 0, summariser: 0, judge: 0, label: 0 };
+  for (const r of records) {
+    if (r.kind === 'answer') { roles.answer += r.roles.answer?.usd ?? 0; roles.summariser += r.roles.summariser?.usd ?? 0; }
+    else if (r.kind === 'judge' || r.kind === 'label') roles[r.kind] += r.usd;
+  }
+  const r4 = (x: number) => Math.round(x * 1e4) / 1e4;
+  const check = {
+    ...judgeCheck(records), tasks_sha256: run.tasks_sha256, n_tasks_checked: run.kept_ids.length,
+    run: {
+      started_at: id.started_at, finished_at: id.finished_at, runner_commit: id.runner_commit, runner_dirty: id.runner_dirty, harness_digest: id.harness_digest,
+      gbrain_loaded_version: id.gbrain_loaded_version, gbrain_loaded_commit: id.gbrain_loaded_commit, schema_version: id.schema_version, control: id.control,
+      effort: id.effort, labellers: id.labellers, label_effort: id.label_effort,
+    },
+    cost: { model_calls_usd: r4(roles.answer + roles.summariser + roles.judge + roles.label), by_role_usd: { answer: r4(roles.answer), summariser: r4(roles.summariser), judge: r4(roles.judge), label: r4(roles.label) }, ledger_usd: (u => (u === null ? null : r4(u)))(ledgerUsd(run.budget)) },
+  };
+  const json = JSON.stringify(check, null, 2) + '\n';
+  checkOutbound(json, '', taskNeedles(runTasksOf(run), records));
+  writeFileSync(paths(dir).judgeCheck, json);
+  return check;
+}
+
+/** The judge check as terminal lines: per counted judge and metric, labels, kappas, catches and false fails. */
+function sayJudgeCheck(c: ReturnType<typeof writeJudgeCheck>, say: (line: string) => void): void {
+  for (const [judge, j] of Object.entries(c.judges) as Array<[string, any]>) for (const metric of ['correct', 'correct_grounded'] as const) {
+    const s = j[metric];
+    say('judge check ' + judge + ' on ' + j.answer_models.join(' and ') + ', ' + metric + ': ' + (s.passed ? 'pass' : 'FAIL') + '; ' + s.n_labelled + ' labels of ' + s.n_rows + ' rows (' + s.unusable + ' unusable), labellers kappa ' + (s.labeller_kappa ?? 'n/a') + ', judge kappa ' + (s.kappa ?? 'n/a') + ', caught ' + s.caught + ' of ' + s.n_bad + ' bad, failed ' + s.false_fails + ' of ' + s.n_good + ' good');
+  }
+  say('judge check ' + (c.passed ? 'passed' : 'NOT PASSED: send judge-check.json to GBEV-3 before any counted call') + '; model calls $' + c.cost.model_calls_usd.toFixed(4) + ' (labels $' + c.cost.by_role_usd.label.toFixed(4) + ')');
+}
+
 // ─── estimate ──────────────────────────────────────────────────────────────────────────────────────────────────────
 
-export interface Estimate { per_task_form_usd: number; second_judge_per_task_usd: number; paraphrase_usd: number; total_usd: number; cap_usd: number; page_factor: Record<string, number>; passed: boolean }
+export interface Estimate {
+  per_task_form_usd: number; judge_per_task_form_usd: Record<string, number>; second_judge_per_task_usd: number; paraphrase_usd: number; total_usd: number; cap_usd: number;
+  judge_check_tasks: number; judge_check_labels_per_task_usd: number | null; judge_check_usd: number | null; judge_check_cap_usd: number;
+  page_factor: Record<string, number>; passed: boolean;
+}
 
 /**
- * Project the counted cost from the smoke's measured usage per episode. Input tokens of every role that reads pages are
- * scaled by the ratio of the frozen gold pages' mean size to the smoke's, each side capped at what that role reads of a
- * page (B and C's summariser: a tool result; D: a pasted page; the judge: a cited page); A, C's answerer and every output
- * stay as measured.
+ * Project the counted cost from the smoke's measured usage per episode, and the judge check's from a fixture judge
+ * check's labels. Input tokens of every role that reads pages are scaled by the ratio of the frozen gold pages' mean size
+ * to the smoke's, each side capped at what that role reads of a page (B and C's summariser: a tool result; D: a pasted
+ * page; the judge and the labellers: a cited page); A, C's answerer and every output stay as measured. Each judge's cost
+ * is shown on its own line. The smoke must have been judged by today's judges.
  */
-export function estimateCost(smoke: RunRecord[], smokePageChars: number, pageChars: number, n: number, forms: number, capUsd: number, models: readonly string[] = MODELS, arms: readonly TaskArm[] = ARMS): Estimate {
+export function estimateCost(smoke: RunRecord[], smokePageChars: number, pageChars: number, n: number, forms: number, capUsd: number, models: readonly string[] = MODELS, arms: readonly TaskArm[] = ARMS, check: RunRecord[] | null = null): Estimate {
   const factor = (cap: number) => Math.max(1, Math.min(pageChars, cap) / Math.max(1, Math.min(smokePageChars, cap)));
   const f = { tool: factor(TOOL_RESULT_CHARS), paste: factor(PASTE_CHARS), judge: factor(JUDGE_PAGE_CHARS) };
   const scale = (u: Usage, k: number): Usage => ({ input: u.input * k, cache_read: u.cache_read * k, cache_write: u.cache_write * k, output: u.output, requests: u.requests });
   const avg = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
   const mean = (xs: Usage[]): Usage | null => xs.length ? { input: avg(xs.map(x => x.input)), output: avg(xs.map(x => x.output)), cache_read: avg(xs.map(x => x.cache_read)), cache_write: avg(xs.map(x => x.cache_write)), requests: avg(xs.map(x => x.requests)) } : null;
   const answers = smoke.filter((r): r is AnswerRecord => r.kind === 'answer');
-  const judgesOf = (kind: JudgeRecord['kind'], keys: Set<string>) => smoke.filter((r): r is JudgeRecord => r.kind === kind && keys.has(r.key)).map(r => r.usage);
+  const judgesOf = (records: RunRecord[], kind: JudgeRecord['kind'], keys: Set<string>, judge: string) => {
+    const js = records.filter((r): r is JudgeRecord => r.kind === kind && keys.has(r.key));
+    if (js.some(j => j.judge !== judge)) throw new Error('the smoke was judged by another model than ' + judge + '; run a new smoke with today\'s judges');
+    return mean(js.map(r => r.usage));
+  };
+  const byJudge: Record<string, number> = {};
   let perTaskForm = 0, secondJudge = 0;
   for (const arm of arms) for (const model of models) {
     const rows = answers.filter(a => a.arm === arm && a.model === model);
     const keys = new Set(rows.map(a => a.key));
     const answer = mean(rows.flatMap(a => (a.roles.answer ? [a.roles.answer.usage] : [])));
-    const judge = mean(judgesOf('judge', keys));
+    const judge = judgesOf(smoke, 'judge', keys, judgeFor(model));
     if (!answer || !judge) throw new Error('the smoke has no ' + (answer ? 'judged ' : '') + 'episode for arm ' + arm + ' and ' + model);
     perTaskForm += priceUsage(model, scale(answer, arm === 'B' ? f.tool : arm === 'D' ? f.paste : 1));
     if (arm === 'C') {
@@ -750,20 +847,38 @@ export function estimateCost(smoke: RunRecord[], smokePageChars: number, pageCha
       if (!summariser) throw new Error('the smoke has no summariser call for ' + model);
       perTaskForm += priceUsage(model, scale(summariser, f.tool));
     }
-    perTaskForm += priceUsage(judgeFor(model), scale(judge, arm === 'A' ? 1 : f.judge));
+    const judged = priceUsage(judgeFor(model), scale(judge, arm === 'A' ? 1 : f.judge));
+    perTaskForm += judged;
+    byJudge[judgeFor(model)] = (byJudge[judgeFor(model)] ?? 0) + judged;
     const second = secondJudgeFor(model);
     if (second && SECOND_JUDGE_ARMS.includes(arm)) {
-      const j2 = mean(judgesOf('judge2', keys));
+      const j2 = judgesOf(smoke, 'judge2', keys, second);
       if (!j2) throw new Error('the smoke has no second-judge call for arm ' + arm);
       secondJudge += priceUsage(second, scale(j2, f.judge));
     }
   }
+  let labels: number | null = null;
+  if (check) {
+    labels = 0;
+    const checked = check.filter((r): r is AnswerRecord => r.kind === 'answer');
+    for (const arm of arms) for (const model of models) for (const l of LABELLERS) {
+      const keys = new Set(checked.filter(a => a.arm === arm && a.model === model).map(a => a.key));
+      const u = judgesOf(check.filter(r => r.kind !== 'label' || r.judge === l), 'label', keys, l);
+      if (!u) throw new Error('the judge-check smoke has no ' + l + ' label for arm ' + arm + ' and ' + model);
+      labels += priceUsage(l, scale(u, arm === 'A' ? 1 : f.judge));
+    }
+  }
+  const checkTasks = Math.min(JUDGE_CHECK_TASKS, n);
+  const judgeCheckUsd = labels === null ? null : checkTasks * (perTaskForm + labels);
   const paraphrase = n * (perTaskForm + secondJudge);
   const total = paraphrase + (forms > 1 ? n * perTaskForm * (forms - 1) : 0);
   const r2 = (x: number) => Math.round(x * 100) / 100;
   return {
-    per_task_form_usd: r2(perTaskForm), second_judge_per_task_usd: r2(secondJudge), paraphrase_usd: r2(paraphrase), total_usd: r2(total), cap_usd: capUsd,
-    page_factor: { tool_result: r2(f.tool), paste: r2(f.paste), judge: r2(f.judge) }, passed: paraphrase <= COST_GATE_SHARE * capUsd && total <= capUsd,
+    per_task_form_usd: r2(perTaskForm), judge_per_task_form_usd: Object.fromEntries(Object.entries(byJudge).map(([j, x]) => [j, r2(x)])), second_judge_per_task_usd: r2(secondJudge),
+    paraphrase_usd: r2(paraphrase), total_usd: r2(total), cap_usd: capUsd,
+    judge_check_tasks: checkTasks, judge_check_labels_per_task_usd: labels === null ? null : r2(labels), judge_check_usd: judgeCheckUsd === null ? null : r2(judgeCheckUsd), judge_check_cap_usd: JUDGE_CHECK_CAP_USD,
+    page_factor: { tool_result: r2(f.tool), paste: r2(f.paste), judge: r2(f.judge) },
+    passed: paraphrase <= COST_GATE_SHARE * capUsd && total <= capUsd && (judgeCheckUsd === null || judgeCheckUsd <= JUDGE_CHECK_CAP_USD),
   };
 }
 
@@ -839,8 +954,8 @@ async function main(argv: string[]): Promise<number> {
   }
   if (command === 'freeze' || command === 'estimate') {
     const out = flag(argv, '--out');
-    if (!tasksPath || (command === 'freeze' && !out) || (command === 'estimate' && (!flag(argv, '--freeze') || !flag(argv, '--smoke')))) {
-      console.error('usage: tasks.ts freeze (--fixture | --tasks <file> --gbrain <checkout>@<commit>) --out <freeze.json>\n       tasks.ts estimate --tasks <file> --freeze <freeze.json> --smoke <smoke run dir> --gbrain <checkout>@<commit> [--out <estimate.json>]');
+    if (!tasksPath || (command === 'freeze' && !out) || (command === 'estimate' && (!flag(argv, '--freeze') || !flag(argv, '--smoke') || !flag(argv, '--smoke-check')))) {
+      console.error('usage: tasks.ts freeze (--fixture | --tasks <file> --gbrain <checkout>@<commit>) --out <freeze.json>\n       tasks.ts estimate --tasks <file> --freeze <freeze.json> --smoke <smoke run dir> --smoke-check <smoke judge-check dir> --gbrain <checkout>@<commit> [--out <estimate.json>]');
       return 2;
     }
     return withLog(join(dirname(resolve(out ?? flag(argv, '--freeze')!)), command + '-log'), async say => {
@@ -859,12 +974,13 @@ async function main(argv: string[]): Promise<number> {
         if (frozen?.schema !== FREEZE_SCHEMA || frozen.tasks_sha256 !== sha256(source)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'task file hash differs from the freeze');
         const lines = new Set<number>(frozen.kept_lines);
         const kept = parsed.filter(t => lines.has(t.line)).map(t => t.task);
-        const smokeDir = flag(argv, '--smoke')!;
+        const smokeDir = flag(argv, '--smoke')!, checkDir = flag(argv, '--smoke-check')!;
         const smokeRun = readRun(smokeDir);
-        const e = estimateCost(loadRecords(paths(smokeDir).records).records, smokeRun.gold_page_chars_mean, await goldPageChars(brain.reader, kept), kept.length, FORMS.length, COUNTED_CAP_USD);
+        const e = estimateCost(loadRecords(paths(smokeDir).records).records, smokeRun.gold_page_chars_mean, await goldPageChars(brain.reader, kept), kept.length, FORMS.length, COUNTED_CAP_USD, MODELS, ARMS, loadRecords(paths(checkDir).records).records);
         if (out) writeJson(out, e);
-        say('estimate: $' + e.per_task_form_usd.toFixed(2) + ' per task form (+$' + e.second_judge_per_task_usd.toFixed(2) + ' second judge per paraphrase task), page factors ' + JSON.stringify(e.page_factor) + '; projected paraphrase pass $' + e.paraphrase_usd.toFixed(2) + ', total $' + e.total_usd.toFixed(2) + ' against the $' + e.cap_usd + ' cap');
-        if (!e.passed) throw new LiveRecallAbort('LR_COST_GATE', 'projected paraphrase pass $' + e.paraphrase_usd.toFixed(2) + ' (gate $' + (COST_GATE_SHARE * e.cap_usd).toFixed(2) + '), total $' + e.total_usd.toFixed(2) + ' (cap $' + e.cap_usd + ')');
+        say('estimate: $' + e.per_task_form_usd.toFixed(2) + ' per task form, of which judges ' + Object.entries(e.judge_per_task_form_usd).map(([j, x]) => j + ' $' + x.toFixed(2)).join(', ') + ' (+$' + e.second_judge_per_task_usd.toFixed(2) + ' second judge per paraphrase task), page factors ' + JSON.stringify(e.page_factor) + '; projected paraphrase pass $' + e.paraphrase_usd.toFixed(2) + ', total $' + e.total_usd.toFixed(2) + ' against the $' + e.cap_usd + ' cap');
+        say('judge check: ' + e.judge_check_tasks + ' tasks at $' + (e.judge_check_labels_per_task_usd ?? 0).toFixed(2) + ' of labels per task, projected $' + (e.judge_check_usd ?? 0).toFixed(2) + ' against its $' + e.judge_check_cap_usd + ' cap');
+        if (!e.passed) throw new LiveRecallAbort('LR_COST_GATE', 'projected paraphrase pass $' + e.paraphrase_usd.toFixed(2) + ' (gate $' + (COST_GATE_SHARE * e.cap_usd).toFixed(2) + '), total $' + e.total_usd.toFixed(2) + ' (cap $' + e.cap_usd + '), judge check $' + (e.judge_check_usd ?? 0).toFixed(2) + ' (cap $' + e.judge_check_cap_usd + ')');
         say('cost gate passed');
         return 0;
       } finally {
@@ -885,6 +1001,11 @@ async function main(argv: string[]): Promise<number> {
         const run = readRun(dir);
         const paid = openPaid(['--budget-ledger', run.budget.ledger_path, ...argv], run.budget.runner, budgetOptionsFrom(argv).budgetUsd ?? run.budget.cap_usd);
         try { await judgeRunDir(dir, paid, say, flag(argv, '--window-note') ?? null); } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); }
+        if (run.identity.labellers) {
+          sayJudgeCheck(writeJudgeCheck(dir), say);
+          say('send only ' + paths(dir).judgeCheck + '; everything else stays on this box');
+          return existsSync(paths(dir).capStop) ? 6 : 0;
+        }
       }
       const s = scoreRunDir(dir, { auditGrades: flag(argv, '--audit-grades') });
       sayScorecard(s.scorecard, say);
@@ -892,18 +1013,19 @@ async function main(argv: string[]): Promise<number> {
       return command === 'judge' && existsSync(paths(dir).capStop) ? 6 : 0;
     });
   }
-  if (command !== 'run') { console.error('usage: tasks.ts check|freeze|estimate|run|judge|audit|score (see the header of this file)'); return 2; }
-  if (!tasksPath) { console.error('usage: tasks.ts run (--fixture | --tasks <file> --freeze <freeze.json> --gbrain <checkout>@<commit>) --budget-usd <dollars> --budget-ledger <ledger>'); return 2; }
-  const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall-tasks', new Date().toISOString().replace(/[:.]/g, '-') + (fixture ? '-fixture' : '')));
+  if (command !== 'run' && command !== 'judge-check') { console.error('usage: tasks.ts check|freeze|estimate|judge-check|run|judge|audit|score (see the header of this file)'); return 2; }
+  const checking = command === 'judge-check';
+  if (!tasksPath) { console.error('usage: tasks.ts ' + command + ' (--fixture | --tasks <file> --freeze <freeze.json> --gbrain <checkout>@<commit>' + (checking ? '' : ' --judge-check <judge-check.json>') + ') --budget-usd <dollars> --budget-ledger <ledger>'); return 2; }
+  const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall-tasks', new Date().toISOString().replace(/[:.]/g, '-') + (checking ? '-judge-check' : '') + (fixture ? '-fixture' : '')));
   let models: string[], forms: TaskForm[], arms: TaskArm[];
   try {
     models = list(flag(argv, '--models'), MODELS, '--models');
-    forms = list(flag(argv, '--forms'), FORMS, '--forms');
+    forms = checking ? ['paraphrase'] : list(flag(argv, '--forms'), FORMS, '--forms');
     arms = list(flag(argv, '--arms'), ARMS, '--arms');
   } catch (e) { console.error('live-recall: ' + (e as Error).message); return 2; }
-  const missing = [...new Set(models.map(m => KEY_ENV[provider(m)]))].filter(k => !process.env[k]);
+  const missing = [...new Set([...models, ...models.map(judgeFor), ...(checking ? LABELLERS : [])].map(m => KEY_ENV[provider(m)]))].filter(k => !process.env[k]);
   if (missing.length) { console.error('live-recall: set ' + missing.join(', ') + ' (test -n only; never print them)'); return 2; }
-  const capUsd = fixture ? SMOKE_CAP_USD : COUNTED_CAP_USD;
+  const capUsd = fixture ? SMOKE_CAP_USD : checking ? JUDGE_CHECK_CAP_USD : COUNTED_CAP_USD;
   const budgetUsd = budgetOptionsFrom(argv).budgetUsd;
   const prior = existsSync(paths(out).run) ? readRun(out).budget : null;
   const extending = argv.includes('--resume') && existsSync(paths(out).capStop);
@@ -911,13 +1033,20 @@ async function main(argv: string[]): Promise<number> {
   return withLog(out, async say => {
     process.env.GBRAIN_AUDIT_DIR = out;
     const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-    const paid = openPaid(prior ? ['--budget-ledger', prior.ledger_path, ...argv] : argv, ledgerRunner(out, fixture), budgetUsd);
+    const paid = openPaid(prior ? ['--budget-ledger', prior.ledger_path, ...argv] : argv, ledgerRunner(out, fixture, checking), budgetUsd);
     try {
       const r = await runTaskSet({
         out, gut, fixture, tasksPath, freezePath: flag(argv, '--freeze') ?? null, databaseUrlEnv, forms, arms, models,
-        limit: flag(argv, '--limit') ? Number(flag(argv, '--limit')) : null, concurrency: Number(flag(argv, '--concurrency') ?? TASK_CONCURRENCY),
+        limit: flag(argv, '--limit') ? Number(flag(argv, '--limit')) : checking ? JUDGE_CHECK_TASKS : null, concurrency: Number(flag(argv, '--concurrency') ?? TASK_CONCURRENCY),
         resume: argv.includes('--resume'), windowNote: flag(argv, '--window-note') ?? null, paid,
+        judgeCheck: checking, judgeCheckPath: flag(argv, '--judge-check') ?? null, judgeCheckWaiver: flag(argv, '--judge-check-waiver') ?? null,
       }, say);
+      if (checking) {
+        const c = writeJudgeCheck(out);
+        sayJudgeCheck(c, say);
+        say('send only ' + paths(out).judgeCheck + '; records, run.json and the gbrain log stay on this box');
+        return r.result === 'cap_stop' ? 6 : r.result !== 'complete' ? 1 : c.passed ? 0 : 7;
+      }
       sayScorecard(r.scorecard, say);
       say('scorecard (' + r.result + '; send these two files): ' + r.scorecard + ' and ' + r.markdown);
       say('records, run.json and the gbrain log stay on this box: ' + out);

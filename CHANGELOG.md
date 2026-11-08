@@ -26,6 +26,15 @@ This records what each gbrain-evals release changed and what its measurements me
 - **gbrain re-pin.** Phase 2 now measures gbrain 0.60.613.0 (`98dda48fb9fd`, schema 296), the version Wintermute's box
   runs after GBRA-108's upgrade, instead of 0.60.593.0. The preregistration's dated amendment, recorded before the
   freeze, lists the two changes arm B can see. The run kit's phase 2 commands load the new commit.
+- **Judge check and Astra judge (R78).** `gpt-6-astra` now judges claude-opus-5-5 and particle-1 rows in place of
+  gpt-6.1-sol, and `claude-opus-5-5` still judges gpt-6.1-sol rows. A new `tasks.ts judge-check` runs before the counted
+  run on 20 frozen tasks: both judge models grade every answer again at effort high, and each counted judge is measured
+  against the answers they grade alike (catch rate, false-fail rate and Cohen's kappa, at least 40 labels and kappa
+  0.6 to pass). Only `judge-check.json` leaves the box, and `tasks.ts run` refuses to start without a passing one
+  (`LR_JUDGE_CHECK`) unless GBEV-3 waives it. Every judge row records its served model version, every comparison
+  reports the tasks that got worse and reads an interval that includes zero as "no measurable difference", and
+  `tasks.ts estimate` shows each judge's cost on its own line and projects the judge check. The counted run's starting
+  cap moves from $360 to $600, and the judge check has its own $200 cap.
 
 ## [0.10.175] - 2026-11-08
 

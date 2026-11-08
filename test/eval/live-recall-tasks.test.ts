@@ -4,6 +4,7 @@
  * ledger's paid-request guard (a fake fetch on a temporary ledger). Nothing here reaches a provider.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -14,11 +15,11 @@ import { LiveRecallAbort, installGuards } from '../../eval/runner/live-recall/br
 import { isCapStop, openBudgetItem } from '../../eval/runner/refresh-barrier/ledger.ts';
 import { buildFixtureBrain, useFixtureTransports } from '../../eval/runner/live-recall/run.ts';
 import { ANSWER_TOOL, PROMPTS, SUMMARY_TOOL, citedSlugs, judgeEpisode, openReader, runEpisode, type AnswerRecord, type EpisodeContext, type Task } from '../../eval/runner/live-recall/task-arms.ts';
-import { JUDGE_SYSTEM, VERDICT_TOOL, assertJudge, derive, judgeFor, parseVerdict, secondJudgeFor } from '../../eval/runner/live-recall/task-judge.ts';
-import { checkOutbound, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
+import { JUDGE_SYSTEM, LABELLERS, VERDICT_TOOL, assertJudge, derive, judgeFor, parseVerdict, secondJudgeFor } from '../../eval/runner/live-recall/task-judge.ts';
+import { JUDGE_CHECK_SCHEMA, buildTaskScorecard, checkOutbound, judgeCheck, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
 import {
-  FIXTURE_TASKS, HARNESS_FILES, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, assertPrivate, estimateCost, freezeSummary, goldCheck, judgeRunDir, ledgerRunner, loadRecords, parseTasks, runTaskSet, scoreRunDir, spread,
-  watchRefusals, writeFreeze, type Paid, type RunRecord,
+  FIXTURE_TASKS, HARNESS_FILES, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, assertPrivate, estimateCost, freezeSummary, goldCheck, harnessDigest, judgeRunDir, ledgerRunner, loadRecords, parseTasks,
+  readJudgeCheck, runTaskSet, scoreRunDir, spread, watchRefusals, writeFreeze, writeJudgeCheck, type Paid, type RunRecord,
 } from '../../eval/runner/live-recall/tasks.ts';
 
 const gut = resolveGbrainUnderTest(null);
@@ -396,10 +397,12 @@ describe('phase 2 privacy posture on the fixture (keyless)', () => {
 // ─── Judge ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 describe('phase 2 judge', () => {
-  test('routing: Sol judges Opus and particle-1, Opus judges Sol, particle-1 never judges, no family judges itself', () => {
-    expect(judgeFor('claude-opus-5-5')).toBe('gpt-6.1-sol');
-    expect(judgeFor('particle-1')).toBe('gpt-6.1-sol');
+  test('routing: Astra judges Opus and particle-1, Opus judges Sol, particle-1 never judges, no family judges itself', () => {
+    expect(judgeFor('claude-opus-5-5')).toBe('gpt-6-astra');
+    expect(judgeFor('particle-1')).toBe('gpt-6-astra');
     expect(judgeFor('gpt-6.1-sol')).toBe('claude-opus-5-5');
+    expect(LABELLERS).toEqual(['gpt-6-astra', 'claude-opus-5-5']);
+    expect(() => assertJudge('gpt-6-astra', 'gpt-6.1-sol')).toThrow('same family');
     expect(secondJudgeFor('particle-1')).toBe('claude-opus-5-5');
     expect(secondJudgeFor('claude-opus-5-5')).toBeNull();
     expect(() => assertJudge('particle-1', 'claude-opus-5-5')).toThrow('never judges');
@@ -526,6 +529,11 @@ describe('phase 2 fixture run with scripted models (keyless)', () => {
     expect(card.cells.paraphrase.B['gpt-6.1-sol'].exposure.gold_opened).toBe(1);
     expect(card.cells.paraphrase.C['gpt-6.1-sol'].exposure.summary_gold_cited).toBe(1);
     expect(card.comparisons.filter((c: any) => c.primary).map((c: any) => c.id).sort()).toEqual(['p1_b_vs_a_opus', 'p1_b_vs_a_particle', 'p2_c_vs_b_opus', 'p2_c_vs_b_particle']);
+    for (const c of card.comparisons.filter((c: any) => !c.untested)) { expect(['no_measurable_difference', 'b_higher', 'b_lower']).toContain(c.reading); expect(Number.isInteger(c.worse_tasks)).toBe(true); }
+    expect(card.comparisons.find((c: any) => c.id === 'p1_b_vs_a_opus')).toMatchObject({ reading: 'no_measurable_difference', worse_tasks: 0 });
+    expect(markdown).toContain('| Reading | Tasks worse |');
+    expect(card.judges['gpt-6-astra'].versions).toEqual(['gpt-6-astra']);
+    expect(card.judges['claude-opus-5-5'].rows).toBeGreaterThan(0);
   });
 
   test('the paraphrase pass finishes before the exact pass starts', () => {
@@ -616,8 +624,8 @@ describe('phase 2 fixture run with scripted models (keyless)', () => {
       try { await new Promise(resolve => setTimeout(resolve, 300)); return await providers.fetchImpl(input, init); } finally { inFlight--; }
     }) as unknown as typeof fetch;
     const ledger = join(dir, 'ledger.sqlite');
-    const run = BudgetRun.open({ runner: 'live-recall-phase2-judge', budgetUsd: 1, ledgerPath: ledger, programCapUsd: 100 });
-    const paid: Paid = { run, guard: installPaidRequestGuard(run, { fetchImpl }), runner: 'live-recall-phase2-judge', capUsd: 1, ledgerPath: ledger };
+    const run = BudgetRun.open({ runner: 'live-recall-phase2-judge', budgetUsd: 10, ledgerPath: ledger, programCapUsd: 100 });
+    const paid: Paid = { run, guard: installPaidRequestGuard(run, { fetchImpl }), runner: 'live-recall-phase2-judge', capUsd: 10, ledgerPath: ledger };
     let inFlightAtThrow = -1;
     try {
       expect(await abortCode(() => judgeRunDir(join(dir, 'run'), paid, () => {}).finally(() => { inFlightAtThrow = inFlight; }))).toBe('LR_PROVIDER_REJECTED');
@@ -1002,11 +1010,24 @@ describe('phase 2 cost estimate', () => {
     for (const arm of ['A', 'B', 'C', 'D']) for (const model of ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1']) {
       const key = ['paraphrase', 't1', arm, model].join('|');
       out.push({ kind: 'answer', key, arm, model, roles: { answer: { usage: usage(1000, 500) }, ...(arm === 'C' ? { summariser: { usage: usage(4000, 500) } } : {}) } });
-      out.push({ kind: 'judge', key, usage: usage(2000, 500) });
-      if (model === 'particle-1' && arm !== 'A') out.push({ kind: 'judge2', key, usage: usage(2000, 500) });
+      out.push({ kind: 'judge', key, judge: judgeFor(model), usage: usage(2000, 500) });
+      if (model === 'particle-1' && arm !== 'A') out.push({ kind: 'judge2', key, judge: 'claude-opus-5-5', usage: usage(2000, 500) });
     }
     return out;
   };
+  const labelled = (output = 1500) => smoke().flatMap(r => (r.kind !== 'answer' ? [] : [r, ...LABELLERS.map(l => ({ kind: 'label', key: r.key, judge: l, usage: usage(2000, output) }))]));
+  test('shows each judge on its own line, projects the judge check under its cap, and refuses a smoke judged by another model', () => {
+    const e = estimateCost(smoke(), 2000, 2000, 100, 2, 360, undefined, undefined, labelled());
+    expect(Object.keys(e.judge_per_task_form_usd).sort()).toEqual(['claude-opus-5-5', 'gpt-6-astra']);
+    expect(e.judge_per_task_form_usd['gpt-6-astra']).toBeCloseTo(8 * (2000 * 10 + 500 * 50) / 1e6, 2);
+    expect(e.judge_check_labels_per_task_usd).toBeCloseTo(12 * ((2000 * 10 + 1500 * 50) + (2000 * 4 + 1500 * 20)) / 1e6, 2);
+    expect(e.judge_check_tasks).toBe(20);
+    expect(e.judge_check_usd!).toBeCloseTo(20 * (e.per_task_form_usd + e.judge_check_labels_per_task_usd!), 0);
+    expect(e.passed).toBe(true);
+    expect(estimateCost(smoke(), 2000, 2000, 100, 2, 360, undefined, undefined, null).judge_check_usd).toBeNull();
+    expect(estimateCost(smoke(), 2000, 2000, 100, 2, 360, undefined, undefined, labelled(400_000)).passed).toBe(false);
+    expect(() => estimateCost(smoke().map(r => (r.kind === 'judge' && r.judge === 'gpt-6-astra' ? { ...r, judge: 'gpt-6.1-sol' } : r)), 2000, 2000, 100, 2, 360)).toThrow('judged by another model');
+  });
   test('scales page-reading input by the page-size ratio and applies the 75% paraphrase gate', () => {
     const same = estimateCost(smoke(), 2000, 2000, 100, 2, 360);
     expect(same.page_factor).toEqual({ tool_result: 1, paste: 1, judge: 1 });
@@ -1020,6 +1041,107 @@ describe('phase 2 cost estimate', () => {
   test('spread takes tasks across the five types in turn', () => {
     expect(spread(fixtureTasks, 5).map(t => t.type)).toEqual(['identifier', 'error_string', 'time_window', 'cross_source', 'topic']);
   });
+});
+
+// ─── Judge check (R78) ─────────────────────────────────────────────────────────────────────────────────────────────
+
+describe('phase 2 judge check (R78)', () => {
+  const at = '2026-11-08T00:00:00.000Z', later = '2026-11-08T00:00:01.000Z';
+  const zero = { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 };
+  const answer = (task: string, arm: string, model: string): any => ({ kind: 'answer', key: ['paraphrase', task, arm, model].join('|'), task, form: 'paraphrase', arm, model, attempt: 1, status: 'answered', answer: '', cited: [], exposure: { tool_calls: 0, searched: false, gold_seen: false, gold_opened: false, gold_cited: false, summary_gold_cited: null, pasted_gold: null }, stages: [], meta_missing: 0, ai_refused: [], roles: {}, snapshots: [], slugs_seen: [], ms: 1, at, error: null });
+  const verdict = (kind: string, key: string, judge: string, correct: boolean, status = 'ok'): any => ({ kind, key, judge, judge_version: judge + '-2026-10-01', effort: kind === 'label' ? 'high' : 'medium', status, verdict: null, derived: status === 'ok' ? { correct, partial: false, contradicted: false, abstained: false, grounded: true, citations: 1, supported: 1 } : null, usd: 0, usage: zero, ms: 1, at: later });
+  /** n answers by model on arm: rows 0..4 split the labellers; of the rest, the first `bad` are bad; the counted judge misses `missed` bad and fails `failed` good. */
+  const rows = (model: string, arm: string, n: number, bad: number, missed: number, failed: number, from = 0) => Array.from({ length: n }, (_, k) => {
+    const i = k + from, a = answer('t' + i, arm, model);
+    const split = k < 5, good = !split && k - 5 >= bad;
+    const judge = split ? true : good ? k - 5 - bad >= failed : k - 5 < missed;
+    return [a, verdict('judge', a.key, judgeFor(model), judge), verdict('label', a.key, 'gpt-6-astra', split ? k % 2 === 0 : good), verdict('label', a.key, 'claude-opus-5-5', split ? k % 2 === 1 : good)];
+  }).flat();
+  const both = (n = 60) => [...rows('claude-opus-5-5', 'B', n, 25, 2, 1), ...rows('gpt-6.1-sol', 'B', n, 25, 0, 0)];
+
+  test('measures each counted judge against the labels both labellers agree on: catches, false fails and kappa', () => {
+    const c = judgeCheck(both());
+    expect(c.schema).toBe(JUDGE_CHECK_SCHEMA);
+    expect(c.passed).toBe(true);
+    const astra = (c.judges as any)['gpt-6-astra'];
+    expect(astra.answer_models).toEqual(['claude-opus-5-5', 'particle-1']);
+    expect(astra.correct).toMatchObject({ n_rows: 60, unusable: 0, n_labelled: 55, n_bad: 25, n_good: 30, caught: 23, false_fails: 1, catch_rate: 0.92, false_fail_rate: 0.0333, passed: true });
+    expect(astra.correct.kappa).toBeCloseTo(0.8897, 3);
+    expect(astra.correct.labeller_kappa).toBeGreaterThan(0.6);
+    expect(astra.by_model['particle-1'].correct.n_rows).toBe(0);
+    expect((c.judges as any)['claude-opus-5-5'].correct).toMatchObject({ n_labelled: 55, caught: 25, false_fails: 0, kappa: 1 });
+    expect(c.versions['gpt-6-astra']!.versions).toEqual(['gpt-6-astra-2026-10-01']);
+    expect(() => validateTaskScorecard(c)).not.toThrow();
+  });
+
+  test('fewer than 40 labels, a judge kappa under 0.6 or labellers that disagree fail; A is left out of correct_grounded', () => {
+    expect(judgeCheck([...rows('claude-opus-5-5', 'B', 44, 20, 0, 0), ...rows('gpt-6.1-sol', 'B', 60, 25, 0, 0)]).passed).toBe(false);
+    const weak = judgeCheck([...rows('claude-opus-5-5', 'B', 60, 25, 12, 10), ...rows('gpt-6.1-sol', 'B', 60, 25, 0, 0)]);
+    expect([(weak.judges as any)['gpt-6-astra'].correct.kappa < 0.6, weak.passed]).toEqual([true, false]);
+    const split = both().map(r => (r.kind === 'label' && r.judge === 'claude-opus-5-5' && Number(r.key.split('|')[1].slice(1)) % 3 === 0 ? { ...r, derived: { ...r.derived, correct: !r.derived.correct } } : r));
+    expect(judgeCheck(split).passed).toBe(false);
+    const withA = judgeCheck([...both(), ...rows('claude-opus-5-5', 'A', 10, 5, 0, 0, 100)]);
+    expect([(withA.judges as any)['gpt-6-astra'].correct.n_rows, (withA.judges as any)['gpt-6-astra'].correct_grounded.n_rows]).toEqual([70, 60]);
+    const errored = both().map((r, i) => (i === 0 ? r : i === 1 ? { ...r, status: 'judge_error', derived: null } : r));
+    expect((judgeCheck(errored).judges as any)['gpt-6-astra'].correct.unusable).toBe(1);
+  });
+
+  test('a counted run needs a passing judge check for its task file and harness, or GBEV-3\'s waiver', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-jc-'));
+    const write = (c: unknown) => { const p = join(dir, 'judge-check.json'); writeFileSync(p, JSON.stringify(c)); return p; };
+    const good = { schema: JUDGE_CHECK_SCHEMA, passed: true, tasks_sha256: createHash('sha256').update(fixtureText).digest('hex'), run: { harness_digest: harnessDigest(), control: false }, judges: {} };
+    try {
+      expect(await abortCode(() => readJudgeCheck(null, fixtureText, null))).toBe('LR_JUDGE_CHECK');
+      expect(readJudgeCheck(write(good), fixtureText, null)).toMatchObject({ passed: true, waiver: null });
+      expect(await abortCode(() => readJudgeCheck(write({ ...good, tasks_sha256: '0'.repeat(64) }), fixtureText, null))).toBe('LR_JUDGE_CHECK');
+      expect(await abortCode(() => readJudgeCheck(write({ ...good, run: { ...good.run, harness_digest: '0'.repeat(64) } }), fixtureText, null))).toBe('LR_JUDGE_CHECK');
+      expect(await abortCode(() => readJudgeCheck(write({ ...good, run: { ...good.run, control: true } }), fixtureText, null))).toBe('LR_JUDGE_CHECK');
+      expect(await abortCode(() => readJudgeCheck(write({ ...good, passed: false }), fixtureText, null))).toBe('LR_JUDGE_CHECK');
+      expect(await abortCode(() => readJudgeCheck(write({ ...good, passed: false }), fixtureText, 'not a note'))).toBe('LR_JUDGE_CHECK');
+      expect(readJudgeCheck(write({ ...good, passed: false }), fixtureText, 'gbev3-waiver-1')).toMatchObject({ passed: false, waiver: 'gbev3-waiver-1' });
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  test('comparisons count the tasks that got worse and read an interval spanning zero as no measurable difference', () => {
+    const tasks = Array.from({ length: 30 }, (_, i) => ({ id: 't' + i, type: 'topic', gold_found_by: 'unknown' })) as any;
+    const card = (aRight: (i: number) => boolean, bRight: (i: number) => boolean) => buildTaskScorecard({
+      tasks, forms: ['paraphrase'], arms: ['A', 'B'], models: ['claude-opus-5-5'], identity: {}, stop: null, ledger_usd: null, audit: null,
+      records: tasks.flatMap((t: any, i: number) => [answer(t.id, 'A', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'A', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', aRight(i)), answer(t.id, 'B', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'B', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', bRight(i))]),
+      task_summary: { submitted: 30, kept_at_freeze: 30, dropped_unreachable: 0, gold_missing_at_run: 0, sha_prefix: '0'.repeat(12), n_frozen: 30 },
+      custody: { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: {} },
+    }).comparisons.find(c => c.id === 'p1_b_vs_a_opus')!;
+    expect(card(i => i < 3, i => i >= 2)).toMatchObject({ worse_tasks: 2, reading: 'b_higher' });
+    expect(card(i => i < 15, i => i >= 15)).toMatchObject({ worse_tasks: 15, reading: 'no_measurable_difference' });
+    expect(card(i => i >= 2, i => i < 3)).toMatchObject({ reading: 'b_lower' });
+  });
+
+  test('a fixture judge check labels every answer with both labellers at effort high after its counted judge, with no second judge', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lr2-check-'));
+    process.env.GBRAIN_AUDIT_DIR = dir;
+    const providers = scriptedProviders(fixtureTasks);
+    const paid = scriptedPaid(dir, providers.fetchImpl, 9);
+    const out = join(dir, 'run');
+    try {
+      const r = await runTaskSet({ out, gut, fixture: true, tasksPath: FIXTURE_TASKS, freezePath: null, databaseUrlEnv: 'UNUSED', forms: ['paraphrase'], arms: ['A', 'B', 'C', 'D'], models: ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], limit: 2, concurrency: 2, resume: false, windowNote: null, paid, judgeCheck: true }, () => {});
+      expect(r.result).toBe('complete');
+      const records = loadRecords(join(out, 'records.local.jsonl')).records as any[];
+      const answers = records.filter(x => x.kind === 'answer' && x.status === 'answered');
+      expect(answers.length).toBe(24);
+      expect(records.some(x => x.kind === 'judge2')).toBe(false);
+      for (const a of answers) {
+        const js = records.filter(x => x.kind !== 'answer' && x.key === a.key);
+        expect(js.map(j => [j.kind, j.judge, j.effort, j.judge_version])).toEqual([['judge', judgeFor(a.model), 'medium', judgeFor(a.model)], ['label', judgeFor(a.model), 'high', judgeFor(a.model)], ...LABELLERS.filter(l => l !== judgeFor(a.model)).map(l => ['label', l, 'high', l])]);
+      }
+      const astraLabels = providers.sent.filter(s => s.wire === 'openai' && conversation('openai', s.body).system === JUDGE_SYSTEM && s.body.reasoning?.effort === 'high');
+      expect(astraLabels.length).toBe(24);
+      expect(astraLabels.every(s => s.body.store === false && s.body.model === 'gpt-6-astra')).toBe(true);
+      const c = writeJudgeCheck(out);
+      expect([c.passed, c.n_tasks_checked, c.run.control, c.cost.by_role_usd.label > 0]).toEqual([false, 2, true, true]);
+      expect((c.judges as any)['gpt-6-astra'].correct.n_rows).toBe(16);
+      const text = readFileSync(join(out, 'judge-check.json'), 'utf8');
+      for (const t of fixtureTasks) for (const x of [t.forms.paraphrase, t.gold_answer.text, ...t.gold_pages]) expect(text).not.toContain(x);
+    } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); rmSync(dir, { recursive: true, force: true }); }
+  }, 120_000);
 });
 
 describe('phase 2 harness digest', () => {
