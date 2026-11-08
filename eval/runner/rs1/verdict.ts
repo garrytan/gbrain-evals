@@ -11,13 +11,17 @@
  *
  *   Receipts  for set RS1, a cell whose dataset revision is unfilled, whose RS1 manifest SHA-256 is neither the filled
  *             manifest's nor one of its earlier_fills, or whose loaded files' SHA-256 differ from the filled manifest is
- *             refused, and so is a conversation that two receipts of one cell both hold. Every system row and the floor
- *             needs particle-1's re-read (reread-cell.ts, under rereadCellId) covering each of its receipts' run
- *             configs; a missing re-read refuses the run.
+ *             refused, and so is a conversation that two receipts of one cell both hold. A verdict needs the filled
+ *             manifest's n_final and every row's receipts holding exactly the first n_final kept conversations; a unit
+ *             run with --limit, a run config that differs from the committed rs1-cells.json definition, and an
+ *             instrument other than the cell's canonical one are refused. Every system row and the floor needs
+ *             particle-1's re-read (reread-cell.ts, under rereadCellId) covering each of its receipts' run configs; a
+ *             missing re-read refuses the run, and so does a conversation two re-reads of one arm both hold.
  *   Values    readers claude-opus-5-5 and gpt-6.1-sol from the cell and particle-1 from its re-read, joined by question id,
- *             replicate 0. A product failure scores 0 under both views; a harness failure, a missing answer or a
- *             missing judgment is a drop, by reason and side. The bridge view is the canonical instrument's judgment,
- *             the frontier view the reader's frontier judge (<instrument>@<judge>).
+ *             replicate 0, each answer scored only by its own receipt's judgments. A product failure scores 0 under
+ *             both views; a harness failure, a missing row, a missing answer or a missing judgment is a drop, by reason
+ *             and side; a scheduled question with no row in any system row refuses the verdict. The bridge view is the
+ *             canonical instrument's judgment, the frontier view the reader's frontier judge (<instrument>@<judge>).
  *   Gate      a system row passes the delivered-context gate when its mean fill rate (rows.ndjson fill_rate) is at
  *             least 0.90; a row that fails makes every comparison it enters descriptive (no verdict).
  *   Reported  iut.ts's decision, the worst-case sensitivity and a flag when it disagrees, the restricted wild cluster
@@ -32,9 +36,10 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { HARNESS_FAILURES, PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
-import { readRecords, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
+import { instrumentFor } from '../memory-qa/instruments.ts';
+import { readRecords, type AnswerRecord } from '../memory-qa/records.ts';
 import { RS1_MANIFEST, rs1Kept, type Rs1Manifest } from '../memory-qa/corpus.ts';
-import { frontierInstrumentId } from '../q1/cell.ts';
+import { frontierInstrumentId, runConfigIdentity, runConfigText } from '../q1/cell.ts';
 import { frontierJudgeOf } from '../q1/cells/definitions.ts';
 import { loadRS1Manifest, OPUS, PARTICLE, RS1_WAVE_A, SOL } from '../q1/cells/rs1.ts';
 import { rereadCellId } from '../q1/reread-cell.ts';
@@ -197,43 +202,74 @@ export function receiptManifestProblems(config: Record<string, any> | null, mani
 
 export interface LoadOptions { set: 'RS1' | 'RS1-dev2'; manifestPath: string; waveA?: boolean }
 
+/** A run config with the fields one launch unit may differ in left out: its dataset files, its scheduled questions and its limit (refused separately). */
+const unitIdentity = (config: Record<string, any>): Record<string, any> => { const { dataset: _d, scheduled_sha256: _s, limit: _l, ...rest } = config; return JSON.parse(runConfigIdentity(JSON.stringify(rest))); };
+/** The dotted keys where two run-config identities differ. */
+const differing = (a: Record<string, any>, b: Record<string, any>, at = ''): string[] => [...new Set([...Object.keys(a), ...Object.keys(b)])].flatMap(k =>
+  JSON.stringify(a[k]) === JSON.stringify(b[k]) ? [] : a[k] && b[k] && typeof a[k] === 'object' && typeof b[k] === 'object' && !Array.isArray(a[k]) ? differing(a[k], b[k], `${at}${k}.`) : [`${at}${k}`]);
+
 /** Read and check every receipt, then build the analysis input. */
 export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput {
   const cells = loadRS1Manifest();
   const defs = (o.set === 'RS1' ? cells.cells : cells.smoke_cells).filter(c => c.arms[0].set === o.set);
-  let manifest: Rs1Manifest | null = null, manifestSha = '', wave: Set<string> | null = null;
+  let manifest: Rs1Manifest | null = null, manifestSha = '', wave: Set<string> | null = null, finalSet: string[] | null = null;
   if (o.set === 'RS1') {
     const bytes = readFileSync(o.manifestPath);
     manifest = JSON.parse(bytes.toString('utf8')) as Rs1Manifest;
     if (manifest.status !== 'filled') refuse(`the RS1 manifest ${o.manifestPath} is unfilled; verdict.ts reads receipts only against the filled manifest`);
     manifestSha = sha256(bytes);
-    if (o.waveA) wave = new Set(rs1Kept(manifest).kept.slice(0, RS1_WAVE_A));
+    const { kept, n_final } = rs1Kept(manifest);
+    if (o.waveA) wave = new Set(kept.slice(0, RS1_WAVE_A));
+    else if (n_final === null || kept.length < n_final) refuse(`the filled manifest's kept list is not final (n_final ${n_final ?? 'unset'}, ${kept.length} kept); a verdict reads exactly the first N_final kept conversations`);
+    else finalSet = kept.slice(0, n_final);
   } else if (o.waveA) refuse('the pilot reads set RS1 only');
   const found = findReceipts(dirs);
   const values = new Map<Row | 'floor', Map<string, Record<string, ReaderValue>>>();
+  const rowIds = new Map<Row | 'floor', Set<string>>();
+  const scheduled = new Map<Row, number>();
   const planned = new Map<string, string>();
   const fill: Record<Row, number | null> = { gbrain: null, 'memory-bank': null, 'extract-first': null };
   const costs: CostRow[] = [];
   for (const def of defs) {
     const role = ROLES[def.system] ?? refuse(`cell ${def.id} has no RS1 role (system ${def.system})`);
     const armCell = def.arms[0].cell_id;
+    const instrument = instrumentFor(def.canonical_instrument);
+    const wrongInstrument = (f: CellFiles) => f.receipt.instrument?.id !== instrument.id || f.receipt.instrument?.sha256 !== instrument.sha256;
+    const expected = unitIdentity(JSON.parse(runConfigText(def, def.arms[0], { instrument, dataset: null as never, scheduledSha: '', limit: null })));
     const units = found.filter(f => f.receipt.cell_id === armCell);
     if (!units.length) refuse(`no receipt for ${armCell} under the given directories`);
     const held = new Map<string, string>();
-    const answers: AnswerRecord[] = [], judgments: JudgmentRecord[] = [], fills: number[] = [];
-    let shared = 0, sharedKnown = true;
+    const ids = new Set<string>();
+    const byQuestion = new Map<string, Record<string, ReaderValue>>();
+    const answered = new Map<string, number>();
+    const take = (dir: string, ans: AnswerRecord[]) => {
+      const score = new Map(readRecords(join(dir, 'judgments.ndjson'), 'judgment').filter(j => j.judge_replicate === 0).map(j => [`${j.answer_id}|${j.instrument_id}`, j.score]));
+      for (const a of ans.filter(x => x.replicate === 0 && READERS.includes(x.reader))) {
+        byQuestion.set(a.question_id, { ...(byQuestion.get(a.question_id) ?? {}), [a.reader]: readerValue(a, score, instrument.id, role === 'floor') });
+        answered.set(a.reader, (answered.get(a.reader) ?? 0) + 1);
+      }
+    };
+    const fills: number[] = [];
+    let shared = 0, sharedKnown = true, scheduledInRow = 0;
     const readerUsd = new Map<string, number>();
     let questionsInRow = 0;
     for (const u of units) {
       if (u.receipt.run_status === 'invalid') refuse(`${u.dir} is invalid: ${(u.receipt.invalid_reasons ?? []).join('; ')}`);
       if (manifest) { const p = receiptManifestProblems(u.config, manifest, manifestSha); if (p.length) refuse(`${u.dir}: ${p.join('; ')}`); }
-      const rows = readRecordsLoose(join(u.dir, 'rows.ndjson')).filter(r => !wave || wave.has(String(r.conversation)));
-      for (const conv of new Set(rows.map(r => String(r.conversation)))) { if (held.has(conv)) refuse(`${armCell}: conversation ${conv} is in both ${held.get(conv)} and ${u.dir}`); held.set(conv, u.dir); }
-      for (const r of rows) { if (role !== 'floor') planned.set(String(r.id), String(r.conversation)); if (typeof r.fill_rate === 'number') fills.push(r.fill_rate); }
+      const config = u.config ?? refuse(`${u.dir} has no run-config.json`);
+      if ((config.limit ?? null) !== null) refuse(`${u.dir} ran with --limit ${config.limit}; a verdict reads whole launch units, every scheduled question`);
+      const diff = differing(unitIdentity(config), expected);
+      if (diff.length) refuse(`${u.dir}: its run config differs from ${def.id} in the committed rs1-cells.json at ${diff.join(', ')}`);
+      if (wrongInstrument(u)) refuse(`${u.dir} was judged under instrument ${u.receipt.instrument?.id} (${String(u.receipt.instrument?.sha256 ?? 'no sha256').slice(0, 12)}), not ${instrument.id} (${instrument.sha256.slice(0, 12)})`);
+      const allRows = readRecordsLoose(join(u.dir, 'rows.ndjson'));
+      const rows = allRows.filter(r => !wave || wave.has(String(r.conversation)));
+      const convs = new Set([...allRows.map(r => String(r.conversation)), ...((u.receipt.realizations ?? []) as Array<{ conversation: string }>).map(r => String(r.conversation))]);
+      for (const conv of [...convs].filter(c => !wave || wave.has(c))) { if (held.has(conv)) refuse(`${armCell}: conversation ${conv} is in both ${held.get(conv)} and ${u.dir}`); held.set(conv, u.dir); }
+      for (const r of rows) { ids.add(String(r.id)); if (role !== 'floor') planned.set(String(r.id), String(r.conversation)); if (typeof r.fill_rate === 'number') fills.push(r.fill_rate); }
       questionsInRow += rows.length;
+      scheduledInRow += Number(u.receipt.selection?.questions);
       const ans = readRecords(join(u.dir, 'answers.ndjson'), 'answer').filter(a => !wave || wave.has(a.conversation));
-      answers.push(...ans);
-      judgments.push(...readRecords(join(u.dir, 'judgments.ndjson'), 'judgment'));
+      take(u.dir, ans);
       const spend = u.receipt.spend?.usd as Record<string, number> | undefined;
       if (spend) shared += (spend.ingest ?? 0) + (spend.retrieval ?? 0) + (spend.background_tail ?? 0); else sharedKnown = false;
       const meters = join(u.root, 'runs', String(u.receipt.run_cell), 'meters.ndjson');
@@ -242,40 +278,45 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
         for (const m of readRecordsLoose(meters)) { const reader = m.phase === 'reader' ? byKey.get(String(m.key)) : undefined; if (reader) readerUsd.set(reader, (readerUsd.get(reader) ?? 0) + Number(m.usd)); }
       }
     }
+    if (finalSet) {
+      const absent = finalSet.filter(c => !held.has(c)), extra = [...held.keys()].filter(c => !finalSet!.includes(c)).sort();
+      if (absent.length || extra.length) refuse(`${armCell}: the receipts must hold exactly the first ${finalSet.length} kept conversations${absent.length ? `; missing ${absent.join(', ')}` : ''}${extra.length ? `; not in that set ${extra.join(', ')}` : ''}`);
+      if (role !== 'floor') {
+        if (!Number.isInteger(scheduledInRow)) refuse(`${armCell}: a receipt has no selection.questions count, so its scheduled questions cannot be checked against its rows`);
+        scheduled.set(role, scheduledInRow);
+      }
+    }
     const rereadId = rereadCellId(armCell, PARTICLE);
     const rereads = found.filter(f => f.receipt.cell_id === rereadId);
     const configs = new Set(units.map(u => String(u.receipt.config_sha256)));
     const covered = new Set(rereads.flatMap(r => (r.receipt.source?.config_sha256s ?? []) as string[]));
     const uncovered = [...configs].filter(c => !covered.has(c));
     if (!rereads.length || uncovered.length) refuse(`missing particle-1 re-read: ${armCell} has ${uncovered.length || configs.size} receipt(s) no ${rereadId} covers`);
+    const reheld = new Map<string, string>();
     for (const r of rereads) {
-      answers.push(...readRecords(join(r.dir, 'answers.ndjson'), 'answer').filter(a => !wave || wave.has(a.conversation)));
-      judgments.push(...readRecords(join(r.dir, 'judgments.ndjson'), 'judgment'));
+      if (wrongInstrument(r)) refuse(`${r.dir} was judged under instrument ${r.receipt.instrument?.id}, not ${instrument.id} (${instrument.sha256.slice(0, 12)})`);
+      const ans = readRecords(join(r.dir, 'answers.ndjson'), 'answer');
+      for (const conv of new Set(ans.map(a => a.conversation))) { if (reheld.has(conv)) refuse(`${rereadId}: conversation ${conv} is re-read in both ${reheld.get(conv)} and ${r.dir}`); reheld.set(conv, r.dir); }
+      take(r.dir, ans.filter(a => !wave || wave.has(a.conversation)));
       const usd = r.receipt.spend?.reader_usd;
       if (typeof usd === 'number') readerUsd.set(PARTICLE, (readerUsd.get(PARTICLE) ?? 0) + usd);
     }
-    const instrument = String(units[0].receipt.instrument.id);
-    const score = new Map(judgments.filter(j => j.judge_replicate === 0).map(j => [`${j.answer_id}|${j.instrument_id}`, j.score]));
-    const byQuestion = new Map<string, Record<string, ReaderValue>>();
-    for (const a of answers.filter(x => x.replicate === 0 && READERS.includes(x.reader))) {
-      const v = readerValue(a, score, instrument, role === 'floor');
-      byQuestion.set(a.question_id, { ...(byQuestion.get(a.question_id) ?? {}), [a.reader]: v });
-    }
     values.set(role, byQuestion);
+    rowIds.set(role, ids);
     if (role !== 'floor') fill[role] = meanOf(fills);
     for (const reader of READERS) {
-      const n = answers.filter(a => a.reader === reader && a.replicate === 0).length;
+      const n = answered.get(reader) ?? 0;
       costs.push({ row: role, reader, usd_per_question: !sharedKnown || !readerUsd.has(reader) || !n || !questionsInRow ? null : shared / questionsInRow + readerUsd.get(reader)! / n });
     }
   }
-  const missing = (reader: string): ReaderValue => ({ drop: reader === PARTICLE ? 'reread_answer_missing' : 'answer_missing' });
+  for (const [row, n] of scheduled) if (n > planned.size) refuse(`${row} scheduled ${n} questions and only ${planned.size} have a row in any system row, so ${n - planned.size} would leave the planned set unseen; resume the launch units that are missing rows`);
+  const value = (row: Row | 'floor', id: string, reader: string): ReaderValue => values.get(row)?.get(id)?.[reader] ?? (!rowIds.get(row)?.has(id) ? { drop: 'row_missing' } : { drop: reader === PARTICLE ? 'reread_answer_missing' : 'answer_missing' });
   const questions: QuestionInput[] = [...planned].sort(([a], [b]) => (a < b ? -1 : 1)).map(([id, conversation]) => ({
-    id, conversation, rows: Object.fromEntries(ROWS.map(row => [row, Object.fromEntries(READERS.map(r => [r, values.get(row)?.get(id)?.[r] ?? missing(r)]))])) as QuestionInput['rows'],
+    id, conversation, rows: Object.fromEntries(ROWS.map(row => [row, Object.fromEntries(READERS.map(r => [r, value(row, id, r)]))])) as QuestionInput['rows'],
   }));
-  const floorValues = values.get('floor') ?? new Map();
   const floor: FloorQuestion[] = questions.map(q => ({ id: q.id, conversation: q.conversation, values: Object.fromEntries(READERS.map(r => {
-    const v = floorValues.get(q.id)?.[r];
-    return [r, v === undefined ? missing(r) : 'drop' in v ? v : v.bridge];
+    const v = value('floor', q.id, r);
+    return [r, 'drop' in v ? v : v.bridge];
   })) }));
   if (wave) { const seen = new Set(questions.map(q => q.conversation)); const absent = [...wave].filter(c => !seen.has(c)); if (absent.length) refuse(`the pilot needs every wave A conversation; ${absent.join(', ')} has no rows`); }
   return { set: o.set, questions, floor, fill, costs };

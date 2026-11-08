@@ -262,7 +262,7 @@ sits about 35 points above the floor on F6's BEAM-1M set, so 3.5 points is about
 - **Product failures score 0 and stay in.** The runner's outcome field classifies them: `retrieval_error`,
   `unsupported`, `turn_cap` and `context_overflow` (`PRODUCT_FAILURES` in `eval/runner/memory-qa/outcomes.ts`).
 - **Harness failures drop the question.** `reader_error`, `judge_error`, `harness_invalid`, `budget_not_run`, or a
-  missing judgment or re-read answer. Every drop is counted by reason and by side (gbrain or server).
+  missing row, judgment or re-read answer. Every drop is counted by reason and by side (gbrain or server).
 - **Drop cap.** If more than 5% of a comparison's planned questions drop, that comparison is invalid: no verdict, not a
   pass, and the claim is not made.
 - **Worst-case sensitivity.** Every gbrain-side drop is scored 0 and every server-side drop 100, and the four tests are

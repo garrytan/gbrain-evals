@@ -1,17 +1,20 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { RS1_MANIFEST } from '../../eval/runner/memory-qa/corpus.ts';
+import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { answerId } from '../../eval/runner/memory-qa/records.ts';
+import { runConfigText } from '../../eval/runner/q1/cell.ts';
 import { loadRS1Manifest, OPUS, PARTICLE, SOL } from '../../eval/runner/q1/cells/rs1.ts';
 import { rereadCellId } from '../../eval/runner/q1/reread-cell.ts';
 import { analyze, loadInput, markdown, receiptManifestProblems, verdictMain, VerdictError } from '../../eval/runner/rs1/verdict.ts';
 
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 const HEX = sha('x');
-const INSTRUMENT = 'beam-rubric';
+const INSTRUMENT = 'beam-rs1';
+const INST = instrumentFor(INSTRUMENT);
 const JUDGE = { [OPUS]: 'openai:gpt-6.1-sol', [PARTICLE]: 'openai:gpt-6.1-sol', [SOL]: 'anthropic:claude-opus-5-5' } as Record<string, string>;
 const tmp = mkdtempSync(join(tmpdir(), 'rs1-verdict-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
@@ -26,6 +29,13 @@ interface Opts {
   score?: (system: string, reader: string, c: number, q: number) => number | string;
   fill?: Record<string, number>;
   revision?: string; manifestSha?: string; dropReread?: string;
+  /** n_final in the filled manifest; defaults to the conversation count when it is 20 to 33, else unset. */
+  nFinal?: number | null;
+  limit?: number;
+  /** Leave a question's row, answers and judgments out of a row's unit while its receipt still schedules it. */
+  noRow?: (system: string, c: number, q: number) => boolean;
+  /** Edit a unit's run config or receipt before they are written. */
+  patch?: (system: string, unit: number, config: Record<string, any>, receipt: Record<string, any>) => void;
 }
 
 /** A filled manifest pinning the kept conversations, and receipts for the four RS1 rows plus their particle-1 re-reads. */
@@ -33,7 +43,8 @@ function build(name: string, o: Opts = {}) {
   const root = join(tmp, name);
   const nConv = o.conversations ?? 20, perUnit = o.perUnit ?? 5, nQ = o.questions ?? 2;
   const files = Array.from({ length: nConv }, (_, i) => [`conversations/c${conv(i).slice(4)}/beam/1/chat.json`, `conversations/c${conv(i).slice(4)}/beam/1/probing_questions/probing_questions.json`]).flat().map(p => ({ path: p, sha256: sha(p) }));
-  const manifest = { dataset: 'beam-rs1', status: 'filled', layout: 'x', note: 'x', files, filled_at: '2026-11-20T00:00:00Z', kept: Array.from({ length: nConv }, (_, i) => conv(i)), earlier_fills: ['e'.repeat(64)] };
+  const manifest = { dataset: 'beam-rs1', status: 'filled', layout: 'x', note: 'x', files, filled_at: '2026-11-20T00:00:00Z', kept: Array.from({ length: nConv }, (_, i) => conv(i)), earlier_fills: ['e'.repeat(64)],
+    ...((o.nFinal !== undefined ? o.nFinal : nConv >= 20 && nConv <= 33 ? nConv : null) !== null ? { n_final: o.nFinal ?? nConv } : {}) };
   const manifestText = JSON.stringify(manifest);
   mkdirSync(root, { recursive: true });
   const manifestPath = join(root, 'rs1-manifest.json');
@@ -52,7 +63,8 @@ function build(name: string, o: Opts = {}) {
       mkdirSync(dir, { recursive: true });
       dirs.push(out);
       const config = sha(`${armCell}|${u}`);
-      const qids = convs.flatMap(c => Array.from({ length: nQ }, (_, q) => [c, q] as const));
+      const scheduledQids = convs.flatMap(c => Array.from({ length: nQ }, (_, q) => [c, q] as const));
+      const qids = scheduledQids.filter(([c, q]) => !o.noRow?.(system, c, q));
       const rows = qids.map(([c, q]) => ({ id: `${conv(c)}:ability${q % 2}:${q}`, conversation: conv(c), cell_id: armCell, realization_id: 'r', fill_rate: o.fill?.[system] ?? 0.95, delivered_tokens: { cl100k_base: 7600 }, packing_loss: null, provenance_status: 'exact', fanout: { mean: 1, max: 1 } }));
       const answersFor = (cellId: string, readers: string[]) => readers.flatMap(reader => qids.map(([c, q]) => {
         const s = score(system, reader, c, q);
@@ -67,8 +79,13 @@ function build(name: string, o: Opts = {}) {
       writeFileSync(join(dir, 'rows.ndjson'), nd(rows));
       writeFileSync(join(dir, 'answers.ndjson'), nd(live.map(x => x.answer)));
       writeFileSync(join(dir, 'judgments.ndjson'), nd(judgmentsFor(live)));
-      writeFileSync(join(dir, 'run-config.json'), JSON.stringify({ dataset: { revision: o.revision ?? 'abcdef0', files: [{ path: RS1_MANIFEST, sha256: o.manifestSha ?? sha(manifestText) }, ...files.filter(f => convs.some(c => f.path.includes(`c${conv(c).slice(4)}/`)))] } }));
-      writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ schema: 'cell', cell_id: armCell, run_cell: def.id, config_sha256: config, run_status: 'complete', instrument: { id: INSTRUMENT }, spend: { usd: { ingest: 1, retrieval: 0.1, reader: 2, judge: 1, background_tail: 0 } } }));
+      const dataset = { revision: o.revision ?? 'abcdef0', files: [{ path: RS1_MANIFEST, sha256: o.manifestSha ?? sha(manifestText) }, ...files.filter(f => convs.some(c => f.path.includes(`c${conv(c).slice(4)}/`)))] };
+      const runConfig = JSON.parse(runConfigText(def, def.arms[0], { instrument: INST, dataset: dataset as never, scheduledSha: sha(`${armCell}|${u}|scheduled`), limit: o.limit ?? null }));
+      const receipt: Record<string, any> = { schema: 'cell', cell_id: armCell, run_cell: def.id, config_sha256: config, run_status: 'complete', instrument: { id: INST.id, sha256: INST.sha256 },
+        selection: { questions: scheduledQids.length, conversations: convs.length, scheduled_sha256: HEX }, spend: { usd: { ingest: 1, retrieval: 0.1, reader: 2, judge: 1, background_tail: 0 } } };
+      o.patch?.(system, u, runConfig, receipt);
+      writeFileSync(join(dir, 'run-config.json'), JSON.stringify(runConfig, null, 2) + '\n');
+      writeFileSync(join(dir, 'receipt.json'), JSON.stringify(receipt));
       if (o.dropReread === system && u === 0) continue;
       const rid = rereadCellId(armCell, PARTICLE);
       const rdir = join(out, 'cells', rid);
@@ -76,10 +93,10 @@ function build(name: string, o: Opts = {}) {
       const reread = answersFor(rid, [PARTICLE]);
       writeFileSync(join(rdir, 'answers.ndjson'), nd(reread.map(x => x.answer)));
       writeFileSync(join(rdir, 'judgments.ndjson'), nd(judgmentsFor(reread)));
-      writeFileSync(join(rdir, 'receipt.json'), JSON.stringify({ schema: 'reread', cell_id: rid, source: { arm_cell_id: armCell, config_sha256s: [config] }, spend: { reader_usd: 0.5 } }));
+      writeFileSync(join(rdir, 'receipt.json'), JSON.stringify({ schema: 'reread', cell_id: rid, source: { arm_cell_id: armCell, config_sha256s: [config] }, instrument: { id: INST.id, sha256: INST.sha256 }, spend: { reader_usd: 0.5 } }));
     }
   }
-  return { dirs, manifestPath, manifestText };
+  return { root, dirs, manifestPath, manifestText };
 }
 const load = (b: ReturnType<typeof build>, waveA = false) => loadInput(b.dirs, { set: 'RS1', manifestPath: b.manifestPath, waveA });
 
@@ -113,6 +130,40 @@ describe('verdict.ts receipts', () => {
   test('refuses a row with a missing particle-1 re-read', () => {
     expect(() => load(build('no-reread', { dropReread: 'ext-memory-bank' }))).toThrow(/missing particle-1 re-read/);
     expect(() => load(build('no-reread-floor', { dropReread: 'baseline-none' }))).toThrow(VerdictError);
+  });
+
+  test('a verdict refuses receipts that do not hold exactly the first n_final kept conversations, and a manifest with no n_final', () => {
+    const b = build('kept-gap');
+    expect(() => loadInput(b.dirs.filter(d => !d.endsWith('-u3')), { set: 'RS1', manifestPath: b.manifestPath })).toThrow(/exactly the first 20 kept conversations; missing rs1-016, rs1-017, rs1-018, rs1-019, rs1-020/);
+    expect(() => load(build('no-n-final', { nFinal: null }))).toThrow(/kept list is not final \(n_final unset/);
+    expect(() => load(build('short-kept', { conversations: 20, nFinal: 21 }))).toThrow(/kept list is not final \(n_final 21, 20 kept\)/);
+  });
+
+  test('refuses a unit run with --limit and a question no system row holds; a row missing in one row is a row_missing drop on its side', () => {
+    expect(() => load(build('limit', { limit: 10 }))).toThrow(/ran with --limit 10/);
+    expect(() => load(build('no-row-anywhere', { noRow: (s, c, q) => s !== 'baseline-none' && c === 0 && q === 0 }))).toThrow(/scheduled 40 questions and only 39 have a row in any system row/);
+    const one = analyze(load(build('no-row-mb', { noRow: (s, c, q) => s === 'ext-memory-bank' && c < 2 && q === 0 })));
+    expect(one.planned_questions).toBe(40);
+    expect(one.common_questions).toBe(38);
+    expect(one.drops).toEqual({ 'server|row_missing': 6 });
+    expect(one.verdict).toBe('pass');
+  });
+
+  test('refuses two re-reads of one arm that hold the same conversation', () => {
+    const b = build('reread-overlap');
+    const rid = rereadCellId(cellOf('ext-extract-first').arms[0].cell_id, PARTICLE);
+    const dup = join(b.root, 'reread-again');
+    cpSync(join(b.root, 'ext-extract-first-u1', 'cells', rid), join(dup, 'cells', rid), { recursive: true });
+    expect(() => loadInput([...b.dirs, dup], { set: 'RS1', manifestPath: b.manifestPath })).toThrow(/conversation rs1-006 is re-read in both/);
+  });
+
+  test('refuses a unit whose run config or instrument differs from the committed definition; launch-control fields may differ', () => {
+    const gbrainSha = (system: string, u: number, config: Record<string, any>) => { if (system === 'gbrain-defaults' && u === 1) config.cell.launch.env.GBRAIN_SHA = '0'.repeat(40); };
+    expect(() => load(build('config-sha', { patch: gbrainSha }))).toThrow(/differs from rs1.gbrain-defaults.rs1-stable in the committed rs1-cells.json at cell.launch.env.GBRAIN_SHA/);
+    const judged = (system: string, u: number, _c: Record<string, any>, receipt: Record<string, any>) => { if (system === 'ext-memory-bank' && u === 2) receipt.instrument.sha256 = 'f'.repeat(64); };
+    expect(() => load(build('instrument', { patch: judged }))).toThrow(/judged under instrument beam-rs1 \(ffffffffffff\)/);
+    const shards = (system: string, u: number, config: Record<string, any>) => { if (u === 0) config.cell.shards = 99; };
+    expect(analyze(load(build('launch-control', { patch: shards }))).verdict).toBe('pass');
   });
 
   test('a product failure scores 0 and stays; harness drops over 5% make the comparisons invalid', () => {
