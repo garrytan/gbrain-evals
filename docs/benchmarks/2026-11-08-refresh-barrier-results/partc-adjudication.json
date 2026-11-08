@@ -1,0 +1,76 @@
+{
+  "partc": "<work>/pc3/pc-out",
+  "rule": "Amendment 3, Part C adjudication",
+  "models": {
+    "anthropic:claude-opus-5-5": {
+      "paired": 60,
+      "off": {
+        "episodes": 60,
+        "raw": 14,
+        "adjudicated": 15,
+        "reissues": 67,
+        "excused": 16,
+        "raw_inconsistent": 0
+      },
+      "on": {
+        "episodes": 60,
+        "raw": 28,
+        "adjudicated": 37,
+        "reissues": 16,
+        "excused": 16,
+        "raw_inconsistent": 0
+      },
+      "raw": {
+        "on_minus_off": {
+          "mean": 0.23333333333333334,
+          "lo": 0.06666666666666667,
+          "hi": 0.4
+        },
+        "status": "non_inferior"
+      },
+      "adjudicated": {
+        "on_minus_off": {
+          "mean": 0.36666666666666664,
+          "lo": 0.18333333333333332,
+          "hi": 0.55
+        },
+        "status": "non_inferior"
+      }
+    },
+    "openai:gpt-6.1-sol": {
+      "paired": 60,
+      "off": {
+        "episodes": 60,
+        "raw": 4,
+        "adjudicated": 4,
+        "reissues": 56,
+        "excused": 0,
+        "raw_inconsistent": 0
+      },
+      "on": {
+        "episodes": 60,
+        "raw": 60,
+        "adjudicated": 60,
+        "reissues": 0,
+        "excused": 0,
+        "raw_inconsistent": 0
+      },
+      "raw": {
+        "on_minus_off": {
+          "mean": 0.9333333333333333,
+          "lo": 0.8666666666666667,
+          "hi": 0.9833333333333333
+        },
+        "status": "non_inferior"
+      },
+      "adjudicated": {
+        "on_minus_off": {
+          "mean": 0.9333333333333333,
+          "lo": 0.8666666666666667,
+          "hi": 0.9833333333333333
+        },
+        "status": "non_inferior"
+      }
+    }
+  }
+}

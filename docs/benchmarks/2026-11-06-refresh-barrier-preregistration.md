@@ -547,3 +547,236 @@ count, seed range, cap, arm or verdict rule.
   Part C runs claude-opus-5-5 and gpt-6.1-sol only, the `particle:particle-1` budget item ($6) is removed, and `agent.ts`
   refuses a particle model. The verdict always read the two gating models, so no verdict rule changes. With particle-1
   gone, no Part C episode puts a key into the environment gbrain runs in.
+
+### Amendment 2, 2026-11-07: G's sha, three harness fixes, the $390 cap and five run procedures
+
+Recorded before any counted trial. It changes no threshold, count, seed range, arm or verdict rule. It raises the all-in
+cap, records a standing money-cut rule for Part C, and adds the run procedures below.
+
+- **G:** `431cb3f91c615a6409d695d12f8af3ffec742475` (gbrain master v0.60.608.0, the merge of #8765), the first master commit
+  containing #8765 and GST-1674's live-retry fix (GBRA-360: a plain-git commit that lands in a live refresh retry's fence
+  window ends in a retry or an abort, never in a stuck `refresh_recovery_required`). GBRA-108 sent the sha on 2026-11-07.
+  Every counted block and `analyze.ts` take it as `--gbrain-sha`. Its source differs from #8765's head 1efd624d, where the smoke below ran, only by master merges outside
+  refresh, recovery and the barrier (upgrade channels, Git LFS during clones, a stall line's wording), and the
+  G-compatibility smoke at G reruns the crash stratum regardless. For the record, GBRA-108 notes two accepted review
+  findings in gbrain's `laterWriteRefusal` (a caller-set `managed_sync_` kind, and a compacted receipt read as a later
+  write) that are fixed in #8766, not in G. Neither case occurs in this harness, and `refresh_barrier` stays off everywhere
+  real until #8766 lands.
+- **Counted code (R77, 2026-11-07):** the results ship in the same pull request as this amendment, #384, instead of after
+  a merge. Counted runs use a pushed head of #384 with harness digest `8e8520f8b606`, never a merge commit, and every
+  receipt records that head (`gbrain_evals.sha`, with `dirty` false) and the digest. Pushes after the first counted
+  trial add results and findings only and change no harness file.
+- **Harness fixes (digest `8e8520f8b606`):** three fixes since Amendment 1, each found by an uncounted smoke. None changes
+  a failure class, threshold or count.
+  1. *Writers start gbrain's persistence consumer* (`child.ts`), as `gbrain serve` does. At f6e8a9f4, seed 271's on arm
+     hung in 3 of 4 runs with 7 or 8 Git effects still open at 120 s while the writer was alive. GBRA-360 traced it to
+     the harness: the writer never ran the consumer that drains the effects it queues, a process shape gbrain does not ship.
+  2. *The crash hold stays rooted* (`runtime.ts`). A crash tick's pause waited on a promise nothing referenced, so
+     garbage collection could end the hold and release the refresh's file lock before the parent killed the process. The
+     pause now waits on a promise held from a global. (GBRA-360's patch carries fixes 1 and 2.)
+  3. *A foreign commit retries on gbrain's index lock* (`runtime.ts`, `trial.ts`). With fix 1, gbrain's own Git effects
+     can hold `.git/index.lock` at the moment the plain-git cron commits. At 1efd624d, seed 222's foreign commit failed on
+     it and the trial scored `harness_error`. The cron now tries again up to 40 times, 250 ms apart, as its next run would,
+     and logs its attempts. A test covers it.
+
+  With these fixes the uncounted smoke at #8765's head 1efd624d passed 86 of 86: seed 355 14 of 14 per arm, seed 271
+  6 of 6 per arm, the crash stratum (seeds 33, 271, 798, 963, 355, 408 and 222) 7 of 7 per arm, and seeds 1 to 8 on both
+  engines and arms 32 of 32.
+- **G-compatibility smoke at G (development evidence, uncounted):** harness digest `8e8520f8b606`, on a 4-vCPU Capy
+  machine. Seeds 1 to 24 on both engines and arms (96 trials) had 0 failures and 0 `harness_error`; PC1 to PC5 held, with
+  PC2 at de22702a overwritten in 60 of 60 runs; 48 named-case runs (repetitions 1 to 4) and 16 quiet runs (seeds 101 to
+  104) had 0 failures. On Postgres the crash stratum (seeds 33, 271, 798, 963, 355, 408 and 222) passed 7 of 7 per arm,
+  seed 355 passed 14 of 14 per arm and seed 271 passed 6 of 6 per arm. Seed 1 on both engines and arms passed on a
+  Ubicloud standard-16 VM, which was then deleted. The smoke passes.
+
+  Its four quiet seeds put Postgres's on-minus-off write latency at +55.4 ms (26 to 71.5), above the 25 ms margin. The
+  gate uses 100 seeds, so 30 more quiet seeds (105 to 134, Postgres) ran at G: +1.0 ms (-17.5 to +19.1) with this harness
+  and +0.5 ms (-14.5 to +15.3) with Amendment 1's (main 489e140d, before the consumer fix). Both intervals hold zero and
+  sit inside the margin, so the consumer fix does not slow quiet writes and the four-seed reading did not repeat.
+- **Cap:** $390 all-in, GBRA-108 picked (c) on 2026-11-07; GBEV-3 confirmed it fits R71. It replaces the $300 under
+  **Budget** and is the hard stop. Every paid line keeps its cap there: Part C claude-opus-5-5 $65, gpt-6.1-sol $35, the
+  Part C smoke $5, B2 $5 and Ubicloud VMs $20. All-in spend when this entry was written: about $266.
+- **Part C money cut (standing rule):** if the Part C smoke's measured cost per episode projects the run past $390, Part
+  C's task count is cut by the same number of tasks for each model so the projection lands at about $380. A dated
+  amendment records it as "money cut ordered by GBEV-3 (2026-11-07)", with the task count and the minimum detectable
+  difference it leaves, before the first counted episode.
+- **Run procedures:**
+  1. B2 runs once, and its ledger run `gbev44-refresh-barrier-b2` is finished right after, so no later process can
+     join it.
+  2. Each counted Part C invocation first checks that the gbrain checkout is clean and at G (`git status --porcelain`
+     empty, HEAD equal to G), and does not start otherwise.
+  3. Before each paid invocation, the run environment is checked by name, never by value, for variables whose name
+     contains AUTH (such as AUTHORIZATION, HTTP_AUTHORIZATION or an OAUTH variable), which `PROVIDER_KEYS` does not match.
+     The invocation starts only when none is set.
+  4. A Part C episode with a fact's token more than once in Git HEAD is not a strict success, even when `scoreEpisode`
+     scores it one (its `duplicates` field lists the fact, but `success` reads current pages only). The episode is
+     rescored by hand, and the adjudication (episode id, fact, the Git HEAD count) is recorded beside the results.
+  5. One invocation runs per model and arm at a time, because two concurrent runs of one model and arm share a work
+     directory and would delete each other's work and pay twice.
+### Amendment 3, 2026-11-07: the counted Part A at G, its triage, a detector fix and a new harness digest
+
+Recorded after the counted Part A at G and before any new counted cell. It changes no threshold, count, seed range, cap
+or arm. It fixes one detector, records the harness digest every later counted cell uses, and adds a Part C scoring rule
+(GBEV-3's B1, which the Part C verdict reads) before any counted Part C episode.
+
+- **Counted Part A at G, scored as frozen:** #384 head `b3bbb0a8`, digest `8e8520f8b606`, on four Ubicloud standard-16
+  VMs that were then deleted. The run had 2,000 trials, 300 named-case runs and 400 quiet runs, half of each flag-on,
+  all with 0 `harness_error`. It reads **FAIL**, with 6 flag-on failures: `overwritten` in trials 1491 on both engines,
+  PGLite trial 1075 and Postgres quiet run 2033, and `hang` in Postgres trial 1142 and PGLite trial 1192. PC1 to PC5,
+  the write-latency gate, B1 and B2 held. GBRA-108 (2026-11-07): "Score the counted Part A at G 431cb3f9 exactly as the
+  frozen prereg says. If that's FAIL, it's FAIL; don't re-score it." The findings report every number `analyze.ts`
+  gives.
+- **The two hangs are gbrain's.** A write held behind a refresh that ends `aborted` (seed 1192: `refresh_diverged` five
+  times) or `abandoned` (seed 1142: the crash's resume) is not released or refused. It stays pending until a later
+  refresh completes, which here is the convergence step, up to about 300 s after its first call. GBRA-108 ruled it a
+  gbrain bug to fix before the flag turns on (GST-1853, GBRA-372). No harness change applies.
+- **The four overwrites match a detector fault, and three are shown.** `removerOf` (`verify.ts`) named as removers every
+  marker in the dropping revision that the revision just before it lacked. A blind put writes back the copy of the file
+  it read, so its revision can carry an older marker back in: the cron line `FCM1491f1q` in seed 1491, or the earlier
+  write `RBM2033w7o3q` in quiet seed 2033. The detector credited that older marker as a remover, so a blind put admitted
+  later, which the `overwritten` row allows (last writer wins), read as an overwrite. `removerOf` now counts only
+  markers that no earlier revision held. A new unit test on a four-revision page modelled on seed 1491 ("removerOf
+  leaves out markers that a blind put carried back from the copy it read") gets `[FCM1491f1q, RBM1491iaq]` from the old
+  code and `[RBM1491iaq]` from the fix. Replays at G on the same schedules, three per seed: with the old detector, seed
+  1491 read `overwritten` in 3 of 3 on each engine and off-arm quiet 2033 in 2 of 3; with the fixed detector, all 12
+  replays of 1491 (both engines) and quiet 2033 (both arms) pass, and 1491's replays credit `RBM1491iaq` alone. On-arm
+  quiet 2033 passed its three old-detector replays, but its counted record settles it: of its removers `[RBM2033w7o3q,
+  RBM2033w2o1q]`, the first (seq 72) committed before the dropped write (seq 73), so the new rule leaves it out, and the
+  second is a blind put admitted later (seq 75). PGLite 1075 passed all three old-detector replays and its page history
+  wasn't kept, so it is attributed to the detector by its signature only, not by a replay: its counted record credits
+  the cron line `FCM1075f1q` beside `RBM1075iaq`, a blind put admitted later (seq 38 against 37), as in 1491.
+  `removedByBlindPut`, the exemption in `no_converge`, uses the same function. PC2 at digest `17b629b49ea5`: the fixed
+  detector still catches the admission-order bug at gbrain `de22702a` in 60 of 60 named runs. One reader reviewed the
+  fix (subagent, claude-opus-5-5, 2026-11-07) and approved it with notes, which this text carries.
+- **How Triage applies.** A failure that a reviewed harness-only fix clears would make the verdict FIX-METHOD, with that
+  engine's block rerun at the same G. The two hangs are gbrain's, so the verdict at G stays FAIL, and the rerun moves to
+  the next G with the fixed detector.
+- **Harness digest from here on:** `17b629b49ea5`, which changes `verify.ts` only. Every later counted cell runs with
+  it, and its results are never pooled with results from `8e8520f8b606`.
+- **Next G:** the first gbrain master commit containing GST-1853's fix. GBRA-108 sends the sha, and a dated entry
+  records it before the G-compatibility smoke and a fresh counted Part A run there. The projected cost goes to GBRA-108
+  against the $390 cap before anything is spent.
+- **Part C at G:** not run. GBEV-3 decided on 2026-11-07 (A1) that counted Part C runs only at a G where PASS is still
+  reachable. The smoke at G (two episodes per model and arm, $1.33) is development evidence. The paid window closed
+  after B2 and the smoke, with $1.37 on the budget ledger (B2 $0.033, smoke $1.334).
+- **Part C adjudication (GBEV-3, B1, 2026-11-07), recorded before any counted Part C episode:** a write refused
+  `invalid_params` with gbrain's "nothing was written", followed by a corrected call carrying the same fact token,
+  counts as one write attempt and its resend, not a reissue. A resend after a success, a timeout, a busy or barrier
+  answer, or any other error still counts as a reissue. A recorded script applies the rule identically to both arms and
+  both models. The findings report the raw preregistered strict success beside the adjudicated number, and the verdict
+  reads the adjudicated number. If the two disagree on the verdict, the findings say so in their first lines. The
+  reason: in the smoke, claude-opus-5-5 passed an unknown `source` parameter to `remember`, gbrain refused it and wrote
+  nothing, and the corrected resend was scored as a reissue, which failed both of Opus's on-arm smoke episodes.
+
+### Amendment 4, 2026-11-08: the next G, recorded before its G-compatibility smoke
+
+Recorded before the G-compatibility smoke at the new G and before any counted cell there. It changes no threshold,
+count, seed range, cap, arm or verdict rule.
+
+- **G:** `773a29eede3b3ea91e0e2cba4012078b5d42c602` (gbrain master v0.60.614.0, #8827), the first master commit
+  containing GST-1853's fix: a write held behind a refresh that ends without completing (aborted, abandoned, or rolled
+  back after its process died) is decided in the run that ends the refresh, instead of staying pending until a later
+  refresh. GBRA-108 sent the sha on 2026-11-08. Every counted block and `analyze.ts` take it as `--gbrain-sha`. Since
+  `431cb3f9`, master also took #8766 (the two `laterWriteRefusal` findings Amendment 2 names), #8798, #8825 and #8833
+  (`/ingest` captures) and #8830 (fact edits).
+- **Harness:** digest `17b629b49ea5` (Amendment 3), run from a pushed #384 head, never a merge commit.
+- **Order:** the G-compatibility smoke as in Amendment 2, with PC2 at `de22702a` rerun on this digest; then a fresh
+  counted Part A, every block on both engines and arms at the preregistered seeds and repetitions, on Ubicloud
+  standard-16 VMs; then B1 and B2 at G; then counted Part C only if PASS is still reachable, in a paid window GBEV-3
+  grants. Results at `431cb3f9` are never pooled with results at this G.
+- **Money:** GBRA-108 approved the full step on 2026-11-08: about $75 more, for about $364 all-in against the $390 cap,
+  with Amendment 2's equal Part C cut if Opus runs over. All-in spend before this step was about $289.
+- **G-compatibility smoke at G, first pass (uncounted, digest `17b629b49ea5`, #384 at `b7aa8b2e`):** 96 trials (seeds 1
+  to 24, both engines and arms), 48 named-case runs (repetitions 1 to 4) and 16 quiet runs (seeds 101 to 104) had one
+  failure: a `harness_error` in Postgres flag-on trial 23. Its writer 0 polled for `t0.json`, read the file between its
+  creation and its write, and exited on "JSON Parse error: Unexpected EOF" before issuing an op. The crash stratum
+  passed 7 of 7 per arm, seed 355 passed 14 of 14 runs per arm and seed 271 6 of 6. PC1, PC3 and PC5 held, PC2 at
+  `de22702a` caught 60 of 60, and PC4 missed on that one trial.
+- **Harness fix (2026-11-08):** `trial.ts` writes `t0.json` to a temporary name and renames it into place (#384 at
+  `8cbd80d7`), so a writer never reads it half-written. One reader (subagent, claude-opus-5-5) approved it with notes:
+  the evidence fits only this race (the error is stamped at the moment the parent computed t0, about 6.7 s before writer
+  0's first call), no other file is read while it is written, and no counted number changes except that this
+  `harness_error` can't recur. The harness digest from here on is `500cc5ba4b97`, which changes `trial.ts` only, and
+  results on `17b629b49ea5` are never pooled with it.
+- **G-compatibility smoke at G on `500cc5ba4b97` (uncounted, #384 at `8cbd80d7`):** the same 96 trials, 48 named-case
+  runs and 16 quiet runs had 0 failures and 0 `harness_error`, and every flag-on named case landed in its window. The
+  crash stratum passed 7 of 7 per arm. PC1 to PC5 held, with PC2 at `de22702a` catching 60 of 60 on this digest. One
+  trial per engine and arm (seed 1) passed on a Ubicloud standard-16 VM, the counted shape, after a first VM request
+  found no capacity. The smoke's four quiet seeds per engine read -42 ms on Postgres and +9.3 ms on PGLite, too few
+  seeds to read the latency gate, which the counted quiet block decides.
+
+### Amendment 5, 2026-11-08: B1 at G, and the rule for its one binding rerun
+
+Recorded before the binding B1 run. It changes no threshold, count, seed range, cap or arm. It sets aside one B1 reading
+as a method fault and fixes how the one rerun runs (GBEV-3, 2026-11-08).
+
+- **First B1 reading at G (FIX-METHOD, reported, not scored):** #384 at `8dc1cbd6`, digest `500cc5ba4b97`, 15:19:13 to
+  15:20:40 UTC. Every score cell was identical off and on. Cat 18 median `query_ms`, off/on: OpenAI 54/64 (ratio 1.19),
+  Voyage 35/59 (ratio 1.69, above the 1.2 gate). The run overlapped this machine creating the four counted Part A VMs
+  and syncing code to them, so GBEV-3 ruled the reading a method fault, not a result about gbrain.
+- **Four uncounted diagnostics** on the same machine, idle, from 15:31 to 15:36 UTC: medians off/on of OpenAI 39/39,
+  41/39, 39/40 and 39/39, and Voyage 36/36, 35/35, 35/41 and 37/36 (ratios 0.95 to 1.17), with identical scores each
+  time. They are development evidence and are never scored.
+- **The binding run:** exactly one fresh counted B1 run, after the counted Part A finishes and its VMs are deleted, on
+  this machine with the Postgres container stopped and nothing else running, from a pushed #384 head with digest
+  `500cc5ba4b97`. It runs under `scripts/refresh-barrier-b1-guard.ts`, which writes `guard.json` and `samples.jsonl`
+  beside the result: `bun scripts/refresh-barrier-b1-guard.ts --out <dir> --max-wait-min 60 -- bun --no-env-file
+  eval/runner/refresh-barrier/retrieval.ts --gbrain-root <G> --work <dir> --stub-embed --label g`.
+- **Start:** the guard starts B1 only once the 1-, 5- and 15-minute load averages in `/proc/loadavg` are all below 0.5,
+  polling every 10 s for up to 60 minutes. If the machine doesn't get there, B1 doesn't start, and nothing is read.
+- **Load record:** the guard records the three load averages once a second and reports them immediately before and after
+  each arm (the samples just before the arm's first sample and just after its last; the start check's reading when the
+  arm opens the run, and the reading at exit when it closes it). They are not held to 0.5 once B1 starts, because B1's
+  own process lifts the 1-minute average to about 1.0 within a minute on an otherwise idle machine.
+- **Contention test:** once a second the guard counts foreign runnable tasks. B1's process tree is the `retrieval.ts`
+  process the guard spawns plus every process whose chain of parents (field 4 of `/proc/<pid>/stat`) reaches it, rebuilt
+  at each sample. A foreign runnable task is a thread (`/proc/<pid>/task/<tid>/stat`) in state `R` whose process is
+  neither in that tree nor the guard's own process; kernel threads count as foreign. A sample's arm is `on` while a
+  process in the tree runs the switch probe (`bun -e`) or the Cat 18 or Cat 26 runner with `GBRAIN_REFRESH_BARRIER=1` in
+  its environment, `off` while one runs without it, and empty otherwise; the guard checks an environment only for that
+  one entry and records nothing from it.
+- **Validity:** the run is invalid if, in either arm (from its first sample to its last), foreign runnable tasks appear
+  in 3 or more consecutive samples. An invalid run is rerun once, for that reason only.
+- **Binding:** a valid run decides B1. If it misses the 1.2 latency gate or a score margin, B1 fails and the verdict
+  says so, with no rerun for any other reason. The gate, the 25 queries and the median stay as preregistered.
+- **Reporting:** the findings report all five readings: the first reading as FIX-METHOD, the four diagnostics marked
+  uncounted, and the binding run, with one limitation line: the gate is a single median of 25 queries per arm, so one
+  reading is noisy.
+
+### Amendment 6, 2026-11-08: Part C money rules and how the counted Part C runs at G
+
+Recorded after B2 and the Part C smoke at G and before any counted Part C episode (GBEV-3, paid window GST-1644-step2,
+2026-11-08). It changes no threshold, task count, arm or verdict rule.
+
+- **Paid window:** $47 in lines: B2 $0.50, Part C smoke $1.50, claude-opus-5-5 $38, gpt-6.1-sol $7, particle-1 $0.
+  All-in spend when this entry was written: about $325, against the $390 cap.
+- **No task cut (replaces Amendment 2's money cut):** Part C runs all 60 tasks per model and arm. If the smoke's
+  measured cost projects all-in spend past $390, the counted episodes don't start; the run pauses and GBEV-3 takes the
+  extra to GBRA-108, whose cap it is.
+- **A stop on money pauses (replaces "A cap stop is terminal" under Part C):** a spend stop pauses that model's Part C
+  and goes to GBEV-3 for an extension; it never ends Part C INCOMPLETE. With an extension the model resumes: completed
+  episodes stay, and the episode the stop interrupted reruns under its task id. Without one, the model's Part C is
+  INCOMPLETE as before. The findings report every pause and the spend at it.
+- **How the lines are held:** a ledger run's budget must fit its ledger's program cap, and `agent.ts` and `retrieval.ts`
+  open their runs at the coded caps (B2 $5, smoke $5, Opus $65, Sol $35); changing those would change the harness
+  digest. So each ledger's program cap is the coded cap it must hold (B2 $5, smoke $5, counted Part C $100), which stays
+  the runaway stop, and the counted job holds the granted lines itself: every 30 s it sums each model's ledger entries
+  (settled cost, or the reservation where a request is unsettled) and, once Opus reaches $37.00 or Sol $6.75 (the line
+  less about one episode), sends SIGTERM to that model's two `agent.ts` processes and writes `pause-<model>.json`. A
+  killed episode writes nothing, so a resume reruns it, and its ledger run stays open, so the resume joins it. A coded
+  cap stop, if one ever came first, writes `cap-stop.json` and finishes the run; with an extension that file is renamed
+  `cap-stop-<n>.json` beside the results and the model's remaining tasks run on a continuation ledger.
+- **B2 at G (counted):** #384 at `2d5fafb8`, digest `500cc5ba4b97`, 17:43 to 17:47 UTC, ledger run
+  `gbev44-refresh-barrier-b2-2026-11-08T17-43-08-537Z-edae3558`, $0.033 over 960 requests. Both switches resolved to
+  their arm, and all eight cells are identical off and on.
+- **Part C smoke at G (uncounted):** the same head, tasks 61 and 62 per model and arm on this Capy machine, 17:48 to
+  17:50 UTC, ledger $0.987 (claude-opus-5-5 $0.763, gpt-6.1-sol $0.196, from the episodes' usage). Per episode: $0.191
+  and $0.049, against $0.283 and $0.044 in the smoke at 431cb3f9. No episode errored, and the fault fired in all eight.
+- **Projection:** from the mean of both smokes' cost per episode, 120 counted episodes cost about $28 for
+  claude-opus-5-5 and $6 for gpt-6.1-sol, under each line, and all-in lands near $375, under $390. The counted episodes
+  start.
+- **Where it runs:** one Ubicloud standard-16 VM, through `ubi-runner.sh run`, whose phases run on the VM detached from
+  the controller. Keys reach it only through `--pass`. It runs from a full clone of #384 at the pushed head carrying
+  this entry, with gbrain fetched at G from github.com/garrytan/gbrain and checked to be `773a29ee`. There are four
+  invocations, one per model and arm, each running tasks 1 to 60, in parallel, on one ledger file. The outputs and the
+  ledger are pulled, and the VM is deleted.
