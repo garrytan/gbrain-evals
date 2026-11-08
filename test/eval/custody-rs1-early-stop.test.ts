@@ -160,7 +160,9 @@ del manifest["steps"]["answer@1"]
 m.write_json(conv / "manifest.json", manifest)
 crashed = step("answer")
 truncate = [step("chat_json")["code"], step("truncate")["code"]]
-print("RESULT " + json.dumps({"out": str(out), "first": first, "rerun": rerun, "crashed": crashed, "truncate": truncate}), flush=True)
+checks = {"mint": m.main(["check-early-stop", "--out", str(out), "--beam-dir", str(out)]),
+          "empty": m.main(["check-early-stop", "--out", str(Path(root) / "no-mint"), "--beam-dir", str(out)])}
+print("RESULT " + json.dumps({"out": str(out), "first": first, "rerun": rerun, "crashed": crashed, "truncate": truncate, "checks": checks}), flush=True)
 `;
 
 const STOP = {
@@ -195,6 +197,17 @@ describe('rs1_mint.py answer-step early stop at BEAM\'s truncation point (stubbe
     const s = scenario('never');
     expect(s.err).toBe('');
     expect(s.result.first).toMatchObject({ code: 0, prompted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], batches: 10, status: 'done', early_stop: null, ids_in_order: true });
+  });
+
+  test('check-early-stop exits 3 (untested) when it checks no conversation or only early-stopped ones, and 0 on a fully answered mint', () => {
+    const s = stopped();
+    expect(s.result.checks).toEqual({ mint: 3, empty: 3 });
+    expect(s.out).toContain('rs1-mint check=early-stop status=untested conversations=1 early_stopped=1 reason=all-early-stopped');
+    expect(s.out).toContain('rs1-mint check=early-stop status=untested conversations=0 early_stopped=0 reason=no-finished-answer-step');
+    const never = scenario('never');
+    expect(never.result.checks).toEqual({ mint: 0, empty: 3 });
+    expect(never.out).toContain('rs1-mint summary=check-early-stop conversations=1 files_differ=0');
+    expect(never.out.join('\n') + never.err).not.toContain(SECRET);
   });
 
   test('check-gaps counts the batches answered before the stop as the whole answer step', () => {

@@ -32,7 +32,10 @@
 #     answering once that truncate cuts; the truncate step then writes the same files it would for the full chat. The
 #     manifest records the stop (early_stop), check-gaps checks the batches answered, and
 #     'rs1_mint.py check-early-stop --out <dir>' (run with <dir>/tooling/venv/bin/python) replays the stop on finished
-#     answer steps and compares the truncate output of the full chat and of the prefix the stop keeps.
+#     answer steps and compares the truncate output of the full chat and of the prefix the stop keeps. It can only test
+#     a mint that answered every batch: an early-stopped mint's chat already ends at the stop, so its files match by
+#     construction and say nothing about where it stopped. It exits 1 when a file differs and 3 (untested) when it
+#     checked no conversation or only early-stopped ones; a clean pass needs at least one fully answered conversation.
 #   - One key per step. Each step runs under 'env -i' with an explicit allowlist, from inside --out so a relative
 #     write BEAM makes (its bad_json.log) stays in custody. In real mode a paid step gets a
 #     metering-proxy token for its one provider (gemini-3.8-flash, or OpenAI embeddings for topic_check): mint.sh

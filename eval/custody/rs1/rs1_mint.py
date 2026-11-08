@@ -43,7 +43,10 @@ stops once that truncate cuts. The truncate step then runs unchanged on the
 shorter chat and writes the same files it writes for the full one. The manifest
 records the stop. 'check-early-stop --out <dir>' replays the stop on a mint's
 finished answer steps and compares the truncate output of the full chat and of
-the prefix the stop keeps.
+the prefix the stop keeps. It can only test mints that answered every batch: an
+early-stopped mint's chat already ends at the stop, so it matches by
+construction. It exits 1 when a file differs, and 3 (untested) when it checked
+no conversation or only early-stopped ones.
 """
 import argparse
 import contextlib
@@ -1433,15 +1436,20 @@ def check_early_stop(out, beam_dir=None, only=None):
     which truncation_cut first cuts the growing chat, as step_answer checks it, then BEAM's chat_json and truncate on the
     full chat and on that prefix. Prints where the stop falls and, for each file truncate writes, whether the two runs
     wrote the same bytes, as counts and sha256 only. Runs in the mint's venv, makes no model call and changes no recorded
-    output: the copies sit in a scratch directory inside the conversation, deleted afterwards. Returns the number of
-    files that differ."""
+    output: the copies sit in a scratch directory inside the conversation, deleted afterwards.
+
+    What it can test: on a mint that answered every batch, whether stopping where the replay stops would have left
+    truncate's output unchanged. What it can't test: a mint that really stopped early holds only the batches up to the
+    stop, so its full chat already is the prefix and every file matches by construction; such a conversation proves
+    nothing about where it stopped. Returns (files that differ, conversations checked, conversations checked that
+    stopped early); the CLI treats a run that checked no conversation, or only early-stopped ones, as untested."""
     os.umask(0o077)
     out = Path(out).resolve()
     os.environ.setdefault("TIKTOKEN_CACHE_DIR", str(out / "tooling" / "tiktoken"))
     with quiet():
         beam = load_beam(Path(beam_dir).resolve() if beam_dir else out / "tooling" / "beam", UnmeteredSlot())
     root = out / "set" / "conversations"
-    convs = differ = 0
+    convs = differ = early = 0
     for conv in sorted(root.iterdir()) if root.exists() else []:
         if (only and conv.name != only) or not (conv / "manifest.json").exists():
             continue
@@ -1450,6 +1458,7 @@ def check_early_stop(out, beam_dir=None, only=None):
         if manifest.get("mode") == "fake" or entry.get("status") != "done":
             continue
         convs += 1
+        early += bool(entry.get("early_stop"))
         beam_chat, scratch = conv / "beam" / "1", conv / "early-stop-replay"
         chat, plans = read_pickle(beam_chat / "chat.pickle"), beam_chat / "plan_new.pickle"
         shutil.rmtree(scratch, ignore_errors=True)
@@ -1485,7 +1494,10 @@ def check_early_stop(out, beam_dir=None, only=None):
         finally:
             shutil.rmtree(scratch, ignore_errors=True)
     emit({"summary": "check-early-stop", "conversations": convs, "files_differ": differ})
-    return differ
+    if not convs or early == convs:
+        emit({"check": "early-stop", "status": "untested", "conversations": convs, "early_stopped": early,
+              "reason": "no-finished-answer-step" if not convs else "all-early-stopped"})
+    return differ, convs, early
 
 
 # ---------------------------------------------------------------------------------------------------- CLI
@@ -1534,7 +1546,8 @@ def main(argv):
         return 1 if check_gaps(args.out) else 0
     if args.command == "check-early-stop":
         try:
-            return 1 if check_early_stop(args.out, args.beam_dir, args.conv) else 0
+            differ, convs, early = check_early_stop(args.out, args.beam_dir, args.conv)
+            return 1 if differ else 3 if not convs or early == convs else 0
         except BaseException as error:
             path = Path(args.out).resolve() / "errors" / "check-early-stop.traceback"
             path.parent.mkdir(parents=True, exist_ok=True)
