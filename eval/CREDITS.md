@@ -33,6 +33,12 @@ The committed `eval/data/world-v1/` corpus contains 240 fictional entities. Clau
 
 The `eval/data/system-one-v1/` datasets come from gbrain's System One v1 eval (MIT, garrytan/gbrain `feat/system-one-v1` at `9196543d`). Their synthetic S7 transcripts were written by `openai:gpt-5.6-luna` for about $0.75, and the S8 labels by `claude-sonnet-5` for about $2.51; both are recorded costs. The [System One data notes](data/system-one-v1/README.md) give each label's source.
 
+BEAM, the benchmark from *Beyond a Million Tokens: Benchmarking and Enhancing Long-Term Memory in LLMs* by Mohammad Tavakoli and coauthors ([arXiv 2510.27246](https://arxiv.org/abs/2510.27246); [mohammadtavakoli78/BEAM](https://github.com/mohammadtavakoli78/BEAM)), comes under two licenses, one for its code and one for its data.
+At the pinned commit `b2da22e` (2026-08-31), the code, including the generator that writes new conversations, is MIT ([LICENSE](https://github.com/mohammadtavakoli78/BEAM/blob/b2da22eac88bb0874c64665f13457eb99835774a/LICENSE), added 2025-12-12).
+The benchmark data, its public conversations and probing questions, is CC BY-SA 4.0 (the [README's License section](https://github.com/mohammadtavakoli78/BEAM/blob/b2da22eac88bb0874c64665f13457eb99835774a/README.md) at that commit), which asks for attribution and puts share-alike terms on adapted material that is distributed.
+The dataset manifests in `eval/decisions/datasets/` record the data license and commit and hold hashes, not dataset text.
+The RS1 set is written by that MIT-licensed generator from new private topics rather than adapted from BEAM's conversations; the [narrowed RS1 preregistration](../docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md#licenses-and-attribution) gives its share-alike position.
+
 The [PrecisionMemBench attribution](precisionmembench/ATTRIBUTION.md) names the upstream author, license, pinned revision and local adaptations. Other external benchmark sources are identified in their individual reports.
 
 ## Influences
@@ -45,6 +51,14 @@ A **Codex** review challenged whether the early suite established anything beyon
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-08: BEAM's code and data licenses
+
+"Data and upstream work" now credits BEAM and records its two licenses at the pinned commit `b2da22e`: the code is MIT
+(LICENSE) and the data is CC BY-SA 4.0 (README, "License"). The page had not named BEAM, although F6, Q1 and the RS1
+stage 0 mint all use it, and the narrowed RS1 test mints its conversations with BEAM's generator. The paragraph was
+first written for the closed RS1 freeze draft (#364), where an earlier preregistration draft had called BEAM's data MIT
+while the dataset manifests said CC BY-SA 4.0. Both licenses apply, to different parts. No other credit changed.
 
 ### 2026-11-03: The opening names `62637c96a`
 

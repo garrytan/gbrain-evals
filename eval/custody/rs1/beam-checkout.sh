@@ -9,7 +9,9 @@
 #   eval/custody/rs1/beam-checkout.sh <dir> <repository> <commit> <path list>
 #
 # A <dir> made from another path list, or a full checkout from before F28, is deleted and fetched again, because its
-# working tree or object store can hold files the list excludes. Then, with git's lazy fetching off, it checks that
+# working tree or object store can hold files the list excludes. It is deleted only when it is a real git directory:
+# a symlink (with or without a trailing /), a path that resolves to / and a directory without .git are refused, and
+# nothing in them is deleted. Then, with git's lazy fetching off, it checks that
 # HEAD is <commit>, the tree has no local changes, the files on disk are exactly the listed ones and the object store
 # holds no file outside the list, and prints one counts-only line. A refusal that finds a file outside the list, on
 # disk or in the object store, deletes <dir> first: only a real directory (never a symlink) that holds this script's
@@ -18,23 +20,31 @@ set -euo pipefail
 umask 077
 
 die() { printf 'rs1-mint refused: %s\n' "$*" >&2; exit 2; }
+# Prints the resolved path of $DIR when it may be deleted: not a symlink, a directory pwd -P resolves, and not /.
+deletable() {
+  local real
+  [ ! -L "$DIR" ] && real="$(CDPATH='' cd -- "$DIR" && pwd -P)" && [ "$real" != / ] && printf '%s\n' "$real"
+}
 discard() {
   local real
-  if [ -L "$DIR" ] || [ ! -f "$MARK" ] || ! real="$(cd "$DIR" && pwd -P)" || [ "$real" = / ]; then
+  if [ ! -f "$MARK" ] || ! real="$(deletable)"; then
     die "$1; delete it and run again"
   fi
   rm -rf -- "$real" || die "$1; could not delete the checkout"
   die "$1; deleted the checkout, run again"
 }
 [ $# -eq 4 ] || die "usage: beam-checkout.sh <dir> <repository> <commit> <path list>"
-DIR="$1" URL="$2" COMMIT="$3" LIST="$4"
+DIR="${1%"${1##*[!/]}"}" URL="$2" COMMIT="$3" LIST="$4"
+[ -n "$DIR" ] || die "the BEAM directory is /"
 [ -f "$LIST" ] || die "the BEAM path list does not exist"
 LIST_SHA="$(sha256sum "$LIST" | cut -d' ' -f1)"
 MARK="$DIR/.git/rs1-beam-paths-sha256"
 
 REPLACED=0
-if [ -e "$DIR" ] && [ "$(cat "$MARK" 2>/dev/null)" != "$LIST_SHA" ]; then
-  rm -rf "$DIR"
+if { [ -e "$DIR" ] || [ -L "$DIR" ]; } && [ "$(cat "$MARK" 2>/dev/null)" != "$LIST_SHA" ]; then
+  real="$(deletable)" && [ -d "$real/.git" ] \
+    || die "the BEAM directory is not a git checkout to replace (a symlink, /, or no .git); nothing was deleted"
+  rm -rf -- "$real"
   REPLACED=1
 fi
 if [ ! -e "$DIR" ]; then

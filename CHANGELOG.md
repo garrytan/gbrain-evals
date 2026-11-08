@@ -56,6 +56,42 @@ This records what each gbrain-evals release changed and what its measurements me
   truncations recorded so far, only with GBEV-3's note, recorded as `agent:GBEV-3` in `run.json` and the scorecard; the
   stop re-arms on new truncations, and truncated rows stay judge errors.
 
+## [0.10.176] - 2026-11-08
+
+### RS1 is preregistered again as one claim: is gbrain within 3.5 points of the two leading memory servers (GST-1886)
+
+- **What it will test.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` asks whether gbrain at its `stable`
+  tag (`27f8b9d6`), reading 8,000 tokens of memory, is at most 3.5 points behind both the memory-bank server and the
+  extract-first server on up to 33 newly minted, sealed BEAM-1M conversations, under BEAM's judge and frontier judges.
+  It is a non-inferiority test, so all four one-sided 95% lower bounds must sit above -3.5. Nothing has been minted and no
+  RS1 cell has run.
+- **The harness.** `eval/runner/q1/cells/rs1-cells.json` (from `bun eval/runner/q1/cells/rs1.ts`) holds the four
+  counted cells, the four stage 1 cells and particle-1's re-read plans. The `beam-rs1` loader reads the custodian's
+  kept list from the filled manifest across 48 mint slots, and cells run in launch units of five kept conversations.
+  `eval/runner/rs1/iut.ts` is the decision rule, `power.ts` the power model and pilot sizing, `pricing.ts` the price and
+  the $2,300 check-in, and `verdict.ts` the verdict and pilot reports.
+- **What the verdict refuses.** `verdict.ts` reads only receipts that hold exactly the first N_final kept conversations
+  of the filled manifest, from whole launch units (no `--limit`) whose run config and instrument match the committed
+  cell definition, with paid, valid, non-overlapping particle-1 re-reads. A question that one system row lacks is a
+  `row_missing` drop on that side, a failed retrieval counts as 0 in the delivered-context gate, and the first table
+  prints n/a where a unit's meters or a re-read's spend are missing. The pilot refuses a kept list shorter than wave A's 20.
+- **Caps.** The counted block stops at $760.79, 1.5 times its cells' own estimate (the re-reads spend from their own
+  ledgers). Stage 1's $60 covers the dry-run campaign ($55.05) and its re-reads ($4.95) together, and
+  `reread-cell.ts` refuses a stage 1 re-read ledger cap above $4.95.
+
+### The RS1 mint stops answering once the chat passes BEAM's truncation limit (GST-1154, GBEV-36)
+
+- **What it wasted.** The truncate step of `eval/custody/rs1/rs1_mint.py` runs BEAM's `count_chats_tokens` (b2da22e), which keeps a chat's turns in order until the running count (tiktoken's gpt-4o-mini encoding over each turn, for a gemini model) passes 1,040,000 tokens, and drops the rest. Stage 0 measured about 168k tokens a batch on a fixed-code conversation, so the cut falls inside batch 7, and batches 8 to 10, about $10 a conversation at stage 0's $3.47 a batch, were generated and thrown away.
+- **The stop.** BEAM answers batch b from plans 0 to b only (the `previous_plans` loop in `main.answer_generation`), so no later batch feeds a kept turn. Before each answer batch and after the last, the answer step runs BEAM's own `convert_chats_pickle_to_json`, `add_ids_to_chats` and `count_chats_tokens` (with `GEN_MODEL` and `TRUNCATE_TOKENS`, as the truncate step calls it) on a scratch copy of the chat inside custody, and stops once that truncate writes `chat_trunecated.json`. The batches it kept and the turns in the last one are read from that file. BEAM's printed count is recorded for information only. A rerun of a chat that has already passed the limit answers nothing. The check takes about a second a batch. The truncate, probe, select and rubric steps are unchanged, and message ids are still renumbered in chat order.
+- **Where the stop is recorded.** The answer step's manifest entry records `early_stop`: the batches answered and planned, the batch and turn at which BEAM's truncate cuts, the batches and turns it keeps, BEAM's printed count and the limit, or null when the chat never passes the limit. `check-gaps` checks an early-stopped answer step against the batches it answered and prints `early_stop=<batches>` or `early_stop=none` on each answer line. `validate.ts` already counts a conversation complete once its rubric step is done, whatever its batch count.
+- **`rs1_mint.py check-early-stop --out <dir> [--conv cNNN] [--beam-dir <dir>]`** replays the stop on a mint's finished answer steps with no model call. It finds the batch after which the stop would have ended the step, runs chat_json and truncate on the full chat and on that prefix in scratch directories inside the conversation, and prints byte equality and both sha256s for each of the four files truncate writes, counts and hashes only. It exits 1 when a file differs. Run it with the mint's venv python, `<dir>/tooling/venv/bin/python`.
+- **Tests.** `test/eval/custody-rs1-early-stop.test.ts` checks keylessly, with a stubbed BEAM, that a chat passing the limit in batch 7 requests no later batch (on main it requested batches 8 to 10), that the stop is recorded, that a rerun answers nothing with or without the manifest entry, that a chat that never passes answers all 10 batches, that `check-gaps` passes and that `validate.ts` loads the conversation as complete. Where a BEAM checkout and venv exist (`RS1_BEAM_DIR`, `RS1_BEAM_PYTHON`), it also runs BEAM's own code and tokenizer on 80-turn chats: `chat_trunecated.json`, `chat_trunecated.pickle`, `plan_new_trunecated.pickle` and `plan_new_trunecated.txt` come out byte-identical for the early-stopped chat and the full one with the cut at batch 7's first, last and fourth turn, and a chat that never passes the limit writes no truncated files and the same `chat.json`. CI's test shards have neither, so they skip that block. The stub BEAM in `test/eval/custody-rs1-gap-check.test.ts` gains the chat_json and truncate calls the answer step now makes, and its `check-gaps` line the `early_stop` field.
+- **Cost.** Stage 0 projected the mint at about $42.78 a conversation without the stop and about $32.10 with it. c003's finished run measures where the cut actually falls. RS1's pricing (`eval/runner/rs1/pricing.ts`) is updated on its own branch.
+
+### beam-checkout.sh replaces a stale BEAM directory only when it is a real git directory (GST-1154)
+
+- **Replacing a stale checkout deletes only a real git directory.** `beam-checkout.sh` strips trailing slashes from `<dir>`, then deletes a directory made from another path list, or a full checkout from before F28, only when it is not a symlink, `pwd -P` does not resolve it to `/`, and it holds `.git`. Anything else is refused and nothing in it is deleted, so a wrong `<dir>` can't lose files. The same check guards the refusal that deletes a checkout holding an excluded file, and stripping the slash closes the bypass where `link/` passed the symlink test. `test/eval/custody-rs1.test.ts` checks each case on disk: a directory without `.git` and a symlink, with or without a trailing `/`, keep their contents; `/` and a path resolving to it are refused before any `rm`; and a stale checkout whose mark names another list is still replaced.
+
 ## [0.10.175] - 2026-11-08
 
 ### The offline skill ranker eval fails its preregistered bars on the no-skill gate (GST-1860)
