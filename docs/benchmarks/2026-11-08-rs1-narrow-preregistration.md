@@ -646,6 +646,16 @@ it, except the Q1 and F6 manifest pin in item 1, a guard that passes at both.
    recorded in the amendment above no longer apply. A further amendment records the pushed commit and the new
    `rs1-cells.json` SHA-256 before any counted run.
 
+### 2026-11-08: the code counted runs start from, after R78
+
+The R78 commits change `rs1-cells.json`, so the commit and digest in "the code counted runs start from" above no longer
+apply. Counted runs, and the judge check before them, start from `8f3d632bc9eb0e77eae9e7d0df4eadf510e3fa88` on the results
+branch. That pushed commit holds the R78 changes, the stage 1 log, and two judge-check fixes from the scoped review: a
+keyless rehearsal and a paid check never share an output directory, and a directory with judgments but no record of
+which kind wrote them is refused. At that commit, `eval/runner/q1/cells/rs1-cells.json` has SHA-256
+`6fc487d7909d5b8e26f1c0254b6cea656a6b654af104760ceec9bb03bcb891e7`. Later docs-only commits don't change it. Each run
+records the commit it actually ran, and a run from any other code needs a further amendment.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
