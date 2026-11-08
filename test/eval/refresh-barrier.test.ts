@@ -669,7 +669,7 @@ describe('refresh-barrier Amendment 2', () => {
     try {
       execFileSync('git', ['init', '-q', '-b', 'main', root]);
       writeFileSync(join(root, '.git', 'index.lock'), '');
-      setTimeout(() => rmSync(join(root, '.git', 'index.lock')), 700);
+      setTimeout(() => rmSync(join(root, '.git', 'index.lock'), { force: true }), 700);
       const paths = { dir, home: dir, remote: dir, upstream: dir, root };
       const out = await foreignCommit(paths, { at_ms: 0, path: 'alpha/notes/cron.md', marker: 'FCMLOCK', sync_after_ms: 0 });
       expect(out.attempts).toBeGreaterThan(1);
