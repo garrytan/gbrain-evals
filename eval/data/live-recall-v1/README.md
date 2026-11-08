@@ -11,3 +11,10 @@ embeddings and a token-overlap reranker, then runs every live-recall arm on the 
 control: it proves the runner, the custody checks and the scorecard, and its numbers say nothing about search quality.
 `test/eval/live-recall.test.ts` runs it in CI. The question format is described in
 [RUN-KIT.md](../../../docs/benchmarks/live-recall/RUN-KIT.md#the-question-file).
+
+Phase 2 (does retrieval change answers) adds `tasks.jsonl`: the same twenty questions reworded as questions with a
+checked gold answer of one to three required facts, plus one task whose gold page, `phase2-pages/notes/board-compensation.md`,
+is flagged `visibility: private`. gbrain hides that page from a remote caller, so `bun eval/runner/live-recall/tasks.ts
+freeze --fixture` drops that task and counts the drop. `test/eval/live-recall-tasks.test.ts` runs the phase 2 runner on
+these tasks with scripted models; the format is in
+[RUN-KIT.md](../../../docs/benchmarks/live-recall/RUN-KIT.md#phase-2-the-task-file).
