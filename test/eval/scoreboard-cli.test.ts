@@ -19,6 +19,7 @@ import { doctor, plan, priceProbe, runCells } from '../../eval/runner/scoreboard
 import { answerId } from '../../eval/runner/scoreboard.ts';
 import { exitCodeOf, ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import type { LaunchContext } from '../../eval/runner/shootout-cell.ts';
+import { bg1CampaignManifest, loadCellManifest } from '../../eval/runner/q1/cell.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'scoreboard-cli-'));
@@ -191,6 +192,20 @@ describe('doctor', () => {
   test('sealed preflight needs the custodian host', async () => {
     const r = await doctor(['--for', 'sealed'], { PATH: process.env.PATH, GBRAIN_EVALS_CUSTODY_LOG: '/nope/custody.log' });
     expect(r.checks.find(c => c.id === 'custody')).toMatchObject({ ok: false, code: 'CUSTODY_REQUIRED' });
+  });
+
+  // Value: protects=a BG1 stage 1 campaign's doctor prices every model the campaign resolves, so run, run --sealed and smoke reach its units; fails_when=priceProbe sends gemini:gemini-3.8-flash or particle:particle-1 to the OpenAI URL, which prices neither, so the doctor refuses every BG1 campaign with MODEL_UNPRICED; why_new=GBEV-3's fix set 7, item 2; seam=doctor over the stage-1 smoke campaign bg1CampaignManifest builds from BG1's cell manifest, keyless; no_claim=a provider call, or the prices themselves
+  test('a BG1 stage 1 campaign\'s doctor prices every model it resolves, its Gemini judge and particle-1 included', async () => {
+    const m = loadCellManifest('bg1');
+    const units = m.smoke_cells.filter(c => c.block === 'BG1-S1').map(c => c.id);
+    const cap = m.blocks.find(b => b.id === 'BG1-S1')!.cap_usd;
+    const manifest = { ...bg1CampaignManifest(m, { smoke: true, units: { campaign_id: 'q1-scoreboard-bg1-s1-t', cap_usd: cap, units, paid_window: 'BG1-S1-T' }, worldEnd: '2026-11-15' }), ledger: join(tmp, 'bg1-s1.sqlite') };
+    const file = join(tmp, 'bg1-s1.json');
+    writeFileSync(file, JSON.stringify(manifest));
+    const priced = (await doctor(['--campaign', file, '--for', 'run'], { PATH: process.env.PATH })).checks.filter(c => c.id.startsWith('price:'));
+    expect(priced.map(c => c.id)).toEqual((manifest.models ?? []).map(x => `price:${x}`));
+    expect(priced.map(c => c.id)).toEqual(expect.arrayContaining(['price:gemini:gemini-3.8-flash', 'price:particle:particle-1']));
+    expect(priced.filter(c => !c.ok).map(c => `${c.id}: ${c.code}: ${c.detail}`)).toEqual([]);
   });
 });
 

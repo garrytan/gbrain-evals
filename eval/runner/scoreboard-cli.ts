@@ -99,10 +99,12 @@ export type DoctorFor = 'fixture' | 'local' | 'run' | 'sealed';
 /** The `provider:model` request shape priceRequest needs, by model kind. */
 export function priceProbe(id: string): { url: string; body: Record<string, unknown> } {
   const [prov, model] = id.includes(':') ? [id.slice(0, id.indexOf(':')), id.slice(id.indexOf(':') + 1)] : ['openai', id];
+  if (prov === 'gemini') return { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', body: { model, max_completion_tokens: 1, messages: [{ role: 'user', content: 'x' }] } };
   if (prov === 'voyage' && /^rerank/.test(model)) return { url: 'https://api.voyageai.com/v1/rerank', body: { model, query: 'q', documents: ['d'] } };
   if (prov === 'voyage') return { url: 'https://api.voyageai.com/v1/embeddings', body: { model, input: ['x'] } };
   if (/embedding/.test(model)) return { url: 'https://api.openai.com/v1/embeddings', body: { model, input: ['x'] } };
   if (prov === 'anthropic') return { url: 'https://api.anthropic.com/v1/messages', body: { model, max_tokens: 1, messages: [{ role: 'user', content: 'x' }] } };
+  if (prov === 'particle') return { url: 'https://api.particle.ai/v1/chat/completions', body: { model, max_tokens: 1, messages: [{ role: 'user', content: 'x' }] } };
   return { url: 'https://api.openai.com/v1/chat/completions', body: { model, max_tokens: 1, messages: [{ role: 'user', content: 'x' }] } };
 }
 
