@@ -34,6 +34,18 @@ describe('normalise', () => {
   });
 });
 
+describe('number words', () => {
+  // Value: protects=the matcher's agreement with the judges reads a list of numbers as that list; fails_when=adjacent number words that do not form one English numeral ("two, three" once its comma is stripped) are summed into one number; why_new=#398 open note 10 (match.ts:35 joined adjacent number words after punctuation was stripped); seam=none; no_claim=the judges' own readings
+  test('words that do not form one numeral stay separate numbers, and every numeral form is read as before', () => {
+    expect(['two, three', 'two three', 'nineteen ninety', 'twenty twenty six', 'zero one', 'two and three'].map(normalise)).toEqual(['2 3', '2 3', '19 90', '20 26', '0 1', '2 and 3']);
+    expect(['twenty five', 'twenty-five', 'four thousand two hundred', 'five hundred twenty five', 'one hundred and five', 'two thousand and five', 'one hundred twelve', 'two hundred thousand', 'nineteen hundred'].map(normalise))
+      .toEqual(['25', '25', '4200', '525', '105', '2005', '112', '200000', '1900']);
+    const counts = question('q5', { stratum: 's8_history', family: 'secondary', ordered: true, gold_values: ['2', '3'], stale_values: ['5'], decoy_values: [] });
+    expect(matchAnswer(counts, 'Two, three.')).toBe('correct');
+    expect(matchAnswer(counts, 'five')).toBe('stale');
+  });
+});
+
 describe('matchAnswer', () => {
   const q = question('q1');
   test('each class: the gold alone, a stale value alone, a decoy value alone, no tracked value, and two kinds', () => {

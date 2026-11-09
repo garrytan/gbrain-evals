@@ -12,7 +12,8 @@
  *     unclear  it states values of two kinds (say the old and the new value), so only a reader of the sentence can tell
  *
  * Both sides are normalised the same way before matching: lower case, straight quotes, thousands separators dropped,
- * "4.2k" and "4.2 thousand" written out, number words up to the millions as digits, currency signs and words dropped,
+ * "4.2k" and "4.2 thousand" written out, number words up to the millions as digits (read as English numerals, so "two,
+ * three" and "nineteen ninety" stay two numbers), currency signs and words dropped,
  * ordinal suffixes dropped, "%" as the word percent, and every other mark as a space. A value matches on whole-token
  * boundaries, longest values first, and a matched span is never matched again, so "Porto" does not match inside
  * "Porto Alegre".
@@ -31,19 +32,29 @@ const UNITS: Record<string, number> = {
 };
 const SCALES: Record<string, number> = { hundred: 100, thousand: 1_000, million: 1_000_000 };
 
-/** Runs of number words as digits: "four thousand two hundred" is 4200, "twenty five" is 25. */
+/**
+ * Runs of number words as digits, read as English numerals: "four thousand two hundred" is 4200, "twenty five" is 25,
+ * "one hundred and five" is 105. A word that cannot continue the numeral before it starts a new one, so "two three"
+ * (as "two, three" reads once its comma is gone) is 2 and 3, not 5.
+ */
 function numberWords(tokens: string[]): string[] {
   const out: string[] = [];
-  let total = 0, current = 0, open = false;
-  const close = () => { if (open) out.push(String(total + current)); total = 0; current = 0; open = false; };
+  let total = 0, current = 0, open = false, last: 'zero' | 'unit' | 'teen' | 'tens' | 'scale' | null = null;
+  const close = () => { if (open) out.push(String(total + current)); total = 0; current = 0; open = false; last = null; };
   tokens.forEach((t, i) => {
-    if (Object.hasOwn(UNITS, t)) { current += UNITS[t]; open = true; return; }
+    if (Object.hasOwn(UNITS, t)) {
+      const n = UNITS[t], kind = n === 0 ? 'zero' : n < 10 ? 'unit' : n < 20 ? 'teen' : 'tens';
+      if (last !== null && (kind === 'zero' || !(last === 'scale' || (last === 'tens' && kind === 'unit')))) close();
+      current += n; open = true; last = kind;
+      return;
+    }
     if (Object.hasOwn(SCALES, t) && open) {
       if (t === 'hundred') current = (current || 1) * 100;
       else { total += (current || 1) * SCALES[t]; current = 0; }
+      last = 'scale';
       return;
     }
-    if (t === 'and' && open && Object.hasOwn(UNITS, tokens[i + 1] ?? '')) return;
+    if (t === 'and' && last === 'scale' && Object.hasOwn(UNITS, tokens[i + 1] ?? '')) return;
     close();
     out.push(t);
   });
