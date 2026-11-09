@@ -174,8 +174,9 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   [proactive brief](benchmarks/2026-10-14-proactive-brief-dev.md),
   [proactive brief v2](benchmarks/2026-10-15-proactive-brief-dev-v2.md).
 - **Cat 40's gpt-6.1-sol, gpt-6-luna and gpt-6-astra dollars are low.** Repriced from the committed results rows
-  with the repository's own analyzers, single-model figures rise 15% to 23%: on the Hard confirmation's M world, Sol's
-  dollars per success are $0.38 with gbrain and $0.28 with files (was $0.32 and $0.24). Figures averaged over several
+  with the repository's own analyzers, gpt-6.1-sol's single-model figures rise 15% to 23%, and gpt-6-astra's and
+  gpt-6-luna's about 9% to 19%: on the Hard confirmation's M world, Sol's dollars per success are $0.38 with gbrain and
+  $0.28 with files (was $0.32 and $0.24). Figures averaged over several
   models rise 1% to 5%: on the first world, gbrain and files cost $0.249 and $0.115 to $0.116 per task (was $0.238 and
   $0.112), still about twice, and on the October 7 Hard world gbrain stays cheaper per task than files (0.72 against
   0.99, was 0.69 against 0.98). The Hard confirmation's S world, the sealed next-confirm cells, the Hard calibration and

@@ -246,6 +246,8 @@ Deferred from [the Cat 40 follow-ups plan](docs/plans/2026-10-03-cat40-followups
 
 - [ ] **Priced dry run for paid scripts** (DX). What: `PRINT_ONLY=1` prints `scripts/cat40-followups.sh` commands; a priced dry run would also estimate each step's cost from the runner's estimate and the ledger's remaining money.
 
+- [ ] **Record cache writes for OpenAI judges in Cat 40** (found 2026-11-09). What: `runAgentText` in `eval/runner/cat40/loop.ts` records `cache_write: 0` for an OpenAI judge; read the cache-write count the way `eval/runner/q1/usage.ts` does, with a keyless test. Why: a gpt-6.1-sol judge's dollars in new Cat 40 rows stay low, so the next published Cat 40 judge cost would repeat the error the [OpenAI cache-write audit](docs/audit/2026-11-09-openai-cache-writes.md) corrects. Budget caps are unaffected: they bind on the ledger, which prices cache writes.
+
 ## Completed infrastructure work
 
 - [x] **Run every hermetic check in CI** (September 28 audit, C5 to C9). CI now runs the unit tests under `eval/`, the Python orchestrator tests, the LongMemEval recount, documentation and query validators, and an unfiltered `tsc`. The unit suite reuses a pre-migrated PGLite snapshot per embedding shape and runs as four concurrent shards, locally and in CI. The inert `postgres@3.4.9` patch and the unneeded PGLite postinstall link were removed. Completed in gbrain-evals v0.10.1, 2026-09-28.
