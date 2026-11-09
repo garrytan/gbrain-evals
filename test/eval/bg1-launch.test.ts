@@ -16,11 +16,20 @@ import { raise } from '../../eval/runner/q1/raise-lease.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { runCells } from '../../eval/runner/scoreboard-cli.ts';
 import { Campaign, type CampaignManifest, type LaunchContext } from '../../eval/runner/shootout-cell.ts';
+import { PROVIDER_KEYS } from '../support/no-provider-keys.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 const roots: string[] = [];
 const scratch = () => { const d = mkdtempSync(join(tmpdir(), 'bg1-launch-')); roots.push(d); return d; };
 afterAll(() => { closeLedgers(); for (const d of roots) rmSync(d, { recursive: true, force: true }); });
+/** What a spawned child gets: this process's environment with every provider key blank, whatever a test has set. */
+const keyless = (extra: Record<string, string> = {}) => ({ ...process.env, ...Object.fromEntries(PROVIDER_KEYS.map(k => [k, ''])), ...extra });
+/** Runs fn with GEMINI_API_KEY set to a placeholder in this process, so a child that inherited it would show it, then puts it back. */
+async function withPlaceholderKey<T>(fn: () => T): Promise<Awaited<T>> {
+  const before = process.env.GEMINI_API_KEY;
+  process.env.GEMINI_API_KEY = 'placeholder-not-a-key';
+  try { return await fn(); } finally { if (before === undefined) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = before; }
+}
 const caught = (fn: () => unknown): ScoreboardError => { try { fn(); } catch (e) { if (e instanceof ScoreboardError) return e; throw e; } throw new Error('expected a ScoreboardError'); };
 
 const UNITS = ['bg1.baseline-none.baseline.c0', 'bg1.baseline-none.baseline.c1', 'bg1.gbrain-defaults.rs1-stable.c0'];
@@ -54,7 +63,7 @@ async function refusedEverywhere(c: Written) {
   expect((e as ScoreboardError).op).toMatchObject({ code: 'PREFLIGHT_FAILED', message: expect.stringContaining('refused before any VM boots') });
   expect(boots).toEqual([]);
   for (const cmd of [['init'], ['reserve', '--cell', UNITS[0]]]) {
-    const r = spawnSync('bun', ['eval/runner/shootout-cell.ts', ...cmd, '--campaign', c.file, '--state', c.state], { cwd: REPO, encoding: 'utf8' });
+    const r = spawnSync('bun', ['eval/runner/shootout-cell.ts', ...cmd, '--campaign', c.file, '--state', c.state], { cwd: REPO, env: keyless(), encoding: 'utf8' });
     expect(r.status).not.toBe(0);
     expect(r.stderr).toContain('refused before any VM boots');
   }
@@ -290,7 +299,7 @@ const c = new Campaign(file, state);
 await Bun.sleep(Math.max(0, Number(start) - Date.now()));
 for (let i = 0; i < ${rounds}; i++) { const l = c.reserve(unit); for (let k = 0; k < 10; k++) c.leases(); c.abandon(l.lease_id, 'race test'); }`;
     const start = String(Date.now() + 4000);
-    const kids = UNITS.map(id => Bun.spawn(['bun', '-e', script, w.file, w.state, id, start], { cwd: REPO, stdout: 'pipe', stderr: 'pipe' }));
+    const kids = UNITS.map(id => Bun.spawn(['bun', '-e', script, w.file, w.state, id, start], { cwd: REPO, env: keyless(), stdout: 'pipe', stderr: 'pipe' }));
     const results = await Promise.all(kids.map(async k => ({ code: await k.exited, err: await new Response(k.stderr).text() })));
     expect(results.filter(r => r.code !== 0).map(r => r.err.split('\n').find(x => /^\w*Error: /.test(x)) ?? r.err.slice(-300))).toEqual([]);
     const c = new Campaign(w.file, w.state);
@@ -332,20 +341,22 @@ for (let i = 0; i < ${rounds}; i++) { const l = c.reserve(unit); for (let k = 0;
     const c = new Campaign(w.file, w.state);
     c.init();
     const l = c.reserve(w.unit);
-    const bootsFile = join(dirname(w.state), 'boots.txt');
+    const bootsFile = join(dirname(w.state), 'boots.txt'), keysFile = join(dirname(w.state), 'keys.txt');
     const script = `const { Campaign } = await import(${JSON.stringify(join(REPO, 'eval/runner/shootout-cell.ts'))});
 const { appendFileSync } = await import('node:fs');
-const [file, state, unit, boots, start] = process.argv.slice(-5);
+const [file, state, unit, boots, start, keys] = process.argv.slice(-6);
+appendFileSync(keys, (process.env.GEMINI_API_KEY ? 'set' : 'empty') + '\\n');
 const c = new Campaign(file, state);
 await Bun.sleep(Math.max(0, Number(start) - Date.now()));
 try { await c.launch(unit, async (_argv, ctx) => { appendFileSync(boots, ctx.lease.lease_id + '\\n'); await Bun.sleep(1000); return 0; }, { local: { port: 1 } }); console.log('booted'); }
 catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     const start = String(Date.now() + 4000);
-    const kids = [0, 1].map(() => Bun.spawn(['bun', '-e', script, w.file, w.state, w.unit, bootsFile, start], { cwd: REPO, stdout: 'pipe', stderr: 'pipe' }));
+    const kids = await withPlaceholderKey(() => [0, 1].map(() => Bun.spawn(['bun', '-e', script, w.file, w.state, w.unit, bootsFile, start, keysFile], { cwd: REPO, env: keyless(), stdout: 'pipe', stderr: 'pipe' })));
     const outs = await Promise.all(kids.map(async k => ({ code: await k.exited, out: (await new Response(k.stdout).text()).trim(), err: await new Response(k.stderr).text() })));
     expect(outs.map(o => [o.code, o.err.split('\n').find(x => /^\w*Error: /.test(x)) ?? null])).toEqual([[0, null], [0, null]]);
     expect(outs.map(o => o.out.split(':')[0]).sort()).toEqual(['booted', 'refused']);
     expect(readFileSync(bootsFile, 'utf8')).toBe(`${l.lease_id}\n`);
+    expect(readFileSync(keysFile, 'utf8')).toBe('empty\nempty\n');
     expect(c.leases().map(x => [x.lease_id, x.status])).toEqual([[l.lease_id, 'finished']]);
     expect(readFileSync(join(w.state, 'leases.ndjson'), 'utf8').split('\n').filter(Boolean).map(x => JSON.parse(x).event)).toEqual(['reserved', 'launched', 'finished']);
   }, 60_000);
@@ -380,7 +391,7 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     expect(entry(resumed.lease.entry_id)).toMatchObject({ actual_usd: 0 });
 
     const home = join(root, 'vm-home');
-    const ssh = (_vm: string, command: string) => { const p = Bun.spawnSync(['bash', '-c', command], { env: { ...process.env, HOME: home }, stdout: 'pipe', stderr: 'pipe' }); return { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() }; };
+    const ssh = (_vm: string, command: string) => { const p = Bun.spawnSync(['bash', '-c', command], { env: keyless({ HOME: home }), stdout: 'pipe', stderr: 'pipe' }); return { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() }; };
     const d = c.reserve(w.unit);
     const vmLedger = join(home, 'custody', d.lease_id, 'proxy', 'lease.sqlite');
     const owner = process.env.UBI_OWNER;
@@ -394,10 +405,11 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     } finally { if (owner === undefined) delete process.env.UBI_OWNER; else process.env.UBI_OWNER = owner; }
     expect(entry(d.entry_id)).toMatchObject({ reserved_usd: d.usd + 0.5, actual_usd: null });
 
-    const fake = join(root, 'ubi-runner.sh'), pulled = join(root, 'pulled-summary.json');
+    const fake = join(root, 'ubi-runner.sh'), pulled = join(root, 'pulled-summary.json'), keysFile = join(root, 'keys.txt');
     writeFileSync(pulled, JSON.stringify({ run_id: d.lease_id, lease_usd: d.usd, committed_usd: 0.6, requests: 4 }));
-    writeFileSync(fake, 'case "$1" in\n  ssh) echo "state 0 0 1 1 0" ;;\n  pull) mkdir -p "$4/$(basename "$3")" && cp "$BG1_TEST_SUMMARY" "$4/$(basename "$3")/lease-summary.json" ;;\n  down) ;;\n  *) exit 9 ;;\nesac\n');
-    const re = spawnSync('bun', ['eval/runner/q1/reattach.ts', '--campaign', w.file, '--state', w.state, '--once'], { cwd: REPO, env: { ...process.env, UBI_RUNNER: fake, BG1_TEST_SUMMARY: pulled }, encoding: 'utf8' });
+    writeFileSync(fake, 'case "$1" in\n  ssh) if [ -n "${GEMINI_API_KEY:-}" ]; then echo set; else echo empty; fi >> "$KEYS"; echo "state 0 0 1 1 0" ;;\n  pull) mkdir -p "$4/$(basename "$3")" && cp "$BG1_TEST_SUMMARY" "$4/$(basename "$3")/lease-summary.json" ;;\n  down) ;;\n  *) exit 9 ;;\nesac\n');
+    const re = await withPlaceholderKey(() => spawnSync('bun', ['eval/runner/q1/reattach.ts', '--campaign', w.file, '--state', w.state, '--once'], { cwd: REPO, env: keyless({ UBI_RUNNER: fake, BG1_TEST_SUMMARY: pulled, KEYS: keysFile }), encoding: 'utf8' }));
+    expect(readFileSync(keysFile, 'utf8')).toBe('empty\n');
     expect([re.status, JSON.parse(re.stdout.trim().split('\n').pop() ?? '{}')[w.unit]]).toEqual([0, 'settled']);
     expect(c.lease(d.lease_id)).toMatchObject({ status: 'settled', actual_usd: 0.6 });
     expect(entry(d.entry_id)).toMatchObject({ reserved_usd: d.usd + 0.5, actual_usd: 0.6, status: 'reconciled' });
@@ -536,7 +548,7 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
       const c = new Campaign(w.file, w.state);
       c.init();
       const home = join(dirname(w.state), 'vm-home');
-      const ssh = (_vm: string, command: string) => { const p = Bun.spawnSync(['bash', '-c', command], { env: { ...process.env, HOME: home }, stdout: 'pipe', stderr: 'pipe' }); return { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() }; };
+      const ssh = (_vm: string, command: string) => { const p = Bun.spawnSync(['bash', '-c', command], { env: keyless({ HOME: home }), stdout: 'pipe', stderr: 'pipe' }); return { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() }; };
       const d = c.reserve(w.unit);
       const vmLedger = join(home, 'custody', d.lease_id, 'proxy', 'lease.sqlite');
       const owner = process.env.UBI_OWNER;
