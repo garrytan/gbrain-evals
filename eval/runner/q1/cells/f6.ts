@@ -25,7 +25,7 @@ import { resolve } from 'node:path';
 import { CHAT_PRICE_OVERRIDES, reservationUsd } from '../../budget-ledger.ts';
 import { DEFAULT_ROUTE_CAPS } from '../../metering-proxy.ts';
 import {
-  ALL_SETS, ASSUMPTIONS, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, FRONTIER_JUDGES, hoursPerMtok, loadManifest, makeCell, MANIFEST_SCHEMA, OVERLAY_KEYS, priceOf, READERS, RS1_ASSUMPTIONS, runsF6, SONNET,
+  ALL_SETS, ASSUMPTIONS, BG1_ASSUMPTIONS, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, FRONTIER_JUDGES, hoursPerMtok, loadManifest, makeCell, MANIFEST_SCHEMA, OVERLAY_KEYS, priceOf, READERS, RS1_ASSUMPTIONS, runsF6, SONNET,
   type ArmSpec, type BlockId, type CellDefinition, type F6BlockId, type Manifest, type RetrievalIdentity, type SetId,
 } from './definitions.ts';
 
@@ -125,8 +125,8 @@ export function maxShardUsd(c: CellDefinition): number {
   return c.estimate.usd / c.shards + sized / ALL_SETS[c.set].conversations * (largestRatio(c.set) - 1);
 }
 function largestRatio(set: SetId): number {
-  const r = F6_ASSUMPTIONS.max_conversation_ratio[set] ?? RS1_ASSUMPTIONS.max_conversation_ratio[set];
-  if (!(r >= 1)) throw new Error(`F6_ASSUMPTIONS.max_conversation_ratio and RS1_ASSUMPTIONS.max_conversation_ratio have no ratio for ${set}`);
+  const r = F6_ASSUMPTIONS.max_conversation_ratio[set] ?? RS1_ASSUMPTIONS.max_conversation_ratio[set] ?? BG1_ASSUMPTIONS.max_conversation_ratio[set];
+  if (!(r >= 1)) throw new Error(`F6_ASSUMPTIONS, RS1_ASSUMPTIONS and BG1_ASSUMPTIONS max_conversation_ratio have no ratio for ${set}`);
   return r;
 }
 /** A unit's lease: its estimate per shard with the lease margin, plus twice the peak reservation, so the last calls of a unit near its estimate still fit. */

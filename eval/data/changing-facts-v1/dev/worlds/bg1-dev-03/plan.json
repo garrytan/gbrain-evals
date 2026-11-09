@@ -1,0 +1,5721 @@
+{
+ "schema": "gbrain-evals/bg1-plan/v1",
+ "generator": "changing-facts-gen@1",
+ "id": "bg1-dev-03",
+ "seed": "bg1-dev-seed-v1:bg1-dev-03",
+ "world_end_weekday": "Sunday",
+ "entities": [
+  {
+   "id": "company-01",
+   "type": "company",
+   "name": "Quayside Health"
+  },
+  {
+   "id": "person-01",
+   "type": "person",
+   "name": "Eamon Petrovic"
+  },
+  {
+   "id": "project-01",
+   "type": "project",
+   "name": "Project Bluebell"
+  },
+  {
+   "id": "person-02",
+   "type": "person",
+   "name": "Willa Halloran"
+  },
+  {
+   "id": "project-02",
+   "type": "project",
+   "name": "Project Tamarind"
+  },
+  {
+   "id": "project-03",
+   "type": "project",
+   "name": "Project Ostrava"
+  },
+  {
+   "id": "company-02",
+   "type": "company",
+   "name": "Vantor Biotech"
+  },
+  {
+   "id": "deal-01",
+   "type": "deal",
+   "name": "Juniper"
+  },
+  {
+   "id": "person-03",
+   "type": "person",
+   "name": "Umar Oyelaran"
+  },
+  {
+   "id": "company-03",
+   "type": "company",
+   "name": "Marlpit Software"
+  },
+  {
+   "id": "person-04",
+   "type": "person",
+   "name": "Greta Achterberg"
+  },
+  {
+   "id": "person-05",
+   "type": "person",
+   "name": "Esme Abernathy"
+  },
+  {
+   "id": "deal-02",
+   "type": "deal",
+   "name": "Harbor"
+  },
+  {
+   "id": "deal-03",
+   "type": "deal",
+   "name": "Tamsin"
+  },
+  {
+   "id": "deal-04",
+   "type": "deal",
+   "name": "Beacon"
+  },
+  {
+   "id": "deal-05",
+   "type": "deal",
+   "name": "Marlow"
+  },
+  {
+   "id": "deal-06",
+   "type": "deal",
+   "name": "Cobalt"
+  },
+  {
+   "id": "company-04",
+   "type": "company",
+   "name": "Brackenridge Media"
+  },
+  {
+   "id": "project-04",
+   "type": "project",
+   "name": "Project Granite"
+  },
+  {
+   "id": "company-05",
+   "type": "company",
+   "name": "Lowmoor Retail"
+  },
+  {
+   "id": "person-02-twin",
+   "type": "person",
+   "name": "Willa Holloran",
+   "twin_of": "person-02"
+  },
+  {
+   "id": "project-04-twin",
+   "type": "project",
+   "name": "Project Granita",
+   "twin_of": "project-04"
+  },
+  {
+   "id": "company-01-twin",
+   "type": "company",
+   "name": "Quayside Homes",
+   "twin_of": "company-01"
+  },
+  {
+   "id": "project-01-twin",
+   "type": "project",
+   "name": "Project Bluebird",
+   "twin_of": "project-01"
+  },
+  {
+   "id": "company-04-twin",
+   "type": "company",
+   "name": "Brackenridge Mills",
+   "twin_of": "company-04"
+  },
+  {
+   "id": "person-01-twin",
+   "type": "person",
+   "name": "Eamon Petrovski",
+   "twin_of": "person-01"
+  },
+  {
+   "id": "deal-01-twin",
+   "type": "deal",
+   "name": "Juniper Hill",
+   "twin_of": "deal-01"
+  },
+  {
+   "id": "person-05-twin",
+   "type": "person",
+   "name": "Esme Abernethy",
+   "twin_of": "person-05"
+  },
+  {
+   "id": "person-04-twin",
+   "type": "person",
+   "name": "Greta Achterhof",
+   "twin_of": "person-04"
+  }
+ ],
+ "slots": [
+  {
+   "id": "company-01.ops_lead",
+   "entity": "company-01",
+   "kind": "ops_lead",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "company-01.ops_lead#0",
+     "type": "state",
+     "value": "Soren Bauer",
+     "session": "s006",
+     "said": -531,
+     "valid_from": -531
+    },
+    {
+     "id": "company-01.ops_lead#1",
+     "type": "change",
+     "value": "Oren Kaur",
+     "session": "s045",
+     "said": -404,
+     "valid_from": -404
+    },
+    {
+     "id": "company-01.ops_lead#2",
+     "type": "change",
+     "value": "Cosima Ortega",
+     "session": "s084",
+     "said": -244,
+     "valid_from": -244
+    },
+    {
+     "id": "company-01.ops_lead#3",
+     "type": "change",
+     "value": "Kavya Quigley",
+     "session": "s126",
+     "said": -107,
+     "valid_from": -107
+    }
+   ],
+   "intent": {
+    "now": "Kavya Quigley",
+    "history": [
+     "Soren Bauer",
+     "Oren Kaur",
+     "Cosima Ortega",
+     "Kavya Quigley"
+    ]
+   }
+  },
+  {
+   "id": "company-01.hq",
+   "entity": "company-01",
+   "kind": "hq",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "company-01.hq#0",
+     "type": "state",
+     "value": "Ghent",
+     "session": "s007",
+     "said": -524,
+     "valid_from": -524
+    },
+    {
+     "id": "company-01.hq#1",
+     "type": "change",
+     "value": "Tallinn",
+     "session": "s062",
+     "said": -347,
+     "valid_from": -347
+    },
+    {
+     "id": "company-01.hq#2",
+     "type": "late",
+     "value": "Oslo",
+     "session": "s132",
+     "said": -93,
+     "valid_from": -151
+    },
+    {
+     "id": "company-01.hq#3",
+     "type": "scheduled",
+     "value": "Calgary",
+     "session": "s146",
+     "said": -40,
+     "valid_from": 119
+    }
+   ],
+   "intent": {
+    "now": "Oslo",
+    "history": [
+     "Ghent",
+     "Tallinn",
+     "Oslo"
+    ]
+   }
+  },
+  {
+   "id": "person-01.role",
+   "entity": "person-01",
+   "kind": "role",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-01.role#0",
+     "type": "state",
+     "value": "Head of Support",
+     "session": "s010",
+     "said": -506,
+     "valid_from": -506
+    },
+    {
+     "id": "person-01.role#1",
+     "type": "late",
+     "value": "Head of Procurement",
+     "session": "s098",
+     "said": -208,
+     "valid_from": -256
+    }
+   ],
+   "intent": {
+    "now": "Head of Procurement",
+    "history": [
+     "Head of Support",
+     "Head of Procurement"
+    ]
+   }
+  },
+  {
+   "id": "project-01.lead",
+   "entity": "project-01",
+   "kind": "lead",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "project-01.lead#0",
+     "type": "state",
+     "value": "Talia Iqbal",
+     "session": "s016",
+     "said": -485,
+     "valid_from": -485
+    },
+    {
+     "id": "project-01.lead#1",
+     "type": "change",
+     "value": "Pavel Jovanovic",
+     "session": "s091",
+     "said": -223,
+     "valid_from": -223
+    },
+    {
+     "id": "project-01.lead#2",
+     "type": "late",
+     "value": "Petra Kiplagat",
+     "session": "s142",
+     "said": -62,
+     "valid_from": -102
+    }
+   ],
+   "intent": {
+    "now": "Petra Kiplagat",
+    "history": [
+     "Talia Iqbal",
+     "Pavel Jovanovic",
+     "Petra Kiplagat"
+    ]
+   }
+  },
+  {
+   "id": "person-01.employer",
+   "entity": "person-01",
+   "kind": "employer",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-01.employer#0",
+     "type": "state",
+     "value": "Lindenhall Bank",
+     "session": "s008",
+     "said": -520,
+     "valid_from": -520
+    },
+    {
+     "id": "person-01.employer#1",
+     "type": "change",
+     "value": "Brightline Analytics",
+     "session": "s071",
+     "said": -313,
+     "valid_from": -313
+    },
+    {
+     "id": "person-01.employer#2",
+     "type": "change",
+     "value": "Jasperwood Furniture",
+     "session": "s091",
+     "said": -223,
+     "valid_from": -223
+    },
+    {
+     "id": "person-01.employer#3",
+     "type": "change",
+     "value": "Goldcrest Insurance",
+     "session": "s114",
+     "said": -146,
+     "valid_from": -146
+    }
+   ],
+   "intent": {
+    "now": "Goldcrest Insurance",
+    "history": [
+     "Lindenhall Bank",
+     "Brightline Analytics",
+     "Jasperwood Furniture",
+     "Goldcrest Insurance"
+    ]
+   }
+  },
+  {
+   "id": "person-02.city",
+   "entity": "person-02",
+   "kind": "city",
+   "stratum": "s1_updated",
+   "events": [
+    {
+     "id": "person-02.city#0",
+     "type": "state",
+     "value": "Tampere",
+     "session": "s010",
+     "said": -506,
+     "valid_from": -506
+    },
+    {
+     "id": "person-02.city#1",
+     "type": "change",
+     "value": "Bilbao",
+     "session": "s042",
+     "said": -407,
+     "valid_from": -407
+    },
+    {
+     "id": "person-02.city#2",
+     "type": "change",
+     "value": "Turin",
+     "session": "s099",
+     "said": -204,
+     "valid_from": -204
+    },
+    {
+     "id": "person-02.city#3",
+     "type": "change",
+     "value": "Bologna",
+     "session": "s134",
+     "said": -84,
+     "valid_from": -84
+    },
+    {
+     "id": "person-02.city#4",
+     "type": "scheduled",
+     "value": "Lyon",
+     "session": "s137",
+     "said": -74,
+     "valid_from": 47
+    }
+   ],
+   "intent": {
+    "now": "Bologna",
+    "history": [
+     "Tampere",
+     "Bilbao",
+     "Turin",
+     "Bologna"
+    ]
+   }
+  },
+  {
+   "id": "project-02.vendor",
+   "entity": "project-02",
+   "kind": "vendor",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "project-02.vendor#0",
+     "type": "state",
+     "value": "Northgate Freight",
+     "session": "s026",
+     "said": -462,
+     "valid_from": -462
+    },
+    {
+     "id": "project-02.vendor#1",
+     "type": "correct",
+     "value": "Pinecrest Robotics",
+     "session": "s065",
+     "said": -336,
+     "valid_from": -462,
+     "replaces": "project-02.vendor#0"
+    }
+   ],
+   "intent": {
+    "now": "Pinecrest Robotics",
+    "history": [
+     "Pinecrest Robotics"
+    ]
+   }
+  },
+  {
+   "id": "project-03.lead",
+   "entity": "project-03",
+   "kind": "lead",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "project-03.lead#0",
+     "type": "state",
+     "value": "Ulla Osei",
+     "session": "s055",
+     "said": -374,
+     "valid_from": -374
+    },
+    {
+     "id": "project-03.lead#1",
+     "type": "correct",
+     "value": "Kasimir Holm",
+     "session": "s088",
+     "said": -234,
+     "valid_from": -374,
+     "replaces": "project-03.lead#0"
+    }
+   ],
+   "intent": {
+    "now": "Kasimir Holm",
+    "history": [
+     "Kasimir Holm"
+    ]
+   }
+  },
+  {
+   "id": "company-02.hq",
+   "entity": "company-02",
+   "kind": "hq",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "company-02.hq#0",
+     "type": "state",
+     "value": "Galway",
+     "session": "s044",
+     "said": -405,
+     "valid_from": -405
+    },
+    {
+     "id": "company-02.hq#1",
+     "type": "change",
+     "value": "Montreal",
+     "session": "s092",
+     "said": -222,
+     "valid_from": -222
+    },
+    {
+     "id": "company-02.hq#2",
+     "type": "correct",
+     "value": "Lisbon",
+     "session": "s131",
+     "said": -96,
+     "valid_from": -222,
+     "replaces": "company-02.hq#1"
+    }
+   ],
+   "intent": {
+    "now": "Lisbon",
+    "history": [
+     "Galway",
+     "Lisbon"
+    ]
+   }
+  },
+  {
+   "id": "deal-01.price",
+   "entity": "deal-01",
+   "kind": "price",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "deal-01.price#0",
+     "type": "state",
+     "value": "$78,000",
+     "session": "s008",
+     "said": -520,
+     "valid_from": -520
+    },
+    {
+     "id": "deal-01.price#1",
+     "type": "correct",
+     "value": "$32,000",
+     "session": "s056",
+     "said": -373,
+     "valid_from": -520,
+     "replaces": "deal-01.price#0"
+    }
+   ],
+   "intent": {
+    "now": "$32,000",
+    "history": [
+     "$32,000"
+    ]
+   }
+  },
+  {
+   "id": "person-02.role",
+   "entity": "person-02",
+   "kind": "role",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "person-02.role#0",
+     "type": "state",
+     "value": "Quality Lead",
+     "session": "s009",
+     "said": -513,
+     "valid_from": -513
+    },
+    {
+     "id": "person-02.role#1",
+     "type": "change",
+     "value": "Analytics Manager",
+     "session": "s034",
+     "said": -421,
+     "valid_from": -421
+    },
+    {
+     "id": "person-02.role#2",
+     "type": "correct",
+     "value": "Head of Brand",
+     "session": "s076",
+     "said": -283,
+     "valid_from": -421,
+     "replaces": "person-02.role#1"
+    }
+   ],
+   "intent": {
+    "now": "Head of Brand",
+    "history": [
+     "Quality Lead",
+     "Head of Brand"
+    ]
+   }
+  },
+  {
+   "id": "person-03.city",
+   "entity": "person-03",
+   "kind": "city",
+   "stratum": "s2_corrected",
+   "events": [
+    {
+     "id": "person-03.city#0",
+     "type": "state",
+     "value": "Krakow",
+     "session": "s023",
+     "said": -464,
+     "valid_from": -464
+    },
+    {
+     "id": "person-03.city#1",
+     "type": "change",
+     "value": "Riga",
+     "session": "s115",
+     "said": -143,
+     "valid_from": -143
+    },
+    {
+     "id": "person-03.city#2",
+     "type": "correct",
+     "value": "Seville",
+     "session": "s151",
+     "said": -24,
+     "valid_from": -143,
+     "replaces": "person-03.city#1"
+    }
+   ],
+   "intent": {
+    "now": "Seville",
+    "history": [
+     "Krakow",
+     "Seville"
+    ]
+   }
+  },
+  {
+   "id": "company-03.ops_lead",
+   "entity": "company-03",
+   "kind": "ops_lead",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "company-03.ops_lead#0",
+     "type": "state",
+     "value": "Yara Tran",
+     "session": "s008",
+     "said": -520,
+     "valid_from": -520
+    },
+    {
+     "id": "company-03.ops_lead#1",
+     "type": "mention",
+     "value": "Yara Tran",
+     "session": "s017",
+     "said": -484,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#2",
+     "type": "mention",
+     "value": "Yara Tran",
+     "session": "s025",
+     "said": -463,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#3",
+     "type": "mention",
+     "value": "Yara Tran",
+     "session": "s031",
+     "said": -434,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#4",
+     "type": "mention",
+     "value": "Yara Tran",
+     "session": "s039",
+     "said": -413,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#5",
+     "type": "mention",
+     "value": "Yara Tran",
+     "session": "s049",
+     "said": -391,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#6",
+     "type": "mention",
+     "value": "Yara Tran",
+     "session": "s054",
+     "said": -374,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#7",
+     "type": "mention",
+     "value": "Yara Tran",
+     "session": "s072",
+     "said": -305,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#8",
+     "type": "mention",
+     "value": "Yara Tran",
+     "session": "s096",
+     "said": -211,
+     "valid_from": null
+    },
+    {
+     "id": "company-03.ops_lead#9",
+     "type": "change",
+     "value": "Ines Vidal",
+     "session": "s148",
+     "said": -35,
+     "valid_from": -35
+    }
+   ],
+   "intent": {
+    "now": "Ines Vidal",
+    "history": [
+     "Yara Tran",
+     "Ines Vidal"
+    ]
+   }
+  },
+  {
+   "id": "person-04.employer",
+   "entity": "person-04",
+   "kind": "employer",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-04.employer#0",
+     "type": "state",
+     "value": "Umberfield Mining",
+     "session": "s022",
+     "said": -465,
+     "valid_from": -465
+    },
+    {
+     "id": "person-04.employer#1",
+     "type": "mention",
+     "value": "Umberfield Mining",
+     "session": "s041",
+     "said": -407,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#2",
+     "type": "mention",
+     "value": "Umberfield Mining",
+     "session": "s042",
+     "said": -407,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#3",
+     "type": "mention",
+     "value": "Umberfield Mining",
+     "session": "s065",
+     "said": -336,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#4",
+     "type": "mention",
+     "value": "Umberfield Mining",
+     "session": "s075",
+     "said": -285,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#5",
+     "type": "mention",
+     "value": "Umberfield Mining",
+     "session": "s080",
+     "said": -251,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#6",
+     "type": "mention",
+     "value": "Umberfield Mining",
+     "session": "s101",
+     "said": -203,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#7",
+     "type": "mention",
+     "value": "Umberfield Mining",
+     "session": "s112",
+     "said": -166,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#8",
+     "type": "mention",
+     "value": "Umberfield Mining",
+     "session": "s118",
+     "said": -137,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#9",
+     "type": "mention",
+     "value": "Umberfield Mining",
+     "session": "s132",
+     "said": -93,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#10",
+     "type": "mention",
+     "value": "Umberfield Mining",
+     "session": "s148",
+     "said": -35,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.employer#11",
+     "type": "change",
+     "value": "Quillfeather Media",
+     "session": "s149",
+     "said": -33,
+     "valid_from": -33
+    }
+   ],
+   "intent": {
+    "now": "Quillfeather Media",
+    "history": [
+     "Umberfield Mining",
+     "Quillfeather Media"
+    ]
+   }
+  },
+  {
+   "id": "person-04.city",
+   "entity": "person-04",
+   "kind": "city",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-04.city#0",
+     "type": "state",
+     "value": "Zurich",
+     "session": "s012",
+     "said": -500,
+     "valid_from": -500
+    },
+    {
+     "id": "person-04.city#1",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s017",
+     "said": -484,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#2",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s022",
+     "said": -465,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#3",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s023",
+     "said": -464,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#4",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s034",
+     "said": -421,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#5",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s035",
+     "said": -421,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#6",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s057",
+     "said": -368,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#7",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s067",
+     "said": -329,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#8",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s077",
+     "said": -264,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#9",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s079",
+     "said": -252,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#10",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s104",
+     "said": -194,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#11",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s105",
+     "said": -193,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#12",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s107",
+     "said": -177,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#13",
+     "type": "mention",
+     "value": "Zurich",
+     "session": "s114",
+     "said": -146,
+     "valid_from": null
+    },
+    {
+     "id": "person-04.city#14",
+     "type": "change",
+     "value": "Busan",
+     "session": "s132",
+     "said": -93,
+     "valid_from": -93
+    }
+   ],
+   "intent": {
+    "now": "Busan",
+    "history": [
+     "Zurich",
+     "Busan"
+    ]
+   }
+  },
+  {
+   "id": "project-01.vendor",
+   "entity": "project-01",
+   "kind": "vendor",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "project-01.vendor#0",
+     "type": "state",
+     "value": "Thistledown Textiles",
+     "session": "s019",
+     "said": -472,
+     "valid_from": -472
+    },
+    {
+     "id": "project-01.vendor#1",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s023",
+     "said": -464,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#2",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s026",
+     "said": -462,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#3",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s033",
+     "said": -430,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#4",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s038",
+     "said": -413,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#5",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s040",
+     "said": -408,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#6",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s043",
+     "said": -406,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#7",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s079",
+     "said": -252,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#8",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s087",
+     "said": -234,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#9",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s102",
+     "said": -200,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#10",
+     "type": "mention",
+     "value": "Thistledown Textiles",
+     "session": "s116",
+     "said": -139,
+     "valid_from": null
+    },
+    {
+     "id": "project-01.vendor#11",
+     "type": "change",
+     "value": "Oakhaven Health",
+     "session": "s121",
+     "said": -133,
+     "valid_from": -133
+    }
+   ],
+   "intent": {
+    "now": "Oakhaven Health",
+    "history": [
+     "Thistledown Textiles",
+     "Oakhaven Health"
+    ]
+   }
+  },
+  {
+   "id": "person-03.employer",
+   "entity": "person-03",
+   "kind": "employer",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-03.employer#0",
+     "type": "state",
+     "value": "Emberly Energy",
+     "session": "s004",
+     "said": -539,
+     "valid_from": -539
+    },
+    {
+     "id": "person-03.employer#1",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s036",
+     "said": -417,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#2",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s040",
+     "said": -408,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#3",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s052",
+     "said": -389,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#4",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s070",
+     "said": -316,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#5",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s086",
+     "said": -238,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#6",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s091",
+     "said": -223,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#7",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s092",
+     "said": -222,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#8",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s099",
+     "said": -204,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#9",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s101",
+     "said": -203,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#10",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s125",
+     "said": -107,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#11",
+     "type": "mention",
+     "value": "Emberly Energy",
+     "session": "s127",
+     "said": -106,
+     "valid_from": null
+    },
+    {
+     "id": "person-03.employer#12",
+     "type": "change",
+     "value": "Larkspur Foods",
+     "session": "s129",
+     "said": -102,
+     "valid_from": -102
+    }
+   ],
+   "intent": {
+    "now": "Larkspur Foods",
+    "history": [
+     "Emberly Energy",
+     "Larkspur Foods"
+    ]
+   }
+  },
+  {
+   "id": "person-05.city",
+   "entity": "person-05",
+   "kind": "city",
+   "stratum": "s3_repeated_stale",
+   "events": [
+    {
+     "id": "person-05.city#0",
+     "type": "state",
+     "value": "Taipei",
+     "session": "s022",
+     "said": -465,
+     "valid_from": -465
+    },
+    {
+     "id": "person-05.city#1",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s025",
+     "said": -463,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#2",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s027",
+     "said": -455,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#3",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s028",
+     "said": -454,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#4",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s034",
+     "said": -421,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#5",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s063",
+     "said": -345,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#6",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s076",
+     "said": -283,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#7",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s078",
+     "said": -254,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#8",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s086",
+     "said": -238,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#9",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s099",
+     "said": -204,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#10",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s101",
+     "said": -203,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#11",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s118",
+     "said": -137,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#12",
+     "type": "mention",
+     "value": "Taipei",
+     "session": "s123",
+     "said": -128,
+     "valid_from": null
+    },
+    {
+     "id": "person-05.city#13",
+     "type": "change",
+     "value": "Brno",
+     "session": "s128",
+     "said": -106,
+     "valid_from": -106
+    }
+   ],
+   "intent": {
+    "now": "Brno",
+    "history": [
+     "Taipei",
+     "Brno"
+    ]
+   }
+  },
+  {
+   "id": "deal-01.seats",
+   "entity": "deal-01",
+   "kind": "seats",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-01.seats#0",
+     "type": "source",
+     "value": "750 seats",
+     "session": "s040",
+     "said": -408,
+     "valid_from": -408,
+     "source": "draft"
+    },
+    {
+     "id": "deal-01.seats#1",
+     "type": "source",
+     "value": "560 seats",
+     "session": "s046",
+     "said": -397,
+     "valid_from": -397,
+     "source": "executed"
+    },
+    {
+     "id": "deal-01.seats#2",
+     "type": "source",
+     "value": "70 seats",
+     "session": "s054",
+     "said": -374,
+     "valid_from": -374,
+     "source": "recap"
+    },
+    {
+     "id": "deal-01.seats#3",
+     "type": "source",
+     "value": "90 seats",
+     "session": "s066",
+     "said": -336,
+     "valid_from": -336,
+     "source": "recap"
+    },
+    {
+     "id": "deal-01.seats#4",
+     "type": "source",
+     "value": "60 seats",
+     "session": "s070",
+     "said": -316,
+     "valid_from": -316,
+     "source": "draft"
+    }
+   ],
+   "intent": {
+    "now": "560 seats",
+    "history": [
+     "560 seats"
+    ]
+   }
+  },
+  {
+   "id": "deal-02.discount",
+   "entity": "deal-02",
+   "kind": "discount",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-02.discount#0",
+     "type": "source",
+     "value": "32%",
+     "session": "s111",
+     "said": -166,
+     "valid_from": -166,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-02.discount#1",
+     "type": "source",
+     "value": "13%",
+     "session": "s113",
+     "said": -151,
+     "valid_from": -151,
+     "source": "draft"
+    },
+    {
+     "id": "deal-02.discount#2",
+     "type": "source",
+     "value": "33%",
+     "session": "s122",
+     "said": -132,
+     "valid_from": -132,
+     "source": "recap"
+    },
+    {
+     "id": "deal-02.discount#3",
+     "type": "source",
+     "value": "23%",
+     "session": "s123",
+     "said": -128,
+     "valid_from": -128,
+     "source": "draft"
+    }
+   ],
+   "intent": {
+    "now": "32%",
+    "history": [
+     "32%"
+    ]
+   }
+  },
+  {
+   "id": "deal-03.discount",
+   "entity": "deal-03",
+   "kind": "discount",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-03.discount#0",
+     "type": "source",
+     "value": "7%",
+     "session": "s059",
+     "said": -364,
+     "valid_from": -364,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-03.discount#1",
+     "type": "source",
+     "value": "41%",
+     "session": "s060",
+     "said": -358,
+     "valid_from": -358,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-03.discount#2",
+     "type": "source",
+     "value": "9%",
+     "session": "s061",
+     "said": -355,
+     "valid_from": -355,
+     "source": "recap"
+    },
+    {
+     "id": "deal-03.discount#3",
+     "type": "source",
+     "value": "27%",
+     "session": "s067",
+     "said": -329,
+     "valid_from": -329,
+     "source": "draft"
+    }
+   ],
+   "intent": {
+    "now": "7%",
+    "history": [
+     "7%"
+    ]
+   }
+  },
+  {
+   "id": "deal-04.price",
+   "entity": "deal-04",
+   "kind": "price",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-04.price#0",
+     "type": "source",
+     "value": "$276,000",
+     "session": "s095",
+     "said": -220,
+     "valid_from": -220,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-04.price#1",
+     "type": "source",
+     "value": "$96,000",
+     "session": "s097",
+     "said": -208,
+     "valid_from": -208,
+     "source": "owner_confirmed"
+    },
+    {
+     "id": "deal-04.price#2",
+     "type": "source",
+     "value": "$228,000",
+     "session": "s104",
+     "said": -194,
+     "valid_from": -194,
+     "source": "recap"
+    },
+    {
+     "id": "deal-04.price#3",
+     "type": "source",
+     "value": "$82,000",
+     "session": "s108",
+     "said": -175,
+     "valid_from": -175,
+     "source": "recap"
+    },
+    {
+     "id": "deal-04.price#4",
+     "type": "source",
+     "value": "$268,000",
+     "session": "s118",
+     "said": -137,
+     "valid_from": -137,
+     "source": "agent_note"
+    }
+   ],
+   "intent": {
+    "now": "$96,000",
+    "history": [
+     "$96,000"
+    ]
+   }
+  },
+  {
+   "id": "deal-05.price",
+   "entity": "deal-05",
+   "kind": "price",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-05.price#0",
+     "type": "source",
+     "value": "$198,000",
+     "session": "s054",
+     "said": -374,
+     "valid_from": -374,
+     "source": "draft"
+    },
+    {
+     "id": "deal-05.price#1",
+     "type": "source",
+     "value": "$68,000",
+     "session": "s058",
+     "said": -367,
+     "valid_from": -367,
+     "source": "executed"
+    },
+    {
+     "id": "deal-05.price#2",
+     "type": "source",
+     "value": "$266,000",
+     "session": "s061",
+     "said": -355,
+     "valid_from": -355,
+     "source": "recap"
+    },
+    {
+     "id": "deal-05.price#3",
+     "type": "source",
+     "value": "$164,000",
+     "session": "s067",
+     "said": -329,
+     "valid_from": -329,
+     "source": "recap"
+    },
+    {
+     "id": "deal-05.price#4",
+     "type": "source",
+     "value": "$310,000",
+     "session": "s075",
+     "said": -285,
+     "valid_from": -285,
+     "source": "agent_note"
+    }
+   ],
+   "intent": {
+    "now": "$68,000",
+    "history": [
+     "$68,000"
+    ]
+   }
+  },
+  {
+   "id": "deal-06.term",
+   "entity": "deal-06",
+   "kind": "term",
+   "stratum": "s4_conflicting",
+   "events": [
+    {
+     "id": "deal-06.term#0",
+     "type": "source",
+     "value": "27 months",
+     "session": "s068",
+     "said": -322,
+     "valid_from": -322,
+     "source": "executed"
+    },
+    {
+     "id": "deal-06.term#1",
+     "type": "source",
+     "value": "33 months",
+     "session": "s077",
+     "said": -264,
+     "valid_from": -264,
+     "source": "recap"
+    },
+    {
+     "id": "deal-06.term#2",
+     "type": "source",
+     "value": "57 months",
+     "session": "s079",
+     "said": -252,
+     "valid_from": -252,
+     "source": "agent_note"
+    },
+    {
+     "id": "deal-06.term#3",
+     "type": "source",
+     "value": "18 months",
+     "session": "s086",
+     "said": -238,
+     "valid_from": -238,
+     "source": "draft"
+    }
+   ],
+   "intent": {
+    "now": "27 months",
+    "history": [
+     "27 months"
+    ]
+   }
+  },
+  {
+   "id": "project-03.pilot",
+   "entity": "project-03",
+   "kind": "pilot",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "project-03.pilot#0",
+     "type": "plan",
+     "value": "Glasswing Studios",
+     "session": "s092",
+     "said": -222,
+     "valid_from": -222
+    },
+    {
+     "id": "project-03.pilot#1",
+     "type": "plan",
+     "value": "Glasswing Studios",
+     "session": "s098",
+     "said": -208,
+     "valid_from": -208
+    },
+    {
+     "id": "project-03.pilot#2",
+     "type": "withdraw",
+     "value": "Glasswing Studios",
+     "session": "s119",
+     "said": -134,
+     "valid_from": null,
+     "rumour": true
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-02.offsite",
+   "entity": "company-02",
+   "kind": "offsite",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-02.offsite#0",
+     "type": "plan",
+     "value": "Rotterdam",
+     "session": "s050",
+     "said": -390,
+     "valid_from": -390
+    },
+    {
+     "id": "company-02.offsite#1",
+     "type": "withdraw",
+     "value": "Rotterdam",
+     "session": "s107",
+     "said": -177,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-04.merger",
+   "entity": "company-04",
+   "kind": "merger",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-04.merger#0",
+     "type": "plan",
+     "value": "Kinglet Telecom",
+     "session": "s089",
+     "said": -229,
+     "valid_from": -229
+    },
+    {
+     "id": "company-04.merger#1",
+     "type": "withdraw",
+     "value": "Kinglet Telecom",
+     "session": "s126",
+     "said": -107,
+     "valid_from": null,
+     "rumour": true
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "project-02.pilot",
+   "entity": "project-02",
+   "kind": "pilot",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "project-02.pilot#0",
+     "type": "plan",
+     "value": "Quarryhill Materials",
+     "session": "s009",
+     "said": -513,
+     "valid_from": -513
+    },
+    {
+     "id": "project-02.pilot#1",
+     "type": "withdraw",
+     "value": "Quarryhill Materials",
+     "session": "s080",
+     "said": -251,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "project-04.pilot",
+   "entity": "project-04",
+   "kind": "pilot",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "project-04.pilot#0",
+     "type": "plan",
+     "value": "Heathmont Schools",
+     "session": "s044",
+     "said": -405,
+     "valid_from": -405
+    },
+    {
+     "id": "project-04.pilot#1",
+     "type": "withdraw",
+     "value": "Heathmont Schools",
+     "session": "s077",
+     "said": -264,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "company-05.merger",
+   "entity": "company-05",
+   "kind": "merger",
+   "stratum": "s5_withdrawn",
+   "events": [
+    {
+     "id": "company-05.merger#0",
+     "type": "plan",
+     "value": "Bramblecote Bakery",
+     "session": "s043",
+     "said": -406,
+     "valid_from": -406
+    },
+    {
+     "id": "company-05.merger#1",
+     "type": "withdraw",
+     "value": "Bramblecote Bakery",
+     "session": "s122",
+     "said": -132,
+     "valid_from": null,
+     "rumour": false
+    }
+   ],
+   "intent": {
+    "now": null,
+    "history": []
+   }
+  },
+  {
+   "id": "person-02-twin.city",
+   "entity": "person-02-twin",
+   "kind": "city",
+   "stratum": "decoy",
+   "twin_slot": "person-02.city",
+   "events": [
+    {
+     "id": "person-02-twin.city#0",
+     "type": "state",
+     "value": "Denver",
+     "session": "s121",
+     "said": -133,
+     "valid_from": -133
+    }
+   ],
+   "intent": {
+    "now": "Denver",
+    "history": [
+     "Denver"
+    ]
+   }
+  },
+  {
+   "id": "project-04-twin.pilot",
+   "entity": "project-04-twin",
+   "kind": "pilot",
+   "stratum": "decoy",
+   "twin_slot": "project-04.pilot",
+   "events": [
+    {
+     "id": "project-04-twin.pilot#0",
+     "type": "plan",
+     "value": "Elmstead Clinics",
+     "session": "s094",
+     "said": -221,
+     "valid_from": -221
+    }
+   ],
+   "intent": {
+    "now": "Elmstead Clinics",
+    "history": [
+     "Elmstead Clinics"
+    ]
+   }
+  },
+  {
+   "id": "company-01-twin.hq",
+   "entity": "company-01-twin",
+   "kind": "hq",
+   "stratum": "decoy",
+   "twin_slot": "company-01.hq",
+   "events": [
+    {
+     "id": "company-01-twin.hq#0",
+     "type": "state",
+     "value": "Prague",
+     "session": "s121",
+     "said": -133,
+     "valid_from": -133
+    }
+   ],
+   "intent": {
+    "now": "Prague",
+    "history": [
+     "Prague"
+    ]
+   }
+  },
+  {
+   "id": "project-01-twin.lead",
+   "entity": "project-01-twin",
+   "kind": "lead",
+   "stratum": "decoy",
+   "twin_slot": "project-01.lead",
+   "events": [
+    {
+     "id": "project-01-twin.lead#0",
+     "type": "state",
+     "value": "Jonah Coelho",
+     "session": "s004",
+     "said": -539,
+     "valid_from": -539
+    }
+   ],
+   "intent": {
+    "now": "Jonah Coelho",
+    "history": [
+     "Jonah Coelho"
+    ]
+   }
+  },
+  {
+   "id": "company-04-twin.merger",
+   "entity": "company-04-twin",
+   "kind": "merger",
+   "stratum": "decoy",
+   "twin_slot": "company-04.merger",
+   "events": [
+    {
+     "id": "company-04-twin.merger#0",
+     "type": "plan",
+     "value": "Inkberry Publishing",
+     "session": "s018",
+     "said": -477,
+     "valid_from": -477
+    }
+   ],
+   "intent": {
+    "now": "Inkberry Publishing",
+    "history": [
+     "Inkberry Publishing"
+    ]
+   }
+  },
+  {
+   "id": "person-01-twin.employer",
+   "entity": "person-01-twin",
+   "kind": "employer",
+   "stratum": "decoy",
+   "twin_slot": "person-01.employer",
+   "events": [
+    {
+     "id": "person-01-twin.employer#0",
+     "type": "state",
+     "value": "Cinderford Steel",
+     "session": "s052",
+     "said": -389,
+     "valid_from": -389
+    }
+   ],
+   "intent": {
+    "now": "Cinderford Steel",
+    "history": [
+     "Cinderford Steel"
+    ]
+   }
+  },
+  {
+   "id": "company-01-twin.ops_lead",
+   "entity": "company-01-twin",
+   "kind": "ops_lead",
+   "stratum": "decoy",
+   "twin_slot": "company-01.ops_lead",
+   "events": [
+    {
+     "id": "company-01-twin.ops_lead#0",
+     "type": "state",
+     "value": "Maren Tanaka",
+     "session": "s048",
+     "said": -394,
+     "valid_from": -394
+    }
+   ],
+   "intent": {
+    "now": "Maren Tanaka",
+    "history": [
+     "Maren Tanaka"
+    ]
+   }
+  },
+  {
+   "id": "deal-01-twin.price",
+   "entity": "deal-01-twin",
+   "kind": "price",
+   "stratum": "decoy",
+   "twin_slot": "deal-01.price",
+   "events": [
+    {
+     "id": "deal-01-twin.price#0",
+     "type": "state",
+     "value": "$186,000",
+     "session": "s087",
+     "said": -234,
+     "valid_from": -234
+    }
+   ],
+   "intent": {
+    "now": "$186,000",
+    "history": [
+     "$186,000"
+    ]
+   }
+  },
+  {
+   "id": "person-05-twin.city",
+   "entity": "person-05-twin",
+   "kind": "city",
+   "stratum": "decoy",
+   "twin_slot": "person-05.city",
+   "events": [
+    {
+     "id": "person-05-twin.city#0",
+     "type": "state",
+     "value": "Vienna",
+     "session": "s050",
+     "said": -390,
+     "valid_from": -390
+    }
+   ],
+   "intent": {
+    "now": "Vienna",
+    "history": [
+     "Vienna"
+    ]
+   }
+  },
+  {
+   "id": "person-04-twin.city",
+   "entity": "person-04-twin",
+   "kind": "city",
+   "stratum": "decoy",
+   "twin_slot": "person-04.city",
+   "events": [
+    {
+     "id": "person-04-twin.city#0",
+     "type": "state",
+     "value": "Adelaide",
+     "session": "s007",
+     "said": -524,
+     "valid_from": -524
+    }
+   ],
+   "intent": {
+    "now": "Adelaide",
+    "history": [
+     "Adelaide"
+    ]
+   }
+  }
+ ],
+ "sessions": [
+  {
+   "id": "s001",
+   "day": -546,
+   "time": "14:45",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s002",
+   "day": -545,
+   "time": "10:25",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s003",
+   "day": -544,
+   "time": "13:20",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s004",
+   "day": -539,
+   "time": "09:40",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Jonah Coelho is the lead on Project Bluebird.",
+     "slot": "project-01-twin.lead",
+     "event": "project-01-twin.lead#0",
+     "values": [
+      "Jonah Coelho"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "For the record, Umar Oyelaran is employed by Emberly Energy.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#0",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s005",
+   "day": -537,
+   "time": "17:30",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s006",
+   "day": -531,
+   "time": "10:10",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Soren Bauer is the head of operations at Quayside Health.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#0",
+     "values": [
+      "Soren Bauer"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s007",
+   "day": -524,
+   "time": "08:40",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Greta Achterhof is based in Adelaide.",
+     "slot": "person-04-twin.city",
+     "event": "person-04-twin.city#0",
+     "values": [
+      "Adelaide"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Writing this down so I remember: Quayside Health has its head office in Ghent.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#0",
+     "values": [
+      "Ghent"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s008",
+   "day": -520,
+   "time": "10:00",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: the renewal price on the Juniper deal is $78,000 a year.",
+     "slot": "deal-01.price",
+     "event": "deal-01.price#0",
+     "values": [
+      "$78,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "For the record, Eamon Petrovic works at Lindenhall Bank.",
+     "slot": "person-01.employer",
+     "event": "person-01.employer#0",
+     "values": [
+      "Lindenhall Bank"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "For the record, Yara Tran runs operations at Marlpit Software.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#0",
+     "values": [
+      "Yara Tran"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s009",
+   "day": -513,
+   "time": "17:30",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Willa Halloran works as Quality Lead.",
+     "slot": "person-02.role",
+     "event": "person-02.role#0",
+     "values": [
+      "Quality Lead"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Keep this quiet for now, but Project Tamarind signed Quarryhill Materials as its pilot customer.",
+     "slot": "project-02.pilot",
+     "event": "project-02.pilot#0",
+     "values": [
+      "Quarryhill Materials"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s010",
+   "day": -506,
+   "time": "14:10",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Willa Halloran is based in Tampere.",
+     "slot": "person-02.city",
+     "event": "person-02.city#0",
+     "values": [
+      "Tampere"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Eamon Petrovic works as Head of Support.",
+     "slot": "person-01.role",
+     "event": "person-01.role#0",
+     "values": [
+      "Head of Support"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s011",
+   "day": -501,
+   "time": "16:15",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s012",
+   "day": -500,
+   "time": "13:45",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Greta Achterberg lives in Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#0",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s013",
+   "day": -500,
+   "time": "18:50",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s014",
+   "day": -499,
+   "time": "12:50",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s015",
+   "day": -495,
+   "time": "17:35",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s016",
+   "day": -485,
+   "time": "08:35",
+   "topic": "marathon training",
+   "long": true,
+   "lines": [
+    {
+     "text": "For the record, Talia Iqbal leads Project Bluebell.",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#0",
+     "values": [
+      "Talia Iqbal"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s017",
+   "day": -484,
+   "time": "17:25",
+   "topic": "a board game night",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Greta Achterberg sent photos from a walk around Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#1",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Yara Tran rearranged the warehouse shifts at Marlpit Software.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#1",
+     "values": [
+      "Yara Tran"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s018",
+   "day": -477,
+   "time": "16:40",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Big news: Brackenridge Mills agreed to merge with Inkberry Publishing.",
+     "slot": "company-04-twin.merger",
+     "event": "company-04-twin.merger#0",
+     "values": [
+      "Inkberry Publishing"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s019",
+   "day": -472,
+   "time": "17:30",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "For the record, Project Bluebell buys from Thistledown Textiles.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#0",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s020",
+   "day": -470,
+   "time": "09:50",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s021",
+   "day": -469,
+   "time": "15:05",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s022",
+   "day": -465,
+   "time": "21:15",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Esme Abernathy is based in Taipei.",
+     "slot": "person-05.city",
+     "event": "person-05.city#0",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "For the record, Greta Achterberg is employed by Umberfield Mining.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#0",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Greta Achterberg recommended a bakery near home in Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#2",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s023",
+   "day": -464,
+   "time": "15:45",
+   "topic": "restoring an old bicycle",
+   "long": true,
+   "lines": [
+    {
+     "text": "Quick note for later: Umar Oyelaran lives in Krakow.",
+     "slot": "person-03.city",
+     "event": "person-03.city#0",
+     "values": [
+      "Krakow"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Thistledown Textiles sent another invoice for Project Bluebell.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#1",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Greta Achterberg recommended a bakery near home in Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#3",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s024",
+   "day": -464,
+   "time": "21:30",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s025",
+   "day": -463,
+   "time": "19:35",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Esme Abernathy sent photos from a walk around Taipei.",
+     "slot": "person-05.city",
+     "event": "person-05.city#1",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Yara Tran is still untangling the Marlpit Software shipping backlog.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#2",
+     "values": [
+      "Yara Tran"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s026",
+   "day": -462,
+   "time": "21:10",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Thistledown Textiles shipped the next batch for Project Bluebell.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#2",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "For the record, Project Tamarind buys from Northgate Freight.",
+     "slot": "project-02.vendor",
+     "event": "project-02.vendor#0",
+     "values": [
+      "Northgate Freight"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s027",
+   "day": -455,
+   "time": "18:25",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Esme Abernathy complained about the weather in Taipei.",
+     "slot": "person-05.city",
+     "event": "person-05.city#2",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s028",
+   "day": -454,
+   "time": "09:35",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Esme Abernathy is hosting the book club at home in Taipei this month.",
+     "slot": "person-05.city",
+     "event": "person-05.city#3",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s029",
+   "day": -445,
+   "time": "16:30",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s030",
+   "day": -442,
+   "time": "09:05",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s031",
+   "day": -434,
+   "time": "13:15",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Yara Tran signed off on the Marlpit Software supplier list.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#3",
+     "values": [
+      "Yara Tran"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s032",
+   "day": -433,
+   "time": "16:25",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s033",
+   "day": -430,
+   "time": "12:30",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Project Bluebell had a review call with Thistledown Textiles.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#3",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s034",
+   "day": -421,
+   "time": "11:10",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Greta Achterberg recommended a bakery near home in Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#4",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Update: Willa Halloran took on the Analytics Manager role.",
+     "slot": "person-02.role",
+     "event": "person-02.role#1",
+     "values": [
+      "Analytics Manager"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "I had coffee with Esme Abernathy in Taipei again.",
+     "slot": "person-05.city",
+     "event": "person-05.city#4",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s035",
+   "day": -421,
+   "time": "13:55",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Greta Achterberg sent photos from a walk around Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#5",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s036",
+   "day": -417,
+   "time": "15:35",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Umar Oyelaran got a new badge photo at Emberly Energy.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#1",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s037",
+   "day": -414,
+   "time": "09:40",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s038",
+   "day": -413,
+   "time": "10:40",
+   "topic": "learning the cello",
+   "long": true,
+   "lines": [
+    {
+     "text": "The Thistledown Textiles support desk fixed the Project Bluebell outage.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#4",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s039",
+   "day": -413,
+   "time": "14:30",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Yara Tran rearranged the warehouse shifts at Marlpit Software.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#4",
+     "values": [
+      "Yara Tran"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s040",
+   "day": -408,
+   "time": "12:40",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "A redlined draft of the Juniper amendment proposes 750 seats as the seat count.",
+     "slot": "deal-01.seats",
+     "event": "deal-01.seats#0",
+     "values": [
+      "750 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Umar Oyelaran said the coffee at Emberly Energy is still terrible.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#2",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The Thistledown Textiles support desk fixed the Project Bluebell outage.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#5",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s041",
+   "day": -407,
+   "time": "17:05",
+   "topic": "a pottery class",
+   "long": true,
+   "lines": [
+    {
+     "text": "Funny timing: Greta Achterberg is leading a hiring push at Umberfield Mining.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#1",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s042",
+   "day": -407,
+   "time": "20:20",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Greta Achterberg is buried in quarter planning at Umberfield Mining.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#2",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "News from this week: Willa Halloran moved to Bilbao.",
+     "slot": "person-02.city",
+     "event": "person-02.city#1",
+     "values": [
+      "Bilbao"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s043",
+   "day": -406,
+   "time": "14:40",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "Big news: Lowmoor Retail agreed to merge with Bramblecote Bakery.",
+     "slot": "company-05.merger",
+     "event": "company-05.merger#0",
+     "values": [
+      "Bramblecote Bakery"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: I renewed the Project Bluebell support plan with Thistledown Textiles.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#6",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s044",
+   "day": -405,
+   "time": "15:05",
+   "topic": "restoring an old bicycle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quick note for later: Vantor Biotech has its head office in Galway.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#0",
+     "values": [
+      "Galway"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Big news: Project Granite signed Heathmont Schools as its pilot customer.",
+     "slot": "project-04.pilot",
+     "event": "project-04.pilot#0",
+     "values": [
+      "Heathmont Schools"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s045",
+   "day": -404,
+   "time": "12:10",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Something changed: Oren Kaur took over operations at Quayside Health.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#1",
+     "values": [
+      "Oren Kaur"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s046",
+   "day": -397,
+   "time": "17:25",
+   "topic": "a board game night",
+   "long": true,
+   "lines": [
+    {
+     "text": "The countersigned Juniper contract sets the seat count at 560 seats.",
+     "slot": "deal-01.seats",
+     "event": "deal-01.seats#1",
+     "values": [
+      "560 seats"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s047",
+   "day": -396,
+   "time": "14:30",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s048",
+   "day": -394,
+   "time": "19:55",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Writing this down so I remember: Maren Tanaka runs operations at Quayside Homes.",
+     "slot": "company-01-twin.ops_lead",
+     "event": "company-01-twin.ops_lead#0",
+     "values": [
+      "Maren Tanaka"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s049",
+   "day": -391,
+   "time": "16:25",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Yara Tran signed off on the Marlpit Software supplier list.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#5",
+     "values": [
+      "Yara Tran"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s050",
+   "day": -390,
+   "time": "17:25",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Big news: Vantor Biotech is holding its team offsite in Rotterdam.",
+     "slot": "company-02.offsite",
+     "event": "company-02.offsite#0",
+     "values": [
+      "Rotterdam"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Writing this down so I remember: Esme Abernethy lives in Vienna.",
+     "slot": "person-05-twin.city",
+     "event": "person-05-twin.city#0",
+     "values": [
+      "Vienna"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s051",
+   "day": -390,
+   "time": "20:20",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s052",
+   "day": -389,
+   "time": "12:55",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Umar Oyelaran brought a Emberly Energy tote bag to the picnic.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#3",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "For the record, Eamon Petrovski is employed by Cinderford Steel.",
+     "slot": "person-01-twin.employer",
+     "event": "person-01-twin.employer#0",
+     "values": [
+      "Cinderford Steel"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s053",
+   "day": -380,
+   "time": "20:50",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s054",
+   "day": -374,
+   "time": "16:20",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "A redlined draft of the Marlow amendment proposes $198,000 as the annual price.",
+     "slot": "deal-05.price",
+     "event": "deal-05.price#0",
+     "values": [
+      "$198,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The meeting summary for the Juniper deal lists the seat count as 70 seats.",
+     "slot": "deal-01.seats",
+     "event": "deal-01.seats#2",
+     "values": [
+      "70 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Yara Tran sent the weekly Marlpit Software operations numbers.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#6",
+     "values": [
+      "Yara Tran"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s055",
+   "day": -374,
+   "time": "20:40",
+   "topic": "a language exchange",
+   "long": true,
+   "lines": [
+    {
+     "text": "Ulla Osei is the lead on Project Ostrava.",
+     "slot": "project-03.lead",
+     "event": "project-03.lead#0",
+     "values": [
+      "Ulla Osei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s056",
+   "day": -373,
+   "time": "10:00",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Scratch $78,000, that was my mistake; the renewal price on the Juniper deal is $32,000 a year.",
+     "slot": "deal-01.price",
+     "event": "deal-01.price#1",
+     "values": [
+      "$78,000",
+      "$32,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s057",
+   "day": -368,
+   "time": "08:05",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Greta Achterberg sent photos from a walk around Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#6",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s058",
+   "day": -367,
+   "time": "10:35",
+   "topic": "restoring an old bicycle",
+   "long": true,
+   "lines": [
+    {
+     "text": "The countersigned Marlow contract sets the annual price at $68,000.",
+     "slot": "deal-05.price",
+     "event": "deal-05.price#1",
+     "values": [
+      "$68,000"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s059",
+   "day": -364,
+   "time": "13:00",
+   "topic": "a book club novel",
+   "long": true,
+   "lines": [
+    {
+     "text": "The account owner signed off in writing on 7% as the binding discount for the Tamsin deal.",
+     "slot": "deal-03.discount",
+     "event": "deal-03.discount#0",
+     "values": [
+      "7%"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s060",
+   "day": -358,
+   "time": "21:00",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": [
+    {
+     "text": "My agent's notes on the Tamsin deal record the discount as 41%.",
+     "slot": "deal-03.discount",
+     "event": "deal-03.discount#1",
+     "values": [
+      "41%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s061",
+   "day": -355,
+   "time": "12:05",
+   "topic": "a photography walk",
+   "long": true,
+   "lines": [
+    {
+     "text": "The meeting summary for the Marlow deal lists the annual price as $266,000.",
+     "slot": "deal-05.price",
+     "event": "deal-05.price#2",
+     "values": [
+      "$266,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The recap email from the Tamsin kickoff says the discount is 9%.",
+     "slot": "deal-03.discount",
+     "event": "deal-03.discount#2",
+     "values": [
+      "9%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s062",
+   "day": -347,
+   "time": "21:30",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Quayside Health moved its headquarters to Tallinn.",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#1",
+     "values": [
+      "Tallinn"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s063",
+   "day": -345,
+   "time": "20:30",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Esme Abernathy recommended a bakery near home in Taipei.",
+     "slot": "person-05.city",
+     "event": "person-05.city#5",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s064",
+   "day": -340,
+   "time": "21:45",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s065",
+   "day": -336,
+   "time": "15:55",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "Greta Achterberg got a new badge photo at Umberfield Mining.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#3",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Correction: I had that wrong earlier. It was never Northgate Freight; Project Tamarind uses Pinecrest Robotics as its vendor.",
+     "slot": "project-02.vendor",
+     "event": "project-02.vendor#1",
+     "values": [
+      "Northgate Freight",
+      "Pinecrest Robotics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s066",
+   "day": -336,
+   "time": "18:15",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "The meeting summary for the Juniper deal lists the seat count as 90 seats.",
+     "slot": "deal-01.seats",
+     "event": "deal-01.seats#3",
+     "values": [
+      "90 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s067",
+   "day": -329,
+   "time": "16:25",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the Tamsin deal floats 27% for the discount.",
+     "slot": "deal-03.discount",
+     "event": "deal-03.discount#3",
+     "values": [
+      "27%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The recap email from the Marlow kickoff says the annual price is $164,000.",
+     "slot": "deal-05.price",
+     "event": "deal-05.price#3",
+     "values": [
+      "$164,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Greta Achterberg is busy redecorating the flat in Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#7",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s068",
+   "day": -322,
+   "time": "09:25",
+   "topic": "marathon training",
+   "long": true,
+   "lines": [
+    {
+     "text": "Both sides executed the Cobalt agreement today, and it fixes the contract term at 27 months.",
+     "slot": "deal-06.term",
+     "event": "deal-06.term#0",
+     "values": [
+      "27 months"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s069",
+   "day": -316,
+   "time": "10:35",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s070",
+   "day": -316,
+   "time": "16:15",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the Juniper deal floats 60 seats for the seat count.",
+     "slot": "deal-01.seats",
+     "event": "deal-01.seats#4",
+     "values": [
+      "60 seats"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Umar Oyelaran got a new badge photo at Emberly Energy.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#4",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s071",
+   "day": -313,
+   "time": "16:45",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Something changed: Eamon Petrovic started a new job at Brightline Analytics.",
+     "slot": "person-01.employer",
+     "event": "person-01.employer#1",
+     "values": [
+      "Brightline Analytics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s072",
+   "day": -305,
+   "time": "09:20",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Yara Tran ran the Marlpit Software operations review again.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#7",
+     "values": [
+      "Yara Tran"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s073",
+   "day": -294,
+   "time": "08:10",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s074",
+   "day": -291,
+   "time": "15:05",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s075",
+   "day": -285,
+   "time": "21:30",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "My agent's notes on the Marlow deal record the annual price as $310,000.",
+     "slot": "deal-05.price",
+     "event": "deal-05.price#4",
+     "values": [
+      "$310,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Greta Achterberg brought a Umberfield Mining tote bag to the picnic.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#4",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s076",
+   "day": -283,
+   "time": "08:20",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Scratch Analytics Manager, that was my mistake; Willa Halloran holds the title Head of Brand.",
+     "slot": "person-02.role",
+     "event": "person-02.role#2",
+     "values": [
+      "Analytics Manager",
+      "Head of Brand"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Esme Abernathy sent photos from a walk around Taipei.",
+     "slot": "person-05.city",
+     "event": "person-05.city#6",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s077",
+   "day": -264,
+   "time": "14:55",
+   "topic": "a backyard bird feeder",
+   "long": false,
+   "lines": [
+    {
+     "text": "Change of plans: Heathmont Schools pulled out of the Project Granite pilot.",
+     "slot": "project-04.pilot",
+     "event": "project-04.pilot#1",
+     "values": [
+      "Heathmont Schools"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The meeting summary for the Cobalt deal lists the contract term as 33 months.",
+     "slot": "deal-06.term",
+     "event": "deal-06.term#1",
+     "values": [
+      "33 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Greta Achterberg recommended a bakery near home in Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#8",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s078",
+   "day": -254,
+   "time": "15:55",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Esme Abernathy recommended a bakery near home in Taipei.",
+     "slot": "person-05.city",
+     "event": "person-05.city#7",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s079",
+   "day": -252,
+   "time": "08:00",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Thistledown Textiles asked for feedback on Project Bluebell.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#7",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Greta Achterberg is busy redecorating the flat in Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#9",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "My agent's notes on the Cobalt deal record the contract term as 57 months.",
+     "slot": "deal-06.term",
+     "event": "deal-06.term#2",
+     "values": [
+      "57 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s080",
+   "day": -251,
+   "time": "13:50",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Greta Achterberg said the coffee at Umberfield Mining is still terrible.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#5",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Change of plans: the Project Tamarind pilot with Quarryhill Materials is cancelled.",
+     "slot": "project-02.pilot",
+     "event": "project-02.pilot#1",
+     "values": [
+      "Quarryhill Materials"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s081",
+   "day": -249,
+   "time": "12:10",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s082",
+   "day": -246,
+   "time": "17:20",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s083",
+   "day": -245,
+   "time": "14:05",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s084",
+   "day": -244,
+   "time": "16:20",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Cosima Ortega took over operations at Quayside Health.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#2",
+     "values": [
+      "Cosima Ortega"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s085",
+   "day": -240,
+   "time": "16:55",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s086",
+   "day": -238,
+   "time": "15:25",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "A redlined draft of the Cobalt amendment proposes 18 months as the contract term.",
+     "slot": "deal-06.term",
+     "event": "deal-06.term#3",
+     "values": [
+      "18 months"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Umar Oyelaran is buried in quarter planning at Emberly Energy.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#5",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Esme Abernathy recommended a bakery near home in Taipei.",
+     "slot": "person-05.city",
+     "event": "person-05.city#8",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s087",
+   "day": -234,
+   "time": "17:30",
+   "topic": "a pottery class",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Project Bluebell had a review call with Thistledown Textiles.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#8",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "The renewal price on the Juniper Hill deal is $186,000 a year.",
+     "slot": "deal-01-twin.price",
+     "event": "deal-01-twin.price#0",
+     "values": [
+      "$186,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s088",
+   "day": -234,
+   "time": "21:40",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Scratch Ulla Osei, that was my mistake; Kasimir Holm leads Project Ostrava.",
+     "slot": "project-03.lead",
+     "event": "project-03.lead#1",
+     "values": [
+      "Ulla Osei",
+      "Kasimir Holm"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s089",
+   "day": -229,
+   "time": "10:10",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Big news: Brackenridge Media agreed to merge with Kinglet Telecom.",
+     "slot": "company-04.merger",
+     "event": "company-04.merger#0",
+     "values": [
+      "Kinglet Telecom"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s090",
+   "day": -227,
+   "time": "14:50",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s091",
+   "day": -223,
+   "time": "09:40",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Eamon Petrovic started a new job at Jasperwood Furniture.",
+     "slot": "person-01.employer",
+     "event": "person-01.employer#2",
+     "values": [
+      "Jasperwood Furniture"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "News from this week: Pavel Jovanovic became the lead on Project Bluebell.",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#1",
+     "values": [
+      "Pavel Jovanovic"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Umar Oyelaran brought a Emberly Energy tote bag to the picnic.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#6",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s092",
+   "day": -222,
+   "time": "15:10",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Umar Oyelaran got a new badge photo at Emberly Energy.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#7",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Big news: Project Ostrava signed Glasswing Studios as its pilot customer.",
+     "slot": "project-03.pilot",
+     "event": "project-03.pilot#0",
+     "values": [
+      "Glasswing Studios"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "News from this week: Vantor Biotech moved its headquarters to Montreal.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#1",
+     "values": [
+      "Montreal"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s093",
+   "day": -222,
+   "time": "21:15",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s094",
+   "day": -221,
+   "time": "18:05",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Big news: Project Granita is running a pilot with Elmstead Clinics.",
+     "slot": "project-04-twin.pilot",
+     "event": "project-04-twin.pilot#0",
+     "values": [
+      "Elmstead Clinics"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s095",
+   "day": -220,
+   "time": "21:35",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "My agent's notes on the Beacon deal record the annual price as $276,000.",
+     "slot": "deal-04.price",
+     "event": "deal-04.price#0",
+     "values": [
+      "$276,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s096",
+   "day": -211,
+   "time": "10:00",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Yara Tran ran the Marlpit Software operations review again.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#8",
+     "values": [
+      "Yara Tran"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s097",
+   "day": -208,
+   "time": "21:20",
+   "topic": "a kitchen repaint",
+   "long": true,
+   "lines": [
+    {
+     "text": "The account owner signed off in writing on $96,000 as the binding annual price for the Beacon deal.",
+     "slot": "deal-04.price",
+     "event": "deal-04.price#1",
+     "values": [
+      "$96,000"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s098",
+   "day": -208,
+   "time": "21:45",
+   "topic": "a slow cooker stew",
+   "long": false,
+   "lines": [
+    {
+     "text": "Nobody told me until now, but Eamon Petrovic took on the Head of Procurement role on [[D:-256]].",
+     "slot": "person-01.role",
+     "event": "person-01.role#1",
+     "values": [
+      "Head of Procurement"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Big news: Project Ostrava is running a pilot with Glasswing Studios.",
+     "slot": "project-03.pilot",
+     "event": "project-03.pilot#1",
+     "values": [
+      "Glasswing Studios"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s099",
+   "day": -204,
+   "time": "12:55",
+   "topic": "a jigsaw puzzle",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Esme Abernathy is busy redecorating the flat in Taipei.",
+     "slot": "person-05.city",
+     "event": "person-05.city#9",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Something changed: Willa Halloran moved to Turin.",
+     "slot": "person-02.city",
+     "event": "person-02.city#2",
+     "values": [
+      "Turin"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Funny timing: Umar Oyelaran is buried in quarter planning at Emberly Energy.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#8",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s100",
+   "day": -203,
+   "time": "10:15",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s101",
+   "day": -203,
+   "time": "21:00",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Greta Achterberg was stuck in a long all-hands at Umberfield Mining.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#6",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Esme Abernathy is hosting the book club at home in Taipei this month.",
+     "slot": "person-05.city",
+     "event": "person-05.city#10",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Umar Oyelaran said the coffee at Emberly Energy is still terrible.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#9",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s102",
+   "day": -200,
+   "time": "15:05",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Project Bluebell had a review call with Thistledown Textiles.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#9",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s103",
+   "day": -195,
+   "time": "12:50",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s104",
+   "day": -194,
+   "time": "10:15",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "The meeting summary for the Beacon deal lists the annual price as $228,000.",
+     "slot": "deal-04.price",
+     "event": "deal-04.price#2",
+     "values": [
+      "$228,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, I had coffee with Greta Achterberg in Zurich again.",
+     "slot": "person-04.city",
+     "event": "person-04.city#10",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s105",
+   "day": -193,
+   "time": "16:30",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Greta Achterberg is busy redecorating the flat in Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#11",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s106",
+   "day": -188,
+   "time": "13:50",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s107",
+   "day": -177,
+   "time": "14:50",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Final word on that: Vantor Biotech cancelled its team offsite in Rotterdam.",
+     "slot": "company-02.offsite",
+     "event": "company-02.offsite#1",
+     "values": [
+      "Rotterdam"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Greta Achterberg complained about the weather in Zurich.",
+     "slot": "person-04.city",
+     "event": "person-04.city#12",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s108",
+   "day": -175,
+   "time": "12:45",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "The recap email from the Beacon kickoff says the annual price is $82,000.",
+     "slot": "deal-04.price",
+     "event": "deal-04.price#3",
+     "values": [
+      "$82,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s109",
+   "day": -173,
+   "time": "19:55",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s110",
+   "day": -170,
+   "time": "13:00",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s111",
+   "day": -166,
+   "time": "08:05",
+   "topic": "a birthday party for a niece",
+   "long": true,
+   "lines": [
+    {
+     "text": "The account owner signed off in writing on 32% as the binding discount for the Harbor deal.",
+     "slot": "deal-02.discount",
+     "event": "deal-02.discount#0",
+     "values": [
+      "32%"
+     ],
+     "speaker": "user",
+     "position": "middle"
+    }
+   ]
+  },
+  {
+   "id": "s112",
+   "day": -166,
+   "time": "17:25",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Greta Achterberg is leading a hiring push at Umberfield Mining.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#7",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s113",
+   "day": -151,
+   "time": "10:45",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the Harbor deal floats 13% for the discount.",
+     "slot": "deal-02.discount",
+     "event": "deal-02.discount#1",
+     "values": [
+      "13%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s114",
+   "day": -146,
+   "time": "11:45",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "I had coffee with Greta Achterberg in Zurich again.",
+     "slot": "person-04.city",
+     "event": "person-04.city#13",
+     "values": [
+      "Zurich"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Something changed: Eamon Petrovic started a new job at Goldcrest Insurance.",
+     "slot": "person-01.employer",
+     "event": "person-01.employer#3",
+     "values": [
+      "Goldcrest Insurance"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s115",
+   "day": -143,
+   "time": "08:50",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": [
+    {
+     "text": "Update: Umar Oyelaran moved to Riga.",
+     "slot": "person-03.city",
+     "event": "person-03.city#1",
+     "values": [
+      "Riga"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s116",
+   "day": -139,
+   "time": "11:30",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": [
+    {
+     "text": "Thistledown Textiles sent another invoice for Project Bluebell.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#10",
+     "values": [
+      "Thistledown Textiles"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s117",
+   "day": -139,
+   "time": "20:55",
+   "topic": "a sleep schedule",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s118",
+   "day": -137,
+   "time": "08:30",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Side note, Esme Abernathy is busy redecorating the flat in Taipei.",
+     "slot": "person-05.city",
+     "event": "person-05.city#11",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "My agent's notes on the Beacon deal record the annual price as $268,000.",
+     "slot": "deal-04.price",
+     "event": "deal-04.price#4",
+     "values": [
+      "$268,000"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Side note, Greta Achterberg got a new badge photo at Umberfield Mining.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#8",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s119",
+   "day": -134,
+   "time": "19:35",
+   "topic": "a language exchange",
+   "long": true,
+   "lines": [
+    {
+     "text": "Please ignore the report that Project Ostrava is running a pilot with Glasswing Studios; it turned out to be false.",
+     "slot": "project-03.pilot",
+     "event": "project-03.pilot#2",
+     "values": [
+      "Glasswing Studios"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s120",
+   "day": -133,
+   "time": "10:45",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s121",
+   "day": -133,
+   "time": "20:15",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Quayside Homes has its head office in Prague.",
+     "slot": "company-01-twin.hq",
+     "event": "company-01-twin.hq#0",
+     "values": [
+      "Prague"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Something changed: Project Bluebell moved its contract over to Oakhaven Health.",
+     "slot": "project-01.vendor",
+     "event": "project-01.vendor#11",
+     "values": [
+      "Oakhaven Health"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Quick note for later: Willa Holloran lives in Denver.",
+     "slot": "person-02-twin.city",
+     "event": "person-02-twin.city#0",
+     "values": [
+      "Denver"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s122",
+   "day": -132,
+   "time": "16:45",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": [
+    {
+     "text": "The recap email from the Harbor kickoff says the discount is 33%.",
+     "slot": "deal-02.discount",
+     "event": "deal-02.discount#2",
+     "values": [
+      "33%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Change of plans: Lowmoor Retail walked away from the merger with Bramblecote Bakery.",
+     "slot": "company-05.merger",
+     "event": "company-05.merger#1",
+     "values": [
+      "Bramblecote Bakery"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s123",
+   "day": -128,
+   "time": "21:20",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": [
+    {
+     "text": "The draft amendment for the Harbor deal floats 23% for the discount.",
+     "slot": "deal-02.discount",
+     "event": "deal-02.discount#3",
+     "values": [
+      "23%"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Esme Abernathy complained about the weather in Taipei.",
+     "slot": "person-05.city",
+     "event": "person-05.city#12",
+     "values": [
+      "Taipei"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s124",
+   "day": -123,
+   "time": "09:45",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s125",
+   "day": -107,
+   "time": "11:00",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Funny timing: Umar Oyelaran got a new badge photo at Emberly Energy.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#10",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s126",
+   "day": -107,
+   "time": "20:30",
+   "topic": "planning a camping trip",
+   "long": false,
+   "lines": [
+    {
+     "text": "Forget what I said earlier about how Brackenridge Media agreed to merge with Kinglet Telecom; that was only a rumour and it is not happening.",
+     "slot": "company-04.merger",
+     "event": "company-04.merger#1",
+     "values": [
+      "Kinglet Telecom"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Heard today that Kavya Quigley became head of operations at Quayside Health.",
+     "slot": "company-01.ops_lead",
+     "event": "company-01.ops_lead#3",
+     "values": [
+      "Kavya Quigley"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s127",
+   "day": -106,
+   "time": "08:10",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": [
+    {
+     "text": "Umar Oyelaran is leading a hiring push at Emberly Energy.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#11",
+     "values": [
+      "Emberly Energy"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s128",
+   "day": -106,
+   "time": "20:15",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "Heard today that Esme Abernathy relocated to Brno.",
+     "slot": "person-05.city",
+     "event": "person-05.city#13",
+     "values": [
+      "Brno"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s129",
+   "day": -102,
+   "time": "13:05",
+   "topic": "a broken dishwasher",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Umar Oyelaran joined Larkspur Foods.",
+     "slot": "person-03.employer",
+     "event": "person-03.employer#12",
+     "values": [
+      "Larkspur Foods"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s130",
+   "day": -101,
+   "time": "15:55",
+   "topic": "marathon training",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s131",
+   "day": -96,
+   "time": "19:40",
+   "topic": "a rescue dog's training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Scratch Montreal, that was my mistake; Vantor Biotech has its head office in Lisbon.",
+     "slot": "company-02.hq",
+     "event": "company-02.hq#2",
+     "values": [
+      "Montreal",
+      "Lisbon"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s132",
+   "day": -93,
+   "time": "17:35",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Greta Achterberg relocated to Busan.",
+     "slot": "person-04.city",
+     "event": "person-04.city#14",
+     "values": [
+      "Busan"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Catching up on old news: Quayside Health moved its headquarters to Oslo on [[D:-151]].",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#2",
+     "values": [
+      "Oslo"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "Greta Achterberg was stuck in a long all-hands at Umberfield Mining.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#9",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s133",
+   "day": -86,
+   "time": "18:10",
+   "topic": "a book club novel",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s134",
+   "day": -84,
+   "time": "19:50",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": [
+    {
+     "text": "News from this week: Willa Halloran relocated to Bologna.",
+     "slot": "person-02.city",
+     "event": "person-02.city#3",
+     "values": [
+      "Bologna"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s135",
+   "day": -77,
+   "time": "10:30",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s136",
+   "day": -76,
+   "time": "14:00",
+   "topic": "a birthday party for a niece",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s137",
+   "day": -74,
+   "time": "16:45",
+   "topic": "a balcony herb garden",
+   "long": false,
+   "lines": [
+    {
+     "text": "Planning note: Willa Halloran moves to Lyon on [[D:47]].",
+     "slot": "person-02.city",
+     "event": "person-02.city#4",
+     "values": [
+      "Lyon"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s138",
+   "day": -72,
+   "time": "08:15",
+   "topic": "a slow cooker stew",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s139",
+   "day": -68,
+   "time": "11:25",
+   "topic": "a sleep schedule",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s140",
+   "day": -67,
+   "time": "11:50",
+   "topic": "a home office rebuild",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s141",
+   "day": -63,
+   "time": "10:55",
+   "topic": "a photography walk",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s142",
+   "day": -62,
+   "time": "12:50",
+   "topic": "learning the cello",
+   "long": false,
+   "lines": [
+    {
+     "text": "Nobody told me until now, but Petra Kiplagat became the lead on Project Bluebell on [[D:-102]].",
+     "slot": "project-01.lead",
+     "event": "project-01.lead#2",
+     "values": [
+      "Petra Kiplagat"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s143",
+   "day": -55,
+   "time": "09:55",
+   "topic": "sourdough baking",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s144",
+   "day": -54,
+   "time": "18:50",
+   "topic": "a weekend hiking route",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s145",
+   "day": -47,
+   "time": "15:05",
+   "topic": "a language exchange",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s146",
+   "day": -40,
+   "time": "10:30",
+   "topic": "restoring an old bicycle",
+   "long": true,
+   "lines": [
+    {
+     "text": "It is official that Quayside Health moves its headquarters to Calgary on [[D:119]].",
+     "slot": "company-01.hq",
+     "event": "company-01.hq#3",
+     "values": [
+      "Calgary"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s147",
+   "day": -40,
+   "time": "16:45",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s148",
+   "day": -35,
+   "time": "21:35",
+   "topic": "marathon training",
+   "long": false,
+   "lines": [
+    {
+     "text": "Greta Achterberg is buried in quarter planning at Umberfield Mining.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#10",
+     "values": [
+      "Umberfield Mining"
+     ],
+     "speaker": "user",
+     "position": "any"
+    },
+    {
+     "text": "News from this week: Ines Vidal became head of operations at Marlpit Software.",
+     "slot": "company-03.ops_lead",
+     "event": "company-03.ops_lead#9",
+     "values": [
+      "Ines Vidal"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s149",
+   "day": -33,
+   "time": "11:00",
+   "topic": "a balcony herb garden",
+   "long": true,
+   "lines": [
+    {
+     "text": "Something changed: Greta Achterberg started a new job at Quillfeather Media.",
+     "slot": "person-04.employer",
+     "event": "person-04.employer#11",
+     "values": [
+      "Quillfeather Media"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s150",
+   "day": -25,
+   "time": "17:15",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s151",
+   "day": -24,
+   "time": "10:30",
+   "topic": "meal prep for the week",
+   "long": false,
+   "lines": [
+    {
+     "text": "Correction: I had that wrong earlier. It was never Riga; Umar Oyelaran lives in Seville.",
+     "slot": "person-03.city",
+     "event": "person-03.city#2",
+     "values": [
+      "Riga",
+      "Seville"
+     ],
+     "speaker": "user",
+     "position": "any"
+    }
+   ]
+  },
+  {
+   "id": "s152",
+   "day": -19,
+   "time": "11:15",
+   "topic": "a balcony herb garden",
+   "long": true,
+   "lines": []
+  },
+  {
+   "id": "s153",
+   "day": -18,
+   "time": "08:55",
+   "topic": "a chess opening",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s154",
+   "day": -9,
+   "time": "09:20",
+   "topic": "a podcast episode",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s155",
+   "day": -8,
+   "time": "21:25",
+   "topic": "a board game night",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s156",
+   "day": -5,
+   "time": "16:35",
+   "topic": "a kitchen repaint",
+   "long": false,
+   "lines": []
+  },
+  {
+   "id": "s157",
+   "day": 0,
+   "time": "15:30",
+   "topic": "marathon training",
+   "long": false,
+   "lines": []
+  }
+ ],
+ "lexicon": {
+  "$164,000": {
+   "aliases": [
+    "164,000",
+    "$164k",
+    "164k",
+    "164 thousand"
+   ],
+   "implications": []
+  },
+  "$186,000": {
+   "aliases": [
+    "186,000",
+    "$186k",
+    "186k",
+    "186 thousand"
+   ],
+   "implications": []
+  },
+  "$198,000": {
+   "aliases": [
+    "198,000",
+    "$198k",
+    "198k",
+    "198 thousand"
+   ],
+   "implications": []
+  },
+  "$228,000": {
+   "aliases": [
+    "228,000",
+    "$228k",
+    "228k",
+    "228 thousand"
+   ],
+   "implications": []
+  },
+  "$266,000": {
+   "aliases": [
+    "266,000",
+    "$266k",
+    "266k",
+    "266 thousand"
+   ],
+   "implications": []
+  },
+  "$268,000": {
+   "aliases": [
+    "268,000",
+    "$268k",
+    "268k",
+    "268 thousand"
+   ],
+   "implications": []
+  },
+  "$276,000": {
+   "aliases": [
+    "276,000",
+    "$276k",
+    "276k",
+    "276 thousand"
+   ],
+   "implications": []
+  },
+  "$310,000": {
+   "aliases": [
+    "310,000",
+    "$310k",
+    "310k",
+    "310 thousand"
+   ],
+   "implications": []
+  },
+  "$32,000": {
+   "aliases": [
+    "32,000",
+    "$32k",
+    "32k",
+    "32 thousand"
+   ],
+   "implications": []
+  },
+  "$68,000": {
+   "aliases": [
+    "68,000",
+    "$68k",
+    "68k",
+    "68 thousand"
+   ],
+   "implications": []
+  },
+  "$78,000": {
+   "aliases": [
+    "78,000",
+    "$78k",
+    "78k",
+    "78 thousand"
+   ],
+   "implications": []
+  },
+  "$82,000": {
+   "aliases": [
+    "82,000",
+    "$82k",
+    "82k",
+    "82 thousand"
+   ],
+   "implications": []
+  },
+  "$96,000": {
+   "aliases": [
+    "96,000",
+    "$96k",
+    "96k",
+    "96 thousand"
+   ],
+   "implications": []
+  },
+  "13%": {
+   "aliases": [
+    "13 percent",
+    "13 per cent"
+   ],
+   "implications": []
+  },
+  "18 months": {
+   "aliases": [
+    "18-month",
+    "18 mo"
+   ],
+   "implications": []
+  },
+  "23%": {
+   "aliases": [
+    "23 percent",
+    "23 per cent"
+   ],
+   "implications": []
+  },
+  "27 months": {
+   "aliases": [
+    "27-month",
+    "27 mo"
+   ],
+   "implications": []
+  },
+  "27%": {
+   "aliases": [
+    "27 percent",
+    "27 per cent"
+   ],
+   "implications": []
+  },
+  "32%": {
+   "aliases": [
+    "32 percent",
+    "32 per cent"
+   ],
+   "implications": []
+  },
+  "33 months": {
+   "aliases": [
+    "33-month",
+    "33 mo"
+   ],
+   "implications": []
+  },
+  "33%": {
+   "aliases": [
+    "33 percent",
+    "33 per cent"
+   ],
+   "implications": []
+  },
+  "41%": {
+   "aliases": [
+    "41 percent",
+    "41 per cent"
+   ],
+   "implications": []
+  },
+  "560 seats": {
+   "aliases": [
+    "560 licenses",
+    "560 licences",
+    "560 users"
+   ],
+   "implications": []
+  },
+  "57 months": {
+   "aliases": [
+    "57-month",
+    "57 mo"
+   ],
+   "implications": []
+  },
+  "60 seats": {
+   "aliases": [
+    "60 licenses",
+    "60 licences",
+    "60 users"
+   ],
+   "implications": []
+  },
+  "7%": {
+   "aliases": [
+    "7 percent",
+    "7 per cent"
+   ],
+   "implications": []
+  },
+  "70 seats": {
+   "aliases": [
+    "70 licenses",
+    "70 licences",
+    "70 users"
+   ],
+   "implications": []
+  },
+  "750 seats": {
+   "aliases": [
+    "750 licenses",
+    "750 licences",
+    "750 users"
+   ],
+   "implications": []
+  },
+  "9%": {
+   "aliases": [
+    "9 percent",
+    "9 per cent"
+   ],
+   "implications": []
+  },
+  "90 seats": {
+   "aliases": [
+    "90 licenses",
+    "90 licences",
+    "90 users"
+   ],
+   "implications": []
+  },
+  "Adelaide": {
+   "aliases": [],
+   "implications": [
+    "Australia"
+   ]
+  },
+  "Analytics Manager": {
+   "aliases": [],
+   "implications": []
+  },
+  "Bilbao": {
+   "aliases": [],
+   "implications": [
+    "Spain"
+   ]
+  },
+  "Bologna": {
+   "aliases": [],
+   "implications": [
+    "Italy"
+   ]
+  },
+  "Bramblecote Bakery": {
+   "aliases": [
+    "Bramblecote"
+   ],
+   "implications": []
+  },
+  "Brightline Analytics": {
+   "aliases": [
+    "Brightline"
+   ],
+   "implications": []
+  },
+  "Brno": {
+   "aliases": [],
+   "implications": [
+    "Czechia"
+   ]
+  },
+  "Busan": {
+   "aliases": [],
+   "implications": [
+    "Korea"
+   ]
+  },
+  "Calgary": {
+   "aliases": [],
+   "implications": [
+    "Alberta"
+   ]
+  },
+  "Cinderford Steel": {
+   "aliases": [
+    "Cinderford"
+   ],
+   "implications": []
+  },
+  "Cosima Ortega": {
+   "aliases": [
+    "Cosima",
+    "Ortega"
+   ],
+   "implications": []
+  },
+  "Denver": {
+   "aliases": [],
+   "implications": [
+    "Colorado"
+   ]
+  },
+  "Elmstead Clinics": {
+   "aliases": [
+    "Elmstead"
+   ],
+   "implications": []
+  },
+  "Emberly Energy": {
+   "aliases": [
+    "Emberly"
+   ],
+   "implications": []
+  },
+  "Galway": {
+   "aliases": [],
+   "implications": [
+    "Ireland"
+   ]
+  },
+  "Ghent": {
+   "aliases": [
+    "Gent"
+   ],
+   "implications": [
+    "Belgium"
+   ]
+  },
+  "Glasswing Studios": {
+   "aliases": [
+    "Glasswing"
+   ],
+   "implications": []
+  },
+  "Goldcrest Insurance": {
+   "aliases": [
+    "Goldcrest"
+   ],
+   "implications": []
+  },
+  "Head of Brand": {
+   "aliases": [],
+   "implications": []
+  },
+  "Head of Procurement": {
+   "aliases": [],
+   "implications": []
+  },
+  "Head of Support": {
+   "aliases": [],
+   "implications": []
+  },
+  "Heathmont Schools": {
+   "aliases": [
+    "Heathmont"
+   ],
+   "implications": []
+  },
+  "Ines Vidal": {
+   "aliases": [
+    "Ines",
+    "Vidal"
+   ],
+   "implications": []
+  },
+  "Inkberry Publishing": {
+   "aliases": [
+    "Inkberry"
+   ],
+   "implications": []
+  },
+  "Jasperwood Furniture": {
+   "aliases": [
+    "Jasperwood"
+   ],
+   "implications": []
+  },
+  "Jonah Coelho": {
+   "aliases": [
+    "Jonah",
+    "Coelho"
+   ],
+   "implications": []
+  },
+  "Kasimir Holm": {
+   "aliases": [
+    "Kasimir",
+    "Holm"
+   ],
+   "implications": []
+  },
+  "Kavya Quigley": {
+   "aliases": [
+    "Kavya",
+    "Quigley"
+   ],
+   "implications": []
+  },
+  "Kinglet Telecom": {
+   "aliases": [
+    "Kinglet"
+   ],
+   "implications": []
+  },
+  "Krakow": {
+   "aliases": [
+    "Kraków"
+   ],
+   "implications": [
+    "Poland"
+   ]
+  },
+  "Larkspur Foods": {
+   "aliases": [
+    "Larkspur"
+   ],
+   "implications": []
+  },
+  "Lindenhall Bank": {
+   "aliases": [
+    "Lindenhall"
+   ],
+   "implications": []
+  },
+  "Lisbon": {
+   "aliases": [
+    "Lisboa"
+   ],
+   "implications": [
+    "Portugal"
+   ]
+  },
+  "Lyon": {
+   "aliases": [],
+   "implications": [
+    "France"
+   ]
+  },
+  "Maren Tanaka": {
+   "aliases": [
+    "Maren",
+    "Tanaka"
+   ],
+   "implications": []
+  },
+  "Montreal": {
+   "aliases": [
+    "Montréal"
+   ],
+   "implications": [
+    "Quebec"
+   ]
+  },
+  "Northgate Freight": {
+   "aliases": [
+    "Northgate"
+   ],
+   "implications": []
+  },
+  "Oakhaven Health": {
+   "aliases": [
+    "Oakhaven"
+   ],
+   "implications": []
+  },
+  "Oren Kaur": {
+   "aliases": [
+    "Oren",
+    "Kaur"
+   ],
+   "implications": []
+  },
+  "Oslo": {
+   "aliases": [],
+   "implications": [
+    "Norway"
+   ]
+  },
+  "Pavel Jovanovic": {
+   "aliases": [
+    "Pavel",
+    "Jovanovic"
+   ],
+   "implications": []
+  },
+  "Petra Kiplagat": {
+   "aliases": [
+    "Petra",
+    "Kiplagat"
+   ],
+   "implications": []
+  },
+  "Pinecrest Robotics": {
+   "aliases": [
+    "Pinecrest"
+   ],
+   "implications": []
+  },
+  "Prague": {
+   "aliases": [
+    "Praha"
+   ],
+   "implications": [
+    "Czechia"
+   ]
+  },
+  "Quality Lead": {
+   "aliases": [],
+   "implications": []
+  },
+  "Quarryhill Materials": {
+   "aliases": [
+    "Quarryhill"
+   ],
+   "implications": []
+  },
+  "Quillfeather Media": {
+   "aliases": [
+    "Quillfeather"
+   ],
+   "implications": []
+  },
+  "Riga": {
+   "aliases": [],
+   "implications": [
+    "Latvia"
+   ]
+  },
+  "Rotterdam": {
+   "aliases": [],
+   "implications": [
+    "Netherlands"
+   ]
+  },
+  "Seville": {
+   "aliases": [
+    "Sevilla"
+   ],
+   "implications": [
+    "Spain"
+   ]
+  },
+  "Soren Bauer": {
+   "aliases": [
+    "Soren",
+    "Bauer"
+   ],
+   "implications": []
+  },
+  "Taipei": {
+   "aliases": [],
+   "implications": [
+    "Taiwan"
+   ]
+  },
+  "Talia Iqbal": {
+   "aliases": [
+    "Talia",
+    "Iqbal"
+   ],
+   "implications": []
+  },
+  "Tallinn": {
+   "aliases": [],
+   "implications": [
+    "Estonia"
+   ]
+  },
+  "Tampere": {
+   "aliases": [],
+   "implications": [
+    "Finland"
+   ]
+  },
+  "Thistledown Textiles": {
+   "aliases": [
+    "Thistledown"
+   ],
+   "implications": []
+  },
+  "Turin": {
+   "aliases": [
+    "Torino"
+   ],
+   "implications": [
+    "Italy"
+   ]
+  },
+  "Ulla Osei": {
+   "aliases": [
+    "Ulla",
+    "Osei"
+   ],
+   "implications": []
+  },
+  "Umberfield Mining": {
+   "aliases": [
+    "Umberfield"
+   ],
+   "implications": []
+  },
+  "Vienna": {
+   "aliases": [
+    "Wien"
+   ],
+   "implications": [
+    "Austria"
+   ]
+  },
+  "Yara Tran": {
+   "aliases": [
+    "Yara",
+    "Tran"
+   ],
+   "implications": []
+  },
+  "Zurich": {
+   "aliases": [
+    "Zürich"
+   ],
+   "implications": [
+    "Switzerland"
+   ]
+  }
+ }
+}

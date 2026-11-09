@@ -19,7 +19,7 @@ import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { BudgetRun } from '../budget-ledger.ts';
-import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../metering-proxy.ts';
+import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageSplit } from '../metering-proxy.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { measureCalibration, readerTokenizer } from '../systems/render-v2.ts';
 import { calibrate, calibrationSamples } from './calibrate.ts';
@@ -74,13 +74,12 @@ if (import.meta.main) {
   try { claimOut(out, !!keyless); }
   catch (e) { console.error((e as Error).message); process.exit(2); }
   const def = calibrationCell(findCell(one('--cell') ?? 's3-smoke.baseline-hybrid.baseline'), reader);
-  const placeholder = 'keyless-not-a-provider-key';
-  const keys = keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder, VOYAGE_API_KEY: placeholder, PARTICLE_API_KEY: placeholder } : { ...process.env };
+  const keys = keyless ? keylessKeys() : { ...process.env };
   const [cellToken, controlToken] = [randomUUID(), randomUUID()];
   Object.assign(process.env, { GBRAIN_EVALS_QA_CACHE: join(out, 'qa-cache'), GBRAIN_EVALS_EMBED_CACHE: join(out, 'embed-cache'), SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
   const lease = BudgetRun.openLease({ runId, leaseUsd, ledgerPath: resolve(ledger), runner: 'q1-calibration-cell' });
   const usageLog = join(out, 'usage.ndjson');
-  const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
+  const proxy = new MeteringProxy({ ...(keyless ? { upstream: keylessUpstream(keyless) } : {}), cellToken, controlToken,
     policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
   proxy.start();
   try {
