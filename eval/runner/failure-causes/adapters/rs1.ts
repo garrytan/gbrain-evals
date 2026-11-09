@@ -11,13 +11,12 @@
  * A turn cap or context overflow is a failed row with cause timeout_latency. A
  * retrieval_error is gbrain's miss: a failed row tagged retrieve_error, which
  * classify counts as retrieval_miss. An unsupported answer is a product miss
- * that stays in the denominator with no labeller text, so it gets a measured
- * retrieval cause or stays unclassified. budget_not_run (never asked) and
- * does_not_fit (not applicable) are skipped. A reader, judge or harness error,
- * and any other outcome, is harness_error. An ingest_degraded answer is judged
- * like any other, and when it fails it counts as operations (ingest path). Each
- * directory's rows, answers and judgments files form one cell; gold and context
- * files are shared.
+ * that stays in the denominator with no row text, and it never reaches the
+ * labeller. budget_not_run (never asked) and does_not_fit (not applicable) are
+ * skipped. A reader, judge or harness error, and any other outcome, is
+ * harness_error. An ingest_degraded answer is judged like any other, and when
+ * it fails it counts as operations (ingest path). Each directory's rows,
+ * answers and judgments files form one cell; gold and context files are shared.
  */
 import { dirname } from 'node:path';
 import { fileText, ndjson, pointer, type LoadedFile, type SourceEntry } from '../manifest.ts';

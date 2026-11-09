@@ -40,10 +40,9 @@ This records what each gbrain-evals release changed and what its measurements me
 - **RS1 adapter.** Each directory's rows, answers and judgments form one cell. An answer the cell never judged follows
   the outcome contract in `eval/runner/memory-qa/outcomes.ts`. A turn cap or context overflow is `timeout_latency`. A
   retrieval error is gbrain's miss: it carries the new `retrieve_error` tag and counts as `retrieval_miss`. An
-  unsupported answer stays in the denominator with no labeller text, so it keeps a measured retrieval cause or stays
-  `unclassified`. A reader, judge or harness error, and any outcome not listed here, is `harness_error`.
-  `budget_not_run` and `does_not_fit` (not applicable) are skipped. A failed `ingest_degraded` answer counts as
-  `operations`.
+  unsupported answer stays in the denominator with no row text, and it never reaches the labeller. A reader, judge or
+  harness error, and any outcome not listed here, is `harness_error`. `budget_not_run` and `does_not_fit` (not
+  applicable) are skipped. A failed `ingest_degraded` answer counts as `operations`.
 - **Cat 40 adapter.** Each directory is one arm run: its results, transcripts and `experiment.json` (the row's gbrain
   commit) go together, and a key counts once per budget run, so two worlds that reuse cell keys stay apart. Legacy rows
   include their first session's tool calls. Gold slugs match only as whole slugs. A tool
