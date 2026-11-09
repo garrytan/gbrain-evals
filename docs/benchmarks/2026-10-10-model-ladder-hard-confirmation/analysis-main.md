@@ -1,3 +1,5 @@
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../audit/2026-11-09-openai-cache-writes.md#cw-hardconf-analysis-main).
+
 ## Hard tier
 
 Canonical cells: 600 (the last harness-clean attempt per cell). Attempts: 600. Spend over every attempt: $480.24 (judge $9.60).

@@ -13,11 +13,11 @@ Canonical cells (last harness-clean attempt per model and task). control had 1 h
 response in 300 s), retried clean; all-on and f5 had none. Intervals: arm minus control on the same cells, percentile
 bootstrap over tasks, 4,000 resamples.
 
-| Arm | Success | d ctrl pp [95%] | Wrong value | Not submitted | H4 `+long` | fs #93, same cells | d fs pp [95%] | Agent + judge USD |
+| Arm | Success | d ctrl pp [95%] | Wrong value | Not submitted | H4 `+long` | fs #93, same cells | d fs pp [95%] | Agent USD, judge excluded |
 |---|---|---|---|---|---|---|---|---|
-| control | 237/300 | | 21 | 32 | 39/48 | 213/300 | +8.0 [+3.0, +13.0] | 156.23 |
-| all-on | 249/300 | +4.0 [+0.3, +8.0] | 9 | 33 | 48/48 | 213/300 | +12.0 [+8.3, +16.0] | 129.17 |
-| f5 | 236/300 | -0.3 [-3.7, +3.0] | 19 | 37 | 37/48 | 213/300 | +7.7 [+2.7, +12.7] | 148.98 |
+| control | 237/300 | | 21 | 32 | 39/48 | 213/300 | +8.0 [+3.0, +13.0] | 161.12 (corrected 2026-11-09: cache writes were under-counted; was 156.23) |
+| all-on | 249/300 | +4.0 [+0.3, +8.0] | 9 | 33 | 48/48 | 213/300 | +12.0 [+8.3, +16.0] | 133.19 (corrected 2026-11-09: cache writes were under-counted; was 129.17) |
+| f5 | 236/300 | -0.3 [-3.7, +3.0] | 19 | 37 | 37/48 | 213/300 | +7.7 [+2.7, +12.7] | 153.53 (corrected 2026-11-09: cache writes were under-counted; was 148.98) |
 
 | Arm | Opus 5.5 | Sonnet 5.5 | GPT-6.1 Sol | H1 | H2 | H3 | H4 | H5 |
 |---|---|---|---|---|---|---|---|---|
@@ -26,6 +26,14 @@ bootstrap over tasks, 4,000 resamples.
 | f5 | 79, w3 | 68, w16 | 89, w0 | 20, w0 | 49, w9 | 58, w0 | 49, w10 | 60, w0 |
 
 (successes out of 100 per model and 60 per family; `w` = wrong-value cells.)
+
+Correction, 2026-11-09: the USD column was headed "Agent + judge USD", but it sums each cell's `total_usd`, which
+leaves the judge out, so the header now says so. The Cat 40 runner also priced gpt-6.1-sol turns from usage that
+counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024
+tokens or more as a cache write, at $2.50 per million against $2.00 for input, so the column was low; it's repriced
+from the committed rows, with each original beside it. No score or verdict changes.
+([corrections](../../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 ## Rounds 1+2 pooled (full arms)
 

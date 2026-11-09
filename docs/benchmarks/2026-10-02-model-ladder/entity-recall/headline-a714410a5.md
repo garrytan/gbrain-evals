@@ -1,5 +1,7 @@
 # Corrected Cat 40 headline: gbrain `a714410a5` against the preregistered comparator
 
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-er-headline-a714410a5).
+
 <a id="correction-2026-10-09"></a>
 
 > **Correction, 2026-10-09: the gbrain cells searched without their reranker.** Each restored slot brain kept the slot build's metering-proxy port in its Voyage URL, and that port was closed when the cells ran, so every rerank request failed and gbrain quietly returned unreranked results (fixed in gbrain-evals #76, commit `7709a70`, and #109). None of the 600 gbrain cells in `followups/holdout/results.jsonl` include a rerank request in their metered calls ([audit](../../2026-10-08-program-primary-hard/root-cause/restore-audit.json)), so this headline compares gbrain without its reranker with the file, memory-tool and Postgres arms, which have none to lose. See the [Cat 40 report correction](../../2026-10-02-model-ladder.md#correction-2026-10-09). The output below is unchanged.
@@ -239,4 +241,5 @@ Spend in these records (agent + gbrain internal + judge): $177.41
 
 ## Changelog
 
+- 2026-11-09: A notice above the unedited output says its gpt-6.1-sol dollar figures missed OpenAI cache writes and links the corrected cells ([cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-er-headline-a714410a5)).
 - 2026-10-09: [Correction](#correction-2026-10-09) added above the unedited output: the gbrain cells ran without reranking (0 of 600; stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109).

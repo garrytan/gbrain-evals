@@ -1,3 +1,5 @@
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-followups-control-analysis).
+
 Cells: 600. Spend in these records: $72.60.
 
 | Model | capability (oracle) | gbrain-566a242a-control | gbrain advantage [95% CI] |

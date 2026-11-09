@@ -125,9 +125,19 @@ names rows carrying records falls from about 82% to 60%, and the names call gets
 | arm, run 2 (106 cells) | $53.85 |
 | **round 3 total** | **$187.20** (cap $228.19) |
 
-Agent plus judge cost recorded on the 300 attempts is $148.52; the ledger's arm total is $155.83. I did not trace the
-$7.31 difference; the ledger figure is the one the caps bind on. Development program committed after round 3: $1,518.50 of $1,777.15
-(`ledger-program.json`, `ledger-runs.json`).
+Agent plus judge cost recorded on the 300 attempts is $148.52 (corrected 2026-11-09: cache writes were under-counted,
+so this is about 3% low); the ledger's arm total is $155.83. I did not trace the $7.31 difference; the ledger figure
+is the one the caps bind on. Most of the difference is now traced: the attempts priced gpt-6.1-sol's cache writes as
+plain input, which accounts for about two thirds of it, and the Sol judge's cache writes can account for up to about a
+fifth more. Development program committed after round 3: $1,518.50 of $1,777.15 (`ledger-program.json`,
+`ledger-runs.json`).
+
+Correction, 2026-11-09: the Cat 40 runner priced gpt-6.1-sol agent turns and judge calls from usage that counted
+OpenAI's cache writes as plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or
+more as a cache write, at $2.50 per million against $2.00 for input, so the attempts' recorded cost was low; the share
+is worked out from the committed attempts and the ledger, which priced cache writes. No score or verdict changes.
+([corrections](../../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 ## Files
 

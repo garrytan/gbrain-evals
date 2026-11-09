@@ -1,3 +1,5 @@
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-w11-wave11-gated-analysis).
+
 Cells: 120. Spend in these records: $14.03.
 
 | Model | capability (oracle) | wave11 | gbrain advantage [95% CI] |

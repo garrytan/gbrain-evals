@@ -1,3 +1,5 @@
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../audit/2026-11-09-openai-cache-writes.md#cw-hard07-holdout-stats).
+
 Cells: 900. Arms: fs, pg, gbrain-hard. Models: claude-sonnet-5-5, claude-opus-5-5, gpt-6.1-sol.
 
 ### Cell counts per arm

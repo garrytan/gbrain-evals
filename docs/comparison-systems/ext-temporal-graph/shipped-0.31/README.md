@@ -68,11 +68,21 @@ fixed-evidence search:
 
 | Route and model | Requests | Input tokens | Output tokens | Cost |
 |---|---|---|---|---|
-| `/v1/responses` `gpt-6-luna` (ingest) | 10 | 13,545 | 705 | $0.0017 |
+| `/v1/responses` `gpt-6-luna` (ingest) | 10 | 13,545 | 705 | $0.0017 (not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so this is low by at most 20%) |
 | `/v1/embeddings` `text-embedding-3-small` | 9 (8 at ingest) | 188 | 0 | under $0.0001 |
 | `/v1/chat/completions` `gpt-4.1-mini` (search rerank) | 12 | 1,122 | 12 | $0.0005 |
 
-31 requests forwarded, 0 refused, $0.0022 billed. Ingest took about 11 seconds per session and spent about 13,700
+31 requests forwarded, 0 refused, $0.0022 billed (not recomputed 2026-11-09: the rows are not committed; cache writes
+were under-counted, so this is low by at most 15%). Ingest took about 11 seconds per session and spent about 13,700
 input tokens on about 90 tokens of conversation. That ratio is mostly fixed prompt overhead on tiny sessions and does
 not predict the cost of a long session. Each `gpt-6-luna` request reserves about $0.0094 against the lease before it is
 forwarded, because graphiti-core asks for 16,384 output tokens.
+
+Correction, 2026-11-09: `probe.py` prices gpt-6-luna at its input and output rates when the metering proxy's row carries
+no cost, and the ingest row matches those rates exactly, so any cache writes OpenAI reported on these requests were
+priced as input. OpenAI reports almost every token of a prompt of 1,024 tokens or more as a cache write, and prices
+gpt-6-luna's at $0.125 per million against $0.10 for input. These requests average about 1,350 input tokens, so the
+ingest cost and the billed total may be low; the proxy's rows are not committed, so both carry upper bounds. No probe
+result changes. ([corrections](../../../corrections.md#openai-cache-writes))
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.

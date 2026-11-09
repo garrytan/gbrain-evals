@@ -105,11 +105,13 @@ compare.
 
 **Resource envelope of the baseline.** The preregistered limits are multipliers of these numbers.
 
+Correction, 2026-11-09: `gpt-6.1-sol`'s dollars per run were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a Sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input. The committed usage receipts give the corrected value, marked in place with the original beside it ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 | Reader | Session-2 wall time p50 / p95 | Reader tokens per run (input / output) | Dollars per run (reader + gbrain) |
 |---|---|---|---|
 | Sonnet 5.5 | 9.6 s / 15.8 s | 150,203 / 4,017 | $0.155 |
 | Opus 5.5 | 20.6 s / 35.0 s | 244,604 / 5,612 | $0.380 |
-| gpt-6.1-sol | 20.5 s / 30.7 s | 114,217 / 2,355 | $0.100 |
+| gpt-6.1-sol | 20.5 s / 30.7 s | 114,217 / 2,355 | $0.116 (corrected 2026-11-09: cache writes were under-counted; was $0.100) |
 
 A run is both sessions. Wall time is measured with four personas running at once. Token counts are
 `usage-receipt/v1` input and output totals across both sessions. gbrain's own provider calls (query embeddings and

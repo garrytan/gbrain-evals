@@ -81,7 +81,9 @@ session 2. The 10% guard ceiling was frozen before the run, so the check fails a
 | Session-2 tool calls per task | 6.10 | 5.94 |
 | Session-2 input tokens per task | 48,842 | 49,802 |
 | Input tokens per cell, both sessions | 145,027 | 145,869 |
-| Dollars per cell | $0.190 | $0.179 |
+| Dollars per cell | $0.196 (corrected 2026-11-09: cache writes were under-counted; was $0.190) | $0.183 (corrected 2026-11-09: cache writes were under-counted; was $0.179) |
+
+Correction, 2026-11-09: the dollars per cell average all three readers, and gpt-6.1-sol's were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a Sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input. The committed usage receipts give the corrected values ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 The brief's opportunity recall stays below 50% even when it fires, because it carries one item and every task needs
 three facts. Per reader, the brief carried 58.3% of needed facts for Opus 5.5, 48.6% for gpt-6.1-sol and 22.2% for
@@ -106,7 +108,8 @@ The new D6 ledger (cap $45) committed $27.85 over 2,950 paid requests. Ledger ru
 `d6-proactive-brief-dev-2026-10-15T04-45-39-722Z-35cdb791`, now closed. Reader cost in the cells was $26.56 ($13.69
 brief-off, $12.87 brief-on), and gbrain's internal calls cost $0.04. The rest is ledger-side spend outside the cells:
 the persona builds, the reranker probes, and three requests charged at their reservation because the provider returned
-no usage.
+no usage. Correction, 2026-11-09: the cell figures under-count gpt-6.1-sol's cache writes, so part of that rest is
+Sol's reading, not spend outside the cells. The ledger total is right.
 
 ## Records
 

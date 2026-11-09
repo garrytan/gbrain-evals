@@ -19,14 +19,18 @@
 
 **Fixtures.** 48 synthetic pairs with placeholder names ([`fixtures.jsonl`](2026-10-09-content-repair-judgment/fixtures.jsonl), sha256 `b9a1b6ca…`), each one a held file and the page its `slug:` names, every one a pair the deterministic tier would hand to the model: 15 true duplicates with mutual hygiene notes (3 with the notes only past line 60, 3 naming the held file as the canonical), 10 true duplicates without notes, 10 stray slugs (research compendia, template company pages, copied pages, a meeting and a concept sharing a title token with a company), 8 adversarial pairs and 5 ambiguous sparse pairs. The $0 check in gbrain (`harness.ts --check`, also the keyless test) proved the counts, the placeholder names, that every `slug:` line names the paired page and not itself, and that the late-evidence pairs keep their evidence out of the first 60 lines and inside `mentions`.
 
-**Runs.** Three models, three runs each: 432 pair runs, $2.05 in all (Opus 5.5 $1.26, Sonnet 5.5 $0.47, gpt-6.1-sol $0.31). No provider error, no retry.
+**Runs.** Three models, three runs each: 432 pair runs, $2.05 in all (Opus 5.5 $1.26, Sonnet 5.5 $0.47, gpt-6.1-sol $0.31; corrected 2026-11-09: cache writes were under-counted, so Sol's figure is about 5% low and the total about 1% low). No provider error, no retry.
+
+Correction, 2026-11-09: the harness priced every gpt-6.1-sol prompt token at the input rate, and its rows record no cache counts. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input, and 15 of Sol's 144 pair runs had prompts that size (five pairs, each run three times), so Sol's cost per pair and its spend were low; they are repriced from the prompt sizes in the committed rows. No score, verdict or ranking changes: Sol is still the cheapest model per pair. ([corrections](../corrections.md#openai-cache-writes))
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 ## Results
 
 | Model | Hard failures | True-duplicate accuracy | Per run | needs_human rate | No answer | USD per pair | Latency p50 / p95 | Bar |
 |---|---|---|---|---|---|---|---|---|
 | `anthropic:claude-opus-5-5` | **0/144** | 69/75, **92.0%** [83.6, 96.3] | 92 / 92 / 92% | 18.8% | 0 | $0.0088 | 3.0 s / 6.4 s | meets |
-| `openai:gpt-6.1-sol` | **0/144** | 64/75, **85.3%** [75.6, 91.6] | 84 / 84 / 88% | 20.1% | 0 | $0.0022 | 2.7 s / 7.3 s | meets |
+| `openai:gpt-6.1-sol` | **0/144** | 64/75, **85.3%** [75.6, 91.6] | 84 / 84 / 88% | 20.1% | 0 | $0.0023 (corrected 2026-11-09: cache writes were under-counted; was $0.0022) | 2.7 s / 7.3 s | meets |
 | `anthropic:claude-sonnet-5-5` | **0/144** | 60/75, **80.0%** [69.6, 87.5] | 84 / 80 / 76% | 24.3% | 0 | $0.0033 | 1.6 s / 2.4 s | meets |
 
 Brackets are Wilson 95% intervals in percent. Per set, as the models answered (pair runs):

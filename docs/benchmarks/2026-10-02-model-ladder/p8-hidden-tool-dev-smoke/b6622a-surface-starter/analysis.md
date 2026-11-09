@@ -1,3 +1,5 @@
+> Correction, 2026-11-09: this page's dollar figures for gpt-6-luna count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-p8-b6622a-surface-starter-analysis).
+
 Cells: 20. Spend in these records: $0.14.
 
 | Model | capability (oracle) | b6622a-surface-starter | gbrain advantage [95% CI] |

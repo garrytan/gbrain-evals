@@ -1,3 +1,5 @@
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol and gpt-6-astra count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-fix-wave-ladder-analysis-next).
+
 Cells: 3410. Spend in these records: $426.61.
 
 | Model | capability (oracle) | fs | fs-acl | gbrain | gbrain-next | memory | pg | gbrain advantage [95% CI] |

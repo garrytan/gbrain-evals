@@ -58,7 +58,7 @@ showed none.
 | gpt-6.1-sol | 195 → 184 | 0.944 (0.868 to 1.026) | 0.951 (upper 0.995) | 0.982 |
 
 Per task, that is 6.46 session-2 tool calls with the brief off and 6.07 with it on. Session-2 input tokens were 55,595
-off and 51,053 on, and cells cost $0.208 off and $0.192 on. Opus 5.5 saved the most, at 14% fewer tool calls with an
+off and 51,053 on, and cells cost $0.214 off and $0.196 on (corrected 2026-11-09: cache writes were under-counted; was $0.208 and $0.192; gpt-6.1-sol's dollars were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a Sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input, and the committed usage receipts give the corrected values; [corrections](../corrections.md#openai-cache-writes); Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.) Opus 5.5 saved the most, at 14% fewer tool calls with an
 interval that excludes no change. Sonnet 5.5 made slightly more calls with the brief on but used fewer tokens. No
 slice reaches the preregistered 20%. Wall time is a diagnostic only, because it includes provider latency.
 
@@ -119,7 +119,8 @@ search.
 
 The new ledger (cap $35) committed $29.60 over 8,804 paid requests. Ledger run:
 `d6-proactive-brief-dev-v2-2026-10-15T15-45-02-043Z-6ee2ffec`, now closed. Cells cost $28.78: $28.58 for readers and
-$0.20 for gbrain's internal calls. The rest is the persona builds and the reranker probes.
+$0.20 for gbrain's internal calls. The rest is the persona builds and the reranker probes. Correction, 2026-11-09: the cell figures under-count gpt-6.1-sol's
+cache writes, so part of that rest is Sol's reading. The ledger total is right.
 
 ## Records
 

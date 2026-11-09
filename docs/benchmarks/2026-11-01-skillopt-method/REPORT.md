@@ -25,11 +25,15 @@ One more finding is for gbrain's SkillOpt harness, not for gbrain's users. In th
 | Opus 5.5 | `query` | 0.28 | 0.75 | **1.00** | +0.47 [0.31, 0.64], 17 / 0, p 1.5e-5 | KEEP | +0.25 [0.11, 0.39], 9 / 0, p 0.0039 | rewrite beats seed | $0.16 / $0.10 |
 | Opus 5.5 | `briefing` | 0.17 | 0.47 | **1.00** | +0.31 [0.17, 0.44], 11 / 0, p 0.00098 | KEEP | +0.53 [0.36, 0.69], 19 / 0, p 3.8e-6 | rewrite beats seed | $0.74 / $0.10 |
 | Opus 5.5 | `fact-check` | 0.00 | 0.78 | **1.00** | +0.78 [0.64, 0.92], 28 / 0, p 7.5e-9 | KEEP | +0.22 [0.08, 0.36], 8 / 0, p 0.0078 | rewrite beats seed | $0.23 / $0.13 |
-| GPT-6.1 Sol † | `query` | 0.86 | 0.72 | **1.00** | −0.14 [−0.28, 0.00], 1 / 6, p 0.13 | **FIX-METHOD** (rollout-path `get_page` failures; rerun after gbrain#8429) | +0.28 [0.14, 0.42], 10 / 0, p 0.0020 | rewrite beats seed | $0.033 / $0.026 |
-| GPT-6.1 Sol † | `briefing` | 0.17 | 0.58 | **1.00** | +0.42 [0.17, 0.64], 20 / 5, p 0.0041 | KEEP | +0.42 [0.25, 0.58], 15 / 0, p 6.1e-5 | rewrite beats seed | $0.16 / $0.034 |
-| GPT-6.1 Sol † | `fact-check` | 0.00 | 0.53 | **1.00** | +0.53 [0.36, 0.69], 19 / 0, p 3.8e-6 | KEEP | +0.47 [0.31, 0.64], 17 / 0, p 1.5e-5 | rewrite beats seed | $0.18 / $0.036 |
+| GPT-6.1 Sol † | `query` | 0.86 | 0.72 | **1.00** | −0.14 [−0.28, 0.00], 1 / 6, p 0.13 | **FIX-METHOD** (rollout-path `get_page` failures; rerun after gbrain#8429) | +0.28 [0.14, 0.42], 10 / 0, p 0.0020 | rewrite beats seed | $0.039 / $0.031 (corrected 2026-11-09: cache writes were under-counted; was $0.033 / $0.026) |
+| GPT-6.1 Sol † | `briefing` | 0.17 | 0.58 | **1.00** | +0.42 [0.17, 0.64], 20 / 5, p 0.0041 | KEEP | +0.42 [0.25, 0.58], 15 / 0, p 6.1e-5 | rewrite beats seed | $0.18 / $0.040 (corrected 2026-11-09: cache writes were under-counted; was $0.16 / $0.034) |
+| GPT-6.1 Sol † | `fact-check` | 0.00 | 0.53 | **1.00** | +0.53 [0.36, 0.69], 19 / 0, p 3.8e-6 | KEEP | +0.47 [0.31, 0.64], 17 / 0, p 1.5e-5 | rewrite beats seed | $0.19 / $0.043 (corrected 2026-11-09: cache writes were under-counted; was $0.18 / $0.036) |
 
 † Every cell in a GPT-6.1 Sol row is affected by a harness-path tool failure: the SkillOpt rollout path rejected all of Sol's `get_page`, `traverse_graph` and `get_backlinks` calls ([below](#tool-errors-in-the-skillopt-rollout-path)). The Opus rows are unaffected.
+
+Correction, 2026-11-09: the rollout meter priced gpt-6.1-sol's cache writes as plain input, because it reads gbrain's `cache_creation_tokens`, which is 0 for Sol calls. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so Sol's cost per correct answer was low; it is repriced from each arm's committed meter totals. The budget ledger priced cache writes, and on the F0a run it matches the repriced meter to within half a cent, so the spend figures below, which come from the ledger, are unchanged. No score, verdict or ranking changes: Sol is still cheaper per correct answer than Opus in every cell. ([corrections](../../corrections.md#openai-cache-writes))
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 Holm-adjusted across all twelve comparisons, every KEEP and every rewrite-beats-seed stays below 0.02. The Sol `query` seed comparison meets the preregistered CUT-CANDIDATE rule (a point difference of 0 or below) and makes no significance claim (Holm p 0.13). R48's exposure check turns it into a FIX-METHOD ([Why null?](#why-null-r48)). The test split agrees with selection (the [probe](probe/frontier/README.md)) on every pair: every clean rewrite was at 0.92 or 1.00 on selection.
 

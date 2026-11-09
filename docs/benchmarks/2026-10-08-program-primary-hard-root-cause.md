@@ -217,7 +217,7 @@ task and reader pairs). Namesake flags rose from 2 to 5; the scorer audit found 
 disambiguations.
 
 Resource envelope against the baseline, per reader (limits 1.2x p95 session-2 latency, 1.5x mean tokens, 1.5x mean
-dollars): Opus 1.03x, 0.93x, 0.94x; Sonnet 1.04x, 1.08x, 1.07x; gpt-6.1-sol 0.96x, 1.00x, 1.01x. All inside.
+dollars): Opus 1.03x, 0.93x, 0.94x; Sonnet 1.04x, 1.08x, 1.07x; gpt-6.1-sol 0.96x, 1.00x, 1.00x (dollars corrected 2026-11-09: cache writes were under-counted; was 1.01x). All inside. Sol's dollars on both arms were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a Sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input; the committed usage receipts give the corrected ratio ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 Mutants on master (validity check, one repeat, 144 cells): the forced-drop and stale-correction mutants each failed
 24 of 24 runs for every reader, against master's repeat-1 failures of 18 (Opus), 14 (Sonnet) and 2 (gpt-6.1-sol) of

@@ -1,3 +1,5 @@
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-holdout-analysis-next).
+
 Cells: 4320. Spend in these records: $335.20.
 
 | Model | capability (oracle) | fs | fs-acl | gbrain-base | gbrain-next | gbrain-next-51a30c1 | memory | pg | gbrain advantage [95% CI] |

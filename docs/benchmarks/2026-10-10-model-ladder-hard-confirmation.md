@@ -54,12 +54,15 @@ Successes out of 100 tasks; no model is at a ceiling on either arm.
 |---|---|---|---|---|---|
 | M | Sonnet 5.5 | 0.85 | 1.71 | 63.7 | 56.5 |
 | M | Opus 5.5 | 1.10 | 2.40 | 68.0 | 72.7 |
-| M | Sol | 0.32 | 0.24 | 36.9 | 35.3 |
+| M | Sol | 0.38 (corrected 2026-11-09: cache writes were under-counted; was 0.32) | 0.28 (corrected 2026-11-09: cache writes were under-counted; was 0.24) | 36.9 | 35.3 |
 | S | Sonnet 5.5 | 1.41 | 2.22 | 70.2 | 52.9 |
 | S | Opus 5.5 | 1.58 | 3.05 | 84.7 | 79.3 |
-| S | Sol | 0.46 | 0.32 | 42.9 | 52.9 |
+| S | Sol | 0.46 (not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so this is about 19% low, as on world M) | 0.32 (not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so this is about 18% low, as on world M) | 42.9 | 52.9 |
 
 Agent plus gbrain-internal dollars over every attempt, judge excluded. gbrain is cheaper per success for both Claude models and slightly dearer for Sol. Each gbrain cell also restores its slot (median about 5 s). Every gbrain cell that made a hybrid search reranked (168 of 168 on M, 167 of 167 on S).
+
+Correction, 2026-11-09: the Cat 40 runner priced gpt-6.1-sol agent turns and judge calls from usage that counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so Sol's dollar figures here and in `analysis-main.md` and `analysis-sealed.md` were low; world M is repriced from the committed rows, and world S's rows aren't committed, so its Sol figures carry an estimate. The Claude rows don't change, Sol is still slightly dearer on gbrain than on fs, and no score or verdict changes. ([corrections](../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 **Ledgers.** M $572.34 and S $775.63 booked (caps $900 each, raised from $650 by Garry Tan on 2026-10-10). Both include requests the provider rejected before generating (413s and prompts over the context window), which the harness then charged at their whole reservation: $37.67 on M and $212.05 on S. Actual spend is probably about $250 lower. The harness now settles those at the provider's reported usage, or $0: agent requests since gbrain-evals `a165ef57`, gbrain's own provider calls through the metering proxy since this report's release.
 
@@ -79,6 +82,7 @@ bun eval/runner/cat40/analyze.ts $D/main-cells/results.jsonl --expect-grid obser
 
 ## Changelog
 
+- 2026-11-09: Sol's dollars per success now count OpenAI cache writes on world M, with the originals beside the corrected values; world S's Sol figures carry an estimate because its rows aren't committed ([corrections](../corrections.md#openai-cache-writes)).
 - 2026-10-11: first version.
 - 2026-10-11: alias precision check added (counts only).
 - 2026-10-11: #6271 recorded as merged (gbrain v0.60.174.0, master `0df9f2ee7`); released in gbrain-evals v0.10.74.

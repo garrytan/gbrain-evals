@@ -187,6 +187,11 @@ $0.72 to $1.13 per leg from the answers' recorded dollars ([file-agent-usage.jso
   and 72.2% in F6's scoreboard. The paired means (72.1% and 63.4%) and every difference are unaffected.
 - Reader dollars are list prices on recorded usage. Failed tries are not priced, since only OpenAI-compatible readers
   record their usage. Each cell's metered spend, failed tries included, is in its receipt.
+- Correction, 2026-11-09: report.md's gpt-6.1-sol reader dollars and dollars per correct answer are low, because the
+  answer records priced OpenAI's cache writes as plain input (fixed in gbrain-evals #397). The per-answer usage stays in
+  custody, so they are not recomputed here. OpenAI's cache-write rate is a quarter above its input rate, so they are low
+  by at most a quarter. particle-1's and Opus 5.5's figures, every accuracy figure and both judges' results are
+  unaffected ([corrections](../corrections.md#openai-cache-writes)).
 - The file agent ran in three legs, each resuming from the last. The comparison with Opus 5.5's F6 row is like for like
   under the outcome rule.
 - Not verified: reconciliation of the add-on's ledgers against the Particle key's other traffic and its credit balance,

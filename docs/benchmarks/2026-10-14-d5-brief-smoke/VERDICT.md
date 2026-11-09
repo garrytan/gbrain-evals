@@ -32,8 +32,15 @@ Each build's `served-tools.json` lists 35 tools. On the three `d5` runs, `contex
 | claude-opus-5-5 | d5 | 10/10 | 47 | 38 | 0 | 0 | $1.92 |
 | claude-sonnet-5-5 | master | 10/10 | 56 | 46 | 0 | 0 | $0.95 |
 | claude-sonnet-5-5 | d5 | 10/10 | 57 | 45 | 0 | 0 | $1.02 |
-| gpt-6.1-sol | master | 10/10 | 52 | 44 | 12 | 0 | $0.38 |
-| gpt-6.1-sol | d5 | 10/10 | 61 | 53 | 12 | 0 | $0.37 |
+| gpt-6.1-sol | master | 10/10 | 52 | 44 | 12 | 0 | $0.46 (corrected 2026-11-09: cache writes were under-counted; was $0.38) |
+| gpt-6.1-sol | d5 | 10/10 | 61 | 53 | 12 | 0 | $0.44 (corrected 2026-11-09: cache writes were under-counted; was $0.37) |
+
+Correction, 2026-11-09: the Cat 40 runner priced gpt-6.1-sol turns from usage that counted OpenAI's cache writes as
+plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache write, at
+$2.50 per million against $2.00 for input, so the gpt-6.1-sol costs in this table were low; they're repriced from the
+committed rows. The ledger below already priced cache writes and doesn't change, and no rule's outcome changes.
+([corrections](../../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 - **R1 holds.** Every model's `d5` success is at least its `master` success minus 1, and the totals are 30/30 on `d5`
   against 29/30 on `master`. No cell succeeds on master and fails on `d5`. The one miss is Opus F01 on master. It

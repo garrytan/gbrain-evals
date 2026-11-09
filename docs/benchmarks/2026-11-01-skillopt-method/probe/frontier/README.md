@@ -7,11 +7,15 @@ This is plan revision 3's decision A3, preregistered as [amendment 2](../../PRER
 | Opus 5.5 | `query` | 0.17 | 0.75 | 1.00, 1.00 | 1.00 | one-shot at ceiling | $0.134 / $0.124 |
 | Opus 5.5 | `briefing` | 0.17 | 0.46 | audit-disqualified, audit-disqualified | 0.46 (seed) | qualifies | $0.286 / $0.297 |
 | Opus 5.5 | `fact-check` | 0.00 | 0.79 | audit-disqualified, 1.00 | 1.00 | one-shot at ceiling | $0.176 / $0.163 |
-| GPT-6.1 Sol † | `query` | 0.88 | 0.71 | 0.92, 1.00 | 1.00 | one-shot at ceiling | $0.033 / $0.032 |
-| GPT-6.1 Sol † | `briefing` | 0.17 | 0.54 | audit-disqualified, 1.00 | 1.00 | one-shot at ceiling | $0.079 / $0.048 |
-| GPT-6.1 Sol † | `fact-check` | 0.00 | 0.58 | audit-disqualified, 1.00 | 1.00 | one-shot at ceiling | $0.091 / $0.054 |
+| GPT-6.1 Sol † | `query` | 0.88 | 0.71 | 0.92, 1.00 | 1.00 | one-shot at ceiling | $0.039 / $0.039 (corrected 2026-11-09: cache writes were under-counted; was $0.033 / $0.032) |
+| GPT-6.1 Sol † | `briefing` | 0.17 | 0.54 | audit-disqualified, 1.00 | 1.00 | one-shot at ceiling | $0.090 / $0.055 (corrected 2026-11-09: cache writes were under-counted; was $0.079 / $0.048) |
+| GPT-6.1 Sol † | `fact-check` | 0.00 | 0.58 | audit-disqualified, 1.00 | 1.00 | one-shot at ceiling | $0.100 / $0.062 (corrected 2026-11-09: cache writes were under-counted; was $0.091 / $0.054) |
 
 † Every cell in a GPT-6.1 Sol row is affected by a harness-path tool failure: the SkillOpt rollout path rejected every `get_page`, `traverse_graph` and `get_backlinks` call Sol made. MCP `get_page` is not affected, and gbrain#8429 fixes the rollout path. The [report](../../REPORT.md#tool-errors-in-the-skillopt-rollout-path) has the reproduction. The Opus rows are unaffected.
+
+Correction, 2026-11-09: the rollout meter priced gpt-6.1-sol's cache writes as plain input, because it reads gbrain's `cache_creation_tokens`, which is 0 for Sol calls. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so Sol's mean rollout costs were low; they are repriced from the receipts' committed meter totals. The ledger spend below already priced cache writes and is unchanged. No score, verdict or gate result changes. ([corrections](../../../../corrections.md#openai-cache-writes))
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 **Gate.** Opus 5.5 is `build-one-skill` (`briefing`), and GPT-6.1 Sol is `stop`. The counted-skills pick is `briefing` on Opus and nothing on Sol. Every seed was in band, so F0b ran all six pairs. The solvability ceiling is 1.00 for every skill.
 

@@ -1,8 +1,16 @@
 # Cat 40 follow-ups: the gbrain cost wave on the fixed harness
 
 These runs are described in the plan `docs/plans/2026-10-03-cat40-followups/PLAN.md` and its gate decisions. All of
-them used one SQLite budget ledger capped at $237, and all of them used the gbrain arm only, the starter surface
-and uncapped tool results. Spend was $179.66, recorded in the ledger.
+them used one SQLite budget ledger capped at $237, and all of them used the gbrain arm only, the starter surface and
+uncapped tool results. Spend was $179.66, recorded in the ledger (corrected 2026-11-09: cache writes were
+under-counted, so this is about 2% low).
+
+Correction, 2026-11-09: the control and held-out runs priced gpt-6.1-sol turns from usage that counted OpenAI's cache
+writes as plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache
+write, at $2.50 per million against $2.00 for input, so the spend above and the gpt-6.1-sol dollar cells in
+`control/analysis.md` and `holdout/analysis.md` were low; the percentage comes from repricing the committed rows. No
+score or verdict changes. ([corrections](../../../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 | Folder | What | gbrain build | Cells |
 |---|---|---|---|
@@ -27,4 +35,5 @@ Machine paths are redacted to `<work>`, `<evals>`, `<gbrain>` and `<home>`.
 
 ## Changelog
 
+- 2026-11-09: The spend figure carries a note that it missed OpenAI cache writes for gpt-6.1-sol, with the original unchanged ([corrections](../../../corrections.md#openai-cache-writes)).
 - 2026-10-09: [Correction](#correction-2026-10-09) added: all seven runs (1,709 cells) ran without reranking (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). Original numbers unchanged.

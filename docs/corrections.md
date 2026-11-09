@@ -137,7 +137,80 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   two still cannot be told apart. No other system's row changes. gbrain is Garry Tan's own project.
   [Report](benchmarks/2026-10-06-scoreboard-report.md), [tables](benchmarks/2026-10-06-scoreboard/scoreboard.md).
 
+## OpenAI cache writes
+
+- **Some reports priced OpenAI's cache writes as plain input** (2026-11-09). OpenAI reports almost every token of a
+  gpt-6.1-sol prompt of 1,024 tokens or more as a cache write (99.7% or more of the uncached prompt in every committed
+  row), and it prices cache writes above input: $2.50 per million tokens against $2.00 for Sol, $0.125 against $0.10 for
+  gpt-6-luna and $12.50 against $10 for gpt-6-astra. No other OpenAI model these evals ran has a cache-write price, so
+  `gpt-4.1-mini` and the rest are unaffected. The Cat 40 agent loop, which the program-primary lane and the
+  multi-source scope test also use, and the Q1 cell runner priced each agent turn's recorded usage without reading that
+  count until gbrain-evals #397 (`02fc9ca8`) fixed `eval/runner/q1/usage.ts`; the loop's judge path still doesn't
+  read it. Budget ledgers from before `8a8e502a` (October 8) booked those tokens as input too, and so did several
+  other runners' own price code. Anthropic reports its cache writes in a field of their own, which every path reads, so
+  no Claude figure moves. The figures below are repriced from the usage the responses reported, committed with each
+  report, and checked against the ledgers that do price cache writes: on runs where nothing was charged at its
+  reservation, the ledger minus the runner's rows equals the predicted difference to within half a cent. No provider
+  was called. No score or verdict changes, no ranking a report states changes, and each report keeps its
+  original figure beside the correction. The [audit](audit/2026-11-09-openai-cache-writes.md) lists every figure.
+  Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+- **The BEAM-1M failure analysis's gpt-6.1-sol reading arms cost 18% to 21% more than published.** A2 to A5 are
+  repriced from the answers' recorded input tokens. The no-memory floor is unchanged, because all its prompts are
+  under 1,024 tokens, and the arms' order by cost is unchanged.
+  [Report](benchmarks/2026-10-08-beam-1m-failure-analysis.md#2-reading-arms-on-the-frozen-evidence).
+- **gpt-6.1-sol's dollars in the program-primary lane are low.** Its dollars per run are $0.116 in the baseline (was
+  $0.100) and $0.088 in the hard baseline (was $0.075). The sealed confirmation's are at most $0.093 against $0.089
+  (was $0.077 against $0.075, still 1.04x); its sealed rows are not committed, so these give Sol the whole gap between
+  each arm's ledger and its cells. The hard root cause's Sol dollar ratio is 1.00x (was 1.01x), the alias stack's
+  development ratio 1.10x (was 1.09x) and Candidate 1's fresh-seed ratio 1.02x (was 1.01x). The proactive brief's
+  dollars per cell, all three readers together, are $0.196 off and $0.183 on (was $0.190 and $0.179), and $0.214 and
+  $0.196 in v2 (was $0.208 and $0.192). Every envelope stays inside its limits.
+  [Baseline](benchmarks/2026-10-08-program-primary-baseline.md),
+  [hard baseline](benchmarks/2026-10-08-program-primary-hard-baseline.md),
+  [sealed confirmation](benchmarks/2026-10-11-t0b-sealed-confirmation.md),
+  [hard root cause](benchmarks/2026-10-08-program-primary-hard-root-cause.md),
+  [alias stack](benchmarks/2026-10-09-alias-stack.md),
+  [Candidate 1](benchmarks/2026-10-09-candidate-1-newer-mentions.md),
+  [proactive brief](benchmarks/2026-10-14-proactive-brief-dev.md),
+  [proactive brief v2](benchmarks/2026-10-15-proactive-brief-dev-v2.md).
+- **Cat 40's gpt-6.1-sol, gpt-6-luna and gpt-6-astra dollars are low.** Repriced from the committed results rows
+  with the repository's own analyzers, single-model figures rise 15% to 23%: on the Hard confirmation's M world, Sol's
+  dollars per success are $0.38 with gbrain and $0.28 with files (was $0.32 and $0.24). Figures averaged over several
+  models rise 1% to 5%: on the first world, gbrain and files cost $0.249 and $0.115 to $0.116 per task (was $0.238 and
+  $0.112), still about twice, and on the October 7 Hard world gbrain stays cheaper per task than files (0.72 against
+  0.99, was 0.69 against 0.98). The Hard confirmation's S world, the sealed next-confirm cells, the Hard calibration and
+  the P8 surface held-out verdict have no committed rows, so they are not recomputed.
+  [Model ladder](benchmarks/2026-10-02-model-ladder.md),
+  [Hard](benchmarks/2026-10-07-model-ladder-hard.md),
+  [Hard confirmation](benchmarks/2026-10-10-model-ladder-hard-confirmation.md),
+  [audit](audit/2026-11-09-openai-cache-writes.md#cat-40).
+- **Other runners' OpenAI dollars are low too.** N2's contradiction judges cost $0.24 per 1,000 pairs with gpt-6-luna
+  (was $0.21), still the cheapest passing model, and $3.22 with gpt-6.1-sol (was $2.69); README's row gives the new
+  figure. SkillOpt's gpt-6.1-sol costs per correct answer rise by about a fifth and stay below Opus 5.5's in every
+  cell. The multi-source scope test's Sol and Astra costs per trial, content repair's Sol cost per pair and the SkillOpt
+  ceiling's Sol price per rollout move too, and that price stays under the ceiling's re-price trigger. The memory proof
+  wave's rebuilt cell ledger no longer fits its approved cap with the full frontier sweep; the 10% sweep option still
+  does. Figures from memory trust, facts extraction, Hangul mention boundaries, expansion latency, Q2's G6 ingest and
+  P4 can only be bounded, because their rows aren't committed.
+  [N2](benchmarks/2026-10-06-n2-judges.md),
+  [SkillOpt method](benchmarks/2026-11-01-skillopt-method/REPORT.md),
+  [cell ledger](../eval/harness-provider/LEDGER.md),
+  [audit](audit/2026-11-09-openai-cache-writes.md#other-runners).
+- **The particle-1 F6 add-on's gpt-6.1-sol reader dollars are low by an unknown amount** (2026-11-09). report.md's
+  Sol rows (dollars and dollars per correct answer for F6's Sol reader) were priced before #397, and the per-answer
+  usage stays in custody, so they are not recomputed here. The cache-write rate is a quarter above the input rate, so
+  they are low by at most a quarter. particle-1's and Opus 5.5's figures, every accuracy figure and both judges'
+  results are unaffected. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+  [Finding](findings/2026-11-04-particle-1-f6-addon.md#limits).
+
 ## Changelog
+
+### 2026-11-09: OpenAI cache writes
+
+A new section lists the reports whose gpt-6.1-sol, gpt-6-luna and gpt-6-astra dollars counted OpenAI's cache writes as
+plain input: the BEAM-1M failure analysis, the program-primary lane, Cat 40 and other runners, with the figures that
+move, the ones that can only be bounded and the F6 add-on's Sol reader rows that custody holds. The
+[audit](audit/2026-11-09-openai-cache-writes.md) lists every figure.
 
 ### 2026-11-04: W10's superiority p values and the Fable sensitivity note
 

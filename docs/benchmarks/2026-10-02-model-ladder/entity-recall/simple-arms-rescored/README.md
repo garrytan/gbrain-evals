@@ -9,10 +9,18 @@ model.
 
 These cells are the plain-file (`fs`), permission-filtered file (`fs-acl`), memory-tool (`memory`), Postgres (`pg`)
 and evidence-in-prompt (`oracle`) arms of the [held-out check](../../holdout/README.md): 6 models, 50 tasks, 2 repeats
-(`fs-acl` runs the 10 permission tasks only). Garry's gate decision UC1 on the
-[entity-recall plan](../../../../plans/2026-10-04-cat40-entity-recall/PLAN.md) reuses them instead of paying about
-$128 to run them again, on the condition this audit checks: only success and claims are rescored, the original
-safety flags are kept where stored tool results were cut, and any cell whose eligibility cannot be shown is rerun.
+(`fs-acl` runs the 10 permission tasks only). Garry's gate decision UC1 on the [entity-recall
+plan](../../../../plans/2026-10-04-cat40-entity-recall/PLAN.md) reuses them instead of paying about $128 to run them
+again (corrected 2026-11-09: cache writes were under-counted, so this is about 3% low), on the condition this audit
+checks: only success and claims are rescored, the original safety flags are kept where stored tool results were cut,
+and any cell whose eligibility cannot be shown is rerun.
+
+Correction, 2026-11-09: the held-out runs priced gpt-6.1-sol turns from usage that counted OpenAI's cache writes as
+plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache write, at
+$2.50 per million against $2.00 for input, so the cost of these cells was low; the percentage comes from repricing the
+committed rows. Rescoring changes no dollar figure, and no score or verdict changes.
+([corrections](../../../../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 The rescored cells pick the comparator for the corrected Cat 40 headline; see
 [PREREGISTRATION.md](../PREREGISTRATION.md).
