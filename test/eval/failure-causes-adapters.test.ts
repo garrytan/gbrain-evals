@@ -69,7 +69,7 @@ describe('rs1 adapter: cells and outcomes the cell never judges', () => {
   const cell = (dir: string, rows: unknown[], answers: unknown[], judgments: unknown[]) =>
     [mem(`${dir}/rows.ndjson`, 'rows', rows), mem(`${dir}/answers.ndjson`, 'answers', answers), mem(`${dir}/judgments.ndjson`, 'judgments', judgments)];
   const files = [
-    ...cell('a', ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'].map(q => row(q)),
+    ...cell('a', ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'].map(q => row(q, q === 'q5' ? { outcome: 'retrieval_error', error_kind: 'product_error', recall_measurable: false } : {})),
       [answer('gbrain-a', 'q1', 'reader_error'), answer('gbrain-a', 'q2', 'turn_cap'), answer('gbrain-a', 'q3', 'budget_not_run'), answer('gbrain-a', 'q4', 'ingest_degraded'), answer('gbrain-a', 'q5', 'retrieval_error'),
         answer('gbrain-a', 'q6', 'does_not_fit'), answer('gbrain-a', 'q7', 'unsupported'), answer('gbrain-a', 'q8', 'judge_error')],
       [judge('gbrain-a-q4', 0)]),
@@ -87,8 +87,29 @@ describe('rs1 adapter: cells and outcomes the cell never judges', () => {
     expect(labels.get('gbrain-a|q2')).toMatchObject({ cause: 'timeout_latency', rule_id: 'budget.turn_cap' });
     expect(labels.get('gbrain-a|q5')).toMatchObject({ cause: 'retrieval_miss', rule_id: 'retrieval.retrieve_error' });
     expect(labels.get('gbrain-a|q5')?.tags).toContain('retrieve_error');
-    expect(labels.get('gbrain-a|q7')).toMatchObject({ cause: 'unclassified', rule_id: 'residual.no_labeller_text' });
+    expect(labels.get('gbrain-a|q7')).toMatchObject({ cause: 'unclassified', rule_id: 'residual.no_answer' });
     expect(out.failures.filter(f => ['q5', 'q7'].includes(f.task_id!)).map(f => f.harness)).toEqual([null, null]);
+    expect((out.not_run ?? []).map(f => [f.task_id, f.failed, classify(f).rule_id, classify(f).cause])).toEqual([['q3', false, 'not_run.budget_not_run', null], ['q6', false, 'not_run.does_not_fit', null]]);
+  });
+
+  test('a retrieval timeout is a timeout, and a store arm\'s retrieval_error is no retrieval miss', () => {
+    const storeRow = (id: string, extra: Record<string, unknown> = {}) => ({ id, category: 'knowledge_update', gold_count: 1, recall_measurable: false, ...extra });
+    const t = ADAPTERS.rs1([
+      ...cell('p', [row('q1', { outcome: 'retrieval_error', error_kind: 'timeout', recall_measurable: false }), row('q2', { gold_count: 0, category: 'abstention' })],
+        [answer('gbrain-p', 'q1', 'retrieval_error'), answer('gbrain-p', 'q2', 'unsupported')], []),
+      ...cell('s', [storeRow('q1'), storeRow('q2'), storeRow('q3'), storeRow('q4', { gold_count: 0, category: 'abstention' })],
+        [answer('gbrain-s', 'q1', 'retrieval_error'), { ...answer('gbrain-s', 'q2', 'retrieval_error'), stop_reason: 'wall_time' }, answer('gbrain-s', 'q3', 'scored'), answer('gbrain-s', 'q4', 'retrieval_error')],
+        [judge('gbrain-s-q3', 0)]),
+    ], entry('rs1', 'rs1'));
+    const got = new Map(t.failures.map(f => [f.case_id.split('|').slice(0, 2).join('|'), classify(f)]));
+    expect(got.get('gbrain-p|q1')).toMatchObject({ cause: 'timeout_latency', rule_id: 'budget.timeout' });
+    expect(got.get('gbrain-p|q1')?.tags).not.toContain('retrieve_error');
+    expect(got.get('gbrain-p|q2')).toMatchObject({ cause: 'unclassified', rule_id: 'residual.no_answer' });
+    expect(got.get('gbrain-s|q1')).toMatchObject({ cause: 'unclassified', rule_id: 'residual.no_answer' });
+    expect(got.get('gbrain-s|q1')?.tags).toEqual(['measured_at_10', 'no_answer']);
+    expect(got.get('gbrain-s|q2')).toMatchObject({ cause: 'timeout_latency', rule_id: 'budget.timeout' });
+    expect(got.get('gbrain-s|q3')).toMatchObject({ cause: 'unclassified', rule_id: 'residual.delivery_unmeasured' });
+    expect(got.get('gbrain-s|q4')).toMatchObject({ cause: 'unclassified', rule_id: 'residual.no_answer' });
   });
 
   test('an unsupported answer carries no labeller text, even on a public source', () => {
