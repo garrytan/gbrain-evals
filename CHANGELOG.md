@@ -51,6 +51,31 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Bug ledger.** `regression_check` must be `bun test <file under test/>.test.ts`, optionally with `-t '<name>'`,
   never a free-form shell command, because the nightly loop runs it.
 
+## [0.10.180] - 2026-11-09
+
+### Pinned per-reader judges, the paid-window guard and keyless tests move to main from RS1's results branch (#391)
+
+- **Pinned per-reader judges.** An arm whose `frontier` block carries its own `judge_by_reader` map must also carry
+  `frontier.settings`, the pinned `PER_READER_JUDGE_SETTINGS` (medium effort and an 8,000-token output cap), and
+  `definitionProblems` refuses a mapped arm with other settings. `judgeAnswer` sends every pinned call at those
+  settings, turns a reply cut off at the cap into a `judge_error` without retrying it, keeps truncated and refused
+  replies out of the judge cache, and records the settings, the call count, cache hits, the judgment's view (gating or
+  descriptive) and the model versions the provider returned. The cell runner, the re-read and campaign manifests pass
+  the settings and views through and add a judge route cap for each pinned judge. No arm on main carries a map yet, so
+  every arm sends exactly what it sent before; RS1's per-reader judgments gain the `view` and `judge_versions` fields.
+- **The paid-window guard.** `eval/runner/paid-arm.ts` gains `paidWindowArgs`, `requireRs1Window` and `ledgerCaps`,
+  and `bun eval/runner/rs1/paid-window.ts check` is their command line. A re-read (`eval/runner/q1/reread-cell.ts`)
+  without `--keyless-upstream` now needs `--paid-window <unit> --window-cap-usd <n>` and refuses a `--ledger-cap-usd`
+  above the window cap, exiting 2 before any lease or output. No other RS1 entry point on main calls the guard yet; #391
+  wires RS1's mint, validation and cell entry points to it.
+- **No provider keys in tests.** `test/support/no-provider-keys.ts` now runs first in every bun test process (the
+  `bunfig.toml` preload). It blanks the five provider keys and makes `Bun.spawn` and `Bun.spawnSync` hand children the
+  cleaned environment. `test/eval/live-recall-tasks.test.ts` sets its placeholder key with `||=`, because the preload
+  leaves the key as an empty string.
+- **Tests.** `test/eval/pinned-judge-settings.test.ts` covers the judge settings, `test/eval/paid-window-guard.test.ts`
+  the guard and the re-read's window flags, and `test/eval/no-provider-keys.test.ts` the preload.
+  `test/eval/rs1-cells.test.ts` expects the per-reader views. No result, score or verdict changes.
+
 ## [0.10.179] - 2026-11-09
 
 ### Every failed eval row can now be given a cause
