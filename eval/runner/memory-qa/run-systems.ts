@@ -127,6 +127,8 @@ export interface RunArgs {
   embeddingModel: string;
   embeddingDims: number;
   categories: string[] | null;
+  /** --ids: only these question ids. */
+  ids?: string[] | null;
   limit: number | null;
   seed: number;
   topK: number;
@@ -296,7 +298,15 @@ export function parseRunArgs(argv: string[]): RunArgs {
     replay: argv.includes('--replay'),
     ingestReplicate: Number(one('--ingest-replicate') ?? 1),
     frozenFrom: one('--frozen-from') ? resolve(one('--frozen-from')!) : null,
+    ids: one('--ids') ? readIdsFile(one('--ids')!) : null,
   };
+}
+
+/** Question ids from an --ids file: one per line, blank lines and # comments ignored. */
+export function readIdsFile(path: string): string[] {
+  const ids = readFileSync(path, 'utf8').split('\n').map(l => l.replace(/#.*/, '').trim()).filter(Boolean);
+  if (!ids.length) throw new Error(`--ids ${path} lists no question ids`);
+  return ids;
 }
 
 /** Deterministic, category-stratified subset: questions sorted by sha256(seed, id) within each category, round-robin across categories. */
@@ -382,7 +392,7 @@ export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus, 
     ...(a.ingestReplicate !== 1 ? { ingest_replicate: a.ingestReplicate } : {}),
     ...(Object.keys(a.policySettings).length ? { policy_settings: a.policySettings } : {}),
     ...(a.frozenFrom ? { frozen_from_sha256: createHash('sha256').update(readFileSync(a.frozenFrom)).digest('hex') } : {}),
-    ...(a.qa.mode === 'think' ? { think_reference_date: 'question date, else latest session date' } : {}) };
+    ...(a.qa.mode === 'think' ? { think_reference_date: 'question date, else latest session date' } : {}), ...(a.ids ? { ids: a.ids } : {}) };
   return createHash('sha256').update(JSON.stringify(pre)).digest('hex');
 }
 
@@ -478,6 +488,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const allowed = a.benchmark === 'custody' ? null : a.split === 'sealed' ? new Set(loadSplit(a.benchmark).sealed) : devConversations(a.benchmark);
   let questions = corpus.questions.filter(q => !allowed || allowed.has(q.conversation));
   if (a.categories) questions = questions.filter(q => a.categories!.includes(q.category));
+  if (a.ids) { const want = new Set(a.ids); questions = questions.filter(q => want.has(q.id)); }
   questions = selectQuestions(questions, a.limit, a.seed);
   const convIds = uniqueInOrder(questions.map(q => q.conversation)).sort();
   const myConvs = convIds.filter((_, i) => i % a.shard.count === a.shard.index);

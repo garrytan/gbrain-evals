@@ -23,36 +23,17 @@ import { loadCorpora } from '../../eval/generators/skillopt-method/common.ts';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import { readSeed } from '../../eval/runner/skillopt-method/dataset.ts';
 import { fakeReply, FRONTIER_TARGETS, openBrain, withProbeGateway, type ChatTransport } from '../../eval/runner/skillopt-method/headroom.ts';
+import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { recordedCalls, withRegistry as withRootRegistry, type Call } from '../../eval/runner/nightly/tool-contract.ts';
 
 const PAGE = 'people/vera-chen-14';
 const TASK = { task_id: 'sol-empty-args', task: 'Who is Vera Chen?' } as BenchmarkTask;
 const SOL_EMPTY = { known_as_of: '', cursor: '', section: '', grep: '' };
 const SOL_NULL = { known_as_of: null, cursor: null, section: null, grep: null, around_chunk_id: null };
 
-type Loop = NonNullable<Parameters<typeof runRollout>[0]['toolLoopFn']>;
-type Refusal = { code?: string; message: string; suggestion?: string; fix?: { mcp?: { tool: string; arguments: object } } };
-type Handlers = Parameters<Loop>[0]['toolHandlers'];
-
-async function withRegistry<T>(registry: 'read-only' | 'write-capture', fn: (call: (tool: string, args: object) => Promise<{ ok: unknown } | { error: Refusal }>) => Promise<T>, tools = ['get_page', 'get_backlinks']): Promise<T> {
-  const engine = await openBrain();
-  try {
-    let out: T | undefined;
-    const toolLoopFn = (async ({ toolHandlers }: { toolHandlers: Handlers }) => {
-      const call = async (tool: string, args: object) => {
-        try { return { ok: await toolHandlers.get(`brain_${tool}`)!.execute(args, {} as never) }; } catch (e) {
-          const text = (e as Error).message;
-          try { return { error: JSON.parse(text) as Refusal }; } catch { return { error: { message: text } }; }
-        }
-      };
-      out = await fn(call);
-      return { messages: [], stopReason: 'end', totalTurns: 0, totalUsage: {} };
-    }) as unknown as Loop;
-    await runRollout({ engine, skillText: readSeed('query'), targetModel: FRONTIER_TARGETS.sol, task: TASK, toolLoopFn, ...(registry === 'write-capture' ? { writeCapture: true } : { allowedTools: new Set(tools) }) });
-    return out!;
-  } finally {
-    await engine.disconnect().catch(() => {});
-  }
-}
+/** The pinned SkillOpt registries, through the nightly tool-contract replay's helpers (eval/runner/nightly/tool-contract.ts). */
+const PINNED = resolveGbrainUnderTest(null).root;
+const withRegistry = <T,>(registry: 'read-only' | 'write-capture', fn: (call: Call) => Promise<T>, tools?: string[]) => withRootRegistry(PINNED, registry, fn, tools);
 
 describe("GPT-6.1 Sol's empty optional arguments in the pinned SkillOpt registries (gbrain#8429)", () => {
   test('the corpus holds the page the calls read', () => {
@@ -144,14 +125,7 @@ describe('what gbrain#8429 and gbrain#8444 leave refused, and where gbrain#8458\
   const SLUG: Record<string, string> = { get_page: PAGE, get_backlinks: PAGE, traverse_graph: 'companies/ranger-22' };
   const lines = (['query', 'briefing', 'fact-check'] as const).flatMap(skill =>
     readFileSync(join(INPUTS, `sol-${skill}-input.txt`), 'utf8').split('\n'));
-  const recorded = lines.flatMap(line => {
-    const m = /^- (get_page|traverse_graph|get_backlinks) ((?:\{|").*[}"]) returned /.exec(line);
-    if (!m) return [];
-    const input: unknown = JSON.parse(m[2]!);
-    let args: Record<string, unknown> | null = null;
-    try { args = (typeof input === 'string' ? JSON.parse(input) : input) as Record<string, unknown>; } catch { /* Sol sent arguments that are not JSON */ }
-    return [{ tool: m[1]!, args }];
-  });
+  const recorded = (['query', 'briefing', 'fact-check'] as const).flatMap(skill => recordedCalls('sol', skill));
 
   test('every get_backlinks call and the 30 traverse_graph calls with hops: [] read; every get_page call and the 8 traverse_graph calls with a hop chain still fail, all but one on a non-empty argument; each refusal carries a suggestion, and following its fix reads all 436 multi-selector get_page calls', async () => {
     expect(loadCorpora().pages.has(SLUG.traverse_graph!)).toBe(true);
