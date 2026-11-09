@@ -22,10 +22,9 @@ const read = [...new Set([
   ...[...quoted].filter(name => !(name in NOT_VARIABLES)),
 ])].sort();
 
-// Value: protects=no test reaches a real provider through a key gbrain reads and the preload leaves set; fails_when=gbrain's config plane, a gateway recipe or any quoted *_API_KEY in gbrain's source names a key PROVIDER_KEYS does not blank, or the preload did not blank one; why_new=GBEV-3's GST-2010 item for the BG1 preregistration (2026-11-09), after the preload blanked five of gbrain's keys and left OPENROUTER_API_KEY; seam=none; no_claim=credentials gbrain passes through without naming them (a CLI's own login, ANTHROPIC_AUTH_TOKEN)
-test('the preload blanks every provider key gbrain reads at the pin', () => {
+// Value: protects=no test reaches a real provider through a key gbrain reads and the preload leaves set; fails_when=gbrain's config plane, a gateway recipe or any quoted *_API_KEY in gbrain's source names a key PROVIDER_KEYS does not blank (test/eval/no-provider-keys.test.ts checks that a fresh test process, and its children, see none of PROVIDER_KEYS); why_new=GBEV-3's GST-2010 item for the BG1 preregistration (2026-11-09), after the preload blanked five of gbrain's keys and left OPENROUTER_API_KEY; seam=none; no_claim=credentials gbrain passes through without naming them (a CLI's own login, ANTHROPIC_AUTH_TOKEN)
+test('the preload key list covers every provider key gbrain reads at the pin', () => {
   expect(read).toContain('OPENROUTER_API_KEY');
   expect(read).toContain('GROQ_API_KEY');
   expect(read.filter(name => !PROVIDER_KEYS.includes(name))).toEqual([]);
-  expect(PROVIDER_KEYS.filter(name => process.env[name] !== '')).toEqual([]);
 });
