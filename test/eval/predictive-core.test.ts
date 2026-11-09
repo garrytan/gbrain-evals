@@ -105,6 +105,19 @@ describe('verdict', () => {
   });
 });
 
+describe('published references', () => {
+  test('every available reference matches the scorecard it was exported from', async () => {
+    const { buildReferences, MANIFEST } = await import('../../eval/runner/predictive/export-references.ts');
+    const { files } = buildReferences();
+    for (const [, built] of files) {
+      const loaded = loadReference(MANIFEST, built.id);
+      expect(loaded).toEqual(built);
+      expect(built.contrasts.filter((c) => c.lo > 0 || c.hi < 0).length).toBeGreaterThanOrEqual(3);
+    }
+    expect(loadReference(MANIFEST, 'live-recall-b3')).toBeNull();
+  });
+});
+
 describe('reference loading', () => {
   function fixture(body: string, sha?: string, status: 'available' | 'pending' = 'available') {
     const dir = mkdtempSync(join(tmpdir(), 'validity-ref-'));

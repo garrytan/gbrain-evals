@@ -1,0 +1,112 @@
+{
+  "id": "live-recall-b1",
+  "source": "docs/benchmarks/2026-11-06-live-recall-batch1/attempt2-scorecard.json (dev reference)",
+  "contrasts": [
+    {
+      "id": "p1_hybrid_vs_hybrid_lexical",
+      "estimate": 0.1,
+      "lo": 0.01,
+      "hi": 0.2
+    },
+    {
+      "id": "p2_configured_vs_hybrid_lexical_paraphrase",
+      "estimate": 0.5,
+      "lo": 0.36,
+      "hi": 0.64
+    },
+    {
+      "id": "hybrid_lexical_vs_keyword",
+      "estimate": 0.11,
+      "lo": 0.04,
+      "hi": 0.19
+    },
+    {
+      "id": "hybrid_vs_keyword",
+      "estimate": 0.21,
+      "lo": 0.11,
+      "hi": 0.31
+    },
+    {
+      "id": "configured_vs_keyword_paraphrase",
+      "estimate": 0.62,
+      "lo": 0.48,
+      "hi": 0.76
+    },
+    {
+      "id": "configured_vs_hybrid",
+      "estimate": 0.19,
+      "lo": 0.13,
+      "hi": 0.26
+    },
+    {
+      "id": "vector_vs_keyword",
+      "estimate": 0.04,
+      "lo": -0.08,
+      "hi": 0.17
+    },
+    {
+      "id": "configured_vs_keyword_exact",
+      "estimate": 0.18,
+      "lo": 0.04,
+      "hi": 0.32
+    },
+    {
+      "id": "hybrid_vs_keyword_paraphrase",
+      "estimate": 0.34,
+      "lo": 0.22,
+      "hi": 0.48
+    },
+    {
+      "id": "window_vs_configured",
+      "estimate": 0,
+      "lo": -0.3,
+      "hi": 0.3
+    },
+    {
+      "id": "paraphrase_vs_exact_keyword",
+      "estimate": -0.72,
+      "lo": -0.84,
+      "hi": -0.58
+    },
+    {
+      "id": "paraphrase_vs_exact_vector",
+      "estimate": -0.2,
+      "lo": -0.36,
+      "hi": -0.04
+    },
+    {
+      "id": "paraphrase_vs_exact_hybrid_lexical",
+      "estimate": -0.7,
+      "lo": -0.84,
+      "hi": -0.56
+    },
+    {
+      "id": "paraphrase_vs_exact_hybrid",
+      "estimate": -0.46,
+      "lo": -0.62,
+      "hi": -0.3
+    },
+    {
+      "id": "paraphrase_vs_exact_configured",
+      "estimate": -0.28,
+      "lo": -0.4,
+      "hi": -0.16
+    }
+  ],
+  "orderings": {
+    "arms_exact": [
+      "configured",
+      "hybrid_lexical",
+      "hybrid",
+      "keyword",
+      "vector"
+    ],
+    "arms_paraphrase": [
+      "configured",
+      "hybrid",
+      "vector",
+      "hybrid_lexical",
+      "keyword"
+    ]
+  }
+}
