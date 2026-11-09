@@ -204,10 +204,12 @@ nothing. Opus 5.5 and Sonnet 5.5 open what the card shows them.
 |---|---|---:|---:|---:|
 | Development | Opus 5.5 | **1.24x** (40.8 s to 50.6 s) | 0.93x | 1.03x |
 | | Sonnet 5.5 | 1.07x | 1.14x | 1.16x |
-| | gpt-6.1-sol | 0.57x | 1.05x | 1.09x |
+| | gpt-6.1-sol | 0.57x | 1.05x | 1.10x (corrected 2026-11-09: cache writes were under-counted; was 1.09x) |
 | Fresh seeds | Opus 5.5 | 1.10x | 0.93x | 0.99x |
 | | Sonnet 5.5 | 1.17x | 1.09x | 1.11x |
 | | gpt-6.1-sol | **1.22x** (51.8 s to 63.3 s) | 1.08x | 1.10x |
+
+Correction, 2026-11-09: gpt-6.1-sol's dollars on both arms were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a Sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input. The committed usage receipts give the corrected development ratio; the fresh seeds' 1.10x is unchanged ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 Tokens and dollars are inside the limits everywhere. Two p95 latencies are over 1.2x. Opus 5.5 on the development seeds
 is 1.24x: it opened the call note in 41 runs against 20 and made 582 tool calls against 528, which is the intended
@@ -301,6 +303,9 @@ Receipts are in [`2026-10-08-program-primary-hard/alias-stack/`](2026-10-08-prog
 | Fresh seeds, alias arm, 72 cells | 13.20 |
 | **Ledger total (includes brain builds and rerank probes)** | **61.78** |
 
+Correction, 2026-11-09: the cell receipts in both tables under-count gpt-6.1-sol's cache writes, so part of each
+gap between the cells and the ledger total is Sol's, not builds and probes. The ledger totals are right.
+
 | Ledger run `t0b-program-primary-2026-10-09T15-41-28-923Z-bdda2440` (cap $60, amendment 4's note) | Dollars (cell receipts) |
 |---|---:|
 | Development repeat 2 on six personas, master arm, 54 cells | 9.63 |
@@ -310,6 +315,12 @@ Receipts are in [`2026-10-08-program-primary-hard/alias-stack/`](2026-10-08-prog
 | **Ledger total** | **49.68** |
 
 ## Changelog
+
+### 2026-11-09: gpt-6.1-sol's dollars count cache writes
+
+The development envelope gives gpt-6.1-sol's mean dollars as 1.10x (was 1.09x), and a note under the first ledger
+table says the cell receipts under-count Sol's cache writes. The runner had priced them as plain input; the committed
+usage receipts reprice them at OpenAI's cache-write rate. Every verdict stands.
 
 ### 2026-10-09: link the Candidate 3 diagnostic
 

@@ -119,11 +119,13 @@ the v3 cue list.
 
 **Resource envelope of the baseline.** The preregistered limits are multipliers of these numbers.
 
+Correction, 2026-11-09: `gpt-6.1-sol`'s dollars per run were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a Sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input. The committed usage receipts give the corrected value, marked in place with the original beside it ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 | Reader | Session-2 wall time p50 / p95 | Reader tokens per run (input / output) | Dollars per run |
 |---|---|---|---|
 | Opus 5.5 | 29.4 s / 40.1 s | 188,360 / 3,371 | $0.292 |
 | Sonnet 5.5 | 18.2 s / 23.2 s | 142,643 / 3,219 | $0.133 |
-| gpt-6.1-sol | 28.6 s / 41.0 s | 97,263 / 1,373 | $0.075 |
+| gpt-6.1-sol | 28.6 s / 41.0 s | 97,263 / 1,373 | $0.088 (corrected 2026-11-09: cache writes were under-counted; was $0.075) |
 
 **Power.** The preregistered sample-size rule is recomputed at the measured pooled rate (51.4%), with 3 tasks per
 persona, 3 readers and 2 repeats. A candidate whose true factor is 20 reaches `10x` with probability 0.815 at 32

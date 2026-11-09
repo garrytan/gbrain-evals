@@ -26,7 +26,19 @@ succeed on 95.6%. Paired by task, the difference is 0.0 points, with a 95% CI of
 - **What gbrain does differently at the frontier: it keeps finance-only text out.** In 100 permission runs gbrain put
   finance-only text in neither an answer nor the agent's context. Plain files put it in the context of all 100
   (though in no answer), and Postgres put it in 4 answers and 97 contexts.
-- **gbrain costs about twice as much per task as files:** $0.238 against $0.112, averaged over the five models.
+- **gbrain costs about twice as much per task as files:** $0.248 (corrected 2026-11-09: cache writes were
+  under-counted; was $0.238) against $0.115 to $0.116 (corrected 2026-11-09: cache writes were under-counted; was
+  $0.112), averaged over the five models. Correction, 2026-11-09: the Cat 40 runner priced gpt-6.1-sol, gpt-6-sol and
+  gpt-6-astra turns from usage that counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of
+  a prompt of 1,027 tokens or more to these models as a cache write, at $2.50 per million against $2.00 for input for
+  gpt-6.1-sol and gpt-6-sol and $12.50 against $10 for gpt-6-astra, so every dollar figure here that includes those
+  models was low; the corrected values are repriced from the committed rows, with each original beside it. OpenAI also
+  bills a request over 272,000 input tokens at long-context rates (twice the input, cached-input and cache-write
+  prices, 1.5 times output), which the runner didn't apply; the rows don't record which requests passed that line, so
+  where a correction is a range, its low end prices no request at those rates and its high end prices every session
+  that could have held one. No score, verdict or takeaway changes, and gbrain still costs about twice as much per task
+  as files. ([corrections](../corrections.md#openai-cache-writes))
+  Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 - **The entity-recall wave makes gbrain better and cheaper than the build before it.** Against `a714410a5` (v0.60.44.0)
   on the same models and tasks:
   - renewal briefs rise 7.0 points (CI +1.0 to +12.0)
@@ -189,11 +201,11 @@ those pages by type. One instruction tells agents to start an account brief with
 
 | Run | Build | Success | Renewal briefs (family E) | $/task |
 |---|---|---|---|---|
-| Dev world, master control | `739e5cc89` | 239/250 | 44/50 | 0.341 |
-| Dev world, round 1 (linking) | `a3246dea8` | 236/250 (−1.2 [−3.2, +0.8]) | 43/50 | 0.286 |
-| Dev world, round 2 (+instruction) | `51f865d78` | 239/250 (0.0 [−2.0, +2.0]) | 46/50 | 0.240 |
-| Held-out, previous gbrain | `a714410a5` | 95.2% | — | 0.323 |
-| Held-out, wave | `51f865d78` | 95.6% (+0.4 [−2.0, +2.4]) | +7.0 pts [+1.0, +12.0] | 0.238 |
+| Dev world, master control | `739e5cc89` | 239/250 | 44/50 | 0.357 (corrected 2026-11-09: cache writes were under-counted; was 0.341) |
+| Dev world, round 1 (linking) | `a3246dea8` | 236/250 (−1.2 [−3.2, +0.8]) | 43/50 | 0.301 (corrected 2026-11-09: cache writes were under-counted; was 0.286) |
+| Dev world, round 2 (+instruction) | `51f865d78` | 239/250 (0.0 [−2.0, +2.0]) | 46/50 | 0.251 (corrected 2026-11-09: cache writes were under-counted; was 0.240) |
+| Held-out, previous gbrain | `a714410a5` | 95.2% | — | 0.338 (corrected 2026-11-09: cache writes were under-counted; was 0.323) |
+| Held-out, wave | `51f865d78` | 95.6% (+0.4 [−2.0, +2.4]) | +7.0 pts [+1.0, +12.0] | 0.248 (corrected 2026-11-09: cache writes were under-counted; was 0.238) |
 
 Five models (Sonnet 5.5, Opus 5.5, Fable 5.1, GPT-6.1 Sol, GPT-6 Astra), one repeat on the development world and
 two on the held-out world. The preregistered ship rule passes, with no new leaks and no model or family at −8 or
@@ -227,8 +239,10 @@ but that interval runs from −0.2 to +12, so on unseen tasks gbrain with the fi
 proven ahead of it. It leaked nothing in 120 permission runs; plain files leaked 9 times.
 
 **Two costs and one open question remain.**
-- Price: a gbrain run costs 2.5 to 4 times a file run ($0.19 against $0.054 per task here, $0.13 against $0.032 on
-  the held-out world), mostly because 33 tool definitions ride along on every turn.
+- Price: a gbrain run costs 2.5 to 4 times a file run ($0.20 to $0.21 (corrected 2026-11-09: cache writes were
+  under-counted; was $0.19) against $0.056 (corrected 2026-11-09: cache writes were under-counted; was $0.054) per
+  task here, $0.13 against $0.033 (corrected 2026-11-09: cache writes were under-counted; was $0.032) on the held-out
+  world), mostly because 33 tool definitions ride along on every turn.
 - Speed: in the harness, gbrain calls looked several times slower after the fixes. That is a harness artifact (see
   [cost and speed](#cost-and-speed)). Replayed alone, the fixed build's searches are as fast as the release's.
 - The slope: the experiment cannot say whether gbrain's advantage grows with model capability. The strongest models
@@ -351,11 +365,11 @@ Finance-only leaks in answers: fixed gbrain 0 of 110, fs 6, release gbrain 22.
 
 | Arm | $ per task | Tokens per task | Tool calls per task |
 |---|---|---|---|
-| fs | 0.054 | 32k | 9.0 |
-| pg | 0.038 | 20k | 6.2 |
-| memory | 0.269 | 246k | 37.1 |
-| gbrain release | 0.190 | 179k | 6.0 |
-| gbrain fixed | 0.192 | 160k | 5.0 |
+| fs | 0.056 (corrected 2026-11-09: cache writes were under-counted; was 0.054) | 32k | 9.0 |
+| pg | 0.040 to 0.041 (corrected 2026-11-09: cache writes were under-counted; was 0.038) | 20k | 6.2 |
+| memory | 0.284 to 0.302 (corrected 2026-11-09: cache writes were under-counted; was 0.269) | 246k | 37.1 |
+| gbrain release | 0.201 to 0.209 (corrected 2026-11-09: cache writes were under-counted; was 0.190) | 179k | 6.0 |
+| gbrain fixed | 0.202 to 0.203 (corrected 2026-11-09: cache writes were under-counted; was 0.192) | 160k | 5.0 |
 
 **The harness's latency numbers are not usable, and the reason is the harness.** Every model request reserves and
 then settles its cost in the budget ledger, and each of those rewrites the whole ledger file synchronously on the
@@ -419,7 +433,10 @@ What this shows:
 - **Leaks are gone.** Finance-only text appeared in 0 of 120 permission runs for the fixed build. The counts for the
   other arms were fs 9, fs-acl 17, pg 12, memory 9 and release gbrain 29. The fixed build also never put
   finance-only text in the agent's context; the other arms did 57 to 115 times.
-- **Cost:** $0.130 per task for the fixed build, against $0.098 for the release, $0.032 for fs and $0.021 for pg.
+- **Cost:** $0.133 (corrected 2026-11-09: cache writes were under-counted; was $0.130) per task for the fixed build,
+  against $0.100 (corrected 2026-11-09: cache writes were under-counted; was $0.098) for the release, $0.033
+  (corrected 2026-11-09: cache writes were under-counted; was $0.032) for fs and $0.022 (corrected 2026-11-09: cache
+  writes were under-counted; was $0.021) for pg.
 
 The held-out world uses the same generator templates as the development world, so it tests tuning to 50 tasks, not
 tuning to the generator's wording.
@@ -459,13 +476,16 @@ against a contemporaneous control on `566a242a` (v0.60.35.0, gate decision UC2).
 | Sonnet 5.5 | 85% | 86% | 0.206 | 0.122 |
 | GPT-5.4-mini | 44% | 47% | 0.020 | 0.017 |
 | GPT-5.4 | 66% | 71% | 0.088 | 0.075 |
-| GPT-6.1 Sol | 100% | 100% | 0.097 | 0.065 |
-| All | 73.5% | 75.7% | 0.118 | 0.080 |
+| GPT-6.1 Sol | 100% | 100% | 0.117 to 0.122 (corrected 2026-11-09: cache writes were under-counted; was 0.097) | 0.078 (corrected 2026-11-09: cache writes were under-counted; was 0.065) |
+| All | 73.5% | 75.7% | 0.121 to 0.122 (corrected 2026-11-09: cache writes were under-counted; was 0.118) | 0.082 (corrected 2026-11-09: cache writes were under-counted; was 0.080) |
 
 Paired by task: +2.2 points [−0.5, +5.0]; 20 tasks better, 13 worse, 17 tied. The gate's ship rule (lower bound above
 −5 points, no new leaks, no model or family at −8 or worse) passes, and the −3-point margin would pass too. Neither
-arm leaked. Cost per task fell 32%, short of the plan's 40% target, and cost per successful task fell 34% ($0.161 to
-$0.106). Median wall time per task was 61 s before and 64 s after.
+arm leaked. Cost per task fell 32% to 33% (corrected 2026-11-09: cache writes were under-counted; was 32%), short of
+the plan's 40% target, and cost per successful task fell 34% to 35% (corrected 2026-11-09: cache writes were
+under-counted; was 34%): it was $0.165 to $0.166 (corrected 2026-11-09: cache writes were under-counted; was $0.161)
+before the wave and $0.109 (corrected 2026-11-09: cache writes were under-counted; was $0.106) after it. Median wall
+time per task was 61 s before and 64 s after.
 
 Family E (renewal briefs) is the weakest family for every gbrain build once vector search works: 4–5 of 30 on the
 development world. Hybrid ranking puts short emails above the long meeting transcripts where the blocker and last
@@ -510,9 +530,11 @@ python3 $D/holdout/holdout_stats.py $D/entity-recall/simple-arms-rescored/result
 ```
 
 Keys: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `VOYAGE_API_KEY` (gbrain's reranker). Spend across the whole program
-was $1,763 across four machines' ledgers, under a $2,000 authorization. Each folder's README or receipt lists its own spend.
+was $1,763 across four machines' ledgers, under a $2,000 authorization (corrected 2026-11-09: cache writes were
+under-counted, so this is 6% to 9% low). Each folder's README or receipt lists its own spend.
 
 ## Changelog
 
+- 2026-11-09: Dollar figures that include gpt-6.1-sol, gpt-6-sol or gpt-6-astra now count OpenAI cache writes and, as the high end of a range, OpenAI's long-context rates above 272,000 input tokens, repriced from the committed rows, with each original kept beside its corrected value ([corrections](../corrections.md#openai-cache-writes)).
 - 2026-10-12: [Retired](#retired-2026-10-12) the success figures as a current claim, keeping the permission result; no rerun (gbrain-evals #110's recommendations, decided in the next-wave plan).
 - 2026-10-09: [Correction](#correction-2026-10-09) added: gbrain ran without reranking in the finding's runs and in all or part of every other run here except the held-out check (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109), with per-run counts from the restore audit. Original numbers unchanged.
