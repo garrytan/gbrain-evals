@@ -797,6 +797,21 @@ describe('checkSession and renderWorld', () => {
     expect(n).toBe(3);
   });
 
+  // Value: protects=a high-thinking request is never served the reply to the same prompt at low thinking, the level reaches the client, and no reply cached before thinking levels joined the key is reused; fails_when=cachedClient's key leaves out the thinking level, the level is not passed on, or a v2-keyed reply is still found; why_new=method change 3 (GBEV-3, 2026-11-09) renders long sessions and every re-render at high thinking, with prompts a low-thinking request has already sent; seam=cachedClient over a counting fake client that records each level, with a cache directory holding a v2-keyed reply; no_claim=caching in the metering proxies (they keep none)
+  test('the render cache keys on the thinking level, passes it on, and reuses no reply cached under v2', async () => {
+    const dir = scratch('cache-thinking');
+    const levels: Array<string | undefined> = [];
+    const base: ModelClient = { id: CHECK_MODELS[0], async complete(_prompt, _max, _temperature, _schema, thinking) { levels.push(thinking); return `reply ${levels.length}`; } };
+    const schema = { type: 'object' };
+    writeFileSync(join(dir, `${sha(['bg1-render-cache/v2', base.id, '256', '1', JSON.stringify(schema), 'the prompt'].join('\u0000'))}.txt`), 'cached under v2');
+    const cache = cachedClient(base, dir);
+    expect(await cache.complete('the prompt', 256, 1, schema, 'low')).toBe('reply 1');
+    expect(await cache.complete('the prompt', 256, 1, schema, 'high')).toBe('reply 2');
+    expect(await cache.complete('the prompt', 256, 1, schema, 'low')).toBe('reply 1');
+    expect(await cache.complete('the prompt', 256, 1, schema, 'high')).toBe('reply 2');
+    expect(levels).toEqual(['low', 'high']);
+  });
+
   // Value: protects=--fake mode, which the keyless tests and drills run, renders what it rendered before the method changes; fails_when=the schema, length or regeneration changes reach fakeModels or what renderWorld returns in --fake; why_new=the renderer method changes after stage 1's first real dev render (09b3f414); seam=render.ts --dev --fake at the fixture size against the committed template fixture; no_claim=the real renderer's output
   test('--fake output is unchanged: a dev world at the fixture size matches the committed template fixture, with no regeneration', () => {
     const set = join(scratch('fake-same'), 'set');

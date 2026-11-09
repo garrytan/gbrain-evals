@@ -73,7 +73,7 @@ export type CheckModel = typeof CHECK_MODELS[number];
 export const REGENERATIONS = 3;
 export const LENGTH_GATE = { min: 0.6, max: 1.5, from_target: 400 } as const;
 export const CONCURRENCY = 6;
-const CACHE_VERSION = 'bg1-render-cache/v2';
+const CACHE_VERSION = 'bg1-render-cache/v3';
 /** English words per cl100k token as gemini-3.8-flash writes, measured from the second stage 1 render, for the prompt's length in words. */
 export const WORDS_PER_TOKEN = 0.84;
 /**
@@ -248,18 +248,20 @@ export interface Models {
   check(model: CheckModel, brief: RenderBrief, turns: readonly Turn[], reask?: boolean): Promise<string>;
 }
 
-/** One provider model; schema, when given, is the JSON Schema the reply must follow (Gemini only). */
-export interface ModelClient { id: string; complete(prompt: string, maxOutputTokens: number, temperature: number, schema?: object): Promise<string> }
+export type ThinkingLevel = 'low' | 'high';
 
-/** Replies cached by request hash (the schema included) under dir, so a rerun buys nothing it already bought. */
+/** One provider model; schema, when given, is the JSON Schema the reply must follow, and thinking the thinkingLevel to ask for (Gemini only). */
+export interface ModelClient { id: string; complete(prompt: string, maxOutputTokens: number, temperature: number, schema?: object, thinking?: ThinkingLevel): Promise<string> }
+
+/** Replies cached by request hash (the schema and thinking level included) under dir, so a rerun buys nothing it already bought. */
 export function cachedClient(client: ModelClient, dir: string): ModelClient {
   mkdirSync(dir, { recursive: true });
   return {
     id: client.id,
-    async complete(prompt, maxOutputTokens, temperature, schema) {
-      const path = join(dir, `${sha256([CACHE_VERSION, client.id, String(maxOutputTokens), String(temperature), schema ? JSON.stringify(schema) : '', prompt].join('\u0000'))}.txt`);
+    async complete(prompt, maxOutputTokens, temperature, schema, thinking) {
+      const path = join(dir, `${sha256([CACHE_VERSION, client.id, String(maxOutputTokens), String(temperature), schema ? JSON.stringify(schema) : '', thinking ?? '', prompt].join('\u0000'))}.txt`);
       if (existsSync(path)) return readFileSync(path, 'utf8');
-      const reply = await client.complete(prompt, maxOutputTokens, temperature, schema);
+      const reply = await client.complete(prompt, maxOutputTokens, temperature, schema, thinking);
       writeFileSync(`${path}.tmp`, reply, { mode: 0o600 });
       renameSync(`${path}.tmp`, path);
       return reply;
