@@ -656,6 +656,38 @@ which kind wrote them is refused. At that commit, `eval/runner/q1/cells/rs1-cell
 `6fc487d7909d5b8e26f1c0254b6cea656a6b654af104760ceec9bb03bcb891e7`. Later docs-only commits don't change it. Each run
 records the commit it actually ran, and a run from any other code needs a further amendment.
 
+### 2026-11-08: pre-wave fixes, and the code counted runs start from
+
+Seven fixes land on the results branch before wave A (approved: "GO RS1-JC, fix f1–f6. Answered by agent:GBEV-3"; the
+re-read guard and the test preload were added inside the same round). Each has a test that fails on the code at
+`2151bf7a` and passes at its commit. None changes a bar, arm, reader, judge, margin or verdict rule.
+
+1. **No run or test reaches a real provider outside a granted paid window** (`d112aba6`, `29e7c70e`). The judge check
+   and the re-read runner refuse a run without `--keyless-upstream` unless it names `--paid-window` and
+   `--window-cap-usd`, and refuse a `--ledger-cap-usd` above that window cap. A bun test preload blanks every provider
+   key, and children that tests spawn get the blanked environment, including children started where a `.env` holds a
+   key.
+2. **Counted leases are sized at the pinned judge cap.** A counted cell's peak reservation prices its pinned gating
+   judges' output at their 8,000-token cap, as the metering proxy reserves it, instead of the default 2,048. This raises
+   the three system rows' leases; the counted block's cap is unchanged. Stage 1 ran before the judges were pinned, so
+   its cells keep the sizing they ran with, and a stage 1 rerun would need its sizing revisited in a new window.
+3. **The judge check takes paid stage 1 inputs only.** A `--stage1` root must carry an `upstream.json` marking a paid
+   re-read, or a campaign `lease-summary.json` that does not record a keyless upstream.
+4. **A rehearsal never reads as a pass.** `judge-check.ts report` exits 0 only for a paid check whose gates pass; a
+   keyless rehearsal, or an output with no keyless/paid marker, exits 4.
+5. **Published judge-check files carry no dollar fields.**
+6. **Gate (i) on cross-family items, reported beside it.** The judge check reports the Astra-Opus kappa without the real
+   answers read by either gating judge's own family, and each gating view's count of labelled real items (40 wanted).
+   Neither is a new gate.
+7. **Mixed judge snapshots are flagged.** verdict.ts reports every model version each gating judge returned, and flags a
+   judge that returned more than one at the top of the report. It refuses nothing and changes no verdict.
+
+Counted runs start from `29e7c70ed18e2a3218b390d10b00081c988019fd` on the results branch. At that commit,
+`eval/runner/q1/cells/rs1-cells.json` has SHA-256 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`.
+The judge check itself runs from `8f3d632b`, as recorded above; none of these fixes changes how it grades. Later
+docs-only commits don't change either. Each run records the commit it actually ran, and a run from any other code needs
+a further amendment.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
