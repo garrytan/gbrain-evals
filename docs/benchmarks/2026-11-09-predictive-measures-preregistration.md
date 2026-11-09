@@ -98,7 +98,7 @@ These are validity checks against held-out references.
 - **G4's retrieval layer** maps batch 3's three entity contrasts the same way: `p2_configured_vs_hybrid_lexical_entity`, `hybrid_vs_hybrid_lexical_entity` and `configured_vs_keyword_entity`.
 - **G1 and G4 agent layers** map `phase2-agent` contrasts when phase 2 is counted: arm B vs arm A, and model pairs. Until then they read NO REFERENCE YET. Their counted agent cells run only after batch 3's aggregates exist.
 - **G3** maps the replay version pair: at 0.60.549.0, 607 of 607 Sol page reads were refused, and at 0.60.570.0, 435 of 436 two- or three-selector calls were read. It also maps phase 2 arm B's refusal counts by cause, when counted, compared as rates given exposure. Matching the cause mix is not a criterion.
-- **G5's** match to Wintermute's counted p50 and p95 (query 10.1 s and 30.1 s; search 9.8 s and 30.4 s; get 2.8 s and 10.9 s) is calibration only. The predictive test is one held-out contrast, latency at pin 549 vs 570, which needs the same direction in a later real measurement. Until one exists it reads NO REFERENCE YET.
+- **G5's** match to Wintermute's counted p50 and p95 (query 10.1 s and 30.1 s; search 9.8 s and 30.4 s; get 2.8 s and 10.9 s) is calibration only. The predictive test is three held-out contrasts, p95 latency at pin 549 vs 570 for `query`, `search` and `get`, each of which needs the same direction in a later real measurement. Until those exist it reads NO REFERENCE YET.
 - **G6** maps the phase-2 freeze's out-of-view counts by cause, if they are published as aggregates. Until then it reads NO REFERENCE YET.
 
 **Planning MDDs** (paired binary, α 0.05 two-sided, power 0.8, discordance 0.3):
