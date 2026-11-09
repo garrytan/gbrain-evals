@@ -2,6 +2,33 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### Every failed eval row can now be given a cause
+
+- **New library.** `eval/runner/failure-causes/` gives each failed row one primary cause from 18, or `unclassified`,
+  chosen by the earliest pipeline stage that broke. Later signals stay on the row as secondary causes. Each cause maps to
+  a failure mode in the gap map (F1 to F16), or to `eval` when our own harness, judge or scorer failed. The taxonomy is
+  `docs/failure-causes/TAXONOMY.md`, rendered from `taxonomy.ts`, and a test pins its cause ids.
+- **Logs first, a model only for the rest.** Deterministic rules read tool errors, refusals, retrieval records and write
+  records with no model. A cross-family labeller (gpt-6.1-sol labels Claude rows, claude-opus-5-5 labels GPT and
+  particle-1 rows) labels only rows where the right evidence reached the answering model. A labeller path counts only
+  once it reaches a kappa of 0.6 on at least 40 held-out rows that Opus and gpt-6-astra agree on. Otherwise that row
+  family switches to gpt-6-astra. Row text goes to the labeller fenced as untrusted, and a private or sealed row is
+  never sent.
+- **Adapters and ranking.** Adapters read the refresh barrier agent check, RS1, Cat 40, SkillOpt's forced probes and the
+  live recall scorecard into one `eval-failure/1` row shape, from a source manifest with file hashes. Only gbrain runs
+  under natural conditions are ranked. Forced probes go in a separate under-stress list and other systems in a contrast
+  table, and a private source contributes counts only. The untitled-capture duplicate that the refresh barrier results
+  disclose counts as `harness_error`.
+- **Command line.** `bun eval/runner/failure-causes/cli.ts` runs `taxonomy`, `classify`, `estimate`, `agree`,
+  `report` and `label`. Only `label` makes provider calls, and it refuses without `--paid` and an open budget run.
+- **Bug ledger.** An entry may carry `cause`, `rule_id` and `regression_check`, so a fix from a weekly top three
+  keeps a check that the nightly loop can rerun.
+- **Refactor.** `adjudicateEpisode` moved to `eval/runner/refresh-barrier/adjudicate.ts`.
+  `scripts/refresh-barrier-partc-adjudicate.ts` re-exports it and still reproduces the published Part C adjudication
+  exactly.
+
 ## [0.10.178] - 2026-11-08
 
 ### gbrain's refresh write barrier passes its preregistered test, and the findings recommend turning it on
