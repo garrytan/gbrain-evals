@@ -26,7 +26,7 @@ export function normalizeUsage(provider: UsageConvention, raw: object | null | u
   const details = (u.prompt_tokens_details ?? u.input_tokens_details ?? {}) as Record<string, unknown>;
   const input = first(u.prompt_tokens, u.input_tokens);
   const cache_read = first(details.cached_tokens, u.cache_read_input_tokens, u.cache_read_tokens, u.cached_input_tokens);
-  const cache_write = first(u.cache_creation_input_tokens, u.cache_write_tokens);
+  const cache_write = first(u.cache_creation_input_tokens, u.cache_write_tokens, details.cache_write_tokens);
   const output = first(u.completion_tokens, u.output_tokens);
   const uncached_input = provider === 'anthropic' ? input : Math.max(0, input - cache_read - cache_write);
   return { uncached_input, cache_read, cache_write, output, total_input: uncached_input + cache_read + cache_write };

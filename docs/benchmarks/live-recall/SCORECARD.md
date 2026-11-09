@@ -27,7 +27,7 @@ The Markdown is rendered from the validated JSON alone. The per-query detail beh
 
 ## scorecard.json
 
-Top level: `schema` (`"live-recall-scorecard/v1"`), `protocol` (`batch1` or `batch2`: from `freeze.json` on a
+Top level: `schema` (`"live-recall-scorecard/v1"`), `protocol` (`batch1`, `batch2` or `batch3`: from `freeze.json` on a
 counted run, from `--protocol` on the fixture, and `batch1` when neither names one), `run`, `custody`, `questions`,
 `eligibility`, `arms`, `comparisons`.
 
@@ -43,7 +43,18 @@ runs with expansion off); `control` (true for the hash-embedding fixture, whose 
 `source_pgvector`, `source_server_version_num`, `copy_server_version_num` and `restore_errors`, read from the row
 `snapshot.sh` writes into the marker table (the copy runs the container image's pgvector, which can differ from the
 source's). Versions are `null` unless they are plain version numbers; `pgvector_version` is `null` when unknown, and the
-four copy fields are `null` when unknown or not a copy.
+four copy fields are `null` when unknown or not a copy. Under `batch3` only, `run` also carries `visibility_epoch`
+(`pre_gbra_398`, `post_gbra_398` or `unknown`, from the loaded gbrain version), `freeze_gbrain_version` and
+`freeze_visibility_epoch` (from the freeze; `null` on the fixture). A `run --synthetic <dir>` control (a conditions-recall
+brain from `eval/generators/conditions-recall-gen.ts`, or a batch-3 brain from `eval/generators/batch3-synthetic-gen.ts`
+built from the G1 freshness and G4 entity worlds, which runs under `batch3`) also carries `run.synthetic`: the directory's `digest` and
+`questions_sha256`, its knobs (`unembedded_chunk_share`, `synopsis_vectors_off`, `keyword_candidate_bound`,
+`shell_page_share`) and what the builder applied (`chunks`, `unembedded_chunks`). In-process runs also carry
+`run.transports`: `hash` for the fixture and keyless synthetic runs (hash embeddings and a token-overlap reranker, a
+control), or `voyage` for `run --synthetic --paid --budget-run-id <id>`, which embeds the synthetic brain and its queries
+with `voyage:voyage-4` and reranks the configured arm with `voyage:rerank-2.5` under `tokenmax`, the configuration live
+recall's counted brain ran, with every request reserved and settled on the budget ledger (`paid-receipt.json` beside the
+scorecard). `eval/runner/predictive/verdict.ts` refuses a `hash` scorecard unless `--control` is passed.
 
 **`custody`**: `readonly_verified_start` and `readonly_verified_end` (the session reported
 `default_transaction_read_only = on` and gbrain's direct pool was off, before the first search and after the last),
@@ -73,6 +84,12 @@ each excluded form), `invalid_arms` (`rerank_fail_open_over_cap`, `embedding_opt
 | `model_calls` | calls by kind (`embedding`, `rerank`, and any refused kind) |
 | `degraded_stages` | how many queries gbrain marked with each degraded stage |
 
+Under `batch3`, `by_type` has seven types (the five live types plus `freshness` and `entity`), and each valid arm also
+has `stale_first` with `all`, `exact` and `paraphrase`: `hits`, `n`, `rate`, `ci95` and `interval` over freshness
+question forms for "a stale page came back above the gold, or came back and the gold did not". When any entity
+question lists `decoy` pages, each valid arm also has `decoy_first` in the same shape, over the entity forms that carry
+one, for a look-alike page in place of a stale one. Both are reported, never a primary.
+
 **`comparisons`**: one row per comparison and metric (`success_at_5` and `mrr`), in the preregistration's order:
 `id`, `metric`, `a`, `b`, `form` (`all`, `exact`, `paraphrase` or `exact_vs_paraphrase` with `arm`),
 `n_pairs`, `n_clusters`, `mean_a`, `mean_b`, `delta` (B minus A), `ci95`, `p_two_sided` and `p_method` (cluster
@@ -80,7 +97,12 @@ sign flip), `mcnemar` (exact, when there is one pair per question), `mde` (the m
 n), `primary` (`P1`, `P2` or `null`) and, on the two primary success@5 rows, `p_holm`. Under `batch1` the primaries are
 `p1_hybrid_vs_hybrid_lexical` (both forms) and `p2_configured_vs_hybrid_lexical_paraphrase`. Under `batch2` they are
 `p1_hybrid_vs_hybrid_lexical_paraphrase` and `p2_configured_vs_hybrid_lexical_paraphrase`, and batch 1's both-forms
-contrast is the secondary `batch1_p1_hybrid_vs_hybrid_lexical`. Under both, the keyword contrasts
+contrast is the secondary `batch1_p1_hybrid_vs_hybrid_lexical`. Under `batch3` they are
+`p1_configured_vs_hybrid_lexical_freshness` and `p2_configured_vs_hybrid_lexical_entity` (both forms, restricted to
+that question type, and the row carries `type`), with the per-type `hybrid_vs_hybrid_lexical_*` and
+`configured_vs_keyword_*` contrasts and batch 2's P1 as `batch2_p1_hybrid_vs_hybrid_lexical_paraphrase` among the
+secondaries. The predictive-measures preregistration names which batch 3 contrasts each synthetic measure is checked
+against. Under both, the keyword contrasts
 (`hybrid_lexical_vs_keyword`, `hybrid_vs_keyword`, `configured_vs_keyword_paraphrase` and the rest) are descriptive.
 A comparison whose arm is invalid or absent is `{"id": ..., "skipped": "arm_invalid_or_absent"}`; a skipped primary
 still counts in the Holm family of two, as p = 1.

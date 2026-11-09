@@ -10,10 +10,14 @@ import { percentile } from '../metrics.ts';
 import { clusteredPairedDelta, exactMcNemar, holmAdjusted, powerNote, type PairedItem } from '../stats/paired.ts';
 import { clusterBootstrapProportion, wilson } from '../q2/stats.ts';
 import { ABORT_CODES, LiveRecallAbort } from './brain.ts';
+import { VISIBILITY_EPOCHS } from './visibility-epoch.ts';
 
 export const SCHEMA = 'live-recall-scorecard/v1';
 export const ARMS = ['keyword', 'vector', 'hybrid_lexical', 'hybrid', 'configured', 'configured_window'] as const;
 export const TYPES = ['identifier', 'error_string', 'time_window', 'cross_source', 'topic'] as const;
+/** Batch 3's two new question types: freshness (gold is the newer page, a stale page holds the old fact) and entity (gold is the right one of two namesakes). */
+export const BATCH3_TYPES = ['freshness', 'entity'] as const;
+export const ALL_TYPES = [...TYPES, ...BATCH3_TYPES] as const;
 export const FORMS = ['exact', 'paraphrase'] as const;
 export const KS = [1, 5, 10, 20] as const;
 export const STATUSES = ['ok', 'error', 'degraded', 'ai_refused', 'rerank_fail_open', 'skipped'] as const;
@@ -24,7 +28,7 @@ export const DRAWS = 10_000;
 export const RERANK_FAIL_OPEN_CAP = 0.1;
 
 export type Arm = (typeof ARMS)[number];
-export type QType = (typeof TYPES)[number];
+export type QType = (typeof ALL_TYPES)[number];
 export type Form = (typeof FORMS)[number];
 export type Status = (typeof STATUSES)[number];
 
@@ -46,6 +50,10 @@ export interface QueryRecord {
   returned: number;
   calls: Record<string, number>;
   degraded_stages: string[];
+  /** Freshness questions only: the best rank of a stale reference page, or null when none came back. */
+  stale_rank?: number | null;
+  /** Entity questions that name a decoy only: the best rank of a look-alike page, or null when none came back. */
+  decoy_rank?: number | null;
 }
 
 export interface RunIdentity {
@@ -71,11 +79,19 @@ export interface RunIdentity {
   /** The mode's own expansion default; every arm passes expansion: false regardless. */
   mode_expansion: boolean;
   control: boolean;
+  /** In-process runs only: hash (fixture transports, a control) or voyage (a paid synthetic run). */
+  transports?: 'hash' | 'voyage';
   pgvector_version: string | null;
   source_pgvector: string | null;
   source_server_version_num: number | null;
   copy_server_version_num: number | null;
   restore_errors: number | null;
+  /** batch3 only: which side of GBRA-398 the run falls on, and the gbrain version and epoch its freeze recorded. */
+  visibility_epoch?: string;
+  freeze_gbrain_version?: string | null;
+  freeze_visibility_epoch?: string | null;
+  /** --synthetic only: the generated directory's digest, question-file hash, knobs and what the builder applied. */
+  synthetic?: { digest: string; questions_sha256: string; unembedded_chunk_share: number; synopsis_vectors_off: boolean; keyword_candidate_bound: number | null; shell_page_share: number; chunks: number; unembedded_chunks: number };
 }
 
 export interface QuestionSummary {
@@ -171,9 +187,11 @@ function compare(id: string, a: Map<string, QueryRecord>, b: Map<string, QueryRe
   };
 }
 
-export const PROTOCOLS = ['batch1', 'batch2'] as const;
+export const PROTOCOLS = ['batch1', 'batch2', 'batch3'] as const;
 export type Protocol = (typeof PROTOCOLS)[number];
-type Comparison = { id: string; a: Arm; b: Arm; form: Form | 'all' | 'exact_vs_paraphrase'; primary?: 'P1' | 'P2'; windowed?: boolean };
+/** The question types each protocol accepts and reports. batch1 and batch2 keep the five live types. */
+export const PROTOCOL_TYPES: Record<Protocol, readonly QType[]> = { batch1: TYPES, batch2: TYPES, batch3: ALL_TYPES };
+type Comparison = { id: string; a: Arm; b: Arm; form: Form | 'all' | 'exact_vs_paraphrase'; primary?: 'P1' | 'P2'; windowed?: boolean; type?: QType };
 const P2: Comparison = { id: 'p2_configured_vs_hybrid_lexical_paraphrase', a: 'hybrid_lexical', b: 'configured', form: 'paraphrase', primary: 'P2' };
 const SECONDARIES: Comparison[] = [
   { id: 'hybrid_lexical_vs_keyword', a: 'keyword', b: 'hybrid_lexical', form: 'all' },
@@ -200,10 +218,26 @@ export const COMPARISONS: Record<Protocol, Comparison[]> = {
     { id: 'batch1_p1_hybrid_vs_hybrid_lexical', a: 'hybrid_lexical', b: 'hybrid', form: 'all' },
     ...SECONDARIES,
   ],
+  batch3: [
+    { id: 'p1_configured_vs_hybrid_lexical_freshness', a: 'hybrid_lexical', b: 'configured', form: 'all', type: 'freshness', primary: 'P1' },
+    { id: 'p2_configured_vs_hybrid_lexical_entity', a: 'hybrid_lexical', b: 'configured', form: 'all', type: 'entity', primary: 'P2' },
+    { id: 'hybrid_vs_hybrid_lexical_freshness', a: 'hybrid_lexical', b: 'hybrid', form: 'all', type: 'freshness' },
+    { id: 'hybrid_vs_hybrid_lexical_entity', a: 'hybrid_lexical', b: 'hybrid', form: 'all', type: 'entity' },
+    { id: 'configured_vs_keyword_freshness', a: 'keyword', b: 'configured', form: 'all', type: 'freshness' },
+    { id: 'configured_vs_keyword_entity', a: 'keyword', b: 'configured', form: 'all', type: 'entity' },
+    { id: 'batch2_p1_hybrid_vs_hybrid_lexical_paraphrase', a: 'hybrid_lexical', b: 'hybrid', form: 'paraphrase' },
+    ...SECONDARIES,
+  ],
 };
 
+/** The stale page outranks the gold: it came back and the gold came back lower or not at all. */
+export const staleFirst = (r: Pick<QueryRecord, 'page_rank' | 'stale_rank'>) => (typeof r.stale_rank === 'number' && (r.page_rank === null || r.stale_rank < r.page_rank) ? 1 : 0);
+
+/** A look-alike page outranks the gold: it came back and the gold came back lower or not at all. */
+export const decoyFirst = (r: Pick<QueryRecord, 'page_rank' | 'decoy_rank'>) => (typeof r.decoy_rank === 'number' && (r.page_rank === null || r.decoy_rank < r.page_rank) ? 1 : 0);
+
 /** Eligibility, per-arm cells and the listed comparisons over a set of records. An arm named in seedInvalid is invalid before any record is read. */
-function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: Record<string, string> = {}) {
+function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: Record<string, string> = {}, types: readonly QType[] = TYPES) {
   const byArm = new Map<Arm, QueryRecord[]>(ARMS.map(a => [a, records.filter(r => r.arm === a)]));
   const invalid: Record<string, string> = { ...seedInvalid };
   for (const arm of ['configured', 'configured_window'] as const) {
@@ -242,8 +276,24 @@ function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: R
     });
     arms[arm] = {
       overall: forms(rows),
-      by_type: Object.fromEntries(TYPES.map(t => [t, forms(rows.filter(r => r.type === t))])),
+      by_type: Object.fromEntries(types.map(t => [t, forms(rows.filter(r => r.type === t))])),
     };
+    if (types.includes('freshness')) {
+      const fresh = rows.filter(r => r.type === 'freshness');
+      (arms[arm] as Record<string, unknown>).stale_first = {
+        all: proportion(fresh, staleFirst, true),
+        exact: proportion(fresh.filter(r => r.form === 'exact'), staleFirst, false),
+        paraphrase: proportion(fresh.filter(r => r.form === 'paraphrase'), staleFirst, false),
+      };
+    }
+    const decoyed = rows.filter(r => r.type === 'entity' && r.decoy_rank !== undefined);
+    if (types.includes('entity') && decoyed.length) {
+      (arms[arm] as Record<string, unknown>).decoy_first = {
+        all: proportion(decoyed, decoyFirst, true),
+        exact: proportion(decoyed.filter(r => r.form === 'exact'), decoyFirst, false),
+        paraphrase: proportion(decoyed.filter(r => r.form === 'paraphrase'), decoyFirst, false),
+      };
+    }
   }
 
   const comparisons: Array<Record<string, unknown>> = [];
@@ -262,8 +312,8 @@ function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: R
       }
       const rowsA = ok(c.a), rowsB = ok(c.b);
       const mapA = new Map(rowsA.map(r => [keyOf(r), r] as const)), mapB = new Map(rowsB.map(r => [keyOf(r), r] as const));
-      const keys = [...mapB.keys()].filter(k => mapA.has(k) && (c.form === 'all' || mapB.get(k)!.form === c.form));
-      comparisons.push({ ...compare(c.id, mapA, mapB, keys, metric, c.form !== 'all'), a: c.a, b: c.b, form: c.form, primary: c.primary ?? null });
+      const keys = [...mapB.keys()].filter(k => mapA.has(k) && (c.form === 'all' || mapB.get(k)!.form === c.form) && (!c.type || mapB.get(k)!.type === c.type));
+      comparisons.push({ ...compare(c.id, mapA, mapB, keys, metric, c.form !== 'all'), a: c.a, b: c.b, form: c.form, ...(c.type ? { type: c.type } : {}), primary: c.primary ?? null });
     }
   }
   const primaryIds = list.filter(c => c.primary).map(c => c.id);
@@ -274,7 +324,7 @@ function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: R
 }
 
 export function buildScorecard(records: QueryRecord[], questions: QuestionSummary, identity: RunIdentity, custody: Custody, protocol: Protocol = 'batch1') {
-  const scorecard = { schema: SCHEMA, protocol, run: identity, custody, questions, ...scoreRecords(records, COMPARISONS[protocol]) };
+  const scorecard = { schema: SCHEMA, protocol, run: identity, custody, questions, ...scoreRecords(records, COMPARISONS[protocol], {}, PROTOCOL_TYPES[protocol]) };
   validateScorecard(scorecard);
   return scorecard;
 }
@@ -337,11 +387,13 @@ const KEY_WORDS = new Set<string>([
   'reranker_model', 'embedding_model', 'embedding_column', 'mode_expansion', 'control', 'top5_changed', 'degraded_stages',
   'pgvector_version', 'source_pgvector', 'source_server_version_num', 'copy_server_version_num', 'restore_errors', 'run_a', 'run_b',
   'chat', 'embedding', 'rerank', 'multimodal', 'decide', 'transcription',
-  ...ARMS, ...TYPES, ...KS.map(k => 'k' + k), ...STATUSES, ...GOLD_FOUND_BY,
+  'stale_first', 'decoy_first', 'type', 'visibility_epoch', 'freeze_gbrain_version', 'freeze_visibility_epoch',
+  'synthetic', 'transports', 'digest', 'questions_sha256', 'unembedded_chunk_share', 'synopsis_vectors_off', 'keyword_candidate_bound', 'shell_page_share', 'chunks', 'unembedded_chunks',
+  ...ARMS, ...ALL_TYPES, ...KS.map(k => 'k' + k), ...STATUSES, ...GOLD_FOUND_BY,
 ]);
 const KEY_PATTERNS = [/^(keyword|vector|hybrid_lexical|hybrid|configured|configured_window|missing)_(ok|error|degraded|ai_refused|rerank_fail_open|skipped|record)$/, /^[a-z_]+$/];
 const STRING_WORDS = new Set<string>([
-  SCHEMA, ...ARMS, ...TYPES, ...FORMS, 'exact_vs_paraphrase', 'P1', 'P2', 'success_at_5', 'mrr', 'wilson', 'cluster_bootstrap', 'none',
+  SCHEMA, ...ARMS, ...ALL_TYPES, ...FORMS, ...VISIBILITY_EPOCHS, 'exact_vs_paraphrase', 'P1', 'P2', 'success_at_5', 'mrr', 'wilson', 'cluster_bootstrap', 'none',
   'exact-sign-flip', 'monte-carlo-sign-flip', 'degenerate', 'postgres', 'pglite', 'copy', 'standby', 'no_write_privilege',
   'session_pooler', 'transaction_pooler_rewritten', 'direct_or_local', 'in_process', 'conservative', 'balanced', 'tokenmax',
   'rerank_fail_open_over_cap', 'embedding_opted_out', 'no_eligible_queries', 'arm_invalid_or_absent', 'invalid_in_one_run', 'unknown',
@@ -361,6 +413,7 @@ const FIELD_PATTERNS: Record<string, RegExp> = {
   '$.run.reranker_model': MODEL_PATTERN,
   '$.run.embedding_model': MODEL_PATTERN,
   '$.run.embedding_column': /^[a-z_][a-z0-9_]{0,62}$/,
+  '$.run.transports': /^(hash|voyage)$/,
 };
 
 /** Structural custody check: known keys, allowlisted strings, finite numbers. Throws LR_CUSTODY_LEAK naming only the path. */
@@ -416,8 +469,10 @@ export function renderMarkdown(s: ReturnType<typeof buildScorecard>): string {
   const lines: string[] = [];
   const r = s.run;
   lines.push('# Live-recall scorecard', '');
-  lines.push('gbrain ' + r.gbrain_loaded_version + ' (' + r.gbrain_loaded_commit.slice(0, 9) + '), schema ' + r.schema_version + ', ' + r.engine + ', barrier: ' + r.barrier + ', pgvector ' + (r.pgvector_version ?? 'n/a') + ', mode: ' + r.search_mode + (r.control ? '. CONTROL RUN (hash embeddings): numbers say nothing about search quality.' : '.'));
+  lines.push('gbrain ' + r.gbrain_loaded_version + ' (' + r.gbrain_loaded_commit.slice(0, 9) + '), schema ' + r.schema_version + ', ' + r.engine + ', barrier: ' + r.barrier + ', pgvector ' + (r.pgvector_version ?? 'n/a') + ', mode: ' + r.search_mode + (r.transports === 'voyage' ? '. Synthetic brain, Voyage embeddings and rerank (' + r.embedding_model + ', ' + r.reranker_model + ').' : r.control ? '. CONTROL RUN (hash embeddings): numbers say nothing about search quality.' : '.'));
   lines.push('Protocol: ' + s.protocol + '; primary comparisons (Holm family of two): ' + COMPARISONS[s.protocol].filter(c => c.primary).map(c => c.id + ' (' + c.primary + ')').join(', ') + '.');
+  if (r.synthetic) lines.push('Synthetic conditions brain ' + r.synthetic.digest.slice(0, 12) + ': unembedded chunk share ' + r.synthetic.unembedded_chunk_share + ' (' + r.synthetic.unembedded_chunks + ' of ' + r.synthetic.chunks + ' chunks), synopsis vectors ' + (r.synthetic.synopsis_vectors_off ? 'off' : 'on') + ', keyword candidate bound ' + (r.synthetic.keyword_candidate_bound ?? 'none') + ', shell page share ' + r.synthetic.shell_page_share + '.');
+  if (s.protocol === 'batch3') lines.push('Visibility epoch (GBRA-398): run ' + (r.visibility_epoch ?? 'unknown') + ', freeze ' + (r.freeze_visibility_epoch ?? 'none (fixture)') + (r.freeze_gbrain_version ? ' at gbrain ' + r.freeze_gbrain_version : '') + '.');
   if ((r.source_pgvector !== null && r.source_pgvector !== r.pgvector_version) || (r.restore_errors ?? 0) > 0) lines.push('Warning: vector search on this copy may differ from the live brain (source pgvector ' + (r.source_pgvector ?? 'unknown') + ', copy pgvector ' + (r.pgvector_version ?? 'none') + ', restore errors ' + (r.restore_errors ?? 'unknown') + ').');
   lines.push('Question forms eligible: ' + s.eligibility.eligible_question_forms + ' of ' + (s.questions.loaded - s.questions.gold_missing) * 2 + ' (questions loaded: ' + s.questions.loaded + ', dropped for an absent gold page: ' + s.questions.gold_missing + ').', '');
   lines.push('## Arms, all queries (both forms)', '', '| Arm | n | success@1 | success@5 (95% CI) | success@10 | success@20 | MRR | pages returned |', '|---|---|---|---|---|---|---|---|');
@@ -431,9 +486,27 @@ export function renderMarkdown(s: ReturnType<typeof buildScorecard>): string {
   for (const arm of ARMS) {
     const a = (s.arms as Record<string, any>)[arm];
     if (!a || a.invalid) continue;
-    for (const t of TYPES) {
+    for (const t of PROTOCOL_TYPES[s.protocol]) {
       const c = a.by_type[t];
       lines.push('| ' + arm + ' | ' + t + ' | ' + c.exact.n + ' | ' + pct(c.exact.success_at.k5.rate) + ' | ' + c.paraphrase.n + ' | ' + pct(c.paraphrase.success_at.k5.rate) + ' |');
+    }
+  }
+  if (s.protocol === 'batch3') {
+    lines.push('', '## Freshness: stale page ranked above the gold', '', '| Arm | n | stale-first (95% CI) | exact | paraphrase |', '|---|---|---|---|---|');
+    for (const arm of ARMS) {
+      const a = (s.arms as Record<string, any>)[arm];
+      if (!a || a.invalid || !a.stale_first) continue;
+      const c = a.stale_first;
+      lines.push('| ' + arm + ' | ' + c.all.n + ' | ' + pct(c.all.rate) + ' (' + ci(c.all.ci95) + ') | ' + pct(c.exact.rate) + ' | ' + pct(c.paraphrase.rate) + ' |');
+    }
+    if (ARMS.some(arm => (s.arms as Record<string, any>)[arm]?.decoy_first)) {
+      lines.push('', '## Entity: look-alike page ranked above the gold', '', '| Arm | n | decoy-first (95% CI) | exact | paraphrase |', '|---|---|---|---|---|');
+      for (const arm of ARMS) {
+        const a = (s.arms as Record<string, any>)[arm];
+        if (!a || a.invalid || !a.decoy_first) continue;
+        const c = a.decoy_first;
+        lines.push('| ' + arm + ' | ' + c.all.n + ' | ' + pct(c.all.rate) + ' (' + ci(c.all.ci95) + ') | ' + pct(c.exact.rate) + ' | ' + pct(c.paraphrase.rate) + ' |');
+      }
     }
   }
   lines.push('', '## Paired comparisons (delta = B minus A)', '', '| Comparison | Metric | Pairs | A | B | Delta (95% CI) | p | Holm p | MDE |', '|---|---|---|---|---|---|---|---|---|');

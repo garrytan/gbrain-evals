@@ -1,0 +1,118 @@
+{
+  "id": "live-recall-b2",
+  "source": "docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json (held out)",
+  "contrasts": [
+    {
+      "id": "p1_hybrid_vs_hybrid_lexical_paraphrase",
+      "estimate": 0.18,
+      "lo": 0.04,
+      "hi": 0.32
+    },
+    {
+      "id": "p2_configured_vs_hybrid_lexical_paraphrase",
+      "estimate": 0.32,
+      "lo": 0.16,
+      "hi": 0.48
+    },
+    {
+      "id": "batch1_p1_hybrid_vs_hybrid_lexical",
+      "estimate": 0.06,
+      "lo": -0.04,
+      "hi": 0.16
+    },
+    {
+      "id": "hybrid_lexical_vs_keyword",
+      "estimate": 0.16,
+      "lo": 0.07,
+      "hi": 0.26
+    },
+    {
+      "id": "hybrid_vs_keyword",
+      "estimate": 0.22,
+      "lo": 0.13,
+      "hi": 0.31
+    },
+    {
+      "id": "configured_vs_keyword_paraphrase",
+      "estimate": 0.48,
+      "lo": 0.34,
+      "hi": 0.62
+    },
+    {
+      "id": "configured_vs_hybrid",
+      "estimate": 0.14,
+      "lo": 0.06,
+      "hi": 0.22
+    },
+    {
+      "id": "vector_vs_keyword",
+      "estimate": 0.12,
+      "lo": 0,
+      "hi": 0.23
+    },
+    {
+      "id": "configured_vs_keyword_exact",
+      "estimate": 0.24,
+      "lo": 0.1,
+      "hi": 0.38
+    },
+    {
+      "id": "hybrid_vs_keyword_paraphrase",
+      "estimate": 0.34,
+      "lo": 0.22,
+      "hi": 0.48
+    },
+    {
+      "id": "window_vs_configured",
+      "estimate": 0.05,
+      "lo": 0,
+      "hi": 0.15
+    },
+    {
+      "id": "paraphrase_vs_exact_keyword",
+      "estimate": -0.64,
+      "lo": -0.76,
+      "hi": -0.5
+    },
+    {
+      "id": "paraphrase_vs_exact_vector",
+      "estimate": -0.24,
+      "lo": -0.38,
+      "hi": -0.1
+    },
+    {
+      "id": "paraphrase_vs_exact_hybrid_lexical",
+      "estimate": -0.64,
+      "lo": -0.78,
+      "hi": -0.5
+    },
+    {
+      "id": "paraphrase_vs_exact_hybrid",
+      "estimate": -0.4,
+      "lo": -0.54,
+      "hi": -0.26
+    },
+    {
+      "id": "paraphrase_vs_exact_configured",
+      "estimate": -0.4,
+      "lo": -0.56,
+      "hi": -0.24
+    }
+  ],
+  "orderings": {
+    "arms_exact": [
+      "configured",
+      "hybrid_lexical",
+      "hybrid",
+      "keyword",
+      "vector"
+    ],
+    "arms_paraphrase": [
+      "configured",
+      "hybrid",
+      "vector",
+      "hybrid_lexical",
+      "keyword"
+    ]
+  }
+}

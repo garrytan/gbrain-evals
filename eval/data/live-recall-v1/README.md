@@ -18,3 +18,10 @@ is flagged `visibility: private`. gbrain hides that page from a remote caller, s
 freeze --fixture` drops that task and counts the drop. `test/eval/live-recall-tasks.test.ts` runs the phase 2 runner on
 these tasks with scripted models; the format is in
 [RUN-KIT.md](../../../docs/benchmarks/live-recall/RUN-KIT.md#phase-2-the-task-file).
+
+Batch 3 adds `questions-batch3.jsonl`: four `freshness` questions (a person who changed company, a renewed contract
+price, a reversed decision, a launch date moved after a page's summary was written), each with the newer page as gold
+and the older page as `stale`, and four `entity` questions (two people with one name, a company named like its
+founder's handle, a father and son, a brother and sister), with their sixteen pages in `batch3-pages/`.
+`run --fixture --protocol batch3` adds those pages to the fixture brain and asks those questions; without
+`--protocol batch3` neither is loaded, so batch 1 and batch 2 fixture runs are unchanged.
