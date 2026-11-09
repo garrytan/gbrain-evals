@@ -2,6 +2,93 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.187] - 2026-11-09
+
+### gbrain's read tools turn paraphrased questions about Garry's notes into right answers, and a summarising helper in front of gbrain costs grounded ones
+
+- **Results.** [The live recall phase 2 findings](docs/benchmarks/2026-11-09-live-recall-phase2.md) report the
+  preregistered run on 99 frozen tasks. On paraphrased questions, gbrain's `query`, `search` and `get_page` tools take
+  claude-opus-5-5 from 13.3% to 86.7% correct (+73.5 points, 95% interval 63.9 to 82.5) and particle-1 from 9.3% to
+  68.0% (+58.8, 48.5 to 68.8). A summarising helper between gbrain and the answering model lowers answers that are
+  correct and cite only supporting pages by 14.3 points for claude-opus-5-5 and 14.4 for particle-1, with no measurable
+  change in plain correctness. The public scorecards sit beside the findings, and the docs hub's live recall row now
+  leads with them.
+- **Public scorecards.** `bun eval/runner/live-recall/redact-scorecard.ts <scorecard.json> <scorecard.md> <out dir>`
+  writes the public copy of a live recall task scorecard. It keeps each cell's answer cost per correct answer, drops the
+  run's other cost fields, checks that the Markdown is what the repository renders from the JSON, and prints the hashes
+  of both copies.
+- **Fixed.** `tasks.ts judge` no longer judges again a call that hit the judge's output-token cap. Such a row stays a
+  judge error, as the preregistration says. A judge check that grows past its first step no longer refuses its own
+  `--truncation-waiver` as already used. The counted run had no truncated judge calls, so no published number changes.
+
+### Live recall phase 2: OpenAI cache writes priced as the budget ledger prices them (GBEV-46)
+
+- **Fix.** `eval/runner/q1/usage.ts` now reads `cache_write_tokens` inside `input_tokens_details` (and Chat
+  Completions' `prompt_tokens_details`) as well as at the top level, so an OpenAI response's cache writes are priced
+  at the model's cache-write rate ($2.50 per million for gpt-6.1-sol) instead of as plain input. The paid fixture smoke
+  on 2026-11-08 had priced gpt-6.1-sol at $0.2853 from its records against $0.3325 on the ledger, while Anthropic and
+  particle-1 matched to the cent. The parser is shared, so Cat 40's agent loop and q1's readers, including the memory-qa
+  results q1 reads, get the same fix; Cat 40's text-only claims judge (`runAgentText`) and `p5-agent.ts` still price an
+  OpenAI judge's cache writes as plain input.
+- **Test.** `test/eval/q1-usage.test.ts` prices the 13 real `usage` objects in
+  `eval/data/live-recall-v1/provider-usage-2026-11-08.jsonl` both ways: the loop's price equals the ledger's for every
+  response, and the totals equal that capture's ledger ($0.0831378 Anthropic, $0.013817 OpenAI, $0.00152595
+  particle-1). It fails on the old parser.
+- **Harness digest.** `HARNESS_FILES` now also hashes the cost path the runner prices with (`q1/usage.ts`,
+  `usage-receipt.ts`, `metering-proxy.ts`, and gbrain's `model-pricing.ts`, `model-id.ts` and `embedding-pricing.ts`)
+  and the shared `metrics.ts` its scorecard uses. Before this, the digest was the same with and without the cost fix. A
+  keyless test checks that every runtime import of the agent loop, the budget ledger and the usage parser, relative or
+  from gbrain, is in the list. The counted run's digest and commit requirements are under the
+  preregistration's Frozen sample.
+- **gbrain re-pin.** Phase 2 now measures gbrain 0.60.613.0 (`98dda48fb9fd`, schema 296), the version Wintermute's box
+  runs after GBRA-108's upgrade, instead of 0.60.593.0. The preregistration's dated amendment, recorded before the
+  freeze, lists the two changes arm B can see. The run kit's phase 2 commands load the new commit.
+- **Judge check and Astra judge (R78).** `gpt-6-astra` now judges claude-opus-5-5 and particle-1 rows in place of
+  gpt-6.1-sol, and `claude-opus-5-5` still judges gpt-6.1-sol rows. A new `tasks.ts judge-check` runs before the counted
+  run on 20 frozen tasks: both judge models grade every answer again at effort high, and each counted judge is measured
+  against the answers they grade alike (catch rate, false-fail rate and Cohen's kappa, at least 40 labels and kappa
+  0.6 to pass). Only `judge-check.json` leaves the box, and `tasks.ts run` refuses to start without a passing one
+  (`LR_JUDGE_CHECK`) unless GBEV-3 waives it. Every judge row records its served model version, every comparison
+  reports the tasks that got worse and reads an interval that includes zero as "no measurable difference", and
+  `tasks.ts estimate` shows each judge's cost on its own line and projects the judge check. The counted run's starting
+  cap moves from $360 to $700, the judge check has its own $200 cap, and the box ledger's program cap is $900.
+- **Label floor and truncated judge calls.** If a counted judge has fewer than 40 labels on either primary metric after
+  20 tasks, the judge check adds 10 frozen tasks at a time, up to 40, under the same $200 cap, and applies the pass
+  rule once to the final set; `judge-check.json` lists every step. Every judge row records its 8192-token output cap and
+  whether the call hit it. A truncated call is a judge error, `judge-check.json` reports each judge model's truncation
+  rate, and above 1% the check fails and a judge check or counted run stops (`LR_JUDGE_TRUNCATED`). A counted run also
+  refuses a judge check that stopped at its cap or misses one of its models, arms or the first 20 tasks, a judge-check
+  run no longer writes a scorecard, and `tasks.ts judge` on a judge-check directory exits 7 when the check fails.
+- **A judge check must finish, and truncation is never washed out.** `judge-check.json` counts only finished tasks
+  (answered, judged and labelled in every arm and model) and passes only when every planned task finished, so a check
+  cut short and then re-judged cannot pass on the tasks it reached. The truncation rate counts every judge call, earlier
+  attempts on a re-judged answer included, and a resume or re-judge checks it before any new call. The terminal shows
+  each model's own kappa under Astra.
+- **Readings follow Holm.** A primary comparison whose interval excludes zero but whose Holm-adjusted p is 0.05 or more
+  reads "not significant after correcting for multiple comparisons" (`not_significant_after_correction`), never as a
+  measured difference; descriptive comparisons still read from their interval.
+- **Truncation by model and effort, and GBEV-3's waiver.** The 1% truncation rule now applies separately to each judge
+  model's medium-effort counted verdicts and its high-effort labels. A counted-judge split stops a run, and a label
+  split fails the judge check. `--truncation-waiver <note>` on `run`, `judge-check` or `judge` lifts a stop for the
+  truncations recorded so far, only with GBEV-3's note, recorded as `agent:GBEV-3` in `run.json` and the scorecard; the
+  stop re-arms on new truncations, and truncated rows stay judge errors.
+- **Primaries by task origin.** The first freeze on Garry's brain kept 38 of 100 tasks, because 65 of the gold pages
+  carry `access: private`, so most cross_source and time_window tasks are being replaced with tasks a remote caller can
+  answer. The scorecard's new `by_origin` block, and a markdown table beside the primaries, show the four primaries on
+  the original tasks and on the replacements (marked `replacement: true` in the task file) separately, with counts by
+  type.
+  It is descriptive only, with no Holm correction and no verdict.
+- **Gold clusters as the resampling unit.** In the rebuilt task file, 8 civic pages each serve as gold for two
+  cross_source tasks. Tasks that share any gold page now form one gold cluster, and every interval and the p that Holm
+  adjusts treat the cluster as one unit. That covers the comparisons' cluster bootstrap, the rates' intervals, and an exact sign-flip
+  test over clusters in place of exact McNemar, which it equals when no gold page is shared. The freeze and the
+  scorecard report the cluster count and the sizes of shared clusters, and compute the minimum detectable differences at
+  the cluster count. A test shows that a shared-page pair is resampled together.
+- **Second freeze recorded.** The preregistration's Frozen sample section records the second freeze on Garry's brain:
+  99 of 100 tasks kept after one same-type top-up round (37 original, 62 replacements), 87 gold clusters, minimum
+  detectable differences of 13.4 and 16.0 points, gbrain 0.60.613.0 loaded on a box whose own install is 0.60.618.0,
+  and no part of GST-2059 on the box. The harness and its digest are unchanged.
+
 ## [0.10.186] - 2026-11-09
 
 ### gbrain pin moves to v0.60.623.0: Sol's multi-selector page reads now read, and Cat 25's trajectory gate passes

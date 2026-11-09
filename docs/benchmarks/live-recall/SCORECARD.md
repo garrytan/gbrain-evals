@@ -150,8 +150,9 @@ it the same two ways as phase 1's, before anything is written, refusing with `LR
 1. **Structure.** Every key is one the format defines (gbrain's degraded-stage names, the guard's verbs and refused AI
    call kinds are allowed as keys in their three count maps), every string is an allowlisted word (arm, form, model,
    status, comparison id, barrier, abort code and so on) or a timestamp, hex digest or version, a `provider:model` id
-   only at `run.reranker_model` and `run.embedding_model`, and a short token only at `run.window_note`. Every number is
-   finite. A task, answer, fact or slug has no field it could land in.
+   only at `run.reranker_model` and `run.embedding_model`, a short token only at `run.window_note` and
+   `judge_check.waiver`, and a served model version that starts with a judge's or model's id only under `versions`.
+   Every number is finite. A task, answer, fact or slug has no field it could land in.
 2. **Needle scan.** Both files are searched for every task form, gold answer, required fact, acceptable variant and
    task id, and every slug the run saw, searched or cited. Needles with no letter (a number or a date) are left to the
    structure check.
@@ -166,14 +167,19 @@ Top level:
   runner's source files), gbrain's pinned and loaded versions and commits, schema version, engine, barrier, connection,
   `control` (true for the public fixture), search mode, reranker, embedding model, `privacy_posture` (`remote`),
   `remote_private_pages` (false), `crag_escalation`, `crag_think`, `result_cache`, `tool_defs_digest` (sha256 of the
-  gbrain tool definitions sent), models, arms, forms, `judges` (model to counted judge), the second judge, effort, output
+  gbrain tool definitions sent), models, arms, forms, `judges` (model to counted judge), the second judge, `labellers`
+  and `label_effort` (a judge-check run only, else null), effort, output
   and turn limits, tool result, paste and page caps, `budget_usd` (the starting cap), `final_cap_usd` (the cap the run's
   ledger run records after any extensions), `cap_extensions` (how many times GBEV-3 extended the cap after a cap stop),
-  `window_note`, concurrency and `openai_store`.
+  `window_note`, concurrency, `openai_store` and `truncation_waivers` (each GBEV-3 note that lifted a truncation stop:
+  `note`, `by` `agent:GBEV-3`, `at`, and `waived`, the truncated counted-judge calls it covered by model and effort).
 - `tasks`: submitted, kept at the freeze, dropped as unreachable, lost since the freeze, kept at the run, the task file's
-  sha256 prefix, N frozen, counts by type and by how each gold page was found, and `mdd_primaries` (the minimum
-  detectable difference at N frozen for 10%, 20% and 30% discordant pairs, at alpha 0.05 and at Holm's 0.0125).
-- `cost`: `model_calls_usd` and `by_role_usd` (answer, summariser, judge, second judge), each priced from the response's
+  sha256 prefix, N frozen, counts by type and by how each gold page was found, `gold_clusters` (`n`, the number of gold
+  clusters among the tasks scored, where tasks sharing any gold page form one cluster, and `shared`, the sizes of the
+  clusters holding more than one task, largest first), and `mdd_primaries` (the minimum detectable difference at that
+  cluster count for 10%, 20% and 30% discordant pairs, at alpha 0.05 and at Holm's 0.0125).
+- `cost`: `model_calls_usd` and `by_role_usd` (answer, summariser, judge, second judge, and `label` for a judge-check
+  run's labellers), each priced from the response's
   usage at the ledger's list prices; `ledger_usd`, the ledger's total for this run directory's own ledger run across
   all its sessions (never another run directory's or runner's spend); and `other_usd`, the difference
   (gbrain's embedding and rerank calls, and requests retried after a failure).
@@ -181,22 +187,65 @@ Top level:
   `model_errors` (counted no-answers from a model-caused 400), `excluded` by reason (`harness_error`, `timed_out`, `degraded`, `judge_error`, `unjudged`, `not_run`), `invalid` and
   `invalid_reason` (`errors_over_cap` or `degraded_over_cap`), and `rates`: `correct`, `correct_grounded` (null for A),
   `partial`, `abstained`, `no_answer`, `confidently_wrong` and `contradicted`, each as `k`, `n`, `point` and `ci95` (Wilson;
-  a cluster bootstrap over tasks when pooled). Then `citations` (mean per answer, supported share), `exposure` (shares
+  a cluster bootstrap over gold clusters when pooled or when any gold cluster holds more than one task). Then `citations` (mean per answer, supported share), `exposure` (shares
   that `searched`, saw, opened and cited a gold page, `summary_gold_cited` for C and `pasted_gold` for D), turns and tool
   calls per episode, latency p50 and p95 in milliseconds, `tokens` by kind, `cost_usd` by role and
   `answer_cost_per_correct_usd`. Pooled cells carry no tokens or cost.
 - `comparisons`: the four primaries (`primary` `P1` or `P2`) and the descriptive set. Each has its id, form, model, arms
-  `a` and `b`, metric, `untested`, `n_pairs`, `mean_a`, `mean_b`, `delta` (b minus a), `ci95` (cluster bootstrap), `mcnemar`
-  (wins, losses, discordant pairs, exact two-sided p; per form only), `p_two_sided`, `p_holm` (primaries only, Holm over
-  the four) and `mde` (the observed minimum detectable difference).
+  `a` and `b`, metric, `untested`, `n_pairs`, `mean_a`, `mean_b`, `delta` (b minus a), `ci95` (cluster bootstrap over
+  gold clusters), `worse_tasks` (tasks where b scored below a, both forms summed when pooled), `reading` (`no_measurable_difference`
+  when the interval includes zero, else `b_higher` or `b_lower`; a primary whose interval excludes zero but whose
+  `p_holm` is 0.05 or more reads `not_significant_after_correction`, so it never reads as a difference Holm does not
+  support; the markdown marks the descriptive copy of each primary),
+  `mcnemar`
+  (task-level wins, losses, discordant pairs and exact two-sided p; per form only, descriptive), `p_two_sided` (per form,
+  the exact two-sided sign-flip test over gold clusters, which equals the exact McNemar p when every cluster is one task;
+  pooled, the cluster sign-flip test), `p_holm` (primaries only, Holm over the four, from `p_two_sided`) and `mde` (the
+  observed minimum detectable difference, from the cluster-robust standard error).
+- `by_origin`: `original` (tasks kept from the first task file) and `replacement` (tasks marked `replacement: true`),
+  each with `n_tasks`, `by_type` and `comparisons`, the four primaries computed on that group alone, in the same shape
+  with `primary` and `p_holm` null and the reading taken from the interval. Descriptive only.
 - `judge_agreement`: `second_judge_correct` (`n`, `agree`, `kappa` between the counted judge and claude-opus-5-5 on
   particle-1's paraphrase rows of B, C and D) and `audit` (Wintermute's `n` and `agree`, or null).
+- `judges`: each judge model's `rows`, how many of them were `truncated` at the output-token cap (each a judge error),
+  and the `versions` its provider reported serving.
+- `judge_check`: the judge check the counted run started from (`judge_check_sha256`, `passed`, GBEV-3's `waiver` note
+  or null, and its `judges` block as below), or null for the fixture and for a judge-check run.
 - `custody`: read-only verified at the start and the end, `guard_refusals` by verb, `ai_refusals` by call kind and
   `degraded_stages` by stage.
 
 `scorecard.md` opens with the status and identity line, then the primary models' paraphrase table with answer cost per
-correct answer, the four primaries with Holm p, every cell, the descriptive comparisons, and the judge, cost and custody
-lines.
+correct answer, the four primaries with their reading, tasks worse and Holm p, the primaries on original and replacement tasks (descriptive),
+every cell, the descriptive comparisons,
+and the judge (versions and the judge check), cost and custody lines.
+
+## Judge check (live-recall-judge-check/v1)
+
+`tasks.ts judge-check` (and `tasks.ts judge <judge-check dir>`, which repairs judge errors and rewrites it) writes
+`judge-check.json`, the R78 check in [PHASE2-PREREGISTRATION.md](PHASE2-PREREGISTRATION.md#judge-check-before-the-counted-run-r78),
+checked by the same structure check and needle scan as the scorecard:
+
+- `schema`, `passed` (the check is complete, every counted judge passed both metrics and no judge model's truncation
+  split is above 1%), `thresholds` (`min_labels` 40, `kappa` 0.6, `truncation` 0.01), `n_answers` (answered episodes),
+  `n_tasks_checked` (finished tasks: every arm and model has its final answer and, when answered, its counted verdict and
+  both labels; at least 20 for a counted run to use it), `complete` (every planned task finished and no cap stop
+  outstanding; a counted run refuses an incomplete check), `tasks_sha256` (the task file's sha256, which the counted run
+  must match) and `stop` (`LR_CAP_STOP` while a cap stop is outstanding, else null).
+- `steps`: the label floor's steps in order, each with `n_tasks` and `labels`, counted judge to its label counts on
+  `correct` and `correct_grounded` over that step's tasks. One step when the first 20 tasks gave every judge 40 labels.
+- `truncation`: judge model to effort (`medium` for counted verdicts, `high` for labels) to `rows` (every call at that
+  effort, earlier calls on an answer judged again included), `truncated` and `rate`. Any split above 1% fails the check.
+- `judges`: counted judge to `answer_models` (the models whose rows it judges), `correct` and `correct_grounded` (B, C and
+  D only), and `by_model` with the same two blocks per answering model. Each block has `n_rows`, `unusable` (a counted
+  verdict or a label missing or a judge error), `labeller_agree` and `labeller_kappa` (the two labellers over every
+  usable row), `n_labelled` (rows both labellers grade alike), `n_bad`, `n_good`, `caught` and `catch_rate` (bad
+  answers the counted judge failed), `false_fails` and `false_fail_rate` (good answers it failed), `kappa` (counted
+  verdict against the labels) and `passed`.
+- `versions`: each judge and labeller's rows, truncated rows and served model versions.
+- `run`: start and finish times, runner commit and dirty flag, `harness_digest` (the counted run must match it),
+  gbrain's loaded version and commit, schema version, `control`, effort, `labellers`, `label_effort`, the `models`
+  and `arms` it covered (the counted run's must be among them) and its `truncation_waivers`.
+- `cost`: `model_calls_usd`, `by_role_usd` (answer, summariser, judge, label) and `ledger_usd`.
 
 ## A release gate (proposal, not wired)
 
