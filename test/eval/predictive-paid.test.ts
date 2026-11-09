@@ -12,9 +12,10 @@ import { join } from 'node:path';
 import { BudgetRun, installPaidRequestGuard, ledgerStatus, readLedger } from '../../eval/runner/budget-ledger.ts';
 import { priceUsage, runAgent, type Arm } from '../../eval/runner/cat40/loop.ts';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS } from '../../eval/runner/hermetic-env.ts';
-import { EPISODE_LOG_SCHEMA, meteredFetch, missingKeys, readEpisodeLog, ResumeRefusal, runPaid, type EpisodeUsage, type LogRow, type PaidJob } from '../../eval/runner/predictive/paid.ts';
+import { EPISODE_LOG_SCHEMA, meteredFetch, missingKeys, readEpisodeLog, ResumeRefusal, runPaid, type EpisodeRecord, type EpisodeUsage, type LogRow, type PaidJob } from '../../eval/runner/predictive/paid.ts';
 import { scoreEntityEpisode } from '../../eval/runner/predictive/entity-agent.ts';
 import { generateEntityTasks } from '../../eval/generators/entity-agent-gen.ts';
+import { G3_CAUSES } from '../../eval/generators/write-contract-gen.ts';
 import { main, paidJobs, scorecards } from '../../eval/runner/predictive/run.ts';
 
 const saved: Record<string, string | undefined> = {};
@@ -310,6 +311,31 @@ describe('the paid executor', () => {
     const [card] = scorecards('g4', [right], 1, again.errored_attempts) as Array<{ errored_usd: number; cost_per_correct_usd: number }>;
     expect(card.errored_usd).toBeCloseTo(cappedSpend, 6);
     expect(card.cost_per_correct_usd).toBeCloseTo(cappedSpend + raisedSpend, 6);
+  });
+
+  test('a model or G3 surface with errored or refused spend and no done episode gets a row with its spend, and no other row changes', () => {
+    const usage = { requests: 1, input: 1000, output: 100, cache_read: 0, cache_write: 0 };
+    const row = (key: string, model: string, status: 'errored' | 'refused', extra: Partial<LogRow>): LogRow => ({ schema: EPISODE_LOG_SCHEMA, key, unit: key.split(':')[0], model, status, counted: true, at: 'then', ...extra });
+    const sol = 'gpt-6.1-sol';
+    const [task] = generateEntityTasks({ n: 1 });
+    const right = scoreEntityEpisode({ task, model: MODEL, trial: 0, answer: task.gold, usd: 0.5, stop: 'submitted' });
+    const solRows = [row(`g4:${sol}:${task.id}:0`, sol, 'errored', { usage, error: 'socket hang up' }), row(`g4:${sol}:${task.id}:1`, sol, 'refused', { usage, error: 'cap stop' })];
+    const solUsd = 2 * priceUsage(sol, usage);
+    const g4 = scorecards('g4', [right], 1, solRows) as Array<Record<string, unknown>>;
+    expect(g4).toHaveLength(2);
+    expect(g4[0]).toEqual(scorecards('g4', [right], 1)[0] as Record<string, unknown>);
+    expect(g4[1]).toEqual({ unit: 'G4', model: sol, episodes: 0, usd: expect.closeTo(solUsd, 9), errored_usd: expect.closeTo(solUsd, 9), cost_per_correct_usd: null });
+    expect(scorecards('g4', [], 1, solRows)).toEqual([g4[1]]);
+    expect([scorecards('g4', [], 1), scorecards('g3', [], 1)]).toEqual([[], []]);
+    const write = {
+      task_id: 't1', task_cause: 'missing_provenance', surface: 'cli', model: MODEL, trial: 0, calls: 1, refusals: [], exposure: Object.fromEntries(G3_CAUSES.map(c => [c, 0])),
+      target_landed: true, landed_on_decoy: false, claimed_landed: 1, reported_done_not_landed: 0, ledger: { write_count: 1, pages_written: 0 }, success: true, cause: 'correct', usd: 0.25, stop: 'submitted',
+    } as unknown as EpisodeRecord;
+    const mcpErrored = row(`g3:${MODEL}:t1:mcp:0`, MODEL, 'errored', { record: { success: false, usd: 0.125, stop: 'error', model: MODEL } });
+    const g3 = scorecards('g3', [write], 1, [mcpErrored]) as Array<Record<string, unknown>>;
+    expect(g3).toHaveLength(2);
+    expect(g3[0]).toEqual(scorecards('g3', [write], 1)[0] as Record<string, unknown>);
+    expect(g3[1]).toEqual({ unit: 'G3', model: MODEL, surface: 'mcp', episodes: 0, usd: 0.125, errored_usd: 0.125, cost_per_correct_usd: null });
   });
 
   test('a G4 paid job runs a real episode on the gbrain CLI through the guard', async () => {
