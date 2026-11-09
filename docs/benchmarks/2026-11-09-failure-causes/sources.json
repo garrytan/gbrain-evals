@@ -1,0 +1,1519 @@
+{
+ "schema": "failure-cause-sources/1",
+ "sources": [
+  {
+   "id": "rs1-stage1-dev2",
+   "adapter": "rs1",
+   "visibility": "public",
+   "condition": "natural",
+   "root": "rs1",
+   "gbrain_sha": "27f8b9d6287c2ba635532c7d3bc015c50e1d769b",
+   "note": "RS1 stage 1 on the public BEAM-1M dev conversations 1m-20 and 1m-28 (BEAM b2da22ea, CC BY-SA 4.0), run from gbrain-evals 80518b25. Root: the RS1 stage 1 output archive.",
+   "files": [
+    {
+     "path": "s1/state/results/rs1-dev2.baseline-none.baseline/rs1-dev2.baseline-none.baseline-a1-818c5a81/cells/rs1-dev2.baseline-none.baseline.component-b8000/rows.ndjson",
+     "sha256": "7731bdc904f36fc81fe8334369bbf5ae2923dda6f73c44b9b183ce18e5a9c036",
+     "role": "rows"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.baseline-none.baseline/rs1-dev2.baseline-none.baseline-a1-818c5a81/cells/rs1-dev2.baseline-none.baseline.component-b8000/answers.ndjson",
+     "sha256": "f9862dffa64aaa216a04b5349e6a8663b15b416903a878928e2ea85fd2468b8a",
+     "role": "answers"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.baseline-none.baseline/rs1-dev2.baseline-none.baseline-a1-818c5a81/cells/rs1-dev2.baseline-none.baseline.component-b8000/judgments.ndjson",
+     "sha256": "1db851fc2cacbd34cc13b4ece1c9f2262659145825ecd15268087d8bddf091bf",
+     "role": "judgments"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.ext-extract-first.common/rs1-dev2.ext-extract-first.common-a1-5f048546/cells/rs1-dev2.ext-extract-first.common.component-b8000/rows.ndjson",
+     "sha256": "a42a832cff80a5532907603ff4f46bd12934315f49fddf5fa84e5d3f22940218",
+     "role": "rows"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.ext-extract-first.common/rs1-dev2.ext-extract-first.common-a1-5f048546/cells/rs1-dev2.ext-extract-first.common.component-b8000/answers.ndjson",
+     "sha256": "56951ddf96881b5429f7a6afd2a9ed88cb9e9aaf6abf1d3a18c657f52983615d",
+     "role": "answers"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.ext-extract-first.common/rs1-dev2.ext-extract-first.common-a1-5f048546/cells/rs1-dev2.ext-extract-first.common.component-b8000/judgments.ndjson",
+     "sha256": "2b1c187452033a39b2b4fa8b6a20c3f1e758131d851d71e02a82cc20cefb5cc1",
+     "role": "judgments"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.ext-memory-bank.recipe/rs1-dev2.ext-memory-bank.recipe-a1-62c20027/cells/rs1-dev2.ext-memory-bank.recipe.component-b8000/rows.ndjson",
+     "sha256": "85d591ae9850dac25c14efdb36cf1a0dc77cb2cd9328b6d1c33395225232779f",
+     "role": "rows"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.ext-memory-bank.recipe/rs1-dev2.ext-memory-bank.recipe-a1-62c20027/cells/rs1-dev2.ext-memory-bank.recipe.component-b8000/answers.ndjson",
+     "sha256": "d6c1d3cba2408de01d9a36fc8754c9491e88002358ff6bef376607f5557c7524",
+     "role": "answers"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.ext-memory-bank.recipe/rs1-dev2.ext-memory-bank.recipe-a1-62c20027/cells/rs1-dev2.ext-memory-bank.recipe.component-b8000/judgments.ndjson",
+     "sha256": "4d8bf38d2d8b6a6b037727cf5ca2537e153e3e1eb0c8bcaf07717063b11e1a80",
+     "role": "judgments"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.gbrain-defaults.rs1-stable/rs1-dev2.gbrain-defaults.rs1-stable-a1-d3284eb6/cells/rs1-dev2.gbrain-defaults.rs1-stable.p/rows.ndjson",
+     "sha256": "e26a7413d50ec58c7cb050c3f82b4774ceedc4f9e42979e38ef0aae9c0023797",
+     "role": "rows"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.gbrain-defaults.rs1-stable/rs1-dev2.gbrain-defaults.rs1-stable-a1-d3284eb6/cells/rs1-dev2.gbrain-defaults.rs1-stable.p/answers.ndjson",
+     "sha256": "c049d2ac8eaa23f3f2746dd28a9ea755bdf6f5b70fcc148ebc99d6d2e650dc92",
+     "role": "answers"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.gbrain-defaults.rs1-stable/rs1-dev2.gbrain-defaults.rs1-stable-a1-d3284eb6/cells/rs1-dev2.gbrain-defaults.rs1-stable.p/judgments.ndjson",
+     "sha256": "793948b9ed3fa1ee3f1b503c82527c5dcfad877d0def3395ebcca19301887c67",
+     "role": "judgments"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.baseline-none.baseline/rs1-dev2.baseline-none.baseline-a1-818c5a81/runs/rs1-dev2.baseline-none.baseline/contexts.ndjson",
+     "sha256": "f1ea9eaedeae7f72d4b2a3ad41d9af67484a887628e3b7a49f03f4a84aa67eb4",
+     "role": "contexts"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.ext-extract-first.common/rs1-dev2.ext-extract-first.common-a1-5f048546/runs/rs1-dev2.ext-extract-first.common/contexts.ndjson",
+     "sha256": "eed651ccc242b0b98c3480a45bfa05119e02b937b4568204e0535bcc743f3ecc",
+     "role": "contexts"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.ext-memory-bank.recipe/rs1-dev2.ext-memory-bank.recipe-a1-62c20027/runs/rs1-dev2.ext-memory-bank.recipe/contexts.ndjson",
+     "sha256": "6abd90638d79c6cf848c82f2e3637fa8d6a0725b90eabeb03fcb72981d2b2686",
+     "role": "contexts"
+    },
+    {
+     "path": "s1/state/results/rs1-dev2.gbrain-defaults.rs1-stable/rs1-dev2.gbrain-defaults.rs1-stable-a1-d3284eb6/runs/rs1-dev2.gbrain-defaults.rs1-stable/contexts.ndjson",
+     "sha256": "33b37d395a6f5c10d76b8d8696e71cb6a3b506d2f7120ee1705309427d5dd228",
+     "role": "contexts"
+    },
+    {
+     "path": "gold/1m-20-probing_questions.json",
+     "sha256": "7f9d121386bed47be754aede8acdf70578880c9f91a4f2a4718424f65a7dbd67",
+     "role": "gold"
+    },
+    {
+     "path": "gold/1m-28-probing_questions.json",
+     "sha256": "40741124c30aeaaf9e576582edcde7501cb9db415cabffa43e0ef1b49b05892f",
+     "role": "gold"
+    }
+   ]
+  },
+  {
+   "id": "cat40-next-confirm-public",
+   "adapter": "cat40",
+   "visibility": "synthetic",
+   "condition": "natural",
+   "root": "repo",
+   "note": "The newest counted Cat 40 run: the next-wave confirmation on public worlds P1 and P2 (2026-10-14). gbrain shas come from each arm run's experiment.json.",
+   "files": [
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/baseline/results.jsonl",
+     "sha256": "0b21831bb0a90f9f753a352e9b339fa555834407ac41cbee5a2bf6c5706608e5",
+     "role": "results"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/baseline/transcripts.jsonl.gz",
+     "sha256": "5612e71512aea0574e14c216da5f78f1fe49d378612a884d87f37e41c95776be",
+     "role": "transcripts"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/baseline/experiment.json",
+     "sha256": "66404aa860e1884a8002f66cdf86e088e162282229dbe60270fb68743900ad1d",
+     "role": "experiment"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/wave/results.jsonl",
+     "sha256": "7e54b823f268456cded3c1d59e88aaec514f8502d272f09ada5c0818f19e208e",
+     "role": "results"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/wave/transcripts.jsonl.gz",
+     "sha256": "85c29ca1679504ddfed53f2a65e294fd8e80a926af6f0dd153c4b887518d1282",
+     "role": "transcripts"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/wave/experiment.json",
+     "sha256": "56c2f78598f13aeac812b87997896c23ce15e68eb117585d26bcbef6f410a7e7",
+     "role": "experiment"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/fs/results.jsonl",
+     "sha256": "20b88de11c183b0c32888a9472258779a81798696b41c7a2ed51938dfff4184a",
+     "role": "results"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/fs/transcripts.jsonl.gz",
+     "sha256": "f4163bea1eee5f0639ec2fc024abc6692cfc4aaa6855e4294270e756fc5f2008",
+     "role": "transcripts"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/fs/experiment.json",
+     "sha256": "13b83765348081d77048a8e57a32e759a1fb72d41df3db124367b15a0528b91f",
+     "role": "experiment"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/oracle/results.jsonl",
+     "sha256": "28a57c4eae55d6f8a2add67e9d5abe15b2d88009f8174870f538343c0bb5773b",
+     "role": "results"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/oracle/transcripts.jsonl.gz",
+     "sha256": "a1588ba4187673dabf2fba907ecc01f05718609487544f8a4f66b43e9b05e970",
+     "role": "transcripts"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p1/oracle/experiment.json",
+     "sha256": "285eabfbad7401a89a2c1b50ad50854b06016677b6e59992167a07594be9298c",
+     "role": "experiment"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/baseline/results.jsonl",
+     "sha256": "0469e99ea244482049fdc3c3c99e6dc82cbb5c70a759fb914da5252f65ed7553",
+     "role": "results"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/baseline/transcripts.jsonl.gz",
+     "sha256": "3c539cbdec7ef8788045a031c336629a8685cd63e7a072a3e182a204fcd2b50a",
+     "role": "transcripts"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/baseline/experiment.json",
+     "sha256": "b76dd5563332bee5c226c653729ebd8295c3bb205434a40a89c061b707a06dd4",
+     "role": "experiment"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/wave/results.jsonl",
+     "sha256": "54bad776d2ed0cba5d7f44316e0fb02dd17507d993921e84684a2c790b835c21",
+     "role": "results"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/wave/transcripts.jsonl.gz",
+     "sha256": "a34da54025d8398a116ec24d92f828174782da2bbaf7c1a9ffd0f73edf5c863c",
+     "role": "transcripts"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/wave/experiment.json",
+     "sha256": "f97d6ada82aa7a75c17ea29ef7564a17c89e4704652f0b0500f44bc168bb1274",
+     "role": "experiment"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/fs/results.jsonl",
+     "sha256": "719ec40b448923edc1721e1f32fa0b0fc0c29bd67e835b70b27d69a0c970044f",
+     "role": "results"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/fs/transcripts.jsonl.gz",
+     "sha256": "cf9851e88b8b4d60d840d320607b5fa4851eef14d71ca1664f421503f6fcb431",
+     "role": "transcripts"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/fs/experiment.json",
+     "sha256": "f51584700c3cf937295ff237903b71dd5f45a740b1179f8e20ec0165bee55296",
+     "role": "experiment"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/oracle/results.jsonl",
+     "sha256": "6446d9ec418c21af604ae3619749c78b91aa9766e16edb5c2043ed7bde13fd89",
+     "role": "results"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/oracle/transcripts.jsonl.gz",
+     "sha256": "6fd0772d225e5286b00474ab0a2df6e5a13097038c0e1f40cb5ec84bfbf13983",
+     "role": "transcripts"
+    },
+    {
+     "path": "docs/benchmarks/2026-10-14-cat40-next-confirm-public/p2/oracle/experiment.json",
+     "sha256": "a16122464bfbff60a323875b3b4f360e57aac5a6fa35f8e5e1aefa6ba94eb11f",
+     "role": "experiment"
+    }
+   ]
+  },
+  {
+   "id": "refresh-barrier-partc",
+   "adapter": "refresh-barrier",
+   "visibility": "synthetic",
+   "condition": "forced",
+   "root": "partc",
+   "gbrain_sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+   "note": "Refresh barrier Part C agent check, counted run: every task forces a worktree refresh refusal. Root: the Part C output archive.",
+   "files": [
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-1.json",
+     "sha256": "12909fa837c298acf228ebe148a3c092d0e4d6a2e2173e408a894a059f7c69c2",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-10.json",
+     "sha256": "a5ab1bd97457f4a943d18e58f239ac85591e07d1feba6a2d5d4f80fcfa7cbe28",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-11.json",
+     "sha256": "153046f8a128e23f02d1f462b60b4d15a9f02749edcbbc33fc2b24e2541936d4",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-12.json",
+     "sha256": "f3247290f0f433137c9e9998e5c563940bb867b6257a89c71ba593ccae216e16",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-13.json",
+     "sha256": "41f1574bdd3ffb0638d785c0a6bc01a48021e171aae0be18573a331f5f4ae700",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-14.json",
+     "sha256": "7b01c19dda45f8fd905f6807470cddb75bf818b757823ddfac2a71580aa9af67",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-15.json",
+     "sha256": "1937cdbf50e24c14eb3509e8af5a6c9dfb4aaa3315ddc2fdeb366b8c8ff633e1",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-16.json",
+     "sha256": "ee060a6a56842eb3fa7f57aa0d1f592ea4098773b86eb8ca124e826e171bf880",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-17.json",
+     "sha256": "f4e0c1a2b13b55e9a7075f67900012105dfd1b0eaf68b7507bcf4b4d74dbf3a2",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-18.json",
+     "sha256": "3174c0506c8c8f746df0fab5d6ec5952dbc379006b5cd19a0336c6f151408d83",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-19.json",
+     "sha256": "5b516fed0edfbd69353b48871034c0c10a97c36c3acb2e0c2ca71cbe1df40116",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-2.json",
+     "sha256": "a42a5ccd34d8e3b55ec10466c3fb8b82c14d63d319aef4573ba8d568668d59b4",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-20.json",
+     "sha256": "4db8c932b458bd48f2755d0317d8809bfa1ff54d9c16b959a3cff881e543c5d5",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-21.json",
+     "sha256": "6a62d29d6507b4cefd2a96ab318b561a7aa583506a37b2379edc47f30047205d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-22.json",
+     "sha256": "5d5145650510da445f84aa43f13fec03d0c31669f479bd9dd4b8476e47ae312c",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-23.json",
+     "sha256": "f0d7e2921e02964d44bfcc0fbb7c0c9ed5b969dc3c8b5f5e1829d2096549ca30",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-24.json",
+     "sha256": "f0825e94ebe2a8c4c6b7f60f9fc2452c40450fe8113c88724ba04c5195308639",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-25.json",
+     "sha256": "df2e91eceda333b7a027216164e0a1d074b032c67a4a7479724204909b1baa3a",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-26.json",
+     "sha256": "58a371ea024a10041ab140b197d210ff31e46000a05767d67bb1aef6dc2455da",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-27.json",
+     "sha256": "a4b91759f0786d239ed728d6d1e04f3f8cf57924aa69b143babbaf4d7ac9d611",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-28.json",
+     "sha256": "0998e7226ea4ddaad1e47b601ca596d377de3d362af9878266be32a6b5f8169a",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-29.json",
+     "sha256": "1517b73ff4ddb31850569683c3f0ce76ff6b7068011d1031a1ba7b63d611da80",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-3.json",
+     "sha256": "81961742c9e36b5a0b8e9067a65a357a2401e3839b4d287d3529e0a4124e5a6f",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-30.json",
+     "sha256": "26ae93cd754e8efdf3429ce01bffe7eb6f74d7113374c106a5506dcfe76764f8",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-31.json",
+     "sha256": "a551e9b2584b9ed4292ca305db3c11c7418989bbf222c3567c8f45c17a2db7e9",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-32.json",
+     "sha256": "3f7b746daec70ae7351b1ae917a39fbab63d74dc9789831f8b6aad40cfb43fb1",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-33.json",
+     "sha256": "d5ecc339c8e0316f7a050956397659a1e9db7bd68d8a20be00db002ac4bc449a",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-34.json",
+     "sha256": "8edf8c37ec751bf2bbc5a1654a62d9c41663f57695a5a267c168b51741abac0f",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-35.json",
+     "sha256": "d61a4b3455f534352d0dbf573eb3f5746ab0de6d705eef1bdf081ad6dc94c9b8",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-36.json",
+     "sha256": "8ecd2f909f7f150661889c74124b01513cebaccf302779f585574a7596d04cd8",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-37.json",
+     "sha256": "7d9b25bdcaf585187fff12aecc4fe1f57c8630e5ac6cfc8d63c5c7b082c559f7",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-38.json",
+     "sha256": "02139e9d29646c492688219cbe7815be99ccd7b61ec5b0c0510ffe4ffb83ddc3",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-39.json",
+     "sha256": "ac37a765fa166e065bb1fad7d17603a62e81f4157b51b5be4048aa59042e0c5e",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-4.json",
+     "sha256": "c12d231e823b67ef91f0eb68bb6178a91e23c10023b88312047931dafdcdaa30",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-40.json",
+     "sha256": "9fa9ace3b3daba4c3e5e17baeb34209576d1231e059a7ff8a79ef25479d7c1a0",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-41.json",
+     "sha256": "9c4940df153784e88478fbe3121dc289e66711de08ce07a3d69bd8f66ad46f3f",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-42.json",
+     "sha256": "05469314fa7634b633db08303e3d032434ec2d10470e5569a24b4fb7aa5baf32",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-43.json",
+     "sha256": "54a16da4438d8c3e9d4878d6261aa9408ec01bb4c4ae209dae4fb579e470df49",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-44.json",
+     "sha256": "c7fadd437502e0d1f72fe75b3d7cf8c98fcb3c115583ef5c7f176dedb5920f47",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-45.json",
+     "sha256": "2335ae77606ac8cf4a3fa6e7918f8e44d89984d4ad58bbc8989cc76dea6289bd",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-46.json",
+     "sha256": "dd9a8e076a0ed636e571fdeca419ce935f53a0a952c43e31fb5b4099d05c8084",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-47.json",
+     "sha256": "fb1219a5d59515ee50171931ac39ecdbebea0220a4ac0764fea139cdfc45df6a",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-48.json",
+     "sha256": "c65577066f8623e6bfc42caa1bdea7f44a76945a143debfc03845aa2d7e2e594",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-49.json",
+     "sha256": "2762266fda13689b27605ecf0ca03fc1985e36c30f4d6fea60e883b39e919dcf",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-5.json",
+     "sha256": "d94b66bba66668b74e2ee6de26ce0059209befdfecd9dff7c39b7258a4ce7a3c",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-50.json",
+     "sha256": "f0321d39425b4b0724ff0f5dce19fc598096f52a61e1170381d6bfaa4291a028",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-51.json",
+     "sha256": "a78eb919b563609dd6d7e64b48b48cd24954566e6bafea93eae61c60dac908b0",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-52.json",
+     "sha256": "24da4d3b222b32193ae44fd69633755440730d4c07f90c7f0e7f155893e8fdd4",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-53.json",
+     "sha256": "9df5fbe9bc2e529bd0953f3a2b7f4b163dd1d555faad01a5d2240c0e00ab8c5d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-54.json",
+     "sha256": "76a81951cac54935ca23e594265fdfdea900d1b37c537af1eb42abb2dda52bb3",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-55.json",
+     "sha256": "d2428c963c1ffa717751984fe995e21dbac8b3f21b20f7024a5658618f9bc1f0",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-56.json",
+     "sha256": "463cd46df7b10adcbf18881e220bf9cecdfcc584ce8d6a1c230012a2d72012d8",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-57.json",
+     "sha256": "90f1bf93ec698342d56e38bdc4b215f874a2165711537c98cb3854998bd0baf5",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-58.json",
+     "sha256": "758f64d8fe8c826cfe4e7d42616ec088bc5cb2d5fe30d6c87a2376560afc9b7e",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-59.json",
+     "sha256": "15e17bd6298bea7a9dc4f48b2685f415e3025d83d15ecb33fdd172cec26064f0",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-6.json",
+     "sha256": "0f5cc4d230248f617159f5dd19e19486f5bb40944eba0c94e4a71240f5d5d9b0",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-60.json",
+     "sha256": "cf378ba3663fc17b4369242c1b15e871ab5016d218645da42ae3fcf0f8999521",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-7.json",
+     "sha256": "d264d5cc7823ae19998ae2283a6e0a36b4c4ddb958b8859ce03daef38c7a9229",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-8.json",
+     "sha256": "52ea57ff9092f4d5969eedb8814c41b3c078e7737d0a3ab58dcb859fc3ed3050",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/off/task-9.json",
+     "sha256": "f5bcb941877bbc84d2011ecccb445a73a182f47e087f296069cba24a7f01329b",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-1.json",
+     "sha256": "a7091fdfca60658ecd75537efc4157c7ff4664731084c20ad71af369739dcdd4",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-10.json",
+     "sha256": "80a2019e5bf76241a00063a1aa9099041ec7cc409361410ebd548e92ff8d97a5",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-11.json",
+     "sha256": "d34154b81ecedd7fea4f15e1d96133e663e93035d5f300edd09faf677f5d25de",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-12.json",
+     "sha256": "e555ba92db054249d37a1e80c490a619323fcdbee17fd3d12bd5279bbad72bdb",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-13.json",
+     "sha256": "329a52a8d3c538e54c4a2a34841cf6d10c6a6021d4949181f7e9d4d5918f2153",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-14.json",
+     "sha256": "577970a4d11b3d16177cb18776acd2e1f0d977df533556670807e3e33891be72",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-15.json",
+     "sha256": "aa95103c0028c8573d0fc83d8dd42e623aa70eed52e0fec70336ec6f269adb7b",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-16.json",
+     "sha256": "1d769882665495127c5d3fa790972c7d494673c9cc76cb6b29075d2b89fab884",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-17.json",
+     "sha256": "8581f060a6df992d405bb27af998d5592deee82dcf14f23eef8fa025ab41f450",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-18.json",
+     "sha256": "e84cdc02b3e7b7275a2d722fea9a955373c0f3e7e97d84d397f9e2a4e6b75614",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-19.json",
+     "sha256": "e327277d713292da49071e901d2522f27b4db03857c54e4e171ec668346335db",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-2.json",
+     "sha256": "0a34064ba25f54fd204f50f54d0b95a9017bbc9caab39c9e1758f3b3a4cd1adf",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-20.json",
+     "sha256": "50526846987c7322eb4869a47d36810837d7a9df1632392a5fcca6c90dbb3102",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-21.json",
+     "sha256": "60a7d133be096cf26b82ce808b66c44d79cf2575c176d3184cb8fb5a03c61586",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-22.json",
+     "sha256": "5d1fab8e8b100302ea03ec5d6c06b090d5758e63a0169d0f7a58de5e22e8ccdb",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-23.json",
+     "sha256": "66a7b42a0a097cf84f82544fd57ccf0c7fe978cf8181d566759fc28f60056dff",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-24.json",
+     "sha256": "dd9fd24e77e54fbb67880467eb44c199b2ef5474e99334578ac12df05c7825a2",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-25.json",
+     "sha256": "c44f6ff9b8b76da5049a13431b5d24f748c29944e20076a95bbc1d5f44c06cf9",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-26.json",
+     "sha256": "a867e17957333024cc41381f0b2421801115f1994477f9ec8f775d11c035f2e1",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-27.json",
+     "sha256": "7a716bae4dd0715eb7aad3c5f67e86846ddf11eae436061f3cd45a962085cdc0",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-28.json",
+     "sha256": "2ed4a9b6615aac8206a801803f2178cfb676d6bce7421406aeb40e69d4f0cdad",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-29.json",
+     "sha256": "71f3c5e94afcf1d1276205515ecae3ddf57333d441f182e8dc8776613c927eb6",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-3.json",
+     "sha256": "e373f92967fd568d6c443ac761d69f8853fd2ae2644e510f7498b58249ad6833",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-30.json",
+     "sha256": "e5d212ab105c4e5f32cabca70b0314c876b4091e29ca5d6ccfd385e035024850",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-31.json",
+     "sha256": "ee7cf79d8b8a76eec4d45205f865edd157a8ca6ad8bf536127a0890620f2f839",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-32.json",
+     "sha256": "e7fffd7debe97a0b68d19108157b68a03baa61917b23b76598aba867a671e2a8",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-33.json",
+     "sha256": "09098b42a97bb8e091e5968c57082aff3c27ccd7a6ed77076fc4dfb568246518",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-34.json",
+     "sha256": "2af89f7d34aca924180febf7309bf4bca2eb49860edfa63bfd6ed1739594fee5",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-35.json",
+     "sha256": "6881e9357f5247e750952bf4475e5ced96554d37735ff3abda794dbe0e96fd0a",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-36.json",
+     "sha256": "e7dd54fdd51694f880d75e13bd71a73426e3371a625b725990c0328d046c718e",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-37.json",
+     "sha256": "6d4ca235dec55c412e7e94840ee943a045c1a3356e60d2633fd9ec4877aadbf0",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-38.json",
+     "sha256": "3a8531eed0da233b20cd3a59842d70314e051e2414094555447709fe1d1ec4b2",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-39.json",
+     "sha256": "d17dc0392a9deaf3d9cf992018ee3302015e9267ff1aa5d233e8a4afc96d4962",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-4.json",
+     "sha256": "dd0a0fe52c9a02037972f38fc224986cdf7031e4b24d3d7d25a32911e5ca1693",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-40.json",
+     "sha256": "2885442f03f7d8251cdfb6e99fee0ed6ec41ad7717d6554370e9e251a05d0393",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-41.json",
+     "sha256": "520d684658f4eb7c245bd07482afa0802c5b07b42594460d9b9b92350c03ba5e",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-42.json",
+     "sha256": "adfcdf81f73ce9e3336351dc216114f7e4806dc369552f55208602455e80b4d7",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-43.json",
+     "sha256": "31921336ebf512b92cdd56a991fd8653a24e4618a324e306a9f1628a5e9d9762",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-44.json",
+     "sha256": "487578704dff375074f6e32ed63a935a88cee120905db047b360f385498e3243",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-45.json",
+     "sha256": "aab65d426b6978a592b82a6006855941ad54f53f9a6656ee13c826da4c888c92",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-46.json",
+     "sha256": "a19728ce3653a7f3de3dd67cbd36e6536f77aac537ddff0d63f39ee44d1fe79d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-47.json",
+     "sha256": "d442dea3762e3861ab923398590566b5bcfd4042138e389927c6db2bfb23e4cc",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-48.json",
+     "sha256": "926dc5ac425523eb3c9faf99539c60d79b47026a56c27db9ab226cfad27f9147",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-49.json",
+     "sha256": "70572cd609d569a4dafee6cf560dfc587f0d1589330ffcaa52a72b97a6bb291b",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-5.json",
+     "sha256": "100c613634e624f00a1906c863762b3cff3bd21ae311bac9c11339d8aee712b5",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-50.json",
+     "sha256": "ef0d2bae01010854c0493047e36a6f2da09b305022f4770179b7f137f97559d7",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-51.json",
+     "sha256": "a91ea3c72b461138b04d762583baa13b7670d3fe904eb0c968d9c3304c7fecbf",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-52.json",
+     "sha256": "a049e4d003c90c4dab58287f7bfe591fd8871c9f441a9e8e339995d70c20e51a",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-53.json",
+     "sha256": "5f126095eed1460f32b3afed159afa1ef90e61cc825cec224a3dde45c2ad01f3",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-54.json",
+     "sha256": "611918d1d0461ebc042060a2fa2d99317869a6e80b19d25e7aa6728d5e85f868",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-55.json",
+     "sha256": "1b1e5929a061ffbac9552afe5740b4955a87b0bd0f3f245ef5173bc8b0c9a5c0",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-56.json",
+     "sha256": "56df063488c660fd8daebb094337283327f66d7701c6e256f97e9f30fce06649",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-57.json",
+     "sha256": "f89c94c8c9ef7d8c7aa8829d5ecc5c4d5a3a613c1ff652f4b7c87b4e89665354",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-58.json",
+     "sha256": "4f57a2b84af8522f1be25ac171ba16c472ba37c2a29c67f59647b75eb93642b6",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-59.json",
+     "sha256": "a65fe0990df4cadd3688048e5613077a5c54bf3a0fd0748a09b16a72a9c0354d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-6.json",
+     "sha256": "15800f4e82451c2d2e89656090aa6b1f630ac15de0bfdf4955de4ebe05795d45",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-60.json",
+     "sha256": "dcd984d316b56d3052156e49411e440dff72191c4f608436ec1261129d06f457",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-7.json",
+     "sha256": "5955388bf242b840b5dceed0466aea3bb260bafcc209d232abf517bdcc873ad4",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-8.json",
+     "sha256": "a235638a924c357704a437086f1b6dd7a230da72ca21b725326256597c13958e",
+     "role": "episode"
+    },
+    {
+     "path": "agent/anthropic_claude-opus-5-5/on/task-9.json",
+     "sha256": "ebf13ae42fcf54181d530f134c454eaeed34819b2f46d946fa7357918e553f49",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-1.json",
+     "sha256": "9538c7033faeaa5f8bcc37589b86211b25eebc2714a152d32ef993a6160aa660",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-10.json",
+     "sha256": "b84db68836023e0cf234d345dd9e32d34bb537c6a2cbd87f9ac35305b3069072",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-11.json",
+     "sha256": "050d3f763a04d1a37caa1e00b1491505b679d1491d5e95915f3c9be55b31f02f",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-12.json",
+     "sha256": "e3f44d4b66d7cca9dd7d71c41eafd0b45c10ceae94b30eaa79c99b7c56081f6b",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-13.json",
+     "sha256": "5aba1241012c259dbf613fc64ad916a42721b9c9c5661b93ee2602a979d853fa",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-14.json",
+     "sha256": "042c13585ecc11da475f44ef19e2f5bba4e97edef2bc5f2f0e512385773d6294",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-15.json",
+     "sha256": "16c8627231cdeb6f89dadfbabf6dd2141e34181cff92408019f7248820a3e23d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-16.json",
+     "sha256": "abc354f70b41c7599ccafcf97648e093daae397dc590a00cafc245695bacc2fa",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-17.json",
+     "sha256": "a81eb0192c08fb18d392bb00291edbf73eb0470725b02031f214c444692e3762",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-18.json",
+     "sha256": "e8e0cafe3ab546dada1242a7e5194550e1434aab677ecf22c427dd2295514a84",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-19.json",
+     "sha256": "552160680ab1a0146c284bc2eb55895ff5ce60b96aee4f6f905969ae2a68c575",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-2.json",
+     "sha256": "79dcc767f01845e1d4e532e11b578908861430cd9013fe8c82dbe0c2db821602",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-20.json",
+     "sha256": "6293616d084e12507e92dfc90651baf37fa82eadbcb43150ebb78a67a647d450",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-21.json",
+     "sha256": "c53b6e9a40dc5dc96c4486affd0852e3737b245549b085e8b32bf0804de2c072",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-22.json",
+     "sha256": "e82c694d9b57ede76afeeb5e29e7f86268a79d779e4fce8abf20f38453796be4",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-23.json",
+     "sha256": "d0e034245ad07272ca366f9702deba8fb338da17604039147aff0e32df31da82",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-24.json",
+     "sha256": "e1361969e3ca9cc4997e87f9aee9ec9da6da775761c5de0905338c019f0e1fca",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-25.json",
+     "sha256": "16c32b7182c60a796a6570d27cbff6e9aec7637ec37ffc0ccc5f921dea44b34c",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-26.json",
+     "sha256": "ba3722241efb3227c42991515f7564821e3cf629d559de41fba271ac64893860",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-27.json",
+     "sha256": "3eb1caa443ea0a3a5ec2ff05b3d7b4b63dc6c43ce683025bb173751a107d1aed",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-28.json",
+     "sha256": "d4d9f3002cc362fcf78a1a9deedeb30d49c6f8094c60527cc9edc79631c224bb",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-29.json",
+     "sha256": "bf4ae7246a7fcb95b71168d99e2407c9429dce2af5887671bf3dafcea762c5a4",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-3.json",
+     "sha256": "99a0d1a2a0c5b7626eeddba080d4a253719c43d68a75e7b58e20559676f8dc82",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-30.json",
+     "sha256": "71785198fdf6e2ce6470f69bb7ea6402545ff215a883cad74c7fa24e0818e608",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-31.json",
+     "sha256": "5bd185f2253d9ed10d2f64f539544d8eb5508bb6154f652fdc023671fd7aa4c9",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-32.json",
+     "sha256": "9e759b25fc5e66e5118a421d6a66734a2cb7733809bc95b33daee43d84d45dd7",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-33.json",
+     "sha256": "4ce5c8fa6d12065d2f9b1c7eaeb324d5f6e8e6112296e2eebae93ef564267d74",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-34.json",
+     "sha256": "61896847d9d6b38edce1a95f34da9efb9b28187f5325c4a9995663800b511c19",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-35.json",
+     "sha256": "2f1189775912d5f878c85af38475166eff39b29e3318df015057e8c1e6dc0bf0",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-36.json",
+     "sha256": "d340c29053e953e32f973abdc78b543100a483e16473ca024593b6f893eb89aa",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-37.json",
+     "sha256": "48a7936272d577887a6ae6097d90dba98219d5b9e54ca83a23870f0fb50f5dcf",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-38.json",
+     "sha256": "5043215f56eefadc84cba4cfa4d46db21794c880f2ca703aa24fc0a0a9b4f31f",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-39.json",
+     "sha256": "9c71b65c1bf30b8c2043a9d3c238cff2b3d5546749733590f5d7c41744fb8f7d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-4.json",
+     "sha256": "43fa5ad04711046206a6d940cdd4cd78df1cf64991b772f4c16614a647ab5fd7",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-40.json",
+     "sha256": "505a9ade7de3ec58616de133c267d9b42641640c035906599db3dc5a78d5410a",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-41.json",
+     "sha256": "f4a3872989d2897d9f5cb6a06f787ca6c30414acad6c1f2fdf51ddfd35422c57",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-42.json",
+     "sha256": "2b115f644ae78fa0e99b3cfaf7b07f2bd348fcb04976fa5605bd3cd085cd4a70",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-43.json",
+     "sha256": "7fd8636099a610810d9a3c7c8832c3b507660bf6c3bda412f93c0c03659f0634",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-44.json",
+     "sha256": "67a5c9ff349779319e51a1aa88d159da5448e67e07a6f6ffd35e9bfc2ac4b148",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-45.json",
+     "sha256": "6004df3f8bb471e33e1d17451c93397ee1498fc09ccad500de6747b08591d45b",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-46.json",
+     "sha256": "3408b75f9d0120ab60306d9e3c01f2318e53ac9758835e4a220eebcb02655644",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-47.json",
+     "sha256": "4202fb170439e016286a3d895d6dd1fae5e85cc8d1ddb36423056b5df88aee7c",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-48.json",
+     "sha256": "5a3a5028dbd7774e262768fe88e289db617a97ba74570b608c122a4e824e5f3f",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-49.json",
+     "sha256": "bc83e6c3dcac873735a0e1dc9c71e0188c36dc001602d09d84454e7a091e93fa",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-5.json",
+     "sha256": "9cbf0a0c26f6596675447424cf7f28c002f0d7178d544abfb03f2d616b9224a5",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-50.json",
+     "sha256": "16f4297f4eb643a06ddedad675797671cb2065ba463ec2db579eccdb78a87ab7",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-51.json",
+     "sha256": "5ed67608b759f6c25e40e60f0cc6674d27ca5be2662846eccedbcf6bfa4683a8",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-52.json",
+     "sha256": "07c9ece2962c27c71920d0700f638ca11e528886205c53893514f6161b237c32",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-53.json",
+     "sha256": "814a6974b0f69f4e6c4e8486aefc2efce6ee7edc3dc876520c332ab3da2a7128",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-54.json",
+     "sha256": "38caf7b4e37e77e992b89708e525c1beba7dca214bd975237b4f4a24e2ff761d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-55.json",
+     "sha256": "62908cd5f7b7f4ccde922244bfd69975a8cc4fcfd22e11a0e51ba49c487a79da",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-56.json",
+     "sha256": "1e094c2890804be53fbb45d3efa85a8b05522b661826992172c985efdf85e22b",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-57.json",
+     "sha256": "f46b037f67829efc574f539538289e0672f1ca2b661edb9814b09826cfcfdea6",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-58.json",
+     "sha256": "a58443a4b3046ea16705649d9cd0e5086485fb6d5f451612e1fe27ab19e49024",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-59.json",
+     "sha256": "bfd2ad3ccc6b3d864f0a620b33c44f569c64fe780352f814287e5b3f64e208bf",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-6.json",
+     "sha256": "c2dab265d9f3fe9d9272a277a79e274cf60ba92b6f0b31a0633a1a3ea70ef709",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-60.json",
+     "sha256": "b65b7893304db8b1b1e0e636a1353bdd286b8b253d63e7f8acfd0767cc94e2fb",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-7.json",
+     "sha256": "584e4132ccf562907efe16cea12d65d00f80f25b80d6b414903d9ec5a96b4e42",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-8.json",
+     "sha256": "5dbbb5f3796a668af9cc1d940b8f9871c529756a73661ef8f59f63fecd5195f3",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/off/task-9.json",
+     "sha256": "c630d3fe33aed1f47d5a84fcd05469668cfc1eef92b91042acdcbc2b02a173cf",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-1.json",
+     "sha256": "60ede44fdb9b1eddcfdbf91e88c8ad5c48ecf0f3802445bea92efd4c12963bdd",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-10.json",
+     "sha256": "f55f905423d24473e3560267325bcb4ad1931f666d2cb0b3efb6cad28d37a4e1",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-11.json",
+     "sha256": "9d832c8e2c622e089158a49e22ae7cd7d27a1dd1b1d8818b9d05bc1955fef1d9",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-12.json",
+     "sha256": "743ac8797ce7b60c212e44c2a58c30b0616ff660ba5c46ae2436d554518da4af",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-13.json",
+     "sha256": "249c1a4911c0d2ff6fe282fdb19daf4089e1ae643b0e774d2403753a72b19174",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-14.json",
+     "sha256": "cb3f133598f02439a2ac0c7c9c764e1c91308edace7a8e0c46518fdf6d96e99e",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-15.json",
+     "sha256": "425ec02f4bb5727523ba57efca79f6cf459d4a3e5dbccef17d9936a7fb5293b8",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-16.json",
+     "sha256": "03c9d41c559b0bf9af01e7987013542901754b0de607884341167b5dc155f1a6",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-17.json",
+     "sha256": "873f5d82764ae7a06979e46c7780cce15f79ee0ab128ea25bdee8c88cd50b7bb",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-18.json",
+     "sha256": "e9f77abccb5739d1d548118bd2e20cf91ba1fef1fbeabb5358314a18fc6b7c62",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-19.json",
+     "sha256": "0c0d6d753ecd952a22ad3258a64cb5d41354e9339ece01c69de49f64e98b3b12",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-2.json",
+     "sha256": "282d01e79e82ccc93686781c7be6e4c06a85cb8f62e82e6f59f5e292fab61465",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-20.json",
+     "sha256": "e4a35083fd1c325de21a07020af4867cb3da5d10f32c5a30916ff03d7010adb3",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-21.json",
+     "sha256": "20a7aa2e0521cb00f64423da12dc459a630f87c4b0a546319bec9fb76d4e6a13",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-22.json",
+     "sha256": "bd3d364f0a8fc3564ee1652320e33f7def9d62b5be2da8c679570eeae96a7f53",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-23.json",
+     "sha256": "4b6f0227dec6fa2705c5857364e941bd662fb236e9a927edeb1e08768c265608",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-24.json",
+     "sha256": "20b18bc05cfd283f567bf0e2e792d9644eccccb7f0882a013b79e3552e77cfb5",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-25.json",
+     "sha256": "943ac48bc66844be893d78e0999cdd4b045a5cea2bf7687c87bb8992045a5a72",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-26.json",
+     "sha256": "94ef030813327487c4f60d74f7111fe54db80b04dc2589ded6f64fa94c0b5213",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-27.json",
+     "sha256": "e39cb04e8e7c362c51e91ee44a3e5b841e3ef9eb599249be8e81c147f4b5a83d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-28.json",
+     "sha256": "58fbc3ecf91df2323bbc40aba9e41974aa9d629b7936bb191712786b97b5e3db",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-29.json",
+     "sha256": "6568ff2e300bb17c2e0f9f84d98b417adaa8795482ef6094cfe8cc3bd0fe6bdc",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-3.json",
+     "sha256": "6ac13a3c207b1414c6f9446433a0d5ae64ae6ea3818d773eb335b122d34e3396",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-30.json",
+     "sha256": "b19dcfda08bf02fec7fd9853b604373aba480fa01652df2cd452a3c6b1c09872",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-31.json",
+     "sha256": "2d130d4690675151688d0aae1d763c09030b95f801bdbcdb1cd7eedbb5988fe2",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-32.json",
+     "sha256": "64c85ee1c237944c301a412f4fe9326ff1182c3b0d4d644cf494f8a1afa867c4",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-33.json",
+     "sha256": "99ccba8fd577fb49ba4a50c118c75d378d2b39d34a1929f94cb052cdf303f812",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-34.json",
+     "sha256": "4d749dd4f713c3b5970157e3f560edb0d84d1762959e3f3e06dd5b230354b0ae",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-35.json",
+     "sha256": "7e7eeebf65dbf77b88f55dab0ecd9f58496ec0a4636d2306e28093ef9ad082fa",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-36.json",
+     "sha256": "10af3188f79194b0d32bddc633da01e97f905104b6fcb60bb56f92d40675dfde",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-37.json",
+     "sha256": "a0bad83963c36221c54bef4d915832bfc8a591d38365864c87737e265e795dee",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-38.json",
+     "sha256": "687d926ce4bbe5d421c241dc3f3ddd456a3e780174b2c3c0ef9f70c47563279d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-39.json",
+     "sha256": "f6453d7ab10922bbbe0be28298d7b51008e320013f6c87b94e95f941908a8ba6",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-4.json",
+     "sha256": "6c3cfa4b9004c750daa08f84e5e84ab0e656f7fb5276637c125a0dc27071e935",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-40.json",
+     "sha256": "18f95ee30e50383d5b7f390e9e6d3578c039719320e72e038917e0414ffb27c9",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-41.json",
+     "sha256": "4b0b34d13b2801c863f2ea308135f779c643c518f7071c894b46104f5f2711d4",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-42.json",
+     "sha256": "55608a99e5f5490288b8389148a5665452e2c620ffd0bf1d2b91316965b3397c",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-43.json",
+     "sha256": "bba072f962e0d68ada1d36d7d99f07cf4c5ad45c25e1dc64125ac46bf353f8ba",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-44.json",
+     "sha256": "f4466d14deec444e0cb495c1715173075c4a9b58416717f45879c77462834d95",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-45.json",
+     "sha256": "c8dd58586cdd1ad10c9feacdb6ca359e55e38f63f9155da8594482ef33131688",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-46.json",
+     "sha256": "c4fe89687841e8590522a87c8ac592b9256dea3e7b9a69453f23067514d06875",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-47.json",
+     "sha256": "bb1d472260bb6771454617d342c555d14fbe84a15d76096929497629e9bb4e75",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-48.json",
+     "sha256": "e8330302feb8dc1ddf1949f2e809ad96de71e37044780771f04194bdc6948b3c",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-49.json",
+     "sha256": "093eb2c495194eaf4390385b5eefe304b0c6dd6b6b18f7649d74e8651aeaacc9",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-5.json",
+     "sha256": "5178eca1e2f03535dc0f56c7fcf2a224b3e50543c2ca1b8f10147507be5d8019",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-50.json",
+     "sha256": "b9c43114537f5bc7fea2b25d754baab54bfebcf690c874825af11a7e8ee1c96d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-51.json",
+     "sha256": "0c8f89fdf67ac2ec7164011bc581acac08b96dc895bcde648df09e40dbebe7bc",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-52.json",
+     "sha256": "0b87ea47ed6cd8b87772a2c9e56b6ff9ad6c15249cbf707ec9355b8fa9a93e1a",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-53.json",
+     "sha256": "5501b7a892cc91f9f274099f9dbb6d388a98da67cf510a98002590af01ba0bf9",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-54.json",
+     "sha256": "d6817c0ca4a5918d30733cd5010e8326fcb7fe73df20bb05337662181cd838a2",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-55.json",
+     "sha256": "480172c27c1c0cc115b9b62e0704998bcb3bfa5011321d0ed45819234d9f819c",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-56.json",
+     "sha256": "e19129b46b5cb35dcc14c320d0ae8b336d4fc84de4b3e2d4b67dfb367e86458a",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-57.json",
+     "sha256": "86bfdb57f0b696ed1dde487347555e9d4ab6a456204da84fd467972b8a4cf40d",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-58.json",
+     "sha256": "b0c9e30d0db9eab2fba2bf8906c0b5910b82768365feff0f54f05fca5140eade",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-59.json",
+     "sha256": "4f8ba83f081b0093d4c934c0045c520b470cfda10c1c7332a6a9bdae49ffc739",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-6.json",
+     "sha256": "a81b382b41e250a97fc0b0fe6e68cdb1e20cf9ecbcc26dba4c0d2a34f94cc560",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-60.json",
+     "sha256": "f1297184678c8593c6d793e3a03e5f2aa8d481b95e5ee8c79e856ece6e00cdfd",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-7.json",
+     "sha256": "cb1ef5df3687d4dc35dd0835560f1b17d2d103d8807b767183944d42cfb6a6ca",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-8.json",
+     "sha256": "4d58e08386526fcb41ed27640b89a0ce6b7a76c8e389a1ce260f43d9191dc083",
+     "role": "episode"
+    },
+    {
+     "path": "agent/openai_gpt-6.1-sol/on/task-9.json",
+     "sha256": "54c36a423c64a4627d6915bf29824bfa285fb85e4c1353396db2805aaab02afc",
+     "role": "episode"
+    }
+   ]
+  },
+  {
+   "id": "skillopt-probe-sol",
+   "adapter": "skillopt",
+   "visibility": "public",
+   "condition": "forced",
+   "root": "repo",
+   "model": "openai:gpt-6.1-sol",
+   "note": "SkillOpt method probe, Sol proposer inputs (training rollouts of a skill under optimization).",
+   "files": [
+    {
+     "path": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot/sol-briefing-input.txt",
+     "sha256": "ed421bae282d5031c913a13bd7817f8c9508ef949a8405ecdf1137daf805bb4c",
+     "role": "proposer_input"
+    },
+    {
+     "path": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot/sol-fact-check-input.txt",
+     "sha256": "1e9fccc1226c89d92385fa84834fa24b2b0d316d2cd999ecd5a0a06373b573ff",
+     "role": "proposer_input"
+    },
+    {
+     "path": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot/sol-query-input.txt",
+     "sha256": "7c2b92b19f4d7ec65e81534d732b9e755fa0374c9b37485965d4f23a6d43b622",
+     "role": "proposer_input"
+    }
+   ]
+  },
+  {
+   "id": "skillopt-probe-opus",
+   "adapter": "skillopt",
+   "visibility": "public",
+   "condition": "forced",
+   "root": "repo",
+   "model": "anthropic:claude-opus-5-5",
+   "note": "SkillOpt method probe, Opus proposer inputs.",
+   "files": [
+    {
+     "path": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-opus/one-shot/opus-briefing-input.txt",
+     "sha256": "b01a7c6f7bd520e95b26022a77ab448db48413612a61d35f4b714edd23fe6b5c",
+     "role": "proposer_input"
+    },
+    {
+     "path": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-opus/one-shot/opus-fact-check-input.txt",
+     "sha256": "b17193eb867ec11a3cedc146d48979f255ae61273f26f8f4a5024d7045b104a8",
+     "role": "proposer_input"
+    },
+    {
+     "path": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-opus/one-shot/opus-query-input.txt",
+     "sha256": "ad714a9d24129fa8f9ad358523e93c5bf493650c5a4bda26180fc3d182a518ab",
+     "role": "proposer_input"
+    }
+   ]
+  },
+  {
+   "id": "live-recall-batch2",
+   "adapter": "live-recall",
+   "visibility": "public",
+   "condition": "forced",
+   "root": "repo",
+   "note": "Live recall phase 1, batch 2 scorecards: per-arm retrieval aggregates only.",
+   "files": [
+    {
+     "path": "docs/benchmarks/2026-11-07-live-recall-batch2/b2-577-scorecard.json",
+     "sha256": "382fdc3dddfbda53b02ecf98e746af7a0f9c2544c6027f3555c6cc51a5c440b6",
+     "role": "scorecard"
+    },
+    {
+     "path": "docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json",
+     "sha256": "81d805c9e0399c688a5ec11c3fa4b07c8bf90963ec21343981826ea3082cac0d",
+     "role": "scorecard"
+    }
+   ]
+  }
+ ]
+}
