@@ -1,0 +1,9 @@
+{
+ "dataset": "BG1 changing-facts set",
+ "status": "unfilled",
+ "generator": "eval/generators/changing-facts-gen.ts (changing-facts-gen@1) from the custody seed and phrasing, rendered by gemini-3.8-flash and validated in custody by eval/custody/bg1/mint.sh",
+ "layout": "worlds/<id>/world.json and worlds/<id>/questions.json under GBRAIN_EVALS_BG1_SOURCE (mint.sh's <out>/set), id = bg1-001 to bg1-048 (48 mint slots, minted in slot order); worlds/<id>/plan.json sits beside them in custody and is never loaded or pinned here",
+ "note": "Hashes only; no BG1 text is committed. Until the custodian fills it on the custody host, `files` is empty and bg1 loads with a notice that its bytes are unpinned. Once filled, every file the loader reads must be listed here with a matching SHA-256, and every listed file of a loaded world must be present. A filled manifest also lists `kept`, the kept worlds in slot order (the first slots that passed validation; wave A is the first 12), and `n_final` once the pilot sets it (30 to 40); BG1 cells run on that list alone. A refill only adds files and records the earlier fill's sha256 under `earlier_fills` (docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md).",
+ "files": [],
+ "filled_at": null
+}
