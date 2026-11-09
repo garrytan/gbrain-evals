@@ -94,6 +94,14 @@ describe('predictive verdict on the committed references', () => {
     expect(() => readSynthetic({ arms: {} })).toThrow('SYNTHETIC_SCORECARD_INVALID');
   });
 
+  test('a layer is read only from a live-recall scorecard of its protocol, and a scorecard carrying no layer of a measure with a live reference refuses', () => {
+    const asBatch2 = evaluateMeasure('G2', readSynthetic({ ...liveCard(b2.contrasts), protocol: 'batch2' }));
+    expect(asBatch2.verdict).toBe('PREDICTIVE');
+    expect(asBatch2.layers.map(l => [l.id, l.status, l.in_scorecard])).toEqual([['b2', 'available', true], ['b3', 'pending', false]]);
+    expect(() => evaluateMeasure('G2', readSynthetic({ ...liveCard(b2.contrasts), protocol: 'batch3' }))).toThrow('carries no G2 layer');
+    expect(() => evaluateMeasure('G2', readSynthetic(card([])))).toThrow(SyntheticScorecardError);
+  });
+
   test('batch 1 used as the synthetic side lacks batch 2\'s paraphrase primaries, and on the contrasts both share it agrees with batch 2', () => {
     expect(() => evaluateMeasure('G2', readSynthetic(card(b1.contrasts, b1.orderings)))).toThrow('p1_hybrid_vs_hybrid_lexical_paraphrase');
     const shared = b2.contrasts.map(c => c.id).filter(id => b1.contrasts.some(c => c.id === id));

@@ -25,6 +25,12 @@ export interface Layer {
   pairs: MappedPair[];
   /** Reference orderings to report Kendall's tau over, never gating. */
   ordering_keys?: string[];
+  /**
+   * The live-recall protocol whose scorecard carries this layer. A live-recall
+   * scorecard of another protocol does not carry it even where contrast ids
+   * coincide: batch 3 repeats batch 2's secondaries over its own questions.
+   */
+  protocol?: 'batch2' | 'batch3';
   note: string;
 }
 
@@ -48,15 +54,15 @@ export const MAPPING: Record<Measure, { title: string; layers: Layer[] }> = {
   G1: {
     title: 'freshness across pages',
     layers: [
-      { id: 'retrieval', reference: 'live-recall-b3', pairs: same(...B3_FRESHNESS), note: 'batch 3 freshness success@5; the stale-first rate is a direction check beside it and never gates' },
+      { id: 'retrieval', reference: 'live-recall-b3', pairs: same(...B3_FRESHNESS), protocol: 'batch3', note: 'batch 3 freshness success@5; the stale-first rate is a direction check beside it and never gates' },
       { id: 'agent', reference: 'phase2-agent', pairs: same(...PHASE2_AGENT), note: 'arm B vs arm A, and model pairs, once phase 2 is counted' },
     ],
   },
   G2: {
     title: 'recall under real conditions',
     layers: [
-      { id: 'b2', reference: 'live-recall-b2', pairs: same(...B2_CONTRASTS), ordering_keys: ['arms_exact', 'arms_paraphrase'], note: 'all 16 success@5 contrasts of live recall batch 2, id to id' },
-      { id: 'b3', reference: 'live-recall-b3', pairs: same(...B3_FRESHNESS, ...B3_ENTITY), note: 'batch 3 freshness and entity success@5, once batch 3 lands' },
+      { id: 'b2', reference: 'live-recall-b2', pairs: same(...B2_CONTRASTS), ordering_keys: ['arms_exact', 'arms_paraphrase'], protocol: 'batch2', note: 'all 16 success@5 contrasts of live recall batch 2, id to id' },
+      { id: 'b3', reference: 'live-recall-b3', pairs: same(...B3_FRESHNESS, ...B3_ENTITY), protocol: 'batch3', note: 'batch 3 freshness and entity success@5, once batch 3 lands' },
     ],
   },
   G3: {
@@ -69,7 +75,7 @@ export const MAPPING: Record<Measure, { title: string; layers: Layer[] }> = {
   G4: {
     title: 'wrong entity',
     layers: [
-      { id: 'retrieval', reference: 'live-recall-b3', pairs: same(...B3_ENTITY), note: 'batch 3 entity success@5' },
+      { id: 'retrieval', reference: 'live-recall-b3', pairs: same(...B3_ENTITY), protocol: 'batch3', note: 'batch 3 entity success@5' },
       { id: 'agent', reference: 'phase2-agent', pairs: same(...PHASE2_AGENT), note: 'arm B vs arm A, and model pairs, once phase 2 is counted' },
     ],
   },

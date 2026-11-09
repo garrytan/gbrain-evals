@@ -14,11 +14,19 @@
  * layer's verdict, the qualifying count, sign agreement per contrast and
  * Kendall's tau over the reference's arm orderings (reported, never gating).
  *
- * A pending reference reads NO_REFERENCE_YET and names it. A missing, corrupt or
- * off-digest reference refuses with VALIDITY_REFERENCE_INVALID, and a synthetic
- * scorecard without a mapped contrast refuses with SYNTHETIC_SCORECARD_INVALID;
- * both exit 3 and write nothing. The measure's overall line reads NOT_PREDICTIVE
- * if any layer does, else PREDICTIVE if any layer does, else NO_REFERENCE_YET.
+ * One scorecard need not carry every layer. A layer is in the scorecard when it
+ * holds all of the layer's mapped contrasts (and, for a live-recall scorecard,
+ * is of the layer's protocol, since batch 3 repeats some batch 2 ids over its
+ * own questions); a layer with none of them reads NOT_IN_SCORECARD and is left
+ * out of the overall line, and a layer with only some of them refuses.
+ *
+ * A pending reference reads NO_REFERENCE_YET and names it, whether or not the
+ * scorecard carries the layer. A missing, corrupt or off-digest reference
+ * refuses with VALIDITY_REFERENCE_INVALID. A layer partly in the scorecard, or a
+ * scorecard carrying no layer of a measure that has an available reference,
+ * refuses with SYNTHETIC_SCORECARD_INVALID; both refusals exit 3 and write
+ * nothing. The measure's overall line reads NOT_PREDICTIVE if any layer does,
+ * else PREDICTIVE if any layer does, else NO_REFERENCE_YET.
  *
  * The synthetic scorecard is a live-recall scorecard (live-recall-scorecard/v1,
  * from run.ts run --synthetic, whose success@5 comparisons are its contrasts) or
@@ -40,7 +48,7 @@ export class SyntheticScorecardError extends Error {
   }
 }
 
-export interface SyntheticCard { schema: string; control: boolean; contrasts: Contrast[]; orderings: Record<string, string[]> }
+export interface SyntheticCard { schema: string; protocol?: string; control: boolean; contrasts: Contrast[]; orderings: Record<string, string[]> }
 
 const finite = (...xs: unknown[]) => xs.every(x => typeof x === 'number' && Number.isFinite(x));
 
@@ -59,7 +67,7 @@ export function readSynthetic(value: any): SyntheticCard {
         .sort((a, b) => b[1] - a[1])
         .map(([arm]) => arm);
     }
-    return { schema: value.schema, control: value.run?.control === true, contrasts, orderings };
+    return { schema: value.schema, ...(typeof value.protocol === 'string' ? { protocol: value.protocol } : {}), control: value.run?.control === true, contrasts, orderings };
   }
   if (Array.isArray(value?.contrasts)) {
     const contrasts = value.contrasts.map((c: any, i: number) => {
@@ -76,8 +84,9 @@ const excludesZero = (c: { lo: number; hi: number }) => c.lo > 0 || c.hi < 0;
 export interface LayerResult {
   id: string;
   reference: string;
-  status: 'available' | 'pending';
-  verdict: Verdict;
+  status: 'available' | 'pending' | 'not_in_scorecard';
+  verdict: Verdict | 'NOT_IN_SCORECARD';
+  in_scorecard: boolean;
   min_qualifying: number;
   qualifying_count: number;
   mapped_count: number;
@@ -94,19 +103,25 @@ export interface LayerResult {
 
 export function evaluateMeasure(measure: Measure, synthetic: SyntheticCard, manifestPath = MANIFEST) {
   const layers: LayerResult[] = [];
+  const synById = new Map(synthetic.contrasts.map(c => [c.id, c]));
   for (const layer of MAPPING[measure].layers) {
     const ref = loadReference(manifestPath, layer.reference);
-    const base = { id: layer.id, reference: layer.reference, min_qualifying: DEFAULT_MIN_QUALIFYING, mapped_count: layer.pairs.length, note: layer.note };
+    const otherProtocol = layer.protocol !== undefined && synthetic.protocol !== undefined && synthetic.protocol !== layer.protocol;
+    const missing = layer.pairs.filter(p => !synById.has(p.synthetic)).map(p => p.synthetic);
+    if (!otherProtocol && missing.length && missing.length < layer.pairs.length) throw new SyntheticScorecardError('the synthetic scorecard has only part of ' + measure + ' layer ' + layer.id + ': no ' + measure + ' contrast ' + missing.join(', ') + ' (for ' + layer.reference + ')');
+    const in_scorecard = !otherProtocol && missing.length === 0;
+    const base = { id: layer.id, reference: layer.reference, min_qualifying: DEFAULT_MIN_QUALIFYING, mapped_count: layer.pairs.length, note: layer.note, in_scorecard };
     if (!ref) {
       layers.push({ ...base, status: 'pending', verdict: 'NO_REFERENCE_YET', qualifying_count: 0, missing_reference: layer.reference, contrasts: [], kendall_tau: {} });
       continue;
     }
     const refById = new Map(ref.contrasts.map(c => [c.id, c]));
-    const synById = new Map(synthetic.contrasts.map(c => [c.id, c]));
     const unknown = layer.pairs.filter(p => !refById.has(p.reference)).map(p => p.reference);
     if (unknown.length) throw new ValidityReferenceError(manifestPath, 'reference ' + layer.reference + ' has no contrast ' + unknown.join(', ') + ' named by the ' + measure + ' mapping');
-    const missing = layer.pairs.filter(p => !synById.has(p.synthetic)).map(p => p.synthetic);
-    if (missing.length) throw new SyntheticScorecardError('the synthetic scorecard has no ' + measure + ' contrast ' + missing.join(', ') + ' (for ' + layer.reference + ')');
+    if (!in_scorecard) {
+      layers.push({ ...base, status: 'not_in_scorecard', verdict: 'NOT_IN_SCORECARD', qualifying_count: 0, contrasts: [], kendall_tau: {} });
+      continue;
+    }
     const mapped = layer.pairs.map(p => ({ ...synById.get(p.synthetic)!, id: p.reference }));
     const result = verdict({ mapped: layer.pairs.map(p => p.reference), reference: ref, synthetic: mapped });
     const kendall_tau = Object.fromEntries((layer.ordering_keys ?? []).map(key => [key, ref.orderings?.[key] && synthetic.orderings[key] ? kendallTau(synthetic.orderings[key]!, ref.orderings[key]!) : null]));
@@ -124,6 +139,7 @@ export function evaluateMeasure(measure: Measure, synthetic: SyntheticCard, mani
       }),
     });
   }
+  if (layers.every(l => !l.in_scorecard) && layers.some(l => l.status !== 'pending')) throw new SyntheticScorecardError('the synthetic scorecard' + (synthetic.protocol ? ' (protocol ' + synthetic.protocol + ')' : '') + ' carries no ' + measure + ' layer: no ' + layers.map(l => l.id).join(' or ') + ' contrasts');
   const overall: Verdict = layers.some(l => l.verdict === 'NOT_PREDICTIVE') ? 'NOT_PREDICTIVE' : layers.some(l => l.verdict === 'PREDICTIVE') ? 'PREDICTIVE' : 'NO_REFERENCE_YET';
   return { schema: VERDICT_SCHEMA, measure, title: MAPPING[measure].title, verdict: overall, synthetic: { schema: synthetic.schema, control: synthetic.control }, layers };
 }
@@ -134,7 +150,8 @@ const iv = (c: { estimate: number; lo: number; hi: number }) => num(c.estimate) 
 export function renderVerdict(r: ReturnType<typeof evaluateMeasure>): string[] {
   const lines = [r.measure + ' ' + r.title + ': ' + r.verdict + (r.synthetic.control ? ' (control scorecard, hash embeddings: this checks the plumbing and says nothing about the measure)' : '')];
   for (const l of r.layers) {
-    if (l.status === 'pending') { lines.push('  layer ' + l.id + ' vs ' + l.reference + ': NO_REFERENCE_YET (reference ' + l.reference + ' is pending)'); continue; }
+    if (l.status === 'pending') { lines.push('  layer ' + l.id + ' vs ' + l.reference + ': NO_REFERENCE_YET (reference ' + l.reference + ' is pending)' + (l.in_scorecard ? '; ' + l.mapped_count + ' mapped contrasts in this scorecard' : '; not in this scorecard')); continue; }
+    if (l.status === 'not_in_scorecard') { lines.push('  layer ' + l.id + ' vs ' + l.reference + ': not in this scorecard'); continue; }
     const taus = Object.entries(l.kendall_tau).map(([k, t]) => k + ' ' + (t === null ? 'n/a' : t.toFixed(3)));
     lines.push('  layer ' + l.id + ' vs ' + l.reference + ': ' + l.verdict + ', ' + l.qualifying_count + ' of ' + l.mapped_count + ' reference contrasts qualify (minimum ' + l.min_qualifying + ')' + (taus.length ? '; Kendall tau ' + taus.join(', ') : ''));
     for (const c of l.contrasts) lines.push('    ' + c.counted.padEnd(14) + ' ' + c.reference_id + ': reference ' + iv(c.reference) + (c.reference.qualifies ? ' qualifies' : '') + '; synthetic ' + iv(c.synthetic) + '; sign ' + (c.sign_agrees ? 'agrees' : 'differs'));
