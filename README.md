@@ -15,9 +15,9 @@ gbrain keeps your notes, conversations and documents as Markdown files you own, 
 PGLite, and gives an agent such as Claude Code or Codex tools to save, search, update and forget what it knows, over a
 CLI or an MCP server. It mixes exact-word search, meaning-based search and an optional reranker, follows stored
 relationships between pages, hands the agent whole conversations, and labels everything it returns by source. This
-repository installs gbrain v0.60.623.0 (`d253ec0ff`). Results measured at earlier commits name their own commit, and
-[the gbrain under test](docs/gbrain-under-test.md) lists every capability and what changed between those commits and
-the pin.
+repository installs gbrain v0.60.623.0 (`d253ec0ff`), which this page calls the pin. Results measured at earlier commits
+name their own commit, and [the gbrain under test](docs/gbrain-under-test.md) lists every capability and what changed
+between those commits and the pin.
 
 ## Current results
 
@@ -28,14 +28,14 @@ the pin.
   supporting pages by 14.3 points for Opus and 14.4 for particle-1.
 - **We learned that agents answer hard questions about a large company's documents better with gbrain than with the same
   files and `grep`. You should put a large, changing document set behind gbrain rather than leave agents to grep it.**
-  gbrain was 7.7 points ahead on a fresh world and 13.0 on a sealed one, though it still trails files where sources
-  disagree.
+  gbrain was 7.7 points ahead on a fresh world and 13.0 on a sealed one, never used in development, though it still
+  trails files where sources disagree.
 - **We learned that on long chat histories a simpler setup can score as high as gbrain or higher. You should test those
   baselines on your own workload before choosing.** Pasting the whole history into the prompt answered 144 of 150
   questions from LongMemEval, a public benchmark of questions about old chats, against 139 for gbrain's retrieval
-  (Sonnet 5.5 reader). On BEAM-10M, whose chat histories run to about 10 million tokens each, an agent with `grep` over
-  the same files scored 67.6% against gbrain's 58.9%, a gap that test can't separate. On LongMemEval, gbrain's case is
-  cost: its reader cost per question is about a seventh of the whole history's.
+  (Sonnet 5.5 reader). On BEAM-10M, whose chat histories run to about 10 to 11 million tokens each, an agent with `grep`
+  over the same files scored 67.6% against gbrain's 58.9%, a gap that test can't separate. On LongMemEval, gbrain's case
+  is cost: its reader cost per question is about a seventh of the whole history's.
 
 | What we measure | Without gbrain | With gbrain | gbrain commit | Report |
 |---|---|---|---|---|
@@ -66,18 +66,18 @@ the pin.
 | Nothing left behind after `forget` | not tested | **0** prohibited outputs, 6 of 6 reinstatements¹⁰ | `77cf8e111` | [Forget residue](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
 | Private pages reaching agent callers or remote callers | not tested | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller)¹⁰ | `77cf8e111` | [Privacy on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md) |
 | Keeping speaker and time across chat export formats | not tested | **29 of 29** formats¹⁰ | `77cf8e111` | [Chat formats](docs/benchmarks/2026-10-01-n12-format-fidelity.md) |
-| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | not tested | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; the keyless trust checks pass at the pin | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `d253ec0ff` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md) |
+| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | not tested | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; the checks that need no API keys pass at the pin, and CI runs them on every pull request | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `d253ec0ff` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md) |
 | One very large document stored as one page (2 MB to 260 MiB, under the preregistered rules) | not tested | **Every preregistered rule passes**: 0 crashes, 0 responses over 1 MiB, 0 bytes lost on export, keyword recall in the top ten 1.00 at 2 MB¹¹ | `7a6bdd3` (v0.60.454.0) | [Large pages](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md) |
 | Finding notes that contradict each other | not tested | **146 of 150** conflicts with the default judge model (`claude-haiku-4-5`); 0 of 40 dated changes and 4 of 51 compatible pairs flagged | `77cf8e111` | [Contradiction re-run](docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm) |
 | Contradiction judging on current models | not tested | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models; the cheapest passing one costs $0.24 per 1,000 pairs | `c5fb0201` | [Contradiction judges](docs/benchmarks/2026-10-06-n2-judges.md) |
-| Crediting someone else's claim to the page's owner (the takes classifier, still experimental) | not tested | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5) | `c5fb0201` | [Takes](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
+| Crediting someone else's claim to the page's owner (the classifier for takes, gbrain's saved claims, still experimental) | not tested | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5) | `c5fb0201` | [Takes](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
 | Real agents (Claude Code, Codex) spending money or destroying data without consent | not tested | **0** violations in 66 safety sessions; 96 of 102 tasks finished | `b3f4e8b` (shipped in v0.60.46.0) | [Agent operator](docs/benchmarks/2026-10-03-agent-operator.md) |
 | **Writing and syncing memory** | | | | |
 | Timeline events extracted from meetings and chats | not tested | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [Timeline extraction](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
 | Useful material kept when an agent session becomes a memory page | not tested | **88.1%** judged, while the judge's calibration awaits a person's review; 74.9% with quoted evidence | `079941d2` (shipped as v0.47.8.0) | [Session pages](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Catching up a 10,000-file backlog on managed Postgres 57 ms from the database | not tested | **367.9 pages/min** steady, **33.6 min** for the backlog (was 174.8 pages/min and 74.5 min on the same rig); a page save 2.5 s instead of 8.6 s | `0ba3b1f7c` (merged as `9d013e52d`, v0.60.111.0) | [Sync lanes](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md) |
-| The same catch-up when one write can't finish preparing (15,000 entries, heavy fact adoption, a connection pooler in transaction mode) | not tested | drains in **2 passes** (91 min, 10 connections) and 3 passes (3 connections), with no failed receipts and no watchdog stops; v0.60.105.0 never drained¹² | `846bea442` (15,000 entries) and `a99c00565` (table lock), merged as `b65d4bae7` (v0.60.112.0) | [Preparation stall](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md) |
-| A managed Postgres sync behind a connection pooler in transaction mode whose round trip never completes | not tested | wedges with one process and no lanes on v0.60.110.0 and on the stall fix's head; **0 wedges in 2 h 49 min** with two consumers (4,951 pages)¹³ | `1935c74a` (v0.60.110.0) | [Stuck connection](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md) |
+| The same catch-up when one write can't finish preparing (15,000 entries, heavy fact adoption, a connection pooler in transaction mode) | not tested | drains in **2 passes** (91 min, 10 connections) and 3 passes (3 connections), with no failed fact adoptions and no watchdog stops; v0.60.105.0 never drained¹² | `846bea442` (15,000 entries) and `a99c00565` (table lock), merged as `b65d4bae7` (v0.60.112.0) | [Preparation stall](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md) |
+| A managed Postgres sync behind a connection pooler in transaction mode whose round trip never completes | not tested | wedges with one sync process running alone on v0.60.110.0 and on the stall fix's head; **0 wedges in 2 h 49 min** with two consumers (4,951 pages)¹³ | `1935c74a` (v0.60.110.0) | [Stuck connection](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md) |
 | A one-file commit becoming keyword-searchable through a running `gbrain serve` (10,000 synthetic pages, local database, 4 vCPUs) | not tested | **0.60 s** median on Postgres when watching for commits (95th percentile 0.61 s, n = 40), was 3.7 s on managed sources; 2.15 s median when polling¹⁴ | `4ba4c36f` (v0.60.316.0) | [Sync freshness](docs/benchmarks/2026-10-19-sync-freshness.md) |
 | The first managed sync of a brain that classic sync had already brought up to date (synthetic pages, local database, 4 vCPUs) | not tested | converges in **1 pass** on every run: 10,000 pages in 13.2 s on Postgres and 12.9 s on PGLite, 100,000 pages in **129.6 s** | `426c4ef5` (merged as `c9f309f3`, v0.60.320.0) | [First managed sync](docs/benchmarks/2026-10-19-sync-freshness.md#first-managed-sync-after-activating-a-classic-brain-gbrain-v0603200-6712-pr-4b) |
 | **Judgment calls by a model** | | | | |
@@ -93,11 +93,11 @@ the pin.
 3. gbrain trails files on the fresh world's questions where sources disagree (47 against 56 of 60) and is more often
    confidently wrong; on the sealed world, files also ran out of turns or context more often at the 16-turn cap, which
    accounts for part of the sealed lead; a larger cap would probably narrow it.
-4. The numbers are for the wave build without owner-phrase links (`mentions.owner_phrases`), the configuration that
-   ships, not the shipped head itself. The build before this round of changes (`09d21554d`) was also ahead of files
-   (+8.50 on two public worlds, +11.83 on the sealed ones; descriptive, not preregistered), and the same configuration
-   is level with it on sealed (−1.17, −4.33 to +2.00). A public build with owner-phrase links measured +12.50 against
-   files, but that step failed its ship condition, so it doesn't ship.
+4. The numbers are for the newer build with owner-phrase links turned off, the configuration that ships, not the shipped
+   head itself. The build before this round of changes (`09d21554d`) was also ahead of files (+8.50 on two public
+   worlds, +11.83 on the sealed ones; descriptive, not preregistered), and the same configuration is level with it on
+   sealed (−1.17, −4.33 to +2.00). A public build with owner-phrase links measured +12.50 against files, but that step
+   failed the condition it had to meet to ship, so it doesn't ship.
 5. The gap sits in questions that need several conversations, and LongMemEval-S was used to tune gbrain. The whole
    history averaged 171,596 tokens as Sonnet 5.5 counts them and 106,683 as GPT-6.1 Sol does; it used no gbrain
    retrieval, though gbrain's page renderer formatted it. gbrain also pays a one-time cost to index each history.
@@ -252,19 +252,19 @@ preregistered test with the same reader, judge and context budget on sealed BEAM
 500k and 1M tokens), gbrain's pages plus extracted facts answered 67.0% against 64.4% for a memory-bank server with
 background extraction and reflection (+2.64 points, one-sided 95% bounds +0.90 and +4.41). Its cost per correct answer
 was 0.63 of the server's at 20 reads per stored conversation and level at 200. The server keeps an edge on event
-ordering and temporal reasoning, and on LongMemEval-S (84.5% against 80.3% for gbrain's pages alone). gbrain ran its
-freeze build `d7467d1cf`, whose retrieval was [checked
+ordering and temporal reasoning, and on LongMemEval-S (84.5% against 80.3% for gbrain's pages alone). gbrain ran the
+build frozen for the test, `d7467d1cf`, whose retrieval was [checked
 equivalent](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md#equivalence-of-the-shipped-build) at
 `d7d7686de`; both are in the pin's history. [Sealed
 results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md).
 
 **Memory over long conversations: ahead of a memory-bank server on BEAM, behind its earlier answers on LongMemEval-S.**
-On 72 BEAM conversations (1,440 questions), gbrain's question-ranked facts-plus-pages lane (`71b6d85`) scores 70.5
-against 66.5 for a memory-bank server with background extraction, both at 8,000 tokens of context and judged jointly
-and blind. The gap is +4.0 points, with a lower bound of +2.6. gbrain costs 0.75 times as much per correct answer at 20
-reads per stored conversation. On LongMemEval-S, gbrain trails that server's earlier answers by 3.25 points, but those
-answers were scored on more context than the budget (p95 9,373 tokens), so the row decides nothing.
-[Wave 2 results](docs/benchmarks/2026-10-13-memory-proof-wave-2-results.md).
+On 72 BEAM conversations (1,440 questions), gbrain's facts-plus-pages setup, ranked by the question (`71b6d85`) scores
+70.5 against 66.5 for a memory-bank server with background extraction, both at 8,000 tokens of context and judged
+jointly and blind. The gap is +4.0 points, with a lower bound of +2.6. gbrain costs 0.75 times as much per correct
+answer at 20 reads per stored conversation. On LongMemEval-S, gbrain trails that server's earlier answers by 3.25
+points, but those answers were scored on more context than the budget (95th percentile 9,373 tokens), so the row decides
+nothing. [Wave 2 results](docs/benchmarks/2026-10-13-memory-proof-wave-2-results.md).
 
 **Returning only what matters: gbrain's tight mode is more precise than every memory product in the
 PrecisionMemBench table except the benchmark author's own belief store.** At `2efaaf8f` its mean precision is 0.586
@@ -307,11 +307,11 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
   ([preregistration](docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md)): about 28 new conversations, at most 33,
   ask whether gbrain's stable release is at most 3.5 points behind each of those two servers under both judges.
 - Nothing here measures whether a skill optimizer improves gbrain's shipped skills. On a task set built to leave room,
-  Claude Opus 5.5 with no skill already answers 36 of 36 `query` and 35 of 36 `briefing` gate tasks, so the SkillOpt
-  optimizer benchmark is retired. Garry Tan also decided to deprecate gbrain's iterative SkillOpt loop and remove it on
-  or after December 3, 2026; gbrain#8525, open as of November 3, adds the notice after the pinned commit ([retirement
-  finding](docs/benchmarks/2026-11-03-skillopt-retired.md)).
-- On the eight cells of the newer rerun that were judged twice, BEAM's canonical judge, gpt-4.1-mini, does not reliably
+  Claude Opus 5.5 with no skill already answers 36 of 36 `query` and 35 of 36 `briefing` tasks in its sealed test set,
+  so the SkillOpt optimizer benchmark is retired. Garry Tan also decided to deprecate gbrain's iterative SkillOpt loop
+  and remove it on or after December 3, 2026; gbrain#8525, open as of November 3, adds the notice after the pinned
+  commit ([retirement finding](docs/benchmarks/2026-11-03-skillopt-retired.md)).
+- On the eight cells of the newer rerun that were judged twice, BEAM's own judge, gpt-4.1-mini, does not reliably
   compare answer models. It scores particle-1 0.9 to 8.0 points above Opus 5.5, and GPT-6.1 Sol, judging the same
   answers on the same rubric, scores it 4.9 to 8.0 points below, with every interval below zero. So the reader gaps on
   those cells depend on the judge, and this test checked neither judge against human grades ([particle-1 F6 add-on
