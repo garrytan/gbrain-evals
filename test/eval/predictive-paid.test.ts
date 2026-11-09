@@ -405,6 +405,19 @@ describe('the Ubicloud launcher, with a fake runner and no keys', () => {
     expect(readFileSync(join(root, 'launches'), 'utf8')).toBe('launched\n');
   });
 
+  test('run.sh refuses to launch when listing VMs fails, and its teardown check fails too', () => {
+    const root = join(dir, 'ubi-list-fails');
+    mkdirSync(root, { recursive: true });
+    const fake = join(root, 'fake-ubi.sh');
+    writeFileSync(fake, '#!/usr/bin/env bash\ncase "$1" in\n  list) echo "HTTP 503" >&2; exit 1 ;;\n  run) echo launched >> "$(dirname "$0")/launches" ;;\nesac\n', { mode: 0o755 });
+    const env = { PATH: process.env.PATH!, HOME: join(root, 'home'), UBI_RUNNER: fake };
+    const refused = spawnSync('bash', ['eval/runner/predictive/ubicloud/run.sh', 'g4', 'smoke', '1'], { cwd: REPO, env, encoding: 'utf8' });
+    expect(refused.status).toBe(2);
+    expect(refused.stderr).toContain('could not list the VMs of owner gbev55');
+    expect(existsSync(join(root, 'launches'))).toBe(false);
+    expect(spawnSync('bash', ['eval/runner/predictive/ubicloud/run.sh', 'check'], { cwd: REPO, env, encoding: 'utf8' }).status).toBe(1);
+  });
+
   test('vm-run.sh reuses an open budget run with money left, and opens a new one after a launch that paused', () => {
     const home = join(dir, 'vm-home');
     const S = join(home, 'work', 'g4-smoke');

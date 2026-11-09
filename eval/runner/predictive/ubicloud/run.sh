@@ -17,8 +17,9 @@ REPO=$(cd "$(dirname "$0")/../../../.." && pwd)
 UBI=${UBI_RUNNER:-$REPO/scripts/ubicloud/ubi-runner.sh}
 export UBI_OWNER=gbev55 UBI_GC_HOURS=0
 check() {
-  local left
-  left=$("$UBI" list --mine | grep -o "ubirun-$UBI_OWNER-[a-z0-9-]*" | sort -u || true)
+  local out left
+  out=$("$UBI" list --mine) || { echo "teardown check FAILED: could not list the VMs of owner $UBI_OWNER" >&2; return 1; }
+  left=$(printf '%s\n' "$out" | grep -o "ubirun-$UBI_OWNER-[a-z0-9-]*" | sort -u || true)
   if [ -n "$left" ]; then
     echo "teardown check FAILED: VMs of owner $UBI_OWNER still exist:" >&2
     echo "$left" >&2
@@ -30,7 +31,7 @@ check() {
 [ "${1:-}" != check ] || { check; exit; }
 unit=${1:?usage: run.sh <unit> <smoke|paid> <cap-usd> [run.ts options...] | run.sh check}; mode=${2:?smoke or paid}; cap=${3:?cap in dollars}; shift 3
 case $unit in g1|g3|g4|g6) ;; *) echo "run.sh: unit must be g1, g3, g4 or g6" >&2; exit 2 ;; esac
-if ! check >&2; then echo "run.sh: refusing to launch beside a live VM, which would be a second ledger writer; pull its work/$unit-$mode into ~/.capy/work/predictive and destroy it first" >&2; exit 2; fi
+if ! check >&2; then echo "run.sh: refusing to launch until the VM list shows no VM of owner $UBI_OWNER: a launch beside a live one would be a second ledger writer" >&2; exit 2; fi
 STATE_ROOT=$HOME/.capy/work/predictive
 mkdir -p "$STATE_ROOT/$unit-$mode"
 pass=()
