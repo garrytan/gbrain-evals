@@ -41,7 +41,8 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 Some results were measured at earlier commits than the pin; each names its commit. Every commit the README names is in
 the release's history except three pull-request builds: `a7cb37b`, the September 29 branch commit whose retrieval the
 reader replay row froze; `94bd52e01`, the multi-relation planner's held-out build (merged in v0.60.60.0); and
-`079941d2`, the session-page build behind the transcript distillation row (shipped as v0.47.8.0).
+`079941d2`, the build behind the row on keeping useful material when an agent session becomes a memory page (shipped as
+v0.47.8.0).
 
 ## Search defaults that changed since then
 
@@ -81,36 +82,41 @@ Five read defaults outside the mode bundles changed after v0.60.454.0:
 Local reads are unchanged, no setting turns either fence off, and `gbrain trust claim-sources` with `gbrain trust
 backfill` marks an owner's older notes as theirs.
 
-Apart from the keyless memory trust checks in the README's memory trust row, no result in the README was measured with
-these defaults. The memory-qa harness holds the first three at their old values and unwraps the fence on its `query`
-path, which reads locally ([`eval/runner/gbrain-under-test.ts`](../eval/runner/gbrain-under-test.ts)). Arms that run
-the pinned gbrain with its own defaults (the shootout, the Cat 40 MCP arm and the agent tool bridges) take all five as
-shipped. The scoreboard's gbrain-defaults container builds its own gbrain, `f05943e6` (v0.60.138.0), so it runs none
-of them.
+Apart from the keyless memory trust checks in the README's memory trust row, and live recall phase 2, which ran gbrain
+0.60.613.0 (a release after all five changes) on the live brain's own configuration, no result in the README was
+measured with these defaults. The memory question-answering harness holds the first three at their old values and
+unwraps the fence on its `query` path, which reads locally
+([`eval/runner/gbrain-under-test.ts`](../eval/runner/gbrain-under-test.ts)). Setups that run the pinned gbrain with its
+own defaults (the open-source comparison, the hard company benchmark's MCP setup and the agent tool bridges) take all
+five as shipped. The scoreboard's gbrain-defaults container builds its own gbrain, `f05943e6` (v0.60.138.0), so it runs
+none of them.
 
 ## When the keyless correctness checks last ran
 
 The README's correctness rows (updates, `forget`, privacy, chat formats) come from keyless checks on synthetic worlds
-with generated answer keys. Their counts were last measured in full at `77cf8e111`, in the
-[October 11 re-pin](benchmarks/2026-10-11-wave14-repin.md); no re-pin since has rerun them in full. CI's BrainBench
-offline tier runs the same checks on every pull request against the gbrain `package.json` pins, smaller (the update
-and `forget` worlds on a slice, privacy in process only), and every one passed at `3ec766c40` in
-[#223's checks](https://github.com/garrytan/gbrain-evals/actions/runs/41270941149), as did the large-page check's
-small tiers. The 29 reproductions in the [bug ledger](benchmarks/2026-10-01-wave-bugs.md) and the memory trust repros
-37-1, 37-2 and 37-5 ([memory trust ledger](benchmarks/2026-10-07-memory-trust-bugs.md)) last ran as a set in that
-October 11 re-pin, where they passed; Cat7-1 passed on the second pair of hosts, and its entry stays open under its
-stricter closure rule (see the README's known limits). Rows marked `c5fb0201` were measured in the October round at
-an earlier pin (the paid runs and the attendance world).
+with generated answer keys. Their counts were last measured in full at `77cf8e111`, in the [October 11
+re-pin](benchmarks/2026-10-11-wave14-repin.md); no re-pin since has rerun them in full. CI's keyless BrainBench tier
+runs the same checks on every pull request against the gbrain `package.json` pins, smaller (the update and `forget`
+worlds on a slice, privacy in process only), and every one passed at `3ec766c40` in [the checks on pull request
+#223](https://github.com/garrytan/gbrain-evals/actions/runs/41270941149), as did the large-page check's small tiers. The
+29 reproductions in the [bug ledger](benchmarks/2026-10-01-wave-bugs.md) and three memory trust reproductions (37-1,
+37-2 and 37-5 in the [memory trust ledger](benchmarks/2026-10-07-memory-trust-bugs.md)) last ran as a set in that
+October 11 re-pin, where they passed; the timeline-latency entry (Cat7-1) passed on the second pair of hosts, and stays
+open under its stricter closure rule (see the README's known limits). Rows marked `c5fb0201` were measured in the
+October round at an earlier pin (the paid runs and the attendance world).
 
 ## Changelog
 
 ### 2026-11-09: Page created from the README's "The gbrain under test"
 
-The README's section "The gbrain under test" (the pin and its aliases, the three pull-request builds outside the release's
-history, the search defaults changed since v0.60.169.0 and the five read defaults changed after v0.60.454.0), its
-capability list under "What gbrain does" and the paragraph on when the keyless correctness checks last ran moved here,
-so the README can open with results; the pin table stays in the README's quick start. The text is the README's at
-gbrain-evals v0.10.188, with four changes: the pin table is a paragraph, the five read defaults are a numbered list, internal names in prose became plain descriptions ("the keyless memory trust
-checks" for "Cats 37 to 39", "the session-page build behind the transcript distillation row" for "Cat 35's post-wave
-build", "the large-page check's small tiers" for "N14's small tiers"), and links point from `docs/`. No number
-changed.
+The README's section "The gbrain under test" (the pin and its aliases, the three pull-request builds outside the
+release's history, the search defaults changed since v0.60.169.0 and the five read defaults changed after v0.60.454.0),
+its capability list under "What gbrain does" and the paragraph on when the keyless correctness checks last ran moved
+here, so the README can open with results; the pin table stays in the README's quick start. The text is the README's at
+gbrain-evals v0.10.188, with four changes: the pin table is a paragraph, the five read defaults are a numbered list,
+internal names in prose became plain descriptions ("the keyless memory trust checks" for "Cats 37 to 39", "the build
+behind the row on keeping useful material when an agent session becomes a memory page" for "Cat 35's post-wave build",
+"the large-page check's small tiers" for "N14's small tiers", "the open-source comparison" for "the shootout", "CI's
+keyless BrainBench tier" for "the BrainBench offline tier"), and links point from `docs/`. No number changed. The
+sentence on which README results ran with the five read defaults also names live recall phase 2, which the README gained
+in the same change.
