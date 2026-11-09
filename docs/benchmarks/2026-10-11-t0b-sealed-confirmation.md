@@ -32,9 +32,11 @@ Risk difference pooled: −46.2 points (−50.0 to −42.4).
 |---|---|---|---|
 | Opus 5.5 | 32.5 s vs 37.9 s (0.86x) | 164k vs 179k (0.92x) | $0.274 vs $0.281 (0.97x) |
 | Sonnet 5.5 | 27.2 s vs 26.2 s (1.04x) | 185k vs 148k (1.25x) | $0.178 vs $0.137 (1.30x) |
-| gpt-6.1-sol | 32.2 s vs 40.1 s (0.80x) | 93k vs 97k (0.96x) | $0.077 vs $0.075 (1.04x) |
+| gpt-6.1-sol | 32.2 s vs 40.1 s (0.80x) | 93k vs 97k (0.96x) | at most $0.0931 vs $0.0893 (1.04x at the recorded dollars and at both upper bounds; the committed data allow 0.87x to 1.24x, inside the 1.5x envelope) (corrected 2026-11-09: cache writes were under-counted; was $0.077 vs $0.075) |
 
 Sonnet 5.5 reads more on the stack (it opens the newer mentions the card shows it) and stays inside the limits.
+
+Correction, 2026-11-09: `gpt-6.1-sol`'s dollars per cell were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a Sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input. The sealed rows are not committed, so the corrected values give Sol the whole difference between each arm's sealed ledger and its cells' recorded dollars, which makes them upper bounds. The ratio is 1.04x at the recorded dollars and at both upper bounds; the committed data allow 0.87x to 1.24x, inside the 1.5x envelope, so the envelope verdict doesn't change ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 ## What failed
 
