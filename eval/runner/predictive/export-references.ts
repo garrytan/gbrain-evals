@@ -50,6 +50,9 @@ export function buildReferences(): { files: Array<[string, ReferenceFile]>; pend
       { id: 'live-recall-b3', file: 'live-recall-b3.json', status: 'pending' },
       { id: 'phase2-agent', file: 'phase2-agent.json', status: 'pending' },
       { id: 'miss-log-weekly', file: 'miss-log-weekly.json', status: 'pending' },
+      { id: 'replay-pins', file: 'replay-pins.json', status: 'pending' },
+      { id: 'latency-pins', file: 'latency-pins.json', status: 'pending' },
+      { id: 'phase2-freeze-out-of-view', file: 'phase2-freeze-out-of-view.json', status: 'pending' },
     ],
   };
 }
