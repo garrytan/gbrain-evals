@@ -16,6 +16,7 @@ import { isCapStop, openBudgetItem } from '../../eval/runner/refresh-barrier/led
 import { buildFixtureBrain, useFixtureTransports } from '../../eval/runner/live-recall/run.ts';
 import { ANSWER_TOOL, PROMPTS, SUMMARY_TOOL, citedSlugs, judgeEpisode, openReader, runEpisode, type AnswerRecord, type EpisodeContext, type Task } from '../../eval/runner/live-recall/task-arms.ts';
 import { JUDGE_SYSTEM, LABELLERS, VERDICT_TOOL, assertJudge, derive, judgeFor, parseVerdict, secondJudgeFor } from '../../eval/runner/live-recall/task-judge.ts';
+import { PUBLIC_NOTE, redactTaskMarkdown, redactTaskScorecard } from '../../eval/runner/live-recall/redact-scorecard.ts';
 import { JUDGE_CHECK_SCHEMA, SEED, TRUNCATION_CAP, buildTaskScorecard, renderTaskMarkdown, checkOutbound, exactClusterSignFlip, goldClusterSummary, goldClusters, judgeCheck, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
 import { clusteredPairedDelta, exactMcNemar } from '../../eval/runner/stats/paired.ts';
 import {
@@ -1165,6 +1166,27 @@ describe('phase 2 judge check (R78)', () => {
     expect(md).toContain('## Original tasks against replacement tasks (descriptive)');
     expect(md).toContain('Replacement tasks (written after the first freeze): 10 tasks (identifier 0, error_string 0, time_window 0, cross_source 10, topic 0).');
     expect(md.find(l => l.startsWith('| p1_b_vs_a_opus (original) '))).toContain('| 20 | 20 | 25.0 | 100.0 |');
+  });
+
+  test('the public scorecard drops the cap fields, the cost totals and each cell\'s spend, and keeps cost per correct answer', () => {
+    const tasks = Array.from({ length: 10 }, (_, i) => ({ id: 't' + i, type: 'topic', gold_found_by: 'unknown' })) as any;
+    const card = buildTaskScorecard({
+      tasks, forms: ['paraphrase'], arms: ['A', 'B'], models: ['claude-opus-5-5'], identity: { budget_usd: 10, final_cap_usd: 12, cap_extensions: 1, effort: 'medium' }, stop: null, ledger_usd: 1.25, audit: null,
+      records: tasks.flatMap((t: any, i: number) => [answer(t.id, 'A', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'A', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', i < 2), answer(t.id, 'B', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'B', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', i < 8)]),
+      task_summary: { submitted: 10, kept_at_freeze: 10, dropped_unreachable: 0, gold_missing_at_run: 0, sha_prefix: '0'.repeat(12), n_frozen: 10 },
+      custody: { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: {} },
+    });
+    const pub = redactTaskScorecard(card), json = JSON.stringify(pub);
+    expect(() => validateTaskScorecard(pub)).not.toThrow();
+    for (const k of ['budget_usd', 'final_cap_usd', 'cap_extensions', 'ledger_usd', 'model_calls_usd', 'cost_usd']) expect(json).not.toContain('"' + k + '"');
+    expect([(pub as any).cost, (pub as any).run.effort, 'answer_cost_per_correct_usd' in (pub as any).cells.paraphrase.B['claude-opus-5-5']]).toEqual([undefined, 'medium', true]);
+    expect([(card.run as any).budget_usd, card.cost.ledger_usd]).toEqual([10, 1.25]);
+    expect(() => redactTaskScorecard({ ...card, judge_check: { label_usd: 1 } })).toThrow('spend left in the public scorecard at $.judge_check.label_usd');
+    const full = renderTaskMarkdown(card), md = redactTaskMarkdown(full).split('\n');
+    expect(full).toContain('Ledger total $1.2500');
+    expect([md[2], md.includes('## Judges'), md.includes('## Judges and cost'), md.some(l => l.startsWith('Model calls '))]).toEqual([PUBLIC_NOTE, true, false, false]);
+    expect(md.find(l => l.startsWith('| Form | Arm | Model |'))).toBe('| Form | Arm | Model | Counted | Excluded | Correct % | Grounded % | Abstained % | Confidently wrong % | Gold seen / opened / cited |');
+    expect(() => redactTaskMarkdown(full + '\nTotal $3.0000')).toThrow('a dollar figure is left outside the cost-per-correct table');
   });
 
   test('tasks that share a gold page are one resampling unit in every interval and p-value', () => {

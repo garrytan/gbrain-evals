@@ -1,7 +1,7 @@
 # Live recall phase 2: preregistration
 
 This fixes the method, comparisons, decision rules, cost cap and custody for phase 2 of live recall before any counted
-call. It reports no result. Phase 2 asks whether gbrain retrieval changes the answers a model gives about Garry Tan's
+call. It reports no result; the results are in the [phase 2 findings](../2026-11-09-live-recall-phase2.md). Phase 2 asks whether gbrain retrieval changes the answers a model gives about Garry Tan's
 own brain, and whether a summarising retrieval helper in front of gbrain helps or hurts. The approved plan, with its
 review record, is [PHASE2-PLAN.md](PHASE2-PLAN.md). Phase 1, which measured whether gbrain's search finds the right page,
 is [PREREGISTRATION.md](PREREGISTRATION.md). The steps on the box are in [RUN-KIT.md](RUN-KIT.md#phase-2), and the
