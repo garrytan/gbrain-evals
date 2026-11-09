@@ -36,11 +36,12 @@ USD per million tokens, OpenAI list prices ([pricing](https://developers.openai.
 
 ## Method
 
-OpenAI reports almost every uncached prompt token of a request of 1,027 tokens or more as a cache write. A runner that
-didn't read that count priced those tokens at the input rate, so the correction adds (cache write − input) × uncached
-tokens / 1e6 for each such request. Where the rows give each request's size, the tool applies that rule per request.
-Where only totals are committed, it gives an upper bound: every uncached input token priced as a cache write, which
-is at most 25% of the uncached input cost, or a ratio taken from committed rows of the same reader.
+OpenAI reports a request's uncached prompt less 3 tokens as cache writes when its whole prompt is 1,027 tokens or more,
+and none below that. A runner that didn't read that count priced those tokens at the input rate, so the correction adds
+(cache write − input) × (uncached tokens − 3) / 1e6 for each such request. Where the rows give each request's size, the
+tool applies that rule per request. Where only totals are committed, it gives an upper bound: every uncached input token
+priced as a cache write, which is at most 25% of the uncached input cost, or a ratio taken from committed rows of the
+same reader.
 
 For the long-context tier it records the largest request the data shows, or a bound on it:
 
@@ -87,3 +88,9 @@ and `n15-skillopt-method-frontier-probe-2026-11-02T00-00-46-604Z-1ae07142`), and
 ceiling's calibration re-read (`n15-ceiling-calibration-2026-11-03T12-54-22-002Z-99f3820d`). The ledgers themselves
 aren't committed; receipts carry only their totals, and the ceiling comparison reads the ledger's entries. So this tool
 doesn't run it, and the audit page reports its result.
+
+## Changelog
+
+- 2026-11-09: the per-request premium uses the measured rule (uncached prompt less 3 tokens from a 1,027-token prompt)
+  instead of every uncached token from 1,024 tokens, and "at most" percentages round up.
+- 2026-11-09: first version (GST-1887).

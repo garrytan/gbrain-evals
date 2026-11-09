@@ -32,7 +32,7 @@ Risk difference pooled: −46.2 points (−50.0 to −42.4).
 |---|---|---|---|
 | Opus 5.5 | 32.5 s vs 37.9 s (0.86x) | 164k vs 179k (0.92x) | $0.274 vs $0.281 (0.97x) |
 | Sonnet 5.5 | 27.2 s vs 26.2 s (1.04x) | 185k vs 148k (1.25x) | $0.178 vs $0.137 (1.30x) |
-| gpt-6.1-sol | 32.2 s vs 40.1 s (0.80x) | 93k vs 97k (0.96x) | at most $0.093 vs $0.089 (1.04x) (corrected 2026-11-09: cache writes were under-counted; was $0.077 vs $0.075) |
+| gpt-6.1-sol | 32.2 s vs 40.1 s (0.80x) | 93k vs 97k (0.96x) | at most $0.0931 vs $0.0893 (1.04x) (corrected 2026-11-09: cache writes were under-counted; was $0.077 vs $0.075) |
 
 Sonnet 5.5 reads more on the stack (it opens the newer mentions the card shows it) and stays inside the limits.
 

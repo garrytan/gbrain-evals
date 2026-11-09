@@ -11,9 +11,10 @@ temporary directory, with every provider key blanked. It writes results.json nex
 line and nothing machine-specific, so a rerun on the same tree writes the same file. It then checks that each
 corrected document still carries the wording the figure's doc_text lists, and exits 1 if any is missing.
 
-Rule. OpenAI reports almost every uncached prompt token of a request of 1,024 tokens or more as a cache write, as
-the committed rows that report the count show, and prices it at the cache-write rate. A runner that didn't read the
-count under-priced those requests by (cache_write - input) x uncached tokens / 1e6. Above 272,000 input tokens OpenAI
+Rule. OpenAI reports a request's uncached prompt less 3 tokens as cache writes when its whole prompt is 1,027 tokens
+or more, and none below that, as every committed record that reports the count shows (the BEAM-1M and lane tool's
+cache_write_rule), and prices them at the cache-write rate. A runner that didn't read the count under-priced those
+requests by (cache_write - input) x (uncached tokens - 3) / 1e6. Above 272,000 input tokens OpenAI
 prices the whole request at the long-context rates, so every figure records the largest request the committed data
 shows or bounds. Prices are OpenAI's list prices (developers.openai.com/api/docs/pricing, read 2026-11-09).
 """
@@ -26,7 +27,8 @@ ROOT = HERE.parents[3]
 TOOL = str(Path(__file__).resolve().relative_to(ROOT))
 B = 'docs/benchmarks'
 LONG = 272_000
-MIN_CACHE = 1024
+MIN_CACHE = 1027
+WRITE_OFFSET = 3
 CW = 'corrected 2026-11-09: cache writes were under-counted'
 NR = 'not recomputed 2026-11-09'
 PRICE = {
@@ -85,6 +87,11 @@ def pct(extra, base):
     return round(100 * extra / base)
 
 
+def upct(extra, base):
+    """An upper bound in whole percent, rounded up so the stated bound stays true."""
+    return math.ceil(100 * extra / base - 1e-9)
+
+
 def money(x, dig):
     return '$%.*f' % (dig, x)
 
@@ -106,21 +113,21 @@ def small_requests():
              for f in files(d + '/' + pat) for r in jl(f) for c in (r.get('calls') or [])]
     mx = max(c['input_tokens'] for c in calls)
     add(id='fence-repair', doc=d + '.md', model='gpt-6.1-sol', figure='Sol $ per repair', published='$0.0026 / $0.0023',
-        status='NO MOVE' if mx < MIN_CACHE else 'CHECK', evidence='every Sol request is under 1,024 prompt tokens', max_request_input=mx, max_request_basis='rows')
+        status='NO MOVE' if mx < MIN_CACHE else 'CHECK', evidence='every Sol request is under 1,027 prompt tokens', max_request_input=mx, max_request_basis='rows')
     rows = jl(B + '/2026-10-06-takes-bootstrap-frontier/requests-gpt-6.1-sol.jsonl')
     mx = max(r['usage']['input_tokens'] for r in rows if r.get('usage'))
     add(id='takes-bootstrap', doc=B + '/2026-10-06-takes-bootstrap-frontier.md', model='gpt-6.1-sol', figure='Sol run', published='$0.174',
-        status='NO MOVE' if mx < MIN_CACHE else 'CHECK', evidence='every request is under 1,024 prompt tokens; gpt-6-sol appears only in its price list',
+        status='NO MOVE' if mx < MIN_CACHE else 'CHECK', evidence='every request is under 1,027 prompt tokens; gpt-6-sol appears only in its price list',
         max_request_input=mx, max_request_basis='rows')
     d = B + '/2026-10-16-take-grading/results'
     rows = [r for f in [d + '/counted/gpt-6.1-sol.jsonl'] + files(d + '/dev/*/gpt-6.1-sol.jsonl') for r in jl(f)]
     mx = max(r.get('input_tokens') or 0 for r in rows)
     add(id='take-grading', doc=B + '/2026-10-16-take-grading.md', model='gpt-6.1-sol', figure='Sol per verdict', published='$0.0016',
-        status='NO MOVE' if mx < MIN_CACHE else 'CHECK', evidence='every request is under 1,024 prompt tokens', max_request_input=mx, max_request_basis='rows')
+        status='NO MOVE' if mx < MIN_CACHE else 'CHECK', evidence='every request is under 1,027 prompt tokens', max_request_input=mx, max_request_basis='rows')
     rows = [r for r in jl(B + '/2026-11-07-skill-ranker-offline/results/spend.jsonl') if r.get('key') == 'openai:gpt-6.1-sol']
     mx = max(r['usage']['input_tokens'] for r in rows)
     add(id='skill-ranker-offline', doc=B + '/2026-11-07-skill-ranker-offline.md', model='gpt-6.1-sol', figure='Sol writer spend', published=r6(sum(r['cost_usd'] for r in rows)),
-        status='NO MOVE' if mx < MIN_CACHE else 'CHECK', evidence='every request is under 1,024 prompt tokens', max_request_input=mx, max_request_basis='rows')
+        status='NO MOVE' if mx < MIN_CACHE else 'CHECK', evidence='every request is under 1,027 prompt tokens', max_request_input=mx, max_request_basis='rows')
 
 
 def priced(rows, model_of, usage_of, usd_key):
@@ -240,20 +247,20 @@ def n2():
     for m in ('gpt-6.1-sol', 'gpt-6-luna'):
         jd = j('%s/judge-%s.json' % (d, m))
         ins = [x['input_tokens'] for x in jd['results'] if x.get('input_tokens')]
-        p = prem(m, sum(i for i in ins if i >= MIN_CACHE))
+        p = prem(m, sum(i - WRITE_OFFSET for i in ins if i >= MIN_CACHE))
         usd = jd['cost']['usd']
-        o[m] = {'requests_with_usage': len(ins), 'at_or_over_1024': sum(i >= MIN_CACHE for i in ins), 'max_input': max(ins), 'premium': r6(p), 'usd': usd,
+        o[m] = {'requests_with_usage': len(ins), 'at_or_over_1027': sum(i >= MIN_CACHE for i in ins), 'max_input': max(ins), 'premium': r6(p), 'usd': usd,
                 'per_1000': round(sc['openai:' + m]['cost_per_1000_judged_pairs'], 4), 'per_1000_new': round((usd + p) / jd['judged'] * 1000, 4)}
     s, l = o['gpt-6.1-sol'], o['gpt-6-luna']
     ln, sn = '$%.2f' % l['per_1000_new'], '$%.2f' % s['per_1000_new']
     tot, lp, sp = pct(s['premium'] + l['premium'], 25.52), pct(l['premium'], l['usd']), pct(s['premium'], s['usd'])
     doc = d + '.md'
     add(id='n2 luna per 1000', doc=doc, model='gpt-6-luna', figure='GPT-6 Luna cost per 1,000 judged pairs (title, finding, table)', published='$0.21', recomputed=ln,
-        status='MOVES', evidence='%d of %d judged prompts are 1,024 tokens or more; the run priced them as input' % (l['at_or_over_1024'], l['requests_with_usage']), detail=l,
+        status='MOVES', evidence='%d of %d judged prompts are 1,027 tokens or more; the run priced them as input' % (l['at_or_over_1027'], l['requests_with_usage']), detail=l,
         max_request_input=l['max_input'], max_request_basis='rows', ranking='unchanged: Luna stays the cheapest model that passes',
         doc_text=['costs %s per 1,000 pairs (%s; was $0.21)' % (ln, CW), '**`gpt-6-luna` at %s per 1,000 judged pairs** (%s; was $0.21)' % (ln, CW), '| **%s** (%s; was $0.21) |' % (ln, CW)])
     add(id='n2 sol per 1000', doc=doc, model='gpt-6.1-sol', figure='GPT-6.1 Sol cost per 1,000 judged pairs', published='$2.69', recomputed=sn, status='MOVES',
-        evidence='%d of %d judged prompts are 1,024 tokens or more' % (s['at_or_over_1024'], s['requests_with_usage']), detail=s,
+        evidence='%d of %d judged prompts are 1,027 tokens or more' % (s['at_or_over_1027'], s['requests_with_usage']), detail=s,
         max_request_input=s['max_input'], max_request_basis='rows', doc_text=[was(sn, '$2.69')])
     add(id='n2 spend', doc=doc, model='gpt-6.1-sol, gpt-6-luna', figure='Spend for five models; Luna; Sol', published='$25.52; $0.16; $1.99',
         recomputed='%d%% low; %d%% low; %d%% low' % (tot, lp, sp), status='MOVES', evidence='as above', max_request_input=s['max_input'], max_request_basis='rows',
@@ -267,12 +274,12 @@ def content_repair():
     d = B + '/2026-10-09-content-repair-judgment'
     rows = [r for f in files(d + '/results/gpt-6.1-sol-run*.jsonl') for r in jl(f)]
     usd = sum(r['usd'] for r in rows)
-    big = [r['input_tokens'] for r in rows if r['input_tokens'] >= MIN_CACHE]
+    big = [r['input_tokens'] - WRITE_OFFSET for r in rows if r['input_tokens'] >= MIN_CACHE]
     p = prem('gpt-6.1-sol', sum(big))
     new = '$%.4f' % ((usd + p) / len(rows))
     common = dict(model='gpt-6.1-sol', max_request_input=max(r['input_tokens'] for r in rows), max_request_basis='rows')
     add(id='content-repair per pair', doc=[d + '.md', d + '/summary.md'], figure='gpt-6.1-sol USD per pair (report table and summary.md)', published='$0.0022', recomputed=new,
-        status='MOVES', evidence='%d of %d Sol pair runs are 1,024 tokens or more; every row is priced at the input rate' % (len(big), len(rows)),
+        status='MOVES', evidence='%d of %d Sol pair runs are 1,027 tokens or more; every row is priced at the input rate' % (len(big), len(rows)),
         detail={'rows': len(rows), 'usd': r6(usd), 'premium': r6(p)}, ranking='unchanged: Sol stays the cheapest per pair', doc_text=[was(new, '$0.0022')], **common)
     add(id='content-repair spend', doc=d + '.md', figure='gpt-6.1-sol spend; spend for 432 pair runs', published='$0.31; $2.05',
         recomputed='%d%% low; %d%% low' % (pct(p, usd), pct(p, 2.05)), status='MOVES', evidence='as above',
@@ -493,10 +500,10 @@ def memory_trust():
     ratio = 1 + prem('gpt-6.1-sol', cw) / sum(r['list_usd'] for r in w)
     guard = 14.72 * (ratio - 1)
     worst = guard + sum(b.values())
-    bp = {f: pct(v, cost(f)['usd']) for f, v in b.items() if f != 'cat37-preflight-gpt'}
+    bp = {f: upct(v, cost(f)['usd']) for f, v in b.items() if f != 'cat37-preflight-gpt'}
     doc = B + '/2026-10-08-memory-trust-results-paid.md'
     common = dict(doc=doc, model='gpt-6.1-sol', long_tier='unknown (rows not committed); the bounds assume no request above 272k')
-    add(id='memory-trust Cat 37 GPT', figure='Cat 37 counted GPT cell; counted cells', published='$6.17; $33.77', recomputed='at most %d%% low; at most %d%% low' % (bp['cat37-gpt'], pct(b['cat37-gpt'], counted)),
+    add(id='memory-trust Cat 37 GPT', figure='Cat 37 counted GPT cell; counted cells', published='$6.17; $33.77', recomputed='at most %d%% low; at most %d%% low' % (bp['cat37-gpt'], upct(b['cat37-gpt'], counted)),
         status='BOUND (rows not committed)', evidence='runner 73524d0d pre-dates 8a8e502a; uncached input derived from the receipt (%d tokens)' % un,
         max_request_basis='receipt mean %d input tokens per request' % (g['input_tokens'] / requests(g)), doc_text=['so the GPT figure is low by at most %d%%' % bp['cat37-gpt']], **common)
     for f, fig, pub in (('cat37-labels-absent', 'Cat 37 labels-absent arm', '$17.01'), ('cat38', 'Cat 38 model arm', '$5.44'), ('cat39', 'Cat 39 model arm and embedding probe', '$0.85')):
@@ -504,16 +511,16 @@ def memory_trust():
         add(id='memory-trust ' + f, figure=fig, published=pub, recomputed='at most %d%% low' % bp[f], status='BOUND (no per-model split)',
             evidence='every input token priced as a Sol cache write', max_request_basis='receipt mean %d input tokens per request' % (c['input_tokens'] / requests(c)),
             doc_text=['%s (%s: the per-model usage is not committed; cache writes were under-counted on its GPT-6.1 Sol share, so this is low by at most %d%%' % (pub, NR, bp[f])], **common)
-    add(id='memory-trust smoke and pre-flight', figure='Cat 37 Fable smoke and GPT pre-flight', published='$%.2f' % smoke, recomputed='at most %d%% low' % pct(b['cat37-preflight-gpt'], smoke),
+    add(id='memory-trust smoke and pre-flight', figure='Cat 37 Fable smoke and GPT pre-flight', published='$%.2f' % smoke, recomputed='at most %d%% low' % upct(b['cat37-preflight-gpt'], smoke),
         status='BOUND (rows not committed)', evidence='pre-flight input priced as Sol cache writes',
-        doc_text=['$%.2f (%s: the rows are not committed; cache writes were under-counted, so this is low by at most %d%%)' % (smoke, NR, pct(b['cat37-preflight-gpt'], smoke))], **common)
+        doc_text=['$%.2f (%s: the rows are not committed; cache writes were under-counted, so this is low by at most %d%%)' % (smoke, NR, upct(b['cat37-preflight-gpt'], smoke))], **common)
     add(id='memory-trust utility guard', figure='Utility guard GPT reader; guard line', published='$14.72; $86.23', recomputed='about %d%% low; about %d%% low' % (round(100 * (ratio - 1)), pct(guard, 86.23)),
         status='ESTIMATE (rows not committed)', evidence='same LongMemEval notes reader as W10b, whose committed rows give the ratio %.4f' % ratio,
         doc_text=['so the GPT reader is about %d%% low' % round(100 * (ratio - 1))], **common)
     add(id='memory-trust spend', figure='Real spend; spent before amendment 4', published='$212.15; $165.14',
-        recomputed='about %d%% and at most %d%% low; about %d%% and at most %d%% low' % (pct(guard, 212.15), pct(worst, 212.15), pct(guard, 165.14), pct(worst, 165.14)),
+        recomputed='about %d%% and at most %d%% low; about %d%% and at most %d%% low' % (pct(guard, 212.15), upct(worst, 212.15), pct(guard, 165.14), upct(worst, 165.14)),
         status='ESTIMATE AND BOUND', evidence='the utility-guard estimate, plus every bound above for the worst case',
-        doc_text=['so this is about %d%% low, and low by at most %d%%' % (pct(guard, 212.15), pct(worst, 212.15)), 'so this is about %d%% low, and low by at most %d%%' % (pct(guard, 165.14), pct(worst, 165.14))], **common)
+        doc_text=['so this is about %d%% low, and low by at most %d%%' % (pct(guard, 212.15), upct(worst, 212.15)), 'so this is about %d%% low, and low by at most %d%%' % (pct(guard, 165.14), upct(worst, 165.14))], **common)
 
 
 def facts_extraction():
@@ -528,17 +535,17 @@ def facts_extraction():
     gl = [a for a in gate['arms'] if a['extraction_input_tokens'] == [x for x in gate['arms'] if x['arm']['label'] == 'luna'][0]['extraction_input_tokens']]
     pg = sum(prem('gpt-6-luna', a['extraction_input_tokens']) for a in gl)
     judge = 0.25 * 0.34
-    gp, ap, r2 = pct(pg + judge, 3.27), pct(p, arms), 100 * (p + pg + judge) / 23.30
+    gp, ap, r2 = upct(pg + judge, 3.27), upct(p, arms), 100 * (p + pg + judge) / 23.30
     doc = d + '.md'
     common = dict(doc=doc, long_tier='unknown (rows not committed); the bounds assume no request above 272k')
     add(id='facts-extraction Luna write cost', model='gpt-6-luna', figure='Luna $ per 1,000 pages, measured / if all 996 ran; Luna extraction', published='$0.89 / $1.23; $0.57',
-        recomputed='at most %d%% low each; at most %d%% low' % (pct(p, luna['usd']), pct(p, 0.57)), status='BOUND (rows not committed)',
+        recomputed='at most %d%% low each; at most %d%% low' % (upct(p, luna['usd']), upct(p, 0.57)), status='BOUND (rows not committed)',
         evidence='run pre-dates 8a8e502a; every extraction input token priced as a cache write', max_request_basis='receipt mean %d input tokens per call' % (ci['input_tokens'] / ci['calls']),
         ranking='unchanged at the bound: Haiku 5.5 stays above Luna',
         detail={'premium': r6(p), 'extraction_at_list_from_tokens': r6(ext)},
-        doc_text=['so each is low by at most %d%%' % pct(p, luna['usd']), '($0.57 of extraction; %s: the rows are not committed; cache writes were under-counted, so this is low by at most %d%%)' % (NR, pct(p, 0.57))], **common)
+        doc_text=['so each is low by at most %d%%' % upct(p, luna['usd']), '($0.57 of extraction; %s: the rows are not committed; cache writes were under-counted, so this is low by at most %d%%)' % (NR, upct(p, 0.57))], **common)
     g = [a for a in gate['arms'] if a['arm']['label'] == 'luna'][0]
-    add(id='facts-extraction Luna gate arm', model='gpt-6-luna', figure='Luna gate arm, 190 pages', published='$%.2f' % g['usd'], recomputed='at most $%.2f' % (g['usd'] + prem('gpt-6-luna', g['extraction_input_tokens'])),
+    add(id='facts-extraction Luna gate arm', model='gpt-6-luna', figure='Luna gate arm, 190 pages', published='$%.2f' % g['usd'], recomputed='at most $%.4f' % (math.ceil(1e4 * (g['usd'] + prem('gpt-6-luna', g['extraction_input_tokens'])) - 1e-9) / 1e4),
         status='NO VISIBLE MOVE', evidence='the bound stays inside the rounding', max_request_basis='mean %d input tokens per call' % (g['extraction_input_tokens'] / g['extraction_calls']), **common)
     add(id='facts-extraction totals', model='gpt-6.1-sol, gpt-6-luna', figure='Sol judge; gate; off, Luna and Haiku arms; R2 total', published='about $0.34; $3.27; $%.2f; $23.30' % arms,
         recomputed='at most 25%%; at most %d%%; at most %d%%; %s' % (gp, ap, 'less than 1%' if r2 < 1 else '%.1f%%' % r2), status='BOUND (rows not committed)',
@@ -558,9 +565,9 @@ def bounds_and_notes():
     reqs, tin = int(cells[2]), int(cells[3].replace(',', ''))
     tp = prem('gpt-6-luna', tin)
     add(id='temporal-graph 0.31 Luna ingest', doc=doc, model='gpt-6-luna', figure='Luna ingest, %d requests; billed total' % reqs, published='$0.0017; $0.0022',
-        recomputed='at most %d%% low; at most %d%% low' % (pct(tp, 0.0017), pct(tp, 0.0022)), status='BOUND (rows not committed)', evidence='probe.py prices input and output only',
+        recomputed='at most %d%% low; at most %d%% low' % (upct(tp, 0.0017), upct(tp, 0.0022)), status='BOUND (rows not committed)', evidence='probe.py prices input and output only',
         max_request_input=tin, max_request_basis='all %d input tokens of the %d requests' % (tin, reqs),
-        doc_text=['$0.0017 (%s: the rows are not committed; cache writes were under-counted, so this is low by at most %d%%)' % (NR, pct(tp, 0.0017)), 'so this is low by at most %d%%' % pct(tp, 0.0022)])
+        doc_text=['$0.0017 (%s: the rows are not committed; cache writes were under-counted, so this is low by at most %d%%)' % (NR, upct(tp, 0.0017)), 'so this is low by at most %d%%' % upct(tp, 0.0022)])
     sp = j(B + '/2026-10-14-expansion-latency/results/spend.json')
     lu = sp['by_phase_model']['arm:openai:gpt-6-luna']
     add(id='expansion-latency Luna arm', doc=B + '/2026-10-14-expansion-latency-preregistration.md', model='gpt-6-luna', figure='Luna expansion spend; total', published='$%.4f; $%.2f' % (lu, sp['total_usd']),
@@ -634,7 +641,7 @@ def main():
     counts = Counter(r['status'].split(' (')[0] for r in results)
     checked = [r for r in results if r['doc_match'] is not None]
     head = {'tool': TOOL, 'command': 'python3 ' + TOOL, 'rule': __doc__.split('Rule. ')[1].strip().replace('\n', ' '), 'prices_usd_per_million': PRICE,
-            'long_context_above_input_tokens': LONG, 'cache_write_from_prompt_tokens': MIN_CACHE, 'files_read': len(reads), 'files_read_at_older_commits': sorted(shown),
+            'long_context_above_input_tokens': LONG, 'cache_write_from_prompt_tokens': MIN_CACHE, 'cache_write_tokens': 'uncached prompt - %d' % WRITE_OFFSET, 'files_read': len(reads), 'files_read_at_older_commits': sorted(shown),
             'status_counts': dict(sorted(counts.items())), 'doc_check': {'figures_checked': len(checked), 'figures_matching': sum(r['doc_match'] for r in checked)}}
     lines = ['{'] + ['%s: %s,' % (json.dumps(k), json.dumps(v, separators=(',', ':'))) for k, v in head.items()] + ['"figures": [']
     lines += [json.dumps(r, separators=(',', ':'), ensure_ascii=False) + (',' if i < len(results) - 1 else '') for i, r in enumerate(results)]

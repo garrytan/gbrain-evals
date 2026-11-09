@@ -73,7 +73,7 @@ low, in percent. [Corrections](../corrections.md#openai-cache-writes) summarizes
 | same | A1 no-memory floor | $0.60 | unchanged: every prompt is under 1,024 tokens |
 | [Program-primary baseline](../benchmarks/2026-10-08-program-primary-baseline.md) | gpt-6.1-sol dollars per run | $0.100 | $0.116 |
 | [Program-primary hard baseline](../benchmarks/2026-10-08-program-primary-hard-baseline.md) | gpt-6.1-sol dollars per run | $0.075 | $0.088 |
-| [Sealed confirmation](../benchmarks/2026-10-11-t0b-sealed-confirmation.md) | gpt-6.1-sol dollars per cell, stack against frozen | $0.077 against $0.075 (1.04x) | at most $0.093 against $0.089 (1.04x) |
+| [Sealed confirmation](../benchmarks/2026-10-11-t0b-sealed-confirmation.md) | gpt-6.1-sol dollars per cell, stack against frozen | $0.077 against $0.075 (1.04x) | at most $0.0931 against $0.0893 (1.04x) |
 | [Hard root cause](../benchmarks/2026-10-08-program-primary-hard-root-cause.md) | gpt-6.1-sol dollar ratio against the baseline | 1.01x | 1.00x |
 | [Alias stack](../benchmarks/2026-10-09-alias-stack.md) | gpt-6.1-sol dollar ratio, development | 1.09x | 1.10x |
 | [Candidate 1](../benchmarks/2026-10-09-candidate-1-newer-mentions.md) | gpt-6.1-sol dollar ratio, fresh seeds | 1.01x | 1.02x |
@@ -81,14 +81,15 @@ low, in percent. [Corrections](../corrections.md#openai-cache-writes) summarizes
 | [Proactive brief v2](../benchmarks/2026-10-15-proactive-brief-dev-v2.md) | dollars per cell, off and on | $0.208 and $0.192 | $0.214 and $0.196 |
 
 The BEAM-1M arms were settled by a ledger from before `8a8e502a` and are repriced from each answer's recorded input
-tokens; cached answers and prompts under 1,024 tokens get no premium. The lane's figures come from its committed usage
-receipts. The sealed confirmation's rows are not committed, so its figures give gpt-6.1-sol the whole gap between each
-arm's ledger and its cells' recorded dollars, which makes them upper bounds; its ratio and envelope verdict don't
-change. In the hard baseline, the gpt-6.1-sol premium from the rows is 92% of the gap between the ledger and the cells.
-Every envelope stays inside its limits. No committed request in these runs passes 272,000 input tokens (the largest has
-103,137), so the long-context tier doesn't apply. The sealed confirmation commits no requests; its gpt-6.1-sol cells
-average 93,000 to 97,000 input tokens in all. [The BEAM-1M and lane tool](2026-11-09-openai-cache-writes/beam-and-program-primary/README.md)
-recomputes every figure in this section and the cache-write rule.
+tokens; cached answers and prompts under 1,027 tokens get no premium, and the rest get it on their input less 3 tokens.
+The lane's figures come from its committed usage receipts. The sealed confirmation's rows are not committed, so its
+figures give gpt-6.1-sol the whole gap between each arm's ledger and its cells' recorded dollars, which makes them upper
+bounds; its ratio and envelope verdict don't change. In the hard baseline, the gpt-6.1-sol premium from the rows is 92%
+of the gap between the ledger and the cells. Every envelope stays inside its limits. No committed request in these runs
+passes 272,000 input tokens (the largest has 103,137), so the long-context tier doesn't apply. The sealed confirmation
+commits no requests; its gpt-6.1-sol cells average 93,000 to 97,000 input tokens in all. [The BEAM-1M and lane
+tool](2026-11-09-openai-cache-writes/beam-and-program-primary/README.md) recomputes every figure in this section and the
+cache-write rule.
 
 ## Cat 40
 
@@ -525,7 +526,10 @@ The high ends include the long-context rates for sessions that could pass 272,00
 <a id="cw-hardconf-analysis-main"></a>
 ### [2026-10-10-model-ladder-hard-confirmation/analysis-main.md](../benchmarks/2026-10-10-model-ladder-hard-confirmation/analysis-main.md)
 
-The high ends include the long-context rates for sessions that could pass 272,000 input tokens.
+The high ends include the long-context rates for sessions that could pass 272,000 input tokens. The report's own
+gpt-6.1-sol figures for world M use the tighter of two true high ends, 0.45 with gbrain and 0.35 with files per
+success, because they cap the long-context share at what the run's ledger, which applied those rates, charged beyond
+the cache-write-corrected rows; this table doesn't apply that cap, so its high ends ($0.4780 and $0.3536) are looser.
 
 | Line | Row | Column | Was | Now |
 |---|---|---|---|---|
@@ -963,7 +967,7 @@ repricing tool's [results.json](2026-11-09-openai-cache-writes/other-runners/res
 | [N2 judges](../benchmarks/2026-10-06-n2-judges.md) | GPT-6 Luna cost per 1,000 judged pairs (title, finding, table) | $0.21 | $0.24; Luna stays the cheapest model that passes |
 | [N2 judges](../benchmarks/2026-10-06-n2-judges.md) | GPT-6.1 Sol cost per 1,000 judged pairs | $2.69 | $3.22 |
 | [N2 judges](../benchmarks/2026-10-06-n2-judges.md) | Spend for the five models | $25.52 | about 2% low |
-| [N2 judges](../benchmarks/2026-10-06-n2-judges.md) | GPT-6 Luna spend (also the low end of the per-model range) | $0.16 | about 13% low |
+| [N2 judges](../benchmarks/2026-10-06-n2-judges.md) | GPT-6 Luna spend (also the low end of the per-model range) | $0.16 | about 12% low |
 | [N2 judges](../benchmarks/2026-10-06-n2-judges.md) | GPT-6.1 Sol spend | $1.99 | about 20% low |
 | [TODOS](../../TODOS.md) | N2 entry: spend; cheapest passing model's cost per 1,000 pairs | $25.52; $0.21 | about 2% low; $0.24 |
 | [Content repair](../benchmarks/2026-10-09-content-repair-judgment.md) | gpt-6.1-sol USD per pair (report table and summary.md) | $0.0022 | $0.0023; Sol stays the cheapest per pair |
@@ -1000,16 +1004,16 @@ repricing tool's [results.json](2026-11-09-openai-cache-writes/other-runners/res
 | [Harness ledger](../../eval/harness-provider/LEDGER.md) | 10% frontier sweep | $2,421 | about 1% low; it still fits the cap |
 | [Harness ledger](../../eval/harness-provider/LEDGER.md) | 16k targets lever | $2,976 | about 2% low |
 | [Harness ledger](../../eval/harness-provider/LEDGER.md) | A-reader alternatives: Sonnet, Opus, gpt-6.1-sol | $3,483, $4,976, $3,014 | about 2%, 1% and 8% low |
-| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 37 counted GPT cell | $6.17 | low by at most 18% (rows not committed) |
-| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 37 counted cells | $33.77 | low by at most 3% |
-| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 37 labels-absent arm | $17.01 | low by at most 22% (no per-model split; bound from its input tokens) |
-| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 37 Fable smoke and GPT pre-flight | $0.35 | low by at most 1% |
-| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 38 model arm | $5.44 | low by at most 24% (no per-model split) |
-| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 39 model arm and embedding probe | $0.85 | low by at most 23% (no per-model split) |
+| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 37 counted GPT cell | $6.17 | low by at most 19% (rows not committed) |
+| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 37 counted cells | $33.77 | low by at most 4% |
+| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 37 labels-absent arm | $17.01 | low by at most 23% (no per-model split; bound from its input tokens) |
+| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 37 Fable smoke and GPT pre-flight | $0.35 | low by at most 2% |
+| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 38 model arm | $5.44 | low by at most 25% (no per-model split) |
+| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Cat 39 model arm and embedding probe | $0.85 | low by at most 24% (no per-model split) |
 | [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Utility guard GPT reader | $14.72 | about 24% low (estimate by W10b's corrected ratio; rows not committed) |
 | [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Utility guard line | $86.23 | about 4% low |
 | [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Real spend | $212.15 | about 2% low, and low by at most 5% |
-| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Spent before amendment 4 | $165.14 | about 2% low, and low by at most 6% |
+| [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Spent before amendment 4 | $165.14 | about 2% low, and low by at most 7% |
 | [Memory trust](../benchmarks/2026-10-08-memory-trust-results-paid.md) | Preference, preference v2 and relay GPT cells | $3.12, $2.50, $2.14 + $2.12 | no move: priced by runners that read cache writes |
 | [Facts extraction](../benchmarks/2026-10-08-facts-extraction-model.md) | GPT-6 Luna $ per 1,000 pages, measured / if all 996 ran | $0.89 / $1.23 | low by at most 3% each (rows not committed); Haiku 5.5 stays above Luna at the bound |
 | [Facts extraction](../benchmarks/2026-10-08-facts-extraction-model.md) | Luna extraction over 624 requests | $0.57 | low by at most 4% |
@@ -1022,7 +1026,7 @@ repricing tool's [results.json](2026-11-09-openai-cache-writes/other-runners/res
 | [Q2](../benchmarks/2026-10-05-heldout-program/q2.md) | G6 ingest (Sonnet, Sol and Opus) | $293.70 | low by at most 25% (no per-model split committed) |
 | [Q2](../benchmarks/2026-10-05-heldout-program/q2.md) | Campaign cost, with and without minting | $306.56; $333.97 | not annotated: the doc doesn't say what it includes |
 | [Temporal graph 0.31](../comparison-systems/ext-temporal-graph/shipped-0.31/README.md) | gpt-6-luna ingest, 10 requests | $0.0017 | low by at most 20% (proxy rows not committed) |
-| [Temporal graph 0.31](../comparison-systems/ext-temporal-graph/shipped-0.31/README.md) | Probe stack billed total | $0.0022 | low by at most 15% |
+| [Temporal graph 0.31](../comparison-systems/ext-temporal-graph/shipped-0.31/README.md) | Probe stack billed total | $0.0022 | low by at most 16% |
 | [P4](../benchmarks/2026-10-05-heldout-program/p4.md) | Core gate gpt-6.1-sol cost per correct answer, A′ → C (verdict JSON also gives $0.282 / $0.318 per question) | $0.32 → $0.37 | low by at most 25% (the rows are in gbrain's decision record); dated note; Sonnet stays above Sol at the bound; JSON not edited |
 | [Held-out verdicts](../benchmarks/2026-10-05-heldout-verdicts/p5-h5b-heldout-2026-10-06.json) | P5 H5b agent spend, off / on, Sonnet and Sol together | 20.6 / 21.71 | low by at most 25%; the P5 page doesn't print it, and the JSON isn't edited |
 | [Held-out verdicts](../benchmarks/2026-10-05-heldout-verdicts/p5-h3-heldout-2026-10-06.json) | P5 H3 judge spend, Sonnet and Sol judges | 0.054 | low by at most 25%; as above |

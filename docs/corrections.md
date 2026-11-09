@@ -164,7 +164,7 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   under 1,024 tokens, and the arms' order by cost is unchanged.
   [Report](benchmarks/2026-10-08-beam-1m-failure-analysis.md#2-reading-arms-on-the-frozen-evidence).
 - **gpt-6.1-sol's dollars in the program-primary lane are low.** Its dollars per run are $0.116 in the baseline (was
-  $0.100) and $0.088 in the hard baseline (was $0.075). The sealed confirmation's are at most $0.093 against $0.089
+  $0.100) and $0.088 in the hard baseline (was $0.075). The sealed confirmation's are at most $0.0931 against $0.0893
   (was $0.077 against $0.075, still 1.04x); its sealed rows are not committed, so these give Sol the whole gap between
   each arm's ledger and its cells. The hard root cause's Sol dollar ratio is 1.00x (was 1.01x), the alias stack's
   development ratio 1.10x (was 1.09x) and Candidate 1's fresh-seed ratio 1.02x (was 1.01x). The proactive brief's
@@ -181,13 +181,16 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
 - **Cat 40's gpt-6.1-sol, gpt-6-sol, gpt-6-luna and gpt-6-astra dollars are low.** Repriced from the committed results
   rows with the repository's own analyzers, single-model figures rise 15% to 23% for gpt-6.1-sol at the low end and up
   to 141% at the high end, where every session could have passed 272,000 input tokens (scale-tier memory dollars per
-  success); gpt-6-sol's rise 14% to 19%, up to 85%; gpt-6-astra's 13% to 19%, up to 32%; gpt-6-luna's about 9%. On the
-  Hard confirmation's M world, Sol's dollars per success are $0.38 to $0.45 with gbrain and $0.28 to $0.35 with files
-  (was $0.32 and $0.24). Figures averaged over several models rise 1% to 6% at the low end and up to 24% at the high
-  end: on the first world, gbrain and files cost $0.248 and $0.115 to $0.116 per task (was $0.238 and $0.112), still
-  about twice, and on the October 7 Hard world gbrain stays cheaper per task than files (0.72 to 0.78 against 0.99 to
-  1.00, was 0.69 against 0.98). The Hard confirmation's S world, the sealed next-confirm cells, the Hard calibration and
-  the P8 surface held-out verdict have no committed rows, so they are not recomputed.
+  success); gpt-6-sol's rise 14% to 19%, up to 85%; gpt-6-astra's 13% to 19%, up to 33%; gpt-6-luna's about 9% to 18%.
+  On the Hard confirmation's M world, Sol's dollars per success are $0.38 to $0.45 with gbrain and $0.28 to $0.35 with
+  files (was $0.32 and $0.24). Figures averaged over several models rise 1% to 7% at the low end and up to 25% at the
+  high end: on the first world, gbrain and files cost $0.248 and $0.115 to $0.116 per task (was $0.238 and $0.112),
+  still about twice, and on the October 7 Hard world gbrain stays cheaper per task than files (0.72 to 0.78 against 0.99
+  to 1.00, was 0.69 against 0.98). Each low end assumes that only the first request of a simple-arm session (fs, fs-acl,
+  pg, memory or oracle) can be under 1,027 tokens; the rows record session totals, so they can't confirm it, and each
+  request that breaks it lowers that session's true premium by at most 1,026 tokens at its model's cache-write premium,
+  about $0.0005 for gpt-6.1-sol and $0.0026 for gpt-6-astra. The Hard confirmation's S world, the sealed next-confirm
+  cells, the Hard calibration and the P8 surface held-out verdict have no committed rows, so they are not recomputed.
   [Model ladder](benchmarks/2026-10-02-model-ladder.md),
   [Hard](benchmarks/2026-10-07-model-ladder-hard.md),
   [Hard confirmation](benchmarks/2026-10-10-model-ladder-hard-confirmation.md),

@@ -73,7 +73,7 @@ fixed-evidence search:
 | `/v1/chat/completions` `gpt-4.1-mini` (search rerank) | 12 | 1,122 | 12 | $0.0005 |
 
 31 requests forwarded, 0 refused, $0.0022 billed (not recomputed 2026-11-09: the rows are not committed; cache writes
-were under-counted, so this is low by at most 15%). Ingest took about 11 seconds per session and spent about 13,700
+were under-counted, so this is low by at most 16%). Ingest took about 11 seconds per session and spent about 13,700
 input tokens on about 90 tokens of conversation. That ratio is mostly fixed prompt overhead on tiny sessions and does
 not predict the cost of a long session. Each `gpt-6-luna` request reserves about $0.0094 against the lease before it is
 forwarded, because graphiti-core asks for 16,384 output tokens.
