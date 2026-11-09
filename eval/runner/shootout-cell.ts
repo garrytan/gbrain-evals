@@ -14,7 +14,8 @@
  * it is marked launched before the VM starts, a launched lease is never
  * launched again, and a cell that never reports back keeps its full
  * reservation until it is settled or abandoned (charged in full). A retry
- * reserves a new lease from what is left.
+ * reserves a new lease from what is left. A campaign with a BG1 unit is also
+ * checked before init, reserve, launch and resume (eval/runner/bg1/launch.ts).
  *
  *   bun eval/runner/shootout-cell.ts init    --campaign <manifest.json> --state <dir>
  *   bun eval/runner/shootout-cell.ts reserve --campaign <manifest.json> --state <dir> --cell <id>
@@ -1178,6 +1179,7 @@ if (import.meta.main) {
         fix: { next: 'run', argv: ['bun', 'run', 'eval:scoreboard', 'status', '--campaign', manifest, '--state', state], verify: ['bun', 'run', 'eval:scoreboard', 'status', '--campaign', manifest, '--state', state] },
         state: { lease: l.lease_id, status: l.status, exit_code: l.exit_code ?? null, cell_exit_code: l.cell_exit_code ?? null } });
     };
+    if (['init', 'reserve', 'launch', 'resume'].includes(cmd)) (await import('./bg1/launch.ts')).requireBg1Launch(c.manifest, manifest);
     if (cmd === 'init') print(c.init());
     else if (cmd === 'reserve') print(c.reserve(one('--cell') ?? ''));
     else if (cmd === 'launch' && argv.includes('--dry-run')) {

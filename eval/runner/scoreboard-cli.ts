@@ -19,7 +19,8 @@
  *                                       the campaign's 20-question smoke cells
  *   run      --campaign <m> --state <dir> (--cell <id> | --cells a,b | --wave N) [--local [--setup]] [--sealed] [--dry-run]
  *                                       preflight, reserve, launch (Ubicloud through the repository runner, or this
- *                                       machine with --local); exits non-zero when any cell fails
+ *                                       machine with --local); exits non-zero when any cell fails. A BG1 campaign
+ *                                       is checked against its window first (eval/runner/bg1/launch.ts)
  *   status   --campaign <m> --state <dir> [--progress <progress.md>]
  *   judge    [args]                     repeated judging (eval/runner/judge-repeat.ts)
  *   render   [--campaign <m> --state <dir>] [args]
@@ -353,6 +354,7 @@ export async function runCells(a: Args, opts: { smoke?: boolean; runner?: Runner
     fix: { next: 'run', argv: [...FRONT, 'plan', '--campaign', '<manifest.json>'] } });
   const local = has(a, '--local'), sealed = has(a, '--sealed'), dry = has(a, '--dry-run');
   const c = new Campaign(manifest, resolve(state));
+  (await import('./bg1/launch.ts')).requireBg1Launch(c.manifest, manifest);
   const wave = one(a, '--wave');
   let ids = one(a, '--cell') ? [one(a, '--cell')!] : one(a, '--cells') ? one(a, '--cells')!.split(',').filter(Boolean)
     : wave ? planWaves(c.manifest).find(w => w.wave === Number(wave))?.cells ?? [] : opts.smoke ? c.manifest.cells.filter(x => x.smoke).map(x => x.id) : [];
