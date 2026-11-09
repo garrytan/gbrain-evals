@@ -10,8 +10,8 @@ import { join } from 'node:path';
 import {
   ALL_SETS, BG1_ASSUMPTIONS, BG1_JUDGE_BY_READER, BG1_SETS, bg1JudgeOf, definitionProblems, frontierJudgesFor, isBg1Benchmark, PER_READER_JUDGE_SETTINGS,
 } from '../../eval/runner/q1/cells/definitions.ts';
-import { BG1_FC_UNITS, BG1_MANIFEST_PATH, bg1ManifestText, bg1Stage1OverCap, BG1_UNIT_WORLDS, BG1_WAVE_A_WORLDS, buildBG1Manifest, canonicalJudgeUsd, OPUS, PARTICLE, SOL, stage1CapUsd } from '../../eval/runner/q1/cells/bg1.ts';
-import { BG1_DEV_CONVERSATIONS, BG1_KEPT_UNITS, BG1_N_CAP, BG1_QUESTIONS_PER_WORLD, BG1_WAVE_A } from '../../eval/runner/bg1/types.ts';
+import { BG1_FC_UNITS, BG1_MANIFEST_PATH, bg1ManifestText, bg1Stage1OverCap, buildBG1Manifest, canonicalJudgeUsd, OPUS, PARTICLE, SOL, stage1CapUsd } from '../../eval/runner/q1/cells/bg1.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_KEPT_UNITS, BG1_N_CAP, BG1_QUESTIONS_PER_WORLD } from '../../eval/runner/bg1/types.ts';
 
 const ROOT = join(import.meta.dir, '..', '..');
 const KINDS = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
@@ -48,10 +48,6 @@ describe('bg1-cells.json', () => {
       if (c.system === 'baseline-full-context') expect([a.id, a.mode]).toEqual(['whole-full-context', 'full-context']);
       else expect([a.id, a.mode, a.budget]).toEqual([c.system === 'gbrain-defaults' ? 'p' : 'component-b8000', 'packed', 8000]);
     }
-  });
-
-  test('the runner-side copies of the shared names agree with eval/runner/bg1/types.ts, which the cell runner does not import', () => {
-    expect([BG1_UNIT_WORLDS, BG1_WAVE_A_WORLDS]).toEqual([BG1_KEPT_UNITS, BG1_WAVE_A]);
   });
 
   test('launch units: six kept worlds per unit on BG1 (seven shards to the cap), five on the reference (two shards), none on the dev worlds', () => {

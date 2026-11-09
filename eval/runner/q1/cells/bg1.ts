@@ -33,6 +33,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chatPrice, reservationUsd } from '../../budget-ledger.ts';
+import { BG1_KEPT_UNITS, BG1_WAVE_A } from '../../memory-qa/bg1-names.ts';
 import { DEFAULT_ROUTE_CAPS } from '../../metering-proxy.ts';
 import type { ScoreboardMessage } from '../scoreboard-errors.ts';
 import {
@@ -46,13 +47,6 @@ export const BG1_PREREGISTRATION = 'docs/benchmarks/2026-11-09-changing-facts-ba
 export const BG1_CAMPAIGN_ID = 'q1-scoreboard-bg1-changing-facts';
 /** Kept worlds per full-context launch unit: BG1-fc10's 10 worlds in two units, both inside wave A. */
 export const BG1_FC_UNITS = 5;
-/**
- * Kept worlds per launch unit and wave A's kept worlds, the values of eval/runner/bg1/types.ts BG1_KEPT_UNITS and
- * BG1_WAVE_A (bg1-cells.test.ts checks they agree). The cell runner imports nothing under eval/runner/bg1, so its
- * EXECUTES list stays the one committed campaigns recorded.
- */
-export const BG1_UNIT_WORLDS = 6;
-export const BG1_WAVE_A_WORLDS = 12;
 export const STAGE1_CAP_CEILING_USD = 300;
 export const STAGE1_CAP_SHARE = 0.75;
 /** The judge check's pool as planned (eval/runner/bg1/judge-check.ts): stage 1 dev answers and construction items, each graded by gpt-6-astra and claude-opus-5-5. */
@@ -117,7 +111,7 @@ export function bg1Lease(c: CellDefinition): CellDefinition {
 
 /** No write-to-queryable probes on any BG1 cell. */
 const noProbes = (set: SetId) => ({ sample: 0, seed: `bg1-probes-${set.toLowerCase()}`, conversations: 0 });
-const KEPT: Partial<Record<BG1SetId, number>> = { BG1: BG1_UNIT_WORLDS, 'BG1-fc10': BG1_FC_UNITS };
+const KEPT: Partial<Record<BG1SetId, number>> = { BG1: BG1_KEPT_UNITS, 'BG1-fc10': BG1_FC_UNITS };
 const cell = (set: BG1SetId, block: BG1BlockId, system: string, configuration: string, arms: ArmSpec[]) => {
   const made = makeCell(set, system, configuration, arms, {
     block, probes: noProbes(set), ...(KEPT[set] ? { keptUnits: KEPT[set] } : {}),
@@ -187,7 +181,7 @@ export function buildBG1Manifest(): BG1Manifest {
   // The counted block stops at 1.5 times its cells' estimate (its re-reads spend from their own ledgers), or at its units' leases where they hold more.
   const blocks = (Object.keys(BG1_BLOCKS) as BG1BlockId[]).map(id => ({ id: id as BlockId, label: BG1_BLOCKS[id], plan_usd: blockUsd(id), estimate_usd: blockUsd(id),
     cap_usd: id === 'BG1-S1' ? stage1CapUsd(stage1) : round(Math.max(cellsUsd(id) * 1.5, cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0))) }));
-  const waveA = (c: CellDefinition) => c.set === 'BG1-fc10' ? c.shards : BG1_WAVE_A_WORLDS / BG1_UNIT_WORLDS;
+  const waveA = (c: CellDefinition) => c.set === 'BG1-fc10' ? c.shards : BG1_WAVE_A / BG1_KEPT_UNITS;
   const units = (pick: (c: CellDefinition, i: number) => boolean) => cells.flatMap(c => Array.from({ length: c.shards }, (_, i) => i).filter(i => pick(c, i)).map(i => `${c.id}.c${i}`));
   const models = [...BG1_READERS, PARTICLE, ...Object.values(BG1_JUDGE_BY_READER), 'gemini:gemini-3.8-flash', F6_ASSUMPTIONS.extraction.model];
   const counted = blocks.find(b => b.id === 'BG1')!;
