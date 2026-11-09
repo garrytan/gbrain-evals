@@ -9,7 +9,8 @@
  *
  * The replayed tools are the read tools whose argument shapes the probe exposed (get_page, traverse_graph, get_backlinks).
  * Each call keeps its recorded arguments and reads a page the rollout brain holds (REPLAY_SLUG), so the replay measures
- * argument handling, not whether a slug exists. A recorded call whose arguments are not JSON is counted apart: no path can
+ * argument handling, not whether a slug exists. For the same reason a named section that page has no heading for is a
+ * content miss, counted as answered. A recorded call whose arguments are not JSON is counted apart: no path can
  * receive it. test/eval/skillopt-rollout-empty-args.test.ts drives the pinned build through the same helpers.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -113,7 +114,7 @@ async function replay(call: Call, calls: Recorded[]): Promise<ItemReplay['paths'
   for (const c of calls) {
     if (!c.args) continue;
     const r = await call(c.tool, { ...c.args, slug: REPLAY_SLUG[c.tool] });
-    if ('ok' in r) { out.ok++; continue; }
+    if ('ok' in r || (typeof c.args.section === 'string' && c.args.section && /has no heading/.test(r.error.message))) { out.ok++; continue; }
     const code = r.error.code ?? 'no_code';
     const byCode = out.refused[c.tool] ??= {};
     byCode[code] = (byCode[code] ?? 0) + 1;

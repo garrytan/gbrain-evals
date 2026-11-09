@@ -190,6 +190,12 @@ describe('tool-contract replay', () => {
       expect(p.ok + Object.values(p.refused).flatMap(Object.values).reduce((a, b) => a + b, 0)).toBe(r!.calls - r!.unparseable);
     }
   }, 120_000);
+
+  test('a named section the replay page has no heading for is a content miss, not a refusal: Opus\'s briefing calls all answer on the pinned build', async () => {
+    const [r] = await replayItems(resolveGbrainUnderTest(null).root, [{ family: 'opus', skill: 'briefing' }]);
+    expect(r!.refusals).toBe(0);
+    expect(r!.paths.mcp.ok).toBe(r!.calls - r!.unparseable);
+  }, 120_000);
 });
 
 const CLONE = process.env.NIGHTLY_GBRAIN_CLONE;
