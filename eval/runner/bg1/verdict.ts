@@ -347,9 +347,13 @@ function findReceipts(dirs: readonly string[]): CellFiles[] {
 /** The filled BG1 manifest as verdict.ts reads it: status, pinned files, the kept list and n_final, and earlier fills. */
 export interface FilledManifest { status: string; files: Array<{ path: string; sha256: string }>; kept?: string[]; n_final?: number | null; earlier_fills?: string[] }
 
-/** The corpus files a set-BG1 verdict loaded at bytes its --manifest does not pin (the loader pins against GBRAIN_EVALS_BG1_MANIFEST, or nothing). */
-export function unpinnedCorpusFiles(files: ReadonlyArray<{ path: string; sha256: string }>, manifest: FilledManifest): string[] {
-  const pins = new Map(manifest.files.map(f => [f.path, f.sha256]));
+/**
+ * The corpus files a set-BG1 verdict loaded at bytes its --manifest does not pin (the loader pins against
+ * GBRAIN_EVALS_BG1_MANIFEST, or nothing). The loader lists the manifest itself first, which pins every other file but
+ * not itself, so that entry is checked against the --manifest's own SHA-256 and every other file against its pins.
+ */
+export function unpinnedCorpusFiles(files: ReadonlyArray<{ path: string; sha256: string }>, manifest: FilledManifest, manifestSha: string): string[] {
+  const pins = new Map([...manifest.files.map(f => [f.path, f.sha256] as const), [BG1_MANIFEST_REL, manifestSha] as const]);
   return files.filter(f => pins.get(f.path) !== f.sha256).map(f => f.path);
 }
 
@@ -430,7 +434,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
   const found = findReceipts(dirs);
   const benchmark = defs[0]?.benchmark ?? refuse(`bg1-cells.json has no cells on ${o.set}`);
   const corpus = deps.questions ? null : loadCorpus(benchmark, undefined, wave ?? (finalSet ? new Set(finalSet) : undefined));
-  const off = corpus && manifest ? unpinnedCorpusFiles(corpus.source.files, manifest) : [];
+  const off = corpus && manifest ? unpinnedCorpusFiles(corpus.source.files, manifest, manifestSha) : [];
   if (off.length) refuse(`the loaded ${benchmark} corpus read ${off.join(', ')} at bytes the --manifest does not pin; the strata and values that decide the verdict come only from the pinned worlds`);
   const qs = deps.questions ?? corpus!.questions;
   const byId = new Map(qs.map(q => [q.id, q]));

@@ -7,10 +7,11 @@
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
+import { BG1_CUSTODY_MARKER, buildQuestions, planWorld, PUBLIC_PHRASING, renderTemplateWorld, sealedWorldSeed } from '../../eval/generators/changing-facts-gen.ts';
+import { bg1ManifestFiles, loadBg1, type MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { answerId } from '../../eval/runner/memory-qa/records.ts';
 import { frontierInstrumentId, runConfigText } from '../../eval/runner/q1/cell.ts';
@@ -21,11 +22,29 @@ import {
   analyze, BG1_MANIFEST_REL, commonSet, dropsOf, gatingProblems, loadInput, main, matcherAgreement, pilotStats, readerValue, receiptManifestProblems, ROLES, unpinnedCorpusFiles, worldDifferences,
   type Bg1Input, type Bg1Row, type QuestionInput, type ReaderValue,
 } from '../../eval/runner/bg1/verdict.ts';
-import { BG1_DEV_CONVERSATIONS, BG1_STRATA, type Bg1Stratum } from '../../eval/runner/bg1/types.ts';
+import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_STRATA, BG1_WAVE_A, type Bg1Stratum } from '../../eval/runner/bg1/types.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'bg1-verdict-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
-const sha = (s: string) => createHash('sha256').update(s).digest('hex');
+
+/** A custody root outside the checkout holding the first `count` slots, rendered from templates on a test seed, and a manifest that pins them and keeps them all. */
+function mintedSet(count: number) {
+  const root = mkdtempSync(join(tmp, 'custody-'));
+  const line = ['bg1', 'seed', 'v1'].join('-') + ':' + sha('verdict test seed');
+  const phrasing = { ...PUBLIC_PHRASING, custody: BG1_CUSTODY_MARKER };
+  const ids = BG1_CONVERSATIONS.slice(0, count);
+  ids.forEach((id, i) => {
+    const plan = planWorld(id, sealedWorldSeed(line, i + 1), { phrasing, custody: true });
+    const dir = join(root, 'set', 'worlds', id);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'questions.json'), JSON.stringify(buildQuestions(plan, phrasing)));
+    writeFileSync(join(dir, 'world.json'), JSON.stringify(renderTemplateWorld(plan, 4000)));
+  });
+  const manifestPath = join(root, 'set', 'bg1-manifest.json');
+  writeFileSync(manifestPath, JSON.stringify({ dataset: 'bg1', status: 'filled', layout: 'worlds/<id>/{world,questions}.json', note: 'verdict test', files: bg1ManifestFiles(join(root, 'set'), ids), filled_at: '2026-11-20', kept: ids }));
+  return { root, manifestPath, bytes: readFileSync(manifestPath) };
+}
+const sha = (s: string | Buffer) => createHash('sha256').update(s).digest('hex');
 const READERS = [OPUS, SOL, PARTICLE];
 const ASTRA = 'openai:gpt-6-astra';
 
@@ -219,9 +238,30 @@ describe('judgment and receipt checks', () => {
   // Value: protects=the strata and values that decide a set-BG1 verdict come from the bytes its --manifest pins; fails_when=the corpus loads against GBRAIN_EVALS_BG1_MANIFEST or unpinned and nothing compares it to --manifest; why_new=red-team #5 on #398; seam=unpinnedCorpusFiles; no_claim=custody of the bytes
   test('a set-BG1 verdict refuses corpus bytes its --manifest does not pin', () => {
     const manifest = { status: 'filled', files: [{ path: 'worlds/bg1-001/world.json', sha256: 'a'.repeat(64) }, { path: 'worlds/bg1-001/questions.json', sha256: 'b'.repeat(64) }] };
-    expect(unpinnedCorpusFiles(manifest.files, manifest)).toEqual([]);
-    expect(unpinnedCorpusFiles([{ path: 'worlds/bg1-001/world.json', sha256: 'c'.repeat(64) }, { path: 'worlds/bg1-002/world.json', sha256: 'a'.repeat(64) }], manifest)).toEqual(['worlds/bg1-001/world.json', 'worlds/bg1-002/world.json']);
+    expect(unpinnedCorpusFiles(manifest.files, manifest, 'd'.repeat(64))).toEqual([]);
+    expect(unpinnedCorpusFiles([{ path: 'worlds/bg1-001/world.json', sha256: 'c'.repeat(64) }, { path: 'worlds/bg1-002/world.json', sha256: 'a'.repeat(64) }], manifest, 'd'.repeat(64))).toEqual(['worlds/bg1-001/world.json', 'worlds/bg1-002/world.json']);
   });
+
+  // Value: protects=a set-BG1 verdict and pilot can read the corpus the loader returns; fails_when=the manifest entry the loader lists first is checked against the manifest's own pins (which never hold it) instead of the manifest's SHA-256, so every set-BG1 verdict and pilot refuses; why_new=blocker 1 on #398 (verdict.ts:433); seam=unpinnedCorpusFiles, loadInput; no_claim=custody of the bytes
+  test('the manifest entry the loader lists first is checked against the --manifest\'s own SHA-256, and every other file against its pins', () => {
+    const { root, manifestPath, bytes } = mintedSet(1);
+    const manifest = JSON.parse(bytes.toString('utf8'));
+    const corpus = loadBg1({ log: join(root, 'access.jsonl'), decisionId: 'd', purpose: 'verdict test' }, { root: join(root, 'set'), manifestPath, worldEnd: '2026-11-15', only: new Set(['bg1-001']) });
+    expect(corpus.source.files[0]).toEqual({ path: BG1_MANIFEST_REL, sha256: sha(bytes) });
+    expect(unpinnedCorpusFiles(corpus.source.files, manifest, sha(bytes))).toEqual([]);
+    expect(unpinnedCorpusFiles(corpus.source.files, manifest, 'f'.repeat(64))).toEqual([BG1_MANIFEST_REL]);
+    expect(unpinnedCorpusFiles(corpus.source.files.map((f, i) => (i === 1 ? { ...f, sha256: '0'.repeat(64) } : f)), manifest, sha(bytes))).toEqual([corpus.source.files[1].path]);
+  }, 60_000);
+
+  test('a set-BG1 pilot gets past the corpus check to its receipts', () => {
+    const { root, manifestPath } = mintedSet(BG1_WAVE_A);
+    const env = { GBRAIN_EVALS_BG1_SOURCE: join(root, 'set'), GBRAIN_EVALS_BG1_MANIFEST: manifestPath, GBRAIN_EVALS_CUSTODY_LOG: join(root, 'access.jsonl'), GBRAIN_EVALS_BG1_WORLD_END: '2026-11-15', GBRAIN_EVALS_BG1_UNIT: undefined };
+    const saved = Object.fromEntries(Object.keys(env).map(k => [k, process.env[k]]));
+    for (const [k, v] of Object.entries(env)) if (v === undefined) delete process.env[k]; else process.env[k] = v;
+    mkdirSync(join(root, 'out', 'cells'), { recursive: true });
+    try { expect(() => loadInput([join(root, 'out')], { set: 'BG1', manifestPath, waveA: true })).toThrow(/^no receipt for bg1\./); }
+    finally { for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+  }, 120_000);
 });
 
 // ─── Synthetic receipts on the dev set ────────────────────────────────
