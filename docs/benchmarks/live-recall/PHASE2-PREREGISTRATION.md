@@ -811,7 +811,7 @@ detectable differences for the four primaries at the kept N, and the counted run
 
 **Counted-run identity (recorded 2026-11-08, before the freeze; updated the same day for R78 and again for the label
 floor and truncation rules, and on 2026-11-09 for the split by task origin and for gold clusters).** The counted run's and the judge check's
-harness digest must be `e6e0f2d147991999b88744754ee38b63aa6ab0b1cdc182f73d347e43a9d65616`. The digest covers the twenty files in
+harness digest must be `74ea58a541b921b97e6d807f55b13d23ec36b618862e99598b527aca1d3c6404`. The digest covers the twenty files in
 `HARNESS_FILES` (`eval/runner/live-recall/tasks.ts`): the runner, the judge, the agent loop, the budget ledger and the
 cost path they price with, including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json`
 must also show a `runner_commit` that contains 320db88b, the R78 commit, the label-floor and truncation commit, the

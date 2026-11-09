@@ -228,7 +228,7 @@ function compare(spec: Spec, rows: Outcome[], invalidCells: Set<string>) {
   const d = clusteredPairedDelta(pairs, { seed: SEED, draws: DRAWS });
   const m = spec.form === POOLED ? null : exactMcNemar(pairs);
   const byTask = new Map<string, number>();
-  for (const x of pairs) byTask.set(x.cluster, (byTask.get(x.cluster) ?? 0) + x.b - x.a);
+  for (const x of pairs) { const task = x.id.slice(x.id.indexOf('|') + 1); byTask.set(task, (byTask.get(task) ?? 0) + x.b - x.a); }
   const ci = d.ci95 ? [round(d.ci95[0])!, round(d.ci95[1])!] : null;
   return {
     ...head, n_pairs: d.n_pairs, mean_a: round(d.mean_a), mean_b: round(d.mean_b), delta: round(d.delta), ci95: ci,

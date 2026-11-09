@@ -1166,12 +1166,14 @@ describe('phase 2 judge check (R78)', () => {
     expect([clusters.get('t00'), clusters.get('t01'), clusters.get('t02'), clusters.get('t03'), clusters.get('t10')]).toEqual(['t00', 't00', 't02', 't02', 't10']);
     expect(goldClusterSummary(tasks)).toEqual({ n: 15, shared: [2, 2, 2, 2, 2] });
     expect(goldClusters([{ id: 'b', gold_pages: ['x'] }, { id: 'c', gold_pages: ['x', 'y'] }, { id: 'a', gold_pages: ['y'] }] as any)).toEqual(new Map([['b', 'a'], ['c', 'a'], ['a', 'a']]));
-    const card = buildTaskScorecard({
+    const build = (aRight: (i: number) => boolean, bRight: (i: number) => boolean) => buildTaskScorecard({
       tasks, forms: ['paraphrase'], arms: ['A', 'B'], models: ['claude-opus-5-5'], identity: {}, stop: null, ledger_usd: null, audit: null,
-      records: tasks.flatMap((t: any, i: number) => [answer(t.id, 'A', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'A', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', false), answer(t.id, 'B', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'B', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', i < 10)]),
+      records: tasks.flatMap((t: any, i: number) => [answer(t.id, 'A', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'A', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', aRight(i)), answer(t.id, 'B', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'B', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', bRight(i))]),
       task_summary: { submitted: 20, kept_at_freeze: 20, dropped_unreachable: 0, gold_missing_at_run: 0, sha_prefix: '0'.repeat(12), n_frozen: 20 },
       custody: { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: {} },
     });
+    const card = build(() => false, i => i < 10);
+    expect(build(i => i === 1, i => i < 10 && i !== 1).comparisons.find(c => c.id === 'p1_b_vs_a_opus')!.worse_tasks).toBe(1);
     expect(() => validateTaskScorecard(card)).not.toThrow();
     const p1 = card.comparisons.find(c => c.id === 'p1_b_vs_a_opus')!;
     const pairs = (cluster: (id: string) => string) => ids.map((id, i) => ({ id: 'paraphrase|' + id, cluster: cluster(id), a: 0, b: i < 10 ? 1 : 0 }));
