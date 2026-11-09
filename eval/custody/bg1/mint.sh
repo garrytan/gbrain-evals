@@ -3,7 +3,7 @@
 # eval/custody/bg1/render.ts (docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md).
 #
 #   eval/custody/bg1/mint.sh --out <dir>/bg1-custody --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json
-#       [--count 48] [--start 1] [--target-tokens 200000]
+#       [--count 48] [--start 1] [--target-tokens 200000] [--yield-gate-ack <approval id>]
 #       (--fake [--fake-break <slot>:<session>:<attempts>,...]
 #        | --budget-ledger <sqlite> --budget-run-id <id> --paid-window <unit> --window-cap-usd <n>)
 #
@@ -23,7 +23,12 @@
 #     <out>/render-cache, so a rerun buys nothing twice.
 #   - Yield gate. Two dropped worlds among mint slots 1 to 5 pause the mint with exit 3. Drops are counted from the
 #     render records under --out (render/bg1-NNN.json), so every invocation on one --out counts them, a resumed or
-#     --start run included, and a run on an --out that already holds two pauses before it renders anything.
+#     --start run included, and a run on an --out that already holds two pauses before it renders anything. A pause goes
+#     to GBEV-3, whose approval id comes back as --yield-gate-ack (a- and 12 hex digits). mint.sh appends the id, the
+#     time and the early-drop count to render/yield-gate-acks.jsonl, and from then on every invocation on that --out
+#     counts only the drops past the latest acknowledged count, so two more pause it again. An ack is refused unless
+#     the gate is paused, and so is an id an earlier pause used; the latest ack's id may be given again on a resumed
+#     run. With no ack recorded, the gate is as above.
 #   - One ledger. A relative --budget-ledger is resolved once, against the directory mint.sh starts in, before the window
 #     check, so the check, both proxies and render.ts all name the same ledger file. CDPATH is unset first, so a
 #     relative --out or --budget-ledger never resolves against a directory the caller's CDPATH names.
@@ -54,7 +59,7 @@ file_mode() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"; }
 owner_only() { case "$(file_mode "$1")" in 600|400) return 0 ;; *) return 1 ;; esac; }
 
 OUT="" SEED_FILE="${BG1_SEED_FILE:-}" PHRASING="${BG1_PHRASING_FILE:-}" COUNT=48 START=1 TARGET=200000 MODE=real BREAKS=""
-LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP=""
+LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --out) OUT="$2"; shift 2 ;;
@@ -69,6 +74,7 @@ while [ $# -gt 0 ]; do
     --budget-run-id) RUN_ID="$2"; shift 2 ;;
     --paid-window) WINDOW="$2"; shift 2 ;;
     --window-cap-usd) WINDOW_CAP="$2"; shift 2 ;;
+    --yield-gate-ack) ACK="$2"; shift 2 ;;
     -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
     *) die "unknown argument $1" ;;
   esac
@@ -81,6 +87,7 @@ done
 [ "$START" -ge 1 ] && [ $((START + COUNT - 1)) -le 48 ] || die "--start must be at least 1 and the last slot at most 48"
 [[ "$TARGET" =~ ^[0-9]+$ ]] || die "--target-tokens must be a whole number"
 [ "$MODE" = fake ] || [ -z "$BREAKS" ] || die "--fake-break is a --fake drill"
+[ -z "$ACK" ] || [[ "$ACK" =~ ^a-[0-9a-f]{12}$ ]] || die "--yield-gate-ack takes GBEV-3's approval id, a- and 12 hex digits"
 case "$(basename "$OUT")" in bg1-custody*) ;; *) die "--out must be a directory whose name starts with bg1-custody" ;; esac
 case "$SEED_FILE" in *.bg1-seed) ;; *) die "the seed file must be named *.bg1-seed" ;; esac
 case "$PHRASING" in *.bg1-phrasing.json) ;; *) die "the phrasing file must be named *.bg1-phrasing.json" ;; esac
@@ -155,13 +162,30 @@ early_drops() {
   for s in 1 2 3 4 5; do grep -Eq '"status": ?"dropped"' "$OUT/render/$(printf 'bg1-%03d' "$s").json" 2>/dev/null && n=$((n + 1)); done
   printf '%s' "$n"
 }
+ACKS="$OUT/render/yield-gate-acks.jsonl"
+# The early-drop count the latest acknowledgement recorded, or 0 with none recorded.
+acked_drops() {
+  local n=0
+  [ ! -s "$ACKS" ] || n="$(tail -n 1 "$ACKS" | sed -n 's/^{"ack":"a-[0-9a-f]\{12\}","at":"[0-9TZ:-]*","early_drops":\([0-9][0-9]*\)}$/\1/p')"
+  [ -n "$n" ] || die "render/yield-gate-acks.jsonl ends in a line that is not an acknowledgement"
+  printf '%s' "$n"
+}
 yield_gate() {
-  local n
+  local n a
   n="$(early_drops)"
-  [ "$n" -ge 2 ] || return 0
-  say "summary=paused reason=yield_gate mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 early_drops=$n"
+  a="$(acked_drops)"
+  [ $((n - a)) -ge 2 ] || return 0
+  say "summary=paused reason=yield_gate mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 early_drops=$n$([ ! -s "$ACKS" ] || printf ' acked_drops=%s' "$a")"
   exit 3
 }
+if [ -n "$ACK" ] && ! { [ -s "$ACKS" ] && tail -n 1 "$ACKS" | grep -Fq "{\"ack\":\"$ACK\","; }; then
+  ! grep -Fq "{\"ack\":\"$ACK\"," "$ACKS" 2>/dev/null || die "approval $ACK acknowledged an earlier pause; a new pause needs a new approval"
+  n="$(early_drops)"
+  a="$(acked_drops)"
+  [ $((n - a)) -ge 2 ] || die "the yield gate is not paused on this --out, so --yield-gate-ack has nothing to acknowledge"
+  printf '{"ack":"%s","at":"%s","early_drops":%s}\n' "$ACK" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$n" >> "$ACKS"
+  say "yield_gate_ack=$ACK early_drops=$n"
+fi
 yield_gate $((START - 1))
 for ((slot = START; slot < START + COUNT; slot++)); do
   id="$(printf 'bg1-%03d' "$slot")"

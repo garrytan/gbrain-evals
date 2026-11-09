@@ -161,6 +161,52 @@ describe('mint.sh --fake, validate.ts and hashlist.ts end to end', () => {
     expect(leaks(one.all + two.all + later.all, probes(join(out, 'set'), j.line))).toEqual([]);
   }, 240_000);
 
+  // Value: protects=GBEV-3's approval of a yield-gate pause lets the mint go on, and the gate still pauses on two more drops; fails_when=an approved pause exits 3 on every later invocation, an ack is taken with no pause or with a malformed or used id, or an ack turns the gate off; why_new=BG1 follow-up fix 7 (mint.sh had no way to go on after an approved pause); seam=mint.sh --fake with planned breaks; no_claim=a paid render
+  test('--yield-gate-ack records an approved pause, so later invocations go on, and two more drops pause again', () => {
+    const j = inputs('yield-ack');
+    const out = join(j.dir, 'bg1-custody-k'), acks = join(out, 'render', 'yield-gate-acks.jsonl');
+    const go = (start: number, count: number, extra: string[] = []) => mint(out, j, ['--fake', '--start', String(start), '--count', String(count), ...extra]);
+    const ackLog = () => readFileSync(acks, 'utf8').trim().split('\n').map(l => JSON.parse(l) as { ack: string; at: string; early_drops: number });
+    const paused = go(1, 3, ['--fake-break', '1:2:4,3:2:4']);
+    expect(paused.code).toBe(3);
+    expect(paused.out).toContain('summary=paused reason=yield_gate mode=fake written=1 skipped=0 dropped=2 last_slot=3 early_drops=2\n');
+    expect(go(6, 1).code).toBe(3);
+    for (const id of ['a-0123456789a', 'a-0123456789abc', 'A-0123456789ab', 'a-0123456789AB', 'b-0123456789ab', 'a-0123456789ag']) {
+      const bad = go(6, 1, ['--yield-gate-ack', id]);
+      expect(bad.code).toBe(2);
+      expect(bad.err).toContain('approval id');
+    }
+    expect(existsSync(acks)).toBe(false);
+
+    const acked = go(6, 1, ['--yield-gate-ack', 'a-0123456789ab']);
+    expect(acked.code).toBe(0);
+    expect(acked.out).toContain('bg1-mint yield_gate_ack=a-0123456789ab early_drops=2\n');
+    expect(acked.out).toContain('summary=mint mode=fake slots=1 written=1 skipped=0 dropped=0');
+    expect(ackLog()).toEqual([{ ack: 'a-0123456789ab', at: expect.stringMatching(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/), early_drops: 2 }]);
+    expect(go(7, 1).code).toBe(0);
+    expect(go(8, 1, ['--yield-gate-ack', 'a-0123456789ab']).code).toBe(0);
+    expect(ackLog()).toHaveLength(1);
+    const unpaused = go(9, 1, ['--yield-gate-ack', 'a-ba9876543210']);
+    expect(unpaused.code).toBe(2);
+    expect(unpaused.err).toContain('not paused');
+    expect(ackLog()).toHaveLength(1);
+
+    const twoMore = go(4, 2, ['--fake-break', '4:2:4,5:2:4']);
+    expect(twoMore.code).toBe(3);
+    expect(twoMore.out).toContain('summary=paused reason=yield_gate mode=fake written=0 skipped=0 dropped=2 last_slot=5 early_drops=4 acked_drops=2\n');
+    expect(go(9, 1, ['--yield-gate-ack', 'a-0123456789ab']).code).toBe(3);
+    const second = go(9, 1, ['--yield-gate-ack', 'a-ba9876543210']);
+    expect(second.code).toBe(0);
+    expect(ackLog().map(a => [a.ack, a.early_drops])).toEqual([['a-0123456789ab', 2], ['a-ba9876543210', 4]]);
+    const old = go(10, 1, ['--yield-gate-ack', 'a-0123456789ab']);
+    expect(old.code).toBe(2);
+    expect(old.err).toContain('earlier pause');
+    expect(ackLog()).toHaveLength(2);
+    for (const id of ['bg1-006', 'bg1-007', 'bg1-008', 'bg1-009']) expect(existsSync(join(out, 'set', 'worlds', id, 'world.json'))).toBe(true);
+    expect(existsSync(join(out, 'set', 'worlds', 'bg1-010'))).toBe(false);
+    expect(leaks(paused.all + acked.all + twoMore.all + second.all, probes(join(out, 'set'), j.line))).toEqual([]);
+  }, 240_000);
+
   test('validate.ts passes the minted set and keeps it in slot order; tampering fails the matching gate', () => {
     const report = join(i.dir, 'validation', 'report.json');
     const v = run('bun', [VALIDATE, '--set', join(out, 'set'), '--seed-file', i.seed, '--phrasing', i.phrasing, '--report', report, '--target-tokens', '30000', '--tolerance', '0.25', '--n-final', '2']);
