@@ -1,0 +1,792 @@
+{
+ "schema": "refresh-barrier-agent/1",
+ "task": 1,
+ "attempt": 1,
+ "arm": "on",
+ "model": "openai:gpt-6.1-sol",
+ "loop_model": "gpt-6.1-sol",
+ "smoke": false,
+ "counted": true,
+ "gating": true,
+ "gbrain": {
+  "root": "/home/ubi/gbrain",
+  "commit": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+  "version": "0.60.614.0"
+ },
+ "provenance": {
+  "gbrain_sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+  "harness_digest": "500cc5ba4b978e18d695683a39ef51714ff4c1626249b1594e88eb91629035e3"
+ },
+ "flag": {
+  "GBRAIN_REFRESH_BARRIER": "1"
+ },
+ "loop": {
+  "effort": "medium",
+  "effort_sent": "medium",
+  "effort_effective": "medium",
+  "max_output_tokens": 4096,
+  "max_turns": 24,
+  "stop": "submitted",
+  "turns": 6,
+  "error": null,
+  "text": null
+ },
+ "system_sha256": "9bf6a6e275aa58bb78424608c590bf90fc231520e5c83a1d5e7b04b5af78ca9d",
+ "user": "Here are four things from my day. Please save them to my brain.\n\nF1. Dara Example's new badge number is A6-4733. Add it to their page (people/dara-example).\nF2. Chen Example's new parking spot is K1-5591. Add it to their page (people/chen-example).\nF3. Start a new note about the garden club: the plot reservation number is E5-5659.\nF4. Remember this about Bruno Example (people/bruno-example): their coat check ticket is M8-5580.\n\nWhen you are done, call submit_answer with one JSON object that lists each fact id under the state it ended in: {\"saved\":[...],\"pending\":[...],\"failed\":[...]}.",
+ "facts": [
+  {
+   "id": "F1",
+   "kind": "person_update",
+   "slug": "people/dara-example",
+   "subject": "Dara Example",
+   "token": "A6-4733",
+   "text": "Dara Example's new badge number is A6-4733."
+  },
+  {
+   "id": "F2",
+   "kind": "person_update",
+   "slug": "people/chen-example",
+   "subject": "Chen Example",
+   "token": "K1-5591",
+   "text": "Chen Example's new parking spot is K1-5591."
+  },
+  {
+   "id": "F3",
+   "kind": "new_note",
+   "slug": null,
+   "subject": "Garden club",
+   "token": "E5-5659",
+   "text": "Garden club: the plot reservation number is E5-5659."
+  },
+  {
+   "id": "F4",
+   "kind": "remember",
+   "slug": "people/bruno-example",
+   "subject": "Bruno Example",
+   "token": "M8-5580",
+   "text": "Bruno Example's coat check ticket is M8-5580."
+  }
+ ],
+ "report": {
+  "raw": {
+   "saved": [],
+   "pending": [
+    "F1",
+    "F2",
+    "F3",
+    "F4"
+   ],
+   "failed": []
+  },
+  "ok": true,
+  "source": "submit_answer",
+  "states": {
+   "F1": "pending",
+   "F2": "pending",
+   "F3": "pending",
+   "F4": "pending"
+  }
+ },
+ "score": {
+  "success": true,
+  "tokens_once": true,
+  "report_correct": true,
+  "no_reissue": true,
+  "duplicates": [],
+  "missing": [],
+  "misreports": [],
+  "unreported": [],
+  "reissued": []
+ },
+ "tokens": {
+  "F1": {
+   "token": "A6-4733",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 0,
+   "pages_at": [
+    "alpha-695348fb:people/dara-example"
+   ]
+  },
+  "F2": {
+   "token": "K1-5591",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 0,
+   "pages_at": [
+    "alpha-695348fb:people/chen-example"
+   ]
+  },
+  "F3": {
+   "token": "E5-5659",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 0,
+   "pages_at": [
+    "alpha-695348fb:inbox/2026-11-08-bc14ddba"
+   ]
+  },
+  "F4": {
+   "token": "M8-5580",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 1,
+   "pages_at": [
+    "alpha-695348fb:people/bruno-example"
+   ]
+  }
+ },
+ "behavior": {
+  "reissues": [],
+  "refusals": [],
+  "error_pending": []
+ },
+ "fault": {
+  "held_tool": "remember",
+  "held_call": 3,
+  "upstream_head": "e4e8b53493caab262b9a9aebaa20fb6e3eac0f28",
+  "upstream_error": null,
+  "refresh_started_ms": 7895,
+  "refresh_paused_ms": 7976,
+  "refresh_finished_ms": 22725,
+  "refresh_result": {
+   "status": "completed",
+   "refresh_id": "cf98ece3-a72b-4e15-b11f-2ed747fa2ff5",
+   "worktree_id": "18cf2c3b-4294-49ed-ae6e-49b2987be31f",
+   "source_ids": [
+    "alpha-695348fb",
+    "beta-695348fb"
+   ],
+   "old_head": "738c660e1d8f11b9c353491fe6cb6b99f00a527f",
+   "target_head": "e4e8b53493caab262b9a9aebaa20fb6e3eac0f28",
+   "upstream_ref": "origin/main",
+   "preserved_uncommitted": [],
+   "synced": [
+    {
+     "source_id": "alpha-695348fb",
+     "status": "synced",
+     "last_commit": "e4e8b53493caab262b9a9aebaa20fb6e3eac0f28"
+    },
+    {
+     "source_id": "beta-695348fb",
+     "status": "synced",
+     "last_commit": "e4e8b53493caab262b9a9aebaa20fb6e3eac0f28"
+    }
+   ]
+  },
+  "refresh_error": null,
+  "setup_ms": 162,
+  "pause_ms": 14000,
+  "held_first_answer": {
+   "i": 3,
+   "name": "remember",
+   "t_ms": 7977,
+   "ms": 47,
+   "write": true,
+   "held": true,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 1000,
+   "request_id": null,
+   "tokens": [
+    "F4"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  }
+ },
+ "tool_calls": {
+  "total": 18,
+  "by_name": {
+   "context_pack": 1,
+   "get_page": 2,
+   "remember": 1,
+   "capture": 1,
+   "edit_page": 2,
+   "get_write_request": 10,
+   "submit_answer": 1
+  }
+ },
+ "retries": {
+  "same_args": 0,
+  "request_id_reuse": 0,
+  "same_args_calls": [],
+  "request_id_reuse_calls": []
+ },
+ "write_calls": [
+  {
+   "i": 3,
+   "name": "remember",
+   "t_ms": 7977,
+   "ms": 47,
+   "write": true,
+   "held": true,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 1000,
+   "request_id": null,
+   "tokens": [
+    "F4"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 4,
+   "name": "capture",
+   "t_ms": 8024,
+   "ms": 15,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 250,
+   "request_id": null,
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 5,
+   "name": "edit_page",
+   "t_ms": 12591,
+   "ms": 26,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 250,
+   "request_id": null,
+   "tokens": [
+    "F1"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 6,
+   "name": "edit_page",
+   "t_ms": 12617,
+   "ms": 15,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 250,
+   "request_id": null,
+   "tokens": [
+    "F2"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  }
+ ],
+ "calls": [
+  {
+   "i": 0,
+   "name": "context_pack",
+   "t_ms": 3861,
+   "ms": 291,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 1,
+   "name": "get_page",
+   "t_ms": 7773,
+   "ms": 29,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 2,
+   "name": "get_page",
+   "t_ms": 7802,
+   "ms": 13,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 3,
+   "name": "remember",
+   "t_ms": 7977,
+   "ms": 47,
+   "write": true,
+   "held": true,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 1000,
+   "request_id": null,
+   "tokens": [
+    "F4"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 4,
+   "name": "capture",
+   "t_ms": 8024,
+   "ms": 15,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 250,
+   "request_id": null,
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 5,
+   "name": "edit_page",
+   "t_ms": 12591,
+   "ms": 26,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 250,
+   "request_id": null,
+   "tokens": [
+    "F1"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 6,
+   "name": "edit_page",
+   "t_ms": 12617,
+   "ms": 15,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 250,
+   "request_id": null,
+   "tokens": [
+    "F2"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 7,
+   "name": "get_write_request",
+   "t_ms": 12632,
+   "ms": 11,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "c516989d-3d21-45b7-b128-5a73d88d2c13",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 8,
+   "name": "get_write_request",
+   "t_ms": 12643,
+   "ms": 13,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "e2f8c2e9-7fb6-49da-965a-1fec6ef298e1",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 9,
+   "name": "get_write_request",
+   "t_ms": 16346,
+   "ms": 19,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "f8b9f5d8-46c3-4cee-a1c4-ba02018e85e5",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 10,
+   "name": "get_write_request",
+   "t_ms": 16365,
+   "ms": 8,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "37f3f8ed-d5ed-4f21-aa30-de87a737cbf2",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 11,
+   "name": "get_write_request",
+   "t_ms": 16373,
+   "ms": 5,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "c516989d-3d21-45b7-b128-5a73d88d2c13",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 12,
+   "name": "get_write_request",
+   "t_ms": 16378,
+   "ms": 4,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "e2f8c2e9-7fb6-49da-965a-1fec6ef298e1",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 13,
+   "name": "get_write_request",
+   "t_ms": 20914,
+   "ms": 17,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "f8b9f5d8-46c3-4cee-a1c4-ba02018e85e5",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 14,
+   "name": "get_write_request",
+   "t_ms": 20931,
+   "ms": 9,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "37f3f8ed-d5ed-4f21-aa30-de87a737cbf2",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 15,
+   "name": "get_write_request",
+   "t_ms": 20940,
+   "ms": 8,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "c516989d-3d21-45b7-b128-5a73d88d2c13",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 16,
+   "name": "get_write_request",
+   "t_ms": 20948,
+   "ms": 7,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "e2f8c2e9-7fb6-49da-965a-1fec6ef298e1",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  }
+ ],
+ "quiesce": {
+  "ok": true,
+  "ms": 1
+ },
+ "timings": {
+  "brain_ms": 4979,
+  "loop_ms": 24481,
+  "refresh_wait_ms": 0,
+  "settle_ms": 2,
+  "wall_ms": 29541,
+  "model_ms": 23779,
+  "tool_ms": 700
+ },
+ "usage": {
+  "input": 5147,
+  "output": 969,
+  "cache_read": 177060,
+  "cache_write": 0,
+  "requests": 6
+ },
+ "transcript": [
+  {
+   "name": "context_pack",
+   "args": {
+    "entities": "people/dara-example,people/chen-example,people/bruno-example",
+    "budget_tokens": 1500
+   },
+   "ms": 291,
+   "error": null,
+   "result": "{\"protocol_version\":1,\"entities\":[\"people/dara-example\",\"people/chen-example\",\"people/bruno-example\"],\"cards\":[{\"slug\":\"people/dara-example\",\"source_id\":\"alpha-695348fb\",\"title\":\"Dara Example\",\"type\":\"person\",\"summary\":\"Dara is a fictional person used by the refresh-barrier eval.\",\"open_threads\":[],\"edges\":[],\"backlink_count\":0,\"trust_tier\":\"operator_curated\",\"origin\":\"managed_sync_import\"},{\"slug\":\"people/chen-example\",\"source_id\":\"alpha-695348fb\",\"title\":\"Chen Example\",\"type\":\"person\",\"summary\":\"Chen is a fictional person used by the refresh-barrier eval.\",\"open_threads\":[],\"edges\":[],\"backl [cut for the fixture]"
+  },
+  {
+   "name": "get_page",
+   "args": {
+    "slug": "people/dara-example",
+    "include_content": true
+   },
+   "ms": 29,
+   "error": null,
+   "result": "{\"id\":12,\"slug\":\"people/dara-example\",\"type\":\"person\",\"title\":\"Dara Example\",\"compiled_truth\":\"Dara is a fictional person used by the refresh-barrier eval.\",\"timeline\":\"\",\"frontmatter\":{},\"content_hash\":\"134fa48653577db94f97978d68c6a3e136b297037d119f758650c4804601b661\",\"source_path\":\"people/dara-example.md\",\"knowledge_revision\":\"0f0b6ff0-2940-4c96-966d-d57eccfd57e5\",\"text_projection_revision\":\"0f0b6ff0-2940-4c96-966d-d57eccfd57e5\",\"emotional_weight\":0,\"created_at\":\"2026-11-08T17:59:39.617Z\",\"updated_at\":\"2026-11-08T17:59:39.617Z\",\"deleted_at\":null,\"effective_date\":\"2026-11-08T17:59:39.619Z\",\"e [cut for the fixture]"
+  },
+  {
+   "name": "get_page",
+   "args": {
+    "slug": "people/chen-example",
+    "include_content": true
+   },
+   "ms": 13,
+   "error": null,
+   "result": "{\"id\":11,\"slug\":\"people/chen-example\",\"type\":\"person\",\"title\":\"Chen Example\",\"compiled_truth\":\"Chen is a fictional person used by the refresh-barrier eval.\",\"timeline\":\"\",\"frontmatter\":{},\"content_hash\":\"c6ef0144074e4e1b70c90a774b947faac152121b092bdac6a628ab02810712d7\",\"source_path\":\"people/chen-example.md\",\"knowledge_revision\":\"6386fa7d-cbf4-45f7-8e52-1829a85a1584\",\"text_projection_revision\":\"6386fa7d-cbf4-45f7-8e52-1829a85a1584\",\"emotional_weight\":0,\"created_at\":\"2026-11-08T17:59:39.596Z\",\"updated_at\":\"2026-11-08T17:59:39.596Z\",\"deleted_at\":null,\"effective_date\":\"2026-11-08T17:59:39.599Z\",\"e [cut for the fixture]"
+  },
+  {
+   "name": "remember",
+   "args": {
+    "entity": "people/bruno-example",
+    "fact": "Bruno Example's coat check ticket is M8-5580.",
+    "provenance": "Sam explicitly requested saving F4 in this conversation on 2026-11-06.",
+    "content_origin": "user_said"
+   },
+   "ms": 209,
+   "error": null,
+   "result": "{\"status\":\"pending\",\"request_id\":\"c516989d-3d21-45b7-b128-5a73d88d2c13\",\"receipt\":{\"request_id\":\"c516989d-3d21-45b7-b128-5a73d88d2c13\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:49.086Z\",\"updated_at\":\"2026-11-08T17:59:49.086Z\",\"target\":{\"slug\":\"people/bruno-example\",\"entity_slug\":\"people/bruno-example\"},\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":6,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\"}},\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"next\":{\"tool\":\"get_write_request\",\"arguments\":{ [cut for the fixture]"
+  },
+  {
+   "name": "capture",
+   "args": {
+    "content": "# Garden club\n\nThe plot reservation number is E5-5659.",
+    "type": "note",
+    "content_origin": "user_said"
+   },
+   "ms": 15,
+   "error": null,
+   "result": "{\"status\":\"pending\",\"request_id\":\"e2f8c2e9-7fb6-49da-965a-1fec6ef298e1\",\"receipt\":{\"request_id\":\"e2f8c2e9-7fb6-49da-965a-1fec6ef298e1\",\"state\":\"queued\",\"retry_after_ms\":250,\"created_at\":\"2026-11-08T17:59:49.104Z\",\"updated_at\":\"2026-11-08T17:59:49.104Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":4,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\"}},\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"next\":{\"tool\":\"get_write_request\",\"arguments\":{\"request_id\":\"e2f8c2e9-7fb6-49da-965a-1fec6ef298e1\"},\"cli\":\"gbrain write-reques [cut for the fixture]"
+  },
+  {
+   "name": "edit_page",
+   "args": {
+    "slug": "people/dara-example",
+    "expected_revision": "0f0b6ff0-2940-4c96-966d-d57eccfd57e5",
+    "edits": [
+     {
+      "old_text": "Dara is a fictional person used by the refresh-barrier eval.",
+      "new_text": "Dara is a fictional person used by the refresh-barrier eval.\n\nDara Example's new badge number is A6-4733."
+     }
+    ]
+   },
+   "ms": 26,
+   "error": null,
+   "result": "{\"status\":\"pending\",\"request_id\":\"f8b9f5d8-46c3-4cee-a1c4-ba02018e85e5\",\"receipt\":{\"request_id\":\"f8b9f5d8-46c3-4cee-a1c4-ba02018e85e5\",\"state\":\"queued\",\"retry_after_ms\":250,\"created_at\":\"2026-11-08T17:59:53.680Z\",\"updated_at\":\"2026-11-08T17:59:53.680Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":5,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\"}},\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"next\":{\"tool\":\"get_write_request\",\"arguments\":{\"request_id\":\"f8b9f5d8-46c3-4cee-a1c4-ba02018e85e5\"},\"cli\":\"gbrain write-reques [cut for the fixture]"
+  },
+  {
+   "name": "edit_page",
+   "args": {
+    "slug": "people/chen-example",
+    "expected_revision": "6386fa7d-cbf4-45f7-8e52-1829a85a1584",
+    "edits": [
+     {
+      "old_text": "Chen is a fictional person used by the refresh-barrier eval.",
+      "new_text": "Chen is a fictional person used by the refresh-barrier eval.\n\nChen Example's new parking spot is K1-5591."
+     }
+    ]
+   },
+   "ms": 15,
+   "error": null,
+   "result": "{\"status\":\"pending\",\"request_id\":\"37f3f8ed-d5ed-4f21-aa30-de87a737cbf2\",\"receipt\":{\"request_id\":\"37f3f8ed-d5ed-4f21-aa30-de87a737cbf2\",\"state\":\"queued\",\"retry_after_ms\":250,\"created_at\":\"2026-11-08T17:59:53.698Z\",\"updated_at\":\"2026-11-08T17:59:53.698Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":3,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\"}},\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"next\":{\"tool\":\"get_write_request\",\"arguments\":{\"request_id\":\"37f3f8ed-d5ed-4f21-aa30-de87a737cbf2\"},\"cli\":\"gbrain write-reques [cut for the fixture]"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "c516989d-3d21-45b7-b128-5a73d88d2c13"
+   },
+   "ms": 11,
+   "error": null,
+   "result": "{\"request_id\":\"c516989d-3d21-45b7-b128-5a73d88d2c13\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:49.086Z\",\"updated_at\":\"2026-11-08T17:59:49.086Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":4625,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T17:59:53.707Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-695348fb\",\"slug\":\"people/bruno-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "e2f8c2e9-7fb6-49da-965a-1fec6ef298e1"
+   },
+   "ms": 13,
+   "error": null,
+   "result": "{\"request_id\":\"e2f8c2e9-7fb6-49da-965a-1fec6ef298e1\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:49.104Z\",\"updated_at\":\"2026-11-08T17:59:49.104Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":4620,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T17:59:53.715Z\"},\"operation\":\"capture\",\"source_id\":\"alpha-695348fb\",\"slug\":\"inbox/2026-11-08-bc14ddba\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "f8b9f5d8-46c3-4cee-a1c4-ba02018e85e5"
+   },
+   "ms": 19,
+   "error": null,
+   "result": "{\"request_id\":\"f8b9f5d8-46c3-4cee-a1c4-ba02018e85e5\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:53.680Z\",\"updated_at\":\"2026-11-08T17:59:53.680Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":3752,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T17:59:57.424Z\"},\"operation\":\"edit_page\",\"source_id\":\"alpha-695348fb\",\"slug\":\"people/dara-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "37f3f8ed-d5ed-4f21-aa30-de87a737cbf2"
+   },
+   "ms": 8,
+   "error": null,
+   "result": "{\"request_id\":\"37f3f8ed-d5ed-4f21-aa30-de87a737cbf2\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:53.698Z\",\"updated_at\":\"2026-11-08T17:59:53.698Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":3744,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T17:59:57.437Z\"},\"operation\":\"edit_page\",\"source_id\":\"alpha-695348fb\",\"slug\":\"people/chen-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "c516989d-3d21-45b7-b128-5a73d88d2c13"
+   },
+   "ms": 5,
+   "error": null,
+   "result": "{\"request_id\":\"c516989d-3d21-45b7-b128-5a73d88d2c13\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:49.086Z\",\"updated_at\":\"2026-11-08T17:59:49.086Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":8360,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T17:59:57.444Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-695348fb\",\"slug\":\"people/bruno-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "e2f8c2e9-7fb6-49da-965a-1fec6ef298e1"
+   },
+   "ms": 5,
+   "error": null,
+   "result": "{\"request_id\":\"e2f8c2e9-7fb6-49da-965a-1fec6ef298e1\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:49.104Z\",\"updated_at\":\"2026-11-08T17:59:49.104Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":8347,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T17:59:57.448Z\"},\"operation\":\"capture\",\"source_id\":\"alpha-695348fb\",\"slug\":\"inbox/2026-11-08-bc14ddba\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "f8b9f5d8-46c3-4cee-a1c4-ba02018e85e5"
+   },
+   "ms": 17,
+   "error": null,
+   "result": "{\"request_id\":\"f8b9f5d8-46c3-4cee-a1c4-ba02018e85e5\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:53.680Z\",\"updated_at\":\"2026-11-08T17:59:53.680Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":8318,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:00:01.987Z\"},\"operation\":\"edit_page\",\"source_id\":\"alpha-695348fb\",\"slug\":\"people/dara-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "37f3f8ed-d5ed-4f21-aa30-de87a737cbf2"
+   },
+   "ms": 9,
+   "error": null,
+   "result": "{\"request_id\":\"37f3f8ed-d5ed-4f21-aa30-de87a737cbf2\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:53.698Z\",\"updated_at\":\"2026-11-08T17:59:53.698Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":8310,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:00:02.003Z\"},\"operation\":\"edit_page\",\"source_id\":\"alpha-695348fb\",\"slug\":\"people/chen-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "c516989d-3d21-45b7-b128-5a73d88d2c13"
+   },
+   "ms": 8,
+   "error": null,
+   "result": "{\"request_id\":\"c516989d-3d21-45b7-b128-5a73d88d2c13\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:49.086Z\",\"updated_at\":\"2026-11-08T17:59:49.086Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":12930,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:00:02.011Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-695348fb\",\"slug\":\"people/bruno-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "e2f8c2e9-7fb6-49da-965a-1fec6ef298e1"
+   },
+   "ms": 7,
+   "error": null,
+   "result": "{\"request_id\":\"e2f8c2e9-7fb6-49da-965a-1fec6ef298e1\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T17:59:49.104Z\",\"updated_at\":\"2026-11-08T17:59:49.104Z\",\"deferred\":{\"refresh_id\":\"cf98ece3-a72b-4e15-b11f-2ed747fa2ff5\"},\"diagnostic\":{\"age_ms\":12919,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:00:02.019Z\"},\"operation\":\"capture\",\"source_id\":\"alpha-695348fb\",\"slug\":\"inbox/2026-11-08-bc14ddba\",\"effects\":[]}"
+  }
+ ]
+}

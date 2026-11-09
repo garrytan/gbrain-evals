@@ -1,0 +1,69 @@
+{
+ "schema": "live-recall-scorecard/v1",
+ "protocol": "batch2",
+ "run": {
+  "gbrain_pin_commit": "62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+  "gbrain_loaded_commit": "27f8b9d6287c2ba635532c7d3bc015c50e1d769b",
+  "engine": "postgres"
+ },
+ "arms": {
+  "keyword": {
+   "overall": {
+    "all": {
+     "n": 100,
+     "success_at": {
+      "k5": {
+       "hits": 32,
+       "n": 100,
+       "rate": 0.32,
+       "ci95": [
+        0.25,
+        0.38
+       ],
+       "interval": "cluster_bootstrap"
+      },
+      "k20": {
+       "hits": 34,
+       "n": 100,
+       "rate": 0.34,
+       "ci95": [
+        0.28,
+        0.4
+       ],
+       "interval": "cluster_bootstrap"
+      }
+     }
+    }
+   }
+  },
+  "hybrid": {
+   "overall": {
+    "all": {
+     "n": 100,
+     "success_at": {
+      "k5": {
+       "hits": 54,
+       "n": 100,
+       "rate": 0.54,
+       "ci95": [
+        0.44,
+        0.64
+       ],
+       "interval": "cluster_bootstrap"
+      },
+      "k20": {
+       "hits": 67,
+       "n": 100,
+       "rate": 0.67,
+       "ci95": [
+        0.58,
+        0.75
+       ],
+       "interval": "cluster_bootstrap"
+      }
+     }
+    }
+   }
+  }
+ }
+}
