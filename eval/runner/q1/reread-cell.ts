@@ -5,7 +5,11 @@
  * arm with a per-reader frontier plan (RS1), the new reader's frontier judge. Nothing is retrieved or packed again.
  *
  *   bun eval/runner/q1/reread-cell.ts --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader particle:particle-1
- *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] [--keyless-upstream <url>]
+ *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1]
+ *     (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)
+ *
+ * A re-read that would spend real keys needs the granted paid window's unit and cap, and its --ledger-cap-usd never
+ * exceeds that cap; without them, or without --keyless-upstream, it exits 2 before any lease or output.
  *
  * Each arm and reader gets its own --out (verify.json, the lease usage log and the keyless/paid marker sit at its root),
  * and each invocation its own --run-id: a lease closes when the run ends and never reopens. `--ledger-cap-usd` is the
@@ -30,7 +34,7 @@
  * cell's effort, replicate 0. A reading the provider may have billed is final and never sent again, a budget refusal
  * stops the run (`budget_not_run`, not a try), and a resume skips answered ids. Each answer is judged by the cell's
  * canonical judge (replicate 0) and, on an arm with a per-reader frontier plan, by the new reader's frontier judge
- * (definitions.ts frontierJudgeOf, under `<instrument>@<judge>`); no other frontier judge runs, and an OpenAI-compatible
+ * (definitions.ts frontierJudgesFor, RS1's map on its arms, under `<instrument>@<judge>`); no other frontier judge runs, and an OpenAI-compatible
  * judge is refused. Output:
  * `--out/cells/<arm cell id>.reread-<reader>/` with answers.ndjson and judgments.ndjson in Q1's record schemas, and
  * receipt.json. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
@@ -51,7 +55,7 @@ import type { PackedContext } from '../systems/render-v2.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { answerAppender, custodyGate, devOnly, findCell, gatherStaging, JUDGED, latestBy, metering, needsCustody, onSlot, readerMaxTokens, readPrompt, refuseCompatJudges, requiredJudges, scheduledQuestions,
   selectCellQuestions, type CellManifestId, type MeterLine, type StagedRetrieval } from './cell.ts';
-import { frontierJudgesFor, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { frontierJudgesFor, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 
@@ -301,7 +305,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
     if (!a || !JUDGED.has(a.outcome)) return;
     for (const j of planned) {
       if (judgedBy(aid, j.judge)) continue;
-      const r = await meter.around('judge', `judge:${aid.slice(0, 16)}:${j.judge}`, 'judge', () => judgeAnswer(judgeChat, instrument, x.question, a.text, { judge: j.judge, judgeReplicate: 0, maxAttempts }));
+      const r = await meter.around('judge', `judge:${aid.slice(0, 16)}:${j.judge}`, 'judge', () => judgeAnswer(judgeChat, instrument, x.question, a.text, { judge: j.judge, judgeReplicate: 0, maxAttempts, ...(j.settings ? { settings: j.settings } : {}), ...(j.view ? { view: j.view } : {}) }));
       if (r.error !== undefined) { if (/budget/i.test(String((r.error as Error).message))) stopped = `budget: ${String((r.error as Error).message).slice(0, 200)}`; return; }
       judgments.append({ answer_id: aid, ...r.value!, instrument_id: j.instrument_id });
     }
@@ -369,12 +373,16 @@ if (import.meta.main) {
   const sources = argv.flatMap((a, i) => (a === '--source' && argv[i + 1] ? [argv[i + 1]] : []));
   const [cellArg, armArg, reader, outArg, ledger, runId, leaseUsd, ledgerCap] = [one('--cell'), one('--arm'), one('--reader'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
   if (!cellArg || !armArg || !sources.length || !reader || !outArg || !ledger || !runId || !(leaseUsd > 0) || !(ledgerCap > 0)) {
-    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] [--keyless-upstream <url>]`);
+    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)`);
     process.exit(2);
   }
   let keyless: string | null;
   try { keyless = keylessUpstreamArg(argv); }
   catch (e) { console.error((e as Error).message); process.exit(2); }
+  const windowCap = Number(one('--window-cap-usd'));
+  if (!keyless && (!one('--paid-window') || !(windowCap > 0))) { console.error('a re-read without --keyless-upstream spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n> from the granted paid window'); process.exit(2); }
+  if (!keyless && ledgerCap > windowCap) { console.error(`--ledger-cap-usd ${ledgerCap} is above the paid window's cap of ${windowCap}; the ledger cap never exceeds the window`); process.exit(2); }
+  if (keyless) for (const k of ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GEMINI_API_KEY', 'PARTICLE_API_KEY', 'VOYAGE_API_KEY']) delete process.env[k];
   const manifest = one('--manifest') as CellManifestId | undefined;
   try {
     const def = findCell(cellArg, undefined, manifest);
@@ -391,7 +399,7 @@ if (import.meta.main) {
     const lease = openRereadLease({ runId, leaseUsd, ledgerPath: resolve(ledger), capUsd: ledgerCap });
     const usageLog = join(out, 'usage.ndjson');
     const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
-      policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
+      policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps([arm]) }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
     proxy.start();
     try {
       const res = await runReread(prepared, { providerProxy: `http://127.0.0.1:${proxy.port}`, lease: { usd: leaseUsd, usageLog } });
