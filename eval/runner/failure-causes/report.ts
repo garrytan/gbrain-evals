@@ -12,7 +12,9 @@
  *
  * Each ranked cause also says, per task and model, whether the other systems
  * and controls in the same source failed the same way, so a cause every
- * system shares on hard tasks is told apart from one only gbrain has; how
+ * system shares on hard tasks is told apart from one only gbrain has (a system
+ * whose source records that it never ran the task, a not_run row, is shown as
+ * not run and is not compared); how
  * many of its rows hit the agent's turn cap; and whether rows still waiting
  * for the labeller could change its place (provisional).
  */
@@ -23,15 +25,20 @@ import type { CauseLabel, StressCount } from './types.ts';
 const NOT_FOR_GBRAIN: readonly string[] = ['harness_error', 'model_error', UNCLASSIFIED];
 const GBRAIN_ROLES = new Set(['gbrain_default', 'gbrain_variant']);
 const PENDING = 'pending_label';
+/** Rule id prefix of a row for a task its system never ran (classify, EvalFailure.not_run). */
+const NOT_RUN = 'not_run.';
 const showable = (l: CauseLabel) => l.visibility === 'public' || l.visibility === 'synthetic';
 
 export interface Example { source: string; case_id: string; model: string; rule_id: string; secondary: string[]; evidence: string[] }
-/** One gbrain row of a cause, and each compared system's causes on the same task and model (null: no failed row there). */
-export interface TaskComparison { source: string; task_id: string; model: string; arm: string; others: Record<string, string | null> }
+/**
+ * One gbrain row of a cause, and each compared system's causes on the same task and model (null: no failed row there).
+ * not_run lists the systems whose source records that they never ran this task and model; they are not in others.
+ */
+export interface TaskComparison { source: string; task_id: string; model: string; arm: string; others: Record<string, string | null>; not_run: string[] }
 export interface RankedCause {
   cause: string; score: number; count: number; by_source: Record<string, { count: number; of: number }>; top_rules: Array<{ rule_id: string; count: number }>; examples: Example[];
   turn_cap: { count: number; by_category: Record<string, number> };
-  others: Array<{ system: string; arm_role: string; same: number; other: number; none: number }>;
+  others: Array<{ system: string; arm_role: string; same: number; other: number; none: number; not_run: number }>;
   /** Rows with at least one compared system, and those where none of them failed the same way. */
   compared: number; gbrain_only: number;
   tasks: TaskComparison[];
@@ -68,7 +75,7 @@ const LABELLER_REACHABLE = new Set<string>([...MODEL_CAUSES, 'retrieval_miss', '
 export function summarize(labels: CauseLabel[], stress: StressCount[] = [], options: { known?: KnownStatus[] } = {}): Summary {
   const versions = [...new Set(labels.map(l => l.taxonomy_version))];
   if (versions.length > 1 || (versions[0] && versions[0] !== TAXONOMY_VERSION)) throw new Error(`labels mix taxonomy versions (${versions.join(', ')}); this code is ${TAXONOMY_VERSION}, so relabel before summarizing`);
-  const failed = labels.filter(l => l.rule_id !== 'passed');
+  const failed = labels.filter(l => l.rule_id !== 'passed' && !l.rule_id.startsWith(NOT_RUN));
   const waiting = (l: CauseLabel) => l.cause === null || NO_LABEL_RULES.includes(l.rule_id);
   const causeOf = (l: CauseLabel) => (waiting(l) ? PENDING : l.cause!);
   const sources: Summary['sources'] = {};
@@ -80,14 +87,19 @@ export function summarize(labels: CauseLabel[], stress: StressCount[] = [], opti
   const natural = failed.filter(l => l.condition === 'natural' && GBRAIN_ROLES.has(l.arm_role) && l.cause !== 'harness_error');
   const bySource = new Map<string, CauseLabel[]>();
   for (const l of natural) bySource.set(l.source, [...(bySource.get(l.source) ?? []), l]);
-  const compared = failed.filter(l => l.condition === 'natural' && !GBRAIN_ROLES.has(l.arm_role) && l.task_id);
+  const isOther = (l: CauseLabel) => l.condition === 'natural' && !GBRAIN_ROLES.has(l.arm_role) && l.task_id;
+  const taskKey = (source: string, system: string, task: string, model: string) => `${source}|${system}|${task}|${model}`;
   const systems = new Map<string, Map<string, string>>();
   const otherCauses = new Map<string, Set<string>>();
-  for (const l of compared) {
+  const notRun = new Set<string>();
+  for (const l of labels.filter(isOther)) {
+    const skipped = l.rule_id.startsWith(NOT_RUN);
+    if (!skipped && l.rule_id === 'passed') continue;
     if (!systems.has(l.source)) systems.set(l.source, new Map());
     systems.get(l.source)!.set(l.system, l.arm_role);
-    const k = `${l.source}|${l.system}|${l.task_id}|${l.model}`;
-    otherCauses.set(k, (otherCauses.get(k) ?? new Set()).add(causeOf(l)));
+    const k = taskKey(l.source, l.system, l.task_id!, l.model);
+    if (skipped) notRun.add(k);
+    else otherCauses.set(k, (otherCauses.get(k) ?? new Set()).add(causeOf(l)));
   }
   const example = (l: CauseLabel): Example => ({ source: l.source, case_id: l.case_id, model: l.model, rule_id: l.rule_id, secondary: l.secondary, evidence: l.evidence });
   const causes = [...new Set(natural.map(causeOf))];
@@ -96,15 +108,20 @@ export function summarize(labels: CauseLabel[], stress: StressCount[] = [], opti
     const shares = Object.values(by_source).map(x => x.count / x.of);
     const rows = natural.filter(l => causeOf(l) === cause);
     const capped = rows.filter(l => l.tags.includes('turn_cap'));
-    const tasks: TaskComparison[] = rows.filter(l => l.task_id).map(l => ({ source: l.source, task_id: l.task_id!, model: l.model, arm: l.arm,
-      others: Object.fromEntries([...(systems.get(l.source) ?? new Map<string, string>()).keys()].map(sys => [sys, [...(otherCauses.get(`${l.source}|${sys}|${l.task_id}|${l.model}`) ?? [])].sort().join('+') || null])) }));
+    const tasks: TaskComparison[] = rows.filter(l => l.task_id).map(l => {
+      const k = (sys: string) => taskKey(l.source, sys, l.task_id!, l.model);
+      const all = [...(systems.get(l.source) ?? new Map<string, string>()).keys()];
+      const skipped = all.filter(sys => notRun.has(k(sys)) && !otherCauses.has(k(sys)));
+      return { source: l.source, task_id: l.task_id!, model: l.model, arm: l.arm, not_run: skipped,
+        others: Object.fromEntries(all.filter(sys => !skipped.includes(sys)).map(sys => [sys, [...(otherCauses.get(k(sys)) ?? [])].sort().join('+') || null])) };
+    });
     const failedSame = (c: string | null) => c !== null && c.split('+').includes(cause);
     const others = [...systems.values()].flatMap(m => [...m]).map(([system, arm_role]) => {
       const seen = tasks.filter(t => system in t.others);
       const same = seen.filter(t => failedSame(t.others[system])).length;
       const none = seen.filter(t => t.others[system] === null).length;
-      return { system, arm_role, same, other: seen.length - same - none, none };
-    }).filter(o => o.same + o.other + o.none > 0);
+      return { system, arm_role, same, other: seen.length - same - none, none, not_run: tasks.filter(t => t.not_run.includes(system)).length };
+    }).filter(o => o.same + o.other + o.none + o.not_run > 0);
     const withOthers = tasks.filter(t => Object.keys(t.others).length);
     return {
       cause, score: shares.reduce((a, b) => a + b, 0) / shares.length, count: rows.length, by_source,
@@ -184,7 +201,7 @@ function context(r: RankedCause): string[] {
     out.push(`Turn cap: ${r.turn_cap.count} of ${r.count} rows hit the agent's turn cap (${listCounts(r.turn_cap.by_category)}). The cap is our harness setting and part of what these rows measure.${lever}`);
   }
   if (r.others.length) {
-    out.push(`Same task and model on other systems: ${r.others.map(o => `${o.system} (${o.arm_role}) failed the same way on ${o.same}, another way on ${o.other}, and had no failed row on ${o.none}`).join('; ')}. `
+    out.push(`Same task and model on other systems: ${r.others.map(o => `${o.system} (${o.arm_role}) failed the same way on ${o.same}, another way on ${o.other}, and had no failed row on ${o.none}${o.not_run ? `, and did not run ${o.not_run}` : ''}`).join('; ')}. `
       + `On ${r.gbrain_only} of ${r.compared} compared rows, no other system failed the same way.`);
   } else if (r.count) out.push('Same task and model on other systems: no compared system in these sources.');
   return out;
@@ -218,16 +235,16 @@ export function renderReport(s: Summary, options: { heading: string; notes?: str
   lines.push('## Our own fix list (harness errors)', '', ...(s.harness.length ? s.harness.map(h => `- \`${h.rule_id}\`: ${h.count} rows (${h.sources.join(', ')})`) : ['- none']), '');
   lines.push('## What each source can measure', '', `| Source | ${STAGES.join(' | ')} |`, `|---|${STAGES.map(() => '---').join('|')}|`,
     ...Object.entries(s.capability).map(([src, c]) => `| ${src} | ${STAGES.map(st => pct(c[st] ?? 0)).join(' | ')} |`), '');
-  const appendix = s.top_three.filter(r => r.tasks.some(t => Object.keys(t.others).length));
+  const appendix = s.top_three.filter(r => r.tasks.some(t => Object.keys(t.others).length || t.not_run.length));
   if (appendix.length) {
-    lines.push('## Appendix: top-three rows beside other systems on the same task and model', '', 'Each cell is that system\'s cause on the task, or a dash when it had no failed row there.', '');
+    lines.push('## Appendix: top-three rows beside other systems on the same task and model', '', `Each cell is that system's cause on the task, or a dash when it had no failed row there${appendix.some(r => r.tasks.some(t => t.not_run.length)) ? ', or "not run" when its source records that it never ran the task' : ''}.`, '');
     for (const r of appendix) {
       for (const source of [...new Set(r.tasks.map(t => t.source))]) {
         const rows = r.tasks.filter(t => t.source === source);
-        const systems = Object.keys(rows[0].others);
+        const systems = [...new Set(rows.flatMap(t => [...Object.keys(t.others), ...t.not_run]))];
         if (!systems.length) continue;
         lines.push(`### \`${r.cause}\` in ${source}`, '', `| Task | Model | gbrain arm | ${systems.join(' | ')} |`, `|---|---|---|${systems.map(() => '---').join('|')}|`,
-          ...rows.map(t => `| \`${t.task_id}\` | ${t.model} | ${t.arm} | ${systems.map(sys => (t.others[sys] ? `\`${t.others[sys]}\`` : '-')).join(' | ')} |`), '');
+          ...rows.map(t => `| \`${t.task_id}\` | ${t.model} | ${t.arm} | ${systems.map(sys => (t.others[sys] ? `\`${t.others[sys]}\`` : t.not_run.includes(sys) ? 'not run' : '-')).join(' | ')} |`), '');
       }
     }
   }

@@ -2,6 +2,33 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.183] - 2026-11-09
+
+### Failure causes: no-answer rows, not-run comparisons and stamped labeller gates
+
+- **Taxonomy 2026-11-09.3.** The cause ids are unchanged. The version moves because some RS1 rows change class, and
+  `report` refuses to pool labels across versions.
+- **Retrieval timeouts count as timeouts.** A packed RS1 arm whose retrieval timed out is now `timeout_latency` (stop
+  `timeout`), not a retrieval miss. Only a retrieval that the row records as failed is gbrain's `retrieval_miss`,
+  with the `retrieve_error` tag.
+- **A store arm's retrieval error is no retrieval miss.** Agent, own-answer and full-context arms retrieve inside the
+  system, so their rows record no retrieval outcome. An agent that ran out of wall time counts as a timeout, and any
+  other retrieval error there stays `unclassified` under `residual.no_answer`. A judged store-arm row no longer reads
+  as a harness error because its row records no outcome.
+- **Answers with nothing to judge.** An answer the cell never judges is tagged `no_answer`, carries no row text and
+  never reaches the labeller. Such a row never counts as an answered abstention question, so an unsupported answer to
+  an abstention question is no longer `citation_abstention`. With no other signal it is `unclassified` under
+  `residual.no_answer`.
+- **Not run is not "no failed row".** RS1's skipped `does_not_fit` and `budget_not_run` answers still count as
+  skipped, and `classify` also writes each one as a `not_run` row (rule `not_run.<outcome>`, no cause, neither
+  passed nor failed). In the same-task comparison the report shows that system as "not run" on the task and leaves it
+  out of the compared rows, and the appendix marks it "not run".
+- **Stamped labeller gates.** `agree` stamps the gate file with the taxonomy version and a hash of the labeller
+  prompt, and refuses production labels from another taxonomy version. `report --gates` refuses a gate file that is
+  unstamped or stamped with another taxonomy or prompt.
+- **Retired flag refused.** `estimate` and `label` refuse `--labelset-per-stratum` instead of ignoring it, and
+  `--labelset-per-family` must be a whole number of at least 1.
+
 ## [0.10.182] - 2026-11-09
 
 ### Failure causes: fixes before the first counted results

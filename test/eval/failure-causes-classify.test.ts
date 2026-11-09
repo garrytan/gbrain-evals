@@ -28,6 +28,17 @@ describe('classify: deterministic rules', () => {
     expect(classify(failure({ failed: false, stop: 'turn_cap' }))).toMatchObject({ cause: null, basis: 'unclassified', rule_id: 'passed', secondary: [] });
   });
 
+  test('a row for a task the system never ran is neither passed nor failed', () => {
+    expect(classify(failure({ failed: false, not_run: 'does_not_fit' }))).toMatchObject({ cause: null, basis: 'unclassified', rule_id: 'not_run.does_not_fit', secondary: [] });
+  });
+
+  test('a row with no answer to judge is never an answered abstention question, and with no other signal is residual.no_answer', () => {
+    const abstention = { category: 'abstention', gold: gold({ gold_count: 0 }), tags: ['no_answer' as const] };
+    expect(classify(failure(abstention))).toMatchObject({ cause: 'unclassified', basis: 'unclassified', rule_id: 'residual.no_answer', secondary: [] });
+    expect(classify(failure({ ...abstention, stop: 'timeout' }))).toMatchObject({ cause: 'timeout_latency', rule_id: 'budget.timeout', secondary: [] });
+    expect(classify(failure({ gold: gold({ gold_count: 1, retrieved: 'all', delivered: 'all' }), text, visibility: 'public', tags: ['no_answer'] }))).toMatchObject({ basis: 'unclassified', rule_id: 'residual.no_answer' });
+  });
+
   test('null evidence never yields retrieval_miss; measured-empty does', () => {
     expect(classify(failure({ gold: gold({ gold_count: 2 }) })).basis).not.toBe('deterministic');
     expect(classify(failure({ gold: gold({ gold_count: 2, retrieved: 'none' }) }))).toMatchObject({ cause: 'retrieval_miss', rule_id: 'retrieval.no_gold_retrieved' });

@@ -121,6 +121,15 @@ describe('labeller command line', () => {
     expect(JSON.parse(r.stdout)).toMatchObject({ residual: 2, labelset_cases: 2, families: { 'sol-labels-claude-rows': 1, 'opus-labels-gpt-rows': 1 } });
   });
 
+  test('estimate and label refuse the retired --labelset-per-stratum flag instead of ignoring it', () => {
+    for (const r of [cli(['estimate', '--failures', failures, '--labelset-per-stratum', '5']),
+      cli(['label', '--failures', failures, '--out', join(dir, 'labels-stratum.ndjson'), '--cache', join(dir, 'cache'), '--labelset-per-stratum', '5'])]) {
+      expect(r.status).toBe(1);
+      expect(r.stderr).toMatch(/--labelset-per-stratum is retired/);
+    }
+    expect(cli(['estimate', '--failures', failures, '--labelset-per-family', 'x']).stderr).toMatch(/--labelset-per-family takes a whole number/);
+  });
+
   test('label refuses without --paid and an open budget run, before any request', () => {
     const r = cli(['label', '--failures', failures, '--out', join(dir, 'labels.ndjson'), '--cache', join(dir, 'cache'), '--budget-ledger', join(dir, 'ledger.sqlite')]);
     expect(r.status).toBe(1);
