@@ -1504,7 +1504,8 @@ export const BG1_GEMINI_KEY_ENV = 'BG1_GEMINI_API_KEY';
  * run naming bg1-cells.json and carrying --paid-window and --window-cap-usd, so bg1CellWindow lets the unit spend only
  * inside that window. A BG1 campaign without such a selection is refused before any file is written. Every unit's
  * canonical judge is Gemini, so its VM also receives BG1_GEMINI_API_KEY, which runRemote hands the lease proxy as
- * Gemini's key (gemini_key_env); every other campaign's providers and passes are campaignManifest's own.
+ * Gemini's key (gemini_key_env); every other campaign's providers and passes are campaignManifest's own. A sealed unit
+ * carries its index and size in kept worlds (bg1_unit), so the custodian pushes only that unit's worlds (bg1CustodyPush).
  */
 export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: Partial<Bg1UnitSelection> } = {}): Q1Campaign {
   const u = opts.units;
@@ -1513,9 +1514,16 @@ export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed
   const { paid_window, ...units } = u as Bg1UnitSelection;
   const campaign = campaignManifest(m, { ...opts, units: { ...units, cell_manifest: 'bg1' } });
   const out = ' --out "$SHOOTOUT_OUT"';
+  const defs = [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])];
+  const unitOf = (id: string) => {
+    const shard = /^(.+)\.c(\d+)$/.exec(id);
+    const def = defs.find(d => (d.shards > 1 ? d.id === shard?.[1] : d.id === id));
+    return def?.kept_units ? { index: def.shards > 1 ? Number(shard![2]) : 0, size: def.kept_units } : undefined;
+  };
   return { ...campaign, cells: campaign.cells.map(cell => {
     if (cell.command.split(out).length !== 2) throw new Error(`BG1 unit ${cell.id} has no single${out} in its command to put the paid window before`);
-    return { ...cell, providers: [...(cell.providers ?? []), 'gemini'], pass: [...(cell.pass ?? []), BG1_GEMINI_KEY_ENV], gemini_key_env: BG1_GEMINI_KEY_ENV,
+    const unit = cell.sealed ? unitOf(cell.id) : undefined;
+    return { ...cell, providers: [...(cell.providers ?? []), 'gemini'], pass: [...(cell.pass ?? []), BG1_GEMINI_KEY_ENV], gemini_key_env: BG1_GEMINI_KEY_ENV, ...(unit ? { bg1_unit: unit } : {}),
       command: cell.command.replace(out, () => ` --paid-window ${paid_window} --window-cap-usd ${units.cap_usd}${out}`) };
   }) };
 }
