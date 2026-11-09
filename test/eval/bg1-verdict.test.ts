@@ -178,6 +178,7 @@ describe('judgment and receipt checks', () => {
     expect(gatingProblems(good, SOL, 'bg1').join('\n')).toContain('not its mapped judge anthropic:claude-opus-5-5');
     expect(gatingProblems({ ...good, view: undefined }, OPUS, 'bg1')[0]).toContain('does not record the gating view');
     expect(gatingProblems({ ...good, settings: { effort: 'high', max_tokens: 8000 } }, OPUS, 'bg1')[0]).toContain('not the pinned');
+    expect(gatingProblems({ ...good, settings: undefined }, OPUS, 'bg1')[0]).toContain('sent at null, not the pinned');
     expect(gatingProblems({ ...good, judge_versions: [] }, OPUS, 'bg1')[0]).toContain('records no judge model version');
     expect(gatingProblems(good, 'gemini:gemini-3.8-flash', 'bg1')[0]).toContain('gemini:gemini-3.8-flash');
   });
