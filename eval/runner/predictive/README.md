@@ -40,13 +40,13 @@ The runner process is the run's one ledger writer. It joins the open run and ins
 Cost is recorded twice, from the same provider usage fields:
 
 - `<out>/episodes.jsonl` has one row per episode state change. A finished row holds the scored record (with `usd`, priced from the episode's usage) and `usage` (requests, uncached input, output, cache reads and cache writes, summed from each response).
-- `<out>/summary.json` holds the preregistration attestation (null for a smoke run without one), the scorecards (whose cost per correct answer counts every dollar the log records for a model, errored episodes and earlier attempts of retried ones included), the measured cost per episode by model with the counted plan's projection, and the ledger's own summary of the run (requests, reserved and actual cost, and requests charged at their reservation because usage was missing).
+- `<out>/summary.json` holds the preregistration attestation (null for a smoke run without one), the scorecards (whose cost per correct answer counts every dollar the log records for a model, errored episodes, earlier attempts of retried ones and turns billed before a cap stop included; a model, or a G3 surface, with spend but no finished episode gets a row with 0 episodes, its spend and a null cost per correct answer), the measured cost per episode by model with the counted plan's projection, and the ledger's own summary of the run (requests, reserved and actual cost, and requests charged at their reservation because usage was missing).
 
 ### Pauses and resume
 
 When the ledger refuses a reservation, nothing is sent. The runner stops scheduling, lets episodes already in flight reach their own next reservation, marks each refused episode `refused`, prints the command that resumes the run and exits 3. Raise the cap (a ledger extension) or open a new run, then run the printed command.
 
-Running the same command again resumes from the episode log, reading only rows a run of the same kind wrote (a counted run never resumes from smoke rows, or the reverse). It refuses, sending nothing and exiting 2, when a row in the log ran on another gbrain version or commit; move the log aside or pass a new `--out`. Finished episodes are skipped. A refused episode runs again, because its refused request never left the process. An episode whose last row is `errored` (a provider or harness error) or `started` (in flight when the process died) may already have been billed, so it is skipped unless you pass `--retry-errored`. The exit code is 0 when every episode finished, 1 when some errored or were skipped, 2 when the resume was refused, and 3 after a pause.
+Running the same command again resumes from the episode log, reading only rows a run of the same kind wrote (a counted run never resumes from smoke rows, or the reverse). It refuses, sending nothing and exiting 2, when a row in the log ran on another gbrain version or commit; move the log aside or pass a new `--out`. Finished episodes are skipped. A refused episode runs again, because its refused request never left the process. Turns it sent before the refusal were billed, so they stay in the refused row's `usage`, and cost per correct answer counts them once. An episode whose last row is `errored` (a provider or harness error) or `started` (in flight when the process died) may already have been billed, so it is skipped unless you pass `--retry-errored`. The exit code is 0 when every episode finished, 1 when some errored or were skipped, 2 when the resume was refused, and 3 after a pause.
 
 ### On a Ubicloud VM
 
@@ -69,6 +69,9 @@ bun test test/eval/predictive-paid.test.ts test/eval/predictive-g6.test.ts test/
 The tests are keyless. Provider keys are deleted for each file. Refusal tests swap `fetch` for a dead upstream and check that no request is attempted. The paid executor tests run against a fake Anthropic upstream behind the real paid-request guard and a temporary ledger.
 
 ## Changelog
+
+### 2026-11-09: spend before a cap stop, and spend with no finished episode
+Cost per correct answer used to leave out turns an episode had billed before a cap stop refused it; it now counts them once. A model or G3 surface whose only spend is errored or refused used to appear in no scorecard; it now gets a row with 0 episodes, its spend and a null cost per correct answer.
 
 ### 2026-11-09: resume and launch refusals, and errored spend in cost per correct
 A resume reads only rows of its own kind and refuses (exit 2) a log from another gbrain build. Cost per correct answer counts errored spend. `ubicloud/run.sh` refuses to launch beside a live or unlistable VM or a held state-directory lock.

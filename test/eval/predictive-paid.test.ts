@@ -353,6 +353,14 @@ describe('the paid executor', () => {
   }, 120_000);
 });
 
+describe('the run guide', () => {
+  test('the README says cost per correct counts turns billed before a cap stop, and that spend with no finished episode gets a row', () => {
+    const text = readFileSync(join(import.meta.dir, '../../eval/runner/predictive/README.md'), 'utf8').replace(/\s+/g, ' ');
+    expect(text).toContain("Turns it sent before the refusal were billed, so they stay in the refused row's `usage`, and cost per correct answer counts them once.");
+    expect(text).toContain('a model, or a G3 surface, with spend but no finished episode gets a row with 0 episodes, its spend and a null cost per correct answer');
+  });
+});
+
 describe('preregistration', () => {
   function capture() {
     const errors: string[] = [];
