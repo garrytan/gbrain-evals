@@ -33,6 +33,9 @@
  * measured length and the allowed range in words. The Haiku check gets 2048 output tokens, room for a reply after its
  * thinking.
  *
+ * gemini-3.8-flash renders a session whose target is at least 2,000 tokens, and every re-render, at thinkingLevel
+ * high, and the rest at low (renderThinking); its check always runs at low.
+ *
  * Model calls sit behind one interface (Models), so tests inject fakes. --fake writes each session with the template
  * renderer and answers both checks "no extra claims", spending nothing; --fake-break makes the stand-in reply with no
  * turns for one session's first attempts (a regeneration and drop drill). Real mode needs the granted paid
@@ -74,6 +77,8 @@ export const REGENERATIONS = 3;
 export const LENGTH_GATE = { min: 0.6, max: 1.5, from_target: 400 } as const;
 export const CONCURRENCY = 6;
 const CACHE_VERSION = 'bg1-render-cache/v3';
+/** A session whose target is at least this many tokens renders at high thinking from its first attempt; every re-render does too. */
+export const HIGH_THINKING_FROM_TOKENS = 2000;
 /** English words per cl100k token as gemini-3.8-flash writes, measured from the second stage 1 render, for the prompt's length in words. */
 export const WORDS_PER_TOKEN = 0.84;
 /**
@@ -269,11 +274,14 @@ export function cachedClient(client: ModelClient, dir: string): ModelClient {
   };
 }
 
+/** gemini-3.8-flash renders at high thinking a session whose target is at least HIGH_THINKING_FROM_TOKENS, and every re-render; the rest at low. */
+export const renderThinking = (brief: RenderBrief, attempt: number): ThinkingLevel => (brief.target_tokens >= HIGH_THINKING_FROM_TOKENS || attempt > 0 ? 'high' : 'low');
+
 export function clientModels(gemini: ModelClient, haiku: ModelClient): Models {
   return {
     renderer: gemini.id,
-    render: (brief, attempt, failures, lastTokens) => gemini.complete(renderPrompt(brief, attempt, failures, lastTokens), Math.min(65_536, Math.ceil(brief.target_tokens * 1.6) + 2048), 1, renderSchema(brief)),
-    check: (model, brief, turns, reask) => (model === CHECK_MODELS[0] ? gemini.complete(checkPrompt(brief, turns, reask), 256, 0, CHECK_SCHEMA) : haiku.complete(checkPrompt(brief, turns), 2048, 0)),
+    render: (brief, attempt, failures, lastTokens) => gemini.complete(renderPrompt(brief, attempt, failures, lastTokens), Math.min(65_536, Math.ceil(brief.target_tokens * 1.6) + 2048), 1, renderSchema(brief), renderThinking(brief, attempt)),
+    check: (model, brief, turns, reask) => (model === CHECK_MODELS[0] ? gemini.complete(checkPrompt(brief, turns, reask), 256, 0, CHECK_SCHEMA, 'low') : haiku.complete(checkPrompt(brief, turns), 2048, 0)),
   };
 }
 
@@ -321,9 +329,9 @@ export function geminiProxyClient(readyPath: string | undefined): ModelClient {
   const { base, token } = proxyEndpoint(readyPath, 'gemini');
   return {
     id: CHECK_MODELS[0],
-    async complete(prompt, maxOutputTokens, temperature, schema) {
+    async complete(prompt, maxOutputTokens, temperature, schema, thinking = 'low') {
       const reply = await post(`${base.replace(/\/$/, '')}/v1beta/models/gemini-3.8-flash:generateContent`, { 'x-goog-api-key': token },
-        { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens, temperature, responseMimeType: 'application/json', ...(schema ? { responseJsonSchema: schema } : {}), thinkingConfig: { thinkingLevel: 'low' } } });
+        { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens, temperature, responseMimeType: 'application/json', ...(schema ? { responseJsonSchema: schema } : {}), thinkingConfig: { thinkingLevel: thinking } } });
       return (reply.candidates?.[0]?.content?.parts ?? []).map((x: { text?: string }) => x.text ?? '').join('');
     },
   };

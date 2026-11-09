@@ -812,6 +812,46 @@ describe('checkSession and renderWorld', () => {
     expect(levels).toEqual(['low', 'high']);
   });
 
+  // Value: protects=gemini-3.8-flash renders a session of at least 2,000 target tokens, and every re-render, at high thinking and the rest at low, its check always at low, and the Haiku check as before; fails_when=a render goes out at another level than its target and attempt call for, a Gemini check goes out at anything but low, or geminiProxyClient sends a thinkingLevel other than the one asked for; why_new=stage 1's third real dev render (b5990b09): the six 3,236-token sessions failed 5 of their 10 attempts at a median of 0.73 of the target, against 3 of 48 for the shorter sessions, and bg1-dev-01 dropped at session 26; seam=clientModels over a fake ModelClient that records each request, for targets 757, 1,999, 2,000 and 3,236 at attempts 0 to 3 and every dev brief, and geminiProxyClient against a loopback server that records each body; no_claim=how well gemini-3.8-flash renders at high thinking
+  test('sessions of at least 2,000 tokens and every re-render go to Gemini at high thinking, short first attempts at low, and its check stays at low', async () => {
+    const sent: Array<{ id: string; max: number; temperature: number; thinking?: string }> = [];
+    const client = (id: string): ModelClient => ({ id, async complete(_prompt, max, temperature, _schema, thinking) { sent.push({ id, max, temperature, thinking }); return ''; } });
+    const models = clientModels(client(CHECK_MODELS[0]), client(CHECK_MODELS[1]));
+    const level = async (brief: RenderBrief, attempt: number) => { sent.length = 0; await models.render(brief, attempt, attempt ? ['length'] : []); return sent[0].thinking; };
+    const got: string[] = [];
+    for (const target of [757, 1999, 2000, 3236]) for (const attempt of [0, 1, 2, 3]) got.push(`${target}/${attempt} ${await level({ ...briefs[at], target_tokens: target }, attempt)}`);
+    expect(got).toEqual(['757/0 low', '757/1 high', '757/2 high', '757/3 high', '1999/0 low', '1999/1 high', '1999/2 high', '1999/3 high',
+      '2000/0 high', '2000/1 high', '2000/2 high', '2000/3 high', '3236/0 high', '3236/1 high', '3236/2 high', '3236/3 high']);
+    const high: number[] = [];
+    for (const id of BG1_DEV_CONVERSATIONS) {
+      let n = 0;
+      for (const b of renderBriefs(JSON.parse(readFileSync(join(REPO, `eval/data/changing-facts-v1/dev/worlds/${id}/plan.json`), 'utf8')) as WorldPlan, BG1_TARGET_TOKENS)) if ((await level(b, 0)) === 'high') n++;
+      high.push(n);
+    }
+    expect(high).toEqual([15, 17, 19]);
+    const long = { ...briefs[at], target_tokens: 3236 };
+    sent.length = 0;
+    await models.check(CHECK_MODELS[0], long, turns());
+    await models.check(CHECK_MODELS[0], long, turns(), true);
+    await models.check(CHECK_MODELS[1], long, turns());
+    expect(sent).toEqual([{ id: CHECK_MODELS[0], max: 256, temperature: 0, thinking: 'low' }, { id: CHECK_MODELS[0], max: 256, temperature: 0, thinking: 'low' }, { id: CHECK_MODELS[1], max: 2048, temperature: 0, thinking: undefined }]);
+    const levels: unknown[] = [];
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', async fetch(req) {
+      levels.push(((await req.json()) as { generationConfig?: { thinkingConfig?: unknown } }).generationConfig?.thinkingConfig);
+      return Response.json({ candidates: [{ content: { parts: [{ text: '{"extra_claims": false}' }] } }] });
+    } });
+    try {
+      const ready = join(scratch('thinking-wire'), 'gemini.json');
+      writeFileSync(ready, JSON.stringify({ env: { bg1: { GOOGLE_GEMINI_BASE_URL: `http://127.0.0.1:${server.port}/gemini`, GEMINI_API_KEY: 'mpwp-bg1-wire' } } }));
+      const wire = clientModels(geminiProxyClient(ready), client(CHECK_MODELS[1]));
+      await wire.render({ ...briefs[at], target_tokens: 757 }, 0, []);
+      await wire.render({ ...briefs[at], target_tokens: 757 }, 1, ['length']);
+      await wire.render(long, 0, []);
+      await wire.check(CHECK_MODELS[0], long, turns());
+    } finally { server.stop(true); }
+    expect(levels).toEqual([{ thinkingLevel: 'low' }, { thinkingLevel: 'high' }, { thinkingLevel: 'high' }, { thinkingLevel: 'low' }]);
+  });
+
   // Value: protects=--fake mode, which the keyless tests and drills run, renders what it rendered before the method changes; fails_when=the schema, length or regeneration changes reach fakeModels or what renderWorld returns in --fake; why_new=the renderer method changes after stage 1's first real dev render (09b3f414); seam=render.ts --dev --fake at the fixture size against the committed template fixture; no_claim=the real renderer's output
   test('--fake output is unchanged: a dev world at the fixture size matches the committed template fixture, with no regeneration', () => {
     const set = join(scratch('fake-same'), 'set');
