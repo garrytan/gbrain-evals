@@ -67,6 +67,19 @@ All commands run from the repository root.
    bun eval/runner/live-recall/run.ts freeze --questions <questions.jsonl> --out freeze.json --protocol batch2
    ```
 
+   For batch 3 (freshness and entity questions), freeze with `--protocol batch3` and the same `--gbrain` you will run
+   with. The freeze then also records `gbrain_version` and `visibility_epoch`: which side of GBRA-398
+   (garrytan/gbrain#8917, the owner and its delegates read private pages, and over-applied `access: private` labels
+   are cleared) that gbrain falls on. A counted run whose own epoch differs from the freeze's is refused with
+   `LR_FREEZE_MISMATCH`, because gold a remote reader could not see before the change may be visible after it. The
+   epoch reads `pre_gbra_398` up to gbrain 0.60.620.0, `post_gbra_398` from the first release that carries the change
+   once `eval/runner/live-recall/visibility-epoch.ts` names it, and `unknown` otherwise.
+
+   ```bash
+   bun eval/runner/live-recall/run.ts freeze --questions <questions.jsonl> --out freeze.json --protocol batch3 \
+     --gbrain <gbrain checkout>@<commit>
+   ```
+
 5. **Run**, after we confirm the freeze is committed:
 
    ```bash
@@ -130,6 +143,22 @@ JSONL, one question per line. Fields the runner does not know are ignored, so yo
 - `gold_found_by`: `page_first` (you opened the answer page, then wrote the question), `memory`, `gbrain_search`,
   `other_search` or `unknown`. Page first is what we ask for.
 - `window` (optional, time_window only): `{"since": "YYYY-MM-DD", "until": "YYYY-MM-DD"}`.
+
+**Batch 3 adds two types**, accepted only under `--protocol batch3` (batch 1 and batch 2 still refuse them):
+
+- `freshness`: the brain holds an old fact on one page and the newer fact on another. `gold` is the newer page, and
+  `stale` (required, freshness only) lists the pages that hold the superseded fact, none of them gold. The question
+  asks for the current value. The runner scores success@5 on the gold and reports how often a stale page outranks
+  the gold.
+- `entity`: two or more pages share a name (two people called the same thing, a company named like its founder's
+  handle, a father and son). `gold` is the right one, and the question carries the detail that tells them apart.
+
+```json
+{"id":"fr-2","type":"freshness","forms":{"exact":"What is the annual price of the Brightline Sensors contract?","paraphrase":"How much do we pay each year for the lidar supplier now?"},"gold":[{"slug":"notes/2026-07-15-brightline-renewal"}],"stale":[{"slug":"vendors/brightline-sensors"}],"gold_found_by":"page_first"}
+```
+
+(From the public batch 3 fixture, `eval/data/live-recall-v1/questions-batch3.jsonl`; `run --fixture --protocol batch3`
+scores it keylessly.) A question with an absent stale page is dropped like one with an absent gold page.
 
 **From `evals/recall/questions.jsonl`.** Its gold is message ids in OpenClaw's session index, which is a different
 search system. Here gold must be the gbrain page that holds the answer: if a session is imported into gbrain, use that
@@ -357,7 +386,8 @@ The question file has a problem at the line and field named. Fix it and freeze a
 ### LR_FREEZE_MISMATCH
 
 The question file's hash differs from `freeze.json`, or a counted run was started without `--questions` and
-`--freeze`. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
+`--freeze`. Under batch 3 it also means the freeze records no `visibility_epoch`, or its epoch differs from the run's
+(GBRA-398): freeze again with the gbrain you run. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
 run directories were made on different question files. In phase 2 it means the task file's hash differs from
 `freeze.json`, or the kept line count does not match it: run with the frozen file, or freeze again. On a phase 2
 `--resume` it means the resume differs from the session that started the run directory in its harness digest, loaded
