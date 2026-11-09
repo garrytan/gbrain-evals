@@ -20,6 +20,10 @@ set -euo pipefail
 umask 077
 
 die() { printf 'rs1-mint refused: %s\n' "$*" >&2; exit 2; }
+# The SHA-256 of a file in hex: sha256sum where it exists (Linux), else shasum -a 256 (macOS).
+sha256_file() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum -- "$1"; else shasum -a 256 -- "$1"; fi | cut -d' ' -f1
+}
 # Prints the resolved path of $DIR when it may be deleted: not a symlink, a directory pwd -P resolves, and not /.
 deletable() {
   local real
@@ -37,7 +41,7 @@ discard() {
 DIR="${1%"${1##*[!/]}"}" URL="$2" COMMIT="$3" LIST="$4"
 [ -n "$DIR" ] || die "the BEAM directory is /"
 [ -f "$LIST" ] || die "the BEAM path list does not exist"
-LIST_SHA="$(sha256sum "$LIST" | cut -d' ' -f1)"
+LIST_SHA="$(sha256_file "$LIST")"
 MARK="$DIR/.git/rs1-beam-paths-sha256"
 
 REPLACED=0

@@ -73,6 +73,10 @@ STEPS=(plan question answer chat_json truncate probe select rubric)
 
 say() { printf 'rs1-mint %s\n' "$*"; }
 die() { printf 'rs1-mint refused: %s\n' "$*" >&2; exit 2; }
+# The SHA-256 of a file in hex: sha256sum where it exists (Linux), else shasum -a 256 (macOS).
+sha256_file() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum -- "$1"; else shasum -a 256 -- "$1"; fi | cut -d' ' -f1
+}
 
 OUT="" SEED_FILE="${RS1_SEED_FILE:-}" COUNT=75 START=1 MODE=real BEAM_DIR="" TOPIC_SOURCE=seeded REGENERATE=""
 LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP=""
@@ -139,7 +143,7 @@ else
   BEAM_DIR="$TOOLING/beam"
   bash "$HERE/beam-checkout.sh" "$BEAM_DIR" "$BEAM_REPO" "$BEAM_COMMIT" "$HERE/beam-paths.txt"
   LOCK="$HERE/requirements.lock"
-  LOCK_SHA="$(sha256sum "$LOCK" | cut -d' ' -f1)"
+  LOCK_SHA="$(sha256_file "$LOCK")"
   VENV="$TOOLING/venv"
   if [ "$(cat "$VENV/.rs1-lock-sha256" 2>/dev/null)" != "$LOCK_SHA" ]; then
     rm -rf "$VENV"
