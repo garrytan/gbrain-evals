@@ -68,12 +68,12 @@ export function requirePaidArm(argv: readonly string[], options: { arm: string; 
 }
 
 // ─── RS1's paid-window guard (GST-1886) ────────────────────────────────
-// An entry point that can spend real keys and calls requireRs1Window (none of RS1's do yet on main; #391 wires mint.sh,
-// rs1_mint.py, validate.ts and `eval/runner/q1/cell.ts run --manifest rs1`) needs the granted window on its command line,
+// Every RS1 entry point that can spend real keys (eval/custody/rs1/mint.sh and rs1_mint.py, eval/custody/rs1/validate.ts,
+// and `eval/runner/q1/cell.ts run --manifest rs1`) needs the granted window on its command line,
 // `--paid-window <unit> --window-cap-usd <n>`, unless it runs keyless or fake. Without them it refuses (exit 2) before any
 // provider client exists, and every cap the run would spend under (the ledger's program cap, the run's budget, a
 // campaign lease) must be known and at most the window cap. It lives here, inside the cell runner's frozen tree
-// (EXECUTES); eval/runner/rs1/paid-window.ts is its command line for shell scripts.
+// (EXECUTES); eval/runner/rs1/paid-window.ts is its command line for mint.sh.
 
 export class WindowRefusal extends Error {}
 

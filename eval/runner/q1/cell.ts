@@ -90,7 +90,7 @@ import { ChatClient, chatWithReceipts, isCompatModel, judgeAnswer, READER_TEMPLA
 import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, RecordLog, sha256, type AnswerPayload, type AnswerRecord, type JudgmentRecord, type Q1Row, type ReaderAttempt } from '../memory-qa/records.ts';
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
-import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
+import { ledgerCaps, PaidArmRefusal, requirePaidArm, requireRs1Window, WindowRefusal } from '../paid-arm.ts';
 import { COMPAT_PROVIDERS, JUDGE_PROVIDERS, compatMayHaveBilled } from '../providers/openai-compatible.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { DEFAULT_ROUTE_CLASSES, Q1_CAMPAIGN_ID, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
@@ -1414,7 +1414,7 @@ const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 export type CellManifestId = 'q1' | 'f6' | 'rs1';
 const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1'];
 
-export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean } = {}): CellSpec[] {
+export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean; paidWindow?: { unit: string; cap_usd: number } } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
   const headline = (c: CellDefinition) => c.block === 'T1' || c.block === 'F6-S1';
   const t1Units = m.cells.filter(headline).flatMap(c => Array.from({ length: c.shards }, (_, i) => ({ c, i }))).sort((a, b) => b.c.estimate.usd / b.c.shards - a.c.estimate.usd / a.c.shards || (a.c.id < b.c.id ? -1 : 1) || a.i - b.i);
@@ -1422,7 +1422,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
   const waveOf = new Map(t1Units.map((u, k) => [`${u.c.id}|${u.i}`, Math.floor(k / perWave) + 1]));
   const spec = (c: CellDefinition, i: number, smoke: boolean): CellSpec => {
     const id = `${c.id}${c.shards > 1 ? `.c${i}` : ''}`;
-    const run = [...FRONT, 'run', '--cell', c.id, ...(opts.cellManifest ? ['--manifest', opts.cellManifest] : []), ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), ...(c.reanswer_invalid_before ? ['--reanswer-invalid-before', c.reanswer_invalid_before.at, ...(c.reanswer_invalid_before.outcomes ? ['--reanswer-outcomes', c.reanswer_invalid_before.outcomes.join(',')] : [])] : []), ...(c.fresh_before?.shards.includes(i) ? ['--fresh-before', c.fresh_before.at] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
+    const run = [...FRONT, 'run', '--cell', c.id, ...(opts.cellManifest ? ['--manifest', opts.cellManifest] : []), ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), ...(c.reanswer_invalid_before ? ['--reanswer-invalid-before', c.reanswer_invalid_before.at, ...(c.reanswer_invalid_before.outcomes ? ['--reanswer-outcomes', c.reanswer_invalid_before.outcomes.join(',')] : [])] : []), ...(c.fresh_before?.shards.includes(i) ? ['--fresh-before', c.fresh_before.at] : []), ...(opts.paidWindow ? ['--paid-window', opts.paidWindow.unit, '--window-cap-usd', String(opts.paidWindow.cap_usd)] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
     const providers: Array<keyof typeof PROVIDER_KEYS> = [...(c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] as const : ['openai', 'anthropic'] as const), ...(c.arms.some(a => a.readers.some(r => r.startsWith('particle:'))) ? ['particle'] as const : [])];
     const stack = c.runner === 'shim' || IN_PROCESS_STACKS.has(c.system);
@@ -1439,6 +1439,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
       ...(smoke ? { smoke: true } : {}), ...(c.only_conversations ? { conversations: c.only_conversations } : {}), providers, pass: providers.map(p => PROVIDER_KEYS[p]),
       expected_hours: c.expected_hours, wave: headline(c) ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
       ...(c.snapshot_command ? { snapshot_command: c.snapshot_command } : {}), ...(c.restore_command ? { restore_command: c.restore_command } : {}),
+      ...(c.kept_units ? { kept_unit: { index: i, size: c.kept_units } } : {}),
     };
   };
   const out: CellSpec[] = [];
@@ -1449,17 +1450,27 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
 }
 
 /** A campaign over named launch units alone, under its own id and ledger cap (plan --units; F6 amendment A1). */
-/** cell_manifest: the manifest each unit's `cell.ts run` resolves its cell from (`--manifest`), for ids q1-cells.json and f6-cells.json both define (A5), and RS1's (rs1-cells.json). */
-export interface UnitSelection { campaign_id: string; cap_usd: number; units: string[]; cell_manifest?: CellManifestId }
+/**
+ * cell_manifest: the manifest each unit's `cell.ts run` resolves its cell from (`--manifest`), for ids q1-cells.json and
+ * f6-cells.json both define (A5), and RS1's (rs1-cells.json). paid_window: the granted paid window an RS1 campaign runs
+ * in; every RS1 unit's command passes it and cap_usd as --paid-window and --window-cap-usd, and an RS1 campaign needs it.
+ */
+export interface UnitSelection { campaign_id: string; cap_usd: number; units: string[]; cell_manifest?: CellManifestId; paid_window?: string }
 
 /** The Q1 scoreboard campaign manifest (shootout-cell.ts `q1-scoreboard-campaign`) for the cell manifest. */
 export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: UnitSelection } = {}): Q1Campaign {
   const f6 = (m as { campaign_id?: string }).campaign_id;
   // F6 adds the temporal graph's 0.31.2 defaults (gpt-6-luna, text-embedding-3-small) to the models its campaign admits.
   const base = [...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5', ...(f6 ? ['openai:gpt-6-luna', 'openai:text-embedding-3-small'] : [])];
-  // RS1's cells live only in rs1-cells.json, so every unit's run names that manifest.
-  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly, cellManifest: opts.units?.cell_manifest ?? ('rs1_assumptions' in m ? 'rs1' : undefined), addons: !!opts.units }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
+  // RS1's cells live only in rs1-cells.json, so every unit's run names that manifest, and the paid window it runs in.
+  const cellManifest = opts.units?.cell_manifest ?? ('rs1_assumptions' in m ? 'rs1' : undefined);
   const u = opts.units;
+  let paidWindow: { unit: string; cap_usd: number } | undefined;
+  if (cellManifest === 'rs1') {
+    if (!u?.paid_window || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(u.paid_window) || !(u.cap_usd > 0)) throw new Error('an RS1 campaign needs a unit selection naming its granted paid window (paid_window) and the window cap (cap_usd)');
+    paidWindow = { unit: u.paid_window, cap_usd: u.cap_usd };
+  }
+  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly, cellManifest, addons: !!opts.units, paidWindow }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
   if (u) {
     const unknown = u.units.filter(id => !all.some(c => c.id === id));
     if (!Q1_CAMPAIGN_ID.test(u.campaign_id) || !(u.cap_usd > 0) || (u.cell_manifest !== undefined && !CELL_MANIFESTS.includes(u.cell_manifest)) || !u.units.length || new Set(u.units).size !== u.units.length || unknown.length) {
@@ -1551,6 +1562,26 @@ export function paidGuard(argv: string[], def: CellDefinition, limit: number | n
   return estimate;
 }
 
+/**
+ * RS1's paid-window guard for `run --manifest rs1` (eval/runner/paid-arm.ts): a run needs the granted window
+ * (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy serves a keyless upstream
+ * (SHOOTOUT_KEYLESS_UPSTREAM). Under a lease proxy the cap checked is the lease (SHOOTOUT_LEASE_USD, set by the
+ * campaign's remote runner); without one it is the ledger's program cap and the run's budget. Refuses with exit 2
+ * before any provider client exists.
+ */
+export function rs1CellWindow(argv: string[], def: CellDefinition, proxy: string | null): void {
+  const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+  const lease = Number(process.env.SHOOTOUT_LEASE_USD);
+  try {
+    requireRs1Window(argv, { what: `RS1 cell ${def.id}`, keyless: !!proxy && !!process.env.SHOOTOUT_KEYLESS_UPSTREAM,
+      caps: () => proxy ? [{ label: 'the campaign lease (SHOOTOUT_LEASE_USD)', usd: lease > 0 ? lease : null }] : ledgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
+  } catch (e) {
+    if (!(e instanceof WindowRefusal)) throw e;
+    throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: 'every RS1 cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap',
+      fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--manifest', 'rs1', '--paid-window', '<granted unit>', '--window-cap-usd', '<granted cap>'] } });
+  }
+}
+
 export async function main(argv: string[]): Promise<number> {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const many = (n: string) => argv.flatMap((a, i) => (a === n ? [argv[i + 1]] : []));
@@ -1603,6 +1634,7 @@ export async function main(argv: string[]): Promise<number> {
     }
     const limit = one('--limit') ? Number(one('--limit')) : null;
     const proxy = (one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
+    if (one('--manifest') === 'rs1') rs1CellWindow(argv, def, proxy);
     if (!proxy) {
       paidGuard(argv, def, limit);
       startPaidRun(`q1-cell:${def.id}`, { ...budgetOptionsFrom(argv), estimateUsd: def.estimate.usd });

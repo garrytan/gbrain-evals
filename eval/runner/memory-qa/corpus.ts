@@ -533,6 +533,21 @@ export interface Rs1Manifest {
   /** The sha256 of each earlier fill of this manifest, oldest first (a refill only adds files). */
   earlier_fills?: string[];
 }
+/**
+ * GBRAIN_EVALS_RS1_UNIT: on a sealed cell's VM, the one launch unit's kept conversations (comma-separated ids) whose
+ * files the custodian host pushed (shootout-cell.ts rs1CustodyPush, GBEV-3's decision D1). Unset on the custody host.
+ * Set, verifyRs1Custody checks exactly those conversations' pinned files and refuses any other conversation under the
+ * root, and loadRs1 opens only those conversations.
+ */
+export function rs1UnitScope(env: Record<string, string | undefined> = process.env): string[] | null {
+  const raw = env.GBRAIN_EVALS_RS1_UNIT;
+  if (raw === undefined) return null;
+  const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+  const bad = ids.filter(id => !RS1_CONVERSATIONS.includes(id));
+  if (!ids.length || bad.length || new Set(ids).size !== ids.length) throw decideError({ code: 'CUSTODY_MISSING', message: `beam-rs1: GBRAIN_EVALS_RS1_UNIT ${JSON.stringify(raw)} is not a list of distinct RS1 conversation ids`,
+    why: 'a sealed cell VM holds exactly one launch unit\'s conversations', fix: rs1Ask });
+  return ids;
+}
 const rs1Fill = { next: 'ask_user' as const, user_message: 'the custodian fills (or refills) the RS1 manifest from the set root on the custody host: every file rs1ManifestFiles lists, with its SHA-256' };
 const rs1Ask = { next: 'ask_user' as const, user_message: 'run beam-rs1 on the custody host with GBRAIN_EVALS_RS1_SOURCE set to the RS1 set root (mint.sh\'s <out>/set; it holds conversations/c<NNN> for the minted slots)' };
 
@@ -584,6 +599,10 @@ export function loadRs1(custody: { log: string; decisionId: string; purpose: str
     fix: { next: 'ask_user', user_message: 'request the beam-rs1 cells from the custodian (decision q1-scoreboard)' } });
   const unknown = opts.only ? [...opts.only].filter(id => !RS1_CONVERSATIONS.includes(id)) : [];
   if (unknown.length) throw new Error(`beam-rs1 has no conversation ${unknown.join(', ')}`);
+  const scope = rs1UnitScope();
+  if (scope && (!opts.only || [...opts.only].some(id => !scope.includes(id)))) throw decideError({ code: 'CUSTODY_MISSING',
+    message: `beam-rs1: this VM holds launch unit ${scope.join(', ')} only, and the load asks for ${opts.only ? [...opts.only].filter(id => !scope.includes(id)).join(', ') : 'every conversation'}`,
+    why: 'a sealed cell VM receives and opens only its own unit\'s conversations (GBEV-3\'s decision D1)', fix: rs1Ask });
   const { manifest, sha256: manifestSha } = readRs1Manifest(opts.manifestPath);
   const pinned = manifest.status === 'filled' ? new Map(manifest.files.map(f => [f.path, f.sha256])) : null;
   const files: DatasetIdentity['files'] = [];
@@ -659,14 +678,27 @@ export function verifyRs1Custody(log: (s: string) => void = s => process.stderr.
   const root = rs1Source();
   const { manifest } = readRs1Manifest();
   if (manifest.status !== 'filled') throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-rs1: the manifest has no hashes yet', why: 'only pinned bytes are verified', fix: rs1Fill });
-  for (const f of manifest.files) {
+  const scope = rs1UnitScope();
+  let files = manifest.files;
+  if (scope) {
+    const { kept } = rs1Kept(manifest);
+    const notKept = scope.filter(id => !kept.includes(id));
+    if (notKept.length) throw decideError({ code: 'DATASET_MISSING', message: `beam-rs1: GBRAIN_EVALS_RS1_UNIT names ${notKept.join(', ')}, which the filled manifest does not keep`, why: 'a unit runs only kept conversations', fix: rs1Fill });
+    const dirs = new Set(scope.map(id => `c${id.slice(4)}`));
+    const present = existsSync(join(root, 'conversations')) ? readdirSync(join(root, 'conversations')).sort() : [];
+    const extra = present.filter(d => !dirs.has(d));
+    if (extra.length) throw decideError({ code: 'CUSTODY_MISSING', message: `beam-rs1: the custody root holds ${extra.length} conversation(s) outside launch unit ${scope.join(', ')}`,
+      why: 'a sealed cell VM receives only its own unit\'s pinned files (GBEV-3\'s decision D1)', fix: rs1Ask });
+    files = manifest.files.filter(f => dirs.has(f.path.split('/')[1]));
+  }
+  for (const f of files) {
     const abs = join(root, f.path);
     if (!existsSync(abs)) throw decideError({ code: 'DATASET_MISSING', message: `beam-rs1: ${f.path} is not under GBRAIN_EVALS_RS1_SOURCE`, why: 'every pinned file must be present', fix: rs1Ask });
     const got = fileSha256(abs);
     if (got !== f.sha256) throw decideError({ code: 'DATASET_HASH_MISMATCH', message: `beam-rs1: ${f.path} has SHA-256 ${got.slice(0, 12)}, expected ${f.sha256.slice(0, 12)}`, why: 'only the pinned bytes are scored', fix: rs1Fill });
   }
-  log(`[custody] beam-rs1: ${manifest.files.length} file(s) match their pinned sha256 under GBRAIN_EVALS_RS1_SOURCE`);
-  return manifest.files.length;
+  log(`[custody] beam-rs1: ${files.length} file(s) match their pinned sha256 under GBRAIN_EVALS_RS1_SOURCE${scope ? ` (launch unit ${scope.join(', ')})` : ''}`);
+  return files.length;
 }
 
 // ─── LongMemEval-M ──────────────────────────────────────────────────

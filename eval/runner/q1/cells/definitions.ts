@@ -382,12 +382,28 @@ export const RS1_ASSUMPTIONS = {
    */
   max_conversation_ratio: { RS1: 1.36, 'RS1-dev2': 1.01 } as Record<string, number>,
   /**
-   * Judging dollars per answer on RS1's sets, measured on F6's BEAM-1M answers: a per-row frontier judgment $113.31 over
-   * 3,301 answers (GST-1365 census B), about 3.2 times what Q1's token assumption gives, and the canonical gpt-4.1-mini
-   * judgment $0.0028 (F6 dry run). They size RS1's estimates and leases; Q1's and F6's keep their token assumptions.
+   * The mean conversation size the extraction cap is sized from: RS1's is validate.ts's length gate centre (1.07M cl100k
+   * tokens), fixed by the preregistration rather than read from the set's facts. The amendment that regenerates wave B's
+   * cells at N_final changes RS1's conversation count, and a cap derived from the set's facts would then move
+   * GBRAIN_F6_EXTRACT_CAP_USD, an identity field of wave A's units, so verdict.ts would refuse wave A's receipts.
    */
-  judge_usd_per_answer: { frontier: 113.31 / 3301, canonical: 0.0028 },
+  conversation_tokens: { RS1: 1_070_000 } as Record<string, number>,
+  /**
+   * The canonical gpt-4.1-mini judgment per answer on RS1's sets, $0.0028 (F6 dry run). It sizes RS1's estimates and
+   * leases; Q1's and F6's keep their token assumptions.
+   */
+  judge_usd_per_answer: { canonical: 0.0028 },
+  /**
+   * A gating judgment's tokens on RS1's sets: BEAM's three rubric calls of 900 input tokens, and 582 output tokens per call
+   * (reasoning included), back-solved so that an even gpt-6.1-sol and claude-opus-5-5 mix gives GST-1365 census B's
+   * measured $113.31 over 3,301 answers. Priced at each judge's own rate (rs1GatingJudgeUsd), so gpt-6-astra costs about
+   * $0.114 an answer and claude-opus-5-5 about $0.046, until the judge check measures each judge's tokens.
+   */
+  gating_judge: { calls: 3, input: 900, output: 582 },
 };
+
+/** One RS1 gating judgment's dollars per answer at the judge's own price (RS1_ASSUMPTIONS.gating_judge). */
+export const rs1GatingJudgeUsd = (judge: string) => { const g = RS1_ASSUMPTIONS.gating_judge; const p = priceOf(judge); return g.calls * (g.input * p.input + g.output * p.output) / 1e6; };
 
 /** An embedding model's list price per million tokens (gbrain's own price table, as budget-ledger prices embeddings). */
 function embeddingPrice(model: string): number {
@@ -521,7 +537,7 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
     if (arm.mode === 'retrieval-only') continue;
     const judged = arm.readers.reduce((s, r) => s + answers(r), 0);
     add('judges', judged * (measured?.canonical ?? judgeCost(def.benchmark)));
-    if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured?.frontier ?? judgeCost(def.benchmark, frontierJudgeOf(r))));
+    if (arm.frontier?.per_reader) for (const r of arm.frontier.readers ?? arm.readers) add('frontier_judges', (arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) : n) * (measured ? rs1GatingJudgeUsd(frontierJudgesFor(arm, r)[0]) : judgeCost(def.benchmark, frontierJudgesFor(arm, r)[0])));
     else if (arm.frontier) {
       const fr = arm.frontier.readers ?? arm.readers;
       const items = arm.frontier.sample !== null ? Math.min(n, arm.frontier.sample) * fr.length : n * fr.length;

@@ -44,7 +44,7 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, write
 import { basename, dirname, join, resolve } from 'node:path';
 import { BudgetRun, ledgerPaths, ledgerStatus } from '../budget-ledger.ts';
 import type { FrozenContext } from '../memory-qa/arms.ts';
-import { loadCorpus, type Corpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
+import { loadCorpus, readRs1Manifest, type Corpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, hasChatRoute, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
@@ -222,7 +222,7 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
 
 export interface RereadOptions { sources: string[]; reader: string; out: string; manifest?: CellManifestId; env?: Record<string, string | undefined>; keyless?: boolean }
 export interface RereadDeps { corpus?: Corpus; reader?: ChatLike; judge?: ChatLike; instrument?: Instrument }
-export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: CellManifestId | null; keyless: boolean; instrument: Instrument; verify: RereadVerify; plan: PlannedRead[] }
+export interface PreparedReread { def: CellDefinition; arm: ArmDefinition; reader: string; out: string; manifest: CellManifestId | null; keyless: boolean; instrument: Instrument; dataset: Corpus['source']; verify: RereadVerify; plan: PlannedRead[] }
 
 /** Everything before the first request: the judge refusal, custody, one re-read per --out, the --out claim, the corpus and the byte-for-byte check (verify.json). */
 export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: RereadOptions, deps: Pick<RereadDeps, 'corpus' | 'instrument'> = {}): PreparedReread {
@@ -233,6 +233,8 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   try { frontier = arm.frontier?.per_reader ? frontierJudgesFor(arm, opts.reader) : []; }
   catch (e) { throw refuse({ code: 'USAGE', message: `${arm.cell_id} judges each reader with its family's frontier judge: ${(e as Error).message}`, why: 'a re-read answer on a per-reader frontier arm is scored by both judge views, so a reader without a preregistered judge would be read and never fully scored', fix: { next: 'report', user_message: 're-read with particle:particle-1, whose frontier judge is openai:gpt-6.1-sol' } }); }
   refuseCompatJudges(arm.cell_id, [instrument.canonical_judge, ...frontier]);
+  if (def.benchmark === 'beam-rs1' && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readRs1Manifest().manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `beam-rs1: the RS1 manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
+    why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and verdict.ts checks the re-read receipt\'s dataset against it', fix: { next: 'ask_user', user_message: 'the custodian fills the RS1 manifest before any RS1 re-read' } });
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
   if (!deps.corpus && needsCustody(def)) custodyGate(def, out, env, `q1 reread ${arm.cell_id} with ${opts.reader}`);
   const others = existsSync(join(out, 'cells')) ? readdirSync(join(out, 'cells')).sort().filter(d => d !== rereadCellId(arm.cell_id, opts.reader)) : [];
@@ -257,7 +259,7 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
     why: 'a resume keeps the answers already in --out, so it must read the sources they were read from', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   writeFileSync(join(out, 'verify.json'), JSON.stringify(verify, null, 2) + '\n');
   if (!resuming) writeFileSync(frozen, identity);
-  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, verify, plan };
+  return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, dataset: corpus.source, verify, plan };
 }
 
 export interface RereadResult { cell_id: string; dir: string; status: 'complete' | 'partial'; stopped: string | null; receipt: Record<string, unknown> }
@@ -334,7 +336,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const receipt = {
     schema: REREAD_RECEIPT_SCHEMA, cell_id: cellId, run_status: status, stopped, keyless: p.keyless,
     source: { cell: def.id, manifest: p.manifest, arm: arm.id, arm_cell_id: arm.cell_id, config_sha256: p.verify.source_config_sha256, config_sha256s: [...new Set(p.verify.sources.map(s => s.config_sha256))].sort(), contexts: p.verify.sources.map(s => ({ sha256: s.contexts_sha256, records: s.contexts_records, arm_records: s.arm_records })) },
-    set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block,
+    set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block, dataset: p.dataset,
     system: { kind: def.system, configuration: def.configuration },
     arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, label: arm.label },
     readers: [reader], reader_replicates: {}, effort: def.effort, max_tokens: readerMaxTokens(reader),

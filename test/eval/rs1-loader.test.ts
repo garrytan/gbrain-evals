@@ -23,7 +23,7 @@ import { rs1CustodyPush, runRemote } from '../../eval/runner/shootout-cell.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const MANIFEST = 'eval/decisions/datasets/rs1-manifest.json';
-const ENV = ['GBRAIN_EVALS_RS1_SOURCE', 'GBRAIN_EVALS_RS1_MANIFEST', 'GBRAIN_EVALS_CUSTODY_LOG', 'GBRAIN_EVALS_DECISION_ID'] as const;
+const ENV = ['GBRAIN_EVALS_RS1_SOURCE', 'GBRAIN_EVALS_RS1_MANIFEST', 'GBRAIN_EVALS_CUSTODY_LOG', 'GBRAIN_EVALS_DECISION_ID', 'GBRAIN_EVALS_RS1_UNIT'] as const;
 const saved = Object.fromEntries(ENV.map(k => [k, process.env[k]]));
 const dirs: string[] = [];
 const tmp = () => { const d = mkdtempSync(join(tmpdir(), 'rs1-loader-')); dirs.push(d); return d; };
@@ -305,19 +305,61 @@ describe('beam-rs1 split, instrument and reuse pin', () => {
 /** A synthetic RS1 stand-in: two conversations in the mint's layout and a filled manifest inside the root. */
 function standIn() {
   const root = tmp();
-  const files = [1, 2].flatMap(n => [[`conversations/${cid(n)}/beam/1/chat.json`, JSON.stringify({ synthetic: `chat ${n}` })], [`conversations/${cid(n)}/beam/1/probing_questions/probing_questions.json`, JSON.stringify({ abstention: [{ question: `SYNTHETIC ${n}` }] })]] as const);
+  const files = Array.from({ length: 10 }, (_, i) => i + 1).flatMap(n => [[`conversations/${cid(n)}/beam/1/chat.json`, JSON.stringify({ synthetic: `chat ${n}` })], [`conversations/${cid(n)}/beam/1/probing_questions/probing_questions.json`, JSON.stringify({ abstention: [{ question: `SYNTHETIC ${n}` }] })]] as const);
   for (const [p, body] of files) { mkdirSync(dirname(join(root, p)), { recursive: true }); writeFileSync(join(root, p), body); }
   const manifest = join(root, 'stand-in-rs1-manifest.json');
-  writeFileSync(manifest, JSON.stringify({ dataset: 'RS1 stand-in', status: 'filled', layout: 'stand-in', note: 'synthetic', files: files.map(([path, body]) => ({ path, sha256: sha(body) })), filled_at: '2026-11-03T00:00:00Z' }));
+  writeFileSync(manifest, JSON.stringify({ dataset: 'RS1 stand-in', status: 'filled', layout: 'stand-in', note: 'synthetic', files: files.map(([path, body]) => ({ path, sha256: sha(body) })), filled_at: '2026-11-03T00:00:00Z', kept: Array.from({ length: 10 }, (_, i) => `rs1-${String(i + 1).padStart(3, '0')}`) }));
   return { root, manifest, files: files.map(([p]) => p) };
 }
 
 describe('the RS1 custody push', () => {
-  test('checks every file against the filled manifest, pushes them and the manifest to ~/custody/rs1, and points the loader there', () => {
+  const UNIT0 = { index: 0, size: 5 };
+  test('checks the unit\'s files against the filled manifest, pushes them and the manifest to ~/custody/rs1, and points the loader there', () => {
     const s = standIn();
-    const push = rs1CustodyPush({ GBRAIN_EVALS_RS1_SOURCE: s.root, GBRAIN_EVALS_RS1_MANIFEST: s.manifest });
-    expect(push).toEqual({ source: s.root, dest: 'custody/rs1', list: [...s.files, 'stand-in-rs1-manifest.json'],
-      env: ['GBRAIN_EVALS_RS1_SOURCE=~/custody/rs1', 'GBRAIN_EVALS_RS1_MANIFEST=~/custody/rs1/stand-in-rs1-manifest.json'] });
+    const push = rs1CustodyPush({ GBRAIN_EVALS_RS1_SOURCE: s.root, GBRAIN_EVALS_RS1_MANIFEST: s.manifest }, '<campaign>', UNIT0);
+    expect(push).toEqual({ source: s.root, dest: 'custody/rs1', list: [...s.files.slice(0, 10), 'stand-in-rs1-manifest.json'],
+      env: ['GBRAIN_EVALS_RS1_SOURCE=~/custody/rs1', 'GBRAIN_EVALS_RS1_MANIFEST=~/custody/rs1/stand-in-rs1-manifest.json', 'GBRAIN_EVALS_RS1_UNIT=rs1-001,rs1-002,rs1-003,rs1-004,rs1-005'] });
+  });
+
+  test('D1: a unit-0 VM receives no file of any other unit; a push without a unit, or of a unit not yet kept, refuses', () => {
+    const s = standIn();
+    const ok = { GBRAIN_EVALS_RS1_SOURCE: s.root, GBRAIN_EVALS_RS1_MANIFEST: s.manifest };
+    const unit0 = rs1CustodyPush(ok, '<campaign>', UNIT0).list;
+    for (const n of [6, 7, 8, 9, 10]) expect(unit0.some(p => p.startsWith(`conversations/${cid(n)}/`))).toBe(false);
+    const unit1 = rs1CustodyPush(ok, '<campaign>', { index: 1, size: 5 }).list;
+    expect(unit1.filter(p => p.startsWith('conversations/')).map(p => p.split('/')[1])).toEqual(['c006', 'c006', 'c007', 'c007', 'c008', 'c008', 'c009', 'c009', 'c010', 'c010']);
+    expect(caught(() => rs1CustodyPush(ok)).op.message).toMatch(/names no launch unit/);
+    expect(caught(() => rs1CustodyPush(ok, '<campaign>', { index: 2, size: 5 })).op.message).toMatch(/launch unit 2 needs kept conversations 11 to 15/);
+  });
+
+  test('D1 on the VM: setup\'s fetch and the loader accept a root holding exactly the unit, refuse any other conversation, and fail closed on a changed byte', async () => {
+    const host = fixture(Array.from({ length: 10 }, (_, i) => i + 1));
+    const kept = Array.from({ length: 10 }, (_, i) => `rs1-${String(i + 1).padStart(3, '0')}`);
+    const template = JSON.parse(readFileSync(host.manifest, 'utf8'));
+    writeFileSync(host.manifest, JSON.stringify({ ...template, status: 'filled', files: rs1ManifestFiles(host.root, kept), filled_at: '2026-11-08T00:00:00Z', kept }, null, 1) + '\n');
+    const push = rs1CustodyPush(process.env, '<campaign>', UNIT0);
+    const vm = tmp();
+    for (const p of push.list) { mkdirSync(dirname(join(vm, p)), { recursive: true }); cpSync(join(host.root, p), join(vm, p)); }
+    const unit = kept.slice(0, 5);
+    process.env.GBRAIN_EVALS_RS1_SOURCE = vm;
+    process.env.GBRAIN_EVALS_RS1_MANIFEST = join(vm, 'stand-in-manifest.json');
+    process.env.GBRAIN_EVALS_RS1_UNIT = unit.join(',');
+    expect(verifyRs1Custody(() => {})).toBe(10);
+    expect(await fetchDataset('beam-rs1', { log: () => {} })).toEqual({ fetched: 0, verified: 10 });
+    expect(loadRs1(custody(host.log), { only: new Set(unit) }).conversations.map(c => c.id)).toEqual(unit);
+    for (const only of [new Set(['rs1-001', 'rs1-006']), undefined]) expect(decide(() => loadRs1(custody(host.log), { only })).op).toMatchObject({ code: 'CUSTODY_MISSING', message: expect.stringContaining('this VM holds launch unit rs1-001, rs1-002, rs1-003, rs1-004, rs1-005 only') });
+    process.env.GBRAIN_EVALS_RS1_UNIT = 'rs1-001,rs1-011';
+    expect(decide(() => verifyRs1Custody(() => {})).op.message).toContain('names rs1-011, which the filled manifest does not keep');
+    process.env.GBRAIN_EVALS_RS1_UNIT = unit.join(',');
+    cpSync(join(host.root, 'conversations/c006'), join(vm, 'conversations/c006'), { recursive: true });
+    expect(decide(() => verifyRs1Custody(() => {})).op).toMatchObject({ code: 'CUSTODY_MISSING', message: expect.stringContaining('holds 1 conversation(s) outside launch unit') });
+    rmSync(join(vm, 'conversations/c006'), { recursive: true });
+    const chat = join(vm, 'conversations/c003/beam/1/chat.json');
+    writeFileSync(chat, readFileSync(chat, 'utf8') + ' ');
+    expect(code(() => verifyRs1Custody(() => {}))).toBe('DATASET_HASH_MISMATCH');
+    expect(code(() => loadRs1(custody(host.log), { only: new Set(unit) }))).toBe('DATASET_HASH_MISMATCH');
+    rmSync(join(vm, 'conversations/c004/beam/1/probing_questions/probing_questions.json'));
+    expect(code(() => verifyRs1Custody(() => {}))).not.toBe('no refusal');
   });
 
   test('an unset source, a source inside the repository, no manifest, an unfilled one, one outside the source, a changed byte or a missing file refuses before any VM', () => {
@@ -331,12 +373,12 @@ describe('the RS1 custody push', () => {
     expect(caught(() => rs1CustodyPush({ ...ok, GBRAIN_EVALS_RS1_MANIFEST: outside })).op).toMatchObject({ code: 'USAGE', message: expect.stringMatching(/must sit inside GBRAIN_EVALS_RS1_SOURCE/) });
     const unfilled = join(s.root, 'unfilled.json');
     writeFileSync(unfilled, readFileSync(join(ROOT, MANIFEST)));
-    expect(caught(() => rs1CustodyPush({ ...ok, GBRAIN_EVALS_RS1_MANIFEST: unfilled })).op.message).toMatch(/has no hashes/);
+    expect(caught(() => rs1CustodyPush({ ...ok, GBRAIN_EVALS_RS1_MANIFEST: unfilled }, '<campaign>', UNIT0)).op.message).toMatch(/has no hashes/);
     const f = join(s.root, s.files[3]);
     writeFileSync(f, readFileSync(f, 'utf8') + ' ');
-    expect(caught(() => rs1CustodyPush(ok)).op.message).toMatch(/conversations\/c002\/beam\/1\/probing_questions\/probing_questions\.json .*not the pinned bytes/);
+    expect(caught(() => rs1CustodyPush(ok, '<campaign>', UNIT0)).op.message).toMatch(/conversations\/c002\/beam\/1\/probing_questions\/probing_questions\.json .*not the pinned bytes/);
     rmSync(join(s.root, s.files[0]));
-    expect(caught(() => rs1CustodyPush(ok)).op.message).toMatch(/conversations\/c001\/beam\/1\/chat\.json .*missing/);
+    expect(caught(() => rs1CustodyPush(ok, '<campaign>', UNIT0)).op.message).toMatch(/conversations\/c001\/beam\/1\/chat\.json .*missing/);
   });
 
   test('the remote command wipes the pushed ~/custody/rs1 at teardown', async () => {

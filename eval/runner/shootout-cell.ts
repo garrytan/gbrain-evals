@@ -82,6 +82,7 @@ import { BudgetRun, initLedger, ledgerStatus, setProgramCap, setRunBudget } from
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
 import { refuse, ScoreboardError } from './q1/scoreboard-errors.ts';
 import { BEAM10M_MANIFEST } from './memory-qa/beam10m-corpus.ts';
+import { rs1UnitConversations, type Rs1Manifest } from './memory-qa/corpus.ts';
 import { insideRepository, sha256File } from './sealed-confirmation-lib.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../..');
@@ -141,6 +142,8 @@ export interface CellSpec {
   snapshot_command?: string;
   /** Q1: run on the VM before the command when resuming from a realization; reads $SHOOTOUT_RESTORE_DIR. */
   restore_command?: string;
+  /** RS1: the launch unit (its index and size in kept conversations) whose pinned files alone its VM receives (D1). */
+  kept_unit?: { index: number; size: number };
 }
 
 export type ParamValue = number | boolean | string;
@@ -303,6 +306,7 @@ export function loadCampaign(path: string): { manifest: CampaignManifest; sha256
     if (typeof c.command !== 'string' || !c.command.trim()) problems.push(`cell ${c.id}: command is required`);
     if (c.setup !== undefined && !existsSync(resolve(REPO_ROOT, c.setup)) && !existsSync(resolve(c.setup))) problems.push(`cell ${c.id}: setup ${c.setup} does not exist`);
     if (c.setup !== undefined && c.setup_command !== undefined) problems.push(`cell ${c.id}: give setup or setup_command, not both`);
+    if (c.kept_unit !== undefined && !(Number.isInteger(c.kept_unit.index) && c.kept_unit.index >= 0 && Number.isInteger(c.kept_unit.size) && c.kept_unit.size > 0)) problems.push(`cell ${c.id}: kept_unit needs a whole index from 0 and a positive size`);
   }
   if (!m.cells?.length) problems.push('cells must list at least one cell');
   if (problems.length) throw new Error(`campaign manifest ${path}: ${problems.join('; ')}`);
@@ -444,14 +448,16 @@ export function d8CustodyPush(env: Record<string, string | undefined> = process.
 }
 
 /**
- * RS1: the custodian's RS1 files for a sealed RS1 cell, mirroring d8CustodyPush. GBRAIN_EVALS_RS1_SOURCE names the RS1
- * set root (mint.sh's <out>/set, outside the checkout) and GBRAIN_EVALS_RS1_MANIFEST a filled manifest inside it (the
- * committed manifest stays unfilled, so a launch always names the custodian's filled copy). Every listed file's SHA-256
- * is checked here before any VM exists; ubi-runner pushes the files and the manifest to ~/custody/rs1 before setup,
+ * RS1: the custodian's RS1 files for one sealed RS1 launch unit, mirroring d8CustodyPush. GBRAIN_EVALS_RS1_SOURCE names
+ * the RS1 set root (mint.sh's <out>/set, outside the checkout) and GBRAIN_EVALS_RS1_MANIFEST a filled manifest inside it
+ * (the committed manifest stays unfilled, so a launch always names the custodian's filled copy). The VM receives only
+ * the pinned files of the unit's kept conversations (rs1UnitConversations; GBEV-3's decision D1) and the manifest, and
+ * GBRAIN_EVALS_RS1_UNIT names those conversations so setup's fetch and the loader refuse any other. Each pushed file's
+ * SHA-256 is checked here before any VM exists; ubi-runner pushes the files and the manifest to ~/custody/rs1 before setup,
  * where setup's fetch (verifyRs1Custody) checks them again, the loader logs each opening to the VM's custody access log
  * (GBRAIN_EVALS_CUSTODY_LOG, set by the remote command), and the remote command wipes ~/custody/rs1 at teardown.
  */
-export function rs1CustodyPush(env: Record<string, string | undefined> = process.env, campaign = '<campaign>'): CustodyPush {
+export function rs1CustodyPush(env: Record<string, string | undefined> = process.env, campaign = '<campaign>', unit?: { index: number; size: number }): CustodyPush {
   const source = env.GBRAIN_EVALS_RS1_SOURCE;
   const fix = { next: 'tell_user_to_run' as const, argv: ['bun', 'run', 'eval:scoreboard', 'doctor', '--for', 'sealed', '--campaign', campaign], user_message: 'on the custodian host, export GBRAIN_EVALS_RS1_SOURCE=<the RS1 set root, outside the checkout> and GBRAIN_EVALS_RS1_MANIFEST=<the filled RS1 manifest inside it>' };
   if (!source) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'a sealed RS1 cell needs the custodian\'s files and GBRAIN_EVALS_RS1_SOURCE is not set', why: 'RS1 is never downloaded on a VM; the custodian host pushes its verified copy', fix });
@@ -460,15 +466,22 @@ export function rs1CustodyPush(env: Record<string, string | undefined> = process
   if (!manifest) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'a sealed RS1 cell needs the filled RS1 manifest and GBRAIN_EVALS_RS1_MANIFEST is not set', why: 'the committed RS1 manifest stays unfilled; only pinned bytes are pushed', fix });
   const rel = relative(resolve(source), resolve(manifest));
   if (rel.startsWith('..') || isAbsolute(rel)) throw refuse({ code: 'USAGE', message: 'the RS1 manifest must sit inside GBRAIN_EVALS_RS1_SOURCE', why: 'it travels with the files it describes', fix });
-  const m = JSON.parse(readFileSync(manifest, 'utf8')) as { status: string; files: Array<{ path: string; sha256: string }> };
+  const m = JSON.parse(readFileSync(manifest, 'utf8')) as Rs1Manifest;
   if (m.status !== 'filled' || !m.files?.length) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'the RS1 manifest has no hashes', why: 'only pinned bytes are pushed', fix });
+  if (!unit) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'a sealed RS1 cell names no launch unit (kept_unit)', why: 'a VM receives only its own unit\'s pinned files (GBEV-3\'s decision D1), so the push needs the unit', fix });
+  let ids: string[];
+  try { ids = rs1UnitConversations(m, unit.index, unit.size); } catch (e) {
+    throw refuse({ code: 'CUSTODY_REQUIRED', message: (e as Error).message, why: 'a unit is pushed only once all of its conversations are kept and pinned', fix });
+  }
+  const dirs = new Set(ids.map(id => `c${id.slice(4)}`));
   const list: string[] = [];
-  for (const f of m.files) {
+  for (const f of m.files.filter(x => dirs.has(x.path.split('/')[1]))) {
     const abs = join(source, f.path);
     if (!existsSync(abs) || sha256File(abs) !== f.sha256) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${f.path} under GBRAIN_EVALS_RS1_SOURCE is ${existsSync(abs) ? 'not the pinned bytes' : 'missing'}`, why: 'the push refuses before any VM exists when a file does not match the manifest', fix });
     list.push(f.path);
   }
-  return { source: resolve(source), dest: 'custody/rs1', list: [...list, rel], env: ['GBRAIN_EVALS_RS1_SOURCE=~/custody/rs1', `GBRAIN_EVALS_RS1_MANIFEST=~/custody/rs1/${rel}`] };
+  return { source: resolve(source), dest: 'custody/rs1', list: [...list, rel],
+    env: ['GBRAIN_EVALS_RS1_SOURCE=~/custody/rs1', `GBRAIN_EVALS_RS1_MANIFEST=~/custody/rs1/${rel}`, `GBRAIN_EVALS_RS1_UNIT=${ids.join(',')}`] };
 }
 
 export class Campaign {
@@ -620,7 +633,7 @@ export class Campaign {
     if (!this.sealedQ1(cellId)) return null;
     const benchmark = this.cell(cellId).benchmark;
     return benchmark === 'beam-10m' ? beam10mCustodyPush(env, this.manifestPath) : benchmark === 'beam-d8' ? d8CustodyPush(env, this.manifestPath)
-      : benchmark === 'beam-rs1' ? rs1CustodyPush(env, this.manifestPath) : null;
+      : benchmark === 'beam-rs1' ? rs1CustodyPush(env, this.manifestPath, this.cell(cellId).kept_unit) : null;
   }
 
   /** Q1: the VM name, in ubi-runner's ownership format so `list --mine` and teardown find it, ending in `-t<hours>`: the cell's timeout, the launcher's backstop and two hours for setup and the final pull, so an age-based sweep of TTL-less `ubirun-*` VMs leaves a running cell alone (A3). */
@@ -1004,10 +1017,12 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     }
     if (!up) throw new Error(ended() ? `the metering proxy exited (${proxy.signalCode ?? `code ${proxy.exitCode}`}) before it served lease ${payload.lease_id} on port ${port}` : `the metering proxy did not serve lease ${payload.lease_id} on port ${port} within 120 s`);
     const base = `http://127.0.0.1:${port}`;
-    const env: Record<string, string | undefined> = { ...process.env, SHOOTOUT_OUT: out, SHOOTOUT_PROXY: base, SHOOTOUT_LEASE_ID: payload.lease_id, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken,
+    const env: Record<string, string | undefined> = { ...process.env, SHOOTOUT_OUT: out, SHOOTOUT_PROXY: base, SHOOTOUT_LEASE_ID: payload.lease_id, SHOOTOUT_LEASE_USD: String(payload.lease_usd), SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken,
       OPENAI_BASE_URL: `${base}/cell/openai/v1`, ANTHROPIC_BASE_URL: `${base}/cell/anthropic`, VOYAGE_BASE_URL: `${base}/cell/voyage/v1`, PARTICLE_BASE_URL: `${base}/cell/particle/v1`, SHOOTOUT_CELL_TOKEN: cellToken, ...(custody ? { SHOOTOUT_CUSTODY: custody } : {}),
       ...(custody && payload.cell ? { GBRAIN_EVALS_CUSTODY_LOG: join(out, 'access-log.jsonl') } : {}) };
     for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'PARTICLE_API_KEY']) if (env[k]) env[k] = 'dummy-key-the-proxy-replaces';
+    // The cell sees SHOOTOUT_KEYLESS_UPSTREAM only when this proxy really serves a keyless upstream (RS1's window guard reads it).
+    if (opts.upstream) env.SHOOTOUT_KEYLESS_UPSTREAM = opts.upstream.openai; else delete env.SHOOTOUT_KEYLESS_UPSTREAM;
     if (payload.restore) {
       const dir = resolve(REPO_ROOT, expandHome(payload.restore.dir));
       // Without a restored store the old ingest-complete marker would trigger a snapshot of the empty store at once.

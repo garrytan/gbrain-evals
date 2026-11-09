@@ -1,10 +1,15 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { keptUnit, requiredJudges } from '../../eval/runner/q1/cell.ts';
-import { definitionProblems, frontierJudgeOf, frontierJudgesFor, ingestRate, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
-import { buildRS1Manifest, OPUS, PARTICLE, RS1_MANIFEST_PATH, rs1ManifestText, SOL, stage1OverCap } from '../../eval/runner/q1/cells/rs1.ts';
+import { dirname, join, relative, resolve } from 'node:path';
+import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
+import { EXECUTES, keptUnit, requiredJudges, runConfigIdentity, runConfigText } from '../../eval/runner/q1/cell.ts';
+import { executedTree } from '../../eval/runner/shootout-cell.ts';
+import { ALL_SETS, buildManifest, definitionProblems, F6_ASSUMPTIONS, priceOf, frontierJudgeOf, frontierJudgesFor, ingestRate, MANIFEST_PATH, manifestText, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { buildF6Manifest, F6_MANIFEST_PATH, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
+import { CHAT_PRICE_OVERRIDES, reservationUsd } from '../../eval/runner/budget-ledger.ts';
+import { buildRS1Manifest, generateRS1Cells, loadRS1Manifest, OPUS, PARTICLE, RS1_JUDGE_BY_READER, rs1JudgeOf, RS1_MANIFEST_PATH, rs1ManifestText, SOL, stage1OverCap } from '../../eval/runner/q1/cells/rs1.ts';
 import type { Rs1Manifest } from '../../eval/runner/memory-qa/corpus.ts';
 
 const ROOT = join(import.meta.dir, '..', '..');
@@ -42,12 +47,14 @@ describe('rs1-cells.json', () => {
       const arm = c.arms[0];
       if (c.system === 'baseline-none') { expect(arm.frontier ?? null).toBeNull(); continue; }
       expect(arm.frontier?.per_reader).toBe(true);
-      expect(frontierJudgesFor(arm, OPUS)).toEqual(['openai:gpt-6.1-sol']);
+      expect(frontierJudgesFor(arm, OPUS)).toEqual(['openai:gpt-6-astra']);
       expect(frontierJudgesFor(arm, SOL)).toEqual(['anthropic:claude-opus-5-5']);
+      expect(arm.frontier?.settings).toEqual({ effort: 'medium', max_tokens: 8000 });
     }
     const plans = m.reread_plans.filter(p => p.set === 'RS1');
     expect(plans.map(p => p.reader)).toEqual([PARTICLE, PARTICLE, PARTICLE, PARTICLE]);
-    expect(plans.map(p => p.judges)).toEqual([...Array(3).fill(['openai:gpt-4.1-mini', 'openai:gpt-6.1-sol']), ['openai:gpt-4.1-mini']]);
+    expect(plans.map(p => p.judges)).toEqual([...Array(3).fill(['openai:gpt-4.1-mini', 'anthropic:claude-opus-5-5']), ['openai:gpt-4.1-mini']]);
+    expect(m.frontier_judges).toEqual({ [OPUS]: 'openai:gpt-6-astra', [SOL]: 'anthropic:claude-opus-5-5', [PARTICLE]: 'anthropic:claude-opus-5-5' });
   });
 
   test('stage 1 fits its $60 cap, and an estimate above it refuses with RS1_STAGE1_OVER_CAP', () => {
@@ -61,7 +68,7 @@ describe('rs1-cells.json', () => {
     const cellsUsd = m.cells.reduce((s, c) => s + c.estimate.usd, 0);
     const leases = m.cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0);
     expect(counted.cap_usd).toBe(Math.round(Math.max(cellsUsd * 1.5, leases) * 100) / 100);
-    expect(counted.cap_usd).toBe(760.79);
+    expect(counted.cap_usd).toBe(1032.17);
     expect(m.cap_usd).toBe(counted.cap_usd);
     expect(counted.estimate_usd).toBe(Math.round((cellsUsd + m.reread_plans.filter(p => p.block === 'RS1').reduce((s, p) => s + p.estimate.usd, 0)) * 100) / 100);
   });
@@ -69,32 +76,65 @@ describe('rs1-cells.json', () => {
   test('stage 1\'s $60 covers the dry-run campaign and its re-reads together, and a larger stage 1 re-read ledger cap refuses', () => {
     const rereads = Math.round(m.reread_plans.filter(p => p.block === 'RS1-S1').reduce((s, p) => s + p.estimate.usd, 0) * 100) / 100;
     expect(m.stage1_reread_cap_usd).toBe(rereads);
-    expect(m.stage1_reread_cap_usd).toBe(4.95);
-    expect(m.dry_run_cap_usd).toBe(55.05);
+    expect(m.stage1_reread_cap_usd).toBe(6.33);
+    expect(m.dry_run_cap_usd).toBe(53.67);
     expect(m.dry_run_cap_usd + m.stage1_reread_cap_usd).toBe(m.stage1_cap_usd);
     expect(m.smoke_cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0)).toBeLessThanOrEqual(m.dry_run_cap_usd);
     const out = mkdtempSync(join(tmpdir(), 'rs1-stage1-reread-'));
     const run = (cap: string) => Bun.spawnSync(['bun', 'eval/runner/q1/reread-cell.ts', '--cell', 'rs1-dev2.gbrain-defaults.rs1-stable', '--arm', 'p', '--source', join(out, 'missing'), '--reader', PARTICLE,
       '--out', join(out, `o${cap}`), '--budget-ledger', join(out, 'ledger'), '--run-id', `r${cap}`, '--lease-usd', '1', '--ledger-cap-usd', cap, '--manifest', 'rs1', '--keyless-upstream', 'http://127.0.0.1:9'], { cwd: ROOT }).stderr.toString();
     try {
-      expect(run('5')).toContain('above the $4.95 stage 1 keeps for its re-reads');
-      expect(run('4.95')).not.toContain('stage 1 keeps for its re-reads');
+      expect(run('7')).toContain('above the $6.33 stage 1 keeps for its re-reads');
+      expect(run('6.33')).not.toContain('stage 1 keeps for its re-reads');
     } finally { rmSync(out, { recursive: true, force: true }); }
   }, 60_000);
 });
 
 describe('judges', () => {
-  test('the frontier judge is picked by the reader family; other families are refused', () => {
-    expect(frontierJudgeOf(OPUS)).toBe('openai:gpt-6.1-sol');
-    expect(frontierJudgeOf(PARTICLE)).toBe('openai:gpt-6.1-sol');
-    expect(frontierJudgeOf(SOL)).toBe('anthropic:claude-opus-5-5');
-    expect(() => frontierJudgeOf('gemini:gemini-3.8-flash')).toThrow(/no per-reader frontier judge/);
+  test('the gating judge is picked by the reader family (R78: Astra for Claude, Opus for Sol and particle-1); other families are refused', () => {
+    expect(rs1JudgeOf(OPUS)).toBe('openai:gpt-6-astra');
+    expect(rs1JudgeOf(PARTICLE)).toBe('anthropic:claude-opus-5-5');
+    expect(rs1JudgeOf(SOL)).toBe('anthropic:claude-opus-5-5');
+    expect(() => rs1JudgeOf('gemini:gemini-3.8-flash')).toThrow(/no RS1 gating judge/);
   });
 
-  test('completeness needs the canonical judge and, at replicate 0 on a per-reader arm, the frontier judge', () => {
+  // Value: protects=the crew's BEAM judge rule outside RS1 (Sol judges Claude rows); fails_when=R78's Astra/Opus map leaks into the shared frontierJudgeOf, so a future Q1 or F6 per-reader campaign picks up Astra; why_new=R78 review F5 as approved; seam=none; no_claim=RS1's own map
+  test('the shared frontierJudgeOf keeps the crew\'s BEAM rule, a per-reader arm without its own map uses it, and every RS1 arm carries RS1\'s map', () => {
+    expect([OPUS, PARTICLE, SOL].map(frontierJudgeOf)).toEqual(['openai:gpt-6.1-sol', 'openai:gpt-6.1-sol', 'anthropic:claude-opus-5-5']);
+    const plain = { frontier: { judges: ['openai:gpt-6.1-sol'], readers: null, sample: null, per_reader: true as const } };
+    expect([frontierJudgesFor(plain, OPUS), frontierJudgesFor(plain, PARTICLE)]).toEqual([['openai:gpt-6.1-sol'], ['openai:gpt-6.1-sol']]);
+    const arms = [...m.cells, ...m.smoke_cells].flatMap(x => x.arms).filter(a => a.frontier);
+    expect(arms.length).toBeGreaterThan(0);
+    for (const a of arms) expect(a.frontier!.judge_by_reader).toEqual(RS1_JUDGE_BY_READER);
+    expect(RS1_JUDGE_BY_READER).toEqual({ [OPUS]: 'openai:gpt-6-astra', [SOL]: 'anthropic:claude-opus-5-5', [PARTICLE]: 'anthropic:claude-opus-5-5' });
+    expect(m.frontier_judges).toEqual(RS1_JUDGE_BY_READER);
+  });
+
+  // Value: protects=a unit's lease holds the reservation the metering proxy really makes for a pinned judge; fails_when=peakReservationUsd prices a pinned frontier judge's output at the default 2,048-token judge cap while the proxy reserves the pinned 8,000; why_new=scoped-review open item 1 (GST-1886 handoff, 2026-11-08); seam=none; no_claim=the proxy's own reservation
+  test('a pinned frontier judge enters the peak reservation at its pinned output cap, as the proxy reserves it', () => {
+    const pinned = m.cells.filter(c => c.arms.some(a => a.frontier?.settings));
+    expect(pinned.length).toBeGreaterThan(0);
+    for (const c of pinned) {
+      const want = Math.max(...c.arms.flatMap(a => (a.frontier?.settings ? a.frontier.judges : []).map(j => reservationUsd({ provider: j.split(':')[0], model: j.split(':')[1], kind: 'chat', ...(CHAT_PRICE_OVERRIDES[j] ?? priceOf(j)), inputTokens: F6_ASSUMPTIONS.lease.judge_bytes + 64, maxOutputTokens: a.frontier!.settings!.max_tokens }))));
+      expect(peakReservationUsd(c).usd).toBeGreaterThanOrEqual(Math.round(want * 10_000) / 10_000);
+    }
+    for (const c of m.smoke_cells) expect(c.lease!.basis).toContain(`($${peakReservationUsd(c, false).usd}, `);
+  });
+
+  test('a per-reader plan without the pinned judge settings is refused', () => {
+    const c = gbrain();
+    delete c.arms[0].frontier!.settings;
+    expect(definitionProblems(c, KINDS).join('\n')).toContain('frontier.settings must pin the per-reader judges');
+    const d = gbrain();
+    d.arms[0].frontier!.settings = { effort: 'high', max_tokens: 8000 };
+    expect(definitionProblems(d, KINDS).join('\n')).toContain('frontier.settings must pin the per-reader judges');
+    expect(definitionProblems(gbrain(), KINDS)).toEqual([]);
+  });
+
+  test('completeness needs the canonical judge and, at replicate 0 on a per-reader arm, the frontier judge at its pinned settings', () => {
     const arm = m.cells[1].arms[0];
     expect(requiredJudges(arm, { reader: SOL, replicate: 0 }, INSTRUMENT)).toEqual([
-      { judge: 'openai:gpt-4.1-mini', instrument_id: 'beam-rubric', view: 'descriptive' }, { judge: 'anthropic:claude-opus-5-5', instrument_id: 'beam-rubric@anthropic:claude-opus-5-5', view: 'gating' }]);
+      { judge: 'openai:gpt-4.1-mini', instrument_id: 'beam-rubric', view: 'descriptive' }, { judge: 'anthropic:claude-opus-5-5', instrument_id: 'beam-rubric@anthropic:claude-opus-5-5', view: 'gating', settings: { effort: 'medium', max_tokens: 8000 } }]);
     expect(requiredJudges(arm, { reader: SOL, replicate: 1 }, INSTRUMENT)).toHaveLength(1);
     expect(requiredJudges(m.cells[3].arms[0], { reader: OPUS, replicate: 0 }, INSTRUMENT)).toHaveLength(1);
   });
@@ -102,7 +142,25 @@ describe('judges', () => {
   test('a per-reader plan that breaks the family rule is refused', () => {
     const c = structuredClone(m.cells[1]) as CellDefinition;
     c.arms[0].readers = [OPUS, 'gemini:gemini-3.8-flash'];
-    expect(definitionProblems(c, KINDS).join(' ')).toContain('no per-reader frontier judge');
+    expect(definitionProblems(c, KINDS).join(' ')).toContain('no per-reader judge is mapped for gemini:gemini-3.8-flash');
+    const d = structuredClone(m.cells[1]) as CellDefinition;
+    d.arms[0].frontier!.judge_by_reader = { ...d.arms[0].frontier!.judge_by_reader, [OPUS]: 'anthropic:claude-opus-5-5' };
+    expect(definitionProblems(d, KINDS).join(' ')).toContain('anthropic:claude-opus-5-5 would judge anthropic:claude-opus-5-5, a reader of its own family (GST-767)');
+  });
+});
+
+describe('the R78 judge map reaches RS1 alone (F5)', () => {
+  // Value: protects=Q1's and F6's published cell manifests and digests; fails_when=the R78 gating-judge map, the pinned settings or their route caps change a Q1 or F6 cell; why_new=R78 review F5; seam=none; no_claim=RS1's own cells
+  test('Q1 and F6 generate byte-identical manifests to the ones published before R78, and none of their arms judges per reader', () => {
+    const digest = (s: string) => createHash('sha256').update(s).digest('hex');
+    expect(digest(manifestText())).toBe('29f6cf497b494239a303ed4d869f0df317119231c8a86c98144127871251787c');
+    expect(digest(f6ManifestText())).toBe('fea479a014cdb5dcb352511f00999d5422d55ef759d265bf9a36c176509ca87e');
+    expect(readFileSync(MANIFEST_PATH, 'utf8')).toBe(manifestText());
+    expect(readFileSync(F6_MANIFEST_PATH, 'utf8')).toBe(f6ManifestText());
+    const q1 = buildManifest(), f6 = buildF6Manifest();
+    const arms = [q1, f6].flatMap(m => [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])].flatMap(c => c.arms));
+    expect(arms.length).toBeGreaterThan(0);
+    expect(arms.filter(a => a.frontier?.per_reader || a.frontier?.settings).map(a => a.cell_id)).toEqual([]);
   });
 });
 
@@ -141,5 +199,66 @@ describe('launch units (kept list)', () => {
     expect(() => keptUnit(def, { index: 2, count: 7 }, manifest)).toThrow(/launch unit 2/);
     expect(() => keptUnit(def, { index: 0, count: 7 }, { ...manifest, status: 'unfilled' })).toThrow(/unfilled/);
     expect(() => keptUnit(def, { index: 0, count: 7 }, { ...manifest, kept: ['rs1-049', ...kept] })).toThrow(/48 mint slots/);
+  });
+});
+
+describe('wave A run identity across the wave B regeneration (2026-11-08 amendment)', () => {
+  /** What verdict.ts compares for a unit: the run config without its launch-control fields, dataset, scheduled_sha256 and limit. */
+  const identity = (def: CellDefinition) => {
+    const c = JSON.parse(runConfigIdentity(runConfigText(def, def.arms[0], { instrument: instrumentFor(def.canonical_instrument), dataset: null as never, scheduledSha: '', limit: null })));
+    delete c.dataset; delete c.scheduled_sha256; delete c.limit;
+    return JSON.stringify(c);
+  };
+  const committed = loadRS1Manifest().cells;
+  const waveA = new Set(loadRS1Manifest().waves.A.map(u => u.replace(/\.c\d+$/, '')));
+
+  test('regenerating the cells at every N_final from 20 to 33 leaves every identity field of wave A\'s units byte-identical', () => {
+    expect([...waveA].sort()).toEqual(committed.map(c => c.id).sort());
+    const facts = { ...ALL_SETS.RS1 };
+    const moved: string[] = [];
+    try {
+      for (let n = 20; n <= 33; n++) {
+        const totals = { unchanged: facts.corpus_tokens, low: Math.round(n * 1_070_000 * 0.85), mean: n * 1_070_000, high: Math.round(n * 1_070_000 * 1.15) };
+        for (const [basis, corpus_tokens] of Object.entries(totals)) {
+          Object.assign(ALL_SETS.RS1, { conversations: n, questions: 20 * n, corpus_tokens });
+          for (const def of generateRS1Cells()) {
+            const was = committed.find(c => c.id === def.id)!;
+            if (identity(def) !== identity(was)) moved.push(`N=${n} ${basis}: ${def.id} ${JSON.stringify(def.launch?.env)} vs ${JSON.stringify(was.launch?.env)}`);
+          }
+        }
+      }
+    } finally {
+      Object.assign(ALL_SETS.RS1, facts);
+    }
+    expect(moved).toEqual([]);
+  });
+
+  // Value: protects=wave A's counted units keep the run identity they started from through every later commit on the results branch; fails_when=a change to the RS1 cell definitions or to runConfigText moves a field verdict.ts compares for a wave A unit; why_new=verdict.ts aggregates mode lands after wave A started (GBEV-3, 2026-11-09) and must not change wave A's identity; seam=none; no_claim=wave B's units
+  test('every wave A unit still has the identity counted runs started from (test/fixtures/rs1/wave-a-identity.json, recorded at de943504)', () => {
+    const pinned = JSON.parse(readFileSync(join(ROOT, 'test/fixtures/rs1/wave-a-identity.json'), 'utf8')) as { identity_sha256: Record<string, string> };
+    const now = Object.fromEntries(committed.filter(c => waveA.has(c.id)).map(c => [c.id, createHash('sha256').update(identity(c)).digest('hex')]));
+    expect(now).toEqual(pinned.identity_sha256);
+  });
+
+  // Value: protects=a change to RS1's analysis code (verdict.ts, iut.ts, power.ts, pricing.ts) cannot change what a counted unit executes or its frozen campaign tree; fails_when=EXECUTES grows to cover eval/runner/rs1/ or a file the cell runner executes reaches it through relative imports; why_new=verdict.ts aggregates mode (GBEV-3, 2026-11-09); seam=none; no_claim=paths built at run time or imports inside node_modules
+  test('nothing the cell runner executes is, or reaches through its imports, RS1\'s analysis code, so a verdict.ts change cannot reach a counted unit', () => {
+    const { entries } = executedTree(EXECUTES);
+    expect(entries.filter(e => e.path.startsWith('eval/runner/rs1/')).map(e => e.path)).toEqual([]);
+    const code = (p: string) => /\.(ts|tsx|js|mjs)$/.test(p);
+    const seen = new Set<string>(), reached: string[] = [], queue = entries.map(e => e.path).filter(code);
+    while (queue.length) {
+      const file = queue.pop()!;
+      if (seen.has(file)) continue;
+      seen.add(file);
+      for (const m of readFileSync(join(ROOT, file), 'utf8').matchAll(/(?:\bfrom|\bimport\s*\(?|\brequire\s*\()\s*['"](\.{1,2}\/[^'"]+)['"]/g)) {
+        const base = relative(ROOT, resolve(ROOT, dirname(file), m[1]));
+        const target = [base, `${base}.ts`, join(base, 'index.ts')].find(p => existsSync(join(ROOT, p)) && statSync(join(ROOT, p)).isFile());
+        if (!target || !code(target) || target.startsWith('..') || target.startsWith('node_modules/')) continue;
+        if (target.startsWith('eval/runner/rs1/')) reached.push(`${file} -> ${target}`);
+        queue.push(target);
+      }
+    }
+    expect(seen.size).toBeGreaterThan(entries.filter(e => code(e.path)).length);
+    expect(reached).toEqual([]);
   });
 });

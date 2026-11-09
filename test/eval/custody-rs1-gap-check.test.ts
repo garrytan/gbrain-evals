@@ -142,6 +142,20 @@ def answer_generation(input_address, output_address, plans_address, topic, theme
         pickle.dump(all_messages, f)
 
 
+def window_args(out):
+    import sqlite3
+    path = str(out) + "-window.sqlite"
+    db = sqlite3.connect(path)
+    db.execute("CREATE TABLE IF NOT EXISTS caps (seq INTEGER PRIMARY KEY AUTOINCREMENT, program_cap_usd REAL NOT NULL)")
+    db.execute("CREATE TABLE IF NOT EXISTS runs (run_id TEXT PRIMARY KEY, budget_usd REAL NOT NULL, finished_at TEXT)")
+    db.execute("INSERT OR IGNORE INTO runs VALUES ('rs1-test', 1, NULL)")
+    if not db.execute("SELECT COUNT(*) FROM caps").fetchone()[0]:
+        db.execute("INSERT INTO caps (program_cap_usd) VALUES (1)")
+    db.commit()
+    db.close()
+    return ["--paid-window", "RS1-TEST", "--window-cap-usd", "1", "--budget-ledger", path, "--budget-run-id", "rs1-test"]
+
+
 def step(out, name, inner=None, question_batches=None):
     def run_question_generation(chats_directory, chat_size, index):
         m.write_pickle(Path(chats_directory) / "1" / "user_messages.pickle", question_batches)
@@ -155,7 +169,7 @@ def step(out, name, inner=None, question_batches=None):
         adjust=types.SimpleNamespace(count_chats_tokens=lambda chat_directory, model_name, token_limit: None))
     m.gemini_model = lambda temperature, usage: m.RecordingModel(inner, "gemini:test", usage)
     return m.main(["step", "--out", str(out), "--conv-index", "1", "--step", name, "--seed-file", seed_file,
-                   "--mode", "real", "--beam-dir", str(out)])
+                   "--mode", "real", "--beam-dir", str(out)] + window_args(out))
 
 
 def batches_prompted(inner):

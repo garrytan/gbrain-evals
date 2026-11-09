@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { findCell, runCell, scheduledQuestions } from '../../eval/runner/q1/cell.ts';
 import { estimateCell, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { RS1_JUDGE_BY_READER } from '../../eval/runner/q1/cells/rs1.ts';
 import { openRereadLease, prepareReread, rereadArm, rereadCellId, runReread, REREAD_VERIFY_SCHEMA, type PreparedReread } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
@@ -135,7 +136,39 @@ beforeAll(async () => {
 }, 60_000);
 afterAll(() => fake?.kill());
 
+describe('re-read: the paid-window guard', () => {
+  // Value: protects=no re-read reaches a real provider outside a granted paid window; fails_when=reread-cell.ts without --keyless-upstream takes the paid branch with the environment's keys, or with a ledger cap above the window's; why_new=GBEV-3 rule 1 (2026-11-08), RS1's counted waves run their particle-1 re-reads through it; seam=none; no_claim=the paid branch itself
+  test('without --keyless-upstream it needs --paid-window and --window-cap-usd, and refuses a ledger cap above the window cap, before any lease or output', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'reread-guard-'));
+    try {
+      const base = (out: string) => ['bun', 'eval/runner/q1/reread-cell.ts', '--cell', 'rs1-dev2.gbrain-defaults.rs1-stable', '--arm', 'p', '--source', join(tmp, 'missing'), '--reader', 'particle:particle-1',
+        '--out', out, '--budget-ledger', join(out, 'ledger.sqlite'), '--run-id', 'guard', '--lease-usd', '1', '--ledger-cap-usd', '2', '--manifest', 'rs1'];
+      const noKeys = { ...process.env, ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '' };
+      const cwd = join(import.meta.dir, '..', '..');
+      const bare = join(tmp, 'bare'), over = join(tmp, 'over');
+      const r = Bun.spawnSync(base(bare), { cwd, env: noKeys, stdout: 'pipe', stderr: 'pipe' });
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain('needs --paid-window <unit> and --window-cap-usd <n>');
+      const o = Bun.spawnSync([...base(over), '--paid-window', 'TEST', '--window-cap-usd', '1'], { cwd, env: noKeys, stdout: 'pipe', stderr: 'pipe' });
+      expect(o.exitCode).toBe(2);
+      expect(o.stderr.toString()).toContain("above the paid window's cap of 1");
+      for (const d of [bare, over]) for (const f of ['upstream.json', 'ledger.sqlite', 'usage.ndjson']) expect(existsSync(join(d, f))).toBe(false);
+    } finally { rmSync(tmp, { recursive: true, force: true }); }
+  });
+});
+
 describe('re-read: verification before any request', () => {
+  test('an RS1 re-read is refused while the RS1 manifest is unfilled, before custody or any source is read', () => {
+    const rs1 = findCell('rs1.ext-memory-bank.recipe', undefined, 'rs1');
+    const rs1Arm = rereadArm(rs1, 'component-b8000');
+    const unfilled = refusal(() => prepareReread(rs1, rs1Arm, { sources: [join(tmp, 'no-rs1-source', 'runs', rs1.id)], reader: PARTICLE, out: join(tmp, 'rs1-unfilled'), env: {} }));
+    expect(unfilled.code).toBe('PREFLIGHT_FAILED');
+    expect(unfilled.message).toContain('the RS1 manifest is unfilled');
+    const source = (revision: string): Corpus => ({ ...corpus, benchmark: 'beam-rs1', source: { ...corpus.source, revision } });
+    expect(refusal(() => prepareReread(rs1, rs1Arm, { sources: [join(tmp, 'no-rs1-source', 'runs', rs1.id)], reader: PARTICLE, out: join(tmp, 'rs1-unfilled-corpus') }, { corpus: source('unfilled') })).message).toContain('the RS1 manifest is unfilled');
+    expect(refusal(() => prepareReread(rs1, rs1Arm, { sources: [join(tmp, 'no-rs1-source', 'runs', rs1.id)], reader: PARTICLE, out: join(tmp, 'rs1-filled-corpus') }, { corpus: source('abcdef0') })).message).not.toContain('unfilled');
+  });
+
   // Value: protects=a re-read reads exactly the source cell's bytes and schedule; fails_when=a frozen context, the schedule or the stored answers are taken on trust; why_new=reread-cell.ts is new; seam=none; no_claim=a sealed source (custody is runCell's gate, reused)
   test('every frozen context of the arm hashes to its prompt and to the answers\' context_sha256; the plan keeps the failed retrieval without a context; verify.json carries counts and hashes, never a question', () => {
     const out = join(tmp, 'verify');
@@ -412,6 +445,7 @@ describe('re-read: particle-1 through the lease proxy', () => {
       const rec = JSON.parse(readFileSync(join(res.dir, 'receipt.json'), 'utf8'));
       expect(rec).toMatchObject({ run_status: 'complete', keyless: false, readers: [PARTICLE], max_tokens: 16_000, effort: 'medium', source: { cell: def.id, arm: arm.id, arm_cell_id: arm.cell_id },
         counts: { answers: 6, answers_promised: 6, judgments: 5, unjudged: 0, outcomes: { scored: 5, retrieval_error: 1 } }, verify: p.verify.counts });
+      expect(rec.dataset).toEqual(corpus.source);
       expect(rec.spend.reader_usd).toBeGreaterThan(0);
       expect(rec.lease.requests).toBe(5);
 
@@ -463,9 +497,9 @@ describe('re-read: particle-1 through the lease proxy', () => {
 });
 
 describe('re-read: RS1 per-reader frontier judging', () => {
-  // Value: protects=RS1's particle-1 rows get both judge views (gpt-4.1-mini and gpt-6.1-sol) and count as complete only when both graded; fails_when=a per-reader arm's re-read is judged by the canonical judge alone or by another frontier judge, or its receipt leaves out the frontier view; why_new=GST-1886; seam=fake_provider.py as Particle, scripted judges; no_claim=the judges' grades
-  test('each particle-1 answer on a per-reader arm is judged by the canonical judge and by gpt-6.1-sol, and the receipt names that judge', async () => {
-    const d = cellDef([{ id: 'component-b8000', mode: 'packed', budget: 8000, frontier: { judges: ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'], readers: null, sample: null, per_reader: true } }]);
+  // Value: protects=RS1's particle-1 rows get both judge views (gpt-4.1-mini and claude-opus-5-5) and count as complete only when both graded; fails_when=a per-reader arm's re-read is judged by the canonical judge alone or by another frontier judge, or its receipt leaves out the frontier view; why_new=GST-1886; seam=fake_provider.py as Particle, scripted judges; no_claim=the judges' grades
+  test('each particle-1 answer on a per-reader arm is judged by the canonical judge and by claude-opus-5-5, and the receipt names that judge', async () => {
+    const d = cellDef([{ id: 'component-b8000', mode: 'packed', budget: 8000, frontier: { judges: ['anthropic:claude-opus-5-5', 'openai:gpt-6-astra'], readers: null, sample: null, per_reader: true, judge_by_reader: { ...RS1_JUDGE_BY_READER }, settings: { effort: 'medium', max_tokens: 8000 } } }]);
     const a = d.arms[0];
     const src = join(tmp, 'source-per-reader');
     const ran = await runCell(d, { out: src, ...quiet }, { corpus, system: new FakeMemorySystem(), reader: scriptedReader(), judge: scriptedJudge() });
@@ -476,12 +510,13 @@ describe('re-read: RS1 per-reader frontier judging', () => {
       const res = await runReread(prepareReread(d, a, { sources: [join(src, 'runs', d.id)], reader: PARTICLE, out: join(tmp, 'reread-per-reader') }, { corpus }), { providerProxy: lp.url, lease: { usd: 1, usageLog: lp.usageLog } }, { judge });
       expect(res.status).toBe('complete');
       const canonical = instrumentFor('locomo');
-      expect(new Set(judge.judges)).toEqual(new Set([canonical.canonical_judge, 'openai:gpt-6.1-sol']));
+      expect(new Set(judge.judges)).toEqual(new Set([canonical.canonical_judge, 'anthropic:claude-opus-5-5']));
       const answers = ndjson(join(res.dir, 'answers.ndjson')).filter(x => x.outcome === 'scored');
       const judgments = ndjson(join(res.dir, 'judgments.ndjson'));
-      expect(judgments.map(j => j.instrument_id).sort()).toEqual([...answers.map(() => canonical.id), ...answers.map(() => `${canonical.id}@openai:gpt-6.1-sol`)].sort());
+      expect(judgments.map(j => j.instrument_id).sort()).toEqual([...answers.map(() => canonical.id), ...answers.map(() => `${canonical.id}@anthropic:claude-opus-5-5`)].sort());
+      expect(judgments.map(j => [j.judge, j.settings ?? null, j.view])).toEqual(judgments.map(j => [j.judge, j.judge === 'anthropic:claude-opus-5-5' ? { effort: 'medium', max_tokens: 8000 } : null, j.judge === 'anthropic:claude-opus-5-5' ? 'gating' : 'descriptive']));
       const rec = JSON.parse(readFileSync(join(res.dir, 'receipt.json'), 'utf8'));
-      expect(rec.frontier).toEqual({ per_reader: true, judge_by_reader: { [PARTICLE]: 'openai:gpt-6.1-sol' }, instrument_ids: [`${canonical.id}@openai:gpt-6.1-sol`] });
+      expect(rec.frontier).toEqual({ per_reader: true, judge_by_reader: { [PARTICLE]: 'anthropic:claude-opus-5-5' }, instrument_ids: [`${canonical.id}@anthropic:claude-opus-5-5`] });
       expect(rec.counts.unjudged).toBe(0);
     } finally { lp.stop(); }
   });
