@@ -132,6 +132,16 @@ describe('bg1CellWindow', () => {
     expect((await above)?.message).toContain('the ledger\'s program cap');
   });
 
+  // Value: protects=under a lease proxy only a SHOOTOUT_LEASE_USD naming the proxy's own lease stands; fails_when=a value that is not a number compares as not differing and the unit passes; why_new=#398 open note 7 (the follow-up to targeted#1, which 13a29f44 fixed); seam=a lease proxy over a dead upstream; no_claim=the lease's value
+  test('a SHOOTOUT_LEASE_USD that is not a number differs from the proxy\'s lease and refuses', async () => {
+    const p50 = leaseProxy(50);
+    try {
+      for (const named of ['fifty', '50usd', 'NaN']) {
+        expect((await refused(bg1CellWindow(['--provider-proxy', `http://127.0.0.1:${p50.port}`, ...window], def, { SHOOTOUT_LEASE_USD: named })))?.message).toContain(`its status reports 50, SHOOTOUT_LEASE_USD names ${named}) is unknown`);
+      }
+    } finally { p50.stop(); }
+  });
+
   test('the CLI exits 2 with the refusal before any output, for sealed and dev BG1 cells alike', () => {
     const env = { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '', BRAINBENCH_BUDGET_LEDGER: join(scratch(), 'ledger.sqlite') };
     for (const [cell, shard] of [['bg1.baseline-none.baseline', ['--shard', '0/7']], ['bg1-dev3.baseline-none.baseline', []]] as const) {
