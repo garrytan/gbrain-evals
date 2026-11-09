@@ -266,6 +266,11 @@ The [October 28 eval cost audit](audit/2026-10-28-eval-cost-audit.md) shows wher
 from October 14 to 28 and how a preregistered Cat 40 run can [reuse an arm or size it by simulation](../eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run).
 The [November 4 superiority p audit](audit/2026-11-04-superiority-p.md) recomputes every published superiority gate
 with the exact one-sided sign-flip p that replaced a bootstrap share: no verdict changes, and the W10 p values move.
+The [November 9 OpenAI cache-write audit](audit/2026-11-09-openai-cache-writes.md) reprices every published OpenAI cost
+figure that counted cache writes as plain input: no score, verdict or stated ranking changes. Cache writes alone raise a
+gpt-6.1-sol dollar figure by at most a quarter; some Cat 40 figures are ranges with a higher top, because a session
+there could have passed OpenAI's 272,000-token long-context line. Disclosure: OpenAI began through YC Research, which
+was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 The [August audit](audit/2026-08-31-eval-audit.md) describes earlier problems in
 scoring and execution. Corrections to published numbers, from the September 28, 2026 audit on, are listed in
 [corrections](corrections.md), with a dated note in each affected report. [Open work](../TODOS.md) distinguishes unfinished
@@ -278,6 +283,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-09: The OpenAI cache-write audit
+
+"Checking the evidence" links the [November 9 OpenAI cache-write audit](audit/2026-11-09-openai-cache-writes.md),
+which reprices the OpenAI cost figures that counted cache writes as plain input. No other part changed.
 
 ### 2026-11-09: Live recall phase 2 results row
 

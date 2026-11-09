@@ -14,6 +14,30 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Test.** `test/eval/ubi-runner-pull.test.ts` adds a case that puts a `mkdir` on `PATH` that answers the way uutils
   0.8.0 does, then starts two pulls together. It fails without the fix.
 
+## [0.10.188] - 2026-11-09
+
+### Published OpenAI dollar figures that priced cache writes as plain input are corrected, and three keyless tools recompute every correction
+
+- **Corrected.** OpenAI reports almost every uncached prompt token of gpt-6.1-sol and gpt-6-luna as a cache write, and
+  it prices cache writes a quarter above plain input. Some published dollar figures for gpt-6.1-sol, gpt-6-sol,
+  gpt-6-luna and gpt-6-astra came from code that priced those tokens as input, so they read low, by at most a quarter
+  of their input dollars. Cat 40's price code also never applied OpenAI's long-context rate for requests over 272,000
+  input tokens. No Cat 40 file records each request's size, so a Cat 40 figure whose sessions could have held such a
+  request is now given as a range. Each affected report keeps its original figure beside a dated correction note, and
+  [corrections](docs/corrections.md) lists them. Totals are given only as the percent they were low.
+- **What it changes.** No score, verdict or stated ranking changes. On the Hard confirmation's M world, gpt-6.1-sol's
+  dollars per success with gbrain are 1.30 to 1.37 times those with files (was 1.35), so gbrain is still slightly
+  dearer for Sol. On the sealed confirmation, the stack's Sol dollars per cell are 1.04 times the frozen arm's at the
+  recorded dollars and at both upper bounds; the committed data allow 0.87 to 1.24 times, inside the 1.5x
+  envelope.
+- **Recompute it yourself.** [The November 9 audit](docs/audit/2026-11-09-openai-cache-writes.md) lists every figure
+  that moved. Its three tools, under `docs/audit/2026-11-09-openai-cache-writes/` (`beam-and-program-primary/`,
+  `cat40/` and `other-runners/`), run with no API keys, read only committed files, and reproduce their committed
+  `results.json` byte for byte.
+- **Not changed here.** Claude figures don't move: Anthropic reports cache writes in a field every path already reads.
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 ## [0.10.187] - 2026-11-09
 
 ### gbrain's read tools turn paraphrased questions about Garry's notes into right answers, and a summarising helper in front of gbrain costs grounded ones

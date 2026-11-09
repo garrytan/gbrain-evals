@@ -74,8 +74,18 @@ first.
   Disclosures section, because it reports gbrain's comparisons and gpt-6.1-sol's reader rows. README's paragraph on it
   under the Q1 block and its docs index row carry the same two lines, since their three-reader comparisons include
   gpt-6.1-sol's reader rows.
+- The [November 9 OpenAI cache-write audit](audit/2026-11-09-openai-cache-writes.md) carries the gbrain, OpenAI and
+  Particle lines up front. The [corrections page](corrections.md#openai-cache-writes)'s cache-write entries carry the
+  OpenAI line, and its F6 add-on entry the Particle line too. Each report they correct carries the OpenAI line beside
+  its first corrected figure; the F6 add-on finding already carries it in its closing Disclosures section.
 
 ## Changelog
+
+### 2026-11-09: The OpenAI cache-write corrections
+
+"In this repository" lists the [November 9 OpenAI cache-write audit](audit/2026-11-09-openai-cache-writes.md), the
+corrections page's cache-write entries and the reports they correct, which carry the OpenAI line beside the corrected
+figures.
 
 ### 2026-11-05: The GST-1365 judge-robustness results
 

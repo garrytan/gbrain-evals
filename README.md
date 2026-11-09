@@ -96,7 +96,7 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Keeping speaker and time across chat export formats | **29 of 29** formats | `77cf8e111` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | One very large document stored as one page (2 MB to 260 MiB, counted under the preregistered rules) | **Every preregistered rule passes**: 0 crashes, 0 responses over 1 MiB, 0 bytes lost on export, keyword recall@10 1.00 at 2 MB and no recall gap to managed parts up to 24 MiB. PGLite stores up to 128 MiB, Postgres stored up to 256 MiB, and `put_page` refuses anything above 24 MiB; larger documents are refused (`request_too_large`), not stored. `forget` on pages over 24 MiB is still unreachable (`request_too_large` at 100 MiB and above) | `7a6bdd3` (v0.60.454.0, the previous pin) | [N14 Wave B PR 4](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md) |
 | Finding contradicting notes | **146 of 150** conflicts with the default judge model (`claude-haiku-4-5`), 0 of 40 dated changes and 4 of 51 compatible pairs flagged; 149 at `48ed5e8` with the same prompt, the difference is sampling | `77cf8e111` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm) |
-| Contradiction judge on current models | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models (Opus 5.5 the top Anthropic one); cheapest passing model $0.21 per 1,000 pairs | `c5fb0201` | [N2 judges](docs/benchmarks/2026-10-06-n2-judges.md) |
+| Contradiction judge on current models | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models (Opus 5.5 the top Anthropic one); cheapest passing model $0.24 per 1,000 pairs | `c5fb0201` | [N2 judges](docs/benchmarks/2026-10-06-n2-judges.md) |
 | Attributing someone else's claim to the page holder (takes classifier) | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5); the classifier is not yet graduated | `c5fb0201` | [Takes-bootstrap](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
 | Real agents (Claude Code, Codex) spending or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | `b3f4e8b` (shipped in v0.60.46.0) | [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) |
 | Hard company questions answered by agents, against plain files with `grep` (Cat 40 Hard confirmation: two 50,000-document worlds, Opus 5.5, Sonnet 5.5, GPT-6.1 Sol, reranking verified in every gbrain slot) | gbrain ahead by **+7.7 points** (95% CI +2.7 to +12.7) on a fresh world and **+13.0** (+7.7 to +18.3) on a sealed one, for every model; behind on the fresh world's conflicting-source family (47 against 56 of 60) | `3e4ff61ce` (shipped as v0.60.174.0, `0df9f2ee7`) | [Cat 40 Hard confirmation](docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md) |
@@ -417,6 +417,14 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-09: The N2 judges row counts OpenAI cache writes
+
+The contradiction-judge row gives the cheapest passing model, gpt-6-luna, as $0.24 per 1,000 pairs (was $0.21). N2's
+runner priced OpenAI's cache writes as plain input, and almost every judge prompt was a cache write; the
+[corrections page](docs/corrections.md#openai-cache-writes) lists every OpenAI figure that moved. Luna is still the
+cheapest passing model. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former
+president of Y Combinator. Garry Tan runs Y Combinator.
 
 ### 2026-11-09: Re-pin to gbrain `d253ec0ff`
 
