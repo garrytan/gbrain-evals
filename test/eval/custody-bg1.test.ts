@@ -10,7 +10,7 @@ import { createHash } from 'node:crypto';
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
-import { BG1_CUSTODY_MARKER, BG1_DEV_SEEDS, BG1_FIXTURE_TOKENS, PUBLIC_PHRASING, renderBriefs, renderTemplateSession, sealedWorldSeed, type Turn, type World, type WorldPlan } from '../../eval/generators/changing-facts-gen.ts';
+import { BG1_CUSTODY_MARKER, BG1_DEV_SEEDS, BG1_FIXTURE_TOKENS, BG1_TARGET_TOKENS, PUBLIC_PHRASING, renderBriefs, renderTemplateSession, sealedWorldSeed, type RenderBrief, type Turn, type World, type WorldPlan } from '../../eval/generators/changing-facts-gen.ts';
 import { BG1_DEV_CONVERSATIONS } from '../../eval/runner/bg1/types.ts';
 import { CHECK_MODELS, cachedClient, checkPrompt, checkSession, clientModels, fakeModels, geminiProxyClient, haikuProxyClient, proxyEndpoint, renderPrompt, renderWorld, type ModelClient, type Models } from '../../eval/custody/bg1/render.ts';
 import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
@@ -681,7 +681,9 @@ describe('checkSession and renderWorld', () => {
     expect(checkPrompt(briefs[at], turns())).toContain('{"extra_claims": true} or {"extra_claims": false}');
   });
 
-  const renderSchema = { type: 'object', properties: { turns: { type: 'array', items: { type: 'object', properties: { speaker: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string' } }, required: ['speaker', 'content'], additionalProperties: false } } }, required: ['turns'], additionalProperties: false };
+  const renderSchema = (minItems: number, maxItems: number) => ({ type: 'object', properties: { turns: { type: 'array', minItems, maxItems, items: { type: 'object', properties: { speaker: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string' } }, required: ['speaker', 'content'], additionalProperties: false } } }, required: ['turns'], additionalProperties: false });
+  /** The turns a session asks for: N, the even number nearest target / 47 and at least 2 × (lines + 1) and 4, to N + 2·max(1, floor(0.05N)). */
+  const turnRange = (b: RenderBrief) => { const n = Math.max(4, 2 * (b.lines.length + 1), 2 * Math.round(b.target_tokens / 47 / 2)); return [n, n + 2 * Math.max(1, Math.floor(0.05 * n))] as const; };
   const checkSchema = { type: 'object', properties: { extra_claims: { type: 'boolean' } }, required: ['extra_claims'], additionalProperties: false };
 
   // Value: protects=Gemini's render and check requests ask for the reply's JSON shape, and the Haiku check has room to answer after thinking; fails_when=a render or Gemini check request goes out without generationConfig.responseJsonSchema, or the Haiku check asks for fewer than 2048 output tokens; why_new=stage 1's first real dev render (09b3f414): 6 shape failures, 5 of them broken JSON, and 3 empty Haiku replies at max_tokens 256; seam=geminiProxyClient and haikuProxyClient through clientModels against a loopback server that records each request body; no_claim=how well gemini-3.8-flash follows a schema
@@ -703,7 +705,7 @@ describe('checkSession and renderWorld', () => {
     } finally { server.stop(true); }
     expect(bodies.map(b => b.path)).toEqual(['/gemini/v1beta/models/gemini-3.8-flash:generateContent', '/gemini/v1beta/models/gemini-3.8-flash:generateContent', '/anthropic/v1/messages']);
     const [render, gemini, haiku] = bodies;
-    expect(render.body.generationConfig?.responseJsonSchema).toEqual(renderSchema);
+    expect(render.body.generationConfig?.responseJsonSchema).toEqual(renderSchema(...turnRange(briefs[at])));
     expect(render.body.generationConfig).toMatchObject({ responseMimeType: 'application/json', temperature: 1 });
     expect(render.body.generationConfig?.responseSchema).toBeUndefined();
     expect(gemini.body.generationConfig?.responseJsonSchema).toEqual(checkSchema);
@@ -711,11 +713,12 @@ describe('checkSession and renderWorld', () => {
     expect(haiku.body.max_tokens).toBe(2048);
   });
 
-  // Value: protects=the render prompt states each session's length as words and a minimum number of turns, and a short session regenerates with its measured length and the allowed range in words; fails_when=the prompt gives the length only in tokens or no minimum number of turns, or a regeneration after a length failure does not name the last attempt's length; why_new=stage 1's first real dev render (09b3f414): 15 length failures, sessions at about 450 to 1,500 tokens against targets of 757 to 3,236; seam=clientModels over a fake ModelClient that records each request, with renderWorld; no_claim=how long gemini-3.8-flash writes
+  // Value: protects=the render prompt states each session's length as words and a range of turns, and a short session regenerates with its measured length and the allowed range in words; fails_when=the prompt gives the length only in tokens or no range of turns, or a regeneration after a length failure does not name the last attempt's length; why_new=stage 1's first real dev render (09b3f414): 15 length failures, sessions at about 450 to 1,500 tokens against targets of 757 to 3,236; seam=clientModels over a fake ModelClient that records each request, with renderWorld; no_claim=how long gemini-3.8-flash writes
   test('the render prompt states the length in words and turns, and a length failure regenerates with its measured length, then passes', async () => {
-    expect(renderPrompt({ ...briefs[at], target_tokens: 1121, lines: [] }, 0, [])).toContain('Write about 840 words (about 1121 tokens) in total, as at least 10 alternating turns starting with the user.');
-    expect(renderPrompt({ ...briefs[at], target_tokens: 3236, lines: [] }, 0, [])).toContain('Write about 2430 words (about 3236 tokens) in total, as at least 26 alternating turns');
-    expect(renderPrompt({ ...briefs[at], target_tokens: 400, lines: briefs[at].lines.slice(0, 1).concat(briefs[at].lines.slice(0, 1), briefs[at].lines.slice(0, 1)) }, 0, [])).toContain('Write about 300 words (about 400 tokens) in total, as at least 8 alternating turns');
+    expect(renderPrompt({ ...briefs[at], target_tokens: 1121, lines: [] }, 0, [])).toContain('Write about 940 words (about 1121 tokens) in total, as 24 to 26 alternating turns starting with the user, each about 39 words.');
+    expect(renderPrompt({ ...briefs[at], target_tokens: 3236, lines: [] }, 0, [])).toContain('Write about 2720 words (about 3236 tokens) in total, as 68 to 74 alternating turns');
+    expect(renderPrompt({ ...briefs[at], target_tokens: 400, lines: briefs[at].lines.slice(0, 1).concat(briefs[at].lines.slice(0, 1), briefs[at].lines.slice(0, 1)) }, 0, [])).toContain('Write about 340 words (about 400 tokens) in total, as 8 to 10 alternating turns');
+    expect(renderPrompt({ ...briefs[at], target_tokens: 300, lines: briefs[at].lines.slice(0, 1).concat(briefs[at].lines.slice(0, 1), briefs[at].lines.slice(0, 1)) }, 0, [])).toContain('Write about 250 words (about 300 tokens) in total, as 8 to 10 alternating turns');
     const small = { ...dev, sessions: dev.sessions.slice(0, 12) } as WorldPlan;
     const target = 12_000;
     const sized = renderBriefs(small, target);
@@ -728,26 +731,55 @@ describe('checkSession and renderWorld', () => {
     const measured = short.reduce((n, t) => n + encodingCount('cl100k_base', t.content), 0);
     expect(sized[0].target_tokens).toBeGreaterThanOrEqual(400);
     expect(measured).toBeLessThan(0.6 * sized[0].target_tokens);
+    const seen: RenderBrief[] = [];
     const models: Models = { renderer: real.renderer, check: real.check, render(brief, attempt, failures, lastTokens) {
+      seen.push(brief);
       const i = small.sessions.findIndex(s => s.id === brief.session);
       reply = JSON.stringify({ turns: i === 0 && attempt === 0 ? short : renderTemplateSession(small, small.sessions[i], brief.target_tokens) });
       return real.render(brief, attempt, failures, lastTokens);
     } };
     const out = await renderWorld(small, models, { targetTokens: target, concurrency: 1 });
     const renders = calls.filter(c => c.temperature === 1);
-    const words = (tokens: number) => Math.round((tokens * 0.75) / 10) * 10;
-    const range = `between ${Math.ceil((0.6 * sized[0].target_tokens * 0.75) / 10) * 10} and ${Math.floor((1.5 * sized[0].target_tokens * 0.75) / 10) * 10} words`;
+    const words = (tokens: number) => Math.round((tokens * 0.84) / 10) * 10;
+    const range = `between ${Math.ceil((0.6 * sized[0].target_tokens * 0.84) / 10) * 10} and ${Math.floor((1.5 * sized[0].target_tokens * 0.84) / 10) * 10} words`;
     expect(renders[1].prompt).toContain(`This is attempt 2. The last attempt broke these rules: The last attempt was about ${words(measured)} words (${measured} tokens); the session must be ${range}, so aim for about ${words(sized[0].target_tokens)}.`);
-    expect(renders[0].prompt).toContain(`Write about ${words(sized[0].target_tokens)} words (about ${sized[0].target_tokens} tokens) in total, as at least `);
+    expect(renders[0].prompt).toContain(`Write about ${words(sized[0].target_tokens)} words (about ${sized[0].target_tokens} tokens) in total, as ${turnRange(sized[0]).join(' to ')} alternating turns`);
     expect(out.world).not.toBeNull();
     expect(out.stats.regenerated).toBe(1);
     expect(out.stats.failures).toEqual({ length: 1 });
     expect(renders).toHaveLength(small.sessions.length + 1);
-    for (const c of renders) expect(c.schema).toEqual(renderSchema);
+    renders.forEach((c, k) => expect(c.schema).toEqual(renderSchema(...turnRange(seen[k]))));
     const checks = calls.filter(c => c.temperature === 0);
     expect(checks.filter(c => c.id === CHECK_MODELS[0]).map(c => [c.max, c.schema])).toEqual(checks.filter(c => c.id === CHECK_MODELS[0]).map(() => [256, checkSchema]));
     expect(checks.filter(c => c.id === CHECK_MODELS[1]).length).toBeGreaterThan(0);
     for (const c of checks.filter(x => x.id === CHECK_MODELS[1])) expect([c.max, c.schema]).toEqual([2048, undefined]);
+  });
+
+  // Value: protects=every BG1 session asks for a turn range that keeps it inside the length gate at the measured 36 to 58 tokens a turn, and leaves each planned line its own user turn; fails_when=the render schema or prompt carries no turn range or one off the rule, a range's N × 36 falls under 0.6 times its target or its top × 58 passes 1.5 times it, or a range holds fewer than 2 × (lines + 1) turns; why_new=stage 1's second real dev render (4ec6a610): gemini-3.8-flash kept to the turn count at a median of about 47 tokens a turn but wrote about 0.69 of the target, and 13 of its 36 attempts failed the length gate; seam=clientModels over a fake ModelClient that records each render request, for every target from 757 to 3,236 and every brief of the three dev worlds at BG1_TARGET_TOKENS; no_claim=how long gemini-3.8-flash writes, or that it honours minItems and maxItems
+  test('every target from 757 to 3,236 and every dev brief asks for a turn range that fits the length gate at 36 to 58 tokens a turn', async () => {
+    const sent: Array<{ prompt: string; schema?: object }> = [];
+    const client: ModelClient = { id: CHECK_MODELS[0], async complete(prompt, _max, _temperature, schema) { sent.push({ prompt, schema }); return ''; } };
+    const models = clientModels(client, client);
+    const sweep: RenderBrief[] = Array.from({ length: 3236 - 757 + 1 }, (_, k) => ({ ...briefs[at], target_tokens: 757 + k, lines: [] }));
+    const devBriefs = BG1_DEV_CONVERSATIONS.flatMap(id => renderBriefs(JSON.parse(readFileSync(join(REPO, `eval/data/changing-facts-v1/dev/worlds/${id}/plan.json`), 'utf8')) as WorldPlan, BG1_TARGET_TOKENS));
+    expect(devBriefs).toHaveLength(467);
+    expect(devBriefs.every(b => b.target_tokens >= 400)).toBe(true);
+    const wrong: string[] = [];
+    let low = Infinity, high = 0;
+    for (const b of [...sweep, ...devBriefs]) {
+      sent.length = 0;
+      await models.render(b, 0, []);
+      const turns = (sent[0].schema as { properties: { turns: { minItems?: number; maxItems?: number } } }).properties.turns;
+      const n = turns.minItems ?? 0, top = turns.maxItems ?? Infinity;
+      const [ruleN, ruleTop] = turnRange(b);
+      if (n !== ruleN || top !== ruleTop || n < 2 * (b.lines.length + 1) || !sent[0].prompt.includes(`as ${n} to ${top} alternating turns starting with the user, each about 39 words.`)) wrong.push(`${b.session} at ${b.target_tokens}`);
+      low = Math.min(low, (n * 36) / b.target_tokens);
+      high = Math.max(high, (top * 58) / b.target_tokens);
+    }
+    expect(wrong).toEqual([]);
+    expect(low).toBeGreaterThanOrEqual(0.6);
+    expect(high).toBeLessThanOrEqual(1.5);
+    expect([757, 997, 1082, 3236].map(t => turnRange({ ...briefs[at], target_tokens: t, lines: [] }))).toEqual([[16, 18], [22, 24], [24, 26], [68, 74]]);
   });
 
   // Value: protects=a cached reply is reused only for the same request, schema included, and no reply cached before the method changes is reused; fails_when=cachedClient's key leaves out the schema, or a v1-keyed reply is still found; why_new=the renderer method changes after 09b3f414 (requests now carry a schema); seam=cachedClient over a counting fake client, with a cache directory holding a v1-keyed reply; no_claim=caching in the metering proxies (they keep none)
