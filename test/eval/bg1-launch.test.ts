@@ -80,6 +80,19 @@ describe('a BG1 campaign before any VM boots', () => {
     await refusedEverywhere(over);
   }, 60_000);
 
+  // Value: protects=stage 1 can launch: its seven smoke units' leases fit BG1-S1's cap in the launch check; fails_when=the committed stage 1 cap sits below the leases campaignCells prices for its smoke units (twice each estimate), so the check refuses stage 1 before any unit boots; why_new=the preregistration's Amendment 1 (stage 1's cap); seam=bg1CampaignManifest over the committed bg1-cells.json's smoke units at BG1-S1's cap; no_claim=what stage 1 spends
+  test('stage 1\'s seven smoke units, at BG1-S1\'s cap, pass the launch check', () => {
+    const m = loadCellManifest('bg1');
+    const units = (m.smoke_cells ?? []).map(c => c.id);
+    const cap = m.blocks.find(b => b.id === 'BG1-S1')!.cap_usd;
+    const stage1 = bg1CampaignManifest(m, { smoke: true, units: { campaign_id: 'q1-scoreboard-bg1-stage1-t', cap_usd: cap, units, paid_window: 'BG1-S1-T' }, worldEnd: '2026-11-15' }) as unknown as CampaignManifest;
+    expect(units).toHaveLength(7);
+    expect(stage1.cells.map(c => c.id).sort()).toEqual([...units].sort());
+    expect(stage1.cells.every(c => c.block === 'BG1-S1')).toBe(true);
+    expect(stage1.blocks!['BG1-S1'].cap_usd).toBeGreaterThanOrEqual(stage1.cells.reduce((n, c) => n + c.lease_usd, 0));
+    expect(bg1LaunchProblems(stage1)).toEqual([]);
+  });
+
   // Value: protects=a BG1 unit's lease can only be the one pricing.ts gave it in bg1-cells.json; fails_when=a lease edited, added or missing in the campaign manifest before init freezes and reaches a unit; why_new=#398 open note 6 (the Captain's conditions 1 and 3; the fix-check's probe froze a lease edited to 399 before init); seam=bg1CampaignManifest over the committed bg1-cells.json, runCells, shootout-cell.ts init and reserve; no_claim=bg1-cells.json's own prices
   test('a lease edited, added or missing in the campaign manifest before init refuses in run, init and reserve; the priced leases pass', async () => {
     const priced = campaign(1000);

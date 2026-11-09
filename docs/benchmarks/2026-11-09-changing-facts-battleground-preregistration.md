@@ -426,7 +426,21 @@ brain is the named follow-up. A result favourable to particle-1 keeps its gap to
 
 ## Amendments
 
-None yet. The expected ones, each dated and committed before the cells it governs:
+### Amendment 1 (2026-11-09): stage 1's cap
+
+Stage 1's cap was its estimate divided by 0.75, rounded up to the dollar, under a fixed ceiling. It is now the larger
+of two amounts, each rounded up to the dollar, under the same ceiling: the estimate divided by 0.75, and the sum of
+stage 1's smoke leases.
+
+Why: each stage 1 unit runs as a smoke unit, and a smoke unit leases twice its estimate. So the old cap could not hold
+the leases that BG1's launch check sums against it, and the check would refuse stage 1 before any unit booted. The
+counted block's cap already takes the larger of its estimate rule and its units' leases, and stage 1's now does too.
+
+GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
+
+### Expected amendments
+
+The expected ones, each dated and committed before the cells it governs:
 
 - stage 1's rendered dev worlds, with their measured rates;
 - the world end;

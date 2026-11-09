@@ -12,10 +12,12 @@ import {
 } from '../../eval/runner/q1/cells/definitions.ts';
 import { BG1_FC_UNITS, BG1_MANIFEST_PATH, bg1ManifestText, bg1Stage1OverCap, buildBG1Manifest, canonicalJudgeUsd, OPUS, PARTICLE, SOL, stage1CapUsd } from '../../eval/runner/q1/cells/bg1.ts';
 import { BG1_DEV_CONVERSATIONS, BG1_KEPT_UNITS, BG1_N_CAP, BG1_QUESTIONS_PER_WORLD } from '../../eval/runner/bg1/types.ts';
+import { campaignCells } from '../../eval/runner/q1/cell.ts';
 
 const ROOT = join(import.meta.dir, '..', '..');
 const KINDS = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
 const m = buildBG1Manifest();
+const smokeLeases = Math.round(campaignCells(m, { smoke: true }).filter(c => c.smoke && c.block === 'BG1-S1').reduce((s, c) => s + c.lease_usd, 0) * 100) / 100;
 const ASTRA = 'openai:gpt-6-astra';
 const ROWS = ['gbrain-defaults.rs1-stable', 'ext-memory-bank.recipe', 'ext-extract-first.common', 'ext-temporal-graph.shipped-0.31', 'baseline-hybrid.baseline', 'baseline-none.baseline'];
 
@@ -116,13 +118,20 @@ describe('re-reads and stage 1', () => {
     expect(m.reread_plans.some(r => r.cell.includes('full-context'))).toBe(false);
   });
 
-  test('stage 1 is its cells, its re-reads and the judge check, capped at min(300, the estimate / 0.75 rounded up)', () => {
+  test('stage 1 is its cells, its re-reads and the judge check, capped at min(300, the larger of the estimate / 0.75 and the smoke leases, rounded up)', () => {
     const cells = m.smoke_cells.reduce((s, c) => s + c.estimate.usd, 0);
     const rereads = m.reread_plans.filter(r => r.block === 'BG1-S1').reduce((s, r) => s + r.estimate.usd, 0);
     expect(m.stage1_estimate_usd).toBeCloseTo(cells + rereads + m.judge_check.estimate_usd, 1);
-    expect(m.stage1_cap_usd).toBe(stage1CapUsd(m.stage1_estimate_usd));
+    expect(m.stage1_cap_usd).toBe(stage1CapUsd(m.stage1_estimate_usd, smokeLeases));
     expect(m.blocks.find(b => b.id === 'BG1-S1')!.cap_usd).toBe(m.stage1_cap_usd);
     expect(m.judge_check).toMatchObject({ dev_answers: 160, construction_items: 160 });
+  });
+
+  // Value: protects=stage 1's cap holds every lease the launch check sums for it; fails_when=the cap falls below the smoke units' leases, so BG1's launch check refuses stage 1 before any unit boots; why_new=the preregistration's Amendment 1 (each smoke unit leases twice its estimate, above the estimate / 0.75 the cap allowed); seam=campaignCells' smoke leases from the generated manifest; no_claim=what stage 1 spends
+  test('stage 1\'s cap is at or above its smoke units\' summed leases, as campaignCells prices them', () => {
+    expect(smokeLeases).toBeGreaterThan(0);
+    expect(m.stage1_cap_usd).toBeGreaterThanOrEqual(smokeLeases);
+    expect(m.blocks.find(b => b.id === 'BG1-S1')!.cap_usd).toBeGreaterThanOrEqual(smokeLeases);
   });
 
   test('the stage 1 refusal fires only above the cap, and writes nothing', () => {
