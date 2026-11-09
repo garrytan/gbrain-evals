@@ -83,7 +83,7 @@ session 2. The 10% guard ceiling was frozen before the run, so the check fails a
 | Input tokens per cell, both sessions | 145,027 | 145,869 |
 | Dollars per cell | $0.196 (corrected 2026-11-09: cache writes were under-counted; was $0.190) | $0.183 (corrected 2026-11-09: cache writes were under-counted; was $0.179) |
 
-Correction, 2026-11-09: the dollars per cell average all three readers, and gpt-6.1-sol's were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a Sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input. The committed usage receipts give the corrected values ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+Correction, 2026-11-09: the dollars per cell average all three readers, and gpt-6.1-sol's were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a Sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input. The committed usage receipts give the corrected values ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 The brief's opportunity recall stays below 50% even when it fires, because it carries one item and every task needs
 three facts. Per reader, the brief carried 58.3% of needed facts for Opus 5.5, 48.6% for gpt-6.1-sol and 22.2% for

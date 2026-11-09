@@ -80,7 +80,7 @@ forwarded, because graphiti-core asks for 16,384 output tokens.
 
 Correction, 2026-11-09: `probe.py` prices gpt-6-luna at its input and output rates when the metering proxy's row carries
 no cost, and the ingest row matches those rates exactly, so any cache writes OpenAI reported on these requests were
-priced as input. OpenAI reports almost every token of a prompt of 1,024 tokens or more as a cache write, and prices
+priced as input. OpenAI reports almost every uncached token of a prompt of 1,027 tokens or more as a cache write, and prices
 gpt-6-luna's at $0.125 per million against $0.10 for input. These requests average about 1,350 input tokens, so the
 ingest cost and the billed total may be low; the proxy's rows are not committed, so both carry upper bounds. No probe
 result changes. ([corrections](../../../corrections.md#openai-cache-writes))

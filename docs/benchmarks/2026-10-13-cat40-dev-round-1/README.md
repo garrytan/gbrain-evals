@@ -43,9 +43,9 @@ minus control on the same tasks and models, percentile bootstrap over tasks (4,0
 
 | Arm | Scope | Success | Control, same cells | d ctrl pp [95%] | Wrong value (arm / control) | Not submitted | H4 `+long` (arm / control) | fs #93, same cells | d fs pp [95%] | Agent USD, judge excluded |
 |---|---|---|---|---|---|---|---|---|---|---|
-| control | full | 238/300 | | | 21 / 21 | 34 | 40/48 / 40/48 | 213/300 | +8.3 [+3.3, +13.3] | 160.08 (corrected 2026-11-09: cache writes were under-counted; was 155.23) |
-| all-on | full | 255/300 | 238/300 | +5.7 [+2.3, +9.3] | 6 / 21 | 33 | 48/48 / 40/48 | 213/300 | +14.0 [+10.0, +18.0] | 130.25 (corrected 2026-11-09: cache writes were under-counted; was 126.03) |
-| f5 | full | 243/300 | 238/300 | +1.7 [-2.0, +5.3] | 15 / 21 | 33 | 39/48 / 40/48 | 213/300 | +10.0 [+5.3, +14.7] | 149.38 (corrected 2026-11-09: cache writes were under-counted; was 144.90) |
+| control | full | 238/300 | | | 21 / 21 | 34 | 40/48 / 40/48 | 213/300 | +8.3 [+3.3, +13.3] | 160.07 to 161.43 (corrected 2026-11-09: cache writes were under-counted; was 155.23) |
+| all-on | full | 255/300 | 238/300 | +5.7 [+2.3, +9.3] | 6 / 21 | 33 | 48/48 / 40/48 | 213/300 | +14.0 [+10.0, +18.0] | 130.25 to 131.49 (corrected 2026-11-09: cache writes were under-counted; was 126.03) |
+| f5 | full | 243/300 | 238/300 | +1.7 [-2.0, +5.3] | 15 / 21 | 33 | 39/48 / 40/48 | 213/300 | +10.0 [+5.3, +14.7] | 149.38 to 151.56 (corrected 2026-11-09: cache writes were under-counted; was 144.90) |
 | f1 | H2-H4 | 160/180 | 158/180 | +1.1 [-3.9, +6.1] | 15 / 21 | 5 | 41/48 / 40/48 | 150/180 | +5.6 [-0.6, +11.7] | 77.53 (corrected 2026-11-09: cache writes were under-counted; was 74.84) |
 | f1-no-names-row | H2-H4 | 159/180 | 158/180 | +0.6 [-4.4, +5.6] | 21 / 21 | 0 | 37/48 / 40/48 | 150/180 | +5.0 [-2.2, +12.2] | 74.11 (corrected 2026-11-09: cache writes were under-counted; was 71.56) |
 | f2 | H2-H4 | 165/180 | 158/180 | +3.9 [-1.1, +8.9] | 14 / 21 | 1 | 43/48 / 40/48 | 150/180 | +8.3 [+2.8, +13.9] | 88.41 (corrected 2026-11-09: cache writes were under-counted; was 85.47) |
@@ -56,9 +56,13 @@ H1, H5). Control's 34 non-submissions sit mostly in H1/H5; the H2-H4 arms' count
 
 Correction, 2026-11-09: the last column was headed "Agent + judge USD", but it sums each cell's `total_usd`, which
 leaves the judge out (`summarize_round.py`), so the header now says so. The Cat 40 runner also priced gpt-6.1-sol
-turns from usage that counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a gpt-6.1-sol
-prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so the column was low;
-it's repriced from the committed attempts, with each original beside it. No score or verdict changes.
+turns from usage that counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a gpt-6.1-sol
+prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so the column was low;
+it's repriced from the committed attempts, with each original beside it. OpenAI also bills a request over 272,000
+input tokens at long-context rates (twice the input, cached-input and cache-write prices, 1.5 times output), which the
+runner didn't apply; the rows don't record which requests passed that line, so where a correction is a range, its low
+end prices no request at those rates and its high end prices every session that could have held one, up to the
+ledger's surplus over the rows, since the ledger applied those rates. No score or verdict changes.
 ([corrections](../../corrections.md#openai-cache-writes))
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 

@@ -21,7 +21,7 @@
 
 **Runs.** Three models, three runs each: 432 pair runs, $2.05 in all (Opus 5.5 $1.26, Sonnet 5.5 $0.47, gpt-6.1-sol $0.31; corrected 2026-11-09: cache writes were under-counted, so Sol's figure is about 5% low and the total about 1% low). No provider error, no retry.
 
-Correction, 2026-11-09: the harness priced every gpt-6.1-sol prompt token at the input rate, and its rows record no cache counts. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input, and 15 of Sol's 144 pair runs had prompts that size (five pairs, each run three times), so Sol's cost per pair and its spend were low; they are repriced from the prompt sizes in the committed rows. No score, verdict or ranking changes: Sol is still the cheapest model per pair. ([corrections](../corrections.md#openai-cache-writes))
+Correction, 2026-11-09: the harness priced every gpt-6.1-sol prompt token at the input rate, and its rows record no cache counts. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input, and 15 of Sol's 144 pair runs had prompts that size (five pairs, each run three times), so Sol's cost per pair and its spend were low; they are repriced from the prompt sizes in the committed rows. No score, verdict or ranking changes: Sol is still the cheapest model per pair. ([corrections](../corrections.md#openai-cache-writes))
 
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 

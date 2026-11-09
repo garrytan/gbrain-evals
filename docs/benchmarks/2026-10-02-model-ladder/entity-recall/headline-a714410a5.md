@@ -1,6 +1,6 @@
 # Corrected Cat 40 headline: gbrain `a714410a5` against the preregistered comparator
 
-> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-er-headline-a714410a5).
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input and ignore the long-context rates above 272,000 input tokens, so they are low. The corrected cells are in the [cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-er-headline-a714410a5).
 
 <a id="correction-2026-10-09"></a>
 
@@ -241,5 +241,5 @@ Spend in these records (agent + gbrain internal + judge): $177.41
 
 ## Changelog
 
-- 2026-11-09: A notice above the unedited output says its gpt-6.1-sol dollar figures missed OpenAI cache writes and links the corrected cells ([cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-er-headline-a714410a5)).
+- 2026-11-09: A notice above the unedited output says its gpt-6.1-sol dollar figures missed OpenAI cache writes and the long-context rates above 272,000 input tokens, and links the corrected cells ([cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-er-headline-a714410a5)).
 - 2026-10-09: [Correction](#correction-2026-10-09) added above the unedited output: the gbrain cells ran without reranking (0 of 600; stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109).

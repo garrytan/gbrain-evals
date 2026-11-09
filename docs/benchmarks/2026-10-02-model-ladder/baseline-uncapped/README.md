@@ -51,15 +51,15 @@ Cells that were attempted but not recorded, all rerun later or still pending: 16
 
 ## Spend
 
-The ledger committed $798.34 in total (`ledger-summary.json`) (corrected 2026-11-09: cache writes were under-counted, so this is at least 4% low):
+The ledger committed $798.34 in total (`ledger-summary.json`) (corrected 2026-11-09: cache writes were under-counted, so this is 5% to 9% low from the recorded cells, plus the unknown premium on cells lost in flight):
 
 - three run segments: $165.19, $469.32 and $163.76;
 - two verification checks: $0.08;
 - $2.32 of reservations left open by the two manual stops, charged at their worst case.
 
-Recorded cells account for $777.00 (corrected 2026-11-09: cache writes were under-counted, so this is 4% to 5% low). The rest is cells lost in flight, slot builds, pg embeddings and the checks.
+Recorded cells account for $777.00 (corrected 2026-11-09: cache writes were under-counted, so this is 5% to 9% low). The rest is cells lost in flight, slot builds, pg embeddings and the checks.
 
-Correction, 2026-11-09: this run priced gpt-6.1-sol and gpt-6-astra turns from usage that counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input, and gpt-6-astra's cache writes cost $12.50 against $10, so the spend above and the gpt-6.1-sol and gpt-6-astra dollar cells in `analysis.md` were low. The percentages come from repricing the committed rows; the ledger from before `8a8e502a` booked the same tokens as input, and the premium on cells lost in flight isn't known. No score or verdict changes. ([corrections](../../../corrections.md#openai-cache-writes))
+Correction, 2026-11-09: this run priced gpt-6.1-sol, gpt-6-sol and gpt-6-astra turns from usage that counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a prompt of 1,027 tokens or more to these models as a cache write, at $2.50 per million against $2.00 for input for gpt-6.1-sol and gpt-6-sol, and gpt-6-astra's cache writes cost $12.50 against $10, so the spend above and the three models' dollar cells in `analysis.md` and `analysis-repeats-0-1.md` were low. OpenAI also bills a request over 272,000 input tokens at long-context rates (twice the input, cached-input and cache-write prices, 1.5 times output), which the runner didn't apply; the rows don't record which requests passed that line, so where a correction is a range, its low end prices no request at those rates and its high end prices every session that could have held one. The percentages come from repricing the committed rows; the ledger from before `8a8e502a` booked the same tokens as input, and the premium on cells lost in flight isn't known. No score or verdict changes. ([corrections](../../../corrections.md#openai-cache-writes))
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 ## Files
@@ -73,5 +73,5 @@ Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a
 
 ## Changelog
 
-- 2026-11-09: The spend figures carry a note that they missed OpenAI cache writes for gpt-6.1-sol and gpt-6-astra, with the originals unchanged ([corrections](../../../corrections.md#openai-cache-writes)).
+- 2026-11-09: The spend figures carry a note that they missed OpenAI cache writes for gpt-6.1-sol, gpt-6-sol and gpt-6-astra and OpenAI's long-context rates above 272,000 input tokens, with the originals unchanged ([corrections](../../../corrections.md#openai-cache-writes)).
 - 2026-10-09: [Correction](#correction-2026-10-09) added: 362 of 1,456 gbrain cells reranked (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). Original numbers unchanged.

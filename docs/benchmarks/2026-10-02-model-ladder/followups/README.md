@@ -6,10 +6,14 @@ uncapped tool results. Spend was $179.66, recorded in the ledger (corrected 2026
 under-counted, so this is about 2% low).
 
 Correction, 2026-11-09: the control and held-out runs priced gpt-6.1-sol turns from usage that counted OpenAI's cache
-writes as plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache
+writes as plain input. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or more as a cache
 write, at $2.50 per million against $2.00 for input, so the spend above and the gpt-6.1-sol dollar cells in
-`control/analysis.md` and `holdout/analysis.md` were low; the percentage comes from repricing the committed rows. No
-score or verdict changes. ([corrections](../../../corrections.md#openai-cache-writes))
+`control/analysis.md` and `holdout/analysis.md` were low; the percentage comes from repricing the committed rows.
+OpenAI also bills a request over 272,000 input tokens at long-context rates (twice the input, cached-input and
+cache-write prices, 1.5 times output), which the runner didn't apply; the rows don't record which requests passed that
+line, so where a correction is a range, its low end prices no request at those rates and its high end prices every
+session that could have held one. No score or verdict changes.
+([corrections](../../../corrections.md#openai-cache-writes))
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 | Folder | What | gbrain build | Cells |
@@ -35,5 +39,5 @@ Machine paths are redacted to `<work>`, `<evals>`, `<gbrain>` and `<home>`.
 
 ## Changelog
 
-- 2026-11-09: The spend figure carries a note that it missed OpenAI cache writes for gpt-6.1-sol, with the original unchanged ([corrections](../../../corrections.md#openai-cache-writes)).
+- 2026-11-09: The spend figure carries a note that it missed OpenAI cache writes for gpt-6.1-sol and OpenAI's long-context rates above 272,000 input tokens, with the original unchanged ([corrections](../../../corrections.md#openai-cache-writes)).
 - 2026-10-09: [Correction](#correction-2026-10-09) added: all seven runs (1,709 cells) ran without reranking (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). Original numbers unchanged.

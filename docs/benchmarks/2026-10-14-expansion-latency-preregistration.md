@@ -237,7 +237,7 @@ Deviations and notes:
   providers' usage counts at list price, not metered invoices.
 
 Correction, 2026-11-09: `harness/proxy.ts` prices gpt-6-luna at its input and output rates only. OpenAI reports almost
-every token of a prompt of 1,024 tokens or more as a cache write, and prices gpt-6-luna's at $0.125 per million against
+every uncached token of a prompt of 1,027 tokens or more as a cache write, and prices gpt-6-luna's at $0.125 per million against
 $0.10 for input, so the Luna arm's cost is low only if some of its expansion prompts reached that size, which short
 query-expansion prompts likely don't. The proxy's event log is not committed, so the figure is not recomputed. No
 latency, score or verdict changes. ([corrections](../corrections.md#openai-cache-writes))

@@ -56,8 +56,8 @@ each (8,814 embedding requests) and $0.48 of cells, the 2-task pilot included
 low and the cells about 14% low).
 
 Correction, 2026-11-09: these cells priced gpt-6-luna turns from usage that
-counted OpenAI's cache writes as plain input. OpenAI reports almost every token
-of a gpt-6-luna prompt of 1,024 tokens or more as a cache write, at $0.125 per
+counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached
+token of a gpt-6-luna prompt of 1,027 tokens or more as a cache write, at $0.125 per
 million against $0.10 for input, so the cell spend and the dollar cells in each
 set's `analysis.md` were low; the percentages come from repricing the committed
 rows. No score or verdict changes.

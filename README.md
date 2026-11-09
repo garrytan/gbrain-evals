@@ -423,7 +423,8 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 The contradiction-judge row gives the cheapest passing model, gpt-6-luna, as $0.24 per 1,000 pairs (was $0.21). N2's
 runner priced OpenAI's cache writes as plain input, and almost every judge prompt was a cache write; the
 [corrections page](docs/corrections.md#openai-cache-writes) lists every OpenAI figure that moved. Luna is still the
-cheapest passing model.
+cheapest passing model. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former
+president of Y Combinator. Garry Tan runs Y Combinator.
 
 ### 2026-11-08: The F6 BEAM-1M known limit gives its intervals and points to the narrowed RS1 test
 

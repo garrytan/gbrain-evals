@@ -36,7 +36,7 @@ Each build's `served-tools.json` lists 35 tools. On the three `d5` runs, `contex
 | gpt-6.1-sol | d5 | 10/10 | 61 | 53 | 12 | 0 | $0.44 (corrected 2026-11-09: cache writes were under-counted; was $0.37) |
 
 Correction, 2026-11-09: the Cat 40 runner priced gpt-6.1-sol turns from usage that counted OpenAI's cache writes as
-plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or more as a cache write, at
+plain input. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or more as a cache write, at
 $2.50 per million against $2.00 for input, so the gpt-6.1-sol costs in this table were low; they're repriced from the
 committed rows. The ledger below already priced cache writes and doesn't change, and no rule's outcome changes.
 ([corrections](../../corrections.md#openai-cache-writes))

@@ -267,8 +267,10 @@ from October 14 to 28 and how a preregistered Cat 40 run can [reuse an arm or si
 The [November 4 superiority p audit](audit/2026-11-04-superiority-p.md) recomputes every published superiority gate
 with the exact one-sided sign-flip p that replaced a bootstrap share: no verdict changes, and the W10 p values move.
 The [November 9 OpenAI cache-write audit](audit/2026-11-09-openai-cache-writes.md) reprices every published OpenAI cost
-figure that counted cache writes as plain input: no score, verdict or stated ranking changes, and gpt-6.1-sol's own
-dollar figures rise by up to about a quarter.
+figure that counted cache writes as plain input: no score, verdict or stated ranking changes. Cache writes alone raise a
+gpt-6.1-sol dollar figure by at most a quarter; some Cat 40 figures are ranges with a higher top, because a session
+there could have passed OpenAI's 272,000-token long-context line. Disclosure: OpenAI began through YC Research, which
+was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 The [August audit](audit/2026-08-31-eval-audit.md) describes earlier problems in
 scoring and execution. Corrections to published numbers, from the September 28, 2026 audit on, are listed in
 [corrections](corrections.md), with a dated note in each affected report. [Open work](../TODOS.md) distinguishes unfinished

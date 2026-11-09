@@ -128,7 +128,7 @@ arm directories).
 | known_as rows | 195 | 0 | 0 | 0 |
 | Served instructions | `3bb1d6aa…` (= dev all-on) | `8876e6f1…` | `3bb1d6aa…` | `8876e6f1…` |
 | Names-call p50 (ms) | 269 / 248 | 217 / 197 | 276 / 277 | 222 / 226 |
-| $ per successful cell | 0.55 (corrected 2026-11-09: cache writes were under-counted; was 0.53) | 0.65 (corrected 2026-11-09: cache writes were under-counted; was 0.63) | 0.98 (not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so this is about 3% low, as on the public worlds) | 0.94 (not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so this is about 3% low, as on the public worlds) |
+| $ per successful cell | 0.55 (corrected 2026-11-09: cache writes were under-counted; was 0.53) | 0.65 (corrected 2026-11-09: cache writes were under-counted; was 0.63) | 0.98 (not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so this is 3% to 4% low, as on the public worlds) | 0.94 (not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so this is 3% to 4% low, as on the public worlds) |
 | Median seconds per cell | 145.9 | 148.6 | 180.2 | 155.8 |
 
 For comparison, fs costs $1.37 (corrected 2026-11-09: cache writes were under-counted; was $1.35) per success on
@@ -136,11 +136,15 @@ public and $1.77 (not recomputed 2026-11-09: the rows are not committed; cache w
 about 1% low, as on public) on sealed, with medians of 72 and 68 seconds. The rerank check passed on every slot.
 
 Correction, 2026-11-09: the Cat 40 runner priced gpt-6.1-sol agent turns and judge calls from usage that counted
-OpenAI's cache writes as plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024 tokens or
+OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or
 more as a cache write, at $2.50 per million against $2.00 for input, so these dollars per success were low; the public
 worlds are repriced from the committed rows (`2026-10-14-cat40-next-confirm-public`), and the sealed rows aren't
-committed, so their figures carry an estimate. The ledger totals below already priced cache writes and don't change.
-gbrain is still cheaper per success than fs, and no score or verdict changes.
+committed, so their figures carry an estimate. OpenAI also bills a request over 272,000 input tokens at long-context
+rates (twice the input, cached-input and cache-write prices, 1.5 times output), which the runner didn't apply; the
+rows don't record which requests passed that line, so where a correction is a range, its low end prices no request at
+those rates and its high end prices every session that could have held one, up to the ledger's surplus over the rows,
+since the ledger applied those rates. The ledger totals below already priced cache writes and the long-context rates,
+and don't change. gbrain is still cheaper per success than fs, and no score or verdict changes.
 ([corrections](../../corrections.md#openai-cache-writes))
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 

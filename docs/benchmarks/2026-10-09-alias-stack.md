@@ -209,7 +209,7 @@ nothing. Opus 5.5 and Sonnet 5.5 open what the card shows them.
 | | Sonnet 5.5 | 1.17x | 1.09x | 1.11x |
 | | gpt-6.1-sol | **1.22x** (51.8 s to 63.3 s) | 1.08x | 1.10x |
 
-Correction, 2026-11-09: gpt-6.1-sol's dollars on both arms were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a Sol prompt of 1,024 tokens or more as a cache write, at $2.50 per million against $2.00 for input. The committed usage receipts give the corrected development ratio; the fresh seeds' 1.10x is unchanged ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+Correction, 2026-11-09: gpt-6.1-sol's dollars on both arms were low, because the runner priced each answer's recorded usage and counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a Sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input. The committed usage receipts give the corrected development ratio; the fresh seeds' 1.10x is unchanged ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 Tokens and dollars are inside the limits everywhere. Two p95 latencies are over 1.2x. Opus 5.5 on the development seeds
 is 1.24x: it opened the call note in 41 runs against 20 and made 582 tool calls against 528, which is the intended

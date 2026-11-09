@@ -1,4 +1,4 @@
-> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol and gpt-6-astra count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-er-holdout-headline-wave).
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol and gpt-6-astra count OpenAI cache writes as plain input and ignore the long-context rates above 272,000 input tokens, so they are low. The corrected cells are in the [cache-write audit](../../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-er-holdout-headline-wave).
 
 Cells: 2300. Arms: oracle, fs, fs-acl, pg, memory, gbrain-entity-holdout. Models: claude-sonnet-5-5, gpt-6.1-sol, claude-fable-5-1, claude-opus-5-5, gpt-6-astra.
 

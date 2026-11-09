@@ -15,9 +15,9 @@ bootstrap over tasks, 4,000 resamples.
 
 | Arm | Success | d ctrl pp [95%] | Wrong value | Not submitted | H4 `+long` | fs #93, same cells | d fs pp [95%] | Agent USD, judge excluded |
 |---|---|---|---|---|---|---|---|---|
-| control | 237/300 | | 21 | 32 | 39/48 | 213/300 | +8.0 [+3.0, +13.0] | 161.12 (corrected 2026-11-09: cache writes were under-counted; was 156.23) |
-| all-on | 249/300 | +4.0 [+0.3, +8.0] | 9 | 33 | 48/48 | 213/300 | +12.0 [+8.3, +16.0] | 133.19 (corrected 2026-11-09: cache writes were under-counted; was 129.17) |
-| f5 | 236/300 | -0.3 [-3.7, +3.0] | 19 | 37 | 37/48 | 213/300 | +7.7 [+2.7, +12.7] | 153.53 (corrected 2026-11-09: cache writes were under-counted; was 148.98) |
+| control | 237/300 | | 21 | 32 | 39/48 | 213/300 | +8.0 [+3.0, +13.0] | 161.12 to 163.14 (corrected 2026-11-09: cache writes were under-counted; was 156.23) |
+| all-on | 249/300 | +4.0 [+0.3, +8.0] | 9 | 33 | 48/48 | 213/300 | +12.0 [+8.3, +16.0] | 133.18 to 135.23 (corrected 2026-11-09: cache writes were under-counted; was 129.17) |
+| f5 | 236/300 | -0.3 [-3.7, +3.0] | 19 | 37 | 37/48 | 213/300 | +7.7 [+2.7, +12.7] | 153.53 to 156.23 (corrected 2026-11-09: cache writes were under-counted; was 148.98) |
 
 | Arm | Opus 5.5 | Sonnet 5.5 | GPT-6.1 Sol | H1 | H2 | H3 | H4 | H5 |
 |---|---|---|---|---|---|---|---|---|
@@ -29,9 +29,13 @@ bootstrap over tasks, 4,000 resamples.
 
 Correction, 2026-11-09: the USD column was headed "Agent + judge USD", but it sums each cell's `total_usd`, which
 leaves the judge out, so the header now says so. The Cat 40 runner also priced gpt-6.1-sol turns from usage that
-counted OpenAI's cache writes as plain input. OpenAI reports almost every token of a gpt-6.1-sol prompt of 1,024
+counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027
 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so the column was low; it's repriced
-from the committed rows, with each original beside it. No score or verdict changes.
+from the committed rows, with each original beside it. OpenAI also bills a request over 272,000 input tokens at
+long-context rates (twice the input, cached-input and cache-write prices, 1.5 times output), which the runner didn't
+apply; the rows don't record which requests passed that line, so where a correction is a range, its low end prices no
+request at those rates and its high end prices every session that could have held one, up to the ledger's surplus over
+the rows, since the ledger applied those rates. No score or verdict changes.
 ([corrections](../../corrections.md#openai-cache-writes))
 Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
