@@ -4,8 +4,13 @@
  * whose stop sits on run.stop). Any other shape is refused. results.jsonl
  * holds one canonical row per key; a key seen twice counts as a duplicate.
  * With the committed transcripts file, gold coverage is read from it: a gold
- * slug is retrieved when any tool result names it and opened when a read tool
- * was called on it.
+ * slug is retrieved when a tool result names it as a whole slug (not as the
+ * start of a longer one) and opened when a read tool was called on it. A v1 row
+ * of a family F task keeps its first session's calls (session1) before the
+ * second's. A tool error counts as recovered only when a later call to the same
+ * tool on the same target succeeded; the target comes from the transcript's
+ * arguments, so without a transcript that lines up call for call, recovery is
+ * unknown.
  */
 import { ndjson, pointer, type LoadedFile, type SourceEntry } from '../manifest.ts';
 import type { Tag } from '../taxonomy.ts';
@@ -35,10 +40,26 @@ export function cat40Fields(row: Rec): { stop: string | null; calls: Rec[]; fina
     return { stop: row.stop ?? null, calls: row.sessions.flatMap((s: Rec) => s.run?.tool_calls ?? []), final: last?.run?.final ?? null };
   }
   if (row.schema !== undefined || !row.run || typeof row.run !== 'object') return null;
-  return { stop: row.stop ?? row.run.stop ?? null, calls: row.run.tool_calls ?? [], final: row.run.final ?? null };
+  return { stop: row.stop ?? row.run.stop ?? null, calls: [...(row.session1?.tool_calls ?? []), ...(row.run.tool_calls ?? [])], final: row.run.final ?? null };
 }
 
 const cover = (hit: number, of: number): Coverage => (hit === 0 ? 'none' : hit === of ? 'all' : 'partial');
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** text names slug as a whole slug: not inside a longer slug such as people/alice-smith for people/alice. */
+export const namesSlug = (text: string, slug: string) => new RegExp(`(^|[^\\w/.-])${escape(slug)}(?![\\w/-])`).test(text);
+/** The thing a call acted on, for matching a retry to the call that failed. */
+const target = (args: Rec | undefined) => JSON.stringify(args?.slug ?? args?.slugs ?? args?.path ?? args?.id ?? args?.page ?? args ?? null);
+
+/** Per call (submit calls dropped): its error, and whether a later call to the same tool on the same target succeeded. */
+export function cat40Calls(calls: Rec[], tools: Rec[] | undefined): ToolCall[] {
+  const args = tools && tools.length === calls.length ? tools.map(t => t.args as Rec | undefined) : null;
+  const kept = calls.map((c, i) => ({ c, target: args ? target(args[i]) : null })).filter(x => !SUBMIT_TOOL.test(x.c.name));
+  return kept.map(({ c, target: t }, i) => {
+    const error = typeof c.error === 'string' && c.error ? c.error : null;
+    const recovered = error === null ? null : t === null ? null : kept.slice(i + 1).some(d => d.c.name === c.name && d.target === t && !d.c.error);
+    return { name: c.name, error, recovered, ms: c.ms ?? null, memory: true };
+  });
+}
 
 export function fromCat40(files: LoadedFile[], entry: SourceEntry): AdapterOutput {
   const counts = emptyCounts();
@@ -59,19 +80,16 @@ export function fromCat40(files: LoadedFile[], entry: SourceEntry): AdapterOutpu
       const s: Rec = row.score;
       if (s.success === true) continue;
       counts.failed++;
-      const calls: ToolCall[] = fields.calls.filter(c => !SUBMIT_TOOL.test(c.name)).map((c, i, all) => {
-        const error = typeof c.error === 'string' && c.error ? c.error : null;
-        return { name: c.name, error, recovered: error === null ? null : all.slice(i + 1).some(d => d.name === c.name && !d.error), ms: c.ms ?? null, memory: true };
-      });
-      const goldSlugs = [...new Set<string>([...(s.evidence_cited ?? []), ...(s.missed_evidence ?? [])])];
       const tools = transcripts.get(row.attempt_id ?? row.key);
+      const calls = cat40Calls(fields.calls, tools);
+      const goldSlugs = [...new Set<string>([...(s.evidence_cited ?? []), ...(s.missed_evidence ?? [])])];
       let retrieved: Coverage | null = null;
       let opened: Coverage | null = null;
       if (tools && goldSlugs.length) {
         const results = tools.map(t => String(t.result ?? '')).join('\n');
         const readArgs = tools.filter(t => READ_TOOLS.has(t.name)).map(t => JSON.stringify(t.args ?? {})).join('\n');
-        retrieved = cover(goldSlugs.filter(g => results.includes(g)).length, goldSlugs.length);
-        opened = cover(goldSlugs.filter(g => readArgs.includes(g)).length, goldSlugs.length);
+        retrieved = cover(goldSlugs.filter(g => namesSlug(results, g)).length, goldSlugs.length);
+        opened = cover(goldSlugs.filter(g => namesSlug(readArgs, g)).length, goldSlugs.length);
       }
       const tags: Tag[] = [];
       if (s.said_wrong) tags.push('said_wrong');

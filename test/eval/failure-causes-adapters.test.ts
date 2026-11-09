@@ -3,10 +3,15 @@ import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { ADAPTERS, classify, loadSource, validateManifest, SOURCES_SCHEMA } from '../../eval/runner/failure-causes/index.ts';
-import { sha256 } from '../../eval/runner/failure-causes/manifest.ts';
-import { entry, FX, loadFixture } from '../support/failure-causes-fixture.ts';
+import { cat40Calls, cat40Fields, namesSlug } from '../../eval/runner/failure-causes/adapters/cat40.ts';
+import { sha256, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
+import { entry, failure, FX, loadFixture } from '../support/failure-causes-fixture.ts';
 
 const byCase = (failures: ReturnType<typeof ADAPTERS.rs1>['failures']) => new Map(failures.map(f => [f.case_id, classify(f)]));
+const mem = (path: string, role: string, rows: unknown[]): LoadedFile => {
+  const bytes = new TextEncoder().encode(rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+  return { path, role, sha256: sha256(bytes), root: 'mem', bytes };
+};
 
 describe('refresh-barrier Part C adapter', () => {
   const out = ADAPTERS['refresh-barrier'](loadFixture('partc', [['sol-off-task-1.json', 'episode'], ['opus-on-task-4.json', 'episode'], ['sol-on-task-1.json', 'episode']]), entry('partc', 'refresh-barrier', { condition: 'forced' }));
@@ -52,6 +57,63 @@ describe('rs1 adapter', () => {
     expect(out.failures.find(f => f.category === 'knowledge_update')?.text?.question).toContain('Synthetic knowledge_update question');
     const other = ADAPTERS.rs1(files, entry('rs1', 'rs1', { visibility: 'private', arm_roles: { 'gbrain-defaults': 'other_system' } }));
     expect(other.failures.every(f => f.arm_role === 'other_system' && f.text === undefined)).toBe(true);
+  });
+});
+
+describe('rs1 adapter: cells and outcomes the cell never judges', () => {
+  const row = (id: string, extra: Record<string, unknown> = {}) => ({ id, category: 'knowledge_update', gold_count: 1, outcome: 'scored', recall_any_at_10: 1, recall_all_at_10: 1,
+    packing_loss: { items_offered: 8, items_cut: 0, items_dropped: 0 }, ...extra });
+  const answer = (cell: string, q: string, outcome: string) => ({ answer_id: `${cell}-${q}`, cell_id: cell, question_id: q, system: 'gbrain-defaults',
+    reader: 'anthropic:claude-opus-5-5', replicate: 0, text: 'a', outcome });
+  const judge = (id: string, score: number) => ({ answer_id: id, judge: 'openai:gpt-6.1-sol', score, parse_ok: true, outcome: 'scored' });
+  const cell = (dir: string, rows: unknown[], answers: unknown[], judgments: unknown[]) =>
+    [mem(`${dir}/rows.ndjson`, 'rows', rows), mem(`${dir}/answers.ndjson`, 'answers', answers), mem(`${dir}/judgments.ndjson`, 'judgments', judgments)];
+  const files = [
+    ...cell('a', ['q1', 'q2', 'q3', 'q4', 'q5'].map(q => row(q)),
+      [answer('gbrain-a', 'q1', 'reader_error'), answer('gbrain-a', 'q2', 'turn_cap'), answer('gbrain-a', 'q3', 'budget_not_run'), answer('gbrain-a', 'q4', 'ingest_degraded'), answer('gbrain-a', 'q5', 'retrieval_error')],
+      [judge('gbrain-a-q4', 0)]),
+    ...cell('b', [row('q1', { recall_any_at_10: 0, recall_all_at_10: 0 })], [answer('gbrain-b', 'q1', 'scored')], [judge('gbrain-b-q1', 0)]),
+  ];
+  const out = ADAPTERS.rs1(files, entry('rs1', 'rs1'));
+  const labels = new Map(out.failures.map(f => [f.case_id.split('|').slice(0, 2).join('|'), classify(f)]));
+
+  test('an unjudged answer is a failure: errors are harness_error, a turn cap is timeout_latency, only budget_not_run is skipped', () => {
+    expect(out.counts).toMatchObject({ read: 6, mapped: 5, failed: 5, skipped: 1 });
+    expect(out.counts.skipped_reasons).toEqual({ budget_not_run: 1 });
+    expect(labels.get('gbrain-a|q1')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.error' });
+    expect(labels.get('gbrain-a|q5')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.error' });
+    expect(labels.get('gbrain-a|q2')).toMatchObject({ cause: 'timeout_latency', rule_id: 'budget.turn_cap' });
+  });
+
+  test('a failed ingest_degraded answer is judged and counts as operations', () => {
+    expect(labels.get('gbrain-a|q4')).toMatchObject({ cause: 'operations', rule_id: 'operations.ingest_degraded' });
+  });
+
+  test('each directory is its own cell: an answer reads its own rows file', () => {
+    expect(labels.get('gbrain-b|q1')).toMatchObject({ cause: 'retrieval_miss', rule_id: 'retrieval.no_gold_retrieved' });
+    expect(() => ADAPTERS.rs1([...files, mem('a/rows-2.ndjson', 'rows', [row('q9')])], entry('rs1', 'rs1'))).toThrow(/a second rows file in a/);
+  });
+});
+
+describe('cat40 adapter: calls, slugs and recovery', () => {
+  test('a v1 row keeps its first session\'s calls before the second\'s', () => {
+    expect(cat40Fields({ key: 'k', score: {}, session1: { tool_calls: [{ name: 'capture' }] }, run: { stop: 'submitted', tool_calls: [{ name: 'search' }] } })?.calls.map(c => c.name)).toEqual(['capture', 'search']);
+  });
+
+  test('a slug matches only whole, never as the start of a longer slug', () => {
+    expect(namesSlug('{"slug":"people/alice"}', 'people/alice')).toBe(true);
+    expect(namesSlug('read people/alice.md', 'people/alice')).toBe(true);
+    expect(namesSlug('{"slug":"people/alice-smith"}', 'people/alice')).toBe(false);
+    expect(namesSlug('archive/people/alice', 'people/alice')).toBe(false);
+  });
+
+  test('a tool error is recovered only by a later success of the same tool on the same target, and unknown without aligned transcript args', () => {
+    const calls = [{ name: 'get_page', error: 'not_found' }, { name: 'get_page' }, { name: 'get_page', error: 'timeout' }, { name: 'get_page' }, { name: 'search', error: 'timeout' }, { name: 'submit_answer' }];
+    const args = [{ args: { slug: 'a' } }, { args: { slug: 'b' } }, { args: { slug: 'c' } }, { args: { slug: 'c' } }, { args: { query: 'x' } }, { args: {} }];
+    expect(cat40Calls(calls, args).map(c => c.recovered)).toEqual([false, null, true, null, false]);
+    expect(cat40Calls(calls, undefined).map(c => c.recovered)).toEqual([null, null, null, null, null]);
+    expect(cat40Calls(calls, args.slice(1)).map(c => c.recovered)).toEqual([null, null, null, null, null]);
+    expect(classify(failure({ tool_calls: cat40Calls(calls, undefined) }))).toMatchObject({ cause: 'tool_contract', rule_id: 'tool.error_recovery_unknown' });
   });
 });
 

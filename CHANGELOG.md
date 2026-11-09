@@ -2,6 +2,34 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### Failure causes: fixes before the first counted results
+
+- **The report checks the labeller gate itself.** `report` now refuses any model label whose labeller path and row family
+  have no passing gate in `--gates` (the file `agree` writes). Gates are kept per path and per row family, so a family
+  moved to gpt-6-astra is gated on that family's rows. A labeller never labels its own family's rows: `labellerFor`
+  refuses gpt-6-astra for GPT rows.
+- **No reasoning-only label for a row whose delivery is unknown.** When the source did not record whether the evidence
+  reached the answering model, the labeller may answer that it never arrived, which counts as a retrieval or ranking
+  miss. A row with unknown delivery and no recorded context stays `unclassified` instead of going to the labeller.
+- **Fairer label set.** The dev and held-out halves come from a second, salted hash, so they no longer follow the
+  sampler. The default sample is sized per row family (100 rows, spread over its sources) so each family can reach 40
+  held-out agreed rows.
+- **Labeller outages show.** A failed call or an unparseable reply counts as pending in the report, and `label` exits 1
+  when any row got no label. `parseLabel` reads a reason that contains braces.
+- **Ranking.** A scorer artifact is the primary cause only when it is the row's only signal. Harness errors no longer
+  count in a source's ranking shares, and `report` keys rows on source, run and case, so two nights of the same source
+  both count.
+- **RS1 adapter.** Each directory's rows, answers and judgments form one cell. An answer the cell never judged is still a
+  failure: a turn cap or context overflow is `timeout_latency`, a reader, retrieval or harness error is
+  `harness_error`, and only `budget_not_run` is skipped. A failed `ingest_degraded` answer counts as `operations`.
+- **Cat 40 adapter.** Legacy rows include their first session's tool calls. Gold slugs match only as whole slugs. A tool
+  error counts as recovered only after a later success of the same tool on the same target, and recovery is unknown
+  without a transcript that lines up call for call; an unknown recovery is `tool_contract` under its own rule.
+- **Bug ledger.** `regression_check` must be `bun test <file under test/>.test.ts`, optionally with `-t '<name>'`,
+  never a free-form shell command, because the nightly loop runs it.
+
 ## [0.10.179] - 2026-11-09
 
 ### Every failed eval row can now be given a cause

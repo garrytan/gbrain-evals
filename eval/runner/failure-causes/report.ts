@@ -3,12 +3,15 @@
  * natural-condition runs of gbrain's own arms: each source's failures give
  * every cause a share, each source weighs the same, raw counts break ties, and
  * harness_error, model_error and unclassified never enter the list (unclassified
- * stays in the full table). Forced-condition rows
+ * stays in the full table). Shares are taken over the rows that say something
+ * about gbrain, so harness errors never dilute them. A labeller call that failed
+ * or did not parse counts as pending. Forced-condition rows
  * and stress counts go to a separate "under stress" list, other systems to a
  * contrast table and harness errors to our own fix list. Example rows come
  * only from public or synthetic sources; private sources give counts only.
  */
 import { STAGES, TAXONOMY_VERSION, UNCLASSIFIED, causeInfo, type Cause, type Stage } from './taxonomy.ts';
+import { NO_LABEL_RULES } from './agreement.ts';
 import type { CauseLabel, StressCount } from './types.ts';
 
 const NOT_FOR_GBRAIN: readonly string[] = ['harness_error', 'model_error', UNCLASSIFIED];
@@ -38,14 +41,15 @@ export function summarize(labels: CauseLabel[], stress: StressCount[] = []): Sum
   const versions = [...new Set(labels.map(l => l.taxonomy_version))];
   if (versions.length > 1 || (versions[0] && versions[0] !== TAXONOMY_VERSION)) throw new Error(`labels mix taxonomy versions (${versions.join(', ')}); this code is ${TAXONOMY_VERSION}, so relabel before summarizing`);
   const failed = labels.filter(l => l.rule_id !== 'passed');
-  const causeOf = (l: CauseLabel) => l.cause ?? PENDING;
+  const waiting = (l: CauseLabel) => l.cause === null || NO_LABEL_RULES.includes(l.rule_id);
+  const causeOf = (l: CauseLabel) => (waiting(l) ? PENDING : l.cause!);
   const sources: Summary['sources'] = {};
   for (const l of failed) {
     const s = sources[l.source] ??= { failures: 0, condition: l.condition, visibility: l.visibility, gbrain_shas: [] };
     s.failures++;
     if (l.gbrain_sha && !s.gbrain_shas.includes(l.gbrain_sha)) s.gbrain_shas.push(l.gbrain_sha);
   }
-  const natural = failed.filter(l => l.condition === 'natural' && GBRAIN_ROLES.has(l.arm_role));
+  const natural = failed.filter(l => l.condition === 'natural' && GBRAIN_ROLES.has(l.arm_role) && l.cause !== 'harness_error');
   const bySource = new Map<string, CauseLabel[]>();
   for (const l of natural) bySource.set(l.source, [...(bySource.get(l.source) ?? []), l]);
   const causes = [...new Set(natural.map(causeOf))];
@@ -77,7 +81,7 @@ export function summarize(labels: CauseLabel[], stress: StressCount[] = []): Sum
     contrast: [...tally(failed.filter(l => !GBRAIN_ROLES.has(l.arm_role)).map(l => `${l.system}\t${l.arm_role}\t${causeOf(l)}`))]
       .map(([k, count]) => { const [system, arm_role, cause] = k.split('\t'); return { system, arm_role, cause, count }; }).sort((a, b) => b.count - a.count),
     harness: [...tally(harnessRows.map(l => l.rule_id))].map(([rule_id, count]) => ({ rule_id, count, sources: [...new Set(harnessRows.filter(l => l.rule_id === rule_id).map(l => l.source))] })),
-    capability, pending: failed.filter(l => l.cause === null).length,
+    capability, pending: failed.filter(waiting).length,
   };
 }
 

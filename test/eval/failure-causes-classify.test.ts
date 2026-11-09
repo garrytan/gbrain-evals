@@ -5,10 +5,15 @@ import { failure } from '../support/failure-causes-fixture.ts';
 const gold = (g: Partial<ReturnType<typeof failure>['gold']>) => ({ ...failure().gold, ...g });
 
 describe('classify: deterministic rules', () => {
-  test('a row with no signal goes to the labeller, with every unmeasured stage listed', () => {
-    const l = classify(failure());
+  test('a row with no signal goes to the labeller when its delivered context is recorded, with every unmeasured stage listed', () => {
+    const l = classify(failure({ text: { question: 'q', expected: 'a', answer: 'b', context: 'ctx' } }));
     expect(l).toMatchObject({ cause: null, basis: 'needs_model', rule_id: 'residual' });
     expect(l.unmeasured).toEqual(['ingest', 'visibility', 'tool_call', 'write', 'retrieval', 'ranking', 'presentation']);
+  });
+
+  test('a row with no signal, unmeasured delivery and no recorded context stays unclassified instead of reaching a reasoning-only labeller', () => {
+    expect(classify(failure())).toMatchObject({ cause: 'unclassified', basis: 'unclassified', rule_id: 'residual.delivery_unmeasured' });
+    expect(classify(failure({ gold: gold({ gold_count: 1, retrieved: 'all', delivered: 'all' }) }))).toMatchObject({ basis: 'needs_model' });
   });
 
   test('a passed row is never given a cause', () => {
@@ -16,7 +21,7 @@ describe('classify: deterministic rules', () => {
   });
 
   test('null evidence never yields retrieval_miss; measured-empty does', () => {
-    expect(classify(failure({ gold: gold({ gold_count: 2 }) })).cause).toBeNull();
+    expect(classify(failure({ gold: gold({ gold_count: 2 }) })).basis).not.toBe('deterministic');
     expect(classify(failure({ gold: gold({ gold_count: 2, retrieved: 'none' }) }))).toMatchObject({ cause: 'retrieval_miss', rule_id: 'retrieval.no_gold_retrieved' });
   });
 
@@ -46,13 +51,18 @@ describe('classify: deterministic rules', () => {
     const call = (recovered: boolean) => [{ name: 'get_page', error: 'invalid_params', recovered, ms: 3, memory: true }];
     expect(classify(failure({ tool_calls: call(false) }))).toMatchObject({ cause: 'tool_contract', rule_id: 'tool.unrecovered_error' });
     const recovered = classify(failure({ tool_calls: call(true) }));
-    expect(recovered.cause).toBeNull();
+    expect(recovered.basis).not.toBe('deterministic');
     expect(recovered.tags).toContain('recovered_tool_error');
+  });
+
+  test('a tool error whose recovery the source did not record is tool_contract under its own rule', () => {
+    expect(classify(failure({ tool_calls: [{ name: 'get_page', error: 'invalid_params', recovered: null, ms: 3, memory: true }] })))
+      .toMatchObject({ cause: 'tool_contract', rule_id: 'tool.error_recovery_unknown' });
   });
 
   test('write records give write_integrity by kind; an empty measured list gives nothing', () => {
     expect(classify(failure({ writes: { lost: ['F2'], stuck: [], overwritten: null, duplicated: [] } })).rule_id).toBe('write.lost');
-    expect(classify(failure({ writes: { lost: [], stuck: [], overwritten: [], duplicated: [] } })).cause).toBeNull();
+    expect(classify(failure({ writes: { lost: [], stuck: [], overwritten: [], duplicated: [] } })).basis).not.toBe('deterministic');
   });
 
   test('harness, operations, ingest and visibility signals', () => {
@@ -72,13 +82,24 @@ describe('classify: deterministic rules', () => {
 describe('classify: precedence', () => {
   test('the earliest stage wins and later signals stay as secondary causes', () => {
     const l = classify(failure({
-      harness: { error: null, scorer_artifact: 'untitled_capture_duplicate' },
+      harness: { error: 'judge reply did not parse', scorer_artifact: null },
       tool_calls: [{ name: 'capture', error: 'refused_retryable/worktree_refreshing', recovered: false, ms: 9805, memory: true }],
       writes: { lost: ['F1'], stuck: [], overwritten: null, duplicated: [] },
     }));
-    expect(l).toMatchObject({ cause: 'harness_error', rule_id: 'harness.scorer_artifact.untitled_capture_duplicate' });
+    expect(l).toMatchObject({ cause: 'harness_error', rule_id: 'harness.error' });
     expect(l.secondary).toEqual(['tool_contract', 'write_integrity']);
+  });
+
+  test('a scorer artifact is primary only when it is the only signal, so it never hides a real failure', () => {
+    const artifact = { error: null, scorer_artifact: 'untitled_capture_duplicate' };
+    const l = classify(failure({ harness: artifact,
+      tool_calls: [{ name: 'capture', error: 'refused_retryable/worktree_refreshing', recovered: false, ms: 9805, memory: true }],
+      writes: { lost: ['F1'], stuck: [], overwritten: null, duplicated: [] } }));
+    expect(l).toMatchObject({ cause: 'tool_contract', rule_id: 'tool.unrecovered_error' });
+    expect(l.secondary).toEqual(['write_integrity', 'harness_error']);
     expect(l.tags).toContain('scorer_artifact');
+    expect(classify(failure({ harness: artifact, writes: { lost: [], stuck: [], overwritten: null, duplicated: [] } })))
+      .toMatchObject({ cause: 'harness_error', rule_id: 'harness.scorer_artifact.untitled_capture_duplicate' });
   });
 
   test('a turn cap is primary only with no earlier signal, else a secondary cause', () => {
