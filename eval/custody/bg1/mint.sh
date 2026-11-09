@@ -214,7 +214,7 @@ if [ "$DEV" = 1 ]; then
   dev_report() {
     local id ledger=()
     [ "$MODE" = fake ] || ledger=(--budget-ledger "$LEDGER" --budget-run-id "$RUN_ID")
-    for id in "${RENDERED[@]}"; do
+    for id in ${RENDERED[@]+"${RENDERED[@]}"}; do
       (cd "$OUT" && env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/render.ts" --dev-report "$id" --set "$OUT/set" ${ledger[@]+"${ledger[@]}"})
     done
   }
