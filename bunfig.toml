@@ -1,4 +1,5 @@
 [test]
 # Reuse one pre-migrated PGLite cluster per embedding shape instead of
 # replaying gbrain's migrations for every in-memory test brain.
-preload = ["./test/support/pglite-snapshot.ts"]
+# no-provider-keys removes every provider key first, so no test can reach a real provider.
+preload = ["./test/support/no-provider-keys.ts", "./test/support/pglite-snapshot.ts"]
