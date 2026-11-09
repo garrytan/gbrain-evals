@@ -47,8 +47,12 @@ export const B3_FRESHNESS = ['p1_configured_vs_hybrid_lexical_freshness', 'hybri
 export const B3_ENTITY = ['p2_configured_vs_hybrid_lexical_entity', 'hybrid_vs_hybrid_lexical_entity', 'configured_vs_keyword_entity'] as const;
 /** Phase 2's arm B vs arm A contrast per model, and the model pair under arm B. */
 export const PHASE2_AGENT = ['p1_b_vs_a_opus', 'p1_b_vs_a_particle', 'arm_b_opus_vs_particle'] as const;
-/** G3's contract causes (eval/generators/write-contract-gen.ts G3_CAUSES), compared as refusal rates given exposure. */
-export const G3_PHASE2_CAUSES = ['source_changed', 'missing_provenance', 'ambiguous_entity', 'fact_and_items', 'scope_denied', 'commit_paths_invalid', 'sources_without_brain', 'two_range_read'] as const;
+/**
+ * G3's contract causes (eval/generators/write-contract-gen.ts G3_CAUSES) compared with phase 2 arm B as refusal rates
+ * given exposure. two_range_read is left out (preregistration amendment of 2026-11-09): arm B runs gbrain 0.60.570.0 or
+ * later, which reads a two-selector get_page instead of refusing it (gbrain#8509), so its rate is zero by construction.
+ */
+export const G3_PHASE2_CAUSES = ['source_changed', 'missing_provenance', 'ambiguous_entity', 'fact_and_items', 'scope_denied', 'commit_paths_invalid', 'sources_without_brain'] as const;
 
 export const MAPPING: Record<Measure, { title: string; layers: Layer[] }> = {
   G1: {
@@ -69,7 +73,7 @@ export const MAPPING: Record<Measure, { title: string; layers: Layer[] }> = {
     title: 'write landing and call contract',
     layers: [
       { id: 'replay', reference: 'replay-pins', pairs: same('read_refusal_rate_570_vs_549'), note: 'the replay version pair: 607 of 607 Sol page reads refused at 0.60.549.0, 435 of 436 two- or three-selector calls read at 0.60.570.0' },
-      { id: 'phase2', reference: 'phase2-agent', pairs: G3_PHASE2_CAUSES.map(c => ({ synthetic: 'refusal_rate_' + c, reference: 'arm_b_refusal_rate_' + c })), note: 'phase 2 arm B refusal rates by cause given exposure; matching the cause mix is not a criterion' },
+      { id: 'phase2', reference: 'phase2-agent', pairs: G3_PHASE2_CAUSES.map(c => ({ synthetic: 'refusal_rate_' + c, reference: 'arm_b_refusal_rate_' + c })), note: 'phase 2 arm B refusal rates by cause given exposure; two_range_read is reported outside the test, because arm B\'s gbrain reads two-selector calls; matching the cause mix is not a criterion' },
     ],
   },
   G4: {

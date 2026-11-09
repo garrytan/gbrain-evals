@@ -154,6 +154,27 @@ A comparison smaller than its binding MDD reads "no measurable difference". For 
 **Order.** G3's and G6's counted agent cells run first. G1's and G4's counted agent cells run only after batch 3's
 aggregates exist, as the G1 and G4 item above says.
 
+### 2026-11-09: G3's `two_range_read` pair with phase 2 arm B is not informative
+
+Fixed before any counted G3 cell.
+
+G3's phase 2 layer compared the synthetic refusal rate of each contract cause with phase 2 arm B's, given exposure. Arm
+B calls the box's own gbrain `get_page` ([live-recall phase 2 plan](live-recall/PHASE2-PLAN.md), D2), and the box runs
+gbrain 0.60.613.0 or later. From 0.60.570.0 on, gbrain reads a `get_page` call with more than one window selector
+instead of refusing it (gbrain#8509). So arm B can't produce a `two_range_read` refusal, and its rate is zero whatever
+the agents do. The synthetic side runs at this preregistration's pin, 0.60.557.0, where the refusal still exists. The
+pair compares two gbrain versions, not the synthetic brain with the real one.
+
+Under the decision rule, a reference of zero never qualifies and can't point the other way, so the pair could never
+have counted as agreement or moved the verdict. It would still have sat in the mapped list as a contrast that can only
+read as not qualifying, and the gap could be read as a miss of the measure.
+
+So the pair leaves G3's phase 2 layer. The layer maps the other seven causes, `source_changed`, `missing_provenance`,
+`ambiguous_entity`, `fact_and_items`, `scope_denied`, `commit_paths_invalid` and `sources_without_brain`, and
+still needs 3 of them to qualify (`eval/runner/predictive/mapping.ts`). G3's `two_range_read` tasks run unchanged,
+and the results report their refusal rate by surface in G3's cause table, outside the verdict, with this reason. G3's
+replay layer (`read_refusal_rate_570_vs_549`) is unchanged and stays the test of this refusal across versions.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.

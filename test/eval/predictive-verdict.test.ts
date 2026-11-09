@@ -3,6 +3,7 @@ import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileS
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { MANIFEST, REFERENCE_DIR } from '../../eval/runner/predictive/export-references.ts';
+import { G3_CAUSES } from '../../eval/generators/write-contract-gen.ts';
 import { B2_CONTRASTS, MAPPING, MEASURES } from '../../eval/runner/predictive/mapping.ts';
 import { SyntheticScorecardError, evaluateMeasure, main, readSynthetic } from '../../eval/runner/predictive/verdict.ts';
 import { ValidityReferenceError, loadReference, verdict, type Contrast, type ManifestEntry } from '../../eval/runner/predictive/validity.ts';
@@ -168,5 +169,14 @@ describe('predictive mapping', () => {
     for (const m of ['G1', 'G4'] as const) for (const p of MAPPING[m].layers[0]!.pairs) expect(prereg).toContain('`' + p.reference + '`');
     expect(MAPPING.G5.layers[0]!.pairs.map(p => p.reference)).toEqual(['p95_query_570_vs_549', 'p95_search_570_vs_549', 'p95_get_570_vs_549']);
     expect(MAPPING.G6.layers[0]!.pairs.map(p => p.reference)).toEqual(['out_of_view_direct_flag', 'out_of_view_alias_inheritance', 'out_of_view_derived_default']);
+  });
+
+  test('G3\'s phase 2 layer maps every contract cause but two_range_read, as the preregistration amendment says', () => {
+    const phase2 = MAPPING.G3.layers.find(l => l.id === 'phase2')!;
+    const kept = G3_CAUSES.filter(c => c !== 'two_range_read');
+    expect(phase2.pairs).toEqual(kept.map(c => ({ synthetic: 'refusal_rate_' + c, reference: 'arm_b_refusal_rate_' + c })));
+    const prereg = readFileSync('docs/benchmarks/2026-11-09-predictive-measures-preregistration.md', 'utf8');
+    expect(prereg).toContain('### 2026-11-09: G3\'s `two_range_read` pair with phase 2 arm B is not informative');
+    for (const c of kept) expect(prereg).toContain('`' + c + '`');
   });
 });
