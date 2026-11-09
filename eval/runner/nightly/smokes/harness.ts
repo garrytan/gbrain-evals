@@ -201,7 +201,8 @@ export async function sql<T = Record<string, unknown>>(url: string, text: string
 export function rootCommit(root: string): string {
   const stamp = join(root, '.lifecycle-build.json');
   if (existsSync(stamp)) return JSON.parse(readFileSync(stamp, 'utf8')).commit as string;
-  return execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  if (existsSync(join(root, '.git'))) return execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  return fail('harness_root_commit_unknown', `${root} is neither a copied overlay (.lifecycle-build.json) nor a Git checkout, so its commit is unknown`);
 }
 
 export const rootVersion = (root: string) => readFileSync(join(root, 'VERSION'), 'utf8').trim();
@@ -270,4 +271,16 @@ export async function seedBrain(ctx: SmokeContext, root: string, o: { name?: str
     check(r.code === 0, `seed_${step}`, () => `gbrain ${args[0]} exited ${r.code} on ${rootVersion(root)}: ${tail(r.stdout + '\n' + r.stderr, 6)}`);
   }
   return { dirs, env, repo, remote, source, seed, cli, git: (...args: string[]) => g(repo, ...args) };
+}
+
+/**
+ * Upgrades a brain in place to `root`'s build the way `gbrain upgrade` does once the new build is installed: its
+ * post-upgrade step runs `apply-migrations --yes --non-interactive`, here as its own command with autopilot installation
+ * off, so a failed migration fails the smoke instead of becoming the warning post-upgrade prints. Same GBRAIN_HOME, same
+ * database; a nonzero exit is the gbrain failure `upgrade_migrations_failed`.
+ */
+export async function upgradeBrain(b: SeededBrain, root: string): Promise<Run> {
+  const r = await b.cli(root, ['apply-migrations', '--yes', '--non-interactive', '--no-autopilot-install'], { timeoutMs: 600_000 });
+  check(r.code === 0, 'upgrade_migrations_failed', () => `gbrain ${rootVersion(root)} apply-migrations exited ${r.code}: ${tail(r.stdout + '\n' + r.stderr, 6)}`);
+  return r;
 }

@@ -15,13 +15,17 @@ import { join, resolve } from 'node:path';
 import { OVERLAY_ROOT } from '../../gbrain-under-test.ts';
 import { assertBuildVerified, prepareBuild } from '../../lifecycle/builds.ts';
 import { PROVIDER_KEYS, SmokeFail, rootVersion, smokeContext, type SmokeContext, type SmokeOptions, type SmokeResult } from './harness.ts';
+import { ingestRetryAcrossUpgrade } from './ingest-retry-across-upgrade.ts';
 import { queryContract } from './query-contract.ts';
+import { upgradeFromPrevious } from './upgrade-from-previous.ts';
 
 export type { SmokeOptions, SmokeResult } from './harness.ts';
 
 type Smoke = (ctx: SmokeContext) => Promise<string>;
 
 const REGISTRY: Array<[string, Smoke]> = [
+  ['upgrade-from-previous', upgradeFromPrevious],
+  ['ingest-retry-across-upgrade', ingestRetryAcrossUpgrade],
   ['query-contract', queryContract],
 ];
 
