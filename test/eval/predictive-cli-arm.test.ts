@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { brainChildEnv, GbrainCliArm, GbrainMcpArm, SyntheticBrain, validateArgv } from '../../eval/runner/predictive/cli-arm.ts';
 import { runWriteEpisode, scriptedWritePolicy } from '../../eval/runner/predictive/episodes.ts';
-import { multiWindowReads } from '../../eval/runner/predictive/write-contract.ts';
+import { multiWindowReads, type RefusalEvent } from '../../eval/runner/predictive/write-contract.ts';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS } from '../../eval/runner/hermetic-env.ts';
 import { G3_CAUSES, generateWriteTasks } from '../../eval/generators/write-contract-gen.ts';
@@ -119,7 +119,7 @@ describe('G3 causes reproduce on the pinned gbrain', () => {
       expect(e.reported_done_not_landed).toBe(0);
       const met = e.refusals.some(r => r.cause === task.cause);
       if (reads && task.cause === 'two_range_read') {
-        const refusals = surface === 'mcp' ? [] : [{ cause: 'two_range_read', code: null, family: 'get', call: 0, retried: true, recovered: true }];
+        const refusals: RefusalEvent[] = surface === 'mcp' ? [] : [{ cause: 'two_range_read', code: null, family: 'get', call: 0, retried: true, recovered: true }];
         expect({ id: task.id, surface, refusals: e.refusals }).toEqual({ id: task.id, surface, refusals });
       } else {
         expect({ id: task.id, surface, met }).toEqual({ id: task.id, surface, met: task.exposure[surface][task.cause] === 1 });
