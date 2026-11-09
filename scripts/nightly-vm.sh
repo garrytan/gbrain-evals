@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bootstrap for the nightly gbrain check on a fresh Ubicloud VM (Ubuntu 24.04), run once as user ubi from the root of
-# the synced gbrain-evals checkout, for example:
+# the synced gbrain-evals checkout (or an export made by scripts/nightly-export.sh), for example:
 #
 #   UBI_OWNER=<owner> scripts/ubicloud/ubi-runner.sh run -s standard-16 --setup scripts/nightly-vm.sh -- '<nightly command>'
 #
@@ -43,6 +43,8 @@ grep -q '.bun/bin' "$HOME/.profile" 2>/dev/null || echo 'export PATH="$HOME/.bun
 [ "$(bun --version)" = "$BUN_VERSION" ] || { echo "nightly-vm: bun $(bun --version) is not the pinned $BUN_VERSION" >&2; exit 1; }
 
 retry bun install --frozen-lockfile >/dev/null
+# The QA suites' datasets, fetched at their pinned revisions and checked by SHA-256 (eval/runner/memory-qa/corpus.ts).
+for b in lme-s beam-1m; do retry bun run eval:decide fetch --benchmark "$b" >/dev/null; done
 
 if [ -d "$GBRAIN_DIR/.git" ]; then
   retry git -C "$GBRAIN_DIR" fetch -q --tags origin
@@ -50,9 +52,11 @@ else
   retry bash -c 'rm -rf "$1" && git clone -q https://github.com/garrytan/gbrain.git "$1"' _ "$GBRAIN_DIR"
 fi
 
+# A night's trials, smokes and agents share each server at once, which needs more clients than Postgres's default 100.
 pgstart() { # name port image
   docker rm -f "$1" >/dev/null 2>&1 || true
-  docker run -d --name "$1" --restart unless-stopped -p "127.0.0.1:$2:5432" -e POSTGRES_HOST_AUTH_METHOD=trust "$3" >/dev/null
+  docker run -d --name "$1" --restart unless-stopped -p "127.0.0.1:$2:5432" -e POSTGRES_HOST_AUTH_METHOD=trust "$3" \
+    -c max_connections=500 -c shared_buffers=512MB >/dev/null
 }
 retry docker pull -q "$PG_IMAGE" >/dev/null
 retry docker pull -q "$PG15_IMAGE" >/dev/null
