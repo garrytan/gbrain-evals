@@ -151,7 +151,7 @@ async function guarded<T>(fail: Failure, body: (ctx: EpisodeContext, sent: Sent[
 const anthropicError = (status: number, message: string) => Response.json({ type: 'error', error: { type: 'invalid_request_error', message } }, { status });
 
 const savedKey = process.env.PARTICLE_API_KEY;
-beforeAll(() => { process.env.PARTICLE_API_KEY ??= 'scripted'; });
+beforeAll(() => { process.env.PARTICLE_API_KEY ||= 'scripted'; });
 afterAll(() => { if (savedKey === undefined) delete process.env.PARTICLE_API_KEY; else process.env.PARTICLE_API_KEY = savedKey; });
 
 // ─── Task file and freeze ──────────────────────────────────────────────────────────────────────────────────────────

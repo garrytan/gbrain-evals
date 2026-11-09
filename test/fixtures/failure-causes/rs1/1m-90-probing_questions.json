@@ -1,0 +1,56 @@
+{
+ "knowledge_update": [
+  {
+   "question": "Synthetic knowledge_update question about Farah Example",
+   "answer": "Synthetic expected answer for knowledge_update",
+   "rubric": [
+    "LLM response should state: the synthetic answer"
+   ]
+  }
+ ],
+ "temporal_reasoning": [
+  {
+   "question": "Synthetic temporal_reasoning question about Farah Example",
+   "answer": "Synthetic expected answer for temporal_reasoning",
+   "rubric": [
+    "LLM response should state: the synthetic answer"
+   ]
+  }
+ ],
+ "multi_session_reasoning": [
+  {
+   "question": "Synthetic multi_session_reasoning question about Farah Example",
+   "answer": "Synthetic expected answer for multi_session_reasoning",
+   "rubric": [
+    "LLM response should state: the synthetic answer"
+   ]
+  }
+ ],
+ "abstention": [
+  {
+   "question": "Synthetic abstention question about Farah Example",
+   "answer": "Synthetic expected answer for abstention",
+   "rubric": [
+    "LLM response should state: the synthetic answer"
+   ]
+  }
+ ],
+ "information_extraction": [
+  {
+   "question": "Synthetic information_extraction question about Farah Example",
+   "answer": "Synthetic expected answer for information_extraction",
+   "rubric": [
+    "LLM response should state: the synthetic answer"
+   ]
+  }
+ ],
+ "preference_following": [
+  {
+   "question": "Synthetic preference_following question about Farah Example",
+   "answer": "Synthetic expected answer for preference_following",
+   "rubric": [
+    "LLM response should state: the synthetic answer"
+   ]
+  }
+ ]
+}

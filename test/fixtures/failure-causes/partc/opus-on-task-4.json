@@ -1,0 +1,673 @@
+{
+ "schema": "refresh-barrier-agent/1",
+ "task": 4,
+ "attempt": 1,
+ "arm": "on",
+ "model": "anthropic:claude-opus-5-5",
+ "loop_model": "claude-opus-5-5",
+ "smoke": false,
+ "counted": true,
+ "gating": true,
+ "gbrain": {
+  "root": "/home/ubi/gbrain",
+  "commit": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+  "version": "0.60.614.0"
+ },
+ "provenance": {
+  "gbrain_sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+  "harness_digest": "500cc5ba4b978e18d695683a39ef51714ff4c1626249b1594e88eb91629035e3"
+ },
+ "flag": {
+  "GBRAIN_REFRESH_BARRIER": "1"
+ },
+ "loop": {
+  "effort": "medium",
+  "effort_sent": "medium",
+  "effort_effective": "medium",
+  "max_output_tokens": 4096,
+  "max_turns": 24,
+  "stop": "submitted",
+  "turns": 5,
+  "error": null,
+  "text": null
+ },
+ "system_sha256": "9bf6a6e275aa58bb78424608c590bf90fc231520e5c83a1d5e7b04b5af78ca9d",
+ "user": "Here are four things from my day. Please save them to my brain.\n\nF1. Dara Example's new mailbox number is L0-9218. Add it to their page (people/dara-example).\nF2. Alice Example's new library card number is N1-8441. Add it to their page (people/alice-example).\nF3. Start a new note about the car service: the work order number is T4-3608.\nF4. Remember this about Chen Example (people/chen-example): their coat check ticket is D9-9166.\n\nWhen you are done, call submit_answer with one JSON object that lists each fact id under the state it ended in: {\"saved\":[...],\"pending\":[...],\"failed\":[...]}.",
+ "facts": [
+  {
+   "id": "F1",
+   "kind": "person_update",
+   "slug": "people/dara-example",
+   "subject": "Dara Example",
+   "token": "L0-9218",
+   "text": "Dara Example's new mailbox number is L0-9218."
+  },
+  {
+   "id": "F2",
+   "kind": "person_update",
+   "slug": "people/alice-example",
+   "subject": "Alice Example",
+   "token": "N1-8441",
+   "text": "Alice Example's new library card number is N1-8441."
+  },
+  {
+   "id": "F3",
+   "kind": "new_note",
+   "slug": null,
+   "subject": "Car service",
+   "token": "T4-3608",
+   "text": "Car service: the work order number is T4-3608."
+  },
+  {
+   "id": "F4",
+   "kind": "remember",
+   "slug": "people/chen-example",
+   "subject": "Chen Example",
+   "token": "D9-9166",
+   "text": "Chen Example's coat check ticket is D9-9166."
+  }
+ ],
+ "report": {
+  "raw": {
+   "saved": [],
+   "pending": [
+    "F1",
+    "F2",
+    "F3",
+    "F4"
+   ],
+   "failed": []
+  },
+  "ok": true,
+  "source": "submit_answer",
+  "states": {
+   "F1": "pending",
+   "F2": "pending",
+   "F3": "pending",
+   "F4": "pending"
+  }
+ },
+ "score": {
+  "success": false,
+  "tokens_once": false,
+  "report_correct": true,
+  "no_reissue": true,
+  "duplicates": [
+   "F3"
+  ],
+  "missing": [],
+  "misreports": [],
+  "unreported": [],
+  "reissued": []
+ },
+ "tokens": {
+  "F1": {
+   "token": "L0-9218",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 1,
+   "pages_at": [
+    "alpha-d9476edb:people/dara-example"
+   ]
+  },
+  "F2": {
+   "token": "N1-8441",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 1,
+   "pages_at": [
+    "alpha-d9476edb:people/alice-example"
+   ]
+  },
+  "F3": {
+   "token": "T4-3608",
+   "pages": 2,
+   "git_head": 3,
+   "facts_live": 0,
+   "pages_at": [
+    "alpha-d9476edb:inbox/2026-11-08-ebfa5d42"
+   ]
+  },
+  "F4": {
+   "token": "D9-9166",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 1,
+   "pages_at": [
+    "alpha-d9476edb:people/chen-example"
+   ]
+  }
+ },
+ "behavior": {
+  "reissues": [],
+  "refusals": [],
+  "error_pending": []
+ },
+ "fault": {
+  "held_tool": "remember",
+  "held_call": 0,
+  "upstream_head": "0648656b7072d51293763b45ff5f6ab6017ab834",
+  "upstream_error": null,
+  "refresh_started_ms": 5772,
+  "refresh_paused_ms": 5845,
+  "refresh_finished_ms": 20473,
+  "refresh_result": {
+   "status": "completed",
+   "refresh_id": "b9db280a-8d42-4c21-b0c6-246fe7bf9c63",
+   "worktree_id": "730a307b-94db-4399-976a-7fcfd3e40567",
+   "source_ids": [
+    "alpha-d9476edb",
+    "beta-d9476edb"
+   ],
+   "old_head": "eeaad70ac4c3de369d40445d459883269071586b",
+   "target_head": "0648656b7072d51293763b45ff5f6ab6017ab834",
+   "upstream_ref": "origin/main",
+   "preserved_uncommitted": [],
+   "synced": [
+    {
+     "source_id": "alpha-d9476edb",
+     "status": "synced",
+     "last_commit": "0648656b7072d51293763b45ff5f6ab6017ab834"
+    },
+    {
+     "source_id": "beta-d9476edb",
+     "status": "synced",
+     "last_commit": "0648656b7072d51293763b45ff5f6ab6017ab834"
+    }
+   ]
+  },
+  "refresh_error": null,
+  "setup_ms": 145,
+  "pause_ms": 14000,
+  "held_first_answer": {
+   "i": 0,
+   "name": "remember",
+   "t_ms": 5845,
+   "ms": 61,
+   "write": true,
+   "held": true,
+   "is_error": false,
+   "cls": "ok",
+   "code": "unexpected_ok:",
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [
+    "F1",
+    "F2",
+    "F4"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  }
+ },
+ "tool_calls": {
+  "total": 15,
+  "by_name": {
+   "remember": 1,
+   "capture": 1,
+   "get_write_request": 12,
+   "submit_answer": 1
+  }
+ },
+ "retries": {
+  "same_args": 0,
+  "request_id_reuse": 0,
+  "same_args_calls": [],
+  "request_id_reuse_calls": []
+ },
+ "write_calls": [
+  {
+   "i": 0,
+   "name": "remember",
+   "t_ms": 5845,
+   "ms": 61,
+   "write": true,
+   "held": true,
+   "is_error": false,
+   "cls": "ok",
+   "code": "unexpected_ok:",
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [
+    "F1",
+    "F2",
+    "F4"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 1,
+   "name": "capture",
+   "t_ms": 5906,
+   "ms": 8,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 250,
+   "request_id": null,
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  }
+ ],
+ "calls": [
+  {
+   "i": 0,
+   "name": "remember",
+   "t_ms": 5845,
+   "ms": 61,
+   "write": true,
+   "held": true,
+   "is_error": false,
+   "cls": "ok",
+   "code": "unexpected_ok:",
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [
+    "F1",
+    "F2",
+    "F4"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 1,
+   "name": "capture",
+   "t_ms": 5906,
+   "ms": 8,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "pending",
+   "code": null,
+   "state": "queued",
+   "retry_after_ms": 250,
+   "request_id": null,
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 2,
+   "name": "get_write_request",
+   "t_ms": 9394,
+   "ms": 21,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "67163e6d-31d3-5280-855c-e6c52870430d",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 3,
+   "name": "get_write_request",
+   "t_ms": 9415,
+   "ms": 9,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "edd7313c-c360-5239-ae10-b1f64caa16dc",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 4,
+   "name": "get_write_request",
+   "t_ms": 9424,
+   "ms": 6,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "4ec4a1f9-76cd-5859-9162-87b49c774190",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 5,
+   "name": "get_write_request",
+   "t_ms": 9430,
+   "ms": 6,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "8e99927c-670f-44f9-8e11-2553508cb1ad",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 6,
+   "name": "get_write_request",
+   "t_ms": 12869,
+   "ms": 11,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "67163e6d-31d3-5280-855c-e6c52870430d",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 7,
+   "name": "get_write_request",
+   "t_ms": 12880,
+   "ms": 9,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "edd7313c-c360-5239-ae10-b1f64caa16dc",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 8,
+   "name": "get_write_request",
+   "t_ms": 12889,
+   "ms": 11,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "4ec4a1f9-76cd-5859-9162-87b49c774190",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 9,
+   "name": "get_write_request",
+   "t_ms": 12900,
+   "ms": 6,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "8e99927c-670f-44f9-8e11-2553508cb1ad",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 10,
+   "name": "get_write_request",
+   "t_ms": 16221,
+   "ms": 10,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "67163e6d-31d3-5280-855c-e6c52870430d",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 11,
+   "name": "get_write_request",
+   "t_ms": 16231,
+   "ms": 8,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "edd7313c-c360-5239-ae10-b1f64caa16dc",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 12,
+   "name": "get_write_request",
+   "t_ms": 16239,
+   "ms": 6,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "4ec4a1f9-76cd-5859-9162-87b49c774190",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 13,
+   "name": "get_write_request",
+   "t_ms": 16245,
+   "ms": 6,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": "8e99927c-670f-44f9-8e11-2553508cb1ad",
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  }
+ ],
+ "quiesce": {
+  "ok": true,
+  "ms": 1042
+ },
+ "timings": {
+  "brain_ms": 3957,
+  "loop_ms": 18839,
+  "refresh_wait_ms": 1634,
+  "settle_ms": 1042,
+  "wall_ms": 25509,
+  "model_ms": 18515,
+  "tool_ms": 323
+ },
+ "usage": {
+  "input": 12,
+  "output": 1462,
+  "cache_read": 302064,
+  "cache_write": 5730,
+  "requests": 5
+ },
+ "transcript": [
+  {
+   "name": "remember",
+   "args": {
+    "items": [
+     {
+      "fact": "Dara Example's new mailbox number is L0-9218.",
+      "entity": "people/dara-example",
+      "provenance": "Sam Example told the assistant in conversation on 2026-11-06"
+     },
+     {
+      "fact": "Alice Example's new library card number is N1-8441.",
+      "entity": "people/alice-example",
+      "provenance": "Sam Example told the assistant in conversation on 2026-11-06"
+     },
+     {
+      "fact": "Chen Example's coat check ticket is D9-9166.",
+      "entity": "people/chen-example",
+      "provenance": "Sam Example told the assistant in conversation on 2026-11-06"
+     }
+    ],
+    "content_origin": "user_said"
+   },
+   "ms": 206,
+   "error": null,
+   "result": "{\"protocol_version\":1,\"request_id\":\"159d5e1a-9c95-4c33-91da-0bd715977e55\",\"items\":[{\"index\":0,\"request_id\":\"67163e6d-31d3-5280-855c-e6c52870430d\",\"status\":\"pending\",\"state\":\"queued\",\"retry_after_ms\":1000,\"target\":{\"slug\":\"people/dara-example\",\"entity_slug\":\"people/dara-example\"}},{\"index\":1,\"request_id\":\"edd7313c-c360-5239-ae10-b1f64caa16dc\",\"status\":\"pending\",\"state\":\"queued\",\"retry_after_ms\":1000,\"target\":{\"slug\":\"people/alice-example\",\"entity_slug\":\"people/alice-example\"}},{\"index\":2,\"request_id\":\"4ec4a1f9-76cd-5859-9162-87b49c774190\",\"status\":\"pending\",\"state\":\"queued\",\"retry_after_ms\":100 [cut for the fixture]"
+  },
+  {
+   "name": "capture",
+   "args": {
+    "content": "Car service note: the work order number is T4-3608.",
+    "content_origin": "user_said"
+   },
+   "ms": 8,
+   "error": null,
+   "result": "{\"status\":\"pending\",\"request_id\":\"8e99927c-670f-44f9-8e11-2553508cb1ad\",\"receipt\":{\"request_id\":\"8e99927c-670f-44f9-8e11-2553508cb1ad\",\"state\":\"queued\",\"retry_after_ms\":250,\"created_at\":\"2026-11-08T18:00:58.436Z\",\"updated_at\":\"2026-11-08T18:00:58.436Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":2,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\"}},\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"next\":{\"tool\":\"get_write_request\",\"arguments\":{\"request_id\":\"8e99927c-670f-44f9-8e11-2553508cb1ad\"},\"cli\":\"gbrain write-reques [cut for the fixture]"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "67163e6d-31d3-5280-855c-e6c52870430d"
+   },
+   "ms": 21,
+   "error": null,
+   "result": "{\"request_id\":\"67163e6d-31d3-5280-855c-e6c52870430d\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.391Z\",\"updated_at\":\"2026-11-08T18:00:58.391Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":3547,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:01.934Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"people/dara-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "edd7313c-c360-5239-ae10-b1f64caa16dc"
+   },
+   "ms": 9,
+   "error": null,
+   "result": "{\"request_id\":\"edd7313c-c360-5239-ae10-b1f64caa16dc\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.408Z\",\"updated_at\":\"2026-11-08T18:00:58.408Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":3540,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:01.942Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"people/alice-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "4ec4a1f9-76cd-5859-9162-87b49c774190"
+   },
+   "ms": 6,
+   "error": null,
+   "result": "{\"request_id\":\"4ec4a1f9-76cd-5859-9162-87b49c774190\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.420Z\",\"updated_at\":\"2026-11-08T18:00:58.420Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":3534,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:01.951Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"people/chen-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "8e99927c-670f-44f9-8e11-2553508cb1ad"
+   },
+   "ms": 6,
+   "error": null,
+   "result": "{\"request_id\":\"8e99927c-670f-44f9-8e11-2553508cb1ad\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.436Z\",\"updated_at\":\"2026-11-08T18:00:58.436Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":3524,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:01.958Z\"},\"operation\":\"capture\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"inbox/2026-11-08-ebfa5d42\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "67163e6d-31d3-5280-855c-e6c52870430d"
+   },
+   "ms": 11,
+   "error": null,
+   "result": "{\"request_id\":\"67163e6d-31d3-5280-855c-e6c52870430d\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.391Z\",\"updated_at\":\"2026-11-08T18:00:58.391Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":7012,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:05.396Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"people/dara-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "edd7313c-c360-5239-ae10-b1f64caa16dc"
+   },
+   "ms": 9,
+   "error": null,
+   "result": "{\"request_id\":\"edd7313c-c360-5239-ae10-b1f64caa16dc\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.408Z\",\"updated_at\":\"2026-11-08T18:00:58.408Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":7004,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:05.407Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"people/alice-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "4ec4a1f9-76cd-5859-9162-87b49c774190"
+   },
+   "ms": 11,
+   "error": null,
+   "result": "{\"request_id\":\"4ec4a1f9-76cd-5859-9162-87b49c774190\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.420Z\",\"updated_at\":\"2026-11-08T18:00:58.420Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":7003,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:05.415Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"people/chen-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "8e99927c-670f-44f9-8e11-2553508cb1ad"
+   },
+   "ms": 6,
+   "error": null,
+   "result": "{\"request_id\":\"8e99927c-670f-44f9-8e11-2553508cb1ad\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.436Z\",\"updated_at\":\"2026-11-08T18:00:58.436Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":6994,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:05.426Z\"},\"operation\":\"capture\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"inbox/2026-11-08-ebfa5d42\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "67163e6d-31d3-5280-855c-e6c52870430d"
+   },
+   "ms": 10,
+   "error": null,
+   "result": "{\"request_id\":\"67163e6d-31d3-5280-855c-e6c52870430d\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.391Z\",\"updated_at\":\"2026-11-08T18:00:58.391Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":10363,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:08.749Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"people/dara-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "edd7313c-c360-5239-ae10-b1f64caa16dc"
+   },
+   "ms": 8,
+   "error": null,
+   "result": "{\"request_id\":\"edd7313c-c360-5239-ae10-b1f64caa16dc\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.408Z\",\"updated_at\":\"2026-11-08T18:00:58.408Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":10354,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:08.758Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"people/alice-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "4ec4a1f9-76cd-5859-9162-87b49c774190"
+   },
+   "ms": 6,
+   "error": null,
+   "result": "{\"request_id\":\"4ec4a1f9-76cd-5859-9162-87b49c774190\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.420Z\",\"updated_at\":\"2026-11-08T18:00:58.420Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":10348,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:08.765Z\"},\"operation\":\"remember\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"people/chen-example\",\"effects\":[]}"
+  },
+  {
+   "name": "get_write_request",
+   "args": {
+    "request_id": "8e99927c-670f-44f9-8e11-2553508cb1ad"
+   },
+   "ms": 6,
+   "error": null,
+   "result": "{\"request_id\":\"8e99927c-670f-44f9-8e11-2553508cb1ad\",\"state\":\"queued\",\"retry_after_ms\":1000,\"created_at\":\"2026-11-08T18:00:58.436Z\",\"updated_at\":\"2026-11-08T18:00:58.436Z\",\"deferred\":{\"refresh_id\":\"b9db280a-8d42-4c21-b0c6-246fe7bf9c63\"},\"diagnostic\":{\"age_ms\":10338,\"assessment\":\"pending\",\"reason\":\"pending\",\"next_action\":\"poll\",\"observed_at\":\"2026-11-08T18:01:08.771Z\"},\"operation\":\"capture\",\"source_id\":\"alpha-d9476edb\",\"slug\":\"inbox/2026-11-08-ebfa5d42\",\"effects\":[]}"
+  }
+ ]
+}

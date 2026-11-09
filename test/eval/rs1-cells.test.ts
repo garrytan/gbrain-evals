@@ -94,7 +94,7 @@ describe('judges', () => {
   test('completeness needs the canonical judge and, at replicate 0 on a per-reader arm, the frontier judge', () => {
     const arm = m.cells[1].arms[0];
     expect(requiredJudges(arm, { reader: SOL, replicate: 0 }, INSTRUMENT)).toEqual([
-      { judge: 'openai:gpt-4.1-mini', instrument_id: 'beam-rubric' }, { judge: 'anthropic:claude-opus-5-5', instrument_id: 'beam-rubric@anthropic:claude-opus-5-5' }]);
+      { judge: 'openai:gpt-4.1-mini', instrument_id: 'beam-rubric', view: 'descriptive' }, { judge: 'anthropic:claude-opus-5-5', instrument_id: 'beam-rubric@anthropic:claude-opus-5-5', view: 'gating' }]);
     expect(requiredJudges(arm, { reader: SOL, replicate: 1 }, INSTRUMENT)).toHaveLength(1);
     expect(requiredJudges(m.cells[3].arms[0], { reader: OPUS, replicate: 0 }, INSTRUMENT)).toHaveLength(1);
   });
