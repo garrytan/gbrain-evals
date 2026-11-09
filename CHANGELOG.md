@@ -2,6 +2,33 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.185] - 2026-11-09
+
+### A preregistered test of whether gbrain knows what is true now when facts change, with its harness
+
+- **What this adds.** The changing-facts battleground asks whether gbrain at its stable release, reading 8,000 tokens of
+  memory, answers "what is true now" more accurately than a memory-bank server, an extract-first server and a
+  temporal-graph library, on sealed, made-up chat histories in which facts change in known ways. Its preregistration,
+  `docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md`, freezes when this release merges. No world
+  has been minted and no cell has run.
+- **Worlds and custody.** `eval/generators/changing-facts-gen.ts` builds worlds with an oracle for each kind of change
+  (moves, corrections, repeated stale values and the rest), with public dev plans and fixture worlds under
+  `eval/data/changing-facts-v1/`. `eval/custody/bg1/` mints, validates and pins sealed worlds, and the `bg1-dev` and
+  `bg1` loaders load only pinned bytes.
+- **Cells, judges and the verdict.** `eval/runner/q1/cells/bg1-cells.json` runs through the Q1 cell runner, and each
+  reader's answers are graded by a judge from another model family. A deterministic value matcher, exposure checks, the
+  decision rule with its power plan and pricing, the verdict and pilot analysis (`eval/runner/bg1/verdict.ts`) and a
+  judge agreement check on public dev data come with it.
+- **Paid windows.** Every entry point here that can spend real keys runs inside a granted paid window. A campaign gives
+  every unit its window, world end and lease. A cell run checks the lease the metering proxy itself reports, and the
+  keyless exemption holds only when the proxy reports loopback upstreams and placeholder keys. The canonical Gemini judge
+  bills only `BG1_GEMINI_API_KEY`.
+- **Keyless tests.** Every bun test process points `GBRAIN_HOME` at an empty directory and blanks every provider key
+  gbrain reads at its pin, and a new test derives that list from gbrain's source.
+- **Known gaps, fixed before any cell runs.** Four verdict and judge-check defects, a lease-sum check before boot and
+  binding each lease to the generated cells file before a campaign starts are fixed at the start of the results branch,
+  each with a keyless test, before the first paid cell.
+
 ## [0.10.183] - 2026-11-09
 
 ### Failure causes: no-answer rows, not-run comparisons and stamped labeller gates
