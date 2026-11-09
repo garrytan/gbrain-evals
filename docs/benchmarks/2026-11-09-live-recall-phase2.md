@@ -42,9 +42,9 @@ test. The rest of the setup: Postgres schema 296, search mode `tokenmax`, embedd
 gbrain is a personal knowledge brain: Markdown pages in Postgres, found with keyword, vector and hybrid search, and
 served to agents as tools. Wintermute, the agent that runs on Garry's box, wrote each task from a real page in the brain,
 with a gold answer of one to four facts. It ran this harness against the live brain through a database role that cannot
-write, and sent back aggregate scorecards. Phase 2 sent the task text and page text from the brain to Anthropic, OpenAI
-and Particle through their APIs, and sent Wintermute's gold answers and the models' answers to the judge models at
-OpenAI and Anthropic, under the consent Garry gave for this eval
+write, and sent back aggregate scorecards. Phase 2 sent the task text and the brain's page text and slugs to Anthropic,
+OpenAI and Particle through their APIs, and sent Wintermute's gold answers and the models' answers to the judge models
+at OpenAI and Anthropic, under the consent Garry gave for this eval
 ([preregistration](live-recall/PHASE2-PREREGISTRATION.md#privacy-posture)). gbrain's own search also sent search
 queries and candidate passages to Voyage AI, the brain's configured embedding and reranking provider. Only aggregates
 came back to us, and none of phase 2's task text, answers or page text is in this repository.
