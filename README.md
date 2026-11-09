@@ -12,11 +12,11 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain [`62637c96a`](https://github.com/garrytan/gbrain/tree/62637c96a5a5c2e9d55594f87a33d79c2f30b54f), release v0.60.557.0, declared as `gbrain` in `package.json` |
+| Pinned product | gbrain [`d253ec0ff`](https://github.com/garrytan/gbrain/tree/d253ec0ff12ed370ed3a846cb7da0191639c4a9e), release v0.60.623.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
 | This repository | gbrain-evals at the release [`VERSION`](VERSION) names; [CHANGELOG.md](CHANGELOG.md) records each release |
 
-This repository installs gbrain v0.60.557.0 (`62637c96a`). Some results below were measured at earlier commits; each
+This repository installs gbrain v0.60.623.0 (`d253ec0ff`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except three pull-request builds:
 `a7cb37b`, the September 29 branch commit whose retrieval the reader replay row froze; `94bd52e01`, the multi-relation
 planner's held-out build (merged in v0.60.60.0); and `079941d2`, Cat 35's post-wave build (shipped as v0.47.8.0). The
@@ -92,7 +92,7 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Serving the new value after an update | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP | `77cf8e111` | [N1](docs/benchmarks/2026-10-01-n1-knowledge-update.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements | `77cf8e111` | [N5](docs/benchmarks/2026-10-01-n5-forget-residue.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller); proactive recall gated in CI | `77cf8e111` | [N6 on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md), [N8 gate](docs/benchmarks/2026-10-06-n8-privacy-gate.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
-| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; Cats 37 to 39 pass every keyless contract at the pin | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `62637c96a` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
+| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; Cats 37 to 39 pass every keyless contract at the pin | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `d253ec0ff` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Keeping speaker and time across chat export formats | **29 of 29** formats | `77cf8e111` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | One very large document stored as one page (2 MB to 260 MiB, counted under the preregistered rules) | **Every preregistered rule passes**: 0 crashes, 0 responses over 1 MiB, 0 bytes lost on export, keyword recall@10 1.00 at 2 MB and no recall gap to managed parts up to 24 MiB. PGLite stores up to 128 MiB, Postgres stored up to 256 MiB, and `put_page` refuses anything above 24 MiB; larger documents are refused (`request_too_large`), not stored. `forget` on pages over 24 MiB is still unreachable (`request_too_large` at 100 MiB and above) | `7a6bdd3` (v0.60.454.0, the previous pin) | [N14 Wave B PR 4](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md) |
 | Finding contradicting notes | **146 of 150** conflicts with the default judge model (`claude-haiku-4-5`), 0 of 40 dated changes and 4 of 51 compatible pairs flagged; 149 at `48ed5e8` with the same prompt, the difference is sampling | `77cf8e111` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm) |
@@ -417,6 +417,12 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-09: Re-pin to gbrain `d253ec0ff`
+
+The pinned product moves from `62637c96a` (v0.60.557.0) to master `d253ec0ff` (v0.60.623.0). The memory trust row's
+keyless check names the new pin: Cats 37 to 39 pass their keyless contracts at `d253ec0ff`. No paid result was rerun,
+and every other row keeps the commit it was measured at.
 
 ### 2026-11-08: The F6 BEAM-1M known limit gives its intervals and points to the narrowed RS1 test
 
