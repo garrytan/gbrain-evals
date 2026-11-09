@@ -91,7 +91,7 @@ export function prepareSecondJudge(def: CellDefinition, arm: ArmDefinition, opts
   const opus = canonical.get(OPUS) ?? new Map<string, Value>(), mine = canonical.get(PARTICLE)!;
   const paired = [...mine.keys()].filter(q => mine.get(q)!.value !== null && opus.get(q)?.value != null).sort();
   const answers = new Map([...unit.frontier.answers, ...unit.particle.answers].filter(a => a.replicate === 0).map(a => [`${a.reader}|${a.question_id}`, a]));
-  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, devOnly(def) ?? undefined);
+  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, devOnly(def) ?? undefined, { keyless: !!opts.keyless });
   const questions = new Map(corpus.questions.map(q => [q.id, q]));
   const plan: PlannedJudgment[] = [];
   let unknown = 0;

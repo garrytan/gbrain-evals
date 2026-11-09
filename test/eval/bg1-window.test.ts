@@ -11,10 +11,11 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
+import { DecideError } from '../../eval/runner/decisions/errors.ts';
 import type { Bg1Manifest, Corpus } from '../../eval/runner/memory-qa/corpus.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 import { keylessKeys, keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
-import { bg1CampaignManifest, bg1CellWindow, bg1GeminiKey, bg1KeptUnit, campaignManifest, findCell, loadCellManifest } from '../../eval/runner/q1/cell.ts';
+import { bg1CampaignManifest, bg1CellWindow, bg1GeminiKey, bg1KeptUnit, campaignManifest, findCell, loadCellManifest, runCell } from '../../eval/runner/q1/cell.ts';
 import { prepareReread, rereadArm } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { runRemote } from '../../eval/runner/shootout-cell.ts';
@@ -122,6 +123,22 @@ describe('bg1CellWindow', () => {
       expect(shapes.map(p => p.status().keyless)).toEqual([false, false, false]);
       for (const p of shapes) expect((await refused(bg1CellWindow(['--provider-proxy', `http://127.0.0.1:${p.port}`], def, {})))?.code).toBe('PAID_FLAGS_MISSING');
     } finally { for (const p of shapes) p.stop(); }
+  });
+
+  // Value: protects=a BG1-dev3 cell run on a paid lease never reads the template fixtures as its dev worlds; fails_when=bg1CellWindow does not say which runs are keyless, or runCell loads the fixtures for a run not declared keyless; why_new=the exception-14 reader's finding 4a (red-team #6: loadBg1Dev honoured GBRAIN_EVALS_BG1_DEV_ROOT in paid runs); seam=bg1CellWindow against a keyless and a lease-mode proxy, runCell on a BG1-dev3 cell with the fixtures as the dev root; no_claim=what the cell does after its corpus loads
+  test('only a proxy reporting keyless upstreams marks a BG1 run keyless, and a BG1-dev3 run not marked keyless refuses the template fixtures', async () => {
+    const keyless = new MeteringProxy({ fetchImpl: dead, upstream: keylessUpstream('http://127.0.0.1:9') }), paid = leaseProxy(5);
+    keyless.start();
+    try {
+      expect(await bg1CellWindow(['--provider-proxy', `http://127.0.0.1:${keyless.port}`], def, {})).toBe(true);
+      expect(await bg1CellWindow(['--provider-proxy', `http://127.0.0.1:${paid.port}`, ...window], def, {})).toBe(false);
+    } finally { keyless.stop(); paid.stop(); }
+    const dev = findCell('bg1-dev3.baseline-none.baseline', undefined, 'bg1');
+    const n = new Date(), sunday = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() - n.getUTCDay())).toISOString().slice(0, 10);
+    const out = join(scratch(), 'out');
+    const err = await withEnv({ GBRAIN_EVALS_BG1_DEV_ROOT: join(REPO, 'eval/data/changing-facts-v1/fixtures'), GBRAIN_EVALS_BG1_WORLD_END: sunday }, () => runCell(dev, { out, keyless: false }).then(() => null, e => e));
+    expect(err).toBeInstanceOf(DecideError);
+    expect((err as DecideError).op).toMatchObject({ code: 'DATASET_MISSING', message: expect.stringContaining('is the committed template fixtures (eval/data/changing-facts-v1/fixtures), and this load is not keyless') });
   });
 
   // Value: protects=under a lease proxy the window caps the lease the proxy itself holds; fails_when=bg1CellWindow takes the lease from SHOOTOUT_LEASE_USD, accepts a proxy that reports no lease, or lets a differing SHOOTOUT_LEASE_USD stand; why_new=fix-check of #398 (a small exported value passed against a larger lease)

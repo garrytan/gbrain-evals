@@ -250,7 +250,7 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   claimOut(out, !!opts.keyless, 'reread');
   // RS1 kept cells load only the conversations the sources staged (one launch unit's); later slots may never have been minted.
   const staged = def.kept_units ? new Set(opts.sources.flatMap(s => [...gatherStaging(def.id, [dirname(dirname(resolve(s)))]).keys()])) : null;
-  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, staged ?? devOnly(def) ?? undefined);
+  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, staged ?? devOnly(def) ?? undefined, { keyless: !!opts.keyless });
   const { verify, plan } = verifySources(def, arm, opts.sources, corpus, opts.reader);
   const frozen = join(out, 'reread-source.json');
   const resuming = existsSync(frozen);

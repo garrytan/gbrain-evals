@@ -33,10 +33,14 @@
  *   Window    `run` spends real keys only inside a granted paid window: without --keyless-upstream it needs --paid-window
  *             and --window-cap-usd, its --ledger-cap-usd never exceeds the window cap, and it exits 2 before any lease,
  *             proxy or output otherwise. A keyless run blanks every provider key first.
+ *   Fixtures  the dev questions load keyless only for `run --keyless-upstream`, or a plan or report on an --out whose
+ *             upstream.json marks a keyless rehearsal; every other load refuses a GBRAIN_EVALS_BG1_DEV_ROOT that is the
+ *             template fixtures or holds template-rendered worlds (corpus.ts bg1DevFixtureProblem), exit 2 before --out.
  */
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { DecideError } from '../decisions/errors.ts';
 import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { ChatClient, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
@@ -279,9 +283,12 @@ if (import.meta.main) {
   }
   const unpaid = mode === 'report' ? [] : stage1.flatMap(r => stage1Unpaid(r) ?? []);
   if (unpaid.length) { console.error(`--stage1 takes paid stage 1 outputs only: ${unpaid.join('; ')}`); process.exit(2); }
+  const keylessOut = existsSync(join(out, 'upstream.json')) && JSON.parse(readFileSync(join(out, 'upstream.json'), 'utf8')).keyless === true;
+  let questions: MemoryQuestion[];
+  try { questions = loadCorpus(BG1_BENCHMARK_DEV, undefined, new Set(BG1_DEV_CONVERSATIONS), { keyless: mode === 'run' ? !!keyless : keylessOut }).questions; }
+  catch (e) { if (!(e instanceof DecideError)) throw e; console.error(e.message); process.exit(2); }
   mkdirSync(out, { recursive: true });
   const instrument = instrumentFor(BG1_BENCHMARK_DEV);
-  const questions = loadCorpus(BG1_BENCHMARK_DEV, undefined, new Set(BG1_DEV_CONVERSATIONS)).questions;
   const byId = new Map(questions.map(q => [q.id, q]));
   if (mode !== 'report') {
     if (mode === 'run') {

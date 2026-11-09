@@ -230,6 +230,8 @@ describe('the command line', () => {
     const stage1 = paid();
     mkdirSync(join(stage1, 'cells'));
     const out = join(dir(), 'out'), poolFile = join(out, 'pool.json');
+    mkdirSync(out);
+    writeFileSync(join(out, 'upstream.json'), JSON.stringify({ keyless: true }));
     const plan = (seed: string) => cli(['plan', '--stage1', stage1, '--out', out, '--seed', seed]);
     expect(plan('7').exitCode).toBe(0);
     const planned = readFileSync(poolFile, 'utf8'), saved = JSON.parse(planned) as { seed: number; pool: Item[] };
@@ -244,5 +246,25 @@ describe('the command line', () => {
     const report = cli(['report', '--out', out]);
     expect(report.exitCode).toBe(2);
     expect(report.stderr.toString()).toContain(`${first.id} by ${ASTRA} was graded on pool ${poolSha256(saved.pool, 7).slice(0, 12)} at seed 7`);
+  }, 60_000);
+
+  // Value: protects=a paid judge check never grades the template fixtures' questions in place of stage 1's rendered dev worlds; fails_when=plan, run or report on an --out that is not a keyless rehearsal loads GBRAIN_EVALS_BG1_DEV_ROOT at the fixtures or a template-rendered copy; why_new=the exception-14 reader's finding 4a (this file's pool test ran plan with a paid stage 1 marker on the fixtures and nothing refused); seam=judge-check.ts plan and report with the template fixtures as the dev root; no_claim=a judge call
+  test('a plan or report on an --out that is not a keyless rehearsal refuses the template fixtures as the dev root, before --out', () => {
+    const n = new Date(), sunday = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() - n.getUTCDay())).toISOString().slice(0, 10);
+    const env = { ...noKeys, GBRAIN_EVALS_BG1_DEV_ROOT: join(import.meta.dir, '..', '..', 'eval/data/changing-facts-v1/fixtures'), GBRAIN_EVALS_BG1_WORLD_END: sunday };
+    const cli = (args: string[]) => Bun.spawnSync(['bun', 'eval/runner/bg1/judge-check.ts', ...args], { cwd: join(import.meta.dir, '..', '..'), stdout: 'pipe', stderr: 'pipe', env });
+    const stage1 = paid();
+    mkdirSync(join(stage1, 'cells'));
+    const fresh = join(dir(), 'out');
+    const plan = cli(['plan', '--stage1', stage1, '--out', fresh, '--seed', '7']);
+    expect(plan.exitCode).toBe(2);
+    expect(plan.stderr.toString()).toContain('is the committed template fixtures (eval/data/changing-facts-v1/fixtures), and this load is not keyless');
+    expect(existsSync(fresh)).toBe(false);
+    const paidOut = dir();
+    writeFileSync(join(paidOut, 'upstream.json'), JSON.stringify({ keyless: false }));
+    const report = cli(['report', '--out', paidOut]);
+    expect(report.exitCode).toBe(2);
+    expect(report.stderr.toString()).toContain('and this load is not keyless');
+    expect(existsSync(join(paidOut, 'report.json'))).toBe(false);
   }, 60_000);
 });
