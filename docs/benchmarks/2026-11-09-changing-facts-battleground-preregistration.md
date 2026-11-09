@@ -488,6 +488,22 @@ readable verdict is asked once more, with the same prompt and a closing line ask
 attempt fails as unreadable only if that reply is unreadable too. No check, the length check's range, the three
 re-renders per session or the yield rule moves.
 
+**Third render and high thinking (2026-11-09).** Stage 1's third render of `bg1-dev-01`, at commit `b5990b09`, dropped
+the world at session 26 of 154. It made 58 render attempts, which wrote a median of 0.84 of a session's target tokens
+(10th percentile 0.69, lowest 0.54, highest 1.05), and 46 of its 51 first attempts passed. The failures sat in the
+longest sessions. The six 3,236-token sessions made 10 attempts, and 5 failed, at a median of 0.73 of the target: both
+of the render's length failures and all three of its attempts that failed the planned-line and forbidden-value checks
+together. Session 26 went 0.60 (length), 0.69 and 0.89 (planned line and forbidden value), then 0.54 (length). The
+shorter sessions made 48 attempts, and 3 failed. Gemini accepted every bounded render schema, up to the 68-to-74-turn
+range. From commit `ab030f1e`, gemini-3.8-flash renders at high thinking (`thinkingConfig.thinkingLevel`) every session
+whose target is at least 2,000 tokens, which is 15, 17 and 19 sessions of `bg1-dev-01`, `-02` and `-03`, and every
+re-render of any session. The rest render at low thinking, as before. Gemini's check stays at low thinking, and the
+claude-haiku-5-5 check is unchanged. Gemini counts thinking tokens toward `maxOutputTokens` and cuts the reply off
+there, so from commit `bc1eada3` a high-thinking render asks for the model's whole output limit of 65,536 tokens, and a
+low-thinking render keeps 1.6 times its target plus 2,048. From commit `fd3c8cb4`, the reply cache keys on the thinking
+level, under a new version, so no reply cached before this change is reused. Keyless (`--fake`) rendering is unchanged.
+No check, the length check's range, the three re-renders per session or the yield rule moves.
+
 The three dev worlds are rendered again under this method. Before any stage 1 cell runs, this amendment gains each
 world's measured rendering cost, its yield and its world end.
 
