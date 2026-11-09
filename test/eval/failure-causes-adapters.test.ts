@@ -3,10 +3,15 @@ import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { ADAPTERS, classify, loadSource, validateManifest, SOURCES_SCHEMA } from '../../eval/runner/failure-causes/index.ts';
-import { sha256 } from '../../eval/runner/failure-causes/manifest.ts';
-import { entry, FX, loadFixture } from '../support/failure-causes-fixture.ts';
+import { cat40Calls, cat40Fields, namesSlug } from '../../eval/runner/failure-causes/adapters/cat40.ts';
+import { sha256, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
+import { entry, failure, FX, loadFixture } from '../support/failure-causes-fixture.ts';
 
 const byCase = (failures: ReturnType<typeof ADAPTERS.rs1>['failures']) => new Map(failures.map(f => [f.case_id, classify(f)]));
+const mem = (path: string, role: string, rows: unknown[]): LoadedFile => {
+  const bytes = new TextEncoder().encode(rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+  return { path, role, sha256: sha256(bytes), root: 'mem', bytes };
+};
 
 describe('refresh-barrier Part C adapter', () => {
   const out = ADAPTERS['refresh-barrier'](loadFixture('partc', [['sol-off-task-1.json', 'episode'], ['opus-on-task-4.json', 'episode'], ['sol-on-task-1.json', 'episode']]), entry('partc', 'refresh-barrier', { condition: 'forced' }));
@@ -55,6 +60,94 @@ describe('rs1 adapter', () => {
   });
 });
 
+describe('rs1 adapter: cells and outcomes the cell never judges', () => {
+  const row = (id: string, extra: Record<string, unknown> = {}) => ({ id, category: 'knowledge_update', gold_count: 1, outcome: 'scored', recall_any_at_10: 1, recall_all_at_10: 1,
+    packing_loss: { items_offered: 8, items_cut: 0, items_dropped: 0 }, ...extra });
+  const answer = (cell: string, q: string, outcome: string) => ({ answer_id: `${cell}-${q}`, cell_id: cell, question_id: q, system: 'gbrain-defaults',
+    reader: 'anthropic:claude-opus-5-5', replicate: 0, text: 'a', outcome });
+  const judge = (id: string, score: number) => ({ answer_id: id, judge: 'openai:gpt-6.1-sol', score, parse_ok: true, outcome: 'scored' });
+  const cell = (dir: string, rows: unknown[], answers: unknown[], judgments: unknown[]) =>
+    [mem(`${dir}/rows.ndjson`, 'rows', rows), mem(`${dir}/answers.ndjson`, 'answers', answers), mem(`${dir}/judgments.ndjson`, 'judgments', judgments)];
+  const files = [
+    ...cell('a', ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'].map(q => row(q)),
+      [answer('gbrain-a', 'q1', 'reader_error'), answer('gbrain-a', 'q2', 'turn_cap'), answer('gbrain-a', 'q3', 'budget_not_run'), answer('gbrain-a', 'q4', 'ingest_degraded'), answer('gbrain-a', 'q5', 'retrieval_error'),
+        answer('gbrain-a', 'q6', 'does_not_fit'), answer('gbrain-a', 'q7', 'unsupported'), answer('gbrain-a', 'q8', 'judge_error')],
+      [judge('gbrain-a-q4', 0)]),
+    ...cell('b', [row('q1', { recall_any_at_10: 0, recall_all_at_10: 0 })], [answer('gbrain-b', 'q1', 'scored')], [judge('gbrain-b-q1', 0)]),
+  ];
+  const out = ADAPTERS.rs1(files, entry('rs1', 'rs1'));
+  const labels = new Map(out.failures.map(f => [f.case_id.split('|').slice(0, 2).join('|'), classify(f)]));
+
+  test('an unjudged answer follows outcomes.ts: harness errors, a turn cap, gbrain misses, and skips for budget_not_run and does_not_fit', () => {
+    expect(out.counts).toMatchObject({ read: 9, mapped: 7, failed: 7, skipped: 2 });
+    expect(out.counts.skipped_reasons).toEqual({ budget_not_run: 1, 'does_not_fit (not applicable)': 1 });
+    expect(labels.has('gbrain-a|q6')).toBe(false);
+    expect(labels.get('gbrain-a|q1')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.error' });
+    expect(labels.get('gbrain-a|q8')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.error' });
+    expect(labels.get('gbrain-a|q2')).toMatchObject({ cause: 'timeout_latency', rule_id: 'budget.turn_cap' });
+    expect(labels.get('gbrain-a|q5')).toMatchObject({ cause: 'retrieval_miss', rule_id: 'retrieval.retrieve_error' });
+    expect(labels.get('gbrain-a|q5')?.tags).toContain('retrieve_error');
+    expect(labels.get('gbrain-a|q7')).toMatchObject({ cause: 'unclassified', rule_id: 'residual.no_labeller_text' });
+    expect(out.failures.filter(f => ['q5', 'q7'].includes(f.task_id!)).map(f => f.harness)).toEqual([null, null]);
+  });
+
+  test('an unsupported answer carries no labeller text, even on a public source', () => {
+    const id = '1m-1:knowledge_update:0';
+    const pub = ADAPTERS.rs1([
+      ...cell('c', [row(id)], [answer('gbrain-c', id, 'unsupported'), { ...answer('gbrain-c', id, 'scored'), answer_id: 'gbrain-c-r1', replicate: 1 }], [judge('gbrain-c-r1', 0)]),
+      mem('1m-1-probing_questions.json', 'gold', [{ knowledge_update: [{ question: 'Which plan?', answer: 'The second' }] }]),
+    ], entry('rs1', 'rs1', { visibility: 'public' }));
+    const byReplicate = new Map(pub.failures.map(f => [f.case_id.split('|')[3], f]));
+    expect(byReplicate.get('r1')?.text?.question).toBe('Which plan?');
+    expect(byReplicate.get('r0')).toMatchObject({ failed: true, harness: null });
+    expect(byReplicate.get('r0')?.text).toBeUndefined();
+  });
+
+  test('a failed ingest_degraded answer is judged and counts as operations', () => {
+    expect(labels.get('gbrain-a|q4')).toMatchObject({ cause: 'operations', rule_id: 'operations.ingest_degraded' });
+  });
+
+  test('each directory is its own cell: an answer reads its own rows file', () => {
+    expect(labels.get('gbrain-b|q1')).toMatchObject({ cause: 'retrieval_miss', rule_id: 'retrieval.no_gold_retrieved', task_id: 'q1' });
+    expect(labels.get('gbrain-a|q1')?.task_id).toBe('q1');
+    expect(() => ADAPTERS.rs1([...files, mem('a/rows-2.ndjson', 'rows', [row('q9')])], entry('rs1', 'rs1'))).toThrow(/a second rows file in a/);
+  });
+});
+
+describe('cat40 adapter: calls, slugs and recovery', () => {
+  test('two worlds that reuse keys and attempt ids stay apart, each with its own transcripts and gbrain sha', () => {
+    const row = (run: string) => ({ schema: 'cat40-cell-v2', key: 'claude-opus-5-5|gbrain-next-baseline|H1-01|0', attempt_id: 'claude-opus-5-5|gbrain-next-baseline|H1-01|0#1',
+      model: 'claude-opus-5-5', provider: 'anthropic', arm: 'gbrain-next-baseline', task: 'H1-01', family: 'H1', budget_run_id: run, stop: 'submitted',
+      sessions: [{ run: { tool_calls: [{ name: 'search' }], final: 'x' } }], score: { success: false, evidence_cited: [], missed_evidence: ['people/alice'] } });
+    const world = (dir: string, run: string, result: string, sha: string) => [mem(`${dir}/results.jsonl`, 'results', [row(run)]),
+      mem(`${dir}/transcripts.jsonl`, 'transcripts', [{ attempt_id: row(run).attempt_id, tools: [{ name: 'search', args: { query: 'q' }, result }] }]),
+      mem(`${dir}/experiment.json`, 'experiment', [{ gbrain_commit: sha, world_digest: sha.replace(/./g, dir.slice(-1)) }])];
+    const out = ADAPTERS.cat40([...world('p1', 'run-1', '[{"slug":"people/alice"}]', 'a'.repeat(40)), ...world('p2', 'run-2', '[]', 'b'.repeat(40))], entry('cat40', 'cat40'));
+    expect(out.counts).toMatchObject({ read: 2, duplicate: 0, failed: 2 });
+    expect(out.failures.map(f => [f.run_id, f.gbrain_sha, f.gold.retrieved, f.task_id])).toEqual([['run-1', 'a'.repeat(40), 'all', `${'1'.repeat(12)}|H1-01`], ['run-2', 'b'.repeat(40), 'none', `${'2'.repeat(12)}|H1-01`]]);
+  });
+
+  test('a v1 row keeps its first session\'s calls before the second\'s', () => {
+    expect(cat40Fields({ key: 'k', score: {}, session1: { tool_calls: [{ name: 'capture' }] }, run: { stop: 'submitted', tool_calls: [{ name: 'search' }] } })?.calls.map(c => c.name)).toEqual(['capture', 'search']);
+  });
+
+  test('a slug matches only whole, never as the start of a longer slug', () => {
+    expect(namesSlug('{"slug":"people/alice"}', 'people/alice')).toBe(true);
+    expect(namesSlug('read people/alice.md', 'people/alice')).toBe(true);
+    expect(namesSlug('{"slug":"people/alice-smith"}', 'people/alice')).toBe(false);
+    expect(namesSlug('archive/people/alice', 'people/alice')).toBe(false);
+  });
+
+  test('a tool error is recovered only by a later success of the same tool on the same target, and unknown without aligned transcript args', () => {
+    const calls = [{ name: 'get_page', error: 'not_found' }, { name: 'get_page' }, { name: 'get_page', error: 'timeout' }, { name: 'get_page' }, { name: 'search', error: 'timeout' }, { name: 'submit_answer' }];
+    const args = [{ args: { slug: 'a' } }, { args: { slug: 'b' } }, { args: { slug: 'c' } }, { args: { slug: 'c' } }, { args: { query: 'x' } }, { args: {} }];
+    expect(cat40Calls(calls, args).map(c => c.recovered)).toEqual([false, null, true, null, false]);
+    expect(cat40Calls(calls, undefined).map(c => c.recovered)).toEqual([null, null, null, null, null]);
+    expect(cat40Calls(calls, args.slice(1)).map(c => c.recovered)).toEqual([null, null, null, null, null]);
+    expect(classify(failure({ tool_calls: cat40Calls(calls, undefined) }))).toMatchObject({ cause: 'tool_contract', rule_id: 'tool.error_recovery_unknown' });
+  });
+});
+
 describe('cat40 adapter', () => {
   const out = ADAPTERS.cat40(loadFixture('cat40', [['results.jsonl', 'results'], ['results-v1.jsonl', 'results'], ['transcripts.jsonl', 'transcripts']]), entry('cat40', 'cat40'));
   const labels = byCase(out.failures);
@@ -96,6 +189,14 @@ describe('stress adapters', () => {
       ['gbrain/keyword', 'retrieval_miss', 66, 100], ['gbrain/keyword', 'wrong_ranking', 2, 100],
       ['gbrain/hybrid', 'retrieval_miss', 33, 100], ['gbrain/hybrid', 'wrong_ranking', 13, 100],
     ]);
+  });
+
+  test('two scorecards of the same questions stay apart: each count names the gbrain version it loaded', () => {
+    const card = (version: string, at20: number) => ({ schema: 'live-recall-scorecard/v1', run: { gbrain_loaded_version: version, gbrain_loaded_commit: 'c'.repeat(40) },
+      arms: { hybrid_lexical: { overall: { all: { n: 100, success_at: { k5: { hits: 48 }, k20: { hits: at20 } } } } } } });
+    const out = ADAPTERS['live-recall']([mem('b2-577.json', 'scorecard', [card('0.60.577.0', 60)]), mem('b2-593.json', 'scorecard', [card('0.60.593.0', 61)])], entry('lr', 'live-recall'));
+    expect(out.stress.filter(s => s.cause === 'retrieval_miss').map(s => s.detail)).toEqual([
+      'hybrid_lexical at gbrain 0.60.577.0: gold page not in the top 20 for 40 of 100 questions', 'hybrid_lexical at gbrain 0.60.593.0: gold page not in the top 20 for 39 of 100 questions']);
   });
 });
 

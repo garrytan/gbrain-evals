@@ -55,7 +55,7 @@ export function fromRefreshBarrier(files: LoadedFile[], entry: SourceEntry): Ada
     if ((s.misreports ?? []).length || (s.unreported ?? []).length || s.report_correct === false) tags.push('misreport');
     failures.push({
       schema: EVAL_FAILURE_SCHEMA, source: entry.id, run_id: `${String(r.provenance?.gbrain_sha ?? '').slice(0, 8)}|${String(r.provenance?.harness_digest ?? '').slice(0, 12)}`,
-      case_id: key, system: 'gbrain', arm: `flag-${r.arm}`, arm_role: entry.arm_roles?.[r.arm] ?? (r.arm === 'off' ? 'gbrain_default' : 'gbrain_variant'),
+      case_id: key, task_id: `task-${r.task}`, system: 'gbrain', arm: `flag-${r.arm}`, arm_role: entry.arm_roles?.[r.arm] ?? (r.arm === 'off' ? 'gbrain_default' : 'gbrain_variant'),
       condition: entry.condition, visibility: entry.visibility, model: r.model, gbrain_sha: r.provenance?.gbrain_sha ?? entry.gbrain_sha ?? null,
       failed: true, score: null, category: 'write_during_refresh', agent_loop: false, stop: r.loop?.stop ?? null, finish_reason: null,
       harness: artifact.length ? { error: null, scorer_artifact: 'untitled_capture_duplicate' } : null, operation: null,
