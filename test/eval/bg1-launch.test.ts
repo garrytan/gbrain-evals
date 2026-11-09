@@ -144,7 +144,7 @@ describe('a BG1 campaign before any VM boots', () => {
 
     const usd = forge(`"usd":${l.usd}`, '"usd":399');
     expect(usd.usd).toBe(399);
-    expect(caught(() => c.payload(usd)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(`leases 399, and the frozen campaign gives unit ${l.cell} ${l.lease_usd ?? l.usd}`) });
+    expect(caught(() => c.payload(usd)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(`leases 399, and the frozen campaign gives unit ${l.cell} ${l.usd}`) });
     const launched = await c.launch(l.cell, runner).then(() => null, x => x);
     expect(launched).toBeInstanceOf(ScoreboardError);
     expect((launched as ScoreboardError).op.code).toBe('CAMPAIGN_HASH_MISMATCH');

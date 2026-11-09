@@ -65,7 +65,7 @@ describe('number words', () => {
     const worlds = new Map(c.conversations.map(w => [w.id, w.sessions.flatMap(s => s.turns.map(t => t.content)).join('\n')]));
     const out: Record<string, unknown> = {};
     for (const q of c.questions) {
-      const f = q.bg1!, vals = [...f.gold_values, ...f.stale_values, ...f.decoy_values, q.answer];
+      const f = q.bg1!, vals = [...f.gold_values, ...f.stale_values, ...f.decoy_values, q.answer!];
       out[q.id] = { norm: vals.map(normalise), cls: vals.map(v => matchAnswer(q, v)), presence: presence(q, worlds.get(q.conversation)!) };
     }
     const byId = new Map(c.questions.map(q => [q.id, q]));

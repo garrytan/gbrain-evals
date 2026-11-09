@@ -388,8 +388,8 @@ describe('mint.sh --dev and render.ts --dev render stage 1\'s public dev worlds'
     expect(r.code).toBe(0);
     expect(r.out).toContain('bg1-mint summary=dev mode=fake worlds=3 written=3 skipped=0');
     for (const l of r.out.trim().split('\n')) expect(l).toMatch(/^bg1-(mint|render) /);
-    expect([...r.out.matchAll(/^bg1-render world=(\S+) status=written /gm)].map(m => m[1])).toEqual(BG1_DEV_CONVERSATIONS);
-    expect([...r.out.matchAll(/^bg1-render world=(\S+) report status=written attempts=\d+ regenerated=0$/gm)].map(m => m[1])).toEqual(BG1_DEV_CONVERSATIONS);
+    expect([...r.out.matchAll(/^bg1-render world=(\S+) status=written /gm)].map(m => m[1])).toEqual([...BG1_DEV_CONVERSATIONS]);
+    expect([...r.out.matchAll(/^bg1-render world=(\S+) report status=written attempts=\d+ regenerated=0$/gm)].map(m => m[1])).toEqual([...BG1_DEV_CONVERSATIONS]);
     for (const id of BG1_DEV_CONVERSATIONS) {
       const dir = join(out, 'set', 'worlds', id);
       for (const name of ['plan.json', 'questions.json']) expect(readFileSync(join(dir, name), 'utf8')).toBe(committed(id, name));
