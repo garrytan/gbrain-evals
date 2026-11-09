@@ -745,7 +745,8 @@ function runTasksOf(run: RunFile): Task[] {
 }
 
 /**
- * Judge every answered episode whose judge is missing, older than the answer, or a judge_error; never re-answers. A
+ * Judge every answered episode whose judge is missing, older than the answer, or a judge_error that did not hit the
+ * output-token cap (a truncated call stays a judge error, as the preregistration says); never re-answers. A
  * failure other than a cap stop (LR_PROVIDER_REJECTED included) stops new judge calls and is thrown once the calls in
  * flight finish, so the caller never uninstalls the paid-request guard under a live call. An outstanding cap stop needs
  * an extension, as a --resume does.
@@ -766,24 +767,25 @@ export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) =
   const stopped = () => halt.cap !== null || halt.fatal !== null;
   try {
     const todo = [...store.answers.values()].filter(a => a.status === 'answered' && tasks.has(a.task));
+    const due = (a: AnswerRecord, x: JudgeRecord | undefined) => !judgedAfter(a, x) || (x!.status === 'judge_error' && !x!.truncated);
     const write = (r: JudgeRecord) => { store.write(r); judged++; checkTruncation(store.calls, TRUNCATION_FLOOR, waived); };
     await pool(todo, TASK_CONCURRENCY, async a => {
       if (stopped()) return;
       const task = tasks.get(a.task)!;
       try {
         const j = store.judges.get(a.key);
-        if (!judgedAfter(a, j) || j!.status === 'judge_error') write(await judgeEpisode(ctx, task, a, judgeFor(a.model), 'judge'));
+        if (due(a, j)) write(await judgeEpisode(ctx, task, a, judgeFor(a.model), 'judge'));
         if (run.identity.labellers) {
           for (const l of labelOrder(a.model)) {
             if (stopped()) return;
             const x = store.labels.get(a.key + '|' + l);
-            if (!judgedAfter(a, x) || x!.status === 'judge_error') write(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT));
+            if (due(a, x)) write(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT));
           }
           return;
         }
         if (stopped()) return;
         const j2 = store.judges2.get(a.key);
-        if (needsSecondJudge(a) && (!judgedAfter(a, j2) || j2!.status === 'judge_error')) write(await judgeEpisode(ctx, task, a, secondJudgeFor(a.model)!, 'judge2'));
+        if (needsSecondJudge(a) && due(a, j2)) write(await judgeEpisode(ctx, task, a, secondJudgeFor(a.model)!, 'judge2'));
       } catch (e) {
         if (isCapStop(e)) halt.cap ??= e as Error;
         else halt.fatal ??= e;
@@ -917,7 +919,7 @@ export async function runJudgeCheck(o: RunOptions, say: (line: string) => void, 
   let n = Math.max(o.limit ?? JUDGE_CHECK_TASKS, existsSync(paths(o.out).run) ? readRun(o.out).kept_ids.length : 0);
   for (let first = true; ; first = false) {
     rmSync(paths(o.out).judgeCheck, { force: true });
-    const r = await runTaskSet({ ...o, forms: ['paraphrase'], judgeCheck: true, limit: n, resume: o.resume || !first, continuing: o.continuing || !first }, say);
+    const r = await runTaskSet({ ...o, forms: ['paraphrase'], judgeCheck: true, limit: n, resume: o.resume || !first, continuing: o.continuing || !first, truncationWaiver: first ? o.truncationWaiver : null }, say);
     const c = writeJudgeCheck(o.out);
     if (r.result !== 'complete' || !c.complete || !floor || !labelsShort(c) || n >= JUDGE_CHECK_MAX_TASKS || readRun(o.out).kept_ids.length < n) return { result: r.result, check: c };
     n = Math.min(n + JUDGE_CHECK_STEP, JUDGE_CHECK_MAX_TASKS);

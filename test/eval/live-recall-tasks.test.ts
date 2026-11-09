@@ -669,6 +669,21 @@ describe('phase 2 fixture run with scripted models (keyless)', () => {
     const card = JSON.parse(readFileSync(scored.scorecard, 'utf8'));
     expect([scored.complete, card.stop, card.run.final_cap_usd, card.run.cap_extensions]).toEqual([true, null, 5, 1]);
   });
+
+  test('tasks.ts judge never judges a truncated call again: the row stays a judge error', async () => {
+    const path = join(dir, 'run', 'records.local.jsonl');
+    const judged = loadRecords(path).records.find((r: any) => r.kind === 'judge' && r.status === 'ok') as any;
+    writeFileSync(path, readFileSync(path, 'utf8') + JSON.stringify({ ...judged, status: 'judge_error', verdict: null, derived: null, truncated: true, at: new Date().toISOString() }) + '\n');
+    const ledger = join(dir, 'ledger.sqlite');
+    const run = BudgetRun.open({ runner: 'live-recall-phase2-judge-truncated', budgetUsd: 10, ledgerPath: ledger, programCapUsd: 100 });
+    const paid: Paid = { run, guard: installPaidRequestGuard(run, { fetchImpl: providers.fetchImpl }), runner: 'live-recall-phase2-judge-truncated', capUsd: 10, ledgerPath: ledger };
+    const before = providers.sent.length;
+    try {
+      expect(await judgeRunDir(join(dir, 'run'), paid, () => {}, null, 'gbev3-trunc-1')).toBe(0);
+    } finally { paid.guard.uninstall(); run.close(); }
+    expect(providers.sent.length).toBe(before);
+    expect(new RecordStore(path).judges.get(judged.key)).toMatchObject({ status: 'judge_error', truncated: true });
+  });
 });
 
 // ─── Stops ─────────────────────────────────────────────────────────────────────────────────────────────────────────
