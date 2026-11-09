@@ -217,10 +217,14 @@ export async function runOnUbicloud(o: LifecycleOptions): Promise<LifecycleRepor
   };
 }
 
-/** The real client: ubi-runner.sh subcommands. UBICLOUD_API_KEY is inherited, never read or printed here. */
+/** The environment ubi-runner.sh reads, besides its UBI_* settings: nothing else reaches it, provider keys included. */
+const UBI_RUNNER_ENV = new Set(['PATH', 'HOME', 'TMPDIR', 'XDG_STATE_HOME', 'UBICLOUD_API_KEY', 'UBICLOUD_API_TOKEN', 'UBICLOUD_API_URL', 'GSTACK_CAPY_RECOVERY_DIR']);
+
+/** The real client: ubi-runner.sh subcommands. UBICLOUD_API_KEY is passed through by name, never read or printed here. */
 export function ubiRunnerClient(script: string, o: { owner: string; ttlHours: number }): UbicloudClient {
   const run = (args: string[], cwd?: string) => new Promise<void>((resolveRun, reject) => {
-    const child = spawn('bash', [script, ...args], { cwd, env: { ...process.env, UBI_OWNER: o.owner, UBI_TTL_HOURS: String(o.ttlHours) }, stdio: ['ignore', 'inherit', 'pipe'] });
+    const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => UBI_RUNNER_ENV.has(name) || name.startsWith('UBI_')));
+    const child = spawn('bash', [script, ...args], { cwd, env: { ...env, UBI_OWNER: o.owner, UBI_TTL_HOURS: String(o.ttlHours) }, stdio: ['ignore', 'inherit', 'pipe'] });
     let tail = '';
     child.stderr?.on('data', (chunk: Buffer) => {
       process.stderr.write(chunk);

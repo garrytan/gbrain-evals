@@ -15,7 +15,7 @@
  *   with pgvector, a 300-page build and probe run there. Skipped otherwise.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
@@ -24,7 +24,7 @@ import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { buildScaleBrain, openScaleEngine, pagesDigest, randomUnitVector, readCheckpoint, scalePage, useScaleTransports } from '../../eval/runner/predictive/scale-latency/build.ts';
 import { OPS, SCORECARD_SCHEMA, calibrate, countFallOpens, opStats, probeArgs, probeLatency, type Op, type OpStats } from '../../eval/runner/predictive/scale-latency/probe.ts';
-import { MAX_RETRIES, defaultSteps, loadState, runOnUbicloud, vmName, type UbicloudClient } from '../../eval/runner/predictive/scale-latency/ubicloud.ts';
+import { MAX_RETRIES, defaultSteps, loadState, runOnUbicloud, ubiRunnerClient, vmName, type UbicloudClient } from '../../eval/runner/predictive/scale-latency/ubicloud.ts';
 
 const gut = resolveGbrainUnderTest(null);
 const dirs: string[] = [];
@@ -243,6 +243,23 @@ describe('Ubicloud lifecycle (J1) with a fake client', () => {
     expect(second.calls[0]).toBe('ssh ' + s.vms[0].name + ' true');
     expect(second.calls.some(c => c.startsWith('up '))).toBe(false);
     expect(report).toMatchObject({ status: 'complete', vm_ids: [s.vms[0].name] });
+  });
+
+  test('ubi-runner.sh gets only the variables it reads, never a provider key', async () => {
+    const dir = tmp();
+    const script = join(dir, 'fake-ubi-runner.sh');
+    writeFileSync(script, '#!/usr/bin/env bash\ncompgen -e | sort > "$(dirname "$0")/names"\n');
+    const dummies = { ANTHROPIC_API_KEY: 'dummy-anthropic', OPENAI_API_KEY: 'dummy-openai', UBICLOUD_API_KEY: 'dummy-ubicloud', UBI_SIZE: 'standard-2' };
+    const saved = Object.fromEntries(Object.keys(dummies).map(name => [name, process.env[name]]));
+    Object.assign(process.env, dummies);
+    try { await ubiRunnerClient(script, { owner: 'gbev55', ttlHours: 1 }).up('ubirun-gbev55-test', { size: 'standard-2', location: 'eu-central-h1' }); }
+    finally { for (const [name, value] of Object.entries(saved)) { if (value === undefined) delete process.env[name]; else process.env[name] = value; } }
+    const names = readFileSync(join(dir, 'names'), 'utf8').split('\n').filter(Boolean).filter(name => !['PWD', 'SHLVL', '_', 'OLDPWD'].includes(name));
+    expect(names).toEqual(expect.arrayContaining(['HOME', 'PATH', 'UBICLOUD_API_KEY', 'UBI_OWNER', 'UBI_SIZE', 'UBI_TTL_HOURS']));
+    expect(names).not.toContain('ANTHROPIC_API_KEY');
+    expect(names).not.toContain('OPENAI_API_KEY');
+    const allowed = ['PATH', 'HOME', 'TMPDIR', 'XDG_STATE_HOME', 'UBICLOUD_API_KEY', 'UBICLOUD_API_TOKEN', 'UBICLOUD_API_URL', 'GSTACK_CAPY_RECOVERY_DIR'];
+    expect(names.filter(name => !allowed.includes(name) && !name.startsWith('UBI_'))).toEqual([]);
   });
 });
 
