@@ -65,7 +65,9 @@ describe('E1: the operator default brain stays untouched', () => {
     const prev = { HOME: process.env.HOME, GBRAIN_HOME: process.env.GBRAIN_HOME };
     process.env.HOME = operator;
     process.env.GBRAIN_HOME = operator;
-    const cwdFiles = readdirSync(process.cwd()).sort();
+    const callerCwd = mkdtempSync(join(tmpdir(), 'operator-cwd-'));
+    const prevCwd = process.cwd();
+    process.chdir(callerCwd);
     let synthHome = '';
     try {
       const brain = await SyntheticBrain.create('e1', [{ slug: 'people/ana-example', markdown: '---\ntype: person\ntitle: Ana Example\n---\n\nAna works at Fernway.\n' }]);
@@ -93,8 +95,10 @@ describe('E1: the operator default brain stays untouched', () => {
       }
       expect(existsSync(synthHome)).toBe(false);
       expect(treeDigest(operator)).toBe(before);
-      expect(readdirSync(process.cwd()).sort()).toEqual(cwdFiles);
+      expect(readdirSync(callerCwd)).toEqual([]);
     } finally {
+      process.chdir(prevCwd);
+      rmSync(callerCwd, { recursive: true, force: true });
       process.env.HOME = prev.HOME;
       if (prev.GBRAIN_HOME === undefined) delete process.env.GBRAIN_HOME; else process.env.GBRAIN_HOME = prev.GBRAIN_HOME;
       rmSync(operator, { recursive: true, force: true });

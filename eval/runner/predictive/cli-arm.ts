@@ -183,7 +183,7 @@ export class SyntheticBrain {
       await this.must(['export', '--dir', dir]);
       const pages: Record<string, string> = {};
       const walk = (d: string) => {
-        for (const name of readdirSync(d)) {
+        for (const name of readdirSync(d).sort()) {
           const p = join(d, name);
           if (statSync(p).isDirectory()) walk(p);
           else if (name.endsWith('.md')) pages[relative(dir, p).slice(0, -3)] = readFileSync(p, 'utf8');
