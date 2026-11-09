@@ -69,20 +69,38 @@ describe('rs1 adapter: cells and outcomes the cell never judges', () => {
   const cell = (dir: string, rows: unknown[], answers: unknown[], judgments: unknown[]) =>
     [mem(`${dir}/rows.ndjson`, 'rows', rows), mem(`${dir}/answers.ndjson`, 'answers', answers), mem(`${dir}/judgments.ndjson`, 'judgments', judgments)];
   const files = [
-    ...cell('a', ['q1', 'q2', 'q3', 'q4', 'q5'].map(q => row(q)),
-      [answer('gbrain-a', 'q1', 'reader_error'), answer('gbrain-a', 'q2', 'turn_cap'), answer('gbrain-a', 'q3', 'budget_not_run'), answer('gbrain-a', 'q4', 'ingest_degraded'), answer('gbrain-a', 'q5', 'retrieval_error')],
+    ...cell('a', ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'].map(q => row(q)),
+      [answer('gbrain-a', 'q1', 'reader_error'), answer('gbrain-a', 'q2', 'turn_cap'), answer('gbrain-a', 'q3', 'budget_not_run'), answer('gbrain-a', 'q4', 'ingest_degraded'), answer('gbrain-a', 'q5', 'retrieval_error'),
+        answer('gbrain-a', 'q6', 'does_not_fit'), answer('gbrain-a', 'q7', 'unsupported'), answer('gbrain-a', 'q8', 'judge_error')],
       [judge('gbrain-a-q4', 0)]),
     ...cell('b', [row('q1', { recall_any_at_10: 0, recall_all_at_10: 0 })], [answer('gbrain-b', 'q1', 'scored')], [judge('gbrain-b-q1', 0)]),
   ];
   const out = ADAPTERS.rs1(files, entry('rs1', 'rs1'));
   const labels = new Map(out.failures.map(f => [f.case_id.split('|').slice(0, 2).join('|'), classify(f)]));
 
-  test('an unjudged answer is a failure: errors are harness_error, a turn cap is timeout_latency, only budget_not_run is skipped', () => {
-    expect(out.counts).toMatchObject({ read: 6, mapped: 5, failed: 5, skipped: 1 });
-    expect(out.counts.skipped_reasons).toEqual({ budget_not_run: 1 });
+  test('an unjudged answer follows outcomes.ts: harness errors, a turn cap, gbrain misses, and skips for budget_not_run and does_not_fit', () => {
+    expect(out.counts).toMatchObject({ read: 9, mapped: 7, failed: 7, skipped: 2 });
+    expect(out.counts.skipped_reasons).toEqual({ budget_not_run: 1, 'does_not_fit (not applicable)': 1 });
+    expect(labels.has('gbrain-a|q6')).toBe(false);
     expect(labels.get('gbrain-a|q1')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.error' });
-    expect(labels.get('gbrain-a|q5')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.error' });
+    expect(labels.get('gbrain-a|q8')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.error' });
     expect(labels.get('gbrain-a|q2')).toMatchObject({ cause: 'timeout_latency', rule_id: 'budget.turn_cap' });
+    expect(labels.get('gbrain-a|q5')).toMatchObject({ cause: 'retrieval_miss', rule_id: 'retrieval.retrieve_error' });
+    expect(labels.get('gbrain-a|q5')?.tags).toContain('retrieve_error');
+    expect(labels.get('gbrain-a|q7')).toMatchObject({ cause: 'unclassified', rule_id: 'residual.no_labeller_text' });
+    expect(out.failures.filter(f => ['q5', 'q7'].includes(f.task_id!)).map(f => f.harness)).toEqual([null, null]);
+  });
+
+  test('an unsupported answer carries no labeller text, even on a public source', () => {
+    const id = '1m-1:knowledge_update:0';
+    const pub = ADAPTERS.rs1([
+      ...cell('c', [row(id)], [answer('gbrain-c', id, 'unsupported'), { ...answer('gbrain-c', id, 'scored'), answer_id: 'gbrain-c-r1', replicate: 1 }], [judge('gbrain-c-r1', 0)]),
+      mem('1m-1-probing_questions.json', 'gold', [{ knowledge_update: [{ question: 'Which plan?', answer: 'The second' }] }]),
+    ], entry('rs1', 'rs1', { visibility: 'public' }));
+    const byReplicate = new Map(pub.failures.map(f => [f.case_id.split('|')[3], f]));
+    expect(byReplicate.get('r1')?.text?.question).toBe('Which plan?');
+    expect(byReplicate.get('r0')).toMatchObject({ failed: true, harness: null });
+    expect(byReplicate.get('r0')?.text).toBeUndefined();
   });
 
   test('a failed ingest_degraded answer is judged and counts as operations', () => {

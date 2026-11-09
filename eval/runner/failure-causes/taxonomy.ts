@@ -52,7 +52,7 @@ export const CAUSES = [
     signal: 'no memory tool call in an agent-loop record' },
   { id: 'retrieval_miss', gap_map: 'F1', stage: 'retrieval', gbrain_actionable: true, basis: 'deterministic', title: 'Retrieval miss',
     meaning: 'No gold evidence appeared in any retrieval result.',
-    signal: 'measured gold coverage of the retrieved results is zero' },
+    signal: 'measured gold coverage of the retrieved results is zero, or the retriever threw (tag retrieve_error)' },
   { id: 'partial_evidence', gap_map: 'F7', stage: 'retrieval', gbrain_actionable: true, basis: 'deterministic', title: 'Partial evidence',
     meaning: 'Some but not all of the required gold was retrieved, as in cross-source or multi-hop questions.',
     signal: 'measured gold coverage between zero and all' },
@@ -94,7 +94,8 @@ export const MODEL_CAUSES: readonly Cause[] = CAUSES.filter(c => c.basis !== 'de
 
 /** Tags that qualify a cause without changing it. */
 export const TAGS = ['wrong_stored_fact', 'scorer_artifact', 'untitled_capture_duplicate', 'recovered_tool_error', 'score_zero', 'measured_at_10',
-  'retrieval_or_ranking', 'said_wrong', 'unparseable_answer', 'record_session_not_recorded', 'excused_resend', 'misreport', 'turn_cap'] as const;
+  'retrieval_or_ranking', 'said_wrong', 'unparseable_answer', 'record_session_not_recorded', 'excused_resend', 'misreport', 'turn_cap',
+  'retrieve_error'] as const;
 export type Tag = typeof TAGS[number];
 
 const BY_ID = new Map<string, CauseInfo>(CAUSES.map(c => [c.id, c]));

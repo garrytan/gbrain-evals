@@ -65,7 +65,8 @@ function signals(f: EvalFailure): { hits: Hit[]; unmeasured: Stage[]; tags: Set<
     else if (!f.tool_calls.some(c => c.memory) || f.stop === 'no_tool_call') hit('memory_not_consulted', 'consult.no_memory_call');
   }
 
-  if (g.gold_count === 0) {
+  if (tags.has('retrieve_error')) hit('retrieval_miss', 'retrieval.retrieve_error');
+  else if (g.gold_count === 0) {
     if (/abstention/.test(f.category ?? '')) hit('citation_abstention', 'reasoning.answered_unanswerable');
   } else {
     if (g.retrieved === null && g.delivered === null) unmeasured.push('retrieval', 'ranking');

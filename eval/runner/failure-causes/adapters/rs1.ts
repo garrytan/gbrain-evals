@@ -7,12 +7,17 @@
  * packed out and every offered item is in that top 10; otherwise ranking is
  * unmeasured.
  *
- * An answer whose outcome the cell never judges is still a failed row: a turn
- * cap or context overflow is timeout_latency, a reader, retrieval or harness
- * error is harness_error, and only budget_not_run (never asked) is skipped. An
- * ingest_degraded answer is judged like any other, and when it fails it counts
- * as operations (ingest path). Each directory's rows, answers and judgments
- * files form one cell; gold and context files are shared.
+ * An answer whose outcome the cell never judges follows memory-qa/outcomes.ts.
+ * A turn cap or context overflow is a failed row with cause timeout_latency. A
+ * retrieval_error is gbrain's miss: a failed row tagged retrieve_error, which
+ * classify counts as retrieval_miss. An unsupported answer is a product miss
+ * that stays in the denominator with no labeller text, so it gets a measured
+ * retrieval cause or stays unclassified. budget_not_run (never asked) and
+ * does_not_fit (not applicable) are skipped. A reader, judge or harness error,
+ * and any other outcome, is harness_error. An ingest_degraded answer is judged
+ * like any other, and when it fails it counts as operations (ingest path). Each
+ * directory's rows, answers and judgments files form one cell; gold and context
+ * files are shared.
  */
 import { dirname } from 'node:path';
 import { fileText, ndjson, pointer, type LoadedFile, type SourceEntry } from '../manifest.ts';
@@ -26,6 +31,10 @@ export const RS1_GATING_JUDGE: Record<string, string> = { anthropic: 'openai:gpt
 /** Outcomes q1/cell.ts judges (its JUDGED set). */
 const JUDGED = new Set(['scored', 'ingest_degraded']);
 const BUDGET_STOPS = new Set(['turn_cap', 'context_overflow']);
+/** Unjudged product misses that stay in the denominator with no harness error (outcomes.ts PRODUCT_FAILURES). */
+const PRODUCT_MISSES = new Set(['retrieval_error', 'unsupported']);
+/** Never asked, or not applicable (outcomes.ts NOT_APPLICABLE): skipped, with these reasons. */
+const SKIPPED = new Map([['budget_not_run', 'budget_not_run'], ['does_not_fit', 'does_not_fit (not applicable)']]);
 
 export function rs1ArmRole(cell: string, entry: SourceEntry): ArmRole {
   const named = Object.entries(entry.arm_roles ?? {}).find(([k]) => cell.includes(k));
@@ -74,7 +83,8 @@ export function fromRs1(files: LoadedFile[], entry: SourceEntry): AdapterOutput 
       if (seen.has(key)) { counts.duplicate++; continue; }
       seen.add(key);
       if (entry.models && !entry.models.includes(a.reader)) { skip(counts, 'model not counted from this source'); continue; }
-      if (a.outcome === 'budget_not_run') { skip(counts, 'budget_not_run'); continue; }
+      const skipped = SKIPPED.get(a.outcome);
+      if (skipped) { skip(counts, skipped); continue; }
       const row = rows.get(a.question_id);
       if (!row) { skip(counts, 'no row for the question'); continue; }
       const judged = JUDGED.has(a.outcome);
@@ -85,7 +95,7 @@ export function fromRs1(files: LoadedFile[], entry: SourceEntry): AdapterOutput 
       counts.mapped++;
       const scores = js.map(j => j.score).filter((s): s is number => typeof s === 'number');
       const stop = judged ? null : BUDGET_STOPS.has(a.outcome) ? String(a.outcome) : null;
-      const harnessError = !judged ? (stop ? null : `answer outcome ${a.outcome}`) : !JUDGED.has(row.outcome) ? `row outcome ${row.outcome}`
+      const harnessError = !judged ? (stop || PRODUCT_MISSES.has(a.outcome) ? null : `answer outcome ${a.outcome}`) : !JUDGED.has(row.outcome) ? `row outcome ${row.outcome}`
         : js.some(j => j.parse_ok === false || !JUDGED.has(j.outcome)) ? 'judgment did not parse' : scores.length ? null : 'no numeric judge score';
       const score = scores.length ? scores.reduce((x, y) => x + y, 0) / scores.length : null;
       if (judged && !harnessError && score !== null && score >= 1) continue;
@@ -96,8 +106,9 @@ export function fromRs1(files: LoadedFile[], entry: SourceEntry): AdapterOutput 
       const delivered = retrieved !== null && packed && packed.items_dropped === 0 && packed.items_cut === 0 && packed.items_offered <= 10 ? retrieved : null;
       const tags: Tag[] = ['measured_at_10'];
       if (score === 0) tags.push('score_zero');
+      if (a.outcome === 'retrieval_error') tags.push('retrieve_error');
       const q = gold.get(a.question_id);
-      const text: FailureText | undefined = q && (entry.visibility === 'public' || entry.visibility === 'synthetic')
+      const text: FailureText | undefined = q && a.outcome !== 'unsupported' && (entry.visibility === 'public' || entry.visibility === 'synthetic')
         ? { question: String(q.question ?? ''), expected: q.answer ?? q.ideal_response ?? q.ideal_answer ?? null, answer: String(a.text ?? ''), context: contexts.get(a.context_sha256) ?? null }
         : undefined;
       failures.push({
