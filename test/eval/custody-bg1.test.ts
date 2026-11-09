@@ -520,6 +520,33 @@ describe('mint.sh --dev and render.ts --dev render stage 1\'s public dev worlds'
     }
   }, 240_000);
 
+  // Value: protects=a dev render's model replies never land where Git could pick them up; fails_when=render.ts --dev takes an explicit --cache inside a checkout while its --set sits outside, and real mode creates that cache directory there; why_new=the Opus fix-check on 12256467..806fc1ba, INFO item 5; seam=render.ts --dev, real mode against a dead loopback proxy inside a scratch ledger's window, and --fake; no_claim=the sealed path's cache, which mint.sh puts under its custody --out
+  test('render.ts --dev refuses a --cache inside a checkout before it opens a client or renders, and takes one outside', async () => {
+    const dir = scratch('dev-cache'), set = join(dir, 'set');
+    const inRepo = join(REPO, 'eval', 'data', 'changing-facts-v1', 'dev-cache-must-not-exist');
+    const port = await freePort(0);
+    const ready = (name: string, bg1: Record<string, string>) => { const p = join(dir, name); writeFileSync(p, JSON.stringify({ env: { bg1 } })); return p; };
+    const proxies = { BG1_GEMINI_READY: ready('gemini.json', { GOOGLE_GEMINI_BASE_URL: `http://127.0.0.1:${port}/gemini`, GEMINI_API_KEY: 'mpwp-bg1-dead' }),
+      BG1_ANTHROPIC_READY: ready('anthropic.json', { ANTHROPIC_BASE_URL: `http://127.0.0.1:${port}/anthropic`, ANTHROPIC_API_KEY: 'mpwp-bg1-dead' }) };
+    const ledgerPath = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5, reason: 'dev cache test' });
+    const window = ['--paid-window', 'bg1-test', '--window-cap-usd', '5', '--budget-ledger', ledgerPath, '--budget-run-id', BudgetRun.open({ runner: 'bg1-dev-cache-test', budgetUsd: 2, ledgerPath }).runId];
+    const base = [RENDER, '--dev', 'bg1-dev-01', '--set', set, '--target-tokens', '4000'];
+    try {
+      const real = run('bun', [...base, '--cache', inRepo, ...window], proxies);
+      expect(existsSync(inRepo)).toBe(false);
+      expect(real.code).toBe(2);
+      expect(real.err).toContain('--cache must sit outside any git checkout');
+      const fake = run('bun', [...base, '--fake', '--cache', inRepo]);
+      expect(existsSync(join(set, 'worlds'))).toBe(false);
+      expect(fake.code).toBe(2);
+      expect(fake.err).toContain('--cache must sit outside any git checkout');
+    } finally { rmSync(inRepo, { recursive: true, force: true }); }
+    const ok = run('bun', [...base, '--fake', '--cache', join(dir, 'render-cache')]);
+    expect(ok.code).toBe(0);
+    expect(ok.out).toContain('bg1-render world=bg1-dev-01 status=written ');
+  }, 120_000);
+
   // Value: protects=a dev world is rendered only from the plan and gold committed for it; fails_when=render.ts plans a dev world and spends on it while the committed plan.json or questions.json differs from that plan, or is missing; why_new=BG1 follow-up fix 8; seam=render.ts main with a counting fake Models and a scratch copy of the committed dev worlds; no_claim=the generator's own determinism (changing-facts-gen.ts check)
   test('a committed dev plan or questions file that differs or is missing refuses before any model call', async () => {
     const worlds = join(scratch('dev-tamper'), 'worlds');
