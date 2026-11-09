@@ -136,6 +136,27 @@ beforeAll(async () => {
 }, 60_000);
 afterAll(() => fake?.kill());
 
+describe('re-read: the paid-window guard', () => {
+  // Value: protects=no re-read reaches a real provider outside a granted paid window; fails_when=reread-cell.ts without --keyless-upstream takes the paid branch with the environment's keys, or with a ledger cap above the window's; why_new=GBEV-3 rule 1 (2026-11-08), RS1's counted waves run their particle-1 re-reads through it; seam=none; no_claim=the paid branch itself
+  test('without --keyless-upstream it needs --paid-window and --window-cap-usd, and refuses a ledger cap above the window cap, before any lease or output', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'reread-guard-'));
+    try {
+      const base = (out: string) => ['bun', 'eval/runner/q1/reread-cell.ts', '--cell', 'rs1-dev2.gbrain-defaults.rs1-stable', '--arm', 'p', '--source', join(tmp, 'missing'), '--reader', 'particle:particle-1',
+        '--out', out, '--budget-ledger', join(out, 'ledger.sqlite'), '--run-id', 'guard', '--lease-usd', '1', '--ledger-cap-usd', '2', '--manifest', 'rs1'];
+      const noKeys = { ...process.env, ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '' };
+      const cwd = join(import.meta.dir, '..', '..');
+      const bare = join(tmp, 'bare'), over = join(tmp, 'over');
+      const r = Bun.spawnSync(base(bare), { cwd, env: noKeys, stdout: 'pipe', stderr: 'pipe' });
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain('needs --paid-window <unit> and --window-cap-usd <n>');
+      const o = Bun.spawnSync([...base(over), '--paid-window', 'TEST', '--window-cap-usd', '1'], { cwd, env: noKeys, stdout: 'pipe', stderr: 'pipe' });
+      expect(o.exitCode).toBe(2);
+      expect(o.stderr.toString()).toContain("above the paid window's cap of 1");
+      for (const d of [bare, over]) for (const f of ['upstream.json', 'ledger.sqlite', 'usage.ndjson']) expect(existsSync(join(d, f))).toBe(false);
+    } finally { rmSync(tmp, { recursive: true, force: true }); }
+  });
+});
+
 describe('re-read: verification before any request', () => {
   test('an RS1 re-read is refused while the RS1 manifest is unfilled, before custody or any source is read', () => {
     const rs1 = findCell('rs1.ext-memory-bank.recipe', undefined, 'rs1');

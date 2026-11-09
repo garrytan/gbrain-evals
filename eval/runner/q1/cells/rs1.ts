@@ -68,10 +68,11 @@ const b8 = (frontier: boolean): ArmSpec => ({ id: 'component-b8000', mode: 'pack
 
 /** No write-to-queryable probes on any RS1 cell. */
 const noProbes = (set: SetId) => ({ sample: 0, seed: `rs1-probes-${set.toLowerCase()}`, conversations: 0 });
+/** Counted cells size their leases at the pinned judges' output cap; stage 1 ran before the judges were pinned and keeps its sizing. */
 const cell = (set: SetId, block: RS1BlockId, system: string, configuration: string, arms: ArmSpec[]) => withHours(withLease(makeCell(set, system, configuration, arms, {
   block, probes: noProbes(set), ...(set === 'RS1' ? { keptUnits: RS1_KEPT_UNITS } : {}),
   ...(system === 'gbrain-defaults' ? { launchEnv: { GBRAIN_F6_EXTRACT_CAP_USD: String(extractionCapUsd(set)) } } : {}),
-})));
+}), block !== 'RS1-S1'));
 const rows = (set: SetId, block: RS1BlockId) => [
   cell(set, block, 'gbrain-defaults', 'rs1-stable', [p()]),
   cell(set, block, 'ext-memory-bank', 'recipe', [b8(true)]),

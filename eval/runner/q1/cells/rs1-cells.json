@@ -430,8 +430,8 @@
         }
       },
       "lease": {
-        "usd": 34.09,
-        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.223, judge openai:gpt-6-astra)"
+        "usd": 34.69,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra)"
       }
     },
     {
@@ -512,8 +512,8 @@
         }
       },
       "lease": {
-        "usd": 37.83,
-        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.223, judge openai:gpt-6-astra)"
+        "usd": 38.42,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra)"
       }
     },
     {
@@ -594,8 +594,8 @@
         }
       },
       "lease": {
-        "usd": 44.64,
-        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.223, judge openai:gpt-6-astra)"
+        "usd": 45.23,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra)"
       }
     },
     {

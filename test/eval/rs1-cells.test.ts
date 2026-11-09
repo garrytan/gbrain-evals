@@ -5,8 +5,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import { keptUnit, requiredJudges, runConfigIdentity, runConfigText } from '../../eval/runner/q1/cell.ts';
-import { ALL_SETS, buildManifest, definitionProblems, frontierJudgeOf, frontierJudgesFor, ingestRate, MANIFEST_PATH, manifestText, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
-import { buildF6Manifest, F6_MANIFEST_PATH, f6ManifestText } from '../../eval/runner/q1/cells/f6.ts';
+import { ALL_SETS, buildManifest, definitionProblems, F6_ASSUMPTIONS, priceOf, frontierJudgeOf, frontierJudgesFor, ingestRate, MANIFEST_PATH, manifestText, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { buildF6Manifest, F6_MANIFEST_PATH, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
+import { CHAT_PRICE_OVERRIDES, reservationUsd } from '../../eval/runner/budget-ledger.ts';
 import { buildRS1Manifest, generateRS1Cells, loadRS1Manifest, OPUS, PARTICLE, RS1_JUDGE_BY_READER, rs1JudgeOf, RS1_MANIFEST_PATH, rs1ManifestText, SOL, stage1OverCap } from '../../eval/runner/q1/cells/rs1.ts';
 import type { Rs1Manifest } from '../../eval/runner/memory-qa/corpus.ts';
 
@@ -106,6 +107,17 @@ describe('judges', () => {
     for (const a of arms) expect(a.frontier!.judge_by_reader).toEqual(RS1_JUDGE_BY_READER);
     expect(RS1_JUDGE_BY_READER).toEqual({ [OPUS]: 'openai:gpt-6-astra', [SOL]: 'anthropic:claude-opus-5-5', [PARTICLE]: 'anthropic:claude-opus-5-5' });
     expect(m.frontier_judges).toEqual(RS1_JUDGE_BY_READER);
+  });
+
+  // Value: protects=a unit's lease holds the reservation the metering proxy really makes for a pinned judge; fails_when=peakReservationUsd prices a pinned frontier judge's output at the default 2,048-token judge cap while the proxy reserves the pinned 8,000; why_new=scoped-review open item 1 (GST-1886 handoff, 2026-11-08); seam=none; no_claim=the proxy's own reservation
+  test('a pinned frontier judge enters the peak reservation at its pinned output cap, as the proxy reserves it', () => {
+    const pinned = m.cells.filter(c => c.arms.some(a => a.frontier?.settings));
+    expect(pinned.length).toBeGreaterThan(0);
+    for (const c of pinned) {
+      const want = Math.max(...c.arms.flatMap(a => (a.frontier?.settings ? a.frontier.judges : []).map(j => reservationUsd({ provider: j.split(':')[0], model: j.split(':')[1], kind: 'chat', ...(CHAT_PRICE_OVERRIDES[j] ?? priceOf(j)), inputTokens: F6_ASSUMPTIONS.lease.judge_bytes + 64, maxOutputTokens: a.frontier!.settings!.max_tokens }))));
+      expect(peakReservationUsd(c).usd).toBeGreaterThanOrEqual(Math.round(want * 10_000) / 10_000);
+    }
+    for (const c of m.smoke_cells) expect(c.lease!.basis).toContain(`($${peakReservationUsd(c, false).usd}, `);
   });
 
   test('a per-reader plan without the pinned judge settings is refused', () => {

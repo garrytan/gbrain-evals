@@ -5,7 +5,11 @@
  * arm with a per-reader frontier plan (RS1), the new reader's frontier judge. Nothing is retrieved or packed again.
  *
  *   bun eval/runner/q1/reread-cell.ts --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader particle:particle-1
- *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] [--keyless-upstream <url>]
+ *     --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1]
+ *     (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)
+ *
+ * A re-read that would spend real keys needs the granted paid window's unit and cap, and its --ledger-cap-usd never
+ * exceeds that cap; without them, or without --keyless-upstream, it exits 2 before any lease or output.
  *
  * Each arm and reader gets its own --out (verify.json, the lease usage log and the keyless/paid marker sit at its root),
  * and each invocation its own --run-id: a lease closes when the run ends and never reopens. `--ledger-cap-usd` is the
@@ -371,12 +375,16 @@ if (import.meta.main) {
   const sources = argv.flatMap((a, i) => (a === '--source' && argv[i + 1] ? [argv[i + 1]] : []));
   const [cellArg, armArg, reader, outArg, ledger, runId, leaseUsd, ledgerCap] = [one('--cell'), one('--arm'), one('--reader'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
   if (!cellArg || !armArg || !sources.length || !reader || !outArg || !ledger || !runId || !(leaseUsd > 0) || !(ledgerCap > 0)) {
-    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] [--keyless-upstream <url>]`);
+    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> --source <out>/runs/<cell id>... --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--manifest q1|f6|rs1] (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)`);
     process.exit(2);
   }
   let keyless: string | null;
   try { keyless = keylessUpstreamArg(argv); }
   catch (e) { console.error((e as Error).message); process.exit(2); }
+  const windowCap = Number(one('--window-cap-usd'));
+  if (!keyless && (!one('--paid-window') || !(windowCap > 0))) { console.error('a re-read without --keyless-upstream spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n> from the granted paid window'); process.exit(2); }
+  if (!keyless && ledgerCap > windowCap) { console.error(`--ledger-cap-usd ${ledgerCap} is above the paid window's cap of ${windowCap}; the ledger cap never exceeds the window`); process.exit(2); }
+  if (keyless) for (const k of ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GEMINI_API_KEY', 'PARTICLE_API_KEY', 'VOYAGE_API_KEY']) delete process.env[k];
   const manifest = one('--manifest') as CellManifestId | undefined;
   try {
     const def = findCell(cellArg, undefined, manifest);

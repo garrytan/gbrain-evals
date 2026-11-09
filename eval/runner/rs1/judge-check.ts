@@ -5,7 +5,7 @@
  *
  *   bun eval/runner/rs1/judge-check.ts plan   --stage1 <stage 1 out dir>... --out <dir> [--seed <n>]
  *   bun eval/runner/rs1/judge-check.ts run    --stage1 <dir>... --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n>
- *                                             --ledger-cap-usd <n> [--seed <n>] [--keyless-upstream <url>]
+ *                                             --ledger-cap-usd <n> [--seed <n>] (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)
  *   bun eval/runner/rs1/judge-check.ts report --out <dir> [--publish <dir>]
  *
  *   Pool      (a) real answers: stage 1's scored answers (set RS1-dev2), stratified by row, reader and stage 1's bridge
@@ -33,7 +33,13 @@
  *             particle-1 option (Astra for particle-1 rows) is GBEV-3's to choose, never applied here.
  *   Reported  for every judge: catch rate on bad items, false-fail rate on good items (construction labels, else the
  *             labelled set's), kappa against the labelled set, overall and by class, with 95% intervals (Wilson for
- *             rates, the large-sample kappa SE); gpt-4.1-mini's numbers are descriptive. Spend from the usage log.
+ *             rates, the large-sample kappa SE); gpt-4.1-mini's numbers are descriptive. Beside gate (i), and not a gate:
+ *             the Astra-Opus kappa on the cross-family items only (no real answer read by either judge's own family),
+ *             and each gating view's labelled real items (the readers the judge grades in counted runs; 40 wanted).
+ *             Spend from the usage log; the published files drop its dollar fields (R79). `report` exits 0 only for
+ *             a paid check whose gates pass: a keyless rehearsal or an --out with no marker exits 4 (JUDGE_CHECK_NOT_PAID).
+ *   Inputs    every --stage1 root must be paid: an upstream.json with keyless false (a re-read) or a campaign lease's
+ *             lease-summary.json (campaign cells have no keyless switch); anything else is refused.
  */
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -47,7 +53,7 @@ import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { claimOut, keylessUpstreamArg } from '../q1/calibration-cell.ts';
 import { metering, onSlot, type MeterLine } from '../q1/cell.ts';
 import { PER_READER_JUDGE_SETTINGS } from '../q1/cells/definitions.ts';
-import { loadRS1Manifest } from '../q1/cells/rs1.ts';
+import { loadRS1Manifest, rs1JudgeOf } from '../q1/cells/rs1.ts';
 import { openRereadLease } from '../q1/reread-cell.ts';
 import { seededRandom } from '../stats/paired.ts';
 
@@ -62,6 +68,8 @@ export const TRUNCATION_GATE = 0.01;
 export const MIN_LABELLED = 40;
 export const MIN_PER_CLASS = 15;
 export const SEED = 20261108;
+/** Provider keys a keyless run, plan or report removes from its own environment, so nothing in it can reach a real provider. */
+export const PROVIDER_KEYS = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GEMINI_API_KEY', 'PARTICLE_API_KEY', 'VOYAGE_API_KEY'];
 export const SIZES = { real: 80, gold: 40, corrupt: 40 } as const;
 /** BEAM-1M's public dev conversations (eval/decisions/splits/beam-1m.json); none is sealed. */
 export const DEV_CONVERSATIONS = ['1m-16', '1m-2', '1m-20', '1m-21', '1m-22', '1m-24', '1m-25', '1m-28', '1m-3', '1m-30', '1m-32'];
@@ -278,17 +286,25 @@ export function gradeOf(j: Pick<JudgmentRecord, 'outcome' | 'detail' | 'calls' |
   return { scores: j.outcome === 'scored' && Array.isArray(d.rubric_scores) ? d.rubric_scores : null, truncated: d.truncated === true, cache_hits: j.cache_hits ?? 0, calls: j.calls ?? 0, versions: j.judge_versions ?? [] };
 }
 
-interface Unit { id: string; class: ItemClass; label: boolean | null; scores: Record<string, number | null> }
+interface Unit { id: string; class: ItemClass; reader: string | null; label: boolean | null; scores: Record<string, number | null> }
 const r4 = (x: number | null) => (x === null ? null : Math.round(x * 1e4) / 1e4);
 const r4p = (p: [number, number] | null): [number, number] | null => (p ? [r4(p[0])!, r4(p[1])!] : null);
 const CLASSES = ['real', 'gold', 'corrupt'] as const;
 
 export function analyzeCheck(pool: readonly Candidate[], grades: Grades) {
-  const units: Unit[] = pool.flatMap(c => c.labels.map((label, i) => ({ id: `${c.id}#${i}`, class: c.class, label, scores: Object.fromEntries(JUDGES.map(j => [j, grades[j]?.[c.id]?.scores?.[i] ?? null])) })));
+  const units: Unit[] = pool.flatMap(c => c.labels.map((label, i) => ({ id: `${c.id}#${i}`, class: c.class, reader: c.stratum?.split('|')[1] ?? null, label, scores: Object.fromEntries(JUDGES.map(j => [j, grades[j]?.[c.id]?.scores?.[i] ?? null])) })));
   const pass = (x: number) => x >= 1;
   const both = units.filter(u => u.scores[ASTRA] !== null && u.scores[OPUS_JUDGE] !== null);
   const inter = cohenKappa(both.map(u => pass(u.scores[ASTRA]!)), both.map(u => pass(u.scores[OPUS_JUDGE]!)));
+  const family = (model: string) => model.split(':')[0];
+  const crossFamily = both.filter(u => !u.reader || GATING_JUDGES.every(j => family(j) !== family(u.reader!)));
+  const interCross = cohenKappa(crossFamily.map(u => pass(u.scores[ASTRA]!)), crossFamily.map(u => pass(u.scores[OPUS_JUDGE]!)));
   const labelled = both.filter(u => pass(u.scores[ASTRA]!) === pass(u.scores[OPUS_JUDGE]!)).map(u => ({ ...u, agreed: pass(u.scores[ASTRA]!) }));
+  const views = GATING_JUDGES.map(judge => {
+    const mine = (u: Unit) => u.class === 'real' && !!u.reader && rs1JudgeOf(u.reader) === judge;
+    const lab = labelled.filter(mine);
+    return { judge, readers: [...new Set(units.filter(mine).map(u => u.reader!))].sort(), items: units.filter(mine).length, labelled: lab.length, pass: lab.filter(u => u.agreed).length, fail: lab.filter(u => !u.agreed).length };
+  });
   const agreed = new Map(labelled.map(u => [u.id, u.agreed]));
   const mix = Object.fromEntries(CLASSES.map(c => [c, labelled.filter(u => u.class === c).length])) as Record<ItemClass, number>;
   const truth = (u: Unit) => u.label ?? agreed.get(u.id) ?? null;
@@ -332,8 +348,10 @@ export function analyzeCheck(pool: readonly Candidate[], grades: Grades) {
   return {
     schema: JUDGE_CHECK_SCHEMA, judges: { gating: GATING_JUDGES, descriptive: [BRIDGE] }, settings: PER_READER_JUDGE_SETTINGS, unit: 'rubric-item judgment; pass = 1.0, fail below',
     pool: { candidates: pool.length, by_class: Object.fromEntries(CLASSES.map(c => [c, pool.filter(x => x.class === c).length])), corruption_kinds: Object.fromEntries(KINDS.map(k => [k, pool.filter(c => c.kind === k).length])), items: units.length },
-    inter_judge: { kappa: r4(inter.kappa), ci95: r4p(inter.ci95), items: inter.n, agreement: r4(inter.po), weighted_kappa: r4(weightedKappa(both.map(u => u.scores[ASTRA]!), both.map(u => u.scores[OPUS_JUDGE]!))) },
+    inter_judge: { kappa: r4(inter.kappa), ci95: r4p(inter.ci95), items: inter.n, agreement: r4(inter.po), weighted_kappa: r4(weightedKappa(both.map(u => u.scores[ASTRA]!), both.map(u => u.scores[OPUS_JUDGE]!))),
+      cross_family: { kappa: r4(interCross.kappa), ci95: r4p(interCross.ci95), items: interCross.n, agreement: r4(interCross.po), note: 'reported, not a gate: gate (i) without the real answers either gating judge\'s own family read' } },
     labelled_set: { items: labelled.length, by_class: mix, pass: labelled.filter(u => u.agreed).length, fail: labelled.filter(u => !u.agreed).length },
+    gating_views: views.map(v => ({ ...v, wanted: MIN_LABELLED, short: v.labelled < MIN_LABELLED })),
     per_judge: judges, gates, stop: gates.some(g => !g.pass), shortfalls,
   };
 }
@@ -346,6 +364,7 @@ export function checkMarkdown(r: CheckReport, spend: unknown = null): string {
   const lines = ['# RS1 judge check', '', r.stop ? '**STOP: a gate failed. Wave A waits, and every number goes to GBEV-3.**' : '**Every gate passed.**', ''];
   lines.push(`Pool: ${r.pool.candidates} candidates (${r.pool.by_class.real} real, ${r.pool.by_class.gold} gold, ${r.pool.by_class.corrupt} corrupted; kinds ${Object.entries(r.pool.corruption_kinds).map(([k, n]) => `${k} ${n}`).join(', ')}), ${r.pool.items} rubric items. Gating judges at ${JSON.stringify(r.settings)}; gpt-4.1-mini at its protocol settings (descriptive).`, '');
   lines.push(`Inter-judge kappa (Astra vs Opus): ${k3(r.inter_judge.kappa)} (95% ${iv(r.inter_judge.ci95, k3)}) over ${r.inter_judge.items} items; weighted ${k3(r.inter_judge.weighted_kappa)}. Labelled set: ${r.labelled_set.items} items (${r.labelled_set.by_class.real} real, ${r.labelled_set.by_class.gold} gold, ${r.labelled_set.by_class.corrupt} corrupted).`, '');
+  lines.push(`Cross-family items only (reported, not a gate): Astra-Opus kappa ${k3(r.inter_judge.cross_family.kappa)} (95% ${iv(r.inter_judge.cross_family.ci95, k3)}) over ${r.inter_judge.cross_family.items} items. Labelled real items per gating view (${MIN_LABELLED} wanted): ${r.gating_views.map(v => `${v.judge} (${v.readers.join(', ') || 'no'} answers) ${v.labelled} of ${v.items}${v.short ? ', SHORT' : ''}`).join('; ')}.`, '');
   lines.push('| Gate | Value | Line | Pass |', '|---|---:|---:|---|', ...r.gates.map(g => `| ${g.gate} | ${g.value ?? 'n/a'} | ${g.line} | ${g.pass ? 'yes' : 'no'} |`), '');
   if (r.shortfalls.length) lines.push(`Shortfalls for GBEV-3: ${r.shortfalls.join('; ')}.`, '');
   lines.push('| Judge | Role | Class | Items | Catch rate (95%) | False-fail rate (95%) | Kappa vs labelled set (95%) |', '|---|---|---|---:|---|---|---|');
@@ -359,6 +378,14 @@ export function checkMarkdown(r: CheckReport, spend: unknown = null): string {
 }
 
 // ─── Loading, grading and the command line ───────────────────────────
+
+/** Why a --stage1 root is not a paid stage 1 output, or null: a re-read's upstream.json must say keyless false; a campaign lease (no keyless switch) carries lease-summary.json. */
+export function stage1Unpaid(root: string): string | null {
+  const marker = join(root, 'upstream.json');
+  const keyless = existsSync(marker) ? (JSON.parse(readFileSync(marker, 'utf8')) as { keyless?: unknown }).keyless : undefined;
+  if (keyless === false || (keyless === undefined && existsSync(join(root, 'lease-summary.json')))) return null;
+  return keyless === true ? `${root} holds a keyless run (upstream.json)` : `${root} has neither an upstream.json marking a paid run nor a campaign lease-summary.json`;
+}
 
 /** Stage 1's scored, replicate-0 answers in each root's cells/ (all four rows and their re-reads), with the bridge score for strata. */
 export function loadRealAnswers(roots: readonly string[], instrument: string): RealAnswer[] {
@@ -395,9 +422,14 @@ export async function gradePool(pool: readonly Candidate[], questions: ReadonlyM
   return gradesFrom(readGraded(file));
 }
 
-/** The published files: judge-check.json and judge-check.md, with ids and hashes only (no answer, gold or corruption text). */
-export function publish(dir: string, report: CheckReport, pool: readonly Candidate[], exclusions: readonly Exclusion[], spend: unknown) {
+/** A copy without dollar fields (R79: the public repo never shows what a finding cost); the full spend goes only to stdout. */
+export const withoutDollars = (v: unknown): unknown => Array.isArray(v) ? v.map(withoutDollars)
+  : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).filter(([k]) => !/usd/i.test(k)).map(([k, x]) => [k, withoutDollars(x)])) : v;
+
+/** The published files: judge-check.json and judge-check.md, with ids and hashes only (no answer, gold or corruption text) and no dollar figures. */
+export function publish(dir: string, report: CheckReport, pool: readonly Candidate[], exclusions: readonly Exclusion[], fullSpend: unknown) {
   mkdirSync(dir, { recursive: true });
+  const spend = withoutDollars(fullSpend);
   const candidates = pool.map(c => ({ id: c.id, class: c.class, question_id: c.question_id, category: c.category, text_sha256: c.text_sha256, labels: c.labels, ...(c.kind ? { kind: c.kind, target: c.target } : {}), ...(c.stratum ? { stratum: c.stratum } : {}) }));
   writeFileSync(join(dir, 'judge-check.json'), JSON.stringify({ ...report, spend, candidates, gold_screen_exclusions: exclusions }, null, 2) + '\n');
   writeFileSync(join(dir, 'judge-check.md'), checkMarkdown(report, spend));
@@ -409,12 +441,18 @@ if (import.meta.main) {
   const stage1 = argv.flatMap((a, i) => (a === '--stage1' && argv[i + 1] ? [resolve(argv[i + 1])] : []));
   const out = one('--out') ? resolve(one('--out')!) : null;
   const seed = Number(one('--seed') ?? SEED);
-  if (!out || !['plan', 'run', 'report'].includes(mode ?? '') || (mode !== 'report' && !stage1.length)) { console.error('usage: bun eval/runner/rs1/judge-check.ts plan|run --stage1 <dir>... --out <dir> [--seed <n>] [run: --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--keyless-upstream <url>]]; report --out <dir> [--publish <dir>]'); process.exit(2); }
+  if (!out || !['plan', 'run', 'report'].includes(mode ?? '') || (mode !== 'report' && !stage1.length)) { console.error('usage: bun eval/runner/rs1/judge-check.ts plan|run --stage1 <dir>... --out <dir> [--seed <n>] [run: --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)]; report --out <dir> [--publish <dir>]'); process.exit(2); }
   mkdirSync(out, { recursive: true });
   const [ledger, runId, leaseUsd, cap] = [one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd'))];
   const keyless = mode === 'run' ? keylessUpstreamArg(argv) : null;
+  if (keyless || mode !== 'run') for (const k of PROVIDER_KEYS) delete process.env[k];
+  const unpaid = mode === 'report' ? [] : stage1.flatMap(r => stage1Unpaid(r) ?? []);
+  if (unpaid.length) { console.error(`--stage1 takes paid stage 1 outputs only: ${unpaid.join('; ')}`); process.exit(2); }
   if (mode === 'run') {
     if (!ledger || !runId || !(leaseUsd > 0) || !(cap > 0)) { console.error('run needs --budget-ledger, --run-id, --lease-usd and --ledger-cap-usd'); process.exit(2); }
+    const windowCap = Number(one('--window-cap-usd'));
+    if (!keyless && (!one('--paid-window') || !(windowCap > 0))) { console.error('a run without --keyless-upstream spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n> from the granted paid window'); process.exit(2); }
+    if (!keyless && cap > windowCap) { console.error(`--ledger-cap-usd ${cap} is above the paid window's cap of ${windowCap}; the ledger cap never exceeds the window`); process.exit(2); }
     if (!existsSync(join(out, 'upstream.json')) && ['judgments.ndjson', 'cache'].some(f => existsSync(join(out, f)))) {
       console.error(`${out} holds judgments or a cache but no keyless/paid marker, so it may hold a keyless rehearsal; give this run a fresh --out`); process.exit(2);
     }
@@ -451,4 +489,5 @@ if (import.meta.main) {
   publish(one('--publish') ? resolve(one('--publish')!) : out, report, saved.pool, saved.exclusions, spend);
   process.stdout.write(checkMarkdown(report, spend));
   if (report.stop) { process.stderr.write(`JUDGE_CHECK_STOP: ${report.gates.filter(g => !g.pass).map(g => `${g.gate} ${g.value ?? 'n/a'} (line ${g.line})`).join('; ')}; wave A waits and every number goes to GBEV-3\n`); process.exit(3); }
+  if (spend.keyless !== false) { process.stderr.write(`JUDGE_CHECK_NOT_PAID: ${spend.keyless ? 'a keyless rehearsal' : 'no keyless/paid marker in --out'}; only a paid check's report passes\n`); process.exit(4); }
 }

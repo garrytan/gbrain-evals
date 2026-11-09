@@ -27,6 +27,8 @@
  *             claude-opus-5-5 for gpt-6.1-sol and particle-1); the descriptive bridge view is the canonical instrument's.
  *   Judges    a gating judgment whose judge shares the reader's family or is not the reader's mapped judge, that does not
  *             record the gating view, that was not sent at the pinned settings, or that records no model version, refuses.
+ *             Each gating judge's returned model versions are reported; a judge that returned more than one is flagged
+ *             as a mixed-snapshot gating view, at the top of the report (a flag, not a refusal or a verdict change).
  *   Gate      a system row passes the delivered-context gate when its mean fill rate (rows.ndjson fill_rate, a failed
  *             retrieval's null counted as 0) is at least 0.90; a row that fails makes every comparison it enters
  *             descriptive (no verdict).
@@ -94,6 +96,8 @@ export interface VerdictInput {
   /** Each system row's mean fill rate (null when no row recorded one). */
   fill: Record<Row, number | null>;
   costs: CostRow[];
+  /** Each gating judge's model versions, as the provider returned them, across every gating judgment read. */
+  snapshots?: Record<string, string[]>;
 }
 
 const ROWS: Row[] = ['gbrain', ...SERVERS];
@@ -209,6 +213,7 @@ export function analyze(input: VerdictInput) {
     worst_case: { verdict: worst.verdict, tests: roundTests(worst), disagrees },
     bootstrap: { method: `restricted wild cluster bootstrap-t, Webb weights, ${DRAWS} draws, seed ${SEED}, one-sided 95% lower bound`, tests: boot },
     paired, gate, drops: dropCounts, per_reader: perReader, per_ability: perAbility, floor, table,
+    judge_snapshots: Object.entries(input.snapshots ?? {}).map(([judge, versions]) => ({ judge, versions, mixed: versions.length > 1 })),
   };
 }
 const roundTests = (d: Decision) => d.tests.map(t => ({ key: t.key, gating: t.gating, n: t.n, estimate: r4(t.mean), sd: r4(t.sd), lower: r4(t.lower), pass: t.pass, valid: t.valid, invalid_reasons: t.invalid_reasons }));
@@ -294,6 +299,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
   const planned = new Map<string, string>();
   const fill: Record<Row, number | null> = { gbrain: null, 'memory-bank': null, 'extract-first': null };
   const costs: CostRow[] = [];
+  const snapshots = new Map<string, Set<string>>();
   for (const def of defs) {
     const role = ROLES[def.system] ?? refuse(`cell ${def.id} has no RS1 role (system ${def.system})`);
     const armCell = def.arms[0].cell_id;
@@ -311,6 +317,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
       const readerOf = new Map(ans.map(a => [a.answer_id, a.reader]));
       const problems = records.flatMap(j => gatingProblems(j, readerOf.get(j.answer_id), instrument.id));
       if (problems.length) refuse(`${dir}: ${problems.slice(0, 3).join('; ')}${problems.length > 3 ? ` (and ${problems.length - 3} more)` : ''}`);
+      for (const j of records.filter(r => r.view === 'gating')) for (const v of j.judge_versions ?? []) snapshots.set(j.judge, new Set([...(snapshots.get(j.judge) ?? []), v]));
       const score = new Map(records.map(j => [`${j.answer_id}|${j.instrument_id}`, j.score]));
       for (const a of ans.filter(x => x.replicate === 0 && READERS.includes(x.reader))) {
         byQuestion.set(a.question_id, { ...(byQuestion.get(a.question_id) ?? {}), [a.reader]: readerValue(a, score, instrument.id, role === 'floor') });
@@ -393,7 +400,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions): VerdictInput
     return [r, 'drop' in v ? v : v.bridge ?? { drop: 'judgment_missing:bridge' }];
   })) }));
   if (wave) { const seen = new Set(questions.map(q => q.conversation)); const absent = [...wave].filter(c => !seen.has(c)); if (absent.length) refuse(`the pilot needs every wave A conversation; ${absent.join(', ')} has no rows`); }
-  return { set: o.set, questions, floor, fill, costs };
+  return { set: o.set, questions, floor, fill, costs, snapshots: Object.fromEntries([...snapshots].sort(([a], [b]) => (a < b ? -1 : 1)).map(([j, vs]) => [j, [...vs].sort()])) };
 }
 
 function readRecordsLoose(path: string): Array<Record<string, any>> {
@@ -436,6 +443,8 @@ const fmt = (x: number | null, d = 2) => (x === null ? 'n/a' : x.toFixed(d));
 export function markdown(a: Analysis): string {
   const lines = [`# RS1 verdict (set ${a.set})`, ''];
   if (a.worst_case.disagrees) lines.push(`**The worst-case sensitivity disagrees with the verdict:** ${a.worst_case.verdict} against ${a.verdict}.`, '');
+  for (const s of a.judge_snapshots.filter(x => x.mixed)) lines.push(`**Mixed judge snapshots in the gating view:** ${s.judge} returned ${s.versions.join(', ')}.`, '');
+  if (a.judge_snapshots.length) lines.push(`Gating judge versions: ${a.judge_snapshots.map(s => `${s.judge} ${s.versions.join(', ') || 'none'}`).join('; ')}.`, '');
   lines.push(`Verdict: **${a.verdict}** (both gating one-sided 95% t lower bounds, Astra/Opus view, above -${a.margin}; the bridge view is descriptive). ${a.conversations} conversations, ${a.common_questions} of ${a.planned_questions} planned questions in the common set; the bridge view has ${a.bridge.common_questions} questions over ${a.bridge.conversations} conversations.`, '');
   lines.push('| Test | Role | n | Estimate | SD | Lower bound | Pass | Bootstrap lower | Worst-case lower | Validity |', '|---|---|---:|---:|---:|---:|---|---:|---:|---|');
   for (const t of a.tests) {

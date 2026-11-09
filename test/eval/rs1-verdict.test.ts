@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { RS1_MANIFEST } from '../../eval/runner/memory-qa/corpus.ts';
@@ -126,6 +126,26 @@ describe('verdict.ts reader values', () => {
 });
 
 describe('verdict.ts gating judgments', () => {
+  // Value: protects=a gating view graded by two snapshots of one judge is visible; fails_when=a provider rolls a judge's snapshot mid-campaign and the verdict reads both without a word; why_new=eng review F10 / scoped-review open item 7 (GST-1886), f5; seam=none; no_claim=a refusal (it flags and reports)
+  test('each gating judge\'s returned versions are reported, and a judge that returned two snapshots is flagged at the top of the report', () => {
+    const clean = analyze(load(build('snap-clean')));
+    expect(clean.judge_snapshots).toEqual([
+      { judge: 'anthropic:claude-opus-5-5', versions: ['claude-opus-5-5-2026-10-01'], mixed: false },
+      { judge: 'openai:gpt-6-astra', versions: ['gpt-6-astra-2026-10-01'], mixed: false },
+    ]);
+    expect(markdown(clean)).not.toContain('Mixed judge snapshots');
+    const b = build('snap-mixed');
+    const file = join(b.root, 'gbrain-defaults-u0', 'cells', cellOf('gbrain-defaults').arms[0].cell_id, 'judgments.ndjson');
+    const recs = readFileSync(file, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    recs.find(j => j.judge === 'openai:gpt-6-astra').judge_versions = ['gpt-6-astra-2026-11-05'];
+    writeFileSync(file, nd(recs));
+    const mixed = analyze(load(b));
+    expect(mixed.judge_snapshots.find(s => s.judge === 'openai:gpt-6-astra')).toEqual({ judge: 'openai:gpt-6-astra', versions: ['gpt-6-astra-2026-10-01', 'gpt-6-astra-2026-11-05'], mixed: true });
+    expect(mixed.judge_snapshots.find(s => s.judge === 'anthropic:claude-opus-5-5')!.mixed).toBe(false);
+    expect(mixed.verdict).toBe(clean.verdict);
+    expect(markdown(mixed)).toContain('**Mixed judge snapshots in the gating view:** openai:gpt-6-astra returned gpt-6-astra-2026-10-01, gpt-6-astra-2026-11-05.');
+  });
+
   const good = { answer_id: HEX, instrument_id: `${INSTRUMENT}@openai:gpt-6-astra`, judge: 'openai:gpt-6-astra', outcome: 'scored' as const, view: 'gating' as const, settings: { effort: 'medium', max_tokens: 8000 }, judge_versions: ['gpt-6-astra-2026-10-01'] };
   test('a gating judgment by the mapped judge, in the gating view, at the pinned settings, with a model version, counts', () => {
     expect(gatingProblems(good, OPUS, INSTRUMENT)).toEqual([]);

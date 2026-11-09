@@ -12,7 +12,7 @@ import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import type { ChatLike, ChatOptions, ChatResultV2 } from '../../eval/runner/memory-qa/qa-v2.ts';
 import {
-  ABSTAIN_TEXT, analyzeCheck, ASTRA, BRIDGE, buildPool, cohenKappa, corrupt, covers, gradePool, INVENTED_TEXT, OPUS_JUDGE, screen, weightedKappa, wilson, WRONG_VALUE,
+  ABSTAIN_TEXT, analyzeCheck, ASTRA, BRIDGE, buildPool, cohenKappa, corrupt, covers, gradePool, INVENTED_TEXT, OPUS_JUDGE, screen, stage1Unpaid, weightedKappa, wilson, WRONG_VALUE,
   type Candidate, type Grade, type Grades, type RealAnswer,
 } from '../../eval/runner/rs1/judge-check.ts';
 
@@ -197,6 +197,22 @@ describe('the analysis, the gates and the stop rule', () => {
     expect(r.stop).toBe(true);
   });
 
+  // Value: protects=gate (i) can be read without the real answers a gating judge's own family wrote, and each gating view's labelled count is visible; fails_when=the report gives only the all-items kappa, so Opus grading Opus-reader answers and Astra grading Sol-reader answers can carry gate (i), and a view short of 40 labels goes unseen; why_new=scoped-review open item 5 and GBEV-3's per-view label rule (2026-11-08), f6; seam=none; no_claim=a new gate
+  test('beside gate (i), the cross-family kappa leaves out real answers read by either gating judge\'s family, and each gating view counts its own labelled real items', () => {
+    const { pool, grades } = setup();
+    const readers = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1', 'particle:particle-1'];
+    pool.filter(c => c.class === 'real').forEach((c, i) => { c.stratum = `gbrain-defaults|${readers[i % 4]}|pass`; });
+    for (const c of pool.filter(x => x.class === 'real' && !x.stratum!.includes('particle'))) grades[OPUS_JUDGE][c.id] = g(grades[ASTRA][c.id].scores![0] ? 0 : 1);
+    const r = analyzeCheck(pool, grades);
+    expect(r.inter_judge).toMatchObject({ kappa: 0.6667, items: 60 });
+    expect(r.inter_judge.cross_family).toMatchObject({ kappa: 1, items: 50 });
+    expect(r.gating_views).toEqual([
+      { judge: ASTRA, readers: ['anthropic:claude-opus-5-5'], items: 5, labelled: 0, pass: 0, fail: 0, wanted: 40, short: true },
+      { judge: OPUS_JUDGE, readers: ['openai:gpt-6.1-sol', 'particle:particle-1'], items: 15, labelled: 10, pass: 5, fail: 5, wanted: 40, short: true },
+    ]);
+    expect(r.gates).toHaveLength(5);
+  });
+
   test('truncation is a judge error; above 1% of a gating judge\'s judgments it stops, at 1% it does not', () => {
     for (const [cut, stop] of [[2, false], [3, true]] as const) {
       const pool = [...Array.from({ length: 100 }, (_, i) => cand('gold', i, true)), ...Array.from({ length: 100 }, (_, i) => cand('corrupt', i, false))];
@@ -255,7 +271,8 @@ describe('grading the pool', () => {
 });
 
 describe('the command line', () => {
-  const run = (args: string[]) => Bun.spawnSync(['bun', 'eval/runner/rs1/judge-check.ts', ...args], { cwd: join(import.meta.dir, '..', '..'), stdout: 'pipe', stderr: 'pipe' });
+  const noKeys = { ...process.env, ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '' };
+  const run = (args: string[]) => Bun.spawnSync(['bun', 'eval/runner/rs1/judge-check.ts', ...args], { cwd: join(import.meta.dir, '..', '..'), stdout: 'pipe', stderr: 'pipe', env: noKeys });
   const stage = (grades: Grades, pool: Candidate[]) => {
     const out = dir();
     writeFileSync(join(out, 'pool.json'), JSON.stringify({ seed: 1, pool, exclusions: [{ question_id: 'x', reason: 'gold does not state rubric item 0' }] }));
@@ -276,14 +293,44 @@ describe('the command line', () => {
     expect(JSON.parse(json)).toMatchObject({ stop: true, gold_screen_exclusions: [{ question_id: 'x' }] });
     expect(readFileSync(join(pub, 'judge-check.md'), 'utf8')).toContain('**STOP: a gate failed.');
     const passing = setup();
-    const ok = run(['report', '--out', stage(passing.grades, passing.pool)]);
+    const paid = stage(passing.grades, passing.pool);
+    writeFileSync(join(paid, 'upstream.json'), JSON.stringify({ keyless: false }) + '\n');
+    const ok = run(['report', '--out', paid]);
     expect(ok.exitCode).toBe(0);
     expect(ok.stdout.toString()).toContain('**Every gate passed.**');
+  });
+
+  // Value: protects=a rehearsal never reads as a passed judge check; fails_when=report exits 0 on a keyless rehearsal or an --out with no keyless/paid marker whose fake grades pass every gate; why_new=handoff note (a passing keyless report still exits 0), GST-1886 f2; seam=none; no_claim=the gates themselves
+  test('report passes (exit 0) only for a paid check: a keyless rehearsal or an --out with no marker exits 4 even when every gate passes', () => {
+    const passing = setup();
+    const keyless = stage(passing.grades, passing.pool), bare = stage(passing.grades, passing.pool);
+    writeFileSync(join(keyless, 'upstream.json'), JSON.stringify({ keyless: true }) + '\n');
+    const k = run(['report', '--out', keyless]);
+    expect(k.exitCode).toBe(4);
+    expect(k.stderr.toString()).toContain('JUDGE_CHECK_NOT_PAID: a keyless rehearsal');
+    const b = run(['report', '--out', bare]);
+    expect(b.exitCode).toBe(4);
+    expect(b.stderr.toString()).toContain('JUDGE_CHECK_NOT_PAID: no keyless/paid marker');
+  });
+
+  // Value: protects=R79, the public repo never shows what a finding cost; fails_when=the published judge-check.json or judge-check.md carries the usage log's dollar fields; why_new=R79 (2026-11-08) and the results commit of the paid check; seam=none; no_claim=stdout, which keeps the dollars for the report to GBEV-3
+  test('the published files carry the request counts but no dollar field; stdout keeps the dollars', () => {
+    const passing = setup();
+    const out = stage(passing.grades, passing.pool), pub = dir();
+    writeFileSync(join(out, 'upstream.json'), JSON.stringify({ keyless: false }) + '\n');
+    writeFileSync(join(out, 'usage.ndjson'), JSON.stringify({ outcome: 'forwarded', actual_usd: 0.25, charged_reservation: false, bucket: 'attributed' }) + '\n');
+    const r = run(['report', '--out', out, '--publish', pub]);
+    expect(r.exitCode).toBe(0);
+    const json = readFileSync(join(pub, 'judge-check.json'), 'utf8'), md = readFileSync(join(pub, 'judge-check.md'), 'utf8');
+    expect(JSON.parse(json).spend.usage).toEqual({ requests: 1, refused: 0, unauthorized: 0 });
+    for (const text of [json, md]) expect(text).not.toMatch(/usd/i);
+    expect(r.stdout.toString()).toContain('"billed_usd":0.25');
   });
 
   test('a keyless rehearsal and a paid run never share an --out: the second refuses before it builds a pool or opens a lease, and report records which kind it read', () => {
     const out = dir(), stage1 = dir();
     mkdirSync(join(stage1, 'cells'));
+    writeFileSync(join(stage1, 'upstream.json'), JSON.stringify({ keyless: false }) + '\n');
     writeFileSync(join(out, 'upstream.json'), JSON.stringify({ keyless: false }) + '\n');
     const r = Bun.spawnSync(['bun', 'eval/runner/rs1/judge-check.ts', 'run', '--stage1', stage1, '--out', out, '--budget-ledger', join(out, 'ledger.ndjson'), '--run-id', 'jc-test',
       '--lease-usd', '1', '--ledger-cap-usd', '2', '--keyless-upstream', 'http://127.0.0.1:9'], { cwd: join(import.meta.dir, '..', '..'), stdout: 'pipe', stderr: 'pipe', env: { ...process.env, OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '' } });
@@ -302,9 +349,48 @@ describe('the command line', () => {
     const staged = stage(passing.grades, passing.pool), pub = dir();
     writeFileSync(join(staged, 'upstream.json'), JSON.stringify({ keyless: true }) + '\n');
     const ok = run(['report', '--out', staged, '--publish', pub]);
-    expect(ok.exitCode).toBe(0);
+    expect(ok.exitCode).toBe(4);
     expect(ok.stderr.toString()).toContain('JUDGE_CHECK_KEYLESS');
     expect(JSON.parse(readFileSync(join(pub, 'judge-check.json'), 'utf8')).spend.keyless).toBe(true);
+  });
+
+  // Value: protects=no run reaches a real provider outside a granted paid window; fails_when=run without --keyless-upstream takes the paid branch with whatever keys the environment holds, or a ledger cap above the window's; why_new=a lane started a real-key run by accident (GBEV-3, 2026-11-08); seam=none; no_claim=the paid branch itself
+  test('a run that would spend real keys needs --paid-window and --window-cap-usd, and refuses a ledger cap above the window cap, before any pool, lease or marker', () => {
+    const stage1 = dir();
+    mkdirSync(join(stage1, 'cells'));
+    writeFileSync(join(stage1, 'upstream.json'), JSON.stringify({ keyless: false }) + '\n');
+    const base = (out: string) => ['run', '--stage1', stage1, '--out', out, '--budget-ledger', join(out, 'ledger.sqlite'), '--run-id', 'jc-guard', '--lease-usd', '1', '--ledger-cap-usd', '2'];
+    const bare = dir();
+    const r = run(base(bare));
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr.toString()).toContain('needs --paid-window <unit> and --window-cap-usd <n>');
+    const over = dir();
+    const o = run([...base(over), '--paid-window', 'TEST', '--window-cap-usd', '1']);
+    expect(o.exitCode).toBe(2);
+    expect(o.stderr.toString()).toContain("above the paid window's cap of 1");
+    for (const d of [bare, over]) for (const f of ['upstream.json', 'pool.json', 'ledger.sqlite']) expect(existsSync(join(d, f))).toBe(false);
+  });
+
+  // Value: protects=real answers in the pool come only from paid stage 1 runs; fails_when=a --stage1 root from a keyless rehearsal, or one with no marker at all, feeds fake answers into the candidate pool; why_new=scoped-review open item 4 (GST-1886 handoff), f3; seam=none; no_claim=whether a paid answer is any good
+  test('--stage1 takes paid outputs only: a keyless or unmarked root is refused before any pool, lease or marker', () => {
+    const keyless = dir(), bare = dir(), reread = dir(), lease = dir();
+    for (const d of [keyless, bare, reread, lease]) mkdirSync(join(d, 'cells'));
+    writeFileSync(join(keyless, 'upstream.json'), JSON.stringify({ keyless: true }) + '\n');
+    writeFileSync(join(reread, 'upstream.json'), JSON.stringify({ keyless: false }) + '\n');
+    writeFileSync(join(lease, 'lease-summary.json'), JSON.stringify({ run_id: 'x' }) + '\n');
+    expect(stage1Unpaid(keyless)).toContain('holds a keyless run');
+    expect(stage1Unpaid(bare)).toContain('has neither an upstream.json marking a paid run nor a campaign lease-summary.json');
+    expect([stage1Unpaid(reread), stage1Unpaid(lease)]).toEqual([null, null]);
+    for (const bad of [keyless, bare]) {
+      const out = dir();
+      const r = run(['plan', '--stage1', reread, '--stage1', bad, '--out', out]);
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain('--stage1 takes paid stage 1 outputs only');
+      expect(existsSync(join(out, 'pool.json'))).toBe(false);
+      const k = run(['run', '--stage1', bad, '--out', out, '--budget-ledger', join(out, 'ledger.sqlite'), '--run-id', 'jc-s1', '--lease-usd', '1', '--ledger-cap-usd', '2', '--keyless-upstream', 'http://127.0.0.1:9']);
+      expect(k.exitCode).toBe(2);
+      for (const f of ['upstream.json', 'pool.json', 'ledger.sqlite']) expect(existsSync(join(out, f))).toBe(false);
+    }
   });
 
   test('without --out or --stage1 it prints its usage and exits 2', () => {
