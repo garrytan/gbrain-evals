@@ -57,7 +57,19 @@ bun eval/runner/q1/raise-lease.ts show --campaign <manifest.json> --state <dir> 
 ```
 
 - **One raise at a time per freeze.** A raise holds `<state>/raise.lock`, in the freeze's state directory, from reading the lease's amount until its record is written. The lock records the holder's pid, host, start time and arguments. Any other raise, dry run included, is refused at once while the lock is held and never waits. A raise whose record cannot be written keeps the lock.
-- **A stale lock.** Nothing breaks a lock automatically. After a crash, a lost session or a record that could not be written, the lock refuses every raise until the person running the campaign clears it. They first run `show` for the holder's lease (the lock file names it) and compare its `lease_usd` with the VM's `budget_usd`. If the VM holds more, the raise reached the VM without a record: they append a record for that lease to `<state>/raises.ndjson` with `from_usd` set to `lease_usd`, `to_usd` set to the VM's amount, `vm_ledger` and `vm_cap_usd` from `show`, and a `reason` naming the reconciliation. Otherwise they change nothing. Then they run:
+- **A stale lock.** Nothing breaks a lock automatically. After a crash, a lost session or a record that could not be written, the lock refuses every raise until the person running the campaign clears it. They first run `show` for the holder's lease (the lock file names it) and compare its `lease_usd` with the VM's `budget_usd`. If the VM holds more, the raise reached the VM without a record: they append a record for that lease to `<state>/raises.ndjson` with `from_usd` set to `lease_usd`, `to_usd` set to the VM's amount, `vm_ledger` and `vm_cap_usd` from `show`, and a `reason` naming the reconciliation. If the VM does not hold the raise, they check the host ledger, because a crash after the host reservation and before the VM step leaves the host holding a raise that `raises.ndjson` never records, and a BG1 campaign then refuses every reserve, launch, resume and payload once the lock is cleared. The host should reserve the lease's `usd` from `show` plus each raise of that lease in `raises.ndjson` (`to_usd` minus `from_usd`, rounded to the cent; a confirming copy counts once). They read what it reserves, from the checkout's root, with the `ledger` and `run_id` in `<state>/campaign.json` and the lease's `entry_id` from `show`:
+
+  ```sh
+  sqlite3 <ledger> "SELECT reserved_usd FROM entries WHERE id = '<entry_id>'"
+  ```
+
+  Only if the host reserves more, they give the difference back in one transaction, which changes nothing if it fails (on a locked ledger, for example):
+
+  ```sh
+  sqlite3 <ledger> "BEGIN IMMEDIATE; UPDATE entries SET reserved_usd = reserved_usd - <difference> WHERE id = '<entry_id>'; UPDATE runs SET committed_usd = committed_usd - <difference> WHERE run_id = '<run_id>'; UPDATE program SET committed_usd = committed_usd - <difference> WHERE id = 1; COMMIT;"
+  ```
+
+  Otherwise they change nothing. Then they run:
 
   ```sh
   bun eval/runner/q1/raise-lease.ts clear-stale-lock --campaign <manifest.json> --state <dir> --confirm <campaign id>
