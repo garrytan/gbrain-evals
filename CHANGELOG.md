@@ -2,6 +2,15 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.191] - 2026-11-09
+
+### CI now runs all six Cat 25 trajectory probes, so a gbrain pin that breaks any one of them fails
+
+- `test/eval/cat25-trajectory-routing.test.ts` runs every probe in the Cat 25 fixture through gbrain's real `think`
+  pipeline, with no API key, and a failure names its probe. Before this, CI ran two of the six. At gbrain v0.60.557.0,
+  `think` dropped the trajectory for team-size-trajectory-foundry and mrr-midpoint-nimbus while CI stayed green; at that
+  version the new cases fail on exactly those two. No runner, score or published result changed.
+
 ## [0.10.189] - 2026-11-09
 
 ### The live recall findings now say which model and search APIs saw the questions and page text
