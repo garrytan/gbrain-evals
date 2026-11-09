@@ -4,7 +4,7 @@
  * rank gbrain configurations the way the real brain did?
  *
  *   bun eval/runner/predictive/verdict.ts --measure <G1..G6> --synthetic <scorecard.json> \
- *     [--manifest eval/data/validity-references/manifest.json] [--out verdict.json]
+ *     [--manifest eval/data/validity-references/manifest.json] [--out verdict.json] [--control]
  *
  * For each layer of the measure (mapping.ts), it loads the reference with
  * validity.ts's loadReference and applies its preregistered verdict(): a
@@ -30,9 +30,13 @@
  *
  * The synthetic scorecard is a live-recall scorecard (live-recall-scorecard/v1,
  * from run.ts run --synthetic, whose success@5 comparisons are its contrasts) or
- * any file of the form { contrasts: [{ id, estimate, lo, hi }], orderings?, control? }.
- * A control scorecard (hash embeddings) is labelled as one: its verdict proves
- * the plumbing, not the measure.
+ * any file of the form { contrasts: [{ id, estimate, lo, hi }], orderings?, control?, transports? }.
+ * A control scorecard is one whose run.transports is hash (the keyless fixture
+ * transports), or an in-process run that records no transports, or a contrasts
+ * file marked control. The command refuses it (SYNTHETIC_SCORECARD_INVALID)
+ * unless --control is passed, and then labels it as one: its verdict proves the
+ * plumbing, never the measure, and is never the verdict we report. A voyage
+ * scorecard (run --synthetic --paid) is not a control.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { MANIFEST } from './export-references.ts';
@@ -48,7 +52,7 @@ export class SyntheticScorecardError extends Error {
   }
 }
 
-export interface SyntheticCard { schema: string; protocol?: string; control: boolean; contrasts: Contrast[]; orderings: Record<string, string[]> }
+export interface SyntheticCard { schema: string; protocol?: string; transports?: string; control: boolean; contrasts: Contrast[]; orderings: Record<string, string[]> }
 
 const finite = (...xs: unknown[]) => xs.every(x => typeof x === 'number' && Number.isFinite(x));
 
@@ -67,14 +71,17 @@ export function readSynthetic(value: any): SyntheticCard {
         .sort((a, b) => b[1] - a[1])
         .map(([arm]) => arm);
     }
-    return { schema: value.schema, ...(typeof value.protocol === 'string' ? { protocol: value.protocol } : {}), control: value.run?.control === true, contrasts, orderings };
+    const transports = typeof value.run?.transports === 'string' ? value.run.transports : undefined;
+    const control = transports === undefined ? value.run?.control === true : transports === 'hash';
+    return { schema: value.schema, ...(typeof value.protocol === 'string' ? { protocol: value.protocol } : {}), ...(transports ? { transports } : {}), control, contrasts, orderings };
   }
   if (Array.isArray(value?.contrasts)) {
     const contrasts = value.contrasts.map((c: any, i: number) => {
       if (typeof c?.id !== 'string' || !finite(c.estimate, c.lo, c.hi) || c.lo > c.hi) throw new SyntheticScorecardError('contrast ' + i + ' is not { id, estimate, lo, hi }');
       return { id: c.id, estimate: c.estimate, lo: c.lo, hi: c.hi };
     });
-    return { schema: typeof value.schema === 'string' ? value.schema : 'contrasts', control: value.control === true, contrasts, orderings: value.orderings ?? {} };
+    const transports = typeof value.transports === 'string' ? value.transports : undefined;
+    return { schema: typeof value.schema === 'string' ? value.schema : 'contrasts', ...(transports ? { transports } : {}), control: value.control === true || transports === 'hash', contrasts, orderings: value.orderings ?? {} };
   }
   throw new SyntheticScorecardError('not a live-recall scorecard or a { contrasts } file');
 }
@@ -141,7 +148,7 @@ export function evaluateMeasure(measure: Measure, synthetic: SyntheticCard, mani
   }
   if (layers.every(l => !l.in_scorecard) && layers.some(l => l.status !== 'pending')) throw new SyntheticScorecardError('the synthetic scorecard' + (synthetic.protocol ? ' (protocol ' + synthetic.protocol + ')' : '') + ' carries no ' + measure + ' layer: no ' + layers.map(l => l.id).join(' or ') + ' contrasts');
   const overall: Verdict = layers.some(l => l.verdict === 'NOT_PREDICTIVE') ? 'NOT_PREDICTIVE' : layers.some(l => l.verdict === 'PREDICTIVE') ? 'PREDICTIVE' : 'NO_REFERENCE_YET';
-  return { schema: VERDICT_SCHEMA, measure, title: MAPPING[measure].title, verdict: overall, synthetic: { schema: synthetic.schema, control: synthetic.control }, layers };
+  return { schema: VERDICT_SCHEMA, measure, title: MAPPING[measure].title, verdict: overall, synthetic: { schema: synthetic.schema, control: synthetic.control, ...(synthetic.transports ? { transports: synthetic.transports } : {}) }, layers };
 }
 
 const num = (x: number) => (x >= 0 ? '+' : '') + x.toFixed(3);
@@ -167,13 +174,15 @@ function flag(argv: string[], name: string): string | undefined {
 export function main(argv: string[]): number {
   const measure = flag(argv, '--measure'), syntheticPath = flag(argv, '--synthetic'), out = flag(argv, '--out');
   if (!isMeasure(measure) || !syntheticPath) {
-    console.error('usage: verdict.ts --measure ' + MEASURES.join('|') + ' --synthetic <scorecard.json> [--manifest <manifest.json>] [--out <verdict.json>]');
+    console.error('usage: verdict.ts --measure ' + MEASURES.join('|') + ' --synthetic <scorecard.json> [--manifest <manifest.json>] [--out <verdict.json>] [--control]');
     return 2;
   }
   try {
     let parsed: unknown;
     try { parsed = JSON.parse(readFileSync(syntheticPath, 'utf8')); } catch { throw new SyntheticScorecardError(syntheticPath + ' is not readable JSON'); }
-    const result = evaluateMeasure(measure, readSynthetic(parsed), flag(argv, '--manifest') ?? MANIFEST);
+    const synthetic = readSynthetic(parsed);
+    if (synthetic.control && !argv.includes('--control')) throw new SyntheticScorecardError(syntheticPath + ' is a control scorecard (' + (synthetic.transports ?? 'no transports recorded') + '); its verdict checks the plumbing and is never the one reported. Pass --control to read it as a control, or score the synthetic brain with run --synthetic --paid');
+    const result = evaluateMeasure(measure, synthetic, flag(argv, '--manifest') ?? MANIFEST);
     for (const line of renderVerdict(result)) console.log(line);
     if (out) writeFileSync(out, JSON.stringify(result, null, 2) + '\n');
     return 0;

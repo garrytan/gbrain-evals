@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { MANIFEST, REFERENCE_DIR } from '../../eval/runner/predictive/export-references.ts';
@@ -94,6 +94,13 @@ describe('predictive verdict on the committed references', () => {
     expect(() => readSynthetic({ arms: {} })).toThrow('SYNTHETIC_SCORECARD_INVALID');
   });
 
+  test('a hash scorecard, or an in-process one that records no transports, is a control; a voyage scorecard is not', () => {
+    const run = (r: object) => readSynthetic({ ...liveCard(b2.contrasts), run: r });
+    expect([run({ control: true, transports: 'hash' }).control, run({ control: true }).control, run({ control: false }).control]).toEqual([true, true, false]);
+    expect(run({ control: true, transports: 'voyage' })).toMatchObject({ control: false, transports: 'voyage' });
+    expect(readSynthetic({ contrasts: [], transports: 'hash' }).control).toBe(true);
+  });
+
   test('a layer is read only from a live-recall scorecard of its protocol, and a scorecard carrying no layer of a measure with a live reference refuses', () => {
     const asBatch2 = evaluateMeasure('G2', readSynthetic({ ...liveCard(b2.contrasts), protocol: 'batch2' }));
     expect(asBatch2.verdict).toBe('PREDICTIVE');
@@ -118,7 +125,9 @@ describe('predictive verdict on the committed references', () => {
     console.log = (...a: unknown[]) => { lines.push(a.join(' ')); };
     try {
       writeFileSync(join(dir, 'syn.json'), JSON.stringify(liveCard(b2.contrasts)));
-      expect(main(['--measure', 'G2', '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json')])).toBe(0);
+      expect(quiet(() => main(['--measure', 'G2', '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json')]))).toBe(3);
+      expect(existsSync(join(dir, 'v.json'))).toBe(false);
+      expect(main(['--measure', 'G2', '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json'), '--control'])).toBe(0);
       expect(lines[0]).toStartWith('G2 recall under real conditions: PREDICTIVE (control scorecard');
       expect(lines.join('\n')).toContain('13 of 16 reference contrasts qualify (minimum 3)');
       expect(lines.join('\n')).toContain('layer b3 vs live-recall-b3: NO_REFERENCE_YET (reference live-recall-b3 is pending)');

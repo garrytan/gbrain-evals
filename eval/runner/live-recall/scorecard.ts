@@ -77,6 +77,8 @@ export interface RunIdentity {
   /** The mode's own expansion default; every arm passes expansion: false regardless. */
   mode_expansion: boolean;
   control: boolean;
+  /** In-process runs only: hash (fixture transports, a control) or voyage (a paid synthetic run). */
+  transports?: 'hash' | 'voyage';
   pgvector_version: string | null;
   source_pgvector: string | null;
   source_server_version_num: number | null;
@@ -373,7 +375,7 @@ const KEY_WORDS = new Set<string>([
   'pgvector_version', 'source_pgvector', 'source_server_version_num', 'copy_server_version_num', 'restore_errors', 'run_a', 'run_b',
   'chat', 'embedding', 'rerank', 'multimodal', 'decide', 'transcription',
   'stale_first', 'type', 'visibility_epoch', 'freeze_gbrain_version', 'freeze_visibility_epoch',
-  'synthetic', 'digest', 'questions_sha256', 'unembedded_chunk_share', 'synopsis_vectors_off', 'keyword_candidate_bound', 'shell_page_share', 'chunks', 'unembedded_chunks',
+  'synthetic', 'transports', 'digest', 'questions_sha256', 'unembedded_chunk_share', 'synopsis_vectors_off', 'keyword_candidate_bound', 'shell_page_share', 'chunks', 'unembedded_chunks',
   ...ARMS, ...ALL_TYPES, ...KS.map(k => 'k' + k), ...STATUSES, ...GOLD_FOUND_BY,
 ]);
 const KEY_PATTERNS = [/^(keyword|vector|hybrid_lexical|hybrid|configured|configured_window|missing)_(ok|error|degraded|ai_refused|rerank_fail_open|skipped|record)$/, /^[a-z_]+$/];
@@ -398,6 +400,7 @@ const FIELD_PATTERNS: Record<string, RegExp> = {
   '$.run.reranker_model': MODEL_PATTERN,
   '$.run.embedding_model': MODEL_PATTERN,
   '$.run.embedding_column': /^[a-z_][a-z0-9_]{0,62}$/,
+  '$.run.transports': /^(hash|voyage)$/,
 };
 
 /** Structural custody check: known keys, allowlisted strings, finite numbers. Throws LR_CUSTODY_LEAK naming only the path. */
@@ -453,7 +456,7 @@ export function renderMarkdown(s: ReturnType<typeof buildScorecard>): string {
   const lines: string[] = [];
   const r = s.run;
   lines.push('# Live-recall scorecard', '');
-  lines.push('gbrain ' + r.gbrain_loaded_version + ' (' + r.gbrain_loaded_commit.slice(0, 9) + '), schema ' + r.schema_version + ', ' + r.engine + ', barrier: ' + r.barrier + ', pgvector ' + (r.pgvector_version ?? 'n/a') + ', mode: ' + r.search_mode + (r.control ? '. CONTROL RUN (hash embeddings): numbers say nothing about search quality.' : '.'));
+  lines.push('gbrain ' + r.gbrain_loaded_version + ' (' + r.gbrain_loaded_commit.slice(0, 9) + '), schema ' + r.schema_version + ', ' + r.engine + ', barrier: ' + r.barrier + ', pgvector ' + (r.pgvector_version ?? 'n/a') + ', mode: ' + r.search_mode + (r.transports === 'voyage' ? '. Synthetic brain, Voyage embeddings and rerank (' + r.embedding_model + ', ' + r.reranker_model + ').' : r.control ? '. CONTROL RUN (hash embeddings): numbers say nothing about search quality.' : '.'));
   lines.push('Protocol: ' + s.protocol + '; primary comparisons (Holm family of two): ' + COMPARISONS[s.protocol].filter(c => c.primary).map(c => c.id + ' (' + c.primary + ')').join(', ') + '.');
   if (r.synthetic) lines.push('Synthetic conditions brain ' + r.synthetic.digest.slice(0, 12) + ': unembedded chunk share ' + r.synthetic.unembedded_chunk_share + ' (' + r.synthetic.unembedded_chunks + ' of ' + r.synthetic.chunks + ' chunks), synopsis vectors ' + (r.synthetic.synopsis_vectors_off ? 'off' : 'on') + ', keyword candidate bound ' + (r.synthetic.keyword_candidate_bound ?? 'none') + ', shell page share ' + r.synthetic.shell_page_share + '.');
   if (s.protocol === 'batch3') lines.push('Visibility epoch (GBRA-398): run ' + (r.visibility_epoch ?? 'unknown') + ', freeze ' + (r.freeze_visibility_epoch ?? 'none (fixture)') + (r.freeze_gbrain_version ? ' at gbrain ' + r.freeze_gbrain_version : '') + '.');
