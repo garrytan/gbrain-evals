@@ -27,7 +27,7 @@ import { execGbrain, GbrainMcpArm, SyntheticBrain, type ArmCall } from './cli-ar
 import { runEntityEpisode, runFreshnessEpisode, runWriteEpisode, scriptedEntityPolicy, scriptedFreshnessPolicy, scriptedWritePolicy } from './episodes.ts';
 import { summarizeEntity } from './entity-agent.ts';
 import { summarizeFreshness } from './freshness.ts';
-import { GRAMMAR_PAGES, runSchemaGrammar, schemaShapes, summarizeWriteEpisodes } from './write-contract.ts';
+import { GRAMMAR_PAGES, runSchemaGrammar, schemaShapes, summarizeWriteEpisodes, type SchemaShape, type ShapeRow } from './write-contract.ts';
 import { freshnessDigest, generateFreshnessTasks, G1_DEFAULT_TASKS } from '../../generators/freshness-world-gen.ts';
 import { G3_CAUSES, G3_DEFAULT_TASKS, G3_SURFACES, generateWriteTasks, writeTasksDigest } from '../../generators/write-contract-gen.ts';
 import { entityTasksDigest, generateEntityTasks, G4_DEFAULT_TASKS } from '../../generators/entity-agent-gen.ts';
@@ -124,17 +124,18 @@ export async function runGrammar(gut?: GbrainUnderTest) {
   const brain = await SyntheticBrain.create('g3-grammar', GRAMMAR_PAGES, { gut });
   try {
     const mcp = await GbrainMcpArm.start(brain);
+    let shapes: SchemaShape[];
+    let mcpRows: ShapeRow[];
     try {
-      const shapes = schemaShapes(mcp.schemas());
-      const rows = await runSchemaGrammar(shapes, {
-        mcp: async (op, args) => { await mcp.call(op, args); return mcp.calls[mcp.calls.length - 1]; },
-        cli: async (op, args): Promise<ArmCall> => {
-          const r = await execGbrain(brain.gut, brain.env, ['call', op, JSON.stringify(args)]);
-          return { surface: 'cli', argv: ['call', op], args, exit: r.exit, output: `${r.stdout}\n${r.stderr}`, ms: r.ms };
-        },
-      });
-      return { gbrain_version: brain.gut.version, shapes: shapes.length, rows, as_expected: rows.filter(r => r.as_expected).length, surprises: rows.filter(r => !r.as_expected).map(r => `${r.surface} ${r.id}: refused=${r.refused} cause=${r.cause}`) };
+      shapes = schemaShapes(mcp.schemas());
+      mcpRows = await runSchemaGrammar(shapes, 'mcp', async (op, args) => { await mcp.call(op, args); return mcp.calls[mcp.calls.length - 1]; });
     } finally { await mcp.close(); }
+    const cliRows = await runSchemaGrammar(shapes, 'cli', async (op, args): Promise<ArmCall> => {
+      const r = await execGbrain(brain.gut, brain.env, ['call', op, JSON.stringify(args)]);
+      return { surface: 'cli', argv: ['call', op], args, exit: r.exit, output: `${r.stdout}\n${r.stderr}`, ms: r.ms };
+    });
+    const rows = [...mcpRows, ...cliRows];
+    return { gbrain_version: brain.gut.version, shapes: shapes.length, rows, as_expected: rows.filter(r => r.as_expected).length, surprises: rows.filter(r => !r.as_expected).map(r => `${r.surface} ${r.id}: refused=${r.refused} cause=${r.cause}`) };
   } finally { brain.dispose(); }
 }
 

@@ -3,8 +3,8 @@
  *
  * The model side is cat40's runAgent. With a scripted model (the runner's --fake mode and the tests) no provider is
  * called and the episode costs nothing; the gbrain side is always the real CLI or MCP server of the gbrain under test,
- * in the sandbox cli-arm.ts builds. A provider path is reached only when the caller passes a real model and no
- * script, which run.ts allows only behind the paid-arm guard.
+ * in the sandbox cli-arm.ts builds. An episode without a script refuses to start unless it carries the budget run id
+ * requirePaidArm returned, and run.ts never starts one (its paid mode only plans).
  */
 import { runAgent, type Arm, type ScriptedModel, type SubmitPayload, type ToolSpec } from '../cat40/loop.ts';
 import type { GbrainUnderTest } from '../gbrain-under-test.ts';
@@ -38,7 +38,8 @@ export function scriptedWritePolicy(task: WriteTask, surface: G3Surface, policy:
   return scriptedSequence(steps, { writes: [{ kind: task.target.kind, path: task.target.path, status }] });
 }
 
-export interface EpisodeModel { model: string; scripted?: ScriptedModel; fetchImpl?: typeof fetch; maxTurns?: number }
+/** budgetRunId is the open ledger run requirePaidArm returned; without a script an episode refuses to start without it. */
+export interface EpisodeModel { model: string; scripted?: ScriptedModel; fetchImpl?: typeof fetch; maxTurns?: number; budgetRunId?: string }
 
 const SYSTEM = 'You work for a founder and keep their gbrain knowledge base. Use the tools to do what they ask, check what gbrain tells you, and finish by calling submit_answer once.';
 
@@ -48,13 +49,19 @@ async function withArm<T>(brain: SyntheticBrain, surface: G3Surface, fn: (arm: A
   try { return await fn(arm); } finally { await arm.close(); }
 }
 
+function requireScriptOrPaidRun(m: EpisodeModel) {
+  if (!m.scripted && !m.budgetRunId) throw new Error(`a real ${m.model} episode needs the paid-arm guard: pass the budgetRunId requirePaidArm returned, inside a granted paid window`);
+}
+
 /** Run one agent loop on an arm, returning the run and the calls the arm recorded. */
 export async function runOnArm(arm: Arm & { calls: ArmCall[] }, m: EpisodeModel, user: string, submitTool?: ToolSpec) {
+  requireScriptOrPaidRun(m);
   const run = await runAgent({ model: m.model, system: `${SYSTEM}\n\n${arm.systemHint()}`, user, arm, scripted: m.scripted, fetchImpl: m.fetchImpl, maxTurns: m.maxTurns ?? 16, maxToolChars: 20_000, classifyStops: true, submitTool });
   return { run, calls: [...arm.calls] };
 }
 
 export async function runWriteEpisode(input: { task: WriteTask; surface: G3Surface; trial: number; gut?: GbrainUnderTest } & EpisodeModel): Promise<WriteEpisode & { final: SubmitPayload | null }> {
+  requireScriptOrPaidRun(input);
   const brain = await SyntheticBrain.create(`g3-${input.task.id}`, input.task.pages, { gut: input.gut });
   try {
     for (const s of input.task.stage) brain.editOutside(s.slug, s.line, s.commit);
@@ -73,6 +80,7 @@ export async function runWriteEpisode(input: { task: WriteTask; surface: G3Surfa
 
 /** Build the task's brain, run the agent on the CLI arm with the given question, and dispose of the brain. */
 export async function runReadEpisode(input: { label: string; pages: Array<{ slug: string; markdown: string }>; question: string; gut?: GbrainUnderTest } & EpisodeModel) {
+  requireScriptOrPaidRun(input);
   const brain = await SyntheticBrain.create(input.label, input.pages, { gut: input.gut });
   try { return await runOnArm(new GbrainCliArm(brain), input, input.question); } finally { brain.dispose(); }
 }

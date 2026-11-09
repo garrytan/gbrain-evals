@@ -80,7 +80,9 @@ export function classifyCall(call: ArmCall): CallClass {
     return { refused: true, cause: 'sources_without_brain', code, family };
   }
   if (/--lines overwrites the positional value/.test(out) || /one window selector, not \d/.test(out)) return { refused: true, cause: 'two_range_read', code, family };
-  const refused = code !== null || (call.exit !== null && call.exit !== 0);
+  const refused = call.surface === 'mcp'
+    ? out.startsWith('Error:')
+    : call.exit !== 0 || /^Error \[[a-z_]+\]/m.test(out) || /^\{\s*"error":/.test(out.trim());
   if (!refused) return { refused: false, cause: null, code: null, family };
   const cause: CallClass['cause'] =
     /"detail":\s*"pending_import"/.test(out) ? 'source_changed'
@@ -318,16 +320,16 @@ export const GRAMMAR_PAGES = [
   { slug: 'notes/grammar-probe', markdown: '---\ntype: note\ntitle: Grammar probe\n---\n\nLine one.\nLine two.\nLine three.\n' },
 ];
 
-/** Dispatch every shape through the MCP server and through gbrain call (the same operation dispatcher on the CLI). */
-export async function runSchemaGrammar(shapes: readonly SchemaShape[], dispatch: { mcp(op: string, args: Record<string, unknown>): Promise<ArmCall>; cli(op: string, args: Record<string, unknown>): Promise<ArmCall> }): Promise<ShapeRow[]> {
+/**
+ * Dispatch every shape on one surface: MCP tools/call, or gbrain call on the CLI (the same operation dispatcher). Run
+ * one surface at a time: a running gbrain serve holds the PGLite brain, so a CLI call beside it can fail.
+ */
+export async function runSchemaGrammar(shapes: readonly SchemaShape[], surface: G3Surface, dispatch: (op: string, args: Record<string, unknown>) => Promise<ArmCall>): Promise<ShapeRow[]> {
   const rows: ShapeRow[] = [];
   for (const shape of shapes) {
-    for (const surface of ['mcp', 'cli'] as const) {
-      const call = await dispatch[surface](shape.op, shape.args);
-      const k = classifyCall({ ...call, surface: 'mcp', argv: [shape.op] });
-      const asExpected = shape.expect === 'accept' ? !k.refused : k.refused && (shape.cause === undefined || k.cause === shape.cause);
-      rows.push({ id: shape.id, op: shape.op, surface, expect: shape.expect, refused: k.refused, cause: k.cause, code: k.code, as_expected: asExpected });
-    }
+    const k = classifyCall(await dispatch(shape.op, shape.args));
+    const asExpected = shape.expect === 'accept' ? !k.refused : k.refused && (shape.cause === undefined || k.cause === shape.cause);
+    rows.push({ id: shape.id, op: shape.op, surface, expect: shape.expect, refused: k.refused, cause: k.cause, code: k.code, as_expected: asExpected });
   }
   return rows;
 }
