@@ -5,6 +5,7 @@
  *     --gbrain-root <checkout> --out <dir> [--budget-run-id <id> --budget-ledger <path>]
  *   bun eval/runner/nightly/worker.ts smokes --tonight <root> [--previous <root>] [--old <root>] --out <dir> --result <file>
  *     [--pg <url>] [--pg15 <url>]
+ *   bun eval/runner/nightly/worker.ts pg-template --gbrain-root <root> --pg-admin <url> --name <database>
  *
  * agents runs Part C episodes (refresh-barrier/agent.ts runEpisode) one at a time, since a brain's arm, home and keys are
  * process-wide, and scores each with the nightly write scorer (write-score.ts) from the brain as the episode left it. Each
@@ -16,6 +17,9 @@
  *
  * smokes imports eval/runner/nightly/smokes/index.ts and writes runSmokes' results to --result; exit 4 when that module
  * is not in the checkout.
+ *
+ * pg-template recreates <database> on the admin server and runs the root's own PostgresEngine.initSchema() on it, so the
+ * Postgres trials clone brains with tonight's schema.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -91,10 +95,28 @@ async function smokes(): Promise<number> {
   return 0;
 }
 
+async function pgTemplate(): Promise<number> {
+  const root = resolve(need('--gbrain-root')), admin = need('--pg-admin'), name = need('--name');
+  if (!/^[a-z0-9_]+$/.test(name)) throw new Error(`--name must be a plain database name (got ${name})`);
+  const pg = (await import(join(root, 'vendor/postgres/src/index.js'))).default;
+  const sql = pg(admin, { max: 1, prepare: false, onnotice: () => undefined });
+  try {
+    await sql.unsafe(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
+    await sql.unsafe(`CREATE DATABASE ${name}`);
+  } finally { await sql.end(); }
+  const url = new URL(admin); url.pathname = `/${name}`;
+  const { PostgresEngine } = await import(join(root, 'src/core/postgres-engine.ts'));
+  const engine = new PostgresEngine();
+  await engine.connect({ database_url: url.toString(), poolSize: 1 });
+  try { await engine.initSchema(); } finally { await engine.disconnect(); }
+  return 0;
+}
+
 if (import.meta.main) {
   const job = process.argv[2];
   try {
-    process.exit(job === 'agents' ? await agents() : job === 'smokes' ? await smokes() : (console.error('usage: worker.ts agents|smokes ...'), 2));
+    process.exit(job === 'agents' ? await agents() : job === 'smokes' ? await smokes() : job === 'pg-template' ? await pgTemplate()
+      : (console.error('usage: worker.ts agents|smokes|pg-template ...'), 2));
   } catch (error) {
     console.error((error as Error).message);
     process.exit(1);

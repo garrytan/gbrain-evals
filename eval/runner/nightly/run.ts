@@ -5,7 +5,7 @@
  *   bun eval/runner/nightly/run.ts --ref master|stable|<sha> --tier nightly|matrix|smoke --out <dir> [--night YYYY-MM-DD]
  *     [--suites a,b] [--items x,y] [--readers m1,m2] [--k N] [--gbrain-clone <path>] [--devset <file>] [--cache <dir>]
  *     [--fake | --paid --budget-ledger <path> (--budget-run-id <id> | --night-cap-usd <n> --month-cap-usd <n>)]
- *     [--pg-admin <url> --pg-template <database>] [--pg15-admin <url>] [--previous-ref <ref>] [--old-ref <ref>]
+ *     [--pg-admin <url> [--pg-template <database>]] [--pg15-admin <url>] [--previous-ref <ref>] [--old-ref <ref>]
  *     [--cat40-slot-allowance-usd <n>]
  *   bun eval/runner/nightly/run.ts --resume <night dir>
  *   bun eval/runner/nightly/run.ts --ref <sha> --tier bisect --suites <id> --items a,b [--readers m] --gbrain-clone <path> --night-dir <dir>
@@ -25,7 +25,8 @@
  * memory-qa's fake system) or --paid with the night's ledger run, which run.ts opens itself from --night-cap-usd and
  * --month-cap-usd (ledger.ts) when no --budget-run-id is given.
  *
- * The system smokes upgrade from the previous master night's commit (else --previous-ref, else the commit's first parent)
+ * The Postgres trials clone their brains from --pg-template, or from a template the night builds with the commit's own
+ * schema. The system smokes upgrade from the previous master night's commit (else --previous-ref, else the commit's first parent)
  * and from the old release (--old-ref, default the smokes' OLD_RELEASE).
  *
  * Suites run in parallel, each in its own child processes (adapters.ts). The night directory is <out>/<night>/<ref>

@@ -253,18 +253,29 @@ export function trialRows(run: SuiteRun, ctx: NightContext, engine: string, dir:
   });
 }
 
+/** A template database with root's schema (worker.ts pg-template), named for tonight's commit; null when it did not build. */
+async function buildPgTemplate(root: string, ctx: NightContext, log: string): Promise<string | null> {
+  const name = `nightly_tpl_${ctx.sha.slice(0, 12)}`;
+  const r = await runChild({ cmd: bun(join(HERE, 'worker.ts'), 'pg-template', '--gbrain-root', root, '--pg-admin', ctx.pg.admin!, '--name', name), env: keylessEnv(), log, signal: ctx.signal });
+  return r.code === 0 ? name : null;
+}
+
 export const trialsAdapter: Adapter = async (run, ctx) => {
   const engines = (run.suite.config?.engines as string[] | undefined) ?? ['pglite'];
   const root = await ctx.worktree();
   const seeds = run.items.map(i => Number(i.id));
   const skipped: string[] = [];
   const results = await Promise.all(engines.map(async engine => {
-    if (engine === 'postgres' && (!ctx.pg.admin || !ctx.pg.template)) { skipped.push('postgres trials need --pg-admin <url> and --pg-template <database>'); return { rows: [] as Outcome[], failed: false }; }
+    if (engine === 'postgres' && !ctx.pg.admin) { skipped.push('postgres trials need --pg-admin <url>'); return { rows: [] as Outcome[], failed: false }; }
     const out = join(ctx.dir, 'suites', run.suite.id, engine);
+    const template = engine === 'postgres' ? ctx.pg.template ?? await buildPgTemplate(root, ctx, join(out, 'template.log')) : null;
+    if (engine === 'postgres' && !template) {
+      return { rows: run.items.map(i => outcome(run, ctx, { item: `${engine}:${i.id}`, pass: false, harness: { error: 'the Postgres template with tonight\'s schema did not build; see template.log' } })), failed: true };
+    }
     let failed = false;
     for (const range of seedRanges(seeds)) {
       const r = await runChild({ cmd: bun(join(REPO, 'eval/runner/refresh-barrier/run.ts'), '--block', 'trials', '--engine', engine, '--gbrain-root', root, '--out', out, '--seeds', range,
-        '--arms', String(run.suite.config?.arm ?? 'on'), '--dry', ...(engine === 'postgres' ? ['--pg-admin', ctx.pg.admin!, '--template', ctx.pg.template!] : [])),
+        '--arms', String(run.suite.config?.arm ?? 'on'), '--dry', ...(engine === 'postgres' ? ['--pg-admin', ctx.pg.admin!, '--template', template!] : [])),
         env: keylessEnv(), log: join(out, 'run.log'), signal: ctx.signal });
       failed ||= r.code !== 0;
     }
