@@ -1493,6 +1493,27 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
   };
 }
 
+/** paid_window: the granted paid window a BG1 campaign runs in; every unit's command passes it, and cap_usd as the window cap. */
+export interface Bg1UnitSelection extends UnitSelection { paid_window: string }
+
+/**
+ * BG1's campaign manifest: campaignManifest over a unit selection that names its granted paid window, with every unit's
+ * run naming bg1-cells.json and carrying --paid-window and --window-cap-usd, so bg1CellWindow lets the unit spend only
+ * inside that window. A BG1 campaign without such a selection is refused before any file is written.
+ */
+export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: Partial<Bg1UnitSelection> } = {}): Q1Campaign {
+  const u = opts.units;
+  if (!u?.paid_window || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(u.paid_window) || !(Number(u.cap_usd) > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: 'a BG1 campaign needs a unit selection (--units) naming its granted paid window as paid_window, with the window cap as cap_usd',
+    why: 'every BG1 unit spends real keys, so its command carries the granted window and the unit refuses outside it', fix: { next: 'run', argv: [...FRONT, 'plan', '--manifest', 'bg1', '--units', '<selection with paid_window and cap_usd>', '--campaign-out', '<file>'] } });
+  const { paid_window, ...units } = u as Bg1UnitSelection;
+  const campaign = campaignManifest(m, { ...opts, units: { ...units, cell_manifest: 'bg1' } });
+  const out = ' --out "$SHOOTOUT_OUT"';
+  return { ...campaign, cells: campaign.cells.map(cell => {
+    if (cell.command.split(out).length !== 2) throw new Error(`BG1 unit ${cell.id} has no single${out} in its command to put the paid window before`);
+    return { ...cell, command: cell.command.replace(out, () => ` --paid-window ${paid_window} --window-cap-usd ${units.cap_usd}${out}`) };
+  }) };
+}
+
 export function renderPlan(m: Manifest): string {
   const cells = campaignCells(m);
   const waves = [...new Set(cells.map(c => c.wave!))].sort((a, b) => a - b).map(w => ({ w, n: cells.filter(c => c.wave === w).length, hours: Math.max(...cells.filter(c => c.wave === w).map(c => c.expected_hours ?? 0)), blocks: [...new Set(cells.filter(c => c.wave === w).map(c => c.block))].join(', ') }));
@@ -1602,7 +1623,7 @@ export async function main(argv: string[]): Promise<number> {
     const unitsFile = one('--units');
     if (unitsFile && !campaignOut) throw refuse(usage('--units needs --campaign-out <file>'));
     const units = unitsFile ? JSON.parse(readFileSync(resolve(unitsFile), 'utf8')) as UnitSelection : undefined;
-    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify(campaignManifest(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined, units }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
+    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify((one('--manifest') === 'bg1' ? bg1CampaignManifest : campaignManifest)(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined, units }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
     console.log(json ? JSON.stringify({ ...m, waves: campaignCells(m).map(c => ({ id: c.id, wave: c.wave, lease_usd: c.lease_usd })) }, null, 2) : renderPlan(m));
     return 0;
   }

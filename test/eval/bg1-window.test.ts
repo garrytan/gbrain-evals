@@ -1,17 +1,18 @@
 /**
  * BG1's runner wiring (eval/runner/q1/cell.ts and reread-cell.ts): `--manifest bg1` finds BG1's cells, a BG1 launch unit is
  * its kept worlds (corpus.ts bg1UnitConversations), every BG1 cell that can spend real keys refuses outside a granted
- * paid window (bg1CellWindow), and a sealed-set re-read refuses while the BG1 manifest is unfilled. Keyless: every key
+ * paid window (bg1CellWindow), a BG1 campaign carries its window in every unit's command and is refused without one
+ * (bg1CampaignManifest), and a sealed-set re-read refuses while the BG1 manifest is unfilled. Keyless: every key
  * is blank, every refusal comes before any request, and the one upstream named is a dead local port.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import type { Bg1Manifest, Corpus } from '../../eval/runner/memory-qa/corpus.ts';
-import { bg1CellWindow, bg1KeptUnit, findCell, loadCellManifest } from '../../eval/runner/q1/cell.ts';
+import { bg1CampaignManifest, bg1CellWindow, bg1KeptUnit, findCell, loadCellManifest } from '../../eval/runner/q1/cell.ts';
 import { prepareReread, rereadArm } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { BG1_CONVERSATIONS } from '../../eval/runner/bg1/types.ts';
@@ -89,6 +90,41 @@ describe('bg1CellWindow', () => {
       expect(r.stderr).toContain('--paid-window');
       expect(existsSync(out)).toBe(false);
     }
+  });
+});
+
+describe('a BG1 campaign', () => {
+  const m = loadCellManifest('bg1');
+  const sel = { campaign_id: 'q1-scoreboard-bg1-wave-a', cap_usd: 400, units: ['bg1.baseline-none.baseline.c0', 'bg1.gbrain-defaults.rs1-stable.c1'], paid_window: 'BG1-WA-CELLS' };
+
+  test('every unit runs from bg1-cells.json inside the selection\'s paid window, at its cap', () => {
+    const c = bg1CampaignManifest(m, { units: sel });
+    expect(c.campaign_id).toBe('q1-scoreboard-bg1-wave-a');
+    expect(c.cap_usd).toBe(400);
+    expect(c.cells.map(x => x.id).sort()).toEqual([...sel.units].sort());
+    for (const cell of c.cells) expect(cell.command).toMatch(new RegExp(`--manifest bg1 --shard ${cell.id.at(-1)}/7 (--system-url \\S+ )?--paid-window BG1-WA-CELLS --window-cap-usd 400 --out "\\$SHOOTOUT_OUT"`));
+    const dev = bg1CampaignManifest(m, { smoke: true, units: { ...sel, campaign_id: 'q1-scoreboard-bg1-stage1', units: ['bg1-dev3.baseline-none.baseline'] } });
+    expect(dev.cells.map(x => x.command)).toEqual([expect.stringContaining('--cell bg1-dev3.baseline-none.baseline --manifest bg1 --paid-window BG1-WA-CELLS --window-cap-usd 400 --out "$SHOOTOUT_OUT"')]);
+  });
+
+  test('a BG1 campaign without a selection naming a well-formed window, or without a positive cap, is refused', () => {
+    for (const units of [undefined, { ...sel, paid_window: undefined }, { ...sel, paid_window: 'a b' }, { ...sel, cap_usd: 0 }]) {
+      expect(refusal(() => bg1CampaignManifest(m, { units }))).toMatchObject({ code: 'PAID_FLAGS_MISSING', message: expect.stringContaining('naming its granted paid window') });
+    }
+  });
+
+  test('the CLI writes a BG1 campaign only from a selection naming its window', () => {
+    const env = { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '' };
+    const dir = scratch(), bare = join(dir, 'bare.json'), named = join(dir, 'named.json'), units = join(dir, 'units.json');
+    const plan = (...args: string[]) => spawnSync('bun', ['eval/runner/q1/cell.ts', 'plan', '--manifest', 'bg1', ...args], { cwd: REPO, encoding: 'utf8', env, timeout: 60_000 });
+    const r = plan('--campaign-out', bare);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain('PAID_FLAGS_MISSING');
+    expect(existsSync(bare)).toBe(false);
+    writeFileSync(units, JSON.stringify(sel));
+    expect(plan('--units', units, '--campaign-out', named).status).toBe(0);
+    const c = JSON.parse(readFileSync(named, 'utf8'));
+    expect(c.cells.every((x: { command: string }) => x.command.includes('--paid-window BG1-WA-CELLS --window-cap-usd 400 --out'))).toBe(true);
   });
 });
 
