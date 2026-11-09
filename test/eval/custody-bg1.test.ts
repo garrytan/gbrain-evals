@@ -209,6 +209,68 @@ describe('mint.sh --fake, validate.ts and hashlist.ts end to end', () => {
     expect(leaks(paused.all + acked.all + twoMore.all + second.all, probes(join(out, 'set'), j.line))).toEqual([]);
   }, 240_000);
 
+  // Value: protects=two drops among slots 1 to 5 past GBEV-3's latest approved count pause the mint, however later runs cover the slots; fails_when=a run whose --start covers an acknowledged dropped slot renders it again, the early-drop count falls, and two more drops go on without a pause; why_new=the Opus fix-check on 12256467..806fc1ba, finding 1 (its probe); seam=mint.sh --fake with planned breaks; no_claim=a paid render
+  test('the fix-check probe: after an ack, a rerun over slots 1 to 3 renders neither dropped slot again, so drops at 4 and 5 pause', () => {
+    const j = inputs('yield-probe');
+    const out = join(j.dir, 'bg1-custody-p');
+    const go = (start: number, count: number, extra: string[] = []) => mint(out, j, ['--fake', '--start', String(start), '--count', String(count), ...extra]);
+    const records = () => ['bg1-001', 'bg1-003'].map(id => readFileSync(join(out, 'render', `${id}.json`), 'utf8'));
+    const paused = go(1, 3, ['--fake-break', '1:2:4,3:2:4']);
+    expect(paused.code).toBe(3);
+    expect(paused.out).toContain('summary=paused reason=yield_gate mode=fake written=1 skipped=0 dropped=2 last_slot=3 early_drops=2\n');
+    const dropped = records();
+    expect(go(6, 1, ['--yield-gate-ack', 'a-0123456789ab']).code).toBe(0);
+    const rerun = go(1, 3, ['--yield-gate-ack', 'a-0123456789ab']);
+    expect(rerun.code).toBe(0);
+    expect(rerun.out).not.toMatch(/^bg1-render slot=[13] /m);
+    expect(records()).toEqual(dropped);
+    for (const id of ['bg1-001', 'bg1-003']) expect(existsSync(join(out, 'set', 'worlds', id))).toBe(false);
+    expect(rerun.out).toContain('bg1-mint slot=1 world=bg1-001 status=dropped_earlier\n');
+    expect(rerun.out).toContain('bg1-mint slot=3 world=bg1-003 status=dropped_earlier\n');
+    expect(rerun.out).toContain('summary=mint mode=fake slots=3 written=0 skipped=1 dropped=0 dropped_earlier=2\n');
+    const twoMore = go(4, 2, ['--fake-break', '4:2:4,5:2:4']);
+    expect(twoMore.code).toBe(3);
+    expect(twoMore.out).toContain('summary=paused reason=yield_gate mode=fake written=0 skipped=0 dropped=2 last_slot=5 early_drops=4 acked_drops=2\n');
+    expect(leaks(paused.all + rerun.all + twoMore.all, probes(join(out, 'set'), j.line))).toEqual([]);
+  }, 240_000);
+
+  // Value: protects=a dropped world stays dropped, so the drop count the gate and validate.ts read only grows; fails_when=a later invocation renders a slot whose render record says dropped, or rewrites that record; why_new=the Opus fix-check on 12256467..806fc1ba, finding 1 (rule one); seam=mint.sh --fake with planned breaks; no_claim=a paid render
+  test('a recorded drop is final: a later run skips the slot with a counted line and leaves its record untouched, early slot or late', () => {
+    const j = inputs('drop-final');
+    const out = join(j.dir, 'bg1-custody-d');
+    const record = (id: string) => { const p = join(out, 'render', `${id}.json`); return { text: readFileSync(p, 'utf8'), mtime: statSync(p).mtimeMs }; };
+    expect(mint(out, j, ['--fake', '--count', '2', '--fake-break', '2:2:4']).out).toContain('bg1-render slot=2 world=bg1-002 status=dropped ');
+    expect(mint(out, j, ['--fake', '--start', '7', '--count', '1', '--fake-break', '7:1:4']).out).toContain('bg1-render slot=7 world=bg1-007 status=dropped ');
+    const before = [record('bg1-002'), record('bg1-007')];
+    const again = mint(out, j, ['--fake', '--count', '3']);
+    const late = mint(out, j, ['--fake', '--start', '7', '--count', '1']);
+    expect([again.code, late.code]).toEqual([0, 0]);
+    expect(again.out + late.out).not.toMatch(/^bg1-render slot=[27] /m);
+    expect([record('bg1-002'), record('bg1-007')]).toEqual(before);
+    for (const id of ['bg1-002', 'bg1-007']) expect(existsSync(join(out, 'set', 'worlds', id))).toBe(false);
+    expect(existsSync(join(out, 'set', 'worlds', 'bg1-003', 'world.json'))).toBe(true);
+    expect(again.out).toContain('bg1-mint slot=2 world=bg1-002 status=dropped_earlier\n');
+    expect(again.out).toContain('summary=mint mode=fake slots=3 written=1 skipped=1 dropped=0 dropped_earlier=1\n');
+    expect(late.out).toBe('bg1-mint slot=7 world=bg1-007 status=dropped_earlier\nbg1-mint summary=mint mode=fake slots=1 written=0 skipped=0 dropped=0 dropped_earlier=1\n');
+  }, 240_000);
+
+  // Value: protects=the gate never measures new drops against an acknowledged count the render records no longer hold; fails_when=an early-drop count below the latest ack's (a render record removed or rewritten outside mint.sh) lets a run render, or takes a new ack; why_new=the Opus fix-check on 12256467..806fc1ba, finding 1 (rule two); seam=mint.sh --fake with planned breaks and a render record removed by hand; no_claim=a paid render
+  test('an early-drop count below the latest ack\'s refuses with exit 3 and a reason line, before any render or new ack', () => {
+    const j = inputs('drops-fell');
+    const out = join(j.dir, 'bg1-custody-e'), acks = join(out, 'render', 'yield-gate-acks.jsonl');
+    const go = (start: number, count: number, extra: string[] = []) => mint(out, j, ['--fake', '--start', String(start), '--count', String(count), ...extra]);
+    expect(go(1, 3, ['--fake-break', '1:2:4,3:2:4']).code).toBe(3);
+    expect(go(6, 1, ['--yield-gate-ack', 'a-0123456789ab']).code).toBe(0);
+    rmSync(join(out, 'render', 'bg1-001.json'));
+    for (const extra of [[], ['--yield-gate-ack', 'a-0123456789ab'], ['--yield-gate-ack', 'a-ba9876543210']]) {
+      const r = go(7, 1, extra);
+      expect(r.code).toBe(3);
+      expect(r.out).toBe('bg1-mint summary=refused reason=early_drops_below_ack mode=fake written=0 skipped=0 dropped=0 last_slot=6 early_drops=1 acked_drops=2\n');
+    }
+    expect(readFileSync(acks, 'utf8').trim().split('\n')).toHaveLength(1);
+    expect(existsSync(join(out, 'set', 'worlds', 'bg1-007'))).toBe(false);
+  }, 240_000);
+
   test('validate.ts passes the minted set and keeps it in slot order; tampering fails the matching gate', () => {
     const report = join(i.dir, 'validation', 'report.json');
     const v = run('bun', [VALIDATE, '--set', join(out, 'set'), '--seed-file', i.seed, '--phrasing', i.phrasing, '--report', report, '--target-tokens', '30000', '--tolerance', '0.25', '--n-final', '2']);
