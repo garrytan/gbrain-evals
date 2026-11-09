@@ -209,6 +209,68 @@ describe('mint.sh --fake, validate.ts and hashlist.ts end to end', () => {
     expect(leaks(paused.all + acked.all + twoMore.all + second.all, probes(join(out, 'set'), j.line))).toEqual([]);
   }, 240_000);
 
+  // Value: protects=two drops among slots 1 to 5 past GBEV-3's latest approved count pause the mint, however later runs cover the slots; fails_when=a run whose --start covers an acknowledged dropped slot renders it again, the early-drop count falls, and two more drops go on without a pause; why_new=the Opus fix-check on 12256467..806fc1ba, finding 1 (its probe); seam=mint.sh --fake with planned breaks; no_claim=a paid render
+  test('the fix-check probe: after an ack, a rerun over slots 1 to 3 renders neither dropped slot again, so drops at 4 and 5 pause', () => {
+    const j = inputs('yield-probe');
+    const out = join(j.dir, 'bg1-custody-p');
+    const go = (start: number, count: number, extra: string[] = []) => mint(out, j, ['--fake', '--start', String(start), '--count', String(count), ...extra]);
+    const records = () => ['bg1-001', 'bg1-003'].map(id => readFileSync(join(out, 'render', `${id}.json`), 'utf8'));
+    const paused = go(1, 3, ['--fake-break', '1:2:4,3:2:4']);
+    expect(paused.code).toBe(3);
+    expect(paused.out).toContain('summary=paused reason=yield_gate mode=fake written=1 skipped=0 dropped=2 last_slot=3 early_drops=2\n');
+    const dropped = records();
+    expect(go(6, 1, ['--yield-gate-ack', 'a-0123456789ab']).code).toBe(0);
+    const rerun = go(1, 3, ['--yield-gate-ack', 'a-0123456789ab']);
+    expect(rerun.code).toBe(0);
+    expect(rerun.out).not.toMatch(/^bg1-render slot=[13] /m);
+    expect(records()).toEqual(dropped);
+    for (const id of ['bg1-001', 'bg1-003']) expect(existsSync(join(out, 'set', 'worlds', id))).toBe(false);
+    expect(rerun.out).toContain('bg1-mint slot=1 world=bg1-001 status=dropped_earlier\n');
+    expect(rerun.out).toContain('bg1-mint slot=3 world=bg1-003 status=dropped_earlier\n');
+    expect(rerun.out).toContain('summary=mint mode=fake slots=3 written=0 skipped=1 dropped=0 dropped_earlier=2\n');
+    const twoMore = go(4, 2, ['--fake-break', '4:2:4,5:2:4']);
+    expect(twoMore.code).toBe(3);
+    expect(twoMore.out).toContain('summary=paused reason=yield_gate mode=fake written=0 skipped=0 dropped=2 last_slot=5 early_drops=4 acked_drops=2\n');
+    expect(leaks(paused.all + rerun.all + twoMore.all, probes(join(out, 'set'), j.line))).toEqual([]);
+  }, 240_000);
+
+  // Value: protects=a dropped world stays dropped, so the drop count the gate and validate.ts read only grows; fails_when=a later invocation renders a slot whose render record says dropped, or rewrites that record; why_new=the Opus fix-check on 12256467..806fc1ba, finding 1 (rule one); seam=mint.sh --fake with planned breaks; no_claim=a paid render
+  test('a recorded drop is final: a later run skips the slot with a counted line and leaves its record untouched, early slot or late', () => {
+    const j = inputs('drop-final');
+    const out = join(j.dir, 'bg1-custody-d');
+    const record = (id: string) => { const p = join(out, 'render', `${id}.json`); return { text: readFileSync(p, 'utf8'), mtime: statSync(p).mtimeMs }; };
+    expect(mint(out, j, ['--fake', '--count', '2', '--fake-break', '2:2:4']).out).toContain('bg1-render slot=2 world=bg1-002 status=dropped ');
+    expect(mint(out, j, ['--fake', '--start', '7', '--count', '1', '--fake-break', '7:1:4']).out).toContain('bg1-render slot=7 world=bg1-007 status=dropped ');
+    const before = [record('bg1-002'), record('bg1-007')];
+    const again = mint(out, j, ['--fake', '--count', '3']);
+    const late = mint(out, j, ['--fake', '--start', '7', '--count', '1']);
+    expect([again.code, late.code]).toEqual([0, 0]);
+    expect(again.out + late.out).not.toMatch(/^bg1-render slot=[27] /m);
+    expect([record('bg1-002'), record('bg1-007')]).toEqual(before);
+    for (const id of ['bg1-002', 'bg1-007']) expect(existsSync(join(out, 'set', 'worlds', id))).toBe(false);
+    expect(existsSync(join(out, 'set', 'worlds', 'bg1-003', 'world.json'))).toBe(true);
+    expect(again.out).toContain('bg1-mint slot=2 world=bg1-002 status=dropped_earlier\n');
+    expect(again.out).toContain('summary=mint mode=fake slots=3 written=1 skipped=1 dropped=0 dropped_earlier=1\n');
+    expect(late.out).toBe('bg1-mint slot=7 world=bg1-007 status=dropped_earlier\nbg1-mint summary=mint mode=fake slots=1 written=0 skipped=0 dropped=0 dropped_earlier=1\n');
+  }, 240_000);
+
+  // Value: protects=the gate never measures new drops against an acknowledged count the render records no longer hold; fails_when=an early-drop count below the latest ack's (a render record removed or rewritten outside mint.sh) lets a run render, or takes a new ack; why_new=the Opus fix-check on 12256467..806fc1ba, finding 1 (rule two); seam=mint.sh --fake with planned breaks and a render record removed by hand; no_claim=a paid render
+  test('an early-drop count below the latest ack\'s refuses with exit 3 and a reason line, before any render or new ack', () => {
+    const j = inputs('drops-fell');
+    const out = join(j.dir, 'bg1-custody-e'), acks = join(out, 'render', 'yield-gate-acks.jsonl');
+    const go = (start: number, count: number, extra: string[] = []) => mint(out, j, ['--fake', '--start', String(start), '--count', String(count), ...extra]);
+    expect(go(1, 3, ['--fake-break', '1:2:4,3:2:4']).code).toBe(3);
+    expect(go(6, 1, ['--yield-gate-ack', 'a-0123456789ab']).code).toBe(0);
+    rmSync(join(out, 'render', 'bg1-001.json'));
+    for (const extra of [[], ['--yield-gate-ack', 'a-0123456789ab'], ['--yield-gate-ack', 'a-ba9876543210']]) {
+      const r = go(7, 1, extra);
+      expect(r.code).toBe(3);
+      expect(r.out).toBe('bg1-mint summary=refused reason=early_drops_below_ack mode=fake written=0 skipped=0 dropped=0 last_slot=6 early_drops=1 acked_drops=2\n');
+    }
+    expect(readFileSync(acks, 'utf8').trim().split('\n')).toHaveLength(1);
+    expect(existsSync(join(out, 'set', 'worlds', 'bg1-007'))).toBe(false);
+  }, 240_000);
+
   test('validate.ts passes the minted set and keeps it in slot order; tampering fails the matching gate', () => {
     const report = join(i.dir, 'validation', 'report.json');
     const v = run('bun', [VALIDATE, '--set', join(out, 'set'), '--seed-file', i.seed, '--phrasing', i.phrasing, '--report', report, '--target-tokens', '30000', '--tolerance', '0.25', '--n-final', '2']);
@@ -434,6 +496,61 @@ describe('mint.sh --dev and render.ts --dev render stage 1\'s public dev worlds'
     expect(r.err).toContain('--set must sit outside any git checkout');
     for (const p of [out, set, inRepo]) expect(existsSync(p)).toBe(false);
   });
+
+  // Value: protects=dev worlds never land in a custody --out, beside sealed worlds or in their render-cache; fails_when=mint.sh --dev renders into an --out named bg1-custody* in any case, or into one whose set/worlds or render/ holds a sealed bg1-NNN entry; why_new=the Opus fix-check on 12256467..806fc1ba, finding 4 (its probe: --dev --fake --out .../bg1-custody-z over a set holding worlds/bg1-001 exited 0); seam=mint.sh --dev --fake, which refuses before it writes anything; no_claim=the sealed path's own --out checks
+  test('--dev refuses a custody --out: a bg1-custody name in any case, or a set/worlds or render/ holding a bg1-NNN entry', () => {
+    const j = inputs('dev-custody');
+    const dev = (out: string) => run('bash', [MINT, '--dev', '--fake', '--out', out, '--target-tokens', '4000']);
+    const sealed = join(j.dir, 'bg1-custody-z');
+    expect(mint(sealed, j, ['--fake', '--count', '1']).code).toBe(0);
+    const before = files(sealed).sort();
+    const probe = dev(sealed);
+    expect(files(sealed).sort()).toEqual(before);
+    expect(probe.code).toBe(2);
+    expect(probe.err).toContain('--dev never writes into a custody --out, so its name may not start with bg1-custody');
+    for (const name of ['bg1-custody-new', 'BG1-Custody-new']) {
+      const r = dev(join(j.dir, name));
+      expect(existsSync(join(j.dir, name))).toBe(false);
+      expect(r.code).toBe(2);
+    }
+    const worlds = join(scratch('dev-mixed-worlds'), 'dev-out'), records = join(scratch('dev-mixed-records'), 'dev-out');
+    mkdirSync(join(worlds, 'set', 'worlds', 'bg1-001'), { recursive: true });
+    mkdirSync(join(records, 'render'), { recursive: true });
+    writeFileSync(join(records, 'render', 'bg1-002.json'), '{}');
+    for (const out of [worlds, records]) {
+      const r = dev(out);
+      expect(existsSync(join(out, 'set', 'worlds', 'bg1-dev-01'))).toBe(false);
+      expect(r.code).toBe(2);
+      expect(r.err).toContain('holds a sealed bg1-NNN entry under set/worlds or render/');
+    }
+  }, 240_000);
+
+  // Value: protects=a dev render's model replies never land where Git could pick them up; fails_when=render.ts --dev takes an explicit --cache inside a checkout while its --set sits outside, and real mode creates that cache directory there; why_new=the Opus fix-check on 12256467..806fc1ba, INFO item 5; seam=render.ts --dev, real mode against a dead loopback proxy inside a scratch ledger's window, and --fake; no_claim=the sealed path's cache, which mint.sh puts under its custody --out
+  test('render.ts --dev refuses a --cache inside a checkout before it opens a client or renders, and takes one outside', async () => {
+    const dir = scratch('dev-cache'), set = join(dir, 'set');
+    const inRepo = join(REPO, 'eval', 'data', 'changing-facts-v1', 'dev-cache-must-not-exist');
+    const port = await freePort(0);
+    const ready = (name: string, bg1: Record<string, string>) => { const p = join(dir, name); writeFileSync(p, JSON.stringify({ env: { bg1 } })); return p; };
+    const proxies = { BG1_GEMINI_READY: ready('gemini.json', { GOOGLE_GEMINI_BASE_URL: `http://127.0.0.1:${port}/gemini`, GEMINI_API_KEY: 'mpwp-bg1-dead' }),
+      BG1_ANTHROPIC_READY: ready('anthropic.json', { ANTHROPIC_BASE_URL: `http://127.0.0.1:${port}/anthropic`, ANTHROPIC_API_KEY: 'mpwp-bg1-dead' }) };
+    const ledgerPath = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5, reason: 'dev cache test' });
+    const window = ['--paid-window', 'bg1-test', '--window-cap-usd', '5', '--budget-ledger', ledgerPath, '--budget-run-id', BudgetRun.open({ runner: 'bg1-dev-cache-test', budgetUsd: 2, ledgerPath }).runId];
+    const base = [RENDER, '--dev', 'bg1-dev-01', '--set', set, '--target-tokens', '4000'];
+    try {
+      const real = run('bun', [...base, '--cache', inRepo, ...window], proxies);
+      expect(existsSync(inRepo)).toBe(false);
+      expect(real.code).toBe(2);
+      expect(real.err).toContain('--cache must sit outside any git checkout');
+      const fake = run('bun', [...base, '--fake', '--cache', inRepo]);
+      expect(existsSync(join(set, 'worlds'))).toBe(false);
+      expect(fake.code).toBe(2);
+      expect(fake.err).toContain('--cache must sit outside any git checkout');
+    } finally { rmSync(inRepo, { recursive: true, force: true }); }
+    const ok = run('bun', [...base, '--fake', '--cache', join(dir, 'render-cache')]);
+    expect(ok.code).toBe(0);
+    expect(ok.out).toContain('bg1-render world=bg1-dev-01 status=written ');
+  }, 120_000);
 
   // Value: protects=a dev world is rendered only from the plan and gold committed for it; fails_when=render.ts plans a dev world and spends on it while the committed plan.json or questions.json differs from that plan, or is missing; why_new=BG1 follow-up fix 8; seam=render.ts main with a counting fake Models and a scratch copy of the committed dev worlds; no_claim=the generator's own determinism (changing-facts-gen.ts check)
   test('a committed dev plan or questions file that differs or is missing refuses before any model call', async () => {

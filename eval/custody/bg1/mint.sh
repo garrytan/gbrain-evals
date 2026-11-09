@@ -22,7 +22,9 @@
 #   - Deterministic seeds. Slot i's world seed is HMAC-SHA256(seed line, "bg1/world/<i>") (changing-facts-gen.ts
 #     sealedWorldSeed), and no file records it.
 #   - Resume. A slot whose world is written from the same plan is skipped, and model replies are cached under
-#     <out>/render-cache, so a rerun buys nothing twice.
+#     <out>/render-cache, so a rerun buys nothing twice. A recorded drop is final: a slot whose render record
+#     (render/bg1-NNN.json) says dropped is never rendered again by any later invocation. mint.sh prints a
+#     status=dropped_earlier line for it, counts it as dropped_earlier in the summary and leaves the record as it is.
 #   - Yield gate. Two dropped worlds among mint slots 1 to 5 pause the mint with exit 3. Drops are counted from the
 #     render records under --out (render/bg1-NNN.json), so every invocation on one --out counts them, a resumed or
 #     --start run included, and a run on an --out that already holds two pauses before it renders anything. A pause goes
@@ -30,7 +32,9 @@
 #     time and the early-drop count to render/yield-gate-acks.jsonl, and from then on every invocation on that --out
 #     counts only the drops past the latest acknowledged count, so two more pause it again. An ack is refused unless
 #     the gate is paused, and so is an id an earlier pause used; the latest ack's id may be given again on a resumed
-#     run. With no ack recorded, the gate is as above.
+#     run. With no ack recorded, the gate is as above. Since a drop is final, the early-drop count never falls, so an
+#     invocation that finds it below the latest ack's recorded count (a render record changed outside mint.sh) refuses
+#     with exit 3 and a summary=refused line before it renders or acknowledges anything.
 #   - One ledger. A relative --budget-ledger is resolved once, against the directory mint.sh starts in, before the window
 #     check, so the check, both proxies and render.ts all name the same ledger file. CDPATH is unset first, so a
 #     relative --out or --budget-ledger never resolves against a directory the caller's CDPATH names.
@@ -49,8 +53,9 @@
 # behind the same pair of metering proxies per world, on one ledger, after the same window check and with the same key
 # sources as above. It reads no seed or phrasing file: render.ts plans each world from its public seed and refuses one
 # whose plan or questions differ from the committed files. So it takes no --seed-file, --phrasing, --count, --start or
-# --yield-gate-ack, and ignores BG1_SEED_FILE and BG1_PHRASING_FILE. --out must sit outside any git checkout and needs
-# no bg1-custody name. Output is counts and hashes. A dropped dev world stops the run with exit 3; the yield gate does
+# --yield-gate-ack, and ignores BG1_SEED_FILE and BG1_PHRASING_FILE. --out must sit outside any git checkout, and it
+# refuses a custody --out: one whose name starts with bg1-custody, in any case, or whose set/worlds or render/ holds a
+# bg1-NNN entry, so dev worlds never sit beside sealed ones or share their render-cache. Output is counts and hashes. A dropped dev world stops the run with exit 3; the yield gate does
 # not apply. At the end, or at a drop, it prints one render.ts --dev-report line per world it rendered: its attempts
 # and, in real mode, its two proxies' requests and spend from the ledger. Layout under --out: set/
 # (worlds/bg1-dev-NN/{plan,questions,world}.json and render/bg1-dev-NN.json; the root GBRAIN_EVALS_BG1_DEV_ROOT
@@ -97,6 +102,10 @@ done
 [ -n "$OUT" ] || die "--out is required"
 if [ "$DEV" = 1 ]; then
   [ -z "$SEALED_ONLY" ] || die "--dev plans the public dev worlds from their public seeds and phrasing, so it takes no$SEALED_ONLY"
+  case "$(basename "$OUT" | tr '[:upper:]' '[:lower:]')" in bg1-custody*) die "--dev never writes into a custody --out, so its name may not start with bg1-custody" ;; esac
+  for f in "$OUT"/set/worlds/bg1-[0-9][0-9][0-9]* "$OUT"/render/bg1-[0-9][0-9][0-9]*; do
+    if [ -e "$f" ] || [ -L "$f" ]; then die "--dev never writes into a custody --out, and this one holds a sealed bg1-NNN entry under set/worlds or render/"; fi
+  done
 else
   [ -n "$SEED_FILE" ] || die "--seed-file (or BG1_SEED_FILE) is required; there is no default seed"
   [ -n "$PHRASING" ] || die "--phrasing (or BG1_PHRASING_FILE) is required; sealed worlds never use the public phrasing"
@@ -199,7 +208,7 @@ render_one() {
   [ -z "$LINE" ] || printf '%s\n' "$LINE"
 }
 
-WRITTEN=0 SKIPPED=0 DROPPED=0
+WRITTEN=0 SKIPPED=0 DROPPED=0 DROPPED_EARLIER=0
 if [ "$DEV" = 1 ]; then
   RENDERED=()
   dev_report() {
@@ -226,10 +235,12 @@ if [ "$DEV" = 1 ]; then
   exit 0
 fi
 
-# The dropped worlds among slots 1 to 5 that the render records under --out hold, whichever invocation dropped them.
+# True when world $1's render record under --out says dropped, whichever invocation dropped it.
+dropped_record() { grep -Eq '"status": ?"dropped"' "$OUT/render/$1.json" 2>/dev/null; }
+# The dropped worlds among slots 1 to 5 that the render records under --out hold.
 early_drops() {
   local n=0 s
-  for s in 1 2 3 4 5; do grep -Eq '"status": ?"dropped"' "$OUT/render/$(printf 'bg1-%03d' "$s").json" 2>/dev/null && n=$((n + 1)); done
+  for s in 1 2 3 4 5; do dropped_record "$(printf 'bg1-%03d' "$s")" && n=$((n + 1)); done
   printf '%s' "$n"
 }
 ACKS="$OUT/render/yield-gate-acks.jsonl"
@@ -240,18 +251,27 @@ acked_drops() {
   [ -n "$n" ] || die "render/yield-gate-acks.jsonl ends in a line that is not an acknowledgement"
   printf '%s' "$n"
 }
+# Exits 3 when the early-drop count $1 is below the latest ack's count $2: a recorded drop is final, so the count falls
+# only when a render record changed outside mint.sh.
+drops_kept() {
+  [ "$1" -lt "$2" ] || return 0
+  say "summary=refused reason=early_drops_below_ack mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$3 early_drops=$1 acked_drops=$2"
+  exit 3
+}
 yield_gate() {
   local n a
   n="$(early_drops)"
   a="$(acked_drops)"
+  drops_kept "$n" "$a" "$1"
   [ $((n - a)) -ge 2 ] || return 0
-  say "summary=paused reason=yield_gate mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 early_drops=$n$([ ! -s "$ACKS" ] || printf ' acked_drops=%s' "$a")"
+  say "summary=paused reason=yield_gate mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 early_drops=$n$([ ! -s "$ACKS" ] || printf ' acked_drops=%s' "$a")$([ "$DROPPED_EARLIER" = 0 ] || printf ' dropped_earlier=%s' "$DROPPED_EARLIER")"
   exit 3
 }
 if [ -n "$ACK" ] && ! { [ -s "$ACKS" ] && tail -n 1 "$ACKS" | grep -Fq "{\"ack\":\"$ACK\","; }; then
   ! grep -Fq "{\"ack\":\"$ACK\"," "$ACKS" 2>/dev/null || die "approval $ACK acknowledged an earlier pause; a new pause needs a new approval"
   n="$(early_drops)"
   a="$(acked_drops)"
+  drops_kept "$n" "$a" $((START - 1))
   [ $((n - a)) -ge 2 ] || die "the yield gate is not paused on this --out, so --yield-gate-ack has nothing to acknowledge"
   printf '{"ack":"%s","at":"%s","early_drops":%s}\n' "$ACK" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$n" >> "$ACKS"
   say "yield_gate_ack=$ACK early_drops=$n"
@@ -259,6 +279,11 @@ fi
 yield_gate $((START - 1))
 for ((slot = START; slot < START + COUNT; slot++)); do
   id="$(printf 'bg1-%03d' "$slot")"
+  if dropped_record "$id"; then
+    DROPPED_EARLIER=$((DROPPED_EARLIER + 1))
+    say "slot=$slot world=$id status=dropped_earlier"
+    continue
+  fi
   render_one "$id" --set "$OUT/set" --seed-file "$SEED_FILE" --phrasing "$PHRASING" --slot "$slot"
   case "$RC" in
     0) case "$LINE" in *" status=skipped "*) SKIPPED=$((SKIPPED + 1)) ;; *) WRITTEN=$((WRITTEN + 1)) ;; esac ;;
@@ -268,4 +293,4 @@ for ((slot = START; slot < START + COUNT; slot++)); do
   yield_gate "$slot"
 done
 
-say "summary=mint mode=$MODE slots=$COUNT written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED"
+say "summary=mint mode=$MODE slots=$COUNT written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED dropped_earlier=$DROPPED_EARLIER"

@@ -42,7 +42,7 @@
  * plan and its questions are byte-identical to the committed eval/data/changing-facts-v1/dev/worlds/<id>/plan.json and
  * questions.json. Rendering, the checks, regeneration, the cache, the models and the window guard are the ones above.
  * It writes worlds/<id>/{plan,questions,world}.json and a counts-only record, render/<id>.json, under --set, which
- * must sit outside any git checkout; nothing carries the custody marker. --dev-report prints a dev world's attempts
+ * must sit outside any git checkout, as must the resolved --cache; nothing carries the custody marker. --dev-report prints a dev world's attempts
  * from that record and, given the ledger run, the requests and spend of its two metering proxies.
  *
  * Exit codes: 0 written or skipped, 11 dropped, 2 refused, 1 an error (printed as its class and a hash, never text).
@@ -414,6 +414,8 @@ export async function main(argv: string[], env: Record<string, string | undefine
     if (!set || !BG1_DEV_CONVERSATIONS.includes(dev)) throw new RenderRefusal(`usage: --dev <${BG1_DEV_CONVERSATIONS.join('|')}> --set <dir> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
     if (insideCheckout(set)) throw new RenderRefusal('--set must sit outside any git checkout');
   } else if (!set || !seedFile || !phrasingFile || !slotText) throw new RenderRefusal('usage: --set <dir> --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json --slot <n> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)');
+  const cache = resolve(flag('--cache') ?? join(dirname(resolve(set)), 'render-cache'));
+  if (dev !== null && insideCheckout(cache)) throw new RenderRefusal('--cache must sit outside any git checkout');
   const fake = argv.includes('--fake');
   const targetTokens = Number(flag('--target-tokens') ?? BG1_TARGET_TOKENS);
   if (!(Number.isInteger(targetTokens) && targetTokens >= 1000)) throw new RenderRefusal('--target-tokens must be a whole number of at least 1000');
@@ -423,7 +425,6 @@ export async function main(argv: string[], env: Record<string, string | undefine
     requireRs1Window(argv, { what: 'bg1 render', keyless: false, caps: () => (ledger && run ? ledgerCaps(ledger, run) : [{ label: 'the budget ledger run (--budget-ledger and --budget-run-id)', usd: null }]) });
     const held = PROVIDER_KEYS.filter(k => env[k]);
     if (held.length) throw new RenderRefusal(`real mode reaches providers only through the metering proxies, and this process holds ${held.join(', ')}`);
-    const cache = resolve(flag('--cache') ?? join(dirname(resolve(set)), 'render-cache'));
     const gemini = cachedClient(geminiProxyClient(env.BG1_GEMINI_READY), cache), haiku = cachedClient(haikuProxyClient(env.BG1_ANTHROPIC_READY), cache);
     make = () => clientModels(gemini, haiku);
   }

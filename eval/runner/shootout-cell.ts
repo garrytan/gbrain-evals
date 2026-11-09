@@ -565,27 +565,19 @@ export class Campaign {
   }
   private append(e: LeaseEvent) {
     this.locked(() => {
-      if (this.bg1) this.events(true);
+      if (this.bg1) this.events();
       appendFileSync(this.eventsPath, JSON.stringify(e) + '\n');
       if (this.bg1) writeFileSync(this.eventsShaPath, createHash('sha256').update(readFileSync(this.eventsPath)).digest('hex') + '\n');
     });
   }
   /**
    * The lease log's lines. A BG1 campaign reads it under leases.lock and refuses a log that is not the one it last wrote
-   * (its SHA-256 beside it), so an edited lease never reaches a unit, and, once campaign.json exists, a log missing
-   * with its SHA-256 while the campaign ledger still holds a reservation for this campaign's run. An append checks only
-   * the SHA-256: the first append follows the first ledger reservation, and every reserve read the log before it.
+   * (its SHA-256 beside it), so an edited lease never reaches a unit. A log emptied, cut down or removed together with
+   * its SHA-256 still reads here; reconcileBg1 refuses it before reserve, payload, launch and resume.
    */
-  private events(appending = false): string[] {
+  private events(): string[] {
     return this.locked(() => {
       const text = existsSync(this.eventsPath) ? readFileSync(this.eventsPath, 'utf8') : null;
-      if (this.bg1 && !appending && text === null && !existsSync(this.eventsShaPath) && existsSync(this.statePath)) {
-        const s = this.state();
-        const held = readLedger(s.ledger).entries.filter(x => x.run_id === s.run_id && (x.actual_usd ?? x.reserved_usd) > 0);
-        if (held.length) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `${this.eventsPath} is missing, and the campaign ledger holds ${held.length} reservation(s) for campaign ${this.manifest.campaign_id}'s run ${s.run_id}`,
-          why: 'every reservation the campaign run holds is a lease this campaign logged, so a missing lease log would hide leases the ledger still charges and let a unit reserve as if none existed',
-          fix: { next: 'ask_user', user_message: `leases.ndjson and leases.sha256 under ${this.stateDir} are gone; restore both from the custody host's copy, or start the campaign in a fresh --state` } });
-      }
       if (this.bg1 && (text !== null || existsSync(this.eventsShaPath))) {
         const kept = existsSync(this.eventsShaPath) ? readFileSync(this.eventsShaPath, 'utf8').trim() : 'none';
         if (text === null || kept !== createHash('sha256').update(text).digest('hex')) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `${this.eventsPath} is not the lease log campaign ${this.manifest.campaign_id} last wrote (${basename(this.eventsShaPath)} holds ${kept.slice(0, 12)})`,
@@ -594,6 +586,28 @@ export class Campaign {
       }
       return text === null ? [] : text.split('\n').filter(Boolean);
     });
+  }
+  /**
+   * BG1, once campaign.json exists: refuse unless the lease log and the campaign ledger match. Every entry this
+   * campaign's run holds with spend (actual, else reserved, above 0) is named by exactly one reserved event in the log,
+   * and every reserved event names an entry the run holds. A log emptied or cut down with its SHA-256 rewritten would
+   * otherwise read as fewer leases than the ledger charges, so a unit could be reserved again and blockSpend would
+   * undercount. It reads the ledger only, so a refused reserve holds no reservation.
+   */
+  private reconcileBg1(): void {
+    if (!this.bg1 || !existsSync(this.statePath)) return;
+    const s = this.state();
+    const reserved = this.events().map(x => JSON.parse(x) as LeaseEvent).filter((e): e is Extract<LeaseEvent, { event: 'reserved' }> => e.event === 'reserved');
+    const entries = readLedger(s.ledger).entries.filter(e => e.run_id === s.run_id);
+    const held = new Set(entries.map(e => e.id));
+    const problems = [
+      ...entries.filter(e => (e.actual_usd ?? e.reserved_usd) > 0).map(e => [e, reserved.filter(r => r.entry_id === e.id).length] as const).filter(([, n]) => n !== 1)
+        .map(([e, n]) => `ledger entry ${e.id} ("${e.description}") has spend, and ${n} reserved events in the lease log name it`),
+      ...reserved.filter(r => !held.has(r.entry_id)).map(r => `lease ${r.lease_id} names ledger entry ${r.entry_id}, which campaign run ${s.run_id} does not hold`),
+    ];
+    if (problems.length) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `campaign ${this.manifest.campaign_id}'s lease log and ledger do not match: ${problems.slice(0, 3).join('; ')}${problems.length > 3 ? ` (and ${problems.length - 3} more)` : ''}`,
+      why: 'every reservation the campaign run holds is one lease this campaign logged, so a log missing a lease would hide spend the ledger still charges and let a unit reserve as if it were not there',
+      fix: { next: 'ask_user', user_message: `leases.ndjson under ${this.stateDir} does not name exactly the reservations campaign run ${s.run_id} holds; restore it and leases.sha256 from the custody host's copy, or start the campaign in a fresh --state` } });
   }
   cell(id: string): CellSpec { const c = this.manifest.cells.find(x => x.id === id); if (!c) throw new Error(`no cell ${id} in campaign ${this.manifest.campaign_id}`); return c; }
 
@@ -667,15 +681,17 @@ export class Campaign {
 
   /**
    * Reserve a new lease for a cell; refused while the cell holds an unsettled lease, or when the campaign cap (or a Q1
-   * block cap) would be passed. A BG1 reserve holds leases.lock from its first read of the lease log to its append, and
-   * gives the ledger reservation back (settled at 0) when the append refuses, so no refusal leaves a reservation the
-   * lease log does not name.
+   * block cap) would be passed. A BG1 reserve holds leases.lock from its first read of the lease log to its append,
+   * refuses before it touches the ledger when the lease log and the ledger do not match (reconcileBg1), and gives the
+   * ledger reservation back (settled at 0) when the append refuses, so no refusal leaves a reservation the lease log
+   * does not name.
    */
   reserve(cellId: string): LeaseState {
     this.verifyFrozen('reserve');
     const unfilled = Object.entries(this.manifest.parameters ?? {}).filter(([, v]) => v === UNFILLED).map(([k]) => k);
     if (unfilled.length) throw new Error(`campaign parameters ${unfilled.join(', ')} are still ${UNFILLED}; the freezing commit fills them before any lease`);
     return this.locked(() => {
+      this.reconcileBg1();
       const c = this.cell(cellId);
       const mine = this.leases().filter(l => l.cell === cellId);
       const open = mine.find(l => l.status === 'reserved' || l.status === 'launched' || l.status === 'finished');
@@ -748,8 +764,10 @@ export class Campaign {
   /**
    * BG1: refuse a lease whose usd or max_output_tokens is not its unit's in the frozen campaign manifest, or, once
    * campaign.json exists, one the campaign ledger does not hold at that amount in this campaign's run (open, while the
-   * lease is reserved). leases.sha256 only shows the log is the one last written, so a coordinated edit of both files
-   * stops here before a proxy is handed the lease. Other campaigns pass untouched.
+   * lease is reserved) under the lease's own description, `lease <cell> attempt <n>` as reserve() writes it. Also
+   * refuse a lease whose ledger entry another reserved event in the log names, so one entry never backs two leases.
+   * Then the whole log must match the ledger (reconcileBg1). leases.sha256 only shows the log is the one last written,
+   * so a coordinated edit of both files stops here before a proxy is handed the lease. Other campaigns pass untouched.
    */
   private bindBg1Lease(l: LeaseState): void {
     if (!this.bg1) return;
@@ -761,12 +779,16 @@ export class Campaign {
       const s = this.state();
       const entry = readLedger(s.ledger).entries.find(e => e.id === l.entry_id && e.run_id === s.run_id);
       if (!entry) problems.push(`names ledger entry ${l.entry_id}, which campaign run ${s.run_id} does not hold`);
+      else if (entry.description !== `lease ${l.cell} attempt ${l.attempt}`) problems.push(`names ledger entry ${l.entry_id}, which the ledger holds for "${entry.description}", not "lease ${l.cell} attempt ${l.attempt}"`);
       else if (Math.abs(entry.reserved_usd - (l.raised_usd ?? l.usd)) > 1e-9) problems.push(`holds ${l.raised_usd ?? l.usd}, and the ledger reserved ${entry.reserved_usd} for it`);
       else if (l.status === 'reserved' && entry.actual_usd !== null) problems.push(`is reserved in the lease log, and the ledger already settled it at ${entry.actual_usd}`);
     }
+    const named = this.events().map(x => JSON.parse(x) as LeaseEvent).filter(e => e.event === 'reserved' && e.entry_id === l.entry_id).length;
+    if (named > 1) problems.push(`names ledger entry ${l.entry_id}, which ${named} reserved events in the lease log name`);
     if (problems.length) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `lease ${l.lease_id}: ${problems.join('; ')}`,
       why: 'a BG1 unit\'s proxy spends the lease handed to it, so the lease must be the one the frozen campaign prices for its unit and the ledger holds for it',
       fix: { next: 'ask_user', user_message: `leases.ndjson under ${this.stateDir} names a lease the campaign did not reserve; restore it and leases.sha256 from the custody host's copy, or start the campaign in a fresh --state` } });
+    this.reconcileBg1();
   }
 
   /** Q1: the cell's share of each provider key's limits, divided among the cells of its wave that call that provider. */
@@ -825,6 +847,7 @@ export class Campaign {
     this.verifyFrozen('launch');
     const l = this.leases().find(x => x.cell === cellId && x.status === 'reserved');
     if (!l) {
+      this.reconcileBg1();
       const used = this.leases().find(x => x.cell === cellId && (x.status === 'launched' || x.status === 'finished'));
       throw new Error(used ? `lease ${used.lease_id} was already launched; a lease is used once (settle or abandon it, then reserve again)` : `cell ${cellId} has no reserved lease; run reserve first`);
     }
@@ -878,6 +901,7 @@ export class Campaign {
   async resume(cellId: string, runner: Runner, opts: { local?: { port: number }; from?: Campaign } = {}): Promise<{ mode: 'snapshot' | 'answers' | 'repeat'; realization_id: string | null; snapshot_check: string; lease: LeaseState; note: string }> {
     if (!this.q1) throw new Error('resume is for Q1 scoreboard campaigns');
     this.verifyFrozen('resume');
+    this.reconcileBg1();
     const c = this.cell(cellId);
     const src = opts.from ?? this;
     const theirs = src.leases().filter(l => l.cell === cellId);
