@@ -459,4 +459,37 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     expect((await c.launch(UNITS[2], runner, local)).status).toBe('finished');
     expect(boots).toEqual([a.lease_id, b.lease_id, d.lease_id]);
   }, 60_000);
+
+
+  // Value: protects=a BG1 refusal over a lease log never sends the operator to restore an older log or its SHA-256, or to a fresh --state, while leases may be live; fails_when=the hash, reconcile, lease-binding or init refusal advises restoring leases.ndjson or leases.sha256, or starting over in a fresh --state, instead of stopping to ask, or names no lease and ledger entry; why_new=GBEV-3's fix set 3, item 4; seam=a BG1 Campaign over a temporary ledger with its lease log edited; no_claim=what the owner then decides
+  test('every BG1 lease-log refusal says to stop and ask, and names the open leases and their ledger entries', () => {
+    const w = campaign(null);
+    const c = new Campaign(w.file, w.state);
+    c.init();
+    const l = c.reserve(UNITS[0]);
+    const named = `lease ${l.lease_id} (ledger entry ${l.entry_id})`;
+    const log = join(w.state, 'leases.ndjson'), shaFile = join(w.state, 'leases.sha256'), text = readFileSync(log, 'utf8');
+    const forge = (t: string) => { writeFileSync(log, t); writeFileSync(shaFile, createHash('sha256').update(t).digest('hex') + '\n'); };
+    const asks = (e: ScoreboardError, what: string, open: string) => {
+      const said = e.op.fix.user_message ?? '';
+      expect([e.op.code, e.op.fix.next]).toEqual(['CAMPAIGN_HASH_MISMATCH', 'ask_user']);
+      expect(said).toStartWith('Stop and ask the campaign owner before anything else runs on ');
+      expect(said).toContain(what);
+      expect(said).toContain(`Leases the campaign ledger still holds open: ${open}. Do not restore an older leases.ndjson or leases.sha256, edit either file, or start the campaign in a fresh --state`);
+      expect(said).not.toMatch(/restore it|custody host's copy|initialise the BG1 campaign in a fresh/);
+    };
+
+    writeFileSync(log, text + '\n');
+    asks(caught(() => c.leases()), 'leases.ndjson changed outside the campaign', named);
+    forge('');
+    asks(caught(() => c.reserve(UNITS[1])), `${l.entry_id} ("lease ${UNITS[0]} attempt 1") has spend, and 0 reserved events in the lease log name it`, named);
+    forge(text.replace(`"usd":${l.usd}`, '"usd":399'));
+    asks(caught(() => c.payload(c.leases()[0])), `leases.ndjson hands out lease ${l.lease_id} (ledger entry ${l.entry_id}), which is not the lease the campaign reserved`, named);
+
+    const planted = campaign(null);
+    mkdirSync(planted.state, { recursive: true });
+    writeFileSync(join(planted.state, 'leases.ndjson'), text);
+    asks(caught(() => new Campaign(planted.file, planted.state).init()), `it holds a lease log naming ${named} but no campaign.json`, 'none (this --state has no campaign.json)');
+    expect(existsSync(join(planted.state, 'campaign.json'))).toBe(false);
+  }, 60_000);
 });

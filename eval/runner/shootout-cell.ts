@@ -582,7 +582,7 @@ export class Campaign {
         const kept = existsSync(this.eventsShaPath) ? readFileSync(this.eventsShaPath, 'utf8').trim() : 'none';
         if (text === null || kept !== createHash('sha256').update(text).digest('hex')) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `${this.eventsPath} is not the lease log campaign ${this.manifest.campaign_id} last wrote (${basename(this.eventsShaPath)} holds ${kept.slice(0, 12)})`,
           why: 'a BG1 unit\'s proxy spends the lease its reserved event names, so a lease log edited outside the campaign could hand a unit a lease the ledger never reserved',
-          fix: { next: 'ask_user', user_message: `leases.ndjson under ${this.stateDir} changed outside the campaign; restore it from the custody host's copy, or start the campaign in a fresh --state` } });
+          fix: { next: 'ask_user', user_message: this.bg1Ask(`leases.ndjson changed outside the campaign (leases.sha256 holds ${kept.slice(0, 12)})`) } });
       }
       return text === null ? [] : text.split('\n').filter(Boolean);
     });
@@ -621,16 +621,38 @@ export class Campaign {
       ];
       if (problems.length) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `campaign ${this.manifest.campaign_id}'s lease log and ledger do not match: ${problems.slice(0, 3).join('; ')}${problems.length > 3 ? ` (and ${problems.length - 3} more)` : ''}`,
         why: 'every reservation the campaign run holds is one lease this campaign logged, open in both or closed at the same amount in both, so a log missing a lease, or closing one the ledger still holds, would hide spend the ledger still charges and let a unit reserve as if it were not there',
-        fix: { next: 'ask_user', user_message: `leases.ndjson under ${this.stateDir} does not name exactly the reservations campaign run ${s.run_id} holds; restore it and leases.sha256 from the custody host's copy, or start the campaign in a fresh --state` } });
+        fix: { next: 'ask_user', user_message: this.bg1Ask(`leases.ndjson does not match what campaign run ${s.run_id} holds in the ledger (${problems.slice(0, 3).join('; ')})`) } });
     });
+  }
+  /**
+   * BG1: the stop-and-ask hint for a lease log the campaign cannot trust. It names each lease the campaign ledger still
+   * holds open (its lease id as reserve() builds it, and its ledger entry), because restoring an older leases.ndjson or
+   * leases.sha256, or starting the campaign in a fresh --state, could launch one of them again while it is live.
+   */
+  private bg1Ask(what: string): string {
+    let open = 'none (this --state has no campaign.json)';
+    if (existsSync(this.statePath)) {
+      try {
+        const s = this.state();
+        open = readLedger(s.ledger).entries.filter(e => e.run_id === s.run_id && e.actual_usd === null)
+          .map(e => { const m = /^lease (\S+) attempt (\d+)$/.exec(e.description); return m ? `lease ${m[1]}-a${m[2]}-${e.id.slice(0, 8)} (ledger entry ${e.id})` : `ledger entry ${e.id} ("${e.description}")`; }).join('; ') || 'none';
+      } catch (e) { open = `unknown, because the campaign ledger could not be read (${(e as Error).message})`; }
+    }
+    return `Stop and ask the campaign owner before anything else runs on ${this.stateDir}: ${what}. Leases the campaign ledger still holds open: ${open}. Do not restore an older leases.ndjson or leases.sha256, edit either file, or start the campaign in a fresh --state; any of those could launch a unit again while its lease is live.`;
   }
   cell(id: string): CellSpec { const c = this.manifest.cells.find(x => x.id === id); if (!c) throw new Error(`no cell ${id} in campaign ${this.manifest.campaign_id}`); return c; }
 
   /** Create the campaign ledger (its program cap is the campaign cap) and the one campaign run every lease reserves from. A Q1 campaign also freezes its executed tree. */
   init(): CampaignState {
     if (existsSync(this.statePath)) return this.state();
-    if (this.bg1 && [this.eventsPath, this.eventsShaPath].some(f => existsSync(f))) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `${this.stateDir} holds a lease log before campaign ${this.manifest.campaign_id} was initialised`,
-      why: 'every BG1 lease event is one this campaign wrote after init, so a log already there could hand a unit a lease the ledger never reserved', fix: { next: 'ask_user', user_message: 'initialise the BG1 campaign in a fresh --state' } });
+    if (this.bg1 && [this.eventsPath, this.eventsShaPath].some(f => existsSync(f))) {
+      const named = (existsSync(this.eventsPath) ? readFileSync(this.eventsPath, 'utf8') : '').split('\n').flatMap(x => {
+        try { const e = JSON.parse(x) as LeaseEvent; return e.event === 'reserved' ? [`lease ${e.lease_id} (ledger entry ${e.entry_id})`] : []; } catch { return []; }
+      });
+      throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `${this.stateDir} holds a lease log before campaign ${this.manifest.campaign_id} was initialised`,
+        why: 'every BG1 lease event is one this campaign wrote after init, so a log already there could hand a unit a lease the ledger never reserved',
+        fix: { next: 'ask_user', user_message: this.bg1Ask(`it holds a lease log${named.length ? ` naming ${named.join('; ')}` : ''} but no campaign.json, so those leases may belong to a campaign that is still running`) } });
+    }
     const label = this.q1 ? 'q1-scoreboard' : 'oss-shootout';
     if (!existsSync(this.ledger)) initLedger({ ledgerPath: this.ledger, programCapUsd: this.manifest.cap_usd, reason: `${this.q1 ? 'Q1 scoreboard' : 'oss shootout'} campaign ${this.manifest.campaign_id}` });
     const run = BudgetRun.open({ runner: `${label}:${this.manifest.campaign_id}`, budgetUsd: this.manifest.cap_usd, ledgerPath: this.ledger, programCapMaxUsd: this.manifest.cap_usd });
@@ -802,7 +824,7 @@ export class Campaign {
     if (named > 1) problems.push(`names ledger entry ${l.entry_id}, which ${named} reserved events in the lease log name`);
     if (problems.length) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `lease ${l.lease_id}: ${problems.join('; ')}`,
       why: 'a BG1 unit\'s proxy spends the lease handed to it, so the lease must be the one the frozen campaign prices for its unit and the ledger holds for it',
-      fix: { next: 'ask_user', user_message: `leases.ndjson under ${this.stateDir} names a lease the campaign did not reserve; restore it and leases.sha256 from the custody host's copy, or start the campaign in a fresh --state` } });
+      fix: { next: 'ask_user', user_message: this.bg1Ask(`leases.ndjson hands out lease ${l.lease_id} (ledger entry ${l.entry_id}), which is not the lease the campaign reserved: ${problems.join('; ')}`) } });
     this.reconcileBg1();
   }
 
