@@ -599,7 +599,9 @@ export class Campaign {
    * unit it is running on. A log emptied or cut down with its SHA-256 rewritten would otherwise read as fewer leases
    * than the ledger charges, so a unit could be reserved again and blockSpend would undercount. Each lease_id is
    * reserved once, and each lease's state matches its entry. The entry reserves the lease's
-   * amount plus each of its raises in raises.ndjson as raise-lease reserved it (rounded to whole cents, raiseDelta); an
+   * amount plus each of its raises in raises.ndjson as raise-lease reserved it (rounded to whole cents, raiseDelta),
+   * read as a chain in file order: a record whose from_usd and to_usd repeat the last counted record's is the confirming
+   * copy eval/RUNBOOK.md's "An unknown raise" appends, which reserved nothing, so it is not counted again; an
    * open lease the raise lock names is skipped here, because its raise may be between the ledger and its record. A lease
    * settled in the log has its entry settled at the amount the log charges; a lease abandoned at its full charge has its
    * entry charged at what the ledger reserved, and the log charges its last raise (or its lease); and an open lease has an
@@ -634,7 +636,11 @@ export class Campaign {
           const e = held.get(l.entry_id);
           if (!e) return [];
           const open = l.status !== 'settled' && l.status !== 'abandoned';
-          const hold = raises.filter(r => r.lease_id === l.lease_id).reduce((n, r) => n + raiseDelta(r.from_usd, r.to_usd), l.usd);
+          const chain = raises.filter(r => r.lease_id === l.lease_id).reduce<typeof raises>((kept, r) => {
+            const last = kept[kept.length - 1];
+            return last && near(last.from_usd, r.from_usd) && near(last.to_usd, r.to_usd) ? kept : [...kept, r];
+          }, []);
+          const hold = chain.reduce((n, r) => n + raiseDelta(r.from_usd, r.to_usd), l.usd);
           if (!(open && raising === l.lease_id) && !near(e.reserved_usd, hold)) return [`lease ${l.lease_id} and its raises in raises.ndjson reserve ${hold}, and the ledger reserved ${e.reserved_usd} for its entry ${e.id}`];
           if (open) return e.actual_usd === null ? [] : [`lease ${l.lease_id} is ${l.status} in the lease log, and the ledger settled its entry ${e.id} at ${e.actual_usd}`];
           const charged = l.status === 'abandoned' && (l.actual_usd ?? 0) > 0;

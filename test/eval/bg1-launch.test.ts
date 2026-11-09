@@ -6,14 +6,14 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { Database } from 'bun:sqlite';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { BudgetRun, closeLedgers, ledgerTestHooks, readLedger } from '../../eval/runner/budget-ledger.ts';
 import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { bg1CampaignManifest, loadCellManifest } from '../../eval/runner/q1/cell.ts';
-import { raise } from '../../eval/runner/q1/raise-lease.ts';
+import { leaseUsd, raise, settle as settleRaised, type Raise } from '../../eval/runner/q1/raise-lease.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { runCells } from '../../eval/runner/scoreboard-cli.ts';
 import { Campaign, mintLeaseId, type CampaignManifest, type LaunchContext } from '../../eval/runner/shootout-cell.ts';
@@ -697,4 +697,75 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     expect((await c.launch(OTHER, runner, local)).status).toBe('finished');
     expect(boots).toEqual([a.lease_id, b.lease_id]);
   }, 60_000);
+
+  // Value: protects=a BG1 lease whose raise ended without a VM result, reconciled as eval/RUNBOOK.md's "An unknown raise" says (raise-lease.ts show, then a confirming copy of the unknown record), leaves the campaign reservable and launchable, and the lease settles or is abandoned and its unit reserves again, while two different raises of equal size still count twice; fails_when=reconcileBg1 counts the confirming copy as a second raise, so the lease log reserves one rounded raise more than the ledger and every reserve, launch, resume and payload refuses, after a settle or abandon too; why_new=GBEV-3's fix set 7, item 1; seam=stage-1 BG1 Campaigns over temporary ledgers, launched on a named VM and raised with raise-lease against a VM ledger in a scratch home whose last VM step commits and returns no result, raise-lease.ts show through a scripted UBI_RUNNER; no_claim=a real VM or ssh, or raise-lease's own records, which are unchanged
+  test('a BG1 raise with an unknown VM result, confirmed as the RUNBOOK says, counts once: another unit reserves and launches, the lease settles or is abandoned, and its unit reserves again', async () => {
+    const raised = async (targets: number[], lostLast: boolean) => {
+      const w = smokeCampaign(RAISED, OTHER);
+      const c = new Campaign(w.file, w.state);
+      c.init();
+      const root = dirname(w.state), home = join(root, 'vm-home'), fake = join(root, 'ubi-runner.sh');
+      writeFileSync(fake, 'case "$1" in\n  ssh) HOME="$VM_HOME" exec bash -c "$3" ;;\n  *) exit 9 ;;\nesac\n');
+      const d = c.reserve(RAISED);
+      const vmLedger = join(home, 'custody', d.lease_id, 'proxy', 'lease.sqlite');
+      const view = () => [c.lease(d.lease_id).raised_usd ?? NaN, c.blockSpend(c.cell(RAISED).block!), leaseUsd(c, d.lease_id)];
+      const views: number[][] = [];
+      const owner = process.env.UBI_OWNER;
+      process.env.UBI_OWNER = 'bg1test';
+      try {
+        expect((await c.launch(RAISED, async () => {
+          mkdirSync(dirname(vmLedger), { recursive: true });
+          BudgetRun.openLease({ runId: d.lease_id, leaseUsd: d.usd, ledgerPath: vmLedger });
+          targets.forEach((t, i) => {
+            const lost = lostLast && i === targets.length - 1;
+            const ssh = (_vm: string, command: string) => {
+              const p = Bun.spawnSync(['bash', '-c', command], { env: keyless({ HOME: home }), stdout: 'pipe', stderr: 'pipe' });
+              return lost && command.includes(" 'raise' ") ? { code: null, out: '', err: '' } : { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() };
+            };
+            if (lost) expect(() => raise(c, d.lease_id, t, 'owner approved', ssh)).toThrow(/ended without a result \(exit null\)/);
+            else expect(raise(c, d.lease_id, t, 'owner approved', ssh)).toMatchObject({ from_usd: i ? targets[i - 1] : d.usd, to_usd: t });
+          });
+          if (!lostLast) return 255;
+          views.push(view());
+          const show = spawnSync('bun', ['eval/runner/q1/raise-lease.ts', 'show', '--campaign', w.file, '--state', w.state, '--lease', d.lease_id], { cwd: REPO, env: keyless({ UBI_RUNNER: fake, VM_HOME: home }), encoding: 'utf8' });
+          expect(show.status, show.stderr).toBe(0);
+          const shown = JSON.parse(show.stdout) as { lease_usd: number; raises: Raise[]; vm: { ledger: string; budget_usd: number; cap_usd: number } };
+          const unknown = shown.raises[shown.raises.length - 1];
+          const last = targets[targets.length - 1];
+          expect([unknown.vm_result, unknown.to_usd, shown.lease_usd, shown.vm.budget_usd]).toEqual(['unknown', last, last, last]);
+          const confirming: Raise = { ...unknown, at: new Date().toISOString(), vm_ledger: shown.vm.ledger, vm_cap_usd: shown.vm.cap_usd, reason: `reconciled: show reads the VM ledger at ${shown.vm.budget_usd}` };
+          delete confirming.vm_result;
+          appendFileSync(join(w.state, 'raises.ndjson'), JSON.stringify(confirming) + '\n');
+          views.push(view());
+          expect(existsSync(join(w.state, 'raise.lock'))).toBe(false);
+          return 255;
+        })).status).toBe('finished');
+      } finally { if (owner === undefined) delete process.env.UBI_OWNER; else process.env.UBI_OWNER = owner; }
+      const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
+      const reserved = (id: string) => readLedger(w.manifest.ledger).entries.find(e => e.id === id && e.run_id === s.run_id)?.reserved_usd ?? NaN;
+      return { c, d, views, reserved };
+    };
+
+    const once = await raised([40.833], true);
+    expect(once.views).toEqual([[40.833, 40.833, 40.833], [40.833, 40.833, 40.833]]);
+    expect(once.reserved(once.d.entry_id)).toBeCloseTo(40.83, 9);
+    const o = once.c.reserve(OTHER);
+    expect((await once.c.launch(OTHER, async (_argv, ctx) => { writeFileSync(join(ctx.resultsDir, 'lease-summary.json'), JSON.stringify({ run_id: o.lease_id, lease_usd: o.usd, committed_usd: 0.6, requests: 2 })); return 0; }, { local: { port: 1 } })).status).toBe('settled');
+    writeFileSync(join(once.c.resultsDir(once.c.lease(once.d.lease_id)), 'lease-summary.json'), JSON.stringify({ run_id: once.d.lease_id, lease_usd: once.d.usd, committed_usd: 12.5, requests: 3 }));
+    expect(settleRaised(once.c, once.d.lease_id)).toMatchObject({ status: 'settled', actual_usd: 12.5 });
+    expect(once.c.reserve(RAISED).attempt).toBe(2);
+
+    const second = await raised([40.833, 41.166], true);
+    expect(second.views).toEqual([[41.166, 41.166, 41.166], [41.166, 41.166, 41.166]]);
+    expect(second.reserved(second.d.entry_id)).toBeCloseTo(41.16, 9);
+    expect(second.c.reserve(OTHER).status).toBe('reserved');
+    expect(second.c.abandon(second.d.lease_id, 'VM lost')).toMatchObject({ status: 'abandoned', actual_usd: 41.166 });
+    expect(second.c.reserve(RAISED).attempt).toBe(2);
+
+    const distinct = await raised([40.833, 41.166], false);
+    expect(distinct.reserved(distinct.d.entry_id)).toBeCloseTo(41.16, 9);
+    expect(distinct.c.reserve(OTHER).status).toBe('reserved');
+    expect(distinct.c.abandon(distinct.d.lease_id, 'VM lost')).toMatchObject({ status: 'abandoned', actual_usd: 41.166 });
+    expect(distinct.c.reserve(RAISED).attempt).toBe(2);
+  }, 120_000);
 });
