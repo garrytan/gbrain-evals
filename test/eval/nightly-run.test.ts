@@ -234,4 +234,22 @@ describe('run.ts --fake end to end (needs NIGHTLY_GBRAIN_CLONE)', () => {
     expect(JSON.parse(readFileSync(join(dir, 'night.json'), 'utf8')).attempts).toBe(2);
     expect(readFileSync(join(dir, 'outcomes.jsonl'), 'utf8').split('\n').filter(Boolean).length).toBe(lines);
   }, 900_000);
+
+  test.skipIf(!CLONE)('a resume reruns on the commit the night started on after master moves', () => {
+    const work = tmp();
+    const clone = join(work, 'gbrain');
+    execFileSync('git', ['clone', '--quiet', '--local', '--no-checkout', CLONE!, clone]);
+    const body = { version: devset.version, readers: devset.readers, k: { ...devset.k, agent: 1 }, reserved: [], suites: [
+      { ...devset.suites.find(s => s.id === 'refused-write-agents')!, items: [{ id: '2001', role: 'headroom' }] }] };
+    writeFileSync(join(work, 'devset.json'), JSON.stringify({ ...body, digest: canonicalDigest(body) }));
+    const run = (...argv: string[]) => spawnSync('bun', ['--no-env-file', join(ROOT, 'eval/runner/nightly/run.ts'), ...argv], { cwd: ROOT, env: keylessEnv(), encoding: 'utf8', timeout: 900_000 });
+    expect(run('--ref', 'master', '--tier', 'matrix', '--fake', '--devset', join(work, 'devset.json'), '--out', join(work, 'out'), '--gbrain-clone', clone, '--night', '2026-11-09').status).toBe(0);
+    const dir = join(work, 'out', '2026-11-09', 'master');
+    const sha = JSON.parse(readFileSync(join(dir, 'night.json'), 'utf8')).sha as string;
+    execFileSync('git', ['-C', clone, 'update-ref', 'refs/heads/master', `${sha}^`]);
+    writeFileSync(join(dir, 'outcomes.jsonl'), '');
+    expect(run('--resume', dir).status).toBe(0);
+    expect(JSON.parse(readFileSync(join(dir, 'night.json'), 'utf8')).sha).toBe(sha);
+    expect(readOutcomes(join(dir, 'outcomes.jsonl')).map(r => [r.item, r.sha])).toEqual([['2001', sha]]);
+  }, 900_000);
 });

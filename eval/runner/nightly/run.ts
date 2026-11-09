@@ -31,8 +31,9 @@
  *
  * Suites run in parallel, each in its own child processes (adapters.ts). The night directory is <out>/<night>/<ref>
  * (the first 12 characters of a sha), holding night.json, outcomes.jsonl, each suite's work under suites/, and the report.
- * --resume reruns what is missing or recorded as a harness failure, after settling the stopped run's open ledger
- * reservations (ledger.ts reconcile), at most twice per night. A stop exits with a code and the line to resume:
+ * --resume reruns what is missing or recorded as a harness failure on the gbrain commit the night started on (its ref
+ * may have moved since), after settling the stopped run's open ledger reservations (ledger.ts reconcile), at most twice
+ * per night. A stop exits with a code and the line to resume:
  *   3 NIGHTLY_CAP_STOP  the night's ledger run or the 30-night cap is spent; paid suites stopped where they were
  *   4 NIGHTLY_VM_LOST   the runner was signalled (the machine is going away); running children were killed
  *   5 NIGHTLY_HARNESS   a suite failed to run or recorded harness or provider failures; its rows are counted apart
@@ -169,7 +170,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     if (saved.budget) a.budgetRunId = saved.budget.run_id;
   } else a = parseArgs(argv);
 
-  const sha = resolveRef(a.clone, a.ref);
+  const sha = resolveRef(a.clone, saved?.sha ?? a.ref);
   const devset = a.devset ? loadDevSet(dirname(a.devset), basename(a.devset)) : loadDevSet();
   const plan = planSuites(devset, a);
   if (!plan.length) throw new Error('no suite and item matches the tier, --suites and --items');
