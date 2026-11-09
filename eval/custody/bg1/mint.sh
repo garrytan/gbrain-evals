@@ -124,7 +124,7 @@ if [ "$MODE" = real ]; then
   KEY_FILE="$HOME/.config/gbrain-evals/bg1.env"
   [ -f "$KEY_FILE" ] || die "real mode takes Gemini's key only from BG1_GEMINI_API_KEY in ~/.config/gbrain-evals/bg1.env, which does not exist"
   owner_only "$KEY_FILE" || die "~/.config/gbrain-evals/bg1.env must be mode 600 or 400"
-  BG1_KEY="$(sed -n 's/^BG1_GEMINI_API_KEY=//p' "$KEY_FILE" | tail -n 1)"
+  BG1_KEY="$(sed -nE 's/^(export[[:space:]]+)?BG1_GEMINI_API_KEY=//p' "$KEY_FILE" | tail -n 1)"
   BG1_KEY="${BG1_KEY%\"}"
   BG1_KEY="${BG1_KEY#\"}"
   [ -n "$BG1_KEY" ] || die "~/.config/gbrain-evals/bg1.env has no BG1_GEMINI_API_KEY line"

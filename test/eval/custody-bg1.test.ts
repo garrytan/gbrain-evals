@@ -298,7 +298,12 @@ describe('mint.sh and render.ts refuse before anything is written or any key is 
     expect(noHaiku.err).toContain('ANTHROPIC_API_KEY is not set');
     writeFileSync(keyFile, 'OTHER=1\n');
     expect(mint(join(i.dir, 'bg1-custody-k4'), i, window(), env).err).toContain('has no BG1_GEMINI_API_KEY line');
-    for (const r of [missing, open, noHaiku]) expect(r.all).not.toContain('not-real');
+    writeFileSync(keyFile, 'export BG1_GEMINI_API_KEY=test-bg1-key-not-real\n');
+    const exported = mint(join(i.dir, 'bg1-custody-k5'), i, window(), env);
+    expect(exported.code).toBe(2);
+    expect(exported.err).not.toContain('has no BG1_GEMINI_API_KEY line');
+    expect(exported.err).toContain('ANTHROPIC_API_KEY is not set');
+    for (const r of [missing, open, noHaiku, exported]) expect(r.all).not.toContain('not-real');
   });
 
   // Value: protects=the window check, both proxies and render.ts reserve against one ledger file; fails_when=a relative --budget-ledger reaches render.ts as written, which runs inside --out and so names another file there; why_new=#398 open note 10 (mint.sh resolved a relative --budget-ledger inside its output directory); seam=a bun stub on PATH that records each call's directory and arguments and runs nothing, placeholder keys; no_claim=the window check's, the proxies' or render.ts's own behaviour
