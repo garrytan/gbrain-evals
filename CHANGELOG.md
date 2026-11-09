@@ -12,15 +12,18 @@ This records what each gbrain-evals release changed and what its measurements me
   `docs/failure-causes/TAXONOMY.md`, rendered from `taxonomy.ts`, and a test pins its cause ids.
 - **Logs first, a model only for the rest.** Deterministic rules read tool errors, refusals, retrieval records and write
   records with no model. A cross-family labeller (gpt-6.1-sol labels Claude rows, claude-opus-5-5 labels GPT and
-  particle-1 rows) labels only rows where the right evidence reached the answering model. A labeller path counts only
-  once it reaches a kappa of 0.6 on at least 40 held-out rows that Opus and gpt-6-astra agree on. Otherwise that row
-  family switches to gpt-6-astra. Row text goes to the labeller fenced as untrusted, and a private or sealed row is
-  never sent.
+  particle-1 rows) labels only rows where the right evidence reached the answering model. `agree` reports a gate for
+  each labeller path the production labels used: a kappa of at least 0.6 on at least 40 held-out rows that Opus and
+  gpt-6-astra agree on, counting only rows where both of those calls returned a cause. A path with no gate fails, and so
+  does an empty label set. Moving a failing path to gpt-6-astra is a step taken before that path's counts are
+  published; nothing switches it automatically. Row text goes to the labeller fenced as untrusted. A private or sealed
+  row is never sent, and a source whose root or file resolves to sealed or custody material is never read.
 - **Adapters and ranking.** Adapters read the refresh barrier agent check, RS1, Cat 40, SkillOpt's forced probes and the
   live recall scorecard into one `eval-failure/1` row shape, from a source manifest with file hashes. Only gbrain runs
   under natural conditions are ranked. Forced probes go in a separate under-stress list and other systems in a contrast
-  table, and a private source contributes counts only. The untitled-capture duplicate that the refresh barrier results
-  disclose counts as `harness_error`.
+  table, and a private source contributes counts only. `unclassified` rows stay in the full table but never enter the
+  top three or an issue draft, and `report` counts each row once when label files overlap. The untitled-capture
+  duplicate that the refresh barrier results disclose counts as `harness_error`.
 - **Command line.** `bun eval/runner/failure-causes/cli.ts` runs `taxonomy`, `classify`, `estimate`, `agree`,
   `report` and `label`. Only `label` makes provider calls, and it refuses without `--paid` and an open budget run.
 - **Bug ledger.** An entry may carry `cause`, `rule_id` and `regression_check`, so a fix from a weekly top three

@@ -13,6 +13,7 @@
 import { createHash } from 'node:crypto';
 import { fenceUntrusted, withUntrustedInstruction } from '../judge.ts';
 import type { ChatLike } from '../memory-qa/qa-v2.ts';
+import type { DoubleLabel } from './agreement.ts';
 import { classify } from './classify.ts';
 import { CAUSES, MODEL_CAUSES, UNCLASSIFIED, type Cause } from './taxonomy.ts';
 import type { CauseLabel, EvalFailure } from './types.ts';
@@ -111,4 +112,35 @@ export async function labelResidual(failures: EvalFailure[], client: ChatLike, o
     }
   }
   return { labels, stopped };
+}
+
+export interface LabelSetRun { rows: DoubleLabel[]; dropped: number; stopped: string | null }
+
+/**
+ * Label each sampled residual with both label-set labellers. A row enters the set only when both calls returned a cause
+ * that parsed: a failed call or an unparseable reply drops the row (no second call), so it never counts toward a path's
+ * held-out minimum. A budget refusal stops the run.
+ */
+export async function labelSet(sample: EvalFailure[], client: ChatLike, stratum: (f: EvalFailure) => string): Promise<LabelSetRun> {
+  const rows: DoubleLabel[] = [];
+  let dropped = 0;
+  let stopped: string | null = null;
+  for (const f of sample) {
+    const { system, prompt } = buildLabelPrompt(f);
+    const got: string[] = [];
+    for (const spec of LABEL_SET_LABELLERS) {
+      try {
+        const parsed = parseLabel((await client.chat(spec.model, prompt, { maxTokens: LABEL_MAX_TOKENS, replicate: 0, temperature: null, effort: spec.effort, system })).text);
+        if (!parsed.ok) break;
+        got.push(parsed.cause);
+      } catch (e) {
+        if ((e as Error)?.name === 'BudgetExceededError' || /budget/i.test(String((e as Error)?.message ?? e))) stopped = String((e as Error).message ?? e).slice(0, 300);
+        break;
+      }
+    }
+    if (stopped) break;
+    if (got.length === LABEL_SET_LABELLERS.length) rows.push({ case_key: `${f.source}|${f.case_id}`, path: labellerFor(f.model).path, stratum: stratum(f), opus: got[0], astra: got[1] });
+    else dropped++;
+  }
+  return { rows, dropped, stopped };
 }

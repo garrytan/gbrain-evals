@@ -6,8 +6,8 @@
  * pointers never carry a machine path.
  */
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import type { ArmRole, Condition, Visibility } from './types.ts';
 
@@ -84,13 +84,19 @@ export function readManifest(path: string): SourceManifest {
 
 export const sha256 = (bytes: Uint8Array | string) => createHash('sha256').update(bytes).digest('hex');
 
-/** Read every file of a source from its mapped root, refusing a missing root or file and any hash mismatch. */
+/**
+ * Read every file of a source from its mapped root, refusing a missing root or file, any hash mismatch, and a root or
+ * file that resolves to a sealed path, so a root mapped into custody material is refused whatever the manifest says.
+ */
 export function loadSource(entry: SourceEntry, roots: Record<string, string>): LoadedFile[] {
   const dir = roots[entry.root];
   if (!dir) throw new Error(`${entry.id}: no directory for root "${entry.root}"; pass --root ${entry.root}=<dir>`);
+  const sealed = (p: string) => SEALED_PATHS.some(s => s.test(p));
+  if (sealed(resolve(dir)) || (existsSync(dir) && sealed(realpathSync(dir)))) throw new Error(`${entry.id}: root "${entry.root}" is a sealed path`);
   return entry.files.map(f => {
     const full = join(dir, f.path);
     if (!existsSync(full)) throw new Error(`${entry.id}: ${entry.root}:${f.path} is missing`);
+    if (sealed(realpathSync(full))) throw new Error(`${entry.id}: ${entry.root}:${f.path} resolves to a sealed path`);
     const bytes = new Uint8Array(readFileSync(full));
     const got = sha256(bytes);
     if (got !== f.sha256) throw new Error(`${entry.id}: ${entry.root}:${f.path} has sha256 ${got}, the manifest says ${f.sha256}`);

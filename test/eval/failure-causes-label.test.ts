@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildLabelPrompt, labellerFor, labelResidual, parseLabel, type EvalFailure } from '../../eval/runner/failure-causes/index.ts';
+import { buildLabelPrompt, buildLabelSet, labellerFor, labelResidual, labelSet, parseLabel, type EvalFailure } from '../../eval/runner/failure-causes/index.ts';
 import type { ChatLike, ChatOptions } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { failure } from '../support/failure-causes-fixture.ts';
 
@@ -64,6 +64,17 @@ describe('residual labeller', () => {
     const { labels, stopped } = await labelResidual([residual(), residual({ case_id: 'b' })], client);
     expect(stopped).toMatch(/exhausted/);
     expect(labels.map(l => l.basis)).toEqual(['needs_model', 'needs_model']);
+  });
+
+  test('a label-set row enters only when both calls return a parsed cause, so failures never count toward the 40', async () => {
+    const replies: Array<string | Error> = ['{"cause":"stale_fact"}', '{"cause":"stale_fact"}', new Error('socket hang up'), '{"cause":"time_reasoning"}', 'no json'];
+    let n = 0;
+    const { client, calls } = fake(() => replies[n++]);
+    const run = await labelSet([residual({ case_id: 'a' }), residual({ case_id: 'b' }), residual({ case_id: 'c' })], client, f => f.source);
+    expect(run.rows.map(r => [r.case_key, r.opus, r.astra])).toEqual([[`${residual().source}|a`, 'stale_fact', 'stale_fact']]);
+    expect(run).toMatchObject({ dropped: 2, stopped: null });
+    expect(calls).toHaveLength(5);
+    expect(buildLabelSet(run.rows).agreed).toBe(1);
   });
 
   test('a path override switches a family to another labeller', () => {

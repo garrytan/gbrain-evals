@@ -2,15 +2,16 @@
  * The weekly summary and report. gbrain's top three is ranked on failures from
  * natural-condition runs of gbrain's own arms: each source's failures give
  * every cause a share, each source weighs the same, raw counts break ties, and
- * harness_error and model_error never enter the list. Forced-condition rows
+ * harness_error, model_error and unclassified never enter the list (unclassified
+ * stays in the full table). Forced-condition rows
  * and stress counts go to a separate "under stress" list, other systems to a
  * contrast table and harness errors to our own fix list. Example rows come
  * only from public or synthetic sources; private sources give counts only.
  */
-import { STAGES, TAXONOMY_VERSION, causeInfo, type Cause, type Stage } from './taxonomy.ts';
+import { STAGES, TAXONOMY_VERSION, UNCLASSIFIED, causeInfo, type Cause, type Stage } from './taxonomy.ts';
 import type { CauseLabel, StressCount } from './types.ts';
 
-const NOT_FOR_GBRAIN: readonly string[] = ['harness_error', 'model_error'];
+const NOT_FOR_GBRAIN: readonly string[] = ['harness_error', 'model_error', UNCLASSIFIED];
 const GBRAIN_ROLES = new Set(['gbrain_default', 'gbrain_variant']);
 const PENDING = 'pending_label';
 const showable = (l: CauseLabel) => l.visibility === 'public' || l.visibility === 'synthetic';

@@ -11,8 +11,10 @@
  *   bun eval/runner/failure-causes/cli.ts agree --labelset <double.ndjson> --production <labels.ndjson> --out <label-check.json>
  *   bun eval/runner/failure-causes/cli.ts report --labels <a.ndjson>[,<b.ndjson>] [--stress <stress.json>] --out-dir <dir> --heading <text> [--allow-stale]
  *
- * classify and report are keyless. failures.ndjson carries row text for the labeller: keep it in a private work
- * directory, never in the repository. label spends money and refuses without --paid and an open budget run.
+ * report counts each source and case once when label files overlap, the last file winning. agree fails when a labeller
+ * path the production labels used has no passing gate, or when there is nothing to gate. classify and report are
+ * keyless. failures.ndjson carries row text for the labeller: keep it in a private work directory, never in the
+ * repository. label spends money and refuses without --paid and an open budget run.
  */
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -20,9 +22,9 @@ import { CHAT_PRICE_OVERRIDES, budgetOptionsFrom, startPaidRun } from '../budget
 import { ChatClient } from '../memory-qa/qa-v2.ts';
 import { requirePaidArm } from '../paid-arm.ts';
 import { ADAPTERS } from './adapters/index.ts';
-import { buildLabelSet, gatePaths, stratifiedSample, type DoubleLabel } from './agreement.ts';
+import { buildLabelSet, gatePaths, productionLabels, stratifiedSample, type DoubleLabel } from './agreement.ts';
 import { classify } from './classify.ts';
-import { buildLabelPrompt, LABEL_SET_LABELLERS, labellerFor, labelResidual, parseLabel, type LabellerSpec } from './label.ts';
+import { buildLabelPrompt, LABEL_SET_LABELLERS, labellerFor, labelResidual, labelSet, type LabellerSpec } from './label.ts';
 import { loadSource, readManifest } from './manifest.ts';
 import { issueDrafts, renderReport, summarize } from './report.ts';
 import { renderTaxonomyMarkdown } from './taxonomy.ts';
@@ -125,45 +127,38 @@ async function run(argv: string[]): Promise<number> {
     const { run: budget, guard } = startPaidRun(`failure-cause-labeller-${mode}`, { ...budgetOptionsFrom(rest), estimateUsd: estimate });
     const client = new ChatClient(cache, undefined, undefined, { holdMayHaveBilled: true });
     let stopped: string | null = null;
+    let dropped: number | undefined;
     try {
       if (mode === 'production') {
         const result = await labelResidual(failures, client);
         stopped = result.stopped;
         writeNdjson(out, result.labels);
       } else {
-        const rows: DoubleLabel[] = [];
-        for (const f of p.sample) {
-          const { system, prompt } = buildLabelPrompt(f);
-          const got: string[] = [];
-          for (const spec of LABEL_SET_LABELLERS) {
-            if (stopped) break;
-            try { got.push(parseLabel((await client.chat(spec.model, prompt, { maxTokens: 16_000, replicate: 0, temperature: null, effort: spec.effort, system })).text).cause); }
-            catch (e) { if ((e as Error)?.name === 'BudgetExceededError' || /budget/i.test(String((e as Error)?.message))) stopped = String((e as Error).message).slice(0, 300); else got.push('unclassified'); }
-          }
-          if (got.length === 2) rows.push({ case_key: `${f.source}|${f.case_id}`, path: labellerFor(f.model).path, stratum: stratum(f), opus: got[0], astra: got[1] });
-        }
-        writeNdjson(out, rows);
+        const result = await labelSet(p.sample, client, stratum);
+        stopped = result.stopped;
+        dropped = result.dropped;
+        writeNdjson(out, result.rows);
       }
     } finally {
       guard.uninstall();
     }
     const summary = budget.close();
-    console.log(JSON.stringify({ mode, stopped, usd: summary.actual_usd, requests: summary.requests }, null, 1));
+    console.log(JSON.stringify({ mode, stopped, dropped, usd: summary.actual_usd, requests: summary.requests }, null, 1));
     return stopped ? 1 : 0;
   }
   if (command === 'agree') {
     const set = buildLabelSet(readNdjson<DoubleLabel>(need(rest, '--labelset')));
-    const labels = readNdjson<CauseLabel>(need(rest, '--production'));
-    const production = new Map(labels.filter(l => l.basis === 'model' || l.basis === 'unclassified').map(l => [`${l.source}|${l.case_id}`, String(l.cause)]));
-    const gates = gatePaths(set.rows, production);
+    const production = productionLabels(readNdjson<CauseLabel>(need(rest, '--production')));
+    const gates = gatePaths(set.rows, production.byCase, production.paths);
     writeFileSync(need(rest, '--out'), JSON.stringify({ agreed: set.agreed, disagreed: set.disagreed, gates }, null, 1) + '\n');
     console.log(JSON.stringify(gates.map(g => ({ path: g.path, held_out: g.held_out, kappa: g.kappa, pass: g.pass, reason: g.reason })), null, 1));
-    return gates.every(g => g.pass) ? 0 : 1;
+    if (!gates.length) console.error('no labeller path to gate: the label set and the production labels are both empty');
+    return gates.length && gates.every(g => g.pass) ? 0 : 1;
   }
   if (command === 'report') {
     const files = need(rest, '--labels').split(',');
     if (!rest.includes('--allow-stale')) for (const f of files) if (Date.now() - statSync(f).mtimeMs > STALE_MS) throw new Error(`${f} is more than 8 days old; a weekly report needs this week's labels (or pass --allow-stale for a back-classification)`);
-    const labels = files.flatMap(f => readNdjson<CauseLabel>(f));
+    const labels = [...new Map(files.flatMap(f => readNdjson<CauseLabel>(f)).map(l => [`${l.source}|${l.case_id}`, l])).values()];
     if (!labels.length) throw new Error('no labels to report; nothing is filed for an empty week');
     const stress: StressCount[] = flag(rest, '--stress') ? JSON.parse(readFileSync(flag(rest, '--stress')!, 'utf8')) : [];
     const dir = need(rest, '--out-dir');

@@ -1,10 +1,18 @@
 import { describe, expect, test } from 'bun:test';
-import { buildLabelSet, classify, cohensKappa, gatePaths, issueDrafts, knownAnswerAccuracy, perCause, renderReport, stratifiedSample, summarize, type CauseLabel, type EvalFailure } from '../../eval/runner/failure-causes/index.ts';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { buildLabelSet, classify, cohensKappa, gatePaths, issueDrafts, knownAnswerAccuracy, perCause, productionLabels, renderReport, stratifiedSample, summarize, type CauseLabel, type EvalFailure } from '../../eval/runner/failure-causes/index.ts';
 import { failure } from '../support/failure-causes-fixture.ts';
 
 const gold = (retrieved: 'none' | 'all') => ({ ...failure().gold, gold_count: 1, retrieved });
 const row = (source: string, n: number, over: Partial<EvalFailure>): CauseLabel[] => Array.from({ length: n }, (_, i) => classify(failure({ source, case_id: `${source}-${over.arm ?? 'g'}-${i}-${JSON.stringify(over).length}`, ...over })));
 const toolError = [{ name: 'get_page', error: 'invalid_params', recovered: false, ms: 1, memory: true }];
+const modelLabel = (l: CauseLabel, cause: string, path: string, rule_id = 'labeller'): CauseLabel => ({ ...l, cause: cause as CauseLabel['cause'], basis: cause === 'unclassified' ? 'unclassified' : 'model', rule_id,
+  labeller: { model: 'openai:gpt-6.1-sol', effort: 'medium', path, prompt_sha256: '0'.repeat(64), cached: false, reason: null } });
+const residualLabel = (source: string, case_id: string) => classify(failure({ source, case_id, gold: { ...failure().gold, gold_count: 1, retrieved: 'all', delivered: 'all' }, category: 'knowledge_update',
+  text: { question: 'Where does Farah park now?', expected: 'Level 5', answer: 'Level 3', context: 'Farah moved to level 3 in May, then level 5 in June.' } }));
 
 describe('summarize', () => {
   const labels = [
@@ -46,6 +54,14 @@ describe('summarize', () => {
     expect(drafts.map(d => d.signature)).toEqual(['retrieval_miss:retrieval.no_gold_retrieved', 'tool_contract:tool.unrecovered_error']);
     expect(drafts[1].body).toContain('**Minimal repro:** bun repro.ts');
     expect(drafts[0].body).toContain('Proposed regression test');
+  });
+
+  test('unclassified stays in the full table but never reaches the top three or an issue draft', () => {
+    const failedCalls = row('s3', 5, { gold: gold('none') }).map(l => modelLabel(l, 'unclassified', 'sol-labels-claude-rows', 'labeller.call_failed'));
+    const u = summarize([...failedCalls, ...row('s3', 1, { tool_calls: toolError })]);
+    expect(u.ranked.map(r => r.cause)).toEqual(['unclassified', 'tool_contract']);
+    expect(u.top_three.map(r => r.cause)).toEqual(['tool_contract']);
+    expect(issueDrafts(u).map(d => d.cause)).toEqual(['tool_contract']);
   });
 });
 
@@ -93,10 +109,53 @@ describe('agreement', () => {
     expect(gatePaths(set, wrong)[0].reason).toMatch(/switch this path to Astra/);
   });
 
+  test('a production path with no label-set rows fails its gate, and a failed call is no label', () => {
+    const set = Array.from({ length: 100 }, (_, i) => ({ case_key: `s|${i}`, path: 'big', stratum: 's', label: i % 3 ? 'stale_fact' : 'time_reasoning', split: 'held_out' as const }));
+    const base = classify(failure({ source: 's' }));
+    const labels = [...set.map(r => modelLabel({ ...base, case_id: r.case_key.slice(2) }, r.label, 'big')), modelLabel({ ...base, case_id: 'lost' }, 'unclassified', 'other', 'labeller.call_failed')];
+    const { byCase, paths } = productionLabels(labels);
+    expect(paths).toEqual(['big', 'other']);
+    expect(byCase.has('s|lost')).toBe(false);
+    const gates = gatePaths(set, byCase, paths);
+    expect(gates.map(g => [g.path, g.held_out, g.pass])).toEqual([['big', 100, true], ['other', 0, false]]);
+    expect(gates[1].reason).toMatch(/^0 held-out agreed rows/);
+  });
+
   test('stratified samples are deterministic and capped per stratum', () => {
     const items = Array.from({ length: 50 }, (_, i) => ({ id: `i${i}`, s: i % 2 ? 'odd' : 'even' }));
     const a = stratifiedSample(items, x => x.s, x => x.id, 10);
     expect(a).toHaveLength(20);
     expect(stratifiedSample(items, x => x.s, x => x.id, 10)).toEqual(a);
+  });
+});
+
+describe('agree and report on the command line', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'fc-report-'));
+  const deadEnv = { ...process.env, ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '', PARTICLE_API_KEY: '', ANTHROPIC_BASE_URL: 'http://127.0.0.1:9', OPENAI_BASE_URL: 'http://127.0.0.1:9/v1', BRAINBENCH_BUDGET_RUN_ID: '' };
+  const cli = (args: string[]) => spawnSync('bun', ['eval/runner/failure-causes/cli.ts', ...args], { encoding: 'utf8', env: deadEnv, timeout: 60_000 });
+  const ndjson = (name: string, rows: unknown[]) => { const f = join(dir, name); writeFileSync(f, rows.map(r => JSON.stringify(r)).join('\n') + (rows.length ? '\n' : '')); return f; };
+
+  test('agree fails on an empty label set: a production path gets a failing gate, and nothing to gate fails too', () => {
+    const empty = ndjson('empty.ndjson', []);
+    const production = ndjson('production.ndjson', [modelLabel(residualLabel('w', 'q1'), 'stale_fact', 'sol-labels-claude-rows')]);
+    const r = cli(['agree', '--labelset', empty, '--production', production, '--out', join(dir, 'check.json')]);
+    expect(r.status).toBe(1);
+    expect(JSON.parse(r.stdout)).toEqual([expect.objectContaining({ path: 'sol-labels-claude-rows', held_out: 0, pass: false })]);
+    const none = cli(['agree', '--labelset', empty, '--production', empty, '--out', join(dir, 'check-none.json')]);
+    expect(none.status).toBe(1);
+    expect(none.stderr).toMatch(/no labeller path to gate/);
+  });
+
+  test('report counts a row once when label files overlap, the last file winning', () => {
+    const pending = residualLabel('w', 'r1');
+    expect(pending.basis).toBe('needs_model');
+    const deterministic = classify(failure({ source: 'w', case_id: 'd1', tool_calls: toolError }));
+    const classified = ndjson('classified.ndjson', [deterministic, pending]);
+    const labelled = ndjson('labelled.ndjson', [deterministic, modelLabel(pending, 'stale_fact', 'sol-labels-claude-rows')]);
+    const r = cli(['report', '--labels', `${classified},${labelled}`, '--out-dir', join(dir, 'out'), '--heading', 'Week']);
+    expect(r.status).toBe(0);
+    const out = JSON.parse(r.stdout);
+    expect(out).toMatchObject({ failures: 2, pending: 0 });
+    expect(out.top_three.map((t: { cause: string; count: number }) => [t.cause, t.count])).toEqual([['stale_fact', 1], ['tool_contract', 1]]);
   });
 });

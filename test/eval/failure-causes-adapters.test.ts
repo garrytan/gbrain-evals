@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { ADAPTERS, classify, loadSource, validateManifest, SOURCES_SCHEMA } from '../../eval/runner/failure-causes/index.ts';
 import { sha256 } from '../../eval/runner/failure-causes/manifest.ts';
 import { entry, FX, loadFixture } from '../support/failure-causes-fixture.ts';
@@ -118,6 +118,18 @@ describe('source manifests', () => {
     expect(() => loadSource(e, { fx: dir })).toThrow(/sha256/);
     expect(() => loadSource(e, {})).toThrow(/no directory for root/);
     expect(loadSource({ ...e, files: [{ path: 'a.jsonl', sha256: sha256('x\n'), role: 'results' }] }, { fx: dir })[0].path).toBe('a.jsonl');
+  });
+
+  test('loadSource refuses a root that resolves to custody material, whatever the manifest says', () => {
+    const custody = join(mkdtempSync(join(tmpdir(), 'fc-sealed-')), 'rs1-custody-x');
+    mkdirSync(custody);
+    writeFileSync(join(custody, '1m-90-probing_questions.json'), '{}');
+    const e = { ...ok.sources[0], id: 'gold', adapter: 'rs1' as const, visibility: 'public' as const, condition: 'natural' as const, root: 'gold', files: [{ path: '1m-90-probing_questions.json', sha256: sha256('{}'), role: 'gold' }] };
+    expect(validateManifest({ ...ok, sources: [e] })).toEqual([]);
+    expect(() => loadSource(e, { gold: custody })).toThrow(/sealed path/);
+    const link = join(dirname(custody), 'innocent');
+    symlinkSync(custody, link);
+    expect(() => loadSource(e, { gold: link })).toThrow(/sealed path/);
   });
 
   test('fixtures live where the helper says', () => expect(FX).toMatch(/test\/fixtures\/failure-causes$/));

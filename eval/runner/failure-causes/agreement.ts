@@ -7,6 +7,7 @@
  * the held-out agreed labels, with at least 40 of them.
  */
 import { createHash } from 'node:crypto';
+import type { CauseLabel } from './types.ts';
 
 export const KAPPA_MIN = 0.6;
 export const MIN_AGREED_PER_PATH = 40;
@@ -59,9 +60,22 @@ export function perCause(pairs: ReadonlyArray<readonly [string, string]>): Recor
 
 export interface PathGate { path: string; held_out: number; kappa: number | null; pass: boolean; reason: string; confusion: ReturnType<typeof confusion>; per_cause: ReturnType<typeof perCause> }
 
-/** Gate each production path on its held-out agreed rows. production maps case_key to the production labeller's cause. */
-export function gatePaths(set: LabelSetRow[], production: ReadonlyMap<string, string>): PathGate[] {
-  const paths = [...new Set(set.map(r => r.path))].sort();
+/**
+ * The production labeller's cause per case key, and every labeller path the production labels used. A failed call or an
+ * unparseable reply is no label, so it never counts toward agreement, but its path still needs a gate.
+ */
+export function productionLabels(labels: CauseLabel[]): { byCase: Map<string, string>; paths: string[] } {
+  const labelled = labels.filter(l => (l.basis === 'model' || l.basis === 'unclassified') && l.labeller);
+  const answered = labelled.filter(l => l.rule_id !== 'labeller.call_failed' && l.rule_id !== 'labeller.invalid_reply');
+  return { byCase: new Map(answered.map(l => [`${l.source}|${l.case_id}`, String(l.cause)])), paths: [...new Set(labelled.map(l => l.labeller!.path))].sort() };
+}
+
+/**
+ * Gate each production path on its held-out agreed rows. production maps case_key to the production labeller's cause.
+ * required names the paths the production labels used, so a path with no label-set rows fails instead of going ungated.
+ */
+export function gatePaths(set: LabelSetRow[], production: ReadonlyMap<string, string>, required: readonly string[] = []): PathGate[] {
+  const paths = [...new Set([...set.map(r => r.path), ...required])].sort();
   return paths.map(path => {
     const held = set.filter(r => r.path === path && r.split === 'held_out' && production.has(r.case_key));
     const pairs = held.map(r => [r.label, production.get(r.case_key)!] as const);

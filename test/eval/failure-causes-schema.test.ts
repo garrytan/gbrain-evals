@@ -36,6 +36,7 @@ describe('failure-cause interface (pinned for the nightly loop)', () => {
     const entry = { id: 'FC-1', category: 'failure-causes', classification: 'bug', contract: 'c', gbrain_sha: 'a'.repeat(40), surface: 'get_page', repro: 'bun repro.ts', expected: 'e', actual: 'a', status: 'open' };
     expect(validateBugEntry({ ...entry, cause: 'tool_contract', rule_id: 'tool.unrecovered_error', regression_check: 'bun test x' })).toEqual([]);
     expect(validateBugEntry({ ...entry, cause: 'not_a_cause' })).toEqual(['FC-1: cause must be a failure-cause id (eval/runner/failure-causes/taxonomy.ts)']);
+    expect(validateBugEntry({ ...entry, rule_id: '' })).toEqual(['FC-1: rule_id must be a classifier rule id']);
     expect(validateBugEntry({ ...entry, regression_check: ' ' })).toEqual(['FC-1: regression_check must be a repository-root command']);
   });
 });
