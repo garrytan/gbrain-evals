@@ -28,10 +28,13 @@
  * the same thing about different pages would have two right answers). The
  * manifest counts the skips by pattern and reason.
  *
- * Exact forms are the worlds' own questions; G1's "Today is <date>." and
- * "Reply with the value only." wrapping is dropped, because retrieval answers
- * the question, not the date arithmetic. Paraphrases are deterministic
- * templates per pattern, a keyless control. A counted run passes
+ * Exact forms are written in the gold page's own words, the way live recall's
+ * exact forms are (batch 3's fixture asks "Where does Ines Varga work now?" of
+ * the page that says so): each is a template per pattern filled from the gold
+ * page's text, so every content word of the exact form is on its gold page and
+ * gbrain's keyword arm can match it. Paraphrases are deterministic templates
+ * per pattern filled from the world's own question (G1's "Today is <date>."
+ * and "Reply with the value only." wrapping dropped), a keyless control. A counted run passes
  * --paraphrases (JSONL {id, paraphrase}, written by
  * eval/runner/live-recall/paraphrase-opus.ts, which is paid and refuses
  * without --paid and a budget run). Either way every paraphrase follows live
@@ -81,6 +84,24 @@ export function batch3Digest(knobs: ConditionsKnobs, pages: Page[], questionsTex
   return fingerprint({ schema: B3_SCHEMA, knobs, pages: [...pages].sort((a, b) => a.slug.localeCompare(b.slug)), questions: questionsText });
 }
 
+/** Exact forms per pattern: a pattern over the gold page's text, and the question built from what it captures. */
+const EXACT: Record<string, [RegExp, (...m: string[]) => string]> = {
+  entity_lag: [/^(.+) said she left .+ and is now VP Engineering at .+\.$/m, who => 'Where is ' + who + ' now VP Engineering?'],
+  decision_reversed: [/^Reversing the earlier call on the (.+): we are going with /m, topic => 'Which ' + topic + ' are we going with instead?'],
+  last_week_tz: [/ \(UTC\)\. (.+) approved plan \S+\.$/m, who => 'Which plan has ' + who + ' approved at the meeting?'],
+  moved_namesake: [/^(.+) worked at .+ until March, then moved to (.+)\.$/m, (name, dest) => 'Which ' + name + ' moved to ' + dest + ' in March?'],
+  family_surname: [/^\S+ (\S+) is a parent in the \S+ family\.$/m, last => 'Who is the parent in the ' + last + ' family?'],
+  company_handle: [/, known online as @(\S+), founded (.+)\. Age \d+\.$/m, (handle, co) => 'Who founded ' + co + ' and is known online as @' + handle + '?'],
+  father_son: [/^(.+), born \d+, son of .+; studied at (.+)\.$/m, (name, school) => 'Which ' + name + ' studied at ' + school + '?'],
+};
+
+function exactFor(pattern: string, goldPage: string): string {
+  const [re, make] = EXACT[pattern] ?? [];
+  const m = re && goldPage.match(re);
+  if (!m) throw new Batch3SyntheticError('no exact-form template matches a ' + pattern + ' gold page; the world generator\'s wording changed');
+  return make!(...m.slice(1));
+}
+
 const PARAPHRASES: Record<string, [RegExp, (...m: string[]) => string]> = {
   entity_lag: [/^Which company does (.+) work at right now\?$/, who => 'Who is ' + who + ' working for these days?'],
   decision_reversed: [/^Which (.+) did the team decide to go with\?$/, topic => 'Who did we end up picking as our ' + topic + '?'],
@@ -91,9 +112,9 @@ const PARAPHRASES: Record<string, [RegExp, (...m: string[]) => string]> = {
   father_son: [/^Which (.+) is the son, the one I asked about at (.+)\? Give the page id\.$/, (name, school) => 'Which ' + name + ' is the younger one who went to ' + school + '?'],
 };
 
-function paraphraseFor(pattern: string, exact: string): string {
+function paraphraseFor(pattern: string, question: string): string {
   const [re, make] = PARAPHRASES[pattern] ?? [];
-  const m = re && exact.match(re);
+  const m = re && question.match(re);
   if (!m) throw new Batch3SyntheticError('no paraphrase template matches a ' + pattern + ' question; the world generator\'s wording changed');
   return make!(...m.slice(1));
 }
@@ -130,15 +151,17 @@ export function generateBatch3Synthetic(opts: { seed?: number; perType?: number;
     let taken = 0;
     for (const w of worlds) {
       if (taken === perType) return;
-      const exact = type === 'freshness' ? freshnessStem(w.question) : w.question;
       const stale = type === 'freshness' ? stalePages(w as FreshnessTask) : [];
       if (type === 'freshness' && stale.length === 0) { skip(w.pattern, 'stale_on_gold_page'); continue; }
       if (w.pages.some(p => slugs.has(p.slug))) { skip(w.pattern, 'slug_taken'); continue; }
-      if (asked.has(exact.toLowerCase())) { skip(w.pattern, 'repeated_question'); continue; }
-      asked.add(exact.toLowerCase());
-      for (const p of w.pages) { slugs.add(p.slug); pages.push({ slug: p.slug, body: p.markdown }); }
       const gold = type === 'freshness' ? (w as FreshnessTask).fresh_page : (w as EntityTask).gold;
-      questions.push({ id: w.id, type, forms: { exact, paraphrase: paraphraseFor(w.pattern, exact) }, gold: [{ slug: gold }], ...(stale.length ? { stale: stale.map(slug => ({ slug })) } : {}), gold_found_by: 'page_first' });
+      const exact = exactFor(w.pattern, w.pages.find(p => p.slug === gold)!.markdown);
+      const paraphrase = paraphraseFor(w.pattern, type === 'freshness' ? freshnessStem(w.question) : w.question);
+      if (asked.has(exact.toLowerCase()) || asked.has(paraphrase.toLowerCase())) { skip(w.pattern, 'repeated_question'); continue; }
+      asked.add(exact.toLowerCase());
+      asked.add(paraphrase.toLowerCase());
+      for (const p of w.pages) { slugs.add(p.slug); pages.push({ slug: p.slug, body: p.markdown }); }
+      questions.push({ id: w.id, type, forms: { exact, paraphrase }, gold: [{ slug: gold }], ...(stale.length ? { stale: stale.map(slug => ({ slug })) } : {}), gold_found_by: 'page_first' });
       byPattern[w.pattern] = (byPattern[w.pattern] ?? 0) + 1;
       taken++;
     }

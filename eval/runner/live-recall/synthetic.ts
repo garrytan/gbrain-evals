@@ -3,11 +3,22 @@
  * from a directory written by eval/generators/conditions-recall-gen.ts (schema
  * conditions-recall/v1) or eval/generators/batch3-synthetic-gen.ts (schema
  * live-recall-b3-synthetic/v1, batch 3's freshness and entity questions under
- * the batch3 protocol, with gbrain's default knobs), with
- * the keyless fixture transports (hash embeddings and a token-overlap
- * reranker), applies the directory's recorded knobs, then marks it as a copy
- * and sets it read-only exactly like buildFixtureBrain in run.ts, so the six
- * live-recall arms (runQuestions) score it the way they score the fixture.
+ * the batch3 protocol, with gbrain's default knobs), applies the directory's
+ * recorded knobs, then marks it as a copy and sets it read-only exactly like
+ * buildFixtureBrain in run.ts, so the six live-recall arms (runQuestions) score
+ * it the way they score the fixture.
+ *
+ * Transports:
+ *   - hash (the default, keyless, a control): the fixture transports, hash
+ *     embeddings and a token-overlap reranker, at gbrain's balanced mode.
+ *   - voyage (paid, only through run.ts run --synthetic --paid --budget-run-id):
+ *     the configuration live recall's counted brain ran in batches 1 and 2
+ *     (VOYAGE_SYNTHETIC): gbrain's real Voyage embedder for pages and queries,
+ *     tokenmax mode and the configured arm's rerank-2.5. The import runs under
+ *     gbrain's AI invocation guard and may make embedding calls only, so the
+ *     per-chunk synopsis tier (a chat model) is never reached and chunks get
+ *     the title tier, as on every keyless build. run.ts reserves and settles
+ *     every request on the budget ledger.
  *
  * Knobs, as the generator header defines them:
  *   - synopsis_vectors_off sets search.contextual_retrieval_disabled before
@@ -37,11 +48,30 @@ import { COPY_MARKER_TABLE } from './brain.ts';
 import { parseQuestions, useFixtureTransports } from './run.ts';
 import { SCHEMA, corpusDigest, validateKnobs, type Manifest, type Page } from '../../generators/conditions-recall-gen.ts';
 import { B3_SCHEMA, batch3Digest, type Batch3Manifest } from '../../generators/batch3-synthetic-gen.ts';
+import { priceRequest } from '../budget-ledger.ts';
 import type { Protocol } from './scorecard.ts';
+
+export type Transports = 'hash' | 'voyage';
+
+/**
+ * Live recall's counted configuration: the run block of
+ * docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json (and both batch 1
+ * attempts) records voyage:voyage-4 embeddings, tokenmax and voyage:rerank-2.5. The
+ * dimension is voyage-4's default (gbrain's Voyage recipe, default_dims 1024); the
+ * counted scorecards do not record one.
+ */
+export const VOYAGE_SYNTHETIC = { embedding_model: 'voyage:voyage-4', embedding_dimensions: 1024, search_mode: 'tokenmax', reranker_model: 'voyage:rerank-2.5' } as const;
+/** tokenmax's reranker_top_n_in: the most chunks one configured-arm query sends to the reranker. */
+export const VOYAGE_RERANK_TOP_N_IN = 50;
+/** Arms that may embed one query form: hybrid, vector, configured and configured_window (an upper bound; vector reuses hybrid's). */
+const QUERY_EMBEDS_PER_FORM = 4;
+/** Context prefix and chunk overlap on top of the page text, an allowance on the ledger's 3 bytes a token. */
+const CORPUS_OVERHEAD = 1.5;
 
 export type SyntheticManifest = Manifest | Batch3Manifest;
 
 export interface SyntheticApplied {
+  transports: Transports;
   chunks: number;
   unembedded_chunks: number;
   contextual_retrieval_mode: string[];
@@ -74,19 +104,59 @@ export function readSyntheticDir(dir: string): { manifest: SyntheticManifest; pa
   return { manifest: { ...manifest, knobs }, pages, questionsText, ...(batch3 ? { protocol: 'batch3' as const } : {}) };
 }
 
-export async function buildSyntheticBrain(gut: GbrainUnderTest, dir: string): Promise<{ engine: any; close: () => Promise<void>; questionsText: string; manifest: SyntheticManifest; protocol?: Protocol; applied: SyntheticApplied }> {
+/** The Voyage cost of one paid synthetic run over a directory, from the ledger's own prices and its 3-bytes-a-token reservation rule; an upper-leaning estimate, printed before the first request. */
+export function estimateVoyageUsd(dir: string): { usd: number; embedding_tokens: number; rerank_tokens: number; embedding_usd_per_mtok: number; rerank_usd_per_mtok: number } {
+  const { pages, questionsText, protocol } = readSyntheticDir(dir);
+  const questions = parseQuestions(questionsText, protocol);
+  const bytes = (s: string) => Buffer.byteLength(s);
+  const pageBytes = pages.reduce((n, p) => n + bytes(p.body), 0);
+  const docs = Math.min(VOYAGE_RERANK_TOP_N_IN, pages.length);
+  const docBytes = pages.length ? pageBytes / pages.length : 0;
+  let queryTokens = 0, rerankTokens = 0;
+  for (const q of questions) for (const form of [q.forms.exact, q.forms.paraphrase]) {
+    queryTokens += (Math.ceil(bytes(form) / 3) + 16) * QUERY_EMBEDS_PER_FORM;
+    rerankTokens += (q.window ? 2 : 1) * (Math.ceil((bytes(form) * docs + docs * docBytes) / 3) + 16);
+  }
+  const embeddingTokens = Math.ceil((pageBytes * CORPUS_OVERHEAD) / 3) + 16 * pages.length + queryTokens;
+  const embed = priceRequest('https://api.voyageai.com/v1/embeddings', { model: VOYAGE_SYNTHETIC.embedding_model.split(':')[1], input: ['x'] })!.input;
+  const rerank = priceRequest('https://api.voyageai.com/v1/rerank', { model: VOYAGE_SYNTHETIC.reranker_model.split(':')[1], query: 'x', documents: ['y'] })!.input;
+  return { usd: (embeddingTokens * embed + rerankTokens * rerank) / 1e6, embedding_tokens: embeddingTokens, rerank_tokens: rerankTokens, embedding_usd_per_mtok: embed, rerank_usd_per_mtok: rerank };
+}
+
+/** gbrain's real Voyage transports with the key from this process's environment. */
+async function useVoyageTransports(gut: GbrainUnderTest): Promise<() => void> {
+  if (!process.env.VOYAGE_API_KEY) throw new Error('synthetic: voyage transports need VOYAGE_API_KEY in the environment');
+  const gateway = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
+  gateway.__setEmbedTransportForTests(null);
+  gateway.__setRerankTransportForTests(null);
+  gateway.configureGateway({ embedding_model: VOYAGE_SYNTHETIC.embedding_model, embedding_dimensions: VOYAGE_SYNTHETIC.embedding_dimensions, env: { VOYAGE_API_KEY: process.env.VOYAGE_API_KEY } });
+  return () => {};
+}
+
+export async function buildSyntheticBrain(gut: GbrainUnderTest, dir: string, transports: Transports = 'hash'): Promise<{ engine: any; close: () => Promise<void>; questionsText: string; manifest: SyntheticManifest; protocol?: Protocol; applied: SyntheticApplied }> {
   const { manifest, pages, questionsText, protocol } = readSyntheticDir(dir);
   const { knobs, seed } = manifest;
-  const reset = await useFixtureTransports(gut);
+  const reset = transports === 'voyage' ? await useVoyageTransports(gut) : await useFixtureTransports(gut);
   const { PGLiteEngine } = await importGbrain<any>(gut, 'src/core/pglite-engine.ts');
   const engine = new PGLiteEngine();
   try {
     await engine.connect({});
     await engine.initSchema();
+    if (transports === 'voyage') {
+      await engine.setConfig('search.mode', VOYAGE_SYNTHETIC.search_mode);
+      await engine.setConfig('search.reranker.model', VOYAGE_SYNTHETIC.reranker_model);
+    }
     if (knobs.synopsis_vectors_off) await engine.setConfig('search.contextual_retrieval_disabled', 'true');
     const { assertEmbedded } = await import('../import-embedded.ts');
     const { importFromContent } = await importGbrain<any>(gut, 'src/core/import-file.ts');
-    for (const page of pages) assertEmbedded(await importFromContent(engine, page.slug, page.body, { noEmbed: false }), page.slug);
+    const importAll = async () => { for (const page of pages) assertEmbedded(await importFromContent(engine, page.slug, page.body, { noEmbed: false }), page.slug); };
+    if (transports === 'voyage') {
+      const { withAIInvocationGuard } = await importGbrain<any>(gut, 'src/core/ai/invocation-guard.ts');
+      await withAIInvocationGuard(async (call: { kind: string }) => {
+        if (call.kind !== 'embedding') throw new Error('synthetic: the voyage import refused a ' + call.kind + ' call');
+        return { settle: async () => {} };
+      }, importAll);
+    } else await importAll();
 
     const chunks = await engine.executeRaw('SELECT cc.id, p.slug, cc.chunk_index FROM content_chunks cc JOIN pages p ON p.id = cc.page_id') as Array<{ id: number; slug: string; chunk_index: number }>;
     const ranked = chunks.map(c => ({ id: Number(c.id), h: createHash('sha256').update(seed + ':unembedded:' + c.slug + ':' + c.chunk_index).digest('hex') })).sort((a, b) => a.h.localeCompare(b.h));
@@ -118,7 +188,7 @@ export async function buildSyntheticBrain(gut: GbrainUnderTest, dir: string): Pr
       questionsText,
       manifest,
       ...(protocol ? { protocol } : {}),
-      applied: { chunks: chunks.length, unembedded_chunks: cleared.length, contextual_retrieval_mode: modes.map(m => m.mode), keyword_candidate_bound: bound },
+      applied: { transports, chunks: chunks.length, unembedded_chunks: cleared.length, contextual_retrieval_mode: modes.map(m => m.mode), keyword_candidate_bound: bound },
       close: async () => {
         reset();
         await engine.disconnect();

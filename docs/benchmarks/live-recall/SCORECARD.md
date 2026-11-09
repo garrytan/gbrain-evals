@@ -49,7 +49,12 @@ four copy fields are `null` when unknown or not a copy. Under `batch3` only, `ru
 brain from `eval/generators/conditions-recall-gen.ts`, or a batch-3 brain from `eval/generators/batch3-synthetic-gen.ts`
 built from the G1 freshness and G4 entity worlds, which runs under `batch3`) also carries `run.synthetic`: the directory's `digest` and
 `questions_sha256`, its knobs (`unembedded_chunk_share`, `synopsis_vectors_off`, `keyword_candidate_bound`,
-`shell_page_share`) and what the builder applied (`chunks`, `unembedded_chunks`).
+`shell_page_share`) and what the builder applied (`chunks`, `unembedded_chunks`). In-process runs also carry
+`run.transports`: `hash` for the fixture and keyless synthetic runs (hash embeddings and a token-overlap reranker, a
+control), or `voyage` for `run --synthetic --paid --budget-run-id <id>`, which embeds the synthetic brain and its queries
+with `voyage:voyage-4` and reranks the configured arm with `voyage:rerank-2.5` under `tokenmax`, the configuration live
+recall's counted brain ran, with every request reserved and settled on the budget ledger (`paid-receipt.json` beside the
+scorecard). `eval/runner/predictive/verdict.ts` refuses a `hash` scorecard unless `--control` is passed.
 
 **`custody`**: `readonly_verified_start` and `readonly_verified_end` (the session reported
 `default_transaction_read_only = on` and gbrain's direct pool was off, before the first search and after the last),

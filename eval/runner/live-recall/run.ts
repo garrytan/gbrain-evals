@@ -6,6 +6,7 @@
  *
  *   bun eval/runner/live-recall/run.ts run --fixture
  *   bun eval/runner/live-recall/run.ts run --synthetic <dir from eval/generators/conditions-recall-gen.ts or batch3-synthetic-gen.ts> [--protocol batch3] [--out <dir>]
+ *     [--paid --budget-run-id <id> [--budget-ledger <path>]]   (Voyage embeddings and rerank; see synthetic.ts)
  *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json> [--protocol batch1|batch2|batch3] [--gbrain <checkout>@<commit>]
  *   bun eval/runner/live-recall/run.ts run --questions <private.jsonl> --freeze <freeze.json> \
  *     --gbrain <gbrain checkout>@<commit> [--database-url-env LIVE_RECALL_DATABASE_URL] [--out <dir>]
@@ -19,7 +20,11 @@
  * entity questions and their pages): a keyless harness control whose numbers say nothing
  * about search quality. --synthetic scores the same six arms on a generated
  * conditions-recall brain (G2: unembedded chunks, synopsis vectors off, a keyword
- * candidate bound, shell pages), also keyless and also a control. A counted run takes its protocol from the freeze. A real run opens a Postgres brain
+ * candidate bound, shell pages) or a batch-3 brain, also keyless and also a
+ * control (run.transports: hash). With --paid --budget-run-id it embeds and
+ * reranks with Voyage instead (run.transports: voyage), after printing an
+ * estimate, with every request reserved and settled on the budget ledger and
+ * nothing sent to any host but api.voyageai.com. A counted run takes its protocol from the freeze. A real run opens a Postgres brain
  * only after brain.ts proves a server-side read-only barrier. The run kit,
  * abort codes and scorecard format are in docs/benchmarks/live-recall/.
  */
@@ -33,6 +38,9 @@ import { gbrainPin } from '../gbrain-version.ts';
 import { normalQuantile } from '../stats/paired.ts';
 import { ABORT_CODES, COPY_MARKER_TABLE, LiveRecallAbort, checkSchema, installGuards, openPostgresBrain, verifyReadOnly, type GuardCounters } from './brain.ts';
 import { visibilityEpoch } from './visibility-epoch.ts';
+import type { Transports } from './synthetic.ts';
+import { budgetOptionsFrom, receiptCost, startPaidRun } from '../budget-ledger.ts';
+import { PaidArmRefusal, paidRequested, requirePaidArm } from '../paid-arm.ts';
 import { ALL_TYPES, ARMS, GOLD_FOUND_BY, KS, PROTOCOLS, PROTOCOL_TYPES, TYPES, buildScorecard, compareRuns, poolRuns, renderMarkdown, scanForLeaks, validateScorecard, versionOrNull, type Arm, type Form, type Protocol, type QType, type QueryRecord, type Status } from './scorecard.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
@@ -321,7 +329,11 @@ function walkPages(dir: string, root = dir): Array<{ slug: string; body: string 
   });
 }
 
-/** Point gbrain's gateway at keyless transports: hash embeddings and a token-overlap reranker. Returns the reset. */
+/**
+ * Point gbrain's gateway at keyless transports: hash embeddings and a token-overlap reranker. It also sets
+ * GBRAIN_MODEL_DISCOVERY=off, since gbrain otherwise lists models at api.openai.com before its first OpenAI-routed
+ * embedding, which would be a network request from a keyless run. Returns the reset.
+ */
 export async function useFixtureTransports(gut: GbrainUnderTest): Promise<() => void> {
   const { hashEmbedVector } = await import('../cat18-embedding-providers.ts');
   const { makeOverlapRerankTransport } = await import('../cat18b-embedding-rerank-matrix.ts');
@@ -329,9 +341,13 @@ export async function useFixtureTransports(gut: GbrainUnderTest): Promise<() => 
   gateway.configureGateway({ embedding_model: 'openai:text-embedding-3-small', embedding_dimensions: FIXTURE_DIM, env: { OPENAI_API_KEY: 'fixture', VOYAGE_API_KEY: 'fixture' } });
   gateway.__setEmbedTransportForTests(async (params: { values: string[] }) => ({ embeddings: params.values.map(t => hashEmbedVector(t, FIXTURE_DIM)), values: params.values, warnings: [] }));
   gateway.__setRerankTransportForTests(makeOverlapRerankTransport());
+  const discovery = process.env.GBRAIN_MODEL_DISCOVERY;
+  process.env.GBRAIN_MODEL_DISCOVERY = 'off';
   return () => {
     gateway.__setEmbedTransportForTests(null);
     gateway.__setRerankTransportForTests(null);
+    if (discovery === undefined) delete process.env.GBRAIN_MODEL_DISCOVERY;
+    else process.env.GBRAIN_MODEL_DISCOVERY = discovery;
   };
 }
 
@@ -390,7 +406,7 @@ function git(args: string[]): string {
   try { return execFileSync('git', ['-C', REPO_ROOT, ...args], { encoding: 'utf8' }).trim(); } catch { return ''; }
 }
 
-interface RunOptions { fixture: boolean; synthetic?: string; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest; protocol?: Protocol }
+interface RunOptions { fixture: boolean; synthetic?: string; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest; protocol?: Protocol; transports?: Transports }
 
 /** One counted or control run. Returns the outbound file paths. */
 /** pgvector in the database searched and, on a copy, the versions and restore error count snapshot.sh wrote into the marker row. */
@@ -418,7 +434,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
   let synthetic: Awaited<ReturnType<typeof import('./synthetic.ts').buildSyntheticBrain>> | null = null;
   if (o.synthetic) {
     const { buildSyntheticBrain } = await import('./synthetic.ts');
-    synthetic = await buildSyntheticBrain(o.gut, o.synthetic);
+    synthetic = await buildSyntheticBrain(o.gut, o.synthetic, o.transports);
     questionsText = synthetic.questionsText;
     if (!o.protocol && synthetic.protocol) protocol = synthetic.protocol;
   } else if (o.fixture) questionsText = readFileSync(o.questionsPath ?? (protocol === 'batch3' ? BATCH3_FIXTURE_QUESTIONS : join(FIXTURE_DIR, 'questions.jsonl')), 'utf8');
@@ -524,6 +540,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       embedding_column: /^[a-z_][a-z0-9_]{0,62}$/.test(String(column.name)) ? String(column.name) : 'unknown',
       mode_expansion: Boolean(knobs.expansion),
       control: inProcess,
+      ...(inProcess ? { transports: synthetic?.applied.transports ?? 'hash' } : {}),
       ...facts,
       ...(synthetic ? { synthetic: { digest: synthetic.manifest.digest, questions_sha256: synthetic.manifest.questions_sha256, ...synthetic.manifest.knobs, chunks: synthetic.applied.chunks, unembedded_chunks: synthetic.applied.unembedded_chunks } } : {}),
       ...(protocol === 'batch3' ? { visibility_epoch: runEpoch, freeze_gbrain_version: frozenEpoch?.gbrain_version ?? null, freeze_visibility_epoch: frozenEpoch?.visibility_epoch ?? null } : {}),
@@ -596,7 +613,16 @@ function flag(argv: string[], name: string): string | undefined {
   return at >= 0 ? argv[at + 1] : undefined;
 }
 
-async function main(argv: string[]): Promise<number> {
+/** For --paid, outside the ledger's guard: send only to Voyage. The guard prices every paid host, so a stray chat call would be reserved and sent; this refuses it before the guard sees it. */
+function voyageOnlyFetch(send: typeof fetch): typeof fetch {
+  return (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    if ((url.protocol === 'http:' || url.protocol === 'https:') && url.hostname !== 'api.voyageai.com') throw new Error('live-recall synthetic --paid sends only to api.voyageai.com; refused a request to ' + url.hostname);
+    return send(input, init);
+  }) as typeof fetch;
+}
+
+export async function main(argv: string[]): Promise<number> {
   const command = argv[0];
   const protocol = flag(argv, '--protocol');
   if (protocol !== undefined && !(PROTOCOLS as readonly string[]).includes(protocol)) { console.error('usage: --protocol ' + PROTOCOLS.join('|')); return 2; }
@@ -630,13 +656,34 @@ async function main(argv: string[]): Promise<number> {
   if (command !== 'run') { console.error('usage: run.ts run|freeze|compare|pool (see the header of this file)'); return 2; }
   const fixture = argv.includes('--fixture');
   const synthetic = flag(argv, '--synthetic');
+  const paid = paidRequested(argv);
+  if (paid && !synthetic) { console.error('live-recall: --paid applies only to run --synthetic <dir>, which then embeds and reranks with Voyage'); return 2; }
+  let estimate: ReturnType<typeof import('./synthetic.ts').estimateVoyageUsd> | null = null;
+  if (paid) {
+    const { estimateVoyageUsd, VOYAGE_SYNTHETIC } = await import('./synthetic.ts');
+    estimate = estimateVoyageUsd(resolve(synthetic!));
+    console.log('live-recall: --paid synthetic run with ' + VOYAGE_SYNTHETIC.embedding_model + ', ' + VOYAGE_SYNTHETIC.search_mode + ' and ' + VOYAGE_SYNTHETIC.reranker_model + ': estimated $' + estimate.usd.toFixed(4) + ' (' + estimate.embedding_tokens + ' embedding tokens at $' + estimate.embedding_usd_per_mtok + '/M, ' + estimate.rerank_tokens + ' rerank tokens at $' + estimate.rerank_usd_per_mtok + '/M)');
+    try {
+      requirePaidArm(argv, { arm: 'live-recall synthetic (' + VOYAGE_SYNTHETIC.embedding_model + ' + ' + VOYAGE_SYNTHETIC.reranker_model + ')', estimateUsd: estimate.usd });
+    } catch (error) {
+      if (!(error instanceof PaidArmRefusal)) throw error;
+      console.error('live-recall: REFUSED: ' + error.message);
+      return 2;
+    }
+  }
   const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall', new Date().toISOString().replace(/[:.]/g, '-') + (synthetic ? '-synthetic' : fixture ? '-fixture' : '')));
   mkdirSync(out, { recursive: true, mode: 0o700 });
   process.env.GBRAIN_AUDIT_DIR = out;
   const { say, restore } = captureOutput(join(out, 'gbrain.local.log'));
+  const savedFetch = globalThis.fetch;
+  let paidRun: ReturnType<typeof startPaidRun> | null = null;
   try {
     const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-    const paths = await liveRecall({ fixture, synthetic: synthetic ? resolve(synthetic) : undefined, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut, protocol: protocol as Protocol | undefined }, say);
+    if (estimate) {
+      paidRun = startPaidRun('live-recall-synthetic-voyage', { ...budgetOptionsFrom(argv), runId: flag(argv, '--budget-run-id'), estimateUsd: estimate.usd, log: say });
+      globalThis.fetch = voyageOnlyFetch(globalThis.fetch);
+    }
+    const paths = await liveRecall({ fixture, synthetic: synthetic ? resolve(synthetic) : undefined, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut, protocol: protocol as Protocol | undefined, transports: estimate ? 'voyage' : 'hash' }, say);
     say('scorecard (send these two files): ' + paths.scorecard + ' and ' + paths.markdown);
     say('detail and gbrain log (stay on this box): ' + paths.detail + ' and ' + join(out, 'gbrain.local.log'));
     return 0;
@@ -650,6 +697,14 @@ async function main(argv: string[]): Promise<number> {
     console.error(error instanceof Error ? error.stack : String(error));
     return 4;
   } finally {
+    if (paidRun) {
+      globalThis.fetch = savedFetch;
+      paidRun.guard.uninstall();
+      const cost = receiptCost(paidRun.run.close());
+      writeFileSync(join(out, 'paid-receipt.json'), JSON.stringify({ transports: 'voyage', estimate, cost }, null, 2) + '\n');
+      say('paid: $' + cost.usd.toFixed(6) + ' on the ledger (' + cost.basis + '); receipt ' + join(out, 'paid-receipt.json'));
+    }
+    globalThis.fetch = savedFetch;
     restore();
   }
 }
