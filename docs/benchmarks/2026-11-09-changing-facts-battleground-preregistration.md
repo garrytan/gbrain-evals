@@ -469,6 +469,11 @@ the rule that drops a world with a session that still fails (two drops among the
 The three dev worlds are rendered again under this method. Before any stage 1 cell runs, this amendment gains each
 world's measured rendering cost, its yield and its world end.
 
+**Operating notes.** Nobody deletes, moves or restores BG1's `--state` directory, its results directories or its lease
+log (`leases.ndjson` and `leases.sha256`). Any recovery stops and goes to the campaign owner, GBEV-3. Every stage's
+DONE report reconciles each provider's usage against the campaign ledger, so spend from a second VM on one lease would
+show up there.
+
 GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
 
 ### Expected amendments
