@@ -152,8 +152,9 @@ export function paidJobs(unit: Unit, opts: { tasks: number; k: number; models: r
 
 /**
  * Scorecards per model (and per surface for G3) from episode records. Cost per correct answer counts every dollar the
- * episode log records for the cell: its done episodes' and its errored attempts' (an errored row's record, else its
- * provider usage at ledger prices), divided by the done episodes that succeeded. `usd` is that numerator and
+ * episode log records for the cell: its done episodes' and its errored attempts' (errored rows, and refused rows whose
+ * usage records turns billed before a cap stop; a row's record, else its provider usage at ledger prices), divided by
+ * the done episodes that succeeded. `usd` is that numerator and
  * `errored_usd` the errored part of it.
  */
 export function scorecards(unit: Unit, records: readonly EpisodeRecord[], k: number, erroredAttempts: readonly LogRow[] = []): unknown[] {
