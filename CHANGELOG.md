@@ -17,7 +17,7 @@ This records what each gbrain-evals release changed and what its measurements me
   gpt-6-astra agree on, counting only rows where both of those calls returned a cause. A path with no gate fails, and so
   does an empty label set. Moving a failing path to gpt-6-astra is a step taken before that path's counts are
   published; nothing switches it automatically. Row text goes to the labeller fenced as untrusted. A private or sealed
-  row is never sent, and a source whose root or file resolves to sealed or custody material is never read.
+  row is never sent, and a source whose root or file resolves to a named RS1 custody or sealed path is never read.
 - **Adapters and ranking.** Adapters read the refresh barrier agent check, RS1, Cat 40, SkillOpt's forced probes and the
   live recall scorecard into one `eval-failure/1` row shape, from a source manifest with file hashes. Only gbrain runs
   under natural conditions are ranked. Forced probes go in a separate under-stress list and other systems in a contrast

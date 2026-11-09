@@ -86,7 +86,8 @@ export const sha256 = (bytes: Uint8Array | string) => createHash('sha256').updat
 
 /**
  * Read every file of a source from its mapped root, refusing a missing root or file, any hash mismatch, and a root or
- * file that resolves to a sealed path, so a root mapped into custody material is refused whatever the manifest says.
+ * file that resolves to a sealed path, so a root mapped into a named RS1 custody or sealed path is refused whatever the
+ * manifest says.
  */
 export function loadSource(entry: SourceEntry, roots: Record<string, string>): LoadedFile[] {
   const dir = roots[entry.root];
