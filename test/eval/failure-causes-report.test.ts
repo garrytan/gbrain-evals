@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildLabelSet, classify, cohensKappa, gatePaths, issueDrafts, knownAnswerAccuracy, labelSetSample, perCause, productionLabels, renderReport, stratifiedSample, summarize, ungated, type CauseLabel, type EvalFailure } from '../../eval/runner/failure-causes/index.ts';
+import { LABEL_PROMPT_SHA256, TAXONOMY_VERSION, buildLabelSet, classify, cohensKappa, gatePaths, issueDrafts, knownAnswerAccuracy, labelSetSample, perCause, productionLabels, renderReport, stratifiedSample, summarize, ungated, type CauseLabel, type EvalFailure } from '../../eval/runner/failure-causes/index.ts';
 import { failure } from '../support/failure-causes-fixture.ts';
 
 const gold = (retrieved: 'none' | 'all') => ({ ...failure().gold, gold_count: 1, retrieved });
@@ -43,13 +44,31 @@ describe('summarize', () => {
       t('a', 'T4', { gold: gold('none') }), t('a', 'T4', { ...fs, gold: gold('none') }, 'openai:gpt-6.1-sol'),
     ]);
     const miss = c.ranked.find(r => r.cause === 'retrieval_miss')!;
-    expect(miss.others).toEqual([{ system: 'fs', arm_role: 'other_system', same: 1, other: 1, none: 2 }]);
+    expect(miss.others).toEqual([{ system: 'fs', arm_role: 'other_system', same: 1, other: 1, none: 2, not_run: 0 }]);
     expect(miss).toMatchObject({ compared: 4, gbrain_only: 3 });
     expect(miss.tasks.map(x => [x.task_id, x.others.fs])).toEqual([['T1', 'retrieval_miss'], ['T2', 'tool_contract'], ['T3', null], ['T4', null]]);
     const md = renderReport(c, { heading: 'w' });
     expect(md).toContain('fs (other_system) failed the same way on 1, another way on 1, and had no failed row on 2');
     expect(md).toContain('On 3 of 4 compared rows, no other system failed the same way.');
     expect(md).toContain('| `T2` | anthropic:claude-opus-5-5 | gbrain | `tool_contract` |');
+  });
+
+  test('a system that never ran a task shows as not run, not as having no failed row, and is not compared there', () => {
+    const t = (task: string, over: Partial<EvalFailure>) => classify(failure({ source: 'a', task_id: task, case_id: `${over.system ?? 'gbrain'}|${task}`, ...over }));
+    const fs = { system: 'fs', arm: 'fs', arm_role: 'other_system' as const };
+    const c = summarize([
+      t('T1', { gold: gold('none') }), t('T1', { ...fs, failed: false, not_run: 'does_not_fit' }),
+      t('T2', { gold: gold('none') }),
+    ]);
+    const miss = c.ranked.find(r => r.cause === 'retrieval_miss')!;
+    expect(c.failures).toBe(2);
+    expect(miss.tasks.map(x => [x.task_id, x.others, x.not_run])).toEqual([['T1', {}, ['fs']], ['T2', { fs: null }, []]]);
+    expect(miss.others).toEqual([{ system: 'fs', arm_role: 'other_system', same: 0, other: 0, none: 1, not_run: 1 }]);
+    expect(miss).toMatchObject({ compared: 1, gbrain_only: 1 });
+    const md = renderReport(c, { heading: 'w' });
+    expect(md).toContain('fs (other_system) failed the same way on 0, another way on 0, and had no failed row on 1, and did not run 1');
+    expect(md).toContain('| `T1` | anthropic:claude-opus-5-5 | gbrain | not run |');
+    expect(md).toContain('| `T2` | anthropic:claude-opus-5-5 | gbrain | - |');
   });
 
   test('turn-cap rows are tagged and counted per cause, and the report says the cap is part of what they measure', () => {
@@ -247,11 +266,12 @@ describe('agree and report on the command line', () => {
     const refused = cli(args);
     expect(refused.status).toBe(1);
     expect(refused.stderr).toMatch(/model labels without a passing gate: sol-labels-claude-rows on sol-labels-claude-rows \(1\)/);
+    const stamp = { taxonomy_version: TAXONOMY_VERSION, prompt_sha256: LABEL_PROMPT_SHA256 };
     const failing = join(dir, 'gates-fail.json');
-    writeFileSync(failing, JSON.stringify({ gates: [{ path: 'sol-labels-claude-rows', family: 'sol-labels-claude-rows', pass: false }] }));
+    writeFileSync(failing, JSON.stringify({ ...stamp, gates: [{ path: 'sol-labels-claude-rows', family: 'sol-labels-claude-rows', pass: false }] }));
     expect(cli([...args, '--gates', failing]).status).toBe(1);
     const passing = join(dir, 'gates.json');
-    writeFileSync(passing, JSON.stringify({ gates: [{ path: 'sol-labels-claude-rows', family: 'sol-labels-claude-rows', pass: true }] }));
+    writeFileSync(passing, JSON.stringify({ ...stamp, gates: [{ path: 'sol-labels-claude-rows', family: 'sol-labels-claude-rows', pass: true }] }));
     const r = cli([...args, '--gates', passing]);
     expect(r.status).toBe(0);
     const out = JSON.parse(r.stdout);
@@ -261,4 +281,48 @@ describe('agree and report on the command line', () => {
     const both = cli(['report', '--labels', `${classified},${labelled},${nextNight}`, '--out-dir', join(dir, 'out2'), '--heading', 'Week', '--gates', passing]);
     expect(JSON.parse(both.stdout)).toMatchObject({ failures: 3 });
   });
+
+  test('report refuses a gate file stamped with another taxonomy or labeller prompt, or none; agree stamps its file and refuses older labels', () => {
+    const pending = residualLabel('w', 'g1');
+    const labels = ndjson('gated.ndjson', [modelLabel(pending, 'stale_fact', 'sol-labels-claude-rows')]);
+    const gates = [{ path: 'sol-labels-claude-rows', family: 'sol-labels-claude-rows', pass: true }];
+    const report = (file: string) => cli(['report', '--labels', labels, '--out-dir', join(dir, 'out-gated'), '--heading', 'Week', '--gates', file]);
+    const write = (name: string, body: unknown) => { const f = join(dir, name); writeFileSync(f, JSON.stringify(body)); return f; };
+    const unstamped = report(write('gates-unstamped.json', { gates }));
+    expect(unstamped.status).toBe(1);
+    expect(unstamped.stderr).toMatch(/gated under taxonomy unstamped and labeller prompt unstamped; this code is .*, so run agree again/);
+    expect(report(write('gates-old-taxonomy.json', { taxonomy_version: '2026-11-09.2', prompt_sha256: LABEL_PROMPT_SHA256, gates })).stderr).toMatch(/gated under taxonomy 2026-11-09\.2/);
+    expect(report(write('gates-old-prompt.json', { taxonomy_version: TAXONOMY_VERSION, prompt_sha256: '0'.repeat(64), gates })).stderr).toMatch(/labeller prompt 000000000000;/);
+    expect(report(write('gates-current.json', { taxonomy_version: TAXONOMY_VERSION, prompt_sha256: LABEL_PROMPT_SHA256, gates })).status).toBe(0);
+    const empty = ndjson('empty-set.ndjson', []);
+    const out = join(dir, 'check-stamped.json');
+    expect(cli(['agree', '--labelset', empty, '--production', labels, '--out', out]).status).toBe(1);
+    expect(JSON.parse(readFileSync(out, 'utf8'))).toMatchObject({ taxonomy_version: TAXONOMY_VERSION, prompt_sha256: LABEL_PROMPT_SHA256 });
+    const old = ndjson('old-labels.ndjson', [{ ...modelLabel(pending, 'stale_fact', 'sol-labels-claude-rows'), taxonomy_version: '2026-11-09.2' }]);
+    const refused = cli(['agree', '--labelset', empty, '--production', old, '--out', join(dir, 'check-old.json')]);
+    expect(refused.status).toBe(1);
+    expect(refused.stderr).toMatch(/production labels from taxonomy 2026-11-09\.2; this code is/);
+  });
+  // Value: protects=classify CLI writes a not_run row beside the failures for each task a system never ran, and counts it apart;
+  //   fails_when=cli.ts drops out.not_run from --out or folds it into the failure count; why_new=adapter and summarize tests call
+  //   the functions, never the classify command; seam=none; no_claim=real RS1 archives (synthetic one-cell fixture; keyless)
+  test('classify on the command line writes a not_run row for a task never run, and does not count it as a failure', () => {
+    const src = join(dir, 'rs1-src');
+    const write = (name: string, rows: unknown[]) => { const body = rows.map(r => JSON.stringify(r)).join('\n') + '\n'; writeFileSync(join(src, name), body); return { path: name, role: name.split('.')[0], sha256: createHash('sha256').update(body).digest('hex') }; };
+    mkdirSync(src, { recursive: true });
+    const row = (id: string) => ({ id, category: 'knowledge_update', gold_count: 1, outcome: 'scored', recall_any_at_10: 0, recall_all_at_10: 0, packing_loss: { items_offered: 8, items_cut: 0, items_dropped: 0 } });
+    const answer = (q: string, outcome: string) => ({ answer_id: `a-${q}`, cell_id: 'gbrain-a', question_id: q, system: 'gbrain-defaults', reader: 'anthropic:claude-opus-5-5', replicate: 0, text: 'a', outcome });
+    const files = [write('rows.ndjson', [row('q1'), row('q2')]), write('answers.ndjson', [answer('q1', 'scored'), answer('q2', 'does_not_fit')]),
+      write('judgments.ndjson', [{ answer_id: 'a-q1', judge: 'openai:gpt-6.1-sol', score: 0, parse_ok: true, outcome: 'scored' }])];
+    const manifest = join(dir, 'sources.json');
+    writeFileSync(manifest, JSON.stringify({ schema: 'failure-cause-sources/1', sources: [{ id: 'rs1', adapter: 'rs1', visibility: 'synthetic', condition: 'natural', root: 'src', files }] }));
+    const out = join(dir, 'classified-cli.ndjson');
+    const r = cli(['classify', '--manifest', manifest, '--root', `src=${src}`, '--out', out]);
+    expect(r.status).toBe(0);
+    expect(JSON.parse(r.stdout)).toMatchObject({ failures: 1, not_run: 1 });
+    const rows = readFileSync(out, 'utf8').trim().split('\n').map(l => JSON.parse(l) as CauseLabel);
+    expect(rows.map(l => [l.task_id, l.rule_id, l.cause])).toEqual([['q1', 'retrieval.no_gold_retrieved', 'retrieval_miss'], ['q2', 'not_run.does_not_fit', null]]);
+    expect(summarize(rows).failures).toBe(1);
+  });
 });
+

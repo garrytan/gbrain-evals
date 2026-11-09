@@ -8,7 +8,7 @@ describe('failure-cause interface (pinned for the nightly loop)', () => {
   test('the 18 cause ids, in stage order', () => {
     expect(CAUSE_IDS).toEqual(['harness_error', 'operations', 'ingest_gap', 'privacy_hidden', 'tool_contract', 'write_integrity', 'memory_not_consulted', 'retrieval_miss',
       'partial_evidence', 'wrong_ranking', 'gold_unopened', 'summary_loss', 'stale_fact', 'wrong_entity', 'time_reasoning', 'citation_abstention', 'model_error', 'timeout_latency']);
-    expect(TAXONOMY_VERSION).toBe('2026-11-09.2');
+    expect(TAXONOMY_VERSION).toBe('2026-11-09.3');
   });
 
   test('every cause maps to the gap map and has a proposed regression test', () => {
