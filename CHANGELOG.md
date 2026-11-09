@@ -2,6 +2,46 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.181] - 2026-11-09
+
+### RS1's harness before counted runs: gating judges, the judge check, per-unit custody and the verdict (GST-1886)
+
+- **Gating judges.** RS1 grades claude-opus-5-5 readers with gpt-6-astra and gpt-6.1-sol and particle-1 readers with
+  claude-opus-5-5 (`rs1JudgeOf` in `eval/runner/q1/cells/rs1.ts`), at the pinned settings #394 shares, and keeps
+  gpt-4.1-mini as the descriptive bridge. The shared `frontierJudgeOf` is unchanged, and a test pins Q1's and F6's cell
+  manifests to their earlier digests. The verdict rests on the gating view alone: gbrain against the memory-bank server
+  and against the extract-first server, and both one-sided lower bounds must sit above -3.5.
+- **Paired reporting.** Every comparison (overall, per reader, per ability, each server, each view) is gbrain minus the
+  server on the same questions, with its 95% and labelled 90% intervals and the questions where gbrain scored lower,
+  higher and tied. A row with fewer than 5 conversations reads "too few conversations".
+- **The judge check.** `eval/runner/rs1/judge-check.ts` grades about 160 public answers (stage 1 answers, screened
+  BEAM-1M gold and scripted corruptions) with both gating judges and the bridge judge, and a failed gate stops wave A.
+  It ran and every gate passed. `docs/benchmarks/2026-11-08-rs1-narrow/results/judge-check.json` and `judge-check.md`
+  hold ids, hashes, labels and scores, never answer, gold or corruption text. A keyless rehearsal never reports a pass.
+- **What verdict.ts refuses.** A gating judgment graded by the reader's family or by a judge the map does not name, or
+  missing its view, its pinned settings or a model version. A particle-1 re-read must match the filled manifest, and a
+  judge that returned more than one model version is flagged. Its new `aggregates` mode is the final custody run: it
+  writes `aggregates.json` and `aggregates.md` from a closed vocabulary, with the code commit and file hashes, and
+  keeps any refusal's reason in the custody directory.
+- **Custody.** `eval/custody/rs1/fill-manifest.ts` writes the filled manifest (ids, paths and SHA-256 hashes only).
+  Each RS1 campaign unit records its launch unit, the custody push sends that unit's VM only its own kept conversations
+  and the filled manifest, and on the VM setup and the loader refuse any other conversation. Paid minting and
+  validation take Gemini's key only from `RS1_GEMINI_API_KEY`, the receipt scan also matches `AQ.`-prefixed Google
+  keys, and mint.sh and beam-checkout.sh hash with `shasum -a 256` where `sha256sum` is missing.
+- **Paid windows.** mint.sh, rs1_mint.py's real steps, validate.ts `--paid`, the judge check and
+  `eval/runner/q1/cell.ts run --manifest rs1` call the guard #394 shares, so each needs `--paid-window` and
+  `--window-cap-usd` unless it runs keyless or fake. Counted leases price the pinned judges' output at their pinned cap.
+- **Pricing.** `eval/runner/rs1/pricing.ts` takes gbrain's measured ingest rates and each gating judge's measured rate
+  from the judge check, prices gpt-6-astra on its own line outside the check-in, and exits 2 when it counts finished
+  work without `--spent-usd`.
+- **Wave A's run identity.** The gbrain cell's extraction cap sizes from a fixed conversation length, so regenerating
+  wave B's cells cannot change wave A's run identity. A fixture recorded at `de943504` and an import guard show that
+  wave A's cells are unchanged; they run from `de943504`, with `rs1-cells.json` unchanged.
+- **Smaller fixes.** The launch preflight prices particle-1 at Particle's own address, `check-early-stop` exits 3
+  when it tested nothing, and a reader whose only answers are failed retrievals costs 0 instead of n/a.
+- **Records.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` gains its amendments, and
+  `docs/benchmarks/2026-11-08-rs1-narrow-results.md` starts with the stage 1 run log. No counted RS1 result exists yet.
+
 ## [0.10.180] - 2026-11-09
 
 ### Pinned per-reader judges, the paid-window guard and keyless tests move to main from RS1's results branch (#391)
