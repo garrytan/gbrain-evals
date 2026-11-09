@@ -74,15 +74,16 @@ const markersIn = (text: string) => new Set(text.match(MARKER) ?? []);
 
 /**
  * Which write removed marker `m` from a page: walks the page's archived revisions (page_versions, oldest first) and its
- * current content, finds the first revision without `m` after one with it, and returns the markers that revision added.
- * Null when `m` never disappeared.
+ * current content, finds the first revision without `m` after one with it, and returns the markers that revision added
+ * that no earlier revision held. A blind put writes back the copy of the file it read, so its revision can carry an older
+ * marker (a cron line, an earlier write) back in; that marker did not remove `m`. Null when `m` never disappeared.
  */
 export function removerOf(contents: string[], m: string): string[] | null {
   const first = contents.findIndex(c => c.includes(m));
   if (first < 0) return null;
   const drop = contents.findIndex((c, i) => i > first && !c.includes(m));
   if (drop < 0) return null;
-  const before = markersIn(contents[drop - 1]!);
+  const before = new Set(contents.slice(0, drop).flatMap(c => [...markersIn(c)]));
   return [...markersIn(contents[drop]!)].filter(x => !before.has(x));
 }
 

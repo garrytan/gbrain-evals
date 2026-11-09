@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -9,7 +10,7 @@ import { isCapStop, openBudgetItem } from '../../eval/runner/refresh-barrier/led
 import { B_KINDS, planJobs, runBlock, type RunArgs } from '../../eval/runner/refresh-barrier/run.ts';
 import { allOps, generateSchedule } from '../../eval/runner/refresh-barrier/schedule.ts';
 import { B2_BUDGET, CELLS, MARGIN, compare, compareLatency, ledgerEnv, runnerArgs } from '../../eval/runner/refresh-barrier/retrieval.ts';
-import { POLL_LIMIT_MS, classifyResult } from '../../eval/runner/refresh-barrier/runtime.ts';
+import { POLL_LIMIT_MS, classifyResult, foreignCommit } from '../../eval/runner/refresh-barrier/runtime.ts';
 import { cliWrapperScript, quiesce } from '../../eval/runner/refresh-barrier/trial.ts';
 import { allowedCode, clientView, ledgerCommits, removedByBlindPut, removerOf, verifyTrial } from '../../eval/runner/refresh-barrier/verify.ts';
 
@@ -198,6 +199,11 @@ describe('refresh-barrier analysis', () => {
   test('removerOf names the markers that arrived in the version that dropped a marker', () => {
     expect(removerOf(['RBM1w0o0q', 'RBM1w0o0q RBM1w1o0q', 'RBM1w0o0q RBM1iaq'], 'RBM1w1o0q')).toEqual(['RBM1iaq']);
     expect(removerOf(['RBM1w0o0q', 'RBM1w0o0q RBM1w1o0q'], 'RBM1w1o0q')).toBeNull();
+  });
+  test('removerOf leaves out markers that a blind put carried back from the copy it read', () => {
+    const page = ['seed', 'FCM1491f1q seed', 'seed RBM1491w0o3q', 'FCM1491f1q seed RBM1491iaq'];
+    expect(removerOf(page, 'RBM1491w0o3q')).toEqual(['RBM1491iaq']);
+    expect(removerOf(['RBM2033w7o3q', 'RBM2033w5o7q', 'RBM2033w7o3q RBM2033w2o1q'], 'RBM2033w5o7q')).toEqual(['RBM2033w2o1q']);
   });
   test('an upstream marker a committed blind put replaced after its import is not a convergence fault', () => {
     const file = ['seed', 'UPM16t1p0q\nseed', 'UPM16t1p0q\nseed RBM16w0o1q', 'RBM16w2o0q'];
@@ -652,5 +658,26 @@ describe('refresh-barrier Amendment 1', () => {
     expect(readLedger(ledgerPath).runs.filter(r => r.runner === 'gbev44-test-race').length).toBe(1);
     closeLedgers();
     rmSync(work, { recursive: true, force: true });
+  });
+});
+
+describe('refresh-barrier Amendment 2', () => {
+  test('a foreign commit that meets gbrain\'s index lock waits for it and lands once', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rb-lock-')), root = join(dir, 'brain');
+    const saved = { GIT_CONFIG_GLOBAL: process.env.GIT_CONFIG_GLOBAL, GIT_CONFIG_NOSYSTEM: process.env.GIT_CONFIG_NOSYSTEM };
+    Object.assign(process.env, hermeticGit(join(dir, 'git')));
+    try {
+      execFileSync('git', ['init', '-q', '-b', 'main', root]);
+      writeFileSync(join(root, '.git', 'index.lock'), '');
+      setTimeout(() => rmSync(join(root, '.git', 'index.lock'), { force: true }), 700);
+      const paths = { dir, home: dir, remote: dir, upstream: dir, root };
+      const out = await foreignCommit(paths, { at_ms: 0, path: 'alpha/notes/cron.md', marker: 'FCMLOCK', sync_after_ms: 0 });
+      expect(out.attempts).toBeGreaterThan(1);
+      expect(execFileSync('git', ['-C', root, 'log', '--format=%s'], { encoding: 'utf8' }).trim()).toBe('cron FCMLOCK');
+      expect(readFileSync(join(root, 'alpha/notes/cron.md'), 'utf8').split('FCMLOCK').length - 1).toBe(1);
+    } finally {
+      for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k]; else process.env[k] = v;
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
