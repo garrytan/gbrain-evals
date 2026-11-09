@@ -1,5 +1,5 @@
 /**
- * Re-read one packed arm of a Q1, F6 or RS1 cell with another reader (the particle-1 add-on, GBEV-31 / GST-1153; RS1's
+ * Re-read one packed arm of a Q1, F6, RS1 or BG1 cell with another reader (the particle-1 add-on, GBEV-31 / GST-1153; RS1's
  * particle-1 re-reads, GST-1886): every frozen context the source cell's readers read (`runs/<cell id>/contexts.ndjson`)
  * is sent byte for byte to the new reader, and each answer is judged with the cell's canonical instrument, plus, on an
  * arm with a per-reader frontier plan (RS1), the new reader's frontier judge. Nothing is retrieved or packed again.
@@ -58,6 +58,7 @@ import { answerAppender, custodyGate, devOnly, findCell, gatherStaging, JUDGED, 
 import { frontierJudgesFor, pinnedJudgeRouteCaps, policyKey, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
 import { loadRS1Manifest } from './cells/rs1.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
+import { readBg1Manifest } from '../memory-qa/corpus.ts';
 
 export const REREAD_VERIFY_SCHEMA = 'gbrain-evals/q1-reread-verify/v1';
 export const REREAD_RECEIPT_SCHEMA = 'gbrain-evals/q1-reread-receipt/v1';
@@ -234,6 +235,8 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   catch (e) { throw refuse({ code: 'USAGE', message: `${arm.cell_id} judges each reader with its family's frontier judge: ${(e as Error).message}`, why: 'a re-read answer on a per-reader frontier arm is scored by both judge views, so a reader without a preregistered judge would be read and never fully scored', fix: { next: 'report', user_message: 're-read with particle:particle-1, whose frontier judge is openai:gpt-6.1-sol' } }); }
   refuseCompatJudges(arm.cell_id, [instrument.canonical_judge, ...frontier]);
   if (!hasChatRoute(opts.reader)) throw refuse({ code: 'USAGE', message: `reader ${opts.reader} has no chat route`, why: 'a re-read sends each frozen prompt to one provider:model reader', fix: { next: 'run', argv: [...FRONT, '--reader', 'particle:particle-1'] } });
+  if (def.benchmark === 'bg1' && (deps.corpus ? deps.corpus.source.revision === 'unfilled' : readBg1Manifest().manifest.status !== 'filled')) throw refuse({ code: 'PREFLIGHT_FAILED', message: `bg1: the BG1 manifest is unfilled, so ${arm.cell_id} cannot be re-read`,
+    why: 'a re-read is scored only against the filled manifest\'s pinned bytes, and BG1\'s verdict.ts checks every receipt\'s dataset against it', fix: { next: 'ask_user', user_message: 'the custodian fills the BG1 manifest before any BG1 re-read' } });
   if (!deps.corpus && needsCustody(def)) custodyGate(def, out, env, `q1 reread ${arm.cell_id} with ${opts.reader}`);
   const others = existsSync(join(out, 'cells')) ? readdirSync(join(out, 'cells')).sort().filter(d => d !== rereadCellId(arm.cell_id, opts.reader)) : [];
   if (others.length) throw refuse({ code: 'USAGE', message: `${out} already holds ${others.join(', ')}; give each arm and reader its own --out`,

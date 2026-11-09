@@ -1,0 +1,101 @@
+/**
+ * BG1's runner wiring (eval/runner/q1/cell.ts and reread-cell.ts): `--manifest bg1` finds BG1's cells, a BG1 launch unit is
+ * its kept worlds (corpus.ts bg1UnitConversations), every BG1 cell that can spend real keys refuses outside a granted
+ * paid window (bg1CellWindow), and a sealed-set re-read refuses while the BG1 manifest is unfilled. Keyless: every key
+ * is blank, every refusal comes before any request, and the one upstream named is a dead local port.
+ */
+import { afterAll, describe, expect, test } from 'bun:test';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
+import type { Bg1Manifest, Corpus } from '../../eval/runner/memory-qa/corpus.ts';
+import { bg1CellWindow, bg1KeptUnit, findCell, loadCellManifest } from '../../eval/runner/q1/cell.ts';
+import { prepareReread, rereadArm } from '../../eval/runner/q1/reread-cell.ts';
+import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
+import { BG1_CONVERSATIONS } from '../../eval/runner/bg1/types.ts';
+
+const REPO = resolve(import.meta.dir, '../..');
+const roots: string[] = [];
+const scratch = () => { const d = mkdtempSync(join(tmpdir(), 'bg1-window-')); roots.push(d); return d; };
+afterAll(() => { closeLedgers(); for (const d of roots) rmSync(d, { recursive: true, force: true }); });
+
+const refusal = (fn: () => unknown) => { try { fn(); } catch (e) { if (e instanceof ScoreboardError) return e.op; throw e; } return null; };
+const withEnv = <T,>(env: Record<string, string | undefined>, fn: () => T): T => {
+  const saved = Object.fromEntries(Object.keys(env).map(k => [k, process.env[k]]));
+  for (const [k, v] of Object.entries(env)) if (v === undefined) delete process.env[k]; else process.env[k] = v;
+  try { return fn(); } finally { for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+};
+/** A ledger whose program cap and one open run's budget are the given amounts. */
+function ledger(cap: number, budget: number) {
+  const path = join(scratch(), 'ledger.sqlite');
+  initLedger({ ledgerPath: path, programCapUsd: cap, reason: 'test', log: () => {} });
+  return { path, id: BudgetRun.open({ runner: 'bg1-test', budgetUsd: budget, ledgerPath: path, log: () => {} }).runId };
+}
+
+describe('cell.ts --manifest bg1', () => {
+  test('finds BG1 counted and stage 1 cells, and names bg1 in the manifest refusal', () => {
+    const m = loadCellManifest('bg1');
+    expect(m.cells.map(c => c.id)).toContain('bg1.gbrain-defaults.rs1-stable');
+    expect(findCell('bg1-dev3.baseline-none.baseline', undefined, 'bg1').set).toBe('BG1-dev3');
+    expect(refusal(() => loadCellManifest('bg2'))?.message).toContain('bg1 for BG1\'s');
+  });
+
+  test('a launch unit is its slice of the kept worlds, and the shard count must be the cell\'s', () => {
+    const def = findCell('bg1.baseline-none.baseline', undefined, 'bg1');
+    const kept = BG1_CONVERSATIONS.slice(0, 40);
+    const manifest = { status: 'filled', kept, n_final: 40 } as unknown as Bg1Manifest;
+    expect(bg1KeptUnit(def, { index: 0, count: 7 }, manifest)).toEqual(kept.slice(0, 6));
+    expect(bg1KeptUnit(def, { index: 1, count: 7 }, manifest)).toEqual(kept.slice(6, 12));
+    expect(refusal(() => bg1KeptUnit(def, { index: 0, count: 3 }, manifest))?.message).toContain('--shard must be i/7');
+  });
+});
+
+describe('bg1CellWindow', () => {
+  const def = findCell('bg1.baseline-none.baseline', undefined, 'bg1');
+  const window = ['--paid-window', 'BG1-S1-CELLS', '--window-cap-usd', '50'];
+  test('refuses a run without the window, and a keyless lease proxy needs none', () => {
+    const env = { SHOOTOUT_KEYLESS_UPSTREAM: undefined, SHOOTOUT_LEASE_USD: undefined, SHOOTOUT_PROXY: undefined };
+    expect(refusal(() => bg1CellWindow([], def, env))).toMatchObject({ code: 'PAID_FLAGS_MISSING', message: expect.stringContaining('needs --paid-window <unit> and --window-cap-usd <n>'), fix: { next: 'run' } });
+    expect(refusal(() => bg1CellWindow(['--provider-proxy', 'http://127.0.0.1:9'], def, env))?.code).toBe('PAID_FLAGS_MISSING');
+    expect(refusal(() => bg1CellWindow(['--provider-proxy', 'http://127.0.0.1:9'], def, { ...env, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:9' }))).toBeNull();
+    expect(refusal(() => bg1CellWindow([], def, { ...env, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:9' }))?.code).toBe('PAID_FLAGS_MISSING');
+  });
+
+  test('under a lease proxy the lease, and without one the ledger cap and run budget, may not exceed the window cap', () => {
+    const proxy = ['--provider-proxy', 'http://127.0.0.1:9', ...window];
+    expect(refusal(() => bg1CellWindow(proxy, def, { SHOOTOUT_LEASE_USD: '50' }))).toBeNull();
+    expect(refusal(() => bg1CellWindow(proxy, def, { SHOOTOUT_LEASE_USD: '50.5' }))?.message).toContain('the campaign lease (SHOOTOUT_LEASE_USD) is above paid window BG1-S1-CELLS\'s cap');
+    expect(refusal(() => bg1CellWindow(proxy, def, {}))?.message).toContain('the campaign lease (SHOOTOUT_LEASE_USD) is unknown');
+    const ok = ledger(50, 40), over = ledger(60, 40);
+    withEnv({ SHOOTOUT_PROXY: undefined }, () => {
+      expect(refusal(() => bg1CellWindow([...window, '--budget-ledger', ok.path, '--budget-run-id', ok.id], def, {}))).toBeNull();
+      expect(refusal(() => bg1CellWindow([...window, '--budget-ledger', over.path, '--budget-run-id', over.id], def, {}))?.message).toContain('the ledger\'s program cap');
+    });
+  });
+
+  test('the CLI exits 2 with the refusal before any output, for sealed and dev BG1 cells alike', () => {
+    const env = { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '', BRAINBENCH_BUDGET_LEDGER: join(scratch(), 'ledger.sqlite') };
+    for (const [cell, shard] of [['bg1.baseline-none.baseline', ['--shard', '0/7']], ['bg1-dev3.baseline-none.baseline', []]] as const) {
+      const out = join(scratch(), 'out');
+      const r = spawnSync('bun', ['eval/runner/q1/cell.ts', 'run', '--cell', cell, '--manifest', 'bg1', ...shard, '--out', out], { cwd: REPO, encoding: 'utf8', env, timeout: 60_000 });
+      expect(r.status).toBe(2);
+      expect(r.stderr).toContain('PAID_FLAGS_MISSING');
+      expect(r.stderr).toContain('--paid-window');
+      expect(existsSync(out)).toBe(false);
+    }
+  });
+});
+
+describe('reread-cell.ts on BG1', () => {
+  test('a sealed-set re-read is refused while the BG1 manifest is unfilled, before custody or any source is read', () => {
+    const def = findCell('bg1.ext-memory-bank.recipe', undefined, 'bg1');
+    const arm = rereadArm(def, 'component-b8000');
+    const corpus = (revision: string): Corpus => ({ benchmark: 'bg1', conversations: [], questions: [], source: { name: 'BG1 fixture', files: [], revision, license: 'custodian-held' } });
+    const tmp = scratch();
+    const unfilled = refusal(() => prepareReread(def, arm, { sources: [join(tmp, 'none', 'runs', def.id)], reader: 'particle:particle-1', out: join(tmp, 'a'), env: {} }, { corpus: corpus('unfilled') }));
+    expect(unfilled).toMatchObject({ code: 'PREFLIGHT_FAILED', message: expect.stringContaining('the BG1 manifest is unfilled') });
+    expect(refusal(() => prepareReread(def, arm, { sources: [join(tmp, 'none', 'runs', def.id)], reader: 'particle:particle-1', out: join(tmp, 'b'), env: {} }, { corpus: corpus('abcdef0') }))?.message ?? '').not.toContain('unfilled');
+  });
+});

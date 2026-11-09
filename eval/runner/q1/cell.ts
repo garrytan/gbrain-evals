@@ -82,7 +82,7 @@ import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
-import { loadCorpus, readRs1Manifest, rs1UnitConversations, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
+import { bg1UnitConversations, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
@@ -104,6 +104,9 @@ import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, ty
 import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
+import { bg1Stage1OverCap, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
+import { isBg1Benchmark } from './cells/definitions.ts';
+import { ledgerCaps as bg1LedgerCaps, requireRs1Window as requireBg1Window, WindowRefusal as Bg1WindowRefusal } from '../paid-arm.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
 import { answerUsage, normalizeUsage, readerConvention } from './usage.ts';
@@ -165,6 +168,11 @@ export interface RequiredJudge { judge: string; instrument_id: string; settings?
 export function keptUnit(def: Pick<CellDefinition, 'id' | 'shards' | 'kept_units'>, shard: { index: number; count: number }, manifest: Rs1Manifest = readRs1Manifest().manifest): string[] {
   if (shard.count !== def.shards) throw refuse(usage(`${def.id} runs as ${def.shards} launch units of ${def.kept_units} kept conversations; --shard must be i/${def.shards}`));
   return rs1UnitConversations(manifest, shard.index, def.kept_units!);
+}
+/** BG1: this launch unit's worlds from the custodian's kept list (corpus.ts bg1UnitConversations); the shard must be one of the cell's units. */
+export function bg1KeptUnit(def: Pick<CellDefinition, 'id' | 'shards' | 'kept_units'>, shard: { index: number; count: number }, manifest: Bg1Manifest = readBg1Manifest().manifest): string[] {
+  if (shard.count !== def.shards) throw refuse(usage(`${def.id} runs as ${def.shards} launch units of ${def.kept_units} kept worlds; --shard must be i/${def.shards}`));
+  return bg1UnitConversations(manifest, shard.index, def.kept_units!);
 }
 
 // ─── Selection ───────────────────────────────────────────────────────
@@ -315,6 +323,8 @@ export interface CellDeps {
   fitTokenizer?: (reader: string) => FitTokenizer;
   /** RS1 kept cells: the filled manifest whose kept list names the unit's conversations (default: corpus.ts readRs1Manifest). */
   rs1Manifest?: Rs1Manifest;
+  /** BG1 kept cells: the filled manifest whose kept list names the unit's worlds (default: corpus.ts readBg1Manifest). */
+  bg1Manifest?: Bg1Manifest;
 }
 
 export interface ArmResult { cell_id: string; dir: string; status: 'complete' | 'partial' | 'invalid'; config_sha256: string; answers: number; judgments: number; rows: number; readers: string[] }
@@ -627,7 +637,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   if (custody) custodyGate(def, out, env, `q1 cell ${def.id}`);
   mkdirSync(out, { recursive: true });
   const shard = opts.shard ?? { index: 0, count: 1 };
-  const unitConvs = def.kept_units ? keptUnit(def, shard, deps.rs1Manifest) : null;
+  const unitConvs = !def.kept_units ? null : def.benchmark === 'bg1' ? bg1KeptUnit(def, shard, deps.bg1Manifest) : keptUnit(def, shard, deps.rs1Manifest);
   const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, unitConvs ? new Set(unitConvs) : devOnly(def) ?? undefined);
   const selected = scheduledQuestions(def, corpus, opts.limit ?? null).filter(q => !unitConvs || unitConvs.includes(q.conversation));
   const convIds = [...new Set(selected.map(q => q.conversation))].sort().filter((_, i) => unitConvs || i % shard.count === shard.index);
@@ -1405,14 +1415,14 @@ const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
 const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: COMPAT_PROVIDERS.particle.key_env } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
-const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1 };
+const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1, 'RS1-S1': 1, RS1: 1, 'BG1-S1': 1, BG1: 1 };
 
 /** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
-export type CellManifestId = 'q1' | 'f6' | 'rs1';
-const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1'];
+export type CellManifestId = 'q1' | 'f6' | 'rs1' | 'bg1';
+const CELL_MANIFESTS: readonly CellManifestId[] = ['q1', 'f6', 'rs1', 'bg1'];
 
 export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: CellManifestId; addons?: boolean } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
@@ -1509,10 +1519,10 @@ export function renderPlan(m: Manifest): string {
 
 // ─── CLI ─────────────────────────────────────────────────────────────
 
-/** The cell manifest `--manifest` names: q1 (default), f6 or rs1. */
+/** The cell manifest `--manifest` names: q1 (default), f6, rs1 or bg1. */
 export function loadCellManifest(which?: string): Manifest {
-  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells), not ${which}`));
-  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : loadManifest();
+  if (which !== undefined && !(CELL_MANIFESTS as readonly string[]).includes(which)) throw refuse(usage(`--manifest takes q1 or f6 (or rs1 for RS1's cells, bg1 for BG1's), not ${which}`));
+  return which === 'f6' ? loadF6Manifest() : which === 'rs1' ? loadRS1Manifest() : which === 'bg1' ? loadBG1Manifest() : loadManifest();
 }
 
 export function findCell(id: string, given?: Manifest, manifest?: string): CellDefinition {
@@ -1538,6 +1548,27 @@ function reanswerOutcomes(raw: string | undefined): Outcome[] | null {
 
 const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message, why: 'the cell runner has four subcommands: plan, show, run, merge', fix: { next: 'run', argv: [...FRONT, 'plan'] } });
 
+/**
+ * BG1's paid-window guard for `run` on a BG1 cell (eval/runner/paid-arm.ts, the shared window guard): a run needs the
+ * granted window (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy serves a keyless upstream
+ * (SHOOTOUT_KEYLESS_UPSTREAM). Under a lease proxy the cap checked is the lease (SHOOTOUT_LEASE_USD, set by the
+ * campaign's remote runner); without one it is the ledger's program cap and the run's budget. Refuses with exit 2
+ * before any provider client, corpus or output exists.
+ */
+export function bg1CellWindow(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): void {
+  const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+  const proxy = (one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
+  const lease = Number(env.SHOOTOUT_LEASE_USD);
+  try {
+    requireBg1Window(argv, { what: `BG1 cell ${def.id}`, keyless: !!proxy && !!env.SHOOTOUT_KEYLESS_UPSTREAM,
+      caps: () => proxy ? [{ label: 'the campaign lease (SHOOTOUT_LEASE_USD)', usd: lease > 0 ? lease : null }] : bg1LedgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
+  } catch (e) {
+    if (!(e instanceof Bg1WindowRefusal)) throw e;
+    throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: 'every BG1 cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap',
+      fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--manifest', 'bg1', '--paid-window', '<granted unit>', '--window-cap-usd', '<granted cap>'] } });
+  }
+}
+
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
 export function paidGuard(argv: string[], def: CellDefinition, limit: number | null): number {
   const estimate = Math.round((limit ? def.estimate.usd * Math.min(1, limit / ALL_SETS[def.set].questions) + (def.estimate.lines.ingest ?? 0) : def.estimate.usd) * 100) / 100;
@@ -1559,9 +1590,10 @@ export async function main(argv: string[]): Promise<number> {
   if (sub === 'plan') {
     // --manifest f6: F6's manifest (eval/runner/q1/cells/f6-cells.json); --dry-run-only keeps its dry-run cells alone;
     // --manifest rs1: RS1's (rs1-cells.json), refused while its stage 1 estimate is above stage 1's cap;
+    // --manifest bg1: BG1's (bg1-cells.json), refused the same way at BG1's stage 1 cap;
     // --units <file>: a UnitSelection (JSON), the named units alone under its own campaign id and cap.
     const m = loadCellManifest(one('--manifest'));
-    const over = one('--manifest') === 'rs1' ? stage1OverCap(m as RS1Manifest) : null;
+    const over = one('--manifest') === 'rs1' ? stage1OverCap(m as RS1Manifest) : one('--manifest') === 'bg1' ? bg1Stage1OverCap(m as BG1Manifest) : null;
     if (over) throw refuse(over);
     const campaignOut = one('--campaign-out');
     const sealedCap = one('--sealed-cap-usd');
@@ -1588,6 +1620,7 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
+    if (sub === 'run' && isBg1Benchmark(def.benchmark)) bg1CellWindow(argv, def);
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
