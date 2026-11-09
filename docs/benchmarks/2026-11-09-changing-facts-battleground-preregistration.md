@@ -466,6 +466,27 @@ From commit `2c7ab96f`, rendering changes its method in these ways:
 Nothing that judges a session moves: every check and the length check's range, the three re-renders per session, and
 the rule that drops a world with a session that still fails (two drops among the first five mint slots pause minting).
 
+**Second render and calibration (2026-11-09).** Stage 1's second render of `bg1-dev-01`, at commit `4ec6a610`, dropped
+the world at session 14 of 154. It made 36 render attempts and 33 checks. Attempts failed the length check 13 times,
+the forbidden-value check twice and the planned-line check once, and 2 gemini-3.8-flash check replies were unreadable.
+gemini-3.8-flash wrote a median of about 0.69 of a session's target tokens. Its first attempts ran from 0.34 to 0.97 of
+the target, and 16 of 23 passed the 0.6 floor. Naming the last attempt's length moved one session from 0.40 to 0.51 to
+0.66 of its target, and a 3,236-token session from 0.34 to 0.46 to 0.59 to 0.47. It wrote about 0.75 of the words
+asked, at about 0.84 words per cl100k token, but kept to the number of turns asked, at a median of about 47 cl100k
+tokens per turn (36 to 58 for most turns). Both unreadable check replies were the literal text "Here is the JSON
+requested:" and a line break, about 7 visible tokens after about 25 reasoning tokens, so the 256-token budget did not
+cut them off. The JSON Schema failed in 2 of about 35 checks, and the other 67 replies were clean JSON. From commit
+`289801fe`, each render asks for N to N + 2·max(1, floor(0.05N)) alternating turns, where N is the even number nearest
+the session's target divided by 47 tokens per turn, and never less than 2 × (planned lines + 1) or 4. The JSON Schema
+holds the reply to that range (`minItems` and `maxItems`) and the prompt states it. The width rounds down because,
+rounded up, the 22- and 24-turn ranges reach 26 and 28 turns, which at 58 tokens a turn pass 1.5 times targets near
+1,000 tokens. For every target from 757 to 3,236 and every dev-world session, N × 36 tokens is never under 0.72 of the
+target and the top of the range × 58 tokens never over 1.46 of it. The prompt's word counts use the measured 0.84
+words per token, and it says each turn is about 39 words. From commit `7fe8bdea`, a Gemini check reply with no
+readable verdict is asked once more, with the same prompt and a closing line asking for the JSON object alone, and the
+attempt fails as unreadable only if that reply is unreadable too. No check, the length check's range, the three
+re-renders per session or the yield rule moves.
+
 The three dev worlds are rendered again under this method. Before any stage 1 cell runs, this amendment gains each
 world's measured rendering cost, its yield and its world end.
 
