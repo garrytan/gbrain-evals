@@ -2,7 +2,7 @@
 
 BrainBench combines project-authored tests, public benchmark material and comparison implementations.
 Attribution matters because a test written by a project's authors supplies different evidence from an independent submission.
-Everything above [Changelog](#changelog) is current as of the gbrain this repository pins, master `62637c96a` (v0.60.557.0).
+Everything above [Changelog](#changelog) is current as of the gbrain this repository pins, master `d253ec0ff` (v0.60.623.0).
 
 ## Project work
 
@@ -51,6 +51,11 @@ A **Codex** review challenged whether the early suite established anything beyon
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-09: The opening names `d253ec0ff`
+
+The opening names gbrain master `d253ec0ff` (v0.60.623.0) as the pin the page is current for (was `62637c96a`,
+v0.60.557.0). Nothing else on the page changed.
 
 ### 2026-11-08: BEAM's code and data licenses
 
