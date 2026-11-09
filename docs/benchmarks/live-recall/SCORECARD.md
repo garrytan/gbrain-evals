@@ -45,7 +45,10 @@ runs with expansion off); `control` (true for the hash-embedding fixture, whose 
 source's). Versions are `null` unless they are plain version numbers; `pgvector_version` is `null` when unknown, and the
 four copy fields are `null` when unknown or not a copy. Under `batch3` only, `run` also carries `visibility_epoch`
 (`pre_gbra_398`, `post_gbra_398` or `unknown`, from the loaded gbrain version), `freeze_gbrain_version` and
-`freeze_visibility_epoch` (from the freeze; `null` on the fixture).
+`freeze_visibility_epoch` (from the freeze; `null` on the fixture). A `run --synthetic <dir>` control (a conditions-recall
+brain from `eval/generators/conditions-recall-gen.ts`) also carries `run.synthetic`: the directory's `digest` and
+`questions_sha256`, its knobs (`unembedded_chunk_share`, `synopsis_vectors_off`, `keyword_candidate_bound`,
+`shell_page_share`) and what the builder applied (`chunks`, `unembedded_chunks`).
 
 **`custody`**: `readonly_verified_start` and `readonly_verified_end` (the session reported
 `default_transaction_read_only = on` and gbrain's direct pool was off, before the first search and after the last),

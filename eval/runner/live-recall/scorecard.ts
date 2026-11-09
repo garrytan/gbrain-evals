@@ -86,6 +86,8 @@ export interface RunIdentity {
   visibility_epoch?: string;
   freeze_gbrain_version?: string | null;
   freeze_visibility_epoch?: string | null;
+  /** --synthetic only: the generated directory's digest, question-file hash, knobs and what the builder applied. */
+  synthetic?: { digest: string; questions_sha256: string; unembedded_chunk_share: number; synopsis_vectors_off: boolean; keyword_candidate_bound: number | null; shell_page_share: number; chunks: number; unembedded_chunks: number };
 }
 
 export interface QuestionSummary {
@@ -371,6 +373,7 @@ const KEY_WORDS = new Set<string>([
   'pgvector_version', 'source_pgvector', 'source_server_version_num', 'copy_server_version_num', 'restore_errors', 'run_a', 'run_b',
   'chat', 'embedding', 'rerank', 'multimodal', 'decide', 'transcription',
   'stale_first', 'type', 'visibility_epoch', 'freeze_gbrain_version', 'freeze_visibility_epoch',
+  'synthetic', 'digest', 'questions_sha256', 'unembedded_chunk_share', 'synopsis_vectors_off', 'keyword_candidate_bound', 'shell_page_share', 'chunks', 'unembedded_chunks',
   ...ARMS, ...ALL_TYPES, ...KS.map(k => 'k' + k), ...STATUSES, ...GOLD_FOUND_BY,
 ]);
 const KEY_PATTERNS = [/^(keyword|vector|hybrid_lexical|hybrid|configured|configured_window|missing)_(ok|error|degraded|ai_refused|rerank_fail_open|skipped|record)$/, /^[a-z_]+$/];
@@ -452,6 +455,7 @@ export function renderMarkdown(s: ReturnType<typeof buildScorecard>): string {
   lines.push('# Live-recall scorecard', '');
   lines.push('gbrain ' + r.gbrain_loaded_version + ' (' + r.gbrain_loaded_commit.slice(0, 9) + '), schema ' + r.schema_version + ', ' + r.engine + ', barrier: ' + r.barrier + ', pgvector ' + (r.pgvector_version ?? 'n/a') + ', mode: ' + r.search_mode + (r.control ? '. CONTROL RUN (hash embeddings): numbers say nothing about search quality.' : '.'));
   lines.push('Protocol: ' + s.protocol + '; primary comparisons (Holm family of two): ' + COMPARISONS[s.protocol].filter(c => c.primary).map(c => c.id + ' (' + c.primary + ')').join(', ') + '.');
+  if (r.synthetic) lines.push('Synthetic conditions brain ' + r.synthetic.digest.slice(0, 12) + ': unembedded chunk share ' + r.synthetic.unembedded_chunk_share + ' (' + r.synthetic.unembedded_chunks + ' of ' + r.synthetic.chunks + ' chunks), synopsis vectors ' + (r.synthetic.synopsis_vectors_off ? 'off' : 'on') + ', keyword candidate bound ' + (r.synthetic.keyword_candidate_bound ?? 'none') + ', shell page share ' + r.synthetic.shell_page_share + '.');
   if (s.protocol === 'batch3') lines.push('Visibility epoch (GBRA-398): run ' + (r.visibility_epoch ?? 'unknown') + ', freeze ' + (r.freeze_visibility_epoch ?? 'none (fixture)') + (r.freeze_gbrain_version ? ' at gbrain ' + r.freeze_gbrain_version : '') + '.');
   if ((r.source_pgvector !== null && r.source_pgvector !== r.pgvector_version) || (r.restore_errors ?? 0) > 0) lines.push('Warning: vector search on this copy may differ from the live brain (source pgvector ' + (r.source_pgvector ?? 'unknown') + ', copy pgvector ' + (r.pgvector_version ?? 'none') + ', restore errors ' + (r.restore_errors ?? 'unknown') + ').');
   lines.push('Question forms eligible: ' + s.eligibility.eligible_question_forms + ' of ' + (s.questions.loaded - s.questions.gold_missing) * 2 + ' (questions loaded: ' + s.questions.loaded + ', dropped for an absent gold page: ' + s.questions.gold_missing + ').', '');

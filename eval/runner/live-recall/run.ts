@@ -5,6 +5,7 @@
  * scorecard leaves that box.
  *
  *   bun eval/runner/live-recall/run.ts run --fixture
+ *   bun eval/runner/live-recall/run.ts run --synthetic <dir from eval/generators/conditions-recall-gen.ts> [--out <dir>]
  *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json> [--protocol batch1|batch2|batch3] [--gbrain <checkout>@<commit>]
  *   bun eval/runner/live-recall/run.ts run --questions <private.jsonl> --freeze <freeze.json> \
  *     --gbrain <gbrain checkout>@<commit> [--database-url-env LIVE_RECALL_DATABASE_URL] [--out <dir>]
@@ -16,7 +17,9 @@
  * questions of the fixture instead of its own; with --protocol, it scores them
  * under that protocol; --protocol batch3 alone adds the public freshness and
  * entity questions and their pages): a keyless harness control whose numbers say nothing
- * about search quality. A counted run takes its protocol from the freeze. A real run opens a Postgres brain
+ * about search quality. --synthetic scores the same six arms on a generated
+ * conditions-recall brain (G2: unembedded chunks, synopsis vectors off, a keyword
+ * candidate bound, shell pages), also keyless and also a control. A counted run takes its protocol from the freeze. A real run opens a Postgres brain
  * only after brain.ts proves a server-side read-only barrier. The run kit,
  * abort codes and scorecard format are in docs/benchmarks/live-recall/.
  */
@@ -387,7 +390,7 @@ function git(args: string[]): string {
   try { return execFileSync('git', ['-C', REPO_ROOT, ...args], { encoding: 'utf8' }).trim(); } catch { return ''; }
 }
 
-interface RunOptions { fixture: boolean; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest; protocol?: Protocol }
+interface RunOptions { fixture: boolean; synthetic?: string; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest; protocol?: Protocol }
 
 /** One counted or control run. Returns the outbound file paths. */
 /** pgvector in the database searched and, on a copy, the versions and restore error count snapshot.sh wrote into the marker row. */
@@ -412,7 +415,12 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
   let protocol: Protocol = o.protocol ?? 'batch1';
   let frozenEpoch: { gbrain_version: string | null; visibility_epoch: string | null } | null = null;
   const runEpoch = visibilityEpoch(o.gut.version);
-  if (o.fixture) questionsText = readFileSync(o.questionsPath ?? (protocol === 'batch3' ? BATCH3_FIXTURE_QUESTIONS : join(FIXTURE_DIR, 'questions.jsonl')), 'utf8');
+  let synthetic: Awaited<ReturnType<typeof import('./synthetic.ts').buildSyntheticBrain>> | null = null;
+  if (o.synthetic) {
+    const { buildSyntheticBrain } = await import('./synthetic.ts');
+    synthetic = await buildSyntheticBrain(o.gut, o.synthetic);
+    questionsText = synthetic.questionsText;
+  } else if (o.fixture) questionsText = readFileSync(o.questionsPath ?? (protocol === 'batch3' ? BATCH3_FIXTURE_QUESTIONS : join(FIXTURE_DIR, 'questions.jsonl')), 'utf8');
   else {
     if (!o.questionsPath || !o.freezePath) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'a counted run needs --questions and --freeze');
     questionsText = readFileSync(o.questionsPath, 'utf8');
@@ -428,11 +436,18 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       frozenEpoch = { gbrain_version: versionOrNull(frozen.gbrain_version), visibility_epoch: frozen.visibility_epoch };
     }
   }
-  const questions = parseQuestions(questionsText, protocol);
+  const inProcess = o.fixture || synthetic !== null;
+  let questions: Question[];
+  try {
+    questions = parseQuestions(questionsText, protocol);
+  } catch (error) {
+    await synthetic?.close();
+    throw error;
+  }
 
   let engine: any, barrier: string, connection: string, schemaVersion: number, close: () => Promise<void>;
-  if (o.fixture) {
-    const brain = await buildFixtureBrain(o.gut, protocol === 'batch3' ? BATCH3_FIXTURE_PAGES : undefined);
+  if (inProcess) {
+    const brain = synthetic ?? await buildFixtureBrain(o.gut, protocol === 'batch3' ? BATCH3_FIXTURE_PAGES : undefined);
     engine = brain.engine;
     barrier = 'copy';
     connection = 'in_process';
@@ -497,7 +512,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       gbrain_loaded_commit: o.gut.overlay?.build.commit ?? (/^[0-9a-f]{7,64}$/.test(pinCommit) ? pinCommit : 'unknown'),
       gbrain_overlay: o.gut.overlay !== null,
       schema_version: schemaVersion,
-      engine: (o.fixture ? 'pglite' : 'postgres') as 'pglite' | 'postgres',
+      engine: (inProcess ? 'pglite' : 'postgres') as 'pglite' | 'postgres',
       barrier,
       connection,
       search_mode: String(knobs.resolved_mode),
@@ -506,8 +521,9 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       embedding_model: embeddingModel,
       embedding_column: /^[a-z_][a-z0-9_]{0,62}$/.test(String(column.name)) ? String(column.name) : 'unknown',
       mode_expansion: Boolean(knobs.expansion),
-      control: o.fixture,
+      control: inProcess,
       ...facts,
+      ...(synthetic ? { synthetic: { digest: synthetic.manifest.digest, questions_sha256: synthetic.manifest.questions_sha256, ...synthetic.manifest.knobs, chunks: synthetic.applied.chunks, unembedded_chunks: synthetic.applied.unembedded_chunks } } : {}),
       ...(protocol === 'batch3' ? { visibility_epoch: runEpoch, freeze_gbrain_version: frozenEpoch?.gbrain_version ?? null, freeze_visibility_epoch: frozenEpoch?.visibility_epoch ?? null } : {}),
     };
     const summary = {
@@ -611,13 +627,14 @@ async function main(argv: string[]): Promise<number> {
   }
   if (command !== 'run') { console.error('usage: run.ts run|freeze|compare|pool (see the header of this file)'); return 2; }
   const fixture = argv.includes('--fixture');
-  const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall', new Date().toISOString().replace(/[:.]/g, '-') + (fixture ? '-fixture' : '')));
+  const synthetic = flag(argv, '--synthetic');
+  const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall', new Date().toISOString().replace(/[:.]/g, '-') + (synthetic ? '-synthetic' : fixture ? '-fixture' : '')));
   mkdirSync(out, { recursive: true, mode: 0o700 });
   process.env.GBRAIN_AUDIT_DIR = out;
   const { say, restore } = captureOutput(join(out, 'gbrain.local.log'));
   try {
     const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-    const paths = await liveRecall({ fixture, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut, protocol: protocol as Protocol | undefined }, say);
+    const paths = await liveRecall({ fixture, synthetic: synthetic ? resolve(synthetic) : undefined, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut, protocol: protocol as Protocol | undefined }, say);
     say('scorecard (send these two files): ' + paths.scorecard + ' and ' + paths.markdown);
     say('detail and gbrain log (stay on this box): ' + paths.detail + ' and ' + join(out, 'gbrain.local.log'));
     return 0;
