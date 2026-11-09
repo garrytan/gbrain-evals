@@ -6,7 +6,9 @@ It reports no result; batch 1's results are in the [batch 1 findings](../2026-11
 sample size (50 questions), question file hash and minimum detectable difference are under
 [Frozen sample](#frozen-sample), taken from Wintermute's freeze output before the counted run. A second, independent
 question set, batch 2, runs under the [batch 2 amendment](#batch-2-amendment), fixed before that set was frozen; its
-frozen sample (N, question file hash and minimum detectable differences) closes the amendment.
+frozen sample (N, question file hash and minimum detectable differences) closes the amendment. A third set, batch 3,
+adds freshness and entity questions under the [batch 3 amendment](#batch-3-amendment), fixed before any of its
+questions was written.
 
 ## The question
 
@@ -341,6 +343,61 @@ Wintermute's notes on the sample, aggregates only:
 the lockfile).
 
 Phase 2 stays held until batch 2 lands and GBRA-108 answers on the paraphrase gap.
+
+## Batch 3 amendment
+
+Fixed on 2026-11-09 by GBEV-55 (GST-2005), under GBEV-3's approval of the predictive-measures plan, before any batch 3
+question was written. Batch 3 is a third, independent question set that adds two question types. Arms, metrics,
+eligibility, custody and the read-only barrier are unchanged. The types, the primaries, the declared secondaries and how
+the freeze pins the gbrain under test change.
+
+**Why.** The [predictive-measures preregistration](../2026-11-09-predictive-measures-preregistration.md) builds
+synthetic measures of stale facts and wrong entities, the two most common recall failures Wintermute reported. Batch 1
+and batch 2 asked neither kind of question, so neither can say whether those measures predict the real brain. Batch 3 is
+their reference.
+
+**Questions.** About 25 `freshness` and 25 `entity` questions, each with an exact and a paraphrased form, written and
+frozen by Wintermute on the box. The freeze records the actual counts. A `freshness` question names the current page
+as gold and the superseded pages in `stale`. An `entity` question's gold is the right page among pages for different
+people or things with the same or similar names, and it may list the look-alike pages in `decoy`. Both types are accepted only under `--protocol batch3`. The question
+file format and a public fixture are in the [run kit](RUN-KIT.md#the-question-file).
+
+**System under test and the visibility epoch.** Batch 3 measures the gbrain Wintermute's box runs at the freeze.
+GBRA-398 (garrytan/gbrain#8917) will clear over-applied `access: private` labels and let the owner and delegates read
+private pages, so gold a reader could not see before it may be visible after it. The freeze records `gbrain_version`
+and `visibility_epoch`, and a counted run refuses a freeze from the other epoch (`LR_FREEZE_MISMATCH`). When the
+epoch reads `unknown`, the run must use the freeze's exact gbrain version. Results from the two epochs are never
+pooled.
+
+**Primary (Holm-corrected across the two, on success@5, both forms clustered by question):**
+
+- **P1: `configured` minus `hybrid_lexical`** on `freshness` questions. Comparison id
+  `p1_configured_vs_hybrid_lexical_freshness`.
+- **P2: `configured` minus `hybrid_lexical`** on `entity` questions. Comparison id
+  `p2_configured_vs_hybrid_lexical_entity`.
+
+**Declared secondaries** (reported with intervals, not Holm-adjusted): `hybrid_vs_hybrid_lexical_freshness`,
+`hybrid_vs_hybrid_lexical_entity`, `configured_vs_keyword_freshness`, `configured_vs_keyword_entity`, batch 2's P1
+on batch 3's questions as `batch2_p1_hybrid_vs_hybrid_lexical_paraphrase`, and every descriptive comparison under
+[Comparisons](#comparisons). Each arm also reports `stale_first` (all forms, exact, paraphrase): the share of
+freshness forms where a stale page ranks above the gold, or comes back when the gold does not. Entity questions may
+name their look-alike pages in `decoy`, and each arm then reports `decoy_first` the same way over the entity forms that
+carry one. Both are descriptive and carry no interval.
+
+**Power.** From `mde` in `run.ts`, in points, with 25 questions per type:
+
+| Comparison | 10% discordant | 20% discordant | 30% discordant |
+|---|---|---|---|
+| P1 or P2, forms independent (50 pairs) | 12.5 | 17.7 | 21.7 |
+| P1 or P2, forms fully correlated (25 pairs) | 17.7 | 25.0 | 30.6 |
+
+So batch 3 can show a 20-point gain from configured search on either type, and cannot rank arms 10 points apart.
+
+**The protocol is frozen with the questions.** Wintermute freezes with `run.ts freeze --protocol batch3` and the
+`--gbrain` it will run. The counted run takes the protocol from `freeze.json`, as for batch 2.
+
+**Cost.** No paid model calls by us. Wintermute's keys pay for about one query embedding per form for `hybrid` and
+`configured` and one rerank call per configured query, as in batch 2.
 
 ## Limits
 
