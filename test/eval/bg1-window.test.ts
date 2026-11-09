@@ -45,9 +45,13 @@ describe('cell.ts --manifest bg1', () => {
   test('a launch unit is its slice of the kept worlds, and the shard count must be the cell\'s', () => {
     const def = findCell('bg1.baseline-none.baseline', undefined, 'bg1');
     const kept = BG1_CONVERSATIONS.slice(0, 40);
-    const manifest = { status: 'filled', kept, n_final: 40 } as unknown as Bg1Manifest;
+    const manifest = { status: 'filled', kept, n_final: 40, files: kept.flatMap(id => ['world.json', 'questions.json'].map(f => ({ path: `worlds/${id}/${f}`, sha256: '0'.repeat(64) }))) } as unknown as Bg1Manifest;
     expect(bg1KeptUnit(def, { index: 0, count: 7 }, manifest)).toEqual(kept.slice(0, 6));
     expect(bg1KeptUnit(def, { index: 1, count: 7 }, manifest)).toEqual(kept.slice(6, 12));
+    expect(bg1KeptUnit(def, { index: 6, count: 7 }, manifest)).toEqual(kept.slice(36, 40));
+    const waveA = { ...manifest, kept: kept.slice(0, 12), n_final: undefined, files: manifest.files.filter(f => kept.slice(0, 12).some(id => f.path.startsWith(`worlds/${id}/`))) } as Bg1Manifest;
+    expect(bg1KeptUnit(def, { index: 1, count: 7 }, waveA)).toEqual(kept.slice(6, 12));
+    expect(() => bg1KeptUnit(def, { index: 2, count: 7 }, waveA)).toThrow('launch unit 2 needs kept worlds 13 to 18');
     expect(refusal(() => bg1KeptUnit(def, { index: 0, count: 3 }, manifest))?.message).toContain('--shard must be i/7');
   });
 });
