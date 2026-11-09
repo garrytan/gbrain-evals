@@ -86,7 +86,7 @@ function walkPages(dir: string, root = dir): Page[] {
   });
 }
 
-/** Read and check a generated directory: schema, knobs, digest, and gold (and batch-3 stale) pages present. protocol is set for a batch-3 directory. */
+/** Read and check a generated directory: schema, knobs, digest, and gold (and batch-3 stale) pages present. protocol is batch3 for a batch-3 directory and batch2 (the protocol G2's b2 layer maps) for a conditions-recall one. */
 export function readSyntheticDir(dir: string): { manifest: SyntheticManifest; pages: Page[]; questionsText: string; protocol?: Protocol } {
   const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as SyntheticManifest;
   const batch3 = manifest?.schema === B3_SCHEMA;
@@ -101,7 +101,7 @@ export function readSyntheticDir(dir: string): { manifest: SyntheticManifest; pa
     for (const g of q.gold) if (!slugs.has(g.slug)) throw new Error('synthetic: question ' + q.id + ' has no gold page');
     for (const s of q.stale ?? []) if (!slugs.has(s.slug)) throw new Error('synthetic: question ' + q.id + ' has no stale page');
   }
-  return { manifest: { ...manifest, knobs }, pages, questionsText, ...(batch3 ? { protocol: 'batch3' as const } : {}) };
+  return { manifest: { ...manifest, knobs }, pages, questionsText, protocol: batch3 ? 'batch3' as const : 'batch2' as const };
 }
 
 /** The Voyage cost of one paid synthetic run over a directory, from the ledger's own prices and its 3-bytes-a-token reservation rule; an upper-leaning estimate, printed before the first request. */
