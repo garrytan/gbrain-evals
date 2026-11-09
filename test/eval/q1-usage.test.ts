@@ -15,6 +15,11 @@ test('OpenAI Responses API: input_tokens includes input_tokens_details.cached_to
     .toEqual({ uncached_input: 2_500, cache_read: 60_000, cache_write: 0, output: 1_500, total_input: 62_500 });
 });
 
+test('OpenAI Responses API: input_tokens_details.cache_write_tokens is a cache write inside input_tokens, as the budget ledger prices it', () => {
+  expect(normalizeUsage('openai', { input_tokens: 27_539, output_tokens: 33, input_tokens_details: { cached_tokens: 0, cache_write_tokens: 27_539 } }))
+    .toEqual({ uncached_input: 0, cache_read: 0, cache_write: 27_539, output: 33, total_input: 27_539 });
+});
+
 test('Anthropic: input_tokens is uncached; cache reads and writes are separate buckets that add to the total', () => {
   expect(normalizeUsage('anthropic', { input_tokens: 40, output_tokens: 5, cache_read_input_tokens: 50, cache_creation_input_tokens: 10 }))
     .toEqual({ uncached_input: 40, cache_read: 50, cache_write: 10, output: 5, total_input: 100 });
