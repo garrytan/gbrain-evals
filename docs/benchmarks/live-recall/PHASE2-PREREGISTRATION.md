@@ -493,6 +493,12 @@ result. A primary whose cell is invalid (below) is reported untested and enters 
 pooled, B minus A on correct, C minus B on correct and grounded and on plain correctness, and D minus B on correct and on
 correct and grounded. gpt-6.1-sol, the exact form, pooled forms, D, task types and every other cell are descriptive.
 
+**By task origin (amendment, 2026-11-09, GBEV-3, before the second freeze).** The four primaries are also computed on
+each group of tasks alone: tasks from a phase 1 question (`source_question` set) and replacement tasks
+(`source_question` null), with their counts by type. These are descriptive only: no Holm, no verdict, and nothing
+gates on them. They are reported beside the primaries because the replacements could cite only pages a remote caller
+can open (Frozen sample, below).
+
 ## Decision rules
 
 - P1 holding for a model says retrieval through gbrain changes that model's answers on this brain. B's and D's exposure
@@ -713,7 +719,11 @@ row. Each counted judge is also one of its own labellers, so its kappa against t
 itself at a higher effort. The labellers' cross-family kappa, which must also reach 0.6, is the stronger test, and the
 answers they disagree on are left out of the labels, which tilts the label set toward easier answers. The run reads the
 live database through the no-write role, so pages change only as Garry's own brain changes during the run; the run's
-start and end times are recorded, and the judge grades the snapshot each model saw.
+start and end times are recorded, and the judge grades the snapshot each model saw. Replacement tasks were chosen by
+type and by whether a remote caller can open their gold pages, so they may be easier than, or simply different from,
+the tasks Wintermute first wrote. That matters most for cross_source and time_window, which are almost all
+replacements. The findings show each type's count of phase 1 questions and replacements, and the primaries on each
+group, descriptively.
 
 ## Differences from the approved plan
 
@@ -783,12 +793,25 @@ submitted, N kept, the count dropped as unreachable, counts by type, the task fi
 detectable differences for the four primaries at the kept N, and the counted run's runner commit and harness digest.
 
 **Counted-run identity (recorded 2026-11-08, before the freeze; updated the same day for R78 and again for the label
-floor and truncation rules).** The counted run's and the judge check's harness digest must be
-`c2e0841a0d24761a4bd4e317a539b0afb3a8d5be567161689651d987c0d7efce`. The digest covers the twenty files in
+floor and truncation rules, and on 2026-11-09 for the split by task origin).** The counted run's and the judge check's
+harness digest must be `0a3ec5b6f7367fae0ab7852e525cce2af71a68893fda3e7463279d166492786b`. The digest covers the twenty files in
 `HARNESS_FILES` (`eval/runner/live-recall/tasks.ts`): the runner, the judge, the agent loop, the budget ledger and the
 cost path they price with, including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json`
-must also show a `runner_commit` that contains 320db88b, the R78 commit and the label-floor and truncation commit, and
-`runner_dirty: false`.
+must also show a `runner_commit` that contains 320db88b, the R78 commit, the label-floor and truncation commit and the
+task-origin commit, and `runner_dirty: false`.
+
+**First freeze and rebuild (recorded 2026-11-09, before the second freeze).** The first freeze, at 2d409a0c on gbrain
+0.60.613.0, kept 38 of 100 tasks (exit 5). 40 of the 109 distinct gold pages opened to a remote caller. Wintermute
+counted why the other 69 did not: 65 carry frontmatter `access: private`, which gbrain treats as private because
+`visibility.honor_aliases` is on; 4 were slug errors in the task file (3 differed from a live slug by letter case or a
+`.md` suffix, 1 page was missing); none was a derived page hidden by default, hidden by `readable_by`, a folder rule or
+lineage, or without a readable chunk. Those 38 kept by type: identifier 16, error_string 16, time_window 2,
+cross_source 0, topic 4. GBEV-3 (agent:GBEV-3) chose to rebuild, and rejected both relaxing the remote privacy posture
+and running at 38. Wintermute keeps the 38, corrects the 3 slugs to the exact live slugs (the harness matches gold slugs
+exactly, in exposure scoring as well as at the freeze), and replaces the rest with new tasks of the same type
+(`source_question` null), chosen by type and remote reachability only, before any model or judge call, to 100 at 20 per
+type. The harness is unchanged except for the descriptive split by task origin (Comparisons). The second freeze's
+entry here shows, for each type, how many tasks came from a phase 1 question and how many are replacements.
 
 ## Disclosures
 

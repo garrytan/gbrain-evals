@@ -1134,6 +1134,27 @@ describe('phase 2 judge check (R78)', () => {
     expect(md.find(l => l.startsWith('| ' + descriptive.id + ' '))).toContain('(a primary: read it above, with Holm)');
   });
 
+  test('the scorecard splits the primaries by task origin, descriptive only, without Holm', () => {
+    const tasks = Array.from({ length: 30 }, (_, i) => ({ id: 't' + i, type: i < 20 ? 'topic' : 'cross_source', source_question: i < 20 ? 'q' + i : null, gold_found_by: 'unknown' })) as any;
+    const card = buildTaskScorecard({
+      tasks, forms: ['paraphrase'], arms: ['A', 'B'], models: ['claude-opus-5-5'], identity: {}, stop: null, ledger_usd: null, audit: null,
+      records: tasks.flatMap((t: any, i: number) => [answer(t.id, 'A', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'A', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', i < 5), answer(t.id, 'B', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'B', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', i < 20)]),
+      task_summary: { submitted: 30, kept_at_freeze: 30, dropped_unreachable: 0, gold_missing_at_run: 0, sha_prefix: '0'.repeat(12), n_frozen: 30 },
+      custody: { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: {} },
+    });
+    expect(() => validateTaskScorecard(card)).not.toThrow();
+    const { phase1_question: old, replacement: fresh } = card.by_origin as any;
+    expect([old.n_tasks, old.by_type.topic, old.by_type.cross_source, fresh.n_tasks, fresh.by_type.cross_source]).toEqual([20, 20, 0, 10, 10]);
+    const p1 = (g: any) => g.comparisons.find((c: any) => c.id === 'p1_b_vs_a_opus');
+    expect([p1(old).n_pairs, p1(old).mean_a, p1(old).mean_b, p1(old).primary, p1(old).p_holm]).toEqual([20, 0.25, 1, null, null]);
+    expect([p1(fresh).n_pairs, p1(fresh).mean_a, p1(fresh).mean_b, p1(fresh).delta, p1(fresh).reading]).toEqual([10, 0, 0, 0, 'no_measurable_difference']);
+    expect(card.comparisons.find(c => c.id === 'p1_b_vs_a_opus')!.n_pairs).toBe(30);
+    const md = renderTaskMarkdown(card).split('\n');
+    expect(md).toContain('## Phase 1 questions against replacement tasks (descriptive)');
+    expect(md).toContain('Replacement tasks (source_question null): 10 tasks (identifier 0, error_string 0, time_window 0, cross_source 10, topic 0).');
+    expect(md.find(l => l.startsWith('| p1_b_vs_a_opus (phase1_question) '))).toContain('| 20 | 20 | 25.0 | 100.0 |');
+  });
+
   test('a fixture judge check labels every answer with both labellers at effort high after its counted judge, with no second judge', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'lr2-check-'));
     process.env.GBRAIN_AUDIT_DIR = dir;

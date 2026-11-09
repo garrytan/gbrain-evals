@@ -55,6 +55,11 @@ This records what each gbrain-evals release changed and what its measurements me
   split fails the judge check. `--truncation-waiver <note>` on `run`, `judge-check` or `judge` lifts a stop for the
   truncations recorded so far, only with GBEV-3's note, recorded as `agent:GBEV-3` in `run.json` and the scorecard; the
   stop re-arms on new truncations, and truncated rows stay judge errors.
+- **Primaries by task origin.** The first freeze on Garry's brain kept 38 of 100 tasks, because 65 of the gold pages
+  carry `access: private`, so most cross_source and time_window tasks are being replaced with tasks a remote caller can
+  answer. The scorecard's new `by_origin` block, and a markdown table beside the primaries, show the four primaries on
+  tasks from a phase 1 question and on replacement tasks (`source_question` null) separately, with counts by type.
+  It is descriptive only, with no Holm correction and no verdict.
 
 ## [0.10.177] - 2026-11-08
 

@@ -22,6 +22,8 @@ export const ERROR_CAP = 0.05;
 export const DEGRADED_CAP = 0.1;
 export const PRIMARY_MODELS = ['claude-opus-5-5', 'particle-1'] as const;
 export const TYPES = ['identifier', 'error_string', 'time_window', 'cross_source', 'topic'] as const;
+/** Where a task came from: a phase 1 question (`source_question` set) or a new task written as a replacement (null). */
+export const ORIGINS = ['phase1_question', 'replacement'] as const;
 const EXCLUSIONS = ['harness_error', 'timed_out', 'degraded', 'judge_error', 'unjudged', 'not_run'] as const;
 type Exclusion = (typeof EXCLUSIONS)[number];
 const RATES = ['correct', 'correct_grounded', 'partial', 'abstained', 'no_answer', 'confidently_wrong', 'contradicted'] as const;
@@ -357,6 +359,12 @@ export function buildTaskScorecard(s: ScoreInput) {
     return j?.derived && j2.derived ? [[j.derived.correct ? 1 : 0, j2.derived.correct ? 1 : 0] as [number, number]] : [];
   });
   const byType = Object.fromEntries(TYPES.map(t => [t, s.tasks.filter(x => x.type === t).length]));
+  const byOrigin = Object.fromEntries(ORIGINS.map(origin => {
+    const ts = s.tasks.filter(t => (t.source_question === null ? 'replacement' : 'phase1_question') === origin);
+    const ids = new Set(ts.map(t => t.id));
+    const subset = rows.filter(o => ids.has(o.task));
+    return [origin, { n_tasks: ts.length, by_type: Object.fromEntries(TYPES.map(t => [t, ts.filter(x => x.type === t).length])), comparisons: PRIMARIES.map(p => compare({ ...p, primary: undefined }, subset, invalidCells)) }];
+  }));
   const card = {
     schema: TASK_SCHEMA,
     status: s.stop === null && rows.every(o => o.exclusion !== 'not_run' && o.exclusion !== 'unjudged') ? 'complete' : 'incomplete',
@@ -371,6 +379,7 @@ export function buildTaskScorecard(s: ScoreInput) {
     },
     cells,
     comparisons,
+    by_origin: byOrigin,
     judge_agreement: { second_judge_correct: kappa(second), audit: s.audit },
     judges: judgeVersions(s.records.filter((r): r is JudgeRecord => r.kind === 'judge' || r.kind === 'judge2')),
     judge_check: s.judge_check ?? null,
@@ -384,7 +393,7 @@ const countBy = (xs: string[]) => xs.reduce<Record<string, number>>((m, x) => { 
 // ─── Custody: structural allowlist and leak scan ───────────────────────────────────────────────────────────────────
 
 const KEY_WORDS = new Set<string>([
-  'schema', 'status', 'stop', 'run', 'tasks', 'cost', 'cells', 'comparisons', 'judge_agreement', 'custody',
+  'schema', 'status', 'stop', 'run', 'tasks', 'cost', 'cells', 'comparisons', 'by_origin', ...ORIGINS, 'judge_agreement', 'custody',
   'submitted', 'kept_at_freeze', 'dropped_unreachable', 'gold_missing_at_run', 'sha_prefix', 'n_frozen', 'kept_at_run', 'by_type', 'gold_found_by', 'mdd_primaries',
   'pd10', 'pd20', 'pd30', 'alpha_05', 'holm_0125', ...TYPES, 'page_first', 'memory', 'gbrain_search', 'other_search', 'unknown',
   'model_calls_usd', 'by_role_usd', 'ledger_usd', 'other_usd', 'answer', 'summariser', 'judge', 'second_judge',
@@ -482,6 +491,11 @@ export function renderTaskMarkdown(s: ReturnType<typeof buildTaskScorecard>): st
   }
   L.push('## Primary comparisons (paraphrase form, Holm over four)', '', '| Comparison | Pairs | A | B | B − A (95% CI) | Reading | Tasks worse | McNemar p | Holm p | Observed MDE |', '|---|---|---|---|---|---|---|---|---|---|');
   for (const c of s.comparisons.filter(c => c.primary)) L.push('| ' + c.id + (c.untested ? ' (untested)' : '') + ' | ' + c.n_pairs + ' | ' + pct(c.mean_a) + ' | ' + pct(c.mean_b) + ' | ' + pct(c.delta) + (Array.isArray(c.ci95) ? ' (' + pct(c.ci95[0]) + ' to ' + pct(c.ci95[1]) + ')' : '') + ' | ' + readingText(c) + ' | ' + (c.worse_tasks ?? 'n/a') + ' | ' + (c.p_two_sided ?? 'n/a') + ' | ' + (c.p_holm ?? 'n/a') + ' | ' + pct(c.mde) + ' |');
+  L.push('', '## Phase 1 questions against replacement tasks (descriptive)', '');
+  const origins = s.by_origin as Record<string, { n_tasks: number; by_type: Record<string, number>; comparisons: typeof s.comparisons }>;
+  for (const o of ORIGINS) L.push((o === 'phase1_question' ? 'From a phase 1 question' : 'Replacement tasks (source_question null)') + ': ' + origins[o]!.n_tasks + ' tasks (' + TYPES.map(t => t + ' ' + origins[o]!.by_type[t]).join(', ') + ').');
+  L.push('', 'The four primaries on each group alone, unadjusted and without Holm: descriptive only, never a verdict.', '', '| Comparison | Tasks | Pairs | A | B | B − A (95% CI) | Reading |', '|---|---|---|---|---|---|---|');
+  for (const o of ORIGINS) for (const c of origins[o]!.comparisons) L.push('| ' + c.id + ' (' + o + ')' + (c.untested ? ' (untested)' : '') + ' | ' + origins[o]!.n_tasks + ' | ' + c.n_pairs + ' | ' + pct(c.mean_a) + ' | ' + pct(c.mean_b) + ' | ' + pct(c.delta) + (Array.isArray(c.ci95) ? ' (' + pct(c.ci95[0]) + ' to ' + pct(c.ci95[1]) + ')' : '') + ' | ' + readingText(c) + ' |');
   L.push('', '## Every cell', '', '| Form | Arm | Model | Counted | Excluded | Correct % | Grounded % | Abstained % | Confidently wrong % | Gold seen / opened / cited | Answer cost |', '|---|---|---|---|---|---|---|---|---|---|---|');
   for (const [form, byArm] of Object.entries(s.cells)) for (const [arm, byModel] of Object.entries(byArm as any)) for (const [model, c] of Object.entries(byModel as any) as Array<[string, any]>) {
     const ex = Object.entries(c.excluded).filter(([, n]) => (n as number) > 0).map(([k, n]) => k + ' ' + n).join(', ') || '0';

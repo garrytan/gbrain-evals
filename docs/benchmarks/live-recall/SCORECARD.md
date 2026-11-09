@@ -176,6 +176,9 @@ Top level:
   `mcnemar`
   (wins, losses, discordant pairs, exact two-sided p; per form only), `p_two_sided`, `p_holm` (primaries only, Holm over
   the four) and `mde` (the observed minimum detectable difference).
+- `by_origin`: `phase1_question` (tasks with a `source_question`) and `replacement` (tasks with `source_question` null),
+  each with `n_tasks`, `by_type` and `comparisons`, the four primaries computed on that group alone, in the same shape
+  with `primary` and `p_holm` null and the reading taken from the interval. Descriptive only.
 - `judge_agreement`: `second_judge_correct` (`n`, `agree`, `kappa` between the counted judge and claude-opus-5-5 on
   particle-1's paraphrase rows of B, C and D) and `audit` (Wintermute's `n` and `agree`, or null).
 - `judges`: each judge model's `rows`, how many of them were `truncated` at the output-token cap (each a judge error),
@@ -186,7 +189,8 @@ Top level:
   `degraded_stages` by stage.
 
 `scorecard.md` opens with the status and identity line, then the primary models' paraphrase table with answer cost per
-correct answer, the four primaries with their reading, tasks worse and Holm p, every cell, the descriptive comparisons,
+correct answer, the four primaries with their reading, tasks worse and Holm p, the primaries by task origin (descriptive),
+every cell, the descriptive comparisons,
 and the judge (versions and the judge check), cost and custody lines.
 
 ## Judge check (live-recall-judge-check/v1)
