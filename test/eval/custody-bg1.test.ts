@@ -63,6 +63,39 @@ const leaks = (output: string, ps: string[]) => ps.filter(p => output.includes(p
 const mint = (out: string, i: ReturnType<typeof inputs>, extra: string[] = [], env: Record<string, string> = {}) =>
   run('bash', [MINT, '--out', out, '--seed-file', i.seed, '--phrasing', i.phrasing, '--target-tokens', '4000', ...extra], env);
 
+/**
+ * mint.sh's real mode with nothing real behind it: a fresh directory holding ledgers/, an owner-only bg1.env with a
+ * placeholder key, and a bun stub on PATH that records each call's directory and arguments and runs nothing.
+ */
+function stubbed(name: string) {
+  const j = inputs(name);
+  const home = scratch(`${name}-home`), bin = join(j.dir, 'bin'), log = join(j.dir, 'bun-calls.log');
+  mkdirSync(join(home, '.config', 'gbrain-evals'), { recursive: true });
+  const keyFile = join(home, '.config', 'gbrain-evals', 'bg1.env');
+  writeFileSync(keyFile, 'BG1_GEMINI_API_KEY=test-bg1-key-not-real\n');
+  chmodSync(keyFile, 0o600);
+  mkdirSync(bin);
+  mkdirSync(join(j.dir, 'ledgers'));
+  writeFileSync(join(bin, 'bun'), [
+    '#!/usr/bin/env bash',
+    `printf '%s\\t%s\\n' "$PWD" "$*" >> ${JSON.stringify(log)}`,
+    'case "$1" in',
+    '  *harness-metering-proxy.ts) while [ $# -gt 1 ]; do [ "$1" = --ready-file ] && printf "{}" > "$2"; shift; done ;;',
+    '  *render.ts) echo "bg1-render slot=1 world=bg1-001 status=written" ;;',
+    'esac',
+    'exit 0', ''].join('\n'));
+  chmodSync(join(bin, 'bun'), 0o755);
+  const mintHere = (args: string[], env: Record<string, string> = {}) => {
+    const r = spawnSync('bash', [MINT, ...args], { cwd: j.dir, encoding: 'utf8', timeout: 60_000,
+      env: { PATH: `${bin}:${process.env.PATH ?? '/usr/bin:/bin'}`, HOME: home, ANTHROPIC_API_KEY: 'test-anthropic-key-not-real', GEMINI_API_KEY: '', OPENAI_API_KEY: '', BG1_GEMINI_API_KEY: '', ...env } });
+    return { code: r.status, out: r.stdout ?? '', err: r.stderr ?? '' };
+  };
+  const calls = () => existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n').map(l => l.split('\t')) : [];
+  const window = ['--paid-window', 'bg1-test', '--window-cap-usd', '5', '--budget-ledger', 'ledgers/ledger.sqlite', '--budget-run-id', 'r1'];
+  return { j, log, mint: mintHere, calls, window };
+}
+const ledgerArgs = (calls: string[][]) => [...new Set(calls.map(([, args]) => /--budget-ledger (\S+)/.exec(args)?.[1]))];
+
 // ─── mint.sh --fake end to end ───────────────────────────────────────
 
 describe('mint.sh --fake, validate.ts and hashlist.ts end to end', () => {
@@ -222,32 +255,29 @@ describe('mint.sh and render.ts refuse before anything is written or any key is 
 
   // Value: protects=the window check, both proxies and render.ts reserve against one ledger file; fails_when=a relative --budget-ledger reaches render.ts as written, which runs inside --out and so names another file there; why_new=#398 open note 10 (mint.sh resolved a relative --budget-ledger inside its output directory); seam=a bun stub on PATH that records each call's directory and arguments and runs nothing, placeholder keys; no_claim=the window check's, the proxies' or render.ts's own behaviour
   test('a relative --budget-ledger is resolved once, so the window check, both proxies and render.ts name the same absolute file', () => {
-    const j = inputs('ledger-rel');
-    const home = scratch('ledger-home'), bin = join(j.dir, 'bin'), log = join(j.dir, 'bun-calls.log'), out = join(j.dir, 'bg1-custody-l');
-    mkdirSync(join(home, '.config', 'gbrain-evals'), { recursive: true });
-    const keyFile = join(home, '.config', 'gbrain-evals', 'bg1.env');
-    writeFileSync(keyFile, 'BG1_GEMINI_API_KEY=test-bg1-key-not-real\n');
-    chmodSync(keyFile, 0o600);
-    mkdirSync(bin);
-    mkdirSync(join(j.dir, 'ledgers'));
-    writeFileSync(join(bin, 'bun'), [
-      '#!/usr/bin/env bash',
-      `printf '%s\\t%s\\n' "$PWD" "$*" >> ${JSON.stringify(log)}`,
-      'case "$1" in',
-      '  *harness-metering-proxy.ts) while [ $# -gt 1 ]; do [ "$1" = --ready-file ] && printf "{}" > "$2"; shift; done ;;',
-      '  *render.ts) echo "bg1-render slot=1 world=bg1-001 status=written" ;;',
-      'esac',
-      'exit 0', ''].join('\n'));
-    chmodSync(join(bin, 'bun'), 0o755);
-    const r = spawnSync('bash', [MINT, '--out', out, '--seed-file', j.seed, '--phrasing', j.phrasing, '--count', '1', '--paid-window', 'bg1-test', '--window-cap-usd', '5', '--budget-ledger', 'ledgers/ledger.sqlite', '--budget-run-id', 'r1'],
-      { cwd: j.dir, encoding: 'utf8', timeout: 60_000, env: { PATH: `${bin}:${process.env.PATH ?? '/usr/bin:/bin'}`, HOME: home, ANTHROPIC_API_KEY: 'test-anthropic-key-not-real', GEMINI_API_KEY: '', OPENAI_API_KEY: '', BG1_GEMINI_API_KEY: '' } });
-    expect(r.status).toBe(0);
-    expect(r.stdout).toContain('summary=mint mode=real slots=1 written=1');
-    const calls = readFileSync(log, 'utf8').trim().split('\n').map(l => l.split('\t'));
+    const s = stubbed('ledger-rel'), out = join(s.j.dir, 'bg1-custody-l');
+    const r = s.mint(['--out', out, '--seed-file', s.j.seed, '--phrasing', s.j.phrasing, '--count', '1', ...s.window]);
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('summary=mint mode=real slots=1 written=1');
+    const calls = s.calls();
     expect(calls.map(([, args]) => args.split(' ')[0].split('/').at(-1))).toEqual(['paid-window.ts', 'harness-metering-proxy.ts', 'harness-metering-proxy.ts', 'render.ts']);
     expect(calls.at(-1)![0]).toBe(realpathSync(out));
-    expect([...new Set(calls.map(([, args]) => /--budget-ledger (\S+)/.exec(args)?.[1]))]).toEqual([join(realpathSync(j.dir), 'ledgers', 'ledger.sqlite')]);
-    expect(r.stdout + r.stderr + readFileSync(log, 'utf8')).not.toContain('not-real');
+    expect(ledgerArgs(calls)).toEqual([join(realpathSync(s.j.dir), 'ledgers', 'ledger.sqlite')]);
+    expect(r.out + r.err + readFileSync(s.log, 'utf8')).not.toContain('not-real');
+  });
+
+  // Value: protects=a relative --out and --budget-ledger resolve against the directory mint.sh starts in; fails_when=a CDPATH exported in the caller's shell sends mint.sh's cd to a like-named directory elsewhere and makes cd print that path into the resolved one; why_new=BG1 follow-up fix 6 (mint.sh ran with the caller's CDPATH); seam=the bun stub and a CDPATH directory holding ledgers/ and the out name; no_claim=the window check's, the proxies' or render.ts's own behaviour
+  test('a CDPATH in the caller\'s shell changes nothing: a relative --out and --budget-ledger resolve against the starting directory', () => {
+    const s = stubbed('cdpath'), decoy = scratch('cdpath-decoy');
+    for (const d of ['ledgers', 'bg1-custody-c']) mkdirSync(join(decoy, d));
+    const r = s.mint(['--out', 'bg1-custody-c', '--seed-file', s.j.seed, '--phrasing', s.j.phrasing, '--count', '1', ...s.window], { CDPATH: decoy });
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('summary=mint mode=real slots=1 written=1');
+    const calls = s.calls(), here = realpathSync(s.j.dir);
+    expect(calls.at(-1)![0]).toBe(join(here, 'bg1-custody-c'));
+    expect(ledgerArgs(calls)).toEqual([join(here, 'ledgers', 'ledger.sqlite')]);
+    expect(readdirSync(decoy).sort()).toEqual(['bg1-custody-c', 'ledgers']);
+    for (const d of ['ledgers', 'bg1-custody-c']) expect(readdirSync(join(decoy, d))).toEqual([]);
   });
 
   test('custody paths: the out name, a checkout, and the seed and phrasing files\' names, modes and contents', () => {

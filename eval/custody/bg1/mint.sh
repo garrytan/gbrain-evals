@@ -25,7 +25,8 @@
 #     render records under --out (render/bg1-NNN.json), so every invocation on one --out counts them, a resumed or
 #     --start run included, and a run on an --out that already holds two pauses before it renders anything.
 #   - One ledger. A relative --budget-ledger is resolved once, against the directory mint.sh starts in, before the window
-#     check, so the check, both proxies and render.ts all name the same ledger file.
+#     check, so the check, both proxies and render.ts all name the same ledger file. CDPATH is unset first, so a
+#     relative --out or --budget-ledger never resolves against a directory the caller's CDPATH names.
 #   - One key per proxy. Real mode needs the granted paid window: without --paid-window and --window-cap-usd, or with
 #     the ledger's program cap or the run's budget unknown or above the window cap, it exits 2 before any proxy starts
 #     (eval/runner/rs1/paid-window.ts check, the window guard in eval/runner/paid-arm.ts). Gemini's key comes only from
@@ -42,6 +43,7 @@
 # request logs and request bodies, holding BG1 text). All of it belongs in the encrypted archive.
 set -euo pipefail
 umask 077
+unset CDPATH
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../../.." && pwd)"
