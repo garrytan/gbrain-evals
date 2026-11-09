@@ -22,8 +22,11 @@ import { main as paraphraseOpus } from '../../eval/runner/live-recall/paraphrase
 import { B3_ENTITY, B3_FRESHNESS } from '../../eval/runner/predictive/mapping.ts';
 import { SyntheticScorecardError, evaluateMeasure, readSynthetic } from '../../eval/runner/predictive/verdict.ts';
 
-const PINNED_DIGEST = 'b35a9adf56c3246e10eab65c9386f435aa175840a2782477d0cd0bc8fa630315';
-const PINNED_QUESTIONS_SHA256 = 'c100d63df49ebd486cbe54c7b159cd7e30a15b82c082d7ca01f135f1c27d8068';
+const PINNED_DIGEST = 'e270789585685527cc01dbad721755273d9a1c85b3971c557a8119d0ad1e7d10';
+const PINNED_QUESTIONS_SHA256 = '15cfd7d0753cf831ff6676f7311e920128fce2fd78aff54fbb1e89aaf2edfbe4';
+/** Function words a question may add around the gold page's own words. */
+const FUNCTION_WORDS = new Set(['which', 'who', 'where', 'what', 'is', 'are', 'has', 'the', 'a', 'at', 'in', 'to', 'and', 'we', 'with', 'of']);
+const words = (text: string) => text.toLowerCase().split(/\s+/).map(w => w.replace(/^[^a-z0-9@]+|[^a-z0-9]+$/g, '')).filter(Boolean);
 
 const temps: string[] = [];
 const tempDir = (label: string) => { const d = mkdtempSync(join(tmpdir(), 'b3s-' + label + '-')); temps.push(d); return d; };
@@ -46,6 +49,14 @@ describe('batch3-synthetic generator', () => {
     expect([full.manifest.sources.g1.seed, full.manifest.sources.g4.seed]).toEqual([20261110, 20261111]);
     expect(full.manifest.counts.by_type).toEqual({ freshness: 20, entity: 20 });
     expect(parseQuestions(full.questionsText, 'batch3').map(q => q.type).sort()).toEqual([...Array(20).fill('entity'), ...Array(20).fill('freshness')]);
+  });
+
+  test('every exact form is in its gold page\'s own words: each content word appears on the gold page', () => {
+    for (const q of full.questions) {
+      const page = new Set(words(body.get(q.gold[0]!.slug)!));
+      const missing = words(q.forms.exact).filter(w => !FUNCTION_WORDS.has(w) && !page.has(w));
+      expect([q.id, missing]).toEqual([q.id, []]);
+    }
   });
 
   test('every paraphrase differs from its exact form and shares no identifier-like token with it', () => {
@@ -131,7 +142,9 @@ describe('live-recall run --synthetic --protocol batch3 (keyless), and the verdi
     expect(() => validateScorecard(card)).not.toThrow();
     expect(card.protocol).toBe('batch3');
     expect(card.run.control).toBe(true);
+    expect(card.run.transports).toBe('hash');
     expect(card.questions.loaded).toBe(8);
+    for (const type of ['freshness', 'entity']) expect(card.arms.keyword.by_type[type].all.success_at.k5.rate).toBeGreaterThan(0);
     const ids = card.comparisons.filter((c: any) => c.metric === 'success_at_5').map((c: any) => c.id);
     expect(ids).toEqual(expect.arrayContaining([...B3_FRESHNESS, ...B3_ENTITY]));
     for (const arm of ['keyword', 'vector', 'hybrid_lexical', 'hybrid', 'configured']) expect(card.arms[arm].stale_first.all.n).toBe(8);
