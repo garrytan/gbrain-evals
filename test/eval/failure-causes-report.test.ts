@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { LABEL_PROMPT_SHA256, TAXONOMY_VERSION, buildLabelSet, classify, cohensKappa, gatePaths, issueDrafts, knownAnswerAccuracy, labelSetSample, perCause, productionLabels, renderReport, stratifiedSample, summarize, ungated, type CauseLabel, type EvalFailure } from '../../eval/runner/failure-causes/index.ts';
@@ -302,4 +303,26 @@ describe('agree and report on the command line', () => {
     expect(refused.status).toBe(1);
     expect(refused.stderr).toMatch(/production labels from taxonomy 2026-11-09\.2; this code is/);
   });
+  // Value: protects=classify CLI writes a not_run row beside the failures for each task a system never ran, and counts it apart;
+  //   fails_when=cli.ts drops out.not_run from --out or folds it into the failure count; why_new=adapter and summarize tests call
+  //   the functions, never the classify command; seam=none; no_claim=real RS1 archives (synthetic one-cell fixture; keyless)
+  test('classify on the command line writes a not_run row for a task never run, and does not count it as a failure', () => {
+    const src = join(dir, 'rs1-src');
+    const write = (name: string, rows: unknown[]) => { const body = rows.map(r => JSON.stringify(r)).join('\n') + '\n'; writeFileSync(join(src, name), body); return { path: name, role: name.split('.')[0], sha256: createHash('sha256').update(body).digest('hex') }; };
+    mkdirSync(src, { recursive: true });
+    const row = (id: string) => ({ id, category: 'knowledge_update', gold_count: 1, outcome: 'scored', recall_any_at_10: 0, recall_all_at_10: 0, packing_loss: { items_offered: 8, items_cut: 0, items_dropped: 0 } });
+    const answer = (q: string, outcome: string) => ({ answer_id: `a-${q}`, cell_id: 'gbrain-a', question_id: q, system: 'gbrain-defaults', reader: 'anthropic:claude-opus-5-5', replicate: 0, text: 'a', outcome });
+    const files = [write('rows.ndjson', [row('q1'), row('q2')]), write('answers.ndjson', [answer('q1', 'scored'), answer('q2', 'does_not_fit')]),
+      write('judgments.ndjson', [{ answer_id: 'a-q1', judge: 'openai:gpt-6.1-sol', score: 0, parse_ok: true, outcome: 'scored' }])];
+    const manifest = join(dir, 'sources.json');
+    writeFileSync(manifest, JSON.stringify({ schema: 'failure-cause-sources/1', sources: [{ id: 'rs1', adapter: 'rs1', visibility: 'synthetic', condition: 'natural', root: 'src', files }] }));
+    const out = join(dir, 'classified-cli.ndjson');
+    const r = cli(['classify', '--manifest', manifest, '--root', `src=${src}`, '--out', out]);
+    expect(r.status).toBe(0);
+    expect(JSON.parse(r.stdout)).toMatchObject({ failures: 1, not_run: 1 });
+    const rows = readFileSync(out, 'utf8').trim().split('\n').map(l => JSON.parse(l) as CauseLabel);
+    expect(rows.map(l => [l.task_id, l.rule_id, l.cause])).toEqual([['q1', 'retrieval.no_gold_retrieved', 'retrieval_miss'], ['q2', 'not_run.does_not_fit', null]]);
+    expect(summarize(rows).failures).toBe(1);
+  });
 });
+
