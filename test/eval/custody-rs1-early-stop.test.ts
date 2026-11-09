@@ -139,10 +139,24 @@ m.write_json(conv / "manifest.json", {"schema": "rs1-mint-manifest/v1", "convers
                                       "steps": {"topic_check@1": {"status": "done", "verdict": "accepted", "outputs": {}}}})
 
 
+def window_args(out):
+    import sqlite3
+    path = str(out) + "-window.sqlite"
+    db = sqlite3.connect(path)
+    db.execute("CREATE TABLE IF NOT EXISTS caps (seq INTEGER PRIMARY KEY AUTOINCREMENT, program_cap_usd REAL NOT NULL)")
+    db.execute("CREATE TABLE IF NOT EXISTS runs (run_id TEXT PRIMARY KEY, budget_usd REAL NOT NULL, finished_at TEXT)")
+    db.execute("INSERT OR IGNORE INTO runs VALUES ('rs1-test', 1, NULL)")
+    if not db.execute("SELECT COUNT(*) FROM caps").fetchone()[0]:
+        db.execute("INSERT INTO caps (program_cap_usd) VALUES (1)")
+    db.commit()
+    db.close()
+    return ["--paid-window", "RS1-TEST", "--window-cap-usd", "1", "--budget-ledger", path, "--budget-run-id", "rs1-test"]
+
+
 def step(name):
     seen["prompted"].clear()
     code = m.main(["step", "--out", str(out), "--conv-index", "1", "--step", name, "--seed-file", seed_file, "--mode", "real",
-                   "--beam-dir", str(out)])
+                   "--beam-dir", str(out)] + window_args(out))
     entry = m.read_json(conv / "manifest.json")["steps"].get(name + "@1", {})
     chat = m.read_pickle(beam_chat / "chat.pickle")
     return {"code": code, "prompted": sorted(seen["prompted"]), "batches": len(chat), "status": entry.get("status"),
@@ -383,9 +397,23 @@ for index in (1, 2):
 early, full = (out / "set" / "conversations" / c / "beam" / "1" for c in ("c001", "c002"))
 
 
+def window_args(out):
+    import sqlite3
+    path = str(out) + "-window.sqlite"
+    db = sqlite3.connect(path)
+    db.execute("CREATE TABLE IF NOT EXISTS caps (seq INTEGER PRIMARY KEY AUTOINCREMENT, program_cap_usd REAL NOT NULL)")
+    db.execute("CREATE TABLE IF NOT EXISTS runs (run_id TEXT PRIMARY KEY, budget_usd REAL NOT NULL, finished_at TEXT)")
+    db.execute("INSERT OR IGNORE INTO runs VALUES ('rs1-test', 1, NULL)")
+    if not db.execute("SELECT COUNT(*) FROM caps").fetchone()[0]:
+        db.execute("INSERT INTO caps (program_cap_usd) VALUES (1)")
+    db.commit()
+    db.close()
+    return ["--paid-window", "RS1-TEST", "--window-cap-usd", "1", "--budget-ledger", path, "--budget-run-id", "rs1-test"]
+
+
 def step(index, name):
     return m.main(["step", "--out", str(out), "--conv-index", str(index), "--step", name, "--seed-file", seed_file,
-                   "--mode", "real", "--beam-dir", beam_dir])
+                   "--mode", "real", "--beam-dir", beam_dir] + window_args(out))
 
 
 # c001 runs the answer step, which stops early; c002 is the same chat answered in full, in one uninterrupted call.

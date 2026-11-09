@@ -16,7 +16,11 @@ Modes:
               deterministic stub in place of every model call (needs the venv).
   real        BEAM's pipeline with gemini-3.8-flash in every model slot and
               OpenAI text-embedding-3-large for the topic check, each reached
-              only through the metering proxy named in RS1_PROXY_READY.
+              only through the metering proxy named in RS1_PROXY_READY. A real
+              step also needs the granted paid window (--paid-window and
+              --window-cap-usd) and its ledger run (--budget-ledger and
+              --budget-run-id), whose program cap and budget may not exceed
+              the window cap; otherwise it exits 2 before anything runs.
 
 Nothing BEAM prints reaches stdout or stderr: file descriptors 1 and 2 point at
 /dev/null while a step runs, and an error prints only its class and the sha256
@@ -59,6 +63,7 @@ import os
 import pickle
 import re
 import shutil
+import sqlite3
 import sys
 import threading
 import traceback
@@ -1503,6 +1508,30 @@ def check_early_stop(out, beam_dir=None, only=None):
 # ---------------------------------------------------------------------------------------------------- CLI
 
 
+def window_refusal(args):
+    """Why a real step may not run, or None: it needs the granted paid window, and its ledger's program cap and its
+    run's budget must exist and sit at or under the window cap (eval/runner/rs1/paid-window.ts)."""
+    if not args.paid_window or not re.match(r"^[A-Za-z0-9][A-Za-z0-9._-]*$", args.paid_window) \
+            or not args.window_cap_usd or not math.isfinite(args.window_cap_usd) or args.window_cap_usd <= 0:
+        return "a real step spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n> from the granted paid window"
+    if not args.budget_ledger or not args.budget_run_id or not os.path.isfile(args.budget_ledger):
+        return "a real step needs --budget-ledger and --budget-run-id naming its open ledger run"
+    try:
+        db = sqlite3.connect(f"file:{Path(args.budget_ledger).resolve()}?mode=ro", uri=True)
+        try:
+            cap = db.execute("SELECT program_cap_usd FROM caps ORDER BY seq DESC LIMIT 1").fetchone()
+            run = db.execute("SELECT budget_usd FROM runs WHERE run_id = ? AND finished_at IS NULL", (args.budget_run_id,)).fetchone()
+        finally:
+            db.close()
+    except sqlite3.Error as error:
+        return f"the ledger could not be read ({type(error).__name__})"
+    if cap is None or run is None:
+        return "the ledger has no program cap or no open run with that id"
+    if cap[0] > args.window_cap_usd + 1e-9 or run[0] > args.window_cap_usd + 1e-9:
+        return f"the ledger's program cap or the run's budget is above paid window {args.paid_window}'s cap; a run's cap never exceeds its window"
+    return None
+
+
 def main(argv):
     parser = argparse.ArgumentParser(prog="rs1_mint.py")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1515,6 +1544,10 @@ def main(argv):
     s.add_argument("--beam-dir", required=True)
     s.add_argument("--topic-source", choices=["seeded", "public"], default="seeded")
     s.add_argument("--regenerate")
+    s.add_argument("--paid-window")
+    s.add_argument("--window-cap-usd", type=float)
+    s.add_argument("--budget-ledger")
+    s.add_argument("--budget-run-id")
     c = sub.add_parser("check-seed")
     c.add_argument("--seed-file", required=True)
     u = sub.add_parser("usage")
@@ -1554,6 +1587,12 @@ def main(argv):
             path.write_text(traceback.format_exc(), encoding="utf-8")
             emit({"summary": "check-early-stop", "status": "error", "error_class": type(error).__name__,
                   "error_sha256": sha256_bytes(str(error).encode("utf-8"))[:16]})
+            return 2
+
+    if args.mode == "real":
+        refusal = window_refusal(args)
+        if refusal:
+            os.write(SAVED_ERR, f"rs1-mint refused: {refusal}\n".encode("utf-8"))
             return 2
 
     cid = f"c{args.conv_index:03d}"

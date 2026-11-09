@@ -3,7 +3,8 @@
 # conversation and one step at a time, through eval/custody/rs1/rs1_mint.py.
 #
 #   eval/custody/rs1/mint.sh --out <dir>/rs1-custody --seed-file <path>.rs1-seed [--count 75] [--start 1]
-#       (--fake --beam-dir <fake BEAM tree> | --stub-model | --budget-ledger <sqlite> --budget-run-id <id>)
+#       (--fake --beam-dir <fake BEAM tree> | --stub-model
+#        | --budget-ledger <sqlite> --budget-run-id <id> --paid-window <unit> --window-cap-usd <n>)
 #       [--topic-source seeded|public] [--regenerate <validation report>]
 #
 # What it guarantees:
@@ -51,7 +52,9 @@
 #
 # Modes: --fake swaps the whole pipeline and every model call for a deterministic stub (no network, system python3;
 # the keyless tests use it). --stub-model runs BEAM's own code with a deterministic stub model. Neither spends.
-# Real mode needs GEMINI_API_KEY and OPENAI_API_KEY in this shell and an open ledger run.
+# Real mode needs GEMINI_API_KEY and OPENAI_API_KEY in this shell, an open ledger run, and the granted paid window: --paid-window <unit> --window-cap-usd <n>. Without the window,
+# or with a ledger program cap or run budget above its cap, it exits 2 before anything is fetched or started
+# (eval/runner/rs1/paid-window.ts).
 #
 # Layout under --out: set/ (the minted set: set/conversations/cNNN/{manifest.json,topic.json,beam/1/...}),
 # usage.json (counts-only usage per step and conversation), proxy/ (request logs, and request bodies holding RS1
@@ -70,7 +73,7 @@ say() { printf 'rs1-mint %s\n' "$*"; }
 die() { printf 'rs1-mint refused: %s\n' "$*" >&2; exit 2; }
 
 OUT="" SEED_FILE="${RS1_SEED_FILE:-}" COUNT=75 START=1 MODE=real BEAM_DIR="" TOPIC_SOURCE=seeded REGENERATE=""
-LEDGER="" RUN_ID=""
+LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --out) OUT="$2"; shift 2 ;;
@@ -84,7 +87,9 @@ while [ $# -gt 0 ]; do
     --regenerate) REGENERATE="$2"; shift 2 ;;
     --budget-ledger) LEDGER="$2"; shift 2 ;;
     --budget-run-id) RUN_ID="$2"; shift 2 ;;
-    -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
+    --paid-window) WINDOW="$2"; shift 2 ;;
+    --window-cap-usd) WINDOW_CAP="$2"; shift 2 ;;
+    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
     *) die "unknown argument $1" ;;
   esac
 done
@@ -94,6 +99,15 @@ done
 [[ "$COUNT" =~ ^[0-9]+$ && "$START" =~ ^[0-9]+$ && "$START" -ge 1 ]] || die "--count and --start must be whole numbers, --start at least 1"
 [[ "$TOPIC_SOURCE" =~ ^(seeded|public)$ ]] || die "--topic-source is seeded or public"
 case "$(basename "$OUT")" in rs1-custody*) ;; *) die "--out must be a directory whose name starts with rs1-custody" ;; esac
+
+if [ "$MODE" = real ]; then
+  [ -n "$WINDOW" ] && [ -n "$WINDOW_CAP" ] || die "real mode spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n> from the granted paid window (--fake and --stub-model spend nothing)"
+  [ -n "$LEDGER" ] && [ -n "$RUN_ID" ] || die "real mode needs --budget-ledger and --budget-run-id (an open RS1 ledger run)"
+  test -n "${GEMINI_API_KEY:-}" || die "GEMINI_API_KEY is not set"
+  test -n "${OPENAI_API_KEY:-}" || die "OPENAI_API_KEY is not set"
+  command -v bun >/dev/null || die "bun is not on PATH"
+  bun "$REPO/eval/runner/rs1/paid-window.ts" check --paid-window "$WINDOW" --window-cap-usd "$WINDOW_CAP" --budget-ledger "$LEDGER" --budget-run-id "$RUN_ID" >/dev/null || exit 2
+fi
 
 inside_checkout() {
   local d="$1"
@@ -131,13 +145,6 @@ else
   fi
   say "venv=ready lock_sha256=$LOCK_SHA packages=$(grep -c '^[a-z0-9]' "$LOCK")"
   PY="$VENV/bin/python"
-fi
-
-if [ "$MODE" = real ]; then
-  test -n "${GEMINI_API_KEY:-}" || die "GEMINI_API_KEY is not set"
-  test -n "${OPENAI_API_KEY:-}" || die "OPENAI_API_KEY is not set"
-  [ -n "$LEDGER" ] && [ -n "$RUN_ID" ] || die "real mode needs --budget-ledger and --budget-run-id (an open RS1 ledger run)"
-  command -v bun >/dev/null || die "bun is not on PATH"
 fi
 
 "$PY" "$HERE/rs1_mint.py" check-seed --seed-file "$SEED_FILE" >/dev/null || exit 2
@@ -187,6 +194,7 @@ run_step() {
   local args=(step --out "$OUT" --conv-index "$index" --step "$step" --seed-file "$SEED_FILE" --mode "$MODE"
     --beam-dir "$BEAM_DIR" --topic-source "$TOPIC_SOURCE")
   [ -z "$REGENERATE" ] || args+=(--regenerate "$REGENERATE")
+  [ "$MODE" != real ] || args+=(--paid-window "$WINDOW" --window-cap-usd "$WINDOW_CAP" --budget-ledger "$LEDGER" --budget-run-id "$RUN_ID")
   line="$(cd "$OUT" && env -i "${allow[@]}" "$PY" "$HERE/rs1_mint.py" "${args[@]}")" || rc=$?
   stop_proxy
   printf '%s\n' "$line"

@@ -1004,10 +1004,12 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     }
     if (!up) throw new Error(ended() ? `the metering proxy exited (${proxy.signalCode ?? `code ${proxy.exitCode}`}) before it served lease ${payload.lease_id} on port ${port}` : `the metering proxy did not serve lease ${payload.lease_id} on port ${port} within 120 s`);
     const base = `http://127.0.0.1:${port}`;
-    const env: Record<string, string | undefined> = { ...process.env, SHOOTOUT_OUT: out, SHOOTOUT_PROXY: base, SHOOTOUT_LEASE_ID: payload.lease_id, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken,
+    const env: Record<string, string | undefined> = { ...process.env, SHOOTOUT_OUT: out, SHOOTOUT_PROXY: base, SHOOTOUT_LEASE_ID: payload.lease_id, SHOOTOUT_LEASE_USD: String(payload.lease_usd), SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken,
       OPENAI_BASE_URL: `${base}/cell/openai/v1`, ANTHROPIC_BASE_URL: `${base}/cell/anthropic`, VOYAGE_BASE_URL: `${base}/cell/voyage/v1`, PARTICLE_BASE_URL: `${base}/cell/particle/v1`, SHOOTOUT_CELL_TOKEN: cellToken, ...(custody ? { SHOOTOUT_CUSTODY: custody } : {}),
       ...(custody && payload.cell ? { GBRAIN_EVALS_CUSTODY_LOG: join(out, 'access-log.jsonl') } : {}) };
     for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'PARTICLE_API_KEY']) if (env[k]) env[k] = 'dummy-key-the-proxy-replaces';
+    // The cell sees SHOOTOUT_KEYLESS_UPSTREAM only when this proxy really serves a keyless upstream (RS1's window guard reads it).
+    if (opts.upstream) env.SHOOTOUT_KEYLESS_UPSTREAM = opts.upstream.openai; else delete env.SHOOTOUT_KEYLESS_UPSTREAM;
     if (payload.restore) {
       const dir = resolve(REPO_ROOT, expandHome(payload.restore.dir));
       // Without a restored store the old ingest-complete marker would trigger a snapshot of the empty store at once.

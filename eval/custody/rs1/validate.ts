@@ -4,7 +4,7 @@
  * regeneration step (mint.sh --regenerate) and the custody record.
  *
  *   bun eval/custody/rs1/validate.ts --set <out>/set --beam-dir <out>/tooling/beam --report <out>/validation/report.json
- *       (--fake | --paid --budget-run-id <id> --budget-ledger <RS1 ledger>)
+ *       (--fake | --paid --budget-run-id <id> --budget-ledger <RS1 ledger> --paid-window <unit> --window-cap-usd <n>)
  *       [--cache <dir>, default <set>/../validate-cache] [--public-index <file>] [--target-tokens 1070000] [--tolerance 0.15]
  *       [--window-tokens 60000] [--overlap-tokens 2000] [--concurrency 8]
  *
@@ -41,7 +41,9 @@
  * paid validators. Paid calls follow the q1 cells' ledger
  * path: requirePaidArm (--paid and an open run with room for the estimate), then startPaidRun, whose fetch guard prices
  * and reserves every request in the budget ledger before it is sent. The ledger prices gemini-3.8-flash generateContent
- * and claude-haiku-5-5, long-prompt tier included.
+ * and claude-haiku-5-5, long-prompt tier included. --paid also needs the granted paid window, and refuses (exit 2) before
+ * any client exists when it is missing or the ledger's program cap or the run's budget is above its cap
+ * (eval/runner/rs1/paid-window.ts).
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -50,6 +52,7 @@ import { BudgetExceededError, budgetOptionsFrom, chatPrice, startPaidRun } from 
 import { acceptsTemperature } from '../../runner/openai-judge-shim.ts';
 import { PaidArmRefusal, requirePaidArm } from '../../runner/paid-arm.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
+import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/rs1/paid-window.ts';
 import { readBeamPaths } from './beam-paths.ts';
 
 export const ABILITIES = [
@@ -662,6 +665,7 @@ async function main(argv: string[]): Promise<number> {
   if (!setDir || !beamDir || !reportPath) throw new ValidateError('--set, --beam-dir and --report are required');
   const fake = argv.includes('--fake');
   if (fake === argv.includes('--paid')) throw new ValidateError('pass exactly one of --fake and --paid');
+  requireRs1Window(argv, { what: 'paid validation', keyless: fake, caps: () => ledgerCaps(budgetOptionsFrom(argv).ledgerPath, flag('--budget-run-id')) });
   const opts: Options = {
     setDir: resolve(setDir), beamDir: resolve(beamDir), reportPath: resolve(reportPath),
     cacheDir: resolve(flag('--cache') ?? join(dirname(resolve(setDir)), 'validate-cache')), publicIndexPath: flag('--public-index'),
@@ -688,7 +692,7 @@ async function main(argv: string[]): Promise<number> {
 
 if (import.meta.main) {
   main(process.argv.slice(2)).then(code => process.exit(code), (error: Error) => {
-    const known = error instanceof ValidateError || error instanceof PaidArmRefusal || error instanceof BudgetExceededError;
+    const known = error instanceof ValidateError || error instanceof PaidArmRefusal || error instanceof BudgetExceededError || error instanceof WindowRefusal;
     process.stderr.write(known ? `rs1-validate refused: ${error.message}\n` : `rs1-validate error class=${error.name} sha256=${sha256(String(error.message)).slice(0, 16)}\n`);
     process.exit(2);
   });

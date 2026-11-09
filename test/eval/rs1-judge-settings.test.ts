@@ -135,7 +135,7 @@ describe('the judge route admits the pinned cap', () => {
   }
 
   test('an RS1 campaign admits each gating judge at its pinned 8,000-token cap, and only those judges', async () => {
-    const rs1 = caps(loadRS1Manifest());
+    const rs1 = campaignManifest(loadRS1Manifest(), { units: { campaign_id: 'q1-scoreboard-rs1-caps', cap_usd: 1, units: ['rs1.baseline-none.baseline.c0'], cell_manifest: 'rs1', paid_window: 'RS1-TEST' } }).output_caps!;
     expect(Object.fromEntries(Object.entries(rs1).filter(([k]) => k.startsWith('judge@')))).toEqual({ 'judge@anthropic:claude-opus-5-5': 8000, 'judge@openai:gpt-6-astra': 8000 });
     expect(await admitted(rs1)).toEqual({ astra: 200, opus: 200, bridge: 400, forwarded: 2 });
   });
