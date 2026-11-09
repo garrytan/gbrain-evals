@@ -18,7 +18,8 @@
  *   - length: the world's cl100k tokens are within the target plus or minus the tolerance (default 15%);
  *   - duplicate: no earlier world in the set has the same world bytes.
  * A slot that render.ts dropped (its <out>/render/<id>.json record) is listed with the gate "render". Kept: the first
- * --n-final passing worlds in slot order, or every passing world without it.
+ * --n-final passing worlds in slot order, or every passing world without it. Each world's entry records the SHA-256 of
+ * its files as validated, so eval/custody/bg1/fill-manifest.ts can refuse files that changed since.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -28,10 +29,11 @@ import { BG1_CONVERSATIONS, BG1_N_CAP } from '../../runner/bg1/types.ts';
 import { checkSession, readPhrasing, readSeedLine, RenderRefusal, sealedPlan } from './render.ts';
 
 export const VALIDATION_SCHEMA = 'gbrain-evals/bg1-validation/v1';
+export const WORLD_FILES = ['plan.json', 'questions.json', 'world.json'] as const;
 const sha256 = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex');
 const json = (v: unknown) => JSON.stringify(v, null, 1) + '\n';
 
-export interface WorldResult { id: string; status: 'pass' | 'fail'; failed: string[]; sessions: number; tokens: number | null; world_sha256: string | null }
+export interface WorldResult { id: string; status: 'pass' | 'fail'; failed: string[]; sessions: number; tokens: number | null; world_sha256: string | null; files_sha256: Record<string, string> }
 export interface ValidationReport {
   schema: string; target_tokens: number; tolerance: number; worlds: WorldResult[]; kept: string[]; n_final: number | null;
   counts: { checked: number; passed: number; failed: number; render_dropped: number };
@@ -39,7 +41,7 @@ export interface ValidationReport {
 
 /** The gates one world fails, given its directory and its plan inputs; empty when it passes. */
 export function validateWorld(dir: string, slot: number, seedLine: string, phrasing: ReturnType<typeof readPhrasing>, opts: { targetTokens: number; tolerance: number }): { failed: string[]; sessions: number; tokens: number | null; worldText: string | null } {
-  const files = ['plan.json', 'questions.json', 'world.json'].map(f => join(dir, f));
+  const files = WORLD_FILES.map(f => join(dir, f));
   if (files.some(f => !existsSync(f))) return { failed: ['files'], sessions: 0, tokens: null, worldText: null };
   const [planText, questionsText, worldText] = files.map(f => readFileSync(f, 'utf8'));
   const failed = new Set<string>();
@@ -81,7 +83,7 @@ export function validateSet(setDir: string, seedLine: string, phrasing: ReturnTy
     if (!present.includes(id)) {
       if (existsSync(record) && (JSON.parse(readFileSync(record, 'utf8')) as { status?: string }).status === 'dropped') {
         renderDropped++;
-        results.push({ id, status: 'fail', failed: ['render'], sessions: 0, tokens: null, world_sha256: null });
+        results.push({ id, status: 'fail', failed: ['render'], sessions: 0, tokens: null, world_sha256: null, files_sha256: {} });
       }
       return;
     }
@@ -89,7 +91,8 @@ export function validateSet(setDir: string, seedLine: string, phrasing: ReturnTy
     const hash = r.worldText === null ? null : sha256(r.worldText);
     if (hash !== null && seen.has(hash)) r.failed.push('duplicate');
     if (hash !== null) seen.add(hash);
-    results.push({ id, status: r.failed.length ? 'fail' : 'pass', failed: r.failed, sessions: r.sessions, tokens: r.tokens, world_sha256: hash });
+    const files_sha256 = Object.fromEntries(WORLD_FILES.filter(f => existsSync(join(worldsDir, id, f))).map(f => [f, sha256(readFileSync(join(worldsDir, id, f)))]));
+    results.push({ id, status: r.failed.length ? 'fail' : 'pass', failed: r.failed, sessions: r.sessions, tokens: r.tokens, world_sha256: hash, files_sha256 });
   });
   const passing = results.filter(r => r.status === 'pass').map(r => r.id);
   const kept = opts.nFinal === null ? passing : passing.slice(0, opts.nFinal);
