@@ -798,6 +798,34 @@ SHA-256 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, unch
 does not depend on this fix; counted cells do. Later docs-only commits don't change either. Each run records the commit
 it actually ran, and a run from any other code needs a further amendment.
 
+### 2026-11-09: verdict aggregates mode, and the code the final verdict runs from
+
+GBEV-3 accepted an aggregates mode for `eval/runner/rs1/verdict.ts` as a fix to make before wave B (amendment above). It
+is built in `c3b3a85e`, with one review fix in `d927c88f`. It changes no bar, arm, reader, judge, margin or verdict rule,
+and no number the verdict computes.
+
+- **What it does.** `bun eval/runner/rs1/verdict.ts aggregates --receipts <every unit and re-read directory> --manifest
+  <filled manifest> --out <custody directory>` is the final custody run. It applies verdict mode's checks and analysis
+  unchanged, so it reads only the filled manifest with `n_final` set and exactly the first N_final kept conversations.
+  It writes `aggregates.json` and `aggregates.md`: verdict mode's analysis, the code commit, the SHA-256 of
+  `verdict.ts`, `iut.ts`, `rs1-cells.json` and the filled manifest, and one SHA-256 over every receipt file it read
+  (each file's path under its `--receipts` directory with its own SHA-256). These are what leave custody at the end.
+- **What it refuses.** Every key and string in the analysis must come from a closed vocabulary: rows, readers, gating
+  judges, views, BEAM's ten abilities, outcome codes, the report's own reason templates, and model versions of each
+  gating judge. Anything else refuses, and nothing is written. Any refusal or error prints one fixed line naming its
+  kind, and its reason stays in `aggregates-refusal.txt` in the custody directory. Stdout carries only the verdict,
+  counts and the SHA-256 of `aggregates.json`.
+- **Wave A is unchanged.** Wave A's counted cells still run from `de9435047201fbc2e6a980b17f473ba6a576494a`, with
+  `rs1-cells.json` SHA-256 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, which `d927c88f` leaves
+  unchanged. Two tests show it: every wave A unit's run-config identity matches a fixture recorded at `de943504`
+  (`test/fixtures/rs1/wave-a-identity.json`), and nothing the cell runner executes sits under `eval/runner/rs1/` or
+  reaches it through its imports.
+- **The code the final verdict runs from.** The final verdict runs `verdict.ts aggregates` from
+  `d927c88f6e613fb3bab3f8724e7654591bb225a9` or a later commit on the results branch, and `aggregates.json` records the
+  commit it ran. At `d927c88f`, `verdict.ts` has SHA-256
+  `a080b72d433eac52424898a9d205efd36315bb529f10d8e98911e2c526f584a4`. The wave B amendment names the code wave B's cells
+  run from.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
