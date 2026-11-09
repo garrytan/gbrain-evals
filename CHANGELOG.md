@@ -67,6 +67,10 @@ This records what each gbrain-evals release changed and what its measurements me
   test over clusters in place of exact McNemar, which it equals when no gold page is shared. The freeze and the
   scorecard report the cluster count and the sizes of shared clusters, and compute the minimum detectable differences at
   the cluster count. A test shows that a shared-page pair is resampled together.
+- **Second freeze recorded.** The preregistration's Frozen sample section records the second freeze on Garry's brain:
+  99 of 100 tasks kept after one same-type top-up round (37 original, 62 replacements), 87 gold clusters, minimum
+  detectable differences of 13.4 and 16.0 points, gbrain 0.60.613.0 loaded on a box whose own install is 0.60.618.0,
+  and no part of GST-2059 on the box. The harness and its digest are unchanged.
 
 ## [0.10.180] - 2026-11-09
 
