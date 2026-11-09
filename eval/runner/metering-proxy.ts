@@ -40,7 +40,8 @@
  * vendor container cannot move charges. `GET /__proxy/status` carries the
  * token's sha256 as `control_sha256`, so the process that spawned this proxy can
  * tell it from another one answering on the same port, and `keyless`, true only
- * when every upstream is keylessUpstream's fake.
+ * when every upstream is a loopback host and every provider key it holds is
+ * keylessKeys()'s placeholder.
  *
  * Standalone (lease mode):
  *   bun eval/runner/metering-proxy.ts --listen 0.0.0.0:8787 --budget-ledger <file> --lease-usd <n> --run-id <id>
@@ -147,6 +148,17 @@ export function keylessUpstream(url: string): Record<ProviderName, string> {
 }
 /** A keyless run's proxy keys: a placeholder in every provider's key variable, so no real key is read. */
 export const keylessKeys = (): Record<string, string> => Object.fromEntries(Object.values(KEY_ENV).map(k => [k, 'keyless-not-a-provider-key']));
+const LOOPBACK = new Set(['127.0.0.1', 'localhost', '::1', '[::1]']);
+/** Whether a proxy serves keyless: every provider's upstream is a loopback host and every key it holds is keylessKeys()'s placeholder. Returns only the verdict, never a key. */
+function servesKeyless(upstream: Partial<Record<ProviderName, string>> | undefined, keys: Record<string, string | undefined>): boolean {
+  const placeholder = keylessKeys();
+  return (Object.keys(KEY_ENV) as ProviderName[]).every(prov => {
+    let host = '';
+    try { host = new URL(upstream?.[prov] ?? '').hostname; } catch { return false; }
+    const key = keys[KEY_ENV[prov]];
+    return LOOPBACK.has(host) && (!key || key === placeholder[KEY_ENV[prov]]);
+  });
+}
 const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-organization', 'openai-project', 'cookie', 'proxy-authorization'];
 export const DEFAULT_MAX_OUTPUT_TOKENS = 32_768;
 /** A provider call may run this long, transport retries and the body included (Bun's own 300-second fetch timeout is off; long reasoning calls exceed it). */
@@ -520,10 +532,9 @@ export class MeteringProxy {
 
   status() {
     const p = this.options.policy;
-    const up = this.options.upstream;
     const run = p ? ledgerStatus({ ledgerPath: p.lease.ledgerPath, runId: p.lease.runId }).run : null;
     const unattributed = Object.fromEntries(this.unattributed);
-    return { mode: p ? 'lease' : 'in-process', keyless: !!up?.openai && Object.entries(keylessUpstream(up.openai)).every(([k, u]) => up[k as ProviderName] === u), run_id: p?.lease.runId ?? null, control_sha256: this.options.controlToken ? createHash('sha256').update(this.options.controlToken).digest('hex') : null, lease_usd: run?.budget_usd ?? p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
+    return { mode: p ? 'lease' : 'in-process', keyless: servesKeyless(this.options.upstream, p?.env ?? process.env), run_id: p?.lease.runId ?? null, control_sha256: this.options.controlToken ? createHash('sha256').update(this.options.controlToken).digest('hex') : null, lease_usd: run?.budget_usd ?? p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
       max_output_tokens: p ? p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS : null, ...this.counts,
       ...(p ? { billed_usd: this.totals.billed_usd, reserved_unsettled_usd: this.totals.reserved_unsettled_usd, unattributed_background: unattributed,
         route_caps: p.routeCaps ?? null, admission: p.admission ? { limits: p.admission.limits, ...p.admission.stats } : null, cell_token: !!this.options.cellToken, trust_local: !!this.options.trustLocal } : {}) };
