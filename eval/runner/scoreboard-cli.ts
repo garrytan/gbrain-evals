@@ -46,7 +46,7 @@ import { join, resolve } from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import { BudgetRun, closeLedgers, ledgerPaths, priceRequest } from './budget-ledger.ts';
 import { AdmissionController, DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from './metering-proxy.ts';
-import { Campaign, DEFAULT_ROUTE_CLASSES, isQ1, loadCampaign, planWaves, resolveRunner, ownerTag, ubiRunner, vcpuOf, type LeaseState, type Runner } from './shootout-cell.ts';
+import { Campaign, DEFAULT_ROUTE_CLASSES, isQ1, loadCampaign, mintLeaseId, planWaves, resolveRunner, ownerTag, ubiRunner, vcpuOf, type LeaseState, type Runner } from './shootout-cell.ts';
 import { costSpeed, loadCell, renderCostSpeed, renderProgress } from './cost-speed.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardCode, type ScoreboardMessage } from './q1/scoreboard-errors.ts';
 import { insideRepository } from './sealed-confirmation-lib.ts';
@@ -243,7 +243,9 @@ export async function doctor(a: Args, env: Record<string, string | undefined> = 
  * A17: what a sealed Q1 launch from this tree would do, checked before any lease. `s1-corpus`: a sealed BEAM-10M cell
  * pushes the custodian's files (GBRAIN_EVALS_BEAM10M_SOURCE, outside the checkout, every SHA-256 matching the committed
  * manifest). `sealed-payload`: the VM command gets a custody root and the custody access log. `sealed-out`: the cell
- * writes outside the VM's checkout, and its rows come back only to a state directory outside this repository.
+ * writes outside the VM's checkout, and its rows come back only to a state directory outside this repository. A BG1
+ * campaign's probe is the lease reserve() would give a cell's attempt 1 on a ledger entry named doctor-probe, so the
+ * BG1 lease binding in payload() accepts it; every other campaign's probe is unchanged.
  */
 export function sealedLaunchChecks(manifestPath: string, stateDir: string | undefined, named: string[], env: Record<string, string | undefined>): Check[] {
   const probeDir = mkdtempSync(join(tmpdir(), 'q1-doctor-'));
@@ -252,7 +254,7 @@ export function sealedLaunchChecks(manifestPath: string, stateDir: string | unde
     const c = new Campaign(manifestPath, probeDir);
     const sealed = c.manifest.cells.filter(x => x.sealed && (!named.length || named.includes(x.id)));
     if (!sealed.length) return [];
-    const probe = (id: string): LeaseState => ({ lease_id: 'doctor-probe', cell: id, attempt: 1, usd: c.cell(id).lease_usd, entry_id: 'doctor-probe', max_output_tokens: null, status: 'reserved' });
+    const probe = (id: string): LeaseState => ({ lease_id: c.bg1 ? mintLeaseId(id, 1, 'doctor-probe') : 'doctor-probe', cell: id, attempt: 1, usd: c.cell(id).lease_usd, entry_id: 'doctor-probe', max_output_tokens: c.bg1 ? c.cell(id).max_output_tokens ?? null : null, status: 'reserved' });
     const out: Check[] = [];
     const s1 = sealed.filter(x => x.benchmark === 'beam-10m');
     if (s1.length) {

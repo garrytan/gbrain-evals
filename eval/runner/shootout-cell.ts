@@ -382,7 +382,7 @@ export function snapshotStoreGap(system: string, tarPath: string, root = REPO_RO
 }
 const usd = (n: number) => `$${n.toFixed(2)}`;
 /** The id reserve() gives a lease: its cell, its attempt and the start of its ledger entry's id. */
-const mintLeaseId = (cell: string, attempt: number, entry: string) => `${cell}-a${attempt}-${entry.slice(0, 8)}`;
+export const mintLeaseId = (cell: string, attempt: number, entry: string) => `${cell}-a${attempt}-${entry.slice(0, 8)}`;
 /** What one raise adds to a lease's host reservation, as eval/runner/q1/raise-lease.ts computes it: the raise rounded to whole cents. */
 const raiseDelta = (fromUsd: number, toUsd: number) => Math.round((toUsd - fromUsd) * 100) / 100;
 
@@ -532,7 +532,7 @@ export class Campaign {
   private get eventsPath() { return join(this.stateDir, 'leases.ndjson'); }
   /** BG1 (#398 open note 6): leases.ndjson's SHA-256 as this campaign last wrote it. */
   private get eventsShaPath() { return join(this.stateDir, 'leases.sha256'); }
-  private get bg1() { return this.q1 && this.manifest.cells.some(c => c.benchmark === 'bg1' || c.benchmark === 'bg1-dev'); }
+  get bg1() { return this.q1 && this.manifest.cells.some(c => c.benchmark === 'bg1' || c.benchmark === 'bg1-dev'); }
   /** BG1: held while a process reads or writes the lease log, so units run in parallel on one --state never see each other's half-written append. */
   private get eventsLockPath() { return join(this.stateDir, 'leases.lock'); }
   private lockDepth = 0;
