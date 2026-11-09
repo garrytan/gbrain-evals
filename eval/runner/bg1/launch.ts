@@ -10,6 +10,9 @@
  *             (bg1CampaignManifest writes both from the unit selection's cap_usd).
  *   Sum       the leases of every unit in the campaign sum to no more than that cap, so a campaign never boots some
  *             units and then stops on the cap partway.
+ *   Blocks    the leases of each block's units sum to no more than that block's cap_usd in the campaign manifest,
+ *             the cap shootout-cell.ts reserve() also stops at, so a window granted above a block's cap never boots
+ *             some of the block's units and then stops on the block cap partway.
  *
  * A campaign with no BG1 unit passes untouched.
  */
@@ -21,7 +24,7 @@ import type { CampaignManifest } from '../shootout-cell.ts';
 const near = (a: number, b: number) => Math.abs(a - b) <= 1e-9;
 
 /** Why a BG1 campaign may not boot a unit; empty when it may, or when the campaign has no BG1 unit. */
-export function bg1LaunchProblems(m: Pick<CampaignManifest, 'cap_usd' | 'cells'>): string[] {
+export function bg1LaunchProblems(m: Pick<CampaignManifest, 'cap_usd' | 'cells' | 'blocks'>): string[] {
   if (!m.cells.some(c => isBg1Benchmark(c.benchmark))) return [];
   const priced = new Map(campaignCells(loadCellManifest('bg1'), { smoke: true, addons: true }).map(c => [c.id, c.lease_usd]));
   const problems = m.cells.flatMap(c => {
@@ -33,11 +36,16 @@ export function bg1LaunchProblems(m: Pick<CampaignManifest, 'cap_usd' | 'cells'>
   });
   const sum = m.cells.reduce((n, c) => n + c.lease_usd, 0);
   if (!(sum <= m.cap_usd + 1e-9)) problems.push(`the ${m.cells.length} unit leases sum to ${Math.round(sum * 100) / 100}, above the window cap ${m.cap_usd}`);
+  for (const [block, { cap_usd }] of Object.entries(m.blocks ?? {})) {
+    const units = m.cells.filter(c => c.block === block);
+    const held = units.reduce((n, c) => n + c.lease_usd, 0);
+    if (!(held <= cap_usd + 1e-9)) problems.push(`the ${units.length} unit leases of block ${block} sum to ${Math.round(held * 100) / 100}, above its cap_usd ${cap_usd}`);
+  }
   return problems;
 }
 
-/** Refuse before init or any VM boots when a BG1 campaign's leases or window caps do not fit its granted window. */
-export function requireBg1Launch(m: Pick<CampaignManifest, 'campaign_id' | 'cap_usd' | 'cells'>, manifestPath: string): void {
+/** Refuse before init or any VM boots when a BG1 campaign's leases or window caps do not fit its granted window or its block caps. */
+export function requireBg1Launch(m: Pick<CampaignManifest, 'campaign_id' | 'cap_usd' | 'cells' | 'blocks'>, manifestPath: string): void {
   const problems = bg1LaunchProblems(m);
   if (!problems.length) return;
   throw refuse({ code: 'PREFLIGHT_FAILED', message: `BG1 campaign ${m.campaign_id} refused before any VM boots: ${problems.slice(0, 3).join('; ')}${problems.length > 3 ? ` (and ${problems.length - 3} more)` : ''}`,

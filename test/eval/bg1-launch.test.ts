@@ -70,6 +70,16 @@ describe('a BG1 campaign before any VM boots', () => {
     for (const c of [over, other]) await refusedEverywhere(c);
   }, 60_000);
 
+  // Value: protects=a BG1 campaign's units fit each block's cap before the first VM boots, so a window granted above a block's cap never launches partway and stops on the block cap; fails_when=a block's units lease more than its cap_usd and still reach init, reserve or a boot; why_new=GBEV-3's reading of bg1LaunchProblems (it summed leases against the window cap only, while reserve() also stops at a block's cap_usd); seam=bg1CampaignManifest over the committed bg1-cells.json with the campaign's block cap edited, runCells, shootout-cell.ts init and reserve; no_claim=bg1-cells.json's own block caps
+  test('a block whose units lease more than its cap_usd refuses before init in run, init and reserve; leases at the block cap pass', async () => {
+    const at = campaign(1000, m => { m.blocks!.BG1.cap_usd = Math.round(m.cells.reduce((n, c) => n + c.lease_usd, 0) * 100) / 100; });
+    expect(bg1LaunchProblems(at.manifest)).toEqual([]);
+    const over = campaign(1000, m => { m.blocks!.BG1.cap_usd = Math.round(m.cells.reduce((n, c) => n + c.lease_usd, 0) * 100) / 100 - 0.01; });
+    expect(over.manifest.cap_usd).toBeGreaterThan(over.sum);
+    expect(bg1LaunchProblems(over.manifest)).toEqual([`the 3 unit leases of block BG1 sum to ${Math.round(over.sum * 100) / 100}, above its cap_usd ${over.manifest.blocks!.BG1.cap_usd}`]);
+    await refusedEverywhere(over);
+  }, 60_000);
+
   // Value: protects=a BG1 unit's lease can only be the one pricing.ts gave it in bg1-cells.json; fails_when=a lease edited, added or missing in the campaign manifest before init freezes and reaches a unit; why_new=#398 open note 6 (the Captain's conditions 1 and 3; the fix-check's probe froze a lease edited to 399 before init); seam=bg1CampaignManifest over the committed bg1-cells.json, runCells, shootout-cell.ts init and reserve; no_claim=bg1-cells.json's own prices
   test('a lease edited, added or missing in the campaign manifest before init refuses in run, init and reserve; the priced leases pass', async () => {
     const priced = campaign(1000);
