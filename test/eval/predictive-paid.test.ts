@@ -5,8 +5,8 @@
  * refusal tests swap globalThis.fetch for a dead upstream that counts calls.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, installPaidRequestGuard, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
@@ -209,6 +209,22 @@ describe('the paid executor', () => {
     expect(up.seen.length).toBe(3);
   });
 
+  test('a counted run resumes only from counted rows: a smoke done row for the same key runs again', async () => {
+    const up = upstream();
+    const log = join(dir, 'counted-resume', 'episodes.jsonl');
+    mkdirSync(join(dir, 'counted-resume'), { recursive: true });
+    writeFileSync(log, JSON.stringify({ schema: EPISODE_LOG_SCHEMA, key: 'a', unit: 'test', model: MODEL, status: 'done', counted: false, at: 'then' }) + '\n');
+    const { run, guard } = paidRun('predictive-counted-resume-test', 5, up.fetchImpl);
+    let result;
+    try {
+      result = await runPaid([job('a')], { log, concurrency: 1, retryErrored: false, counted: true, guard, resumeCommand: 'resume-cmd', print: () => {} });
+    } finally { guard.uninstall(); run.close({ finish: false }); }
+    expect(up.seen.length).toBe(1);
+    expect(result).toMatchObject({ status: 'complete', ran: 1, skipped: { done: 0, errored: 0, in_flight: 0 } });
+    expect(result.done[0]).toMatchObject({ key: 'a', counted: true });
+    expect(readEpisodeLog(log, false).get('a')!.counted).toBe(false);
+  });
+
   test('a G4 paid job runs a real episode on the gbrain CLI through the guard', async () => {
     const up = anthropicUpstream(() => ({ name: 'submit_answer', input: { answer: 'fictional answer' } }));
     const { run, guard } = paidRun('predictive-g4-job-test', 5, up.fetchImpl);
@@ -367,4 +383,42 @@ describe('the OpenAI and particle routes', () => {
     expect(summary).toMatchObject({ requests: 2, charged_reservations: 0 });
     expect(summary.actual_usd).toBeCloseTo(2 * perRequest, 6);
   });
+});
+
+describe('the Ubicloud launcher, with a fake runner and no keys', () => {
+  const REPO = join(import.meta.dir, '../..');
+
+  test('run.sh refuses to launch beside a live VM of its owner, and launches once none remains', () => {
+    const root = join(dir, 'ubi');
+    mkdirSync(root, { recursive: true });
+    const fake = join(root, 'fake-ubi.sh');
+    writeFileSync(fake, '#!/usr/bin/env bash\ncase "$1" in\n  list) cat "$(dirname "$0")/vms" ;;\n  run) echo launched >> "$(dirname "$0")/launches" ;;\nesac\n', { mode: 0o755 });
+    const env = { PATH: process.env.PATH!, HOME: join(root, 'home'), UBI_RUNNER: fake };
+    const launch = () => spawnSync('bash', ['eval/runner/predictive/ubicloud/run.sh', 'g4', 'smoke', '1'], { cwd: REPO, env, encoding: 'utf8' });
+    writeFileSync(join(root, 'vms'), 'ubirun-gbev55-old running\n');
+    const refused = launch();
+    expect(refused.status).toBe(2);
+    expect(refused.stderr).toContain('second ledger writer');
+    expect(existsSync(join(root, 'launches'))).toBe(false);
+    writeFileSync(join(root, 'vms'), '');
+    expect(launch().status).toBe(0);
+    expect(readFileSync(join(root, 'launches'), 'utf8')).toBe('launched\n');
+  });
+
+  test('vm-run.sh reuses an open budget run with money left, and opens a new one after a launch that paused', () => {
+    const home = join(dir, 'vm-home');
+    const S = join(home, 'work', 'g4-smoke');
+    const vmRun = () => spawnSync('bash', ['eval/runner/predictive/ubicloud/vm-run.sh', 'g4', 'smoke', '1'], { cwd: REPO, env: { PATH: process.env.PATH!, HOME: home }, encoding: 'utf8' });
+    const first = vmRun();
+    expect(first.status).toBe(2);
+    expect(first.stderr).toMatch(/not set; nothing was sent/);
+    const rid = readFileSync(join(S, 'run-id'), 'utf8').trim();
+    vmRun();
+    expect(readFileSync(join(S, 'run-id'), 'utf8').trim()).toBe(rid);
+    writeFileSync(join(S, 'out', 'summary.json'), JSON.stringify({ status: 'paused' }));
+    vmRun();
+    const next = readFileSync(join(S, 'run-id'), 'utf8').trim();
+    expect(next).not.toBe(rid);
+    expect(ledgerStatus({ ledgerPath: join(S, 'ledger.sqlite'), runId: next }).run).toMatchObject({ finished_at: null });
+  }, 60_000);
 });

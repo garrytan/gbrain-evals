@@ -285,7 +285,7 @@ export async function main(argv: readonly string[]): Promise<number> {
   const retryErrored = argv.includes('--retry-errored');
   const pressured = argv.includes('--pressured');
   const perEpisode = new Map(plan.per_model.map(m => [m.model, m.estimate_usd / m.episodes]));
-  const pending = pendingJobs(paidJobs(u, { tasks, k, models, seed, pressured, budgetRunId: '' }), readEpisodeLog(join(dir, 'episodes.jsonl')), retryErrored);
+  const pending = pendingJobs(paidJobs(u, { tasks, k, models, seed, pressured, budgetRunId: '' }), readEpisodeLog(join(dir, 'episodes.jsonl'), !smoke), retryErrored);
   const estimateUsd = pending.todo.reduce((s, j) => s + perEpisode.get(j.model)!, 0);
   if (pending.todo.length < plan.episodes) console.log(JSON.stringify({ resume: { pending: pending.todo.length, skipped: pending.skipped, estimate_usd: Number(estimateUsd.toFixed(2)) } }));
   const prereg = flag(argv, '--preregistration');
@@ -327,6 +327,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     mode: smoke ? 'paid-smoke' : 'paid', counted: !smoke, unit: u, plan, preregistration_attestation: attestation, gbrain_version: gut.version, overlay: overlaySummary(gut),
     status: result.status, ran: result.ran, skipped: result.skipped, pause_reason: result.pause_reason,
     done: result.done.length, errored: result.errored.map(r => ({ key: r.key, error: r.error ?? r.record?.stop })),
+    errored_by_model: Object.fromEntries(models.map(m => [m, result.errored.filter(r => r.model === m).length])),
     scorecards: records.length ? scorecards(u, records, k) : [],
     measured: records.length ? smokeProjection(u, result.done, { seed }) : null,
     ledger, resume_command: result.status === 'complete' ? null : resumeCommand,

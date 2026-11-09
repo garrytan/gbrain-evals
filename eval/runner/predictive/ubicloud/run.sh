@@ -10,7 +10,8 @@
 # ~/.capy/work/predictive/<unit>-<mode>/, runs vm-run.sh detached, pulls the state back, and destroys the VM on every
 # exit path. Provider keys travel only through ubi-runner's --pass (into ~/.ubirun-env on the VM, mode 0600), never
 # onto local disk or the command line. Run the same command again to resume: the episode log skips done episodes and
-# never resends errored or in-flight ones unless --retry-errored is passed. After every launch the teardown check runs.
+# never resends errored or in-flight ones unless --retry-errored is passed. It refuses to launch while any VM of owner gbev55
+# still exists, because that VM may still be writing its own copy of the ledger. After every launch the teardown check runs.
 set -euo pipefail
 REPO=$(cd "$(dirname "$0")/../../../.." && pwd)
 UBI=${UBI_RUNNER:-$REPO/scripts/ubicloud/ubi-runner.sh}
@@ -29,6 +30,7 @@ check() {
 [ "${1:-}" != check ] || { check; exit; }
 unit=${1:?usage: run.sh <unit> <smoke|paid> <cap-usd> [run.ts options...] | run.sh check}; mode=${2:?smoke or paid}; cap=${3:?cap in dollars}; shift 3
 case $unit in g1|g3|g4|g6) ;; *) echo "run.sh: unit must be g1, g3, g4 or g6" >&2; exit 2 ;; esac
+if ! check >&2; then echo "run.sh: refusing to launch beside a live VM, which would be a second ledger writer; pull its work/$unit-$mode into ~/.capy/work/predictive and destroy it first" >&2; exit 2; fi
 STATE_ROOT=$HOME/.capy/work/predictive
 mkdir -p "$STATE_ROOT/$unit-$mode"
 pass=()

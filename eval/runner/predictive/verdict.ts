@@ -59,6 +59,7 @@ const finite = (...xs: unknown[]) => xs.every(x => typeof x === 'number' && Numb
 /** The synthetic contrasts and arm orderings a scorecard carries. */
 export function readSynthetic(value: any): SyntheticCard {
   if (value?.schema === 'live-recall-scorecard/v1') {
+    if (typeof value.run?.synthetic?.digest !== 'string') throw new SyntheticScorecardError('a live-recall scorecard is a synthetic side only when its run records a synthetic digest (run.synthetic.digest); this one is a real run');
     const contrasts: Contrast[] = (Array.isArray(value.comparisons) ? value.comparisons : [])
       .filter((c: any) => c?.metric === 'success_at_5' && finite(c.delta) && Array.isArray(c.ci95) && finite(c.ci95[0], c.ci95[1]))
       .map((c: any) => ({ id: c.id, estimate: c.delta, lo: c.ci95[0], hi: c.ci95[1] }));

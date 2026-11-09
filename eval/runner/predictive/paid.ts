@@ -57,13 +57,14 @@ export function meteredFetch(model: string, usage: EpisodeUsage): typeof fetch {
   }) as unknown as typeof fetch;
 }
 
-/** The last row per episode key. */
-export function readEpisodeLog(path: string): Map<string, LogRow> {
+/** The last row per episode key; given `counted`, only rows a run of that kind wrote, so a counted run never resumes from smoke rows or the reverse. */
+export function readEpisodeLog(path: string, counted?: boolean): Map<string, LogRow> {
   const rows = new Map<string, LogRow>();
   if (!existsSync(path)) return rows;
   for (const line of readFileSync(path, 'utf8').split('\n')) {
     if (!line.trim()) continue;
     const row = JSON.parse(line) as LogRow;
+    if (counted !== undefined && row.counted !== counted) continue;
     rows.set(row.key, row);
   }
   return rows;
@@ -97,7 +98,7 @@ export async function runPaid(jobs: readonly PaidJob[], opts: { log: string; con
   const keys = new Set<string>();
   for (const j of jobs) { if (keys.has(j.key)) throw new Error(`duplicate episode key ${j.key}`); keys.add(j.key); }
   mkdirSync(dirname(opts.log), { recursive: true });
-  const prior = readEpisodeLog(opts.log);
+  const prior = readEpisodeLog(opts.log, opts.counted);
   const { todo, skipped } = pendingJobs(jobs, prior, opts.retryErrored);
   if (skipped.errored || skipped.in_flight) print(`resume: skipping ${skipped.errored} errored and ${skipped.in_flight} in-flight episodes, which may already have been billed; pass --retry-errored to send them again`);
   const latest = new Map(prior);

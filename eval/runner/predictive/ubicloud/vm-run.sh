@@ -5,8 +5,9 @@
 #
 # State is ~/work/<unit>-<mode>/ (pushed from and pulled back to the launching machine): ledger.sqlite, run-id, and
 # out/ with episodes.jsonl and summary.json. The first launch creates the ledger with a program cap of <cap-usd>. Each
-# launch reuses the recorded budget run while it is open with money left, else opens a new run with a <cap-usd> budget
-# (after a cap pause, raise the program cap first with budget-ledger.ts set-cap on the launching machine's ledger).
+# launch reuses the recorded budget run while it is open with money left and the last launch did not pause on it, else
+# opens a new run with a <cap-usd> budget (after a cap pause, raise the program cap first with budget-ledger.ts set-cap
+# on the launching machine's ledger).
 set -euo pipefail
 unit=${1:?unit}; mode=${2:?smoke or paid}; cap=${3:?cap in dollars}; shift 3
 case $mode in smoke) flags=(--paid --smoke) ;; paid) flags=(--paid) ;; *) echo "vm-run: mode must be smoke or paid" >&2; exit 2 ;; esac
@@ -19,6 +20,9 @@ left=0
 if [ -n "$rid" ]; then
   left=$(bun eval/runner/budget-ledger.ts status --budget-ledger "$L" --budget-run-id "$rid" \
     | bun -e 'const s = JSON.parse(await Bun.stdin.text()); console.log(s.run && s.run.finished_at === null && s.run.remaining_usd > 0 ? 1 : 0)')
+  if [ "$left" = 1 ] && [ -f "$S/out/summary.json" ]; then
+    left=$(bun -e 'const s = JSON.parse(await Bun.stdin.text()); console.log(s.status === "paused" ? 0 : 1)' < "$S/out/summary.json")
+  fi
 fi
 if [ "$left" != 1 ]; then
   rid=$(bun eval/runner/budget-ledger.ts open --budget-ledger "$L" --runner "predictive-$unit-$mode" --budget-usd "$cap")

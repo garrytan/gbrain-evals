@@ -10,6 +10,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DEFAULT_KNOBS, TEMPLATES, THINGS, applyParaphrases, generateConditionsRecall, paraphraseRuleBreaks, writeConditionsRecall, ConditionsRecallError, type ConditionsKnobs } from '../../eval/generators/conditions-recall-gen.ts';
+import { BudgetRun } from '../../eval/runner/budget-ledger.ts';
 import { enterHermeticEnv, withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { COPY_MARKER_TABLE } from '../../eval/runner/live-recall/brain.ts';
@@ -251,6 +252,36 @@ describe('paraphrase-opus (paid path)', () => {
     expect(fetches).toBe(0);
     expect(existsSync(out)).toBe(false);
     expect(existsSync(ledger)).toBe(false);
+  });
+
+  test('an error mid-run stops the loop, keeps the paraphrases already paid for and writes the receipt', async () => {
+    const dir = writeSet({}, 2);
+    const out = join(tempDir('paid-stop'), 'paraphrases.jsonl');
+    const ledger = join(tempDir('ledger-stop'), 'ledger.sqlite');
+    const open = BudgetRun.open({ runner: 'paraphrase-stop-test', budgetUsd: 5, ledgerPath: ledger, programCapUsd: 10 });
+    open.close({ finish: false });
+    let calls = 0;
+    const makeClient = () => ({ messages: { create: async () => {
+      if (++calls > 1) throw new Error('fake outage');
+      return { content: [{ type: 'text', text: 'a reworded request about the invented note' }] };
+    } } }) as any;
+    const errors: string[] = [];
+    const savedError = console.error, savedLog = console.log;
+    console.error = (...a: unknown[]) => { errors.push(a.join(' ')); };
+    console.log = () => {};
+    let code;
+    try {
+      code = await paraphraseOpus(['--dir', dir, '--out', out, '--budget-ledger', ledger, '--paid', '--budget-run-id', open.runId], { makeClient });
+    } finally {
+      console.error = savedError;
+      console.log = savedLog;
+    }
+    expect(code).toBe(1);
+    expect(readFileSync(out, 'utf8').trim().split('\n')).toHaveLength(1);
+    const receipt = JSON.parse(readFileSync(out + '.receipt.json', 'utf8'));
+    expect(receipt).toMatchObject({ written: 1, rule_failures: [] });
+    expect(receipt.stopped_by_error).toContain('fake outage');
+    expect(errors.join('\n')).toContain('stopped at');
   });
 });
 

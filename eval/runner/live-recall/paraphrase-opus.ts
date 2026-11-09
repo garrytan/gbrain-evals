@@ -82,15 +82,21 @@ export async function main(argv: string[], deps: { makeClient?: () => Client } =
   const bySlug = new Map(pages.map(p => [p.slug, p]));
   const rows: Array<{ id: string; paraphrase: string }> = [];
   const failed: string[] = [];
+  let stoppedBy: string | null = null;
   try {
     const client = (deps.makeClient ?? (() => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })))();
     for (const q of questions) {
       if (paid.guard.exhausted) break;
       const gold = q.gold.map(g => bySlug.get(g.slug)!);
-      let text = await paraphrase(client, paraphrasePrompt(q.forms.exact, gold, false));
-      if (!text || paraphraseRuleBreaks([{ id: q.id, forms: { exact: q.forms.exact, paraphrase: text } }]).length) text = await paraphrase(client, paraphrasePrompt(q.forms.exact, gold, true));
-      if (!text || paraphraseRuleBreaks([{ id: q.id, forms: { exact: q.forms.exact, paraphrase: text } }]).length) failed.push(q.id);
-      else rows.push({ id: q.id, paraphrase: text });
+      try {
+        let text = await paraphrase(client, paraphrasePrompt(q.forms.exact, gold, false));
+        if (!text || paraphraseRuleBreaks([{ id: q.id, forms: { exact: q.forms.exact, paraphrase: text } }]).length) text = await paraphrase(client, paraphrasePrompt(q.forms.exact, gold, true));
+        if (!text || paraphraseRuleBreaks([{ id: q.id, forms: { exact: q.forms.exact, paraphrase: text } }]).length) failed.push(q.id);
+        else rows.push({ id: q.id, paraphrase: text });
+      } catch (error) {
+        stoppedBy = q.id + ': ' + (error as Error).message;
+        break;
+      }
     }
   } finally {
     paid.guard.uninstall();
@@ -107,8 +113,10 @@ export async function main(argv: string[], deps: { makeClient?: () => Client } =
     rule_failures: failed,
     not_attempted: missing - failed.length,
     budget_exhausted: paid.guard.exhausted,
+    stopped_by_error: stoppedBy,
     cost: receiptCost(paid.run.close()),
   }, null, 2) + '\n');
+  if (stoppedBy) console.error('paraphrase-opus: stopped at ' + stoppedBy + '; the paraphrases already paid for are kept');
   console.log('paraphrase-opus: ' + rows.length + ' of ' + questions.length + ' paraphrases written to ' + out + (missing ? '; ' + missing + ' missing, so the generator will refuse this file until they are filled' : ''));
   return missing ? 1 : 0;
 }

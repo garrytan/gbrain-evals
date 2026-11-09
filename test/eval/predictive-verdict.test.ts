@@ -19,7 +19,7 @@ const quiet = <T>(fn: () => T): T => {
 
 /** A live-recall scorecard shape carrying the given success@5 comparisons. */
 const liveCard = (contrasts: Contrast[]) => ({
-  schema: 'live-recall-scorecard/v1', run: { control: true },
+  schema: 'live-recall-scorecard/v1', run: { control: true, synthetic: { digest: 'test-digest' } },
   comparisons: contrasts.flatMap(c => [
     { id: c.id, metric: 'success_at_5', delta: c.estimate, ci95: [c.lo, c.hi] },
     { id: c.id, metric: 'mrr', delta: -c.estimate, ci95: [-c.hi, -c.lo] },
@@ -95,10 +95,16 @@ describe('predictive verdict on the committed references', () => {
   });
 
   test('a hash scorecard, or an in-process one that records no transports, is a control; a voyage scorecard is not', () => {
-    const run = (r: object) => readSynthetic({ ...liveCard(b2.contrasts), run: r });
+    const run = (r: object) => readSynthetic({ ...liveCard(b2.contrasts), run: { synthetic: { digest: 'test-digest' }, ...r } });
     expect([run({ control: true, transports: 'hash' }).control, run({ control: true }).control, run({ control: false }).control]).toEqual([true, true, false]);
     expect(run({ control: true, transports: 'voyage' })).toMatchObject({ control: false, transports: 'voyage' });
     expect(readSynthetic({ contrasts: [], transports: 'hash' }).control).toBe(true);
+  });
+
+  test('a real live-recall scorecard, which records no synthetic digest, is refused as the synthetic side', () => {
+    const real = JSON.parse(readFileSync(new URL('../../docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json', import.meta.url), 'utf8'));
+    expect(() => readSynthetic(real)).toThrow('SYNTHETIC_SCORECARD_INVALID');
+    expect(() => readSynthetic({ ...liveCard(b2.contrasts), run: { control: false } })).toThrow('run.synthetic.digest');
   });
 
   test('a layer is read only from a live-recall scorecard of its protocol, and a scorecard carrying no layer of a measure with a live reference refuses', () => {
