@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildLabelPrompt, buildLabelSet, labellerFor, labelResidual, labelSet, parseLabel, type EvalFailure } from '../../eval/runner/failure-causes/index.ts';
+import { buildLabelPrompt, buildLabelSet, labellerFor, labelResidual, labelSet, parseLabel, resolveChoice, type EvalFailure } from '../../eval/runner/failure-causes/index.ts';
 import type { ChatLike, ChatOptions } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { failure } from '../support/failure-causes-fixture.ts';
 
@@ -42,7 +42,7 @@ describe('residual labeller', () => {
     const { client, calls } = fake('{"cause":"stale_fact"}');
     const { labels } = await labelResidual([residual({ visibility: 'private' })], client);
     expect(calls).toHaveLength(0);
-    expect(labels[0].basis).toBe('needs_model');
+    expect(labels[0]).toMatchObject({ basis: 'unclassified', rule_id: 'residual.no_labeller_text' });
     expect(() => buildLabelPrompt(residual({ visibility: 'sealed' }))).toThrow(/never sent/);
   });
 
@@ -56,6 +56,19 @@ describe('residual labeller', () => {
     expect(parseLabel('{"cause":"harness_error"}')).toMatchObject({ cause: 'unclassified', ok: false });
     expect(parseLabel('thinking... {"cause":"time_reasoning","reason":"off by a day"}')).toEqual({ cause: 'time_reasoning', reason: 'off by a day', ok: true });
     expect(parseLabel('no json')).toMatchObject({ cause: 'unclassified', ok: false });
+    expect(parseLabel('{"cause":"time_reasoning","reason":"read {May} as June"}')).toEqual({ cause: 'time_reasoning', reason: 'read {May} as June', ok: true });
+    expect(parseLabel('{"cause":"evidence_not_delivered"}')).toMatchObject({ cause: 'unclassified', ok: false });
+  });
+
+  test('when delivery was not measured, the labeller may say the evidence never arrived, and that counts upstream', async () => {
+    const unknown = (retrieved: 'all' | null) => residual({ case_id: `u-${retrieved}`, gold: { ...failure().gold, gold_count: 1, retrieved, delivered: null } });
+    expect(buildLabelPrompt(unknown('all')).prompt).toContain('- evidence_not_delivered:');
+    expect(buildLabelPrompt(residual()).prompt).not.toContain('evidence_not_delivered');
+    const { client } = fake('{"cause":"evidence_not_delivered","reason":"the June note is not in the context"}');
+    const { labels } = await labelResidual([unknown('all'), unknown(null)], client);
+    expect(labels.map(l => [l.cause, l.basis, l.rule_id])).toEqual([['wrong_ranking', 'model', 'labeller.evidence_not_delivered'], ['retrieval_miss', 'model', 'labeller.evidence_not_delivered']]);
+    expect(labels[1].tags).toContain('retrieval_or_ranking');
+    expect(resolveChoice(residual(), 'stale_fact')).toEqual({ cause: 'stale_fact', rule_id: 'labeller', tags: [] });
   });
 
   test('a budget refusal stops the run and leaves the rest for later', async () => {
@@ -77,8 +90,20 @@ describe('residual labeller', () => {
     expect(buildLabelSet(run.rows).agreed).toBe(1);
   });
 
-  test('a path override switches a family to another labeller', () => {
-    expect(labellerFor('anthropic:claude-opus-5-5', { anthropic: { model: 'openai:gpt-6-astra', effort: 'high', path: 'astra-fallback' } }).model).toBe('openai:gpt-6-astra');
+  test('a budget refusal in the label set stops the sample loop, adds no partial row and drops nothing', async () => {
+    const err = Object.assign(new Error('budget run is exhausted'), { name: 'BudgetExceededError' });
+    const { client, calls } = fake(model => (model.includes('astra') ? err : '{"cause":"stale_fact"}'));
+    const run = await labelSet([residual({ case_id: 'a' }), residual({ case_id: 'b' })], client, f => f.source);
+    expect(run).toMatchObject({ rows: [], dropped: 0 });
+    expect(run.stopped).toMatch(/exhausted/);
+    expect(calls.map(c => c.model)).toEqual(['anthropic:claude-opus-5-5', 'openai:gpt-6-astra']);
+  });
+
+  test('a path override switches a family to another labeller, never to one of its own family', () => {
+    const astra = { model: 'openai:gpt-6-astra', effort: 'high', path: 'astra-fallback' };
+    expect(labellerFor('anthropic:claude-opus-5-5', { anthropic: astra }).model).toBe('openai:gpt-6-astra');
+    expect(labellerFor('particle:particle-1', { particle: astra }).model).toBe('openai:gpt-6-astra');
+    expect(() => labellerFor('openai:gpt-6.1-sol', { openai: astra })).toThrow(/own family's rows/);
     expect(() => labellerFor('mystery:model')).toThrow(/no labeller path/);
   });
 });
@@ -91,9 +116,18 @@ describe('labeller command line', () => {
   const cli = (args: string[]) => spawnSync('bun', ['eval/runner/failure-causes/cli.ts', ...args], { encoding: 'utf8', env: deadEnv, timeout: 60_000 });
 
   test('estimate is keyless and counts the residuals', () => {
-    const r = cli(['estimate', '--failures', failures, '--labelset-per-stratum', '1']);
+    const r = cli(['estimate', '--failures', failures, '--labelset-per-family', '1']);
     expect(r.status).toBe(0);
-    expect(JSON.parse(r.stdout)).toMatchObject({ residual: 2, labelset_cases: 2 });
+    expect(JSON.parse(r.stdout)).toMatchObject({ residual: 2, labelset_cases: 2, families: { 'sol-labels-claude-rows': 1, 'opus-labels-gpt-rows': 1 } });
+  });
+
+  test('estimate and label refuse the retired --labelset-per-stratum flag instead of ignoring it', () => {
+    for (const r of [cli(['estimate', '--failures', failures, '--labelset-per-stratum', '5']),
+      cli(['label', '--failures', failures, '--out', join(dir, 'labels-stratum.ndjson'), '--cache', join(dir, 'cache'), '--labelset-per-stratum', '5'])]) {
+      expect(r.status).toBe(1);
+      expect(r.stderr).toMatch(/--labelset-per-stratum is retired/);
+    }
+    expect(cli(['estimate', '--failures', failures, '--labelset-per-family', 'x']).stderr).toMatch(/--labelset-per-family takes a whole number/);
   });
 
   test('label refuses without --paid and an open budget run, before any request', () => {

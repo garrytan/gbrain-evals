@@ -63,6 +63,8 @@ export interface EvalFailure {
   source: string;
   run_id: string;
   case_id: string;
+  /** The task or question this row answers, the same for every arm and system that ran it, so the report can compare them. */
+  task_id?: string;
   system: string;
   arm: string;
   arm_role: ArmRole;
@@ -72,6 +74,11 @@ export interface EvalFailure {
   model: string;
   gbrain_sha: string | null;
   failed: boolean;
+  /**
+   * Why the system never ran this task (an outcome such as does_not_fit or budget_not_run). Such a row is neither passed
+   * nor failed: it only tells the report's same-task comparison that the system did not run the task.
+   */
+  not_run?: string;
   /** The row's score on the source's own scale, when it has one. */
   score: number | null;
   /** Task category or family, a hint for the labeller. */
@@ -109,6 +116,7 @@ export interface CauseLabel {
   source: string;
   run_id: string;
   case_id: string;
+  task_id: string | null;
   system: string;
   arm: string;
   arm_role: ArmRole;

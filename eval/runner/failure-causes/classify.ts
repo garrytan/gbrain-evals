@@ -2,14 +2,25 @@
  * Deterministic failure classification. classify() reads only the signals in
  * an EvalFailure, applies the rules stage by stage (taxonomy.ts STAGES), and
  * returns the first stage's cause as primary with every later signal kept as
- * a secondary cause. A failure with no signal comes back as needs_model, for
- * the residual labeller. The function is pure: no I/O, no clock, no model.
+ * a secondary cause. A scorer artifact is primary only when it is the row's
+ * only signal, so it never hides a real failure. A failure with no signal
+ * comes back as needs_model, for the residual labeller, unless the source did
+ * not measure whether the gold reached the model and kept no delivered context
+ * to check: that row stays unclassified, because a reasoning-only labeller
+ * cannot rule out an upstream miss. A row no labeller may read (no recorded
+ * text, or a private or sealed source) is unclassified too, so it never waits
+ * for a label that cannot come. A row tagged no_answer (the system gave no
+ * answer to judge) never counts as an answered abstention question and, with no
+ * earlier signal, is unclassified as residual.no_answer. A row for a task the
+ * system never ran (not_run) gets no cause and is neither passed nor failed. The
+ * function is pure: no I/O, no clock, no model.
  */
-import { CAUSES, STAGES, TAXONOMY_VERSION, type Cause, type Stage, type Tag } from './taxonomy.ts';
+import { CAUSES, STAGES, TAXONOMY_VERSION, UNCLASSIFIED, type Cause, type Stage, type Tag } from './taxonomy.ts';
 import { FAILURE_CAUSE_SCHEMA, type CauseLabel, type EvalFailure } from './types.ts';
 
 const HARNESS_STOPS = new Set(['harness_error', 'error']);
 const TIMEOUT_STOPS = new Set(['turn_cap', 'timeout', 'context_overflow', 'max_turns']);
+const TURN_CAPS = new Set(['turn_cap', 'max_turns']);
 const TRUNCATED_FINISH = new Set(['length', 'max_tokens', 'max_output_tokens']);
 const STAGE_OF = new Map<Cause, Stage>(CAUSES.map(c => [c.id, c.stage]));
 
@@ -19,6 +30,7 @@ function signals(f: EvalFailure): { hits: Hit[]; unmeasured: Stage[]; tags: Set<
   const hits: Hit[] = [];
   const unmeasured: Stage[] = [];
   const tags = new Set<Tag>(f.tags);
+  if (f.stop && TURN_CAPS.has(f.stop)) tags.add('turn_cap');
   const hit = (cause: Cause, rule: string) => hits.push({ cause, rule });
   const g = f.gold;
 
@@ -39,7 +51,8 @@ function signals(f: EvalFailure): { hits: Hit[]; unmeasured: Stage[]; tags: Set<
   if (f.tool_calls === null) unmeasured.push('tool_call');
   else {
     const errors = f.tool_calls.filter(c => c.error !== null);
-    if (errors.some(c => c.recovered !== true)) hit('tool_contract', 'tool.unrecovered_error');
+    if (errors.some(c => c.recovered === false)) hit('tool_contract', 'tool.unrecovered_error');
+    else if (errors.some(c => c.recovered === null)) hit('tool_contract', 'tool.error_recovery_unknown');
     else if (errors.length) tags.add('recovered_tool_error');
   }
 
@@ -55,8 +68,9 @@ function signals(f: EvalFailure): { hits: Hit[]; unmeasured: Stage[]; tags: Set<
     else if (!f.tool_calls.some(c => c.memory) || f.stop === 'no_tool_call') hit('memory_not_consulted', 'consult.no_memory_call');
   }
 
-  if (g.gold_count === 0) {
-    if (/abstention/.test(f.category ?? '')) hit('citation_abstention', 'reasoning.answered_unanswerable');
+  if (tags.has('retrieve_error')) hit('retrieval_miss', 'retrieval.retrieve_error');
+  else if (g.gold_count === 0) {
+    if (/abstention/.test(f.category ?? '') && !tags.has('no_answer')) hit('citation_abstention', 'reasoning.answered_unanswerable');
   } else {
     if (g.retrieved === null && g.delivered === null) unmeasured.push('retrieval', 'ranking');
     else if (g.retrieved === null) {
@@ -86,19 +100,27 @@ function signals(f: EvalFailure): { hits: Hit[]; unmeasured: Stage[]; tags: Set<
 export function classify(f: EvalFailure): CauseLabel {
   const { hits, unmeasured, tags } = signals(f);
   const rank = (h: Hit) => STAGES.indexOf(STAGE_OF.get(h.cause)!);
-  const sorted = [...hits].sort((a, b) => rank(a) - rank(b));
+  const artifact = (h: Hit) => h.rule.startsWith('harness.scorer_artifact.');
+  const sorted = [...hits].sort((a, b) => Number(artifact(a)) - Number(artifact(b)) || rank(a) - rank(b));
   const timeout = f.stop !== null && TIMEOUT_STOPS.has(f.stop);
-  let primary: Hit | null = sorted[0] ?? null;
-  if (!primary && timeout) primary = { cause: 'timeout_latency', rule: `budget.${f.stop}` };
-  const secondary = [...new Set([...sorted.slice(1).map(h => h.cause), ...(timeout && primary?.cause !== 'timeout_latency' ? ['timeout_latency' as const] : [])])]
-    .filter(c => c !== primary?.cause);
+  const primary: Hit | null = timeout && (!sorted.length || artifact(sorted[0])) ? { cause: 'timeout_latency', rule: `budget.${f.stop}` } : sorted[0] ?? null;
+  const secondary = [...new Set([...sorted.map(h => h.cause), ...(timeout ? ['timeout_latency' as const] : [])])].filter(c => c !== primary?.cause);
   const base: Omit<CauseLabel, 'cause' | 'basis' | 'rule_id'> = {
-    schema: FAILURE_CAUSE_SCHEMA, taxonomy_version: TAXONOMY_VERSION, source: f.source, run_id: f.run_id, case_id: f.case_id,
+    schema: FAILURE_CAUSE_SCHEMA, taxonomy_version: TAXONOMY_VERSION, source: f.source, run_id: f.run_id, case_id: f.case_id, task_id: f.task_id ?? null,
     system: f.system, arm: f.arm, arm_role: f.arm_role, condition: f.condition, visibility: f.visibility, model: f.model,
     gbrain_sha: f.gbrain_sha, category: f.category, secondary, tags: [...tags].sort(), unmeasured: [...new Set(unmeasured)],
     evidence: f.evidence, labeller: null,
   };
+  if (f.not_run) return { ...base, cause: null, basis: 'unclassified', rule_id: `not_run.${f.not_run}`, secondary: [] };
   if (!f.failed) return { ...base, cause: null, basis: 'unclassified', rule_id: 'passed', secondary: [] };
   if (primary) return { ...base, cause: primary.cause, basis: 'deterministic', rule_id: primary.rule };
+  if (tags.has('no_answer')) return { ...base, cause: UNCLASSIFIED, basis: 'unclassified', rule_id: 'residual.no_answer' };
+  if (deliveryUnknown(f) && (f.text?.context ?? null) === null) return { ...base, cause: UNCLASSIFIED, basis: 'unclassified', rule_id: 'residual.delivery_unmeasured' };
+  if (!f.text || f.visibility === 'private' || f.visibility === 'sealed') return { ...base, cause: UNCLASSIFIED, basis: 'unclassified', rule_id: 'residual.no_labeller_text' };
   return { ...base, cause: null, basis: 'needs_model', rule_id: 'residual' };
+}
+
+/** The source did not measure whether the gold reached the answering model. */
+export function deliveryUnknown(f: EvalFailure): boolean {
+  return f.gold.gold_count !== 0 && f.gold.delivered === null;
 }
