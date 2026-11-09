@@ -1439,6 +1439,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
       ...(smoke ? { smoke: true } : {}), ...(c.only_conversations ? { conversations: c.only_conversations } : {}), providers, pass: providers.map(p => PROVIDER_KEYS[p]),
       expected_hours: c.expected_hours, wave: headline(c) ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
       ...(c.snapshot_command ? { snapshot_command: c.snapshot_command } : {}), ...(c.restore_command ? { restore_command: c.restore_command } : {}),
+      ...(c.kept_units ? { kept_unit: { index: i, size: c.kept_units } } : {}),
     };
   };
   const out: CellSpec[] = [];

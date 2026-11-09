@@ -187,10 +187,11 @@ describe('cell.ts run --manifest rs1', () => {
     const sel: UnitSelection = { campaign_id: 'q1-scoreboard-rs1-narrow-wave-a', cap_usd: 625.56, units: ['rs1.baseline-none.baseline.c0', 'rs1.gbrain-defaults.rs1-stable.c1'], cell_manifest: 'rs1', paid_window: 'RS1-WA-CELLS' };
     const c = campaignManifest(m, { units: sel });
     expect(c.cap_usd).toBe(625.56);
+    expect(c.cells.map(cell => [cell.id, cell.kept_unit]).sort()).toEqual(sel.units.map(id => [id, { index: Number(id.at(-1)), size: 5 }]).sort());
     for (const cell of c.cells) expect(cell.command).toMatch(new RegExp(`--manifest rs1 --shard ${cell.id.at(-1)}/7 (--system-url \\S+ )?--paid-window RS1-WA-CELLS --window-cap-usd 625\\.56 --out "\\$SHOOTOUT_OUT"`));
     const { paid_window: _, ...bare } = sel;
     for (const bad of [bare, { ...sel, paid_window: 'a b' }]) expect(() => campaignManifest(m, { units: bad })).toThrow(/an RS1 campaign needs a unit selection naming its granted paid window/);
     expect(() => campaignManifest(m)).toThrow(/an RS1 campaign needs/);
-    for (const cell of campaignManifest(loadCellManifest()).cells) expect(cell.command).not.toContain('--paid-window');
+    for (const cell of campaignManifest(loadCellManifest()).cells) { expect(cell.command).not.toContain('--paid-window'); expect(cell).not.toHaveProperty('kept_unit'); }
   });
 });
