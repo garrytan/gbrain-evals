@@ -110,6 +110,20 @@ describe('bg1CellWindow', () => {
     } finally { for (const p of all) p.stop(); }
   });
 
+  // Value: protects=a proxy reports keyless only when every route goes to the one keyless fake; fails_when=a loopback proxy in another upstream shape (a provider on its own port, Particle off /particle) holding placeholder keys reports keyless and skips the window; why_new=#398 open note 9 (13a29f44 replaced the shape check instead of adding to it); seam=lease-mode proxies over a dead upstream; no_claim=what listens on those ports
+  test('a loopback proxy with placeholder keys in another upstream shape does not report keyless and needs the window', async () => {
+    const dir = scratch();
+    const lease = BudgetRun.openLease({ runId: 'bg1-window-keyless-shape', leaseUsd: 1, ledgerPath: join(dir, 'ledger.sqlite') });
+    const at = (upstream: Record<string, string>) => new MeteringProxy({ fetchImpl: dead, upstream: upstream as ReturnType<typeof keylessUpstream>, policy: { lease, usageLog: join(dir, 'usage.ndjson'), env: keylessKeys() } });
+    const fake = keylessUpstream('http://127.0.0.1:9');
+    const shapes = [at({ ...fake, anthropic: 'http://127.0.0.1:8443' }), at({ ...fake, particle: 'http://127.0.0.1:9' }), at({ ...fake, gemini: 'http://localhost:9' })];
+    for (const p of shapes) p.start();
+    try {
+      expect(shapes.map(p => p.status().keyless)).toEqual([false, false, false]);
+      for (const p of shapes) expect((await refused(bg1CellWindow(['--provider-proxy', `http://127.0.0.1:${p.port}`], def, {})))?.code).toBe('PAID_FLAGS_MISSING');
+    } finally { for (const p of shapes) p.stop(); }
+  });
+
   // Value: protects=under a lease proxy the window caps the lease the proxy itself holds; fails_when=bg1CellWindow takes the lease from SHOOTOUT_LEASE_USD, accepts a proxy that reports no lease, or lets a differing SHOOTOUT_LEASE_USD stand; why_new=fix-check of #398 (a small exported value passed against a larger lease)
   test('under a lease proxy the lease its status reports, and without one the ledger cap and run budget, may not exceed the window cap', async () => {
     const p50 = leaseProxy(50), p200 = leaseProxy(200), inProcess = new MeteringProxy({ fetchImpl: dead });

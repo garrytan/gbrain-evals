@@ -40,8 +40,8 @@
  * vendor container cannot move charges. `GET /__proxy/status` carries the
  * token's sha256 as `control_sha256`, so the process that spawned this proxy can
  * tell it from another one answering on the same port, and `keyless`, true only
- * when every upstream is a loopback host and every provider key it holds is
- * keylessKeys()'s placeholder.
+ * when the upstreams are keylessUpstream's shape on a loopback host and every
+ * provider key it holds is keylessKeys()'s placeholder.
  *
  * Standalone (lease mode):
  *   bun eval/runner/metering-proxy.ts --listen 0.0.0.0:8787 --budget-ledger <file> --lease-usd <n> --run-id <id>
@@ -149,14 +149,15 @@ export function keylessUpstream(url: string): Record<ProviderName, string> {
 /** A keyless run's proxy keys: a placeholder in every provider's key variable, so no real key is read. */
 export const keylessKeys = (): Record<string, string> => Object.fromEntries(Object.values(KEY_ENV).map(k => [k, 'keyless-not-a-provider-key']));
 const LOOPBACK = new Set(['127.0.0.1', 'localhost', '::1', '[::1]']);
-/** Whether a proxy serves keyless: every provider's upstream is a loopback host and every key it holds is keylessKeys()'s placeholder. Returns only the verdict, never a key. */
+/** Whether a proxy serves keyless: its upstreams are keylessUpstream's shape (every provider at one fake, Particle under /particle) on a loopback host, and every key it holds is keylessKeys()'s placeholder. Returns only the verdict, never a key. */
 function servesKeyless(upstream: Partial<Record<ProviderName, string>> | undefined, keys: Record<string, string | undefined>): boolean {
   const placeholder = keylessKeys();
-  return (Object.keys(KEY_ENV) as ProviderName[]).every(prov => {
+  const shape = upstream?.openai ? keylessUpstream(upstream.openai) : null;
+  return !!shape && (Object.keys(KEY_ENV) as ProviderName[]).every(prov => {
     let host = '';
     try { host = new URL(upstream?.[prov] ?? '').hostname; } catch { return false; }
     const key = keys[KEY_ENV[prov]];
-    return LOOPBACK.has(host) && (!key || key === placeholder[KEY_ENV[prov]]);
+    return upstream?.[prov] === shape[prov] && LOOPBACK.has(host) && (!key || key === placeholder[KEY_ENV[prov]]);
   });
 }
 const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-organization', 'openai-project', 'cookie', 'proxy-authorization'];
