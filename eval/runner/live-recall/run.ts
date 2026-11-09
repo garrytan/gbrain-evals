@@ -5,7 +5,9 @@
  * scorecard leaves that box.
  *
  *   bun eval/runner/live-recall/run.ts run --fixture
- *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json> [--protocol batch1|batch2]
+ *   bun eval/runner/live-recall/run.ts run --synthetic <dir from eval/generators/conditions-recall-gen.ts or batch3-synthetic-gen.ts> [--protocol batch3] [--out <dir>]
+ *     [--paid --budget-run-id <id> [--budget-ledger <path>]]   (Voyage embeddings and rerank; see synthetic.ts)
+ *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json> [--protocol batch1|batch2|batch3] [--gbrain <checkout>@<commit>]
  *   bun eval/runner/live-recall/run.ts run --questions <private.jsonl> --freeze <freeze.json> \
  *     --gbrain <gbrain checkout>@<commit> [--database-url-env LIVE_RECALL_DATABASE_URL] [--out <dir>]
  *   bun eval/runner/live-recall/run.ts compare --a <run dir> --b <run dir> --out <dir>
@@ -14,8 +16,15 @@
  * --fixture builds the public 30-page fixture brain in memory with hash
  * embeddings and a token-overlap reranker (with --questions, it asks those
  * questions of the fixture instead of its own; with --protocol, it scores them
- * under that protocol): a keyless harness control whose numbers say nothing
- * about search quality. A counted run takes its protocol from the freeze. A real run opens a Postgres brain
+ * under that protocol; --protocol batch3 alone adds the public freshness and
+ * entity questions and their pages): a keyless harness control whose numbers say nothing
+ * about search quality. --synthetic scores the same six arms on a generated
+ * conditions-recall brain (G2: unembedded chunks, synopsis vectors off, a keyword
+ * candidate bound, shell pages) or a batch-3 brain, also keyless and also a
+ * control (run.transports: hash). With --paid --budget-run-id it embeds and
+ * reranks with Voyage instead (run.transports: voyage), after printing an
+ * estimate, with every request reserved and settled on the budget ledger and
+ * nothing sent to any host but api.voyageai.com. A counted run takes its protocol from the freeze. A real run opens a Postgres brain
  * only after brain.ts proves a server-side read-only barrier. The run kit,
  * abort codes and scorecard format are in docs/benchmarks/live-recall/.
  */
@@ -28,10 +37,17 @@ import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderT
 import { gbrainPin } from '../gbrain-version.ts';
 import { normalQuantile } from '../stats/paired.ts';
 import { ABORT_CODES, COPY_MARKER_TABLE, LiveRecallAbort, checkSchema, installGuards, openPostgresBrain, verifyReadOnly, type GuardCounters } from './brain.ts';
-import { ARMS, GOLD_FOUND_BY, KS, PROTOCOLS, TYPES, buildScorecard, compareRuns, poolRuns, renderMarkdown, scanForLeaks, validateScorecard, versionOrNull, type Arm, type Form, type Protocol, type QType, type QueryRecord, type Status } from './scorecard.ts';
+import { visibilityEpoch } from './visibility-epoch.ts';
+import type { Transports } from './synthetic.ts';
+import { budgetOptionsFrom, receiptCost, startPaidRun } from '../budget-ledger.ts';
+import { PaidArmRefusal, paidRequested, requirePaidArm } from '../paid-arm.ts';
+import { ALL_TYPES, ARMS, GOLD_FOUND_BY, KS, PROTOCOLS, PROTOCOL_TYPES, TYPES, buildScorecard, compareRuns, poolRuns, renderMarkdown, scanForLeaks, validateScorecard, versionOrNull, type Arm, type Form, type Protocol, type QType, type QueryRecord, type Status } from './scorecard.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const FIXTURE_DIR = join(REPO_ROOT, 'eval/data/live-recall-v1');
+/** Batch 3's public fixture questions and the pages they add to the fixture brain. */
+export const BATCH3_FIXTURE_QUESTIONS = join(FIXTURE_DIR, 'questions-batch3.jsonl');
+export const BATCH3_FIXTURE_PAGES = join(FIXTURE_DIR, 'batch3-pages');
 export const FIXTURE_DIM = 256;
 /** Chunks fetched by every arm except configured, which keeps gbrain's own default limit. */
 export const CHUNK_FETCH = 50;
@@ -46,10 +62,19 @@ export interface Question {
   gold: Array<{ slug: string; chunk_ids?: number[] }>;
   gold_found_by: string;
   window?: { since: string; until: string };
+  /** batch3 freshness only: pages holding the superseded fact. */
+  stale?: Array<{ slug: string }>;
+  /** batch3 entity only, optional: the look-alike pages a wrong answer would come from. */
+  decoy?: Array<{ slug: string }>;
 }
 
-/** Parse the private question file. A refusal names the line and the field, never the content. */
-export function parseQuestions(text: string): Question[] {
+/**
+ * Parse the private question file. A refusal names the line and the field, never the content.
+ * The protocol fixes the accepted types; under batch3 a freshness question must name its stale
+ * pages (none of them gold) and no other type may.
+ */
+export function parseQuestions(text: string, protocol: Protocol = 'batch1'): Question[] {
+  const types = PROTOCOL_TYPES[protocol];
   const out: Question[] = [];
   const ids = new Set<string>();
   text.split('\n').forEach((line, i) => {
@@ -58,7 +83,7 @@ export function parseQuestions(text: string): Question[] {
     let q: any;
     try { q = JSON.parse(line); } catch { throw bad('json'); }
     if (typeof q?.id !== 'string' || !/^[A-Za-z0-9_.-]{1,64}$/.test(q.id) || ids.has(q.id)) throw bad('id');
-    if (!(TYPES as readonly string[]).includes(q.type)) throw bad('type');
+    if (!(types as readonly string[]).includes(q.type)) throw bad('type');
     const forms = {} as Record<Form, string>;
     for (const form of ['exact', 'paraphrase'] as const) {
       const v = q.forms?.[form];
@@ -79,8 +104,26 @@ export function parseQuestions(text: string): Question[] {
       if (typeof q.window?.since !== 'string' || typeof q.window?.until !== 'string' || !iso.test(q.window.since) || !iso.test(q.window.until)) throw bad('window');
       window = { since: q.window.since, until: q.window.until };
     }
+    let stale: Question['stale'];
+    let decoy: Question['decoy'];
+    if (protocol === 'batch3') {
+      if (q.type === 'freshness') {
+        if (!Array.isArray(q.stale) || q.stale.length === 0) throw bad('stale');
+        stale = q.stale.map((s: any, j: number) => {
+          if (typeof s?.slug !== 'string' || !s.slug.trim() || gold.some((g: { slug: string }) => g.slug === s.slug)) throw bad('stale[' + j + '].slug');
+          return { slug: s.slug };
+        });
+      } else if (q.stale !== undefined) throw bad('stale');
+      if (q.type === 'entity' && q.decoy !== undefined) {
+        if (!Array.isArray(q.decoy) || q.decoy.length === 0) throw bad('decoy');
+        decoy = q.decoy.map((s: any, j: number) => {
+          if (typeof s?.slug !== 'string' || !s.slug.trim() || gold.some((g: { slug: string }) => g.slug === s.slug)) throw bad('decoy[' + j + '].slug');
+          return { slug: s.slug };
+        });
+      } else if (q.decoy !== undefined) throw bad('decoy');
+    }
     ids.add(q.id);
-    out.push({ id: q.id, type: q.type, forms, gold, gold_found_by: foundBy, ...(window ? { window } : {}) });
+    out.push({ id: q.id, type: q.type, forms, gold, gold_found_by: foundBy, ...(window ? { window } : {}), ...(stale ? { stale } : {}), ...(decoy ? { decoy } : {}) });
   });
   if (out.length === 0) throw new LiveRecallAbort('LR_QUESTIONS_INVALID', 'no questions');
   return out;
@@ -104,10 +147,11 @@ export function mde(pairs: number, discordant: number): number {
   return Math.round((normalQuantile(0.975) + normalQuantile(0.8)) * Math.sqrt(discordant / pairs) * 10000) / 10000;
 }
 
+const byPd = (f: (pd: number) => unknown) => ({ pd10: f(0.1), pd20: f(0.2), pd30: f(0.3) });
+
 /** The numbers Wintermute sends before a counted run; we commit them to the preregistration. The protocol fixes which comparisons are primary. */
-export function freezeSummary(text: string, questions: Question[], protocol: Protocol = 'batch1') {
+export function freezeSummary(text: string, questions: Question[], protocol: Exclude<Protocol, 'batch3'> = 'batch1') {
   const n = questions.length;
-  const byPd = (f: (pd: number) => unknown) => ({ pd10: f(0.1), pd20: f(0.2), pd30: f(0.3) });
   const bothForms = byPd(pd => [mde(2 * n, pd), mde(n, pd)]);
   const paraphrase = byPd(pd => mde(n, pd));
   return {
@@ -120,6 +164,28 @@ export function freezeSummary(text: string, questions: Question[], protocol: Pro
     mde_success_at_5: protocol === 'batch1'
       ? { p1_both_forms_range: bothForms, p2_paraphrase: paraphrase }
       : { p1_paraphrase: paraphrase, p2_paraphrase: paraphrase, batch1_p1_both_forms_range: bothForms },
+  };
+}
+
+/**
+ * The batch 3 freeze: the same counts over all seven types, the minimum detectable differences of its two primaries
+ * (null for a type with no questions), and the gbrain version the freeze was made with and its GBRA-398 visibility
+ * epoch, so a counted run on the other side of that change refuses it.
+ */
+export function freezeSummaryBatch3(text: string, questions: Question[], gbrain: { version: string }) {
+  const typed = (t: QType) => questions.filter(q => q.type === t).length;
+  const range = (m: number) => byPd(pd => (m ? [mde(2 * m, pd), mde(m, pd)] : null));
+  return {
+    schema: 'live-recall-freeze/v1',
+    protocol: 'batch3' as const,
+    questions_sha256: sha256(text),
+    n_questions: questions.length,
+    by_type: Object.fromEntries(ALL_TYPES.map(t => [t, typed(t)])),
+    windowed_time_window: questions.filter(q => q.type === 'time_window' && q.window).length,
+    freshness_stale_pages: questions.reduce((s, q) => s + (q.stale?.length ?? 0), 0),
+    gbrain_version: gbrain.version,
+    visibility_epoch: visibilityEpoch(gbrain.version),
+    mde_success_at_5: { p1_freshness_both_forms_range: range(typed('freshness')), p2_entity_both_forms_range: range(typed('entity')) },
   };
 }
 
@@ -144,7 +210,7 @@ export const FAILURE_STAGES: ReadonlySet<string> = new Set(['embed_unavailable',
 /** In the configured arms these are the reranker failing open, so they count toward the arm's fail-open cap. */
 const RERANK_FAILURE_STAGES: ReadonlySet<string> = new Set(['rerank_failed', 'rerank_passthrough']);
 
-interface Gold { pages: Set<string>; chunks: Set<string> }
+interface Gold { pages: Set<string>; chunks: Set<string>; stale?: Set<string>; decoy?: Set<string> }
 
 async function runArm(ctx: SearchContext, arm: Arm, base: Pick<QueryRecord, 'qid' | 'type' | 'form' | 'gold_pages' | 'has_chunk_gold'>, gold: Gold, allowed: Kind[], search: (onMeta: (m: any) => void) => Promise<any[]>): Promise<QueryRecord> {
   const calls: Record<string, number> = {};
@@ -176,12 +242,16 @@ async function runArm(ctx: SearchContext, arm: Arm, base: Pick<QueryRecord, 'qid
   const chunks = uniqueInOrder(results.map(r => String(r.chunk_id))).slice(0, CHUNK_FETCH);
   const pageRank = rankOfFirstHit(pages, gold.pages);
   const chunkRank = gold.chunks.size ? rankOfFirstHit(chunks, gold.chunks) : Infinity;
+  const staleRank = gold.stale ? rankOfFirstHit(pages, gold.stale) : Infinity;
+  const decoyRank = gold.decoy ? rankOfFirstHit(pages, gold.decoy) : Infinity;
   return {
     ...base, arm, status, pages, chunks,
     page_rank: Number.isFinite(pageRank) ? pageRank : null,
     chunk_rank: Number.isFinite(chunkRank) ? chunkRank : null,
     all_found_at: Object.fromEntries(KS.map(k => ['k' + k, recallAllAtK(pages, gold.pages, k) === 1])),
     ms, returned: pages.length, calls, degraded_stages: degraded,
+    ...(gold.stale ? { stale_rank: Number.isFinite(staleRank) ? staleRank : null } : {}),
+    ...(gold.decoy ? { decoy_rank: Number.isFinite(decoyRank) ? decoyRank : null } : {}),
   };
 }
 
@@ -190,7 +260,7 @@ export async function runQuestions(ctx: SearchContext, questions: Question[], pr
   const records: QueryRecord[] = [];
   const hybridOpts = { limit: CHUNK_FETCH, expansion: false, crossModal: 'text', autocut: false, reranker: { enabled: false, topNIn: 25, topNOut: null } };
   for (const [i, q] of questions.entries()) {
-    const gold: Gold = { pages: new Set(q.gold.map(g => g.slug)), chunks: new Set(q.gold.flatMap(g => (g.chunk_ids ?? []).map(String))) };
+    const gold: Gold = { pages: new Set(q.gold.map(g => g.slug)), chunks: new Set(q.gold.flatMap(g => (g.chunk_ids ?? []).map(String))), ...(q.stale ? { stale: new Set(q.stale.map(s => s.slug)) } : {}), ...(q.decoy ? { decoy: new Set(q.decoy.map(s => s.slug)) } : {}) };
     for (const form of ['exact', 'paraphrase'] as const) {
       const text = q.forms[form];
       const base = { qid: q.id, type: q.type, form, gold_pages: gold.pages.size, has_chunk_gold: gold.chunks.size > 0 };
@@ -250,12 +320,12 @@ export async function armPreflight(ctx: SearchContext): Promise<void> {
   if (failed.size) throw new LiveRecallAbort('LR_ARM_PREFLIGHT', [...failed.values()].join('; '));
 }
 
-/** Drop questions whose gold pages the brain does not hold; abort past the cap. */
+/** Drop questions whose gold pages (or, under batch 3, stale or decoy pages) the brain does not hold; abort past the cap. */
 export async function presenceCheck(engine: any, questions: Question[]): Promise<{ kept: Question[]; missing: number }> {
   const kept: Question[] = [];
   for (const q of questions) {
     let present = true;
-    for (const g of q.gold) if (!(await engine.getPage(g.slug))) present = false;
+    for (const g of [...q.gold, ...(q.stale ?? []), ...(q.decoy ?? [])]) if (!(await engine.getPage(g.slug))) present = false;
     if (present) kept.push(q);
   }
   const missing = questions.length - kept.length;
@@ -271,7 +341,11 @@ function walkPages(dir: string, root = dir): Array<{ slug: string; body: string 
   });
 }
 
-/** Point gbrain's gateway at keyless transports: hash embeddings and a token-overlap reranker. Returns the reset. */
+/**
+ * Point gbrain's gateway at keyless transports: hash embeddings and a token-overlap reranker. It also sets
+ * GBRAIN_MODEL_DISCOVERY=off, since gbrain otherwise lists models at api.openai.com before its first OpenAI-routed
+ * embedding, which would be a network request from a keyless run. Returns the reset.
+ */
 export async function useFixtureTransports(gut: GbrainUnderTest): Promise<() => void> {
   const { hashEmbedVector } = await import('../cat18-embedding-providers.ts');
   const { makeOverlapRerankTransport } = await import('../cat18b-embedding-rerank-matrix.ts');
@@ -279,9 +353,13 @@ export async function useFixtureTransports(gut: GbrainUnderTest): Promise<() => 
   gateway.configureGateway({ embedding_model: 'openai:text-embedding-3-small', embedding_dimensions: FIXTURE_DIM, env: { OPENAI_API_KEY: 'fixture', VOYAGE_API_KEY: 'fixture' } });
   gateway.__setEmbedTransportForTests(async (params: { values: string[] }) => ({ embeddings: params.values.map(t => hashEmbedVector(t, FIXTURE_DIM)), values: params.values, warnings: [] }));
   gateway.__setRerankTransportForTests(makeOverlapRerankTransport());
+  const discovery = process.env.GBRAIN_MODEL_DISCOVERY;
+  process.env.GBRAIN_MODEL_DISCOVERY = 'off';
   return () => {
     gateway.__setEmbedTransportForTests(null);
     gateway.__setRerankTransportForTests(null);
+    if (discovery === undefined) delete process.env.GBRAIN_MODEL_DISCOVERY;
+    else process.env.GBRAIN_MODEL_DISCOVERY = discovery;
   };
 }
 
@@ -333,11 +411,14 @@ export function captureOutput(logPath: string): { say: (line: string) => void; r
   };
 }
 
+/** An epoch named in the freeze, echoed only when it is one of the known words. */
+const versionOrEpoch = (v: unknown) => (typeof v === 'string' && /^(pre_gbra_398|post_gbra_398|unknown)$/.test(v) ? v : 'unrecognised');
+
 function git(args: string[]): string {
   try { return execFileSync('git', ['-C', REPO_ROOT, ...args], { encoding: 'utf8' }).trim(); } catch { return ''; }
 }
 
-interface RunOptions { fixture: boolean; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest; protocol?: Protocol }
+interface RunOptions { fixture: boolean; synthetic?: string; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest; protocol?: Protocol; transports?: Transports }
 
 /** One counted or control run. Returns the outbound file paths. */
 /** pgvector in the database searched and, on a copy, the versions and restore error count snapshot.sh wrote into the marker row. */
@@ -360,7 +441,15 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
   const counters: GuardCounters = { refusals: {} };
   let questionsText: string;
   let protocol: Protocol = o.protocol ?? 'batch1';
-  if (o.fixture) questionsText = readFileSync(o.questionsPath ?? join(FIXTURE_DIR, 'questions.jsonl'), 'utf8');
+  let frozenEpoch: { gbrain_version: string | null; visibility_epoch: string | null } | null = null;
+  const runEpoch = visibilityEpoch(o.gut.version);
+  let synthetic: Awaited<ReturnType<typeof import('./synthetic.ts').buildSyntheticBrain>> | null = null;
+  if (o.synthetic) {
+    const { buildSyntheticBrain } = await import('./synthetic.ts');
+    synthetic = await buildSyntheticBrain(o.gut, o.synthetic, o.transports);
+    questionsText = synthetic.questionsText;
+    if (!o.protocol && synthetic.protocol) protocol = synthetic.protocol;
+  } else if (o.fixture) questionsText = readFileSync(o.questionsPath ?? (protocol === 'batch3' ? BATCH3_FIXTURE_QUESTIONS : join(FIXTURE_DIR, 'questions.jsonl')), 'utf8');
   else {
     if (!o.questionsPath || !o.freezePath) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'a counted run needs --questions and --freeze');
     questionsText = readFileSync(o.questionsPath, 'utf8');
@@ -370,12 +459,25 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     if (!(PROTOCOLS as readonly string[]).includes(frozenProtocol)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the freeze names an unknown protocol');
     if (o.protocol && o.protocol !== frozenProtocol) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', '--protocol differs from the protocol in the freeze');
     protocol = frozenProtocol;
+    if (protocol === 'batch3') {
+      if (typeof frozen.visibility_epoch !== 'string') throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the batch3 freeze records no visibility_epoch');
+      if (frozen.visibility_epoch !== runEpoch) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the freeze visibility_epoch ' + versionOrEpoch(frozen.visibility_epoch) + ' differs from this run\'s ' + runEpoch + ' (GBRA-398)');
+      if (runEpoch === 'unknown' && frozen.gbrain_version !== o.gut.version) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the visibility epoch is unknown on both sides, so the run needs the freeze\'s gbrain version ' + (versionOrNull(frozen.gbrain_version) ?? 'unrecorded') + ' (GBRA-398)');
+      frozenEpoch = { gbrain_version: versionOrNull(frozen.gbrain_version), visibility_epoch: frozen.visibility_epoch };
+    }
   }
-  const questions = parseQuestions(questionsText);
+  const inProcess = o.fixture || synthetic !== null;
+  let questions: Question[];
+  try {
+    questions = parseQuestions(questionsText, protocol);
+  } catch (error) {
+    await synthetic?.close();
+    throw error;
+  }
 
   let engine: any, barrier: string, connection: string, schemaVersion: number, close: () => Promise<void>;
-  if (o.fixture) {
-    const brain = await buildFixtureBrain(o.gut);
+  if (inProcess) {
+    const brain = synthetic ?? await buildFixtureBrain(o.gut, protocol === 'batch3' ? BATCH3_FIXTURE_PAGES : undefined);
     engine = brain.engine;
     barrier = 'copy';
     connection = 'in_process';
@@ -440,7 +542,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       gbrain_loaded_commit: o.gut.overlay?.build.commit ?? (/^[0-9a-f]{7,64}$/.test(pinCommit) ? pinCommit : 'unknown'),
       gbrain_overlay: o.gut.overlay !== null,
       schema_version: schemaVersion,
-      engine: (o.fixture ? 'pglite' : 'postgres') as 'pglite' | 'postgres',
+      engine: (inProcess ? 'pglite' : 'postgres') as 'pglite' | 'postgres',
       barrier,
       connection,
       search_mode: String(knobs.resolved_mode),
@@ -449,13 +551,16 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       embedding_model: embeddingModel,
       embedding_column: /^[a-z_][a-z0-9_]{0,62}$/.test(String(column.name)) ? String(column.name) : 'unknown',
       mode_expansion: Boolean(knobs.expansion),
-      control: o.fixture,
+      control: inProcess,
+      ...(inProcess ? { transports: synthetic?.applied.transports ?? 'hash' } : {}),
       ...facts,
+      ...(synthetic ? { synthetic: { digest: synthetic.manifest.digest, questions_sha256: synthetic.manifest.questions_sha256, ...synthetic.manifest.knobs, chunks: synthetic.applied.chunks, unembedded_chunks: synthetic.applied.unembedded_chunks } } : {}),
+      ...(protocol === 'batch3' ? { visibility_epoch: runEpoch, freeze_gbrain_version: frozenEpoch?.gbrain_version ?? null, freeze_visibility_epoch: frozenEpoch?.visibility_epoch ?? null } : {}),
     };
     const summary = {
       loaded: questions.length,
       gold_missing: missing,
-      by_type: Object.fromEntries(TYPES.map(t => [t, kept.filter(q => q.type === t).length])),
+      by_type: Object.fromEntries(PROTOCOL_TYPES[protocol].map(t => [t, kept.filter(q => q.type === t).length])),
       gold_found_by: Object.fromEntries(GOLD_FOUND_BY.map(g => [g, kept.filter(q => q.gold_found_by === g).length])),
       paraphrase_shares_identifier_token: paraphraseOverlapShare(kept),
       freeze_sha_prefix: sha256(questionsText).slice(0, 12),
@@ -466,7 +571,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     const scorecard = buildScorecard(records, summary, identity, { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: counters.refusals }, protocol);
     const json = JSON.stringify(scorecard, null, 2) + '\n';
     const markdown = renderMarkdown(scorecard);
-    const needles = new Set<string>([...questions.flatMap(q => [...Object.values(q.forms), ...q.gold.map(g => g.slug)]), ...records.flatMap(r => r.pages)]);
+    const needles = new Set<string>([...questions.flatMap(q => [...Object.values(q.forms), ...q.gold.map(g => g.slug), ...(q.stale ?? []).map(s => s.slug), ...(q.decoy ?? []).map(s => s.slug)]), ...records.flatMap(r => r.pages)]);
     scanForLeaks(json + markdown, needles);
     const jsonPath = join(o.out, 'scorecard.json'), mdPath = join(o.out, 'scorecard.md');
     writeFileSync(jsonPath, json);
@@ -520,7 +625,16 @@ function flag(argv: string[], name: string): string | undefined {
   return at >= 0 ? argv[at + 1] : undefined;
 }
 
-async function main(argv: string[]): Promise<number> {
+/** For --paid, outside the ledger's guard: send only to Voyage. The guard prices every paid host, so a stray chat call would be reserved and sent; this refuses it before the guard sees it. */
+function voyageOnlyFetch(send: typeof fetch): typeof fetch {
+  return (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    if ((url.protocol === 'http:' || url.protocol === 'https:') && url.hostname !== 'api.voyageai.com') throw new Error('live-recall synthetic --paid sends only to api.voyageai.com; refused a request to ' + url.hostname);
+    return send(input, init);
+  }) as typeof fetch;
+}
+
+export async function main(argv: string[]): Promise<number> {
   const command = argv[0];
   const protocol = flag(argv, '--protocol');
   if (protocol !== undefined && !(PROTOCOLS as readonly string[]).includes(protocol)) { console.error('usage: --protocol ' + PROTOCOLS.join('|')); return 2; }
@@ -528,7 +642,8 @@ async function main(argv: string[]): Promise<number> {
     const path = flag(argv, '--questions'), out = flag(argv, '--out');
     if (!path || !out) { console.error('usage: run.ts freeze --questions <file> --out <freeze.json> [--protocol ' + PROTOCOLS.join('|') + ']'); return 2; }
     const text = readFileSync(path, 'utf8');
-    const summary = freezeSummary(text, parseQuestions(text), (protocol ?? 'batch1') as Protocol);
+    const p = (protocol ?? 'batch1') as Protocol;
+    const summary = p === 'batch3' ? freezeSummaryBatch3(text, parseQuestions(text, p), resolveGbrainUnderTest(gbrainSpecFrom(argv))) : freezeSummary(text, parseQuestions(text, p), p);
     writeFileSync(out, JSON.stringify(summary, null, 2) + '\n');
     console.log('live-recall: freeze ' + out + ' (' + summary.n_questions + ' questions, protocol ' + summary.protocol + ')');
     return 0;
@@ -552,13 +667,35 @@ async function main(argv: string[]): Promise<number> {
   }
   if (command !== 'run') { console.error('usage: run.ts run|freeze|compare|pool (see the header of this file)'); return 2; }
   const fixture = argv.includes('--fixture');
-  const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall', new Date().toISOString().replace(/[:.]/g, '-') + (fixture ? '-fixture' : '')));
+  const synthetic = flag(argv, '--synthetic');
+  const paid = paidRequested(argv);
+  if (paid && !synthetic) { console.error('live-recall: --paid applies only to run --synthetic <dir>, which then embeds and reranks with Voyage'); return 2; }
+  let estimate: ReturnType<typeof import('./synthetic.ts').estimateVoyageUsd> | null = null;
+  if (paid) {
+    const { estimateVoyageUsd, VOYAGE_SYNTHETIC } = await import('./synthetic.ts');
+    estimate = estimateVoyageUsd(resolve(synthetic!));
+    console.log('live-recall: --paid synthetic run with ' + VOYAGE_SYNTHETIC.embedding_model + ', ' + VOYAGE_SYNTHETIC.search_mode + ' and ' + VOYAGE_SYNTHETIC.reranker_model + ': estimated $' + estimate.usd.toFixed(4) + ' (' + estimate.embedding_tokens + ' embedding tokens at $' + estimate.embedding_usd_per_mtok + '/M, ' + estimate.rerank_tokens + ' rerank tokens at $' + estimate.rerank_usd_per_mtok + '/M)');
+    try {
+      requirePaidArm(argv, { arm: 'live-recall synthetic (' + VOYAGE_SYNTHETIC.embedding_model + ' + ' + VOYAGE_SYNTHETIC.reranker_model + ')', estimateUsd: estimate.usd });
+    } catch (error) {
+      if (!(error instanceof PaidArmRefusal)) throw error;
+      console.error('live-recall: REFUSED: ' + error.message);
+      return 2;
+    }
+  }
+  const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall', new Date().toISOString().replace(/[:.]/g, '-') + (synthetic ? '-synthetic' : fixture ? '-fixture' : '')));
   mkdirSync(out, { recursive: true, mode: 0o700 });
   process.env.GBRAIN_AUDIT_DIR = out;
   const { say, restore } = captureOutput(join(out, 'gbrain.local.log'));
+  const savedFetch = globalThis.fetch;
+  let paidRun: ReturnType<typeof startPaidRun> | null = null;
   try {
     const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-    const paths = await liveRecall({ fixture, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut, protocol: protocol as Protocol | undefined }, say);
+    if (estimate) {
+      paidRun = startPaidRun('live-recall-synthetic-voyage', { ...budgetOptionsFrom(argv), runId: flag(argv, '--budget-run-id'), estimateUsd: estimate.usd, log: say });
+      globalThis.fetch = voyageOnlyFetch(globalThis.fetch);
+    }
+    const paths = await liveRecall({ fixture, synthetic: synthetic ? resolve(synthetic) : undefined, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut, protocol: protocol as Protocol | undefined, transports: estimate ? 'voyage' : 'hash' }, say);
     say('scorecard (send these two files): ' + paths.scorecard + ' and ' + paths.markdown);
     say('detail and gbrain log (stay on this box): ' + paths.detail + ' and ' + join(out, 'gbrain.local.log'));
     return 0;
@@ -572,6 +709,14 @@ async function main(argv: string[]): Promise<number> {
     console.error(error instanceof Error ? error.stack : String(error));
     return 4;
   } finally {
+    if (paidRun) {
+      globalThis.fetch = savedFetch;
+      paidRun.guard.uninstall();
+      const cost = receiptCost(paidRun.run.close());
+      writeFileSync(join(out, 'paid-receipt.json'), JSON.stringify({ transports: 'voyage', estimate, cost }, null, 2) + '\n');
+      say('paid: $' + cost.usd.toFixed(6) + ' on the ledger (' + cost.basis + '); receipt ' + join(out, 'paid-receipt.json'));
+    }
+    globalThis.fetch = savedFetch;
     restore();
   }
 }

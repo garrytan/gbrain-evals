@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "predictive-measures",
+      "preregistration": "docs/benchmarks/2026-11-09-predictive-measures-preregistration.md",
+      "results": [
+        "docs/benchmarks/predictive-measures/**",
+        "docs/benchmarks/2026-11-*-predictive-measures.md"
+      ]
+    }
+  ]
+}

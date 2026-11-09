@@ -16,7 +16,7 @@ import { BudgetExceededError, BudgetRun, closeRun, initLedger } from '../../eval
 import { gbrainInstallTag, gbrainPin } from '../../eval/runner/gbrain-version.ts';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import {
-  CALIBRATION_HALF_TASKS, CEILING_STAGE_PLANS, fileRows, GATE_PROPOSER_CALLS_PER_PAIR, GATE_ROLLOUTS_PER_PAIR, gateEstimateUsd, memoryRows, PLANNING_PRICES_USD,
+  CALIBRATION_HALF_TASKS, CEILING_GBRAIN_COMMIT, CEILING_STAGE_PLANS, fileRows, GATE_PROPOSER_CALLS_PER_PAIR, GATE_ROLLOUTS_PER_PAIR, gateEstimateUsd, memoryRows, PLANNING_PRICES_USD,
   reachabilityHint, repriceStages, runCalibration, runGateStage, type CalibrationResult, type CeilingRow, type GatePairResult, type GateStageResult, type ProposalRow, type RolloutRow, type RowStore,
 } from '../../eval/runner/skillopt-method/ceiling-stages.ts';
 import { datasetDir, readCriteria, readSealedTasks, readSeed, readTasks, sha256 } from '../../eval/runner/skillopt-method/dataset.ts';
@@ -577,6 +577,8 @@ describe('gate stage, stops and skips', () => {
 });
 
 describe('runner CLI (--dataset v3)', () => {
+  /** A live stage's cap and receipt checks come after its pin check, so they can only be reached in a tree at the stage pin. */
+  const AT_STAGE_PIN = gbrainPin().endsWith(`#${CEILING_GBRAIN_COMMIT}`);
   const run = (args: string[]) => Bun.spawnSync(['bun', 'eval/runner/n15-skillopt-method.ts', ...args], { cwd: join(import.meta.dir, '../..'), stdout: 'pipe', stderr: 'pipe' });
 
   test('keyless by default: calibration runs on the fake transport without --paid, needs no preregistration, and writes its receipt and rows', () => {
@@ -614,7 +616,7 @@ describe('runner CLI (--dataset v3)', () => {
     expect(gbrainInstallTag()).toBe(`garrytan-gbrain-${gbrainPin().split('#')[1]!.slice(0, 7)}`);
   });
 
-  test("a live gate prices from both targets' calibration receipts, and does not start when their metered means put it over its $470 cap", () => {
+  test.skipIf(!AT_STAGE_PIN)("a live gate prices from both targets' calibration receipts, and does not start when their metered means put it over its $470 cap", () => {
     const out = tempDir();
     const missing = keyless(gateArgs(out, ['--attempt', '1', '--budget-run-id', 'n15-ceiling-gate-1-test']));
     expect(missing.exitCode).toBe(2);
@@ -646,7 +648,18 @@ describe('runner CLI (--dataset v3)', () => {
   const pastTheCap = (p: ReturnType<typeof keyless>) => { expect(p.exitCode).toBe(2); expect(p.stderr.toString()).toMatch(/_API_KEY (is|and .* are) not set/); };
   const calibrate = (out: string, runId: string) => keyless(['--dataset', 'v3', '--stage', 'calibration', '--target', 'opus', '--paid', '--budget-run-id', runId, '--budget-ledger', join(out, 'ledger.sqlite'), '--output', join(out, runId)]);
 
-  test('the gate cap covers the whole stage across ledger runs: an open earlier run holds its whole budget; once it closes it holds what it spent, so a new run is refused the full $470 and admitted for what is left, on a resume whose rows metered the work done', () => {
+  test.skipIf(AT_STAGE_PIN)('in a tree off the stage pin, a paid calibration and gate stop at the pin check, naming both commits, before they write a row', () => {
+    const out = tempDir();
+    const calibration = `${calibrationReceipt(out, 'opus', 0.2)},${calibrationReceipt(out, 'sol', 0.1)}`;
+    for (const p of [calibrate(out, 'n15-ceiling-calibration-test'), keyless(gateArgs(out, ['--attempt', '1', '--budget-run-id', 'n15-ceiling-gate-1-test', '--calibration', calibration]))]) {
+      expect(p.exitCode).toBe(2);
+      expect(p.stderr.toString()).toContain(`runs at gbrain ${CEILING_GBRAIN_COMMIT.slice(0, 9)} (plan decision S), but this tree pins ${gbrainPin()}`);
+    }
+    expect(existsSync(join(out, 'rows.jsonl'))).toBe(false);
+    expect(existsSync(join(out, 'n15-ceiling-calibration-test', 'rows.jsonl'))).toBe(false);
+  }, 120_000);
+
+  test.skipIf(!AT_STAGE_PIN)('the gate cap covers the whole stage across ledger runs: an open earlier run holds its whole budget; once it closes it holds what it spent, so a new run is refused the full $470 and admitted for what is left, on a resume whose rows metered the work done', () => {
     const out = tempDir();
     const { earlier, newRun, close } = stageLedger(out, 'n15-ceiling-gate-1', { budgetUsd: 470, usd: 100, close: false });
     const calibration = `${calibrationReceipt(out, 'opus', 0.2)},${calibrationReceipt(out, 'sol', 0.1)}`;
@@ -670,7 +683,7 @@ describe('runner CLI (--dataset v3)', () => {
     expect(readFileSync(join(out, 'rows.jsonl'), 'utf8').trim().split('\n').length).toBe(2);
   }, 120_000);
 
-  test("calibration's re-read fits what is left of its $50 cap: with $27.95 committed under a closed run, a new $22.06 run is refused and a $22.05 run is admitted", () => {
+  test.skipIf(!AT_STAGE_PIN)("calibration's re-read fits what is left of its $50 cap: with $27.95 committed under a closed run, a new $22.06 run is refused and a $22.05 run is admitted", () => {
     const out = tempDir();
     const { newRun, close } = stageLedger(out, 'n15-ceiling-calibration', { budgetUsd: 50, usd: 27.95, close: true });
     const overRun = newRun(22.06);
@@ -681,7 +694,7 @@ describe('runner CLI (--dataset v3)', () => {
     pastTheCap(calibrate(out, newRun(22.05)));
   }, 120_000);
 
-  test('two open runs of one stage cannot both hold its cap: a second $50 calibration run is refused while the first is open, and admitted once the first closes having spent nothing', () => {
+  test.skipIf(!AT_STAGE_PIN)('two open runs of one stage cannot both hold its cap: a second $50 calibration run is refused while the first is open, and admitted once the first closes having spent nothing', () => {
     const out = tempDir();
     const { earlier, newRun, close } = stageLedger(out, 'n15-ceiling-calibration', { budgetUsd: 50, usd: 0, close: false });
     const second = newRun(50);
@@ -707,7 +720,7 @@ describe('runner CLI (--dataset v3)', () => {
     expect(existsSync(join(out, 'rows.jsonl'))).toBe(false);
   }, 120_000);
 
-  test('a live attempt 2 runs only after a complete live attempt 1 whose verdict is revise: such a receipt is admitted, and a fake, partial or stub receipt, or one that read stop, is refused', () => {
+  test.skipIf(!AT_STAGE_PIN)('a live attempt 2 runs only after a complete live attempt 1 whose verdict is revise: such a receipt is admitted, and a fake, partial or stub receipt, or one that read stop, is refused', () => {
     const out = tempDir();
     const calibration = `${calibrationReceipt(out, 'opus', 0.2)},${calibrationReceipt(out, 'sol', 0.1)}`;
     const { newRun } = stageLedger(out, 'n15-ceiling-gate-2', { budgetUsd: 470, usd: 0, close: true });

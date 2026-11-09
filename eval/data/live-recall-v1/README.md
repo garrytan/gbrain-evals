@@ -23,3 +23,10 @@ these tasks with scripted models; the format is in
 of the 13 provider responses from one paid fixture task in arm B on 2026-11-08 (claude-opus-5-5, gpt-6.1-sol and
 particle-1 answering, both judges; $0.0985 on its ledger). `test/eval/q1-usage.test.ts` checks that the loop prices
 every one exactly as the budget ledger does, OpenAI's nested `input_tokens_details.cache_write_tokens` included.
+
+Batch 3 adds `questions-batch3.jsonl`: four `freshness` questions (a person who changed company, a renewed contract
+price, a reversed decision, a launch date moved after a page's summary was written), each with the newer page as gold
+and the older page as `stale`, and four `entity` questions (two people with one name, a company named like its
+founder's handle, a father and son, a brother and sister), with their sixteen pages in `batch3-pages/`.
+`run --fixture --protocol batch3` adds those pages to the fixture brain and asks those questions; without
+`--protocol batch3` neither is loaded, so batch 1 and batch 2 fixture runs are unchanged.

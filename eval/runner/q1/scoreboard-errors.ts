@@ -36,7 +36,8 @@ export type ScoreboardCode =
   | 'RESUME_REFUSED'
   | 'INPUT_MISSING'
   | 'PAID_FLAGS_MISSING'
-  | 'RS1_STAGE1_OVER_CAP';
+  | 'RS1_STAGE1_OVER_CAP'
+  | 'BG1_STAGE1_OVER_CAP';
 
 export interface ScoreboardMessage extends Omit<OperatorMessage, 'code'> {
   code: ScoreboardCode;

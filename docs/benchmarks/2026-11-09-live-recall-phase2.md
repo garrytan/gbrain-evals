@@ -34,8 +34,9 @@ model saw them. The runner was gbrain-evals
 [4740c1f3](https://github.com/garrytan/gbrain-evals/commit/4740c1f35f85d2661b149a88cfd8127c00dc005c), with the harness
 digest `d27425cc…1e18` the preregistration names. The gbrain under test was 0.60.613.0 at `98dda48fb9fd`, loaded as a
 verified overlay; the box's own install was 0.60.618.0, which changes no search, tool or access code
-([why that's fine](live-recall/PHASE2-PREREGISTRATION.md#differences-from-the-approved-plan)). gbrain-evals pins
-0.60.557.0 at `62637c96a`. The rest of the setup: Postgres schema 296, search mode `tokenmax`, embeddings
+([why that's fine](live-recall/PHASE2-PREREGISTRATION.md#differences-from-the-approved-plan)). The preregistration's pin
+was 0.60.557.0 at `62637c96a`; gbrain-evals has since moved its pin to 0.60.623.0 at `d253ec0ff`, which this run didn't
+test. The rest of the setup: Postgres schema 296, search mode `tokenmax`, embeddings
 `voyage:voyage-4` and reranker `voyage:rerank-2.5`.
 
 gbrain is a personal knowledge brain: Markdown pages in Postgres, found with keyword, vector and hybrid search, and

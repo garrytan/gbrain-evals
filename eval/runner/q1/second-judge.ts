@@ -37,7 +37,7 @@ import { instrumentFor, PASS_THRESHOLD, type Instrument } from '../memory-qa/ins
 import { DEFAULT_MAX_ATTEMPTS } from '../memory-qa/outcomes.ts';
 import { ChatClient, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { judgmentKey, RecordLog, sha256, type AnswerRecord } from '../memory-qa/records.ts';
-import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../metering-proxy.ts';
+import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageSplit } from '../metering-proxy.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { clusteredPairedDelta } from '../stats/paired.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
@@ -230,13 +230,12 @@ if (import.meta.main) {
     if (!arm) throw refuse({ code: 'USAGE', message: `cell ${def.id} has no arm ${armArg}`, why: 'the second judge grades one arm\'s cell', fix: { next: 'run', argv: ['bun', 'eval/runner/q1/cell.ts', 'show', '--cell', def.id] } });
     const out = resolve(outArg);
     const prepared = prepareSecondJudge(def, arm, { roots, out, keyless: !!keyless });
-    const placeholder = 'keyless-not-a-provider-key';
-    const keys = keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder, VOYAGE_API_KEY: placeholder, PARTICLE_API_KEY: placeholder } : { ...process.env };
+    const keys = keyless ? keylessKeys() : { ...process.env };
     const [cellToken, controlToken] = [randomUUID(), randomUUID()];
     Object.assign(process.env, { SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
     const lease = openRereadLease({ runId, leaseUsd, ledgerPath: resolve(ledger), capUsd: ledgerCap, runner: 'q1-second-judge' });
     const usageLog = join(out, 'usage.ndjson');
-    const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
+    const proxy = new MeteringProxy({ ...(keyless ? { upstream: keylessUpstream(keyless) } : {}), cellToken, controlToken,
       policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
     proxy.start();
     try {
