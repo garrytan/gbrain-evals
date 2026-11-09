@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { RS1_MANIFEST } from '../../eval/runner/memory-qa/corpus.ts';
@@ -42,6 +42,8 @@ interface Opts {
   meters?: (system: string, unit: number) => boolean;
   /** A question whose retrieval failed: its row records fill_rate null, and its answers are written as cell.ts writes them (no context, zero usage, no reader meter). */
   failedRetrieval?: (system: string, c: number, q: number) => boolean;
+  /** A question's ability name in its id (default `ability<q mod 2>`). */
+  ability?: (q: number) => string;
 }
 
 /** A filled manifest pinning the kept conversations, and receipts for the four RS1 rows plus their particle-1 re-reads. */
@@ -56,6 +58,7 @@ function build(name: string, o: Opts = {}) {
   const manifestPath = join(root, 'rs1-manifest.json');
   writeFileSync(manifestPath, manifestText);
   const score = o.score ?? ((system: string) => (system === 'baseline-none' ? 0.3 : 0.7));
+  const qid = (c: number, q: number) => `${conv(c)}:${o.ability?.(q) ?? `ability${q % 2}`}:${q}`;
   const units = Math.ceil(nConv / perUnit);
   const dirs: string[] = [];
   for (const system of ['gbrain-defaults', 'ext-memory-bank', 'ext-extract-first', 'baseline-none']) {
@@ -71,9 +74,9 @@ function build(name: string, o: Opts = {}) {
       const config = sha(`${armCell}|${u}`);
       const scheduledQids = convs.flatMap(c => Array.from({ length: nQ }, (_, q) => [c, q] as const));
       const qids = scheduledQids.filter(([c, q]) => !o.noRow?.(system, c, q));
-      const rows = qids.map(([c, q]) => ({ id: `${conv(c)}:ability${q % 2}:${q}`, conversation: conv(c), cell_id: armCell, realization_id: 'r', fill_rate: o.failedRetrieval?.(system, c, q) ? null : o.fill?.[system] ?? 0.95, delivered_tokens: { cl100k_base: 7600 }, packing_loss: null, provenance_status: 'exact', fanout: { mean: 1, max: 1 } }));
+      const rows = qids.map(([c, q]) => ({ id: qid(c, q), conversation: conv(c), cell_id: armCell, realization_id: 'r', fill_rate: o.failedRetrieval?.(system, c, q) ? null : o.fill?.[system] ?? 0.95, delivered_tokens: { cl100k_base: 7600 }, packing_loss: null, provenance_status: 'exact', fanout: { mean: 1, max: 1 } }));
       const answersFor = (cellId: string, readers: string[]) => readers.flatMap(reader => qids.map(([c, q]) => {
-        const question_id = `${conv(c)}:ability${q % 2}:${q}`;
+        const question_id = qid(c, q);
         if (o.failedRetrieval?.(system, c, q)) return { answer: { answer_id: answerId(cellId, question_id, reader, 0), cell_id: cellId, realization_id: 'r', question_id, conversation: conv(c), system, arm: 'b8000', reader, replicate: 0, effort: 'medium', context_sha256: sha('no-context|retrieval_error'), text: '', usage: { input: 0, output: 0, cache_read: 0, cache_write: 0 }, provider_input_tokens: null, latency_ms: 0, outcome: 'retrieval_error' }, score: 'retrieval_error' as number | string };
         const s = score(system, reader, c, q);
         return { answer: { answer_id: answerId(cellId, question_id, reader, 0), cell_id: cellId, realization_id: 'r', question_id, conversation: conv(c), system, arm: 'b8000', reader, replicate: 0, effort: 'medium', context_sha256: HEX, text: 'a', usage: { input: 1, output: 1, cache_read: 0, cache_write: 0 }, provider_input_tokens: 1, latency_ms: 1, outcome: typeof s === 'string' ? s : 'scored' }, score: s };
@@ -383,4 +386,81 @@ describe('verdict.ts receipts', () => {
     writeFileSync(few.manifestPath, JSON.stringify({ ...JSON.parse(few.manifestText), kept: Array.from({ length: 20 }, (_, i) => conv(i)), files: [...JSON.parse(few.manifestText).files, ...Array.from({ length: 5 }, (_, i) => [`conversations/c${conv(15 + i).slice(4)}/beam/1/chat.json`, `conversations/c${conv(15 + i).slice(4)}/beam/1/probing_questions/probing_questions.json`]).flat().map(p => ({ path: p, sha256: sha(p) }))] }));
     expect(() => loadInput(few.dirs, { set: 'RS1', manifestPath: few.manifestPath, waveA: true })).toThrow();
   });
+});
+
+describe('verdict.ts aggregates mode (the final custody run)', () => {
+  const ROOT = join(import.meta.dir, '..', '..');
+  const ABILITIES = ['abstention', 'contradiction_resolution', 'event_ordering', 'information_extraction', 'instruction_following', 'knowledge_update', 'multi_session_reasoning', 'preference_following', 'summarization', 'temporal_reasoning'];
+  const beam = (q: number) => ABILITIES[q % ABILITIES.length];
+  const fileSha = (p: string) => createHash('sha256').update(readFileSync(p)).digest('hex');
+  /** verdictMain in-process, with what it printed. */
+  const run = (argv: string[]) => {
+    const out: string[] = [], err: string[] = [];
+    const [o, e] = [process.stdout.write, process.stderr.write];
+    process.stdout.write = ((s: string | Uint8Array) => { out.push(String(s)); return true; }) as typeof o;
+    process.stderr.write = ((s: string | Uint8Array) => { err.push(String(s)); return true; }) as typeof e;
+    try { return { code: verdictMain(argv), stdout: out.join(''), stderr: err.join('') }; } finally { process.stdout.write = o; process.stderr.write = e; }
+  };
+
+  test('writes verdict mode\'s analysis unchanged with what it was computed from, nothing per question or conversation, and prints only the verdict, counts and the file\'s SHA-256', () => {
+    const b = build('agg', { ability: beam, questions: 3, meters: () => true });
+    const vOut = join(tmp, 'agg-verdict'), aOut = join(tmp, 'agg-out');
+    expect(run(['verdict', '--receipts', ...b.dirs, '--manifest', b.manifestPath, '--out', vOut]).code).toBe(0);
+    const r = run(['aggregates', '--receipts', ...b.dirs, '--manifest', b.manifestPath, '--out', aOut]);
+    expect(r.code).toBe(0);
+    const text = readFileSync(join(aOut, 'aggregates.json'), 'utf8');
+    const g = JSON.parse(text);
+    expect(g.schema).toBe('gbrain-evals/rs1-aggregates/v1');
+    expect(g.analysis).toEqual(JSON.parse(readFileSync(join(vOut, 'verdict.json'), 'utf8')));
+    expect(g.analysis.verdict).toBe('pass');
+    expect(r.stdout).toBe(`RS1 aggregates: verdict pass; 20 conversations; 60 of 60 planned questions in the common set; aggregates.json SHA-256 ${sha(text)}\n`);
+    expect(r.stderr).toBe('');
+    const files = b.dirs.flatMap(d => (readdirSync(d, { recursive: true }) as string[]).map(f => join(d, f)).filter(f => statSync(f).isFile()));
+    const digests = files.map(fileSha).sort();
+    expect(g.provenance).toEqual({
+      code_commit: Bun.spawnSync(['git', 'rev-parse', 'HEAD'], { cwd: ROOT }).stdout.toString().trim(), tracked_tree_clean: expect.any(Boolean),
+      verdict_sha256: fileSha(join(ROOT, 'eval/runner/rs1/verdict.ts')), iut_sha256: fileSha(join(ROOT, 'eval/runner/rs1/iut.ts')), cells_sha256: fileSha(join(ROOT, 'eval/runner/q1/cells/rs1-cells.json')),
+      manifest_sha256: sha(b.manifestText), receipt_files: digests.length, receipt_files_sha256: sha(digests.join('\n')),
+    });
+    expect(g.provenance.code_commit).toMatch(/^[0-9a-f]{40}$/);
+    const strings: string[] = [], keys: string[] = [];
+    const walk = (x: unknown) => { if (typeof x === 'string') strings.push(x); else if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) { keys.push(k); walk(v); } };
+    walk(g.analysis);
+    expect(strings.filter(s => /rs1-\d{3}|[0-9a-f]{12}/.test(s))).toEqual([]);
+    expect(keys.filter(k => /^(question|question_id|conversation|answer_id|text)$/.test(k))).toEqual([]);
+    expect(new Set(g.analysis.per_ability.map((x: { ability: string }) => x.ability))).toEqual(new Set(ABILITIES.slice(0, 3)));
+    expect(readFileSync(join(aOut, 'aggregates.md'), 'utf8')).toContain(`## Provenance\n\nCode ${g.provenance.code_commit}`);
+  }, 60_000);
+
+  test('refuses an ability outside BEAM\'s ten and a version that is not its judge\'s, writing nothing and never echoing the value', () => {
+    const odd = build('agg-ability', { ability: q => (q === 1 ? 'paris_is_the_capital' : beam(q)) });
+    const out1 = join(tmp, 'agg-ability-out');
+    const r1 = run(['aggregates', '--receipts', ...odd.dirs, '--manifest', odd.manifestPath, '--out', out1]);
+    expect(r1.code).toBe(1);
+    expect(r1.stderr).toContain('outside the aggregate vocabulary');
+    expect(r1.stderr).not.toContain('paris');
+    expect(existsSync(join(out1, 'aggregates.json'))).toBe(false);
+    const pv = build('agg-version', { ability: beam });
+    const file = join(pv.root, 'gbrain-defaults-u0', 'cells', cellOf('gbrain-defaults').arms[0].cell_id, 'judgments.ndjson');
+    const recs = readFileSync(file, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    recs.find(j => j.view === 'gating').judge_versions = ['Paris'];
+    writeFileSync(file, nd(recs));
+    const out2 = join(tmp, 'agg-version-out');
+    const r2 = run(['aggregates', '--receipts', ...pv.dirs, '--manifest', pv.manifestPath, '--out', out2]);
+    expect(r2.code).toBe(1);
+    expect(r2.stderr).toContain('not a model version of its judge');
+    expect(r2.stderr).not.toContain('Paris');
+    expect(existsSync(join(out2, 'aggregates.json'))).toBe(false);
+  }, 60_000);
+
+  test('refuses before the kept list is final, outside set RS1 and without --out', () => {
+    const early = build('agg-early', { ability: beam, nFinal: null });
+    const out = join(tmp, 'agg-early-out');
+    const r = run(['aggregates', '--receipts', ...early.dirs, '--manifest', early.manifestPath, '--out', out]);
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain('kept list is not final');
+    expect(run(['aggregates', '--receipts', ...early.dirs, '--manifest', early.manifestPath, '--set', 'RS1-dev2', '--out', out]).code).toBe(2);
+    expect(run(['aggregates', '--receipts', ...early.dirs, '--manifest', early.manifestPath]).code).toBe(2);
+    expect(existsSync(join(out, 'aggregates.json'))).toBe(false);
+  }, 60_000);
 });

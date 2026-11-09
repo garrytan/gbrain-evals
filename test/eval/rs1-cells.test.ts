@@ -2,9 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
-import { keptUnit, requiredJudges, runConfigIdentity, runConfigText } from '../../eval/runner/q1/cell.ts';
+import { EXECUTES, keptUnit, requiredJudges, runConfigIdentity, runConfigText } from '../../eval/runner/q1/cell.ts';
+import { executedTree } from '../../eval/runner/shootout-cell.ts';
 import { ALL_SETS, buildManifest, definitionProblems, F6_ASSUMPTIONS, priceOf, frontierJudgeOf, frontierJudgesFor, ingestRate, MANIFEST_PATH, manifestText, runsF6, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { buildF6Manifest, F6_MANIFEST_PATH, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
 import { CHAT_PRICE_OVERRIDES, reservationUsd } from '../../eval/runner/budget-ledger.ts';
@@ -230,5 +231,23 @@ describe('wave A run identity across the wave B regeneration (2026-11-08 amendme
       Object.assign(ALL_SETS.RS1, facts);
     }
     expect(moved).toEqual([]);
+  });
+
+  // Value: protects=wave A's counted units keep the run identity they started from through every later commit on the results branch; fails_when=a change to the RS1 cell definitions or to runConfigText moves a field verdict.ts compares for a wave A unit; why_new=verdict.ts aggregates mode lands after wave A started (GBEV-3, 2026-11-09) and must not change wave A's identity; seam=none; no_claim=wave B's units
+  test('every wave A unit still has the identity counted runs started from (test/fixtures/rs1/wave-a-identity.json, recorded at de943504)', () => {
+    const pinned = JSON.parse(readFileSync(join(ROOT, 'test/fixtures/rs1/wave-a-identity.json'), 'utf8')) as { identity_sha256: Record<string, string> };
+    const now = Object.fromEntries(committed.filter(c => waveA.has(c.id)).map(c => [c.id, createHash('sha256').update(identity(c)).digest('hex')]));
+    expect(now).toEqual(pinned.identity_sha256);
+  });
+
+  // Value: protects=a change to RS1's analysis code (verdict.ts, iut.ts, power.ts, pricing.ts) cannot change what a counted unit executes or its frozen campaign tree; fails_when=EXECUTES grows to cover eval/runner/rs1/ or a file the cell runner executes imports from it; why_new=verdict.ts aggregates mode (GBEV-3, 2026-11-09); seam=none; no_claim=paths built at run time
+  test('nothing the cell runner executes is or imports RS1\'s analysis code, so a verdict.ts change cannot reach a counted unit', () => {
+    const { entries } = executedTree(EXECUTES);
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.filter(e => e.path.startsWith('eval/runner/rs1/')).map(e => e.path)).toEqual([]);
+    const imports = entries.filter(e => /\.(ts|tsx|js|mjs)$/.test(e.path)).flatMap(e => [...readFileSync(join(ROOT, e.path), 'utf8').matchAll(/(?:\bfrom|\bimport\s*\(?|\brequire\s*\()\s*['"](\.{1,2}\/[^'"]+)['"]/g)]
+      .map(m => ({ file: e.path, target: relative(ROOT, resolve(ROOT, dirname(e.path), m[1])) })));
+    expect(imports.length).toBeGreaterThan(100);
+    expect(imports.filter(i => i.target.startsWith('eval/runner/rs1/'))).toEqual([]);
   });
 });

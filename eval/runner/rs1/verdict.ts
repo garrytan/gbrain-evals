@@ -4,6 +4,7 @@
  *
  *   bun eval/runner/rs1/verdict.ts verdict --receipts <out dir>... [--manifest <filled rs1-manifest.json>] [--set RS1|RS1-dev2] [--out <dir>]
  *   bun eval/runner/rs1/verdict.ts pilot   --receipts <out dir>... [--manifest <filled rs1-manifest.json>] [--out <dir>]
+ *   bun eval/runner/rs1/verdict.ts aggregates --receipts <out dir>... [--manifest <filled rs1-manifest.json>] --out <dir>
  *
  * Each --receipts directory is a cell or re-read output (cell.ts --out, reread-cell.ts --out): every
  * cells/<cell id>/receipt.json under it is read, with the cell's run-config.json, rows, answers and judgments, and each
@@ -47,17 +48,24 @@
  *             per-conversation differences and their correlation, no means; then power.ts's N_required and
  *             N_final = min(33, max(20, N_required)). Above 33 it exits 3 with RS1_PILOT_OVER_CAP, the margin reachable
  *             at 33 and the price of N_required.
+ *   Aggregates the final custody run (set RS1, the final kept list only): verdict mode's analysis, unchanged, in
+ *             aggregates.json and aggregates.md, with what it was computed from (the code commit, the SHA-256 of verdict.ts,
+ *             iut.ts, rs1-cells.json and the filled manifest, and one SHA-256 over every receipt file read). Every key and
+ *             string in the analysis must come from a closed vocabulary (rows, readers, judges, views, BEAM's ten abilities,
+ *             outcome codes, the report's own templates, and model versions of each gating judge); anything else refuses
+ *             without writing or echoing it. It prints only the verdict, counts and the file's SHA-256.
  */
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { HARNESS_FAILURES, PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
+import { HARNESS_FAILURES, OUTCOMES, PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
 import { instrumentFor } from '../memory-qa/instruments.ts';
 import { readRecords, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { RS1_MANIFEST, rs1Kept, type Rs1Manifest } from '../memory-qa/corpus.ts';
 import { frontierInstrumentId, runConfigIdentity, runConfigText } from '../q1/cell.ts';
 import { PER_READER_JUDGE_SETTINGS } from '../q1/cells/definitions.ts';
-import { loadRS1Manifest, OPUS, PARTICLE, rs1JudgeOf, RS1_WAVE_A, SOL } from '../q1/cells/rs1.ts';
+import { loadRS1Manifest, OPUS, PARTICLE, rs1JudgeOf, RS1_MANIFEST_PATH, RS1_WAVE_A, SOL } from '../q1/cells/rs1.ts';
 import { rereadCellId } from '../q1/reread-cell.ts';
 import { wildTest, type ClusterRow } from '../stats/wild-cluster.ts';
 import { COMPARISONS, conversationDifferences, decide, dropValidity, GATING, inBridgeSet, inCommonSet, questionScores, RS1_MARGIN, SERVERS, tQuantile, viewValue, VIEWS, worstCase,
@@ -71,6 +79,7 @@ export const TABLE_READERS = [OPUS, PARTICLE, SOL];
 export const FILL_GATE = 0.9;
 export const DRAWS = 9999;
 export const SEED = 20261108;
+const BOOTSTRAP_METHOD = `restricted wild cluster bootstrap-t, Webb weights, ${DRAWS} draws, seed ${SEED}, one-sided 95% lower bound`;
 export const ROLES: Record<string, Row | 'floor'> = { 'gbrain-defaults': 'gbrain', 'ext-memory-bank': 'memory-bank', 'ext-extract-first': 'extract-first', 'baseline-none': 'floor' };
 /** Below this many conversations a per-reader or per-ability paired row reads "too few conversations". */
 export const MIN_SUBGROUP_CONVERSATIONS = 5;
@@ -211,7 +220,7 @@ export function analyze(input: VerdictInput) {
     gating: GATING, bridge: { conversations: bridge_conversations.length, common_questions: validity.bridge_common, drop_share: r4(validity.bridge_share), drops: counts(bridgeDrops) },
     verdict: decision.verdict, tests: roundTests(decision), secondaries: decision.secondaries.map(s => ({ id: s.id, status: s.status })),
     worst_case: { verdict: worst.verdict, tests: roundTests(worst), disagrees },
-    bootstrap: { method: `restricted wild cluster bootstrap-t, Webb weights, ${DRAWS} draws, seed ${SEED}, one-sided 95% lower bound`, tests: boot },
+    bootstrap: { method: BOOTSTRAP_METHOD, tests: boot },
     paired, gate, drops: dropCounts, per_reader: perReader, per_ability: perAbility, floor, table,
     judge_snapshots: Object.entries(input.snapshots ?? {}).map(([judge, versions]) => ({ judge, versions, mixed: versions.length > 1 })),
   };
@@ -437,6 +446,76 @@ export function readerValue(a: Pick<AnswerRecord, 'answer_id' | 'reader' | 'outc
   return { frontier, bridge: typeof bridge === 'number' ? bridge : null };
 }
 
+// ─── Aggregates (the final custody run's output) ─────────────────────
+
+/** BEAM's ten probing abilities, as the mint writes them (eval/custody/rs1/rs1_mint.py ABILITIES). */
+export const BEAM_ABILITIES = ['abstention', 'contradiction_resolution', 'event_ordering', 'information_extraction', 'instruction_following', 'knowledge_update', 'multi_session_reasoning', 'preference_following', 'summarization', 'temporal_reasoning'];
+const DROP_REASONS = [...OUTCOMES.filter(o => o !== 'scored'), 'row_missing', 'answer_missing', 'reread_answer_missing', 'judgment_missing:frontier', 'judgment_missing:bridge'];
+const AGGREGATE_WORDS = new Set<string>([
+  'gbrain-evals/rs1-verdict/v1', 'RS1', BOOTSTRAP_METHOD, ...READERS, ...READERS.map(rs1JudgeOf), ...ROWS, 'floor', ...VIEWS, ...COMPARISONS, 'pass', 'fail', 'invalid', 'not_tested',
+  ...SERVERS.map(s => `superiority/${s}`), 'no measurable difference', 'gbrain lower', 'gbrain higher', 'too few conversations', 'overall', ...READERS.map(r => `reader ${r}`),
+  ...BEAM_ABILITIES, ...BEAM_ABILITIES.map(a => `ability ${a}`),
+]);
+const DROP_KEYS = new Set(['gbrain', 'server'].flatMap(side => DROP_REASONS.map(r => `${side}|${r}`)));
+/** The two invalid-reason templates analyze writes (iut.ts dropValidity and the delivered-context gate). */
+const REASON_TEMPLATES = [/^\d+ of \d+ planned questions dropped \(\d+\.\d%, above the 5% cap\)$/, /^descriptive: (gbrain|memory-bank|extract-first) failed the delivered-context gate \(mean fill rate (\d+(\.\d+)?|not recorded), needs 0\.9\)$/];
+/** A model version a gating judge returned: its model id, or its model id and a dated suffix. */
+const isVersionOf = (judge: unknown, v: unknown) => { const model = String(judge).split(':')[1] ?? ''; return typeof v === 'string' && /^[A-Za-z0-9._-]{1,100}$/.test(v) && !!model && (v === model || v.startsWith(`${model}-`)); };
+
+/**
+ * Where an analysis holds a key or value outside the aggregate vocabulary, by path. A problem never quotes the value, so a
+ * refusal cannot carry sealed text out of custody.
+ */
+export function aggregateProblems(analysis: Analysis): string[] {
+  const problems: string[] = [];
+  const walk = (x: unknown, at: string): void => {
+    if (x === null || typeof x === 'boolean' || (typeof x === 'number' && Number.isFinite(x))) return;
+    if (Array.isArray(x)) { x.forEach((v, i) => walk(v, `${at}[${i}]`)); return; }
+    if (typeof x === 'object') {
+      for (const [k, v] of Object.entries(x as Record<string, unknown>)) {
+        if (!/^[a-z0-9_]+$/.test(k) && !DROP_KEYS.has(k)) { problems.push(`${at || 'top level'}: a key outside the aggregate vocabulary (${k.length} characters)`); continue; }
+        if (k === 'versions' && /^judge_snapshots\[\d+\]$/.test(at)) {
+          (Array.isArray(v) ? v : [v]).forEach((s, i) => { if (!isVersionOf((x as Record<string, unknown>).judge, s)) problems.push(`${at}.versions[${i}]: not a model version of its judge`); });
+          continue;
+        }
+        walk(v, at ? `${at}.${k}` : k);
+      }
+      return;
+    }
+    if (typeof x === 'string' && (AGGREGATE_WORDS.has(x) || REASON_TEMPLATES.some(re => re.test(x)))) return;
+    problems.push(`${at}: a ${typeof x} outside the aggregate vocabulary${typeof x === 'string' ? ` (${x.length} characters)` : ''}`);
+  };
+  walk(analysis, '');
+  return problems;
+}
+
+/** The files verdict.ts reads from each receipt directory, for the receipts digest. */
+const RECEIPT_FILES = ['receipt.json', 'run-config.json', 'rows.ndjson', 'answers.ndjson', 'judgments.ndjson'];
+
+/** The final custody run: verdict mode's analysis of the final kept list, checked against the aggregate vocabulary, with what it was computed from. */
+export function aggregatesOf(dirs: readonly string[], manifestPath: string) {
+  const analysis = analyze(loadInput(dirs, { set: 'RS1', manifestPath }));
+  const problems = aggregateProblems(analysis);
+  if (problems.length) refuse(`the analysis holds values outside the aggregate vocabulary, so no aggregates were written: ${problems.slice(0, 5).join('; ')}${problems.length > 5 ? ` (and ${problems.length - 5} more)` : ''}`);
+  const root = resolve(import.meta.dir, '../../..');
+  const git = (...args: string[]) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  let commit = '';
+  try { commit = git('rev-parse', 'HEAD'); } catch { refuse(`aggregates record the checkout's commit, and git rev-parse HEAD failed in ${root}`); }
+  const fileSha = (p: string) => sha256(readFileSync(p));
+  const files = new Set(findReceipts(dirs).flatMap(f => [...RECEIPT_FILES.map(n => join(f.dir, n)), ...(f.receipt.run_cell ? [join(f.root, 'runs', String(f.receipt.run_cell), 'meters.ndjson')] : [])]).filter(p => existsSync(p)));
+  const digests = [...files].map(fileSha).sort();
+  return {
+    schema: 'gbrain-evals/rs1-aggregates/v1',
+    provenance: {
+      code_commit: commit, tracked_tree_clean: git('status', '--porcelain', '--untracked-files=no') === '',
+      verdict_sha256: fileSha(join(import.meta.dir, 'verdict.ts')), iut_sha256: fileSha(join(import.meta.dir, 'iut.ts')), cells_sha256: fileSha(RS1_MANIFEST_PATH),
+      manifest_sha256: fileSha(manifestPath), receipt_files: digests.length, receipt_files_sha256: sha256(digests.join('\n')),
+    },
+    analysis,
+  };
+}
+export type Aggregates = ReturnType<typeof aggregatesOf>;
+
 // ─── Reports ─────────────────────────────────────────────────────────
 
 const fmt = (x: number | null, d = 2) => (x === null ? 'n/a' : x.toFixed(d));
@@ -466,9 +545,14 @@ export function markdown(a: Analysis): string {
   return lines.join('\n') + '\n';
 }
 
+export function aggregatesMarkdown(g: Aggregates): string {
+  const p = g.provenance;
+  return markdown(g.analysis) + ['', '## Provenance', '', `Code ${p.code_commit}${p.tracked_tree_clean ? '' : ' (tracked files modified)'}. SHA-256: verdict.ts ${p.verdict_sha256}, iut.ts ${p.iut_sha256}, rs1-cells.json ${p.cells_sha256}, filled manifest ${p.manifest_sha256}, ${p.receipt_files} receipt files ${p.receipt_files_sha256}.`, ''].join('\n');
+}
+
 function main(argv: string[]): number {
   const [mode, ...args] = argv;
-  if (mode !== 'verdict' && mode !== 'pilot') { process.stderr.write('usage: bun eval/runner/rs1/verdict.ts verdict|pilot --receipts <dir>... [--manifest <file>] [--set RS1|RS1-dev2] [--out <dir>]\n'); return 2; }
+  if (mode !== 'verdict' && mode !== 'pilot' && mode !== 'aggregates') { process.stderr.write('usage: bun eval/runner/rs1/verdict.ts verdict|pilot|aggregates --receipts <dir>... [--manifest <file>] [--set RS1|RS1-dev2] [--out <dir>]\n'); return 2; }
   const receipts: string[] = [];
   let manifestPath = resolve(import.meta.dir, '../../..', RS1_MANIFEST), set: 'RS1' | 'RS1-dev2' = 'RS1', out: string | null = null;
   for (let i = 0; i < args.length; i++) {
@@ -479,9 +563,19 @@ function main(argv: string[]): number {
     else { process.stderr.write(`unknown argument ${args[i]}\n`); return 2; }
   }
   if (!receipts.length) { process.stderr.write('--receipts needs at least one directory\n'); return 2; }
+  if (mode === 'aggregates' && set !== 'RS1') { process.stderr.write('aggregates reads set RS1 only\n'); return 2; }
+  if (mode === 'aggregates' && !out) { process.stderr.write('aggregates needs --out <custody directory>\n'); return 2; }
   const write = (name: string, json: unknown, md: string) => { if (out) { mkdirSync(out, { recursive: true }); writeFileSync(join(out, `${name}.json`), JSON.stringify(json, null, 2) + '\n'); writeFileSync(join(out, `${name}.md`), md); } process.stdout.write(md); };
   try {
     if (mode === 'verdict') { const a = analyze(loadInput(receipts, { set, manifestPath })); write('verdict', a, markdown(a)); return 0; }
+    if (mode === 'aggregates') {
+      const g = aggregatesOf(receipts, manifestPath), json = JSON.stringify(g, null, 2) + '\n';
+      mkdirSync(out!, { recursive: true });
+      writeFileSync(join(out!, 'aggregates.json'), json);
+      writeFileSync(join(out!, 'aggregates.md'), aggregatesMarkdown(g));
+      process.stdout.write(`RS1 aggregates: verdict ${g.analysis.verdict}; ${g.analysis.conversations} conversations; ${g.analysis.common_questions} of ${g.analysis.planned_questions} planned questions in the common set; aggregates.json SHA-256 ${sha256(json)}\n`);
+      return 0;
+    }
     const stats = pilotStats(loadInput(receipts, { set: 'RS1', manifestPath, waveA: true }));
     const size = pilotSize(stats.sds, stats.corr);
     const price = size.n_required === null ? null : priceAt(size.n_required);
