@@ -594,9 +594,11 @@ export class Campaign {
   /**
    * BG1, once campaign.json exists: refuse unless the lease log and the campaign ledger match. Every entry this
    * campaign's run holds with spend (actual, else reserved, above 0) is named by exactly one reserved event in the log,
-   * and every reserved event names an entry the run holds. A log emptied or cut down with its SHA-256 rewritten would
-   * otherwise read as fewer leases than the ledger charges, so a unit could be reserved again and blockSpend would
-   * undercount. Each lease_id is reserved once, and each lease's state matches its entry. The entry reserves the lease's
+   * and every reserved event names an entry the run holds for its cell and attempt (`lease <cell> attempt <n>`, as
+   * reserve() writes it) and a cell in the manifest, so a lease relabelled to another unit or attempt never frees the
+   * unit it is running on. A log emptied or cut down with its SHA-256 rewritten would otherwise read as fewer leases
+   * than the ledger charges, so a unit could be reserved again and blockSpend would undercount. Each lease_id is
+   * reserved once, and each lease's state matches its entry. The entry reserves the lease's
    * amount plus each of its raises in raises.ndjson as raise-lease reserved it (rounded to whole cents, raiseDelta); an
    * open lease the raise lock names is skipped here, because its raise may be between the ledger and its record. A lease
    * settled in the log has its entry settled at the amount the log charges; a lease abandoned at its full charge has its
@@ -621,6 +623,9 @@ export class Campaign {
         ...entries.filter(e => (e.actual_usd ?? e.reserved_usd) > 0).map(e => [e, reserved.filter(r => r.entry_id === e.id).length] as const).filter(([, n]) => n !== 1)
           .map(([e, n]) => `ledger entry ${e.id} ("${e.description}") has spend, and ${n} reserved events in the lease log name it`),
         ...reserved.filter(r => !held.has(r.entry_id)).map(r => `lease ${r.lease_id} names ledger entry ${r.entry_id}, which campaign run ${s.run_id} does not hold`),
+        ...reserved.filter(r => held.has(r.entry_id) && held.get(r.entry_id)!.description !== `lease ${r.cell} attempt ${r.attempt}`)
+          .map(r => `lease ${r.lease_id} is reserved for attempt ${r.attempt} of unit ${r.cell}, and the ledger holds its entry ${r.entry_id} for "${held.get(r.entry_id)!.description}"`),
+        ...reserved.filter(r => !this.manifest.cells.some(c => c.id === r.cell)).map(r => `lease ${r.lease_id} is reserved for unit ${r.cell}, which campaign ${this.manifest.campaign_id} does not have`),
         ...reserved.filter(r => r.lease_id !== mintLeaseId(r.cell, r.attempt, r.entry_id))
           .map(r => `lease ${r.lease_id} is not the id reserve() gives attempt ${r.attempt} of unit ${r.cell} on ledger entry ${r.entry_id}, ${mintLeaseId(r.cell, r.attempt, r.entry_id)}`),
         ...[...new Set(reserved.map(r => r.lease_id))].map(id => [id, reserved.filter(r => r.lease_id === id).length] as const).filter(([, n]) => n > 1)

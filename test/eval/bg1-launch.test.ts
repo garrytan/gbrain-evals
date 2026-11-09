@@ -16,7 +16,7 @@ import { bg1CampaignManifest, loadCellManifest } from '../../eval/runner/q1/cell
 import { raise } from '../../eval/runner/q1/raise-lease.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { runCells } from '../../eval/runner/scoreboard-cli.ts';
-import { Campaign, type CampaignManifest, type LaunchContext } from '../../eval/runner/shootout-cell.ts';
+import { Campaign, mintLeaseId, type CampaignManifest, type LaunchContext } from '../../eval/runner/shootout-cell.ts';
 import { PROVIDER_KEYS } from '../support/no-provider-keys.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
@@ -657,4 +657,44 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     } finally { ledger.close(); }
     expect(r.c.reserve(RAISED).attempt).toBe(2);
   }, 300_000);
+
+  // Value: protects=a running BG1 unit stays held while its lease runs, even when the lease log calls its lease another unit's or another attempt's; fails_when=a reserved event relabelled to a unit outside the manifest, another unit or another attempt, with its lease id minted to match and its SHA-256 rewritten, frees the running unit for a second reserve, launch or resume; why_new=fix-check 4's #3 (a launched lease relabelled to another cell let its unit reserve again); seam=a stage-1 BG1 Campaign over a temporary ledger, launched locally with a runner that records boots; no_claim=a ledger edited by hand
+  test('a reserved event whose unit or attempt disagrees with its ledger entry refuses reserve, launch, resume and payload, and boots nothing', async () => {
+    const w = smokeCampaign(RAISED, OTHER);
+    const c = new Campaign(w.file, w.state);
+    c.init();
+    const boots: string[] = [];
+    const runner = async (_argv: string[], ctx: LaunchContext) => { boots.push(ctx.lease.lease_id); return 0; };
+    const local = { local: { port: 1 } };
+    const a = c.reserve(RAISED);
+    expect((await c.launch(RAISED, runner, local)).status).toBe('finished');
+    const b = c.reserve(OTHER);
+    const log = join(w.state, 'leases.ndjson'), shaFile = join(w.state, 'leases.sha256'), text = readFileSync(log, 'utf8'), sha = readFileSync(shaFile, 'utf8');
+    const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
+    const held = () => readLedger(w.manifest.ledger).entries.filter(e => e.run_id === s.run_id).map(e => [e.description, e.reserved_usd, e.actual_usd]);
+    const before = held();
+    const relabel = (cell: string, attempt: number) => text.split(`"lease_id":"${a.lease_id}"`).join(`"lease_id":"${mintLeaseId(cell, attempt, a.entry_id)}"`).replace(`"cell":"${RAISED}","attempt":1`, `"cell":"${cell}","attempt":${attempt}`);
+    const cases: Array<[string, string]> = [
+      [relabel('ghost', 1), `lease ${mintLeaseId('ghost', 1, a.entry_id)} is reserved for unit ghost, which campaign ${w.manifest.campaign_id} does not have`],
+      [relabel(OTHER, 1), `lease ${mintLeaseId(OTHER, 1, a.entry_id)} is reserved for attempt 1 of unit ${OTHER}, and the ledger holds its entry ${a.entry_id} for "lease ${RAISED} attempt 1"`],
+      [relabel(RAISED, 2), `lease ${mintLeaseId(RAISED, 2, a.entry_id)} is reserved for attempt 2 of unit ${RAISED}, and the ledger holds its entry ${a.entry_id} for "lease ${RAISED} attempt 1"`],
+    ];
+    for (const [t, why] of cases) {
+      expect(t).not.toBe(text);
+      writeFileSync(log, t);
+      writeFileSync(shaFile, createHash('sha256').update(t).digest('hex') + '\n');
+      const entryPoints: Array<() => Promise<unknown>> = [async () => c.reserve(RAISED), () => c.launch(RAISED, runner, local), () => c.resume(RAISED, runner, local), async () => c.payload(b)];
+      for (const go of entryPoints) {
+        const e = await go().then(() => null, x => x);
+        expect(e).toBeInstanceOf(ScoreboardError);
+        expect((e as ScoreboardError).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(why), fix: { user_message: expect.stringMatching(/^Stop and ask the campaign owner/) } });
+        expect(boots).toEqual([a.lease_id]);
+        expect(held()).toEqual(before);
+      }
+    }
+    writeFileSync(log, text);
+    writeFileSync(shaFile, sha);
+    expect((await c.launch(OTHER, runner, local)).status).toBe('finished');
+    expect(boots).toEqual([a.lease_id, b.lease_id]);
+  }, 60_000);
 });
