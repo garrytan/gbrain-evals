@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { LiveRecallAbort } from '../../eval/runner/live-recall/brain.ts';
 import { BATCH3_FIXTURE_QUESTIONS, FIXTURE_DIR, freezeSummary, freezeSummaryBatch3, liveRecall, parseQuestions } from '../../eval/runner/live-recall/run.ts';
-import { COMPARISONS, PROTOCOL_TYPES, TYPES, staleFirst, validateScorecard, type QueryRecord } from '../../eval/runner/live-recall/scorecard.ts';
+import { COMPARISONS, PROTOCOL_TYPES, TYPES, decoyFirst, staleFirst, validateScorecard, type QueryRecord } from '../../eval/runner/live-recall/scorecard.ts';
 import { GBRA_398, visibilityEpoch } from '../../eval/runner/live-recall/visibility-epoch.ts';
 
 const gut = resolveGbrainUnderTest(null);
@@ -43,17 +43,20 @@ describe('live-recall batch3 fixture control (keyless)', () => {
       expect(card.arms[arm].by_type.freshness.all.n).toBe(8);
       expect(card.arms[arm].stale_first.all.n).toBe(8);
       expect(card.arms[arm].stale_first.exact.n).toBe(4);
+      expect(card.arms[arm].decoy_first.all.n).toBe(8);
+      expect(card.arms[arm].decoy_first.paraphrase.n).toBe(4);
     }
     expect(card.comparisons.filter((c: any) => c.primary).map((c: any) => c.id + ':' + c.metric + ':' + c.n_pairs)).toEqual([
       'p1_configured_vs_hybrid_lexical_freshness:success_at_5:8', 'p1_configured_vs_hybrid_lexical_freshness:mrr:8',
       'p2_configured_vs_hybrid_lexical_entity:success_at_5:8', 'p2_configured_vs_hybrid_lexical_entity:mrr:8',
     ]);
     expect(outbound).toContain('Freshness: stale page ranked above the gold');
+    expect(outbound).toContain('Entity: look-alike page ranked above the gold');
   });
 
   test('no question form, gold slug or stale slug reaches the outbound files or the terminal', () => {
     for (const q of batch3Questions) {
-      for (const needle of [...Object.values(q.forms), ...q.gold.map(g => g.slug), ...(q.stale ?? []).map(s => s.slug)]) expect(outbound).not.toContain(needle);
+      for (const needle of [...Object.values(q.forms), ...q.gold.map(g => g.slug), ...(q.stale ?? []).map(s => s.slug), ...(q.decoy ?? []).map(s => s.slug)]) expect(outbound).not.toContain(needle);
     }
   });
 });
@@ -130,6 +133,21 @@ describe('live-recall batch3 questions, freeze and epoch', () => {
   test('stale-first counts a stale page above the gold, or a stale page with no gold', () => {
     const r = (page_rank: number | null, stale_rank: number | null | undefined) => staleFirst({ page_rank, stale_rank } as Pick<QueryRecord, 'page_rank' | 'stale_rank'>);
     expect([r(3, 1), r(null, 2), r(1, 3), r(null, null), r(2, undefined)]).toEqual([1, 1, 0, 0, 0]);
+  });
+
+  test('decoy-first counts a look-alike page above the gold, or one with no gold', () => {
+    const r = (page_rank: number | null, decoy_rank: number | null | undefined) => decoyFirst({ page_rank, decoy_rank } as Pick<QueryRecord, 'page_rank' | 'decoy_rank'>);
+    expect([r(3, 1), r(null, 2), r(1, 3), r(null, null), r(2, undefined)]).toEqual([1, 1, 0, 0, 0]);
+  });
+
+  test('a decoy is optional on entity questions, refused on any other type, and never gold', () => {
+    const entity = (q: Record<string, unknown>) => line({ type: 'entity', ...q });
+    expect(parseQuestions(entity({ decoy: [{ slug: 'p/other' }] }), 'batch3')[0]!.decoy).toEqual([{ slug: 'p/other' }]);
+    expect(parseQuestions(entity({}), 'batch3')[0]!.decoy).toBeUndefined();
+    const refused = (text: string) => { try { parseQuestions(text, 'batch3'); return 'parsed'; } catch (e) { return e instanceof LiveRecallAbort ? e.code + ':' + e.message : String(e); } };
+    expect(refused(entity({ decoy: [{ slug: 'p/gold' }] }))).toContain('decoy[0].slug');
+    expect(refused(entity({ decoy: [] }))).toContain('decoy');
+    expect(refused(line({ type: 'freshness', stale: [{ slug: 'p/old' }], decoy: [{ slug: 'p/other' }] }))).toContain('decoy');
   });
 
   test('batch1 and batch2 comparison lists are unchanged', () => {

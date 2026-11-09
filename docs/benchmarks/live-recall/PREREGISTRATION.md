@@ -359,7 +359,7 @@ their reference.
 **Questions.** About 25 `freshness` and 25 `entity` questions, each with an exact and a paraphrased form, written and
 frozen by Wintermute on the box. The freeze records the actual counts. A `freshness` question names the current page
 as gold and the superseded pages in `stale`. An `entity` question's gold is the right page among pages for different
-people or things with the same or similar names. Both types are accepted only under `--protocol batch3`. The question
+people or things with the same or similar names, and it may list the look-alike pages in `decoy`. Both types are accepted only under `--protocol batch3`. The question
 file format and a public fixture are in the [run kit](RUN-KIT.md#the-question-file).
 
 **System under test and the visibility epoch.** Batch 3 measures the gbrain Wintermute's box runs at the freeze.
@@ -380,8 +380,9 @@ pooled.
 `hybrid_vs_hybrid_lexical_entity`, `configured_vs_keyword_freshness`, `configured_vs_keyword_entity`, batch 2's P1
 on batch 3's questions as `batch2_p1_hybrid_vs_hybrid_lexical_paraphrase`, and every descriptive comparison under
 [Comparisons](#comparisons). Each arm also reports `stale_first` (all forms, exact, paraphrase): the share of
-freshness forms where a stale page ranks above the gold, or comes back when the gold does not. It is descriptive and
-carries no interval.
+freshness forms where a stale page ranks above the gold, or comes back when the gold does not. Entity questions may
+name their look-alike pages in `decoy`, and each arm then reports `decoy_first` the same way over the entity forms that
+carry one. Both are descriptive and carry no interval.
 
 **Power.** From `mde` in `run.ts`, in points, with 25 questions per type:
 

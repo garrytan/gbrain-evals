@@ -64,6 +64,8 @@ export interface Question {
   window?: { since: string; until: string };
   /** batch3 freshness only: pages holding the superseded fact. */
   stale?: Array<{ slug: string }>;
+  /** batch3 entity only, optional: the look-alike pages a wrong answer would come from. */
+  decoy?: Array<{ slug: string }>;
 }
 
 /**
@@ -103,6 +105,7 @@ export function parseQuestions(text: string, protocol: Protocol = 'batch1'): Que
       window = { since: q.window.since, until: q.window.until };
     }
     let stale: Question['stale'];
+    let decoy: Question['decoy'];
     if (protocol === 'batch3') {
       if (q.type === 'freshness') {
         if (!Array.isArray(q.stale) || q.stale.length === 0) throw bad('stale');
@@ -111,9 +114,16 @@ export function parseQuestions(text: string, protocol: Protocol = 'batch1'): Que
           return { slug: s.slug };
         });
       } else if (q.stale !== undefined) throw bad('stale');
+      if (q.type === 'entity' && q.decoy !== undefined) {
+        if (!Array.isArray(q.decoy) || q.decoy.length === 0) throw bad('decoy');
+        decoy = q.decoy.map((s: any, j: number) => {
+          if (typeof s?.slug !== 'string' || !s.slug.trim() || gold.some((g: { slug: string }) => g.slug === s.slug)) throw bad('decoy[' + j + '].slug');
+          return { slug: s.slug };
+        });
+      } else if (q.decoy !== undefined) throw bad('decoy');
     }
     ids.add(q.id);
-    out.push({ id: q.id, type: q.type, forms, gold, gold_found_by: foundBy, ...(window ? { window } : {}), ...(stale ? { stale } : {}) });
+    out.push({ id: q.id, type: q.type, forms, gold, gold_found_by: foundBy, ...(window ? { window } : {}), ...(stale ? { stale } : {}), ...(decoy ? { decoy } : {}) });
   });
   if (out.length === 0) throw new LiveRecallAbort('LR_QUESTIONS_INVALID', 'no questions');
   return out;
@@ -200,7 +210,7 @@ export const FAILURE_STAGES: ReadonlySet<string> = new Set(['embed_unavailable',
 /** In the configured arms these are the reranker failing open, so they count toward the arm's fail-open cap. */
 const RERANK_FAILURE_STAGES: ReadonlySet<string> = new Set(['rerank_failed', 'rerank_passthrough']);
 
-interface Gold { pages: Set<string>; chunks: Set<string>; stale?: Set<string> }
+interface Gold { pages: Set<string>; chunks: Set<string>; stale?: Set<string>; decoy?: Set<string> }
 
 async function runArm(ctx: SearchContext, arm: Arm, base: Pick<QueryRecord, 'qid' | 'type' | 'form' | 'gold_pages' | 'has_chunk_gold'>, gold: Gold, allowed: Kind[], search: (onMeta: (m: any) => void) => Promise<any[]>): Promise<QueryRecord> {
   const calls: Record<string, number> = {};
@@ -233,6 +243,7 @@ async function runArm(ctx: SearchContext, arm: Arm, base: Pick<QueryRecord, 'qid
   const pageRank = rankOfFirstHit(pages, gold.pages);
   const chunkRank = gold.chunks.size ? rankOfFirstHit(chunks, gold.chunks) : Infinity;
   const staleRank = gold.stale ? rankOfFirstHit(pages, gold.stale) : Infinity;
+  const decoyRank = gold.decoy ? rankOfFirstHit(pages, gold.decoy) : Infinity;
   return {
     ...base, arm, status, pages, chunks,
     page_rank: Number.isFinite(pageRank) ? pageRank : null,
@@ -240,6 +251,7 @@ async function runArm(ctx: SearchContext, arm: Arm, base: Pick<QueryRecord, 'qid
     all_found_at: Object.fromEntries(KS.map(k => ['k' + k, recallAllAtK(pages, gold.pages, k) === 1])),
     ms, returned: pages.length, calls, degraded_stages: degraded,
     ...(gold.stale ? { stale_rank: Number.isFinite(staleRank) ? staleRank : null } : {}),
+    ...(gold.decoy ? { decoy_rank: Number.isFinite(decoyRank) ? decoyRank : null } : {}),
   };
 }
 
@@ -248,7 +260,7 @@ export async function runQuestions(ctx: SearchContext, questions: Question[], pr
   const records: QueryRecord[] = [];
   const hybridOpts = { limit: CHUNK_FETCH, expansion: false, crossModal: 'text', autocut: false, reranker: { enabled: false, topNIn: 25, topNOut: null } };
   for (const [i, q] of questions.entries()) {
-    const gold: Gold = { pages: new Set(q.gold.map(g => g.slug)), chunks: new Set(q.gold.flatMap(g => (g.chunk_ids ?? []).map(String))), ...(q.stale ? { stale: new Set(q.stale.map(s => s.slug)) } : {}) };
+    const gold: Gold = { pages: new Set(q.gold.map(g => g.slug)), chunks: new Set(q.gold.flatMap(g => (g.chunk_ids ?? []).map(String))), ...(q.stale ? { stale: new Set(q.stale.map(s => s.slug)) } : {}), ...(q.decoy ? { decoy: new Set(q.decoy.map(s => s.slug)) } : {}) };
     for (const form of ['exact', 'paraphrase'] as const) {
       const text = q.forms[form];
       const base = { qid: q.id, type: q.type, form, gold_pages: gold.pages.size, has_chunk_gold: gold.chunks.size > 0 };
@@ -308,12 +320,12 @@ export async function armPreflight(ctx: SearchContext): Promise<void> {
   if (failed.size) throw new LiveRecallAbort('LR_ARM_PREFLIGHT', [...failed.values()].join('; '));
 }
 
-/** Drop questions whose gold pages (or, for freshness, stale pages) the brain does not hold; abort past the cap. */
+/** Drop questions whose gold pages (or, under batch 3, stale or decoy pages) the brain does not hold; abort past the cap. */
 export async function presenceCheck(engine: any, questions: Question[]): Promise<{ kept: Question[]; missing: number }> {
   const kept: Question[] = [];
   for (const q of questions) {
     let present = true;
-    for (const g of [...q.gold, ...(q.stale ?? [])]) if (!(await engine.getPage(g.slug))) present = false;
+    for (const g of [...q.gold, ...(q.stale ?? []), ...(q.decoy ?? [])]) if (!(await engine.getPage(g.slug))) present = false;
     if (present) kept.push(q);
   }
   const missing = questions.length - kept.length;
@@ -559,7 +571,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     const scorecard = buildScorecard(records, summary, identity, { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: counters.refusals }, protocol);
     const json = JSON.stringify(scorecard, null, 2) + '\n';
     const markdown = renderMarkdown(scorecard);
-    const needles = new Set<string>([...questions.flatMap(q => [...Object.values(q.forms), ...q.gold.map(g => g.slug), ...(q.stale ?? []).map(s => s.slug)]), ...records.flatMap(r => r.pages)]);
+    const needles = new Set<string>([...questions.flatMap(q => [...Object.values(q.forms), ...q.gold.map(g => g.slug), ...(q.stale ?? []).map(s => s.slug), ...(q.decoy ?? []).map(s => s.slug)]), ...records.flatMap(r => r.pages)]);
     scanForLeaks(json + markdown, needles);
     const jsonPath = join(o.out, 'scorecard.json'), mdPath = join(o.out, 'scorecard.md');
     writeFileSync(jsonPath, json);

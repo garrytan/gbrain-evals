@@ -153,13 +153,16 @@ JSONL, one question per line. Fields the runner does not know are ignored, so yo
   the gold.
 - `entity`: two or more pages share a name (two people called the same thing, a company named like its founder's
   handle, a father and son). `gold` is the right one, and the question carries the detail that tells them apart.
+  `decoy` (optional, entity only) lists the look-alike pages in the same `{"slug": ...}` form, none of them gold; the
+  runner then reports how often one outranks the gold. A question with an absent decoy page is dropped like one with
+  an absent stale page.
 
 ```json
 {"id":"fr-2","type":"freshness","forms":{"exact":"What is the annual price of the Brightline Sensors contract?","paraphrase":"How much do we pay each year for the lidar supplier now?"},"gold":[{"slug":"notes/2026-07-15-brightline-renewal"}],"stale":[{"slug":"vendors/brightline-sensors"}],"gold_found_by":"page_first"}
 ```
 
 (From the public batch 3 fixture, `eval/data/live-recall-v1/questions-batch3.jsonl`; `run --fixture --protocol batch3`
-scores it keylessly.) A question with an absent stale page is dropped like one with an absent gold page.
+scores it keylessly; its entity lines carry `decoy`.) A question with an absent stale page is dropped like one with an absent gold page.
 
 **From `evals/recall/questions.jsonl`.** Its gold is message ids in OpenClaw's session index, which is a different
 search system. Here gold must be the gbrain page that holds the answer: if a session is imported into gbrain, use that

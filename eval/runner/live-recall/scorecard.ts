@@ -52,6 +52,8 @@ export interface QueryRecord {
   degraded_stages: string[];
   /** Freshness questions only: the best rank of a stale reference page, or null when none came back. */
   stale_rank?: number | null;
+  /** Entity questions that name a decoy only: the best rank of a look-alike page, or null when none came back. */
+  decoy_rank?: number | null;
 }
 
 export interface RunIdentity {
@@ -231,6 +233,9 @@ export const COMPARISONS: Record<Protocol, Comparison[]> = {
 /** The stale page outranks the gold: it came back and the gold came back lower or not at all. */
 export const staleFirst = (r: Pick<QueryRecord, 'page_rank' | 'stale_rank'>) => (typeof r.stale_rank === 'number' && (r.page_rank === null || r.stale_rank < r.page_rank) ? 1 : 0);
 
+/** A look-alike page outranks the gold: it came back and the gold came back lower or not at all. */
+export const decoyFirst = (r: Pick<QueryRecord, 'page_rank' | 'decoy_rank'>) => (typeof r.decoy_rank === 'number' && (r.page_rank === null || r.decoy_rank < r.page_rank) ? 1 : 0);
+
 /** Eligibility, per-arm cells and the listed comparisons over a set of records. An arm named in seedInvalid is invalid before any record is read. */
 function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: Record<string, string> = {}, types: readonly QType[] = TYPES) {
   const byArm = new Map<Arm, QueryRecord[]>(ARMS.map(a => [a, records.filter(r => r.arm === a)]));
@@ -279,6 +284,14 @@ function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: R
         all: proportion(fresh, staleFirst, true),
         exact: proportion(fresh.filter(r => r.form === 'exact'), staleFirst, false),
         paraphrase: proportion(fresh.filter(r => r.form === 'paraphrase'), staleFirst, false),
+      };
+    }
+    const decoyed = rows.filter(r => r.type === 'entity' && r.decoy_rank !== undefined);
+    if (types.includes('entity') && decoyed.length) {
+      (arms[arm] as Record<string, unknown>).decoy_first = {
+        all: proportion(decoyed, decoyFirst, true),
+        exact: proportion(decoyed.filter(r => r.form === 'exact'), decoyFirst, false),
+        paraphrase: proportion(decoyed.filter(r => r.form === 'paraphrase'), decoyFirst, false),
       };
     }
   }
@@ -374,7 +387,7 @@ const KEY_WORDS = new Set<string>([
   'reranker_model', 'embedding_model', 'embedding_column', 'mode_expansion', 'control', 'top5_changed', 'degraded_stages',
   'pgvector_version', 'source_pgvector', 'source_server_version_num', 'copy_server_version_num', 'restore_errors', 'run_a', 'run_b',
   'chat', 'embedding', 'rerank', 'multimodal', 'decide', 'transcription',
-  'stale_first', 'type', 'visibility_epoch', 'freeze_gbrain_version', 'freeze_visibility_epoch',
+  'stale_first', 'decoy_first', 'type', 'visibility_epoch', 'freeze_gbrain_version', 'freeze_visibility_epoch',
   'synthetic', 'transports', 'digest', 'questions_sha256', 'unembedded_chunk_share', 'synopsis_vectors_off', 'keyword_candidate_bound', 'shell_page_share', 'chunks', 'unembedded_chunks',
   ...ARMS, ...ALL_TYPES, ...KS.map(k => 'k' + k), ...STATUSES, ...GOLD_FOUND_BY,
 ]);
@@ -485,6 +498,15 @@ export function renderMarkdown(s: ReturnType<typeof buildScorecard>): string {
       if (!a || a.invalid || !a.stale_first) continue;
       const c = a.stale_first;
       lines.push('| ' + arm + ' | ' + c.all.n + ' | ' + pct(c.all.rate) + ' (' + ci(c.all.ci95) + ') | ' + pct(c.exact.rate) + ' | ' + pct(c.paraphrase.rate) + ' |');
+    }
+    if (ARMS.some(arm => (s.arms as Record<string, any>)[arm]?.decoy_first)) {
+      lines.push('', '## Entity: look-alike page ranked above the gold', '', '| Arm | n | decoy-first (95% CI) | exact | paraphrase |', '|---|---|---|---|---|');
+      for (const arm of ARMS) {
+        const a = (s.arms as Record<string, any>)[arm];
+        if (!a || a.invalid || !a.decoy_first) continue;
+        const c = a.decoy_first;
+        lines.push('| ' + arm + ' | ' + c.all.n + ' | ' + pct(c.all.rate) + ' (' + ci(c.all.ci95) + ') | ' + pct(c.exact.rate) + ' | ' + pct(c.paraphrase.rate) + ' |');
+      }
     }
   }
   lines.push('', '## Paired comparisons (delta = B minus A)', '', '| Comparison | Metric | Pairs | A | B | Delta (95% CI) | p | Holm p | MDE |', '|---|---|---|---|---|---|---|---|---|');

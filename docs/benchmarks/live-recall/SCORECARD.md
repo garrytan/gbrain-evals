@@ -86,8 +86,9 @@ each excluded form), `invalid_arms` (`rerank_fail_open_over_cap`, `embedding_opt
 
 Under `batch3`, `by_type` has seven types (the five live types plus `freshness` and `entity`), and each valid arm also
 has `stale_first` with `all`, `exact` and `paraphrase`: `hits`, `n`, `rate`, `ci95` and `interval` over freshness
-question forms for "a stale page came back above the gold, or came back and the gold did not". It is reported, never
-a primary.
+question forms for "a stale page came back above the gold, or came back and the gold did not". When any entity
+question lists `decoy` pages, each valid arm also has `decoy_first` in the same shape, over the entity forms that carry
+one, for a look-alike page in place of a stale one. Both are reported, never a primary.
 
 **`comparisons`**: one row per comparison and metric (`success_at_5` and `mrr`), in the preregistration's order:
 `id`, `metric`, `a`, `b`, `form` (`all`, `exact`, `paraphrase` or `exact_vs_paraphrase` with `arm`),
