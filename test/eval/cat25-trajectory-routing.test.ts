@@ -105,6 +105,17 @@ describe('cat25 good input — real pipeline, wave consumes trajectory', () => {
   }, PROBE_TIMEOUT);
 });
 
+describe('cat25 every probe at the pinned gbrain', () => {
+  // Value: protects=a gbrain pin bump that stops runThink injecting the trajectory for any one of the six probes fails CI by that probe's id; fails_when=gbrain v0.60.557.0 (62637c96a), whose month window dropped the trajectory for team-size-trajectory-foundry and mrr-midpoint-nimbus; why_new=CI ran only two probes, so the other four were checked only by a local hermetic run; seam=none; no_claim=wiring only, the deterministic actor answers from the injected block
+  test.each(PROBES.map(p => p.id))('%s: wave arm injects the trajectory and scores; baseline never sees it', async id => {
+    const r = resultOf(await runProbe(probeById(id), { complete: hermeticComplete, judge: markerJudge }));
+    expect(r.wave_trajectory_injected).toBe(true);
+    expect(r.baseline_block_absent).toBe(true);
+    expect(r.wave_score).toBe(1);
+    expect(r.baseline_score).toBe(0);
+  }, PROBE_TIMEOUT);
+});
+
 describe('cat25 regression — the original bug can no longer publish', () => {
   test('legacy markdown-table seeding (no insertFact) fails the preflight', async () => {
     // Exactly the pre-fix seeding path: a bare '## Facts' markdown table in
