@@ -39,7 +39,7 @@ import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { ChatClient, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { readRecords, sha256, type JudgmentRecord } from '../memory-qa/records.ts';
-import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../metering-proxy.ts';
+import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageSplit } from '../metering-proxy.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { claimOut, keylessUpstreamArg } from '../q1/calibration-cell.ts';
 import { metering, onSlot, type MeterLine } from '../q1/cell.ts';
@@ -273,13 +273,12 @@ if (import.meta.main) {
     writeFileSync(join(out, 'pool.json'), JSON.stringify({ seed, pool }, null, 2) + '\n');
     console.log(JSON.stringify({ seed, items: pool.length, real: pool.filter(i => i.source === 'real').length, construction: pool.filter(i => i.source === 'construction').length, calls: pool.length * GATING_JUDGES.length }, null, 2));
     if (mode === 'plan') process.exit(0);
-    const placeholder = 'keyless-not-a-provider-key';
     const [cellToken, controlToken] = [randomUUID(), randomUUID()];
     Object.assign(process.env, { SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
     const lease = openRereadLease({ runId: runId!, leaseUsd, ledgerPath: resolve(ledger!), capUsd: cap, runner: 'bg1-judge-check' });
     const usageLog = join(out, 'usage.ndjson');
-    const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
-      policy: { lease, usageLog, env: keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder } : { ...process.env },
+    const proxy = new MeteringProxy({ ...(keyless ? { upstream: keylessUpstream(keyless) } : {}), cellToken, controlToken,
+      policy: { lease, usageLog, env: keyless ? keylessKeys() : { ...process.env },
         routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS, ...Object.fromEntries(GATING_JUDGES.map(j => [`judge@${j}`, PER_READER_JUDGE_SETTINGS.max_tokens])) }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
     proxy.start();
     try {

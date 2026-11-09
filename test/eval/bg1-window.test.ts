@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import type { Bg1Manifest, Corpus } from '../../eval/runner/memory-qa/corpus.ts';
-import { bg1CampaignManifest, bg1CellWindow, bg1KeptUnit, findCell, loadCellManifest } from '../../eval/runner/q1/cell.ts';
+import { bg1CampaignManifest, bg1CellWindow, bg1KeptUnit, campaignManifest, findCell, loadCellManifest } from '../../eval/runner/q1/cell.ts';
 import { prepareReread, rereadArm } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { BG1_CONVERSATIONS } from '../../eval/runner/bg1/types.ts';
@@ -105,6 +105,24 @@ describe('a BG1 campaign', () => {
     for (const cell of c.cells) expect(cell.command).toMatch(new RegExp(`--manifest bg1 --shard ${cell.id.at(-1)}/7 (--system-url \\S+ )?--paid-window BG1-WA-CELLS --window-cap-usd 400 --out "\\$SHOOTOUT_OUT"`));
     const dev = bg1CampaignManifest(m, { smoke: true, units: { ...sel, campaign_id: 'q1-scoreboard-bg1-stage1', units: ['bg1-dev3.baseline-none.baseline'] } });
     expect(dev.cells.map(x => x.command)).toEqual([expect.stringContaining('--cell bg1-dev3.baseline-none.baseline --manifest bg1 --paid-window BG1-WA-CELLS --window-cap-usd 400 --out "$SHOOTOUT_OUT"')]);
+  });
+
+  // Value: protects=a BG1 unit's VM gets Gemini's key only as BG1_GEMINI_API_KEY, and no other campaign's units change; fails_when=a BG1 unit passes GEMINI_API_KEY or no Gemini key, or a q1, f6 or rs1 unit gains a provider, pass or key mapping; why_new=GBEV-3's key rule for BG1's canonical judge; seam=bg1CampaignManifest; no_claim=that the launch host holds the key
+  test('every BG1 unit passes BG1_GEMINI_API_KEY and maps it to Gemini, never GEMINI_API_KEY; q1, f6 and rs1 units pass only their own providers\' keys', () => {
+    const units = [...bg1CampaignManifest(m, { units: sel }).cells, ...bg1CampaignManifest(m, { smoke: true, units: { ...sel, campaign_id: 'q1-scoreboard-bg1-stage1', units: ['bg1-dev3.baseline-none.baseline'] } }).cells];
+    expect(units).toHaveLength(3);
+    for (const cell of units) {
+      expect(cell.providers).toContain('gemini');
+      expect(cell.pass).toContain('BG1_GEMINI_API_KEY');
+      expect(cell.pass).not.toContain('GEMINI_API_KEY');
+      expect(cell.gemini_key_env).toBe('BG1_GEMINI_API_KEY');
+    }
+    const KEYS: Record<string, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: 'PARTICLE_API_KEY' };
+    for (const id of ['q1', 'f6', 'rs1']) for (const cell of campaignManifest(loadCellManifest(id), { smoke: true }).cells) {
+      expect(cell.providers!.every(p => p in KEYS)).toBe(true);
+      expect(cell.pass).toEqual(cell.providers!.map(p => KEYS[p]));
+      expect(cell.gemini_key_env).toBeUndefined();
+    }
   });
 
   test('a BG1 campaign without a selection naming a well-formed window, or without a positive cap, is refused', () => {

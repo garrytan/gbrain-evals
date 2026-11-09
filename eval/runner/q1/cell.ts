@@ -1496,10 +1496,15 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
 /** paid_window: the granted paid window a BG1 campaign runs in; every unit's command passes it, and cap_usd as the window cap. */
 export interface Bg1UnitSelection extends UnitSelection { paid_window: string }
 
+/** BG1's Gemini key variable: the custody host's ~/.config/gbrain-evals/bg1.env names it, and no BG1 unit reads GEMINI_API_KEY. */
+export const BG1_GEMINI_KEY_ENV = 'BG1_GEMINI_API_KEY';
+
 /**
  * BG1's campaign manifest: campaignManifest over a unit selection that names its granted paid window, with every unit's
  * run naming bg1-cells.json and carrying --paid-window and --window-cap-usd, so bg1CellWindow lets the unit spend only
- * inside that window. A BG1 campaign without such a selection is refused before any file is written.
+ * inside that window. A BG1 campaign without such a selection is refused before any file is written. Every unit's
+ * canonical judge is Gemini, so its VM also receives BG1_GEMINI_API_KEY, which runRemote hands the lease proxy as
+ * Gemini's key (gemini_key_env); every other campaign's providers and passes are campaignManifest's own.
  */
 export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: Partial<Bg1UnitSelection> } = {}): Q1Campaign {
   const u = opts.units;
@@ -1510,7 +1515,8 @@ export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed
   const out = ' --out "$SHOOTOUT_OUT"';
   return { ...campaign, cells: campaign.cells.map(cell => {
     if (cell.command.split(out).length !== 2) throw new Error(`BG1 unit ${cell.id} has no single${out} in its command to put the paid window before`);
-    return { ...cell, command: cell.command.replace(out, () => ` --paid-window ${paid_window} --window-cap-usd ${units.cap_usd}${out}`) };
+    return { ...cell, providers: [...(cell.providers ?? []), 'gemini'], pass: [...(cell.pass ?? []), BG1_GEMINI_KEY_ENV], gemini_key_env: BG1_GEMINI_KEY_ENV,
+      command: cell.command.replace(out, () => ` --paid-window ${paid_window} --window-cap-usd ${units.cap_usd}${out}`) };
   }) };
 }
 

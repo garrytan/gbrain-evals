@@ -138,7 +138,14 @@ const ROUTES: Record<ProviderName, Array<{ method: string; path: RegExp }>> = {
   particle: [{ method: 'POST', path: /^\/v1\/chat\/completions$/ }, { method: 'GET', path: /^\/v1\/models(\/[^/]+)?$/ }],
   gemini: [{ method: 'POST', path: /^\/v1beta\/openai\/chat\/completions$/ }, { method: 'GET', path: /^\/v1beta\/openai\/models(\/[^/]+)?$/ }],
 };
-const KEY_ENV: Record<ProviderName, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: PARTICLE.key_env, gemini: GEMINI.key_env };
+export const KEY_ENV: Record<ProviderName, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: PARTICLE.key_env, gemini: GEMINI.key_env };
+/** A keyless run's upstreams: every provider goes to the fake at `url` (Particle under /particle), so no route can reach a real provider. */
+export function keylessUpstream(url: string): Record<ProviderName, string> {
+  const u = url.replace(/\/$/, '');
+  return { openai: u, anthropic: u, voyage: u, particle: `${u}/particle`, gemini: u };
+}
+/** A keyless run's proxy keys: a placeholder in every provider's key variable, so no real key is read. */
+export const keylessKeys = (): Record<string, string> => Object.fromEntries(Object.values(KEY_ENV).map(k => [k, 'keyless-not-a-provider-key']));
 const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-organization', 'openai-project', 'cookie', 'proxy-authorization'];
 export const DEFAULT_MAX_OUTPUT_TOKENS = 32_768;
 /** A provider call may run this long, transport retries and the body included (Bun's own 300-second fetch timeout is off; long reasoning calls exceed it). */

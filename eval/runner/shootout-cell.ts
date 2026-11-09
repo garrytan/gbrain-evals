@@ -79,7 +79,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:pat
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { BudgetRun, initLedger, ledgerStatus, setProgramCap, setRunBudget } from './budget-ledger.ts';
-import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
+import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, KEY_ENV, keylessUpstream, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
 import { refuse, ScoreboardError } from './q1/scoreboard-errors.ts';
 import { BEAM10M_MANIFEST } from './memory-qa/beam10m-corpus.ts';
 import { insideRepository, sha256File } from './sealed-confirmation-lib.ts';
@@ -133,6 +133,8 @@ export interface CellSpec {
   conversations?: string[];
   /** Q1: providers the cell calls, for admission shares (default openai, anthropic, voyage). */
   providers?: ProviderName[];
+  /** Q1: the variable the VM receives Gemini's key in (BG1: BG1_GEMINI_API_KEY); runRemote hands it to the lease proxy as Gemini's key variable, by reference, and the cell never sees it. */
+  gemini_key_env?: string;
   /** Q1: expected wall-clock hours, for the schedule. */
   expected_hours?: number;
   /** Q1: an explicit schedule wave (1-based); otherwise the planner packs cells under the vCPU cap. */
@@ -341,6 +343,8 @@ export interface RemotePayload {
   restore?: { realization_id: string | null; dir: string; restore_command?: string };
   route_caps?: { caps: Record<string, number>; slots: Record<string, string>; defaultClass: string };
   admission?: Partial<Record<ProviderName, ProviderLimits>>;
+  /** The cell's gemini_key_env: the proxy's Gemini key comes from this variable and no other, and the cell's environment drops both. */
+  gemini_key_env?: string;
   /**
    * A sealed cell: the proxy's ledger and usage log live in the VM's custody root, ~/custody/<lease id>, passed to the
    * command as SHOOTOUT_CUSTODY, so only the lease summary and what the command writes to SHOOTOUT_OUT leave the VM. A
@@ -642,7 +646,7 @@ export class Campaign {
     return { ...base, ...(c.sealed ? { sealed: true, out: `~/${this.remotePath(l)}` } : {}), cell: c.id, campaign_sha256: this.sha, row_pull_every: this.manifest.row_pull_every ?? ROW_PULL_EVERY,
       ...(c.snapshot_command ? { snapshot_command: c.snapshot_command } : {}), ...(restore ? { restore } : {}),
       route_caps: { caps: { ...DEFAULT_ROUTE_CAPS, ...(this.manifest.output_caps ?? {}) }, slots: { ...DEFAULT_ROUTE_CLASSES, ...(this.manifest.route_classes ?? {}) }, defaultClass: 'extraction' },
-      ...(this.manifest.provider_limits ? { admission: this.admissionShare(c) } : {}) };
+      ...(this.manifest.provider_limits ? { admission: this.admissionShare(c) } : {}), ...(c.gemini_key_env ? { gemini_key_env: c.gemini_key_env } : {}) };
   }
 
   /** Q1: the cell's share of each provider key's limits, divided among the cells of its wave that call that provider. */
@@ -978,7 +982,8 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
   for (const [prov, lim] of Object.entries(payload.admission ?? {})) extra.push('--admission', `${prov}=${Object.entries(lim!).map(([k, v]) => `${k}:${v}`).join(',')}`);
   const proxy = Bun.spawn([process.execPath, join(REPO_ROOT, 'eval/runner/metering-proxy.ts'), '--listen', `0.0.0.0:${port}`, '--budget-ledger', ledger, '--lease-usd', String(payload.lease_usd),
     '--run-id', payload.lease_id, '--usage-log', join(traces, 'usage.ndjson'), ...(payload.max_output_tokens ? ['--max-output-tokens', String(payload.max_output_tokens)] : []), '--control-token', controlToken,
-    ...extra, ...Object.entries(opts.upstream ?? {}).flatMap(([prov, url]) => ['--upstream', `${prov}=${url}`])], { stdout: 'inherit', stderr: 'inherit', env: { ...process.env, SHOOTOUT_CELL_TOKEN: cellToken } });
+    ...extra, ...Object.entries(opts.upstream ?? {}).flatMap(([prov, url]) => ['--upstream', `${prov}=${url}`])], { stdout: 'inherit', stderr: 'inherit',
+    env: { ...process.env, ...(payload.gemini_key_env ? { [KEY_ENV.gemini]: process.env[payload.gemini_key_env] ?? '' } : {}), SHOOTOUT_CELL_TOKEN: cellToken } });
   let code: number | null = null;
   let timedOut = false;
   let stoppedBy: string | null = null;
@@ -1007,6 +1012,7 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     const env: Record<string, string | undefined> = { ...process.env, SHOOTOUT_OUT: out, SHOOTOUT_PROXY: base, SHOOTOUT_LEASE_ID: payload.lease_id, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken,
       OPENAI_BASE_URL: `${base}/cell/openai/v1`, ANTHROPIC_BASE_URL: `${base}/cell/anthropic`, VOYAGE_BASE_URL: `${base}/cell/voyage/v1`, PARTICLE_BASE_URL: `${base}/cell/particle/v1`, SHOOTOUT_CELL_TOKEN: cellToken, ...(custody ? { SHOOTOUT_CUSTODY: custody } : {}),
       ...(custody && payload.cell ? { GBRAIN_EVALS_CUSTODY_LOG: join(out, 'access-log.jsonl') } : {}) };
+    if (payload.gemini_key_env) for (const k of [payload.gemini_key_env, KEY_ENV.gemini]) delete env[k];
     for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'PARTICLE_API_KEY']) if (env[k]) env[k] = 'dummy-key-the-proxy-replaces';
     if (payload.restore) {
       const dir = resolve(REPO_ROOT, expandHome(payload.restore.dir));
@@ -1111,7 +1117,7 @@ if (import.meta.main) {
     const cmd = argv[0];
     if (cmd === 'remote') {
       const keyless = process.env.SHOOTOUT_KEYLESS_UPSTREAM;
-      const upstream = keyless ? { ...Object.fromEntries(['openai', 'anthropic', 'voyage'].map(p => [p, keyless])), particle: `${keyless.replace(/\/$/, '')}/particle` } : undefined;
+      const upstream = keyless ? keylessUpstream(keyless) : undefined;
       process.exit(await runRemote(JSON.parse(Buffer.from(one('--cell-b64') ?? '', 'base64').toString('utf8')), { port: one('--port') ? Number(one('--port')) : undefined, upstream }));
     }
     if (cmd === 'hash') {
