@@ -401,6 +401,32 @@ describe('metering proxy', () => {
     expect(c.committed().run).toBeCloseTo(failed.reserved_usd, 12);
   });
 
+  // Value: protects=GST-2163: the harness proxy fails closed on usage the ledger cannot price; fails_when=a response naming an unpriced cache tier settles below its reservation, reaches the harness as a success, or the cell keeps sending paid requests; why_new=usageCost now refuses unpriced cache tiers; seam=startMeteringProxy non-stream settle; no_claim=does not call a provider
+  test('a response the ledger cannot price is charged at its reservation and answered 402, and the cell sends no paid request after it', async () => {
+    const c = await cell({ labels: ['harness'] });
+    const auth = { authorization: `Bearer ${c.proxy.tokens.harness}` };
+    const body = { model: 'gpt-6.1-sol', max_tokens: 50, messages: [] };
+    const url = `${c.proxy.baseUrls.openai}/chat/completions`;
+    c.stub.respond('openai.chat', () => ({ status: 200, body: { id: 'chatcmpl-x', object: 'chat.completion', model: 'gpt-6.1-sol', choices: [{ index: 0, message: { role: 'assistant', content: 'ok' }, finish_reason: 'stop' }],
+      usage: { prompt_tokens: 10, completion_tokens: 2, prompt_tokens_details: { cached_tokens: 0, cache_write_tokens: 4, cache_write_tokens_details: { ttl_7d_tokens: 4 } } } } }));
+    const message = async (r: Response) => ((await r.json()) as { error: { type: string; message: string } }).error;
+    const first = await post(url, auth, body);
+    expect(first.status).toBe(402);
+    const charged = await message(first);
+    expect(charged.type).toBe(REFUSAL_TYPE);
+    expect(charged.message.replaceAll('\u200b', '')).toContain('at its reservation');
+    const second = await post(url, auth, body);
+    expect(second.status).toBe(402);
+    expect((await message(second)).message.replaceAll('\u200b', '')).toContain('reported usage the ledger cannot price');
+    expect(c.stub.hits.total).toBe(1);
+    expect(c.proxy.exhausted).toBe(true);
+    const [settled, refused] = c.log();
+    expect(settled).toMatchObject({ settlement: 'charged-reservation', status: 402 });
+    expect(settled.error).toContain('ttl_7d_tokens');
+    expect(refused).toMatchObject({ refused: true, status: 402 });
+    expect(c.committed().run).toBeCloseTo(settled.reserved_usd, 12);
+  });
+
   // Value: protects=the workload-route proxy never sends a provider's real key over http to a host that is not loopback (issue #277); fails_when=an --upstream with an http URL that is not loopback is accepted; why_new=assertMetered guards clients only, and this proxy swaps in the real key itself; seam=none; no_claim=TLS certificate checks
   test('an upstream that is not loopback must be https, because the proxy sends the real key there (#277)', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'mp-cleartext-')); dirs.push(dir);

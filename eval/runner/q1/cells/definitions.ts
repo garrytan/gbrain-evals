@@ -30,7 +30,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { CHAT_PRICE_OVERRIDES } from '../../budget-ledger.ts';
+import { CHAT_PRICE_OVERRIDES, type ChatPrice } from '../../budget-ledger.ts';
 import { lookupEmbeddingPrice } from '../../../../node_modules/gbrain/src/core/embedding-pricing.ts';
 import { READER_WINDOWS } from '../../systems/baselines.ts';
 import type { Outcome } from '../../memory-qa/outcomes.ts';
@@ -464,11 +464,20 @@ export const BG1_JUDGE_BY_READER: Record<string, string> = Object.fromEntries(['
 
 // ─── Prices ──────────────────────────────────────────────────────────
 
-/** List price per million tokens from eval/runner/budget-ledger.ts; a dated snapshot bills at its family's price. */
-export function priceOf(model: string): { input: number; output: number; cache_read?: number; cache_write?: number } {
+/**
+ * List price per million tokens from eval/runner/budget-ledger.ts; a dated snapshot bills at its family's price. These are
+ * the rates the cell manifests record, for requests at the default cache lifetime: a cache-write rate equal to the input
+ * rate, a missing long-prompt tier and OpenAI's 12-hour cache lifetime, which no cell selects, are left out, so a frozen
+ * manifest keeps its bytes when the ledger only states them.
+ */
+export function priceOf(model: string): { input: number; output: number; cache_read?: number; cache_write?: number; long?: Omit<NonNullable<ChatPrice['long']>, 'cache_write_12h'> } {
   const p = CHAT_PRICE_OVERRIDES[model] ?? CHAT_PRICE_OVERRIDES[model.replace(/-\d{4}-?\d{2}-?\d{2}$/, '')];
   if (!p) throw new Error(`no price for ${model} in CHAT_PRICE_OVERRIDES (eval/runner/budget-ledger.ts); register its per-million-token rates there before planning`);
-  return p;
+  const { cache_write_12h: _12h, long, ...rates } = p;
+  if (rates.cache_write === rates.input) delete rates.cache_write;
+  if (!long) return rates;
+  const { cache_write_12h: _long12h, ...longRates } = long;
+  return { ...rates, long: longRates };
 }
 
 const call = (model: string, input: number, output: number) => { const p = priceOf(model); return (input * p.input + output * p.output) / 1e6; };

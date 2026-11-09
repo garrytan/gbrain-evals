@@ -291,6 +291,8 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
   const pending = new Set<Promise<void>>();
   let exhausted = false;
   let lastRefusal: string | null = null;
+  /** Set by the first response whose usage the ledger cannot price: it is charged at its reservation and every later priced request is refused. */
+  let unpriced: string | null = null;
 
   function record(line: RequestLogLine): void {
     appendFileSync(options.requestLogPath, JSON.stringify(line) + '\n');
@@ -301,6 +303,16 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
       t.actual_usd += line.actual_usd ?? 0;
       t.input_tokens += line.input_tokens ?? 0;
       t.output_tokens += line.output_tokens ?? 0;
+    }
+  }
+
+  /** Settlement cost from reported usage; usage the ledger cannot price is an error that stops the cell's paid requests. */
+  function priced(cost: () => ReturnType<typeof usageCost>): { cost: ReturnType<typeof usageCost>; error: string | null } {
+    try { return { cost: cost(), error: null }; }
+    catch (error) {
+      exhausted = true;
+      unpriced = lastRefusal = (error as Error).message;
+      return { cost: null, error: unpriced };
     }
   }
 
@@ -370,6 +382,10 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
     }
     line.model = price?.model ?? null;
     line.kind = price?.kind ?? null;
+    if (price && unpriced) {
+      const { response, message } = refusal(`${price.provider}:${price.model} ${price.kind}`, label, `an earlier response in this cell reported usage the ledger cannot price (${unpriced})`);
+      return finish(response, { refused: true, error: message });
+    }
     let id: string | null = null;
     if (price) {
       line.reserved_usd = reservationUsd(price);
@@ -418,7 +434,11 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
       }
       let parsed: unknown = null;
       try { parsed = JSON.parse(new TextDecoder().decode(bytes)); } catch {}
-      const cost = price && parsed !== null ? usageCost(price, parsed) : null;
+      const { cost, error } = priced(() => (price && parsed !== null ? usageCost(price, parsed) : null));
+      if (error) {
+        const message = `metering proxy charged ${price!.provider}:${price!.model} for cell ${cellId} (process ${label}) at its reservation and stops this cell's paid requests: ${error}`;
+        return finish(errorResponse(402, REFUSAL_TYPE, message), { ...settle(null, upstream.status, error), error, ...responseFields(provider, parsed) });
+      }
       return finish(new Response(bytes, { status: upstream.status, statusText: upstream.statusText, headers: outHeaders }), { ...settle(cost, upstream.status, null), ...responseFields(provider, parsed) });
     }
 
@@ -428,7 +448,8 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
       let patch: Partial<RequestLogLine>;
       try {
         const text = await new Response(toMeter).text();
-        patch = { ...settle(price ? streamUsageCost(price, text) : null, status, null), ...responseFields(provider, streamResponse(text)) };
+        const { cost, error } = priced(() => (price ? streamUsageCost(price, text) : null));
+        patch = { ...settle(cost, status, error), ...responseFields(provider, streamResponse(text)), ...(error ? { error } : {}) };
       } catch (error) {
         const message = `stream from ${provider} ended early: ${(error as Error).message}`;
         patch = { ...settle(null, status, message), error: message };

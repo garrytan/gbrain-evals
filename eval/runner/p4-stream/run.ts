@@ -83,10 +83,13 @@ export function sessionTime(date: string | undefined): number {
 }
 export const approxTokens = (s: string) => Math.ceil(s.length / 3.6);
 
+/** The calls' cost: what the budget ledger settles them at (`usd`), else the summed usage at the short-prompt list rates. */
 export function priceUsage(model: string, u: CallUsage): number {
+  if (u.usd !== undefined) return u.usd;
   const p = CHAT_PRICE_OVERRIDES[`${provider(model)}:${model}`];
   if (!p) throw new Error(`no verified price for ${model}; add it to CHAT_PRICE_OVERRIDES`);
-  return (u.input * p.input + u.cache_read * (p.cache_read ?? p.input) + u.cache_write * (p.cache_write ?? p.input) + u.output * p.output) / 1e6;
+  if (u.cache_write > 0 && p.cache_write === undefined) throw new Error(`no verified cache-write rate for ${model}; add it to CHAT_PRICE_OVERRIDES before pricing its cache writes`);
+  return (u.input * p.input + u.cache_read * (p.cache_read ?? p.input) + u.cache_write * (p.cache_write ?? 0) + u.output * p.output) / 1e6;
 }
 
 /** Question order fixed by seed alone (sha256 of seed + id), so a limit is a reproducible slice. */
@@ -181,7 +184,7 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
   const run = brainEnv(dir, buildDir, ctx.proxy.port, slot);
   ctx.proxy.bind(slot, cellId);
   const errors: string[] = [];
-  const usage: CallUsage = { input: 0, cache_write: 0, cache_read: 0, output: 0 };
+  const usage: Required<CallUsage> = { input: 0, cache_write: 0, cache_read: 0, output: 0, usd: 0 };
   const toolCalls: Record<string, number> = {};
   let client: McpClient | null = null;
   // LongMemEval haystacks are not stored in date order; BEAM chats are.
@@ -189,7 +192,7 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
   const profile = ctx.benchmark === 'lme-s' ? await profileFor(ctx, ordered[0]) : await standingPreferencesFor(ctx, ordered);
   const answers = new Map<string, { answer: string; usage: CallUsage }>();
   const savedByOut = new Map<string, string>();
-  let streamUsage: CallUsage = { input: 0, cache_write: 0, cache_read: 0, output: 0 };
+  let streamUsage: Required<CallUsage> = { input: 0, cache_write: 0, cache_read: 0, output: 0, usd: 0 };
   const row: CellRow = {
     id: cellId, conversation: convId, question_id: '', category: '', abstention: false, arm: armLabel, model, window: ctx.window,
     answer: '', qa_scores: [], qa_score: 0, sessions: ordered.length, live_turns: 0, compactions: 0, notices: 0, notice_segments: 0, missed_segments: 0,
@@ -330,7 +333,7 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
       writeFileSync(transcript.path, baseTranscript);
       const before = { ...usage };
       const answer = await liveTurn(`[Now: ${q.question_date ?? lastDate ?? 'today'}] ${q.question}\n\n${FINAL_INSTRUCTION}`, 10, 2000);
-      answers.set(q.id, { answer, usage: { input: usage.input - before.input, cache_write: usage.cache_write - before.cache_write, cache_read: usage.cache_read - before.cache_read, output: usage.output - before.output } });
+      answers.set(q.id, { answer, usage: { input: usage.input - before.input, cache_write: usage.cache_write - before.cache_write, cache_read: usage.cache_read - before.cache_read, output: usage.output - before.output, usd: usage.usd - before.usd } });
     }
   } catch (e) {
     if ((e as Error).name === 'BudgetExceededError') throw e;
@@ -350,7 +353,7 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
       ...row, id: `${q.id}__${armLabel}__${model}`, question_id: q.id, category: q.category, abstention: q.abstention,
       answer: a?.answer ?? '', qa_scores: [], qa_score: 0, errors: [...errors], tool_calls: { ...toolCalls }, tool_errors: { ...row.tool_errors }, truncated_tool_calls: row.truncated_tool_calls,
       evidence_saved: goldSaved.length > 0, stream_questions: qs.length,
-      usage: a?.usage ?? { input: 0, cache_write: 0, cache_read: 0, output: 0 },
+      usage: a?.usage ?? { input: 0, cache_write: 0, cache_read: 0, output: 0, usd: 0 },
       usd_stream: streamUsd, usd_agent: streamUsd / qs.length + (a ? priceUsage(model, a.usage) : 0),
       usd_gbrain: row.usd_gbrain / qs.length, usd_profile: row.usd_profile / qs.length, ms: Date.now() - t0,
     };
