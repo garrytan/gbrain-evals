@@ -4,11 +4,11 @@ gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research,
 
 ## The finding
 
-No score, verdict or ranking a report states changes. One takeaway does: the memory proof wave's rebuilt cell ledger
-no longer fits its approved cap with the full frontier sweep if gpt-6-astra's cache writes behave like gpt-6.1-sol's,
-though its 10% sweep option fits either way. One description changes too: on the Hard confirmation's M world,
-gpt-6.1-sol's dollars per success with gbrain are now 1.09 to 1.63 times those with files, so the report calls gbrain
-dearer for Sol rather than slightly dearer.
+No score, verdict or ranking a report states changes. One takeaway does: the memory proof wave's rebuilt cell ledger no
+longer fits its approved cap with the full frontier sweep if gpt-6-astra's cache writes behave like gpt-6.1-sol's,
+though its 10% sweep option fits either way. The Hard confirmation's description of its M world stands: with both arms
+at the same end of their ranges, gpt-6.1-sol's dollars per success with gbrain are 1.30 to 1.37 times those with files
+(was 1.35), so gbrain is still slightly dearer for Sol.
 
 Some published dollar figures for gpt-6.1-sol, gpt-6-sol, gpt-6-luna and gpt-6-astra are low, for two reasons. First,
 the code that priced them counted OpenAI's cache writes as plain input. OpenAI's Responses API reports every uncached
@@ -73,7 +73,7 @@ low, in percent. [Corrections](../corrections.md#openai-cache-writes) summarizes
 | same | A1 no-memory floor | $0.60 | unchanged: every prompt is under 1,024 tokens |
 | [Program-primary baseline](../benchmarks/2026-10-08-program-primary-baseline.md) | gpt-6.1-sol dollars per run | $0.100 | $0.116 |
 | [Program-primary hard baseline](../benchmarks/2026-10-08-program-primary-hard-baseline.md) | gpt-6.1-sol dollars per run | $0.075 | $0.088 |
-| [Sealed confirmation](../benchmarks/2026-10-11-t0b-sealed-confirmation.md) | gpt-6.1-sol dollars per cell, stack against frozen | $0.077 against $0.075 (1.04x) | at most $0.0931 against $0.0893 (1.04x) |
+| [Sealed confirmation](../benchmarks/2026-10-11-t0b-sealed-confirmation.md) | gpt-6.1-sol dollars per cell, stack against frozen | $0.077 against $0.075 (1.04x) | at most $0.0931 against $0.0893 (1.04x at the recorded dollars and at both upper bounds; the committed data allow 0.87x to 1.24x, inside the 1.5x envelope) |
 | [Hard root cause](../benchmarks/2026-10-08-program-primary-hard-root-cause.md) | gpt-6.1-sol dollar ratio against the baseline | 1.01x | 1.00x |
 | [Alias stack](../benchmarks/2026-10-09-alias-stack.md) | gpt-6.1-sol dollar ratio, development | 1.09x | 1.10x |
 | [Candidate 1](../benchmarks/2026-10-09-candidate-1-newer-mentions.md) | gpt-6.1-sol dollar ratio, fresh seeds | 1.01x | 1.02x |
@@ -84,12 +84,13 @@ The BEAM-1M arms were settled by a ledger from before `8a8e502a` and are reprice
 tokens; cached answers and prompts under 1,027 tokens get no premium, and the rest get it on their input less 3 tokens.
 The lane's figures come from its committed usage receipts. The sealed confirmation's rows are not committed, so its
 figures give gpt-6.1-sol the whole gap between each arm's ledger and its cells' recorded dollars, which makes them upper
-bounds; its ratio and envelope verdict don't change. In the hard baseline, the gpt-6.1-sol premium from the rows is 92%
-of the gap between the ledger and the cells. Every envelope stays inside its limits. No committed request in these runs
-passes 272,000 input tokens (the largest has 103,137), so the long-context tier doesn't apply. The sealed confirmation
-commits no requests; its gpt-6.1-sol cells average 93,000 to 97,000 input tokens in all. [The BEAM-1M and lane
-tool](2026-11-09-openai-cache-writes/beam-and-program-primary/README.md) recomputes every figure in this section and the
-cache-write rule.
+bounds; its ratio is 1.04x at the recorded dollars and at both upper bounds; the committed data allow 0.87x to 1.24x,
+inside the 1.5x envelope, so the envelope verdict doesn't change. In the hard baseline, the gpt-6.1-sol premium from the
+rows is 92% of the gap between the ledger and the cells. Every envelope stays inside its limits. No committed request in
+these runs passes 272,000 input tokens (the largest has 103,137), so the long-context tier doesn't apply. The sealed
+confirmation commits no requests; its gpt-6.1-sol cells average 93,000 to 97,000 input tokens in all. [The BEAM-1M and
+lane tool](2026-11-09-openai-cache-writes/beam-and-program-primary/README.md) recomputes every figure in this section
+and the cache-write rule.
 
 ## Cat 40
 
@@ -132,7 +133,7 @@ One command at the repository root reproduces every figure here from committed f
 | [2026-10-07-wave11-agent-smoke.md](../benchmarks/2026-10-07-wave11-agent-smoke.md) | cell totals: all, master, wave 11, pilot; ledger total | as published | about 2% low; about 2% low; about 1% low; about 19% low; about 2% low |
 | [2026-10-07-wave12-agent-smoke.md](../benchmarks/2026-10-07-wave12-agent-smoke.md) | preregistered cells: all, baseline, wave 12; ledger total | as published | about 2% low; about 2% low; about 2% low; about 1% low |
 | [2026-10-10-model-ladder-hard-confirmation.md](../benchmarks/2026-10-10-model-ladder-hard-confirmation.md) | world M, Sol: gbrain and fs $/success | 0.32, 0.24 | 0.38 to 0.45, 0.28 to 0.35 |
-| [2026-10-10-model-ladder-hard-confirmation.md](../benchmarks/2026-10-10-model-ladder-hard-confirmation.md) | world M, Sol: gbrain against fs per success ("slightly dearer") | 1.35 times | 1.09 to 1.63 times, now "dearer" |
+| [2026-10-10-model-ladder-hard-confirmation.md](../benchmarks/2026-10-10-model-ladder-hard-confirmation.md) | world M, Sol: gbrain against fs per success ("slightly dearer") | 1.35 times | 1.30 to 1.37 times with both arms at the same end of their ranges (1.09 to 1.63 at opposite ends); still "slightly dearer" |
 | [2026-10-10-model-ladder-hard-confirmation.md](../benchmarks/2026-10-10-model-ladder-hard-confirmation.md) | world S, Sol: gbrain and fs $/success | 0.46, 0.32 | not recomputed (rows not committed); 19% to 42% low and 17% to 48% low, as on M |
 | [2026-10-12-d2d4-smoke/VERDICT.md](../benchmarks/2026-10-12-d2d4-smoke/VERDICT.md) | gpt-6.1-sol cost, 10 cells: master, d2d4 | $0.36, $0.14 | $0.43, $0.16 |
 | [2026-10-14-d5-brief-smoke/VERDICT.md](../benchmarks/2026-10-14-d5-brief-smoke/VERDICT.md) | gpt-6.1-sol cost, 10 cells: master, d5 | $0.38, $0.37 | $0.46, $0.44 |

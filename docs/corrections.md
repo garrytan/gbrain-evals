@@ -165,11 +165,12 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   [Report](benchmarks/2026-10-08-beam-1m-failure-analysis.md#2-reading-arms-on-the-frozen-evidence).
 - **gpt-6.1-sol's dollars in the program-primary lane are low.** Its dollars per run are $0.116 in the baseline (was
   $0.100) and $0.088 in the hard baseline (was $0.075). The sealed confirmation's are at most $0.0931 against $0.0893
-  (was $0.077 against $0.075, still 1.04x); its sealed rows are not committed, so these give Sol the whole gap between
-  each arm's ledger and its cells. The hard root cause's Sol dollar ratio is 1.00x (was 1.01x), the alias stack's
-  development ratio 1.10x (was 1.09x) and Candidate 1's fresh-seed ratio 1.02x (was 1.01x). The proactive brief's
-  dollars per cell, all three readers together, are $0.196 off and $0.183 on (was $0.190 and $0.179), and $0.214 and
-  $0.196 in v2 (was $0.208 and $0.192). Every envelope stays inside its limits.
+  (was $0.077 against $0.075); its sealed rows are not committed, so these give Sol the whole gap between each arm's
+  ledger and its cells, and their ratio is 1.04x at the recorded dollars and at both upper bounds; the committed data
+  allow 0.87x to 1.24x, inside the 1.5x envelope. The hard root cause's Sol dollar ratio is 1.00x (was 1.01x), the alias
+  stack's development ratio 1.10x (was 1.09x) and Candidate 1's fresh-seed ratio 1.02x (was 1.01x). The proactive
+  brief's dollars per cell, all three readers together, are $0.196 off and $0.183 on (was $0.190 and $0.179), and $0.214
+  and $0.196 in v2 (was $0.208 and $0.192). Every envelope stays inside its limits.
   [Baseline](benchmarks/2026-10-08-program-primary-baseline.md),
   [hard baseline](benchmarks/2026-10-08-program-primary-hard-baseline.md),
   [sealed confirmation](benchmarks/2026-10-11-t0b-sealed-confirmation.md),

@@ -231,12 +231,15 @@ function ledgerFig(id: string, doc: string, hint: number, what: string, publishe
   const t = sums(Array.isArray(s) ? s : pick(s), true); const l = +published.replace(/[$,]/g, '');
   figures.push({ id, doc: D(doc), line: locate(D(doc), published, hint), what, published, now: fmtPct(100 * (t.lower - t.original) / l, 100 * (t.upper - t.original) / l), moves: true, long_tier: t.tier > 0 });
 }
-function ratio(id: string, doc: string, needle: string, what: string, published: string, a: Est, b: Est, dp = 2, fall = false) {
+function ratio(id: string, doc: string, needle: string, what: string, published: string, a: Est, b: Est, dp = 2, fall = false, matched = false) {
   const f = (x: number) => fall ? 100 * (1 - x) : x;
   const [lo, hi] = [a.lower / b.upper, a.upper / b.lower].map(f).sort((x, y) => x - y);
   if (!docLines.has(D(doc))) docLines.set(D(doc), readFileSync(join(REPO, D(doc)), 'utf8').split('\n'));
   const at = docLines.get(D(doc))!.findIndex(l => l.includes(needle));
   figures.push({ id, doc: D(doc), line: at < 0 ? null : at + 1, what, published, original: +f(a.original / b.original).toFixed(dp + 1), lower: +lo.toFixed(dp + 1), upper: +hi.toFixed(dp + 1), now: range(lo.toFixed(dp), hi.toFixed(dp)), moves: false, long_tier: a.tier + b.tier > 0 });
+  if (!matched) return;
+  const [mlo, mhi] = [a.lower / b.lower, a.upper / b.upper].map(f).sort((x, y) => x - y);
+  Object.assign(figures[figures.length - 1], { matched_lower: +mlo.toFixed(dp + 1), matched_upper: +mhi.toFixed(dp + 1), matched_now: range(mlo.toFixed(dp), mhi.toFixed(dp)) });
 }
 function estimate(id: string, doc: string, hint: number, what: string, published: string, basis: Est) {
   figures.push({ id, doc: D(doc), line: locate(D(doc), published, hint), what, published, now: fmtPct(pct(basis.original, basis.lower), pct(basis.original, basis.upper)), moves: true, long_tier: basis.tier > 0 });
@@ -331,7 +334,7 @@ value('hardconf-M-sol-gbrain', `${HC}.md`, 56, 'world M, GPT-6.1 Sol, gbrain $/s
 value('hardconf-M-sol-fs', `${HC}.md`, 56, 'world M, GPT-6.1 Sol, fs $/success', '0.24', 2, hcM.fs);
 estimate('hardconf-S-sol-gbrain', `${HC}.md`, 60, 'world S, GPT-6.1 Sol, gbrain $/success: rows not committed, estimated as the rise on world M', '0.46', hcM['gbrain-hard']);
 estimate('hardconf-S-sol-fs', `${HC}.md`, 60, 'world S, GPT-6.1 Sol, fs $/success: rows not committed, estimated as the rise on world M', '0.32', hcM.fs);
-ratio('hardconf-M-sol-gbrain-vs-fs', `${HC}.md`, 'and dearer for Sol', 'GPT-6.1 Sol gbrain against fs per success on M (the report said slightly dearer; corrected to dearer)', 'above 1', hcM['gbrain-hard'], hcM.fs);
+ratio('hardconf-M-sol-gbrain-vs-fs', `${HC}.md`, 'slightly dearer for Sol', 'GPT-6.1 Sol gbrain against fs per success on M (the report says slightly dearer, which holds with both arms at the same end of their ranges)', 'above 1', hcM['gbrain-hard'], hcM.fs, 2, false, true);
 const DD = '2026-10-12-d2d4-smoke'; const D5 = '2026-10-14-d5-brief-smoke';
 value('d2d4-sol-master', `${DD}/VERDICT.md`, 9, 'GPT-6.1 Sol cost, 10 cells, master', '0.36', 2, stat({ files: [`${DD}/master/results.jsonl`], where: model('gpt-6.1-sol') }, 'sum'), '$');
 value('d2d4-sol-d2d4', `${DD}/VERDICT.md`, 12, 'GPT-6.1 Sol cost, 10 cells, d2d4', '0.14', 2, stat({ files: [`${DD}/d2d4/results.jsonl`], where: model('gpt-6.1-sol') }, 'sum'), '$');

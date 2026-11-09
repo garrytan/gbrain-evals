@@ -618,6 +618,10 @@
   },
   "stack_over_frozen": 1.03675,
   "stack_over_frozen_upper_bounds": 1.042676,
+  "stack_over_frozen_range": [
+   0.868711,
+   1.244364
+  ],
   "within_envelope": true
  },
  "f6_dry_run": [

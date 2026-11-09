@@ -186,7 +186,7 @@ const sealed = Object.fromEntries(['frozen/counted', 'stack/counted', 'stack/mut
   return [part, { cells: rows.length, sol_cells: sol.length, ledger_usd: r6(ledger), cells_usd: r6(cells), gap_usd: r6(ledger - cells), sol_per_cell_usd: r6(solUsd / sol.length), sol_per_cell_upper_bound_usd: r6((solUsd + ledger - cells) / sol.length) }];
 }));
 const sf = sealed['stack/counted'], ff = sealed['frozen/counted'];
-const sealed_confirmation = { arms: sealed, stack_over_frozen: r6(sf.sol_per_cell_usd / ff.sol_per_cell_usd), stack_over_frozen_upper_bounds: r6(sf.sol_per_cell_upper_bound_usd / ff.sol_per_cell_upper_bound_usd), within_envelope: sf.sol_per_cell_upper_bound_usd / ff.sol_per_cell_upper_bound_usd <= ENVELOPE_DOLLAR_LIMIT };
+const sealed_confirmation = { arms: sealed, stack_over_frozen: r6(sf.sol_per_cell_usd / ff.sol_per_cell_usd), stack_over_frozen_upper_bounds: r6(sf.sol_per_cell_upper_bound_usd / ff.sol_per_cell_upper_bound_usd), stack_over_frozen_range: [r6(sf.sol_per_cell_usd / ff.sol_per_cell_upper_bound_usd), r6(sf.sol_per_cell_upper_bound_usd / ff.sol_per_cell_usd)], within_envelope: sf.sol_per_cell_upper_bound_usd / ff.sol_per_cell_usd <= ENVELOPE_DOLLAR_LIMIT };
 
 // F6 dry run: the metering proxy's per-cell Sol reader aggregates [calls, input, output, usd] reproduce only with every
 // input token at the cache-write rate.

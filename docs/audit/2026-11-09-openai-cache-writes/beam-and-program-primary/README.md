@@ -55,7 +55,9 @@ ledger (its `cost-*.json` files) and its cells' recorded dollars (`scores.jsonl.
 - `ledger_checks`: for runs whose cost files are the whole ledger, the gap between ledger and cells and how much of it
   the gpt-6.1-sol premium explains.
 - `sealed_confirmation`: per arm, the ledger, the cells, the gap and the gpt-6.1-sol dollars per cell with its upper
-  bound, and the stack-over-frozen ratio.
+  bound; the stack-over-frozen ratio at the recorded dollars and at both upper bounds; and the range the data allow,
+  from stack's recorded dollars over frozen's upper bound to stack's upper bound over frozen's recorded dollars.
+  `within_envelope` tests that range's high end against the 1.5x limit.
 - `f6_dry_run`: the metering proxy's gpt-6.1-sol aggregates per cell against the cache-write and input rates. They
   match only the cache-write rate, so these figures were already right.
 - `w10`: W10b and W10c gpt-6.1-sol reader dollars at the cache-write rate, list and batch, per question and per

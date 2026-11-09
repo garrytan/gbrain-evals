@@ -64,11 +64,12 @@ The rows keep each session's token totals and request count, not each request's 
   generated lines and cells that move, report figures and those that move, figures whose original doesn't reproduce,
   sessions that could and must pass 272,000 tokens (each cell counted once), budget runs with a ledger cap, ledger
   commits missing from history, and ordering changes.
-- `report_figures`: one entry per published figure. `id`, `doc` and `line` locate it, `what` says what it is
-  and `published` is the doc's original value. `reproduces` is false when the original rows don't give the published
-  value at its rounding. Value figures carry `original`, `lower` and `upper`; spend figures give only `now` as a
-  percentage. `now` is the corrected value or range, `moves` whether it differs from the published value, and
-  `long_tier` whether the high end includes the long-context rates.
+- `report_figures`: one entry per published figure. `id`, `doc` and `line` locate it, `what` says what it is and
+  `published` is the doc's original value. `reproduces` is false when the original rows don't give the published value
+  at its rounding. Value figures carry `original`, `lower` and `upper`; spend figures give only `now` as a percentage.
+  `now` is the corrected value or range, `moves` whether it differs from the published value, and `long_tier` whether
+  the high end includes the long-context rates. A ratio's range divides opposite ends of its two figures;
+  `matched_lower`, `matched_upper` and `matched_now`, where given, divide the same ends.
 - `generated_pages`: one entry per regenerated page, with its audit `anchor`, the affected `models`,
   `long_tier`, line counts and `moved`, the cells that change (`line`, `row`, `col`, `was`, `now`; spend lines
   give `now` as a percentage).
