@@ -1,0 +1,3071 @@
+{
+  "schema": "gbrain-evals/rs1-judge-check/v1",
+  "judges": {
+    "gating": [
+      "openai:gpt-6-astra",
+      "anthropic:claude-opus-5-5"
+    ],
+    "descriptive": [
+      "openai:gpt-4.1-mini"
+    ]
+  },
+  "settings": {
+    "effort": "medium",
+    "max_tokens": 8000
+  },
+  "unit": "rubric-item judgment; pass = 1.0, fail below",
+  "pool": {
+    "candidates": 160,
+    "by_class": {
+      "real": 80,
+      "gold": 40,
+      "corrupt": 40
+    },
+    "corruption_kinds": {
+      "number": 15,
+      "date": 0,
+      "entity": 3,
+      "contradiction": 2,
+      "negation": 1,
+      "drop": 8,
+      "abstain": 3,
+      "invented": 8
+    },
+    "items": 505
+  },
+  "inter_judge": {
+    "kappa": 0.9475,
+    "ci95": [
+      0.9193,
+      0.9757
+    ],
+    "items": 505,
+    "agreement": 0.9743,
+    "weighted_kappa": 0.9408,
+    "cross_family": {
+      "kappa": 0.9601,
+      "ci95": [
+        0.9285,
+        0.9917
+      ],
+      "items": 335,
+      "agreement": 0.9821,
+      "note": "reported, not a gate: gate (i) without the real answers either gating judge's own family read"
+    }
+  },
+  "labelled_set": {
+    "items": 492,
+    "by_class": {
+      "real": 254,
+      "gold": 110,
+      "corrupt": 128
+    },
+    "pass": 281,
+    "fail": 211
+  },
+  "gating_views": [
+    {
+      "judge": "openai:gpt-6-astra",
+      "readers": [
+        "anthropic:claude-opus-5-5"
+      ],
+      "items": 83,
+      "labelled": 79,
+      "pass": 35,
+      "fail": 44,
+      "wanted": 40,
+      "short": false
+    },
+    {
+      "judge": "anthropic:claude-opus-5-5",
+      "readers": [
+        "openai:gpt-6.1-sol",
+        "particle:particle-1"
+      ],
+      "items": 184,
+      "labelled": 175,
+      "pass": 52,
+      "fail": 123,
+      "wanted": 40,
+      "short": false
+    }
+  ],
+  "per_judge": [
+    {
+      "judge": "openai:gpt-6-astra",
+      "role": "gating",
+      "judgments": 160,
+      "judge_errors": 0,
+      "truncated": 0,
+      "truncation_rate": 0,
+      "cache_hits": 138,
+      "calls": 1179,
+      "versions": [
+        "gpt-6-astra"
+      ],
+      "kappa_vs_construction": 0.9721,
+      "kappa_vs_construction_ci95": [
+        0.9336,
+        1.0106
+      ],
+      "kappa_vs_construction_n": 238,
+      "weighted_kappa_vs_construction": 0.9048,
+      "overall": {
+        "items": 505,
+        "bad": 211,
+        "catch_rate": 0.9953,
+        "catch_ci95": [
+          0.9736,
+          0.9992
+        ],
+        "good": 281,
+        "false_fail_rate": 0.0036,
+        "false_fail_ci95": [
+          0.0006,
+          0.0199
+        ],
+        "kappa_vs_labelled": 1,
+        "kappa_vs_labelled_ci95": [
+          1,
+          1
+        ],
+        "na": null
+      },
+      "by_class": {
+        "real": {
+          "items": 267,
+          "bad": 167,
+          "catch_rate": 1,
+          "catch_ci95": [
+            0.9775,
+            1
+          ],
+          "good": 87,
+          "false_fail_rate": 0,
+          "false_fail_ci95": [
+            0,
+            0.0423
+          ],
+          "kappa_vs_labelled": 1,
+          "kappa_vs_labelled_ci95": [
+            1,
+            1
+          ],
+          "na": null
+        },
+        "gold": {
+          "items": 110,
+          "bad": 0,
+          "catch_rate": null,
+          "catch_ci95": null,
+          "good": 110,
+          "false_fail_rate": 0,
+          "false_fail_ci95": [
+            0,
+            0.0337
+          ],
+          "kappa_vs_labelled": null,
+          "kappa_vs_labelled_ci95": null,
+          "na": null
+        },
+        "corrupt": {
+          "items": 128,
+          "bad": 44,
+          "catch_rate": 0.9773,
+          "catch_ci95": [
+            0.8819,
+            0.996
+          ],
+          "good": 84,
+          "false_fail_rate": 0.0119,
+          "false_fail_ci95": [
+            0.0021,
+            0.0644
+          ],
+          "kappa_vs_labelled": 1,
+          "kappa_vs_labelled_ci95": [
+            1,
+            1
+          ],
+          "na": null
+        }
+      }
+    },
+    {
+      "judge": "anthropic:claude-opus-5-5",
+      "role": "gating",
+      "judgments": 160,
+      "judge_errors": 0,
+      "truncated": 0,
+      "truncation_rate": 0,
+      "cache_hits": 135,
+      "calls": 1147,
+      "versions": [
+        "claude-opus-5-5"
+      ],
+      "kappa_vs_construction": 0.9721,
+      "kappa_vs_construction_ci95": [
+        0.9336,
+        1.0106
+      ],
+      "kappa_vs_construction_n": 238,
+      "weighted_kappa_vs_construction": 0.9284,
+      "overall": {
+        "items": 505,
+        "bad": 211,
+        "catch_rate": 0.9953,
+        "catch_ci95": [
+          0.9736,
+          0.9992
+        ],
+        "good": 281,
+        "false_fail_rate": 0.0036,
+        "false_fail_ci95": [
+          0.0006,
+          0.0199
+        ],
+        "kappa_vs_labelled": 1,
+        "kappa_vs_labelled_ci95": [
+          1,
+          1
+        ],
+        "na": null
+      },
+      "by_class": {
+        "real": {
+          "items": 267,
+          "bad": 167,
+          "catch_rate": 1,
+          "catch_ci95": [
+            0.9775,
+            1
+          ],
+          "good": 87,
+          "false_fail_rate": 0,
+          "false_fail_ci95": [
+            0,
+            0.0423
+          ],
+          "kappa_vs_labelled": 1,
+          "kappa_vs_labelled_ci95": [
+            1,
+            1
+          ],
+          "na": null
+        },
+        "gold": {
+          "items": 110,
+          "bad": 0,
+          "catch_rate": null,
+          "catch_ci95": null,
+          "good": 110,
+          "false_fail_rate": 0,
+          "false_fail_ci95": [
+            0,
+            0.0337
+          ],
+          "kappa_vs_labelled": null,
+          "kappa_vs_labelled_ci95": null,
+          "na": null
+        },
+        "corrupt": {
+          "items": 128,
+          "bad": 44,
+          "catch_rate": 0.9773,
+          "catch_ci95": [
+            0.8819,
+            0.996
+          ],
+          "good": 84,
+          "false_fail_rate": 0.0119,
+          "false_fail_ci95": [
+            0.0021,
+            0.0644
+          ],
+          "kappa_vs_labelled": 1,
+          "kappa_vs_labelled_ci95": [
+            1,
+            1
+          ],
+          "na": null
+        }
+      }
+    },
+    {
+      "judge": "openai:gpt-4.1-mini",
+      "role": "descriptive",
+      "judgments": 160,
+      "judge_errors": 0,
+      "truncated": 0,
+      "truncation_rate": 0,
+      "cache_hits": 0,
+      "calls": 0,
+      "versions": [
+        "gpt-4.1-mini-2025-04-14"
+      ],
+      "kappa_vs_construction": 0.9284,
+      "kappa_vs_construction_ci95": [
+        0.8663,
+        0.9905
+      ],
+      "kappa_vs_construction_n": 238,
+      "weighted_kappa_vs_construction": 0.9057,
+      "overall": {
+        "items": 505,
+        "bad": 211,
+        "catch_rate": 0.7583,
+        "catch_ci95": [
+          0.6962,
+          0.8111
+        ],
+        "good": 281,
+        "false_fail_rate": 0.0498,
+        "false_fail_ci95": [
+          0.0299,
+          0.0819
+        ],
+        "kappa_vs_labelled": 0.7243,
+        "kappa_vs_labelled_ci95": [
+          0.6618,
+          0.7867
+        ],
+        "na": null
+      },
+      "by_class": {
+        "real": {
+          "items": 267,
+          "bad": 167,
+          "catch_rate": 0.7186,
+          "catch_ci95": [
+            0.646,
+            0.7813
+          ],
+          "good": 87,
+          "false_fail_rate": 0.1494,
+          "false_fail_ci95": [
+            0.0895,
+            0.239
+          ],
+          "kappa_vs_labelled": 0.5204,
+          "kappa_vs_labelled_ci95": [
+            0.4144,
+            0.6265
+          ],
+          "na": null
+        },
+        "gold": {
+          "items": 110,
+          "bad": 0,
+          "catch_rate": null,
+          "catch_ci95": null,
+          "good": 110,
+          "false_fail_rate": 0,
+          "false_fail_ci95": [
+            0,
+            0.0337
+          ],
+          "kappa_vs_labelled": null,
+          "kappa_vs_labelled_ci95": null,
+          "na": null
+        },
+        "corrupt": {
+          "items": 128,
+          "bad": 44,
+          "catch_rate": 0.9091,
+          "catch_ci95": [
+            0.7884,
+            0.9641
+          ],
+          "good": 84,
+          "false_fail_rate": 0.0119,
+          "false_fail_ci95": [
+            0.0021,
+            0.0644
+          ],
+          "kappa_vs_labelled": 0.912,
+          "kappa_vs_labelled_ci95": [
+            0.8364,
+            0.9876
+          ],
+          "na": null
+        }
+      }
+    }
+  ],
+  "gates": [
+    {
+      "gate": "inter-judge kappa, Astra vs Opus (i)",
+      "value": 0.9475,
+      "line": 0.6,
+      "pass": true
+    },
+    {
+      "gate": "openai:gpt-6-astra kappa against the construction labels (ii)",
+      "value": 0.9721,
+      "line": 0.6,
+      "pass": true
+    },
+    {
+      "gate": "anthropic:claude-opus-5-5 kappa against the construction labels (ii)",
+      "value": 0.9721,
+      "line": 0.6,
+      "pass": true
+    },
+    {
+      "gate": "openai:gpt-6-astra truncation rate",
+      "value": 0,
+      "line": 0.01,
+      "pass": true
+    },
+    {
+      "gate": "anthropic:claude-opus-5-5 truncation rate",
+      "value": 0,
+      "line": 0.01,
+      "pass": true
+    }
+  ],
+  "stop": false,
+  "shortfalls": [],
+  "spend": {
+    "source": "metering proxy usage log (provider usage fields)",
+    "keyless": false,
+    "usage": {
+      "requests": 3265,
+      "refused": 0,
+      "unauthorized": 0
+    }
+  },
+  "candidates": [
+    {
+      "id": "real:bf339f4d7b8d3c7c",
+      "class": "real",
+      "question_id": "1m-20:temporal_reasoning:1",
+      "category": "temporal_reasoning",
+      "text_sha256": "59d561b6c171107e3e7661152336cbf55a5ab10eabc116777ed4a9060ab47f0a",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "baseline-none|anthropic:claude-opus-5-5|fail"
+    },
+    {
+      "id": "real:101ab7bcb3710e2f",
+      "class": "real",
+      "question_id": "1m-28:event_ordering:0",
+      "category": "event_ordering",
+      "text_sha256": "bc6a2907b6218594239e013232120729d7f5ce29aa2ebef14d395f269bda9cc1",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|anthropic:claude-opus-5-5|partial"
+    },
+    {
+      "id": "real:4d1650635c9f0189",
+      "class": "real",
+      "question_id": "1m-20:abstention:1",
+      "category": "abstention",
+      "text_sha256": "039554a878d493de01418fe855772a94ca2c196fbbd544851adc5af0fd08e899",
+      "labels": [
+        null
+      ],
+      "stratum": "baseline-none|anthropic:claude-opus-5-5|pass"
+    },
+    {
+      "id": "real:f3e11a34306df7dd",
+      "class": "real",
+      "question_id": "1m-28:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "c7409c1dc4039fcd93e11c188cf49e39e697a4b375d5455e2b49c5cc13b6af3d",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "baseline-none|openai:gpt-6.1-sol|fail"
+    },
+    {
+      "id": "real:8466bcf68a89a3d5",
+      "class": "real",
+      "question_id": "1m-20:event_ordering:1",
+      "category": "event_ordering",
+      "text_sha256": "79e0e78324ac83941daafa4a27fb570c3ff0580fadd2b0d417bbe18bcfb00160",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|openai:gpt-6.1-sol|partial"
+    },
+    {
+      "id": "real:e30715dbd9f7e8a1",
+      "class": "real",
+      "question_id": "1m-28:instruction_following:1",
+      "category": "instruction_following",
+      "text_sha256": "a9a449f187ea00e08c1b412e2765a7afc4eb4e1d6eb6b122a45ad70a06c40827",
+      "labels": [
+        null
+      ],
+      "stratum": "baseline-none|openai:gpt-6.1-sol|pass"
+    },
+    {
+      "id": "real:a6f01c49f0c5f739",
+      "class": "real",
+      "question_id": "1m-28:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "2d5fed5eeb7e7a77a989b09124d64cd34482ecf2f6e3f974a5629dee80b9aa0a",
+      "labels": [
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|particle:particle-1|fail"
+    },
+    {
+      "id": "real:d0de93a6313f9e1b",
+      "class": "real",
+      "question_id": "1m-20:contradiction_resolution:0",
+      "category": "contradiction_resolution",
+      "text_sha256": "6eeac9be61b63e40e0237adba38c89c8b5d5018afac05a9c9f79124e1904fd2a",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|particle:particle-1|partial"
+    },
+    {
+      "id": "real:e133327320e01592",
+      "class": "real",
+      "question_id": "1m-28:instruction_following:1",
+      "category": "instruction_following",
+      "text_sha256": "302319d4e617dff639704bf8df49d70d879c43f03b0d8c333a241fe7bff18290",
+      "labels": [
+        null
+      ],
+      "stratum": "baseline-none|particle:particle-1|pass"
+    },
+    {
+      "id": "real:1c73c14d3d56788b",
+      "class": "real",
+      "question_id": "1m-20:instruction_following:1",
+      "category": "instruction_following",
+      "text_sha256": "492533d50774ab5bd970f8ee66fd07356c741636c619f7d7aad05826b3dcc658",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "ext-extract-first|anthropic:claude-opus-5-5|fail"
+    },
+    {
+      "id": "real:f6612cdb17f2210f",
+      "class": "real",
+      "question_id": "1m-28:summarization:0",
+      "category": "summarization",
+      "text_sha256": "8117f4d812c1e7e912a6fe8da3355554a5b6c2b918f0edb61eae541f10fbc7f4",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-extract-first|anthropic:claude-opus-5-5|partial"
+    },
+    {
+      "id": "real:72c8fab3cb155415",
+      "class": "real",
+      "question_id": "1m-28:abstention:1",
+      "category": "abstention",
+      "text_sha256": "a1558ba7e5258e5b127992068fa48662ab4c143307b3e8728d64f878ba5aad96",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-extract-first|anthropic:claude-opus-5-5|pass"
+    },
+    {
+      "id": "real:4a254dc08f3e651a",
+      "class": "real",
+      "question_id": "1m-28:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "3701729ff4ebbb250967661e857a895d3af203d4361485f18f914ce59f920a87",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-extract-first|openai:gpt-6.1-sol|fail"
+    },
+    {
+      "id": "real:dd3a1f1bb06d690c",
+      "class": "real",
+      "question_id": "1m-20:event_ordering:1",
+      "category": "event_ordering",
+      "text_sha256": "7014d5bdeec8e014b8c8a6bbb69953d451c938e719786652e09d75d51885e6a6",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-extract-first|openai:gpt-6.1-sol|partial"
+    },
+    {
+      "id": "real:0ad133670a065750",
+      "class": "real",
+      "question_id": "1m-20:abstention:0",
+      "category": "abstention",
+      "text_sha256": "9c1c17a81d7d1d58ab1215751eb5758e36c43dd8fdbea8130a8ae8b8b7dbe5de",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-extract-first|openai:gpt-6.1-sol|pass"
+    },
+    {
+      "id": "real:aff9b2fc211b0572",
+      "class": "real",
+      "question_id": "1m-20:abstention:1",
+      "category": "abstention",
+      "text_sha256": "4ece609a5b6a33e855aa772d95637363147682ed6d218e5e6a9274cdc35fe89f",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-extract-first|particle:particle-1|fail"
+    },
+    {
+      "id": "real:4833745448f29d48",
+      "class": "real",
+      "question_id": "1m-28:contradiction_resolution:0",
+      "category": "contradiction_resolution",
+      "text_sha256": "83d73f34f1bd7d79094636e322e287af671f94f6e07b171684587c9d2730c933",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-extract-first|particle:particle-1|partial"
+    },
+    {
+      "id": "real:35bcb5634237a3b3",
+      "class": "real",
+      "question_id": "1m-28:summarization:0",
+      "category": "summarization",
+      "text_sha256": "4ae6b1b2fc448e582fffb261cf2893c6bcfdc4e593589f3f83e3139638b621c0",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-extract-first|particle:particle-1|pass"
+    },
+    {
+      "id": "real:94c25cda9b477e94",
+      "class": "real",
+      "question_id": "1m-20:contradiction_resolution:0",
+      "category": "contradiction_resolution",
+      "text_sha256": "100ba96552da8d1ca6aaa07b66b0e5cc079d7df6d76247cb05b197b5320185f0",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-memory-bank|anthropic:claude-opus-5-5|fail"
+    },
+    {
+      "id": "real:925053c6a0028260",
+      "class": "real",
+      "question_id": "1m-28:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "3a7c61f4ce83932795427db4d202af67d71eaebe6096f91cd9e8fed7d205d23e",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "ext-memory-bank|anthropic:claude-opus-5-5|partial"
+    },
+    {
+      "id": "real:8e0981367c59b962",
+      "class": "real",
+      "question_id": "1m-20:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "63021505bb423f318d5200712fbe3c02d0f7503f6d480cfb938a90a9fa5db19a",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-memory-bank|anthropic:claude-opus-5-5|pass"
+    },
+    {
+      "id": "real:c919ad8753d1421c",
+      "class": "real",
+      "question_id": "1m-28:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "af596514197b272d5ca4e5ebbe8895f2cf8aab46704898d5b699fe160627f044",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-memory-bank|openai:gpt-6.1-sol|fail"
+    },
+    {
+      "id": "real:23367ec5076cc000",
+      "class": "real",
+      "question_id": "1m-28:event_ordering:1",
+      "category": "event_ordering",
+      "text_sha256": "11abdde534a3b40c1bf60469c616601758e14bcaeb06705bf1eacd2e2c096349",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-memory-bank|openai:gpt-6.1-sol|partial"
+    },
+    {
+      "id": "real:83f2eea9149fe42b",
+      "class": "real",
+      "question_id": "1m-20:multi_session_reasoning:0",
+      "category": "multi_session_reasoning",
+      "text_sha256": "895e58626b2d302a31dfa645858213724eef7c76e16582013eb5b50963e18db0",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-memory-bank|openai:gpt-6.1-sol|pass"
+    },
+    {
+      "id": "real:ea8d41869a366340",
+      "class": "real",
+      "question_id": "1m-28:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "cf9554d37c66cd45d32c91f74b6b5c47475d1827b1e4b3dd23f2f3b3782a0e91",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-memory-bank|particle:particle-1|fail"
+    },
+    {
+      "id": "real:8dd2c7d37e18faea",
+      "class": "real",
+      "question_id": "1m-28:summarization:1",
+      "category": "summarization",
+      "text_sha256": "f6d573171f42754e875781d3d6854dd712213425051e0b35b48de8f80af9cf82",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-memory-bank|particle:particle-1|partial"
+    },
+    {
+      "id": "real:4aafaa0d8d9a81aa",
+      "class": "real",
+      "question_id": "1m-20:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "fe1cf663ed851fe73e1f7f68dbd11a8f3ac333137f08c67c396bb85428281e3d",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-memory-bank|particle:particle-1|pass"
+    },
+    {
+      "id": "real:08b57c5fa6751fc2",
+      "class": "real",
+      "question_id": "1m-20:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "0cf0e90b0d7bff56ddca2364c423ad525168760b32de18253f84bde7689015c5",
+      "labels": [
+        null
+      ],
+      "stratum": "gbrain-defaults|anthropic:claude-opus-5-5|fail"
+    },
+    {
+      "id": "real:640e14d18b79b3e2",
+      "class": "real",
+      "question_id": "1m-20:event_ordering:1",
+      "category": "event_ordering",
+      "text_sha256": "1d03cf94d7e8230471d374c248d21501e6193e281ac03e58b1054255e5ae705d",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|anthropic:claude-opus-5-5|partial"
+    },
+    {
+      "id": "real:1095b00162c29ec0",
+      "class": "real",
+      "question_id": "1m-28:instruction_following:0",
+      "category": "instruction_following",
+      "text_sha256": "50883605689b39a03cd81e8286bd1f747a50a9cf7f444565e9c37090e6d09c5d",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|anthropic:claude-opus-5-5|pass"
+    },
+    {
+      "id": "real:f60046c82adc605f",
+      "class": "real",
+      "question_id": "1m-28:abstention:1",
+      "category": "abstention",
+      "text_sha256": "dac80823ff521cc4ba93b50ac333f8d06a318cdc70f49a77245451420765afaa",
+      "labels": [
+        null
+      ],
+      "stratum": "gbrain-defaults|openai:gpt-6.1-sol|fail"
+    },
+    {
+      "id": "real:0431530916f6dea7",
+      "class": "real",
+      "question_id": "1m-28:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "55501d94a28b8297dbd3f1a84fd9cddcd34c9f8b037612a7e75fe3428155912f",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|openai:gpt-6.1-sol|partial"
+    },
+    {
+      "id": "real:fe4baf2fd6bc76d8",
+      "class": "real",
+      "question_id": "1m-28:multi_session_reasoning:0",
+      "category": "multi_session_reasoning",
+      "text_sha256": "6a3d19fd2ea0f24b43916ce9a5ba314c80e61879bde60b8f0e6a27514180f64e",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|openai:gpt-6.1-sol|pass"
+    },
+    {
+      "id": "real:120714139cb378b2",
+      "class": "real",
+      "question_id": "1m-28:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "0908e5fd8e79fc083c6681b5c9528f9f27d4837db8074afd8a2b9b294f92c33b",
+      "labels": [
+        null
+      ],
+      "stratum": "gbrain-defaults|particle:particle-1|fail"
+    },
+    {
+      "id": "real:ed7f05141315fa91",
+      "class": "real",
+      "question_id": "1m-20:temporal_reasoning:1",
+      "category": "temporal_reasoning",
+      "text_sha256": "12bf05e9ed96eff35ae9b69eb9e31ea1ea8125e16356cbb19646106ef3507c39",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|particle:particle-1|partial"
+    },
+    {
+      "id": "real:9bb5dfde55c80836",
+      "class": "real",
+      "question_id": "1m-20:information_extraction:1",
+      "category": "information_extraction",
+      "text_sha256": "63acd789f29cee29a92dd29b108f427df30659804dd0fdc85913d2041a4c61a6",
+      "labels": [
+        null,
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|particle:particle-1|pass"
+    },
+    {
+      "id": "real:7ee5786402d0edae",
+      "class": "real",
+      "question_id": "1m-28:information_extraction:1",
+      "category": "information_extraction",
+      "text_sha256": "111dc34678dce39f91fd20cd6007732d793e733ad05cc8967e6e8b952a16a303",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|anthropic:claude-opus-5-5|fail"
+    },
+    {
+      "id": "real:08c0412010b84345",
+      "class": "real",
+      "question_id": "1m-20:event_ordering:0",
+      "category": "event_ordering",
+      "text_sha256": "cf0701f8fc1f54f9d62744bbba7ffc9c9a867952e56af401a689cda25a8509eb",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|anthropic:claude-opus-5-5|partial"
+    },
+    {
+      "id": "real:d177063960f64892",
+      "class": "real",
+      "question_id": "1m-20:abstention:0",
+      "category": "abstention",
+      "text_sha256": "7b4193d13e0061dad1ba7ba9b0315649872971579175c264bc8e6fda6ce9b55e",
+      "labels": [
+        null
+      ],
+      "stratum": "baseline-none|anthropic:claude-opus-5-5|pass"
+    },
+    {
+      "id": "real:5a20c3eb056600c5",
+      "class": "real",
+      "question_id": "1m-20:summarization:0",
+      "category": "summarization",
+      "text_sha256": "9127f5a096340ad9801487cb8dd9f92571e7eb2655b8bda16fd85636f1de44ae",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|openai:gpt-6.1-sol|fail"
+    },
+    {
+      "id": "real:db254cb3ada3b237",
+      "class": "real",
+      "question_id": "1m-28:event_ordering:1",
+      "category": "event_ordering",
+      "text_sha256": "cb76c2484e383f34b59dbf9621d7a7569ba8e14f7d83f26adc059922b2d9a38f",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|openai:gpt-6.1-sol|partial"
+    },
+    {
+      "id": "real:182f6a2fd12fd198",
+      "class": "real",
+      "question_id": "1m-20:abstention:0",
+      "category": "abstention",
+      "text_sha256": "10486234a3553834079bb02464a27257dc18f900dcfb296bb91a031cc062fde5",
+      "labels": [
+        null
+      ],
+      "stratum": "baseline-none|openai:gpt-6.1-sol|pass"
+    },
+    {
+      "id": "real:ac5c4b1e01589466",
+      "class": "real",
+      "question_id": "1m-20:information_extraction:1",
+      "category": "information_extraction",
+      "text_sha256": "91699392d800586cb746357274bb33c951d81ebe497f6c8d299f5a510d75771a",
+      "labels": [
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|particle:particle-1|fail"
+    },
+    {
+      "id": "real:5e149d9a9a8f54f0",
+      "class": "real",
+      "question_id": "1m-28:event_ordering:0",
+      "category": "event_ordering",
+      "text_sha256": "cceb814fe72f83671f7a53ab8b0d397ff43fd3b4d9be0c96f7c4095b4525bb57",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|particle:particle-1|partial"
+    },
+    {
+      "id": "real:954bfea991d8f898",
+      "class": "real",
+      "question_id": "1m-20:preference_following:0",
+      "category": "preference_following",
+      "text_sha256": "8f2caac527dc5b4d35d011546805c82d0f30c88dd6f2c80c290d0afbdf6f86e2",
+      "labels": [
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|particle:particle-1|pass"
+    },
+    {
+      "id": "real:00b2695955e147d2",
+      "class": "real",
+      "question_id": "1m-28:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "c61c1a394ef24dd711f2da09a0b0949c19f4844aa6e4062d318b03a1a7960b79",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-extract-first|anthropic:claude-opus-5-5|fail"
+    },
+    {
+      "id": "real:bacf282b4ed12e61",
+      "class": "real",
+      "question_id": "1m-28:contradiction_resolution:1",
+      "category": "contradiction_resolution",
+      "text_sha256": "3bdb0dceb1e4c7a78a0c028afa26da089fc85387c1c5afe32cf9bd3850237599",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-extract-first|anthropic:claude-opus-5-5|partial"
+    },
+    {
+      "id": "real:6821724cd6e0143d",
+      "class": "real",
+      "question_id": "1m-20:multi_session_reasoning:0",
+      "category": "multi_session_reasoning",
+      "text_sha256": "ca6d602da361c90b25d2a9f9df4f3bd1fdc88eb7f36ed2f220435be01060da88",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-extract-first|anthropic:claude-opus-5-5|pass"
+    },
+    {
+      "id": "real:de79754ff85ac7af",
+      "class": "real",
+      "question_id": "1m-28:preference_following:0",
+      "category": "preference_following",
+      "text_sha256": "95af6e6cf9cc16229fdffe21773fc86e235190e36d4b1c3f79e0ec5b6a4ec6c8",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "ext-extract-first|openai:gpt-6.1-sol|fail"
+    },
+    {
+      "id": "real:bdf7f5072f0f06b3",
+      "class": "real",
+      "question_id": "1m-20:summarization:0",
+      "category": "summarization",
+      "text_sha256": "01c7a0cae6c2d7fac5fe497a90f75a7b61a33c77abfb5618310d8251ff62aeeb",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-extract-first|openai:gpt-6.1-sol|partial"
+    },
+    {
+      "id": "real:f132ee9774603f8d",
+      "class": "real",
+      "question_id": "1m-20:instruction_following:0",
+      "category": "instruction_following",
+      "text_sha256": "650a61ad98553bd72dbbe2ccbc50e717a54121f8aa09900da00d771a13bb73dd",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-extract-first|openai:gpt-6.1-sol|pass"
+    },
+    {
+      "id": "real:4fa99506ae961157",
+      "class": "real",
+      "question_id": "1m-28:abstention:1",
+      "category": "abstention",
+      "text_sha256": "d33fb8adbcc02240c7f414d7ecb45c3e40789a8bb59bea733f390f8d58fea953",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-extract-first|particle:particle-1|fail"
+    },
+    {
+      "id": "real:5d8ee87c1764760d",
+      "class": "real",
+      "question_id": "1m-20:temporal_reasoning:1",
+      "category": "temporal_reasoning",
+      "text_sha256": "181241d314af00755e59d42e217ae67294d9f5b715f34553d514ab8e0c558b57",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "ext-extract-first|particle:particle-1|partial"
+    },
+    {
+      "id": "real:9772d065af01e4a0",
+      "class": "real",
+      "question_id": "1m-28:knowledge_update:0",
+      "category": "knowledge_update",
+      "text_sha256": "6957d2bd6b76638efef19c1066be1656a1f0fab93b9adaf99be5d1e1583727d6",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-extract-first|particle:particle-1|pass"
+    },
+    {
+      "id": "real:9d1feb95b9184bd4",
+      "class": "real",
+      "question_id": "1m-28:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "ef83858f447cb96d8a4f3dc8988145e1b4e4d2d711f0a48d10bdf9e31273caea",
+      "labels": [
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-memory-bank|anthropic:claude-opus-5-5|partial"
+    },
+    {
+      "id": "real:112cec72a321697d",
+      "class": "real",
+      "question_id": "1m-20:summarization:1",
+      "category": "summarization",
+      "text_sha256": "e71561f723faaf75158cb9da91fdd9b1694ffc86785f5fcb5abb8992042f0c6f",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-memory-bank|anthropic:claude-opus-5-5|pass"
+    },
+    {
+      "id": "real:ecc2b092d460e7fb",
+      "class": "real",
+      "question_id": "1m-28:abstention:1",
+      "category": "abstention",
+      "text_sha256": "f71a0ef2f314ead1f0ed4b30521e08e7e646f80aac8b0100294adc9e2f50157d",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-memory-bank|openai:gpt-6.1-sol|fail"
+    },
+    {
+      "id": "real:f55f7dbebeae1b96",
+      "class": "real",
+      "question_id": "1m-20:temporal_reasoning:0",
+      "category": "temporal_reasoning",
+      "text_sha256": "0b8d5d041d71f86f9d0cd40d2fb2b53e1b23f510cec5ee757281a97683cf4fda",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "ext-memory-bank|openai:gpt-6.1-sol|partial"
+    },
+    {
+      "id": "real:3898543ccd417857",
+      "class": "real",
+      "question_id": "1m-20:instruction_following:1",
+      "category": "instruction_following",
+      "text_sha256": "a42527ca3be6fd83384550319ab06fee8a823543af3a61eb5ffed677cecf5a80",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "ext-memory-bank|openai:gpt-6.1-sol|pass"
+    },
+    {
+      "id": "real:12bb22bed480dcb9",
+      "class": "real",
+      "question_id": "1m-28:abstention:1",
+      "category": "abstention",
+      "text_sha256": "0a1df207df7dbb57199d506e3b513ba6562eb0ed26fdf3c6fcc1b4d066b26c75",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-memory-bank|particle:particle-1|fail"
+    },
+    {
+      "id": "real:7a2aa1e7e1a79304",
+      "class": "real",
+      "question_id": "1m-28:event_ordering:1",
+      "category": "event_ordering",
+      "text_sha256": "c09e40ed7b3eeb45b559122a719b43a961e1f53406319c147c14d64d4155dd66",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-memory-bank|particle:particle-1|partial"
+    },
+    {
+      "id": "real:18f4d35ba7e324a7",
+      "class": "real",
+      "question_id": "1m-28:preference_following:1",
+      "category": "preference_following",
+      "text_sha256": "7e878139ecf1af0b586e3021a5a0fb15681890eac87878c384c115f55fa10013",
+      "labels": [
+        null,
+        null,
+        null
+      ],
+      "stratum": "ext-memory-bank|particle:particle-1|pass"
+    },
+    {
+      "id": "real:a6d76fd611b9824f",
+      "class": "real",
+      "question_id": "1m-28:information_extraction:1",
+      "category": "information_extraction",
+      "text_sha256": "310edb240e419c6292838592050c4d4929725e615fdb17a278b50b86cac91c1b",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|anthropic:claude-opus-5-5|partial"
+    },
+    {
+      "id": "real:b04fddf73778ee88",
+      "class": "real",
+      "question_id": "1m-20:contradiction_resolution:0",
+      "category": "contradiction_resolution",
+      "text_sha256": "07d36f02bc9dcea9f41027c6125fba3247f434e01dabfc3a8e5d7d3ace4e7c6f",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|anthropic:claude-opus-5-5|pass"
+    },
+    {
+      "id": "real:52067b546f826bd1",
+      "class": "real",
+      "question_id": "1m-28:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "9179b5b774855b2edfdc278f9b5dda0371eb082d9a7c3d318ea2f8ba919be4b1",
+      "labels": [
+        null
+      ],
+      "stratum": "gbrain-defaults|openai:gpt-6.1-sol|fail"
+    },
+    {
+      "id": "real:f0d3085b9012ec56",
+      "class": "real",
+      "question_id": "1m-20:temporal_reasoning:1",
+      "category": "temporal_reasoning",
+      "text_sha256": "68482a728f91fe4ebef540904ab6f0aef403448d22b5c9b416475277374bbf22",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|openai:gpt-6.1-sol|partial"
+    },
+    {
+      "id": "real:c361ceb15e341917",
+      "class": "real",
+      "question_id": "1m-28:temporal_reasoning:1",
+      "category": "temporal_reasoning",
+      "text_sha256": "0c024b5a47076777367308dcadb88c52b1ebae2ad3c3e3fdf151c268bb9eaa66",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|openai:gpt-6.1-sol|pass"
+    },
+    {
+      "id": "real:afe10e6d99f3f840",
+      "class": "real",
+      "question_id": "1m-28:abstention:1",
+      "category": "abstention",
+      "text_sha256": "047b8e1596c0d1306905c2c9e777cc3a0bf2698deee5a7690b37a95b606d8ef0",
+      "labels": [
+        null
+      ],
+      "stratum": "gbrain-defaults|particle:particle-1|fail"
+    },
+    {
+      "id": "real:91ca76a49e67451d",
+      "class": "real",
+      "question_id": "1m-20:event_ordering:0",
+      "category": "event_ordering",
+      "text_sha256": "481d0d7c703b991a238f33c0e86e05041c161f3c3791f15f7ef8221ec1fbf7f4",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|particle:particle-1|partial"
+    },
+    {
+      "id": "real:d929502f29c70311",
+      "class": "real",
+      "question_id": "1m-20:contradiction_resolution:0",
+      "category": "contradiction_resolution",
+      "text_sha256": "e57e3b045ef6ae1266aaadab3fc1c90d36d6b8883ef71ad76ae5d8921b0278a5",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "gbrain-defaults|particle:particle-1|pass"
+    },
+    {
+      "id": "real:d8dedb45aeff9c46",
+      "class": "real",
+      "question_id": "1m-20:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "1b0cb4a6bbdb8aa354a644b69ad1a7730afa94c55d62685d06ce5e7307970c16",
+      "labels": [
+        null
+      ],
+      "stratum": "baseline-none|anthropic:claude-opus-5-5|fail"
+    },
+    {
+      "id": "real:5a0eec217b89aeb5",
+      "class": "real",
+      "question_id": "1m-28:temporal_reasoning:1",
+      "category": "temporal_reasoning",
+      "text_sha256": "4391c5c4de97a2516706e16db8cc123c378b7572e013f7d234ba33c53a67e7d6",
+      "labels": [
+        null,
+        null
+      ],
+      "stratum": "baseline-none|anthropic:claude-opus-5-5|partial"
+    },
+    {
+      "id": "real:07023b9e99166453",
+      "class": "real",
+      "question_id": "1m-20:preference_following:0",
+      "category": "preference_following",
+      "text_sha256": "bd6e4545c9a5b0182bde826c7e951b4e8c6ae9ccf7223f4c2db1b6f66fc46875",
+      "labels": [
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|anthropic:claude-opus-5-5|pass"
+    },
+    {
+      "id": "real:fca00b6308bc3c32",
+      "class": "real",
+      "question_id": "1m-20:contradiction_resolution:0",
+      "category": "contradiction_resolution",
+      "text_sha256": "62540408734195b2bcf712b249ae47d6a013f7199e0595d8343489dc01bd9c2d",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|openai:gpt-6.1-sol|fail"
+    },
+    {
+      "id": "real:cd5bada1f7089889",
+      "class": "real",
+      "question_id": "1m-20:summarization:1",
+      "category": "summarization",
+      "text_sha256": "338d955bb6947c1284b033504a1fa92925d0bb11401ff054e4f25d01485853aa",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|openai:gpt-6.1-sol|partial"
+    },
+    {
+      "id": "real:839c379d1223e8db",
+      "class": "real",
+      "question_id": "1m-28:abstention:0",
+      "category": "abstention",
+      "text_sha256": "ed595f4bdfad39c58adaee0450944e952c85e58d7c94197c0da2bddbb4541fa5",
+      "labels": [
+        null
+      ],
+      "stratum": "baseline-none|openai:gpt-6.1-sol|pass"
+    },
+    {
+      "id": "real:417c564c70ac25f4",
+      "class": "real",
+      "question_id": "1m-28:multi_session_reasoning:0",
+      "category": "multi_session_reasoning",
+      "text_sha256": "a856b6617d8215713f4d4665f642f4604c8a41f456469d6a38823604a23760d4",
+      "labels": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|particle:particle-1|fail"
+    },
+    {
+      "id": "real:3701de3b06654a2b",
+      "class": "real",
+      "question_id": "1m-28:event_ordering:1",
+      "category": "event_ordering",
+      "text_sha256": "f7d485d67be49af3552c9c72081fff91765c39ee5f4a6381974abf703af9e858",
+      "labels": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|particle:particle-1|partial"
+    },
+    {
+      "id": "real:e33bd9d4f09a5eb0",
+      "class": "real",
+      "question_id": "1m-20:preference_following:1",
+      "category": "preference_following",
+      "text_sha256": "08adcc72fcdca95085e741f8eda9f9438565ec74b4f042e3945c196c1e5b6e41",
+      "labels": [
+        null,
+        null,
+        null
+      ],
+      "stratum": "baseline-none|particle:particle-1|pass"
+    },
+    {
+      "id": "real:dd35b2a232f83638",
+      "class": "real",
+      "question_id": "1m-20:instruction_following:0",
+      "category": "instruction_following",
+      "text_sha256": "8c035e517267d6b4ac0752f95467ab2c476ea072c889ff30e7e9d036b63bbd29",
+      "labels": [
+        null
+      ],
+      "stratum": "ext-extract-first|anthropic:claude-opus-5-5|fail"
+    },
+    {
+      "id": "gold:1m-21:multi_session_reasoning:0",
+      "class": "gold",
+      "question_id": "1m-21:multi_session_reasoning:0",
+      "category": "multi_session_reasoning",
+      "text_sha256": "ce03d9f60f30ead5f106ea18c9c9b60854c3fde5f83002a4852784051f375f0a",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-22:summarization:0",
+      "class": "gold",
+      "question_id": "1m-22:summarization:0",
+      "category": "summarization",
+      "text_sha256": "a2f019409d25b30e0131a5fb436e2959d3c9cb575e2d92732acd8364f1fdb808",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-28:abstention:1",
+      "class": "gold",
+      "question_id": "1m-28:abstention:1",
+      "category": "abstention",
+      "text_sha256": "99fc2cd45d22034526941164c63fe1f25cef6dbf218ac96fb1f84cee647e1144",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-25:abstention:1",
+      "class": "gold",
+      "question_id": "1m-25:abstention:1",
+      "category": "abstention",
+      "text_sha256": "5575fd9db11b1d7acbd826fbd26739dd17d0829fd30a485cac95a5ff450ba407",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-2:knowledge_update:0",
+      "class": "gold",
+      "question_id": "1m-2:knowledge_update:0",
+      "category": "knowledge_update",
+      "text_sha256": "1d6a2281a9b938da723906ca1031c6f9f4246d2540b125ca9f892212e3df36af",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-30:information_extraction:0",
+      "class": "gold",
+      "question_id": "1m-30:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "61183fa23753725f84f1400d0638feedc2aae704950cee474657991ff777f3ee",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-3:summarization:1",
+      "class": "gold",
+      "question_id": "1m-3:summarization:1",
+      "category": "summarization",
+      "text_sha256": "399d2e145b1cf74e6166067c5c1f35a93ba3494fb37b6a8c4caae3bac9077e98",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-28:information_extraction:0",
+      "class": "gold",
+      "question_id": "1m-28:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "1ac8a3332b1bbda77a88135e2c0dc467a74c793d3d94b51096e9c6bc6f7c04bd",
+      "labels": [
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-20:abstention:0",
+      "class": "gold",
+      "question_id": "1m-20:abstention:0",
+      "category": "abstention",
+      "text_sha256": "838dbe6eb8ddeef023f82aa1dd7312ade6a6e48683e691b831f77ba6ca87ab5c",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-20:multi_session_reasoning:0",
+      "class": "gold",
+      "question_id": "1m-20:multi_session_reasoning:0",
+      "category": "multi_session_reasoning",
+      "text_sha256": "bf8b3680ed1baf39352630ebd8330ea51be1230def7aa2872da8a62b1f23b7dc",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-22:knowledge_update:0",
+      "class": "gold",
+      "question_id": "1m-22:knowledge_update:0",
+      "category": "knowledge_update",
+      "text_sha256": "5c82507c600b02c084adb2064325e31ca41d703492f0e923e672125f2755a456",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-24:knowledge_update:1",
+      "class": "gold",
+      "question_id": "1m-24:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "635c191c716e52ed2c0b8c32dc62f2a95ceb6f96e518a7886572a99f257f9318",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-30:abstention:0",
+      "class": "gold",
+      "question_id": "1m-30:abstention:0",
+      "category": "abstention",
+      "text_sha256": "bb0d2b1b61524609cc8851cc3b5331249db1a62afb46fdfddd16252776528b2a",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-21:abstention:1",
+      "class": "gold",
+      "question_id": "1m-21:abstention:1",
+      "category": "abstention",
+      "text_sha256": "a0773bad13669f5a4068f382ff87824f971485608d73cfaacf5a11137517d24a",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-25:knowledge_update:0",
+      "class": "gold",
+      "question_id": "1m-25:knowledge_update:0",
+      "category": "knowledge_update",
+      "text_sha256": "cf6467cc7fdbfdd20b8a68f0dff5bc2552702a274d16c4a169c8e9acc8662e98",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-3:information_extraction:0",
+      "class": "gold",
+      "question_id": "1m-3:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "9dc181c669e42bde53069dcfcdd511a6a77d0edd2e439266e16269d523e00150",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-28:summarization:0",
+      "class": "gold",
+      "question_id": "1m-28:summarization:0",
+      "category": "summarization",
+      "text_sha256": "35317da5d9de76997f7a2d569d8e2fd96d4cb4cc944e127d8306b9d9395e1120",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-32:knowledge_update:1",
+      "class": "gold",
+      "question_id": "1m-32:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "b5a03b2e8fb617449cdb9725287cf2a7bcede7984434f12b0eda0f8d6c0fc696",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-28:temporal_reasoning:0",
+      "class": "gold",
+      "question_id": "1m-28:temporal_reasoning:0",
+      "category": "temporal_reasoning",
+      "text_sha256": "462387bbd8c20ca086fcfed83a3cda2977149b1a905862c11068cad5101c812a",
+      "labels": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-25:summarization:0",
+      "class": "gold",
+      "question_id": "1m-25:summarization:0",
+      "category": "summarization",
+      "text_sha256": "c2e3bec69725fa9119ea32d552e812b282d94fa4456143ccfc973183569918c1",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-21:multi_session_reasoning:1",
+      "class": "gold",
+      "question_id": "1m-21:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "71e35c9e33d9a681529aae3a3810d7b79364c26f96c41b01504414c5a89bd0d0",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-2:information_extraction:0",
+      "class": "gold",
+      "question_id": "1m-2:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "0f197dcf147c2403593be67792ca7e9183fb3b80dea98431838da7e0b6c11cc9",
+      "labels": [
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-21:summarization:1",
+      "class": "gold",
+      "question_id": "1m-21:summarization:1",
+      "category": "summarization",
+      "text_sha256": "a2e7feb73b0e288f5610bf69140a2fd4016d4958b2fc8f2d4bc727aeff00492a",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-2:multi_session_reasoning:1",
+      "class": "gold",
+      "question_id": "1m-2:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "062014fef070ca4bb68324e350850863c4ea31041b4967bca3aadab1032e7451",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-22:abstention:1",
+      "class": "gold",
+      "question_id": "1m-22:abstention:1",
+      "category": "abstention",
+      "text_sha256": "5ca6552806876b6e8fd2fb1f93abaab61a541415de68f5fe912bcce83fed83c8",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-22:summarization:1",
+      "class": "gold",
+      "question_id": "1m-22:summarization:1",
+      "category": "summarization",
+      "text_sha256": "b333e1eb08fca870a0c4a23bce4d0867ac5b4353edfd7ea682b62db9016cae50",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-20:summarization:1",
+      "class": "gold",
+      "question_id": "1m-20:summarization:1",
+      "category": "summarization",
+      "text_sha256": "cec5f93e68a3175e7698cb15e199e5f32ee82d25e90ab68d4c7f931960ec823d",
+      "labels": [
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-20:abstention:1",
+      "class": "gold",
+      "question_id": "1m-20:abstention:1",
+      "category": "abstention",
+      "text_sha256": "f1ab9cf471fc03979fbc2877c436d3723cc86aa61b500d2ec35fa7041006c5bf",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-16:abstention:1",
+      "class": "gold",
+      "question_id": "1m-16:abstention:1",
+      "category": "abstention",
+      "text_sha256": "f82291c3adf6dbb0c42695a7dfa61227a8664e45024b22df6c2796fed2bb4574",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-3:abstention:0",
+      "class": "gold",
+      "question_id": "1m-3:abstention:0",
+      "category": "abstention",
+      "text_sha256": "ede756834b85529b1e33caebb57794bef84c10f1c1a0517e95061112e411d2e2",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-30:summarization:0",
+      "class": "gold",
+      "question_id": "1m-30:summarization:0",
+      "category": "summarization",
+      "text_sha256": "874dc33fbd066e8a776b817248d461b001135f47a462de79c28273c43b59f7f8",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-24:information_extraction:1",
+      "class": "gold",
+      "question_id": "1m-24:information_extraction:1",
+      "category": "information_extraction",
+      "text_sha256": "d2cab09e0787857615e2124c5f0ca5073402297be75972d0ff90f4b8f27aa542",
+      "labels": [
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-24:knowledge_update:0",
+      "class": "gold",
+      "question_id": "1m-24:knowledge_update:0",
+      "category": "knowledge_update",
+      "text_sha256": "38807338feb72bfeef90d8e1c4c8efce0c8ff6f99d675c38dd0d6000a5c4f4a6",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-2:summarization:0",
+      "class": "gold",
+      "question_id": "1m-2:summarization:0",
+      "category": "summarization",
+      "text_sha256": "71ec206ac01ad52fbc4475a82992a9c22703909e2242d83a6ad527021027dfc5",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-28:knowledge_update:0",
+      "class": "gold",
+      "question_id": "1m-28:knowledge_update:0",
+      "category": "knowledge_update",
+      "text_sha256": "46b5ed6ba6ab71d0e28f753ae6099425a1b931e5e216ded3b47303a0f1f0b0d3",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-2:knowledge_update:1",
+      "class": "gold",
+      "question_id": "1m-2:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "f369cb89fc627e668987007d121ed1eacdc01db9e28f8bb26f358b7d8c4f08ac",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-32:knowledge_update:0",
+      "class": "gold",
+      "question_id": "1m-32:knowledge_update:0",
+      "category": "knowledge_update",
+      "text_sha256": "393c025c2fa239b3f1f2dd064dd1cd00dd818dc0a997b8443b881f78bcfb118b",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-30:knowledge_update:0",
+      "class": "gold",
+      "question_id": "1m-30:knowledge_update:0",
+      "category": "knowledge_update",
+      "text_sha256": "5296b7db78583cfae3974e0bcae147e36aec073399860b8ffd7716f1ea5d663d",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-16:information_extraction:1",
+      "class": "gold",
+      "question_id": "1m-16:information_extraction:1",
+      "category": "information_extraction",
+      "text_sha256": "e0023c3c2257b7e1f93ea3e24da51c4e75f1e3aa0365110150914c40040052d0",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "gold:1m-32:abstention:0",
+      "class": "gold",
+      "question_id": "1m-32:abstention:0",
+      "category": "abstention",
+      "text_sha256": "e3057f8e7ded180a7faa05f2d3905ca1e74d27029e2ad0171d8f2e124ceeebb5",
+      "labels": [
+        true
+      ]
+    },
+    {
+      "id": "corrupt:1m-32:information_extraction:1:number:0",
+      "class": "corrupt",
+      "question_id": "1m-32:information_extraction:1",
+      "category": "information_extraction",
+      "text_sha256": "fa5b439a41828a646fa645f003770341c8c1634e578380013b0278f721686586",
+      "labels": [
+        false
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-25:information_extraction:1:contradiction:4",
+      "class": "corrupt",
+      "question_id": "1m-25:information_extraction:1",
+      "category": "information_extraction",
+      "text_sha256": "06fcc490610bf4345bf71eb39afb1818b9c0e69f6f800828f291d068a0f10c18",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "kind": "contradiction",
+      "target": 4
+    },
+    {
+      "id": "corrupt:1m-3:summarization:0:number:2",
+      "class": "corrupt",
+      "question_id": "1m-3:summarization:0",
+      "category": "summarization",
+      "text_sha256": "f2064667a5fd10e7c906bef2ab873e63f278fe5bc87ab148a3eec0b2c651168e",
+      "labels": [
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "kind": "number",
+      "target": 2
+    },
+    {
+      "id": "corrupt:1m-21:summarization:0:drop:1",
+      "class": "corrupt",
+      "question_id": "1m-21:summarization:0",
+      "category": "summarization",
+      "text_sha256": "dd3b3250fad28d767da8b3d08a0821c98115b4d184a3b5beb558b9fe68630926",
+      "labels": [
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "kind": "drop",
+      "target": 1
+    },
+    {
+      "id": "corrupt:1m-28:abstention:0:invented:0",
+      "class": "corrupt",
+      "question_id": "1m-28:abstention:0",
+      "category": "abstention",
+      "text_sha256": "205b1e4cb060cbce8c3634278cb5d51fac9f0b4aabceaedc6a871833d75954a8",
+      "labels": [
+        false
+      ],
+      "kind": "invented",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-28:information_extraction:1:number:4",
+      "class": "corrupt",
+      "question_id": "1m-28:information_extraction:1",
+      "category": "information_extraction",
+      "text_sha256": "1d972f786c4a3b77276f5951e63c7a29a0e835d95b57a68bd6fa713a5be06816",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "kind": "number",
+      "target": 4
+    },
+    {
+      "id": "corrupt:1m-3:multi_session_reasoning:1:drop:2",
+      "class": "corrupt",
+      "question_id": "1m-3:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "324ef7698ed50be41239ff9564fc83d5b120756684e264079561de9faab4dbef",
+      "labels": [
+        true,
+        true,
+        false
+      ],
+      "kind": "drop",
+      "target": 2
+    },
+    {
+      "id": "corrupt:1m-16:knowledge_update:1:contradiction:0",
+      "class": "corrupt",
+      "question_id": "1m-16:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "8b3ff9232c369802020472a777bc4f5fe8084b7a5c89470475294980e355f2ff",
+      "labels": [
+        false,
+        true
+      ],
+      "kind": "contradiction",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-25:multi_session_reasoning:1:entity:0",
+      "class": "corrupt",
+      "question_id": "1m-25:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "f431421ce20c3e409ecbb875309fd2035fe7f9a00a76852793d648c1c1d44fa8",
+      "labels": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "kind": "entity",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-2:summarization:1:drop:7",
+      "class": "corrupt",
+      "question_id": "1m-2:summarization:1",
+      "category": "summarization",
+      "text_sha256": "f0b3219e9801df177ced58dfc6d28233eb5542ebf527af1a80b3674b17bbcf9c",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "kind": "drop",
+      "target": 7
+    },
+    {
+      "id": "corrupt:1m-21:knowledge_update:1:abstain:0",
+      "class": "corrupt",
+      "question_id": "1m-21:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "303dbdf62ce8de56d2253445aeb2f23115098045611ffbaddcbda25b308ef249",
+      "labels": [
+        false
+      ],
+      "kind": "abstain",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-3:information_extraction:1:number:0",
+      "class": "corrupt",
+      "question_id": "1m-3:information_extraction:1",
+      "category": "information_extraction",
+      "text_sha256": "d7c423b67e79efe709688824f89030d79d86b4bd8f6692b3f3bf5963bd1511af",
+      "labels": [
+        false
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-24:summarization:1:number:0",
+      "class": "corrupt",
+      "question_id": "1m-24:summarization:1",
+      "category": "summarization",
+      "text_sha256": "505ef8ba4aae32b0123779e4de5325f630ab726ac0a16e95e60e86f116b3fdb0",
+      "labels": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-25:summarization:1:negation:4",
+      "class": "corrupt",
+      "question_id": "1m-25:summarization:1",
+      "category": "summarization",
+      "text_sha256": "65ae0f2c247ab01889a11b0a0154d5f1d063c423946dc4577be86110e2a88a72",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "kind": "negation",
+      "target": 4
+    },
+    {
+      "id": "corrupt:1m-24:abstention:0:invented:0",
+      "class": "corrupt",
+      "question_id": "1m-24:abstention:0",
+      "category": "abstention",
+      "text_sha256": "205b1e4cb060cbce8c3634278cb5d51fac9f0b4aabceaedc6a871833d75954a8",
+      "labels": [
+        false
+      ],
+      "kind": "invented",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-30:multi_session_reasoning:1:drop:0",
+      "class": "corrupt",
+      "question_id": "1m-30:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "55fd40750270edbd88d72311ede8027d5c37d8791b8856ebb364f242e9012cd4",
+      "labels": [
+        false
+      ],
+      "kind": "drop",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-21:abstention:0:invented:0",
+      "class": "corrupt",
+      "question_id": "1m-21:abstention:0",
+      "category": "abstention",
+      "text_sha256": "205b1e4cb060cbce8c3634278cb5d51fac9f0b4aabceaedc6a871833d75954a8",
+      "labels": [
+        false
+      ],
+      "kind": "invented",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-2:temporal_reasoning:1:number:0",
+      "class": "corrupt",
+      "question_id": "1m-2:temporal_reasoning:1",
+      "category": "temporal_reasoning",
+      "text_sha256": "d3e2b7dd1fcf4c7738a4c9e759aa3343b75eb0604fbba137623d1d19bc629ab6",
+      "labels": [
+        false
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-24:information_extraction:0:number:0",
+      "class": "corrupt",
+      "question_id": "1m-24:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "f890a949d948088a1299f37b22887f9e47bfb634ff6adaf8bac0066a1b7c037e",
+      "labels": [
+        false
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-32:abstention:1:invented:0",
+      "class": "corrupt",
+      "question_id": "1m-32:abstention:1",
+      "category": "abstention",
+      "text_sha256": "205b1e4cb060cbce8c3634278cb5d51fac9f0b4aabceaedc6a871833d75954a8",
+      "labels": [
+        false
+      ],
+      "kind": "invented",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-24:abstention:1:invented:0",
+      "class": "corrupt",
+      "question_id": "1m-24:abstention:1",
+      "category": "abstention",
+      "text_sha256": "205b1e4cb060cbce8c3634278cb5d51fac9f0b4aabceaedc6a871833d75954a8",
+      "labels": [
+        false
+      ],
+      "kind": "invented",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-25:information_extraction:0:number:0",
+      "class": "corrupt",
+      "question_id": "1m-25:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "6bc78150fd5620569546d2642c95e1b71d14095a132de17c946993631935f364",
+      "labels": [
+        false
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-32:multi_session_reasoning:0:entity:1",
+      "class": "corrupt",
+      "question_id": "1m-32:multi_session_reasoning:0",
+      "category": "multi_session_reasoning",
+      "text_sha256": "f4defdc924b5fe9993affc3b5a9f0da086f78c0255a4205d6ebf45653a1e12a0",
+      "labels": [
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "kind": "entity",
+      "target": 1
+    },
+    {
+      "id": "corrupt:1m-22:knowledge_update:1:drop:0",
+      "class": "corrupt",
+      "question_id": "1m-22:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "d7289b67b3d53a37e8e14f7fc0da36652d11c150989a72b19b1e8cbc2e9bca7e",
+      "labels": [
+        false
+      ],
+      "kind": "drop",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-21:knowledge_update:0:abstain:0",
+      "class": "corrupt",
+      "question_id": "1m-21:knowledge_update:0",
+      "category": "knowledge_update",
+      "text_sha256": "303dbdf62ce8de56d2253445aeb2f23115098045611ffbaddcbda25b308ef249",
+      "labels": [
+        false
+      ],
+      "kind": "abstain",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-28:multi_session_reasoning:1:drop:1",
+      "class": "corrupt",
+      "question_id": "1m-28:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "d692a8158ed56270858a7b25e548477609503f06c3618c11b3786150acb6d59c",
+      "labels": [
+        true,
+        false,
+        true
+      ],
+      "kind": "drop",
+      "target": 1
+    },
+    {
+      "id": "corrupt:1m-32:information_extraction:0:number:0",
+      "class": "corrupt",
+      "question_id": "1m-32:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "10cf483c759c4228e719b7c69a4050d1e8692659dc9c739809827afeb61a44ed",
+      "labels": [
+        false
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-24:summarization:0:number:9",
+      "class": "corrupt",
+      "question_id": "1m-24:summarization:0",
+      "category": "summarization",
+      "text_sha256": "c8e6c1a2ce9371f240b885449a33393f8364e3d983a4af7145d558d274217a58",
+      "labels": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "kind": "number",
+      "target": 9
+    },
+    {
+      "id": "corrupt:1m-16:multi_session_reasoning:1:number:0",
+      "class": "corrupt",
+      "question_id": "1m-16:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "f28d57e78825d4949af4c6d4a6272ba9339c32238a6871e08934b3d401c93d7b",
+      "labels": [
+        false
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-2:multi_session_reasoning:0:drop:0",
+      "class": "corrupt",
+      "question_id": "1m-2:multi_session_reasoning:0",
+      "category": "multi_session_reasoning",
+      "text_sha256": "ef85d8413b6993508b72b5bb7c61dea84739be25238fdbd4bdc31c0f82c1203e",
+      "labels": [
+        false,
+        true,
+        true
+      ],
+      "kind": "drop",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-22:information_extraction:0:number:0",
+      "class": "corrupt",
+      "question_id": "1m-22:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "b53cd9f85ca767c53195bf4af43d5517361de1a1de3817e07d833f4be62606d4",
+      "labels": [
+        false
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-2:abstention:1:invented:0",
+      "class": "corrupt",
+      "question_id": "1m-2:abstention:1",
+      "category": "abstention",
+      "text_sha256": "205b1e4cb060cbce8c3634278cb5d51fac9f0b4aabceaedc6a871833d75954a8",
+      "labels": [
+        false
+      ],
+      "kind": "invented",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-28:summarization:1:entity:1",
+      "class": "corrupt",
+      "question_id": "1m-28:summarization:1",
+      "category": "summarization",
+      "text_sha256": "0dbc7e06675cf280968e9b68a386ca6f0fc8f28fe5da6627def93223a16dc69f",
+      "labels": [
+        true,
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "kind": "entity",
+      "target": 1
+    },
+    {
+      "id": "corrupt:1m-20:knowledge_update:1:number:0",
+      "class": "corrupt",
+      "question_id": "1m-20:knowledge_update:1",
+      "category": "knowledge_update",
+      "text_sha256": "3b1a6a6e4f1fa38dcca47ab3d0b8ece49d67d630934186adc57ba187162e2da2",
+      "labels": [
+        false
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-3:abstention:1:invented:0",
+      "class": "corrupt",
+      "question_id": "1m-3:abstention:1",
+      "category": "abstention",
+      "text_sha256": "205b1e4cb060cbce8c3634278cb5d51fac9f0b4aabceaedc6a871833d75954a8",
+      "labels": [
+        false
+      ],
+      "kind": "invented",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-20:multi_session_reasoning:1:drop:3",
+      "class": "corrupt",
+      "question_id": "1m-20:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "edd7022fdd1bc0501698ed95bd12fa3c9215e2f5206b3b250b0e0102c5ee08b3",
+      "labels": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "kind": "drop",
+      "target": 3
+    },
+    {
+      "id": "corrupt:1m-22:multi_session_reasoning:1:abstain:0",
+      "class": "corrupt",
+      "question_id": "1m-22:multi_session_reasoning:1",
+      "category": "multi_session_reasoning",
+      "text_sha256": "303dbdf62ce8de56d2253445aeb2f23115098045611ffbaddcbda25b308ef249",
+      "labels": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "kind": "abstain",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-16:summarization:0:number:3",
+      "class": "corrupt",
+      "question_id": "1m-16:summarization:0",
+      "category": "summarization",
+      "text_sha256": "279cf07ec91cdbf93ddfda2eba16d057af06e7ad2b4997c88822b3d470ca03bd",
+      "labels": [
+        true,
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "kind": "number",
+      "target": 3
+    },
+    {
+      "id": "corrupt:1m-20:information_extraction:0:number:0",
+      "class": "corrupt",
+      "question_id": "1m-20:information_extraction:0",
+      "category": "information_extraction",
+      "text_sha256": "dc2485efc34f36d6b64f36a4a2c75632a6a78a710ef8c06c3f3179c31ea4db9e",
+      "labels": [
+        false
+      ],
+      "kind": "number",
+      "target": 0
+    },
+    {
+      "id": "corrupt:1m-2:abstention:0:invented:0",
+      "class": "corrupt",
+      "question_id": "1m-2:abstention:0",
+      "category": "abstention",
+      "text_sha256": "205b1e4cb060cbce8c3634278cb5d51fac9f0b4aabceaedc6a871833d75954a8",
+      "labels": [
+        false
+      ],
+      "kind": "invented",
+      "target": 0
+    }
+  ],
+  "gold_screen_exclusions": [
+    {
+      "question_id": "1m-2:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-2:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-2:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-2:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-2:information_extraction:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-2:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-2:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-2:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-2:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-2:temporal_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-3:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-3:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-3:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-3:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-3:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-3:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-3:knowledge_update:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-3:multi_session_reasoning:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-3:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-3:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-3:temporal_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-3:temporal_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-16:abstention:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-16:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-16:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-16:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-16:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-16:information_extraction:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-16:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-16:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-16:multi_session_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-16:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-16:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-16:summarization:1",
+      "reason": "gold does not state rubric item 3"
+    },
+    {
+      "question_id": "1m-16:temporal_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-16:temporal_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-20:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-20:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-20:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-20:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-20:information_extraction:1",
+      "reason": "gold does not state rubric item 2"
+    },
+    {
+      "question_id": "1m-20:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-20:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-20:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-20:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-20:summarization:0",
+      "reason": "gold does not state rubric item 3"
+    },
+    {
+      "question_id": "1m-20:temporal_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-20:temporal_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-21:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-21:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-21:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-21:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-21:information_extraction:1",
+      "reason": "gold does not state rubric item 6"
+    },
+    {
+      "question_id": "1m-21:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-21:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-21:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-21:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-21:temporal_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-21:temporal_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-22:abstention:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-22:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-22:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-22:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-22:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-22:information_extraction:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-22:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-22:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-22:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-22:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-22:temporal_reasoning:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-22:temporal_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-24:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-24:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-24:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-24:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-24:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-24:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-24:multi_session_reasoning:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-24:multi_session_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-24:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-24:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-24:temporal_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-24:temporal_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-25:abstention:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-25:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-25:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-25:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-25:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-25:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-25:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-25:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-25:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-25:temporal_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-25:temporal_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-28:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-28:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-28:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-28:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-28:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-28:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-28:multi_session_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-28:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-28:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-28:temporal_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-30:abstention:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-30:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-30:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-30:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-30:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-30:information_extraction:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-30:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-30:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-30:multi_session_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-30:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-30:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-30:summarization:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-30:temporal_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-30:temporal_reasoning:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-32:contradiction_resolution:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-32:contradiction_resolution:1",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-32:event_ordering:0",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-32:event_ordering:1",
+      "reason": "category event_ordering is not built from gold"
+    },
+    {
+      "question_id": "1m-32:instruction_following:0",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-32:instruction_following:1",
+      "reason": "category instruction_following is not built from gold"
+    },
+    {
+      "question_id": "1m-32:multi_session_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-32:preference_following:0",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-32:preference_following:1",
+      "reason": "category preference_following is not built from gold"
+    },
+    {
+      "question_id": "1m-32:summarization:0",
+      "reason": "gold does not state rubric item 0"
+    },
+    {
+      "question_id": "1m-32:summarization:1",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-32:temporal_reasoning:0",
+      "reason": "gold does not state rubric item 1"
+    },
+    {
+      "question_id": "1m-32:temporal_reasoning:1",
+      "reason": "gold does not state rubric item 1"
+    }
+  ]
+}

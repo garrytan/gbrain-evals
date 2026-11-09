@@ -688,6 +688,38 @@ The judge check itself runs from `8f3d632b`, as recorded above; none of these fi
 docs-only commits don't change either. Each run records the commit it actually ran, and a run from any other code needs
 a further amendment.
 
+### 2026-11-08: the judge check passed
+
+The judge check (R78 point 1) ran on public stage 1 answers in its own paid window, from `8f3d632b`, on one VM with one
+ledger. Its report was written at `deafd34c`, which adds the reported-only fields below and drops dollar fields from the
+published files; it grades nothing differently. The published files are
+`docs/benchmarks/2026-11-08-rs1-narrow/results/judge-check.json` and `judge-check.md` (ids, hashes, labels and scores,
+no answer, gold or corruption text).
+
+- **Every gate passed.** (i) Astra-Opus Cohen's kappa 0.948 (95% 0.919 to 0.976) over all 505 rubric items. (ii) Each
+  gating judge's kappa against the construction labels 0.972 (95% 0.934 to 1.011) over 238 items, the same for both,
+  because Astra and Opus graded every constructed item the same way; all 13 of their disagreements are on real
+  answers. Truncation 0 of 160 judgments for each gating judge, and no judge errors.
+- **Labelled set:** 492 items (254 real, 110 gold, 128 corrupted), every class above 15. Each gating view holds well
+  over 40 labelled real items from the rows it grades in counted runs: Astra 79 of its 83 claude-opus-5-5-reader items,
+  Opus 175 of its 184 gpt-6.1-sol and particle-1 items, so no view needed more items.
+- **Catch and false-fail rates**, both gating judges alike: catch 99.5% (97.4% to 99.9%) of 211 bad items, false fails
+  0.4% (0.1% to 2.0%) of 281 good ones; on gold answers 0 of 110 false fails. gpt-4.1-mini (descriptive) caught 75.8%
+  (69.6% to 81.1%) and false-failed 5.0% (3.0% to 8.2%), with kappa 0.724 against the labelled set.
+- **Reported beside gate (i), not a gate:** Astra-Opus kappa on cross-family items only (no real answer read by either
+  gating judge's own family) 0.960 (95% 0.928 to 0.992) over 335 items.
+- **Judge model versions:** gpt-6-astra and claude-opus-5-5, one each, as the providers returned them.
+- **Tokens, measured.** At medium effort Astra spent few reasoning tokens: 3.6 per call on average (median 0, 95th
+  percentile 23); Opus's thinking averaged 23.6 (median 0, 95th percentile 174). No reply came near the 8,000-token
+  cap: the longest Astra reply was 242 output tokens and the longest Opus reply 781. A real answer took about 10 judge
+  calls per gating judge, because event-ordering questions add BEAM's equivalence calls, one per response line and
+  reference item until a match, on top of one rubric call per item. That is also why stage 1 shows more judge calls
+  than rubric items: there are no retries, extra samples or key collisions.
+- **Projection.** pricing.ts, rerun outside the repo with these measured tokens per judgment in place of the assumed
+  three calls, keeps the check-in projection under its line. pricing.json is unchanged in this commit.
+
+Wave A still waits on the Voyage check. The particle-1 fallback is not needed.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
