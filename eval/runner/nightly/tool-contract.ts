@@ -9,9 +9,9 @@
  *
  * The replayed tools are the read tools whose argument shapes the probe exposed (get_page, traverse_graph, get_backlinks).
  * Each call keeps its recorded arguments and reads a page the rollout brain holds (REPLAY_SLUG), so the replay measures
- * argument handling, not whether a slug exists. For the same reason a named section that page has no heading for is a
- * content miss, counted as answered. A recorded call whose arguments are not JSON is counted apart: no path can
- * receive it. test/eval/skillopt-rollout-empty-args.test.ts drives the pinned build through the same helpers.
+ * argument handling, not whether a slug exists. For the same reason a refusal that comes from what the replay brain holds
+ * is a content miss, counted as answered (isContentMiss). A recorded call whose arguments are not JSON is counted apart: no
+ * path can receive it. test/eval/skillopt-rollout-empty-args.test.ts drives the pinned build through the same helpers.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -50,6 +50,16 @@ export function recordedCalls(family: string, skill: string): Recorded[] {
 
 export type Refusal = { code?: string; message: string; suggestion?: string; fix?: { mcp?: { tool: string; arguments: object } } };
 export type Call = (tool: string, args: object) => Promise<{ ok: unknown } | { error: Refusal }>;
+
+/**
+ * Whether a refusal comes from the replay brain's contents rather than the call's arguments: a named section the replay
+ * page has no heading for, or a recorded-time read (known_as_of) at an instant the brain has no history for, since it
+ * imports its pages at replay time and never enables the belief ledger (coverage_from, coverage_gap).
+ */
+export function isContentMiss(args: Record<string, unknown>, refusal: Refusal): boolean {
+  if (refusal.code === 'coverage_from' || refusal.code === 'coverage_gap') return true;
+  return typeof args.section === 'string' && args.section !== '' && /has no heading/.test(refusal.message);
+}
 const mod = (root: string, sub: string) => import(join(root, sub)) as Promise<Record<string, any>>;
 
 /** The rollout brain at root: the SkillOpt dataset's pages imported without embeddings, under the probe's pinned search config. */
@@ -114,7 +124,7 @@ async function replay(call: Call, calls: Recorded[]): Promise<ItemReplay['paths'
   for (const c of calls) {
     if (!c.args) continue;
     const r = await call(c.tool, { ...c.args, slug: REPLAY_SLUG[c.tool] });
-    if ('ok' in r || (typeof c.args.section === 'string' && c.args.section && /has no heading/.test(r.error.message))) { out.ok++; continue; }
+    if ('ok' in r || isContentMiss(c.args, r.error)) { out.ok++; continue; }
     const code = r.error.code ?? 'no_code';
     const byCode = out.refused[c.tool] ??= {};
     byCode[code] = (byCode[code] ?? 0) + 1;

@@ -16,7 +16,7 @@ import { NightlyCache } from '../../eval/runner/nightly/judge-cache.ts';
 import { keylessEnv } from '../../eval/runner/nightly/keyless.ts';
 import { readOutcomes } from '../../eval/runner/nightly/outcome.ts';
 import { parseArgs, planSuites, requirementGap } from '../../eval/runner/nightly/run.ts';
-import { recordedCalls, replayItems } from '../../eval/runner/nightly/tool-contract.ts';
+import { isContentMiss, recordedCalls, replayItems } from '../../eval/runner/nightly/tool-contract.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const devset = loadDevSet();
@@ -190,6 +190,14 @@ describe('tool-contract replay', () => {
       expect(p.ok + Object.values(p.refused).flatMap(Object.values).reduce((a, b) => a + b, 0)).toBe(r!.calls - r!.unparseable);
     }
   }, 120_000);
+
+  test('content misses: a section the replay page lacks, or a recorded-time read before the brain\'s history; argument refusals stay refusals', () => {
+    expect(isContentMiss({ section: 'overview' }, { code: 'invalid_params', message: 'get_page: page people/vera-chen-14 has no heading "overview". It has no headings.' })).toBe(true);
+    expect(isContentMiss({ known_as_of: '2026-10-14T23:59:59Z' }, { code: 'coverage_from', message: 'no history at that instant' })).toBe(true);
+    expect(isContentMiss({ known_as_of: '2026-10-14T23:59:59Z' }, { code: 'coverage_gap', message: 'history has a gap' })).toBe(true);
+    expect(isContentMiss({ section: '' }, { code: 'invalid_params', message: 'has no heading ""' })).toBe(false);
+    expect(isContentMiss({ known_as_of: '' }, { code: 'invalid_params', message: 'get_page: known_as_of does not combine with include_content, lines, bytes.' })).toBe(false);
+  });
 
   test('a named section the replay page has no heading for is a content miss, not a refusal: Opus\'s briefing calls all answer on the pinned build', async () => {
     const [r] = await replayItems(resolveGbrainUnderTest(null).root, [{ family: 'opus', skill: 'briefing' }]);
