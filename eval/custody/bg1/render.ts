@@ -26,6 +26,11 @@
  * nothing of it is written under --set. The world-level gates (session count, values, the oracle cross-check) run in
  * the planner before any call.
  *
+ * Gemini's render and check requests carry a JSON Schema for the reply (generationConfig.responseJsonSchema, beside
+ * responseMimeType). The render prompt gives the length as words and tokens and a minimum number of turns
+ * (sessionLength), and a regeneration after a length failure names the last attempt's measured length and the allowed
+ * range in words. The Haiku check gets 2048 output tokens, room for a reply after its thinking.
+ *
  * Model calls sit behind one interface (Models), so tests inject fakes. --fake writes each session with the template
  * renderer and answers both checks "no extra claims", spending nothing; --fake-break makes the stand-in reply with no
  * turns for one session's first attempts (a regeneration and drop drill). Real mode needs the granted paid
@@ -66,7 +71,23 @@ export type CheckModel = typeof CHECK_MODELS[number];
 export const REGENERATIONS = 3;
 export const LENGTH_GATE = { min: 0.6, max: 1.5, from_target: 400 } as const;
 export const CONCURRENCY = 6;
-const CACHE_VERSION = 'bg1-render-cache/v1';
+const CACHE_VERSION = 'bg1-render-cache/v2';
+/** cl100k tokens to English words, for the prompt's length in words (about 0.75 words per token). */
+export const WORDS_PER_TOKEN = 0.75;
+/** Target tokens per exchange (a user turn and the assistant's reply), about 190 words: a casual message and a brief answer. */
+export const TOKENS_PER_EXCHANGE = 250;
+
+/** The JSON Schema of a render reply, sent to Gemini as generationConfig.responseJsonSchema. */
+export const RENDER_SCHEMA = {
+  type: 'object',
+  properties: {
+    turns: { type: 'array', items: { type: 'object', properties: { speaker: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string' } }, required: ['speaker', 'content'], additionalProperties: false } },
+  },
+  required: ['turns'],
+  additionalProperties: false,
+} as const;
+/** The JSON Schema of a check reply, sent to Gemini as generationConfig.responseJsonSchema. */
+export const CHECK_SCHEMA = { type: 'object', properties: { extra_claims: { type: 'boolean' } }, required: ['extra_claims'], additionalProperties: false } as const;
 const SEED_LINE = /^bg1-seed-v1:[0-9a-f]{64}$/;
 /** Provider keys this process must not hold in real mode: it reaches providers only through the proxies. */
 const PROVIDER_KEYS = ['GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'BG1_GEMINI_API_KEY', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY'];
@@ -84,6 +105,26 @@ const RAW_DATES = [
   /\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/, /\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)s?\b/,
 ];
 const DATE_TOKEN = /\[\[[DW]:-?\d+\]\]/g;
+
+/** cl100k tokens of a session's turn text, as the length gate counts them. */
+export const sessionTokens = (turns: readonly Turn[]) => turns.reduce((n, t) => n + encodingCount('cl100k_base', t.content), 0);
+const words = (tokens: number) => Math.round((tokens * WORDS_PER_TOKEN) / 10) * 10;
+
+/**
+ * A session's length as the render prompt states it: its token target in words, rounded to ten; the length gate's
+ * range in words, rounded inward to ten so a reply inside it stays inside the gate at 0.75 words per token; and a
+ * minimum number of turns, two per exchange, with one exchange per TOKENS_PER_EXCHANGE target tokens and at least
+ * one more exchange than planned lines (so each line can have its own user turn after an opener), never fewer than 2.
+ */
+export function sessionLength(brief: RenderBrief): { words: number; min_words: number; max_words: number; min_turns: number } {
+  const exchanges = Math.max(2, Math.ceil(brief.target_tokens / TOKENS_PER_EXCHANGE), brief.lines.length + 1);
+  return {
+    words: words(brief.target_tokens),
+    min_words: Math.ceil((LENGTH_GATE.min * brief.target_tokens * WORDS_PER_TOKEN) / 10) * 10,
+    max_words: Math.floor((LENGTH_GATE.max * brief.target_tokens * WORDS_PER_TOKEN) / 10) * 10,
+    min_turns: 2 * exchanges,
+  };
+}
 
 const occurrences = (hay: string, needle: string) => { let n = 0; for (let i = hay.indexOf(needle); i >= 0; i = hay.indexOf(needle, i + needle.length)) n++; return n; };
 
@@ -115,7 +156,7 @@ export function checkSession(brief: RenderBrief, turns: unknown): string[] {
     if (RAW_DATES.some(re => re.test(bare))) fails.add('raw_date');
   }
   if (brief.target_tokens >= LENGTH_GATE.from_target) {
-    const tokens = ts.reduce((n, t) => n + encodingCount('cl100k_base', t.content), 0);
+    const tokens = sessionTokens(ts);
     if (tokens < LENGTH_GATE.min * brief.target_tokens || tokens > LENGTH_GATE.max * brief.target_tokens) fails.add('length');
   }
   return [...fails].sort();
@@ -132,13 +173,20 @@ const FAILURE_HINTS: Readonly<Record<string, string>> = {
   length: 'Keep to the requested length.', extra_claims: 'State no facts about the named people, companies, projects or deals beyond the required lines, and never restate, doubt or correct those lines.',
 };
 
-/** The prompt that asks gemini-3.8-flash for one session. A regeneration names the gates the last attempt failed. */
-export function renderPrompt(brief: RenderBrief, attempt: number, failures: readonly string[]): string {
+/**
+ * The prompt that asks gemini-3.8-flash for one session. A regeneration names the gates the last attempt failed, and
+ * after a length failure, lastTokens (the last attempt's measured length) and the allowed range in words.
+ */
+export function renderPrompt(brief: RenderBrief, attempt: number, failures: readonly string[], lastTokens?: number): string {
+  const len = sessionLength(brief);
+  const hint = (f: string) => (f === 'length' && lastTokens !== undefined
+    ? `The last attempt was about ${words(lastTokens)} words (${lastTokens} tokens); the session must be between ${len.min_words} and ${len.max_words} words, so aim for about ${len.words}.`
+    : FAILURE_HINTS[f.split(':')[0]] ?? f);
   return [
     'You write one chat session between a user and an AI assistant for a synthetic long-term memory benchmark. Everything in it is fictional.',
     '',
     `The session is mostly about: ${brief.topic}. It takes place on [[W:${brief.day}]] at ${brief.time}.`,
-    `Write about ${brief.target_tokens} tokens in total, as alternating turns starting with the user. The user speaks casually; the assistant is helpful and brief.`,
+    `Write about ${len.words} words (about ${brief.target_tokens} tokens) in total, as at least ${len.min_turns} alternating turns starting with the user. The user speaks casually; the assistant is helpful and brief.`,
     ...(brief.lines.length ? [
       '',
       'At natural points the user must say each of these lines word for word, each inside one of the user\'s turns (other sentences may surround it). Lines marked (middle) belong in the middle half of the session:',
@@ -152,7 +200,7 @@ export function renderPrompt(brief: RenderBrief, attempt: number, failures: read
     `- Say nothing about these people, companies, projects or deals beyond the lines above: ${brief.entities.join('; ')}. Do not mention them at all unless a line does.`,
     '- Do not write calendar dates, years, month names with a day, or weekday names. Tokens such as [[D:-12]] appear only inside the lines above; copy them exactly and add no others.',
     '- Never restate, question or correct a line above.',
-    ...(attempt > 0 && failures.length ? ['', `This is attempt ${attempt + 1}. The last attempt broke these rules: ${failures.map(f => FAILURE_HINTS[f.split(':')[0]] ?? f).join(' ')}`] : []),
+    ...(attempt > 0 && failures.length ? ['', `This is attempt ${attempt + 1}. The last attempt broke these rules: ${failures.map(hint).join(' ')}`] : []),
     '',
     'Reply with only a JSON object: {"turns": [{"speaker": "user", "content": "..."}, {"speaker": "assistant", "content": "..."}]}',
   ].join('\n');
@@ -185,21 +233,22 @@ export const parseVerdict = (reply: string): boolean | null => { const v = jsonO
 
 export interface Models {
   renderer: string;
-  render(brief: RenderBrief, attempt: number, failures: readonly string[]): Promise<string>;
+  render(brief: RenderBrief, attempt: number, failures: readonly string[], lastTokens?: number): Promise<string>;
   check(model: CheckModel, brief: RenderBrief, turns: readonly Turn[]): Promise<string>;
 }
 
-export interface ModelClient { id: string; complete(prompt: string, maxOutputTokens: number, temperature: number): Promise<string> }
+/** One provider model; schema, when given, is the JSON Schema the reply must follow (Gemini only). */
+export interface ModelClient { id: string; complete(prompt: string, maxOutputTokens: number, temperature: number, schema?: object): Promise<string> }
 
-/** Replies cached by request hash under dir, so a rerun buys nothing it already bought. */
+/** Replies cached by request hash (the schema included) under dir, so a rerun buys nothing it already bought. */
 export function cachedClient(client: ModelClient, dir: string): ModelClient {
   mkdirSync(dir, { recursive: true });
   return {
     id: client.id,
-    async complete(prompt, maxOutputTokens, temperature) {
-      const path = join(dir, `${sha256([CACHE_VERSION, client.id, String(maxOutputTokens), String(temperature), prompt].join('\u0000'))}.txt`);
+    async complete(prompt, maxOutputTokens, temperature, schema) {
+      const path = join(dir, `${sha256([CACHE_VERSION, client.id, String(maxOutputTokens), String(temperature), schema ? JSON.stringify(schema) : '', prompt].join('\u0000'))}.txt`);
       if (existsSync(path)) return readFileSync(path, 'utf8');
-      const reply = await client.complete(prompt, maxOutputTokens, temperature);
+      const reply = await client.complete(prompt, maxOutputTokens, temperature, schema);
       writeFileSync(`${path}.tmp`, reply, { mode: 0o600 });
       renameSync(`${path}.tmp`, path);
       return reply;
@@ -210,8 +259,8 @@ export function cachedClient(client: ModelClient, dir: string): ModelClient {
 export function clientModels(gemini: ModelClient, haiku: ModelClient): Models {
   return {
     renderer: gemini.id,
-    render: (brief, attempt, failures) => gemini.complete(renderPrompt(brief, attempt, failures), Math.min(65_536, Math.ceil(brief.target_tokens * 1.6) + 2048), 1),
-    check: (model, brief, turns) => (model === CHECK_MODELS[0] ? gemini : haiku).complete(checkPrompt(brief, turns), 256, 0),
+    render: (brief, attempt, failures, lastTokens) => gemini.complete(renderPrompt(brief, attempt, failures, lastTokens), Math.min(65_536, Math.ceil(brief.target_tokens * 1.6) + 2048), 1, RENDER_SCHEMA),
+    check: (model, brief, turns) => (model === CHECK_MODELS[0] ? gemini.complete(checkPrompt(brief, turns), 256, 0, CHECK_SCHEMA) : haiku.complete(checkPrompt(brief, turns), 2048, 0)),
   };
 }
 
@@ -259,9 +308,9 @@ export function geminiProxyClient(readyPath: string | undefined): ModelClient {
   const { base, token } = proxyEndpoint(readyPath, 'gemini');
   return {
     id: CHECK_MODELS[0],
-    async complete(prompt, maxOutputTokens, temperature) {
+    async complete(prompt, maxOutputTokens, temperature, schema) {
       const reply = await post(`${base.replace(/\/$/, '')}/v1beta/models/gemini-3.8-flash:generateContent`, { 'x-goog-api-key': token },
-        { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens, temperature, responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'low' } } });
+        { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens, temperature, responseMimeType: 'application/json', ...(schema ? { responseJsonSchema: schema } : {}), thinkingConfig: { thinkingLevel: 'low' } } });
       return (reply.candidates?.[0]?.content?.parts ?? []).map((x: { text?: string }) => x.text ?? '').join('');
     },
   };
@@ -295,11 +344,13 @@ export async function renderWorld(plan: WorldPlan, models: Models, opts: { targe
   const one = async (i: number) => {
     const brief = briefs[i];
     let failures: string[] = [];
+    let lastTokens: number | undefined;
     for (let attempt = 0; attempt <= REGENERATIONS; attempt++) {
       stats.attempts++;
       if (attempt > 0) stats.regenerated++;
-      const turns = parseTurns(await models.render(brief, attempt, failures));
+      const turns = parseTurns(await models.render(brief, attempt, failures, lastTokens));
       failures = checkSession(brief, turns);
+      lastTokens = failures.includes('length') ? sessionTokens(turns as Turn[]) : undefined;
       for (const model of failures.length ? [] : CHECK_MODELS.filter(m => m === CHECK_MODELS[0] || brief.tracked)) {
         stats.checks++;
         const verdict = parseVerdict(await models.check(model, brief, turns as Turn[]));

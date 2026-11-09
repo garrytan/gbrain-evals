@@ -12,7 +12,8 @@ import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, BG1_DEV_SEEDS, BG1_FIXTURE_TOKENS, PUBLIC_PHRASING, renderBriefs, renderTemplateSession, sealedWorldSeed, type Turn, type World, type WorldPlan } from '../../eval/generators/changing-facts-gen.ts';
 import { BG1_DEV_CONVERSATIONS } from '../../eval/runner/bg1/types.ts';
-import { checkPrompt, checkSession, fakeModels, proxyEndpoint, renderPrompt, renderWorld, type Models } from '../../eval/custody/bg1/render.ts';
+import { CHECK_MODELS, cachedClient, checkPrompt, checkSession, clientModels, fakeModels, geminiProxyClient, haikuProxyClient, proxyEndpoint, renderPrompt, renderWorld, type ModelClient, type Models } from '../../eval/custody/bg1/render.ts';
+import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
 import * as renderTs from '../../eval/custody/bg1/render.ts';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
@@ -678,6 +679,102 @@ describe('checkSession and renderWorld', () => {
     expect(prompt).toContain('attempt 2');
     expect(renderPrompt(briefs[at], 0, [])).not.toContain('attempt');
     expect(checkPrompt(briefs[at], turns())).toContain('{"extra_claims": true} or {"extra_claims": false}');
+  });
+
+  const renderSchema = { type: 'object', properties: { turns: { type: 'array', items: { type: 'object', properties: { speaker: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string' } }, required: ['speaker', 'content'], additionalProperties: false } } }, required: ['turns'], additionalProperties: false };
+  const checkSchema = { type: 'object', properties: { extra_claims: { type: 'boolean' } }, required: ['extra_claims'], additionalProperties: false };
+
+  // Value: protects=Gemini's render and check requests ask for the reply's JSON shape, and the Haiku check has room to answer after thinking; fails_when=a render or Gemini check request goes out without generationConfig.responseJsonSchema, or the Haiku check asks for fewer than 2048 output tokens; why_new=stage 1's first real dev render (09b3f414): 6 shape failures, 5 of them broken JSON, and 3 empty Haiku replies at max_tokens 256; seam=geminiProxyClient and haikuProxyClient through clientModels against a loopback server that records each request body; no_claim=how well gemini-3.8-flash follows a schema
+  test('Gemini render and check requests carry a responseJsonSchema, and the Haiku check asks for 2048 tokens', async () => {
+    const bodies: Array<{ path: string; body: { generationConfig?: Record<string, unknown>; max_tokens?: number } }> = [];
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', async fetch(req) {
+      const path = new URL(req.url).pathname;
+      bodies.push({ path, body: await req.json() });
+      return Response.json(path.startsWith('/gemini') ? { candidates: [{ content: { parts: [{ text: '{"extra_claims": false}' }] } }] } : { content: [{ type: 'text', text: '{"extra_claims": false}' }] });
+    } });
+    try {
+      const dir = scratch('wire');
+      const ready = (name: string, bg1: Record<string, string>) => { const p = join(dir, name); writeFileSync(p, JSON.stringify({ env: { bg1 } })); return p; };
+      const models = clientModels(geminiProxyClient(ready('gemini.json', { GOOGLE_GEMINI_BASE_URL: `http://127.0.0.1:${server.port}/gemini`, GEMINI_API_KEY: 'mpwp-bg1-wire' })),
+        haikuProxyClient(ready('anthropic.json', { ANTHROPIC_BASE_URL: `http://127.0.0.1:${server.port}/anthropic`, ANTHROPIC_API_KEY: 'mpwp-bg1-wire' })));
+      await models.render(briefs[at], 0, []);
+      await models.check(CHECK_MODELS[0], briefs[at], turns());
+      await models.check(CHECK_MODELS[1], briefs[at], turns());
+    } finally { server.stop(true); }
+    expect(bodies.map(b => b.path)).toEqual(['/gemini/v1beta/models/gemini-3.8-flash:generateContent', '/gemini/v1beta/models/gemini-3.8-flash:generateContent', '/anthropic/v1/messages']);
+    const [render, gemini, haiku] = bodies;
+    expect(render.body.generationConfig?.responseJsonSchema).toEqual(renderSchema);
+    expect(render.body.generationConfig).toMatchObject({ responseMimeType: 'application/json', temperature: 1 });
+    expect(render.body.generationConfig?.responseSchema).toBeUndefined();
+    expect(gemini.body.generationConfig?.responseJsonSchema).toEqual(checkSchema);
+    expect(gemini.body.generationConfig).toMatchObject({ responseMimeType: 'application/json', maxOutputTokens: 256, temperature: 0 });
+    expect(haiku.body.max_tokens).toBe(2048);
+  });
+
+  // Value: protects=the render prompt states each session's length as words and a minimum number of turns, and a short session regenerates with its measured length and the allowed range in words; fails_when=the prompt gives the length only in tokens or no minimum number of turns, or a regeneration after a length failure does not name the last attempt's length; why_new=stage 1's first real dev render (09b3f414): 15 length failures, sessions at about 450 to 1,500 tokens against targets of 757 to 3,236; seam=clientModels over a fake ModelClient that records each request, with renderWorld; no_claim=how long gemini-3.8-flash writes
+  test('the render prompt states the length in words and turns, and a length failure regenerates with its measured length, then passes', async () => {
+    expect(renderPrompt({ ...briefs[at], target_tokens: 1121, lines: [] }, 0, [])).toContain('Write about 840 words (about 1121 tokens) in total, as at least 10 alternating turns starting with the user.');
+    expect(renderPrompt({ ...briefs[at], target_tokens: 3236, lines: [] }, 0, [])).toContain('Write about 2430 words (about 3236 tokens) in total, as at least 26 alternating turns');
+    expect(renderPrompt({ ...briefs[at], target_tokens: 400, lines: briefs[at].lines.slice(0, 1).concat(briefs[at].lines.slice(0, 1), briefs[at].lines.slice(0, 1)) }, 0, [])).toContain('Write about 300 words (about 400 tokens) in total, as at least 8 alternating turns');
+    const small = { ...dev, sessions: dev.sessions.slice(0, 12) } as WorldPlan;
+    const target = 12_000;
+    const sized = renderBriefs(small, target);
+    expect(sized.some(b => b.tracked)).toBe(true);
+    const calls: Array<{ id: string; prompt: string; max: number; temperature: number; schema?: object }> = [];
+    let reply = '';
+    const client = (id: string): ModelClient => ({ id, async complete(prompt, max, temperature, schema) { calls.push({ id, prompt, max, temperature, schema }); return temperature === 1 ? reply : '{"extra_claims": false}'; } });
+    const real = clientModels(client(CHECK_MODELS[0]), client(CHECK_MODELS[1]));
+    const short = renderTemplateSession(small, small.sessions[0], 50);
+    const measured = short.reduce((n, t) => n + encodingCount('cl100k_base', t.content), 0);
+    expect(sized[0].target_tokens).toBeGreaterThanOrEqual(400);
+    expect(measured).toBeLessThan(0.6 * sized[0].target_tokens);
+    const models: Models = { renderer: real.renderer, check: real.check, render(brief, attempt, failures, lastTokens) {
+      const i = small.sessions.findIndex(s => s.id === brief.session);
+      reply = JSON.stringify({ turns: i === 0 && attempt === 0 ? short : renderTemplateSession(small, small.sessions[i], brief.target_tokens) });
+      return real.render(brief, attempt, failures, lastTokens);
+    } };
+    const out = await renderWorld(small, models, { targetTokens: target, concurrency: 1 });
+    const renders = calls.filter(c => c.temperature === 1);
+    const words = (tokens: number) => Math.round((tokens * 0.75) / 10) * 10;
+    const range = `between ${Math.ceil((0.6 * sized[0].target_tokens * 0.75) / 10) * 10} and ${Math.floor((1.5 * sized[0].target_tokens * 0.75) / 10) * 10} words`;
+    expect(renders[1].prompt).toContain(`This is attempt 2. The last attempt broke these rules: The last attempt was about ${words(measured)} words (${measured} tokens); the session must be ${range}, so aim for about ${words(sized[0].target_tokens)}.`);
+    expect(renders[0].prompt).toContain(`Write about ${words(sized[0].target_tokens)} words (about ${sized[0].target_tokens} tokens) in total, as at least `);
+    expect(out.world).not.toBeNull();
+    expect(out.stats.regenerated).toBe(1);
+    expect(out.stats.failures).toEqual({ length: 1 });
+    expect(renders).toHaveLength(small.sessions.length + 1);
+    for (const c of renders) expect(c.schema).toEqual(renderSchema);
+    const checks = calls.filter(c => c.temperature === 0);
+    expect(checks.filter(c => c.id === CHECK_MODELS[0]).map(c => [c.max, c.schema])).toEqual(checks.filter(c => c.id === CHECK_MODELS[0]).map(() => [256, checkSchema]));
+    expect(checks.filter(c => c.id === CHECK_MODELS[1]).length).toBeGreaterThan(0);
+    for (const c of checks.filter(x => x.id === CHECK_MODELS[1])) expect([c.max, c.schema]).toEqual([2048, undefined]);
+  });
+
+  // Value: protects=a cached reply is reused only for the same request, schema included, and no reply cached before the method changes is reused; fails_when=cachedClient's key leaves out the schema, or a v1-keyed reply is still found; why_new=the renderer method changes after 09b3f414 (requests now carry a schema); seam=cachedClient over a counting fake client, with a cache directory holding a v1-keyed reply; no_claim=caching in the metering proxies (they keep none)
+  test('the render cache keys on the schema and reuses no reply cached under v1', async () => {
+    const dir = scratch('cache');
+    let n = 0;
+    const base: ModelClient = { id: CHECK_MODELS[0], async complete() { n++; return `reply ${n}`; } };
+    writeFileSync(join(dir, `${sha(['bg1-render-cache/v1', base.id, '256', '0', 'the prompt'].join('\u0000'))}.txt`), 'cached under v1');
+    const cache = cachedClient(base, dir);
+    const a = { type: 'object' }, b = { type: 'object', required: ['x'] };
+    expect(await cache.complete('the prompt', 256, 0, a)).toBe('reply 1');
+    expect(await cache.complete('the prompt', 256, 0, a)).toBe('reply 1');
+    expect(await cache.complete('the prompt', 256, 0, b)).toBe('reply 2');
+    expect(await cache.complete('the prompt', 256, 0)).toBe('reply 3');
+    expect(n).toBe(3);
+  });
+
+  // Value: protects=--fake mode, which the keyless tests and drills run, renders what it rendered before the method changes; fails_when=the schema, length or regeneration changes reach fakeModels or what renderWorld returns in --fake; why_new=the renderer method changes after stage 1's first real dev render (09b3f414); seam=render.ts --dev --fake at the fixture size against the committed template fixture; no_claim=the real renderer's output
+  test('--fake output is unchanged: a dev world at the fixture size matches the committed template fixture, with no regeneration', () => {
+    const set = join(scratch('fake-same'), 'set');
+    const r = run('bun', [RENDER, '--dev', 'bg1-dev-01', '--fake', '--set', set, '--target-tokens', String(BG1_FIXTURE_TOKENS)]);
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/^bg1-render world=bg1-dev-01 status=written sessions=(\d+) attempts=\1 regenerated=0 checks=\d+ failures=none tokens=\d+ world_sha256=[0-9a-f]{16}\n$/);
+    const world = JSON.parse(readFileSync(join(set, 'worlds', 'bg1-dev-01', 'world.json'), 'utf8')) as World;
+    const fixture = JSON.parse(readFileSync(join(REPO, 'eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-01/world.json'), 'utf8')) as World;
+    expect(world.renderer).toBe('fake-template');
+    expect(world.sessions).toEqual(fixture.sessions);
   });
 
   test('a check that finds extra claims regenerates; an unreadable verdict counts as a failure; four failures drop the world', async () => {
