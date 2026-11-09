@@ -130,7 +130,29 @@ Every paid request reserves its worst case against the budget ledger before it i
 
 ## Amendments
 
-None yet.
+### 2026-11-09: binding MDDs and the order of counted cells
+
+Both points are fixed before any counted cell.
+
+**Binding MDDs.** `eval/runner/power` has no paired-binary module, so the binding MDDs use the formula the planning
+table used: `mdd()` in `eval/runner/live-recall/task-scorecard.ts`, (z(0.975) + z(0.8)) × √(d / n), with two-sided α 0.05,
+power 0.8 and discordance d = 0.3. The smoke runs had one or two tasks per cell, too few to estimate discordance, so 0.3
+stays. These values replace the planning MDDs:
+
+| Unit | n (pairs) | Binding MDD (points) |
+|---|---|---|
+| G2, per form and condition | 100 | 15.3 |
+| G1 | 120 | 14.0 |
+| G3, per surface | 60 | 19.8 |
+| G3, pooled | 120 | 14.0 |
+| G4 | 60 | 19.8 |
+| G6 agent layer, per caller | 50 | 21.7 |
+
+A comparison smaller than its binding MDD reads "no measurable difference". For reference, the same n at d = 0.2 gives
+12.5, 11.4, 16.2, 11.4, 16.2 and 17.7 points. Those values are reported but don't bind.
+
+**Order.** G3's and G6's counted agent cells run first. G1's and G4's counted agent cells run only after batch 3's
+aggregates exist, as the G1 and G4 item above says.
 
 ## Disclosures
 
