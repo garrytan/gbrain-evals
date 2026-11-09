@@ -381,6 +381,8 @@ export function snapshotStoreGap(system: string, tarPath: string, root = REPO_RO
   return missing.length ? `lacks volume${missing.length > 1 ? 's' : ''} ${missing.join(', ')} that ${relative(root, compose)} declares` : null;
 }
 const usd = (n: number) => `$${n.toFixed(2)}`;
+/** The id reserve() gives a lease: its cell, its attempt and the start of its ledger entry's id. */
+const mintLeaseId = (cell: string, attempt: number, entry: string) => `${cell}-a${attempt}-${entry.slice(0, 8)}`;
 
 /** The ubi-runner owner tag (UBI_OWNER, lowercased letters and digits, at most 12, starting with a letter), as the runner computes it. */
 export function ownerTag(raw: string | undefined): string | null {
@@ -609,6 +611,8 @@ export class Campaign {
         ...entries.filter(e => (e.actual_usd ?? e.reserved_usd) > 0).map(e => [e, reserved.filter(r => r.entry_id === e.id).length] as const).filter(([, n]) => n !== 1)
           .map(([e, n]) => `ledger entry ${e.id} ("${e.description}") has spend, and ${n} reserved events in the lease log name it`),
         ...reserved.filter(r => !held.has(r.entry_id)).map(r => `lease ${r.lease_id} names ledger entry ${r.entry_id}, which campaign run ${s.run_id} does not hold`),
+        ...reserved.filter(r => r.lease_id !== mintLeaseId(r.cell, r.attempt, r.entry_id))
+          .map(r => `lease ${r.lease_id} is not the id reserve() gives attempt ${r.attempt} of unit ${r.cell} on ledger entry ${r.entry_id}, ${mintLeaseId(r.cell, r.attempt, r.entry_id)}`),
         ...[...new Set(reserved.map(r => r.lease_id))].map(id => [id, reserved.filter(r => r.lease_id === id).length] as const).filter(([, n]) => n > 1)
           .map(([id, n]) => `lease ${id} is reserved ${n} times in the lease log`),
         ...this.leases().flatMap(l => {
@@ -635,7 +639,7 @@ export class Campaign {
       try {
         const s = this.state();
         open = readLedger(s.ledger).entries.filter(e => e.run_id === s.run_id && e.actual_usd === null)
-          .map(e => { const m = /^lease (\S+) attempt (\d+)$/.exec(e.description); return m ? `lease ${m[1]}-a${m[2]}-${e.id.slice(0, 8)} (ledger entry ${e.id})` : `ledger entry ${e.id} ("${e.description}")`; }).join('; ') || 'none';
+          .map(e => { const m = /^lease (\S+) attempt (\d+)$/.exec(e.description); return m ? `lease ${mintLeaseId(m[1], Number(m[2]), e.id)} (ledger entry ${e.id})` : `ledger entry ${e.id} ("${e.description}")`; }).join('; ') || 'none';
       } catch (e) { open = `unknown, because the campaign ledger could not be read (${(e as Error).message})`; }
     }
     return `Stop and ask the campaign owner before anything else runs on ${this.stateDir}: ${what}. Leases the campaign ledger still holds open: ${open}. Do not restore an older leases.ndjson or leases.sha256, edit either file, or start the campaign in a fresh --state; any of those could launch a unit again while its lease is live.`;
@@ -752,7 +756,7 @@ export class Campaign {
             verify: ['bun', 'run', 'eval:scoreboard', 'status', '--campaign', this.manifestPath, '--state', this.stateDir] },
           state: { cap_usd: this.manifest.cap_usd, committed_usd: st.committed_usd, remaining_usd: st.remaining_usd, charged_reservations_usd: st.unsettled_usd } });
       }
-      const l: LeaseState = { lease_id: `${cellId}-a${attempt}-${entry.slice(0, 8)}`, cell: cellId, attempt, usd: c.lease_usd, entry_id: entry, max_output_tokens: c.max_output_tokens ?? null, status: 'reserved' };
+      const l: LeaseState = { lease_id: mintLeaseId(cellId, attempt, entry), cell: cellId, attempt, usd: c.lease_usd, entry_id: entry, max_output_tokens: c.max_output_tokens ?? null, status: 'reserved' };
       try { this.append({ event: 'reserved', lease_id: l.lease_id, cell: cellId, attempt, usd: c.lease_usd, entry_id: entry, at: new Date().toISOString(), max_output_tokens: l.max_output_tokens }); }
       catch (e) { if (this.bg1) this.run().settle(entry, { usd: 0 }); throw e; }
       return l;
@@ -802,7 +806,9 @@ export class Campaign {
    * BG1: refuse a lease whose usd or max_output_tokens is not its unit's in the frozen campaign manifest, or, once
    * campaign.json exists, one the campaign ledger does not hold at that amount in this campaign's run (open, while the
    * lease is reserved) under the lease's own description, `lease <cell> attempt <n>` as reserve() writes it. Also
-   * refuse a lease whose ledger entry another reserved event in the log names, so one entry never backs two leases.
+   * refuse a lease whose ledger entry another reserved event in the log names, so one entry never backs two leases, and
+   * one whose id is not the id reserve() mints from its cell, attempt and entry, so a lease renamed in the log never
+   * claims a fresh results directory for an entry that already launched.
    * Then the whole log must match the ledger (reconcileBg1). leases.sha256 only shows the log is the one last written,
    * so a coordinated edit of both files stops here before a proxy is handed the lease. Other campaigns pass untouched.
    */
@@ -810,6 +816,8 @@ export class Campaign {
     if (!this.bg1) return;
     const c = this.cell(l.cell);
     const problems: string[] = [];
+    const minted = mintLeaseId(l.cell, l.attempt, l.entry_id);
+    if (l.lease_id !== minted) problems.push(`is not the id reserve() gives attempt ${l.attempt} of unit ${l.cell} on ledger entry ${l.entry_id}, ${minted}`);
     if (Math.abs(l.usd - c.lease_usd) > 1e-9) problems.push(`leases ${l.usd}, and the frozen campaign gives unit ${c.id} ${c.lease_usd}`);
     if ((l.max_output_tokens ?? null) !== (c.max_output_tokens ?? null)) problems.push(`caps output at ${l.max_output_tokens}, and the frozen campaign gives unit ${c.id} ${c.max_output_tokens ?? null}`);
     if (existsSync(this.statePath)) {

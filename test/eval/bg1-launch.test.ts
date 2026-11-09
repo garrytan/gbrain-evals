@@ -440,6 +440,8 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
       [text + event({ event: 'abandoned', lease_id: b.lease_id, reason: 'forged' }), UNITS[1],
         `lease ${b.lease_id} is abandoned at ${b.usd} in the lease log, and the ledger holds its entry ${b.entry_id} open`],
       [text.replace(`"lease_id":"${d.lease_id}"`, `"lease_id":"${b.lease_id}"`), UNITS[1],
+        `is not the id reserve() gives attempt 1 of unit ${UNITS[2]} on ledger entry ${d.entry_id}, ${d.lease_id}`],
+      [text + text.split('\n').find(x => x.includes('"event":"reserved"') && x.includes(b.lease_id)) + '\n', UNITS[1],
         `lease ${b.lease_id} is reserved 2 times in the lease log`],
     ];
     for (const [t, unit, why] of cases) {
@@ -491,5 +493,37 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     writeFileSync(join(planted.state, 'leases.ndjson'), text);
     asks(caught(() => new Campaign(planted.file, planted.state).init()), `it holds a lease log naming ${named} but no campaign.json`, 'none (this --state has no campaign.json)');
     expect(existsSync(join(planted.state, 'campaign.json'))).toBe(false);
+  }, 60_000);
+
+
+  // Value: protects=one BG1 ledger entry boots one VM even when the lease log renames its lease; fails_when=a post-reserve log with the lease's id renamed and its SHA-256 rewritten claims a fresh results directory and boots a second VM on an entry that already launched; why_new=fix-check 3's blocker B1 (launch-once was keyed on the editable lease_id); seam=a stage-1 BG1 Campaign over a temporary ledger, launched locally with a runner that records boots; no_claim=a real VM
+  test('a launched lease renamed in a restored lease log, with its SHA-256 rewritten, refuses a second launch on the same ledger entry', async () => {
+    const w = smokeCampaign('bg1-dev3.gbrain-defaults.rs1-stable');
+    const c = new Campaign(w.file, w.state);
+    c.init();
+    const l = c.reserve(w.unit);
+    const log = join(w.state, 'leases.ndjson'), shaFile = join(w.state, 'leases.sha256'), text = readFileSync(log, 'utf8');
+    const boots: string[] = [];
+    const runner = async (_argv: string[], ctx: LaunchContext) => { boots.push(`${ctx.lease.lease_id}@${ctx.lease.entry_id}`); return 0; };
+    const local = { local: { port: 1 } };
+    expect((await c.launch(w.unit, runner, local)).status).toBe('finished');
+    const renamed = text.split(`"lease_id":"${l.lease_id}"`).join(`"lease_id":"${l.lease_id}-x"`);
+    expect(renamed).not.toBe(text);
+    writeFileSync(log, renamed);
+    writeFileSync(shaFile, createHash('sha256').update(renamed).digest('hex') + '\n');
+    expect(c.leases().map(x => [x.lease_id, x.status])).toEqual([[`${l.lease_id}-x`, 'reserved']]);
+    const why = `is not the id reserve() gives attempt 1 of unit ${w.unit} on ledger entry ${l.entry_id}, ${l.lease_id}`;
+    const again = await c.launch(w.unit, runner, local).then(() => null, x => x);
+    expect(boots).toEqual([`${l.lease_id}@${l.entry_id}`]);
+    expect(again).toBeInstanceOf(ScoreboardError);
+    expect((again as ScoreboardError).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(`lease ${l.lease_id}-x: ${why}`) });
+    expect((again as ScoreboardError).op.fix.user_message).toStartWith('Stop and ask the campaign owner');
+    expect(existsSync(join(w.state, 'results', w.unit, `${l.lease_id}-x`))).toBe(false);
+    const resumed = await c.resume(w.unit, runner, local).then(() => null, x => x);
+    expect(resumed).toBeInstanceOf(ScoreboardError);
+    expect((resumed as ScoreboardError).op.message).toContain(why);
+    for (const go of [() => c.payload(c.leases()[0]), () => c.reserve(w.unit)]) expect(caught(go).op.message).toContain(why);
+    expect(boots).toHaveLength(1);
+    expect(readFileSync(log, 'utf8')).toBe(renamed);
   }, 60_000);
 });
