@@ -44,6 +44,7 @@ async function finish(code: number): Promise<never> {
 try {
   if (role === 'writer') {
     const plan = schedule.writers[Number(arg)]!;
+    g.service.startPersistenceConsumer(engine, { engine: engine.kind });
     // The parent sets t0 once every writer has loaded gbrain and connected (t0.json), so cold starts do not shift the schedule.
     writeFileSync(join(dir, `${tag}.ready`), '');
     while (!existsSync(join(dir, 't0.json'))) await sleep(50);

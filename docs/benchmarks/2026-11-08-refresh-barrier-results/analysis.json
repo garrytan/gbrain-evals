@@ -1,0 +1,1197 @@
+{
+  "counted": true,
+  "incomplete": [],
+  "interrupted": [],
+  "provenance": {
+    "gbrain_shas": [
+      "773a29eede3b3ea91e0e2cba4012078b5d42c602"
+    ],
+    "harness_digests": [
+      "500cc5ba4b978e18d695683a39ef51714ff4c1626249b1594e88eb91629035e3"
+    ],
+    "mixed": false,
+    "g": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+    "results_from_g": true,
+    "analyzer_digest": "500cc5ba4b978e18d695683a39ef51714ff4c1626249b1594e88eb91629035e3",
+    "analyzer_matches_results": true
+  },
+  "receipts": [
+    {
+      "block": "named",
+      "engine": "pglite",
+      "gbrain": {
+        "root": "~/work/gbrain-g-shallow",
+        "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+        "dirty": false
+      },
+      "counted": true,
+      "jobs": {
+        "total": 150,
+        "skipped_existing": 0,
+        "ran": 150,
+        "harness_errors": 0,
+        "interrupted": [],
+        "post_result_exits": []
+      }
+    },
+    {
+      "block": "named",
+      "engine": "postgres",
+      "gbrain": {
+        "root": "~/work/gbrain-g-shallow",
+        "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+        "dirty": false
+      },
+      "counted": true,
+      "jobs": {
+        "total": 150,
+        "skipped_existing": 0,
+        "ran": 150,
+        "harness_errors": 0,
+        "interrupted": [],
+        "post_result_exits": []
+      }
+    },
+    {
+      "block": "quiet",
+      "engine": "pglite",
+      "gbrain": {
+        "root": "~/work/gbrain-g-shallow",
+        "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+        "dirty": false
+      },
+      "counted": true,
+      "jobs": {
+        "total": 200,
+        "skipped_existing": 0,
+        "ran": 200,
+        "harness_errors": 0,
+        "interrupted": [],
+        "post_result_exits": []
+      }
+    },
+    {
+      "block": "quiet",
+      "engine": "postgres",
+      "gbrain": {
+        "root": "~/work/gbrain-g-shallow",
+        "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+        "dirty": false
+      },
+      "counted": true,
+      "jobs": {
+        "total": 200,
+        "skipped_existing": 0,
+        "ran": 200,
+        "harness_errors": 0,
+        "interrupted": [],
+        "post_result_exits": []
+      }
+    },
+    {
+      "block": "trials",
+      "engine": "pglite",
+      "gbrain": {
+        "root": "~/work/gbrain-g-shallow",
+        "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+        "dirty": false
+      },
+      "counted": true,
+      "jobs": {
+        "total": 1000,
+        "skipped_existing": 0,
+        "ran": 1000,
+        "harness_errors": 0,
+        "interrupted": [],
+        "post_result_exits": []
+      }
+    },
+    {
+      "block": "trials",
+      "engine": "postgres",
+      "gbrain": {
+        "root": "~/work/gbrain-g-shallow",
+        "sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+        "dirty": false
+      },
+      "counted": true,
+      "jobs": {
+        "total": 1000,
+        "skipped_existing": 0,
+        "ran": 1000,
+        "harness_errors": 0,
+        "interrupted": [],
+        "post_result_exits": []
+      }
+    }
+  ],
+  "verdict": "PASS",
+  "verdict_reasons": {
+    "counted": true,
+    "fix_method": [],
+    "fail": [],
+    "incomplete": [],
+    "incomplete_method": [],
+    "inconclusive": []
+  },
+  "verdict_part_a": "PASS",
+  "recommend_flag_on": true,
+  "benefit": {
+    "postgres": {
+      "worktree_refreshing_share_outside_expiry": 0,
+      "blocked_p95_ms": 76,
+      "pass": true
+    },
+    "pglite": {
+      "worktree_refreshing_share_outside_expiry": 0,
+      "blocked_p95_ms": 35,
+      "pass": true
+    }
+  },
+  "flag_on_failures": [],
+  "bounds": {
+    "trials_both_engines": {
+      "n": 1000,
+      "failures": 0,
+      "upper95": 0.0029912495450953314
+    },
+    "trials_postgres": {
+      "n": 500,
+      "failures": 0,
+      "upper95": 0.005973551516349596
+    },
+    "trials_pglite": {
+      "n": 500,
+      "failures": 0,
+      "upper95": 0.005973551516349596
+    },
+    "writes_both_engines": {
+      "n": 21404,
+      "failures": 0,
+      "upper95": 0.0001399515342926927,
+      "assumes": "independent writes (writes in one trial share a brain, so this bound is optimistic; the trial bound is the primary one)"
+    },
+    "writes_held_on": {
+      "n": 6632,
+      "failures": 0,
+      "upper95": 0.0004516067213831132,
+      "assumes": "independent writes; n is the held writes the run actually reached"
+    },
+    "stratum_crash": {
+      "n": 50,
+      "failures": 0,
+      "upper95": 0.058155079116972264
+    },
+    "stratum_writer_kill": {
+      "n": 47,
+      "failures": 0,
+      "upper95": 0.06175013471082447
+    },
+    "stratum_import_sequence": {
+      "n": 181,
+      "failures": 0,
+      "upper95": 0.01641479165519244
+    },
+    "named_in_window": {
+      "n": 150,
+      "failures": 0,
+      "upper95": 0.019773438164508494
+    },
+    "named_all_runs": {
+      "n": 150,
+      "failures": 0,
+      "upper95": 0.019773438164508494
+    },
+    "quiet_trials_on": {
+      "n": 200,
+      "failures": 0,
+      "upper95": 0.014867039231272083
+    }
+  },
+  "positive_controls": {
+    "PC1": {
+      "postgres": {
+        "share": 0.34,
+        "pass": true
+      },
+      "pglite": {
+        "share": 0.276,
+        "pass": true
+      }
+    },
+    "PC2": {
+      "runs": 60,
+      "in_window": 60,
+      "overwritten": 60,
+      "share": 1,
+      "at_detector_build": true,
+      "same_harness": true,
+      "planned_runs": true,
+      "pass": true
+    },
+    "PC3": {
+      "postgres/on/put_blind": {
+        "share": 1,
+        "pass": true
+      },
+      "postgres/on/put_update": {
+        "share": 1,
+        "pass": true
+      },
+      "postgres/on/remember_entity": {
+        "share": 1,
+        "pass": true
+      },
+      "pglite/on/put_blind": {
+        "share": 1,
+        "pass": true
+      },
+      "pglite/on/put_update": {
+        "share": 1,
+        "pass": true
+      },
+      "pglite/on/remember_entity": {
+        "share": 1,
+        "pass": true
+      }
+    },
+    "PC4": {
+      "off": {
+        "trials": 1000,
+        "harness_errors": 0,
+        "pass": true
+      },
+      "on": {
+        "trials": 1000,
+        "harness_errors": 0,
+        "pass": true
+      }
+    },
+    "PC5": {
+      "postgres": {
+        "deferral_share": 0.89,
+        "worktree_refreshing_first_outside_expiry": 0,
+        "switches_match_arm": true,
+        "pass": true
+      },
+      "pglite": {
+        "deferral_share": 0.852,
+        "worktree_refreshing_first_outside_expiry": 0,
+        "switches_match_arm": true,
+        "pass": true
+      }
+    }
+  },
+  "quiet_latency": {
+    "postgres": {
+      "seeds": 100,
+      "excluded_failed": 0,
+      "runs": 100,
+      "writes_on": 2343,
+      "writes_off": 2343,
+      "mean": -2.1216389244557945,
+      "lo": -8.6793160967473,
+      "hi": 3.9387274155537852,
+      "margin_ms": 25,
+      "pass": true
+    },
+    "pglite": {
+      "seeds": 100,
+      "excluded_failed": 0,
+      "runs": 100,
+      "writes_on": 2003,
+      "writes_off": 2003,
+      "mean": 4.734897653519738,
+      "lo": 0.26229508196720985,
+      "hi": 9.30536332179932,
+      "margin_ms": 25,
+      "pass": true
+    }
+  },
+  "summary": {
+    "postgres/off": {
+      "trials": 500,
+      "failed_trials": 0,
+      "classes": {
+        "lost": 0,
+        "lost_git": 0,
+        "phantom": 0,
+        "duplicated": 0,
+        "stuck": 0,
+        "overwritten": 0,
+        "wrong_expiry": 0,
+        "unindexed": 0,
+        "unpublished": 0,
+        "false_refusal": 0,
+        "unexpected_outcome": 0,
+        "hang": 0,
+        "deadlock": 0,
+        "no_converge": 0,
+        "harness_error": 0
+      },
+      "writes": 10758,
+      "first_call": {
+        "refused:source_changed": 174,
+        "refused_retryable:worktree_refreshing": 469,
+        "committed": 10051,
+        "refused:revision_conflict": 64
+      },
+      "trials_with_worktree_refreshing": 170,
+      "worktree_refreshing_first_outside_expiry": 298,
+      "writes_outside_expiry": 8795,
+      "trials_with_deferral": 0,
+      "unexpected_reasons": {},
+      "too_many_clients": 0,
+      "slip_ms": {
+        "n": 10758,
+        "p50": 1,
+        "p95": 10531,
+        "max": 34990
+      },
+      "pauses": {
+        "planned": 889,
+        "fired": 635,
+        "missed": 0,
+        "skipped_current": 241
+      },
+      "attempts_mean": 1.0518683770217512,
+      "blocked_ms": {
+        "n": 995,
+        "p50": 8153,
+        "p95": 10009,
+        "max": 10751
+      },
+      "defer_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "release_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "ticks": {
+        "total": 1036,
+        "completed": 1019,
+        "refused": {
+          "refresh_source_changed": 3,
+          "refresh_diverged": 13,
+          "refresh_dirty": 1
+        }
+      },
+      "converge_attempts": {
+        "n": 1000,
+        "p50": 1,
+        "p95": 1,
+        "max": 2
+      },
+      "trials_with_publish_consent": 5,
+      "residual_recovery_required": {
+        "trials": 0,
+        "rows": 0
+      },
+      "failures": []
+    },
+    "postgres/on": {
+      "trials": 500,
+      "failed_trials": 0,
+      "classes": {
+        "lost": 0,
+        "lost_git": 0,
+        "phantom": 0,
+        "duplicated": 0,
+        "stuck": 0,
+        "overwritten": 0,
+        "wrong_expiry": 0,
+        "unindexed": 0,
+        "unpublished": 0,
+        "false_refusal": 0,
+        "unexpected_outcome": 0,
+        "hang": 0,
+        "deadlock": 0,
+        "no_converge": 0,
+        "harness_error": 0
+      },
+      "writes": 10758,
+      "first_call": {
+        "pending:write_pending": 612,
+        "pending": 2863,
+        "committed": 7259,
+        "refused:revision_conflict": 24
+      },
+      "trials_with_worktree_refreshing": 0,
+      "worktree_refreshing_first_outside_expiry": 0,
+      "writes_outside_expiry": 8795,
+      "trials_with_deferral": 445,
+      "unexpected_reasons": {},
+      "too_many_clients": 0,
+      "slip_ms": {
+        "n": 10758,
+        "p50": 0,
+        "p95": 58,
+        "max": 1607
+      },
+      "pauses": {
+        "planned": 889,
+        "fired": 616,
+        "missed": 0,
+        "skipped_current": 253
+      },
+      "attempts_mean": 1,
+      "blocked_ms": {
+        "n": 2018,
+        "p50": 26,
+        "p95": 76,
+        "max": 150
+      },
+      "defer_to_apply_ms": {
+        "n": 2829,
+        "p50": 4334,
+        "p95": 22131,
+        "max": 52621
+      },
+      "release_to_apply_ms": {
+        "n": 2660,
+        "p50": 726,
+        "p95": 3361,
+        "max": 8029
+      },
+      "ticks": {
+        "total": 1040,
+        "completed": 1010,
+        "refused": {
+          "refresh_source_changed": 9,
+          "refresh_diverged": 21
+        }
+      },
+      "converge_attempts": {
+        "n": 1000,
+        "p50": 1,
+        "p95": 1,
+        "max": 2
+      },
+      "trials_with_publish_consent": 1,
+      "residual_recovery_required": {
+        "trials": 0,
+        "rows": 0
+      },
+      "failures": []
+    },
+    "pglite/off": {
+      "trials": 500,
+      "failed_trials": 0,
+      "classes": {
+        "lost": 0,
+        "lost_git": 0,
+        "phantom": 0,
+        "duplicated": 0,
+        "stuck": 0,
+        "overwritten": 0,
+        "wrong_expiry": 0,
+        "unindexed": 0,
+        "unpublished": 0,
+        "false_refusal": 0,
+        "unexpected_outcome": 0,
+        "hang": 0,
+        "deadlock": 0,
+        "no_converge": 0,
+        "harness_error": 0
+      },
+      "writes": 10646,
+      "first_call": {
+        "refused:source_changed": 180,
+        "committed": 10035,
+        "refused_retryable:worktree_refreshing": 369,
+        "refused:revision_conflict": 62
+      },
+      "trials_with_worktree_refreshing": 138,
+      "worktree_refreshing_first_outside_expiry": 279,
+      "writes_outside_expiry": 9139,
+      "trials_with_deferral": 0,
+      "unexpected_reasons": {},
+      "too_many_clients": 0,
+      "slip_ms": {
+        "n": 10646,
+        "p50": 1,
+        "p95": 9236,
+        "max": 48942
+      },
+      "pauses": {
+        "planned": 878,
+        "fired": 632,
+        "missed": 0,
+        "skipped_current": 233
+      },
+      "attempts_mean": 1.0417058049971821,
+      "blocked_ms": {
+        "n": 993,
+        "p50": 7877,
+        "p95": 10048,
+        "max": 10901
+      },
+      "defer_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "release_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "ticks": {
+        "total": 1025,
+        "completed": 1003,
+        "refused": {
+          "refresh_diverged": 20,
+          "refresh_dirty": 1,
+          "refresh_source_changed": 1
+        }
+      },
+      "converge_attempts": {
+        "n": 1000,
+        "p50": 1,
+        "p95": 1,
+        "max": 2
+      },
+      "trials_with_publish_consent": 2,
+      "residual_recovery_required": {
+        "trials": 0,
+        "rows": 0
+      },
+      "failures": []
+    },
+    "pglite/on": {
+      "trials": 500,
+      "failed_trials": 0,
+      "classes": {
+        "lost": 0,
+        "lost_git": 0,
+        "phantom": 0,
+        "duplicated": 0,
+        "stuck": 0,
+        "overwritten": 0,
+        "wrong_expiry": 0,
+        "unindexed": 0,
+        "unpublished": 0,
+        "false_refusal": 0,
+        "unexpected_outcome": 0,
+        "hang": 0,
+        "deadlock": 0,
+        "no_converge": 0,
+        "harness_error": 0
+      },
+      "writes": 10646,
+      "first_call": {
+        "pending:write_pending": 575,
+        "pending": 2581,
+        "committed": 7473,
+        "refused:revision_conflict": 17
+      },
+      "trials_with_worktree_refreshing": 0,
+      "worktree_refreshing_first_outside_expiry": 0,
+      "writes_outside_expiry": 9139,
+      "trials_with_deferral": 426,
+      "unexpected_reasons": {},
+      "too_many_clients": 0,
+      "slip_ms": {
+        "n": 10646,
+        "p50": 1,
+        "p95": 53,
+        "max": 1463
+      },
+      "pauses": {
+        "planned": 878,
+        "fired": 615,
+        "missed": 0,
+        "skipped_current": 236
+      },
+      "attempts_mean": 1,
+      "blocked_ms": {
+        "n": 1943,
+        "p50": 14,
+        "p95": 35,
+        "max": 117
+      },
+      "defer_to_apply_ms": {
+        "n": 2650,
+        "p50": 4173,
+        "p95": 20378,
+        "max": 42516
+      },
+      "release_to_apply_ms": {
+        "n": 2493,
+        "p50": 461,
+        "p95": 4271,
+        "max": 7171
+      },
+      "ticks": {
+        "total": 1025,
+        "completed": 981,
+        "refused": {
+          "refresh_source_changed": 13,
+          "refresh_diverged": 31
+        }
+      },
+      "converge_attempts": {
+        "n": 1000,
+        "p50": 1,
+        "p95": 1,
+        "max": 2
+      },
+      "trials_with_publish_consent": 2,
+      "residual_recovery_required": {
+        "trials": 0,
+        "rows": 0
+      },
+      "failures": []
+    }
+  },
+  "quiet_summary": {
+    "postgres/off": {
+      "trials": 100,
+      "failed_trials": 0,
+      "classes": {
+        "lost": 0,
+        "lost_git": 0,
+        "phantom": 0,
+        "duplicated": 0,
+        "stuck": 0,
+        "overwritten": 0,
+        "wrong_expiry": 0,
+        "unindexed": 0,
+        "unpublished": 0,
+        "false_refusal": 0,
+        "unexpected_outcome": 0,
+        "hang": 0,
+        "deadlock": 0,
+        "no_converge": 0,
+        "harness_error": 0
+      },
+      "writes": 2348,
+      "first_call": {
+        "committed": 2343,
+        "refused:revision_conflict": 5
+      },
+      "trials_with_worktree_refreshing": 0,
+      "worktree_refreshing_first_outside_expiry": 0,
+      "writes_outside_expiry": 2348,
+      "trials_with_deferral": 0,
+      "unexpected_reasons": {},
+      "too_many_clients": 0,
+      "slip_ms": {
+        "n": 2348,
+        "p50": 0,
+        "p95": 70,
+        "max": 812
+      },
+      "pauses": {
+        "planned": 0,
+        "fired": 0,
+        "missed": 0,
+        "skipped_current": 0
+      },
+      "attempts_mean": 1,
+      "blocked_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "defer_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "release_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "ticks": {
+        "total": 0,
+        "completed": 0,
+        "refused": {}
+      },
+      "converge_attempts": {
+        "n": 200,
+        "p50": 1,
+        "p95": 1,
+        "max": 1
+      },
+      "trials_with_publish_consent": 0,
+      "residual_recovery_required": {
+        "trials": 0,
+        "rows": 0
+      },
+      "failures": []
+    },
+    "postgres/on": {
+      "trials": 100,
+      "failed_trials": 0,
+      "classes": {
+        "lost": 0,
+        "lost_git": 0,
+        "phantom": 0,
+        "duplicated": 0,
+        "stuck": 0,
+        "overwritten": 0,
+        "wrong_expiry": 0,
+        "unindexed": 0,
+        "unpublished": 0,
+        "false_refusal": 0,
+        "unexpected_outcome": 0,
+        "hang": 0,
+        "deadlock": 0,
+        "no_converge": 0,
+        "harness_error": 0
+      },
+      "writes": 2348,
+      "first_call": {
+        "committed": 2343,
+        "refused:revision_conflict": 5
+      },
+      "trials_with_worktree_refreshing": 0,
+      "worktree_refreshing_first_outside_expiry": 0,
+      "writes_outside_expiry": 2348,
+      "trials_with_deferral": 0,
+      "unexpected_reasons": {},
+      "too_many_clients": 0,
+      "slip_ms": {
+        "n": 2348,
+        "p50": 0,
+        "p95": 70,
+        "max": 747
+      },
+      "pauses": {
+        "planned": 0,
+        "fired": 0,
+        "missed": 0,
+        "skipped_current": 0
+      },
+      "attempts_mean": 1,
+      "blocked_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "defer_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "release_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "ticks": {
+        "total": 0,
+        "completed": 0,
+        "refused": {}
+      },
+      "converge_attempts": {
+        "n": 200,
+        "p50": 1,
+        "p95": 1,
+        "max": 1
+      },
+      "trials_with_publish_consent": 0,
+      "residual_recovery_required": {
+        "trials": 0,
+        "rows": 0
+      },
+      "failures": []
+    },
+    "pglite/off": {
+      "trials": 100,
+      "failed_trials": 0,
+      "classes": {
+        "lost": 0,
+        "lost_git": 0,
+        "phantom": 0,
+        "duplicated": 0,
+        "stuck": 0,
+        "overwritten": 0,
+        "wrong_expiry": 0,
+        "unindexed": 0,
+        "unpublished": 0,
+        "false_refusal": 0,
+        "unexpected_outcome": 0,
+        "hang": 0,
+        "deadlock": 0,
+        "no_converge": 0,
+        "harness_error": 0
+      },
+      "writes": 2006,
+      "first_call": {
+        "committed": 2003,
+        "refused:revision_conflict": 3
+      },
+      "trials_with_worktree_refreshing": 0,
+      "worktree_refreshing_first_outside_expiry": 0,
+      "writes_outside_expiry": 2006,
+      "trials_with_deferral": 0,
+      "unexpected_reasons": {},
+      "too_many_clients": 0,
+      "slip_ms": {
+        "n": 2006,
+        "p50": 0,
+        "p95": 30,
+        "max": 913
+      },
+      "pauses": {
+        "planned": 0,
+        "fired": 0,
+        "missed": 0,
+        "skipped_current": 0
+      },
+      "attempts_mean": 1,
+      "blocked_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "defer_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "release_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "ticks": {
+        "total": 0,
+        "completed": 0,
+        "refused": {}
+      },
+      "converge_attempts": {
+        "n": 200,
+        "p50": 1,
+        "p95": 1,
+        "max": 1
+      },
+      "trials_with_publish_consent": 0,
+      "residual_recovery_required": {
+        "trials": 0,
+        "rows": 0
+      },
+      "failures": []
+    },
+    "pglite/on": {
+      "trials": 100,
+      "failed_trials": 0,
+      "classes": {
+        "lost": 0,
+        "lost_git": 0,
+        "phantom": 0,
+        "duplicated": 0,
+        "stuck": 0,
+        "overwritten": 0,
+        "wrong_expiry": 0,
+        "unindexed": 0,
+        "unpublished": 0,
+        "false_refusal": 0,
+        "unexpected_outcome": 0,
+        "hang": 0,
+        "deadlock": 0,
+        "no_converge": 0,
+        "harness_error": 0
+      },
+      "writes": 2006,
+      "first_call": {
+        "committed": 2003,
+        "refused:revision_conflict": 3
+      },
+      "trials_with_worktree_refreshing": 0,
+      "worktree_refreshing_first_outside_expiry": 0,
+      "writes_outside_expiry": 2006,
+      "trials_with_deferral": 0,
+      "unexpected_reasons": {},
+      "too_many_clients": 0,
+      "slip_ms": {
+        "n": 2006,
+        "p50": 0,
+        "p95": 33,
+        "max": 893
+      },
+      "pauses": {
+        "planned": 0,
+        "fired": 0,
+        "missed": 0,
+        "skipped_current": 0
+      },
+      "attempts_mean": 1,
+      "blocked_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "defer_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "release_to_apply_ms": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "ticks": {
+        "total": 0,
+        "completed": 0,
+        "refused": {}
+      },
+      "converge_attempts": {
+        "n": 200,
+        "p50": 1,
+        "p95": 1,
+        "max": 1
+      },
+      "trials_with_publish_consent": 0,
+      "residual_recovery_required": {
+        "trials": 0,
+        "rows": 0
+      },
+      "failures": []
+    }
+  },
+  "paired": {
+    "postgres": {
+      "seeds": 500,
+      "retryable_refusal_rate_off_minus_on": {
+        "mean": 0.04637773102402959,
+        "lo": 0.03950669500397006,
+        "hi": 0.052989342263235935
+      },
+      "blocked_ms_off_minus_on": {
+        "seeds": 338,
+        "mean": 6914.801536761782,
+        "lo": 6609.239799290749,
+        "hi": 7213.747548044426
+      },
+      "no_tick_latency_on_minus_off_ms": {
+        "seeds": 488,
+        "mean": 11.824208983230948,
+        "lo": -0.5218054016933888,
+        "hi": 23.35185955534644,
+        "note": "descriptive; the gate is quiet_latency"
+      }
+    },
+    "pglite": {
+      "seeds": 500,
+      "retryable_refusal_rate_off_minus_on": {
+        "mean": 0.03619512505674592,
+        "lo": 0.030545567364184227,
+        "hi": 0.04178388940036933
+      },
+      "blocked_ms_off_minus_on": {
+        "seeds": 322,
+        "mean": 6535.744630001981,
+        "lo": 6218.757716707115,
+        "hi": 6848.111279499676
+      },
+      "no_tick_latency_on_minus_off_ms": {
+        "seeds": 492,
+        "mean": -23.219387703774895,
+        "lo": -34.53031336158415,
+        "hi": -11.966386933670144,
+        "note": "descriptive; the gate is quiet_latency"
+      }
+    }
+  },
+  "named": {
+    "postgres/off": {
+      "put_blind": {
+        "runs": 25,
+        "in_window": 0,
+        "failed": 0,
+        "classes": {}
+      },
+      "put_update": {
+        "runs": 25,
+        "in_window": 0,
+        "failed": 0,
+        "classes": {}
+      },
+      "remember_entity": {
+        "runs": 25,
+        "in_window": 0,
+        "failed": 0,
+        "classes": {}
+      }
+    },
+    "postgres/on": {
+      "put_blind": {
+        "runs": 25,
+        "in_window": 25,
+        "failed": 0,
+        "classes": {}
+      },
+      "put_update": {
+        "runs": 25,
+        "in_window": 25,
+        "failed": 0,
+        "classes": {}
+      },
+      "remember_entity": {
+        "runs": 25,
+        "in_window": 25,
+        "failed": 0,
+        "classes": {}
+      }
+    },
+    "pglite/off": {
+      "put_blind": {
+        "runs": 25,
+        "in_window": 0,
+        "failed": 0,
+        "classes": {}
+      },
+      "put_update": {
+        "runs": 25,
+        "in_window": 0,
+        "failed": 0,
+        "classes": {}
+      },
+      "remember_entity": {
+        "runs": 25,
+        "in_window": 0,
+        "failed": 0,
+        "classes": {}
+      }
+    },
+    "pglite/on": {
+      "put_blind": {
+        "runs": 25,
+        "in_window": 25,
+        "failed": 0,
+        "classes": {}
+      },
+      "put_update": {
+        "runs": 25,
+        "in_window": 25,
+        "failed": 0,
+        "classes": {}
+      },
+      "remember_entity": {
+        "runs": 25,
+        "in_window": 25,
+        "failed": 0,
+        "classes": {}
+      }
+    }
+  },
+  "part_b": {
+    "b1": {
+      "pass": true,
+      "gbrain": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+      "cap_stop": false
+    },
+    "b2": {
+      "pass": true,
+      "gbrain": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+      "cap_stop": false
+    }
+  },
+  "part_c": {
+    "anthropic:claude-opus-5-5": {
+      "gating": true,
+      "arms": {
+        "off": {
+          "episodes": 60,
+          "successes": 14,
+          "errored": 0,
+          "reruns": 0,
+          "errored_out": 0,
+          "unexposed": 0,
+          "context_overflow": 0,
+          "missing": 0,
+          "outside": 0,
+          "cap_stop": false
+        },
+        "on": {
+          "episodes": 60,
+          "successes": 28,
+          "errored": 0,
+          "reruns": 0,
+          "errored_out": 0,
+          "unexposed": 0,
+          "context_overflow": 0,
+          "missing": 0,
+          "outside": 0,
+          "cap_stop": false
+        }
+      },
+      "paired": 60,
+      "on_minus_off": {
+        "mean": 0.23333333333333334,
+        "lo": 0.06666666666666667,
+        "hi": 0.4
+      },
+      "non_inferior": true,
+      "harm": false,
+      "from_g": true,
+      "incomplete": [],
+      "status": "non_inferior"
+    },
+    "openai:gpt-6.1-sol": {
+      "gating": true,
+      "arms": {
+        "off": {
+          "episodes": 60,
+          "successes": 4,
+          "errored": 0,
+          "reruns": 0,
+          "errored_out": 0,
+          "unexposed": 0,
+          "context_overflow": 0,
+          "missing": 0,
+          "outside": 0,
+          "cap_stop": false
+        },
+        "on": {
+          "episodes": 60,
+          "successes": 60,
+          "errored": 0,
+          "reruns": 0,
+          "errored_out": 0,
+          "unexposed": 0,
+          "context_overflow": 0,
+          "missing": 0,
+          "outside": 0,
+          "cap_stop": false
+        }
+      },
+      "paired": 60,
+      "on_minus_off": {
+        "mean": 0.9333333333333333,
+        "lo": 0.8666666666666667,
+        "hi": 0.9833333333333333
+      },
+      "non_inferior": true,
+      "harm": false,
+      "from_g": true,
+      "incomplete": [],
+      "status": "non_inferior"
+    }
+  }
+}

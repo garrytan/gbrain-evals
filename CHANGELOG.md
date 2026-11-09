@@ -2,6 +2,106 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.180] - 2026-11-09
+
+### Pinned per-reader judges, the paid-window guard and keyless tests move to main from RS1's results branch (#391)
+
+- **Pinned per-reader judges.** An arm whose `frontier` block carries its own `judge_by_reader` map must also carry
+  `frontier.settings`, the pinned `PER_READER_JUDGE_SETTINGS` (medium effort and an 8,000-token output cap), and
+  `definitionProblems` refuses a mapped arm with other settings. `judgeAnswer` sends every pinned call at those
+  settings, turns a reply cut off at the cap into a `judge_error` without retrying it, keeps truncated and refused
+  replies out of the judge cache, and records the settings, the call count, cache hits, the judgment's view (gating or
+  descriptive) and the model versions the provider returned. The cell runner, the re-read and campaign manifests pass
+  the settings and views through and add a judge route cap for each pinned judge. No arm on main carries a map yet, so
+  every arm sends exactly what it sent before; RS1's per-reader judgments gain the `view` and `judge_versions` fields.
+- **The paid-window guard.** `eval/runner/paid-arm.ts` gains `paidWindowArgs`, `requireRs1Window` and `ledgerCaps`,
+  and `bun eval/runner/rs1/paid-window.ts check` is their command line. A re-read (`eval/runner/q1/reread-cell.ts`)
+  without `--keyless-upstream` now needs `--paid-window <unit> --window-cap-usd <n>` and refuses a `--ledger-cap-usd`
+  above the window cap, exiting 2 before any lease or output. No other RS1 entry point on main calls the guard yet; #391
+  wires RS1's mint, validation and cell entry points to it.
+- **No provider keys in tests.** `test/support/no-provider-keys.ts` now runs first in every bun test process (the
+  `bunfig.toml` preload). It blanks the five provider keys and makes `Bun.spawn` and `Bun.spawnSync` hand children the
+  cleaned environment. `test/eval/live-recall-tasks.test.ts` sets its placeholder key with `||=`, because the preload
+  leaves the key as an empty string.
+- **Tests.** `test/eval/pinned-judge-settings.test.ts` covers the judge settings, `test/eval/paid-window-guard.test.ts`
+  the guard and the re-read's window flags, and `test/eval/no-provider-keys.test.ts` the preload.
+  `test/eval/rs1-cells.test.ts` expects the per-reader views. No result, score or verdict changes.
+
+## [0.10.179] - 2026-11-09
+
+### Every failed eval row can now be given a cause
+
+- **New library.** `eval/runner/failure-causes/` gives each failed row one primary cause from 18, or `unclassified`,
+  chosen by the earliest pipeline stage that broke. Later signals stay on the row as secondary causes. Each cause maps to
+  a failure mode in the gap map (F1 to F16), or to `eval` when our own harness, judge or scorer failed. The taxonomy is
+  `docs/failure-causes/TAXONOMY.md`, rendered from `taxonomy.ts`, and a test pins its cause ids.
+- **Logs first, a model only for the rest.** Deterministic rules read tool errors, refusals, retrieval records and write
+  records with no model. A cross-family labeller (gpt-6.1-sol labels Claude rows, claude-opus-5-5 labels GPT and
+  particle-1 rows) labels only rows where the right evidence reached the answering model. `agree` reports a gate for
+  each labeller path the production labels used. A path passes with a kappa of at least 0.6 on at least 40 held-out
+  rows that Opus and gpt-6-astra agree on, counting only rows where both of those calls returned a cause. A path with
+  no gate fails, and so does an empty label set. Moving a failing path to gpt-6-astra is a step taken before that
+  path's counts are published; nothing switches it automatically. Row text goes to the labeller fenced as untrusted. A
+  private or sealed row is never sent, and a source whose root or file resolves to a named RS1 custody or sealed path is
+  never read.
+- **Adapters and ranking.** The refresh barrier agent check, RS1, Cat 40, SkillOpt's forced probes and the live recall
+  scorecard each read into one `eval-failure/1` row shape, from a source manifest with file hashes. Only gbrain runs
+  under natural conditions are ranked. Forced probes go in a separate under-stress list and other systems in a contrast
+  table, and a private source contributes counts only. `unclassified` rows stay in the full table but never enter the
+  top three or an issue draft, and `report` counts each row once when label files overlap. The untitled-capture
+  duplicate that the refresh barrier results disclose counts as `harness_error`.
+- **Command line.** `bun eval/runner/failure-causes/cli.ts` runs `taxonomy`, `classify`, `estimate`, `agree`,
+  `report` and `label`. Only `label` makes provider calls, and it refuses without `--paid` and an open budget run.
+- **Bug ledger.** An entry may carry `cause`, `rule_id` and `regression_check`, so a fix from a weekly top three
+  keeps a check that the nightly loop can rerun.
+- **Refactor.** `adjudicateEpisode` moved to `eval/runner/refresh-barrier/adjudicate.ts`.
+  `scripts/refresh-barrier-partc-adjudicate.ts` re-exports it and still reproduces the published Part C adjudication
+  exactly.
+
+## [0.10.178] - 2026-11-08
+
+### gbrain's refresh write barrier passes its preregistered test, and the findings recommend turning it on
+
+- **What we learned.** With `persistence.refresh_barrier` on, gbrain at `773a29ee` holds a write made during a refresh
+  instead of refusing it. It lost, stuck, duplicated or overwrote no write in 2,000 counted concurrency trials on Postgres
+  and PGLite. `worktree_refreshing` refusals went to 0, and the p95 wait for a write's first answer during a refresh fell
+  from about 10 s to 76 ms (Postgres) and 35 ms (PGLite). Retrieval scores didn't change. Agents did far better with a
+  held write than a refused one: gpt-6.1-sol's strict success went from 4 to 60 of 60 tasks, and claude-opus-5-5's from
+  15 to 37 adjudicated (14 to 28 raw). The report is `docs/benchmarks/2026-11-08-refresh-barrier-results.md`, and the
+  docs index row moves to "Saving, using, and improving memory".
+- **What didn't work.** The first counted run, at gbrain `431cb3f9`, read FAIL on two writes that stayed pending after an
+  aborted refresh, which gbrain fixed in `773a29ee`, and on four overwrites that matched a fault in our own detector. The
+  two runs are never pooled. The preregistered scorer counts an untitled capture as a duplicate fact, which works against
+  the flag, and the results stand as scored.
+- **Harness changes, each made before the counted run it affects.** Writers start gbrain's persistence consumer as
+  `gbrain serve` does, a scripted cron commit waits for gbrain's Git index lock instead of failing the trial, the trial
+  start time is written atomically, and the overwrite detector no longer blames a marker that a blind put carried back.
+  The preregistration's Amendments 1 to 6 record each change before the counted run it affects.
+- **New scripts.** `scripts/refresh-barrier-b1-guard.ts` waits for an idle machine before it runs the retrieval
+  latency check, and marks the run invalid if other work ran during either arm. `scripts/refresh-barrier-partc-adjudicate.ts` applies the agent check's
+  preregistered adjudication rule; it reads a model as incomplete unless all 60 counted task pairs are present at the
+  tested build, and keeps a fact written twice or a context overflow as a failure.
+
+## [0.10.177] - 2026-11-08
+
+### Every report opens with its two or three takeaways (GST-1933)
+
+- **What report writers do now.** `CLAUDE.md`'s "Shape of a benchmark report" opens every report, finding file and
+  investigation write-up with 2 or 3 bullets in the form "We learned X. You should do X." What works comes first,
+  including where gbrain, gstack or our harness help people building agents, and what didn't work comes second, stated
+  plainly. A null result leads with the useful lesson the data supports, with its number, and states the null right
+  after it. The preregistered primary result is always one of the bullets, with its interval; a secondary or
+  exploratory result is labeled and shows its interval; a null without a preregistered margin reads "no measurable
+  difference"; and disclosures follow `docs/disclosures.md`.
+- **Costs.** A report shows a cost only where it is part of the lesson, such as cost per correct answer, and
+  "Reproduce and inspect" asks for observed run time instead of time and cost. Program totals, budgets, caps and spend
+  stay out of public docs, commit messages and PR bodies. Raw receipts and ledger files keep their recorded fields.
+- **Templates.** `docs/benchmarks/PREREGISTRATION-TEMPLATE.md` adds a required "Public lesson" section (what a
+  builder would learn and do differently either way), and its Budget section describes the ledger, a cap that pauses
+  the run until it is extended and how the run resumes, instead of asking for dollar amounts.
+  `docs/benchmarks/cat40-hard/REPORT_TEMPLATE.md` opens section 1 with the takeaways, moves ledger reconciliation to
+  the tracking issue and asks for observed run time. No existing report, finding, README result or number changes.
+
 ## [0.10.176] - 2026-11-08
 
 ### RS1 is preregistered again as one claim: is gbrain within 3.5 points of the two leading memory servers (GST-1886)
