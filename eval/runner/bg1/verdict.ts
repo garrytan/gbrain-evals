@@ -23,9 +23,11 @@
  *             the mapped one, without the gating view or the pinned settings, or without a model version refuses.
  *   Metric    a question's score is the mean over the three readers of correct (100) or not (0); a world's difference is
  *             the mean over its questions in the family of gbrain minus the comparator. One common question set: a
- *             question dropped in any system row leaves every comparison. Above 5% of the planned questions dropped,
- *             every comparison is descriptive. The worst-case sensitivity scores every planned question, each gbrain
- *             drop 0 and each comparator drop 100, and is flagged when its words differ.
+ *             question dropped in any system row leaves every comparison. Above 5% of a comparison's planned questions
+ *             (those in its family's strata) dropped, that comparison is descriptive, so the primary family and the
+ *             design control share the primary strata's share and the time-indexed family has its own. The worst-case
+ *             sensitivity scores every planned question, each gbrain drop 0 and each comparator drop 100, and is
+ *             flagged when its words differ.
  *   Gate      a system row whose mean fill rate (rows.ndjson fill_rate, a failed retrieval's null as 0) is below 0.90
  *             makes every comparison it enters descriptive.
  *   Families  primary (strata s1 to s5, gbrain against memory-bank, extract-first and temporal-graph, Holm over the three);
@@ -160,7 +162,7 @@ export interface ComparisonRow {
 }
 const WILD_METHOD = `restricted wild cluster bootstrap-t over worlds, question-weighted, Webb weights, ${DRAWS} draws, seed ${SEED}, two-sided`;
 
-/** One family's comparisons, Holm across them; a row that fails the fill gate, or a run above the drop cap, is descriptive. */
+/** One family's comparisons, Holm across them; a row that fails the fill gate, or a family above the drop cap, is descriptive. */
 export function familyRows(input: Bg1Input, rows: readonly Bg1Row[], strata: readonly Bg1Stratum[], keep: ReadonlySet<string>, invalid: readonly string[], view: View = 'gating'): ComparisonRow[] {
   const diffs = new Map(rows.map(r => [r, worldDifferences(input, r, strata, { view, keep })]));
   const enough = rows.every(r => diffs.get(r)!.length >= 2);
@@ -260,11 +262,16 @@ export function costPerCorrect(input: Bg1Input, keep: ReadonlySet<string>) {
 export function analyze(input: Bg1Input, opts: { judgeCheck?: unknown } = {}) {
   const keep = commonSet(input, 'gating');
   const drops = dropsOf(input, 'gating');
-  const invalid = drops.share > DROP_CAP ? [`${drops.dropped} of ${drops.planned} planned questions dropped (${(drops.share * 100).toFixed(1)}%, above the 5% cap)`] : [];
-  const primary = familyRows(input, COMPARATOR_ROWS, BG1_PRIMARY, keep, invalid);
+  const capped = (strata: readonly Bg1Stratum[]) => {
+    const d = dropsOf({ questions: input.questions.filter(q => strata.includes(q.stratum)) }, 'gating');
+    return { drops: d, invalid: d.share > DROP_CAP ? [`${d.dropped} of ${d.planned} planned questions dropped (${(d.share * 100).toFixed(1)}%, above the 5% cap)`] : [] };
+  };
+  const primaryCap = capped(BG1_PRIMARY), timeCap = capped(BG1_SECONDARY);
+  const invalid = [...primaryCap.invalid.map(x => `primary: ${x}`), ...timeCap.invalid.map(x => `time-indexed: ${x}`)];
+  const primary = familyRows(input, COMPARATOR_ROWS, BG1_PRIMARY, keep, primaryCap.invalid);
   const worstDiffs = COMPARATOR_ROWS.map(r => worldDifferences(input, r, BG1_PRIMARY, { worstCase: true }));
   const worst = worstDiffs.every(d => d.length >= 2) ? decideFamily(Object.fromEntries(COMPARATOR_ROWS.map((r, i) => [r, worstDiffs[i].map(x => x.d)]))).map(v => v.verdict) : null;
-  const design = familyRows(input, ['hybrid'], BG1_PRIMARY, keep, invalid)[0];
+  const design = familyRows(input, ['hybrid'], BG1_PRIMARY, keep, primaryCap.invalid)[0];
   const canonicalKeep = commonSet(input, 'canonical');
   const rowMeans = Object.fromEntries([...SYSTEM_ROWS, 'floor' as Bg1Row].map(row => [row, Object.fromEntries(READERS.map(r => {
     const view: View = row === 'floor' ? 'canonical' : 'gating';
@@ -277,9 +284,9 @@ export function analyze(input: Bg1Input, opts: { judgeCheck?: unknown } = {}) {
     schema: 'gbrain-evals/bg1-verdict/v1', set: input.set, worlds: new Set(input.questions.map(q => q.conversation)).size, planned: drops.planned, common: keep.size,
     drops, invalid_reasons: invalid,
     fill: Object.fromEntries(SYSTEM_ROWS.map(r => [r, { mean_fill: input.fill[r] === undefined || input.fill[r] === null ? null : r4(input.fill[r]!), pass: (input.fill[r] ?? 0) >= FILL_GATE }])),
-    primary: { strata: BG1_PRIMARY, holm_over: COMPARATOR_ROWS, comparisons: primary,
+    primary: { strata: BG1_PRIMARY, holm_over: COMPARATOR_ROWS, drops: primaryCap.drops, comparisons: primary,
       worst_case: { verdicts: worst, disagrees: worst !== null && worst.some((w, i) => primary[i].verdict !== null && w !== primary[i].verdict) } },
-    time_indexed: { strata: BG1_SECONDARY, holm_over: COMPARATOR_ROWS, comparisons: familyRows(input, COMPARATOR_ROWS, BG1_SECONDARY, keep, invalid) },
+    time_indexed: { strata: BG1_SECONDARY, holm_over: COMPARATOR_ROWS, drops: timeCap.drops, comparisons: familyRows(input, COMPARATOR_ROWS, BG1_SECONDARY, keep, timeCap.invalid) },
     design_control: { comparison: design, attributable_to_design: design.verdict === 'ahead',
       note: design.verdict === 'ahead' ? null : 'hybrid search is level with or ahead of gbrain on the primary strata, so a primary win cannot be attributed to the design' },
     cost_per_correct: costPerCorrect(input, keep),

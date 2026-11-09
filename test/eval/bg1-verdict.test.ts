@@ -121,12 +121,20 @@ describe('drops, the worst case and the fill gate', () => {
     expect(dropsOf(missing).by).toEqual({ 'other|row_missing': 3 });
   }, 30_000);
 
-  test('above 5% of the planned questions dropped, every comparison is descriptive', () => {
-    const many = synthetic((q, w, k) => { if (w < 5 && k < 2) q.rows['memory-bank']![PARTICLE] = { drop: 'reread_answer_missing' }; });
-    const a = analyze(many);
-    expect(a.drops.dropped).toBe(10);
-    expect(a.invalid_reasons[0]).toContain('10 of 192 planned questions dropped (5.2%, above the 5% cap)');
-    for (const c of [...a.primary.comparisons, ...a.time_indexed.comparisons]) { expect(c.verdict).toBeNull(); expect(c.descriptive).toContain('above the 5% cap'); }
+  // Value: protects=the preregistered drop cap is per comparison, over that comparison's own planned questions; fails_when=one share over every stratum decides every family, so primary drops hide under the global share or time-indexed drops void the primary family; why_new=red-team #2 on #398; seam=analyze; no_claim=which drops a real run has
+  test('above 5% of a comparison\'s own planned questions dropped, that family\'s comparisons are descriptive and the other family still decides', () => {
+    const primaryDrops = analyze(synthetic((q, w, k) => { if (w < 9 && k === 0) q.rows['memory-bank']![PARTICLE] = { drop: 'reread_answer_missing' }; }));
+    expect([primaryDrops.drops.dropped, primaryDrops.drops.planned]).toEqual([9, 192]);
+    expect(primaryDrops.primary.drops).toMatchObject({ planned: 120, dropped: 9, share: 9 / 120 });
+    expect(primaryDrops.time_indexed.drops).toMatchObject({ planned: 72, dropped: 0 });
+    expect(primaryDrops.invalid_reasons).toEqual(['primary: 9 of 120 planned questions dropped (7.5%, above the 5% cap)']);
+    for (const c of [...primaryDrops.primary.comparisons, primaryDrops.design_control.comparison]) { expect(c.verdict).toBeNull(); expect(c.descriptive).toContain('above the 5% cap'); }
+    for (const c of primaryDrops.time_indexed.comparisons) { expect(c.verdict).not.toBeNull(); expect(c.descriptive ?? '').not.toContain('above the 5% cap'); }
+    const timeDrops = analyze(synthetic((q, w, k) => { if (w < 5 && (k === 10 || k === 11)) q.rows['memory-bank']![PARTICLE] = { drop: 'reread_answer_missing' }; }));
+    expect(timeDrops.drops).toMatchObject({ planned: 192, dropped: 10 });
+    expect(timeDrops.invalid_reasons).toEqual(['time-indexed: 10 of 72 planned questions dropped (13.9%, above the 5% cap)']);
+    for (const c of timeDrops.time_indexed.comparisons) { expect(c.verdict).toBeNull(); expect(c.descriptive).toContain('above the 5% cap'); }
+    for (const c of [...timeDrops.primary.comparisons, timeDrops.design_control.comparison]) { expect(c.verdict).not.toBeNull(); expect(c.descriptive ?? '').not.toContain('above the 5% cap'); }
   }, 30_000);
 
   test('the worst case scores every planned question, a gbrain drop as 0 and a comparator drop as 100', () => {
