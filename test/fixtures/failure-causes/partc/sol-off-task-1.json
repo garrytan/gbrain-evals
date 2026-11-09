@@ -1,0 +1,595 @@
+{
+ "schema": "refresh-barrier-agent/1",
+ "task": 1,
+ "attempt": 1,
+ "arm": "off",
+ "model": "openai:gpt-6.1-sol",
+ "loop_model": "gpt-6.1-sol",
+ "smoke": false,
+ "counted": true,
+ "gating": true,
+ "gbrain": {
+  "root": "/home/ubi/gbrain",
+  "commit": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+  "version": "0.60.614.0"
+ },
+ "provenance": {
+  "gbrain_sha": "773a29eede3b3ea91e0e2cba4012078b5d42c602",
+  "harness_digest": "500cc5ba4b978e18d695683a39ef51714ff4c1626249b1594e88eb91629035e3"
+ },
+ "flag": {
+  "GBRAIN_REFRESH_BARRIER": null
+ },
+ "loop": {
+  "effort": "medium",
+  "effort_sent": "medium",
+  "effort_effective": "medium",
+  "max_output_tokens": 4096,
+  "max_turns": 24,
+  "stop": "submitted",
+  "turns": 4,
+  "error": null,
+  "text": null
+ },
+ "system_sha256": "9bf6a6e275aa58bb78424608c590bf90fc231520e5c83a1d5e7b04b5af78ca9d",
+ "user": "Here are four things from my day. Please save them to my brain.\n\nF1. Dara Example's new badge number is A6-4733. Add it to their page (people/dara-example).\nF2. Chen Example's new parking spot is K1-5591. Add it to their page (people/chen-example).\nF3. Start a new note about the garden club: the plot reservation number is E5-5659.\nF4. Remember this about Bruno Example (people/bruno-example): their coat check ticket is M8-5580.\n\nWhen you are done, call submit_answer with one JSON object that lists each fact id under the state it ended in: {\"saved\":[...],\"pending\":[...],\"failed\":[...]}.",
+ "facts": [
+  {
+   "id": "F1",
+   "kind": "person_update",
+   "slug": "people/dara-example",
+   "subject": "Dara Example",
+   "token": "A6-4733",
+   "text": "Dara Example's new badge number is A6-4733."
+  },
+  {
+   "id": "F2",
+   "kind": "person_update",
+   "slug": "people/chen-example",
+   "subject": "Chen Example",
+   "token": "K1-5591",
+   "text": "Chen Example's new parking spot is K1-5591."
+  },
+  {
+   "id": "F3",
+   "kind": "new_note",
+   "slug": null,
+   "subject": "Garden club",
+   "token": "E5-5659",
+   "text": "Garden club: the plot reservation number is E5-5659."
+  },
+  {
+   "id": "F4",
+   "kind": "remember",
+   "slug": "people/bruno-example",
+   "subject": "Bruno Example",
+   "token": "M8-5580",
+   "text": "Bruno Example's coat check ticket is M8-5580."
+  }
+ ],
+ "report": {
+  "raw": {
+   "saved": [
+    "F1",
+    "F2",
+    "F3",
+    "F4"
+   ],
+   "pending": [],
+   "failed": []
+  },
+  "ok": true,
+  "source": "submit_answer",
+  "states": {
+   "F1": "saved",
+   "F2": "saved",
+   "F3": "saved",
+   "F4": "saved"
+  }
+ },
+ "score": {
+  "success": false,
+  "tokens_once": true,
+  "report_correct": true,
+  "no_reissue": false,
+  "duplicates": [],
+  "missing": [],
+  "misreports": [],
+  "unreported": [],
+  "reissued": [
+   "F3"
+  ]
+ },
+ "tokens": {
+  "F1": {
+   "token": "A6-4733",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 0,
+   "pages_at": [
+    "alpha-977e9d01:people/dara-example"
+   ]
+  },
+  "F2": {
+   "token": "K1-5591",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 0,
+   "pages_at": [
+    "alpha-977e9d01:people/chen-example"
+   ]
+  },
+  "F3": {
+   "token": "E5-5659",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 0,
+   "pages_at": [
+    "alpha-977e9d01:inbox/2026-11-08-bc14ddba"
+   ]
+  },
+  "F4": {
+   "token": "M8-5580",
+   "pages": 1,
+   "git_head": 1,
+   "facts_live": 1,
+   "pages_at": [
+    "alpha-977e9d01:people/bruno-example"
+   ]
+  }
+ },
+ "behavior": {
+  "reissues": [
+   {
+    "call": 7,
+    "fact": "F3",
+    "earlier": 3
+   }
+  ],
+  "refusals": [
+   {
+    "call": 3,
+    "tool": "capture",
+    "code": "worktree_refreshing",
+    "retry_after_ms": 2000,
+    "facts": [
+     "F3"
+    ],
+    "next_call": 7,
+    "waited_ms": 10741,
+    "waited_at_least_retry_after": true,
+    "retried_same_request_id": false,
+    "outcome": "reissued_new_id"
+   }
+  ],
+  "error_pending": []
+ },
+ "fault": {
+  "held_tool": "capture",
+  "held_call": 3,
+  "upstream_head": "05cf9ec9582968b10efe0981c9a3766606dbcfa1",
+  "upstream_error": null,
+  "refresh_started_ms": 7117,
+  "refresh_paused_ms": 7162,
+  "refresh_finished_ms": 21797,
+  "refresh_result": {
+   "status": "completed",
+   "refresh_id": "5dbe887e-0a28-4f36-a060-5dcb2462cc3f",
+   "worktree_id": "061990bd-c8f6-430d-9735-d90a2aba3cda",
+   "source_ids": [
+    "alpha-977e9d01",
+    "beta-977e9d01"
+   ],
+   "old_head": "1ff3e7f440cb854668f4137ec78e742ef053d323",
+   "target_head": "05cf9ec9582968b10efe0981c9a3766606dbcfa1",
+   "upstream_ref": "origin/main",
+   "preserved_uncommitted": [],
+   "synced": [
+    {
+     "source_id": "alpha-977e9d01",
+     "status": "synced",
+     "last_commit": "05cf9ec9582968b10efe0981c9a3766606dbcfa1"
+    },
+    {
+     "source_id": "beta-977e9d01",
+     "status": "synced",
+     "last_commit": "05cf9ec9582968b10efe0981c9a3766606dbcfa1"
+    }
+   ]
+  },
+  "refresh_error": null,
+  "setup_ms": 107,
+  "pause_ms": 14000,
+  "held_first_answer": {
+   "i": 3,
+   "name": "capture",
+   "t_ms": 7162,
+   "ms": 9805,
+   "write": true,
+   "held": true,
+   "is_error": true,
+   "cls": "refused_retryable",
+   "code": "worktree_refreshing",
+   "state": null,
+   "retry_after_ms": 2000,
+   "request_id": null,
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  }
+ },
+ "tool_calls": {
+  "total": 9,
+  "by_name": {
+   "context_pack": 1,
+   "get_page": 2,
+   "capture": 2,
+   "remember": 1,
+   "append_page": 2,
+   "submit_answer": 1
+  }
+ },
+ "retries": {
+  "same_args": 1,
+  "request_id_reuse": 0,
+  "same_args_calls": [
+   7
+  ],
+  "request_id_reuse_calls": []
+ },
+ "write_calls": [
+  {
+   "i": 3,
+   "name": "capture",
+   "t_ms": 7162,
+   "ms": 9805,
+   "write": true,
+   "held": true,
+   "is_error": true,
+   "cls": "refused_retryable",
+   "code": "worktree_refreshing",
+   "state": null,
+   "retry_after_ms": 2000,
+   "request_id": null,
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 4,
+   "name": "remember",
+   "t_ms": 16967,
+   "ms": 6039,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [
+    "F4"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 5,
+   "name": "append_page",
+   "t_ms": 27528,
+   "ms": 107,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": "bd792a49-ab15-4d72-97b3-e8f5aca7684e",
+   "tokens": [
+    "F1"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 6,
+   "name": "append_page",
+   "t_ms": 27635,
+   "ms": 73,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": "5c88ebbb-832b-43d3-9cc5-91a08b836fe7",
+   "tokens": [
+    "F2"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 7,
+   "name": "capture",
+   "t_ms": 27708,
+   "ms": 64,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  }
+ ],
+ "calls": [
+  {
+   "i": 0,
+   "name": "context_pack",
+   "t_ms": 3309,
+   "ms": 273,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 1,
+   "name": "get_page",
+   "t_ms": 7034,
+   "ms": 13,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 2,
+   "name": "get_page",
+   "t_ms": 7047,
+   "ms": 8,
+   "write": false,
+   "held": false,
+   "is_error": false,
+   "cls": null,
+   "code": null,
+   "state": null,
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 3,
+   "name": "capture",
+   "t_ms": 7162,
+   "ms": 9805,
+   "write": true,
+   "held": true,
+   "is_error": true,
+   "cls": "refused_retryable",
+   "code": "worktree_refreshing",
+   "state": null,
+   "retry_after_ms": 2000,
+   "request_id": null,
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 4,
+   "name": "remember",
+   "t_ms": 16967,
+   "ms": 6039,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [
+    "F4"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 5,
+   "name": "append_page",
+   "t_ms": 27528,
+   "ms": 107,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": "bd792a49-ab15-4d72-97b3-e8f5aca7684e",
+   "tokens": [
+    "F1"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 6,
+   "name": "append_page",
+   "t_ms": 27635,
+   "ms": 73,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": "5c88ebbb-832b-43d3-9cc5-91a08b836fe7",
+   "tokens": [
+    "F2"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  },
+  {
+   "i": 7,
+   "name": "capture",
+   "t_ms": 27708,
+   "ms": 64,
+   "write": true,
+   "held": false,
+   "is_error": false,
+   "cls": "committed",
+   "code": null,
+   "state": "committed",
+   "retry_after_ms": null,
+   "request_id": null,
+   "tokens": [
+    "F3"
+   ],
+   "error_pending": false,
+   "harness_error": null
+  }
+ ],
+ "quiesce": {
+  "ok": true,
+  "ms": 2
+ },
+ "timings": {
+  "brain_ms": 4914,
+  "loop_ms": 31879,
+  "refresh_wait_ms": 0,
+  "settle_ms": 2,
+  "wall_ms": 36912,
+  "model_ms": 15389,
+  "tool_ms": 16489
+ },
+ "usage": {
+  "input": 5562,
+  "output": 459,
+  "cache_read": 114314,
+  "cache_write": 0,
+  "requests": 4
+ },
+ "transcript": [
+  {
+   "name": "context_pack",
+   "args": {
+    "entities": "people/dara-example,people/chen-example,people/bruno-example",
+    "budget_tokens": 1500
+   },
+   "ms": 273,
+   "error": null,
+   "result": "{\"protocol_version\":1,\"entities\":[\"people/dara-example\",\"people/chen-example\",\"people/bruno-example\"],\"cards\":[{\"slug\":\"people/dara-example\",\"source_id\":\"alpha-977e9d01\",\"title\":\"Dara Example\",\"type\":\"person\",\"summary\":\"Dara is a fictional person used by the refresh-barrier eval.\",\"open_threads\":[],\"edges\":[],\"backlink_count\":0,\"trust_tier\":\"operator_curated\",\"origin\":\"managed_sync_import\"},{\"slug\":\"people/chen-example\",\"source_id\":\"alpha-977e9d01\",\"title\":\"Chen Example\",\"type\":\"person\",\"summary\":\"Chen is a fictional person used by the refresh-barrier eval.\",\"open_threads\":[],\"edges\":[],\"backl [cut for the fixture]"
+  },
+  {
+   "name": "get_page",
+   "args": {
+    "slug": "people/dara-example",
+    "include_content": true
+   },
+   "ms": 13,
+   "error": null,
+   "result": "{\"id\":12,\"slug\":\"people/dara-example\",\"type\":\"person\",\"title\":\"Dara Example\",\"compiled_truth\":\"Dara is a fictional person used by the refresh-barrier eval.\",\"timeline\":\"\",\"frontmatter\":{},\"content_hash\":\"134fa48653577db94f97978d68c6a3e136b297037d119f758650c4804601b661\",\"source_path\":\"people/dara-example.md\",\"knowledge_revision\":\"518a28a2-e3d1-46cd-b2f3-cbc6f504cac1\",\"text_projection_revision\":\"518a28a2-e3d1-46cd-b2f3-cbc6f504cac1\",\"emotional_weight\":0,\"created_at\":\"2026-11-08T17:59:34.762Z\",\"updated_at\":\"2026-11-08T17:59:34.762Z\",\"deleted_at\":null,\"effective_date\":\"2026-11-08T17:59:34.764Z\",\"e [cut for the fixture]"
+  },
+  {
+   "name": "get_page",
+   "args": {
+    "slug": "people/chen-example",
+    "include_content": true
+   },
+   "ms": 8,
+   "error": null,
+   "result": "{\"id\":11,\"slug\":\"people/chen-example\",\"type\":\"person\",\"title\":\"Chen Example\",\"compiled_truth\":\"Chen is a fictional person used by the refresh-barrier eval.\",\"timeline\":\"\",\"frontmatter\":{},\"content_hash\":\"c6ef0144074e4e1b70c90a774b947faac152121b092bdac6a628ab02810712d7\",\"source_path\":\"people/chen-example.md\",\"knowledge_revision\":\"41e8fc05-1d3f-4278-b6fa-c196ea8ee459\",\"text_projection_revision\":\"41e8fc05-1d3f-4278-b6fa-c196ea8ee459\",\"emotional_weight\":0,\"created_at\":\"2026-11-08T17:59:34.743Z\",\"updated_at\":\"2026-11-08T17:59:34.743Z\",\"deleted_at\":null,\"effective_date\":\"2026-11-08T17:59:34.745Z\",\"e [cut for the fixture]"
+  },
+  {
+   "name": "capture",
+   "args": {
+    "content": "# Garden club\n\nThe plot reservation number is E5-5659.",
+    "content_origin": "user_said"
+   },
+   "ms": 9912,
+   "error": null,
+   "result": "Error: {\n  \"error\": \"worktree_refreshing\",\n  \"code\": \"worktree_refreshing\",\n  \"message\": \"This write was not saved: refresh 5dbe887e-0a28-4f36-a060-5dcb2462cc3f is fast-forwarding source alpha-977e9d01's checkout (draining, running 10 s). Retry the same request_id in about 2 s. This call waited 9751 ms for the refresh to finish.\",\n  \"suggestion\": \"Retry the same request_id after retry_after_ms: 2000. Check progress with gbrain sources writer status alpha-977e9d01. Next: gbrain sources writer status --source alpha-977e9d01 --json --brain host\",\n  \"docs\": \"https://github.com/garrytan/gbrain/blob [cut for the fixture]"
+  },
+  {
+   "name": "remember",
+   "args": {
+    "fact": "Bruno Example's coat check ticket is M8-5580.",
+    "entity": "people/bruno-example",
+    "provenance": "Sam explicitly requested saving F4 in this conversation on 2026-11-06.",
+    "content_origin": "user_said"
+   },
+   "ms": 6039,
+   "error": null,
+   "result": "{\"id\":\"1\",\"status\":\"inserted\",\"revision\":\"ddc145e1-981b-476b-9ced-8ca2f8c0bff7\",\"entity_slug\":\"people/bruno-example\",\"persistence\":{\"mode\":\"filesystem\",\"git_state\":\"queued\",\"file_written\":true},\"status_text\":\"remembered as fact #1\",\"valid_until\":null,\"write_through\":{\"written\":true},\"degraded_dedup\":true,\"embedding_state\":\"queued\",\"protocol_version\":1,\"outcome\":{\"id\":\"1\",\"status\":\"inserted\",\"revision\":\"ddc145e1-981b-476b-9ced-8ca2f8c0bff7\",\"entity_slug\":\"people/bruno-example\",\"persistence\":{\"mode\":\"filesystem\",\"git_state\":\"queued\",\"file_written\":true},\"status_text\":\"remembered as fact #1\",\"val [cut for the fixture]"
+  },
+  {
+   "name": "append_page",
+   "args": {
+    "slug": "people/dara-example",
+    "text": "\nNew badge number: A6-4733.\n",
+    "expected_revision": "518a28a2-e3d1-46cd-b2f3-cbc6f504cac1",
+    "request_id": "bd792a49-ab15-4d72-97b3-e8f5aca7684e"
+   },
+   "ms": 107,
+   "error": null,
+   "result": "{\"slug\":\"people/dara-example\",\"revision\":\"c85ba136-2668-4084-a405-e3f7655960f4\",\"body_bytes\":88,\"appended_bytes\":28,\"chunks_new\":1,\"receipt\":{\"noop\":false,\"slug\":\"people/dara-example\",\"chunks\":1,\"region\":\"truth\",\"status\":\"created_or_updated\",\"revision\":\"c85ba136-2668-4084-a405-e3f7655960f4\",\"source_id\":\"alpha-977e9d01\",\"auto_links\":{\"hint\":\"Body wikilinks are saved as text but NOT reconciled into the graph inline. With mention_links: queued, a post-commit `links` effect (listed by get_write_request) adds plain mention edges to existing pages this connection can read; typed and frontmatter edge [cut for the fixture]"
+  },
+  {
+   "name": "append_page",
+   "args": {
+    "slug": "people/chen-example",
+    "text": "\nNew parking spot: K1-5591.\n",
+    "expected_revision": "41e8fc05-1d3f-4278-b6fa-c196ea8ee459",
+    "request_id": "5c88ebbb-832b-43d3-9cc5-91a08b836fe7"
+   },
+   "ms": 73,
+   "error": null,
+   "result": "{\"slug\":\"people/chen-example\",\"revision\":\"4a7beab6-bd63-4d4e-8cae-64e3f4855b13\",\"body_bytes\":88,\"appended_bytes\":28,\"chunks_new\":1,\"receipt\":{\"noop\":false,\"slug\":\"people/chen-example\",\"chunks\":1,\"region\":\"truth\",\"status\":\"created_or_updated\",\"revision\":\"4a7beab6-bd63-4d4e-8cae-64e3f4855b13\",\"source_id\":\"alpha-977e9d01\",\"auto_links\":{\"hint\":\"Body wikilinks are saved as text but NOT reconciled into the graph inline. With mention_links: queued, a post-commit `links` effect (listed by get_write_request) adds plain mention edges to existing pages this connection can read; typed and frontmatter edge [cut for the fixture]"
+  },
+  {
+   "name": "capture",
+   "args": {
+    "content": "# Garden club\n\nThe plot reservation number is E5-5659.",
+    "content_origin": "user_said"
+   },
+   "ms": 64,
+   "error": null,
+   "result": "{\"noop\":false,\"slug\":\"inbox/2026-11-08-bc14ddba\",\"chunks\":1,\"status\":\"created_or_updated\",\"channel\":\"capture\",\"revision\":\"7f87f513-a898-4092-9374-7160ed3e6e27\",\"source_id\":\"alpha-977e9d01\",\"auto_links\":{\"hint\":\"Body wikilinks are saved as text but NOT reconciled into the graph inline. With mention_links: queued, a post-commit `links` effect (listed by get_write_request) adds plain mention edges to existing pages this connection can read; typed and frontmatter edges are not added. A stdio `gbrain serve` sweeps them at startup + on idle; `gbrain serve --http` does not self-sweep — run `gbrain sw [cut for the fixture]"
+  }
+ ]
+}
