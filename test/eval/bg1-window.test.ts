@@ -12,9 +12,12 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import type { Bg1Manifest, Corpus } from '../../eval/runner/memory-qa/corpus.ts';
-import { bg1CampaignManifest, bg1CellWindow, bg1KeptUnit, campaignManifest, findCell, loadCellManifest } from '../../eval/runner/q1/cell.ts';
+import { freePort } from '../../eval/runner/lifecycle/slice.ts';
+import { keylessUpstream, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
+import { bg1CampaignManifest, bg1CellWindow, bg1GeminiKey, bg1KeptUnit, campaignManifest, findCell, loadCellManifest } from '../../eval/runner/q1/cell.ts';
 import { prepareReread, rereadArm } from '../../eval/runner/q1/reread-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
+import { runRemote } from '../../eval/runner/shootout-cell.ts';
 import { BG1_CONVERSATIONS } from '../../eval/runner/bg1/types.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
@@ -23,6 +26,7 @@ const scratch = () => { const d = mkdtempSync(join(tmpdir(), 'bg1-window-')); ro
 afterAll(() => { closeLedgers(); for (const d of roots) rmSync(d, { recursive: true, force: true }); });
 
 const refusal = (fn: () => unknown) => { try { fn(); } catch (e) { if (e instanceof ScoreboardError) return e.op; throw e; } return null; };
+const refused = async (p: Promise<unknown>) => { try { await p; } catch (e) { if (e instanceof ScoreboardError) return e.op; throw e; } return null; };
 const withEnv = <T,>(env: Record<string, string | undefined>, fn: () => T): T => {
   const saved = Object.fromEntries(Object.keys(env).map(k => [k, process.env[k]]));
   for (const [k, v] of Object.entries(env)) if (v === undefined) delete process.env[k]; else process.env[k] = v;
@@ -60,24 +64,37 @@ describe('cell.ts --manifest bg1', () => {
 describe('bg1CellWindow', () => {
   const def = findCell('bg1.baseline-none.baseline', undefined, 'bg1');
   const window = ['--paid-window', 'BG1-S1-CELLS', '--window-cap-usd', '50'];
-  test('refuses a run without the window, and a keyless lease proxy needs none', () => {
+  test('refuses a run without the window, and a lease proxy that cannot be asked is not keyless', async () => {
     const env = { SHOOTOUT_KEYLESS_UPSTREAM: undefined, SHOOTOUT_LEASE_USD: undefined, SHOOTOUT_PROXY: undefined };
-    expect(refusal(() => bg1CellWindow([], def, env))).toMatchObject({ code: 'PAID_FLAGS_MISSING', message: expect.stringContaining('needs --paid-window <unit> and --window-cap-usd <n>'), fix: { next: 'run' } });
-    expect(refusal(() => bg1CellWindow(['--provider-proxy', 'http://127.0.0.1:9'], def, env))?.code).toBe('PAID_FLAGS_MISSING');
-    expect(refusal(() => bg1CellWindow(['--provider-proxy', 'http://127.0.0.1:9'], def, { ...env, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:9' }))).toBeNull();
-    expect(refusal(() => bg1CellWindow([], def, { ...env, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:9' }))?.code).toBe('PAID_FLAGS_MISSING');
+    expect(await refused(bg1CellWindow([], def, env))).toMatchObject({ code: 'PAID_FLAGS_MISSING', message: expect.stringContaining('needs --paid-window <unit> and --window-cap-usd <n>'), fix: { next: 'run' } });
+    expect((await refused(bg1CellWindow(['--provider-proxy', 'http://127.0.0.1:9'], def, env)))?.code).toBe('PAID_FLAGS_MISSING');
+    expect((await refused(bg1CellWindow(['--provider-proxy', 'http://127.0.0.1:9'], def, { ...env, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:9' })))?.code).toBe('PAID_FLAGS_MISSING');
+    expect((await refused(bg1CellWindow([], def, { ...env, SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:9' })))?.code).toBe('PAID_FLAGS_MISSING');
   });
 
-  test('under a lease proxy the lease, and without one the ledger cap and run budget, may not exceed the window cap', () => {
+  // Value: protects=BG1's keyless exemption rests on what the lease proxy itself reports; fails_when=bg1CellWindow trusts an inherited SHOOTOUT_KEYLESS_UPSTREAM beside a proxy with real upstreams, or ignores a keyless proxy's report; why_new=specialist review of #398 round 2 (a stale variable skipped the window)
+  test('a stale SHOOTOUT_KEYLESS_UPSTREAM beside a proxy with real upstreams refuses; only a proxy reporting keyless upstreams needs no window', async () => {
+    const dead = (async () => { throw new Error('no provider is reachable from this test'); }) as unknown as typeof fetch;
+    const real = new MeteringProxy({ fetchImpl: dead }), keyless = new MeteringProxy({ fetchImpl: dead, upstream: keylessUpstream('http://127.0.0.1:9') });
+    real.start(); keyless.start();
+    try {
+      const stale = { SHOOTOUT_KEYLESS_UPSTREAM: 'http://127.0.0.1:9', SHOOTOUT_LEASE_USD: undefined, SHOOTOUT_PROXY: undefined };
+      expect((await refused(bg1CellWindow(['--provider-proxy', `http://127.0.0.1:${real.port}`], def, stale)))?.code).toBe('PAID_FLAGS_MISSING');
+      expect(await refused(bg1CellWindow(['--provider-proxy', `http://127.0.0.1:${keyless.port}`], def, { ...stale, SHOOTOUT_KEYLESS_UPSTREAM: undefined }))).toBeNull();
+    } finally { real.stop(); keyless.stop(); }
+  });
+
+  test('under a lease proxy the lease, and without one the ledger cap and run budget, may not exceed the window cap', async () => {
     const proxy = ['--provider-proxy', 'http://127.0.0.1:9', ...window];
-    expect(refusal(() => bg1CellWindow(proxy, def, { SHOOTOUT_LEASE_USD: '50' }))).toBeNull();
-    expect(refusal(() => bg1CellWindow(proxy, def, { SHOOTOUT_LEASE_USD: '50.5' }))?.message).toContain('the campaign lease (SHOOTOUT_LEASE_USD) is above paid window BG1-S1-CELLS\'s cap');
-    expect(refusal(() => bg1CellWindow(proxy, def, {}))?.message).toContain('the campaign lease (SHOOTOUT_LEASE_USD) is unknown');
+    expect(await refused(bg1CellWindow(proxy, def, { SHOOTOUT_LEASE_USD: '50' }))).toBeNull();
+    expect((await refused(bg1CellWindow(proxy, def, { SHOOTOUT_LEASE_USD: '50.5' })))?.message).toContain('the campaign lease (SHOOTOUT_LEASE_USD) is above paid window BG1-S1-CELLS\'s cap');
+    expect((await refused(bg1CellWindow(proxy, def, {})))?.message).toContain('the campaign lease (SHOOTOUT_LEASE_USD) is unknown');
     const ok = ledger(50, 40), over = ledger(60, 40);
-    withEnv({ SHOOTOUT_PROXY: undefined }, () => {
-      expect(refusal(() => bg1CellWindow([...window, '--budget-ledger', ok.path, '--budget-run-id', ok.id], def, {}))).toBeNull();
-      expect(refusal(() => bg1CellWindow([...window, '--budget-ledger', over.path, '--budget-run-id', over.id], def, {}))?.message).toContain('the ledger\'s program cap');
-    });
+    const [within, above] = withEnv({ SHOOTOUT_PROXY: undefined }, () => [
+      refused(bg1CellWindow([...window, '--budget-ledger', ok.path, '--budget-run-id', ok.id], def, {})),
+      refused(bg1CellWindow([...window, '--budget-ledger', over.path, '--budget-run-id', over.id], def, {}))]);
+    expect(await within).toBeNull();
+    expect((await above)?.message).toContain('the ledger\'s program cap');
   });
 
   test('the CLI exits 2 with the refusal before any output, for sealed and dev BG1 cells alike', () => {
@@ -96,20 +113,46 @@ describe('bg1CellWindow', () => {
 describe('a BG1 campaign', () => {
   const m = loadCellManifest('bg1');
   const sel = { campaign_id: 'q1-scoreboard-bg1-wave-a', cap_usd: 400, units: ['bg1.baseline-none.baseline.c0', 'bg1.gbrain-defaults.rs1-stable.c1'], paid_window: 'BG1-WA-CELLS' };
+  const WORLD_END = '2026-11-15';
 
   test('every unit runs from bg1-cells.json inside the selection\'s paid window, at its cap', () => {
-    const c = bg1CampaignManifest(m, { units: sel });
+    const c = bg1CampaignManifest(m, { units: sel, worldEnd: WORLD_END });
     expect(c.campaign_id).toBe('q1-scoreboard-bg1-wave-a');
     expect(c.cap_usd).toBe(400);
     expect(c.cells.map(x => x.id).sort()).toEqual([...sel.units].sort());
     for (const cell of c.cells) expect(cell.command).toMatch(new RegExp(`--manifest bg1 --shard ${cell.id.at(-1)}/7 (--system-url \\S+ )?--paid-window BG1-WA-CELLS --window-cap-usd 400 --out "\\$SHOOTOUT_OUT"`));
-    const dev = bg1CampaignManifest(m, { smoke: true, units: { ...sel, campaign_id: 'q1-scoreboard-bg1-stage1', units: ['bg1-dev3.baseline-none.baseline'] } });
+    const dev = bg1CampaignManifest(m, { smoke: true, worldEnd: WORLD_END, units: { ...sel, campaign_id: 'q1-scoreboard-bg1-stage1', units: ['bg1-dev3.baseline-none.baseline'] } });
     expect(dev.cells.map(x => x.command)).toEqual([expect.stringContaining('--cell bg1-dev3.baseline-none.baseline --manifest bg1 --paid-window BG1-WA-CELLS --window-cap-usd 400 --out "$SHOOTOUT_OUT"')]);
+  });
+
+  // Value: protects=every BG1 unit's VM resolves dates from the campaign's one world end; fails_when=a unit command lacks GBRAIN_EVALS_BG1_WORLD_END, or a campaign plans without a Sunday world end; why_new=red team of #398 round 2 (every remote unit refused SPEC_MISSING)
+  test('every unit exports the campaign\'s world end before it runs, and a campaign without a Sunday world end is refused', () => {
+    for (const cell of bg1CampaignManifest(m, { units: sel, worldEnd: WORLD_END }).cells) expect(cell.command.startsWith('export GBRAIN_EVALS_BG1_WORLD_END=' + WORLD_END + '; ')).toBe(true);
+    expect(withEnv({ GBRAIN_EVALS_BG1_WORLD_END: '2026-11-22' }, () => bg1CampaignManifest(m, { units: sel }).cells.map(c => c.command.split(';')[0]))).toEqual(sel.units.map(() => 'export GBRAIN_EVALS_BG1_WORLD_END=2026-11-22'));
+    expect(() => withEnv({ GBRAIN_EVALS_BG1_WORLD_END: undefined }, () => bg1CampaignManifest(m, { units: sel }))).toThrow('GBRAIN_EVALS_BG1_WORLD_END is not set');
+    expect(() => bg1CampaignManifest(m, { units: sel, worldEnd: '2026-11-16' })).toThrow('not a Sunday');
+  });
+
+  // Value: protects=a paid BG1 unit passes its window guard on its VM, against the lease its proxy holds; fails_when=runRemote sets no SHOOTOUT_LEASE_USD, or an inherited value wins; why_new=red team of #398 round 2 (every paid unit refused PAID_FLAGS_MISSING)
+  test('runRemote gives the unit its own lease as SHOOTOUT_LEASE_USD over an inherited one, and a campaign unit passes its window guard with it', async () => {
+    const cell = bg1CampaignManifest(m, { units: sel, worldEnd: WORLD_END }).cells.find(c => c.id === 'bg1.gbrain-defaults.rs1-stable.c1')!;
+    const out = join(scratch(), 'out');
+    const saved = process.env.SHOOTOUT_LEASE_USD;
+    process.env.SHOOTOUT_LEASE_USD = '9999';
+    try { expect(await runRemote({ lease_id: 'bg1-lease-usd', lease_usd: cell.lease_usd, out, command: 'printf %s "$SHOOTOUT_LEASE_USD" > "$SHOOTOUT_OUT/lease.txt"' }, { port: await freePort(0), upstream: keylessUpstream('http://127.0.0.1:9') })).toBe(0); }
+    finally { if (saved === undefined) delete process.env.SHOOTOUT_LEASE_USD; else process.env.SHOOTOUT_LEASE_USD = saved; }
+    const lease = readFileSync(join(out, 'lease.txt'), 'utf8');
+    expect(lease).toBe(String(cell.lease_usd));
+    const argv = cell.command.slice(cell.command.indexOf(' run ') + 5).split(' ');
+    const def = findCell('bg1.gbrain-defaults.rs1-stable', m, 'bg1');
+    const env = { SHOOTOUT_PROXY: 'http://127.0.0.1:9', SHOOTOUT_LEASE_ID: 'bg1-lease-usd', SHOOTOUT_KEYLESS_UPSTREAM: undefined };
+    expect(await refused(bg1CellWindow(argv, def, { ...env, SHOOTOUT_LEASE_USD: lease }))).toBeNull();
+    expect((await refused(bg1CellWindow(argv, def, env)))?.code).toBe('PAID_FLAGS_MISSING');
   });
 
   // Value: protects=a BG1 unit's VM gets Gemini's key only as BG1_GEMINI_API_KEY, and no other campaign's units change; fails_when=a BG1 unit passes GEMINI_API_KEY or no Gemini key, or a q1, f6 or rs1 unit gains a provider, pass or key mapping; why_new=GBEV-3's key rule for BG1's canonical judge; seam=bg1CampaignManifest; no_claim=that the launch host holds the key
   test('every BG1 unit passes BG1_GEMINI_API_KEY and maps it to Gemini, never GEMINI_API_KEY; q1, f6 and rs1 units pass only their own providers\' keys', () => {
-    const units = [...bg1CampaignManifest(m, { units: sel }).cells, ...bg1CampaignManifest(m, { smoke: true, units: { ...sel, campaign_id: 'q1-scoreboard-bg1-stage1', units: ['bg1-dev3.baseline-none.baseline'] } }).cells];
+    const units = [...bg1CampaignManifest(m, { units: sel, worldEnd: WORLD_END }).cells, ...bg1CampaignManifest(m, { smoke: true, worldEnd: WORLD_END, units: { ...sel, campaign_id: 'q1-scoreboard-bg1-stage1', units: ['bg1-dev3.baseline-none.baseline'] } }).cells];
     expect(units).toHaveLength(3);
     for (const cell of units) {
       expect(cell.providers).toContain('gemini');
@@ -132,7 +175,7 @@ describe('a BG1 campaign', () => {
   });
 
   test('the CLI writes a BG1 campaign only from a selection naming its window', () => {
-    const env = { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '' };
+    const env = { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GEMINI_API_KEY: '', PARTICLE_API_KEY: '', VOYAGE_API_KEY: '', GBRAIN_EVALS_BG1_WORLD_END: '2026-11-15' };
     const dir = scratch(), bare = join(dir, 'bare.json'), named = join(dir, 'named.json'), units = join(dir, 'units.json');
     const plan = (...args: string[]) => spawnSync('bun', ['eval/runner/q1/cell.ts', 'plan', '--manifest', 'bg1', ...args], { cwd: REPO, encoding: 'utf8', env, timeout: 60_000 });
     const r = plan('--campaign-out', bare);
@@ -143,10 +186,29 @@ describe('a BG1 campaign', () => {
     expect(plan('--units', units, '--campaign-out', named).status).toBe(0);
     const c = JSON.parse(readFileSync(named, 'utf8'));
     expect(c.cells.every((x: { command: string }) => x.command.includes('--paid-window BG1-WA-CELLS --window-cap-usd 400 --out'))).toBe(true);
+    expect(c.cells.every((x: { command: string }) => x.command.startsWith('export GBRAIN_EVALS_BG1_WORLD_END=2026-11-15; '))).toBe(true);
   });
 });
 
 describe('reread-cell.ts on BG1', () => {
+  // Value: protects=a paid BG1 re-read and a proxy-less BG1 run bill Gemini to BG1_GEMINI_API_KEY alone; fails_when=either falls back to GEMINI_API_KEY or runs with no BG1 key; why_new=red team of #398 round 2
+  test('bg1GeminiKey takes BG1_GEMINI_API_KEY over GEMINI_API_KEY, and a paid re-read without it refuses before its --out is claimed', () => {
+    expect(bg1GeminiKey({ BG1_GEMINI_API_KEY: 'placeholder-bg1', GEMINI_API_KEY: 'placeholder-decoy' })).toBe('placeholder-bg1');
+    expect(refusal(() => bg1GeminiKey({ GEMINI_API_KEY: 'placeholder-decoy' }))).toMatchObject({ code: 'KEY_MISSING', message: 'BG1_GEMINI_API_KEY is not set' });
+    const tmp = scratch();
+    const reread = (extra: Record<string, string>, out: string) => spawnSync('bun', ['eval/runner/q1/reread-cell.ts', '--cell', 'bg1.ext-memory-bank.recipe', '--manifest', 'bg1', '--arm', 'component-b8000', '--source', join(tmp, 'none'), '--reader', 'particle:particle-1',
+      '--out', out, '--budget-ledger', join(tmp, 'ledger.sqlite'), '--run-id', 'bg1-rr', '--lease-usd', '1', '--ledger-cap-usd', '1', '--paid-window', 'BG1-RR', '--window-cap-usd', '5'],
+      { cwd: REPO, encoding: 'utf8', timeout: 60_000, env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', GEMINI_API_KEY: 'placeholder-decoy', ...extra } });
+    const bare = reread({}, join(tmp, 'a'));
+    expect(bare.status).not.toBe(0);
+    expect(bare.stderr).toContain('BG1_GEMINI_API_KEY is not set');
+    expect(existsSync(join(tmp, 'a'))).toBe(false);
+    const keyed = reread({ BG1_GEMINI_API_KEY: 'placeholder-bg1' }, join(tmp, 'b'));
+    expect(keyed.status).not.toBe(0);
+    expect(keyed.stderr).not.toContain('BG1_GEMINI_API_KEY is not set');
+    expect(keyed.stderr).toContain('the BG1 manifest is unfilled');
+  });
+
   test('a sealed-set re-read is refused while the BG1 manifest is unfilled, before custody or any source is read', () => {
     const def = findCell('bg1.ext-memory-bank.recipe', undefined, 'bg1');
     const arm = rereadArm(def, 'component-b8000');

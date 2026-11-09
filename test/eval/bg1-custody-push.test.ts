@@ -59,9 +59,9 @@ describe('a sealed BG1 unit\'s custody', () => {
     const m = loadCellManifest('bg1');
     const sel = { campaign_id: 'q1-scoreboard-bg1-wave-a', cap_usd: 400, units: ['bg1.baseline-none.baseline.c0', 'bg1.gbrain-defaults.rs1-stable.c1'], paid_window: 'BG1-WA-CELLS' };
     const size = m.cells.find(c => c.id === 'bg1.baseline-none.baseline')!.kept_units!;
-    const cells = bg1CampaignManifest(m, { units: sel }).cells;
+    const cells = bg1CampaignManifest(m, { units: sel, worldEnd: '2026-11-15' }).cells;
     expect(cells.map(c => [c.id, c.sealed, c.bg1_unit]).sort()).toEqual([['bg1.baseline-none.baseline.c0', true, { index: 0, size }], ['bg1.gbrain-defaults.rs1-stable.c1', true, { index: 1, size }]]);
-    const dev = bg1CampaignManifest(m, { smoke: true, units: { ...sel, campaign_id: 'q1-scoreboard-bg1-stage1', units: ['bg1-dev3.baseline-none.baseline'] } }).cells;
+    const dev = bg1CampaignManifest(m, { smoke: true, worldEnd: '2026-11-15', units: { ...sel, campaign_id: 'q1-scoreboard-bg1-stage1', units: ['bg1-dev3.baseline-none.baseline'] } }).cells;
     expect(dev.map(c => [c.sealed, c.bg1_unit])).toEqual([[false, undefined]]);
 
     const s = custodySet();

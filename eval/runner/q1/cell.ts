@@ -82,7 +82,7 @@ import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
-import { bg1RunClock, bg1UnitConversations, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
+import { bg1RunClock, bg1UnitConversations, bg1WorldEnd, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
@@ -1499,6 +1499,14 @@ export interface Bg1UnitSelection extends UnitSelection { paid_window: string }
 /** BG1's Gemini key variable: the custody host's ~/.config/gbrain-evals/bg1.env names it, and no BG1 unit reads GEMINI_API_KEY. */
 export const BG1_GEMINI_KEY_ENV = 'BG1_GEMINI_API_KEY';
 
+/** Gemini's key for a paid BG1 run that holds its own provider keys (a re-read's lease proxy, a run without a lease proxy): BG1_GEMINI_API_KEY, never GEMINI_API_KEY. */
+export function bg1GeminiKey(env: Record<string, string | undefined> = process.env): string {
+  const key = env[BG1_GEMINI_KEY_ENV];
+  if (key) return key;
+  throw refuse({ code: 'KEY_MISSING', message: `${BG1_GEMINI_KEY_ENV} is not set`, why: 'BG1\'s canonical Gemini judge spends BG1\'s own key, never the shell\'s GEMINI_API_KEY',
+    fix: { next: 'ask_user', user_message: `export ${BG1_GEMINI_KEY_ENV} from the custody host's bg1.env` } });
+}
+
 /**
  * BG1's campaign manifest: campaignManifest over a unit selection that names its granted paid window, with every unit's
  * run naming bg1-cells.json and carrying --paid-window and --window-cap-usd, so bg1CellWindow lets the unit spend only
@@ -1506,12 +1514,15 @@ export const BG1_GEMINI_KEY_ENV = 'BG1_GEMINI_API_KEY';
  * canonical judge is Gemini, so its VM also receives BG1_GEMINI_API_KEY, which runRemote hands the lease proxy as
  * Gemini's key (gemini_key_env); every other campaign's providers and passes are campaignManifest's own. A sealed unit
  * carries its index and size in kept worlds (bg1_unit), so the custodian pushes only that unit's worlds (bg1CustodyPush).
+ * Every unit's command exports the campaign's world end (GBRAIN_EVALS_BG1_WORLD_END: `worldEnd`, else the planning
+ * shell's), so its VM's run and loaders resolve dates from the same world end as every other unit of the campaign.
  */
-export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: Partial<Bg1UnitSelection> } = {}): Q1Campaign {
+export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: Partial<Bg1UnitSelection>; worldEnd?: string } = {}): Q1Campaign {
   const u = opts.units;
   if (!u?.paid_window || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(u.paid_window) || !(Number(u.cap_usd) > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: 'a BG1 campaign needs a unit selection (--units) naming its granted paid window as paid_window, with the window cap as cap_usd',
     why: 'every BG1 unit spends real keys, so its command carries the granted window and the unit refuses outside it', fix: { next: 'run', argv: [...FRONT, 'plan', '--manifest', 'bg1', '--units', '<selection with paid_window and cap_usd>', '--campaign-out', '<file>'] } });
   const { paid_window, ...units } = u as Bg1UnitSelection;
+  const worldEnd = bg1WorldEnd({ worldEnd: opts.worldEnd });
   const campaign = campaignManifest(m, { ...opts, units: { ...units, cell_manifest: 'bg1' } });
   const out = ' --out "$SHOOTOUT_OUT"';
   const defs = [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])];
@@ -1524,7 +1535,7 @@ export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed
     if (cell.command.split(out).length !== 2) throw new Error(`BG1 unit ${cell.id} has no single${out} in its command to put the paid window before`);
     const unit = cell.sealed ? unitOf(cell.id) : undefined;
     return { ...cell, providers: [...(cell.providers ?? []), 'gemini'], pass: [...(cell.pass ?? []), BG1_GEMINI_KEY_ENV], gemini_key_env: BG1_GEMINI_KEY_ENV, ...(unit ? { bg1_unit: unit } : {}),
-      command: cell.command.replace(out, () => ` --paid-window ${paid_window} --window-cap-usd ${units.cap_usd}${out}`) };
+      command: `export GBRAIN_EVALS_BG1_WORLD_END=${worldEnd}; ${cell.command.replace(out, () => ` --paid-window ${paid_window} --window-cap-usd ${units.cap_usd}${out}`)}` };
   }) };
 }
 
@@ -1585,17 +1596,18 @@ const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message,
 
 /**
  * BG1's paid-window guard for `run` on a BG1 cell (eval/runner/paid-arm.ts, the shared window guard): a run needs the
- * granted window (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy serves a keyless upstream
- * (SHOOTOUT_KEYLESS_UPSTREAM). Under a lease proxy the cap checked is the lease (SHOOTOUT_LEASE_USD, set by the
+ * granted window (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy itself reports a keyless upstream
+ * (GET /__proxy/status; an inherited SHOOTOUT_KEYLESS_UPSTREAM is never trusted). Under a lease proxy the cap checked is the lease (SHOOTOUT_LEASE_USD, set by the
  * campaign's remote runner); without one it is the ledger's program cap and the run's budget. Refuses with exit 2
  * before any provider client, corpus or output exists.
  */
-export function bg1CellWindow(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): void {
+export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<void> {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const proxy = (one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
   const lease = Number(env.SHOOTOUT_LEASE_USD);
+  const keyless = !!proxy && await fetch(`${proxy}/__proxy/status`, { signal: AbortSignal.timeout(5000) }).then(r => r.json() as Promise<{ keyless?: unknown }>).then(s => s.keyless === true).catch(() => false);
   try {
-    requireBg1Window(argv, { what: `BG1 cell ${def.id}`, keyless: !!proxy && !!env.SHOOTOUT_KEYLESS_UPSTREAM,
+    requireBg1Window(argv, { what: `BG1 cell ${def.id}`, keyless,
       caps: () => proxy ? [{ label: 'the campaign lease (SHOOTOUT_LEASE_USD)', usd: lease > 0 ? lease : null }] : bg1LedgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
   } catch (e) {
     if (!(e instanceof Bg1WindowRefusal)) throw e;
@@ -1655,7 +1667,7 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
-    if (sub === 'run' && isBg1Benchmark(def.benchmark)) { bg1CellWindow(argv, def); bg1RunClock(); }
+    if (sub === 'run' && isBg1Benchmark(def.benchmark)) { await bg1CellWindow(argv, def); bg1RunClock(); if (!(one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY)) process.env.GEMINI_API_KEY = bg1GeminiKey(); }
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
