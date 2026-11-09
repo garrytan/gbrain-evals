@@ -725,9 +725,11 @@ Wave A still waits on the Voyage check. The particle-1 fallback is not needed.
 GBEV-3 answered the custody decisions with "rec, answered by agent:GBEV-3", and GBRA-108 answered the provider checks,
 relayed by GBEV-3. None of this changes a bar, arm, reader, judge, margin or verdict rule.
 
-- **Sealed cells (D1).** Counted cells run on ephemeral Ubicloud VMs launched from the custody host. Each VM receives only
-  its unit's pinned files, and provider keys only through the runner's `--pass`. Only counts, hashes and aggregates come
-  back. Each VM is deleted after its unit, and the custodian confirms that with the runner's `list`.
+- **Sealed cells (D1).** Counted cells run on ephemeral Ubicloud VMs launched from the custody host. Each VM is to receive
+  only its unit's pinned files, and provider keys only through the runner's `--pass`. Only counts, hashes and aggregates
+  come back. Each VM is deleted after its unit, and the custodian confirms that with the runner's `list`. The code at
+  the commit below falls short of the first part: the custody push (`rs1CustodyPush`) sends every file the filled
+  manifest pins, so a unit's VM also receives the kept conversations of other units. That is an open gap for GBEV-3.
 - **Storage (D2).** At rest, RS1 is an `age`-encrypted archive with two recipients: the custodian's key on the custody
   host, and a recovery identity generated on the machine that holds the second encrypted copy, where it stays. The
   custody record holds only the recipients' public keys and the archive's SHA-256; no thread, drive or repository holds
