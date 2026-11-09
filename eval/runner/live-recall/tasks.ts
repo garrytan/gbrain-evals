@@ -27,7 +27,8 @@
  * call, and every embedding and rerank call gbrain makes, goes through the budget ledger's paid-request guard; a refused
  * reservation is a cap stop that pauses the run, incomplete, at its cap until GBEV-3 extends it and a --resume (or judge)
  * with --window-note <extension id> and a higher --budget-usd continues it. Each run directory has its own ledger run, so
- * its cost sums count only its own spend. The protocol is docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md;
+ * its cost sums count only its own spend; the session that leaves the directory owing no paid call finishes that run, and
+ * `judge` on such a directory makes no call and finishes it. The protocol is docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md;
  * the steps, abort codes and recovery are in RUN-KIT.md, "Phase 2". Exit status: 0 complete, 1 incomplete, 2 usage error,
  * 3 abort, 4 unexpected error, 5 a freeze under 60 kept tasks, 6 cap stop, 7 a judge check that did not pass (R78).
  */
@@ -35,7 +36,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { budgetOptionsFrom, readLedger, setRunBudget, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
+import { budgetOptionsFrom, closeRun, readLedger, setRunBudget, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
 import { priceUsage, provider, type Usage } from '../cat40/loop.ts';
 import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { gbrainPin } from '../gbrain-version.ts';
@@ -422,6 +423,35 @@ const needsSecondJudge = (a: AnswerRecord) => a.form === 'paraphrase' && SECOND_
 const labelOrder = (model: string) => [judgeFor(model), ...LABELLERS.filter(l => l !== judgeFor(model))];
 
 /**
+ * The judge calls `tasks.ts judge` still owes one answered episode, in order: its judge, then every labeller on a judge
+ * check, otherwise its second judge where one reads it. A call is owed when its record is missing, older than the answer,
+ * or a judge error that did not hit the output-token cap (a truncated call stays a judge error, as the preregistration says).
+ */
+function judgeCallsDue(run: RunFile, store: RecordStore, a: AnswerRecord): Array<{ judge: string; kind: JudgeRecord['kind'] }> {
+  const due = (x: JudgeRecord | undefined) => !judgedAfter(a, x) || (x!.status === 'judge_error' && !x!.truncated);
+  const calls = due(store.judges.get(a.key)) ? [{ judge: judgeFor(a.model), kind: 'judge' as const }] : [];
+  if (run.identity.labellers) return [...calls, ...labelOrder(a.model).filter(l => due(store.labels.get(a.key + '|' + l))).map(l => ({ judge: l, kind: 'label' as const }))];
+  return needsSecondJudge(a) && due(store.judges2.get(a.key)) ? [...calls, { judge: secondJudgeFor(a.model)!, kind: 'judge2' as const }] : calls;
+}
+
+/**
+ * Whether a run directory owes no paid call: it has a run.json, no cap stop or truncation stop is outstanding, every
+ * planned episode is answered or out of attempts, and `tasks.ts judge` would make no call. Only then is its ledger run
+ * finished; until then the run stays open for the next session (a resume, an extension or a judge pass) to join.
+ */
+export function owesNoCalls(dir: string): boolean {
+  const p = paths(dir);
+  if (!existsSync(p.run) || existsSync(p.capStop)) return false;
+  const run = readRun(dir), store = new RecordStore(p.records), kept = new Set(run.kept_ids);
+  if (truncationStopped(store.calls, waivedOf(run.truncation_waivers ?? []))) return false;
+  const answered = run.kept_ids.every(task => run.forms.every(form => run.arms.every(arm => run.models.every(model => {
+    const a = store.answers.get(episodeKey(form, task, arm, model));
+    return a !== undefined && !(a.status === 'harness_error' && a.attempt < MAX_ATTEMPTS);
+  }))));
+  return answered && [...store.answers.values()].every(a => a.status !== 'answered' || !kept.has(a.task) || judgeCallsDue(run, store, a).length === 0);
+}
+
+/**
  * Stop the check or run once a judge model's truncated counted-judge calls (judge and second judge, split by model and
  * effort; labels only fail the judge check) pass TRUNCATION_CAP of all its calls in that split, earlier attempts at a
  * re-judged answer included, so judging again never clears a stop. While judging, the share is taken of at least
@@ -458,15 +488,16 @@ export function truncationWaivers(previous: TruncationWaiver[] | null | undefine
   if (note === null || note === undefined) return out;
   if (!NOTE.test(note)) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', '--truncation-waiver takes GBEV-3\'s note id');
   if (out.some(w => w.note === note)) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', 'truncation waiver ' + note + ' was already used; drop the flag, and a new stop needs a new note from GBEV-3');
-  const live = (() => {
-    try { checkTruncation(calls, 1, waivedOf(out)); return false; } catch (e) { if (e instanceof LiveRecallAbort && e.code === 'LR_JUDGE_TRUNCATED') return true; throw e; }
-  })();
-  if (!live) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', '--truncation-waiver given with no truncation stop outstanding; run without it');
+  if (!truncationStopped(calls, waivedOf(out))) throw new LiveRecallAbort('LR_JUDGE_TRUNCATED', '--truncation-waiver given with no truncation stop outstanding; run without it');
   const waived: Waived = {};
   for (const c of calls) if (c.kind !== 'label' && c.truncated) (waived[c.judge] ??= {})[c.effort ?? EFFORT] = (waived[c.judge]?.[c.effort ?? EFFORT] ?? 0) + 1;
   return [...out, { note, by: 'agent:GBEV-3', at: new Date().toISOString(), waived }];
 }
 const waivedOf = (w: TruncationWaiver[]): Waived => w[w.length - 1]?.waived ?? {};
+/** Whether a truncation stop is outstanding at the plain rate after the waivers so far. */
+function truncationStopped(calls: JudgeCall[], waived: Waived): boolean {
+  try { checkTruncation(calls, 1, waived); return false; } catch (e) { if (e instanceof LiveRecallAbort && e.code === 'LR_JUDGE_TRUNCATED') return true; throw e; }
+}
 
 // ─── run ───────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -518,7 +549,8 @@ function git(args: string[]): string {
 
 /**
  * The ledger runner of a run directory: the one its run.json records, else one named for the directory. Every session of
- * a directory joins that ledger run, which a cap stop leaves open for an extension, and no other directory shares it.
+ * a directory joins that ledger run, which stays open while the directory owes paid calls (owesNoCalls: a cap stop
+ * waiting for an extension, an unanswered or unjudged episode), and no other directory shares it.
  */
 export function ledgerRunner(dir: string, fixture: boolean, judgeCheck = false): string {
   if (existsSync(paths(dir).run)) return readRun(dir).budget.runner;
@@ -767,25 +799,14 @@ export async function judgeRunDir(dir: string, paid: Paid, say: (line: string) =
   const stopped = () => halt.cap !== null || halt.fatal !== null;
   try {
     const todo = [...store.answers.values()].filter(a => a.status === 'answered' && tasks.has(a.task));
-    const due = (a: AnswerRecord, x: JudgeRecord | undefined) => !judgedAfter(a, x) || (x!.status === 'judge_error' && !x!.truncated);
     const write = (r: JudgeRecord) => { store.write(r); judged++; checkTruncation(store.calls, TRUNCATION_FLOOR, waived); };
     await pool(todo, TASK_CONCURRENCY, async a => {
-      if (stopped()) return;
       const task = tasks.get(a.task)!;
       try {
-        const j = store.judges.get(a.key);
-        if (due(a, j)) write(await judgeEpisode(ctx, task, a, judgeFor(a.model), 'judge'));
-        if (run.identity.labellers) {
-          for (const l of labelOrder(a.model)) {
-            if (stopped()) return;
-            const x = store.labels.get(a.key + '|' + l);
-            if (due(a, x)) write(await judgeEpisode(ctx, task, a, l, 'label', LABEL_EFFORT));
-          }
-          return;
+        for (const call of judgeCallsDue(run, store, a)) {
+          if (stopped()) return;
+          write(await judgeEpisode(ctx, task, a, call.judge, call.kind, call.kind === 'label' ? LABEL_EFFORT : undefined));
         }
-        if (stopped()) return;
-        const j2 = store.judges2.get(a.key);
-        if (needsSecondJudge(a) && due(a, j2)) write(await judgeEpisode(ctx, task, a, secondJudgeFor(a.model)!, 'judge2'));
       } catch (e) {
         if (isCapStop(e)) halt.cap ??= e as Error;
         else halt.fatal ??= e;
@@ -1072,7 +1093,7 @@ function openPaid(argv: string[], runner: string, capUsd: number): Paid {
   return { ...paid, runner, capUsd, ledgerPath: options.ledgerPath };
 }
 
-async function main(argv: string[]): Promise<number> {
+export async function main(argv: string[]): Promise<number> {
   const command = argv[0];
   const fixture = argv.includes('--fixture');
   const tasksPath = fixture ? FIXTURE_TASKS : flag(argv, '--tasks');
@@ -1138,8 +1159,17 @@ async function main(argv: string[]): Promise<number> {
       if (command === 'judge') {
         const run = readRun(dir);
         if (run.identity.labellers) rmSync(paths(dir).judgeCheck, { force: true });
-        const paid = openPaid(['--budget-ledger', run.budget.ledger_path, ...argv], run.budget.runner, budgetOptionsFrom(argv).budgetUsd ?? run.budget.cap_usd);
-        try { await judgeRunDir(dir, paid, say, flag(argv, '--window-note') ?? null, flag(argv, '--truncation-waiver') ?? null); } finally { paid.guard.uninstall(); paid.run.close({ finish: false }); }
+        if (owesNoCalls(dir) && flag(argv, '--truncation-waiver') === undefined) {
+          closeRun(run.budget.ledger_path, run.budget.run_id);
+          say('nothing to judge: every answered episode is judged; ledger run ' + run.budget.run_id + ' is finished');
+        } else {
+          const paid = openPaid(['--budget-ledger', run.budget.ledger_path, ...argv], run.budget.runner, budgetOptionsFrom(argv).budgetUsd ?? run.budget.cap_usd);
+          let finish = false;
+          try {
+            await judgeRunDir(dir, paid, say, flag(argv, '--window-note') ?? null, flag(argv, '--truncation-waiver') ?? null);
+            finish = owesNoCalls(dir);
+          } finally { paid.guard.uninstall(); paid.run.close({ finish }); }
+        }
         if (run.identity.labellers) {
           const c = writeJudgeCheck(dir);
           sayJudgeCheck(c, say);
@@ -1174,6 +1204,7 @@ async function main(argv: string[]): Promise<number> {
     process.env.GBRAIN_AUDIT_DIR = out;
     const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
     const paid = openPaid(prior ? ['--budget-ledger', prior.ledger_path, ...argv] : argv, ledgerRunner(out, fixture, checking), budgetUsd);
+    let finish = false;
     try {
       const opts: RunOptions = {
         out, gut, fixture, tasksPath, freezePath: flag(argv, '--freeze') ?? null, databaseUrlEnv, forms, arms, models,
@@ -1183,18 +1214,20 @@ async function main(argv: string[]): Promise<number> {
       };
       if (checking) {
         const { result, check } = await runJudgeCheck(opts, say);
+        finish = owesNoCalls(out);
         sayJudgeCheck(check, say);
         say('send only ' + paths(out).judgeCheck + '; records, run.json and the gbrain log stay on this box');
         return result === 'cap_stop' ? 6 : result !== 'complete' || !check.complete ? 1 : check.passed ? 0 : 7;
       }
       const r = await runTaskSet(opts, say);
+      finish = owesNoCalls(out);
       sayScorecard(r.scorecard, say);
       say('scorecard (' + r.result + '; send these two files): ' + r.scorecard + ' and ' + r.markdown);
       say('records, run.json and the gbrain log stay on this box: ' + out);
       return r.result === 'cap_stop' ? 6 : r.result === 'complete' ? 0 : 1;
     } finally {
       paid.guard.uninstall();
-      paid.run.close({ finish: false });
+      paid.run.close({ finish });
       const s = ledgerSpend(paid.ledgerPath, paid.run.runId);
       say('ledger run ' + paid.run.runId + ', every session of this run directory: $' + s.actual_usd.toFixed(4) + ' of its $' + s.cap_usd.toFixed(2) + ' cap over ' + s.requests + ' requests');
     }
