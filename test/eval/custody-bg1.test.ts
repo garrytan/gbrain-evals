@@ -825,6 +825,50 @@ describe('checkSession and renderWorld', () => {
     expect(dropped.stats.dropped_session).toBe(0);
     expect(dropped.stats.attempts).toBe(4);
   });
+
+  // Value: protects=an unreadable Gemini check reply is asked once more, with its own closing line and cache key, and fails the attempt only when the second reply is unreadable too, while a readable verdict and the Haiku check are never asked again; fails_when=renderWorld fails an attempt on Gemini's first unreadable reply, the second ask is not the same request plus the closing line, the cache serves it the first reply, stats.checks leaves it out, or a readable verdict or a Haiku reply is asked again; why_new=stage 1's second real dev render (4ec6a610): 2 Gemini check replies were the literal "Here is the JSON requested:\n" despite responseJsonSchema, and each failed its attempt; seam=renderWorld over fakeModels' renderer and clientModels' checks, with Gemini behind cachedClient over fake ModelClients that record each request; no_claim=how often gemini-3.8-flash answers the second ask readably
+  test('an unreadable Gemini check reply is asked once more with a closing line and its own cache key, and only a second unreadable reply fails the attempt', async () => {
+    const small = { ...dev, sessions: dev.sessions.slice(0, 12) } as WorldPlan;
+    const fake = fakeModels(small);
+    const closing = '\nReply with only the JSON object, with no other text.';
+    const ok = '{"extra_claims": false}', unreadable = 'Here is the JSON requested:\n';
+    type Sent = Array<{ prompt: string; max: number; temperature: number; schema?: object }>;
+    const client = (id: string, sent: Sent, reply: (prompt: string, sent: Sent) => string): ModelClient => ({ id, async complete(prompt, max, temperature, schema) { sent.push({ prompt, max, temperature, schema }); return reply(prompt, sent); } });
+    const render = async (gem: (prompt: string, sent: Sent) => string, hai: (prompt: string, sent: Sent) => string = () => ok, cache = false) => {
+      const gemini: Sent = [], haiku: Sent = [];
+      const g = client(CHECK_MODELS[0], gemini, gem);
+      const real = clientModels(cache ? cachedClient(g, scratch('reask')) : g, client(CHECK_MODELS[1], haiku, hai));
+      return { ...(await renderWorld(small, { ...fake, check: real.check }, { targetTokens: 400, concurrency: 1 })), gemini, haiku };
+    };
+    const clean = await render(() => ok);
+    expect(clean.stats.failures).toEqual({});
+    expect(clean.haiku.length).toBeGreaterThan(0);
+
+    const once = await render((_p, sent) => (sent.length === 1 ? unreadable : ok), undefined, true);
+    expect(once.world).not.toBeNull();
+    expect(once.stats.failures).toEqual({});
+    expect(once.stats.regenerated).toBe(0);
+    expect(once.stats.checks).toBe(clean.stats.checks + 1);
+    expect(once.gemini).toHaveLength(clean.gemini.length + 1);
+    expect(once.gemini[1]).toEqual({ prompt: once.gemini[0].prompt + closing, max: 256, temperature: 0, schema: checkSchema });
+    expect(once.gemini.filter(c => c.prompt.endsWith(closing))).toHaveLength(1);
+
+    const twice = await render((p, sent) => (p.endsWith(closing) ? (sent.filter(c => c.prompt.endsWith(closing)).length === 1 ? unreadable : ok) : p === sent[0].prompt ? unreadable : ok));
+    expect(twice.world).not.toBeNull();
+    expect(twice.stats.failures).toEqual({ 'check_unreadable:gemini:gemini-3.8-flash': 1 });
+    expect(twice.stats.regenerated).toBe(1);
+    expect(twice.stats.checks).toBe(clean.stats.checks + 3);
+
+    const claims = await render((_p, sent) => (sent.length === 1 ? '{"extra_claims": true}' : ok));
+    expect(claims.stats.failures).toEqual({ 'extra_claims:gemini:gemini-3.8-flash': 1 });
+    expect(claims.stats.checks).toBe(clean.stats.checks + 1);
+    expect(claims.gemini.some(c => c.prompt.endsWith(closing))).toBe(false);
+
+    const haikuOff = await render(() => ok, (_p, sent) => (sent.length === 1 ? unreadable : ok));
+    expect(haikuOff.stats.failures).toEqual({ 'check_unreadable:anthropic:claude-haiku-5-5': 1 });
+    expect(haikuOff.stats.checks).toBe(clean.stats.checks + 2);
+    expect([...haikuOff.gemini, ...haikuOff.haiku].some(c => c.prompt.endsWith(closing))).toBe(false);
+  });
 });
 
 // ─── the sealed key ──────────────────────────────────────────────────

@@ -19,7 +19,8 @@
  *      the session may use and none is damaged; no calendar date, year or weekday is written out; and, once a
  *      session's target is at least 400 tokens, its length is 0.6 to 1.5 times the target;
  *   2. gemini-3.8-flash reads the session for extra claims: a fact about a person, company, project or deal beyond
- *      the planned lines, or a turn that doubts, corrects or restates one;
+ *      the planned lines, or a turn that doubts, corrects or restates one; a reply with no readable verdict is asked
+ *      once more, with a closing line asking for the JSON object alone, and counts as unreadable only if that fails too;
  *   3. claude-haiku-5-5, the second validator from another family, asks the same of every session with a line on a
  *      tracked slot.
  * A failed attempt regenerates, up to 3 times. A session that fails all four attempts drops the world (exit 11) and
@@ -215,8 +216,8 @@ export function renderPrompt(brief: RenderBrief, attempt: number, failures: read
   ].join('\n');
 }
 
-/** The prompt both checking models answer for one session. */
-export function checkPrompt(brief: RenderBrief, turns: readonly Turn[]): string {
+/** The prompt both checking models answer for one session; reask adds the closing line of Gemini's second ask after an unreadable reply. */
+export function checkPrompt(brief: RenderBrief, turns: readonly Turn[], reask = false): string {
   return [
     'You check one chat session from a synthetic memory benchmark. The session was written around some required lines, which are the only places it may state facts about the people, companies, projects and deals it names.',
     '',
@@ -227,6 +228,7 @@ export function checkPrompt(brief: RenderBrief, turns: readonly Turn[]): string 
     'Outside the required lines, does the session state or imply any fact about a named person, company, project or deal (where someone lives or works, a job title, who runs or leads something, a vendor or customer, a price, seat count, discount or contract term, a merger, an offsite, a pilot), or restate, doubt or correct a required line?',
     '',
     'Reply with only a JSON object: {"extra_claims": true} or {"extra_claims": false}.',
+    ...(reask ? ['Reply with only the JSON object, with no other text.'] : []),
   ].join('\n');
 }
 
@@ -243,7 +245,7 @@ export const parseVerdict = (reply: string): boolean | null => { const v = jsonO
 export interface Models {
   renderer: string;
   render(brief: RenderBrief, attempt: number, failures: readonly string[], lastTokens?: number): Promise<string>;
-  check(model: CheckModel, brief: RenderBrief, turns: readonly Turn[]): Promise<string>;
+  check(model: CheckModel, brief: RenderBrief, turns: readonly Turn[], reask?: boolean): Promise<string>;
 }
 
 /** One provider model; schema, when given, is the JSON Schema the reply must follow (Gemini only). */
@@ -269,7 +271,7 @@ export function clientModels(gemini: ModelClient, haiku: ModelClient): Models {
   return {
     renderer: gemini.id,
     render: (brief, attempt, failures, lastTokens) => gemini.complete(renderPrompt(brief, attempt, failures, lastTokens), Math.min(65_536, Math.ceil(brief.target_tokens * 1.6) + 2048), 1, renderSchema(brief)),
-    check: (model, brief, turns) => (model === CHECK_MODELS[0] ? gemini.complete(checkPrompt(brief, turns), 256, 0, CHECK_SCHEMA) : haiku.complete(checkPrompt(brief, turns), 2048, 0)),
+    check: (model, brief, turns, reask) => (model === CHECK_MODELS[0] ? gemini.complete(checkPrompt(brief, turns, reask), 256, 0, CHECK_SCHEMA) : haiku.complete(checkPrompt(brief, turns), 2048, 0)),
   };
 }
 
@@ -362,7 +364,11 @@ export async function renderWorld(plan: WorldPlan, models: Models, opts: { targe
       lastTokens = failures.includes('length') ? sessionTokens(turns as Turn[]) : undefined;
       for (const model of failures.length ? [] : CHECK_MODELS.filter(m => m === CHECK_MODELS[0] || brief.tracked)) {
         stats.checks++;
-        const verdict = parseVerdict(await models.check(model, brief, turns as Turn[]));
+        let verdict = parseVerdict(await models.check(model, brief, turns as Turn[]));
+        if (verdict === null && model === CHECK_MODELS[0]) {
+          stats.checks++;
+          verdict = parseVerdict(await models.check(model, brief, turns as Turn[], true));
+        }
         if (verdict !== false) { failures = [verdict === null ? `check_unreadable:${model}` : `extra_claims:${model}`]; break; }
       }
       for (const f of failures) stats.failures[f] = (stats.failures[f] ?? 0) + 1;
