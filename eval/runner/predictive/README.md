@@ -1,6 +1,6 @@
 # Predictive measures: the agent stack
 
-These runners measure how an agent does on gbrain's agent-facing surfaces, at the gbrain version `package.json` pins (0.60.557.0). Each unit builds a fresh synthetic brain per episode from fictional data, runs the real gbrain CLI or MCP server of the gbrain under test, and scores the agent's final answer with a keyed scorer. No judge model is involved. They are part of GBEV-55.
+These runners measure how an agent does on gbrain's agent-facing surfaces, at the gbrain version `package.json` pins: 0.60.623.0 (`d253ec0ff`) on main. The preregistered counted runs use 0.60.557.0 (`62637c96a`) on their results branch. From 0.60.570.0 on, gbrain reads a two-selector `get_page` call through MCP and `gbrain call` instead of refusing it (gbrain#8509), so G3's `two_range_read` can't be provoked there. The CLI's repeated `--lines` still warns and reads only the last window, which G3 counts as that cause. Each unit builds a fresh synthetic brain per episode from fictional data, runs the real gbrain CLI or MCP server of the gbrain under test, and scores the agent's final answer with a keyed scorer. No judge model is involved. They are part of GBEV-55.
 
 | Unit | Question | Surfaces | Counted size |
 |---|---|---|---|
@@ -69,6 +69,9 @@ bun test test/eval/predictive-paid.test.ts test/eval/predictive-g6.test.ts test/
 The tests are keyless. Provider keys are deleted for each file. Refusal tests swap `fetch` for a dead upstream and check that no request is attempted. The paid executor tests run against a fake Anthropic upstream behind the real paid-request guard and a temporary ledger.
 
 ## Changelog
+
+### 2026-11-09: main pins gbrain 0.60.623.0, and G3's `two_range_read` at that pin
+The opening says main pins 0.60.623.0 while the preregistered counted runs use 0.60.557.0 on their results branch, and that from 0.60.570.0 on `two_range_read` can't be provoked through MCP or `gbrain call` (it said the runners measure at 0.60.557.0).
 
 ### 2026-11-09: resume and launch refusals, and errored spend in cost per correct
 A resume reads only rows of its own kind and refuses (exit 2) a log from another gbrain build. Cost per correct answer counts errored spend. `ubicloud/run.sh` refuses to launch beside a live or unlistable VM or a held state-directory lock.

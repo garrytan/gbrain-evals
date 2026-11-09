@@ -2,6 +2,68 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.186] - 2026-11-09
+
+### gbrain pin moves to v0.60.623.0: Sol's multi-selector page reads now read, and Cat 25's trajectory gate passes
+
+- **The product pin moves from `62637c96a` (v0.60.557.0) to master `d253ec0ff` (v0.60.623.0)**, 1,144 commits and 66
+  releases later; the old pin is in the new one's history. `gbrain-cues` and `gbrain-reader` stay where they are.
+  gbrain's dependency list did not change, so `bun.lock` changes only the `gbrain` entry. v0.60.623.0 is gbrain's newest
+  release (also its `latest-stable` ref, gbrain's alpha channel), and gbrain's CI passed at it. gbrain's soaked `stable`
+  tag is v0.60.620.0, older than v0.60.622.0, the first release with the Cat 25 fix below, so the pin takes the newest
+  release.
+- **Sol's recorded page reads now read (gbrain#8509, v0.60.570.0).** Replayed with no keys through the pinned SkillOpt
+  rollout registry, 435 of the 436 frontier-probe `get_page` calls and all 233 ceiling-calibration calls that v0.60.557.0
+  refused for sending two or three window selectors now read one window; the one probe call that doesn't asks for a
+  page that isn't in the brain. Of the calibration re-read's 305 Sol `get_page` calls, all refused at v0.60.557.0, 40 of
+  127 in `briefing` and 32 of 178 in `fact-check` still refuse, for a zero-length `bytes`, a `section` or a `grep` beside
+  `lines`. Every one of the replay's 2,105 recorded calls gets the same outcome at the pin as at `241cef5aa`
+  (v0.60.570.0), and every read returns the same digest
+  (`docs/benchmarks/2026-11-02-skillopt-ceiling/runs/get-page-replay/compare-570-623.json`). A replay sends Sol's
+  recorded arguments, so it can't show how Sol would answer at this pin.
+- **Cat 25's hermetic gate passes (gbrain#8912, v0.60.622.0).** `think` now keeps an entity's trajectory when the question
+  names a month: the latest reading before the month joins the readings inside it, and pages the month leaves out still
+  name the entities to read. `CAT25_DRY_RUN=1 bun eval/runner/cat25-trajectory-routing.ts` scores 6 of 6 probes at the
+  pin with the trajectory injected on every one (wave mean 1.00, baseline 0.00) and every gate passes. At v0.60.557.0
+  the same command injects it on 4 of 6, two probes end as system failures, and the gate fails.
+- **Schema.** The range adds migrations v287 to v296, so a brain the pinned gbrain builds is at schema 296 (was 286).
+  Fixture and CI brains are built fresh. Live recall refuses a counted brain whose schema differs from the gbrain it
+  loads, so a counted run against a brain at another schema loads that brain's own release, as batches 1 and 2 did.
+- **What else in the range can move a number on a rerun.** No published result was rerun here, and every published
+  number keeps the commit it was measured at. A rerun at this pin would see these changes. Search's keyword arm adds a
+  statement for identifiers a question names (`#412`, codes, emails, URLs), resolves hyphenated handles and ranks
+  longer any-word retries by rare words (v0.60.575.0, no setting turns it off); every gbrain retrieval runner reaches it.
+  `forget` strikes the claim's row in the page before the database changes (v0.60.578.0), which N5, N14, Cat 39 and the
+  lifecycle runner reach. Refresh recovery, re-planning over gbrain's own commits and default publishing of a diverged
+  checkout (v0.60.615.0, v0.60.618.0, v0.60.620.0) reach the refresh-barrier harness, whose results were measured at
+  v0.60.614.0. A degraded read gains a `[gbrain degraded: ...]` text block (v0.60.563.0), which readers that keep
+  every text block see (the 8k conversion arms, live recall's task arms, Cat 40). The brain owner's own credentials read
+  private pages (gbrain#8917, v0.60.623.0); no harness here names an owner. G3's `two_range_read` cause can't be
+  provoked through MCP or `gbrain call` at this pin, because gbrain#8509 reads the two-selector call, so a G3 run here
+  would count none of those refusals against a reference measured at an older gbrain. G3's preregistered counted runs
+  use v0.60.557.0 on their results branch.
+- **Tests.** `test/eval/skillopt-rollout-empty-args.test.ts` reads a refusal through a `known_as_of` call beside `lines`,
+  which refuses the same way at both pins, and its replay expects the 436 multi-selector calls to read; that replay
+  fails at `62637c96a`. `test/eval/skillopt-tool-calls.test.ts` adds the pin's classes for Sol's 651 recorded calls: 472
+  read, and 169 `known_as_of`, 8 hop-chain and 2 other calls refuse. The retired SkillOpt ceiling stages keep their
+  v0.60.557.0 pin, so in this tree a paid stage stops at its pin check. In
+  `test/eval/skillopt-ceiling-stages.test.ts` the five CLI tests of the checks that come after it (stage caps and attempt
+  2's admission) run only in a tree at the stage pin, and a new test checks that a paid calibration and gate refuse at
+  the pin check here, naming both commits, before they write a row. `test/eval/predictive-runner.test.ts` and
+  `test/eval/predictive-cli-arm.test.ts` set G3's `two_range_read` expectation by the gbrain under test: below
+  v0.60.570.0 both surfaces refuse the two-selector call with that cause, and from v0.60.570.0 on MCP and `gbrain call`
+  read it. The CLI's repeated `--lines` still warns that it overwrites the first window and reads only the last, which
+  G3 counts as that cause. `test/support/no-provider-keys.ts` blanks `WAKESHIFT_API_KEY`, which gbrain now reads for its
+  wakeshift command, so the preload again covers every provider key gbrain reads at the pin.
+- **Docs.** The hub sentences name the new pin. The settings page adds `search.keyword_phrase` (off in every bundle) and
+  the keyword arm's identifier, handle and rare-word changes. README's memory trust row names `d253ec0ff` for its keyless
+  check (Cats 37 to 39 pass). The docs index's SkillOpt method row says the multi-selector calls now read. The SkillOpt
+  retirement addendum names the new pin and the replay's result at it, and says the calibration's 72 and the probe's 171
+  remaining refusals are what a replay of Sol's recorded arguments shows, not a forecast of a live rerun.
+- **Campaign identity.** `package.json` and `bun.lock` are in the F6 campaign's executed tree, so this release counts for
+  F6 only under a new campaign identity. No file in the Cat 40 Hard freeze changed. Experiments preregistered at an
+  earlier gbrain keep their own pins on their results branches.
+
 ## [0.10.185] - 2026-11-09
 
 ### A preregistered test of whether gbrain knows what is true now when facts change, with its harness

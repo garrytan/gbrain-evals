@@ -240,7 +240,7 @@ export async function runGrammar(gut?: GbrainUnderTest) {
     let shapes: SchemaShape[];
     let mcpRows: ShapeRow[];
     try {
-      shapes = schemaShapes(mcp.schemas());
+      shapes = schemaShapes(mcp.schemas(), brain.gut.version);
       mcpRows = await runSchemaGrammar(shapes, 'mcp', async (op, args) => { await mcp.call(op, args); return mcp.calls[mcp.calls.length - 1]; });
     } finally { await mcp.close(); }
     const cliRows = await runSchemaGrammar(shapes, 'cli', async (op, args): Promise<ArmCall> => {
