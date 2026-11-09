@@ -509,8 +509,10 @@ differences at the cluster count: at 92 clusters, 13.1 points at alpha 0.05 and 
 discordant pairs (12.5 and 14.9 at 100 independent tasks). The second freeze's entry records the actual count.
 
 **By task origin (amendment, 2026-11-09, GBEV-3, before the second freeze).** The four primaries are also computed on
-each group of tasks alone: tasks from a phase 1 question (`source_question` set) and replacement tasks
-(`source_question` null), with their counts by type. These are descriptive only: no Holm, no verdict, and nothing
+each group of tasks alone: the original tasks kept from the first task file, and the replacement tasks written after the
+first freeze, which carry `replacement: true` in the task file, with their counts by type. (Corrected the same day,
+before the freeze: the split first used `source_question`, but 22 of the 41 original tasks were already new tasks with
+`source_question` null, so it could not separate originals from replacements.) These are descriptive only: no Holm, no verdict, and nothing
 gates on them. They are reported beside the primaries because the replacements could cite only pages a remote caller
 can open (Frozen sample, below).
 
@@ -739,8 +741,8 @@ live database through the no-write role, so pages change only as Garry's own bra
 start and end times are recorded, and the judge grades the snapshot each model saw. Replacement tasks were chosen by
 type and by whether a remote caller can open their gold pages, so they may be easier than, or simply different from,
 the tasks Wintermute first wrote. That matters most for cross_source and time_window, which are almost all
-replacements. The findings show each type's count of phase 1 questions and replacements, and the primaries on each
-group, descriptively.
+replacements. The findings show each type's count of original and replacement tasks, and the primaries on each group,
+descriptively.
 
 ## Differences from the approved plan
 
@@ -811,7 +813,7 @@ detectable differences for the four primaries at the kept N, and the counted run
 
 **Counted-run identity (recorded 2026-11-08, before the freeze; updated the same day for R78 and again for the label
 floor and truncation rules, and on 2026-11-09 for the split by task origin and for gold clusters).** The counted run's and the judge check's
-harness digest must be `74ea58a541b921b97e6d807f55b13d23ec36b618862e99598b527aca1d3c6404`. The digest covers the twenty files in
+harness digest must be `d27425cc958de472b3e04b843bb199123b94b24820cd7963f89f0145ca7c1e18`. The digest covers the twenty files in
 `HARNESS_FILES` (`eval/runner/live-recall/tasks.ts`): the runner, the judge, the agent loop, the budget ledger and the
 cost path they price with, including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json`
 must also show a `runner_commit` that contains 320db88b, the R78 commit, the label-floor and truncation commit, the
@@ -826,11 +828,11 @@ lineage, or without a readable chunk. Those 38 kept by type: identifier 16, erro
 cross_source 0, topic 4. GBEV-3 (agent:GBEV-3) chose to rebuild, and rejected both relaxing the remote privacy posture
 and running at 38. Wintermute keeps the 38, corrects the 3 slugs to the exact live slugs (the harness matches gold slugs
 exactly, in exposure scoring as well as at the freeze), and replaces the rest with new tasks of the same type
-(`source_question` null), chosen by type and remote reachability only, before any model or judge call, to 100 at 20 per
+(`source_question` null and `replacement: true`), chosen by type and remote reachability only, before any model or judge call, to 100 at 20 per
 type, with at most two uses of any civic page in cross_source and the one remaining error_string replacement drawn from
 public engineering-doc folders. The harness is unchanged except for the descriptive split by task origin and the gold
 cluster as the resampling unit (both under Comparisons). The second freeze's
-entry here shows, for each type, how many tasks came from a phase 1 question and how many are replacements.
+entry here shows, for each type, how many tasks are original and how many are replacements.
 
 ## Disclosures
 

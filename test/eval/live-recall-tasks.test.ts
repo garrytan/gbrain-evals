@@ -180,6 +180,14 @@ describe('phase 2 task file', () => {
     expect(await abortCode(() => parseTasks(dup))).toBe('LR_TASKS_INVALID');
   });
 
+  test('a task may be marked as a replacement, and only with true or false', () => {
+    const first = JSON.parse(fixtureText.trim().split('\n')[0]!);
+    expect(parseTasks(JSON.stringify({ ...first, replacement: true }))[0]!.task.replacement).toBe(true);
+    expect('replacement' in parseTasks(JSON.stringify({ ...first, replacement: false }))[0]!.task).toBe(false);
+    expect('replacement' in parseTasks(JSON.stringify(first))[0]!.task).toBe(false);
+    expect(() => parseTasks(JSON.stringify({ ...first, replacement: 'yes' }))).toThrow('line 1 field replacement');
+  });
+
   test('MDD for the four primaries matches the preregistration', () => {
     expect(primaryMdd(100).pd20).toEqual({ alpha_05: 0.1253, holm_0125: 0.1493 });
     expect(primaryMdd(60).pd20).toEqual({ alpha_05: 0.1617, holm_0125: 0.1928 });
@@ -1139,7 +1147,7 @@ describe('phase 2 judge check (R78)', () => {
   });
 
   test('the scorecard splits the primaries by task origin, descriptive only, without Holm', () => {
-    const tasks = Array.from({ length: 30 }, (_, i) => ({ id: 't' + i, type: i < 20 ? 'topic' : 'cross_source', source_question: i < 20 ? 'q' + i : null, gold_found_by: 'unknown' })) as any;
+    const tasks = Array.from({ length: 30 }, (_, i) => ({ id: 't' + i, type: i < 20 ? 'topic' : 'cross_source', source_question: i < 10 ? 'q' + i : null, gold_found_by: 'unknown', ...(i >= 20 ? { replacement: true } : {}) })) as any;
     const card = buildTaskScorecard({
       tasks, forms: ['paraphrase'], arms: ['A', 'B'], models: ['claude-opus-5-5'], identity: {}, stop: null, ledger_usd: null, audit: null,
       records: tasks.flatMap((t: any, i: number) => [answer(t.id, 'A', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'A', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', i < 5), answer(t.id, 'B', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'B', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', i < 20)]),
@@ -1147,16 +1155,16 @@ describe('phase 2 judge check (R78)', () => {
       custody: { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: {} },
     });
     expect(() => validateTaskScorecard(card)).not.toThrow();
-    const { phase1_question: old, replacement: fresh } = card.by_origin as any;
+    const { original: old, replacement: fresh } = card.by_origin as any;
     expect([old.n_tasks, old.by_type.topic, old.by_type.cross_source, fresh.n_tasks, fresh.by_type.cross_source]).toEqual([20, 20, 0, 10, 10]);
     const p1 = (g: any) => g.comparisons.find((c: any) => c.id === 'p1_b_vs_a_opus');
     expect([p1(old).n_pairs, p1(old).mean_a, p1(old).mean_b, p1(old).primary, p1(old).p_holm]).toEqual([20, 0.25, 1, null, null]);
     expect([p1(fresh).n_pairs, p1(fresh).mean_a, p1(fresh).mean_b, p1(fresh).delta, p1(fresh).reading]).toEqual([10, 0, 0, 0, 'no_measurable_difference']);
     expect(card.comparisons.find(c => c.id === 'p1_b_vs_a_opus')!.n_pairs).toBe(30);
     const md = renderTaskMarkdown(card).split('\n');
-    expect(md).toContain('## Phase 1 questions against replacement tasks (descriptive)');
-    expect(md).toContain('Replacement tasks (source_question null): 10 tasks (identifier 0, error_string 0, time_window 0, cross_source 10, topic 0).');
-    expect(md.find(l => l.startsWith('| p1_b_vs_a_opus (phase1_question) '))).toContain('| 20 | 20 | 25.0 | 100.0 |');
+    expect(md).toContain('## Original tasks against replacement tasks (descriptive)');
+    expect(md).toContain('Replacement tasks (written after the first freeze): 10 tasks (identifier 0, error_string 0, time_window 0, cross_source 10, topic 0).');
+    expect(md.find(l => l.startsWith('| p1_b_vs_a_opus (original) '))).toContain('| 20 | 20 | 25.0 | 100.0 |');
   });
 
   test('tasks that share a gold page are one resampling unit in every interval and p-value', () => {

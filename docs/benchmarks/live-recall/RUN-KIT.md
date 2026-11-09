@@ -212,6 +212,8 @@ JSONL, one task per line, kept on the box outside this repository. This line is 
   `gold_answer.acceptable_variants` (optional): other wordings of the answer that also count.
 - `gold_found_by`: `page_first`, `memory`, `gbrain_search`, `other_search` or `unknown`, as in phase 1.
 - `window` (optional): `{"since": "YYYY-MM-DD", "until": "YYYY-MM-DD"}`.
+- `replacement` (optional): `true` on a task written after the first freeze to replace one whose gold a remote caller
+  could not open. The scorecard compares these with the original tasks, descriptively.
 
 ### Phase 2: steps
 

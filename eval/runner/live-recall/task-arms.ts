@@ -55,6 +55,8 @@ export interface Task {
   gold_answer: { text: string; required_facts: Array<{ id: string; fact: string }>; acceptable_variants?: string[] };
   window?: { since: string; until: string };
   gold_found_by: string;
+  /** Written after the first freeze to replace a task whose gold a remote caller could not open. */
+  replacement?: boolean;
 }
 
 // ─── Prompts (frozen in docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md) ────────────────────────────────────────

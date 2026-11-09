@@ -143,6 +143,7 @@ export function parseTasks(source: string): Array<{ line: number; task: Task }> 
     if (g.acceptable_variants !== undefined && (!Array.isArray(g.acceptable_variants) || !g.acceptable_variants.every(text))) throw bad('gold_answer.acceptable_variants');
     if (t.window !== undefined && !(typeof t.window?.since === 'string' && DATE.test(t.window.since) && typeof t.window?.until === 'string' && DATE.test(t.window.until))) throw bad('window');
     if (!(GOLD_FOUND_BY as readonly unknown[]).includes(t.gold_found_by)) throw bad('gold_found_by');
+    if (t.replacement !== undefined && typeof t.replacement !== 'boolean') throw bad('replacement');
     ids.add(t.id);
     out.push({
       line: i + 1,
@@ -150,6 +151,7 @@ export function parseTasks(source: string): Array<{ line: number; task: Task }> 
         id: t.id, type: t.type, source_question: t.source_question, forms: { paraphrase: t.forms.paraphrase, exact: t.forms.exact }, gold_pages: t.gold_pages,
         gold_answer: { text: g.text, required_facts: facts.map((f: any) => ({ id: f.id, fact: f.fact })), ...(g.acceptable_variants ? { acceptable_variants: g.acceptable_variants } : {}) },
         ...(t.window ? { window: { since: t.window.since, until: t.window.until } } : {}), gold_found_by: t.gold_found_by,
+        ...(t.replacement ? { replacement: true } : {}),
       },
     });
   });

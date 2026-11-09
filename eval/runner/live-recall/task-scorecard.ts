@@ -22,8 +22,8 @@ export const ERROR_CAP = 0.05;
 export const DEGRADED_CAP = 0.1;
 export const PRIMARY_MODELS = ['claude-opus-5-5', 'particle-1'] as const;
 export const TYPES = ['identifier', 'error_string', 'time_window', 'cross_source', 'topic'] as const;
-/** Where a task came from: a phase 1 question (`source_question` set) or a new task written as a replacement (null). */
-export const ORIGINS = ['phase1_question', 'replacement'] as const;
+/** Where a task came from: kept from the first task file, or written after the first freeze as a replacement (`replacement: true`). */
+export const ORIGINS = ['original', 'replacement'] as const;
 const EXCLUSIONS = ['harness_error', 'timed_out', 'degraded', 'judge_error', 'unjudged', 'not_run'] as const;
 type Exclusion = (typeof EXCLUSIONS)[number];
 const RATES = ['correct', 'correct_grounded', 'partial', 'abstained', 'no_answer', 'confidently_wrong', 'contradicted'] as const;
@@ -400,7 +400,7 @@ export function buildTaskScorecard(s: ScoreInput) {
   const byType = Object.fromEntries(TYPES.map(t => [t, s.tasks.filter(x => x.type === t).length]));
   const goldClustersAtRun = goldClusterSummary(s.tasks);
   const byOrigin = Object.fromEntries(ORIGINS.map(origin => {
-    const ts = s.tasks.filter(t => (t.source_question === null ? 'replacement' : 'phase1_question') === origin);
+    const ts = s.tasks.filter(t => (t.replacement === true ? 'replacement' : 'original') === origin);
     const ids = new Set(ts.map(t => t.id));
     const subset = rows.filter(o => ids.has(o.task));
     return [origin, { n_tasks: ts.length, by_type: Object.fromEntries(TYPES.map(t => [t, ts.filter(x => x.type === t).length])), comparisons: PRIMARIES.map(p => compare({ ...p, primary: undefined }, subset, invalidCells)) }];
@@ -531,9 +531,9 @@ export function renderTaskMarkdown(s: ReturnType<typeof buildTaskScorecard>): st
   }
   L.push('## Primary comparisons (paraphrase form, Holm over four)', '', '| Comparison | Pairs | A | B | B − A (95% CI) | Reading | Tasks worse | Exact p (gold clusters) | Holm p | Observed MDE |', '|---|---|---|---|---|---|---|---|---|---|');
   for (const c of s.comparisons.filter(c => c.primary)) L.push('| ' + c.id + (c.untested ? ' (untested)' : '') + ' | ' + c.n_pairs + ' | ' + pct(c.mean_a) + ' | ' + pct(c.mean_b) + ' | ' + pct(c.delta) + (Array.isArray(c.ci95) ? ' (' + pct(c.ci95[0]) + ' to ' + pct(c.ci95[1]) + ')' : '') + ' | ' + readingText(c) + ' | ' + (c.worse_tasks ?? 'n/a') + ' | ' + (c.p_two_sided ?? 'n/a') + ' | ' + (c.p_holm ?? 'n/a') + ' | ' + pct(c.mde) + ' |');
-  L.push('', '## Phase 1 questions against replacement tasks (descriptive)', '');
+  L.push('', '## Original tasks against replacement tasks (descriptive)', '');
   const origins = s.by_origin as Record<string, { n_tasks: number; by_type: Record<string, number>; comparisons: typeof s.comparisons }>;
-  for (const o of ORIGINS) L.push((o === 'phase1_question' ? 'From a phase 1 question' : 'Replacement tasks (source_question null)') + ': ' + origins[o]!.n_tasks + ' tasks (' + TYPES.map(t => t + ' ' + origins[o]!.by_type[t]).join(', ') + ').');
+  for (const o of ORIGINS) L.push((o === 'original' ? 'Original tasks (kept from the first task file)' : 'Replacement tasks (written after the first freeze)') + ': ' + origins[o]!.n_tasks + ' tasks (' + TYPES.map(t => t + ' ' + origins[o]!.by_type[t]).join(', ') + ').');
   L.push('', 'The four primaries on each group alone, unadjusted and without Holm: descriptive only, never a verdict.', '', '| Comparison | Tasks | Pairs | A | B | B − A (95% CI) | Reading |', '|---|---|---|---|---|---|---|');
   for (const o of ORIGINS) for (const c of origins[o]!.comparisons) L.push('| ' + c.id + ' (' + o + ')' + (c.untested ? ' (untested)' : '') + ' | ' + origins[o]!.n_tasks + ' | ' + c.n_pairs + ' | ' + pct(c.mean_a) + ' | ' + pct(c.mean_b) + ' | ' + pct(c.delta) + (Array.isArray(c.ci95) ? ' (' + pct(c.ci95[0]) + ' to ' + pct(c.ci95[1]) + ')' : '') + ' | ' + readingText(c) + ' |');
   L.push('', '## Every cell', '', '| Form | Arm | Model | Counted | Excluded | Correct % | Grounded % | Abstained % | Confidently wrong % | Gold seen / opened / cited | Answer cost |', '|---|---|---|---|---|---|---|---|---|---|---|');

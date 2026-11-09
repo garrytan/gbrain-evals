@@ -58,7 +58,8 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Primaries by task origin.** The first freeze on Garry's brain kept 38 of 100 tasks, because 65 of the gold pages
   carry `access: private`, so most cross_source and time_window tasks are being replaced with tasks a remote caller can
   answer. The scorecard's new `by_origin` block, and a markdown table beside the primaries, show the four primaries on
-  tasks from a phase 1 question and on replacement tasks (`source_question` null) separately, with counts by type.
+  the original tasks and on the replacements (marked `replacement: true` in the task file) separately, with counts by
+  type.
   It is descriptive only, with no Holm correction and no verdict.
 - **Gold clusters as the resampling unit.** In the rebuilt task file, 8 civic pages each serve as gold for two
   cross_source tasks. Tasks that share any gold page now form one gold cluster, and every interval and the p that Holm
