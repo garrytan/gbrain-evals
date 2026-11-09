@@ -21,7 +21,11 @@
 #     sealedWorldSeed), and no file records it.
 #   - Resume. A slot whose world is written from the same plan is skipped, and model replies are cached under
 #     <out>/render-cache, so a rerun buys nothing twice.
-#   - Yield gate. Two dropped worlds among mint slots 1 to 5 pause the mint with exit 3.
+#   - Yield gate. Two dropped worlds among mint slots 1 to 5 pause the mint with exit 3. Drops are counted from the
+#     render records under --out (render/bg1-NNN.json), so every invocation on one --out counts them, a resumed or
+#     --start run included, and a run on an --out that already holds two pauses before it renders anything.
+#   - One ledger. A relative --budget-ledger is resolved once, against the directory mint.sh starts in, before the window
+#     check, so the check, both proxies and render.ts all name the same ledger file.
 #   - One key per proxy. Real mode needs the granted paid window: without --paid-window and --window-cap-usd, or with
 #     the ledger's program cap or the run's budget unknown or above the window cap, it exits 2 before any proxy starts
 #     (eval/runner/rs1/paid-window.ts check, the window guard in eval/runner/paid-arm.ts). Gemini's key comes only from
@@ -85,6 +89,8 @@ BG1_KEY=""
 if [ "$MODE" = real ]; then
   [ -n "$WINDOW" ] && [ -n "$WINDOW_CAP" ] || die "real mode spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n> from the granted paid window (--fake spends nothing)"
   [ -n "$LEDGER" ] && [ -n "$RUN_ID" ] || die "real mode needs --budget-ledger and --budget-run-id (an open BG1 ledger run)"
+  [ -d "$(dirname "$LEDGER")" ] || die "the --budget-ledger directory does not exist"
+  LEDGER="$(cd "$(dirname "$LEDGER")" && pwd)/$(basename "$LEDGER")"
   "$BUN" "$REPO/eval/runner/rs1/paid-window.ts" check --paid-window "$WINDOW" --window-cap-usd "$WINDOW_CAP" --budget-ledger "$LEDGER" --budget-run-id "$RUN_ID" >/dev/null || exit 2
   KEY_FILE="$HOME/.config/gbrain-evals/bg1.env"
   [ -f "$KEY_FILE" ] || die "real mode takes Gemini's key only from BG1_GEMINI_API_KEY in ~/.config/gbrain-evals/bg1.env, which does not exist"
@@ -140,7 +146,21 @@ start_proxy() {
   [ -s "$ready" ] || die "the $provider metering proxy for $id did not start"
 }
 
-WRITTEN=0 SKIPPED=0 DROPPED=0 EARLY_DROPS=0
+WRITTEN=0 SKIPPED=0 DROPPED=0
+# The dropped worlds among slots 1 to 5 that the render records under --out hold, whichever invocation dropped them.
+early_drops() {
+  local n=0 s
+  for s in 1 2 3 4 5; do grep -Eq '"status": ?"dropped"' "$OUT/render/$(printf 'bg1-%03d' "$s").json" 2>/dev/null && n=$((n + 1)); done
+  printf '%s' "$n"
+}
+yield_gate() {
+  local n
+  n="$(early_drops)"
+  [ "$n" -ge 2 ] || return 0
+  say "summary=paused reason=yield_gate mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$1 early_drops=$n"
+  exit 3
+}
+yield_gate $((START - 1))
 for ((slot = START; slot < START + COUNT; slot++)); do
   id="$(printf 'bg1-%03d' "$slot")"
   allow=(PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC)
@@ -160,13 +180,10 @@ for ((slot = START; slot < START + COUNT; slot++)); do
   [ -z "$line" ] || printf '%s\n' "$line"
   case "$rc" in
     0) case "$line" in *" status=skipped "*) SKIPPED=$((SKIPPED + 1)) ;; *) WRITTEN=$((WRITTEN + 1)) ;; esac ;;
-    11) DROPPED=$((DROPPED + 1)); [ "$slot" -gt 5 ] || EARLY_DROPS=$((EARLY_DROPS + 1)) ;;
+    11) DROPPED=$((DROPPED + 1)) ;;
     *) exit "$rc" ;;
   esac
-  if [ "$EARLY_DROPS" -ge 2 ]; then
-    say "summary=paused reason=yield_gate mode=$MODE written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED last_slot=$slot"
-    exit 3
-  fi
+  yield_gate "$slot"
 done
 
 say "summary=mint mode=$MODE slots=$COUNT written=$WRITTEN skipped=$SKIPPED dropped=$DROPPED"

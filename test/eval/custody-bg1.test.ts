@@ -7,7 +7,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, BG1_DEV_SEEDS, BG1_FIXTURE_TOKENS, PUBLIC_PHRASING, renderBriefs, renderTemplateSession, sealedWorldSeed, type Turn, type World, type WorldPlan } from '../../eval/generators/changing-facts-gen.ts';
@@ -111,6 +111,23 @@ describe('mint.sh --fake, validate.ts and hashlist.ts end to end', () => {
     expect(late.out).toContain('written=0 skipped=0 dropped=2');
   });
 
+  // Value: protects=the yield gate pauses the mint on two dropped worlds among slots 1 to 5, whichever invocation dropped them; fails_when=a resumed or --start run on the same --out counts only its own drops and renders past the gate; why_new=#398 open note 10 (mint.sh counted early drops per invocation); seam=mint.sh --fake with planned breaks; no_claim=a paid render
+  test('the yield gate counts early drops across invocations on one --out: a resumed run pauses at the second, and a later --start run pauses before rendering', () => {
+    const j = inputs('yield-resume');
+    const out = join(j.dir, 'bg1-custody-r');
+    const one = mint(out, j, ['--fake', '--count', '1', '--fake-break', '1:2:4']);
+    expect(one.code).toBe(0);
+    expect(one.out).toContain('summary=mint mode=fake slots=1 written=0 skipped=0 dropped=1');
+    const two = mint(out, j, ['--fake', '--start', '2', '--count', '4', '--fake-break', '3:6:4']);
+    expect(two.code).toBe(3);
+    expect(two.out).toContain('summary=paused reason=yield_gate mode=fake written=1 skipped=0 dropped=1 last_slot=3 early_drops=2');
+    const later = mint(out, j, ['--fake', '--start', '6', '--count', '1']);
+    expect(later.code).toBe(3);
+    expect(later.out).toContain('summary=paused reason=yield_gate mode=fake written=0 skipped=0 dropped=0 last_slot=5 early_drops=2');
+    expect(existsSync(join(out, 'set', 'worlds', 'bg1-006'))).toBe(false);
+    expect(leaks(one.all + two.all + later.all, probes(join(out, 'set'), j.line))).toEqual([]);
+  }, 240_000);
+
   test('validate.ts passes the minted set and keeps it in slot order; tampering fails the matching gate', () => {
     const report = join(i.dir, 'validation', 'report.json');
     const v = run('bun', [VALIDATE, '--set', join(out, 'set'), '--seed-file', i.seed, '--phrasing', i.phrasing, '--report', report, '--target-tokens', '30000', '--tolerance', '0.25', '--n-final', '2']);
@@ -201,6 +218,36 @@ describe('mint.sh and render.ts refuse before anything is written or any key is 
     writeFileSync(keyFile, 'OTHER=1\n');
     expect(mint(join(i.dir, 'bg1-custody-k4'), i, window(), env).err).toContain('has no BG1_GEMINI_API_KEY line');
     for (const r of [missing, open, noHaiku]) expect(r.all).not.toContain('not-real');
+  });
+
+  // Value: protects=the window check, both proxies and render.ts reserve against one ledger file; fails_when=a relative --budget-ledger reaches render.ts as written, which runs inside --out and so names another file there; why_new=#398 open note 10 (mint.sh resolved a relative --budget-ledger inside its output directory); seam=a bun stub on PATH that records each call's directory and arguments and runs nothing, placeholder keys; no_claim=the window check's, the proxies' or render.ts's own behaviour
+  test('a relative --budget-ledger is resolved once, so the window check, both proxies and render.ts name the same absolute file', () => {
+    const j = inputs('ledger-rel');
+    const home = scratch('ledger-home'), bin = join(j.dir, 'bin'), log = join(j.dir, 'bun-calls.log'), out = join(j.dir, 'bg1-custody-l');
+    mkdirSync(join(home, '.config', 'gbrain-evals'), { recursive: true });
+    const keyFile = join(home, '.config', 'gbrain-evals', 'bg1.env');
+    writeFileSync(keyFile, 'BG1_GEMINI_API_KEY=test-bg1-key-not-real\n');
+    chmodSync(keyFile, 0o600);
+    mkdirSync(bin);
+    mkdirSync(join(j.dir, 'ledgers'));
+    writeFileSync(join(bin, 'bun'), [
+      '#!/usr/bin/env bash',
+      `printf '%s\\t%s\\n' "$PWD" "$*" >> ${JSON.stringify(log)}`,
+      'case "$1" in',
+      '  *harness-metering-proxy.ts) while [ $# -gt 1 ]; do [ "$1" = --ready-file ] && printf "{}" > "$2"; shift; done ;;',
+      '  *render.ts) echo "bg1-render slot=1 world=bg1-001 status=written" ;;',
+      'esac',
+      'exit 0', ''].join('\n'));
+    chmodSync(join(bin, 'bun'), 0o755);
+    const r = spawnSync('bash', [MINT, '--out', out, '--seed-file', j.seed, '--phrasing', j.phrasing, '--count', '1', '--paid-window', 'bg1-test', '--window-cap-usd', '5', '--budget-ledger', 'ledgers/ledger.sqlite', '--budget-run-id', 'r1'],
+      { cwd: j.dir, encoding: 'utf8', timeout: 60_000, env: { PATH: `${bin}:${process.env.PATH ?? '/usr/bin:/bin'}`, HOME: home, ANTHROPIC_API_KEY: 'test-anthropic-key-not-real', GEMINI_API_KEY: '', OPENAI_API_KEY: '', BG1_GEMINI_API_KEY: '' } });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain('summary=mint mode=real slots=1 written=1');
+    const calls = readFileSync(log, 'utf8').trim().split('\n').map(l => l.split('\t'));
+    expect(calls.map(([, args]) => args.split(' ')[0].split('/').at(-1))).toEqual(['paid-window.ts', 'harness-metering-proxy.ts', 'harness-metering-proxy.ts', 'render.ts']);
+    expect(calls.at(-1)![0]).toBe(realpathSync(out));
+    expect([...new Set(calls.map(([, args]) => /--budget-ledger (\S+)/.exec(args)?.[1]))]).toEqual([join(realpathSync(j.dir), 'ledgers', 'ledger.sqlite')]);
+    expect(r.stdout + r.stderr + readFileSync(log, 'utf8')).not.toContain('not-real');
   });
 
   test('custody paths: the out name, a checkout, and the seed and phrasing files\' names, modes and contents', () => {
