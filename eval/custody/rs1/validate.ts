@@ -43,7 +43,7 @@
  * and reserves every request in the budget ledger before it is sent. The ledger prices gemini-3.8-flash generateContent
  * and claude-haiku-5-5, long-prompt tier included. --paid also needs the granted paid window, and refuses (exit 2) before
  * any client exists when it is missing or the ledger's program cap or the run's budget is above its cap
- * (eval/runner/rs1/paid-window.ts). Paid validation takes Gemini's key only from RS1_GEMINI_API_KEY, the dedicated
+ * (eval/runner/paid-arm.ts). Paid validation takes Gemini's key only from RS1_GEMINI_API_KEY, the dedicated
  * paid-tier key, and sets GEMINI_API_KEY from it in this process; an existing GEMINI_API_KEY is never used.
  */
 import { createHash } from 'node:crypto';
@@ -51,9 +51,9 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { dirname, join, relative, resolve } from 'node:path';
 import { BudgetExceededError, budgetOptionsFrom, chatPrice, startPaidRun } from '../../runner/budget-ledger.ts';
 import { acceptsTemperature } from '../../runner/openai-judge-shim.ts';
-import { PaidArmRefusal, requirePaidArm } from '../../runner/paid-arm.ts';
+import { ledgerCaps, PaidArmRefusal, requirePaidArm, requireRs1Window, WindowRefusal } from '../../runner/paid-arm.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
-import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/rs1/paid-window.ts';
+
 import { readBeamPaths } from './beam-paths.ts';
 
 export const ABILITIES = [

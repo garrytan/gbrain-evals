@@ -77,7 +77,6 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renam
 import { homedir } from 'node:os';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { budgetOptionsFrom, startPaidRun } from '../budget-ledger.ts';
-import { ledgerCaps, requireRs1Window, WindowRefusal } from '../rs1/paid-window.ts';
 import { cachedOpenAIEmbedder, PG_EMBED_DIMS } from '../cat40/pg-arm.ts';
 import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
@@ -91,7 +90,7 @@ import { ChatClient, chatWithReceipts, isCompatModel, judgeAnswer, READER_TEMPLA
 import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, RecordLog, sha256, type AnswerPayload, type AnswerRecord, type JudgmentRecord, type Q1Row, type ReaderAttempt } from '../memory-qa/records.ts';
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
-import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
+import { ledgerCaps, PaidArmRefusal, requirePaidArm, requireRs1Window, WindowRefusal } from '../paid-arm.ts';
 import { COMPAT_PROVIDERS, JUDGE_PROVIDERS, compatMayHaveBilled } from '../providers/openai-compatible.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { DEFAULT_ROUTE_CLASSES, Q1_CAMPAIGN_ID, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
@@ -1563,7 +1562,7 @@ export function paidGuard(argv: string[], def: CellDefinition, limit: number | n
 }
 
 /**
- * RS1's paid-window guard for `run --manifest rs1` (eval/runner/rs1/paid-window.ts): a run needs the granted window
+ * RS1's paid-window guard for `run --manifest rs1` (eval/runner/paid-arm.ts): a run needs the granted window
  * (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy serves a keyless upstream
  * (SHOOTOUT_KEYLESS_UPSTREAM). Under a lease proxy the cap checked is the lease (SHOOTOUT_LEASE_USD, set by the
  * campaign's remote runner); without one it is the ledger's program cap and the run's budget. Refuses with exit 2
