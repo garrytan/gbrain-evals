@@ -4,7 +4,8 @@
  * The model side is cat40's runAgent. With a scripted model (the runner's --fake mode and the tests) no provider is
  * called and the episode costs nothing; the gbrain side is always the real CLI or MCP server of the gbrain under test,
  * in the sandbox cli-arm.ts builds. An episode without a script refuses to start unless it carries the budget run id
- * requirePaidArm returned, and run.ts never starts one (its paid mode only plans).
+ * requirePaidArm returned; run.ts passes it only after joining that ledger run with the paid-request guard installed
+ * (paid.ts).
  */
 import { runAgent, type Arm, type ScriptedModel, type SubmitPayload, type ToolSpec } from '../cat40/loop.ts';
 import type { GbrainUnderTest } from '../gbrain-under-test.ts';

@@ -4,7 +4,7 @@ This measure counts how much of a task's gold evidence a caller can't reach in g
 
 The measure counts hides. It does not judge whether a hide is right: that decision belongs to the brain's owner and to gbrain's maintainers. Every hide lands under the shared cause `privacy_hidden` (`eval/runner/predictive/causes.ts`), split into three sub-causes.
 
-It is part of GBEV-55 (rank 10 in the gap map, with rank 8's cross-source joins as its agent layer). Everything here is keyless and uses fictional data.
+It is part of GBEV-55 (rank 10 in the gap map, with rank 8's cross-source joins as its agent layer). The world, the reachability report and the scorer are keyless; the agent layer (`agent.ts`) has a keyless fake mode and a paid mode through `eval/runner/predictive/run.ts g6`. Everything uses fictional data.
 
 ## What gbrain 0.60.557.0 hides from a remote caller
 
@@ -58,7 +58,11 @@ The final answer has one fixed schema (gate change G1): `{ "answered": boolean, 
 - `answered_without_gold`: some gold is out of view, and the answer answers anyway.
 - `wrong`: anything else, such as abstaining when all gold was in view or a missing or extra citation.
 
-The scorer passes the mutation kit (`eval/runner/mutation-kit.ts`): it fails a system that answers nothing, one that cites every page, one that always abstains, one that answers as if no page had gone private, and one that cites the decoy project. The agent loop that answers these tasks is not wired here.
+The scorer passes the mutation kit (`eval/runner/mutation-kit.ts`): it fails a system that answers nothing, one that cites every page, one that always abstains, one that answers as if no page had gone private, and one that cites the decoy project.
+
+## Agent layer: agent.ts
+
+Each G6 episode builds the world into a fresh brain, importing the pages as Markdown files so their privacy frontmatter is kept exactly, and gives the agent the tool list of `gbrain serve --access read-only`. The remote caller reaches those tools through the MCP server (`remote: true`, no grant), the identity `reach.ts` probes with. The local caller gets the same tool list, dispatched through `gbrain call` (`remote: false`). Before the agent starts, the episode probes each of the task's gold pages with `get_page` as that caller, so the task's `out_of_view` comes from observed reachability. The agent ends by calling `submit_answer` with the fixed schema, and `tasks.ts` scores it. The scorecard counts verdicts by caller and by the privacy sub-cause of the hidden gold, plus answers given without the gold. [The runner's README](../README.md) covers the fake, smoke and counted modes.
 
 ## Reproduce
 
@@ -70,6 +74,9 @@ bun test test/eval/predictive-out-of-view.test.ts
 Optional flags: `--entities`, `--direct-share`, `--alias-share`, `--derived-share` and `--gbrain <checkout>[@ref]`. The runner needs no key, runs inside `withHermeticEnv` and refuses `--paid`. The default world (164 pages) takes about 11 seconds on a Capy cloud machine. At gbrain 0.60.557.0 with seed 7 it reports the local caller with 100 of 100 gold pages in view, the remote caller with 50 of 100 (20 direct flag, 15 alias inheritance, 15 derived default out of view), and 0 unexpected.
 
 ## Changelog
+
+### 2026-11-09: agent layer
+Added `agent.ts`, which runs the tasks with an agent as a local and a remote caller and scores them; the README no longer says the agent loop is not wired.
 
 ### 2026-11-09: first version
 Added the world generator, the reachability report, the cross-source tasks and the keyed scorer for GBEV-55.
