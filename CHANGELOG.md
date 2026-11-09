@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.184] - 2026-11-09
 
 ### Synthetic measures for the failures Wintermute reports, each checked against real results before it may gate (GST-2005)
 
@@ -37,10 +37,17 @@ This records what each gbrain-evals release changed and what its measurements me
 - **A cost fix.** OpenAI Responses usage reports cache writes in `input_tokens_details.cache_write_tokens`, and
   `eval/runner/q1/usage.ts` now counts them, as the budget ledger already did. Before this, a gpt-6.1-sol episode's own
   cost could read about 18% under the ledger.
+- **Paid-run guards.** The Ubicloud launcher refuses to start beside a live VM of its owner, when the VM list can't be
+  read, or while another launch of the same unit and mode holds its state lock. A resume refuses an episode log written
+  against another gbrain version or commit. The Opus paraphrase writer refuses an existing output file. Cost per correct
+  answer counts the spend of errored episodes, retried attempts included, and the preregistration says so. Two known gaps
+  remain, and both are fixed before any counted cell. Spend on an episode the cap stopped partway isn't counted yet, and
+  two paraphrase runs started at once on one output file can still overwrite each other.
 - **What isn't measured yet.** No counted cell has run. A paid smoke of 18 agent episodes finished cleanly. G5's
   300,000-page build, its Ubicloud run and G2's Opus paraphrases are built but untested against real services. At
   0.60.557.0, gbrain's refusal codes don't separate `source_changed` from `scope_denied` the way Wintermute's labels
   do, so G3 maps them by their detail.
+
 ## [0.10.182] - 2026-11-09
 
 ### Failure causes: fixes before the first counted results
