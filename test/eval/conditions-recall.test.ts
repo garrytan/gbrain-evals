@@ -6,6 +6,7 @@
  * token-overlap reranker, and no test constructs a model request.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -251,6 +252,7 @@ describe('paraphrase-opus (paid path)', () => {
     expect(clients).toBe(0);
     expect(fetches).toBe(0);
     expect(existsSync(out)).toBe(false);
+    expect(existsSync(out + '.receipt.json')).toBe(false);
     expect(existsSync(ledger)).toBe(false);
   });
 
@@ -281,6 +283,83 @@ describe('paraphrase-opus (paid path)', () => {
     expect(existsSync(out + '.receipt.json')).toBe(false);
     expect(errors.join('\n')).toContain('already exists');
   });
+
+  test('refuses a leftover receipt when only the paraphrases were moved aside, sending nothing and leaving no claim behind', async () => {
+    const dir = writeSet({}, 2);
+    const out = join(tempDir('paid-receipt'), 'paraphrases.jsonl');
+    const kept = JSON.stringify({ model: 'claude-opus-5-5', written: 4, note: 'the receipt of an earlier paid run' }) + '\n';
+    writeFileSync(out + '.receipt.json', kept);
+    const ledger = join(tempDir('ledger-receipt'), 'ledger.sqlite');
+    const open = BudgetRun.open({ runner: 'paraphrase-receipt-test', budgetUsd: 5, ledgerPath: ledger, programCapUsd: 10 });
+    open.close({ finish: false });
+    let clients = 0;
+    const makeClient = () => { clients++; return { messages: { create: async () => ({ content: [{ type: 'text', text: 'a reworded request about the invented note' }] }) } } as any; };
+    const errors: string[] = [];
+    const savedError = console.error, savedLog = console.log;
+    console.error = (...a: unknown[]) => { errors.push(a.join(' ')); };
+    console.log = () => {};
+    let code;
+    try {
+      code = await paraphraseOpus(['--dir', dir, '--out', out, '--budget-ledger', ledger, '--paid', '--budget-run-id', open.runId], { makeClient });
+    } finally {
+      console.error = savedError;
+      console.log = savedLog;
+    }
+    expect(code).toBe(2);
+    expect(clients).toBe(0);
+    expect(readFileSync(out + '.receipt.json', 'utf8')).toBe(kept);
+    expect(existsSync(out)).toBe(false);
+    expect(errors.join('\n')).toContain('.receipt.json already exists');
+  });
+
+  test('a second run on the same --out refuses while the first is still sending, and the first keeps its paraphrases and receipt', async () => {
+    const dir = writeSet({}, 2);
+    const work = tempDir('paid-race');
+    const out = join(work, 'paraphrases.jsonl');
+    const ledger = join(tempDir('ledger-race'), 'ledger.sqlite');
+    const open = BudgetRun.open({ runner: 'paraphrase-race-test', budgetUsd: 5, ledgerPath: ledger, programCapUsd: 10 });
+    open.close({ finish: false });
+    const args = ['--dir', dir, '--out', out, '--budget-ledger', ledger, '--paid', '--budget-run-id', open.runId];
+    const inFlight = join(work, 'in-flight'), go = join(work, 'go'), script = join(work, 'first-run.ts');
+    writeFileSync(script, [
+      "import { existsSync, writeFileSync } from 'node:fs';",
+      'import { main } from ' + JSON.stringify(join(import.meta.dir, '../../eval/runner/live-recall/paraphrase-opus.ts')) + ';',
+      'const create = async () => {',
+      '  writeFileSync(' + JSON.stringify(inFlight) + ", '');",
+      '  while (!existsSync(' + JSON.stringify(go) + ')) await Bun.sleep(20);',
+      "  return { content: [{ type: 'text', text: 'a reworded request about the invented note' }] };",
+      '};',
+      'process.exit(await main(' + JSON.stringify(args) + ', { makeClient: () => ({ messages: { create } }) as any }));',
+    ].join('\n'));
+    const first = Bun.spawn([process.execPath, script], { cwd: join(import.meta.dir, '../..'), env: { PATH: process.env.PATH ?? '', HOME: work }, stdout: 'pipe', stderr: 'pipe' });
+    let clients = 0;
+    const errors: string[] = [];
+    const savedError = console.error, savedLog = console.log;
+    let second;
+    try {
+      for (const started = Date.now(); !existsSync(inFlight); await Bun.sleep(20)) {
+        if (first.exitCode !== null || Date.now() - started > 60_000) throw new Error('the first run never reached its first request: ' + await new Response(first.stderr).text());
+      }
+      console.error = (...a: unknown[]) => { errors.push(a.join(' ')); };
+      console.log = () => {};
+      second = await paraphraseOpus(args, { makeClient: () => { clients++; return { messages: { create: async () => ({ content: [{ type: 'text', text: 'what the second run wrote' }] }) } } as any; } });
+    } finally {
+      console.error = savedError;
+      console.log = savedLog;
+      writeFileSync(go, '');
+    }
+    expect(await first.exited).toBe(0);
+    expect(second).toBe(2);
+    expect(clients).toBe(0);
+    expect(errors.join('\n')).toContain(out + ' already exists');
+    const body = readFileSync(out, 'utf8');
+    const rows = body.trim().split('\n').map(line => JSON.parse(line));
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every(r => r.paraphrase === 'a reworded request about the invented note')).toBe(true);
+    const receipt = JSON.parse(readFileSync(out + '.receipt.json', 'utf8'));
+    expect(receipt.written).toBe(rows.length);
+    expect(receipt.paraphrases_sha256).toBe(createHash('sha256').update(body).digest('hex'));
+  }, 120_000);
 
   test('an error mid-run stops the loop, keeps the paraphrases already paid for and writes the receipt', async () => {
     const dir = writeSet({}, 2);
