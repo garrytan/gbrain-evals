@@ -23,7 +23,9 @@
  * one line per pass, and the receipt's dollars come from the lease's per-request usage log, which a killed pass keeps. A
  * budget refusal stops new answers (partial), other judge errors are counted with the last message, and a resume skips
  * judged answers of the same answers and questions. A6 takes the second judge's dollars from the re-read ceiling, so the lease is the
- * re-read ledger's and openRereadLease refuses one that would pass --ledger-cap-usd. Output:
+ * re-read ledger's and openRereadLease refuses one that would pass --ledger-cap-usd. A BG1 cell (--manifest bg1) that is not
+ * keyless also needs the granted window (--paid-window <unit> --window-cap-usd <n>, the shared guard in paid-arm.ts),
+ * with --ledger-cap-usd and --lease-usd at most its cap, and refuses with exit 2 before any output or lease. Output:
  * `--out/cells/<arm cell id>.second-judge/` with judgments.ndjson and receipt.json, whose comparison holds particle-1
  * minus Opus under each judge over the questions both judges scored for both readers, with the report's seed,
  * resamples and conversation clusters. stdout, the receipt and the summary carry counts, means, intervals and dollars,
@@ -42,8 +44,9 @@ import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { clusteredPairedDelta } from '../stats/paired.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
 import { custodyGate, devOnly, findCell, frontierInstrumentId, JUDGED, metering, needsCustody, type MeterLine } from './cell.ts';
-import { ALL_SETS, type ArmDefinition, type CellDefinition, type SetId } from './cells/definitions.ts';
+import { ALL_SETS, isBg1Benchmark, type ArmDefinition, type CellDefinition, type SetId } from './cells/definitions.ts';
 import { loadCells, OPUS, PARTICLE, RESAMPLES, SEED, seedNumber, SOL, unitReport, unitsOf, valuesOf, type Unit, type Value } from './particle-addon-report.ts';
+import { requireRs1Window as requireBg1Window } from '../paid-arm.ts';
 import { openRereadLease } from './reread-cell.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError } from './scoreboard-errors.ts';
 
@@ -228,6 +231,7 @@ if (import.meta.main) {
     const def = findCell(cellArg, undefined, one('--manifest'));
     const arm = def.arms.find(a => a.id === armArg);
     if (!arm) throw refuse({ code: 'USAGE', message: `cell ${def.id} has no arm ${armArg}`, why: 'the second judge grades one arm\'s cell', fix: { next: 'run', argv: ['bun', 'eval/runner/q1/cell.ts', 'show', '--cell', def.id] } });
+    if (isBg1Benchmark(def.benchmark)) requireBg1Window(argv, { what: `the BG1 second judge on ${def.id}`, keyless: !!keyless, caps: () => [{ label: '--ledger-cap-usd', usd: ledgerCap }, { label: '--lease-usd', usd: leaseUsd }] });
     const out = resolve(outArg);
     const prepared = prepareSecondJudge(def, arm, { roots, out, keyless: !!keyless });
     const keys = keyless ? keylessKeys() : { ...process.env };
