@@ -20,8 +20,10 @@
  *   Grading   gpt-6-astra and claude-opus-5-5 grade every item with the production request (the bg1-dev instrument
  *             through judgeAnswer at PER_READER_JUDGE_SETTINGS, gating view), through the judge cache and one lease.
  *             The deterministic matcher (match.ts) reads every item too, at no cost, descriptive. Every grade records the
- *             pool's SHA-256 and seed beside its item's text hash, and a plan, run or report whose pool, seed or item text
- *             differs from a grade already in --out exits 2 before it writes pool.json or opens a lease.
+ *             pool's key (poolSha256: the seed, the instrument's sha256, the pool, and each item's question and gold as
+ *             the loaded corpus holds them) beside its item's text hash, and a plan, run or report whose key or item text
+ *             differs from a grade already in --out exits 2 before it writes pool.json or opens a lease, so a gold-audit
+ *             amendment or an instrument change makes every earlier grade stale.
  *   Gates     (i) Astra-Opus Cohen's kappa over every item both graded, at least 0.6; (ii) each gating judge's kappa
  *             against the construction labels, at least 0.6; (iii) at least 40 items on which Astra and Opus agree,
  *             at least 15 in each class; (iv) each gating judge's truncation rate at most 1%. Any failure exits 3
@@ -235,26 +237,33 @@ export const gradesFrom = (records: readonly Graded[]): Grades => {
   return grades;
 };
 
-export const poolSha256 = (pool: readonly Item[], seed: number) => sha256(JSON.stringify({ seed, pool }));
+/**
+ * The key every grade records: the seed, the instrument's sha256, the pool, and a hash of each item's question and gold
+ * (its text, answer and BG1 fields) as the loaded corpus holds them now.
+ */
+export const poolSha256 = (pool: readonly Item[], seed: number, questions: ReadonlyMap<string, MemoryQuestion>, instrument: Pick<Instrument, 'sha256'>) => {
+  const gold = pool.map(i => { const q = questions.get(i.question_id); return q ? sha256(JSON.stringify({ question: q.question, answer: q.answer, bg1: q.bg1 ?? null })) : null; });
+  return sha256(JSON.stringify({ seed, instrument: instrument.sha256, pool, gold }));
+};
 
-/** Why the grades in a judgments file were not all made on this pool at this seed for each item's text; null when they were. */
-export function staleGrades(file: string, pool: readonly Item[], seed: number): string | null {
-  const key = poolSha256(pool, seed), items = new Map(pool.map(i => [i.id, i]));
+/** Why the grades in a judgments file were not all made under this key (poolSha256) for each item's text; null when they were. */
+export function staleGrades(file: string, pool: readonly Item[], seed: number, questions: ReadonlyMap<string, MemoryQuestion>, instrument: Pick<Instrument, 'sha256'>): string | null {
+  const key = poolSha256(pool, seed, questions, instrument), items = new Map(pool.map(i => [i.id, i]));
   const stale = readGraded(file).flatMap(r => {
     const i = items.get(r.item);
     const why = r.pool_sha256 !== key || r.seed !== seed ? `pool ${r.pool_sha256?.slice(0, 12) ?? 'unrecorded'} at seed ${r.seed ?? 'unrecorded'}` : !i ? 'an item outside this pool' : r.answer_id !== i.text_sha256 ? `text ${r.answer_id.slice(0, 12)}` : null;
     return why ? [`${r.item} by ${r.judge} was graded on ${why}`] : [];
   });
   if (!stale.length) return null;
-  return `${file} holds grades not made on pool ${key.slice(0, 12)} at seed ${seed}: ${stale.slice(0, 3).join('; ')}${stale.length > 3 ? ` (and ${stale.length - 3} more)` : ''}; give this pool a fresh --out`;
+  return `${file} holds grades not made on pool ${key.slice(0, 12)} at seed ${seed} (the key covers the instrument and each item's question and gold): ${stale.slice(0, 3).join('; ')}${stale.length > 3 ? ` (and ${stale.length - 3} more)` : ''}; give this pool a fresh --out`;
 }
 
 /** Grade every item with both gating judges at the pinned settings (resumable: a graded pair in --out is skipped). */
 export async function gradePool(pool: readonly Item[], questions: ReadonlyMap<string, MemoryQuestion>, client: ChatLike, instrument: Instrument, out: string, seed = SEED): Promise<Grades> {
   const file = join(out, 'judgments.ndjson');
-  const stale = staleGrades(file, pool, seed);
+  const stale = staleGrades(file, pool, seed, questions, instrument);
   if (stale) throw new Error(stale);
-  const key = poolSha256(pool, seed);
+  const key = poolSha256(pool, seed, questions, instrument);
   const done = new Set(readGraded(file).map(r => `${r.item}|${r.judge}`));
   for (const i of pool) for (const judge of GATING_JUDGES) {
     if (done.has(`${i.id}|${judge}`)) continue;
@@ -296,7 +305,7 @@ if (import.meta.main) {
       try { claimOut(out, !!keyless, 'judge-check'); } catch (e) { console.error((e as Error).message); process.exit(2); }
     }
     const pool = buildPool(questions, loadRealAnswers(stage1, instrument.id), seed);
-    const stale = staleGrades(join(out, 'judgments.ndjson'), pool, seed);
+    const stale = staleGrades(join(out, 'judgments.ndjson'), pool, seed, byId, instrument);
     if (stale) { console.error(stale); process.exit(2); }
     writeFileSync(join(out, 'pool.json'), JSON.stringify({ seed, pool }, null, 2) + '\n');
     console.log(JSON.stringify({ seed, items: pool.length, real: pool.filter(i => i.source === 'real').length, construction: pool.filter(i => i.source === 'construction').length, calls: pool.length * GATING_JUDGES.length }, null, 2));
@@ -315,7 +324,7 @@ if (import.meta.main) {
     } finally { proxy.stop(); lease.close(); }
   }
   const saved = JSON.parse(readFileSync(join(out, 'pool.json'), 'utf8')) as { seed: number; pool: Item[] };
-  const stale = staleGrades(join(out, 'judgments.ndjson'), saved.pool, saved.seed);
+  const stale = staleGrades(join(out, 'judgments.ndjson'), saved.pool, saved.seed, byId, instrument);
   if (stale) { console.error(stale); process.exit(2); }
   const report = analyzeCheck(saved.pool, gradesFrom(readGraded(join(out, 'judgments.ndjson'))), byId);
   writeFileSync(join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');

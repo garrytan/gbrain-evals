@@ -8,7 +8,7 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
+import { loadBg1Dev, type MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import type { ChatLike, ChatOptions, ChatResultV2 } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { sha256 } from '../../eval/runner/memory-qa/records.ts';
@@ -173,15 +173,42 @@ describe('grading', () => {
     const out = dir(), file = join(out, 'judgments.ndjson');
     await gradePool(pool, qs, fakeJudges(), instrumentFor('bg1-dev'), out, 7);
     const recs = readFileSync(file, 'utf8').trim().split('\n').map(l => JSON.parse(l));
-    expect(recs.map(r => [r.judge, r.pool_sha256, r.seed, r.answer_id])).toEqual([ASTRA, OPUS_JUDGE].map(j => [j, poolSha256(pool, 7), 7, sha256('Porto.')]));
-    expect(staleGrades(file, pool, 7)).toBeNull();
+    expect(recs.map(r => [r.judge, r.pool_sha256, r.seed, r.answer_id])).toEqual([ASTRA, OPUS_JUDGE].map(j => [j, poolSha256(pool, 7, qs, instrumentFor('bg1-dev')), 7, sha256('Porto.')]));
+    expect(staleGrades(file, pool, 7, qs, instrumentFor('bg1-dev'))).toBeNull();
     for (const [other, seed] of [[pool, 8], [[item('It is Porto.')], 7]] as const) {
       const c = fakeJudges();
-      await expect(gradePool(other, qs, c, instrumentFor('bg1-dev'), out, seed)).rejects.toThrow(`holds grades not made on pool ${poolSha256(other, seed).slice(0, 12)} at seed ${seed}`);
+      await expect(gradePool(other, qs, c, instrumentFor('bg1-dev'), out, seed)).rejects.toThrow(`holds grades not made on pool ${poolSha256(other, seed, qs, instrumentFor('bg1-dev')).slice(0, 12)} at seed ${seed}`);
       expect(c.calls).toHaveLength(0);
     }
     writeFileSync(file, recs.map(({ pool_sha256: _p, seed: _s, ...r }) => JSON.stringify(r) + '\n').join(''));
-    expect(staleGrades(file, pool, 7)).toContain(`con-q1-good by ${ASTRA} was graded on pool unrecorded at seed unrecorded`);
+    expect(staleGrades(file, pool, 7, qs, instrumentFor('bg1-dev'))).toContain(`con-q1-good by ${ASTRA} was graded on pool unrecorded at seed unrecorded`);
+  });
+
+  // Value: protects=the judge check's gates read only grades made on today's gold under today's instrument; fails_when=a gold-audit amendment (another gold value, answer or question text) or an instrument change keeps grades made before it, so a resume grades only what is missing and mixes the two; why_new=the exception-14 reader's finding 7 (poolSha256 covered the seed and the pool's texts only); seam=fake judges over one construction item; no_claim=the gates' values
+  test('a gold-audit amendment or another instrument makes every grade stale, and a resume refuses before any call', async () => {
+    const qs = new Map([['q1', question('q1')]]);
+    const pool: Item[] = [{ id: 'con-q1-good', source: 'construction', question_id: 'q1', conversation: 'bg1-dev-01', text: 'Porto.', text_sha256: sha256('Porto.'), label: 1, kind: 'good' }];
+    const instrument = instrumentFor('bg1-dev');
+    const out = dir(), file = join(out, 'judgments.ndjson');
+    await gradePool(pool, qs, fakeJudges(), instrument, out, 7);
+    expect(staleGrades(file, pool, 7, qs, instrument)).toBeNull();
+    const amended = [
+      new Map([['q1', question('q1', { gold_values: ['Porto', 'Oporto'] })]]),
+      new Map([['q1', question('q1', { stale_values: ['Lisbon', 'Faro'] })]]),
+      new Map([['q1', { ...question('q1'), answer: 'Oporto' } as MemoryQuestion]]),
+      new Map([['q1', { ...question('q1'), question: 'Which city does Ana live in today?' } as MemoryQuestion]]),
+    ];
+    for (const gold of amended) {
+      expect(poolSha256(pool, 7, gold, instrument)).not.toBe(poolSha256(pool, 7, qs, instrument));
+      const c = fakeJudges();
+      await expect(gradePool(pool, gold, c, instrument, out, 7)).rejects.toThrow(`holds grades not made on pool ${poolSha256(pool, 7, gold, instrument).slice(0, 12)} at seed 7`);
+      expect(c.calls).toHaveLength(0);
+    }
+    const other = { ...instrument, sha256: '0'.repeat(64) };
+    expect(staleGrades(file, pool, 7, qs, other)).toContain('was graded on pool');
+    const c = fakeJudges();
+    await expect(gradePool(pool, qs, c, other, out, 7)).rejects.toThrow('holds grades not made on pool');
+    expect(c.calls).toHaveLength(0);
   });
 });
 
@@ -233,10 +260,11 @@ describe('the command line', () => {
     mkdirSync(out);
     writeFileSync(join(out, 'upstream.json'), JSON.stringify({ keyless: true }));
     const plan = (seed: string) => cli(['plan', '--stage1', stage1, '--out', out, '--seed', seed]);
+    const qs = new Map(loadBg1Dev({ root: env.GBRAIN_EVALS_BG1_DEV_ROOT, worldEnd: sunday, keyless: true }).questions.map(q => [q.id, q]));
     expect(plan('7').exitCode).toBe(0);
     const planned = readFileSync(poolFile, 'utf8'), saved = JSON.parse(planned) as { seed: number; pool: Item[] };
     const [first] = saved.pool;
-    writeFileSync(join(out, 'judgments.ndjson'), JSON.stringify({ item: first.id, judge: ASTRA, answer_id: first.text_sha256, pool_sha256: poolSha256(saved.pool, 7), seed: 7, score: 1 }) + '\n');
+    writeFileSync(join(out, 'judgments.ndjson'), JSON.stringify({ item: first.id, judge: ASTRA, answer_id: first.text_sha256, pool_sha256: poolSha256(saved.pool, 7, qs, instrumentFor('bg1-dev')), seed: 7, score: 1 }) + '\n');
     const other = plan('8');
     expect(other.exitCode).toBe(2);
     expect(other.stderr.toString()).toContain('holds grades not made on pool');
@@ -245,7 +273,7 @@ describe('the command line', () => {
     writeFileSync(poolFile, JSON.stringify({ seed: 7, pool: [{ ...first, text: 'Faro.', text_sha256: sha256('Faro.') }, ...saved.pool.slice(1)] }));
     const report = cli(['report', '--out', out]);
     expect(report.exitCode).toBe(2);
-    expect(report.stderr.toString()).toContain(`${first.id} by ${ASTRA} was graded on pool ${poolSha256(saved.pool, 7).slice(0, 12)} at seed 7`);
+    expect(report.stderr.toString()).toContain(`${first.id} by ${ASTRA} was graded on pool ${poolSha256(saved.pool, 7, qs, instrumentFor('bg1-dev')).slice(0, 12)} at seed 7`);
   }, 60_000);
 
   // Value: protects=a paid judge check never grades the template fixtures' questions in place of stage 1's rendered dev worlds; fails_when=plan, run or report on an --out that is not a keyless rehearsal loads GBRAIN_EVALS_BG1_DEV_ROOT at the fixtures or a template-rendered copy; why_new=the exception-14 reader's finding 4a (this file's pool test ran plan with a paid stage 1 marker on the fixtures and nothing refused); seam=judge-check.ts plan and report with the template fixtures as the dev root; no_claim=a judge call
