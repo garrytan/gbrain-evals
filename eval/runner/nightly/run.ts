@@ -25,6 +25,9 @@
  * memory-qa's fake system) or --paid with the night's ledger run, which run.ts opens itself from --night-cap-usd and
  * --month-cap-usd (ledger.ts) when no --budget-run-id is given.
  *
+ * The system smokes upgrade from the previous master night's commit (else --previous-ref, else the commit's first parent)
+ * and from the old release (--old-ref, default the smokes' OLD_RELEASE).
+ *
  * Suites run in parallel, each in its own child processes (adapters.ts). The night directory is <out>/<night>/<ref>
  * (the first 12 characters of a sha), holding night.json, outcomes.jsonl, each suite's work under suites/, and the report.
  * --resume reruns what is missing or recorded as a harness failure, after settling the stopped run's open ledger
@@ -44,6 +47,7 @@ import { NightlyCache } from './judge-cache.ts';
 import { NightlyCapStop, openNightRun, reconcileNightRun } from './ledger.ts';
 import { appendOutcome, outcomeKey, readOutcomes } from './outcome.ts';
 import { findPreviousNight, writeReport, type NightManifest, type SuiteStatus } from './report.ts';
+import { OLD_RELEASE } from './smokes/upgrade-from-old.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
 /** The stable pin: the peeled commit of gbrain's latest-stable release. */
@@ -88,7 +92,7 @@ export function parseArgs(argv: readonly string[]): NightArgs {
     fake, paid: argv.includes('--paid'), budgetRunId: flag('--budget-run-id') ?? null, budgetLedger: flag('--budget-ledger') ? resolve(flag('--budget-ledger')!) : null,
     nightCapUsd: num('--night-cap-usd'), monthCapUsd: num('--month-cap-usd'),
     pgAdmin: flag('--pg-admin') ?? null, pgTemplate: flag('--pg-template') ?? null, pg15Admin: flag('--pg15-admin') ?? null,
-    previousRef: flag('--previous-ref') ?? null, oldRef: flag('--old-ref') ?? 'stable', cat40SlotAllowanceUsd: num('--cat40-slot-allowance-usd'),
+    previousRef: flag('--previous-ref') ?? null, oldRef: flag('--old-ref') ?? OLD_RELEASE, cat40SlotAllowanceUsd: num('--cat40-slot-allowance-usd'),
   };
 }
 
@@ -187,7 +191,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     const outRoot = a.out ?? dirname(dir);
     const cacheRoot = a.cache ?? join(a.out ?? dirname(dir), 'cache');
     const previousDir = a.tier === 'bisect' || a.ref !== 'master' || !a.out ? null : findPreviousNight(outRoot, a.night, 'master');
-    const previousSha = a.previousRef ? resolveRef(a.clone, a.previousRef) : previousDir ? (JSON.parse(readFileSync(join(previousDir, 'night.json'), 'utf8')) as NightManifest).sha : null;
+    const previousSha = a.previousRef ? resolveRef(a.clone, a.previousRef) : previousDir ? (JSON.parse(readFileSync(join(previousDir, 'night.json'), 'utf8')) as NightManifest).sha : resolveRef(a.clone, `${sha}^`);
     const statuses: SuiteStatus[] = plan.map(r => {
       const gap = requirementGap(a.clone, sha, r.suite.requires?.gbrain_commit);
       const before = saved?.suites.find(s => s.id === r.suite.id);
