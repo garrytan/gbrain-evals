@@ -526,6 +526,9 @@ export class Campaign {
   get q1() { return isQ1(this.manifest); }
   private get statePath() { return join(this.stateDir, 'campaign.json'); }
   private get eventsPath() { return join(this.stateDir, 'leases.ndjson'); }
+  /** BG1 (#398 open note 6): leases.ndjson's SHA-256 as this campaign last wrote it. */
+  private get eventsShaPath() { return join(this.stateDir, 'leases.sha256'); }
+  private get bg1() { return this.q1 && this.manifest.cells.some(c => c.benchmark === 'bg1' || c.benchmark === 'bg1-dev'); }
   private get frozenPath() { return join(this.stateDir, 'frozen-tree.json'); }
   private state(): CampaignState {
     if (!existsSync(this.statePath)) throw new Error(`${this.stateDir} has no campaign; run \`bun eval/runner/shootout-cell.ts init\` first`);
@@ -544,12 +547,29 @@ export class Campaign {
     return this.ledger;
   }
   private run(): BudgetRun { const s = this.state(); return BudgetRun.join({ runId: s.run_id, ledgerPath: s.ledger, programCapMaxUsd: this.manifest.cap_usd }); }
-  private append(e: LeaseEvent) { appendFileSync(this.eventsPath, JSON.stringify(e) + '\n'); }
+  private append(e: LeaseEvent) {
+    if (this.bg1) this.events();
+    appendFileSync(this.eventsPath, JSON.stringify(e) + '\n');
+    if (this.bg1) writeFileSync(this.eventsShaPath, createHash('sha256').update(readFileSync(this.eventsPath)).digest('hex') + '\n');
+  }
+  /** The lease log's lines. A BG1 campaign refuses a log that is not the one it last wrote (its SHA-256 beside it), so an edited lease never reaches a unit. */
+  private events(): string[] {
+    const text = existsSync(this.eventsPath) ? readFileSync(this.eventsPath, 'utf8') : null;
+    if (this.bg1 && (text !== null || existsSync(this.eventsShaPath))) {
+      const kept = existsSync(this.eventsShaPath) ? readFileSync(this.eventsShaPath, 'utf8').trim() : 'none';
+      if (text === null || kept !== createHash('sha256').update(text).digest('hex')) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `${this.eventsPath} is not the lease log campaign ${this.manifest.campaign_id} last wrote (${basename(this.eventsShaPath)} holds ${kept.slice(0, 12)})`,
+        why: 'a BG1 unit\'s proxy spends the lease its reserved event names, so a lease log edited outside the campaign could hand a unit a lease the ledger never reserved',
+        fix: { next: 'ask_user', user_message: `leases.ndjson under ${this.stateDir} changed outside the campaign; restore it from the custody host's copy, or start the campaign in a fresh --state` } });
+    }
+    return text === null ? [] : text.split('\n').filter(Boolean);
+  }
   cell(id: string): CellSpec { const c = this.manifest.cells.find(x => x.id === id); if (!c) throw new Error(`no cell ${id} in campaign ${this.manifest.campaign_id}`); return c; }
 
   /** Create the campaign ledger (its program cap is the campaign cap) and the one campaign run every lease reserves from. A Q1 campaign also freezes its executed tree. */
   init(): CampaignState {
     if (existsSync(this.statePath)) return this.state();
+    if (this.bg1 && [this.eventsPath, this.eventsShaPath].some(f => existsSync(f))) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `${this.stateDir} holds a lease log before campaign ${this.manifest.campaign_id} was initialised`,
+      why: 'every BG1 lease event is one this campaign wrote after init, so a log already there could hand a unit a lease the ledger never reserved', fix: { next: 'ask_user', user_message: 'initialise the BG1 campaign in a fresh --state' } });
     const label = this.q1 ? 'q1-scoreboard' : 'oss-shootout';
     if (!existsSync(this.ledger)) initLedger({ ledgerPath: this.ledger, programCapUsd: this.manifest.cap_usd, reason: `${this.q1 ? 'Q1 scoreboard' : 'oss shootout'} campaign ${this.manifest.campaign_id}` });
     const run = BudgetRun.open({ runner: `${label}:${this.manifest.campaign_id}`, budgetUsd: this.manifest.cap_usd, ledgerPath: this.ledger, programCapMaxUsd: this.manifest.cap_usd });
@@ -585,10 +605,11 @@ export class Campaign {
 
   leases(): LeaseState[] {
     const out = new Map<string, LeaseState>();
-    if (!existsSync(this.eventsPath)) return [];
+    const lines = this.events();
+    if (!lines.length) return [];
     const raisesPath = join(this.stateDir, 'raises.ndjson');
     const raised = new Map<string, number>(existsSync(raisesPath) ? readFileSync(raisesPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as { lease_id: string; to_usd: number }).map(r => [r.lease_id, r.to_usd]) : []);
-    for (const line of readFileSync(this.eventsPath, 'utf8').split('\n').filter(Boolean)) {
+    for (const line of lines) {
       const e = JSON.parse(line) as LeaseEvent;
       if (e.event === 'reserved') { out.set(e.lease_id, { lease_id: e.lease_id, cell: e.cell, attempt: e.attempt, usd: e.usd, entry_id: e.entry_id, max_output_tokens: e.max_output_tokens ?? null, status: 'reserved', ...(raised.has(e.lease_id) ? { raised_usd: raised.get(e.lease_id) } : {}) }); continue; }
       const l = out.get(e.lease_id);
@@ -603,8 +624,7 @@ export class Campaign {
   }
   lease(id: string): LeaseState { const l = this.leases().find(x => x.lease_id === id); if (!l) throw new Error(`no lease ${id}`); return l; }
   realizedEvents(): Extract<LeaseEvent, { event: 'realized' }>[] {
-    if (!existsSync(this.eventsPath)) return [];
-    return readFileSync(this.eventsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as LeaseEvent).filter((e): e is Extract<LeaseEvent, { event: 'realized' }> => e.event === 'realized');
+    return this.events().map(l => JSON.parse(l) as LeaseEvent).filter((e): e is Extract<LeaseEvent, { event: 'realized' }> => e.event === 'realized');
   }
 
   /** Q1: dollars held by a block's leases (reserved, running, settled or abandoned at their charge). */
