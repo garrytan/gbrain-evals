@@ -720,6 +720,51 @@ no answer, gold or corruption text).
 
 Wave A still waits on the Voyage check. The particle-1 fallback is not needed.
 
+### 2026-11-08: custody decisions and pre-wave custody fixes, and the code counted runs start from
+
+GBEV-3 answered the custody decisions with "rec, answered by agent:GBEV-3", and GBRA-108 answered the provider checks,
+relayed by GBEV-3. None of this changes a bar, arm, reader, judge, margin or verdict rule.
+
+- **Sealed cells (D1).** Counted cells run on ephemeral Ubicloud VMs launched from the custody host. Each VM receives only
+  its unit's pinned files, and provider keys only through the runner's `--pass`. Only counts, hashes and aggregates come
+  back. Each VM is deleted after its unit, and the custodian confirms that with the runner's `list`.
+- **Storage (D2).** At rest, RS1 is an `age`-encrypted archive with two recipients: the custodian's key on the custody
+  host, and a recovery identity generated on the machine that holds the second encrypted copy, where it stays. The
+  custody record holds only the recipients' public keys and the archive's SHA-256; no thread, drive or repository holds
+  either private key. This preregistration sets no retention period or deletion procedure for either copy. GBEV-3
+  decides both before the test ends.
+- **Voyage.** GBRA-108 confirmed on 2026-11-09 that the custody host's Voyage key belongs to garrytan's Organization,
+  which the dashboard shows as opted out. The Voyage check is done.
+- **Gemini.** The custody host's existing Gemini key can't be shown to sit on a paid-tier project, so it never mints or
+  validates RS1. GBRA-108 made a dedicated key on project `gen-lang-client-0920143313` (Wintermute Openclaw, Tier 2),
+  ending `ydmA`, which the custodian loads as `RS1_GEMINI_API_KEY`. GBRA-108's check stands in for the custody-host
+  billing probe, so no probe is built: the key alone can't show which project serves it or that project's tier. At
+  RS1's end GBRA-108 deletes this key. No RS1 cell sends text to Gemini.
+
+Six fixes land on the results branch, each with a test that fails before its commit and passes at it:
+
+1. **Manifest fill** (`07ae574b`). `eval/custody/rs1/fill-manifest.ts` writes the filled manifest from the custody set
+   root and the kept list. Only ids, paths and SHA-256 hashes go into it. A refill only appends kept ids and files, and
+   keeps `n_final` once set. It refuses files that are links or resolve outside the root, and anything the `beam-rs1`
+   loader would refuse.
+2. **Paid-window guard** (`5e45d673`, `14e3a89d`). mint.sh, rs1_mint.py's real steps, validate.ts `--paid` and
+   `cell.ts run --manifest rs1` need `--paid-window <unit>` and `--window-cap-usd <n>` unless they run keyless or fake.
+   Without them, they exit 2 before any provider client exists. They also refuse a ledger program cap, run budget or
+   campaign lease above the window cap. Every RS1 campaign unit carries its window. Q1 and F6 are unchanged.
+3. **One Gemini key** (`3b9b74da`). Paid minting and validation take Gemini's key only from `RS1_GEMINI_API_KEY` and
+   never fall back to `GEMINI_API_KEY`. They refuse with exit 2 when it is empty.
+4. **Key scan** (`4620afdb`). The receipt secret scan matches `AQ.`-prefixed Google keys beside `AIza` ones, and
+   fingerprints `RS1_GEMINI_API_KEY`.
+5. **macOS** (`a63174f2`). mint.sh and beam-checkout.sh fall back to `shasum -a 256` where `sha256sum` is missing.
+6. **Measured judge rates** (`631bd23e`). pricing.ts takes each gating judge's measured cost per graded answer from the
+   judge check (`--astra-judge-usd-per-answer`, `--opus-judge-usd-per-answer`). gpt-6-astra stays on its own line,
+   outside the check-in. pricing.json is unchanged.
+
+Counted runs start from `14e3a89d8db80d74f35d079ef9db45531bacf296` on the results branch. At that commit,
+`eval/runner/q1/cells/rs1-cells.json` has SHA-256 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`,
+unchanged from the previous amendment. Later docs-only commits don't change either. Each run records the commit it
+actually ran, and a run from any other code needs a further amendment.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
