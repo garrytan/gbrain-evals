@@ -28,8 +28,9 @@ own history:
 
 ## System under test
 
-- gbrain on Wintermute's box: version 0.60.613.0 at commit `98dda48fb9fd`, schema 296, loaded with
-  `--gbrain /data/gbrain@98dda48fb9fd` from a verified overlay copy. The scorecard records the loaded version and commit
+- gbrain 0.60.613.0 at commit `98dda48fb9fd`, schema 296, loaded on Wintermute's box with
+  `--gbrain /data/gbrain@98dda48fb9fd` from a verified overlay copy. At the second freeze the box's own install was
+  0.60.618.0 (see [Differences from the approved plan](#differences-from-the-approved-plan)). The scorecard records the loaded version and commit
   beside gbrain-evals' own pin (0.60.557.0). Phase 1's schema check applies: the runner refuses a brain whose schema
   version differs from the loaded code's.
 - The brain's own search configuration (mode, reranker, embedding model), read from the database and the box's
@@ -83,7 +84,8 @@ answered or graded without them. Nothing else leaves the box.
 Phase 1's barrier, guards and abort codes apply unchanged ([PREREGISTRATION.md](PREREGISTRATION.md#corpus-and-the-read-only-barrier)).
 The counted run reads the live database through the role GBRA-108 confirmed for phase 1: SELECT only, no sequence
 grants, no role memberships and no EXECUTE on a SECURITY DEFINER function in `public`. ALPH-72 creates it just before
-the counted run and removes it after, with the teardown proof going to GBRA-108. The runner proves the barrier from the
+the counted run and removes it after, with the teardown proof going to GBRA-108. The freezes and the cost estimate
+read through the same kind of role, created by the box crew for that step and dropped with proof afterwards. The runner proves the barrier from the
 database before any read, forces every gbrain transaction read-only, and counts every write gbrain attempts (such as its
 best-effort `last-retrieved` write-back) as a guard refusal in the scorecard. A keyless test shows that every fixture
 query returns the same pages with writes allowed and with writes refused, so a refused write-back does not change what
@@ -740,10 +742,10 @@ answers they disagree on are left out of the labels, which tilts the label set t
 live database through the no-write role, so pages change only as Garry's own brain changes during the run; the run's
 start and end times are recorded, and the judge grades the snapshot each model saw. Replacement tasks were chosen by
 type and by whether a remote caller can open their gold pages, so they may be easier than, or simply different from,
-the tasks Wintermute first wrote. That matters most for cross_source and time_window, which are almost all
-replacements. The findings show each type's count of original and replacement tasks, and the primaries on each group,
+the tasks Wintermute first wrote. That matters most for cross_source, time_window and topic, where 20, 18 and 17 of
+the 20 kept tasks are replacements. The findings show each type's count of original and replacement tasks, and the primaries on each group,
 descriptively. The task set covers only gold pages a remote caller can open, and at the first freeze 60% of the
-first-choice gold pages carried `access: private`, stamped by Wintermute's ingest rather than set by gbrain.
+first task file's gold pages carried `access: private`, stamped by Wintermute's ingest, not by gbrain's code.
 cross_source has 10 independent gold clusters, each from a media page to a short civic page summarising Garry's posts
 on one theme, so it mostly measures whether gbrain finds those summary pages; any cross_source number on its own shows
 its cluster count and is descriptive. Gold pages can close between the freeze and the run: 4 that opened at the first
@@ -812,7 +814,7 @@ freeze gained `access: private` a few hours later, and the scorecard counts gold
 - 2026-11-09, before the second freeze and before any counted call: the box's own gbrain install moved to 0.60.618.0
   (`0451622123`), while the runner keeps loading 0.60.613.0 from `98dda48fb9fd` through the verified overlay. So phase 2
   measures 613's retrieval on a database the box's 618 install keeps in sync, not the exact gbrain the brain runs.
-  0.60.614.0 to 0.60.618.0 change 17 files in refresh, local-edit adoption, persistence, doctor and source-origin
+  0.60.614.0 to 0.60.618.0 change 17 source files under `src/`, in refresh, local-edit adoption, persistence, doctor and source-origin
   recording, and none in search, `src/mcp`, `src/core/operations.ts`, access or schema migrations. The schema stays
   296, which both rounds of the second freeze checked. The scorecard's loaded version and commit say 613.
 
@@ -836,8 +838,8 @@ counted why the other 69 did not: 65 carry frontmatter `access: private`, which 
 `visibility.honor_aliases` is on; 4 were slug errors in the task file (3 differed from a live slug by letter case or a
 `.md` suffix, 1 page was missing); none was a derived page hidden by default, hidden by `readable_by`, a folder rule or
 lineage, or without a readable chunk. GBRA-108 traced the `access: private` stamp to Wintermute's own ingest scripts
-and skills, which write it page by page; gbrain honours it but does not set it, so 60% of the first-choice gold pages
-(65 of 109) were marked private by Wintermute's ingest. Those 38 kept by type: identifier 16, error_string 16, time_window 2,
+and skills, which write it page by page; gbrain's code honours it but does not write it, so 60% of the first task
+file's gold pages (65 of 109) were marked private by Wintermute's ingest. The 38 kept tasks by type: identifier 16, error_string 16, time_window 2,
 cross_source 0, topic 4. GBEV-3 (agent:GBEV-3) chose to rebuild, and rejected both relaxing the remote privacy posture
 and running at 38. Wintermute keeps the 38, corrects the 3 slugs to the exact live slugs (the harness matches gold slugs
 exactly, in exposure scoring as well as at the freeze), and replaces the rest with new tasks of the same type
@@ -848,29 +850,33 @@ cluster as the resampling unit (both under Comparisons). The second freeze's
 entry here shows, for each type, how many tasks are original and how many are replacements.
 
 **Second freeze (recorded 2026-11-09, before the judge check and before any counted call).** Wintermute rebuilt the
-task file as decided, with four calls GBEV-3 accepted. Replacement gold leaves out the brain's 14,061 Y Combinator
+task file as decided, with calls GBEV-3 accepted. Replacement gold leaves out the brain's 14,061 Y Combinator
 company pages, one media folder and other folders Wintermute judged sensitive. A fixed test of whether a page can
 support a task, with spares taken in seed order, set aside 17 topic, 1 identifier and 1 time_window candidates and 8
 pairs of cross_source candidates; 17 of the first 33 topic candidates were public pages with too little on them to ask
 about. The twentieth error_string task takes its gold from a wider pool of 1,504 public engineering pages. One civic
-page serves three cross_source tasks. The file passed Wintermute's checker (1.4.1) and `tasks.ts check` with 100 valid
+page serves three cross_source tasks, one more than the rebuild's limit of two. The file passed Wintermute's checker (1.4.1) and `tasks.ts check` with 100 valid
 tasks, 20 per type. The remote pre-screen was skipped because its endpoint no longer exists, so the freeze was the
-reachability check. Both rounds ran on 2026-11-09 between 11:33 and 11:37 UTC in one role window, from a worktree at
+reachability check. Both rounds ran on 2026-11-09 between 11:33 and 11:37 UTC under one read-only role, created for
+the freeze and dropped with proof after the estimate, from a worktree at
 4740c1f3 whose `harnessDigest()` printed `d27425cc…1e18` on the box, with gbrain 0.60.613.0 loaded from
 `98dda48fb9fd`, schema 296, and brain HEAD `deac1bae15f7` before and after.
 
 - Round 1: 104 of 108 gold pages opened to a remote caller, and 96 tasks were kept. The 4 dropped tasks (1 topic, 3
-  identifier) were original tasks whose gold had opened at the first freeze; the brain's history shows all 4 gold pages
-  gained `access: private` at 05:28 to 05:30 UTC that morning. Under the top-up rule, Wintermute replaced
-  them with the next spares of the same type in seed order: 1 topic and 2 identifier, after skipping one identifier
-  spare that failed the junk test. That used up the identifier spares, so the last identifier task stayed unchanged.
+  identifier) were original tasks whose gold had opened at the first freeze. The brain's history shows that none of the 4 gold
+  pages had an `access:` line at the task file's pin and all 4 carry `access: private` now, each last changed between
+  05:28 and 05:30 UTC that morning. Under GBEV-3's top-up rule (one round of same-type replacements from the spares in
+  seed order, then one more freeze), Wintermute replaced three of them (1 topic, 2 identifier), skipping one identifier
+  spare that failed its page-quality check. That used up the identifier spares, so the third dropped identifier task
+  stayed in the file unchanged.
 - Round 2: the task file's sha256 is `0b849b89…d434` (100 tasks, 62 marked `replacement: true`). 107 of 108 gold
   pages opened, 99 tasks were kept, and the 1 dropped is the identifier task left unreplaced. `freeze.json` has sha256
   `fe167378…1f832`.
 - Kept by type, original / replacement: topic 3 / 17, identifier 13 / 6, error_string 19 / 1, time_window 2 / 18,
   cross_source 0 / 20; 37 / 62 in all.
 - 87 gold clusters: 11 hold tasks that share a gold page (one of 3 tasks, ten of 2), and 76 tasks stand alone.
-  cross_source's 20 tasks form 10 of them (one of 3, eight of 2, one single).
+  cross_source's 20 tasks make up 10 of the 87 (one of 3, eight of 2, one single), and the other two shared clusters
+  are pairs outside cross_source, so 23 tasks share a gold page rather than the 16 the gold-cluster amendment expected.
 - Minimum detectable differences for the primaries at 87 clusters with 20% discordant pairs: 13.4 points at alpha
   0.05 and 16.0 at Holm's tightest level, against 13.1 / 15.6 planned at 92 clusters. GBEV-3's freeze rule proceeds
   at any N from 60 to 99 after the top-up, with the MDD recorded, so the judge check and the counted run use these 99
@@ -879,8 +885,8 @@ reachability check. Both rounds ran on 2026-11-09 between 11:33 and 11:37 UTC in
   had not reached the box: its own install is 0.60.618.0, the brain has no access members and there is no relabel
   marker. With no members, the owner binding would create the first one and turn on `readable_by` and folder checks
   for good, so every step of it must sit on the same side of the freeze and the counted run. If a step lands before
-  the counted run, the task file is frozen again in a fresh role window, with the top-up rule, before the estimate goes
-  to GBEV-3. If one lands during the run, the run pauses at the next cell boundary and GBEV-3 decides. Just before the
+  the counted run, the task file is frozen again under a fresh role with the top-up rule, and the estimate is rerun and
+  must pass the cost gate again before the counted run. If one lands during the run, the run pauses at the next cell boundary and GBEV-3 decides. Just before the
   counted run, Wintermute checks the install version and the access member count again.
 - The box's estimate passed the cost gate, for the counted run and for the judge check's own cap.
 
