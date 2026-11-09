@@ -26,7 +26,7 @@ export async function sourcePinnedSync(ctx: SmokeContext): Promise<string> {
   check(before.code === 0, 'pin_not_source_root', () => `after the first sync of a source at ${SUBDIR}/, ${kept.slug} has no page under its source-relative slug, `
     + `so the source did not pin source-root: ${tail(before.stdout + '\n' + before.stderr, 3)}`);
 
-  for (const entry of readdirSync(join(b.repo, SUBDIR))) b.git('mv', join(SUBDIR, entry), entry);
+  for (const entry of readdirSync(join(b.repo, SUBDIR)).sort()) b.git('mv', join(SUBDIR, entry), entry);
   writeFileSync(join(b.repo, `${ADDED.slug}.md`), `---\ntype: note\ntitle: After the move\n---\n\nA note written after the brain moved to the repository root. Search token ${ADDED.token}.\n`);
   b.git('add', '-A'); b.git('commit', '-qm', 'move the brain to the repository root');
   const rebind = await b.cli(root, ['sources', 'set-path', b.source, b.repo, '--json']);

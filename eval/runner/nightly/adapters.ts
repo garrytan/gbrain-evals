@@ -191,7 +191,7 @@ export const cat40Adapter: Adapter = async (run, ctx) => {
 /** Outcome rows from the worker's episode records (worker.ts agents), each scored by the nightly write scorer. */
 export function episodeRows(run: SuiteRun, ctx: NightContext, reader: string, dir: string): Outcome[] {
   if (!existsSync(dir)) return [];
-  return readdirSync(dir).filter(f => /^task-\d+-t\d+\.json$/.test(f)).map(f => {
+  return readdirSync(dir).sort().filter(f => /^task-\d+-t\d+\.json$/.test(f)).map(f => {
     const rec = JSON.parse(readFileSync(join(dir, f), 'utf8')) as Record<string, any>;
     const [, id, trial] = /^task-(\d+)-t(\d+)\.json$/.exec(f)!;
     if (rec.harness_error) return outcome(run, ctx, { item: id!, reader, trial: Number(trial), pass: false, harness: { error: String(rec.harness_error).slice(0, 300) } });
@@ -244,7 +244,7 @@ export function seedRanges(seeds: number[]): string[] {
 
 export function trialRows(run: SuiteRun, ctx: NightContext, engine: string, dir: string): Outcome[] {
   if (!existsSync(dir)) return [];
-  return readdirSync(dir).filter(f => /^\d+\.json$/.test(f) && run.items.some(i => `${i.id}.json` === f)).map(f => {
+  return readdirSync(dir).sort().filter(f => /^\d+\.json$/.test(f) && run.items.some(i => `${i.id}.json` === f)).map(f => {
     const t = JSON.parse(readFileSync(join(dir, f), 'utf8')) as Record<string, any>;
     const classes = failureClasses(t, 'trial');
     const harness = classes.includes('harness_error') || t.placeholder ? { error: t.harness_error ? JSON.stringify(t.harness_error).slice(0, 300) : 'harness_error' } : null;

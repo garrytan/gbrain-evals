@@ -119,7 +119,7 @@ function lme(): Suite {
 function beam(): Suite {
   const dir = join(BENCH, '2026-10-08-beam-1m-failure-analysis/arms');
   const rows = ['a2-top5-opus55', 'a2-top5-gpt61sol'].flatMap(arm =>
-    readdirSync(join(dir, arm)).filter(s => s.startsWith('shard-')).flatMap(s => jsonl(join(dir, arm, s, 'rows.ndjson.gz'))));
+    readdirSync(join(dir, arm)).sort().filter(s => s.startsWith('shard-')).flatMap(s => jsonl(join(dir, arm, s, 'rows.ndjson.gz'))));
   const misses = new Map<string, number>();
   for (const r of rows) misses.set(r.conversation, (misses.get(r.conversation) ?? 0) + (Number(r.qa_score) < 1 ? 1 : 0));
   const convs = [...misses.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 3).map(([c]) => c).sort();
