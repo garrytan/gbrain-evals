@@ -8,7 +8,8 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { closeLedgers } from '../../eval/runner/budget-ledger.ts';
+import { createHash } from 'node:crypto';
+import { closeLedgers, ledgerTestHooks, readLedger } from '../../eval/runner/budget-ledger.ts';
 import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { bg1CampaignManifest, loadCellManifest } from '../../eval/runner/q1/cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
@@ -105,5 +106,82 @@ describe('a BG1 campaign before any VM boots', () => {
     writeFileSync(join(planted.state, 'leases.ndjson'), forged);
     expect(caught(() => new Campaign(planted.file, planted.state).init()).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining('holds a lease log before campaign') });
     expect(existsSync(join(planted.state, 'campaign.json'))).toBe(false);
+  }, 60_000);
+
+  // Value: protects=a BG1 unit's proxy is handed only the lease the frozen campaign prices and the ledger reserved; fails_when=a reserved event forged with its leases.sha256 rewritten reaches payload or launch, or a lease log deleted with its SHA-256 reads as no leases while the ledger holds one; why_new=the exception-14 reader's finding 2 (it forged a reserved event's usd, rewrote the SHA-256, and payload().lease_usd came back forged; deleting both files went unnoticed); seam=a BG1 Campaign over a temporary ledger; no_claim=the frozen campaign hash, which already refuses an edited manifest
+  test('a BG1 lease forged together with its SHA-256 refuses in payload and launch, and a lease log deleted with it refuses while the ledger holds a reservation', async () => {
+    const w = campaign(null);
+    const c = new Campaign(w.file, w.state);
+    c.init();
+    const l = c.reserve(c.manifest.cells[0].id);
+    const log = join(w.state, 'leases.ndjson'), shaFile = join(w.state, 'leases.sha256'), text = readFileSync(log, 'utf8'), sha = readFileSync(shaFile, 'utf8');
+    const forge = (from: string, to: string) => { const t = text.replace(from, to); expect(t).not.toBe(text); writeFileSync(log, t); writeFileSync(shaFile, createHash('sha256').update(t).digest('hex') + '\n'); return c.leases()[0]; };
+    const boots: string[] = [];
+    const runner = async () => { boots.push('booted'); return 0; };
+
+    const usd = forge(`"usd":${l.usd}`, '"usd":399');
+    expect(usd.usd).toBe(399);
+    expect(caught(() => c.payload(usd)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(`leases 399, and the frozen campaign gives unit ${l.cell} ${l.lease_usd ?? l.usd}`) });
+    const launched = await c.launch(l.cell, runner).then(() => null, x => x);
+    expect(launched).toBeInstanceOf(ScoreboardError);
+    expect((launched as ScoreboardError).op.code).toBe('CAMPAIGN_HASH_MISMATCH');
+    expect(caught(() => c.payload(forge('"max_output_tokens":null', '"max_output_tokens":999999'))).op.message).toContain('caps output at 999999');
+    expect(caught(() => c.payload(forge(`"entry_id":"${l.entry_id}"`, '"entry_id":"00000000-0000-4000-8000-000000000000"'))).op.message).toContain('names ledger entry 00000000-0000-4000-8000-000000000000');
+    expect(boots).toEqual([]);
+    expect(readFileSync(log, 'utf8').split('\n').filter(Boolean).map(x => JSON.parse(x).event)).toEqual(['reserved']);
+
+    writeFileSync(log, text);
+    writeFileSync(shaFile, sha);
+    expect(c.payload(c.leases()[0]).lease_usd).toBe(l.usd);
+    rmSync(log);
+    rmSync(shaFile);
+    expect(caught(() => c.leases()).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining('is missing, and the campaign ledger holds 1 reservation(s)') });
+    expect(caught(() => c.reserve(c.manifest.cells[1].id)).op.code).toBe('CAMPAIGN_HASH_MISMATCH');
+    const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
+    expect(readLedger(w.manifest.ledger).entries.filter(e => e.run_id === s.run_id).map(e => e.reserved_usd)).toEqual([l.usd]);
+  }, 60_000);
+
+  // Value: protects=a refused BG1 reserve leaves no ledger reservation the lease log does not name; fails_when=the lease log changes between reserve's read and its append, the append refuses, and the lease-sized ledger reservation stays charged; why_new=the exception-14 reader's finding 2 (reserve() refuses after this.run().reserve() succeeds); seam=ledgerTestHooks.afterCapCheck, inside the ledger's reserve, edits the log as an outside writer would; no_claim=a ledger the process cannot write
+  test('a BG1 reserve whose append refuses gives its ledger reservation back', () => {
+    const w = campaign(null);
+    const c = new Campaign(w.file, w.state);
+    c.init();
+    const first = c.reserve(c.manifest.cells[0].id);
+    const log = join(w.state, 'leases.ndjson'), text = readFileSync(log, 'utf8');
+    ledgerTestHooks.afterCapCheck = () => writeFileSync(log, text + '\n');
+    try { expect(caught(() => c.reserve(c.manifest.cells[1].id)).op.code).toBe('CAMPAIGN_HASH_MISMATCH'); }
+    finally { delete ledgerTestHooks.afterCapCheck; }
+    writeFileSync(log, text);
+    const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
+    const held = readLedger(w.manifest.ledger).entries.filter(e => e.run_id === s.run_id).reduce((n, e) => n + (e.actual_usd ?? e.reserved_usd), 0);
+    expect(Math.round(held * 100) / 100).toBe(first.usd);
+    expect(c.leases()).toEqual([first]);
+  }, 60_000);
+
+  // Value: protects=units the custodian runs in parallel on one --state never refuse each other's lease log or leave a stale SHA-256; fails_when=append's check, append, re-read and SHA-256 write interleave across processes with no lock; why_new=the exception-14 reader's finding 2 (the race, read from code: one detached run --cell per unit on one --state); seam=three processes reserving and abandoning their own unit on one BG1 campaign; no_claim=the ledger's own serialisation, which already holds
+  test('parallel BG1 reserves on one --state keep the lease log, its SHA-256 and the ledger in step', async () => {
+    const w = campaign(100_000);
+    new Campaign(w.file, w.state).init();
+    const perRound = w.manifest.cells.reduce((n, c) => n + c.lease_usd, 0);
+    const rounds = Math.min(25, Math.floor(w.manifest.blocks!.BG1.cap_usd / perRound));
+    expect(rounds).toBeGreaterThanOrEqual(10);
+    // Each process starts its rounds at the same instant and reads the lease log between its reserve and its abandon, as a status poll would.
+    const script = `const { Campaign } = await import(${JSON.stringify(join(REPO, 'eval/runner/shootout-cell.ts'))});
+const [file, state, unit, start] = process.argv.slice(-4);
+const c = new Campaign(file, state);
+await Bun.sleep(Math.max(0, Number(start) - Date.now()));
+for (let i = 0; i < ${rounds}; i++) { const l = c.reserve(unit); for (let k = 0; k < 10; k++) c.leases(); c.abandon(l.lease_id, 'race test'); }`;
+    const start = String(Date.now() + 4000);
+    const kids = UNITS.map(id => Bun.spawn(['bun', '-e', script, w.file, w.state, id, start], { cwd: REPO, stdout: 'pipe', stderr: 'pipe' }));
+    const results = await Promise.all(kids.map(async k => ({ code: await k.exited, err: await new Response(k.stderr).text() })));
+    expect(results.filter(r => r.code !== 0).map(r => r.err.split('\n').find(x => /^\w*Error: /.test(x)) ?? r.err.slice(-300))).toEqual([]);
+    const c = new Campaign(w.file, w.state);
+    const leases = c.leases();
+    expect(leases.length).toBe(UNITS.length * rounds);
+    expect(leases.every(l => l.status === 'abandoned')).toBe(true);
+    const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
+    const entries = readLedger(w.manifest.ledger).entries.filter(e => e.run_id === s.run_id);
+    expect(entries.length).toBe(leases.length);
+    expect(Math.round(entries.reduce((n, e) => n + (e.actual_usd ?? e.reserved_usd), 0) * 100)).toBe(Math.round(leases.reduce((n, l) => n + l.usd, 0) * 100));
   }, 60_000);
 });
