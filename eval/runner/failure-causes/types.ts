@@ -63,6 +63,8 @@ export interface EvalFailure {
   source: string;
   run_id: string;
   case_id: string;
+  /** The task or question this row answers, the same for every arm and system that ran it, so the report can compare them. */
+  task_id?: string;
   system: string;
   arm: string;
   arm_role: ArmRole;
@@ -109,6 +111,7 @@ export interface CauseLabel {
   source: string;
   run_id: string;
   case_id: string;
+  task_id: string | null;
   system: string;
   arm: string;
   arm_role: ArmRole;

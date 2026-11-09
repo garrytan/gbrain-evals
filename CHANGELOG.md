@@ -41,6 +41,54 @@ This records what each gbrain-evals release changed and what its measurements me
   300,000-page build, its Ubicloud run and G2's Opus paraphrases are built but untested against real services. At
   0.60.557.0, gbrain's refusal codes don't separate `source_changed` from `scope_denied` the way Wintermute's labels
   do, so G3 maps them by their detail.
+## [0.10.182] - 2026-11-09
+
+### Failure causes: fixes before the first counted results
+
+- **Taxonomy 2026-11-09.2.** The 18 cause ids are unchanged. The version moves because the rules below classify some
+  rows differently, and `report` refuses to pool labels across versions. Labels gain `task_id` and failure rows may
+  carry it: the task or question a row answers, the same for every arm and system that ran it. A row that hit the
+  agent's turn cap carries the new `turn_cap` tag whatever its primary cause.
+- **The report compares gbrain with the other systems on the same tasks.** For each cause it counts, per task and model,
+  whether each other system and control in the same source failed the same way, another way, or not at all, and how
+  many of gbrain's rows no other system shares. An appendix lists the top three's rows beside the other systems. Each
+  cause also counts its turn-cap rows by category and says the cap is part of what those rows measure.
+- **Provisional places.** A top-three place is marked provisional when the rows still waiting for the labeller could
+  move it if they all got one cause the labeller can give. Those rows are listed, and a report with no model labels
+  says once that its counts come from deterministic log rules alone.
+- **Under-stress statuses.** `report --known` shows a status beside matching under-stress rows, such as a fix gbrain
+  has already shipped, and every harness-error row there is marked as ours. Live-recall counts name the gbrain version
+  their scorecard loaded, so two scorecards of the same questions stay apart.
+- **The report checks the labeller gate itself.** `report` now refuses any model label whose labeller path and row family
+  have no passing gate in `--gates` (the file `agree` writes). Gates are kept per path and per row family, so a family
+  moved to gpt-6-astra is gated on that family's rows. A labeller never labels its own family's rows: `labellerFor`
+  refuses gpt-6-astra for GPT rows.
+- **No reasoning-only label for a row whose delivery is unknown.** When the source did not record whether the evidence
+  reached the answering model, the labeller may answer that it never arrived, which counts as a retrieval or ranking
+  miss. A row with unknown delivery and no recorded context stays `unclassified` instead of going to the labeller, and so
+  does a row no labeller may read (no recorded text, or a private or sealed source), so it never waits for a label that
+  cannot come.
+- **Fairer label set.** The dev and held-out halves come from a second, salted hash, so they no longer follow the
+  sampler. The default sample is sized per row family (100 rows, spread over its sources) so each family can reach 40
+  held-out agreed rows.
+- **Labeller outages show.** A failed call or an unparseable reply counts as pending in the report, and `label` exits 1
+  when any row got no label. `parseLabel` reads a reason that contains braces.
+- **Ranking.** A scorer artifact is the primary cause only when it is the row's only signal. Harness errors no longer
+  count in a source's ranking shares, and `report` keys rows on source, run and case, so two nights of the same source
+  both count.
+- **RS1 adapter.** Each directory's rows, answers and judgments form one cell. An answer the cell never judged follows
+  the outcome contract in `eval/runner/memory-qa/outcomes.ts`. A turn cap or context overflow is `timeout_latency`. A
+  retrieval error is gbrain's miss. It carries the new `retrieve_error` tag and counts as `retrieval_miss`. An
+  unsupported answer stays in the denominator with no row text, and it never reaches the labeller. A reader, judge or
+  harness error, and any outcome not listed here, is `harness_error`. `budget_not_run` and `does_not_fit` (not
+  applicable) are skipped. A failed `ingest_degraded` answer counts as `operations`.
+- **Cat 40 adapter.** Each directory is one arm run: its results, transcripts and `experiment.json` (the row's gbrain
+  commit) go together, and a key counts once per budget run, so two worlds that reuse cell keys stay apart. Legacy rows
+  include their first session's tool calls. Gold slugs match only as whole slugs. A tool
+  error counts as recovered only after a later success of the same tool on the same target, and recovery is unknown
+  without a transcript that lines up call for call; an unknown recovery is `tool_contract` under its own rule.
+- **Bug ledger.** `regression_check` must be `bun test <file under test/>.test.ts`, optionally with `-t '<name>'`,
+  never a free-form shell command, because the nightly loop runs it.
 
 ## [0.10.180] - 2026-11-09
 
