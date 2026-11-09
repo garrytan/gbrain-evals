@@ -6,6 +6,8 @@
 #       [--count 48] [--start 1] [--target-tokens 200000] [--yield-gate-ack <approval id>]
 #       (--fake [--fake-break <slot>:<session>:<attempts>,...]
 #        | --budget-ledger <sqlite> --budget-run-id <id> --paid-window <unit> --window-cap-usd <n>)
+#   eval/custody/bg1/mint.sh --dev --out <dir> [--target-tokens 200000]
+#       (--fake [--fake-break <dev number>:<session>:<attempts>,...] | --budget-ledger ... as above)
 #
 # What it guarantees:
 #   - Output only counts and hashes. Every line is "bg1-mint key=value ...", render.ts's counts line, or a refusal
@@ -43,6 +45,17 @@
 #
 # --fake renders with the template renderer and fake checks: no network, and no key or key file is read.
 #
+# --dev renders stage 1's three public dev worlds, bg1-dev-01, -02 and -03 in that order, through render.ts --dev,
+# behind the same pair of metering proxies per world, on one ledger, after the same window check and with the same key
+# sources as above. It reads no seed or phrasing file: render.ts plans each world from its public seed and refuses one
+# whose plan or questions differ from the committed files. So it takes no --seed-file, --phrasing, --count, --start or
+# --yield-gate-ack, and ignores BG1_SEED_FILE and BG1_PHRASING_FILE. --out must sit outside any git checkout and needs
+# no bg1-custody name. Output is counts and hashes. A dropped dev world stops the run with exit 3; the yield gate does
+# not apply. At the end, or at a drop, it prints one render.ts --dev-report line per world it rendered: its attempts
+# and, in real mode, its two proxies' requests and spend from the ledger. Layout under --out: set/
+# (worlds/bg1-dev-NN/{plan,questions,world}.json and render/bg1-dev-NN.json; the root GBRAIN_EVALS_BG1_DEV_ROOT
+# names), render-cache/ and proxy/.
+#
 # Layout under --out: set/ (worlds/bg1-NNN/{plan,questions,world}.json, the root GBRAIN_EVALS_BG1_SOURCE names),
 # render/ (a counts-only record per slot), render-cache/ (model replies, holding BG1 text) and proxy/ (ready files,
 # request logs and request bodies, holding BG1 text). All of it belongs in the encrypted archive.
@@ -59,14 +72,15 @@ file_mode() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"; }
 owner_only() { case "$(file_mode "$1")" in 600|400) return 0 ;; *) return 1 ;; esac; }
 
 OUT="" SEED_FILE="${BG1_SEED_FILE:-}" PHRASING="${BG1_PHRASING_FILE:-}" COUNT=48 START=1 TARGET=200000 MODE=real BREAKS=""
-LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK=""
+LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK="" DEV=0 SEALED_ONLY=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --out) OUT="$2"; shift 2 ;;
-    --seed-file) SEED_FILE="$2"; shift 2 ;;
-    --phrasing) PHRASING="$2"; shift 2 ;;
-    --count) COUNT="$2"; shift 2 ;;
-    --start) START="$2"; shift 2 ;;
+    --dev) DEV=1; shift ;;
+    --seed-file) SEED_FILE="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
+    --phrasing) PHRASING="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
+    --count) COUNT="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
+    --start) START="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
     --target-tokens) TARGET="$2"; shift 2 ;;
     --fake) MODE=fake; shift ;;
     --fake-break) BREAKS="$2"; shift 2 ;;
@@ -74,23 +88,29 @@ while [ $# -gt 0 ]; do
     --budget-run-id) RUN_ID="$2"; shift 2 ;;
     --paid-window) WINDOW="$2"; shift 2 ;;
     --window-cap-usd) WINDOW_CAP="$2"; shift 2 ;;
-    --yield-gate-ack) ACK="$2"; shift 2 ;;
-    -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
+    --yield-gate-ack) ACK="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
+    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
     *) die "unknown argument $1" ;;
   esac
 done
 
 [ -n "$OUT" ] || die "--out is required"
-[ -n "$SEED_FILE" ] || die "--seed-file (or BG1_SEED_FILE) is required; there is no default seed"
-[ -n "$PHRASING" ] || die "--phrasing (or BG1_PHRASING_FILE) is required; sealed worlds never use the public phrasing"
+if [ "$DEV" = 1 ]; then
+  [ -z "$SEALED_ONLY" ] || die "--dev plans the public dev worlds from their public seeds and phrasing, so it takes no$SEALED_ONLY"
+else
+  [ -n "$SEED_FILE" ] || die "--seed-file (or BG1_SEED_FILE) is required; there is no default seed"
+  [ -n "$PHRASING" ] || die "--phrasing (or BG1_PHRASING_FILE) is required; sealed worlds never use the public phrasing"
+fi
 [[ "$COUNT" =~ ^[0-9]+$ && "$START" =~ ^[0-9]+$ ]] || die "--count and --start must be whole numbers"
 [ "$START" -ge 1 ] && [ $((START + COUNT - 1)) -le 48 ] || die "--start must be at least 1 and the last slot at most 48"
 [[ "$TARGET" =~ ^[0-9]+$ ]] || die "--target-tokens must be a whole number"
 [ "$MODE" = fake ] || [ -z "$BREAKS" ] || die "--fake-break is a --fake drill"
 [ -z "$ACK" ] || [[ "$ACK" =~ ^a-[0-9a-f]{12}$ ]] || die "--yield-gate-ack takes GBEV-3's approval id, a- and 12 hex digits"
-case "$(basename "$OUT")" in bg1-custody*) ;; *) die "--out must be a directory whose name starts with bg1-custody" ;; esac
-case "$SEED_FILE" in *.bg1-seed) ;; *) die "the seed file must be named *.bg1-seed" ;; esac
-case "$PHRASING" in *.bg1-phrasing.json) ;; *) die "the phrasing file must be named *.bg1-phrasing.json" ;; esac
+if [ "$DEV" = 0 ]; then
+  case "$(basename "$OUT")" in bg1-custody*) ;; *) die "--out must be a directory whose name starts with bg1-custody" ;; esac
+  case "$SEED_FILE" in *.bg1-seed) ;; *) die "the seed file must be named *.bg1-seed" ;; esac
+  case "$PHRASING" in *.bg1-phrasing.json) ;; *) die "the phrasing file must be named *.bg1-phrasing.json" ;; esac
+fi
 
 command -v bun >/dev/null || die "bun is not on PATH"
 BUN="$(command -v bun)"
@@ -117,15 +137,18 @@ inside_checkout() {
   git -C "$d" rev-parse --is-inside-work-tree >/dev/null 2>&1
 }
 inside_checkout "$OUT" && die "--out must sit outside any git checkout"
-for f in "$SEED_FILE" "$PHRASING"; do
-  [ -f "$f" ] || die "$(basename "$f") does not exist"
-  inside_checkout "$(cd "$(dirname "$f")" && pwd)" && die "$(basename "$f") must sit outside any git checkout"
-  owner_only "$f" || die "$(basename "$f") must be mode 600 or 400"
-done
-grep -Eqx 'bg1-seed-v1:[0-9a-f]{64}' "$SEED_FILE" && [ "$(grep -c '' "$SEED_FILE")" -eq 1 ] || die "the seed file does not hold one bg1-seed-v1 line"
-SEED_FILE="$(cd "$(dirname "$SEED_FILE")" && pwd)/$(basename "$SEED_FILE")"
-PHRASING="$(cd "$(dirname "$PHRASING")" && pwd)/$(basename "$PHRASING")"
-mkdir -p "$OUT/set/worlds" "$OUT/render" "$OUT/render-cache"
+if [ "$DEV" = 0 ]; then
+  for f in "$SEED_FILE" "$PHRASING"; do
+    [ -f "$f" ] || die "$(basename "$f") does not exist"
+    inside_checkout "$(cd "$(dirname "$f")" && pwd)" && die "$(basename "$f") must sit outside any git checkout"
+    owner_only "$f" || die "$(basename "$f") must be mode 600 or 400"
+  done
+  grep -Eqx 'bg1-seed-v1:[0-9a-f]{64}' "$SEED_FILE" && [ "$(grep -c '' "$SEED_FILE")" -eq 1 ] || die "the seed file does not hold one bg1-seed-v1 line"
+  SEED_FILE="$(cd "$(dirname "$SEED_FILE")" && pwd)/$(basename "$SEED_FILE")"
+  PHRASING="$(cd "$(dirname "$PHRASING")" && pwd)/$(basename "$PHRASING")"
+  mkdir -p "$OUT/render"
+fi
+mkdir -p "$OUT/set/worlds" "$OUT/render-cache"
 OUT="$(cd "$OUT" && pwd)"
 
 PIDS=()
@@ -155,7 +178,54 @@ start_proxy() {
   [ -s "$ready" ] || die "the $provider metering proxy for $id did not start"
 }
 
+# Renders one world through render.ts with the given arguments, in real mode behind its own pair of metering proxies,
+# and prints render.ts's line. Sets LINE and RC.
+render_one() {
+  local id="$1"
+  shift
+  local allow=(PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC) args=("$@" --cache "$OUT/render-cache" --target-tokens "$TARGET")
+  if [ "$MODE" = fake ]; then
+    args+=(--fake)
+    [ -z "$BREAKS" ] || args+=(--fake-break "$BREAKS")
+  else
+    start_proxy "$id" gemini
+    start_proxy "$id" anthropic
+    allow+=(BG1_GEMINI_READY="$OUT/proxy/ready/$id-gemini.json" BG1_ANTHROPIC_READY="$OUT/proxy/ready/$id-anthropic.json")
+    args+=(--paid-window "$WINDOW" --window-cap-usd "$WINDOW_CAP" --budget-ledger "$LEDGER" --budget-run-id "$RUN_ID")
+  fi
+  RC=0
+  LINE="$(cd "$OUT" && env -i "${allow[@]}" "$BUN" "$HERE/render.ts" "${args[@]}")" || RC=$?
+  stop_proxies
+  [ -z "$LINE" ] || printf '%s\n' "$LINE"
+}
+
 WRITTEN=0 SKIPPED=0 DROPPED=0
+if [ "$DEV" = 1 ]; then
+  RENDERED=()
+  dev_report() {
+    local id ledger=()
+    [ "$MODE" = fake ] || ledger=(--budget-ledger "$LEDGER" --budget-run-id "$RUN_ID")
+    for id in "${RENDERED[@]}"; do
+      (cd "$OUT" && env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/render.ts" --dev-report "$id" --set "$OUT/set" ${ledger[@]+"${ledger[@]}"})
+    done
+  }
+  for id in bg1-dev-01 bg1-dev-02 bg1-dev-03; do
+    render_one "$id" --dev "$id" --set "$OUT/set"
+    RENDERED+=("$id")
+    case "$RC" in
+      0) case "$LINE" in *" status=skipped "*) SKIPPED=$((SKIPPED + 1)) ;; *) WRITTEN=$((WRITTEN + 1)) ;; esac ;;
+      11)
+        dev_report
+        say "summary=stopped reason=dev_world_dropped mode=$MODE world=$id written=$WRITTEN skipped=$SKIPPED"
+        exit 3 ;;
+      *) exit "$RC" ;;
+    esac
+  done
+  dev_report
+  say "summary=dev mode=$MODE worlds=3 written=$WRITTEN skipped=$SKIPPED"
+  exit 0
+fi
+
 # The dropped worlds among slots 1 to 5 that the render records under --out hold, whichever invocation dropped them.
 early_drops() {
   local n=0 s
@@ -189,25 +259,11 @@ fi
 yield_gate $((START - 1))
 for ((slot = START; slot < START + COUNT; slot++)); do
   id="$(printf 'bg1-%03d' "$slot")"
-  allow=(PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC)
-  args=(--set "$OUT/set" --seed-file "$SEED_FILE" --phrasing "$PHRASING" --slot "$slot" --cache "$OUT/render-cache" --target-tokens "$TARGET")
-  if [ "$MODE" = fake ]; then
-    args+=(--fake)
-    [ -z "$BREAKS" ] || args+=(--fake-break "$BREAKS")
-  else
-    start_proxy "$id" gemini
-    start_proxy "$id" anthropic
-    allow+=(BG1_GEMINI_READY="$OUT/proxy/ready/$id-gemini.json" BG1_ANTHROPIC_READY="$OUT/proxy/ready/$id-anthropic.json")
-    args+=(--paid-window "$WINDOW" --window-cap-usd "$WINDOW_CAP" --budget-ledger "$LEDGER" --budget-run-id "$RUN_ID")
-  fi
-  rc=0
-  line="$(cd "$OUT" && env -i "${allow[@]}" "$BUN" "$HERE/render.ts" "${args[@]}")" || rc=$?
-  stop_proxies
-  [ -z "$line" ] || printf '%s\n' "$line"
-  case "$rc" in
-    0) case "$line" in *" status=skipped "*) SKIPPED=$((SKIPPED + 1)) ;; *) WRITTEN=$((WRITTEN + 1)) ;; esac ;;
+  render_one "$id" --set "$OUT/set" --seed-file "$SEED_FILE" --phrasing "$PHRASING" --slot "$slot"
+  case "$RC" in
+    0) case "$LINE" in *" status=skipped "*) SKIPPED=$((SKIPPED + 1)) ;; *) WRITTEN=$((WRITTEN + 1)) ;; esac ;;
     11) DROPPED=$((DROPPED + 1)) ;;
-    *) exit "$rc" ;;
+    *) exit "$RC" ;;
   esac
   yield_gate "$slot"
 done

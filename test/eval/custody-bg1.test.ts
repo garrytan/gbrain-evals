@@ -13,8 +13,10 @@ import { join, relative, resolve } from 'node:path';
 import { BG1_CUSTODY_MARKER, BG1_DEV_SEEDS, BG1_FIXTURE_TOKENS, PUBLIC_PHRASING, renderBriefs, renderTemplateSession, sealedWorldSeed, type Turn, type World, type WorldPlan } from '../../eval/generators/changing-facts-gen.ts';
 import { BG1_DEV_CONVERSATIONS } from '../../eval/runner/bg1/types.ts';
 import { checkPrompt, checkSession, fakeModels, proxyEndpoint, renderPrompt, renderWorld, type Models } from '../../eval/custody/bg1/render.ts';
-import { closeLedgers } from '../../eval/runner/budget-ledger.ts';
+import * as renderTs from '../../eval/custody/bg1/render.ts';
+import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
+import { bg1DevFixtureProblem } from '../../eval/runner/memory-qa/corpus.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 const MINT = join(REPO, 'eval/custody/bg1/mint.sh');
@@ -371,6 +373,138 @@ describe('mint.sh and render.ts refuse before anything is written or any key is 
     expect(r.err).toMatch(/^bg1-render error class=\w+ sha256=[0-9a-f]{16}\n$/);
     expect(r.out).toBe('');
     expect(existsSync(join(set, 'worlds'))).toBe(false);
+  });
+});
+
+// ─── the public dev worlds: mint.sh --dev and render.ts --dev ────────
+
+describe('mint.sh --dev and render.ts --dev render stage 1\'s public dev worlds', () => {
+  const committed = (id: string, name: string) => readFileSync(join(renderTs.BG1_DEV_WORLDS, id, name), 'utf8');
+
+  // Value: protects=stage 1 renders the three public dev worlds from the committed plans and gold, through the sealed path's renderer and checks; fails_when=mint.sh or render.ts has no dev path, renders a plan or questions other than the committed ones, skips a world or renders out of order, or a drop does not stop the run; why_new=BG1 follow-up fix 8 (stage 1's dev worlds had no render path); seam=mint.sh --dev --fake with planned breaks; no_claim=a paid render or the rendered text's quality
+  test('--dev --fake renders bg1-dev-01, -02 and -03 in order, each plan and questions byte-identical to the committed files; a drop stops with exit 3', () => {
+    const out = join(scratch('dev-fake'), 'dev-out');
+    const r = run('bash', [MINT, '--dev', '--fake', '--out', out, '--target-tokens', '4000']);
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('bg1-mint summary=dev mode=fake worlds=3 written=3 skipped=0');
+    for (const l of r.out.trim().split('\n')) expect(l).toMatch(/^bg1-(mint|render) /);
+    expect([...r.out.matchAll(/^bg1-render world=(\S+) status=written /gm)].map(m => m[1])).toEqual(BG1_DEV_CONVERSATIONS);
+    expect([...r.out.matchAll(/^bg1-render world=(\S+) report status=written attempts=\d+ regenerated=0$/gm)].map(m => m[1])).toEqual(BG1_DEV_CONVERSATIONS);
+    for (const id of BG1_DEV_CONVERSATIONS) {
+      const dir = join(out, 'set', 'worlds', id);
+      for (const name of ['plan.json', 'questions.json']) expect(readFileSync(join(dir, name), 'utf8')).toBe(committed(id, name));
+      const world = JSON.parse(readFileSync(join(dir, 'world.json'), 'utf8')) as World;
+      expect([world.id, world.renderer, 'custody' in world]).toEqual([id, 'fake-template', false]);
+      expect(JSON.parse(readFileSync(join(out, 'set', 'render', `${id}.json`), 'utf8')).status).toBe('written');
+    }
+    expect(bg1DevFixtureProblem(join(out, 'set'))).toContain('holds template-rendered worlds');
+
+    const dropOut = join(scratch('dev-drop'), 'dev-out');
+    const drop = run('bash', [MINT, '--dev', '--fake', '--out', dropOut, '--target-tokens', '4000', '--fake-break', '2:3:4']);
+    expect(drop.code).toBe(3);
+    expect(drop.out).toContain('bg1-render world=bg1-dev-02 status=dropped dropped_session=3 ');
+    expect(drop.out).toContain('bg1-render world=bg1-dev-02 report status=dropped attempts=');
+    expect(drop.out).toContain('bg1-mint summary=stopped reason=dev_world_dropped mode=fake world=bg1-dev-02 written=1 skipped=0');
+    expect(readdirSync(join(dropOut, 'set', 'worlds'))).toEqual(['bg1-dev-01']);
+  }, 240_000);
+
+  // Value: protects=a dev render reads no custody input and writes nowhere Git could pick it up; fails_when=--dev takes a seed or phrasing file or a slot, or render.ts writes a dev set inside a checkout; why_new=BG1 follow-up fix 8; seam=mint.sh and render.ts refusals, which exit before anything is read or written; no_claim=the sealed path's own refusals
+  test('--dev takes no seed, phrasing or slot, and render.ts refuses a --set inside a checkout', () => {
+    const j = inputs('dev-refuse');
+    const out = join(j.dir, 'dev-out'), set = join(j.dir, 'dev-set');
+    for (const extra of [['--seed-file', j.seed], ['--phrasing', j.phrasing], ['--count', '1'], ['--start', '2'], ['--yield-gate-ack', 'a-0123456789ab']]) {
+      const r = run('bash', [MINT, '--dev', '--fake', '--out', out, ...extra]);
+      expect(r.code).toBe(2);
+      expect(r.err).toContain(`so it takes no ${extra[0]}`);
+    }
+    for (const extra of [['--seed-file', j.seed], ['--phrasing', j.phrasing], ['--slot', '1']]) {
+      const r = run('bun', [RENDER, '--dev', 'bg1-dev-01', '--fake', '--set', set, ...extra]);
+      expect(r.code).toBe(2);
+      expect(r.err).toContain('takes no --seed-file, --phrasing or --slot');
+    }
+    expect(run('bun', [RENDER, '--dev', 'bg1-dev-04', '--fake', '--set', set]).err).toContain('usage: --dev <bg1-dev-01|bg1-dev-02|bg1-dev-03>');
+    const inRepo = join(REPO, 'eval', 'data', 'changing-facts-v1', 'dev-set-must-not-exist');
+    const r = run('bun', [RENDER, '--dev', 'bg1-dev-01', '--fake', '--set', inRepo]);
+    expect(r.code).toBe(2);
+    expect(r.err).toContain('--set must sit outside any git checkout');
+    for (const p of [out, set, inRepo]) expect(existsSync(p)).toBe(false);
+  });
+
+  // Value: protects=a dev world is rendered only from the plan and gold committed for it; fails_when=render.ts plans a dev world and spends on it while the committed plan.json or questions.json differs from that plan, or is missing; why_new=BG1 follow-up fix 8; seam=render.ts main with a counting fake Models and a scratch copy of the committed dev worlds; no_claim=the generator's own determinism (changing-facts-gen.ts check)
+  test('a committed dev plan or questions file that differs or is missing refuses before any model call', async () => {
+    const worlds = join(scratch('dev-tamper'), 'worlds');
+    cpSync(renderTs.BG1_DEV_WORLDS, worlds, { recursive: true });
+    let calls = 0;
+    const counting = (plan: WorldPlan): Models => {
+      const m = fakeModels(plan);
+      return { renderer: m.renderer, render: (...a) => { calls++; return m.render(...a); }, check: (...a) => { calls++; return m.check(...a); } };
+    };
+    const set = join(scratch('dev-tamper-out'), 'set');
+    const go = () => renderTs.main(['--dev', 'bg1-dev-01', '--set', set, '--target-tokens', '4000'], {}, counting, worlds);
+    const plan = join(worlds, 'bg1-dev-01', 'plan.json'), questions = join(worlds, 'bg1-dev-01', 'questions.json');
+    const original = { plan: readFileSync(plan, 'utf8'), questions: readFileSync(questions, 'utf8') };
+    writeFileSync(plan, original.plan.replace('"sessions"', '"sessions" '));
+    await expect(go()).rejects.toThrow("bg1-dev-01's plan.json differs from the committed");
+    writeFileSync(plan, original.plan);
+    writeFileSync(questions, original.questions.replace(/"answer": "/, '"answer": "x'));
+    await expect(go()).rejects.toThrow("bg1-dev-01's questions.json differs from the committed");
+    rmSync(questions);
+    await expect(go()).rejects.toThrow("bg1-dev-01's questions.json differs from the committed");
+    expect(calls).toBe(0);
+    expect(existsSync(set)).toBe(false);
+    writeFileSync(questions, original.questions);
+    expect((await go()).status).toBe('written');
+    expect(calls).toBeGreaterThan(0);
+  }, 120_000);
+
+  // Value: protects=a real dev render spends only inside the granted window, behind each world's own pair of metering proxies on one ledger; fails_when=mint.sh --dev starts a proxy or render.ts without the window, or renders a dev world behind another world's proxies or on another ledger; why_new=BG1 follow-up fix 8; seam=the bun stub, which records each call and runs nothing, placeholder keys; no_claim=the window check's, the proxies' or render.ts's own behaviour
+  test('real-mode --dev without the window refuses before any proxy starts; inside it, each world gets its own pair of proxies on one ledger', () => {
+    const s = stubbed('dev-real');
+    const none = s.mint(['--dev', '--out', 'dev-out']);
+    expect(none.code).toBe(2);
+    expect(none.err).toContain('real mode spends real keys, so it needs --paid-window');
+    expect(s.calls()).toEqual([]);
+    expect(run('bun', [RENDER, '--dev', 'bg1-dev-01', '--set', join(s.j.dir, 'render-set')]).err).toContain('bg1-render refused: bg1 render spends real keys');
+
+    const r = s.mint(['--dev', '--out', 'dev-out', ...s.window]);
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('bg1-mint summary=dev mode=real worlds=3 written=3 skipped=0');
+    const calls = s.calls(), here = realpathSync(s.j.dir);
+    const name = (args: string) => args.split(' ')[0].split('/').at(-1);
+    expect(calls.map(([, args]) => name(args))).toEqual(['paid-window.ts', ...BG1_DEV_CONVERSATIONS.flatMap(() => ['harness-metering-proxy.ts', 'harness-metering-proxy.ts', 'render.ts']), 'render.ts', 'render.ts', 'render.ts']);
+    BG1_DEV_CONVERSATIONS.forEach((id, k) => {
+      const [gemini, anthropic, render] = calls.slice(1 + 3 * k, 4 + 3 * k).map(([, args]) => args);
+      expect(gemini).toContain(`--cell-id bg1-${id}-gemini `);
+      expect(anthropic).toContain(`--cell-id bg1-${id}-anthropic `);
+      expect(render).toContain(`--dev ${id} --set ${join(here, 'dev-out', 'set')} `);
+      expect(render).toContain('--paid-window bg1-test');
+      expect(calls[10 + k][1]).toContain(`--dev-report ${id} --set ${join(here, 'dev-out', 'set')} --budget-ledger `);
+    });
+    for (const [dir, args] of calls) {
+      if (name(args) === 'render.ts') expect(dir).toBe(join(here, 'dev-out'));
+      expect(args).not.toMatch(/--seed-file|--phrasing|--slot/);
+    }
+    expect(ledgerArgs(calls)).toEqual([join(here, 'ledgers', 'ledger.sqlite')]);
+    expect(r.out + r.err + readFileSync(s.log, 'utf8')).not.toContain('not-real');
+  });
+
+  // Value: protects=the spend mint.sh --dev reports per world is that world's two proxies' requests in the ledger run, at their settled cost; fails_when=devReport counts another world's or another run's requests, or drops a request settled at its reservation; why_new=BG1 follow-up fix 8; seam=a scratch ledger with reservations under the proxies' descriptions; no_claim=the proxies' pricing
+  test('--dev-report gives a world\'s attempts and its own proxies\' requests and spend in the ledger run', () => {
+    const dir = scratch('dev-report'), set = join(dir, 'set'), ledgerPath = join(dir, 'ledger.sqlite');
+    mkdirSync(join(set, 'render'), { recursive: true });
+    writeFileSync(join(set, 'render', 'bg1-dev-01.json'), JSON.stringify({ world: 'bg1-dev-01', status: 'written', attempts: 7, regenerated: 2 }));
+    initLedger({ ledgerPath, programCapUsd: 10, reason: 'devReport test' });
+    const run1 = BudgetRun.open({ runner: 'bg1-dev-report-test', budgetUsd: 5, ledgerPath });
+    const run2 = BudgetRun.open({ runner: 'bg1-dev-report-test', budgetUsd: 5, ledgerPath });
+    const book = (r: BudgetRun, cell: string, reserved: number, actual: number | null) => r.settle(r.reserve(reserved, `gemini:gemini-3.8-flash chat (proxy ${cell}/bg1)`), actual === null ? null : { usd: actual, input_tokens: 1, output_tokens: 1 });
+    book(run1, 'bg1-bg1-dev-01-gemini', 0.5, 0.25);
+    book(run1, 'bg1-bg1-dev-01-anthropic', 0.2, null);
+    book(run1, 'bg1-bg1-dev-02-gemini', 0.5, 0.4);
+    book(run2, 'bg1-bg1-dev-01-gemini', 0.5, 0.3);
+    const report = renderTs.devReport(['--dev-report', 'bg1-dev-01', '--set', set, '--budget-ledger', ledgerPath, '--budget-run-id', run1.runId]);
+    expect(report).toBe('bg1-render world=bg1-dev-01 report status=written attempts=7 regenerated=2 requests=2 spend_usd=0.4500 unreconciled=1');
+    expect(renderTs.devReport(['--dev-report', 'bg1-dev-02', '--set', set])).toBe('bg1-render world=bg1-dev-02 report record=missing');
+    expect(() => renderTs.devReport(['--dev-report', 'bg1-dev-01', '--set', set, '--budget-ledger', ledgerPath])).toThrow('usage: --dev-report');
   });
 });
 

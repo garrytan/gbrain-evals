@@ -8,6 +8,9 @@
  *       [--cache <dir>, default <set>/../render-cache] [--target-tokens 200000]
  *       (--fake [--fake-break <slot>:<session index>:<attempts>,...]
  *        | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)
+ *   bun eval/custody/bg1/render.ts --dev <bg1-dev-01|bg1-dev-02|bg1-dev-03> --set <out>/set [--cache <dir>] [--target-tokens 200000]
+ *       (--fake [--fake-break <dev number>:<session index>:<attempts>,...] | --paid-window ... as above)
+ *   bun eval/custody/bg1/render.ts --dev-report <bg1-dev-NN> --set <out>/set [--budget-ledger <file> --budget-run-id <id>]
  *
  * Checks on every attempt at a session:
  *   1. deterministic (checkSession): the turns alternate, starting with the user; every planned line appears exactly
@@ -33,16 +36,27 @@
  * refuses. Replies are cached under --cache by request hash, so a rerun after a crash buys nothing twice. A world
  * already written is skipped when its plan is unchanged; a changed plan refuses.
  *
+ * --dev renders one of stage 1's three public dev worlds instead of a mint slot (mint.sh --dev runs all three). It
+ * plans the world from its public seed and the public phrasing, as changing-facts-gen.ts devFiles() does, and reads no
+ * seed or phrasing file, so it takes no --seed-file, --phrasing or --slot. Before any model call it refuses unless the
+ * plan and its questions are byte-identical to the committed eval/data/changing-facts-v1/dev/worlds/<id>/plan.json and
+ * questions.json. Rendering, the checks, regeneration, the cache, the models and the window guard are the ones above.
+ * It writes worlds/<id>/{plan,questions,world}.json and a counts-only record, render/<id>.json, under --set, which
+ * must sit outside any git checkout; nothing carries the custody marker. --dev-report prints a dev world's attempts
+ * from that record and, given the ledger run, the requests and spend of its two metering proxies.
+ *
  * Exit codes: 0 written or skipped, 11 dropped, 2 refused, 1 an error (printed as its class and a hash, never text).
  */
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
-  BG1_TARGET_TOKENS, BG1_WORLD_SCHEMA, buildQuestions, loadPhrasing, PlanError, planWorld, renderBriefs, renderTemplateSession, sealedWorldSeed, termRegex,
-  type Phrasing, type RenderBrief, type Turn, type World, type WorldPlan,
+  BG1_DATA_DIR, BG1_DEV_SEEDS, BG1_TARGET_TOKENS, BG1_WORLD_SCHEMA, buildQuestions, loadPhrasing, PlanError, planWorld, PUBLIC_PHRASING, renderBriefs, renderTemplateSession,
+  sealedWorldSeed, termRegex, type Phrasing, type RenderBrief, type Turn, type World, type WorldPlan,
 } from '../../generators/changing-facts-gen.ts';
-import { BG1_CONVERSATIONS } from '../../runner/bg1/types.ts';
+import { readLedger } from '../../runner/budget-ledger.ts';
+import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS } from '../../runner/bg1/types.ts';
 import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/paid-arm.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
 
@@ -336,6 +350,51 @@ export const worldIdOf = (slot: number) => {
 /** The sealed plan of one mint slot: deterministic from the custody seed line, the slot and the phrasing set. */
 export const sealedPlan = (seedLine: string, slot: number, phrasing: Phrasing) => planWorld(worldIdOf(slot), sealedWorldSeed(seedLine, slot), { phrasing, custody: true });
 
+/** The committed public dev worlds' plans and questions, as changing-facts-gen.ts devFiles() writes them. */
+export const BG1_DEV_WORLDS = join(BG1_DATA_DIR, 'dev', 'worlds');
+
+/**
+ * A public dev world's plan, planned as devFiles() plans it. Refuses unless the plan and its questions are
+ * byte-identical to plan.json and questions.json under worlds/<id>, so the rendered world is the committed gold's.
+ */
+export function devPlan(id: string, worlds = BG1_DEV_WORLDS): WorldPlan {
+  const plan = planWorld(id, BG1_DEV_SEEDS[id], { publicSeed: true });
+  for (const [name, text] of [['plan.json', json(plan)], ['questions.json', json(buildQuestions(plan, PUBLIC_PHRASING))]]) {
+    const path = join(worlds, id, name);
+    if (!existsSync(path) || readFileSync(path, 'utf8') !== text) throw new RenderRefusal(`${id}'s ${name} differs from the committed eval/data/changing-facts-v1/dev/worlds/${id}/${name}`);
+  }
+  return plan;
+}
+
+/** True when path, or its nearest existing parent, sits inside a git work tree; refuses when git cannot say. */
+function insideCheckout(path: string): boolean {
+  let dir = resolve(path);
+  while (!existsSync(dir)) dir = dirname(dir);
+  const git = spawnSync('git', ['-C', dir, 'rev-parse', '--is-inside-work-tree'], { stdio: 'ignore' });
+  if (git.error) throw new RenderRefusal('git is not on PATH, so --set cannot be checked for a checkout');
+  return git.status === 0;
+}
+
+/**
+ * One dev world's counts after mint.sh --dev: its record's status and attempts and, given the ledger run, the requests
+ * its two metering proxies (cells bg1-<id>-gemini and bg1-<id>-anthropic) reserved and their spend, each request at
+ * its settled cost from the provider's usage or its reservation where none was reported (counted as unreconciled).
+ */
+export function devReport(argv: string[]): string {
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  const id = flag('--dev-report') ?? '', set = flag('--set'), ledger = flag('--budget-ledger'), run = flag('--budget-run-id');
+  if (!BG1_DEV_CONVERSATIONS.includes(id) || !set || !ledger !== !run) throw new RenderRefusal('usage: --dev-report <bg1-dev-NN> --set <dir> [--budget-ledger <file> --budget-run-id <id>]');
+  const record = join(resolve(set), 'render', `${id}.json`);
+  const stats = existsSync(record) ? JSON.parse(readFileSync(record, 'utf8')) as { status: string; attempts: number; regenerated: number } : null;
+  const parts = [`bg1-render world=${id} report`, stats ? `status=${stats.status} attempts=${stats.attempts} regenerated=${stats.regenerated}` : 'record=missing'];
+  if (ledger && run) {
+    const cells = [`(proxy bg1-${id}-gemini/`, `(proxy bg1-${id}-anthropic/`];
+    const entries = readLedger(resolve(ledger)).entries.filter(e => e.run_id === run && cells.some(c => e.description.includes(c)));
+    parts.push(`requests=${entries.length} spend_usd=${entries.reduce((n, e) => n + (e.actual_usd ?? e.reserved_usd), 0).toFixed(4)} unreconciled=${entries.filter(e => e.status !== 'reconciled').length}`);
+  }
+  return parts.join(' ');
+}
+
 function writeAtomic(path: string, text: string) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(`${path}.tmp`, text, { mode: 0o600 });
@@ -346,10 +405,15 @@ function writeAtomic(path: string, text: string) {
 
 export interface RenderOutcome { status: 'written' | 'skipped' | 'dropped'; line: string }
 
-export async function main(argv: string[], env: Record<string, string | undefined> = process.env, models?: (plan: WorldPlan) => Models): Promise<RenderOutcome> {
+export async function main(argv: string[], env: Record<string, string | undefined> = process.env, models?: (plan: WorldPlan) => Models, devWorlds = BG1_DEV_WORLDS): Promise<RenderOutcome> {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const set = flag('--set'), seedFile = flag('--seed-file'), phrasingFile = flag('--phrasing'), slotText = flag('--slot');
-  if (!set || !seedFile || !phrasingFile || !slotText) throw new RenderRefusal('usage: --set <dir> --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json --slot <n> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)');
+  const dev = argv.includes('--dev') ? flag('--dev') ?? '' : null;
+  if (dev !== null) {
+    if (seedFile || phrasingFile || slotText) throw new RenderRefusal('--dev plans a public dev world from its public seed and phrasing, so it takes no --seed-file, --phrasing or --slot');
+    if (!set || !BG1_DEV_CONVERSATIONS.includes(dev)) throw new RenderRefusal(`usage: --dev <${BG1_DEV_CONVERSATIONS.join('|')}> --set <dir> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
+    if (insideCheckout(set)) throw new RenderRefusal('--set must sit outside any git checkout');
+  } else if (!set || !seedFile || !phrasingFile || !slotText) throw new RenderRefusal('usage: --set <dir> --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json --slot <n> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)');
   const fake = argv.includes('--fake');
   const targetTokens = Number(flag('--target-tokens') ?? BG1_TARGET_TOKENS);
   if (!(Number.isInteger(targetTokens) && targetTokens >= 1000)) throw new RenderRefusal('--target-tokens must be a whole number of at least 1000');
@@ -363,10 +427,11 @@ export async function main(argv: string[], env: Record<string, string | undefine
     const gemini = cachedClient(geminiProxyClient(env.BG1_GEMINI_READY), cache), haiku = cachedClient(haikuProxyClient(env.BG1_ANTHROPIC_READY), cache);
     make = () => clientModels(gemini, haiku);
   }
-  const slot = Number(slotText);
-  const id = worldIdOf(slot);
-  const phrasing = readPhrasing(resolve(phrasingFile));
-  const plan = sealedPlan(readSeedLine(resolve(seedFile)), slot, phrasing);
+  const slot = dev === null ? Number(slotText) : BG1_DEV_CONVERSATIONS.indexOf(dev) + 1;
+  const id = dev ?? worldIdOf(slot);
+  const phrasing = dev === null ? readPhrasing(resolve(phrasingFile!)) : PUBLIC_PHRASING;
+  const plan = dev === null ? sealedPlan(readSeedLine(resolve(seedFile!)), slot, phrasing) : devPlan(dev, devWorlds);
+  const label = dev === null ? `slot=${slot} world=${id}` : `world=${id}`;
   if (!make) {
     const breaks = new Map<number, number>();
     for (const entry of (flag('--fake-break') ?? '').split(',').filter(Boolean)) {
@@ -379,27 +444,29 @@ export async function main(argv: string[], env: Record<string, string | undefine
   const planText = json(plan);
   if (existsSync(join(dir, 'world.json'))) {
     if (!existsSync(join(dir, 'plan.json')) || readFileSync(join(dir, 'plan.json'), 'utf8') !== planText) throw new RenderRefusal(`${id} is already written from a different plan`);
-    return { status: 'skipped', line: `bg1-render slot=${slot} world=${id} status=skipped world_sha256=${sha256(readFileSync(join(dir, 'world.json'))).slice(0, 16)}` };
+    return { status: 'skipped', line: `bg1-render ${label} status=skipped world_sha256=${sha256(readFileSync(join(dir, 'world.json'))).slice(0, 16)}` };
   }
   const { world, stats } = await renderWorld(plan, make(plan), { targetTokens });
   const failures = Object.entries(stats.failures).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => `${k}:${v}`).join(',') || 'none';
   const counts = `sessions=${stats.sessions} attempts=${stats.attempts} regenerated=${stats.regenerated} checks=${stats.checks} failures=${failures}`;
-  const record = join(dirname(resolve(set)), 'render', `${id}.json`);
+  const record = join(dev === null ? dirname(resolve(set)) : resolve(set), 'render', `${id}.json`);
   if (!world) {
     writeAtomic(record, json({ world: id, status: 'dropped', ...stats }));
-    return { status: 'dropped', line: `bg1-render slot=${slot} world=${id} status=dropped dropped_session=${stats.dropped_session} ${counts}` };
+    return { status: 'dropped', line: `bg1-render ${label} status=dropped dropped_session=${stats.dropped_session} ${counts}` };
   }
   const worldText = json(world);
   writeAtomic(join(dir, 'plan.json'), planText);
   writeAtomic(join(dir, 'questions.json'), json(buildQuestions(plan, phrasing)));
   writeAtomic(join(dir, 'world.json'), worldText);
   writeAtomic(record, json({ world: id, status: 'written', world_sha256: sha256(worldText), ...stats }));
-  return { status: 'written', line: `bg1-render slot=${slot} world=${id} status=written ${counts} tokens=${stats.tokens} world_sha256=${sha256(worldText).slice(0, 16)}` };
+  return { status: 'written', line: `bg1-render ${label} status=written ${counts} tokens=${stats.tokens} world_sha256=${sha256(worldText).slice(0, 16)}` };
 }
 
 if (import.meta.main) {
   try {
-    const out = await main(process.argv.slice(2));
+    const argv = process.argv.slice(2);
+    if (argv.includes('--dev-report')) { console.log(devReport(argv)); process.exit(0); }
+    const out = await main(argv);
     console.log(out.line);
     process.exit(out.status === 'dropped' ? 11 : 0);
   } catch (error) {
