@@ -21,6 +21,7 @@ import { decideError } from '../decisions/errors.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { beam10mManifestPath, beam10mRoot, loadBeam10mCorpus } from './beam10m-corpus.ts';
 import { loadBeam10mQuestions } from './beam10m-questions.ts';
+import type { Bg1QuestionFields } from '../bg1/types.ts';
 
 export interface Turn { speaker: string; content: string; message_ids?: number[] }
 /** `original_id`: the dataset's own session id when `id` is an occurrence id (LongMemEval-M repeats a session id across a haystack). */
@@ -41,6 +42,8 @@ export interface MemoryQuestion {
   rubric?: string[];
   /** Evaluator-side only: the misleading answer an adversarial question invites (LoCoMo category 5). */
   trap?: string;
+  /** Evaluator-side only: BG1's stratum, gold, stale and decoy values (eval/runner/bg1/types.ts). */
+  bg1?: Bg1QuestionFields;
 }
 export interface Corpus { benchmark: string; conversations: Conversation[]; questions: MemoryQuestion[]; source: DatasetIdentity }
 export interface DatasetIdentity { name: string; files: Array<{ path: string; sha256: string }>; revision: string; license: string }
