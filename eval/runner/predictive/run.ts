@@ -2,15 +2,18 @@
  * Runner for the agent-stack predictive measures (GBEV-55): G1 freshness, G3 write contract, G4 wrong entity, G6 cross-
  * source tasks over mixed access (local and remote caller), and the keyless G3 schema-shape grammar.
  *
- *   bun eval/runner/predictive/run.ts <unit> --dry-run                      tasks, digest, episode count and an estimate
- *                                                                           at budget-ledger prices; no gbrain, no model
+ *   bun eval/runner/predictive/run.ts <unit> --dry-run [--smoke]            tasks, digest, episode count and an estimate
+ *                                                                           at budget-ledger prices (the smoke's plan with
+ *                                                                           --smoke); no gbrain, no model
  *   bun eval/runner/predictive/run.ts <unit> --fake [--tasks N]             scripted model replies on the real gbrain CLI
  *                                                                           and MCP server; keyless, costs nothing
  *   bun eval/runner/predictive/run.ts <unit> --paid --smoke --budget-run-id ID
  *                                                                           one task per surface and model at k=1; prints
  *                                                                           measured cost per episode and the counted
  *                                                                           plan's cost projected from it
- *   bun eval/runner/predictive/run.ts <unit> --paid --budget-run-id ID      the counted run
+ *   bun eval/runner/predictive/run.ts <unit> --paid --budget-run-id ID --preregistration <path>
+ *                                                                           the counted run; refuses without an attested
+ *                                                                           preregistration (prereg.ts)
  *   bun eval/runner/predictive/run.ts grammar                               dispatch every schema shape through MCP and
  *                                                                           gbrain call; keyless
  *
@@ -20,7 +23,8 @@
  * --out (a file for --fake and grammar; a directory for paid runs, default eval/reports/predictive/<unit>-<smoke|paid>),
  * --concurrency N (paid episodes in flight, default 2), --retry-errored (resend errored and in-flight episodes on resume).
  *
- * A paid run refuses before any provider client exists unless requirePaidArm accepts --paid --budget-run-id for an open
+ * A paid run refuses before any provider client exists unless a counted run's --preregistration attests (a smoke may
+ * pass one; its attestation is recorded either way in summary.json), requirePaidArm accepts --paid --budget-run-id for an open
  * ledger run with money left, every model's key is set, and the model-freshness check passes. It then joins that run as
  * the process's one ledger writer (paid.ts has the money rules) and logs every episode to <out>/episodes.jsonl, so the
  * same command resumes it.
@@ -32,6 +36,7 @@ import { budgetOptionsFrom, startPaidRun } from '../budget-ledger.ts';
 import { priceUsage, provider } from '../cat40/loop.ts';
 import { gbrainSpecFrom, overlaySummary, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { PaidArmRefusal, paidRequested, requirePaidArm } from '../paid-arm.ts';
+import { attestPreregistration, type Attestation } from '../prereg.ts';
 import { execGbrain, GbrainMcpArm, SyntheticBrain, type ArmCall } from './cli-arm.ts';
 import { runEntityEpisode, runFreshnessEpisode, runWriteEpisode, scriptedEntityPolicy, scriptedFreshnessPolicy, scriptedWritePolicy } from './episodes.ts';
 import { summarizeEntity, type EntityEpisode } from './entity-agent.ts';
@@ -64,6 +69,7 @@ export const UNIT_SIZES: Record<Unit, { tasks: number; surfaces: number }> = {
  */
 export const EPISODE_TOKENS: Record<Unit, { input: number; output: number }> = { g1: { input: 70_000, output: 4_000 }, g3: { input: 30_000, output: 2_500 }, g4: { input: 40_000, output: 2_500 }, g6: { input: 60_000, output: 3_000 } };
 export const FAKE_MODEL = 'scripted-fake';
+export const PREREGISTRATION = 'docs/benchmarks/2026-11-09-predictive-measures-preregistration.md';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 
@@ -252,14 +258,14 @@ export async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
   if (!UNITS.includes(unit as Unit)) {
-    console.error(`usage: bun eval/runner/predictive/run.ts <${UNITS.join('|')}|grammar> (--dry-run | --fake | --paid [--smoke] --budget-run-id <id>) [--tasks N] [--k N] [--models a,b] [--pressured] [--concurrency N] [--retry-errored] [--gbrain <checkout>@<commit>] [--out <path>]`);
+    console.error(`usage: bun eval/runner/predictive/run.ts <${UNITS.join('|')}|grammar> (--dry-run | --fake | --paid [--smoke] --budget-run-id <id>) [--tasks N] [--k N] [--models a,b] [--pressured] [--preregistration <path>] [--concurrency N] [--retry-errored] [--gbrain <checkout>@<commit>] [--out <path>]`);
     return 2;
   }
   const u = unit as Unit;
   const smoke = argv.includes('--smoke');
   const k = intFlag(argv, '--k', smoke ? 1 : DEFAULT_K);
   const models = flag(argv, '--models')?.split(',').map(m => m.trim()).filter(Boolean) ?? [...MODELS];
-  const modes = [argv.includes('--dry-run'), argv.includes('--fake'), paidRequested(argv) || smoke].filter(Boolean).length;
+  const modes = [argv.includes('--dry-run'), argv.includes('--fake'), paidRequested(argv) || (smoke && !argv.includes('--dry-run'))].filter(Boolean).length;
   if (modes !== 1) { console.error('pass exactly one of --dry-run, --fake or --paid [--smoke] --budget-run-id <id>'); return 2; }
 
   if (argv.includes('--fake')) {
@@ -282,6 +288,13 @@ export async function main(argv: readonly string[]): Promise<number> {
   const pending = pendingJobs(paidJobs(u, { tasks, k, models, seed, pressured, budgetRunId: '' }), readEpisodeLog(join(dir, 'episodes.jsonl')), retryErrored);
   const estimateUsd = pending.todo.reduce((s, j) => s + perEpisode.get(j.model)!, 0);
   if (pending.todo.length < plan.episodes) console.log(JSON.stringify({ resume: { pending: pending.todo.length, skipped: pending.skipped, estimate_usd: Number(estimateUsd.toFixed(2)) } }));
+  const prereg = flag(argv, '--preregistration');
+  if (!smoke && !prereg) { console.error(`predictive ${u}: a counted run needs --preregistration <path> (${PREREGISTRATION}); nothing was sent`); return 2; }
+  let attestation: Attestation | null = null;
+  if (prereg) {
+    try { attestation = attestPreregistration(prereg); }
+    catch (e) { console.error(`predictive ${u}: preregistration attestation failed: ${(e as Error).message}; nothing was sent`); return 2; }
+  }
   let budgetRunId: string;
   try { budgetRunId = requirePaidArm(argv, { arm: `predictive ${u}${smoke ? ' smoke' : ''}`, estimateUsd }).budgetRunId; }
   catch (e) {
@@ -311,7 +324,7 @@ export async function main(argv: readonly string[]): Promise<number> {
   }
   const records = result.done.map(r => r.record!);
   const summary = {
-    mode: smoke ? 'paid-smoke' : 'paid', counted: !smoke, unit: u, plan, gbrain_version: gut.version, overlay: overlaySummary(gut),
+    mode: smoke ? 'paid-smoke' : 'paid', counted: !smoke, unit: u, plan, preregistration_attestation: attestation, gbrain_version: gut.version, overlay: overlaySummary(gut),
     status: result.status, ran: result.ran, skipped: result.skipped, pause_reason: result.pause_reason,
     done: result.done.length, errored: result.errored.map(r => ({ key: r.key, error: r.error ?? r.record?.stop })),
     scorecards: records.length ? scorecards(u, records, k) : [],

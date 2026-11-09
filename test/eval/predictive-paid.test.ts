@@ -1,9 +1,11 @@
 /**
  * Paid execution for the predictive runner (paid.ts and run.ts --paid), keyless: provider keys are deleted for the file,
- * every provider answer comes from a fake Anthropic upstream behind the real paid-request guard and a temporary ledger,
- * and the refusal tests swap globalThis.fetch for a dead upstream that counts calls.
+ * every provider answer comes from a fake Anthropic, OpenAI Responses or Particle Chat Completions upstream behind the
+ * real paid-request guard and a temporary ledger (the Particle test sets a placeholder key, never a real one), and the
+ * refusal tests swap globalThis.fetch for a dead upstream that counts calls.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -78,6 +80,17 @@ describe('refusals before any provider work', () => {
     } finally { globalThis.fetch = original; }
     expect(calls).toEqual([]);
     expect(ledgerStatus({ ledgerPath, runId: open.runId }).run!.remaining_usd).toBe(1000);
+  });
+});
+
+describe('the smoke plan', () => {
+  test('--dry-run --smoke prints the smoke plan and sends nothing', async () => {
+    const logs: string[] = [];
+    const original = console.log;
+    console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+    try { expect(await main(['g3', '--dry-run', '--smoke'])).toBe(0); }
+    finally { console.log = original; }
+    expect(JSON.parse(logs[0])).toMatchObject({ mode: 'dry-run', tasks: 1, surfaces: 2, k: 1, episodes: 6 });
   });
 });
 
@@ -209,4 +222,149 @@ describe('the paid executor', () => {
     expect(result.done[0].record).toMatchObject({ model: MODEL, stop: 'submitted', success: false });
     expect(scorecards('g4', result.done.map(r => r.record!), 1)).toHaveLength(1);
   }, 120_000);
+});
+
+describe('preregistration', () => {
+  function capture() {
+    const errors: string[] = [];
+    const calls: string[] = [];
+    const original = { error: console.error, fetch: globalThis.fetch };
+    console.error = (...args: unknown[]) => { errors.push(args.join(' ')); };
+    globalThis.fetch = (async (input: Parameters<typeof fetch>[0]) => { calls.push(String(input)); throw new Error('dead upstream'); }) as unknown as typeof fetch;
+    return { errors, calls, restore: () => { console.error = original.error; globalThis.fetch = original.fetch; } };
+  }
+  function openRun(name: string) {
+    const ledgerPath = join(dir, `${name}.sqlite`);
+    const run = BudgetRun.open({ runner: name, budgetUsd: 5000, ledgerPath, programCapUsd: 10_000 });
+    run.close({ finish: false });
+    return { ledgerPath, runId: run.runId };
+  }
+
+  test('a counted run refuses without an attested preregistration, before any client exists', async () => {
+    const { ledgerPath, runId } = openRun('predictive-prereg-refusal-test');
+    const c = capture();
+    try {
+      for (const unit of ['g1', 'g3', 'g4', 'g6']) {
+        const argv = [unit, '--paid', '--budget-run-id', runId, '--budget-ledger', ledgerPath, '--out', join(dir, `prereg-${unit}`)];
+        expect(await main(argv)).toBe(2);
+        expect(await main([...argv, '--preregistration', 'docs/benchmarks/no-such-preregistration.md'])).toBe(2);
+      }
+    } finally { c.restore(); }
+    expect(c.errors.filter(e => /a counted run needs --preregistration <path>.*nothing was sent/.test(e))).toHaveLength(4);
+    expect(c.errors.filter(e => /preregistration attestation failed: .*does not exist.*nothing was sent/.test(e))).toHaveLength(4);
+    expect(c.errors.some(e => /not set/.test(e))).toBe(false);
+    expect(c.calls).toEqual([]);
+    expect(ledgerStatus({ ledgerPath, runId }).run!.remaining_usd).toBe(5000);
+  });
+
+  test('a smoke needs no preregistration, and a pushed one attests for a counted run', async () => {
+    const { ledgerPath, runId } = openRun('predictive-prereg-pass-test');
+    const repo = mkdtempSync(join(tmpdir(), 'predictive-prereg-repo-'));
+    const remote = mkdtempSync(join(tmpdir(), 'predictive-prereg-remote-'));
+    const g = (cwd: string, ...args: string[]) => execFileSync('git', args, { cwd, stdio: 'ignore' });
+    g(remote, 'init', '-q', '--bare');
+    g(repo, 'init', '-q', '-b', 'main');
+    g(repo, 'config', 'user.email', 't@example.com');
+    g(repo, 'config', 'user.name', 't');
+    g(repo, 'config', 'commit.gpgsign', 'false');
+    writeFileSync(join(repo, 'prereg.md'), 'fictional preregistration\n');
+    g(repo, 'add', 'prereg.md');
+    g(repo, 'commit', '-q', '-m', 'prereg');
+    g(repo, 'remote', 'add', 'origin', remote);
+    g(repo, 'push', '-q', 'origin', 'main');
+    g(repo, 'fetch', '-q', 'origin');
+    const base = ['--budget-run-id', runId, '--budget-ledger', ledgerPath, '--tasks', '1', '--k', '1'];
+    const c = capture();
+    const cwd = process.cwd();
+    try {
+      expect(await main(['g4', '--paid', '--smoke', ...base, '--out', join(dir, 'prereg-smoke')])).toBe(2);
+      process.chdir(repo);
+      expect(await main(['g4', '--paid', ...base, '--preregistration', 'prereg.md', '--out', join(dir, 'prereg-counted')])).toBe(2);
+    } finally { process.chdir(cwd); c.restore(); rmSync(repo, { recursive: true, force: true }); rmSync(remote, { recursive: true, force: true }); }
+    expect(c.errors.some(e => /preregistration/.test(e))).toBe(false);
+    expect(c.errors.filter(e => /not set; nothing was sent/.test(e))).toHaveLength(2);
+    expect(c.calls).toEqual([]);
+  });
+});
+
+/** A two-turn episode on an arm with one lookup tool: turn 1 calls lookup, turn 2 submits. */
+const lookupArm: Arm = {
+  name: 'lookup', systemHint: () => 'lookup arm', writeTools: () => [], call: async () => 'fictional lookup result',
+  tools: () => [{ name: 'lookup', description: 'Look a fictional fact up.', input_schema: { type: 'object', properties: { q: { type: 'string' } }, required: ['q'] } }],
+};
+const twoTurnJob = (model: string): PaidJob => ({
+  key: `route:${model}`, unit: 'test', model,
+  run: async fetchImpl => {
+    const run = await runAgent({ model, system: 'test', user: 'fictional question', arm: lookupArm, fetchImpl, classifyStops: true, maxTurns: 3 });
+    return { success: run.final !== null, usd: run.usd, stop: run.stop, model: run.model };
+  },
+});
+
+describe('the OpenAI and particle routes', () => {
+  test('gpt-6.1-sol: Responses requests reconcile on the ledger from usage with cached input', async () => {
+    const seen: Array<{ url: string; body: Record<string, any> }> = [];
+    const usage = { input_tokens: 1200, input_tokens_details: { cached_tokens: 800 }, output_tokens: 100, output_tokens_details: { reasoning_tokens: 40 } };
+    const fetchImpl = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input);
+      const body = JSON.parse(String(init?.body));
+      seen.push({ url, body });
+      const n = seen.length;
+      const call = n === 1 ? { name: 'lookup', arguments: JSON.stringify({ q: 'fictional' }) } : { name: 'submit_answer', arguments: JSON.stringify({ answer: 'fictional answer' }) };
+      return new Response(JSON.stringify({ id: `resp_fake_${n}`, object: 'response', model: body.model, status: 'completed',
+        output: [{ type: 'function_call', id: `fc_${n}`, call_id: `call_${n}`, ...call }], usage }), { status: 200, headers: { 'content-type': 'application/json' } });
+    }) as unknown as typeof fetch;
+    const model = 'gpt-6.1-sol';
+    const { run, guard } = paidRun('predictive-openai-route-test', 5, fetchImpl);
+    let result;
+    try { result = await runPaid([twoTurnJob(model)], { log: join(dir, 'openai', 'episodes.jsonl'), concurrency: 1, retryErrored: false, counted: false, guard, resumeCommand: 'x', print: () => {} }); }
+    finally { guard.uninstall(); }
+    const summary = run.close({ finish: false });
+    expect(seen.map(s => s.url)).toEqual(['https://api.openai.com/v1/responses', 'https://api.openai.com/v1/responses']);
+    expect(seen[0].body).toMatchObject({ model, instructions: expect.stringContaining('test'), input: [{ role: 'user', content: 'fictional question' }] });
+    expect(seen[0].body.tools.map((t: { name: string }) => t.name)).toEqual(['lookup', 'submit_answer']);
+    expect(seen[0].body.temperature).toBeUndefined();
+    expect(seen[1].body).toMatchObject({ previous_response_id: 'resp_fake_1', input: [{ type: 'function_call_output', call_id: 'call_1', output: 'fictional lookup result' }] });
+    expect(result.status).toBe('complete');
+    const row = result.done[0];
+    expect(row.record).toMatchObject({ stop: 'submitted', success: true });
+    expect(row.usage).toEqual({ requests: 2, input: 2 * 400, output: 200, cache_read: 2 * 800, cache_write: 0 });
+    const perRequest = priceUsage(model, { input: 400, output: 100, cache_read: 800, cache_write: 0 });
+    expect(perRequest).toBeLessThan(priceUsage(model, { input: 1200, output: 100, cache_read: 0, cache_write: 0 }));
+    expect(row.record!.usd).toBeCloseTo(2 * perRequest, 9);
+    expect(summary).toMatchObject({ requests: 2, charged_reservations: 0 });
+    expect(summary.actual_usd).toBeCloseTo(2 * perRequest, 6);
+  });
+
+  test('particle-1: Chat Completions requests reconcile on the ledger from usage with cached prompt tokens', async () => {
+    const seen: Array<{ url: string; body: Record<string, any> }> = [];
+    const usage = { prompt_tokens: 1200, prompt_tokens_details: { cached_tokens: 800 }, completion_tokens: 100, total_tokens: 1300 };
+    const fetchImpl = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input);
+      const body = JSON.parse(String(init?.body));
+      seen.push({ url, body });
+      const n = seen.length;
+      const fn = n === 1 ? { name: 'lookup', arguments: JSON.stringify({ q: 'fictional' }) } : { name: 'submit_answer', arguments: JSON.stringify({ answer: 'fictional answer' }) };
+      return new Response(JSON.stringify({ id: `chatcmpl_${n}`, object: 'chat.completion', model: 'particle-ai/particle-1',
+        choices: [{ index: 0, finish_reason: 'tool_calls', message: { role: 'assistant', content: null, tool_calls: [{ id: `tc_${n}`, type: 'function', function: fn }] } }], usage }), { status: 200, headers: { 'content-type': 'application/json' } });
+    }) as unknown as typeof fetch;
+    const model = 'particle-1';
+    process.env.PARTICLE_API_KEY = 'fake-test-key-not-a-secret';
+    const { run, guard } = paidRun('predictive-particle-route-test', 5, fetchImpl);
+    let result;
+    try { result = await runPaid([twoTurnJob(model)], { log: join(dir, 'particle', 'episodes.jsonl'), concurrency: 1, retryErrored: false, counted: false, guard, resumeCommand: 'x', print: () => {} }); }
+    finally { guard.uninstall(); delete process.env.PARTICLE_API_KEY; }
+    const summary = run.close({ finish: false });
+    expect(seen.map(s => s.url)).toEqual(['https://api.particle.ai/v1/chat/completions', 'https://api.particle.ai/v1/chat/completions']);
+    expect(seen[0].body).toMatchObject({ model, tool_choice: 'auto', messages: [{ role: 'system' }, { role: 'user', content: 'fictional question' }] });
+    expect(seen[0].body.tools.map((t: { function: { name: string } }) => t.function.name)).toEqual(['lookup', 'submit_answer']);
+    expect(seen[1].body.messages.slice(-2)).toMatchObject([{ role: 'assistant', tool_calls: [{ id: 'tc_1' }] }, { role: 'tool', tool_call_id: 'tc_1', content: 'fictional lookup result' }]);
+    expect(result.status).toBe('complete');
+    const row = result.done[0];
+    expect(row.record).toMatchObject({ stop: 'submitted', success: true });
+    expect(row.usage).toEqual({ requests: 2, input: 2 * 400, output: 200, cache_read: 2 * 800, cache_write: 0 });
+    const perRequest = priceUsage(model, { input: 400, output: 100, cache_read: 800, cache_write: 0 });
+    expect(row.record!.usd).toBeCloseTo(2 * perRequest, 9);
+    expect(summary).toMatchObject({ requests: 2, charged_reservations: 0 });
+    expect(summary.actual_usd).toBeCloseTo(2 * perRequest, 6);
+  });
 });

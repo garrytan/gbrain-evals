@@ -20,11 +20,11 @@ Every command runs from the repository root.
 bun eval/runner/predictive/run.ts g3 --dry-run
 bun eval/runner/predictive/run.ts g3 --fake --tasks 4
 bun eval/runner/predictive/run.ts g3 --paid --smoke --budget-run-id <id>
-bun eval/runner/predictive/run.ts g3 --paid --budget-run-id <id>
+bun eval/runner/predictive/run.ts g3 --paid --budget-run-id <id> --preregistration docs/benchmarks/2026-11-09-predictive-measures-preregistration.md
 bun eval/runner/predictive/run.ts grammar
 ```
 
-- **Dry run** prints the task count, the task digest, the episode count and an estimate at the budget ledger's list prices. It starts no gbrain and no model.
+- **Dry run** prints the task count, the task digest, the episode count and an estimate at the budget ledger's list prices. It starts no gbrain and no model. With `--smoke` it prints the smoke's plan.
 - **Fake** runs scripted model replies against the real gbrain under test. It needs no key and costs nothing. Its numbers prove the harness, not any model.
 - **Smoke** is a paid run of one task per surface and model at k=1 (`--tasks` and `--k` override it). It prints the measured cost per episode for each model and the full counted plan's cost projected from those measured means, beside the planning estimate. Its episodes are logged with `counted: false`.
 - **Counted** runs the full plan. Its episodes are logged with `counted: true`.
@@ -33,14 +33,14 @@ Options: `--tasks N`, `--k N`, `--models a,b,c`, `--seed N`, `--pressured` (G1's
 
 ## Paid runs
 
-A paid run starts only inside a granted paid window, and it refuses before any provider client exists unless all of these hold: `--paid` and `--budget-run-id` name an open budget-ledger run with enough money left for the estimate, every model's provider key is set, and `scripts/model-freshness.ts` passes for the models. Open the run once with `bun eval/runner/budget-ledger.ts open --runner <name> --budget-usd <cap>` and pass the id it prints.
+A paid run starts only inside a granted paid window, and it refuses before any provider client exists unless all of these hold: a counted run passes `--preregistration <path>` and the attestation in `eval/runner/prereg.ts` succeeds (the file is committed, unchanged and on `origin`; a smoke may pass one but doesn't need it), `--paid` and `--budget-run-id` name an open budget-ledger run with enough money left for the estimate, every model's provider key is set, and `scripts/model-freshness.ts` passes for the models. Open the run once with `bun eval/runner/budget-ledger.ts open --runner <name> --budget-usd <cap>` and pass the id it prints.
 
 The runner process is the run's one ledger writer. It joins the open run and installs the paid-request guard once, and every episode's requests go through that guard, which reserves each request's worst case before sending and reconciles it from the provider's usage fields afterwards. Claude requests are fitted to the model with `fitAnthropicRequest`. `particle-1` uses the repository's OpenAI-compatible client, which refuses any host the ledger can't price.
 
 Cost is recorded twice, from the same provider usage fields:
 
 - `<out>/episodes.jsonl` has one row per episode state change. A finished row holds the scored record (with `usd`, priced from the episode's usage) and `usage` (requests, uncached input, output, cache reads and cache writes, summed from each response).
-- `<out>/summary.json` holds the scorecards, the measured cost per episode by model with the counted plan's projection, and the ledger's own summary of the run (requests, reserved and actual cost, and requests charged at their reservation because usage was missing).
+- `<out>/summary.json` holds the preregistration attestation (null for a smoke run without one), the scorecards, the measured cost per episode by model with the counted plan's projection, and the ledger's own summary of the run (requests, reserved and actual cost, and requests charged at their reservation because usage was missing).
 
 ### Pauses and resume
 
@@ -69,6 +69,9 @@ bun test test/eval/predictive-paid.test.ts test/eval/predictive-g6.test.ts test/
 The tests are keyless. Provider keys are deleted for each file. Refusal tests swap `fetch` for a dead upstream and check that no request is attempted. The paid executor tests run against a fake Anthropic upstream behind the real paid-request guard and a temporary ledger.
 
 ## Changelog
+
+### 2026-11-09: counted runs need an attested preregistration
+A counted paid run now refuses without `--preregistration`, or when its attestation fails; the attestation is written into `summary.json`. Smoke runs may pass one. `--dry-run --smoke` prints the smoke's plan.
 
 ### 2026-11-09: paid execution, G6 agent layer and the Ubicloud launcher
 Paid mode used to plan only. It now runs episodes behind the paid-arm guard, with `--smoke`, `--concurrency`, a resumable episode log, `--retry-errored` and a clean pause at the ledger cap. Added unit `g6` (cross-source tasks over mixed access, as a local and a remote caller), and the Ubicloud launcher in `ubicloud/`.
