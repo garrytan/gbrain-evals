@@ -293,7 +293,7 @@ const lookupArm: Arm = {
   tools: () => [{ name: 'lookup', description: 'Look a fictional fact up.', input_schema: { type: 'object', properties: { q: { type: 'string' } }, required: ['q'] } }],
 };
 const twoTurnJob = (model: string): PaidJob => ({
-  key: `route:${model}`, unit: 'test', model,
+  key: 'route:' + model, unit: 'test', model,
   run: async fetchImpl => {
     const run = await runAgent({ model, system: 'test', user: 'fictional question', arm: lookupArm, fetchImpl, classifyStops: true, maxTurns: 3 });
     return { success: run.final !== null, usd: run.usd, stop: run.stop, model: run.model };
