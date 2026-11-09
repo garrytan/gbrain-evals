@@ -46,6 +46,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { DecideError } from '../decisions/errors.ts';
 import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor } from '../memory-qa/instruments.ts';
 import { HARNESS_FAILURES, PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
@@ -346,6 +347,12 @@ function findReceipts(dirs: readonly string[]): CellFiles[] {
 /** The filled BG1 manifest as verdict.ts reads it: status, pinned files, the kept list and n_final, and earlier fills. */
 export interface FilledManifest { status: string; files: Array<{ path: string; sha256: string }>; kept?: string[]; n_final?: number | null; earlier_fills?: string[] }
 
+/** The corpus files a set-BG1 verdict loaded at bytes its --manifest does not pin (the loader pins against GBRAIN_EVALS_BG1_MANIFEST, or nothing). */
+export function unpinnedCorpusFiles(files: ReadonlyArray<{ path: string; sha256: string }>, manifest: FilledManifest): string[] {
+  const pins = new Map(manifest.files.map(f => [f.path, f.sha256]));
+  return files.filter(f => pins.get(f.path) !== f.sha256).map(f => f.path);
+}
+
 /** A set-BG1 receipt must come from the filled manifest (or one of its earlier fills) and load only its pinned bytes. */
 export function receiptManifestProblems(dataset: Record<string, any> | undefined, manifest: FilledManifest, manifestSha: string): string[] {
   if (!dataset) return ['it records no dataset'];
@@ -422,7 +429,10 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
   } else if (o.waveA) refuse('the pilot reads set BG1 only');
   const found = findReceipts(dirs);
   const benchmark = defs[0]?.benchmark ?? refuse(`bg1-cells.json has no cells on ${o.set}`);
-  const qs = deps.questions ?? loadCorpus(benchmark, undefined, wave ?? (finalSet ? new Set(finalSet) : undefined)).questions;
+  const corpus = deps.questions ? null : loadCorpus(benchmark, undefined, wave ?? (finalSet ? new Set(finalSet) : undefined));
+  const off = corpus && manifest ? unpinnedCorpusFiles(corpus.source.files, manifest) : [];
+  if (off.length) refuse(`the loaded ${benchmark} corpus read ${off.join(', ')} at bytes the --manifest does not pin; the strata and values that decide the verdict come only from the pinned worlds`);
+  const qs = deps.questions ?? corpus!.questions;
   const byId = new Map(qs.map(q => [q.id, q]));
   const inScope = (conv: string) => !wave || wave.has(conv);
   const question = (id: string) => byId.get(id) ?? refuse(`question ${id} has no BG1 fields in the loaded ${benchmark} corpus`);
@@ -559,7 +569,7 @@ export function main(argv: string[]): number {
     process.stdout.write(`${a.set}: ${words}; ${a.worlds} worlds, ${a.common} of ${a.planned} questions in the common set${a.primary.worst_case.disagrees ? '; the worst case disagrees' : ''}\n`);
     return 0;
   } catch (e) {
-    if (!(e instanceof VerdictError)) throw e;
+    if (!(e instanceof VerdictError || e instanceof DecideError)) throw e;
     process.stderr.write(`bg1 verdict refused: ${e.message}\n`);
     return 2;
   }

@@ -856,7 +856,7 @@ export function loadLmeM(opts: { path?: string; sha256?: string; size?: number; 
 export const BG1_MANIFEST = 'eval/decisions/datasets/bg1-manifest.json';
 export const BG1_DEV_ROOT = join(REPO_ROOT, 'eval/data/changing-facts-v1/dev');
 export const BG1_WORLD_FORMAT = 'gbrain-evals/bg1-world/v1';
-/** The runner and the loaders refuse once the wall clock passes the world end by more than this (the plan's F9). */
+/** The runner (bg1RunClock) refuses once the wall clock passes the world end by more than this (the plan's F9). */
 export const BG1_WORLD_END_SLIP_DAYS = 14;
 /** Worlds end on a Sunday (changing-facts-gen.ts BG1_WORLD_END_WEEKDAY), so a world end moves only in whole weeks. */
 const BG1_WORLD_END_UTC_DAY = 0;
@@ -913,9 +913,10 @@ const BG1_WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
 
 /**
  * The world end, YYYY-MM-DD: `worldEnd` when given, else GBRAIN_EVALS_BG1_WORLD_END. Refuses a missing or malformed
- * date, one that is not a Sunday, and a wall clock (`now`) more than 14 days past it.
+ * date and one that is not a Sunday. The wall clock is the runner's check (bg1RunClock), never the loader's, so a
+ * verdict, re-read or judge check of frozen answers resolves the dates their run resolved, whenever it runs.
  */
-export function bg1WorldEnd(opts: { worldEnd?: string; now?: Date; env?: Record<string, string | undefined> } = {}): string {
+export function bg1WorldEnd(opts: { worldEnd?: string; env?: Record<string, string | undefined> } = {}): string {
   const raw = opts.worldEnd ?? (opts.env ?? process.env).GBRAIN_EVALS_BG1_WORLD_END;
   const why = 'BG1 worlds store dates as day offsets from a world end that the campaign records; the loader resolves them';
   if (!raw) throw decideError({ code: 'SPEC_MISSING', message: 'bg1: GBRAIN_EVALS_BG1_WORLD_END is not set', why, fix: bg1WorldEndAsk });
@@ -923,7 +924,18 @@ export function bg1WorldEnd(opts: { worldEnd?: string; now?: Date; env?: Record<
   if (!d || Number.isNaN(d.getTime()) || isoDay(d) !== raw) throw decideError({ code: 'SPEC_INVALID', message: `bg1: world end ${JSON.stringify(raw)} is not a YYYY-MM-DD date`, why, fix: bg1WorldEndAsk });
   if (d.getUTCDay() !== BG1_WORLD_END_UTC_DAY) throw decideError({ code: 'SPEC_INVALID', message: `bg1: world end ${raw} is a ${BG1_WEEKDAYS[d.getUTCDay()]}, not a Sunday`,
     why: 'worlds are planned to end on a Sunday and move only in whole weeks, so every weekday in the text stays right', fix: bg1WorldEndAsk });
+  return raw;
+}
+
+/**
+ * The runner's clock (the preregistration's "Dates and now"): a BG1 cell runs only after its world end, so every
+ * session is in the past for a system that reads the wall clock, and at most 14 days past it. Returns the world end.
+ */
+export function bg1RunClock(opts: { worldEnd?: string; now?: Date; env?: Record<string, string | undefined> } = {}): string {
+  const raw = bg1WorldEnd(opts);
   const today = isoDay(opts.now ?? new Date());
+  if (today <= raw) throw decideError({ code: 'SPEC_INVALID', message: `bg1: today (${today}) is not after the world end ${raw}`,
+    why: 'every question is asked the day after the world end, so a system that reads the wall clock must see every session in the past', fix: bg1WorldEndAsk });
   if (today > plusDays(raw, BG1_WORLD_END_SLIP_DAYS)) throw decideError({ code: 'SPEC_INVALID', message: `bg1: today (${today}) is more than ${BG1_WORLD_END_SLIP_DAYS} days past the world end ${raw}`,
     why: 'a run that slips more than 14 days past the world end regenerates the dates in a dated amendment (the plan\'s F9)', fix: bg1WorldEndAsk });
   return raw;
@@ -994,7 +1006,7 @@ export function bg1ManifestFiles(root: string, ids: readonly string[] = BG1_CONV
 }
 
 /** Load bg1-dev: the public dev worlds (or GBRAIN_EVALS_BG1_DEV_ROOT), dates resolved from the world end. */
-export function loadBg1Dev(opts: { root?: string; only?: ReadonlySet<string>; worldEnd?: string; now?: Date } = {}): Corpus {
+export function loadBg1Dev(opts: { root?: string; only?: ReadonlySet<string>; worldEnd?: string } = {}): Corpus {
   const root = resolve(opts.root ?? fromHome(process.env.GBRAIN_EVALS_BG1_DEV_ROOT) ?? BG1_DEV_ROOT);
   const worldEnd = bg1WorldEnd(opts);
   const unknown = opts.only ? [...opts.only].filter(id => !BG1_DEV_CONVERSATIONS.includes(id)) : [];
@@ -1017,7 +1029,7 @@ export function loadBg1Dev(opts: { root?: string; only?: ReadonlySet<string>; wo
  * worlds. With a filled manifest every file must be listed and match; with an unfilled one the files' hashes are
  * recorded in the corpus source and a notice says they were not pinned.
  */
-export function loadBg1(custody: { log: string; decisionId: string; purpose: string }, opts: { only?: ReadonlySet<string>; root?: string; manifestPath?: string; worldEnd?: string; now?: Date } = {}): Corpus {
+export function loadBg1(custody: { log: string; decisionId: string; purpose: string }, opts: { only?: ReadonlySet<string>; root?: string; manifestPath?: string; worldEnd?: string } = {}): Corpus {
   const root = opts.root ?? bg1Source();
   if (!custody.log) throw decideError({ code: 'CUSTODY_MISSING', message: 'bg1 opens only on the custodian host', why: 'every opening of a sealed set is logged first',
     fix: { next: 'ask_user', user_message: 'request the bg1 cells from the custodian (campaign q1-scoreboard-bg1-changing-facts)' } });

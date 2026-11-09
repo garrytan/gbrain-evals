@@ -18,7 +18,7 @@ import { loadBG1Manifest, OPUS, PARTICLE, SOL } from '../../eval/runner/q1/cells
 import { bg1JudgeOf, PER_READER_JUDGE_SETTINGS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { rereadCellId } from '../../eval/runner/q1/reread-cell.ts';
 import {
-  analyze, BG1_MANIFEST_REL, commonSet, dropsOf, gatingProblems, loadInput, main, matcherAgreement, pilotStats, readerValue, receiptManifestProblems, ROLES, worldDifferences,
+  analyze, BG1_MANIFEST_REL, commonSet, dropsOf, gatingProblems, loadInput, main, matcherAgreement, pilotStats, readerValue, receiptManifestProblems, ROLES, unpinnedCorpusFiles, worldDifferences,
   type Bg1Input, type Bg1Row, type QuestionInput, type ReaderValue,
 } from '../../eval/runner/bg1/verdict.ts';
 import { BG1_DEV_CONVERSATIONS, BG1_STRATA, type Bg1Stratum } from '../../eval/runner/bg1/types.ts';
@@ -215,6 +215,13 @@ describe('judgment and receipt checks', () => {
     expect(receiptManifestProblems(ds('d'.repeat(64), [{ path: 'data/extra.json', sha256: 'c'.repeat(64) }]), manifest, 'd'.repeat(64))).toEqual(['it loaded data/extra.json, which the filled manifest does not pin']);
     expect(receiptManifestProblems(ds('d'.repeat(64), [{ path: 'data/bg1-001.json', sha256: '0'.repeat(64) }]), manifest, 'd'.repeat(64))[0]).toContain('the manifest pins');
   });
+
+  // Value: protects=the strata and values that decide a set-BG1 verdict come from the bytes its --manifest pins; fails_when=the corpus loads against GBRAIN_EVALS_BG1_MANIFEST or unpinned and nothing compares it to --manifest; why_new=red-team #5 on #398; seam=unpinnedCorpusFiles; no_claim=custody of the bytes
+  test('a set-BG1 verdict refuses corpus bytes its --manifest does not pin', () => {
+    const manifest = { status: 'filled', files: [{ path: 'worlds/bg1-001/world.json', sha256: 'a'.repeat(64) }, { path: 'worlds/bg1-001/questions.json', sha256: 'b'.repeat(64) }] };
+    expect(unpinnedCorpusFiles(manifest.files, manifest)).toEqual([]);
+    expect(unpinnedCorpusFiles([{ path: 'worlds/bg1-001/world.json', sha256: 'c'.repeat(64) }, { path: 'worlds/bg1-002/world.json', sha256: 'a'.repeat(64) }], manifest)).toEqual(['worlds/bg1-001/world.json', 'worlds/bg1-002/world.json']);
+  });
 });
 
 // ─── Synthetic receipts on the dev set ────────────────────────────────
@@ -312,5 +319,20 @@ describe('loadInput on synthetic dev receipts', () => {
     expect(quiet(() => main(['verdict', '--out', join(tmp, 'x')]))).toBe(2);
     expect(quiet(() => main(['verdict', '--receipts', tmp, '--set', 'BG2', '--out', join(tmp, 'x')]))).toBe(2);
     expect(quiet(() => main(['pilot', '--receipts', fresh(), '--set', 'BG1-dev3', '--out', join(tmp, 'x')]))).toBe(2);
+  });
+
+  // Value: protects=a corpus refusal at verdict time exits 2 with the refusal, like every other verdict refusal; fails_when=main rethrows the loader's DecideError as a crash; why_new=red-team #3 on #398; seam=main; no_claim=which refusal a real run meets
+  test('a corpus refusal (here a missing world end) exits 2 with the loader\'s message instead of a stack trace', () => {
+    const saved = process.env.GBRAIN_EVALS_BG1_WORLD_END;
+    delete process.env.GBRAIN_EVALS_BG1_WORLD_END;
+    let err = '';
+    const w = process.stderr.write, o = process.stdout.write;
+    process.stderr.write = ((s: string) => { err += s; return true; }) as never;
+    process.stdout.write = (() => true) as never;
+    try { expect(main(['verdict', '--receipts', fresh(), '--set', 'BG1-dev3', '--out', join(tmp, 'x')])).toBe(2); } finally {
+      process.stderr.write = w; process.stdout.write = o;
+      if (saved !== undefined) process.env.GBRAIN_EVALS_BG1_WORLD_END = saved;
+    }
+    expect(err).toContain('bg1 verdict refused: SPEC_MISSING: bg1: GBRAIN_EVALS_BG1_WORLD_END is not set');
   });
 });

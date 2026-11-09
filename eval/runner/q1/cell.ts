@@ -82,7 +82,7 @@ import { DecideError, renderOperatorMessage } from '../decisions/errors.ts';
 import { loadSplit } from '../decisions/splits.ts';
 import { ndcgAtK, percentile, recallAllAtK, recallAnyAtK } from '../metrics.ts';
 import { DEFAULT_ROUTE_CAPS, ProxyControl, upstreamTrouble, type Meter, type Phase } from '../metering-proxy.ts';
-import { bg1UnitConversations, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
+import { bg1RunClock, bg1UnitConversations, loadCorpus, readBg1Manifest, readRs1Manifest, rs1UnitConversations, type Bg1Manifest, type Corpus, type MemoryQuestion, type Rs1Manifest, type Session } from '../memory-qa/corpus.ts';
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
@@ -1647,7 +1647,7 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
-    if (sub === 'run' && isBg1Benchmark(def.benchmark)) bg1CellWindow(argv, def);
+    if (sub === 'run' && isBg1Benchmark(def.benchmark)) { bg1CellWindow(argv, def); bg1RunClock(); }
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));

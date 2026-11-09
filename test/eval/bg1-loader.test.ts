@@ -15,7 +15,7 @@ import { devConversations, loadSplit } from '../../eval/runner/decisions/splits.
 import { DATASET_PINS } from '../../eval/runner/q1/reuse-check.ts';
 import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_STRATA } from '../../eval/runner/bg1/types.ts';
 import {
-  BG1_MANIFEST, bg1Kept, bg1ManifestFiles, bg1Source, bg1UnitConversations, bg1UnitScope, bg1WorldEnd, fetchDataset, filesFor, loadBg1, loadBg1Dev, loadCorpus,
+  BG1_MANIFEST, bg1Kept, bg1ManifestFiles, bg1RunClock, bg1Source, bg1UnitConversations, bg1UnitScope, bg1WorldEnd, fetchDataset, filesFor, loadBg1, loadBg1Dev, loadCorpus,
   readBg1Manifest, resolveBg1Dates, verifyBg1Custody, type Bg1Manifest,
 } from '../../eval/runner/memory-qa/corpus.ts';
 
@@ -60,14 +60,13 @@ const fill = (m: Partial<Bg1Manifest>, root = set): string => {
 };
 
 describe('dates and the world-end clock', () => {
-  test('the world end must be a Sunday, and the clock may pass it by at most 14 days', () => {
-    expect(bg1WorldEnd({ worldEnd: END, now: NOW })).toBe(END);
-    expect(bg1WorldEnd({ worldEnd: END, now: new Date('2026-11-29T23:00:00Z') })).toBe(END);
-    expect(code(() => bg1WorldEnd({ worldEnd: END, now: new Date('2026-11-30T00:00:00Z') }))).toBe('SPEC_INVALID');
-    expect(code(() => bg1WorldEnd({ worldEnd: '2026-11-14', now: NOW }))).toBe('SPEC_INVALID');
-    expect(code(() => bg1WorldEnd({ worldEnd: '2026-02-30', now: NOW }))).toBe('SPEC_INVALID');
-    expect(code(() => bg1WorldEnd({ env: {}, now: NOW }))).toBe('SPEC_MISSING');
-    expect(bg1WorldEnd({ env: { GBRAIN_EVALS_BG1_WORLD_END: END }, now: NOW })).toBe(END);
+  test('the world end must be a Sunday, whatever the clock says', () => {
+    expect(bg1WorldEnd({ worldEnd: END })).toBe(END);
+    expect(code(() => bg1WorldEnd({ worldEnd: '2026-11-14' }))).toBe('SPEC_INVALID');
+    expect(code(() => bg1WorldEnd({ worldEnd: '2026-02-30' }))).toBe('SPEC_INVALID');
+    expect(code(() => bg1WorldEnd({ env: {} }))).toBe('SPEC_MISSING');
+    expect(bg1WorldEnd({ env: { GBRAIN_EVALS_BG1_WORLD_END: END } })).toBe(END);
+    expect(bg1WorldEnd({ worldEnd: '2026-10-18' })).toBe('2026-10-18');
     expect(new Date(`${END}T00:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })).toBe(BG1_WORLD_END_WEEKDAY);
   });
 
@@ -80,7 +79,7 @@ describe('dates and the world-end clock', () => {
 
 describe('bg1-dev', () => {
   test('loads the three fixture worlds with resolved dates, strata as categories and evidence sessions as gold', () => {
-    const c = loadBg1Dev({ root: FIXTURES, worldEnd: END, now: NOW });
+    const c = loadBg1Dev({ root: FIXTURES, worldEnd: END });
     expect(c.benchmark).toBe('bg1-dev');
     expect(c.conversations.map(x => x.id)).toEqual([...BG1_DEV_CONVERSATIONS]);
     expect(c.questions).toHaveLength(3 * 64);
@@ -107,8 +106,8 @@ describe('bg1-dev', () => {
   });
 
   test('a later world end shifts every date by whole weeks and keeps the weekdays', () => {
-    const a = loadBg1Dev({ root: FIXTURES, worldEnd: END, now: NOW, only: new Set(['bg1-dev-01']) });
-    const b = loadBg1Dev({ root: FIXTURES, worldEnd: '2026-11-22', now: NOW, only: new Set(['bg1-dev-01']) });
+    const a = loadBg1Dev({ root: FIXTURES, worldEnd: END, only: new Set(['bg1-dev-01']) });
+    const b = loadBg1Dev({ root: FIXTURES, worldEnd: '2026-11-22', only: new Set(['bg1-dev-01']) });
     const day = (s: string) => new Date(`${s.slice(0, 10)}T00:00:00Z`);
     a.conversations[0].sessions.forEach((s, i) => {
       const t = b.conversations[0].sessions[i];
@@ -117,10 +116,21 @@ describe('bg1-dev', () => {
     });
   });
 
+  // Value: protects=a BG1 cell runs only after its world end and at most 14 days past it, while a verdict, re-read or judge check reloads the corpus at any date; fails_when=the loader refuses analysis past the slip, or a run starts on or before the world end with sessions still in the wall clock's future; why_new=red-team #3 and #4 on #398; seam=bg1RunClock; no_claim=the gbrain pin's clock handling
+  test('the runner\'s clock: after the world end, and by at most 14 days', () => {
+    expect(bg1RunClock({ worldEnd: END, now: NOW })).toBe(END);
+    expect(bg1RunClock({ worldEnd: END, now: new Date('2026-11-29T23:00:00Z') })).toBe(END);
+    expect(code(() => bg1RunClock({ worldEnd: END, now: new Date('2026-11-30T00:00:00Z') }))).toBe('SPEC_INVALID');
+    expect(code(() => bg1RunClock({ worldEnd: END, now: new Date('2026-11-15T23:59:00Z') }))).toBe('SPEC_INVALID');
+    expect(code(() => bg1RunClock({ worldEnd: '2026-11-22', now: NOW }))).toBe('SPEC_INVALID');
+    expect(code(() => bg1RunClock({ worldEnd: '2026-11-14', now: NOW }))).toBe('SPEC_INVALID');
+    expect(code(() => bg1RunClock({ env: {}, now: NOW }))).toBe('SPEC_MISSING');
+  });
+
   test('the committed dev root has no rendered worlds until stage 1, so bg1-dev refuses there and names the fixtures', () => {
     expect(existsSync(join(REPO, 'eval/data/changing-facts-v1/dev/worlds/bg1-dev-01/plan.json'))).toBe(true);
-    expect(code(() => loadBg1Dev({ worldEnd: END, now: NOW }))).toBe('DATASET_MISSING');
-    expect(code(() => loadBg1Dev({ root: FIXTURES, worldEnd: END, now: NOW, only: new Set(['bg1-001']) }))).toContain('has no world');
+    expect(code(() => loadBg1Dev({ worldEnd: END }))).toBe('DATASET_MISSING');
+    expect(code(() => loadBg1Dev({ root: FIXTURES, worldEnd: END, only: new Set(['bg1-001']) }))).toContain('has no world');
   });
 
   test('loadCorpus reads GBRAIN_EVALS_BG1_DEV_ROOT and GBRAIN_EVALS_BG1_WORLD_END, and refuses without a world end', () => {
@@ -144,20 +154,20 @@ describe('bg1 (sealed)', () => {
 
   test('loads a minted set only with a custody log, logging each world before it is read; unfilled, it warns that nothing is pinned', () => {
     const log = join(tmp('log'), 'access.jsonl');
-    expect(code(() => loadBg1({ log: '', decisionId: 'd', purpose: 'p' }, { root: set, worldEnd: END, now: NOW }))).toBe('CUSTODY_MISSING');
-    const c = loadBg1({ log, decisionId: 'q1-scoreboard-bg1-changing-facts', purpose: 'loader test' }, { root: set, worldEnd: END, now: NOW, only: new Set(['bg1-001', 'bg1-002']) });
+    expect(code(() => loadBg1({ log: '', decisionId: 'd', purpose: 'p' }, { root: set, worldEnd: END }))).toBe('CUSTODY_MISSING');
+    const c = loadBg1({ log, decisionId: 'q1-scoreboard-bg1-changing-facts', purpose: 'loader test' }, { root: set, worldEnd: END, only: new Set(['bg1-001', 'bg1-002']) });
     expect(c.conversations.map(x => x.id)).toEqual(['bg1-001', 'bg1-002']);
     expect(c.questions).toHaveLength(128);
     expect(c.source.revision).toBe('unfilled');
     const lines = readFileSync(log, 'utf8').trim().split('\n');
     expect(lines).toHaveLength(2);
     expect(lines[0]).toContain('bg1 bg1-001: loader test');
-    expect(code(() => loadBg1({ log, decisionId: 'd', purpose: 'p' }, { root: set, worldEnd: END, now: NOW, only: new Set(['bg1-049']) }))).toContain('has no world');
+    expect(code(() => loadBg1({ log, decisionId: 'd', purpose: 'p' }, { root: set, worldEnd: END, only: new Set(['bg1-049']) }))).toContain('has no world');
   });
 
   test('with a filled manifest, every read file must be pinned and match', () => {
     const log = join(tmp('log'), 'access.jsonl');
-    const opts = { root: set, worldEnd: END, now: NOW, only: new Set(['bg1-001']) };
+    const opts = { root: set, worldEnd: END, only: new Set(['bg1-001']) };
     const good = fill({ kept: ['bg1-001', 'bg1-002', 'bg1-003'] });
     const c = loadBg1({ log, decisionId: 'd', purpose: 'p' }, { ...opts, manifestPath: good });
     expect(c.source.revision).toBe(sha(readFileSync(good)).slice(0, 7));
@@ -202,8 +212,8 @@ describe('bg1 (sealed)', () => {
     for (const bad of ['', 'bg1-001,bg1-001', 'rs1-001', 'bg1-dev-01']) expect(code(() => bg1UnitScope({ GBRAIN_EVALS_BG1_UNIT: bad }))).toBe('CUSTODY_MISSING');
     const log = join(tmp('log'), 'access.jsonl');
     process.env.GBRAIN_EVALS_BG1_UNIT = 'bg1-002';
-    expect(code(() => loadBg1({ log, decisionId: 'd', purpose: 'p' }, { root: set, worldEnd: END, now: NOW }))).toBe('CUSTODY_MISSING');
-    expect(loadBg1({ log, decisionId: 'd', purpose: 'p' }, { root: set, worldEnd: END, now: NOW, only: new Set(['bg1-002']) }).conversations).toHaveLength(1);
+    expect(code(() => loadBg1({ log, decisionId: 'd', purpose: 'p' }, { root: set, worldEnd: END }))).toBe('CUSTODY_MISSING');
+    expect(loadBg1({ log, decisionId: 'd', purpose: 'p' }, { root: set, worldEnd: END, only: new Set(['bg1-002']) }).conversations).toHaveLength(1);
     process.env.GBRAIN_EVALS_BG1_SOURCE = set;
     process.env.GBRAIN_EVALS_BG1_MANIFEST = fill({ kept: ['bg1-001', 'bg1-002', 'bg1-003'] });
     expect(code(() => verifyBg1Custody(() => {}))).toBe('CUSTODY_MISSING');
