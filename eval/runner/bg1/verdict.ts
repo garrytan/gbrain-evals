@@ -17,7 +17,9 @@
  *             holding exactly the first n_final kept worlds; every packed row needs particle-1's paid re-read covering
  *             each of its receipts' run configs.
  *   Values    claude-opus-5-5 and gpt-6.1-sol from the cell and particle-1 from its re-read, joined by question id,
- *             replicate 0. A product failure scores 0; a harness failure, a missing row, answer or gating judgment is a
+ *             replicate 0. The planned questions are the loaded corpus's questions of the worlds read (the first n_final
+ *             kept, wave A, or the dev cells' worlds), so a question no row wrote is planned too. A row outside them
+ *             refuses. A product failure scores 0; a harness failure, a missing row, answer or gating judgment is a
  *             drop, by reason and side. The gating view is each reader's mapped judge (bg1JudgeOf); the canonical
  *             gemini-3.8-flash view is descriptive. A gating judgment by the reader's own family, by another judge than
  *             the mapped one, without the gating view or the pinned settings, or without a model version refuses.
@@ -440,10 +442,13 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
   const byId = new Map(qs.map(q => [q.id, q]));
   const inScope = (conv: string) => !wave || wave.has(conv);
   const question = (id: string) => byId.get(id) ?? refuse(`question ${id} has no BG1 fields in the loaded ${benchmark} corpus`);
+  const worlds = wave ?? new Set(finalSet ?? defs[0].only_conversations ?? qs.map(q => q.conversation));
+  const planned = qs.filter(q => worlds.has(q.conversation)).sort((a, b) => (a.id < b.id ? -1 : 1));
+  const plannedIds = new Set(planned.map(q => q.id));
+  const rowWorlds = new Set<string>();
   const values = new Map<Bg1Row, Map<string, Record<string, ReaderValue>>>();
   const exposures = new Map<Bg1Row, Map<string, Exposure>>();
   const rowIds = new Map<Bg1Row, Set<string>>();
-  const planned = new Map<string, string>();
   const fill: Partial<Record<Bg1Row, number | null>> = {};
   const costs: CostCell[] = [];
   const snapshots = new Map<string, Set<string>>();
@@ -485,7 +490,7 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
       const rows = allRows.filter(r => inScope(String(r.conversation)));
       const convs = new Set([...allRows.map(r => String(r.conversation)), ...((u.receipt.realizations ?? []) as Array<{ conversation: string }>).map(r => String(r.conversation))]);
       for (const conv of [...convs].filter(inScope)) { if (held.has(conv)) refuse(`${armCell}: world ${conv} is in both ${held.get(conv)} and ${u.dir}`); held.set(conv, u.dir); }
-      for (const r of rows) { ids.add(String(r.id)); if (role !== 'floor') planned.set(String(r.id), String(r.conversation)); fills.push(typeof r.fill_rate === 'number' ? r.fill_rate : 0); }
+      for (const r of rows) { ids.add(String(r.id)); if (role !== 'floor') rowWorlds.add(String(r.conversation)); fills.push(typeof r.fill_rate === 'number' ? r.fill_rate : 0); }
       const ans = readRecords(join(u.dir, 'answers.ndjson'), 'answer').filter(a => inScope(a.conversation));
       take(u.dir, ans);
       const runDir = join(u.root, 'runs', String(u.receipt.run_cell ?? def.id));
@@ -509,6 +514,8 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
       const absent = finalSet.filter(c => !held.has(c)), extra = [...held.keys()].filter(c => !finalSet!.includes(c)).sort();
       if (absent.length || extra.length) refuse(`${armCell}: the receipts must hold exactly the first ${finalSet.length} kept worlds; missing ${absent.join(', ') || 'none'}; outside that set ${extra.join(', ') || 'none'}`);
     }
+    const unplanned = [...ids].filter(id => !plannedIds.has(id)).sort();
+    if (unplanned.length) refuse(`${armCell}: rows ${more(unplanned)} are not planned questions of the loaded ${benchmark} corpus`);
     const rereadId = rereadCellId(armCell, PARTICLE);
     const rereads = found.filter(f => f.receipt.cell_id === rereadId);
     const configs = new Set(units.map(u => String(u.receipt.config_sha256)));
@@ -534,13 +541,13 @@ export function loadInput(dirs: readonly string[], o: LoadOptions, deps: LoadDep
     for (const [k, x] of usd) { const [reader, conversation] = k.split('|'); costs.push({ row: role, reader, conversation, usd: x === null ? null : r4(x) }); }
   }
   const value = (row: Bg1Row, id: string, reader: string): ReaderValue => values.get(row)?.get(id)?.[reader] ?? { drop: reader === PARTICLE ? 'reread_answer_missing' : 'answer_missing' };
-  const questions: QuestionInput[] = [...planned].sort(([a], [b]) => (a < b ? -1 : 1)).map(([id, conversation]) => {
+  const questions: QuestionInput[] = planned.map(({ id, conversation, bg1 }) => {
     const rows: QuestionInput['rows'] = {};
     for (const row of [...SYSTEM_ROWS, 'floor' as Bg1Row]) if (rowIds.get(row)?.has(id)) rows[row] = Object.fromEntries(READERS.map(r => [r, value(row, id, r)]));
     const exposure = Object.fromEntries([...exposures].flatMap(([row, m]) => (m.has(id) ? [[row, m.get(id)!]] : [])));
-    return { id, conversation, stratum: question(id).bg1!.stratum, rows, exposure };
+    return { id, conversation, stratum: bg1!.stratum, rows, exposure };
   });
-  if (wave) { const seen = new Set(questions.map(q => q.conversation)); const absent = [...wave].filter(c => !seen.has(c)); if (absent.length) refuse(`the pilot needs every wave A world; ${absent.join(', ')} has no rows`); }
+  if (wave) { const absent = [...wave].filter(c => !rowWorlds.has(c)); if (absent.length) refuse(`the pilot needs every wave A world; ${absent.join(', ')} has no rows`); }
   return { set: o.set, questions, fill, costs, snapshots: Object.fromEntries([...snapshots].sort(([a], [b]) => (a < b ? -1 : 1)).map(([j, vs]) => [j, [...vs].sort()])) };
 }
 

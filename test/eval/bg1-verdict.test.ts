@@ -271,8 +271,9 @@ const DEV_QUESTIONS: MemoryQuestion[] = BG1_DEV_CONVERSATIONS.flatMap(conversati
 }) as unknown as MemoryQuestion)));
 const ndjson = (path: string, rows: unknown[]) => { mkdirSync(join(path, '..'), { recursive: true }); writeFileSync(path, rows.map(r => JSON.stringify(r) + '\n').join('')); };
 
-interface Opts { limit?: number | null; keylessReread?: boolean; noReread?: string; configEdit?: (c: Record<string, any>) => void; gatingSettings?: Record<string, unknown> }
+interface Opts { limit?: number | null; keylessReread?: boolean; noReread?: string; configEdit?: (c: Record<string, any>) => void; gatingSettings?: Record<string, unknown>; omit?: string; extraRow?: string }
 function writeReceipts(root: string, o: Opts = {}) {
+  const qs = DEV_QUESTIONS.filter(q => q.id !== o.omit);
   const instrument = instrumentFor('bg1-dev');
   const defs = loadBG1Manifest().smoke_cells.filter(c => ROLES[c.system]) as CellDefinition[];
   const judgment = (answer_id: string, judge: string, instrument_id: string, score: number, gating: boolean) => ({
@@ -291,22 +292,22 @@ function writeReceipts(root: string, o: Opts = {}) {
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, 'run-config.json'), JSON.stringify(config));
     writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ cell_id: arm.cell_id, run_cell: def.id, run_status: 'complete', instrument: { id: instrument.id, sha256: instrument.sha256 }, config_sha256: `cfg-${def.system}`, spend: { usd: { ingest: 0.3, retrieval: 0.1 } } }));
-    ndjson(join(dir, 'rows.ndjson'), DEV_QUESTIONS.map(q => ({ id: q.id, cell_id: arm.cell_id, conversation: q.conversation, fill_rate: 0.95 })));
+    ndjson(join(dir, 'rows.ndjson'), [...qs, ...(o.extraRow ? [{ id: o.extraRow, conversation: qs[0].conversation }] : [])].map(q => ({ id: q.id, cell_id: arm.cell_id, conversation: q.conversation, fill_rate: 0.95 })));
     const text = def.system === 'ext-memory-bank' ? 'Lisbon' : 'Porto';
-    const answers = DEV_QUESTIONS.flatMap(q => [OPUS, SOL].map(r => answer(arm.cell_id, def.system, arm.id, q, r, text)));
+    const answers = qs.flatMap(q => [OPUS, SOL].map(r => answer(arm.cell_id, def.system, arm.id, q, r, text)));
     ndjson(join(dir, 'answers.ndjson'), answers);
     const score = text === 'Porto' ? 1 : 0;
     ndjson(join(dir, 'judgments.ndjson'), answers.flatMap(a => [judgment(a.answer_id, 'gemini:gemini-3.8-flash', instrument.id, score, false),
       ...(floor ? [] : [judgment(a.answer_id, bg1JudgeOf(a.reader), frontierInstrumentId(instrument.id, bg1JudgeOf(a.reader)), score, true)])]));
     if (!floor) {
-      ndjson(join(root, 'runs', def.id, 'contexts.ndjson'), DEV_QUESTIONS.map(q => ({ key: q.id, prompt: `memory: ${q.id} lives in ${text}`, meta: { context_sha256: sha(`ctx|${def.system}|${q.id}`) } })));
+      ndjson(join(root, 'runs', def.id, 'contexts.ndjson'), qs.map(q => ({ key: q.id, prompt: `memory: ${q.id} lives in ${text}`, meta: { context_sha256: sha(`ctx|${def.system}|${q.id}`) } })));
       ndjson(join(root, 'runs', def.id, 'meters.ndjson'), answers.map(a => ({ phase: 'reader', key: `read:${a.answer_id.slice(0, 16)}`, usd: 0.01, requests: 1, unpriced: 0 })));
     }
     if (o.noReread === def.system) continue;
     const rid = rereadCellId(arm.cell_id, PARTICLE), rdir = join(root, 'cells', rid);
     mkdirSync(rdir, { recursive: true });
     writeFileSync(join(rdir, 'receipt.json'), JSON.stringify({ cell_id: rid, keyless: o.keylessReread ? true : false, run_status: 'complete', instrument: { id: instrument.id, sha256: instrument.sha256 }, source: { config_sha256s: [`cfg-${def.system}`] }, spend: { reader_usd: 0.48 } }));
-    const ranswers = DEV_QUESTIONS.map(q => answer(rid, def.system, arm.id, q, PARTICLE, text));
+    const ranswers = qs.map(q => answer(rid, def.system, arm.id, q, PARTICLE, text));
     ndjson(join(rdir, 'answers.ndjson'), ranswers);
     ndjson(join(rdir, 'judgments.ndjson'), ranswers.flatMap(a => [judgment(a.answer_id, 'gemini:gemini-3.8-flash', instrument.id, score, false),
       ...(floor ? [] : [judgment(a.answer_id, OPUS, frontierInstrumentId(instrument.id, OPUS), score, true)])]));
@@ -343,6 +344,18 @@ describe('loadInput on synthetic dev receipts', () => {
     expect(load({ limit: 5 })).toThrow('ran with --limit 5');
     expect(load({ gatingSettings: { effort: 'high', max_tokens: 8000 } })).toThrow('not the pinned');
   });
+
+  // Value: protects=the 5% drop cap and the worst case count every question the corpus plans, not only those some row wrote; fails_when=a question no cell wrote a row for leaves the planned set instead of dropping as row_missing, or a row outside the planned questions is read; why_new=blocker 3 on #398 (verdict.ts:484); seam=synthetic dev receipts over DEV_QUESTIONS; no_claim=the drop cap's value
+  test('a question no cell wrote a row for stays planned and drops as row_missing on every side; a row outside the planned questions refuses', () => {
+    const gone = DEV_QUESTIONS[5];
+    const input = loadInput([fresh({ omit: gone.id })], { set: 'BG1-dev3' }, { questions: DEV_QUESTIONS });
+    expect(input.questions).toHaveLength(48);
+    const q = input.questions.find(x => x.id === gone.id)!;
+    expect({ conversation: q.conversation, stratum: q.stratum, rows: q.rows }).toEqual({ conversation: gone.conversation, stratum: gone.bg1!.stratum, rows: {} });
+    expect(dropsOf(input)).toEqual({ planned: 48, dropped: 1, share: 1 / 48, by: { 'gbrain|row_missing': 3, 'other|row_missing': 12 } });
+    expect(analyze(input).planned).toBe(48);
+    expect(() => loadInput([fresh({ extraRow: 'bg1-dev-01-q99' })], { set: 'BG1-dev3' }, { questions: DEV_QUESTIONS })).toThrow('rows bg1-dev-01-q99 are not planned questions of the loaded bg1-dev corpus');
+  }, 30_000);
 
   test('set BG1 needs the filled manifest, and the pilot reads set BG1 only', () => {
     const root = fresh();
