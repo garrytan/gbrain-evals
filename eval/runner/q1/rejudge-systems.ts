@@ -13,7 +13,11 @@
  *   bun eval/runner/q1/rejudge-systems.ts summary <roots> --out <dir> [--report <dir>]
  *     <roots>: --root f6=<receipt> --root q1=<receipt> [--root second-judge=<out>]...
  *     <lease>: --budget-ledger <file> --run-id <id> --lease-usd <n> [--reserve-grant <usd>=<GBEV-3's words>]
- *              [--concurrency <n>] [--keyless-upstream <url>]
+ *              [--concurrency <n>] (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)
+ *
+ * A paid subcommand without --keyless-upstream spends real keys, so it needs the granted paid window's unit and cap, and
+ * its --lease-usd never exceeds that cap (eval/runner/paid-arm.ts, the shared window guard); otherwise it exits 2 before
+ * any output, key check or lease. The ledger's ceiling below spans every stage, so the window bounds each stage's lease.
  *
  * Judges: gpt-6.1-sol grades the Claude readers' rows, claude-opus-5-5 the gpt-6.1-sol rows, and gemini-4-argon referees;
  * a same-family pair or a particle judge is refused. A frontier judgment already in custody (the receipts' own frontier
@@ -39,6 +43,7 @@ import { DEFAULT_MAX_ATTEMPTS, HARNESS_FAILURES, NOT_APPLICABLE, PRODUCT_FAILURE
 import { ChatClient, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { judgmentKey, RecordLog, sha256, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit, type UsageLine } from '../metering-proxy.ts';
+import { requireRs1Window } from '../paid-arm.ts';
 import { attestPreregistration } from '../prereg.ts';
 import { compatMayHaveBilled, JUDGE_PROVIDERS } from '../providers/openai-compatible.ts';
 import { derive } from '../scoreboard.ts';
@@ -733,6 +738,9 @@ if (import.meta.main) {
   try {
     const outArg = one('--out');
     if (!sub || !outArg) throw refuse({ code: 'USAGE', message: 'usage: rejudge-systems.ts plan|cut|judge|reuse-check|referee|controls|summary ... --out <dir>', why: 'every subcommand reads and writes one custody --out', fix: { next: 'run', argv: [...FRONT, 'plan', '--root', 'f6=<receipt>', '--root', 'q1=<receipt>', '--out', '<dir>'] } });
+    const paid = ['judge', 'reuse-check', 'referee', 'controls'].includes(sub);
+    const keyless = paid ? keylessUpstreamArg(argv) : null;
+    if (paid) requireRs1Window(argv, { what: `rejudge-systems.ts ${sub} without --keyless-upstream`, keyless: !!keyless, caps: () => [{ label: '--lease-usd', usd: Number(one('--lease-usd')) > 0 ? Number(one('--lease-usd')) : null }] });
     const out = resolve(outArg);
     mkdirSync(out, { recursive: true });
     if (sub === 'cut') {
@@ -774,14 +782,13 @@ if (import.meta.main) {
       console.log(md);
       process.exit(r.contrasts.some(c => c.outcome === 'INCOMPLETE') ? 4 : 0);
     }
-    if (!['judge', 'reuse-check', 'referee', 'controls'].includes(sub)) throw refuse({ code: 'USAGE', message: `unknown subcommand ${sub}`, why: 'the file header lists the subcommands', fix: { next: 'run', argv: [...FRONT, 'plan'] } });
+    if (!paid) throw refuse({ code: 'USAGE', message: `unknown subcommand ${sub}`, why: 'the file header lists the subcommands', fix: { next: 'run', argv: [...FRONT, 'plan'] } });
     const [ledger, runId, leaseUsd, concurrency] = [one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--concurrency') ?? 16)];
     if (!ledger || !runId || !(leaseUsd > 0) || !Number.isInteger(concurrency) || concurrency < 1) throw refuse({ code: 'USAGE', message: 'a paid subcommand needs --budget-ledger, --run-id and --lease-usd', why: 'every judge request is reserved on the GST-1365 ledger first', fix: { next: 'run', argv: [...FRONT, sub, '--budget-ledger', '<file>', '--run-id', 'gst-1365-<stage>', '--lease-usd', '<n>'] } });
     const grantArg = one('--reserve-grant');
     const grant = grantArg ? { usd: Number(grantArg.slice(0, grantArg.indexOf('='))), words: grantArg.slice(grantArg.indexOf('=') + 1) } : null;
     const ceiling = ceilingUsd(grant);
     if (one('--ledger-cap-usd') !== undefined && Number(one('--ledger-cap-usd')) !== ceiling) throw refuse({ code: 'USAGE', message: `the GST-1365 ledger ceiling is $${ceiling}; --ledger-cap-usd may only repeat it`, why: 'the API ceiling is pinned in code and rises only with a recorded reserve grant (R71)', fix: { next: 'run', argv: [...FRONT, sub, '--reserve-grant', '<usd>=<GBEV-3\'s words>'] } });
-    const keyless = keylessUpstreamArg(argv);
     claimOut(out, !!keyless, 'gst-1365');
     tieLedger(out, resolve(ledger));
     let tasks: Task[], extra: Record<string, unknown> = {}, logPath = join(out, 'judgments.ndjson'), cache = join(out, 'cache', 'qa');
