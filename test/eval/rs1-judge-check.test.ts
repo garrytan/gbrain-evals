@@ -373,15 +373,17 @@ describe('the command line', () => {
 
   // Value: protects=real answers in the pool come only from paid stage 1 runs; fails_when=a --stage1 root from a keyless rehearsal, or one with no marker at all, feeds fake answers into the candidate pool; why_new=scoped-review open item 4 (GST-1886 handoff), f3; seam=none; no_claim=whether a paid answer is any good
   test('--stage1 takes paid outputs only: a keyless or unmarked root is refused before any pool, lease or marker', () => {
-    const keyless = dir(), bare = dir(), reread = dir(), lease = dir();
-    for (const d of [keyless, bare, reread, lease]) mkdirSync(join(d, 'cells'));
+    const keyless = dir(), bare = dir(), reread = dir(), lease = dir(), keylessLease = dir();
+    for (const d of [keyless, bare, reread, lease, keylessLease]) mkdirSync(join(d, 'cells'));
     writeFileSync(join(keyless, 'upstream.json'), JSON.stringify({ keyless: true }) + '\n');
+    writeFileSync(join(keylessLease, 'lease-summary.json'), JSON.stringify({ run_id: 'x', keyless_upstream: true }) + '\n');
+    expect(stage1Unpaid(keylessLease)).toContain('holds a keyless campaign lease');
     writeFileSync(join(reread, 'upstream.json'), JSON.stringify({ keyless: false }) + '\n');
     writeFileSync(join(lease, 'lease-summary.json'), JSON.stringify({ run_id: 'x' }) + '\n');
     expect(stage1Unpaid(keyless)).toContain('holds a keyless run');
     expect(stage1Unpaid(bare)).toContain('has neither an upstream.json marking a paid run nor a campaign lease-summary.json');
     expect([stage1Unpaid(reread), stage1Unpaid(lease)]).toEqual([null, null]);
-    for (const bad of [keyless, bare]) {
+    for (const bad of [keyless, bare, keylessLease]) {
       const out = dir();
       const r = run(['plan', '--stage1', reread, '--stage1', bad, '--out', out]);
       expect(r.exitCode).toBe(2);

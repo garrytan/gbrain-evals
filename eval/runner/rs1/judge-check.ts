@@ -39,7 +39,7 @@
  *             Spend from the usage log; the published files drop its dollar fields (R79). `report` exits 0 only for
  *             a paid check whose gates pass: a keyless rehearsal or an --out with no marker exits 4 (JUDGE_CHECK_NOT_PAID).
  *   Inputs    every --stage1 root must be paid: an upstream.json with keyless false (a re-read) or a campaign lease's
- *             lease-summary.json (campaign cells have no keyless switch); anything else is refused.
+ *             lease-summary.json without keyless_upstream; anything else is refused.
  */
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -379,12 +379,17 @@ export function checkMarkdown(r: CheckReport, spend: unknown = null): string {
 
 // ─── Loading, grading and the command line ───────────────────────────
 
-/** Why a --stage1 root is not a paid stage 1 output, or null: a re-read's upstream.json must say keyless false; a campaign lease (no keyless switch) carries lease-summary.json. */
+/**
+ * Why a --stage1 root is not a paid stage 1 output, or null: a re-read's upstream.json must say keyless false; a campaign
+ * lease's lease-summary.json must not record keyless_upstream (shootout-cell writes it for a SHOOTOUT_KEYLESS_UPSTREAM run).
+ */
 export function stage1Unpaid(root: string): string | null {
-  const marker = join(root, 'upstream.json');
-  const keyless = existsSync(marker) ? (JSON.parse(readFileSync(marker, 'utf8')) as { keyless?: unknown }).keyless : undefined;
-  if (keyless === false || (keyless === undefined && existsSync(join(root, 'lease-summary.json')))) return null;
-  return keyless === true ? `${root} holds a keyless run (upstream.json)` : `${root} has neither an upstream.json marking a paid run nor a campaign lease-summary.json`;
+  const read = (f: string) => (existsSync(join(root, f)) ? JSON.parse(readFileSync(join(root, f), 'utf8')) as Record<string, unknown> : null);
+  const marker = read('upstream.json'), lease = read('lease-summary.json');
+  if (marker?.keyless === true) return `${root} holds a keyless run (upstream.json)`;
+  if (lease?.keyless_upstream === true) return `${root} holds a keyless campaign lease (lease-summary.json keyless_upstream)`;
+  if (marker?.keyless === false || (!marker && lease)) return null;
+  return `${root} has neither an upstream.json marking a paid run nor a campaign lease-summary.json`;
 }
 
 /** Stage 1's scored, replicate-0 answers in each root's cells/ (all four rows and their re-reads), with the bridge score for strata. */
