@@ -5,7 +5,7 @@
  *   bun eval/runner/rs1/pricing.ts [--n <planned N>] [--spent-usd <all-in spent so far>] [--astra-spent-usd <the part
  *     of it on the Astra line>] [--kept-done <conversations whose spend is in --spent-usd>] [--stage1-done]
  *     [--judge-check-done] [--crew-remaining-usd <n>] [--gbrain-api-per-mtok <usd>] [--gbrain-hours-per-mtok <h>]
- *     [--out <file>]
+ *     [--astra-judge-usd-per-answer <usd>] [--opus-judge-usd-per-answer <usd>] [--out <file>]
  *
  * It writes pricing.json (default eval/runner/rs1/pricing.json) with the expected all-in spend at N = 28, the ceiling
  * at the cap of 33, and the check-in projection at the planned N (28 before the pilot, N_final after it):
@@ -21,7 +21,10 @@
  * of the remaining spend that only the spend to date can put back; --judge-check-done needs --astra-spent-usd for the
  * same reason, and --astra-spent-usd may not pass --spent-usd. It exits 3 with RS1_CHECKIN when the projection passes $2,300. After stage 1, the measured
  * rs1-stable ingest rates replace F6's f6-master placeholders through --gbrain-api-per-mtok and --gbrain-hours-per-mtok,
- * and both projections are recorded in the preregistration's amendments.
+ * and both projections are recorded in the preregistration's amendments. After the judge check, its measured dollars
+ * per graded answer for each gating judge (gpt-6-astra and claude-opus-5-5) replace the assumed three calls per answer
+ * in counted judging through --astra-judge-usd-per-answer and --opus-judge-usd-per-answer; Astra's stays on the Astra
+ * line, outside the check-in. The judge check's own planning figure keeps the per-call price.
  */
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -57,6 +60,8 @@ export interface Rates {
    * rs1GatingJudgeUsd) until the judge check measures their tokens.
    */
   gating_judges: GatingJudge[];
+  /** A gating judge's measured dollars per graded answer (the judge check's), used for counted judging in its place. */
+  measured_judge_usd?: Record<string, number>;
   /** gpt-4.1-mini bridge judgment per answer. */
   bridge_judge_usd: number;
   /**
@@ -107,7 +112,7 @@ export function systemPerConversation(r: Rates, s: SystemRate) {
   const ingest_api = s.api_usd_per_mtok * r.mtok_per_conversation;
   const ingest_vm = s.vm_hours_per_mtok * r.mtok_per_conversation * s.vcpu * r.vcpu_hour_usd;
   const reads = q * (r.read_usd_per_question + r.query_usd_per_question + r.read_vm_usd_per_question);
-  const gating = (astra: boolean) => q * r.gating_judges.filter(j => (j.judge === ASTRA_JUDGE) === astra).reduce((a, j) => a + j.readers * j.usd, 0);
+  const gating = (astra: boolean) => q * r.gating_judges.filter(j => (j.judge === ASTRA_JUDGE) === astra).reduce((a, j) => a + j.readers * (r.measured_judge_usd?.[j.judge] ?? j.usd), 0);
   const judges_astra = gating(true);
   const judges = gating(false) + q * r.readers * r.bridge_judge_usd;
   return { ingest_api, ingest_vm, reads, judges, judges_astra, total: ingest_api + ingest_vm + reads + judges + judges_astra };
@@ -168,7 +173,9 @@ if (import.meta.main) {
   const flag = (name: string) => { const i = args.indexOf(name); return i < 0 ? undefined : args[i + 1]; };
   const num = (name: string, fallback: number) => { const v = flag(name); if (v === undefined) return fallback; const x = Number(v); if (!Number.isFinite(x) || x < 0) { process.stderr.write(`pricing.ts: ${name} takes a non-negative number, not ${v}\n`); process.exit(2); } return x; };
   const g = STAGE0_RATES.systems.gbrain;
-  const rates: Rates = { ...STAGE0_RATES, systems: { ...STAGE0_RATES.systems, gbrain: { ...g, api_usd_per_mtok: num('--gbrain-api-per-mtok', g.api_usd_per_mtok), vm_hours_per_mtok: num('--gbrain-hours-per-mtok', g.vm_hours_per_mtok) } } };
+  const measured = Object.fromEntries(([['--astra-judge-usd-per-answer', ASTRA_JUDGE], ['--opus-judge-usd-per-answer', 'anthropic:claude-opus-5-5']] as const).filter(([f]) => flag(f) !== undefined).map(([f, judge]) => [judge, num(f, 0)]));
+  const rates: Rates = { ...STAGE0_RATES, systems: { ...STAGE0_RATES.systems, gbrain: { ...g, api_usd_per_mtok: num('--gbrain-api-per-mtok', g.api_usd_per_mtok), vm_hours_per_mtok: num('--gbrain-hours-per-mtok', g.vm_hours_per_mtok) } },
+    ...(Object.keys(measured).length ? { measured_judge_usd: measured } : {}) };
   const crewLeft = flag('--crew-remaining-usd');
   const progress: Progress = { spent_usd: num('--spent-usd', 0), kept_done: num('--kept-done', 0), stage1_done: args.includes('--stage1-done'), crew_remaining_usd: crewLeft === undefined ? null : num('--crew-remaining-usd', 0),
     ...(flag('--astra-spent-usd') !== undefined ? { astra_spent_usd: num('--astra-spent-usd', 0) } : {}), ...(args.includes('--judge-check-done') ? { judge_check_done: true } : {}) };

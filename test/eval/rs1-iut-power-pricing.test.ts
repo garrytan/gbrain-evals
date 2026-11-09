@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { COMPARISONS, conversationDifferences, decide, dropValidity, GATING, questionScores, RS1_MARGIN, tLowerBound, tQuantile, worstCase, type ComparisonKey, type QuestionInput } from '../../eval/runner/rs1/iut.ts';
 import { analyticN, corr2, corr4, jointN, jointPower, MC_TOLERANCE, minMargin, pilotSize, RHO_JUDGE, SD10, sdAtItems, sdsAt, simulatedPass, TAUS } from '../../eval/runner/rs1/power.ts';
@@ -227,6 +228,29 @@ describe('pricing.ts', () => {
     expect(cli('--stage1-done', '--spent-usd', '60').exitCode).toBe(0);
     expect(cli('--kept-done', '5', '--spent-usd', '2000').exitCode).toBe(3);
     expect(cli('--kept-done', '0').exitCode).toBe(0);
+  });
+
+  test('the judge check\'s measured dollars per answer replace each gating judge\'s assumed rate in counted judging; Astra\'s stays outside the check-in', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rs1-pricing-'));
+    const cli = (...args: string[]) => {
+      const out = join(dir, `${args.join('_').replace(/[^a-z0-9]/gi, '')}.json`);
+      const r = Bun.spawnSync(['bun', 'eval/runner/rs1/pricing.ts', '--n', '20', '--spent-usd', '50', '--astra-spent-usd', '20', '--stage1-done', '--judge-check-done', '--out', out, ...args], { cwd: ROOT });
+      return { code: r.exitCode, json: r.exitCode === 2 ? null : JSON.parse(readFileSync(out, 'utf8')), err: r.stderr.toString() };
+    };
+    const base = cli(), astra = cli('--astra-judge-usd-per-answer', '0.0664648'), both = cli('--astra-judge-usd-per-answer', '0.0664648', '--opus-judge-usd-per-answer', '0.04890336');
+    const q = STAGE0_RATES.questions_per_conversation;
+    expect(base.json.rates).not.toHaveProperty('measured_judge_usd');
+    expect(both.json.rates.measured_judge_usd).toEqual({ [ASTRA_JUDGE]: 0.0664648, 'anthropic:claude-opus-5-5': 0.04890336 });
+    expect(astra.json.astra_per_conversation).toBeCloseTo(3 * q * 0.0664648, 2);
+    expect(astra.json.checkin.projection).toBe(base.json.checkin.projection);
+    expect(astra.json.astra_line.projection - base.json.astra_line.projection).toBeCloseTo(3 * q * (0.0664648 - rs1GatingJudgeUsd(ASTRA_JUDGE)) * 20 * (1 + STAGE0_RATES.reserve), 1);
+    const opusDelta = 3 * q * 2 * (0.04890336 - rs1GatingJudgeUsd('anthropic:claude-opus-5-5')) * 20 * (1 + STAGE0_RATES.reserve);
+    expect(both.json.checkin.projection - astra.json.checkin.projection).toBeCloseTo(opusDelta, 1);
+    expect(both.json.astra_line.projection).toBe(astra.json.astra_line.projection);
+    expect(both.json.judge_check).toEqual(base.json.judge_check);
+    const bad = cli('--opus-judge-usd-per-answer', '-1');
+    expect([bad.code, bad.err]).toEqual([2, expect.stringContaining('--opus-judge-usd-per-answer takes a non-negative number')]);
+    rmSync(dir, { recursive: true, force: true });
   });
 
   test('the committed pricing.json is the default output', () => {
