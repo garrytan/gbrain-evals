@@ -15,7 +15,11 @@
  * --known holds { known: [{ source, cause, detail_includes?, status }] }, a status shown beside matching under-stress rows
  * (such as a fix gbrain already shipped). report counts each source, run and case once when label files overlap, the last file winning, and refuses any model
  * label whose labeller path and row family have no passing gate in --gates. agree fails when a (path, family) pair the
- * production labels used has no passing gate, or when there is nothing to gate. classify and report are
+ * production labels used has no passing gate, or when there is nothing to gate. agree stamps the gate file with the
+ * taxonomy version and the labeller prompt hash, refuses production labels from another taxonomy version, and report
+ * refuses a gate file stamped with another version or prompt. classify writes a not_run row beside the failures for
+ * each task a system never ran, so report can tell "not run" from "no failed row". estimate and label refuse the
+ * retired --labelset-per-stratum flag. classify and report are
  * keyless. failures.ndjson carries row text for the labeller: keep it in a private work directory, never in the
  * repository. label spends money and refuses without --paid and an open budget run; it exits 1 when the budget stops it
  * or when any row got no label, so a partial run is never mistaken for a finished one.
@@ -28,10 +32,10 @@ import { requirePaidArm } from '../paid-arm.ts';
 import { ADAPTERS } from './adapters/index.ts';
 import { buildLabelSet, gatePaths, LABEL_SET_PER_FAMILY, labelSetSample, NO_LABEL_RULES, productionLabels, ungated, type DoubleLabel, type PathGate } from './agreement.ts';
 import { classify } from './classify.ts';
-import { buildLabelPrompt, LABEL_SET_LABELLERS, labellerFor, labelResidual, labelSet, type LabellerSpec } from './label.ts';
+import { buildLabelPrompt, LABEL_PROMPT_SHA256, LABEL_SET_LABELLERS, labellerFor, labelResidual, labelSet, type LabellerSpec } from './label.ts';
 import { loadSource, readManifest } from './manifest.ts';
 import { issueDrafts, renderReport, summarize, type KnownStatus } from './report.ts';
-import { renderTaxonomyMarkdown } from './taxonomy.ts';
+import { renderTaxonomyMarkdown, TAXONOMY_VERSION } from './taxonomy.ts';
 import type { CauseLabel, EvalFailure, SourceCounts, StressCount } from './types.ts';
 
 export const TAXONOMY_DOC = 'docs/failure-causes/TAXONOMY.md';
@@ -51,6 +55,14 @@ function roots(argv: string[]): Record<string, string> {
     if (at <= 0) throw new Error(`--root takes <name>=<dir>, got ${r}`);
     return [r.slice(0, at), r.slice(at + 1)];
   }));
+}
+
+/** The label-set size per row family; the retired per-stratum flag refuses instead of being ignored. */
+function perFamily(argv: string[]): number {
+  if (argv.includes('--labelset-per-stratum')) throw new Error('--labelset-per-stratum is retired: the label set is sized per row family, so pass --labelset-per-family <n>');
+  const n = Number(flag(argv, '--labelset-per-family') ?? LABEL_SET_PER_FAMILY);
+  if (!Number.isInteger(n) || n < 1) throw new Error('--labelset-per-family takes a whole number of rows, at least 1');
+  return n;
 }
 
 function residuals(failures: EvalFailure[]): EvalFailure[] {
@@ -92,6 +104,7 @@ async function run(argv: string[]): Promise<number> {
     const manifest = readManifest(need(rest, '--manifest'));
     const dirs = roots(rest);
     const labels: CauseLabel[] = [];
+    const notRun: CauseLabel[] = [];
     const failures: EvalFailure[] = [];
     const stress: StressCount[] = [];
     const counts: Record<string, SourceCounts> = {};
@@ -101,17 +114,18 @@ async function run(argv: string[]): Promise<number> {
       failures.push(...out.failures);
       stress.push(...out.stress);
       labels.push(...out.failures.map(classify));
+      notRun.push(...(out.not_run ?? []).map(classify));
     }
-    writeNdjson(need(rest, '--out'), labels);
+    writeNdjson(need(rest, '--out'), [...labels, ...notRun]);
     if (flag(rest, '--failures-out')) writeNdjson(flag(rest, '--failures-out')!, failures);
     if (flag(rest, '--stress-out')) writeFileSync(flag(rest, '--stress-out')!, JSON.stringify(stress, null, 1) + '\n');
     if (flag(rest, '--counts-out')) writeFileSync(flag(rest, '--counts-out')!, JSON.stringify(counts, null, 1) + '\n');
     const basis = labels.reduce((m, l) => ({ ...m, [l.basis]: (m[l.basis] ?? 0) + 1 }), {} as Record<string, number>);
-    console.log(JSON.stringify({ failures: labels.length, basis, stress: stress.length, counts }, null, 1));
+    console.log(JSON.stringify({ failures: labels.length, basis, not_run: notRun.length, stress: stress.length, counts }, null, 1));
     return 0;
   }
   if (command === 'estimate') {
-    const p = plan(readNdjson<EvalFailure>(need(rest, '--failures')), Number(flag(rest, '--labelset-per-family') ?? LABEL_SET_PER_FAMILY));
+    const p = plan(readNdjson<EvalFailure>(need(rest, '--failures')), perFamily(rest));
     console.log(JSON.stringify({ residual: p.rest.length, labelset_cases: p.sample.length,
       families: Object.fromEntries([...new Set(p.sample.map(f => family(f.model)))].map(s => [s, p.sample.filter(f => family(f.model) === s).length])),
       strata: Object.fromEntries([...new Set(p.sample.map(stratum))].map(s => [s, p.sample.filter(f => stratum(f) === s).length])),
@@ -126,7 +140,7 @@ async function run(argv: string[]): Promise<number> {
     const mode = flag(rest, '--mode') ?? 'production';
     if (mode !== 'production' && mode !== 'labelset') throw new Error('--mode is production or labelset');
     if (existsSync(out)) throw new Error(`${out} exists; a rerun writes a fresh file (cached calls are free)`);
-    const p = plan(failures, Number(flag(rest, '--labelset-per-family') ?? LABEL_SET_PER_FAMILY));
+    const p = plan(failures, perFamily(rest));
     const estimate = estimateUsd(mode === 'production' ? p.production : p.labelset);
     requirePaidArm(rest, { arm: `failure-cause labeller (${mode})`, estimateUsd: estimate });
     mkdirSync(cache, { recursive: true });
@@ -156,9 +170,12 @@ async function run(argv: string[]): Promise<number> {
   }
   if (command === 'agree') {
     const set = buildLabelSet(readNdjson<DoubleLabel>(need(rest, '--labelset')));
-    const production = productionLabels(readNdjson<CauseLabel>(need(rest, '--production')), family);
+    const productionRows = readNdjson<CauseLabel>(need(rest, '--production'));
+    const stale = [...new Set(productionRows.map(l => l.taxonomy_version))].filter(v => v !== TAXONOMY_VERSION);
+    if (stale.length) throw new Error(`production labels from taxonomy ${stale.join(', ')}; this code is ${TAXONOMY_VERSION}, so relabel before gating`);
+    const production = productionLabels(productionRows, family);
     const gates = gatePaths(set.rows, production);
-    writeFileSync(need(rest, '--out'), JSON.stringify({ agreed: set.agreed, disagreed: set.disagreed, gates }, null, 1) + '\n');
+    writeFileSync(need(rest, '--out'), JSON.stringify({ taxonomy_version: TAXONOMY_VERSION, prompt_sha256: LABEL_PROMPT_SHA256, agreed: set.agreed, disagreed: set.disagreed, gates }, null, 1) + '\n');
     console.log(JSON.stringify(gates.map(g => ({ path: g.path, family: g.family, held_out: g.held_out, kappa: g.kappa, pass: g.pass, reason: g.reason })), null, 1));
     if (!gates.length) console.error('no labeller path to gate: the production labels hold no model label');
     return gates.length && gates.every(g => g.pass) ? 0 : 1;
@@ -168,7 +185,12 @@ async function run(argv: string[]): Promise<number> {
     if (!rest.includes('--allow-stale')) for (const f of files) if (Date.now() - statSync(f).mtimeMs > STALE_MS) throw new Error(`${f} is more than 8 days old; a weekly report needs this week's labels (or pass --allow-stale for a back-classification)`);
     const labels = [...new Map(files.flatMap(f => readNdjson<CauseLabel>(f)).map(l => [`${l.source}|${l.run_id}|${l.case_id}`, l])).values()];
     if (!labels.length) throw new Error('no labels to report; nothing is filed for an empty week');
-    const gates: PathGate[] = flag(rest, '--gates') ? JSON.parse(readFileSync(flag(rest, '--gates')!, 'utf8')).gates : [];
+    let gates: PathGate[] = [];
+    if (flag(rest, '--gates')) {
+      const file = JSON.parse(readFileSync(flag(rest, '--gates')!, 'utf8')) as { taxonomy_version?: string; prompt_sha256?: string; gates: PathGate[] };
+      if (file.taxonomy_version !== TAXONOMY_VERSION || file.prompt_sha256 !== LABEL_PROMPT_SHA256) throw new Error(`${flag(rest, '--gates')} was gated under taxonomy ${file.taxonomy_version ?? 'unstamped'} and labeller prompt ${file.prompt_sha256?.slice(0, 12) ?? 'unstamped'}; this code is ${TAXONOMY_VERSION} with prompt ${LABEL_PROMPT_SHA256.slice(0, 12)}, so run agree again`);
+      gates = file.gates;
+    }
     const refused = ungated(labels, gates, family);
     if (refused.length) throw new Error(`model labels without a passing gate: ${refused.map(r => `${r.path} on ${r.family} (${r.labels})`).join(', ')}; run agree and pass its output as --gates`);
     const stress: StressCount[] = flag(rest, '--stress') ? JSON.parse(readFileSync(flag(rest, '--stress')!, 'utf8')) : [];

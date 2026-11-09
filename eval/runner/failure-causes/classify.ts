@@ -9,8 +9,11 @@
  * to check: that row stays unclassified, because a reasoning-only labeller
  * cannot rule out an upstream miss. A row no labeller may read (no recorded
  * text, or a private or sealed source) is unclassified too, so it never waits
- * for a label that cannot come. The function is pure: no I/O, no clock, no
- * model.
+ * for a label that cannot come. A row tagged no_answer (the system gave no
+ * answer to judge) never counts as an answered abstention question and, with no
+ * earlier signal, is unclassified as residual.no_answer. A row for a task the
+ * system never ran (not_run) gets no cause and is neither passed nor failed. The
+ * function is pure: no I/O, no clock, no model.
  */
 import { CAUSES, STAGES, TAXONOMY_VERSION, UNCLASSIFIED, type Cause, type Stage, type Tag } from './taxonomy.ts';
 import { FAILURE_CAUSE_SCHEMA, type CauseLabel, type EvalFailure } from './types.ts';
@@ -67,7 +70,7 @@ function signals(f: EvalFailure): { hits: Hit[]; unmeasured: Stage[]; tags: Set<
 
   if (tags.has('retrieve_error')) hit('retrieval_miss', 'retrieval.retrieve_error');
   else if (g.gold_count === 0) {
-    if (/abstention/.test(f.category ?? '')) hit('citation_abstention', 'reasoning.answered_unanswerable');
+    if (/abstention/.test(f.category ?? '') && !tags.has('no_answer')) hit('citation_abstention', 'reasoning.answered_unanswerable');
   } else {
     if (g.retrieved === null && g.delivered === null) unmeasured.push('retrieval', 'ranking');
     else if (g.retrieved === null) {
@@ -108,8 +111,10 @@ export function classify(f: EvalFailure): CauseLabel {
     gbrain_sha: f.gbrain_sha, category: f.category, secondary, tags: [...tags].sort(), unmeasured: [...new Set(unmeasured)],
     evidence: f.evidence, labeller: null,
   };
+  if (f.not_run) return { ...base, cause: null, basis: 'unclassified', rule_id: `not_run.${f.not_run}`, secondary: [] };
   if (!f.failed) return { ...base, cause: null, basis: 'unclassified', rule_id: 'passed', secondary: [] };
   if (primary) return { ...base, cause: primary.cause, basis: 'deterministic', rule_id: primary.rule };
+  if (tags.has('no_answer')) return { ...base, cause: UNCLASSIFIED, basis: 'unclassified', rule_id: 'residual.no_answer' };
   if (deliveryUnknown(f) && (f.text?.context ?? null) === null) return { ...base, cause: UNCLASSIFIED, basis: 'unclassified', rule_id: 'residual.delivery_unmeasured' };
   if (!f.text || f.visibility === 'private' || f.visibility === 'sealed') return { ...base, cause: UNCLASSIFIED, basis: 'unclassified', rule_id: 'residual.no_labeller_text' };
   return { ...base, cause: null, basis: 'needs_model', rule_id: 'residual' };

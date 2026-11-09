@@ -19,7 +19,7 @@ import type { ChatLike } from '../memory-qa/qa-v2.ts';
 import type { DoubleLabel } from './agreement.ts';
 import { classify, deliveryUnknown } from './classify.ts';
 import { CAUSES, MODEL_CAUSES, UNCLASSIFIED, type Cause, type Tag } from './taxonomy.ts';
-import type { CauseLabel, EvalFailure } from './types.ts';
+import { EVAL_FAILURE_SCHEMA, type CauseLabel, type EvalFailure } from './types.ts';
 
 export interface LabellerSpec { model: string; effort: string; path: string }
 
@@ -79,6 +79,20 @@ export function buildLabelPrompt(f: EvalFailure): { system: string; prompt: stri
   ].join('\n');
   return { system: SYSTEM, prompt, sha256: createHash('sha256').update(SYSTEM + '\n' + prompt).digest('hex') };
 }
+
+const PROBE: EvalFailure = {
+  schema: EVAL_FAILURE_SCHEMA, source: 'probe', run_id: 'probe', case_id: 'probe', system: 'probe', arm: 'probe', arm_role: 'gbrain_default', condition: 'natural',
+  visibility: 'synthetic', model: 'anthropic:probe', gbrain_sha: null, failed: true, score: 0, category: 'probe', agent_loop: false, stop: null, finish_reason: null,
+  harness: null, operation: null, tool_calls: null, gold: { gold_count: 1, stored: null, hidden: null, retrieved: null, delivered: 'all', opened: null, summary_only: null },
+  writes: null, tags: [], evidence: [], text: { question: 'q', expected: 'e', answer: 'a', context: 'c' },
+};
+/**
+ * The labeller prompt's identity: the hash of the prompts built for two fixed probe rows (one with every field, one with
+ * delivery unmeasured and nothing recorded), so a change to the instruction, the cause list or the template changes it.
+ * agree stamps it on the gate file, and report refuses a gate stamped with another.
+ */
+export const LABEL_PROMPT_SHA256 = createHash('sha256').update([PROBE,
+  { ...PROBE, gold: { ...PROBE.gold, delivered: null }, text: { question: 'q', expected: null, answer: 'a', context: null } }].map(p => buildLabelPrompt(p).sha256).join('\n')).digest('hex');
 
 /** The last JSON object in a reply that has a cause field; braces inside its strings are fine. */
 function lastCauseObject(text: string): Record<string, unknown> | null {

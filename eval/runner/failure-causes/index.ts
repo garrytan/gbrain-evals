@@ -11,7 +11,7 @@ export { ADAPTERS, fromCat40, fromLiveRecall, fromRefreshBarrier, fromRs1, fromS
 export type { AdapterOutput } from './adapters/index.ts';
 export { SOURCES_SCHEMA, loadSource, pointer, readManifest, validateManifest } from './manifest.ts';
 export type { SourceEntry, SourceManifest } from './manifest.ts';
-export { ASTRA_LABELLER, LABEL_SET_LABELLERS, NOT_DELIVERED, PRODUCTION_LABELLERS, buildLabelPrompt, labelResidual, labelSet, labellerFor, parseLabel, resolveChoice } from './label.ts';
+export { ASTRA_LABELLER, LABEL_PROMPT_SHA256, LABEL_SET_LABELLERS, NOT_DELIVERED, PRODUCTION_LABELLERS, buildLabelPrompt, labelResidual, labelSet, labellerFor, parseLabel, resolveChoice } from './label.ts';
 export type { LabellerSpec, LabelRun, LabelSetRun } from './label.ts';
 export { KAPPA_MIN, LABEL_SET_PER_FAMILY, MIN_AGREED_PER_PATH, NO_LABEL_RULES, buildLabelSet, cohensKappa, confusion, gatePaths, knownAnswerAccuracy, labelSetSample, perCause, productionLabels, stratifiedSample, ungated } from './agreement.ts';
 export type { DoubleLabel, LabelSetRow, PathGate, Production } from './agreement.ts';
