@@ -54,6 +54,8 @@ import { DEFAULT_THINK_MODEL as P8_THINK } from '../../eval/runner/p8-quote-grou
 import { DEFAULT_ARMS as FACTS_ABSORB_ARMS, parseArms } from '../../eval/runner/facts-absorb-gate.ts';
 import { FRONTIER_READERS } from '../../eval/runner/systems/baselines.ts';
 import { MODEL_CONFIG as WORKLOAD } from '../../eval/workload-suites/run-config.ts';
+import { MODELS as PREDICTIVE_MODELS } from '../../eval/runner/predictive/run.ts';
+import { MODEL as CONDITIONS_PARAPHRASER } from '../../eval/runner/live-recall/paraphrase-opus.ts';
 
 /** `test` holds the models under test: agents, readers, answer, think and extraction models, optimizers and optimization targets. */
 interface Registered { test?: readonly string[]; judge?: readonly string[] }
@@ -104,6 +106,8 @@ const DEFAULTS: Record<string, Registered> = {
   'P4 streaming model': { test: [P4_MODEL] },
   'P8 think model': { test: [P8_THINK] },
   'facts-absorb gate candidate arms': { test: parseArms(FACTS_ABSORB_ARMS).filter(a => a.kind === 'model').map(a => a.model!) },
+  'predictive measures G1, G3 and G4 agents': { test: [...PREDICTIVE_MODELS] },
+  'conditions-recall paraphrase writer (G2)': { test: [CONDITIONS_PARAPHRASER] },
 };
 const models = (r: Registered): string[] => [...(r.test ?? []), ...(r.judge ?? [])];
 

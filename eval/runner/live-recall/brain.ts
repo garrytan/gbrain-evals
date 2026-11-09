@@ -42,7 +42,9 @@ export const ABORT_CODES = {
   LR_CELL_INVALID: 'A cell passed its error or degraded-search cap; the scorecard reports it invalid (not an abort).',
   LR_JUDGE_ERROR: 'Judge output failed to parse twice; `tasks.ts judge <run dir>` re-judges those answers without re-answering.',
   LR_RESUME_NEEDS_WINDOW: 'A counted --resume needs --window-note <id> from GBEV-3\'s window note; ask GBEV-3 for one.',
-  LR_COST_GATE: 'The projected counted cost breaks the cost gate (paraphrase pass over 75% of the cap, or the total over the cap); send the projection to GBEV-3 before any counted call.',
+  LR_COST_GATE: 'The projected counted cost breaks the cost gate (paraphrase pass over 75% of the cap, the total over the cap, or the judge check over its cap); send the projection to GBEV-3 before any counted call.',
+  LR_JUDGE_TRUNCATED: 'A judge model hit the output-token cap on more than 1% of its calls (while it has fewer than 100, on more than one), so the check or run stopped; send the line to GBEV-3, who decides before anything resumes.',
+  LR_JUDGE_CHECK: 'The counted run has no passing judge check (R78) for this task file and harness; run tasks.ts judge-check, and if it does not pass, send judge-check.json to GBEV-3, who decides before any counted call.',
   LR_PROVIDER_REJECTED: 'A provider refused the key, the model or the account (401, 403, 404, another 4xx, a credit or billing 400, OpenAI\'s 429 insufficient_quota, or Particle\'s 402 for an empty prepaid balance); that episode has no record. Fix the key, model access or balance, then continue with --resume.',
   LR_GOLD_OUT_OF_SOURCE: 'A gold page lives only in a source other than the one the runner reads (the source `gbrain sources current` names from the repository root in this shell); nothing was written and no task was dropped. Send the detail line to GBEV-3, which decides between fixing the gold slug and reading another source.',
 } as const;

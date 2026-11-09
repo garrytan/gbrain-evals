@@ -1,0 +1,44 @@
+[
+  {
+    "id": "live-recall-b1",
+    "file": "live-recall-b1.json",
+    "sha256": "2401172b60be9cc6034c6938c0fb3a89f05f610f0a90d61757c4911e6a4cac78",
+    "status": "available"
+  },
+  {
+    "id": "live-recall-b2",
+    "file": "live-recall-b2.json",
+    "sha256": "f051200fefb23a8e82d5ebf0431e3cc4aa9dc7d0697c542f088412dee707b6e3",
+    "status": "available"
+  },
+  {
+    "id": "live-recall-b3",
+    "file": "live-recall-b3.json",
+    "status": "pending"
+  },
+  {
+    "id": "phase2-agent",
+    "file": "phase2-agent.json",
+    "status": "pending"
+  },
+  {
+    "id": "miss-log-weekly",
+    "file": "miss-log-weekly.json",
+    "status": "pending"
+  },
+  {
+    "id": "replay-pins",
+    "file": "replay-pins.json",
+    "status": "pending"
+  },
+  {
+    "id": "latency-pins",
+    "file": "latency-pins.json",
+    "status": "pending"
+  },
+  {
+    "id": "phase2-freeze-out-of-view",
+    "file": "phase2-freeze-out-of-view.json",
+    "status": "pending"
+  }
+]

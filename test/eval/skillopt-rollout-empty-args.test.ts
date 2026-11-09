@@ -10,9 +10,10 @@
  * `grep`) as absent, so 30 of the 38 `traverse_graph` calls now read; that replay fails at `a131fb20`. Every
  * recorded `get_page` call still refuses on a non-empty value. gbrain v0.60.557.0 (gbrain#8458) hands the model the
  * error an MCP caller gets for the same refused read (code, message, suggestion and a runnable `fix`), where it used
- * to hand over only the message; the four tests that read a refusal fail at `311a83bbe`. Following each refusal's
- * fix verbatim reads every two- and three-selector `get_page` call. A replay cannot show whether Sol follows it, so
- * only a live Sol rollout shows whether its page reads recover.
+ * to hand over only the message; the four tests that read a refusal fail at `311a83bbe`. gbrain v0.60.570.0
+ * (gbrain#8509) reads one window from several selectors (cursor, then around_chunk_id, then lines, then bytes)
+ * instead of refusing, so all 436 two- and three-selector `get_page` calls now read; that replay fails at
+ * `62637c96a`. The known_as_of, grep and hop-chain refusals remain.
  */
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
@@ -76,7 +77,7 @@ describe("GPT-6.1 Sol's empty optional arguments in the pinned SkillOpt registri
       for (const m of opts.messages) if (Array.isArray(m.content)) for (const b of m.content) if (b.type === 'tool-result') seen.push(b);
       if (seen.length) return fakeReply(opts, 'Vera Chen. [Source: people/vera-chen-14]');
       const blocks = [
-        { type: 'tool-call', toolCallId: 'c1', toolName: 'brain_get_page', input: { slug: PAGE, lines: { from: 1, count: 150 }, bytes: { offset: 0, length: 20000 } } },
+        { type: 'tool-call', toolCallId: 'c1', toolName: 'brain_get_page', input: { slug: PAGE, known_as_of: '2026-01-01T00:00:00Z', lines: { from: 1, count: 150 } } },
       ] as ChatResult['blocks'];
       return { ...fakeReply(opts, ''), blocks, stopReason: 'tool_calls' } as ChatResult;
     };
@@ -93,9 +94,9 @@ describe("GPT-6.1 Sol's empty optional arguments in the pinned SkillOpt registri
     expect(result!.isError).toBe(true);
     expect(JSON.parse(result!.output)).toMatchObject({
       code: 'invalid_params',
-      message: 'get_page: pass one window selector, not 2 (got lines and bytes).',
-      suggestion: expect.stringContaining('Drop `bytes` to read the lines window'),
-      fix: { mcp: { tool: 'get_page', arguments: { slug: PAGE, lines: { from: 1, count: 150 }, body: 'window' } } },
+      message: 'get_page: known_as_of does not combine with lines.',
+      suggestion: expect.stringContaining('Drop `lines` to read the page as recorded at known_as_of'),
+      fix: { mcp: { tool: 'get_page', arguments: { slug: PAGE, known_as_of: '2026-01-01T00:00:00Z' } } },
     });
   }, 120_000);
 
@@ -120,14 +121,14 @@ describe("GPT-6.1 Sol's empty optional arguments in the pinned SkillOpt registri
   }
 });
 
-describe('what gbrain#8429 and gbrain#8444 leave refused, and where gbrain#8458\'s fix leads: the frontier probe\'s recorded Sol calls, replayed', () => {
+describe('what gbrain#8429, gbrain#8444 and gbrain#8509 leave refused, and where gbrain#8458\'s fix leads: the frontier probe\'s recorded Sol calls, replayed', () => {
   const INPUTS = join(import.meta.dir, '../../docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot');
   const SLUG: Record<string, string> = { get_page: PAGE, get_backlinks: PAGE, traverse_graph: 'companies/ranger-22' };
   const lines = (['query', 'briefing', 'fact-check'] as const).flatMap(skill =>
     readFileSync(join(INPUTS, `sol-${skill}-input.txt`), 'utf8').split('\n'));
   const recorded = (['query', 'briefing', 'fact-check'] as const).flatMap(skill => recordedCalls('sol', skill));
 
-  test('every get_backlinks call and the 30 traverse_graph calls with hops: [] read; every get_page call and the 8 traverse_graph calls with a hop chain still fail, all but one on a non-empty argument; each refusal carries a suggestion, and following its fix reads all 436 multi-selector get_page calls', async () => {
+  test('every get_backlinks call, the 30 traverse_graph calls with hops: [] and the 436 multi-selector get_page calls read; the other 171 get_page calls and the 8 traverse_graph calls with a hop chain still fail, all but one on a non-empty argument, and each refusal carries a suggestion', async () => {
     expect(loadCorpora().pages.has(SLUG.traverse_graph!)).toBe(true);
     for (const tool of Object.keys(SLUG)) {
       expect(recorded.filter(c => c.tool === tool).length).toBe(lines.filter(l => l.startsWith(`- ${tool} `)).length);
@@ -152,16 +153,13 @@ describe('what gbrain#8429 and gbrain#8444 leave refused, and where gbrain#8458\
     }, ['get_page', 'traverse_graph', 'get_backlinks']));
     expect(unguided).toBe(0);
     expect(followed).toEqual({
-      'pass one window selector, not 2 (got lines and bytes)': { reads: 183 },
-      'pass one window selector, not 3 (got lines and bytes and around_chunk_id)': { reads: 253 },
       'known_as_of does not combine with': { 'no recorded page at that instant': 169 },
       'grep returns part of the read view': { 'no fix': 1 },
       'hops cannot be combined with': { 'no fix': 8 },
     });
     expect(outcomes).toEqual({
       get_page: {
-        'pass one window selector, not 2 (got lines and bytes)': 183,
-        'pass one window selector, not 3 (got lines and bytes and around_chunk_id)': 253,
+        ok: 436,
         'known_as_of does not combine with': 169,
         'grep returns part of the read view': 1,
         'arguments are not JSON': 1,
