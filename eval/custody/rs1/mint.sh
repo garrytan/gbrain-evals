@@ -52,7 +52,9 @@
 #
 # Modes: --fake swaps the whole pipeline and every model call for a deterministic stub (no network, system python3;
 # the keyless tests use it). --stub-model runs BEAM's own code with a deterministic stub model. Neither spends.
-# Real mode needs GEMINI_API_KEY and OPENAI_API_KEY in this shell, an open ledger run, and the granted paid window: --paid-window <unit> --window-cap-usd <n>. Without the window,
+# Real mode needs RS1_GEMINI_API_KEY (the dedicated paid-tier Gemini key; GEMINI_API_KEY is never read in real mode, and
+# each Gemini step's proxy gets RS1_GEMINI_API_KEY's value under the name GEMINI_API_KEY) and OPENAI_API_KEY in this
+# shell, an open ledger run, and the granted paid window: --paid-window <unit> --window-cap-usd <n>. Without the window,
 # or with a ledger program cap or run budget above its cap, it exits 2 before anything is fetched or started
 # (eval/runner/rs1/paid-window.ts).
 #
@@ -103,10 +105,12 @@ case "$(basename "$OUT")" in rs1-custody*) ;; *) die "--out must be a directory 
 if [ "$MODE" = real ]; then
   [ -n "$WINDOW" ] && [ -n "$WINDOW_CAP" ] || die "real mode spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n> from the granted paid window (--fake and --stub-model spend nothing)"
   [ -n "$LEDGER" ] && [ -n "$RUN_ID" ] || die "real mode needs --budget-ledger and --budget-run-id (an open RS1 ledger run)"
-  test -n "${GEMINI_API_KEY:-}" || die "GEMINI_API_KEY is not set"
+  test -n "${RS1_GEMINI_API_KEY:-}" || die "RS1_GEMINI_API_KEY is not set; real mode takes Gemini's key only from it, never from GEMINI_API_KEY"
   test -n "${OPENAI_API_KEY:-}" || die "OPENAI_API_KEY is not set"
   command -v bun >/dev/null || die "bun is not on PATH"
   bun "$REPO/eval/runner/rs1/paid-window.ts" check --paid-window "$WINDOW" --window-cap-usd "$WINDOW_CAP" --budget-ledger "$LEDGER" --budget-run-id "$RUN_ID" >/dev/null || exit 2
+  GEMINI_API_KEY="$RS1_GEMINI_API_KEY"
+  export GEMINI_API_KEY
 fi
 
 inside_checkout() {
