@@ -115,6 +115,13 @@ describe('live-recall batch3 questions, freeze and epoch', () => {
       expect(await run({ ...f, visibility_epoch: 'post_gbra_398' })).toBe('LR_FREEZE_MISMATCH');
       const { visibility_epoch: _e, ...noEpoch } = f;
       expect(await run(noEpoch)).toBe('LR_FREEZE_MISMATCH');
+      const later = { ...gut, version: '9.0.0.0' };
+      const runLater = (freeze: unknown) => {
+        writeFileSync(join(dir, 'freeze.json'), JSON.stringify(freeze));
+        return abortCode(liveRecall({ fixture: false, questionsPath: join(dir, 'q.jsonl'), freezePath: join(dir, 'freeze.json'), databaseUrlEnv: 'LIVE_RECALL_TEST_UNSET', out: join(dir, 'out'), gut: later }, () => {}));
+      };
+      expect(await runLater({ ...f, visibility_epoch: 'unknown', gbrain_version: '8.0.0.0' })).toBe('LR_FREEZE_MISMATCH');
+      expect(await runLater({ ...f, visibility_epoch: 'unknown', gbrain_version: '9.0.0.0' })).toBe('LR_NO_DATABASE_URL');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

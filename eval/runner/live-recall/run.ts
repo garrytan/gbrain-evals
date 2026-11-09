@@ -433,6 +433,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     if (protocol === 'batch3') {
       if (typeof frozen.visibility_epoch !== 'string') throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the batch3 freeze records no visibility_epoch');
       if (frozen.visibility_epoch !== runEpoch) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the freeze visibility_epoch ' + versionOrEpoch(frozen.visibility_epoch) + ' differs from this run\'s ' + runEpoch + ' (GBRA-398)');
+      if (runEpoch === 'unknown' && frozen.gbrain_version !== o.gut.version) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the visibility epoch is unknown on both sides, so the run needs the freeze\'s gbrain version ' + (versionOrNull(frozen.gbrain_version) ?? 'unrecorded') + ' (GBRA-398)');
       frozenEpoch = { gbrain_version: versionOrNull(frozen.gbrain_version), visibility_epoch: frozen.visibility_epoch };
     }
   }

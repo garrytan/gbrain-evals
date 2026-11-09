@@ -73,7 +73,8 @@ All commands run from the repository root.
    are cleared) that gbrain falls on. A counted run whose own epoch differs from the freeze's is refused with
    `LR_FREEZE_MISMATCH`, because gold a remote reader could not see before the change may be visible after it. The
    epoch reads `pre_gbra_398` up to gbrain 0.60.620.0, `post_gbra_398` from the first release that carries the change
-   once `eval/runner/live-recall/visibility-epoch.ts` names it, and `unknown` otherwise.
+   once `eval/runner/live-recall/visibility-epoch.ts` names it, and `unknown` otherwise. When the epoch is `unknown`,
+   the run must also use the freeze's exact gbrain version, because an unknown epoch can't show which side it is on.
 
    ```bash
    bun eval/runner/live-recall/run.ts freeze --questions <questions.jsonl> --out freeze.json --protocol batch3 \
@@ -387,7 +388,7 @@ The question file has a problem at the line and field named. Fix it and freeze a
 
 The question file's hash differs from `freeze.json`, or a counted run was started without `--questions` and
 `--freeze`. Under batch 3 it also means the freeze records no `visibility_epoch`, or its epoch differs from the run's
-(GBRA-398): freeze again with the gbrain you run. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
+(GBRA-398), or both epochs read `unknown` and the gbrain versions differ: freeze again with the gbrain you run. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
 run directories were made on different question files. In phase 2 it means the task file's hash differs from
 `freeze.json`, or the kept line count does not match it: run with the frozen file, or freeze again. On a phase 2
 `--resume` it means the resume differs from the session that started the run directory in its harness digest, loaded
