@@ -748,8 +748,10 @@ export class Campaign {
   /**
    * BG1: refuse a lease whose usd or max_output_tokens is not its unit's in the frozen campaign manifest, or, once
    * campaign.json exists, one the campaign ledger does not hold at that amount in this campaign's run (open, while the
-   * lease is reserved). leases.sha256 only shows the log is the one last written, so a coordinated edit of both files
-   * stops here before a proxy is handed the lease. Other campaigns pass untouched.
+   * lease is reserved) under the lease's own description, `lease <cell> attempt <n>` as reserve() writes it. Also
+   * refuse a lease whose ledger entry another reserved event in the log names, so one entry never backs two leases.
+   * leases.sha256 only shows the log is the one last written, so a coordinated edit of both files stops here before a
+   * proxy is handed the lease. Other campaigns pass untouched.
    */
   private bindBg1Lease(l: LeaseState): void {
     if (!this.bg1) return;
@@ -761,9 +763,12 @@ export class Campaign {
       const s = this.state();
       const entry = readLedger(s.ledger).entries.find(e => e.id === l.entry_id && e.run_id === s.run_id);
       if (!entry) problems.push(`names ledger entry ${l.entry_id}, which campaign run ${s.run_id} does not hold`);
+      else if (entry.description !== `lease ${l.cell} attempt ${l.attempt}`) problems.push(`names ledger entry ${l.entry_id}, which the ledger holds for "${entry.description}", not "lease ${l.cell} attempt ${l.attempt}"`);
       else if (Math.abs(entry.reserved_usd - (l.raised_usd ?? l.usd)) > 1e-9) problems.push(`holds ${l.raised_usd ?? l.usd}, and the ledger reserved ${entry.reserved_usd} for it`);
       else if (l.status === 'reserved' && entry.actual_usd !== null) problems.push(`is reserved in the lease log, and the ledger already settled it at ${entry.actual_usd}`);
     }
+    const named = this.events().map(x => JSON.parse(x) as LeaseEvent).filter(e => e.event === 'reserved' && e.entry_id === l.entry_id).length;
+    if (named > 1) problems.push(`names ledger entry ${l.entry_id}, which ${named} reserved events in the lease log name`);
     if (problems.length) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `lease ${l.lease_id}: ${problems.join('; ')}`,
       why: 'a BG1 unit\'s proxy spends the lease handed to it, so the lease must be the one the frozen campaign prices for its unit and the ledger holds for it',
       fix: { next: 'ask_user', user_message: `leases.ndjson under ${this.stateDir} names a lease the campaign did not reserve; restore it and leases.sha256 from the custody host's copy, or start the campaign in a fresh --state` } });

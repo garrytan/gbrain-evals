@@ -14,7 +14,7 @@ import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { bg1CampaignManifest, loadCellManifest } from '../../eval/runner/q1/cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { runCells } from '../../eval/runner/scoreboard-cli.ts';
-import { Campaign, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
+import { Campaign, type CampaignManifest, type LaunchContext } from '../../eval/runner/shootout-cell.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 const roots: string[] = [];
@@ -35,6 +35,15 @@ function campaign(cap: number | null, edit: (m: CampaignManifest) => void = () =
   return { manifest, sum, file: join(dir, 'manifest.json'), state: join(dir, 'state'), dir };
 }
 type Written = ReturnType<typeof campaign>;
+/** A stage-1 BG1 campaign over one smoke unit at BG1-S1's cap, written with a ledger outside the checkout. */
+function smokeCampaign(unit: string) {
+  const m = loadCellManifest('bg1');
+  const cap = m.blocks.find(b => b.id === 'BG1-S1')!.cap_usd;
+  const dir = scratch();
+  const manifest = { ...bg1CampaignManifest(m, { smoke: true, units: { campaign_id: 'q1-scoreboard-bg1-smoke-t', cap_usd: cap, units: [unit], paid_window: 'BG1-S1-T' }, worldEnd: '2026-11-15' }), ledger: join(dir, 'campaign.sqlite') } as unknown as CampaignManifest;
+  writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  return { manifest, unit, file: join(dir, 'manifest.json'), state: join(dir, 'state') };
+}
 
 /** run, init and reserve all refuse the campaign before init: no boot, no campaign.json, no ledger. */
 async function refusedEverywhere(c: Written) {
@@ -162,6 +171,46 @@ describe('a BG1 campaign before any VM boots', () => {
     expect(caught(() => c.reserve(c.manifest.cells[1].id)).op.code).toBe('CAMPAIGN_HASH_MISMATCH');
     const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
     expect(readLedger(w.manifest.ledger).entries.filter(e => e.run_id === s.run_id).map(e => e.reserved_usd)).toEqual([l.usd]);
+  }, 60_000);
+
+  // Value: protects=one ledger entry backs one BG1 lease, so one reservation never boots two VMs; fails_when=a reserved event forged into the lease log with its SHA-256 rewritten names another lease's still-open ledger entry, and launch boots a second VM on it; why_new=the Opus fix-check on 12256467..806fc1ba, finding 2 (its probe on bg1-dev3.gbrain-defaults.rs1-stable); seam=a stage-1 BG1 Campaign over a temporary ledger, launched locally with a runner that records boots; no_claim=a real VM or proxy
+  test('a reserved event forged onto another lease\'s open ledger entry refuses in launch and payload, so no second VM boots on one entry', async () => {
+    const w = smokeCampaign('bg1-dev3.gbrain-defaults.rs1-stable');
+    const c = new Campaign(w.file, w.state);
+    c.init();
+    const first = c.reserve(w.unit);
+    const boots: string[] = [];
+    const runner = async (_argv: string[], ctx: LaunchContext) => { boots.push(ctx.lease.lease_id); return 0; };
+    const local = { local: { port: 1 } };
+    expect((await c.launch(w.unit, runner, local)).status).toBe('finished');
+    expect(boots).toEqual([first.lease_id]);
+    const log = join(w.state, 'leases.ndjson'), shaFile = join(w.state, 'leases.sha256'), text = readFileSync(log, 'utf8'), sha = readFileSync(shaFile, 'utf8');
+    const forge = (leaseId: string, attempt: number) => {
+      const t = text + JSON.stringify({ event: 'reserved', lease_id: leaseId, cell: w.unit, attempt, usd: first.usd, entry_id: first.entry_id, at: new Date().toISOString(), max_output_tokens: first.max_output_tokens }) + '\n';
+      writeFileSync(log, t);
+      writeFileSync(shaFile, createHash('sha256').update(t).digest('hex') + '\n');
+      const l = c.leases().find(x => x.status === 'reserved');
+      expect(l?.lease_id).toBe(leaseId);
+      return l!;
+    };
+    const shared = `names ledger entry ${first.entry_id}, which 2 reserved events in the lease log name`;
+    for (const [leaseId, attempt, why] of [
+      [`${w.unit}-a2-${first.entry_id.slice(0, 8)}`, 2, `which the ledger holds for "lease ${w.unit} attempt 1", not "lease ${w.unit} attempt 2"`],
+      [`${w.unit}-a1-forged00`, 1, shared],
+      [first.lease_id, 1, shared],
+    ] as const) {
+      const forged = forge(leaseId, attempt);
+      const launched = await c.launch(w.unit, runner, local).then(() => null, x => x);
+      expect(boots).toEqual([first.lease_id]);
+      expect(launched).toBeInstanceOf(ScoreboardError);
+      expect((launched as ScoreboardError).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(why) });
+      expect(caught(() => c.payload(forged)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(shared) });
+      writeFileSync(log, text);
+      writeFileSync(shaFile, sha);
+    }
+    const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
+    expect(readLedger(w.manifest.ledger).entries.filter(e => e.run_id === s.run_id).map(e => e.description)).toEqual([`lease ${w.unit} attempt 1`]);
+    expect(c.leases().map(l => [l.lease_id, l.status])).toEqual([[first.lease_id, 'finished']]);
   }, 60_000);
 
   // Value: protects=a refused BG1 reserve leaves no ledger reservation the lease log does not name; fails_when=the lease log changes between reserve's read and its append, the append refuses, and the lease-sized ledger reservation stays charged; why_new=the exception-14 reader's finding 2 (reserve() refuses after this.run().reserve() succeeds); seam=ledgerTestHooks.afterCapCheck, inside the ledger's reserve, edits the log as an outside writer would; no_claim=a ledger the process cannot write
