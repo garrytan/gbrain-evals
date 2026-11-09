@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
@@ -240,14 +240,25 @@ describe('wave A run identity across the wave B regeneration (2026-11-08 amendme
     expect(now).toEqual(pinned.identity_sha256);
   });
 
-  // Value: protects=a change to RS1's analysis code (verdict.ts, iut.ts, power.ts, pricing.ts) cannot change what a counted unit executes or its frozen campaign tree; fails_when=EXECUTES grows to cover eval/runner/rs1/ or a file the cell runner executes imports from it; why_new=verdict.ts aggregates mode (GBEV-3, 2026-11-09); seam=none; no_claim=paths built at run time
-  test('nothing the cell runner executes is or imports RS1\'s analysis code, so a verdict.ts change cannot reach a counted unit', () => {
+  // Value: protects=a change to RS1's analysis code (verdict.ts, iut.ts, power.ts, pricing.ts) cannot change what a counted unit executes or its frozen campaign tree; fails_when=EXECUTES grows to cover eval/runner/rs1/ or a file the cell runner executes reaches it through relative imports; why_new=verdict.ts aggregates mode (GBEV-3, 2026-11-09); seam=none; no_claim=paths built at run time or imports inside node_modules
+  test('nothing the cell runner executes is, or reaches through its imports, RS1\'s analysis code, so a verdict.ts change cannot reach a counted unit', () => {
     const { entries } = executedTree(EXECUTES);
-    expect(entries.length).toBeGreaterThan(0);
     expect(entries.filter(e => e.path.startsWith('eval/runner/rs1/')).map(e => e.path)).toEqual([]);
-    const imports = entries.filter(e => /\.(ts|tsx|js|mjs)$/.test(e.path)).flatMap(e => [...readFileSync(join(ROOT, e.path), 'utf8').matchAll(/(?:\bfrom|\bimport\s*\(?|\brequire\s*\()\s*['"](\.{1,2}\/[^'"]+)['"]/g)]
-      .map(m => ({ file: e.path, target: relative(ROOT, resolve(ROOT, dirname(e.path), m[1])) })));
-    expect(imports.length).toBeGreaterThan(100);
-    expect(imports.filter(i => i.target.startsWith('eval/runner/rs1/'))).toEqual([]);
+    const code = (p: string) => /\.(ts|tsx|js|mjs)$/.test(p);
+    const seen = new Set<string>(), reached: string[] = [], queue = entries.map(e => e.path).filter(code);
+    while (queue.length) {
+      const file = queue.pop()!;
+      if (seen.has(file)) continue;
+      seen.add(file);
+      for (const m of readFileSync(join(ROOT, file), 'utf8').matchAll(/(?:\bfrom|\bimport\s*\(?|\brequire\s*\()\s*['"](\.{1,2}\/[^'"]+)['"]/g)) {
+        const base = relative(ROOT, resolve(ROOT, dirname(file), m[1]));
+        const target = [base, `${base}.ts`, join(base, 'index.ts')].find(p => existsSync(join(ROOT, p)) && statSync(join(ROOT, p)).isFile());
+        if (!target || !code(target) || target.startsWith('..') || target.startsWith('node_modules/')) continue;
+        if (target.startsWith('eval/runner/rs1/')) reached.push(`${file} -> ${target}`);
+        queue.push(target);
+      }
+    }
+    expect(seen.size).toBeGreaterThan(entries.filter(e => code(e.path)).length);
+    expect(reached).toEqual([]);
   });
 });

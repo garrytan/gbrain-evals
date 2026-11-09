@@ -415,8 +415,7 @@ describe('verdict.ts aggregates mode (the final custody run)', () => {
     expect(g.analysis.verdict).toBe('pass');
     expect(r.stdout).toBe(`RS1 aggregates: verdict pass; 20 conversations; 60 of 60 planned questions in the common set; aggregates.json SHA-256 ${sha(text)}\n`);
     expect(r.stderr).toBe('');
-    const files = b.dirs.flatMap(d => (readdirSync(d, { recursive: true }) as string[]).map(f => join(d, f)).filter(f => statSync(f).isFile()));
-    const digests = files.map(fileSha).sort();
+    const digests = b.dirs.flatMap(d => (readdirSync(d, { recursive: true }) as string[]).filter(f => statSync(join(d, f)).isFile()).map(f => `${f}\t${fileSha(join(d, f))}`)).sort();
     expect(g.provenance).toEqual({
       code_commit: Bun.spawnSync(['git', 'rev-parse', 'HEAD'], { cwd: ROOT }).stdout.toString().trim(), tracked_tree_clean: expect.any(Boolean),
       verdict_sha256: fileSha(join(ROOT, 'eval/runner/rs1/verdict.ts')), iut_sha256: fileSha(join(ROOT, 'eval/runner/rs1/iut.ts')), cells_sha256: fileSha(join(ROOT, 'eval/runner/q1/cells/rs1-cells.json')),
@@ -432,13 +431,20 @@ describe('verdict.ts aggregates mode (the final custody run)', () => {
     expect(readFileSync(join(aOut, 'aggregates.md'), 'utf8')).toContain(`## Provenance\n\nCode ${g.provenance.code_commit}`);
   }, 60_000);
 
-  test('refuses an ability outside BEAM\'s ten and a version that is not its judge\'s, writing nothing and never echoing the value', () => {
+  const refused = (out: string, kind: string) => `verdict.ts aggregates refused (${kind}); the reason stays in custody in ${join(out, 'aggregates-refusal.txt')}\n`;
+  const reason = (out: string) => readFileSync(join(out, 'aggregates-refusal.txt'), 'utf8');
+
+  test('refuses an ability outside BEAM\'s ten and a version that is not its judge\'s, writing nothing, removing an earlier run\'s files and never echoing the value', () => {
     const odd = build('agg-ability', { ability: q => (q === 1 ? 'paris_is_the_capital' : beam(q)) });
     const out1 = join(tmp, 'agg-ability-out');
+    mkdirSync(out1, { recursive: true });
+    writeFileSync(join(out1, 'aggregates.json'), '{}');
     const r1 = run(['aggregates', '--receipts', ...odd.dirs, '--manifest', odd.manifestPath, '--out', out1]);
     expect(r1.code).toBe(1);
-    expect(r1.stderr).toContain('outside the aggregate vocabulary');
-    expect(r1.stderr).not.toContain('paris');
+    expect(r1.stdout).toBe('');
+    expect(r1.stderr).toBe(refused(out1, 'VerdictError'));
+    expect(reason(out1)).toContain('outside the aggregate vocabulary');
+    expect(reason(out1)).not.toContain('paris');
     expect(existsSync(join(out1, 'aggregates.json'))).toBe(false);
     const pv = build('agg-version', { ability: beam });
     const file = join(pv.root, 'gbrain-defaults-u0', 'cells', cellOf('gbrain-defaults').arms[0].cell_id, 'judgments.ndjson');
@@ -448,8 +454,9 @@ describe('verdict.ts aggregates mode (the final custody run)', () => {
     const out2 = join(tmp, 'agg-version-out');
     const r2 = run(['aggregates', '--receipts', ...pv.dirs, '--manifest', pv.manifestPath, '--out', out2]);
     expect(r2.code).toBe(1);
-    expect(r2.stderr).toContain('not a model version of its judge');
-    expect(r2.stderr).not.toContain('Paris');
+    expect(r2.stderr).toBe(refused(out2, 'VerdictError'));
+    expect(reason(out2)).toContain('not a model version of its judge');
+    expect(reason(out2)).not.toContain('Paris');
     expect(existsSync(join(out2, 'aggregates.json'))).toBe(false);
   }, 60_000);
 
@@ -458,9 +465,26 @@ describe('verdict.ts aggregates mode (the final custody run)', () => {
     const out = join(tmp, 'agg-early-out');
     const r = run(['aggregates', '--receipts', ...early.dirs, '--manifest', early.manifestPath, '--out', out]);
     expect(r.code).toBe(1);
-    expect(r.stderr).toContain('kept list is not final');
+    expect(r.stderr).toBe(refused(out, 'VerdictError'));
+    expect(reason(out)).toContain('kept list is not final');
     expect(run(['aggregates', '--receipts', ...early.dirs, '--manifest', early.manifestPath, '--set', 'RS1-dev2', '--out', out]).code).toBe(2);
     expect(run(['aggregates', '--receipts', ...early.dirs, '--manifest', early.manifestPath]).code).toBe(2);
+    expect(existsSync(join(out, 'aggregates.json'))).toBe(false);
+  }, 60_000);
+
+  test('any other error, such as an unparseable answers line, prints one fixed line and never the text that broke it', () => {
+    const b = build('agg-corrupt', { ability: beam });
+    const file = join(b.root, 'gbrain-defaults-u0', 'cells', cellOf('gbrain-defaults').arms[0].cell_id, 'answers.ndjson');
+    const lines = readFileSync(file, 'utf8').split('\n');
+    lines[0] = '{"answer_id": sentinelword}';
+    writeFileSync(file, lines.join('\n'));
+    const out = join(tmp, 'agg-corrupt-out');
+    const r = run(['aggregates', '--receipts', ...b.dirs, '--manifest', b.manifestPath, '--out', out]);
+    expect(r.code).toBe(1);
+    expect(r.stdout).toBe('');
+    expect(r.stderr).toBe(refused(out, 'Error'));
+    expect(r.stderr).not.toContain('sentinelword');
+    expect(reason(out)).toStartWith('Error: ');
     expect(existsSync(join(out, 'aggregates.json'))).toBe(false);
   }, 60_000);
 });

@@ -53,12 +53,14 @@
  *             iut.ts, rs1-cells.json and the filled manifest, and one SHA-256 over every receipt file read). Every key and
  *             string in the analysis must come from a closed vocabulary (rows, readers, judges, views, BEAM's ten abilities,
  *             outcome codes, the report's own templates, and model versions of each gating judge); anything else refuses
- *             without writing or echoing it. It prints only the verdict, counts and the file's SHA-256.
+ *             without writing or echoing it. It prints only the verdict, counts and the file's SHA-256. Any refusal or
+ *             error prints one fixed line naming its kind, and its reason goes only to aggregates-refusal.txt in --out;
+ *             an earlier run's files there are removed first.
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
 import { HARNESS_FAILURES, OUTCOMES, PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
 import { instrumentFor } from '../memory-qa/instruments.ts';
 import { readRecords, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
@@ -459,7 +461,7 @@ const AGGREGATE_WORDS = new Set<string>([
 const DROP_KEYS = new Set(['gbrain', 'server'].flatMap(side => DROP_REASONS.map(r => `${side}|${r}`)));
 /** The two invalid-reason templates analyze writes (iut.ts dropValidity and the delivered-context gate). */
 const REASON_TEMPLATES = [/^\d+ of \d+ planned questions dropped \(\d+\.\d%, above the 5% cap\)$/, /^descriptive: (gbrain|memory-bank|extract-first) failed the delivered-context gate \(mean fill rate (\d+(\.\d+)?|not recorded), needs 0\.9\)$/];
-/** A model version a gating judge returned: its model id, or its model id and a dated suffix. */
+/** A model version a gating judge returned: its model id, alone or followed by a dash and letters, digits, dots or dashes (a dated snapshot). */
 const isVersionOf = (judge: unknown, v: unknown) => { const model = String(judge).split(':')[1] ?? ''; return typeof v === 'string' && /^[A-Za-z0-9._-]{1,100}$/.test(v) && !!model && (v === model || v.startsWith(`${model}-`)); };
 
 /**
@@ -489,7 +491,7 @@ export function aggregateProblems(analysis: Analysis): string[] {
   return problems;
 }
 
-/** The files verdict.ts reads from each receipt directory, for the receipts digest. */
+/** The files verdict.ts reads from each receipt directory, for the receipts digest (a cell's run meters are read from its --receipts directory). */
 const RECEIPT_FILES = ['receipt.json', 'run-config.json', 'rows.ndjson', 'answers.ndjson', 'judgments.ndjson'];
 
 /** The final custody run: verdict mode's analysis of the final kept list, checked against the aggregate vocabulary, with what it was computed from. */
@@ -502,8 +504,9 @@ export function aggregatesOf(dirs: readonly string[], manifestPath: string) {
   let commit = '';
   try { commit = git('rev-parse', 'HEAD'); } catch { refuse(`aggregates record the checkout's commit, and git rev-parse HEAD failed in ${root}`); }
   const fileSha = (p: string) => sha256(readFileSync(p));
-  const files = new Set(findReceipts(dirs).flatMap(f => [...RECEIPT_FILES.map(n => join(f.dir, n)), ...(f.receipt.run_cell ? [join(f.root, 'runs', String(f.receipt.run_cell), 'meters.ndjson')] : [])]).filter(p => existsSync(p)));
-  const digests = [...files].map(fileSha).sort();
+  // One line per file, '<path under its --receipts directory>\t<SHA-256>', sorted by code unit and joined by newlines with none at the end.
+  const files = new Map(findReceipts(dirs).flatMap(f => [...RECEIPT_FILES.map(n => join(f.dir, n)), ...(f.receipt.run_cell ? [join(f.root, 'runs', String(f.receipt.run_cell), 'meters.ndjson')] : [])].map(p => [p, f.root] as const)));
+  const digests = [...files].filter(([p]) => existsSync(p)).map(([p, root]) => `${relative(root, p)}\t${fileSha(p)}`).sort();
   return {
     schema: 'gbrain-evals/rs1-aggregates/v1',
     provenance: {
@@ -569,8 +572,17 @@ function main(argv: string[]): number {
   try {
     if (mode === 'verdict') { const a = analyze(loadInput(receipts, { set, manifestPath })); write('verdict', a, markdown(a)); return 0; }
     if (mode === 'aggregates') {
-      const g = aggregatesOf(receipts, manifestPath), json = JSON.stringify(g, null, 2) + '\n';
       mkdirSync(out!, { recursive: true });
+      const refusal = join(out!, 'aggregates-refusal.txt');
+      for (const f of ['aggregates.json', 'aggregates.md', refusal]) rmSync(resolve(out!, f), { force: true });
+      let g: Aggregates;
+      try { g = aggregatesOf(receipts, manifestPath); } catch (e) {
+        const kind = e instanceof VerdictError ? 'VerdictError' : e instanceof Error ? e.constructor.name : typeof e;
+        writeFileSync(refusal, `${kind}: ${e instanceof Error ? e.stack ?? e.message : String(e)}\n`);
+        process.stderr.write(`verdict.ts aggregates refused (${kind}); the reason stays in custody in ${refusal}\n`);
+        return 1;
+      }
+      const json = JSON.stringify(g, null, 2) + '\n';
       writeFileSync(join(out!, 'aggregates.json'), json);
       writeFileSync(join(out!, 'aggregates.md'), aggregatesMarkdown(g));
       process.stdout.write(`RS1 aggregates: verdict ${g.analysis.verdict}; ${g.analysis.conversations} conversations; ${g.analysis.common_questions} of ${g.analysis.planned_questions} planned questions in the common set; aggregates.json SHA-256 ${sha256(json)}\n`);
