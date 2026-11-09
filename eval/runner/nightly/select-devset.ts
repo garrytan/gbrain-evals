@@ -71,21 +71,31 @@ function concurrencyTrials(): Suite {
 
 function systemSmokes(): Suite {
   const smokes: Array<[string, string]> = [
-    ['upgrade-from-previous', 'seeded brain written by the previous night\'s master, upgraded to tonight\'s; pages, writes, search, serve /health and /admin'],
-    ['upgrade-from-old', 'seeded brain written by an old release (oldest still-supported schema, pre-managed persistence), upgraded; legacy pages advance and edits become searchable'],
-    ['ingest-retry-across-upgrade', 'a POST /ingest capture accepted before the upgrade and retried after it never writes the old body over a newer edit'],
-    ['managed-sync', 'managed sync against a bare remote: hub index.md files with their own slug lines, a page delete that must reach the remote'],
-    ['source-pinned-sync', 'a source rooted at its repository root under a source-root pin syncs without revision_conflict'],
-    ['postgres-15', 'managed sync and a concurrency subset on Postgres 15 beside the current Postgres'],
-    ['large-page-write-latency', 'writes to a page over 4 MiB while its search index builds stay inside the lock bound, on real Postgres'],
-    ['query-contract', 'query --limit N with no budget returns N rows on a brain whose pages carry Facts fences'],
+    ['upgrade-from-previous', 'seeded brain written by the previous night\'s master, upgraded to tonight\'s; pages, writes, search, serve /health and /admin from an installed build. '
+      + 'Fails at v0.60.553.0 over v0.60.552.0 (admin_bundle_missing), passes at v0.60.554.0 over v0.60.553.0. Its schema v265 pair counts as validated by its failure code: '
+      + 'v0.60.465.0 over v0.60.390.0 fails with upgrade_migrations_failed, v0.60.466.0 over v0.60.390.0 passes the upgrade phase and then fails only on the separate /admin bug, '
+      + 'and v0.60.554.0 over v0.60.390.0 passes'],
+    ['upgrade-from-old', 'seeded brain written by the old release v0.52.2.0 (the last release before managed persistence), upgraded with post-upgrade and the claim and activate runbook; '
+      + 'a commit made after the upgrade becomes searchable while legacy pages wait (fails at v0.60.338.0 with legacy_sweep_blocks_commit; v0.60.339.0 passes that check and fails '
+      + 'only the next) and a Git edit to a legacy page imports with no file_drift hold (fails at v0.60.370.0 with legacy_edit_held_file_drift, passes at v0.60.371.0)'],
+    ['ingest-retry-across-upgrade', 'a POST /ingest capture accepted before the upgrade and retried after it never writes the old body over a newer edit. '
+      + 'Fails at v0.60.609.0 over v0.60.608.0 (retry_overwrote_newer_edit), passes at v0.60.610.0 over v0.60.608.0'],
+    ['managed-sync', 'managed sync against a bare remote: hub index.md files with their own slug lines stay unheld (fail at v0.60.337.0 and v0.60.400.0 with hub_index_held, '
+      + 'pass at v0.60.401.0), and a page delete whose first push is refused still reaches the remote (fails at v0.60.317.0 with delete_not_pushed, passes at v0.60.318.0)'],
+    ['source-pinned-sync', 'a source rooted at its repository root under a source-root pin syncs without revision_conflict. '
+      + 'Fails at v0.60.247.0 (checkpoint_revision_conflict), passes at v0.60.248.0'],
+    ['postgres-15', 'managed sync and eight concurrent writes on Postgres 15 beside the current Postgres. '
+      + 'Fails at v0.60.325.0 (sync_checkpoint_failed, on Postgres 15 only), passes at v0.60.326.0'],
+    ['query-contract', 'query --limit N with no budget returns N rows on a brain whose pages carry Facts fences. '
+      + 'Fails at v0.60.491.0 and v0.60.554.0 (query_limit_not_honored), passes at v0.60.555.0'],
   ];
   return {
     id: 'system-smokes', kind: 'smoke', scoring: 'deterministic',
     about: 'Keyless smokes on a seeded synthetic brain that need a cross-version upgrade, a seeded brain or a real Postgres version: the surfaces where gbrain master broke in the 30 days before 2026-11-09',
     source: 'eval/runner/nightly/smokes/ (built with the runner)',
     items: smokes.map(([id]) => ({ id, role: 'headroom' as const })),
-    note: smokes.map(([id, what]) => `${id}: ${what}`).join('; '),
+    note: [...smokes.map(([id, what]) => `${id}: ${what}`), 'dropped before the freeze: large-page-write-latency (writes to a page over 4 MiB while its search '
+      + 'index builds), which on a Ubicloud VM passed at break releases between v0.60.331.0 and v0.60.335.0, before and after one respecification'].join('; '),
   };
 }
 

@@ -136,6 +136,25 @@ export function generateBrain(seed = 1): SeedBrain {
   return { seed, pages, files };
 }
 
+/**
+ * generateBrain(seed) plus `count` plain archive notes under archive/<year>/, for smokes that need more pages than the
+ * seeded brain, such as one past a 500-page batch limit. The seeded pages keep their bytes, archive/ sorts before every
+ * seeded folder, and each archive note has its own search token.
+ */
+export function archiveBrain(seed: number, count: number): SeedBrain {
+  const brain = generateBrain(seed);
+  const rand = prng(seed ^ 0xa7c4);
+  for (let i = 0; i < count; i++) {
+    const token = `smk${seed}a${i.toString(36).padStart(4, '0')}`;
+    const topic = TOPICS[i % TOPICS.length]!;
+    const title = `Archive ${topic} note ${i + 1}`;
+    const path = `archive/${2021 + (i % 5)}/${topic}-${String(i + 1).padStart(5, '0')}.md`;
+    brain.pages.push({ path, slug: path.slice(0, -3), title, token, kind: 'note', facts: [] });
+    brain.files.set(path, page('note', title, `${title}. Search token ${token}.\n\n${sentence(rand, 12)}\n\n${sentence(rand, 16)}`));
+  }
+  return brain;
+}
+
 /** The sha256 of a brain's paths and bytes, in path order. */
 export function brainDigest(brain: SeedBrain): string {
   const h = createHash('sha256');

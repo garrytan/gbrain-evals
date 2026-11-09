@@ -16,7 +16,11 @@ import { OVERLAY_ROOT } from '../../gbrain-under-test.ts';
 import { assertBuildVerified, prepareBuild } from '../../lifecycle/builds.ts';
 import { PROVIDER_KEYS, SmokeFail, rootVersion, smokeContext, type SmokeContext, type SmokeOptions, type SmokeResult } from './harness.ts';
 import { ingestRetryAcrossUpgrade } from './ingest-retry-across-upgrade.ts';
+import { managedSync } from './managed-sync.ts';
+import { postgres15 } from './postgres-15.ts';
 import { queryContract } from './query-contract.ts';
+import { sourcePinnedSync } from './source-pinned-sync.ts';
+import { upgradeFromOld } from './upgrade-from-old.ts';
 import { upgradeFromPrevious } from './upgrade-from-previous.ts';
 
 export type { SmokeOptions, SmokeResult } from './harness.ts';
@@ -25,7 +29,11 @@ type Smoke = (ctx: SmokeContext) => Promise<string>;
 
 const REGISTRY: Array<[string, Smoke]> = [
   ['upgrade-from-previous', upgradeFromPrevious],
+  ['upgrade-from-old', upgradeFromOld],
   ['ingest-retry-across-upgrade', ingestRetryAcrossUpgrade],
+  ['managed-sync', managedSync],
+  ['source-pinned-sync', sourcePinnedSync],
+  ['postgres-15', postgres15],
   ['query-contract', queryContract],
 ];
 

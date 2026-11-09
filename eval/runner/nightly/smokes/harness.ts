@@ -97,8 +97,11 @@ export function assertKeyless(env: Record<string, string | undefined>): void {
 
 export interface Run { code: number; stdout: string; stderr: string; ms: number }
 
-/** Run one gbrain build's CLI by absolute path (bun --no-env-file, so no .env file can add a key back). */
-export function gbrain(root: string, args: string[], o: { env: Record<string, string>; cwd?: string; input?: string; timeoutMs?: number; log?: (l: string) => void }): Promise<Run> {
+/**
+ * Run one gbrain build's CLI by absolute path (bun --no-env-file, so no .env file can add a key back). Aborting
+ * `interrupt` sends the process SIGINT, gbrain's graceful cancel (the path Ctrl-C and `sync --timeout` take).
+ */
+export function gbrain(root: string, args: string[], o: { env: Record<string, string>; cwd?: string; input?: string; timeoutMs?: number; log?: (l: string) => void; interrupt?: AbortSignal }): Promise<Run> {
   assertKeyless(o.env);
   const t0 = Date.now();
   return new Promise(resolve => {
@@ -108,6 +111,7 @@ export function gbrain(root: string, args: string[], o: { env: Record<string, st
     proc.stdout.on('data', (c: string) => { if (stdout.length < 4_000_000) stdout += c; });
     proc.stderr.on('data', (c: string) => { if (stderr.length < 4_000_000) stderr += c; });
     proc.stdin.end(o.input ?? '');
+    o.interrupt?.addEventListener('abort', () => proc.kill('SIGINT'), { once: true });
     const timer = setTimeout(() => { stderr += `\n[smoke] killed after ${o.timeoutMs ?? 300_000} ms`; proc.kill('SIGKILL'); }, o.timeoutMs ?? 300_000);
     const done = (code: number) => {
       clearTimeout(timer);
@@ -132,6 +136,18 @@ export function jsonOut<T = any>(r: Run): T | null {
     try { return JSON.parse(t.slice(at)) as T; } catch { /* keep looking */ }
   }
   return null;
+}
+
+/**
+ * A directory holding a `gbrain` script that runs `root`'s CLI (bun --no-env-file), for a step that shells out to
+ * `gbrain` on PATH the way an installed release does (older migrations run `gbrain jobs smoke`). Put it on PATH only for
+ * that step; the script inherits the calling gbrain's keyless environment.
+ */
+export function gbrainOnPath(dir: string, root: string): string {
+  const bin = join(dir, 'gbrain-bin');
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(join(bin, 'gbrain'), `#!/bin/sh\nexec bun --no-env-file '${join(root, 'src/cli.ts')}' "$@"\n`, { mode: 0o755 });
+  return bin;
 }
 
 /** Plain git with the hermetic config. */
@@ -228,7 +244,7 @@ export interface SeededBrain {
   source: string;
   seed: SeedBrain;
   /** Runs a gbrain CLI from `root` against this brain, logging to the smoke log. */
-  cli: (root: string, args: string[], o?: { input?: string; timeoutMs?: number; cwd?: string }) => Promise<Run>;
+  cli: (root: string, args: string[], o?: { input?: string; timeoutMs?: number; cwd?: string; interrupt?: AbortSignal }) => Promise<Run>;
   /** Plain git in the checkout. */
   git: (...args: string[]) => string;
 }
@@ -236,10 +252,15 @@ export interface SeededBrain {
 /**
  * The seeded brain on one gbrain build: the generated pages committed to a Git checkout (optionally a clone of a bare
  * remote), a keyword-only brain (PGLite, or a fresh database at `databaseUrl`), the checkout registered as a source and
- * synced once. Any step that fails is a gbrain failure named `seed_<step>`.
+ * synced once. Any step that fails is a gbrain failure named `seed_<step>`. With `subdir`, the pages go under that
+ * directory of the checkout and the directory is the source. `brain` replaces generateBrain(seed) (for example
+ * archiveBrain), and `beforeInit` runs in the checkout after the seed commit and before `gbrain init`, so a smoke can leave
+ * uncommitted changes there for the first sync. `migrate` runs the build's own `gbrain apply-migrations --yes` right after
+ * init, with that build's gbrain on PATH, as its install's postinstall and every `gbrain upgrade` do, so a brain an older
+ * release wrote carries that release's migration history.
  */
 export async function seedBrain(ctx: SmokeContext, root: string, o: { name?: string; seed?: number; databaseUrl?: string; remote?: boolean; source?: string;
-  filter?: (path: string) => boolean; env?: Record<string, string> } = {}): Promise<SeededBrain> {
+  subdir?: string; filter?: (path: string) => boolean; env?: Record<string, string>; brain?: SeedBrain; beforeInit?: (repo: string) => void; migrate?: boolean } = {}): Promise<SeededBrain> {
   const dir = join(ctx.work, o.name ?? 'brain');
   const dirs = brainDirs(dir);
   const repo = join(dir, 'repo');
@@ -254,20 +275,25 @@ export async function seedBrain(ctx: SmokeContext, root: string, o: { name?: str
     mkdirSync(repo, { recursive: true });
     g(repo, 'init', '-q', '-b', 'main');
   }
-  const seed = generateBrain(o.seed ?? 1);
-  writeBrain(repo, seed, o.filter);
+  const seed = o.brain ?? generateBrain(o.seed ?? 1);
+  const sourceDir = o.subdir ? join(repo, o.subdir) : repo;
+  writeBrain(sourceDir, seed, o.filter);
   g(repo, 'add', '-A'); g(repo, 'commit', '-qm', 'seed brain');
   if (remote) g(repo, 'push', '-q', '-u', 'origin', 'main');
+  o.beforeInit?.(repo);
   const env = keylessEnv(dirs, o.env);
-  const cli = (r: string, args: string[], x: { input?: string; timeoutMs?: number; cwd?: string } = {}) => gbrain(r, args, { env, log: ctx.log, cwd: x.cwd ?? dir, ...x });
+  const cli = (r: string, args: string[], x: { input?: string; timeoutMs?: number; cwd?: string; interrupt?: AbortSignal } = {}) => gbrain(r, args, { env, log: ctx.log, cwd: x.cwd ?? dir, ...x });
   const source = o.source ?? 'vault';
   const steps: Array<[string, string[]]> = [
     ['init', ['init', ...(o.databaseUrl ? ['--url', o.databaseUrl] : ['--pglite', '--path', join(dirs.home, 'brain.pglite')]), '--no-embedding', '--non-interactive']],
-    ['sources_add', ['sources', 'add', source, '--path', repo]],
+    ...(o.migrate ? [['migrate', ['apply-migrations', '--yes', '--non-interactive', '--no-autopilot-install']] as [string, string[]]] : []),
+    ['sources_add', ['sources', 'add', source, '--path', sourceDir]],
     ['sync', ['sync', '--source', source, '--no-pull']],
   ];
   for (const [step, args] of steps) {
-    const r = await cli(root, args, { timeoutMs: 600_000 });
+    const r = step === 'migrate'
+      ? await gbrain(root, args, { env: { ...env, PATH: `${gbrainOnPath(dir, root)}:${env.PATH}` }, log: ctx.log, cwd: dir, timeoutMs: 600_000 })
+      : await cli(root, args, { timeoutMs: 600_000 });
     check(r.code === 0, `seed_${step}`, () => `gbrain ${args[0]} exited ${r.code} on ${rootVersion(root)}: ${tail(r.stdout + '\n' + r.stderr, 6)}`);
   }
   return { dirs, env, repo, remote, source, seed, cli, git: (...args: string[]) => g(repo, ...args) };
