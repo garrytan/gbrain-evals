@@ -89,6 +89,8 @@ R=docs/benchmarks/2026-11-02-skillopt-ceiling/runs/get-page-replay/replay.ts
 bun $R before.json.gz                  # in a checkout with package.json pinning gbrain 62637c96a, after bun install
 bun $R after.json.gz                   # in a checkout with package.json pinning gbrain 241cef5a, after bun install
 bun $R --compare before.json.gz after.json.gz
+bun $R d253ec0ff.json.gz               # at this repository's pin
+bun $R --compare 241cef5aa.json.gz d253ec0ff.json.gz > compare-570-623.json
 ```
 
 The per-call outcomes at both builds and their comparison are in [`runs/get-page-replay/`](2026-11-02-skillopt-ceiling/runs/get-page-replay/). This repository pinned v0.60.557.0 when the replay ran. It now pins v0.60.623.0 (`d253ec0ff`), where the same replay gives every one of the 2,105 recorded calls the same outcome, and every read the same digest, as at `241cef5aa` (v0.60.570.0) ([`compare-570-623.json`](2026-11-02-skillopt-ceiling/runs/get-page-replay/compare-570-623.json)). The benchmark stays retired, and its stages keep their v0.60.557.0 pin.

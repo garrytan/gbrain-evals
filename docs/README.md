@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.172, with gbrain master `d253ec0ff` (v0.60.623.0) as the product under test. Results measured at
+gbrain-evals v0.10.186, with gbrain master `d253ec0ff` (v0.60.623.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -281,7 +281,8 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-11-09: Re-pin to gbrain `d253ec0ff`; the SkillOpt method row
 
-The opening names gbrain master `d253ec0ff` (v0.60.623.0) as the product under test (was `62637c96a`, v0.60.557.0).
+The opening names gbrain-evals v0.10.186 (was v0.10.172) and gbrain master `d253ec0ff` (v0.60.623.0) as the product
+under test (was `62637c96a`, v0.60.557.0).
 The SkillOpt method row said every recorded Sol `get_page` call still refuses at the pin. At `d253ec0ff`, 435 of the 436
 calls that sent two or three window selectors read one window (gbrain#8509, v0.60.570.0), and the row now says so; the
 169 `known_as_of` calls still refuse.

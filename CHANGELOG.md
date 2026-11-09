@@ -38,7 +38,10 @@ This records what each gbrain-evals release changed and what its measurements me
   checkout (v0.60.615.0, v0.60.618.0, v0.60.620.0) reach the refresh-barrier harness, whose results were measured at
   v0.60.614.0. A degraded read gains a `[gbrain degraded: ...]` text block (v0.60.563.0), which readers that keep
   every text block see (the 8k conversion arms, live recall's task arms, Cat 40). The brain owner's own credentials read
-  private pages (gbrain#8917, v0.60.623.0); no harness here names an owner.
+  private pages (gbrain#8917, v0.60.623.0); no harness here names an owner. G3's `two_range_read` cause can't be
+  provoked through MCP or `gbrain call` at this pin, because gbrain#8509 reads the two-selector call, so a G3 run here
+  would count none of those refusals against a reference measured at an older gbrain. G3's preregistered counted runs
+  use v0.60.557.0 on their results branch.
 - **Tests.** `test/eval/skillopt-rollout-empty-args.test.ts` reads a refusal through a `known_as_of` call beside `lines`,
   which refuses the same way at both pins, and its replay expects the 436 multi-selector calls to read; that replay
   fails at `62637c96a`. `test/eval/skillopt-tool-calls.test.ts` adds the pin's classes for Sol's 651 recorded calls: 472
@@ -46,7 +49,12 @@ This records what each gbrain-evals release changed and what its measurements me
   v0.60.557.0 pin, so in this tree a paid stage stops at its pin check. In
   `test/eval/skillopt-ceiling-stages.test.ts` the five CLI tests of the checks that come after it (stage caps and attempt
   2's admission) run only in a tree at the stage pin, and a new test checks that a paid calibration and gate refuse at
-  the pin check here, naming both commits, before they write a row.
+  the pin check here, naming both commits, before they write a row. `test/eval/predictive-runner.test.ts` and
+  `test/eval/predictive-cli-arm.test.ts` set G3's `two_range_read` expectation by the gbrain under test: below
+  v0.60.570.0 both surfaces refuse the two-selector call with that cause, and from v0.60.570.0 on MCP and `gbrain call`
+  read it. The CLI's repeated `--lines` still warns that it overwrites the first window and reads only the last, which
+  G3 counts as that cause. `test/support/no-provider-keys.ts` blanks `WAKESHIFT_API_KEY`, which gbrain now reads for its
+  wakeshift command, so the preload again covers every provider key gbrain reads at the pin.
 - **Docs.** The hub sentences name the new pin. The settings page adds `search.keyword_phrase` (off in every bundle) and
   the keyword arm's identifier, handle and rare-word changes. README's memory trust row names `d253ec0ff` for its keyless
   check (Cats 37 to 39 pass). The docs index's SkillOpt method row says the multi-selector calls now read. The SkillOpt
