@@ -13,7 +13,8 @@
  *
  * Both sides are normalised the same way before matching: lower case, straight quotes, thousands separators dropped,
  * "4.2k" and "4.2 thousand" written out, number words up to the millions as digits (read as English numerals, so "two,
- * three" and "nineteen ninety" stay two numbers), currency signs and words dropped,
+ * three" and "nineteen ninety" stay two numbers, a comma or semicolon ends a numeral, and "two hundred three hundred"
+ * is two numbers), currency signs and words dropped,
  * ordinal suffixes dropped, "%" as the word percent, and every other mark as a space. A value matches on whole-token
  * boundaries, longest values first, and a matched span is never matched again, so "Porto" does not match inside
  * "Porto Alegre".
@@ -31,27 +32,41 @@ const UNITS: Record<string, number> = {
   seventy: 70, eighty: 80, ninety: 90,
 };
 const SCALES: Record<string, number> = { hundred: 100, thousand: 1_000, million: 1_000_000 };
+/** normalise's token for a comma or semicolon, which ends a numeral and is then dropped. */
+const LIST_BREAK = '\u0001';
 
 /**
  * Runs of number words as digits, read as English numerals: "four thousand two hundred" is 4200, "twenty five" is 25,
  * "one hundred and five" is 105. A word that cannot continue the numeral before it starts a new one, so "two three"
- * (as "two, three" reads once its comma is gone) is 2 and 3, not 5.
+ * is 2 and 3, not 5, and a comma or semicolon (LIST_BREAK) ends the numeral, so "twenty, five" is 20 and 5. A scale
+ * word applies only where it is larger than every scale already applied to what it multiplies (hundred to its group,
+ * thousand and million to the numeral so far); otherwise the units after the last scale start a new numeral, so "two
+ * hundred three hundred" is 200 and 300 and "one thousand two thousand" is 1000 and 2000.
  */
 function numberWords(tokens: string[]): string[] {
   const out: string[] = [];
-  let total = 0, current = 0, open = false, last: 'zero' | 'unit' | 'teen' | 'tens' | 'scale' | null = null;
-  const close = () => { if (open) out.push(String(total + current)); total = 0; current = 0; open = false; last = null; };
+  // total: the numeral above its current group; current: the group since its last thousand or million; tail: the units since its last scale word.
+  let total = 0, current = 0, tail = 0, hundred = false, big = Infinity, open = false, last: 'zero' | 'unit' | 'teen' | 'tens' | 'scale' | null = null;
+  const close = () => { if (open) out.push(String(total + current)); total = 0; current = 0; tail = 0; hundred = false; big = Infinity; open = false; last = null; };
   tokens.forEach((t, i) => {
+    if (t === LIST_BREAK) { close(); return; }
     if (Object.hasOwn(UNITS, t)) {
       const n = UNITS[t], kind = n === 0 ? 'zero' : n < 10 ? 'unit' : n < 20 ? 'teen' : 'tens';
       if (last !== null && (kind === 'zero' || !(last === 'scale' || (last === 'tens' && kind === 'unit')))) close();
-      current += n; open = true; last = kind;
+      current += n; tail += n; open = true; last = kind;
       return;
     }
     if (Object.hasOwn(SCALES, t) && open) {
-      if (t === 'hundred') current = (current || 1) * 100;
-      else { total += (current || 1) * SCALES[t]; current = 0; }
-      last = 'scale';
+      if (t === 'hundred' ? hundred : SCALES[t] >= big) {
+        const units = tail;
+        if (!units) { close(); out.push(t); return; }
+        current -= units;
+        close();
+        current = units; open = true;
+      }
+      if (t === 'hundred') { current = (current || 1) * 100; hundred = true; }
+      else { total += (current || 1) * SCALES[t]; current = 0; hundred = false; big = SCALES[t]; }
+      tail = 0; last = 'scale';
       return;
     }
     if (t === 'and' && last === 'scale' && Object.hasOwn(UNITS, tokens[i + 1] ?? '')) return;
@@ -73,7 +88,8 @@ export function normalise(text: string): string {
   s = s.replace(/(\d+)\.0+\b/g, '$1');
   s = s.replace(/(\d)(st|nd|rd|th)\b/g, '$1');
   s = s.replace(/%/g, ' percent ').replace(/[$\u20ac\u00a3]/g, ' ').replace(/\b(usd|eur|gbp|dollars?|euros?|pounds?)\b/g, ' ');
-  s = s.replace(/(\d)[.:/-](?=\d)/g, '$1\u0000').replace(/[^a-z0-9\u0000']+/g, ' ').replace(/\u0000/g, '.').replace(/'/g, '');
+  s = s.replace(/[,;]/g, ` ${LIST_BREAK} `);
+  s = s.replace(/(\d)[.:/-](?=\d)/g, '$1\u0000').replace(/[^a-z0-9\u0000\u0001']+/g, ' ').replace(/\u0000/g, '.').replace(/'/g, '');
   return numberWords(s.split(/\s+/).filter(Boolean)).join(' ');
 }
 

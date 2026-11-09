@@ -4,7 +4,10 @@
  * delivered-context exposure and the deciding line, the prompt cut, and the judge prompt and verdict parser. Keyless.
  */
 import { describe, expect, test } from 'bun:test';
-import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
+import { createHash } from 'node:crypto';
+import { join, resolve } from 'node:path';
+import { buildPool } from '../../eval/runner/bg1/judge-check.ts';
+import { loadBg1Dev, type MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { BG1_CANONICAL_JUDGE, BG1_ORDERED_RULE, BG1_UNORDERED_RULE, bg1JudgePrompt, instrumentFor, parseBg1Verdict, RESERVE_INSTRUMENTS } from '../../eval/runner/memory-qa/instruments.ts';
 import { READER_TEMPLATE } from '../../eval/runner/memory-qa/qa.ts';
 import { NATIVE_READER_TEMPLATE } from '../../eval/runner/systems/render.ts';
@@ -43,6 +46,32 @@ describe('number words', () => {
     const counts = question('q5', { stratum: 's8_history', family: 'secondary', ordered: true, gold_values: ['2', '3'], stale_values: ['5'], decoy_values: [] });
     expect(matchAnswer(counts, 'Two, three.')).toBe('correct');
     expect(matchAnswer(counts, 'five')).toBe('stale');
+  });
+
+  // Value: protects=the matcher reads a list of scaled numbers as that list; fails_when=a comma or semicolon between two numerals, or a scale word no larger than one already applied, merges them into one number; why_new=the exception-14 reader's finding 3 (match.ts:40-60 still read "two hundred, three hundred" as 20300); seam=none; no_claim=the judges' own readings
+  test('a comma or semicolon ends a numeral, and a scale word no larger than one already applied starts a new one', () => {
+    expect(['two hundred, three hundred', 'one thousand, two thousand', 'five hundred, six hundred and five', 'twenty, five', 'twenty; five'].map(normalise)).toEqual(['200 300', '1000 2000', '500 605', '20 5', '20 5']);
+    expect(['two hundred three hundred', 'one thousand two thousand', 'five hundred six hundred and five', 'one million two million', 'two hundred hundred'].map(normalise)).toEqual(['200 300', '1000 2000', '500 605', '1000000 2000000', '200 hundred']);
+    expect(['two, three', 'nineteen ninety', 'one million two thousand', 'five hundred thousand two hundred', 'Porto, Portugal'].map(normalise)).toEqual(['2 3', '19 90', '1002000', '500200', 'porto portugal']);
+    const sizes = question('q6', { stratum: 's8_history', family: 'secondary', ordered: true, gold_values: ['200', '300'], stale_values: ['20300'], decoy_values: [] });
+    expect(matchAnswer(sizes, 'Two hundred, then three hundred.')).toBe('correct');
+    expect(matchAnswer(sizes, 'two hundred, three hundred')).toBe('correct');
+    expect(matchAnswer(question('q7', { gold_values: ['20'], stale_values: ['25'], decoy_values: [] }), 'twenty, five')).toBe('correct');
+  });
+
+  // Value: protects=the list fix changes no reading the verdict or the judge check makes on the committed fixtures; fails_when=normalise or matchAnswer reads any fixture value, gold answer, construction item or world text differently from the matcher before the fix; why_new=the exception-14 reader's finding 3 (the brief asks that the fix change only the cases it fixes); seam=the template fixtures, judge-check buildPool at seed 7; no_claim=answers no fixture holds
+  test('the verdict\'s and judge-check\'s readings of the committed fixtures are the matcher\'s before the list fix', () => {
+    const c = loadBg1Dev({ root: join(resolve(import.meta.dir, '../..'), 'eval/data/changing-facts-v1/fixtures'), worldEnd: '2026-11-15', keyless: true });
+    const worlds = new Map(c.conversations.map(w => [w.id, w.sessions.flatMap(s => s.turns.map(t => t.content)).join('\n')]));
+    const out: Record<string, unknown> = {};
+    for (const q of c.questions) {
+      const f = q.bg1!, vals = [...f.gold_values, ...f.stale_values, ...f.decoy_values, q.answer];
+      out[q.id] = { norm: vals.map(normalise), cls: vals.map(v => matchAnswer(q, v)), presence: presence(q, worlds.get(q.conversation)!) };
+    }
+    const byId = new Map(c.questions.map(q => [q.id, q]));
+    out.pool = buildPool(c.questions, [], 7).map(i => [i.id, normalise(i.text), matchAnswer(byId.get(i.question_id)!, i.text)]);
+    // The SHA-256 of these readings as the matcher at 12256467 (before the list fix) made them.
+    expect(createHash('sha256').update(JSON.stringify(out) + '\n').digest('hex')).toBe('8b0b90efddfe3923437b761db764a4d83ebb6964c56bfeab1e250872e4fed338');
   });
 });
 
