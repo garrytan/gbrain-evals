@@ -88,6 +88,13 @@ describe('classify: deterministic rules', () => {
 });
 
 describe('classify: precedence', () => {
+  test('a row that hit the turn cap carries the turn_cap tag whatever its primary cause', () => {
+    expect(classify(failure({ stop: 'turn_cap', gold: gold({ gold_count: 2, retrieved: 'partial', delivered: 'partial' }) }))).toMatchObject({ cause: 'partial_evidence', secondary: ['timeout_latency'] });
+    expect(classify(failure({ stop: 'turn_cap', gold: gold({ gold_count: 2, retrieved: 'partial', delivered: 'partial' }) })).tags).toContain('turn_cap');
+    expect(classify(failure({ stop: 'context_overflow' })).tags).not.toContain('turn_cap');
+    expect(classify(failure({ stop: 'max_turns' })).tags).toContain('turn_cap');
+  });
+
   test('the earliest stage wins and later signals stay as secondary causes', () => {
     const l = classify(failure({
       harness: { error: 'judge reply did not parse', scorer_artifact: null },

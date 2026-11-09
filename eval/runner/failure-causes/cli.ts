@@ -10,9 +10,10 @@
  *       [--labelset-per-family <n>] --paid --budget-run-id <id>
  *   bun eval/runner/failure-causes/cli.ts agree --labelset <double.ndjson> --production <labels.ndjson> --out <label-check.json>
  *   bun eval/runner/failure-causes/cli.ts report --labels <a.ndjson>[,<b.ndjson>] [--gates <label-check.json>] [--stress <stress.json>]
- *       --out-dir <dir> --heading <text> [--allow-stale]
+ *       [--known <known.json>] --out-dir <dir> --heading <text> [--allow-stale]
  *
- * report counts each source, run and case once when label files overlap, the last file winning, and refuses any model
+ * --known holds { known: [{ source, cause, detail_includes?, status }] }, a status shown beside matching under-stress rows
+ * (such as a fix gbrain already shipped). report counts each source, run and case once when label files overlap, the last file winning, and refuses any model
  * label whose labeller path and row family have no passing gate in --gates. agree fails when a (path, family) pair the
  * production labels used has no passing gate, or when there is nothing to gate. classify and report are
  * keyless. failures.ndjson carries row text for the labeller: keep it in a private work directory, never in the
@@ -29,7 +30,7 @@ import { buildLabelSet, gatePaths, LABEL_SET_PER_FAMILY, labelSetSample, NO_LABE
 import { classify } from './classify.ts';
 import { buildLabelPrompt, LABEL_SET_LABELLERS, labellerFor, labelResidual, labelSet, type LabellerSpec } from './label.ts';
 import { loadSource, readManifest } from './manifest.ts';
-import { issueDrafts, renderReport, summarize } from './report.ts';
+import { issueDrafts, renderReport, summarize, type KnownStatus } from './report.ts';
 import { renderTaxonomyMarkdown } from './taxonomy.ts';
 import type { CauseLabel, EvalFailure, SourceCounts, StressCount } from './types.ts';
 
@@ -171,9 +172,10 @@ async function run(argv: string[]): Promise<number> {
     const refused = ungated(labels, gates, family);
     if (refused.length) throw new Error(`model labels without a passing gate: ${refused.map(r => `${r.path} on ${r.family} (${r.labels})`).join(', ')}; run agree and pass its output as --gates`);
     const stress: StressCount[] = flag(rest, '--stress') ? JSON.parse(readFileSync(flag(rest, '--stress')!, 'utf8')) : [];
+    const known: KnownStatus[] = flag(rest, '--known') ? JSON.parse(readFileSync(flag(rest, '--known')!, 'utf8')).known : [];
     const dir = need(rest, '--out-dir');
     mkdirSync(dir, { recursive: true });
-    const summary = summarize(labels, stress);
+    const summary = summarize(labels, stress, { known });
     writeFileSync(join(dir, 'summary.json'), JSON.stringify(summary, null, 1) + '\n');
     writeFileSync(join(dir, 'report.md'), renderReport(summary, { heading: need(rest, '--heading') }));
     writeFileSync(join(dir, 'issues.json'), JSON.stringify(issueDrafts(summary), null, 1) + '\n');

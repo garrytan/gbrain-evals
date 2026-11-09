@@ -6,6 +6,20 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ### Failure causes: fixes before the first counted results
 
+- **Taxonomy 2026-11-09.2.** The 18 cause ids are unchanged. The version moves because the rules below classify some
+  rows differently, and `report` refuses to pool labels across versions. Labels gain `task_id` and failure rows may
+  carry it: the task or question a row answers, the same for every arm and system that ran it. A row that hit the
+  agent's turn cap carries the new `turn_cap` tag whatever its primary cause.
+- **The report compares gbrain with the other systems on the same tasks.** For each cause it counts, per task and model,
+  whether each other system and control in the same source failed the same way, another way, or not at all, and how
+  many of gbrain's rows no other system shares. An appendix lists the top three's rows beside the other systems. Each
+  cause also counts its turn-cap rows by category and says the cap is part of what those rows measure.
+- **Provisional places.** A top-three place is marked provisional when the rows still waiting for the labeller could
+  move it if they all got one cause the labeller can give. Those rows are listed, and a report with no model labels
+  says once that its counts come from deterministic log rules alone.
+- **Under-stress statuses.** `report --known` shows a status beside matching under-stress rows, such as a fix gbrain
+  has already shipped, and every harness-error row there is marked as ours. Live-recall counts name the gbrain version
+  their scorecard loaded, so two scorecards of the same questions stay apart.
 - **The report checks the labeller gate itself.** `report` now refuses any model label whose labeller path and row family
   have no passing gate in `--gates` (the file `agree` writes). Gates are kept per path and per row family, so a family
   moved to gpt-6-astra is gated on that family's rows. A labeller never labels its own family's rows: `labellerFor`

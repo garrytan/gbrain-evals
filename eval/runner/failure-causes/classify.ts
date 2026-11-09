@@ -17,6 +17,7 @@ import { FAILURE_CAUSE_SCHEMA, type CauseLabel, type EvalFailure } from './types
 
 const HARNESS_STOPS = new Set(['harness_error', 'error']);
 const TIMEOUT_STOPS = new Set(['turn_cap', 'timeout', 'context_overflow', 'max_turns']);
+const TURN_CAPS = new Set(['turn_cap', 'max_turns']);
 const TRUNCATED_FINISH = new Set(['length', 'max_tokens', 'max_output_tokens']);
 const STAGE_OF = new Map<Cause, Stage>(CAUSES.map(c => [c.id, c.stage]));
 
@@ -26,6 +27,7 @@ function signals(f: EvalFailure): { hits: Hit[]; unmeasured: Stage[]; tags: Set<
   const hits: Hit[] = [];
   const unmeasured: Stage[] = [];
   const tags = new Set<Tag>(f.tags);
+  if (f.stop && TURN_CAPS.has(f.stop)) tags.add('turn_cap');
   const hit = (cause: Cause, rule: string) => hits.push({ cause, rule });
   const g = f.gold;
 
@@ -100,7 +102,7 @@ export function classify(f: EvalFailure): CauseLabel {
   const primary: Hit | null = timeout && (!sorted.length || artifact(sorted[0])) ? { cause: 'timeout_latency', rule: `budget.${f.stop}` } : sorted[0] ?? null;
   const secondary = [...new Set([...sorted.map(h => h.cause), ...(timeout ? ['timeout_latency' as const] : [])])].filter(c => c !== primary?.cause);
   const base: Omit<CauseLabel, 'cause' | 'basis' | 'rule_id'> = {
-    schema: FAILURE_CAUSE_SCHEMA, taxonomy_version: TAXONOMY_VERSION, source: f.source, run_id: f.run_id, case_id: f.case_id,
+    schema: FAILURE_CAUSE_SCHEMA, taxonomy_version: TAXONOMY_VERSION, source: f.source, run_id: f.run_id, case_id: f.case_id, task_id: f.task_id ?? null,
     system: f.system, arm: f.arm, arm_role: f.arm_role, condition: f.condition, visibility: f.visibility, model: f.model,
     gbrain_sha: f.gbrain_sha, category: f.category, secondary, tags: [...tags].sort(), unmeasured: [...new Set(unmeasured)],
     evidence: f.evidence, labeller: null,

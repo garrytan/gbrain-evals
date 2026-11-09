@@ -16,4 +16,4 @@ export type { LabellerSpec, LabelRun, LabelSetRun } from './label.ts';
 export { KAPPA_MIN, LABEL_SET_PER_FAMILY, MIN_AGREED_PER_PATH, NO_LABEL_RULES, buildLabelSet, cohensKappa, confusion, gatePaths, knownAnswerAccuracy, labelSetSample, perCause, productionLabels, stratifiedSample, ungated } from './agreement.ts';
 export type { DoubleLabel, LabelSetRow, PathGate, Production } from './agreement.ts';
 export { REGRESSION_TESTS, issueDrafts, renderReport, summarize } from './report.ts';
-export type { IssueDraft, RankedCause, Summary } from './report.ts';
+export type { IssueDraft, KnownStatus, RankedCause, Summary, TaskComparison } from './report.ts';

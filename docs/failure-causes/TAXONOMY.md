@@ -9,7 +9,7 @@ The gap-map column links each cause to a failure mode (F1 to F16) in the gap map
 the nightly loop use. Rendered from `eval/runner/failure-causes/taxonomy.ts` by
 `bun eval/runner/failure-causes/cli.ts taxonomy --write`; edit the TypeScript, not this file.
 
-Taxonomy version `2026-11-09.1`. Stages, earliest first: `harness`, `operations`, `ingest`, `visibility`, `tool_call`, `write`, `consult`, `retrieval`, `ranking`, `open`, `presentation`, `reasoning`, `budget`. The last stage, 
+Taxonomy version `2026-11-09.2`. Stages, earliest first: `harness`, `operations`, `ingest`, `visibility`, `tool_call`, `write`, `consult`, `retrieval`, `ranking`, `open`, `presentation`, `reasoning`, `budget`. The last stage, 
 `budget`, is a fallback: a turn cap or timeout is the primary cause only when no earlier stage has a signal.
 
 | Cause | Gap map | Stage | Assigned by | gbrain can fix | Meaning | Signal |
@@ -34,4 +34,4 @@ Taxonomy version `2026-11-09.1`. Stages, earliest first: `harness`, `operations`
 | `timeout_latency` | F11 | budget | logs | yes | The run hit a turn cap, a wall timeout, a context overflow or a latency bound, with no earlier stage to blame. | stop turn_cap, timeout or context_overflow, with no earlier signal (otherwise a secondary cause) |
 | `unclassified` | none | none | labeller abstained, or no signal | no | No signal applies and the labeller abstained. | none |
 
-Tags qualify a cause without changing it: `wrong_stored_fact`, `scorer_artifact`, `untitled_capture_duplicate`, `recovered_tool_error`, `score_zero`, `measured_at_10`, `retrieval_or_ranking`, `said_wrong`, `unparseable_answer`, `record_session_not_recorded`, `excused_resend`, `misreport`.
+Tags qualify a cause without changing it: `wrong_stored_fact`, `scorer_artifact`, `untitled_capture_duplicate`, `recovered_tool_error`, `score_zero`, `measured_at_10`, `retrieval_or_ranking`, `said_wrong`, `unparseable_answer`, `record_session_not_recorded`, `excused_resend`, `misreport`, `turn_cap`.

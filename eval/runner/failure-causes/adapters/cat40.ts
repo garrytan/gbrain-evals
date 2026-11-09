@@ -56,6 +56,12 @@ export const namesSlug = (text: string, slug: string) => new RegExp(`(^|[^\\w/.-
 /** The thing a call acted on, for matching a retry to the call that failed. */
 const target = (args: Rec | undefined) => JSON.stringify(args?.slug ?? args?.slugs ?? args?.path ?? args?.id ?? args?.page ?? args ?? null);
 
+/** The task a row answers: its world (by digest) and task id, so every arm that ran the same world and task shares it. */
+const taskId = (row: Rec, world: string | null): { task_id?: string } => {
+  const digest = row.experiment?.world_digest ?? world;
+  return typeof row.task === 'string' ? { task_id: digest ? `${String(digest).slice(0, 12)}|${row.task}` : row.task } : {};
+};
+
 /** Per call (submit calls dropped): its error, and whether a later call to the same tool on the same target succeeded. */
 export function cat40Calls(calls: Rec[], tools: Rec[] | undefined): ToolCall[] {
   const args = tools && tools.length === calls.length ? tools.map(t => t.args as Rec | undefined) : null;
@@ -70,13 +76,16 @@ export function cat40Calls(calls: Rec[], tools: Rec[] | undefined): ToolCall[] {
 export function fromCat40(files: LoadedFile[], entry: SourceEntry): AdapterOutput {
   const counts = emptyCounts();
   const failures: EvalFailure[] = [];
-  const dirs = new Map<string, { transcripts: Map<string, Rec[]>; sha: string | null }>();
+  const dirs = new Map<string, { transcripts: Map<string, Rec[]>; sha: string | null; world: string | null }>();
   const dirOf = (f: LoadedFile) => {
-    if (!dirs.has(dirname(f.path))) dirs.set(dirname(f.path), { transcripts: new Map(), sha: null });
+    if (!dirs.has(dirname(f.path))) dirs.set(dirname(f.path), { transcripts: new Map(), sha: null, world: null });
     return dirs.get(dirname(f.path))!;
   };
   for (const t of files.filter(f => f.role === 'transcripts')) for (const x of ndjson(t)) dirOf(t).transcripts.set(x.attempt_id ?? x.key, x.tools ?? []);
-  for (const e of files.filter(f => f.role === 'experiment')) dirOf(e).sha = JSON.parse(fileText(e)).gbrain_commit ?? null;
+  for (const e of files.filter(f => f.role === 'experiment')) {
+    const x = JSON.parse(fileText(e));
+    Object.assign(dirOf(e), { sha: x.gbrain_commit ?? null, world: x.world_digest ?? null });
+  }
   const models = entry.models ?? CAT40_DEFAULT_MODELS;
   const seen = new Set<string>();
   for (const f of files.filter(x => x.role === 'results')) {
@@ -109,7 +118,7 @@ export function fromCat40(files: LoadedFile[], entry: SourceEntry): AdapterOutpu
       if (s.unparseable_set) tags.push('unparseable_answer');
       if (Array.isArray(s.recorded) && s.recorded.includes(false)) tags.push('record_session_not_recorded');
       failures.push({
-        schema: EVAL_FAILURE_SCHEMA, source: entry.id, run_id: runId, case_id: row.key,
+        schema: EVAL_FAILURE_SCHEMA, source: entry.id, run_id: runId, case_id: row.key, ...taskId(row, dir.world),
         system: row.arm.startsWith('gbrain') ? 'gbrain' : row.arm, arm: row.arm, arm_role: cat40ArmRole(row.arm, entry),
         condition: entry.condition, visibility: entry.visibility, model: `${row.provider ?? 'unknown'}:${row.model}`, gbrain_sha: dir.sha ?? entry.gbrain_sha ?? null,
         failed: true, score: null, category: row.family ?? null, agent_loop: true, stop: fields.stop, finish_reason: null,

@@ -8,7 +8,7 @@ describe('failure-cause interface (pinned for the nightly loop)', () => {
   test('the 18 cause ids, in stage order', () => {
     expect(CAUSE_IDS).toEqual(['harness_error', 'operations', 'ingest_gap', 'privacy_hidden', 'tool_contract', 'write_integrity', 'memory_not_consulted', 'retrieval_miss',
       'partial_evidence', 'wrong_ranking', 'gold_unopened', 'summary_loss', 'stale_fact', 'wrong_entity', 'time_reasoning', 'citation_abstention', 'model_error', 'timeout_latency']);
-    expect(TAXONOMY_VERSION).toBe('2026-11-09.1');
+    expect(TAXONOMY_VERSION).toBe('2026-11-09.2');
   });
 
   test('every cause maps to the gap map and has a proposed regression test', () => {
@@ -23,7 +23,7 @@ describe('failure-cause interface (pinned for the nightly loop)', () => {
     expect(FAILURE_CAUSE_SCHEMA).toBe('failure-cause/1');
     expect(EVAL_FAILURE_SCHEMA).toBe('eval-failure/1');
     expect(Object.keys(classify(failure())).sort()).toEqual(['arm', 'arm_role', 'basis', 'case_id', 'category', 'cause', 'condition', 'evidence', 'gbrain_sha', 'labeller', 'model',
-      'rule_id', 'run_id', 'schema', 'secondary', 'source', 'system', 'tags', 'taxonomy_version', 'unmeasured', 'visibility']);
+      'rule_id', 'run_id', 'schema', 'secondary', 'source', 'system', 'tags', 'task_id', 'taxonomy_version', 'unmeasured', 'visibility']);
     expect(Object.keys(failure()).sort()).toEqual(['agent_loop', 'arm', 'arm_role', 'case_id', 'category', 'condition', 'evidence', 'failed', 'finish_reason', 'gbrain_sha', 'gold',
       'harness', 'model', 'operation', 'run_id', 'schema', 'score', 'source', 'stop', 'system', 'tags', 'tool_calls', 'visibility', 'writes']);
   });

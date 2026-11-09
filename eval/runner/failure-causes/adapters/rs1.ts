@@ -101,7 +101,7 @@ export function fromRs1(files: LoadedFile[], entry: SourceEntry): AdapterOutput 
         ? { question: String(q.question ?? ''), expected: q.answer ?? q.ideal_response ?? q.ideal_answer ?? null, answer: String(a.text ?? ''), context: contexts.get(a.context_sha256) ?? null }
         : undefined;
       failures.push({
-        schema: EVAL_FAILURE_SCHEMA, source: entry.id, run_id: String(a.realization_id ?? a.cell_id), case_id: key,
+        schema: EVAL_FAILURE_SCHEMA, source: entry.id, run_id: String(a.realization_id ?? a.cell_id), case_id: key, task_id: String(a.question_id),
         system: String(a.system ?? a.cell_id), arm: String(a.cell_id), arm_role: rs1ArmRole(String(a.cell_id), entry),
         condition: entry.condition, visibility: entry.visibility, model: a.reader, gbrain_sha: entry.gbrain_sha ?? null,
         failed: true, score, category: row.category ?? null, agent_loop: false, stop, finish_reason: null,

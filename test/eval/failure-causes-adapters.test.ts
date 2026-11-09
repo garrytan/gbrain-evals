@@ -90,7 +90,8 @@ describe('rs1 adapter: cells and outcomes the cell never judges', () => {
   });
 
   test('each directory is its own cell: an answer reads its own rows file', () => {
-    expect(labels.get('gbrain-b|q1')).toMatchObject({ cause: 'retrieval_miss', rule_id: 'retrieval.no_gold_retrieved' });
+    expect(labels.get('gbrain-b|q1')).toMatchObject({ cause: 'retrieval_miss', rule_id: 'retrieval.no_gold_retrieved', task_id: 'q1' });
+    expect(labels.get('gbrain-a|q1')?.task_id).toBe('q1');
     expect(() => ADAPTERS.rs1([...files, mem('a/rows-2.ndjson', 'rows', [row('q9')])], entry('rs1', 'rs1'))).toThrow(/a second rows file in a/);
   });
 });
@@ -98,14 +99,14 @@ describe('rs1 adapter: cells and outcomes the cell never judges', () => {
 describe('cat40 adapter: calls, slugs and recovery', () => {
   test('two worlds that reuse keys and attempt ids stay apart, each with its own transcripts and gbrain sha', () => {
     const row = (run: string) => ({ schema: 'cat40-cell-v2', key: 'claude-opus-5-5|gbrain-next-baseline|H1-01|0', attempt_id: 'claude-opus-5-5|gbrain-next-baseline|H1-01|0#1',
-      model: 'claude-opus-5-5', provider: 'anthropic', arm: 'gbrain-next-baseline', family: 'H1', budget_run_id: run, stop: 'submitted',
+      model: 'claude-opus-5-5', provider: 'anthropic', arm: 'gbrain-next-baseline', task: 'H1-01', family: 'H1', budget_run_id: run, stop: 'submitted',
       sessions: [{ run: { tool_calls: [{ name: 'search' }], final: 'x' } }], score: { success: false, evidence_cited: [], missed_evidence: ['people/alice'] } });
     const world = (dir: string, run: string, result: string, sha: string) => [mem(`${dir}/results.jsonl`, 'results', [row(run)]),
       mem(`${dir}/transcripts.jsonl`, 'transcripts', [{ attempt_id: row(run).attempt_id, tools: [{ name: 'search', args: { query: 'q' }, result }] }]),
-      mem(`${dir}/experiment.json`, 'experiment', [{ gbrain_commit: sha }])];
+      mem(`${dir}/experiment.json`, 'experiment', [{ gbrain_commit: sha, world_digest: sha.replace(/./g, dir.slice(-1)) }])];
     const out = ADAPTERS.cat40([...world('p1', 'run-1', '[{"slug":"people/alice"}]', 'a'.repeat(40)), ...world('p2', 'run-2', '[]', 'b'.repeat(40))], entry('cat40', 'cat40'));
     expect(out.counts).toMatchObject({ read: 2, duplicate: 0, failed: 2 });
-    expect(out.failures.map(f => [f.run_id, f.gbrain_sha, f.gold.retrieved])).toEqual([['run-1', 'a'.repeat(40), 'all'], ['run-2', 'b'.repeat(40), 'none']]);
+    expect(out.failures.map(f => [f.run_id, f.gbrain_sha, f.gold.retrieved, f.task_id])).toEqual([['run-1', 'a'.repeat(40), 'all', `${'1'.repeat(12)}|H1-01`], ['run-2', 'b'.repeat(40), 'none', `${'2'.repeat(12)}|H1-01`]]);
   });
 
   test('a v1 row keeps its first session\'s calls before the second\'s', () => {
@@ -170,6 +171,14 @@ describe('stress adapters', () => {
       ['gbrain/keyword', 'retrieval_miss', 66, 100], ['gbrain/keyword', 'wrong_ranking', 2, 100],
       ['gbrain/hybrid', 'retrieval_miss', 33, 100], ['gbrain/hybrid', 'wrong_ranking', 13, 100],
     ]);
+  });
+
+  test('two scorecards of the same questions stay apart: each count names the gbrain version it loaded', () => {
+    const card = (version: string, at20: number) => ({ schema: 'live-recall-scorecard/v1', run: { gbrain_loaded_version: version, gbrain_loaded_commit: 'c'.repeat(40) },
+      arms: { hybrid_lexical: { overall: { all: { n: 100, success_at: { k5: { hits: 48 }, k20: { hits: at20 } } } } } } });
+    const out = ADAPTERS['live-recall']([mem('b2-577.json', 'scorecard', [card('0.60.577.0', 60)]), mem('b2-593.json', 'scorecard', [card('0.60.593.0', 61)])], entry('lr', 'live-recall'));
+    expect(out.stress.filter(s => s.cause === 'retrieval_miss').map(s => s.detail)).toEqual([
+      'hybrid_lexical at gbrain 0.60.577.0: gold page not in the top 20 for 40 of 100 questions', 'hybrid_lexical at gbrain 0.60.593.0: gold page not in the top 20 for 39 of 100 questions']);
   });
 });
 

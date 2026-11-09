@@ -8,7 +8,7 @@
  * (bun eval/runner/failure-causes/cli.ts taxonomy --write); a test keeps them equal.
  */
 
-export const TAXONOMY_VERSION = '2026-11-09.1';
+export const TAXONOMY_VERSION = '2026-11-09.2';
 
 /** Pipeline stages, earliest first. A failure's primary cause is the first stage with a signal on its failure path. */
 export const STAGES = ['harness', 'operations', 'ingest', 'visibility', 'tool_call', 'write', 'consult', 'retrieval', 'ranking', 'open', 'presentation', 'reasoning', 'budget'] as const;
@@ -94,7 +94,7 @@ export const MODEL_CAUSES: readonly Cause[] = CAUSES.filter(c => c.basis !== 'de
 
 /** Tags that qualify a cause without changing it. */
 export const TAGS = ['wrong_stored_fact', 'scorer_artifact', 'untitled_capture_duplicate', 'recovered_tool_error', 'score_zero', 'measured_at_10',
-  'retrieval_or_ranking', 'said_wrong', 'unparseable_answer', 'record_session_not_recorded', 'excused_resend', 'misreport'] as const;
+  'retrieval_or_ranking', 'said_wrong', 'unparseable_answer', 'record_session_not_recorded', 'excused_resend', 'misreport', 'turn_cap'] as const;
 export type Tag = typeof TAGS[number];
 
 const BY_ID = new Map<string, CauseInfo>(CAUSES.map(c => [c.id, c]));

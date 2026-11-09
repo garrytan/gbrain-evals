@@ -33,13 +33,64 @@ describe('summarize', () => {
     expect(s.failures).toBe(15);
   });
 
+  test('each cause says, per task and model, whether the other systems failed the same way', () => {
+    const t = (source: string, task: string, over: Partial<EvalFailure>, model = 'anthropic:claude-opus-5-5') => classify(failure({ source, task_id: task, model, case_id: `${over.system ?? 'gbrain'}|${task}|${model}`, ...over }));
+    const fs = { system: 'fs', arm: 'fs', arm_role: 'other_system' as const };
+    const c = summarize([
+      t('a', 'T1', { gold: gold('none') }), t('a', 'T1', { ...fs, gold: gold('none') }),
+      t('a', 'T2', { gold: gold('none') }), t('a', 'T2', { ...fs, tool_calls: toolError }),
+      t('a', 'T3', { gold: gold('none') }),
+      t('a', 'T4', { gold: gold('none') }), t('a', 'T4', { ...fs, gold: gold('none') }, 'openai:gpt-6.1-sol'),
+    ]);
+    const miss = c.ranked.find(r => r.cause === 'retrieval_miss')!;
+    expect(miss.others).toEqual([{ system: 'fs', arm_role: 'other_system', same: 1, other: 1, none: 2 }]);
+    expect(miss).toMatchObject({ compared: 4, gbrain_only: 3 });
+    expect(miss.tasks.map(x => [x.task_id, x.others.fs])).toEqual([['T1', 'retrieval_miss'], ['T2', 'tool_contract'], ['T3', null], ['T4', null]]);
+    const md = renderReport(c, { heading: 'w' });
+    expect(md).toContain('fs (other_system) failed the same way on 1, another way on 1, and had no failed row on 2');
+    expect(md).toContain('On 3 of 4 compared rows, no other system failed the same way.');
+    expect(md).toContain('| `T2` | anthropic:claude-opus-5-5 | gbrain | `tool_contract` |');
+  });
+
+  test('turn-cap rows are tagged and counted per cause, and the report says the cap is part of what they measure', () => {
+    const c = summarize([...row('a', 2, { stop: 'turn_cap', category: 'H1', gold: { ...failure().gold, gold_count: 30, retrieved: 'partial', delivered: 'partial' } }),
+      ...row('a', 1, { gold: { ...failure().gold, gold_count: 2, retrieved: 'partial', delivered: 'partial' } })]);
+    expect(c.ranked[0]).toMatchObject({ cause: 'partial_evidence', count: 3, turn_cap: { count: 2, by_category: { H1: 2 } } });
+    const md = renderReport(c, { heading: 'w' });
+    expect(md).toContain("Turn cap: 2 of 3 rows hit the agent's turn cap (H1 2). The cap is our harness setting and part of what these rows measure. For these rows the lever may be reaching many pages in fewer calls, not better ranking.");
+  });
+
+  test('a top-three place is provisional when the rows waiting for the labeller could move it, and those rows are listed', () => {
+    const waiting = Array.from({ length: 2 }, (_, i) => residualLabel('a', `w${i}`));
+    const c = summarize([...row('a', 5, { gold: gold('none') }), ...row('a', 2, { stop: 'harness_error' }), ...row('a', 1, { stop: 'turn_cap' }), ...row('a', 2, { category: 'abstention', gold: { ...failure().gold, gold_count: 0 } }), ...waiting]);
+    expect(c.top_three.map(r => [r.cause, r.count, r.provisional])).toEqual([['retrieval_miss', 5, false], ['citation_abstention', 2, true], ['timeout_latency', 1, true]]);
+    expect(Number(c.pending_share.toFixed(3))).toBe(0.2);
+    expect(c.waiting.map(e => e.case_id)).toEqual(['w0', 'w1']);
+    const md = renderReport(c, { heading: 'w' });
+    expect(md).toContain('### 2. Citation or abstention (`citation_abstention`), provisional');
+    expect(md).toContain('Every count here comes from deterministic log rules.');
+    expect(md).toContain('## Waiting for the labeller');
+    expect(issueDrafts(c)[1].title).toMatch(/, provisional$/);
+    const labelled = summarize([...row('a', 5, { gold: gold('none') }), modelLabel(waiting[0], 'stale_fact', 'p')]);
+    expect(labelled.top_three.every(r => !r.provisional)).toBe(true);
+    expect(renderReport(labelled, { heading: 'w' })).not.toContain('Every count here comes from deterministic log rules.');
+  });
+
+  test('an under-stress row shows a known status, and a harness error is marked as ours', () => {
+    const stress = [{ source: 'skillopt', run_id: 'r', system: 'gbrain', model: 'm', gbrain_sha: null, condition: 'forced' as const, visibility: 'public' as const, cause: 'tool_contract' as const, unit: 'calls' as const, count: 9, of: 9, detail: 'get_page: 9 of 9', evidence: [] }];
+    const c = summarize([...row('forced', 2, { condition: 'forced', harness: { error: null, scorer_artifact: 'untitled_capture_duplicate' } })], stress,
+      { known: [{ source: 'skillopt', cause: 'tool_contract', detail_includes: 'get_page', status: 'fixed upstream in gbrain v0.60.570.0' }, { source: 'skillopt', cause: 'tool_contract', detail_includes: 'traverse', status: 'never shown' }] });
+    expect(c.under_stress.map(u => u.status)).toEqual(['eval side: our harness or scorer, not gbrain', 'fixed upstream in gbrain v0.60.570.0']);
+    expect(renderReport(c, { heading: 'w' })).toContain('| get_page: 9 of 9 | fixed upstream in gbrain v0.60.570.0 |');
+  });
+
   test('raw counts break a tie in share', () => {
     const t = summarize([...row('a', 3, { gold: gold('none') }), ...row('a', 1, { tool_calls: toolError }), ...row('b', 1, { gold: gold('none') }), ...row('b', 3, { tool_calls: toolError })]);
     expect(t.ranked.map(r => [r.cause, Number(r.score.toFixed(3)), r.count])).toEqual([['retrieval_miss', 0.5, 4], ['tool_contract', 0.5, 4]]);
   });
 
   test('forced runs and stress counts go under stress, other systems to the contrast table, harness errors to our list', () => {
-    expect(s.under_stress).toContainEqual({ source: 'forced', cause: 'tool_contract', unit: 'episodes', count: 5, of: 5, detail: '5 failed rows' });
+    expect(s.under_stress).toContainEqual({ source: 'forced', cause: 'tool_contract', unit: 'episodes', count: 5, of: 5, detail: '5 failed rows', status: null });
     expect(s.under_stress.some(u => u.count === 607)).toBe(true);
     expect(s.ranked.some(r => Object.keys(r.by_source).includes('forced'))).toBe(false);
     expect(s.contrast).toEqual([{ system: 'memory-bank', arm_role: 'other_system', cause: 'retrieval_miss', count: 4 }]);
