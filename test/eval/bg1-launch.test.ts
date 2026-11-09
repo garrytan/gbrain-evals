@@ -167,7 +167,7 @@ describe('a BG1 campaign before any VM boots', () => {
     expect(c.payload(c.leases()[0]).lease_usd).toBe(l.usd);
     rmSync(log);
     rmSync(shaFile);
-    expect(caught(() => c.leases()).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining('is missing, and the campaign ledger holds 1 reservation(s)') });
+    expect(caught(() => c.payload(l)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(`ledger entry ${l.entry_id} ("lease ${l.cell} attempt 1") has spend, and 0 reserved events in the lease log name it`) });
     expect(caught(() => c.reserve(c.manifest.cells[1].id)).op.code).toBe('CAMPAIGN_HASH_MISMATCH');
     const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
     expect(readLedger(w.manifest.ledger).entries.filter(e => e.run_id === s.run_id).map(e => e.reserved_usd)).toEqual([l.usd]);
@@ -211,6 +211,51 @@ describe('a BG1 campaign before any VM boots', () => {
     const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
     expect(readLedger(w.manifest.ledger).entries.filter(e => e.run_id === s.run_id).map(e => e.description)).toEqual([`lease ${w.unit} attempt 1`]);
     expect(c.leases().map(l => [l.lease_id, l.status])).toEqual([[first.lease_id, 'finished']]);
+  }, 60_000);
+
+  // Value: protects=every reservation the BG1 campaign run holds stays one lease in the log, so a unit is never reserved twice and blockSpend never undercounts; fails_when=a lease log emptied or cut down with its SHA-256 rewritten, or one naming an entry the run does not hold, still reaches reserve, payload, launch or resume, or a refused reserve leaves a reservation; why_new=the Opus fix-check on 12256467..806fc1ba, finding 3 (its probe: two "lease ...c0 attempt 1" entries in the ledger, blockSpend reading one); seam=a BG1 Campaign over a temporary ledger, launched locally with a runner that records boots; no_claim=a real VM or proxy
+  test('a lease log emptied, cut down or naming an unheld entry, with its SHA-256 rewritten, refuses reserve, payload, launch and resume, and leaks no reservation', async () => {
+    const w = campaign(null);
+    const c = new Campaign(w.file, w.state);
+    c.init();
+    const a = c.reserve(UNITS[0]), b = c.reserve(UNITS[1]);
+    const log = join(w.state, 'leases.ndjson'), shaFile = join(w.state, 'leases.sha256'), text = readFileSync(log, 'utf8'), sha = readFileSync(shaFile, 'utf8');
+    const write = (t: string) => { writeFileSync(log, t); writeFileSync(shaFile, createHash('sha256').update(t).digest('hex') + '\n'); };
+    const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
+    const held = () => readLedger(w.manifest.ledger).entries.filter(e => e.run_id === s.run_id).map(e => e.description);
+    const before = held();
+    expect(before).toEqual([`lease ${UNITS[0]} attempt 1`, `lease ${UNITS[1]} attempt 1`]);
+    const boots: string[] = [];
+    const runner = async (_argv: string[], ctx: LaunchContext) => { boots.push(ctx.lease.lease_id); return 0; };
+    const local = { local: { port: 1 } };
+    const unnamed = (l: typeof a) => `ledger entry ${l.entry_id} ("lease ${l.cell} attempt 1") has spend, and 0 reserved events in the lease log name it`;
+    const phantom = JSON.stringify({ event: 'reserved', lease_id: `${UNITS[2]}-a1-00000000`, cell: UNITS[2], attempt: 1, usd: a.usd, entry_id: '00000000-0000-4000-8000-000000000000', at: new Date().toISOString(), max_output_tokens: a.max_output_tokens }) + '\n';
+    const cases: Array<[string, string, string]> = [
+      ['', UNITS[0], unnamed(a)],
+      [text.split('\n').filter(x => !x.includes(a.lease_id)).join('\n'), UNITS[0], unnamed(a)],
+      [text + phantom, UNITS[2], `lease ${UNITS[2]}-a1-00000000 names ledger entry 00000000-0000-4000-8000-000000000000, which campaign run ${s.run_id} does not hold`],
+    ];
+    for (const [t, unit, why] of cases) {
+      write(t);
+      const reserved = (() => { try { return c.reserve(unit); } catch (e) { return e; } })();
+      expect(held()).toEqual(before);
+      expect(reserved).toBeInstanceOf(ScoreboardError);
+      expect((reserved as ScoreboardError).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(why) });
+      const entryPoints: Array<() => Promise<unknown>> = [() => c.launch(UNITS[1], runner, local), () => c.resume(unit, runner, local)];
+      for (const go of entryPoints) {
+        const e = await go().then(() => null, x => x);
+        expect(boots).toEqual([]);
+        expect(e).toBeInstanceOf(ScoreboardError);
+        expect((e as ScoreboardError).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(why) });
+      }
+      expect(caught(() => c.payload(b)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(why) });
+      expect(held()).toEqual(before);
+    }
+    writeFileSync(log, text);
+    writeFileSync(shaFile, sha);
+    expect(c.payload(b).lease_usd).toBe(b.usd);
+    expect((await c.launch(UNITS[1], runner, local)).status).toBe('finished');
+    expect(boots).toEqual([b.lease_id]);
   }, 60_000);
 
   // Value: protects=a refused BG1 reserve leaves no ledger reservation the lease log does not name; fails_when=the lease log changes between reserve's read and its append, the append refuses, and the lease-sized ledger reservation stays charged; why_new=the exception-14 reader's finding 2 (reserve() refuses after this.run().reserve() succeeds); seam=ledgerTestHooks.afterCapCheck, inside the ledger's reserve, edits the log as an outside writer would; no_claim=a ledger the process cannot write
