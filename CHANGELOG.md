@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.182] - 2026-11-09
 
 ### Failure causes: fixes before the first counted results
 
@@ -39,7 +39,7 @@ This records what each gbrain-evals release changed and what its measurements me
   both count.
 - **RS1 adapter.** Each directory's rows, answers and judgments form one cell. An answer the cell never judged follows
   the outcome contract in `eval/runner/memory-qa/outcomes.ts`. A turn cap or context overflow is `timeout_latency`. A
-  retrieval error is gbrain's miss: it carries the new `retrieve_error` tag and counts as `retrieval_miss`. An
+  retrieval error is gbrain's miss. It carries the new `retrieve_error` tag and counts as `retrieval_miss`. An
   unsupported answer stays in the denominator with no row text, and it never reaches the labeller. A reader, judge or
   harness error, and any outcome not listed here, is `harness_error`. `budget_not_run` and `does_not_fit` (not
   applicable) are skipped. A failed `ingest_degraded` answer counts as `operations`.
