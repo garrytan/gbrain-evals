@@ -475,9 +475,10 @@ the target, and 16 of 23 passed the 0.6 floor. Naming the last attempt's length 
 asked, at about 0.84 words per cl100k token, but kept to the number of turns asked, at a median of about 47 cl100k
 tokens per turn (36 to 58 for most turns). Both unreadable check replies were the literal text "Here is the JSON
 requested:" and a line break, about 7 visible tokens after about 25 reasoning tokens, so the 256-token budget did not
-cut them off. The JSON Schema failed in 2 of about 35 checks, and the other 67 replies were clean JSON. From commit
+cut them off. The JSON Schema failed in 2 of the 23 Gemini checks. The other 21 Gemini check replies, all 36 render replies and all 10
+claude-haiku-5-5 check replies were clean JSON. From commit
 `289801fe`, each render asks for N to N + 2·max(1, floor(0.05N)) alternating turns, where N is the even number nearest
-the session's target divided by 47 tokens per turn, and never less than 2 × (planned lines + 1) or 4. The JSON Schema
+the session's target divided by 47 tokens per turn (ties round up), and never less than 2 × (planned lines + 1) or 4. The JSON Schema
 holds the reply to that range (`minItems` and `maxItems`) and the prompt states it. The width rounds down because,
 rounded up, the 22- and 24-turn ranges reach 26 and 28 turns, which at 58 tokens a turn pass 1.5 times targets near
 1,000 tokens. For every target from 757 to 3,236 and every dev-world session, N × 36 tokens is never under 0.72 of the
