@@ -4,6 +4,7 @@
  * provider.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
+import { Database } from 'bun:sqlite';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -53,6 +54,37 @@ function smokeCampaign(unit: string, ...others: string[]) {
   const manifest = { ...bg1CampaignManifest(m, { smoke: true, units: { campaign_id: 'q1-scoreboard-bg1-smoke-t', cap_usd: cap, units: [unit, ...others], paid_window: 'BG1-S1-T' }, worldEnd: '2026-11-15' }), ledger: join(dir, 'campaign.sqlite') } as unknown as CampaignManifest;
   writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2));
   return { manifest, unit, file: join(dir, 'manifest.json'), state: join(dir, 'state') };
+}
+
+const RAISED = 'bg1-dev3.gbrain-defaults.rs1-stable', OTHER = 'bg1-dev3.baseline-none.baseline';
+let raisedManifest: CampaignManifest | null = null;
+/** A stage-1 BG1 campaign over RAISED and OTHER whose RAISED lease launches on a named VM, is raised in place to each of targets with raise-lease (against a VM ledger in a scratch home), and is abandoned at its full charge. */
+async function raiseAndAbandon(targets: number[]) {
+  raisedManifest ??= smokeCampaign(RAISED, OTHER).manifest;
+  const dir = scratch();
+  const w = { manifest: { ...raisedManifest, ledger: join(dir, 'campaign.sqlite') }, file: join(dir, 'manifest.json'), state: join(dir, 'state') };
+  writeFileSync(w.file, JSON.stringify(w.manifest, null, 2));
+  const c = new Campaign(w.file, w.state);
+  c.init();
+  const home = join(dirname(w.state), 'vm-home');
+  const ssh = (_vm: string, command: string) => { const p = Bun.spawnSync(['bash', '-c', command], { env: keyless({ HOME: home }), stdout: 'pipe', stderr: 'pipe' }); return { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() }; };
+  const d = c.reserve(RAISED);
+  const vmLedger = join(home, 'custody', d.lease_id, 'proxy', 'lease.sqlite');
+  const raised: number[] = [];
+  const owner = process.env.UBI_OWNER;
+  process.env.UBI_OWNER = 'bg1test';
+  try {
+    await c.launch(RAISED, async () => {
+      mkdirSync(dirname(vmLedger), { recursive: true });
+      BudgetRun.openLease({ runId: d.lease_id, leaseUsd: d.usd, ledgerPath: vmLedger });
+      for (const t of targets) raised.push((raise(c, d.lease_id, t, 'owner approved', ssh) as { to_usd: number }).to_usd);
+      return 255;
+    });
+  } finally { if (owner === undefined) delete process.env.UBI_OWNER; else process.env.UBI_OWNER = owner; }
+  const abandoned = c.abandon(d.lease_id, 'VM lost');
+  const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
+  const entry = readLedger(w.manifest.ledger).entries.find(x => x.id === d.entry_id && x.run_id === s.run_id)!;
+  return { w, c, d, raised, abandoned, entry };
 }
 
 /** run, init and reserve all refuse the campaign before init: no boot, no campaign.json, no ledger. */
@@ -573,7 +605,7 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     const forged = raised.replace(/"to_usd":[0-9.]+/, '"to_usd":40.843');
     expect(forged).not.toBe(raised);
     writeFileSync(raisesFile, forged);
-    expect(caught(() => odd.c.reserve(other)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(`lease ${odd.d.lease_id} is abandoned at 40.843 in the lease log, and the ledger settled its entry ${odd.d.entry_id} at `) });
+    expect(caught(() => odd.c.reserve(other)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(`lease ${odd.d.lease_id} and its raises in raises.ndjson reserve 40.84, and the ledger reserved 40.83 for its entry ${odd.d.entry_id}`) });
     writeFileSync(raisesFile, raised);
     expect(odd.c.reserve(other).status).toBe('reserved');
 
@@ -582,4 +614,47 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     expect(half.c.reserve(other).status).toBe('reserved');
     expect(half.c.reserve(half.w.unit).attempt).toBe(2);
   }, 60_000);
+
+  // Value: protects=a BG1 lease raised once or more by amounts between cents and then abandoned leaves the campaign reservable, while a ledger that disagrees with the lease log and raises.ndjson still refuses; fails_when=reconcileBg1 compares a charged abandon's last raise with the whole-cent reservation raise-lease made (in cents or exactly), so a raise that rounds away from its target refuses every later reserve, or a raise on the host ledger with no record, a charge at another amount or a settle a fraction of a cent off passes; why_new=fix-check 4's #1 (a lease raised twice between cents, then abandoned: the ledger charged its lease plus the two raises rounded to cents, the log the last unrounded raise, and the cents comparison refused every reserve) and #5 (that comparison let a settled amount differ by under a cent); seam=stage-1 BG1 Campaigns over temporary ledgers, launched on a named VM and raised with raise-lease against a VM ledger in a scratch home, across 58 raise sequences; no_claim=raise-lease's own arithmetic, unchanged, which reconcileBg1 repeats
+  test('a BG1 lease raised between cents once, twice or three times, then abandoned, leaves another unit reservable across 58 sequences; a raise with no record or a ledger amount off by any fraction refuses', async () => {
+    const named = [[40.525], [40.555], [40.705], [40.833], [40.833, 41.166], [40.833, 41.166, 41.499]];
+    const to = (base: number, k: number) => Number((base + k / 1000).toFixed(3));
+    const generated = [40.5, 40.51, 40.99, 41.37].flatMap(base => {
+      const start = base === 40.5 ? [] : [base];
+      return [...[6, 15, 25, 45, 333, 505, 667, 994].map(k => [...start, to(base, k)]), ...[[6, 6], [15, 25], [333, 333], [505, 505], [994, 6]].map(([j, k]) => [...start, to(base, j), to(to(base, j), k)])];
+    });
+    expect(generated).toHaveLength(52);
+    const wrong: string[] = [], drifted: string[] = [];
+    for (const targets of [...named, ...generated]) {
+      const r = await raiseAndAbandon(targets);
+      const seq = [r.d.usd, ...targets].join(' -> ');
+      if (Math.round(r.entry.reserved_usd * 100) !== Math.round(targets.at(-1)! * 100)) drifted.push(seq);
+      if (r.raised.join() !== targets.join() || r.abandoned.actual_usd !== targets.at(-1) || r.entry.actual_usd !== r.entry.reserved_usd) wrong.push(`${seq}: raised ${r.raised.join()}, log ${r.abandoned.actual_usd}, ledger ${r.entry.reserved_usd}/${r.entry.actual_usd}`);
+      try { r.c.reserve(OTHER); } catch (e) { wrong.push(`${seq}: ${(e as Error).message}`); }
+    }
+    expect(wrong).toEqual([]);
+    expect(drifted).toContain('40.5 -> 40.833 -> 41.166');
+    expect(drifted.length).toBeGreaterThan(10);
+
+    const r = await raiseAndAbandon([40.833, 41.166]);
+    expect([r.entry.reserved_usd, r.entry.actual_usd, r.abandoned.actual_usd]).toEqual([41.16, 41.16, 41.166]);
+    const raisesFile = join(r.w.state, 'raises.ndjson'), raised = readFileSync(raisesFile, 'utf8');
+    writeFileSync(raisesFile, raised.split('\n').filter(Boolean)[0] + '\n');
+    expect(caught(() => r.c.reserve(OTHER)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(`lease ${r.d.lease_id} and its raises in raises.ndjson reserve 40.83, and the ledger reserved 41.16 for its entry ${r.d.entry_id}`),
+      fix: { user_message: expect.stringMatching(/^Stop and ask the campaign owner/) } });
+    writeFileSync(raisesFile, raised);
+    const ledger = new Database(r.w.manifest.ledger);
+    const setActual = (id: string, usd: number) => ledger.query('UPDATE entries SET actual_usd = ? WHERE id = ?').run(usd, id);
+    try {
+      setActual(r.d.entry_id, 41.17);
+      expect(caught(() => r.c.reserve(OTHER)).op.message).toContain(`lease ${r.d.lease_id} is abandoned at 41.166 in the lease log, and the ledger settled its entry ${r.d.entry_id} at 41.17 of the 41.16 it reserved`);
+      setActual(r.d.entry_id, 41.16);
+      const o = r.c.reserve(OTHER);
+      expect((await r.c.launch(OTHER, async (_argv, ctx) => { writeFileSync(join(ctx.resultsDir, 'lease-summary.json'), JSON.stringify({ run_id: o.lease_id, lease_usd: o.usd, committed_usd: 0.6, requests: 2 })); return 0; }, { local: { port: 1 } })).status).toBe('settled');
+      setActual(o.entry_id, 0.604);
+      expect(caught(() => r.c.reserve(RAISED)).op.message).toContain(`lease ${o.lease_id} is settled at 0.6 in the lease log, and the ledger settled its entry ${o.entry_id} at 0.604`);
+      setActual(o.entry_id, 0.6);
+    } finally { ledger.close(); }
+    expect(r.c.reserve(RAISED).attempt).toBe(2);
+  }, 300_000);
 });

@@ -383,6 +383,8 @@ export function snapshotStoreGap(system: string, tarPath: string, root = REPO_RO
 const usd = (n: number) => `$${n.toFixed(2)}`;
 /** The id reserve() gives a lease: its cell, its attempt and the start of its ledger entry's id. */
 const mintLeaseId = (cell: string, attempt: number, entry: string) => `${cell}-a${attempt}-${entry.slice(0, 8)}`;
+/** What one raise adds to a lease's host reservation, as eval/runner/q1/raise-lease.ts computes it: the raise rounded to whole cents. */
+const raiseDelta = (fromUsd: number, toUsd: number) => Math.round((toUsd - fromUsd) * 100) / 100;
 
 /** The ubi-runner owner tag (UBI_OWNER, lowercased letters and digits, at most 12, starting with a letter), as the runner computes it. */
 export function ownerTag(raw: string | undefined): string | null {
@@ -594,12 +596,14 @@ export class Campaign {
    * campaign's run holds with spend (actual, else reserved, above 0) is named by exactly one reserved event in the log,
    * and every reserved event names an entry the run holds. A log emptied or cut down with its SHA-256 rewritten would
    * otherwise read as fewer leases than the ledger charges, so a unit could be reserved again and blockSpend would
-   * undercount. Each lease_id is reserved once, and each lease's state matches its entry: a lease settled or abandoned
-   * in the log has its entry settled at the amount the log charges, to the cent (raise-lease reserves a raise in whole
-   * cents, so a charged abandon must match what the ledger reserved), and an open lease has an open entry, so a log that
-   * closes a lease the ledger still holds open never frees its unit for a second reservation. It reads the log and the
-   * ledger under leases.lock, where a BG1 settle or abandon writes both, and changes neither, so a refused reserve
-   * holds no reservation.
+   * undercount. Each lease_id is reserved once, and each lease's state matches its entry. The entry reserves the lease's
+   * amount plus each of its raises in raises.ndjson as raise-lease reserved it (rounded to whole cents, raiseDelta); an
+   * open lease the raise lock names is skipped here, because its raise may be between the ledger and its record. A lease
+   * settled in the log has its entry settled at the amount the log charges; a lease abandoned at its full charge has its
+   * entry charged at what the ledger reserved, and the log charges its last raise (or its lease); and an open lease has an
+   * open entry, so a log that closes a lease the ledger still holds open never frees its unit for a second reservation.
+   * It reads the log and the ledger under leases.lock, where a BG1 settle or abandon writes both, and changes neither, so
+   * a refused reserve holds no reservation.
    */
   private reconcileBg1(): void {
     if (!this.bg1 || !existsSync(this.statePath)) return;
@@ -608,6 +612,11 @@ export class Campaign {
       const reserved = this.events().map(x => JSON.parse(x) as LeaseEvent).filter((e): e is Extract<LeaseEvent, { event: 'reserved' }> => e.event === 'reserved');
       const entries = readLedger(s.ledger).entries.filter(e => e.run_id === s.run_id);
       const held = new Map(entries.map(e => [e.id, e] as const));
+      const raisesPath = join(this.stateDir, 'raises.ndjson');
+      const raises = existsSync(raisesPath) ? readFileSync(raisesPath, 'utf8').split('\n').filter(Boolean).map(x => JSON.parse(x) as { lease_id: string; from_usd: number; to_usd: number }) : [];
+      let raising: string | null = null;
+      try { raising = (JSON.parse(readFileSync(join(this.stateDir, 'raise.lock'), 'utf8')) as { lease_id: string }).lease_id; } catch { raising = null; }
+      const near = (a: number | null | undefined, b: number | null | undefined) => typeof a === 'number' && typeof b === 'number' && Math.abs(a - b) <= 1e-9;
       const problems = [
         ...entries.filter(e => (e.actual_usd ?? e.reserved_usd) > 0).map(e => [e, reserved.filter(r => r.entry_id === e.id).length] as const).filter(([, n]) => n !== 1)
           .map(([e, n]) => `ledger entry ${e.id} ("${e.description}") has spend, and ${n} reserved events in the lease log name it`),
@@ -619,10 +628,12 @@ export class Campaign {
         ...this.leases().flatMap(l => {
           const e = held.get(l.entry_id);
           if (!e) return [];
-          if (l.status !== 'settled' && l.status !== 'abandoned') return e.actual_usd === null ? [] : [`lease ${l.lease_id} is ${l.status} in the lease log, and the ledger settled its entry ${e.id} at ${e.actual_usd}`];
-          const cents = (usd: number | null | undefined) => usd === null || usd === undefined ? NaN : Math.round(usd * 100);
+          const open = l.status !== 'settled' && l.status !== 'abandoned';
+          const hold = raises.filter(r => r.lease_id === l.lease_id).reduce((n, r) => n + raiseDelta(r.from_usd, r.to_usd), l.usd);
+          if (!(open && raising === l.lease_id) && !near(e.reserved_usd, hold)) return [`lease ${l.lease_id} and its raises in raises.ndjson reserve ${hold}, and the ledger reserved ${e.reserved_usd} for its entry ${e.id}`];
+          if (open) return e.actual_usd === null ? [] : [`lease ${l.lease_id} is ${l.status} in the lease log, and the ledger settled its entry ${e.id} at ${e.actual_usd}`];
           const charged = l.status === 'abandoned' && (l.actual_usd ?? 0) > 0;
-          return cents(e.actual_usd) === cents(l.actual_usd) && (!charged || cents(e.actual_usd) === cents(e.reserved_usd)) ? []
+          return (charged ? near(e.actual_usd, e.reserved_usd) && near(l.actual_usd, l.raised_usd ?? l.usd) : near(e.actual_usd, l.actual_usd)) ? []
             : [`lease ${l.lease_id} is ${l.status} at ${l.actual_usd} in the lease log, and the ledger ${e.actual_usd === null ? `holds its entry ${e.id} open` : `settled its entry ${e.id} at ${e.actual_usd}${charged ? ` of the ${e.reserved_usd} it reserved` : ''}`}`];
         }),
       ];
