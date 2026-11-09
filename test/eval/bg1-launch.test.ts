@@ -7,11 +7,12 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
-import { closeLedgers, ledgerTestHooks, readLedger } from '../../eval/runner/budget-ledger.ts';
+import { BudgetRun, closeLedgers, ledgerTestHooks, readLedger } from '../../eval/runner/budget-ledger.ts';
 import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { bg1CampaignManifest, loadCellManifest } from '../../eval/runner/q1/cell.ts';
+import { raise } from '../../eval/runner/q1/raise-lease.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { runCells } from '../../eval/runner/scoreboard-cli.ts';
 import { Campaign, type CampaignManifest, type LaunchContext } from '../../eval/runner/shootout-cell.ts';
@@ -300,5 +301,107 @@ for (let i = 0; i < ${rounds}; i++) { const l = c.reserve(unit); for (let k = 0;
     const entries = readLedger(w.manifest.ledger).entries.filter(e => e.run_id === s.run_id);
     expect(entries.length).toBe(leases.length);
     expect(Math.round(entries.reduce((n, e) => n + (e.actual_usd ?? e.reserved_usd), 0) * 100)).toBe(Math.round(leases.reduce((n, l) => n + l.usd, 0) * 100));
+  }, 60_000);
+
+
+  // Value: protects=one BG1 reservation boots one VM; fails_when=a lease launched once, its lease log and leases.sha256 put back to their post-reserve copies, launches again and boots a second VM on the same ledger entry; why_new=GBEV-3's fix set 3, item 2 (launch read the lease as reserved outside leases.lock, so only the log marked a lease used); seam=a stage-1 BG1 Campaign over a temporary ledger, launched locally with a runner that records boots; no_claim=a results directory removed by hand along with the log, or a real VM
+  test('a lease launched once, with its log and SHA-256 restored to their post-reserve copies, refuses a second launch and boots nothing more', async () => {
+    const w = smokeCampaign('bg1-dev3.gbrain-defaults.rs1-stable');
+    const c = new Campaign(w.file, w.state);
+    c.init();
+    const l = c.reserve(w.unit);
+    const log = join(w.state, 'leases.ndjson'), shaFile = join(w.state, 'leases.sha256'), text = readFileSync(log, 'utf8'), sha = readFileSync(shaFile, 'utf8');
+    const boots: string[] = [], lockHeld: boolean[] = [];
+    const runner = async (_argv: string[], ctx: LaunchContext) => { boots.push(ctx.lease.lease_id); lockHeld.push(existsSync(join(w.state, 'leases.lock'))); return 0; };
+    const local = { local: { port: 1 } };
+    expect((await c.launch(w.unit, runner, local)).status).toBe('finished');
+    expect([boots, lockHeld]).toEqual([[l.lease_id], [false]]);
+    writeFileSync(log, text);
+    writeFileSync(shaFile, sha);
+    expect(c.leases().map(x => [x.lease_id, x.status])).toEqual([[l.lease_id, 'reserved']]);
+    const again = await c.launch(w.unit, runner, local).then(() => null, x => x);
+    expect(boots).toEqual([l.lease_id]);
+    expect(again).toBeInstanceOf(ScoreboardError);
+    expect((again as ScoreboardError).op).toMatchObject({ code: 'LEASE_STATE', message: expect.stringContaining(`lease ${l.lease_id} (ledger entry ${l.entry_id}) already has a results directory`), fix: { next: 'ask_user' } });
+    expect(readFileSync(log, 'utf8')).toBe(text);
+  }, 60_000);
+
+  // Value: protects=one BG1 reservation boots one VM when a unit is started twice at once; fails_when=two processes launching one lease both read it as reserved and both boot; why_new=GBEV-3's fix set 3, item 2; seam=two processes launching one stage-1 BG1 lease locally on one --state at the same instant, each with a runner that records its boot; no_claim=a real VM
+  test('two processes launching one BG1 lease at once boot it once, and the other refuses', async () => {
+    const w = smokeCampaign('bg1-dev3.gbrain-defaults.rs1-stable');
+    const c = new Campaign(w.file, w.state);
+    c.init();
+    const l = c.reserve(w.unit);
+    const bootsFile = join(dirname(w.state), 'boots.txt');
+    const script = `const { Campaign } = await import(${JSON.stringify(join(REPO, 'eval/runner/shootout-cell.ts'))});
+const { appendFileSync } = await import('node:fs');
+const [file, state, unit, boots, start] = process.argv.slice(-5);
+const c = new Campaign(file, state);
+await Bun.sleep(Math.max(0, Number(start) - Date.now()));
+try { await c.launch(unit, async (_argv, ctx) => { appendFileSync(boots, ctx.lease.lease_id + '\\n'); await Bun.sleep(1000); return 0; }, { local: { port: 1 } }); console.log('booted'); }
+catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
+    const start = String(Date.now() + 4000);
+    const kids = [0, 1].map(() => Bun.spawn(['bun', '-e', script, w.file, w.state, w.unit, bootsFile, start], { cwd: REPO, stdout: 'pipe', stderr: 'pipe' }));
+    const outs = await Promise.all(kids.map(async k => ({ code: await k.exited, out: (await new Response(k.stdout).text()).trim(), err: await new Response(k.stderr).text() })));
+    expect(outs.map(o => [o.code, o.err.split('\n').find(x => /^\w*Error: /.test(x)) ?? null])).toEqual([[0, null], [0, null]]);
+    expect(outs.map(o => o.out.split(':')[0]).sort()).toEqual(['booted', 'refused']);
+    expect(readFileSync(bootsFile, 'utf8')).toBe(`${l.lease_id}\n`);
+    expect(c.leases().map(x => [x.lease_id, x.status])).toEqual([[l.lease_id, 'finished']]);
+    expect(readFileSync(join(w.state, 'leases.ndjson'), 'utf8').split('\n').filter(Boolean).map(x => JSON.parse(x).event)).toEqual(['reserved', 'launched', 'finished']);
+  }, 60_000);
+
+  // Value: protects=the launch claim strands no BG1 lease; fails_when=a lease launched under it can no longer settle, abandon at its full charge or at 0, resume as a repeat, be raised in place, or be settled by reattach; why_new=GBEV-3's fix set 3, item 2; seam=a stage-1 BG1 Campaign over a temporary ledger, launched locally and on a named VM with runners that record boots, raise-lease against a VM ledger in a scratch home, reattach.ts --once with a scripted UBI_RUNNER; no_claim=a real VM, ssh or pull
+  test('after a BG1 reserve and launch, settle, both kinds of abandon, resume (repeat), raise-lease and reattach still close leases', async () => {
+    const w = smokeCampaign('bg1-dev3.gbrain-defaults.rs1-stable');
+    const c = new Campaign(w.file, w.state);
+    c.init();
+    const root = dirname(w.state);
+    const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
+    const entry = (id: string) => readLedger(w.manifest.ledger).entries.find(e => e.id === id && e.run_id === s.run_id);
+    const summary = (dir: string, leaseId: string, usd: number, spent: number) => { mkdirSync(dir, { recursive: true }); writeFileSync(join(dir, 'lease-summary.json'), JSON.stringify({ run_id: leaseId, lease_usd: usd, committed_usd: spent, requests: 3 })); };
+    const boots: string[] = [];
+    const exits = (code: number, during: (ctx: LaunchContext) => void = () => {}) => async (_argv: string[], ctx: LaunchContext) => { boots.push(ctx.lease.lease_id); during(ctx); return code; };
+    const local = { local: { port: 1 } };
+
+    const a = c.reserve(w.unit);
+    expect(await c.launch(w.unit, exits(0, ctx => summary(ctx.resultsDir, a.lease_id, a.usd, 0.25)), local)).toMatchObject({ status: 'settled', actual_usd: 0.25 });
+    expect(entry(a.entry_id)).toMatchObject({ actual_usd: 0.25, status: 'reconciled' });
+
+    const b = c.reserve(w.unit);
+    expect((await c.launch(w.unit, exits(1), local)).status).toBe('finished');
+    expect(c.abandon(b.lease_id, 'VM lost')).toMatchObject({ status: 'abandoned', actual_usd: b.usd });
+    expect(entry(b.entry_id)).toMatchObject({ actual_usd: b.usd, status: 'charged-reservation' });
+
+    const resumed = await c.resume(w.unit, exits(1), local);
+    expect([resumed.mode, resumed.lease.status]).toEqual(['repeat', 'finished']);
+    const launchLog = join(root, 'launch.log');
+    writeFileSync(launchLog, 'ubi-runner: provisioning\n');
+    expect(c.abandon(resumed.lease.lease_id, 'died in setup', { log: launchLog })).toMatchObject({ status: 'abandoned', actual_usd: 0 });
+    expect(entry(resumed.lease.entry_id)).toMatchObject({ actual_usd: 0 });
+
+    const home = join(root, 'vm-home');
+    const ssh = (_vm: string, command: string) => { const p = Bun.spawnSync(['bash', '-c', command], { env: { ...process.env, HOME: home }, stdout: 'pipe', stderr: 'pipe' }); return { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() }; };
+    const d = c.reserve(w.unit);
+    const vmLedger = join(home, 'custody', d.lease_id, 'proxy', 'lease.sqlite');
+    const owner = process.env.UBI_OWNER;
+    process.env.UBI_OWNER = 'bg1test';
+    try {
+      expect(await c.launch(w.unit, exits(255, () => {
+        mkdirSync(dirname(vmLedger), { recursive: true });
+        BudgetRun.openLease({ runId: d.lease_id, leaseUsd: d.usd, ledgerPath: vmLedger });
+        expect(raise(c, d.lease_id, d.usd + 0.5, 'owner approved', ssh)).toMatchObject({ from_usd: d.usd, to_usd: d.usd + 0.5, vm_ledger: vmLedger });
+      }))).toMatchObject({ status: 'finished', exit_code: 255, raised_usd: d.usd + 0.5 });
+    } finally { if (owner === undefined) delete process.env.UBI_OWNER; else process.env.UBI_OWNER = owner; }
+    expect(entry(d.entry_id)).toMatchObject({ reserved_usd: d.usd + 0.5, actual_usd: null });
+
+    const fake = join(root, 'ubi-runner.sh'), pulled = join(root, 'pulled-summary.json');
+    writeFileSync(pulled, JSON.stringify({ run_id: d.lease_id, lease_usd: d.usd, committed_usd: 0.6, requests: 4 }));
+    writeFileSync(fake, 'case "$1" in\n  ssh) echo "state 0 0 1 1 0" ;;\n  pull) mkdir -p "$4/$(basename "$3")" && cp "$BG1_TEST_SUMMARY" "$4/$(basename "$3")/lease-summary.json" ;;\n  down) ;;\n  *) exit 9 ;;\nesac\n');
+    const re = spawnSync('bun', ['eval/runner/q1/reattach.ts', '--campaign', w.file, '--state', w.state, '--once'], { cwd: REPO, env: { ...process.env, UBI_RUNNER: fake, BG1_TEST_SUMMARY: pulled }, encoding: 'utf8' });
+    expect([re.status, JSON.parse(re.stdout.trim().split('\n').pop() ?? '{}')[w.unit]]).toEqual([0, 'settled']);
+    expect(c.lease(d.lease_id)).toMatchObject({ status: 'settled', actual_usd: 0.6 });
+    expect(entry(d.entry_id)).toMatchObject({ reserved_usd: d.usd + 0.5, actual_usd: 0.6, status: 'reconciled' });
+    expect(boots).toEqual([a.lease_id, b.lease_id, resumed.lease.lease_id, d.lease_id]);
+    expect(c.reserve(w.unit).attempt).toBe(5);
   }, 60_000);
 });

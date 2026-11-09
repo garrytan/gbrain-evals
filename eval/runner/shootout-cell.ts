@@ -841,7 +841,9 @@ export class Campaign {
 
   /**
    * Launch a reserved lease. The launch is recorded before the VM starts, so a
-   * crash at any point leaves a launched lease that is never launched again.
+   * crash at any point leaves a launched lease that is never launched again. A BG1
+   * launch records it under leases.lock, after re-reading the lease as reserved and
+   * creating its results directory fresh, and releases the lock before the VM boots.
    */
   async launch(cellId: string, runner: Runner, opts: { restore?: RemotePayload['restore']; restoreFrom?: string; local?: { port: number } } = {}): Promise<LeaseState> {
     this.verifyFrozen('launch');
@@ -858,8 +860,18 @@ export class Campaign {
       fix: { next: 'tell_user_to_run', argv: ['bun', 'run', 'eval:scoreboard', 'doctor', '--for', 'sealed', '--campaign', this.manifestPath, '--state', '<custody dir outside the repository>/state'], user_message: 'relaunch with --state under the custody root, outside the checkout' } });
     const vm = this.q1 && !opts.local ? this.vmName(l) : null;
     const argv = opts.local ? this.localArgv(l, opts.local.port, opts.restore) : this.launchArgv(l, { vm, restore: opts.restore, restoreFrom: opts.restoreFrom });
-    mkdirSync(this.resultsDir(l), { recursive: true });
-    this.append({ event: 'launched', lease_id: l.lease_id, at: new Date().toISOString(), argv, ...(this.q1 ? { vm, restore: opts.restore?.realization_id ?? null } : {}) });
+    this.locked(() => {
+      if (this.bg1) {
+        const dir = this.resultsDir(l), now = this.leases().find(x => x.lease_id === l.lease_id)?.status ?? 'missing';
+        mkdirSync(dirname(dir), { recursive: true });
+        let claimed = now === 'reserved';
+        if (claimed) try { mkdirSync(dir); } catch (e) { if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e; claimed = false; }
+        if (!claimed) throw refuse({ code: 'LEASE_STATE', message: `lease ${l.lease_id} (ledger entry ${l.entry_id}) ${now === 'reserved' ? `already has a results directory, ${dir}` : `is ${now} in the lease log`}, so it may already have booted; launch refused`,
+          why: 'a lease is used once: a BG1 launch re-reads the lease log and claims the lease\'s results directory under leases.lock, so a stale or restored log, or a second process, never boots a second VM on one reservation',
+          fix: { next: 'ask_user', user_message: `Stop and ask the campaign owner before touching lease ${l.lease_id} (ledger entry ${l.entry_id}): it may be running or have run. Do not restore an older leases.ndjson or leases.sha256, remove ${dir}, or start a fresh --state over this campaign's leases.` } });
+      } else mkdirSync(this.resultsDir(l), { recursive: true });
+      this.append({ event: 'launched', lease_id: l.lease_id, at: new Date().toISOString(), argv, ...(this.q1 ? { vm, restore: opts.restore?.realization_id ?? null } : {}) });
+    });
     const ctx: LaunchContext = { lease: l, cell: c, vm, remoteOut: this.remotePath(l), resultsDir: this.resultsDir(l), runner: argv[1],
       timeoutMs: c.timeout_hours ? c.timeout_hours * 3_600_000 : null, pullEveryMs: this.q1 ? (this.manifest.pull_interval_minutes ?? 10) * 60_000 : null };
     const code = await runner(argv, ctx);
