@@ -595,7 +595,8 @@ export class Campaign {
    * and every reserved event names an entry the run holds. A log emptied or cut down with its SHA-256 rewritten would
    * otherwise read as fewer leases than the ledger charges, so a unit could be reserved again and blockSpend would
    * undercount. Each lease_id is reserved once, and each lease's state matches its entry: a lease settled or abandoned
-   * in the log has its entry settled at the amount the log charges, and an open lease has an open entry, so a log that
+   * in the log has its entry settled at the amount the log charges, to the cent (raise-lease reserves a raise in whole
+   * cents, so a charged abandon must match what the ledger reserved), and an open lease has an open entry, so a log that
    * closes a lease the ledger still holds open never frees its unit for a second reservation. It reads the log and the
    * ledger under leases.lock, where a BG1 settle or abandon writes both, and changes neither, so a refused reserve
    * holds no reservation.
@@ -619,8 +620,10 @@ export class Campaign {
           const e = held.get(l.entry_id);
           if (!e) return [];
           if (l.status !== 'settled' && l.status !== 'abandoned') return e.actual_usd === null ? [] : [`lease ${l.lease_id} is ${l.status} in the lease log, and the ledger settled its entry ${e.id} at ${e.actual_usd}`];
-          return e.actual_usd !== null && Math.abs(e.actual_usd - (l.actual_usd ?? NaN)) <= 1e-9 ? []
-            : [`lease ${l.lease_id} is ${l.status} at ${l.actual_usd} in the lease log, and the ledger ${e.actual_usd === null ? `holds its entry ${e.id} open` : `settled its entry ${e.id} at ${e.actual_usd}`}`];
+          const cents = (usd: number | null | undefined) => usd === null || usd === undefined ? NaN : Math.round(usd * 100);
+          const charged = l.status === 'abandoned' && (l.actual_usd ?? 0) > 0;
+          return cents(e.actual_usd) === cents(l.actual_usd) && (!charged || cents(e.actual_usd) === cents(e.reserved_usd)) ? []
+            : [`lease ${l.lease_id} is ${l.status} at ${l.actual_usd} in the lease log, and the ledger ${e.actual_usd === null ? `holds its entry ${e.id} open` : `settled its entry ${e.id} at ${e.actual_usd}${charged ? ` of the ${e.reserved_usd} it reserved` : ''}`}`];
         }),
       ];
       if (problems.length) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `campaign ${this.manifest.campaign_id}'s lease log and ledger do not match: ${problems.slice(0, 3).join('; ')}${problems.length > 3 ? ` (and ${problems.length - 3} more)` : ''}`,

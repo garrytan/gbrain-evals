@@ -36,12 +36,12 @@ function campaign(cap: number | null, edit: (m: CampaignManifest) => void = () =
   return { manifest, sum, file: join(dir, 'manifest.json'), state: join(dir, 'state'), dir };
 }
 type Written = ReturnType<typeof campaign>;
-/** A stage-1 BG1 campaign over one smoke unit at BG1-S1's cap, written with a ledger outside the checkout. */
-function smokeCampaign(unit: string) {
+/** A stage-1 BG1 campaign over one smoke unit (and any others named) at BG1-S1's cap, written with a ledger outside the checkout. */
+function smokeCampaign(unit: string, ...others: string[]) {
   const m = loadCellManifest('bg1');
   const cap = m.blocks.find(b => b.id === 'BG1-S1')!.cap_usd;
   const dir = scratch();
-  const manifest = { ...bg1CampaignManifest(m, { smoke: true, units: { campaign_id: 'q1-scoreboard-bg1-smoke-t', cap_usd: cap, units: [unit], paid_window: 'BG1-S1-T' }, worldEnd: '2026-11-15' }), ledger: join(dir, 'campaign.sqlite') } as unknown as CampaignManifest;
+  const manifest = { ...bg1CampaignManifest(m, { smoke: true, units: { campaign_id: 'q1-scoreboard-bg1-smoke-t', cap_usd: cap, units: [unit, ...others], paid_window: 'BG1-S1-T' }, worldEnd: '2026-11-15' }), ledger: join(dir, 'campaign.sqlite') } as unknown as CampaignManifest;
   writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2));
   return { manifest, unit, file: join(dir, 'manifest.json'), state: join(dir, 'state') };
 }
@@ -525,5 +525,49 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     for (const go of [() => c.payload(c.leases()[0]), () => c.reserve(w.unit)]) expect(caught(go).op.message).toContain(why);
     expect(boots).toHaveLength(1);
     expect(readFileSync(log, 'utf8')).toBe(renamed);
+  }, 60_000);
+
+
+  // Value: protects=a BG1 lease raised to an amount between cents and then abandoned leaves the campaign reservable, while a cent of difference between the log and the ledger still refuses; fails_when=reconcileBg1 compares a charged abandon's unrounded raise with the whole-cent reservation raise-lease made, so every later reserve refuses; why_new=fix-check 3's blocker B2 (a raise between cents: the ledger reserves it rounded to the cent, the log records it unrounded); seam=a stage-1 BG1 Campaign over a temporary ledger, launched on a named VM, raise-lease against a VM ledger in a scratch home; no_claim=raise-lease's own rounding, which is unchanged
+  test('a BG1 lease raised between cents and then abandoned leaves the campaign reservable, as a whole-cent raise does; a one-cent mismatch still refuses', async () => {
+    const other = 'bg1-dev3.baseline-none.baseline';
+    const raisedThenAbandoned = async (bump: number) => {
+      const w = smokeCampaign('bg1-dev3.gbrain-defaults.rs1-stable', other);
+      const c = new Campaign(w.file, w.state);
+      c.init();
+      const home = join(dirname(w.state), 'vm-home');
+      const ssh = (_vm: string, command: string) => { const p = Bun.spawnSync(['bash', '-c', command], { env: { ...process.env, HOME: home }, stdout: 'pipe', stderr: 'pipe' }); return { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() }; };
+      const d = c.reserve(w.unit);
+      const vmLedger = join(home, 'custody', d.lease_id, 'proxy', 'lease.sqlite');
+      const owner = process.env.UBI_OWNER;
+      process.env.UBI_OWNER = 'bg1test';
+      try {
+        expect((await c.launch(w.unit, async () => {
+          mkdirSync(dirname(vmLedger), { recursive: true });
+          BudgetRun.openLease({ runId: d.lease_id, leaseUsd: d.usd, ledgerPath: vmLedger });
+          expect(raise(c, d.lease_id, d.usd + bump, 'owner approved', ssh)).toMatchObject({ from_usd: d.usd, to_usd: d.usd + bump });
+          return 255;
+        })).status).toBe('finished');
+      } finally { if (owner === undefined) delete process.env.UBI_OWNER; else process.env.UBI_OWNER = owner; }
+      expect(c.abandon(d.lease_id, 'VM lost')).toMatchObject({ status: 'abandoned', actual_usd: d.usd + bump });
+      const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string };
+      const e = readLedger(w.manifest.ledger).entries.find(x => x.id === d.entry_id && x.run_id === s.run_id);
+      return { w, c, d, cents: [e?.reserved_usd, e?.actual_usd].map(x => Math.round((x ?? NaN) * 100)) };
+    };
+
+    const odd = await raisedThenAbandoned(0.333);
+    expect([odd.d.usd, odd.cents]).toEqual([40.5, [4083, 4083]]);
+    const raisesFile = join(odd.w.state, 'raises.ndjson'), raised = readFileSync(raisesFile, 'utf8');
+    const forged = raised.replace(/"to_usd":[0-9.]+/, '"to_usd":40.843');
+    expect(forged).not.toBe(raised);
+    writeFileSync(raisesFile, forged);
+    expect(caught(() => odd.c.reserve(other)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(`lease ${odd.d.lease_id} is abandoned at 40.843 in the lease log, and the ledger settled its entry ${odd.d.entry_id} at `) });
+    writeFileSync(raisesFile, raised);
+    expect(odd.c.reserve(other).status).toBe('reserved');
+
+    const half = await raisedThenAbandoned(0.5);
+    expect(half.cents).toEqual([4100, 4100]);
+    expect(half.c.reserve(other).status).toBe('reserved');
+    expect(half.c.reserve(half.w.unit).attempt).toBe(2);
   }, 60_000);
 });
