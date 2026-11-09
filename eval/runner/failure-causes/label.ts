@@ -87,12 +87,14 @@ const PROBE: EvalFailure = {
   writes: null, tags: [], evidence: [], text: { question: 'q', expected: 'e', answer: 'a', context: 'c' },
 };
 /**
- * The labeller prompt's identity: the hash of the prompts built for two fixed probe rows (one with every field, one with
- * delivery unmeasured and nothing recorded), so a change to the instruction, the cause list or the template changes it.
- * agree stamps it on the gate file, and report refuses a gate stamped with another.
+ * The labeller prompt's identity: the hash of the prompts built for three fixed probe rows (one with every field, one with
+ * delivery unmeasured and nothing recorded, one whose context is cut for length), so a change to the instruction, the
+ * cause list, the template or the context cut changes it. agree stamps it on the gate file, and report refuses a gate
+ * stamped with another.
  */
 export const LABEL_PROMPT_SHA256 = createHash('sha256').update([PROBE,
-  { ...PROBE, gold: { ...PROBE.gold, delivered: null }, text: { question: 'q', expected: null, answer: 'a', context: null } }].map(p => buildLabelPrompt(p).sha256).join('\n')).digest('hex');
+  { ...PROBE, gold: { ...PROBE.gold, delivered: null }, text: { question: 'q', expected: null, answer: 'a', context: null } },
+  { ...PROBE, text: { question: 'q', expected: 'e', answer: 'a', context: 'c'.repeat(CONTEXT_CHARS + 1) } }].map(p => buildLabelPrompt(p).sha256).join('\n')).digest('hex');
 
 /** The last JSON object in a reply that has a cause field; braces inside its strings are fine. */
 function lastCauseObject(text: string): Record<string, unknown> | null {
