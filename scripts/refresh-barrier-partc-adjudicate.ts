@@ -16,24 +16,15 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { adjudicateEpisode } from '../eval/runner/refresh-barrier/adjudicate.ts';
 import { modelSlug, NON_INFERIOR_LO, PART_C_GATING, PART_C_TASKS, pairedBootstrap } from '../eval/runner/refresh-barrier/analyze.ts';
+
+export { adjudicateEpisode };
 
 type Rec = Record<string, any>;
 
 export const COUNTED_GBRAIN_SHA = '773a29eede3b3ea91e0e2cba4012078b5d42c602';
 export const COUNTED_HARNESS_DIGEST = '500cc5ba4b978e18d695683a39ef51714ff4c1626249b1594e88eb91629035e3';
-
-export function adjudicateEpisode(r: Rec): { raw: boolean; adjudicated: boolean; reissues: number; excused: number } {
-  const reissues: Rec[] = r.behavior?.reissues ?? [];
-  const writes: Rec[] = r.write_calls ?? [];
-  const excused = reissues.filter(x => {
-    const prior = writes.filter(w => w.i < x.call && (w.tokens ?? []).includes(x.fact)).at(-1);
-    return prior !== undefined && prior.code === 'invalid_params' && String(r.transcript?.[prior.i]?.result ?? '').includes('nothing was written');
-  }).length;
-  const s = r.score ?? {};
-  const kept = (s.duplicates ?? []).length === 0 && r.loop?.stop !== 'context_overflow';
-  return { raw: s.success === true && kept, adjudicated: s.tokens_once === true && s.report_correct === true && excused === reissues.length && kept, reissues: reissues.length, excused };
-}
 
 export function adjudicate(partc: string): Rec {
   const models = Object.fromEntries(PART_C_GATING.map(model => {

@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.179] - 2026-11-09
+## [0.10.180] - 2026-11-09
 
 ### Pinned per-reader judges, the paid-window guard and keyless tests move to main from RS1's results branch (#391)
 
@@ -26,6 +26,37 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Tests.** `test/eval/pinned-judge-settings.test.ts` covers the judge settings, `test/eval/paid-window-guard.test.ts`
   the guard and the re-read's window flags, and `test/eval/no-provider-keys.test.ts` the preload.
   `test/eval/rs1-cells.test.ts` expects the per-reader views. No result, score or verdict changes.
+
+## [0.10.179] - 2026-11-09
+
+### Every failed eval row can now be given a cause
+
+- **New library.** `eval/runner/failure-causes/` gives each failed row one primary cause from 18, or `unclassified`,
+  chosen by the earliest pipeline stage that broke. Later signals stay on the row as secondary causes. Each cause maps to
+  a failure mode in the gap map (F1 to F16), or to `eval` when our own harness, judge or scorer failed. The taxonomy is
+  `docs/failure-causes/TAXONOMY.md`, rendered from `taxonomy.ts`, and a test pins its cause ids.
+- **Logs first, a model only for the rest.** Deterministic rules read tool errors, refusals, retrieval records and write
+  records with no model. A cross-family labeller (gpt-6.1-sol labels Claude rows, claude-opus-5-5 labels GPT and
+  particle-1 rows) labels only rows where the right evidence reached the answering model. `agree` reports a gate for
+  each labeller path the production labels used. A path passes with a kappa of at least 0.6 on at least 40 held-out
+  rows that Opus and gpt-6-astra agree on, counting only rows where both of those calls returned a cause. A path with
+  no gate fails, and so does an empty label set. Moving a failing path to gpt-6-astra is a step taken before that
+  path's counts are published; nothing switches it automatically. Row text goes to the labeller fenced as untrusted. A
+  private or sealed row is never sent, and a source whose root or file resolves to a named RS1 custody or sealed path is
+  never read.
+- **Adapters and ranking.** The refresh barrier agent check, RS1, Cat 40, SkillOpt's forced probes and the live recall
+  scorecard each read into one `eval-failure/1` row shape, from a source manifest with file hashes. Only gbrain runs
+  under natural conditions are ranked. Forced probes go in a separate under-stress list and other systems in a contrast
+  table, and a private source contributes counts only. `unclassified` rows stay in the full table but never enter the
+  top three or an issue draft, and `report` counts each row once when label files overlap. The untitled-capture
+  duplicate that the refresh barrier results disclose counts as `harness_error`.
+- **Command line.** `bun eval/runner/failure-causes/cli.ts` runs `taxonomy`, `classify`, `estimate`, `agree`,
+  `report` and `label`. Only `label` makes provider calls, and it refuses without `--paid` and an open budget run.
+- **Bug ledger.** An entry may carry `cause`, `rule_id` and `regression_check`, so a fix from a weekly top three
+  keeps a check that the nightly loop can rerun.
+- **Refactor.** `adjudicateEpisode` moved to `eval/runner/refresh-barrier/adjudicate.ts`.
+  `scripts/refresh-barrier-partc-adjudicate.ts` re-exports it and still reproduces the published Part C adjudication
+  exactly.
 
 ## [0.10.178] - 2026-11-08
 
