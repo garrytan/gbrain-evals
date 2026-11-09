@@ -72,9 +72,10 @@ All commands run from the repository root.
    (garrytan/gbrain#8917, the owner and its delegates read private pages, and over-applied `access: private` labels
    are cleared) that gbrain falls on. A counted run whose own epoch differs from the freeze's is refused with
    `LR_FREEZE_MISMATCH`, because gold a remote reader could not see before the change may be visible after it. The
-   epoch reads `pre_gbra_398` up to gbrain 0.60.620.0, `post_gbra_398` from the first release that carries the change
-   once `eval/runner/live-recall/visibility-epoch.ts` names it, and `unknown` otherwise. When the epoch is `unknown`,
-   the run must also use the freeze's exact gbrain version, because an unknown epoch can't show which side it is on.
+   epoch reads `pre_gbra_398` up to gbrain 0.60.622.0 and `post_gbra_398` from 0.60.623.0, the first release that
+   carries the change (`eval/runner/live-recall/visibility-epoch.ts`). A version string that doesn't parse reads
+   `unknown`, and then the run must also use the freeze's exact gbrain version, because an unknown epoch can't show
+   which side it is on.
 
    ```bash
    bun eval/runner/live-recall/run.ts freeze --questions <questions.jsonl> --out freeze.json --protocol batch3 \
