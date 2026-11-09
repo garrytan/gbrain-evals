@@ -852,6 +852,24 @@ describe('checkSession and renderWorld', () => {
     expect(levels).toEqual([{ thinkingLevel: 'low' }, { thinkingLevel: 'high' }, { thinkingLevel: 'high' }, { thinkingLevel: 'low' }]);
   });
 
+  // Value: protects=a high-thinking render asks for gemini-3.8-flash's whole 65,536-token output limit, because thinking counts toward maxOutputTokens and Google sets no ceiling on it at high, while a low-thinking render keeps 1.6 times its target plus 2,048 and Gemini's check keeps 256; fails_when=a high-thinking render asks for fewer than 65,536 output tokens, a low-thinking render's budget moves, or any render asks for more than 65,536; why_new=method change 3 (GBEV-3, 2026-11-09): Gemini's thinking guide ("Token limits and max_output_tokens") and a Google answer on its forum say maxOutputTokens caps thinking and reply together and cuts the reply off at the cap, so a 3,236-token session's low-thinking budget of 7,226 could cut it off at high; seam=clientModels over a fake ModelClient that records each request, for every target from 400 to 3,236 at attempts 0 and 1; no_claim=how many tokens gemini-3.8-flash thinks at high, or what the metering proxy reserves
+  test('a high-thinking render asks for the whole 65,536-token output limit and a low-thinking one keeps 1.6 × target + 2,048', async () => {
+    const sent: Array<{ max: number; thinking?: string }> = [];
+    const client: ModelClient = { id: CHECK_MODELS[0], async complete(_prompt, max, _temperature, _schema, thinking) { sent.push({ max, thinking }); return ''; } };
+    const models = clientModels(client, client);
+    const wrong: string[] = [];
+    for (let target = 400; target <= 3236; target++) for (const attempt of [0, 1]) {
+      sent.length = 0;
+      await models.render({ ...briefs[at], target_tokens: target, lines: [] }, attempt, attempt ? ['length'] : []);
+      const want = target >= 2000 || attempt > 0 ? 65_536 : Math.ceil(target * 1.6) + 2048;
+      if (sent[0].max !== want) wrong.push(`${target}/${attempt}: ${sent[0].max} at ${sent[0].thinking}`);
+    }
+    expect(wrong).toEqual([]);
+    sent.length = 0;
+    await models.check(CHECK_MODELS[0], briefs[at], turns());
+    expect(sent).toEqual([{ max: 256, thinking: 'low' }]);
+  });
+
   // Value: protects=--fake mode, which the keyless tests and drills run, renders what it rendered before the method changes; fails_when=the schema, length or regeneration changes reach fakeModels or what renderWorld returns in --fake; why_new=the renderer method changes after stage 1's first real dev render (09b3f414); seam=render.ts --dev --fake at the fixture size against the committed template fixture; no_claim=the real renderer's output
   test('--fake output is unchanged: a dev world at the fixture size matches the committed template fixture, with no regeneration', () => {
     const set = join(scratch('fake-same'), 'set');

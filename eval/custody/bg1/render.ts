@@ -34,7 +34,9 @@
  * thinking.
  *
  * gemini-3.8-flash renders a session whose target is at least 2,000 tokens, and every re-render, at thinkingLevel
- * high, and the rest at low (renderThinking); its check always runs at low.
+ * high, and the rest at low (renderThinking); its check always runs at low. Thinking tokens count toward
+ * maxOutputTokens and the reply stops at it, so a high-thinking render asks for the model's whole 65,536-token output
+ * limit, and a low-thinking one for 1.6 times its target plus 2,048.
  *
  * Model calls sit behind one interface (Models), so tests inject fakes. --fake writes each session with the template
  * renderer and answers both checks "no extra claims", spending nothing; --fake-break makes the stand-in reply with no
@@ -79,6 +81,8 @@ export const CONCURRENCY = 6;
 const CACHE_VERSION = 'bg1-render-cache/v3';
 /** A session whose target is at least this many tokens renders at high thinking from its first attempt; every re-render does too. */
 export const HIGH_THINKING_FROM_TOKENS = 2000;
+/** gemini-3.8-flash's output limit. Thinking tokens count toward maxOutputTokens, so a high-thinking render asks for all of it. */
+const GEMINI_OUTPUT_LIMIT = 65_536;
 /** English words per cl100k token as gemini-3.8-flash writes, measured from the second stage 1 render, for the prompt's length in words. */
 export const WORDS_PER_TOKEN = 0.84;
 /**
@@ -280,7 +284,10 @@ export const renderThinking = (brief: RenderBrief, attempt: number): ThinkingLev
 export function clientModels(gemini: ModelClient, haiku: ModelClient): Models {
   return {
     renderer: gemini.id,
-    render: (brief, attempt, failures, lastTokens) => gemini.complete(renderPrompt(brief, attempt, failures, lastTokens), Math.min(65_536, Math.ceil(brief.target_tokens * 1.6) + 2048), 1, renderSchema(brief), renderThinking(brief, attempt)),
+    render: (brief, attempt, failures, lastTokens) => {
+      const thinking = renderThinking(brief, attempt);
+      return gemini.complete(renderPrompt(brief, attempt, failures, lastTokens), thinking === 'high' ? GEMINI_OUTPUT_LIMIT : Math.min(GEMINI_OUTPUT_LIMIT, Math.ceil(brief.target_tokens * 1.6) + 2048), 1, renderSchema(brief), thinking);
+    },
     check: (model, brief, turns, reask) => (model === CHECK_MODELS[0] ? gemini.complete(checkPrompt(brief, turns, reask), 256, 0, CHECK_SCHEMA, 'low') : haiku.complete(checkPrompt(brief, turns), 2048, 0)),
   };
 }
