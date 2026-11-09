@@ -37,7 +37,9 @@
  * (definitions.ts frontierJudgesFor, RS1's map on its arms, under `<instrument>@<judge>`); no other frontier judge runs, and an OpenAI-compatible
  * judge is refused. Output:
  * `--out/cells/<arm cell id>.reread-<reader>/` with answers.ndjson and judgments.ndjson in Q1's record schemas, and
- * receipt.json. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
+ * receipt.json. A BG1 re-read's receipt (and verify.json) also carries `dataset`, the corpus record its schedule was
+ * checked against, as BG1's cells write it into run-config.json, so BG1's verdict.ts checks it against the filled
+ * manifest. The proxy, cell token, placeholder keys and keyless/paid marker are calibration-cell.ts's.
  */
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -87,6 +89,8 @@ export interface RereadVerify {
   };
   source_config_sha256: string | null;
   problems: string[];
+  /** BG1 only: the dataset the schedule was checked against, the corpus record BG1's cells write into run-config.json; the re-read receipt carries it for verdict.ts. */
+  dataset?: Corpus['source'];
 }
 
 const noContext = (outcome: string) => sha256(`no-context|${outcome}`);
@@ -120,7 +124,8 @@ export function readingConfig(text: string): string | null {
 export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: string[], corpus: Corpus, reader: string): { verify: RereadVerify; plan: PlannedRead[] | null } {
   const problems: string[] = [];
   const counts = { contexts_checked: 0, contexts_matched: 0, scheduled_questions: 0, questions_with_context: 0, questions_without_context: 0, stored_answers_cross_checked: 0, published_answers: 0, contexts_not_read: 0 };
-  const verify: RereadVerify = { schema: REREAD_VERIFY_SCHEMA, ok: false, cell: def.id, arm: arm.id, arm_cell_id: arm.cell_id, reader, sources: [], counts, source_config_sha256: null, problems };
+  const verify: RereadVerify = { schema: REREAD_VERIFY_SCHEMA, ok: false, cell: def.id, arm: arm.id, arm_cell_id: arm.cell_id, reader, sources: [], counts, source_config_sha256: null, problems,
+    ...(isBg1Benchmark(def.benchmark) ? { dataset: corpus.source } : {}) };
   const contexts: FrozenContext[] = [];
   const configs = new Map<string, string>();
   const staged: AnswerRecord[] = [];
@@ -344,6 +349,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
     instrument: { id: instrument.id, sha256: instrument.sha256, judge: instrument.canonical_judge },
     frontier: view ? { per_reader: true, judge_by_reader: { [reader]: view.judge }, instrument_ids: [view.instrument_id] } : null,
     verify: p.verify.counts,
+    ...(p.verify.dataset ? { dataset: p.verify.dataset } : {}),
     counts: { answers: all.length, answers_promised: plan.length, judgments: judgments.size, unjudged, outcomes, truncated: all.filter(a => a.truncated).length },
     per_reader_mean: { [reader]: mean(scores) },
     ...(view ? { per_reader_frontier_mean: { [reader]: mean(viewScores) } } : {}),
