@@ -53,8 +53,9 @@
 # behind the same pair of metering proxies per world, on one ledger, after the same window check and with the same key
 # sources as above. It reads no seed or phrasing file: render.ts plans each world from its public seed and refuses one
 # whose plan or questions differ from the committed files. So it takes no --seed-file, --phrasing, --count, --start or
-# --yield-gate-ack, and ignores BG1_SEED_FILE and BG1_PHRASING_FILE. --out must sit outside any git checkout and needs
-# no bg1-custody name. Output is counts and hashes. A dropped dev world stops the run with exit 3; the yield gate does
+# --yield-gate-ack, and ignores BG1_SEED_FILE and BG1_PHRASING_FILE. --out must sit outside any git checkout, and it
+# refuses a custody --out: one whose name starts with bg1-custody, in any case, or whose set/worlds or render/ holds a
+# bg1-NNN entry, so dev worlds never sit beside sealed ones or share their render-cache. Output is counts and hashes. A dropped dev world stops the run with exit 3; the yield gate does
 # not apply. At the end, or at a drop, it prints one render.ts --dev-report line per world it rendered: its attempts
 # and, in real mode, its two proxies' requests and spend from the ledger. Layout under --out: set/
 # (worlds/bg1-dev-NN/{plan,questions,world}.json and render/bg1-dev-NN.json; the root GBRAIN_EVALS_BG1_DEV_ROOT
@@ -101,6 +102,10 @@ done
 [ -n "$OUT" ] || die "--out is required"
 if [ "$DEV" = 1 ]; then
   [ -z "$SEALED_ONLY" ] || die "--dev plans the public dev worlds from their public seeds and phrasing, so it takes no$SEALED_ONLY"
+  case "$(basename "$OUT" | tr '[:upper:]' '[:lower:]')" in bg1-custody*) die "--dev never writes into a custody --out, so its name may not start with bg1-custody" ;; esac
+  for f in "$OUT"/set/worlds/bg1-[0-9][0-9][0-9]* "$OUT"/render/bg1-[0-9][0-9][0-9]*; do
+    if [ -e "$f" ] || [ -L "$f" ]; then die "--dev never writes into a custody --out, and this one holds a sealed bg1-NNN entry under set/worlds or render/"; fi
+  done
 else
   [ -n "$SEED_FILE" ] || die "--seed-file (or BG1_SEED_FILE) is required; there is no default seed"
   [ -n "$PHRASING" ] || die "--phrasing (or BG1_PHRASING_FILE) is required; sealed worlds never use the public phrasing"

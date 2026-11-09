@@ -492,6 +492,34 @@ describe('mint.sh --dev and render.ts --dev render stage 1\'s public dev worlds'
     for (const p of [out, set, inRepo]) expect(existsSync(p)).toBe(false);
   });
 
+  // Value: protects=dev worlds never land in a custody --out, beside sealed worlds or in their render-cache; fails_when=mint.sh --dev renders into an --out named bg1-custody* in any case, or into one whose set/worlds or render/ holds a sealed bg1-NNN entry; why_new=the Opus fix-check on 12256467..806fc1ba, finding 4 (its probe: --dev --fake --out .../bg1-custody-z over a set holding worlds/bg1-001 exited 0); seam=mint.sh --dev --fake, which refuses before it writes anything; no_claim=the sealed path's own --out checks
+  test('--dev refuses a custody --out: a bg1-custody name in any case, or a set/worlds or render/ holding a bg1-NNN entry', () => {
+    const j = inputs('dev-custody');
+    const dev = (out: string) => run('bash', [MINT, '--dev', '--fake', '--out', out, '--target-tokens', '4000']);
+    const sealed = join(j.dir, 'bg1-custody-z');
+    expect(mint(sealed, j, ['--fake', '--count', '1']).code).toBe(0);
+    const before = files(sealed).sort();
+    const probe = dev(sealed);
+    expect(files(sealed).sort()).toEqual(before);
+    expect(probe.code).toBe(2);
+    expect(probe.err).toContain('--dev never writes into a custody --out, so its name may not start with bg1-custody');
+    for (const name of ['bg1-custody-new', 'BG1-Custody-new']) {
+      const r = dev(join(j.dir, name));
+      expect(existsSync(join(j.dir, name))).toBe(false);
+      expect(r.code).toBe(2);
+    }
+    const worlds = join(scratch('dev-mixed-worlds'), 'dev-out'), records = join(scratch('dev-mixed-records'), 'dev-out');
+    mkdirSync(join(worlds, 'set', 'worlds', 'bg1-001'), { recursive: true });
+    mkdirSync(join(records, 'render'), { recursive: true });
+    writeFileSync(join(records, 'render', 'bg1-002.json'), '{}');
+    for (const out of [worlds, records]) {
+      const r = dev(out);
+      expect(existsSync(join(out, 'set', 'worlds', 'bg1-dev-01'))).toBe(false);
+      expect(r.code).toBe(2);
+      expect(r.err).toContain('holds a sealed bg1-NNN entry under set/worlds or render/');
+    }
+  }, 240_000);
+
   // Value: protects=a dev world is rendered only from the plan and gold committed for it; fails_when=render.ts plans a dev world and spends on it while the committed plan.json or questions.json differs from that plan, or is missing; why_new=BG1 follow-up fix 8; seam=render.ts main with a counting fake Models and a scratch copy of the committed dev worlds; no_claim=the generator's own determinism (changing-facts-gen.ts check)
   test('a committed dev plan or questions file that differs or is missing refuses before any model call', async () => {
     const worlds = join(scratch('dev-tamper'), 'worlds');
