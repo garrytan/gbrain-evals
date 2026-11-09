@@ -514,6 +514,18 @@ show up there.
 
 GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
 
+### Amendment 3 (2026-11-09): stage 1's rendering cap
+
+Stage 1's dev-world rendering runs under its own cap, beside the campaign cap. GBEV-3 raised the rendering cap on
+2026-11-09, before any stage 1 cell ran, to cover rendering at high thinking (Amendment 2).
+
+Why: from commit `ab030f1e`, long sessions and every re-render go to gemini-3.8-flash at high thinking, and Gemini bills
+thinking tokens as output, so those renders cost more than renders at low thinking. Because the rendering cap sits
+beside the campaign cap, stage 1's total can now pass the fixed ceiling in Amendment 1 by the amount of this raise.
+GBEV-3 accepted that. The amounts are kept on GST-2010, not here.
+
+GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
+
 ### Expected amendments
 
 The expected ones, each dated and committed before the cells it governs:
