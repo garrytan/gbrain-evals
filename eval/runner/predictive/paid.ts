@@ -12,6 +12,8 @@
  *   - No silent resend. An episode whose last log row is `errored` (a provider or harness error) or `started` (in flight
  *     when the process died) may already have been billed, so a resume skips it unless --retry-errored is passed. A
  *     `refused` episode is re-run on resume: its refused request never left the process. Completed episodes are skipped.
+ *   - One build per result. Every row records the gbrain version and commit it ran on, and a resume refuses, before
+ *     sending anything, when any row it would reuse ran on another build (or records none).
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -29,9 +31,19 @@ export interface EpisodeRecord { success: boolean; usd: number; stop: string; mo
 export interface EpisodeUsage { requests: number; input: number; output: number; cache_read: number; cache_write: number }
 export interface PaidJob { key: string; unit: string; model: string; run: (fetchImpl: typeof fetch) => Promise<EpisodeRecord> }
 export type RowStatus = 'started' | 'done' | 'errored' | 'refused';
+/** The gbrain build a row ran on: its version, and the commit loaded (an overlay's) or pinned in package.json. */
+export interface GbrainStamp { version: string; commit: string | null }
 export interface LogRow {
   schema: typeof EPISODE_LOG_SCHEMA; key: string; unit: string; model: string; status: RowStatus; counted: boolean; at: string;
-  record?: EpisodeRecord; usage?: EpisodeUsage; error?: string;
+  gbrain?: GbrainStamp; record?: EpisodeRecord; usage?: EpisodeUsage; error?: string;
+}
+
+/** A resume whose episode log ran on another gbrain build: refused before anything is sent. */
+export class ResumeRefusal extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ResumeRefusal';
+  }
 }
 
 /** The environment variables the given models' providers need, missing ones only. Presence checks only; values are never read out. */
@@ -57,18 +69,19 @@ export function meteredFetch(model: string, usage: EpisodeUsage): typeof fetch {
   }) as unknown as typeof fetch;
 }
 
-/** The last row per episode key; given `counted`, only rows a run of that kind wrote, so a counted run never resumes from smoke rows or the reverse. */
-export function readEpisodeLog(path: string, counted?: boolean): Map<string, LogRow> {
-  const rows = new Map<string, LogRow>();
-  if (!existsSync(path)) return rows;
-  for (const line of readFileSync(path, 'utf8').split('\n')) {
-    if (!line.trim()) continue;
-    const row = JSON.parse(line) as LogRow;
-    if (counted !== undefined && row.counted !== counted) continue;
-    rows.set(row.key, row);
-  }
-  return rows;
+/** Every row in log order; given `counted`, only rows a run of that kind wrote, so a counted run never resumes from smoke rows or the reverse. */
+export function readLogRows(path: string, counted?: boolean): LogRow[] {
+  if (!existsSync(path)) return [];
+  return readFileSync(path, 'utf8').split('\n').filter(line => line.trim()).map(line => JSON.parse(line) as LogRow)
+    .filter(row => counted === undefined || row.counted === counted);
 }
+
+/** The last row per episode key, of the kind `counted` names (readLogRows). */
+export function readEpisodeLog(path: string, counted?: boolean): Map<string, LogRow> {
+  return new Map(readLogRows(path, counted).map(row => [row.key, row]));
+}
+
+const buildLabel = (stamp: GbrainStamp | undefined) => stamp ? `gbrain ${stamp.version} at ${stamp.commit ?? 'an unrecorded commit'}` : 'an unrecorded gbrain build';
 
 export interface PaidResult {
   status: 'complete' | 'paused' | 'incomplete';
@@ -78,6 +91,8 @@ export interface PaidResult {
   /** The latest done row of every job, this invocation's and earlier ones'. */
   done: LogRow[];
   errored: LogRow[];
+  /** Every errored row of these jobs in the log, earlier attempts of a since-retried episode included: spend cost per correct counts. */
+  errored_attempts: LogRow[];
 }
 
 /** The jobs a resume would run, and what it skips: done episodes always; errored and in-flight ones unless retryErrored. */
@@ -93,17 +108,19 @@ export function pendingJobs<J extends { key: string }>(jobs: readonly J[], prior
   return { todo, skipped };
 }
 
-export async function runPaid(jobs: readonly PaidJob[], opts: { log: string; concurrency: number; retryErrored: boolean; counted: boolean; guard: { readonly exhausted: boolean }; resumeCommand: string; print?: (line: string) => void }): Promise<PaidResult> {
+export async function runPaid(jobs: readonly PaidJob[], opts: { log: string; concurrency: number; retryErrored: boolean; counted: boolean; gbrain: GbrainStamp; guard: { readonly exhausted: boolean }; resumeCommand: string; print?: (line: string) => void }): Promise<PaidResult> {
   const print = opts.print ?? ((line: string) => console.error(line));
   const keys = new Set<string>();
   for (const j of jobs) { if (keys.has(j.key)) throw new Error(`duplicate episode key ${j.key}`); keys.add(j.key); }
   mkdirSync(dirname(opts.log), { recursive: true });
   const prior = readEpisodeLog(opts.log, opts.counted);
+  const other = [...prior.values()].find(row => row.gbrain?.version !== opts.gbrain.version || row.gbrain?.commit !== opts.gbrain.commit);
+  if (other) throw new ResumeRefusal(`resume refused: episode ${other.key} in ${opts.log} ran on ${buildLabel(other.gbrain)}, not ${buildLabel(opts.gbrain)}, and one result never mixes builds; move the log aside or pass a new --out for this build`);
   const { todo, skipped } = pendingJobs(jobs, prior, opts.retryErrored);
   if (skipped.errored || skipped.in_flight) print(`resume: skipping ${skipped.errored} errored and ${skipped.in_flight} in-flight episodes, which may already have been billed; pass --retry-errored to send them again`);
   const latest = new Map(prior);
   const append = (job: PaidJob, status: RowStatus, extra: Partial<LogRow> = {}) => {
-    const row: LogRow = { schema: EPISODE_LOG_SCHEMA, key: job.key, unit: job.unit, model: job.model, status, counted: opts.counted, at: new Date().toISOString(), ...extra };
+    const row: LogRow = { schema: EPISODE_LOG_SCHEMA, key: job.key, unit: job.unit, model: job.model, status, counted: opts.counted, at: new Date().toISOString(), gbrain: opts.gbrain, ...extra };
     appendFileSync(opts.log, JSON.stringify(row) + '\n');
     latest.set(job.key, row);
   };
@@ -138,5 +155,6 @@ export async function runPaid(jobs: readonly PaidJob[], opts: { log: string; con
   const done = jobs.map(j => latest.get(j.key)).filter((r): r is LogRow => r?.status === 'done');
   const errored = jobs.map(j => latest.get(j.key)).filter((r): r is LogRow => r?.status === 'errored');
   if (pause !== null) print(`paused: ${pause}\nRaise the budget run's cap (a ledger extension from GBEV-3) or open a new run, then resume with:\n  ${opts.resumeCommand}`);
-  return { status: pause !== null ? 'paused' : done.length === jobs.length ? 'complete' : 'incomplete', ran, skipped, pause_reason: pause, done, errored };
+  const errored_attempts = readLogRows(opts.log, opts.counted).filter(r => r.status === 'errored' && keys.has(r.key));
+  return { status: pause !== null ? 'paused' : done.length === jobs.length ? 'complete' : 'incomplete', ran, skipped, pause_reason: pause, done, errored, errored_attempts };
 }

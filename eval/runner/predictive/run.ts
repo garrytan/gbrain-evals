@@ -34,7 +34,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { budgetOptionsFrom, startPaidRun } from '../budget-ledger.ts';
 import { priceUsage, provider } from '../cat40/loop.ts';
-import { gbrainSpecFrom, overlaySummary, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
+import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { PaidArmRefusal, paidRequested, requirePaidArm } from '../paid-arm.ts';
 import { attestPreregistration, type Attestation } from '../prereg.ts';
 import { execGbrain, GbrainMcpArm, SyntheticBrain, type ArmCall } from './cli-arm.ts';
@@ -44,7 +44,8 @@ import { summarizeFreshness, type FreshnessEpisode } from './freshness.ts';
 import { g6Tasks, g6World, runOutOfViewEpisode, summarizeOutOfView, type OutOfViewEpisode } from './out-of-view/agent.ts';
 import { CALLERS } from './out-of-view/gen.ts';
 import { tasksDigest } from './out-of-view/tasks.ts';
-import { missingKeys, pendingJobs, readEpisodeLog, runPaid, type EpisodeRecord, type LogRow, type PaidJob } from './paid.ts';
+import { missingKeys, pendingJobs, readEpisodeLog, ResumeRefusal, runPaid, type EpisodeRecord, type LogRow, type PaidJob } from './paid.ts';
+import { costPerCorrect } from './passk.ts';
 import { GRAMMAR_PAGES, runSchemaGrammar, schemaShapes, summarizeWriteEpisodes, type SchemaShape, type ShapeRow, type WriteEpisode } from './write-contract.ts';
 import { freshnessDigest, generateFreshnessTasks, G1_DEFAULT_TASKS } from '../../generators/freshness-world-gen.ts';
 import { G3_CAUSES, G3_DEFAULT_TASKS, G3_SURFACES, generateWriteTasks, writeTasksDigest } from '../../generators/write-contract-gen.ts';
@@ -149,15 +150,27 @@ export function paidJobs(unit: Unit, opts: { tasks: number; k: number; models: r
   return jobs;
 }
 
-/** Scorecards per model (and per surface for G3) from episode records. */
-export function scorecards(unit: Unit, records: readonly EpisodeRecord[], k: number): unknown[] {
+/**
+ * Scorecards per model (and per surface for G3) from episode records. Cost per correct answer counts every dollar the
+ * episode log records for the cell: its done episodes' and its errored attempts' (an errored row's record, else its
+ * provider usage at ledger prices), divided by the done episodes that succeeded. `usd` is that numerator and
+ * `errored_usd` the errored part of it.
+ */
+export function scorecards(unit: Unit, records: readonly EpisodeRecord[], k: number, erroredAttempts: readonly LogRow[] = []): unknown[] {
   const models = [...new Set(records.map(r => String(r.model)))];
+  const charge = (card: unknown, rows: readonly EpisodeRecord[], errored: readonly LogRow[]) => {
+    const errored_usd = errored.reduce((s, r) => s + (r.record?.usd ?? (r.usage ? priceUsage(r.model, r.usage) : 0)), 0);
+    const usd = (card as { usd: number }).usd + errored_usd;
+    return { ...(card as object), usd, errored_usd, cost_per_correct_usd: costPerCorrect(usd, rows.filter(r => r.success).length) };
+  };
   return models.flatMap((model): unknown[] => {
     const rows = records.filter(r => r.model === model);
-    if (unit === 'g1') return [summarizeFreshness(rows as unknown as FreshnessEpisode[], k)];
-    if (unit === 'g4') return [summarizeEntity(rows as unknown as EntityEpisode[], k)];
-    if (unit === 'g6') return [summarizeOutOfView(rows as unknown as OutOfViewEpisode[], k)];
-    return G3_SURFACES.map(s => rows.filter(r => (r as { surface?: string }).surface === s)).filter(r => r.length).map(r => summarizeWriteEpisodes(r as unknown as WriteEpisode[], k));
+    const errored = erroredAttempts.filter(r => r.model === model);
+    if (unit === 'g1') return [charge(summarizeFreshness(rows as unknown as FreshnessEpisode[], k), rows, errored)];
+    if (unit === 'g4') return [charge(summarizeEntity(rows as unknown as EntityEpisode[], k), rows, errored)];
+    if (unit === 'g6') return [charge(summarizeOutOfView(rows as unknown as OutOfViewEpisode[], k), rows, errored)];
+    return G3_SURFACES.map(s => ({ rows: rows.filter(r => (r as { surface?: string }).surface === s), errored: errored.filter(r => r.key.split(':').at(-2) === s) }))
+      .filter(c => c.rows.length).map(c => charge(summarizeWriteEpisodes(c.rows as unknown as WriteEpisode[], k), c.rows, c.errored));
   });
 }
 
@@ -308,6 +321,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     if (proc.status !== 0) { console.error(`model freshness check failed (exit ${proc.status}); nothing was sent:\n${`${proc.stdout ?? ''}${proc.stderr ?? ''}`.slice(-4_000)}`); return 2; }
   }
   const gut = resolveGbrainUnderTest(gutSpec);
+  const identity = productIdentityFor(gut);
   const resumeArgs = argv.filter(a => a !== '--retry-errored');
   const resumeCommand = ['bun eval/runner/predictive/run.ts', ...resumeArgs, ...(out ? [] : ['--out', dir])].join(' ');
   const { run, guard } = startPaidRun(`predictive-${u}${smoke ? '-smoke' : ''}`, { ...budgetOptionsFrom(argv), runId: budgetRunId, budgetUsd: null, estimateUsd });
@@ -316,8 +330,12 @@ export async function main(argv: readonly string[]): Promise<number> {
   try {
     result = await runPaid(paidJobs(u, { tasks, k, models, seed, pressured, gut, budgetRunId }), {
       log: join(dir, 'episodes.jsonl'), concurrency: intFlag(argv, '--concurrency', DEFAULT_CONCURRENCY), retryErrored,
-      counted: !smoke, guard, resumeCommand,
+      counted: !smoke, gbrain: { version: gut.version, commit: identity.loaded_git_head ?? identity.declared_sha }, guard, resumeCommand,
     });
+  } catch (e) {
+    if (!(e instanceof ResumeRefusal)) throw e;
+    console.error(`predictive ${u}: ${e.message}; nothing was sent`);
+    return 2;
   } finally {
     guard.uninstall();
     ledger = run.close({ finish: false });
@@ -328,7 +346,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     status: result.status, ran: result.ran, skipped: result.skipped, pause_reason: result.pause_reason,
     done: result.done.length, errored: result.errored.map(r => ({ key: r.key, error: r.error ?? r.record?.stop })),
     errored_by_model: Object.fromEntries(models.map(m => [m, result.errored.filter(r => r.model === m).length])),
-    scorecards: records.length ? scorecards(u, records, k) : [],
+    scorecards: records.length ? scorecards(u, records, k, result.errored_attempts) : [],
     measured: records.length ? smokeProjection(u, result.done, { seed }) : null,
     ledger, resume_command: result.status === 'complete' ? null : resumeCommand,
   };

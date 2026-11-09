@@ -12,7 +12,9 @@ import { join } from 'node:path';
 import { BudgetRun, installPaidRequestGuard, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
 import { priceUsage, runAgent, type Arm } from '../../eval/runner/cat40/loop.ts';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS } from '../../eval/runner/hermetic-env.ts';
-import { EPISODE_LOG_SCHEMA, meteredFetch, missingKeys, readEpisodeLog, runPaid, type EpisodeUsage, type PaidJob } from '../../eval/runner/predictive/paid.ts';
+import { EPISODE_LOG_SCHEMA, meteredFetch, missingKeys, readEpisodeLog, ResumeRefusal, runPaid, type EpisodeUsage, type LogRow, type PaidJob } from '../../eval/runner/predictive/paid.ts';
+import { scoreEntityEpisode } from '../../eval/runner/predictive/entity-agent.ts';
+import { generateEntityTasks } from '../../eval/generators/entity-agent-gen.ts';
 import { main, paidJobs, scorecards } from '../../eval/runner/predictive/run.ts';
 
 const saved: Record<string, string | undefined> = {};
@@ -43,6 +45,7 @@ function anthropicUpstream(reply: (body: { model: string; messages: Array<{ cont
   return { fetchImpl, seen };
 }
 
+const GBRAIN = { version: '0.0.0-test', commit: 'a'.repeat(40) };
 const stubArm: Arm = { name: 'stub', systemHint: () => 'stub arm', tools: () => [], call: async () => 'ok', writeTools: () => [] };
 const MODEL = 'claude-opus-5-5';
 const job = (key: string): PaidJob => ({
@@ -147,12 +150,12 @@ describe('the paid executor', () => {
     const lines: string[] = [];
     let first, second, third;
     try {
-      first = await runPaid(jobs, { log, concurrency: 2, retryErrored: false, counted: false, guard, resumeCommand: 'resume-cmd', print: l => lines.push(l) });
+      first = await runPaid(jobs, { log, concurrency: 2, retryErrored: false, counted: false, gbrain: GBRAIN, guard, resumeCommand: 'resume-cmd', print: l => lines.push(l) });
       expect(up.seen.length).toBe(4);
-      second = await runPaid(jobs, { log, concurrency: 2, retryErrored: false, counted: false, guard, resumeCommand: 'resume-cmd', print: l => lines.push(l) });
+      second = await runPaid(jobs, { log, concurrency: 2, retryErrored: false, counted: false, gbrain: GBRAIN, guard, resumeCommand: 'resume-cmd', print: l => lines.push(l) });
       expect(up.seen.length).toBe(4);
-      writeFileSync(log, readFileSync(log, 'utf8') + JSON.stringify({ schema: EPISODE_LOG_SCHEMA, key: 'e', unit: 'test', model: MODEL, status: 'started', counted: false, at: 'then' }) + '\n');
-      third = await runPaid([...jobs, job('e')], { log, concurrency: 2, retryErrored: false, counted: false, guard, resumeCommand: 'resume-cmd', print: l => lines.push(l) });
+      writeFileSync(log, readFileSync(log, 'utf8') + JSON.stringify({ schema: EPISODE_LOG_SCHEMA, key: 'e', unit: 'test', model: MODEL, status: 'started', counted: false, at: 'then', gbrain: GBRAIN }) + '\n');
+      third = await runPaid([...jobs, job('e')], { log, concurrency: 2, retryErrored: false, counted: false, gbrain: GBRAIN, guard, resumeCommand: 'resume-cmd', print: l => lines.push(l) });
       expect(up.seen.length).toBe(4);
     } finally { guard.uninstall(); }
     const summary = run.close({ finish: false });
@@ -179,8 +182,8 @@ describe('the paid executor', () => {
     const { run, guard } = paidRun('predictive-retry-test', 5, up.fetchImpl);
     let again;
     try {
-      await runPaid(jobs, { log, concurrency: 1, retryErrored: false, counted: true, guard, resumeCommand: 'x', print: () => {} });
-      again = await runPaid(jobs, { log, concurrency: 1, retryErrored: true, counted: true, guard, resumeCommand: 'x', print: () => {} });
+      await runPaid(jobs, { log, concurrency: 1, retryErrored: false, counted: true, gbrain: GBRAIN, guard, resumeCommand: 'x', print: () => {} });
+      again = await runPaid(jobs, { log, concurrency: 1, retryErrored: true, counted: true, gbrain: GBRAIN, guard, resumeCommand: 'x', print: () => {} });
     } finally { guard.uninstall(); run.close({ finish: false }); }
     expect(again.ran).toBe(1);
     expect(up.seen.length).toBe(3);
@@ -193,7 +196,7 @@ describe('the paid executor', () => {
     const lines: string[] = [];
     const capped = paidRun('predictive-cap-test', 1e-9, up.fetchImpl);
     let paused;
-    try { paused = await runPaid(jobs, { log, concurrency: 1, retryErrored: false, counted: true, guard: capped.guard, resumeCommand: 'bun eval/runner/predictive/run.ts g4 --paid --budget-run-id R', print: l => lines.push(l) }); }
+    try { paused = await runPaid(jobs, { log, concurrency: 1, retryErrored: false, counted: true, gbrain: GBRAIN, guard: capped.guard, resumeCommand: 'bun eval/runner/predictive/run.ts g4 --paid --budget-run-id R', print: l => lines.push(l) }); }
     finally { capped.guard.uninstall(); capped.run.close({ finish: false }); }
     expect(up.seen.length).toBe(0);
     expect(paused).toMatchObject({ status: 'paused', ran: 1 });
@@ -203,7 +206,7 @@ describe('the paid executor', () => {
     expect(lines.join('\n')).toContain('resume with:\n  bun eval/runner/predictive/run.ts g4 --paid --budget-run-id R');
     const raised = paidRun('predictive-cap-raised-test', 5, up.fetchImpl);
     let resumed;
-    try { resumed = await runPaid(jobs, { log, concurrency: 1, retryErrored: false, counted: true, guard: raised.guard, resumeCommand: 'x', print: () => {} }); }
+    try { resumed = await runPaid(jobs, { log, concurrency: 1, retryErrored: false, counted: true, gbrain: GBRAIN, guard: raised.guard, resumeCommand: 'x', print: () => {} }); }
     finally { raised.guard.uninstall(); raised.run.close({ finish: false }); }
     expect(resumed).toMatchObject({ status: 'complete', ran: 3 });
     expect(up.seen.length).toBe(3);
@@ -217,7 +220,7 @@ describe('the paid executor', () => {
     const { run, guard } = paidRun('predictive-counted-resume-test', 5, up.fetchImpl);
     let result;
     try {
-      result = await runPaid([job('a')], { log, concurrency: 1, retryErrored: false, counted: true, guard, resumeCommand: 'resume-cmd', print: () => {} });
+      result = await runPaid([job('a')], { log, concurrency: 1, retryErrored: false, counted: true, gbrain: GBRAIN, guard, resumeCommand: 'resume-cmd', print: () => {} });
     } finally { guard.uninstall(); run.close({ finish: false }); }
     expect(up.seen.length).toBe(1);
     expect(result).toMatchObject({ status: 'complete', ran: 1, skipped: { done: 0, errored: 0, in_flight: 0 } });
@@ -225,12 +228,59 @@ describe('the paid executor', () => {
     expect(readEpisodeLog(log, false).get('a')!.counted).toBe(false);
   });
 
+  test('a resume refuses rows from another gbrain build, or from none, before sending anything', async () => {
+    const up = upstream();
+    const log = join(dir, 'build-resume', 'episodes.jsonl');
+    mkdirSync(join(dir, 'build-resume'), { recursive: true });
+    const row = (gbrain?: object) => JSON.stringify({ schema: EPISODE_LOG_SCHEMA, key: 'a', unit: 'test', model: MODEL, status: 'done', counted: true, at: 'then', ...(gbrain ? { gbrain } : {}) }) + '\n';
+    const { run, guard } = paidRun('predictive-build-resume-test', 5, up.fetchImpl);
+    const resume = () => runPaid([job('a'), job('b')], { log, concurrency: 1, retryErrored: false, counted: true, gbrain: GBRAIN, guard, resumeCommand: 'x', print: () => {} });
+    let same;
+    try {
+      for (const other of [{ version: '0.0.1-test', commit: GBRAIN.commit }, { version: GBRAIN.version, commit: 'b'.repeat(40) }, undefined]) {
+        writeFileSync(log, row(other));
+        await expect(resume()).rejects.toThrow(ResumeRefusal);
+        expect(readFileSync(log, 'utf8')).toBe(row(other));
+      }
+      expect(up.seen.length).toBe(0);
+      writeFileSync(log, row(GBRAIN));
+      same = await resume();
+    } finally { guard.uninstall(); run.close({ finish: false }); }
+    expect(same).toMatchObject({ ran: 1, skipped: { done: 1, errored: 0, in_flight: 0 } });
+    expect(readEpisodeLog(log, true).get('b')!.gbrain).toEqual(GBRAIN);
+  });
+
+  test('cost per correct answer counts errored spend, earlier attempts of a retried episode included', async () => {
+    const up = upstream();
+    const log = join(dir, 'errored-spend', 'episodes.jsonl');
+    const { run, guard } = paidRun('predictive-errored-spend-test', 5, up.fetchImpl);
+    let again;
+    try {
+      await runPaid(['a', 'bad-b'].map(job), { log, concurrency: 1, retryErrored: false, counted: true, gbrain: GBRAIN, guard, resumeCommand: 'x', print: () => {} });
+      again = await runPaid(['a', 'bad-b'].map(job), { log, concurrency: 1, retryErrored: true, counted: true, gbrain: GBRAIN, guard, resumeCommand: 'x', print: () => {} });
+    } finally { guard.uninstall(); run.close({ finish: false }); }
+    expect(again.errored_attempts.map(r => r.key)).toEqual(['bad-b', 'bad-b']);
+    const [task] = generateEntityTasks({ n: 1 });
+    const right = scoreEntityEpisode({ task, model: MODEL, trial: 0, answer: task.gold, usd: 0.5, stop: 'submitted' });
+    const wrong = scoreEntityEpisode({ task, model: MODEL, trial: 1, answer: null, usd: 0.25, stop: 'submitted' });
+    const usage = { requests: 1, input: 1000, output: 100, cache_read: 0, cache_write: 0 };
+    const errored: LogRow[] = [
+      { schema: EPISODE_LOG_SCHEMA, key: `g4:${MODEL}:${task.id}:2`, unit: 'g4', model: MODEL, status: 'errored', counted: true, at: 'then', usage, error: 'socket hang up' },
+      { schema: EPISODE_LOG_SCHEMA, key: `g4:${MODEL}:${task.id}:3`, unit: 'g4', model: MODEL, status: 'errored', counted: true, at: 'then', record: { success: false, usd: 0.125, stop: 'error', model: MODEL } },
+    ];
+    const erroredUsd = priceUsage(MODEL, usage) + 0.125;
+    const [card] = scorecards('g4', [right, wrong], 2, errored) as Array<{ usd: number; errored_usd: number; cost_per_correct_usd: number }>;
+    expect(card.errored_usd).toBeCloseTo(erroredUsd, 9);
+    expect(card.usd).toBeCloseTo(0.75 + erroredUsd, 9);
+    expect(card.cost_per_correct_usd).toBeCloseTo(0.75 + erroredUsd, 9);
+  });
+
   test('a G4 paid job runs a real episode on the gbrain CLI through the guard', async () => {
     const up = anthropicUpstream(() => ({ name: 'submit_answer', input: { answer: 'fictional answer' } }));
     const { run, guard } = paidRun('predictive-g4-job-test', 5, up.fetchImpl);
     const jobs = paidJobs('g4', { tasks: 1, k: 1, models: [MODEL], budgetRunId: run.runId });
     let result;
-    try { result = await runPaid(jobs, { log: join(dir, 'g4', 'episodes.jsonl'), concurrency: 1, retryErrored: false, counted: false, guard, resumeCommand: 'x', print: () => {} }); }
+    try { result = await runPaid(jobs, { log: join(dir, 'g4', 'episodes.jsonl'), concurrency: 1, retryErrored: false, counted: false, gbrain: GBRAIN, guard, resumeCommand: 'x', print: () => {} }); }
     finally { guard.uninstall(); run.close({ finish: false }); }
     expect(jobs.map(j => j.key)).toEqual([`g4:${MODEL}:${jobs[0].key.split(':')[2]}:0`]);
     expect(result.status).toBe('complete');
@@ -332,7 +382,7 @@ describe('the OpenAI and particle routes', () => {
     const model = 'gpt-6.1-sol';
     const { run, guard } = paidRun('predictive-openai-route-test', 5, fetchImpl);
     let result;
-    try { result = await runPaid([twoTurnJob(model)], { log: join(dir, 'openai', 'episodes.jsonl'), concurrency: 1, retryErrored: false, counted: false, guard, resumeCommand: 'x', print: () => {} }); }
+    try { result = await runPaid([twoTurnJob(model)], { log: join(dir, 'openai', 'episodes.jsonl'), concurrency: 1, retryErrored: false, counted: false, gbrain: GBRAIN, guard, resumeCommand: 'x', print: () => {} }); }
     finally { guard.uninstall(); }
     const summary = run.close({ finish: false });
     expect(seen.map(s => s.url)).toEqual(['https://api.openai.com/v1/responses', 'https://api.openai.com/v1/responses']);
@@ -367,7 +417,7 @@ describe('the OpenAI and particle routes', () => {
     process.env.PARTICLE_API_KEY = 'fake-test-key-not-a-secret';
     const { run, guard } = paidRun('predictive-particle-route-test', 5, fetchImpl);
     let result;
-    try { result = await runPaid([twoTurnJob(model)], { log: join(dir, 'particle', 'episodes.jsonl'), concurrency: 1, retryErrored: false, counted: false, guard, resumeCommand: 'x', print: () => {} }); }
+    try { result = await runPaid([twoTurnJob(model)], { log: join(dir, 'particle', 'episodes.jsonl'), concurrency: 1, retryErrored: false, counted: false, gbrain: GBRAIN, guard, resumeCommand: 'x', print: () => {} }); }
     finally { guard.uninstall(); delete process.env.PARTICLE_API_KEY; }
     const summary = run.close({ finish: false });
     expect(seen.map(s => s.url)).toEqual(['https://api.particle.ai/v1/chat/completions', 'https://api.particle.ai/v1/chat/completions']);
@@ -402,6 +452,23 @@ describe('the Ubicloud launcher, with a fake runner and no keys', () => {
     expect(existsSync(join(root, 'launches'))).toBe(false);
     writeFileSync(join(root, 'vms'), '');
     expect(launch().status).toBe(0);
+    expect(readFileSync(join(root, 'launches'), 'utf8')).toBe('launched\n');
+  });
+
+  test('run.sh refuses a second launch of the same unit and mode while the first holds the state lock', () => {
+    const root = join(dir, 'ubi-lock');
+    mkdirSync(root, { recursive: true });
+    const fake = join(root, 'fake-ubi.sh');
+    writeFileSync(fake, '#!/usr/bin/env bash\ncase "$1" in\n  list) : ;;\n  run) echo launched >> "$(dirname "$0")/launches" ;;\nesac\n', { mode: 0o755 });
+    const home = join(root, 'home');
+    const state = join(home, '.capy/work/predictive/g4-smoke');
+    mkdirSync(state, { recursive: true });
+    const env = { PATH: process.env.PATH!, HOME: home, UBI_RUNNER: fake };
+    const held = spawnSync('flock', [state, 'bash', 'eval/runner/predictive/ubicloud/run.sh', 'g4', 'smoke', '1'], { cwd: REPO, env, encoding: 'utf8' });
+    expect(held.status).toBe(2);
+    expect(held.stderr).toContain('another launch of g4 smoke holds');
+    expect(existsSync(join(root, 'launches'))).toBe(false);
+    expect(spawnSync('bash', ['eval/runner/predictive/ubicloud/run.sh', 'g4', 'smoke', '1'], { cwd: REPO, env, encoding: 'utf8' }).status).toBe(0);
     expect(readFileSync(join(root, 'launches'), 'utf8')).toBe('launched\n');
   });
 

@@ -76,6 +76,7 @@ These are validity checks against held-out references.
 - **pages_opened** counts page reads (get calls) only, never search snippets.
 - **Invalid rows.** An answer that can't be keyed is an invalid row and is reported as such. No model judge scores any counted cell.
 - **Unit metrics.**
+  - Agent units (G1, G3, G4 and G6): cost per correct answer divides every dollar the episode log records for a model's episodes, errored episodes and earlier attempts of retried ones included, by that model's correct answers.
   - G2: success@5, MRR, the exact-minus-paraphrase gap, and for batch 3 the stale-first rate.
   - G3: refusals per 100 calls by cause given exposure, recovery share, refusals never retried, and "reported done, not landed".
   - G5: p50 and p95 per operation, and statement-timeout fall-opens.

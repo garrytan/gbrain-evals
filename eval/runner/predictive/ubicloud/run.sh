@@ -11,7 +11,9 @@
 # exit path. Provider keys travel only through ubi-runner's --pass (into ~/.ubirun-env on the VM, mode 0600), never
 # onto local disk or the command line. Run the same command again to resume: the episode log skips done episodes and
 # never resends errored or in-flight ones unless --retry-errored is passed. It refuses to launch while any VM of owner gbev55
-# still exists, because that VM may still be writing its own copy of the ledger. After every launch the teardown check runs.
+# still exists, because that VM may still be writing its own copy of the ledger, and while another launch of the same unit
+# and mode holds the state directory's lock (flock, held from the VM check through the final pull). After every launch the
+# teardown check runs.
 set -euo pipefail
 REPO=$(cd "$(dirname "$0")/../../../.." && pwd)
 UBI=${UBI_RUNNER:-$REPO/scripts/ubicloud/ubi-runner.sh}
@@ -31,15 +33,17 @@ check() {
 [ "${1:-}" != check ] || { check; exit; }
 unit=${1:?usage: run.sh <unit> <smoke|paid> <cap-usd> [run.ts options...] | run.sh check}; mode=${2:?smoke or paid}; cap=${3:?cap in dollars}; shift 3
 case $unit in g1|g3|g4|g6) ;; *) echo "run.sh: unit must be g1, g3, g4 or g6" >&2; exit 2 ;; esac
-if ! check >&2; then echo "run.sh: refusing to launch until the VM list shows no VM of owner $UBI_OWNER: a launch beside a live one would be a second ledger writer" >&2; exit 2; fi
 STATE_ROOT=$HOME/.capy/work/predictive
 mkdir -p "$STATE_ROOT/$unit-$mode"
+exec 9<"$STATE_ROOT/$unit-$mode"
+if ! flock -n 9; then echo "run.sh: refusing to launch: another launch of $unit $mode holds $STATE_ROOT/$unit-$mode, and a second would be a second ledger writer" >&2; exit 2; fi
+if ! check >&2; then echo "run.sh: refusing to launch until the VM list shows no VM of owner $UBI_OWNER: a launch beside a live one would be a second ledger writer" >&2; exit 2; fi
 pass=()
 for k in ANTHROPIC_API_KEY OPENAI_API_KEY PARTICLE_API_KEY; do if [ -n "${!k:-}" ]; then pass+=(--pass "$k"); fi; done
 cmd="bash eval/runner/predictive/ubicloud/vm-run.sh $(printf '%q ' "$unit" "$mode" "$cap" "$@")"
 rc=0
 (cd "$REPO" && "$UBI" run --setup eval/runner/predictive/ubicloud/setup.sh ${pass[@]+"${pass[@]}"} \
-  --push "$STATE_ROOT/$unit-$mode:work/$unit-$mode" --pull "work/$unit-$mode:$STATE_ROOT" -- "$cmd") || rc=$?
+  --push "$STATE_ROOT/$unit-$mode:work/$unit-$mode" --pull "work/$unit-$mode:$STATE_ROOT" -- "$cmd") 9<&- || rc=$?
 echo "run.sh: $unit $mode exited $rc; state in $STATE_ROOT/$unit-$mode (summary: out/summary.json)"
 if ! check; then [ "$rc" != 0 ] || rc=1; fi
 exit "$rc"

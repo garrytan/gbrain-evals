@@ -254,6 +254,34 @@ describe('paraphrase-opus (paid path)', () => {
     expect(existsSync(ledger)).toBe(false);
   });
 
+  test('refuses an existing --out before any client or paid run exists, leaving its paraphrases as they were', async () => {
+    const dir = writeSet({}, 2);
+    const out = join(tempDir('paid-existing'), 'paraphrases.jsonl');
+    const kept = JSON.stringify({ id: 'q1', paraphrase: 'a paraphrase an earlier run paid for' }) + '\n';
+    writeFileSync(out, kept);
+    const ledger = join(tempDir('ledger-existing'), 'ledger.sqlite');
+    const open = BudgetRun.open({ runner: 'paraphrase-existing-test', budgetUsd: 5, ledgerPath: ledger, programCapUsd: 10 });
+    open.close({ finish: false });
+    let clients = 0;
+    const makeClient = () => { clients++; return { messages: { create: async () => { throw new Error('fake outage'); } } } as any; };
+    const errors: string[] = [];
+    const savedError = console.error, savedLog = console.log;
+    console.error = (...a: unknown[]) => { errors.push(a.join(' ')); };
+    console.log = () => {};
+    let code;
+    try {
+      code = await paraphraseOpus(['--dir', dir, '--out', out, '--budget-ledger', ledger, '--paid', '--budget-run-id', open.runId], { makeClient });
+    } finally {
+      console.error = savedError;
+      console.log = savedLog;
+    }
+    expect(code).toBe(2);
+    expect(clients).toBe(0);
+    expect(readFileSync(out, 'utf8')).toBe(kept);
+    expect(existsSync(out + '.receipt.json')).toBe(false);
+    expect(errors.join('\n')).toContain('already exists');
+  });
+
   test('an error mid-run stops the loop, keeps the paraphrases already paid for and writes the receipt', async () => {
     const dir = writeSet({}, 2);
     const out = join(tempDir('paid-stop'), 'paraphrases.jsonl');

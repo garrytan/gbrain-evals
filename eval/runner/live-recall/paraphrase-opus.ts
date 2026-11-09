@@ -15,6 +15,9 @@
  * from eval/generators/batch3-synthetic-gen.ts works the same way and takes
  * the file back through batch3-synthetic-gen.ts --paraphrases <file>.
  *
+ * It refuses an existing --out before anything else, so a rerun never overwrites
+ * paraphrases an earlier run paid for: move the file aside or name a new one.
+ *
  * It spends money, so requirePaidArm (paid-arm.ts) refuses it without --paid
  * and --budget-run-id naming an open budget-ledger run, before any client or
  * request exists. Every request goes through the ledger's paid-request guard
@@ -23,7 +26,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { createHash } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { fitAnthropicRequest, withThinkingRoom } from '../anthropic-request.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from '../budget-ledger.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
@@ -63,6 +66,10 @@ export async function main(argv: string[], deps: { makeClient?: () => Client } =
   const dir = flag('--dir'), out = flag('--out');
   if (!dir || !out) {
     console.error('usage: bun eval/runner/live-recall/paraphrase-opus.ts --dir <generated dir> --out <paraphrases.jsonl> --paid --budget-run-id <id>');
+    return 2;
+  }
+  if (existsSync(out)) {
+    console.error('paraphrase-opus: REFUSED: ' + out + ' already exists, and this run would overwrite the paraphrases in it; move it aside or pass a new --out. Nothing was sent.');
     return 2;
   }
   const { pages, questionsText, protocol } = readSyntheticDir(dir);

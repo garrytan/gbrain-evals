@@ -24,6 +24,7 @@ afterAll(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
+const GBRAIN = { version: '0.0.0-test', commit: 'a'.repeat(40) };
 const world = g6World();
 const tasks = g6Tasks(world);
 const hidden = tasks.findIndex(t => t.out_of_view.remote.length > 0);
@@ -90,7 +91,7 @@ describe('G6 episodes on the real gbrain', () => {
     const model = 'claude-opus-5-5';
     const jobs = paidJobs('g6', { tasks: 1, k: 1, models: [model], budgetRunId: run.runId });
     let result;
-    try { result = await runPaid(jobs, { log: join(dir, 'g6', 'episodes.jsonl'), concurrency: 2, retryErrored: false, counted: false, guard, resumeCommand: 'x', print: () => {} }); }
+    try { result = await runPaid(jobs, { log: join(dir, 'g6', 'episodes.jsonl'), concurrency: 2, retryErrored: false, counted: false, gbrain: GBRAIN, guard, resumeCommand: 'x', print: () => {} }); }
     finally { guard.uninstall(); run.close({ finish: false }); }
     expect(jobs.map(j => j.key)).toEqual([`g6:${model}:${tasks[0].id}:local:0`, `g6:${model}:${tasks[0].id}:remote:0`]);
     expect(result.status).toBe('complete');
