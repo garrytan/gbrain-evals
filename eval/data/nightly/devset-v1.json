@@ -1,0 +1,1363 @@
+{
+  "version": 1,
+  "readers": [
+    "claude-opus-5-5",
+    "gpt-6.1-sol"
+  ],
+  "k": {
+    "agent": 3,
+    "qa": 1,
+    "replay": 1,
+    "trials": 1,
+    "smoke": 1
+  },
+  "suites": [
+    {
+      "id": "cat40-hard-m",
+      "kind": "agent",
+      "scoring": "deterministic",
+      "about": "Cat 40 Hard world M (public seed 20261021, 50k documents): company questions an agent answers through gbrain MCP",
+      "source": "docs/benchmarks/2026-10-10-model-ladder-hard-confirmation/main-cells/results.jsonl (gbrain-hard arm)",
+      "items": [
+        {
+          "id": "H1-02",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-03",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-04",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-05",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-06",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-07",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-09",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-10",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-11",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-12",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-15",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-16",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-17",
+          "role": "headroom"
+        },
+        {
+          "id": "H1-18",
+          "role": "headroom"
+        },
+        {
+          "id": "H2-14",
+          "role": "headroom"
+        },
+        {
+          "id": "H3-08",
+          "role": "headroom"
+        },
+        {
+          "id": "H4-08",
+          "role": "headroom"
+        },
+        {
+          "id": "H4-11",
+          "role": "headroom"
+        },
+        {
+          "id": "H4-17",
+          "role": "headroom"
+        },
+        {
+          "id": "H4-18",
+          "role": "headroom"
+        },
+        {
+          "id": "H4-19",
+          "role": "headroom"
+        },
+        {
+          "id": "H2-01",
+          "role": "canary"
+        },
+        {
+          "id": "H3-01",
+          "role": "canary"
+        },
+        {
+          "id": "H4-01",
+          "role": "canary"
+        },
+        {
+          "id": "H5-01",
+          "role": "canary"
+        }
+      ]
+    },
+    {
+      "id": "refresh-barrier-agents",
+      "kind": "agent",
+      "scoring": "deterministic",
+      "about": "Save four facts while a refresh holds the first write (barrier on, as production runs it), then report; scored from the brain, Git and the tool log",
+      "source": "eval/runner/refresh-barrier/agent.ts task generator, ids 1001-1030 (outside the counted 1-60)",
+      "config": {
+        "arm": "on"
+      },
+      "requires": {
+        "gbrain_commit": "773a29eede3b3ea91e0e2cba4012078b5d42c602"
+      },
+      "items": [
+        {
+          "id": "1001",
+          "role": "headroom"
+        },
+        {
+          "id": "1002",
+          "role": "headroom"
+        },
+        {
+          "id": "1003",
+          "role": "headroom"
+        },
+        {
+          "id": "1004",
+          "role": "headroom"
+        },
+        {
+          "id": "1005",
+          "role": "headroom"
+        },
+        {
+          "id": "1006",
+          "role": "headroom"
+        },
+        {
+          "id": "1007",
+          "role": "headroom"
+        },
+        {
+          "id": "1008",
+          "role": "headroom"
+        },
+        {
+          "id": "1009",
+          "role": "headroom"
+        },
+        {
+          "id": "1010",
+          "role": "headroom"
+        },
+        {
+          "id": "1011",
+          "role": "headroom"
+        },
+        {
+          "id": "1012",
+          "role": "headroom"
+        },
+        {
+          "id": "1013",
+          "role": "headroom"
+        },
+        {
+          "id": "1014",
+          "role": "headroom"
+        },
+        {
+          "id": "1015",
+          "role": "headroom"
+        },
+        {
+          "id": "1016",
+          "role": "headroom"
+        },
+        {
+          "id": "1017",
+          "role": "headroom"
+        },
+        {
+          "id": "1018",
+          "role": "headroom"
+        },
+        {
+          "id": "1019",
+          "role": "headroom"
+        },
+        {
+          "id": "1020",
+          "role": "headroom"
+        },
+        {
+          "id": "1021",
+          "role": "headroom"
+        },
+        {
+          "id": "1022",
+          "role": "headroom"
+        },
+        {
+          "id": "1023",
+          "role": "headroom"
+        },
+        {
+          "id": "1024",
+          "role": "headroom"
+        },
+        {
+          "id": "1025",
+          "role": "headroom"
+        },
+        {
+          "id": "1026",
+          "role": "headroom"
+        },
+        {
+          "id": "1027",
+          "role": "headroom"
+        },
+        {
+          "id": "1028",
+          "role": "headroom"
+        },
+        {
+          "id": "1029",
+          "role": "headroom"
+        },
+        {
+          "id": "1030",
+          "role": "headroom"
+        }
+      ]
+    },
+    {
+      "id": "refused-write-agents",
+      "kind": "agent",
+      "scoring": "deterministic",
+      "about": "The same task with the barrier off, so the first write is refused worktree_refreshing: does the agent recover from the refusal gbrain hands it",
+      "source": "eval/runner/refresh-barrier/agent.ts task generator, ids 2001-2030 (outside the counted 1-60)",
+      "config": {
+        "arm": "off"
+      },
+      "items": [
+        {
+          "id": "2001",
+          "role": "headroom"
+        },
+        {
+          "id": "2002",
+          "role": "headroom"
+        },
+        {
+          "id": "2003",
+          "role": "headroom"
+        },
+        {
+          "id": "2004",
+          "role": "headroom"
+        },
+        {
+          "id": "2005",
+          "role": "headroom"
+        },
+        {
+          "id": "2006",
+          "role": "headroom"
+        },
+        {
+          "id": "2007",
+          "role": "headroom"
+        },
+        {
+          "id": "2008",
+          "role": "headroom"
+        },
+        {
+          "id": "2009",
+          "role": "headroom"
+        },
+        {
+          "id": "2010",
+          "role": "headroom"
+        },
+        {
+          "id": "2011",
+          "role": "headroom"
+        },
+        {
+          "id": "2012",
+          "role": "headroom"
+        },
+        {
+          "id": "2013",
+          "role": "headroom"
+        },
+        {
+          "id": "2014",
+          "role": "headroom"
+        },
+        {
+          "id": "2015",
+          "role": "headroom"
+        },
+        {
+          "id": "2016",
+          "role": "headroom"
+        },
+        {
+          "id": "2017",
+          "role": "headroom"
+        },
+        {
+          "id": "2018",
+          "role": "headroom"
+        },
+        {
+          "id": "2019",
+          "role": "headroom"
+        },
+        {
+          "id": "2020",
+          "role": "headroom"
+        },
+        {
+          "id": "2021",
+          "role": "headroom"
+        },
+        {
+          "id": "2022",
+          "role": "headroom"
+        },
+        {
+          "id": "2023",
+          "role": "headroom"
+        },
+        {
+          "id": "2024",
+          "role": "headroom"
+        },
+        {
+          "id": "2025",
+          "role": "headroom"
+        },
+        {
+          "id": "2026",
+          "role": "headroom"
+        },
+        {
+          "id": "2027",
+          "role": "headroom"
+        },
+        {
+          "id": "2028",
+          "role": "headroom"
+        },
+        {
+          "id": "2029",
+          "role": "headroom"
+        },
+        {
+          "id": "2030",
+          "role": "headroom"
+        }
+      ]
+    },
+    {
+      "id": "concurrent-writers",
+      "kind": "trials",
+      "scoring": "deterministic",
+      "about": "Seeded keyless trials where several writers race refreshes, crashes, writer kills and imports; every write is checked against the database, the client and Git",
+      "source": "eval/runner/refresh-barrier/run.ts --block trials --dry, seeds 5001-5100 (outside the counted 1001-1500)",
+      "config": {
+        "arm": "on",
+        "engines": [
+          "pglite",
+          "postgres"
+        ]
+      },
+      "requires": {
+        "gbrain_commit": "773a29eede3b3ea91e0e2cba4012078b5d42c602"
+      },
+      "items": [
+        {
+          "id": "5001",
+          "role": "headroom"
+        },
+        {
+          "id": "5002",
+          "role": "headroom"
+        },
+        {
+          "id": "5003",
+          "role": "headroom"
+        },
+        {
+          "id": "5004",
+          "role": "headroom"
+        },
+        {
+          "id": "5005",
+          "role": "headroom"
+        },
+        {
+          "id": "5006",
+          "role": "headroom"
+        },
+        {
+          "id": "5007",
+          "role": "headroom"
+        },
+        {
+          "id": "5008",
+          "role": "headroom"
+        },
+        {
+          "id": "5009",
+          "role": "headroom"
+        },
+        {
+          "id": "5010",
+          "role": "headroom"
+        },
+        {
+          "id": "5011",
+          "role": "headroom"
+        },
+        {
+          "id": "5012",
+          "role": "headroom"
+        },
+        {
+          "id": "5013",
+          "role": "headroom"
+        },
+        {
+          "id": "5014",
+          "role": "headroom"
+        },
+        {
+          "id": "5015",
+          "role": "headroom"
+        },
+        {
+          "id": "5016",
+          "role": "headroom"
+        },
+        {
+          "id": "5017",
+          "role": "headroom"
+        },
+        {
+          "id": "5018",
+          "role": "headroom"
+        },
+        {
+          "id": "5019",
+          "role": "headroom"
+        },
+        {
+          "id": "5020",
+          "role": "headroom"
+        },
+        {
+          "id": "5021",
+          "role": "headroom"
+        },
+        {
+          "id": "5022",
+          "role": "headroom"
+        },
+        {
+          "id": "5023",
+          "role": "headroom"
+        },
+        {
+          "id": "5024",
+          "role": "headroom"
+        },
+        {
+          "id": "5025",
+          "role": "headroom"
+        },
+        {
+          "id": "5026",
+          "role": "headroom"
+        },
+        {
+          "id": "5027",
+          "role": "headroom"
+        },
+        {
+          "id": "5028",
+          "role": "headroom"
+        },
+        {
+          "id": "5029",
+          "role": "headroom"
+        },
+        {
+          "id": "5030",
+          "role": "headroom"
+        },
+        {
+          "id": "5031",
+          "role": "headroom"
+        },
+        {
+          "id": "5032",
+          "role": "headroom"
+        },
+        {
+          "id": "5033",
+          "role": "headroom"
+        },
+        {
+          "id": "5034",
+          "role": "headroom"
+        },
+        {
+          "id": "5035",
+          "role": "headroom"
+        },
+        {
+          "id": "5036",
+          "role": "headroom"
+        },
+        {
+          "id": "5037",
+          "role": "headroom"
+        },
+        {
+          "id": "5038",
+          "role": "headroom"
+        },
+        {
+          "id": "5039",
+          "role": "headroom"
+        },
+        {
+          "id": "5040",
+          "role": "headroom"
+        },
+        {
+          "id": "5041",
+          "role": "headroom"
+        },
+        {
+          "id": "5042",
+          "role": "headroom"
+        },
+        {
+          "id": "5043",
+          "role": "headroom"
+        },
+        {
+          "id": "5044",
+          "role": "headroom"
+        },
+        {
+          "id": "5045",
+          "role": "headroom"
+        },
+        {
+          "id": "5046",
+          "role": "headroom"
+        },
+        {
+          "id": "5047",
+          "role": "headroom"
+        },
+        {
+          "id": "5048",
+          "role": "headroom"
+        },
+        {
+          "id": "5049",
+          "role": "headroom"
+        },
+        {
+          "id": "5050",
+          "role": "headroom"
+        },
+        {
+          "id": "5051",
+          "role": "headroom"
+        },
+        {
+          "id": "5052",
+          "role": "headroom"
+        },
+        {
+          "id": "5053",
+          "role": "headroom"
+        },
+        {
+          "id": "5054",
+          "role": "headroom"
+        },
+        {
+          "id": "5055",
+          "role": "headroom"
+        },
+        {
+          "id": "5056",
+          "role": "headroom"
+        },
+        {
+          "id": "5057",
+          "role": "headroom"
+        },
+        {
+          "id": "5058",
+          "role": "headroom"
+        },
+        {
+          "id": "5059",
+          "role": "headroom"
+        },
+        {
+          "id": "5060",
+          "role": "headroom"
+        },
+        {
+          "id": "5061",
+          "role": "headroom"
+        },
+        {
+          "id": "5062",
+          "role": "headroom"
+        },
+        {
+          "id": "5063",
+          "role": "headroom"
+        },
+        {
+          "id": "5064",
+          "role": "headroom"
+        },
+        {
+          "id": "5065",
+          "role": "headroom"
+        },
+        {
+          "id": "5066",
+          "role": "headroom"
+        },
+        {
+          "id": "5067",
+          "role": "headroom"
+        },
+        {
+          "id": "5068",
+          "role": "headroom"
+        },
+        {
+          "id": "5069",
+          "role": "headroom"
+        },
+        {
+          "id": "5070",
+          "role": "headroom"
+        },
+        {
+          "id": "5071",
+          "role": "headroom"
+        },
+        {
+          "id": "5072",
+          "role": "headroom"
+        },
+        {
+          "id": "5073",
+          "role": "headroom"
+        },
+        {
+          "id": "5074",
+          "role": "headroom"
+        },
+        {
+          "id": "5075",
+          "role": "headroom"
+        },
+        {
+          "id": "5076",
+          "role": "headroom"
+        },
+        {
+          "id": "5077",
+          "role": "headroom"
+        },
+        {
+          "id": "5078",
+          "role": "headroom"
+        },
+        {
+          "id": "5079",
+          "role": "headroom"
+        },
+        {
+          "id": "5080",
+          "role": "headroom"
+        },
+        {
+          "id": "5081",
+          "role": "headroom"
+        },
+        {
+          "id": "5082",
+          "role": "headroom"
+        },
+        {
+          "id": "5083",
+          "role": "headroom"
+        },
+        {
+          "id": "5084",
+          "role": "headroom"
+        },
+        {
+          "id": "5085",
+          "role": "headroom"
+        },
+        {
+          "id": "5086",
+          "role": "headroom"
+        },
+        {
+          "id": "5087",
+          "role": "headroom"
+        },
+        {
+          "id": "5088",
+          "role": "headroom"
+        },
+        {
+          "id": "5089",
+          "role": "headroom"
+        },
+        {
+          "id": "5090",
+          "role": "headroom"
+        },
+        {
+          "id": "5091",
+          "role": "headroom"
+        },
+        {
+          "id": "5092",
+          "role": "headroom"
+        },
+        {
+          "id": "5093",
+          "role": "headroom"
+        },
+        {
+          "id": "5094",
+          "role": "headroom"
+        },
+        {
+          "id": "5095",
+          "role": "headroom"
+        },
+        {
+          "id": "5096",
+          "role": "headroom"
+        },
+        {
+          "id": "5097",
+          "role": "headroom"
+        },
+        {
+          "id": "5098",
+          "role": "headroom"
+        },
+        {
+          "id": "5099",
+          "role": "headroom"
+        },
+        {
+          "id": "5100",
+          "role": "headroom"
+        }
+      ]
+    },
+    {
+      "id": "system-smokes",
+      "kind": "smoke",
+      "scoring": "deterministic",
+      "about": "Keyless smokes on a seeded synthetic brain that need a cross-version upgrade, a seeded brain or a real Postgres version: the surfaces where gbrain master broke in the 30 days before 2026-11-09",
+      "source": "eval/runner/nightly/smokes/ (built with the runner)",
+      "items": [
+        {
+          "id": "upgrade-from-previous",
+          "role": "headroom"
+        },
+        {
+          "id": "upgrade-from-old",
+          "role": "headroom"
+        },
+        {
+          "id": "ingest-retry-across-upgrade",
+          "role": "headroom"
+        },
+        {
+          "id": "managed-sync",
+          "role": "headroom"
+        },
+        {
+          "id": "source-pinned-sync",
+          "role": "headroom"
+        },
+        {
+          "id": "postgres-15",
+          "role": "headroom"
+        },
+        {
+          "id": "large-page-write-latency",
+          "role": "headroom"
+        },
+        {
+          "id": "query-contract",
+          "role": "headroom"
+        }
+      ],
+      "note": "upgrade-from-previous: seeded brain written by the previous night's master, upgraded to tonight's; pages, writes, search, serve /health and /admin; upgrade-from-old: seeded brain written by an old release (oldest still-supported schema, pre-managed persistence), upgraded; legacy pages advance and edits become searchable; ingest-retry-across-upgrade: a POST /ingest capture accepted before the upgrade and retried after it never writes the old body over a newer edit; managed-sync: managed sync against a bare remote: hub index.md files with their own slug lines, a page delete that must reach the remote; source-pinned-sync: a source rooted at its repository root under a source-root pin syncs without revision_conflict; postgres-15: managed sync and a concurrency subset on Postgres 15 beside the current Postgres; large-page-write-latency: writes to a page over 4 MiB while its search index builds stay inside the lock bound, on real Postgres; query-contract: query --limit N with no budget returns N rows on a brain whose pages carry Facts fences"
+    },
+    {
+      "id": "lme-s-hard",
+      "kind": "qa",
+      "scoring": "judge",
+      "about": "LongMemEval-S questions a frontier reader on gbrain retrieval got wrong, plus spread-out canaries",
+      "source": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/{w10b-opus55-notes,w10b-sol-notes}/rows.ndjson (official judge)",
+      "config": {
+        "benchmark": "lme-s",
+        "split": "dev"
+      },
+      "items": [
+        {
+          "id": "031748ae_abs",
+          "role": "headroom"
+        },
+        {
+          "id": "08f4fc43",
+          "role": "headroom"
+        },
+        {
+          "id": "09ba9854_abs",
+          "role": "headroom"
+        },
+        {
+          "id": "0a995998",
+          "role": "headroom"
+        },
+        {
+          "id": "0bc8ad93",
+          "role": "headroom"
+        },
+        {
+          "id": "10d9b85a",
+          "role": "headroom"
+        },
+        {
+          "id": "2133c1b5",
+          "role": "headroom"
+        },
+        {
+          "id": "2bf43736",
+          "role": "headroom"
+        },
+        {
+          "id": "35a27287",
+          "role": "headroom"
+        },
+        {
+          "id": "370a8ff4",
+          "role": "headroom"
+        },
+        {
+          "id": "37f165cf",
+          "role": "headroom"
+        },
+        {
+          "id": "51c32626",
+          "role": "headroom"
+        },
+        {
+          "id": "61f8c8f8",
+          "role": "headroom"
+        },
+        {
+          "id": "6d550036",
+          "role": "headroom"
+        },
+        {
+          "id": "7024f17c",
+          "role": "headroom"
+        },
+        {
+          "id": "71017277",
+          "role": "headroom"
+        },
+        {
+          "id": "7405e8b1",
+          "role": "headroom"
+        },
+        {
+          "id": "81507db6",
+          "role": "headroom"
+        },
+        {
+          "id": "88432d0a",
+          "role": "headroom"
+        },
+        {
+          "id": "8e91e7d9",
+          "role": "headroom"
+        },
+        {
+          "id": "92a0aa75",
+          "role": "headroom"
+        },
+        {
+          "id": "9a707b81",
+          "role": "headroom"
+        },
+        {
+          "id": "9ee3ecd6",
+          "role": "headroom"
+        },
+        {
+          "id": "a2f3aa27",
+          "role": "headroom"
+        },
+        {
+          "id": "a3838d2b",
+          "role": "headroom"
+        },
+        {
+          "id": "a96c20ee_abs",
+          "role": "headroom"
+        },
+        {
+          "id": "bf659f65",
+          "role": "headroom"
+        },
+        {
+          "id": "d851d5ba",
+          "role": "headroom"
+        },
+        {
+          "id": "dd2973ad",
+          "role": "headroom"
+        },
+        {
+          "id": "e3038f8c",
+          "role": "headroom"
+        },
+        {
+          "id": "gpt4_0a05b494",
+          "role": "headroom"
+        },
+        {
+          "id": "gpt4_2f8be40d",
+          "role": "headroom"
+        },
+        {
+          "id": "gpt4_59149c77",
+          "role": "headroom"
+        },
+        {
+          "id": "gpt4_68e94287",
+          "role": "headroom"
+        },
+        {
+          "id": "gpt4_731e37d7",
+          "role": "headroom"
+        },
+        {
+          "id": "gpt4_7abb270c",
+          "role": "headroom"
+        },
+        {
+          "id": "gpt4_7fce9456",
+          "role": "headroom"
+        },
+        {
+          "id": "gpt4_85da3956",
+          "role": "headroom"
+        },
+        {
+          "id": "gpt4_a1b77f9c",
+          "role": "headroom"
+        },
+        {
+          "id": "gpt4_d6585ce9",
+          "role": "headroom"
+        },
+        {
+          "id": "001be529",
+          "role": "canary"
+        },
+        {
+          "id": "1a1907b4",
+          "role": "canary"
+        },
+        {
+          "id": "3b6f954b",
+          "role": "canary"
+        },
+        {
+          "id": "5d3d2817",
+          "role": "canary"
+        },
+        {
+          "id": "75f70248",
+          "role": "canary"
+        },
+        {
+          "id": "9bbe84a2",
+          "role": "canary"
+        },
+        {
+          "id": "c14c00dd",
+          "role": "canary"
+        },
+        {
+          "id": "e3fc4d6e",
+          "role": "canary"
+        },
+        {
+          "id": "gpt4_1a1dc16d",
+          "role": "canary"
+        },
+        {
+          "id": "gpt4_7bc6cf22",
+          "role": "canary"
+        }
+      ]
+    },
+    {
+      "id": "beam-1m-hard",
+      "kind": "qa",
+      "scoring": "judge",
+      "about": "Every question of the three public BEAM-1M dev conversations where frontier readers on gbrain missed most rubric items",
+      "source": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/{a2-top5-opus55,a2-top5-gpt61sol}",
+      "config": {
+        "benchmark": "beam-1m",
+        "split": "dev",
+        "conversations": [
+          "1m-2",
+          "1m-24",
+          "1m-25"
+        ]
+      },
+      "items": [
+        {
+          "id": "1m-24:abstention:0",
+          "role": "canary"
+        },
+        {
+          "id": "1m-24:abstention:1",
+          "role": "canary"
+        },
+        {
+          "id": "1m-24:contradiction_resolution:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:contradiction_resolution:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:event_ordering:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:event_ordering:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:information_extraction:0",
+          "role": "canary"
+        },
+        {
+          "id": "1m-24:information_extraction:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:instruction_following:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:instruction_following:1",
+          "role": "canary"
+        },
+        {
+          "id": "1m-24:knowledge_update:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:knowledge_update:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:multi_session_reasoning:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:multi_session_reasoning:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:preference_following:0",
+          "role": "canary"
+        },
+        {
+          "id": "1m-24:preference_following:1",
+          "role": "canary"
+        },
+        {
+          "id": "1m-24:summarization:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:summarization:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:temporal_reasoning:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-24:temporal_reasoning:1",
+          "role": "canary"
+        },
+        {
+          "id": "1m-25:abstention:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:abstention:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:contradiction_resolution:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:contradiction_resolution:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:event_ordering:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:event_ordering:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:information_extraction:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:information_extraction:1",
+          "role": "canary"
+        },
+        {
+          "id": "1m-25:instruction_following:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:instruction_following:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:knowledge_update:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:knowledge_update:1",
+          "role": "canary"
+        },
+        {
+          "id": "1m-25:multi_session_reasoning:0",
+          "role": "canary"
+        },
+        {
+          "id": "1m-25:multi_session_reasoning:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:preference_following:0",
+          "role": "canary"
+        },
+        {
+          "id": "1m-25:preference_following:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:summarization:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:summarization:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:temporal_reasoning:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-25:temporal_reasoning:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:abstention:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:abstention:1",
+          "role": "canary"
+        },
+        {
+          "id": "1m-2:contradiction_resolution:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:contradiction_resolution:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:event_ordering:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:event_ordering:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:information_extraction:0",
+          "role": "canary"
+        },
+        {
+          "id": "1m-2:information_extraction:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:instruction_following:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:instruction_following:1",
+          "role": "canary"
+        },
+        {
+          "id": "1m-2:knowledge_update:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:knowledge_update:1",
+          "role": "canary"
+        },
+        {
+          "id": "1m-2:multi_session_reasoning:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:multi_session_reasoning:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:preference_following:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:preference_following:1",
+          "role": "canary"
+        },
+        {
+          "id": "1m-2:summarization:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:summarization:1",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:temporal_reasoning:0",
+          "role": "headroom"
+        },
+        {
+          "id": "1m-2:temporal_reasoning:1",
+          "role": "canary"
+        }
+      ]
+    },
+    {
+      "id": "tool-contract-replay",
+      "kind": "replay",
+      "scoring": "deterministic",
+      "about": "Each model family's recorded natural tool calls (Sol's get_page with two or three selectors, traverse_graph and get_backlinks among them) replayed keyless through gbrain's rollout, write-capture and MCP paths",
+      "source": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/{f0b-sol,f0b-opus}/one-shot/<family>-<skill>-input.txt",
+      "items": [
+        {
+          "id": "sol-query",
+          "role": "headroom"
+        },
+        {
+          "id": "sol-briefing",
+          "role": "headroom"
+        },
+        {
+          "id": "sol-fact-check",
+          "role": "headroom"
+        },
+        {
+          "id": "opus-query",
+          "role": "headroom"
+        },
+        {
+          "id": "opus-briefing",
+          "role": "headroom"
+        },
+        {
+          "id": "opus-fact-check",
+          "role": "headroom"
+        }
+      ]
+    }
+  ],
+  "reserved": [
+    "paired exact and paraphrase forms on the same gold page (gap-map generator), after it passes the live-recall check",
+    "per-family tool-call shape fuzzer (gap-map generator), after the same check",
+    "tasks mined from real misses"
+  ],
+  "digest": "3b4d72a1640c12ea3d63365835c9976d4c8eb05340e8c60c5a54af640640fa7f"
+}
