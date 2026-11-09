@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "benchmark": "bg1-dev",
+  "salt": "gbrain-evals-heldout-split-v1",
+  "method": "all dev: the three BG1 dev worlds come from public seeds and public phrasing (eval/generators/changing-facts-gen.ts), so none is held out",
+  "dev_fraction": 1,
+  "dev": [
+    "bg1-dev-01",
+    "bg1-dev-02",
+    "bg1-dev-03"
+  ],
+  "sealed": [],
+  "created_at": "2026-11-09",
+  "note": "Development data in full: the plans, gold and (from stage 1) the Gemini-rendered worlds are committed under eval/data/changing-facts-v1/dev. No system is tuned on them; held-out confirmation runs on benchmark bg1."
+}
