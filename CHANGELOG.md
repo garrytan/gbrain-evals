@@ -2,6 +2,46 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### Synthetic measures for the failures Wintermute reports, each checked against real results before it may gate (GST-2005)
+
+- **What this adds.** Wintermute, the agent that runs Garry Tan's brain every day, described failures our evals don't
+  model. Six seeded generators now build fictional brains for them:
+  - G1, a stale fact on one page with the newer fact on another;
+  - G2, missed recall under the real search conditions;
+  - G3, writes that are refused or reported done without landing, on gbrain's command line and through its MCP tools;
+  - G4, the wrong one of two same-named entities;
+  - G5, latency at about 300,000 pages;
+  - G6, gold that a remote reader can't see, counted by cause.
+
+  Every scorer keys answers to a fixed schema, so no judge grades a counted cell, and each scorer passes the honest
+  system and fails the mutation kit's fakes. Agent units run claude-opus-5-5, gpt-6.1-sol and particle-1 with k = 4 and
+  report pass^k and cost per correct answer (`eval/runner/predictive/`, run guide in its README).
+- **How a measure earns trust.** `eval/runner/predictive/verdict.ts` reads a measure as PREDICTIVE only when its synthetic
+  effect has the same sign as at least 3 real contrasts whose intervals exclude zero. Those contrasts are named in
+  `docs/benchmarks/2026-11-09-predictive-measures-preregistration.md` before any counted cell, and the live-recall
+  batch 1 and batch 2 reference contrasts are exported with digests to `eval/data/validity-references/`. A measure whose
+  references don't exist yet reads NO REFERENCE YET and gates nothing. The verdict refuses a hash-embedding control unless
+  it is passed `--control`.
+- **Live recall batch 3.** The live-recall runner gains a `batch3` protocol with `freshness` and `entity` questions and
+  a per-arm stale-first rate. Its freeze records which side of GBRA-398's private-page change its gbrain falls on, and
+  a counted run refuses a freeze from the other side. Its primaries are fixed in the live-recall preregistration's
+  batch 3 amendment, before any batch 3 question was written.
+- **Other new pieces.**
+  - A command-line agent arm that runs gbrain with argv only: no shell, no provider keys and a throwaway home.
+  - A schema grammar that tells gbrain 0.60.549.0 from 0.60.570.0 by the call shapes each accepts.
+  - A paid runner with smoke, resume and ledger-cap pause.
+  - A real-embedding (Voyage) path for synthetic recall runs.
+  - A miss-log kit (`eval/runner/miss-mining/`) whose export carries only weekly counts by cause.
+- **A cost fix.** OpenAI Responses usage reports cache writes in `input_tokens_details.cache_write_tokens`, and
+  `eval/runner/q1/usage.ts` now counts them, as the budget ledger already did. Before this, a gpt-6.1-sol episode's own
+  cost could read about 18% under the ledger.
+- **What isn't measured yet.** No counted cell has run. A paid smoke of 18 agent episodes finished cleanly. G5's
+  300,000-page build, its Ubicloud run and G2's Opus paraphrases are built but untested against real services. At
+  0.60.557.0, gbrain's refusal codes don't separate `source_changed` from `scope_denied` the way Wintermute's labels
+  do, so G3 maps them by their detail.
+
 ## [0.10.180] - 2026-11-09
 
 ### Pinned per-reader judges, the paid-window guard and keyless tests move to main from RS1's results branch (#391)
