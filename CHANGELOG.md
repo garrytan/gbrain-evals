@@ -2,7 +2,24 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.187] - 2026-11-09
+
+### gbrain's read tools turn paraphrased questions about Garry's notes into right answers, and a summarising helper in front of gbrain costs grounded ones
+
+- **Results.** [The live recall phase 2 findings](docs/benchmarks/2026-11-09-live-recall-phase2.md) report the
+  preregistered run on 99 frozen tasks. On paraphrased questions, gbrain's `query`, `search` and `get_page` tools take
+  claude-opus-5-5 from 13.3% to 86.7% correct (+73.5 points, 95% interval 63.9 to 82.5) and particle-1 from 9.3% to
+  68.0% (+58.8, 48.5 to 68.8). A summarising helper between gbrain and the answering model lowers answers that are
+  correct and cite only supporting pages by 14.3 points for claude-opus-5-5 and 14.4 for particle-1, with no measurable
+  change in plain correctness. The public scorecards sit beside the findings, and the docs hub's live recall row now
+  leads with them.
+- **Public scorecards.** `bun eval/runner/live-recall/redact-scorecard.ts <scorecard.json> <scorecard.md> <out dir>`
+  writes the public copy of a live recall task scorecard. It keeps each cell's answer cost per correct answer, drops the
+  run's other cost fields, checks that the Markdown is what the repository renders from the JSON, and prints the hashes
+  of both copies.
+- **Fixed.** `tasks.ts judge` no longer judges again a call that hit the judge's output-token cap. Such a row stays a
+  judge error, as the preregistration says. A judge check that grows past its first step no longer refuses its own
+  `--truncation-waiver` as already used. The counted run had no truncated judge calls, so no published number changes.
 
 ### Live recall phase 2: OpenAI cache writes priced as the budget ledger prices them (GBEV-46)
 
@@ -51,7 +68,7 @@ This records what each gbrain-evals release changed and what its measurements me
   reads "not significant after correcting for multiple comparisons" (`not_significant_after_correction`), never as a
   measured difference; descriptive comparisons still read from their interval.
 - **Truncation by model and effort, and GBEV-3's waiver.** The 1% truncation rule now applies separately to each judge
-  model's medium-effort counted verdicts and its high-effort labels: a counted-judge split stops a run, and a label
+  model's medium-effort counted verdicts and its high-effort labels. A counted-judge split stops a run, and a label
   split fails the judge check. `--truncation-waiver <note>` on `run`, `judge-check` or `judge` lifts a stop for the
   truncations recorded so far, only with GBEV-3's note, recorded as `agent:GBEV-3` in `run.json` and the scorecard; the
   stop re-arms on new truncations, and truncated rows stay judge errors.
@@ -63,7 +80,7 @@ This records what each gbrain-evals release changed and what its measurements me
   It is descriptive only, with no Holm correction and no verdict.
 - **Gold clusters as the resampling unit.** In the rebuilt task file, 8 civic pages each serve as gold for two
   cross_source tasks. Tasks that share any gold page now form one gold cluster, and every interval and the p that Holm
-  adjusts treat the cluster as one unit: the comparisons' cluster bootstrap, the rates' intervals, and an exact sign-flip
+  adjusts treat the cluster as one unit. That covers the comparisons' cluster bootstrap, the rates' intervals, and an exact sign-flip
   test over clusters in place of exact McNemar, which it equals when no gold page is shared. The freeze and the
   scorecard report the cluster count and the sizes of shared clusters, and compute the minimum detectable differences at
   the cluster count. A test shows that a shared-page pair is resampled together.
