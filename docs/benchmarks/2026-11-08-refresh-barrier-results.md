@@ -14,7 +14,7 @@
   retry.
 - **What didn't work: the first counted run failed, and our scorer penalises untitled captures.** At gbrain
   `431cb3f9` the test read **FAIL**: two writes held behind refreshes that aborted stayed pending for up to about 300 s
-  (GST-1853), and four overwrites matched a fault in our own detector. gbrain fixed the hangs in `773a29ee`, the two runs are never pooled, and the first stays FAIL. B1's latency gate also failed its first
+  (a gbrain bug), and four overwrites matched a fault in our own detector. gbrain fixed the hangs in `773a29ee`, the two runs are never pooled, and the first stays FAIL. B1's latency gate also failed its first
   reading (Voyage 1.69 times flag-off, taken while this machine was creating VMs); Amendment 5 then added an idle-machine
   guard, and the guarded rerun passed. Separately,
   when an agent calls `capture` without a title, gbrain titles the note with its content, so the preregistered scorer
@@ -37,7 +37,7 @@ every change and every procedure, each before the counted cell it affects.
 
 - **Part A, concurrency (keyless, gating):** 500 seeded trials per engine and arm, in which several writers race
   refreshes, crashes, writer kills and import sequences. Every write is checked against the database, the client's view
-  and Git. A named case (GBRA-108's) runs 25 times per kind, engine and arm, and a quiet block of 100 seeds per engine
+  and Git. A named case from gbrain's maintainers runs 25 times per kind, engine and arm, and a quiet block of 100 seeds per engine
   and arm measures write latency with no refresh.
 - **Part B, retrieval (gating):** Cat 18 (165 pages, 25 queries, two embedders) and Cat 26 (30 pages, 10 queries, three
   modes), run off and on and compared query by query. B1 uses hash embeddings and also gates search latency. B2 uses the
@@ -165,11 +165,11 @@ Opus's held flag-on writes answered as follows:
 The counted Part A at `431cb3f9` (2026-11-07, digest `8e8520f8b606`) read FAIL with 6 flag-on failures (Amendment 3):
 
 - **2 hangs.** These were gbrain's. A write held behind a refresh that ended `aborted` or `abandoned` stayed pending
-  until a later refresh, up to about 300 s. That was GST-1853, fixed in `773a29ee`.
+  until a later refresh, up to about 300 s. That was a gbrain bug, fixed in `773a29ee`.
 - **4 overwrites.** These matched a fault in our own `removerOf` detector, and 3 of them are shown by replay. The
   detector was fixed and reviewed before any later counted cell.
 
-GBRA-108 ruled that the run stands as scored. Part C didn't run at that G.
+gbrain's maintainers ruled that the run stands as scored. Part C didn't run at that G.
 
 ## Reproducing it
 
