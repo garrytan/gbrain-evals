@@ -96,6 +96,18 @@ describe('rs1 adapter: cells and outcomes the cell never judges', () => {
 });
 
 describe('cat40 adapter: calls, slugs and recovery', () => {
+  test('two worlds that reuse keys and attempt ids stay apart, each with its own transcripts and gbrain sha', () => {
+    const row = (run: string) => ({ schema: 'cat40-cell-v2', key: 'claude-opus-5-5|gbrain-next-baseline|H1-01|0', attempt_id: 'claude-opus-5-5|gbrain-next-baseline|H1-01|0#1',
+      model: 'claude-opus-5-5', provider: 'anthropic', arm: 'gbrain-next-baseline', family: 'H1', budget_run_id: run, stop: 'submitted',
+      sessions: [{ run: { tool_calls: [{ name: 'search' }], final: 'x' } }], score: { success: false, evidence_cited: [], missed_evidence: ['people/alice'] } });
+    const world = (dir: string, run: string, result: string, sha: string) => [mem(`${dir}/results.jsonl`, 'results', [row(run)]),
+      mem(`${dir}/transcripts.jsonl`, 'transcripts', [{ attempt_id: row(run).attempt_id, tools: [{ name: 'search', args: { query: 'q' }, result }] }]),
+      mem(`${dir}/experiment.json`, 'experiment', [{ gbrain_commit: sha }])];
+    const out = ADAPTERS.cat40([...world('p1', 'run-1', '[{"slug":"people/alice"}]', 'a'.repeat(40)), ...world('p2', 'run-2', '[]', 'b'.repeat(40))], entry('cat40', 'cat40'));
+    expect(out.counts).toMatchObject({ read: 2, duplicate: 0, failed: 2 });
+    expect(out.failures.map(f => [f.run_id, f.gbrain_sha, f.gold.retrieved])).toEqual([['run-1', 'a'.repeat(40), 'all'], ['run-2', 'b'.repeat(40), 'none']]);
+  });
+
   test('a v1 row keeps its first session\'s calls before the second\'s', () => {
     expect(cat40Fields({ key: 'k', score: {}, session1: { tool_calls: [{ name: 'capture' }] }, run: { stop: 'submitted', tool_calls: [{ name: 'search' }] } })?.calls.map(c => c.name)).toEqual(['capture', 'search']);
   });

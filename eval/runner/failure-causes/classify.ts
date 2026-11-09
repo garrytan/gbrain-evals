@@ -7,7 +7,9 @@
  * comes back as needs_model, for the residual labeller, unless the source did
  * not measure whether the gold reached the model and kept no delivered context
  * to check: that row stays unclassified, because a reasoning-only labeller
- * cannot rule out an upstream miss. The function is pure: no I/O, no clock, no
+ * cannot rule out an upstream miss. A row no labeller may read (no recorded
+ * text, or a private or sealed source) is unclassified too, so it never waits
+ * for a label that cannot come. The function is pure: no I/O, no clock, no
  * model.
  */
 import { CAUSES, STAGES, TAXONOMY_VERSION, UNCLASSIFIED, type Cause, type Stage, type Tag } from './taxonomy.ts';
@@ -106,6 +108,7 @@ export function classify(f: EvalFailure): CauseLabel {
   if (!f.failed) return { ...base, cause: null, basis: 'unclassified', rule_id: 'passed', secondary: [] };
   if (primary) return { ...base, cause: primary.cause, basis: 'deterministic', rule_id: primary.rule };
   if (deliveryUnknown(f) && (f.text?.context ?? null) === null) return { ...base, cause: UNCLASSIFIED, basis: 'unclassified', rule_id: 'residual.delivery_unmeasured' };
+  if (!f.text || f.visibility === 'private' || f.visibility === 'sealed') return { ...base, cause: UNCLASSIFIED, basis: 'unclassified', rule_id: 'residual.no_labeller_text' };
   return { ...base, cause: null, basis: 'needs_model', rule_id: 'residual' };
 }
 

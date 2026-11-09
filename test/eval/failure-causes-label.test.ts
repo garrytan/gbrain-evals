@@ -42,7 +42,7 @@ describe('residual labeller', () => {
     const { client, calls } = fake('{"cause":"stale_fact"}');
     const { labels } = await labelResidual([residual({ visibility: 'private' })], client);
     expect(calls).toHaveLength(0);
-    expect(labels[0].basis).toBe('needs_model');
+    expect(labels[0]).toMatchObject({ basis: 'unclassified', rule_id: 'residual.no_labeller_text' });
     expect(() => buildLabelPrompt(residual({ visibility: 'sealed' }))).toThrow(/never sent/);
   });
 

@@ -3,17 +3,25 @@ import { classify } from '../../eval/runner/failure-causes/index.ts';
 import { failure } from '../support/failure-causes-fixture.ts';
 
 const gold = (g: Partial<ReturnType<typeof failure>['gold']>) => ({ ...failure().gold, ...g });
+const text = { question: 'q', expected: 'a', answer: 'b', context: 'ctx' };
 
 describe('classify: deterministic rules', () => {
   test('a row with no signal goes to the labeller when its delivered context is recorded, with every unmeasured stage listed', () => {
-    const l = classify(failure({ text: { question: 'q', expected: 'a', answer: 'b', context: 'ctx' } }));
+    const l = classify(failure({ text }));
     expect(l).toMatchObject({ cause: null, basis: 'needs_model', rule_id: 'residual' });
     expect(l.unmeasured).toEqual(['ingest', 'visibility', 'tool_call', 'write', 'retrieval', 'ranking', 'presentation']);
   });
 
   test('a row with no signal, unmeasured delivery and no recorded context stays unclassified instead of reaching a reasoning-only labeller', () => {
     expect(classify(failure())).toMatchObject({ cause: 'unclassified', basis: 'unclassified', rule_id: 'residual.delivery_unmeasured' });
-    expect(classify(failure({ gold: gold({ gold_count: 1, retrieved: 'all', delivered: 'all' }) }))).toMatchObject({ basis: 'needs_model' });
+    expect(classify(failure({ text, gold: gold({ gold_count: 1, retrieved: 'all', delivered: 'all' }) }))).toMatchObject({ basis: 'needs_model' });
+  });
+
+  test('a residual row no labeller may read is unclassified, so it never waits for a label that cannot come', () => {
+    const delivered = gold({ gold_count: 1, retrieved: 'all', delivered: 'all' });
+    expect(classify(failure({ gold: delivered }))).toMatchObject({ cause: 'unclassified', basis: 'unclassified', rule_id: 'residual.no_labeller_text' });
+    expect(classify(failure({ gold: delivered, text, visibility: 'private' }))).toMatchObject({ basis: 'unclassified', rule_id: 'residual.no_labeller_text' });
+    expect(classify(failure({ gold: delivered, text, visibility: 'public' }))).toMatchObject({ basis: 'needs_model' });
   });
 
   test('a passed row is never given a cause', () => {
@@ -32,7 +40,7 @@ describe('classify: deterministic rules', () => {
   });
 
   test('delivered gold with a wrong answer reaches the labeller, so stale, entity and time causes stay reachable', () => {
-    const l = classify(failure({ category: 'knowledge_update', gold: gold({ gold_count: 1, retrieved: 'all', delivered: 'all' }) }));
+    const l = classify(failure({ category: 'knowledge_update', text, gold: gold({ gold_count: 1, retrieved: 'all', delivered: 'all' }) }));
     expect(l).toMatchObject({ cause: null, basis: 'needs_model' });
   });
 
