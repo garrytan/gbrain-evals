@@ -767,6 +767,37 @@ Counted runs start from `14e3a89d8db80d74f35d079ef9db45531bacf296` on the result
 unchanged from the previous amendment. Later docs-only commits don't change either. Each run records the commit it
 actually ran, and a run from any other code needs a further amendment.
 
+### 2026-11-09: per-unit custody push, custody rulings, and the code counted runs start from
+
+GBEV-3 ruled on the custody brief's open points; each ruling below was answered by agent:GBEV-3, 2026-11-09. None
+changes a bar, arm, reader, judge, margin or verdict rule.
+
+- **Custodian.** The custodian is GBEV-53 (issue GST-1993), not GBRA-240, which is archived. Dyson links no gbrain-evals
+  folder, so a device thread was refused. GBEV-53 is a small cloud thread that does all custody work in a device
+  subagent on Dyson, so Dyson stays the custody host.
+- **Retention.** Both encrypted copies are kept until 180 days after the RS1 results PR merges. Then both archives and
+  both private keys are deleted, and the deletion is recorded. Keeping them longer needs a written note from GBEV-3.
+  This replaces the open retention point in the amendment above.
+- **Second-copy commands.** The custodian's `age` identity at `~/.config/gbrain-evals/rs1-custodian.key` on the custody
+  host and the `age` archive steps in the custodian brief are accepted as proposed.
+- **Verdict aggregates mode.** An aggregates mode for `eval/runner/rs1/verdict.ts` is accepted as a fix to make before
+  wave B. It is pending and not built.
+- **Haiku.** claude-haiku-5-5 stays validate.ts's second item validator, as the frozen preregistration says. It is
+  disclosed as a validator and is never a reader.
+
+**Per-unit custody push** (`de943504`). This closes the gap the amendment above recorded under D1. Each RS1 campaign unit
+now records its launch unit (`kept_unit`), and the launcher pushes that unit's VM only the pinned files of its five kept
+conversations and the filled manifest, naming them to the VM as `GBRAIN_EVALS_RS1_UNIT`. On the VM, setup's custody check
+verifies exactly those files, refuses any other conversation under the custody root and fails closed on a missing file
+or a hash mismatch, and the loader opens only those conversations. A test shows a unit-0 push carries no file of units 1
+to 3. Q1, F6, D8 and BEAM-10M pushes are unchanged. A campaign manifest planned from earlier code has no `kept_unit`, and
+its launches refuse.
+
+Counted runs start from `de9435047201fbc2e6a980b17f473ba6a576494a` on the results branch. At that commit, `eval/runner/q1/cells/rs1-cells.json` has
+SHA-256 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, unchanged from the amendment above. Minting
+does not depend on this fix; counted cells do. Later docs-only commits don't change either. Each run records the commit
+it actually ran, and a run from any other code needs a further amendment.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
