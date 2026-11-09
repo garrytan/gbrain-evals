@@ -19,7 +19,7 @@
  */
 import { execFile } from 'node:child_process';
 import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { McpClient } from '../cat40/gbrain-arm.ts';
 import type { Arm, ToolSpec } from '../cat40/loop.ts';
 import { resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
@@ -127,7 +127,11 @@ export class SyntheticBrain {
   get home(): string { return this.hermetic.home; }
   get contentRoot(): string { return join(this.hermetic.home, 'brain'); }
 
-  static async create(label: string, pages: readonly Page[], opts: { gut?: GbrainUnderTest } = {}): Promise<SyntheticBrain> {
+  /**
+   * seed 'put' (default) writes each page through gbrain put, as an agent would; 'files' writes the Markdown into the
+   * checkout and imports it with sync, as a person's notes arrive, keeping frontmatter such as visibility exactly.
+   */
+  static async create(label: string, pages: readonly Page[], opts: { gut?: GbrainUnderTest; seed?: 'put' | 'files' } = {}): Promise<SyntheticBrain> {
     const gut = opts.gut ?? resolveGbrainUnderTest(null);
     const scratch: Record<string, string | undefined> = { ...process.env };
     const hermetic = enterHermeticEnv(label, scratch);
@@ -138,7 +142,10 @@ export class SyntheticBrain {
       writeFileSync(join(hermetic.home, '.gitconfig'), GITCONFIG);
       const brain = new SyntheticBrain(gut, hermetic, env);
       await brain.must(['init', '--pglite', '--non-interactive', '--content-root', brain.contentRoot, '--git']);
-      for (const p of pages) await brain.must(['put', p.slug], p.markdown);
+      for (const p of pages) {
+        if (opts.seed === 'files') { mkdirSync(dirname(brain.pageFile(p.slug)), { recursive: true }); writeFileSync(brain.pageFile(p.slug), p.markdown); }
+        else await brain.must(['put', p.slug], p.markdown);
+      }
       brain.git('add', '-A');
       brain.git('commit', '-qm', 'seed fictional brain');
       await brain.must(['sync']);
@@ -221,8 +228,8 @@ export class GbrainMcpArm implements Arm {
   readonly name = 'gbrain-mcp';
   readonly calls: ArmCall[] = [];
   private constructor(private client: McpClient) {}
-  static async start(brain: SyntheticBrain): Promise<GbrainMcpArm> {
-    const client = new McpClient({ buildDir: brain.gut.root, env: brain.env }, []);
+  static async start(brain: SyntheticBrain, serveArgs: string[] = []): Promise<GbrainMcpArm> {
+    const client = new McpClient({ buildDir: brain.gut.root, env: brain.env }, serveArgs);
     await client.start();
     return new GbrainMcpArm(client);
   }
@@ -232,6 +239,7 @@ export class GbrainMcpArm implements Arm {
   tools(): ToolSpec[] {
     return this.client.tools.map(t => ({ name: t.name, description: t.description ?? '', input_schema: (t.inputSchema ?? { type: 'object', properties: {} }) as Record<string, unknown> }));
   }
+  instructions() { return this.client.instructions; }
   toolsVersion() { return this.client.toolsVersion; }
   writeTools() { return this.client.tools.filter(t => t.annotations?.readOnlyHint !== true).map(t => t.name); }
   /** The served tool schemas, for the schema-shape grammar. */
@@ -243,4 +251,29 @@ export class GbrainMcpArm implements Arm {
     return output;
   }
   close() { return this.client.close(); }
+}
+
+/**
+ * The trusted local caller on the MCP tool surface: the same tool list a gbrain serve offers, each call dispatched
+ * through gbrain call (remote: false in gbrain's CLI), so it differs from GbrainMcpArm only in caller identity. Out-of-view
+ * tasks use it beside the MCP arm. Never run it while a gbrain serve holds the same brain.
+ */
+export class GbrainCallArm implements Arm {
+  readonly name = 'gbrain-local';
+  readonly calls: ArmCall[] = [];
+  constructor(private brain: SyntheticBrain, private specs: ToolSpec[], private instructions: string) {}
+  systemHint() {
+    return `The knowledge base is a gbrain brain, reached through the tools listed. The gbrain server's instructions follow.\n<mcp_server_instructions server="gbrain">\n${this.instructions}\n</mcp_server_instructions>`;
+  }
+  tools() { return this.specs; }
+  writeTools() { return []; }
+  async call(name: string, args: Record<string, unknown>): Promise<string> {
+    if (!this.specs.some(s => s.name === name)) throw new Error(`unknown tool ${name}`);
+    const r = await this.brain.run(['call', name, JSON.stringify(args)]);
+    const text = capText(r.stdout.trim() || r.stderr.trim());
+    const refused = r.exit !== 0 || /^\{\s*"error":/.test(text);
+    const output = refused ? `Error: ${text}` : text;
+    this.calls.push({ surface: 'mcp', argv: [name], args, exit: refused ? 1 : 0, output, ms: r.ms });
+    return output;
+  }
 }
