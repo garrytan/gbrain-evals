@@ -29,7 +29,7 @@ import { join, relative, resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { renderOperatorMessage, type OperatorFix, type OperatorMessage } from '../decisions/errors.ts';
 
-export const SECRET_ENV = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'GEMINI_API_KEY', 'UBICLOUD_API_TOKEN', 'JEV_TYPESAFE_API_KEY'] as const;
+export const SECRET_ENV = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'GEMINI_API_KEY', 'RS1_GEMINI_API_KEY', 'UBICLOUD_API_TOKEN', 'JEV_TYPESAFE_API_KEY'] as const;
 const MIN_VALUE_BYTES = 8;
 const BASE = 257;
 
@@ -58,6 +58,7 @@ export const KEY_PATTERNS: ReadonlyArray<{ id: string; re: RegExp }> = [
   { id: 'openai-key', re: /sk-(?!ant-)(?:proj-|svcacct-|admin-)?[A-Za-z0-9_-]{20,}/g },
   { id: 'voyage-key', re: /\bpa-[A-Za-z0-9_-]{30,}/g },
   { id: 'google-api-key', re: /AIza[0-9A-Za-z_-]{35}/g },
+  { id: 'google-aq-key', re: /\bAQ\.[0-9A-Za-z_-][0-9A-Za-z_.-]{19,}/g },
   { id: 'github-token', re: /\bgh[pousr]_[A-Za-z0-9]{36,}/g },
   { id: 'github-fine-grained-token', re: /\bgithub_pat_[A-Za-z0-9_]{40,}/g },
   { id: 'aws-access-key', re: /\bAKIA[0-9A-Z]{16}\b/g },
