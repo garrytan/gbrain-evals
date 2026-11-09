@@ -592,22 +592,37 @@ export class Campaign {
    * campaign's run holds with spend (actual, else reserved, above 0) is named by exactly one reserved event in the log,
    * and every reserved event names an entry the run holds. A log emptied or cut down with its SHA-256 rewritten would
    * otherwise read as fewer leases than the ledger charges, so a unit could be reserved again and blockSpend would
-   * undercount. It reads the ledger only, so a refused reserve holds no reservation.
+   * undercount. Each lease_id is reserved once, and each lease's state matches its entry: a lease settled or abandoned
+   * in the log has its entry settled at the amount the log charges, and an open lease has an open entry, so a log that
+   * closes a lease the ledger still holds open never frees its unit for a second reservation. It reads the log and the
+   * ledger under leases.lock, where a BG1 settle or abandon writes both, and changes neither, so a refused reserve
+   * holds no reservation.
    */
   private reconcileBg1(): void {
     if (!this.bg1 || !existsSync(this.statePath)) return;
-    const s = this.state();
-    const reserved = this.events().map(x => JSON.parse(x) as LeaseEvent).filter((e): e is Extract<LeaseEvent, { event: 'reserved' }> => e.event === 'reserved');
-    const entries = readLedger(s.ledger).entries.filter(e => e.run_id === s.run_id);
-    const held = new Set(entries.map(e => e.id));
-    const problems = [
-      ...entries.filter(e => (e.actual_usd ?? e.reserved_usd) > 0).map(e => [e, reserved.filter(r => r.entry_id === e.id).length] as const).filter(([, n]) => n !== 1)
-        .map(([e, n]) => `ledger entry ${e.id} ("${e.description}") has spend, and ${n} reserved events in the lease log name it`),
-      ...reserved.filter(r => !held.has(r.entry_id)).map(r => `lease ${r.lease_id} names ledger entry ${r.entry_id}, which campaign run ${s.run_id} does not hold`),
-    ];
-    if (problems.length) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `campaign ${this.manifest.campaign_id}'s lease log and ledger do not match: ${problems.slice(0, 3).join('; ')}${problems.length > 3 ? ` (and ${problems.length - 3} more)` : ''}`,
-      why: 'every reservation the campaign run holds is one lease this campaign logged, so a log missing a lease would hide spend the ledger still charges and let a unit reserve as if it were not there',
-      fix: { next: 'ask_user', user_message: `leases.ndjson under ${this.stateDir} does not name exactly the reservations campaign run ${s.run_id} holds; restore it and leases.sha256 from the custody host's copy, or start the campaign in a fresh --state` } });
+    this.locked(() => {
+      const s = this.state();
+      const reserved = this.events().map(x => JSON.parse(x) as LeaseEvent).filter((e): e is Extract<LeaseEvent, { event: 'reserved' }> => e.event === 'reserved');
+      const entries = readLedger(s.ledger).entries.filter(e => e.run_id === s.run_id);
+      const held = new Map(entries.map(e => [e.id, e] as const));
+      const problems = [
+        ...entries.filter(e => (e.actual_usd ?? e.reserved_usd) > 0).map(e => [e, reserved.filter(r => r.entry_id === e.id).length] as const).filter(([, n]) => n !== 1)
+          .map(([e, n]) => `ledger entry ${e.id} ("${e.description}") has spend, and ${n} reserved events in the lease log name it`),
+        ...reserved.filter(r => !held.has(r.entry_id)).map(r => `lease ${r.lease_id} names ledger entry ${r.entry_id}, which campaign run ${s.run_id} does not hold`),
+        ...[...new Set(reserved.map(r => r.lease_id))].map(id => [id, reserved.filter(r => r.lease_id === id).length] as const).filter(([, n]) => n > 1)
+          .map(([id, n]) => `lease ${id} is reserved ${n} times in the lease log`),
+        ...this.leases().flatMap(l => {
+          const e = held.get(l.entry_id);
+          if (!e) return [];
+          if (l.status !== 'settled' && l.status !== 'abandoned') return e.actual_usd === null ? [] : [`lease ${l.lease_id} is ${l.status} in the lease log, and the ledger settled its entry ${e.id} at ${e.actual_usd}`];
+          return e.actual_usd !== null && Math.abs(e.actual_usd - (l.actual_usd ?? NaN)) <= 1e-9 ? []
+            : [`lease ${l.lease_id} is ${l.status} at ${l.actual_usd} in the lease log, and the ledger ${e.actual_usd === null ? `holds its entry ${e.id} open` : `settled its entry ${e.id} at ${e.actual_usd}`}`];
+        }),
+      ];
+      if (problems.length) throw refuse({ code: 'CAMPAIGN_HASH_MISMATCH', message: `campaign ${this.manifest.campaign_id}'s lease log and ledger do not match: ${problems.slice(0, 3).join('; ')}${problems.length > 3 ? ` (and ${problems.length - 3} more)` : ''}`,
+        why: 'every reservation the campaign run holds is one lease this campaign logged, open in both or closed at the same amount in both, so a log missing a lease, or closing one the ledger still holds, would hide spend the ledger still charges and let a unit reserve as if it were not there',
+        fix: { next: 'ask_user', user_message: `leases.ndjson under ${this.stateDir} does not name exactly the reservations campaign run ${s.run_id} holds; restore it and leases.sha256 from the custody host's copy, or start the campaign in a fresh --state` } });
+    });
   }
   cell(id: string): CellSpec { const c = this.manifest.cells.find(x => x.id === id); if (!c) throw new Error(`no cell ${id} in campaign ${this.manifest.campaign_id}`); return c; }
 
@@ -984,9 +999,11 @@ export class Campaign {
     }
     if (runId !== leaseId) throw new Error(`the pulled ledger is for lease ${runId}, not ${leaseId}`);
     if (Math.abs(leaseUsd - l.usd) > 1e-9) throw new Error(`the pulled ledger's lease is $${leaseUsd}, the host reserved $${l.usd}`);
-    this.run().settle(l.entry_id, { usd: committed });
-    this.append({ event: 'settled', lease_id: leaseId, at: new Date().toISOString(), actual_usd: committed, requests, max_output_tokens: maxOut ?? null,
-      ...(timedOut ? { timed_out: true } : {}), ...(cellExit !== undefined ? { cell_exit_code: cellExit } : {}) });
+    this.locked(() => {
+      this.run().settle(l.entry_id, { usd: committed });
+      this.append({ event: 'settled', lease_id: leaseId, at: new Date().toISOString(), actual_usd: committed, requests, max_output_tokens: maxOut ?? null,
+        ...(timedOut ? { timed_out: true } : {}), ...(cellExit !== undefined ? { cell_exit_code: cellExit } : {}) });
+    });
     return this.lease(leaseId);
   }
 
@@ -1002,8 +1019,10 @@ export class Campaign {
     if (l.status === 'settled' || l.status === 'abandoned') throw new Error(`lease ${leaseId} is already ${l.status}`);
     if (!reason.trim()) throw new Error('abandon needs --reason');
     if (!unstarted) {
-      this.run().settle(l.entry_id, null);
-      this.append({ event: 'abandoned', lease_id: leaseId, at: new Date().toISOString(), reason });
+      this.locked(() => {
+        this.run().settle(l.entry_id, null);
+        this.append({ event: 'abandoned', lease_id: leaseId, at: new Date().toISOString(), reason });
+      });
       return { ...this.lease(leaseId), note: `abandoned lease ${leaseId} is charged its full reservation of ${usd(l.raised_usd ?? l.usd)} against the campaign cap, because no VM ledger came back to settle it to what was really spent. `
         + `If the launch log proves the cell command never started, close it at $0 instead with: bun eval/runner/shootout-cell.ts abandon --campaign <manifest> --state <dir> --lease ${leaseId} --reason "<why>" --unstarted --log <launch log>.` };
     }
@@ -1015,8 +1034,10 @@ export class Campaign {
     mkdirSync(join(this.stateDir, 'evidence'), { recursive: true });
     const evidence = join(this.stateDir, 'evidence', `${leaseId}.log`);
     writeFileSync(evidence, log);
-    this.run().settle(l.entry_id, { usd: 0 });
-    this.append({ event: 'abandoned', lease_id: leaseId, at: new Date().toISOString(), reason, unstarted: { evidence } });
+    this.locked(() => {
+      this.run().settle(l.entry_id, { usd: 0 });
+      this.append({ event: 'abandoned', lease_id: leaseId, at: new Date().toISOString(), reason, unstarted: { evidence } });
+    });
     return this.lease(leaseId);
   }
 
