@@ -438,6 +438,39 @@ counted block's cap already takes the larger of its estimate rule and its units'
 
 GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
 
+### Amendment 2 (2026-11-09): stage 1's dev-world rendering
+
+Stage 1's first real render of `bg1-dev-01` dropped the world at session 10 of 154, which failed its render and all
+three re-renders. The run made 41 render attempts and 23 checks. Render attempts failed the length check 15 times, the
+turn-format check 6 times and the date check (a calendar date written out instead of a date token) 3 times, and 3
+claude-haiku-5-5 check replies came back empty. The cached replies show why. gemini-3.8-flash, at low thinking, wrote
+sessions of about 450 to 1,500 tokens against targets of 757 to 3,236. Five of the turn-format failures were broken
+JSON, such as a turn missing its `speaker` key, because the request asked for JSON with no schema. The empty Haiku
+replies averaged about 210 of their 256 output tokens and held no text.
+
+From commit `2c7ab96f`, rendering changes its method in these ways:
+
+- Each render request gives Gemini a JSON Schema (`generationConfig.responseJsonSchema`): an object whose `turns` list
+  holds turns with a `speaker` of `user` or `assistant` and a `content` string. Gemini's check asks for
+  `{"extra_claims": boolean}` the same way.
+- The render prompt states each session's length in words beside its token target: the target times 0.75, rounded to
+  the nearest ten. It also asks for a minimum number of alternating turns: two per exchange, with one exchange (a
+  casual message and a brief answer, about 190 words) per 250 target tokens, at least one exchange more than the
+  session's planned lines, and never fewer than two exchanges.
+- When a session fails the length check, its next render names the last attempt's measured length, in words and
+  tokens, and the range the check allows, in words.
+- The claude-haiku-5-5 check may write up to 2,048 output tokens instead of 256. Gemini's check keeps 256.
+- Replies are cached under a new version, so no reply cached before this change is reused. Keyless (`--fake`)
+  rendering is unchanged.
+
+Nothing that judges a session moves: every check and the length check's range, the three re-renders per session, and
+the rule that drops a world with a session that still fails (two drops among the first five mint slots pause minting).
+
+The three dev worlds are rendered again under this method. Before any stage 1 cell runs, this amendment gains each
+world's measured rendering cost, its yield and its world end.
+
+GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
+
 ### Expected amendments
 
 The expected ones, each dated and committed before the cells it governs:
