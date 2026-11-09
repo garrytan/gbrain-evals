@@ -48,7 +48,7 @@ import {
   type AnswerRecord, type EpisodeContext, type GbrainReader, type JudgeRecord, type Task, type TaskArm, type TaskForm,
 } from './task-arms.ts';
 import { JUDGE_PAGE_CHARS, LABELLERS, LABEL_EFFORT, MODELS, judgeFor, secondJudgeFor } from './task-judge.ts';
-import { JUDGE_CHECK_KAPPA, JUDGE_CHECK_MIN_LABELS, JUDGE_CHECK_SCHEMA, SEED, TRUNCATION_CAP, TYPES, buildTaskScorecard, checkOutbound, judgeCheck, primaryMdd, renderTaskMarkdown, taskNeedles } from './task-scorecard.ts';
+import { JUDGE_CHECK_KAPPA, JUDGE_CHECK_MIN_LABELS, JUDGE_CHECK_SCHEMA, SEED, TRUNCATION_CAP, TYPES, buildTaskScorecard, checkOutbound, goldClusterSummary, judgeCheck, primaryMdd, renderTaskMarkdown, taskNeedles } from './task-scorecard.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const FIXTURE_TASKS = join(FIXTURE_DIR, 'tasks.jsonl');
@@ -179,6 +179,7 @@ export async function goldCheck(reader: GbrainReader, tasks: Array<{ line: numbe
 
 /** freeze.json: numbers only. */
 export function freezeSummary(source: string, parsed: Array<{ line: number; task: Task }>, kept: Array<{ line: number; task: Task }>, gut: GbrainUnderTest) {
+  const clusters = goldClusterSummary(kept.map(k => k.task));
   return {
     schema: FREEZE_SCHEMA,
     tasks_sha256: sha256(source),
@@ -189,7 +190,8 @@ export function freezeSummary(source: string, parsed: Array<{ line: number; task
     dropped_unreachable: parsed.length - kept.length,
     kept_lines: kept.map(k => k.line).sort((a, b) => a - b),
     by_type: byType(kept.map(k => k.task)),
-    mdd_primaries: primaryMdd(kept.length),
+    gold_clusters: clusters,
+    mdd_primaries: primaryMdd(clusters.n),
   };
 }
 
@@ -199,7 +201,7 @@ export async function writeFreeze(reader: GbrainReader, source: string, parsed: 
   say('gold pages reachable from the reader\'s source: ' + gold.reachable + ' of ' + gold.gold);
   const summary = freezeSummary(source, parsed, gold.kept, gut);
   writeJson(out, summary);
-  say('freeze ' + out + ': ' + summary.n_submitted + ' submitted, ' + summary.n_kept + ' kept, ' + summary.dropped_unreachable + ' dropped as unreachable to a remote caller; MDD at alpha 0.05 with 20% discordant pairs ' + (100 * (summary.mdd_primaries.pd20.alpha_05 ?? 0)).toFixed(1) + ' points (' + (100 * (summary.mdd_primaries.pd20.holm_0125 ?? 0)).toFixed(1) + ' at Holm\'s tightest)');
+  say('freeze ' + out + ': ' + summary.n_submitted + ' submitted, ' + summary.n_kept + ' kept, ' + summary.dropped_unreachable + ' dropped as unreachable to a remote caller; ' + summary.gold_clusters.n + ' gold clusters' + (summary.gold_clusters.shared.length ? ' (' + summary.gold_clusters.shared.length + ' shared, sizes ' + summary.gold_clusters.shared.join(', ') + ')' : '') + '; MDD at alpha 0.05 with 20% discordant pairs over ' + summary.gold_clusters.n + ' clusters ' + (100 * (summary.mdd_primaries.pd20.alpha_05 ?? 0)).toFixed(1) + ' points (' + (100 * (summary.mdd_primaries.pd20.holm_0125 ?? 0)).toFixed(1) + ' at Holm\'s tightest)');
   return summary;
 }
 

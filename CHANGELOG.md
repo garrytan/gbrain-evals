@@ -60,6 +60,12 @@ This records what each gbrain-evals release changed and what its measurements me
   answer. The scorecard's new `by_origin` block, and a markdown table beside the primaries, show the four primaries on
   tasks from a phase 1 question and on replacement tasks (`source_question` null) separately, with counts by type.
   It is descriptive only, with no Holm correction and no verdict.
+- **Gold clusters as the resampling unit.** In the rebuilt task file, 8 civic pages each serve as gold for two
+  cross_source tasks. Tasks that share any gold page now form one gold cluster, and every interval and the p that Holm
+  adjusts treat the cluster as one unit: the comparisons' cluster bootstrap, the rates' intervals, and an exact sign-flip
+  test over clusters in place of exact McNemar, which it equals when no gold page is shared. The freeze and the
+  scorecard report the cluster count and the sizes of shared clusters, and compute the minimum detectable differences at
+  the cluster count. A test shows that a shared-page pair is resampled together.
 
 ## [0.10.178] - 2026-11-08
 

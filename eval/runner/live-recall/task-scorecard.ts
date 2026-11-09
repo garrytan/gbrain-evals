@@ -46,7 +46,7 @@ export function primaryMdd(n: number) {
 }
 
 export interface Outcome {
-  task: string; type: string; form: TaskForm; arm: TaskArm; model: string;
+  task: string; cluster: string; type: string; form: TaskForm; arm: TaskArm; model: string;
   state: 'counted' | 'excluded'; exclusion: Exclusion | null;
   /** A counted no-answer whose model call ended on a model-caused 400. */
   model_error: boolean;
@@ -70,14 +70,38 @@ export function indexRecords(records: Array<AnswerRecord | JudgeRecord>): Indexe
 const keyOf = (form: string, task: string, arm: string, model: string) => [form, task, arm, model].join('|');
 const bool = (b: boolean | null | undefined) => (b === null || b === undefined ? null : b ? 1 : 0);
 
+/**
+ * Gold clusters: tasks that share a gold page, directly or through other tasks, are resampled together. Each cluster is
+ * named by its smallest task id, so a task that shares no gold page is its own cluster under its own id.
+ */
+export function goldClusters(tasks: ReadonlyArray<Pick<Task, 'id' | 'gold_pages'>>): Map<string, string> {
+  const parent = new Map<string, string>(tasks.map(t => [t.id, t.id]));
+  const find = (x: string): string => { let r = x; while (parent.get(r) !== r) r = parent.get(r)!; parent.set(x, r); return r; };
+  const owner = new Map<string, string>();
+  for (const t of tasks) for (const slug of t.gold_pages ?? []) {
+    const first = owner.get(slug);
+    if (first === undefined) { owner.set(slug, t.id); continue; }
+    const a = find(first), b = find(t.id);
+    if (a !== b) parent.set(a < b ? b : a, a < b ? a : b);
+  }
+  return new Map(tasks.map(t => [t.id, find(t.id)]));
+}
+
+/** How many gold clusters the tasks form, and the sizes of those holding more than one task, largest first. */
+export function goldClusterSummary(tasks: ReadonlyArray<Pick<Task, 'id' | 'gold_pages'>>) {
+  const sizes = Object.values(countBy([...goldClusters(tasks).values()]));
+  return { n: sizes.length, shared: sizes.filter(s => s > 1).sort((a, b) => b - a) };
+}
+
 /** One outcome per kept task, form, arm and model the run covers. A judge record is counted only when it names the answer's key. */
 export function outcomes(tasks: Task[], forms: readonly TaskForm[], arms: readonly TaskArm[], models: readonly string[], idx: Indexed): Outcome[] {
   const out: Outcome[] = [];
+  const clusters = goldClusters(tasks);
   for (const form of forms) for (const task of tasks) for (const arm of arms) for (const model of models) {
     const a = idx.answers.get(keyOf(form, task.id, arm, model));
     const empty = Object.fromEntries(RATES.map(r => [r, null])) as Record<Rate, number | null>;
     const base: Outcome = {
-      task: task.id, type: task.type, form, arm, model, state: 'excluded', exclusion: 'not_run', model_error: false, values: empty, citations: 0, supported: 0,
+      task: task.id, cluster: clusters.get(task.id)!, type: task.type, form, arm, model, state: 'excluded', exclusion: 'not_run', model_error: false, values: empty, citations: 0, supported: 0,
       exposure: Object.fromEntries(EXPOSURES.map(e => [e, null])) as Outcome['exposure'], turns: 0, tool_calls: 0, ms: 0,
     };
     if (!a) { out.push(base); continue; }
@@ -113,13 +137,13 @@ function rate(rows: Outcome[], r: Rate, pooled: boolean) {
   const xs = rows.filter(o => o.values[r] !== null);
   if (!xs.length) return null;
   const k = xs.reduce((s, o) => s + (o.values[r] as number), 0);
-  if (!pooled) {
+  const byCluster = new Map<string, { k: number; n: number }>();
+  for (const o of xs) { const c = byCluster.get(o.cluster) ?? { k: 0, n: 0 }; c.k += o.values[r] as number; c.n++; byCluster.set(o.cluster, c); }
+  if (!pooled && [...byCluster.values()].every(c => c.n === 1)) {
     const w = wilson(k, xs.length);
     return { k, n: xs.length, point: round(w.point), ci95: [round(w.lower), round(w.upper)] };
   }
-  const byTask = new Map<string, { k: number; n: number }>();
-  for (const o of xs) { const c = byTask.get(o.task) ?? { k: 0, n: 0 }; c.k += o.values[r] as number; c.n++; byTask.set(o.task, c); }
-  const b = clusterBootstrapProportion([...byTask.entries()].sort(([x], [y]) => x.localeCompare(y)).map(([, c]) => c), { seed: SEED, draws: DRAWS });
+  const b = clusterBootstrapProportion([...byCluster.entries()].sort(([x], [y]) => x.localeCompare(y)).map(([, c]) => c), { seed: SEED, draws: DRAWS });
   return { k, n: xs.length, point: round(b.point), ci95: b.ci95 ? [round(b.ci95[0]), round(b.ci95[1])] : null };
 }
 
@@ -177,11 +201,26 @@ export const SPECS: Spec[] = [
 type Reading = 'no_measurable_difference' | 'b_higher' | 'b_lower' | 'not_significant_after_correction' | null;
 const HOLM_ALPHA = 0.05;
 
+/** Exact two-sided sign-flip p over gold clusters' summed B − A on a 0/1 metric: exact McNemar when each cluster is one task. */
+export function exactClusterSignFlip(sums: readonly number[]): number {
+  let dist = new Map<number, number>([[0, 1]]);
+  for (const s of sums) {
+    if (s === 0) continue;
+    const next = new Map<number, number>();
+    for (const [v, q] of dist) for (const x of [v + s, v - s]) next.set(x, (next.get(x) ?? 0) + q / 2);
+    dist = next;
+  }
+  const observed = Math.abs(sums.reduce((a, b) => a + b, 0));
+  let p = 0;
+  for (const [v, q] of dist) if (Math.abs(v) >= observed) p += q;
+  return Math.min(1, p);
+}
+
 function compare(spec: Spec, rows: Outcome[], invalidCells: Set<string>) {
   const pick = (arm: TaskArm) => new Map(rows.filter(o => o.arm === arm && o.model === spec.model && (spec.form === POOLED || o.form === spec.form) && o.state === 'counted' && o.values[spec.metric] !== null).map(o => [o.form + '|' + o.task, o]));
   const ma = pick(spec.a), mb = pick(spec.b);
   const pairs: PairedItem[] = [];
-  for (const [k, oa] of ma) { const ob = mb.get(k); if (ob) pairs.push({ id: k, cluster: oa.task, a: oa.values[spec.metric] as number, b: ob.values[spec.metric] as number }); }
+  for (const [k, oa] of ma) { const ob = mb.get(k); if (ob) pairs.push({ id: k, cluster: oa.cluster, a: oa.values[spec.metric] as number, b: ob.values[spec.metric] as number }); }
   const forms = spec.form === POOLED ? FORMS : [spec.form];
   const invalid = forms.some(f => invalidCells.has(f + '|' + spec.a + '|' + spec.model) || invalidCells.has(f + '|' + spec.b + '|' + spec.model));
   const head = { id: spec.id, primary: spec.primary ?? null, form: spec.form, model: spec.model, a: spec.a, b: spec.b, metric: spec.metric, untested: invalid };
@@ -196,7 +235,7 @@ function compare(spec: Spec, rows: Outcome[], invalidCells: Set<string>) {
     worse_tasks: [...byTask.values()].filter(x => x < 0).length,
     reading: (!ci ? null : ci[0] <= 0 && ci[1] >= 0 ? 'no_measurable_difference' : ci[0] > 0 ? 'b_higher' : 'b_lower') as Reading,
     mcnemar: m ? { wins: m.wins, losses: m.losses, discordant: m.discordant, p_two_sided: round(m.p_two_sided) } : null,
-    p_two_sided: round(m ? m.p_two_sided : d.p_two_sided), p_holm: null as number | null, mde: round(powerNote(d, { binary: true }).mde),
+    p_two_sided: round(m ? exactClusterSignFlip(d.sign_flip.sums) : d.p_two_sided), p_holm: null as number | null, mde: round(powerNote(d, { binary: true }).mde),
   };
 }
 
@@ -359,6 +398,7 @@ export function buildTaskScorecard(s: ScoreInput) {
     return j?.derived && j2.derived ? [[j.derived.correct ? 1 : 0, j2.derived.correct ? 1 : 0] as [number, number]] : [];
   });
   const byType = Object.fromEntries(TYPES.map(t => [t, s.tasks.filter(x => x.type === t).length]));
+  const goldClustersAtRun = goldClusterSummary(s.tasks);
   const byOrigin = Object.fromEntries(ORIGINS.map(origin => {
     const ts = s.tasks.filter(t => (t.source_question === null ? 'replacement' : 'phase1_question') === origin);
     const ids = new Set(ts.map(t => t.id));
@@ -370,7 +410,7 @@ export function buildTaskScorecard(s: ScoreInput) {
     status: s.stop === null && rows.every(o => o.exclusion !== 'not_run' && o.exclusion !== 'unjudged') ? 'complete' : 'incomplete',
     stop: s.stop,
     run: s.identity,
-    tasks: { ...s.task_summary, kept_at_run: s.tasks.length, by_type: byType, gold_found_by: Object.fromEntries(['page_first', 'memory', 'gbrain_search', 'other_search', 'unknown'].map(g => [g, s.tasks.filter(t => t.gold_found_by === g).length])), mdd_primaries: primaryMdd(s.task_summary.n_frozen) },
+    tasks: { ...s.task_summary, kept_at_run: s.tasks.length, by_type: byType, gold_found_by: Object.fromEntries(['page_first', 'memory', 'gbrain_search', 'other_search', 'unknown'].map(g => [g, s.tasks.filter(t => t.gold_found_by === g).length])), gold_clusters: goldClustersAtRun, mdd_primaries: primaryMdd(goldClustersAtRun.n) },
     cost: {
       model_calls_usd: round(Object.values(roleTotals).reduce((x, y) => x + y, 0)),
       by_role_usd: { answer: round(roleTotals.answer), summariser: round(roleTotals.summariser), judge: round(roleTotals.judge), second_judge: round(roleTotals.second_judge), label: round(roleTotals.label) },
@@ -394,7 +434,7 @@ const countBy = (xs: string[]) => xs.reduce<Record<string, number>>((m, x) => { 
 
 const KEY_WORDS = new Set<string>([
   'schema', 'status', 'stop', 'run', 'tasks', 'cost', 'cells', 'comparisons', 'by_origin', ...ORIGINS, 'judge_agreement', 'custody',
-  'submitted', 'kept_at_freeze', 'dropped_unreachable', 'gold_missing_at_run', 'sha_prefix', 'n_frozen', 'kept_at_run', 'by_type', 'gold_found_by', 'mdd_primaries',
+  'submitted', 'kept_at_freeze', 'dropped_unreachable', 'gold_missing_at_run', 'sha_prefix', 'n_frozen', 'kept_at_run', 'by_type', 'gold_found_by', 'gold_clusters', 'shared', 'mdd_primaries',
   'pd10', 'pd20', 'pd30', 'alpha_05', 'holm_0125', ...TYPES, 'page_first', 'memory', 'gbrain_search', 'other_search', 'unknown',
   'model_calls_usd', 'by_role_usd', 'ledger_usd', 'other_usd', 'answer', 'summariser', 'judge', 'second_judge',
   ...FORMS, POOLED, ...ARMS, ...MODELS,
@@ -479,7 +519,7 @@ export function renderTaskMarkdown(s: ReturnType<typeof buildTaskScorecard>): st
   const run = s.run as Record<string, unknown>;
   L.push('# Live recall phase 2 task scorecard', '');
   L.push('Status: ' + s.status + (s.stop ? ' (' + s.stop + ')' : '') + '. gbrain ' + String(run.gbrain_loaded_version) + ' at ' + String(run.gbrain_loaded_commit) + ', barrier ' + String(run.barrier) + ', runner ' + String(run.runner_commit) + (run.control ? '. Fixture control: these numbers say nothing about Garry\'s brain.' : '.'), '');
-  L.push('Tasks: ' + s.tasks.kept_at_run + ' kept at run (' + s.tasks.n_frozen + ' frozen, ' + s.tasks.dropped_unreachable + ' dropped at the freeze as unreachable to a remote caller, ' + s.tasks.gold_missing_at_run + ' lost since).', '');
+  L.push('Tasks: ' + s.tasks.kept_at_run + ' kept at run (' + s.tasks.n_frozen + ' frozen, ' + s.tasks.dropped_unreachable + ' dropped at the freeze as unreachable to a remote caller, ' + s.tasks.gold_missing_at_run + ' lost since), in ' + s.tasks.gold_clusters.n + ' gold clusters' + (s.tasks.gold_clusters.shared.length ? ' (' + s.tasks.gold_clusters.shared.length + ' hold tasks that share a gold page, sizes ' + s.tasks.gold_clusters.shared.join(', ') + ')' : '') + '. Intervals and p-values treat each gold cluster as one unit.', '');
   const para = (s.cells as any).paraphrase;
   if (para) {
     L.push('## Primary models, paraphrase form', '', '| Arm | Model | Correct % (95% CI) | Correct and grounded % | Answer cost per correct |', '|---|---|---|---|---|');
@@ -489,7 +529,7 @@ export function renderTaskMarkdown(s: ReturnType<typeof buildTaskScorecard>): st
     }
     L.push('');
   }
-  L.push('## Primary comparisons (paraphrase form, Holm over four)', '', '| Comparison | Pairs | A | B | B − A (95% CI) | Reading | Tasks worse | McNemar p | Holm p | Observed MDE |', '|---|---|---|---|---|---|---|---|---|---|');
+  L.push('## Primary comparisons (paraphrase form, Holm over four)', '', '| Comparison | Pairs | A | B | B − A (95% CI) | Reading | Tasks worse | Exact p (gold clusters) | Holm p | Observed MDE |', '|---|---|---|---|---|---|---|---|---|---|');
   for (const c of s.comparisons.filter(c => c.primary)) L.push('| ' + c.id + (c.untested ? ' (untested)' : '') + ' | ' + c.n_pairs + ' | ' + pct(c.mean_a) + ' | ' + pct(c.mean_b) + ' | ' + pct(c.delta) + (Array.isArray(c.ci95) ? ' (' + pct(c.ci95[0]) + ' to ' + pct(c.ci95[1]) + ')' : '') + ' | ' + readingText(c) + ' | ' + (c.worse_tasks ?? 'n/a') + ' | ' + (c.p_two_sided ?? 'n/a') + ' | ' + (c.p_holm ?? 'n/a') + ' | ' + pct(c.mde) + ' |');
   L.push('', '## Phase 1 questions against replacement tasks (descriptive)', '');
   const origins = s.by_origin as Record<string, { n_tasks: number; by_type: Record<string, number>; comparisons: typeof s.comparisons }>;

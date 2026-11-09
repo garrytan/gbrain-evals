@@ -16,7 +16,8 @@ import { isCapStop, openBudgetItem } from '../../eval/runner/refresh-barrier/led
 import { buildFixtureBrain, useFixtureTransports } from '../../eval/runner/live-recall/run.ts';
 import { ANSWER_TOOL, PROMPTS, SUMMARY_TOOL, citedSlugs, judgeEpisode, openReader, runEpisode, type AnswerRecord, type EpisodeContext, type Task } from '../../eval/runner/live-recall/task-arms.ts';
 import { JUDGE_SYSTEM, LABELLERS, VERDICT_TOOL, assertJudge, derive, judgeFor, parseVerdict, secondJudgeFor } from '../../eval/runner/live-recall/task-judge.ts';
-import { JUDGE_CHECK_SCHEMA, TRUNCATION_CAP, buildTaskScorecard, renderTaskMarkdown, checkOutbound, judgeCheck, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
+import { JUDGE_CHECK_SCHEMA, SEED, TRUNCATION_CAP, buildTaskScorecard, renderTaskMarkdown, checkOutbound, exactClusterSignFlip, goldClusterSummary, goldClusters, judgeCheck, mdd, primaryMdd, taskNeedles, validateTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
+import { clusteredPairedDelta, exactMcNemar } from '../../eval/runner/stats/paired.ts';
 import {
   FIXTURE_TASKS, HARNESS_FILES, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, TRUNCATION_FLOOR, assertPrivate, checkTruncation, truncationWaivers, estimateCost, freezeSummary, goldCheck, harnessDigest, judgeRunDir, labelsShort, ledgerRunner,
   loadRecords, parseTasks, readJudgeCheck, runJudgeCheck, runTaskSet, scoreRunDir, spread, watchRefusals, writeFreeze, writeJudgeCheck, type Paid, type RunRecord,
@@ -234,6 +235,9 @@ describe('phase 2 privacy posture on the fixture (keyless)', () => {
     expect(dropped).toBe(1);
     const summary = freezeSummary(fixtureText, parsed, kept, gut);
     expect([summary.n_submitted, summary.n_kept, summary.dropped_unreachable]).toEqual([21, 20, 1]);
+    expect(summary.gold_clusters).toEqual(goldClusterSummary(kept.map(k => k.task)));
+    expect(summary.gold_clusters.n).toBeLessThan(20);
+    expect(summary.mdd_primaries).toEqual(primaryMdd(summary.gold_clusters.n));
     expect(summary.kept_lines).not.toContain(parsed.find(t => t.task.gold_pages.includes(PRIVATE_SLUG))!.line);
     expect(JSON.stringify(summary)).not.toContain(PRIVATE_SLUG);
   });
@@ -1153,6 +1157,44 @@ describe('phase 2 judge check (R78)', () => {
     expect(md).toContain('## Phase 1 questions against replacement tasks (descriptive)');
     expect(md).toContain('Replacement tasks (source_question null): 10 tasks (identifier 0, error_string 0, time_window 0, cross_source 10, topic 0).');
     expect(md.find(l => l.startsWith('| p1_b_vs_a_opus (phase1_question) '))).toContain('| 20 | 20 | 25.0 | 100.0 |');
+  });
+
+  test('tasks that share a gold page are one resampling unit in every interval and p-value', () => {
+    const ids = Array.from({ length: 20 }, (_, i) => 't' + String(i).padStart(2, '0'));
+    const tasks = ids.map((id, i) => ({ id, type: 'cross_source', source_question: null, gold_pages: i < 10 ? ['media/m' + i, 'civic/shared-' + Math.floor(i / 2)] : ['media/m' + i], gold_found_by: 'unknown' })) as any;
+    const clusters = goldClusters(tasks);
+    expect([clusters.get('t00'), clusters.get('t01'), clusters.get('t02'), clusters.get('t03'), clusters.get('t10')]).toEqual(['t00', 't00', 't02', 't02', 't10']);
+    expect(goldClusterSummary(tasks)).toEqual({ n: 15, shared: [2, 2, 2, 2, 2] });
+    expect(goldClusters([{ id: 'b', gold_pages: ['x'] }, { id: 'c', gold_pages: ['x', 'y'] }, { id: 'a', gold_pages: ['y'] }] as any)).toEqual(new Map([['b', 'a'], ['c', 'a'], ['a', 'a']]));
+    const card = buildTaskScorecard({
+      tasks, forms: ['paraphrase'], arms: ['A', 'B'], models: ['claude-opus-5-5'], identity: {}, stop: null, ledger_usd: null, audit: null,
+      records: tasks.flatMap((t: any, i: number) => [answer(t.id, 'A', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'A', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', false), answer(t.id, 'B', 'claude-opus-5-5'), verdict('judge', ['paraphrase', t.id, 'B', 'claude-opus-5-5'].join('|'), 'gpt-6-astra', i < 10)]),
+      task_summary: { submitted: 20, kept_at_freeze: 20, dropped_unreachable: 0, gold_missing_at_run: 0, sha_prefix: '0'.repeat(12), n_frozen: 20 },
+      custody: { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: {} },
+    });
+    expect(() => validateTaskScorecard(card)).not.toThrow();
+    const p1 = card.comparisons.find(c => c.id === 'p1_b_vs_a_opus')!;
+    const pairs = (cluster: (id: string) => string) => ids.map((id, i) => ({ id: 'paraphrase|' + id, cluster: cluster(id), a: 0, b: i < 10 ? 1 : 0 }));
+    const byGold = clusteredPairedDelta(pairs(id => clusters.get(id)!), { seed: SEED, draws: 10_000 });
+    const byTask = clusteredPairedDelta(pairs(id => id), { seed: SEED, draws: 10_000 });
+    const r4 = (x: number) => Math.round(x * 1e4) / 1e4;
+    expect(p1.ci95).toEqual(byGold.ci95!.map(r4));
+    expect(p1.ci95).not.toEqual(byTask.ci95!.map(r4));
+    expect([p1.mcnemar!.wins, p1.mcnemar!.p_two_sided, p1.p_two_sided]).toEqual([10, 0.002, 0.0625]);
+    const bRate = (card.cells as any).paraphrase.B['claude-opus-5-5'].rates.correct;
+    expect([bRate.k, bRate.n, bRate.point]).toEqual([10, 20, 0.5]);
+    expect(bRate.ci95[1] - bRate.ci95[0]).toBeGreaterThan(0.45);
+    expect([card.tasks.gold_clusters, card.tasks.mdd_primaries]).toEqual([{ n: 15, shared: [2, 2, 2, 2, 2] }, primaryMdd(15)]);
+    expect(renderTaskMarkdown(card)).toContain('in 15 gold clusters (5 hold tasks that share a gold page, sizes 2, 2, 2, 2, 2)');
+  });
+
+  test('the exact sign-flip over gold clusters is exact McNemar when every cluster is one task', () => {
+    for (let wins = 0; wins <= 14; wins++) for (let losses = 0; losses <= 14; losses++) {
+      const pairs = [...Array(wins).fill([0, 1]), ...Array(losses).fill([1, 0]), [1, 1], [0, 0]].map(([a, b], i) => ({ id: 'x' + i, cluster: 'x' + i, a, b }));
+      expect(exactClusterSignFlip(pairs.map(p => p.b - p.a))).toBe(exactMcNemar(pairs).p_two_sided);
+    }
+    expect(exactClusterSignFlip([2, 1])).toBe(0.5);
+    expect(exactClusterSignFlip([2, -2, 0])).toBe(1);
   });
 
   test('a fixture judge check labels every answer with both labellers at effort high after its counted judge, with no second judge', async () => {

@@ -463,7 +463,8 @@ Beside the judge check, two descriptive checks of the judge, because no one on o
 
 Per form, arm and model, and with both forms pooled: the share of counted episodes that are correct, correct and
 grounded, partial, abstained, with no submitted answer, confidently wrong, and contradicted, each with a Wilson 95%
-interval (a cluster bootstrap over tasks when forms are pooled, 10,000 draws, seed 20261108). Also: citations per
+interval (a cluster bootstrap over gold clusters when forms are pooled or when any gold cluster holds more than one
+task, 10,000 draws, seed 20261108; see the gold-cluster amendment under Comparisons). Also: citations per
 answer and the supported share; exposure (the share of episodes that searched, that saw a gold page among search
 results, that opened a gold page, that cited one; for C whether the summary cited one; for D whether a gold page was
 among the five pasted); turns and tool calls; latency p50 and p95; tokens by kind; exclusions by reason; cost by role
@@ -482,8 +483,9 @@ particle-1 on the paraphrase form with answer cost per correct answer.
 | p2_c_vs_b_particle | C minus B | correct and grounded | particle-1 |
 
 Each reports the paired difference with a cluster-bootstrap 95% interval, the number of tasks that got worse (the
-second arm below the first on that task, both forms summed when pooled) and the exact McNemar two-sided p, then Holm's
-adjusted p. An interval that includes zero reads "no measurable difference". A primary, which sits in the Holm family
+second arm below the first on that task, both forms summed when pooled) and the exact McNemar two-sided p (an exact
+sign-flip test over gold clusters since the gold-cluster amendment below, which is McNemar when no gold page is
+shared), then Holm's adjusted p. An interval that includes zero reads "no measurable difference". A primary, which sits in the Holm family
 of four, reads as a measured difference only when its interval excludes zero and its Holm-adjusted p is under 0.05; an interval that excludes zero with a Holm p of 0.05 or more reads "not
 significant after correcting for multiple comparisons". Descriptive comparisons, outside any Holm family, read from the
 interval alone, and the markdown marks the descriptive copy of each primary so it is read with the primary's Holm
@@ -492,6 +494,19 @@ result. A primary whose cell is invalid (below) is reported untested and enters 
 **Descriptive**, with intervals, tasks worse, the same reading and unadjusted p: for each model and for the paraphrase form, the exact form and both
 pooled, B minus A on correct, C minus B on correct and grounded and on plain correctness, and D minus B on correct and on
 correct and grounded. gpt-6.1-sol, the exact form, pooled forms, D, task types and every other cell are descriptive.
+
+**Gold clusters as the resampling unit (amendment, 2026-11-09, GBEV-3, before the second freeze and any counted
+call).** The rebuilt task file has 8 civic pages that each serve as gold for two cross_source tasks, so 16 tasks are
+not independent. Tasks that share any gold page, directly or through other tasks, form one gold cluster; every other task
+is its own cluster. The plan expects about 92 clusters from 100 tasks. The gold cluster replaces the task as the unit in
+every interval and test: the cluster bootstrap behind every comparison's interval (primary, descriptive and by origin),
+the rates' intervals (a cluster bootstrap whenever a cluster holds more than one task; Wilson otherwise), and the per-form
+p that Holm adjusts, which becomes the exact two-sided sign-flip test over clusters' summed differences. With one task
+per cluster that test is the exact McNemar test, so nothing changes for a task file where no gold page is shared. The
+`mcnemar` block keeps its task-level wins, losses and p as a descriptive count. The freeze and the scorecard record the
+number of gold clusters and the sizes of those holding more than one task, and compute the minimum detectable
+differences at the cluster count: at 92 clusters, 13.1 points at alpha 0.05 and 15.6 at Holm's 0.0125 for 20%
+discordant pairs (12.5 and 14.9 at 100 independent tasks). The second freeze's entry records the actual count.
 
 **By task origin (amendment, 2026-11-09, GBEV-3, before the second freeze).** The four primaries are also computed on
 each group of tasks alone: tasks from a phase 1 question (`source_question` set) and replacement tasks
@@ -523,6 +538,8 @@ Paired binary outcome, two-sided, 80% power, in points; Holm's tightest level is
 | Same, 30% discordant | 19.8 / 23.7 | 15.4 / 18.3 |
 | Descriptive, both forms pooled, 20% discordant | 11.5 to 16.2 | 8.9 to 12.5 |
 | One task type alone (N / 5 tasks), 20% discordant | about 36 | about 28 |
+
+Since the gold-cluster amendment (Comparisons), N in this table is the number of gold clusters, not tasks.
 
 A single rate near 50% at n = 100 has a Wilson interval of about plus or minus 10 points. B minus A is expected to be
 large, because the tasks ask for private facts, so P1 is well powered. C minus B is the test most likely to sit near its
@@ -793,12 +810,12 @@ submitted, N kept, the count dropped as unreachable, counts by type, the task fi
 detectable differences for the four primaries at the kept N, and the counted run's runner commit and harness digest.
 
 **Counted-run identity (recorded 2026-11-08, before the freeze; updated the same day for R78 and again for the label
-floor and truncation rules, and on 2026-11-09 for the split by task origin).** The counted run's and the judge check's
-harness digest must be `0a3ec5b6f7367fae0ab7852e525cce2af71a68893fda3e7463279d166492786b`. The digest covers the twenty files in
+floor and truncation rules, and on 2026-11-09 for the split by task origin and for gold clusters).** The counted run's and the judge check's
+harness digest must be `e6e0f2d147991999b88744754ee38b63aa6ab0b1cdc182f73d347e43a9d65616`. The digest covers the twenty files in
 `HARNESS_FILES` (`eval/runner/live-recall/tasks.ts`): the runner, the judge, the agent loop, the budget ledger and the
 cost path they price with, including the OpenAI cache-write fix in `eval/runner/q1/usage.ts` (320db88b). Its `run.json`
-must also show a `runner_commit` that contains 320db88b, the R78 commit, the label-floor and truncation commit and the
-task-origin commit, and `runner_dirty: false`.
+must also show a `runner_commit` that contains 320db88b, the R78 commit, the label-floor and truncation commit, the
+task-origin commit and the gold-cluster commit, and `runner_dirty: false`.
 
 **First freeze and rebuild (recorded 2026-11-09, before the second freeze).** The first freeze, at 2d409a0c on gbrain
 0.60.613.0, kept 38 of 100 tasks (exit 5). 40 of the 109 distinct gold pages opened to a remote caller. Wintermute
@@ -810,7 +827,9 @@ cross_source 0, topic 4. GBEV-3 (agent:GBEV-3) chose to rebuild, and rejected bo
 and running at 38. Wintermute keeps the 38, corrects the 3 slugs to the exact live slugs (the harness matches gold slugs
 exactly, in exposure scoring as well as at the freeze), and replaces the rest with new tasks of the same type
 (`source_question` null), chosen by type and remote reachability only, before any model or judge call, to 100 at 20 per
-type. The harness is unchanged except for the descriptive split by task origin (Comparisons). The second freeze's
+type, with at most two uses of any civic page in cross_source and the one remaining error_string replacement drawn from
+public engineering-doc folders. The harness is unchanged except for the descriptive split by task origin and the gold
+cluster as the resampling unit (both under Comparisons). The second freeze's
 entry here shows, for each type, how many tasks came from a phase 1 question and how many are replacements.
 
 ## Disclosures

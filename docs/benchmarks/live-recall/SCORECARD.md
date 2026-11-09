@@ -152,8 +152,10 @@ Top level:
   `window_note`, concurrency, `openai_store` and `truncation_waivers` (each GBEV-3 note that lifted a truncation stop:
   `note`, `by` `agent:GBEV-3`, `at`, and `waived`, the truncated counted-judge calls it covered by model and effort).
 - `tasks`: submitted, kept at the freeze, dropped as unreachable, lost since the freeze, kept at the run, the task file's
-  sha256 prefix, N frozen, counts by type and by how each gold page was found, and `mdd_primaries` (the minimum
-  detectable difference at N frozen for 10%, 20% and 30% discordant pairs, at alpha 0.05 and at Holm's 0.0125).
+  sha256 prefix, N frozen, counts by type and by how each gold page was found, `gold_clusters` (`n`, the number of gold
+  clusters among the tasks scored, where tasks sharing any gold page form one cluster, and `shared`, the sizes of the
+  clusters holding more than one task, largest first), and `mdd_primaries` (the minimum detectable difference at that
+  cluster count for 10%, 20% and 30% discordant pairs, at alpha 0.05 and at Holm's 0.0125).
 - `cost`: `model_calls_usd` and `by_role_usd` (answer, summariser, judge, second judge, and `label` for a judge-check
   run's labellers), each priced from the response's
   usage at the ledger's list prices; `ledger_usd`, the ledger's total for this run directory's own ledger run across
@@ -163,19 +165,21 @@ Top level:
   `model_errors` (counted no-answers from a model-caused 400), `excluded` by reason (`harness_error`, `timed_out`, `degraded`, `judge_error`, `unjudged`, `not_run`), `invalid` and
   `invalid_reason` (`errors_over_cap` or `degraded_over_cap`), and `rates`: `correct`, `correct_grounded` (null for A),
   `partial`, `abstained`, `no_answer`, `confidently_wrong` and `contradicted`, each as `k`, `n`, `point` and `ci95` (Wilson;
-  a cluster bootstrap over tasks when pooled). Then `citations` (mean per answer, supported share), `exposure` (shares
+  a cluster bootstrap over gold clusters when pooled or when any gold cluster holds more than one task). Then `citations` (mean per answer, supported share), `exposure` (shares
   that `searched`, saw, opened and cited a gold page, `summary_gold_cited` for C and `pasted_gold` for D), turns and tool
   calls per episode, latency p50 and p95 in milliseconds, `tokens` by kind, `cost_usd` by role and
   `answer_cost_per_correct_usd`. Pooled cells carry no tokens or cost.
 - `comparisons`: the four primaries (`primary` `P1` or `P2`) and the descriptive set. Each has its id, form, model, arms
-  `a` and `b`, metric, `untested`, `n_pairs`, `mean_a`, `mean_b`, `delta` (b minus a), `ci95` (cluster bootstrap),
-  `worse_tasks` (tasks where b scored below a, both forms summed when pooled), `reading` (`no_measurable_difference`
+  `a` and `b`, metric, `untested`, `n_pairs`, `mean_a`, `mean_b`, `delta` (b minus a), `ci95` (cluster bootstrap over
+  gold clusters), `worse_tasks` (tasks where b scored below a, both forms summed when pooled), `reading` (`no_measurable_difference`
   when the interval includes zero, else `b_higher` or `b_lower`; a primary whose interval excludes zero but whose
   `p_holm` is 0.05 or more reads `not_significant_after_correction`, so it never reads as a difference Holm does not
   support; the markdown marks the descriptive copy of each primary),
   `mcnemar`
-  (wins, losses, discordant pairs, exact two-sided p; per form only), `p_two_sided`, `p_holm` (primaries only, Holm over
-  the four) and `mde` (the observed minimum detectable difference).
+  (task-level wins, losses, discordant pairs and exact two-sided p; per form only, descriptive), `p_two_sided` (per form,
+  the exact two-sided sign-flip test over gold clusters, which equals the exact McNemar p when every cluster is one task;
+  pooled, the cluster sign-flip test), `p_holm` (primaries only, Holm over the four, from `p_two_sided`) and `mde` (the
+  observed minimum detectable difference, from the cluster-robust standard error).
 - `by_origin`: `phase1_question` (tasks with a `source_question`) and `replacement` (tasks with `source_question` null),
   each with `n_tasks`, `by_type` and `comparisons`, the four primaries computed on that group alone, in the same shape
   with `primary` and `p_holm` null and the reading taken from the interval. Descriptive only.
