@@ -11,7 +11,9 @@
  * identifier-like token (identifierTokens in run.ts) shared with the exact
  * form. A reply that breaks the rule gets one retry; a second break leaves the
  * id out, and the generator then refuses the file by that id. Feed the output
- * back with conditions-recall-gen.ts --paraphrases <file>.
+ * back with conditions-recall-gen.ts --paraphrases <file>. A batch-3 directory
+ * from eval/generators/batch3-synthetic-gen.ts works the same way and takes
+ * the file back through batch3-synthetic-gen.ts --paraphrases <file>.
  *
  * It spends money, so requirePaidArm (paid-arm.ts) refuses it without --paid
  * and --budget-run-id naming an open budget-ledger run, before any client or
@@ -63,8 +65,8 @@ export async function main(argv: string[], deps: { makeClient?: () => Client } =
     console.error('usage: bun eval/runner/live-recall/paraphrase-opus.ts --dir <generated dir> --out <paraphrases.jsonl> --paid --budget-run-id <id>');
     return 2;
   }
-  const { pages, questionsText } = readSyntheticDir(dir);
-  const questions = parseQuestions(questionsText);
+  const { pages, questionsText, protocol } = readSyntheticDir(dir);
+  const questions = parseQuestions(questionsText, protocol);
   const paid = (() => {
     try {
       const estimateUsd = questions.length * ESTIMATE_USD_PER_QUESTION;

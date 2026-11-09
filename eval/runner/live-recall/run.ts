@@ -5,7 +5,7 @@
  * scorecard leaves that box.
  *
  *   bun eval/runner/live-recall/run.ts run --fixture
- *   bun eval/runner/live-recall/run.ts run --synthetic <dir from eval/generators/conditions-recall-gen.ts> [--out <dir>]
+ *   bun eval/runner/live-recall/run.ts run --synthetic <dir from eval/generators/conditions-recall-gen.ts or batch3-synthetic-gen.ts> [--protocol batch3] [--out <dir>]
  *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json> [--protocol batch1|batch2|batch3] [--gbrain <checkout>@<commit>]
  *   bun eval/runner/live-recall/run.ts run --questions <private.jsonl> --freeze <freeze.json> \
  *     --gbrain <gbrain checkout>@<commit> [--database-url-env LIVE_RECALL_DATABASE_URL] [--out <dir>]
@@ -420,6 +420,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     const { buildSyntheticBrain } = await import('./synthetic.ts');
     synthetic = await buildSyntheticBrain(o.gut, o.synthetic);
     questionsText = synthetic.questionsText;
+    if (!o.protocol && synthetic.protocol) protocol = synthetic.protocol;
   } else if (o.fixture) questionsText = readFileSync(o.questionsPath ?? (protocol === 'batch3' ? BATCH3_FIXTURE_QUESTIONS : join(FIXTURE_DIR, 'questions.jsonl')), 'utf8');
   else {
     if (!o.questionsPath || !o.freezePath) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'a counted run needs --questions and --freeze');

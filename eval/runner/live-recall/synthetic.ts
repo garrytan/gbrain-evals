@@ -1,6 +1,9 @@
 /**
  * Synthetic live-recall brain (GBEV-55 G2): builds an in-process PGLite brain
- * from a directory written by eval/generators/conditions-recall-gen.ts, with
+ * from a directory written by eval/generators/conditions-recall-gen.ts (schema
+ * conditions-recall/v1) or eval/generators/batch3-synthetic-gen.ts (schema
+ * live-recall-b3-synthetic/v1, batch 3's freshness and entity questions under
+ * the batch3 protocol, with gbrain's default knobs), with
  * the keyless fixture transports (hash embeddings and a token-overlap
  * reranker), applies the directory's recorded knobs, then marks it as a copy
  * and sets it read-only exactly like buildFixtureBrain in run.ts, so the six
@@ -23,7 +26,8 @@
  *   - shell pages are already in the page files.
  *
  * The directory's digest is recomputed before anything is built; a directory
- * edited after generation is refused.
+ * edited after generation is refused. Every gold page, and on a batch-3
+ * directory every stale page, must be in the directory.
  */
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -32,6 +36,10 @@ import { importGbrain, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { COPY_MARKER_TABLE } from './brain.ts';
 import { parseQuestions, useFixtureTransports } from './run.ts';
 import { SCHEMA, corpusDigest, validateKnobs, type Manifest, type Page } from '../../generators/conditions-recall-gen.ts';
+import { B3_SCHEMA, batch3Digest, type Batch3Manifest } from '../../generators/batch3-synthetic-gen.ts';
+import type { Protocol } from './scorecard.ts';
+
+export type SyntheticManifest = Manifest | Batch3Manifest;
 
 export interface SyntheticApplied {
   chunks: number;
@@ -48,22 +56,26 @@ function walkPages(dir: string, root = dir): Page[] {
   });
 }
 
-/** Read and check a generated directory: schema, knobs, digest, and gold pages present. */
-export function readSyntheticDir(dir: string): { manifest: Manifest; pages: Page[]; questionsText: string } {
-  const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as Manifest;
-  if (manifest?.schema !== SCHEMA) throw new Error('synthetic: ' + dir + ' has no ' + SCHEMA + ' manifest');
+/** Read and check a generated directory: schema, knobs, digest, and gold (and batch-3 stale) pages present. protocol is set for a batch-3 directory. */
+export function readSyntheticDir(dir: string): { manifest: SyntheticManifest; pages: Page[]; questionsText: string; protocol?: Protocol } {
+  const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as SyntheticManifest;
+  const batch3 = manifest?.schema === B3_SCHEMA;
+  if (!batch3 && manifest?.schema !== SCHEMA) throw new Error('synthetic: ' + dir + ' has no ' + SCHEMA + ' or ' + B3_SCHEMA + ' manifest');
   const knobs = validateKnobs(manifest.knobs);
   const pages = walkPages(join(dir, 'pages'));
   const questionsText = readFileSync(join(dir, 'questions.jsonl'), 'utf8');
-  const digest = corpusDigest(knobs, pages, questionsText);
+  const digest = (batch3 ? batch3Digest : corpusDigest)(knobs, pages, questionsText);
   if (digest !== manifest.digest) throw new Error('synthetic: ' + dir + ' does not match its manifest digest (expected ' + manifest.digest + ', got ' + digest + '); regenerate it');
   const slugs = new Set(pages.map(p => p.slug));
-  for (const q of parseQuestions(questionsText)) for (const g of q.gold) if (!slugs.has(g.slug)) throw new Error('synthetic: question ' + q.id + ' has no gold page');
-  return { manifest: { ...manifest, knobs }, pages, questionsText };
+  for (const q of parseQuestions(questionsText, batch3 ? 'batch3' : undefined)) {
+    for (const g of q.gold) if (!slugs.has(g.slug)) throw new Error('synthetic: question ' + q.id + ' has no gold page');
+    for (const s of q.stale ?? []) if (!slugs.has(s.slug)) throw new Error('synthetic: question ' + q.id + ' has no stale page');
+  }
+  return { manifest: { ...manifest, knobs }, pages, questionsText, ...(batch3 ? { protocol: 'batch3' as const } : {}) };
 }
 
-export async function buildSyntheticBrain(gut: GbrainUnderTest, dir: string): Promise<{ engine: any; close: () => Promise<void>; questionsText: string; manifest: Manifest; applied: SyntheticApplied }> {
-  const { manifest, pages, questionsText } = readSyntheticDir(dir);
+export async function buildSyntheticBrain(gut: GbrainUnderTest, dir: string): Promise<{ engine: any; close: () => Promise<void>; questionsText: string; manifest: SyntheticManifest; protocol?: Protocol; applied: SyntheticApplied }> {
+  const { manifest, pages, questionsText, protocol } = readSyntheticDir(dir);
   const { knobs, seed } = manifest;
   const reset = await useFixtureTransports(gut);
   const { PGLiteEngine } = await importGbrain<any>(gut, 'src/core/pglite-engine.ts');
@@ -105,6 +117,7 @@ export async function buildSyntheticBrain(gut: GbrainUnderTest, dir: string): Pr
       engine,
       questionsText,
       manifest,
+      ...(protocol ? { protocol } : {}),
       applied: { chunks: chunks.length, unembedded_chunks: cleared.length, contextual_retrieval_mode: modes.map(m => m.mode), keyword_candidate_bound: bound },
       close: async () => {
         reset();

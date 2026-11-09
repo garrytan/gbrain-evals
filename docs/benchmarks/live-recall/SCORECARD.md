@@ -46,7 +46,8 @@ source's). Versions are `null` unless they are plain version numbers; `pgvector_
 four copy fields are `null` when unknown or not a copy. Under `batch3` only, `run` also carries `visibility_epoch`
 (`pre_gbra_398`, `post_gbra_398` or `unknown`, from the loaded gbrain version), `freeze_gbrain_version` and
 `freeze_visibility_epoch` (from the freeze; `null` on the fixture). A `run --synthetic <dir>` control (a conditions-recall
-brain from `eval/generators/conditions-recall-gen.ts`) also carries `run.synthetic`: the directory's `digest` and
+brain from `eval/generators/conditions-recall-gen.ts`, or a batch-3 brain from `eval/generators/batch3-synthetic-gen.ts`
+built from the G1 freshness and G4 entity worlds, which runs under `batch3`) also carries `run.synthetic`: the directory's `digest` and
 `questions_sha256`, its knobs (`unembedded_chunk_share`, `synopsis_vectors_off`, `keyword_candidate_bound`,
 `shell_page_share`) and what the builder applied (`chunks`, `unembedded_chunks`).
 
