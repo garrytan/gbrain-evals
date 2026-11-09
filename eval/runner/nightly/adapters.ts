@@ -122,7 +122,7 @@ export const CAT40 = {
   knobs: join(REPO, 'docs/benchmarks/cat40-hard/knobs.frozen.json'), seed: 20261021, label: 'gbrain-hard', judge: 'gpt-6.1-sol', slots: 5, concurrency: 10,
 };
 
-/** The Cat 40 runner's commands for one night: the world (free), the slot build and the cells, scripted on a fake night. */
+/** The Cat 40 runner's commands for one night: the world (free), one slot build per slot (run side by side), and the cells, scripted on a fake night. */
 export function cat40Commands(run: SuiteRun, ctx: NightContext, world: string, dirs: { root: string; slots: string; cells: string }) {
   const build = ['--world', world, '--gbrain-repo', ctx.clone, '--gbrain-ref', ctx.sha, '--gbrain-root', dirs.root, '--slots', String(CAT40.slots)];
   const keyless = ctx.fake ? ['--scripted', '--keyless-slots'] : [];
@@ -131,7 +131,8 @@ export function cat40Commands(run: SuiteRun, ctx: NightContext, world: string, d
   return {
     world: [bun(CAT40.generator, '--mode', 'hard', '--seed', String(CAT40.seed), '--knobs', CAT40.knobs, '--out', join(dirname(dirname(world)), 'base-4k')),
       bun(CAT40.generator, '--mode', 'hard', '--seed', String(CAT40.seed), '--knobs', CAT40.knobs, '--scale', 'large', '--base-world', join(dirname(dirname(world)), 'base-4k', 'world.json'), '--out', dirname(world))],
-    slots: bun(CAT40.runner, '--build-slots', ...build, ...keyless, ...(ctx.fake ? [] : ['--slot-build-allowance-usd', String(ctx.cat40SlotAllowanceUsd)]), ...paid, '--out', dirs.slots),
+    slots: Array.from({ length: CAT40.slots }, (_, i) => bun(CAT40.runner, '--build-slots', ...build, '--build-slot-ids', String(i), ...keyless,
+      ...(ctx.fake ? [] : ['--slot-build-allowance-usd', String(ctx.cat40SlotAllowanceUsd)]), ...paid, '--out', join(dirs.slots, `slot${i}`))),
     cells: bun(CAT40.runner, ...build, '--arms', 'gbrain', '--gbrain-label', CAT40.label, '--tasks', run.items.map(i => i.id).join(','), '--repeat', String(run.k),
       '--concurrency', String(CAT40.concurrency), '--transcripts', ...keyless,
       ...(ctx.fake ? [] : ['--models', run.readers.filter((r): r is string => r !== null).join(','), '--judge', CAT40.judge]), ...paid, '--out', dirs.cells),
@@ -177,8 +178,9 @@ export const cat40Adapter: Adapter = async (run, ctx) => {
     return r.code === 0 ? null : { capStop: capStopIn(r.tail), why: `${name} exited ${r.code ?? r.signal}: ${r.tail.split('\n').slice(-3).join(' ')}` };
   };
   if (!existsSync(world)) for (const cmd of cmds.world) { const f = await step('world', cmd, keylessEnv()); if (f) return { status: 'error', reason: f.why, rows: [] }; }
-  const slots = await step('slots', cmds.slots, env);
-  if (slots) return { status: 'error', reason: slots.why, capStop: slots.capStop, rows: [] };
+  const built = await Promise.all(cmds.slots.map((cmd, i) => step(`slots-${i}`, cmd, env)));
+  const failed = built.filter((f): f is NonNullable<typeof f> => f !== null);
+  if (failed.length) return { status: 'error', reason: failed.map(f => f.why).join('; '), capStop: failed.some(f => f.capStop), rows: [] };
   const cells = await step('cells', cmds.cells, env);
   const rows = cat40Rows(run, ctx, dirs.cells);
   const readers = ctx.fake ? ['fake'] : run.readers.filter((r): r is string => r !== null);

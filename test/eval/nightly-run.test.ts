@@ -90,11 +90,17 @@ describe('adapter commands', () => {
     expect(paid.cells.join(' ')).toContain('--arms gbrain --gbrain-label gbrain-hard --tasks H1-02,H1-03 --repeat 3');
     expect(paid.cells.join(' ')).toContain('--models claude-opus-5-5,gpt-6.1-sol --judge gpt-6.1-sol --budget-run-id nightly:2026-11-09:master-x --budget-ledger /ledger.sqlite');
     expect(paid.world[1]!.join(' ')).toContain('--mode hard --seed 20261021 --knobs ' + join(ROOT, 'docs/benchmarks/cat40-hard/knobs.frozen.json') + ' --scale large');
+    expect(paid.slots).toHaveLength(5);
+    paid.slots.forEach((cmd, i) => {
+      expect(cmd.join(' ')).toContain(`--slots 5 --build-slot-ids ${i} --slot-build-allowance-usd`);
+      expect(cmd.join(' ')).toContain(`--budget-ledger /ledger.sqlite --out /s/slot${i}`);
+    });
     const fake = cat40Commands(run, ctx({ fake: true, paid: null }), '/cache/world/world.json', dirs);
     expect(fake.cells).toContain('--scripted');
     expect(fake.cells).toContain('--keyless-slots');
     expect(fake.cells.join(' ')).not.toContain('--models');
-    expect(fake.slots.join(' ')).not.toContain('--budget');
+    expect(fake.slots.flat().join(' ')).not.toContain('--budget');
+    expect(fake.slots.every(cmd => cmd.includes('--keyless-slots'))).toBe(true);
     expect(() => cat40Commands(run, ctx({ cat40SlotAllowanceUsd: null }), '/w', dirs)).toThrow('--cat40-slot-allowance-usd');
   });
 
