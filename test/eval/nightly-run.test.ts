@@ -79,10 +79,12 @@ describe('tiers and the ancestor check', () => {
 });
 
 describe('adapter commands', () => {
-  test('readers and judges: GPT-6 Astra judges Claude rows and Claude Opus 5.5 judges GPT rows', () => {
+  test('readers and judges: GPT-6 Astra judges Claude and particle-1 rows, so the two share a judge, and Claude Opus 5.5 judges GPT rows', () => {
     expect(qualifiedModel('claude-opus-5-5')).toBe('anthropic:claude-opus-5-5');
     expect(qualifiedModel('gpt-6.1-sol')).toBe('openai:gpt-6.1-sol');
     expect(judgeFor('claude-opus-5-5')).toBe('openai:gpt-6-astra');
+    expect(judgeFor('particle-1')).toBe('openai:gpt-6-astra');
+    expect(judgeFor('particle:particle-1')).toBe('openai:gpt-6-astra');
     expect(judgeFor('gpt-6.1-sol')).toBe('anthropic:claude-opus-5-5');
   });
 

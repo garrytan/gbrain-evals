@@ -164,6 +164,8 @@ describe("particle-1's agreement with claude-opus-5-5", () => {
     particle: [...Array(bp + co).fill(true), ...Array(ro + bf).fill(false)] as boolean[],
     opus: [...Array(bp).fill(true), ...Array(co).fill(false), ...Array(ro).fill(true), ...Array(bf).fill(false)] as boolean[],
   });
+  /** Both readers' rows for one suite from a table. */
+  const pair = (t: ReturnType<typeof table>, suite = 'suite-a') => [...labelled('claude-opus-5-5', t.opus, { suite }), ...labelled('particle-1', t.particle, { suite })];
   const a = table(10, 1, 2, 7);
   const opusA = a.opus.flatMap((pass, i) => [1, 2, 3].map(trial => row({ reader: 'claude-opus-5-5', item: `item-${i}`, trial, pass: trial === 1 ? pass : !pass })));
   opusA[0] = { ...opusA[0]!, pass: false, harness: { error: 'provider 529' } };
@@ -171,74 +173,121 @@ describe("particle-1's agreement with claude-opus-5-5", () => {
   const rowsA = [...opusA, ...labelled('particle-1', a.particle), row({ reader: 'particle-1', item: 'item-20', pass: true }), row({ reader: 'particle-1', item: 'item-21', skipped: 'not scheduled' }),
     row({ suite: 'suite-c', reader: 'particle-1', harness: { error: 'refused' } }), row({ suite: 'suite-k', reader: null, pass: true })];
   const suitesA = [{ id: 'suite-a', readers: both }, { id: 'suite-c', readers: both, status: 'error' as const, reason: 'the runner refused particle-1' }, { id: 'suite-k', readers: [null], k: 1 }];
+  const twoSuites = manifest([{ id: 'suite-a', readers: both, k: 1 }, { id: 'suite-b', readers: both, k: 1 }]);
 
-  test("each reader's first counted trial is its label, only items both answered are paired, a suite with no pair is not measured and keyless suites are left out", () => {
+  test("Opus's first counted trial is its label, only items both answered are paired, a suite with no pair is not measured and keyless suites are left out", () => {
     const ag = nightAgreement(manifest(suitesA), rowsA)!;
     expect(ag.suites.map(s => s.suite)).toEqual(['suite-a', 'suite-c']);
-    expect(ag.suites[0]).toMatchObject({ measured: true, items: 20, both_pass: 10, candidate_only: 1, reference_only: 2, both_fail: 7, unpaired: 1 });
+    expect(ag.suites[0]).toMatchObject({ measured: true, counted: true, items: 20, both_pass: 10, candidate_only: 1, reference_only: 2, both_fail: 7, scheduled: 22, unpaired: 2, candidate_harness: 0 });
     const s = ag.suites[0] as { raw: number; kappa: number; candidate_pass: number; reference_pass: number; gap: number };
     expect(s.raw).toBeCloseTo(0.85, 10);
     expect(s.kappa).toBeCloseTo(0.34 / 0.49, 10);
     expect([s.candidate_pass, s.reference_pass, s.gap].map(x => +x.toFixed(10))).toEqual([0.55, 0.6, -0.05]);
-    expect(ag.suites[1]).toEqual({ suite: 'suite-c', measured: false, reason: 'error: the runner refused particle-1' });
+    expect(ag.suites[1]).toEqual({ suite: 'suite-c', measured: false, scheduled: 1, unpaired: 1, reason: 'error: the runner refused particle-1' });
     expect(ag.pooled).toMatchObject({ items: 20, both_pass: 10, candidate_only: 1, reference_only: 2, both_fail: 7 });
+    expect([ag.scheduled, ag.unpaired, ag.verdict, ag.reason]).toEqual([23, 3, 'not_measured', '3 of 23 scheduled items are unpaired, more than 10%']);
+  });
+
+  test('a night passes with at least 40 items in suites of at least 20, the item-weighted mean of their kappas and their raw agreement at or above the bars', () => {
+    const ag = nightAgreement(twoSuites, [...pair(a), ...pair(a, 'suite-b')])!;
+    expect(ag.counted).toMatchObject({ suites: 2, items: 40, both_pass: 20, candidate_only: 2, reference_only: 4, both_fail: 14 });
+    expect(ag.counted.mean_kappa).toBeCloseTo(0.34 / 0.49, 10);
+    expect(ag.counted.raw).toBe(0.85);
+    expect([ag.verdict, ag.reason, ag.unpaired]).toEqual(['pass', null, 0]);
+  });
+
+  test('a kappa of exactly 0.6, which floating point computes as 0.5999999999999996, passes', () => {
+    const ag = nightAgreement(twoSuites, [...pair(table(28, 2, 2, 4)), ...pair(table(28, 2, 2, 4), 'suite-b')])!;
+    const s = ag.suites[0] as { kappa: number };
+    expect(s.kappa).toBeLessThan(0.6);
+    expect(s.kappa).toBeCloseTo(0.6, 12);
     expect(ag.verdict).toBe('pass');
   });
 
-  test('tables are summed over suites, and both bars must hold on the pooled table: kappa 0.667 with 83.3% raw agreement fails', () => {
-    const b = table(2, 2, 0, 6);
-    const rows = [...rowsA, ...labelled('claude-opus-5-5', b.opus, { suite: 'suite-b' }), ...labelled('particle-1', b.particle, { suite: 'suite-b' })];
-    const ag = nightAgreement(manifest([...suitesA, { id: 'suite-b', readers: both, k: 1 }]), rows)!;
-    expect(ag.pooled).toMatchObject({ items: 30, both_pass: 12, candidate_only: 3, reference_only: 2, both_fail: 13 });
-    expect(ag.pooled.raw).toBeCloseTo(25 / 30, 10);
-    expect(ag.pooled.kappa).toBeCloseTo(2 / 3, 10);
+  test('the verdict uses the item-weighted mean of per-suite kappas, so two suites with kappa 0 fail even though their pooled kappa is 0.92', () => {
+    const ag = nightAgreement(twoSuites, [...pair(table(24, 0, 1, 0)), ...pair(table(0, 1, 0, 24), 'suite-b')])!;
+    expect(ag.suites.map(s => +(s as { kappa: number }).kappa.toFixed(10))).toEqual([0, 0]);
+    expect(ag.pooled.kappa).toBeCloseTo(0.92, 10);
+    expect(ag.counted.mean_kappa).toBeCloseTo(0, 10);
+    expect(ag.counted.raw).toBeCloseTo(0.96, 10);
     expect(ag.verdict).toBe('fail');
   });
 
-  test('kappa is null and the bar fails when both readers give every item the same label; a scheduled suite with no pair says why; a night that never schedules particle-1 has no agreement', () => {
+  test('a suite counts only with at least 20 paired items, and the verdict needs at least 40 counted items', () => {
+    const one = nightAgreement(manifest([{ id: 'suite-a', readers: both, k: 1 }]), pair(table(20, 1, 2, 16)))!;
+    expect([one.counted.items, one.verdict, one.reason]).toEqual([39, 'not_measured', '39 paired items in suites with at least 20, fewer than 40']);
+    const small = nightAgreement(twoSuites, [...pair(a), ...pair(table(10, 1, 2, 6), 'suite-b')])!;
+    expect(small.suites.map(s => (s as { counted: boolean }).counted)).toEqual([true, false]);
+    expect([small.pooled.items, small.counted.items, small.verdict, small.reason]).toEqual([39, 20, 'not_measured', '20 paired items in suites with at least 20, fewer than 40']);
+  });
+
+  test('a particle-1 crash is a fail, never a dropped item; an item Opus has no counted trial for is unpaired, and more than 10% unpaired is not measured', () => {
+    const crashed = (labels: boolean[], suite: string) => labels.map((pass, i) => row({ reader: 'particle-1', item: `item-${i}`, suite, pass, score: pass ? 1 : 0, ...(pass ? {} : { harness: { error: 'particle-1 crashed' } }) }));
+    const opus = (suite: string) => labelled('claude-opus-5-5', a.opus, { suite });
+    const ag = nightAgreement(twoSuites, [...opus('suite-a'), ...crashed(a.particle, 'suite-a'), ...opus('suite-b'), ...crashed(a.particle, 'suite-b')])!;
+    expect(ag.suites[0]).toMatchObject({ items: 20, both_pass: 10, candidate_only: 1, reference_only: 2, both_fail: 7, candidate_harness: 9, unpaired: 0 });
+    expect(ag.verdict).toBe('pass');
+    const opusDown = [...opus('suite-a').map((r, i) => (i < 5 ? { ...r, harness: { error: 'provider 529' } } : r)), ...pair(a, 'suite-b').slice(0, 20), ...labelled('particle-1', a.particle), ...labelled('particle-1', a.particle, { suite: 'suite-b' })];
+    const down = nightAgreement(twoSuites, opusDown)!;
+    expect(down.suites[0]).toMatchObject({ items: 15, scheduled: 20, unpaired: 5 });
+    expect([down.verdict, down.reason]).toEqual(['not_measured', '5 of 40 scheduled items are unpaired, more than 10%']);
+  });
+
+  test('qualified reader names match, and a suite a --fake night skipped schedules nothing', () => {
+    const qualified = manifest([{ id: 'suite-a', readers: ['anthropic:claude-opus-5-5', 'particle:particle-1'], k: 1 }, { id: 'suite-b', readers: ['anthropic:claude-opus-5-5', 'particle:particle-1'], k: 1 }]);
+    const rename = (r: Outcome) => ({ ...r, reader: r.reader === 'particle-1' ? 'particle:particle-1' : `anthropic:${r.reader}` });
+    expect(nightAgreement(qualified, [...pair(a), ...pair(a, 'suite-b')].map(rename))!.verdict).toBe('pass');
+    const fake = manifest([{ id: 'suite-a', readers: both, status: 'skipped', reason: 'needs gbrain 773a29ee' }, { id: 'suite-k', readers: ['fake'] }], { fake: true });
+    expect(nightAgreement(fake, [])).toBeNull();
+    expect(nightAgreement({ ...fake, fake: false }, [])!.suites).toEqual([{ suite: 'suite-a', measured: false, scheduled: 0, unpaired: 0, reason: 'skipped: needs gbrain 773a29ee' }]);
+  });
+
+  test("a suite's kappa is null when both readers give every item the same label; a scheduled suite with no pair says why; a night that never schedules particle-1 has no agreement", () => {
     const night = manifest([{ id: 'suite-a', readers: both, k: 1 }]);
-    const same = nightAgreement(night, [...labelled('claude-opus-5-5', [true, true, true]), ...labelled('particle-1', [true, true, true])])!;
-    expect(same.pooled).toMatchObject({ items: 3, raw: 1, kappa: null });
-    expect(same.verdict).toBe('fail');
-    const errored = nightAgreement(night, [...labelled('claude-opus-5-5', [true]), row({ reader: 'particle-1', harness: { error: 'network' } })])!;
-    expect(errored.suites).toEqual([{ suite: 'suite-a', measured: false, reason: 'no counted particle-1 rows' }]);
-    expect(errored.verdict).toBe('not_measured');
-    expect(nightAgreement(night, labelled('particle-1', [true, false]))!.suites).toEqual([{ suite: 'suite-a', measured: false, reason: 'no counted claude-opus-5-5 rows' }]);
-    expect(nightAgreement(night, [row({ reader: 'claude-opus-5-5', item: 'x' }), row({ reader: 'particle-1', item: 'y' })])!.suites).toEqual([{ suite: 'suite-a', measured: false, reason: 'no item both readers answered' }]);
+    const same = nightAgreement(night, pair({ particle: Array(40).fill(true), opus: Array(40).fill(true) }))!;
+    expect(same.pooled).toMatchObject({ items: 40, raw: 1, kappa: null });
+    expect([same.counted.mean_kappa, same.verdict]).toEqual([null, 'fail']);
+    const crash = nightAgreement(night, [...labelled('claude-opus-5-5', [true]), row({ reader: 'particle-1', item: 'item-0', harness: { error: 'network' } })])!;
+    expect(crash.suites[0]).toMatchObject({ measured: true, items: 1, reference_only: 1, candidate_harness: 1 });
+    expect(nightAgreement(night, [...labelled('claude-opus-5-5', [true]), row({ reader: 'particle-1', item: 'item-0', skipped: 'not scheduled' })])!.suites)
+      .toEqual([{ suite: 'suite-a', measured: false, scheduled: 1, unpaired: 1, reason: 'no particle-1 row that ran' }]);
+    expect(nightAgreement(night, labelled('particle-1', [true, false]))!.suites).toEqual([{ suite: 'suite-a', measured: false, scheduled: 2, unpaired: 2, reason: 'no counted claude-opus-5-5 rows' }]);
+    const apart = nightAgreement(night, [row({ reader: 'claude-opus-5-5', item: 'x' }), row({ reader: 'particle-1', item: 'y' })])!;
+    expect(apart.suites).toEqual([{ suite: 'suite-a', measured: false, scheduled: 2, unpaired: 2, reason: 'no item both readers answered' }]);
+    expect([apart.verdict, apart.reason]).toEqual(['not_measured', 'no item both readers answered']);
     expect(nightAgreement(manifest([{ id: 'suite-a' }]), trials([3, 1]))).toBeNull();
   });
 
-  test('report.md and summary.json carry the agreement section on a night with particle-1 rows, and leave it out otherwise', () => {
+  const reportOf = (m: NightManifest, rows: Outcome[]) => {
     const dir = mkdtempSync(join(tmpdir(), 'nightly-report-'));
-    writeFileSync(join(dir, 'night.json'), JSON.stringify(manifest(suitesA)));
-    writeFileSync(join(dir, 'outcomes.jsonl'), rowsA.map(r => JSON.stringify(r)).join('\n') + '\n');
+    writeFileSync(join(dir, 'night.json'), JSON.stringify(m));
+    writeFileSync(join(dir, 'outcomes.jsonl'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
     const summary = writeReport({ dir });
-    expect(summary.agreement).toMatchObject({ candidate: 'particle-1', reference: 'claude-opus-5-5', min_kappa: 0.6, min_raw: 0.85, verdict: 'pass' });
-    const md = readFileSync(join(dir, 'report.md'), 'utf8');
+    return { summary, md: readFileSync(join(dir, 'report.md'), 'utf8') };
+  };
+
+  test('report.md and summary.json carry the agreement section on a night with particle-1 rows, and leave it out otherwise', () => {
+    const night = manifest([{ id: 'suite-a', readers: both, k: 1 }, { id: 'suite-b', readers: both, k: 1 }, { id: 'suite-c', readers: both, status: 'error', reason: 'the runner refused particle-1' }]);
+    const { summary, md } = reportOf(night, [...pair(a), ...pair(a, 'suite-b'), row({ suite: 'suite-c', reader: 'particle-1', harness: { error: 'refused' } })]);
+    expect(summary.agreement).toMatchObject({ candidate: 'particle-1', reference: 'claude-opus-5-5', min_kappa: 0.6, min_raw: 0.85, min_suite_items: 20, min_items: 40, max_unpaired: 0.1, verdict: 'pass', reason: null });
     expect(md).toContain('## particle-1 agreement with claude-opus-5-5');
-    expect(md).toContain('**Passes: kappa 0.694, raw agreement 85.0%, over 20 items in 1 suite.** particle-1 passes 55.0% of them and claude-opus-5-5 60.0%, a gap of -5.0 points.');
-    expect(md).toContain('| suite-a | 20 | 85.0% | 0.694 | 55.0% | 60.0% | -5.0 | 1 |');
+    expect(md).toContain('**Passes: kappa 0.694 (item-weighted mean over 2 suites), raw agreement 85.0%, over 40 items.** particle-1 passes 55.0% of them and claude-opus-5-5 60.0%, a gap of -5.0 points.');
+    expect(md).toContain('Pooled kappa over every measured suite, for reference only: 0.694 over 40 items. Unpaired items: 1 of 41 scheduled.');
+    expect(md).toContain('| suite-a | 20 | yes | 85.0% | 0.694 | 55.0% | 60.0% | -5.0 | 0 | 0 |');
     expect(md).toContain('- suite-c: not measured, error: the runner refused particle-1');
-    const plain = mkdtempSync(join(tmpdir(), 'nightly-report-'));
-    writeFileSync(join(plain, 'night.json'), JSON.stringify(manifest([{ id: 'suite-a' }])));
-    writeFileSync(join(plain, 'outcomes.jsonl'), trials([3, 1]).map(r => JSON.stringify(r)).join('\n') + '\n');
-    expect(writeReport({ dir: plain }).agreement).toBeNull();
-    expect(readFileSync(join(plain, 'report.md'), 'utf8')).not.toContain('agreement with');
+    const plain = reportOf(manifest([{ id: 'suite-a' }]), trials([3, 1]));
+    expect(plain.summary.agreement).toBeNull();
+    expect(plain.md).not.toContain('agreement with');
   });
 
-  test('report.md states a failing verdict, an undefined kappa and a night with nothing to pair', () => {
-    const md = (rows: Outcome[]) => {
-      const dir = mkdtempSync(join(tmpdir(), 'nightly-report-'));
-      writeFileSync(join(dir, 'night.json'), JSON.stringify(manifest([{ id: 'suite-a', readers: both, k: 1 }])));
-      writeFileSync(join(dir, 'outcomes.jsonl'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
-      writeReport({ dir });
-      return readFileSync(join(dir, 'report.md'), 'utf8');
-    };
-    const b = table(2, 2, 0, 6);
-    expect(md([...labelled('claude-opus-5-5', b.opus), ...labelled('particle-1', b.particle)])).toContain('**Fails: kappa 0.545, raw agreement 80.0%, over 10 items in 1 suite.**');
-    expect(md([...labelled('claude-opus-5-5', [true, true]), ...labelled('particle-1', [true, true])])).toContain('**Fails: kappa n/a (both readers gave every item the same label), raw agreement 100.0%, over 2 items in 1 suite.**');
-    const none = md([...labelled('claude-opus-5-5', [true]), row({ reader: 'particle-1', harness: { error: 'network' } })]);
-    expect(none).toContain('**Not measured: no item both readers answered.**\n\n- suite-a: not measured');
-    expect(none).toContain('- suite-a: not measured, no counted particle-1 rows');
+  test('report.md states a failing verdict, an undefined kappa, a suite under the floor and a night with nothing to pair', () => {
+    const one = manifest([{ id: 'suite-a', readers: both, k: 1 }]);
+    expect(reportOf(twoSuites, [...pair(table(4, 4, 0, 12)), ...pair(table(4, 4, 0, 12), 'suite-b')]).md).toContain('**Fails: kappa 0.545 (item-weighted mean over 2 suites), raw agreement 80.0%, over 40 items.**');
+    expect(reportOf(one, pair({ particle: Array(40).fill(true), opus: Array(40).fill(true) })).md).toContain('**Fails: kappa n/a (both readers gave every item the same label in every counted suite), raw agreement 100.0%, over 40 items.**');
+    const small = reportOf(twoSuites, [...pair(a), ...pair(table(10, 1, 2, 6), 'suite-b')]).md;
+    expect(small).toContain('**Not measured: 20 paired items in suites with at least 20, fewer than 40.**');
+    expect(small).toContain('| suite-b | 19 | no (under 20) |');
+    const none = reportOf(one, [...labelled('claude-opus-5-5', [true]), row({ reader: 'particle-1', item: 'item-0', skipped: 'not scheduled' })]).md;
+    expect(none).toContain('**Not measured: no item both readers answered.**\n\n- suite-a: not measured, no particle-1 row that ran');
   });
 });
