@@ -612,8 +612,16 @@ pace stage 2's timing needs.
 GBEV-3 decided on 2026-11-10 that the unit runs again as a one-unit campaign, `q1-scoreboard-bg1-stage1c`, at commit
 `5958985d`. That commit is cut from `4306e9e3`, the commit stage 1's other units ran at, and changes only this unit's
 expected hours, from 2 to 5, which gives it a 10-hour timeout. A byte-for-byte check of every tracked file the units
-read, covering the paths the campaign hash covers and the dev worlds, found only that one value changed between the two
-checkouts. The two campaigns' caps are set so that together they stay inside stage 1's cap (Amendment 1).
+read, covering the paths the campaign hash covers and the dev worlds, found that value changed between the two checkouts,
+along with what follows from it: the one line in `eval/runner/q1/cells/definitions.ts` that sets it, the generated
+`bg1-cells.json` that carries it, the unit's timeout, which the campaign derives from its expected hours, the unit's
+window-cap flag, which must equal its campaign's cap, and the new campaign's name, cap and ledger path. Nothing else
+differed. GBEV-3 ruled on 2026-11-10 that all of these follow from the one value and fall inside the decision.
+
+The two campaigns' caps are set so that together they stay inside stage 1's cap (Amendment 1). The program cap of
+`q1-scoreboard-bg1-stage1b`'s ledger was lowered to make room for stage1c's. That ledger's run row still reads the
+earlier budget, because the ledger tool refuses to lower a run budget, so the program cap is the level that binds
+stage1b's remaining spend: every reservation is checked against both.
 
 ### Expected amendments
 
