@@ -24,6 +24,25 @@ This records what each gbrain-evals release changed and what its measurements me
 - README's Known limits gains a bullet on this, and the docs hub gains a row for the findings. No number in the README
   tables changed.
 
+## [0.10.201] - 2026-11-10
+
+### The nightly report now checks whether particle-1 marks the same items right and wrong as Opus
+
+- **What it adds.** On a night that runs particle-1 beside claude-opus-5-5, `eval/runner/nightly/report.ts` pairs the two
+  readers item by item. Each reader's first counted trial of an item is its pass or fail, and only items both readers
+  answered count. For each suite the report shows raw agreement, Cohen's kappa and particle-1's pass-rate gap to Opus.
+  It adds the suites' tables together for one verdict, and particle-1 passes at a kappa of at least 0.6 and raw
+  agreement of at least 85%. A suite particle-1 was scheduled on with no paired item is listed as not measured, with the reason.
+  `summary.json` carries the same numbers under `agreement`.
+- **Why it matters.** This is the agreement test that decides whether particle-1, the low-cost reader, joins the
+  nightly check as a reader. No particle-1 night has run yet, so there is no agreement number.
+- **Known limits, to settle before the first particle-1 night.** The pooled table can count differences in suite
+  difficulty as agreement. The verdict has no minimum item count and no coverage floor, so items particle-1 failed on
+  for harness reasons drop out. A kappa of exactly 0.6 can round just below the bar. On the QA suites, different judges
+  grade the two readers' answers.
+- Keyless fixture tests cover the pairing, the pooled bars, an undefined kappa, each not-measured reason and the report
+  lines. `docs/nightly.md` describes the section and gains a Disclosures section.
+
 ## [0.10.200] - 2026-11-10
 
 ### The skill ranker benchmark now includes the probe behind the off-by-default `top_gate` proposed for gbrain
