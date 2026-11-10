@@ -18,7 +18,7 @@
  *
  * Every model call goes through Cat 40's loop (eval/runner/cat40/loop.ts) at medium effort, with store false on OpenAI.
  */
-import { HarnessError, runAgent, type AgentRun, type Arm, type ToolSpec, type Usage } from '../cat40/loop.ts';
+import { HarnessError, runAgent, type AgentRun, type Arm, type ProviderAttempt, type ToolSpec, type Usage } from '../cat40/loop.ts';
 import { importGbrain, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { uniqueInOrder } from '../metrics.ts';
 import { ParticleCreditExhausted } from '../providers/openai-compatible.ts';
@@ -55,6 +55,8 @@ export interface Task {
   gold_answer: { text: string; required_facts: Array<{ id: string; fact: string }>; acceptable_variants?: string[] };
   window?: { since: string; until: string };
   gold_found_by: string;
+  /** Written after the first freeze to replace a task whose gold a remote caller could not open. */
+  replacement?: boolean;
 }
 
 // ─── Prompts (frozen in docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md) ────────────────────────────────────────
@@ -111,17 +113,27 @@ export interface GbrainReader {
   outOfSource(slug: string): Promise<boolean>;
   /** D's search: phase 1's configured arm with private pages excluded, in the reader's source. */
   top(text: string): Promise<{ slugs: string[]; degraded: string[]; aiRefused: string[] }>;
+  /** The wider view a gbrain response reported (see openReader), or null while every response was an unbound caller's. */
+  breach(): string | null;
+  /** get_page on one page gbrain's own privacy predicate hides from a remote caller in the reader's source, chosen afresh on each call; 'none' when there is none. */
+  privateProbe(): Promise<'hidden' | 'readable' | 'none'>;
 }
 
 /**
  * `capped` reports that the run's budget guard has refused a reservation. gbrain catches a refused embedding or rerank
  * call and degrades the search, so the reader checks it after every call and ends the episode with a HarnessError; the
  * episode's capCheck then turns that into the run's cap stop.
+ *
+ * A gbrain that reports `_meta.access` (0.60.623.0 and later) must answer every call as an unbound remote caller: no
+ * member, group or audience, and relaxation 'none'. A response without it, or with a wider view, ends the episode with a
+ * HarnessError before its text reaches a model, and a wider view is kept as the reader's breach, which assertPrivate
+ * turns into LR_PRIVACY_RELAXED.
  */
 export async function openReader(gut: GbrainUnderTest, engine: any, rerankerEnabled: boolean, capped: () => boolean = () => false): Promise<GbrainReader> {
-  const [dispatch, ops, toolDefs, server, invocation, hybrid] = await Promise.all([
+  const [dispatch, ops, toolDefs, server, invocation, hybrid, visibility, caller] = await Promise.all([
     importGbrain<any>(gut, 'src/mcp/dispatch.ts'), importGbrain<any>(gut, 'src/core/operations.ts'), importGbrain<any>(gut, 'src/mcp/tool-defs.ts'),
     importGbrain<any>(gut, 'src/mcp/server.ts'), importGbrain<any>(gut, 'src/core/ai/invocation-guard.ts'), importGbrain<any>(gut, 'src/core/search/hybrid.ts'),
+    importGbrain<any>(gut, 'src/core/search/private-visibility.ts'), importGbrain<any>(gut, 'src/core/access/caller.ts').catch(() => null),
   ]);
   const scope = await server.resolveMcpStdioSourceScope(engine);
   const sourceId = String(scope?.sourceId ?? 'default');
@@ -145,6 +157,19 @@ export async function openReader(gut: GbrainUnderTest, engine: any, rerankerEnab
     } finally { clearTimeout(timer); }
   };
   const stages = (meta: any) => ((meta?.degraded ?? []) as Array<{ stage?: unknown }>).map(d => String(d?.stage)).filter(s => /^[a-z_]+$/.test(s));
+  const accessMeta = typeof caller?.appliedAccessSummary === 'function';
+  let breach: string | null = null;
+  const checkAccess = (r: { _meta?: { access?: { member?: unknown; groups?: unknown; audience?: unknown; relaxation?: unknown } } }) => {
+    if (!accessMeta) return;
+    const a = r._meta?.access;
+    if (!a) throw new HarnessError('gbrain answered without _meta.access');
+    const relaxation = String(a.relaxation);
+    const wider = relaxation !== 'none' ? 'relaxation ' + (/^[a-z_]{1,32}$/.test(relaxation) ? relaxation : 'unknown')
+      : a.member !== null || !Array.isArray(a.groups) || a.groups.length > 0 || a.audience !== null ? 'a member, group or audience binding' : null;
+    if (!wider) return;
+    breach ??= wider;
+    throw new HarnessError('gbrain answered under ' + wider);
+  };
   const call = async (name: string, args: Record<string, unknown>): Promise<CallOutcome> => {
     if (!(TOOL_NAMES as readonly string[]).includes(name)) return { text: 'Error: unknown tool ' + name, isError: true, degraded: [], metaMissing: false, aiRefused: [] };
     const params: Record<string, unknown> = Object.fromEntries(Object.entries(args).filter(([k]) => !DROPPED_PARAMS.includes(k)));
@@ -156,13 +181,14 @@ export async function openReader(gut: GbrainUnderTest, engine: any, rerankerEnab
       ctx.emitResponseMeta = (k, v) => { if (k === 'retrieval') meta = v; previous?.(k, v); };
       return undefined;
     };
-    let r: { content?: Array<{ type: string; text?: string }>; isError?: boolean };
+    let r: { content?: Array<{ type: string; text?: string }>; isError?: boolean; _meta?: Record<string, any> };
     try {
       r = await guarded(refused, () => dispatch.dispatchToolCall(engine, name, params, { remote: true, transport: 'stdio', sourceId, metaHook }));
     } catch (e) {
       if (e instanceof HarnessError || (e as Error).name === 'BudgetExceededError') throw e;
       return { text: 'Error: ' + (e as Error).message, isError: true, degraded: [], metaMissing: false, aiRefused: refused };
     }
+    checkAccess(r);
     if (capped()) throw new HarnessError('the budget guard refused a provider call inside gbrain');
     const text = (r.content ?? []).filter(c => c.type === 'text').map(c => c.text ?? '').join('\n');
     const isError = r.isError === true;
@@ -173,11 +199,26 @@ export async function openReader(gut: GbrainUnderTest, engine: any, rerankerEnab
     return r.isError || !r.text.includes('"slug"') ? null : r.text;
   };
   const chunkCount = async (slug: string) => {
-    const r = await guarded([], () => dispatch.dispatchToolCall(engine, 'get_chunks', { slug }, { remote: true, transport: 'stdio', sourceId })) as { content?: Array<{ text?: string }>; isError?: boolean };
+    const r = await guarded([], () => dispatch.dispatchToolCall(engine, 'get_chunks', { slug }, { remote: true, transport: 'stdio', sourceId })) as { content?: Array<{ text?: string }>; isError?: boolean; _meta?: Record<string, any> };
+    checkAccess(r);
     return r.isError ? 0 : ((r.content ?? []).map(c => c.text ?? '').join('\n').match(/"chunk_index"/g) ?? []).length;
   };
+  const privateProbe = async (): Promise<'hidden' | 'readable' | 'none'> => {
+    if (typeof visibility.privatePagesFilterFragment !== 'function') return 'none';
+    const [row] = await engine.executeRaw('SELECT p.slug FROM pages p WHERE p.source_id = $1 AND p.deleted_at IS NULL AND NOT (' + visibility.privatePagesFilterFragment('p') + ') ORDER BY p.slug LIMIT 1', [sourceId]) as Array<{ slug: string }>;
+    if (!row) return 'none';
+    const r = await guarded([], () => dispatch.dispatchToolCall(engine, 'get_page', { slug: row.slug }, { remote: true, transport: 'stdio', sourceId })) as { content?: Array<{ type: string; text?: string }>; isError?: boolean; _meta?: Record<string, any> };
+    try {
+      checkAccess(r);
+    } catch (e) {
+      if (breach) return 'readable';
+      throw e;
+    }
+    return r.isError || !(r.content ?? []).some(c => c.type === 'text' && (c.text ?? '').includes('"slug"')) ? 'hidden' : 'readable';
+  };
   return {
-    tools, sourceId, call, page,
+    tools, sourceId, call, page, privateProbe,
+    breach: () => breach,
     reachable: async (slug: string) => (await page(slug)) !== null && (await chunkCount(slug)) > 0,
     outOfSource: async (slug: string) => {
       const [row] = await engine.executeRaw('SELECT bool_or(source_id = $2) AS own, bool_or(source_id <> $2) AS other FROM pages WHERE slug = $1 AND deleted_at IS NULL', [slug, sourceId]) as Array<{ own: boolean | null; other: boolean | null }>;
@@ -264,7 +305,13 @@ export interface AnswerRecord {
   slugs_seen: string[]; ms: number; at: string; error: string | null;
 }
 export interface JudgeRecord {
-  kind: 'judge' | 'judge2'; key: string; judge: string; status: 'ok' | 'judge_error'; verdict: Verdict | null; derived: Derived | null;
+  /** judge: the counted verdict; judge2: the descriptive second judge; label: a judge-check labeller. */
+  kind: 'judge' | 'judge2' | 'label'; key: string; judge: string;
+  /** The model version the provider reports serving (its response's `model`), null when no response carried one. */
+  judge_version: string | null; effort: string;
+  /** The output-token cap sent, and whether a call hit it; a truncated call is a judge_error and is not retried. */
+  max_output_tokens: number; truncated: boolean;
+  status: 'ok' | 'judge_error'; verdict: Verdict | null; derived: Derived | null;
   usd: number; usage: Usage; ms: number; at: string;
 }
 
@@ -405,21 +452,31 @@ function exposure(task: Task, calls: ToolCall[], cited: string[], summaryCited: 
 
 const ZERO: Usage = { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 };
 
-/** One judge verdict for an answered episode: at most two judge calls, then judge_error; a provider rejection throws. A has no citations to judge. */
-export async function judgeEpisode(ctx: Pick<EpisodeContext, 'limit' | 'capCheck'>, task: Task, rec: AnswerRecord, judge: string, kind: JudgeRecord['kind']): Promise<JudgeRecord> {
+/**
+ * One judge verdict for an answered episode: at most two judge calls, then judge_error; a call that hits the output-token
+ * cap is a judge_error at once, marked truncated. A provider rejection throws. A has no citations to judge.
+ */
+export async function judgeEpisode(ctx: Pick<EpisodeContext, 'limit' | 'capCheck'>, task: Task, rec: AnswerRecord, judge: string, kind: JudgeRecord['kind'], effort: string = EFFORT): Promise<JudgeRecord> {
   const cited = rec.arm === 'A' ? [] : rec.cited;
   const user = judgeUser({ question: task.forms[rec.form], gold: task.gold_answer, answer: rec.answer, cited, pages: new Map(rec.snapshots.map(s => [s.slug, s.text])) });
   const shown = cited.slice(0, JUDGED_CITATIONS);
   const usage = { ...ZERO };
-  let usd = 0, ms = 0;
+  let usd = 0, ms = 0, version: string | null = null, truncated = false;
+  const onAttempt = (a: ProviderAttempt) => {
+    const r = a.response;
+    if (typeof r?.model === 'string') version = r.model;
+    if (r?.stop_reason === 'max_tokens' || (r?.status === 'incomplete' && (r.incomplete_details as { reason?: unknown } | undefined)?.reason === 'max_output_tokens')) truncated = true;
+  };
+  const head = { kind, key: rec.key, judge, effort, max_output_tokens: MAX_OUTPUT_TOKENS };
   for (let i = 0; i < 2; i++) {
-    const run = await ctx.limit(judge, () => runAgent({ model: judge, system: JUDGE_SYSTEM, user, arm: NO_TOOLS, submitTool: VERDICT_TOOL, maxTurns: 2, maxOutputTokens: MAX_OUTPUT_TOKENS, effort: EFFORT, classifyStops: true, openaiStore: false }));
+    const run = await ctx.limit(judge, () => runAgent({ model: judge, system: JUDGE_SYSTEM, user, arm: NO_TOOLS, submitTool: VERDICT_TOOL, maxTurns: 2, maxOutputTokens: MAX_OUTPUT_TOKENS, effort, classifyStops: true, openaiStore: false, onAttempt }));
     ctx.capCheck();
     assertAccepted(run);
     usd += run.usd; ms += run.ms;
     for (const k of Object.keys(usage) as Array<keyof Usage>) usage[k] += run.usage[k];
+    if (truncated) break;
     const verdict = run.stop === 'submitted' ? parseVerdict(run.final, task.gold_answer.required_facts.map(f => f.id), shown) : null;
-    if (verdict) return { kind, key: rec.key, judge, status: 'ok', verdict, derived: derive(verdict, cited), usd, usage, ms, at: new Date().toISOString() };
+    if (verdict) return { ...head, judge_version: version, truncated, status: 'ok', verdict, derived: derive(verdict, cited), usd, usage, ms, at: new Date().toISOString() };
   }
-  return { kind, key: rec.key, judge, status: 'judge_error', verdict: null, derived: null, usd, usage, ms, at: new Date().toISOString() };
+  return { ...head, judge_version: version, truncated, status: 'judge_error', verdict: null, derived: null, usd, usage, ms, at: new Date().toISOString() };
 }

@@ -6,7 +6,7 @@ autocut off. That setup retrieves all labeled conversations for 451/470 answerab
 with opaque session ids at gbrain `109b992`. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md),
 [original experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-This page describes the gbrain this repository installs, master `62637c96a` (v0.60.557.0, declared in
+This page describes the gbrain this repository installs, master `d253ec0ff` (v0.60.623.0, declared in
 `package.json`). Most experiments here ran at gbrain v0.48.4.0 (`2efaaf8f`) or later commits named beside each
 number. The `balanced`, `conservative` and `tokenmax` mode definitions (`MODE_BUNDLES` in
 `src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `77cf8e111` (v0.60.169.0), apart from three
@@ -18,7 +18,7 @@ queries (v0.60.250.0). The conversation measurements here used `rerank-2.5`; on 
 ([reranker addendum](benchmarks/2026-10-13-rerank3-addendum-preregistration.md),
 [expansion latency](benchmarks/2026-10-14-expansion-latency-preregistration.md)). Of the keys added since then,
 `search.reranker.gate` and `search.diverse_pool_depth` are off in every bundle, and `search.collapse` and
-`search.rank_priors` (v0.60.332.0) are on in every bundle: same-slug twins in other sources, merge stubs and copies of
+`search.rank_priors` (v0.60.332.0) are on in every bundle, and `search.keyword_phrase` (v0.60.575.0) is off in every bundle: same-slug twins in other sources, merge stubs and copies of
 one document fold into one result row, and organization, OCR and date priors adjust the ranking after the reranker. The
 LongMemEval retrieval rows were measured before v0.60.332.0 and do not test collapse or rank priors; other code differs.
 From v0.60.164.0, `query` also adds up to three matching saved facts as rows of their own (`search.query_facts_arm`,
@@ -30,7 +30,10 @@ v0.60.493.0); a remote `search` or `query` that names no `limit` keeps at most 3
 (`search.remote_page_cap`, v0.60.506.0; `0` turns it off); text from conversation, chat, email and meeting pages
 comes back inside a quote fence marked as source material (v0.60.507.0, v0.60.521.0); and a remote reader, such as an
 agent over MCP, gets any text below the owner's own notes (agent-written, tool data, external, or with no recorded
-origin) in the same fence (v0.60.536.0 to v0.60.541.0; local reads are unchanged). No setting turns either fence off. The
+origin) in the same fence (v0.60.536.0 to v0.60.541.0; local reads are unchanged). No setting turns either fence off. Since v0.60.575.0 the keyword arm also
+runs one more statement for a question that names an identifier (`#412`, a long digit run, a code, an email or a URL),
+resolves a hyphenated handle such as `dan-example` to the page it names, and ranks the any-word retry by rare words for
+questions of up to 12 words (was 4); no setting turns these off. The
 LongMemEval retrieval rows were measured before all of these and do not test them. Existing per-key overrides take
 precedence over a mode, so a mode name alone is not a complete description of an experiment. Everything above [Changelog](#changelog) is current.
 
@@ -72,7 +75,7 @@ as completed reranked measurements.
 | `search.adaptive_return` | Cap results according to query intent | Off for the broad-return baseline. Try it when irrelevant results cost more than missed additional evidence. |
 | `search.adaptive_return_entity_max` / `_other_max` / `_min_keep` | Caps for entity questions, other questions, and the minimum kept | Product defaults are 2, 6, and 1. The tight experiment explicitly uses 1, 1, and 1. |
 | `return_unit` on `search`, `query` and `recall` | How much text comes back around each hit: `chunk`, `window`, `section`, `page` or `auto` | `auto` (the default) returns the whole conversation behind each hit within a 24,000-token budget and leaves other hits as chunks. On a sealed held-out set it answered 192 of 200 against 132 for bare chunks, at about four times the reader input. Use `chunk` when reader tokens matter more than answer quality. [Sealed v2 decision](benchmarks/2026-10-02-sealed-v2-decision-1.md), [delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
-| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | Keep it on: gbrain v0.60.49.0 (`b9ee931`, PR #6010), which the installed `62637c96a` postdates, fixed the dated follow-ups that `739e5cc` (the pin from 2026-10-04 to 2026-10-06) wrote from meeting notes as events on their future dates (0.96 wrong events per page against gbrain's 0.20 gate). At `b9ee931` it finds 37 and 38 of 38 labeled events, writes 0 events dated after their page and 0.04 wrong events per judged page, for about $0.01 per page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md), [rerun](benchmarks/2026-10-04-auto-chronicle-rerun.md). |
+| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | Keep it on: gbrain v0.60.49.0 (`b9ee931`, PR #6010), which the installed `d253ec0ff` postdates, fixed the dated follow-ups that `739e5cc` (the pin from 2026-10-04 to 2026-10-06) wrote from meeting notes as events on their future dates (0.96 wrong events per page against gbrain's 0.20 gate). At `b9ee931` it finds 37 and 38 of 38 labeled events, writes 0 events dated after their page and 0.04 wrong events per judged page, for about $0.01 per page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md), [rerun](benchmarks/2026-10-04-auto-chronicle-rerun.md). |
 | `GBRAIN_SOURCE_BOOST` | Override the source-prefix weight map | This is an environment setting, separate from the search mode. A stale prefix can make an intended preference do nothing. |
 
 The settings are defined in the pinned
@@ -168,6 +171,15 @@ the [refresh report](benchmarks/2026-09-09-retrieval-refresh.md) gives the full
 reproducible matrix used here.
 
 ## Changelog
+
+### 2026-11-09: Installed pin moves to `d253ec0ff`
+
+The installed gbrain commit changed from `62637c96a` (v0.60.557.0) to `d253ec0ff` (v0.60.623.0). `MODE_BUNDLES` in
+`src/core/search/mode.ts` gains one key, `keyword_phrase`, off in every bundle (v0.60.575.0), and no other bundle value
+changed, so the mode-definition note stands with that key added. One read behaviour outside the bundles changed: since
+v0.60.575.0 the keyword arm adds an identifier statement, resolves hyphenated handles and ranks longer any-word retries
+by rare words, with no setting to turn it off. The note on defaults outside the bundles now says so, and the
+`auto_chronicle` row names the new pin.
 
 ### 2026-11-03: Installed pin moves to `62637c96a`
 

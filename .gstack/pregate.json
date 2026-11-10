@@ -7,13 +7,13 @@
     { "finding": "env.kv", "paths": ["docs/comparison-systems/ext-temporal-graph/**/docker-compose.yml"], "pattern": "(?:neo4j/)?shootout-\\x67raphiti(?=$|[\\s\"'])", "reason": "internal-network graph-database dummy password, already on main" }
   ],
   "sealed": {
-    "paths": ["**/rs1-custody*", "**/rs1-custody*/**", "**/*.rs1-seed"],
+    "paths": ["**/rs1-custody*", "**/rs1-custody*/**", "**/*.rs1-seed", "**/bg1-custody*", "**/bg1-custody*/**", "**/*.bg1-seed", "**/*.bg1-phrasing.json"],
     "case_insensitive": true,
-    "answer_markers": ["RS1-SEALED-CUSTODY-v[0-9]+"],
-    "seed_patterns": ["rs1-seed-v1:[0-9a-f]{64}"]
+    "answer_markers": ["RS1-SEALED-CUSTODY-v[0-9]+", "BG1-SEALED-CUSTODY-v[0-9]+"],
+    "seed_patterns": ["rs1-seed-v1:[0-9a-f]{64}", "bg1-seed-v1:[0-9a-f]{64}"]
   },
   "run_profiles": {
-    "ci-carry/tests": { "workflow": "ci.yml", "events": ["pull_request", "push"], "jobs": ["checks", "tests (1)", "tests (2)", "tests (3)", "tests (4)", "tested-tree"], "artifact": "tested-tree", "os": "Linux" }
+    "ci-carry/tests": { "workflow": "ci.yml", "events": ["pull_request", "push"], "jobs": ["checks", "tests (1)", "tests (2)", "tests (3)", "tests (4)", "tests (5)", "tests (6)", "tested-tree"], "artifact": "tested-tree", "os": "Linux" }
   },
   "ship_lanes_from": {
     "bun run test": { "profiles": ["ci-carry/tests"], "inventory": "bun --no-env-file --config=/dev/null scripts/ci-tested-tree.ts inventory --lane test" },

@@ -8,7 +8,9 @@
  * job (seen in 2 of 4 full runs on Bun 1.3.14), while sharded processes did not.
  *
  * Usage: bun scripts/test-shards.ts [paths...]   (default: test/eval/ eval/)
- * TEST_SHARDS sets the shard count (default: min(4, CPU count)).
+ * TEST_SHARDS sets the shard count (default: min(4, CPU count)). Shards split the files by the CI times in
+ * test/timings.json (scripts/test-timings.ts), as CI's shard jobs do. Run it from the repository root, where Bun
+ * resolves that file's relative paths.
  */
 import { cpus } from 'node:os';
 
@@ -28,7 +30,7 @@ export function summarize(results: ShardResult[]): SuiteSummary {
 }
 
 async function runShard(shard: number, shards: number, paths: string[]): Promise<ShardResult> {
-  const proc = Bun.spawn([process.execPath, 'test', `--shard=${shard}/${shards}`, ...paths], { stdout: 'pipe', stderr: 'pipe' });
+  const proc = Bun.spawn([process.execPath, 'test', `--shard=${shard}/${shards}`, '--timings=test/timings.json', ...paths], { stdout: 'pipe', stderr: 'pipe' });
   const [stdout, stderr, code] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited]);
   return { shard, code, output: stdout + stderr };
 }

@@ -12,9 +12,9 @@ import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
-import { Campaign, executedTree, loadCampaign, ownerTag, planWaves, REPO_RUNNER, resolveRunner, runRemote, treeDiff, type CampaignManifest, type LaunchContext, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
+import { Campaign, executedTree, loadCampaign, ownerTag, planWaves, Q1_VM_PATHS, REPO_RUNNER, resolveRunner, runRemote, treeDiff, type CampaignManifest, type LaunchContext, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
 import { exitCodeOf, ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 
@@ -197,6 +197,56 @@ describe('executor, VM payload and schedule', () => {
     expect(ownerTag('49x')).toBe('u49x');
   });
 
+  // Value: protects=BG1 stage 2 uploads (GST-2280); fails_when=a Q1 launch sends the whole checkout, from the shell's cwd, or a list other than executes plus Q1_VM_PATHS; why_new=--only on Q1 launches; seam=none; no_claim=argv only, the pack itself is in ubi-runner-pack.test.ts
+  test('a Q1 launch sends only its executes paths and Q1_VM_PATHS from the repository root; a shootout launch keeps the whole checkout', () => {
+    const a = q1();
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    const argv = c.launchArgv(c.reserve('kb-locomo'));
+    expect(argv[argv.indexOf('--src') + 1]).toBe(ROOT);
+    expect(readFileSync(argv[argv.indexOf('--only') + 1], 'utf8').trim().split('\n')).toEqual([rel(a.exec), 'bun.lock', ...Q1_VM_PATHS]);
+    expect(argv.indexOf('--only')).toBeLessThan(argv.indexOf('--'));
+    const dir = join(tmp, 'shootout-only');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'm.json'), JSON.stringify({ kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: 'oss-only', cap_usd: 10, ledger: join(dir, 'l.sqlite'),
+      cells: [{ id: 'a', system: 'fake', benchmark: 'locomo', config: 'common', lease_usd: 1, command: 'true' }] }));
+    const s = new Campaign(join(dir, 'm.json'), join(dir, 'state'));
+    s.init();
+    expect(s.launchArgv(s.reserve('a'))).not.toContain('--only');
+  });
+
+  // Value: protects=a Q1 VM never starts a script it was not sent; fails_when=a cell command, setup, snapshot or restore names a repository script outside executes and Q1_VM_PATHS and the launch goes ahead; why_new=the VM no longer receives the whole checkout; seam=none; no_claim=script paths written in the commands
+  test('a Q1 cell whose command runs a script the VM would not receive is refused before launch', () => {
+    const a = q1({ executes: ['bun.lock', 'eval/systems/bootstrap.sh'] }, [{ id: 'kb-locomo', system: 'ext-markdown-kb', benchmark: 'locomo', config: 'recipe', lease_usd: 4, command: 'bun eval/runner/q1/hedge.ts --x', setup_command: 'bash eval/systems/bootstrap.sh setup', block: 'T1', vm: { size: 'standard-4' } }]);
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    const e = caught(() => c.launchArgv(c.reserve('kb-locomo')));
+    expect(e.op.code).toBe('CAMPAIGN_INVALID');
+    expect(e.op.message).toContain('eval/runner/q1/hedge.ts');
+    expect(e.op.message).not.toContain('bootstrap.sh');
+  });
+
+  // Value: protects=a Q1 VM never boots without a module the cell runner imports (GST-2280 review F1); fails_when=a campaign copied from an older manifest leaves an EXECUTES path out of executes and the lease is still reserved; why_new=the VM receives only executes and Q1_VM_PATHS; seam=none; no_claim=the import graph itself, which q1-cell.test.ts checks against EXECUTES
+  test('a Q1 campaign whose executes leaves out a path the cell runner imports is refused before any lease', async () => {
+    const { EXECUTES } = await import('../../eval/runner/q1/cell.ts');
+    const a = q1({ executes: EXECUTES.filter(p => p !== 'eval/runner/providers') });
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    const e = caught(() => c.reserve('kb-locomo'));
+    expect(e.op.code).toBe('CAMPAIGN_INVALID');
+    expect(e.op.message).toContain('leaves eval/runner/providers out of executes');
+    expect(c.leases()).toEqual([]);
+  }, 30_000);
+
+  // Value: protects=a refused Q1 cell holds no lease (GST-2280 review F3); fails_when=the unshipped-script refusal comes only at launch, after reserve wrote a lease against the campaign cap; why_new=the refusal moved ahead of reserve; seam=none; no_claim=script paths written in the commands
+  test('a Q1 cell that runs a script the VM would not receive is refused at reserve, leaving no lease', () => {
+    const a = q1({ executes: ['bun.lock'] }, [{ id: 'kb-locomo', system: 'ext-markdown-kb', benchmark: 'locomo', config: 'recipe', lease_usd: 4, command: 'bun eval/runner/q1/hedge.ts --x', block: 'T1', vm: { size: 'standard-4' } }]);
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    expect(caught(() => c.reserve('kb-locomo')).op.code).toBe('CAMPAIGN_INVALID');
+    expect(c.leases()).toEqual([]);
+  });
+
   test('waves pack cells under the daytime vCPU cap, explicit waves first', () => {
     const cells = Array.from({ length: 5 }, (_, i) => ({ id: `c${i}`, system: 's', benchmark: 'locomo', config: 'common', lease_usd: 1, command: 'true', vm: { size: 'standard-16' }, expected_hours: i + 1 }));
     const waves = planWaves({ kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: 'q1-scoreboard', cap_usd: 1, ledger: 'x', schedule: { vcpu_cap_day: 32 }, cells: [...cells, { ...cells[0], id: 'pinned', wave: 2 }] });
@@ -320,6 +370,29 @@ describe('launch, realizations and resume on the launching host', () => {
     expect(r.mode).toBe('snapshot');
     expect(r.lease).toMatchObject({ status: 'settled', attempt: 2, restored_from: 'real-hy-locomo-0123456789abcdef' });
     expect(existsSync(staged!)).toBe(false);
+  });
+
+  // Value: protects=Q1 resumes on a VM (GST-2280 review); fails_when=a non-sealed resume's staged checkpoint or snapshot is not pushed into the synced checkout at the path its payload names, so the VM re-asks every question or finds no snapshot; why_new=--only sends tracked files only, and the staged directory is untracked; seam=none; no_claim=argv and staged files only, cmd_push itself is not run
+  test('a non-sealed Q1 resume on a VM pushes its staged checkpoint and snapshot to the path its payload names, in answers and snapshot mode', async () => {
+    for (const [cell, mode] of [['kb-locomo', 'answers'], ['hy-locomo', 'snapshot']] as const) {
+      const a = q1();
+      const c = new Campaign(a.manifestPath, a.state);
+      c.init();
+      c.reserve(cell);
+      await c.launch(cell, vm(1, { realization: true }));
+      let checked = false;
+      const r = await c.resume(cell, vm(0.5, { seen: argv => {
+        const dir = payloadOf(argv).restore!.dir;
+        expect(dir).toMatch(/^\.scoreboard-restore\/[A-Za-z0-9._-]+$/);
+        const pushes = argv.flatMap((x, i) => x === '--push' ? [argv[i + 1]] : []);
+        expect(pushes).toContain(`${join(ROOT, dir)}:work/${basename(ROOT)}/${dir}`);
+        expect(argv.indexOf('--push')).toBeLessThan(argv.indexOf('--'));
+        expect(existsSync(join(ROOT, dir, 'checkpoint', 'attempts.ndjson'))).toBe(true);
+        expect(existsSync(join(ROOT, dir, 'realization', 'snapshot', 'store.tar'))).toBe(mode === 'snapshot');
+        checked = true;
+      } }));
+      expect([r.mode, checked]).toEqual([mode, true]);
+    }
   });
 
   test('a tampered snapshot is not recorded; without a usable snapshot the resume keeps the checkpoint and answers only what it lacks (A22)', async () => {

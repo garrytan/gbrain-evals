@@ -1,0 +1,4 @@
+{
+  "$comment": "Each fix gbrain's improvement crew ships for a nightly finding: issue (tracker id), pr (gbrain pull request), gbrain_version (the first version carrying it), suite (a dev-set suite id), items (the dev-set item ids that exposed it) and an optional note. The nightly report shows each fix's items every night, so a fix that regresses shows up next to the record of shipping it.",
+  "fixes": []
+}

@@ -67,7 +67,7 @@ Gate 1 cost $133.87 over 3,304 requests, against its $470 cap: `query` $23.74, `
 
 ## Addendum (2026-11-04): most of Sol's `get_page` refusals were a gbrain bug, fixed in v0.60.570.0
 
-Most of these refusals were gbrain rejecting a call shape it now accepts. Sol fills in every optional argument of `get_page`, so most of its page reads sent two or three window selectors (`lines` and `bytes`, often `around_chunk_id` too) beside `body: "full"`. gbrain v0.60.557.0, the pin here, refused any call with more than one selector (`invalid_params`). gbrain v0.60.570.0 ([gbrain#8509](https://github.com/garrytan/gbrain/pull/8509), `241cef5a`) reads one window instead. It applies the first usable selector in the order cursor, `around_chunk_id`, `lines`, `bytes`, and its `window_selector` field says which one applied and what it set aside.
+Most of these refusals were gbrain rejecting a call shape it now accepts. Sol fills in every optional argument of `get_page`, so most of its page reads sent two or three window selectors (`lines` and `bytes`, often `around_chunk_id` too) beside `body: "full"`. gbrain v0.60.557.0, this benchmark's pin, refused any call with more than one selector (`invalid_params`). gbrain v0.60.570.0 ([gbrain#8509](https://github.com/garrytan/gbrain/pull/8509), `241cef5a`) reads one window instead. It applies the first usable selector in the order cursor, `around_chunk_id`, `lines`, `bytes`, and its `window_selector` field says which one applied and what it set aside.
 
 A keyless replay sent every recorded Sol `get_page` call to the SkillOpt rollout registry at both gbrain builds, against the brain each run read. No model ran, so the replay shows what gbrain now does with the calls Sol made. It can't show whether Sol would answer differently.
 
@@ -76,7 +76,7 @@ A keyless replay sent every recorded Sol `get_page` call to the SkillOpt rollout
 | This benchmark's calibration (v3 brain) | 305 of 305 | 233 | 233: 221 `lines` windows, 12 `around_chunk_id` windows | 72: 61 sent `bytes: {offset: 0, length: 0}` beside `lines`, 8 a `section` and 3 a `grep` beside `lines` |
 | The [frontier probe](2026-11-01-skillopt-method/REPORT.md#tool-errors-in-the-skillopt-rollout-path) (v2 brain) | 606 of 607 (one call's arguments aren't JSON) | 436 | 435: 285 `lines` windows, 150 `around_chunk_id` windows | 171: 169 `known_as_of` beside read-view arguments, 1 a `grep` beside `lines`, 1 `page_not_found` |
 
-The one probe call refused for its selectors that doesn't read asks for `people/chris-davis-49`, a page that isn't in the brain. It now gets `page_not_found` instead of `invalid_params`. The other calls that still refuse break rules this fix didn't change. gbrain refuses `known_as_of` beside read-view arguments, and `section` or `grep` beside a window, on purpose. It rejects a zero-length `bytes` as a malformed selector even when a usable `lines` comes with it. These refusals come from the same habit of filling in every optional argument, so a Sol rerun at v0.60.570.0 would still lose about a quarter of its page reads: 72 of the calibration's 305 (40 of 127 in `briefing`, 32 of 178 in `fact-check`) and 171 of the probe's 606.
+The one probe call refused for its selectors that doesn't read asks for `people/chris-davis-49`, a page that isn't in the brain. It now gets `page_not_found` instead of `invalid_params`. The other calls that still refuse break rules this fix didn't change. gbrain refuses `known_as_of` beside read-view arguments, and `section` or `grep` beside a window, on purpose. It rejects a zero-length `bytes` as a malformed selector even when a usable `lines` comes with it. These refusals come from the same habit of filling in every optional argument. Replayed as Sol sent them, 72 of the calibration's 305 (40 of 127 in `briefing`, 32 of 178 in `fact-check`) and 171 of the probe's 606 still fail. Only a live Sol rerun can show how many page reads Sol would lose, because its later calls depend on what its earlier ones returned.
 
 Not every call that sent `around_chunk_id` reads that window. 89 of the probe's three-selector reads asked for `view: "markdown"`, which has no `around_chunk_id` window, so gbrain set it aside and read `lines`. The probe's committed input names the page as `[withheld]` in 128 of its `get_page` calls, because the one-shot proposer wasn't shown those pages, and 86 of them were refused for their selectors. Those calls replay against a stand-in page (`people/vera-chen-14`, the one the acceptance test uses), where 14 recorded chunk ids don't exist, so those reads fell through to `lines`.
 
@@ -86,12 +86,14 @@ Reproduce, with no keys, in about 25 seconds per build:
 
 ```sh
 R=docs/benchmarks/2026-11-02-skillopt-ceiling/runs/get-page-replay/replay.ts
-bun $R before.json.gz                  # at this repository's pin, gbrain 62637c96a
+bun $R before.json.gz                  # in a checkout with package.json pinning gbrain 62637c96a, after bun install
 bun $R after.json.gz                   # in a checkout with package.json pinning gbrain 241cef5a, after bun install
 bun $R --compare before.json.gz after.json.gz
+bun $R d253ec0ff.json.gz               # at this repository's pin
+bun $R --compare after.json.gz d253ec0ff.json.gz > compare-570-623.json
 ```
 
-The per-call outcomes at both builds and their comparison are in [`runs/get-page-replay/`](2026-11-02-skillopt-ceiling/runs/get-page-replay/). This repository stays pinned at v0.60.557.0, and the benchmark stays retired.
+The per-call outcomes at both builds and their comparison are in [`runs/get-page-replay/`](2026-11-02-skillopt-ceiling/runs/get-page-replay/). This repository pinned v0.60.557.0 when the replay ran. It now pins v0.60.623.0 (`d253ec0ff`), where the same replay gives every one of the 2,105 recorded calls the same outcome, and every read the same digest, as at `241cef5aa` (v0.60.570.0) ([`compare-570-623.json`](2026-11-02-skillopt-ceiling/runs/get-page-replay/compare-570-623.json)). The benchmark stays retired, and its stages keep their v0.60.557.0 pin.
 
 ## What changes in this repository
 

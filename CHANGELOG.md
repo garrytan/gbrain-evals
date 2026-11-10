@@ -2,6 +2,427 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.200] - 2026-11-10
+
+### The skill ranker benchmark now includes the probe behind the off-by-default `top_gate` proposed for gbrain
+
+- **What it adds.** `docs/benchmarks/2026-11-07-skill-ranker-offline/scripts/gate-probe.ts` tests ten candidate measures
+  for a "no skill applies" gate, with no API keys. For each measure it fits one threshold on the dev and stress-dev
+  turns at 750 skills, keeping false suggestions on no-skill turns under 25%, then scores that threshold on the test
+  and stress-test turns at 250, 750 and 1,500 skills with Wilson 95% intervals. Its output is pinned in
+  `results/gate-probe.json`, and a rerun reproduces it byte for byte.
+- **What it shows.** `rawN`, the best skill's BM25 score divided by the catalog's largest idf, is the measure that
+  garrytan/gbrain#9095 proposes for gbrain as `top_gate`, off by default; the gbrain this repo pins has no gate yet.
+  At its fitted threshold of 1.33, the gate keeps an acceptable skill in the top 5 on 25.7%, 27.2% and 27.9% of skill
+  turns, against 51.5%, 55.5% and 61.1% with no gate, and still suggests a skill on 18.8%, 17.0% and 18.8% of no-skill
+  turns. That is why that change keeps the gate off by default.
+- The benchmark's README lists the probe and its result. No published score or verdict changes.
+
+## [0.10.199] - 2026-11-10
+
+### The nightly check's results now feed the weekly failure-cause count
+
+- **A `nightly` failure-cause adapter.** `eval/runner/failure-causes/adapters/nightly.ts` reads a night's
+  `outcomes.jsonl` or `outcomes.jsonl.gz` into the shared failure rows, so a week of nightly failures can be counted by
+  cause beside the other evals. It maps fields and infers none. Keyless failures (the concurrency trials, the system
+  smokes, the tool-contract replay) are counted per night, suite and cause, and an item the night scheduled but didn't run
+  comes back as not run.
+- **Richer outcome rows.** Every nightly row carries its suite's fixed facts (system, arm, condition, visibility, agent
+  loop), each tool call with its error and whether the agent recovered, gold coverage, write losses, and the question,
+  reference and answer on public or synthetic rows. A suite the night skipped or couldn't build writes one skipped row
+  per item with the reason, and a resume replaces it once the item runs.
+- **One taxonomy.** The nightly report's failures by cause come from the shared classifier, and the nightly's own
+  `classify.ts` is gone. `summary.json` records `taxonomy_version` in place of `classifier_version`.
+- **Bisect.** `bisect.ts` leaves skipped rows out, so a bisect step on a gbrain commit older than a suite, or on a
+  Postgres item without `--pg-admin`, stops instead of counting the step as bad.
+- **Stable pin.** Matrix nights compare with gbrain's `stable` tag, v0.60.620.0. The old pin predated the commit the
+  refresh-barrier and concurrent-writer suites need, so a matrix night skipped them on stable.
+- No published score or verdict changes.
+
+## [0.10.198] - 2026-11-10
+
+### CI splits the test suite into six shards balanced by measured file times, so no test job nears its 15-minute limit
+
+- **Six shards, balanced by time.** CI's `tests` jobs go from four to six, and each runs
+  `bun test --shard=<n>/6 --timings=test/timings.json`. Bun now cuts the sorted file list where the listed times
+  balance, instead of dealing files out one at a time by file count. On main at a06ae365, the slowest of the four old
+  shards spent 832 s of its 900 s job limit running tests.
+- **The largest single file.** Bun shards whole files, so `test/eval/predictive-cli-arm.test.ts` (about 5 minutes)
+  always runs inside one shard. A shard's time is about a sixth of the suite plus, at most, its slowest file.
+- **Refreshing the times.** `test/timings.json` holds each test file's median time over five main runs. When you add
+  a test file that takes more than a minute, or a shard job nears 10 minutes, download the `tested-files-*` reports of
+  a few green main runs (`gh run download <run id> -R garrytan/gbrain-evals -p 'tested-files-*' -D <dir>`, one
+  directory per run) and run `bun scripts/test-timings.ts <dir> [<dir>...]`. Use green runs: a failed shard uploads no
+  report, so its files would drop out. A file missing from the timings still runs and counts as a median file.
+- **Local runs.** `bun run test` (`scripts/test-shards.ts`) reads the same timings, so run it from the repository
+  root. It still defaults to four shards or the CPU count, whichever is lower; `TEST_SHARDS=6` gives CI's grouping.
+- **Checks.** The CI-carry profile in `.gstack/pregate.json` lists the two new jobs. Two CI-config tests pin the new
+  command and matrix. No other assertion changed, and no test is skipped.
+
+## [0.10.197] - 2026-11-10
+
+### A nightly check of gbrain master that counts failures by cause and flags what got worse since the night before
+
+- **What it runs.** `eval/runner/nightly/run.ts` runs a frozen development set (`eval/data/nightly/devset-v1.json`,
+  eight suites chosen for headroom) against one gbrain ref at one tier: nightly, matrix, smoke or bisect. The suites are
+  Cat 40 Hard world M, two write-task agent suites (refresh barrier on and off), the concurrent-writer trials on PGLite
+  and Postgres, seven keyless system smokes, LongMemEval-S hard, BEAM-1M hard and the tool-contract replay. Keyless
+  suites always run without keys. A suite that calls a model runs only with `--fake`, or with `--paid` and a
+  budget-ledger run.
+- **What it reports.** Each night writes pass^1 and pass^k, failures by cause, cost per correct answer, and flags
+  against the previous master night and the pinned stable release. Provider and harness failures are counted on their
+  own line and left out of every rate. `bisect.ts` narrows a flag to the first bad first-parent commit. QA answers are
+  judged across model families.
+- **System smokes.** Seven keyless smokes on a seeded synthetic brain cover the places where gbrain master broke in the
+  30 days before the check was built: upgrades from the previous night's commit and from an old release, an ingest
+  retried across an upgrade, managed and source-pinned sync, Postgres 15 and the query contract. On a Ubicloud VM, each
+  failed at its breaking gbrain release and passed at its fix.
+- **Ledger.** A paid night spends through one run in a durable budget ledger, sized by a night cap and a 30-night cap.
+  An open nightly run holds its whole budget against the 30-night cap until its opener closes it (`ledger.ts close`).
+  The runner closes only a run it opened itself, and refuses a `--budget-run-id` that isn't an open nightly run.
+- **Cat 40.** The nightly runs world M with the ladder's `--dev-set` flag, and every such cells receipt and report says
+  it is a dev-set run on the current harness, never a Hard-freeze result. A paid slot build now checks the Hard freeze
+  before it spends. The rerank probe repeats a search that missed gbrain's query embed deadline. A slot build no longer
+  closes a shared ledger run, and the metering proxy names budget refusals.
+- **VM and docs.** `scripts/nightly-vm.sh` bootstraps an ephemeral Ubicloud VM with Postgres 15 and 18 and a gbrain
+  clone, and `scripts/nightly-export.sh` writes only the files a night reads. The new page `docs/nightly.md` explains
+  each tier, the report, the ledger, resuming a night and bisecting.
+- No published score or verdict changes. Nothing schedules the check yet.
+
+## [0.10.196] - 2026-11-10
+
+### Phase 2 live recall stops before a model can read a page gbrain hides from unbound callers
+
+- The phase 2 runner refuses to start, and stops mid-run, when gbrain would read its calls as a member or as the brain
+  owner: config `mcp.stdio_member` set to anyone (or unreadable), or a caller access for its session that shows an
+  identity, a granted source or, from gbrain 0.60.623.0, the owner's view. gbrain 0.60.613.0, the phase 2 pin, reports
+  no owner field, so it starts normally on a clean brain.
+- It also stops when the brain turns privacy aliases off (`visibility.honor_aliases` false, 0, off or no, or
+  unreadable), because gbrain then shows pages marked private only by `access` or `confidentiality` to remote callers.
+- When gbrain reports `_meta.access` (the phase 2 pin does), every response must show an unbound caller's view there. A
+  response without it, or with a wider view, never reaches a model, and a wider view stops the run with
+  `LR_PRIVACY_RELAXED`. Before every task and after every episode the runner also reads one page gbrain hides from
+  unbound callers, picked afresh each time, and stops if it comes back readable.
+- What stays open: gbrain caches these settings for 30 seconds, so pages served inside that window may reach a model.
+  Turning aliases off reaches the episodes already running until they end, and turning them off and back on between
+  two checks can go unnoticed. The run kit says so under `LR_PRIVACY_RELAXED`.
+- No score, published result or preregistered number changes. The changed runner files are part of the harness
+  digest, so a phase 2 judge check made before this release is refused (`LR_JUDGE_CHECK`) and has to be made again.
+
+## [0.10.195] - 2026-11-10
+
+### GPT-6.1 Sol's full-context reads now hit OpenAI's prompt cache, and older full-context costs that missed it are labelled
+
+- **Full-context reader.** From GPT-5.6 on, OpenAI writes and looks up its prompt cache only at breakpoints, and with
+  none set the only one falls at the end of the message, after the question. `answerFullContext` in
+  `eval/runner/systems/baselines.ts` sent GPT-6.1 Sol the history and the question as one string, so every question on
+  a conversation wrote the whole history to the cache again and no later question read it back. It now sends the same
+  text as two parts, the history ending in an explicit `prompt_cache_breakpoint`, with `prompt_cache_options.mode`
+  set to `explicit`, so later questions on a conversation can read the history from the cache. The Anthropic bodies,
+  the particle-1 path, usage mapping and the budget ledger are unchanged.
+- **Labels.** The scoreboard report, a note under README's scoreboard block, the dev smokes page and the corrections
+  page now say that S2b full-context's published spend was measured without prompt-cache reads, so it overstates that
+  arm's cost. W10c, the particle-1 replay report and README say their whole-history costs are for one question per
+  history. No figure, accuracy or verdict changes. The W10b finding's checksum of the replay report is repinned for
+  that report's new note.
+
+## [0.10.194] - 2026-11-10
+
+### Q1 eval VMs receive only the files their cells run, and a campaign that would miss one is refused before its lease
+
+- A Q1 scoreboard cell's Ubicloud VM now gets only the tracked files under the campaign's `executes` paths and the few
+  paths cells read beyond them (`Q1_VM_PATHS` in `eval/runner/shootout-cell.ts`), without `.git` or the benchmark
+  docs, so each upload is a few MB instead of the whole checkout. `scripts/ubicloud/ubi-runner.sh run --only <file>`
+  packs that list. A listed path with no tracked files, a tracked file missing from disk or an untracked file under a
+  listed path stops the launch before any VM exists.
+- A resume still sends the checkpoint and store snapshot it staged. They go into the synced checkout for an ordinary
+  cell, or into the custody root for a sealed one.
+- `reserve` refuses, with `CAMPAIGN_INVALID` and before any lease exists, a Q1 campaign whose `executes` leaves out a
+  path the cell runner imports, and a cell whose commands name a script the VM would not receive. Most committed Q1
+  manifests predate `eval/runner/providers` in that list, so a campaign frozen from a copy of one would otherwise fail
+  on its VM after setup.
+- No score or published result changes. A Q1 campaign frozen before this release needs a new campaign identity to
+  launch or resume, because `eval/runner/shootout-cell.ts` and `scripts/ubicloud/ubi-runner.sh` are in its
+  `executes`.
+
+## [0.10.193] - 2026-11-09
+
+### CI now runs all six Cat 25 trajectory probes, so a gbrain pin that breaks any one of them fails
+
+- `test/eval/cat25-trajectory-routing.test.ts` runs every probe in the Cat 25 fixture through gbrain's real `think`
+  pipeline, with no API key, and a failure names its probe. Before this, CI ran two of the six. At gbrain v0.60.557.0,
+  `think` dropped the trajectory for team-size-trajectory-foundry and mrr-midpoint-nimbus while CI stayed green; at that
+  version the new cases fail on exactly those two. No runner, score or published result changed.
+
+## [0.10.192] - 2026-11-09
+
+### The budget ledger prices OpenAI cache writes and long prompts everywhere, and stops a run whose usage it cannot price
+
+- **OpenAI cache writes and long prompts.** Every OpenAI row in the ledger's price table now lists its cache-write
+  rate for the default 30-minute lifetime and for the 12-hour lifetime, and its long-prompt rates above 272,000 input
+  tokens, or says it has none. gpt-6-sol gets the write and long-prompt rates it was missing. A model whose row lists
+  neither is refused before sending, like a model with no price, and so is a request that picks a cache lifetime with
+  no listed write rate. Tool-call arguments and JSON schemas inside a request no longer count as cache settings.
+- **Usage the ledger cannot price stops the run.** A response that reports a cache tier the ledger has no rate for, or
+  a cache count in a place the ledger does not read, is charged at its full reservation, and the run sends no more paid
+  requests. Both metering proxies close their lease and answer 402 in the same case. The batch lane charges such a
+  result row its worst case and keeps going.
+- **Older runners record the ledger's own cost.** Cat 40's agent loop and judges, p5-agent and p4-stream now record
+  each response's cost the way the ledger settles it, cache writes and long prompts included. Before, they priced cache
+  writes as plain input.
+- **Live-recall ledger runs finish.** A live-recall run or judge session that owes no more calls closes its ledger run
+  as finished, instead of leaving it open.
+- **Three Q1 judge runners need a paid window.** Without `--keyless-upstream`, the calibration cell, the A6 second
+  judge and the GST-1365 rejudge refuse to start unless they get `--paid-window` and `--window-cap-usd`, with their
+  ledger cap and lease within the window's cap. The rejudge records a window's starting spend beside its ledger, so
+  every stage under one window shares the window's cap whatever its output directory, and a crashed stage can resume
+  its own lease.
+- No published number changes, and the frozen cell manifests keep their bytes.
+
+## [0.10.191] - 2026-11-09
+
+### The README opens with a scorecard of agents with and without gbrain
+
+- **Results first.** The README now opens with one sentence on what gbrain-evals asks, a short "What gbrain does",
+  three takeaways and a results table with "Without gbrain" and "With gbrain" columns. Live recall phase 2 leads: Opus
+  5.5 goes from 13.3% with no retrieval to 86.7% with gbrain's tools, and particle-1 from 9.3% to 68.0%. Rows whose
+  experiment had no setup without gbrain say "not tested" instead of borrowing a baseline.
+- **Plain words.** Internal names such as `recall_all@5`, W10a, N9, Cat 35, F6 and RS1 became plain descriptions, and
+  caveats moved from table cells into numbered notes under the table.
+- **Version detail moved.** The pin's commits outside the release, the defaults changed since each result and the
+  capability list moved to [the gbrain under test](docs/gbrain-under-test.md). The pin table moved into a numbered
+  quick start that needs no API keys.
+- **Disclosures.** The gbrain, Particle and OpenAI lines appear once, in a closing section, as
+  [disclosures](docs/disclosures.md) now says.
+- **What it changes.** No score, verdict or stated ranking changes. Every figure is copied from its linked report.
+
+## [0.10.190] - 2026-11-09
+
+### Two pulls of one Ubicloud VM no longer run at once on Ubuntu 26.04
+
+- **Fixed.** `scripts/ubicloud/ubi-runner.sh` now gives a VM's pull lock to the pull that creates the lock's `pid` file,
+  which bash's `noclobber` opens with `O_EXCL`, so only one pull can create it. On Ubuntu 26.04, GitHub's
+  `ubuntu-latest` image since 2026-11-09, `mkdir` comes from uutils coreutils 0.8.0, which can tell two pulls that start
+  together that both created the lock directory. Both then wrote into the same local directory, and the
+  `ubi-runner pull lock` test failed CI at random.
+- **Test.** `test/eval/ubi-runner-pull.test.ts` adds a case that puts a `mkdir` on `PATH` that answers the way uutils
+  0.8.0 does, then starts two pulls together. It fails without the fix.
+
+## [0.10.189] - 2026-11-09
+
+### The live recall findings now say which model and search APIs saw the questions and page text
+
+- [The phase 2 findings](docs/benchmarks/2026-11-09-live-recall-phase2.md) said that no task, answer, page text or slug
+  left the box. Phase 2 sent the task text and the brain's page text and slugs to Anthropic, OpenAI and Particle, and
+  sent the gold answers and the models' answers to the judge models at OpenAI and Anthropic, under the consent its
+  preregistration records. gbrain's own search also sent queries and candidate passages to Voyage AI, the brain's
+  embedding and reranking provider. The page now says so.
+- The [batch 1](docs/benchmarks/2026-11-06-live-recall-batch1.md) and
+  [batch 2](docs/benchmarks/2026-11-07-live-recall-batch2.md) findings said that no question, page text, slug or result
+  left the box. The runs' only model calls were gbrain's own calls to Voyage AI, which embedded each question form and,
+  in configured search, reranked it with its candidate passages. Both pages now say so.
+- Each of the three pages carries a dated correction note. No number, scorecard or preregistration changed.
+
+## [0.10.188] - 2026-11-09
+
+### Published OpenAI dollar figures that priced cache writes as plain input are corrected, and three keyless tools recompute every correction
+
+- **Corrected.** OpenAI reports almost every uncached prompt token of gpt-6.1-sol and gpt-6-luna as a cache write, and
+  it prices cache writes a quarter above plain input. Some published dollar figures for gpt-6.1-sol, gpt-6-sol,
+  gpt-6-luna and gpt-6-astra came from code that priced those tokens as input, so they read low, by at most a quarter
+  of their input dollars. Cat 40's price code also never applied OpenAI's long-context rate for requests over 272,000
+  input tokens. No Cat 40 file records each request's size, so a Cat 40 figure whose sessions could have held such a
+  request is now given as a range. Each affected report keeps its original figure beside a dated correction note, and
+  [corrections](docs/corrections.md) lists them. Totals are given only as the percent they were low.
+- **What it changes.** No score, verdict or stated ranking changes. On the Hard confirmation's M world, gpt-6.1-sol's
+  dollars per success with gbrain are 1.30 to 1.37 times those with files (was 1.35), so gbrain is still slightly
+  dearer for Sol. On the sealed confirmation, the stack's Sol dollars per cell are 1.04 times the frozen arm's at the
+  recorded dollars and at both upper bounds; the committed data allow 0.87 to 1.24 times, inside the 1.5x
+  envelope.
+- **Recompute it yourself.** [The November 9 audit](docs/audit/2026-11-09-openai-cache-writes.md) lists every figure
+  that moved. Its three tools, under `docs/audit/2026-11-09-openai-cache-writes/` (`beam-and-program-primary/`,
+  `cat40/` and `other-runners/`), run with no API keys, read only committed files, and reproduce their committed
+  `results.json` byte for byte.
+- **Not changed here.** Claude figures don't move: Anthropic reports cache writes in a field every path already reads.
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
+## [0.10.187] - 2026-11-09
+
+### gbrain's read tools turn paraphrased questions about Garry's notes into right answers, and a summarising helper in front of gbrain costs grounded ones
+
+- **Results.** [The live recall phase 2 findings](docs/benchmarks/2026-11-09-live-recall-phase2.md) report the
+  preregistered run on 99 frozen tasks. On paraphrased questions, gbrain's `query`, `search` and `get_page` tools take
+  claude-opus-5-5 from 13.3% to 86.7% correct (+73.5 points, 95% interval 63.9 to 82.5) and particle-1 from 9.3% to
+  68.0% (+58.8, 48.5 to 68.8). A summarising helper between gbrain and the answering model lowers answers that are
+  correct and cite only supporting pages by 14.3 points for claude-opus-5-5 and 14.4 for particle-1, with no measurable
+  change in plain correctness. The public scorecards sit beside the findings, and the docs hub's live recall row now
+  leads with them.
+- **Public scorecards.** `bun eval/runner/live-recall/redact-scorecard.ts <scorecard.json> <scorecard.md> <out dir>`
+  writes the public copy of a live recall task scorecard. It keeps each cell's answer cost per correct answer, drops the
+  run's other cost fields, checks that the Markdown is what the repository renders from the JSON, and prints the hashes
+  of both copies.
+- **Fixed.** `tasks.ts judge` no longer judges again a call that hit the judge's output-token cap. Such a row stays a
+  judge error, as the preregistration says. A judge check that grows past its first step no longer refuses its own
+  `--truncation-waiver` as already used. The counted run had no truncated judge calls, so no published number changes.
+
+### Live recall phase 2: OpenAI cache writes priced as the budget ledger prices them (GBEV-46)
+
+- **Fix.** `eval/runner/q1/usage.ts` now reads `cache_write_tokens` inside `input_tokens_details` (and Chat
+  Completions' `prompt_tokens_details`) as well as at the top level, so an OpenAI response's cache writes are priced
+  at the model's cache-write rate ($2.50 per million for gpt-6.1-sol) instead of as plain input. The paid fixture smoke
+  on 2026-11-08 had priced gpt-6.1-sol at $0.2853 from its records against $0.3325 on the ledger, while Anthropic and
+  particle-1 matched to the cent. The parser is shared, so Cat 40's agent loop and q1's readers, including the memory-qa
+  results q1 reads, get the same fix; Cat 40's text-only claims judge (`runAgentText`) and `p5-agent.ts` still price an
+  OpenAI judge's cache writes as plain input.
+- **Test.** `test/eval/q1-usage.test.ts` prices the 13 real `usage` objects in
+  `eval/data/live-recall-v1/provider-usage-2026-11-08.jsonl` both ways: the loop's price equals the ledger's for every
+  response, and the totals equal that capture's ledger ($0.0831378 Anthropic, $0.013817 OpenAI, $0.00152595
+  particle-1). It fails on the old parser.
+- **Harness digest.** `HARNESS_FILES` now also hashes the cost path the runner prices with (`q1/usage.ts`,
+  `usage-receipt.ts`, `metering-proxy.ts`, and gbrain's `model-pricing.ts`, `model-id.ts` and `embedding-pricing.ts`)
+  and the shared `metrics.ts` its scorecard uses. Before this, the digest was the same with and without the cost fix. A
+  keyless test checks that every runtime import of the agent loop, the budget ledger and the usage parser, relative or
+  from gbrain, is in the list. The counted run's digest and commit requirements are under the
+  preregistration's Frozen sample.
+- **gbrain re-pin.** Phase 2 now measures gbrain 0.60.613.0 (`98dda48fb9fd`, schema 296), the version Wintermute's box
+  runs after GBRA-108's upgrade, instead of 0.60.593.0. The preregistration's dated amendment, recorded before the
+  freeze, lists the two changes arm B can see. The run kit's phase 2 commands load the new commit.
+- **Judge check and Astra judge (R78).** `gpt-6-astra` now judges claude-opus-5-5 and particle-1 rows in place of
+  gpt-6.1-sol, and `claude-opus-5-5` still judges gpt-6.1-sol rows. A new `tasks.ts judge-check` runs before the counted
+  run on 20 frozen tasks: both judge models grade every answer again at effort high, and each counted judge is measured
+  against the answers they grade alike (catch rate, false-fail rate and Cohen's kappa, at least 40 labels and kappa
+  0.6 to pass). Only `judge-check.json` leaves the box, and `tasks.ts run` refuses to start without a passing one
+  (`LR_JUDGE_CHECK`) unless GBEV-3 waives it. Every judge row records its served model version, every comparison
+  reports the tasks that got worse and reads an interval that includes zero as "no measurable difference", and
+  `tasks.ts estimate` shows each judge's cost on its own line and projects the judge check. The counted run's starting
+  cap moves from $360 to $700, the judge check has its own $200 cap, and the box ledger's program cap is $900.
+- **Label floor and truncated judge calls.** If a counted judge has fewer than 40 labels on either primary metric after
+  20 tasks, the judge check adds 10 frozen tasks at a time, up to 40, under the same $200 cap, and applies the pass
+  rule once to the final set; `judge-check.json` lists every step. Every judge row records its 8192-token output cap and
+  whether the call hit it. A truncated call is a judge error, `judge-check.json` reports each judge model's truncation
+  rate, and above 1% the check fails and a judge check or counted run stops (`LR_JUDGE_TRUNCATED`). A counted run also
+  refuses a judge check that stopped at its cap or misses one of its models, arms or the first 20 tasks, a judge-check
+  run no longer writes a scorecard, and `tasks.ts judge` on a judge-check directory exits 7 when the check fails.
+- **A judge check must finish, and truncation is never washed out.** `judge-check.json` counts only finished tasks
+  (answered, judged and labelled in every arm and model) and passes only when every planned task finished, so a check
+  cut short and then re-judged cannot pass on the tasks it reached. The truncation rate counts every judge call, earlier
+  attempts on a re-judged answer included, and a resume or re-judge checks it before any new call. The terminal shows
+  each model's own kappa under Astra.
+- **Readings follow Holm.** A primary comparison whose interval excludes zero but whose Holm-adjusted p is 0.05 or more
+  reads "not significant after correcting for multiple comparisons" (`not_significant_after_correction`), never as a
+  measured difference; descriptive comparisons still read from their interval.
+- **Truncation by model and effort, and GBEV-3's waiver.** The 1% truncation rule now applies separately to each judge
+  model's medium-effort counted verdicts and its high-effort labels. A counted-judge split stops a run, and a label
+  split fails the judge check. `--truncation-waiver <note>` on `run`, `judge-check` or `judge` lifts a stop for the
+  truncations recorded so far, only with GBEV-3's note, recorded as `agent:GBEV-3` in `run.json` and the scorecard; the
+  stop re-arms on new truncations, and truncated rows stay judge errors.
+- **Primaries by task origin.** The first freeze on Garry's brain kept 38 of 100 tasks, because 65 of the gold pages
+  carry `access: private`, so most cross_source and time_window tasks are being replaced with tasks a remote caller can
+  answer. The scorecard's new `by_origin` block, and a markdown table beside the primaries, show the four primaries on
+  the original tasks and on the replacements (marked `replacement: true` in the task file) separately, with counts by
+  type.
+  It is descriptive only, with no Holm correction and no verdict.
+- **Gold clusters as the resampling unit.** In the rebuilt task file, 8 civic pages each serve as gold for two
+  cross_source tasks. Tasks that share any gold page now form one gold cluster, and every interval and the p that Holm
+  adjusts treat the cluster as one unit. That covers the comparisons' cluster bootstrap, the rates' intervals, and an exact sign-flip
+  test over clusters in place of exact McNemar, which it equals when no gold page is shared. The freeze and the
+  scorecard report the cluster count and the sizes of shared clusters, and compute the minimum detectable differences at
+  the cluster count. A test shows that a shared-page pair is resampled together.
+- **Second freeze recorded.** The preregistration's Frozen sample section records the second freeze on Garry's brain:
+  99 of 100 tasks kept after one same-type top-up round (37 original, 62 replacements), 87 gold clusters, minimum
+  detectable differences of 13.4 and 16.0 points, gbrain 0.60.613.0 loaded on a box whose own install is 0.60.618.0,
+  and no part of GST-2059 on the box. The harness and its digest are unchanged.
+
+## [0.10.186] - 2026-11-09
+
+### gbrain pin moves to v0.60.623.0: Sol's multi-selector page reads now read, and Cat 25's trajectory gate passes
+
+- **The product pin moves from `62637c96a` (v0.60.557.0) to master `d253ec0ff` (v0.60.623.0)**, 1,144 commits and 66
+  releases later; the old pin is in the new one's history. `gbrain-cues` and `gbrain-reader` stay where they are.
+  gbrain's dependency list did not change, so `bun.lock` changes only the `gbrain` entry. v0.60.623.0 is gbrain's newest
+  release (also its `latest-stable` ref, gbrain's alpha channel), and gbrain's CI passed at it. gbrain's soaked `stable`
+  tag is v0.60.620.0, older than v0.60.622.0, the first release with the Cat 25 fix below, so the pin takes the newest
+  release.
+- **Sol's recorded page reads now read (gbrain#8509, v0.60.570.0).** Replayed with no keys through the pinned SkillOpt
+  rollout registry, 435 of the 436 frontier-probe `get_page` calls and all 233 ceiling-calibration calls that v0.60.557.0
+  refused for sending two or three window selectors now read one window; the one probe call that doesn't asks for a
+  page that isn't in the brain. Of the calibration re-read's 305 Sol `get_page` calls, all refused at v0.60.557.0, 40 of
+  127 in `briefing` and 32 of 178 in `fact-check` still refuse, for a zero-length `bytes`, a `section` or a `grep` beside
+  `lines`. Every one of the replay's 2,105 recorded calls gets the same outcome at the pin as at `241cef5aa`
+  (v0.60.570.0), and every read returns the same digest
+  (`docs/benchmarks/2026-11-02-skillopt-ceiling/runs/get-page-replay/compare-570-623.json`). A replay sends Sol's
+  recorded arguments, so it can't show how Sol would answer at this pin.
+- **Cat 25's hermetic gate passes (gbrain#8912, v0.60.622.0).** `think` now keeps an entity's trajectory when the question
+  names a month: the latest reading before the month joins the readings inside it, and pages the month leaves out still
+  name the entities to read. `CAT25_DRY_RUN=1 bun eval/runner/cat25-trajectory-routing.ts` scores 6 of 6 probes at the
+  pin with the trajectory injected on every one (wave mean 1.00, baseline 0.00) and every gate passes. At v0.60.557.0
+  the same command injects it on 4 of 6, two probes end as system failures, and the gate fails.
+- **Schema.** The range adds migrations v287 to v296, so a brain the pinned gbrain builds is at schema 296 (was 286).
+  Fixture and CI brains are built fresh. Live recall refuses a counted brain whose schema differs from the gbrain it
+  loads, so a counted run against a brain at another schema loads that brain's own release, as batches 1 and 2 did.
+- **What else in the range can move a number on a rerun.** No published result was rerun here, and every published
+  number keeps the commit it was measured at. A rerun at this pin would see these changes. Search's keyword arm adds a
+  statement for identifiers a question names (`#412`, codes, emails, URLs), resolves hyphenated handles and ranks
+  longer any-word retries by rare words (v0.60.575.0, no setting turns it off); every gbrain retrieval runner reaches it.
+  `forget` strikes the claim's row in the page before the database changes (v0.60.578.0), which N5, N14, Cat 39 and the
+  lifecycle runner reach. Refresh recovery, re-planning over gbrain's own commits and default publishing of a diverged
+  checkout (v0.60.615.0, v0.60.618.0, v0.60.620.0) reach the refresh-barrier harness, whose results were measured at
+  v0.60.614.0. A degraded read gains a `[gbrain degraded: ...]` text block (v0.60.563.0), which readers that keep
+  every text block see (the 8k conversion arms, live recall's task arms, Cat 40). The brain owner's own credentials read
+  private pages (gbrain#8917, v0.60.623.0); no harness here names an owner. G3's `two_range_read` cause can't be
+  provoked through MCP or `gbrain call` at this pin, because gbrain#8509 reads the two-selector call, so a G3 run here
+  would count none of those refusals against a reference measured at an older gbrain. G3's preregistered counted runs
+  use v0.60.557.0 on their results branch.
+- **Tests.** `test/eval/skillopt-rollout-empty-args.test.ts` reads a refusal through a `known_as_of` call beside `lines`,
+  which refuses the same way at both pins, and its replay expects the 436 multi-selector calls to read; that replay
+  fails at `62637c96a`. `test/eval/skillopt-tool-calls.test.ts` adds the pin's classes for Sol's 651 recorded calls: 472
+  read, and 169 `known_as_of`, 8 hop-chain and 2 other calls refuse. The retired SkillOpt ceiling stages keep their
+  v0.60.557.0 pin, so in this tree a paid stage stops at its pin check. In
+  `test/eval/skillopt-ceiling-stages.test.ts` the five CLI tests of the checks that come after it (stage caps and attempt
+  2's admission) run only in a tree at the stage pin, and a new test checks that a paid calibration and gate refuse at
+  the pin check here, naming both commits, before they write a row. `test/eval/predictive-runner.test.ts` and
+  `test/eval/predictive-cli-arm.test.ts` set G3's `two_range_read` expectation by the gbrain under test: below
+  v0.60.570.0 both surfaces refuse the two-selector call with that cause, and from v0.60.570.0 on MCP and `gbrain call`
+  read it. The CLI's repeated `--lines` still warns that it overwrites the first window and reads only the last, which
+  G3 counts as that cause. `test/support/no-provider-keys.ts` blanks `WAKESHIFT_API_KEY`, which gbrain now reads for its
+  wakeshift command, so the preload again covers every provider key gbrain reads at the pin.
+- **Docs.** The hub sentences name the new pin. The settings page adds `search.keyword_phrase` (off in every bundle) and
+  the keyword arm's identifier, handle and rare-word changes. README's memory trust row names `d253ec0ff` for its keyless
+  check (Cats 37 to 39 pass). The docs index's SkillOpt method row says the multi-selector calls now read. The SkillOpt
+  retirement addendum names the new pin and the replay's result at it, and says the calibration's 72 and the probe's 171
+  remaining refusals are what a replay of Sol's recorded arguments shows, not a forecast of a live rerun.
+- **Campaign identity.** `package.json` and `bun.lock` are in the F6 campaign's executed tree, so this release counts for
+  F6 only under a new campaign identity. No file in the Cat 40 Hard freeze changed. Experiments preregistered at an
+  earlier gbrain keep their own pins on their results branches.
+
+## [0.10.185] - 2026-11-09
+
+### A preregistered test of whether gbrain knows what is true now when facts change, with its harness
+
+- **What this adds.** The changing-facts battleground asks whether gbrain at its stable release, reading 8,000 tokens of
+  memory, answers "what is true now" more accurately than a memory-bank server, an extract-first server and a
+  temporal-graph library, on sealed, made-up chat histories in which facts change in known ways. Its preregistration,
+  `docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md`, freezes when this release merges. No world
+  has been minted and no cell has run.
+- **Worlds and custody.** `eval/generators/changing-facts-gen.ts` builds worlds with an oracle for each kind of change
+  (moves, corrections, repeated stale values and the rest), with public dev plans and fixture worlds under
+  `eval/data/changing-facts-v1/`. `eval/custody/bg1/` mints, validates and pins sealed worlds, and the `bg1-dev` and
+  `bg1` loaders load only pinned bytes.
+- **Cells, judges and the verdict.** `eval/runner/q1/cells/bg1-cells.json` runs through the Q1 cell runner, and each
+  reader's answers are graded by a judge from another model family. A deterministic value matcher, exposure checks, the
+  decision rule with its power plan and pricing, the verdict and pilot analysis (`eval/runner/bg1/verdict.ts`) and a
+  judge agreement check on public dev data come with it.
+- **Paid windows.** Every entry point here that can spend real keys runs inside a granted paid window. A campaign gives
+  every unit its window, world end and lease. A cell run checks the lease the metering proxy itself reports, and the
+  keyless exemption holds only when the proxy reports loopback upstreams and placeholder keys. The canonical Gemini judge
+  bills only `BG1_GEMINI_API_KEY`.
+- **Keyless tests.** Every bun test process points `GBRAIN_HOME` at an empty directory and blanks every provider key
+  gbrain reads at its pin, and a new test derives that list from gbrain's source.
+- **Known gaps, fixed before any cell runs.** Four verdict and judge-check defects, a lease-sum check before boot and
+  binding each lease to the generated cells file before a campaign starts are fixed at the start of the results branch,
+  each with a keyless test, before the first paid cell.
+
 ## [0.10.184] - 2026-11-09
 
 ### Synthetic measures for the failures Wintermute reports, each checked against real results before it may gate (GST-2005)

@@ -52,6 +52,40 @@ describe('rerankProbe (from GBRA-39\'s #76: fail closed when a slot reaches no r
     await expect(rerankProbe([bad], proxy, 'q')).rejects.toThrow('made no rerank request');
     expect(bad.restored).toBe(0);
   });
+
+  test('a search that missed gbrain\'s query-embed deadline is repeated; any other search without a rerank fails at once', async () => {
+    const meters: Record<string, Record<string, { requests: number }>> = {};
+    let bound = '';
+    const proxy = { bind: (_s: string, k: string) => { bound = k; }, unbind: () => { bound = ''; }, finalize: async (k: string) => { const m = meters[k] ?? {}; delete meters[k]; return { byModel: m }; } };
+    const timedOut = 'rows\n[gbrain degraded: embed_timeout] This result is partial or degraded.';
+    // Each slot answers its searches in order: true reranks, 'timeout' falls back on the embed deadline, false searches without reranking.
+    const slot = (id: string, answers: Array<true | false | 'timeout'>) => {
+      const s = { id, restored: 0, calls: 0, client: { stderr: ['[gbrain] 1/1 query embeds failed (salvaging survivors): query embed deadline 6000ms exceeded'], call: async () => {
+        const a = answers[s.calls++] ?? false;
+        if (a === true) meters[bound] = { 'voyage:rerank-3-lite': { requests: 1 }, 'openai:text-embedding-3-large': { requests: 1 } };
+        return a === 'timeout' ? timedOut : 'rows';
+      } }, restore: async () => { s.restored++; } };
+      return s;
+    };
+    const late = slot('slot0', ['timeout', 'timeout', true]);
+    await rerankProbe([late], proxy, 'q', { gapMs: 0 });
+    expect([late.calls, late.restored]).toEqual([3, 1]);
+
+    const stuck = slot('slot1', ['timeout', 'timeout', 'timeout', 'timeout', true]);
+    await expect(rerankProbe([stuck], proxy, 'q', { gapMs: 0 })).rejects.toThrow(/all 4 probe searches.*embed_timeout.*query embed deadline 6000ms exceeded/);
+    expect([stuck.calls, stuck.restored]).toEqual([4, 0]);
+
+    const off = slot('slot2', [false, true]);
+    await expect(rerankProbe([off], proxy, 'q', { gapMs: 0 })).rejects.toThrow('the reranker is unreachable or off');
+    expect(off.calls).toBe(1);
+  });
+
+  test('a search whose provider requests the proxy refused on the budget fails at once and names the refusal', async () => {
+    const proxy = { bind: () => {}, unbind: () => {}, finalize: async () => ({ byModel: {}, refused: { budget: 3 }, last_refusal: 'search embed: budget run nightly-x already finished' }) };
+    const s = { id: 'slot1', restored: 0, calls: 0, client: { call: async () => { s.calls++; return 'rows\n[gbrain degraded: embed_timeout] This result is partial or degraded.'; } }, restore: async () => { s.restored++; } };
+    await expect(rerankProbe([s], proxy, 'q', { gapMs: 0 })).rejects.toThrow('the proxy refused 3 of the probe search\'s provider requests on the budget (search embed: budget run nightly-x already finished)');
+    expect([s.calls, s.restored]).toEqual([1, 0]);
+  });
 });
 
 describe('parseConfigPairs (--gbrain-config, --gbrain-build-config)', () => {

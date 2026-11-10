@@ -1,7 +1,13 @@
 /** One usage normalizer (eval/runner/q1/usage.ts): OpenAI counts cached tokens inside its input count, Anthropic beside it. */
 import { expect, test } from 'bun:test';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { answerUsage, normalizeUsage, readerConvention } from '../../eval/runner/q1/usage.ts';
-import { runAgent, type Arm } from '../../eval/runner/cat40/loop.ts';
+import { priceUsage, runAgent, runAgentText, type Arm } from '../../eval/runner/cat40/loop.ts';
+import { BudgetRun, closeLedgers, initLedger, installPaidRequestGuard, priceRequest, readLedger, usageCost } from '../../eval/runner/budget-ledger.ts';
+import { chatText } from '../../eval/runner/p5-agent.ts';
+import { callModel } from '../../eval/runner/p4-stream/model.ts';
 import { parseTranscript } from '../../eval/runner/systems/agent-runtime.ts';
 
 test('OpenAI Chat Completions: a 100-token prompt with 60 cached is 100 in total, 40 uncached', () => {
@@ -52,4 +58,76 @@ test('the agent loop (file agent) sums normalized usage per call on both APIs', 
     usage: { input_tokens: 40, output_tokens: 4, cache_read_input_tokens: 50, cache_creation_input_tokens: 10 } })) as unknown as typeof fetch;
   const a = await runAgent({ model: 'claude-sonnet-5-5', system: 's', user: 'u', arm, fetchImpl: messages });
   expect(a.usage).toEqual({ input: 40, output: 4, cache_read: 50, cache_write: 10, requests: 1 });
+});
+
+test('OpenAI Chat Completions reports cache writes inside prompt_tokens_details; they are a subset of prompt_tokens', () => {
+  expect(normalizeUsage('openai', { prompt_tokens: 12374, completion_tokens: 88, prompt_tokens_details: { cached_tokens: 0, cache_write_tokens: 12371 } }))
+    .toEqual({ uncached_input: 3, cache_read: 0, cache_write: 12371, output: 88, total_input: 12374 });
+});
+
+test('real provider usage from the 2026-11-08 live recall capture: the loop prices each response as the budget ledger does, and the totals match the ledger', () => {
+  const rows = readFileSync(join(import.meta.dir, '../../eval/data/live-recall-v1/provider-usage-2026-11-08.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l) as { endpoint: string; model: string; usage: Record<string, unknown> });
+  const family = (model: string) => (model.startsWith('claude') ? 'anthropic' : model.startsWith('gpt') ? 'openai' : 'particle');
+  const nestedWrites = (u: Record<string, unknown>) => (u.input_tokens_details as { cache_write_tokens?: number } | undefined)?.cache_write_tokens;
+  const totals: Record<string, number> = {};
+  for (const r of rows) {
+    const n = normalizeUsage(family(r.model) === 'anthropic' ? 'anthropic' : 'openai', r.usage);
+    if (nestedWrites(r.usage) !== undefined) expect(n.cache_write).toBe(nestedWrites(r.usage)!);
+    const loop = priceUsage(r.model, { input: n.uncached_input, cache_read: n.cache_read, cache_write: n.cache_write, output: n.output });
+    const body = r.endpoint.endsWith('/responses') ? { model: r.model, max_output_tokens: 8192, input: [] } : { model: r.model, max_tokens: 8192, messages: [] };
+    expect(loop).toBeCloseTo(usageCost(priceRequest('https://' + r.endpoint, body)!, { usage: r.usage })!.usd, 12);
+    totals[family(r.model)] = (totals[family(r.model)] ?? 0) + loop;
+  }
+  expect(rows.some(r => family(r.model) === 'openai' && (nestedWrites(r.usage) ?? 0) > 0)).toBe(true);
+  expect(totals.anthropic).toBeCloseTo(0.0831378, 9);
+  expect(totals.openai).toBeCloseTo(0.013817, 9);
+  expect(totals.particle).toBeCloseTo(0.00152595, 9);
+});
+
+
+// Value: protects=GST-2163: the older runners record OpenAI cache writes from the provider's usage and cost each response as the budget ledger settles it, long prompts included; fails_when=a runner records cache_write 0, books writes at the input rate, or prices a prompt over 272K tokens at the short rates; why_new=p5 chatText, p4-stream and the cat40 judge dropped cache writes; seam=runAgent/runAgentText/chatText/callModel; no_claim=does not call OpenAI (a scripted upstream behind the paid-request guard, keys blanked)
+test('every runner records OpenAI cache writes and costs each response as the ledger settles it, long prompts at the long rates', async () => {
+  const capture = readFileSync(join(import.meta.dir, '../../eval/data/live-recall-v1/provider-usage-2026-11-08.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l) as { model: string; usage: Record<string, any> });
+  const real = capture.find(r => r.model === 'gpt-6.1-sol' && r.usage.input_tokens_details.cache_write_tokens > 0)!.usage;
+  const long = { input_tokens: 300_000, input_tokens_details: { cached_tokens: 100_000, cache_write_tokens: 50_000 }, output_tokens: 1000, total_tokens: 301_000 };
+  const settled = (usage: object) => usageCost(priceRequest('https://api.openai.com/v1/responses', { model: 'gpt-6.1-sol', max_output_tokens: 100, input: [] })!, { usage })!.usd;
+  expect(settled(long)).toBeCloseTo((150_000 * 4 + 100_000 * 0.2 + 50_000 * 5 + 1000 * 15) / 1e6, 12);
+  const message = (usage: object) => ({ id: 'resp_1', object: 'response', status: 'completed', model: 'gpt-6.1-sol', output: [{ type: 'message', content: [{ type: 'output_text', text: 'ok' }] }], usage });
+  const submit = (usage: object) => (async () => Response.json({ id: 'resp_1', output: [{ type: 'function_call', name: 'submit_answer', call_id: 'c1', arguments: '{"answer":"x"}' }], usage })) as unknown as typeof fetch;
+
+  const arm: Arm = { name: 'none', systemHint: () => '', tools: () => [], writeTools: () => [], call: async () => '' };
+  const agent = await runAgent({ model: 'gpt-6.1-sol', system: 's', user: 'u', arm, fetchImpl: submit(real) });
+  expect(agent.usage.cache_write).toBe(real.input_tokens_details.cache_write_tokens);
+  expect(agent.usd).toBeCloseTo(settled(real), 12);
+  const longAgent = await runAgent({ model: 'gpt-6.1-sol', system: 's', user: 'u', arm, fetchImpl: submit(long) });
+  expect(longAgent.usd).toBeCloseTo(settled(long), 12);
+  expect(longAgent.usd).toBeGreaterThan(priceUsage('gpt-6.1-sol', longAgent.usage));
+
+  const p5 = await chatText('gpt-6.1-sol', 's', 'u', { fetchImpl: (async () => Response.json(message(long))) as unknown as typeof fetch });
+  expect(p5.usd).toBeCloseTo(settled(long), 12);
+
+  const saved = { OPENAI_API_KEY: process.env.OPENAI_API_KEY, ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY };
+  process.env.OPENAI_API_KEY = ''; process.env.ANTHROPIC_API_KEY = '';
+  const dir = mkdtempSync(join(tmpdir(), 'runner-usage-'));
+  const ledgerPath = join(dir, 'ledger.sqlite');
+  initLedger({ ledgerPath });
+  const run = BudgetRun.open({ runner: 'runner-usage', budgetUsd: 50, ledgerPath });
+  const sent: string[] = [];
+  const guard = installPaidRequestGuard(run, { fetchImpl: (async (url: RequestInfo | URL) => { sent.push(String(url)); return Response.json(message(long)); }) as unknown as typeof fetch });
+  try {
+    const judge = await runAgentText('gpt-6.1-sol', 's', 'u');
+    expect(judge.usd).toBeCloseTo(settled(long), 12);
+    const reply = await callModel({ model: 'gpt-6.1-sol', system: 's', tools: [], messages: [{ role: 'user', blocks: [{ type: 'text', text: 'hi' }] }], maxOutput: 100 });
+    expect(reply.usage).toMatchObject({ input: 150_000, cache_read: 100_000, cache_write: 50_000, output: 1000 });
+    expect(reply.usage.usd).toBeCloseTo(settled(long), 12);
+    expect(reply.contextTokens).toBe(301_000);
+  } finally {
+    guard.uninstall();
+    run.close();
+    for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k]; else process.env[k] = v;
+  }
+  expect(sent).toEqual(['https://api.openai.com/v1/responses', 'https://api.openai.com/v1/responses']);
+  expect(readLedger(ledgerPath).entries.map(e => e.actual_usd)).toEqual([expect.closeTo(settled(long), 12), expect.closeTo(settled(long), 12)]);
+  closeLedgers();
+  rmSync(dir, { recursive: true, force: true });
 });

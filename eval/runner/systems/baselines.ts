@@ -317,8 +317,13 @@ export const FULL_CONTEXT_EFFORT = 'medium';
  * when the prompt does not fit the reader, and when the provider rejects it
  * as too long. A lease refusal (the metering proxy's 402 budget) is `budget_not_run`, never a reader
  * error (A23). Anthropic readers get the history as a `cache_control`
- * prefix; OpenAI readers get the same bytes with `prompt_cache_key` set to
- * the conversation, so its automatic prefix cache routes them together.
+ * prefix. OpenAI readers get the same bytes as two text parts, the history
+ * ending in an explicit `prompt_cache_breakpoint` under
+ * `prompt_cache_options.mode: explicit`, with `prompt_cache_key` set to the
+ * conversation: GPT-5.6 and later write and look up the cache only at
+ * breakpoints, and the implicit one falls at the end of the message, after
+ * the question, so a history sent as one string is written on every read and
+ * never read back.
  * Request parameters match `ChatClient` (qa.ts) so only caching differs, reasoning effort included (default
  * `medium`, OpenAI `reasoning_effort`, Anthropic `output_config.effort`; the effort is part of the prompt-cache key).
  * An OpenAI-compatible reader (COMPAT_PROVIDERS, today particle-1) is built and sent by the provider module, with
@@ -342,7 +347,7 @@ export async function answerFullContext(opts: { reader: string; prompt: string; 
       body: { model, max_tokens: outputTokens, ...(sendsTemperature(`anthropic:${model}`) ? { temperature: 0 } : {}), output_config: { effort }, messages: [{ role: 'user', content: [{ type: 'text', text: prefix, cache_control: { type: 'ephemeral' } }, ...(suffix ? [{ type: 'text', text: suffix }] : [])] }] } }
     : { url: `${(process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/$/, '')}/chat/completions`, headers: { authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
       body: /^(gpt-[5-9]|o\d)/.test(model)
-        ? { model, messages: [{ role: 'user', content: opts.prompt }], n: 1, max_completion_tokens: Math.max(outputTokens, 2000), reasoning_effort: effort, prompt_cache_key: cache_key }
+        ? { model, messages: [{ role: 'user', content: [{ type: 'text', text: prefix, prompt_cache_breakpoint: { mode: 'explicit' } }, ...(suffix ? [{ type: 'text', text: suffix }] : [])] }], n: 1, max_completion_tokens: Math.max(outputTokens, 2000), reasoning_effort: effort, prompt_cache_key: cache_key, prompt_cache_options: { mode: 'explicit' } }
         : { model, messages: [{ role: 'user', content: opts.prompt }], n: 1, temperature: 0, max_tokens: outputTokens, reasoning_effort: effort, prompt_cache_key: cache_key } };
   const t0 = performance.now();
   let last = '';

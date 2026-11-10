@@ -9,6 +9,7 @@ Routes (any path prefix, so `/openai/v1/...` and `/<slot>/openai/v1/...` both wo
                              `response_format: json_schema` gets a schema-valid instance (entities are capitalized
                              words, knowledge graphs get nodes and edges); a forced tool call gets schema-valid
                              arguments; an extract-first-style "## New Messages" prompt gets one memory per message line;
+                             a BG1 verdict prompt (eval/runner/memory-qa/instruments.ts) gets {"correct": 1};
                              anything else gets "ok". `stream: true` answers as server-sent events with usage.
   POST .../responses         `text.format: json_schema` gets the temporal graph library's named structured outputs (ExtractedEntities,
                              ExtractedEdges, EdgeTimestamps) or a schema-valid instance for any other schema.
@@ -191,6 +192,9 @@ def temporal_graph_structured(name: str, schema: dict[str, Any], prompt: str) ->
     return filler.fill(schema)
 
 
+BG1_VERDICT_OPENING = "You are grading one answer to a question about a long chat history in which facts change over time."
+
+
 def usage_chat(prompt: str, completion: str) -> dict[str, int]:
     p, c = max(1, len(prompt) // 4), max(1, len(completion) // 4)
     return {"prompt_tokens": p, "completion_tokens": c, "total_tokens": p + c}
@@ -220,6 +224,8 @@ def chat(body: dict[str, Any]) -> dict[str, Any]:
         fn = tools[0]["function"]
         params = fn.get("parameters", {})
         message["tool_calls"] = [{"id": "call_fake", "type": "function", "function": {"name": fn["name"], "arguments": json.dumps(SchemaFiller(params, last_user).fill(params))}}]
+    elif last_user.startswith(BG1_VERDICT_OPENING):
+        message["content"] = json.dumps({"correct": 1})
     else:
         extracted = extract_first_extraction(prompt)
         message["content"] = extracted if extracted is not None else "{}" if rf.get("type") == "json_object" else "ok"

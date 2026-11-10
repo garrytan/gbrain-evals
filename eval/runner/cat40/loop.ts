@@ -19,10 +19,10 @@
  * Retry-After (capped at 120 s), and an empty Particle balance (HTTP 402) stops the run as a budget stop.
  */
 import { createHash } from 'node:crypto';
-import { CHAT_PRICE_OVERRIDES } from '../budget-ledger.ts';
+import { CHAT_PRICE_OVERRIDES, responseUsd } from '../budget-ledger.ts';
 import { compatDeadlineMs } from '../metering-proxy.ts';
 import { assertMetered, classifyCompatError, compatError, compatMayHaveBilled, compatRequest, parseCompatResponse, type CompatMessage, type CompatToolCall } from '../providers/openai-compatible.ts';
-import { normalizeUsage, type NormalizedUsage } from '../q1/usage.ts';
+import { normalizeUsage } from '../q1/usage.ts';
 import { normalizeFinish, normalizeUsage as receiptUsage, receipt, responseMeta, usageSourceOf, type ReceiptRequest, type UsageReceipt } from '../usage-receipt.ts';
 
 export interface ToolSpec {
@@ -197,10 +197,15 @@ export function provider(model: string): 'anthropic' | 'openai' | 'particle' {
   throw new Error(`no provider for model ${model}`);
 }
 
+/**
+ * Summed usage at the short-prompt list rates (estimates, totals). A run's own cost is AgentRun.usd, priced per request as
+ * the budget ledger settles it, long prompts included. Cache writes on a model with no write rate are refused.
+ */
 export function priceUsage(model: string, u: Omit<Usage, 'requests'> & { requests?: number }): number {
   const p = CHAT_PRICE_OVERRIDES[`${provider(model)}:${model}`];
   if (!p) throw new Error(`no verified price for ${model}; add it to CHAT_PRICE_OVERRIDES`);
-  return (u.input * p.input + u.cache_read * (p.cache_read ?? p.input) + u.cache_write * (p.cache_write ?? p.input) + u.output * p.output) / 1e6;
+  if (u.cache_write > 0 && p.cache_write === undefined) throw new Error(`no verified cache-write rate for ${model}; add it to CHAT_PRICE_OVERRIDES before pricing its cache writes`);
+  return (u.input * p.input + u.cache_read * (p.cache_read ?? p.input) + u.cache_write * (p.cache_write ?? 0) + u.output * p.output) / 1e6;
 }
 
 function cap(text: string, max: number | null): { text: string; truncated: boolean } {
@@ -325,14 +330,17 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
     if (cfg.classifyStops && e instanceof ProviderError && (run.stop === 'error' || isBillingRefusal(e))) run.provider_error = { status: e.status, billing: isBillingRefusal(e) };
   }
   run.ms = Date.now() - t0;
-  run.usd = cfg.scripted ? 0 : priceUsage(cfg.model, run.usage);
   return run;
 }
 
-function addUsage(run: AgentRun, u: NormalizedUsage) {
+/** Add one response's usage to the run, and its cost as the budget ledger settles it: long prompts and cache writes at their own rates. */
+function addUsage(run: AgentRun, usage: unknown) {
+  const p = provider(run.model);
+  const u = normalizeUsage(p === 'anthropic' ? 'anthropic' : 'openai', usage as object | undefined);
   run.usage.input += u.uncached_input; run.usage.output += u.output;
   run.usage.cache_read += u.cache_read; run.usage.cache_write += u.cache_write;
   run.usage.requests++;
+  run.usd += responseUsd(p, run.model, { usage }) ?? 0;
 }
 
 type Exec = (name: string, args: Record<string, unknown>) => Promise<{ text: string; submitted: boolean }>;
@@ -386,7 +394,7 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
       ...(cfg.effort !== undefined ? { output_config: { effort: cfg.effort } } : {}),
     }, onAttempt);
     run.model_ms += Date.now() - s;
-    addUsage(run, normalizeUsage('anthropic', res.usage as object | undefined));
+    addUsage(run, res.usage);
     const content = (res.content ?? []) as Array<Record<string, unknown>>;
     messages.push({ role: 'assistant', content });
     const calls = content.filter(c => c.type === 'tool_use');
@@ -427,7 +435,7 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
       ...(stateless ? { store: false, include: ['reasoning.encrypted_content'] } : {}),
     }, onAttempt);
     run.model_ms += Date.now() - s;
-    addUsage(run, normalizeUsage('openai', res.usage as object | undefined));
+    addUsage(run, res.usage);
     if (!stateless) previous = String(res.id);
     const output = (res.output ?? []) as Array<Record<string, unknown>>;
     const calls = output.filter(o => o.type === 'function_call');
@@ -471,7 +479,7 @@ async function particleLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpe
     const s = Date.now();
     const hook = attemptHook(cfg, run, () => req.sent);
     const onAttempt = (a: ProviderAttempt) => {
-      if (a.status === 'error' && a.response?.usage) addUsage(run, normalizeUsage('openai', a.response.usage as object));
+      if (a.status === 'error' && a.response?.usage) addUsage(run, a.response.usage);
       hook?.(a);
     };
     const res = parseCompatResponse(await postJson(fetchImpl, req.url, req.headers, req.body, onAttempt, req.provider).catch(e => {
@@ -479,7 +487,7 @@ async function particleLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpe
       throw e;
     }));
     run.model_ms += Date.now() - s;
-    addUsage(run, normalizeUsage('openai', res.usage ?? undefined));
+    addUsage(run, res.usage);
     const calls: CompatToolCall[] = res.tool_calls.map(c => ({ id: String(c.id), type: 'function', function: { name: String(c.function?.name), arguments: String(c.function?.arguments ?? '') } }));
     messages.push({ role: 'assistant', content: calls.length ? res.text || null : res.text, ...(calls.length ? { tool_calls: calls } : {}) });
     if (!calls.length) {
@@ -541,15 +549,19 @@ export async function runAgentText(model: string, system: string, user: string):
     const j = await res.json() as Record<string, unknown>;
     if (!res.ok) throw new Error(`judge error ${res.status}: ${JSON.stringify(j).slice(0, 300)}`);
     const text = ((j.output ?? []) as Array<Record<string, unknown>>).filter(o => o.type === 'message').flatMap(o => (o.content as Array<Record<string, unknown>>) ?? []).map(c => String(c.text ?? '')).join('\n');
-    const u = j.usage as Record<string, unknown>;
-    const cached = ((u.input_tokens_details ?? {}) as Record<string, number>).cached_tokens ?? 0;
-    return { text, usd: priceUsage(model, { input: (u.input_tokens as number) - cached, cache_read: cached, cache_write: 0, output: u.output_tokens as number, requests: 1 }) };
+    return { text, usd: judgeUsd(model, j) };
   }
   const res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({ model, max_tokens: 4000, system, messages: [{ role: 'user', content: user }] }) });
   const j = await res.json() as Record<string, unknown>;
   if (!res.ok) throw new Error(`judge error ${res.status}: ${JSON.stringify(j).slice(0, 300)}`);
   const text = ((j.content ?? []) as Array<Record<string, unknown>>).filter(c => c.type === 'text').map(c => String(c.text)).join('\n');
-  const u = j.usage as Record<string, number>;
-  return { text, usd: priceUsage(model, { input: u.input_tokens, output: u.output_tokens, cache_read: u.cache_read_input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0, requests: 1 }) };
+  return { text, usd: judgeUsd(model, j) };
+}
+
+/** A judge response's cost from its reported usage, cache reads and writes included; a response that reports none is refused. */
+function judgeUsd(model: string, response: Record<string, unknown>): number {
+  const usd = responseUsd(provider(model), model, response);
+  if (usd === null) throw new Error(`judge response from ${model} reported no usage`);
+  return usd;
 }

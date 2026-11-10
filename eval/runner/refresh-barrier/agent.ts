@@ -562,7 +562,7 @@ export function fakeProvider(task: AgentTask): typeof fetch {
 }
 
 /** The loop's requests with the model's key set, so the key never enters the environment gbrain runs in. The guard sees every request. */
-function keyedFetch(prov: keyof typeof KEY_ENV, key: string): typeof fetch {
+export function keyedFetch(prov: keyof typeof KEY_ENV, key: string): typeof fetch {
   return ((input: Parameters<typeof fetch>[0], init?: RequestInit) => {
     const headers = new Headers(init?.headers);
     if (prov === 'anthropic') headers.set('x-api-key', key); else headers.set('authorization', `Bearer ${key}`);
@@ -583,6 +583,8 @@ export interface EpisodeOptions {
   model_freshness?: { command: string; exit: number | null; output: string } | null;
   /** 1 for a task's first run, 2 and 3 for its reruns. */
   attempt?: number;
+  /** Reads the brain after scoring and before it closes; the result is the record's `inspect` (the nightly write scorer reads page bodies this way). */
+  inspect?: (b: OpenBrain, task: AgentTask) => Promise<unknown>;
 }
 
 export async function runEpisode(task: AgentTask, o: EpisodeOptions): Promise<Record<string, unknown>> {
@@ -614,6 +616,7 @@ export async function runEpisode(task: AgentTask, o: EpisodeOptions): Promise<Re
     const settle = await quiesce(b.engine);
     timings.settle_ms = Date.now() - t0 - timings.loop_ms - timings.refresh_wait_ms;
     const counts = await tokenCounts(b, task.facts);
+    const inspected = o.inspect ? await o.inspect(b, task) : undefined;
     const report = parseReport(run.final as Record<string, unknown> | null, run.text);
     const behavior = writeBehavior(arm.calls.filter(c => c.write));
     const score = scoreEpisode(counts, report, behavior.reissues);
@@ -632,7 +635,7 @@ export async function runEpisode(task: AgentTask, o: EpisodeOptions): Promise<Re
       tools: { sha256: sha, file: toolsFile, count: catalog.tools.length, surface: catalog.surface, write_tools: [...writes] },
       loop: { effort: EFFORT, effort_sent: request?.effort_sent ?? null, effort_effective: request?.effort_effective ?? null, max_output_tokens: MAX_OUTPUT_TOKENS, max_turns: MAX_TURNS, stop: run.stop, turns: run.turns, error: run.error ?? null, text: run.text ?? null },
       system_sha256: createHash('sha256').update(system).digest('hex'), user: task.user, facts: task.facts,
-      report: { raw: run.final ?? null, ...report }, score, tokens: counts, behavior,
+      report: { raw: run.final ?? null, ...report }, score, tokens: counts, behavior, ...(o.inspect ? { inspect: inspected } : {}),
       fault: arm.fault ? { ...arm.fault.record, pause_ms: PAUSE_MS, held_first_answer: held } : null,
       tool_calls: { total: run.tools.length + (run.final ? 1 : 0), by_name: byName },
       retries: retriesOf(run.tools, writes),

@@ -30,7 +30,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { CHAT_PRICE_OVERRIDES } from '../../budget-ledger.ts';
+import { CHAT_PRICE_OVERRIDES, type ChatPrice } from '../../budget-ledger.ts';
 import { lookupEmbeddingPrice } from '../../../../node_modules/gbrain/src/core/embedding-pricing.ts';
 import { READER_WINDOWS } from '../../systems/baselines.ts';
 import type { Outcome } from '../../memory-qa/outcomes.ts';
@@ -43,15 +43,19 @@ export const PREREGISTRATION = 'docs/benchmarks/2026-10-06-scoreboard-preregistr
 
 export type Q1SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S3-smoke-default' | 'S2b-ingest';
 /** F6's own set (eval/runner/q1/cells/f6.ts): the D8 long-history reserve. */
-export type SetId = Q1SetId | 'D8' | RS1SetId;
+export type SetId = Q1SetId | 'D8' | RS1SetId | BG1SetId;
 /** RS1's sets (eval/runner/q1/cells/rs1.ts): the sealed set and stage 1's two public dev conversations. */
 export type RS1SetId = 'RS1' | 'RS1-dev2';
+/** BG1's sets (eval/runner/q1/cells/bg1.ts): the sealed changing-facts set, its full-context worlds and stage 1's three public dev worlds. */
+export type BG1SetId = 'BG1' | 'BG1-fc10' | 'BG1-dev3';
 export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
 /** F6's spend blocks (eval/runner/q1/cells/f6.ts), charged to F6's own cap; F6-P1 is the particle-1 add-on's (GBEV-31). */
 export type F6BlockId = 'F6-S1' | 'F6-T2' | 'F6-D8' | 'F6-S4' | 'F6-dry' | 'F6-P1';
 /** RS1's spend blocks (eval/runner/q1/cells/rs1.ts): stage 1 and the counted cells. */
 export type RS1BlockId = 'RS1-S1' | 'RS1';
-export type BlockId = Q1BlockId | F6BlockId | RS1BlockId;
+/** BG1's spend blocks (eval/runner/q1/cells/bg1.ts): stage 1 and the counted cells. */
+export type BG1BlockId = 'BG1-S1' | 'BG1';
+export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId;
 export type Split = 'dev' | 'sealed' | 'all';
 
 export type Selection =
@@ -152,8 +156,8 @@ export interface CellDefinition {
   /** Shim cells: the stack's bootstrap environment and config (`GBRAIN_FULL_SURFACE=1` for gbrain's full-surface cell). */
   launch?: { env: Record<string, string>; config: 'recipe' | 'common' | 'shipped-0.31' };
   /**
-   * RS1: the cell's conversations are the custodian's kept list (eval/runner/memory-qa/corpus.ts rs1Kept), in slot order,
-   * and launch unit (shard) i runs kept conversations i x kept_units to (i + 1) x kept_units - 1.
+   * RS1 and BG1: the cell's conversations are the custodian's kept list (eval/runner/memory-qa/corpus.ts rs1Kept, bg1Kept),
+   * in slot order, and launch unit (shard) i runs kept conversations i x kept_units to (i + 1) x kept_units - 1.
    */
   kept_units?: number;
   /** Shim cells: tar the stack's named volumes into the realization once ingest is complete (the launcher sets SHOOTOUT_SNAPSHOT_DIR). */
@@ -235,8 +239,20 @@ export const RS1_SETS: Record<RS1SetId, SetFacts> = {
   RS1: { id: 'RS1', benchmark: 'beam-rs1', split: 'sealed', questions: 660, conversations: 33, corpus_tokens: 35_310_000, messages: 67_012, block: 'RS1', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'RS1 narrowed set (kept conversations, cap 33)' },
   'RS1-dev2': { id: 'RS1-dev2', benchmark: 'beam-1m', split: 'dev', questions: 40, conversations: 2, corpus_tokens: 1_966_206, messages: 4_322, block: 'RS1-S1', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'RS1 stage 1, two public BEAM-1M dev conversations', only_conversations: ['1m-20', '1m-28'] },
 };
-/** Every set a cell may name: Q1's, F6's and RS1's. */
-export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS };
+/**
+ * BG1's sets (docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md). BG1 is the sealed set in owner
+ * custody (loader bg1) at its cap of 40 kept worlds, 64 questions each, about 200,000 cl100k tokens and about 150
+ * sessions per world; its message count is a placeholder (about 13 turns a session) until the custodian reports the
+ * aggregates. BG1-fc10 is the full-context reference's worlds: the first 10 kept worlds of BG1 (inside wave A),
+ * descriptive. BG1-dev3 is stage 1's three public dev worlds (loader bg1-dev), sized the same way until they are rendered.
+ */
+export const BG1_SETS: Record<BG1SetId, SetFacts> = {
+  BG1: { id: 'BG1', benchmark: 'bg1', split: 'sealed', questions: 2_560, conversations: 40, corpus_tokens: 8_000_000, messages: 80_000, block: 'BG1', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'BG1 changing-facts set (kept worlds, cap 40)', sessions: 150 },
+  'BG1-fc10': { id: 'BG1-fc10', benchmark: 'bg1', split: 'sealed', questions: 640, conversations: 10, corpus_tokens: 2_000_000, messages: 20_000, block: 'BG1', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'BG1 full-context reference, the first 10 kept worlds (descriptive)', sessions: 150 },
+  'BG1-dev3': { id: 'BG1-dev3', benchmark: 'bg1-dev', split: 'dev', questions: 192, conversations: 3, corpus_tokens: 600_000, messages: 6_000, block: 'BG1-S1', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BG1 stage 1, three public dev worlds', only_conversations: ['bg1-dev-01', 'bg1-dev-02', 'bg1-dev-03'], sessions: 150 },
+};
+/** Every set a cell may name: Q1's, F6's, RS1's and BG1's. */
+export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS, ...BG1_SETS };
 
 /** PLAN §7 block lines (the approved estimate the re-priced manifest is compared with). */
 export const PLAN_BLOCKS: Record<Q1BlockId, { label: string; plan_usd: number }> = {
@@ -405,13 +421,63 @@ export function f6ExtractionUsd(tokens: number): number {
   return tokens * (x.input_per_token * p.input + x.output_per_token * p.output) / 1e6;
 }
 
+// ─── BG1 ─────────────────────────────────────────────────────────────
+
+/** BG1's benchmarks: the sealed set (bg1) and the public dev worlds (bg1-dev). */
+export const isBg1Benchmark = (benchmark: string) => benchmark === 'bg1' || benchmark === 'bg1-dev';
+
+/**
+ * BG1's rates (eval/runner/q1/cells/bg1.ts and eval/runner/bg1/pricing.ts), each a named assumption stage 1 replaces
+ * with a measurement on the three dev worlds. They live apart from Q1's, F6's and RS1's so those manifests stay
+ * byte-identical. gbrain runs RS1's stable tag and rs1-stable configuration (shimLaunch), with no tuning on BG1.
+ */
+export const BG1_ASSUMPTIONS = {
+  /**
+   * Ingest dollars per million tokens beyond gbrain's extraction (its own estimate line): BEAM's long-session rates as
+   * the plan priced them (memory-bank 1.737, extract-first 2.772, hybrid search 0.14), F6's dry-run temporal graph
+   * (4.01) and rs1-stable's embeddings (0.08). BG1's sessions are short chats, so stage 1 measures them on BG1's worlds.
+   */
+  ingest_usd_per_mtok: { 'gbrain-defaults:rs1-stable': 0.08, 'ext-memory-bank:recipe': 1.737, 'ext-extract-first:common': 2.772, 'ext-temporal-graph:shipped-0.31': 4.01, 'baseline-hybrid:baseline': 0.14 } as Record<string, number>,
+  /** Ingest (VM) hours per million tokens: F6's dry run for gbrain and the temporal graph, BEAM's for the servers; hybrid search's flat per-world VM share as half an hour per million tokens. */
+  hours_per_mtok: { 'gbrain-defaults:rs1-stable': 1.92, 'ext-memory-bank:recipe': 2.32, 'ext-extract-first:common': 1.74, 'ext-temporal-graph:shipped-0.31': 2.26, 'baseline-hybrid:baseline': 0.5 } as Record<string, number>,
+  /** The largest world's size over the set's mean, rounded up: the generator's 140 to 160 sessions at its length target. */
+  max_conversation_ratio: { BG1: 1.15, 'BG1-fc10': 1.15, 'BG1-dev3': 1.15 } as Record<string, number>,
+  /** Gating judge dollars per call, measured in RS1's judge check (GST-1886) at the pinned settings: gpt-6-astra $0.022, claude-opus-5-5 $0.016. */
+  judge_usd_per_call: { 'openai:gpt-6-astra': 0.022, 'anthropic:claude-opus-5-5': 0.016 } as Record<string, number>,
+  /** The canonical judge's tokens per call (one short-answer verdict, thinking included), at its list price. */
+  canonical_judge_tokens: { input: 600, output: 250 },
+};
+
+/**
+ * BG1's gating judge for a reader (R78; GST-767): never the reader's own family and never particle-1. Anthropic readers
+ * are judged by gpt-6-astra, OpenAI and particle readers by claude-opus-5-5; any other reader is refused. BG1's arms
+ * carry it as frontier.judge_by_reader, so definitions.ts frontierJudgeOf keeps the crew's BEAM rule for everything else.
+ */
+export function bg1JudgeOf(reader: string): string {
+  const family = reader.split(':')[0];
+  if (family === 'anthropic') return 'openai:gpt-6-astra';
+  if (family === 'openai' || family === 'particle') return 'anthropic:claude-opus-5-5';
+  throw new Error(`no BG1 gating judge is preregistered for ${reader} (anthropic readers: openai:gpt-6-astra; openai and particle readers: anthropic:claude-opus-5-5)`);
+}
+/** Every BG1 reader's gating judge: the live readers and particle-1's re-read. */
+export const BG1_JUDGE_BY_READER: Record<string, string> = Object.fromEntries(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'].map(r => [r, bg1JudgeOf(r)]));
+
 // ─── Prices ──────────────────────────────────────────────────────────
 
-/** List price per million tokens from eval/runner/budget-ledger.ts; a dated snapshot bills at its family's price. */
-export function priceOf(model: string): { input: number; output: number; cache_read?: number; cache_write?: number } {
+/**
+ * List price per million tokens from eval/runner/budget-ledger.ts; a dated snapshot bills at its family's price. These are
+ * the rates the cell manifests record, for requests at the default cache lifetime: a cache-write rate equal to the input
+ * rate, a missing long-prompt tier and OpenAI's 12-hour cache lifetime, which no cell selects, are left out, so a frozen
+ * manifest keeps its bytes when the ledger only states them.
+ */
+export function priceOf(model: string): { input: number; output: number; cache_read?: number; cache_write?: number; long?: Omit<NonNullable<ChatPrice['long']>, 'cache_write_12h'> } {
   const p = CHAT_PRICE_OVERRIDES[model] ?? CHAT_PRICE_OVERRIDES[model.replace(/-\d{4}-?\d{2}-?\d{2}$/, '')];
   if (!p) throw new Error(`no price for ${model} in CHAT_PRICE_OVERRIDES (eval/runner/budget-ledger.ts); register its per-million-token rates there before planning`);
-  return p;
+  const { cache_write_12h: _12h, long, ...rates } = p;
+  if (rates.cache_write === rates.input) delete rates.cache_write;
+  if (!long) return rates;
+  const { cache_write_12h: _long12h, ...longRates } = long;
+  return { ...rates, long: longRates };
 }
 
 const call = (model: string, input: number, output: number) => { const p = priceOf(model); return (input * p.input + output * p.output) / 1e6; };
@@ -450,10 +516,11 @@ function fullContextCost(set: SetFacts, reader: string, questions: number): numb
  */
 export const runsF6 = (def: Pick<CellDefinition, 'launch'>) => def.launch?.env.GBRAIN_F6 === '1';
 
-/** A cell's ingest dollars per million tokens: for its benchmark family, then its configuration (Q1's, F6's, RS1's), else 0. */
+/** A cell's ingest dollars per million tokens: BG1's own on a BG1 benchmark, else for its benchmark family, then its configuration (Q1's, F6's, RS1's), else 0. */
 export function ingestRate(def: Pick<CellDefinition, 'system' | 'configuration' | 'benchmark'>): number {
   const family = def.benchmark.startsWith('beam') ? 'beam' : def.benchmark;
   const key = `${def.system}:${def.configuration}`;
+  if (isBg1Benchmark(def.benchmark)) return BG1_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? 0;
   return ASSUMPTIONS.ingest_usd_per_mtok[`${key}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[key] ?? F6_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? RS1_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? 0;
 }
 
@@ -609,6 +676,8 @@ export const HOURS_OVERRIDES: Record<string, { hours: number; basis: string }> =
 /** A system's ingest hours per million corpus tokens: for its benchmark family, then its configuration (Q1's, then F6's), then its runner's default. */
 export function hoursPerMtok(system: string, configuration: string, benchmark: string, runner: 'shim' | 'in-process'): number {
   const family = benchmark.startsWith('beam') ? 'beam' : benchmark;
+  const bg1 = isBg1Benchmark(benchmark) ? BG1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] : undefined;
+  if (bg1 !== undefined) return bg1;
   return ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? RS1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
 }
 
@@ -810,6 +879,7 @@ function selectionProblems(s: Selection, where: string): string[] {
 
 export const F6_BLOCK_IDS: readonly F6BlockId[] = ['F6-S1', 'F6-T2', 'F6-D8', 'F6-S4', 'F6-dry', 'F6-P1'];
 export const RS1_BLOCK_IDS: readonly RS1BlockId[] = ['RS1-S1', 'RS1'];
+export const BG1_BLOCK_IDS: readonly BG1BlockId[] = ['BG1-S1', 'BG1'];
 
 /** An arm's retrieval identity: only on gbrain cells whose stack runs F6 (GBRAIN_F6=1), on a packed or retrieval-only arm, naming a known op, its own arguments and all six overlay keys. */
 function retrievalProblems(d: CellDefinition, a: ArmDefinition, w: string): string[] {
@@ -854,7 +924,7 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.schema !== CELL_SCHEMA) p.push(`schema must be ${CELL_SCHEMA}`);
   if (!ID.test(d.id ?? '')) p.push(`id ${JSON.stringify(d.id)} must be 1-80 characters of [a-z0-9.-]`);
   if (!ALL_SETS[d.set]) p.push(`set ${d.set} is unknown`);
-  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
+  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
   if (!['dev', 'sealed', 'all'].includes(d.split)) p.push('split must be dev, sealed or all');
   p.push(...selectionProblems(d.selection, 'selection'));
   if (!kinds.has(d.system)) p.push(`system ${d.system} is not a kind id in eval/systems/kinds.json`);
@@ -864,7 +934,7 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.ingest_sessions !== undefined && !(Number.isInteger(d.ingest_sessions) && d.ingest_sessions > 0)) p.push('ingest_sessions must be a positive whole number of sessions');
   if (d.only_conversations !== undefined && !(Array.isArray(d.only_conversations) && d.only_conversations.length && d.only_conversations.every(c => typeof c === 'string' && c) && d.split === 'dev')) p.push('only_conversations must list dev conversation ids on a dev-split cell');
   if (!Array.isArray(d.arms) || !d.arms.length) p.push('arms must list at least one arm');
-  if (d.kept_units !== undefined && !(Number.isInteger(d.kept_units) && d.kept_units > 0 && d.benchmark === 'beam-rs1' && d.shards === Math.ceil(ALL_SETS[d.set].conversations / d.kept_units))) p.push('kept_units runs a beam-rs1 cell over the custodian\'s kept list, in units of a positive number of conversations, one shard per unit');
+  if (d.kept_units !== undefined && !(Number.isInteger(d.kept_units) && d.kept_units > 0 && (d.benchmark === 'beam-rs1' || d.benchmark === 'bg1') && d.shards === Math.ceil(ALL_SETS[d.set].conversations / d.kept_units))) p.push('kept_units runs a beam-rs1 or bg1 cell over the custodian\'s kept list, in units of a positive number of conversations, one shard per unit');
   if (d.system === 'gbrain-defaults' && runsF6(d)) {
     if (!(Number(d.launch?.env.GBRAIN_F6_EXTRACT_CAP_USD) > 0)) p.push('a gbrain cell on the F6 build (GBRAIN_F6=1) needs a positive GBRAIN_F6_EXTRACT_CAP_USD in its launch environment, the runaway cap on gbrain\'s own extraction');
     if (!(ingestRate(d) > 0)) p.push(`a gbrain cell on the F6 build needs a positive ingest rate for ${d.system}:${d.configuration} (F6_ASSUMPTIONS or RS1_ASSUMPTIONS ingest_usd_per_mtok), or its estimate and lease leave ingest out`);
