@@ -39,6 +39,15 @@ This records what each gbrain-evals release changed and what its measurements me
   wave A's cells are unchanged; they run from `de943504`, with `rs1-cells.json` unchanged.
 - **Smaller fixes.** The launch preflight prices particle-1 at Particle's own address, `check-early-stop` exits 3
   when it tested nothing, and a reader whose only answers are failed retrievals costs 0 instead of n/a.
+- **Longer plans and validated candidates in the mint.** The first paid mint kept no conversation: two of five chats
+  answered all 10 of BEAM's planned batches and still came out under the length gate, and selecting two items per
+  ability before validating them never filled every slot. rs1_mint.py now runs BEAM's plan and question code with 15
+  batches in place of 10 and refuses a plan that holds any other number; the early stop still ends each chat where
+  BEAM's truncate would cut it, and conversations planned with 10 keep 10. The new
+  `eval/custody/rs1/validate-candidates.ts` asks validate.ts's two validators about every candidate after the probe step,
+  sharing validate.ts's reply cache, and `mint.sh --candidates <report>` selects only candidates both passed. A real
+  mint without a report stops each conversation after its probe step. validate.ts is unchanged and still decides what is
+  kept.
 - **Records.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` gains its amendments, and
   `docs/benchmarks/2026-11-08-rs1-narrow-results.md` starts with the stage 1 run log. No counted RS1 result exists yet.
 

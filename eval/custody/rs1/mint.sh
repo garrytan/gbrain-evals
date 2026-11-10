@@ -5,7 +5,13 @@
 #   eval/custody/rs1/mint.sh --out <dir>/rs1-custody --seed-file <path>.rs1-seed [--count 75] [--start 1]
 #       (--fake --beam-dir <fake BEAM tree> | --stub-model
 #        | --budget-ledger <sqlite> --budget-run-id <id> --paid-window <unit> --window-cap-usd <n>)
-#       [--topic-source seeded|public] [--regenerate <validation report>]
+#       [--topic-source seeded|public] [--until <step>] [--candidates <candidate report>]
+#       [--regenerate <validation report>]
+#
+# A real mint runs in three passes: mint.sh without --candidates stops each conversation after its probe step;
+# eval/custody/rs1/validate-candidates.ts asks both validators about every candidate and writes the candidate report;
+# mint.sh --candidates <report> selects only from the candidates both passed and writes the rubrics. validate.ts then
+# decides what is kept, and mint.sh --candidates <report> --regenerate <validation report> replaces the items it failed.
 #
 # What it guarantees:
 #   - Output only counts and hashes. Every line is "rs1-mint key=value ..."; BEAM's own output goes to /dev/null and
@@ -20,6 +26,14 @@
 #     Files under --out are created owner-only (umask 077).
 #   - Deterministic seeds. Conversation i's seed is HMAC-SHA256(seed, "rs1/conversation/<i>"); its topic, category,
 #     BEAM's random user profile and the item selection all derive from it.
+#   - Fifteen planned batches. BEAM's 1M recipe plans 10 batches; rs1_mint.py runs BEAM's plan and question code with 15
+#     in their place, and the plan step fails unless BEAM's plan holds 15 batch plans. The answer step's early stop
+#     (below) ends each chat once BEAM's truncate would cut it. A conversation planned with 10 before then keeps 10.
+#   - Validated candidates. --candidates <report> passes validate-candidates.ts's report to the select step, which then
+#     chooses only candidates both validators passed, and refuses a report that does not hold the conversation as
+#     checked or drop or that read another chat. A real select refuses without one, so in real mode a run without
+#     --candidates stops each conversation after its probe step (--until probe), and the summary counts the
+#     conversations awaiting candidates. --until <step> stops each conversation after any step of STEPS below.
 #   - Resume without re-sampling. Each conversation's manifest.json records every finished step with the sha256 of
 #     its outputs. A finished step is verified and skipped, never run again; a changed output stops the run.
 #   - No silent gaps. BEAM's question and answer steps swallow model errors, so rs1_mint.py checks each one's output
@@ -78,7 +92,7 @@ sha256_file() {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum -- "$1"; else shasum -a 256 -- "$1"; fi | cut -d' ' -f1
 }
 
-OUT="" SEED_FILE="${RS1_SEED_FILE:-}" COUNT=75 START=1 MODE=real BEAM_DIR="" TOPIC_SOURCE=seeded REGENERATE=""
+OUT="" SEED_FILE="${RS1_SEED_FILE:-}" COUNT=75 START=1 MODE=real BEAM_DIR="" TOPIC_SOURCE=seeded REGENERATE="" CANDIDATES="" UNTIL=""
 LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP=""
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -91,11 +105,13 @@ while [ $# -gt 0 ]; do
     --beam-dir) BEAM_DIR="$2"; shift 2 ;;
     --topic-source) TOPIC_SOURCE="$2"; shift 2 ;;
     --regenerate) REGENERATE="$2"; shift 2 ;;
+    --candidates) CANDIDATES="$2"; shift 2 ;;
+    --until) UNTIL="$2"; shift 2 ;;
     --budget-ledger) LEDGER="$2"; shift 2 ;;
     --budget-run-id) RUN_ID="$2"; shift 2 ;;
     --paid-window) WINDOW="$2"; shift 2 ;;
     --window-cap-usd) WINDOW_CAP="$2"; shift 2 ;;
-    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
     *) die "unknown argument $1" ;;
   esac
 done
@@ -105,6 +121,15 @@ done
 [[ "$COUNT" =~ ^[0-9]+$ && "$START" =~ ^[0-9]+$ && "$START" -ge 1 ]] || die "--count and --start must be whole numbers, --start at least 1"
 [[ "$TOPIC_SOURCE" =~ ^(seeded|public)$ ]] || die "--topic-source is seeded or public"
 case "$(basename "$OUT")" in rs1-custody*) ;; *) die "--out must be a directory whose name starts with rs1-custody" ;; esac
+if [ -n "$UNTIL" ]; then
+  case " ${STEPS[*]} " in *" $UNTIL "*) ;; *) die "--until names a step of: ${STEPS[*]}" ;; esac
+fi
+if [ "$MODE" = real ] && [ -z "$CANDIDATES" ]; then
+  case "$UNTIL" in
+    "") UNTIL=probe ;;
+    select|rubric) die "a real mint selects only from validated candidates; pass --candidates <report> or stop at --until probe" ;;
+  esac
+fi
 
 if [ "$MODE" = real ]; then
   [ -n "$WINDOW" ] && [ -n "$WINDOW_CAP" ] || die "real mode spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n> from the granted paid window (--fake and --stub-model spend nothing)"
@@ -130,6 +155,8 @@ SEED_FILE="$(cd "$(dirname "$SEED_FILE")" && pwd)/$(basename "$SEED_FILE")"
 inside_checkout "$SEED_FILE" && die "the seed file must sit outside any git checkout"
 [ -z "$REGENERATE" ] || [ -f "$REGENERATE" ] || die "--regenerate names no file"
 [ -z "$REGENERATE" ] || REGENERATE="$(cd "$(dirname "$REGENERATE")" && pwd)/$(basename "$REGENERATE")"
+[ -z "$CANDIDATES" ] || [ -f "$CANDIDATES" ] || die "--candidates names no file"
+[ -z "$CANDIDATES" ] || CANDIDATES="$(cd "$(dirname "$CANDIDATES")" && pwd)/$(basename "$CANDIDATES")"
 
 TOOLING="$OUT/tooling"
 mkdir -p "$TOOLING" "$OUT/set/conversations"
@@ -202,6 +229,7 @@ run_step() {
   local args=(step --out "$OUT" --conv-index "$index" --step "$step" --seed-file "$SEED_FILE" --mode "$MODE"
     --beam-dir "$BEAM_DIR" --topic-source "$TOPIC_SOURCE")
   [ -z "$REGENERATE" ] || args+=(--regenerate "$REGENERATE")
+  [ -z "$CANDIDATES" ] || args+=(--candidates "$CANDIDATES")
   [ "$MODE" != real ] || args+=(--paid-window "$WINDOW" --window-cap-usd "$WINDOW_CAP" --budget-ledger "$LEDGER" --budget-run-id "$RUN_ID")
   line="$(cd "$OUT" && env -i "${allow[@]}" "$PY" "$HERE/rs1_mint.py" "${args[@]}")" || rc=$?
   stop_proxy
@@ -210,7 +238,7 @@ run_step() {
   return "$rc"
 }
 
-COMPLETE=0 DROPPED=0 EXHAUSTED=0
+COMPLETE=0 DROPPED=0 EXHAUSTED=0 STOPPED=0
 for ((i = START; i < START + COUNT; i++)); do
   rc=0
   for _ in 1 2 3 4 5; do
@@ -225,9 +253,12 @@ for ((i = START; i < START + COUNT; i++)); do
     rc=0; run_step "$i" "$step" || rc=$?
     if [ "$rc" -eq 12 ]; then EXHAUSTED=$((EXHAUSTED + 1)); continue 2; fi
     [ "$rc" -eq 0 ] || exit "$rc"
+    if [ "$step" = "$UNTIL" ] && [ "$step" != "${STEPS[${#STEPS[@]} - 1]}" ]; then STOPPED=$((STOPPED + 1)); continue 2; fi
   done
   COMPLETE=$((COMPLETE + 1))
 done
 
 "$PY" "$HERE/rs1_mint.py" usage --out "$OUT"
-say "summary=mint mode=$MODE conversations=$COUNT complete=$COMPLETE dropped=$DROPPED select_exhausted=$EXHAUSTED steps_run=$STEPS_RUN steps_skipped=$STEPS_SKIPPED"
+AWAITING=0
+[ "$UNTIL" != probe ] || AWAITING=$STOPPED
+say "summary=mint mode=$MODE conversations=$COUNT complete=$COMPLETE dropped=$DROPPED select_exhausted=$EXHAUSTED steps_run=$STEPS_RUN steps_skipped=$STEPS_SKIPPED until=${UNTIL:-none} stopped=$STOPPED awaiting_candidates=$AWAITING"

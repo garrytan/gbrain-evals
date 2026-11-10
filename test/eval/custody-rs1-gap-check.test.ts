@@ -157,13 +157,18 @@ def window_args(out):
 
 
 def step(out, name, inner=None, question_batches=None):
-    def run_question_generation(chats_directory, chat_size, index):
-        m.write_pickle(Path(chats_directory) / "1" / "user_messages.pickle", question_batches)
+    def user_messages_generation_fast(num_batches, save_address, **kwargs):
+        m.write_pickle(save_address, question_batches)
 
+    def run_question_generation(chats_directory, chat_size, index):
+        run_pipeline.user_messages_generation_fast(num_batches=10, save_address=str(Path(chats_directory) / "1" / "user_messages.pickle"))
+
+    run_pipeline = types.SimpleNamespace(run_question_generation=run_question_generation,
+                                         user_messages_generation_fast=user_messages_generation_fast)
     # BEAM's chat_json and truncate code for the answer step's early-stop check: a chat this short never passes the limit.
     m.load_beam = lambda beam_dir, slot: types.SimpleNamespace(
         main=types.SimpleNamespace(answer_generation=answer_generation),
-        run_pipeline=types.SimpleNamespace(run_question_generation=run_question_generation),
+        run_pipeline=run_pipeline,
         utils=types.SimpleNamespace(convert_chats_pickle_to_json=lambda src, dst: m.write_json(dst, []),
                                     add_ids_to_chats=lambda src, dst: m.write_json(dst, [])),
         adjust=types.SimpleNamespace(count_chats_tokens=lambda chat_directory, model_name, token_limit: None))

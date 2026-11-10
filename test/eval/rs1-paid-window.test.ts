@@ -1,5 +1,5 @@
 /**
- * RS1's paid-window guard (GST-1886): mint.sh, rs1_mint.py, validate.ts and `cell.ts run --manifest rs1` refuse a run
+ * RS1's paid-window guard (GST-1886): mint.sh, rs1_mint.py, validate.ts, validate-candidates.ts and `cell.ts run --manifest rs1` refuse a run
  * that is neither keyless nor inside a granted window, and one whose ledger cap, run budget or lease is above the window
  * cap, with exit 2 before any provider client exists. Paid minting and validation take Gemini's key only from
  * RS1_GEMINI_API_KEY. Keyless: every key here is a dummy, every refusal comes before any request, and the one upstream
@@ -128,6 +128,30 @@ describe('validate.ts --paid', () => {
       [[...ledgerArgs, '--paid-window', 'RS1-MINT-1', '--window-cap-usd', '9.99'], both, /^rs1-validate refused: paid validation: the ledger's program cap .* is above paid window RS1-MINT-1's cap/],
       [['--paid-window', 'RS1-MINT-1', '--window-cap-usd', '10', '--budget-run-id', 'nope', '--budget-ledger', l.path], both, /^rs1-validate refused: paid validation: budget run nope is unknown/],
       [[...ledgerArgs, '--paid-window', 'RS1-MINT-1', '--window-cap-usd', '10'], { GEMINI_API_KEY: DUMMY, ANTHROPIC_API_KEY: DUMMY }, /^rs1-validate refused: paid validation needs RS1_GEMINI_API_KEY, the dedicated paid-tier Gemini key; GEMINI_API_KEY is never used\n$/],
+    ];
+    for (const [args, env, want] of cases) {
+      const r = validate(args, env);
+      expect(r.code).toBe(2);
+      expect(r.err).toMatch(want);
+      expect(r.out + r.err).not.toContain(DUMMY);
+    }
+    const inWindow = validate([...ledgerArgs, '--paid-window', 'RS1-MINT-1', '--window-cap-usd', '10'], both);
+    expect([inWindow.code, inWindow.err]).toEqual([2, expect.stringMatching(/holds no conversations\/\n$/)]);
+  });
+});
+
+describe('validate-candidates.ts --paid', () => {
+  const validate = (extra: string[], env: Record<string, string>) => run('bun', ['eval/custody/rs1/validate-candidates.ts', '--set', join(scratch(), 'set'), '--beam-dir', scratch(), '--report', join(scratch(), 'report.json'), '--paid', ...extra], env);
+
+  test('refuses without the window, with a ledger above it, and with only GEMINI_API_KEY, before any client exists', () => {
+    const l = ledger(10, 10);
+    const ledgerArgs = ['--budget-ledger', l.path, '--budget-run-id', l.id];
+    const both = { RS1_GEMINI_API_KEY: DUMMY, GEMINI_API_KEY: DUMMY, ANTHROPIC_API_KEY: DUMMY };
+    const cases: Array<[string[], Record<string, string>, RegExp]> = [
+      [ledgerArgs, both, /^rs1-validate-candidates refused: paid candidate validation spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n>/],
+      [[...ledgerArgs, '--paid-window', 'RS1-MINT-1', '--window-cap-usd', '9.99'], both, /^rs1-validate-candidates refused: paid candidate validation: the ledger's program cap .* is above paid window RS1-MINT-1's cap/],
+      [['--paid-window', 'RS1-MINT-1', '--window-cap-usd', '10', '--budget-run-id', 'nope', '--budget-ledger', l.path], both, /^rs1-validate-candidates refused: paid candidate validation: budget run nope is unknown/],
+      [[...ledgerArgs, '--paid-window', 'RS1-MINT-1', '--window-cap-usd', '10'], { GEMINI_API_KEY: DUMMY, ANTHROPIC_API_KEY: DUMMY }, /^rs1-validate-candidates refused: paid candidate validation needs RS1_GEMINI_API_KEY, the dedicated paid-tier Gemini key; GEMINI_API_KEY is never used\n$/],
     ];
     for (const [args, env, want] of cases) {
       const r = validate(args, env);
