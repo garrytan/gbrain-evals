@@ -653,6 +653,29 @@ these questions included. The judge check's grades stay valid, because its pool 
 The ceiling stays where it is (R61): no comparator reached 95% on the dev primary. The closest, pooled over Opus and Sol,
 were the extract-first server at 225 of 240 and the memory-bank server at 224 of 240.
 
+### Amendment 5 (2026-11-10): stage 1's repricing
+
+Stage 1 step 5. `pricing.ts` now prices every line from rates measured in stage 1 instead of the assumed ones. The
+sources are the dev renders, the five system rows and the floor (stage 1's units at `4306e9e3`, and the extract-first
+unit at `5958985d`), the full-context reference, particle-1's re-reads and the judge check. Rates come from the provider
+usage fields in each unit's metering log, and VM hours from each unit's lease log.
+
+The rates that moved most from the assumptions:
+
+- The extract-first server's ingest costs about seven times the assumed amount per world and takes about six times the
+  assumed hours, about two hours per world. The temporal-graph library's API cost is about four times the assumption.
+  Most of it comes from queries, and `pricing.ts` has no per-system query line, so it is counted in the library's
+  per-world line.
+- Judge calls cost much less than the RS1 rates assumed: about a quarter for GPT-6 Astra and about a seventh for Opus.
+  Live reads cost less too.
+- Every stage 1 VM was a 4-vCPU machine, not the 16 vCPUs the assumptions gave the outside servers.
+- In the full-context reference, Opus used the prompt cache and Sol did not, because of a harness fault that is fixed
+  for stage 2 and is checked at stage 2's smoke run. Sol is priced at its cached rate, scaled up by the ratio between
+  Opus's measured and modelled cost.
+
+The projection at the planned N stays under the check-in line, so `pricing.ts` does not stop the study. The amounts are
+kept on GST-2010, not here.
+
 ### Expected amendments
 
 The expected ones, each dated and committed before the cells it governs:
