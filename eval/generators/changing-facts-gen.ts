@@ -42,6 +42,11 @@
  * set). Seeds: the dev worlds use the public BG1_DEV_SEEDS; a sealed world's seed is HMAC-SHA256 of the custody seed
  * line and "bg1/world/<slot>" (sealedWorldSeed), and a sealed plan never records it.
  *
+ * Gold-audit fixes (stage 1, Amendment 4), sealed worlds only, so the dev worlds stage 1 rendered and scored still
+ * match a fresh generation: a sealed retraction uses only retract templates that say the plan is not happening (one of
+ * NONE_FORMS), because "the report was false" alone does not support the s5 gold; and a sealed s8 question never asks
+ * about a slot with a scheduled change, because a value due after the world end is neither history nor stale.
+ *
  * Files (eval/data/changing-facts-v1): dev/worlds/<id>/{plan,questions}.json, the public dev plans and gold (stage 1
  * adds the Gemini-rendered world.json beside them), and fixtures/worlds/<id>/{world,questions}.json, the same worlds
  * from the template renderer at BG1_FIXTURE_TOKENS, for keyless tests.
@@ -532,6 +537,8 @@ export function planWorld(id: string, seed: string, opts: PlanOptions = {}): Wor
 function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolean, publicSeed: string | undefined): WorldPlan {
   const rng = new Rng(seedNumber(seed));
   const names = new Names(rng, [...phrasingTexts(phrasing), ...TOPICS, ...FILLER_TEXTS, ...WEEKDAYS]);
+  const frames = custody ? { ...phrasing.frames, retract: phrasing.frames.retract.filter(t => NONE_FORMS.some(f => termRegex(f).test(t))) } : phrasing.frames;
+  if (!frames.retract.length) throw new Error('the custody phrasing set has no retract template that says the plan is not happening (gold audit, Amendment 4)');
 
   const n = rng.int(BG1_SESSIONS.min, BG1_SESSIONS.max);
   const first = -(BG1_SPAN_DAYS - 1) + rng.int(0, 4), lastDay = -rng.int(0, 2);
@@ -607,7 +614,7 @@ function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolea
     if (frame === 'plan' || frame === 'retract') ctx.plan = clause('plan');
     if (frame === 'off') ctx.off = clause('off');
     if (frame in SOURCE_RANK) ctx.attr = clause('attr');
-    const text = cap(fill(rng.pick(phrasing.frames[frame]), ctx));
+    const text = cap(fill(rng.pick(frames[frame]), ctx));
     sessions.find(x => x.id === ev.session)!.lines.push({ text, slot: slot.id, event: ev.id, values: frame === 'correct' ? [extra.old, ev.value] : [ev.value], speaker: 'user', position });
   };
 
@@ -992,7 +999,8 @@ export function buildQuestions(plan: WorldPlan, phrasing: Phrasing = PUBLIC_PHRA
   }
 
   const f8 = balanced(BG1_QUESTIONS_PER_STRATUM);
-  for (const slot of eight(rng.shuffle(changing).sort((a, b) => b.intent.history.length - a.intent.history.length), 's8_history')) {
+  const histories = plan.custody ? changing.filter(s => !s.events.some(e => e.type === 'scheduled')) : changing;
+  for (const slot of eight(rng.shuffle(histories).sort((a, b) => b.intent.history.length - a.intent.history.length), 's8_history')) {
     const form = f8.shift()!;
     push('s8_history', slot, form, ask(slot, 'history', form), slot.intent.history);
   }

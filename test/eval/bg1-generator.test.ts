@@ -9,9 +9,9 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
-  BG1_CUSTODY_MARKER, BG1_DATA_DIR, BG1_DEV_SEEDS, BG1_FIXTURE_TOKENS, BG1_FUTURE_DAYS, BG1_SESSIONS, BG1_SLOTS_PER_STRATUM, BG1_WORLD_END_WEEKDAY, PUBLIC_PHRASING,
+  BG1_CUSTODY_MARKER, BG1_DATA_DIR, BG1_DEV_SEEDS, BG1_FIXTURE_TOKENS, BG1_FUTURE_DAYS, BG1_SESSIONS, BG1_SLOTS_PER_STRATUM, BG1_WORLD_END_WEEKDAY, NONE_FORMS, PUBLIC_PHRASING,
   PlanError, buildQuestions, checkPhrasing, checkPlan, deriveGold, devFiles, goldFields, oracleAsKnown, oracleAsOf, oracleConflicting, oracleCorrected, oracleHistory,
-  oracleRepeatedStale, oracleUpdated, oracleWithdrawn, planWorld, queryDayOf, renderBriefs, sealedWorldSeed, termsOf, weekdayOf, worldTokens,
+  oracleRepeatedStale, oracleUpdated, oracleWithdrawn, planWorld, queryDayOf, renderBriefs, sealedWorldSeed, termRegex, termsOf, weekdayOf, worldTokens,
   type QuestionRecord, type Slot, type SlotEvent, type World, type WorldPlan,
 } from '../../eval/generators/changing-facts-gen.ts';
 import { BG1_DEV_CONVERSATIONS, BG1_PRIMARY, BG1_QUESTIONS_PER_STRATUM, BG1_STRATA } from '../../eval/runner/bg1/types.ts';
@@ -241,6 +241,38 @@ describe('determinism, seeds and phrasing', () => {
     expect(briefs.filter(b => b.tracked).length).toBeGreaterThan(plan.sessions.length / 2);
     expect(briefs.every((b, i) => b.lines.length === plan.sessions[i].lines.length && b.allowed_tokens.includes(`[[D:${b.day}]]`))).toBe(true);
     expect(Math.abs(briefs.reduce((n, b) => n + b.target_tokens, 0) - 200_000)).toBeLessThan(200);
+  });
+});
+
+describe('the stage 1 gold-audit fixes (Amendment 4)', () => {
+  const line = ['bg1', 'seed', 'v1'].join('-') + ':' + 'b'.repeat(64);
+  const phrasing = { ...PUBLIC_PHRASING, custody: BG1_CUSTODY_MARKER };
+  const sealed = [1, 2, 3, 4].map(n => planWorld(`bg1-00${n}`, sealedWorldSeed(line, n), { phrasing, custody: true }));
+
+  test('a sealed s8 question never asks about a slot with a scheduled change', () => {
+    for (const plan of sealed) {
+      const scheduled = new Set(plan.slots.filter(s => s.events.some(e => e.type === 'scheduled')).map(s => s.id));
+      expect(scheduled.size).toBeGreaterThan(0);
+      const s8 = buildQuestions(plan, phrasing).filter(q => q.bg1.stratum === 's8_history');
+      expect(s8.length).toBe(BG1_QUESTIONS_PER_STRATUM);
+      expect(s8.filter(q => scheduled.has(q.bg1.slot)).map(q => q.id)).toEqual([]);
+    }
+  });
+
+  test('a sealed retraction says the plan is not happening, and a custody set with no such template is refused', () => {
+    let retractions = 0;
+    for (const plan of sealed) {
+      const events = new Map(plan.slots.flatMap(s => s.events).map(e => [e.id, e]));
+      for (const l of plan.sessions.flatMap(s => s.lines)) {
+        if (!events.get(l.event)?.rumour) continue;
+        retractions++;
+        expect(NONE_FORMS.some(f => termRegex(f).test(l.text))).toBe(true);
+      }
+    }
+    expect(retractions).toBeGreaterThan(0);
+    const bad = structuredClone(phrasing);
+    bad.frames.retract = ['Please ignore the report that {plan}; it turned out to be false.'];
+    expect(() => planWorld('bg1-001', sealedWorldSeed(line, 1), { phrasing: bad, custody: true })).toThrow('says the plan is not happening');
   });
 });
 
