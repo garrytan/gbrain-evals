@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.192] - 2026-11-09
+## [0.10.193] - 2026-11-09
 
 ### CI now runs all six Cat 25 trajectory probes, so a gbrain pin that breaks any one of them fails
 
@@ -10,6 +10,31 @@ This records what each gbrain-evals release changed and what its measurements me
   pipeline, with no API key, and a failure names its probe. Before this, CI ran two of the six. At gbrain v0.60.557.0,
   `think` dropped the trajectory for team-size-trajectory-foundry and mrr-midpoint-nimbus while CI stayed green; at that
   version the new cases fail on exactly those two. No runner, score or published result changed.
+
+## [0.10.192] - 2026-11-09
+
+### The budget ledger prices OpenAI cache writes and long prompts everywhere, and stops a run whose usage it cannot price
+
+- **OpenAI cache writes and long prompts.** Every OpenAI row in the ledger's price table now lists its cache-write
+  rate for the default 30-minute lifetime and for the 12-hour lifetime, and its long-prompt rates above 272,000 input
+  tokens, or says it has none. gpt-6-sol gets the write and long-prompt rates it was missing. A model whose row lists
+  neither is refused before sending, like a model with no price, and so is a request that picks a cache lifetime with
+  no listed write rate. Tool-call arguments and JSON schemas inside a request no longer count as cache settings.
+- **Usage the ledger cannot price stops the run.** A response that reports a cache tier the ledger has no rate for, or
+  a cache count in a place the ledger does not read, is charged at its full reservation, and the run sends no more paid
+  requests. Both metering proxies close their lease and answer 402 in the same case. The batch lane charges such a
+  result row its worst case and keeps going.
+- **Older runners record the ledger's own cost.** Cat 40's agent loop and judges, p5-agent and p4-stream now record
+  each response's cost the way the ledger settles it, cache writes and long prompts included. Before, they priced cache
+  writes as plain input.
+- **Live-recall ledger runs finish.** A live-recall run or judge session that owes no more calls closes its ledger run
+  as finished, instead of leaving it open.
+- **Three Q1 judge runners need a paid window.** Without `--keyless-upstream`, the calibration cell, the A6 second
+  judge and the GST-1365 rejudge refuse to start unless they get `--paid-window` and `--window-cap-usd`, with their
+  ledger cap and lease within the window's cap. The rejudge records a window's starting spend beside its ledger, so
+  every stage under one window shares the window's cap whatever its output directory, and a crashed stage can resume
+  its own lease.
+- No published number changes, and the frozen cell manifests keep their bytes.
 
 ## [0.10.191] - 2026-11-09
 

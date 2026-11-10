@@ -13,7 +13,12 @@
  *   bun eval/runner/q1/rejudge-systems.ts summary <roots> --out <dir> [--report <dir>]
  *     <roots>: --root f6=<receipt> --root q1=<receipt> [--root second-judge=<out>]...
  *     <lease>: --budget-ledger <file> --run-id <id> --lease-usd <n> [--reserve-grant <usd>=<GBEV-3's words>]
- *              [--concurrency <n>] [--keyless-upstream <url>]
+ *              [--concurrency <n>] (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)
+ *
+ * A paid subcommand without --keyless-upstream spends real keys, so it needs the granted paid window's unit and cap, and
+ * its --lease-usd never exceeds that cap (eval/runner/paid-arm.ts, the shared window guard); otherwise it exits 2 before
+ * any output, key check or lease. The ledger's ceiling below spans every stage, so the window bounds the leases taken
+ * under it together (checkWindowRoom).
  *
  * Judges: gpt-6.1-sol grades the Claude readers' rows, claude-opus-5-5 the gpt-6.1-sol rows, and gemini-4-argon referees;
  * a same-family pair or a particle judge is refused. A frontier judgment already in custody (the receipts' own frontier
@@ -31,7 +36,7 @@
  */
 import { createHash, randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { BudgetRun, ledgerPaths, ledgerStatus } from '../budget-ledger.ts';
 import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor, PASS_THRESHOLD, type Instrument } from '../memory-qa/instruments.ts';
@@ -39,6 +44,7 @@ import { DEFAULT_MAX_ATTEMPTS, HARNESS_FAILURES, NOT_APPLICABLE, PRODUCT_FAILURE
 import { ChatClient, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { judgmentKey, RecordLog, sha256, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit, type UsageLine } from '../metering-proxy.ts';
+import { requireRs1Window, type PaidWindow } from '../paid-arm.ts';
 import { attestPreregistration } from '../prereg.ts';
 import { compatMayHaveBilled, JUDGE_PROVIDERS } from '../providers/openai-compatible.ts';
 import { derive } from '../scoreboard.ts';
@@ -546,6 +552,25 @@ export function openLease(o: { runId: string; leaseUsd: number; ledgerPath: stri
   return BudgetRun.openLease({ runId: o.runId, leaseUsd: o.leaseUsd, ledgerPath: o.ledgerPath, runner: 'gst-1365-rejudge' });
 }
 
+/**
+ * A paid window's room on a ledger: the first paid stage under a window records the ledger's committed total beside the
+ * ledger, in <ledger>.window-<unit>.json, and every stage under that window, from any out on that ledger, refuses a lease
+ * that would take the ledger's spend since then past the window cap. A resumed open lease counts its own spend once,
+ * inside its lease, as openLease does, so the stages and reruns of one window never pass its cap together.
+ */
+export function checkWindowRoom(window: PaidWindow, ledgerPath: string, runId: string, leaseUsd: number): void {
+  const ledger = ledgerPaths(ledgerPath).ledger, file = `${ledger}.window-${window.unit}.json`;
+  mkdirSync(dirname(ledger), { recursive: true });
+  if (!existsSync(file)) writeFileSync(file, JSON.stringify({ unit: window.unit, cap_usd: window.cap_usd, start_committed_usd: committed(ledgerPath) }) + '\n', { flag: 'wx' });
+  const recorded = JSON.parse(readFileSync(file, 'utf8')) as { cap_usd: number; start_committed_usd: number };
+  if (recorded.cap_usd !== window.cap_usd) throw refuse({ code: 'USAGE', message: `paid window ${window.unit} was recorded on ${ledger} with a cap of $${recorded.cap_usd}, not $${window.cap_usd}`,
+    why: 'a paid window keeps the cap it was granted', fix: { next: 'ask_user', user_message: `ask GBEV-3 for paid window ${window.unit}'s cap` } });
+  const status = existsSync(ledger) ? ledgerStatus({ ledgerPath, runId }) : null;
+  const spent = (status?.totals.committed_usd ?? 0) - recorded.start_committed_usd - (status?.run && !status.run.finished_at ? status.run.committed_usd : 0);
+  if (spent + leaseUsd > recorded.cap_usd + 1e-9) throw refuse({ code: 'USAGE', message: `WINDOW_SPENT: a $${leaseUsd.toFixed(2)} lease would take paid window ${window.unit}'s spend on ${ledgerPath} from $${spent.toFixed(2)} past its $${recorded.cap_usd.toFixed(2)} cap`,
+    why: 'every stage and rerun under one paid window shares its cap', fix: { next: 'ask_user', user_message: `report paid window ${window.unit} spent to GBEV-3` } });
+}
+
 const KEYS: Record<string, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', gemini: 'GEMINI_API_KEY' };
 const LISTING: Record<string, (model: string, key: string) => { url: string; headers: Record<string, string> }> = {
   openai: (m, k) => ({ url: `https://api.openai.com/v1/models/${m}`, headers: { authorization: `Bearer ${k}` } }),
@@ -733,6 +758,9 @@ if (import.meta.main) {
   try {
     const outArg = one('--out');
     if (!sub || !outArg) throw refuse({ code: 'USAGE', message: 'usage: rejudge-systems.ts plan|cut|judge|reuse-check|referee|controls|summary ... --out <dir>', why: 'every subcommand reads and writes one custody --out', fix: { next: 'run', argv: [...FRONT, 'plan', '--root', 'f6=<receipt>', '--root', 'q1=<receipt>', '--out', '<dir>'] } });
+    const paid = ['judge', 'reuse-check', 'referee', 'controls'].includes(sub);
+    const keyless = paid ? keylessUpstreamArg(argv) : null;
+    const paidWindow = paid ? requireRs1Window(argv, { what: `rejudge-systems.ts ${sub} without --keyless-upstream`, keyless: !!keyless, caps: () => [{ label: '--lease-usd', usd: Number(one('--lease-usd')) > 0 ? Number(one('--lease-usd')) : null }] }) : null;
     const out = resolve(outArg);
     mkdirSync(out, { recursive: true });
     if (sub === 'cut') {
@@ -774,14 +802,13 @@ if (import.meta.main) {
       console.log(md);
       process.exit(r.contrasts.some(c => c.outcome === 'INCOMPLETE') ? 4 : 0);
     }
-    if (!['judge', 'reuse-check', 'referee', 'controls'].includes(sub)) throw refuse({ code: 'USAGE', message: `unknown subcommand ${sub}`, why: 'the file header lists the subcommands', fix: { next: 'run', argv: [...FRONT, 'plan'] } });
+    if (!paid) throw refuse({ code: 'USAGE', message: `unknown subcommand ${sub}`, why: 'the file header lists the subcommands', fix: { next: 'run', argv: [...FRONT, 'plan'] } });
     const [ledger, runId, leaseUsd, concurrency] = [one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--concurrency') ?? 16)];
     if (!ledger || !runId || !(leaseUsd > 0) || !Number.isInteger(concurrency) || concurrency < 1) throw refuse({ code: 'USAGE', message: 'a paid subcommand needs --budget-ledger, --run-id and --lease-usd', why: 'every judge request is reserved on the GST-1365 ledger first', fix: { next: 'run', argv: [...FRONT, sub, '--budget-ledger', '<file>', '--run-id', 'gst-1365-<stage>', '--lease-usd', '<n>'] } });
     const grantArg = one('--reserve-grant');
     const grant = grantArg ? { usd: Number(grantArg.slice(0, grantArg.indexOf('='))), words: grantArg.slice(grantArg.indexOf('=') + 1) } : null;
     const ceiling = ceilingUsd(grant);
     if (one('--ledger-cap-usd') !== undefined && Number(one('--ledger-cap-usd')) !== ceiling) throw refuse({ code: 'USAGE', message: `the GST-1365 ledger ceiling is $${ceiling}; --ledger-cap-usd may only repeat it`, why: 'the API ceiling is pinned in code and rises only with a recorded reserve grant (R71)', fix: { next: 'run', argv: [...FRONT, sub, '--reserve-grant', '<usd>=<GBEV-3\'s words>'] } });
-    const keyless = keylessUpstreamArg(argv);
     claimOut(out, !!keyless, 'gst-1365');
     tieLedger(out, resolve(ledger));
     let tasks: Task[], extra: Record<string, unknown> = {}, logPath = join(out, 'judgments.ndjson'), cache = join(out, 'cache', 'qa');
@@ -859,6 +886,7 @@ if (import.meta.main) {
     const keys = keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder, GEMINI_API_KEY: placeholder } : { ...process.env };
     const [cellToken, controlToken] = [randomUUID(), randomUUID()];
     Object.assign(process.env, { SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
+    if (paidWindow) checkWindowRoom(paidWindow, resolve(ledger), runId, leaseUsd);
     const lease = openLease({ runId, leaseUsd, ledgerPath: resolve(ledger), ceiling });
     const usageLog = join(out, `usage-${runId}.ndjson`);
     const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, gemini: keyless } } : {}), cellToken, controlToken,

@@ -6,8 +6,13 @@
  * judges use (`<instrument>@openai:gpt-6.1-sol`). OpenAI grades neither reader's rows (GST-767).
  *
  *   bun eval/runner/q1/second-judge.ts --cell <source cell id> --arm <arm id> [--manifest q1|f6] --root <cell output>... --out <dir>
- *     --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--concurrency <n>] [--keyless-upstream <url>]
+ *     --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--concurrency <n>]
+ *     (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)
  *   bun eval/runner/q1/second-judge.ts summary --out <dir>...
+ *
+ * A run without --keyless-upstream spends real keys, so it needs the granted paid window's unit and cap, and its
+ * --ledger-cap-usd and --lease-usd never exceed that cap (eval/runner/paid-arm.ts, the shared window guard); otherwise
+ * it exits 2 before any lease or output.
  *
  * --root takes particle-addon-report.ts's roots (the re-read's --out and the frontier cell's output), and the cell is
  * the particle-1 cell the report pairs with the arm's cell. Before any request (prepareSecondJudge): the custody gate a
@@ -38,6 +43,7 @@ import { DEFAULT_MAX_ATTEMPTS } from '../memory-qa/outcomes.ts';
 import { ChatClient, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { judgmentKey, RecordLog, sha256, type AnswerRecord } from '../memory-qa/records.ts';
 import { DEFAULT_ROUTE_CAPS, keylessKeys, keylessUpstream, MeteringProxy, usageSplit } from '../metering-proxy.ts';
+import { requireRs1Window } from '../paid-arm.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../shootout-cell.ts';
 import { clusteredPairedDelta } from '../stats/paired.ts';
 import { claimOut, keylessUpstreamArg } from './calibration-cell.ts';
@@ -218,12 +224,14 @@ if (import.meta.main) {
   const [cellArg, armArg, outArg, ledger, runId, leaseUsd, ledgerCap, concurrency] = [one('--cell'), one('--arm'), one('--out'), one('--budget-ledger'), one('--run-id'), Number(one('--lease-usd')), Number(one('--ledger-cap-usd')), Number(one('--concurrency') ?? 8)];
   const roots = many('--root');
   if (!cellArg || !armArg || !roots.length || !outArg || !ledger || !runId || !(leaseUsd > 0) || !(ledgerCap > 0) || !Number.isInteger(concurrency) || concurrency < 1) {
-    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> [--manifest q1|f6] --root <cell output>... --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--concurrency <n>] [--keyless-upstream <url>]`);
+    console.error(`usage: ${FRONT.join(' ')} --cell <source cell id> --arm <arm id> [--manifest q1|f6] --root <cell output>... --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> --ledger-cap-usd <n> [--concurrency <n>] (--keyless-upstream <url> | --paid-window <unit> --window-cap-usd <n>)`);
     process.exit(2);
   }
   let keyless: string | null;
-  try { keyless = keylessUpstreamArg(argv); }
-  catch (e) { console.error((e as Error).message); process.exit(2); }
+  try {
+    keyless = keylessUpstreamArg(argv);
+    requireRs1Window(argv, { what: 'a second judge without --keyless-upstream', keyless: !!keyless, caps: () => [{ label: '--ledger-cap-usd', usd: ledgerCap }, { label: '--lease-usd', usd: leaseUsd }] });
+  } catch (e) { console.error((e as Error).message); process.exit(2); }
   try {
     const def = findCell(cellArg, undefined, one('--manifest'));
     const arm = def.arms.find(a => a.id === armArg);

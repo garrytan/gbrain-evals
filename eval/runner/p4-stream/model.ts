@@ -8,7 +8,9 @@
  * replayed verbatim. Calls go out through `fetch`, so the paid-request guard
  * in budget-ledger.ts reserves and caps each one.
  */
+import { responseUsd } from '../budget-ledger.ts';
 import { provider } from '../cat40/loop.ts';
+import { normalizeUsage } from '../q1/usage.ts';
 
 export type Block =
   | { type: 'text'; text: string }
@@ -17,8 +19,12 @@ export type Block =
 
 export interface Msg { role: 'user' | 'assistant'; blocks: Block[]; raw?: unknown[] }
 export interface ToolDef { name: string; description: string; input_schema: Record<string, unknown> }
-export interface CallUsage { input: number; cache_write: number; cache_read: number; output: number }
-export interface Reply { blocks: Block[]; raw?: unknown[]; usage: CallUsage; contextTokens: number; stop: string }
+/**
+ * Token buckets (input is uncached input). `usd` is the calls' cost as the budget ledger settles each one, long prompts and
+ * cache writes at their own rates; callModel always sets it.
+ */
+export interface CallUsage { input: number; cache_write: number; cache_read: number; output: number; usd?: number }
+export interface Reply { blocks: Block[]; raw?: unknown[]; usage: Required<CallUsage>; contextTokens: number; stop: string }
 
 async function postJson(url: string, headers: Record<string, string>, body: unknown): Promise<Record<string, unknown>> {
   let last = '';
@@ -55,7 +61,8 @@ async function anthropic(o: CallOptions): Promise<Reply> {
     ...(tools.length ? { tools } : {}), messages,
   });
   const u = (res.usage ?? {}) as Record<string, number>;
-  const usage = { input: u.input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0, cache_read: u.cache_read_input_tokens ?? 0, output: u.output_tokens ?? 0 };
+  const usage = { input: u.input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0, cache_read: u.cache_read_input_tokens ?? 0, output: u.output_tokens ?? 0,
+    usd: responseUsd('anthropic', o.model, res) ?? 0 };
   const blocks: Block[] = [];
   for (const c of (res.content ?? []) as Array<Record<string, unknown>>) {
     if (c.type === 'text') blocks.push({ type: 'text', text: String(c.text ?? '') });
@@ -79,9 +86,8 @@ async function openai(o: CallOptions): Promise<Reply> {
     ...(o.noTools ? {} : { tools: o.tools.map(t => ({ type: 'function', name: t.name, description: t.description, parameters: t.input_schema, strict: false })) }),
     ...(o.effort ? { reasoning: { effort: o.effort } } : {}),
   });
-  const u = (res.usage ?? {}) as Record<string, unknown>;
-  const cached = ((u.input_tokens_details ?? {}) as Record<string, number>).cached_tokens ?? 0;
-  const usage = { input: ((u.input_tokens as number) ?? 0) - cached, cache_write: 0, cache_read: cached, output: (u.output_tokens as number) ?? 0 };
+  const u = normalizeUsage('openai', res.usage as object | undefined);
+  const usage = { input: u.uncached_input, cache_write: u.cache_write, cache_read: u.cache_read, output: u.output, usd: responseUsd('openai', o.model, res) ?? 0 };
   const raw = (res.output ?? []) as Array<Record<string, unknown>>;
   const blocks: Block[] = [];
   for (const it of raw) {
@@ -92,7 +98,7 @@ async function openai(o: CallOptions): Promise<Reply> {
       blocks.push({ type: 'tool_call', id: String(it.call_id), name: String(it.name), args });
     }
   }
-  return { blocks, raw, usage, contextTokens: usage.input + usage.cache_read + usage.output, stop: String(res.status ?? '') };
+  return { blocks, raw, usage, contextTokens: usage.input + usage.cache_write + usage.cache_read + usage.output, stop: String(res.status ?? '') };
 }
 
 export const textOf = (blocks: Block[]) => blocks.filter((b): b is Extract<Block, { type: 'text' }> => b.type === 'text').map(b => b.text).join('\n').trim();
