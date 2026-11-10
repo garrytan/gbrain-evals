@@ -2,6 +2,25 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.194] - 2026-11-10
+
+### Q1 eval VMs receive only the files their cells run, and a campaign that would miss one is refused before its lease
+
+- A Q1 scoreboard cell's Ubicloud VM now gets only the tracked files under the campaign's `executes` paths and the few
+  paths cells read beyond them (`Q1_VM_PATHS` in `eval/runner/shootout-cell.ts`), without `.git` or the benchmark
+  docs, so each upload is a few MB instead of the whole checkout. `scripts/ubicloud/ubi-runner.sh run --only <file>`
+  packs that list. A listed path with no tracked files, a tracked file missing from disk or an untracked file under a
+  listed path stops the launch before any VM exists.
+- A resume still sends the checkpoint and store snapshot it staged. They go into the synced checkout for an ordinary
+  cell, or into the custody root for a sealed one.
+- `reserve` refuses, with `CAMPAIGN_INVALID` and before any lease exists, a Q1 campaign whose `executes` leaves out a
+  path the cell runner imports, and a cell whose commands name a script the VM would not receive. Most committed Q1
+  manifests predate `eval/runner/providers` in that list, so a campaign frozen from a copy of one would otherwise fail
+  on its VM after setup.
+- No score or published result changes. A Q1 campaign frozen before this release needs a new campaign identity to
+  launch or resume, because `eval/runner/shootout-cell.ts` and `scripts/ubicloud/ubi-runner.sh` are in its
+  `executes`.
+
 ## [0.10.193] - 2026-11-09
 
 ### CI now runs all six Cat 25 trajectory probes, so a gbrain pin that breaks any one of them fails
