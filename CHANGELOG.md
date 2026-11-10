@@ -19,6 +19,21 @@ This records what each gbrain-evals release changed and what its measurements me
   [disclosures](docs/disclosures.md) now says.
 - **What it changes.** No score, verdict or stated ranking changes. Every figure is copied from its linked report.
 
+## [0.10.189] - 2026-11-09
+
+### The live recall findings now say which model and search APIs saw the questions and page text
+
+- [The phase 2 findings](docs/benchmarks/2026-11-09-live-recall-phase2.md) said that no task, answer, page text or slug
+  left the box. Phase 2 sent the task text and the brain's page text and slugs to Anthropic, OpenAI and Particle, and
+  sent the gold answers and the models' answers to the judge models at OpenAI and Anthropic, under the consent its
+  preregistration records. gbrain's own search also sent queries and candidate passages to Voyage AI, the brain's
+  embedding and reranking provider. The page now says so.
+- The [batch 1](docs/benchmarks/2026-11-06-live-recall-batch1.md) and
+  [batch 2](docs/benchmarks/2026-11-07-live-recall-batch2.md) findings said that no question, page text, slug or result
+  left the box. The runs' only model calls were gbrain's own calls to Voyage AI, which embedded each question form and,
+  in configured search, reranked it with its candidate passages. Both pages now say so.
+- Each of the three pages carries a dated correction note. No number, scorecard or preregistration changed.
+
 ## [0.10.188] - 2026-11-09
 
 ### Published OpenAI dollar figures that priced cache writes as plain input are corrected, and three keyless tools recompute every correction
