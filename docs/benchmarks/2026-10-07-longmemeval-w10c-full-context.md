@@ -1,4 +1,4 @@
-# gbrain against pasting the whole history: within 7 points on LongMemEval, at about one seventh of the reader cost
+# gbrain against pasting the whole history: within 7 points on LongMemEval, at about one seventh of the reader cost with one question per history
 
 *Note added 2026-11-04, after publication:* gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. See [disclosures](../disclosures.md).
 
@@ -17,7 +17,7 @@ Measured 2026-10-06. Status: **Complete** (150 of 150 questions in all four arms
 
 **The whole history scored a little higher with both readers, and the gap sits in multi-session questions.** The preregistered test of "whole history better by more than 7 points" did not pass for either reader, so the result is "gbrain within 7 points", not "the same". All of Sonnet's five-question gap and all of `gpt-6.1-sol`'s net four are in multi-session questions, where the answer is spread over more conversations than gbrain's top 5 always returns.
 
-**gbrain's reader input is about one eighth of the whole history, and its recurring cost per question is about one seventh.** The Sonnet 5.5 reader cost $0.024 per question with gbrain (reader plus rerank) and $0.173 with the whole history, at batch prices. For `gpt-6.1-sol`: $0.015 against $0.107 ([corrected 2026-11-01](../corrections.md#longmemeval)). gbrain also pays a one-time $0.015 per history to embed it.
+**gbrain's reader input is about one eighth of the whole history, and its recurring cost per question is about one seventh, with one question per history.** The Sonnet 5.5 reader cost $0.024 per question with gbrain (reader plus rerank) and $0.173 with the whole history, at batch prices. For `gpt-6.1-sol`: $0.015 against $0.107 ([corrected 2026-11-01](../corrections.md#longmemeval)). gbrain also pays a one-time $0.015 per history to embed it.
 
 ## The concrete case
 
@@ -111,7 +111,7 @@ done
 
 ### 2026-11-10: The cost comparison is for one question per history
 
-Notes under the title and the cost table, and a clause in the first "What to use" bullet, say that each history here
+The title, the cost finding, notes under the title and the cost table, and a clause in the first "What to use" bullet say that each history here
 was read once, so each whole-history cost is one full read and "about one seventh" holds for one question per history.
 A history asked several questions can be read from a prompt cache after the first, which this experiment did not
 measure. No figure, accuracy or verdict changes. [Corrections](../corrections.md#full-context-reads-and-openais-prompt-cache).
