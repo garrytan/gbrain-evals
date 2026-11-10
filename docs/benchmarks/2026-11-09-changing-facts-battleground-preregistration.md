@@ -623,6 +623,36 @@ The two campaigns' caps are set so that together they stay inside stage 1's cap 
 earlier budget, because the ledger tool refuses to lower a run budget, so the program cap is the level that binds
 stage1b's remaining spend: every reservation is checked against both.
 
+### Amendment 4 (2026-11-10): stage 1's gold audit and two generator fixes
+
+Stage 1's gold audit (step 4) looked for dev questions on which both whole-history readers disagree with the gold. On
+the full-context reference, graded by the gating judges (GPT-6 Astra on Opus answers, Opus on Sol answers), Opus
+missed 5 of 192 questions and Sol 3 of 192. They missed two of the same questions, and both trace to the generator:
+
+1. `bg1-dev-01:s8_history:1` asks for a person's job titles, oldest first. The slot also has a change scheduled after
+   the world end, and the gold labels that scheduled title as stale. Both readers listed the four titles held, in
+   order, and then the scheduled one, each saying she does not hold it yet. Every judge failed both answers. A value due
+   after the world end is neither history nor stale, so the question is ambiguous. Six of the 24 dev s8 questions ask
+   about a slot with a scheduled change.
+2. `bg1-dev-02:s5_withdrawn:7` asks which city a company's offsite is in. The plan was withdrawn with "Please ignore
+   the report that Fenwick Labs is holding its team offsite in Ghent; it turned out to be false." The gold says nothing
+   is planned, but that line says only that the report was false, so "unknown" is the answer the history supports, and
+   both readers gave it. One of the two public retract templates uses this wording, and three of the 24 dev s5
+   questions rest on it. On those three, every row loses most of its answers: gbrain 0 of 6, the memory-bank server
+   1 of 6, the extract-first server 1 of 6 and the whole-history reference 3 of 6.
+
+The fixes are in `eval/generators/changing-facts-gen.ts` at `0f558ac3` and apply to sealed worlds only. A sealed
+retraction uses only retract templates that say the plan is not happening (one of the s5 gold's accepted forms), and
+planning refuses a custody phrasing set that has none. A sealed s8 question never asks about a slot with a scheduled
+change. Each fix has a keyless test that fails without it.
+
+The dev worlds do not change. Stage 1 rendered and scored them, so their plans, questions and gold stay as committed,
+the generator's check that they match a fresh generation still passes, and their results are reported as measured,
+these questions included. The judge check's grades stay valid, because its pool key covers the dev gold.
+
+The ceiling stays where it is (R61): no comparator reached 95% on the dev primary. The closest, pooled over Opus and Sol,
+were the extract-first server at 225 of 240 and the memory-bank server at 224 of 240.
+
 ### Expected amendments
 
 The expected ones, each dated and committed before the cells it governs:
