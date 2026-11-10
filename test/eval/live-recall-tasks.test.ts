@@ -5,7 +5,7 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { BudgetRun, initLedger, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
@@ -293,6 +293,33 @@ describe('phase 2 privacy posture on the fixture (keyless)', () => {
       const get = open.engine.getConfig.bind(open.engine);
       open.engine.getConfig = async (k: string) => { if (k === 'mcp.stdio_member') throw new Error('config read failed'); return get(k); };
       expect(await abortCode(() => assertPrivate(gut, open.engine))).toBe('LR_PRIVACY_RELAXED');
+    } finally { await open.close(); }
+  }, 120_000);
+
+  test('a gbrain whose caller access has no owner field (0.60.613.0, the phase 2 pin) is not refused on a clean brain', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'lr-ownerless-'));
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      mkdirSync(join(root, 'src/core/search'), { recursive: true });
+      mkdirSync(join(root, 'src/core/access'), { recursive: true });
+      writeFileSync(join(root, 'src/core/search/private-visibility.ts'), "export * from '" + join(gut.root, 'src/core/search/private-visibility.ts') + "';\n");
+      writeFileSync(join(root, 'src/core/access/caller.ts'), "import * as c from '" + join(gut.root, 'src/core/access/caller.ts') + "';\nexport const STDIO_MEMBER_KEY = c.STDIO_MEMBER_KEY;\nexport async function remoteCallerAccess(...a: any[]) { const r: any = await (c.remoteCallerAccess as any)(...a); delete r.owner; return r; }\n");
+      expect(await abortCode(() => assertPrivate({ ...gut, root }, open.engine))).toBe('no abort');
+    } finally { await open.close(); rmSync(root, { recursive: true, force: true }); }
+  }, 120_000);
+
+  test('a probe page made public during a run is not read as a breach', async () => {
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      const { importFromContent } = await importGbrain<any>(gut, 'src/core/import-file.ts');
+      await open.engine.executeRaw('SET default_transaction_read_only = off');
+      const note = (visibility: string) => '---\ntype: note\ntitle: Access probe\n' + visibility + '---\n\n# Access probe\n\nFictional page, private first and public later.\n';
+      await importFromContent(open.engine, 'notes/access-probe', note('visibility: private\n'));
+      const reader = await openReader(gut, open.engine, true);
+      expect(await reader.privateProbe()).toBe('hidden');
+      await importFromContent(open.engine, 'notes/access-probe', note(''));
+      expect(await reader.page('notes/access-probe')).not.toBeNull();
+      expect(await abortCode(() => assertPrivate(gut, open.engine, reader))).toBe('no abort');
     } finally { await open.close(); }
   }, 120_000);
 

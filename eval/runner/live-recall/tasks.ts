@@ -232,7 +232,7 @@ export async function assertPrivate(gut: GbrainUnderTest, engine: any, reader?: 
   const caller = await importGbrain<any>(gut, 'src/core/access/caller.ts').catch(() => null);
   const bound = String((await engine.getConfig(caller?.STDIO_MEMBER_KEY ?? 'mcp.stdio_member').catch(() => 'unreadable')) ?? '').trim();
   const access = typeof caller?.remoteCallerAccess === 'function' ? await caller.remoteCallerAccess(engine, undefined, undefined, 'stdio') : null;
-  const wider = access && (access.owner !== false || access.hidePrivate !== true || [access.identity, access.audienceIdentities, access.privateReadableSources].some(l => !Array.isArray(l) || l.length > 0));
+  const wider = access && (('owner' in access && access.owner !== false) || access.hidePrivate !== true || [access.identity, access.audienceIdentities, access.privateReadableSources].some(l => !Array.isArray(l) || l.length > 0));
   if (bound || wider) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'the runner\'s stdio session is bound to a member or reads as the brain owner');
   if (!reader) return;
   const breach = reader.breach();

@@ -471,8 +471,8 @@ to remote callers (`search.remote_private_pages`), or gbrain would read the runn
 owner (`mcp.stdio_member` set, or `access.owner_member` naming that member), or a gbrain response reported a wider view
 than an unbound caller's in `_meta.access` (that response's text never reaches a model), or a page gbrain hides from an
 unbound caller came back readable. At the start nothing runs. The runner checks again before every task and after every
-episode, reading one hidden page each time, so a change during the run stops it with no record for the episode that
-just ran. gbrain caches the setting for 30 seconds, so pages it served inside that
+episode, each time reading one page gbrain hides from an unbound caller when the brain has one, so a change during the
+run stops it with no record for the episode that just ran. gbrain caches the setting for 30 seconds, so pages it served inside that
 window may have reached a model. The runner never relaxes or works around it; GBEV-3 decides.
 
 ### LR_CAP_STOP

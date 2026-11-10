@@ -115,7 +115,7 @@ export interface GbrainReader {
   top(text: string): Promise<{ slugs: string[]; degraded: string[]; aiRefused: string[] }>;
   /** The wider view a gbrain response reported (see openReader), or null while every response was an unbound caller's. */
   breach(): string | null;
-  /** get_page on one page gbrain's own privacy predicate hides from a remote caller in the reader's source; 'none' when there is none. */
+  /** get_page on one page gbrain's own privacy predicate hides from a remote caller in the reader's source, chosen afresh on each call; 'none' when there is none. */
   privateProbe(): Promise<'hidden' | 'readable' | 'none'>;
 }
 
@@ -203,15 +203,11 @@ export async function openReader(gut: GbrainUnderTest, engine: any, rerankerEnab
     checkAccess(r);
     return r.isError ? 0 : ((r.content ?? []).map(c => c.text ?? '').join('\n').match(/"chunk_index"/g) ?? []).length;
   };
-  let probeSlug: string | null = null;
   const privateProbe = async (): Promise<'hidden' | 'readable' | 'none'> => {
-    if (!probeSlug) {
-      if (typeof visibility.privatePagesFilterFragment !== 'function') return 'none';
-      const [row] = await engine.executeRaw('SELECT p.slug FROM pages p WHERE p.source_id = $1 AND p.deleted_at IS NULL AND NOT (' + visibility.privatePagesFilterFragment('p') + ') ORDER BY p.slug LIMIT 1', [sourceId]) as Array<{ slug: string }>;
-      if (!row) return 'none';
-      probeSlug = row.slug;
-    }
-    const r = await guarded([], () => dispatch.dispatchToolCall(engine, 'get_page', { slug: probeSlug }, { remote: true, transport: 'stdio', sourceId })) as { content?: Array<{ type: string; text?: string }>; isError?: boolean; _meta?: Record<string, any> };
+    if (typeof visibility.privatePagesFilterFragment !== 'function') return 'none';
+    const [row] = await engine.executeRaw('SELECT p.slug FROM pages p WHERE p.source_id = $1 AND p.deleted_at IS NULL AND NOT (' + visibility.privatePagesFilterFragment('p') + ') ORDER BY p.slug LIMIT 1', [sourceId]) as Array<{ slug: string }>;
+    if (!row) return 'none';
+    const r = await guarded([], () => dispatch.dispatchToolCall(engine, 'get_page', { slug: row.slug }, { remote: true, transport: 'stdio', sourceId })) as { content?: Array<{ type: string; text?: string }>; isError?: boolean; _meta?: Record<string, any> };
     try {
       checkAccess(r);
     } catch (e) {
