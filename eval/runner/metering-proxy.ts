@@ -196,8 +196,10 @@ export interface Meter {
   billed_usd?: number;
   /** Dollars charged at a reservation because no usage came back (a 5xx, a timeout, a lost stream). */
   reserved_unsettled_usd?: number;
-  /** Lease mode: requests the proxy refused before forwarding, by error kind (`budget`, `rate_limited`, `invalid_request`), so a caller can tell a lease stop the system swallowed from a product failure. */
+  /** Requests the proxy refused before forwarding, by error kind (`budget`, `rate_limited`, `invalid_request`), so a caller can tell a lease stop the system swallowed from a product failure. In-process mode counts only `budget`. */
   refused?: Record<string, number>;
+  /** In-process mode: the last budget refusal's message (a finished run, a spent allowance), so a probe can name it. */
+  last_refusal?: string;
 }
 export const newMeter = (): Meter => ({ usd: 0, requests: 0, unpriced: 0, byModel: {} });
 
@@ -591,8 +593,10 @@ export class MeteringProxy {
     try { res = await (allowance ? allowance.run(forward) : forward()); }
     catch (e) {
       // A refused reservation never left the process; any other failure after sending is charged at its reservation, as the ledger does.
-      if ((e as Error).name !== 'BudgetExceededError' && price) this.charge(key, prov, price.model, reservationUsd(price), true);
-      return json(502, (e as Error).name === 'BudgetExceededError' ? 'budget' : 'product_error', (e as Error).message);
+      const refused = (e as Error).name === 'BudgetExceededError';
+      if (refused) { const m = this.meter(key); m.refused = { ...m.refused, budget: (m.refused?.budget ?? 0) + 1 }; m.last_refusal = (e as Error).message; }
+      else if (price) this.charge(key, prov, price.model, reservationUsd(price), true);
+      return json(502, refused ? 'budget' : 'product_error', (e as Error).message);
     }
     const text = await res.text();
     if (price) {

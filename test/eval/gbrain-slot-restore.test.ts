@@ -79,6 +79,13 @@ describe('rerankProbe (from GBRA-39\'s #76: fail closed when a slot reaches no r
     await expect(rerankProbe([off], proxy, 'q', { gapMs: 0 })).rejects.toThrow('the reranker is unreachable or off');
     expect(off.calls).toBe(1);
   });
+
+  test('a search whose provider requests the proxy refused on the budget fails at once and names the refusal', async () => {
+    const proxy = { bind: () => {}, unbind: () => {}, finalize: async () => ({ byModel: {}, refused: { budget: 3 }, last_refusal: 'search embed: budget run nightly-x already finished' }) };
+    const s = { id: 'slot1', restored: 0, calls: 0, client: { call: async () => { s.calls++; return 'rows\n[gbrain degraded: embed_timeout] This result is partial or degraded.'; } }, restore: async () => { s.restored++; } };
+    await expect(rerankProbe([s], proxy, 'q', { gapMs: 0 })).rejects.toThrow('the proxy refused 3 of the probe search\'s provider requests on the budget (search embed: budget run nightly-x already finished)');
+    expect([s.calls, s.restored]).toEqual([1, 0]);
+  });
 });
 
 describe('parseConfigPairs (--gbrain-config, --gbrain-build-config)', () => {

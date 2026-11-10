@@ -421,6 +421,12 @@ export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGua
   return { paid, manifest: bound };
 }
 
+/**
+ * Whether a finished step closes its budget run. A run named by --budget-run-id belongs to the process that opened it
+ * (a nightly night, whose other slot builds and suites still spend from it), so only that process closes it.
+ */
+export const closesBudgetRun = (complete: boolean, options: { runId: string | null }) => complete && options.runId === null;
+
 function insideRepo(p: string): boolean {
   const r = relative(REPO_ROOT, resolve(p));
   return r === '' || (!r.startsWith('..') && !isAbsolute(r));
@@ -820,7 +826,7 @@ export async function main(argv = process.argv.slice(2)) {
     if (ctx.proxy) proxyUnattributed = Object.fromEntries([...ctx.proxy.meters].filter(([k]) => k.startsWith('slot:')));
     ctx.proxy?.stop();
     // An incomplete step leaves its budget run open, so a resume continues within the same budget.
-    const summary = budget?.run.close({ finish: complete });
+    const summary = budget?.run.close({ finish: closesBudgetRun(complete, options) });
     budget?.guard.uninstall();
     const receipt = {
       schema: 'cat40-receipt-v1', version: CAT40_VERSION,

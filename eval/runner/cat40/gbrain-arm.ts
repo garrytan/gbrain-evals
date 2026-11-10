@@ -239,7 +239,7 @@ export function refreshProviderBaseUrls(home: string, voyageBase: string, advert
 }
 
 type ProbeSlot = { id: string; client: { call(name: string, args: Record<string, unknown>): Promise<string>; stderr?: string[] } | null; restore(): Promise<void> };
-type ProbeProxy = { bind(slot: string, key: string): void; unbind(slot: string, key?: string): void; finalize(key: string, timeoutMs?: number): Promise<{ byModel: Record<string, { requests: number }> }> };
+type ProbeProxy = { bind(slot: string, key: string): void; unbind(slot: string, key?: string): void; finalize(key: string, timeoutMs?: number): Promise<{ byModel: Record<string, { requests: number }>; refused?: Record<string, number>; last_refusal?: string }> };
 
 /** gbrain's marker on a search that fell back to keyword matching because its query embed missed gbrain's deadline (6 s by default). */
 const EMBED_TIMEOUT_MARK = '[gbrain degraded: embed_timeout]';
@@ -248,9 +248,10 @@ const EMBED_TIMEOUT_MARK = '[gbrain degraded: embed_timeout]';
  * One search per started slot must reach a reranker through this process's proxy; otherwise fail closed before any
  * cell runs (from GBRA-39's #76, Cat 40 Hard R0). Each slot is restored after its probe.
  * A search whose query embed missed gbrain's deadline never tries the reranker, so it says nothing about whether the
- * reranker is reachable. On a loaded machine (slot builds running beside the probe, 2026-11-09) the embed is aborted
- * before it reaches the proxy. Only that case repeats, up to `attempts` searches `gapMs` apart; a rerank request
- * must still be seen.
+ * reranker is reachable. On a CPU-saturated machine the embed can be aborted before it reaches the proxy (reproduced
+ * locally, 2026-11-09). Only that case repeats, up to `attempts` searches `gapMs` apart; a rerank request must still be
+ * seen. A provider request the proxy refused on the budget fails at once and names the refusal, since waiting never
+ * lifts it: gbrain retries the proxy's 502 until its own deadline, so such a search also reads as embed_timeout.
  */
 export async function rerankProbe(slots: ProbeSlot[], proxy: ProbeProxy, query: string, opts: { attempts?: number; gapMs?: number } = {}): Promise<void> {
   const attempts = opts.attempts ?? 4, gapMs = opts.gapMs ?? 15_000;
@@ -264,6 +265,7 @@ export async function rerankProbe(slots: ProbeSlot[], proxy: ProbeProxy, query: 
       const m = await proxy.finalize(key, 30_000);
       const reranks = Object.entries(m.byModel).filter(([k]) => /rerank/i.test(k)).reduce((n, [, v]) => n + v.requests, 0);
       if (reranks) break;
+      if (m.refused?.budget) throw new HarnessError(`gbrain ${s.id}: the proxy refused ${m.refused.budget} of the probe search's provider requests on the budget (${m.last_refusal}), so no search reached the reranker`);
       const timedOut = out.includes(EMBED_TIMEOUT_MARK);
       if (timedOut && attempt < attempts) { await new Promise(r => setTimeout(r, gapMs)); continue; }
       const cause = timedOut
