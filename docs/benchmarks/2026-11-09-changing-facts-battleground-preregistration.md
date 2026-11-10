@@ -561,6 +561,28 @@ cell ran. The render then resumed on the same output directory, where the render
 already paid for, so nothing is bought twice. Stage 1's total now passes Amendment 1's ceiling by the sum of both
 raises, and GBEV-3 accepted that. The amounts are kept on GST-2010, not here.
 
+### Deviation 1 (2026-11-10): stage 1's first campaign stopped before any provider call
+
+Stage 1's first campaign, `q1-scoreboard-bg1-stage1`, launched one unit, `bg1-dev3.baseline-none.baseline`, from a full
+checkout of commit `4306e9e3`. The VM runner uploads the whole working tree to each VM before it starts the cell, git
+history included, and this checkout carries the data of every published benchmark under `docs/benchmarks/`. At the
+upload rate we measured, the copy could not finish before the launcher's backstop. The other units could not launch
+from a smaller checkout either: a campaign's ledger lives inside the checkout it was planned from, so a launch from a
+second checkout reads as a different campaign, and the launch check refused it.
+
+GBEV-3 stopped the campaign on 2026-11-10. The unit's VM was destroyed while the upload was still running, before the
+cell command started. Its lease was closed at no charge through the runner's unstarted path, which accepts only a launch
+log showing that the runner never reached the cell command. So no provider call was made under the first campaign. Its
+ledger and lease log are kept unchanged as evidence.
+
+Stage 1 restarts as campaign `q1-scoreboard-bg1-stage1b` at the same commit, with the same seven units, cells, paid
+window and cap (Amendment 1). Its units launch from a sparse, shallow checkout of `4306e9e3` that leaves out
+`docs/benchmarks/`, except this preregistration and the scoreboard's, and carries one commit of history. Every file
+the campaign hash covers (the paths the cells execute) is byte-identical to the full checkout's, so the cells run the
+same code. The restarted campaign's hash is `9a63064f7759`.
+
+The runner's packing, meaning what it uploads to a VM, gets its own fix before stage 2.
+
 ### Expected amendments
 
 The expected ones, each dated and committed before the cells it governs:
