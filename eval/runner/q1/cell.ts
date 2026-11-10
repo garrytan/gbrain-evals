@@ -92,7 +92,7 @@ import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memor
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
 import { COMPAT_PROVIDERS, JUDGE_PROVIDERS, compatMayHaveBilled } from '../providers/openai-compatible.ts';
-import { appendAccessLog } from '../sealed-confirmation-lib.ts';
+import { appendAccessLog, sha256File } from '../sealed-confirmation-lib.ts';
 import { DEFAULT_ROUTE_CLASSES, Q1_CAMPAIGN_ID, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
 import { AgentRuntimeSystem } from '../systems/agent-runtime.ts';
 import { answerFullContext, FullContextSystem, NoMemorySystem, PlainHybridSystem, type FitTokenizer } from '../systems/baselines.ts';
@@ -1509,6 +1509,9 @@ export function bg1GeminiKey(env: Record<string, string | undefined> = process.e
     fix: { next: 'ask_user', user_message: `export ${BG1_GEMINI_KEY_ENV} from the custody host's bg1.env` } });
 }
 
+/** BG1's committed data, which BG1 campaigns add to EXECUTES so the campaign hash covers it. */
+export const BG1_DATA_PATHS = ['eval/data/changing-facts-v1'];
+
 /**
  * BG1's campaign manifest: campaignManifest over a unit selection that names its granted paid window, with every unit's
  * run naming bg1-cells.json and carrying --paid-window and --window-cap-usd, so bg1CellWindow lets the unit spend only
@@ -1518,8 +1521,12 @@ export function bg1GeminiKey(env: Record<string, string | undefined> = process.e
  * carries its index and size in kept worlds (bg1_unit), so the custodian pushes only that unit's worlds (bg1CustodyPush).
  * Every unit's command exports the campaign's world end (GBRAIN_EVALS_BG1_WORLD_END: `worldEnd`, else the planning
  * shell's), so its VM's run and loaders resolve dates from the same world end as every other unit of the campaign.
+ * Data paths (the stage 2 freeze): the campaign hash also covers BG1's committed data (BG1_DATA_PATHS, the dev worlds a
+ * smoke unit reads), and a campaign with sealed units records the SHA-256 of the custodian's filled manifest
+ * (`bg1Manifest`, else GBRAIN_EVALS_BG1_MANIFEST), which pins every sealed world; Campaign.custodyPush refuses a sealed
+ * unit without it.
  */
-export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: Partial<Bg1UnitSelection>; worldEnd?: string } = {}): Q1Campaign {
+export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: Partial<Bg1UnitSelection>; worldEnd?: string; bg1Manifest?: string } = {}): Q1Campaign {
   const u = opts.units;
   if (!u?.paid_window || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(u.paid_window) || !(Number(u.cap_usd) > 0)) throw refuse({ code: 'PAID_FLAGS_MISSING', message: 'a BG1 campaign needs a unit selection (--units) naming its granted paid window as paid_window, with the window cap as cap_usd',
     why: 'every BG1 unit spends real keys, so its command carries the granted window and the unit refuses outside it', fix: { next: 'run', argv: [...FRONT, 'plan', '--manifest', 'bg1', '--units', '<selection with paid_window and cap_usd>', '--campaign-out', '<file>'] } });
@@ -1533,7 +1540,9 @@ export function bg1CampaignManifest(m: Manifest, opts: { smoke?: boolean; sealed
     const def = defs.find(d => (d.shards > 1 ? d.id === shard?.[1] : d.id === id));
     return def?.kept_units ? { index: def.shards > 1 ? Number(shard![2]) : 0, size: def.kept_units } : undefined;
   };
-  return { ...campaign, cells: campaign.cells.map(cell => {
+  const filled = opts.bg1Manifest ?? process.env.GBRAIN_EVALS_BG1_MANIFEST;
+  const recorded = campaign.cells.some(c => c.sealed) && filled && existsSync(filled) ? { bg1_manifest_sha256: sha256File(filled) } : {};
+  return { ...campaign, executes: [...(campaign.executes ?? []), ...BG1_DATA_PATHS], ...recorded, cells: campaign.cells.map(cell => {
     if (cell.command.split(out).length !== 2) throw new Error(`BG1 unit ${cell.id} has no single${out} in its command to put the paid window before`);
     const unit = cell.sealed ? unitOf(cell.id) : undefined;
     return { ...cell, providers: [...(cell.providers ?? []), 'gemini'], pass: [...(cell.pass ?? []), BG1_GEMINI_KEY_ENV], gemini_key_env: BG1_GEMINI_KEY_ENV, ...(unit ? { bg1_unit: unit } : {}),

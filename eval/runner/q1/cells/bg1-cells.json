@@ -253,6 +253,32 @@
       "output": 250
     }
   },
+  "bg1_measured": {
+    "ingest_usd_per_mtok": {
+      "gbrain-defaults:rs1-stable": 0.08,
+      "ext-memory-bank:recipe": 1.851499,
+      "ext-extract-first:common": 20.088763,
+      "ext-temporal-graph:shipped-0.31": 15.929683,
+      "baseline-hybrid:baseline": 0.136887
+    },
+    "hours_per_mtok": {
+      "gbrain-defaults:rs1-stable": 4.69,
+      "ext-memory-bank:recipe": 4.63,
+      "ext-extract-first:common": 13.1,
+      "ext-temporal-graph:shipped-0.31": 5.72,
+      "baseline-hybrid:baseline": 1.55,
+      "baseline-none:baseline": 0.92
+    },
+    "judge_usd_per_call": {
+      "openai:gpt-6-astra": 0.005397,
+      "anthropic:claude-opus-5-5": 0.002411
+    },
+    "canonical_judge_usd_per_call": 0.000401,
+    "full_context_read_usd_per_world": {
+      "anthropic:claude-opus-5-5": 8.27044,
+      "openai:gpt-6.1-sol": 2.297107
+    }
+  },
   "sets": [
     {
       "id": "BG1",
@@ -325,9 +351,9 @@
     {
       "id": "BG1",
       "label": "BG1 counted cells at the cap of 40 kept worlds (gbrain arm P at the stable tag, the three comparators, hybrid search, the floor) and the full-context reference on the first 10",
-      "plan_usd": 1894.79,
-      "estimate_usd": 1894.79,
-      "cap_usd": 2446.69
+      "plan_usd": 1529.1,
+      "estimate_usd": 1529.1,
+      "cap_usd": 2181.77
     }
   ],
   "cells": [
@@ -355,7 +381,7 @@
       },
       "kept_units": 6,
       "shards": 7,
-      "expected_hours": 3,
+      "expected_hours": 6,
       "launch": {
         "env": {
           "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
@@ -420,20 +446,20 @@
         }
       ],
       "estimate": {
-        "usd": 269.94,
+        "usd": 187.6,
         "lines": {
           "extraction": 8.05,
           "fact_embeddings": 0.07,
-          "frontier_judges": 97.28,
+          "frontier_judges": 19.99,
           "ingest": 0.64,
-          "judges": 7.1,
+          "judges": 2.05,
           "readers": 152.29,
           "system_queries": 4.51
         }
       },
       "lease": {
-        "usd": 49.29,
-        "basis": "BG1: the largest shard's estimate ($38.60) x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra at 8000 output tokens)"
+        "usd": 34.59,
+        "basis": "BG1: the largest shard's estimate ($26.83) x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra at 8000 output tokens)"
       }
     },
     {
@@ -460,7 +486,7 @@
       },
       "kept_units": 6,
       "shards": 7,
-      "expected_hours": 3,
+      "expected_hours": 6,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -505,17 +531,17 @@
         }
       ],
       "estimate": {
-        "usd": 270.57,
+        "usd": 189.14,
         "lines": {
-          "frontier_judges": 97.28,
-          "ingest": 13.9,
-          "judges": 7.1,
+          "frontier_judges": 19.99,
+          "ingest": 14.81,
+          "judges": 2.05,
           "readers": 152.29
         }
       },
       "lease": {
-        "usd": 49.43,
-        "basis": "BG1: the largest shard's estimate ($38.70) x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra at 8000 output tokens)"
+        "usd": 34.89,
+        "basis": "BG1: the largest shard's estimate ($27.08) x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra at 8000 output tokens)"
       }
     },
     {
@@ -542,7 +568,7 @@
       },
       "kept_units": 6,
       "shards": 7,
-      "expected_hours": 3,
+      "expected_hours": 16,
       "launch": {
         "env": {},
         "config": "common"
@@ -587,17 +613,17 @@
         }
       ],
       "estimate": {
-        "usd": 278.85,
+        "usd": 335.04,
         "lines": {
-          "frontier_judges": 97.28,
-          "ingest": 22.18,
-          "judges": 7.1,
+          "frontier_judges": 19.99,
+          "ingest": 160.71,
+          "judges": 2.05,
           "readers": 152.29
         }
       },
       "lease": {
-        "usd": 50.94,
-        "basis": "BG1: the largest shard's estimate ($39.92) x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra at 8000 output tokens)"
+        "usd": 61.63,
+        "basis": "BG1: the largest shard's estimate ($48.47) x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra at 8000 output tokens)"
       }
     },
     {
@@ -624,7 +650,7 @@
       },
       "kept_units": 6,
       "shards": 7,
-      "expected_hours": 3,
+      "expected_hours": 7,
       "launch": {
         "env": {},
         "config": "shipped-0.31"
@@ -669,17 +695,17 @@
         }
       ],
       "estimate": {
-        "usd": 288.75,
+        "usd": 301.77,
         "lines": {
-          "frontier_judges": 97.28,
-          "ingest": 32.08,
-          "judges": 7.1,
+          "frontier_judges": 19.99,
+          "ingest": 127.44,
+          "judges": 2.05,
           "readers": 152.29
         }
       },
       "lease": {
-        "usd": 52.76,
-        "basis": "BG1: the largest shard's estimate ($41.37) x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra at 8000 output tokens)"
+        "usd": 55.53,
+        "basis": "BG1: the largest shard's estimate ($43.59) x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra at 8000 output tokens)"
       }
     },
     {
@@ -706,7 +732,7 @@
       },
       "kept_units": 6,
       "shards": 7,
-      "expected_hours": 1,
+      "expected_hours": 2,
       "arms": [
         {
           "id": "component-b8000",
@@ -745,17 +771,17 @@
         }
       ],
       "estimate": {
-        "usd": 257.79,
+        "usd": 175.43,
         "lines": {
-          "frontier_judges": 97.28,
-          "ingest": 1.12,
-          "judges": 7.1,
+          "frontier_judges": 19.99,
+          "ingest": 1.1,
+          "judges": 2.05,
           "readers": 152.29
         }
       },
       "lease": {
-        "usd": 47.09,
-        "basis": "BG1: the largest shard's estimate ($36.83) x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra at 8000 output tokens)"
+        "usd": 32.38,
+        "basis": "BG1: the largest shard's estimate ($25.07) x 1.25 plus twice the peak reservation ($0.5206, judge openai:gpt-6-astra at 8000 output tokens)"
       }
     },
     {
@@ -782,7 +808,7 @@
       },
       "kept_units": 6,
       "shards": 7,
-      "expected_hours": 1,
+      "expected_hours": 2,
       "arms": [
         {
           "id": "component-b8000",
@@ -804,15 +830,15 @@
         }
       ],
       "estimate": {
-        "usd": 159.39,
+        "usd": 154.34,
         "lines": {
-          "judges": 7.1,
+          "judges": 2.05,
           "readers": 152.29
         }
       },
       "lease": {
-        "usd": 28.85,
-        "basis": "BG1: the largest shard's estimate ($22.77) x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+        "usd": 27.95,
+        "basis": "BG1: the largest shard's estimate ($22.05) x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
       }
     },
     {
@@ -878,16 +904,16 @@
         }
       ],
       "estimate": {
-        "usd": 105.84,
+        "usd": 111.19,
         "lines": {
-          "frontier_judges": 24.32,
-          "full_context": 79.74,
-          "judges": 1.78
+          "frontier_judges": 5,
+          "full_context": 105.68,
+          "judges": 0.51
         }
       },
       "lease": {
-        "usd": 75.94,
-        "basis": "BG1: the largest shard's estimate ($52.92) x 1.25 plus twice the peak reservation ($4.8913, whole-history read anthropic:claude-opus-5-5)"
+        "usd": 79.28,
+        "basis": "BG1: the largest shard's estimate ($55.59) x 1.25 plus twice the peak reservation ($4.8913, whole-history read anthropic:claude-opus-5-5)"
       }
     }
   ],
@@ -1480,9 +1506,9 @@
       }
     }
   ],
-  "total_usd": 1894.79,
-  "plan_total_usd": 1894.79,
-  "cap_usd": 2446.69,
+  "total_usd": 1529.1,
+  "plan_total_usd": 1529.1,
+  "cap_usd": 2181.77,
   "stage1_cap_usd": 293,
   "stage1_estimate_usd": 178.09,
   "campaign_id": "q1-scoreboard-bg1-changing-facts",
@@ -1510,11 +1536,11 @@
         "anthropic:claude-opus-5-5"
       ],
       "estimate": {
-        "usd": 50.77,
+        "usd": 13.46,
         "lines": {
           "readers": 6.26,
-          "judges": 3.55,
-          "frontier_judges": 40.96
+          "judges": 1.03,
+          "frontier_judges": 6.17
         }
       }
     },
@@ -1531,11 +1557,11 @@
         "anthropic:claude-opus-5-5"
       ],
       "estimate": {
-        "usd": 50.77,
+        "usd": 13.46,
         "lines": {
           "readers": 6.26,
-          "judges": 3.55,
-          "frontier_judges": 40.96
+          "judges": 1.03,
+          "frontier_judges": 6.17
         }
       }
     },
@@ -1552,11 +1578,11 @@
         "anthropic:claude-opus-5-5"
       ],
       "estimate": {
-        "usd": 50.77,
+        "usd": 13.46,
         "lines": {
           "readers": 6.26,
-          "judges": 3.55,
-          "frontier_judges": 40.96
+          "judges": 1.03,
+          "frontier_judges": 6.17
         }
       }
     },
@@ -1573,11 +1599,11 @@
         "anthropic:claude-opus-5-5"
       ],
       "estimate": {
-        "usd": 50.77,
+        "usd": 13.46,
         "lines": {
           "readers": 6.26,
-          "judges": 3.55,
-          "frontier_judges": 40.96
+          "judges": 1.03,
+          "frontier_judges": 6.17
         }
       }
     },
@@ -1594,11 +1620,11 @@
         "anthropic:claude-opus-5-5"
       ],
       "estimate": {
-        "usd": 50.77,
+        "usd": 13.46,
         "lines": {
           "readers": 6.26,
-          "judges": 3.55,
-          "frontier_judges": 40.96
+          "judges": 1.03,
+          "frontier_judges": 6.17
         }
       }
     },
@@ -1614,10 +1640,10 @@
         "gemini:gemini-3.8-flash"
       ],
       "estimate": {
-        "usd": 9.81,
+        "usd": 7.29,
         "lines": {
           "readers": 6.26,
-          "judges": 3.55
+          "judges": 1.03
         }
       }
     },

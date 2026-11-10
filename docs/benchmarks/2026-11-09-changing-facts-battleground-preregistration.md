@@ -676,6 +676,30 @@ The rates that moved most from the assumptions:
 The projection at the planned N stays under the check-in line, so `pricing.ts` does not stop the study. The amounts are
 kept on GST-2010, not here.
 
+### Amendment 6 (2026-11-10): the stage 2 freeze
+
+Stage 2 runs from this file's results branch at the commit that adds this amendment.
+
+- **Pricing.** The counted cells (sets BG1 and BG1-fc10) are now priced at stage 1's measured rates: each system's
+  ingest, the per-call judge rates and the full-context reference's reads per world (`BG1_MEASURED` in
+  `eval/runner/q1/cells/definitions.ts`, regenerated into `bg1-cells.json`). Live reads stay on the token model, which
+  is within a few percent of what stage 1 measured. Stage 1's own cells keep the assumed rates, so stage 1's estimate and
+  cap read as they ran.
+- **Unit hours.** Each system's expected hours come from its stage 1 unit's VM wall time, building and questions
+  together, so a unit's timeout covers its question phase. An extract-first unit of six worlds now expects about 16 hours.
+- **Data paths.** A BG1 campaign's hash also covers BG1's committed data (`eval/data/changing-facts-v1`). The sealed
+  worlds stay out of the git tree, so a campaign with sealed units records the SHA-256 of the custodian's filled
+  manifest, which pins every world file, and a sealed unit refuses to launch with any other manifest.
+- **The sealed phrasing.** Inside the mint window, gemini-3.8-flash writes the private phrasing set in custody from the
+  public set's keys and placeholders. A custody script keeps only templates whose placeholders the generator accepts,
+  drops any copy of a public template, and requires every retract template to say the plan is not happening. It then
+  runs the generator's phrasing check with the custody marker and plans all 48 slots with the set before writing it. The
+  seed is 32 random bytes. Both files are owner-only, and the custody lane reports only exit codes, counts and hashes.
+- **Mint stops.** Besides the 2-of-5 yield gate, minting stops and goes to GBEV-3 when three worlds fail a validation
+  gate, so a systematic fault cannot spend through the slots.
+
+Each code change has a keyless test that fails without it.
+
 ### Expected amendments
 
 The expected ones, each dated and committed before the cells it governs:

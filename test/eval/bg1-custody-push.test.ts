@@ -67,7 +67,8 @@ describe('a sealed BG1 unit\'s custody', () => {
     const s = custodySet();
     const dir = scratch();
     const cell = { id: 'bg1.x.c1', system: 'baseline-none', benchmark: 'bg1', config: 'baseline', lease_usd: 5, command: 'true', block: 'BG1', sealed: true, vm: { size: 'standard-4' }, bg1_unit: { index: 1, size: 2 } };
-    const manifest = { kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: 'q1-scoreboard-bg1-t', cap_usd: 50, ledger: join(dir, 'campaign.sqlite'), executes: ['bun.lock'], images: {}, blocks: { BG1: { estimate_usd: 20, cap_usd: 30 } }, cells: [cell] } as unknown as CampaignManifest;
+    const manifest = { kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: 'q1-scoreboard-bg1-t', cap_usd: 50, ledger: join(dir, 'campaign.sqlite'), executes: ['bun.lock'], images: {}, blocks: { BG1: { estimate_usd: 20, cap_usd: 30 } }, cells: [cell],
+      bg1_manifest_sha256: sha(readFileSync(s.env.GBRAIN_EVALS_BG1_MANIFEST, 'utf8')) } as unknown as CampaignManifest;
     writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest));
     const c = new Campaign(join(dir, 'manifest.json'), join(dir, 'state'));
     expect(c.custodyPush('bg1.x.c1', s.env)).toEqual(bg1CustodyPush(s.env, join(dir, 'manifest.json'), { index: 1, size: 2 }));
@@ -81,6 +82,31 @@ describe('a sealed BG1 unit\'s custody', () => {
       expect(readFileSync(push.split(':').at(-1)!, 'utf8').trim().split('\n')).toEqual(bg1CustodyPush(s.env, 'c', { index: 1, size: 2 }).list);
       expect(argv.flatMap((x, i) => (x === '--env' ? [argv[i + 1]] : []))).toContain('GBRAIN_EVALS_BG1_UNIT=bg1-003,bg1-004');
     } finally { for (const k of Object.keys(s.env)) if (!(k in saved)) delete process.env[k]; }
+  });
+
+  // Value: protects=a sealed BG1 campaign's hash covers its custody worlds through the filled manifest it records, and its data paths enter the hash; fails_when=a sealed campaign is planned without the manifest's SHA-256, a dev-only campaign records one, the committed BG1 data is not hashed, or a sealed unit launches with no recorded manifest or a different one; why_new=the stage 2 freeze (Amendment 6, data paths); seam=bg1CampaignManifest and Campaign.custodyPush; no_claim=the VM side's verifyBg1Custody
+  test('a sealed BG1 campaign records the filled manifest\'s SHA-256, and a unit refuses any other manifest', () => {
+    const m = loadCellManifest('bg1');
+    const s = custodySet();
+    const held = sha(readFileSync(s.env.GBRAIN_EVALS_BG1_MANIFEST, 'utf8'));
+    const sel = { campaign_id: 'q1-scoreboard-bg1-wave-a', cap_usd: 400, units: ['bg1.baseline-none.baseline.c0'], paid_window: 'BG1-WA-CELLS' };
+    const sealed = bg1CampaignManifest(m, { units: sel, worldEnd: '2026-11-15', bg1Manifest: s.env.GBRAIN_EVALS_BG1_MANIFEST });
+    expect(sealed.bg1_manifest_sha256).toBe(held);
+    expect(sealed.executes).toContain('eval/data/changing-facts-v1');
+    const dev = bg1CampaignManifest(m, { smoke: true, worldEnd: '2026-11-15', bg1Manifest: s.env.GBRAIN_EVALS_BG1_MANIFEST, units: { ...sel, campaign_id: 'q1-scoreboard-bg1-stage1', units: ['bg1-dev3.baseline-none.baseline'] } });
+    expect(dev.bg1_manifest_sha256).toBeUndefined();
+    expect(dev.executes).toContain('eval/data/changing-facts-v1');
+
+    const cell = { id: 'bg1.x.c1', system: 'baseline-none', benchmark: 'bg1', config: 'baseline', lease_usd: 5, command: 'true', block: 'BG1', sealed: true, vm: { size: 'standard-4' }, bg1_unit: { index: 1, size: 2 } };
+    const campaign = (recorded?: string) => {
+      const dir = scratch();
+      const manifest = { kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: 'q1-scoreboard-bg1-t', cap_usd: 50, ledger: join(dir, 'campaign.sqlite'), executes: ['bun.lock'], images: {}, blocks: { BG1: { estimate_usd: 20, cap_usd: 30 } }, cells: [cell], ...(recorded ? { bg1_manifest_sha256: recorded } : {}) };
+      writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest));
+      return new Campaign(join(dir, 'manifest.json'), join(dir, 'state'));
+    };
+    expect(campaign(held).custodyPush('bg1.x.c1', s.env)!.list).toEqual(bg1CustodyPush(s.env, 'c', { index: 1, size: 2 }).list);
+    expect(caught(() => campaign().custodyPush('bg1.x.c1', s.env)).op).toMatchObject({ code: 'CUSTODY_REQUIRED', message: expect.stringMatching(/records no filled BG1 manifest SHA-256/) });
+    expect(caught(() => campaign(sha('another manifest')).custodyPush('bg1.x.c1', s.env)).op.message).toMatch(/not the one campaign q1-scoreboard-bg1-t recorded/);
   });
 
   // Value: protects=a sealed BG1 VM holds no worlds after its cell ends; fails_when=the teardown wipe leaves ~/custody/bg1; why_new=core review of #398; seam=runRemote's teardown; no_claim=VM deletion

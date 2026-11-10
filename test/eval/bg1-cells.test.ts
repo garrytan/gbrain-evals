@@ -8,7 +8,7 @@ import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  ALL_SETS, BG1_ASSUMPTIONS, BG1_JUDGE_BY_READER, BG1_SETS, bg1JudgeOf, definitionProblems, frontierJudgesFor, isBg1Benchmark, PER_READER_JUDGE_SETTINGS,
+  ALL_SETS, BG1_ASSUMPTIONS, BG1_JUDGE_BY_READER, BG1_MEASURED, BG1_SETS, bg1JudgeOf, definitionProblems, frontierJudgesFor, hoursPerMtok, isBg1Benchmark, PER_READER_JUDGE_SETTINGS,
 } from '../../eval/runner/q1/cells/definitions.ts';
 import { BG1_FC_UNITS, BG1_MANIFEST_PATH, bg1ManifestText, bg1Stage1OverCap, buildBG1Manifest, canonicalJudgeUsd, OPUS, PARTICLE, SOL, stage1CapUsd } from '../../eval/runner/q1/cells/bg1.ts';
 import { BG1_DEV_CONVERSATIONS, BG1_KEPT_UNITS, BG1_N_CAP, BG1_QUESTIONS_PER_WORLD } from '../../eval/runner/bg1/types.ts';
@@ -87,13 +87,31 @@ describe('judging', () => {
   });
 
   test('judge lines are priced per call: the canonical judge on every answer, and the mapped gating judge per reader', () => {
-    for (const c of m.cells) {
+    for (const c of [...m.cells, ...m.smoke_cells]) {
       const n = ALL_SETS[c.set].questions;
-      expect(c.estimate.lines.judges).toBeCloseTo(n * 2 * canonicalJudgeUsd(), 1);
+      const rates = c.benchmark === 'bg1' ? BG1_MEASURED : BG1_ASSUMPTIONS;
+      expect(c.estimate.lines.judges).toBeCloseTo(n * 2 * (c.benchmark === 'bg1' ? BG1_MEASURED.canonical_judge_usd_per_call : canonicalJudgeUsd()), 1);
       if (c.system === 'baseline-none') expect(c.estimate.lines.frontier_judges).toBeUndefined();
-      else expect(c.estimate.lines.frontier_judges).toBeCloseTo(n * (BG1_ASSUMPTIONS.judge_usd_per_call[ASTRA] + BG1_ASSUMPTIONS.judge_usd_per_call[OPUS]), 1);
+      else expect(c.estimate.lines.frontier_judges).toBeCloseTo(n * (rates.judge_usd_per_call[ASTRA] + rates.judge_usd_per_call[OPUS]), 1);
       expect(c.estimate.usd).toBeCloseTo(Object.values(c.estimate.lines).reduce((s, v) => s + v, 0), 1);
     }
+  });
+
+  // Value: protects=the stage 2 freeze prices only the counted cells at stage 1's measured rates and leaves stage 1's record as it ran; fails_when=a counted cell keeps an assumed ingest or hours rate, the reference's reads skip the measured per-world rate, or stage 1's cells, estimate or cap move; why_new=the stage 2 freeze (Amendment 6); seam=definitions.ts bg1Rates and bg1.ts bg1Estimate; no_claim=what stage 2 spends
+  test('the counted cells are priced at stage 1\'s measured rates, and stage 1\'s cells keep the assumed ones', () => {
+    const systems = ['ext-memory-bank:recipe', 'ext-extract-first:common', 'ext-temporal-graph:shipped-0.31', 'baseline-hybrid:baseline'];
+    for (const [cells, rates] of [[m.cells, BG1_MEASURED], [m.smoke_cells, BG1_ASSUMPTIONS]] as const) {
+      for (const c of cells.filter(x => systems.includes(`${x.system}:${x.configuration}`))) expect(c.estimate.lines.ingest).toBeCloseTo(rates.ingest_usd_per_mtok[`${c.system}:${c.configuration}`] * ALL_SETS[c.set].corpus_tokens / 1e6, 1);
+    }
+    for (const key of Object.keys(BG1_MEASURED.hours_per_mtok)) {
+      const [system, configuration] = key.split(':');
+      expect(hoursPerMtok(system, configuration, 'bg1', 'shim')).toBe(BG1_MEASURED.hours_per_mtok[key]);
+      expect(hoursPerMtok(system, configuration, 'bg1-dev', 'shim')).toBe(BG1_ASSUMPTIONS.hours_per_mtok[key] ?? hoursPerMtok(system, configuration, 'bg1-dev', 'shim'));
+    }
+    const fc = m.cells.find(c => c.system === 'baseline-full-context')!;
+    expect(fc.estimate.lines.full_context).toBeCloseTo(ALL_SETS[fc.set].conversations * (BG1_MEASURED.full_context_read_usd_per_world[OPUS] + BG1_MEASURED.full_context_read_usd_per_world[SOL]), 1);
+    expect(m.bg1_measured).toEqual(BG1_MEASURED);
+    expect([m.stage1_estimate_usd, m.stage1_cap_usd]).toEqual([178.09, 293]);
   });
 
   test('every lease holds twice the peak reservation over its largest shard, a pinned judge for the rows and a whole-history read for the reference', () => {

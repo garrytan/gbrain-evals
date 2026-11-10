@@ -449,6 +449,30 @@ export const BG1_ASSUMPTIONS = {
 };
 
 /**
+ * Stage 1's measured rates (the preregistration's Amendment 5), which price BG1's counted cells (benchmark bg1: sets BG1
+ * and BG1-fc10) from the stage 2 freeze on. Stage 1's own cells (bg1-dev) keep BG1_ASSUMPTIONS, so stage 1's estimate
+ * and cap stay as they ran. Each rate comes from the provider usage fields of stage 1's metering logs or from its lease
+ * logs, over the three dev worlds at 180,704 cl100k tokens a world:
+ *   - ingest: each system's API dollars outside the readers and judges, per million tokens, the temporal-graph library's
+ *     queries included (no line prices them apart). gbrain keeps its embeddings line, because its extraction, fact
+ *     embeddings and system-query lines already sum to its measured total;
+ *   - hours: each unit's VM wall hours (ingest and both readers' questions) per million tokens, so a unit's timeout
+ *     covers its question phase as well as its build;
+ *   - judges: dollars per call for each gating judge and for the canonical judge;
+ *   - the full-context reference's reads per world and reader: Opus as measured, and Sol at its cached rate scaled by
+ *     Opus's measured over modelled cost (stage 1's Sol reads missed the cache, a harness fault fixed for stage 2).
+ */
+export const BG1_MEASURED = {
+  ingest_usd_per_mtok: { 'gbrain-defaults:rs1-stable': 0.08, 'ext-memory-bank:recipe': 1.851499, 'ext-extract-first:common': 20.088763, 'ext-temporal-graph:shipped-0.31': 15.929683, 'baseline-hybrid:baseline': 0.136887 } as Record<string, number>,
+  hours_per_mtok: { 'gbrain-defaults:rs1-stable': 4.69, 'ext-memory-bank:recipe': 4.63, 'ext-extract-first:common': 13.1, 'ext-temporal-graph:shipped-0.31': 5.72, 'baseline-hybrid:baseline': 1.55, 'baseline-none:baseline': 0.92 } as Record<string, number>,
+  judge_usd_per_call: { 'openai:gpt-6-astra': 0.005397, 'anthropic:claude-opus-5-5': 0.002411 } as Record<string, number>,
+  canonical_judge_usd_per_call: 0.000401,
+  full_context_read_usd_per_world: { 'anthropic:claude-opus-5-5': 8.27044, 'openai:gpt-6.1-sol': 2.297107 } as Record<string, number>,
+};
+/** BG1's rates for a benchmark: the measured ones for the sealed set's counted cells, the assumed ones for stage 1's dev worlds. */
+export const bg1Rates = (benchmark: string) => (benchmark === 'bg1' ? BG1_MEASURED : BG1_ASSUMPTIONS);
+
+/**
  * BG1's gating judge for a reader (R78; GST-767): never the reader's own family and never particle-1. Anthropic readers
  * are judged by gpt-6-astra, OpenAI and particle readers by claude-opus-5-5; any other reader is refused. BG1's arms
  * carry it as frontier.judge_by_reader, so definitions.ts frontierJudgeOf keeps the crew's BEAM rule for everything else.
@@ -507,11 +531,11 @@ function fullContextCost(set: SetFacts, reader: string, questions: number): numb
  */
 export const runsF6 = (def: Pick<CellDefinition, 'launch'>) => def.launch?.env.GBRAIN_F6 === '1';
 
-/** A cell's ingest dollars per million tokens: BG1's own on a BG1 benchmark, else for its benchmark family, then its configuration (Q1's, F6's, RS1's), else 0. */
+/** A cell's ingest dollars per million tokens: BG1's own on a BG1 benchmark (bg1Rates), else for its benchmark family, then its configuration (Q1's, F6's, RS1's), else 0. */
 export function ingestRate(def: Pick<CellDefinition, 'system' | 'configuration' | 'benchmark'>): number {
   const family = def.benchmark.startsWith('beam') ? 'beam' : def.benchmark;
   const key = `${def.system}:${def.configuration}`;
-  if (isBg1Benchmark(def.benchmark)) return BG1_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? 0;
+  if (isBg1Benchmark(def.benchmark)) return bg1Rates(def.benchmark).ingest_usd_per_mtok[key] ?? 0;
   return ASSUMPTIONS.ingest_usd_per_mtok[`${key}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[key] ?? F6_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? RS1_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? 0;
 }
 
@@ -668,7 +692,7 @@ export const HOURS_OVERRIDES: Record<string, { hours: number; basis: string }> =
 /** A system's ingest hours per million corpus tokens: for its benchmark family, then its configuration (Q1's, then F6's), then its runner's default. */
 export function hoursPerMtok(system: string, configuration: string, benchmark: string, runner: 'shim' | 'in-process'): number {
   const family = benchmark.startsWith('beam') ? 'beam' : benchmark;
-  const bg1 = isBg1Benchmark(benchmark) ? BG1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] : undefined;
+  const bg1 = isBg1Benchmark(benchmark) ? bg1Rates(benchmark).hours_per_mtok[`${system}:${configuration}`] : undefined;
   if (bg1 !== undefined) return bg1;
   return ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? RS1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
 }

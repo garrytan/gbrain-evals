@@ -182,6 +182,12 @@ export interface CampaignManifest {
   executes?: string[];
   /** Q1: container images by digest (`sha256:<64 hex>` or `<ref>@sha256:<64 hex>`), part of the campaign hash. */
   images?: Record<string, string>;
+  /**
+   * BG1: the SHA-256 of the custodian's filled bg1-manifest.json, recorded when a campaign with sealed units is planned
+   * on the custody host. The manifest pins every sealed world file, so the campaign hash covers the worlds custody keeps
+   * out of the git tree, and Campaign.custodyPush refuses a sealed unit whose manifest is not this one.
+   */
+  bg1_manifest_sha256?: string;
   /** Q1: the hedge classifier version the derived columns use at render (`none` when no version met its bar, amendment A6). */
   hedge_classifier?: string;
   /** Q1: spend blocks (T1, T2-S2a, ...) with their estimate and hard cap. */
@@ -799,7 +805,14 @@ export class Campaign {
   custodyPush(cellId: string, env: Record<string, string | undefined> = process.env): CustodyPush | null {
     if (!this.sealedQ1(cellId)) return null;
     const benchmark = this.cell(cellId).benchmark;
-    if (benchmark === 'bg1') return bg1CustodyPush(env, this.manifestPath, this.cell(cellId).bg1_unit);
+    if (benchmark === 'bg1') {
+      const push = bg1CustodyPush(env, this.manifestPath, this.cell(cellId).bg1_unit);
+      const recorded = this.manifest.bg1_manifest_sha256, held = sha256File(env.GBRAIN_EVALS_BG1_MANIFEST!);
+      if (recorded !== held) throw refuse({ code: 'CUSTODY_REQUIRED', message: recorded ? `the filled BG1 manifest is not the one campaign ${this.manifest.campaign_id} recorded (it holds ${held.slice(0, 12)}, the campaign ${recorded.slice(0, 12)})` : `campaign ${this.manifest.campaign_id} records no filled BG1 manifest SHA-256`,
+        why: 'a sealed BG1 campaign\'s hash covers its worlds through the filled manifest it records (the stage 2 freeze), so a unit pushes only worlds that manifest pins',
+        fix: { next: 'ask_user', user_message: 'stop: plan the campaign on the custody host with GBRAIN_EVALS_BG1_MANIFEST naming the filled manifest, and ask before launching if the manifest changed since the campaign was planned' } });
+      return push;
+    }
     return benchmark === 'beam-10m' ? beam10mCustodyPush(env, this.manifestPath) : benchmark === 'beam-d8' ? d8CustodyPush(env, this.manifestPath)
       : benchmark === 'beam-rs1' ? rs1CustodyPush(env, this.manifestPath) : null;
   }
