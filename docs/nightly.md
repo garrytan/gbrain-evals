@@ -188,7 +188,7 @@ bun eval/runner/nightly/run.ts --resume <night dir>
 `--resume` reruns only what is missing or recorded as a harness failure, on the gbrain commit the night started on,
 even if the ref has moved since. An answer cut off at its output limit stays as recorded, because memory-qa keeps it as
 answered and the reader's cached reply would be cut off the same way, so it neither ends a night with exit 5 nor gets
-rerun. The report still counts it as a harness row and flags a rise. It first settles the stopped run's open ledger reservations. Run it only after every
+rerun. The report still counts it as a harness row and flags a rise. A resume first settles the stopped run's open ledger reservations. Run it only after every
 child process of the stopped run has exited. On a Ubicloud VM that holds by construction, because `ubi-runner.sh`
 destroys the VM, and every child with it, on every exit path. A night can be resumed at most twice.
 
