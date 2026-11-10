@@ -23,7 +23,7 @@
  * plus the fs arm's read tools over the corpus files; see the end of this file.
  */
 import { spawn, execFile, execFileSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { readdir, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
@@ -692,8 +692,18 @@ export const instructionsOverride: {
   servedTools: Array<{ name: string; description?: string; inputSchema?: Record<string, unknown> }> | null;
 } = { text: null, served: null, descriptions: null, dropTools: [], servedTools: null };
 
+/**
+ * `--gbrain-call-turns` (off by default): the file that gets one line per gbrain tool call, with the slot, the agent's
+ * turn in its session and the time, so a probe can say on which turn an agent first called a tool. The loop reads the
+ * arm's tool-list version once when a session starts and once at the top of every turn (loop.ts toolList), so the turn
+ * is that count less one. Null records nothing and counts nothing.
+ */
+export const callTurnLog: { path: string | null } = { path: null };
+
 export class GbrainArm implements Arm {
   readonly name = 'gbrain';
+  private versionReads = 0;
+  private session: McpClient | null = null;
   constructor(private slot: GbrainSlot) {}
   private get client() { if (!this.slot.client) throw new Error('gbrain slot not started'); return this.slot.client; }
   systemHint() {
@@ -706,9 +716,18 @@ export class GbrainArm implements Arm {
     const o = instructionsOverride;
     return this.client.tools.filter(t => !o.dropTools.includes(t.name)).map(t => ({ name: t.name, description: o.descriptions?.[t.name] ?? t.description ?? '', input_schema: (t.inputSchema ?? { type: 'object', properties: {} }) as Record<string, unknown> }));
   }
-  toolsVersion() { return this.client.toolsVersion; }
+  toolsVersion() {
+    if (callTurnLog.path) {
+      if (this.slot.client !== this.session) { this.session = this.slot.client; this.versionReads = 0; }
+      this.versionReads++;
+    }
+    return this.client.toolsVersion;
+  }
   writeTools() { return this.client.tools.filter(t => t.annotations?.readOnlyHint !== true).map(t => t.name); }
-  call(name: string, args: Record<string, unknown>) { return this.client.call(name, args); }
+  call(name: string, args: Record<string, unknown>) {
+    if (callTurnLog.path) appendFileSync(callTurnLog.path, JSON.stringify({ slot: this.slot.id, turn: this.versionReads - 1, tool: name, at: new Date().toISOString() }) + '\n');
+    return this.client.call(name, args);
+  }
 }
 
 // ─── gbrain-fs (exploratory, development world only; plan 2026-10-07-cat40-hard-fix C16) ───

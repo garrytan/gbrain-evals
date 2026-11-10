@@ -117,6 +117,19 @@ describe('adapter commands', () => {
     expect(() => cat40Commands(run, ctx({ cat40SlotAllowanceUsd: null }), '/w', dirs)).toThrow('--cat40-slot-allowance-usd');
   });
 
+  test('Cat 40: --cat40-call-turns adds --gbrain-call-turns to the cells command only, and a night without it is unchanged', () => {
+    const run = suiteRun('cat40-hard-m', ['H1-02'], { k: 3 });
+    const dirs = { root: '/r', slots: '/s', cells: '/c' };
+    const off = cat40Commands(run, ctx(), '/w', dirs);
+    expect([off.cells, ...off.slots].flat()).not.toContain('--gbrain-call-turns');
+    const on = cat40Commands(run, ctx({ cat40CallTurns: true }), '/w', dirs);
+    expect(on.cells.filter(a => a !== '--gbrain-call-turns')).toEqual(off.cells);
+    expect(on.cells).toContain('--gbrain-call-turns');
+    expect(on.slots).toEqual(off.slots);
+    expect(parseArgs(['--out', '/tmp/x']).cat40CallTurns).toBe(false);
+    expect(parseArgs(['--out', '/tmp/x', '--cat40-call-turns']).cat40CallTurns).toBe(true);
+  });
+
   test('Cat 40: the suite carries the newest cells receipt\'s dev-set label and drifted files', () => {
     const cells = mkdtempSync(join(tmpdir(), 'nightly-cat40-'));
     expect(cat40DevSet(cells)).toBeNull();

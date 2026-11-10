@@ -1,0 +1,13 @@
+diff --git a/src/mcp/surface.ts b/src/mcp/surface.ts
+index 06b4eb1eaf..5b569d2ee9 100644
+--- a/src/mcp/surface.ts
++++ b/src/mcp/surface.ts
+@@ -95,6 +95,8 @@ export const STARTER_OPS: ReadonlySet<string> = new Set([
+   ...FALLBACK_DAILY_OPS,
+   'whoami',
+   'request_tools',
++  // Probe (gbrain-evals Cat 40 H1, 2026-11-11): exhaustive literal search on the starter surface from turn one.
++  'search_exact',
+   // [EV8] capture joins as a DIRECT literal — deliberately NOT via
+   // BRAIN_TOOL_ALLOWLIST (that would grant every minion subagent a new write
+   // tool and require the skillopt mutating-exclusion update). The plugin +

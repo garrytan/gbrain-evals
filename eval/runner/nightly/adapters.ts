@@ -48,6 +48,8 @@ export interface NightContext {
   pg: { admin: string | null; template: string | null; pg15Admin: string | null };
   smokeRefs: { previous: string | null; old: string | null };
   cat40SlotAllowanceUsd: number | null;
+  /** run.ts --cat40-call-turns: Cat 40's cells write gbrain-call-turns.jsonl (cat40-model-ladder.ts --gbrain-call-turns). */
+  cat40CallTurns?: boolean;
   log: (line: string) => void;
   signal: AbortSignal;
 }
@@ -159,7 +161,7 @@ export function cat40Commands(run: SuiteRun, ctx: NightContext, world: string, d
     slots: Array.from({ length: CAT40.slots }, (_, i) => bun(CAT40.runner, '--build-slots', ...build, '--build-slot-ids', String(i), ...keyless,
       ...(ctx.fake ? [] : ['--slot-build-allowance-usd', String(ctx.cat40SlotAllowanceUsd)]), ...paid, '--out', join(dirs.slots, `slot${i}`))),
     cells: bun(CAT40.runner, ...build, '--arms', 'gbrain', '--gbrain-label', CAT40.label, '--tasks', run.items.map(i => i.id).join(','), '--repeat', String(run.k),
-      '--concurrency', String(CAT40.concurrency), '--transcripts', ...keyless,
+      '--concurrency', String(CAT40.concurrency), '--transcripts', ...(ctx.cat40CallTurns ? ['--gbrain-call-turns'] : []), ...keyless,
       ...(ctx.fake ? [] : ['--models', run.readers.filter((r): r is string => r !== null).join(','), '--judge', CAT40.judge]), ...paid, '--out', dirs.cells),
   };
 }

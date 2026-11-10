@@ -34,6 +34,8 @@
  *   --scripted --keyless-slots --arms gbrain: the $0 plumbing smoke on keyword-only slots built without embeddings;
  *     slot processes get no provider keys and the rerank probe is skipped (receipt rerank_probe says so).
  *   --gbrain <checkout>@<ref> is shorthand for --gbrain-repo <checkout> --gbrain-ref <ref>.
+ *   --gbrain-call-turns writes <out>/gbrain-call-turns.jsonl, one line per gbrain tool call with its slot, the agent's
+ *     turn in the session and the time (off by default; it changes nothing the agent sees).
  *
  * Worlds: v1 (default), `--world eval/data/model-ladder-wide-dev/world.json` (scale wide: families A-F plus
  * H, hidden tool; every record carries its task's stratum). Dev mode runs only dev seeds and dev template sets.
@@ -71,7 +73,7 @@ import { runAgent, runAgentText, provider, attemptReceipt, HarnessError, type Ag
 import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall } from './cat40/arms.ts';
 import { renderDoc } from '../generators/model-ladder-gen.ts';
 import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
-import { GbrainArm, instructionsOverride, cellLabel, assertNoGbrainFsCollision, GBRAIN_FS_READ_TOOLS, type CellArm, GbrainPool, GbrainSlot, MeteringProxy, rerankProbe, restoreProbe, parseConfigPairs, BUILD_TIME_CONFIG_KEYS, type RestoreProbeRecord, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, coverageProblem, type Meter, type SlotBuild, type SlotCoverage } from './cat40/gbrain-arm.ts';
+import { GbrainArm, instructionsOverride, callTurnLog, cellLabel, assertNoGbrainFsCollision, GBRAIN_FS_READ_TOOLS, type CellArm, GbrainPool, GbrainSlot, MeteringProxy, rerankProbe, restoreProbe, parseConfigPairs, BUILD_TIME_CONFIG_KEYS, type RestoreProbeRecord, SERVE_BOOT_TIMEOUT_SECONDS, STAGED_SOURCE_ADD_DOCS, STAGED_SYNC_BATCH, coverageProblem, type Meter, type SlotBuild, type SlotCoverage } from './cat40/gbrain-arm.ts';
 import { scoreTask, judgePrompt, parseClaims, JUDGE_PROMPT_VERSION, type TaskScore, type ClaimVerdicts } from './cat40/score.ts';
 import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { HARD_FAMILIES, isHardWorld, type HardWorld, type HardTask } from '../generators/hard/schema.ts';
@@ -496,7 +498,7 @@ export const VALUE_FLAGS = ['--arms', '--models', '--families', '--tasks', '--re
   '--max-tool-chars', '--order', '--slot-ref', '--surface', '--gbrain-instructions-file', '--gbrain-tool-descriptions-file', '--gbrain-drop-tools', '--gbrain-config', '--gbrain-build-config', '--build-slot-ids', '--slot-build-allowance-usd',
   '--budget-usd', '--estimate-usd', '--budget-run-id', '--budget-ledger', '--program-cap-usd', '--max-turns', '--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step',
   '--gbrain', '--advertised', '--world-templates-file', '--decision-id', '--purpose', '--retire-models'];
-export const BOOLEAN_FLAGS = ['--scripted', '--keyless-slots', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help', '--new-budget-run', '--dev-set'];
+export const BOOLEAN_FLAGS = ['--scripted', '--keyless-slots', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help', '--new-budget-run', '--dev-set', '--gbrain-call-turns'];
 const NUMERIC_FLAGS = new Set(['--repeat', '--concurrency', '--slots', '--slot-build-allowance-usd', '--budget-usd', '--estimate-usd', '--program-cap-usd', '--max-turns', '--per-family']);
 
 export const RUNNER_USAGE = `Usage: bun eval/runner/cat40-model-ladder.ts [flags]
@@ -628,6 +630,7 @@ export async function main(argv = process.argv.slice(2)) {
   const resultsPath = join(out, 'results.jsonl');
   const attemptsPath = join(out, 'attempts.jsonl');
   const transcripts = argv.includes('--transcripts');
+  if (argv.includes('--gbrain-call-turns')) callTurnLog.path = join(out, 'gbrain-call-turns.jsonl');
   // Hard: a cell is done once it has a harness-clean attempt; harness-error attempts count toward its retry limit.
   const priorAttempts = new Map<string, number>();
   const hardAttempts = hard && existsSync(attemptsPath) ? readFileSync(attemptsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as CellRecordV2) : [];

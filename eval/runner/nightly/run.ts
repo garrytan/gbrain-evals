@@ -6,7 +6,7 @@
  *     [--suites a,b] [--items x,y] [--readers m1,m2] [--k N] [--gbrain-clone <path>] [--devset <file>] [--cache <dir>]
  *     [--fake | --paid --budget-ledger <path> (--budget-run-id <id> | --night-cap-usd <n> --month-cap-usd <n>)]
  *     [--pg-admin <url> [--pg-template <database>]] [--pg15-admin <url>] [--previous-ref <ref>] [--old-ref <ref>]
- *     [--cat40-slot-allowance-usd <n>]
+ *     [--cat40-slot-allowance-usd <n>] [--cat40-call-turns]
  *   bun eval/runner/nightly/run.ts --resume <night dir>
  *   bun eval/runner/nightly/run.ts --ref <sha> --tier bisect --suites <id> --items a,b [--readers m] --gbrain-clone <path> --night-dir <dir>
  *
@@ -76,6 +76,8 @@ export interface NightArgs {
   suites: string[] | null; items: string[] | null; readers: string[] | null; k: number | null;
   fake: boolean; paid: boolean; budgetRunId: string | null; budgetLedger: string | null; nightCapUsd: number | null; monthCapUsd: number | null;
   pgAdmin: string | null; pgTemplate: string | null; pg15Admin: string | null; previousRef: string | null; oldRef: string; cat40SlotAllowanceUsd: number | null;
+  /** --cat40-call-turns: Cat 40's cells record each gbrain tool call's turn (off by default; nightly runs leave it off). */
+  cat40CallTurns: boolean;
 }
 
 export function parseArgs(argv: readonly string[]): NightArgs {
@@ -100,6 +102,7 @@ export function parseArgs(argv: readonly string[]): NightArgs {
     nightCapUsd: num('--night-cap-usd'), monthCapUsd: num('--month-cap-usd'),
     pgAdmin: flag('--pg-admin') ?? null, pgTemplate: flag('--pg-template') ?? null, pg15Admin: flag('--pg15-admin') ?? null,
     previousRef: flag('--previous-ref') ?? null, oldRef: flag('--old-ref') ?? OLD_RELEASE, cat40SlotAllowanceUsd: num('--cat40-slot-allowance-usd'),
+    cat40CallTurns: argv.includes('--cat40-call-turns'),
   };
 }
 
@@ -242,6 +245,7 @@ export async function main(argv: readonly string[]): Promise<number> {
       cache: new NightlyCache(cacheRoot), paid,
       pg: { admin: a.pgAdmin, template: a.pgTemplate, pg15Admin: a.pg15Admin },
       smokeRefs: { previous: previousSha, old: (() => { try { return resolveRef(a.clone, a.oldRef); } catch { return null; } })() }, cat40SlotAllowanceUsd: a.cat40SlotAllowanceUsd,
+      ...(a.cat40CallTurns ? { cat40CallTurns: true } : {}),
       log: line => console.error(`[nightly] ${line}`), signal: abort.signal,
     };
     let capStop = false;
