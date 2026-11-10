@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { afterAll, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -12,6 +12,12 @@ import { ValidityReferenceError, loadReference, verdict, type Contrast, type Man
 const b1 = loadReference(MANIFEST, 'live-recall-b1')!;
 const b2 = loadReference(MANIFEST, 'live-recall-b2')!;
 const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8')) as ManifestEntry[];
+const committedManifest = manifest;
+const pendingB3Dir = mkdtempSync(join(tmpdir(), 'verdict-pending-b3-'));
+for (const e of committedManifest) if (e.status === 'available') copyFileSync(join(REFERENCE_DIR, e.file), join(pendingB3Dir, e.file));
+writeFileSync(join(pendingB3Dir, 'manifest.json'), JSON.stringify(committedManifest.map(e => (e.id === 'live-recall-b3' ? { id: e.id, file: e.file, status: 'pending' } : e)), null, 2));
+const PENDING_B3 = join(pendingB3Dir, 'manifest.json');
+afterAll(() => rmSync(pendingB3Dir, { recursive: true, force: true }));
 const card = (contrasts: Contrast[], orderings = b2.orderings) => ({ contrasts, orderings, control: false });
 const quiet = <T>(fn: () => T): T => {
   const log = console.log, err = console.error;
@@ -31,7 +37,7 @@ const liveCard = (contrasts: Contrast[]) => ({
 
 describe('predictive verdict on the committed references', () => {
   test('a synthetic scorecard whose signs match batch 2 reads PREDICTIVE, with batch 3 pending', () => {
-    const r = evaluateMeasure('G2', readSynthetic(card(b2.contrasts)));
+    const r = evaluateMeasure('G2', readSynthetic(card(b2.contrasts)), PENDING_B3);
     expect(r.verdict).toBe('PREDICTIVE');
     const [b2Layer, b3Layer] = r.layers;
     expect(b2Layer).toMatchObject({ reference: 'live-recall-b2', verdict: 'PREDICTIVE', qualifying_count: 13, mapped_count: 16 });
@@ -64,7 +70,7 @@ describe('predictive verdict on the committed references', () => {
     const r = evaluateMeasure('G5', readSynthetic(card([])));
     expect(r.verdict).toBe('NO_REFERENCE_YET');
     expect(r.layers.map(l => l.missing_reference)).toEqual(['latency-pins']);
-    expect(evaluateMeasure('G1', readSynthetic(card([]))).layers.map(l => l.missing_reference)).toEqual(['live-recall-b3', 'phase2-agent']);
+    expect(evaluateMeasure('G1', readSynthetic(card([])), PENDING_B3).layers.map(l => l.missing_reference)).toEqual(['live-recall-b3', 'phase2-agent']);
     expect(evaluateMeasure('G6', readSynthetic(card([]))).verdict).toBe('NO_REFERENCE_YET');
   });
 
@@ -112,7 +118,7 @@ describe('predictive verdict on the committed references', () => {
   test('a layer is read only from a live-recall scorecard of its protocol, and a scorecard carrying no layer of a measure with a live reference refuses', () => {
     const asBatch2 = evaluateMeasure('G2', readSynthetic({ ...liveCard(b2.contrasts), protocol: 'batch2' }));
     expect(asBatch2.verdict).toBe('PREDICTIVE');
-    expect(asBatch2.layers.map(l => [l.id, l.status, l.in_scorecard])).toEqual([['b2', 'available', true], ['b3', 'pending', false]]);
+    expect(asBatch2.layers.map(l => [l.id, l.status, l.in_scorecard])).toEqual([['b2', 'available', true], ['b3', 'not_in_scorecard', false]]);
     expect(() => evaluateMeasure('G2', readSynthetic({ ...liveCard(b2.contrasts), protocol: 'batch3' }))).toThrow('carries no G2 layer');
     expect(() => evaluateMeasure('G2', readSynthetic(card([])))).toThrow(SyntheticScorecardError);
   });
@@ -138,7 +144,7 @@ describe('predictive verdict on the committed references', () => {
       expect(main(['--measure', 'G2', '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json'), '--control'])).toBe(0);
       expect(lines[0]).toStartWith('G2 recall under real conditions: PREDICTIVE (control scorecard');
       expect(lines.join('\n')).toContain('13 of 16 reference contrasts qualify (minimum 3)');
-      expect(lines.join('\n')).toContain('layer b3 vs live-recall-b3: NO_REFERENCE_YET (reference live-recall-b3 is pending)');
+      expect(lines.join('\n')).toContain('layer b3 vs live-recall-b3: not in this scorecard');
       expect(JSON.parse(readFileSync(join(dir, 'v.json'), 'utf8'))).toMatchObject({ schema: 'predictive-verdict/v1', measure: 'G2', verdict: 'PREDICTIVE' });
     } finally {
       console.log = log;

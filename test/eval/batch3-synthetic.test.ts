@@ -7,7 +7,7 @@
  * token-overlap reranker, and no test constructs a model request.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { B3_SCHEMA, Batch3SyntheticError, generateBatch3Synthetic, writeBatch3Synthetic } from '../../eval/generators/batch3-synthetic-gen.ts';
@@ -19,8 +19,17 @@ import { liveRecall, parseQuestions } from '../../eval/runner/live-recall/run.ts
 import { validateScorecard } from '../../eval/runner/live-recall/scorecard.ts';
 import { readSyntheticDir } from '../../eval/runner/live-recall/synthetic.ts';
 import { main as paraphraseOpus } from '../../eval/runner/live-recall/paraphrase-opus.ts';
+import { MANIFEST, REFERENCE_DIR } from '../../eval/runner/predictive/export-references.ts';
 import { B3_ENTITY, B3_FRESHNESS } from '../../eval/runner/predictive/mapping.ts';
+import type { ManifestEntry } from '../../eval/runner/predictive/validity.ts';
 import { SyntheticScorecardError, evaluateMeasure, readSynthetic } from '../../eval/runner/predictive/verdict.ts';
+
+const committedManifest = JSON.parse(readFileSync(MANIFEST, 'utf8')) as ManifestEntry[];
+const pendingB3Dir = mkdtempSync(join(tmpdir(), 'verdict-pending-b3-'));
+for (const e of committedManifest) if (e.status === 'available') copyFileSync(join(REFERENCE_DIR, e.file), join(pendingB3Dir, e.file));
+writeFileSync(join(pendingB3Dir, 'manifest.json'), JSON.stringify(committedManifest.map(e => (e.id === 'live-recall-b3' ? { id: e.id, file: e.file, status: 'pending' } : e)), null, 2));
+const PENDING_B3 = join(pendingB3Dir, 'manifest.json');
+afterAll(() => rmSync(pendingB3Dir, { recursive: true, force: true }));
 
 const PINNED_DIGEST = 'e270789585685527cc01dbad721755273d9a1c85b3971c557a8119d0ad1e7d10';
 const PINNED_QUESTIONS_SHA256 = '15cfd7d0753cf831ff6676f7311e920128fce2fd78aff54fbb1e89aaf2edfbe4';
@@ -150,9 +159,9 @@ describe('live-recall run --synthetic --protocol batch3 (keyless), and the verdi
     for (const arm of ['keyword', 'vector', 'hybrid_lexical', 'hybrid', 'configured']) expect(card.arms[arm].stale_first.all.n).toBe(8);
   });
 
-  test('verdict reads G1 retrieval, G4 retrieval and G2 b3 as NO_REFERENCE_YET naming live-recall-b3, and G2 b2 as not in this scorecard', () => {
+  test('while live-recall-b3 is pending, verdict reads G1 retrieval, G4 retrieval and G2 b3 as NO_REFERENCE_YET naming it, and G2 b2 as not in this scorecard', () => {
     const syn = readSynthetic(card);
-    const g1 = evaluateMeasure('G1', syn), g4 = evaluateMeasure('G4', syn), g2 = evaluateMeasure('G2', syn);
+    const g1 = evaluateMeasure('G1', syn, PENDING_B3), g4 = evaluateMeasure('G4', syn, PENDING_B3), g2 = evaluateMeasure('G2', syn, PENDING_B3);
     for (const r of [g1, g4]) {
       expect(r.verdict).toBe('NO_REFERENCE_YET');
       expect(r.layers.map(l => [l.id, l.verdict, l.missing_reference, l.in_scorecard])).toEqual([['retrieval', 'NO_REFERENCE_YET', 'live-recall-b3', true], ['agent', 'NO_REFERENCE_YET', 'phase2-agent', false]]);
@@ -160,6 +169,12 @@ describe('live-recall run --synthetic --protocol batch3 (keyless), and the verdi
     expect(g2.verdict).toBe('NO_REFERENCE_YET');
     expect(g2.layers.map(l => [l.id, l.status, l.verdict, l.in_scorecard])).toEqual([['b2', 'not_in_scorecard', 'NOT_IN_SCORECARD', false], ['b3', 'pending', 'NO_REFERENCE_YET', true]]);
     expect(g2.layers[1]!.missing_reference).toBe('live-recall-b3');
+  });
+
+  test('with live-recall-b3 published, the same scorecard reads G1 and G4 retrieval and G2 b3 against it', () => {
+    const syn = readSynthetic(card);
+    for (const m of ['G1', 'G4'] as const) expect(evaluateMeasure(m, syn).layers.map(l => [l.id, l.reference, l.status, l.in_scorecard])).toEqual([['retrieval', 'live-recall-b3', 'available', true], ['agent', 'phase2-agent', 'pending', false]]);
+    expect(evaluateMeasure('G2', syn).layers.map(l => [l.id, l.status, l.in_scorecard])).toEqual([['b2', 'not_in_scorecard', false], ['b3', 'available', true]]);
   });
 
   test('a batch-3 scorecard missing one entity contrast refuses G2 and G4 by name, and still reads G1', () => {
