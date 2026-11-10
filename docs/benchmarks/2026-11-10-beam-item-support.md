@@ -1,12 +1,12 @@
-# BEAM questions their own conversations don't support, and our BEAM results without them
+# BEAM questions their cited turns don't support, and our BEAM results without them
 
-- **We learned that between a quarter and a half of BEAM's questions can't be answered from their conversation as
-  written, and that the share rises with conversation length. You should read every BEAM score, ours included, as
-  carrying that noise, and check a generated benchmark's answers against the evidence they cite before trusting a small
-  gap.** Of the 1,521 questions behind our published BEAM results that cite their evidence, 33.8% have a reference
-  answer that at least one of two validator models finds unsupported by the conversation turns the question cites, or
-  cite no turn the conversation has: 27.5% at 100,000 tokens, 31.3% at 500,000, 33.5% at 1 million and 52.2% at 10
-  million. Both validators reject 24.2%.
+- **We learned that between about a quarter and a half of the BEAM questions behind our results have a reference answer
+  that the turns they cite don't support, and that the share rises with conversation length. You should read every BEAM
+  score, ours included, as carrying that noise, and check a generated benchmark's answers against the evidence they cite
+  before trusting a small gap.** Of the 1,521 questions behind our published BEAM results that cite their evidence,
+  33.8% have a reference answer that at least one of two validator models finds unsupported by the conversation turns
+  the question cites, or cite no turn the conversation has: 27.5% at 100,000 tokens, 31.3% at 500,000, 33.5% at 1
+  million and 52.2% at 10 million. Both validators reject 24.2%.
 - **We learned that no published BEAM verdict depends on those questions. You should expect a rescore on fewer, cleaner
   questions to widen intervals more than it moves gaps.** Rescored on only the questions both validators pass, every
   preregistered outcome stays as published. Absolute scores rise (gbrain's BEAM-10M row from 56.3% to 64.8%), while
@@ -16,7 +16,8 @@
 - **Some descriptive comparisons move, in both directions.** Seven of gbrain's descriptive gains no longer exclude zero
   (five on BEAM-10M in the head-to-head, two in its newer rerun), and a new descriptive loss appears on BEAM-100K. The
   two published BEAM losses no longer exclude zero, and three gains newly exclude it, two of them only in the strictest
-  view. Two published results can't be rescored, and the frontier-judge results aren't covered.
+  view. Two published results can't be rescored, the rerun's D8 set isn't rescored, and the frontier-judge results
+  aren't covered.
 
 These are measurements of the benchmark, made on 2026-11-10, and of results already published. Nothing was rerun:
 the rescore reuses each result's recorded answers and judgments.
@@ -48,14 +49,16 @@ questions this way, about a third fail, and at 10 million tokens about half do.
   in the conversation, or (once) when it repeats an earlier question. It ran with an empty public-text index, since
   these are BEAM's own conversations, and with its length target set to each tier.
 - **Abstention questions** have the answer "the conversation doesn't say" and cite nothing, so they weren't checked.
-- **Which questions.** Every cited question behind a published BEAM result: the head-to-head scoreboard's three BEAM
-  sets and its 10-conversation sweep subset, its newer rerun on the same sets, and memory proof wave 2's 72
-  conversations. The 18 wave 2 conversations that are public in our split (324 questions) were checked in the open; the
-  sealed ones (1,197 questions) were checked in custody, and only counts and the rescore tables came out.
+- **Which questions.** Every cited question behind a published BEAM result except the rerun's D8 set (below): the
+  head-to-head scoreboard's three BEAM sets and its 10-conversation sweep subset, its newer rerun on the same sets, and
+  memory proof wave 2's 72 conversations. The 18 wave 2 conversations that are public in our split (324 questions) were
+  checked in the open; the sealed ones (1,197 questions) were checked in custody, and only counts and the rescore tables
+  came out.
 - **How far to trust the validators.** They are models, and no person graded these questions. On 35 public questions
-  checked twice, every question got the same pass or fail, though one validator changed its reading on 3 of them. On the narrowed RS1 test's own minted questions, written by the same
-  BEAM generator, gpt-6.1-sol read 30 that the validators failed and found 28 unsupported. The `both-out` view below
-  drops only questions both validators reject, as the conservative case.
+  checked twice, every question got the same pass or fail, though one validator changed its reading on 3 of them. On the
+  narrowed RS1 test's own minted questions, written by the same BEAM generator, gpt-6.1-sol read 30 that the validators
+  failed and found 28 unsupported. Neither check's per-question results are in this repository. The `both-out` view
+  below drops only questions both validators reject, as the conservative case.
 
 ## How many questions fail
 
@@ -105,11 +108,12 @@ validators reject. The verdicts are the same in all three.
 | Rerun, BEAM-1M sealed, gbrain against the extract-first server | +4.8 points (+2.6 to +7.1) | +5.7 (+1.7 to +9.6) |
 | Memory proof wave 2 (gbrain `71b6d85`), 500,000-token stratum, facts plus pages against the memory-bank server | +3.11 points (one-sided 95% bounds +1.10 and +5.13), 560 questions | +4.01 (+1.60 and +6.42), 346 questions |
 
-On supported questions, the head-to-head's BEAM-10M scores rise by 8.5 to 11.5 points for every memory system but the
-temporal-graph library (3.2 points, on its 8 conversations), and the question alone falls by 2.3. Paired gaps move
-much less: across the head-to-head's 59 scored answer comparisons the median gap moves 2.8 points. The largest moves,
-up to 11.0 points, are against the no-memory and recency baselines; among memory systems the largest is 6.4. Intervals
-get a median of 1.39 times wider (1.04 to 2.19), most at BEAM-10M, where fewer than half of the questions remain.
+On supported questions, the head-to-head's headline BEAM-10M scores rise by 8.5 to 11.5 points for every memory system
+but the temporal-graph library (3.2 points, on its 8 conversations), and the question alone falls by 2.3. Paired gaps
+move much less: across the head-to-head's 59 scored answer comparisons the median gap moves 2.8 points. The largest
+moves, up to 11.0 points, are against the no-memory and recency baselines; among memory systems the largest is 6.4.
+Intervals get a median of 1.39 times wider (1.04 to 2.19), most at BEAM-10M, where fewer than half of the questions
+remain.
 
 ## What moved
 
@@ -136,11 +140,11 @@ in all three views.
 | Head-to-head, BEAM-1M sealed, knowledge-graph pipeline at 2,000 tokens | +5.1 (-0.1 to +10.3) | +7.8 (+1.3 to +14.6) | supported only |
 | Head-to-head, BEAM-1M sealed, verbatim-session system at 16,000 tokens | +2.4 (-1.3 to +6.3) | +6.1 (+1.2 to +11.1) | supported only |
 
-All of these are descriptive comparisons, which the preregistrations never ranked. The scoreboard's "where gbrain
-loses" list on BEAM goes from the file agent and the extract-first server on the sweep subset to the knowledge-graph
-pipeline on BEAM-100K. One retrieval comparison in the rerun, the memory-bank server's recall of every needed session in
-the top ten, also stops excluding zero (-7.4, -13.9 to -1.4, against -5.8, -18.3 to +5.9); that row is incomplete and
-counts no verdict.
+Apart from the file-agent gap, a preregistered comparison that wasn't separated before or after, all of these are
+descriptive comparisons, which the preregistrations never ranked. The scoreboard's "where gbrain loses" list on BEAM
+goes from the file agent and the extract-first server on the sweep subset to the knowledge-graph pipeline on BEAM-100K.
+One retrieval comparison in the rerun, the memory-bank server's recall of every needed session in the top ten, also
+stops excluding zero (from -7.4, -13.9 to -1.4, to -5.8, -18.3 to +5.9); that row is incomplete and counts no verdict.
 
 ## What isn't covered
 
@@ -162,8 +166,9 @@ counts no verdict.
 - Leaving questions out changes what is measured: the questions that remain are the ones whose evidence the generator
   wrote cleanly, which may be easier or weighted differently across abilities. The supported scores are not "true"
   scores, and the published numbers stay the record.
-- At BEAM-10M only 86 of 199 questions remain, so most of the movement in the head-to-head's BEAM-10M rows is within
-  the published intervals.
+- At BEAM-10M only 86 of 199 questions remain. Most of the head-to-head's BEAM-10M gaps (20 of 27 scored answer
+  comparisons) move to a value inside their published interval, but most of its BEAM-10M scores (13 of the 16 with an
+  interval) rise past theirs.
 
 ## Reproduce and inspect
 
