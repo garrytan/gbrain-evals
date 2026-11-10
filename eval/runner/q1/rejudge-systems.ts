@@ -36,7 +36,7 @@
  */
 import { createHash, randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { BudgetRun, ledgerPaths, ledgerStatus } from '../budget-ledger.ts';
 import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor, PASS_THRESHOLD, type Instrument } from '../memory-qa/instruments.ts';
@@ -553,17 +553,20 @@ export function openLease(o: { runId: string; leaseUsd: number; ledgerPath: stri
 }
 
 /**
- * A paid window's room on this out's ledger: the first paid stage under a window records the ledger's committed total in
- * <out>/window-<unit>.json, and every stage under that window refuses a lease that would take the ledger's spend since
- * then past the window cap, so the stages and reruns of one window never pass its cap together.
+ * A paid window's room on a ledger: the first paid stage under a window records the ledger's committed total beside the
+ * ledger, in <ledger>.window-<unit>.json, and every stage under that window, from any out on that ledger, refuses a lease
+ * that would take the ledger's spend since then past the window cap. A resumed open lease counts its own spend once,
+ * inside its lease, as openLease does, so the stages and reruns of one window never pass its cap together.
  */
-export function checkWindowRoom(out: string, window: PaidWindow, ledgerPath: string, leaseUsd: number): void {
-  const file = join(out, `window-${window.unit}.json`);
+export function checkWindowRoom(window: PaidWindow, ledgerPath: string, runId: string, leaseUsd: number): void {
+  const ledger = ledgerPaths(ledgerPath).ledger, file = `${ledger}.window-${window.unit}.json`;
+  mkdirSync(dirname(ledger), { recursive: true });
   if (!existsSync(file)) writeFileSync(file, JSON.stringify({ unit: window.unit, cap_usd: window.cap_usd, start_committed_usd: committed(ledgerPath) }) + '\n', { flag: 'wx' });
   const recorded = JSON.parse(readFileSync(file, 'utf8')) as { cap_usd: number; start_committed_usd: number };
-  if (recorded.cap_usd !== window.cap_usd) throw refuse({ code: 'USAGE', message: `paid window ${window.unit} was recorded on ${out} with a cap of $${recorded.cap_usd}, not $${window.cap_usd}`,
+  if (recorded.cap_usd !== window.cap_usd) throw refuse({ code: 'USAGE', message: `paid window ${window.unit} was recorded on ${ledger} with a cap of $${recorded.cap_usd}, not $${window.cap_usd}`,
     why: 'a paid window keeps the cap it was granted', fix: { next: 'ask_user', user_message: `ask GBEV-3 for paid window ${window.unit}'s cap` } });
-  const spent = committed(ledgerPath) - recorded.start_committed_usd;
+  const status = existsSync(ledger) ? ledgerStatus({ ledgerPath, runId }) : null;
+  const spent = (status?.totals.committed_usd ?? 0) - recorded.start_committed_usd - (status?.run && !status.run.finished_at ? status.run.committed_usd : 0);
   if (spent + leaseUsd > recorded.cap_usd + 1e-9) throw refuse({ code: 'USAGE', message: `WINDOW_SPENT: a $${leaseUsd.toFixed(2)} lease would take paid window ${window.unit}'s spend on ${ledgerPath} from $${spent.toFixed(2)} past its $${recorded.cap_usd.toFixed(2)} cap`,
     why: 'every stage and rerun under one paid window shares its cap', fix: { next: 'ask_user', user_message: `report paid window ${window.unit} spent to GBEV-3` } });
 }
@@ -883,7 +886,7 @@ if (import.meta.main) {
     const keys = keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder, GEMINI_API_KEY: placeholder } : { ...process.env };
     const [cellToken, controlToken] = [randomUUID(), randomUUID()];
     Object.assign(process.env, { SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
-    if (paidWindow) checkWindowRoom(out, paidWindow, resolve(ledger), leaseUsd);
+    if (paidWindow) checkWindowRoom(paidWindow, resolve(ledger), runId, leaseUsd);
     const lease = openLease({ runId, leaseUsd, ledgerPath: resolve(ledger), ceiling });
     const usageLog = join(out, `usage-${runId}.ndjson`);
     const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, gemini: keyless } } : {}), cellToken, controlToken,

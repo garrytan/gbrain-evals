@@ -388,20 +388,25 @@ describe('money, keys and the proxy', () => {
     openLease({ runId: 'gst-1365-census-a', leaseUsd: 851, ledgerPath, ceiling: 1100 }).close();
   });
 
-  // Value: protects=GST-1969: the paid stages and reruns under one granted window spend at most its cap together; fails_when=a second lease under the same window ignores what the first spent, a window's cap changes between stages, or another window inherits the first one's spend; why_new=/ship red team on #409: the window guard checked each lease alone; seam=checkWindowRoom; no_claim=the CLI wiring (paid-window-guard.test.ts covers the guard before it)
-  test('the leases under one paid window share its cap, counted from the ledger\'s spend when the window first ran', () => {
-    const out = join(tmp, 'window-out'), ledgerPath = join(tmp, 'window-ledger.sqlite');
-    mkdirSync(out, { recursive: true });
+  // Value: protects=GST-1969: the paid stages and reruns under one granted window spend at most its cap together, from any out on the ledger, and a crashed stage resumes its own lease; fails_when=a second lease under the same window ignores what the first spent, the window's record lives anywhere but beside the ledger (a fresh --out would restart its count), a resumed open lease counts its spend twice, a window's cap changes between stages, or another window inherits the first one's spend; why_new=/ship red team and Step 11 voices on #409: the window guard checked each lease alone, then kept its record in the out; seam=checkWindowRoom; no_claim=the CLI wiring (paid-window-guard.test.ts covers the guard before it)
+  test('the leases under one paid window share its cap, counted on the ledger from its spend when the window first ran', () => {
+    const ledgerPath = join(tmp, 'window-ledger.sqlite');
     const w = { unit: 'TEST-WINDOW-1', cap_usd: 10 };
-    checkWindowRoom(out, w, ledgerPath, 6);
+    checkWindowRoom(w, ledgerPath, 'gst-1365-w1', 6);
+    expect(existsSync(`${ledgerPath}.window-TEST-WINDOW-1.json`)).toBe(true);
     const first = openLease({ runId: 'gst-1365-w1', leaseUsd: 6, ledgerPath, ceiling: 850 });
     first.settle(first.reserve(6, 'judge'), { usd: 6 });
     first.close();
-    const spent = refusal(() => checkWindowRoom(out, w, ledgerPath, 5));
+    const spent = refusal(() => checkWindowRoom(w, ledgerPath, 'gst-1365-w2', 5));
     expect([spent.code, spent.message.startsWith('WINDOW_SPENT')]).toEqual(['USAGE', true]);
-    checkWindowRoom(out, w, ledgerPath, 4);
-    expect(refusal(() => checkWindowRoom(out, { ...w, cap_usd: 20 }, ledgerPath, 1)).message).toContain('with a cap of $10, not $20');
-    checkWindowRoom(out, { unit: 'TEST-WINDOW-2', cap_usd: 10 }, ledgerPath, 10);
+    checkWindowRoom(w, ledgerPath, 'gst-1365-w2', 4);
+    const crashed = openLease({ runId: 'gst-1365-w2', leaseUsd: 4, ledgerPath, ceiling: 850 });
+    crashed.settle(crashed.reserve(1, 'judge'), { usd: 1 });
+    checkWindowRoom(w, ledgerPath, 'gst-1365-w2', 4);
+    expect(refusal(() => checkWindowRoom(w, ledgerPath, 'gst-1365-w3', 4)).message).toMatch(/^WINDOW_SPENT/);
+    crashed.close();
+    expect(refusal(() => checkWindowRoom({ ...w, cap_usd: 20 }, ledgerPath, 'gst-1365-w3', 1)).message).toContain('with a cap of $10, not $20');
+    checkWindowRoom({ unit: 'TEST-WINDOW-2', cap_usd: 10 }, ledgerPath, 'gst-1365-w3', 10);
   });
 
   // Value: protects=a missing or dead judge key stops before any lease as KEY_MISSING, naming the variable and never its value; fails_when=a missing key reads as a budget stop, or a key value is printed; why_new=autoplan finding F10; seam=preflightKeys with a fake fetch; no_claim=does not call the live model listings

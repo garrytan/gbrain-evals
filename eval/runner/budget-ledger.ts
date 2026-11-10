@@ -1320,12 +1320,15 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
 
 /**
  * Every cache lifetime a request selects: OpenAI's `prompt_cache_options.ttl` and `prompt_cache_breakpoint.ttl`, and
- * Anthropic's `cache_control.ttl`. A request that names none uses the provider's default lifetime.
+ * Anthropic's `cache_control.ttl`. A request that names none uses the provider's default lifetime. Tool-call arguments
+ * and JSON schemas are data the provider never reads cache settings from, so they are not searched.
  */
 function cacheLifetimes(value: unknown, out = new Set<string>()): Set<string> {
   if (Array.isArray(value)) for (const v of value) cacheLifetimes(v, out);
   else if (value && typeof value === 'object') {
+    const type = (value as { type?: unknown }).type;
     for (const [key, v] of Object.entries(value)) {
+      if ((key === 'input' && typeof type === 'string' && type.endsWith('tool_use')) || key === 'input_schema' || key === 'parameters' || key === 'schema') continue;
       if ((key === 'prompt_cache_options' || key === 'prompt_cache_breakpoint' || key === 'cache_control') && v && typeof v === 'object' && 'ttl' in v) out.add(String(v.ttl));
       cacheLifetimes(v, out);
     }
@@ -1427,7 +1430,7 @@ export function usageCost(price: RequestPrice, responseBody: unknown): { usd: nu
   const lifetimes = objectOf(details?.cache_write_tokens_details);
   const ttls = objectOf(usage.cache_creation);
   const unknown = [
-    ...[usage, details ?? {}].flatMap(o => Object.keys(o).filter(k => /cach/i.test(k) && !PRICED_CACHE_FIELDS.has(k) && reportsTokens(o[k]))),
+    ...([[usage, PRICED_CACHE_FIELDS.usage], [details ?? {}, PRICED_CACHE_FIELDS.details]] as const).flatMap(([o, priced]) => Object.keys(o).filter(k => /cach/i.test(k) && !priced.has(k) && reportsTokens(o[k]))),
     ...Object.keys(lifetimes).filter(k => k !== 'ttl_30m_tokens' && k !== 'ttl_12h_tokens' && reportsTokens(lifetimes[k])),
     ...Object.keys(ttls).filter(k => k !== 'ephemeral_5m_input_tokens' && reportsTokens(ttls[k])),
   ];
@@ -1444,8 +1447,8 @@ export function usageCost(price: RequestPrice, responseBody: unknown): { usd: nu
   return { usd, input_tokens: inputTokens, output_tokens: outputTokens };
 }
 
-/** The cache fields usageCost prices. Any other field naming a cache in a usage object is a tier the ledger cannot price. */
-const PRICED_CACHE_FIELDS = new Set(['cache_read_input_tokens', 'cache_creation_input_tokens', 'cache_creation', 'cached_tokens', 'cache_write_tokens', 'cache_write_tokens_details']);
+/** The cache fields usageCost prices, at the level it reads each from. Any other field naming a cache at either level is a tier the ledger cannot price. */
+const PRICED_CACHE_FIELDS = { usage: new Set(['cache_read_input_tokens', 'cache_creation_input_tokens', 'cache_creation']), details: new Set(['cached_tokens', 'cache_write_tokens', 'cache_write_tokens_details']) };
 const objectOf = (value: unknown): Record<string, unknown> => (value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {});
 const numberOf = (value: unknown): number => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
 /** True when a usage field reports tokens: a positive count, or an object holding one. */

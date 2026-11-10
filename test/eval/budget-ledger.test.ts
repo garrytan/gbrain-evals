@@ -580,6 +580,11 @@ describe('cache writes, the long-prompt tier and usage the ledger cannot price',
     const anthropic = { model: 'claude-opus-5-5', max_tokens: 10, system: [{ type: 'text', text: 's', cache_control: { type: 'ephemeral', ttl: '1h' } }], messages: [] };
     expect(() => priceRequest('https://api.anthropic.com/v1/messages', anthropic)).toThrow(/selects the 1h cache lifetime/);
     expect(priceRequest('https://api.anthropic.com/v1/messages', { ...anthropic, system: [{ type: 'text', text: 's', cache_control: { type: 'ephemeral' } }] })!.cacheWritePremium).toBe(true);
+    // Tool-call arguments and tool schemas are data: a cache_control in them selects no lifetime, one on the block itself does.
+    const call = { type: 'tool_use', id: 'toolu_1', name: 'save', input: { cache_control: { ttl: '1h' } } };
+    const toolData = { model: 'claude-opus-5-5', max_tokens: 10, tools: [{ name: 'save', input_schema: { type: 'object', examples: [{ cache_control: { ttl: '1h' } }] } }], messages: [{ role: 'assistant', content: [call] }] };
+    expect(priceRequest('https://api.anthropic.com/v1/messages', toolData)).toMatchObject({ model: 'claude-opus-5-5' });
+    expect(() => priceRequest('https://api.anthropic.com/v1/messages', { ...toolData, messages: [{ role: 'assistant', content: [{ ...call, cache_control: { type: 'ephemeral', ttl: '1h' } }] }] })).toThrow(/selects the 1h cache lifetime/);
   });
 
   test('usage naming a cache tier the ledger has no rate for is refused, never settled as input', () => {
@@ -593,6 +598,9 @@ describe('cache writes, the long-prompt tier and usage the ledger cannot price',
       output_tokens_details: { thinking_tokens: 0 }, service_tier: 'standard', inference_geo: 'global', speed: 'standard' };
     expect(usageCost(opus, { usage: real })!.usd).toBeCloseTo((4 * 4 + 1885 * 5 + 379 * 20) / 1e6, 12);
     expect(() => usageCost(opus, { usage: { ...real, cache_creation: { ephemeral_5m_input_tokens: 1875, ephemeral_1h_input_tokens: 10 } } })).toThrow(/ephemeral_1h_input_tokens/);
+    // A priced cache field counts only at the level usageCost reads it from; at the other level it is a tier it cannot price.
+    expect(() => usageCost(sol, { usage: { input_tokens: 1000, input_tokens_details: { cached_tokens: 0 }, cache_write_tokens: 1000, output_tokens: 0 } })).toThrow(/reported cache_write_tokens, a cache tier/);
+    expect(() => usageCost(opus, { usage: { input_tokens: 10, output_tokens: 1, input_tokens_details: { cache_creation_input_tokens: 5 } } })).toThrow(/reported cache_creation_input_tokens, a cache tier/);
     const particle = priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'particle-1', max_tokens: 10, messages: [] })!;
     expect(() => usageCost(particle, { usage: { prompt_tokens: 100, completion_tokens: 1, prompt_tokens_details: { cached_tokens: 0, cache_write_tokens: 40 } } })).toThrow(/has no cache-write rate for it/);
     expect(() => usageCost(particle, { usage: { prompt_tokens: 100, completion_tokens: 1, prompt_cache_hit_tokens: 60 } })).toThrow(/reported prompt_cache_hit_tokens/);
