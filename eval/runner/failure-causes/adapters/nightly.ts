@@ -20,10 +20,16 @@
  * harness is the nightly's harnessOf: an answer cut off at its output limit is a harness failure whether or not its row
  * records the cut (older rows record only the finish reason), so old and new rows classify alike, as
  * harness.output_truncated. A harness row is a failure even when its judge passed it, as the nightly report counts it.
+ *
+ * reader_budget is the most sessions the row's reader was given, from its run's memory-qa receipt
+ * (reading.breadth_sessions, when the reader read the top sessions) in a role-logs file: a suite's published logs
+ * archive, <suite>/<reader>/out/receipt.json inside. It is matched by suite, gbrain sha and reader, two receipts that
+ * disagree for one of those are refused, and the receipt joins the row's evidence. With no logs file, or no receipt for
+ * the row, reader_budget stays null.
  */
 import { harnessOf, OUTCOME_SCHEMA, qualifiedModel, type Outcome } from '../../nightly/outcome.ts';
 import { classify } from '../classify.ts';
-import { fileText, pointer, type LoadedFile, type SourceEntry } from '../manifest.ts';
+import { fileText, pointer, tarFiles, type LoadedFile, type SourceEntry } from '../manifest.ts';
 import type { Tag } from '../taxonomy.ts';
 import { EVAL_FAILURE_SCHEMA, type EvalFailure, type StressCount } from '../types.ts';
 import { emptyCounts, skip, type AdapterOutput } from './shared.ts';
@@ -39,7 +45,7 @@ function stopOf(stop: string | null): string | null {
 }
 
 /** One outcome row as an EvalFailure: a failure when it did not pass, a not_run row when it was skipped. */
-export function nightlyFailure(o: Outcome, source: string, evidence: string[]): EvalFailure {
+export function nightlyFailure(o: Outcome, source: string, evidence: string[], readerBudget: number | null = null): EvalFailure {
   const harness = harnessOf(o);
   const tags: Tag[] = [];
   if (o.evidence.report_correct === false) tags.push('misreport');
@@ -54,13 +60,33 @@ export function nightlyFailure(o: Outcome, source: string, evidence: string[]): 
     failed: !o.skipped && (!o.pass || harness !== null), ...(o.skipped ? { not_run: o.skipped } : {}), score: o.score, category: o.category ?? null, agent_loop: o.agent_loop,
     stop: stopOf(o.stop), finish_reason: o.finish_reason ?? null, harness: harness ? { error: harness.error, scorer_artifact: null } : null,
     operation: o.operation ?? null, tool_calls: o.calls ?? null,
-    gold: { gold_count: o.gold_count ?? null, stored: null, hidden: null, retrieved: o.retrieved ?? null, delivered: o.delivered ?? null, opened: o.opened ?? null, summary_only: null },
+    gold: { gold_count: o.gold_count ?? null, stored: null, hidden: null, retrieved: o.retrieved ?? null, delivered: o.delivered ?? null, opened: o.opened ?? null, summary_only: null,
+      reader_budget: readerBudget },
     writes: o.writes ?? null, tags, evidence, ...text,
   };
 }
 
+/** The sessions each memory-qa reader was given at most, by suite, gbrain sha and reader, from the receipts in role-logs archives. */
+function readerBudgets(files: LoadedFile[]): Map<string, { sessions: number; at: string }> {
+  const budgets = new Map<string, { sessions: number; at: string }>();
+  for (const f of files.filter(x => x.role === 'logs')) for (const [path, bytes] of tarFiles(f)) {
+    const suite = /^([^/]+)\/[^/]+\/out\/receipt\.json$/.exec(path)?.[1];
+    if (!suite) continue;
+    const r = JSON.parse(new TextDecoder().decode(bytes));
+    const sessions = r.qa?.mode === 'reader' && r.qa?.context === 'sessions' ? r.reading?.breadth_sessions : null;
+    if (!Number.isInteger(sessions) || typeof r.qa.reader !== 'string' || typeof r.product?.loaded_git_head !== 'string') continue;
+    const key = `${suite}|${r.product.loaded_git_head}|${r.qa.reader}`;
+    const at = pointer(f, path);
+    const seen = budgets.get(key);
+    if (seen && seen.sessions !== sessions) throw new Error(`${at}: gives ${key} ${sessions} reader sessions, ${seen.at} gives ${seen.sessions}`);
+    budgets.set(key, seen ?? { sessions, at });
+  }
+  return budgets;
+}
+
 export function fromNightly(files: LoadedFile[], entry: SourceEntry): AdapterOutput {
   const counts = emptyCounts();
+  const budgets = readerBudgets(files);
   const failures: EvalFailure[] = [];
   const notRun: EvalFailure[] = [];
   const rows = new Map<string, { o: Outcome; at: string }>();
@@ -79,7 +105,8 @@ export function fromNightly(files: LoadedFile[], entry: SourceEntry): AdapterOut
   const ran = new Map<string, number>();
   for (const { o, at } of rows.values()) {
     if (typeof o.system !== 'string' || typeof o.condition !== 'string' || typeof o.visibility !== 'string') { skip(counts, 'row predates the suite facts'); continue; }
-    const f = nightlyFailure(o, entry.id, [at]);
+    const budget = o.reader === null || o.reader === 'fake' ? undefined : budgets.get(`${o.suite}|${o.sha}|${qualifiedModel(o.reader)}`);
+    const f = nightlyFailure(o, entry.id, budget ? [at, budget.at] : [at], budget?.sessions ?? null);
     if (o.skipped) { skip(counts, o.skipped); notRun.push(f); continue; }
     if (o.reader === null) ran.set(`${f.run_id}|${o.suite}`, (ran.get(`${f.run_id}|${o.suite}`) ?? 0) + 1);
     if (!f.failed) { counts.mapped++; continue; }

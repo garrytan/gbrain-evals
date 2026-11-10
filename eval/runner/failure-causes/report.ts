@@ -2,8 +2,8 @@
  * The weekly summary and report. gbrain's top three is ranked on failures from
  * natural-condition runs of gbrain's own arms: each source's failures give
  * every cause a share, each source weighs the same, raw counts break ties, and
- * harness_error, model_error and unclassified never enter the list (unclassified
- * stays in the full table). Shares are taken over the rows that say something
+ * the causes gbrain can't fix (harness_error, reader_budget, model_error) and
+ * unclassified never enter the list (they stay in the full table). Shares are taken over the rows that say something
  * about gbrain, so harness errors never dilute them. A labeller call that failed
  * or did not parse counts as pending. Forced-condition rows
  * and stress counts go to a separate "under stress" list, other systems to a
@@ -18,11 +18,11 @@
  * many of its rows hit the agent's turn cap; and whether rows still waiting
  * for the labeller could change its place (provisional).
  */
-import { MODEL_CAUSES, STAGES, TAXONOMY_VERSION, UNCLASSIFIED, causeInfo, type Cause, type Stage } from './taxonomy.ts';
+import { CAUSES, MODEL_CAUSES, STAGES, TAXONOMY_VERSION, UNCLASSIFIED, causeInfo, type Cause, type Stage } from './taxonomy.ts';
 import { NO_LABEL_RULES } from './agreement.ts';
 import type { CauseLabel, StressCount } from './types.ts';
 
-const NOT_FOR_GBRAIN: readonly string[] = ['harness_error', 'model_error', UNCLASSIFIED];
+const NOT_FOR_GBRAIN: readonly string[] = [...CAUSES.filter(c => !c.gbrain_actionable).map(c => c.id), UNCLASSIFIED];
 const GBRAIN_ROLES = new Set(['gbrain_default', 'gbrain_variant']);
 const PENDING = 'pending_label';
 /** Rule id prefix of a row for a task its system never ran (classify, EvalFailure.not_run). */
@@ -171,6 +171,7 @@ const title = (cause: string) => causeInfo(cause)?.title ?? (cause === PENDING ?
 /** Proposed regression test, per cause: what a check must show once gbrain fixes the cause. */
 export const REGRESSION_TESTS: Record<Cause, string> = {
   harness_error: 'A keyless test in gbrain-evals that replays the failing record through the fixed runner or scorer and asserts it now scores.',
+  reader_budget: 'No gbrain test: a keyless suite check in gbrain-evals that the reader is given at least as many items as each question has gold, or that such questions are left out.',
   operations: 'A nightly smoke that runs the failing operation on a fresh brain at the pinned Postgres version and asserts it exits 0 with the brain readable.',
   ingest_gap: 'A keyless ingest test that imports the source record and asserts the gold fact is stored once, verbatim, and indexed.',
   privacy_hidden: 'A visibility test that counts gold hidden from the caller by cause (private flag, alias, derived page) and asserts the count matches the intended policy.',

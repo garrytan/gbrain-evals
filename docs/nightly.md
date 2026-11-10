@@ -91,7 +91,10 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   suites, from memory-qa's reader receipt), and null where it records none: Cat 40 Hard and the Part C agent suites
   keep no per-call finish, and the keyless suites have no reader.
 - **Weekly failure causes.** Each outcome row carries the fields the failure-cause `nightly` adapter reads, so a week
-  of nights can go through `bun eval/runner/failure-causes/cli.ts classify` and `report` beside the other evals.
+  of nights can go through `bun eval/runner/failure-causes/cli.ts classify` and `report` beside the other evals. List a
+  QA suite's published logs archive (`logs/<suite>.tar.gz`, role `logs`) beside its outcomes: its memory-qa receipts say
+  how many sessions each reader was given, so a question with more gold sessions than that is labelled `reader_budget`,
+  a suite cause, instead of a gbrain retrieval or ranking cause. Without the archive those rows label as before.
 - **Cost per correct answer.** The suite's recorded cost divided by its passing rows. It's a metric for spotting a
   change that costs more for the same result.
 - **Against the previous master night.** Suite by suite, where the digests match, the report flags any increase in a
@@ -243,6 +246,13 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-11: Questions with more gold sessions than the reader is given get their own cause
+
+The QA readers get the top 5 sessions, so a question with 6 or more gold sessions can't get all its evidence to the
+reader however well gbrain ranks. The weekly failure causes used to blame gbrain for those rows (wrong ranking, partial
+evidence or a retrieval miss). They are now `reader_budget`, a suite cause kept out of gbrain's top three, when the
+week's sources list the suite's logs archive, whose memory-qa receipts record each reader's session count.
 
 ### 2026-11-11: QA readers get 8,192 output tokens, and a cut-off answer is a harness row
 

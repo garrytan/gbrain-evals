@@ -149,3 +149,36 @@ describe('classify: precedence', () => {
     expect(l).toMatchObject({ cause: 'write_integrity', rule_id: 'write.duplicated' });
   });
 });
+
+describe('classify: more gold than the reader is given', () => {
+  const over = (g: Partial<ReturnType<typeof failure>['gold']>) => gold({ gold_count: 6, reader_budget: 5, ...g });
+
+  test('gold all retrieved but cut past the reader budget is reader_budget, not ranking.some_gold_cut (lme-s-hard a3838d2b: 6 gold at ranks 1 to 6, the reader given 5)', () => {
+    expect(classify(failure({ gold: over({ retrieved: 'all', delivered: 'partial' }) }))).toMatchObject({ cause: 'reader_budget', basis: 'deterministic', rule_id: 'harness.gold_over_reader_budget', secondary: ['wrong_ranking'] });
+  });
+
+  test('gold over the budget with partial or no retrieval is reader_budget too, and the gbrain cause stays as a secondary cause', () => {
+    expect(classify(failure({ gold: over({ gold_count: 9, retrieved: 'partial', delivered: 'partial' }) }))).toMatchObject({ cause: 'reader_budget', secondary: ['partial_evidence'] });
+    expect(classify(failure({ gold: over({ gold_count: 24, retrieved: 'none', delivered: 'none' }) }))).toMatchObject({ cause: 'reader_budget', secondary: ['retrieval_miss'] });
+    expect(classify(failure({ gold: over({ gold_count: 11, retrieved: null, delivered: 'none' }) }))).toMatchObject({ cause: 'reader_budget', secondary: ['retrieval_miss'] });
+  });
+
+  test('gold equal to the budget keeps its label (81507db6: 5 gold at ranks 1, 2, 3, 4 and 6 is wrong_ranking), and one gold item more is reader_budget', () => {
+    expect(classify(failure({ gold: over({ gold_count: 5, retrieved: 'all', delivered: 'partial' }) }))).toMatchObject({ cause: 'wrong_ranking', rule_id: 'ranking.some_gold_cut', secondary: [] });
+    expect(classify(failure({ gold: over({ gold_count: 6, retrieved: 'all', delivered: 'partial' }) })).cause).toBe('reader_budget');
+  });
+
+  test('a row that records no budget labels as before, and the same row with its run\'s budget is reader_budget', () => {
+    for (const reader_budget of [undefined, null]) {
+      expect(classify(failure({ gold: over({ retrieved: 'all', delivered: 'partial', reader_budget }) }))).toMatchObject({ cause: 'wrong_ranking', rule_id: 'ranking.some_gold_cut' });
+    }
+    expect(classify(failure({ gold: over({ retrieved: 'all', delivered: 'partial' }) })).cause).toBe('reader_budget');
+  });
+
+  test('a cut-off answer with more gold than the budget stays harness.output_truncated, with reader_budget and the gbrain cause as secondary causes', () => {
+    expect(classify(failure({ finish_reason: 'max_tokens', gold: over({ gold_count: 9, retrieved: 'partial', delivered: 'partial' }) })))
+      .toMatchObject({ cause: 'harness_error', rule_id: 'harness.output_truncated', secondary: ['reader_budget', 'partial_evidence'] });
+    expect(classify(failure({ harness: { error: 'provider 529', scorer_artifact: null }, gold: over({ retrieved: 'all', delivered: 'partial' }) })))
+      .toMatchObject({ cause: 'harness_error', rule_id: 'harness.error', secondary: ['reader_budget', 'wrong_ranking'] });
+  });
+});

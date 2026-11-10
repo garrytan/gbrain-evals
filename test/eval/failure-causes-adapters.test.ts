@@ -1,17 +1,29 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { ADAPTERS, classify, loadSource, nightlyFailure, validateManifest, SOURCES_SCHEMA } from '../../eval/runner/failure-causes/index.ts';
 import { cat40Calls, cat40Fields, namesSlug } from '../../eval/runner/failure-causes/adapters/cat40.ts';
-import { fileText, sha256, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
+import { fileText, sha256, tarFiles, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
 import { harnessOf } from '../../eval/runner/nightly/outcome.ts';
 import { entry, failure, FX, loadFixture } from '../support/failure-causes-fixture.ts';
 
 const byCase = (failures: ReturnType<typeof ADAPTERS.rs1>['failures']) => new Map(failures.map(f => [f.case_id, classify(f)]));
 const mem = (path: string, role: string, rows: unknown[]): LoadedFile => {
   const bytes = new TextEncoder().encode(rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+  return { path, role, sha256: sha256(bytes), root: 'mem', bytes };
+};
+/** A tar.gz written by the system tar from files under one top directory, as a LoadedFile. */
+const tarball = (path: string, role: string, files: Record<string, string>, format = 'gnu'): LoadedFile => {
+  const dir = mkdtempSync(join(tmpdir(), 'fc-tar-'));
+  for (const [name, text] of Object.entries(files)) {
+    mkdirSync(dirname(join(dir, 'in', name)), { recursive: true });
+    writeFileSync(join(dir, 'in', name), text);
+  }
+  execFileSync('tar', [`--format=${format}`, '-czf', join(dir, 'out.tar.gz'), '-C', join(dir, 'in'), ...new Set(Object.keys(files).map(n => n.split('/')[0]!))]);
+  const bytes = new Uint8Array(readFileSync(join(dir, 'out.tar.gz')));
   return { path, role, sha256: sha256(bytes), root: 'mem', bytes };
 };
 
@@ -304,6 +316,37 @@ describe('nightly adapter', () => {
     expect(out.failures.some(f => f.model === 'none (keyless)')).toBe(false);
   });
 
+  test('a logs archive gives each reader its run\'s session budget: a stored 2026-11-10 row with more gold than that is reader_budget, a cut-off one stays harness.output_truncated, and a row with no receipt labels as before', () => {
+    const receipt = (reader: string, breadth_sessions: number) => JSON.stringify({ qa: { mode: 'reader', context: 'sessions', reader }, reading: { breadth_sessions }, product: { loaded_git_head: sha } });
+    const logs = (opus: number) => tarball('2026-11-10/master/logs/lme-s-hard.tar.gz', 'logs', {
+      'lme-s-hard/claude-opus-5-5/out/receipt.json': receipt('anthropic:claude-opus-5-5', opus), 'lme-s-hard/claude-opus-5-5/run.log': 'log',
+      'lme-s-hard/gpt-6.1-sol/out/receipt.json': receipt('openai:gpt-6.1-sol', 5) });
+    const stored = { schema: 'nightly-outcome/1', night: '2026-11-10', suite: 'lme-s-hard', suite_digest: 'd', role: 'headroom', ref: 'master', sha, trial: 1, pass: false, score: 0, cost_usd: null,
+      stop: 'answered', tool_errors: [], evidence: {}, harness: null, system: 'gbrain', arm: 'lme-s-hard@master', arm_role: 'gbrain_default', condition: 'natural', visibility: 'public',
+      agent_loop: false, category: 'multi-session', answered: true, finish_reason: 'stop', reader: 'claude-opus-5-5', gold_count: 6, retrieved: 'all', delivered: 'partial' };
+    const rows = [
+      { ...stored, item: 'a3838d2b' },
+      { ...stored, item: '81507db6', gold_count: 5 },
+      { ...stored, item: 'gpt4_7abb270c', retrieved: 'partial', finish_reason: 'max_tokens' },
+      { ...stored, item: 'gpt4_7abb270c', reader: 'gpt-6.1-sol', retrieved: 'partial' },
+      { ...stored, item: 'a3838d2b', reader: 'gpt-6.1-sol', sha: 'd'.repeat(40) },
+    ];
+    const out = ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows), logs(5)], entry('n', 'nightly'));
+    expect(out.failures.map(f => { const l = classify(f); return [f.task_id, f.gold.reader_budget, l.cause, l.rule_id, l.secondary]; })).toEqual([
+      ['a3838d2b', 5, 'reader_budget', 'harness.gold_over_reader_budget', ['wrong_ranking']],
+      ['81507db6', 5, 'wrong_ranking', 'ranking.some_gold_cut', []],
+      ['gpt4_7abb270c', 5, 'harness_error', 'harness.output_truncated', ['reader_budget', 'partial_evidence']],
+      ['gpt4_7abb270c', 5, 'reader_budget', 'harness.gold_over_reader_budget', ['partial_evidence']],
+      ['a3838d2b', null, 'wrong_ranking', 'ranking.some_gold_cut', []],
+    ]);
+    expect(out.failures[0]!.evidence).toEqual([expect.stringMatching(/^mem:n\/outcomes\.jsonl#[0-9a-f]{8} line=1$/),
+      expect.stringMatching(/^mem:2026-11-10\/master\/logs\/lme-s-hard\.tar\.gz#[0-9a-f]{8} lme-s-hard\/claude-opus-5-5\/out\/receipt\.json$/)]);
+    expect(ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows)], entry('n', 'nightly')).failures.map(f => classify(f).cause))
+      .toEqual(['wrong_ranking', 'wrong_ranking', 'harness_error', 'partial_evidence', 'wrong_ranking']);
+    expect(() => ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows), logs(5), { ...logs(6), path: 'other/lme-s-hard.tar.gz' }], entry('n', 'nightly')))
+      .toThrow(/lme-s-hard\/claude-opus-5-5\/out\/receipt\.json: gives lme-s-hard\|c{40}\|anthropic:claude-opus-5-5 6 reader sessions, .* gives 5$/);
+  });
+
   test('reads outcomes.jsonl.gz the same way, refuses a row of another schema, and is registered for manifests', () => {
     const bytes = gzipSync(files[0]!.bytes);
     const gz = ADAPTERS.nightly([{ ...files[0]!, path: 'outcomes.jsonl.gz', bytes, sha256: sha256(bytes) }], entry('nightly-week', 'nightly'));
@@ -348,4 +391,12 @@ describe('source manifests', () => {
   });
 
   test('fixtures live where the helper says', () => expect(FX).toMatch(/test\/fixtures\/failure-causes$/));
+
+  test('tarFiles reads a GNU and a POSIX archive, a long POSIX path included, and leaves out an entry a GNU long name renames rather than cut its name', () => {
+    const long = `${'d'.repeat(60)}/${'e'.repeat(60)}/receipt.json`;
+    const read = (f: LoadedFile) => Object.fromEntries([...tarFiles(f)].map(([p, b]) => [p, new TextDecoder().decode(b)]));
+    expect(read(tarball('a.tar.gz', 'logs', { 'x/a.json': '1', 'x/b/c.json': '22' }))).toEqual({ 'x/a.json': '1', 'x/b/c.json': '22' });
+    expect(read(tarball('p.tar.gz', 'logs', { [long]: 'r' }, 'ustar'))).toEqual({ [long]: 'r' });
+    expect(read(tarball('g.tar.gz', 'logs', { [long]: 'r' }, 'gnu'))).toEqual({});
+  });
 });

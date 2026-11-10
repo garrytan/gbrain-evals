@@ -107,5 +107,25 @@ export function loadSource(entry: SourceEntry, roots: Record<string, string>): L
 
 export const fileText = (f: LoadedFile) => new TextDecoder().decode(f.path.endsWith('.gz') ? gunzipSync(f.bytes) : f.bytes);
 export const ndjson = (f: LoadedFile): Record<string, any>[] => fileText(f).split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
+
+/**
+ * The regular files of a tar archive (gzipped when its path ends in .gz) by their path inside it, as `tar czf` writes them.
+ * An entry renamed by a GNU long-name or pax header before it is left out rather than read under a cut name.
+ */
+export function tarFiles(f: LoadedFile): Map<string, Uint8Array> {
+  const tar = f.path.endsWith('.gz') ? gunzipSync(f.bytes) : f.bytes;
+  const field = (at: number, len: number) => new TextDecoder().decode(tar.subarray(at, at + len)).split('\0')[0]!;
+  const files = new Map<string, Uint8Array>();
+  let renamed = false;
+  for (let at = 0; at + 512 <= tar.length && tar[at] !== 0;) {
+    const size = parseInt(field(at + 124, 12).trim() || '0', 8);
+    const type = field(at + 156, 1);
+    const prefix = field(at + 257, 6) === 'ustar' ? field(at + 345, 155) : '';
+    if (!renamed && ['0', ''].includes(type)) files.set((prefix ? `${prefix}/` : '') + field(at, 100), tar.subarray(at + 512, at + 512 + size));
+    renamed = type === 'L' || type === 'x';
+    at += 512 + Math.ceil(size / 512) * 512;
+  }
+  return files;
+}
 /** An archive-relative evidence pointer: root, path, the first 8 hex of the file's sha256, and an optional locator. */
 export const pointer = (f: Pick<LoadedFile, 'root' | 'path' | 'sha256'>, locator?: string) => `${f.root}:${f.path}#${f.sha256.slice(0, 8)}${locator ? ' ' + locator : ''}`;
