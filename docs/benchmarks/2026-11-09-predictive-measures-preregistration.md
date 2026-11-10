@@ -175,6 +175,58 @@ still needs 3 of them to qualify (`eval/runner/predictive/mapping.ts`). G3's `tw
 and the results report their refusal rate by surface in G3's cause table, outside the verdict, with this reason. G3's
 replay layer (`read_refusal_rate_570_vs_549`) is unchanged and stays the test of this refusal across versions.
 
+### 2026-11-10: G2's conditions, pins and batch-3 size
+
+Fixed before any counted G2 cell, and before batch 3's counted aggregates exist. The build table gave G2 "4 conditions,
+2 pins" without naming them; this amendment names them and says which scorecard each verdict is read from.
+
+**Questions.** `eval/generators/conditions-recall-gen.ts` at its defaults (seed 20261109, 20 per type): 100 questions
+on 180 pages, question file sha256 `25a7cc094a54f21f907b536abb7ca8fc66fa36afc6f308e5243f0b466830f6f6`, the same file
+in every condition. One file of Opus paraphrases (`eval/runner/live-recall/paraphrase-opus.ts`) serves all four
+conditions.
+
+**Conditions.** Each knob is set from a measured condition of the real brain, as the evidence class requires:
+
+| Condition | Knobs | Measured condition it copies |
+|---|---|---|
+| clean | none (generator defaults) | the clean pages our other evals use |
+| embedding | `--synopsis-off --unembedded-share 0.1` | 0% synopsis vectors, 10% of chunks with no vector |
+| shells | `--shell-share 0.5` | about half of sampled media pages are empty shells |
+| real | `--synopsis-off --unembedded-share 0.1 --shell-share 0.5` | both together |
+
+The shell knob applies to every page that isn't gold, so it overstates shells on pages that aren't media. That is a
+stated limit of the shells and real conditions.
+
+**The keyword candidate bound is left out.** A keyless calibration at `446b9c14` on the real-condition brain (180
+chunks, hash transports) gave identical success@5 for every arm at bounds of 5, 10, 20, 40, 80 and 160 chunks, and no
+query reported `keyword_candidates_incomplete`, so at this brain size the bound never bites. Batch 1, the development
+reference, recorded it on 57 of 100 `hybrid_lexical` forms. The synthetic brain doesn't reproduce that condition, and
+the results say so instead of setting a knob that changes nothing.
+
+**Pins.** Every G2 scorecard runs on Voyage transports (voyage-4 embeddings, tokenmax, rerank-2.5, as
+`eval/runner/live-recall/synthetic.ts` sets them), at two gbrain versions loaded through the gbrain-under-test overlay:
+
+- the version the reference itself ran, so that each pair compares the synthetic brain with the real one and not two
+  gbrain versions (the reason for the `two_range_read` amendment above): 0.60.593.0 (`27f8b9d6`) for the batch 2
+  layer, and 0.60.623.0 (`d253ec0f`) for the batch 3 layer;
+- this preregistration's pin, 0.60.557.0 (`62637c96`), for both layers.
+
+**Which scorecard gives each verdict.**
+
+- G2's batch 2 layer reads the **real** condition at 0.60.593.0. The other seven batch-2-shaped scorecards (four
+  conditions at two pins, less that one) are reported beside it with their own readings, as secondary results that
+  never gate. They show which condition carries the agreement, if any.
+- One synthetic batch-3 brain from `eval/generators/batch3-synthetic-gen.ts` at seed 20261110 and `--per-type 30`
+  (60 questions, 30 freshness and 30 entity; 30 is the most distinct freshness worlds its pool gives), with Opus
+  paraphrases, gives G2's batch 3 layer and the retrieval layers of G1 and G4. Their verdicts read its scorecard at
+  0.60.623.0. Its scorecard at 0.60.557.0 is secondary. The batch-3 generator has no condition knobs, so this brain is
+  clean.
+
+**Power.** G2's binding MDD per form and condition stays 15.3 points. For the synthetic batch-3 brain the same formula,
+over both forms of a type (between 60 forms and 30 questions), gives 19.8 to 28.0 points at discordance 0.3, and 16.2
+to 22.9 at 0.2. These bind G1's and G4's retrieval layers and G2's batch 3 layer. The verdict itself reads signs, as
+the decision rule says, so these numbers govern only how a difference is described.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
