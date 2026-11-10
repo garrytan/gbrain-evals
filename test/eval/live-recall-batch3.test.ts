@@ -97,12 +97,21 @@ describe('live-recall batch3 questions, freeze and epoch', () => {
   test('the visibility epoch reads pre below the known ceiling, unknown above it, and post from the first release once set', () => {
     expect(visibilityEpoch('0.60.557.0')).toBe('pre_gbra_398');
     expect(visibilityEpoch(GBRA_398.pre_ceiling)).toBe('pre_gbra_398');
-    expect(visibilityEpoch('0.60.621.0')).toBe('unknown');
     expect(visibilityEpoch('not-a-version')).toBe('unknown');
+    const unshipped = { first_version: null, pre_ceiling: '0.60.620.0' };
+    expect(visibilityEpoch('0.60.620.0', unshipped)).toBe('pre_gbra_398');
+    expect(visibilityEpoch('0.60.621.0', unshipped)).toBe('unknown');
     const shipped = { first_version: '0.60.630.0', pre_ceiling: GBRA_398.pre_ceiling };
     expect(visibilityEpoch('0.60.629.0', shipped)).toBe('pre_gbra_398');
     expect(visibilityEpoch('0.60.630.0', shipped)).toBe('post_gbra_398');
     expect(visibilityEpoch('0.61.0.0', shipped)).toBe('post_gbra_398');
+  });
+
+  test('GBRA-398 shipped in gbrain 0.60.623.0: the box before GST-2059 reads pre, and the release after it reads post', () => {
+    expect(GBRA_398.first_version).toBe('0.60.623.0');
+    expect(visibilityEpoch('0.60.618.0')).toBe('pre_gbra_398');
+    expect(visibilityEpoch('0.60.622.0')).toBe('pre_gbra_398');
+    expect(visibilityEpoch('0.60.623.0')).toBe('post_gbra_398');
   });
 
   test('a counted batch3 run refuses a freeze with no epoch or the other epoch, before opening any database', async () => {
@@ -115,16 +124,17 @@ describe('live-recall batch3 questions, freeze and epoch', () => {
       };
       const f = freezeSummaryBatch3(batch3Text, batch3Questions, gut);
       expect(await run(f)).toBe('LR_NO_DATABASE_URL');
-      expect(await run({ ...f, visibility_epoch: 'post_gbra_398' })).toBe('LR_FREEZE_MISMATCH');
+      const otherEpoch = f.visibility_epoch === 'post_gbra_398' ? 'pre_gbra_398' : 'post_gbra_398';
+      expect(await run({ ...f, visibility_epoch: otherEpoch })).toBe('LR_FREEZE_MISMATCH');
       const { visibility_epoch: _e, ...noEpoch } = f;
       expect(await run(noEpoch)).toBe('LR_FREEZE_MISMATCH');
-      const later = { ...gut, version: '9.0.0.0' };
+      const later = { ...gut, version: '9.0.0.0-local' };
       const runLater = (freeze: unknown) => {
         writeFileSync(join(dir, 'freeze.json'), JSON.stringify(freeze));
         return abortCode(liveRecall({ fixture: false, questionsPath: join(dir, 'q.jsonl'), freezePath: join(dir, 'freeze.json'), databaseUrlEnv: 'LIVE_RECALL_TEST_UNSET', out: join(dir, 'out'), gut: later }, () => {}));
       };
       expect(await runLater({ ...f, visibility_epoch: 'unknown', gbrain_version: '8.0.0.0' })).toBe('LR_FREEZE_MISMATCH');
-      expect(await runLater({ ...f, visibility_epoch: 'unknown', gbrain_version: '9.0.0.0' })).toBe('LR_NO_DATABASE_URL');
+      expect(await runLater({ ...f, visibility_epoch: 'unknown', gbrain_version: '9.0.0.0-local' })).toBe('LR_NO_DATABASE_URL');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

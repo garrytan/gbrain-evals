@@ -1,0 +1,347 @@
+{
+  "schema": "predictive-verdict/v1",
+  "measure": "G2",
+  "title": "recall under real conditions",
+  "verdict": "PREDICTIVE",
+  "synthetic": {
+    "schema": "live-recall-scorecard/v1",
+    "control": false,
+    "transports": "voyage"
+  },
+  "layers": [
+    {
+      "id": "b2",
+      "reference": "live-recall-b2",
+      "min_qualifying": 3,
+      "mapped_count": 16,
+      "note": "all 16 success@5 contrasts of live recall batch 2, id to id",
+      "in_scorecard": true,
+      "status": "available",
+      "verdict": "PREDICTIVE",
+      "qualifying_count": 13,
+      "kendall_tau": {
+        "arms_exact": 0.6,
+        "arms_paraphrase": 0.8
+      },
+      "contrasts": [
+        {
+          "reference_id": "p1_hybrid_vs_hybrid_lexical_paraphrase",
+          "synthetic_id": "p1_hybrid_vs_hybrid_lexical_paraphrase",
+          "reference": {
+            "estimate": 0.18,
+            "lo": 0.04,
+            "hi": 0.32,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.31,
+            "lo": 0.2,
+            "hi": 0.42,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "p2_configured_vs_hybrid_lexical_paraphrase",
+          "synthetic_id": "p2_configured_vs_hybrid_lexical_paraphrase",
+          "reference": {
+            "estimate": 0.32,
+            "lo": 0.16,
+            "hi": 0.48,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.32,
+            "lo": 0.21,
+            "hi": 0.43,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "batch1_p1_hybrid_vs_hybrid_lexical",
+          "synthetic_id": "batch1_p1_hybrid_vs_hybrid_lexical",
+          "reference": {
+            "estimate": 0.06,
+            "lo": -0.04,
+            "hi": 0.16,
+            "qualifies": false
+          },
+          "synthetic": {
+            "estimate": 0.11,
+            "lo": 0.035,
+            "hi": 0.18,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "not_qualifying"
+        },
+        {
+          "reference_id": "hybrid_lexical_vs_keyword",
+          "synthetic_id": "hybrid_lexical_vs_keyword",
+          "reference": {
+            "estimate": 0.16,
+            "lo": 0.07,
+            "hi": 0.26,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.405,
+            "lo": 0.345,
+            "hi": 0.465,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "hybrid_vs_keyword",
+          "synthetic_id": "hybrid_vs_keyword",
+          "reference": {
+            "estimate": 0.22,
+            "lo": 0.13,
+            "hi": 0.31,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.515,
+            "lo": 0.445,
+            "hi": 0.585,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "configured_vs_keyword_paraphrase",
+          "synthetic_id": "configured_vs_keyword_paraphrase",
+          "reference": {
+            "estimate": 0.48,
+            "lo": 0.34,
+            "hi": 0.62,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.9,
+            "lo": 0.84,
+            "hi": 0.95,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "configured_vs_hybrid",
+          "synthetic_id": "configured_vs_hybrid",
+          "reference": {
+            "estimate": 0.14,
+            "lo": 0.06,
+            "hi": 0.22,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.035,
+            "lo": 0.015,
+            "hi": 0.06,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "vector_vs_keyword",
+          "synthetic_id": "vector_vs_keyword",
+          "reference": {
+            "estimate": 0.12,
+            "lo": 0,
+            "hi": 0.23,
+            "qualifies": false
+          },
+          "synthetic": {
+            "estimate": 0.51,
+            "lo": 0.435,
+            "hi": 0.58,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "not_qualifying"
+        },
+        {
+          "reference_id": "configured_vs_keyword_exact",
+          "synthetic_id": "configured_vs_keyword_exact",
+          "reference": {
+            "estimate": 0.24,
+            "lo": 0.1,
+            "hi": 0.38,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.2,
+            "lo": 0.13,
+            "hi": 0.28,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "hybrid_vs_keyword_paraphrase",
+          "synthetic_id": "hybrid_vs_keyword_paraphrase",
+          "reference": {
+            "estimate": 0.34,
+            "lo": 0.22,
+            "hi": 0.48,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.89,
+            "lo": 0.83,
+            "hi": 0.95,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "window_vs_configured",
+          "synthetic_id": "window_vs_configured",
+          "reference": {
+            "estimate": 0.05,
+            "lo": 0,
+            "hi": 0.15,
+            "qualifies": false
+          },
+          "synthetic": {
+            "estimate": 0,
+            "lo": 0,
+            "hi": 0,
+            "excludes_zero": false
+          },
+          "sign_agrees": false,
+          "counted": "not_qualifying"
+        },
+        {
+          "reference_id": "paraphrase_vs_exact_keyword",
+          "synthetic_id": "paraphrase_vs_exact_keyword",
+          "reference": {
+            "estimate": -0.64,
+            "lo": -0.76,
+            "hi": -0.5,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": -0.77,
+            "lo": -0.85,
+            "hi": -0.69,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "paraphrase_vs_exact_vector",
+          "synthetic_id": "paraphrase_vs_exact_vector",
+          "reference": {
+            "estimate": -0.24,
+            "lo": -0.38,
+            "hi": -0.1,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": -0.01,
+            "lo": -0.03,
+            "hi": 0,
+            "excludes_zero": false
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "paraphrase_vs_exact_hybrid_lexical",
+          "synthetic_id": "paraphrase_vs_exact_hybrid_lexical",
+          "reference": {
+            "estimate": -0.64,
+            "lo": -0.78,
+            "hi": -0.5,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": -0.42,
+            "lo": -0.52,
+            "hi": -0.32,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "paraphrase_vs_exact_hybrid",
+          "synthetic_id": "paraphrase_vs_exact_hybrid",
+          "reference": {
+            "estimate": -0.4,
+            "lo": -0.54,
+            "hi": -0.26,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": -0.02,
+            "lo": -0.05,
+            "hi": 0,
+            "excludes_zero": false
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "paraphrase_vs_exact_configured",
+          "synthetic_id": "paraphrase_vs_exact_configured",
+          "reference": {
+            "estimate": -0.4,
+            "lo": -0.56,
+            "hi": -0.24,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": -0.07,
+            "lo": -0.12,
+            "hi": -0.03,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        }
+      ]
+    },
+    {
+      "id": "b3",
+      "reference": "live-recall-b3",
+      "min_qualifying": 3,
+      "mapped_count": 6,
+      "note": "batch 3 freshness and entity success@5, once batch 3 lands",
+      "in_scorecard": false,
+      "status": "not_in_scorecard",
+      "verdict": "NOT_IN_SCORECARD",
+      "qualifying_count": 0,
+      "contrasts": [],
+      "kendall_tau": {}
+    }
+  ],
+  "counted": false,
+  "secondary": true,
+  "scorecard": {
+    "path": "docs/benchmarks/predictive-measures/g2/secondary/embed-557/scorecard.json",
+    "sha256": "c5c2d1ba0650d9fb0acedc53960bde7217b1637de81483202b966c284100ac09",
+    "gbrain_loaded_version": "0.60.557.0",
+    "gbrain_loaded_commit": "62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+    "knobs": {
+      "unembedded_chunk_share": 0.1,
+      "synopsis_vectors_off": true,
+      "keyword_candidate_bound": null,
+      "shell_page_share": 0
+    },
+    "questions_sha256": "077569d730f9cff639cb21040e14635c034db19f19fd44b9e2c7460a7a5d2e89",
+    "digest": "e6e4042248d741634119227f24953c1b3e383fcc2e8a9e009a138b83ad575770"
+  }
+}

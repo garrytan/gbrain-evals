@@ -14,8 +14,9 @@
  * embedding transport is replaced in-process: each chunk gets a seeded random
  * unit vector at gbrain's default embedding width (DEFAULT_EMBEDDING_DIMENSIONS,
  * 1024 for voyage:voyage-4 at the pin), so no embedding provider is ever called.
- * No search setting is written: the brain keeps the search config gbrain resolves
- * by default (resolveSearchMode over an empty config table).
+ * The brain gets the real brain's search setting as live-recall batch 2's scorecard
+ * records it (REAL_SEARCH_CONFIG: mode tokenmax, reranker voyage:rerank-2.5); the
+ * rerank transport stays in-process.
  *
  * The load runs in batches. After each batch the checkpoint file names the last
  * finished batch, so a rerun with the same seed, size, batch size and width
@@ -162,20 +163,24 @@ export async function useScaleTransports(gut: GbrainUnderTest): Promise<ScaleTra
 
 export type ScaleTarget = { kind: 'pglite' } | { kind: 'postgres'; url: string; poolMax?: number };
 
-/** Connect and initialise the schema at the gateway's width. Call useScaleTransports first. */
+/** The search setting of the real brain, as live-recall batch 2's counted scorecard records it. */
+export const REAL_SEARCH_CONFIG = { 'search.mode': 'tokenmax', 'search.reranker.model': 'voyage:rerank-2.5' } as const;
+
+/** Connect, initialise the schema at the gateway's width and write REAL_SEARCH_CONFIG. Call useScaleTransports first. */
 export async function openScaleEngine(gut: GbrainUnderTest, target: ScaleTarget): Promise<any> {
+  let engine: any;
   if (target.kind === 'pglite') {
     const { PGLiteEngine } = await importGbrain<any>(gut, 'src/core/pglite-engine.ts');
-    const engine = new PGLiteEngine();
+    engine = new PGLiteEngine();
     await engine.connect({});
-    await engine.initSchema();
-    return engine;
+  } else {
+    const { createEngine } = await importGbrain<any>(gut, 'src/core/engine-factory.ts');
+    const config = { engine: 'postgres', database_url: target.url, pool_max: target.poolMax ?? 8 };
+    engine = await createEngine(config);
+    await engine.connect(config);
   }
-  const { createEngine } = await importGbrain<any>(gut, 'src/core/engine-factory.ts');
-  const config = { engine: 'postgres', database_url: target.url, pool_max: target.poolMax ?? 8 };
-  const engine = await createEngine(config);
-  await engine.connect(config);
   await engine.initSchema();
+  for (const [key, value] of Object.entries(REAL_SEARCH_CONFIG)) await engine.setConfig(key, value);
   return engine;
 }
 

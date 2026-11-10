@@ -15,7 +15,7 @@
  *   with pgvector, a 300-page build and probe run there. Skipped otherwise.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
@@ -24,7 +24,7 @@ import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { buildScaleBrain, openScaleEngine, pagesDigest, randomUnitVector, readCheckpoint, scalePage, useScaleTransports } from '../../eval/runner/predictive/scale-latency/build.ts';
 import { OPS, SCORECARD_SCHEMA, calibrate, countFallOpens, opStats, probeArgs, probeLatency, type Op, type OpStats } from '../../eval/runner/predictive/scale-latency/probe.ts';
-import { MAX_RETRIES, defaultSteps, loadState, runOnUbicloud, vmName, type UbicloudClient } from '../../eval/runner/predictive/scale-latency/ubicloud.ts';
+import { MAX_RETRIES, defaultSteps, loadState, parsePins, runOnUbicloud, ubiRunnerClient, vmName, type UbicloudClient } from '../../eval/runner/predictive/scale-latency/ubicloud.ts';
 
 const gut = resolveGbrainUnderTest(null);
 const dirs: string[] = [];
@@ -169,6 +169,24 @@ describe('Ubicloud lifecycle (J1) with a fake client', () => {
     expect(vmName('55x', 6, 1, '00000000')).toMatch(/^ubirun-u55x-/);
   });
 
+  test('pins: gbrain cloned on the VM, the brain built once at the first pin, each pin probed in order on its own fresh copy', () => {
+    const a = 'a131fb20ef4aafd017f0c6a6565ce5627dc46897';
+    const b = '241cef5aa54f185bc79a21eec12249583e3c88dc';
+    const steps = defaultSteps({ pages: 300_000, n: 200, syncN: 30, pins: parsePins(`549:${a},570:${b},549b:${a}`) });
+    expect(steps.map(s => s.id)).toEqual(['setup', 'gbrain', 'build', 'probe-549', 'probe-570', 'probe-549b']);
+    expect(steps[2].command).toContain(`--gbrain ~/gbrain-src@${a}`);
+    expect(steps[4].command).toContain(`--gbrain ~/gbrain-src@${b}`);
+    expect(steps[4].command).toContain('--out ~/scale-latency/scorecard-570.json');
+    expect(steps[4].command).toContain('[ -s ~/scale-latency/scorecard-570.json ] ||');
+    expect(steps[4].command).toContain('CREATE DATABASE scale_570 TEMPLATE scale');
+    expect(steps[4].command).toContain('SCALE_LATENCY_DATABASE_URL=postgresql://ubi@127.0.0.1:5432/scale_570 bun');
+    expect(defaultSteps({ pages: 1, n: 1, syncN: 1 }).map(s => s.id)).toEqual(['setup', 'build', 'probe']);
+    expect(parsePins(undefined)).toEqual([]);
+    expect(() => parsePins(`549:${a},549:${b}`)).toThrow(/twice/);
+    expect(() => parsePins('549:v0.60.549.0')).toThrow(/40-hex/);
+    expect(() => parsePins(`549-b:${a}`)).toThrow(/lowercase letters and digits/);
+  });
+
   test('refused without --paid and --budget-run-id, before any client call', async () => {
     const statePath = join(tmp(), 'state.json');
     const { client, calls } = fakeClient({ statePath });
@@ -243,6 +261,23 @@ describe('Ubicloud lifecycle (J1) with a fake client', () => {
     expect(second.calls[0]).toBe('ssh ' + s.vms[0].name + ' true');
     expect(second.calls.some(c => c.startsWith('up '))).toBe(false);
     expect(report).toMatchObject({ status: 'complete', vm_ids: [s.vms[0].name] });
+  });
+
+  test('ubi-runner.sh gets only the variables it reads, never a provider key', async () => {
+    const dir = tmp();
+    const script = join(dir, 'fake-ubi-runner.sh');
+    writeFileSync(script, '#!/usr/bin/env bash\ncompgen -e | sort > "$(dirname "$0")/names"\n');
+    const dummies = { ANTHROPIC_API_KEY: 'dummy-anthropic', OPENAI_API_KEY: 'dummy-openai', UBICLOUD_API_KEY: 'dummy-ubicloud', UBI_SIZE: 'standard-2' };
+    const saved = Object.fromEntries(Object.keys(dummies).map(name => [name, process.env[name]]));
+    Object.assign(process.env, dummies);
+    try { await ubiRunnerClient(script, { owner: 'gbev55', ttlHours: 1 }).up('ubirun-gbev55-test', { size: 'standard-2', location: 'eu-central-h1' }); }
+    finally { for (const [name, value] of Object.entries(saved)) { if (value === undefined) delete process.env[name]; else process.env[name] = value; } }
+    const names = readFileSync(join(dir, 'names'), 'utf8').split('\n').filter(Boolean).filter(name => !['PWD', 'SHLVL', '_', 'OLDPWD'].includes(name));
+    expect(names).toEqual(expect.arrayContaining(['HOME', 'PATH', 'UBICLOUD_API_KEY', 'UBI_OWNER', 'UBI_SIZE', 'UBI_TTL_HOURS']));
+    expect(names).not.toContain('ANTHROPIC_API_KEY');
+    expect(names).not.toContain('OPENAI_API_KEY');
+    const allowed = ['PATH', 'HOME', 'TMPDIR', 'XDG_STATE_HOME', 'UBICLOUD_API_KEY', 'UBICLOUD_API_TOKEN', 'UBICLOUD_API_URL', 'GSTACK_CAPY_RECOVERY_DIR'];
+    expect(names.filter(name => !allowed.includes(name) && !name.startsWith('UBI_'))).toEqual([]);
   });
 });
 

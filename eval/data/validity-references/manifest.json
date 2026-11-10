@@ -14,7 +14,8 @@
   {
     "id": "live-recall-b3",
     "file": "live-recall-b3.json",
-    "status": "pending"
+    "sha256": "6aa31f14f495cfa171890b61fbe0fc8f773c033d62a9e8279f1797ee4271d187",
+    "status": "available"
   },
   {
     "id": "phase2-agent",

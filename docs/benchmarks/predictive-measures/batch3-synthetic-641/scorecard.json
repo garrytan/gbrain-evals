@@ -1,0 +1,7585 @@
+{
+  "schema": "live-recall-scorecard/v1",
+  "protocol": "batch3",
+  "run": {
+    "started_at": "2026-11-10T08:39:20.440Z",
+    "finished_at": "2026-11-10T08:42:11.106Z",
+    "runner_commit": "40235f3586f3dbbae751323b79e64c1b93376683",
+    "runner_dirty": false,
+    "gbrain_pin_version": "0.60.557.0",
+    "gbrain_pin_commit": "62637c96a5a5c2e9d55594f87a33d79c2f30b54f",
+    "gbrain_loaded_version": "0.60.641.0",
+    "gbrain_loaded_commit": "2560ffddb85244b82f2b325ee2ddc846f77c3cac",
+    "gbrain_overlay": true,
+    "schema_version": 297,
+    "engine": "pglite",
+    "barrier": "copy",
+    "connection": "in_process",
+    "search_mode": "tokenmax",
+    "reranker_enabled": true,
+    "reranker_model": "voyage:rerank-2.5",
+    "embedding_model": "voyage:voyage-4",
+    "embedding_column": "embedding",
+    "mode_expansion": false,
+    "control": true,
+    "transports": "voyage",
+    "pgvector_version": "0.8.1",
+    "source_pgvector": null,
+    "source_server_version_num": null,
+    "copy_server_version_num": null,
+    "restore_errors": null,
+    "synthetic": {
+      "digest": "c2dcf99f4775a8d74181dd8eca150fb00025e4ab42999dfa2966f787ef5b0596",
+      "questions_sha256": "3664863bc9916952ac987a225d4393013fed94c48e8de27a4dd78b0c9cd6f1f7",
+      "unembedded_chunk_share": 0,
+      "synopsis_vectors_off": false,
+      "keyword_candidate_bound": null,
+      "shell_page_share": 0,
+      "chunks": 174,
+      "unembedded_chunks": 0
+    },
+    "visibility_epoch": "post_gbra_398",
+    "freeze_gbrain_version": null,
+    "freeze_visibility_epoch": null
+  },
+  "custody": {
+    "readonly_verified_start": true,
+    "readonly_verified_end": true,
+    "guard_refusals": {
+      "analyze": 63,
+      "telemetry_write": 9
+    }
+  },
+  "questions": {
+    "loaded": 60,
+    "gold_missing": 0,
+    "by_type": {
+      "identifier": 0,
+      "error_string": 0,
+      "time_window": 0,
+      "cross_source": 0,
+      "topic": 0,
+      "freshness": 30,
+      "entity": 30
+    },
+    "gold_found_by": {
+      "page_first": 60,
+      "memory": 0,
+      "gbrain_search": 0,
+      "other_search": 0,
+      "unknown": 0
+    },
+    "paraphrase_shares_identifier_token": 0,
+    "freeze_sha_prefix": "3664863bc991"
+  },
+  "eligibility": {
+    "eligible_question_forms": 120,
+    "exclusions": {},
+    "invalid_arms": {},
+    "common_arms": [
+      "keyword",
+      "vector",
+      "hybrid_lexical",
+      "hybrid",
+      "configured"
+    ]
+  },
+  "arms": {
+    "keyword": {
+      "overall": {
+        "all": {
+          "n": 120,
+          "success_at": {
+            "k1": {
+              "hits": 48,
+              "n": 120,
+              "rate": 0.4,
+              "ci95": [
+                0.35,
+                0.45
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k5": {
+              "hits": 60,
+              "n": 120,
+              "rate": 0.5,
+              "ci95": [
+                0.5,
+                0.5
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k10": {
+              "hits": 60,
+              "n": 120,
+              "rate": 0.5,
+              "ci95": [
+                0.5,
+                0.5
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k20": {
+              "hits": 60,
+              "n": 120,
+              "rate": 0.5,
+              "ci95": [
+                0.5,
+                0.5
+              ],
+              "interval": "cluster_bootstrap"
+            }
+          },
+          "mrr": {
+            "mean": 0.4333,
+            "ci95": [
+              0.4,
+              0.4667
+            ],
+            "n": 120
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 0.775,
+          "harness_latency_ms": {
+            "p50": 4,
+            "p95": 8
+          },
+          "model_calls": {},
+          "degraded_stages": {}
+        },
+        "exact": {
+          "n": 60,
+          "success_at": {
+            "k1": {
+              "hits": 48,
+              "n": 60,
+              "rate": 0.8,
+              "ci95": [
+                0.6822,
+                0.8817
+              ],
+              "interval": "wilson"
+            },
+            "k5": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k10": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k20": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            }
+          },
+          "mrr": {
+            "mean": 0.8667,
+            "ci95": [
+              0.8,
+              0.9333
+            ],
+            "n": 60
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 1.4,
+          "harness_latency_ms": {
+            "p50": 3,
+            "p95": 9
+          },
+          "model_calls": {},
+          "degraded_stages": {}
+        },
+        "paraphrase": {
+          "n": 60,
+          "success_at": {
+            "k1": {
+              "hits": 0,
+              "n": 60,
+              "rate": 0,
+              "ci95": [
+                0,
+                0.0602
+              ],
+              "interval": "wilson"
+            },
+            "k5": {
+              "hits": 0,
+              "n": 60,
+              "rate": 0,
+              "ci95": [
+                0,
+                0.0602
+              ],
+              "interval": "wilson"
+            },
+            "k10": {
+              "hits": 0,
+              "n": 60,
+              "rate": 0,
+              "ci95": [
+                0,
+                0.0602
+              ],
+              "interval": "wilson"
+            },
+            "k20": {
+              "hits": 0,
+              "n": 60,
+              "rate": 0,
+              "ci95": [
+                0,
+                0.0602
+              ],
+              "interval": "wilson"
+            }
+          },
+          "mrr": {
+            "mean": 0,
+            "ci95": [
+              0,
+              0
+            ],
+            "n": 60
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 0.15,
+          "harness_latency_ms": {
+            "p50": 4,
+            "p95": 7
+          },
+          "model_calls": {},
+          "degraded_stages": {}
+        }
+      },
+      "by_type": {
+        "identifier": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "error_string": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "time_window": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "cross_source": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "topic": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "freshness": {
+          "all": {
+            "n": 60,
+            "success_at": {
+              "k1": {
+                "hits": 18,
+                "n": 60,
+                "rate": 0.3,
+                "ci95": [
+                  0.2167,
+                  0.3833
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 60,
+                "rate": 0.5,
+                "ci95": [
+                  0.5,
+                  0.5
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 60,
+                "rate": 0.5,
+                "ci95": [
+                  0.5,
+                  0.5
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 60,
+                "rate": 0.5,
+                "ci95": [
+                  0.5,
+                  0.5
+                ],
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": 0.3667,
+              "ci95": [
+                0.3111,
+                0.4222
+              ],
+              "n": 60
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 0.9,
+            "harness_latency_ms": {
+              "p50": 4,
+              "p95": 9.05
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 18,
+                "n": 30,
+                "rate": 0.6,
+                "ci95": [
+                  0.4232,
+                  0.7541
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.7333,
+              "ci95": [
+                0.6222,
+                0.8444
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 1.8,
+            "harness_latency_ms": {
+              "p50": 3,
+              "p95": 9.55
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 30,
+                "rate": 0,
+                "ci95": [
+                  0,
+                  0.1135
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 30,
+                "rate": 0,
+                "ci95": [
+                  0,
+                  0.1135
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 30,
+                "rate": 0,
+                "ci95": [
+                  0,
+                  0.1135
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 30,
+                "rate": 0,
+                "ci95": [
+                  0,
+                  0.1135
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0,
+              "ci95": [
+                0,
+                0
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 0,
+            "harness_latency_ms": {
+              "p50": 4,
+              "p95": 7.55
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "entity": {
+          "all": {
+            "n": 60,
+            "success_at": {
+              "k1": {
+                "hits": 30,
+                "n": 60,
+                "rate": 0.5,
+                "ci95": [
+                  0.5,
+                  0.5
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 60,
+                "rate": 0.5,
+                "ci95": [
+                  0.5,
+                  0.5
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 60,
+                "rate": 0.5,
+                "ci95": [
+                  0.5,
+                  0.5
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 60,
+                "rate": 0.5,
+                "ci95": [
+                  0.5,
+                  0.5
+                ],
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": 0.5,
+              "ci95": [
+                0.5,
+                0.5
+              ],
+              "n": 60
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 0.65,
+            "harness_latency_ms": {
+              "p50": 4,
+              "p95": 6.05
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 1,
+            "harness_latency_ms": {
+              "p50": 3,
+              "p95": 6.2
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 30,
+                "rate": 0,
+                "ci95": [
+                  0,
+                  0.1135
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 30,
+                "rate": 0,
+                "ci95": [
+                  0,
+                  0.1135
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 30,
+                "rate": 0,
+                "ci95": [
+                  0,
+                  0.1135
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 30,
+                "rate": 0,
+                "ci95": [
+                  0,
+                  0.1135
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0,
+              "ci95": [
+                0,
+                0
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 0.3,
+            "harness_latency_ms": {
+              "p50": 4,
+              "p95": 6
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        }
+      },
+      "stale_first": {
+        "all": {
+          "hits": 12,
+          "n": 60,
+          "rate": 0.2,
+          "ci95": [
+            0.1167,
+            0.2833
+          ],
+          "interval": "cluster_bootstrap"
+        },
+        "exact": {
+          "hits": 12,
+          "n": 30,
+          "rate": 0.4,
+          "ci95": [
+            0.2459,
+            0.5768
+          ],
+          "interval": "wilson"
+        },
+        "paraphrase": {
+          "hits": 0,
+          "n": 30,
+          "rate": 0,
+          "ci95": [
+            0,
+            0.1135
+          ],
+          "interval": "wilson"
+        }
+      }
+    },
+    "vector": {
+      "overall": {
+        "all": {
+          "n": 120,
+          "success_at": {
+            "k1": {
+              "hits": 88,
+              "n": 120,
+              "rate": 0.7333,
+              "ci95": [
+                0.625,
+                0.8333
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k5": {
+              "hits": 120,
+              "n": 120,
+              "rate": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k10": {
+              "hits": 120,
+              "n": 120,
+              "rate": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k20": {
+              "hits": 120,
+              "n": 120,
+              "rate": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "interval": "cluster_bootstrap"
+            }
+          },
+          "mrr": {
+            "mean": 0.8482,
+            "ci95": [
+              0.7844,
+              0.9056
+            ],
+            "n": 120
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 20,
+          "harness_latency_ms": {
+            "p50": 24,
+            "p95": 32
+          },
+          "model_calls": {},
+          "degraded_stages": {}
+        },
+        "exact": {
+          "n": 60,
+          "success_at": {
+            "k1": {
+              "hits": 42,
+              "n": 60,
+              "rate": 0.7,
+              "ci95": [
+                0.5749,
+                0.801
+              ],
+              "interval": "wilson"
+            },
+            "k5": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k10": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k20": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            }
+          },
+          "mrr": {
+            "mean": 0.8417,
+            "ci95": [
+              0.7778,
+              0.9
+            ],
+            "n": 60
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 20,
+          "harness_latency_ms": {
+            "p50": 24,
+            "p95": 32.05
+          },
+          "model_calls": {},
+          "degraded_stages": {}
+        },
+        "paraphrase": {
+          "n": 60,
+          "success_at": {
+            "k1": {
+              "hits": 46,
+              "n": 60,
+              "rate": 0.7667,
+              "ci95": [
+                0.6456,
+                0.8556
+              ],
+              "interval": "wilson"
+            },
+            "k5": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k10": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k20": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            }
+          },
+          "mrr": {
+            "mean": 0.8547,
+            "ci95": [
+              0.7836,
+              0.9194
+            ],
+            "n": 60
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 20,
+          "harness_latency_ms": {
+            "p50": 24,
+            "p95": 30.1
+          },
+          "model_calls": {},
+          "degraded_stages": {}
+        }
+      },
+      "by_type": {
+        "identifier": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "error_string": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "time_window": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "cross_source": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "topic": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "freshness": {
+          "all": {
+            "n": 60,
+            "success_at": {
+              "k1": {
+                "hits": 37,
+                "n": 60,
+                "rate": 0.6167,
+                "ci95": [
+                  0.4667,
+                  0.7667
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": 0.7806,
+              "ci95": [
+                0.6889,
+                0.8667
+              ],
+              "n": 60
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 24,
+              "p95": 33
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 16,
+                "n": 30,
+                "rate": 0.5333,
+                "ci95": [
+                  0.3614,
+                  0.6977
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.75,
+              "ci95": [
+                0.65,
+                0.8444
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 24,
+              "p95": 33
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 21,
+                "n": 30,
+                "rate": 0.7,
+                "ci95": [
+                  0.5212,
+                  0.8334
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.8111,
+              "ci95": [
+                0.7,
+                0.9111
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 23.5,
+              "p95": 31.1
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "entity": {
+          "all": {
+            "n": 60,
+            "success_at": {
+              "k1": {
+                "hits": 51,
+                "n": 60,
+                "rate": 0.85,
+                "ci95": [
+                  0.7167,
+                  0.9667
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": 0.9158,
+              "ci95": [
+                0.8408,
+                0.9783
+              ],
+              "n": 60
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 24,
+              "p95": 31.05
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 26,
+                "n": 30,
+                "rate": 0.8667,
+                "ci95": [
+                  0.7032,
+                  0.9469
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.9333,
+              "ci95": [
+                0.8667,
+                0.9833
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 24,
+              "p95": 31.55
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 25,
+                "n": 30,
+                "rate": 0.8333,
+                "ci95": [
+                  0.6644,
+                  0.9266
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.8983,
+              "ci95": [
+                0.81,
+                0.9733
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 24.5,
+              "p95": 30
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        }
+      },
+      "stale_first": {
+        "all": {
+          "hits": 18,
+          "n": 60,
+          "rate": 0.3,
+          "ci95": [
+            0.1667,
+            0.4333
+          ],
+          "interval": "cluster_bootstrap"
+        },
+        "exact": {
+          "hits": 10,
+          "n": 30,
+          "rate": 0.3333,
+          "ci95": [
+            0.1923,
+            0.5122
+          ],
+          "interval": "wilson"
+        },
+        "paraphrase": {
+          "hits": 8,
+          "n": 30,
+          "rate": 0.2667,
+          "ci95": [
+            0.1418,
+            0.4445
+          ],
+          "interval": "wilson"
+        }
+      }
+    },
+    "hybrid_lexical": {
+      "overall": {
+        "all": {
+          "n": 120,
+          "success_at": {
+            "k1": {
+              "hits": 73,
+              "n": 120,
+              "rate": 0.6083,
+              "ci95": [
+                0.5083,
+                0.7
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k5": {
+              "hits": 115,
+              "n": 120,
+              "rate": 0.9583,
+              "ci95": [
+                0.9167,
+                0.9917
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k10": {
+              "hits": 115,
+              "n": 120,
+              "rate": 0.9583,
+              "ci95": [
+                0.9167,
+                0.9917
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k20": {
+              "hits": 115,
+              "n": 120,
+              "rate": 0.9583,
+              "ci95": [
+                0.9167,
+                0.9917
+              ],
+              "interval": "cluster_bootstrap"
+            }
+          },
+          "mrr": {
+            "mean": 0.7225,
+            "ci95": [
+              0.6514,
+              0.7917
+            ],
+            "n": 120
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 11.6417,
+          "harness_latency_ms": {
+            "p50": 21,
+            "p95": 39
+          },
+          "model_calls": {},
+          "degraded_stages": {}
+        },
+        "exact": {
+          "n": 60,
+          "success_at": {
+            "k1": {
+              "hits": 48,
+              "n": 60,
+              "rate": 0.8,
+              "ci95": [
+                0.6822,
+                0.8817
+              ],
+              "interval": "wilson"
+            },
+            "k5": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k10": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k20": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            }
+          },
+          "mrr": {
+            "mean": 0.8667,
+            "ci95": [
+              0.8,
+              0.9333
+            ],
+            "n": 60
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 7.4667,
+          "harness_latency_ms": {
+            "p50": 15,
+            "p95": 21.05
+          },
+          "model_calls": {},
+          "degraded_stages": {}
+        },
+        "paraphrase": {
+          "n": 60,
+          "success_at": {
+            "k1": {
+              "hits": 25,
+              "n": 60,
+              "rate": 0.4167,
+              "ci95": [
+                0.3006,
+                0.5427
+              ],
+              "interval": "wilson"
+            },
+            "k5": {
+              "hits": 55,
+              "n": 60,
+              "rate": 0.9167,
+              "ci95": [
+                0.8193,
+                0.9639
+              ],
+              "interval": "wilson"
+            },
+            "k10": {
+              "hits": 55,
+              "n": 60,
+              "rate": 0.9167,
+              "ci95": [
+                0.8193,
+                0.9639
+              ],
+              "interval": "wilson"
+            },
+            "k20": {
+              "hits": 55,
+              "n": 60,
+              "rate": 0.9167,
+              "ci95": [
+                0.8193,
+                0.9639
+              ],
+              "interval": "wilson"
+            }
+          },
+          "mrr": {
+            "mean": 0.5783,
+            "ci95": [
+              0.4844,
+              0.6736
+            ],
+            "n": 60
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 15.8167,
+          "harness_latency_ms": {
+            "p50": 29,
+            "p95": 42.05
+          },
+          "model_calls": {},
+          "degraded_stages": {}
+        }
+      },
+      "by_type": {
+        "identifier": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "error_string": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "time_window": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "cross_source": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "topic": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "freshness": {
+          "all": {
+            "n": 60,
+            "success_at": {
+              "k1": {
+                "hits": 26,
+                "n": 60,
+                "rate": 0.4333,
+                "ci95": [
+                  0.2833,
+                  0.5833
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 58,
+                "n": 60,
+                "rate": 0.9667,
+                "ci95": [
+                  0.9167,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 58,
+                "n": 60,
+                "rate": 0.9667,
+                "ci95": [
+                  0.9167,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 58,
+                "n": 60,
+                "rate": 0.9667,
+                "ci95": [
+                  0.9167,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": 0.5994,
+              "ci95": [
+                0.4908,
+                0.7067
+              ],
+              "n": 60
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 10.3833,
+            "harness_latency_ms": {
+              "p50": 19.5,
+              "p95": 39.1
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 18,
+                "n": 30,
+                "rate": 0.6,
+                "ci95": [
+                  0.4232,
+                  0.7541
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.7333,
+              "ci95": [
+                0.6222,
+                0.8444
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 5.4,
+            "harness_latency_ms": {
+              "p50": 15,
+              "p95": 19.55
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 8,
+                "n": 30,
+                "rate": 0.2667,
+                "ci95": [
+                  0.1418,
+                  0.4445
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 28,
+                "n": 30,
+                "rate": 0.9333,
+                "ci95": [
+                  0.7868,
+                  0.9815
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 28,
+                "n": 30,
+                "rate": 0.9333,
+                "ci95": [
+                  0.7868,
+                  0.9815
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 28,
+                "n": 30,
+                "rate": 0.9333,
+                "ci95": [
+                  0.7868,
+                  0.9815
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.4656,
+              "ci95": [
+                0.3456,
+                0.59
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 15.3667,
+            "harness_latency_ms": {
+              "p50": 29.5,
+              "p95": 41.55
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "entity": {
+          "all": {
+            "n": 60,
+            "success_at": {
+              "k1": {
+                "hits": 47,
+                "n": 60,
+                "rate": 0.7833,
+                "ci95": [
+                  0.7,
+                  0.8667
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 57,
+                "n": 60,
+                "rate": 0.95,
+                "ci95": [
+                  0.9,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 57,
+                "n": 60,
+                "rate": 0.95,
+                "ci95": [
+                  0.9,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 57,
+                "n": 60,
+                "rate": 0.95,
+                "ci95": [
+                  0.9,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": 0.8456,
+              "ci95": [
+                0.7775,
+                0.9122
+              ],
+              "n": 60
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 12.9,
+            "harness_latency_ms": {
+              "p50": 21.5,
+              "p95": 37
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 9.5333,
+            "harness_latency_ms": {
+              "p50": 14.5,
+              "p95": 21.55
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 17,
+                "n": 30,
+                "rate": 0.5667,
+                "ci95": [
+                  0.392,
+                  0.7262
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 27,
+                "n": 30,
+                "rate": 0.9,
+                "ci95": [
+                  0.7438,
+                  0.9654
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 27,
+                "n": 30,
+                "rate": 0.9,
+                "ci95": [
+                  0.7438,
+                  0.9654
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 27,
+                "n": 30,
+                "rate": 0.9,
+                "ci95": [
+                  0.7438,
+                  0.9654
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.6911,
+              "ci95": [
+                0.555,
+                0.8244
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 16.2667,
+            "harness_latency_ms": {
+              "p50": 29,
+              "p95": 40.3
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        }
+      },
+      "stale_first": {
+        "all": {
+          "hits": 30,
+          "n": 60,
+          "rate": 0.5,
+          "ci95": [
+            0.3333,
+            0.6667
+          ],
+          "interval": "cluster_bootstrap"
+        },
+        "exact": {
+          "hits": 12,
+          "n": 30,
+          "rate": 0.4,
+          "ci95": [
+            0.2459,
+            0.5768
+          ],
+          "interval": "wilson"
+        },
+        "paraphrase": {
+          "hits": 18,
+          "n": 30,
+          "rate": 0.6,
+          "ci95": [
+            0.4232,
+            0.7541
+          ],
+          "interval": "wilson"
+        }
+      }
+    },
+    "hybrid": {
+      "overall": {
+        "all": {
+          "n": 120,
+          "success_at": {
+            "k1": {
+              "hits": 94,
+              "n": 120,
+              "rate": 0.7833,
+              "ci95": [
+                0.6833,
+                0.875
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k5": {
+              "hits": 119,
+              "n": 120,
+              "rate": 0.9917,
+              "ci95": [
+                0.975,
+                1
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k10": {
+              "hits": 120,
+              "n": 120,
+              "rate": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k20": {
+              "hits": 120,
+              "n": 120,
+              "rate": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "interval": "cluster_bootstrap"
+            }
+          },
+          "mrr": {
+            "mean": 0.8671,
+            "ci95": [
+              0.8065,
+              0.9217
+            ],
+            "n": 120
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 20,
+          "harness_latency_ms": {
+            "p50": 487,
+            "p95": 571.05
+          },
+          "model_calls": {
+            "embedding": 120
+          },
+          "degraded_stages": {}
+        },
+        "exact": {
+          "n": 60,
+          "success_at": {
+            "k1": {
+              "hits": 49,
+              "n": 60,
+              "rate": 0.8167,
+              "ci95": [
+                0.7008,
+                0.8944
+              ],
+              "interval": "wilson"
+            },
+            "k5": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k10": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k20": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            }
+          },
+          "mrr": {
+            "mean": 0.8944,
+            "ci95": [
+              0.8333,
+              0.9472
+            ],
+            "n": 60
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 20,
+          "harness_latency_ms": {
+            "p50": 490.5,
+            "p95": 573
+          },
+          "model_calls": {
+            "embedding": 60
+          },
+          "degraded_stages": {}
+        },
+        "paraphrase": {
+          "n": 60,
+          "success_at": {
+            "k1": {
+              "hits": 45,
+              "n": 60,
+              "rate": 0.75,
+              "ci95": [
+                0.6277,
+                0.8422
+              ],
+              "interval": "wilson"
+            },
+            "k5": {
+              "hits": 59,
+              "n": 60,
+              "rate": 0.9833,
+              "ci95": [
+                0.9114,
+                0.9971
+              ],
+              "interval": "wilson"
+            },
+            "k10": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k20": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            }
+          },
+          "mrr": {
+            "mean": 0.8397,
+            "ci95": [
+              0.7647,
+              0.9083
+            ],
+            "n": 60
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 20,
+          "harness_latency_ms": {
+            "p50": 487,
+            "p95": 563.15
+          },
+          "model_calls": {
+            "embedding": 60
+          },
+          "degraded_stages": {}
+        }
+      },
+      "by_type": {
+        "identifier": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "error_string": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "time_window": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "cross_source": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "topic": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "freshness": {
+          "all": {
+            "n": 60,
+            "success_at": {
+              "k1": {
+                "hits": 40,
+                "n": 60,
+                "rate": 0.6667,
+                "ci95": [
+                  0.5,
+                  0.8167
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": 0.8,
+              "ci95": [
+                0.6972,
+                0.8944
+              ],
+              "n": 60
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 481,
+              "p95": 573.1
+            },
+            "model_calls": {
+              "embedding": 60
+            },
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 19,
+                "n": 30,
+                "rate": 0.6333,
+                "ci95": [
+                  0.4551,
+                  0.7813
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.7889,
+              "ci95": [
+                0.6833,
+                0.8833
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 476,
+              "p95": 574.1
+            },
+            "model_calls": {
+              "embedding": 30
+            },
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 21,
+                "n": 30,
+                "rate": 0.7,
+                "ci95": [
+                  0.5212,
+                  0.8334
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.8111,
+              "ci95": [
+                0.7,
+                0.9111
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 497,
+              "p95": 569.3
+            },
+            "model_calls": {
+              "embedding": 30
+            },
+            "degraded_stages": {}
+          }
+        },
+        "entity": {
+          "all": {
+            "n": 60,
+            "success_at": {
+              "k1": {
+                "hits": 54,
+                "n": 60,
+                "rate": 0.9,
+                "ci95": [
+                  0.8333,
+                  0.9667
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 59,
+                "n": 60,
+                "rate": 0.9833,
+                "ci95": [
+                  0.95,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": 0.9342,
+              "ci95": [
+                0.8833,
+                0.9783
+              ],
+              "n": 60
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 493.5,
+              "p95": 565.15
+            },
+            "model_calls": {
+              "embedding": 60
+            },
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 509,
+              "p95": 569.65
+            },
+            "model_calls": {
+              "embedding": 30
+            },
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 24,
+                "n": 30,
+                "rate": 0.8,
+                "ci95": [
+                  0.6269,
+                  0.9049
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 29,
+                "n": 30,
+                "rate": 0.9667,
+                "ci95": [
+                  0.8333,
+                  0.9941
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.8683,
+              "ci95": [
+                0.7667,
+                0.9567
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 477.5,
+              "p95": 552.9
+            },
+            "model_calls": {
+              "embedding": 30
+            },
+            "degraded_stages": {}
+          }
+        }
+      },
+      "stale_first": {
+        "all": {
+          "hits": 17,
+          "n": 60,
+          "rate": 0.2833,
+          "ci95": [
+            0.1333,
+            0.45
+          ],
+          "interval": "cluster_bootstrap"
+        },
+        "exact": {
+          "hits": 9,
+          "n": 30,
+          "rate": 0.3,
+          "ci95": [
+            0.1666,
+            0.4788
+          ],
+          "interval": "wilson"
+        },
+        "paraphrase": {
+          "hits": 8,
+          "n": 30,
+          "rate": 0.2667,
+          "ci95": [
+            0.1418,
+            0.4445
+          ],
+          "interval": "wilson"
+        }
+      }
+    },
+    "configured": {
+      "overall": {
+        "all": {
+          "n": 120,
+          "success_at": {
+            "k1": {
+              "hits": 78,
+              "n": 120,
+              "rate": 0.65,
+              "ci95": [
+                0.5333,
+                0.75
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k5": {
+              "hits": 120,
+              "n": 120,
+              "rate": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k10": {
+              "hits": 120,
+              "n": 120,
+              "rate": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "interval": "cluster_bootstrap"
+            },
+            "k20": {
+              "hits": 120,
+              "n": 120,
+              "rate": 1,
+              "ci95": [
+                1,
+                1
+              ],
+              "interval": "cluster_bootstrap"
+            }
+          },
+          "mrr": {
+            "mean": 0.809,
+            "ci95": [
+              0.7479,
+              0.8653
+            ],
+            "n": 120
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 20,
+          "harness_latency_ms": {
+            "p50": 608.5,
+            "p95": 687.5
+          },
+          "model_calls": {
+            "embedding": 120,
+            "rerank": 120
+          },
+          "degraded_stages": {}
+        },
+        "exact": {
+          "n": 60,
+          "success_at": {
+            "k1": {
+              "hits": 40,
+              "n": 60,
+              "rate": 0.6667,
+              "ci95": [
+                0.5406,
+                0.7727
+              ],
+              "interval": "wilson"
+            },
+            "k5": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k10": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k20": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            }
+          },
+          "mrr": {
+            "mean": 0.8194,
+            "ci95": [
+              0.7528,
+              0.8833
+            ],
+            "n": 60
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 20,
+          "harness_latency_ms": {
+            "p50": 605.5,
+            "p95": 687.8
+          },
+          "model_calls": {
+            "embedding": 60,
+            "rerank": 60
+          },
+          "degraded_stages": {}
+        },
+        "paraphrase": {
+          "n": 60,
+          "success_at": {
+            "k1": {
+              "hits": 38,
+              "n": 60,
+              "rate": 0.6333,
+              "ci95": [
+                0.5068,
+                0.7438
+              ],
+              "interval": "wilson"
+            },
+            "k5": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k10": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            },
+            "k20": {
+              "hits": 60,
+              "n": 60,
+              "rate": 1,
+              "ci95": [
+                0.9398,
+                1
+              ],
+              "interval": "wilson"
+            }
+          },
+          "mrr": {
+            "mean": 0.7986,
+            "ci95": [
+              0.7278,
+              0.8639
+            ],
+            "n": 60
+          },
+          "recall_all_at": null,
+          "chunk_success_at": null,
+          "mean_pages_returned": 20,
+          "harness_latency_ms": {
+            "p50": 615,
+            "p95": 674.2
+          },
+          "model_calls": {
+            "embedding": 60,
+            "rerank": 60
+          },
+          "degraded_stages": {}
+        }
+      },
+      "by_type": {
+        "identifier": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "error_string": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "time_window": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "cross_source": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "topic": {
+          "all": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 0,
+            "success_at": {
+              "k1": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 0,
+                "n": 0,
+                "rate": null,
+                "ci95": null,
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": null,
+              "ci95": null,
+              "n": 0
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": null,
+            "harness_latency_ms": {
+              "p50": null,
+              "p95": null
+            },
+            "model_calls": {},
+            "degraded_stages": {}
+          }
+        },
+        "freshness": {
+          "all": {
+            "n": 60,
+            "success_at": {
+              "k1": {
+                "hits": 44,
+                "n": 60,
+                "rate": 0.7333,
+                "ci95": [
+                  0.5833,
+                  0.8667
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": 0.8444,
+              "ci95": [
+                0.7556,
+                0.925
+              ],
+              "n": 60
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 610,
+              "p95": 703.8
+            },
+            "model_calls": {
+              "embedding": 60,
+              "rerank": 60
+            },
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 20,
+                "n": 30,
+                "rate": 0.6667,
+                "ci95": [
+                  0.4878,
+                  0.8077
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.8056,
+              "ci95": [
+                0.7,
+                0.9
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 618,
+              "p95": 711.8
+            },
+            "model_calls": {
+              "embedding": 30,
+              "rerank": 30
+            },
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 24,
+                "n": 30,
+                "rate": 0.8,
+                "ci95": [
+                  0.6269,
+                  0.9049
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.8833,
+              "ci95": [
+                0.7944,
+                0.9611
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 607,
+              "p95": 665.35
+            },
+            "model_calls": {
+              "embedding": 30,
+              "rerank": 30
+            },
+            "degraded_stages": {}
+          }
+        },
+        "entity": {
+          "all": {
+            "n": 60,
+            "success_at": {
+              "k1": {
+                "hits": 34,
+                "n": 60,
+                "rate": 0.5667,
+                "ci95": [
+                  0.4,
+                  0.7167
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k5": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k10": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              },
+              "k20": {
+                "hits": 60,
+                "n": 60,
+                "rate": 1,
+                "ci95": [
+                  1,
+                  1
+                ],
+                "interval": "cluster_bootstrap"
+              }
+            },
+            "mrr": {
+              "mean": 0.7736,
+              "ci95": [
+                0.6917,
+                0.8528
+              ],
+              "n": 60
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 607.5,
+              "p95": 669
+            },
+            "model_calls": {
+              "embedding": 60,
+              "rerank": 60
+            },
+            "degraded_stages": {}
+          },
+          "exact": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 20,
+                "n": 30,
+                "rate": 0.6667,
+                "ci95": [
+                  0.4878,
+                  0.8077
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.8333,
+              "ci95": [
+                0.75,
+                0.9167
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 602,
+              "p95": 662.75
+            },
+            "model_calls": {
+              "embedding": 30,
+              "rerank": 30
+            },
+            "degraded_stages": {}
+          },
+          "paraphrase": {
+            "n": 30,
+            "success_at": {
+              "k1": {
+                "hits": 14,
+                "n": 30,
+                "rate": 0.4667,
+                "ci95": [
+                  0.3023,
+                  0.6386
+                ],
+                "interval": "wilson"
+              },
+              "k5": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k10": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              },
+              "k20": {
+                "hits": 30,
+                "n": 30,
+                "rate": 1,
+                "ci95": [
+                  0.8865,
+                  1
+                ],
+                "interval": "wilson"
+              }
+            },
+            "mrr": {
+              "mean": 0.7139,
+              "ci95": [
+                0.6139,
+                0.8111
+              ],
+              "n": 30
+            },
+            "recall_all_at": null,
+            "chunk_success_at": null,
+            "mean_pages_returned": 20,
+            "harness_latency_ms": {
+              "p50": 624.5,
+              "p95": 684.4
+            },
+            "model_calls": {
+              "embedding": 30,
+              "rerank": 30
+            },
+            "degraded_stages": {}
+          }
+        }
+      },
+      "stale_first": {
+        "all": {
+          "hits": 15,
+          "n": 60,
+          "rate": 0.25,
+          "ci95": [
+            0.1167,
+            0.4
+          ],
+          "interval": "cluster_bootstrap"
+        },
+        "exact": {
+          "hits": 10,
+          "n": 30,
+          "rate": 0.3333,
+          "ci95": [
+            0.1923,
+            0.5122
+          ],
+          "interval": "wilson"
+        },
+        "paraphrase": {
+          "hits": 5,
+          "n": 30,
+          "rate": 0.1667,
+          "ci95": [
+            0.0734,
+            0.3356
+          ],
+          "interval": "wilson"
+        }
+      }
+    },
+    "configured_window": {
+      "invalid": "no_eligible_queries"
+    }
+  },
+  "comparisons": [
+    {
+      "id": "p1_configured_vs_hybrid_lexical_freshness",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.9667,
+      "mean_b": 1,
+      "delta": 0.0333,
+      "ci95": [
+        0,
+        0.0833
+      ],
+      "p_two_sided": 0.4996,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0649,
+      "a": "hybrid_lexical",
+      "b": "configured",
+      "form": "all",
+      "type": "freshness",
+      "primary": "P1",
+      "p_holm": 0.4996
+    },
+    {
+      "id": "p1_configured_vs_hybrid_lexical_freshness",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.5994,
+      "mean_b": 0.8444,
+      "delta": 0.245,
+      "ci95": [
+        0.1736,
+        0.3231
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.1091,
+      "a": "hybrid_lexical",
+      "b": "configured",
+      "form": "all",
+      "type": "freshness",
+      "primary": "P1"
+    },
+    {
+      "id": "p2_configured_vs_hybrid_lexical_entity",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.95,
+      "mean_b": 1,
+      "delta": 0.05,
+      "ci95": [
+        0,
+        0.1
+      ],
+      "p_two_sided": 0.2466,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.078,
+      "a": "hybrid_lexical",
+      "b": "configured",
+      "form": "all",
+      "type": "entity",
+      "primary": "P2",
+      "p_holm": 0.4932
+    },
+    {
+      "id": "p2_configured_vs_hybrid_lexical_entity",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.8456,
+      "mean_b": 0.7736,
+      "delta": -0.0719,
+      "ci95": [
+        -0.1769,
+        0.0336
+      ],
+      "p_two_sided": 0.2038,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.1545,
+      "a": "hybrid_lexical",
+      "b": "configured",
+      "form": "all",
+      "type": "entity",
+      "primary": "P2"
+    },
+    {
+      "id": "hybrid_vs_hybrid_lexical_freshness",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.9667,
+      "mean_b": 1,
+      "delta": 0.0333,
+      "ci95": [
+        0,
+        0.0833
+      ],
+      "p_two_sided": 0.4996,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0649,
+      "a": "hybrid_lexical",
+      "b": "hybrid",
+      "form": "all",
+      "type": "freshness",
+      "primary": null
+    },
+    {
+      "id": "hybrid_vs_hybrid_lexical_freshness",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.5994,
+      "mean_b": 0.8,
+      "delta": 0.2006,
+      "ci95": [
+        0.1342,
+        0.2728
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.1013,
+      "a": "hybrid_lexical",
+      "b": "hybrid",
+      "form": "all",
+      "type": "freshness",
+      "primary": null
+    },
+    {
+      "id": "hybrid_vs_hybrid_lexical_entity",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.95,
+      "mean_b": 0.9833,
+      "delta": 0.0333,
+      "ci95": [
+        -0.0333,
+        0.1
+      ],
+      "p_two_sided": 0.6237,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0934,
+      "a": "hybrid_lexical",
+      "b": "hybrid",
+      "form": "all",
+      "type": "entity",
+      "primary": null
+    },
+    {
+      "id": "hybrid_vs_hybrid_lexical_entity",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.8456,
+      "mean_b": 0.9342,
+      "delta": 0.0886,
+      "ci95": [
+        0.0392,
+        0.1431
+      ],
+      "p_two_sided": 0.0021,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0746,
+      "a": "hybrid_lexical",
+      "b": "hybrid",
+      "form": "all",
+      "type": "entity",
+      "primary": null
+    },
+    {
+      "id": "configured_vs_keyword_freshness",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.5,
+      "mean_b": 1,
+      "delta": 0.5,
+      "ci95": [
+        0.5,
+        0.5
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": null,
+      "a": "keyword",
+      "b": "configured",
+      "form": "all",
+      "type": "freshness",
+      "primary": null
+    },
+    {
+      "id": "configured_vs_keyword_freshness",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.3667,
+      "mean_b": 0.8444,
+      "delta": 0.4778,
+      "ci95": [
+        0.4278,
+        0.5306
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0742,
+      "a": "keyword",
+      "b": "configured",
+      "form": "all",
+      "type": "freshness",
+      "primary": null
+    },
+    {
+      "id": "configured_vs_keyword_entity",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.5,
+      "mean_b": 1,
+      "delta": 0.5,
+      "ci95": [
+        0.5,
+        0.5
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": null,
+      "a": "keyword",
+      "b": "configured",
+      "form": "all",
+      "type": "entity",
+      "primary": null
+    },
+    {
+      "id": "configured_vs_keyword_entity",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 30,
+      "mean_a": 0.5,
+      "mean_b": 0.7736,
+      "delta": 0.2736,
+      "ci95": [
+        0.1917,
+        0.3528
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.1168,
+      "a": "keyword",
+      "b": "configured",
+      "form": "all",
+      "type": "entity",
+      "primary": null
+    },
+    {
+      "id": "batch2_p1_hybrid_vs_hybrid_lexical_paraphrase",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0.9167,
+      "mean_b": 0.9833,
+      "delta": 0.0667,
+      "ci95": [
+        0,
+        0.15
+      ],
+      "p_two_sided": 0.2198,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": {
+        "wins": 5,
+        "losses": 1,
+        "discordant": 6,
+        "p_two_sided": 0.2188
+      },
+      "mde": 0.1127,
+      "a": "hybrid_lexical",
+      "b": "hybrid",
+      "form": "paraphrase",
+      "primary": null
+    },
+    {
+      "id": "batch2_p1_hybrid_vs_hybrid_lexical_paraphrase",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0.5783,
+      "mean_b": 0.8397,
+      "delta": 0.2614,
+      "ci95": [
+        0.1808,
+        0.3458
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.1173,
+      "a": "hybrid_lexical",
+      "b": "hybrid",
+      "form": "paraphrase",
+      "primary": null
+    },
+    {
+      "id": "hybrid_lexical_vs_keyword",
+      "metric": "success_at_5",
+      "n_pairs": 120,
+      "n_clusters": 60,
+      "mean_a": 0.5,
+      "mean_b": 0.9583,
+      "delta": 0.4583,
+      "ci95": [
+        0.4167,
+        0.4917
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0504,
+      "a": "keyword",
+      "b": "hybrid_lexical",
+      "form": "all",
+      "primary": null
+    },
+    {
+      "id": "hybrid_lexical_vs_keyword",
+      "metric": "mrr",
+      "n_pairs": 120,
+      "n_clusters": 60,
+      "mean_a": 0.4333,
+      "mean_b": 0.7225,
+      "delta": 0.2892,
+      "ci95": [
+        0.2422,
+        0.3368
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.069,
+      "a": "keyword",
+      "b": "hybrid_lexical",
+      "form": "all",
+      "primary": null
+    },
+    {
+      "id": "hybrid_vs_keyword",
+      "metric": "success_at_5",
+      "n_pairs": 120,
+      "n_clusters": 60,
+      "mean_a": 0.5,
+      "mean_b": 0.9917,
+      "delta": 0.4917,
+      "ci95": [
+        0.475,
+        0.5
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0233,
+      "a": "keyword",
+      "b": "hybrid",
+      "form": "all",
+      "primary": null
+    },
+    {
+      "id": "hybrid_vs_keyword",
+      "metric": "mrr",
+      "n_pairs": 120,
+      "n_clusters": 60,
+      "mean_a": 0.4333,
+      "mean_b": 0.8671,
+      "delta": 0.4338,
+      "ci95": [
+        0.3954,
+        0.4697
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0534,
+      "a": "keyword",
+      "b": "hybrid",
+      "form": "all",
+      "primary": null
+    },
+    {
+      "id": "configured_vs_keyword_paraphrase",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0,
+      "mean_b": 1,
+      "delta": 1,
+      "ci95": [
+        1,
+        1
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": {
+        "wins": 60,
+        "losses": 0,
+        "discordant": 60,
+        "p_two_sided": 0
+      },
+      "mde": null,
+      "a": "keyword",
+      "b": "configured",
+      "form": "paraphrase",
+      "primary": null
+    },
+    {
+      "id": "configured_vs_keyword_paraphrase",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0,
+      "mean_b": 0.7986,
+      "delta": 0.7986,
+      "ci95": [
+        0.7278,
+        0.8639
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0982,
+      "a": "keyword",
+      "b": "configured",
+      "form": "paraphrase",
+      "primary": null
+    },
+    {
+      "id": "configured_vs_hybrid",
+      "metric": "success_at_5",
+      "n_pairs": 120,
+      "n_clusters": 60,
+      "mean_a": 0.9917,
+      "mean_b": 1,
+      "delta": 0.0083,
+      "ci95": [
+        0,
+        0.025
+      ],
+      "p_two_sided": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0233,
+      "a": "hybrid",
+      "b": "configured",
+      "form": "all",
+      "primary": null
+    },
+    {
+      "id": "configured_vs_hybrid",
+      "metric": "mrr",
+      "n_pairs": 120,
+      "n_clusters": 60,
+      "mean_a": 0.8671,
+      "mean_b": 0.809,
+      "delta": -0.0581,
+      "ci95": [
+        -0.1258,
+        0.0082
+      ],
+      "p_two_sided": 0.0987,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.097,
+      "a": "hybrid",
+      "b": "configured",
+      "form": "all",
+      "primary": null
+    },
+    {
+      "id": "vector_vs_keyword",
+      "metric": "success_at_5",
+      "n_pairs": 120,
+      "n_clusters": 60,
+      "mean_a": 0.5,
+      "mean_b": 1,
+      "delta": 0.5,
+      "ci95": [
+        0.5,
+        0.5
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": null,
+      "a": "keyword",
+      "b": "vector",
+      "form": "all",
+      "primary": null
+    },
+    {
+      "id": "vector_vs_keyword",
+      "metric": "mrr",
+      "n_pairs": 120,
+      "n_clusters": 60,
+      "mean_a": 0.4333,
+      "mean_b": 0.8482,
+      "delta": 0.4149,
+      "ci95": [
+        0.3672,
+        0.4572
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0655,
+      "a": "keyword",
+      "b": "vector",
+      "form": "all",
+      "primary": null
+    },
+    {
+      "id": "configured_vs_keyword_exact",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "keyword",
+      "b": "configured",
+      "form": "exact",
+      "primary": null
+    },
+    {
+      "id": "configured_vs_keyword_exact",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0.8667,
+      "mean_b": 0.8194,
+      "delta": -0.0472,
+      "ci95": [
+        -0.1083,
+        0.0111
+      ],
+      "p_two_sided": 0.1587,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0867,
+      "a": "keyword",
+      "b": "configured",
+      "form": "exact",
+      "primary": null
+    },
+    {
+      "id": "hybrid_vs_keyword_paraphrase",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0,
+      "mean_b": 0.9833,
+      "delta": 0.9833,
+      "ci95": [
+        0.95,
+        1
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": {
+        "wins": 59,
+        "losses": 0,
+        "discordant": 59,
+        "p_two_sided": 0
+      },
+      "mde": 0.0467,
+      "a": "keyword",
+      "b": "hybrid",
+      "form": "paraphrase",
+      "primary": null
+    },
+    {
+      "id": "hybrid_vs_keyword_paraphrase",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0,
+      "mean_b": 0.8397,
+      "delta": 0.8397,
+      "ci95": [
+        0.7647,
+        0.9083
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.1035,
+      "a": "keyword",
+      "b": "hybrid",
+      "form": "paraphrase",
+      "primary": null
+    },
+    {
+      "id": "window_vs_configured",
+      "skipped": "arm_invalid_or_absent"
+    },
+    {
+      "id": "paraphrase_vs_exact_keyword",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 1,
+      "mean_b": 0,
+      "delta": -1,
+      "ci95": [
+        -1,
+        -1
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 60,
+        "discordant": 60,
+        "p_two_sided": 0
+      },
+      "mde": null,
+      "a": "exact",
+      "b": "paraphrase",
+      "arm": "keyword",
+      "form": "exact_vs_paraphrase",
+      "primary": null
+    },
+    {
+      "id": "paraphrase_vs_exact_keyword",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0.8667,
+      "mean_b": 0,
+      "delta": -0.8667,
+      "ci95": [
+        -0.9333,
+        -0.8
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0973,
+      "a": "exact",
+      "b": "paraphrase",
+      "arm": "keyword",
+      "form": "exact_vs_paraphrase",
+      "primary": null
+    },
+    {
+      "id": "paraphrase_vs_exact_vector",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "exact",
+      "b": "paraphrase",
+      "arm": "vector",
+      "form": "exact_vs_paraphrase",
+      "primary": null
+    },
+    {
+      "id": "paraphrase_vs_exact_vector",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0.8417,
+      "mean_b": 0.8547,
+      "delta": 0.0131,
+      "ci95": [
+        -0.0347,
+        0.0631
+      ],
+      "p_two_sided": 0.6263,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0707,
+      "a": "exact",
+      "b": "paraphrase",
+      "arm": "vector",
+      "form": "exact_vs_paraphrase",
+      "primary": null
+    },
+    {
+      "id": "paraphrase_vs_exact_hybrid_lexical",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 1,
+      "mean_b": 0.9167,
+      "delta": -0.0833,
+      "ci95": [
+        -0.1667,
+        -0.0167
+      ],
+      "p_two_sided": 0.0662,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 5,
+        "discordant": 5,
+        "p_two_sided": 0.0625
+      },
+      "mde": 0.1008,
+      "a": "exact",
+      "b": "paraphrase",
+      "arm": "hybrid_lexical",
+      "form": "exact_vs_paraphrase",
+      "primary": null
+    },
+    {
+      "id": "paraphrase_vs_exact_hybrid_lexical",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0.8667,
+      "mean_b": 0.5783,
+      "delta": -0.2883,
+      "ci95": [
+        -0.3758,
+        -0.2028
+      ],
+      "p_two_sided": 0.0001,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.1245,
+      "a": "exact",
+      "b": "paraphrase",
+      "arm": "hybrid_lexical",
+      "form": "exact_vs_paraphrase",
+      "primary": null
+    },
+    {
+      "id": "paraphrase_vs_exact_hybrid",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 1,
+      "mean_b": 0.9833,
+      "delta": -0.0167,
+      "ci95": [
+        -0.05,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 1,
+        "discordant": 1,
+        "p_two_sided": 1
+      },
+      "mde": 0.0467,
+      "a": "exact",
+      "b": "paraphrase",
+      "arm": "hybrid",
+      "form": "exact_vs_paraphrase",
+      "primary": null
+    },
+    {
+      "id": "paraphrase_vs_exact_hybrid",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0.8944,
+      "mean_b": 0.8397,
+      "delta": -0.0547,
+      "ci95": [
+        -0.1169,
+        0
+      ],
+      "p_two_sided": 0.083,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0834,
+      "a": "exact",
+      "b": "paraphrase",
+      "arm": "hybrid",
+      "form": "exact_vs_paraphrase",
+      "primary": null
+    },
+    {
+      "id": "paraphrase_vs_exact_configured",
+      "metric": "success_at_5",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 1,
+      "mean_b": 1,
+      "delta": 0,
+      "ci95": [
+        0,
+        0
+      ],
+      "p_two_sided": 1,
+      "p_method": "degenerate",
+      "mcnemar": {
+        "wins": 0,
+        "losses": 0,
+        "discordant": 0,
+        "p_two_sided": 1
+      },
+      "mde": null,
+      "a": "exact",
+      "b": "paraphrase",
+      "arm": "configured",
+      "form": "exact_vs_paraphrase",
+      "primary": null
+    },
+    {
+      "id": "paraphrase_vs_exact_configured",
+      "metric": "mrr",
+      "n_pairs": 60,
+      "n_clusters": 60,
+      "mean_a": 0.8194,
+      "mean_b": 0.7986,
+      "delta": -0.0208,
+      "ci95": [
+        -0.0847,
+        0.0417
+      ],
+      "p_two_sided": 0.5747,
+      "p_method": "monte-carlo-sign-flip",
+      "mcnemar": null,
+      "mde": 0.0903,
+      "a": "exact",
+      "b": "paraphrase",
+      "arm": "configured",
+      "form": "exact_vs_paraphrase",
+      "primary": null
+    }
+  ]
+}

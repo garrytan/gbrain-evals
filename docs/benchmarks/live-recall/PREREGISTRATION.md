@@ -399,6 +399,110 @@ So batch 3 can show a 20-point gain from configured search on either type, and c
 **Cost.** No paid model calls by us. Wintermute's keys pay for about one query embedding per form for `hybrid` and
 `configured` and one rerank call per configured query, as in batch 2.
 
+**Batch 3 frozen sample.** Frozen on 2026-11-09 from Wintermute's `run.ts freeze --protocol batch3` output at
+gbrain-evals `a1cfff13`, with `--gbrain` at gbrain v0.60.623.0 (`d253ec0f`, a clean checkout), before any batch 3
+search. `freeze.json` records `gbrain_version` 0.60.623.0 and `visibility_epoch` `post_gbra_398`. The runner refuses a
+question file whose hash differs from this one, and a run whose protocol or visibility epoch differs from the freeze's
+(`LR_FREEZE_MISMATCH`).
+
+- **N = 51 questions** (102 question forms): 25 `freshness` and 26 `entity`. The freshness questions name 25 stale
+  pages in all.
+- **Question file sha256:** `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e`.
+- **freeze.json sha256:** `ece4fc08627046d8d19449e5ace36123ea57b789c8794a820c7794efb56a20ad`.
+- **Minimum detectable difference** in success@5 (two-sided alpha 0.05, 80% power), in points, both forms clustered by
+  question (forms independent to fully correlated):
+
+| Comparison | 10% discordant | 20% discordant | 30% discordant |
+|---|---|---|---|
+| P1, `configured` minus `hybrid_lexical`, freshness | 12.5 to 17.7 | 17.7 to 25.1 | 21.7 to 30.7 |
+| P2, `configured` minus `hybrid_lexical`, entity | 12.3 to 17.4 | 17.4 to 24.6 | 21.3 to 30.1 |
+
+An earlier freeze of the same question file on gbrain 0.60.618.0 checked the run kit. It read `pre_gbra_398` and matched
+this freeze in every field but the gbrain version and the epoch. It is not counted, and no batch 3 result comes from it.
+
+### 2026-11-10: batch 3 runs on gbrain 0.60.641.0
+
+Written after the first counted attempt stopped and before any batch 3 search.
+
+**What happened.** The first counted attempt ran on 2026-11-10 from gbrain-evals `446b9c14`, with `--gbrain` at
+0.60.623.0 (`d253ec0f`). It stopped with `LR_SCHEMA_MISMATCH`: the brain's schema was 297, and 0.60.623.0 expects 296.
+Earlier that day Wintermute's box had upgraded to gbrain 0.60.634.0, and that upgrade migrated the brain to schema 297.
+The runner never migrates, and it refuses before any search, so the attempt ran no batch 3 query. No batch 3 data
+exists at 0.60.623.0, and nothing from that attempt is counted or reported as a result.
+
+**What changes.** Batch 3's system under test is gbrain 0.60.641.0
+(`2560ffddb85244b82f2b325ee2ddc846f77c3cac`). That's the version the box runs, and it opens schema 297. The counted run
+passes `--gbrain <checkout>@2560ffddb85244b82f2b325ee2ddc846f77c3cac` and runs from the gbrain-evals commit that adds
+this amendment. Since `446b9c14` the runner has changed only in a check that applies to paid synthetic runs
+(`e0c55bb0`), so the counted path is the same code.
+
+**What doesn't change.** The question file and `freeze.json` are the ones recorded above, and their hashes stand:
+question file `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e` and `freeze.json`
+`ece4fc08627046d8d19449e5ace36123ea57b789c8794a820c7794efb56a20ad`. There is no new freeze. The protocol, arms,
+primaries, declared secondaries, power and minimum detectable differences are unchanged.
+
+**Why the existing freeze still applies.** The freeze was recorded at 0.60.623.0. Under batch 3 the runner compares the
+freeze's visibility epoch with the run's, and it compares gbrain versions only when both epochs read `unknown`
+(`eval/runner/live-recall/run.ts`, lines 463 to 465). 0.60.623.0 and 0.60.641.0 both read `post_gbra_398`, so the
+runner accepts this freeze at 0.60.641.0. The scorecard records both versions: `gbrain_loaded_version` 0.60.641.0 and
+`freeze_gbrain_version` 0.60.623.0.
+
+**What the numbers measure.** 0.60.641.0 hides more from scoped callers than 0.60.623.0 did. gbrain's changelog lists
+three changes:
+- 0.60.634.0 makes the SQL privacy checks behind list and search queries give the same answers as their TypeScript
+  versions.
+- 0.60.639.0 drops a link whose origin page is soft-deleted, or outside the caller's source grant.
+- 0.60.641.0 makes facts, timeline entries and tags follow the page they're about. They stay hidden from a caller who
+  can't read that page, and from everyone while the page is deleted.
+
+So batch 3's numbers measure 0.60.641.0, not 0.60.623.0. Every batch 3 result is labelled with both versions: run at
+0.60.641.0, frozen at 0.60.623.0.
+
+**Order on the box.** The counted run starts after GBRA-398's relabel of over-applied `access: private` labels has
+finished on the box, so the run reads one state of the brain. If the brain's schema moves past 297 before the run, the
+runner refuses with `LR_SCHEMA_MISMATCH` again. That stop ends the attempt, and running at any other version needs
+another dated amendment.
+
+### 2026-11-10: batch 3 runs after relabel window 1, before window 2
+
+Written before any batch 3 search, after the first counted attempt stopped with `LR_SCHEMA_MISMATCH`. It changes when the
+counted run happens and nothing else. It replaces the timing in "Order on the box" in the amendment above; the rest of
+that amendment stands.
+
+**Why.** GBRA-398's relabel of over-applied `access: private` labels applies in windows of about 1,000 pages. Window 1
+applied from 2026-11-10T08:39:14Z to 09:41:20Z: 961 pages applied and 39 declined because their files changed during the
+apply. About 48 windows remain at about an hour each, so the last would land around 2026-11-12. The box is held at
+0.60.641.0 only until 2026-11-11T08:00Z, and the brain's schema went from 291 (0.60.593.0, batch 2's run on 2026-11-07)
+to 297 (0.60.641.0) in three days. A migration after the hold would stop the run with `LR_SCHEMA_MISMATCH` again.
+
+**When the run happens.** The counted run starts after window 1's one-hour watch has ended, and window 2 is held from
+the run's start until its teardown, so the run reads one state of the brain: relabel window 1 of about 49 applied (961
+pages applied, 39 declined), the rest of the over-applied labels still in place. The run record names that state. If the
+run can't start in this gap, it runs in a later gap between two windows before 2026-11-11T08:00Z, with the windows
+applied named the same way. If no gap works by then, it runs after the last window, as the amendment above says.
+
+**Unchanged.** Runner gbrain-evals `40235f35`, gbrain 0.60.641.0 at `2560ffdd` loaded as a verified overlay, the same
+question file (sha256 `c023694e…`) and freeze.json (sha256 `ece4fc08…`, 51 questions, frozen at 0.60.623.0, visibility
+epoch `post_gbra_398`), and the same arms, primaries and analysis.
+
+**One counted run.** This is batch 3's only counted run. No later batch 3 run counts, including one after the relabel
+finishes. A post-relabel read, if anyone makes one, is descriptive, labelled that way and never pooled with this one.
+
+**What this state means for the results.**
+
+- The freeze was made at 0.60.623.0 before the box's 0.60.634.0 upgrade (about 02:45Z on 2026-11-10; 0.60.623.0 can't
+  open the upgraded schema), so before window 1 began. The run reads nearly the label state the questions were frozen
+  against, with 961 pages relabelled since.
+- About 2% of the relabel is applied. A page still wrongly labelled private stays hidden from a caller that can't read
+  private pages. Where such a page is a question's gold, every arm misses it alike. That lowers success for every arm
+  and pulls contrasts toward zero rather than reversing them, so it can leave fewer than three qualifying contrasts. A
+  verdict that reads NO REFERENCE YET for that reason says so.
+- Batch 2 ran on 2026-11-07 at 0.60.593.0, before the relabel began, so no relabel window had changed its labels either.
+  It ran on the other visibility epoch (`pre_gbra_398`: owner and delegate connections couldn't read private pages).
+  Whether every over-applied label already existed on 2026-11-07 isn't recorded here. The predictive measures' batch 2
+  and batch 3 layers each compare a synthetic brain with one real run and are never pooled, so the two layers differ in
+  visibility epoch and label state as well as in questions, and their results say so.
+
 ## Limits
 
 - One writer who knows the brain writes both the questions and the gold, so paraphrase difficulty and topic choice

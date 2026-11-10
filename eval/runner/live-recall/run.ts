@@ -672,7 +672,11 @@ export async function main(argv: string[]): Promise<number> {
   if (paid && !synthetic) { console.error('live-recall: --paid applies only to run --synthetic <dir>, which then embeds and reranks with Voyage'); return 2; }
   let estimate: ReturnType<typeof import('./synthetic.ts').estimateVoyageUsd> | null = null;
   if (paid) {
-    const { estimateVoyageUsd, VOYAGE_SYNTHETIC } = await import('./synthetic.ts');
+    const { estimateVoyageUsd, readSyntheticDir, VOYAGE_SYNTHETIC } = await import('./synthetic.ts');
+    if (readSyntheticDir(resolve(synthetic!)).manifest.knobs.keyword_candidate_bound !== null) {
+      console.error('live-recall: REFUSED: a paid synthetic run takes no keyword_candidate_bound. On PGLite the bound samples only gbrain\'s all-words keyword match, never the any-word retry that sets keyword_candidates_incomplete on Postgres, so it cannot reproduce the real condition (predictive-measures preregistration, amendment of 2026-11-10). Regenerate the directory without --keyword-bound.');
+      return 2;
+    }
     estimate = estimateVoyageUsd(resolve(synthetic!));
     console.log('live-recall: --paid synthetic run with ' + VOYAGE_SYNTHETIC.embedding_model + ', ' + VOYAGE_SYNTHETIC.search_mode + ' and ' + VOYAGE_SYNTHETIC.reranker_model + ': estimated $' + estimate.usd.toFixed(4) + ' (' + estimate.embedding_tokens + ' embedding tokens at $' + estimate.embedding_usd_per_mtok + '/M, ' + estimate.rerank_tokens + ' rerank tokens at $' + estimate.rerank_usd_per_mtok + '/M)');
     try {

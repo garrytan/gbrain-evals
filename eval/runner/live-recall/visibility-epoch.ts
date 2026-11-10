@@ -8,11 +8,13 @@
  * refuses a freeze from the other epoch (LR_FREEZE_MISMATCH).
  *
  * The epoch is read from the loaded gbrain version:
- * - `post_gbra_398` at or above first_version, once the change ships and
- *   first_version names the release that carries it;
- * - `pre_gbra_398` at or below pre_ceiling, the newest master version known to
- *   lack it (0.60.620.0 on 2026-11-09, with #8917 still open);
- * - `unknown` for anything else, so a newer gbrain is never silently labelled.
+ * - `post_gbra_398` at or above first_version, the first release that carries
+ *   the change: 0.60.623.0, whose tag is #8917's merge commit d253ec0f
+ *   (merged 2026-11-09; v0.60.622.0 does not contain it);
+ * - `pre_gbra_398` below first_version;
+ * - `unknown` for a version string that does not parse, so it is never
+ *   silently labelled. With first_version null, anything above pre_ceiling,
+ *   the newest version known to lack the change, is `unknown` too.
  */
 
 export const VISIBILITY_EPOCHS = ['pre_gbra_398', 'post_gbra_398', 'unknown'] as const;
@@ -20,9 +22,9 @@ export type VisibilityEpoch = (typeof VISIBILITY_EPOCHS)[number];
 
 export const GBRA_398 = {
   change: 'garrytan/gbrain#8917',
-  /** The first gbrain release carrying GBRA-398; null until it ships. */
-  first_version: null as string | null,
-  pre_ceiling: '0.60.620.0',
+  /** The first gbrain release carrying GBRA-398. */
+  first_version: '0.60.623.0' as string | null,
+  pre_ceiling: '0.60.622.0',
 };
 
 const VERSION = /^\d+\.\d+\.\d+(\.\d+)?$/;

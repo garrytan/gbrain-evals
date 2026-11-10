@@ -152,12 +152,15 @@ export function paidJobs(unit: Unit, opts: { tasks: number; k: number; models: r
 
 /**
  * Scorecards per model (and per surface for G3) from episode records. Cost per correct answer counts every dollar the
- * episode log records for the cell: its done episodes' and its errored attempts' (an errored row's record, else its
- * provider usage at ledger prices), divided by the done episodes that succeeded. `usd` is that numerator and
- * `errored_usd` the errored part of it.
+ * episode log records for the cell: its done episodes' and its errored attempts' (errored rows, and refused rows whose
+ * usage records turns billed before a cap stop; a row's record, else its provider usage at ledger prices), divided by
+ * the done episodes that succeeded. `usd` is that numerator and
+ * `errored_usd` the errored part of it. A cell with errored or refused spend and no done episode still gets a row:
+ * 0 episodes, its spend, and a null cost per correct answer.
  */
 export function scorecards(unit: Unit, records: readonly EpisodeRecord[], k: number, erroredAttempts: readonly LogRow[] = []): unknown[] {
-  const models = [...new Set(records.map(r => String(r.model)))];
+  const models = [...new Set([...records.map(r => String(r.model)), ...erroredAttempts.map(r => r.model)])];
+  const noDone = (model: string, surface?: string) => ({ unit: unit.toUpperCase(), model, ...(surface ? { surface } : {}), episodes: 0, usd: 0 });
   const charge = (card: unknown, rows: readonly EpisodeRecord[], errored: readonly LogRow[]) => {
     const errored_usd = errored.reduce((s, r) => s + (r.record?.usd ?? (r.usage ? priceUsage(r.model, r.usage) : 0)), 0);
     const usd = (card as { usd: number }).usd + errored_usd;
@@ -166,11 +169,13 @@ export function scorecards(unit: Unit, records: readonly EpisodeRecord[], k: num
   return models.flatMap((model): unknown[] => {
     const rows = records.filter(r => r.model === model);
     const errored = erroredAttempts.filter(r => r.model === model);
+    if (unit !== 'g3' && !rows.length) return [charge(noDone(model), rows, errored)];
     if (unit === 'g1') return [charge(summarizeFreshness(rows as unknown as FreshnessEpisode[], k), rows, errored)];
     if (unit === 'g4') return [charge(summarizeEntity(rows as unknown as EntityEpisode[], k), rows, errored)];
     if (unit === 'g6') return [charge(summarizeOutOfView(rows as unknown as OutOfViewEpisode[], k), rows, errored)];
-    return G3_SURFACES.map(s => ({ rows: rows.filter(r => (r as { surface?: string }).surface === s), errored: errored.filter(r => r.key.split(':').at(-2) === s) }))
-      .filter(c => c.rows.length).map(c => charge(summarizeWriteEpisodes(c.rows as unknown as WriteEpisode[], k), c.rows, c.errored));
+    return G3_SURFACES.map(s => ({ s, rows: rows.filter(r => (r as { surface?: string }).surface === s), errored: errored.filter(r => r.key.split(':').at(-2) === s) }))
+      .filter(c => c.rows.length || c.errored.length)
+      .map(c => charge(c.rows.length ? summarizeWriteEpisodes(c.rows as unknown as WriteEpisode[], k) : noDone(model, c.s), c.rows, c.errored));
   });
 }
 
@@ -346,7 +351,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     status: result.status, ran: result.ran, skipped: result.skipped, pause_reason: result.pause_reason,
     done: result.done.length, errored: result.errored.map(r => ({ key: r.key, error: r.error ?? r.record?.stop })),
     errored_by_model: Object.fromEntries(models.map(m => [m, result.errored.filter(r => r.model === m).length])),
-    scorecards: records.length ? scorecards(u, records, k, result.errored_attempts) : [],
+    scorecards: scorecards(u, records, k, result.errored_attempts),
     measured: records.length ? smokeProjection(u, result.done, { seed }) : null,
     ledger, resume_command: result.status === 'complete' ? null : resumeCommand,
   };

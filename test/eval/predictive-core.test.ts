@@ -114,7 +114,8 @@ describe('published references', () => {
       expect(loaded).toEqual(built);
       expect(built.contrasts.filter((c) => c.lo > 0 || c.hi < 0).length).toBeGreaterThanOrEqual(3);
     }
-    expect(loadReference(MANIFEST, 'live-recall-b3')).toBeNull();
+    expect(files.map(([, built]) => built.id)).toEqual(['live-recall-b1', 'live-recall-b2', 'live-recall-b3']);
+    expect(loadReference(MANIFEST, 'phase2-agent')).toBeNull();
   });
 });
 

@@ -130,7 +130,207 @@ Every paid request reserves its worst case against the budget ledger before it i
 
 ## Amendments
 
-None yet.
+### 2026-11-09: binding MDDs and the order of counted cells
+
+Both points are fixed before any counted cell.
+
+**Binding MDDs.** `eval/runner/power` has no paired-binary module, so the binding MDDs use the formula the planning
+table used: `mdd()` in `eval/runner/live-recall/task-scorecard.ts`, (z(0.975) + z(0.8)) × √(d / n), with two-sided α 0.05,
+power 0.8 and discordance d = 0.3. The smoke runs had one or two tasks per cell, too few to estimate discordance, so 0.3
+stays. These values replace the planning MDDs:
+
+| Unit | n (pairs) | Binding MDD (points) |
+|---|---|---|
+| G2, per form and condition | 100 | 15.3 |
+| G1 | 120 | 14.0 |
+| G3, per surface | 60 | 19.8 |
+| G3, pooled | 120 | 14.0 |
+| G4 | 60 | 19.8 |
+| G6 agent layer, per caller | 50 | 21.7 |
+
+A comparison smaller than its binding MDD reads "no measurable difference". For reference, the same n at d = 0.2 gives
+12.5, 11.4, 16.2, 11.4, 16.2 and 17.7 points. Those values are reported but don't bind.
+
+**Order.** G3's and G6's counted agent cells run first. G1's and G4's counted agent cells run only after batch 3's
+aggregates exist, as the G1 and G4 item above says.
+
+### 2026-11-09: G3's `two_range_read` pair with phase 2 arm B is not informative
+
+Fixed before any counted G3 cell.
+
+G3's phase 2 layer compared the synthetic refusal rate of each contract cause with phase 2 arm B's, given exposure. Arm
+B calls the box's own gbrain `get_page` ([live-recall phase 2 plan](live-recall/PHASE2-PLAN.md), D2), and the box runs
+gbrain 0.60.613.0 or later. From 0.60.570.0 on, gbrain reads a `get_page` call with more than one window selector
+instead of refusing it (gbrain#8509). So arm B can't produce a `two_range_read` refusal, and its rate is zero whatever
+the agents do. The synthetic side runs at this preregistration's pin, 0.60.557.0, where the refusal still exists. The
+pair compares two gbrain versions, not the synthetic brain with the real one.
+
+Under the decision rule, a reference of zero never qualifies and can't point the other way, so the pair could never
+have counted as agreement or moved the verdict. It would still have sat in the mapped list as a contrast that can only
+read as not qualifying, and the gap could be read as a miss of the measure.
+
+So the pair leaves G3's phase 2 layer. The layer maps the other seven causes, `source_changed`, `missing_provenance`,
+`ambiguous_entity`, `fact_and_items`, `scope_denied`, `commit_paths_invalid` and `sources_without_brain`, and
+still needs 3 of them to qualify (`eval/runner/predictive/mapping.ts`). G3's `two_range_read` tasks run unchanged,
+and the results report their refusal rate by surface in G3's cause table, outside the verdict, with this reason. G3's
+replay layer (`read_refusal_rate_570_vs_549`) is unchanged and stays the test of this refusal across versions.
+
+### 2026-11-10: G2's conditions, pins and batch-3 size
+
+Fixed before any counted G2 cell, and before batch 3's counted aggregates exist. The build table gave G2 "4 conditions,
+2 pins" without naming them; this amendment names them and says which scorecard each verdict is read from.
+
+**Questions.** `eval/generators/conditions-recall-gen.ts` at its defaults (seed 20261109, 20 per type): 100 questions
+on 180 pages, question file sha256 `25a7cc094a54f21f907b536abb7ca8fc66fa36afc6f308e5243f0b466830f6f6`, the same file
+in every condition. One file of Opus paraphrases (`eval/runner/live-recall/paraphrase-opus.ts`) serves all four
+conditions.
+
+**Conditions.** Each knob is set from a measured condition of the real brain, as the evidence class requires:
+
+| Condition | Knobs | Measured condition it copies |
+|---|---|---|
+| clean | none (generator defaults) | the clean pages our other evals use |
+| embedding | `--synopsis-off --unembedded-share 0.1` | 0% synopsis vectors, 10% of chunks with no vector |
+| shells | `--shell-share 0.5` | about half of sampled media pages are empty shells |
+| real | `--synopsis-off --unembedded-share 0.1 --shell-share 0.5` | both together |
+
+The shell knob applies to every page that isn't gold, so it overstates shells on pages that aren't media. That is a
+stated limit of the shells and real conditions.
+
+**The keyword candidate bound is left out.** A keyless calibration at `446b9c14` on the real-condition brain (180
+chunks, hash transports) gave identical success@5 for every arm at bounds of 5, 10, 20, 40, 80 and 160 chunks, and no
+query reported `keyword_candidates_incomplete`, so at this brain size the bound never bites. Batch 1, the development
+reference, recorded it on 57 of 100 `hybrid_lexical` forms. The synthetic brain doesn't reproduce that condition, and
+the results say so instead of setting a knob that changes nothing.
+
+**Pins.** Every G2 scorecard runs on Voyage transports (voyage-4 embeddings, tokenmax, rerank-2.5, as
+`eval/runner/live-recall/synthetic.ts` sets them), at two gbrain versions loaded through the gbrain-under-test overlay:
+
+- the version the reference itself ran, so that each pair compares the synthetic brain with the real one and not two
+  gbrain versions (the reason for the `two_range_read` amendment above): 0.60.593.0 (`27f8b9d6`) for the batch 2
+  layer, and 0.60.623.0 (`d253ec0f`) for the batch 3 layer;
+- this preregistration's pin, 0.60.557.0 (`62637c96`), for both layers.
+
+**Which scorecard gives each verdict.**
+
+- G2's batch 2 layer reads the **real** condition at 0.60.593.0. The other seven batch-2-shaped scorecards (four
+  conditions at two pins, less that one) are reported beside it with their own readings, as secondary results that
+  never gate. They show which condition carries the agreement, if any.
+- One synthetic batch-3 brain from `eval/generators/batch3-synthetic-gen.ts` at seed 20261110 and `--per-type 30`
+  (60 questions, 30 freshness and 30 entity; 30 is the most distinct freshness worlds its pool gives), with Opus
+  paraphrases, gives G2's batch 3 layer and the retrieval layers of G1 and G4. Their verdicts read its scorecard at
+  0.60.623.0. Its scorecard at 0.60.557.0 is secondary. The batch-3 generator has no condition knobs, so this brain is
+  clean.
+
+**Power.** G2's binding MDD per form and condition stays 15.3 points. For the synthetic batch-3 brain the same formula,
+over both forms of a type (between 60 forms and 30 questions), gives 19.8 to 28.0 points at discordance 0.3, and 16.2
+to 22.9 at 0.2. These bind G1's and G4's retrieval layers and G2's batch 3 layer. The verdict itself reads signs, as
+the decision rule says, so these numbers govern only how a difference is described.
+
+### 2026-11-10: corrections to G2's amendment, after one reader
+
+Fixed before any counted G2 cell and before batch 3's counted aggregates exist. One Opus adversarial reader read the
+amendment above for verdict integrity: whether its choices were fixed before any output that could inform them, whether
+any favours agreement with batch 2's published reference, and whether the calibration it cites supports dropping the
+keyword bound. It found the choices themselves clean and the stated reason for dropping the bound wrong. These
+corrections take precedence over the amendment above where they differ.
+
+**Why the keyword candidate bound is left out.** This replaces the reason given above; the calibration's facts stand.
+The synthetic bound samples only gbrain's all-words keyword match (`eval/runner/live-recall/synthetic.ts`), and on
+this brain that match finds at most one chunk per question form: one chunk for 77 exact forms, none for the other 23 and
+none for any of the 100 paraphrases. So no bound of 1 or more ever applies. When the all-words match is empty, gbrain
+retries with any word matching, and that retry supplies most of the hybrid arms' keyword candidates; the synthetic
+bound never touches it. Batch 1 recorded `keyword_candidates_incomplete` on 57 of 100 `hybrid_lexical` forms, 48 of
+them paraphrases. As far as the published aggregates show (they record the flag, not its cause), that comes mostly from
+the same retry on Postgres, which drops common words using planner statistics and reports the bound. PGLite has no
+such path. The synthetic brain therefore can't reproduce the condition at any size, not just at this one. A paid
+synthetic run now refuses a directory that sets the bound. The build table's G2 row still lists the keyword bound; it
+is not run.
+
+**The engines differ too.** Each pair compares the synthetic brain on PGLite with the real brain on Postgres, even at
+the same gbrain version. Without the narrowing above, synthetic `hybrid_lexical` paraphrases may do relatively
+better than real ones, which pushes P1 and P2 (both measured against `hybrid_lexical` paraphrases) toward
+disagreement, not agreement. This is a stated limit of every G2 condition.
+
+**Shells in numbers.** The brain has 180 pages, 110 of them gold. The shells and real conditions turn 35 of the 70
+pages that aren't gold into shells, which is 19% of all pages. The real brain's measured half applies to media pages.
+
+**Question files.** The sha256 named above, `25a7cc09…6f6`, is the generator's template file. Counted runs apply
+one Opus paraphrase file to it, which rewrites `questions.jsonl`. Each scorecard records the counted file's
+`questions_sha256` and the paraphrase file it used, and all eight batch-2-shaped scorecards must carry the same
+values. The synthetic batch-3 brain's template file is
+`bd574fd1b7bdb666417c6ae45bdb3746bb498e144dfb28e15641a017463f2324` (directory digest
+`dcc97ed9eefdf404af9324853d3d42502b8d0b509b78968cebe2d85fd0b6865e`), and its counted file is that file with its own Opus
+paraphrase file applied.
+
+**Batch 3's version.** For the batch 3 layers, "the version the reference itself ran" means the version batch 3's freeze
+records, 0.60.623.0. If batch 3's counted scorecard loads another gbrain version, the synthetic batch-3 brain is run
+again at that version, and that scorecard gives the verdict.
+
+**Earlier synthetic output.** GBEV-55's uncounted Voyage smoke probes ran on 2026-11-09, before the amendment above: 100
+batch-2-shaped questions twice and 40 batch-3-shaped questions once. Their knobs and results weren't available to the
+amendment's author, and none is counted. The author saw only keyless hash-transport control runs, all made before the
+amendment, and they show the same sign pattern against batch 2 at 0.60.557.0 and 0.60.593.0.
+
+**Binding MDD for the synthetic batch-3 brain.** The upper end binds, to be conservative: 28.0 points at discordance
+0.3. A difference below it reads "no measurable difference" and is reported with its interval.
+
+**Which scorecard gives each verdict, enforced.** Before any counted verdict runs, `eval/runner/predictive/verdict.ts`
+will refuse a non-control scorecard whose gbrain commit, knobs or question file differs from the one named for the layer,
+and will copy those fields and the scorecard's sha256 into `verdict.json`. G2's summary line combines the verdict
+files of its batch 2 and batch 3 layers under the decision rule (NOT PREDICTIVE if either layer is).
+
+### 2026-11-10: batch 3 moves to gbrain 0.60.641.0
+
+The live-recall preregistration's
+[amendment of the same date](live-recall/PREREGISTRATION.md#2026-11-10-batch-3-runs-on-gbrain-0606410) moves batch 3's
+counted run to gbrain 0.60.641.0 (`2560ffdd`), because its first attempt stopped with `LR_SCHEMA_MISMATCH` before any
+search. Under "Batch 3's version" above, the synthetic batch-3 brain is run again at 0.60.641.0, with the same template
+file, paraphrase file and Voyage transports. That scorecard gives the verdicts for G2's batch 3 layer and for G1's and
+G4's retrieval layers. The synthetic brain's scorecard at 0.60.623.0, made before this amendment, is reported beside it
+as a secondary result that never gates, like the one at 0.60.557.0. Nothing else here changes. G1's and G4's counted
+agent cells still wait for batch 3's aggregates.
+
+### 2026-11-10: batch 3's timing
+
+The live-recall preregistration's
+[amendment of the same date](live-recall/PREREGISTRATION.md#2026-11-10-batch-3-runs-after-relabel-window-1-before-window-2)
+runs batch 3 after relabel window 1 (961 pages applied, 39 declined) and before window 2, instead of after the last
+window. Nothing else here changes: the runner, gbrain 0.60.641.0, the question file and freeze, and the synthetic
+batch-3 scorecard at 0.60.641.0 that gives the verdicts. It is batch 3's one counted run. With about 2% of the relabel
+applied, gold hidden by labels the relabel hasn't reached is missed by every arm alike, which can leave a layer short of
+three qualifying contrasts. A layer that reads NO REFERENCE YET for that reason says so in the results.
+
+### 2026-11-10: how G5 runs
+
+Fixed before any G5 cell runs. G5 reads NO REFERENCE YET whatever it measures (the decision rule above), so its numbers
+are descriptive. This fixes what it measures.
+
+**Search configuration.** The build table asks for the real search configuration. The runner as merged wrote no search
+setting, so its brain resolved gbrain's defaults (mode `balanced`, reranker `voyage:rerank-3-lite`). It now writes the
+setting live-recall batch 2's counted scorecard records for the real brain, mode `tokenmax` and reranker
+`voyage:rerank-2.5`, and each scorecard records what gbrain resolved. Embedding and rerank calls stay in-process, so
+no provider time is in any G5 number. G5 therefore compares gbrain versions on local compute only, and it can't predict
+the latency a user feels.
+
+**One brain, two versions.** One brain of 300,000 pages (seed 55) is built once at 0.60.549.0 (`a131fb20`); 0.60.549.0 and
+0.60.570.0 open the same schema. Each probe runs on its own copy of that brain, made with `CREATE DATABASE … TEMPLATE`,
+because a probe writes to the brain it times. A keyless rehearsal at 30,000 pages showed why: a second probe on the same
+database failed every one of its remember calls and slowed sync, because the first probe's side repository was gone.
+On fresh copies every remember succeeded.
+
+**Order and noise.** The probes run at 0.60.549.0, then 0.60.570.0, then 0.60.549.0 again, each with 200 timed calls per
+operation after 3 warm-up calls and 30 syncs. The first two give the three contrasts (p95 of query, search and get at
+0.60.549.0 against 0.60.570.0). The repeat shows how far two identical probes differ, and it is reported beside them. A
+contrast smaller than that difference for its operation is reported as no difference, within run-to-run noise. If the
+time limit ends the run before the repeat probe finishes, the results name the missing probe and give the contrasts with
+no noise estimate.
+
+**The knob is not run.** The build table lists "one knob" as a variable, but no knob was named before the freeze, and
+choosing one now, after seeing keyless latencies, would be a choice made from results. No mapped contrast uses a knob.
+
+**Machine.** One Ubicloud standard-16 VM (16 vCPUs, 64 GB) in `eu-central-h1`, Postgres 16 with pgvector and the settings
+in `vm-setup.sh`, with a 12-hour time limit. The VM is destroyed when the run ends.
 
 ## Disclosures
 
