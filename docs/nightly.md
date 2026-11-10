@@ -61,8 +61,7 @@ k is the number of trials per item. Agent suites run each item 3 times; QA suite
 smokes run once, and the smoke tier runs everything once. The QA suites are judged across model families, so no judge
 grades its own family: GPT-6 Astra judges every family's answers except OpenAI's, which Claude Opus 5.5 judges. So
 claude-opus-5-5 and particle-1 share a judge, and their agreement compares the two readers, not two reader-and-judge
-pairs. QA
-judgments and provider calls are cached by content, so a resumed night repeats none of them.
+pairs. QA judgments and provider calls are cached by content, so a resumed night repeats none of them.
 
 ## What the report shows
 
@@ -91,9 +90,10 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
 - **particle-1's agreement with Opus.** On a night that runs particle-1 beside claude-opus-5-5 (`--readers
   claude-opus-5-5,particle-1`), the report checks whether the low-cost reader marks the same items right and wrong as
   Opus. particle-1 runs on the QA suites only: Part C's worker and the Cat 40 Hard runner take Claude and GPT readers,
-  so the night leaves particle-1 off the agent suites. particle-1's first trial of an item and Opus's first counted
-  trial are each reader's pass or fail. A particle-1
-  crash, invalid answer or harness failure counts as a fail, so a reader that breaks on hard items can't drop them. An
+  so the night leaves particle-1 off the agent suites. The nightly tier plans no QA suite, so pass `--suites
+  lme-s-hard,beam-1m-hard` there, or use the matrix or smoke tier. particle-1's first trial of an item and Opus's first
+  counted trial are each reader's pass or fail. A particle-1 crash, invalid answer or harness failure counts as a fail,
+  so a reader that breaks on hard items can't drop them. An
   item is unpaired only when Opus has no counted trial or the night didn't run it for particle-1. Per suite the report
   shows raw agreement, Cohen's kappa (agreement beyond what the two pass rates give by chance) and particle-1's pass-rate
   gap to Opus. A suite counts toward the verdict with at least 20 paired items. particle-1 passes when the counted suites
@@ -235,7 +235,8 @@ for reference. A suite counts with at least 20 paired items and the verdict need
 failure counts as a fail, and more than 10% of scheduled items unpaired reads as not measured, as does a night that ends
 on a budget stop or loses its VM. A suite that stopped before writing rows counts its planned items as unpaired. A kappa
 of exactly 0.6 now passes. GPT-6 Astra judges particle-1's QA answers as well as Claude's, qualified reader names such as
-`particle:particle-1` match, and a night leaves particle-1 off the agent suites, whose runners refuse it.
+`particle:particle-1` match, and a night leaves particle-1 off the agent suites, whose runners refuse it. The page now
+says the nightly tier plans no QA suite, so a particle-1 night there needs `--suites lme-s-hard,beam-1m-hard`.
 
 ### 2026-11-10: particle-1's agreement with Opus
 
