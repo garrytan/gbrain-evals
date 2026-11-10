@@ -22,6 +22,23 @@ This records what each gbrain-evals release changed and what its measurements me
 - No score, published result or preregistered number changes. The changed runner files are part of the harness
   digest, so a phase 2 judge check made before this release is refused (`LR_JUDGE_CHECK`) and has to be made again.
 
+## [0.10.195] - 2026-11-10
+
+### GPT-6.1 Sol's full-context reads now hit OpenAI's prompt cache, and older full-context costs that missed it are labelled
+
+- **Full-context reader.** From GPT-5.6 on, OpenAI writes and looks up its prompt cache only at breakpoints, and with
+  none set the only one falls at the end of the message, after the question. `answerFullContext` in
+  `eval/runner/systems/baselines.ts` sent GPT-6.1 Sol the history and the question as one string, so every question on
+  a conversation wrote the whole history to the cache again and no later question read it back. It now sends the same
+  text as two parts, the history ending in an explicit `prompt_cache_breakpoint`, with `prompt_cache_options.mode`
+  set to `explicit`, so later questions on a conversation can read the history from the cache. The Anthropic bodies,
+  the particle-1 path, usage mapping and the budget ledger are unchanged.
+- **Labels.** The scoreboard report, a note under README's scoreboard block, the dev smokes page and the corrections
+  page now say that S2b full-context's published spend was measured without prompt-cache reads, so it overstates that
+  arm's cost. W10c, the particle-1 replay report and README say their whole-history costs are for one question per
+  history. No figure, accuracy or verdict changes. The W10b finding's checksum of the replay report is repinned for
+  that report's new note.
+
 ## [0.10.194] - 2026-11-10
 
 ### Q1 eval VMs receive only the files their cells run, and a campaign that would miss one is refused before its lease

@@ -35,7 +35,7 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   cost is $8.83 at batch price (was $7.12), so the W10b run total is $92.00 (was $90.29). W10c's Sol reader costs
   $0.0178 per question on gbrain's retrieval (was $0.0144, so the recurring total with the rerank rises by $0.0034) and
   $0.1339 with the whole history (was $0.1073), so gbrain's recurring cost is still about a seventh of the whole
-  history's. The replay
+  history's, with one question per history ([see below](#full-context-reads-and-openais-prompt-cache)). The replay
   report's W10b figures for Sol are $0.0381 per correct answer at list and $0.0190 at batch (was $0.0307 and $0.0154,
   which was itself $0.01535 rounded a second time), so particle-1's list cost per correct answer is about a ninth of
   Sol's, not a seventh. Its W10c figures for Sol are $0.0356 and $0.0178 per question on gbrain's retrieval (was
@@ -218,7 +218,46 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   every accuracy figure and both judges' results are unaffected. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
   [Finding](findings/2026-11-04-particle-1-f6-addon.md#limits).
 
+## Full-context reads and OpenAI's prompt cache
+
+- **Q1's full-context reads never let GPT-6.1 Sol read a history back from OpenAI's prompt cache** (2026-11-10). From
+  GPT-5.6 on, OpenAI writes and looks up its prompt cache only at breakpoints, and with no explicit breakpoint the only
+  one falls at the end of the last user message. Q1's full-context reader (`answerFullContext` in
+  `eval/runner/systems/baselines.ts`) sent Sol the whole conversation history and the question as one message, so
+  that breakpoint fell after the question. Every question on a conversation wrote the whole history to the cache
+  again, at the cache-write rate, and no later question read it back. Claude readers already sent the history as a
+  cached prefix and did read it back. From 2026-11-10 the reader sends Sol the same text with an explicit breakpoint at
+  the end of the history. The model reads the same text, so answers and accuracy should not change, but no run has
+  checked that; the change is meant to lower cost. Q1 publishes no cost per answer, so the
+  one published figure this reaches is S2b full-context's settled spend, which includes 20 Sol answers, 10 on each of
+  the two BEAM-1M conversations that fit Sol's window, in the [scoreboard report](benchmarks/2026-10-06-scoreboard-report.md), README's scoreboard block
+  and the [scoreboard tables](benchmarks/2026-10-06-scoreboard/scoreboard.md). It was measured with a harness that
+  never let a later question hit OpenAI's prompt cache, so it overstates that arm's cost. It stays as measured, and no corrected figure is
+  given, because none was measured. The README block and the tables are generated from the sealed receipt, so neither
+  changes: README carries a note under its block, and the tables carry no note of their own, so the scoreboard
+  report's note covers them. Sol's full-context reads on BEAM-100K and LoCoMo ran the same way and
+  publish no cost. The [dev smokes](benchmarks/2026-10-06-scoreboard/dev-smokes/README.md)' full-context cell ran the
+  same reader, and its page says what that means for its two figures. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+  [Report](benchmarks/2026-10-06-scoreboard-report.md).
+- **W10c's whole-history reader costs are for one question per history** (2026-11-10). Each of W10c's 150 LongMemEval
+  questions comes with its own history, and each history was read once. No whole-history read could reuse a prompt
+  cache: all 150 GPT-6.1 Sol reads were cache writes with no cache reads, by design rather than because of the
+  breakpoint above. The figures stand as the cost of one read of a whole history. The comparison drawn from them,
+  that gbrain's recurring reader cost per question is about a seventh of the whole history's, holds when each history
+  is asked one question. A history that answers several questions can stay in a prompt cache, and later questions then
+  pay the cached-input rate for it. W10c didn't measure that, so with several questions per history the whole history
+  would cost less per question than these figures show, and gbrain's cost advantage would be smaller. README,
+  [W10c](benchmarks/2026-10-07-longmemeval-w10c-full-context.md) and the
+  [particle-1 replay](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md) say so beside the figures. No
+  accuracy figure or verdict changes. gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 ## Changelog
+
+### 2026-11-10: Full-context reads and OpenAI's prompt cache
+
+A new section says Q1's full-context reader never let GPT-6.1 Sol read a history back from OpenAI's prompt cache, so
+S2b full-context's spend overstates that arm's cost, and that W10c's whole-history costs are for one question per
+history, so its "about a seventh" comparison holds for that case. The W10c entry above points to it.
 
 ### 2026-11-09: OpenAI cache writes
 
