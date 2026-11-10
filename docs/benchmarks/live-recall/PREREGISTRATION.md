@@ -463,6 +463,46 @@ finished on the box, so the run reads one state of the brain. If the brain's sch
 runner refuses with `LR_SCHEMA_MISMATCH` again. That stop ends the attempt, and running at any other version needs
 another dated amendment.
 
+### 2026-11-10: batch 3 runs after relabel window 1, before window 2
+
+Written before any batch 3 search, after the first counted attempt stopped with `LR_SCHEMA_MISMATCH`. It changes when the
+counted run happens and nothing else. It replaces the timing in "Order on the box" in the amendment above; the rest of
+that amendment stands.
+
+**Why.** GBRA-398's relabel of over-applied `access: private` labels applies in windows of about 1,000 pages. Window 1
+applied from 2026-11-10T08:39:14Z to 09:41:20Z: 961 pages applied and 39 declined because their files changed during the
+apply. About 48 windows remain at about an hour each, so the last would land around 2026-11-12. The box is held at
+0.60.641.0 only until 2026-11-11T08:00Z, and the brain's schema went from 291 (0.60.593.0, batch 2's run on 2026-11-07)
+to 297 (0.60.641.0) in three days. A migration after the hold would stop the run with `LR_SCHEMA_MISMATCH` again.
+
+**When the run happens.** The counted run starts after window 1's one-hour watch has ended, and window 2 is held from
+the run's start until its teardown, so the run reads one state of the brain: relabel window 1 of about 49 applied (961
+pages applied, 39 declined), the rest of the over-applied labels still in place. The run record names that state. If the
+run can't start in this gap, it runs in a later gap between two windows before 2026-11-11T08:00Z, with the windows
+applied named the same way. If no gap works by then, it runs after the last window, as the amendment above says.
+
+**Unchanged.** Runner gbrain-evals `40235f35`, gbrain 0.60.641.0 at `2560ffdd` loaded as a verified overlay, the same
+question file (sha256 `c023694e…`) and freeze.json (sha256 `ece4fc08…`, 51 questions, frozen at 0.60.623.0, visibility
+epoch `post_gbra_398`), and the same arms, primaries and analysis.
+
+**One counted run.** This is batch 3's only counted run. No later batch 3 run counts, including one after the relabel
+finishes. A post-relabel read, if anyone makes one, is descriptive, labelled that way and never pooled with this one.
+
+**What this state means for the results.**
+
+- The freeze was made at 0.60.623.0 before the box's 0.60.634.0 upgrade (about 02:45Z on 2026-11-10; 0.60.623.0 can't
+  open the upgraded schema), so before window 1 began. The run reads nearly the label state the questions were frozen
+  against, with 961 pages relabelled since.
+- About 2% of the relabel is applied. A page still wrongly labelled private stays hidden from a caller that can't read
+  private pages. Where such a page is a question's gold, every arm misses it alike. That lowers success for every arm
+  and pulls contrasts toward zero rather than reversing them, so it can leave fewer than three qualifying contrasts. A
+  verdict that reads NO REFERENCE YET for that reason says so.
+- Batch 2 ran on 2026-11-07 at 0.60.593.0, before the relabel began, so no relabel window had changed its labels either.
+  It ran on the other visibility epoch (`pre_gbra_398`: owner and delegate connections couldn't read private pages).
+  Whether every over-applied label already existed on 2026-11-07 isn't recorded here. The predictive measures' batch 2
+  and batch 3 layers each compare a synthetic brain with one real run and are never pooled, so the two layers differ in
+  visibility epoch and label state as well as in questions, and their results say so.
+
 ## Limits
 
 - One writer who knows the brain writes both the questions and the gold, so paraphrase difficulty and topic choice

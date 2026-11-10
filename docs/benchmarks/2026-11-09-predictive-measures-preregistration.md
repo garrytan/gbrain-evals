@@ -291,6 +291,16 @@ G4's retrieval layers. The synthetic brain's scorecard at 0.60.623.0, made befor
 as a secondary result that never gates, like the one at 0.60.557.0. Nothing else here changes. G1's and G4's counted
 agent cells still wait for batch 3's aggregates.
 
+### 2026-11-10: batch 3's timing
+
+The live-recall preregistration's
+[amendment of the same date](live-recall/PREREGISTRATION.md#2026-11-10-batch-3-runs-after-relabel-window-1-before-window-2)
+runs batch 3 after relabel window 1 (961 pages applied, 39 declined) and before window 2, instead of after the last
+window. Nothing else here changes: the runner, gbrain 0.60.641.0, the question file and freeze, and the synthetic
+batch-3 scorecard at 0.60.641.0 that gives the verdicts. It is batch 3's one counted run. With about 2% of the relabel
+applied, gold hidden by labels the relabel hasn't reached is missed by every arm alike, which can leave a layer short of
+three qualifying contrasts. A layer that reads NO REFERENCE YET for that reason says so in the results.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
