@@ -2,6 +2,27 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.203] - 2026-11-10
+
+### Code review now skips the predictive-measures raw scorecards and episode logs, so their results fit gstack's review limit
+
+- **What changed.** `.gstack/ship-policy.json` adds two `review_exclude_paths` patterns:
+  `docs/benchmarks/predictive-measures/**/scorecard.json` and `docs/benchmarks/predictive-measures/**/episodes.jsonl.gz`.
+  Neither matches anything outside that folder. The results report, the verdict JSONs, the scorecard `.md` summaries
+  and all code stay in review.
+- **Why.** The predictive-measures results diff is 2,594,160 bytes, over gstack's 2,000,000-byte review ceiling. Ten
+  scorecards of about 200 KB each (the nine G2 conditions and the batch 3 synthetic run) make up most of it. With both
+  patterns the diff is 567,892 bytes. The scorecard pattern does nearly all of that. Git shows each gzipped episode log
+  as one binary line, so the episode pattern saves about 1 KB and only hides that a log changed.
+- **What still checks these files.** CI scans every committed result file under `docs/benchmarks`, and each member of a
+  gzipped log, for machine-local paths, and gitleaks scans the gzipped logs' members for secrets. Nothing in CI compares
+  a scorecard's numbers with the verdict files or the report; `verdict.ts` reproduces the counted verdicts from them
+  when someone runs it.
+- **Known limits.** The scorecard pattern also covers the four small counted scorecards for G1, G3, G4 and G6 (about
+  42 KB together), which the ceiling alone doesn't require excluding. The patterns apply to every later pull request,
+  so a later change to a published scorecard won't reach a reviewer either.
+- No published score or verdict changes.
+
 ## [0.10.201] - 2026-11-10
 
 ### The nightly report now checks whether particle-1 marks the same items right and wrong as Opus
