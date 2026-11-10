@@ -287,6 +287,15 @@ describe('phase 2 privacy posture on the fixture (keyless)', () => {
     } finally { await open.close(); }
   }, 120_000);
 
+  test('a stdio binding the runner cannot read is refused', async () => {
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      const get = open.engine.getConfig.bind(open.engine);
+      open.engine.getConfig = async (k: string) => { if (k === 'mcp.stdio_member') throw new Error('config read failed'); return get(k); };
+      expect(await abortCode(() => assertPrivate(gut, open.engine))).toBe('LR_PRIVACY_RELAXED');
+    } finally { await open.close(); }
+  }, 120_000);
+
   test('B\'s tools are gbrain\'s query, search and get_page, with expansion, images and source ids removed', () => {
     expect(reader.tools.map(t => t.name).sort()).toEqual(['get_page', 'query', 'search']);
     for (const t of reader.tools) for (const k of ['expand', 'image', 'image_mime', 'source_id', 'source_ids']) expect(Object.keys((t.input_schema as any).properties)).not.toContain(k);
