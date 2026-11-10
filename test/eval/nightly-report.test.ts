@@ -89,6 +89,23 @@ describe('the diff against an earlier night', () => {
     expect(c.suites[0]!.pass_diff!.mean).toBe(0);
   });
 
+  test('an answer cut off at its output limit is a harness row, on an older night\'s rows too: out of the pass rate, no drop or strong flip, harness_error by cause', () => {
+    const root = mkdtempSync(join(tmpdir(), 'nightly-report-'));
+    const write = (night: string, rows: Outcome[]) => {
+      const dir = join(root, night, 'master');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, 'night.json'), JSON.stringify(manifest([{ id: 'suite-a' }], { night })));
+      writeFileSync(join(dir, 'outcomes.jsonl'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+      return dir;
+    };
+    const prev = write('2026-11-08', trials(Array(20).fill(3), 3, { cost_usd: null }));
+    const cut = trials([...Array(14).fill(3), ...Array(6).fill(0)], 3, { cost_usd: null }).map((r, i) => (!r.pass || i === 0 ? { ...r, finish_reason: 'max_tokens' } : r));
+    const summary = writeReport({ dir: write('2026-11-09', cut), previous: prev });
+    expect(summary.flags).toEqual([expect.objectContaining({ kind: 'signal', detail: 'harness errors rose from 0 to 19' })]);
+    expect((summary.suites as Array<{ cells: Array<Record<string, unknown>> }>)[0]!.cells[0]).toMatchObject({ items: 14, trials: 41, pass1: 1, harness: 19, failures_by_cause: { harness_error: 19 } });
+    expect(summary.harness_rows).toBe(19);
+  });
+
   test('cost per correct answer up 25% or more with no pass-rate gain is flagged', () => {
     const c = compareNights({ manifest: manifest([{ id: 'suite-a' }]), rows: trials(Array(20).fill(3), 3, { cost_usd: 0.7 }) }, previous, 'previous');
     expect(c.flags).toMatchObject([{ kind: 'cost', detail: 'cost per correct answer up 40% with no gain in pass rate' }]);

@@ -99,6 +99,14 @@ function systemSmokes(): Suite {
   };
 }
 
+/**
+ * The QA reader's output limit (memory-qa --qa-max-tokens): 8,192 tokens, what the BEAM file-agent rows (Q1 and F6's
+ * grep agent, systems/file-agent.ts on cat40/loop.ts) send Claude on every turn. memory-qa's 1,024-token default cut most of Opus's BEAM answers, because
+ * Claude's adaptive thinking shares the limit; at 4,096 no Opus, Sonnet or GPT-6.1 Sol answer on BEAM-1M dev reached it
+ * (docs/benchmarks/2026-10-12-beam-1m-s1-fixes.md). particle-1 keeps its 16,000-token floor.
+ */
+const QA_MAX_TOKENS = 8192;
+
 function lme(): Suite {
   const dir = '2026-10-07-longmemeval-w10b-reader-replay/arms';
   const arms = ['w10b-opus55-notes', 'w10b-sol-notes'].map(a => jsonl(join(BENCH, dir, a, 'rows.ndjson')));
@@ -111,7 +119,7 @@ function lme(): Suite {
     id: 'lme-s-hard', kind: 'qa', scoring: 'judge',
     about: 'LongMemEval-S questions a frontier reader on gbrain retrieval got wrong, plus spread-out canaries',
     source: `docs/benchmarks/${dir}/{w10b-opus55-notes,w10b-sol-notes}/rows.ndjson (official judge)`,
-    config: { benchmark: 'lme-s', split: 'dev' },
+    config: { benchmark: 'lme-s', split: 'dev', qa_max_tokens: QA_MAX_TOKENS },
     items: [...failed.map(id => ({ id, role: 'headroom' as const })), ...canaries.map(id => ({ id, role: 'canary' as const }))],
   };
 }
@@ -129,7 +137,7 @@ function beam(): Suite {
     id: 'beam-1m-hard', kind: 'qa', scoring: 'judge',
     about: 'Every question of the three public BEAM-1M dev conversations where frontier readers on gbrain missed most rubric items',
     source: 'docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/{a2-top5-opus55,a2-top5-gpt61sol}',
-    config: { benchmark: 'beam-1m', split: 'dev', conversations: convs },
+    config: { benchmark: 'beam-1m', split: 'dev', conversations: convs, qa_max_tokens: QA_MAX_TOKENS },
     items: ids.map(id => ({ id, role: wrong.has(id) ? 'headroom' as const : 'canary' as const })),
   };
 }

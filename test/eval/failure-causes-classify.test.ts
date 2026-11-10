@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { classify } from '../../eval/runner/failure-causes/index.ts';
+import { TRUNCATED_FINISHES } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { failure } from '../support/failure-causes-fixture.ts';
 
 const gold = (g: Partial<ReturnType<typeof failure>['gold']>) => ({ ...failure().gold, ...g });
@@ -90,6 +91,14 @@ describe('classify: deterministic rules', () => {
     expect(classify(failure({ operation: { step: 'upgrade', error: 'migration v297 failed' } })).cause).toBe('operations');
     expect(classify(failure({ tags: ['wrong_stored_fact'] })).rule_id).toBe('ingest.wrong_stored_fact');
     expect(classify(failure({ gold: gold({ gold_count: 1, hidden: 'all' }) })).cause).toBe('privacy_hidden');
+  });
+
+  test('a reply cut off at its output limit is harness.output_truncated for every finish qa-v2 counts as cut, also beside the harness error that records the cut', () => {
+    for (const finish of [...TRUNCATED_FINISHES, 'max_output_tokens']) {
+      expect(classify(failure({ finish_reason: finish })).rule_id).toBe('harness.output_truncated');
+      expect(classify(failure({ finish_reason: finish, harness: { error: `output_truncated: finish ${finish}`, scorer_artifact: null } }))).toMatchObject({ cause: 'harness_error', rule_id: 'harness.output_truncated' });
+    }
+    expect(classify(failure({ finish_reason: 'stop', harness: { error: 'provider 529', scorer_artifact: null } })).rule_id).toBe('harness.error');
   });
 
   test('an abstention question answered anyway is citation_abstention; a misreported write is too', () => {

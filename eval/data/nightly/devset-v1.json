@@ -853,7 +853,8 @@
       "source": "docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/{w10b-opus55-notes,w10b-sol-notes}/rows.ndjson (official judge)",
       "config": {
         "benchmark": "lme-s",
-        "split": "dev"
+        "split": "dev",
+        "qa_max_tokens": 8192
       },
       "items": [
         {
@@ -1071,7 +1072,8 @@
           "1m-2",
           "1m-24",
           "1m-25"
-        ]
+        ],
+        "qa_max_tokens": 8192
       },
       "items": [
         {
@@ -1355,5 +1357,5 @@
     "per-family tool-call shape fuzzer (gap-map generator), after the same check",
     "tasks mined from real misses"
   ],
-  "digest": "ca0fa83332c91c4889ec24e43e5ea69d3706f0f0d901331d4cdd11a5da4bebeb"
+  "digest": "2d8dc1669b309edf5c58b67d10318b12774c1e100235bf0b8b2749a4a78f938a"
 }

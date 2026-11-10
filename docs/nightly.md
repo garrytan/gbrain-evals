@@ -63,6 +63,13 @@ grades its own family: GPT-6 Astra judges every family's answers except OpenAI's
 claude-opus-5-5 and particle-1 share a judge, and their agreement compares the two readers, not two reader-and-judge
 pairs. QA judgments and provider calls are cached by content, so a resumed night repeats none of them.
 
+The QA reader may write up to 8,192 output tokens per answer. The limit is `qa_max_tokens` in each QA suite's config,
+so it is part of the suite digest, and memory-qa's receipt records the limit it sent. 8,192 is what the BEAM rows of
+the file agent (a model with list, grep and read tools over the sessions as files) give Claude on every turn, and at
+half that no frontier answer on BEAM-1M dev reached the limit ([S1 fixes](benchmarks/2026-10-12-beam-1m-s1-fixes.md)). memory-qa's own default is 1,024 tokens, and Claude's
+adaptive thinking counts against it. On the 2026-11-10 master night, at that default, 19 of Opus's 25 BEAM failures
+were answers cut off before they finished. particle-1 keeps its own floor of 16,000 tokens.
+
 ## What the report shows
 
 Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its night directory,
@@ -75,8 +82,14 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   ([`eval/runner/failure-causes`](../eval/runner/failure-causes), causes listed in
   [TAXONOMY.md](failure-causes/TAXONOMY.md)), the same rules the other evals' failures go through, or `unclassified`
   when no deterministic rule explains it. The nightly never sends a row to a model labeller. Provider and harness
-  failures are `harness` rows (`harness_error`): they are counted on their own line and left out of every rate. Items
-  the night scheduled and didn't run are shown as not run, with the reason, and left out of every rate.
+  failures are `harness` rows (`harness_error`): they are counted on their own line and left out of every rate. An
+  answer cut off at its output limit (finish reason `length`, `max_tokens` or `max_output_tokens`) is a harness row
+  too, whatever the judge gave it, because it measured our limit and not gbrain. Rows from older nights that record only
+  the finish reason are read the same way. Items the night scheduled and didn't run are shown as not run, with the
+  reason, and left out of every rate.
+- **Finish reasons.** Every row records the reader's finish reason where the suite's runner records one (the QA
+  suites, from memory-qa's reader receipt), and null where it records none: Cat 40 Hard and the Part C agent suites
+  keep no per-call finish, and the keyless suites have no reader.
 - **Weekly failure causes.** Each outcome row carries the fields the failure-cause `nightly` adapter reads, so a week
   of nights can go through `bun eval/runner/failure-causes/cli.ts classify` and `report` beside the other evals.
 - **Cost per correct answer.** The suite's recorded cost divided by its passing rows. It's a metric for spotting a
@@ -84,8 +97,9 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
 - **Against the previous master night.** Suite by suite, where the digests match, the report flags any increase in a
   deterministic signal (refused tool calls, tool errors, harness errors, lost, stuck, duplicated or overwritten writes,
   failed smokes), a pass-rate drop whose paired bootstrap interval excludes zero, a strong flip (an item that passed
-  every trial and now passes none) and a rise in cost per correct answer with no gain in pass rate. It also lists the
-  gbrain commits since that night.
+  every trial and now passes none) and a rise in cost per correct answer with no gain in pass rate. A cut-off answer
+  counts there as a harness error, never as a pass-rate drop or a flip. It also lists the gbrain commits since that
+  night.
 - **Against stable.** On matrix nights the same rules compare master with the stable release, in their own section.
 - **particle-1's agreement with Opus.** On a night that runs particle-1 beside claude-opus-5-5 (`--readers
   claude-opus-5-5,particle-1`), the report checks whether the low-cost reader marks the same items right and wrong as
@@ -174,7 +188,7 @@ The runner exits with a code and prints the command that resumes the night:
 |---|---|---|
 | 3 | `NIGHTLY_CAP_STOP` | The night's ledger run has no budget left. Paid suites stopped where they were. |
 | 4 | `NIGHTLY_VM_LOST` | The runner was signalled because the machine is going away. Running children were killed. |
-| 5 | `NIGHTLY_HARNESS` | A suite failed to run, or recorded harness or provider failures. Those rows are counted apart. |
+| 5 | `NIGHTLY_HARNESS` | A suite failed to run, or recorded harness or provider failures other than cut-off answers. Those rows are counted apart. |
 
 A refused paid run exits 2, and any other error exits 1.
 
@@ -183,7 +197,9 @@ bun eval/runner/nightly/run.ts --resume <night dir>
 ```
 
 `--resume` reruns only what is missing or recorded as a harness failure, on the gbrain commit the night started on,
-even if the ref has moved since. It first settles the stopped run's open ledger reservations. Run it only after every
+even if the ref has moved since. An answer cut off at its output limit stays as recorded, because memory-qa keeps it as
+answered and the reader's cached reply would be cut off the same way, so it neither ends a night with exit 5 nor gets
+rerun. The report still counts it as a harness row and flags a rise. A resume first settles the stopped run's open ledger reservations. Run it only after every
 child process of the stopped run has exited. On a Ubicloud VM that holds by construction, because `ubi-runner.sh`
 destroys the VM, and every child with it, on every exit path. A night can be resumed at most twice.
 
@@ -227,6 +243,15 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-11: QA readers get 8,192 output tokens, and a cut-off answer is a harness row
+
+The QA suites' reader output limit went from memory-qa's 1,024-token default to 8,192 tokens, set in the dev set as
+`qa_max_tokens`, because at 1,024 most of Opus's BEAM failures were answers cut off before they finished. The change
+gives `lme-s-hard` and `beam-1m-hard` new suite digests, so both start a new baseline. An answer cut off at its output
+limit is now a harness row, on old nights' rows too, and every row records a finish reason, null where its suite records
+none. A cut-off answer doesn't end a night with exit 5 or get rerun by a resume, which would only repeat it. The weekly
+failure-cause output counts every harness row as a failure, even one its judge passed, as this report already did.
 
 ### 2026-11-10: A stricter particle-1 agreement verdict
 

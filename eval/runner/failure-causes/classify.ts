@@ -2,7 +2,9 @@
  * Deterministic failure classification. classify() reads only the signals in
  * an EvalFailure, applies the rules stage by stage (taxonomy.ts STAGES), and
  * returns the first stage's cause as primary with every later signal kept as
- * a secondary cause. A scorer artifact is primary only when it is the row's
+ * a secondary cause. A reply cut off at its output limit is named by that
+ * rule (harness.output_truncated) even when the row also records the harness
+ * error the cut produced. A scorer artifact is primary only when it is the row's
  * only signal, so it never hides a real failure. A failure with no signal
  * comes back as needs_model, for the residual labeller, unless the source did
  * not measure whether the gold reached the model and kept no delivered context
@@ -21,7 +23,8 @@ import { FAILURE_CAUSE_SCHEMA, type CauseLabel, type EvalFailure } from './types
 const HARNESS_STOPS = new Set(['harness_error', 'error']);
 const TIMEOUT_STOPS = new Set(['turn_cap', 'timeout', 'context_overflow', 'max_turns']);
 const TURN_CAPS = new Set(['turn_cap', 'max_turns']);
-const TRUNCATED_FINISH = new Set(['length', 'max_tokens', 'max_output_tokens']);
+/** Finish reasons of a reply cut off at its output limit: OpenAI's `length`, Anthropic's `max_tokens` (qa-v2's TRUNCATED_FINISHES) and the Responses API's `max_output_tokens`. */
+export const TRUNCATED_FINISH: ReadonlySet<string> = new Set(['length', 'max_tokens', 'max_output_tokens']);
 const STAGE_OF = new Map<Cause, Stage>(CAUSES.map(c => [c.id, c.stage]));
 
 interface Hit { cause: Cause; rule: string }
@@ -34,10 +37,10 @@ function signals(f: EvalFailure): { hits: Hit[]; unmeasured: Stage[]; tags: Set<
   const hit = (cause: Cause, rule: string) => hits.push({ cause, rule });
   const g = f.gold;
 
+  if (f.finish_reason && TRUNCATED_FINISH.has(f.finish_reason)) hit('harness_error', 'harness.output_truncated');
   if (f.harness?.error) hit('harness_error', 'harness.error');
   if (f.harness?.scorer_artifact) { hit('harness_error', `harness.scorer_artifact.${f.harness.scorer_artifact}`); tags.add('scorer_artifact'); }
   if (f.stop && HARNESS_STOPS.has(f.stop)) hit('harness_error', `harness.stop_${f.stop}`);
-  if (f.finish_reason && TRUNCATED_FINISH.has(f.finish_reason)) hit('harness_error', 'harness.output_truncated');
 
   if (f.operation) hit('operations', `operations.${f.operation.step}`);
 
