@@ -232,7 +232,10 @@ describe('raise-lease (A17 campaigns)', () => {
       writeFileSync(join(s.state, 'campaign.json'), JSON.stringify({ ...JSON.parse(saved), ledger: 'gone/campaign.sqlite' }));
       return run();
     });
-    expect(s.raiseTo5).toThrow(/was not raised \(exit 3\): lease .* is not open in .*; giving the host reservation back then failed: .*; the host reservation stays at \$5.00 with no raise recorded, so give the \$1.00 back on the host ledger by hand/);
+    let refused = '';
+    try { s.raiseTo5(); } catch (e) { refused = (e as Error).message; }
+    expect(refused).toMatch(/was not raised \(exit 3\): lease .* is not open in .*; giving the host reservation back then failed: .*; the host reservation stays at \$5.00 with no raise recorded, \$1.00 above the lease's \$4.00, and no raise lock is held\. The person running the campaign stops there: they leave the ledger and raises\.ndjson as they are, raise this lease no further, and bring these amounts to the campaign owner \(GBEV-3 for BG1\)/);
+    expect(refused).not.toContain('by hand');
     writeFileSync(join(s.state, 'campaign.json'), saved);
     expect(s.ledgers()).toEqual([5, 4, []]);
     expect(existsSync(join(s.state, 'raise.lock'))).toBe(false);

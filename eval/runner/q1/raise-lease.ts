@@ -219,7 +219,7 @@ export function raise(c: Campaign, leaseId: string, toUsd: number, reason: strin
     if (r.code === VM_REFUSED) {
       const refused = `${what}: the VM ledger on ${l.vm} was not raised (exit ${r.code}): ${(r.err || r.out).slice(-400)}`;
       try { resizeHost(c, l.entry_id, -delta, null, `give back ${what}`); } catch (e) {
-        throw new Error(`${refused}; giving the host reservation back then failed: ${(e as Error).message}; the host reservation stays at ${usd(toUsd)} with no raise recorded, so give the ${usd(delta)} back on the host ledger by hand`);
+        throw new Error(`${refused}; giving the host reservation back then failed: ${(e as Error).message}; the host reservation stays at ${usd(toUsd)} with no raise recorded, ${usd(delta)} above the lease's ${usd(from)}, and no raise lock is held. The person running the campaign stops there: they leave the ledger and raises.ndjson as they are, raise this lease no further, and bring these amounts to the campaign owner (GBEV-3 for BG1) (eval/RUNBOOK.md, "Raise a running Q1 lease")`);
       }
       throw new Error(`${refused}; the host reservation is back at ${usd(from)}`);
     }
