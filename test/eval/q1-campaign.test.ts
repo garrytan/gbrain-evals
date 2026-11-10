@@ -226,6 +226,27 @@ describe('executor, VM payload and schedule', () => {
     expect(e.op.message).not.toContain('bootstrap.sh');
   });
 
+  // Value: protects=a Q1 VM never boots without a module the cell runner imports (GST-2280 review F1); fails_when=a campaign copied from an older manifest leaves an EXECUTES path out of executes and the lease is still reserved; why_new=the VM receives only executes and Q1_VM_PATHS; seam=none; no_claim=the import graph itself, which q1-cell.test.ts checks against EXECUTES
+  test('a Q1 campaign whose executes leaves out a path the cell runner imports is refused before any lease', async () => {
+    const { EXECUTES } = await import('../../eval/runner/q1/cell.ts');
+    const a = q1({ executes: EXECUTES.filter(p => p !== 'eval/runner/providers') });
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    const e = caught(() => c.reserve('kb-locomo'));
+    expect(e.op.code).toBe('CAMPAIGN_INVALID');
+    expect(e.op.message).toContain('leaves eval/runner/providers out of executes');
+    expect(c.leases()).toEqual([]);
+  }, 30_000);
+
+  // Value: protects=a refused Q1 cell holds no lease (GST-2280 review F3); fails_when=the unshipped-script refusal comes only at launch, after reserve wrote a lease against the campaign cap; why_new=the refusal moved ahead of reserve; seam=none; no_claim=script paths written in the commands
+  test('a Q1 cell that runs a script the VM would not receive is refused at reserve, leaving no lease', () => {
+    const a = q1({ executes: ['bun.lock'] }, [{ id: 'kb-locomo', system: 'ext-markdown-kb', benchmark: 'locomo', config: 'recipe', lease_usd: 4, command: 'bun eval/runner/q1/hedge.ts --x', block: 'T1', vm: { size: 'standard-4' } }]);
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    expect(caught(() => c.reserve('kb-locomo')).op.code).toBe('CAMPAIGN_INVALID');
+    expect(c.leases()).toEqual([]);
+  });
+
   test('waves pack cells under the daytime vCPU cap, explicit waves first', () => {
     const cells = Array.from({ length: 5 }, (_, i) => ({ id: `c${i}`, system: 's', benchmark: 'locomo', config: 'common', lease_usd: 1, command: 'true', vm: { size: 'standard-16' }, expected_hours: i + 1 }));
     const waves = planWaves({ kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: 'q1-scoreboard', cap_usd: 1, ledger: 'x', schedule: { vcpu_cap_day: 32 }, cells: [...cells, { ...cells[0], id: 'pinned', wave: 2 }] });

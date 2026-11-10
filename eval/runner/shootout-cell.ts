@@ -96,6 +96,13 @@ export const REPO_RUNNER = join(REPO_ROOT, 'scripts/ubicloud/ubi-runner.sh');
  */
 export const Q1_VM_PATHS = ['patches', 'eval/runner/decide.ts', 'eval/runner/stats', 'eval/data/changing-facts-v1/dev'];
 
+export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/q1/usage.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions', 'eval/runner/providers',
+  'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/openai-judge-shim.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
+  'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
+  'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'scripts/ubicloud/ubi-runner.sh', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',
+  'eval/systems/PROTOCOL.md', 'eval/systems/_fake', 'eval/systems/_shim', 'eval/systems/bootstrap.sh', 'eval/systems/gbrain-defaults', 'eval/systems/kinds.json',
+  'eval/systems/name-guard-baseline.json', 'docs/comparison-systems', 'eval/decisions', 'package.json', 'bun.lock'];
+
 /** The VM executor: UBI_RUNNER when set, else the repository's runner; never a path outside a checkout by default. */
 export function resolveRunner(env: Record<string, string | undefined> = process.env): string {
   const named = env.UBI_RUNNER;
@@ -626,6 +633,15 @@ export class Campaign {
     const unfilled = Object.entries(this.manifest.parameters ?? {}).filter(([, v]) => v === UNFILLED).map(([k]) => k);
     if (unfilled.length) throw new Error(`campaign parameters ${unfilled.join(', ')} are still ${UNFILLED}; the freezing commit fills them before any lease`);
     const c = this.cell(cellId);
+    const ship = [...(this.manifest.executes ?? []), ...Q1_VM_PATHS], shipped = (p: string) => ship.some(e => p === e || p.startsWith(`${e}/`));
+    const missing = this.q1 && shipped('eval/runner/q1/cell.ts') ? EXECUTES.filter(p => !shipped(p)) : [];
+    if (missing.length) throw refuse({ code: 'CAMPAIGN_INVALID', message: `campaign ${this.manifest.campaign_id} runs the Q1 cell runner but leaves ${missing.join(', ')} out of executes, so its VM would not receive what the runner imports`,
+      why: 'a Q1 VM receives only the campaign\'s executes paths and Q1_VM_PATHS, and eval/runner/q1/cell.ts imports every path in EXECUTES', fix: { next: 'ask_user', user_message: 'freeze a new campaign whose executes comes from EXECUTES in eval/runner/shootout-cell.ts instead of copying an older manifest\'s executes' } });
+    const unshipped = this.q1 ? [c.command, c.setup_command, c.snapshot_command, c.restore_command].flatMap(s => [...(s ?? '').matchAll(/(?:eval|scripts|docs)\/[\w./-]+\.(?:ts|sh|py)\b/g)].map(m => m[0]))
+      .filter(p => !shipped(p)) : [];
+    if (unshipped.length) throw refuse({ code: 'CAMPAIGN_INVALID', message: `cell ${c.id} runs ${[...new Set(unshipped)].join(', ')}, which the VM would not receive`,
+      why: 'a Q1 VM receives only the campaign\'s executes paths and Q1_VM_PATHS, so a script outside them would be missing there',
+      fix: { next: 'ask_user', user_message: `add ${unshipped[0]} to the campaign's executes or to Q1_VM_PATHS in eval/runner/shootout-cell.ts; either edit is a new campaign identity, because shootout-cell.ts is in every Q1 campaign's executes` } });
     const mine = this.leases().filter(l => l.cell === cellId);
     const open = mine.find(l => l.status === 'reserved' || l.status === 'launched' || l.status === 'finished');
     if (open) throw new Error(`cell ${cellId} already holds lease ${open.lease_id} (${open.status}); settle or abandon it before reserving again`);
@@ -724,11 +740,6 @@ export class Campaign {
     let onlyArgs: string[] = [];
     if (this.q1) {
       const ship = [...(this.manifest.executes ?? []), ...Q1_VM_PATHS];
-      const unshipped = [c.command, c.setup_command, c.snapshot_command, c.restore_command].flatMap(s => [...(s ?? '').matchAll(/(?:eval|scripts|docs)\/[\w./-]+\.(?:ts|sh|py)\b/g)].map(m => m[0]))
-        .filter(p => !ship.some(e => p === e || p.startsWith(`${e}/`)));
-      if (unshipped.length) throw refuse({ code: 'CAMPAIGN_INVALID', message: `cell ${c.id} runs ${[...new Set(unshipped)].join(', ')}, which the VM would not receive`,
-        why: 'a Q1 VM receives only the campaign\'s executes paths and Q1_VM_PATHS, so a script outside them would be missing there',
-        fix: { next: 'ask_user', user_message: `add ${unshipped[0]} to the campaign's executes or to Q1_VM_PATHS in eval/runner/shootout-cell.ts; either edit is a new campaign identity, because shootout-cell.ts is in every Q1 campaign's executes` } });
       mkdirSync(join(this.stateDir, 'setup'), { recursive: true });
       const shipFile = join(this.stateDir, 'setup', `${l.cell}.ship`);
       writeFileSync(shipFile, ship.join('\n') + '\n');
