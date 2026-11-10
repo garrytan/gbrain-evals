@@ -58,7 +58,7 @@ questions this way, about a third fail, and at 10 million tokens about half do.
   checked twice, every question got the same pass or fail, though one validator changed its reading on 3 of them. On the
   narrowed RS1 test's own minted questions, written by the same BEAM generator, gpt-6.1-sol read 30 that the validators
   failed and found 28 unsupported. Neither check's per-question results are in this repository. The `both-out` view
-  below drops only questions both validators reject, as the conservative case.
+  below drops only questions both validators reject or that cite no turn the conversation has, as the conservative case.
 
 ## How many questions fail
 
@@ -92,9 +92,9 @@ judgments. Every result keeps its published judge, BEAM's gpt-4.1-mini. In one c
 answers as gbrain's own failures, and those on excluded questions (5 of the 10 in the supported view) leave that count
 with their questions.
 
-There are three views. `supported` keeps only questions both validators pass and leaves abstention out; the tables
-here use it. `flagged-out` drops any question that fails and keeps abstention. `both-out` drops only questions both
-validators reject. The verdicts are the same in all three.
+There are three views. `supported` keeps only questions both validators pass and leaves abstention out; the tables here
+use it. `flagged-out` drops any question that fails and keeps abstention. `both-out` drops only questions both
+validators reject or that cite no turn the conversation has. The verdicts are the same in all three.
 
 | Published result | As published | Supported questions only |
 |---|---|---|
