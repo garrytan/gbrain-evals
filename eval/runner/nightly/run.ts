@@ -57,8 +57,8 @@ import { findPreviousNight, writeReport, type NightManifest, type SuiteStatus } 
 import { OLD_RELEASE } from './smokes/upgrade-from-old.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
-/** The stable pin: the peeled commit of gbrain's latest-stable release. */
-export const STABLE_SHA = '98dda48fb9fd339609d6d4eef009811280ff648d';
+/** The stable pin: the peeled commit of gbrain's `stable` tag, the soaked release (v0.60.620.0). `latest-stable` is the alpha channel. */
+export const STABLE_SHA = '555b73a8079de8d7061884358652e19d37f7acdf';
 export const EXIT = { NIGHTLY_CAP_STOP: 3, NIGHTLY_VM_LOST: 4, NIGHTLY_HARNESS: 5 } as const;
 /** Retries of one night (resumes after the first invocation). */
 export const MAX_RETRIES = 2;
