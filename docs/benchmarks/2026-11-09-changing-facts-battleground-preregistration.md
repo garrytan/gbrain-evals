@@ -526,6 +526,15 @@ GBEV-3 accepted that. The amounts are kept on GST-2010, not here.
 
 GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
 
+Update (2026-11-09): the fourth render, the first at high thinking, wrote bg1-dev-01 in full and then stopped partway
+into bg1-dev-02, when a request would have taken the rendering run past its own budget. The first raise had changed
+the program cap but not the run's budget, which was an operator error. A long session's render at high thinking also
+cost several times the rate the raise had been sized on, so the raised cap could not have covered all three dev worlds
+in any case. GBEV-3 raised the rendering cap a second time, at both the program and the run level, before any stage 1
+cell ran. The render then resumed on the same output directory, where the renderer's cache replays every reply
+already paid for, so nothing is bought twice. Stage 1's total now passes Amendment 1's ceiling by the sum of both
+raises, and GBEV-3 accepted that. The amounts are kept on GST-2010, not here.
+
 ### Expected amendments
 
 The expected ones, each dated and committed before the cells it governs:
