@@ -3,7 +3,8 @@
  * finishes, so `run.ts --resume` continues where a stopped run left off and the report reads one shape for every suite.
  *
  * `harness` marks a row that measured the harness or a provider, not gbrain (a provider error, a crashed child, a
- * placeholder result). The report counts those rows apart and never as a gbrain failure. `skipped` marks an item the night
+ * placeholder result, an answer cut off at its output limit). The report counts those rows apart and never as a gbrain
+ * failure. `skipped` marks an item the night
  * scheduled and did not run, with the reason; it is neither a pass, a failure nor a harness row.
  *
  * The fields after `harness` are what eval/runner/failure-causes/adapters/nightly.ts reads into an EvalFailure. The suite's
@@ -12,6 +13,7 @@
  */
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
+import { TRUNCATED_FINISH } from '../failure-causes/classify.ts';
 import type { ArmRole, Condition, Coverage, ToolCall, Visibility, WriteRecord } from '../failure-causes/types.ts';
 
 export const OUTCOME_SCHEMA = 'nightly-outcome/1';
@@ -73,8 +75,11 @@ export interface Outcome {
   operation?: { step: string; error: string } | null;
   /** False when there is nothing to judge: no submission, an empty answer, no report. */
   answered?: boolean | null;
-  /** The reader's finish reason, when recorded. */
-  finish_reason?: string | null;
+  /**
+   * The reader's finish reason as the suite's runner records it (memory-qa's reader receipt), or null where the suite
+   * records none: Cat 40 Hard and Part C keep no per-call finish, and the keyless suites have no reader.
+   */
+  finish_reason: string | null;
   question?: string | null;
   expected?: string | null;
   answer?: string | null;
@@ -91,13 +96,26 @@ export function qualifiedModel(reader: string): string {
   throw new Error(`no provider for reader ${reader}`);
 }
 
+/**
+ * The row's harness failure: the one it records, else, for an answer cut off at its output limit (a finish reason in
+ * classify's TRUNCATED_FINISH), that cut, because the answer measured our output limit rather than gbrain. Rows written
+ * before the cut was recorded as a harness failure read the same way.
+ */
+export function harnessOf(o: Pick<Outcome, 'harness'> & { finish_reason?: string | null }): Outcome['harness'] {
+  if (o.harness) return o.harness;
+  return o.finish_reason && TRUNCATED_FINISH.has(o.finish_reason) ? { error: `output_truncated: the answer was cut off at its output limit (finish ${o.finish_reason})` } : null;
+}
+
 export const outcomeKey = (o: Pick<Outcome, 'suite' | 'item' | 'reader' | 'trial'>) => `${o.suite}\u0000${o.item}\u0000${o.reader ?? ''}\u0000${o.trial}`;
 
 export function appendOutcome(path: string, o: Outcome): void {
   appendFileSync(path, JSON.stringify(o) + '\n');
 }
 
-/** Rows from outcomes.jsonl, else outcomes.jsonl.gz; the last row per key wins, so a rerun row replaces an earlier one. */
+/**
+ * Rows from outcomes.jsonl, else outcomes.jsonl.gz; the last row per key wins, so a rerun row replaces an earlier one.
+ * A row written before every row carried a finish reason reads it as null, and its harness failure is harnessOf's.
+ */
 export function readOutcomes(path: string): Outcome[] {
   const plain = path.endsWith('.gz') ? path.slice(0, -3) : path;
   const gz = `${plain}.gz`;
@@ -106,7 +124,7 @@ export function readOutcomes(path: string): Outcome[] {
   for (const line of text.split('\n')) {
     if (!line.trim()) continue;
     const o = JSON.parse(line) as Outcome;
-    rows.set(outcomeKey(o), o);
+    rows.set(outcomeKey(o), { ...o, finish_reason: o.finish_reason ?? null, harness: harnessOf(o) });
   }
   return [...rows.values()];
 }

@@ -24,7 +24,7 @@ import { isCapStop } from '../refresh-barrier/ledger.ts';
 import type { Item, Suite } from './devset.ts';
 import { contextDigest, NightlyCache, qaPromptVersion } from './judge-cache.ts';
 import { keylessEnv, paidEnv, type Provider } from './keyless.ts';
-import { OUTCOME_SCHEMA, qualifiedModel, type Outcome, type ToolError } from './outcome.ts';
+import { harnessOf, OUTCOME_SCHEMA, qualifiedModel, type Outcome, type ToolError } from './outcome.ts';
 import type { DevSetRun } from './report.ts';
 import type { WriteScore } from './write-score.ts';
 
@@ -111,9 +111,10 @@ export function outcome(run: SuiteRun, ctx: Pick<NightContext, 'night' | 'ref' |
   const role = run.items.find(i => i.id === o.item || o.item.endsWith(`:${i.id}`))?.role ?? 'headroom';
   const facts = SUITE_FACTS[run.suite.id];
   if (!facts) throw new Error(`suite ${run.suite.id} has no row in SUITE_FACTS`);
-  return { schema: OUTCOME_SCHEMA, night: ctx.night, suite: run.suite.id, suite_digest: run.digest, role, reader: null, ref: ctx.ref, sha: ctx.sha, trial: 1,
-    score: null, cost_usd: null, stop: null, tool_errors: [], evidence: {}, harness: null,
+  const row: Outcome = { schema: OUTCOME_SCHEMA, night: ctx.night, suite: run.suite.id, suite_digest: run.digest, role, reader: null, ref: ctx.ref, sha: ctx.sha, trial: 1,
+    score: null, cost_usd: null, stop: null, tool_errors: [], evidence: {}, harness: null, finish_reason: null,
     system: 'gbrain', arm: `${run.suite.id}@${ctx.ref}`, arm_role: ctx.ref === 'master' ? 'gbrain_default' : 'gbrain_variant', ...facts, ...o };
+  return { ...row, harness: harnessOf(row) };
 }
 
 /** Rows for items a child never reported on: harness rows, so the report counts them apart and a resume reruns them. */
@@ -375,12 +376,18 @@ export const trialsAdapter: Adapter = async (run, ctx) => {
 
 // ─── QA: lme-s-hard and beam-1m-hard through memory-qa ──────────────
 
+/**
+ * memory-qa's command for one reader. The reader's output limit is the suite's qa_max_tokens, so the suite digest and
+ * memory-qa's receipt (reading.max_output_tokens, reader_max_tokens_sent) record it; a paid suite without one is refused.
+ */
 export function qaCommand(run: SuiteRun, ctx: NightContext, reader: string, idsFile: string, out: string): string[] {
   const benchmark = String(run.suite.config?.benchmark);
   const script = join(REPO, 'eval/runner/memory-qa/run.ts');
   if (ctx.fake) return bun(script, '--benchmark', benchmark, '--system', 'fake', '--ids', idsFile, '--output', out);
+  const maxTokens = run.suite.config?.qa_max_tokens;
+  if (!Number.isInteger(maxTokens)) throw new Error(`suite ${run.suite.id} names no qa_max_tokens, so its reader would get memory-qa's 1,024-token default, which cuts frontier answers`);
   return bun(script, '--benchmark', benchmark, '--split', String(run.suite.config?.split ?? 'dev'), '--gbrain', `${ctx.clone}@${ctx.sha}`, '--gbrain-defaults', '--embed', 'real',
-    '--qa', 'reader', '--reader', qualifiedModel(reader), '--judge', judgeFor(reader), '--ids', idsFile, '--paid', ...paidFlags(ctx, run.suite), '--output', out);
+    '--qa', 'reader', '--reader', qualifiedModel(reader), '--judge', judgeFor(reader), '--ids', idsFile, '--paid', ...paidFlags(ctx, run.suite), '--qa-max-tokens', String(maxTokens), '--output', out);
 }
 
 const QA_PASS = 0.5;
