@@ -37,6 +37,32 @@ This records what each gbrain-evals release changed and what its measurements me
   touch or cross zero. The synthetic sizes don't match the real ones, so G2 and G4 may gate the nightly loop on
   direction only.
 
+## [0.10.206] - 2026-11-11
+
+### The nightly LongMemEval and BEAM readers get room to finish their answers, and an answer cut off at its limit no longer counts against gbrain
+
+- **What changed.** The nightly QA suites, `lme-s-hard` and `beam-1m-hard`, now give the reader up to 8,192 output
+  tokens per answer instead of memory-qa's 1,024-token default. The limit is `qa_max_tokens` in each suite's dev-set
+  config, so it is part of the suite digest, and a paid QA suite that names none is refused. Claude's adaptive thinking
+  counts against the limit. On the 2026-11-10 master night, 19 of Opus's 25 BEAM failures, and 13 of its BEAM passes,
+  were answers cut off at 1,024 tokens. 8,192 is what the file agent's BEAM rows give Claude per turn, and at half that no
+  frontier answer on BEAM-1M dev reached the limit. particle-1 keeps its own 16,000-token floor.
+- **How a cut-off answer counts.** Every nightly outcome row records the reader's finish reason, or null where its suite
+  records none. An answer that stopped at its output limit (finish `length`, `max_tokens` or `max_output_tokens`) is
+  a harness row whatever its judge gave it. It's left out of the pass rates, counted as `harness_error` in failures by
+  cause, and flagged as a rise in harness errors against the previous night, never as a pass-rate drop or a flip. Older
+  nights' rows read the same way, since they already recorded the finish reason. Re-read with this code, the 2026-11-10
+  night's Opus BEAM pass^1 is 79% over the 28 answers that finished, where it read 58% over all 60. The weekly
+  failure-cause output now counts every harness row as a failure even when its judge passed it, as the nightly report
+  already did.
+- **Resume.** A resume leaves a cut-off answer as recorded, because memory-qa keeps it as answered and the reader's
+  cached reply would be cut off the same way. A night whose only harness rows are cut-off answers no longer ends with
+  exit 5.
+- **What to expect.** Both QA suites get new digests, so they start a new baseline, and the first night after this
+  change makes every QA reader and judge call afresh, since the cache keys on the output limit. Don't resume a night
+  that started before this change. memory-qa refuses its output directory because the reader's limit changed, so start
+  a fresh night instead.
+
 ## [0.10.205] - 2026-11-10
 
 ### Code review now skips the predictive-measures raw scorecards and episode logs, so their results fit gstack's review limit

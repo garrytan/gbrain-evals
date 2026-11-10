@@ -5,9 +5,9 @@
  *   bun eval/runner/nightly/report.ts --night-dir <dir> [--previous <night dir>] [--stable <night dir>] [--gbrain-clone <path>]
  *
  * pass^k is tau-bench's estimator: an item with c passes in n trials contributes C(c,k)/C(n,k), the chance that k trials drawn
- * from its n all pass, averaged over items; pass^1 is the plain pass rate. Harness rows (provider or harness failures) are
- * left out of every rate and counted on their own line, and skipped rows (items the night scheduled and did not run) are
- * left out of every rate and count, and shown as not run. Cost per correct answer is the suite's whole recorded cost over
+ * from its n all pass, averaged over items; pass^1 is the plain pass rate. Harness rows (provider or harness failures, and
+ * answers cut off at their output limit: outcome.ts harnessOf) are left out of every rate and counted on their own line,
+ * and skipped rows (items the night scheduled and did not run) are left out of every rate and count, and shown as not run. Cost per correct answer is the suite's whole recorded cost over
  * its passing rows.
  *
  * Failures by cause come from the failure-cause library (eval/runner/failure-causes): each failed or harness row becomes

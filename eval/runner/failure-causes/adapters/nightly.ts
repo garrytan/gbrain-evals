@@ -16,8 +16,12 @@
  * harness_error; an ordinary end (submitted, answered, replayed, pass, fail, ok) is null. Tags: misreport when the write
  * report was wrong (report_correct false), no_answer when there was no answer to judge (answered false), measured_at_10
  * when the gold coverage is the QA runner's at 10. Row text goes only on public or synthetic rows with an answer.
+ *
+ * harness is the nightly's harnessOf: an answer cut off at its output limit is a harness failure whether or not its row
+ * records the cut (older rows record only the finish reason), so old and new rows classify alike, as
+ * harness.output_truncated. A harness row is a failure even when its judge passed it, as the nightly report counts it.
  */
-import { OUTCOME_SCHEMA, qualifiedModel, type Outcome } from '../../nightly/outcome.ts';
+import { harnessOf, OUTCOME_SCHEMA, qualifiedModel, type Outcome } from '../../nightly/outcome.ts';
 import { classify } from '../classify.ts';
 import { fileText, pointer, type LoadedFile, type SourceEntry } from '../manifest.ts';
 import type { Tag } from '../taxonomy.ts';
@@ -36,6 +40,7 @@ function stopOf(stop: string | null): string | null {
 
 /** One outcome row as an EvalFailure: a failure when it did not pass, a not_run row when it was skipped. */
 export function nightlyFailure(o: Outcome, source: string, evidence: string[]): EvalFailure {
+  const harness = harnessOf(o);
   const tags: Tag[] = [];
   if (o.evidence.report_correct === false) tags.push('misreport');
   if (o.answered === false) tags.push('no_answer');
@@ -46,8 +51,8 @@ export function nightlyFailure(o: Outcome, source: string, evidence: string[]): 
     schema: EVAL_FAILURE_SCHEMA, source, run_id: `${o.night}|${o.ref}|${o.sha}`, case_id: `${o.suite}|${o.item}|${o.reader ?? 'keyless'}|t${o.trial}`, task_id: o.item,
     system: o.system, arm: o.arm, arm_role: o.arm_role, condition: o.condition, visibility: o.visibility,
     model: o.reader === null ? KEYLESS : o.reader === 'fake' ? 'fake' : qualifiedModel(o.reader), gbrain_sha: o.sha,
-    failed: !o.skipped && !o.pass, ...(o.skipped ? { not_run: o.skipped } : {}), score: o.score, category: o.category ?? null, agent_loop: o.agent_loop,
-    stop: stopOf(o.stop), finish_reason: o.finish_reason ?? null, harness: o.harness ? { error: o.harness.error, scorer_artifact: null } : null,
+    failed: !o.skipped && (!o.pass || harness !== null), ...(o.skipped ? { not_run: o.skipped } : {}), score: o.score, category: o.category ?? null, agent_loop: o.agent_loop,
+    stop: stopOf(o.stop), finish_reason: o.finish_reason ?? null, harness: harness ? { error: harness.error, scorer_artifact: null } : null,
     operation: o.operation ?? null, tool_calls: o.calls ?? null,
     gold: { gold_count: o.gold_count ?? null, stored: null, hidden: null, retrieved: o.retrieved ?? null, delivered: o.delivered ?? null, opened: o.opened ?? null, summary_only: null },
     writes: o.writes ?? null, tags, evidence, ...text,
@@ -77,7 +82,7 @@ export function fromNightly(files: LoadedFile[], entry: SourceEntry): AdapterOut
     const f = nightlyFailure(o, entry.id, [at]);
     if (o.skipped) { skip(counts, o.skipped); notRun.push(f); continue; }
     if (o.reader === null) ran.set(`${f.run_id}|${o.suite}`, (ran.get(`${f.run_id}|${o.suite}`) ?? 0) + 1);
-    if (o.pass) { counts.mapped++; continue; }
+    if (!f.failed) { counts.mapped++; continue; }
     if (o.reader !== null) { counts.mapped++; counts.failed++; failures.push(f); continue; }
     const label = classify(f);
     if (label.cause === null || label.cause === 'unclassified') { skip(counts, 'keyless failure with no deterministic cause'); continue; }

@@ -16,8 +16,9 @@ import { cat40Commands, cat40DevSet, cat40Rows, episodeRows, judgeFor, latestRow
   trialRows, type NightContext, type SuiteRun } from '../../eval/runner/nightly/adapters.ts';
 import { canonicalDigest, loadDevSet } from '../../eval/runner/nightly/devset.ts';
 import { NightlyCache } from '../../eval/runner/nightly/judge-cache.ts';
+import { buildDevSet } from '../../eval/runner/nightly/select-devset.ts';
 import { keylessEnv } from '../../eval/runner/nightly/keyless.ts';
-import { qualifiedModel, readOutcomes } from '../../eval/runner/nightly/outcome.ts';
+import { qualifiedModel, readOutcomes, resumable, type Outcome } from '../../eval/runner/nightly/outcome.ts';
 import { main, parseArgs, planSuites, requirementGap } from '../../eval/runner/nightly/run.ts';
 import { isContentMiss, recordedCalls, replayItems } from '../../eval/runner/nightly/tool-contract.ts';
 
@@ -131,6 +132,16 @@ describe('adapter commands', () => {
     const cmd = qaCommand(run, ctx(), 'gpt-6.1-sol', '/ids.txt', '/out').join(' ');
     expect(cmd).toContain('--benchmark beam-1m --split dev --gbrain /g@' + 'c'.repeat(40) + ' --gbrain-defaults --embed real --qa reader --reader openai:gpt-6.1-sol --judge anthropic:claude-opus-5-5 --ids /ids.txt --paid --budget-run-id');
     expect(qaCommand(run, ctx({ fake: true, paid: null }), 'fake', '/ids.txt', '/out').slice(3)).toEqual(['--benchmark', 'beam-1m', '--system', 'fake', '--ids', '/ids.txt', '--output', '/out']);
+  });
+
+  test('QA: the reader gets its suite\'s output limit, 8,192 tokens on both QA suites, and a paid QA suite that names none is refused', () => {
+    expect(buildDevSet()).toEqual(devset);
+    expect(devset.suites.filter(s => s.kind === 'qa').map(s => [s.id, s.config?.qa_max_tokens])).toEqual([['lme-s-hard', 8192], ['beam-1m-hard', 8192]]);
+    for (const id of ['lme-s-hard', 'beam-1m-hard']) expect(qaCommand(suiteRun(id), ctx(), 'claude-opus-5-5', '/ids.txt', '/out').join(' ')).toContain('--qa-max-tokens 8192 --output /out');
+    const run = suiteRun('beam-1m-hard');
+    const bare = { ...run, suite: { ...run.suite, config: { benchmark: 'beam-1m', split: 'dev' } } };
+    expect(() => qaCommand(bare, ctx(), 'claude-opus-5-5', '/ids.txt', '/out')).toThrow('qa_max_tokens');
+    expect(qaCommand(bare, ctx({ fake: true, paid: null }), 'fake', '/ids.txt', '/out')).not.toContain('--qa-max-tokens');
   });
 
   test('concurrency trials take contiguous seed ranges', () => {
@@ -329,6 +340,37 @@ describe('the fields the failure-cause adapter reads', () => {
     expect(at5.map(r => [r.retrieved, r.delivered, r.evidence.recall_any_at_10, r.question])).toEqual([['none', null, null, null], ['all', null, null, null]]);
     writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ qa: { mode: 'think', context: 'sessions' } }));
     expect(qaRows(run, ctx(), 'gpt-6.1-sol', dir, 'anthropic:claude-opus-5-5', new Map([q(a!, ['g1', 'g2'], 'Paris')]))[0]!.delivered).toBeNull();
+  });
+
+  test('every row carries a finish reason, null where its suite records none; a QA answer cut off at its output limit is a harness row, and an older row reads the same', () => {
+    const none = [outcome(suiteRun('cat40-hard-m'), ctx(), { item: 'H1-02', pass: false }), ...smokeRows(suiteRun('system-smokes'), ctx(), [{ id: 'query-contract', pass: true, code: null, detail: '', ms: 1 }]),
+      ...skippedRows(suiteRun('concurrent-writers', ['5001']), ctx(), 'postgres trials need --pg-admin <url>')];
+    for (const r of none) expect(r).toMatchObject({ finish_reason: null, harness: null });
+    const dir = tmp();
+    const run = suiteRun('beam-1m-hard');
+    const [a, b] = run.items.map(i => i.id);
+    writeFileSync(join(dir, 'rows.ndjson'), [{ id: a, qa_score: 1, qa_answer: 'Paris', qa_receipts: [{ role: 'reader', finish: 'stop' }] },
+      { id: b, qa_score: 1, qa_answer: 'The user moved to', qa_receipts: [{ role: 'reader', finish: 'max_tokens' }, { role: 'judge', finish: 'stop' }] }].map(r => JSON.stringify(r)).join('\n') + '\n');
+    const [whole, cut] = qaRows(run, ctx(), 'claude-opus-5-5', dir, 'openai:gpt-6-astra');
+    expect(whole).toMatchObject({ pass: true, finish_reason: 'stop', harness: null });
+    expect(cut).toMatchObject({ pass: true, finish_reason: 'max_tokens', harness: { error: 'output_truncated: the answer was cut off at its output limit (finish max_tokens)' } });
+    const file = join(tmp(), 'outcomes.jsonl');
+    const { finish_reason: _absent, ...older } = whole!;
+    writeFileSync(file, [older, { ...cut, harness: null }].map(r => JSON.stringify(r)).join('\n') + '\n');
+    expect(readOutcomes(file).map(r => [r.item, r.finish_reason, r.harness])).toEqual([[a, null, null], [b, 'max_tokens', cut!.harness]]);
+  });
+
+  test('a resume reruns skipped and harness rows, but not an answer cut off at its output limit, which a rerun would only repeat', () => {
+    const run = suiteRun('beam-1m-hard');
+    const item = run.items[0]!.id;
+    const row = (o: Partial<Outcome>) => outcome(run, ctx(), { item, reader: 'claude-opus-5-5', pass: true, ...o });
+    expect(row({}).harness).toBeNull();
+    expect(resumable(row({}))).toBe(false);
+    expect(row({ finish_reason: 'length' }).harness?.error).toStartWith('output_truncated:');
+    expect(resumable(row({ finish_reason: 'length' }))).toBe(false);
+    expect(resumable(row({ finish_reason: 'length', harness: { error: 'memory-qa exited 1: provider 529' } }))).toBe(true);
+    expect(resumable(row({ pass: false, harness: { error: 'no row recorded' } }))).toBe(true);
+    expect(resumable(row({ pass: false, skipped: 'postgres trials need --pg-admin <url>' }))).toBe(true);
   });
 
   test('tool-contract replay rows: every replayed call by tool, and a refusal never recovered, since a replay sends each call once', async () => {

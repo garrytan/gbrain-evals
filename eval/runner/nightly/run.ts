@@ -32,15 +32,17 @@
  *
  * Suites run in parallel, each in its own child processes (adapters.ts). The night directory is <out>/<night>/<ref>
  * (the first 12 characters of a sha), holding night.json, outcomes.jsonl, each suite's work under suites/, and the report.
- * --resume reruns what is missing, skipped or recorded as a harness failure on the gbrain commit the night started on (its ref
- * may have moved since), after settling the stopped run's open ledger reservations (ledger.ts reconcile), at most twice
- * per night; run it only once every child of the stopped run has exited. A fresh run into a night directory that already
- * holds night.json is refused and points to --resume. A ledger run this night opened itself (from --night-cap-usd and
+ * --resume reruns what is missing, skipped or recorded as a harness failure, except an answer cut off at its output limit,
+ * which a rerun would only repeat (outcome.ts resumable), on the gbrain commit the night started on (its ref may have
+ * moved since), after settling the stopped run's open ledger reservations (ledger.ts reconcile), at most twice per night;
+ * run it only once every child of the stopped run has exited. A fresh run into a night directory that already holds
+ * night.json is refused and points to --resume. A ledger run this night opened itself (from --night-cap-usd and
  * --month-cap-usd) is closed when the night, or a later resume of it, ends without a stop; a run passed in with
  * --budget-run-id belongs to its opener, which closes it (ledger.ts close). A stop exits with a code and the line to resume:
  *   3 NIGHTLY_CAP_STOP  the night's ledger run or the 30-night cap is spent; paid suites stopped where they were
  *   4 NIGHTLY_VM_LOST   the runner was signalled (the machine is going away); running children were killed
- *   5 NIGHTLY_HARNESS   a suite failed to run or recorded harness or provider failures; its rows are counted apart
+ *   5 NIGHTLY_HARNESS   a suite failed to run or recorded harness or provider failures other than cut-off answers; its
+ *                       rows are counted apart
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -52,7 +54,7 @@ import { ADAPTERS, callsModels, skippedRows, type NightContext, type SuiteRun, t
 import { loadDevSet, suiteDigest, type DevSet } from './devset.ts';
 import { NightlyCache } from './judge-cache.ts';
 import { closeOwnedNightRun, NIGHTLY_RUNNER_PREFIX, NightlyCapStop, openNightRun, reconcileNightRun } from './ledger.ts';
-import { appendOutcome, outcomeKey, qualifiedModel, readOutcomes, type Outcome } from './outcome.ts';
+import { appendOutcome, outcomeKey, qualifiedModel, readOutcomes, resumable, type Outcome } from './outcome.ts';
 import { findPreviousNight, writeReport, type NightManifest, type SuiteStatus } from './report.ts';
 import { OLD_RELEASE } from './smokes/upgrade-from-old.ts';
 
@@ -248,7 +250,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     const record = (rows: Outcome[]) => {
       for (const o of rows) {
         const before = have.get(outcomeKey(o));
-        if (before && !before.harness && !before.skipped) continue;
+        if (before && !resumable(before)) continue;
         appendOutcome(outcomesPath, o);
         have.set(outcomeKey(o), o);
       }
@@ -278,7 +280,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     for (const [s, h] of handlers) process.off(s, h);
     for (const s of statuses) if (s.status === 'pending') Object.assign(s, { status: 'error', reason: 'did not finish' });
     manifest.finished_at = new Date().toISOString();
-    const harnessRows = [...have.values()].filter(o => o.harness).length;
+    const harnessRows = [...have.values()].filter(o => o.harness && resumable(o)).length;
     const partial = [...statuses.filter(s => s.status === 'partial' || s.status === 'error').map(s => `${s.id} ${s.status}${s.reason ? `: ${s.reason}` : ''}`),
       ...(harnessRows ? [`${harnessRows} harness rows`] : [])];
     const exit = signalled ? 'NIGHTLY_VM_LOST' : capStop ? 'NIGHTLY_CAP_STOP' : partial.length ? 'NIGHTLY_HARNESS' : null;

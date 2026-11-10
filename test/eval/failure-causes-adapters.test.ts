@@ -6,6 +6,7 @@ import { gzipSync } from 'node:zlib';
 import { ADAPTERS, classify, loadSource, nightlyFailure, validateManifest, SOURCES_SCHEMA } from '../../eval/runner/failure-causes/index.ts';
 import { cat40Calls, cat40Fields, namesSlug } from '../../eval/runner/failure-causes/adapters/cat40.ts';
 import { fileText, sha256, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
+import { harnessOf } from '../../eval/runner/nightly/outcome.ts';
 import { entry, failure, FX, loadFixture } from '../support/failure-causes-fixture.ts';
 
 const byCase = (failures: ReturnType<typeof ADAPTERS.rs1>['failures']) => new Map(failures.map(f => [f.case_id, classify(f)]));
@@ -253,6 +254,17 @@ describe('nightly adapter', () => {
     expect(labels.get('H1-04')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.error' });
     expect(byItem.get('H1-04')!.harness).toEqual({ error: 'harness_error: MCP server exited', scorer_artifact: null });
     expect(labels.get('0a995998')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.output_truncated', tags: ['measured_at_10', 'no_answer'] });
+  });
+
+  test('an answer cut off at its output limit reads the same from an older row and from one that records the cut as its harness error, and is a harness failure even when the judge passed it', () => {
+    const older = fixtureRows.find(r => r.item === '0a995998');
+    const marked = { ...older, harness: harnessOf(older) };
+    expect(marked.harness).not.toBeNull();
+    expect(nightlyFailure(marked, 'n', [])).toEqual(nightlyFailure(older, 'n', []));
+    expect(classify(nightlyFailure(marked, 'n', []))).toMatchObject({ cause: 'harness_error', rule_id: 'harness.output_truncated' });
+    const passed = ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', [{ ...older, pass: true, score: 1 }, { ...marked, item: 'cut-2', pass: true, score: 1 }])], entry('n', 'nightly'));
+    expect(passed.counts).toMatchObject({ read: 2, mapped: 2, failed: 2 });
+    expect(passed.failures.map(f => classify(f)).map(l => [l.task_id, l.cause, l.rule_id])).toEqual([['0a995998', 'harness_error', 'harness.output_truncated'], ['cut-2', 'harness_error', 'harness.output_truncated']]);
   });
 
   test('stop: harness_error and error are harness_error, turn_cap stays, a smoke timeout is timeout, an ordinary end is null', () => {
