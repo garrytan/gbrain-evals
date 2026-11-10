@@ -43,12 +43,14 @@
  * 2026-11-10) reads only that one: a non-control scorecard carrying the layer
  * must record the named gbrain commit, knobs and question file, or the command
  * refuses with SYNTHETIC_SCORECARD_INVALID and writes nothing. verdict.json
- * records the scorecard's path, sha256 and identity. --secondary reads any other
- * scorecard as a secondary result: the output and verdict.json say so, and it is
- * never the verdict we report.
+ * records the scorecard's absolute path, sha256 and identity, and counted: true
+ * only for a non-control scorecard that passed the check on at least one such
+ * layer. --secondary reads any other scorecard as a secondary result: the output
+ * and verdict.json say so, and it is never the verdict we report.
  */
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { MANIFEST } from './export-references.ts';
 import { MAPPING, isMeasure, MEASURES, type Measure } from './mapping.ts';
 import { DEFAULT_MIN_QUALIFYING, ValidityReferenceError, kendallTau, loadReference, verdict, type Contrast, type Verdict } from './validity.ts';
@@ -178,8 +180,9 @@ export function scorecardIdentity(card: any) {
  * A layer with a named counted scorecard (mapping.ts) reads only that scorecard: a non-control scorecard carrying the
  * layer must have loaded the named gbrain commit, with the named knobs and question file, or the command refuses.
  */
-export function checkCountedScorecard(measure: Measure, card: unknown, result: ReturnType<typeof evaluateMeasure>): void {
+export function checkCountedScorecard(measure: Measure, card: unknown, result: ReturnType<typeof evaluateMeasure>): number {
   const id = scorecardIdentity(card);
+  let checked = 0;
   for (const layer of MAPPING[measure].layers) {
     const spec = layer.counted;
     if (!spec || !result.layers.find(l => l.id === layer.id)?.in_scorecard) continue;
@@ -187,9 +190,12 @@ export function checkCountedScorecard(measure: Measure, card: unknown, result: R
       id.gbrain_loaded_commit !== spec.gbrain_commit ? 'gbrain_loaded_commit ' + id.gbrain_loaded_commit + ', expected ' + spec.gbrain_commit : '',
       JSON.stringify(id.knobs) !== JSON.stringify(spec.knobs) ? 'knobs ' + JSON.stringify(id.knobs) + ', expected ' + JSON.stringify(spec.knobs) : '',
       id.questions_sha256 !== spec.questions_sha256 ? 'questions_sha256 ' + id.questions_sha256 + ', expected ' + spec.questions_sha256 : '',
+      id.digest !== spec.digest ? 'digest ' + id.digest + ', expected ' + spec.digest : '',
     ].filter(Boolean);
     if (wrong.length) throw new SyntheticScorecardError(measure + ' layer ' + layer.id + ' reads only the counted scorecard the preregistration names (corrections of 2026-11-10); this one differs: ' + wrong.join('; ') + '. Pass --secondary to read it as a secondary result that never gates');
+    checked++;
   }
+  return checked;
 }
 
 const num = (x: number) => (x >= 0 ? '+' : '') + x.toFixed(3);
@@ -219,15 +225,15 @@ export function main(argv: string[]): number {
     return 2;
   }
   try {
-    let parsed: unknown, text = '';
-    try { text = readFileSync(syntheticPath, 'utf8'); parsed = JSON.parse(text); } catch { throw new SyntheticScorecardError(syntheticPath + ' is not readable JSON'); }
+    let parsed: unknown, raw = Buffer.alloc(0);
+    try { raw = readFileSync(syntheticPath); parsed = JSON.parse(raw.toString('utf8')); } catch { throw new SyntheticScorecardError(syntheticPath + ' is not readable JSON'); }
     const synthetic = readSynthetic(parsed);
     if (synthetic.control && !argv.includes('--control')) throw new SyntheticScorecardError(syntheticPath + ' is a control scorecard (' + (synthetic.transports ?? 'no transports recorded') + '); its verdict checks the plumbing and is never the one reported. Pass --control to read it as a control, or score the synthetic brain with run --synthetic --paid');
     const result = evaluateMeasure(measure, synthetic, flag(argv, '--manifest') ?? MANIFEST);
     const secondary = argv.includes('--secondary');
-    if (!synthetic.control && !secondary) checkCountedScorecard(measure, parsed, result);
+    const counted = !synthetic.control && !secondary && checkCountedScorecard(measure, parsed, result) > 0;
     for (const line of renderVerdict(result, secondary)) console.log(line);
-    if (out) writeFileSync(out, JSON.stringify({ ...result, ...(secondary ? { secondary: true } : {}), scorecard: { path: syntheticPath, sha256: createHash('sha256').update(text).digest('hex'), ...scorecardIdentity(parsed) } }, null, 2) + '\n');
+    if (out) writeFileSync(out, JSON.stringify({ ...result, counted, ...(secondary ? { secondary: true } : {}), scorecard: { path: resolve(syntheticPath), sha256: createHash('sha256').update(raw).digest('hex'), ...scorecardIdentity(parsed) } }, null, 2) + '\n');
     return 0;
   } catch (error) {
     if (error instanceof ValidityReferenceError || error instanceof SyntheticScorecardError) {

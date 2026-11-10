@@ -36,11 +36,12 @@ export interface Layer {
   note: string;
 }
 
-/** A synthetic live-recall scorecard's identity: the gbrain commit it loaded, its knobs and its question file. */
+/** A synthetic live-recall scorecard's identity: the gbrain commit it loaded, its knobs, its question file and the directory digest the runner recomputes. */
 export interface CountedScorecard {
   gbrain_commit: string;
   knobs: { unembedded_chunk_share: number; synopsis_vectors_off: boolean; keyword_candidate_bound: number | null; shell_page_share: number };
   questions_sha256: string;
+  digest: string;
 }
 
 /** G2's batch 2 layer: the real condition (synopsis vectors off, 10% unembedded, half the pages that aren't gold as shells) at 0.60.593.0, batch 2's own gbrain. */
@@ -48,12 +49,14 @@ export const COUNTED_B2: CountedScorecard = {
   gbrain_commit: '27f8b9d6287c2ba635532c7d3bc015c50e1d769b',
   knobs: { unembedded_chunk_share: 0.1, synopsis_vectors_off: true, keyword_candidate_bound: null, shell_page_share: 0.5 },
   questions_sha256: '077569d730f9cff639cb21040e14635c034db19f19fd44b9e2c7460a7a5d2e89',
+  digest: '6b3791febd9840179686c0c035540a99acd38a7c31042aad7838163c4e493551',
 };
 /** The batch 3 layers: the synthetic batch-3 brain (seed 20261110, 30 per type, Opus paraphrases) at 0.60.641.0, the version batch 3's counted run loads under the 2026-11-10 amendment (its freeze records 0.60.623.0). */
 export const COUNTED_B3: CountedScorecard = {
   gbrain_commit: '2560ffddb85244b82f2b325ee2ddc846f77c3cac',
   knobs: { unembedded_chunk_share: 0, synopsis_vectors_off: false, keyword_candidate_bound: null, shell_page_share: 0 },
   questions_sha256: '3664863bc9916952ac987a225d4393013fed94c48e8de27a4dd78b0c9cd6f1f7',
+  digest: 'c2dcf99f4775a8d74181dd8eca150fb00025e4ab42999dfa2966f787ef5b0596',
 };
 
 const same = (...ids: string[]): MappedPair[] => ids.map(id => ({ synthetic: id, reference: id }));

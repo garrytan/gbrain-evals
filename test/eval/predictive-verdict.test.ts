@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { MANIFEST, REFERENCE_DIR } from '../../eval/runner/predictive/export-references.ts';
 import { G3_CAUSES } from '../../eval/generators/write-contract-gen.ts';
-import { B2_CONTRASTS, COUNTED_B2, MAPPING, MEASURES } from '../../eval/runner/predictive/mapping.ts';
+import { B2_CONTRASTS, B3_ENTITY, B3_FRESHNESS, COUNTED_B2, COUNTED_B3, MAPPING, MEASURES } from '../../eval/runner/predictive/mapping.ts';
 import { SyntheticScorecardError, evaluateMeasure, main, readSynthetic } from '../../eval/runner/predictive/verdict.ts';
 import { ValidityReferenceError, loadReference, verdict, type Contrast, type ManifestEntry } from '../../eval/runner/predictive/validity.ts';
 
@@ -149,11 +149,11 @@ describe('predictive verdict on the committed references', () => {
 });
 
 describe('counted scorecard identity', () => {
-  const voyageCard = (over: { commit?: string; knobs?: object; questions?: string } = {}) => ({
+  const voyageCard = (over: { commit?: string; knobs?: object; questions?: string; digest?: string } = {}) => ({
     ...liveCard(b2.contrasts), protocol: 'batch2',
     run: {
       control: false, transports: 'voyage', gbrain_loaded_version: '0.60.593.0', gbrain_loaded_commit: over.commit ?? COUNTED_B2.gbrain_commit,
-      synthetic: { digest: 'test-digest', questions_sha256: over.questions ?? COUNTED_B2.questions_sha256, ...(over.knobs ?? COUNTED_B2.knobs) },
+      synthetic: { digest: over.digest ?? COUNTED_B2.digest, questions_sha256: over.questions ?? COUNTED_B2.questions_sha256, ...(over.knobs ?? COUNTED_B2.knobs) },
     },
   });
 
@@ -165,7 +165,8 @@ describe('counted scorecard identity', () => {
       expect(quiet(() => main(['--measure', 'G2', '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json')]))).toBe(0);
       const v = JSON.parse(readFileSync(join(dir, 'v.json'), 'utf8'));
       expect(v.verdict).toBe('PREDICTIVE');
-      expect(v.scorecard).toMatchObject({ sha256: createHash('sha256').update(text).digest('hex'), gbrain_loaded_commit: COUNTED_B2.gbrain_commit, questions_sha256: COUNTED_B2.questions_sha256, knobs: COUNTED_B2.knobs });
+      expect(v.counted).toBe(true);
+      expect(v.scorecard).toMatchObject({ path: join(dir, 'syn.json'), sha256: createHash('sha256').update(text).digest('hex'), gbrain_loaded_commit: COUNTED_B2.gbrain_commit, questions_sha256: COUNTED_B2.questions_sha256, digest: COUNTED_B2.digest, knobs: COUNTED_B2.knobs });
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -174,7 +175,7 @@ describe('counted scorecard identity', () => {
   test('another gbrain commit, other knobs or another question file refuses with exit 3 and writes nothing, even with --control', () => {
     const dir = mkdtempSync(join(tmpdir(), 'verdict-counted-bad-'));
     try {
-      for (const bad of [{ commit: '62637c96a5a5c2e9d55594f87a33d79c2f30b54f' }, { knobs: { ...COUNTED_B2.knobs, shell_page_share: 0 } }, { questions: '0'.repeat(64) }]) {
+      for (const bad of [{ commit: '62637c96a5a5c2e9d55594f87a33d79c2f30b54f' }, { knobs: { ...COUNTED_B2.knobs, shell_page_share: 0 } }, { questions: '0'.repeat(64) }, { digest: '0'.repeat(64) }]) {
         writeFileSync(join(dir, 'syn.json'), JSON.stringify(voyageCard(bad)));
         for (const extra of [[], ['--control']]) {
           expect(quiet(() => main(['--measure', 'G2', '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json'), ...extra]))).toBe(3);
@@ -198,7 +199,32 @@ describe('counted scorecard identity', () => {
       expect(lines[0]).toContain('secondary scorecard');
       const v = JSON.parse(readFileSync(join(dir, 'v.json'), 'utf8'));
       expect(v.secondary).toBe(true);
+      expect(v.counted).toBe(false);
       expect(v.scorecard.gbrain_loaded_commit).toBe('62637c96a5a5c2e9d55594f87a33d79c2f30b54f');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('counted batch 3 scorecard identity', () => {
+  const b3Card = (commit = COUNTED_B3.gbrain_commit) => ({
+    ...liveCard([...B3_FRESHNESS, ...B3_ENTITY].map(id => ({ id, estimate: 0.1, lo: 0.02, hi: 0.18 }) as Contrast)), protocol: 'batch3',
+    run: { control: false, transports: 'voyage', gbrain_loaded_version: '0.60.641.0', gbrain_loaded_commit: commit, synthetic: { digest: COUNTED_B3.digest, questions_sha256: COUNTED_B3.questions_sha256, ...COUNTED_B3.knobs } },
+  });
+
+  test('the batch 3 layers read the synthetic batch-3 brain at 0.60.641.0 and refuse the one at 0.60.623.0', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verdict-counted-b3-'));
+    try {
+      for (const m of ['G1', 'G2', 'G4'] as const) {
+        writeFileSync(join(dir, 'syn.json'), JSON.stringify(b3Card()));
+        expect(quiet(() => main(['--measure', m, '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json')]))).toBe(0);
+        expect(JSON.parse(readFileSync(join(dir, 'v.json'), 'utf8')).counted).toBe(true);
+        rmSync(join(dir, 'v.json'));
+        writeFileSync(join(dir, 'syn.json'), JSON.stringify(b3Card('d253ec0ff12ed370ed3a846cb7da0191639c4a9e')));
+        expect(quiet(() => main(['--measure', m, '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json')]))).toBe(3);
+        expect(existsSync(join(dir, 'v.json'))).toBe(false);
+      }
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
