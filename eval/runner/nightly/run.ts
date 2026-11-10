@@ -214,8 +214,8 @@ export async function main(argv: readonly string[]): Promise<number> {
     const statuses: SuiteStatus[] = plan.map(r => {
       const gap = requirementGap(a.clone, sha, r.suite.requires?.gbrain_commit);
       const before = saved?.suites.find(s => s.id === r.suite.id);
-      return gap ? { id: r.suite.id, digest: r.digest, k: r.k, readers: r.readers, status: 'skipped', reason: gap }
-        : { id: r.suite.id, digest: r.digest, k: r.k, readers: a.fake && callsModels(r.suite) ? ['fake'] : r.readers, status: before?.status === 'not_built' ? 'not_built' : 'pending' };
+      return gap ? { id: r.suite.id, digest: r.digest, k: r.k, readers: r.readers, items: r.items.length, status: 'skipped', reason: gap }
+        : { id: r.suite.id, digest: r.digest, k: r.k, readers: a.fake && callsModels(r.suite) ? ['fake'] : r.readers, items: r.items.length, status: before?.status === 'not_built' ? 'not_built' : 'pending' };
     });
     const manifest: NightManifest = {
       schema: 'nightly-night/1', night: a.night, ref: a.ref, sha, version: gut.version, tier: a.tier, fake: a.fake,

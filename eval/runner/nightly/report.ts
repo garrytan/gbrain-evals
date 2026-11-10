@@ -51,6 +51,8 @@ export const COST_RISE = 1.25;
 
 export interface SuiteStatus {
   id: string; digest: string; k: number; readers: Array<string | null>;
+  /** How many items the plan scheduled; nights recorded before this field existed lack it. */
+  items?: number;
   /** pending while the suite runs; a night that stops leaves it pending, and a finished night records it as error. */
   status: 'pending' | 'ran' | 'partial' | 'skipped' | 'not_built' | 'error';
   reason?: string;
@@ -236,11 +238,12 @@ export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreem
     const items = new Set(rows.filter(r => r.suite === s.id && (isModel(r.reader, candidate) || isModel(r.reader, reference))).map(r => r.item));
     const mine = firstTrials(s.id, candidate, true), theirs = firstTrials(s.id, reference, false);
     const paired = [...items].filter(i => mine.has(i) && theirs.has(i));
-    scheduled += items.size;
-    unpaired += items.size - paired.length;
+    const planned = Math.max(items.size, s.items ?? 0);
+    scheduled += planned;
+    unpaired += planned - paired.length;
     if (!paired.length) {
       const absent = s.status === 'ran' || s.status === 'partial' ? null : `${s.status.replace('_', ' ')}${s.reason ? `: ${s.reason}` : ''}`;
-      suites.push({ suite: s.id, measured: false, scheduled: items.size, unpaired: items.size,
+      suites.push({ suite: s.id, measured: false, scheduled: planned, unpaired: planned,
         reason: absent ?? (!mine.size ? `no ${candidate} row that ran` : !theirs.size ? `no counted ${reference} rows` : 'no item both readers answered') });
       continue;
     }
@@ -254,7 +257,7 @@ export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreem
       countedSuites++;
       if (stats.kappa !== null) { kappaWeight += t.items; kappaSum += t.items * stats.kappa; }
     }
-    suites.push({ suite: s.id, measured: true, counted: countsToward, scheduled: items.size, unpaired: items.size - paired.length,
+    suites.push({ suite: s.id, measured: true, counted: countsToward, scheduled: planned, unpaired: planned - paired.length,
       candidate_harness: paired.filter(i => mine.get(i)!.harness).length, ...stats });
   }
   const c = { ...agreementStats(counted), suites: countedSuites, mean_kappa: kappaWeight ? kappaSum / kappaWeight : null };

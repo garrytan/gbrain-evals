@@ -233,6 +233,14 @@ describe("particle-1's agreement with claude-opus-5-5", () => {
     expect([down.verdict, down.reason]).toEqual(['not_measured', '5 of 40 scheduled items are unpaired, more than 10%']);
   });
 
+  test('a scheduled suite that stopped before writing any row counts every item it planned as unpaired, so the other suite cannot pass alone', () => {
+    const lost = manifest([{ id: 'suite-a', readers: both, k: 1, items: 40 }, { id: 'suite-b', readers: both, k: 1, items: 60, status: 'error', reason: 'rows.ndjson: bad line' }]);
+    const ag = nightAgreement(lost, pair(table(30, 2, 2, 6)))!;
+    expect(ag.suites[0]).toMatchObject({ measured: true, counted: true, scheduled: 40, unpaired: 0 });
+    expect(ag.suites[1]).toEqual({ suite: 'suite-b', measured: false, scheduled: 60, unpaired: 60, reason: 'error: rows.ndjson: bad line' });
+    expect([ag.scheduled, ag.unpaired, ag.verdict, ag.reason]).toEqual([100, 60, 'not_measured', '60 of 100 scheduled items are unpaired, more than 10%']);
+  });
+
   test('qualified reader names match, and a suite a --fake night skipped schedules nothing', () => {
     const qualified = manifest([{ id: 'suite-a', readers: ['anthropic:claude-opus-5-5', 'particle:particle-1'], k: 1 }, { id: 'suite-b', readers: ['anthropic:claude-opus-5-5', 'particle:particle-1'], k: 1 }]);
     const rename = (r: Outcome) => ({ ...r, reader: r.reader === 'particle-1' ? 'particle:particle-1' : `anthropic:${r.reader}` });
