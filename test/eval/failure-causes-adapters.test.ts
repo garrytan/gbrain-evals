@@ -351,7 +351,7 @@ describe('nightly adapter', () => {
     expect(ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows), facts], entry('n', 'nightly')).failures.map(f => f.gold.reader_budget)).toEqual([null, null, null, null, null]);
   });
 
-  test('a BEAM item both support validators reject and the oracle arm fails is item_unsupported, with its support record as evidence; an oracle pass, one validator, no record or a cut-off answer label as before', () => {
+  test('a BEAM item both support validators reject and the oracle arm fails is item_unsupported, with its support record as evidence; an oracle pass, no oracle verdict (an empty oracle answer cut at its output limit), one validator, no record or a cut-off answer label as before', () => {
     const beam = { schema: 'nightly-outcome/1', night: '2026-11-10', suite: 'beam-1m-hard', suite_digest: 'd', role: 'headroom', ref: 'master', sha, trial: 1, pass: false, score: 0,
       cost_usd: null, stop: 'answered', tool_errors: [], evidence: {}, harness: null, system: 'gbrain', arm: 'beam-1m-hard@master', arm_role: 'gbrain_default', condition: 'natural',
       visibility: 'public', agent_loop: false, category: 'contradiction_resolution', answered: true, finish_reason: 'stop', reader: 'claude-opus-5-5', gold_count: 2, retrieved: 'partial', delivered: 'partial' };
@@ -362,6 +362,7 @@ describe('nightly adapter', () => {
       { ...beam, item: '1m-2:contradiction_resolution:0', reader: 'gpt-6.1-sol', finish_reason: 'max_tokens' },
       { ...beam, suite: 'lme-s-hard', arm: 'lme-s-hard@master', item: '1m-2:contradiction_resolution:0' },
       { ...beam, item: '1m-24:knowledge_update:0' },
+      { ...beam, item: '1m-25:summarization:1' },
     ];
     const out = ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows)], entry('n', 'nightly'));
     expect(out.failures.map(f => { const l = classify(f); return [f.gold.unsupported, l.cause, l.rule_id]; })).toEqual([
@@ -369,6 +370,7 @@ describe('nightly adapter', () => {
       [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
       [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
       ['both_validators', 'harness_error', 'harness.output_truncated'],
+      [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
       [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
       [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
     ]);
@@ -464,19 +466,26 @@ describe('item support records', () => {
     expect(itemUnsupported('beam-1m-hard', '1m-2:contradiction_resolution:0')?.why).toBe('both_validators');
   });
 
-  test('the committed record\'s oracle verdicts repeat the every-gold-session arm\'s scores, and only the 4 items both validators reject and that arm fails are unsupported', () => {
-    const rec = JSON.parse(readFileSync('eval/data/nightly/beam-1m-hard-support.json', 'utf8')) as { sources: { oracle: { file: string } }; items: Record<string, { oracle: string }> };
+  test('the committed record\'s oracle verdicts repeat the every-gold-session arm\'s scores, an empty answer cut at its output limit records none, and only the 3 items both validators reject and that arm fails are unsupported', () => {
+    const rec = JSON.parse(readFileSync('eval/data/nightly/beam-1m-hard-support.json', 'utf8')) as { sources: { oracle: { file: string } }; items: Record<string, { oracle?: string }> };
     const arm = rec.sources.oracle.file.replace('/shard-*/rows.ndjson.gz', '');
     const scores = new Map<string, number>();
+    const cut = new Set<string>();
     for (const shard of readdirSync(arm).filter(s => s.startsWith('shard-'))) {
       for (const line of gunzipSync(readFileSync(join(arm, shard, 'rows.ndjson.gz'))).toString('utf8').split('\n').filter(Boolean)) {
         const r = JSON.parse(line) as { id: string; qa_score: number };
         scores.set(r.id, r.qa_score);
       }
+      for (const line of gunzipSync(readFileSync(join(arm, shard, 'answers.ndjson.gz'))).toString('utf8').split('\n').filter(Boolean)) {
+        const a = JSON.parse(line) as { id: string; answer: string; finish_reason: string };
+        if (!a.answer.trim() && a.finish_reason === 'length') cut.add(a.id);
+      }
     }
-    for (const [id, x] of Object.entries(rec.items)) expect([id, x.oracle]).toEqual([id, scores.get(id)! >= 0.5 ? 'pass' : 'fail']);
+    for (const [id, x] of Object.entries(rec.items)) expect([id, x.oracle]).toEqual([id, cut.has(id) ? undefined : scores.get(id)! >= 0.5 ? 'pass' : 'fail']);
+    expect(Object.keys(rec.items).filter(id => cut.has(id)).sort()).toEqual(['1m-25:summarization:1', '1m-2:summarization:0', '1m-2:summarization:1']);
+    expect(itemUnsupported('beam-1m-hard', '1m-25:summarization:1')).toBeNull();
     expect(Object.keys(rec.items).filter(id => itemUnsupported('beam-1m-hard', id)).sort())
-      .toEqual(['1m-24:knowledge_update:1', '1m-25:summarization:1', '1m-25:temporal_reasoning:1', '1m-2:contradiction_resolution:0']);
+      .toEqual(['1m-24:knowledge_update:1', '1m-25:temporal_reasoning:1', '1m-2:contradiction_resolution:0']);
     expect(itemUnsupported('beam-1m-hard', '1m-24:knowledge_update:0')).toBeNull();
   });
 });

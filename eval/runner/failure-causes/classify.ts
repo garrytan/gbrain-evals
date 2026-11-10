@@ -4,9 +4,9 @@
  * returns the first stage's cause as primary with every later signal kept as
  * a secondary cause. A reply cut off at its output limit is named by that
  * rule (harness.output_truncated) even when the row also records the harness
- * error the cut produced. Two suite causes come next, for questions no system
- * can pass whatever retrieval and ranking did: an item whose cited gold doesn't
- * support its reference answer (both support validators reject it, or it cites no
+ * error the cut produced. Two suite causes come next, for rows that say nothing
+ * about gbrain's retrieval or ranking: an item where the cited gold sessions don't
+ * support the answer (both support validators reject it, or it cites no
  * turn, and the arm given every gold session fails it) is item_unsupported, then a question that needs more gold than its run
  * gives the reader (gold_count above reader_budget) is reader_budget. A row with no
  * support record or no recorded budget labels as before. A scorer artifact is primary only when it is the row's

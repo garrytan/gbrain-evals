@@ -4,8 +4,8 @@
  * every cause a share, each source weighs the same, raw counts break ties, and
  * the causes gbrain can't fix (harness_error, item_unsupported, reader_budget,
  * model_error) and unclassified never enter the list (model_error and unclassified stay in the full table). Shares are
- * taken over the rows that say something about gbrain, so harness errors and the suite causes (questions no system can
- * pass) never dilute them; those get their own lists. A labeller call that failed
+ * taken over the rows that say something about gbrain, so harness errors and the suite causes (rows that say nothing
+ * about gbrain) never dilute them; those get their own lists. A labeller call that failed
  * or did not parse counts as pending. Forced-condition rows
  * and stress counts go to a separate "under stress" list, other systems to a
  * contrast table and harness errors to our own fix list. Example rows come
@@ -24,7 +24,7 @@ import { NO_LABEL_RULES } from './agreement.ts';
 import type { CauseLabel, StressCount } from './types.ts';
 
 const NOT_FOR_GBRAIN: readonly string[] = [...CAUSES.filter(c => !c.gbrain_actionable).map(c => c.id), UNCLASSIFIED];
-/** Our own side (gap map eval): harness errors, and suite causes for questions no system can pass. Never in gbrain's shares. */
+/** Our own side (gap map eval): harness errors, and suite causes for rows that say nothing about gbrain. Never in gbrain's shares. */
 const EVAL_SIDE_CAUSES: readonly string[] = CAUSES.filter(c => c.gap_map === 'eval').map(c => c.id);
 const SUITE_CAUSES: readonly string[] = EVAL_SIDE_CAUSES.filter(c => c !== 'harness_error');
 const GBRAIN_ROLES = new Set(['gbrain_default', 'gbrain_variant']);
@@ -61,7 +61,7 @@ export interface Summary {
   under_stress: Array<{ source: string; cause: string; unit: string; count: number; of: number; detail: string; status: string | null }>;
   contrast: Array<{ system: string; arm_role: string; cause: string; count: number }>;
   harness: Array<{ rule_id: string; count: number; sources: string[] }>;
-  /** Failed rows of questions no system can pass (the suite causes), by cause and source. */
+  /** Failed rows that say nothing about gbrain (the suite causes), by cause and source. */
   suite: Array<{ cause: string; count: number; by_source: Record<string, number> }>;
   capability: Record<string, Partial<Record<Stage, number>>>;
   pending: number;
@@ -243,7 +243,7 @@ export function renderReport(s: Summary, options: { heading: string; notes?: str
     ...s.under_stress.map(u => `| ${u.source} | \`${u.cause}\` | ${u.count} | ${u.of} ${u.unit} | ${u.detail} | ${u.status ?? ''} |`), '');
   lines.push('## Other systems and controls', '', '| System | Role | Cause | Rows |', '|---|---|---|---|', ...s.contrast.map(c => `| ${c.system} | ${c.arm_role} | \`${c.cause}\` | ${c.count} |`), '');
   lines.push('## Our own fix list (harness errors)', '', ...(s.harness.length ? s.harness.map(h => `- \`${h.rule_id}\`: ${h.count} rows (${h.sources.join(', ')})`) : ['- none']), '');
-  lines.push('## Questions no system can pass (suite causes)', '', 'Failed rows on questions the suite itself leaves unanswerable, whatever gbrain does. Not ranked and not in the shares above.', '',
+  lines.push('## Suite causes', '', 'Failed rows that say nothing about gbrain: the question has more gold than the reader is given, or the cited gold sessions don\'t support the answer. Not ranked and not in the shares above.', '',
     ...(s.suite.length ? s.suite.map(x => `- ${title(x.cause)} (\`${x.cause}\`): ${x.count} rows (${listCounts(x.by_source)})`) : ['- none']), '');
   lines.push('## What each source can measure', '', `| Source | ${STAGES.join(' | ')} |`, `|---|${STAGES.map(() => '---').join('|')}|`,
     ...Object.entries(s.capability).map(([src, c]) => `| ${src} | ${STAGES.map(st => pct(c[st] ?? 0)).join(' | ')} |`), '');

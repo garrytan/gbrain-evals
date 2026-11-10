@@ -106,7 +106,7 @@ describe('the diff against an earlier night', () => {
     expect(summary.harness_rows).toBe(19);
   });
 
-  test('an item its support record says no system can answer stays out of the pass-rate and strong-flip flags, counts as item_unsupported and gets its own line', () => {
+  test('an item whose cited gold sessions don\'t support the answer stays in the pass-rate and strong-flip flags, counts as item_unsupported and gets its own line', () => {
     const root = mkdtempSync(join(tmpdir(), 'nightly-report-'));
     const unsupported = ['1m-2:contradiction_resolution:0', '1m-24:knowledge_update:1', '1m-25:temporal_reasoning:1'];
     const supported = ['1m-24:contradiction_resolution:0', '1m-25:multi_session_reasoning:0', ...Array.from({ length: 15 }, (_, i) => `other-${i}`)];
@@ -121,12 +121,12 @@ describe('the diff against an earlier night', () => {
     };
     const prev = write('2026-11-08', beam([]));
     const summary = writeReport({ dir: write('2026-11-09', beam(unsupported)), previous: prev });
-    expect(summary.flags).toEqual([]);
+    expect((summary.flags as Array<{ kind: string; items?: string[] }>).map(f => [f.kind, f.items])).toEqual([['strong_flip', [...unsupported].sort()]]);
     expect(summary.item_unsupported).toEqual({ rows: 9, items: unsupported.map(i => `beam-1m-hard ${i}`).sort() });
     expect((summary.suites as Array<{ cells: Array<Record<string, unknown>> }>)[0]!.cells[0]).toMatchObject({ failures_by_cause: { item_unsupported: 9 } });
-    expect(readFileSync(join(root, '2026-11-09', 'master', 'report.md'), 'utf8')).toContain('Item-unsupported: 9 failed rows on 3 items whose cited turns don\'t support the reference answer');
+    expect(readFileSync(join(root, '2026-11-09', 'master', 'report.md'), 'utf8')).toContain('Item-unsupported: 9 failed rows on 3 items where the cited gold sessions don\'t support the answer');
     const flipped = compareNights({ manifest: manifest([{ id: 'beam-1m-hard' }]), rows: beam([unsupported[0]!, supported[0]!]) }, { manifest: manifest([{ id: 'beam-1m-hard' }]), rows: beam([]) }, 'previous');
-    expect(flipped.flags.map(f => [f.kind, f.items])).toEqual([['strong_flip', [supported[0]]]]);
+    expect(flipped.flags.map(f => [f.kind, f.items])).toEqual([['strong_flip', [unsupported[0]!, supported[0]!].sort()]]);
   });
 
   test('an item both support validators reject but the every-gold-session arm passes keeps its label and stays in the flags', () => {

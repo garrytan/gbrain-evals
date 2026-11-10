@@ -17,7 +17,7 @@
   },
   "oracle": {
    "file": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/a4-oracle-gpt61sol/shard-*/rows.ndjson.gz",
-   "note": "The October BEAM arm given every gold session (a4-oracle-gpt61sol, gpt-6.1-sol reader). oracle is pass when its qa_score is at least 0.5, else fail. The arm ran before the 8,192-token output limit, so its fails may include truncation."
+   "note": "The October BEAM arm given every gold session (a4-oracle-gpt61sol, gpt-6.1-sol reader). oracle is pass when its qa_score is at least 0.5, else fail, except that an item whose oracle answer is empty and stopped at the output limit (answer '' and finish_reason length in the arm's answers.ndjson.gz) records no verdict. The arm ran before the 8,192-token output limit, so its fails may include truncation."
   }
  },
  "items": {
@@ -444,7 +444,6 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 11,
-   "oracle": "fail",
    "source": "beam-nightly-check"
   },
   "1m-25:temporal_reasoning:0": {
@@ -659,7 +658,6 @@
    },
    "gates": [],
    "cited": 33,
-   "oracle": "fail",
    "source": "gst2339"
   },
   "1m-2:summarization:1": {
@@ -670,7 +668,6 @@
    },
    "gates": [],
    "cited": 30,
-   "oracle": "fail",
    "source": "gst2339"
   },
   "1m-2:temporal_reasoning:0": {

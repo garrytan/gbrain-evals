@@ -2,11 +2,12 @@
  * Per-item support checks for the nightly suites. eval/data/nightly/<suite>-support.json, keyed by item id, records what
  * the BEAM support check (eval/custody/rs1/validate.ts, two validators) found: each validator's verdict on whether the
  * reference answer is supported by the turns the item cites, the check's gates, the cited count and the source. Each
- * item also records the oracle verdict: whether the arm given every gold session passed it. The files sit beside the dev
- * set, not in it, so no suite digest changes.
+ * item also records the oracle verdict: whether the arm given every gold session passed it. An oracle answer that is
+ * empty because it stopped at the output limit records no verdict. The files sit beside the dev set, not in it, so no
+ * suite digest changes.
  *
  * An item is unsupported when both validators reject it (a support:<validator> gate for each) or it cites no turn (the
- * uncited gate, or cited 0), and the oracle arm fails it too: no system can answer it from its evidence. An item one
+ * uncited gate, or cited 0), and the oracle arm fails it too: the cited gold sessions don't support the answer. An item one
  * validator rejects, one the oracle arm passes or has no verdict for, an item the check left out (abstention cites no
  * turn by design), and an item or suite with no file are not, so their rows label as before.
  */
@@ -44,7 +45,7 @@ function supportFile(dir: string, suite: string): { file: SupportFile; at: strin
   return files.get(path)!;
 }
 
-/** Why an item can't be answered from its evidence, with the evidence pointer to its support record, or null. */
+/** Why the cited gold sessions don't support an item's answer, with the evidence pointer to its support record, or null. */
 export function itemUnsupported(suite: string, item: string, dir = DATA): { why: 'both_validators' | 'uncited'; at: string } | null {
   const s = supportFile(dir, suite);
   const x = s?.file.items[item];
