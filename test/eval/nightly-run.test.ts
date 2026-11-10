@@ -18,7 +18,7 @@ import { canonicalDigest, loadDevSet } from '../../eval/runner/nightly/devset.ts
 import { NightlyCache } from '../../eval/runner/nightly/judge-cache.ts';
 import { buildDevSet } from '../../eval/runner/nightly/select-devset.ts';
 import { keylessEnv } from '../../eval/runner/nightly/keyless.ts';
-import { qualifiedModel, readOutcomes } from '../../eval/runner/nightly/outcome.ts';
+import { qualifiedModel, readOutcomes, resumable, type Outcome } from '../../eval/runner/nightly/outcome.ts';
 import { main, parseArgs, planSuites, requirementGap } from '../../eval/runner/nightly/run.ts';
 import { isContentMiss, recordedCalls, replayItems } from '../../eval/runner/nightly/tool-contract.ts';
 
@@ -349,6 +349,19 @@ describe('the fields the failure-cause adapter reads', () => {
     const { finish_reason: _absent, ...older } = whole!;
     writeFileSync(file, [older, { ...cut, harness: null }].map(r => JSON.stringify(r)).join('\n') + '\n');
     expect(readOutcomes(file).map(r => [r.item, r.finish_reason, r.harness])).toEqual([[a, null, null], [b, 'max_tokens', cut!.harness]]);
+  });
+
+  test('a resume reruns skipped and harness rows, but not an answer cut off at its output limit, which a rerun would only repeat', () => {
+    const run = suiteRun('beam-1m-hard');
+    const item = run.items[0]!.id;
+    const row = (o: Partial<Outcome>) => outcome(run, ctx(), { item, reader: 'claude-opus-5-5', pass: true, ...o });
+    expect(row({}).harness).toBeNull();
+    expect(resumable(row({}))).toBe(false);
+    expect(row({ finish_reason: 'length' }).harness?.error).toStartWith('output_truncated:');
+    expect(resumable(row({ finish_reason: 'length' }))).toBe(false);
+    expect(resumable(row({ finish_reason: 'length', harness: { error: 'memory-qa exited 1: provider 529' } }))).toBe(true);
+    expect(resumable(row({ pass: false, harness: { error: 'no row recorded' } }))).toBe(true);
+    expect(resumable(row({ pass: false, skipped: 'postgres trials need --pg-admin <url>' }))).toBe(true);
   });
 
   test('tool-contract replay rows: every replayed call by tool, and a refusal never recovered, since a replay sends each call once', async () => {

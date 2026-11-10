@@ -177,7 +177,7 @@ The runner exits with a code and prints the command that resumes the night:
 |---|---|---|
 | 3 | `NIGHTLY_CAP_STOP` | The night's ledger run has no budget left. Paid suites stopped where they were. |
 | 4 | `NIGHTLY_VM_LOST` | The runner was signalled because the machine is going away. Running children were killed. |
-| 5 | `NIGHTLY_HARNESS` | A suite failed to run, or recorded harness or provider failures. Those rows are counted apart. |
+| 5 | `NIGHTLY_HARNESS` | A suite failed to run, or recorded harness or provider failures that a resume can redo. Those rows are counted apart. |
 
 A refused paid run exits 2, and any other error exits 1.
 
@@ -186,7 +186,9 @@ bun eval/runner/nightly/run.ts --resume <night dir>
 ```
 
 `--resume` reruns only what is missing or recorded as a harness failure, on the gbrain commit the night started on,
-even if the ref has moved since. It first settles the stopped run's open ledger reservations. Run it only after every
+even if the ref has moved since. An answer cut off at its output limit stays as recorded, because memory-qa keeps it as
+answered and the reader's cached reply would be cut off the same way, so it neither ends a night with exit 5 nor gets
+rerun. The report still counts it as a harness row and flags a rise. It first settles the stopped run's open ledger reservations. Run it only after every
 child process of the stopped run has exited. On a Ubicloud VM that holds by construction, because `ubi-runner.sh`
 destroys the VM, and every child with it, on every exit path. A night can be resumed at most twice.
 
@@ -237,7 +239,7 @@ The QA suites' reader output limit went from memory-qa's 1,024-token default to 
 `qa_max_tokens`, because at 1,024 most of Opus's BEAM failures were answers cut off before they finished. The change
 gives `lme-s-hard` and `beam-1m-hard` new suite digests, so both start a new baseline. An answer cut off at its output
 limit is now a harness row, on old nights' rows too, and every row records a finish reason, null where its suite records
-none.
+none. A cut-off answer doesn't end a night with exit 5 or get rerun by a resume, which would only repeat it.
 
 ### 2026-11-10: particle-1's agreement with Opus
 

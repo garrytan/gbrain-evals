@@ -96,6 +96,8 @@ export function qualifiedModel(reader: string): string {
   throw new Error(`no provider for reader ${reader}`);
 }
 
+const CUT_OFF = 'output_truncated';
+
 /**
  * The row's harness failure: the one it records, else, for an answer cut off at its output limit (a finish reason in
  * classify's TRUNCATED_FINISH), that cut, because the answer measured our output limit rather than gbrain. Rows written
@@ -103,8 +105,14 @@ export function qualifiedModel(reader: string): string {
  */
 export function harnessOf(o: Pick<Outcome, 'harness'> & { finish_reason?: string | null }): Outcome['harness'] {
   if (o.harness) return o.harness;
-  return o.finish_reason && TRUNCATED_FINISH.has(o.finish_reason) ? { error: `output_truncated: the answer was cut off at its output limit (finish ${o.finish_reason})` } : null;
+  return o.finish_reason && TRUNCATED_FINISH.has(o.finish_reason) ? { error: `${CUT_OFF}: the answer was cut off at its output limit (finish ${o.finish_reason})` } : null;
 }
+
+/**
+ * Whether a resume runs the row again: a skipped row, or a harness row other than a cut-off answer. A resume can't redo a
+ * cut-off answer, because memory-qa keeps it as answered and the reader's cached reply is the same cut-off one, so it stands.
+ */
+export const resumable = (o: Pick<Outcome, 'harness' | 'skipped'>): boolean => !!o.skipped || (o.harness !== null && !o.harness.error.startsWith(`${CUT_OFF}:`));
 
 export const outcomeKey = (o: Pick<Outcome, 'suite' | 'item' | 'reader' | 'trial'>) => `${o.suite}\u0000${o.item}\u0000${o.reader ?? ''}\u0000${o.trial}`;
 
