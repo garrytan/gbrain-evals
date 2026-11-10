@@ -218,7 +218,7 @@ interface Brain {
 
 /**
  * Refuse a brain that would show the runner a page gbrain hides from an unbound remote caller. Each check fails closed:
- * - the operator opt-out (search.remote_private_pages), read fresh;
+ * - the operator opt-out (search.remote_private_pages), read fresh, and privacy aliases turned off (visibility.honor_aliases);
  * - a stdio session bound to a member (config mcp.stdio_member, set at all), or the caller access gbrain's dispatcher
  *   would give the runner's own calls showing an identity, a granted source or the brain owner's relaxed view
  *   (garrytan/gbrain#8917, 0.60.623.0 and later);
@@ -229,6 +229,8 @@ export async function assertPrivate(gut: GbrainUnderTest, engine: any, reader?: 
   const visibility = await importGbrain<any>(gut, 'src/core/search/private-visibility.ts');
   const relaxed = typeof visibility.readRemotePolicyNow === 'function' ? (await visibility.readRemotePolicyNow(engine)).privacyRelaxed : await visibility.remotePrivacyRelaxed(engine);
   if (relaxed !== false) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'search.remote_private_pages relaxes remote private-page visibility');
+  const aliases = await engine.getConfig(visibility.HONOR_ALIASES_KEY ?? 'visibility.honor_aliases').then((v: unknown) => String(v ?? '').trim().toLowerCase(), () => 'unreadable');
+  if (['false', '0', 'off', 'no', 'unreadable'].includes(aliases)) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'visibility.honor_aliases is off or unreadable, so gbrain may show access: private pages to remote callers');
   const caller = await importGbrain<any>(gut, 'src/core/access/caller.ts').catch(() => null);
   const bound = String((await engine.getConfig(caller?.STDIO_MEMBER_KEY ?? 'mcp.stdio_member').catch(() => 'unreadable')) ?? '').trim();
   const access = typeof caller?.remoteCallerAccess === 'function' ? await caller.remoteCallerAccess(engine, undefined, undefined, 'stdio') : null;

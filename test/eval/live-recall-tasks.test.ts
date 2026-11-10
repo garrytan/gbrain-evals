@@ -308,6 +308,17 @@ describe('phase 2 privacy posture on the fixture (keyless)', () => {
     } finally { await open.close(); rmSync(root, { recursive: true, force: true }); }
   }, 120_000);
 
+  test('privacy aliases turned off (visibility.honor_aliases) are refused, at the start or during a run', async () => {
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      const reader = await openReader(gut, open.engine, true);
+      expect(await abortCode(() => assertPrivate(gut, open.engine, reader))).toBe('no abort');
+      await open.engine.executeRaw('SET default_transaction_read_only = off');
+      await open.engine.setConfig('visibility.honor_aliases', 'off');
+      expect(await abortCode(() => assertPrivate(gut, open.engine, reader))).toBe('LR_PRIVACY_RELAXED');
+    } finally { await open.close(); }
+  }, 120_000);
+
   test('a probe page made public during a run is not read as a breach', async () => {
     const open = await buildFixtureBrain(gut, PHASE2_PAGES);
     try {

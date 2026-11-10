@@ -218,7 +218,8 @@ snapshots, audit rows and gbrain's log stay.
   embeddings and reranking, exported in the shell. Check each with `test -n "$NAME"`; never print one.
 - The shell rules from phase 1: run as the user whose `~/.gbrain/config.json` serves the brain, with
   `GBRAIN_DIRECT_DATABASE_URL` unset. `GBRAIN_REMOTE_PRIVATE_PAGES` is removed from the runner's own process; if the
-  brain's config sets `search.remote_private_pages`, the runner refuses to start. It also refuses when gbrain would read
+  brain's config sets `search.remote_private_pages`, or turns privacy aliases off (`visibility.honor_aliases` false, 0, off
+  or no), the runner refuses to start. It also refuses when gbrain would read
   its calls as a member or as the brain owner: config `mcp.stdio_member` set to anyone, or, from gbrain 0.60.623.0,
   `access.owner_member` naming the member its session is bound to. An owner-bound session sees private pages.
 - A budget ledger on the box, for example `/data/ops/live-recall/phase2/ledger.sqlite`. The first paid command on a new
@@ -467,7 +468,8 @@ Phase 2: the task file has a problem at the line and field named. Fix it and fre
 ### LR_PRIVACY_RELAXED
 
 Phase 2: the runner would see pages gbrain hides from an unbound remote caller. The brain's config shows private pages
-to remote callers (`search.remote_private_pages`), or gbrain would read the runner's calls as a member or as the brain
+to remote callers (`search.remote_private_pages`) or turns privacy aliases such as `access: private` off
+(`visibility.honor_aliases`), or gbrain would read the runner's calls as a member or as the brain
 owner (`mcp.stdio_member` set, or `access.owner_member` naming that member), or a gbrain response reported a wider view
 than an unbound caller's in `_meta.access` (that response's text never reaches a model), or a page gbrain hides from an
 unbound caller came back readable. At the start nothing runs. The runner checks again before every task and after every
