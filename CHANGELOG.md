@@ -2,6 +2,36 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.197] - 2026-11-10
+
+### A nightly check of gbrain master that counts failures by cause and flags what got worse since the night before
+
+- **What it runs.** `eval/runner/nightly/run.ts` runs a frozen development set (`eval/data/nightly/devset-v1.json`,
+  eight suites chosen for headroom) against one gbrain ref at one tier: nightly, matrix, smoke or bisect. The suites are
+  Cat 40 Hard world M, two write-task agent suites (refresh barrier on and off), the concurrent-writer trials on PGLite
+  and Postgres, seven keyless system smokes, LongMemEval-S hard, BEAM-1M hard and the tool-contract replay. Keyless
+  suites always run without keys. A suite that calls a model runs only with `--fake`, or with `--paid` and a
+  budget-ledger run.
+- **What it reports.** Each night writes pass^1 and pass^k, failures by cause, cost per correct answer, and flags
+  against the previous master night and the pinned stable release. Provider and harness failures are counted on their
+  own line and left out of every rate. `bisect.ts` narrows a flag to the first bad first-parent commit. QA answers are
+  judged across model families.
+- **System smokes.** Seven keyless smokes on a seeded synthetic brain cover the places where gbrain master broke in the
+  30 days before the check was built: upgrades from the previous night's commit and from an old release, an ingest
+  retried across an upgrade, managed and source-pinned sync, Postgres 15 and the query contract. On a Ubicloud VM, each
+  failed at its breaking gbrain release and passed at its fix.
+- **Ledger.** A paid night spends through one run in a durable budget ledger, sized by a night cap and a 30-night cap.
+  An open nightly run holds its whole budget against the 30-night cap until its opener closes it (`ledger.ts close`).
+  The runner closes only a run it opened itself, and refuses a `--budget-run-id` that isn't an open nightly run.
+- **Cat 40.** The nightly runs world M with the ladder's `--dev-set` flag, and every such cells receipt and report says
+  it is a dev-set run on the current harness, never a Hard-freeze result. A paid slot build now checks the Hard freeze
+  before it spends. The rerank probe repeats a search that missed gbrain's query embed deadline. A slot build no longer
+  closes a shared ledger run, and the metering proxy names budget refusals.
+- **VM and docs.** `scripts/nightly-vm.sh` bootstraps an ephemeral Ubicloud VM with Postgres 15 and 18 and a gbrain
+  clone, and `scripts/nightly-export.sh` writes only the files a night reads. The new page `docs/nightly.md` explains
+  each tier, the report, the ledger, resuming a night and bisecting.
+- No published score or verdict changes. Nothing schedules the check yet.
+
 ## [0.10.196] - 2026-11-10
 
 ### Phase 2 live recall stops before a model can read a page gbrain hides from unbound callers

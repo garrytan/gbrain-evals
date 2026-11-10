@@ -17,6 +17,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md); then [agents operating gbrain](#agents-operating-gbrain) for setup time to working memory and the meeting-prep program |
 | How do I run the benchmarks? | [Evaluation guide](../eval/README.md), [troubleshooting](../eval/RUNBOOK.md) |
 | How do I get a dev or held-out verdict for a gbrain change? | [Decision kit](decisions.md) (`bun run eval:decide`) |
+| What does the nightly check of gbrain master run, and how do I run it myself? | [Nightly gbrain check](nightly.md) |
 | Where does gbrain master start, and which feature ideas won or lost their held-out tests? | [October 5 nine-plan held-out program: starting line, verdicts and scorecard](benchmarks/2026-10-05-heldout-program.md); [October 6 BEAM-1M rerun with every session dated](benchmarks/2026-10-06-beam-1m-dates.md); [October 8 BEAM-1M failure analysis: the 1M no-memory floor, frontier readers, the oracle ceiling and the reranker](benchmarks/2026-10-08-beam-1m-failure-analysis.md); [October 12 BEAM-1M S1 fixes: the harness reranker, the diverse pool knob (ships off) and reading breadth, three readers](benchmarks/2026-10-12-beam-1m-s1-fixes.md); [Q2 parser gaps: typed list-line guards and relationship phrasings](benchmarks/2026-10-05-heldout-program/q2.md) |
 | Which agent-written labels has a person checked? | [October 6 review packets and their rules](benchmarks/2026-10-06-w11-review/README.md) ([preregistration](benchmarks/2026-10-06-w11-review-preregistration.md)): awaiting human review |
 | How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
@@ -284,6 +285,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-09: A row for the nightly gbrain check
+
+The opening table links [the nightly gbrain check](nightly.md), the new page that says what the nightly check of
+gbrain master runs at each tier, what its report shows and how to run it keyless. No other part changed.
 
 ### 2026-11-09: A row for the gbrain under test
 

@@ -9,7 +9,11 @@
  *     [--facts conversation] [--qa reader|think --qa-context sessions|facts|none|oracle]
  *     [--retrieved-from <rows dir>] [--search-limit N] [--pool-depth N] [--max-per-session N]
  *     [--reranker on|off] [--qa-sessions N] [--qa-max-tokens N] [--reader <provider:model>] [--reader-effort <effort>]
- *     [--paid --budget-run-id <id>] --output <dir>
+ *     [--ids <file>] [--gbrain-defaults] [--paid --budget-run-id <id>] --output <dir>
+ *
+ * `--ids <file>` keeps only the questions whose ids the file lists (one per line), after the split; the nightly dev set
+ * uses it. `--gbrain-defaults` leaves out the held search defaults (HELD_GBRAIN_DEFAULTS in gbrain-under-test.ts), so
+ * the arm measures gbrain's own values for those keys; the lane's other pins (balanced mode, autocut off) stay.
  *
  * Memory-system cells (`--system`, `--arms`, `--replay`, `--sealed-profile`, `--provider-proxy` and the other flags in
  * run-systems.ts) run through run-systems.ts, the open-source comparison's harness, unchanged; this file dispatches to it.
@@ -146,6 +150,8 @@ export interface RunArgs {
   /** Replay the ranked session lists in this directory's rows instead of searching. */
   retrievedFrom: string | null;
   search: { limit: number | null; poolDepth: number | null; maxPerSession: number | null };
+  /** --ids: only these question ids. */
+  ids?: string[] | null;
 }
 
 export interface MemoryQaRow {
@@ -193,7 +199,8 @@ export interface MemoryQaRow {
 /** The part of hybridSearch's onMeta report the reranker fidelity check reads. */
 type SearchMeta = { degraded?: Array<string | { stage?: string; reason?: string }> };
 
-const DEFAULT_PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.autocut': 'false', ...HELD_GBRAIN_DEFAULTS };
+const LANE_PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.autocut': 'false' };
+const DEFAULT_PINS: Record<string, string> = { ...LANE_PINS, ...HELD_GBRAIN_DEFAULTS };
 const RECYCLE_EVERY = 25;
 const repoRelative = (p: string) => p.replace(resolve(import.meta.dir, '../../..') + '/', '');
 /** Planning estimate for one session through the conversation-facts extractor (product default model). */
@@ -299,7 +306,7 @@ export function parseRunArgs(argv: string[]): RunArgs {
   const embed = (one('--embed') ?? (benchmark === 'fixture' ? 'hash' : 'real')) as 'hash' | 'real';
   if (!['hash', 'real'].includes(embed)) throw new Error('--embed must be hash or real');
   const config = kv(many('--config'), '--config');
-  const pins = { ...DEFAULT_PINS, ...kv(many('--pin'), '--pin') };
+  const pins = { ...(argv.includes('--gbrain-defaults') ? LANE_PINS : DEFAULT_PINS), ...kv(many('--pin'), '--pin') };
   const reranker = resolveReranker(one('--reranker'), config['search.reranker.enabled'] ?? pins['search.reranker.enabled'], embed);
   pins['search.reranker.enabled'] = String(reranker.enabled);
   delete config['search.reranker.enabled'];
@@ -325,6 +332,7 @@ export function parseRunArgs(argv: string[]): RunArgs {
     facts: (one('--facts') ?? 'none') as 'none' | 'conversation',
     retrievedFrom: one('--retrieved-from') ? resolve(one('--retrieved-from')!) : null,
     search: { limit: positiveInt(one('--search-limit'), '--search-limit'), poolDepth: positiveInt(one('--pool-depth'), '--pool-depth'), maxPerSession: positiveInt(one('--max-per-session'), '--max-per-session') },
+    ids: one('--ids') ? systems.readIdsFile(one('--ids')!) : null,
   };
 }
 
@@ -396,7 +404,7 @@ export function runConfigPreimage(a: RunArgs, gut: GbrainUnderTest, corpus: Corp
   return { benchmark: a.benchmark, split: a.split, config: a.config, pins: a.pins, embed: a.embed, model: a.embeddingModel, dims: a.embeddingDims, qa: a.qa,
     categories: a.categories, limit: a.limit, seed: a.seed, topK: a.topK, gbrain: gut.overlay?.build.commit ?? gut.version, data: corpus.source.files, ...(a.facts !== 'none' ? { facts: a.facts } : {}),
     ...(frozenFiles ? { retrieved_from: frozenFiles.map(f => f.sha256) } : {}), ...(a.search.limit || a.search.poolDepth || a.search.maxPerSession ? { search: a.search } : {}),
-    ...(a.qa.mode !== 'none' ? { reading: readingIdentity(a.qa) } : {}) };
+    ...(a.qa.mode !== 'none' ? { reading: readingIdentity(a.qa) } : {}), ...(a.ids ? { ids: a.ids } : {}) };
 }
 
 export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus, frozenFiles: Array<{ sha256: string }> | null = null): string {
@@ -498,6 +506,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const corpus = loadCorpus(a.benchmark, a.corpusFile, allowed ?? undefined);
   let questions = corpus.questions.filter(q => !allowed || allowed.has(q.conversation));
   if (a.categories) questions = questions.filter(q => a.categories!.includes(q.category));
+  if (a.ids) { const want = new Set(a.ids); questions = questions.filter(q => want.has(q.id)); }
   questions = selectQuestions(questions, a.limit, a.seed);
   const convIds = uniqueInOrder(questions.map(q => q.conversation)).sort();
   const myConvs = convIds.filter((_, i) => i % a.shard.count === a.shard.index);
@@ -769,7 +778,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     reranker: brainless ? { applies: false } : { applies: true, enabled: rerankOn, decided_by: a.reranker.decided_by, model: rerankModel },
     reading: a.qa.mode === 'none' ? null : { breadth_sessions: a.qa.sessions, budget_tokens: a.qa.budgetTokens, max_output_tokens: a.qa.maxTokens ?? 1024, ...readingIdentity(a.qa) },
     embedding: { mode: a.embed, model: a.embeddingModel, dims: a.embeddingDims, cache_stats: cache ? { ...cache.stats } : null },
-    dataset: corpus.source, selection: { categories: a.categories, limit: a.limit, seed: a.seed, shard: a.shard, conversations: myConvs.length, questions_expected: expected },
+    dataset: corpus.source, selection: { categories: a.categories, limit: a.limit, seed: a.seed, shard: a.shard, conversations: myConvs.length, questions_expected: expected, ...(a.ids ? { ids: a.ids.length } : {}) },
     counts: { rows: latest.length, scored: scored.length, errors: latest.filter(r => r.error).length, abstention: latest.filter(r => r.abstention).length },
     summary: { recall_all_at_5: retrievalScored ? mean('recall_all_at_5') : null, recall_any_at_5: retrievalScored ? mean('recall_any_at_5') : null, recall_all_at_10: retrievalScored ? mean('recall_all_at_10') : null, ndcg_at_10: retrievalScored ? mean('ndcg_at_10') : null,
       latency_p50_ms: brainless || !scored.length ? null : percentile(scored.map(r => r.latency_ms ?? 0), 50), latency_p95_ms: brainless || !scored.length ? null : percentile(scored.map(r => r.latency_ms ?? 0), 95),

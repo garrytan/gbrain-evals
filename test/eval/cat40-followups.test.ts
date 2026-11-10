@@ -16,9 +16,9 @@ import { MeteringProxy } from '../../eval/runner/cat40/gbrain-arm.ts';
 import { cellCostBuckets, lagWarnings, reconcile, analyze } from '../../eval/runner/cat40/analyze.ts';
 import { harnessToolMs, latencyVerdict, replayParallel, sampleReplayCalls } from '../../eval/runner/cat40/latency-replay.ts';
 import {
-  bindExperiment, experimentFlags, main, missingSlotSnapshots, parseMaxToolChars, scheduleCells, slotRoot, type CellRecord,
+  bindExperiment, closesBudgetRun, experimentFlags, main, missingSlotSnapshots, parseMaxToolChars, scheduleCells, slotRoot, type CellRecord,
 } from '../../eval/runner/cat40-model-ladder.ts';
-import { closeLedgers, initLedger, ledgerStatus, priceRequest, readLedger, reservationUsd, startPaidRun, budgetOptionsFrom } from '../../eval/runner/budget-ledger.ts';
+import { BudgetExceededError, closeLedgers, initLedger, ledgerStatus, priceRequest, readLedger, reservationUsd, startPaidRun, budgetOptionsFrom } from '../../eval/runner/budget-ledger.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const world = generateLadderWorld();
@@ -90,6 +90,28 @@ describe('experiment-bound output directories (E-3)', () => {
     expect(() => bindExperiment(out, { ...manifest, flags: { '--slots': '3' } }, start)).toThrow('flags: recorded');
   });
 
+  test('a slot build that joined a shared run leaves it open for the builds still spending from it', () => {
+    const ledger = join(tmp(), 'l.sqlite');
+    initLedger({ ledgerPath: ledger, programCapUsd: 50 });
+    const night = startPaidRun('nightly', { ...budgetOptionsFrom(['--budget-usd', '20', '--budget-ledger', ledger], {}), estimateUsd: null, log: () => {} });
+    night.guard.uninstall();
+    const options = budgetOptionsFrom(['--budget-run-id', night.run.runId, '--budget-ledger', ledger], {});
+    const build = () => {
+      const paid = bindExperiment(tmp(), manifest, recorded => startPaidRun('cat40-slot-build', { ...options, runId: recorded ?? options.runId, estimateUsd: null, log: () => {} })).paid!;
+      paid.guard.uninstall();
+      return paid.run;
+    };
+    const first = build(), second = build();
+    first.close({ finish: closesBudgetRun(true, options) });
+    expect(() => second.reserve(0.01, "slot1's probe search embed")).not.toThrow();
+    second.close({ finish: closesBudgetRun(true, options) });
+    expect(ledgerStatus({ ledgerPath: ledger, runId: night.run.runId }).run!.finished_at).toBeNull();
+    night.run.close();
+    expect(ledgerStatus({ ledgerPath: ledger, runId: night.run.runId }).run!.finished_at).not.toBeNull();
+    expect(closesBudgetRun(true, { runId: null })).toBe(true);
+    expect(closesBudgetRun(false, { runId: null })).toBe(false);
+  });
+
   test('budget flags do not change the experiment; every other flag does', () => {
     expect(experimentFlags(['--models', 'a,b', '--budget-usd', '18', '--estimate-usd=3', '--transcripts', '--budget-run-id', 'x', '--slots=5']))
       .toEqual({ '--models': 'a,b', '--transcripts': true, '--slots': '5' });
@@ -139,6 +161,19 @@ describe('slot builds and preflight (E-4)', () => {
 });
 
 describe('gbrain provider-call attribution (E-6)', () => {
+  test('a request the paid-request guard refuses is answered 502 budget and counted on the meter with its reason, never charged', async () => {
+    const proxy = new MeteringProxy({ fetchImpl: (async () => { throw new BudgetExceededError('search embed: budget run nightly-x already finished'); }) as unknown as typeof fetch });
+    proxy.start();
+    try {
+      proxy.bind('slot1', 'rerank-probe:slot1');
+      const res = await fetch(`http://127.0.0.1:${proxy.port}/slot1/openai/v1/embeddings`, { method: 'POST', body: JSON.stringify({ model: 'text-embedding-3-large', input: ['x'] }) });
+      expect(res.status).toBe(502);
+      expect((await res.json()).error.kind).toBe('budget');
+      const m = await proxy.finalize('rerank-probe:slot1');
+      expect([m.requests, m.usd, m.refused, m.last_refusal]).toEqual([0, 0, { budget: 1 }, 'search embed: budget run nightly-x already finished']);
+    } finally { proxy.stop(); }
+  });
+
   test('a cell finishing after its released slot was bound to the next cell does not unbind the next cell (from GBRA-39\'s #76)', async () => {
     const proxy = new MeteringProxy({ fetchImpl: (async () => Response.json({ usage: { prompt_tokens: 10, total_tokens: 10 } })) as unknown as typeof fetch });
     proxy.start();
