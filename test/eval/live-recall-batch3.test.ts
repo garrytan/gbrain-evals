@@ -124,7 +124,8 @@ describe('live-recall batch3 questions, freeze and epoch', () => {
       };
       const f = freezeSummaryBatch3(batch3Text, batch3Questions, gut);
       expect(await run(f)).toBe('LR_NO_DATABASE_URL');
-      expect(await run({ ...f, visibility_epoch: 'post_gbra_398' })).toBe('LR_FREEZE_MISMATCH');
+      const otherEpoch = f.visibility_epoch === 'post_gbra_398' ? 'pre_gbra_398' : 'post_gbra_398';
+      expect(await run({ ...f, visibility_epoch: otherEpoch })).toBe('LR_FREEZE_MISMATCH');
       const { visibility_epoch: _e, ...noEpoch } = f;
       expect(await run(noEpoch)).toBe('LR_FREEZE_MISMATCH');
       const later = { ...gut, version: '9.0.0.0-local' };
