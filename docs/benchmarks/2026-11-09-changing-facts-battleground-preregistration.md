@@ -601,6 +601,20 @@ Separately, one unit's first VM stalled while installing its system's dependenci
 It was stopped, its lease was closed at no charge through the unstarted path, and the unit was relaunched as a second
 attempt. No provider call was made under the first attempt.
 
+### Deviation 3 (2026-11-10): stage 1's mem0 unit reruns with a longer timeout
+
+The ext-extract-first dev unit could not finish inside its timeout. That system adds one session at a time, and its
+ingest took 95 minutes on `bg1-dev-01` and 106 on `bg1-dev-02`, so three worlds and their questions run past the
+5 hours its planned 2 expected hours gave it. Its store is saved only after all three worlds are ingested, so the
+stopped attempt leaves nothing to resume from. That attempt was left to reach its timeout, which also records the ingest
+pace stage 2's timing needs.
+
+GBEV-3 decided on 2026-11-10 that the unit runs again as a one-unit campaign, `q1-scoreboard-bg1-stage1c`, at commit
+`5958985d`. That commit is cut from `4306e9e3`, the commit stage 1's other units ran at, and changes only this unit's
+expected hours, from 2 to 5, which gives it a 10-hour timeout. A byte-for-byte check of every tracked file the units
+read, covering the paths the campaign hash covers and the dev worlds, found only that one value changed between the two
+checkouts. The two campaigns' caps are set so that together they stay inside stage 1's cap (Amendment 1).
+
 ### Expected amendments
 
 The expected ones, each dated and committed before the cells it governs:
