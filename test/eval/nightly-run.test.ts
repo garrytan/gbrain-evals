@@ -51,6 +51,13 @@ describe('tiers and the ancestor check', () => {
     expect(plan('--tier', 'smoke').every(r => r.k === 1)).toBe(true);
   });
 
+  test('a particle-1 reader goes to the QA suites only, because Part C and Cat 40 Hard run Claude and GPT readers', () => {
+    const p = plan('--tier', 'matrix', '--readers', 'claude-opus-5-5,particle-1');
+    for (const id of ['cat40-hard-m', 'refresh-barrier-agents', 'refused-write-agents']) expect(p.find(r => r.suite.id === id)!.readers).toEqual(['claude-opus-5-5']);
+    for (const id of ['lme-s-hard', 'beam-1m-hard']) expect(p.find(r => r.suite.id === id)!.readers).toEqual(['claude-opus-5-5', 'particle-1']);
+    expect(plan('--tier', 'matrix', '--readers', 'particle-1').filter(r => r.suite.kind === 'agent')).toEqual([]);
+  });
+
   test('--suites and --items narrow the plan; an engine-prefixed item selects its seed; an unknown suite is refused', () => {
     const p = plan('--tier', 'matrix', '--items', '2001,pglite:5002,sol-query');
     expect(p.map(r => [r.suite.id, r.items.map(i => i.id)])).toEqual([['refused-write-agents', ['2001']], ['concurrent-writers', ['5002']], ['tool-contract-replay', ['sol-query']]]);

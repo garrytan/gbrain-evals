@@ -90,7 +90,9 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
 - **Against stable.** On matrix nights the same rules compare master with the stable release, in their own section.
 - **particle-1's agreement with Opus.** On a night that runs particle-1 beside claude-opus-5-5 (`--readers
   claude-opus-5-5,particle-1`), the report checks whether the low-cost reader marks the same items right and wrong as
-  Opus. particle-1's first trial of an item and Opus's first counted trial are each reader's pass or fail. A particle-1
+  Opus. particle-1 runs on the QA suites only: Part C's worker and the Cat 40 Hard runner take Claude and GPT readers,
+  so the night leaves particle-1 off the agent suites. particle-1's first trial of an item and Opus's first counted
+  trial are each reader's pass or fail. A particle-1
   crash, invalid answer or harness failure counts as a fail, so a reader that breaks on hard items can't drop them. An
   item is unpaired only when Opus has no counted trial or the night didn't run it for particle-1. Per suite the report
   shows raw agreement, Cohen's kappa (agreement beyond what the two pass rates give by chance) and particle-1's pass-rate
@@ -229,8 +231,8 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 The verdict now reads the item-weighted mean of per-suite kappas instead of the pooled kappa, which stays in the report
 for reference. A suite counts with at least 20 paired items and the verdict needs 40, a particle-1 crash or harness
 failure counts as a fail, and more than 10% of scheduled items unpaired reads as not measured. A kappa of exactly 0.6
-now passes. GPT-6 Astra judges particle-1's QA answers as well as Claude's, and qualified reader names such as
-`particle:particle-1` match.
+now passes. GPT-6 Astra judges particle-1's QA answers as well as Claude's, qualified reader names such as
+`particle:particle-1` match, and a night leaves particle-1 off the agent suites, whose runners refuse it.
 
 ### 2026-11-10: particle-1's agreement with Opus
 
