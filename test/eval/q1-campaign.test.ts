@@ -12,7 +12,7 @@ import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { Campaign, executedTree, loadCampaign, ownerTag, planWaves, Q1_VM_PATHS, REPO_RUNNER, resolveRunner, runRemote, treeDiff, type CampaignManifest, type LaunchContext, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
 import { exitCodeOf, ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
@@ -349,6 +349,29 @@ describe('launch, realizations and resume on the launching host', () => {
     expect(r.mode).toBe('snapshot');
     expect(r.lease).toMatchObject({ status: 'settled', attempt: 2, restored_from: 'real-hy-locomo-0123456789abcdef' });
     expect(existsSync(staged!)).toBe(false);
+  });
+
+  // Value: protects=Q1 resumes on a VM (GST-2280 review); fails_when=a non-sealed resume's staged checkpoint or snapshot is not pushed into the synced checkout at the path its payload names, so the VM re-asks every question or finds no snapshot; why_new=--only sends tracked files only, and the staged directory is untracked; seam=none; no_claim=argv and staged files only, cmd_push itself is not run
+  test('a non-sealed Q1 resume on a VM pushes its staged checkpoint and snapshot to the path its payload names, in answers and snapshot mode', async () => {
+    for (const [cell, mode] of [['kb-locomo', 'answers'], ['hy-locomo', 'snapshot']] as const) {
+      const a = q1();
+      const c = new Campaign(a.manifestPath, a.state);
+      c.init();
+      c.reserve(cell);
+      await c.launch(cell, vm(1, { realization: true }));
+      let checked = false;
+      const r = await c.resume(cell, vm(0.5, { seen: argv => {
+        const dir = payloadOf(argv).restore!.dir;
+        expect(dir).toMatch(/^\.scoreboard-restore\/[A-Za-z0-9._-]+$/);
+        const pushes = argv.flatMap((x, i) => x === '--push' ? [argv[i + 1]] : []);
+        expect(pushes).toContain(`${join(ROOT, dir)}:work/${basename(ROOT)}/${dir}`);
+        expect(argv.indexOf('--push')).toBeLessThan(argv.indexOf('--'));
+        expect(existsSync(join(ROOT, dir, 'checkpoint', 'attempts.ndjson'))).toBe(true);
+        expect(existsSync(join(ROOT, dir, 'realization', 'snapshot', 'store.tar'))).toBe(mode === 'snapshot');
+        checked = true;
+      } }));
+      expect([r.mode, checked]).toEqual([mode, true]);
+    }
   });
 
   test('a tampered snapshot is not recorded; without a usable snapshot the resume keeps the checkpoint and answers only what it lacks (A22)', async () => {

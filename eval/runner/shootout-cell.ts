@@ -728,11 +728,12 @@ export class Campaign {
         .filter(p => !ship.some(e => p === e || p.startsWith(`${e}/`)));
       if (unshipped.length) throw refuse({ code: 'CAMPAIGN_INVALID', message: `cell ${c.id} runs ${[...new Set(unshipped)].join(', ')}, which the VM would not receive`,
         why: 'a Q1 VM receives only the campaign\'s executes paths and Q1_VM_PATHS, so a script outside them would be missing there',
-        fix: { next: 'ask_user', user_message: `add ${unshipped[0]} to the campaign's executes (a new campaign identity) or to Q1_VM_PATHS in eval/runner/shootout-cell.ts` } });
+        fix: { next: 'ask_user', user_message: `add ${unshipped[0]} to the campaign's executes or to Q1_VM_PATHS in eval/runner/shootout-cell.ts; either edit is a new campaign identity, because shootout-cell.ts is in every Q1 campaign's executes` } });
       mkdirSync(join(this.stateDir, 'setup'), { recursive: true });
       const shipFile = join(this.stateDir, 'setup', `${l.cell}.ship`);
       writeFileSync(shipFile, ship.join('\n') + '\n');
       onlyArgs = ['--src', REPO_ROOT, '--only', shipFile];
+      if (opts.restore && opts.restore.dir !== '~/custody/restore' && opts.restoreFrom) pushArgs.push('--push', `${opts.restoreFrom}:work/${basename(REPO_ROOT)}/${opts.restore.dir}`);
     }
     let setup = c.setup ? (existsSync(resolve(REPO_ROOT, c.setup)) ? resolve(REPO_ROOT, c.setup) : resolve(c.setup)) : null;
     if (c.setup_command) {
