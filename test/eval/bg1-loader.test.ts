@@ -33,6 +33,16 @@ const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 const lastSunday = () => { const n = new Date(); return isoDay(new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() - n.getUTCDay()))); };
 const END = '2026-11-15', NOW = new Date('2026-11-16T12:00:00Z');
 const code = (f: () => unknown) => { try { f(); } catch (e) { return e instanceof DecideError ? e.op.code : (e as Error).message; } return 'no error'; };
+/** A copy of the committed dev root with its plans and questions but no world.json: the dev root before stage 1's render. */
+const unrendered = () => {
+  const d = tmp('dev-unrendered');
+  for (const id of BG1_DEV_CONVERSATIONS) {
+    const from = join(REPO, 'eval/data/changing-facts-v1/dev/worlds', id), to = join(d, 'worlds', id);
+    mkdirSync(to, { recursive: true });
+    for (const name of ['plan.json', 'questions.json']) cpSync(join(from, name), join(to, name));
+  }
+  return d;
+};
 
 let custody = '', set = '';
 beforeAll(() => {
@@ -127,9 +137,11 @@ describe('bg1-dev', () => {
     expect(code(() => bg1RunClock({ env: {}, now: NOW }))).toBe('SPEC_MISSING');
   });
 
-  test('the committed dev root has no rendered worlds until stage 1, so bg1-dev refuses there and names the fixtures', () => {
+  test('the committed dev root holds stage 1\'s model-rendered worlds, so a paid bg1-dev load reads it, and a root without them refuses', () => {
     expect(existsSync(join(REPO, 'eval/data/changing-facts-v1/dev/worlds/bg1-dev-01/plan.json'))).toBe(true);
-    expect(code(() => loadBg1Dev({ worldEnd: END }))).toBe('DATASET_MISSING');
+    for (const id of BG1_DEV_CONVERSATIONS) expect(JSON.parse(readFileSync(join(REPO, 'eval/data/changing-facts-v1/dev/worlds', id, 'world.json'), 'utf8')).renderer).toBe('gemini:gemini-3.8-flash');
+    expect(loadBg1Dev({ worldEnd: END }).conversations.map(c => c.id)).toEqual([...BG1_DEV_CONVERSATIONS]);
+    expect(code(() => loadBg1Dev({ root: unrendered(), worldEnd: END }))).toBe('DATASET_MISSING');
     expect(code(() => loadBg1Dev({ root: FIXTURES, worldEnd: END, only: new Set(['bg1-001']) }))).toContain('has no world');
   });
 
@@ -162,8 +174,7 @@ describe('bg1-dev', () => {
     process.env.GBRAIN_EVALS_BG1_DEV_ROOT = FIXTURES;
     process.env.GBRAIN_EVALS_BG1_WORLD_END = lastSunday();
     expect(refusal(() => loadCorpus('bg1-dev', undefined, devConversations('bg1-dev')!)).message).toContain('and this load is not keyless');
-    delete process.env.GBRAIN_EVALS_BG1_DEV_ROOT;
-    const missing = refusal(() => loadBg1Dev({ worldEnd: END }));
+    const missing = refusal(() => loadBg1Dev({ root: unrendered(), worldEnd: END }));
     expect(missing.code).toBe('DATASET_MISSING');
     expect(missing.fix.user_message).toContain('a paid run waits for the rendered dev worlds');
     expect(missing.fix.user_message).not.toMatch(/^for harness work, set GBRAIN_EVALS_BG1_DEV_ROOT/);

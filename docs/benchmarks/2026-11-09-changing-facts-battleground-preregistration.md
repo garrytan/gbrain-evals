@@ -504,8 +504,34 @@ low-thinking render keeps 1.6 times its target plus 2,048. From commit `fd3c8cb4
 level, under a new version, so no reply cached before this change is reused. Keyless (`--fake`) rendering is unchanged.
 No check, the length check's range, the three re-renders per session or the yield rule moves.
 
-The three dev worlds are rendered again under this method. Before any stage 1 cell runs, this amendment gains each
-world's measured rendering cost, its yield and its world end.
+**Fourth render: the dev worlds (2026-11-09).** Stage 1's fourth render, at commit `399de8b9`, wrote all three dev
+worlds. It stopped once, partway into `bg1-dev-02`, on the rendering budget (Amendment 3), and resumed on the same
+output directory, where the reply cache replayed every reply already bought. The first three long sessions of
+`bg1-dev-01` (3,236 target tokens, high thinking) each passed on their first render, at 0.98, 1.00 and 1.01 of the
+target. Every session of every world passed within its three re-renders, so no world dropped. The worlds are committed
+at `eval/data/changing-facts-v1/dev/worlds/<id>/world.json`.
+
+| World | Sessions | Render attempts | Re-renders | Checks | Failures by check (an attempt can fail several) | world.json SHA-256 |
+|---|---|---|---|---|---|---|
+| `bg1-dev-01` | 154 | 168 | 14 | 260 | planned line 9, forbidden value 9, Haiku extra claims 2, length 1, date 1, unreadable Gemini check 1 | `84611e6d9a4e650f` |
+| `bg1-dev-02` | 156 | 168 | 12 | 275 | planned line 8, forbidden value 8, unreadable Gemini check 2, length 1, date 1 | `b6d9b8fe9bce5710` |
+| `bg1-dev-03` | 157 | 171 | 14 | 273 | planned line 6, forbidden value 6, date 5, unreadable Gemini check 3, length 1 | `9822852461e22a59` |
+
+Measured rendering cost, as requests and output tokens:
+
+| World | High-thinking renders | Their output tokens (thinking) | Low-thinking renders | Their output tokens | Gemini checks | claude-haiku-5-5 checks |
+|---|---|---|---|---|---|---|
+| `bg1-dev-01` | 29 | 674,771 (596,302) | 139 | 173,255 | 165 | 95 |
+| `bg1-dev-02` | 29 | 764,465 (681,358) | 140 | 173,075 | 177 | 98 |
+| `bg1-dev-03` | 33 | 735,900 (642,811) | 138 | 164,829 | 174 | 99 |
+
+The high-thinking renders were about a sixth of each world's render requests and about seven-tenths of its rendering
+cost. `bg1-dev-02` also had five requests in flight when the budget stop ended the first invocation. Their replies were
+never logged, so they are not in the table, and whether Gemini billed them is reconciled against Gemini's usage when
+the window closes. The dollar amounts are kept on GST-2010, not here.
+
+Stage 1's world end is 2026-11-08, the Sunday before its cells run, so the runner accepts a stage 1 cell from
+2026-11-09 through 2026-11-22 (UTC). A stage 1 cell after that regenerates the dates in a dated amendment.
 
 **Operating notes.** Nobody deletes, moves or restores BG1's `--state` directory, its results directories or its lease
 log (`leases.ndjson` and `leases.sha256`). Any recovery stops and goes to the campaign owner, GBEV-3. Every stage's
