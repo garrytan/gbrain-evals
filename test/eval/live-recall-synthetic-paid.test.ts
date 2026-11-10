@@ -144,8 +144,10 @@ describe('live-recall run --synthetic, paid mode', () => {
     const detail = readFileSync(join(out, 'detail.local.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
     expect(new Set(detail.filter(r => r.arm === 'configured').map(r => r.status))).toEqual(new Set(['ok']));
     expect(readSynthetic(card)).toMatchObject({ control: false, transports: 'voyage' });
-    const log = console.log;
+    const log = console.log, err = console.error, errors: string[] = [];
     console.log = () => {};
-    try { expect(verdictMain(['--measure', 'G4', '--synthetic', join(out, 'scorecard.json')])).toBe(0); } finally { console.log = log; }
+    console.error = (...a: unknown[]) => { errors.push(a.join(' ')); };
+    try { expect(verdictMain(['--measure', 'G4', '--synthetic', join(out, 'scorecard.json')])).toBe(3); } finally { console.log = log; console.error = err; }
+    expect(errors.join('\n')).toContain('gbrain_loaded_commit');
   }, 120_000);
 });

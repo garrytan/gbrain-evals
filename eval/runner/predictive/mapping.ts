@@ -31,8 +31,30 @@ export interface Layer {
    * coincide: batch 3 repeats batch 2's secondaries over its own questions.
    */
   protocol?: 'batch2' | 'batch3';
+  /** The one non-control scorecard this layer's counted verdict reads (preregistration, corrections of 2026-11-10). */
+  counted?: CountedScorecard;
   note: string;
 }
+
+/** A synthetic live-recall scorecard's identity: the gbrain commit it loaded, its knobs and its question file. */
+export interface CountedScorecard {
+  gbrain_commit: string;
+  knobs: { unembedded_chunk_share: number; synopsis_vectors_off: boolean; keyword_candidate_bound: number | null; shell_page_share: number };
+  questions_sha256: string;
+}
+
+/** G2's batch 2 layer: the real condition (synopsis vectors off, 10% unembedded, half the pages that aren't gold as shells) at 0.60.593.0, batch 2's own gbrain. */
+export const COUNTED_B2: CountedScorecard = {
+  gbrain_commit: '27f8b9d6287c2ba635532c7d3bc015c50e1d769b',
+  knobs: { unembedded_chunk_share: 0.1, synopsis_vectors_off: true, keyword_candidate_bound: null, shell_page_share: 0.5 },
+  questions_sha256: '077569d730f9cff639cb21040e14635c034db19f19fd44b9e2c7460a7a5d2e89',
+};
+/** The batch 3 layers: the synthetic batch-3 brain (seed 20261110, 30 per type, Opus paraphrases) at 0.60.641.0, the version batch 3's counted run loads under the 2026-11-10 amendment (its freeze records 0.60.623.0). */
+export const COUNTED_B3: CountedScorecard = {
+  gbrain_commit: '2560ffddb85244b82f2b325ee2ddc846f77c3cac',
+  knobs: { unembedded_chunk_share: 0, synopsis_vectors_off: false, keyword_candidate_bound: null, shell_page_share: 0 },
+  questions_sha256: '3664863bc9916952ac987a225d4393013fed94c48e8de27a4dd78b0c9cd6f1f7',
+};
 
 const same = (...ids: string[]): MappedPair[] => ids.map(id => ({ synthetic: id, reference: id }));
 
@@ -58,15 +80,15 @@ export const MAPPING: Record<Measure, { title: string; layers: Layer[] }> = {
   G1: {
     title: 'freshness across pages',
     layers: [
-      { id: 'retrieval', reference: 'live-recall-b3', pairs: same(...B3_FRESHNESS), protocol: 'batch3', note: 'batch 3 freshness success@5; the stale-first rate is a direction check beside it and never gates' },
+      { id: 'retrieval', reference: 'live-recall-b3', pairs: same(...B3_FRESHNESS), protocol: 'batch3', counted: COUNTED_B3, note: 'batch 3 freshness success@5; the stale-first rate is a direction check beside it and never gates' },
       { id: 'agent', reference: 'phase2-agent', pairs: same(...PHASE2_AGENT), note: 'arm B vs arm A, and model pairs, once phase 2 is counted' },
     ],
   },
   G2: {
     title: 'recall under real conditions',
     layers: [
-      { id: 'b2', reference: 'live-recall-b2', pairs: same(...B2_CONTRASTS), ordering_keys: ['arms_exact', 'arms_paraphrase'], protocol: 'batch2', note: 'all 16 success@5 contrasts of live recall batch 2, id to id' },
-      { id: 'b3', reference: 'live-recall-b3', pairs: same(...B3_FRESHNESS, ...B3_ENTITY), protocol: 'batch3', note: 'batch 3 freshness and entity success@5, once batch 3 lands' },
+      { id: 'b2', reference: 'live-recall-b2', pairs: same(...B2_CONTRASTS), ordering_keys: ['arms_exact', 'arms_paraphrase'], protocol: 'batch2', counted: COUNTED_B2, note: 'all 16 success@5 contrasts of live recall batch 2, id to id' },
+      { id: 'b3', reference: 'live-recall-b3', pairs: same(...B3_FRESHNESS, ...B3_ENTITY), protocol: 'batch3', counted: COUNTED_B3, note: 'batch 3 freshness and entity success@5, once batch 3 lands' },
     ],
   },
   G3: {
@@ -79,7 +101,7 @@ export const MAPPING: Record<Measure, { title: string; layers: Layer[] }> = {
   G4: {
     title: 'wrong entity',
     layers: [
-      { id: 'retrieval', reference: 'live-recall-b3', pairs: same(...B3_ENTITY), protocol: 'batch3', note: 'batch 3 entity success@5' },
+      { id: 'retrieval', reference: 'live-recall-b3', pairs: same(...B3_ENTITY), protocol: 'batch3', counted: COUNTED_B3, note: 'batch 3 entity success@5' },
       { id: 'agent', reference: 'phase2-agent', pairs: same(...PHASE2_AGENT), note: 'arm B vs arm A, and model pairs, once phase 2 is counted' },
     ],
   },

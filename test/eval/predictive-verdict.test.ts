@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'bun:test';
+import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { MANIFEST, REFERENCE_DIR } from '../../eval/runner/predictive/export-references.ts';
 import { G3_CAUSES } from '../../eval/generators/write-contract-gen.ts';
-import { B2_CONTRASTS, MAPPING, MEASURES } from '../../eval/runner/predictive/mapping.ts';
+import { B2_CONTRASTS, COUNTED_B2, MAPPING, MEASURES } from '../../eval/runner/predictive/mapping.ts';
 import { SyntheticScorecardError, evaluateMeasure, main, readSynthetic } from '../../eval/runner/predictive/verdict.ts';
 import { ValidityReferenceError, loadReference, verdict, type Contrast, type ManifestEntry } from '../../eval/runner/predictive/validity.ts';
 
@@ -144,6 +145,63 @@ describe('predictive verdict on the committed references', () => {
       rmSync(dir, { recursive: true, force: true });
     }
     expect(quiet(() => main(['--measure', 'G9', '--synthetic', 'x']))).toBe(2);
+  });
+});
+
+describe('counted scorecard identity', () => {
+  const voyageCard = (over: { commit?: string; knobs?: object; questions?: string } = {}) => ({
+    ...liveCard(b2.contrasts), protocol: 'batch2',
+    run: {
+      control: false, transports: 'voyage', gbrain_loaded_version: '0.60.593.0', gbrain_loaded_commit: over.commit ?? COUNTED_B2.gbrain_commit,
+      synthetic: { digest: 'test-digest', questions_sha256: over.questions ?? COUNTED_B2.questions_sha256, ...(over.knobs ?? COUNTED_B2.knobs) },
+    },
+  });
+
+  test('G2 batch 2 reads its named counted scorecard, and verdict.json records the scorecard sha256 and identity', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verdict-counted-'));
+    try {
+      const text = JSON.stringify(voyageCard());
+      writeFileSync(join(dir, 'syn.json'), text);
+      expect(quiet(() => main(['--measure', 'G2', '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json')]))).toBe(0);
+      const v = JSON.parse(readFileSync(join(dir, 'v.json'), 'utf8'));
+      expect(v.verdict).toBe('PREDICTIVE');
+      expect(v.scorecard).toMatchObject({ sha256: createHash('sha256').update(text).digest('hex'), gbrain_loaded_commit: COUNTED_B2.gbrain_commit, questions_sha256: COUNTED_B2.questions_sha256, knobs: COUNTED_B2.knobs });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('another gbrain commit, other knobs or another question file refuses with exit 3 and writes nothing, even with --control', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verdict-counted-bad-'));
+    try {
+      for (const bad of [{ commit: '62637c96a5a5c2e9d55594f87a33d79c2f30b54f' }, { knobs: { ...COUNTED_B2.knobs, shell_page_share: 0 } }, { questions: '0'.repeat(64) }]) {
+        writeFileSync(join(dir, 'syn.json'), JSON.stringify(voyageCard(bad)));
+        for (const extra of [[], ['--control']]) {
+          expect(quiet(() => main(['--measure', 'G2', '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json'), ...extra]))).toBe(3);
+          expect(existsSync(join(dir, 'v.json'))).toBe(false);
+        }
+      }
+      expect(evaluateMeasure('G2', readSynthetic(voyageCard({ commit: '62637c96a5a5c2e9d55594f87a33d79c2f30b54f' }))).verdict).toBe('PREDICTIVE');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('--secondary reads another scorecard and labels it secondary in the output and verdict.json', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verdict-counted-secondary-'));
+    try {
+      writeFileSync(join(dir, 'syn.json'), JSON.stringify(voyageCard({ commit: '62637c96a5a5c2e9d55594f87a33d79c2f30b54f' })));
+      const lines: string[] = [];
+      const log = console.log;
+      console.log = (...a: unknown[]) => { lines.push(a.join(' ')); };
+      try { expect(main(['--measure', 'G2', '--synthetic', join(dir, 'syn.json'), '--out', join(dir, 'v.json'), '--secondary'])).toBe(0); } finally { console.log = log; }
+      expect(lines[0]).toContain('secondary scorecard');
+      const v = JSON.parse(readFileSync(join(dir, 'v.json'), 'utf8'));
+      expect(v.secondary).toBe(true);
+      expect(v.scorecard.gbrain_loaded_commit).toBe('62637c96a5a5c2e9d55594f87a33d79c2f30b54f');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 
