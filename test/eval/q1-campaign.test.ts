@@ -14,7 +14,7 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
-import { Campaign, executedTree, loadCampaign, ownerTag, planWaves, REPO_RUNNER, resolveRunner, runRemote, treeDiff, type CampaignManifest, type LaunchContext, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
+import { Campaign, executedTree, loadCampaign, ownerTag, planWaves, Q1_VM_PATHS, REPO_RUNNER, resolveRunner, runRemote, treeDiff, type CampaignManifest, type LaunchContext, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
 import { exitCodeOf, ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 
@@ -195,6 +195,35 @@ describe('executor, VM payload and schedule', () => {
     expect(caught(() => c.vmName(l)).op.code).toBe('OWNER_UNSET');
     expect(ownerTag('GBRA-49')).toBe('gbra49');
     expect(ownerTag('49x')).toBe('u49x');
+  });
+
+  // Value: protects=BG1 stage 2 uploads (GST-2280); fails_when=a Q1 launch sends the whole checkout, from the shell's cwd, or a list other than executes plus Q1_VM_PATHS; why_new=--only on Q1 launches; seam=none; no_claim=argv only, the pack itself is in ubi-runner-pack.test.ts
+  test('a Q1 launch sends only its executes paths and Q1_VM_PATHS from the repository root; a shootout launch keeps the whole checkout', () => {
+    const a = q1();
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    const argv = c.launchArgv(c.reserve('kb-locomo'));
+    expect(argv[argv.indexOf('--src') + 1]).toBe(ROOT);
+    expect(readFileSync(argv[argv.indexOf('--only') + 1], 'utf8').trim().split('\n')).toEqual([rel(a.exec), 'bun.lock', ...Q1_VM_PATHS]);
+    expect(argv.indexOf('--only')).toBeLessThan(argv.indexOf('--'));
+    const dir = join(tmp, 'shootout-only');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'm.json'), JSON.stringify({ kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: 'oss-only', cap_usd: 10, ledger: join(dir, 'l.sqlite'),
+      cells: [{ id: 'a', system: 'fake', benchmark: 'locomo', config: 'common', lease_usd: 1, command: 'true' }] }));
+    const s = new Campaign(join(dir, 'm.json'), join(dir, 'state'));
+    s.init();
+    expect(s.launchArgv(s.reserve('a'))).not.toContain('--only');
+  });
+
+  // Value: protects=a Q1 VM never starts a script it was not sent; fails_when=a cell command, setup, snapshot or restore names a repository script outside executes and Q1_VM_PATHS and the launch goes ahead; why_new=the VM no longer receives the whole checkout; seam=none; no_claim=script paths written in the commands
+  test('a Q1 cell whose command runs a script the VM would not receive is refused before launch', () => {
+    const a = q1({ executes: ['bun.lock', 'eval/systems/bootstrap.sh'] }, [{ id: 'kb-locomo', system: 'ext-markdown-kb', benchmark: 'locomo', config: 'recipe', lease_usd: 4, command: 'bun eval/runner/q1/hedge.ts --x', setup_command: 'bash eval/systems/bootstrap.sh setup', block: 'T1', vm: { size: 'standard-4' } }]);
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    const e = caught(() => c.launchArgv(c.reserve('kb-locomo')));
+    expect(e.op.code).toBe('CAMPAIGN_INVALID');
+    expect(e.op.message).toContain('eval/runner/q1/hedge.ts');
+    expect(e.op.message).not.toContain('bootstrap.sh');
   });
 
   test('waves pack cells under the daytime vCPU cap, explicit waves first', () => {

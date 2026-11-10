@@ -88,6 +88,14 @@ import { insideRepository, sha256File } from './sealed-confirmation-lib.ts';
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 export const REPO_RUNNER = join(REPO_ROOT, 'scripts/ubicloud/ubi-runner.sh');
 
+/**
+ * Q1: repository paths a cell's VM reads beyond the campaign's `executes`: the patch `bun install --frozen-lockfile` applies
+ * (package.json patchedDependencies), the dataset fetcher bootstrap.sh setup runs (`bun run eval:decide fetch`), and BG1's
+ * public dev worlds (corpus.ts BG1_DEV_ROOT). A Q1 launch sends only the tracked files under these and `executes`, without
+ * .git (ubi-runner run --only), instead of the whole checkout with its benchmark docs and history (GST-2280).
+ */
+export const Q1_VM_PATHS = ['patches', 'eval/runner/decide.ts', 'eval/runner/stats', 'eval/data/changing-facts-v1/dev'];
+
 /** The VM executor: UBI_RUNNER when set, else the repository's runner; never a path outside a checkout by default. */
 export function resolveRunner(env: Record<string, string | undefined> = process.env): string {
   const named = env.UBI_RUNNER;
@@ -713,6 +721,19 @@ export class Campaign {
       pushArgs = ['--push', `${push.source}:${push.dest}:${listFile}`, ...push.env.flatMap(e => ['--env', e])];
     }
     if (opts.restore?.dir === '~/custody/restore' && opts.restoreFrom) pushArgs.push('--push', `${opts.restoreFrom}:custody/restore`);
+    let onlyArgs: string[] = [];
+    if (this.q1) {
+      const ship = [...(this.manifest.executes ?? []), ...Q1_VM_PATHS];
+      const unshipped = [c.command, c.setup_command, c.snapshot_command, c.restore_command].flatMap(s => [...(s ?? '').matchAll(/(?:eval|scripts|docs)\/[\w./-]+\.(?:ts|sh|py)\b/g)].map(m => m[0]))
+        .filter(p => !ship.some(e => p === e || p.startsWith(`${e}/`)));
+      if (unshipped.length) throw refuse({ code: 'CAMPAIGN_INVALID', message: `cell ${c.id} runs ${[...new Set(unshipped)].join(', ')}, which the VM would not receive`,
+        why: 'a Q1 VM receives only the campaign\'s executes paths and Q1_VM_PATHS, so a script outside them would be missing there',
+        fix: { next: 'ask_user', user_message: `add ${unshipped[0]} to the campaign's executes (a new campaign identity) or to Q1_VM_PATHS in eval/runner/shootout-cell.ts` } });
+      mkdirSync(join(this.stateDir, 'setup'), { recursive: true });
+      const shipFile = join(this.stateDir, 'setup', `${l.cell}.ship`);
+      writeFileSync(shipFile, ship.join('\n') + '\n');
+      onlyArgs = ['--src', REPO_ROOT, '--only', shipFile];
+    }
     let setup = c.setup ? (existsSync(resolve(REPO_ROOT, c.setup)) ? resolve(REPO_ROOT, c.setup) : resolve(c.setup)) : null;
     if (c.setup_command) {
       mkdirSync(join(this.stateDir, 'setup'), { recursive: true });
@@ -720,7 +741,7 @@ export class Campaign {
       writeFileSync(setup, `set -euo pipefail\n${c.setup_command}\n`);
     }
     return ['bash', resolveRunner(), 'run', '-s', c.vm?.size ?? 'standard-8', '-l', c.vm?.location ?? 'eu-central-h1', ...(c.vm?.storage_gib ? ['-S', String(c.vm.storage_gib)] : []),
-      ...(opts.vm ? ['-n', opts.vm] : []), ...(setup ? ['--setup', setup] : []), ...(c.pass ?? []).flatMap(p => ['--pass', p]), ...pushArgs,
+      ...(opts.vm ? ['-n', opts.vm] : []), ...onlyArgs, ...(setup ? ['--setup', setup] : []), ...(c.pass ?? []).flatMap(p => ['--pass', p]), ...pushArgs,
       '--pull', `${this.remotePath(l)}:${dirname(this.resultsDir(l))}`,
       '--', `bun eval/runner/shootout-cell.ts remote --cell-b64 ${payload}`];
   }
