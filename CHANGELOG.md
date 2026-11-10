@@ -2,6 +2,31 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.204] - 2026-11-10
+
+### The nightly report's particle-1 agreement verdict follows stricter rules
+
+- **What changed.** The verdict now reads the item-weighted mean of each suite's kappa. The kappa of all suites pooled
+  stays in the report for reference only, because pooling counts differences in difficulty between suites as
+  agreement. A suite counts toward the verdict with at least 20 paired items, and the verdict needs at least 40. A kappa
+  of exactly 0.6 now passes; floating point used to compute it as 0.5999999999999996.
+- **Items particle-1 can't drop.** A particle-1 crash, invalid answer or provider error on an item counts as a fail.
+  An item is unpaired only when Opus has no counted trial for it or the night never ran it, and more than 10% of
+  scheduled items unpaired reads as not measured. `night.json` now records how many items each suite planned, so a
+  suite that stopped before writing any row counts all of them as unpaired. A night that ends on a budget stop
+  (including Particle's 402) or loses its VM reads as not measured, because the items it never reached aren't
+  particle-1's fails.
+- **Readers and judges.** GPT-6 Astra now judges particle-1's QA answers as well as Claude's, and Opus judges GPT's,
+  so both readers in the agreement check get the same judge and no judge grades its own family. particle-1 runs on the
+  QA suites only, because Part C's worker and the Cat 40 Hard runner take Claude and GPT readers. Qualified reader names
+  such as `particle:particle-1` match, and a suite a `--fake` night skipped is left out.
+- **Known limits.** No particle-1 night has run yet, so there is still no agreement number. The default nightly tier
+  plans no QA suite, so `--readers claude-opus-5-5,particle-1` on it puts particle-1 on no suite; name
+  `--suites lme-s-hard,beam-1m-hard` or a tier that includes them. A judge error on a particle-1 answer counts as a
+  fail.
+- Keyless fixture tests cover the item-weighted mean, the exact-0.6 case, both floors, a crash counted as a
+  fail, the unpaired floor, a suite lost before writing rows, a budget stop at 70% of each suite, qualified names and
+  fake-night skips. `docs/nightly.md` describes the rules.
 ## [0.10.202] - 2026-11-10
 
 ### How many BEAM questions their cited turns don't support, and our published BEAM results without them

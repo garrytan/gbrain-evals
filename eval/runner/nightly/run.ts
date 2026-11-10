@@ -52,7 +52,7 @@ import { ADAPTERS, callsModels, skippedRows, type NightContext, type SuiteRun, t
 import { loadDevSet, suiteDigest, type DevSet } from './devset.ts';
 import { NightlyCache } from './judge-cache.ts';
 import { closeOwnedNightRun, NIGHTLY_RUNNER_PREFIX, NightlyCapStop, openNightRun, reconcileNightRun } from './ledger.ts';
-import { appendOutcome, outcomeKey, readOutcomes, type Outcome } from './outcome.ts';
+import { appendOutcome, outcomeKey, qualifiedModel, readOutcomes, type Outcome } from './outcome.ts';
 import { findPreviousNight, writeReport, type NightManifest, type SuiteStatus } from './report.ts';
 import { OLD_RELEASE } from './smokes/upgrade-from-old.ts';
 
@@ -103,7 +103,13 @@ export function parseArgs(argv: readonly string[]): NightArgs {
   };
 }
 
-/** The suites a night runs, with their items, readers and k. */
+/**
+ * Whether a suite's runner can run a reader. Agent suites take Claude and GPT readers only: Part C's worker refuses any
+ * other provider, and the Cat 40 Hard runner refuses particle-1 (amendment A6) and would fail the whole cell run with it.
+ */
+export const runsReader = (s: Pick<DevSet['suites'][number], 'kind'>, reader: string) => s.kind !== 'agent' || /^(anthropic|openai):/.test(qualifiedModel(reader));
+
+/** The suites a night runs, with their items, readers and k; a reader goes only to the suites whose runner runs it. */
 export function planSuites(devset: DevSet, a: Pick<NightArgs, 'tier' | 'suites' | 'items' | 'readers' | 'k'>): SuiteRun[] {
   const tier = TIERS[a.tier];
   const known = new Set(devset.suites.map(s => s.id));
@@ -112,8 +118,8 @@ export function planSuites(devset: DevSet, a: Pick<NightArgs, 'tier' | 'suites' 
   return devset.suites
     .filter(s => (tier.suites === null || tier.suites.includes(s.id)) && (a.suites === null || a.suites.includes(s.id)))
     .map(s => ({ suite: s, digest: suiteDigest(s), items: s.items.filter(i => a.items === null || a.items.some(x => x === i.id || x.endsWith(`:${i.id}`))),
-      readers: callsModels(s) ? a.readers ?? tier.readers ?? devset.readers : [null], k: a.k ?? tier.k ?? devset.k[s.kind] }))
-    .filter(r => r.items.length > 0);
+      readers: callsModels(s) ? (a.readers ?? tier.readers ?? devset.readers).filter(r => runsReader(s, r)) : [null], k: a.k ?? tier.k ?? devset.k[s.kind] }))
+    .filter(r => r.items.length > 0 && r.readers.length > 0);
 }
 
 /**
@@ -208,8 +214,8 @@ export async function main(argv: readonly string[]): Promise<number> {
     const statuses: SuiteStatus[] = plan.map(r => {
       const gap = requirementGap(a.clone, sha, r.suite.requires?.gbrain_commit);
       const before = saved?.suites.find(s => s.id === r.suite.id);
-      return gap ? { id: r.suite.id, digest: r.digest, k: r.k, readers: r.readers, status: 'skipped', reason: gap }
-        : { id: r.suite.id, digest: r.digest, k: r.k, readers: a.fake && callsModels(r.suite) ? ['fake'] : r.readers, status: before?.status === 'not_built' ? 'not_built' : 'pending' };
+      return gap ? { id: r.suite.id, digest: r.digest, k: r.k, readers: r.readers, items: r.items.length, status: 'skipped', reason: gap }
+        : { id: r.suite.id, digest: r.digest, k: r.k, readers: a.fake && callsModels(r.suite) ? ['fake'] : r.readers, items: r.items.length, status: before?.status === 'not_built' ? 'not_built' : 'pending' };
     });
     const manifest: NightManifest = {
       schema: 'nightly-night/1', night: a.night, ref: a.ref, sha, version: gut.version, tier: a.tier, fake: a.fake,
