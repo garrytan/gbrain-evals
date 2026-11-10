@@ -18,6 +18,27 @@ This records what each gbrain-evals release changed and what its measurements me
   turns. That is why that change keeps the gate off by default.
 - The benchmark's README lists the probe and its result. No published score or verdict changes.
 
+## [0.10.199] - 2026-11-10
+
+### The nightly check's results now feed the weekly failure-cause count
+
+- **A `nightly` failure-cause adapter.** `eval/runner/failure-causes/adapters/nightly.ts` reads a night's
+  `outcomes.jsonl` or `outcomes.jsonl.gz` into the shared failure rows, so a week of nightly failures can be counted by
+  cause beside the other evals. It maps fields and infers none. Keyless failures (the concurrency trials, the system
+  smokes, the tool-contract replay) are counted per night, suite and cause, and an item the night scheduled but didn't run
+  comes back as not run.
+- **Richer outcome rows.** Every nightly row carries its suite's fixed facts (system, arm, condition, visibility, agent
+  loop), each tool call with its error and whether the agent recovered, gold coverage, write losses, and the question,
+  reference and answer on public or synthetic rows. A suite the night skipped or couldn't build writes one skipped row
+  per item with the reason, and a resume replaces it once the item runs.
+- **One taxonomy.** The nightly report's failures by cause come from the shared classifier, and the nightly's own
+  `classify.ts` is gone. `summary.json` records `taxonomy_version` in place of `classifier_version`.
+- **Bisect.** `bisect.ts` leaves skipped rows out, so a bisect step on a gbrain commit older than a suite, or on a
+  Postgres item without `--pg-admin`, stops instead of counting the step as bad.
+- **Stable pin.** Matrix nights compare with gbrain's `stable` tag, v0.60.620.0. The old pin predated the commit the
+  refresh-barrier and concurrent-writer suites need, so a matrix night skipped them on stable.
+- No published score or verdict changes.
+
 ## [0.10.198] - 2026-11-10
 
 ### CI splits the test suite into six shards balanced by measured file times, so no test job nears its 15-minute limit

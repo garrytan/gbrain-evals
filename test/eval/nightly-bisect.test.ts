@@ -31,6 +31,12 @@ describe('bisect', () => {
     expect(() => firingItemsBad([{ item: 'a', pass: false, harness: { error: 'provider' } }], ['a'])).toThrow('no outcome for the firing items a');
   });
 
+  test('skipped rows (items the step did not run) do not count, and a step whose firing items were all skipped stops the bisect', () => {
+    const skipped = { item: 'a', pass: false, harness: null, skipped: 'gbrain predates the suite' };
+    expect(firingItemsBad([{ item: 'a', pass: true, harness: null }, skipped], ['a'])).toBe(false);
+    expect(() => firingItemsBad([skipped, skipped], ['a'])).toThrow('no outcome for the firing items a');
+  });
+
   test('each step gets the paid flags, the reader and the settings a Cat 40 or Postgres suite needs', () => {
     const argv = ['--suite', 'cat40-hard-m', '--items', 'a,b', '--good', 'g', '--bad', 'b', '--gbrain-clone', '/g', '--out', '/o', '--paid', '--budget-run-id', 'nightly:x',
       '--budget-ledger', '/ledger.sqlite', '--cat40-slot-allowance-usd', '2', '--pg-admin', 'postgres://a', '--pg-template', 'tpl', '--pg15-admin', 'postgres://b', '--reader', 'gpt-6.1-sol'];

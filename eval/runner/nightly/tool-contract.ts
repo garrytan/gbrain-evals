@@ -114,17 +114,17 @@ export async function withMcp<T>(root: string, fn: (call: Call) => Promise<T>): 
 
 export interface ItemReplay {
   item: string; family: Family; skill: string; calls: number; unparseable: number;
-  /** Per path: answered calls and refusals by tool and code. */
-  paths: Record<ReplayPath, { ok: number; refused: Record<string, Record<string, number>> }>;
+  /** Per path: answered calls (in all and by tool) and refusals by tool and code. */
+  paths: Record<ReplayPath, { ok: number; ok_by_tool: Record<string, number>; refused: Record<string, Record<string, number>> }>;
   refusals: number;
 }
 
 async function replay(call: Call, calls: Recorded[]): Promise<ItemReplay['paths'][ReplayPath]> {
-  const out: ItemReplay['paths'][ReplayPath] = { ok: 0, refused: {} };
+  const out: ItemReplay['paths'][ReplayPath] = { ok: 0, ok_by_tool: {}, refused: {} };
   for (const c of calls) {
     if (!c.args) continue;
     const r = await call(c.tool, { ...c.args, slug: REPLAY_SLUG[c.tool] });
-    if ('ok' in r || isContentMiss(c.args, r.error)) { out.ok++; continue; }
+    if ('ok' in r || isContentMiss(c.args, r.error)) { out.ok++; out.ok_by_tool[c.tool] = (out.ok_by_tool[c.tool] ?? 0) + 1; continue; }
     const code = r.error.code ?? 'no_code';
     const byCode = out.refused[c.tool] ??= {};
     byCode[code] = (byCode[code] ?? 0) + 1;
