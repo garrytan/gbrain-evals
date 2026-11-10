@@ -32,7 +32,7 @@ describe('CI workflow gates (audit C5 to C8)', () => {
   });
 
   test('colocated eval/ unit tests, Python tests and validators all run', () => {
-    expect(workflow).toContain('bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/');
+    expect(workflow).toContain('bun test --shard=${{ matrix.shard }}/${{ strategy.job-total }} --timings=test/timings.json test/eval/ eval/');
     for (const line of runLines()) expect(line).not.toContain('--parallel');
     expect(workflow).toContain('python3 test/retrieval_refresh_orchestrator_test.py');
     expect(runLines()).toContain('bun run validate');
@@ -49,7 +49,7 @@ describe('CI workflow gates (audit C5 to C8)', () => {
     const jobs = workflow.slice(workflow.indexOf('\njobs:')).split(/^  (?=\w[\w-]*:\n)/m).slice(1);
     expect(jobs.length).toBeGreaterThanOrEqual(2);
     for (const job of jobs) expect(job).toMatch(/timeout-minutes: \d+/);
-    expect(workflow).toMatch(/shard: \[1, 2, 3, 4\]/);
+    expect(workflow).toMatch(/shard: \[1, 2, 3, 4, 5, 6\]/);
   });
 
   test('the Bun version CI installs supports --shard', () => {
