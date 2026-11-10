@@ -219,8 +219,8 @@ snapshots, audit rows and gbrain's log stay.
 - The shell rules from phase 1: run as the user whose `~/.gbrain/config.json` serves the brain, with
   `GBRAIN_DIRECT_DATABASE_URL` unset. `GBRAIN_REMOTE_PRIVATE_PAGES` is removed from the runner's own process; if the
   brain's config sets `search.remote_private_pages`, or turns privacy aliases off (`visibility.honor_aliases` false, 0, off
-  or no), the runner refuses to start. It also refuses when gbrain would read
-  its calls as a member or as the brain owner: config `mcp.stdio_member` set to anyone, or, from gbrain 0.60.623.0,
+  or no, or unreadable), the runner refuses to start. It also refuses when gbrain would read
+  its calls as a member or as the brain owner: config `mcp.stdio_member` set to anyone (or unreadable), or, from gbrain 0.60.623.0,
   `access.owner_member` naming the member its session is bound to. An owner-bound session sees private pages.
 - A budget ledger on the box, for example `/data/ops/live-recall/phase2/ledger.sqlite`. The first paid command on a new
   ledger also takes `--program-cap-usd 900`, which covers the judge check's $200 cap and the counted run's $700.
