@@ -2,9 +2,10 @@
  * The weekly summary and report. gbrain's top three is ranked on failures from
  * natural-condition runs of gbrain's own arms: each source's failures give
  * every cause a share, each source weighs the same, raw counts break ties, and
- * harness_error, model_error and unclassified never enter the list (unclassified
- * stays in the full table). Shares are taken over the rows that say something
- * about gbrain, so harness errors never dilute them. A labeller call that failed
+ * the causes gbrain can't fix (harness_error, item_unsupported, reader_budget,
+ * model_error) and unclassified never enter the list (model_error and unclassified stay in the full table). Shares are
+ * taken over the rows that say something about gbrain, so harness errors and the suite causes (rows that say nothing
+ * about gbrain) never dilute them; those get their own lists. A labeller call that failed
  * or did not parse counts as pending. Forced-condition rows
  * and stress counts go to a separate "under stress" list, other systems to a
  * contrast table and harness errors to our own fix list. Example rows come
@@ -18,11 +19,14 @@
  * many of its rows hit the agent's turn cap; and whether rows still waiting
  * for the labeller could change its place (provisional).
  */
-import { MODEL_CAUSES, STAGES, TAXONOMY_VERSION, UNCLASSIFIED, causeInfo, type Cause, type Stage } from './taxonomy.ts';
+import { CAUSES, MODEL_CAUSES, STAGES, TAXONOMY_VERSION, UNCLASSIFIED, causeInfo, type Cause, type Stage } from './taxonomy.ts';
 import { NO_LABEL_RULES } from './agreement.ts';
 import type { CauseLabel, StressCount } from './types.ts';
 
-const NOT_FOR_GBRAIN: readonly string[] = ['harness_error', 'model_error', UNCLASSIFIED];
+const NOT_FOR_GBRAIN: readonly string[] = [...CAUSES.filter(c => !c.gbrain_actionable).map(c => c.id), UNCLASSIFIED];
+/** Our own side (gap map eval): harness errors, and suite causes for rows that say nothing about gbrain. Never in gbrain's shares. */
+const EVAL_SIDE_CAUSES: readonly string[] = CAUSES.filter(c => c.gap_map === 'eval').map(c => c.id);
+const SUITE_CAUSES: readonly string[] = EVAL_SIDE_CAUSES.filter(c => c !== 'harness_error');
 const GBRAIN_ROLES = new Set(['gbrain_default', 'gbrain_variant']);
 const PENDING = 'pending_label';
 /** Rule id prefix of a row for a task its system never ran (classify, EvalFailure.not_run). */
@@ -57,6 +61,8 @@ export interface Summary {
   under_stress: Array<{ source: string; cause: string; unit: string; count: number; of: number; detail: string; status: string | null }>;
   contrast: Array<{ system: string; arm_role: string; cause: string; count: number }>;
   harness: Array<{ rule_id: string; count: number; sources: string[] }>;
+  /** Failed rows that say nothing about gbrain (the suite causes), by cause and source. */
+  suite: Array<{ cause: string; count: number; by_source: Record<string, number> }>;
   capability: Record<string, Partial<Record<Stage, number>>>;
   pending: number;
   /** The share the gbrain rows waiting for the labeller hold; one cause could gain all of it. */
@@ -84,7 +90,7 @@ export function summarize(labels: CauseLabel[], stress: StressCount[] = [], opti
     s.failures++;
     if (l.gbrain_sha && !s.gbrain_shas.includes(l.gbrain_sha)) s.gbrain_shas.push(l.gbrain_sha);
   }
-  const natural = failed.filter(l => l.condition === 'natural' && GBRAIN_ROLES.has(l.arm_role) && l.cause !== 'harness_error');
+  const natural = failed.filter(l => l.condition === 'natural' && GBRAIN_ROLES.has(l.arm_role) && !EVAL_SIDE_CAUSES.includes(l.cause ?? ''));
   const bySource = new Map<string, CauseLabel[]>();
   for (const l of natural) bySource.set(l.source, [...(bySource.get(l.source) ?? []), l]);
   const isOther = (l: CauseLabel) => l.condition === 'natural' && !GBRAIN_ROLES.has(l.arm_role) && l.task_id;
@@ -152,6 +158,7 @@ export function summarize(labels: CauseLabel[], stress: StressCount[] = [], opti
     capability[src] = Object.fromEntries(STAGES.map(s => [s, Number((rows.filter(l => !l.unmeasured.includes(s)).length / ls).toFixed(3))]));
   }
   const harnessRows = failed.filter(l => l.cause === 'harness_error');
+  const suiteRows = failed.filter(l => SUITE_CAUSES.includes(l.cause ?? ''));
   return {
     schema: 'failure-cause-summary/1', taxonomy_version: TAXONOMY_VERSION, failures: failed.length, sources,
     ranked, top_three: forGbrain.slice(0, 3),
@@ -159,6 +166,7 @@ export function summarize(labels: CauseLabel[], stress: StressCount[] = [], opti
     contrast: [...tally(failed.filter(l => !GBRAIN_ROLES.has(l.arm_role)).map(l => `${l.system}\t${l.arm_role}\t${causeOf(l)}`))]
       .map(([k, count]) => { const [system, arm_role, cause] = k.split('\t'); return { system, arm_role, cause, count }; }).sort((a, b) => b.count - a.count),
     harness: [...tally(harnessRows.map(l => l.rule_id))].map(([rule_id, count]) => ({ rule_id, count, sources: [...new Set(harnessRows.filter(l => l.rule_id === rule_id).map(l => l.source))] })),
+    suite: [...tally(suiteRows.map(l => l.cause!))].map(([cause, count]) => ({ cause, count, by_source: Object.fromEntries(tally(suiteRows.filter(l => l.cause === cause).map(l => l.source))) })),
     capability, pending: failed.filter(waiting).length, pending_share: pendingShare,
     waiting: waitingRows.filter(showable).map(example), waiting_hidden: waitingRows.filter(l => !showable(l)).length,
     model_labelled: failed.filter(l => l.basis === 'model').length,
@@ -171,6 +179,8 @@ const title = (cause: string) => causeInfo(cause)?.title ?? (cause === PENDING ?
 /** Proposed regression test, per cause: what a check must show once gbrain fixes the cause. */
 export const REGRESSION_TESTS: Record<Cause, string> = {
   harness_error: 'A keyless test in gbrain-evals that replays the failing record through the fixed runner or scorer and asserts it now scores.',
+  item_unsupported: 'No gbrain test: a keyless suite check in gbrain-evals that every item passes the support check, or that items failing it are left out of the suite.',
+  reader_budget: 'No gbrain test: a keyless suite check in gbrain-evals that the reader is given at least as many items as each question has gold, or that such questions are left out.',
   operations: 'A nightly smoke that runs the failing operation on a fresh brain at the pinned Postgres version and asserts it exits 0 with the brain readable.',
   ingest_gap: 'A keyless ingest test that imports the source record and asserts the gold fact is stored once, verbatim, and indexed.',
   privacy_hidden: 'A visibility test that counts gold hidden from the caller by cause (private flag, alias, derived page) and asserts the count matches the intended policy.',
@@ -233,6 +243,8 @@ export function renderReport(s: Summary, options: { heading: string; notes?: str
     ...s.under_stress.map(u => `| ${u.source} | \`${u.cause}\` | ${u.count} | ${u.of} ${u.unit} | ${u.detail} | ${u.status ?? ''} |`), '');
   lines.push('## Other systems and controls', '', '| System | Role | Cause | Rows |', '|---|---|---|---|', ...s.contrast.map(c => `| ${c.system} | ${c.arm_role} | \`${c.cause}\` | ${c.count} |`), '');
   lines.push('## Our own fix list (harness errors)', '', ...(s.harness.length ? s.harness.map(h => `- \`${h.rule_id}\`: ${h.count} rows (${h.sources.join(', ')})`) : ['- none']), '');
+  lines.push('## Suite causes', '', 'Failed rows that say nothing about gbrain: the question has more gold than the reader is given, or the cited gold sessions don\'t support the answer. Not ranked and not in the shares above.', '',
+    ...(s.suite.length ? s.suite.map(x => `- ${title(x.cause)} (\`${x.cause}\`): ${x.count} rows (${listCounts(x.by_source)})`) : ['- none']), '');
   lines.push('## What each source can measure', '', `| Source | ${STAGES.join(' | ')} |`, `|---|${STAGES.map(() => '---').join('|')}|`,
     ...Object.entries(s.capability).map(([src, c]) => `| ${src} | ${STAGES.map(st => pct(c[st] ?? 0)).join(' | ')} |`), '');
   const appendix = s.top_three.filter(r => r.tasks.some(t => Object.keys(t.others).length || t.not_run.length));

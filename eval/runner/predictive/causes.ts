@@ -1,6 +1,6 @@
 /**
  * Cause ids every predictive measure emits. They mirror GBEV-57's failure-cause
- * taxonomy (eval/runner/failure-causes/taxonomy.ts, TAXONOMY_VERSION 2026-11-09.1)
+ * taxonomy (eval/runner/failure-causes/taxonomy.ts, TAXONOMY_VERSION 2026-11-11.1)
  * so the gap measures, the nightly loop and the weekly report count the same
  * causes. test/eval/predictive-core.test.ts compares this list with that module
  * whenever it is present.
@@ -8,6 +8,8 @@
 
 export const CAUSE_IDS = [
   'harness_error',
+  'item_unsupported',
+  'reader_budget',
   'operations',
   'ingest_gap',
   'privacy_hidden',
@@ -29,9 +31,11 @@ export const CAUSE_IDS = [
 ] as const;
 export type CauseId = (typeof CAUSE_IDS)[number];
 
-/** Gap-map failure mode for each cause; harness_error and unclassified map to none. */
+/** Gap-map failure mode for each cause; harness_error, the suite causes and unclassified map to none. */
 export const CAUSE_MODE: Record<CauseId, string | null> = {
   harness_error: null,
+  item_unsupported: null,
+  reader_budget: null,
   operations: 'F16',
   ingest_gap: 'F10',
   privacy_hidden: 'F8',

@@ -2,6 +2,26 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.208] - 2026-11-10
+
+### The weekly failure causes stop blaming gbrain for questions the suite can't fairly test
+
+- **What changed.** Two suite causes keep rows out of gbrain's failure counts in the weekly failure-cause report.
+  `reader_budget` is a failed row whose question has more gold sessions than the reader is given (memory-qa's
+  `reading.breadth_sessions`, read from the suite's logs archive), so no ranking could get all its evidence to the
+  reader. `item_unsupported` is a beam-1m-hard item that both BEAM support validators reject, or that cites no turn, and
+  that the October arm given every gold session also failed, so the cited gold sessions don't support the answer. Three
+  items carry that label: `1m-24:knowledge_update:1`, `1m-25:temporal_reasoning:1` and
+  `1m-2:contradiction_resolution:0`.
+- **Where they show.** Both causes stay out of gbrain's ranked list and its shares, and the weekly report lists them
+  under "Suite causes". The nightly report keeps every item in its pass-rate and strong-flip flags, counts unsupported
+  items' failed rows as `item_unsupported` in its cause column, and lists them on one line.
+- **The support record.** `eval/data/nightly/beam-1m-hard-support.json` holds each beam-1m-hard item's support-check
+  result and the every-gold-session arm's verdict. An answer that arm left empty at its output limit records no verdict,
+  so it labels nothing. The file sits beside the dev set, so the beam-1m-hard digest is unchanged.
+- **What to expect.** A week whose sources include the QA suites' logs archives can show fewer `wrong_ranking`,
+  `partial_evidence` and `retrieval_miss` rows for gbrain. Without the archive, those rows label as before.
+
 ## [0.10.207] - 2026-11-10
 
 ### Predictive-measures results: which synthetic memory tests predict gbrain's failures on a real brain

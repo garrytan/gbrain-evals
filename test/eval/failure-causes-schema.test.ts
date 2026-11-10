@@ -5,10 +5,10 @@ import { CAUSES, CAUSE_IDS, EVAL_FAILURE_SCHEMA, FAILURE_CAUSE_SCHEMA, MODEL_CAU
 import { failure } from '../support/failure-causes-fixture.ts';
 
 describe('failure-cause interface (pinned for the nightly loop)', () => {
-  test('the 18 cause ids, in stage order', () => {
-    expect(CAUSE_IDS).toEqual(['harness_error', 'operations', 'ingest_gap', 'privacy_hidden', 'tool_contract', 'write_integrity', 'memory_not_consulted', 'retrieval_miss',
+  test('the 20 cause ids, in stage order', () => {
+    expect(CAUSE_IDS).toEqual(['harness_error', 'item_unsupported', 'reader_budget', 'operations', 'ingest_gap', 'privacy_hidden', 'tool_contract', 'write_integrity', 'memory_not_consulted', 'retrieval_miss',
       'partial_evidence', 'wrong_ranking', 'gold_unopened', 'summary_loss', 'stale_fact', 'wrong_entity', 'time_reasoning', 'citation_abstention', 'model_error', 'timeout_latency']);
-    expect(TAXONOMY_VERSION).toBe('2026-11-09.3');
+    expect(TAXONOMY_VERSION).toBe('2026-11-11.1');
   });
 
   test('every cause maps to the gap map and has a proposed regression test', () => {

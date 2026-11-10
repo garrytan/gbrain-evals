@@ -8,7 +8,7 @@
  * (bun eval/runner/failure-causes/cli.ts taxonomy --write); a test keeps them equal.
  */
 
-export const TAXONOMY_VERSION = '2026-11-09.3';
+export const TAXONOMY_VERSION = '2026-11-11.1';
 
 /** Pipeline stages, earliest first. A failure's primary cause is the first stage with a signal on its failure path. */
 export const STAGES = ['harness', 'operations', 'ingest', 'visibility', 'tool_call', 'write', 'consult', 'retrieval', 'ranking', 'open', 'presentation', 'reasoning', 'budget'] as const;
@@ -32,6 +32,12 @@ export const CAUSES = [
   { id: 'harness_error', gap_map: 'eval', stage: 'harness', gbrain_actionable: false, basis: 'deterministic', title: 'Harness error',
     meaning: 'Our runner, judge, gold or scorer failed, so the row says nothing about gbrain.',
     signal: 'outcome not scored, judge parse failure, stop harness_error or error, reader output cut at its limit, a known scorer artifact' },
+  { id: 'item_unsupported', gap_map: 'eval', stage: 'harness', gbrain_actionable: false, basis: 'deterministic', title: 'Item its cited turns don\'t support',
+    meaning: 'The benchmark item\'s reference answer isn\'t supported by the turns it cites, or it cites none, and a reader given every gold session fails it too, so the row says nothing about gbrain.',
+    signal: 'the suite\'s support record (eval/data/nightly/<suite>-support.json): both support validators reject the item, or it cites no turn, and the arm given every gold session fails it, with no harness error' },
+  { id: 'reader_budget', gap_map: 'eval', stage: 'harness', gbrain_actionable: false, basis: 'deterministic', title: 'More gold than the reader is given',
+    meaning: 'The question needs more gold items than the suite gives its reader, so no ranking could deliver them all and the row says nothing about gbrain\'s ranking.',
+    signal: 'gold count above the reader budget its run records (memory-qa\'s sessions per answer, reading.breadth_sessions), with no harness error or unsupported item' },
   { id: 'operations', gap_map: 'F16', stage: 'operations', gbrain_actionable: true, basis: 'deterministic', title: 'Operations',
     meaning: 'An upgrade, sync, dream cycle, purge, Postgres-version or ingest-path operation failed.',
     signal: 'an operation step error or nonzero exit in a smoke or lifecycle record' },

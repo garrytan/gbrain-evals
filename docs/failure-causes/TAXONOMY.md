@@ -9,12 +9,14 @@ The gap-map column links each cause to a failure mode (F1 to F16) in the gap map
 the nightly loop use. Rendered from `eval/runner/failure-causes/taxonomy.ts` by
 `bun eval/runner/failure-causes/cli.ts taxonomy --write`; edit the TypeScript, not this file.
 
-Taxonomy version `2026-11-09.3`. Stages, earliest first: `harness`, `operations`, `ingest`, `visibility`, `tool_call`, `write`, `consult`, `retrieval`, `ranking`, `open`, `presentation`, `reasoning`, `budget`. The last stage, 
+Taxonomy version `2026-11-11.1`. Stages, earliest first: `harness`, `operations`, `ingest`, `visibility`, `tool_call`, `write`, `consult`, `retrieval`, `ranking`, `open`, `presentation`, `reasoning`, `budget`. The last stage, 
 `budget`, is a fallback: a turn cap or timeout is the primary cause only when no earlier stage has a signal.
 
 | Cause | Gap map | Stage | Assigned by | gbrain can fix | Meaning | Signal |
 |---|---|---|---|---|---|---|
 | `harness_error` | eval | harness | logs | no | Our runner, judge, gold or scorer failed, so the row says nothing about gbrain. | outcome not scored, judge parse failure, stop harness_error or error, reader output cut at its limit, a known scorer artifact |
+| `item_unsupported` | eval | harness | logs | no | The benchmark item's reference answer isn't supported by the turns it cites, or it cites none, and a reader given every gold session fails it too, so the row says nothing about gbrain. | the suite's support record (eval/data/nightly/<suite>-support.json): both support validators reject the item, or it cites no turn, and the arm given every gold session fails it, with no harness error |
+| `reader_budget` | eval | harness | logs | no | The question needs more gold items than the suite gives its reader, so no ranking could deliver them all and the row says nothing about gbrain's ranking. | gold count above the reader budget its run records (memory-qa's sessions per answer, reading.breadth_sessions), with no harness error or unsupported item |
 | `operations` | F16 | operations | logs | yes | An upgrade, sync, dream cycle, purge, Postgres-version or ingest-path operation failed. | an operation step error or nonzero exit in a smoke or lifecycle record |
 | `ingest_gap` | F10 | ingest | logs | yes | The fact never reached the brain, or reached it wrong (tag wrong_stored_fact). | the gold page or chunk is absent from the store or index |
 | `privacy_hidden` | F8 | visibility | logs | yes | The gold exists but access flags, aliases or scopes hid it from this caller. Whether the hide is correct is not decided here. | visibility or private-flag fields on the gold in tool results |

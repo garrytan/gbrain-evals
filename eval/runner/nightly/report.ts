@@ -22,7 +22,9 @@
  *     seed 1): when the 95% interval of tonight minus the previous night excludes zero and the drop is at least 5 points;
  *   - a strong flip: an item that passed k of k trials and now passes 0 of k;
  *   - cost per correct answer up 25% or more with no gain in pass rate.
- * The same rules compare master with stable, reported in their own section.
+ * The same rules compare master with stable, reported in their own section. An item whose support record says the cited
+ * gold sessions don't support the answer (eval/runner/nightly/item-support.ts) stays in every comparison; its failed rows
+ * count as item_unsupported, a weekly cause label, and are listed on their own line.
  *
  * particle-1's agreement with claude-opus-5-5, scored on a night that schedules particle-1: per item, particle-1's first
  * trial and Opus's first counted trial are each reader's pass or fail. A particle-1 crash, invalid answer or harness row is
@@ -308,12 +310,15 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     return { ...f, tonight: { rows: mine.length, passes: mine.filter(r => r.pass).length } };
   });
   const flags = comparisons.flatMap(c => c.flags);
+  const unsupported = rows.filter(r => !r.skipped && !(r.pass && !r.harness) && classify(nightlyFailure(r, `nightly-${r.suite}`, [])).cause === 'item_unsupported');
+  const unsupportedItems = [...new Set(unsupported.map(r => `${r.suite} ${r.item}`))].sort();
   const agreement = nightAgreement(m, rows);
   const summary = {
     schema: 'nightly-summary/1', night: m.night, ref: m.ref, sha: m.sha, version: m.version, tier: m.tier, fake: m.fake, devset: m.devset,
     taxonomy_version: TAXONOMY_VERSION,
     suites: m.suites.map(s => ({ ...s, cells: cells.filter(c => c.suite === s.id).map(({ per_item: _items, ...c }) => c) })),
     harness_rows: rows.filter(r => r.harness).length,
+    item_unsupported: { rows: unsupported.length, items: unsupportedItems },
     flags, comparisons, commit_range: prev ? { from: prev.sha, to: m.sha, commits } : null, fixes, agreement,
   };
   const lines: string[] = [];
@@ -321,6 +326,7 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
   lines.push(`Tier ${m.tier}${m.fake ? ', fake providers (plumbing only; no number here measures a model)' : ''}. Dev set ${m.devset.digest.slice(0, 12)}. Causes: failure-cause taxonomy ${TAXONOMY_VERSION}.`, '');
   lines.push(flags.length ? `**${flags.length} flags.**` : '**No flags.**', '');
   for (const f of flags) lines.push(`- ${f.kind} (vs ${f.against}) ${f.suite} ${f.reader ?? 'keyless'}: ${f.detail}${f.items ? `: ${f.items.join(', ')}` : ''}`);
+  if (unsupported.length) lines.push('', `Item-unsupported: ${unsupported.length} failed rows on ${unsupportedItems.length} items where the cited gold sessions don't support the answer (both support validators reject it, or the item cites no turn) and the arm given every gold session fails too. They count as \`item_unsupported\` in the weekly failure causes, not as gbrain failures, and stay in the flags above: ${unsupportedItems.join(', ')}.`);
   lines.push('', '## Suites', '', '| Suite | Reader | Items | Trials | pass^1 | pass^k | Harness | Cost per correct | Failures by cause |', '|---|---|---|---|---|---|---|---|---|');
   for (const s of m.suites) {
     const mine = cells.filter(c => c.suite === s.id);

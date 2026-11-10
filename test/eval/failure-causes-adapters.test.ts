@@ -1,17 +1,30 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { gzipSync } from 'node:zlib';
+import { gunzipSync, gzipSync } from 'node:zlib';
 import { ADAPTERS, classify, loadSource, nightlyFailure, validateManifest, SOURCES_SCHEMA } from '../../eval/runner/failure-causes/index.ts';
 import { cat40Calls, cat40Fields, namesSlug } from '../../eval/runner/failure-causes/adapters/cat40.ts';
-import { fileText, sha256, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
+import { fileText, sha256, tarFiles, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
+import { itemUnsupported } from '../../eval/runner/nightly/item-support.ts';
 import { harnessOf } from '../../eval/runner/nightly/outcome.ts';
 import { entry, failure, FX, loadFixture } from '../support/failure-causes-fixture.ts';
 
 const byCase = (failures: ReturnType<typeof ADAPTERS.rs1>['failures']) => new Map(failures.map(f => [f.case_id, classify(f)]));
 const mem = (path: string, role: string, rows: unknown[]): LoadedFile => {
   const bytes = new TextEncoder().encode(rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+  return { path, role, sha256: sha256(bytes), root: 'mem', bytes };
+};
+/** A tar.gz written by the system tar from files under one top directory, as a LoadedFile. */
+const tarball = (path: string, role: string, files: Record<string, string>, format = 'gnu'): LoadedFile => {
+  const dir = mkdtempSync(join(tmpdir(), 'fc-tar-'));
+  for (const [name, text] of Object.entries(files)) {
+    mkdirSync(dirname(join(dir, 'in', name)), { recursive: true });
+    writeFileSync(join(dir, 'in', name), text);
+  }
+  execFileSync('tar', [`--format=${format}`, '-czf', join(dir, 'out.tar.gz'), '-C', join(dir, 'in'), ...new Set(Object.keys(files).map(n => n.split('/')[0]!))]);
+  const bytes = new Uint8Array(readFileSync(join(dir, 'out.tar.gz')));
   return { path, role, sha256: sha256(bytes), root: 'mem', bytes };
 };
 
@@ -304,6 +317,66 @@ describe('nightly adapter', () => {
     expect(out.failures.some(f => f.model === 'none (keyless)')).toBe(false);
   });
 
+  test('a logs archive gives each reader its run\'s session budget: a stored 2026-11-10 row with more gold than that is reader_budget, a cut-off one stays harness.output_truncated, and a row with no receipt labels as before', () => {
+    const receipt = (reader: string, breadth_sessions: number) => JSON.stringify({ qa: { mode: 'reader', context: 'sessions', reader }, reading: { breadth_sessions }, product: { loaded_git_head: sha } });
+    const logs = (opus: number) => tarball('2026-11-10/master/logs/lme-s-hard.tar.gz', 'logs', {
+      'lme-s-hard/claude-opus-5-5/out/receipt.json': receipt('anthropic:claude-opus-5-5', opus), 'lme-s-hard/claude-opus-5-5/run.log': 'log',
+      'lme-s-hard/gpt-6.1-sol/out/receipt.json': receipt('openai:gpt-6.1-sol', 5) });
+    const stored = { schema: 'nightly-outcome/1', night: '2026-11-10', suite: 'lme-s-hard', suite_digest: 'd', role: 'headroom', ref: 'master', sha, trial: 1, pass: false, score: 0, cost_usd: null,
+      stop: 'answered', tool_errors: [], evidence: {}, harness: null, system: 'gbrain', arm: 'lme-s-hard@master', arm_role: 'gbrain_default', condition: 'natural', visibility: 'public',
+      agent_loop: false, category: 'multi-session', answered: true, finish_reason: 'stop', reader: 'claude-opus-5-5', gold_count: 6, retrieved: 'all', delivered: 'partial' };
+    const rows = [
+      { ...stored, item: 'a3838d2b' },
+      { ...stored, item: '81507db6', gold_count: 5 },
+      { ...stored, item: 'gpt4_7abb270c', retrieved: 'partial', finish_reason: 'max_tokens' },
+      { ...stored, item: 'gpt4_7abb270c', reader: 'gpt-6.1-sol', retrieved: 'partial' },
+      { ...stored, item: 'a3838d2b', reader: 'gpt-6.1-sol', sha: 'd'.repeat(40) },
+    ];
+    const out = ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows), logs(5)], entry('n', 'nightly'));
+    expect(out.failures.map(f => { const l = classify(f); return [f.task_id, f.gold.reader_budget, l.cause, l.rule_id, l.secondary]; })).toEqual([
+      ['a3838d2b', 5, 'reader_budget', 'harness.gold_over_reader_budget', ['wrong_ranking']],
+      ['81507db6', 5, 'wrong_ranking', 'ranking.some_gold_cut', []],
+      ['gpt4_7abb270c', 5, 'harness_error', 'harness.output_truncated', ['reader_budget', 'partial_evidence']],
+      ['gpt4_7abb270c', 5, 'reader_budget', 'harness.gold_over_reader_budget', ['partial_evidence']],
+      ['a3838d2b', null, 'wrong_ranking', 'ranking.some_gold_cut', []],
+    ]);
+    expect(out.failures[0]!.evidence).toEqual([expect.stringMatching(/^mem:n\/outcomes\.jsonl#[0-9a-f]{8} line=1$/),
+      expect.stringMatching(/^mem:2026-11-10\/master\/logs\/lme-s-hard\.tar\.gz#[0-9a-f]{8} lme-s-hard\/claude-opus-5-5\/out\/receipt\.json$/)]);
+    expect(ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows)], entry('n', 'nightly')).failures.map(f => classify(f).cause))
+      .toEqual(['wrong_ranking', 'wrong_ranking', 'harness_error', 'partial_evidence', 'wrong_ranking']);
+    expect(() => ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows), logs(5), { ...logs(6), path: 'other/lme-s-hard.tar.gz' }], entry('n', 'nightly')))
+      .toThrow(/lme-s-hard\/claude-opus-5-5\/out\/receipt\.json: gives lme-s-hard\|c{40}\|anthropic:claude-opus-5-5 6 reader sessions, .* gives 5$/);
+    const facts = tarball('f.tar.gz', 'logs', { 'lme-s-hard/claude-opus-5-5/out/receipt.json': JSON.stringify({ qa: { mode: 'reader', context: 'facts', reader: 'anthropic:claude-opus-5-5' },
+      reading: { breadth_sessions: 5 }, product: { loaded_git_head: sha } }) });
+    expect(ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows), facts], entry('n', 'nightly')).failures.map(f => f.gold.reader_budget)).toEqual([null, null, null, null, null]);
+  });
+
+  test('a BEAM item both support validators reject and the oracle arm fails is item_unsupported, with its support record as evidence; an oracle pass, no oracle verdict (an empty oracle answer cut at its output limit), one validator, no record or a cut-off answer label as before', () => {
+    const beam = { schema: 'nightly-outcome/1', night: '2026-11-10', suite: 'beam-1m-hard', suite_digest: 'd', role: 'headroom', ref: 'master', sha, trial: 1, pass: false, score: 0,
+      cost_usd: null, stop: 'answered', tool_errors: [], evidence: {}, harness: null, system: 'gbrain', arm: 'beam-1m-hard@master', arm_role: 'gbrain_default', condition: 'natural',
+      visibility: 'public', agent_loop: false, category: 'contradiction_resolution', answered: true, finish_reason: 'stop', reader: 'claude-opus-5-5', gold_count: 2, retrieved: 'partial', delivered: 'partial' };
+    const rows = [
+      { ...beam, item: '1m-2:contradiction_resolution:0' },
+      { ...beam, item: '1m-25:multi_session_reasoning:0' },
+      { ...beam, item: '1m-2:not_an_item:0' },
+      { ...beam, item: '1m-2:contradiction_resolution:0', reader: 'gpt-6.1-sol', finish_reason: 'max_tokens' },
+      { ...beam, suite: 'lme-s-hard', arm: 'lme-s-hard@master', item: '1m-2:contradiction_resolution:0' },
+      { ...beam, item: '1m-24:knowledge_update:0' },
+      { ...beam, item: '1m-25:summarization:1' },
+    ];
+    const out = ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows)], entry('n', 'nightly'));
+    expect(out.failures.map(f => { const l = classify(f); return [f.gold.unsupported, l.cause, l.rule_id]; })).toEqual([
+      ['both_validators', 'item_unsupported', 'harness.item_unsupported_by_both_validators'],
+      [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
+      [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
+      ['both_validators', 'harness_error', 'harness.output_truncated'],
+      [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
+      [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
+      [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
+    ]);
+    expect(out.failures[0]!.evidence[1]).toMatch(/^repo:eval\/data\/nightly\/beam-1m-hard-support\.json#[0-9a-f]{8} 1m-2:contradiction_resolution:0$/);
+  });
+
   test('reads outcomes.jsonl.gz the same way, refuses a row of another schema, and is registered for manifests', () => {
     const bytes = gzipSync(files[0]!.bytes);
     const gz = ADAPTERS.nightly([{ ...files[0]!, path: 'outcomes.jsonl.gz', bytes, sha256: sha256(bytes) }], entry('nightly-week', 'nightly'));
@@ -348,4 +421,71 @@ describe('source manifests', () => {
   });
 
   test('fixtures live where the helper says', () => expect(FX).toMatch(/test\/fixtures\/failure-causes$/));
+
+  test('tarFiles reads GNU, ustar and pax archives, long paths included', () => {
+    const long = `${'d'.repeat(60)}/${'e'.repeat(60)}/receipt.json`;
+    const read = (f: LoadedFile) => Object.fromEntries([...tarFiles(f)].map(([p, b]) => [p, new TextDecoder().decode(b)]));
+    expect(read(tarball('a.tar.gz', 'logs', { 'x/a.json': '1', 'x/b/c.json': '22' }))).toEqual({ 'x/a.json': '1', 'x/b/c.json': '22' });
+    expect(read(tarball('p.tar.gz', 'logs', { [long]: 'r' }, 'ustar'))).toEqual({ [long]: 'r' });
+    expect(read(tarball('g.tar.gz', 'logs', { [long]: 'r', 'x/a.json': '1' }, 'gnu'))).toEqual({ [long]: 'r', 'x/a.json': '1' });
+    expect(read(tarball('x.tar.gz', 'logs', { [long]: 'r', 'x/a.json': '1' }, 'posix'))).toEqual({ [long]: 'r', 'x/a.json': '1' });
+  });
+});
+
+describe('item support records', () => {
+  test('an item is unsupported when both validators reject it or it cites no turn and the oracle arm fails it; one validator, an oracle pass or no oracle verdict, an unchecked item, or a missing item or file is not', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fc-support-'));
+    const validators = ['gemini:g', 'anthropic:h'];
+    const both = ['support:anthropic:h', 'support:gemini:g'];
+    writeFileSync(join(dir, 's-support.json'), JSON.stringify({ schema: 'nightly-item-support/1', suite: 's', validators, items: {
+      both: { checked: true, gates: both, cited: 2, oracle: 'fail', source: 'x' }, one: { checked: true, gates: ['support:gemini:g'], cited: 2, oracle: 'fail', source: 'x' },
+      uncited: { checked: true, gates: ['uncited'], cited: 0, oracle: 'fail', source: 'x' }, zero: { checked: true, gates: [], cited: 0, oracle: 'fail', source: 'x' },
+      oracle_pass: { checked: true, gates: both, cited: 2, oracle: 'pass', source: 'x' }, uncited_oracle_pass: { checked: true, gates: ['uncited'], cited: 0, oracle: 'pass', source: 'x' },
+      no_oracle: { checked: true, gates: both, cited: 2, source: 'x' },
+      abstention: { checked: false, reason: 'abstention cites no turn', oracle: 'fail', source: 'x' } } }));
+    const why = (item: string, suite = 's') => itemUnsupported(suite, item, dir)?.why ?? null;
+    expect(['both', 'one', 'uncited', 'zero', 'oracle_pass', 'uncited_oracle_pass', 'no_oracle', 'abstention', 'missing'].map(i => why(i)))
+      .toEqual(['both_validators', null, 'uncited', 'uncited', null, null, null, null, null]);
+    expect(why('both', 'other')).toBeNull();
+    expect(itemUnsupported('s', 'both', dir)!.at).toMatch(/^repo:eval\/data\/nightly\/s-support\.json#[0-9a-f]{8} both$/);
+    writeFileSync(join(dir, 'bad-support.json'), JSON.stringify({ schema: 'nightly-item-support/1', suite: 'other', validators, items: {} }));
+    expect(() => itemUnsupported('bad', 'x', dir)).toThrow(/not a nightly-item-support\/1 file for bad$/);
+  });
+
+  test('the committed beam-1m-hard record covers every item of the suite and repeats GST-2339\'s published gates where they overlap', () => {
+    const ids = (JSON.parse(readFileSync('eval/data/nightly/devset-v1.json', 'utf8')).suites as Array<{ id: string; items: Array<{ id: string }> }>).find(s => s.id === 'beam-1m-hard')!.items.map(i => i.id);
+    const rec = JSON.parse(readFileSync('eval/data/nightly/beam-1m-hard-support.json', 'utf8'));
+    const pubBytes = readFileSync(rec.sources.gst2339.file);
+    expect(sha256(new Uint8Array(pubBytes))).toBe(rec.sources.gst2339.sha256);
+    const pub = new Map((JSON.parse(pubBytes.toString('utf8')).items as Array<{ id: string; gates: string[]; cited: number }>).map(x => [x.id, x]));
+    expect(Object.keys(rec.items).sort()).toEqual([...ids].sort());
+    for (const [id, x] of Object.entries(rec.items as Record<string, { source: string; gates?: string[]; cited?: number }>)) {
+      expect(x.source).toBe(pub.has(id) ? 'gst2339' : 'beam-nightly-check');
+      if (pub.has(id)) expect([x.gates, x.cited]).toEqual([[...pub.get(id)!.gates].sort(), pub.get(id)!.cited]);
+    }
+    expect(itemUnsupported('beam-1m-hard', '1m-2:contradiction_resolution:0')?.why).toBe('both_validators');
+  });
+
+  test('the committed record\'s oracle verdicts repeat the every-gold-session arm\'s scores, an empty answer cut at its output limit records none, and only the 3 items both validators reject and that arm fails are unsupported', () => {
+    const rec = JSON.parse(readFileSync('eval/data/nightly/beam-1m-hard-support.json', 'utf8')) as { sources: { oracle: { file: string } }; items: Record<string, { oracle?: string }> };
+    const arm = rec.sources.oracle.file.replace('/shard-*/rows.ndjson.gz', '');
+    const scores = new Map<string, number>();
+    const cut = new Set<string>();
+    for (const shard of readdirSync(arm).filter(s => s.startsWith('shard-'))) {
+      for (const line of gunzipSync(readFileSync(join(arm, shard, 'rows.ndjson.gz'))).toString('utf8').split('\n').filter(Boolean)) {
+        const r = JSON.parse(line) as { id: string; qa_score: number };
+        scores.set(r.id, r.qa_score);
+      }
+      for (const line of gunzipSync(readFileSync(join(arm, shard, 'answers.ndjson.gz'))).toString('utf8').split('\n').filter(Boolean)) {
+        const a = JSON.parse(line) as { id: string; answer: string; finish_reason: string };
+        if (!a.answer.trim() && a.finish_reason === 'length') cut.add(a.id);
+      }
+    }
+    for (const [id, x] of Object.entries(rec.items)) expect([id, x.oracle]).toEqual([id, cut.has(id) ? undefined : scores.get(id)! >= 0.5 ? 'pass' : 'fail']);
+    expect(Object.keys(rec.items).filter(id => cut.has(id)).sort()).toEqual(['1m-25:summarization:1', '1m-2:summarization:0', '1m-2:summarization:1']);
+    expect(itemUnsupported('beam-1m-hard', '1m-25:summarization:1')).toBeNull();
+    expect(Object.keys(rec.items).filter(id => itemUnsupported('beam-1m-hard', id)).sort())
+      .toEqual(['1m-24:knowledge_update:1', '1m-25:temporal_reasoning:1', '1m-2:contradiction_resolution:0']);
+    expect(itemUnsupported('beam-1m-hard', '1m-24:knowledge_update:0')).toBeNull();
+  });
 });

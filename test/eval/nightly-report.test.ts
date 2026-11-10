@@ -106,6 +106,44 @@ describe('the diff against an earlier night', () => {
     expect(summary.harness_rows).toBe(19);
   });
 
+  test('an item whose cited gold sessions don\'t support the answer stays in the pass-rate and strong-flip flags, counts as item_unsupported and gets its own line', () => {
+    const root = mkdtempSync(join(tmpdir(), 'nightly-report-'));
+    const unsupported = ['1m-2:contradiction_resolution:0', '1m-24:knowledge_update:1', '1m-25:temporal_reasoning:1'];
+    const supported = ['1m-24:contradiction_resolution:0', '1m-25:multi_session_reasoning:0', ...Array.from({ length: 15 }, (_, i) => `other-${i}`)];
+    const beam = (fail: string[]) => [...unsupported, ...supported].flatMap(item => [1, 2, 3].map(trial =>
+      row({ suite: 'beam-1m-hard', arm: 'beam-1m-hard@master', item, trial, pass: !fail.includes(item), score: fail.includes(item) ? 0 : 1, stop: 'answered' })));
+    const write = (night: string, rows: Outcome[]) => {
+      const dir = join(root, night, 'master');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, 'night.json'), JSON.stringify(manifest([{ id: 'beam-1m-hard' }], { night })));
+      writeFileSync(join(dir, 'outcomes.jsonl'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+      return dir;
+    };
+    const prev = write('2026-11-08', beam([]));
+    const summary = writeReport({ dir: write('2026-11-09', beam(unsupported)), previous: prev });
+    expect((summary.flags as Array<{ kind: string; items?: string[] }>).map(f => [f.kind, f.items])).toEqual([['strong_flip', [...unsupported].sort()]]);
+    expect(summary.item_unsupported).toEqual({ rows: 9, items: unsupported.map(i => `beam-1m-hard ${i}`).sort() });
+    expect((summary.suites as Array<{ cells: Array<Record<string, unknown>> }>)[0]!.cells[0]).toMatchObject({ failures_by_cause: { item_unsupported: 9 } });
+    expect(readFileSync(join(root, '2026-11-09', 'master', 'report.md'), 'utf8')).toContain('Item-unsupported: 9 failed rows on 3 items where the cited gold sessions don\'t support the answer');
+    const flipped = compareNights({ manifest: manifest([{ id: 'beam-1m-hard' }]), rows: beam([unsupported[0]!, supported[0]!]) }, { manifest: manifest([{ id: 'beam-1m-hard' }]), rows: beam([]) }, 'previous');
+    expect(flipped.flags.map(f => [f.kind, f.items])).toEqual([['strong_flip', [unsupported[0]!, supported[0]!].sort()]]);
+  });
+
+  test('an item both support validators reject but the every-gold-session arm passes keeps its label and stays in the flags', () => {
+    const answerable = ['1m-24:knowledge_update:0', '1m-24:event_ordering:1', '1m-2:event_ordering:0'];
+    const others = Array.from({ length: 17 }, (_, i) => `other-${i}`);
+    const beam = (fail: string[]) => [...answerable, ...others].flatMap(item => [1, 2, 3].map(trial =>
+      row({ suite: 'beam-1m-hard', arm: 'beam-1m-hard@master', item, trial, pass: !fail.includes(item), score: fail.includes(item) ? 0 : 1, stop: 'answered' })));
+    const flipped = compareNights({ manifest: manifest([{ id: 'beam-1m-hard' }]), rows: beam(answerable) }, { manifest: manifest([{ id: 'beam-1m-hard' }]), rows: beam([]) }, 'previous');
+    expect(flipped.flags.find(f => f.kind === 'strong_flip')?.items).toEqual([...answerable].sort());
+    const dir = mkdtempSync(join(tmpdir(), 'nightly-report-'));
+    writeFileSync(join(dir, 'night.json'), JSON.stringify(manifest([{ id: 'beam-1m-hard' }])));
+    writeFileSync(join(dir, 'outcomes.jsonl'), beam(answerable).map(r => JSON.stringify(r)).join('\n') + '\n');
+    const summary = writeReport({ dir });
+    expect(summary.item_unsupported).toEqual({ rows: 0, items: [] });
+    expect(JSON.stringify((summary.suites as Array<{ cells: Array<{ failures_by_cause: Record<string, number> }> }>)[0]!.cells[0]!.failures_by_cause)).not.toContain('item_unsupported');
+  });
+
   test('cost per correct answer up 25% or more with no pass-rate gain is flagged', () => {
     const c = compareNights({ manifest: manifest([{ id: 'suite-a' }]), rows: trials(Array(20).fill(3), 3, { cost_usd: 0.7 }) }, previous, 'previous');
     expect(c.flags).toMatchObject([{ kind: 'cost', detail: 'cost per correct answer up 40% with no gain in pass rate' }]);

@@ -79,6 +79,17 @@ describe('summarize', () => {
     expect(md).toContain("Turn cap: 2 of 3 rows hit the agent's turn cap (H1 2). The cap is our harness setting and part of what these rows measure. For these rows the lever may be reaching many pages in fewer calls, not better ranking.");
   });
 
+  test('suite-cause rows (reader_budget, item_unsupported) get their own list, out of gbrain\'s ranking, its shares and its issue drafts', () => {
+    const over = { ...failure().gold, gold_count: 6, reader_budget: 5, retrieved: 'all' as const, delivered: 'partial' as const };
+    const unsupported = { ...failure().gold, gold_count: 2, retrieved: 'partial' as const, delivered: 'partial' as const, unsupported: 'both_validators' as const };
+    const c = summarize([...row('a', 4, { gold: over }), ...row('a', 2, { gold: unsupported }), ...row('b', 1, { gold: over }), ...row('a', 1, { gold: gold('none') })]);
+    expect(c.ranked.map(r => [r.cause, r.count, r.score])).toEqual([['retrieval_miss', 1, 1]]);
+    expect(c.top_three.map(r => r.cause)).toEqual(['retrieval_miss']);
+    expect(issueDrafts(c).map(d => d.cause)).toEqual(['retrieval_miss']);
+    expect(c.suite).toEqual([{ cause: 'reader_budget', count: 5, by_source: { a: 4, b: 1 } }, { cause: 'item_unsupported', count: 2, by_source: { a: 2 } }]);
+    expect(renderReport(c, { heading: 'w' })).toContain('- More gold than the reader is given (`reader_budget`): 5 rows (a 4, b 1)\n- Item its cited turns don\'t support (`item_unsupported`): 2 rows (a 2)');
+  });
+
   test('a top-three place is provisional when the rows waiting for the labeller could move it, and those rows are listed', () => {
     const waiting = Array.from({ length: 2 }, (_, i) => residualLabel('a', `w${i}`));
     const c = summarize([...row('a', 5, { gold: gold('none') }), ...row('a', 2, { stop: 'harness_error' }), ...row('a', 1, { stop: 'turn_cap' }), ...row('a', 2, { category: 'abstention', gold: { ...failure().gold, gold_count: 0 } }), ...waiting]);
