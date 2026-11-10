@@ -36,6 +36,13 @@ points between systems is noise (one question is 5 points). Nothing here is a sc
 The ledgers recorded about $53.75 in total, inside the lane's $150 cap. For the two runs stopped mid-flight, the figure
 is the proxy's last billed total. Ubicloud VM time is billed outside the ledgers.
 
+*Note added 2026-11-10:* both full-context figures below were measured with a harness that never let GPT-6.1 Sol read
+a history back from OpenAI's prompt cache for a new question: its full-context reader put the only cache breakpoint
+after the question. The first run's Sol reads could not hit the cache. The complete run asked the same 20 questions
+again, and a read like this can hit only a prompt sent before. Neither is what the cell costs with the reader's
+breakpoint fix, and the cell records its three readers' usage together, so Sol's share can't be separated
+([corrections](../../../corrections.md#full-context-reads-and-openais-prompt-cache)).
+
 | Run | Dollars |
 |---|---:|
 | 8k component smokes: 3 baselines, 5 externals, gbrain-defaults (with synthesize) | 24.39 |
@@ -66,7 +73,8 @@ The whole-system rows on the same 20 questions:
 - **gbrain `synthesize`.** It answered as `own:anthropic:claude-opus-4-7` and scored 0.85, at 34,700 input and 850
   output tokens per answer.
 - **Full context.** 0.75 for every reader, at about 24,700 cl100k tokens of history per question (about 38,000
-  Claude tokens), read from the prompt cache.
+  Claude tokens), read from the prompt cache. For GPT-6.1 Sol that held only for prompts an earlier run had already
+  sent (see the note under Spend).
 
 Own default amount (`claude-sonnet-5-5`, delivered cl100k tokens):
 
