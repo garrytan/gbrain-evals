@@ -227,13 +227,15 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   that breakpoint fell after the question. Every question on a conversation wrote the whole history to the cache
   again, at the cache-write rate, and no later question read it back. Claude readers already sent the history as a
   cached prefix and did read it back. From 2026-11-10 the reader sends Sol the same text with an explicit breakpoint at
-  the end of the history. Answers and accuracy don't change; only cost does. Q1 publishes no cost per answer, so the
+  the end of the history. The model reads the same text, so answers and accuracy should not change, but no run has
+  checked that; the change is meant to lower cost. Q1 publishes no cost per answer, so the
   one published figure this reaches is S2b full-context's settled spend, which includes 20 Sol answers, 10 on each of
   the two BEAM-1M conversations that fit Sol's window, in the [scoreboard report](benchmarks/2026-10-06-scoreboard-report.md), README's scoreboard block
   and the [scoreboard tables](benchmarks/2026-10-06-scoreboard/scoreboard.md). It was measured with a harness that
   never let a later question hit OpenAI's prompt cache, so it overstates that arm's cost. It stays as measured, and no corrected figure is
-  given, because none was measured. The README block and the tables are generated from the sealed receipt, so their
-  notes sit beside them rather than in them. Sol's full-context reads on BEAM-100K and LoCoMo ran the same way and
+  given, because none was measured. The README block and the tables are generated from the sealed receipt, so neither
+  changes: README carries a note under its block, and the tables carry no note of their own, so the scoreboard
+  report's note covers them. Sol's full-context reads on BEAM-100K and LoCoMo ran the same way and
   publish no cost. The [dev smokes](benchmarks/2026-10-06-scoreboard/dev-smokes/README.md)' full-context cell ran the
   same reader, and its page says what that means for its two figures. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
   [Report](benchmarks/2026-10-06-scoreboard-report.md).
