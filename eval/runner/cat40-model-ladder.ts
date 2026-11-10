@@ -427,6 +427,27 @@ export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGua
  */
 export const closesBudgetRun = (complete: boolean, options: { runId?: string | null }) => complete && !options.runId;
 
+/**
+ * The Hard freeze gate on a world whose seed is frozen (smoke, held-out, confirmation, sealed): code that drifted from
+ * freeze.json is refused unless --accept-freeze-drift and accepted-drift.json list its current hash. --dev-set runs the
+ * nightly's world M, a dev set rather than a counted confirmation, on the current code: it returns the drifted files for
+ * the receipt, and it never runs a preregistered --step or accepts drift.
+ */
+export function freezeGate(o: { devSet: boolean; accept: boolean; step: string | undefined; drift?: (accept: boolean) => string[] }): string[] | null {
+  const drifted = o.drift ?? freezeDrift;
+  if (o.devSet) {
+    if (o.step) throw new UsageError(`--dev-set runs the nightly dev set, never the preregistered step ${o.step}`);
+    if (o.accept) throw new UsageError('--dev-set records drift instead of accepting it; drop --accept-freeze-drift');
+    return drifted(false);
+  }
+  const drift = drifted(o.accept);
+  if (drift.length) throw new HardStop('HARD_FREEZE_DRIFT', o.accept
+      ? `frozen code changed since freeze.json, and accepted-drift.json does not list the current hash of ${drift.map(f => `${f} (${codeHashes(REPO_ROOT)[f]})`).join(', ')}`
+      : `frozen code changed since freeze.json: ${drift.join(', ')}`,
+      'a scorer-only change: rescore offline (eval/runner/cat40/rescore.ts --hard) and continue; a behavior change: rerun the affected calibration and reference cells; then record each file\'s current hash with a dated note in docs/benchmarks/cat40-hard/accepted-drift.json, add the same note to calibration.md, and pass --accept-freeze-drift "<the note>"', 'Garry decides when a generator change after step 5 is involved (CEO-F17)');
+  return null;
+}
+
 function insideRepo(p: string): boolean {
   const r = relative(REPO_ROOT, resolve(p));
   return r === '' || (!r.startsWith('..') && !isAbsolute(r));
@@ -472,7 +493,7 @@ export const VALUE_FLAGS = ['--arms', '--models', '--families', '--tasks', '--re
   '--max-tool-chars', '--order', '--slot-ref', '--surface', '--gbrain-instructions-file', '--gbrain-tool-descriptions-file', '--gbrain-drop-tools', '--gbrain-config', '--gbrain-build-config', '--build-slot-ids', '--slot-build-allowance-usd',
   '--budget-usd', '--estimate-usd', '--budget-run-id', '--budget-ledger', '--program-cap-usd', '--max-turns', '--per-family', '--hard-tool-limits', '--accept-freeze-drift', '--step',
   '--gbrain', '--advertised', '--world-templates-file', '--decision-id', '--purpose', '--retire-models'];
-export const BOOLEAN_FLAGS = ['--scripted', '--keyless-slots', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help', '--new-budget-run'];
+export const BOOLEAN_FLAGS = ['--scripted', '--keyless-slots', '--build-slots', '--rebuild', '--no-pglite-analyze', '--transcripts', '--preflight', '--help', '--new-budget-run', '--dev-set'];
 const NUMERIC_FLAGS = new Set(['--repeat', '--concurrency', '--slots', '--slot-build-allowance-usd', '--budget-usd', '--estimate-usd', '--program-cap-usd', '--max-turns', '--per-family']);
 
 export const RUNNER_USAGE = `Usage: bun eval/runner/cat40-model-ladder.ts [flags]
@@ -571,17 +592,13 @@ export async function main(argv = process.argv.slice(2)) {
   if (maxTurns !== undefined && (!Number.isInteger(maxTurns) || maxTurns < 1)) throw new UsageError('--max-turns must be a positive integer');
   const toolLimits = (flag(argv, '--hard-tool-limits') ?? 'hard') as 'hard' | 'v1';
   if (toolLimits !== 'hard' && toolLimits !== 'v1') throw new UsageError('--hard-tool-limits must be hard or v1');
-  if (hw && !scripted && !buildSlots && requiresFreeze(hw)) {
+  // A slot build checks the freeze too: the cells would refuse drifted code anyway, after the builds had spent.
+  let devSetDrift: string[] | null = null;
+  if (hw && !scripted && requiresFreeze(hw)) {
     const frozen = frozenKnobDigest();
     if (frozen !== hw.knob_digest) throw new HardStop('HARD_KNOBS_NOT_FROZEN', `seed ${hw.seed} is a smoke or held-out seed, and its world's knob digest ${hw.knob_digest.slice(0, 12)} ${frozen ? `differs from knobs.frozen.json (${frozen.slice(0, 12)})` : 'has no knobs.frozen.json to match (the generator is not frozen yet)'}`,
       'freeze first (scripts/cat40-hard.sh step freeze), then regenerate the world with --knobs docs/benchmarks/cat40-hard/knobs.frozen.json');
-    // --accept-freeze-drift accepts only drift whose current hash docs/benchmarks/cat40-hard/accepted-drift.json lists.
-    const accept = flag(argv, '--accept-freeze-drift') !== undefined;
-    const drift = freezeDrift(accept);
-    if (drift.length) throw new HardStop('HARD_FREEZE_DRIFT', accept
-      ? `frozen code changed since freeze.json, and accepted-drift.json does not list the current hash of ${drift.map(f => `${f} (${codeHashes(REPO_ROOT)[f]})`).join(', ')}`
-      : `frozen code changed since freeze.json: ${drift.join(', ')}`,
-      'a scorer-only change: rescore offline (eval/runner/cat40/rescore.ts --hard) and continue; a behavior change: rerun the affected calibration and reference cells; then record each file\'s current hash with a dated note in docs/benchmarks/cat40-hard/accepted-drift.json, add the same note to calibration.md, and pass --accept-freeze-drift "<the note>"', 'Garry decides when a generator change after step 5 is involved (CEO-F17)');
+    devSetDrift = freezeGate({ devSet: argv.includes('--dev-set'), accept: flag(argv, '--accept-freeze-drift') !== undefined, step: flag(argv, '--step') });
   }
   // Confirmation steps spend only from their world's preregistered ledger (PREREG.md, Budget).
   if (hw && !scripted && isConfirmStep(flag(argv, '--step'))) checkConfirmLedger(flag(argv, '--budget-ledger'));
@@ -620,6 +637,7 @@ export async function main(argv = process.argv.slice(2)) {
   for (const m of retired) if (!models.includes(m)) throw new UsageError(`--retire-models names ${m}, which this experiment does not run`);
   const cells = buildSlots ? [] : scheduleCells({ tasks, models, arms, repeats, order, gbrainLabel: ctx.gbrainLabel, done }).filter(c => !retired.has(c.model));
   log(buildSlots ? 'building gbrain slots' : `${cells.length} cells to run (${done.size} already done, order ${order}${retired.size ? `, retired: ${[...retired].join(',')}` : ''}) in ${out}`);
+  if (devSetDrift?.length) log(`--dev-set: running on code that changed since freeze.json (${devSetDrift.join(', ')}); the receipt records the files`);
   if (!buildSlots && cells.length === 0) { log('nothing to run'); return; }
 
   // gbrain identity and the slot preflight come first, so a refusal opens no budget run.
@@ -838,6 +856,7 @@ export async function main(argv = process.argv.slice(2)) {
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
       gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, slot_commit: slotCommit, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', advertised_surface: flag(argv, '--advertised') ?? null, tool_overrides: { descriptions_file: descriptionsFile ?? null, descriptions_sha256: instructionsOverride.descriptions ? createHash('sha256').update(JSON.stringify(instructionsOverride.descriptions)).digest('hex') : null, dropped: instructionsOverride.dropTools }, instructions_override: instructionsOverride.text === null ? null : { file: relative(process.cwd(), resolve(instructionsFile!)), sha256: createHash('sha256').update(instructionsOverride.text).digest('hex') }, served_instructions_sha256: instructionsOverride.served === null ? null : createHash('sha256').update(instructionsOverride.served).digest('hex'), config: Object.fromEntries(gbrainConfig), build_config: Object.fromEntries(buildConfig), keyless_slots: keyless, slot_dir: slotDir, restore_probe: restoreProbes, rerank_probe: rerankProbeState, operator_analyze: analyze, serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
+      ...(devSetDrift ? { dev_set: { freeze_drift: devSetDrift } } : {}),
       mode: buildSlots ? 'build-slots' : 'cells', order, complete, cells_planned: cells.length,
       slot_builds: builds, models, arms, families, repeats, max_tool_chars: ctx.maxToolChars, argv,
       budget_run_id: ctx.budgetRunId, resumed: Boolean(budget?.run.participant),

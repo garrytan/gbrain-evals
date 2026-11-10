@@ -124,7 +124,8 @@ export const CAT40 = {
 
 /** The Cat 40 runner's commands for one night: the world (free), one slot build per slot (run side by side), and the cells, scripted on a fake night. */
 export function cat40Commands(run: SuiteRun, ctx: NightContext, world: string, dirs: { root: string; slots: string; cells: string }) {
-  const build = ['--world', world, '--gbrain-repo', ctx.clone, '--gbrain-ref', ctx.sha, '--gbrain-root', dirs.root, '--slots', String(CAT40.slots)];
+  // World M is a dev set (gate decision A, 2026-11-09), so the night runs it on the current harness and records any drift from the Hard freeze.
+  const build = ['--dev-set', '--world', world, '--gbrain-repo', ctx.clone, '--gbrain-ref', ctx.sha, '--gbrain-root', dirs.root, '--slots', String(CAT40.slots)];
   const keyless = ctx.fake ? ['--scripted', '--keyless-slots'] : [];
   if (!ctx.fake && ctx.cat40SlotAllowanceUsd === null) throw new Error('a paid Cat 40 night builds embedded slots; pass --cat40-slot-allowance-usd <dollars>');
   const paid = paidFlags(ctx, run.suite);
