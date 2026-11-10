@@ -425,7 +425,7 @@ export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGua
  * Whether a finished step closes its budget run. A run named by --budget-run-id belongs to the process that opened it
  * (a nightly night, whose other slot builds and suites still spend from it), so only that process closes it.
  */
-export const closesBudgetRun = (complete: boolean, options: { runId: string | null }) => complete && options.runId === null;
+export const closesBudgetRun = (complete: boolean, options: { runId?: string | null }) => complete && !options.runId;
 
 function insideRepo(p: string): boolean {
   const r = relative(REPO_ROOT, resolve(p));
