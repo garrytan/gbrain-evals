@@ -1115,7 +1115,7 @@
         "bg1-dev-03"
       ],
       "shards": 1,
-      "expected_hours": 2,
+      "expected_hours": 5,
       "launch": {
         "env": {},
         "config": "common"

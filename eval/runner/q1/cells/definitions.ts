@@ -662,6 +662,7 @@ const UNIT_LIMIT_HOURS = 72;
 /** Expected hours set apart from the ingest-rate schedule, for units whose question phase dominates their wall time (A22). */
 export const HOURS_OVERRIDES: Record<string, { hours: number; basis: string }> = {
   's1.baseline-hybrid.baseline': { hours: 9, basis: 'A22: concurrent embedding ingests S1 in about 0.9 hours; the sequential question phase (2,200 answers, canonical and frontier judging) takes about 8' },
+  'bg1-dev3.ext-extract-first.common': { hours: 5, basis: 'BG1 stage 1 (2026-11-10): ingest measured 95 and 106 minutes on bg1-dev-01 and bg1-dev-02, so three worlds and the questions outrun a 5-hour timeout (GBEV-3 decision D, stage1c)' },
 };
 
 /** A system's ingest hours per million corpus tokens: for its benchmark family, then its configuration (Q1's, then F6's), then its runner's default. */
