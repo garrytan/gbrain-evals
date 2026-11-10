@@ -28,6 +28,28 @@ This records what each gbrain-evals release changed and what its measurements me
   that started before this change. memory-qa refuses its output directory because the reader's limit changed, so start
   a fresh night instead.
 
+## [0.10.202] - 2026-11-10
+
+### How many BEAM questions their cited turns don't support, and our published BEAM results without them
+
+- **What it adds.** `docs/benchmarks/2026-11-10-beam-item-support.md` checks every cited question behind our published
+  BEAM results against the conversation turns it cites, with two validator models (gemini-3.8-flash and
+  claude-haiku-5-5), and rescores each published BEAM result it can on only the questions both validators pass. The
+  rescore reuses each result's recorded answers and judgments, so nothing was rerun. The support counts, the gates for
+  the 324 public questions (by id, with no question text) and the rescore tables are pinned beside it in
+  `docs/benchmarks/2026-11-10-beam-item-support/`.
+- **What it shows.** Of 1,521 cited questions, 33.8% have a reference answer that at least one validator finds
+  unsupported by the turns the question cites, or cite no turn the conversation has: 27.5% at 100,000 tokens, 31.3% at
+  500,000, 33.5% at 1 million and 52.2% at 10 million. Both validators reject 24.2%. Rescored on the questions both
+  pass, no published verdict changes. The BEAM-10M gap to the file agent holds at about 7.5 points with a wider
+  interval: -7.5 (95% interval -19.5 to +4.2) on 86 questions, against -8.7 (-16.4 to -1.4) on 198. Seven descriptive
+  gains for gbrain and the two published BEAM losses no longer exclude zero, one new descriptive loss appears on
+  BEAM-100K, and three gains newly exclude zero.
+- **What it doesn't cover.** The memory proof wave's sealed run and wave 2's 100,000- and 1-million-token strata can't
+  be rescored, the rerun's D8 set isn't rescored, and the frontier-judge results aren't covered.
+- README's Known limits gains a bullet on this, and the docs hub gains a row for the findings. No number in the README
+  tables changed.
+
 ## [0.10.201] - 2026-11-10
 
 ### The nightly report now checks whether particle-1 marks the same items right and wrong as Opus
