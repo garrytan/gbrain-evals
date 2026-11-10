@@ -2,6 +2,21 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.200] - 2026-11-10
+
+### The skill ranker benchmark now includes the probe behind gbrain's off-by-default `top_gate`
+
+- **What it adds.** `docs/benchmarks/2026-11-07-skill-ranker-offline/scripts/gate-probe.ts` tests ten candidate measures
+  for a "no skill applies" gate, with no API keys. For each measure it fits one threshold on the dev and stress-dev
+  turns at 750 skills, keeping false suggestions on no-skill turns under 25%, then scores that threshold on the test
+  and stress-test turns at 250, 750 and 1,500 skills with Wilson 95% intervals. Its output is pinned in
+  `results/gate-probe.json`, and a rerun reproduces it byte for byte.
+- **What it shows.** `rawN`, the best skill's BM25 score divided by the catalog's largest idf, is the measure gbrain
+  ships as `top_gate` (garrytan/gbrain#9095). At its fitted threshold of 1.33, the gate keeps an acceptable skill in
+  the top 5 on 25.7%, 27.2% and 27.9% of skill turns, against 51.5%, 55.5% and 61.1% with no gate, and still suggests a
+  skill on 18.8%, 17.0% and 18.8% of no-skill turns. That is why gbrain keeps the gate off by default.
+- The benchmark's README lists the probe and its result. No published score or verdict changes.
+
 ## [0.10.197] - 2026-11-10
 
 ### A nightly check of gbrain master that counts failures by cause and flags what got worse since the night before
