@@ -10,7 +10,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
-import { cat40Commands, cat40Rows, episodeRows, judgeFor, qaCommand, qaRows, qualifiedModel, seedRanges, toolErrorFromText, trialRows, type NightContext, type SuiteRun } from '../../eval/runner/nightly/adapters.ts';
+import { cat40Commands, cat40DevSet, cat40Rows, episodeRows, judgeFor, qaCommand, qaRows, qualifiedModel, seedRanges, toolErrorFromText, trialRows, type NightContext, type SuiteRun } from '../../eval/runner/nightly/adapters.ts';
 import { canonicalDigest, loadDevSet } from '../../eval/runner/nightly/devset.ts';
 import { NightlyCache } from '../../eval/runner/nightly/judge-cache.ts';
 import { keylessEnv } from '../../eval/runner/nightly/keyless.ts';
@@ -103,6 +103,15 @@ describe('adapter commands', () => {
     expect(fake.slots.flat().join(' ')).not.toContain('--budget');
     expect(fake.slots.every(cmd => cmd.includes('--keyless-slots'))).toBe(true);
     expect(() => cat40Commands(run, ctx({ cat40SlotAllowanceUsd: null }), '/w', dirs)).toThrow('--cat40-slot-allowance-usd');
+  });
+
+  test('Cat 40: the suite carries the newest cells receipt\'s dev-set label and drifted files', () => {
+    const cells = mkdtempSync(join(tmpdir(), 'nightly-cat40-'));
+    expect(cat40DevSet(cells)).toBeNull();
+    writeFileSync(join(cells, 'receipt-900.json'), JSON.stringify({ dev_set: { label: 'old', freeze_drift: [] } }));
+    writeFileSync(join(cells, 'receipt-1000.json'), JSON.stringify({ dev_set: { label: 'dev-set run', freeze_drift: ['eval/runner/cat40/loop.ts'] } }));
+    expect(cat40DevSet(cells)).toEqual({ label: 'dev-set run', freeze_drift: ['eval/runner/cat40/loop.ts'] });
+    expect(cat40DevSet(join(cells, 'missing'))).toBeNull();
   });
 
   test('QA: gbrain\'s own defaults, real embeddings, one reader and its cross-family judge, the --ids filter; the fake night uses the fake system', () => {

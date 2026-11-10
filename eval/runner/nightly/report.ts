@@ -37,7 +37,10 @@ export interface SuiteStatus {
   /** pending while the suite runs; a night that stops leaves it pending, and a finished night records it as error. */
   status: 'pending' | 'ran' | 'partial' | 'skipped' | 'not_built' | 'error';
   reason?: string;
+  dev_set?: DevSetRun;
 }
+/** A suite run as a dev set on the current harness rather than a frozen experiment's (Cat 40 world M under --dev-set); freeze_drift is null when the freeze was not checked. */
+export interface DevSetRun { label: string; freeze_drift: string[] | null }
 export interface NightManifest {
   schema: 'nightly-night/1'; night: string; ref: string; sha: string; version: string | null; tier: string; fake: boolean;
   devset: { path: string; digest: string }; suites: SuiteStatus[]; started_at: string; finished_at?: string;
@@ -216,8 +219,14 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     if (!mine.length) { lines.push(`| ${s.id} | | | | | | | | ${s.status.replace('_', ' ')}${s.reason ? `: ${s.reason}` : ''} |`); continue; }
     for (const c of mine) {
       const causes = CAUSES.filter(x => c.failures_by_cause[x]).map(x => `${x} ${c.failures_by_cause[x]}`).join(', ') || 'none';
-      lines.push(`| ${s.id}${s.status === 'partial' ? ' (partial)' : ''} | ${c.reader ?? 'keyless'} | ${c.items} | ${c.trials} | ${pct(c.pass1)} | ${c.k > 1 ? pct(c.passk) : 'n/a'} | ${c.harness} | ${usd(c.cost_per_correct)} | ${causes} |`);
+      lines.push(`| ${s.id}${s.status === 'partial' ? ' (partial)' : ''}${s.dev_set ? ' (dev set)' : ''} | ${c.reader ?? 'keyless'} | ${c.items} | ${c.trials} | ${pct(c.pass1)} | ${c.k > 1 ? pct(c.passk) : 'n/a'} | ${c.harness} | ${usd(c.cost_per_correct)} | ${causes} |`);
     }
+  }
+  const devSets = m.suites.filter(s => s.dev_set);
+  if (devSets.length) lines.push('', '## Dev-set runs', '');
+  for (const s of devSets) {
+    const drift = s.dev_set!.freeze_drift;
+    lines.push(`- ${s.id}: ${s.dev_set!.label}. ${drift === null ? 'The freeze was not checked on this night.' : drift.length ? `Code changed since the freeze: ${drift.join(', ')}.` : 'No frozen file has changed since the freeze.'}`);
   }
   for (const c of comparisons) {
     lines.push('', `## Against ${c.against === 'previous' ? 'the previous master night' : 'stable'} (${c.ref} ${c.sha.slice(0, 12)}, ${c.night})`, '');

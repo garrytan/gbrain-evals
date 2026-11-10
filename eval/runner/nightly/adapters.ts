@@ -21,6 +21,7 @@ import type { Item, Suite } from './devset.ts';
 import { contextDigest, NightlyCache, qaPromptVersion } from './judge-cache.ts';
 import { keylessEnv, paidEnv, type Provider } from './keyless.ts';
 import { OUTCOME_SCHEMA, type Outcome, type ToolError } from './outcome.ts';
+import type { DevSetRun } from './report.ts';
 import type { WriteScore } from './write-score.ts';
 
 const HERE = import.meta.dir;
@@ -48,7 +49,7 @@ export interface NightContext {
 }
 
 export interface SuiteRun { suite: Suite; digest: string; items: Item[]; readers: Array<string | null>; k: number }
-export interface AdapterResult { status: 'ran' | 'partial' | 'error' | 'not_built' | 'skipped'; reason?: string; capStop?: boolean; rows: Outcome[] }
+export interface AdapterResult { status: 'ran' | 'partial' | 'error' | 'not_built' | 'skipped'; reason?: string; capStop?: boolean; rows: Outcome[]; dev_set?: DevSetRun }
 export type Adapter = (run: SuiteRun, ctx: NightContext) => Promise<AdapterResult>;
 
 /** Suites whose items call a model: they need --fake, or --paid with the night's ledger run. */
@@ -140,6 +141,13 @@ export function cat40Commands(run: SuiteRun, ctx: NightContext, world: string, d
   };
 }
 
+/** The dev-set label and drifted files from the newest Cat 40 cells receipt, which every row of the suite carries into the report. */
+export function cat40DevSet(cellsDir: string): DevSetRun | null {
+  const receipts = existsSync(cellsDir) ? readdirSync(cellsDir).filter(f => /^receipt-\d+\.json$/.test(f)).sort((a, b) => Number(a.slice(8, -5)) - Number(b.slice(8, -5))) : [];
+  if (!receipts.length) return null;
+  return (JSON.parse(readFileSync(join(cellsDir, receipts.at(-1)!), 'utf8')) as { dev_set?: DevSetRun }).dev_set ?? null;
+}
+
 /** Outcome rows from a Cat 40 cells directory: the canonical cell per key, its transcript's refused calls, and harness rows for keys left incomplete. */
 export function cat40Rows(run: SuiteRun, ctx: NightContext, cellsDir: string): Outcome[] {
   const files = ['attempts.jsonl', 'results.jsonl'].map(f => join(cellsDir, f)).filter(existsSync);
@@ -186,7 +194,8 @@ export const cat40Adapter: Adapter = async (run, ctx) => {
   const rows = cat40Rows(run, ctx, dirs.cells);
   const readers = ctx.fake ? ['fake'] : run.readers.filter((r): r is string => r !== null);
   const all = [...rows, ...readers.flatMap(r => missingRows(run, ctx, r, rows, cells?.why ?? 'no cell recorded'))];
-  return { status: cells ? 'partial' : 'ran', reason: cells?.why, capStop: cells?.capStop, rows: all };
+  const devSet = cat40DevSet(dirs.cells);
+  return { status: cells ? 'partial' : 'ran', reason: cells?.why, capStop: cells?.capStop, rows: all, ...(devSet ? { dev_set: devSet } : {}) };
 };
 
 // ─── Part C write tasks: refresh-barrier-agents and refused-write-agents ─

@@ -128,4 +128,17 @@ describe('the report files', () => {
     expect(existsSync(join(dir, 'outcomes.jsonl.gz'))).toBe(true);
     expect(gunzipSync(readFileSync(join(dir, 'outcomes.jsonl.gz'))).toString('utf8')).toBe(readFileSync(join(dir, 'outcomes.jsonl'), 'utf8'));
   });
+
+  test('a dev-set suite is labelled in its table rows and listed with its drifted files, in report.md and summary.json', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'nightly-report-'));
+    const label = 'dev-set run on the current harness, not a Hard-freeze result: never publish or compare it as one';
+    const m = manifest([{ id: 'suite-a', dev_set: { label, freeze_drift: ['eval/runner/cat40/loop.ts', 'eval/runner/cat40/arms.ts'] } }, { id: 'suite-b', dev_set: { label, freeze_drift: null } }]);
+    writeFileSync(join(dir, 'night.json'), JSON.stringify(m));
+    writeFileSync(join(dir, 'outcomes.jsonl'), [...trials([3, 1]), ...trials([2], 3, { suite: 'suite-b' })].map(r => JSON.stringify(r)).join('\n') + '\n');
+    const summary = writeReport({ dir });
+    const md = readFileSync(join(dir, 'report.md'), 'utf8');
+    expect(md).toContain('| suite-a (dev set) | gpt-6.1-sol |');
+    expect(md).toContain(`## Dev-set runs\n\n- suite-a: ${label}. Code changed since the freeze: eval/runner/cat40/loop.ts, eval/runner/cat40/arms.ts.\n- suite-b: ${label}. The freeze was not checked on this night.`);
+    expect((summary.suites as SuiteStatus[])[0]!.dev_set).toEqual(m.suites[0]!.dev_set);
+  });
 });

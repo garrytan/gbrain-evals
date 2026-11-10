@@ -241,7 +241,7 @@ export async function main(argv: readonly string[]): Promise<number> {
           appendOutcome(outcomesPath, o);
           have.set(outcomeKey(o), o);
         }
-        Object.assign(status, { status: r.status, ...(r.reason ? { reason: r.reason } : {}) });
+        Object.assign(status, { status: r.status, ...(r.reason ? { reason: r.reason } : {}), ...(r.dev_set ? { dev_set: r.dev_set } : {}) });
         capStop ||= r.capStop === true;
       } catch (error) {
         Object.assign(status, { status: 'error', reason: (error as Error).message.split('\n')[0]!.slice(0, 300) });

@@ -427,6 +427,9 @@ export function bindExperiment<T extends { run: BudgetRun; guard: PaidRequestGua
  */
 export const closesBudgetRun = (complete: boolean, options: { runId?: string | null }) => complete && !options.runId;
 
+/** What a --dev-set receipt says about itself (GBEV-3, 2026-11-10): its numbers are never published or compared as a Hard-freeze result. */
+export const DEV_SET_LABEL = 'dev-set run on the current harness, not a Hard-freeze result: never publish or compare it as one';
+
 /**
  * The Hard freeze gate on a world whose seed is frozen (smoke, held-out, confirmation, sealed): code that drifted from
  * freeze.json is refused unless --accept-freeze-drift and accepted-drift.json list its current hash. --dev-set runs the
@@ -856,7 +859,7 @@ export async function main(argv = process.argv.slice(2)) {
       evals_commit: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return null; } })(),
       evals_dirty: (() => { try { return execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0; } catch { return null; } })(),
       gbrain: gbrainBuild ? { slot_ref: flag(argv, '--slot-ref') ?? null, slot_commit: slotCommit, label: ctx.gbrainLabel, commit: gbrainBuild.commit, version: gbrainBuild.version, tree: gbrainBuild.tree, verified: gbrainBuild.verified, surface: flag(argv, '--surface') ?? 'starter', advertised_surface: flag(argv, '--advertised') ?? null, tool_overrides: { descriptions_file: descriptionsFile ?? null, descriptions_sha256: instructionsOverride.descriptions ? createHash('sha256').update(JSON.stringify(instructionsOverride.descriptions)).digest('hex') : null, dropped: instructionsOverride.dropTools }, instructions_override: instructionsOverride.text === null ? null : { file: relative(process.cwd(), resolve(instructionsFile!)), sha256: createHash('sha256').update(instructionsOverride.text).digest('hex') }, served_instructions_sha256: instructionsOverride.served === null ? null : createHash('sha256').update(instructionsOverride.served).digest('hex'), config: Object.fromEntries(gbrainConfig), build_config: Object.fromEntries(buildConfig), keyless_slots: keyless, slot_dir: slotDir, restore_probe: restoreProbes, rerank_probe: rerankProbeState, operator_analyze: analyze, serve_boot_timeout_s: SERVE_BOOT_TIMEOUT_SECONDS, staged_build: world.docs.length > STAGED_SOURCE_ADD_DOCS ? { sync_batch_docs: STAGED_SYNC_BATCH } : null } : null,
-      ...(devSetDrift ? { dev_set: { freeze_drift: devSetDrift } } : {}),
+      ...(argv.includes('--dev-set') ? { dev_set: { label: DEV_SET_LABEL, freeze_drift: devSetDrift } } : {}),
       mode: buildSlots ? 'build-slots' : 'cells', order, complete, cells_planned: cells.length,
       slot_builds: builds, models, arms, families, repeats, max_tool_chars: ctx.maxToolChars, argv,
       budget_run_id: ctx.budgetRunId, resumed: Boolean(budget?.run.participant),
