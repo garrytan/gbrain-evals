@@ -2,6 +2,18 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.190] - 2026-11-09
+
+### Two pulls of one Ubicloud VM no longer run at once on Ubuntu 26.04
+
+- **Fixed.** `scripts/ubicloud/ubi-runner.sh` now gives a VM's pull lock to the pull that creates the lock's `pid` file,
+  which bash's `noclobber` opens with `O_EXCL`, so only one pull can create it. On Ubuntu 26.04, GitHub's
+  `ubuntu-latest` image since 2026-11-09, `mkdir` comes from uutils coreutils 0.8.0, which can tell two pulls that start
+  together that both created the lock directory. Both then wrote into the same local directory, and the
+  `ubi-runner pull lock` test failed CI at random.
+- **Test.** `test/eval/ubi-runner-pull.test.ts` adds a case that puts a `mkdir` on `PATH` that answers the way uutils
+  0.8.0 does, then starts two pulls together. It fails without the fix.
+
 ## [0.10.189] - 2026-11-09
 
 ### The live recall findings now say which model and search APIs saw the questions and page text
