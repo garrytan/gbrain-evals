@@ -301,6 +301,37 @@ batch-3 scorecard at 0.60.641.0 that gives the verdicts. It is batch 3's one cou
 applied, gold hidden by labels the relabel hasn't reached is missed by every arm alike, which can leave a layer short of
 three qualifying contrasts. A layer that reads NO REFERENCE YET for that reason says so in the results.
 
+### 2026-11-10: how G5 runs
+
+Fixed before any G5 cell runs. G5 reads NO REFERENCE YET whatever it measures (the decision rule above), so its numbers
+are descriptive. This fixes what it measures.
+
+**Search configuration.** The build table asks for the real search configuration. The runner as merged wrote no search
+setting, so its brain resolved gbrain's defaults (mode `balanced`, reranker `voyage:rerank-3-lite`). It now writes the
+setting live-recall batch 2's counted scorecard records for the real brain, mode `tokenmax` and reranker
+`voyage:rerank-2.5`, and each scorecard records what gbrain resolved. Embedding and rerank calls stay in-process, so
+no provider time is in any G5 number. G5 therefore compares gbrain versions on local compute only, and it can't predict
+the latency a user feels.
+
+**One brain, two versions.** One brain of 300,000 pages (seed 55) is built once at 0.60.549.0 (`a131fb20`); 0.60.549.0 and
+0.60.570.0 open the same schema. Each probe runs on its own copy of that brain, made with `CREATE DATABASE … TEMPLATE`,
+because a probe writes to the brain it times. A keyless rehearsal at 30,000 pages showed why: a second probe on the same
+database failed every one of its remember calls and slowed sync, because the first probe's side repository was gone.
+On fresh copies every remember succeeded.
+
+**Order and noise.** The probes run at 0.60.549.0, then 0.60.570.0, then 0.60.549.0 again, each with 200 timed calls per
+operation after 3 warm-up calls and 30 syncs. The first two give the three contrasts (p95 of query, search and get at
+0.60.549.0 against 0.60.570.0). The repeat shows how far two identical probes differ, and it is reported beside them. A
+contrast smaller than that difference for its operation is reported as no difference, within run-to-run noise. If the
+time limit ends the run before the repeat probe finishes, the results name the missing probe and give the contrasts with
+no noise estimate.
+
+**The knob is not run.** The build table lists "one knob" as a variable, but no knob was named before the freeze, and
+choosing one now, after seeing keyless latencies, would be a choice made from results. No mapped contrast uses a knob.
+
+**Machine.** One Ubicloud standard-16 VM (16 vCPUs, 64 GB) in `eu-central-h1`, Postgres 16 with pgvector and the settings
+in `vm-setup.sh`, with a 12-hour time limit. The VM is destroyed when the run ends.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
