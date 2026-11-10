@@ -246,7 +246,7 @@ Deferred from [the Cat 40 follow-ups plan](docs/plans/2026-10-03-cat40-followups
 
 - [ ] **Priced dry run for paid scripts** (DX). What: `PRINT_ONLY=1` prints `scripts/cat40-followups.sh` commands; a priced dry run would also estimate each step's cost from the runner's estimate and the ledger's remaining money.
 
-- [ ] **Record cache writes for OpenAI judges in Cat 40** (found 2026-11-09). What: `runAgentText` in `eval/runner/cat40/loop.ts` records `cache_write: 0` for an OpenAI judge; read the cache-write count the way `eval/runner/q1/usage.ts` does, with a keyless test. Why: a gpt-6.1-sol judge's dollars in new Cat 40 rows stay low, so the next published Cat 40 judge cost would repeat the error the [OpenAI cache-write audit](docs/audit/2026-11-09-openai-cache-writes.md) corrects. Budget caps are unaffected: they bind on the ledger, which prices cache writes.
+- [x] **Record cache writes for OpenAI judges in Cat 40** (found 2026-11-09). Done 2026-11-09 in v0.10.192 (#409): `runAgentText` and the agent loop in `eval/runner/cat40/loop.ts` record each response's cache reads and writes and its cost as the budget ledger settles it (`responseUsd`), long prompts included, with keyless tests. Original text: *What: `runAgentText` in `eval/runner/cat40/loop.ts` records `cache_write: 0` for an OpenAI judge; read the cache-write count the way `eval/runner/q1/usage.ts` does, with a keyless test. Why: a gpt-6.1-sol judge's dollars in new Cat 40 rows stay low, so the next published Cat 40 judge cost would repeat the error the [OpenAI cache-write audit](docs/audit/2026-11-09-openai-cache-writes.md) corrects. Budget caps are unaffected: they bind on the ledger, which prices cache writes.*
 
 ## Completed infrastructure work
 

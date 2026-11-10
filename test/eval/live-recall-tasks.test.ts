@@ -21,7 +21,7 @@ import { JUDGE_CHECK_SCHEMA, SEED, TRUNCATION_CAP, buildTaskScorecard, renderTas
 import { clusteredPairedDelta, exactMcNemar } from '../../eval/runner/stats/paired.ts';
 import {
   FIXTURE_TASKS, HARNESS_FILES, PHASE2_PAGES, RecordStore, TASK_CONCURRENCY, TRUNCATION_FLOOR, assertPrivate, checkTruncation, truncationWaivers, estimateCost, freezeSummary, goldCheck, harnessDigest, judgeRunDir, labelsShort, ledgerRunner,
-  loadRecords, parseTasks, readJudgeCheck, runJudgeCheck, runTaskSet, scoreRunDir, spread, watchRefusals, writeFreeze, writeJudgeCheck, type Paid, type RunRecord,
+  loadRecords, main, owesNoCalls, parseTasks, readJudgeCheck, runJudgeCheck, runTaskSet, scoreRunDir, spread, watchRefusals, writeFreeze, writeJudgeCheck, type Paid, type RunRecord,
 } from '../../eval/runner/live-recall/tasks.ts';
 
 const gut = resolveGbrainUnderTest(null);
@@ -593,11 +593,25 @@ describe('phase 2 fixture run with scripted models (keyless)', () => {
     expect(JSON.parse(readFileSync(again.scorecard, 'utf8'))).toEqual(card);
   });
 
+  // Value: protects=GST-2163: a run directory whose work is done leaves no ledger run open (two phase 2 runs kept finished_at NULL after exiting 0), and `tasks.ts judge` on it spends nothing; fails_when=a complete directory still owes calls, or judge leaves its ledger run open or opens a paid run; why_new=every session closed with finish: false; seam=owesNoCalls/main judge; no_claim=does not drive `tasks.ts run` end to end (it needs provider keys), which finishes on the same owesNoCalls
+  test('a complete directory owes no paid call: tasks.ts judge makes none and finishes the ledger run a normal exit used to leave open', async () => {
+    const runDir = join(dir, 'run');
+    const run = JSON.parse(readFileSync(join(runDir, 'run.json'), 'utf8'));
+    const ledgerRun = () => readLedger(run.budget.ledger_path).runs.find(r => r.run_id === run.budget.run_id)!;
+    expect(ledgerRun().finished_at).toBeNull();
+    expect(owesNoCalls(runDir)).toBe(true);
+    const ledger = readLedger(run.budget.ledger_path);
+    expect(await main(['judge', runDir])).toBe(0);
+    expect(ledgerRun().finished_at).not.toBeNull();
+    expect(readLedger(run.budget.ledger_path)).toMatchObject({ entries: ledger.entries, runs: { length: ledger.runs.length } });
+  });
+
   test('resume judges an answered but unjudged episode without re-answering it', async () => {
     const path = join(dir, 'run', 'records.local.jsonl');
     const lines = readFileSync(path, 'utf8').trim().split('\n');
     const dropped = lines.filter(l => JSON.parse(l).kind === 'judge').slice(0, 3);
     writeFileSync(path, lines.filter(l => !dropped.includes(l)).join('\n') + '\n');
+    expect(owesNoCalls(join(dir, 'run'))).toBe(false);
     const before = providers.sent.length;
     const ledger = join(dir, 'ledger.sqlite');
     const run = BudgetRun.open({ runner: 'live-recall-phase2-resume', budgetUsd: 1, ledgerPath: ledger, programCapUsd: 100 });
@@ -612,6 +626,7 @@ describe('phase 2 fixture run with scripted models (keyless)', () => {
     const made = providers.sent.slice(before);
     expect(made).toHaveLength(3);
     expect(made.every(s => conversation(s.wire, s.body).system === JUDGE_SYSTEM)).toBe(true);
+    expect(owesNoCalls(join(dir, 'run'))).toBe(true);
   }, 120_000);
 
   test('a counted resume without a window note, a changed task file and an unfrozen run abort with their codes', async () => {
@@ -678,11 +693,13 @@ describe('phase 2 fixture run with scripted models (keyless)', () => {
     const run = BudgetRun.open({ runner: 'live-recall-phase2-judge-truncated', budgetUsd: 10, ledgerPath: ledger, programCapUsd: 100 });
     const paid: Paid = { run, guard: installPaidRequestGuard(run, { fetchImpl: providers.fetchImpl }), runner: 'live-recall-phase2-judge-truncated', capUsd: 10, ledgerPath: ledger };
     const before = providers.sent.length;
+    expect(owesNoCalls(join(dir, 'run'))).toBe(false);
     try {
       expect(await judgeRunDir(join(dir, 'run'), paid, () => {}, null, 'gbev3-trunc-1')).toBe(0);
     } finally { paid.guard.uninstall(); run.close(); }
     expect(providers.sent.length).toBe(before);
     expect(new RecordStore(path).judges.get(judged.key)).toMatchObject({ status: 'judge_error', truncated: true });
+    expect(owesNoCalls(join(dir, 'run'))).toBe(true);
   });
 });
 
@@ -713,6 +730,7 @@ describe('phase 2 stops (keyless)', () => {
     try {
       const r = await runTaskSet({ ...opts, resume: false }, () => {});
       expect(r.result).toBe('cap_stop');
+      expect(owesNoCalls(runDir)).toBe(false);
       const card = JSON.parse(readFileSync(r.scorecard, 'utf8'));
       expect([card.status, card.stop]).toEqual(['incomplete', 'LR_CAP_STOP']);
       const stop = JSON.parse(readFileSync(join(runDir, 'cap-stop.json'), 'utf8'));
@@ -730,6 +748,7 @@ describe('phase 2 stops (keyless)', () => {
       const before = answering();
       const resumed = await runTaskSet({ ...opts, resume: true, windowNote: 'gbev3-ext-1', paid: { ...paid, capUsd: 10 } }, () => {});
       expect(resumed.result).toBe('complete');
+      expect(owesNoCalls(runDir)).toBe(true);
       const after = answering();
       for (const key of finished) expect([key, after.get(key)]).toEqual([key, before.get(key)]);
       expect(after.size).toBe(120);
