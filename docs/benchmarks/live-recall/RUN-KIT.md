@@ -475,7 +475,9 @@ than an unbound caller's in `_meta.access` (that response's text never reaches a
 unbound caller came back readable. At the start nothing runs. The runner checks again before every task and after every
 episode, each time reading one page gbrain hides from an unbound caller when the brain has one, so a change during the
 run stops it with no record for the episode that just ran. gbrain caches the setting for 30 seconds, so pages it served inside that
-window may have reached a model. The runner never relaxes or works around it; GBEV-3 decides.
+window may have reached a model. `visibility.honor_aliases` has no per-response signal in `_meta.access`, so once gbrain
+picks up `off`, the episodes already running can show alias-private pages to a model until they end, and turning it off
+and back on between two checks can go unnoticed. The runner never relaxes or works around it; GBEV-3 decides.
 
 ### LR_CAP_STOP
 
