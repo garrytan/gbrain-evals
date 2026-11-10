@@ -337,12 +337,33 @@ describe('true full context', () => {
     const a = await answerFullContext({ reader: 'openai:gpt-6.1-sol', prompt, conversation: conv.id, fetchImpl });
     await answerFullContext({ reader: 'openai:gpt-6.1-sol', prompt, conversation: conv.id, fetchImpl });
     await answerFullContext({ reader: 'openai:gpt-6.1-sol', prompt, conversation: other.id, fetchImpl });
-    expect(bodies[0].messages[0].content).toBe(prompt);
+    expect(bodies[0].messages[0].content.map((c: any) => c.text).join('')).toBe(prompt);
     expect(bodies[0].prompt_cache_key).toBe(bodies[1].prompt_cache_key);
     expect(bodies[0].prompt_cache_key).not.toBe(bodies[2].prompt_cache_key);
     expect(bodies[0].prompt_cache_key).not.toContain(conv.id);
     expect(a.usage).toEqual({ input: 104, output: 7, cache_read: 896, cache_write: 0 });
     expect(bodies.every(b => b.reasoning_effort === 'medium' && b.output_config === undefined)).toBe(true);
+  });
+
+  // Value: protects=Sol's whole-history reads hitting the prompt cache from the second question on a conversation (BG1 stage1b: 88 of 88 Sol reads were cache writes of the ~211k-token history); fails_when=the OpenAI body sends history and question as one string, or the history part loses its explicit breakpoint or explicit-only mode, so GPT-5.6+'s one breakpoint falls after the question; why_new=GPT-5.6+ writes and looks up the cache only at breakpoints (developers.openai.com/api/docs/guides/prompt-caching, "A shared prefix is not always a cached prefix"); seam=none; no_claim=OpenAI's server-side cache behaviour
+  test('OpenAI readers end the history with an explicit cache breakpoint, so every question on a conversation shares one cacheable prefix', async () => {
+    const bodies: any[] = [];
+    const fetchImpl = (async (_u: string, init: RequestInit) => {
+      bodies.push(JSON.parse(String(init.body)));
+      return new Response(JSON.stringify({ choices: [{ message: { content: 'ok' } }], usage: { prompt_tokens: 1000, completion_tokens: 7, prompt_tokens_details: { cached_tokens: bodies.length === 1 ? 0 : 990, cache_write_tokens: bodies.length === 1 ? 990 : 0 } } }));
+    }) as unknown as typeof fetch;
+    const p2 = readerPrompt(corpus.questions.filter(x => x.conversation === conv.id)[1], conv.sessions, '2026-04-01');
+    const a1 = await answerFullContext({ reader: 'openai:gpt-6.1-sol', prompt, conversation: conv.id, fetchImpl });
+    const a2 = await answerFullContext({ reader: 'openai:gpt-6.1-sol', prompt: p2, conversation: conv.id, fetchImpl });
+    const [c1, c2] = bodies.map(b => b.messages[0].content);
+    expect(bodies.map(b => [b.messages.length, b.prompt_cache_options])).toEqual([[1, { mode: 'explicit' }], [1, { mode: 'explicit' }]]);
+    expect([c1, c2].map(c => c.map((x: any) => [x.type, x.prompt_cache_breakpoint ?? null]))).toEqual(Array(2).fill([['text', { mode: 'explicit' }], ['text', null]]));
+    expect([c1.map((x: any) => x.text).join(''), c2.map((x: any) => x.text).join('')]).toEqual([prompt, p2]);
+    expect(c1[0].text).toBe(c2[0].text);
+    expect(c1[1].text).not.toBe(c2[1].text);
+    expect(c2[1].text.startsWith('Current Date: ')).toBe(true);
+    expect(bodies[1].prompt_cache_key).toBe(bodies[0].prompt_cache_key);
+    expect([a1.usage, a2.usage]).toEqual([{ input: 10, output: 7, cache_read: 0, cache_write: 990 }, { input: 10, output: 7, cache_read: 990, cache_write: 0 }]);
   });
 
   test('reasoning effort on the agent loop: medium on every file-agent call; Cat 40 without effort sends neither field', async () => {
@@ -371,13 +392,13 @@ describe('true full context', () => {
     await sys.close();
   });
 
-  // Value: protects=existing readers' full-context requests, which counted Q1 cells froze; fails_when=adding the particle transport changes one byte of an Anthropic or OpenAI body; why_new=answerFullContext gains a second transport; seam=none; no_claim=provider-side behavior
-  test('Anthropic and OpenAI full-context request bodies are byte for byte main 8ca8d2cc\'s (sha256 pinned before particle-1 joined)', async () => {
+  // Value: protects=existing readers' full-context requests, which counted Q1 cells froze; fails_when=adding the particle transport changes one byte of an Anthropic body, or one byte of the OpenAI body other than its history cache breakpoint; why_new=answerFullContext gains a second transport; seam=none; no_claim=provider-side behavior
+  test('Anthropic full-context request bodies are byte for byte main 8ca8d2cc\'s and OpenAI\'s differs only by its history cache breakpoint (sha256 pinned)', async () => {
     const fixed = 'History:\nSession 1: alice: I moved to Lisbon.\n\nCurrent Date: 2023/05/01\nQuestion: Where does Alice live?\nAnswer:';
     const pinned: Record<string, string> = {
       'anthropic:claude-opus-5-5': 'c3d7e0a1e0548aa843fb055bc9fa70e941fc8562655ebb8e9aa12d4e4fef4bbf',
       'anthropic:claude-sonnet-5-5': '2ca566d6650b17480c3cc45deff079a69393087b40bfbf5456f9d0ccebd06399',
-      'openai:gpt-6.1-sol': 'c6bf19e08831d83c697ae48f787b3bb8d6686e33eab7d82ff8d980beb237a59d',
+      'openai:gpt-6.1-sol': '47ac9b5d4109b505beef7bf15920692e4c0e5752d84096ab980fe343bf1ecf31',
     };
     for (const [reader, sha] of Object.entries(pinned)) {
       let body = '';

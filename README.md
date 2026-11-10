@@ -35,7 +35,8 @@ between those commits and the pin.
   questions from LongMemEval, a public benchmark of questions about old chats, against 139 for gbrain's retrieval
   (Sonnet 5.5 reader). On BEAM-10M, whose chat histories run to about 10 to 11 million tokens each, an agent with `grep`
   over the same files scored 67.6% against gbrain's 58.9%, a gap that test can't separate. On LongMemEval, gbrain's case
-  is cost: its reader cost per question is about a seventh of the whole history's.
+  is cost: with one question per history, its reader cost per question was about a seventh of the whole history's. A
+  history asked several questions can be read from a prompt cache after the first, which we haven't measured.
 
 | What we measure | Without gbrain | With gbrain | gbrain commit | Report |
 |---|---|---|---|---|
@@ -45,7 +46,7 @@ between those commits and the pin.
 | Hard questions about a large, messy company, answered by agents (two worlds of about 55,000 documents; Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | the same files with `grep`: 71.0% on a fresh world, 53.0% on a sealed one | **78.7%** and **66.0%** (+7.7 points, 95% interval +2.7 to +12.7; +13.0, +7.7 to +18.3)³ | `3e4ff61ce` (shipped as v0.60.174.0) | [Hard company questions](docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md) |
 | The same kind of questions on two newer sealed worlds, with the configuration that ships (same three models) | the same files with `grep` | **+10.67 points** ahead of files (95% interval +7.00 to +14.50)⁴ | `4e10136b4` | [Hard questions, next build](docs/benchmarks/2026-10-15-cat40-next-confirm/README.md) |
 | Finance-only text reaching an agent's context in 100 permission runs, on the first, easier company world (five frontier models) | the same files: 100; plain Postgres: 97, with 4 leaked answers | **0** | `51f865d78` | [Permission runs](docs/benchmarks/2026-10-02-model-ladder.md) |
-| Right answers on 150 LongMemEval questions, against pasting each whole history (about 50 conversations) into the prompt | whole history: 144 (Sonnet 5.5 reader) and 141 (GPT-6.1 Sol) of 150 | **139** and **137** of 150, within the preregistered 7-point margin, at about a seventh of the reader cost per question⁵ | `c5fb0201` | [Whole-history comparison](docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md) |
+| Right answers on 150 LongMemEval questions, against pasting each whole history (about 50 conversations) into the prompt | whole history: 144 (Sonnet 5.5 reader) and 141 (GPT-6.1 Sol) of 150 | **139** and **137** of 150, within the preregistered 7-point margin, at about a seventh of the reader cost per question, with one question per history⁵ | `c5fb0201` | [Whole-history comparison](docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md) |
 | Right answers about very long chat histories (BEAM-10M, never used to tune gbrain; three answer models, 8,000 tokens of memory) | the question alone: 25.8% | **56.3%** (197 of 199 questions scored)⁶ | `f05943e6` (v0.60.138.0) | [Head-to-head scoreboard](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md) |
 | The same questions, against an agent with list, `grep` and read tools over the same files (each at its own default amount of evidence) | the file agent: 67.6% | **58.9%** on the 198 questions scored for both, a gap this test can't separate⁶ | `f05943e6` (v0.60.138.0) | [Head-to-head scoreboard](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md) |
 | **Finding the right evidence** | | | | |
@@ -103,7 +104,10 @@ between those commits and the pin.
    retrieval, though gbrain's page renderer formatted it. gbrain also pays a one-time cost to index each history.
    particle-1 reading the same prompts answered 135 against 140, within the margin by the preregistered test, though a
    score test puts it just outside ([particle-1
-   replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md)).
+   replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md)). Each question came with its own history,
+   read once, so every whole-history read paid for the whole history. When one history answers several questions, a
+   prompt cache bills it at the cached-input rate after the first read; that wasn't measured
+   ([corrections](docs/corrections.md#full-context-reads-and-openais-prompt-cache)).
 6. Measured at gbrain 0.60.138.0, not the pin. The set detects only differences of about 13.6 points, and the file-agent
    comparison misses gaps under about 12.4, so no row is ranked; [comparisons](#how-gbrain-compares) shows the full
    table.
@@ -205,6 +209,11 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 - Measured 2026-10-09 to 2026-10-27 with gbrain 0.60.138.0 (`f05943e`); pinned systems: `ext-extract-first` bundle lock 9777b7a8, capabilities 0acaff3a; `ext-memory-bank` bundle lock f54d89df, capabilities 23a033f4; `ext-graph-pipeline` bundle lock 59af44d5, capabilities e00e4600; `ext-temporal-graph` bundle lock 4ce9b216, capabilities 0ae56345; `ext-markdown-kb` bundle lock e1a14a19, capabilities 4e95f8ef; `ext-agent-runtime` bundle capabilities d55c28c9; `ext-verbatim-session` bundle lock e2e066bf, capabilities ffd48dae.
 - Full tables, cohorts and exclusions: [scoreboard report](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md).
 <!-- scoreboard:headline:end -->
+
+The S2b full-context spend in the notes above was measured with a harness that never let a later question hit OpenAI's
+prompt cache: each GPT-6.1 Sol question wrote its conversation's whole history to the cache again, and no later question
+read it back, so the figure overstates that arm's cost. The block is generated from the sealed receipt, so this note sits below it
+([corrections](docs/corrections.md#full-context-reads-and-openais-prompt-cache)).
 
 A rerun of this comparison at a newer gbrain (`0ccf2bdd`, 2026-11-03, at 8,000 tokens; called F6 in its reports) is
 published in [its scoreboard](docs/benchmarks/2026-10-29-f6-current-master/scoreboard.md); the table above stays the
@@ -415,6 +424,14 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-10: The whole-history cost comparison is for one question per history
+
+The LongMemEval takeaway, the whole-history row and its footnote now say that gbrain's reader cost was about a seventh
+of the whole history's with one question per history, as W10c measured it. A history asked several questions can be
+read from a prompt cache after the first, which wasn't measured. A note under the scoreboard block says S2b
+full-context's spend was measured with a harness that never let a later question hit OpenAI's prompt cache, so it
+overstates that arm's cost. No accuracy figure changed. [Corrections](docs/corrections.md#full-context-reads-and-openais-prompt-cache).
 
 ### 2026-11-09: The README opens with a scorecard against working without gbrain
 
