@@ -12,8 +12,15 @@ the stable release the box was upgraded to that morning, loaded as a verified ov
 
 gbrain is a personal knowledge brain. It stores Markdown pages in Postgres and finds them with keyword, vector and
 hybrid search. Wintermute, the agent that runs on Garry's box, wrote the questions, each in two forms. It ran this
-harness against the live brain through a database role that cannot write, and sent back aggregate scorecards. No
-question, page text, slug or result left the box.
+harness against the live brain through a database role that cannot write, and sent back aggregate scorecards. The runs'
+only model calls were gbrain's own search calls to Voyage AI, the brain's configured embedding and reranking provider:
+gbrain sent each question form there to be embedded and, in configured search, sent the form with its candidate
+passages to be reranked. Only aggregates came back to us, and none of the runs' questions, page text or slugs is in this
+repository.
+
+> **Correction, 2026-11-09.** The first version of this page said that no question, page text, slug or result left the
+> box, as the [preregistration](live-recall/PREREGISTRATION.md) still does. The paragraph above now says what the runs
+> sent to Voyage AI.
 
 ## The finding
 

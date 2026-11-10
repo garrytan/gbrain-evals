@@ -12,7 +12,7 @@
  * confirmed factor. A request whose usage is missing or malformed is charged
  * its worst case, so the ledger never undercounts.
  */
-import { priceRequest, reservationUsd, usageCost, type RequestPrice } from '../budget-ledger.ts';
+import { priceRequest, reservationUsd, UnpricedUsageError, usageCost, type RequestPrice } from '../budget-ledger.ts';
 import type { Provider } from './manifest.ts';
 import type { BatchStatus, NormalizedResult } from './transport.ts';
 
@@ -49,12 +49,15 @@ export interface RowCost { list_usd: number; usd: number; input_tokens: number; 
 
 /**
  * Cost of one result row. Succeeded rows with usable usage settle at list ×
- * factor. Succeeded rows without usable usage are charged their worst case.
+ * factor. Succeeded rows without usable usage, or with usage the ledger cannot
+ * price (UnpricedUsageError), are charged their worst case.
  * Errored, expired, canceled and missing requests are not billed by either provider.
  */
 export function rowCost(price: RequestPrice, worstListUsd: number, result: NormalizedResult, factor: number): RowCost {
   if (result.status !== 'succeeded') return { list_usd: 0, usd: 0, input_tokens: 0, output_tokens: 0, basis: 'not-billed' };
-  const measured = result.usage ? usageCost(price, { usage: result.usage }) : null;
+  let measured: ReturnType<typeof usageCost> = null;
+  try { measured = result.usage ? usageCost(price, { usage: result.usage }) : null; }
+  catch (error) { if (!(error instanceof UnpricedUsageError)) throw error; }
   if (!measured || !Number.isFinite(measured.usd) || measured.usd < 0) {
     return { list_usd: worstListUsd, usd: worstListUsd * factor, input_tokens: 0, output_tokens: 0, basis: 'worst-case' };
   }

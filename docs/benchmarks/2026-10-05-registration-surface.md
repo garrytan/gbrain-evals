@@ -65,9 +65,9 @@ fresh session, so the agent must save it in a form a later session finds.
 
 | Surface | Success | Tool calls | Tool errors | `request_tools` calls | Tokens | Cost |
 |---|---|---|---|---|---|---|
-| `starter` | 40/40 | 334 | 0 | 0 | 7.92M | $14.17 |
-| `full` | 40/40 | 310 | 0 | 0 | 12.31M | $15.39 |
-| `verbs` | 37/40 | 244 | 0 | 0 | 7.35M | $14.37 |
+| `starter` | 40/40 | 334 | 0 | 0 | 7.92M | $14.36 (corrected 2026-11-09: cache writes were under-counted; was $14.17) |
+| `full` | 40/40 | 310 | 0 | 0 | 12.31M | $15.55 (corrected 2026-11-09: cache writes were under-counted; was $15.39) |
+| `verbs` | 37/40 | 244 | 0 | 0 | 7.35M | $14.53 (corrected 2026-11-09: cache writes were under-counted; was $14.37) |
 
 By model (success out of 10):
 
@@ -120,12 +120,13 @@ done
 bun docs/benchmarks/2026-10-05-registration-surface/analyze.ts
 ```
 
-Keys: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `VOYAGE_API_KEY`. Spend: $43.93 in agent cells plus $0.29 of slot
-builds, about 32 minutes of agent time on one machine. Each surface folder holds `results.jsonl`, the
-`experiment.json` binding, the budget receipt, the served tool list and instructions, the run log and gzipped
-transcripts; `summary.json` is the analysis output. Machine paths are redacted to `<evals>`, `<gbrain>`, `<work>`
-and `<home>`.
+Keys: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `VOYAGE_API_KEY`. Spend: $43.93 in agent cells (corrected 2026-11-09:
+cache writes were under-counted, so this is about 1% low) plus $0.29 of slot builds, about 32 minutes of agent time on
+one machine. Each surface folder holds `results.jsonl`, the `experiment.json` binding, the budget receipt, the served
+tool list and instructions, the run log and gzipped transcripts; `summary.json` is the analysis output. Machine paths
+are redacted to `<evals>`, `<gbrain>`, `<work>` and `<home>`.
 
 ## Changelog
 
+- 2026-11-09: The cost column now counts OpenAI cache writes for gpt-6.1-sol, with each original beside its corrected value, and the spend line carries a note ([corrections](../corrections.md#openai-cache-writes)).
 - 2026-10-09: [Correction](#correction-2026-10-09) added: all 120 cells searched without gbrain's reranker (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). The surfaces shared the condition, so the keep decision stands. Original numbers unchanged.

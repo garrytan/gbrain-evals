@@ -232,5 +232,14 @@ Deviations and notes:
   the haystacks were refused as duplicate session ids (HTTP 409), as in #141; identical in every arm.
 - **Spend** (`results/spend.json`): an estimated $4.71 of the $5 cap, including the pilot: $2.36 building 300 brains
   (voyage-4), $1.19 reranking (frozen pair cache, shared by all arms and warm-ups), $0.76 Haiku 4.5 expansion (A1 + A2),
-  $0.29 Gemini screen, $0.06 Haiku 5.5, $0.05 GPT-6 Luna. Estimates from providers' usage counts at list price, not
-  metered invoices.
+  $0.29 Gemini screen, $0.06 Haiku 5.5, $0.05 GPT-6 Luna (not recomputed 2026-11-09: the request log is not committed;
+  cache writes were under-counted, so this is low by at most 25%, and the $4.71 total by less than 1%). Estimates from
+  providers' usage counts at list price, not metered invoices.
+
+Correction, 2026-11-09: `harness/proxy.ts` prices gpt-6-luna at its input and output rates only. OpenAI reports almost
+every uncached token of a prompt of 1,027 tokens or more as a cache write, and prices gpt-6-luna's at $0.125 per million against
+$0.10 for input, so the Luna arm's cost is low only if some of its expansion prompts reached that size, which short
+query-expansion prompts likely don't. The proxy's event log is not committed, so the figure is not recomputed. No
+latency, score or verdict changes. ([corrections](../corrections.md#openai-cache-writes))
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.

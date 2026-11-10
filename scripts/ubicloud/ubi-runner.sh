@@ -439,12 +439,14 @@ sync_once() { ( set -o pipefail; cmd_pack "$2" | cmd_unpack "$1" "$3" ); }
 # pull_lock DIR: take the VM's pull lock, waiting out another pull of the same
 # VM and breaking a lock whose holder died. Returns 1, holding nothing, when the
 # run's final pull has begun and this is not it (a periodic pull is then moot).
+# The lock is held by whoever creates its pid file, which noclobber opens with O_EXCL: mkdir alone is not exclusive
+# where coreutils is uutils 0.8.0 (Ubuntu 26.04, GitHub's ubuntu-latest), whose mkdir tells two racing calls that both
+# created the directory.
 pull_lock() {
   local dir=$1 holder
   while :; do
     [ -n "${UBI_FINAL_PULL:-}" ] || [ ! -e "$dir/final-pull" ] || return 1
-    if mkdir "$dir/pull.lock" 2>/dev/null; then
-      echo $$ >"$dir/pull.lock/pid"
+    if mkdir "$dir/pull.lock" 2>/dev/null && (set -C; echo $$ >"$dir/pull.lock/pid") 2>/dev/null; then
       [ -n "${UBI_FINAL_PULL:-}" ] || [ ! -e "$dir/final-pull" ] || { rm -rf "$dir/pull.lock"; return 1; }
       return 0
     fi

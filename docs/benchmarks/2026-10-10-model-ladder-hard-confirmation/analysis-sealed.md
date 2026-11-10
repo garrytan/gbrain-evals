@@ -1,3 +1,5 @@
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input and ignore the long-context rates above 272,000 input tokens, so they are low. Its rows aren't committed, so its cells aren't recomputed; see the [cache-write audit](../../audit/2026-11-09-openai-cache-writes.md#cw-hardconf-analysis-sealed). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 ## Hard tier
 
 Canonical cells: 600 (the last harness-clean attempt per cell). Attempts: 600. Spend over every attempt: $487.50 (judge $5.86).

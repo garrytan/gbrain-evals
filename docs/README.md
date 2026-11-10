@@ -11,6 +11,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 |---|---|
 | How do words, vectors, and relationships work together? | [Retrieval lessons](retrieval-lessons.md) |
 | Which setup should I evaluate for my application? | [Settings by workload](settings.md) |
+| Which gbrain do these results test, and what changed since each was measured? | [The gbrain under test](gbrain-under-test.md) |
 | What did the October 11 re-pin change, category by category? | [October 11 re-pin to gbrain `77cf8e111` (v0.60.169.0)](benchmarks/2026-10-11-wave14-repin.md) ([preregistration](benchmarks/2026-10-11-wave14-repin-preregistration.md)) |
 | What did the October 2026 follow-up round measure, and why? | [Follow-up round plan and its reviews](plans/2026-10-06-followups-round/PLAN.md) |
 | Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md); then [agents operating gbrain](#agents-operating-gbrain) for setup time to working memory and the meeting-prep program |
@@ -266,6 +267,11 @@ The [October 28 eval cost audit](audit/2026-10-28-eval-cost-audit.md) shows wher
 from October 14 to 28 and how a preregistered Cat 40 run can [reuse an arm or size it by simulation](../eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run).
 The [November 4 superiority p audit](audit/2026-11-04-superiority-p.md) recomputes every published superiority gate
 with the exact one-sided sign-flip p that replaced a bootstrap share: no verdict changes, and the W10 p values move.
+The [November 9 OpenAI cache-write audit](audit/2026-11-09-openai-cache-writes.md) reprices every published OpenAI cost
+figure that counted cache writes as plain input: no score, verdict or stated ranking changes. Cache writes alone raise a
+gpt-6.1-sol dollar figure by at most a quarter; some Cat 40 figures are ranges with a higher top, because a session
+there could have passed OpenAI's 272,000-token long-context line. Disclosure: OpenAI began through YC Research, which
+was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 The [August audit](audit/2026-08-31-eval-audit.md) describes earlier problems in
 scoring and execution. Corrections to published numbers, from the September 28, 2026 audit on, are listed in
 [corrections](corrections.md), with a dated note in each affected report. [Open work](../TODOS.md) distinguishes unfinished
@@ -278,6 +284,16 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-09: A row for the gbrain under test
+
+The opening table links [the gbrain under test](gbrain-under-test.md), the new page that holds the pin, the capability
+list and the defaults changed since each result, which moved there from the README. No other part changed.
+
+### 2026-11-09: The OpenAI cache-write audit
+
+"Checking the evidence" links the [November 9 OpenAI cache-write audit](audit/2026-11-09-openai-cache-writes.md),
+which reprices the OpenAI cost figures that counted cache writes as plain input. No other part changed.
 
 ### 2026-11-09: Live recall phase 2 results row
 

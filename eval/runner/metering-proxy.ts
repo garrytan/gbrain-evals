@@ -112,7 +112,7 @@
  */
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { appendFileSync, readFileSync } from 'node:fs';
-import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, sseUsage, usageCost, type BudgetAllowance } from './budget-ledger.ts';
+import { BudgetExceededError, BudgetRun, closeRun, ledgerStatus, priceRequest, reservationUsd, sseUsage, UnpricedUsageError, usageCost, type BudgetAllowance } from './budget-ledger.ts';
 
 export { sseUsage };
 import { findLeaks } from './systems/sanitize.ts';
@@ -440,6 +440,8 @@ export class MeteringProxy {
   private bindings = new Map<string, { key: string; brain: string | null; phase: Phase | null }>();
   private phases = new Map<string, Phase>();
   private seq = 0;
+  /** Set by the first response whose usage the ledger cannot price; every later paid request is refused before forwarding. */
+  private unpriced: string | null = null;
   private inflight = new Map<string, number>();
   private waiters = new Map<string, Array<() => void>>();
   /** `transform` (in-process mode) rewrites a response body after it is metered: a mutant that drops a model's output, for example. */
@@ -537,7 +539,7 @@ export class MeteringProxy {
     const run = p ? ledgerStatus({ ledgerPath: p.lease.ledgerPath, runId: p.lease.runId }).run : null;
     const unattributed = Object.fromEntries(this.unattributed);
     return { mode: p ? 'lease' : 'in-process', keyless: servesKeyless(this.options.upstream, p?.env ?? process.env), run_id: p?.lease.runId ?? null, control_sha256: this.options.controlToken ? createHash('sha256').update(this.options.controlToken).digest('hex') : null, lease_usd: run?.budget_usd ?? p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
-      max_output_tokens: p ? p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS : null, ...this.counts,
+      max_output_tokens: p ? p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS : null, ...this.counts, unpriced_usage: this.unpriced,
       ...(p ? { billed_usd: this.totals.billed_usd, reserved_unsettled_usd: this.totals.reserved_unsettled_usd, unattributed_background: unattributed,
         route_caps: p.routeCaps ?? null, admission: p.admission ? { limits: p.admission.limits, ...p.admission.stats } : null, cell_token: !!this.options.cellToken, trust_local: !!this.options.trustLocal } : {}) };
   }
@@ -587,24 +589,34 @@ export class MeteringProxy {
     let price: ReturnType<typeof priceRequest>;
     try { price = priceRequest(`${UPSTREAM[prov]}${rest}${search}`, body ? JSON.parse(body) : undefined); }
     catch (e) { return json(402, 'budget', `refused before forwarding: ${(e as Error).message}`); }
+    if (price && this.unpriced) return json(402, 'budget', `refused before forwarding: an earlier response reported usage the ledger cannot price (${this.unpriced})`);
     let res: Response;
     const allowance = this.allowances.get(slot);
     const forward = () => send(target, { method: req.method, headers, body });
     try { res = await (allowance ? allowance.run(forward) : forward()); }
     catch (e) {
-      // A refused reservation never left the process; any other failure after sending is charged at its reservation, as the ledger does.
-      const refused = (e as Error).name === 'BudgetExceededError';
+      // A refused reservation never left the process; any other failure after sending, unpriceable usage included, is charged at its reservation, as the ledger does.
+      const unpriced = e instanceof UnpricedUsageError;
+      if (unpriced) this.unpriced = (e as Error).message;
+      const refused = !unpriced && (e as Error).name === 'BudgetExceededError';
       if (refused) { const m = this.meter(key); m.refused = { ...m.refused, budget: (m.refused?.budget ?? 0) + 1 }; m.last_refusal = (e as Error).message; }
       else if (price) this.charge(key, prov, price.model, reservationUsd(price), true);
-      return json(502, refused ? 'budget' : 'product_error', (e as Error).message);
+      return json(502, (e as Error).name === 'BudgetExceededError' ? 'budget' : 'product_error', (e as Error).message);
     }
     const text = await res.text();
     if (price) {
+      let parsed: unknown = null;
+      try { parsed = (res.headers.get('content-type') ?? '').includes('event-stream') ? { usage: sseUsage(text) } : JSON.parse(text); } catch { parsed = null; }
       let cost: ReturnType<typeof usageCost> = null;
-      try { cost = (res.headers.get('content-type') ?? '').includes('event-stream') ? usageCost(price, { usage: sseUsage(text) }) : usageCost(price, JSON.parse(text)); } catch { cost = null; }
+      let unpriced: string | null = null;
+      if (parsed !== null) {
+        try { cost = usageCost(price, parsed); }
+        catch (e) { unpriced = this.unpriced = (e as Error).message; }
+      }
       // A 4xx without usage (a 413, a prompt over the context window) settles at $0, as in lease mode and the paid-request guard.
-      if (!cost && res.status >= 400 && res.status < 500) cost = { usd: 0, input_tokens: 0, output_tokens: 0 };
+      if (!cost && !unpriced && res.status >= 400 && res.status < 500) cost = { usd: 0, input_tokens: 0, output_tokens: 0 };
       this.charge(key, prov, price.model, cost ? cost.usd : reservationUsd(price), !cost);
+      if (unpriced) return json(402, 'budget', `charged at its reservation: ${unpriced}`);
     } else this.charge(key, prov, null, 0, false);
     const out = new Headers(res.headers);
     for (const h of ['content-encoding', 'content-length', 'transfer-encoding']) out.delete(h);
@@ -627,6 +639,7 @@ export class MeteringProxy {
       return r;
     };
     if (!ROUTES[prov].some(r => r.method === req.method && r.path.test(route))) return refuse(403, 'invalid_request', `route ${req.method} /${prov}${route} is not allowlisted`);
+    if (this.unpriced) return refuse(402, 'budget', `an earlier response reported usage the ledger cannot price, so this proxy forwards nothing more: ${this.unpriced}`);
     const realKey = (p.env ?? process.env)[KEY_ENV[prov]];
     if (!realKey) return refuse(503, 'budget', `${KEY_ENV[prov]} is not set in the proxy's environment`);
     const raw = req.method === 'GET' ? undefined : await req.text();
@@ -684,12 +697,17 @@ export class MeteringProxy {
     if (outBody !== undefined) headers.set('content-type', 'application/json');
     const waitMs = admitted?.waited_ms;
     let retries = 0;
-    const settle = (cost: ReturnType<typeof usageCost>, status: number, isStream: boolean, retryAfter: number | null = null) => {
+    /** Price usage the provider reported; usage the ledger cannot price is charged at the reservation, stops this proxy and closes its lease. */
+    const priced = (usage: unknown): { cost: ReturnType<typeof usageCost>; unpriced: string | null } => {
+      try { return { cost: bounded && usage ? usageCost(bounded, usage) : null, unpriced: null }; }
+      catch (e) { closeRun(p.lease.ledgerPath, p.lease.runId); return { cost: null, unpriced: this.unpriced = (e as Error).message }; }
+    };
+    const settle = (cost: ReturnType<typeof usageCost>, status: number, isStream: boolean, retryAfter: number | null = null, unpriced: string | null = null) => {
       if (entry) p.lease.settle(entry, cost);
       admitted?.release(cost ? cost.input_tokens + cost.output_tokens : undefined);
       const usd = cost ? cost.usd : reserved;
       this.charge(key, prov, bounded?.model ?? null, usd, !!bounded && !cost, tag);
-      this.log({ at, key, provider: prov, route, model: bounded?.model ?? model, outcome: 'forwarded', status, reserved_usd: reserved, actual_usd: usd,
+      this.log({ at, key, provider: prov, route, model: bounded?.model ?? model, outcome: 'forwarded', ...(unpriced ? { reason: unpriced } : {}), status, reserved_usd: reserved, actual_usd: usd,
         input_tokens: cost?.input_tokens, output_tokens: cost?.output_tokens, charged_reservation: !!bounded && !cost, streamed: isStream, ...tagged,
         ...(waitMs ? { admission_wait_ms: waitMs } : {}), ...(retryAfter !== null ? { retry_after_ms: retryAfter } : {}), ...(retries ? { transport_retries: retries } : {}) });
     };
@@ -725,7 +743,7 @@ export class MeteringProxy {
       const [client, meterBranch] = res.body.tee();
       this.observe(key, res.status);
       void new Response(meterBranch).text().then(
-        text => { const u = sseUsage(text); settle(bounded && u ? usageCost(bounded, { usage: u }) : null, res.status, true, hint); },
+        text => { const u = sseUsage(text); const { cost, unpriced } = priced(u && { usage: u }); settle(cost, res.status, true, hint, unpriced); },
         () => settle(null, res.status, true, hint),
       ).finally(done);
       return new Response(client, { status: res.status, headers: out });
@@ -743,13 +761,13 @@ export class MeteringProxy {
       } catch (err) { console.error(`metering-proxy: recording a failed ${prov} body failed, so its reservation stays open: ${(err as Error).message}`); }
       return answer;
     }
-    let cost: ReturnType<typeof usageCost> = null;
     let parsed = true;
     try { JSON.parse(text); } catch { parsed = false; }
     this.observe(key, res.ok && !parsed ? 'unparseable' : res.status);
-    if (bounded && parsed) cost = usageCost(bounded, JSON.parse(text));
-    if (!cost && bounded && res.status >= 400 && res.status < 500) cost = { usd: 0, input_tokens: 0, output_tokens: 0 };
-    settle(cost, res.status, false, hint);
+    let { cost, unpriced } = priced(parsed ? JSON.parse(text) : null);
+    if (!cost && !unpriced && bounded && res.status >= 400 && res.status < 500) cost = { usd: 0, input_tokens: 0, output_tokens: 0 };
+    settle(cost, res.status, false, hint, unpriced);
+    if (unpriced) return json(402, 'budget', `charged at its reservation: ${unpriced}`);
     return new Response(text, { status: res.status, headers: out });
   }
 }

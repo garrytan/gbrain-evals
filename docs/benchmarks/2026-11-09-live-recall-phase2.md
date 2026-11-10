@@ -42,7 +42,15 @@ test. The rest of the setup: Postgres schema 296, search mode `tokenmax`, embedd
 gbrain is a personal knowledge brain: Markdown pages in Postgres, found with keyword, vector and hybrid search, and
 served to agents as tools. Wintermute, the agent that runs on Garry's box, wrote each task from a real page in the brain,
 with a gold answer of one to four facts. It ran this harness against the live brain through a database role that cannot
-write, and sent back aggregate scorecards. No task, answer, page text or slug left the box.
+write, and sent back aggregate scorecards. Phase 2 sent the task text and the brain's page text and slugs to Anthropic,
+OpenAI and Particle through their APIs, and sent Wintermute's gold answers and the models' answers to the judge models
+at OpenAI and Anthropic, under the consent Garry gave for this eval
+([preregistration](live-recall/PHASE2-PREREGISTRATION.md#privacy-posture)). gbrain's own search also sent search
+queries and candidate passages to Voyage AI, the brain's configured embedding and reranking provider. Only aggregates
+came back to us, and none of phase 2's task text, answers or page text is in this repository.
+
+> **Correction, 2026-11-09.** The first version of this page said that no task, answer, page text or slug left the box.
+> The paragraph above now says what phase 2 sent to each provider.
 
 ## The concrete case
 
@@ -217,8 +225,8 @@ the run, claude-opus-5-5 also graded particle-1's paraphrase answers in B, C and
 - **Scorecards.** [Markdown](2026-11-09-live-recall-phase2/scorecard.md) and
   [JSON](2026-11-09-live-recall-phase2/scorecard.json), the box's own output after the audit rescore, with the run's cap
   and spend fields removed by [redact-scorecard.ts](../../eval/runner/live-recall/redact-scorecard.ts). Cost per correct
-  answer is kept, and the public JSON passes the runner's structural check (`validateTaskScorecard`). Task text,
-  answers, records and gbrain's log stay on Garry's box.
+  answer is kept, and the public JSON passes the runner's structural check (`validateTaskScorecard`). The task file,
+  the run's records and gbrain's log are kept on Garry's box, not in this repository.
 - **The runs.** [RUN-KIT.md](live-recall/RUN-KIT.md#phase-2) has the commands. The judge check ran
   `tasks.ts judge-check` and passed at 15:03 UTC; the counted run ran
   `tasks.ts run --tasks <file> --freeze <freeze.json> --gbrain /data/gbrain@98dda48fb9fd --judge-check <judge-check.json>`

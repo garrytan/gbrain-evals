@@ -2,6 +2,108 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.193] - 2026-11-09
+
+### CI now runs all six Cat 25 trajectory probes, so a gbrain pin that breaks any one of them fails
+
+- `test/eval/cat25-trajectory-routing.test.ts` runs every probe in the Cat 25 fixture through gbrain's real `think`
+  pipeline, with no API key, and a failure names its probe. Before this, CI ran two of the six. At gbrain v0.60.557.0,
+  `think` dropped the trajectory for team-size-trajectory-foundry and mrr-midpoint-nimbus while CI stayed green; at that
+  version the new cases fail on exactly those two. No runner, score or published result changed.
+
+## [0.10.192] - 2026-11-09
+
+### The budget ledger prices OpenAI cache writes and long prompts everywhere, and stops a run whose usage it cannot price
+
+- **OpenAI cache writes and long prompts.** Every OpenAI row in the ledger's price table now lists its cache-write
+  rate for the default 30-minute lifetime and for the 12-hour lifetime, and its long-prompt rates above 272,000 input
+  tokens, or says it has none. gpt-6-sol gets the write and long-prompt rates it was missing. A model whose row lists
+  neither is refused before sending, like a model with no price, and so is a request that picks a cache lifetime with
+  no listed write rate. Tool-call arguments and JSON schemas inside a request no longer count as cache settings.
+- **Usage the ledger cannot price stops the run.** A response that reports a cache tier the ledger has no rate for, or
+  a cache count in a place the ledger does not read, is charged at its full reservation, and the run sends no more paid
+  requests. Both metering proxies close their lease and answer 402 in the same case. The batch lane charges such a
+  result row its worst case and keeps going.
+- **Older runners record the ledger's own cost.** Cat 40's agent loop and judges, p5-agent and p4-stream now record
+  each response's cost the way the ledger settles it, cache writes and long prompts included. Before, they priced cache
+  writes as plain input.
+- **Live-recall ledger runs finish.** A live-recall run or judge session that owes no more calls closes its ledger run
+  as finished, instead of leaving it open.
+- **Three Q1 judge runners need a paid window.** Without `--keyless-upstream`, the calibration cell, the A6 second
+  judge and the GST-1365 rejudge refuse to start unless they get `--paid-window` and `--window-cap-usd`, with their
+  ledger cap and lease within the window's cap. The rejudge records a window's starting spend beside its ledger, so
+  every stage under one window shares the window's cap whatever its output directory, and a crashed stage can resume
+  its own lease.
+- No published number changes, and the frozen cell manifests keep their bytes.
+
+## [0.10.191] - 2026-11-09
+
+### The README opens with a scorecard of agents with and without gbrain
+
+- **Results first.** The README now opens with one sentence on what gbrain-evals asks, a short "What gbrain does",
+  three takeaways and a results table with "Without gbrain" and "With gbrain" columns. Live recall phase 2 leads: Opus
+  5.5 goes from 13.3% with no retrieval to 86.7% with gbrain's tools, and particle-1 from 9.3% to 68.0%. Rows whose
+  experiment had no setup without gbrain say "not tested" instead of borrowing a baseline.
+- **Plain words.** Internal names such as `recall_all@5`, W10a, N9, Cat 35, F6 and RS1 became plain descriptions, and
+  caveats moved from table cells into numbered notes under the table.
+- **Version detail moved.** The pin's commits outside the release, the defaults changed since each result and the
+  capability list moved to [the gbrain under test](docs/gbrain-under-test.md). The pin table moved into a numbered
+  quick start that needs no API keys.
+- **Disclosures.** The gbrain, Particle and OpenAI lines appear once, in a closing section, as
+  [disclosures](docs/disclosures.md) now says.
+- **What it changes.** No score, verdict or stated ranking changes. Every figure is copied from its linked report.
+
+## [0.10.190] - 2026-11-09
+
+### Two pulls of one Ubicloud VM no longer run at once on Ubuntu 26.04
+
+- **Fixed.** `scripts/ubicloud/ubi-runner.sh` now gives a VM's pull lock to the pull that creates the lock's `pid` file,
+  which bash's `noclobber` opens with `O_EXCL`, so only one pull can create it. On Ubuntu 26.04, GitHub's
+  `ubuntu-latest` image since 2026-11-09, `mkdir` comes from uutils coreutils 0.8.0, which can tell two pulls that start
+  together that both created the lock directory. Both then wrote into the same local directory, and the
+  `ubi-runner pull lock` test failed CI at random.
+- **Test.** `test/eval/ubi-runner-pull.test.ts` adds a case that puts a `mkdir` on `PATH` that answers the way uutils
+  0.8.0 does, then starts two pulls together. It fails without the fix.
+
+## [0.10.189] - 2026-11-09
+
+### The live recall findings now say which model and search APIs saw the questions and page text
+
+- [The phase 2 findings](docs/benchmarks/2026-11-09-live-recall-phase2.md) said that no task, answer, page text or slug
+  left the box. Phase 2 sent the task text and the brain's page text and slugs to Anthropic, OpenAI and Particle, and
+  sent the gold answers and the models' answers to the judge models at OpenAI and Anthropic, under the consent its
+  preregistration records. gbrain's own search also sent queries and candidate passages to Voyage AI, the brain's
+  embedding and reranking provider. The page now says so.
+- The [batch 1](docs/benchmarks/2026-11-06-live-recall-batch1.md) and
+  [batch 2](docs/benchmarks/2026-11-07-live-recall-batch2.md) findings said that no question, page text, slug or result
+  left the box. The runs' only model calls were gbrain's own calls to Voyage AI, which embedded each question form and,
+  in configured search, reranked it with its candidate passages. Both pages now say so.
+- Each of the three pages carries a dated correction note. No number, scorecard or preregistration changed.
+
+## [0.10.188] - 2026-11-09
+
+### Published OpenAI dollar figures that priced cache writes as plain input are corrected, and three keyless tools recompute every correction
+
+- **Corrected.** OpenAI reports almost every uncached prompt token of gpt-6.1-sol and gpt-6-luna as a cache write, and
+  it prices cache writes a quarter above plain input. Some published dollar figures for gpt-6.1-sol, gpt-6-sol,
+  gpt-6-luna and gpt-6-astra came from code that priced those tokens as input, so they read low, by at most a quarter
+  of their input dollars. Cat 40's price code also never applied OpenAI's long-context rate for requests over 272,000
+  input tokens. No Cat 40 file records each request's size, so a Cat 40 figure whose sessions could have held such a
+  request is now given as a range. Each affected report keeps its original figure beside a dated correction note, and
+  [corrections](docs/corrections.md) lists them. Totals are given only as the percent they were low.
+- **What it changes.** No score, verdict or stated ranking changes. On the Hard confirmation's M world, gpt-6.1-sol's
+  dollars per success with gbrain are 1.30 to 1.37 times those with files (was 1.35), so gbrain is still slightly
+  dearer for Sol. On the sealed confirmation, the stack's Sol dollars per cell are 1.04 times the frozen arm's at the
+  recorded dollars and at both upper bounds; the committed data allow 0.87 to 1.24 times, inside the 1.5x
+  envelope.
+- **Recompute it yourself.** [The November 9 audit](docs/audit/2026-11-09-openai-cache-writes.md) lists every figure
+  that moved. Its three tools, under `docs/audit/2026-11-09-openai-cache-writes/` (`beam-and-program-primary/`,
+  `cat40/` and `other-runners/`), run with no API keys, read only committed files, and reproduce their committed
+  `results.json` byte for byte.
+- **Not changed here.** Claude figures don't move: Anthropic reports cache writes in a field every path already reads.
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 ## [0.10.187] - 2026-11-09
 
 ### gbrain's read tools turn paraphrased questions about Garry's notes into right answers, and a summarising helper in front of gbrain costs grounded ones
