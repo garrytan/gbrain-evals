@@ -53,6 +53,7 @@ import { Database } from 'bun:sqlite';
 import { appendFileSync, closeSync, existsSync, openSync, readFileSync, unlinkSync, writeSync } from 'node:fs';
 import { hostname } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
+import { readLedger } from '../budget-ledger.ts';
 import { Campaign, resolveRunner } from '../shootout-cell.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
@@ -110,8 +111,28 @@ interface Holder { pid: number; host: string; started_at: string; lease_id: stri
 const lockPath = (c: Campaign) => join(c.stateDir, 'raise.lock');
 const holderOf = (path: string) => { try { return JSON.parse(readFileSync(path, 'utf8')) as Holder; } catch { return null; } };
 
+/**
+ * What a stale-lock hint states about a lease, read as the hint is printed and never written: the host ledger's
+ * reservation for the lease's entry, and whether it is settled, beside the lease's launch amount plus its recorded
+ * raises, each rounded to the cent as resizeHost reserved it and a confirming copy counted once.
+ */
+function measured(c: Campaign, lease: string): string {
+  try {
+    const l = c.lease(lease);
+    const s = JSON.parse(readFileSync(join(c.stateDir, 'campaign.json'), 'utf8')) as { run_id: string; ledger: string };
+    const legacy = isAbsolute(s.ledger) && !existsSync(s.ledger) && s.ledger.endsWith(`/${c.manifest.ledger}`);
+    const e = readLedger(legacy ? c.ledger : resolve(REPO_ROOT, s.ledger)).entries.find(x => x.id === l.entry_id && x.run_id === s.run_id);
+    if (!e) throw new Error(`campaign run ${s.run_id} holds no ledger entry ${l.entry_id}`);
+    const same = (a: Raise, b: Raise) => Math.abs(a.from_usd - b.from_usd) <= 1e-9 && Math.abs(a.to_usd - b.to_usd) <= 1e-9;
+    const counted = raises(c.stateDir).filter(r => r.lease_id === lease).filter((r, i, mine) => !(i > 0 && same(mine[i - 1], r)));
+    const recorded = counted.reduce((n, r) => n + Math.round((r.to_usd - r.from_usd) * 100) / 100, l.usd);
+    const diff = e.reserved_usd - recorded;
+    return `As read when this was printed: the host ledger reserves ${usd(e.reserved_usd)} for lease ${lease} (ledger entry ${e.id}, ${e.actual_usd === null ? 'still open' : `settled at ${usd(e.actual_usd)}`}), and the lease's launch amount of ${usd(l.usd)} plus its ${counted.length} recorded raise${counted.length === 1 ? '' : 's'} comes to ${usd(recorded)}, so the host holds ${Math.abs(diff) <= 1e-9 ? 'the same' : `${usd(Math.abs(diff))} ${diff > 0 ? 'more' : 'less'}`}`;
+  } catch (e) { return `The host ledger's reservation for lease ${lease} could not be read when this was printed (${(e as Error).message})`; }
+}
+
 /** The operating rule a held lock refuses with: one raise at a time per freeze, who clears a stale lock, and how. */
-const lockRule = (c: Campaign, lease: string) => `One raise runs at a time per freeze, and nothing breaks a held lock. If that raise is still running, let it finish. If it is not, the person running the campaign first runs \`bun eval/runner/q1/raise-lease.ts show --campaign ${c.manifestPath} --state ${c.stateDir} --lease ${lease}\` and compares its lease_usd with the VM's budget_usd. Only if the VM holds more, the raise reached the VM without a record: they append a record for that lease to ${join(c.stateDir, 'raises.ndjson')} from lease_usd to the VM's amount. Otherwise the VM does not hold the raise, and they check the host ledger. It should reserve the lease's usd from show plus each raise of that lease in raises.ndjson (to_usd minus from_usd, rounded to the cent; a confirming copy counts once), and they read what it reserves with \`sqlite3 <ledger> "SELECT reserved_usd FROM entries WHERE id = '<entry_id>'"\` (the ledger and run_id ${join(c.stateDir, 'campaign.json')} names, run from the checkout's root, and the entry_id show prints for the lease). Only if the host reserves more, a crash left the raise reserved on the host without reaching the VM: they give the difference back on the host ledger in one transaction with \`sqlite3 <ledger> "BEGIN IMMEDIATE; UPDATE entries SET reserved_usd = reserved_usd - <difference> WHERE id = '<entry_id>'; UPDATE runs SET committed_usd = committed_usd - <difference> WHERE run_id = '<run_id>'; UPDATE program SET committed_usd = committed_usd - <difference> WHERE id = 1; COMMIT;"\`, which changes nothing if it fails. Otherwise they change nothing, and an unknown raise stands until the lease settles. Then they clear the lock with \`bun eval/runner/q1/raise-lease.ts clear-stale-lock --campaign ${c.manifestPath} --state ${c.stateDir} --confirm ${c.manifest.campaign_id}\` (eval/RUNBOOK.md, "Raise a running Q1 lease")`;
+const lockRule = (c: Campaign, lease: string) => `One raise runs at a time per freeze, and nothing breaks a held lock. If that raise is still running, let it finish. If it is not, the person running the campaign first runs \`bun eval/runner/q1/raise-lease.ts show --campaign ${c.manifestPath} --state ${c.stateDir} --lease ${lease}\` and compares its lease_usd with the VM's budget_usd. Only if the VM holds more, the raise reached the VM without a record: they append a record for that lease to ${join(c.stateDir, 'raises.ndjson')} from lease_usd to the VM's amount. Otherwise (the VM holds the old amount, or show reads no VM because the lease has closed), they compare the host ledger with the lease. ${measured(c, lease)}. If the host holds more or less than the lease and its recorded raises, or that could not be read, a crash may have left a raise on the host ledger that never reached the VM: they stop there, leave the ledger, raises.ndjson and this lock as they are, and bring these amounts to the campaign owner (GBEV-3 for BG1). Otherwise they change nothing, and an unknown raise stands until the lease settles. Then they clear the lock with \`bun eval/runner/q1/raise-lease.ts clear-stale-lock --campaign ${c.manifestPath} --state ${c.stateDir} --confirm ${c.manifest.campaign_id}\` (eval/RUNBOOK.md, "Raise a running Q1 lease")`;
 
 /** Take the campaign's raise lock, or refuse at once when another raise holds it. Returns its release. */
 function lock(c: Campaign, raise: Omit<Holder, 'pid' | 'host' | 'started_at'>): () => void {

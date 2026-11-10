@@ -10,7 +10,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFi
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
-import { BudgetRun, closeLedgers, ledgerTestHooks, readLedger, verifyLedger } from '../../eval/runner/budget-ledger.ts';
+import { BudgetRun, closeLedgers, ledgerStatus, ledgerTestHooks, readLedger, verifyLedger } from '../../eval/runner/budget-ledger.ts';
 import { bg1LaunchProblems } from '../../eval/runner/bg1/launch.ts';
 import { bg1CampaignManifest, loadCellManifest } from '../../eval/runner/q1/cell.ts';
 import { leaseUsd, raise, settle as settleRaised, type Raise } from '../../eval/runner/q1/raise-lease.ts';
@@ -769,49 +769,61 @@ catch (e) { console.log('refused: ' + (e.op?.code ?? e.message)); }`;
     expect(distinct.c.reserve(RAISED).attempt).toBe(2);
   }, 120_000);
 
-  // Value: protects=a BG1 raise that crashed between its host reservation and its VM step leaves a stale-lock hint that, followed as written, gives the host ledger its raise back and leaves the campaign reservable; fails_when=the hint says only "change nothing" when the VM does not hold the raise, so the host keeps a raise raises.ndjson never records and, once the lock is cleared, every reserve, launch, resume and payload refuses; why_new=GBEV-3's fix set 7, item 3 (N2); seam=a stage-1 BG1 Campaign over a temporary ledger, launched on a named VM, raise-lease.ts raise, show and clear-stale-lock through a scripted UBI_RUNNER whose raise step kills raise-lease, the hint's SQL run on the campaign ledger; no_claim=a real VM, ssh, or any other crash point
-  test('a BG1 raise killed between the host reservation and the VM step names how to give the host its raise back, and following the hint leaves the campaign reservable', async () => {
-    const w = smokeCampaign(RAISED, OTHER);
-    const c = new Campaign(w.file, w.state);
-    c.init();
-    const root = dirname(w.state), home = join(root, 'vm-home'), fake = join(root, 'ubi-runner.sh');
-    writeFileSync(fake, 'case "$1" in\n  ssh) case "$3" in *" \'raise\' "*) kill -9 "$PPID"; exit 255 ;; esac; HOME="$VM_HOME" exec bash -c "$3" ;;\n  *) exit 9 ;;\nesac\n');
-    const cli = (...args: string[]) => spawnSync('bun', ['eval/runner/q1/raise-lease.ts', ...args, '--campaign', w.file, '--state', w.state], { cwd: REPO, env: keyless({ UBI_RUNNER: fake, VM_HOME: home }), encoding: 'utf8' });
-    const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string; ledger: string };
-    const ledger = resolve(REPO, s.ledger);
-    const d = c.reserve(RAISED);
-    const reserved = () => readLedger(ledger).entries.find(e => e.id === d.entry_id)?.reserved_usd;
-    const vmLedger = join(home, 'custody', d.lease_id, 'proxy', 'lease.sqlite');
-    const owner = process.env.UBI_OWNER;
-    process.env.UBI_OWNER = 'bg1test';
-    try {
-      expect((await c.launch(RAISED, async () => {
-        mkdirSync(dirname(vmLedger), { recursive: true });
-        BudgetRun.openLease({ runId: d.lease_id, leaseUsd: d.usd, ledgerPath: vmLedger });
-        const killed = cli('raise', '--lease', d.lease_id, '--usd', '41', '--reason', 'owner approved');
-        expect([killed.status, killed.signal]).toEqual([null, 'SIGKILL']);
-        expect([existsSync(join(w.state, 'raise.lock')), existsSync(join(w.state, 'raises.ndjson')), reserved()]).toEqual([true, false, 41]);
-        const refused = cli('raise', '--lease', d.lease_id, '--usd', '41', '--reason', 'retry');
-        expect(refused.status).toBe(1);
-        const hint = refused.stderr;
-        expect(hint).toContain('Only if the host reserves more, a crash left the raise reserved on the host without reaching the VM: they give the difference back on the host ledger in one transaction');
-        const shown = JSON.parse(cli('show', '--lease', d.lease_id).stdout) as { lease: { usd: number; entry_id: string }; lease_usd: number; raises: Raise[]; vm: { budget_usd: number } };
-        expect([shown.lease_usd, shown.vm.budget_usd, shown.raises]).toEqual([d.usd, d.usd, []]);
-        const sql = (start: string) => new RegExp(`\`sqlite3 <ledger> "(${start}[^"]+)"\``).exec(hint)![1].split('<entry_id>').join(shown.lease.entry_id).split('<run_id>').join(s.run_id);
-        const db = new Database(ledger);
-        try {
-          const difference = Math.round(((db.query(sql('SELECT')).get() as { reserved_usd: number }).reserved_usd - shown.lease.usd) * 100) / 100;
-          expect(difference).toBe(0.5);
-          db.exec(sql('BEGIN IMMEDIATE').split('<difference>').join(String(difference)));
-        } finally { db.close(); }
-        expect(reserved()).toBe(d.usd);
-        expect(cli('clear-stale-lock', '--confirm', w.manifest.campaign_id).status).toBe(0);
-        return 255;
-      })).status).toBe('finished');
-    } finally { if (owner === undefined) delete process.env.UBI_OWNER; else process.env.UBI_OWNER = owner; }
-    expect(verifyLedger(ledger).ok).toBe(true);
-    expect(c.reserve(OTHER).status).toBe('reserved');
-    expect(c.abandon(d.lease_id, 'VM lost')).toMatchObject({ status: 'abandoned', actual_usd: d.usd });
-    expect(c.reserve(RAISED).attempt).toBe(2);
+  // Value: protects=a BG1 raise killed between its host reservation and its VM step leaves a stale-lock hint that states the measured amounts and says stop, with no SQL, so following it changes neither ledger and the campaign stays refused while the mismatch stands, whether the lease is still open or settled on its own before the hint printed; fails_when=the hint has the operator edit the host ledger by hand, which after a settle takes the released raise off the run and program totals a second time and leaves verifyLedger failing; why_new=GBEV-3's fix set 8 (the fix-check of fix set 7's N2 hint, blocking 1); seam=stage-1 BG1 Campaigns over temporary ledgers, launched on a named VM, raise-lease.ts raise and show through a scripted UBI_RUNNER whose raise step kills raise-lease, one lease settled from a pulled lease summary before the hint prints; no_claim=a real VM, ssh, or any other crash point
+  test('a BG1 raise killed between the host reservation and the VM step prints the amounts and says stop, with no SQL; following it changes no ledger, and the campaign stays refused, settled or open', async () => {
+    const killedRaise = async (settled: boolean) => {
+      const w = smokeCampaign(RAISED, OTHER);
+      const c = new Campaign(w.file, w.state);
+      c.init();
+      const root = dirname(w.state), home = join(root, 'vm-home'), fake = join(root, 'ubi-runner.sh'), lock = join(w.state, 'raise.lock');
+      writeFileSync(fake, 'case "$1" in\n  ssh) case "$3" in *" \'raise\' "*) kill -9 "$PPID"; exit 255 ;; esac; HOME="$VM_HOME" exec bash -c "$3" ;;\n  *) exit 9 ;;\nesac\n');
+      const cli = (...args: string[]) => spawnSync('bun', ['eval/runner/q1/raise-lease.ts', ...args, '--campaign', w.file, '--state', w.state], { cwd: REPO, env: keyless({ UBI_RUNNER: fake, VM_HOME: home }), encoding: 'utf8' });
+      const s = JSON.parse(readFileSync(join(w.state, 'campaign.json'), 'utf8')) as { run_id: string; ledger: string };
+      const ledger = resolve(REPO, s.ledger);
+      const snapshot = () => { const st = ledgerStatus({ ledgerPath: ledger, runId: s.run_id }); return JSON.stringify({ ...readLedger(ledger), totals: st.totals, run: st.run }); };
+      const d = c.reserve(RAISED);
+      const vmLedger = join(home, 'custody', d.lease_id, 'proxy', 'lease.sqlite');
+      const retry = () => { const r = cli('raise', '--lease', d.lease_id, '--usd', '41', '--reason', 'retry'); expect(r.status).toBe(1); return r.stderr; };
+      const follow = () => {
+        const shown = JSON.parse(cli('show', '--lease', d.lease_id).stdout) as { lease_usd: number; raises: Raise[]; vm: { budget_usd: number } | null };
+        expect([shown.lease_usd, shown.raises, shown.vm?.budget_usd ?? null]).toEqual([d.usd, [], settled ? null : d.usd]);
+      };
+      let before = '', hint = '';
+      const owner = process.env.UBI_OWNER;
+      process.env.UBI_OWNER = 'bg1test';
+      try {
+        await c.launch(RAISED, async (_argv, ctx) => {
+          mkdirSync(dirname(vmLedger), { recursive: true });
+          BudgetRun.openLease({ runId: d.lease_id, leaseUsd: d.usd, ledgerPath: vmLedger });
+          const killed = cli('raise', '--lease', d.lease_id, '--usd', '41', '--reason', 'owner approved');
+          expect([killed.status, killed.signal]).toEqual([null, 'SIGKILL']);
+          expect([existsSync(lock), existsSync(join(w.state, 'raises.ndjson')), readLedger(ledger).entries.find(e => e.id === d.entry_id)?.reserved_usd]).toEqual([true, false, 41]);
+          if (settled) writeFileSync(join(ctx.resultsDir, 'lease-summary.json'), JSON.stringify({ run_id: d.lease_id, lease_usd: d.usd, committed_usd: 12.5, requests: 3 }));
+          else { before = snapshot(); hint = retry(); follow(); }
+          return 255;
+        });
+      } finally { if (owner === undefined) delete process.env.UBI_OWNER; else process.env.UBI_OWNER = owner; }
+      expect(c.lease(d.lease_id)).toMatchObject(settled ? { status: 'settled', actual_usd: 12.5 } : { status: 'finished' });
+      if (settled) { before = snapshot(); hint = retry(); follow(); }
+      expect(hint).not.toMatch(/\b(update|begin|commit)\b|sqlite3/i);
+      expect(hint).toContain(`As read when this was printed: the host ledger reserves $41.00 for lease ${d.lease_id} (ledger entry ${d.entry_id}, ${settled ? 'settled at $12.50' : 'still open'}), and the lease's launch amount of $40.50 plus its 0 recorded raises comes to $40.50, so the host holds $0.50 more.`);
+      expect(hint).toContain('they stop there, leave the ledger, raises.ndjson and this lock as they are, and bring these amounts to the campaign owner');
+      expect([snapshot(), existsSync(lock), verifyLedger(ledger).ok]).toEqual([before, true, true]);
+      return { c, d, before, snapshot, retry };
+    };
+    const refusedReserve = (k: Awaited<ReturnType<typeof killedRaise>>) => {
+      expect(caught(() => k.c.reserve(OTHER)).op).toMatchObject({ code: 'CAMPAIGN_HASH_MISMATCH', message: expect.stringContaining(`lease ${k.d.lease_id} and its raises in raises.ndjson reserve 40.5, and the ledger reserved 41 for its entry ${k.d.entry_id}`) });
+      expect(caught(() => k.c.reserve(RAISED)).op.code).toBe('CAMPAIGN_HASH_MISMATCH');
+    };
+
+    const settled = await killedRaise(true);
+    refusedReserve(settled);
+    settled.retry();
+    expect(settled.snapshot()).toBe(settled.before);
+
+    const open = await killedRaise(false);
+    open.retry();
+    expect(open.c.abandon(open.d.lease_id, 'VM lost')).toMatchObject({ status: 'abandoned', actual_usd: open.d.usd });
+    refusedReserve(open);
   }, 60_000);
 });
