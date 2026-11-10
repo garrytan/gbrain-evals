@@ -112,7 +112,7 @@
  */
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { appendFileSync, readFileSync } from 'node:fs';
-import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, sseUsage, UnpricedUsageError, usageCost, type BudgetAllowance } from './budget-ledger.ts';
+import { BudgetExceededError, BudgetRun, closeRun, ledgerStatus, priceRequest, reservationUsd, sseUsage, UnpricedUsageError, usageCost, type BudgetAllowance } from './budget-ledger.ts';
 
 export { sseUsage };
 import { findLeaks } from './systems/sanitize.ts';
@@ -693,10 +693,10 @@ export class MeteringProxy {
     if (outBody !== undefined) headers.set('content-type', 'application/json');
     const waitMs = admitted?.waited_ms;
     let retries = 0;
-    /** Price usage the provider reported; usage the ledger cannot price is charged at the reservation and stops this proxy. */
+    /** Price usage the provider reported; usage the ledger cannot price is charged at the reservation, stops this proxy and closes its lease. */
     const priced = (usage: unknown): { cost: ReturnType<typeof usageCost>; unpriced: string | null } => {
       try { return { cost: bounded && usage ? usageCost(bounded, usage) : null, unpriced: null }; }
-      catch (e) { return { cost: null, unpriced: this.unpriced = (e as Error).message }; }
+      catch (e) { closeRun(p.lease.ledgerPath, p.lease.runId); return { cost: null, unpriced: this.unpriced = (e as Error).message }; }
     };
     const settle = (cost: ReturnType<typeof usageCost>, status: number, isStream: boolean, retryAfter: number | null = null, unpriced: string | null = null) => {
       if (entry) p.lease.settle(entry, cost);

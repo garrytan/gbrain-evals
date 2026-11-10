@@ -100,7 +100,8 @@ export class BudgetExceededError extends Error {
 
 /**
  * A response reported usage the ledger has no rate for: a cache tier it does not price, or cache writes on a model with no
- * write rate. Its request was already sent, so the caller charges the reservation and stops spending.
+ * write rate. Its request was already sent, so the caller charges the reservation, stops spending and closes the run (or
+ * lease), so a rerun cannot join it and pay again before the rate is registered.
  */
 export class UnpricedUsageError extends BudgetExceededError {}
 
@@ -1612,6 +1613,9 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
   const previous = globalThis.fetch;
   const send = options.fetchImpl ?? (previous === delegatingFetch ? baseFetch : previous);
   const state: { exhausted: boolean; unpriced: string | null } = { exhausted: false, unpriced: null };
+  const refuseAfterUnpriced = () => { if (state.unpriced) throw new BudgetExceededError(`refused before sending: an earlier response in this run reported usage the ledger cannot price (${state.unpriced})`); };
+  /** Usage the ledger cannot price: every later paid request here is refused, and the run is closed so no process reserves against it again. */
+  const stopUnpriced = (error: unknown) => { state.exhausted = true; state.unpriced = (error as Error).message; closeRun(run.ledgerPath, run.runId); };
   /** OpenAI response id -> input plus output tokens it reported: the context a continuation re-sends. */
   const chain = new Map<string, number>();
   const pricing: PriceOptions = { chainContextTokens: id => chain.get(id) };
@@ -1641,6 +1645,7 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
     if (batchKind === 'free') return send(input, init);
     const direct: RequestInit = { ...init, redirect: 'error' };
     if (batchKind === 'submission') {
+      refuseAfterUnpriced();
       if (batchLaneScope.getStore()) return send(input, direct);
       state.exhausted = true;
       throw new BudgetExceededError(`batch submission to ${url} did not come through the batch lane; submit batches with eval/runner/batch/ so the ledger reserves their worst case first`);
@@ -1659,7 +1664,7 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
         }
         return send(input, direct);
       }
-      if (state.unpriced) throw new BudgetExceededError(`refused before sending: an earlier response in this run reported usage the ledger cannot price (${state.unpriced})`);
+      refuseAfterUnpriced();
       const allowance = allowanceScope.getStore();
       if (allowance) {
         if (allowance.budget !== run) throw new BudgetExceededError(`allowance ${allowance.description} belongs to another budget run`);
@@ -1670,7 +1675,7 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
         catch (error) { allowance.charge(held, null); throw error; }
         let cost: Awaited<ReturnType<typeof measure>>;
         try { cost = await measure(price, res); }
-        catch (error) { allowance.charge(held, null); state.exhausted = true; state.unpriced = (error as Error).message; throw error; }
+        catch (error) { allowance.charge(held, null); stopUnpriced(error); throw error; }
         allowance.charge(held, cost);
         return res;
       }
@@ -1683,9 +1688,8 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
     try { response = await send(input, direct); }
     catch (error) { run.settle(id, null); throw error; }
     let cost: Awaited<ReturnType<typeof measure>>;
-    // Usage the ledger cannot price (UnpricedUsageError) charges the reservation and refuses every later paid request.
     try { cost = await measure(price, response); }
-    catch (error) { run.settle(id, null); state.exhausted = true; state.unpriced = (error as Error).message; throw error; }
+    catch (error) { run.settle(id, null); stopUnpriced(error); throw error; }
     run.settle(id, cost);
     return response;
   };

@@ -425,6 +425,8 @@ describe('metering proxy', () => {
     expect(settled.error).toContain('ttl_7d_tokens');
     expect(refused).toMatchObject({ refused: true, status: 402 });
     expect(c.committed().run).toBeCloseTo(settled.reserved_usd, 12);
+    expect(ledgerStatus({ ledgerPath: c.ledgerPath, runId: c.run.runId }).run!.finished_at).not.toBeNull();
+    expect(() => BudgetRun.join({ runId: c.run.runId, ledgerPath: c.ledgerPath })).toThrow('already finished');
   });
 
   // Value: protects=the workload-route proxy never sends a provider's real key over http to a host that is not loopback (issue #277); fails_when=an --upstream with an http URL that is not loopback is accepted; why_new=assertMetered guards clients only, and this proxy swaps in the real key itself; seam=none; no_claim=TLS certificate checks

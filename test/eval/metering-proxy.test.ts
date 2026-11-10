@@ -145,6 +145,8 @@ describe('lease mode forwarding', () => {
       expect(lines.map(l => [l.outcome, l.charged_reservation ?? null])).toEqual([['forwarded', true], ['refused', null]]);
       expect(lines[0].reason).toContain('ttl_7d_tokens');
       expect(ledgerStatus({ ledgerPath: lease.ledgerPath, runId: 'lease-unpriced' }).run!.committed_usd).toBeCloseTo(lines[0].reserved_usd, 12);
+      expect(ledgerStatus({ ledgerPath: lease.ledgerPath, runId: 'lease-unpriced' }).run!.finished_at).not.toBeNull();
+      expect(() => BudgetRun.openLease({ runId: 'lease-unpriced', leaseUsd: 1, ledgerPath: lease.ledgerPath })).toThrow('a closed lease is never reopened');
     } finally { proxy.stop(); }
   });
 

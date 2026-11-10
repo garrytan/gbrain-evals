@@ -67,7 +67,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
-  BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, streamUsageCost, unguardedFetch, usageCost,
+  BudgetExceededError, BudgetRun, closeRun, ledgerStatus, priceRequest, reservationUsd, streamUsageCost, unguardedFetch, usageCost,
 } from './budget-ledger.ts';
 import { UPSTREAM_DEADLINE_MS } from './metering-proxy.ts';
 import { carriesKeyInCleartext, COMPAT_PROVIDERS, compatMayHaveBilled } from './providers/openai-compatible.ts';
@@ -291,7 +291,7 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
   const pending = new Set<Promise<void>>();
   let exhausted = false;
   let lastRefusal: string | null = null;
-  /** Set by the first response whose usage the ledger cannot price: it is charged at its reservation and every later priced request is refused. */
+  /** Set by the first response whose usage the ledger cannot price: it is charged at its reservation, every later priced request is refused and the run is closed. */
   let unpriced: string | null = null;
 
   function record(line: RequestLogLine): void {
@@ -306,10 +306,11 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
     }
   }
 
-  /** Settlement cost from reported usage; usage the ledger cannot price is an error that stops the cell's paid requests. */
+  /** Settlement cost from reported usage; usage the ledger cannot price is an error that stops the cell's paid requests and closes its run. */
   function priced(cost: () => ReturnType<typeof usageCost>): { cost: ReturnType<typeof usageCost>; error: string | null } {
     try { return { cost: cost(), error: null }; }
     catch (error) {
+      closeRun(run.ledgerPath, run.runId);
       exhausted = true;
       unpriced = lastRefusal = (error as Error).message;
       return { cost: null, error: unpriced };

@@ -4,8 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   BudgetExceededError, BudgetRun, budgetOptionsFrom, CHAT_PRICE_OVERRIDES, chatPrice, closeLedgers, closeRun, HARNESS_CHAT_PRICES, initLedger, installPaidRequestGuard, ledgerStatus,
-  ledgerTotals, priceRequest, readLedger, receiptCost, reservationUsd, responseUsd, startPaidRun, UnpricedUsageError, usageCost, verifyLedger,
+  ledgerTotals, priceRequest, readLedger, receiptCost, reservationUsd, responseUsd, runInBatchLane, startPaidRun, UnpricedUsageError, usageCost, verifyLedger,
 } from '../../eval/runner/budget-ledger.ts';
+import { rowCost } from '../../eval/runner/batch/ledger.ts';
 import Anthropic from '@anthropic-ai/sdk';
 
 const dirs: string[] = [];
@@ -615,5 +616,35 @@ describe('cache writes, the long-prompt tier and usage the ledger cannot price',
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({ status: 'charged-reservation' });
     expect(entries[0].actual_usd).toBe(entries[0].reserved_usd);
+    expect(ledgerStatus({ ledgerPath: path, runId: run.runId }).run!.finished_at).not.toBeNull();
+    expect(() => BudgetRun.join({ runId: run.runId, ledgerPath: path })).toThrow('already finished');
+  });
+
+  test('inside an allowance, a response the ledger cannot price is charged at its reservation, and every later paid request and batch submission is refused before sending', async () => {
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: ledgerPath() });
+    const mock = mockFetch(() => Response.json({ usage: { input_tokens: 10, output_tokens: 1, cache_creation_input_tokens: 5, cache_creation: { ephemeral_1h_input_tokens: 5 } } }));
+    const guard = installPaidRequestGuard(run, { fetchImpl: mock.impl });
+    const allowance = run.allowance(0.5, 'bulk');
+    const url = 'https://api.anthropic.com/v1/messages';
+    try {
+      await expect(allowance.run(() => send(url, anthropicBody))).rejects.toThrow(UnpricedUsageError);
+      for (const later of [() => allowance.run(() => send(url, anthropicBody)), () => send(url, anthropicBody), () => runInBatchLane('reserved', () => send('https://api.anthropic.com/v1/messages/batches', {}))]) {
+        await expect(later()).rejects.toThrow(/refused before sending: an earlier response in this run reported usage the ledger cannot price/);
+      }
+      expect(guard.exhausted).toBe(true);
+    } finally { guard.uninstall(); }
+    expect(mock.calls).toHaveLength(1);
+    const charged = allowance.close();
+    expect(charged).toMatchObject({ requests: 1, charged_reservations: 1 });
+    expect(charged.usd).toBeCloseTo(reservationUsd(priceRequest(url, anthropicBody)!), 12);
+    expect(ledgerStatus({ ledgerPath: run.ledgerPath, runId: run.runId }).run!.finished_at).not.toBeNull();
+  });
+
+  test('a batch row whose usage the ledger cannot price is charged its worst case', () => {
+    const price = priceRequest('https://api.openai.com/v1/responses', { model: 'gpt-6.1-sol', max_output_tokens: 100, input: 'x' })!;
+    const row = (usage: Record<string, unknown>) => ({ custom_id: 'r', status: 'succeeded' as const, text: 'ok', finish: 'stop', usage, response_model: null, service_tier: null, error: null });
+    const unpriced = { input_tokens: 10, input_tokens_details: { cached_tokens: 0, cache_write_tokens: 10, cache_write_tokens_details: { ttl_24h_tokens: 10 } }, output_tokens: 1 };
+    expect(rowCost(price, 0.02, row(unpriced), 0.5)).toEqual({ list_usd: 0.02, usd: 0.01, input_tokens: 0, output_tokens: 0, basis: 'worst-case' });
+    expect(rowCost(price, 0.02, row({ input_tokens: 10, output_tokens: 1 }), 0.5).basis).toBe('usage');
   });
 });
