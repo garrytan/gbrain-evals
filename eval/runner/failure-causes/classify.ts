@@ -4,11 +4,12 @@
  * returns the first stage's cause as primary with every later signal kept as
  * a secondary cause. A reply cut off at its output limit is named by that
  * rule (harness.output_truncated) even when the row also records the harness
- * error the cut produced. A question that needs more gold than its run gives the
- * reader (gold_count above reader_budget) is reader_budget, a suite cause, whatever
- * retrieval and ranking did, because no ranking could deliver all of it; only a
- * harness error comes before it, and a row with no recorded budget labels as
- * before. A scorer artifact is primary only when it is the row's
+ * error the cut produced. Two suite causes come next, for questions no system
+ * can pass whatever retrieval and ranking did: an item whose cited gold doesn't
+ * support its reference answer (both support validators reject it, or it cites no
+ * turn) is item_unsupported, then a question that needs more gold than its run
+ * gives the reader (gold_count above reader_budget) is reader_budget. A row with no
+ * support record or no recorded budget labels as before. A scorer artifact is primary only when it is the row's
  * only signal, so it never hides a real failure. A failure with no signal
  * comes back as needs_model, for the residual labeller, unless the source did
  * not measure whether the gold reached the model and kept no delivered context
@@ -45,6 +46,7 @@ function signals(f: EvalFailure): { hits: Hit[]; unmeasured: Stage[]; tags: Set<
   if (f.harness?.error) hit('harness_error', 'harness.error');
   if (f.harness?.scorer_artifact) { hit('harness_error', `harness.scorer_artifact.${f.harness.scorer_artifact}`); tags.add('scorer_artifact'); }
   if (f.stop && HARNESS_STOPS.has(f.stop)) hit('harness_error', `harness.stop_${f.stop}`);
+  if (g.unsupported) hit('item_unsupported', g.unsupported === 'uncited' ? 'harness.item_cites_no_turn' : 'harness.item_unsupported_by_both_validators');
   if (g.gold_count !== null && g.reader_budget != null && g.gold_count > g.reader_budget) hit('reader_budget', 'harness.gold_over_reader_budget');
 
   if (f.operation) hit('operations', `operations.${f.operation.step}`);

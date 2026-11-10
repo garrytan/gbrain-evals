@@ -22,7 +22,9 @@
  *     seed 1): when the 95% interval of tonight minus the previous night excludes zero and the drop is at least 5 points;
  *   - a strong flip: an item that passed k of k trials and now passes 0 of k;
  *   - cost per correct answer up 25% or more with no gain in pass rate.
- * The same rules compare master with stable, reported in their own section.
+ * The same rules compare master with stable, reported in their own section. An item whose support record says no system
+ * can answer it from its evidence (eval/runner/nightly/item-support.ts) is left out of the pass-rate and strong-flip
+ * comparisons; its failed rows count as item_unsupported and are listed on their own line.
  *
  * particle-1's agreement with claude-opus-5-5, scored on a night that schedules particle-1: per item, particle-1's first
  * trial and Opus's first counted trial are each reader's pass or fail. A particle-1 crash, invalid answer or harness row is
@@ -42,6 +44,7 @@ import { gzipSync } from 'node:zlib';
 import { join, resolve } from 'node:path';
 import { pairedBootstrap } from '../refresh-barrier/analyze.ts';
 import { CAUSE_IDS, TAXONOMY_VERSION, UNCLASSIFIED, classify, nightlyFailure, type Cause } from '../failure-causes/index.ts';
+import { itemUnsupported } from './item-support.ts';
 import { readOutcomes, type Outcome } from './outcome.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
@@ -170,7 +173,7 @@ export function compareNights(tonight: { manifest: NightManifest; rows: Outcome[
       for (const name of SIGNAL_NAMES) {
         if (t.signals[name] > p.signals[name]) flags.push({ kind: 'signal', against, suite: id, reader, detail: `${name.replace('_', ' ')} rose from ${p.signals[name]} to ${t.signals[name]}` });
       }
-      const common = Object.keys(t.per_item).filter(i => p.per_item[i]).sort();
+      const common = Object.keys(t.per_item).filter(i => p.per_item[i] && !itemUnsupported(id, i)).sort();
       const diffs = common.map(i => t.per_item[i]!.c / t.per_item[i]!.n - p.per_item[i]!.c / p.per_item[i]!.n);
       const boot = pairedBootstrap(diffs);
       if (boot.hi !== null && boot.mean !== null && boot.hi < 0 && -boot.mean >= PASS_DROP) {
@@ -308,12 +311,15 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     return { ...f, tonight: { rows: mine.length, passes: mine.filter(r => r.pass).length } };
   });
   const flags = comparisons.flatMap(c => c.flags);
+  const unsupported = rows.filter(r => !r.skipped && !(r.pass && !r.harness) && classify(nightlyFailure(r, `nightly-${r.suite}`, [])).cause === 'item_unsupported');
+  const unsupportedItems = [...new Set(unsupported.map(r => `${r.suite} ${r.item}`))].sort();
   const agreement = nightAgreement(m, rows);
   const summary = {
     schema: 'nightly-summary/1', night: m.night, ref: m.ref, sha: m.sha, version: m.version, tier: m.tier, fake: m.fake, devset: m.devset,
     taxonomy_version: TAXONOMY_VERSION,
     suites: m.suites.map(s => ({ ...s, cells: cells.filter(c => c.suite === s.id).map(({ per_item: _items, ...c }) => c) })),
     harness_rows: rows.filter(r => r.harness).length,
+    item_unsupported: { rows: unsupported.length, items: unsupportedItems },
     flags, comparisons, commit_range: prev ? { from: prev.sha, to: m.sha, commits } : null, fixes, agreement,
   };
   const lines: string[] = [];
@@ -321,6 +327,7 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
   lines.push(`Tier ${m.tier}${m.fake ? ', fake providers (plumbing only; no number here measures a model)' : ''}. Dev set ${m.devset.digest.slice(0, 12)}. Causes: failure-cause taxonomy ${TAXONOMY_VERSION}.`, '');
   lines.push(flags.length ? `**${flags.length} flags.**` : '**No flags.**', '');
   for (const f of flags) lines.push(`- ${f.kind} (vs ${f.against}) ${f.suite} ${f.reader ?? 'keyless'}: ${f.detail}${f.items ? `: ${f.items.join(', ')}` : ''}`);
+  if (unsupported.length) lines.push('', `Item-unsupported: ${unsupported.length} failed rows on ${unsupportedItems.length} items whose cited turns don't support the reference answer (both support validators reject it) or that cite no turn. They count as \`item_unsupported\`, not as gbrain failures, and stay out of the flags: ${unsupportedItems.join(', ')}.`);
   lines.push('', '## Suites', '', '| Suite | Reader | Items | Trials | pass^1 | pass^k | Harness | Cost per correct | Failures by cause |', '|---|---|---|---|---|---|---|---|---|');
   for (const s of m.suites) {
     const mine = cells.filter(c => c.suite === s.id);

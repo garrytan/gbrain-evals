@@ -95,6 +95,13 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   QA suite's published logs archive (`logs/<suite>.tar.gz`, role `logs`) beside its outcomes: its memory-qa receipts say
   how many sessions each reader was given, so a question with more gold sessions than that is labelled `reader_budget`,
   a suite cause, instead of a gbrain retrieval or ranking cause. Without the archive those rows label as before.
+- **Items the support check rejects.** `eval/data/nightly/beam-1m-hard-support.json` records, per beam-1m-hard item,
+  what the BEAM support check found: whether each of its two validators (gemini-3.8-flash and claude-haiku-5-5) judged
+  the reference answer supported by the turns the item cites. A failed row on an item both validators reject, or one
+  that cites no turn, counts as `item_unsupported`, a suite cause, not a gbrain failure. Those items stay out of the
+  pass-rate and strong-flip flags, and the report lists their failed rows on one line. The record sits beside the dev
+  set, not in it, so the suite digest doesn't change. The six abstention items cite no turn by design and are not
+  checked.
 - **Cost per correct answer.** The suite's recorded cost divided by its passing rows. It's a metric for spotting a
   change that costs more for the same result.
 - **Against the previous master night.** Suite by suite, where the digests match, the report flags any increase in a
@@ -247,12 +254,14 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 
 ## Changelog
 
-### 2026-11-11: Questions with more gold sessions than the reader is given get their own cause
+### 2026-11-11: Questions no system can pass get their own causes
 
 The QA readers get the top 5 sessions, so a question with 6 or more gold sessions can't get all its evidence to the
 reader however well gbrain ranks. The weekly failure causes used to blame gbrain for those rows (wrong ranking, partial
-evidence or a retrieval miss). They are now `reader_budget`, a suite cause kept out of gbrain's top three, when the
-week's sources list the suite's logs archive, whose memory-qa receipts record each reader's session count.
+evidence or a retrieval miss). They are now `reader_budget`, a suite cause kept out of gbrain's ranking, when the
+week's sources list the suite's logs archive, whose memory-qa receipts record each reader's session count. BEAM items
+whose cited turns don't support the reference answer, by both support validators, or that cite no turn, are now
+`item_unsupported`, in this report and the weekly one, and stay out of this report's pass-rate and strong-flip flags.
 
 ### 2026-11-11: QA readers get 8,192 output tokens, and a cut-off answer is a harness row
 

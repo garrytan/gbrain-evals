@@ -182,3 +182,29 @@ describe('classify: more gold than the reader is given', () => {
       .toMatchObject({ cause: 'harness_error', rule_id: 'harness.error', secondary: ['reader_budget', 'wrong_ranking'] });
   });
 });
+
+describe('classify: items whose cited turns don\'t support the answer', () => {
+  test('an item both support validators reject is item_unsupported, not a gbrain cause, and the gbrain cause stays secondary (BEAM 1m-2:contradiction_resolution:0)', () => {
+    expect(classify(failure({ gold: gold({ gold_count: 2, retrieved: 'partial', delivered: 'partial', unsupported: 'both_validators' }) })))
+      .toMatchObject({ cause: 'item_unsupported', basis: 'deterministic', rule_id: 'harness.item_unsupported_by_both_validators', secondary: ['partial_evidence'] });
+  });
+
+  test('an item that cites no turn is item_unsupported under its own rule', () => {
+    expect(classify(failure({ gold: gold({ gold_count: 1, retrieved: 'none', delivered: 'none', unsupported: 'uncited' }) })))
+      .toMatchObject({ cause: 'item_unsupported', rule_id: 'harness.item_cites_no_turn', secondary: ['retrieval_miss'] });
+  });
+
+  test('a supported or unchecked item labels as before', () => {
+    for (const unsupported of [undefined, null]) {
+      expect(classify(failure({ gold: gold({ gold_count: 2, retrieved: 'partial', delivered: 'partial', unsupported }) }))).toMatchObject({ cause: 'partial_evidence' });
+    }
+    expect(classify(failure({ gold: gold({ gold_count: 2, retrieved: 'partial', delivered: 'partial', unsupported: 'both_validators' }) })).cause).toBe('item_unsupported');
+  });
+
+  test('item_unsupported comes after the harness rules and before reader_budget', () => {
+    const both = gold({ gold_count: 9, reader_budget: 5, retrieved: 'partial', delivered: 'partial', unsupported: 'both_validators' });
+    expect(classify(failure({ gold: both }))).toMatchObject({ cause: 'item_unsupported', secondary: ['reader_budget', 'partial_evidence'] });
+    expect(classify(failure({ finish_reason: 'max_tokens', gold: both })))
+      .toMatchObject({ cause: 'harness_error', rule_id: 'harness.output_truncated', secondary: ['item_unsupported', 'reader_budget', 'partial_evidence'] });
+  });
+});

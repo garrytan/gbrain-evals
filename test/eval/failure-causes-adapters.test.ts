@@ -7,6 +7,7 @@ import { gzipSync } from 'node:zlib';
 import { ADAPTERS, classify, loadSource, nightlyFailure, validateManifest, SOURCES_SCHEMA } from '../../eval/runner/failure-causes/index.ts';
 import { cat40Calls, cat40Fields, namesSlug } from '../../eval/runner/failure-causes/adapters/cat40.ts';
 import { fileText, sha256, tarFiles, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
+import { itemUnsupported } from '../../eval/runner/nightly/item-support.ts';
 import { harnessOf } from '../../eval/runner/nightly/outcome.ts';
 import { entry, failure, FX, loadFixture } from '../support/failure-causes-fixture.ts';
 
@@ -345,6 +346,31 @@ describe('nightly adapter', () => {
       .toEqual(['wrong_ranking', 'wrong_ranking', 'harness_error', 'partial_evidence', 'wrong_ranking']);
     expect(() => ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows), logs(5), { ...logs(6), path: 'other/lme-s-hard.tar.gz' }], entry('n', 'nightly')))
       .toThrow(/lme-s-hard\/claude-opus-5-5\/out\/receipt\.json: gives lme-s-hard\|c{40}\|anthropic:claude-opus-5-5 6 reader sessions, .* gives 5$/);
+    const facts = tarball('f.tar.gz', 'logs', { 'lme-s-hard/claude-opus-5-5/out/receipt.json': JSON.stringify({ qa: { mode: 'reader', context: 'facts', reader: 'anthropic:claude-opus-5-5' },
+      reading: { breadth_sessions: 5 }, product: { loaded_git_head: sha } }) });
+    expect(ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows), facts], entry('n', 'nightly')).failures.map(f => f.gold.reader_budget)).toEqual([null, null, null, null, null]);
+  });
+
+  test('a BEAM item both support validators reject is item_unsupported, with its support record as evidence; one validator, no record or a cut-off answer label as before', () => {
+    const beam = { schema: 'nightly-outcome/1', night: '2026-11-10', suite: 'beam-1m-hard', suite_digest: 'd', role: 'headroom', ref: 'master', sha, trial: 1, pass: false, score: 0,
+      cost_usd: null, stop: 'answered', tool_errors: [], evidence: {}, harness: null, system: 'gbrain', arm: 'beam-1m-hard@master', arm_role: 'gbrain_default', condition: 'natural',
+      visibility: 'public', agent_loop: false, category: 'contradiction_resolution', answered: true, finish_reason: 'stop', reader: 'claude-opus-5-5', gold_count: 2, retrieved: 'partial', delivered: 'partial' };
+    const rows = [
+      { ...beam, item: '1m-2:contradiction_resolution:0' },
+      { ...beam, item: '1m-25:multi_session_reasoning:0' },
+      { ...beam, item: '1m-2:not_an_item:0' },
+      { ...beam, item: '1m-2:contradiction_resolution:0', reader: 'gpt-6.1-sol', finish_reason: 'max_tokens' },
+      { ...beam, suite: 'lme-s-hard', arm: 'lme-s-hard@master', item: '1m-2:contradiction_resolution:0' },
+    ];
+    const out = ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows)], entry('n', 'nightly'));
+    expect(out.failures.map(f => { const l = classify(f); return [f.gold.unsupported, l.cause, l.rule_id]; })).toEqual([
+      ['both_validators', 'item_unsupported', 'harness.item_unsupported_by_both_validators'],
+      [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
+      [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
+      ['both_validators', 'harness_error', 'harness.output_truncated'],
+      [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
+    ]);
+    expect(out.failures[0]!.evidence[1]).toMatch(/^repo:eval\/data\/nightly\/beam-1m-hard-support\.json#[0-9a-f]{8} 1m-2:contradiction_resolution:0$/);
   });
 
   test('reads outcomes.jsonl.gz the same way, refuses a row of another schema, and is registered for manifests', () => {
@@ -392,11 +418,43 @@ describe('source manifests', () => {
 
   test('fixtures live where the helper says', () => expect(FX).toMatch(/test\/fixtures\/failure-causes$/));
 
-  test('tarFiles reads a GNU and a POSIX archive, a long POSIX path included, and leaves out an entry a GNU long name renames rather than cut its name', () => {
+  test('tarFiles reads GNU, ustar and pax archives, long paths included', () => {
     const long = `${'d'.repeat(60)}/${'e'.repeat(60)}/receipt.json`;
     const read = (f: LoadedFile) => Object.fromEntries([...tarFiles(f)].map(([p, b]) => [p, new TextDecoder().decode(b)]));
     expect(read(tarball('a.tar.gz', 'logs', { 'x/a.json': '1', 'x/b/c.json': '22' }))).toEqual({ 'x/a.json': '1', 'x/b/c.json': '22' });
     expect(read(tarball('p.tar.gz', 'logs', { [long]: 'r' }, 'ustar'))).toEqual({ [long]: 'r' });
-    expect(read(tarball('g.tar.gz', 'logs', { [long]: 'r' }, 'gnu'))).toEqual({});
+    expect(read(tarball('g.tar.gz', 'logs', { [long]: 'r', 'x/a.json': '1' }, 'gnu'))).toEqual({ [long]: 'r', 'x/a.json': '1' });
+    expect(read(tarball('x.tar.gz', 'logs', { [long]: 'r', 'x/a.json': '1' }, 'posix'))).toEqual({ [long]: 'r', 'x/a.json': '1' });
+  });
+});
+
+describe('item support records', () => {
+  test('an item is unsupported when both validators reject it or it cites no turn; one validator, an unchecked item, or a missing item or file is not', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fc-support-'));
+    const validators = ['gemini:g', 'anthropic:h'];
+    writeFileSync(join(dir, 's-support.json'), JSON.stringify({ schema: 'nightly-item-support/1', suite: 's', validators, items: {
+      both: { checked: true, gates: ['support:anthropic:h', 'support:gemini:g'], cited: 2, source: 'x' }, one: { checked: true, gates: ['support:gemini:g'], cited: 2, source: 'x' },
+      uncited: { checked: true, gates: ['uncited'], cited: 0, source: 'x' }, zero: { checked: true, gates: [], cited: 0, source: 'x' },
+      abstention: { checked: false, reason: 'abstention cites no turn', source: 'x' } } }));
+    const why = (item: string, suite = 's') => itemUnsupported(suite, item, dir)?.why ?? null;
+    expect(['both', 'one', 'uncited', 'zero', 'abstention', 'missing'].map(i => why(i))).toEqual(['both_validators', null, 'uncited', 'uncited', null, null]);
+    expect(why('both', 'other')).toBeNull();
+    expect(itemUnsupported('s', 'both', dir)!.at).toMatch(/^repo:eval\/data\/nightly\/s-support\.json#[0-9a-f]{8} both$/);
+    writeFileSync(join(dir, 'bad-support.json'), JSON.stringify({ schema: 'nightly-item-support/1', suite: 'other', validators, items: {} }));
+    expect(() => itemUnsupported('bad', 'x', dir)).toThrow(/not a nightly-item-support\/1 file for bad$/);
+  });
+
+  test('the committed beam-1m-hard record covers every item of the suite and repeats GST-2339\'s published gates where they overlap', () => {
+    const ids = (JSON.parse(readFileSync('eval/data/nightly/devset-v1.json', 'utf8')).suites as Array<{ id: string; items: Array<{ id: string }> }>).find(s => s.id === 'beam-1m-hard')!.items.map(i => i.id);
+    const rec = JSON.parse(readFileSync('eval/data/nightly/beam-1m-hard-support.json', 'utf8'));
+    const pubBytes = readFileSync(rec.sources.gst2339.file);
+    expect(sha256(new Uint8Array(pubBytes))).toBe(rec.sources.gst2339.sha256);
+    const pub = new Map((JSON.parse(pubBytes.toString('utf8')).items as Array<{ id: string; gates: string[]; cited: number }>).map(x => [x.id, x]));
+    expect(Object.keys(rec.items).sort()).toEqual([...ids].sort());
+    for (const [id, x] of Object.entries(rec.items as Record<string, { source: string; gates?: string[]; cited?: number }>)) {
+      expect(x.source).toBe(pub.has(id) ? 'gst2339' : 'beam-nightly-check');
+      if (pub.has(id)) expect([x.gates, x.cited]).toEqual([[...pub.get(id)!.gates].sort(), pub.get(id)!.cited]);
+    }
+    expect(itemUnsupported('beam-1m-hard', '1m-2:contradiction_resolution:0')?.why).toBe('both_validators');
   });
 });

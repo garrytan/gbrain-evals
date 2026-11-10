@@ -1,0 +1,637 @@
+{
+ "schema": "nightly-item-support/1",
+ "suite": "beam-1m-hard",
+ "about": "Whether each beam-1m-hard item's reference answer is supported by the turns it cites, from the BEAM support check (eval/custody/rs1/validate.ts as of branch rs1-narrow-results at cf73d324, sha256 7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e, validators gemini-3.8-flash and claude-haiku-5-5, an empty public index). A gate support:<validator> means that validator found the answer unsupported; uncited, or cited 0, means the item cites no turn. Read by eval/runner/nightly/item-support.ts; kept out of the dev set so the suite digest is unchanged.",
+ "validators": [
+  "gemini:gemini-3.8-flash",
+  "anthropic:claude-haiku-5-5"
+ ],
+ "sources": {
+  "gst2339": {
+   "file": "docs/benchmarks/2026-11-10-beam-item-support/public-items.json",
+   "sha256": "cce927bcda46953595263bec0fd446740e373abc792c22d19b77dd10e33b9a28",
+   "note": "GST-2339's published check of the public BEAM items behind published rows."
+  },
+  "beam-nightly-check": {
+   "note": "The same kit and validate.ts run on 2026-11-11 over the 1m-25 items GST-2339 did not list, from BEAM b2da22e files checked against eval/decisions/datasets/beam-b2da22e.json. Its analysis-full.json (ids and gates only) has sha256 41e62f25f6865d1f18d52f68b22f528df71717cc34720cd5d71bfcc9d89cebd2."
+  }
+ },
+ "items": {
+  "1m-24:abstention:0": {
+   "checked": false,
+   "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "source": "beam-nightly-check"
+  },
+  "1m-24:abstention:1": {
+   "checked": false,
+   "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "source": "beam-nightly-check"
+  },
+  "1m-24:contradiction_resolution:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 2,
+   "source": "gst2339"
+  },
+  "1m-24:contradiction_resolution:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 4,
+   "source": "gst2339"
+  },
+  "1m-24:event_ordering:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 9,
+   "source": "gst2339"
+  },
+  "1m-24:event_ordering:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 19,
+   "source": "gst2339"
+  },
+  "1m-24:information_extraction:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 1,
+   "source": "gst2339"
+  },
+  "1m-24:information_extraction:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 4,
+   "source": "gst2339"
+  },
+  "1m-24:instruction_following:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 1,
+   "source": "gst2339"
+  },
+  "1m-24:instruction_following:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 1,
+   "source": "gst2339"
+  },
+  "1m-24:knowledge_update:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 4,
+   "source": "gst2339"
+  },
+  "1m-24:knowledge_update:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "source": "gst2339"
+  },
+  "1m-24:multi_session_reasoning:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 5,
+   "source": "gst2339"
+  },
+  "1m-24:multi_session_reasoning:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 3,
+   "source": "gst2339"
+  },
+  "1m-24:preference_following:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 3,
+   "source": "gst2339"
+  },
+  "1m-24:preference_following:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 3,
+   "source": "gst2339"
+  },
+  "1m-24:summarization:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 10,
+   "source": "gst2339"
+  },
+  "1m-24:summarization:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 21,
+   "source": "gst2339"
+  },
+  "1m-24:temporal_reasoning:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 6,
+   "source": "gst2339"
+  },
+  "1m-24:temporal_reasoning:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 5,
+   "source": "gst2339"
+  },
+  "1m-25:abstention:0": {
+   "checked": false,
+   "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "source": "beam-nightly-check"
+  },
+  "1m-25:abstention:1": {
+   "checked": false,
+   "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "source": "beam-nightly-check"
+  },
+  "1m-25:contradiction_resolution:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 4,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:contradiction_resolution:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 3,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:event_ordering:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 35,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:event_ordering:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 26,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:information_extraction:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:information_extraction:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 2,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:instruction_following:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 1,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:instruction_following:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 1,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:knowledge_update:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 6,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:knowledge_update:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 5,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:multi_session_reasoning:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:multi_session_reasoning:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 8,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:preference_following:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 3,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:preference_following:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 3,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:summarization:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 64,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:summarization:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 11,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:temporal_reasoning:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 4,
+   "source": "beam-nightly-check"
+  },
+  "1m-25:temporal_reasoning:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 6,
+   "source": "beam-nightly-check"
+  },
+  "1m-2:abstention:0": {
+   "checked": false,
+   "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "source": "beam-nightly-check"
+  },
+  "1m-2:abstention:1": {
+   "checked": false,
+   "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "source": "beam-nightly-check"
+  },
+  "1m-2:contradiction_resolution:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "source": "gst2339"
+  },
+  "1m-2:contradiction_resolution:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "source": "gst2339"
+  },
+  "1m-2:event_ordering:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 13,
+   "source": "gst2339"
+  },
+  "1m-2:event_ordering:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 15,
+   "source": "gst2339"
+  },
+  "1m-2:information_extraction:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 1,
+   "source": "gst2339"
+  },
+  "1m-2:information_extraction:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "unsupported"
+   },
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "cited": 2,
+   "source": "gst2339"
+  },
+  "1m-2:instruction_following:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 2,
+   "source": "gst2339"
+  },
+  "1m-2:instruction_following:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 1,
+   "source": "gst2339"
+  },
+  "1m-2:knowledge_update:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 3,
+   "source": "gst2339"
+  },
+  "1m-2:knowledge_update:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 2,
+   "source": "gst2339"
+  },
+  "1m-2:multi_session_reasoning:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 5,
+   "source": "gst2339"
+  },
+  "1m-2:multi_session_reasoning:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 14,
+   "source": "gst2339"
+  },
+  "1m-2:preference_following:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 1,
+   "source": "gst2339"
+  },
+  "1m-2:preference_following:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 3,
+   "source": "gst2339"
+  },
+  "1m-2:summarization:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 33,
+   "source": "gst2339"
+  },
+  "1m-2:summarization:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 30,
+   "source": "gst2339"
+  },
+  "1m-2:temporal_reasoning:0": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "supported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [],
+   "cited": 2,
+   "source": "gst2339"
+  },
+  "1m-2:temporal_reasoning:1": {
+   "checked": true,
+   "verdicts": {
+    "gemini:gemini-3.8-flash": "unsupported",
+    "anthropic:claude-haiku-5-5": "supported"
+   },
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "cited": 2,
+   "source": "gst2339"
+  }
+ }
+}

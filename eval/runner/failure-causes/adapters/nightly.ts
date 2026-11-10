@@ -26,7 +26,12 @@
  * archive, <suite>/<reader>/out/receipt.json inside. It is matched by suite, gbrain sha and reader, two receipts that
  * disagree for one of those are refused, and the receipt joins the row's evidence. With no logs file, or no receipt for
  * the row, reader_budget stays null.
+ *
+ * gold.unsupported comes from the suite's per-item support record (eval/runner/nightly/item-support.ts): both support
+ * validators reject the item, or it cites no turn. The record joins the row's evidence. An item with no record, or one
+ * that only one validator rejects, stays null.
  */
+import { itemUnsupported } from '../../nightly/item-support.ts';
 import { harnessOf, OUTCOME_SCHEMA, qualifiedModel, type Outcome } from '../../nightly/outcome.ts';
 import { classify } from '../classify.ts';
 import { fileText, pointer, tarFiles, type LoadedFile, type SourceEntry } from '../manifest.ts';
@@ -47,6 +52,7 @@ function stopOf(stop: string | null): string | null {
 /** One outcome row as an EvalFailure: a failure when it did not pass, a not_run row when it was skipped. */
 export function nightlyFailure(o: Outcome, source: string, evidence: string[], readerBudget: number | null = null): EvalFailure {
   const harness = harnessOf(o);
+  const support = itemUnsupported(o.suite, o.item);
   const tags: Tag[] = [];
   if (o.evidence.report_correct === false) tags.push('misreport');
   if (o.answered === false) tags.push('no_answer');
@@ -61,8 +67,8 @@ export function nightlyFailure(o: Outcome, source: string, evidence: string[], r
     stop: stopOf(o.stop), finish_reason: o.finish_reason ?? null, harness: harness ? { error: harness.error, scorer_artifact: null } : null,
     operation: o.operation ?? null, tool_calls: o.calls ?? null,
     gold: { gold_count: o.gold_count ?? null, stored: null, hidden: null, retrieved: o.retrieved ?? null, delivered: o.delivered ?? null, opened: o.opened ?? null, summary_only: null,
-      reader_budget: readerBudget },
-    writes: o.writes ?? null, tags, evidence, ...text,
+      reader_budget: readerBudget, unsupported: support?.why ?? null },
+    writes: o.writes ?? null, tags, evidence: support ? [...evidence, support.at] : evidence, ...text,
   };
 }
 

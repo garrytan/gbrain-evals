@@ -8,6 +8,7 @@
 
 export const CAUSE_IDS = [
   'harness_error',
+  'item_unsupported',
   'reader_budget',
   'operations',
   'ingest_gap',
@@ -30,9 +31,10 @@ export const CAUSE_IDS = [
 ] as const;
 export type CauseId = (typeof CAUSE_IDS)[number];
 
-/** Gap-map failure mode for each cause; harness_error, reader_budget and unclassified map to none. */
+/** Gap-map failure mode for each cause; harness_error, the suite causes and unclassified map to none. */
 export const CAUSE_MODE: Record<CauseId, string | null> = {
   harness_error: null,
+  item_unsupported: null,
   reader_budget: null,
   operations: 'F16',
   ingest_gap: 'F10',
