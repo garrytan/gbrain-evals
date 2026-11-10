@@ -1,18 +1,20 @@
 # Do synthetic memory tests predict an agent's real failures? Results
 
-- **We learned that a synthetic recall test ranks gbrain's search setups the way Garry's real brain does, but it
-  catches the real brain's paraphrase gap only when it carries the real brain's embedding gaps. You should build those
-  gaps into a synthetic recall test (here, no synopsis vectors and 10% of chunks with no vector) and check its signs
-  against real-brain contrasts before it gates anything.** With the gaps, G2 (recall under real conditions) reads
-  PREDICTIVE on batch 2: all 13 of the 13 real batch 2 contrasts whose interval excludes zero agree in sign with the
-  synthetic brain. Without the gaps, the same brain reads NOT PREDICTIVE at both gbrain versions, because it misses the
-  paraphrase gap of configured search: the real brain finds 40 points fewer paraphrased questions than exact ones (95%
-  interval −56 to −24), and the clean synthetic brain shows no gap at all. The agreement is about direction, not size.
-  The synthetic brain is far easier (configured search finds 90% of paraphrases against the real brain's 48%), and its
-  configured paraphrase gap is 7 points against the real 40. Batch 3's contrasts compare search setups rather than
-  paraphrased and exact wording, and its synthetic brain is clean, with no embedding gaps: it agrees in sign on all 5
-  that qualify. G4 (wrong entity) also reads PREDICTIVE, on all 3 of its real entity contrasts, from the same clean
-  batch-3 brain.
+- **We learned that a synthetic recall test agrees in sign with Garry's real brain on every qualifying contrast between
+  gbrain's search setups, but it catches the real brain's paraphrase gap only when it carries the real brain's embedding
+  gaps. You should build those gaps into a synthetic recall test (here, no synopsis vectors and 10% of chunks with no
+  vector) and check its signs against real-brain contrasts before it gates anything.** With the gaps, G2 (recall under
+  real conditions) reads PREDICTIVE on batch 2: all 13 of the 13 real batch 2 contrasts whose interval excludes zero
+  agree in sign with the synthetic brain. Without the gaps, the same brain reads NOT PREDICTIVE at both gbrain versions,
+  because it misses the paraphrase gap of configured search: the real brain finds 40 points fewer paraphrased questions
+  than exact ones (95% interval −56 to −24), and the clean synthetic brain shows no gap at all. The agreement is about
+  direction, not size. The synthetic brain is far easier (configured search finds 90% of paraphrases against the real
+  brain's 48%), and its configured paraphrase gap is 7 points against the real 40. Batch 3's contrasts compare search
+  setups rather than paraphrased and exact wording, and its synthetic brain is clean, with no embedding gaps: it agrees
+  in sign on all 5 that qualify, though 3 of those 5 synthetic intervals touch or cross zero. G4 (wrong entity) also
+  reads PREDICTIVE, on all 3 of its real entity contrasts, from the same clean batch-3 brain, and 2 of its 3 synthetic
+  intervals touch or cross zero. So G4 and G2's batch 3 layer come from a clean brain: they may gate on which search
+  setup beats which, but they can't catch a paraphrase-recall regression.
 - **We learned that Opus and Sol never claimed a write had landed when it hadn't: 0 times in 960 write episodes.
   particle-1 did 7 times in 480. You should check a low-cost model's write claims against the brain before trusting
   them.** This is the failure Wintermute reported, "writes reported as done that never landed", reproduced in G3.
@@ -405,10 +407,11 @@ YET**, as preregistered, until a later real p95 measurement at these two version
 
 ## What to use and what to avoid
 
-- **Use a synthetic recall test to check direction, after you've matched its embedding gaps to your brain's.** It
-  ranked six search setups in the same direction as the real brain on every contrast that qualified. A clean brain was
-  enough for batch 3's setup contrasts, but only the brain with the gaps caught batch 2's paraphrase gap. Don't read its
-  sizes: on the contrasts that qualify, it puts the gain of meaning-based search over keyword search at about two to
+- **Use a synthetic recall test to check direction, after you've matched its embedding gaps to your brain's.** It agreed
+  in sign with the real brain on every qualifying contrast between six search setups. On batch 3's setup contrasts the
+  clean brain agreed in sign on all 5 that qualify, but 3 of those 5 synthetic intervals touch or cross zero, so those
+  three agreements carry little information; only the brain with the gaps caught batch 2's paraphrase gap. Don't read
+  its sizes: on the contrasts that qualify, it puts the gain of meaning-based search over keyword search at about two to
   two and a half times the real one, and the paraphrase gap of configured search at a sixth of the real one (about a
   twentieth for vector and hybrid search).
 - **Don't trust a clean synthetic brain for paraphrase recall.** Clean pages make configured search look perfect on
