@@ -399,6 +399,27 @@ So batch 3 can show a 20-point gain from configured search on either type, and c
 **Cost.** No paid model calls by us. Wintermute's keys pay for about one query embedding per form for `hybrid` and
 `configured` and one rerank call per configured query, as in batch 2.
 
+**Batch 3 frozen sample.** Frozen on 2026-11-09 from Wintermute's `run.ts freeze --protocol batch3` output at
+gbrain-evals `a1cfff13`, with `--gbrain` at gbrain v0.60.623.0 (`d253ec0f`, a clean checkout), before any batch 3
+search. `freeze.json` records `gbrain_version` 0.60.623.0 and `visibility_epoch` `post_gbra_398`. The runner refuses a
+question file whose hash differs from this one, and a run whose protocol or visibility epoch differs from the freeze's
+(`LR_FREEZE_MISMATCH`).
+
+- **N = 51 questions** (102 question forms): 25 `freshness` and 26 `entity`. The freshness questions name 25 stale
+  pages in all.
+- **Question file sha256:** `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e`.
+- **freeze.json sha256:** `ece4fc08627046d8d19449e5ace36123ea57b789c8794a820c7794efb56a20ad`.
+- **Minimum detectable difference** in success@5 (two-sided alpha 0.05, 80% power), in points, both forms clustered by
+  question (forms independent to fully correlated):
+
+| Comparison | 10% discordant | 20% discordant | 30% discordant |
+|---|---|---|---|
+| P1, `configured` minus `hybrid_lexical`, freshness | 12.5 to 17.7 | 17.7 to 25.1 | 21.7 to 30.7 |
+| P2, `configured` minus `hybrid_lexical`, entity | 12.3 to 17.4 | 17.4 to 24.6 | 21.3 to 30.1 |
+
+An earlier freeze of the same question file on gbrain 0.60.618.0 checked the run kit. It read `pre_gbra_398` and matched
+this freeze in every field but the gbrain version and the epoch. It is not counted, and no batch 3 result comes from it.
+
 ## Limits
 
 - One writer who knows the brain writes both the questions and the gold, so paraphrase difficulty and topic choice
