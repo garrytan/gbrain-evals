@@ -849,16 +849,17 @@ number of batches, and slots planned before this change keep their 10-batch plan
 
 **Change 2: items only from validator-passed candidates.** After the probe step,
 `eval/custody/rs1/validate-candidates.ts` applies validate.ts's conversation gates for length and contamination, then
-validate.ts's item gates, with its two validators and the same prompts, to every usable candidate BEAM generated for
-each ability. Selection then takes candidates in the conversation seed's order, as before, but only those that passed.
-validate.ts still runs on the 20 selected items and decides keep, regenerate or drop as preregistered. Its support
-checks send the same prompts, so its reply cache returns the answers candidate validation already got. Its absence scan
-asks about the two selected abstention items instead of all of them, so it asks again and can still fail one. For the
-other nine abilities, regeneration repeated without limit would reach the same first two passing candidates in seed
-order, so the change affects how many selection rounds it takes, not which items count as valid. A conversation with
-fewer than two passing candidates in an ability can't fill it and is dropped on the item floor, as before. A real mint
-now runs in three passes (the mint up to the probe step, candidate validation, then selection and rubrics) and refuses
-to select without a candidates report.
+its item gates other than the duplicate gate, with its two validators and the same prompts, to every usable candidate
+BEAM generated for each ability; validate.ts applies the duplicate gate to the selection, as before. Selection then
+takes candidates in the conversation seed's order, as before, but only those that passed. validate.ts still runs on the
+20 selected items and decides keep, regenerate or drop as preregistered. Its support checks send the same prompts, so
+its reply cache returns the answers candidate validation already got. Its absence scan asks about the two selected
+abstention items instead of all of them, so it asks again and can still fail one. For the other nine abilities,
+regeneration repeated without limit would reach the same first two passing candidates in seed order, so the change
+affects how many selection rounds it takes, not which items count as valid. A conversation with fewer than two passing
+candidates in an ability can't fill it and is dropped on the item floor, as before. A real mint now runs in three passes
+(the mint up to the probe step, candidate validation, then selection and rubrics) and refuses to select without a
+candidates report.
 
 **Slots already minted.** `rs1-001` and `rs1-003` stay dropped on length. `rs1-002`, `rs1-004` and `rs1-005` keep
 their chats and finish under change 2, in their third and last selection.
