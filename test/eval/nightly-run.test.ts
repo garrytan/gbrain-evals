@@ -16,6 +16,7 @@ import { cat40Commands, cat40DevSet, cat40Rows, episodeRows, judgeFor, latestRow
   trialRows, type NightContext, type SuiteRun } from '../../eval/runner/nightly/adapters.ts';
 import { canonicalDigest, loadDevSet } from '../../eval/runner/nightly/devset.ts';
 import { NightlyCache } from '../../eval/runner/nightly/judge-cache.ts';
+import { buildDevSet } from '../../eval/runner/nightly/select-devset.ts';
 import { keylessEnv } from '../../eval/runner/nightly/keyless.ts';
 import { qualifiedModel, readOutcomes } from '../../eval/runner/nightly/outcome.ts';
 import { main, parseArgs, planSuites, requirementGap } from '../../eval/runner/nightly/run.ts';
@@ -125,6 +126,7 @@ describe('adapter commands', () => {
   });
 
   test('QA: the reader gets its suite\'s output limit, 8,192 tokens on both QA suites, and a paid QA suite that names none is refused', () => {
+    expect(buildDevSet()).toEqual(devset);
     expect(devset.suites.filter(s => s.kind === 'qa').map(s => [s.id, s.config?.qa_max_tokens])).toEqual([['lme-s-hard', 8192], ['beam-1m-hard', 8192]]);
     for (const id of ['lme-s-hard', 'beam-1m-hard']) expect(qaCommand(suiteRun(id), ctx(), 'claude-opus-5-5', '/ids.txt', '/out').join(' ')).toContain('--qa-max-tokens 8192 --output /out');
     const run = suiteRun('beam-1m-hard');
