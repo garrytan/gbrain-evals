@@ -12,7 +12,8 @@
  *
  * The ref resolves to a commit in the gbrain clone (stable is the pinned release commit), which is built into a verified
  * overlay (gbrain-under-test.ts); the refresh-barrier harness gets a Git worktree of the same commit, because it reads the
- * root's HEAD. A suite whose requires.gbrain_commit is not an ancestor of the commit is skipped, and the report says why.
+ * root's HEAD. A suite whose requires.gbrain_commit is not an ancestor of the commit is skipped, and the report says why;
+ * each item of a skipped or unbuilt suite gets a skipped outcome row with the reason, which a resume replaces once it runs.
  *
  * Tiers:
  *   nightly  tool-contract-replay, concurrent-writers, system-smokes, refresh-barrier-agents and refused-write-agents;
@@ -31,7 +32,7 @@
  *
  * Suites run in parallel, each in its own child processes (adapters.ts). The night directory is <out>/<night>/<ref>
  * (the first 12 characters of a sha), holding night.json, outcomes.jsonl, each suite's work under suites/, and the report.
- * --resume reruns what is missing or recorded as a harness failure on the gbrain commit the night started on (its ref
+ * --resume reruns what is missing, skipped or recorded as a harness failure on the gbrain commit the night started on (its ref
  * may have moved since), after settling the stopped run's open ledger reservations (ledger.ts reconcile), at most twice
  * per night; run it only once every child of the stopped run has exited. A fresh run into a night directory that already
  * holds night.json is refused and points to --resume. A ledger run this night opened itself (from --night-cap-usd and
@@ -47,11 +48,11 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { resolveGbrainUnderTest } from '../gbrain-under-test.ts';
 import { ledgerStatus } from '../budget-ledger.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
-import { ADAPTERS, callsModels, type NightContext, type SuiteRun, type Tier, worktreeAt } from './adapters.ts';
+import { ADAPTERS, callsModels, skippedRows, type NightContext, type SuiteRun, type Tier, worktreeAt } from './adapters.ts';
 import { loadDevSet, suiteDigest, type DevSet } from './devset.ts';
 import { NightlyCache } from './judge-cache.ts';
 import { closeOwnedNightRun, NIGHTLY_RUNNER_PREFIX, NightlyCapStop, openNightRun, reconcileNightRun } from './ledger.ts';
-import { appendOutcome, outcomeKey, readOutcomes } from './outcome.ts';
+import { appendOutcome, outcomeKey, readOutcomes, type Outcome } from './outcome.ts';
 import { findPreviousNight, writeReport, type NightManifest, type SuiteStatus } from './report.ts';
 import { OLD_RELEASE } from './smokes/upgrade-from-old.ts';
 
@@ -238,20 +239,28 @@ export async function main(argv: readonly string[]): Promise<number> {
       log: line => console.error(`[nightly] ${line}`), signal: abort.signal,
     };
     let capStop = false;
+    const record = (rows: Outcome[]) => {
+      for (const o of rows) {
+        const before = have.get(outcomeKey(o));
+        if (before && !before.harness && !before.skipped) continue;
+        appendOutcome(outcomesPath, o);
+        have.set(outcomeKey(o), o);
+      }
+    };
     await Promise.all(plan.map(async run => {
       const status = statuses.find(s => s.id === run.suite.id)!;
-      if (status.status === 'skipped') return;
+      if (status.status === 'skipped') { record(skippedRows(run, ctx, status.reason!)); return; }
       ctx.log(`${run.suite.id}: ${run.items.length} items, k ${run.k}, ${a.fake && callsModels(run.suite) ? 'fake' : run.readers.map(r => r ?? 'keyless').join(', ')}`);
       const adapter = ADAPTERS[run.suite.id];
-      if (!adapter) { Object.assign(status, { status: 'not_built', reason: 'no nightly adapter runs this suite yet' }); writeManifest(); return; }
+      if (!adapter) {
+        Object.assign(status, { status: 'not_built', reason: 'no nightly adapter runs this suite yet' });
+        record(skippedRows(run, ctx, status.reason!));
+        writeManifest();
+        return;
+      }
       try {
         const r = await adapter(run, ctx);
-        for (const o of r.rows) {
-          const before = have.get(outcomeKey(o));
-          if (before && !before.harness) continue;
-          appendOutcome(outcomesPath, o);
-          have.set(outcomeKey(o), o);
-        }
+        record(r.status === 'not_built' ? skippedRows(run, ctx, r.reason ?? 'not built') : r.rows);
         Object.assign(status, { status: r.status, ...(r.reason ? { reason: r.reason } : {}), ...(r.dev_set ? { dev_set: r.dev_set } : {}) });
         capStop ||= r.capStop === true;
       } catch (error) {

@@ -12,7 +12,7 @@ import { gunzipSync } from 'node:zlib';
 import type { ArmRole, Condition, Visibility } from './types.ts';
 
 export const SOURCES_SCHEMA = 'failure-cause-sources/1';
-export const ADAPTER_IDS = ['refresh-barrier', 'rs1', 'cat40', 'skillopt', 'live-recall'] as const;
+export const ADAPTER_IDS = ['refresh-barrier', 'rs1', 'cat40', 'skillopt', 'live-recall', 'nightly'] as const;
 export type AdapterId = typeof ADAPTER_IDS[number];
 const VISIBILITIES: readonly Visibility[] = ['public', 'synthetic', 'private', 'sealed'];
 const CONDITIONS: readonly Condition[] = ['natural', 'forced'];
