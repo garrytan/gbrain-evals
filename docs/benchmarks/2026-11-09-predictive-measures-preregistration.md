@@ -280,6 +280,17 @@ will refuse a non-control scorecard whose gbrain commit, knobs or question file 
 and will copy those fields and the scorecard's sha256 into `verdict.json`. G2's summary line combines the verdict
 files of its batch 2 and batch 3 layers under the decision rule (NOT PREDICTIVE if either layer is).
 
+### 2026-11-10: batch 3 moves to gbrain 0.60.641.0
+
+The live-recall preregistration's
+[amendment of the same date](live-recall/PREREGISTRATION.md#2026-11-10-batch-3-runs-on-gbrain-0606410) moves batch 3's
+counted run to gbrain 0.60.641.0 (`2560ffdd`), because its first attempt stopped with `LR_SCHEMA_MISMATCH` before any
+search. Under "Batch 3's version" above, the synthetic batch-3 brain is run again at 0.60.641.0, with the same template
+file, paraphrase file and Voyage transports. That scorecard gives the verdicts for G2's batch 3 layer and for G1's and
+G4's retrieval layers. The synthetic brain's scorecard at 0.60.623.0, made before this amendment, is reported beside it
+as a secondary result that never gates, like the one at 0.60.557.0. Nothing else here changes. G1's and G4's counted
+agent cells still wait for batch 3's aggregates.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.

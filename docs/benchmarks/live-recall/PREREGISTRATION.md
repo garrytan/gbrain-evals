@@ -420,6 +420,49 @@ question file whose hash differs from this one, and a run whose protocol or visi
 An earlier freeze of the same question file on gbrain 0.60.618.0 checked the run kit. It read `pre_gbra_398` and matched
 this freeze in every field but the gbrain version and the epoch. It is not counted, and no batch 3 result comes from it.
 
+### 2026-11-10: batch 3 runs on gbrain 0.60.641.0
+
+Written after the first counted attempt stopped and before any batch 3 search.
+
+**What happened.** The first counted attempt ran on 2026-11-10 from gbrain-evals `446b9c14`, with `--gbrain` at
+0.60.623.0 (`d253ec0f`). It stopped with `LR_SCHEMA_MISMATCH`: the brain's schema was 297, and 0.60.623.0 expects 296.
+Earlier that day Wintermute's box had upgraded to gbrain 0.60.634.0, and that upgrade migrated the brain to schema 297.
+The runner never migrates, and it refuses before any search, so the attempt ran no batch 3 query. No batch 3 data
+exists at 0.60.623.0, and nothing from that attempt is counted or reported as a result.
+
+**What changes.** Batch 3's system under test is gbrain 0.60.641.0
+(`2560ffddb85244b82f2b325ee2ddc846f77c3cac`). That's the version the box runs, and it opens schema 297. The counted run
+passes `--gbrain <checkout>@2560ffddb85244b82f2b325ee2ddc846f77c3cac` and runs from the gbrain-evals commit that adds
+this amendment. Since `446b9c14` the runner has changed only in a check that applies to paid synthetic runs
+(`e0c55bb0`), so the counted path is the same code.
+
+**What doesn't change.** The question file and `freeze.json` are the ones recorded above, and their hashes stand:
+question file `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e` and `freeze.json`
+`ece4fc08627046d8d19449e5ace36123ea57b789c8794a820c7794efb56a20ad`. There is no new freeze. The protocol, arms,
+primaries, declared secondaries, power and minimum detectable differences are unchanged.
+
+**Why the existing freeze still applies.** The freeze was recorded at 0.60.623.0. Under batch 3 the runner compares the
+freeze's visibility epoch with the run's, and it compares gbrain versions only when both epochs read `unknown`
+(`eval/runner/live-recall/run.ts`, lines 463 to 465). 0.60.623.0 and 0.60.641.0 both read `post_gbra_398`, so the
+runner accepts this freeze at 0.60.641.0. The scorecard records both versions: `gbrain_loaded_version` 0.60.641.0 and
+`freeze_gbrain_version` 0.60.623.0.
+
+**What the numbers measure.** 0.60.641.0 hides more from scoped callers than 0.60.623.0 did. gbrain's changelog lists
+three changes:
+- 0.60.634.0 makes the SQL privacy checks behind list and search queries give the same answers as their TypeScript
+  versions.
+- 0.60.639.0 drops a link whose origin page is soft-deleted, or outside the caller's source grant.
+- 0.60.641.0 makes facts, timeline entries and tags follow the page they're about. They stay hidden from a caller who
+  can't read that page, and from everyone while the page is deleted.
+
+So batch 3's numbers measure 0.60.641.0, not 0.60.623.0. Every batch 3 result is labelled with both versions: run at
+0.60.641.0, frozen at 0.60.623.0.
+
+**Order on the box.** The counted run starts after GBRA-398's relabel of over-applied `access: private` labels has
+finished on the box, so the run reads one state of the brain. If the brain's schema moves past 297 before the run, the
+runner refuses with `LR_SCHEMA_MISMATCH` again. That stop ends the attempt, and running at any other version needs
+another dated amendment.
+
 ## Limits
 
 - One writer who knows the brain writes both the questions and the gold, so paraphrase difficulty and topic choice
