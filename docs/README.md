@@ -11,6 +11,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 |---|---|
 | How do words, vectors, and relationships work together? | [Retrieval lessons](retrieval-lessons.md) |
 | Which setup should I evaluate for my application? | [Settings by workload](settings.md) |
+| Which gbrain do these results test, and what changed since each was measured? | [The gbrain under test](gbrain-under-test.md) |
 | What did the October 11 re-pin change, category by category? | [October 11 re-pin to gbrain `77cf8e111` (v0.60.169.0)](benchmarks/2026-10-11-wave14-repin.md) ([preregistration](benchmarks/2026-10-11-wave14-repin-preregistration.md)) |
 | What did the October 2026 follow-up round measure, and why? | [Follow-up round plan and its reviews](plans/2026-10-06-followups-round/PLAN.md) |
 | Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md); then [agents operating gbrain](#agents-operating-gbrain) for setup time to working memory and the meeting-prep program |
@@ -283,6 +284,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-09: A row for the gbrain under test
+
+The opening table links [the gbrain under test](gbrain-under-test.md), the new page that holds the pin, the capability
+list and the defaults changed since each result, which moved there from the README. No other part changed.
 
 ### 2026-11-09: The OpenAI cache-write audit
 

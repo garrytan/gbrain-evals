@@ -27,6 +27,35 @@ This records what each gbrain-evals release changed and what its measurements me
   its own lease.
 - No published number changes, and the frozen cell manifests keep their bytes.
 
+## [0.10.191] - 2026-11-09
+
+### The README opens with a scorecard of agents with and without gbrain
+
+- **Results first.** The README now opens with one sentence on what gbrain-evals asks, a short "What gbrain does",
+  three takeaways and a results table with "Without gbrain" and "With gbrain" columns. Live recall phase 2 leads: Opus
+  5.5 goes from 13.3% with no retrieval to 86.7% with gbrain's tools, and particle-1 from 9.3% to 68.0%. Rows whose
+  experiment had no setup without gbrain say "not tested" instead of borrowing a baseline.
+- **Plain words.** Internal names such as `recall_all@5`, W10a, N9, Cat 35, F6 and RS1 became plain descriptions, and
+  caveats moved from table cells into numbered notes under the table.
+- **Version detail moved.** The pin's commits outside the release, the defaults changed since each result and the
+  capability list moved to [the gbrain under test](docs/gbrain-under-test.md). The pin table moved into a numbered
+  quick start that needs no API keys.
+- **Disclosures.** The gbrain, Particle and OpenAI lines appear once, in a closing section, as
+  [disclosures](docs/disclosures.md) now says.
+- **What it changes.** No score, verdict or stated ranking changes. Every figure is copied from its linked report.
+
+## [0.10.190] - 2026-11-09
+
+### Two pulls of one Ubicloud VM no longer run at once on Ubuntu 26.04
+
+- **Fixed.** `scripts/ubicloud/ubi-runner.sh` now gives a VM's pull lock to the pull that creates the lock's `pid` file,
+  which bash's `noclobber` opens with `O_EXCL`, so only one pull can create it. On Ubuntu 26.04, GitHub's
+  `ubuntu-latest` image since 2026-11-09, `mkdir` comes from uutils coreutils 0.8.0, which can tell two pulls that start
+  together that both created the lock directory. Both then wrote into the same local directory, and the
+  `ubi-runner pull lock` test failed CI at random.
+- **Test.** `test/eval/ubi-runner-pull.test.ts` adds a case that puts a `mkdir` on `PATH` that answers the way uutils
+  0.8.0 does, then starts two pulls together. It fails without the fix.
+
 ## [0.10.189] - 2026-11-09
 
 ### The live recall findings now say which model and search APIs saw the questions and page text
