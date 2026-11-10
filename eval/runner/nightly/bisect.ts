@@ -45,9 +45,9 @@ export async function bisect(commits: string[], isBad: (sha: string) => Promise<
   return { first_bad: commits[lo]!, steps };
 }
 
-/** Bad when at least half of the firing items' non-harness trials fail. */
-export function firingItemsBad(rows: Array<{ item: string; pass: boolean; harness: unknown }>, items: readonly string[]): boolean {
-  const mine = rows.filter(r => items.includes(r.item) && !r.harness);
+/** Bad when at least half of the firing items' non-harness trials fail; skipped rows (items the step did not run) do not count. */
+export function firingItemsBad(rows: Array<{ item: string; pass: boolean; harness: unknown; skipped?: string }>, items: readonly string[]): boolean {
+  const mine = rows.filter(r => items.includes(r.item) && !r.harness && !r.skipped);
   if (!mine.length) throw new Error(`no outcome for the firing items ${items.join(', ')} (every trial was a harness error or the suite was skipped)`);
   return mine.filter(r => !r.pass).length * 2 >= mine.length;
 }

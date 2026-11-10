@@ -2,9 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { ADAPTERS, classify, loadSource, validateManifest, SOURCES_SCHEMA } from '../../eval/runner/failure-causes/index.ts';
+import { gzipSync } from 'node:zlib';
+import { ADAPTERS, classify, loadSource, nightlyFailure, validateManifest, SOURCES_SCHEMA } from '../../eval/runner/failure-causes/index.ts';
 import { cat40Calls, cat40Fields, namesSlug } from '../../eval/runner/failure-causes/adapters/cat40.ts';
-import { sha256, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
+import { fileText, sha256, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
 import { entry, failure, FX, loadFixture } from '../support/failure-causes-fixture.ts';
 
 const byCase = (failures: ReturnType<typeof ADAPTERS.rs1>['failures']) => new Map(failures.map(f => [f.case_id, classify(f)]));
@@ -218,6 +219,86 @@ describe('stress adapters', () => {
     const out = ADAPTERS['live-recall']([mem('b2-577.json', 'scorecard', [card('0.60.577.0', 60)]), mem('b2-593.json', 'scorecard', [card('0.60.593.0', 61)])], entry('lr', 'live-recall'));
     expect(out.stress.filter(s => s.cause === 'retrieval_miss').map(s => s.detail)).toEqual([
       'hybrid_lexical at gbrain 0.60.577.0: gold page not in the top 20 for 40 of 100 questions', 'hybrid_lexical at gbrain 0.60.593.0: gold page not in the top 20 for 39 of 100 questions']);
+  });
+});
+
+describe('nightly adapter', () => {
+  const files = loadFixture('nightly', [['outcomes.jsonl', 'outcomes']]);
+  const fixtureRows = fileText(files[0]!).split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const out = ADAPTERS.nightly(files, entry('nightly-week', 'nightly'));
+  const byItem = new Map(out.failures.map(f => [f.task_id, f]));
+  const labels = new Map(out.failures.map(f => [f.task_id, classify(f)]));
+  const sha = 'c'.repeat(40);
+
+  test('reads every row once: a later row with the same identity replaces the earlier one, and a row without the suite facts is skipped', () => {
+    expect(out.counts).toEqual({ read: 17, mapped: 13, duplicate: 1, skipped: 3, failed: 12, skipped_reasons: {
+      'gbrain cccccccccccc predates the refused-write fix, which this suite needs': 1, 'keyless failure with no deterministic cause': 1, 'row predates the suite facts': 1 } });
+    expect(out.failures.map(f => f.task_id).sort()).toEqual(['08f4fc43', '0a995998', '2001', 'H1-02', 'H1-03', 'H1-04']);
+  });
+
+  test('identity, the suite facts and the gold come from the row; model is the reader as provider:model; evidence points at the line', () => {
+    expect(byItem.get('H1-02')).toMatchObject({ schema: 'eval-failure/1', source: 'nightly-week', run_id: `2026-11-09|master|${sha}`, case_id: 'cat40-hard-m|H1-02|gpt-6.1-sol|t1',
+      system: 'gbrain', arm: 'cat40-hard-m@master', arm_role: 'gbrain_default', condition: 'natural', visibility: 'synthetic', model: 'openai:gpt-6.1-sol', gbrain_sha: sha,
+      failed: true, score: 0, category: 'H1', agent_loop: true, stop: null, harness: null, operation: null, writes: null,
+      gold: { gold_count: 2, stored: null, hidden: null, retrieved: 'partial', delivered: 'partial', opened: 'partial', summary_only: null } });
+    expect(byItem.get('H1-02')!.evidence).toEqual([expect.stringMatching(/^fx:outcomes\.jsonl#[0-9a-f]{8} line=2$/)]);
+    expect(byItem.get('08f4fc43')!.model).toBe('anthropic:claude-opus-5-5');
+    expect(byItem.get('2001')!.writes).toEqual({ lost: [], stuck: null, overwritten: null, duplicated: [] });
+  });
+
+  test('causes: an unrecovered refusal, a retrieval miss measured at 10, a misreported write, a harness row, and an answer cut at its output limit', () => {
+    expect(labels.get('H1-02')).toMatchObject({ cause: 'tool_contract', rule_id: 'tool.unrecovered_error' });
+    expect(labels.get('08f4fc43')).toMatchObject({ cause: 'retrieval_miss', rule_id: 'retrieval.no_gold_retrieved', tags: ['measured_at_10'] });
+    expect(labels.get('2001')).toMatchObject({ cause: 'citation_abstention', rule_id: 'reasoning.misreported_state', tags: ['misreport', 'recovered_tool_error'] });
+    expect(labels.get('H1-04')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.error' });
+    expect(byItem.get('H1-04')!.harness).toEqual({ error: 'harness_error: MCP server exited', scorer_artifact: null });
+    expect(labels.get('0a995998')).toMatchObject({ cause: 'harness_error', rule_id: 'harness.output_truncated', tags: ['measured_at_10', 'no_answer'] });
+  });
+
+  test('stop: harness_error and error are harness_error, turn_cap stays, a smoke timeout is timeout, an ordinary end is null', () => {
+    expect(['H1-02', 'H1-03', 'H1-04', '08f4fc43'].map(i => byItem.get(i)!.stop)).toEqual([null, 'turn_cap', 'harness_error', null]);
+    expect(labels.get('H1-03')).toMatchObject({ cause: 'partial_evidence', secondary: ['timeout_latency'], tags: ['no_answer', 'turn_cap'] });
+    const smoke = fixtureRows.find(r => r.item === 'upgrade-from-old');
+    expect(nightlyFailure(smoke, 'n', []).stop).toBe('timeout');
+    expect(nightlyFailure({ ...smoke, stop: 'error' }, 'n', []).stop).toBe('harness_error');
+    expect(nightlyFailure({ ...smoke, stop: 'ok' }, 'n', []).stop).toBeNull();
+  });
+
+  test('row text only on public or synthetic rows with an answer', () => {
+    expect(byItem.get('H1-02')!.text).toEqual({ question: 'Who leads the Acme Example deal?', expected: 'Ada Example', answer: 'Bo Example', context: null });
+    expect(byItem.get('08f4fc43')!.text).toMatchObject({ question: 'Which city did the user move to?', answer: 'Lyon' });
+    expect(byItem.get('0a995998')!.text).toBeUndefined();
+    expect(byItem.get('H1-03')!.text).toBeUndefined();
+    const hidden = ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', [{ ...fixtureRows[1], visibility: 'private' }])], entry('n', 'nightly'));
+    expect(hidden.failures[0]!.text).toBeUndefined();
+  });
+
+  test('a skipped row comes back as not_run, and classify gives it the not_run rule', () => {
+    const reason = 'gbrain cccccccccccc predates the refused-write fix, which this suite needs';
+    expect(out.not_run).toEqual([expect.objectContaining({ failed: false, not_run: reason, task_id: '2002', model: 'openai:gpt-6.1-sol', case_id: 'refused-write-agents|2002|gpt-6.1-sol|t1' })]);
+    expect(classify(out.not_run![0]!)).toMatchObject({ cause: null, rule_id: `not_run.${reason}` });
+  });
+
+  test('keyless rows become stress counts per night, suite and cause, never failures; a keyless failure with no deterministic cause is skipped', () => {
+    expect(out.stress.map(s => [s.cause, s.count, s.of, s.detail])).toEqual([
+      ['write_integrity', 2, 5, 'concurrent-writers: write.duplicated (1), write.lost (1) in 2 of 5 items'],
+      ['harness_error', 1, 5, 'concurrent-writers: harness.error (1) in 1 of 5 items'],
+      ['operations', 2, 2, 'system-smokes: operations.source-pinned-sync (1), operations.upgrade-from-old (1) in 2 of 2 items'],
+      ['tool_contract', 1, 1, 'tool-contract-replay: tool.unrecovered_error (1) in 1 of 1 items'],
+    ]);
+    expect(out.stress[0]).toMatchObject({ source: 'nightly-week', run_id: `2026-11-09|master|${sha}`, system: 'gbrain', model: 'none (keyless)', gbrain_sha: sha, condition: 'forced',
+      visibility: 'synthetic', unit: 'episodes' });
+    expect(out.stress[0]!.evidence).toEqual([expect.stringMatching(/ line=10$/), expect.stringMatching(/ line=13$/)]);
+    expect(out.failures.some(f => f.model === 'none (keyless)')).toBe(false);
+  });
+
+  test('reads outcomes.jsonl.gz the same way, refuses a row of another schema, and is registered for manifests', () => {
+    const bytes = gzipSync(files[0]!.bytes);
+    const gz = ADAPTERS.nightly([{ ...files[0]!, path: 'outcomes.jsonl.gz', bytes, sha256: sha256(bytes) }], entry('nightly-week', 'nightly'));
+    expect([gz.counts, gz.failures.length, gz.stress.length]).toEqual([out.counts, out.failures.length, out.stress.length]);
+    expect(() => ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', [{ schema: 'other/1' }])], entry('n', 'nightly'))).toThrow(/^mem:n\/outcomes\.jsonl#[0-9a-f]{8} line=1: not a nightly-outcome\/1 row$/);
+    expect(validateManifest({ schema: SOURCES_SCHEMA, sources: [{ id: 'nightly-cat40-hard-m-w45', adapter: 'nightly', visibility: 'synthetic', condition: 'natural', root: 'nightly',
+      files: [{ path: '2026-11-09/master/outcomes.jsonl.gz', sha256: 'a'.repeat(64), role: 'outcomes' }] }] })).toEqual([]);
   });
 });
 

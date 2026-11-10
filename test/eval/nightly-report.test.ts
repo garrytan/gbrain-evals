@@ -1,13 +1,15 @@
 /**
  * The nightly report (eval/runner/nightly/report.ts): pass^k and cost per correct answer, and the diff against an earlier
  * night with its flags, on fixture nights: a pass-rate drop, strong flips, a deterministic signal, a cost rise, a changed
- * suite digest, a suite the ref skipped, and harness rows kept out of every rate.
+ * suite digest, a suite the ref skipped, harness and skipped rows kept out of every rate, and failures counted by the
+ * failure-cause taxonomy.
  */
 import { describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
+import { TAXONOMY_VERSION } from '../../eval/runner/failure-causes/index.ts';
 import type { Outcome } from '../../eval/runner/nightly/outcome.ts';
 import { cellStats, compareNights, findPreviousNight, passHatK, writeReport, type NightManifest, type SuiteStatus } from '../../eval/runner/nightly/report.ts';
 import { row } from './nightly-fixtures.ts';
@@ -43,7 +45,15 @@ describe('pass^k and cost per correct answer', () => {
     expect(c.cost_usd).toBeCloseTo(5, 10);
     expect(c.cost_per_correct).toBeCloseTo(1, 10);
     expect(c.signals.harness_errors).toBe(1);
-    expect(c.failures_by_cause).toEqual({ unclassified: 4, harness: 1 });
+    expect(c.failures_by_cause).toEqual({ unclassified: 4, harness_error: 1 });
+  });
+
+  test('failures by cause use the failure-cause taxonomy, and a skipped row is out of every rate and count, counted as not run', () => {
+    const rows = [row({ item: 'item-0', writes: { lost: ['F3'], stuck: null, overwritten: null, duplicated: [] } }), row({ item: 'item-1', gold_count: 1, retrieved: 'none' }),
+      row({ item: 'item-2', pass: true, score: 1 }), row({ item: 'item-3', skipped: 'postgres trials need --pg-admin <url>' })];
+    const c = cellStats('suite-a', 'gpt-6.1-sol', rows, 1);
+    expect(c.failures_by_cause).toEqual({ write_integrity: 1, retrieval_miss: 1 });
+    expect([c.items, c.trials, c.harness, c.skipped, c.pass1]).toEqual([3, 3, 0, 1, 1 / 3]);
   });
 });
 
@@ -114,7 +124,8 @@ describe('the report files', () => {
     };
     write('2026-11-07', manifest([{ id: 'suite-a' }], { night: '2026-11-07' }), trials(Array(20).fill(3)));
     const prev = write('2026-11-08', manifest([{ id: 'suite-a' }], { night: '2026-11-08', sha: 'a'.repeat(40) }), trials(Array(20).fill(3)));
-    const dir = write('2026-11-09', manifest([{ id: 'suite-a' }, { id: 'suite-b', status: 'not_built', reason: 'smokes missing' }]), trials([...Array(14).fill(3), ...Array(6).fill(0)], 3, { cost_usd: null }));
+    const dir = write('2026-11-09', manifest([{ id: 'suite-a' }, { id: 'suite-b', status: 'not_built', reason: 'smokes missing' }]),
+      [...trials([...Array(14).fill(3), ...Array(6).fill(0)], 3, { cost_usd: null }), row({ suite: 'suite-b', item: 'smoke-1', skipped: 'smokes missing' })]);
     expect(findPreviousNight(root, '2026-11-09', 'master')).toBe(prev);
     const summary = writeReport({ dir, previous: prev, fixes: [{ issue: 'ISSUE-1', pr: 'gbrain#1', gbrain_version: '0.60.621.0', suite: 'suite-a', items: ['item-0', 'item-19'] }] });
     expect((summary.flags as unknown[]).length).toBe(2);
@@ -124,7 +135,9 @@ describe('the report files', () => {
     expect(md).toContain('| suite-b | | | | | | | | not built: smokes missing |');
     expect(md).toContain('## Against the previous master night');
     expect(md).toContain('ISSUE-1 (gbrain#1, gbrain 0.60.621.0): suite-a item-0, item-19: 3 of 6 passing tonight');
-    expect(JSON.parse(readFileSync(join(dir, 'summary.json'), 'utf8')).classifier_version).toBe('nightly-causes/v0');
+    expect(md).toContain(`Causes: failure-cause taxonomy ${TAXONOMY_VERSION}.`);
+    expect(md).toContain('| n/a | unclassified 18 |');
+    expect(JSON.parse(readFileSync(join(dir, 'summary.json'), 'utf8')).taxonomy_version).toBe(TAXONOMY_VERSION);
     expect(existsSync(join(dir, 'outcomes.jsonl.gz'))).toBe(true);
     expect(gunzipSync(readFileSync(join(dir, 'outcomes.jsonl.gz'))).toString('utf8')).toBe(readFileSync(join(dir, 'outcomes.jsonl'), 'utf8'));
   });

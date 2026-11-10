@@ -10,11 +10,14 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
-import { cat40Commands, cat40DevSet, cat40Rows, episodeRows, judgeFor, latestRowPerItem, qaCommand, qaRows, smokeRows, qualifiedModel, seedRanges, toolErrorFromText, trialRows, type NightContext, type SuiteRun } from '../../eval/runner/nightly/adapters.ts';
+import type { HardTask } from '../../eval/generators/hard/schema.ts';
+import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
+import { cat40Commands, cat40DevSet, cat40Rows, episodeRows, judgeFor, latestRowPerItem, outcome, qaCommand, qaRows, replayAdapter, seedRanges, skippedRows, smokeRows, SUITE_FACTS, toolErrorFromText,
+  trialRows, type NightContext, type SuiteRun } from '../../eval/runner/nightly/adapters.ts';
 import { canonicalDigest, loadDevSet } from '../../eval/runner/nightly/devset.ts';
 import { NightlyCache } from '../../eval/runner/nightly/judge-cache.ts';
 import { keylessEnv } from '../../eval/runner/nightly/keyless.ts';
-import { readOutcomes } from '../../eval/runner/nightly/outcome.ts';
+import { qualifiedModel, readOutcomes } from '../../eval/runner/nightly/outcome.ts';
 import { main, parseArgs, planSuites, requirementGap } from '../../eval/runner/nightly/run.ts';
 import { isContentMiss, recordedCalls, replayItems } from '../../eval/runner/nightly/tool-contract.ts';
 
@@ -218,6 +221,131 @@ describe('reading runner records into outcome rows', () => {
   });
 });
 
+describe('the fields the failure-cause adapter reads', () => {
+  test('every dev-set suite has its facts; a row says gbrain, the suite at its ref, and default on master or variant elsewhere', () => {
+    expect(devset.suites.map(s => s.id).filter(id => !SUITE_FACTS[id])).toEqual([]);
+    const run = suiteRun('lme-s-hard');
+    expect(outcome(run, ctx(), { item: '08f4fc43', pass: true })).toMatchObject({ system: 'gbrain', arm: 'lme-s-hard@master', arm_role: 'gbrain_default', condition: 'natural', visibility: 'public', agent_loop: false });
+    expect(outcome(suiteRun('concurrent-writers'), ctx({ ref: 'stable' }), { item: 'pglite:5001', pass: true }))
+      .toMatchObject({ arm: 'concurrent-writers@stable', arm_role: 'gbrain_variant', condition: 'forced', visibility: 'synthetic' });
+    expect(outcome(suiteRun('refused-write-agents'), ctx(), { item: '2001', pass: true })).toMatchObject({ condition: 'forced', agent_loop: true });
+    expect(() => outcome({ ...run, suite: { ...run.suite, id: 'no-such-suite' } }, ctx(), { item: 'x', pass: true })).toThrow('suite no-such-suite has no row in SUITE_FACTS');
+  });
+
+  test('skipped rows: one per reader, item and trial with the reason; a fake night\'s model suite has the fake reader, a keyless suite none', () => {
+    const rows = skippedRows(suiteRun('refused-write-agents', ['2001', '2002'], { k: 2 }), ctx(), 'gbrain predates it');
+    expect(rows).toHaveLength(8);
+    expect(rows.every(r => r.skipped === 'gbrain predates it' && !r.pass && r.harness === null)).toBe(true);
+    expect(new Set(rows.map(r => r.reader))).toEqual(new Set(['claude-opus-5-5', 'gpt-6.1-sol']));
+    expect(skippedRows(suiteRun('refused-write-agents', ['2001']), ctx({ fake: true }), 'x').map(r => r.reader)).toEqual(['fake']);
+    expect(skippedRows(suiteRun('concurrent-writers', ['5001'], { readers: [null] }), ctx(), 'x', ['postgres:5001'])).toMatchObject([{ item: 'postgres:5001', reader: null, skipped: 'x' }]);
+  });
+
+  test('Cat 40 cells: each call with its refusal and recovery, the gold from cited and missed evidence, searched and opened coverage, the answer and the world task', () => {
+    const dir = tmp();
+    const cell = (o: Record<string, unknown>) => ({ schema: 'cat40-cell-v2', attempt: 1, model: 'gpt-6.1-sol', arm: 'gbrain-hard', family: 'H1', repeat: 0, stop: 'submitted', claims: null, total_usd: 0.25, judge_usd: 0.05,
+      timings: { agent_ms: 1 }, wall_ms: 2, experiment: { scale: 'large' }, ...o });
+    const calls = [{ name: 'get_page', ms: 5, chars: 1, truncated: false }, { name: 'get_page', ms: 6, chars: 1, truncated: false }, { name: 'search', ms: 7, chars: 1, truncated: false }];
+    writeFileSync(join(dir, 'attempts.jsonl'), [
+      cell({ key: 'gpt-6.1-sol|gbrain-hard|H1-02|0', attempt_id: 'gpt-6.1-sol|gbrain-hard|H1-02|0#1', task: 'H1-02',
+        score: { success: false, submitted: true, said_wrong: false, evidence_cited: ['people/ada-example'], missed_evidence: ['deals/acme-example'], wrote: false },
+        sessions: [{ index: 1, role: 'question', stop: 'submitted', usd: 0.25, run: { turns: 4, final: { answer: 'Ada Example' }, tool_calls: calls } }] }),
+      cell({ key: 'gpt-6.1-sol|gbrain-hard|H1-03|0', attempt_id: 'gpt-6.1-sol|gbrain-hard|H1-03|0#1', task: 'H1-03', stop: 'turn_cap',
+        score: { success: false, submitted: false, said_wrong: false, evidence_cited: [], missed_evidence: ['deals/acme-example'], wrote: false },
+        sessions: [{ index: 1, role: 'question', stop: 'turn_cap', usd: 0.25, run: { turns: 30, final: null, tool_calls: calls.slice(2) } }] }),
+    ].map(l => JSON.stringify(l)).join('\n') + '\n');
+    writeFileSync(join(dir, 'transcripts.jsonl'), JSON.stringify({ key: 'gpt-6.1-sol|gbrain-hard|H1-02|0', attempt_id: 'gpt-6.1-sol|gbrain-hard|H1-02|0#1', tools: [
+      { session: 1, name: 'get_page', args: { slug: 'people/ada-example' }, result: 'Error: {"error":"invalid_params","message":"bad selector"}' },
+      { session: 1, name: 'get_page', args: { slug: 'people/ada-example' }, result: '{"slug":"people/ada-example"}' },
+      { session: 1, name: 'search', args: { query: 'acme' }, result: '{"results":[{"slug":"people/ada-example"},{"slug":"deals/acme-example-2"}]}' }] }) + '\n');
+    const task = { id: 'H1-02', question: 'Who leads the Acme deal?', gold: { answer: ['Ada Example', 'Ada'], evidence: ['people/ada-example', 'deals/acme-example'] } } as unknown as HardTask;
+    const [one, two] = cat40Rows(suiteRun('cat40-hard-m', ['H1-02', 'H1-03']), ctx(), dir, new Map([['H1-02', task]])).sort((a, b) => a.item.localeCompare(b.item));
+    expect(one).toMatchObject({ category: 'H1', gold_count: 2, searched_gold: ['people/ada-example'], retrieved: 'partial', delivered: 'partial', opened: 'partial', answered: true, answer: 'Ada Example',
+      question: 'Who leads the Acme deal?', expected: 'Ada Example | Ada', system: 'gbrain', arm: 'cat40-hard-m@master', condition: 'natural', visibility: 'synthetic', agent_loop: true });
+    expect(one!.calls).toEqual([{ name: 'get_page', error: 'invalid_params', recovered: true, ms: 5, memory: true }, { name: 'get_page', error: null, recovered: null, ms: 6, memory: true },
+      { name: 'search', error: null, recovered: null, ms: 7, memory: true }]);
+    expect(two).toMatchObject({ stop: 'turn_cap', gold_count: 1, opened: 'none', calls: null, retrieved: null, searched_gold: null, answered: false, answer: null, question: null });
+  });
+
+  test('Part C episodes: every logged call with its recovery, the write losses the nightly scorer measures, and whether a report came back', () => {
+    const dir = tmp();
+    const score = { pass: false, tokens_once: false, report_correct: true, no_resend: false, duplicated: ['F3'], missing: ['F4'], acknowledged_missing: ['F2'], resent: ['F1'], misreports: [], unreported: [] };
+    const calls = [
+      { name: 'put_page', write: true, is_error: true, cls: 'refused', code: 'worktree_refreshing', tokens: ['F1'], ms: 4, harness_error: null },
+      { name: 'put_page', write: true, is_error: true, cls: 'refused', code: 'worktree_refreshing', tokens: ['F5'], ms: 5, harness_error: null },
+      { name: 'get_page', write: false, is_error: true, cls: null, code: 'not_found', tokens: [], ms: 6, harness_error: null },
+      { name: 'get_page', write: false, is_error: false, cls: null, code: null, tokens: [], ms: 7, harness_error: null },
+    ];
+    const transcript = ['notes/a', 'notes/b', 'notes/a', 'notes/a'].map((slug, i) => ({ name: calls[i]!.name, args: { slug } }));
+    writeFileSync(join(dir, 'task-1001-t1.json'), JSON.stringify({ usd: 0.02, loop: { stop: 'submitted' }, nightly_score: score, score: { success: false }, calls, transcript,
+      report: { ok: true, source: 'submit_answer' }, behavior: { refusals: [] } }));
+    writeFileSync(join(dir, 'task-1001-t2.json'), JSON.stringify({ usd: 0.01, loop: { stop: 'turn_cap' }, nightly_score: { ...score, resent: [] }, score: { success: false }, calls: calls.slice(2),
+      report: { ok: false, source: null }, behavior: { refusals: [] } }));
+    const [one, two] = episodeRows(suiteRun('refresh-barrier-agents', ['1001'], { k: 2 }), ctx(), 'gpt-6.1-sol', dir).sort((a, b) => a.trial - b.trial);
+    expect(one!.calls!.map(c => [c.name, c.error, c.recovered, c.ms])).toEqual([['put_page', 'refused/worktree_refreshing', false, 4], ['put_page', 'refused/worktree_refreshing', true, 5],
+      ['get_page', 'not_found', true, 6], ['get_page', null, null, 7]]);
+    expect(one).toMatchObject({ writes: { lost: ['F2'], stuck: null, overwritten: null, duplicated: ['F3'] }, answered: true, agent_loop: true });
+    expect(two!.calls!.map(c => [c.error, c.recovered])).toEqual([['not_found', null], [null, null]]);
+    expect(two!.answered).toBe(false);
+  });
+
+  test('concurrency trials: write ids by class from Part A\'s per-op flags', () => {
+    const dir = tmp();
+    const base = { flags: { converge: { ok: true }, quiesce: { ok: true } }, switches: [{ refresh_barrier: true }], arm: 'on', faults: {}, upstream: { missing_head: 0 } };
+    writeFileSync(join(dir, '5004.json'), JSON.stringify({ ...base, ops: [{ state: 'committed', request_id: 'r1', lost: true }, { state: 'pending', writer: 2, op: 7, stuck: true },
+      { state: 'committed', request_id: 'r3', overwritten: true }, { state: 'committed' }] }));
+    const [r] = trialRows(suiteRun('concurrent-writers', ['5004']), ctx(), 'pglite', dir);
+    expect(r!.writes).toEqual({ lost: ['r1'], stuck: ['w2.7'], overwritten: ['r3'], duplicated: [] });
+    expect(r).toMatchObject({ reader: null, condition: 'forced', agent_loop: false });
+  });
+
+  test('QA rows: recall at 10 beside the runner\'s @5, coverage at 10, delivered from the packed prefix, and the question, reference and answer', () => {
+    const dir = tmp();
+    const run = suiteRun('lme-s-hard');
+    const [a, b] = run.items.map(i => i.id);
+    const rows = [
+      { id: a, category: 'multi-session', gold_count: 2, abstention: false, recall_all_at_5: 0, recall_any_at_5: 0, recall_all_at_10: 0, retrieved: ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 'g1'],
+        qa_sessions: 5, qa_score: 0, qa_answer: 'Lyon', qa_receipts: [{ role: 'reader', finish: 'stop' }, { role: 'judge', finish: 'stop' }] },
+      { id: b, category: 'single-session', gold_count: 1, abstention: false, recall_all_at_5: 1, recall_any_at_5: 1, recall_all_at_10: 1, retrieved: ['g3', 's1'], qa_sessions: 2, qa_score: 0,
+        qa_answer: '  ', qa_receipts: [{ role: 'reader', finish: 'max_tokens' }] },
+    ];
+    writeFileSync(join(dir, 'rows.ndjson'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+    writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ qa: { mode: 'reader', context: 'sessions' } }));
+    const q = (id: string, gold: string[], answer: string): [string, MemoryQuestion] => [id, { id, conversation: 'c', question: `Question ${id}?`, category: 'x', gold, abstention: false, answer }];
+    const [one, two] = qaRows(run, ctx(), 'gpt-6.1-sol', dir, 'anthropic:claude-opus-5-5', new Map([q(a!, ['g1', 'g2'], 'Paris'), q(b!, ['g3'], 'Rome')]));
+    expect(one).toMatchObject({ category: 'multi-session', gold_count: 2, retrieved: 'partial', delivered: 'none', answered: true, finish_reason: 'stop', question: `Question ${a}?`, expected: 'Paris',
+      answer: 'Lyon', evidence: { recall_any_at_10: 1, recall_all_at_10: 0, recall_any_at_5: 0, recall_all_at_5: 0 } });
+    expect(two).toMatchObject({ retrieved: 'all', delivered: 'all', answered: false, finish_reason: 'max_tokens' });
+    const at5 = qaRows(run, ctx(), 'gpt-6.1-sol', dir, 'anthropic:claude-opus-5-5');
+    expect(at5.map(r => [r.retrieved, r.delivered, r.evidence.recall_any_at_10, r.question])).toEqual([['none', null, null, null], ['all', null, null, null]]);
+    writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ qa: { mode: 'think', context: 'sessions' } }));
+    expect(qaRows(run, ctx(), 'gpt-6.1-sol', dir, 'anthropic:claude-opus-5-5', new Map([q(a!, ['g1', 'g2'], 'Paris')]))[0]!.delivered).toBeNull();
+  });
+
+  test('tool-contract replay rows: every replayed call by tool, and a refusal never recovered, since a replay sends each call once', async () => {
+    const c = ctx();
+    const dir = join(c.dir, 'suites', 'tool-contract-replay');
+    mkdirSync(dir, { recursive: true });
+    const paths = { rollout: { ok: 2, ok_by_tool: { get_page: 2 }, refused: {} }, 'write-capture': { ok: 1, ok_by_tool: { get_page: 1 }, refused: { get_page: { invalid_params: 1 } } },
+      mcp: { ok: 2, ok_by_tool: { get_page: 1, traverse_graph: 1 }, refused: {} } };
+    writeFileSync(join(dir, 'replay.json'), JSON.stringify([{ item: 'sol-query', family: 'sol', skill: 'query', calls: 2, unparseable: 0, refusals: 1, paths }]));
+    const [r] = (await replayAdapter(suiteRun('tool-contract-replay', ['sol-query'], { readers: [null] }), c)).rows;
+    expect(r).toMatchObject({ pass: false, category: 'query', condition: 'forced', reader: null });
+    expect(r!.calls).toHaveLength(6);
+    expect(r!.calls!.filter(x => x.error)).toEqual([{ name: 'get_page', error: 'invalid_params', recovered: false, ms: null, memory: true }]);
+    expect(r!.calls!.filter(x => x.name === 'traverse_graph')).toHaveLength(1);
+  });
+
+  test('system smokes: a failed smoke is the operation it checks, with its code; a harness_ code is a harness row', () => {
+    const [ok, failed, harness] = smokeRows(suiteRun('system-smokes', undefined, { readers: [null] }), ctx(), [{ id: 'managed-sync', pass: true, code: 'ok', detail: '', ms: 1 },
+      { id: 'source-pinned-sync', pass: false, code: 'delete_not_pushed', detail: 'the delete never reached the remote', ms: 2 },
+      { id: 'postgres-15', pass: false, code: 'harness_missing_postgres', detail: 'needs --pg15', ms: 3 }]);
+    expect([ok!.operation, ok!.harness]).toEqual([null, null]);
+    expect(failed).toMatchObject({ operation: { step: 'source-pinned-sync', error: 'delete_not_pushed' }, harness: null, condition: 'forced' });
+    expect(harness).toMatchObject({ operation: null, harness: { error: 'harness_missing_postgres: needs --pg15' } });
+  });
+});
+
 describe('tool-contract replay', () => {
   test('each family\'s recorded calls parse from the SkillOpt probe inputs', () => {
     for (const family of ['sol', 'opus']) for (const skill of ['query', 'briefing', 'fact-check']) expect(recordedCalls(family, skill).length).toBeGreaterThan(0);
@@ -229,6 +357,7 @@ describe('tool-contract replay', () => {
     for (const path of ['rollout', 'write-capture', 'mcp'] as const) {
       const p = r!.paths[path];
       expect(p.ok + Object.values(p.refused).flatMap(Object.values).reduce((a, b) => a + b, 0)).toBe(r!.calls - r!.unparseable);
+      expect(Object.values(p.ok_by_tool).reduce((a, b) => a + b, 0)).toBe(p.ok);
     }
   }, 120_000);
 

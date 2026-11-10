@@ -13,14 +13,18 @@ import { execFileSync, spawn } from 'node:child_process';
 import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { canonicalCells, readRecords } from '../cat40/records.ts';
-import { loadCorpus } from '../memory-qa/corpus.ts';
+import { cat40Calls, cat40Fields, namesSlug } from '../failure-causes/adapters/cat40.ts';
+import type { Coverage, ToolCall } from '../failure-causes/types.ts';
+import type { HardTask } from '../../generators/hard/schema.ts';
+import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
+import { recallAllAtK, recallAnyAtK } from '../metrics.ts';
 import { readResult } from '../refresh-barrier/agent.ts';
 import { failureClasses } from '../refresh-barrier/analyze.ts';
 import { isCapStop } from '../refresh-barrier/ledger.ts';
 import type { Item, Suite } from './devset.ts';
 import { contextDigest, NightlyCache, qaPromptVersion } from './judge-cache.ts';
 import { keylessEnv, paidEnv, type Provider } from './keyless.ts';
-import { OUTCOME_SCHEMA, type Outcome, type ToolError } from './outcome.ts';
+import { OUTCOME_SCHEMA, qualifiedModel, type Outcome, type ToolError } from './outcome.ts';
 import type { DevSetRun } from './report.ts';
 import type { WriteScore } from './write-score.ts';
 
@@ -55,14 +59,6 @@ export type Adapter = (run: SuiteRun, ctx: NightContext) => Promise<AdapterResul
 /** Suites whose items call a model: they need --fake, or --paid with the night's ledger run. */
 export const callsModels = (s: Pick<Suite, 'kind'>) => s.kind === 'agent' || s.kind === 'qa';
 
-export function qualifiedModel(reader: string): string {
-  if (reader.includes(':')) return reader;
-  if (reader.startsWith('claude-')) return `anthropic:${reader}`;
-  if (reader.startsWith('gpt-') || /^o\d/.test(reader)) return `openai:${reader}`;
-  if (reader.startsWith('particle-')) return `particle:${reader}`;
-  throw new Error(`no provider for reader ${reader}`);
-}
-
 /** The QA judge for a reader's rows: GPT-6 Astra judges Claude rows and Claude Opus 5.5 judges every other family's, so no judge grades its own family. */
 export const judgeFor = (reader: string) => (qualifiedModel(reader).startsWith('anthropic:') ? 'openai:gpt-6-astra' : 'anthropic:claude-opus-5-5');
 
@@ -96,10 +92,28 @@ const bun = (script: string, ...args: string[]) => ['bun', '--no-env-file', scri
 /** Whether a child's log tail records a ledger cap stop (refresh-barrier/ledger.ts isCapStop, line by line). */
 export const capStopIn = (tail: string) => tail.split('\n').some(line => isCapStop(line) || (line.includes('budget: ') && isCapStop(line.slice(line.indexOf('budget: ')))));
 
+/**
+ * Each suite's fixed facts, stamped on every row it writes: natural for the headroom QA and agent-QA suites, forced for the
+ * fault-injection suites (the write-agent episodes run against injected refreshes and refusals, the trials, smokes and replay); public for LongMemEval and BEAM, synthetic for the generated ones.
+ */
+export const SUITE_FACTS: Record<string, Pick<Outcome, 'condition' | 'visibility' | 'agent_loop'>> = {
+  'cat40-hard-m': { condition: 'natural', visibility: 'synthetic', agent_loop: true },
+  'refresh-barrier-agents': { condition: 'forced', visibility: 'synthetic', agent_loop: true },
+  'refused-write-agents': { condition: 'forced', visibility: 'synthetic', agent_loop: true },
+  'concurrent-writers': { condition: 'forced', visibility: 'synthetic', agent_loop: false },
+  'system-smokes': { condition: 'forced', visibility: 'synthetic', agent_loop: false },
+  'lme-s-hard': { condition: 'natural', visibility: 'public', agent_loop: false },
+  'beam-1m-hard': { condition: 'natural', visibility: 'public', agent_loop: false },
+  'tool-contract-replay': { condition: 'forced', visibility: 'synthetic', agent_loop: false },
+};
+
 export function outcome(run: SuiteRun, ctx: Pick<NightContext, 'night' | 'ref' | 'sha'>, o: Partial<Outcome> & Pick<Outcome, 'item' | 'pass'>): Outcome {
   const role = run.items.find(i => i.id === o.item || o.item.endsWith(`:${i.id}`))?.role ?? 'headroom';
+  const facts = SUITE_FACTS[run.suite.id];
+  if (!facts) throw new Error(`suite ${run.suite.id} has no row in SUITE_FACTS`);
   return { schema: OUTCOME_SCHEMA, night: ctx.night, suite: run.suite.id, suite_digest: run.digest, role, reader: null, ref: ctx.ref, sha: ctx.sha, trial: 1,
-    score: null, cost_usd: null, stop: null, tool_errors: [], evidence: {}, harness: null, ...o };
+    score: null, cost_usd: null, stop: null, tool_errors: [], evidence: {}, harness: null,
+    system: 'gbrain', arm: `${run.suite.id}@${ctx.ref}`, arm_role: ctx.ref === 'master' ? 'gbrain_default' : 'gbrain_variant', ...facts, ...o };
 }
 
 /** Rows for items a child never reported on: harness rows, so the report counts them apart and a resume reruns them. */
@@ -107,6 +121,11 @@ const missingRows = (run: SuiteRun, ctx: NightContext, reader: string | null, ha
   items.flatMap(item => Array.from({ length: run.k }, (_, t) => t + 1)
     .filter(trial => !have.some(r => r.item === item && r.reader === reader && r.trial === trial))
     .map(trial => outcome(run, ctx, { item, reader, trial, pass: false, harness: { error: why } })));
+
+/** Rows for items the night scheduled and did not run (a suite it skipped or could not build, an engine it had no server for), with the reason. */
+export const skippedRows = (run: SuiteRun, ctx: Pick<NightContext, 'night' | 'ref' | 'sha' | 'fake'>, why: string, items = run.items.map(i => i.id)) =>
+  (ctx.fake && callsModels(run.suite) ? ['fake'] : run.readers).flatMap(reader => items.flatMap(item => Array.from({ length: run.k }, (_, t) =>
+    outcome(run, ctx, { item, reader, trial: t + 1, pass: false, skipped: why }))));
 
 /** gbrain's answer to a call, read from the text the agent saw: a refusal (a coded error the caller can act on) or a crash. */
 export function toolErrorFromText(tool: string, text: string): ToolError | null {
@@ -149,14 +168,21 @@ export function cat40DevSet(cellsDir: string): DevSetRun | null {
   return (JSON.parse(readFileSync(join(cellsDir, receipts.at(-1)!), 'utf8')) as { dev_set?: DevSetRun }).dev_set ?? null;
 }
 
-/** Outcome rows from a Cat 40 cells directory: the canonical cell per key, its transcript's refused calls, and harness rows for keys left incomplete. */
-export function cat40Rows(run: SuiteRun, ctx: NightContext, cellsDir: string): Outcome[] {
+/**
+ * Outcome rows from a Cat 40 cells directory: the canonical cell per key, its transcript's refused calls, and harness rows for
+ * keys left incomplete. The gold is the cell's evidence_cited and missed_evidence: opened from those, searched_gold the gold
+ * ids any tool result names (the transcript holds each result as the agent saw it, so delivered is the same coverage). Every
+ * call comes from the cell's tool calls lined up with the transcript, a refusal read from the result text, and recovered as
+ * the failure-cause Cat 40 adapter computes it; without a transcript that lines up call for call, calls is null. The question
+ * and its expected answer come from the world's task when tasks holds it.
+ */
+export function cat40Rows(run: SuiteRun, ctx: NightContext, cellsDir: string, tasks: ReadonlyMap<string, HardTask> = new Map()): Outcome[] {
   const files = ['attempts.jsonl', 'results.jsonl'].map(f => join(cellsDir, f)).filter(existsSync);
   const { cells, incomplete } = canonicalCells(readRecords(files));
-  const transcripts = new Map<string, Array<{ name: string; result: string }>>();
+  const transcripts = new Map<string, Array<{ name: string; args?: Record<string, unknown>; result: string }>>();
   if (existsSync(join(cellsDir, 'transcripts.jsonl'))) {
     for (const line of readFileSync(join(cellsDir, 'transcripts.jsonl'), 'utf8').split('\n').filter(Boolean)) {
-      const t = JSON.parse(line) as { key: string; attempt_id?: string; tools: Array<{ name: string; result: string }> };
+      const t = JSON.parse(line) as { key: string; attempt_id?: string; tools: Array<{ name: string; args?: Record<string, unknown>; result: string }> };
       transcripts.set(t.attempt_id ?? t.key, t.tools);
     }
   }
@@ -164,11 +190,29 @@ export function cat40Rows(run: SuiteRun, ctx: NightContext, cellsDir: string): O
   const rows = cells.filter(c => run.items.some(i => i.id === c.task)).map(c => {
     const raw = c.raw as Record<string, any>;
     const thrown: ToolError[] = (raw.sessions ?? []).flatMap((s: any) => (s.run?.tool_calls ?? []).filter((t: any) => t.error).map((t: any) => ({ tool: t.name, code: null, refused: false, message: String(t.error).slice(0, 200) })));
-    const answered = (transcripts.get(c.attempt_id) ?? transcripts.get(c.key) ?? []).map(t => toolErrorFromText(t.name, t.result)).filter((e): e is ToolError => e !== null);
+    const tools = transcripts.get(c.attempt_id) ?? transcripts.get(c.key);
+    const answered = (tools ?? []).map(t => toolErrorFromText(t.name, t.result)).filter((e): e is ToolError => e !== null);
     const harness = c.stop === 'harness_error' || c.stop === 'error' ? { error: `${c.stop}: ${String(raw.error ?? '').slice(0, 300)}` } : null;
+    const fields = cat40Fields(raw);
+    const calls = fields && tools && tools.length === fields.calls.length ? cat40Calls(fields.calls.map((x, i) => {
+      const refusal = toolErrorFromText(x.name, tools[i]!.result);
+      return { ...x, error: x.error ?? (refusal ? refusal.code ?? refusal.message ?? 'error' : null) };
+    }), tools) : null;
+    const cited: string[] = raw.score?.evidence_cited ?? [], missed: string[] = raw.score?.missed_evidence ?? [];
+    const gold = [...new Set([...cited, ...missed])];
+    const results = (tools ?? []).map(t => String(t.result ?? '')).join('\n');
+    const searched = tools && gold.length ? gold.filter(g => namesSlug(results, g)) : null;
+    const retrieved: Coverage | null = searched === null ? null : !searched.length ? 'none' : searched.length === gold.length ? 'all' : 'partial';
+    const submitted = (fields?.final as { answer?: unknown } | null)?.answer;
+    const answer = typeof submitted === 'string' ? submitted : submitted == null ? null : JSON.stringify(submitted);
+    const task = tasks.get(c.task), g = task?.gold;
     return outcome(run, ctx, {
       item: c.task, reader: reader(c.model), trial: c.repeat + 1, pass: c.success, score: c.success ? 1 : 0, cost_usd: c.total_usd + c.judge_usd, stop: c.stop,
-      tool_errors: [...thrown, ...answered], harness,
+      tool_errors: [...thrown, ...answered], harness, category: c.family, gold_count: gold.length,
+      retrieved, delivered: retrieved, opened: !gold.length ? null : !cited.length ? 'none' : !missed.length ? 'all' : 'partial', searched_gold: searched, calls,
+      answered: raw.score?.submitted === true && !!answer?.trim(), answer,
+      question: task?.question ?? null,
+      expected: !g ? null : g.answer?.join(' | ') ?? (g.members ? JSON.stringify(g.members.map(m => m.names[0])) : g.count !== undefined ? String(g.count) : g.items ? JSON.stringify(g.items.map(i => i.answer)) : null),
       evidence: { kind: 'agent-qa', family: c.family, submitted: raw.score?.submitted ?? null, said_wrong: raw.score?.said_wrong ?? null, evidence_cited: raw.score?.evidence_cited ?? [],
         missed_evidence: raw.score?.missed_evidence ?? [], wrote: raw.score?.wrote ?? null, claims: raw.claims ? { unsupported: raw.claims.unsupported, contradicted: raw.claims.contradicted, total: raw.claims.total } : null },
     });
@@ -192,7 +236,8 @@ export const cat40Adapter: Adapter = async (run, ctx) => {
   const failed = built.filter((f): f is NonNullable<typeof f> => f !== null);
   if (failed.length) return { status: 'error', reason: failed.map(f => f.why).join('; '), capStop: failed.some(f => f.capStop), rows: [] };
   const cells = await step('cells', cmds.cells, env);
-  const rows = cat40Rows(run, ctx, dirs.cells);
+  const tasks = (JSON.parse(readFileSync(world, 'utf8')) as { tasks: HardTask[] }).tasks.filter(t => run.items.some(i => i.id === t.id));
+  const rows = cat40Rows(run, ctx, dirs.cells, new Map(tasks.map(t => [t.id, t])));
   const readers = ctx.fake ? ['fake'] : run.readers.filter((r): r is string => r !== null);
   const all = [...rows, ...readers.flatMap(r => missingRows(run, ctx, r, rows, cells?.why ?? 'no cell recorded'))];
   const devSet = cat40DevSet(dirs.cells);
@@ -201,7 +246,15 @@ export const cat40Adapter: Adapter = async (run, ctx) => {
 
 // ─── Part C write tasks: refresh-barrier-agents and refused-write-agents ─
 
-/** Outcome rows from the worker's episode records (worker.ts agents), each scored by the nightly write scorer. */
+/**
+ * Outcome rows from the worker's episode records (worker.ts agents), each scored by the nightly write scorer. Every logged
+ * call is a call: a refused write, a thrown call or a read gbrain answered with an error is an error. An error on a call that
+ * carried facts is recovered only when none of those facts was resent under a new request id, never landed or went
+ * unreported (as the failure-cause refresh-barrier adapter reads Part C); any other error is recovered when a later call of
+ * the same tool on the same subject succeeded, and unknown when the transcript does not line up call for call. writes holds
+ * what the nightly scorer measures: lost (acknowledged and missing) and duplicated facts; stuck and overwritten are not
+ * measured, so null. answered is whether the episode's report could be read from a submit_answer call or the final text.
+ */
 export function episodeRows(run: SuiteRun, ctx: NightContext, reader: string, dir: string): Outcome[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir).sort().filter(f => /^task-\d+-t\d+\.json$/.test(f)).map(f => {
@@ -212,9 +265,22 @@ export function episodeRows(run: SuiteRun, ctx: NightContext, reader: string, di
     const stop = String(rec.loop?.stop ?? '');
     const tool_errors: ToolError[] = (rec.calls ?? []).flatMap((c: any) => c.harness_error ? [{ tool: c.name, code: null, refused: false, message: String(c.harness_error).slice(0, 200) }]
       : String(c.cls ?? '').startsWith('refused') ? [{ tool: c.name, code: c.code ?? null, refused: true }] : []);
+    const logged: Array<Record<string, any>> = rec.calls ?? [];
+    const failed = new Set<string>([...s.resent, ...s.missing, ...s.unreported]);
+    const errorOf = (c: Record<string, any>) => c.harness_error ? String(c.harness_error).slice(0, 200)
+      : String(c.cls ?? '').startsWith('refused') ? `${c.cls}${c.code ? `/${c.code}` : ''}` : !c.write && c.is_error ? String(c.code ?? 'error') : null;
+    const subject = (i: number) => (rec.transcript?.length === logged.length ? JSON.stringify(rec.transcript[i].args?.slug ?? rec.transcript[i].args ?? null) : null);
+    const calls = logged.map((c, i) => {
+      const error = errorOf(c);
+      const recovered = error === null ? null : (c.tokens ?? []).length ? !c.tokens.some((t: string) => failed.has(t))
+        : subject(i) === null ? null : logged.slice(i + 1).some((d, j) => d.name === c.name && subject(i + 1 + j) === subject(i) && errorOf(d) === null);
+      return { name: String(c.name), error, recovered, ms: typeof c.ms === 'number' ? c.ms : null, memory: true };
+    });
     return outcome(run, ctx, {
       item: id!, reader, trial: Number(trial), pass: s.pass, score: s.pass ? 1 : 0, cost_usd: typeof rec.usd === 'number' ? rec.usd : null, stop,
-      harness: stop === 'error' || stop === 'harness_error' ? { error: `${stop}: ${String(rec.loop?.error ?? '').slice(0, 300)}` } : null, tool_errors,
+      harness: stop === 'error' || stop === 'harness_error' ? { error: `${stop}: ${String(rec.loop?.error ?? '').slice(0, 300)}` } : null, tool_errors, calls,
+      writes: { lost: s.acknowledged_missing, stuck: null, overwritten: null, duplicated: s.duplicated },
+      answered: rec.report ? rec.report.source != null : null,
       evidence: { kind: 'write', tokens_once: s.tokens_once, report_correct: s.report_correct, no_resend: s.no_resend, duplicated: s.duplicated, missing: s.missing,
         acknowledged_missing: s.acknowledged_missing, resent: s.resent, misreports: s.misreports, unreported: s.unreported,
         refusal_outcomes: (rec.behavior?.refusals ?? []).map((r: any) => r.outcome), counted_scorer_success: rec.score?.success ?? null },
@@ -261,7 +327,10 @@ export function trialRows(run: SuiteRun, ctx: NightContext, engine: string, dir:
     const t = JSON.parse(readFileSync(join(dir, f), 'utf8')) as Record<string, any>;
     const classes = failureClasses(t, 'trial');
     const harness = classes.includes('harness_error') || t.placeholder ? { error: t.harness_error ? JSON.stringify(t.harness_error).slice(0, 300) : 'harness_error' } : null;
+    const ops: Array<Record<string, any>> = t.ops ?? [];
+    const ids = (cls: string) => ops.filter(o => o[cls] === true).map(o => String(o.request_id ?? `w${o.writer}.${o.op}`));
     return outcome(run, ctx, { item: `${engine}:${f.slice(0, -5)}`, pass: classes.length === 0, score: classes.length === 0 ? 1 : 0, stop: classes.join(',') || 'ok', harness,
+      writes: { lost: ids('lost'), stuck: ids('stuck'), overwritten: ids('overwritten'), duplicated: ids('duplicated') },
       evidence: { kind: 'trials', engine, failure_classes: classes.filter(c => c !== 'harness_error') } });
   });
 }
@@ -279,7 +348,11 @@ export const trialsAdapter: Adapter = async (run, ctx) => {
   const seeds = run.items.map(i => Number(i.id));
   const skipped: string[] = [];
   const results = await Promise.all(engines.map(async engine => {
-    if (engine === 'postgres' && !ctx.pg.admin) { skipped.push('postgres trials need --pg-admin <url>'); return { rows: [] as Outcome[], failed: false }; }
+    if (engine === 'postgres' && !ctx.pg.admin) {
+      const why = 'postgres trials need --pg-admin <url>';
+      skipped.push(why);
+      return { rows: skippedRows(run, ctx, why, run.items.map(i => `${engine}:${i.id}`)), failed: false };
+    }
     const out = join(ctx.dir, 'suites', run.suite.id, engine);
     const template = engine === 'postgres' ? ctx.pg.template ?? await buildPgTemplate(root, ctx, join(out, 'template.log')) : null;
     if (engine === 'postgres' && !template) {
@@ -312,23 +385,42 @@ export function qaCommand(run: SuiteRun, ctx: NightContext, reader: string, idsF
 
 const QA_PASS = 0.5;
 
-/** Outcome rows from memory-qa rows. A judged row passes at a judge score of at least 0.5 (LongMemEval's judge scores 0 or 1, BEAM's the share of rubric items met); a fake night's retrieval-only row passes when every gold session is in the top five. */
-export function qaRows(run: SuiteRun, ctx: NightContext, reader: string, out: string, judge: string | null): Outcome[] {
+/**
+ * Outcome rows from memory-qa rows. A judged row passes at a judge score of at least 0.5 (LongMemEval's judge scores 0 or 1, BEAM's the share of rubric items met); a fake night's retrieval-only row passes when every gold session is in the top five.
+ * Gold coverage comes from the runner's ranked sessions: recall_any_at_10 is computed from that list and the question's gold
+ * sessions beside the runner's recall_all_at_10, and retrieved is the coverage at 10 (at 5 when the question is not in
+ * questions). A reader given the top sessions (--qa reader, --qa-context sessions) read the first qa_sessions of that list,
+ * so delivered is that prefix's coverage; under any other reading it is null.
+ */
+export function qaRows(run: SuiteRun, ctx: NightContext, reader: string, out: string, judge: string | null, questions: ReadonlyMap<string, MemoryQuestion> = new Map()): Outcome[] {
   const rowsFile = join(out, 'rows.ndjson');
   if (!existsSync(rowsFile)) return [];
   const rows = readFileSync(rowsFile, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as Record<string, any>);
   const receipt = existsSync(join(out, 'receipt.json')) ? JSON.parse(readFileSync(join(out, 'receipt.json'), 'utf8')) as Record<string, any> : {};
   const perRow = typeof receipt.cost_usd_all_attempts === 'number' && rows.length ? receipt.cost_usd_all_attempts / rows.length : null;
+  const packed = receipt.qa?.mode === 'reader' && receipt.qa?.context === 'sessions';
+  const cover = (any: unknown, all: unknown): Coverage | null => (typeof any !== 'number' || typeof all !== 'number' ? null : any <= 0 ? 'none' : all >= 1 ? 'all' : 'partial');
   return rows.filter(r => run.items.some(i => i.id === r.id)).map(r => {
     const judged = judge !== null;
     const harnessError = r.qa_error ?? (r.error && r.error_origin !== 'sut' ? r.error : null);
     const readerReceipts = (r.qa_receipts ?? []).filter((x: any) => x.role !== 'judge');
+    const q = questions.get(r.id);
+    const ranked: string[] | null = Array.isArray(r.retrieved) ? r.retrieved : null;
+    const gold = q?.gold.length ? new Set(q.gold) : null;
+    const any10 = gold && ranked ? recallAnyAtK(ranked, gold, 10) : null;
+    const top = packed && gold && ranked && typeof r.qa_sessions === 'number' ? ranked.slice(0, r.qa_sessions) : null;
     return outcome(run, ctx, {
       item: r.id, reader, pass: judged ? (r.qa_score ?? 0) >= QA_PASS : r.abstention === true || r.recall_all_at_5 === 1,
       score: judged ? r.qa_score ?? null : r.recall_all_at_5 ?? null, cost_usd: perRow, stop: harnessError ? 'error' : 'answered',
       harness: harnessError ? { error: String(harnessError).slice(0, 300) } : null,
       tool_errors: r.error && r.error_origin === 'sut' ? [{ tool: 'search', code: null, refused: false, message: String(r.error).slice(0, 200) }] : [],
+      category: r.category ?? null, gold_count: typeof r.gold_count === 'number' ? r.gold_count : null,
+      retrieved: r.gold_count === 0 ? null : gold ? cover(any10, r.recall_all_at_10) : cover(r.recall_any_at_5, r.recall_all_at_5),
+      delivered: top ? cover(recallAnyAtK(top, gold!, top.length), recallAllAtK(top, gold!, top.length)) : null,
+      answered: typeof r.qa_answer === 'string' ? r.qa_answer.trim() !== '' : null, finish_reason: readerReceipts.at(-1)?.finish ?? null,
+      question: q?.question ?? null, expected: q ? q.answer ?? (q.rubric?.length ? q.rubric.join(' | ') : null) : null, answer: r.qa_answer ?? null,
       evidence: { kind: 'qa', judge, abstention: r.abstention ?? false, recall_any_at_5: r.recall_any_at_5 ?? null, recall_all_at_5: r.recall_all_at_5 ?? null,
+        recall_any_at_10: any10, recall_all_at_10: r.recall_all_at_10 ?? null,
         answer: r.qa_answer ?? null, retrieved: r.retrieved ?? null, reader_from_cache: readerReceipts.length > 0 && readerReceipts.every((x: any) => x.from_cache === true) },
     });
   });
@@ -357,10 +449,10 @@ export function recordQaCaches(rows: Outcome[], ctx: NightContext, reader: strin
   }
 }
 
-function goldAnswers(benchmark: string, items: string[]): Map<string, unknown> | null {
+function corpusQuestions(benchmark: string, items: string[]): Map<string, MemoryQuestion> | null {
   try {
     const want = new Set(items);
-    return new Map(loadCorpus(benchmark).questions.filter(q => want.has(q.id)).map(q => [q.id, { answer: q.answer ?? null, rubric: q.rubric ?? null }]));
+    return new Map(loadCorpus(benchmark).questions.filter(q => want.has(q.id)).map(q => [q.id, q]));
   } catch { return null; }
 }
 
@@ -373,6 +465,8 @@ export const latestRowPerItem = (rows: Outcome[], ids: readonly string[]): Outco
 
 export const qaAdapter: Adapter = async (run, ctx) => {
   const readers = ctx.fake ? ['fake'] : run.readers.filter((r): r is string => r !== null);
+  const questions = corpusQuestions(String(run.suite.config?.benchmark), run.items.map(i => i.id));
+  const gold = questions && new Map([...questions].map(([id, q]) => [id, { answer: q.answer ?? null, rubric: q.rubric ?? null }]));
   const results = await Promise.all(readers.map(async reader => {
     const dir = join(ctx.dir, 'suites', run.suite.id, slug(reader));
     const out = join(dir, 'out');
@@ -382,8 +476,8 @@ export const qaAdapter: Adapter = async (run, ctx) => {
     const judge = ctx.fake ? null : judgeFor(reader);
     const providers: Provider[] = ctx.fake ? [] : [providerOf(qualifiedModel(reader)), providerOf(judge!), 'openai', 'voyage'];
     const r = await runChild({ cmd: qaCommand(run, ctx, reader, ids, out), env: envFor(ctx, run.suite, providers, { GBRAIN_EVALS_QA_CACHE: ctx.cache.chatDir }), log: join(dir, 'run.log'), signal: ctx.signal });
-    const rows = qaRows(run, ctx, reader, out, judge);
-    if (judge) recordQaCaches(rows, ctx, reader, judge, goldAnswers(String(run.suite.config?.benchmark), run.items.map(i => i.id)));
+    const rows = qaRows(run, ctx, reader, out, judge, questions ?? new Map());
+    if (judge) recordQaCaches(rows, ctx, reader, judge, gold);
     const receipt = existsSync(join(out, 'receipt.json')) ? JSON.parse(readFileSync(join(out, 'receipt.json'), 'utf8')) as Record<string, any> : null;
     const capStop = receipt?.summary?.stopped === 'budget';
     const all = latestRowPerItem(rows, run.items.map(i => i.id));
@@ -404,13 +498,18 @@ export const replayAdapter: Adapter = async (run, ctx) => {
     if (r.code !== 0 || !existsSync(out)) return { status: 'error', reason: `the replay exited ${r.code ?? r.signal}: ${r.tail.split('\n').at(-1)}`, rows: missingRows(run, ctx, null, [], 'the replay did not finish') };
   }
   const replays = JSON.parse(readFileSync(out, 'utf8')) as Array<{ item: string; family: string; skill: string; calls: number; unparseable: number; refusals: number;
-    paths: Record<string, { ok: number; refused: Record<string, Record<string, number>> }> }>;
+    paths: Record<string, { ok: number; ok_by_tool?: Record<string, number>; refused: Record<string, Record<string, number>> }> }>;
+  const repeat = (n: number, call: ToolCall) => Array.from({ length: n }, () => call);
   return { status: 'ran', rows: replays.map(x => {
     const tool_errors = Object.entries(x.paths).flatMap(([path, p]) => Object.entries(p.refused).flatMap(([tool, codes]) =>
       Object.entries(codes).flatMap(([code, n]) => Array.from({ length: n }, () => ({ tool, code, refused: true, message: path })))));
     const answered = Object.values(x.paths).reduce((n, p) => n + p.ok, 0);
+    const calls = Object.values(x.paths).every(p => p.ok_by_tool) ? Object.values(x.paths).flatMap(p => [
+      ...Object.entries(p.ok_by_tool!).flatMap(([name, n]) => repeat(n, { name, error: null, recovered: null, ms: null, memory: true })),
+      ...Object.entries(p.refused).flatMap(([name, codes]) => Object.entries(codes).flatMap(([code, n]) => repeat(n, { name, error: code, recovered: false, ms: null, memory: true }))),
+    ]) : null;
     return outcome(run, ctx, { item: x.item, pass: x.refusals === 0, score: answered + x.refusals ? answered / (answered + x.refusals) : null, stop: 'replayed', tool_errors,
-      evidence: { kind: 'replay', family: x.family, skill: x.skill, calls: x.calls, unparseable: x.unparseable, paths: x.paths } });
+      category: x.skill, calls, evidence: { kind: 'replay', family: x.family, skill: x.skill, calls: x.calls, unparseable: x.unparseable, paths: x.paths } });
   }) };
 };
 
@@ -434,10 +533,16 @@ export const smokesAdapter: Adapter = async (run, ctx) => {
 
 export interface SmokeResult { id: string; pass: boolean; code: string | null; detail: string; ms: number }
 
-/** Outcome rows from the smokes' results; a `harness_*` code means the smoke could not run, so its row is a harness row. */
+/**
+ * Outcome rows from the smokes' results. A `harness_*` code (or none) means the smoke could not run, so its row is a harness
+ * row and never a gbrain failure; any other failed smoke is the operation it checks failing with its code.
+ */
 export function smokeRows(run: SuiteRun, ctx: Pick<NightContext, 'night' | 'ref' | 'sha'>, results: SmokeResult[]): Outcome[] {
-  return results.filter(s => run.items.some(i => i.id === s.id)).map(s => outcome(run, ctx, { item: s.id, pass: s.pass, score: s.pass ? 1 : 0, stop: s.code ?? (s.pass ? 'pass' : 'fail'),
-    evidence: { kind: 'smoke', code: s.code, detail: s.detail, ms: s.ms }, harness: !s.pass && s.code?.startsWith('harness_') ? { error: `${s.code}: ${s.detail}`.slice(0, 300) } : null }));
+  return results.filter(s => run.items.some(i => i.id === s.id)).map(s => {
+    const harness = !s.pass && (s.code === null || s.code.startsWith('harness_')) ? { error: `${s.code ?? 'no code'}: ${s.detail}`.slice(0, 300) } : null;
+    return outcome(run, ctx, { item: s.id, pass: s.pass, score: s.pass ? 1 : 0, stop: s.code ?? (s.pass ? 'pass' : 'fail'), harness,
+      operation: s.pass || harness ? null : { step: s.id, error: s.code! }, evidence: { kind: 'smoke', code: s.code, detail: s.detail, ms: s.ms } });
+  });
 }
 
 export const ADAPTERS: Record<string, Adapter> = {

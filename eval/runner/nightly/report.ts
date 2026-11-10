@@ -6,8 +6,14 @@
  *
  * pass^k is tau-bench's estimator: an item with c passes in n trials contributes C(c,k)/C(n,k), the chance that k trials drawn
  * from its n all pass, averaged over items; pass^1 is the plain pass rate. Harness rows (provider or harness failures) are
- * left out of every rate and counted on their own line. Cost per correct answer is the suite's whole recorded cost over its
- * passing rows.
+ * left out of every rate and counted on their own line, and skipped rows (items the night scheduled and did not run) are
+ * left out of every rate and count, and shown as not run. Cost per correct answer is the suite's whole recorded cost over
+ * its passing rows.
+ *
+ * Failures by cause come from the failure-cause library (eval/runner/failure-causes): each failed or harness row becomes
+ * the EvalFailure the nightly adapter builds (nightlyFailure) and goes through classify(), so a cell counts the taxonomy's
+ * cause ids, with harness rows as harness_error, plus unclassified for a failure no deterministic rule explains (the
+ * nightly never sends a row to the labeller). summary.json records the taxonomy version.
  *
  * Flags against the previous master night, suite by suite and only where the suite digests match:
  *   - a deterministic signal (refused tool calls, tool errors, harness errors, lost, stuck, duplicated or overwritten writes,
@@ -24,7 +30,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { join, resolve } from 'node:path';
 import { pairedBootstrap } from '../refresh-barrier/analyze.ts';
-import { CAUSES, CLASSIFIER_VERSION, classify, type Cause } from './classify.ts';
+import { CAUSE_IDS, TAXONOMY_VERSION, UNCLASSIFIED, classify, nightlyFailure, type Cause } from '../failure-causes/index.ts';
 import { readOutcomes, type Outcome } from './outcome.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
@@ -81,27 +87,31 @@ export function signalsOf(rows: Outcome[]): Signals {
 export interface CellStats {
   suite: string; reader: string | null; items: number; trials: number; k: number;
   pass1: number | null; passk: number | null; passes: number;
-  failures_by_cause: Partial<Record<Cause, number>>; harness: number;
+  failures_by_cause: Partial<Record<Cause | typeof UNCLASSIFIED, number>>; harness: number; skipped: number;
   cost_usd: number | null; cost_per_correct: number | null; signals: Signals;
   /** Per item: passes and non-harness trials. */
   per_item: Record<string, { c: number; n: number }>;
 }
 
 export function cellStats(suite: string, reader: string | null, rows: Outcome[], k: number): CellStats {
-  const counted = rows.filter(r => !r.harness);
+  const counted = rows.filter(r => !r.harness && !r.skipped);
   const per_item: Record<string, { c: number; n: number }> = {};
   for (const r of counted) { const e = per_item[r.item] ??= { c: 0, n: 0 }; e.n++; if (r.pass) e.c++; }
   const items = Object.values(per_item);
   const mean = (xs: Array<number | null>) => { const v = xs.filter((x): x is number => x !== null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
-  const failures_by_cause: Partial<Record<Cause, number>> = {};
-  for (const r of rows) if (r.harness || !r.pass) { const c = classify(r).cause; failures_by_cause[c] = (failures_by_cause[c] ?? 0) + 1; }
+  const failures_by_cause: CellStats['failures_by_cause'] = {};
+  for (const r of rows) {
+    if (r.skipped || (r.pass && !r.harness)) continue;
+    const c = classify(nightlyFailure(r, `nightly-${suite}`, [])).cause ?? UNCLASSIFIED;
+    failures_by_cause[c] = (failures_by_cause[c] ?? 0) + 1;
+  }
   const costs = rows.map(r => r.cost_usd);
   const cost_usd = costs.some(c => c !== null) ? costs.reduce<number>((a, c) => a + (c ?? 0), 0) : null;
   const passes = counted.filter(r => r.pass).length;
   return {
     suite, reader, items: items.length, trials: counted.length, k, passes,
     pass1: mean(items.map(i => i.c / i.n)), passk: mean(items.map(i => passHatK(i.c, i.n, k))),
-    failures_by_cause, harness: rows.length - counted.length, cost_usd, cost_per_correct: cost_usd !== null && passes ? cost_usd / passes : null,
+    failures_by_cause, harness: rows.filter(r => r.harness).length, skipped: rows.filter(r => r.skipped).length, cost_usd, cost_per_correct: cost_usd !== null && passes ? cost_usd / passes : null,
     signals: signalsOf(rows), per_item,
   };
 }
@@ -113,7 +123,7 @@ export function nightCells(manifest: NightManifest, rows: Outcome[]): CellStats[
     const readers = [...new Set([...s.readers, ...mine.map(r => r.reader)])];
     for (const reader of readers) {
       const cell = mine.filter(r => r.reader === reader);
-      if (cell.length || s.status === 'ran' || s.status === 'partial') out.push(cellStats(s.id, reader, cell, s.k));
+      if (cell.some(r => !r.skipped) || s.status === 'ran' || s.status === 'partial') out.push(cellStats(s.id, reader, cell, s.k));
     }
   }
   return out;
@@ -198,20 +208,20 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     catch (e) { commits = [`(git log failed: ${(e as Error).message.split('\n')[0]})`]; }
   }
   const fixes = (o.fixes ?? loadFixes()).map(f => {
-    const mine = rows.filter(r => r.suite === f.suite && f.items.includes(r.item) && !r.harness);
+    const mine = rows.filter(r => r.suite === f.suite && f.items.includes(r.item) && !r.harness && !r.skipped);
     return { ...f, tonight: { rows: mine.length, passes: mine.filter(r => r.pass).length } };
   });
   const flags = comparisons.flatMap(c => c.flags);
   const summary = {
     schema: 'nightly-summary/1', night: m.night, ref: m.ref, sha: m.sha, version: m.version, tier: m.tier, fake: m.fake, devset: m.devset,
-    classifier_version: CLASSIFIER_VERSION,
+    taxonomy_version: TAXONOMY_VERSION,
     suites: m.suites.map(s => ({ ...s, cells: cells.filter(c => c.suite === s.id).map(({ per_item: _items, ...c }) => c) })),
     harness_rows: rows.filter(r => r.harness).length,
     flags, comparisons, commit_range: prev ? { from: prev.sha, to: m.sha, commits } : null, fixes,
   };
   const lines: string[] = [];
   lines.push(`# Nightly gbrain check: ${m.ref} ${m.sha.slice(0, 12)}${m.version ? ` (v${m.version})` : ''}, ${m.night}`, '');
-  lines.push(`Tier ${m.tier}${m.fake ? ', fake providers (plumbing only; no number here measures a model)' : ''}. Dev set ${m.devset.digest.slice(0, 12)}. Causes: ${CLASSIFIER_VERSION}.`, '');
+  lines.push(`Tier ${m.tier}${m.fake ? ', fake providers (plumbing only; no number here measures a model)' : ''}. Dev set ${m.devset.digest.slice(0, 12)}. Causes: failure-cause taxonomy ${TAXONOMY_VERSION}.`, '');
   lines.push(flags.length ? `**${flags.length} flags.**` : '**No flags.**', '');
   for (const f of flags) lines.push(`- ${f.kind} (vs ${f.against}) ${f.suite} ${f.reader ?? 'keyless'}: ${f.detail}${f.items ? `: ${f.items.join(', ')}` : ''}`);
   lines.push('', '## Suites', '', '| Suite | Reader | Items | Trials | pass^1 | pass^k | Harness | Cost per correct | Failures by cause |', '|---|---|---|---|---|---|---|---|---|');
@@ -219,8 +229,8 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     const mine = cells.filter(c => c.suite === s.id);
     if (!mine.length) { lines.push(`| ${s.id} | | | | | | | | ${s.status.replace('_', ' ')}${s.reason ? `: ${s.reason}` : ''} |`); continue; }
     for (const c of mine) {
-      const causes = CAUSES.filter(x => c.failures_by_cause[x]).map(x => `${x} ${c.failures_by_cause[x]}`).join(', ') || 'none';
-      lines.push(`| ${s.id}${s.status === 'partial' ? ' (partial)' : ''}${s.dev_set ? ' (dev set)' : ''} | ${c.reader ?? 'keyless'} | ${c.items} | ${c.trials} | ${pct(c.pass1)} | ${c.k > 1 ? pct(c.passk) : 'n/a'} | ${c.harness} | ${usd(c.cost_per_correct)} | ${causes} |`);
+      const causes = [...CAUSE_IDS, UNCLASSIFIED].filter(x => c.failures_by_cause[x]).map(x => `${x} ${c.failures_by_cause[x]}`).join(', ') || 'none';
+      lines.push(`| ${s.id}${s.status === 'partial' ? ' (partial)' : ''}${s.dev_set ? ' (dev set)' : ''} | ${c.reader ?? 'keyless'} | ${c.items} | ${c.trials} | ${pct(c.pass1)} | ${c.k > 1 ? pct(c.passk) : 'n/a'} | ${c.harness} | ${usd(c.cost_per_correct)} | ${causes}${c.skipped ? `; ${c.skipped} not run` : ''} |`);
     }
   }
   const devSets = m.suites.filter(s => s.dev_set);
