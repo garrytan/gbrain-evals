@@ -24,7 +24,7 @@
  *   - cost per correct answer up 25% or more with no gain in pass rate.
  * The same rules compare master with stable, reported in their own section.
  *
- * particle-1's agreement with claude-opus-5-5, scored on a night that has particle-1 rows: per item, each reader's first
+ * particle-1's agreement with claude-opus-5-5, scored on a night that schedules particle-1: per item, each reader's first
  * counted trial is a pass or a fail, and only items both readers answered are paired. Each suite's 2x2 table gives its raw
  * agreement, Cohen's kappa and particle-1's pass-rate gap to Opus; the tables are summed over suites, and particle-1
  * passes when the pooled table has a kappa of at least 0.6 and raw agreement of at least 85%. Kappa is undefined (null,
@@ -200,10 +200,10 @@ export function agreementStats(t: AgreementTable): AgreementStats {
   return { ...t, raw, kappa: chance === 1 ? null : (raw - chance) / (1 - chance), candidate_pass: c, reference_pass: r, gap: c - r };
 }
 
-/** particle-1 against claude-opus-5-5 on one night, or null when the night has no counted particle-1 row. */
+/** particle-1 against claude-opus-5-5 on one night, or null when no suite schedules particle-1 and no row names it. */
 export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreement | null {
   const { candidate, reference, min_kappa, min_raw } = AGREEMENT;
-  if (!rows.some(r => r.reader === candidate && !r.harness && !r.skipped)) return null;
+  if (!manifest.suites.some(s => s.readers.includes(candidate)) && !rows.some(r => r.reader === candidate)) return null;
   const first = (suite: string, reader: string) => {
     const byItem = new Map<string, Outcome>();
     for (const r of rows) if (r.suite === suite && r.reader === reader && !r.harness && !r.skipped && (byItem.get(r.item)?.trial ?? Infinity) > r.trial) byItem.set(r.item, r);
@@ -302,7 +302,7 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     lines.push(`Per item, each reader's first counted trial is a pass or a fail; only items both readers answered count. ${a.candidate} passes on Cohen's kappa of at least ${a.min_kappa} and raw agreement of at least ${pct(a.min_raw)}, pooled over suites.`, '');
     lines.push(a.verdict === 'not_measured' ? '**Not measured: no item both readers answered.**'
       : `**${a.verdict === 'pass' ? 'Passes' : 'Fails'}: kappa ${kappa(p.kappa)}${p.kappa === null ? ' (both readers gave every item the same label)' : ''}, raw agreement ${pct(p.raw)}, over ${p.items} items in ${measured} suite${measured === 1 ? '' : 's'}.** ${a.candidate} passes ${pct(p.candidate_pass)} of them and ${a.reference} ${pct(p.reference_pass)}, a gap of ${points(p.gap)} points.`);
-    lines.push('', `| Suite | Paired items | Raw agreement | Kappa | ${a.candidate} pass rate | ${a.reference} pass rate | Gap (points) | Unpaired items |`, '|---|---|---|---|---|---|---|---|');
+    if (measured) lines.push('', `| Suite | Paired items | Raw agreement | Kappa | ${a.candidate} pass rate | ${a.reference} pass rate | Gap (points) | Unpaired items |`, '|---|---|---|---|---|---|---|---|');
     for (const s of a.suites) if (s.measured) lines.push(`| ${s.suite} | ${s.items} | ${pct(s.raw)} | ${kappa(s.kappa)} | ${pct(s.candidate_pass)} | ${pct(s.reference_pass)} | ${points(s.gap)} | ${s.unpaired} |`);
     const unmeasured = a.suites.flatMap(s => (s.measured ? [] : [`- ${s.suite}: not measured, ${s.reason}`]));
     if (unmeasured.length) lines.push('', ...unmeasured);

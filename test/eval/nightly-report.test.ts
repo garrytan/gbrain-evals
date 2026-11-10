@@ -195,15 +195,17 @@ describe("particle-1's agreement with claude-opus-5-5", () => {
     expect(ag.verdict).toBe('fail');
   });
 
-  test('kappa is null and the bar fails when both readers give every item the same label; no counted particle-1 row means no agreement; no paired item means not measured', () => {
+  test('kappa is null and the bar fails when both readers give every item the same label; a scheduled suite with no pair says why; a night that never schedules particle-1 has no agreement', () => {
     const night = manifest([{ id: 'suite-a', readers: both, k: 1 }]);
     const same = nightAgreement(night, [...labelled('claude-opus-5-5', [true, true, true]), ...labelled('particle-1', [true, true, true])])!;
     expect(same.pooled).toMatchObject({ items: 3, raw: 1, kappa: null });
     expect(same.verdict).toBe('fail');
-    expect(nightAgreement(night, [...labelled('claude-opus-5-5', [true]), row({ reader: 'particle-1', harness: { error: 'network' } })])).toBeNull();
-    const alone = nightAgreement(night, labelled('particle-1', [true, false]))!;
-    expect(alone.suites).toEqual([{ suite: 'suite-a', measured: false, reason: 'no counted claude-opus-5-5 rows' }]);
-    expect(alone.verdict).toBe('not_measured');
+    const errored = nightAgreement(night, [...labelled('claude-opus-5-5', [true]), row({ reader: 'particle-1', harness: { error: 'network' } })])!;
+    expect(errored.suites).toEqual([{ suite: 'suite-a', measured: false, reason: 'no counted particle-1 rows' }]);
+    expect(errored.verdict).toBe('not_measured');
+    expect(nightAgreement(night, labelled('particle-1', [true, false]))!.suites).toEqual([{ suite: 'suite-a', measured: false, reason: 'no counted claude-opus-5-5 rows' }]);
+    expect(nightAgreement(night, [row({ reader: 'claude-opus-5-5', item: 'x' }), row({ reader: 'particle-1', item: 'y' })])!.suites).toEqual([{ suite: 'suite-a', measured: false, reason: 'no item both readers answered' }]);
+    expect(nightAgreement(manifest([{ id: 'suite-a' }]), trials([3, 1]))).toBeNull();
   });
 
   test('report.md and summary.json carry the agreement section on a night with particle-1 rows, and leave it out otherwise', () => {
@@ -222,5 +224,21 @@ describe("particle-1's agreement with claude-opus-5-5", () => {
     writeFileSync(join(plain, 'outcomes.jsonl'), trials([3, 1]).map(r => JSON.stringify(r)).join('\n') + '\n');
     expect(writeReport({ dir: plain }).agreement).toBeNull();
     expect(readFileSync(join(plain, 'report.md'), 'utf8')).not.toContain('agreement with');
+  });
+
+  test('report.md states a failing verdict, an undefined kappa and a night with nothing to pair', () => {
+    const md = (rows: Outcome[]) => {
+      const dir = mkdtempSync(join(tmpdir(), 'nightly-report-'));
+      writeFileSync(join(dir, 'night.json'), JSON.stringify(manifest([{ id: 'suite-a', readers: both, k: 1 }])));
+      writeFileSync(join(dir, 'outcomes.jsonl'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+      writeReport({ dir });
+      return readFileSync(join(dir, 'report.md'), 'utf8');
+    };
+    const b = table(2, 2, 0, 6);
+    expect(md([...labelled('claude-opus-5-5', b.opus), ...labelled('particle-1', b.particle)])).toContain('**Fails: kappa 0.545, raw agreement 80.0%, over 10 items in 1 suite.**');
+    expect(md([...labelled('claude-opus-5-5', [true, true]), ...labelled('particle-1', [true, true])])).toContain('**Fails: kappa n/a (both readers gave every item the same label), raw agreement 100.0%, over 2 items in 1 suite.**');
+    const none = md([...labelled('claude-opus-5-5', [true]), row({ reader: 'particle-1', harness: { error: 'network' } })]);
+    expect(none).toContain('**Not measured: no item both readers answered.**\n\n- suite-a: not measured');
+    expect(none).toContain('- suite-a: not measured, no counted particle-1 rows');
   });
 });
