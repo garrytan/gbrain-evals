@@ -10,6 +10,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { generateBatch3Synthetic, writeBatch3Synthetic } from '../../eval/generators/batch3-synthetic-gen.ts';
+import { generateConditionsRecall, writeConditionsRecall } from '../../eval/generators/conditions-recall-gen.ts';
 import { BudgetRun, readLedger } from '../../eval/runner/budget-ledger.ts';
 import { hashEmbedVector } from '../../eval/runner/cat18-embedding-providers.ts';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
@@ -90,6 +91,29 @@ describe('live-recall run --synthetic, paid mode', () => {
     expect([seen.voyage, seen.other, existsSync(out), existsSync(ledger)]).toEqual([[], [], false, false]);
   });
 
+  test('--paid refuses a directory that sets a keyword candidate bound, before any request or run directory, even with an open budget run', async () => {
+    const base = tempDir('bound'), out = join(base, 'run'), ledgerPath = join(base, 'ledger.sqlite');
+    const bounded = join(base, 'bounded'), unbounded = join(base, 'unbounded');
+    writeConditionsRecall(bounded, generateConditionsRecall({ perType: 2, knobs: { keyword_candidate_bound: 5 } }));
+    writeConditionsRecall(unbounded, generateConditionsRecall({ perType: 2 }));
+    const run = BudgetRun.open({ runner: 'lr-paid-bound', budgetUsd: 1, ledgerPath, programCapUsd: 100 });
+    const errors: string[] = [];
+    const seen = await withHermeticEnv('lr-paid-bound', () => withFetch(fakeVoyage, async seen => {
+      process.env.VOYAGE_API_KEY = 'fake-voyage-key';
+      const log = console.log, err = console.error;
+      console.log = () => {};
+      console.error = (...a: unknown[]) => { errors.push(a.join(' ')); };
+      try {
+        expect(await liveRecallMain(['run', '--synthetic', bounded, '--paid', '--budget-run-id', run.runId, '--budget-ledger', ledgerPath, '--out', out])).toBe(2);
+      } finally { console.log = log; console.error = err; }
+      return seen;
+    }));
+    expect([seen.voyage, seen.other, existsSync(out)]).toEqual([[], [], false]);
+    expect(errors.join('\n')).toContain('keyword_candidate_bound');
+    expect(JSON.parse(readFileSync(join(unbounded, 'manifest.json'), 'utf8')).knobs.keyword_candidate_bound).toBeNull();
+    run.close();
+  });
+
   test('with a fake Voyage, every request is reserved and reconciled on the ledger, and the scorecard is a voyage scorecard', async () => {
     const dir = setDir(), base = tempDir('voyage'), out = join(base, 'run'), ledgerPath = join(base, 'ledger.sqlite');
     const opener = BudgetRun.open({ runner: 'lr-paid-test', budgetUsd: 1, ledgerPath, programCapUsd: 100 });
@@ -120,8 +144,10 @@ describe('live-recall run --synthetic, paid mode', () => {
     const detail = readFileSync(join(out, 'detail.local.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
     expect(new Set(detail.filter(r => r.arm === 'configured').map(r => r.status))).toEqual(new Set(['ok']));
     expect(readSynthetic(card)).toMatchObject({ control: false, transports: 'voyage' });
-    const log = console.log;
+    const log = console.log, err = console.error, errors: string[] = [];
     console.log = () => {};
-    try { expect(verdictMain(['--measure', 'G4', '--synthetic', join(out, 'scorecard.json')])).toBe(0); } finally { console.log = log; }
+    console.error = (...a: unknown[]) => { errors.push(a.join(' ')); };
+    try { expect(verdictMain(['--measure', 'G4', '--synthetic', join(out, 'scorecard.json')])).toBe(3); } finally { console.log = log; console.error = err; }
+    expect(errors.join('\n')).toContain('gbrain_loaded_commit');
   }, 120_000);
 });

@@ -4,7 +4,7 @@
  * rank gbrain configurations the way the real brain did?
  *
  *   bun eval/runner/predictive/verdict.ts --measure <G1..G6> --synthetic <scorecard.json> \
- *     [--manifest eval/data/validity-references/manifest.json] [--out verdict.json] [--control]
+ *     [--manifest eval/data/validity-references/manifest.json] [--out verdict.json] [--control] [--secondary]
  *
  * For each layer of the measure (mapping.ts), it loads the reference with
  * validity.ts's loadReference and applies its preregistered verdict(): a
@@ -37,8 +37,20 @@
  * unless --control is passed, and then labels it as one: its verdict proves the
  * plumbing, never the measure, and is never the verdict we report. A voyage
  * scorecard (run --synthetic --paid) is not a control.
+ *
+ * A layer that names its counted scorecard in mapping.ts (G2's two layers and
+ * the retrieval layers of G1 and G4, preregistration corrections of
+ * 2026-11-10) reads only that one: a non-control scorecard carrying the layer
+ * must record the named gbrain commit, knobs and question file, or the command
+ * refuses with SYNTHETIC_SCORECARD_INVALID and writes nothing. verdict.json
+ * records the scorecard's absolute path, sha256 and identity, and counted: true
+ * only for a non-control scorecard that passed the check on at least one such
+ * layer. --secondary reads any other scorecard as a secondary result: the output
+ * and verdict.json say so, and it is never the verdict we report.
  */
+import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { MANIFEST } from './export-references.ts';
 import { MAPPING, isMeasure, MEASURES, type Measure } from './mapping.ts';
 import { DEFAULT_MIN_QUALIFYING, ValidityReferenceError, kendallTau, loadReference, verdict, type Contrast, type Verdict } from './validity.ts';
@@ -152,11 +164,45 @@ export function evaluateMeasure(measure: Measure, synthetic: SyntheticCard, mani
   return { schema: VERDICT_SCHEMA, measure, title: MAPPING[measure].title, verdict: overall, synthetic: { schema: synthetic.schema, control: synthetic.control, ...(synthetic.transports ? { transports: synthetic.transports } : {}) }, layers };
 }
 
+/** The identity a synthetic live-recall scorecard records: gbrain commit and version, knobs, question file and directory digest. */
+export function scorecardIdentity(card: any) {
+  const run = card?.run ?? {}, syn = run.synthetic ?? {};
+  return {
+    gbrain_loaded_version: run.gbrain_loaded_version ?? null,
+    gbrain_loaded_commit: run.gbrain_loaded_commit ?? null,
+    knobs: { unembedded_chunk_share: syn.unembedded_chunk_share ?? null, synopsis_vectors_off: syn.synopsis_vectors_off ?? null, keyword_candidate_bound: syn.keyword_candidate_bound ?? null, shell_page_share: syn.shell_page_share ?? null },
+    questions_sha256: syn.questions_sha256 ?? null,
+    digest: syn.digest ?? null,
+  };
+}
+
+/**
+ * A layer with a named counted scorecard (mapping.ts) reads only that scorecard: a non-control scorecard carrying the
+ * layer must have loaded the named gbrain commit, with the named knobs and question file, or the command refuses.
+ */
+export function checkCountedScorecard(measure: Measure, card: unknown, result: ReturnType<typeof evaluateMeasure>): number {
+  const id = scorecardIdentity(card);
+  let checked = 0;
+  for (const layer of MAPPING[measure].layers) {
+    const spec = layer.counted;
+    if (!spec || !result.layers.find(l => l.id === layer.id)?.in_scorecard) continue;
+    const wrong = [
+      id.gbrain_loaded_commit !== spec.gbrain_commit ? 'gbrain_loaded_commit ' + id.gbrain_loaded_commit + ', expected ' + spec.gbrain_commit : '',
+      JSON.stringify(id.knobs) !== JSON.stringify(spec.knobs) ? 'knobs ' + JSON.stringify(id.knobs) + ', expected ' + JSON.stringify(spec.knobs) : '',
+      id.questions_sha256 !== spec.questions_sha256 ? 'questions_sha256 ' + id.questions_sha256 + ', expected ' + spec.questions_sha256 : '',
+      id.digest !== spec.digest ? 'digest ' + id.digest + ', expected ' + spec.digest : '',
+    ].filter(Boolean);
+    if (wrong.length) throw new SyntheticScorecardError(measure + ' layer ' + layer.id + ' reads only the counted scorecard the preregistration names (corrections of 2026-11-10); this one differs: ' + wrong.join('; ') + '. Pass --secondary to read it as a secondary result that never gates');
+    checked++;
+  }
+  return checked;
+}
+
 const num = (x: number) => (x >= 0 ? '+' : '') + x.toFixed(3);
 const iv = (c: { estimate: number; lo: number; hi: number }) => num(c.estimate) + ' [' + num(c.lo) + ', ' + num(c.hi) + ']';
 
-export function renderVerdict(r: ReturnType<typeof evaluateMeasure>): string[] {
-  const lines = [r.measure + ' ' + r.title + ': ' + r.verdict + (r.synthetic.control ? ' (control scorecard, hash embeddings: this checks the plumbing and says nothing about the measure)' : '')];
+export function renderVerdict(r: ReturnType<typeof evaluateMeasure>, secondary = false): string[] {
+  const lines = [r.measure + ' ' + r.title + ': ' + r.verdict + (r.synthetic.control ? ' (control scorecard, hash embeddings: this checks the plumbing and says nothing about the measure)' : '') + (secondary ? ' (secondary scorecard: reported beside the counted one, never the verdict)' : '')];
   for (const l of r.layers) {
     if (l.status === 'pending') { lines.push('  layer ' + l.id + ' vs ' + l.reference + ': NO_REFERENCE_YET (reference ' + l.reference + ' is pending)' + (l.in_scorecard ? '; ' + l.mapped_count + ' mapped contrasts in this scorecard' : '; not in this scorecard')); continue; }
     if (l.status === 'not_in_scorecard') { lines.push('  layer ' + l.id + ' vs ' + l.reference + ': not in this scorecard'); continue; }
@@ -175,17 +221,19 @@ function flag(argv: string[], name: string): string | undefined {
 export function main(argv: string[]): number {
   const measure = flag(argv, '--measure'), syntheticPath = flag(argv, '--synthetic'), out = flag(argv, '--out');
   if (!isMeasure(measure) || !syntheticPath) {
-    console.error('usage: verdict.ts --measure ' + MEASURES.join('|') + ' --synthetic <scorecard.json> [--manifest <manifest.json>] [--out <verdict.json>] [--control]');
+    console.error('usage: verdict.ts --measure ' + MEASURES.join('|') + ' --synthetic <scorecard.json> [--manifest <manifest.json>] [--out <verdict.json>] [--control] [--secondary]');
     return 2;
   }
   try {
-    let parsed: unknown;
-    try { parsed = JSON.parse(readFileSync(syntheticPath, 'utf8')); } catch { throw new SyntheticScorecardError(syntheticPath + ' is not readable JSON'); }
+    let parsed: unknown, raw = Buffer.alloc(0);
+    try { raw = readFileSync(syntheticPath); parsed = JSON.parse(raw.toString('utf8')); } catch { throw new SyntheticScorecardError(syntheticPath + ' is not readable JSON'); }
     const synthetic = readSynthetic(parsed);
     if (synthetic.control && !argv.includes('--control')) throw new SyntheticScorecardError(syntheticPath + ' is a control scorecard (' + (synthetic.transports ?? 'no transports recorded') + '); its verdict checks the plumbing and is never the one reported. Pass --control to read it as a control, or score the synthetic brain with run --synthetic --paid');
     const result = evaluateMeasure(measure, synthetic, flag(argv, '--manifest') ?? MANIFEST);
-    for (const line of renderVerdict(result)) console.log(line);
-    if (out) writeFileSync(out, JSON.stringify(result, null, 2) + '\n');
+    const secondary = argv.includes('--secondary');
+    const counted = !synthetic.control && !secondary && checkCountedScorecard(measure, parsed, result) > 0;
+    for (const line of renderVerdict(result, secondary)) console.log(line);
+    if (out) writeFileSync(out, JSON.stringify({ ...result, counted, ...(secondary ? { secondary: true } : {}), scorecard: { path: resolve(syntheticPath), sha256: createHash('sha256').update(raw).digest('hex'), ...scorecardIdentity(parsed) } }, null, 2) + '\n');
     return 0;
   } catch (error) {
     if (error instanceof ValidityReferenceError || error instanceof SyntheticScorecardError) {

@@ -5,7 +5,7 @@
  *   bun eval/runner/predictive/export-references.ts
  *
  * Reads only public aggregate scorecards already in the repo (live-recall
- * batches 1 and 2) and rewrites eval/data/validity-references/, including the
+ * batches 1, 2 and 3) and rewrites eval/data/validity-references/, including the
  * manifest's sha256 digests. References that do not exist yet are listed as
  * pending, so the verdict reads NO_REFERENCE_YET for them instead of failing.
  */
@@ -45,9 +45,9 @@ export function buildReferences(): { files: Array<[string, ReferenceFile]>; pend
     files: [
       ['live-recall-b1.json', liveRecall('live-recall-b1', 'docs/benchmarks/2026-11-06-live-recall-batch1/attempt2-scorecard.json (dev reference)', 'docs/benchmarks/2026-11-06-live-recall-batch1/attempt2-scorecard.json')],
       ['live-recall-b2.json', liveRecall('live-recall-b2', 'docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json (held out)', 'docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json')],
+      ['live-recall-b3.json', liveRecall('live-recall-b3', 'docs/benchmarks/2026-11-10-live-recall-batch3/b3-641-scorecard.json (held out)', 'docs/benchmarks/2026-11-10-live-recall-batch3/b3-641-scorecard.json')],
     ],
     pending: [
-      { id: 'live-recall-b3', file: 'live-recall-b3.json', status: 'pending' },
       { id: 'phase2-agent', file: 'phase2-agent.json', status: 'pending' },
       { id: 'miss-log-weekly', file: 'miss-log-weekly.json', status: 'pending' },
       { id: 'replay-pins', file: 'replay-pins.json', status: 'pending' },

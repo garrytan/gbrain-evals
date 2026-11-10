@@ -9,7 +9,7 @@ Small test brains answer in milliseconds, while the counted latencies on Winterm
 - **Pages.** `build.ts` generates fictional people, companies, projects, meetings and notes from a seeded generator (seed 55 by default). Words come from an invented vocabulary with a Zipf curve, so the commonest terms match a large share of the brain, as common words do in a real one. That matters because broad keyword terms are what push a keyword statement into its timeout. The test pins a digest of the first 200 pages.
 - **Vectors.** gbrain's embedding transport is replaced inside the process: each chunk gets a seeded random unit vector at gbrain's default width (`DEFAULT_EMBEDDING_DIMENSIONS`, 1024 for `voyage:voyage-4` at the pinned gbrain, 0.60.557.0). No embedding provider is called.
 - **Writes.** Pages go in through gbrain's own importer (`importFromContent`), so chunking, triggers and index maintenance are gbrain's.
-- **Search config.** Nothing is configured. The brain keeps what gbrain resolves by default (`resolveSearchMode`), and the scorecard records it: at the pin, mode `balanced`, reranker `voyage:rerank-3-lite` on, expansion off, keyword statement timeout 8,000 ms on Postgres.
+- **Search config.** The brain gets the real brain's search setting as live-recall batch 2's counted scorecard records it: mode `tokenmax` and reranker `voyage:rerank-2.5` (`REAL_SEARCH_CONFIG` in `build.ts`). The rerank call itself stays in-process. The scorecard records what gbrain resolved, with expansion and the keyword statement timeout (8,000 ms on Postgres by default).
 - **Resume.** The load runs in batches (1,000 pages by default). After each batch the checkpoint file names the last finished batch, so a rerun with the same settings continues from there. A rerun with a different seed, size, batch size or width is refused.
 
 ## What it measures
@@ -71,6 +71,8 @@ On a Ubicloud VM, which costs money and so needs an open budget-ledger run:
 bun eval/runner/predictive/scale-latency/ubicloud.ts --paid --budget-run-id <id> --owner <thread code> --pages 300000
 ```
 
+To compare gbrain versions on one brain, add `--pins <tag>:<commit>,…` (for example `549:a131fb20…,570:241cef5a…,549b:a131fb20…`, full 40-character commits). The VM clones gbrain, builds the brain once at the first commit, and probes each commit in the order given on its own fresh copy of that brain, made with `CREATE DATABASE … TEMPLATE`, because a probe writes to the brain it times (remember and sync). Each probe writes `scorecard-<tag>.json`, and the whole `scale-latency` folder comes back. Repeating the first commit at the end, as `549b` does, shows how much two identical probes differ.
+
 `ubicloud.ts` follows gate change J1. It refuses without `--paid` and `--budget-run-id` (`eval/runner/paid-arm.ts`). It writes the VM's name to its state file before the create request, tears every recorded VM down in a finally path, retries a failed attempt at most twice (reusing the VM, so the build resumes from its checkpoint there), and on failure reports `partial` with every VM id and whether it was torn down. A rerun adopts a VM that a dead controller left in the state file if it still answers ssh. `vm-setup.sh` installs Postgres 16 with pgvector (8 GB shared buffers), a loopback-only scratch database and bun on the VM. The Ubicloud client is injectable, and the tests drive a fake that fails.
 
 ## Limits
@@ -79,4 +81,5 @@ bun eval/runner/predictive/scale-latency/ubicloud.ts --paid --budget-run-id <id>
 - Page shapes are synthetic: a few hundred words, Zipf words, no links between pages. A real brain's long pages, links and facts may change these numbers.
 - Sync times a one-note change in a side repository, not a sync of the brain's own repository.
 - Postgres settings on the VM are chosen here (`vm-setup.sh`), not copied from the production database.
-- Running a second gbrain pin needs that pin installed as its own alias (gate change H1); `build.ts` and `probe.ts` accept `--gbrain <checkout>@<ref>` for a local checkout.
+- `build.ts` and `probe.ts` accept `--gbrain <checkout>@<ref>` for a local checkout, and `ubicloud.ts --pins` clones gbrain on the VM for each commit it names.
+- The real brain also has no synopsis vectors and 10% of chunks with no vector; this brain embeds every chunk.

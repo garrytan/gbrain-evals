@@ -9,12 +9,13 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BudgetRun, installPaidRequestGuard, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
+import { BudgetRun, installPaidRequestGuard, ledgerStatus, readLedger } from '../../eval/runner/budget-ledger.ts';
 import { priceUsage, runAgent, type Arm } from '../../eval/runner/cat40/loop.ts';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS } from '../../eval/runner/hermetic-env.ts';
-import { EPISODE_LOG_SCHEMA, meteredFetch, missingKeys, readEpisodeLog, ResumeRefusal, runPaid, type EpisodeUsage, type LogRow, type PaidJob } from '../../eval/runner/predictive/paid.ts';
+import { EPISODE_LOG_SCHEMA, meteredFetch, missingKeys, readEpisodeLog, ResumeRefusal, runPaid, type EpisodeRecord, type EpisodeUsage, type LogRow, type PaidJob } from '../../eval/runner/predictive/paid.ts';
 import { scoreEntityEpisode } from '../../eval/runner/predictive/entity-agent.ts';
 import { generateEntityTasks } from '../../eval/generators/entity-agent-gen.ts';
+import { G3_CAUSES } from '../../eval/generators/write-contract-gen.ts';
 import { main, paidJobs, scorecards } from '../../eval/runner/predictive/run.ts';
 
 const saved: Record<string, string | undefined> = {};
@@ -275,6 +276,68 @@ describe('the paid executor', () => {
     expect(card.cost_per_correct_usd).toBeCloseTo(0.75 + erroredUsd, 9);
   });
 
+  test('cost per correct answer counts the turns a mid-episode cap stop already billed, once', async () => {
+    const reply = (body: { messages: unknown[] }) => body.messages.length === 1 ? { name: 'lookup', input: { q: 'fictional' } } : { name: 'submit_answer', input: { answer: 'fictional answer' } };
+    const probeUp = anthropicUpstream(reply);
+    const probe = paidRun('predictive-refused-probe-test', 5, probeUp.fetchImpl);
+    try { await runPaid([twoTurnJob(MODEL)], { log: join(dir, 'refused-probe', 'episodes.jsonl'), concurrency: 1, retryErrored: false, counted: true, gbrain: GBRAIN, guard: probe.guard, resumeCommand: 'x', print: () => {} }); }
+    finally { probe.guard.uninstall(); probe.run.close({ finish: false }); }
+    const firstReservation = Math.min(...readLedger(join(dir, 'predictive-refused-probe-test.sqlite')).entries.map(e => e.reserved_usd));
+    const up = anthropicUpstream(reply);
+    const log = join(dir, 'refused-spend', 'episodes.jsonl');
+    const opts = { log, concurrency: 1, retryErrored: false, counted: true, gbrain: GBRAIN, resumeCommand: 'x', print: () => {} };
+    const capped = paidRun('predictive-refused-capped-test', firstReservation * 1.001, up.fetchImpl);
+    let paused;
+    try { paused = await runPaid([twoTurnJob(MODEL)], { ...opts, guard: capped.guard }); }
+    finally { capped.guard.uninstall(); }
+    const cappedSpend = capped.run.close({ finish: false }).actual_usd;
+    expect(up.seen.length).toBe(1);
+    expect(paused.status).toBe('paused');
+    const refused = readEpisodeLog(log).get('route:' + MODEL)!;
+    expect(refused).toMatchObject({ status: 'refused', usage: { requests: 1 } });
+    const raised = paidRun('predictive-refused-raised-test', 5, up.fetchImpl);
+    let resumed, again;
+    try {
+      resumed = await runPaid([twoTurnJob(MODEL)], { ...opts, guard: raised.guard });
+      again = await runPaid([twoTurnJob(MODEL)], { ...opts, guard: raised.guard });
+    } finally { raised.guard.uninstall(); }
+    const raisedSpend = raised.run.close({ finish: false }).actual_usd;
+    expect(resumed.status).toBe('complete');
+    expect(again).toMatchObject({ status: 'complete', ran: 0 });
+    expect(up.seen.length).toBe(3);
+    expect(again.errored_attempts).toEqual([refused]);
+    const [task] = generateEntityTasks({ n: 1 });
+    const right = scoreEntityEpisode({ task, model: MODEL, trial: 0, answer: task.gold, usd: again.done[0].record!.usd, stop: 'submitted' });
+    const [card] = scorecards('g4', [right], 1, again.errored_attempts) as Array<{ errored_usd: number; cost_per_correct_usd: number }>;
+    expect(card.errored_usd).toBeCloseTo(cappedSpend, 6);
+    expect(card.cost_per_correct_usd).toBeCloseTo(cappedSpend + raisedSpend, 6);
+  });
+
+  test('a model or G3 surface with errored or refused spend and no done episode gets a row with its spend, and no other row changes', () => {
+    const usage = { requests: 1, input: 1000, output: 100, cache_read: 0, cache_write: 0 };
+    const row = (key: string, model: string, status: 'errored' | 'refused', extra: Partial<LogRow>): LogRow => ({ schema: EPISODE_LOG_SCHEMA, key, unit: key.split(':')[0], model, status, counted: true, at: 'then', ...extra });
+    const sol = 'gpt-6.1-sol';
+    const [task] = generateEntityTasks({ n: 1 });
+    const right = scoreEntityEpisode({ task, model: MODEL, trial: 0, answer: task.gold, usd: 0.5, stop: 'submitted' });
+    const solRows = [row(`g4:${sol}:${task.id}:0`, sol, 'errored', { usage, error: 'socket hang up' }), row(`g4:${sol}:${task.id}:1`, sol, 'refused', { usage, error: 'cap stop' })];
+    const solUsd = 2 * priceUsage(sol, usage);
+    const g4 = scorecards('g4', [right], 1, solRows) as Array<Record<string, unknown>>;
+    expect(g4).toHaveLength(2);
+    expect(g4[0]).toEqual(scorecards('g4', [right], 1)[0] as Record<string, unknown>);
+    expect(g4[1]).toEqual({ unit: 'G4', model: sol, episodes: 0, usd: expect.closeTo(solUsd, 9), errored_usd: expect.closeTo(solUsd, 9), cost_per_correct_usd: null });
+    expect(scorecards('g4', [], 1, solRows)).toEqual([g4[1]]);
+    expect([scorecards('g4', [], 1), scorecards('g3', [], 1)]).toEqual([[], []]);
+    const write = {
+      task_id: 't1', task_cause: 'missing_provenance', surface: 'cli', model: MODEL, trial: 0, calls: 1, refusals: [], exposure: Object.fromEntries(G3_CAUSES.map(c => [c, 0])),
+      target_landed: true, landed_on_decoy: false, claimed_landed: 1, reported_done_not_landed: 0, ledger: { write_count: 1, pages_written: 0 }, success: true, cause: 'correct', usd: 0.25, stop: 'submitted',
+    } as unknown as EpisodeRecord;
+    const mcpErrored = row(`g3:${MODEL}:t1:mcp:0`, MODEL, 'errored', { record: { success: false, usd: 0.125, stop: 'error', model: MODEL } });
+    const g3 = scorecards('g3', [write], 1, [mcpErrored]) as Array<Record<string, unknown>>;
+    expect(g3).toHaveLength(2);
+    expect(g3[0]).toEqual(scorecards('g3', [write], 1)[0] as Record<string, unknown>);
+    expect(g3[1]).toEqual({ unit: 'G3', model: MODEL, surface: 'mcp', episodes: 0, usd: 0.125, errored_usd: 0.125, cost_per_correct_usd: null });
+  });
+
   test('a G4 paid job runs a real episode on the gbrain CLI through the guard', async () => {
     const up = anthropicUpstream(() => ({ name: 'submit_answer', input: { answer: 'fictional answer' } }));
     const { run, guard } = paidRun('predictive-g4-job-test', 5, up.fetchImpl);
@@ -288,6 +351,14 @@ describe('the paid executor', () => {
     expect(result.done[0].record).toMatchObject({ model: MODEL, stop: 'submitted', success: false });
     expect(scorecards('g4', result.done.map(r => r.record!), 1)).toHaveLength(1);
   }, 120_000);
+});
+
+describe('the run guide', () => {
+  test('the README says cost per correct counts turns billed before a cap stop, and that spend with no finished episode gets a row', () => {
+    const text = readFileSync(join(import.meta.dir, '../../eval/runner/predictive/README.md'), 'utf8').replace(/\s+/g, ' ');
+    expect(text).toContain("Turns it sent before the refusal were billed, so they stay in the refused row's `usage`, and cost per correct answer counts them once.");
+    expect(text).toContain('a model, or a G3 surface, with spend but no finished episode gets a row with 0 episodes, its spend and a null cost per correct answer');
+  });
 });
 
 describe('preregistration', () => {

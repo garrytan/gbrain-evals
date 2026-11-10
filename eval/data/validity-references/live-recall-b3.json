@@ -1,0 +1,136 @@
+{
+  "id": "live-recall-b3",
+  "source": "docs/benchmarks/2026-11-10-live-recall-batch3/b3-641-scorecard.json (held out)",
+  "contrasts": [
+    {
+      "id": "p1_configured_vs_hybrid_lexical_freshness",
+      "estimate": 0.1875,
+      "lo": 0.087,
+      "hi": 0.2857
+    },
+    {
+      "id": "p2_configured_vs_hybrid_lexical_entity",
+      "estimate": 0.2745,
+      "lo": 0.1731,
+      "hi": 0.375
+    },
+    {
+      "id": "hybrid_vs_hybrid_lexical_freshness",
+      "estimate": 0.0417,
+      "lo": -0.0408,
+      "hi": 0.125
+    },
+    {
+      "id": "hybrid_vs_hybrid_lexical_entity",
+      "estimate": 0.1373,
+      "lo": 0.0385,
+      "hi": 0.2449
+    },
+    {
+      "id": "configured_vs_keyword_freshness",
+      "estimate": 0.1875,
+      "lo": 0.0889,
+      "hi": 0.2857
+    },
+    {
+      "id": "configured_vs_keyword_entity",
+      "estimate": 0.3922,
+      "lo": 0.2745,
+      "hi": 0.5098
+    },
+    {
+      "id": "batch2_p1_hybrid_vs_hybrid_lexical_paraphrase",
+      "estimate": 0.1633,
+      "lo": 0.0408,
+      "hi": 0.2857
+    },
+    {
+      "id": "hybrid_lexical_vs_keyword",
+      "estimate": 0.0606,
+      "lo": 0,
+      "hi": 0.1237
+    },
+    {
+      "id": "hybrid_vs_keyword",
+      "estimate": 0.1515,
+      "lo": 0.0808,
+      "hi": 0.2323
+    },
+    {
+      "id": "configured_vs_keyword_paraphrase",
+      "estimate": 0.551,
+      "lo": 0.4082,
+      "hi": 0.6939
+    },
+    {
+      "id": "configured_vs_hybrid",
+      "estimate": 0.1414,
+      "lo": 0.0714,
+      "hi": 0.2121
+    },
+    {
+      "id": "vector_vs_keyword",
+      "estimate": 0.0808,
+      "lo": -0.0102,
+      "hi": 0.1765
+    },
+    {
+      "id": "configured_vs_keyword_exact",
+      "estimate": 0.04,
+      "lo": 0,
+      "hi": 0.1
+    },
+    {
+      "id": "hybrid_vs_keyword_paraphrase",
+      "estimate": 0.2653,
+      "lo": 0.1429,
+      "hi": 0.3878
+    },
+    {
+      "id": "paraphrase_vs_exact_keyword",
+      "estimate": -0.9375,
+      "lo": -1,
+      "hi": -0.8542
+    },
+    {
+      "id": "paraphrase_vs_exact_vector",
+      "estimate": -0.5833,
+      "lo": -0.7292,
+      "hi": -0.4167
+    },
+    {
+      "id": "paraphrase_vs_exact_hybrid_lexical",
+      "estimate": -0.8542,
+      "lo": -0.9375,
+      "hi": -0.75
+    },
+    {
+      "id": "paraphrase_vs_exact_hybrid",
+      "estimate": -0.7292,
+      "lo": -0.8542,
+      "hi": -0.6042
+    },
+    {
+      "id": "paraphrase_vs_exact_configured",
+      "estimate": -0.4375,
+      "lo": -0.5833,
+      "hi": -0.2917
+    }
+  ],
+  "orderings": {
+    "arms_exact": [
+      "hybrid",
+      "configured",
+      "hybrid_lexical",
+      "keyword",
+      "vector"
+    ],
+    "arms_paraphrase": [
+      "configured",
+      "vector",
+      "hybrid",
+      "hybrid_lexical",
+      "keyword"
+    ]
+  }
+}
