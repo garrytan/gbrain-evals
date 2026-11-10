@@ -2,6 +2,41 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.207] - 2026-11-10
+
+### Predictive-measures results: which synthetic memory tests predict gbrain's failures on a real brain
+
+- **What it adds.** `docs/benchmarks/2026-11-10-predictive-measures.md` reports the verdict for each of the six
+  synthetic measures preregistered on 2026-11-09. `docs/benchmarks/predictive-measures/` holds the raw files: each agent
+  run's scorecard and episodes, the counted and secondary G2 scorecards, the batch 3 synthetic scorecard, the three G5
+  latency scorecards and the verdict files, which `verdict.ts` reproduces from the published scorecards. Batch 3 of
+  live recall is published as the `live-recall-b3` validity reference. The docs hub moves the experiment's row from
+  protocols to results.
+- **What it shows.** Recall under real conditions (G2) reads PREDICTIVE. All 13 qualifying batch 2 contrasts agree in
+  sign with a synthetic brain that carries the real brain's embedding gaps (no synopsis vectors, and 10% of chunks with
+  no vector). The same brain without the gaps, run as a secondary condition, misses configured search's 40-point
+  paraphrase gap and reads NOT PREDICTIVE. Batch 3's contrasts compare search setups, and its synthetic brain is clean:
+  it agrees in sign on all 5 that qualify. Wrong entity (G4) reads PREDICTIVE on 3 of 3, from the same clean brain. The
+  agreement is about direction, not size. Freshness (G1), write landing (G3, also FIX-METHOD), latency at scale (G5)
+  and gold out of view (G6) read NO REFERENCE YET. No measure is a cut candidate.
+- **Agent cells (descriptive).** claude-opus-5-5 and gpt-6.1-sol never reported an unlanded write (0 of 960 write
+  episodes), and particle-1 did 7 times in 480. 50 of particle-1's 240 entity answers weren't the entity id the task
+  asked for, and 43 of those named the right person in the wrong form.
+- **Runner changes made before the counted runs.** `paraphrase-opus.ts` claims its output and receipt before any paid
+  request, so neither a rerun nor a concurrent run can overwrite paid paraphrases. A paid synthetic live-recall run
+  refuses a keyword candidate bound. `verdict.ts` reads only the counted scorecard the preregistration names, unless
+  `--secondary` is passed. Cost per correct answer counts turns billed before a cap stop, and a model with spend but
+  no finished episode gets a row. The scale-latency brain gets the real brain's search setting, `ubicloud.ts --pins`
+  probes several gbrain commits on fresh copies of one brain, and `ubicloud.ts` passes `ubi-runner.sh` only the
+  environment it reads. G3's `two_range_read` pair is left out of the phase 2 test. gbrain 0.60.623.0 is named as
+  the first release that clears over-applied private labels, so a batch 3 freeze records which side of that change it
+  falls on.
+- **Fixed.** The batch 3 freeze test hard-coded one visibility epoch as "the other epoch". At gbrain 0.60.623.0 and
+  later that is the run's own epoch, so the test now picks whichever epoch the gbrain under test isn't in.
+- **Known limits.** Three of batch 3's five agreeing contrasts, and two of G4's three, have synthetic intervals that
+  touch or cross zero. The synthetic sizes don't match the real ones, so G2 and G4 may gate the nightly loop on
+  direction only.
+
 ## [0.10.205] - 2026-11-10
 
 ### Code review now skips the predictive-measures raw scorecards and episode logs, so their results fit gstack's review limit
