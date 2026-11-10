@@ -2,6 +2,26 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.198] - 2026-11-10
+
+### CI splits the test suite into six shards balanced by measured file times, so no test job nears its 15-minute limit
+
+- **Six shards, balanced by time.** CI's `tests` jobs go from four to six, and each runs
+  `bun test --shard=<n>/6 --timings=test/timings.json`. Bun now cuts the sorted file list where the listed times
+  balance, instead of dealing files out one at a time by file count. On main at a06ae365, the slowest of the four old
+  shards spent 832 s of its 900 s job limit running tests.
+- **The largest single file.** Bun shards whole files, so `test/eval/predictive-cli-arm.test.ts` (about 5 minutes)
+  always runs inside one shard. A shard's time is about a sixth of the suite plus, at most, its slowest file.
+- **Refreshing the times.** `test/timings.json` holds each test file's median time over five main runs. When you add
+  a test file that takes more than a minute, or a shard job nears 10 minutes, download the `tested-files-*` reports of
+  a few green main runs (`gh run download <run id> -R garrytan/gbrain-evals -p 'tested-files-*' -D <dir>`, one
+  directory per run) and run `bun scripts/test-timings.ts <dir> [<dir>...]`. Use green runs: a failed shard uploads no
+  report, so its files would drop out. A file missing from the timings still runs and counts as a median file.
+- **Local runs.** `bun run test` (`scripts/test-shards.ts`) reads the same timings, so run it from the repository
+  root. It still defaults to four shards or the CPU count, whichever is lower; `TEST_SHARDS=6` gives CI's grouping.
+- **Checks.** The CI-carry profile in `.gstack/pregate.json` lists the two new jobs. Two CI-config tests pin the new
+  command and matrix. No other assertion changed, and no test is skipped.
+
 ## [0.10.197] - 2026-11-10
 
 ### A nightly check of gbrain master that counts failures by cause and flags what got worse since the night before
