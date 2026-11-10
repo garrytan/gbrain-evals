@@ -216,11 +216,28 @@ interface Brain {
   crag: { escalation: boolean; think: boolean }; resultCache: boolean | null; close: () => Promise<void>;
 }
 
-/** Refuse a brain whose remote read policy, read fresh, shows private pages to remote callers. */
-export async function assertPrivate(gut: GbrainUnderTest, engine: any): Promise<void> {
+/**
+ * Refuse a brain that would show the runner a page gbrain hides from an unbound remote caller. Each check fails closed:
+ * - the operator opt-out (search.remote_private_pages), read fresh;
+ * - a stdio session bound to a member (config mcp.stdio_member, set at all), or the caller access gbrain's dispatcher
+ *   would give the runner's own calls showing an identity, a granted source or the brain owner's relaxed view
+ *   (garrytan/gbrain#8917, 0.60.623.0 and later);
+ * - with a reader, any response it saw under a wider view (_meta.access), and a get_page of one page gbrain hides from an
+ *   unbound remote caller that comes back readable.
+ */
+export async function assertPrivate(gut: GbrainUnderTest, engine: any, reader?: GbrainReader): Promise<void> {
   const visibility = await importGbrain<any>(gut, 'src/core/search/private-visibility.ts');
   const relaxed = typeof visibility.readRemotePolicyNow === 'function' ? (await visibility.readRemotePolicyNow(engine)).privacyRelaxed : await visibility.remotePrivacyRelaxed(engine);
   if (relaxed !== false) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'search.remote_private_pages relaxes remote private-page visibility');
+  const caller = await importGbrain<any>(gut, 'src/core/access/caller.ts').catch(() => null);
+  const bound = String((await engine.getConfig(caller?.STDIO_MEMBER_KEY ?? 'mcp.stdio_member').catch(() => 'unreadable')) ?? '').trim();
+  const access = typeof caller?.remoteCallerAccess === 'function' ? await caller.remoteCallerAccess(engine, undefined, undefined, 'stdio') : null;
+  const wider = access && (access.owner !== false || access.hidePrivate !== true || [access.identity, access.audienceIdentities, access.privateReadableSources].some(l => !Array.isArray(l) || l.length > 0));
+  if (bound || wider) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'the runner\'s stdio session is bound to a member or reads as the brain owner');
+  if (!reader) return;
+  const breach = reader.breach();
+  if (breach) throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'gbrain answered the runner under ' + breach);
+  if (await reader.privateProbe() === 'readable') throw new LiveRecallAbort('LR_PRIVACY_RELAXED', 'a page gbrain hides from an unbound remote caller came back readable');
 }
 
 /**
@@ -257,6 +274,7 @@ async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUr
     const config = async (key: string) => (await engine.getConfig(key).catch(() => null)) === 'true';
     const cache = await importGbrain<any>(o.gut, 'src/core/search/query-cache.ts').catch(() => null);
     const reader = await openReader(o.gut, engine, Boolean(knobs.reranker_enabled), capped);
+    await assertPrivate(o.gut, engine, reader);
     return {
       engine, barrier, connection, schemaVersion, counters, reader, knobs, embeddingModel,
       crag: { escalation: await config('search.crag_escalation'), think: await config('search.crag_think') },
@@ -717,7 +735,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       while (!a || (a.status === 'harness_error' && a.attempt < MAX_ATTEMPTS)) {
         if (stopped()) return;
         a = await runEpisode(ctx, task, form, arm, model, (a?.attempt ?? 0) + 1);
-        await assertPrivate(o.gut, brain.engine);
+        await assertPrivate(o.gut, brain.engine, brain.reader);
         if (a.status === 'degraded') await preflight(brain.reader).catch(e => { ctx.capCheck(); throw e; });
         store.write(a);
       }
@@ -733,7 +751,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       await pool(tasks, o.concurrency, async task => {
         try {
           if (stopped()) return;
-          await assertPrivate(o.gut, brain.engine);
+          await assertPrivate(o.gut, brain.engine, brain.reader);
           for (const [arm, model] of cellOrder(task.id, o.arms, o.models)) {
             if (stopped()) return;
             await cell(form, task, arm, model);

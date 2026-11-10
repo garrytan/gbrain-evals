@@ -261,6 +261,32 @@ describe('phase 2 privacy posture on the fixture (keyless)', () => {
     } finally { await open.close(); }
   }, 120_000);
 
+  test('a stdio session bound to a member or the brain owner is refused, and a response read under the owner\'s view never reaches the caller', async () => {
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      const { importFromContent } = await importGbrain<any>(gut, 'src/core/import-file.ts');
+      const { addMember } = await importGbrain<any>(gut, 'src/core/access/members.ts');
+      await open.engine.executeRaw('SET default_transaction_read_only = off');
+      await importFromContent(open.engine, 'notes/access-probe', '---\ntype: note\ntitle: Access probe\naccess: private\n---\n\n# Access probe\n\nFictional page marked access private. Its code word is heliotrope.\n');
+      await addMember(open.engine, 'owner-one', { name: 'Owner One' });
+      const unbound = await openReader(gut, open.engine, true);
+      expect(await unbound.page('notes/access-probe')).toBeNull();
+      expect(await unbound.privateProbe()).toBe('hidden');
+      expect(await abortCode(() => assertPrivate(gut, open.engine, unbound))).toBe('no abort');
+
+      await open.engine.setConfig('mcp.stdio_member', 'owner-one');
+      expect(await abortCode(() => assertPrivate(gut, open.engine))).toBe('LR_PRIVACY_RELAXED');
+      await open.engine.setConfig('access.owner_member', 'owner-one');
+      expect(await abortCode(() => assertPrivate(gut, open.engine))).toBe('LR_PRIVACY_RELAXED');
+
+      const owned = await openReader(gut, open.engine, true);
+      expect(await owned.page('notes/access-probe').then(t => 'returned ' + (t ?? '').includes('heliotrope'), e => (e as Error).message)).toBe('gbrain answered under relaxation owner');
+      expect(owned.breach()).toBe('relaxation owner');
+      expect(await owned.privateProbe()).toBe('readable');
+      expect(await abortCode(() => assertPrivate(gut, open.engine, owned))).toBe('LR_PRIVACY_RELAXED');
+    } finally { await open.close(); }
+  }, 120_000);
+
   test('B\'s tools are gbrain\'s query, search and get_page, with expansion, images and source ids removed', () => {
     expect(reader.tools.map(t => t.name).sort()).toEqual(['get_page', 'query', 'search']);
     for (const t of reader.tools) for (const k of ['expand', 'image', 'image_mime', 'source_id', 'source_ids']) expect(Object.keys((t.input_schema as any).properties)).not.toContain(k);
