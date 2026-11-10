@@ -22,8 +22,15 @@
  *     seed 1): when the 95% interval of tonight minus the previous night excludes zero and the drop is at least 5 points;
  *   - a strong flip: an item that passed k of k trials and now passes 0 of k;
  *   - cost per correct answer up 25% or more with no gain in pass rate.
- * The same rules compare master with stable, reported in their own section. Writes report.md, summary.json and
- * outcomes.jsonl.gz into the night directory.
+ * The same rules compare master with stable, reported in their own section.
+ *
+ * particle-1's agreement with claude-opus-5-5, scored on a night that schedules particle-1: per item, each reader's first
+ * counted trial is a pass or a fail, and only items both readers answered are paired. Each suite's 2x2 table gives its raw
+ * agreement, Cohen's kappa and particle-1's pass-rate gap to Opus; the tables are summed over suites, and particle-1
+ * passes when the pooled table has a kappa of at least 0.6 and raw agreement of at least 85%. Kappa is undefined (null,
+ * so the bar fails) when both readers give every item the same label. A suite particle-1 was scheduled on with no paired
+ * item is listed as not measured, with the reason. Writes report.md, summary.json and outcomes.jsonl.gz into the night
+ * directory.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -175,6 +182,54 @@ export function compareNights(tonight: { manifest: NightManifest; rows: Outcome[
   return { against, night: other.manifest.night, ref: other.manifest.ref, sha: other.manifest.sha, suites, flags };
 }
 
+export const AGREEMENT = { candidate: 'particle-1', reference: 'claude-opus-5-5', min_kappa: 0.6, min_raw: 0.85 } as const;
+
+export interface AgreementTable { items: number; both_pass: number; candidate_only: number; reference_only: number; both_fail: number }
+export interface AgreementStats extends AgreementTable { raw: number | null; kappa: number | null; candidate_pass: number | null; reference_pass: number | null; gap: number | null }
+export interface Agreement {
+  candidate: string; reference: string; min_kappa: number; min_raw: number;
+  suites: Array<({ suite: string; measured: true; unpaired: number } & AgreementStats) | { suite: string; measured: false; reason: string }>;
+  pooled: AgreementStats; verdict: 'pass' | 'fail' | 'not_measured';
+}
+
+/** Raw agreement, Cohen's kappa and both pass rates from one 2x2 table; kappa is null when chance agreement is 1. */
+export function agreementStats(t: AgreementTable): AgreementStats {
+  if (!t.items) return { ...t, raw: null, kappa: null, candidate_pass: null, reference_pass: null, gap: null };
+  const raw = (t.both_pass + t.both_fail) / t.items, c = (t.both_pass + t.candidate_only) / t.items, r = (t.both_pass + t.reference_only) / t.items;
+  const chance = c * r + (1 - c) * (1 - r);
+  return { ...t, raw, kappa: chance === 1 ? null : (raw - chance) / (1 - chance), candidate_pass: c, reference_pass: r, gap: c - r };
+}
+
+/** particle-1 against claude-opus-5-5 on one night, or null when no suite schedules particle-1 and no row names it. */
+export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreement | null {
+  const { candidate, reference, min_kappa, min_raw } = AGREEMENT;
+  if (!manifest.suites.some(s => s.readers.includes(candidate)) && !rows.some(r => r.reader === candidate)) return null;
+  const first = (suite: string, reader: string) => {
+    const byItem = new Map<string, Outcome>();
+    for (const r of rows) if (r.suite === suite && r.reader === reader && !r.harness && !r.skipped && (byItem.get(r.item)?.trial ?? Infinity) > r.trial) byItem.set(r.item, r);
+    return byItem;
+  };
+  const suites: Agreement['suites'] = [];
+  const pooled: AgreementTable = { items: 0, both_pass: 0, candidate_only: 0, reference_only: 0, both_fail: 0 };
+  for (const s of manifest.suites) {
+    if (!s.readers.includes(candidate) && !rows.some(r => r.suite === s.id && r.reader === candidate)) continue;
+    const mine = first(s.id, candidate), theirs = first(s.id, reference);
+    const paired = [...mine.keys()].filter(i => theirs.has(i));
+    if (!paired.length) {
+      const absent = s.status === 'ran' || s.status === 'partial' ? null : `${s.status.replace('_', ' ')}${s.reason ? `: ${s.reason}` : ''}`;
+      suites.push({ suite: s.id, measured: false, reason: absent ?? (!mine.size ? `no counted ${candidate} rows` : !theirs.size ? `no counted ${reference} rows` : 'no item both readers answered') });
+      continue;
+    }
+    const t: AgreementTable = { items: paired.length, both_pass: 0, candidate_only: 0, reference_only: 0, both_fail: 0 };
+    for (const i of paired) { const a = mine.get(i)!.pass, b = theirs.get(i)!.pass; t[a && b ? 'both_pass' : a ? 'candidate_only' : b ? 'reference_only' : 'both_fail']++; }
+    for (const key of Object.keys(t) as Array<keyof AgreementTable>) pooled[key] += t[key];
+    suites.push({ suite: s.id, measured: true, unpaired: new Set([...mine.keys(), ...theirs.keys()]).size - paired.length, ...agreementStats(t) });
+  }
+  const p = agreementStats(pooled);
+  return { candidate, reference, min_kappa, min_raw, suites, pooled: p,
+    verdict: !p.items ? 'not_measured' : p.kappa !== null && p.kappa >= min_kappa && p.raw! >= min_raw ? 'pass' : 'fail' };
+}
+
 export interface Fix { issue: string; pr: string; gbrain_version: string; suite: string; items: string[]; note?: string }
 
 export function loadFixes(path = join(REPO, FIXES_PATH)): Fix[] {
@@ -212,12 +267,13 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     return { ...f, tonight: { rows: mine.length, passes: mine.filter(r => r.pass).length } };
   });
   const flags = comparisons.flatMap(c => c.flags);
+  const agreement = nightAgreement(m, rows);
   const summary = {
     schema: 'nightly-summary/1', night: m.night, ref: m.ref, sha: m.sha, version: m.version, tier: m.tier, fake: m.fake, devset: m.devset,
     taxonomy_version: TAXONOMY_VERSION,
     suites: m.suites.map(s => ({ ...s, cells: cells.filter(c => c.suite === s.id).map(({ per_item: _items, ...c }) => c) })),
     harness_rows: rows.filter(r => r.harness).length,
-    flags, comparisons, commit_range: prev ? { from: prev.sha, to: m.sha, commits } : null, fixes,
+    flags, comparisons, commit_range: prev ? { from: prev.sha, to: m.sha, commits } : null, fixes, agreement,
   };
   const lines: string[] = [];
   lines.push(`# Nightly gbrain check: ${m.ref} ${m.sha.slice(0, 12)}${m.version ? ` (v${m.version})` : ''}, ${m.night}`, '');
@@ -238,6 +294,18 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
   for (const s of devSets) {
     const drift = s.dev_set!.freeze_drift;
     lines.push(`- ${s.id}: ${s.dev_set!.label}. ${drift === null ? 'The freeze was not checked on this night.' : drift.length ? `Code changed since the freeze: ${drift.join(', ')}.` : 'No frozen file has changed since the freeze.'}`);
+  }
+  if (agreement) {
+    const a = agreement, p = a.pooled, measured = a.suites.filter(s => s.measured).length, kappa = (x: number | null) => (x === null ? 'n/a' : x.toFixed(3));
+    const points = (x: number | null) => (x === null ? 'n/a' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}`);
+    lines.push('', `## ${a.candidate} agreement with ${a.reference}`, '');
+    lines.push(`Per item, each reader's first counted trial is a pass or a fail; only items both readers answered count. ${a.candidate} passes on Cohen's kappa of at least ${a.min_kappa} and raw agreement of at least ${pct(a.min_raw)}, pooled over suites.`, '');
+    lines.push(a.verdict === 'not_measured' ? '**Not measured: no item both readers answered.**'
+      : `**${a.verdict === 'pass' ? 'Passes' : 'Fails'}: kappa ${kappa(p.kappa)}${p.kappa === null ? ' (both readers gave every item the same label)' : ''}, raw agreement ${pct(p.raw)}, over ${p.items} items in ${measured} suite${measured === 1 ? '' : 's'}.** ${a.candidate} passes ${pct(p.candidate_pass)} of them and ${a.reference} ${pct(p.reference_pass)}, a gap of ${points(p.gap)} points.`);
+    if (measured) lines.push('', `| Suite | Paired items | Raw agreement | Kappa | ${a.candidate} pass rate | ${a.reference} pass rate | Gap (points) | Unpaired items |`, '|---|---|---|---|---|---|---|---|');
+    for (const s of a.suites) if (s.measured) lines.push(`| ${s.suite} | ${s.items} | ${pct(s.raw)} | ${kappa(s.kappa)} | ${pct(s.candidate_pass)} | ${pct(s.reference_pass)} | ${points(s.gap)} | ${s.unpaired} |`);
+    const unmeasured = a.suites.flatMap(s => (s.measured ? [] : [`- ${s.suite}: not measured, ${s.reason}`]));
+    if (unmeasured.length) lines.push('', ...unmeasured);
   }
   for (const c of comparisons) {
     lines.push('', `## Against ${c.against === 'previous' ? 'the previous master night' : 'stable'} (${c.ref} ${c.sha.slice(0, 12)}, ${c.night})`, '');
