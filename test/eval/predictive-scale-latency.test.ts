@@ -24,7 +24,7 @@ import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { buildScaleBrain, openScaleEngine, pagesDigest, randomUnitVector, readCheckpoint, scalePage, useScaleTransports } from '../../eval/runner/predictive/scale-latency/build.ts';
 import { OPS, SCORECARD_SCHEMA, calibrate, countFallOpens, opStats, probeArgs, probeLatency, type Op, type OpStats } from '../../eval/runner/predictive/scale-latency/probe.ts';
-import { MAX_RETRIES, defaultSteps, loadState, runOnUbicloud, ubiRunnerClient, vmName, type UbicloudClient } from '../../eval/runner/predictive/scale-latency/ubicloud.ts';
+import { MAX_RETRIES, defaultSteps, loadState, parsePins, runOnUbicloud, ubiRunnerClient, vmName, type UbicloudClient } from '../../eval/runner/predictive/scale-latency/ubicloud.ts';
 
 const gut = resolveGbrainUnderTest(null);
 const dirs: string[] = [];
@@ -167,6 +167,24 @@ describe('Ubicloud lifecycle (J1) with a fake client', () => {
   test('vm names follow ubi-runner.sh', () => {
     expect(vmName('GBEV-55', 6, 1_700_000_000, '0a1b2c3d')).toBe('ubirun-gbev55-1700000000-0a1b2c3d-t6');
     expect(vmName('55x', 6, 1, '00000000')).toMatch(/^ubirun-u55x-/);
+  });
+
+  test('pins: gbrain cloned on the VM, the brain built once at the first pin, each pin probed in order on its own fresh copy', () => {
+    const a = 'a131fb20ef4aafd017f0c6a6565ce5627dc46897';
+    const b = '241cef5aa54f185bc79a21eec12249583e3c88dc';
+    const steps = defaultSteps({ pages: 300_000, n: 200, syncN: 30, pins: parsePins(`549:${a},570:${b},549b:${a}`) });
+    expect(steps.map(s => s.id)).toEqual(['setup', 'gbrain', 'build', 'probe-549', 'probe-570', 'probe-549b']);
+    expect(steps[2].command).toContain(`--gbrain ~/gbrain-src@${a}`);
+    expect(steps[4].command).toContain(`--gbrain ~/gbrain-src@${b}`);
+    expect(steps[4].command).toContain('--out ~/scale-latency/scorecard-570.json');
+    expect(steps[4].command).toContain('[ -s ~/scale-latency/scorecard-570.json ] ||');
+    expect(steps[4].command).toContain('CREATE DATABASE scale_570 TEMPLATE scale');
+    expect(steps[4].command).toContain('SCALE_LATENCY_DATABASE_URL=postgresql://ubi@127.0.0.1:5432/scale_570 bun');
+    expect(defaultSteps({ pages: 1, n: 1, syncN: 1 }).map(s => s.id)).toEqual(['setup', 'build', 'probe']);
+    expect(parsePins(undefined)).toEqual([]);
+    expect(() => parsePins(`549:${a},549:${b}`)).toThrow(/twice/);
+    expect(() => parsePins('549:v0.60.549.0')).toThrow(/40-hex/);
+    expect(() => parsePins(`549-b:${a}`)).toThrow(/lowercase letters and digits/);
   });
 
   test('refused without --paid and --budget-run-id, before any client call', async () => {

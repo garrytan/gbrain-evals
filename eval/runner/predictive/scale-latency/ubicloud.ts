@@ -6,6 +6,7 @@
  *   bun eval/runner/predictive/scale-latency/ubicloud.ts --paid --budget-run-id <id> --owner <thread code> \
  *     [--pages 300000] [--n 200] [--sync-n 30] [--size standard-16] [--location eu-central-h1] \
  *     [--ttl-hours 6] [--state <file>] [--out <dir>] [--ubi-runner <path to ubi-runner.sh>]
+ *     [--pins <tag>:<gbrain commit>,…]   probe each commit in order on one brain built at the first
  *
  * --owner becomes UBI_OWNER, so the VM name carries it. The VM costs money, so the
  * run needs an open budget-ledger run.
@@ -80,14 +81,45 @@ export function vmName(owner: string, ttlHours: number, epochSeconds: number, he
   return `ubirun-${o.slice(0, 12)}-${epochSeconds}-${hex}-t${ttlHours}`;
 }
 
-/** The remote steps for one build and probe: setup, resumable build, probe. The scorecard lands in ~/scale-latency. */
-export function defaultSteps(o: { pages: number; n: number; syncN: number; checkout?: string }): RemoteStep[] {
+export interface Pin { tag: string; ref: string }
+export const GBRAIN_REPO = 'https://github.com/garrytan/gbrain';
+
+/** --pins <tag>:<commit>,…: the gbrain commits to probe, in order, on one brain built at the first. */
+export function parsePins(value: string | undefined): Pin[] {
+  if (!value) return [];
+  const pins = value.split(',').map(entry => {
+    const [tag, ref, extra] = entry.split(':');
+    if (!tag || !/^[a-z0-9]+$/.test(tag) || !ref || !/^[0-9a-f]{40}$/.test(ref) || extra !== undefined) throw new Error(`--pins takes <tag>:<40-hex gbrain commit> entries, comma-separated, each tag lowercase letters and digits; got "${entry}"`);
+    return { tag, ref };
+  });
+  const seen = new Set<string>();
+  for (const p of pins) {
+    if (seen.has(p.tag)) throw new Error(`--pins names tag ${p.tag} twice; give each probe its own tag`);
+    seen.add(p.tag);
+  }
+  return pins;
+}
+
+/**
+ * The remote steps: setup, resumable build, probe. Scorecards land in ~/scale-latency. With no pins, the package's
+ * gbrain builds and probes once (scorecard.json). With pins, gbrain is cloned on the VM and the brain is built once at
+ * the first pin. Each pin, in the order given, is probed on its own fresh copy of that brain (database scale_<tag>,
+ * made from the built one as a template), because a probe writes to the brain it times; it writes
+ * scorecard-<tag>.json, and a retry skips a probe whose scorecard already exists.
+ */
+export function defaultSteps(o: { pages: number; n: number; syncN: number; checkout?: string; pins?: Pin[] }): RemoteStep[] {
   const cd = `cd ~/work/${o.checkout ?? basename(REPO_ROOT)} && export PATH="$HOME/.bun/bin:$PATH" SCALE_LATENCY_DATABASE_URL=postgresql://ubi@127.0.0.1:5432/scale && mkdir -p ~/scale-latency`;
   const dir = 'eval/runner/predictive/scale-latency';
+  const pins = o.pins ?? [];
+  const gut = (p: Pin) => ` --gbrain ~/gbrain-src@${p.ref}`;
+  const probe = (out: string, extra: string) => `bun ${dir}/probe.ts --database-url-env SCALE_LATENCY_DATABASE_URL --checkpoint ~/scale-latency/checkpoint.json --n ${o.n} --sync-n ${o.syncN}${extra} --out ~/scale-latency/${out}`;
   return [
     { id: 'setup', command: `${cd} && bash ${dir}/vm-setup.sh` },
-    { id: 'build', command: `${cd} && bun ${dir}/build.ts --database-url-env SCALE_LATENCY_DATABASE_URL --pages ${o.pages} --checkpoint ~/scale-latency/checkpoint.json` },
-    { id: 'probe', command: `${cd} && bun ${dir}/probe.ts --database-url-env SCALE_LATENCY_DATABASE_URL --checkpoint ~/scale-latency/checkpoint.json --n ${o.n} --sync-n ${o.syncN} --out ~/scale-latency/scorecard.json` },
+    ...(pins.length ? [{ id: 'gbrain', command: `[ -d ~/gbrain-src/.git ] || git clone --quiet ${GBRAIN_REPO} ~/gbrain-src` }] : []),
+    { id: 'build', command: `${cd} && bun ${dir}/build.ts --database-url-env SCALE_LATENCY_DATABASE_URL --pages ${o.pages} --checkpoint ~/scale-latency/checkpoint.json${pins.length ? gut(pins[0]) : ''}` },
+    ...(pins.length
+      ? pins.map(p => ({ id: `probe-${p.tag}`, command: `${cd} && { [ -s ~/scale-latency/scorecard-${p.tag}.json ] || { sudo -u postgres psql -qc 'DROP DATABASE IF EXISTS scale_${p.tag}' -c 'CREATE DATABASE scale_${p.tag} TEMPLATE scale OWNER ubi' && SCALE_LATENCY_DATABASE_URL=postgresql://ubi@127.0.0.1:5432/scale_${p.tag} ${probe(`scorecard-${p.tag}.json`, gut(p))}; }; }` }))
+      : [{ id: 'probe', command: `${cd} && ${probe('scorecard.json', '')}` }]),
   ];
 }
 
@@ -249,15 +281,18 @@ if (import.meta.main) {
   const ttlHours = Number(flag(argv, '--ttl-hours') ?? 6);
   const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/scale-latency'));
   const script = flag(argv, '--ubi-runner') ?? process.env.UBI_RUNNER ?? DEFAULT_UBI_RUNNER;
+  const pins = parsePins(flag(argv, '--pins'));
   const report = await runOnUbicloud({
     argv, owner, ttlHours,
     client: ubiRunnerClient(script, { owner, ttlHours }),
     statePath: resolve(flag(argv, '--state') ?? join(out, 'ubicloud-state.json')),
     spec: { size: flag(argv, '--size') ?? 'standard-16', location: flag(argv, '--location') ?? 'eu-central-h1' },
-    steps: defaultSteps({ pages: Number(flag(argv, '--pages') ?? DEFAULT_PAGES), n: Number(flag(argv, '--n') ?? 200), syncN: Number(flag(argv, '--sync-n') ?? 30) }),
-    pull: { remote: 'scale-latency/scorecard.json', localDir: out },
+    steps: defaultSteps({ pages: Number(flag(argv, '--pages') ?? DEFAULT_PAGES), n: Number(flag(argv, '--n') ?? 200), syncN: Number(flag(argv, '--sync-n') ?? 30), pins }),
+    pull: { remote: pins.length ? 'scale-latency' : 'scale-latency/scorecard.json', localDir: out },
     log: line => process.stderr.write(`scale-latency ubicloud: ${line}\n`),
   });
+  const missing = report.status === 'complete' ? pins.filter(p => !existsSync(join(out, 'scale-latency', `scorecard-${p.tag}.json`))).map(p => p.tag) : [];
+  if (missing.length) Object.assign(report, { status: 'partial', error: `the VM run finished but no scorecard came back for ${missing.join(', ')}` });
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, 'ubicloud-report.json'), JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify(report, null, 2));
