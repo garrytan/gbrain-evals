@@ -4,8 +4,9 @@ This page lists every relationship between Garry Tan, who directs gbrain-evals, 
 product these evals test, compare or feature. A finding file or long-form post that tests, compares or features the
 subject carries the line only in a closing Disclosures section at the end, never in front matter, which GitHub shows as
 a table above the body. An X post and its images carry no disclosure line. A report or summary in this repository that
-gives the subject's results carries the line up front, directly under its title or beside the result. Use the words
-below exactly.
+gives the subject's results carries the line up front, directly under its title or beside the result. README, which
+gathers results from many reports, carries its lines once, in a closing Disclosures section. Use the words below
+exactly.
 
 ## Garry Tan's words
 
@@ -51,9 +52,10 @@ first.
 
 - The [particle-1 W10b finding](findings/2026-11-01-particle-1-longmemeval-w10b.md) carries the Particle, gbrain and
   OpenAI lines only in its closing Disclosures section. Its X post draft and infographic carry none.
-- The [particle-1 replay report](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md), README's full-context
-  paragraph and the [corrections page](corrections.md)'s GPT-6.1 Sol entry carry the Particle, gbrain and OpenAI
-  lines.
+- The [README](../README.md) carries the gbrain, Particle and OpenAI lines in its closing Disclosures section, because
+  its results and comparisons report gbrain, particle-1 and GPT-6.1 Sol results.
+- The [particle-1 replay report](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md) and the
+  [corrections page](corrections.md)'s GPT-6.1 Sol entry carry the Particle, gbrain and OpenAI lines.
 - The [docs index](README.md)'s particle-1 replay row carries the Particle and gbrain lines. It reports no OpenAI
   model's result.
 - The [particle-1 tokenizer calibration](benchmarks/2026-11-01-particle-1-calibration/README.md) and its docs index
@@ -65,21 +67,27 @@ first.
   section. It reports no particle-1 or OpenAI model result.
 - The [particle-1 F6 add-on finding](findings/2026-11-04-particle-1-f6-addon.md) carries the Particle, gbrain and OpenAI
   lines in its closing Disclosures section, and its [report](findings/2026-11-04-particle-1-f6-addon/report.md) carries
-  them up front. The docs index row carries all three. README's known-limits entry on BEAM's judge carries the Particle
-  line, since it reports particle-1's result and uses GPT-6.1 Sol only as a judge.
+  them up front. The docs index row carries all three.
 - The [GST-1365 judge-robustness preregistration](benchmarks/2026-11-04-gst-1365-judge-robustness-preregistration.md)
   reports no result. Its judges are OpenAI, Anthropic and Google models (gpt-6.1-sol, claude-opus-5-5 and
   gemini-4-argon, with gpt-4.1-mini on the known-answer controls), and judges trigger no line. Its
   [results file](benchmarks/2026-11-05-gst-1365-judge-robustness.md) carries the gbrain and OpenAI lines in its closing
-  Disclosures section, because it reports gbrain's comparisons and gpt-6.1-sol's reader rows. README's paragraph on it
-  under the Q1 block and its docs index row carry the same two lines, since their three-reader comparisons include
-  gpt-6.1-sol's reader rows.
+  Disclosures section, because it reports gbrain's comparisons and gpt-6.1-sol's reader rows. Its docs index row
+  carries the same two lines, since its three-reader comparisons include gpt-6.1-sol's reader rows.
 - The [November 9 OpenAI cache-write audit](audit/2026-11-09-openai-cache-writes.md) carries the gbrain, OpenAI and
   Particle lines up front. The [corrections page](corrections.md#openai-cache-writes)'s cache-write entries carry the
   OpenAI line, and its F6 add-on entry the Particle line too. Each report they correct carries the OpenAI line beside
   its first corrected figure; the F6 add-on finding already carries it in its closing Disclosures section.
 
 ## Changelog
+
+### 2026-11-09: README's lines move to one closing section
+
+README now carries the gbrain, Particle and OpenAI lines once, in a closing Disclosures section, instead of beside its
+full-context paragraph, its known-limits entry on BEAM's judge and its paragraph on the judge-robustness results. The
+opening says so, "In this repository" gains a README entry, and the three entries that described README's inline lines
+drop those sentences. Why: README became a scorecard that gathers many reports' results, and a single closing section
+keeps the lines in one place, as a finding file does.
 
 ### 2026-11-09: The OpenAI cache-write corrections
 
