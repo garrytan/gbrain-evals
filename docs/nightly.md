@@ -118,8 +118,8 @@ A night that calls models runs only with `--paid` and a [budget ledger](budget-l
 A paid night spends through one run in a durable budget ledger that carries from night to night. Each nightly run's
 budget is the smaller of the night cap and what is left of the 30-night cap. An open nightly run holds its whole budget
 against the 30-night cap (or what it committed, if that is more), whatever its age, because a resume or a bisect step
-can still spend it. A closed run holds what it committed in the 30 days before. So two runs opened on one night can't
-add up past the 30-night cap.
+can still spend it. A closed run holds what it committed in the 30 days before. So two runs opened one after another
+can't add up past the 30-night cap. Two opens at the same moment can, so open runs one at a time.
 
 Only a run's opener closes it. A night gets its run in one of two ways:
 
@@ -134,6 +134,11 @@ bun eval/runner/nightly/run.ts --ref master --tier matrix --paid --budget-ledger
 bun eval/runner/nightly/run.ts --ref stable --tier matrix --paid --budget-ledger <path> --budget-run-id "$RUN" --out <dir> --gbrain-clone ../gbrain
 bun eval/runner/nightly/ledger.ts close --budget-ledger <path> --budget-run-id "$RUN"
 ```
+
+Each `run.ts` line also needs the settings its suites need, as described under
+[Run a night without keys](#run-a-night-without-keys): `--pg-admin` and `--pg15-admin` for the Postgres trials and
+smoke, and `--cat40-slot-allowance-usd` for a paid Cat 40 run. `--resume` repeats the night's first arguments, so a
+night started without them can't gain them on a resume.
 
 The runner never closes a run passed in with `--budget-run-id`, on the night or on a resume. It refuses an id that
 isn't a nightly run, and one that is already closed. If you won't resume a stopped night, close its run, so its unspent
@@ -201,7 +206,8 @@ Ubicloud VM:
 Added how a paid night gets and closes its ledger run: an open run holds its whole budget against the 30-night cap, only
 its opener closes it, and the matrix and bisect flows open one run and close it at the end. `--resume` now says to run
 only once the stopped run's children have exited, a fresh run into an existing night is refused, and bisect passes the
-Cat 40 and Postgres settings to every step.
+Cat 40 and Postgres settings to every step. The matrix example says which settings its runs need, and the 30-night cap
+holds for runs opened one at a time.
 
 ### 2026-11-09: First version
 
