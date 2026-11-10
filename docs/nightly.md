@@ -86,6 +86,13 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   every trial and now passes none) and a rise in cost per correct answer with no gain in pass rate. It also lists the
   gbrain commits since that night.
 - **Against stable.** On matrix nights the same rules compare master with the stable release, in their own section.
+- **particle-1's agreement with Opus.** On a night that runs particle-1 beside claude-opus-5-5 (`--readers
+  claude-opus-5-5,particle-1`), the report checks whether the low-cost reader marks the same items right and wrong as
+  Opus. Each reader's first counted trial of an item is its pass or fail, and only items both readers answered count. Per
+  suite it shows raw agreement, Cohen's kappa (agreement beyond what the two pass rates give by chance) and particle-1's
+  pass-rate gap to Opus. particle-1 passes when the tables pooled over suites reach a kappa of at least 0.6 and raw
+  agreement of at least 85%. A suite particle-1 was scheduled on with no paired item is listed as not measured, with the
+  reason. The verdict decides whether particle-1 joins as a nightly reader.
 - **Fixes.** [`eval/data/nightly/fixes.json`](../eval/data/nightly/fixes.json) records each gbrain fix shipped for a
   nightly finding, and the report shows its items every night, so a fix that regresses shows up next to its record.
 
@@ -203,7 +210,17 @@ Ubicloud VM:
    clone with every release tag. It prints the two Postgres admin URLs to pass as `--pg-admin` and `--pg15-admin`.
    It never reads or forwards a provider key.
 
+## Disclosures
+
+Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. The full list is in
+[disclosures](disclosures.md).
+
 ## Changelog
+
+### 2026-11-10: particle-1's agreement with Opus
+
+Added the report section that scores particle-1 against claude-opus-5-5 on a night that runs both: raw agreement,
+Cohen's kappa and the pass-rate gap per suite, and the pooled verdict. Added a Disclosures section for Particle.
 
 ### 2026-11-10: Failures by cause use the shared taxonomy
 
