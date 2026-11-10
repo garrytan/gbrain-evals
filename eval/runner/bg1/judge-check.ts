@@ -19,7 +19,11 @@
  *             JUDGE_CHECK_PLAN's. The pool and every text stay in --out.
  *   Grading   gpt-6-astra and claude-opus-5-5 grade every item with the production request (the bg1-dev instrument
  *             through judgeAnswer at PER_READER_JUDGE_SETTINGS, gating view), through the judge cache and one lease.
- *             The deterministic matcher (match.ts) reads every item too, at no cost, descriptive.
+ *             The deterministic matcher (match.ts) reads every item too, at no cost, descriptive. Every grade records the
+ *             pool's key (poolSha256: the seed, the instrument's sha256, the pool, and each item's question and gold as
+ *             the loaded corpus holds them) beside its item's text hash, and a plan, run or report whose key or item text
+ *             differs from a grade already in --out exits 2 before it writes pool.json or opens a lease, so a gold-audit
+ *             amendment or an instrument change makes every earlier grade stale.
  *   Gates     (i) Astra-Opus Cohen's kappa over every item both graded, at least 0.6; (ii) each gating judge's kappa
  *             against the construction labels, at least 0.6; (iii) at least 40 items on which Astra and Opus agree,
  *             at least 15 in each class; (iv) each gating judge's truncation rate at most 1%. Any failure exits 3
@@ -31,10 +35,14 @@
  *   Window    `run` spends real keys only inside a granted paid window: without --keyless-upstream it needs --paid-window
  *             and --window-cap-usd, its --ledger-cap-usd never exceeds the window cap, and it exits 2 before any lease,
  *             proxy or output otherwise. A keyless run blanks every provider key first.
+ *   Fixtures  the dev questions load keyless only for `run --keyless-upstream`, or a plan or report on an --out whose
+ *             upstream.json marks a keyless rehearsal; every other load refuses a GBRAIN_EVALS_BG1_DEV_ROOT that is the
+ *             template fixtures or holds template-rendered worlds (corpus.ts bg1DevFixtureProblem), exit 2 before --out.
  */
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { DecideError } from '../decisions/errors.ts';
 import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { ChatClient, judgeAnswer, type ChatLike } from '../memory-qa/qa-v2.ts';
@@ -221,7 +229,7 @@ export function loadRealAnswers(roots: readonly string[], instrument: string): R
   });
 }
 
-type Graded = JudgmentRecord & { item: string };
+type Graded = JudgmentRecord & { item: string; pool_sha256?: string; seed?: number };
 const readGraded = (file: string): Graded[] => (existsSync(file) ? readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : []);
 export const gradesFrom = (records: readonly Graded[]): Grades => {
   const grades: Grades = Object.fromEntries(GATING_JUDGES.map(j => [j, {}]));
@@ -229,14 +237,38 @@ export const gradesFrom = (records: readonly Graded[]): Grades => {
   return grades;
 };
 
+/**
+ * The key every grade records: the seed, the instrument's sha256, the pool, and a hash of each item's question and gold
+ * (its text, answer and BG1 fields) as the loaded corpus holds them now.
+ */
+export const poolSha256 = (pool: readonly Item[], seed: number, questions: ReadonlyMap<string, MemoryQuestion>, instrument: Pick<Instrument, 'sha256'>) => {
+  const gold = pool.map(i => { const q = questions.get(i.question_id); return q ? sha256(JSON.stringify({ question: q.question, answer: q.answer, bg1: q.bg1 ?? null })) : null; });
+  return sha256(JSON.stringify({ seed, instrument: instrument.sha256, pool, gold }));
+};
+
+/** Why the grades in a judgments file were not all made under this key (poolSha256) for each item's text; null when they were. */
+export function staleGrades(file: string, pool: readonly Item[], seed: number, questions: ReadonlyMap<string, MemoryQuestion>, instrument: Pick<Instrument, 'sha256'>): string | null {
+  const key = poolSha256(pool, seed, questions, instrument), items = new Map(pool.map(i => [i.id, i]));
+  const stale = readGraded(file).flatMap(r => {
+    const i = items.get(r.item);
+    const why = r.pool_sha256 !== key || r.seed !== seed ? `pool ${r.pool_sha256?.slice(0, 12) ?? 'unrecorded'} at seed ${r.seed ?? 'unrecorded'}` : !i ? 'an item outside this pool' : r.answer_id !== i.text_sha256 ? `text ${r.answer_id.slice(0, 12)}` : null;
+    return why ? [`${r.item} by ${r.judge} was graded on ${why}`] : [];
+  });
+  if (!stale.length) return null;
+  return `${file} holds grades not made on pool ${key.slice(0, 12)} at seed ${seed} (the key covers the instrument and each item's question and gold): ${stale.slice(0, 3).join('; ')}${stale.length > 3 ? ` (and ${stale.length - 3} more)` : ''}; give this pool a fresh --out`;
+}
+
 /** Grade every item with both gating judges at the pinned settings (resumable: a graded pair in --out is skipped). */
-export async function gradePool(pool: readonly Item[], questions: ReadonlyMap<string, MemoryQuestion>, client: ChatLike, instrument: Instrument, out: string): Promise<Grades> {
+export async function gradePool(pool: readonly Item[], questions: ReadonlyMap<string, MemoryQuestion>, client: ChatLike, instrument: Instrument, out: string, seed = SEED): Promise<Grades> {
   const file = join(out, 'judgments.ndjson');
+  const stale = staleGrades(file, pool, seed, questions, instrument);
+  if (stale) throw new Error(stale);
+  const key = poolSha256(pool, seed, questions, instrument);
   const done = new Set(readGraded(file).map(r => `${r.item}|${r.judge}`));
   for (const i of pool) for (const judge of GATING_JUDGES) {
     if (done.has(`${i.id}|${judge}`)) continue;
     const r = await judgeAnswer(client, instrument, questions.get(i.question_id)!, i.text, { judge, judgeReplicate: 0, view: 'gating', settings: { ...PER_READER_JUDGE_SETTINGS } });
-    appendFileSync(file, JSON.stringify({ item: i.id, answer_id: i.text_sha256, ...r }) + '\n');
+    appendFileSync(file, JSON.stringify({ item: i.id, answer_id: i.text_sha256, pool_sha256: key, seed, ...r }) + '\n');
   }
   return gradesFrom(readGraded(file));
 }
@@ -260,9 +292,12 @@ if (import.meta.main) {
   }
   const unpaid = mode === 'report' ? [] : stage1.flatMap(r => stage1Unpaid(r) ?? []);
   if (unpaid.length) { console.error(`--stage1 takes paid stage 1 outputs only: ${unpaid.join('; ')}`); process.exit(2); }
+  const keylessOut = existsSync(join(out, 'upstream.json')) && JSON.parse(readFileSync(join(out, 'upstream.json'), 'utf8')).keyless === true;
+  let questions: MemoryQuestion[];
+  try { questions = loadCorpus(BG1_BENCHMARK_DEV, undefined, new Set(BG1_DEV_CONVERSATIONS), { keyless: mode === 'run' ? !!keyless : keylessOut }).questions; }
+  catch (e) { if (!(e instanceof DecideError)) throw e; console.error(e.message); process.exit(2); }
   mkdirSync(out, { recursive: true });
   const instrument = instrumentFor(BG1_BENCHMARK_DEV);
-  const questions = loadCorpus(BG1_BENCHMARK_DEV, undefined, new Set(BG1_DEV_CONVERSATIONS)).questions;
   const byId = new Map(questions.map(q => [q.id, q]));
   if (mode !== 'report') {
     if (mode === 'run') {
@@ -270,6 +305,8 @@ if (import.meta.main) {
       try { claimOut(out, !!keyless, 'judge-check'); } catch (e) { console.error((e as Error).message); process.exit(2); }
     }
     const pool = buildPool(questions, loadRealAnswers(stage1, instrument.id), seed);
+    const stale = staleGrades(join(out, 'judgments.ndjson'), pool, seed, byId, instrument);
+    if (stale) { console.error(stale); process.exit(2); }
     writeFileSync(join(out, 'pool.json'), JSON.stringify({ seed, pool }, null, 2) + '\n');
     console.log(JSON.stringify({ seed, items: pool.length, real: pool.filter(i => i.source === 'real').length, construction: pool.filter(i => i.source === 'construction').length, calls: pool.length * GATING_JUDGES.length }, null, 2));
     if (mode === 'plan') process.exit(0);
@@ -283,10 +320,12 @@ if (import.meta.main) {
     proxy.start();
     try {
       const meter = metering(`http://127.0.0.1:${proxy.port}`, { meter: (m: MeterLine) => appendFileSync(join(out, 'meters.ndjson'), JSON.stringify(m) + '\n') }, process.env);
-      await gradePool(pool, byId, onSlot(new ChatClient(join(out, 'cache', 'qa')), meter, 'judge'), instrument, out);
+      await gradePool(pool, byId, onSlot(new ChatClient(join(out, 'cache', 'qa')), meter, 'judge'), instrument, out, seed);
     } finally { proxy.stop(); lease.close(); }
   }
-  const saved = JSON.parse(readFileSync(join(out, 'pool.json'), 'utf8')) as { pool: Item[] };
+  const saved = JSON.parse(readFileSync(join(out, 'pool.json'), 'utf8')) as { seed: number; pool: Item[] };
+  const stale = staleGrades(join(out, 'judgments.ndjson'), saved.pool, saved.seed, byId, instrument);
+  if (stale) { console.error(stale); process.exit(2); }
   const report = analyzeCheck(saved.pool, gradesFrom(readGraded(join(out, 'judgments.ndjson'))), byId);
   writeFileSync(join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
   const marker = join(out, 'upstream.json');

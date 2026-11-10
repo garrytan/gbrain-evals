@@ -320,7 +320,7 @@
       "label": "BG1 stage 1 (the three public dev worlds; every row, the full-context reference, particle-1 re-reads and the judge check)",
       "plan_usd": 178.09,
       "estimate_usd": 178.09,
-      "cap_usd": 238
+      "cap_usd": 293
     },
     {
       "id": "BG1",
@@ -1483,7 +1483,7 @@
   "total_usd": 1894.79,
   "plan_total_usd": 1894.79,
   "cap_usd": 2446.69,
-  "stage1_cap_usd": 238,
+  "stage1_cap_usd": 293,
   "stage1_estimate_usd": 178.09,
   "campaign_id": "q1-scoreboard-bg1-changing-facts",
   "judge_check": {

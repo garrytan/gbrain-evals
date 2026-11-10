@@ -20,6 +20,7 @@ import type { PublicQuestion, RetrievalPolicy } from '../../eval/runner/systems/
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { DEFAULT_ROUTE_CAPS, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import { DEFAULT_ROUTE_CLASSES } from '../../eval/runner/shootout-cell.ts';
+import { BG1_MANIFEST_REL, receiptManifestProblems } from '../../eval/runner/bg1/verdict.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'q1-reread-'));
@@ -460,6 +461,42 @@ describe('re-read: particle-1 through the lease proxy', () => {
       expect(ndjson(join(res.dir, 'answers.ndjson')).map(a => a.outcome).sort()).toEqual(['retrieval_error', 'scored', 'scored', 'scored', 'scored', 'scored']);
     } finally { room.stop(); }
   });
+});
+
+describe('re-read: a BG1 receipt carries its dataset', () => {
+  // Value: protects=a set-BG1 verdict can check each particle-1 re-read against the filled manifest, and other re-reads stay byte-identical; fails_when=a BG1 re-read receipt carries no dataset (every set-BG1 verdict and pilot refuses), carries another record than its cells', or a q1 re-read gains one; why_new=blocker 2 on #398 (verdict.ts:518); seam=fake_provider.py as Particle, scripted judges, a BG1-shaped dataset record over the invented fixture; no_claim=custody of the bytes
+  test('a BG1 re-read receipt carries the dataset record its cells write, the verdict accepts it against the filled manifest and refuses another fill or an unpinned file, and a q1 re-read writes none', async () => {
+    const manifestText = JSON.stringify({ status: 'filled', files: [{ path: 'worlds/bg1-001/world.json', sha256: 'a'.repeat(64) }, { path: 'worlds/bg1-001/questions.json', sha256: 'b'.repeat(64) }], kept: ['bg1-001'] });
+    const manifest = JSON.parse(manifestText), manifestSha = sha256(manifestText);
+    const dataset = (files: Array<{ path: string; sha256: string }>, head = manifestSha): Corpus['source'] => ({ name: 'BG1 changing-facts set (minted in custody, world end 2026-11-15)', files: [{ path: BG1_MANIFEST_REL, sha256: head }, ...files], revision: head.slice(0, 7), license: 'custodian-held' });
+    const bg1 = (source: Corpus['source']): Corpus => ({ ...corpus, source });
+    const d: CellDefinition = { ...cellDef([{ id: 'component-b8000', mode: 'packed', budget: 8000 }]), benchmark: 'bg1' };
+    const a = d.arms[0];
+    const src = join(tmp, 'source-bg1');
+    const ran = await runCell(d, { out: src, ...quiet }, { corpus: bg1(dataset(manifest.files)), system: new FakeMemorySystem(), reader: scriptedReader(), judge: scriptedJudge() });
+    expect(ran.status).toBe('complete');
+    const config = JSON.parse(readFileSync(join(src, 'cells', a.cell_id, 'run-config.json'), 'utf8'));
+    expect(config.dataset).toEqual(dataset(manifest.files));
+    const lp = leaseProxy('bg1-dataset', { upstream: fakeBase });
+    const reread = async (n: string, c: Corpus, d2 = d, sources = [join(src, 'runs', d.id)]) => {
+      const out = join(tmp, `reread-${n}`);
+      const res = await runReread(prepareReread(d2, d2.arms[0], { sources, reader: PARTICLE, out }, { corpus: c }), { providerProxy: lp.url }, { judge: scriptedJudge() });
+      expect(res.status).toBe('complete');
+      return { receipt: JSON.parse(readFileSync(join(res.dir, 'receipt.json'), 'utf8')), verify: JSON.parse(readFileSync(join(out, 'verify.json'), 'utf8')) };
+    };
+    try {
+      const good = await reread('bg1-good', bg1(dataset(manifest.files)));
+      expect(good.receipt.dataset).toEqual(config.dataset);
+      expect(receiptManifestProblems(good.receipt.dataset, manifest, manifestSha)).toEqual([]);
+      const otherFill = await reread('bg1-other-fill', bg1(dataset(manifest.files, 'f'.repeat(64))));
+      expect(receiptManifestProblems(otherFill.receipt.dataset, manifest, manifestSha)).toEqual([expect.stringContaining('is not the filled manifest\'s')]);
+      const unpinned = await reread('bg1-unpinned', bg1(dataset([...manifest.files, { path: 'worlds/bg1-002/world.json', sha256: 'c'.repeat(64) }])));
+      expect(receiptManifestProblems(unpinned.receipt.dataset, manifest, manifestSha)).toEqual(['it loaded worlds/bg1-002/world.json, which the filled manifest does not pin']);
+      const q1 = await reread('q1-no-dataset', corpus, def, [staging]);
+      expect('dataset' in q1.receipt).toBe(false);
+      expect('dataset' in q1.verify).toBe(false);
+    } finally { lp.stop(); }
+  }, 60_000);
 });
 
 describe('re-read: RS1 per-reader frontier judging', () => {

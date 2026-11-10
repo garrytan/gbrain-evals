@@ -14,7 +14,7 @@
  * remaining distinct occurrences for scoring.
  */
 import { createHash } from 'node:crypto';
-import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { decideError } from '../decisions/errors.ts';
@@ -844,8 +844,10 @@ export function loadLmeM(opts: { path?: string; sha256?: string; size?: number; 
  * evidence_sessions, the category its stratum, and the bg1 fields travel on the question for the instrument.
  *
  * bg1-dev reads the three public dev worlds under eval/data/changing-facts-v1/dev, or GBRAIN_EVALS_BG1_DEV_ROOT (the
- * template fixtures in eval/data/changing-facts-v1/fixtures, for keyless tests). The Gemini-rendered dev worlds land in
- * stage 1, so until then bg1-dev refuses without that override. bg1 is sealed (eval/decisions/splits/bg1.json): 48 mint
+ * template fixtures in eval/data/changing-facts-v1/fixtures, for keyless runs only). The Gemini-rendered dev worlds land
+ * in stage 1, so until then bg1-dev refuses without that override. A load not declared keyless (a cell run on a paid
+ * lease, judge-check --stage1, verdict BG1-dev3) refuses a root that is the fixtures or holds template-rendered worlds
+ * (bg1DevFixtureProblem), so the fixtures never stand in for the rendered dev worlds in a paid run. bg1 is sealed (eval/decisions/splits/bg1.json): 48 mint
  * slots, bg1-001 to bg1-048, minted in slot order by eval/custody/bg1/mint.sh into owner custody. It reads only
  * GBRAIN_EVALS_BG1_SOURCE (mint.sh's <out>/set), refusing a root inside the checkout, logs every opening first, checks
  * the manifest (eval/decisions/datasets/bg1-manifest.json, GBRAIN_EVALS_BG1_MANIFEST to override) and honours the unit
@@ -855,6 +857,9 @@ export function loadLmeM(opts: { path?: string; sha256?: string; size?: number; 
  */
 export const BG1_MANIFEST = 'eval/decisions/datasets/bg1-manifest.json';
 export const BG1_DEV_ROOT = join(REPO_ROOT, 'eval/data/changing-facts-v1/dev');
+export const BG1_FIXTURES_ROOT = join(REPO_ROOT, 'eval/data/changing-facts-v1/fixtures');
+/** Renderers that write template text, not a model's: the committed fixtures (changing-facts-gen.ts at BG1_FIXTURE_TOKENS) and render.ts --fake. */
+const BG1_TEMPLATE_RENDERERS = ['template', 'fake-template'];
 export const BG1_WORLD_FORMAT = 'gbrain-evals/bg1-world/v1';
 /** The runner (bg1RunClock) refuses once the wall clock passes the world end by more than this (the plan's F9). */
 export const BG1_WORLD_END_SLIP_DAYS = 14;
@@ -994,8 +999,8 @@ export function bg1WorldFiles(root: string, id: string, benchmark: 'bg1' | 'bg1-
   for (const path of Object.values(files)) if (!existsSync(join(root, path))) {
     if (benchmark === 'bg1') throw decideError({ code: 'DATASET_MISSING', message: `bg1: ${path} is not under GBRAIN_EVALS_BG1_SOURCE`, why: 'each BG1 world is a directory holding world.json and questions.json', fix: bg1Ask });
     throw decideError({ code: 'DATASET_MISSING', message: `bg1-dev: ${path} is not under ${root}`,
-      why: 'the Gemini-rendered dev worlds are committed in stage 1 (a dated amendment); until then only the template fixtures exist',
-      fix: { next: 'ask_user', user_message: 'for harness work, set GBRAIN_EVALS_BG1_DEV_ROOT=eval/data/changing-facts-v1/fixtures (template-rendered, keyless tests only)' } });
+      why: 'the Gemini-rendered dev worlds are rendered in stage 1 step 1 and committed by a dated amendment; until then only the template fixtures exist, and a paid load refuses them',
+      fix: { next: 'ask_user', user_message: 'a paid run waits for the rendered dev worlds (stage 1 step 1); only a keyless run may set GBRAIN_EVALS_BG1_DEV_ROOT to the template fixtures (eval/data/changing-facts-v1/fixtures)' } });
   }
   return files;
 }
@@ -1005,12 +1010,37 @@ export function bg1ManifestFiles(root: string, ids: readonly string[] = BG1_CONV
   return ids.flatMap(id => { const f = bg1WorldFiles(root, id); return [f.world, f.questions]; }).map(path => ({ path, sha256: fileSha256(join(root, path)) }));
 }
 
-/** Load bg1-dev: the public dev worlds (or GBRAIN_EVALS_BG1_DEV_ROOT), dates resolved from the world end. */
-export function loadBg1Dev(opts: { root?: string; only?: ReadonlySet<string>; worldEnd?: string } = {}): Corpus {
+/**
+ * Why a bg1-dev root cannot stand in for stage 1's rendered dev worlds: it resolves to the committed template fixtures,
+ * or a world it holds was written by a template renderer (the fixtures' renderer at BG1_FIXTURE_TOKENS, or render.ts
+ * --fake); null when neither.
+ */
+export function bg1DevFixtureProblem(root: string): string | null {
+  const real = (p: string) => { try { return realpathSync(p); } catch { return resolve(p); } };
+  if (real(root) === real(BG1_FIXTURES_ROOT)) return `${root} is the committed template fixtures (eval/data/changing-facts-v1/fixtures)`;
+  const template = BG1_DEV_CONVERSATIONS.flatMap(id => {
+    const file = join(root, 'worlds', id, 'world.json');
+    if (!existsSync(file)) return [];
+    let renderer: unknown;
+    try { renderer = (JSON.parse(readFileSync(file, 'utf8')) as { renderer?: unknown }).renderer; } catch { return []; }
+    return typeof renderer === 'string' && BG1_TEMPLATE_RENDERERS.includes(renderer) ? [`${id} (renderer ${renderer})`] : [];
+  });
+  return template.length ? `${root} holds template-rendered worlds: ${template.join(', ')}` : null;
+}
+
+/**
+ * Load bg1-dev: the public dev worlds (or GBRAIN_EVALS_BG1_DEV_ROOT), dates resolved from the world end. Unless the
+ * caller declares the load keyless, a root bg1DevFixtureProblem names refuses before any world is read.
+ */
+export function loadBg1Dev(opts: { root?: string; only?: ReadonlySet<string>; worldEnd?: string; keyless?: boolean } = {}): Corpus {
   const root = resolve(opts.root ?? fromHome(process.env.GBRAIN_EVALS_BG1_DEV_ROOT) ?? BG1_DEV_ROOT);
   const worldEnd = bg1WorldEnd(opts);
   const unknown = opts.only ? [...opts.only].filter(id => !BG1_DEV_CONVERSATIONS.includes(id)) : [];
   if (unknown.length) throw new Error(`bg1-dev has no world ${unknown.join(', ')}`);
+  const fixture = opts.keyless ? null : bg1DevFixtureProblem(root);
+  if (fixture) throw decideError({ code: 'DATASET_MISSING', message: `bg1-dev: ${fixture}, and this load is not keyless`,
+    why: 'the template fixtures are for keyless runs; a paid cell run, judge check or verdict reads only the dev worlds rendered in stage 1 step 1',
+    fix: { next: 'ask_user', user_message: 'unset GBRAIN_EVALS_BG1_DEV_ROOT, or point it at the rendered dev worlds, before a paid bg1-dev load' } });
   const conversations: Conversation[] = [];
   const questions: MemoryQuestion[] = [];
   const files: DatasetIdentity['files'] = [];
@@ -1160,8 +1190,8 @@ export function loadCustodyCorpus(path: string): Corpus {
     source: { name: `custodian sealed corpus ${raw.id}`, files: [{ path: 'custody', sha256: sha256(bytes) }], revision: raw.id, license: 'custodian-authored' } };
 }
 
-/** `only` restricts LoCoMo, BEAM, D8, RS1 and BG1 to those conversations (a split), so a BEAM, D8, RS1 or BG1 conversation outside it is never read. */
-export function loadCorpus(benchmark: string, corpusFile?: string, only?: ReadonlySet<string>): Corpus {
+/** `only` restricts LoCoMo, BEAM, D8, RS1 and BG1 to those conversations (a split), so a BEAM, D8, RS1 or BG1 conversation outside it is never read. `keyless` declares a bg1-dev load keyless (loadBg1Dev). */
+export function loadCorpus(benchmark: string, corpusFile?: string, only?: ReadonlySet<string>, opts: { keyless?: boolean } = {}): Corpus {
   if (benchmark === 'custody') {
     if (!corpusFile) throw new Error('benchmark custody needs --corpus-file <custody path>');
     return loadCustodyCorpus(corpusFile);
@@ -1195,7 +1225,7 @@ export function loadCorpus(benchmark: string, corpusFile?: string, only?: Readon
         why: 'every RS1 conversation is sealed (eval/decisions/splits/beam-rs1.json); every opening is logged', fix: { next: 'ask_user', user_message: 'request the beam-rs1 cells from the custodian (decision q1-scoreboard)' } });
       return loadRs1({ log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', purpose: 'memory-qa loadCorpus beam-rs1' }, { only });
     }
-    case 'bg1-dev': return loadBg1Dev({ only });
+    case 'bg1-dev': return loadBg1Dev({ only, keyless: opts.keyless });
     case 'bg1': {
       bg1Source();
       const log = process.env.GBRAIN_EVALS_CUSTODY_LOG;

@@ -15,8 +15,8 @@
  *     runner needs no new arm mode: a full-context arm is one Q1 already runs.
  *   Stage 1 (block BG1-S1, set BG1-dev3: the three public dev worlds): the six rows and the full-context reference
  *     (which doubles as the gold audit, review finding F4), the particle-1 re-reads and the judge check. Its cap is
- *     min(300, its estimate / 0.75 rounded up) (stage1CapUsd), and `cell.ts plan --manifest bg1` refuses
- *     above it.
+ *     min(300, the larger of its estimate / 0.75 and its smoke leases, rounded up) (stage1CapUsd, the
+ *     preregistration's Amendment 1), and `cell.ts plan --manifest bg1` refuses above it.
  *   Re-read plans: particle-1 re-reads every row's frozen contexts byte for byte (reread-cell.ts) at effort medium with
  *     its 16,000-token output floor, each with its own estimate; they run only in paid windows.
  *
@@ -51,8 +51,15 @@ export const STAGE1_CAP_CEILING_USD = 300;
 export const STAGE1_CAP_SHARE = 0.75;
 /** The judge check's pool as planned (eval/runner/bg1/judge-check.ts): stage 1 dev answers and construction items, each graded by gpt-6-astra and claude-opus-5-5. */
 export const JUDGE_CHECK_PLAN = { dev_answers: 160, construction_items: 160 } as const;
-/** The stage 1 cap: the estimate over 0.75 rounded up to the dollar, at most $300. */
-export const stage1CapUsd = (estimateUsd: number) => Math.min(STAGE1_CAP_CEILING_USD, Math.ceil(estimateUsd / STAGE1_CAP_SHARE));
+/**
+ * Stage 1's smoke leases summed: campaignCells (cell.ts) launches each stage 1 cell once as a smoke unit, whose lease
+ * holds twice its estimate per shard, rounded up to the cent and at least a cent.
+ */
+export const stage1SmokeLeaseUsd = (smoke: readonly CellDefinition[]) =>
+  Math.round(smoke.reduce((s, c) => s + Math.max(0.01, Math.ceil(2 * c.estimate.usd / c.shards * 100) / 100), 0) * 100) / 100;
+/** The stage 1 cap (Amendment 1): the larger of the estimate over 0.75 and the smoke leases, rounded up to the dollar, at most the ceiling. */
+export const stage1CapUsd = (estimateUsd: number, smokeLeaseUsd: number) =>
+  Math.min(STAGE1_CAP_CEILING_USD, Math.max(Math.ceil(estimateUsd / STAGE1_CAP_SHARE), Math.ceil(smokeLeaseUsd)));
 /** A model's list price (budget-ledger chatPrice, which also holds the Gemini rows). */
 export const listPrice = (model: string) => { const p = chatPrice(model); if (!p) throw new Error(`no list price for ${model} in eval/runner/budget-ledger.ts`); return p; };
 
@@ -159,7 +166,7 @@ const BG1_BLOCKS: Record<BG1BlockId, string> = {
 
 export interface BG1Manifest extends Manifest {
   bg1_assumptions: typeof BG1_ASSUMPTIONS; f6_assumptions: typeof F6_ASSUMPTIONS; campaign_id: string;
-  /** Stage 1's estimate (its cells, its re-reads and the judge check) and its cap, min(300, estimate / 0.75 rounded up). */
+  /** Stage 1's estimate (its cells, its re-reads and the judge check) and its cap, min(300, the larger of estimate / 0.75 and the smoke leases, rounded up). */
   stage1_cap_usd: number; stage1_estimate_usd: number;
   /** The judge check's planned pool and its estimate, inside stage 1. */
   judge_check: { dev_answers: number; construction_items: number; estimate_usd: number };
@@ -178,9 +185,10 @@ export function buildBG1Manifest(): BG1Manifest {
   const rereadsUsd = (id: BG1BlockId) => rereads.filter(r => r.block === id).reduce((s, r) => s + r.estimate.usd, 0);
   const blockUsd = (id: BG1BlockId) => round(cellsUsd(id) + rereadsUsd(id) + (id === 'BG1-S1' ? judgeCheck : 0));
   const stage1 = blockUsd('BG1-S1');
+  const stage1Cap = stage1CapUsd(stage1, stage1SmokeLeaseUsd(smoke));
   // The counted block stops at 1.5 times its cells' estimate (its re-reads spend from their own ledgers), or at its units' leases where they hold more.
   const blocks = (Object.keys(BG1_BLOCKS) as BG1BlockId[]).map(id => ({ id: id as BlockId, label: BG1_BLOCKS[id], plan_usd: blockUsd(id), estimate_usd: blockUsd(id),
-    cap_usd: id === 'BG1-S1' ? stage1CapUsd(stage1) : round(Math.max(cellsUsd(id) * 1.5, cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0))) }));
+    cap_usd: id === 'BG1-S1' ? stage1Cap : round(Math.max(cellsUsd(id) * 1.5, cells.reduce((s, c) => s + c.lease!.usd * c.shards, 0))) }));
   const waveA = (c: CellDefinition) => c.set === 'BG1-fc10' ? c.shards : BG1_WAVE_A / BG1_KEPT_UNITS;
   const units = (pick: (c: CellDefinition, i: number) => boolean) => cells.flatMap(c => Array.from({ length: c.shards }, (_, i) => i).filter(i => pick(c, i)).map(i => `${c.id}.c${i}`));
   const models = [...BG1_READERS, PARTICLE, ...Object.values(BG1_JUDGE_BY_READER), 'gemini:gemini-3.8-flash', F6_ASSUMPTIONS.extraction.model];
@@ -191,7 +199,7 @@ export function buildBG1Manifest(): BG1Manifest {
     assumptions: ASSUMPTIONS, f6_assumptions: F6_ASSUMPTIONS, bg1_assumptions: BG1_ASSUMPTIONS,
     sets: Object.values(BG1_SETS), blocks, cells, smoke_cells: smoke,
     total_usd: counted.estimate_usd, plan_total_usd: counted.plan_usd, cap_usd: counted.cap_usd,
-    stage1_cap_usd: stage1CapUsd(stage1), stage1_estimate_usd: stage1, campaign_id: BG1_CAMPAIGN_ID,
+    stage1_cap_usd: stage1Cap, stage1_estimate_usd: stage1, campaign_id: BG1_CAMPAIGN_ID,
     judge_check: { ...JUDGE_CHECK_PLAN, estimate_usd: judgeCheck },
     frontier_judges: { ...BG1_JUDGE_BY_READER }, reread_plans: rereads,
     waves: { A: units((c, i) => i < waveA(c)), B: units((c, i) => i >= waveA(c)) },
@@ -204,7 +212,7 @@ export function bg1Stage1OverCap(m: Pick<BG1Manifest, 'stage1_estimate_usd' | 's
   return {
     code: 'BG1_STAGE1_OVER_CAP',
     message: `BG1 stage 1 is estimated at $${m.stage1_estimate_usd.toFixed(2)}, above its $${m.stage1_cap_usd.toFixed(2)} cap`,
-    why: 'stage 1\'s cap is min(300, its estimate / 0.75) in the preregistration; a larger stage 1 or a smaller scope is GBEV-3\'s call, never the planner\'s',
+    why: 'stage 1\'s cap is min(300, the larger of its estimate / 0.75 and its smoke leases) under the preregistration\'s Amendment 1; a larger stage 1 or a smaller scope is GBEV-3\'s call, never the planner\'s',
     fix: { next: 'ask_user', user_message: 'bring the stage 1 estimate and its lines (bg1-cells.json smoke_cells, the BG1-S1 re-read plans and the judge check) to GBEV-3', verify: ['bun', 'eval/runner/q1/cell.ts', 'plan', '--manifest', 'bg1'] },
     state: { stage1_estimate_usd: m.stage1_estimate_usd, stage1_cap_usd: m.stage1_cap_usd, side_effects: 'none: no campaign manifest written, nothing reserved' },
   };

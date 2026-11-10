@@ -426,13 +426,192 @@ brain is the named follow-up. A result favourable to particle-1 keeps its gap to
 
 ## Amendments
 
-None yet. The expected ones, each dated and committed before the cells it governs:
+### Amendment 1 (2026-11-09): stage 1's cap
+
+Stage 1's cap was its estimate divided by 0.75, rounded up to the dollar, under a fixed ceiling. It is now the larger
+of two amounts, each rounded up to the dollar, under the same ceiling: the estimate divided by 0.75, and the sum of
+stage 1's smoke leases.
+
+Why: each stage 1 unit runs as a smoke unit, and a smoke unit leases twice its estimate. So the old cap could not hold
+the leases that BG1's launch check sums against it, and the check would refuse stage 1 before any unit booted. The
+counted block's cap already takes the larger of its estimate rule and its units' leases, and stage 1's now does too.
+
+GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
+
+### Amendment 2 (2026-11-09): stage 1's dev-world rendering
+
+Stage 1's first real render of `bg1-dev-01` dropped the world at session 10 of 154, which failed its render and all
+three re-renders. The run made 41 render attempts and 23 checks. Render attempts failed the length check 15 times, the
+turn-format check 6 times and the date check (a calendar date written out instead of a date token) 3 times, and 3
+claude-haiku-5-5 check replies came back empty. The cached replies show why. gemini-3.8-flash, at low thinking, wrote
+sessions of about 450 to 1,500 tokens against targets of 757 to 3,236. Five of the turn-format failures were broken
+JSON, such as a turn missing its `speaker` key, because the request asked for JSON with no schema. The empty Haiku
+replies averaged about 210 of their 256 output tokens and held no text.
+
+From commit `2c7ab96f`, rendering changes its method in these ways:
+
+- Each render request gives Gemini a JSON Schema (`generationConfig.responseJsonSchema`): an object whose `turns` list
+  holds turns with a `speaker` of `user` or `assistant` and a `content` string. Gemini's check asks for
+  `{"extra_claims": boolean}` the same way.
+- The render prompt states each session's length in words beside its token target: the target times 0.75, rounded to
+  the nearest ten. It also asks for a minimum number of alternating turns: two per exchange, with one exchange (a
+  casual message and a brief answer, about 190 words) per 250 target tokens, at least one exchange more than the
+  session's planned lines, and never fewer than two exchanges.
+- When a session fails the length check, its next render names the last attempt's measured length, in words and
+  tokens, and the range the check allows, in words.
+- The claude-haiku-5-5 check may write up to 2,048 output tokens instead of 256. Gemini's check keeps 256.
+- Replies are cached under a new version, so no reply cached before this change is reused. Keyless (`--fake`)
+  rendering is unchanged.
+
+Nothing that judges a session moves: every check and the length check's range, the three re-renders per session, and
+the rule that drops a world with a session that still fails (two drops among the first five mint slots pause minting).
+
+**Second render and calibration (2026-11-09).** Stage 1's second render of `bg1-dev-01`, at commit `4ec6a610`, dropped
+the world at session 14 of 154. It made 36 render attempts and 33 checks. Attempts failed the length check 13 times,
+the forbidden-value check twice and the planned-line check once, and 2 gemini-3.8-flash check replies were unreadable.
+gemini-3.8-flash wrote a median of about 0.69 of a session's target tokens. Its first attempts ran from 0.34 to 0.97 of
+the target, and 16 of 23 passed the 0.6 floor. Naming the last attempt's length moved one session from 0.40 to 0.51 to
+0.66 of its target, and a 3,236-token session from 0.34 to 0.46 to 0.59 to 0.47. It wrote about 0.75 of the words
+asked, at about 0.84 words per cl100k token, but kept to the number of turns asked, at a median of about 47 cl100k
+tokens per turn (36 to 58 for most turns). Both unreadable check replies were the literal text "Here is the JSON
+requested:" and a line break, about 7 visible tokens after about 25 reasoning tokens, so the 256-token budget did not
+cut them off. The JSON Schema failed in 2 of the 23 Gemini checks. The other 21 Gemini check replies, all 36 render replies and all 10
+claude-haiku-5-5 check replies were clean JSON. From commit
+`289801fe`, each render asks for N to N + 2·max(1, floor(0.05N)) alternating turns, where N is the even number nearest
+the session's target divided by 47 tokens per turn (ties round up), and never less than 2 × (planned lines + 1) or 4. The JSON Schema
+holds the reply to that range (`minItems` and `maxItems`) and the prompt states it. The width rounds down because,
+rounded up, the 22- and 24-turn ranges reach 26 and 28 turns, which at 58 tokens a turn pass 1.5 times targets near
+1,000 tokens. For every target from 757 to 3,236 and every dev-world session, N × 36 tokens is never under 0.72 of the
+target and the top of the range × 58 tokens never over 1.46 of it. The prompt's word counts use the measured 0.84
+words per token, and it says each turn is about 39 words. From commit `7fe8bdea`, a Gemini check reply with no
+readable verdict is asked once more, with the same prompt and a closing line asking for the JSON object alone, and the
+attempt fails as unreadable only if that reply is unreadable too. No check, the length check's range, the three
+re-renders per session or the yield rule moves.
+
+**Third render and high thinking (2026-11-09).** Stage 1's third render of `bg1-dev-01`, at commit `b5990b09`, dropped
+the world at session 26 of 154. It made 58 render attempts, which wrote a median of 0.84 of a session's target tokens
+(10th percentile 0.69, lowest 0.54, highest 1.05), and 46 of its 51 first attempts passed. The failures sat in the
+longest sessions. The six 3,236-token sessions made 10 attempts, and 5 failed, at a median of 0.73 of the target: both
+of the render's length failures and all three of its attempts that failed the planned-line and forbidden-value checks
+together. Session 26 went 0.60 (length), 0.69 and 0.89 (planned line and forbidden value), then 0.54 (length). The
+shorter sessions made 48 attempts, and 3 failed. Gemini accepted every bounded render schema, up to the 68-to-74-turn
+range. From commit `ab030f1e`, gemini-3.8-flash renders at high thinking (`thinkingConfig.thinkingLevel`) every session
+whose target is at least 2,000 tokens, which is 15, 17 and 19 sessions of `bg1-dev-01`, `-02` and `-03`, and every
+re-render of any session. The rest render at low thinking, as before. Gemini's check stays at low thinking, and the
+claude-haiku-5-5 check is unchanged. Gemini counts thinking tokens toward `maxOutputTokens` and cuts the reply off
+there, so from commit `bc1eada3` a high-thinking render asks for the model's whole output limit of 65,536 tokens, and a
+low-thinking render keeps 1.6 times its target plus 2,048. From commit `fd3c8cb4`, the reply cache keys on the thinking
+level, under a new version, so no reply cached before this change is reused. Keyless (`--fake`) rendering is unchanged.
+No check, the length check's range, the three re-renders per session or the yield rule moves.
+
+**Fourth render: the dev worlds (2026-11-09).** Stage 1's fourth render, at commit `399de8b9`, wrote all three dev
+worlds. It stopped once, partway into `bg1-dev-02`, on the rendering budget (Amendment 3), and resumed on the same
+output directory, where the reply cache replayed every reply already bought. The first three long sessions of
+`bg1-dev-01` (3,236 target tokens, high thinking) each passed on their first render, at 0.98, 1.00 and 1.01 of the
+target. Every session of every world passed within its three re-renders, so no world dropped. The worlds are committed
+at `eval/data/changing-facts-v1/dev/worlds/<id>/world.json`.
+
+| World | Sessions | Render attempts | Re-renders | Checks | Failures by check (an attempt can fail several) | world.json SHA-256 |
+|---|---|---|---|---|---|---|
+| `bg1-dev-01` | 154 | 168 | 14 | 260 | planned line 9, forbidden value 9, Haiku extra claims 2, length 1, date 1, unreadable Gemini check 1 | `84611e6d9a4e650f` |
+| `bg1-dev-02` | 156 | 168 | 12 | 275 | planned line 8, forbidden value 8, unreadable Gemini check 2, length 1, date 1 | `b6d9b8fe9bce5710` |
+| `bg1-dev-03` | 157 | 171 | 14 | 273 | planned line 6, forbidden value 6, date 5, unreadable Gemini check 3, length 1 | `9822852461e22a59` |
+
+Measured rendering cost, as requests and output tokens:
+
+| World | High-thinking renders | Their output tokens (thinking) | Low-thinking renders | Their output tokens | Gemini checks | claude-haiku-5-5 checks |
+|---|---|---|---|---|---|---|
+| `bg1-dev-01` | 29 | 674,771 (596,302) | 139 | 173,255 | 165 | 95 |
+| `bg1-dev-02` | 29 | 764,465 (681,358) | 140 | 173,075 | 177 | 98 |
+| `bg1-dev-03` | 33 | 735,900 (642,811) | 138 | 164,829 | 174 | 99 |
+
+The high-thinking renders were about a sixth of each world's render requests and about seven-tenths of its rendering
+cost. `bg1-dev-02` also had five requests in flight when the budget stop ended the first invocation. Their replies were
+never logged, so they are not in the table, and whether Gemini billed them is reconciled against Gemini's usage when
+the window closes. The dollar amounts are kept on GST-2010, not here.
+
+Stage 1's world end is 2026-11-08, the Sunday before its cells run, so the runner accepts a stage 1 cell from
+2026-11-09 through 2026-11-22 (UTC). A stage 1 cell after that regenerates the dates in a dated amendment.
+
+**Operating notes.** Nobody deletes, moves or restores BG1's `--state` directory, its results directories or its lease
+log (`leases.ndjson` and `leases.sha256`). Any recovery stops and goes to the campaign owner, GBEV-3. Every stage's
+DONE report reconciles each provider's usage against the campaign ledger, so spend from a second VM on one lease would
+show up there.
+
+GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
+
+### Amendment 3 (2026-11-09): stage 1's rendering cap
+
+Stage 1's dev-world rendering runs under its own cap, beside the campaign cap. GBEV-3 raised the rendering cap on
+2026-11-09, before any stage 1 cell ran, to cover rendering at high thinking (Amendment 2).
+
+Why: from commit `ab030f1e`, long sessions and every re-render go to gemini-3.8-flash at high thinking, and Gemini bills
+thinking tokens as output, so those renders cost more than renders at low thinking. Because the rendering cap sits
+beside the campaign cap, stage 1's total can now pass the fixed ceiling in Amendment 1 by the amount of this raise.
+GBEV-3 accepted that. The amounts are kept on GST-2010, not here.
+
+GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
+
+Update (2026-11-09): the fourth render, the first at high thinking, wrote bg1-dev-01 in full and then stopped partway
+into bg1-dev-02, when a request would have taken the rendering run past its own budget. The first raise had changed
+the program cap but not the run's budget, which was an operator error. A long session's render at high thinking also
+cost several times the rate the raise had been sized on, so the raised cap could not have covered all three dev worlds
+in any case. GBEV-3 raised the rendering cap a second time, at both the program and the run level, before any stage 1
+cell ran. The render then resumed on the same output directory, where the renderer's cache replays every reply
+already paid for, so nothing is bought twice. Stage 1's total now passes Amendment 1's ceiling by the sum of both
+raises, and GBEV-3 accepted that. The amounts are kept on GST-2010, not here.
+
+### Deviation 1 (2026-11-10): stage 1's first campaign stopped before any provider call
+
+Stage 1's first campaign, `q1-scoreboard-bg1-stage1`, launched one unit, `bg1-dev3.baseline-none.baseline`, from a full
+checkout of commit `4306e9e3`. The VM runner uploads the whole working tree to each VM before it starts the cell, git
+history included, and this checkout carries the data of every published benchmark under `docs/benchmarks/`. At the
+upload rate we measured, the copy could not finish before the launcher's backstop. The other units could not launch
+from a smaller checkout either: a campaign's ledger lives inside the checkout it was planned from, so a launch from a
+second checkout reads as a different campaign, and the launch check refused it.
+
+GBEV-3 stopped the campaign on 2026-11-10. The unit's VM was destroyed while the upload was still running, before the
+cell command started. Its lease was closed at no charge through the runner's unstarted path, which accepts only a launch
+log showing that the runner never reached the cell command. So no provider call was made under the first campaign. Its
+ledger and lease log are kept unchanged as evidence.
+
+Stage 1 restarts as campaign `q1-scoreboard-bg1-stage1b` at the same commit, with the same seven units, cells, paid
+window and cap (Amendment 1). Its units launch from a sparse, shallow checkout of `4306e9e3` that leaves out
+`docs/benchmarks/`, except this preregistration and the scoreboard's, and carries one commit of history. Every file
+the campaign hash covers (the paths the cells execute) is byte-identical to the full checkout's, so the cells run the
+same code. The restarted campaign's hash is `9a63064f7759`.
+
+The runner's packing, meaning what it uploads to a VM, gets its own fix before stage 2.
+
+### Deviation 2 (2026-11-10): stage 1's cost stop tripped on the full-context reference
+
+Stage 1's full-context reference stopped at its lease partway through the second of the three dev worlds. Projected to
+the end, its cost puts stage 1 past the check-in line in "Stage 1", so the preregistered stop applied, and GBEV-3
+decided on 2026-11-10. The units already running finish under their own leases. The reference then resumes from its
+checkpoint, which keeps every answer and judgment already recorded, inside the unchanged campaign cap, so no world or
+reader is dropped. If the cap can't then hold the judge check and the particle-1 re-reads, neither is cut, and GBEV-3
+decides on a raise.
+
+The cost came from the GPT-6.1 Sol reads. They missed the prompt cache on every read, while the Opus reads hit it, and
+the cause is being diagnosed. Until it's fixed, stage 1's Sol cost figures for the full-context reference, including
+cost per correct answer, carry a note saying so. Stage 2's estimate uses the rate measured after the fix. Stage 1's
+executed tree stays frozen.
+
+Separately, one unit's first VM stalled while installing its system's dependencies, before its cell command started.
+It was stopped, its lease was closed at no charge through the unstarted path, and the unit was relaunched as a second
+attempt. No provider call was made under the first attempt.
+
+### Expected amendments
+
+The expected ones, each dated and committed before the cells it governs:
 
 - stage 1's rendered dev worlds, with their measured rates;
 - the world end;
 - any R61 ceiling change and generator fixes from the gold audit;
 - the repricing;
-- wave B's cells once N_final is known.
+- wave B's cells once N_final is known;
+- the stage 2 freeze, whose campaign hash covers every data path its cells read, the worlds included, or records a
+  sha256 manifest for any path custody keeps out of the hash.
 
 ## Disclosures
 

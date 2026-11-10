@@ -288,6 +288,8 @@ export interface CellOptions {
   frontier?: boolean;
   systemUrl?: string | null;
   providerProxy?: string | null;
+  /** BG1: the run's lease proxy reports a keyless upstream (bg1CellWindow), so a bg1-dev load may read the template fixtures. */
+  keyless?: boolean;
   finishTimeoutS?: number;
   probeTimeoutMs?: number;
   probeIntervalMs?: number;
@@ -638,7 +640,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   mkdirSync(out, { recursive: true });
   const shard = opts.shard ?? { index: 0, count: 1 };
   const unitConvs = !def.kept_units ? null : def.benchmark === 'bg1' ? bg1KeptUnit(def, shard, deps.bg1Manifest) : keptUnit(def, shard, deps.rs1Manifest);
-  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, unitConvs ? new Set(unitConvs) : devOnly(def) ?? undefined);
+  const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, unitConvs ? new Set(unitConvs) : devOnly(def) ?? undefined, { keyless: opts.keyless });
   const selected = scheduledQuestions(def, corpus, opts.limit ?? null).filter(q => !unitConvs || unitConvs.includes(q.conversation));
   const convIds = [...new Set(selected.map(q => q.conversation))].sort().filter((_, i) => unitConvs || i % shard.count === shard.index);
   const armQs = new Map(arms.map(a => [a.id, new Set((a.questions ? selectCellQuestions(selected, a.questions) : selected).map(q => q.id))]));
@@ -1598,16 +1600,17 @@ const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message,
  * BG1's paid-window guard for `run` on a BG1 cell (eval/runner/paid-arm.ts, the shared window guard): a run needs the
  * granted window (--paid-window <unit> --window-cap-usd <n>) unless its lease proxy itself reports a keyless upstream
  * (GET /__proxy/status; an inherited SHOOTOUT_KEYLESS_UPSTREAM is never trusted). Under a lease proxy the cap checked is
- * the lease that status reports in lease mode, and a SHOOTOUT_LEASE_USD that differs from it refuses; without one it is
+ * the lease that status reports in lease mode, and a SHOOTOUT_LEASE_USD that differs from it (or is not a number) refuses; without one it is
  * the ledger's program cap and the run's budget. Refuses with exit 2 before any provider client, corpus or output exists.
+ * Returns whether the lease proxy reports a keyless upstream, the one case a bg1-dev load may read the template fixtures.
  */
-export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<void> {
+export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Record<string, string | undefined> = process.env): Promise<boolean> {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const proxy = (one('--provider-proxy') ?? env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
   const status = proxy ? await fetch(`${proxy}/__proxy/status`, { signal: AbortSignal.timeout(5000) }).then(r => r.json() as Promise<{ keyless?: unknown; mode?: unknown; lease_usd?: unknown } | null>).catch(() => null) : null;
   const held = status?.mode === 'lease' && typeof status.lease_usd === 'number' && status.lease_usd > 0 ? status.lease_usd : null;
   const named = env.SHOOTOUT_LEASE_USD;
-  const differs = !!named && held !== null && Math.abs(Number(named) - held) > 1e-9;
+  const differs = !!named && held !== null && !(Math.abs(Number(named) - held) <= 1e-9);
   try {
     requireBg1Window(argv, { what: `BG1 cell ${def.id}`, keyless: status?.keyless === true,
       caps: () => proxy ? [{ label: differs ? `the lease proxy's lease (its status reports ${held}, SHOOTOUT_LEASE_USD names ${named})` : "the lease proxy's lease (GET /__proxy/status in lease mode)", usd: differs ? null : held }] : bg1LedgerCaps(budgetOptionsFrom(argv).ledgerPath, one('--budget-run-id')) });
@@ -1616,6 +1619,7 @@ export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Re
     throw refuse({ code: 'PAID_FLAGS_MISSING', message: e.message, why: 'every BG1 cell that can spend real keys runs inside a granted paid window, and no cap it spends under exceeds the window cap',
       fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--manifest', 'bg1', '--paid-window', '<granted unit>', '--window-cap-usd', '<granted cap>'] } });
   }
+  return status?.keyless === true;
 }
 
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
@@ -1669,7 +1673,8 @@ export async function main(argv: string[]): Promise<number> {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
     const def = findCell(id, undefined, one('--manifest'));
-    if (sub === 'run' && isBg1Benchmark(def.benchmark)) { await bg1CellWindow(argv, def); bg1RunClock(); if (!(one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY)) process.env.GEMINI_API_KEY = bg1GeminiKey(); }
+    let keyless = false;
+    if (sub === 'run' && isBg1Benchmark(def.benchmark)) { keyless = await bg1CellWindow(argv, def); bg1RunClock(); if (!(one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY)) process.env.GEMINI_API_KEY = bg1GeminiKey(); }
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
@@ -1692,7 +1697,7 @@ export async function main(argv: string[]): Promise<number> {
     const shardRaw = one('--shard') ?? '0/1';
     const [si, sn] = shardRaw.split('/').map(Number);
     if (!Number.isInteger(si) || !Number.isInteger(sn) || sn < 1 || si < 0 || si >= sn) throw refuse(usage('--shard must look like i/n with 0 <= i < n'));
-    const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy,
+    const result = await runCell(def, { out, limit, shard: { index: si, count: sn }, arms: one('--arms')?.split(',') ?? null, systemUrl: one('--system-url') ?? null, providerProxy: proxy, keyless,
       maxAttempts: one('--max-attempts') ? Number(one('--max-attempts')) : undefined, frontier: !argv.includes('--no-frontier'),
       finishTimeoutS: one('--finish-timeout-s') ? Number(one('--finish-timeout-s')) : undefined, probeTimeoutMs: one('--probe-timeout-s') ? Number(one('--probe-timeout-s')) * 1000 : undefined,
       reanswerInvalidBefore: one('--reanswer-invalid-before') ?? null, reanswerOutcomes: reanswerOutcomes(one('--reanswer-outcomes')), freshBefore: one('--fresh-before') ?? null });

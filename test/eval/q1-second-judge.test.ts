@@ -265,3 +265,34 @@ describe('the second-judge sensitivity', () => {
     expect(() => renderSecondJudge([r, { ...r, keyless: true }])).toThrow('keyless rehearsals');
   });
 });
+
+describe('the command line on a BG1 cell', () => {
+  const cli = (args: string[]) => Bun.spawnSync(['bun', 'eval/runner/q1/second-judge.ts', ...args], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' });
+  let k = 0;
+  const args = (cell: string, manifest: string, lease = '1', cap = '2') => {
+    const d = join(tmp, `cli-${++k}`);
+    return { out: join(d, 'out'), argv: ['--cell', cell, '--arm', 'component-b8000', '--manifest', manifest, '--root', join(d, 'no-root'), '--out', join(d, 'out'), '--budget-ledger', join(d, 'ledger.sqlite'), '--run-id', 'sj', '--lease-usd', lease, '--ledger-cap-usd', cap] };
+  };
+  // Value: protects=a paid BG1 second judge spends only inside a granted window, and no cap it spends under passes the window cap; fails_when=second-judge.ts takes a BG1 cell without --keyless-upstream and without the window, or with a ledger cap or lease above the window cap, past the point of any output or lease; why_new=#398 open note 10 (second-judge.ts took BG1 cells without the window guard, though its ledger cap still applied); seam=the CLI over roots that do not exist, so nothing past the guard can run; no_claim=a real second judge
+  test('a BG1 cell without --keyless-upstream needs the granted window, and a ledger cap or lease above its cap refuses, before any output; a q1 cell is unchanged', () => {
+    const bg1 = 'bg1-dev3.ext-memory-bank.recipe';
+    const bare = args(bg1, 'bg1'), over = args(bg1, 'bg1'), lease = args(bg1, 'bg1', '3', '2'), within = args(bg1, 'bg1'), q1 = args('s1.ext-extract-first.common', 'q1');
+    const r = cli(bare.argv);
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr.toString()).toContain(`the BG1 second judge on ${bg1} spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n>`);
+    const o = cli([...over.argv, '--paid-window', 'BG1-S1', '--window-cap-usd', '1.5']);
+    expect(o.exitCode).toBe(2);
+    expect(o.stderr.toString()).toContain('--ledger-cap-usd is above paid window BG1-S1\'s cap');
+    const l = cli([...lease.argv, '--paid-window', 'BG1-S1', '--window-cap-usd', '2']);
+    expect(l.exitCode).toBe(2);
+    expect(l.stderr.toString()).toContain('--lease-usd is above paid window BG1-S1\'s cap');
+    for (const x of [bare, over, lease]) expect(existsSync(x.out)).toBe(false);
+    const w = cli([...within.argv, '--paid-window', 'BG1-S1', '--window-cap-usd', '2']);
+    const q = cli(q1.argv);
+    for (const x of [w, q]) {
+      expect(x.exitCode).not.toBe(0);
+      expect(x.stderr.toString()).not.toContain('paid window');
+      expect(x.stderr.toString()).not.toContain('--paid-window');
+    }
+  }, 60_000);
+});

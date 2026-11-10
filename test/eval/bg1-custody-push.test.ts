@@ -74,7 +74,7 @@ describe('a sealed BG1 unit\'s custody', () => {
     const saved = { ...process.env };
     Object.assign(process.env, s.env);
     try {
-      const l: LeaseState = { lease_id: 'bg1.x.c1-a1-0000', cell: 'bg1.x.c1', attempt: 1, usd: 5, entry_id: 'e', max_output_tokens: null, status: 'reserved' };
+      const l: LeaseState = { lease_id: 'bg1.x.c1-a1-e', cell: 'bg1.x.c1', attempt: 1, usd: 5, entry_id: 'e', max_output_tokens: null, status: 'reserved' };
       const argv = c.launchArgv(l, { vm: 'ubirun-test-1-abc' });
       const push = argv[argv.indexOf('--push') + 1];
       expect(push.startsWith(`${s.root}:custody/bg1:`)).toBe(true);
