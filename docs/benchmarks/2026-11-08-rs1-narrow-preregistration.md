@@ -826,6 +826,63 @@ and no number the verdict computes.
   `a080b72d433eac52424898a9d205efd36315bb529f10d8e98911e2c526f584a4`. The wave B amendment names the code wave B's cells
   run from.
 
+### 2026-11-10: fix B for the mint, and a pilot gate
+
+No counted cell has run and no system has answered an RS1 question, so everything here comes before any result. It
+changes no arm, reader, judge, margin or verdict rule, and no gate in `validate.ts`, which stays byte-identical.
+
+**What the first mint showed.** The first five slots, minted from `14e3a89d`, kept none. Two chats answered all 10
+of BEAM's planned batches and still came in under the length gate's floor of 909,500 cl100k tokens. The other three
+passed every conversation gate, but 21 of their 60 first-selection items failed a support or absence check, and after
+one regeneration 10 still failed, so none reached 20 of 20. gpt-6.1-sol, given the same prompts as the validators, found
+28 of 30 items that failed the support check unsupported, so the validators are right: BEAM's generator writes reference
+answers that the turns they cite don't support. A separate check found the same flaw across public and sealed BEAM
+(the item-support findings, `docs/benchmarks/2026-11-10-beam-item-support.md`).
+
+**Change 1: up to 15 batches.** BEAM's 1M recipe plans 10 batches of user turns. The mint now plans and writes 15,
+through BEAM's own plan and question code with only the batch count changed, and the answer step still stops once
+BEAM's truncate would cut the chat at 1,040,000 tokens. So a chat answers between about 9 and 15 batches and ends at
+BEAM's 1M limit or after batch 15. The length gate is unchanged, and a chat still short after 15 batches is dropped as
+before. This is a named deviation from BEAM's recipe: a chat that stops early covers fewer of its planned batches than
+BEAM's own 1M chats do. Items are still generated from the truncated plan. The plan step refuses a plan with any other
+number of batches, and slots planned before this change keep their 10-batch plans.
+
+**Change 2: items only from validator-passed candidates.** After the probe step,
+`eval/custody/rs1/validate-candidates.ts` applies validate.ts's conversation gates for length and contamination, then
+validate.ts's item gates, with its two validators and the same prompts, to every usable candidate BEAM generated for
+each ability. Selection then takes candidates in the conversation seed's order, as before, but only those that passed.
+validate.ts still runs on the 20 selected items and decides keep, regenerate or drop as preregistered. Its support
+checks send the same prompts, so its reply cache returns the answers candidate validation already got. Its absence scan
+asks about the two selected abstention items instead of all of them, so it asks again and can still fail one. For the
+other nine abilities, regeneration repeated without limit would reach the same first two passing candidates in seed
+order, so the change affects how many selection rounds it takes, not which items count as valid. A conversation with
+fewer than two passing candidates in an ability can't fill it and is dropped on the item floor, as before. A real mint
+now runs in three passes (the mint up to the probe step, candidate validation, then selection and rubrics) and refuses
+to select without a candidates report.
+
+**Slots already minted.** `rs1-001` and `rs1-003` stay dropped on length. `rs1-002`, `rs1-004` and `rs1-005` keep
+their chats and finish under change 2, in their third and last selection.
+
+**Pilot gate.** The next five slots, `rs1-006` to `rs1-010`, minted under both changes, are a pilot. Once they are
+minted and validated, the custodian divides their mint and validation spend by the number kept. If that cost per kept
+conversation passes the limit GBEV-3 set when granting the pilot (recorded on the tracking issue, not here), or if 2 or
+more of the 5 drop, minting pauses and the counts go to GBEV-3. Otherwise minting continues in slot order. The kept set,
+the waves and the internal pilot are unchanged.
+
+**The projection.** On 2026-11-10 Garry Tan approved this change, the pilot and the run after it, at a projection made
+from the first mint's measured costs and fix B's expected yield, frontier judge included. The figures are on the
+tracking issue. `pricing.ts`'s check-in for that projection is answered.
+
+**Code.** Minting and candidate validation run from `228ed99acc826360ac9800ee465ee2b8d211623a` or a later commit on
+the results branch, and the custodian records the commit each pass ran. At `228ed99a`, `rs1_mint.py` has SHA-256
+`261889adf003eb6239205db308904a29e85bf19b5b10119b247a63f72f4327ad`, `validate-candidates.ts`
+`31041118df911fe6839cdb4850b5e6814f347ed4e9033255cfe0c48b7aeb12fb` and `mint.sh`
+`a42bbc9c08993a2d4bd5f6548460f08283add1f145d3b4ef28e90ff40d01c5e1`, and `validate.ts` keeps
+`7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e`. Counted cells still run from
+`de9435047201fbc2e6a980b17f473ba6a576494a` with `rs1-cells.json` SHA-256
+`d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, unchanged at `228ed99a`, and the final verdict
+from `d927c88f` or later; this change touches neither.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
