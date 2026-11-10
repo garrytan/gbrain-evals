@@ -70,10 +70,14 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
 - **pass^1 and pass^k.** pass^1 is the plain pass rate. pass^k (pass^3 on agent suites) is tau-bench's estimator: the
   chance that k trials drawn from an item's trials all pass, averaged over items. It rewards an agent that succeeds
   every time, not just once.
-- **Failures by cause.** Every failed row gets one cause from [`classify.ts`](../eval/runner/nightly/classify.ts):
-  `turn_cap`, `tool_error`, `agent_resend`, `write_lost`, `tool_refused`, `retrieval_miss`, `partial_evidence`,
-  `abstained`, `answer_wrong` or `unclassified`. Provider and harness failures are `harness` rows: they are counted on
-  their own line and left out of every rate.
+- **Failures by cause.** Every failed row gets one cause from the shared failure-cause library
+  ([`eval/runner/failure-causes`](../eval/runner/failure-causes), causes listed in
+  [TAXONOMY.md](failure-causes/TAXONOMY.md)), the same rules the other evals' failures go through, or `unclassified`
+  when no deterministic rule explains it. The nightly never sends a row to a model labeller. Provider and harness
+  failures are `harness` rows (`harness_error`): they are counted on their own line and left out of every rate. Items
+  the night scheduled and didn't run are shown as not run, with the reason, and left out of every rate.
+- **Weekly failure causes.** Each outcome row carries the fields the failure-cause `nightly` adapter reads, so a week
+  of nights can go through `bun eval/runner/failure-causes/cli.ts classify` and `report` beside the other evals.
 - **Cost per correct answer.** The suite's recorded cost divided by its passing rows. It's a metric for spotting a
   change that costs more for the same result.
 - **Against the previous master night.** Suite by suite, where the digests match, the report flags any increase in a
@@ -200,6 +204,12 @@ Ubicloud VM:
    It never reads or forwards a provider key.
 
 ## Changelog
+
+### 2026-11-10: Failures by cause use the shared taxonomy
+
+Failures by cause came from the nightly's own `classify.ts` and its ten causes. They now come from the shared
+failure-cause library and its taxonomy, so a nightly failure and another eval's failure get the same cause. Added the
+weekly failure-cause step and the not-run rows for scheduled items a night skipped.
 
 ### 2026-11-09: Paid nights, resumes and bisect settings
 
