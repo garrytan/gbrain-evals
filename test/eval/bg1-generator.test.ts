@@ -270,8 +270,7 @@ describe('the stage 1 gold-audit fixes (Amendment 4)', () => {
       }
     }
     expect(retractions).toBeGreaterThan(0);
-    const bad = structuredClone(phrasing);
-    bad.frames.retract = ['Please ignore the report that {plan}; it turned out to be false.'];
+    const bad = { ...phrasing, frames: { ...phrasing.frames, retract: ['Please ignore the report that {plan}; it turned out to be false.'] } };
     expect(() => planWorld('bg1-001', sealedWorldSeed(line, 1), { phrasing: bad, custody: true })).toThrow('says the plan is not happening');
   });
 });
