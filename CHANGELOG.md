@@ -2,6 +2,42 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.195] - 2026-11-10
+
+### GPT-6.1 Sol's full-context reads now hit OpenAI's prompt cache, and older full-context costs that missed it are labelled
+
+- **Full-context reader.** From GPT-5.6 on, OpenAI writes and looks up its prompt cache only at breakpoints, and with
+  none set the only one falls at the end of the message, after the question. `answerFullContext` in
+  `eval/runner/systems/baselines.ts` sent GPT-6.1 Sol the history and the question as one string, so every question on
+  a conversation wrote the whole history to the cache again and no later question read it back. It now sends the same
+  text as two parts, the history ending in an explicit `prompt_cache_breakpoint`, with `prompt_cache_options.mode`
+  set to `explicit`, so later questions on a conversation can read the history from the cache. The Anthropic bodies,
+  the particle-1 path, usage mapping and the budget ledger are unchanged.
+- **Labels.** The scoreboard report, a note under README's scoreboard block, the dev smokes page and the corrections
+  page now say that S2b full-context's published spend was measured without prompt-cache reads, so it overstates that
+  arm's cost. W10c, the particle-1 replay report and README say their whole-history costs are for one question per
+  history. No figure, accuracy or verdict changes. The W10b finding's checksum of the replay report is repinned for
+  that report's new note.
+
+## [0.10.194] - 2026-11-10
+
+### Q1 eval VMs receive only the files their cells run, and a campaign that would miss one is refused before its lease
+
+- A Q1 scoreboard cell's Ubicloud VM now gets only the tracked files under the campaign's `executes` paths and the few
+  paths cells read beyond them (`Q1_VM_PATHS` in `eval/runner/shootout-cell.ts`), without `.git` or the benchmark
+  docs, so each upload is a few MB instead of the whole checkout. `scripts/ubicloud/ubi-runner.sh run --only <file>`
+  packs that list. A listed path with no tracked files, a tracked file missing from disk or an untracked file under a
+  listed path stops the launch before any VM exists.
+- A resume still sends the checkpoint and store snapshot it staged. They go into the synced checkout for an ordinary
+  cell, or into the custody root for a sealed one.
+- `reserve` refuses, with `CAMPAIGN_INVALID` and before any lease exists, a Q1 campaign whose `executes` leaves out a
+  path the cell runner imports, and a cell whose commands name a script the VM would not receive. Most committed Q1
+  manifests predate `eval/runner/providers` in that list, so a campaign frozen from a copy of one would otherwise fail
+  on its VM after setup.
+- No score or published result changes. A Q1 campaign frozen before this release needs a new campaign identity to
+  launch or resume, because `eval/runner/shootout-cell.ts` and `scripts/ubicloud/ubi-runner.sh` are in its
+  `executes`.
+
 ## [0.10.193] - 2026-11-09
 
 ### CI now runs all six Cat 25 trajectory probes, so a gbrain pin that breaks any one of them fails
