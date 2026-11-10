@@ -227,6 +227,59 @@ over both forms of a type (between 60 forms and 30 questions), gives 19.8 to 28.
 to 22.9 at 0.2. These bind G1's and G4's retrieval layers and G2's batch 3 layer. The verdict itself reads signs, as
 the decision rule says, so these numbers govern only how a difference is described.
 
+### 2026-11-10: corrections to G2's amendment, after one reader
+
+Fixed before any counted G2 cell and before batch 3's counted aggregates exist. One Opus adversarial reader read the
+amendment above for verdict integrity: whether its choices were fixed before any output that could inform them, whether
+any favours agreement with batch 2's published reference, and whether the calibration it cites supports dropping the
+keyword bound. It found the choices themselves clean and the stated reason for dropping the bound wrong. These
+corrections take precedence over the amendment above where they differ.
+
+**Why the keyword candidate bound is left out.** This replaces the reason given above; the calibration's facts stand.
+The synthetic bound samples only gbrain's all-words keyword match (`eval/runner/live-recall/synthetic.ts`), and on
+this brain that match finds at most one chunk per question form: one chunk for 77 exact forms, none for the other 23 and
+none for any of the 100 paraphrases. So no bound of 1 or more ever applies. When the all-words match is empty, gbrain
+retries with any word matching, and that retry supplies most of the hybrid arms' keyword candidates; the synthetic
+bound never touches it. Batch 1 recorded `keyword_candidates_incomplete` on 57 of 100 `hybrid_lexical` forms, 48 of
+them paraphrases. As far as the published aggregates show (they record the flag, not its cause), that comes mostly from
+the same retry on Postgres, which drops common words using planner statistics and reports the bound. PGLite has no
+such path. The synthetic brain therefore can't reproduce the condition at any size, not just at this one. A paid
+synthetic run now refuses a directory that sets the bound. The build table's G2 row still lists the keyword bound; it
+is not run.
+
+**The engines differ too.** Each pair compares the synthetic brain on PGLite with the real brain on Postgres, even at
+the same gbrain version. Without the narrowing above, synthetic `hybrid_lexical` paraphrases may do relatively
+better than real ones, which pushes P1 and P2 (both measured against `hybrid_lexical` paraphrases) toward
+disagreement, not agreement. This is a stated limit of every G2 condition.
+
+**Shells in numbers.** The brain has 180 pages, 110 of them gold. The shells and real conditions turn 35 of the 70
+pages that aren't gold into shells, which is 19% of all pages. The real brain's measured half applies to media pages.
+
+**Question files.** The sha256 named above, `25a7cc09…6f6`, is the generator's template file. Counted runs apply
+one Opus paraphrase file to it, which rewrites `questions.jsonl`. Each scorecard records the counted file's
+`questions_sha256` and the paraphrase file it used, and all eight batch-2-shaped scorecards must carry the same
+values. The synthetic batch-3 brain's template file is
+`bd574fd1b7bdb666417c6ae45bdb3746bb498e144dfb28e15641a017463f2324` (directory digest
+`dcc97ed9eefdf404af9324853d3d42502b8d0b509b78968cebe2d85fd0b6865e`), and its counted file is that file with its own Opus
+paraphrase file applied.
+
+**Batch 3's version.** For the batch 3 layers, "the version the reference itself ran" means the version batch 3's freeze
+records, 0.60.623.0. If batch 3's counted scorecard loads another gbrain version, the synthetic batch-3 brain is run
+again at that version, and that scorecard gives the verdict.
+
+**Earlier synthetic output.** GBEV-55's uncounted Voyage smoke probes ran on 2026-11-09, before the amendment above: 100
+batch-2-shaped questions twice and 40 batch-3-shaped questions once. Their knobs and results weren't available to the
+amendment's author, and none is counted. The author saw only keyless hash-transport control runs, all made before the
+amendment, and they show the same sign pattern against batch 2 at 0.60.557.0 and 0.60.593.0.
+
+**Binding MDD for the synthetic batch-3 brain.** The upper end binds, to be conservative: 28.0 points at discordance
+0.3. A difference below it reads "no measurable difference" and is reported with its interval.
+
+**Which scorecard gives each verdict, enforced.** Before any counted verdict runs, `eval/runner/predictive/verdict.ts`
+will refuse a non-control scorecard whose gbrain commit, knobs or question file differs from the one named for the layer,
+and will copy those fields and the scorecard's sha256 into `verdict.json`. G2's summary line combines the verdict
+files of its batch 2 and batch 3 layers under the decision rule (NOT PREDICTIVE if either layer is).
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
