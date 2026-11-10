@@ -5,7 +5,7 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { BudgetRun, initLedger, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
@@ -258,6 +258,79 @@ describe('phase 2 privacy posture on the fixture (keyless)', () => {
       await open.engine.executeRaw('SET default_transaction_read_only = off');
       await open.engine.setConfig('search.remote_private_pages', 'true');
       expect(await abortCode(() => assertPrivate(gut, open.engine))).toBe('LR_PRIVACY_RELAXED');
+    } finally { await open.close(); }
+  }, 120_000);
+
+  test('a stdio session bound to a member or the brain owner is refused, and a response read under the owner\'s view never reaches the caller', async () => {
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      const { importFromContent } = await importGbrain<any>(gut, 'src/core/import-file.ts');
+      const { addMember } = await importGbrain<any>(gut, 'src/core/access/members.ts');
+      await open.engine.executeRaw('SET default_transaction_read_only = off');
+      await importFromContent(open.engine, 'notes/access-probe', '---\ntype: note\ntitle: Access probe\naccess: private\n---\n\n# Access probe\n\nFictional page marked access private. Its code word is heliotrope.\n');
+      await addMember(open.engine, 'owner-one', { name: 'Owner One' });
+      const unbound = await openReader(gut, open.engine, true);
+      expect(await unbound.page('notes/access-probe')).toBeNull();
+      expect(await unbound.privateProbe()).toBe('hidden');
+      expect(await abortCode(() => assertPrivate(gut, open.engine, unbound))).toBe('no abort');
+
+      await open.engine.setConfig('mcp.stdio_member', 'owner-one');
+      expect(await abortCode(() => assertPrivate(gut, open.engine))).toBe('LR_PRIVACY_RELAXED');
+      await open.engine.setConfig('access.owner_member', 'owner-one');
+      expect(await abortCode(() => assertPrivate(gut, open.engine))).toBe('LR_PRIVACY_RELAXED');
+
+      const owned = await openReader(gut, open.engine, true);
+      expect(await owned.page('notes/access-probe').then(t => 'returned ' + (t ?? '').includes('heliotrope'), e => (e as Error).message)).toBe('gbrain answered under relaxation owner');
+      expect(owned.breach()).toBe('relaxation owner');
+      expect(await owned.privateProbe()).toBe('readable');
+      expect(await abortCode(() => assertPrivate(gut, open.engine, owned))).toBe('LR_PRIVACY_RELAXED');
+    } finally { await open.close(); }
+  }, 120_000);
+
+  test('a stdio binding the runner cannot read is refused', async () => {
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      const get = open.engine.getConfig.bind(open.engine);
+      open.engine.getConfig = async (k: string) => { if (k === 'mcp.stdio_member') throw new Error('config read failed'); return get(k); };
+      expect(await abortCode(() => assertPrivate(gut, open.engine))).toBe('LR_PRIVACY_RELAXED');
+    } finally { await open.close(); }
+  }, 120_000);
+
+  test('a gbrain whose caller access has no owner field (0.60.613.0, the phase 2 pin) is not refused on a clean brain', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'lr-ownerless-'));
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      mkdirSync(join(root, 'src/core/search'), { recursive: true });
+      mkdirSync(join(root, 'src/core/access'), { recursive: true });
+      writeFileSync(join(root, 'src/core/search/private-visibility.ts'), "export * from '" + join(gut.root, 'src/core/search/private-visibility.ts') + "';\n");
+      writeFileSync(join(root, 'src/core/access/caller.ts'), "import * as c from '" + join(gut.root, 'src/core/access/caller.ts') + "';\nexport const STDIO_MEMBER_KEY = c.STDIO_MEMBER_KEY;\nexport async function remoteCallerAccess(...a: any[]) { const r: any = await (c.remoteCallerAccess as any)(...a); delete r.owner; return r; }\n");
+      expect(await abortCode(() => assertPrivate({ ...gut, root }, open.engine))).toBe('no abort');
+    } finally { await open.close(); rmSync(root, { recursive: true, force: true }); }
+  }, 120_000);
+
+  test('privacy aliases turned off (visibility.honor_aliases) are refused, at the start or during a run', async () => {
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      const reader = await openReader(gut, open.engine, true);
+      expect(await abortCode(() => assertPrivate(gut, open.engine, reader))).toBe('no abort');
+      await open.engine.executeRaw('SET default_transaction_read_only = off');
+      await open.engine.setConfig('visibility.honor_aliases', 'off');
+      expect(await abortCode(() => assertPrivate(gut, open.engine, reader))).toBe('LR_PRIVACY_RELAXED');
+    } finally { await open.close(); }
+  }, 120_000);
+
+  test('a probe page made public during a run is not read as a breach', async () => {
+    const open = await buildFixtureBrain(gut, PHASE2_PAGES);
+    try {
+      const { importFromContent } = await importGbrain<any>(gut, 'src/core/import-file.ts');
+      await open.engine.executeRaw('SET default_transaction_read_only = off');
+      const note = (visibility: string) => '---\ntype: note\ntitle: Access probe\n' + visibility + '---\n\n# Access probe\n\nFictional page, private first and public later.\n';
+      await importFromContent(open.engine, 'notes/access-probe', note('visibility: private\n'));
+      const reader = await openReader(gut, open.engine, true);
+      expect(await reader.privateProbe()).toBe('hidden');
+      await importFromContent(open.engine, 'notes/access-probe', note(''));
+      expect(await reader.page('notes/access-probe')).not.toBeNull();
+      expect(await abortCode(() => assertPrivate(gut, open.engine, reader))).toBe('no abort');
     } finally { await open.close(); }
   }, 120_000);
 

@@ -2,6 +2,26 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.196] - 2026-11-10
+
+### Phase 2 live recall stops before a model can read a page gbrain hides from unbound callers
+
+- The phase 2 runner refuses to start, and stops mid-run, when gbrain would read its calls as a member or as the brain
+  owner: config `mcp.stdio_member` set to anyone (or unreadable), or a caller access for its session that shows an
+  identity, a granted source or, from gbrain 0.60.623.0, the owner's view. gbrain 0.60.613.0, the phase 2 pin, reports
+  no owner field, so it starts normally on a clean brain.
+- It also stops when the brain turns privacy aliases off (`visibility.honor_aliases` false, 0, off or no, or
+  unreadable), because gbrain then shows pages marked private only by `access` or `confidentiality` to remote callers.
+- When gbrain reports `_meta.access` (the phase 2 pin does), every response must show an unbound caller's view there. A
+  response without it, or with a wider view, never reaches a model, and a wider view stops the run with
+  `LR_PRIVACY_RELAXED`. Before every task and after every episode the runner also reads one page gbrain hides from
+  unbound callers, picked afresh each time, and stops if it comes back readable.
+- What stays open: gbrain caches these settings for 30 seconds, so pages served inside that window may reach a model.
+  Turning aliases off reaches the episodes already running until they end, and turning them off and back on between
+  two checks can go unnoticed. The run kit says so under `LR_PRIVACY_RELAXED`.
+- No score, published result or preregistered number changes. The changed runner files are part of the harness
+  digest, so a phase 2 judge check made before this release is refused (`LR_JUDGE_CHECK`) and has to be made again.
+
 ## [0.10.195] - 2026-11-10
 
 ### GPT-6.1 Sol's full-context reads now hit OpenAI's prompt cache, and older full-context costs that missed it are labelled

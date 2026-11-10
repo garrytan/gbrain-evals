@@ -218,7 +218,10 @@ snapshots, audit rows and gbrain's log stay.
   embeddings and reranking, exported in the shell. Check each with `test -n "$NAME"`; never print one.
 - The shell rules from phase 1: run as the user whose `~/.gbrain/config.json` serves the brain, with
   `GBRAIN_DIRECT_DATABASE_URL` unset. `GBRAIN_REMOTE_PRIVATE_PAGES` is removed from the runner's own process; if the
-  brain's config sets `search.remote_private_pages`, the runner refuses to start.
+  brain's config sets `search.remote_private_pages`, or turns privacy aliases off (`visibility.honor_aliases` false, 0, off
+  or no, or unreadable), the runner refuses to start. It also refuses when gbrain would read
+  its calls as a member or as the brain owner: config `mcp.stdio_member` set to anyone (or unreadable), or, from gbrain 0.60.623.0,
+  `access.owner_member` naming the member its session is bound to. An owner-bound session sees private pages.
 - A budget ledger on the box, for example `/data/ops/live-recall/phase2/ledger.sqlite`. The first paid command on a new
   ledger also takes `--program-cap-usd 900`, which covers the judge check's $200 cap and the counted run's $700.
 
@@ -464,10 +467,17 @@ Phase 2: the task file has a problem at the line and field named. Fix it and fre
 
 ### LR_PRIVACY_RELAXED
 
-Phase 2: the brain's config shows private pages to remote callers (`search.remote_private_pages`). At the start nothing
-runs. The runner reads the policy again before every task and after every episode, so a change during the run stops it
-with no record for the episode that just ran. gbrain caches the setting for 30 seconds, so pages it served inside that
-window may have reached a model. The runner never relaxes or works around it; GBEV-3 decides.
+Phase 2: the runner would see pages gbrain hides from an unbound remote caller. The brain's config shows private pages
+to remote callers (`search.remote_private_pages`) or turns privacy aliases such as `access: private` off
+(`visibility.honor_aliases`), or gbrain would read the runner's calls as a member or as the brain
+owner (`mcp.stdio_member` set, or `access.owner_member` naming that member), or a gbrain response reported a wider view
+than an unbound caller's in `_meta.access` (that response's text never reaches a model), or a page gbrain hides from an
+unbound caller came back readable. At the start nothing runs. The runner checks again before every task and after every
+episode, each time reading one page gbrain hides from an unbound caller when the brain has one, so a change during the
+run stops it with no record for the episode that just ran. gbrain caches the setting for 30 seconds, so pages it served inside that
+window may have reached a model. `visibility.honor_aliases` has no per-response signal in `_meta.access`, so once gbrain
+picks up `off`, the episodes already running can show alias-private pages to a model until they end, and turning it off
+and back on between two checks can go unnoticed. The runner never relaxes or works around it; GBEV-3 decides.
 
 ### LR_CAP_STOP
 
