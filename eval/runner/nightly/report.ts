@@ -261,7 +261,9 @@ export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreem
       candidate_harness: paired.filter(i => mine.get(i)!.harness).length, ...stats });
   }
   const c = { ...agreementStats(counted), suites: countedSuites, mean_kappa: kappaWeight ? kappaSum / kappaWeight : null };
-  const reason = !pooled.items ? 'no item both readers answered'
+  const stopped = manifest.exit === 'NIGHTLY_CAP_STOP' || manifest.exit === 'NIGHTLY_VM_LOST' ? manifest.exit : null;
+  const reason = stopped ? `the night ended with ${stopped}, so the items it never reached are not particle-1's fails`
+    : !pooled.items ? 'no item both readers answered'
     : unpaired > max_unpaired * scheduled + 1e-9 ? `${unpaired} of ${scheduled} scheduled items are unpaired, more than ${max_unpaired * 100}%`
     : c.items < min_items ? `${c.items} paired items in suites with at least ${min_suite_items}, fewer than ${min_items}`
     : null;

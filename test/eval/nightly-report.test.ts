@@ -241,6 +241,18 @@ describe("particle-1's agreement with claude-opus-5-5", () => {
     expect([ag.scheduled, ag.unpaired, ag.verdict, ag.reason]).toEqual([100, 60, 'not_measured', '60 of 100 scheduled items are unpaired, more than 10%']);
   });
 
+  test("a night that ends on a budget stop or loses its VM is not measured: particle-1 agrees on every item it answered, then Particle's 402 stops it at 70% of each suite", () => {
+    const opus = [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, true, true, true, true, true];
+    const particle = (suite: string) => opus.map((pass, i) => i < 14 ? row({ suite, reader: 'particle-1', item: `item-${i}`, pass, score: pass ? 1 : 0 })
+      : row({ suite, reader: 'particle-1', item: `item-${i}`, pass: false, score: 0, harness: { error: 'budget stop: Particle answered 402' } }));
+    const rows = ['suite-a', 'suite-b'].flatMap(suite => [...labelled('claude-opus-5-5', opus, { suite }), ...particle(suite)]);
+    const capped = nightAgreement({ ...twoSuites, exit: 'NIGHTLY_CAP_STOP' }, rows)!;
+    expect(capped.suites[0]).toMatchObject({ items: 20, both_pass: 7, candidate_only: 0, reference_only: 6, both_fail: 7, candidate_harness: 6, unpaired: 0 });
+    expect([capped.verdict, capped.reason]).toEqual(['not_measured', "the night ended with NIGHTLY_CAP_STOP, so the items it never reached are not particle-1's fails"]);
+    expect(nightAgreement({ ...twoSuites, exit: 'NIGHTLY_VM_LOST' }, rows)!.verdict).toBe('not_measured');
+    expect(nightAgreement({ ...twoSuites, exit: 'NIGHTLY_HARNESS' }, rows)!.verdict).toBe('fail');
+  });
+
   test('qualified reader names match, and a suite a --fake night skipped schedules nothing', () => {
     const qualified = manifest([{ id: 'suite-a', readers: ['anthropic:claude-opus-5-5', 'particle:particle-1'], k: 1 }, { id: 'suite-b', readers: ['anthropic:claude-opus-5-5', 'particle:particle-1'], k: 1 }]);
     const rename = (r: Outcome) => ({ ...r, reader: r.reader === 'particle-1' ? 'particle:particle-1' : `anthropic:${r.reader}` });

@@ -99,9 +99,11 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   gap to Opus. A suite counts toward the verdict with at least 20 paired items. particle-1 passes when the counted suites
   hold at least 40 items, no more than 10% of scheduled items are unpaired, the item-weighted mean of the counted suites'
   kappas is at least 0.6 and their raw agreement is at least 85%. Below those floors the verdict reads not measured, with
-  the reason, and a scheduled suite with no paired item is listed with its reason. The kappa of every suite's table
-  pooled is shown for reference only, because pooling counts differences in difficulty between suites as agreement. The
-  verdict decides whether particle-1 joins as a nightly reader.
+  the reason, and a scheduled suite with no paired item is listed with its reason. A night that ends on a budget stop
+  (including Particle's 402) or loses its VM also reads not measured, because the items it never reached aren't
+  particle-1's fails, and a suite that stopped before writing any row counts every item it planned as unpaired. The
+  kappa of every suite's table pooled is shown for reference only, because pooling counts differences in difficulty
+  between suites as agreement. The verdict decides whether particle-1 joins as a nightly reader.
 - **Fixes.** [`eval/data/nightly/fixes.json`](../eval/data/nightly/fixes.json) records each gbrain fix shipped for a
   nightly finding, and the report shows its items every night, so a fix that regresses shows up next to its record.
 
@@ -230,8 +232,9 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 
 The verdict now reads the item-weighted mean of per-suite kappas instead of the pooled kappa, which stays in the report
 for reference. A suite counts with at least 20 paired items and the verdict needs 40, a particle-1 crash or harness
-failure counts as a fail, and more than 10% of scheduled items unpaired reads as not measured. A kappa of exactly 0.6
-now passes. GPT-6 Astra judges particle-1's QA answers as well as Claude's, qualified reader names such as
+failure counts as a fail, and more than 10% of scheduled items unpaired reads as not measured, as does a night that ends
+on a budget stop or loses its VM. A suite that stopped before writing rows counts its planned items as unpaired. A kappa
+of exactly 0.6 now passes. GPT-6 Astra judges particle-1's QA answers as well as Claude's, qualified reader names such as
 `particle:particle-1` match, and a night leaves particle-1 off the agent suites, whose runners refuse it.
 
 ### 2026-11-10: particle-1's agreement with Opus
