@@ -69,6 +69,12 @@ manifest from them.
 **`run`** reserves a lease and launches each named cell (`--cell`, `--cells a,b` or `--wave N`). Without `--local` the
 cell runs on its own Ubicloud VM through the repository runner; the launcher stops the VM run half an hour after the
 cell's `timeout_hours`, pulls the cell's row checkpoint every pull interval, and exits non-zero when any cell fails.
+A Q1 cell's VM receives only the tracked files under the campaign's `executes` paths and the few paths cells read
+beyond them (`Q1_VM_PATHS` in `eval/runner/shootout-cell.ts`: the lockfile patch, the dataset fetcher and its
+`stats` helpers, and BG1's public dev worlds), without `.git` or the benchmark docs, so each upload is a few MB. A resume also pushes the
+checkpoint and store snapshot it staged, into that checkout or, for a sealed cell, into the custody root. A listed
+path with no tracked files, a tracked file missing from disk or an untracked file under a listed path stops the
+launch before any VM exists.
 `--dry-run` shows the launching host, where rows land and how the VM is torn down, without reserving anything. Sealed
 cells launch only with `--sealed` from the custodian's host, where dataset caches, rows and store snapshots stay;
 `--local` refuses them.
@@ -79,7 +85,10 @@ cells launch only with `--sealed` from the custodian's host, where dataset cache
   runs (adapters, scorer, packer, instruments, lockfiles) and, in `images`, every container image by digest. Its hash
   covers those files' git blob ids. `reserve`, `launch`, `resume` and `render` refuse once the tree no longer matches
   the hash stored when the campaign started, and name the changed files. A change that affects execution after the
-  freeze needs a new campaign identity (`q1-scoreboard-<suffix>`) recorded in the preregistration.
+  freeze needs a new campaign identity (`q1-scoreboard-<suffix>`) recorded in the preregistration. `reserve` also
+  refuses, with `CAMPAIGN_INVALID` and before any lease exists, a Q1 campaign whose `executes` leaves out a path in
+  `EXECUTES` (`eval/runner/shootout-cell.ts`), which the cell runner imports, and a cell whose commands name a script
+  outside `executes` and `Q1_VM_PATHS`, because its VM would not receive either.
 - **Metering.** Every provider call leaves through the cell's metering proxy, which holds the only real keys. A request
   that does not present the cell's token is refused, wherever it comes from: the runners present the token as their
   provider key and the compose stacks as their dummy key (`${SHOOTOUT_CELL_TOKEN:-dummy}`). Each request has a stable id, the slot it arrived on, the brain and phase the harness bound, and a bucket;
@@ -196,6 +205,13 @@ preregistration.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-10: what a Q1 VM receives
+
+The `run` paragraph now says a Q1 cell's VM gets only the tracked files under the campaign's `executes` paths and
+`Q1_VM_PATHS`, without `.git`, that a resume pushes the checkpoint and snapshot it staged, and that a missing or
+untracked file under them stops the launch before any VM exists. The Freeze guarantee adds that `reserve` refuses a
+Q1 campaign or cell that would leave its VM without a file the cell runs.
 
 ### 2026-11-01: particle-1 readers, the judge cap
 

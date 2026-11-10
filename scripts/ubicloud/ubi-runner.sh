@@ -9,8 +9,9 @@
 # scripts/ubicloud/ubi-runner.sh.)
 #
 # Creates a VM (standard-16 by default), streams the checkout to it (tracked +
-# untracked-unignored files + .git, so uncommitted edits are included), runs an
-# optional setup script and the command, copies requested artifacts back, and
+# untracked-unignored files + .git, so uncommitted edits are included; with
+# --only LIST, just the tracked files under the paths LIST names and no .git),
+# runs an optional setup script and the command, copies requested artifacts back, and
 # destroys the VM on every exit path. Exits with the command's status. The command runs detached on the VM
 # (setsid/nohup, log and exit status in files there) and this side follows its log over short ssh calls, so a
 # dropped session is retried instead of killing the command; an exit before the command ended (a signal, a
@@ -366,12 +367,41 @@ cmd_down() {
   done
 }
 
-# pack SRC: write a gzipped checkout tarball to stdout (tracked + untracked
-# files that are not ignored, plus .git; a non-git directory is taken whole).
+# pack_files SRC LIST: print, NUL-separated, the tracked files of checkout SRC under the repository-relative paths
+# LIST names (one per line). It refuses when a path has no tracked files, a tracked file under one is missing from
+# disk, or an untracked file sits under one, so what it lists is exactly what a campaign hashes, and a needed file
+# is never silently left behind.
+pack_files() {
+  local src=$1 list=$2 p specs=() bad
+  [ -f "$list" ] || die "pack: list file $list not found"
+  git -C "$src" rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "pack --only: $src is not a git checkout"
+  while IFS= read -r p || [ -n "$p" ]; do
+    [ -n "$p" ] || continue
+    [ -n "$(git -C "$src" ls-files --cached -- ":(literal)$p")" ] || die "pack --only: $p has no tracked files in $src; refusing to send a checkout without it"
+    specs+=(":(literal)$p")
+  done <"$list"
+  [ ${#specs[@]} -gt 0 ] || die "pack --only: $list names no paths"
+  bad=$(git -C "$src" ls-files --deleted -- ${specs[@]+"${specs[@]}"})
+  [ -z "$bad" ] || die "pack --only: tracked files are missing from $src: $(printf '%s' "$bad" | head -n 3 | tr '\n' ' ')"
+  bad=$(git -C "$src" ls-files --others --exclude-standard -- ${specs[@]+"${specs[@]}"})
+  [ -z "$bad" ] || die "pack --only: untracked files under the listed paths would not be sent: $(printf '%s' "$bad" | head -n 3 | tr '\n' ' ')"
+  git -C "$src" ls-files -z --cached -- ${specs[@]+"${specs[@]}"}
+}
+
+# pack [--only LIST] SRC: write a gzipped checkout tarball to stdout (tracked + untracked files that are not ignored,
+# plus .git; a non-git directory is taken whole). With --only, only the tracked files under the paths LIST names,
+# without .git (pack_files).
 cmd_pack() {
-  local src
+  local src only="" files
+  if [ "${1:-}" = --only ]; then only=$2; shift 2; fi
   src=$(cd "${1:-.}" && pwd)
-  if git -C "$src" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if [ -n "$only" ]; then
+    files=$(mktemp)
+    ( pack_files "$src" "$only" ) >"$files" || { rm -f "$files"; return 1; }
+    log "packing $(tr -cd '\0' <"$files" | wc -c | tr -d ' ') tracked file(s) under the paths in $only, without .git"
+    ( cd "$src" && tar --null -T "$files" -czf - ) || { rm -f "$files"; return 1; }
+    rm -f "$files"
+  elif git -C "$src" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     (
       cd "$src"
       { git ls-files -z -co --exclude-standard; printf '.git\0'; } \
@@ -425,14 +455,15 @@ retry_stream() {
 }
 
 cmd_sync() {
-  local name=$1 src=${2:-.} dest=${3:-}
+  local name=$1 src=${2:-.} dest=${3:-} only=${4:-}
   src=$(cd "$src" && pwd)
   [ -n "$dest" ] || dest="work/$(basename "$src")"
-  retry_stream "sync to $dest" sync_once "$name" "$src" "$dest" || die "sync to $dest failed after $PUSH_TRIES attempts"
+  [ -z "$only" ] || pack_files "$src" "$only" >/dev/null
+  retry_stream "sync to $dest" sync_once "$name" "$src" "$dest" "$only" || die "sync to $dest failed after $PUSH_TRIES attempts"
   log "synced $src -> $name:$dest"
 }
 
-sync_once() { ( set -o pipefail; cmd_pack "$2" | cmd_unpack "$1" "$3" ); }
+sync_once() { ( set -o pipefail; cmd_pack ${4:+--only "$4"} "$2" | cmd_unpack "$1" "$3" ); }
 
 # pull NAME REMOTE_GLOB LOCAL_DIR: copy matching remote entries into LOCAL_DIR.
 # Relative remote paths start at /home/ubi.
@@ -592,12 +623,13 @@ run_exit() {
 }
 
 cmd_run() {
-  local up_args=() src=. dest="" setup="" keep=0 pulls=() envs=() pushes=()
+  local up_args=() src=. dest="" setup="" keep=0 pulls=() envs=() pushes=() only=""
   while [ $# -gt 0 ]; do
     case $1 in
       -s|--size|-l|--location|-n|--name|-S|--storage|-b|--image) up_args+=("$1" "$2"); shift 2 ;;
       --src) src=$2; shift 2 ;;
       --dest) dest=$2; shift 2 ;;
+      --only) only=$2; shift 2 ;;
       --setup) setup=$2; shift 2 ;;
       --env) envs+=("$2"); shift 2 ;;
       --pass) [ -n "${!2+x}" ] || die "--pass $2: not set locally"; envs+=("$2=${!2}"); shift 2 ;;
@@ -613,6 +645,8 @@ cmd_run() {
   [ -z "$setup" ] || [ -f "$setup" ] || die "setup script not found: $setup"
   src=$(cd "$src" && pwd)
   [ -n "$dest" ] || dest="work/$(basename "$src")"
+  # A missing or untracked file under an --only path refuses here, before any VM exists.
+  [ -z "$only" ] || pack_files "$src" "$only" >/dev/null
 
   local i name=""
   for (( i = 0; i < ${#up_args[@]}; i += 2 )); do
@@ -631,7 +665,7 @@ cmd_run() {
   for e in ${envs[@]+"${envs[@]}"}; do printf 'export %s=%q\n' "${e%%=*}" "${e#*=}"; done \
     | remote "$name" 'umask 077 && cat > ~/.ubirun-env'
 
-  cmd_sync "$name" "$src" "$dest"
+  cmd_sync "$name" "$src" "$dest" "$only"
   local qdest p rest
   qdest=$(printf %q "$dest")
   for p in ${pushes[@]+"${pushes[@]}"}; do
@@ -666,15 +700,20 @@ usage() {
   cat <<EOF
 usage: ubi-runner.sh <command> [args]
 
-  run [up opts] [--src DIR] [--dest PATH] [--setup FILE] [--env K=V]...
+  run [up opts] [--src DIR] [--dest PATH] [--only LIST] [--setup FILE] [--env K=V]...
       [--pass NAME]... [--push LOCAL_DIR:REMOTE_DIR[:LIST_FILE]]...
       [--pull REMOTE_GLOB:LOCAL_DIR]... [--keep] -- COMMAND
                          up + sync + push + setup + command + pull + destroy; exits with COMMAND's status
   up [-s SIZE] [-l LOCATION] [-n NAME] [-S STORAGE_GIB] [-b IMAGE]
                          create a VM and wait for SSH; prints its name
   ssh NAME [COMMAND]     shell or login-shell command on the VM (user ubi, passwordless sudo)
-  sync NAME [SRC] [DEST] stream a checkout (tracked + untracked-unignored + .git)
-  pack [SRC]             write that checkout tarball to stdout
+  sync NAME [SRC] [DEST] [LIST]
+                         stream a checkout (tracked + untracked-unignored + .git; with LIST,
+                         only the tracked files under the paths it names, without .git)
+  pack [--only LIST] [SRC]
+                         write that checkout tarball to stdout; --only refuses when a listed
+                         path has no tracked files, a tracked file is missing or an untracked
+                         file sits under one
   unpack NAME DEST       extract a tarball from stdin into DEST on the VM
   push NAME LOCAL_DIR REMOTE_DIR [LIST_FILE]
                          replace REMOTE_DIR with LOCAL_DIR (or the listed relative paths), mode 0700
