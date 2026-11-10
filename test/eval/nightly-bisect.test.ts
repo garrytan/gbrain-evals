@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { bisect, firingItemsBad, firstParentCommits } from '../../eval/runner/nightly/bisect.ts';
+import { bisect, firingItemsBad, firstParentCommits, stepFlags } from '../../eval/runner/nightly/bisect.ts';
 
 const commits = Array.from({ length: 16 }, (_, i) => `c${String(i).padStart(2, '0')}`);
 
@@ -29,6 +29,14 @@ describe('bisect', () => {
     expect(firingItemsBad(rows([false, true, true, true]), ['a', 'b'])).toBe(false);
     expect(firingItemsBad([...rows([true, true]), { item: 'a', pass: false, harness: { error: 'provider' } }], ['a', 'b'])).toBe(false);
     expect(() => firingItemsBad([{ item: 'a', pass: false, harness: { error: 'provider' } }], ['a'])).toThrow('no outcome for the firing items a');
+  });
+
+  test('each step gets the paid flags, the reader and the settings a Cat 40 or Postgres suite needs', () => {
+    const argv = ['--suite', 'cat40-hard-m', '--items', 'a,b', '--good', 'g', '--bad', 'b', '--gbrain-clone', '/g', '--out', '/o', '--paid', '--budget-run-id', 'nightly:x',
+      '--budget-ledger', '/ledger.sqlite', '--cat40-slot-allowance-usd', '2', '--pg-admin', 'postgres://a', '--pg-template', 'tpl', '--pg15-admin', 'postgres://b', '--reader', 'gpt-6.1-sol'];
+    expect(stepFlags(argv)).toEqual(['--paid', '--budget-run-id', 'nightly:x', '--budget-ledger', '/ledger.sqlite', '--cat40-slot-allowance-usd', '2', '--pg-admin', 'postgres://a',
+      '--pg-template', 'tpl', '--pg15-admin', 'postgres://b', '--readers', 'gpt-6.1-sol']);
+    expect(stepFlags(['--suite', 's', '--fake'])).toEqual(['--fake']);
   });
 
   test('the range is first-parent: a merged branch is the one commit that brought it in', () => {

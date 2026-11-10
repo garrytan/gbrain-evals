@@ -44,7 +44,8 @@ export interface DevSetRun { label: string; freeze_drift: string[] | null }
 export interface NightManifest {
   schema: 'nightly-night/1'; night: string; ref: string; sha: string; version: string | null; tier: string; fake: boolean;
   devset: { path: string; digest: string }; suites: SuiteStatus[]; started_at: string; finished_at?: string;
-  budget?: { run_id: string; ledger: string } | null;
+  /** The night's ledger run; opened_by_night when run.ts opened it itself, and closed_at once it closed it. */
+  budget?: { run_id: string; ledger: string; opened_by_night?: boolean; closed_at?: string } | null;
   /** The invocation's arguments, which --resume repeats, and how many times the night has been started. */
   argv?: string[]; attempts?: number;
   /** The stop code the night ended with (run.ts EXIT), or null when it finished whole. */

@@ -33,7 +33,10 @@
  * (the first 12 characters of a sha), holding night.json, outcomes.jsonl, each suite's work under suites/, and the report.
  * --resume reruns what is missing or recorded as a harness failure on the gbrain commit the night started on (its ref
  * may have moved since), after settling the stopped run's open ledger reservations (ledger.ts reconcile), at most twice
- * per night. A stop exits with a code and the line to resume:
+ * per night; run it only once every child of the stopped run has exited. A fresh run into a night directory that already
+ * holds night.json is refused and points to --resume. A ledger run this night opened itself (from --night-cap-usd and
+ * --month-cap-usd) is closed when the night, or a later resume of it, ends without a stop; a run passed in with
+ * --budget-run-id belongs to its opener, which closes it (ledger.ts close). A stop exits with a code and the line to resume:
  *   3 NIGHTLY_CAP_STOP  the night's ledger run or the 30-night cap is spent; paid suites stopped where they were
  *   4 NIGHTLY_VM_LOST   the runner was signalled (the machine is going away); running children were killed
  *   5 NIGHTLY_HARNESS   a suite failed to run or recorded harness or provider failures; its rows are counted apart
@@ -42,11 +45,12 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { resolveGbrainUnderTest } from '../gbrain-under-test.ts';
+import { ledgerStatus } from '../budget-ledger.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
 import { ADAPTERS, callsModels, type NightContext, type SuiteRun, type Tier, worktreeAt } from './adapters.ts';
 import { loadDevSet, suiteDigest, type DevSet } from './devset.ts';
 import { NightlyCache } from './judge-cache.ts';
-import { NightlyCapStop, openNightRun, reconcileNightRun } from './ledger.ts';
+import { closeOwnedNightRun, NIGHTLY_RUNNER_PREFIX, NightlyCapStop, openNightRun, reconcileNightRun } from './ledger.ts';
 import { appendOutcome, outcomeKey, readOutcomes } from './outcome.ts';
 import { findPreviousNight, writeReport, type NightManifest, type SuiteStatus } from './report.ts';
 import { OLD_RELEASE } from './smokes/upgrade-from-old.ts';
@@ -114,9 +118,9 @@ export function planSuites(devset: DevSet, a: Pick<NightArgs, 'tier' | 'suites' 
 /**
  * The night's ledger run, or null when it calls no model. Refuses a night with model-calling suites that is neither
  * --fake nor --paid with a ledger run, and any paid flag without one (the paid-arm guard's rule: environment variables
- * never turn on spending).
+ * never turn on spending). A --budget-run-id must be an open nightly run; `opened` says this night opened the run itself.
  */
-export function paidGate(a: NightArgs, plan: SuiteRun[]): { runId: string; ledger: string } | null {
+export function paidGate(a: NightArgs, plan: SuiteRun[]): { runId: string; ledger: string; opened: boolean } | null {
   const calling = plan.filter(r => callsModels(r.suite)).map(r => r.suite.id);
   if (a.fake) {
     if (a.paid || a.budgetRunId) throw new PaidArmRefusal('--fake makes no paid call; drop --paid and --budget-run-id');
@@ -127,12 +131,17 @@ export function paidGate(a: NightArgs, plan: SuiteRun[]): { runId: string; ledge
     throw new PaidArmRefusal(`${calling.join(', ') || 'this night'} calls models: pass --fake for a keyless run, or --paid --budget-ledger <path> with --budget-run-id <id> (or --night-cap-usd and --month-cap-usd to open the night's run)`);
   }
   let runId = a.budgetRunId;
+  const opened = !runId;
   if (!runId) {
     if (a.nightCapUsd === null || a.monthCapUsd === null) throw new PaidArmRefusal('--paid needs the night\'s ledger run: --budget-run-id <id>, or --night-cap-usd and --month-cap-usd to open it');
     runId = openNightRun({ ledgerPath: a.budgetLedger, night: a.night, ref: a.ref, nightCapUsd: a.nightCapUsd, monthCapUsd: a.monthCapUsd }).runId;
+  } else {
+    const given = ledgerStatus({ ledgerPath: a.budgetLedger, runId }).run;
+    if (given && !given.runner.startsWith(NIGHTLY_RUNNER_PREFIX)) throw new PaidArmRefusal(`--budget-run-id ${runId} belongs to ${given.runner}, not to a nightly run; open one with \`bun eval/runner/nightly/ledger.ts open\``);
+    if (given && given.finished_at !== null) throw new PaidArmRefusal(`--budget-run-id ${runId} is a closed nightly run; open a new one with \`bun eval/runner/nightly/ledger.ts open\``);
   }
   requirePaidArm(['--paid', '--budget-run-id', runId], { arm: 'the nightly run', estimateUsd: null, ledgerPath: a.budgetLedger });
-  return { runId, ledger: a.budgetLedger };
+  return { runId, ledger: a.budgetLedger, opened };
 }
 
 const git = (clone: string, ...args: string[]) => execFileSync('git', ['-C', clone, ...args], { encoding: 'utf8' }).trim();
@@ -175,6 +184,7 @@ export async function main(argv: readonly string[]): Promise<number> {
   const plan = planSuites(devset, a);
   if (!plan.length) throw new Error('no suite and item matches the tier, --suites and --items');
   const dir = a.nightDir ?? join(a.out!, a.night, refLabel(a.ref, sha));
+  if (!saved && existsSync(join(dir, 'night.json'))) throw new Error(`${dir} already holds a night; resume it with \`bun eval/runner/nightly/run.ts --resume ${dir}\`, or pass another --out or --night`);
   mkdirSync(dir, { recursive: true });
   const lock = join(dir, 'run.lock');
   if (existsSync(lock)) {
@@ -203,7 +213,8 @@ export async function main(argv: readonly string[]): Promise<number> {
     const manifest: NightManifest = {
       schema: 'nightly-night/1', night: a.night, ref: a.ref, sha, version: gut.version, tier: a.tier, fake: a.fake,
       devset: { path: a.devset ?? 'eval/data/nightly/devset-v1.json', digest: devset.digest }, suites: statuses, started_at: saved?.started_at ?? new Date().toISOString(),
-      budget: paid ? { run_id: paid.runId, ledger: paid.ledger } : null, argv: saved?.argv ?? [...argv], attempts: (saved?.attempts ?? 0) + 1,
+      budget: paid ? { run_id: paid.runId, ledger: paid.ledger, opened_by_night: saved?.budget ? saved.budget.opened_by_night === true : paid.opened } : null,
+      argv: saved?.argv ?? [...argv], attempts: (saved?.attempts ?? 0) + 1,
     };
     const writeManifest = () => writeFileSync(join(dir, 'night.json'), JSON.stringify(manifest, null, 2) + '\n');
     writeManifest();
@@ -257,6 +268,7 @@ export async function main(argv: readonly string[]): Promise<number> {
       ...(harnessRows ? [`${harnessRows} harness rows`] : [])];
     const exit = signalled ? 'NIGHTLY_VM_LOST' : capStop ? 'NIGHTLY_CAP_STOP' : partial.length ? 'NIGHTLY_HARNESS' : null;
     manifest.exit = exit;
+    if (closeOwnedNightRun(manifest.budget, exit !== null)) manifest.budget!.closed_at = new Date().toISOString();
     writeManifest();
     const stableDir = a.tier === 'matrix' && a.ref === 'master' && a.out ? join(a.out, a.night, 'stable') : null;
     const summary = writeReport({ dir, previous: previousDir, stable: stableDir, gbrainClone: a.clone });

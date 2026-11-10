@@ -113,6 +113,32 @@ only what your machine supports.
 A night that calls models runs only with `--paid` and a [budget ledger](budget-ledger.md) run. Without `--fake` or
 `--paid`, a night that includes a model suite is refused before anything runs.
 
+## Pay for a night
+
+A paid night spends through one run in a durable budget ledger that carries from night to night. Each nightly run's
+budget is the smaller of the night cap and what is left of the 30-night cap. An open nightly run holds its whole budget
+against the 30-night cap (or what it committed, if that is more), whatever its age, because a resume or a bisect step
+can still spend it. A closed run holds what it committed in the 30 days before. So two runs opened on one night can't
+add up past the 30-night cap.
+
+Only a run's opener closes it. A night gets its run in one of two ways:
+
+- **The night opens it.** Pass `--paid --budget-ledger <path> --night-cap-usd <n> --month-cap-usd <n>`. The runner
+  records in `night.json` that it opened the run, and closes it when the night, or a later resume of it, ends without a
+  stop. A night that stops leaves its run open for the resume.
+- **You open it and pass it in.** A matrix night opens one run for master and stable together:
+
+```bash
+RUN=$(bun eval/runner/nightly/ledger.ts open --budget-ledger <path> --night <YYYY-MM-DD> --ref matrix --night-cap-usd <n> --month-cap-usd <n>)
+bun eval/runner/nightly/run.ts --ref master --tier matrix --paid --budget-ledger <path> --budget-run-id "$RUN" --out <dir> --gbrain-clone ../gbrain
+bun eval/runner/nightly/run.ts --ref stable --tier matrix --paid --budget-ledger <path> --budget-run-id "$RUN" --out <dir> --gbrain-clone ../gbrain
+bun eval/runner/nightly/ledger.ts close --budget-ledger <path> --budget-run-id "$RUN"
+```
+
+The runner never closes a run passed in with `--budget-run-id`, on the night or on a resume. It refuses an id that
+isn't a nightly run, and one that is already closed. If you won't resume a stopped night, close its run, so its unspent
+budget stops counting against the 30-night cap.
+
 ## When a night stops
 
 The runner exits with a code and prints the command that resumes the night:
@@ -130,8 +156,12 @@ bun eval/runner/nightly/run.ts --resume <night dir>
 ```
 
 `--resume` reruns only what is missing or recorded as a harness failure, on the gbrain commit the night started on,
-even if the ref has moved since. It first settles the stopped run's open ledger reservations. A night can be resumed at
-most twice.
+even if the ref has moved since. It first settles the stopped run's open ledger reservations. Run it only after every
+child process of the stopped run has exited. On a Ubicloud VM that holds by construction, because `ubi-runner.sh`
+destroys the VM, and every child with it, on every exit path. A night can be resumed at most twice.
+
+A fresh run into a night directory that already holds a `night.json` is refused and prints the `--resume` command
+instead, so a second run never adds to a night's outcomes.
 
 ## Find the commit that broke something
 
@@ -142,7 +172,12 @@ rerunning only the firing items. A commit is bad when at least half of those ite
 bun eval/runner/nightly/bisect.ts --suite <id> --items <a,b> --good <sha> --bad <sha> --gbrain-clone ../gbrain --out <dir> --fake
 ```
 
-Keyless suites cost only machine time. A paid suite's steps join the night's ledger run.
+Each step runs `run.ts` on one commit with only the firing items. Pass the settings the suite needs, and bisect hands
+them to every step: `--cat40-slot-allowance-usd` for Cat 40, and `--pg-admin` (with `--pg-template`) and
+`--pg15-admin` for the Postgres trials and smoke. Keyless suites cost only machine time. A paid bisect works like a
+matrix night: it gets its own ledger run from `ledger.ts open` (or takes an open one its caller opened), passes it to
+every step with `--paid --budget-ledger <path> --budget-run-id <id>`, and the run's opener closes it with
+`ledger.ts close` when the bisect ends. No step closes it.
 
 ## Run it on a Ubicloud VM
 
@@ -160,6 +195,13 @@ Ubicloud VM:
    It never reads or forwards a provider key.
 
 ## Changelog
+
+### 2026-11-09: Paid nights, resumes and bisect settings
+
+Added how a paid night gets and closes its ledger run: an open run holds its whole budget against the 30-night cap, only
+its opener closes it, and the matrix and bisect flows open one run and close it at the end. `--resume` now says to run
+only once the stopped run's children have exited, a fresh run into an existing night is refused, and bisect passes the
+Cat 40 and Postgres settings to every step.
 
 ### 2026-11-09: First version
 

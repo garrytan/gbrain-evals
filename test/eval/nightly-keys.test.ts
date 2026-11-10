@@ -5,14 +5,15 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { initLedger, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
+import { BudgetRun, initLedger, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
 import { PaidArmRefusal } from '../../eval/runner/paid-arm.ts';
 import { envFor, runChild } from '../../eval/runner/nightly/adapters.ts';
 import { loadDevSet } from '../../eval/runner/nightly/devset.ts';
 import { BASE_URL_VARS, DEAD_UPSTREAM, keyLikeVariables, keylessEnv, paidEnv, stripKeys } from '../../eval/runner/nightly/keyless.ts';
+import { closeNightRun, openNightRun } from '../../eval/runner/nightly/ledger.ts';
 import { paidGate, parseArgs, planSuites } from '../../eval/runner/nightly/run.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -28,6 +29,16 @@ describe('the keyless launcher environment', () => {
     expect(env).toMatchObject({ PATH: '/usr/bin:/bin', HOME: '/home/example', GBRAIN_MODEL_DISCOVERY: 'off' });
     expect(Object.values(env)).not.toContain('fixture');
     expect(Object.values(env)).not.toContain('sk-fixture');
+  });
+
+  test('no child starts once the night is aborted', async () => {
+    const dir = tmp();
+    const marker = join(dir, 'started');
+    const abort = new AbortController();
+    abort.abort();
+    const r = await runChild({ cmd: ['bun', '--no-env-file', '-e', `require('node:fs').writeFileSync(${JSON.stringify(marker)}, 'x')`], env: keylessEnv(), log: join(dir, 'child.log'), signal: abort.signal });
+    expect(r.code).toBeNull();
+    expect(existsSync(marker)).toBe(false);
   });
 
   test('a child launched with it sees no key, even when the parent holds one', async () => {
@@ -96,6 +107,27 @@ describe('paid flags without a ledger run are refused', () => {
     const run = gate('--paid', '--budget-ledger', l, '--night', '2026-11-09', '--night-cap-usd', '3', '--month-cap-usd', '5')!;
     expect(run.runId.startsWith('nightly:2026-11-09:master-')).toBe(true);
     expect(ledgerStatus({ ledgerPath: l, runId: run.runId }).run).toMatchObject({ budget_usd: 3, finished_at: null });
+  });
+
+  test('a --budget-run-id from another runner is refused', () => {
+    const l = ledger();
+    const other = BudgetRun.open({ runner: 'another-eval', budgetUsd: 10, ledgerPath: l });
+    expect(() => gate('--paid', '--budget-ledger', l, '--budget-run-id', other.runId)).toThrow(PaidArmRefusal);
+    expect(() => gate('--paid', '--budget-ledger', l, '--budget-run-id', other.runId)).toThrow('belongs to another-eval, not to a nightly run');
+  });
+
+  test('a --budget-run-id of a closed nightly run is refused', () => {
+    const l = ledger();
+    const closed = openNightRun({ ledgerPath: l, night: '2026-11-08', ref: 'master', nightCapUsd: 3, monthCapUsd: 50 }).runId;
+    closeNightRun(l, closed);
+    expect(() => gate('--paid', '--budget-ledger', l, '--budget-run-id', closed)).toThrow('is a closed nightly run');
+  });
+
+  test('the gate says whether the night opened its ledger run itself', () => {
+    const l = ledger();
+    const given = openNightRun({ ledgerPath: l, night: '2026-11-09', ref: 'matrix', nightCapUsd: 3, monthCapUsd: 50 }).runId;
+    expect(gate('--paid', '--budget-ledger', l, '--budget-run-id', given)).toMatchObject({ runId: given, opened: false });
+    expect(gate('--paid', '--budget-ledger', l, '--night', '2026-11-10', '--night-cap-usd', '3', '--month-cap-usd', '50')).toMatchObject({ opened: true });
   });
 
   test('run.ts refuses before it builds anything (exit 2)', () => {

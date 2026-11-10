@@ -3,16 +3,26 @@
  *
  *   bun eval/runner/nightly/bisect.ts --suite <id> --items <a,b,...> [--reader <model>] --good <sha> --bad <sha>
  *     --gbrain-clone <path> --out <dir> [--fake | --paid --budget-run-id <id> --budget-ledger <path>]
+ *     [--cat40-slot-allowance-usd <n>] [--pg-admin <url> [--pg-template <database>]] [--pg15-admin <url>]
  *
  * The range is the first-parent commits after --good up to --bad (the night's master), so a merged branch counts as the
  * one commit that brought it in, and about 4 steps cover a night's 16 commits. A commit is bad when at least half of the
  * firing items' trials fail there (the items passed on the good night and failed on the bad one). Each step is one
- * run.ts invocation on that commit with only those items; keyless suites cost machine time only, and a paid suite's steps
- * join the night's ledger run like any other paid work.
+ * run.ts invocation on that commit with only those items, with the settings its suite needs (Cat 40's slot allowance, the
+ * Postgres servers). Keyless suites cost machine time only. A paid bisect takes a nightly ledger run its caller opened
+ * (`ledger.ts open`), passes it to every step and leaves it to that caller to close (`ledger.ts close`).
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { readOutcomes } from './outcome.ts';
+
+/** The run.ts flags a bisect step takes from bisect's own: the paid flags, the reader and the settings its suite needs. */
+export function stepFlags(argv: readonly string[]): string[] {
+  const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+  return [...['--fake', '--paid'].filter(f => argv.includes(f)),
+    ...['--budget-run-id', '--budget-ledger', '--cat40-slot-allowance-usd', '--pg-admin', '--pg-template', '--pg15-admin'].flatMap(f => flag(f) ? [f, flag(f)!] : []),
+    ...(flag('--reader') ? ['--readers', flag('--reader')!] : [])];
+}
 
 export function firstParentCommits(clone: string, good: string, bad: string): string[] {
   return execFileSync('git', ['-C', clone, 'rev-list', '--first-parent', '--reverse', `${good}..${bad}`], { encoding: 'utf8' }).split('\n').filter(Boolean);
@@ -47,8 +57,7 @@ if (import.meta.main) {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const need = (name: string) => flag(name) ?? (() => { throw new Error(`${name} is required`); })();
   const suite = need('--suite'), items = need('--items').split(','), clone = resolve(need('--gbrain-clone')), out = resolve(need('--out'));
-  const passthrough = [...['--fake', '--paid'].filter(f => argv.includes(f)), ...['--budget-run-id', '--budget-ledger'].flatMap(f => flag(f) ? [f, flag(f)!] : []),
-    ...(flag('--reader') ? ['--readers', flag('--reader')!] : [])];
+  const passthrough = stepFlags(argv);
   const commits = firstParentCommits(clone, need('--good'), need('--bad'));
   const result = await bisect(commits, async sha => {
     const dir = join(out, sha.slice(0, 12));

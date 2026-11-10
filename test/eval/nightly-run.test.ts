@@ -10,12 +10,12 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
-import { cat40Commands, cat40DevSet, cat40Rows, episodeRows, judgeFor, qaCommand, qaRows, qualifiedModel, seedRanges, toolErrorFromText, trialRows, type NightContext, type SuiteRun } from '../../eval/runner/nightly/adapters.ts';
+import { cat40Commands, cat40DevSet, cat40Rows, episodeRows, judgeFor, latestRowPerItem, qaCommand, qaRows, smokeRows, qualifiedModel, seedRanges, toolErrorFromText, trialRows, type NightContext, type SuiteRun } from '../../eval/runner/nightly/adapters.ts';
 import { canonicalDigest, loadDevSet } from '../../eval/runner/nightly/devset.ts';
 import { NightlyCache } from '../../eval/runner/nightly/judge-cache.ts';
 import { keylessEnv } from '../../eval/runner/nightly/keyless.ts';
 import { readOutcomes } from '../../eval/runner/nightly/outcome.ts';
-import { parseArgs, planSuites, requirementGap } from '../../eval/runner/nightly/run.ts';
+import { main, parseArgs, planSuites, requirementGap } from '../../eval/runner/nightly/run.ts';
 import { isContentMiss, recordedCalls, replayItems } from '../../eval/runner/nightly/tool-contract.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -184,6 +184,37 @@ describe('reading runner records into outcome rows', () => {
     expect(out[0]!.evidence).toMatchObject({ kind: 'qa', judge: 'anthropic:claude-opus-5-5', reader_from_cache: true });
     const fake = qaRows(suiteRun('lme-s-hard', ['0a995998', '08f4fc43']), ctx({ fake: true }), 'fake', dir, null);
     expect(fake.map(r => [r.pass, r.score])).toEqual([[true, 1], [false, 0]]);
+  });
+
+  test('QA rows: a retried question keeps its newest non-harness row, not the failed first attempt', () => {
+    const dir = tmp();
+    const rows = [{ id: '0a995998', abstention: false, qa_error: 'anthropic 529' },
+      { id: '0a995998', abstention: false, recall_all_at_5: 1, recall_any_at_5: 1, qa_score: 1, qa_answer: 'Paris', retrieved: ['s1'] },
+      { id: '08f4fc43', abstention: false, qa_error: 'anthropic 529' }];
+    writeFileSync(join(dir, 'rows.ndjson'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+    const all = qaRows(suiteRun('lme-s-hard', ['0a995998', '08f4fc43']), ctx(), 'gpt-6.1-sol', dir, 'anthropic:claude-opus-5-5');
+    expect(latestRowPerItem(all, ['0a995998', '08f4fc43']).map(r => [r.item, r.pass, r.harness?.error ?? null])).toEqual([['0a995998', true, null], ['08f4fc43', false, 'anthropic 529']]);
+  });
+
+  test('smokes: a harness_* code means the smoke could not run, so its row is a harness row and never a gbrain failure', () => {
+    const rows = smokeRows(suiteRun('system-smokes', ['managed-sync', 'postgres-15', 'query-contract', 'upgrade-from-old']), ctx(), [
+      { id: 'managed-sync', pass: false, code: 'harness_error', detail: 'TypeError', ms: 1 },
+      { id: 'postgres-15', pass: false, code: 'harness_missing_postgres', detail: 'postgres-15 needs both servers', ms: 1 },
+      { id: 'query-contract', pass: false, code: 'contract_broken', detail: 'a gbrain failure', ms: 1 },
+      { id: 'upgrade-from-old', pass: true, code: null, detail: '', ms: 1 }]);
+    expect(rows.map(r => [r.item, r.pass, r.harness?.error ?? null])).toEqual([['managed-sync', false, 'harness_error: TypeError'],
+      ['postgres-15', false, 'harness_missing_postgres: postgres-15 needs both servers'], ['query-contract', false, null], ['upgrade-from-old', true, null]]);
+  });
+
+  test('a fresh run into a night directory that already holds night.json is refused and points to --resume', async () => {
+    const clone = tmp();
+    const git = (...args: string[]) => execFileSync('git', ['-C', clone, '-c', 'user.name=Example', '-c', 'user.email=example@example.invalid', ...args]);
+    git('init', '-q', '-b', 'master');
+    git('commit', '-q', '--allow-empty', '-m', 'fixture');
+    const out = tmp();
+    mkdirSync(join(out, '2026-11-09', 'master'), { recursive: true });
+    writeFileSync(join(out, '2026-11-09', 'master', 'night.json'), '{}\n');
+    await expect(main(['--ref', 'master', '--tier', 'nightly', '--fake', '--out', out, '--gbrain-clone', clone, '--night', '2026-11-09'])).rejects.toThrow('already holds a night; resume it with');
   });
 });
 

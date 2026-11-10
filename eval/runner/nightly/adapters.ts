@@ -77,8 +77,9 @@ export function envFor(ctx: Pick<NightContext, 'fake' | 'paid'>, suite: Pick<Sui
 
 const paidFlags = (ctx: NightContext, suite: Suite) => (!ctx.fake && ctx.paid && callsModels(suite) ? ['--budget-run-id', ctx.paid.runId, '--budget-ledger', ctx.paid.ledger] : []);
 
-/** Run a child in its own process group, log to a file, and kill the group when the night is aborted. */
+/** Run a child in its own process group, log to a file, and kill the group when the night is aborted; once aborted, start none. */
 export async function runChild(o: { cmd: string[]; env: Record<string, string>; log: string; signal?: AbortSignal; cwd?: string }): Promise<{ code: number | null; signal: string | null; tail: string }> {
+  if (o.signal?.aborted) return { code: null, signal: 'aborted', tail: 'not started: the night was aborted' };
   mkdirSync(dirname(o.log), { recursive: true });
   const fd = openSync(o.log, 'a');
   const proc = spawn(o.cmd[0]!, o.cmd.slice(1), { cwd: o.cwd ?? REPO, env: o.env, stdio: ['ignore', fd, fd], detached: true });
@@ -363,6 +364,13 @@ function goldAnswers(benchmark: string, items: string[]): Map<string, unknown> |
   } catch { return null; }
 }
 
+/** One row per item: memory-qa appends a retry's row after the failed one, so the newest non-harness row is current. */
+export const latestRowPerItem = (rows: Outcome[], ids: readonly string[]): Outcome[] => ids.flatMap(id => {
+  const mine = rows.filter(r => r.item === id);
+  const pick = mine.filter(r => !r.harness).at(-1) ?? mine.at(-1);
+  return pick ? [pick] : [];
+});
+
 export const qaAdapter: Adapter = async (run, ctx) => {
   const readers = ctx.fake ? ['fake'] : run.readers.filter((r): r is string => r !== null);
   const results = await Promise.all(readers.map(async reader => {
@@ -378,7 +386,7 @@ export const qaAdapter: Adapter = async (run, ctx) => {
     if (judge) recordQaCaches(rows, ctx, reader, judge, goldAnswers(String(run.suite.config?.benchmark), run.items.map(i => i.id)));
     const receipt = existsSync(join(out, 'receipt.json')) ? JSON.parse(readFileSync(join(out, 'receipt.json'), 'utf8')) as Record<string, any> : null;
     const capStop = receipt?.summary?.stopped === 'budget';
-    const all = run.items.map(i => i.id).flatMap(id => rows.filter(x => x.item === id).slice(0, 1));
+    const all = latestRowPerItem(rows, run.items.map(i => i.id));
     return { rows: [...all, ...missingRows(run, ctx, reader, all, r.code === 0 ? 'no row recorded' : `memory-qa exited ${r.code ?? r.signal}: ${r.tail.split('\n').at(-1)}`)], ok: r.code === 0, capStop, tail: r.tail };
   }));
   const bad = results.filter(r => !r.ok);
@@ -420,11 +428,17 @@ export const smokesAdapter: Adapter = async (run, ctx) => {
     env: keylessEnv(), log: join(dir, 'smokes.log'), signal: ctx.signal });
   if (r.code === 4) return { status: 'not_built', reason: r.tail.split('\n').at(-1), rows: [] };
   if (r.code !== 0 || !existsSync(result)) return { status: 'error', reason: `the smokes exited ${r.code ?? r.signal}: ${r.tail.split('\n').at(-1)}`, rows: missingRows(run, ctx, null, [], 'the smokes did not finish') };
-  const results = JSON.parse(readFileSync(result, 'utf8')) as Array<{ id: string; pass: boolean; code: string | null; detail: string; ms: number }>;
-  const rows = results.filter(s => run.items.some(i => i.id === s.id)).map(s => outcome(run, ctx, { item: s.id, pass: s.pass, score: s.pass ? 1 : 0, stop: s.code ?? (s.pass ? 'pass' : 'fail'),
-    evidence: { kind: 'smoke', code: s.code, detail: s.detail, ms: s.ms } }));
+  const rows = smokeRows(run, ctx, JSON.parse(readFileSync(result, 'utf8')) as SmokeResult[]);
   return { status: 'ran', rows: [...rows, ...missingRows(run, ctx, null, rows, 'the smoke did not report')] };
 };
+
+export interface SmokeResult { id: string; pass: boolean; code: string | null; detail: string; ms: number }
+
+/** Outcome rows from the smokes' results; a `harness_*` code means the smoke could not run, so its row is a harness row. */
+export function smokeRows(run: SuiteRun, ctx: Pick<NightContext, 'night' | 'ref' | 'sha'>, results: SmokeResult[]): Outcome[] {
+  return results.filter(s => run.items.some(i => i.id === s.id)).map(s => outcome(run, ctx, { item: s.id, pass: s.pass, score: s.pass ? 1 : 0, stop: s.code ?? (s.pass ? 'pass' : 'fail'),
+    evidence: { kind: 'smoke', code: s.code, detail: s.detail, ms: s.ms }, harness: !s.pass && s.code?.startsWith('harness_') ? { error: `${s.code}: ${s.detail}`.slice(0, 300) } : null }));
+}
 
 export const ADAPTERS: Record<string, Adapter> = {
   'cat40-hard-m': cat40Adapter, 'refresh-barrier-agents': agentsAdapter, 'refused-write-agents': agentsAdapter, 'concurrent-writers': trialsAdapter,
