@@ -1,7 +1,7 @@
 {
  "schema": "nightly-item-support/1",
  "suite": "beam-1m-hard",
- "about": "Whether each beam-1m-hard item's reference answer is supported by the turns it cites, from the BEAM support check (eval/custody/rs1/validate.ts as of branch rs1-narrow-results at cf73d324, sha256 7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e, validators gemini-3.8-flash and claude-haiku-5-5, an empty public index). A gate support:<validator> means that validator found the answer unsupported; uncited, or cited 0, means the item cites no turn. Read by eval/runner/nightly/item-support.ts; kept out of the dev set so the suite digest is unchanged.",
+ "about": "Whether each beam-1m-hard item's reference answer is supported by the turns it cites, from the BEAM support check (eval/custody/rs1/validate.ts as of branch rs1-narrow-results at cf73d324, sha256 7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e, validators gemini-3.8-flash and claude-haiku-5-5, an empty public index). A gate support:<validator> means that validator found the answer unsupported; uncited, or cited 0, means the item cites no turn. An item counts as unsupported only when both validators reject it, or it cites no turn, and the every-gold-session arm (oracle) fails it too. Read by eval/runner/nightly/item-support.ts; kept out of the dev set so the suite digest is unchanged.",
  "validators": [
   "gemini:gemini-3.8-flash",
   "anthropic:claude-haiku-5-5"
@@ -14,17 +14,23 @@
   },
   "beam-nightly-check": {
    "note": "The same kit and validate.ts run on 2026-11-11 over the 1m-25 items GST-2339 did not list, from BEAM b2da22e files checked against eval/decisions/datasets/beam-b2da22e.json. Its analysis-full.json (ids and gates only) has sha256 41e62f25f6865d1f18d52f68b22f528df71717cc34720cd5d71bfcc9d89cebd2."
+  },
+  "oracle": {
+   "file": "docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/a4-oracle-gpt61sol/shard-*/rows.ndjson.gz",
+   "note": "The October BEAM arm given every gold session (a4-oracle-gpt61sol, gpt-6.1-sol reader). oracle is pass when its qa_score is at least 0.5, else fail. The arm ran before the 8,192-token output limit, so its fails may include truncation."
   }
  },
  "items": {
   "1m-24:abstention:0": {
    "checked": false,
    "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-24:abstention:1": {
    "checked": false,
    "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-24:contradiction_resolution:0": {
@@ -35,6 +41,7 @@
    },
    "gates": [],
    "cited": 2,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:contradiction_resolution:1": {
@@ -45,6 +52,7 @@
    },
    "gates": [],
    "cited": 4,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:event_ordering:0": {
@@ -57,6 +65,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 9,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:event_ordering:1": {
@@ -70,6 +79,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 19,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:information_extraction:0": {
@@ -80,6 +90,7 @@
    },
    "gates": [],
    "cited": 1,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:information_extraction:1": {
@@ -90,6 +101,7 @@
    },
    "gates": [],
    "cited": 4,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:instruction_following:0": {
@@ -100,6 +112,7 @@
    },
    "gates": [],
    "cited": 1,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:instruction_following:1": {
@@ -110,6 +123,7 @@
    },
    "gates": [],
    "cited": 1,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:knowledge_update:0": {
@@ -123,6 +137,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 4,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:knowledge_update:1": {
@@ -136,6 +151,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 1,
+   "oracle": "fail",
    "source": "gst2339"
   },
   "1m-24:multi_session_reasoning:0": {
@@ -149,6 +165,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 5,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:multi_session_reasoning:1": {
@@ -162,6 +179,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 3,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:preference_following:0": {
@@ -172,6 +190,7 @@
    },
    "gates": [],
    "cited": 3,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:preference_following:1": {
@@ -182,6 +201,7 @@
    },
    "gates": [],
    "cited": 3,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:summarization:0": {
@@ -195,6 +215,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 10,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:summarization:1": {
@@ -205,6 +226,7 @@
    },
    "gates": [],
    "cited": 21,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:temporal_reasoning:0": {
@@ -215,6 +237,7 @@
    },
    "gates": [],
    "cited": 6,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-24:temporal_reasoning:1": {
@@ -225,16 +248,19 @@
    },
    "gates": [],
    "cited": 5,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-25:abstention:0": {
    "checked": false,
    "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:abstention:1": {
    "checked": false,
    "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:contradiction_resolution:0": {
@@ -245,6 +271,7 @@
    },
    "gates": [],
    "cited": 4,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:contradiction_resolution:1": {
@@ -255,6 +282,7 @@
    },
    "gates": [],
    "cited": 3,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:event_ordering:0": {
@@ -265,6 +293,7 @@
    },
    "gates": [],
    "cited": 35,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:event_ordering:1": {
@@ -275,6 +304,7 @@
    },
    "gates": [],
    "cited": 26,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:information_extraction:0": {
@@ -288,6 +318,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 1,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:information_extraction:1": {
@@ -298,6 +329,7 @@
    },
    "gates": [],
    "cited": 2,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:instruction_following:0": {
@@ -308,6 +340,7 @@
    },
    "gates": [],
    "cited": 1,
+   "oracle": "fail",
    "source": "beam-nightly-check"
   },
   "1m-25:instruction_following:1": {
@@ -318,6 +351,7 @@
    },
    "gates": [],
    "cited": 1,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:knowledge_update:0": {
@@ -328,6 +362,7 @@
    },
    "gates": [],
    "cited": 6,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:knowledge_update:1": {
@@ -338,6 +373,7 @@
    },
    "gates": [],
    "cited": 5,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:multi_session_reasoning:0": {
@@ -350,6 +386,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 2,
+   "oracle": "fail",
    "source": "beam-nightly-check"
   },
   "1m-25:multi_session_reasoning:1": {
@@ -360,6 +397,7 @@
    },
    "gates": [],
    "cited": 8,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:preference_following:0": {
@@ -370,6 +408,7 @@
    },
    "gates": [],
    "cited": 3,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:preference_following:1": {
@@ -380,6 +419,7 @@
    },
    "gates": [],
    "cited": 3,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:summarization:0": {
@@ -390,6 +430,7 @@
    },
    "gates": [],
    "cited": 64,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:summarization:1": {
@@ -403,6 +444,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 11,
+   "oracle": "fail",
    "source": "beam-nightly-check"
   },
   "1m-25:temporal_reasoning:0": {
@@ -413,6 +455,7 @@
    },
    "gates": [],
    "cited": 4,
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-25:temporal_reasoning:1": {
@@ -426,16 +469,19 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 6,
+   "oracle": "fail",
    "source": "beam-nightly-check"
   },
   "1m-2:abstention:0": {
    "checked": false,
    "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-2:abstention:1": {
    "checked": false,
    "reason": "abstention cites no turn by design, so the support check leaves it out",
+   "oracle": "pass",
    "source": "beam-nightly-check"
   },
   "1m-2:contradiction_resolution:0": {
@@ -449,6 +495,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 2,
+   "oracle": "fail",
    "source": "gst2339"
   },
   "1m-2:contradiction_resolution:1": {
@@ -462,6 +509,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 2,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:event_ordering:0": {
@@ -475,6 +523,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 13,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:event_ordering:1": {
@@ -485,6 +534,7 @@
    },
    "gates": [],
    "cited": 15,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:information_extraction:0": {
@@ -495,6 +545,7 @@
    },
    "gates": [],
    "cited": 1,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:information_extraction:1": {
@@ -507,6 +558,7 @@
     "support:anthropic:claude-haiku-5-5"
    ],
    "cited": 2,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:instruction_following:0": {
@@ -517,6 +569,7 @@
    },
    "gates": [],
    "cited": 2,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:instruction_following:1": {
@@ -527,6 +580,7 @@
    },
    "gates": [],
    "cited": 1,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:knowledge_update:0": {
@@ -537,6 +591,7 @@
    },
    "gates": [],
    "cited": 3,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:knowledge_update:1": {
@@ -547,6 +602,7 @@
    },
    "gates": [],
    "cited": 2,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:multi_session_reasoning:0": {
@@ -557,6 +613,7 @@
    },
    "gates": [],
    "cited": 5,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:multi_session_reasoning:1": {
@@ -567,6 +624,7 @@
    },
    "gates": [],
    "cited": 14,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:preference_following:0": {
@@ -579,6 +637,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 1,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:preference_following:1": {
@@ -589,6 +648,7 @@
    },
    "gates": [],
    "cited": 3,
+   "oracle": "pass",
    "source": "gst2339"
   },
   "1m-2:summarization:0": {
@@ -599,6 +659,7 @@
    },
    "gates": [],
    "cited": 33,
+   "oracle": "fail",
    "source": "gst2339"
   },
   "1m-2:summarization:1": {
@@ -609,6 +670,7 @@
    },
    "gates": [],
    "cited": 30,
+   "oracle": "fail",
    "source": "gst2339"
   },
   "1m-2:temporal_reasoning:0": {
@@ -619,6 +681,7 @@
    },
    "gates": [],
    "cited": 2,
+   "oracle": "fail",
    "source": "gst2339"
   },
   "1m-2:temporal_reasoning:1": {
@@ -631,6 +694,7 @@
     "support:gemini:gemini-3.8-flash"
    ],
    "cited": 2,
+   "oracle": "pass",
    "source": "gst2339"
   }
  }

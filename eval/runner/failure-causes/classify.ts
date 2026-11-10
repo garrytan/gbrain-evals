@@ -7,7 +7,7 @@
  * error the cut produced. Two suite causes come next, for questions no system
  * can pass whatever retrieval and ranking did: an item whose cited gold doesn't
  * support its reference answer (both support validators reject it, or it cites no
- * turn) is item_unsupported, then a question that needs more gold than its run
+ * turn, and the arm given every gold session fails it) is item_unsupported, then a question that needs more gold than its run
  * gives the reader (gold_count above reader_budget) is reader_budget. A row with no
  * support record or no recorded budget labels as before. A scorer artifact is primary only when it is the row's
  * only signal, so it never hides a real failure. A failure with no signal

@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { gzipSync } from 'node:zlib';
+import { gunzipSync, gzipSync } from 'node:zlib';
 import { ADAPTERS, classify, loadSource, nightlyFailure, validateManifest, SOURCES_SCHEMA } from '../../eval/runner/failure-causes/index.ts';
 import { cat40Calls, cat40Fields, namesSlug } from '../../eval/runner/failure-causes/adapters/cat40.ts';
 import { fileText, sha256, tarFiles, type LoadedFile } from '../../eval/runner/failure-causes/manifest.ts';
@@ -351,7 +351,7 @@ describe('nightly adapter', () => {
     expect(ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows), facts], entry('n', 'nightly')).failures.map(f => f.gold.reader_budget)).toEqual([null, null, null, null, null]);
   });
 
-  test('a BEAM item both support validators reject is item_unsupported, with its support record as evidence; one validator, no record or a cut-off answer label as before', () => {
+  test('a BEAM item both support validators reject and the oracle arm fails is item_unsupported, with its support record as evidence; an oracle pass, one validator, no record or a cut-off answer label as before', () => {
     const beam = { schema: 'nightly-outcome/1', night: '2026-11-10', suite: 'beam-1m-hard', suite_digest: 'd', role: 'headroom', ref: 'master', sha, trial: 1, pass: false, score: 0,
       cost_usd: null, stop: 'answered', tool_errors: [], evidence: {}, harness: null, system: 'gbrain', arm: 'beam-1m-hard@master', arm_role: 'gbrain_default', condition: 'natural',
       visibility: 'public', agent_loop: false, category: 'contradiction_resolution', answered: true, finish_reason: 'stop', reader: 'claude-opus-5-5', gold_count: 2, retrieved: 'partial', delivered: 'partial' };
@@ -361,6 +361,7 @@ describe('nightly adapter', () => {
       { ...beam, item: '1m-2:not_an_item:0' },
       { ...beam, item: '1m-2:contradiction_resolution:0', reader: 'gpt-6.1-sol', finish_reason: 'max_tokens' },
       { ...beam, suite: 'lme-s-hard', arm: 'lme-s-hard@master', item: '1m-2:contradiction_resolution:0' },
+      { ...beam, item: '1m-24:knowledge_update:0' },
     ];
     const out = ADAPTERS.nightly([mem('n/outcomes.jsonl', 'outcomes', rows)], entry('n', 'nightly'));
     expect(out.failures.map(f => { const l = classify(f); return [f.gold.unsupported, l.cause, l.rule_id]; })).toEqual([
@@ -368,6 +369,7 @@ describe('nightly adapter', () => {
       [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
       [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
       ['both_validators', 'harness_error', 'harness.output_truncated'],
+      [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
       [null, 'partial_evidence', 'retrieval.partial_gold_retrieved'],
     ]);
     expect(out.failures[0]!.evidence[1]).toMatch(/^repo:eval\/data\/nightly\/beam-1m-hard-support\.json#[0-9a-f]{8} 1m-2:contradiction_resolution:0$/);
@@ -429,15 +431,19 @@ describe('source manifests', () => {
 });
 
 describe('item support records', () => {
-  test('an item is unsupported when both validators reject it or it cites no turn; one validator, an unchecked item, or a missing item or file is not', () => {
+  test('an item is unsupported when both validators reject it or it cites no turn and the oracle arm fails it; one validator, an oracle pass or no oracle verdict, an unchecked item, or a missing item or file is not', () => {
     const dir = mkdtempSync(join(tmpdir(), 'fc-support-'));
     const validators = ['gemini:g', 'anthropic:h'];
+    const both = ['support:anthropic:h', 'support:gemini:g'];
     writeFileSync(join(dir, 's-support.json'), JSON.stringify({ schema: 'nightly-item-support/1', suite: 's', validators, items: {
-      both: { checked: true, gates: ['support:anthropic:h', 'support:gemini:g'], cited: 2, source: 'x' }, one: { checked: true, gates: ['support:gemini:g'], cited: 2, source: 'x' },
-      uncited: { checked: true, gates: ['uncited'], cited: 0, source: 'x' }, zero: { checked: true, gates: [], cited: 0, source: 'x' },
-      abstention: { checked: false, reason: 'abstention cites no turn', source: 'x' } } }));
+      both: { checked: true, gates: both, cited: 2, oracle: 'fail', source: 'x' }, one: { checked: true, gates: ['support:gemini:g'], cited: 2, oracle: 'fail', source: 'x' },
+      uncited: { checked: true, gates: ['uncited'], cited: 0, oracle: 'fail', source: 'x' }, zero: { checked: true, gates: [], cited: 0, oracle: 'fail', source: 'x' },
+      oracle_pass: { checked: true, gates: both, cited: 2, oracle: 'pass', source: 'x' }, uncited_oracle_pass: { checked: true, gates: ['uncited'], cited: 0, oracle: 'pass', source: 'x' },
+      no_oracle: { checked: true, gates: both, cited: 2, source: 'x' },
+      abstention: { checked: false, reason: 'abstention cites no turn', oracle: 'fail', source: 'x' } } }));
     const why = (item: string, suite = 's') => itemUnsupported(suite, item, dir)?.why ?? null;
-    expect(['both', 'one', 'uncited', 'zero', 'abstention', 'missing'].map(i => why(i))).toEqual(['both_validators', null, 'uncited', 'uncited', null, null]);
+    expect(['both', 'one', 'uncited', 'zero', 'oracle_pass', 'uncited_oracle_pass', 'no_oracle', 'abstention', 'missing'].map(i => why(i)))
+      .toEqual(['both_validators', null, 'uncited', 'uncited', null, null, null, null, null]);
     expect(why('both', 'other')).toBeNull();
     expect(itemUnsupported('s', 'both', dir)!.at).toMatch(/^repo:eval\/data\/nightly\/s-support\.json#[0-9a-f]{8} both$/);
     writeFileSync(join(dir, 'bad-support.json'), JSON.stringify({ schema: 'nightly-item-support/1', suite: 'other', validators, items: {} }));
@@ -456,5 +462,21 @@ describe('item support records', () => {
       if (pub.has(id)) expect([x.gates, x.cited]).toEqual([[...pub.get(id)!.gates].sort(), pub.get(id)!.cited]);
     }
     expect(itemUnsupported('beam-1m-hard', '1m-2:contradiction_resolution:0')?.why).toBe('both_validators');
+  });
+
+  test('the committed record\'s oracle verdicts repeat the every-gold-session arm\'s scores, and only the 4 items both validators reject and that arm fails are unsupported', () => {
+    const rec = JSON.parse(readFileSync('eval/data/nightly/beam-1m-hard-support.json', 'utf8')) as { sources: { oracle: { file: string } }; items: Record<string, { oracle: string }> };
+    const arm = rec.sources.oracle.file.replace('/shard-*/rows.ndjson.gz', '');
+    const scores = new Map<string, number>();
+    for (const shard of readdirSync(arm).filter(s => s.startsWith('shard-'))) {
+      for (const line of gunzipSync(readFileSync(join(arm, shard, 'rows.ndjson.gz'))).toString('utf8').split('\n').filter(Boolean)) {
+        const r = JSON.parse(line) as { id: string; qa_score: number };
+        scores.set(r.id, r.qa_score);
+      }
+    }
+    for (const [id, x] of Object.entries(rec.items)) expect([id, x.oracle]).toEqual([id, scores.get(id)! >= 0.5 ? 'pass' : 'fail']);
+    expect(Object.keys(rec.items).filter(id => itemUnsupported('beam-1m-hard', id)).sort())
+      .toEqual(['1m-24:knowledge_update:1', '1m-25:summarization:1', '1m-25:temporal_reasoning:1', '1m-2:contradiction_resolution:0']);
+    expect(itemUnsupported('beam-1m-hard', '1m-24:knowledge_update:0')).toBeNull();
   });
 });

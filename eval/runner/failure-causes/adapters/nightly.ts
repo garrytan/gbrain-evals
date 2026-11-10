@@ -28,7 +28,7 @@
  * the row, reader_budget stays null.
  *
  * gold.unsupported comes from the suite's per-item support record (eval/runner/nightly/item-support.ts): both support
- * validators reject the item, or it cites no turn. The record joins the row's evidence. An item with no record, or one
+ * validators reject the item, or it cites no turn, and the arm given every gold session fails it. The record joins the row's evidence. An item with no record, or one
  * that only one validator rejects, stays null.
  */
 import { itemUnsupported } from '../../nightly/item-support.ts';

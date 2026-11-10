@@ -327,7 +327,7 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
   lines.push(`Tier ${m.tier}${m.fake ? ', fake providers (plumbing only; no number here measures a model)' : ''}. Dev set ${m.devset.digest.slice(0, 12)}. Causes: failure-cause taxonomy ${TAXONOMY_VERSION}.`, '');
   lines.push(flags.length ? `**${flags.length} flags.**` : '**No flags.**', '');
   for (const f of flags) lines.push(`- ${f.kind} (vs ${f.against}) ${f.suite} ${f.reader ?? 'keyless'}: ${f.detail}${f.items ? `: ${f.items.join(', ')}` : ''}`);
-  if (unsupported.length) lines.push('', `Item-unsupported: ${unsupported.length} failed rows on ${unsupportedItems.length} items whose cited turns don't support the reference answer (both support validators reject it) or that cite no turn. They count as \`item_unsupported\`, not as gbrain failures, and stay out of the flags: ${unsupportedItems.join(', ')}.`);
+  if (unsupported.length) lines.push('', `Item-unsupported: ${unsupported.length} failed rows on ${unsupportedItems.length} items whose cited turns don't support the reference answer (both support validators reject it) or that cite no turn, and that the arm given every gold session fails. They count as \`item_unsupported\`, not as gbrain failures, and stay out of the flags: ${unsupportedItems.join(', ')}.`);
   lines.push('', '## Suites', '', '| Suite | Reader | Items | Trials | pass^1 | pass^k | Harness | Cost per correct | Failures by cause |', '|---|---|---|---|---|---|---|---|---|');
   for (const s of m.suites) {
     const mine = cells.filter(c => c.suite === s.id);
