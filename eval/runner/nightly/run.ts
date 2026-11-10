@@ -41,8 +41,8 @@
  * --budget-run-id belongs to its opener, which closes it (ledger.ts close). A stop exits with a code and the line to resume:
  *   3 NIGHTLY_CAP_STOP  the night's ledger run or the 30-night cap is spent; paid suites stopped where they were
  *   4 NIGHTLY_VM_LOST   the runner was signalled (the machine is going away); running children were killed
- *   5 NIGHTLY_HARNESS   a suite failed to run or recorded harness or provider failures a resume can redo; its rows are
- *                       counted apart
+ *   5 NIGHTLY_HARNESS   a suite failed to run or recorded harness or provider failures other than cut-off answers; its
+ *                       rows are counted apart
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

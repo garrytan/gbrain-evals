@@ -66,8 +66,8 @@ The QA reader may write up to 8,192 output tokens per answer. The limit is `qa_m
 so it is part of the suite digest, and memory-qa's receipt records the limit it sent. 8,192 is what the BEAM rows of
 the file agent (a model with list, grep and read tools over the sessions as files) give Claude on every turn, and at
 half that no frontier answer on BEAM-1M dev reached the limit ([S1 fixes](benchmarks/2026-10-12-beam-1m-s1-fixes.md)). memory-qa's own default is 1,024 tokens, and Claude's
-adaptive thinking counts against it: on one matrix night at that default, 19 of Opus's 25 BEAM failures were answers
-cut off before they finished. particle-1 keeps its own floor of 16,000 tokens.
+adaptive thinking counts against it. On the 2026-11-10 master night, at that default, 19 of Opus's 25 BEAM failures
+were answers cut off before they finished. particle-1 keeps its own floor of 16,000 tokens.
 
 ## What the report shows
 
@@ -177,7 +177,7 @@ The runner exits with a code and prints the command that resumes the night:
 |---|---|---|
 | 3 | `NIGHTLY_CAP_STOP` | The night's ledger run has no budget left. Paid suites stopped where they were. |
 | 4 | `NIGHTLY_VM_LOST` | The runner was signalled because the machine is going away. Running children were killed. |
-| 5 | `NIGHTLY_HARNESS` | A suite failed to run, or recorded harness or provider failures that a resume can redo. Those rows are counted apart. |
+| 5 | `NIGHTLY_HARNESS` | A suite failed to run, or recorded harness or provider failures other than cut-off answers. Those rows are counted apart. |
 
 A refused paid run exits 2, and any other error exits 1.
 
@@ -239,7 +239,8 @@ The QA suites' reader output limit went from memory-qa's 1,024-token default to 
 `qa_max_tokens`, because at 1,024 most of Opus's BEAM failures were answers cut off before they finished. The change
 gives `lme-s-hard` and `beam-1m-hard` new suite digests, so both start a new baseline. An answer cut off at its output
 limit is now a harness row, on old nights' rows too, and every row records a finish reason, null where its suite records
-none. A cut-off answer doesn't end a night with exit 5 or get rerun by a resume, which would only repeat it.
+none. A cut-off answer doesn't end a night with exit 5 or get rerun by a resume, which would only repeat it. The weekly
+failure-cause output counts every harness row as a failure, even one its judge passed, as this report already did.
 
 ### 2026-11-10: particle-1's agreement with Opus
 
