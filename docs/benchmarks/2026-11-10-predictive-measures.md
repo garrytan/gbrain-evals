@@ -476,8 +476,11 @@ contrast no room, as the batch 3 section shows.
 - **Paired intervals.** Percentile bootstrap over tasks, 10,000 resamples, seed 2005.
 - **Raw files**, under [`predictive-measures/`](predictive-measures/):
   - `g1/`, `g3/`, `g4/` and `g6/`: each run's `scorecard.json` (the runner's summary without its spending ledger) and
-    `episodes.jsonl.gz` (every episode, with its answer, cause and usage). Temporary directory paths inside agent
-    answers read `<tmp>/`, as in every receipt this repository publishes.
+    `episodes.jsonl.gz` (every episode, with its answer, cause and usage). In 70 of G3's 1,440 episodes an agent's
+    text names a temporary directory on the run's VM, 71 times in all. The published file rewrites each `/tmp/` to
+    `<tmp>/`, as this repository's receipt writer does for every receipt, so it passes the machine-path check. Nothing
+    else changed, in G3 or in the other three files: rescoring the published episodes with the runner's own scorer
+    gives scorecards byte-identical to the counted runs'.
   - `g2/real-593/`: the counted batch 2 scorecard; `g2/secondary/`: the seven secondary scorecards.
   - `batch3-synthetic-641/`: the synthetic batch 3 scorecard. The real one is the
     [`live-recall-b3` reference](2026-11-10-live-recall-batch3/b3-641-scorecard.md).
