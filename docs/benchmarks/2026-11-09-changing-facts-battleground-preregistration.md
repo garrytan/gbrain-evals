@@ -583,6 +583,24 @@ same code. The restarted campaign's hash is `9a63064f7759`.
 
 The runner's packing, meaning what it uploads to a VM, gets its own fix before stage 2.
 
+### Deviation 2 (2026-11-10): stage 1's cost stop tripped on the full-context reference
+
+Stage 1's full-context reference stopped at its lease partway through the second of the three dev worlds. Projected to
+the end, its cost puts stage 1 past the check-in line in "Stage 1", so the preregistered stop applied, and GBEV-3
+decided on 2026-11-10. The units already running finish under their own leases. The reference then resumes from its
+checkpoint, which keeps every answer and judgment already recorded, inside the unchanged campaign cap, so no world or
+reader is dropped. If the cap can't then hold the judge check and the particle-1 re-reads, neither is cut, and GBEV-3
+decides on a raise.
+
+The cost came from the GPT-6.1 Sol reads. They missed the prompt cache on every read, while the Opus reads hit it, and
+the cause is being diagnosed. Until it's fixed, stage 1's Sol cost figures for the full-context reference, including
+cost per correct answer, carry a note saying so. Stage 2's estimate uses the rate measured after the fix. Stage 1's
+executed tree stays frozen.
+
+Separately, one unit's first VM stalled while installing its system's dependencies, before its cell command started.
+It was stopped, its lease was closed at no charge through the unstarted path, and the unit was relaunched as a second
+attempt. No provider call was made under the first attempt.
+
 ### Expected amendments
 
 The expected ones, each dated and committed before the cells it governs:
@@ -591,7 +609,9 @@ The expected ones, each dated and committed before the cells it governs:
 - the world end;
 - any R61 ceiling change and generator fixes from the gold audit;
 - the repricing;
-- wave B's cells once N_final is known.
+- wave B's cells once N_final is known;
+- the stage 2 freeze, whose campaign hash covers every data path its cells read, the worlds included, or records a
+  sha256 manifest for any path custody keeps out of the hash.
 
 ## Disclosures
 
