@@ -315,6 +315,23 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
   to 7.7 points ([stage 0 finding](docs/benchmarks/2026-11-04-rs1-stage0.md)). A narrowed version now tests that claim
   ([preregistration](docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md)): about 28 new conversations, at most 33,
   ask whether gbrain's stable release is at most 3.5 points behind each of those two servers under both judges.
+- Between a quarter and a half of BEAM's questions can't be answered from their conversation as written, and the share
+  rises with length. For 27.5% of the cited questions behind our BEAM results at 100,000 tokens, 31.3% at 500,000,
+  33.5% at 1 million and 52.2% at 10 million (1,521 in all), at least one of two validator models finds the reference
+  answer unsupported by the turns the question cites, or no cited turn exists; abstention questions cite nothing and
+  weren't checked. Rescored on only the questions both validators pass, with each result's published judge, no
+  published verdict changes. The BEAM-10M gap to the file agent holds at about 7.5 points with a wider interval: -7.5
+  (95% interval -19.5 to +4.2) on 86 questions, against -8.7 (-16.4 to -1.4) on 198. Paired gaps move less than
+  absolute scores but get noisier: the head-to-head's BEAM-10M scores rise 8.5 to 11.5 points for most memory systems,
+  while its gaps move a median of 2.8 points and their intervals get a median of 1.4 times wider. Some descriptive
+  comparisons move both ways. Seven of gbrain's descriptive gains no longer exclude zero: against the verbatim-session
+  system and hybrid search on BEAM-10M at 8,000 tokens, those two and the temporal-graph library on its 2,000-token
+  sweep subset, and in the newer rerun the memory-bank server on BEAM-10M and the knowledge-graph pipeline on BEAM-1M
+  sealed. A new descriptive loss appears on BEAM-100K sealed, to the knowledge-graph pipeline at 8,000 tokens (-5.3,
+  -9.7 to -0.8). The two BEAM losses listed under the scoreboard no longer exclude zero, and three gains newly exclude
+  it, two of them only when every question either validator rejects is left out. The memory-bank server's sealed run
+  and wave 2's 100,000- and 1-million-token strata can't be rescored, and the frontier-judge results aren't covered
+  ([item-support findings](docs/benchmarks/2026-11-10-beam-item-support.md)).
 - Nothing here measures whether a skill optimizer improves gbrain's shipped skills. On a task set built to leave room,
   Claude Opus 5.5 with no skill already answers 36 of 36 `query` and 35 of 36 `briefing` tasks in its sealed test set,
   so the SkillOpt optimizer benchmark is retired. Garry Tan also decided to deprecate gbrain's iterative SkillOpt loop
@@ -424,6 +441,17 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-10: A known limit on BEAM questions their own conversations don't support
+
+Known limits gains one bullet: between a quarter and a half of the cited BEAM questions behind our results (27.5% at
+100,000 tokens to 52.2% at 10 million) have a reference answer that the turns they cite don't support, by at least one
+of two validator models, and rescoring every published BEAM result we can on only the questions both validators pass
+changes no published verdict. The bullet gives the BEAM-10M file-agent gap on those questions (-7.5 points, -19.5 to
++4.2, against the published -8.7, -16.4 to -1.4), the descriptive comparisons that lose or gain separation in both
+directions, and the results that can't be rescored. No number in the tables changed, and the scoreboard block stays as
+its receipt renders it. Why: the numbers we publish on BEAM carry this noise, and readers should know how much it
+moves them ([item-support findings](docs/benchmarks/2026-11-10-beam-item-support.md)).
 
 ### 2026-11-10: The whole-history cost comparison is for one question per history
 
