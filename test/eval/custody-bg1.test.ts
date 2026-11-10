@@ -10,7 +10,7 @@ import { createHash } from 'node:crypto';
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
-import { BG1_CUSTODY_MARKER, BG1_DEV_SEEDS, BG1_FIXTURE_TOKENS, PUBLIC_PHRASING, renderBriefs, renderTemplateSession, sealedWorldSeed, type Turn, type World, type WorldPlan } from '../../eval/generators/changing-facts-gen.ts';
+import { BG1_CUSTODY_MARKER, BG1_DEV_SEEDS, BG1_FIXTURE_TOKENS, BG1_TARGET_TOKENS, PUBLIC_PHRASING, renderBriefs, renderTemplateSession, sealedWorldSeed, type RenderBrief, type Turn, type World, type WorldPlan } from '../../eval/generators/changing-facts-gen.ts';
 import { BG1_DEV_CONVERSATIONS } from '../../eval/runner/bg1/types.ts';
 import { CHECK_MODELS, cachedClient, checkPrompt, checkSession, clientModels, fakeModels, geminiProxyClient, haikuProxyClient, proxyEndpoint, renderPrompt, renderWorld, type ModelClient, type Models } from '../../eval/custody/bg1/render.ts';
 import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
@@ -681,7 +681,9 @@ describe('checkSession and renderWorld', () => {
     expect(checkPrompt(briefs[at], turns())).toContain('{"extra_claims": true} or {"extra_claims": false}');
   });
 
-  const renderSchema = { type: 'object', properties: { turns: { type: 'array', items: { type: 'object', properties: { speaker: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string' } }, required: ['speaker', 'content'], additionalProperties: false } } }, required: ['turns'], additionalProperties: false };
+  const renderSchema = (minItems: number, maxItems: number) => ({ type: 'object', properties: { turns: { type: 'array', minItems, maxItems, items: { type: 'object', properties: { speaker: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string' } }, required: ['speaker', 'content'], additionalProperties: false } } }, required: ['turns'], additionalProperties: false });
+  /** The turns a session asks for: N, the even number nearest target / 47 and at least 2 × (lines + 1) and 4, to N + 2·max(1, floor(0.05N)). */
+  const turnRange = (b: RenderBrief) => { const n = Math.max(4, 2 * (b.lines.length + 1), 2 * Math.round(b.target_tokens / 47 / 2)); return [n, n + 2 * Math.max(1, Math.floor(0.05 * n))] as const; };
   const checkSchema = { type: 'object', properties: { extra_claims: { type: 'boolean' } }, required: ['extra_claims'], additionalProperties: false };
 
   // Value: protects=Gemini's render and check requests ask for the reply's JSON shape, and the Haiku check has room to answer after thinking; fails_when=a render or Gemini check request goes out without generationConfig.responseJsonSchema, or the Haiku check asks for fewer than 2048 output tokens; why_new=stage 1's first real dev render (09b3f414): 6 shape failures, 5 of them broken JSON, and 3 empty Haiku replies at max_tokens 256; seam=geminiProxyClient and haikuProxyClient through clientModels against a loopback server that records each request body; no_claim=how well gemini-3.8-flash follows a schema
@@ -703,7 +705,7 @@ describe('checkSession and renderWorld', () => {
     } finally { server.stop(true); }
     expect(bodies.map(b => b.path)).toEqual(['/gemini/v1beta/models/gemini-3.8-flash:generateContent', '/gemini/v1beta/models/gemini-3.8-flash:generateContent', '/anthropic/v1/messages']);
     const [render, gemini, haiku] = bodies;
-    expect(render.body.generationConfig?.responseJsonSchema).toEqual(renderSchema);
+    expect(render.body.generationConfig?.responseJsonSchema).toEqual(renderSchema(...turnRange(briefs[at])));
     expect(render.body.generationConfig).toMatchObject({ responseMimeType: 'application/json', temperature: 1 });
     expect(render.body.generationConfig?.responseSchema).toBeUndefined();
     expect(gemini.body.generationConfig?.responseJsonSchema).toEqual(checkSchema);
@@ -711,11 +713,12 @@ describe('checkSession and renderWorld', () => {
     expect(haiku.body.max_tokens).toBe(2048);
   });
 
-  // Value: protects=the render prompt states each session's length as words and a minimum number of turns, and a short session regenerates with its measured length and the allowed range in words; fails_when=the prompt gives the length only in tokens or no minimum number of turns, or a regeneration after a length failure does not name the last attempt's length; why_new=stage 1's first real dev render (09b3f414): 15 length failures, sessions at about 450 to 1,500 tokens against targets of 757 to 3,236; seam=clientModels over a fake ModelClient that records each request, with renderWorld; no_claim=how long gemini-3.8-flash writes
+  // Value: protects=the render prompt states each session's length as words and a range of turns, and a short session regenerates with its measured length and the allowed range in words; fails_when=the prompt gives the length only in tokens or no range of turns, or a regeneration after a length failure does not name the last attempt's length; why_new=stage 1's first real dev render (09b3f414): 15 length failures, sessions at about 450 to 1,500 tokens against targets of 757 to 3,236; seam=clientModels over a fake ModelClient that records each request, with renderWorld; no_claim=how long gemini-3.8-flash writes
   test('the render prompt states the length in words and turns, and a length failure regenerates with its measured length, then passes', async () => {
-    expect(renderPrompt({ ...briefs[at], target_tokens: 1121, lines: [] }, 0, [])).toContain('Write about 840 words (about 1121 tokens) in total, as at least 10 alternating turns starting with the user.');
-    expect(renderPrompt({ ...briefs[at], target_tokens: 3236, lines: [] }, 0, [])).toContain('Write about 2430 words (about 3236 tokens) in total, as at least 26 alternating turns');
-    expect(renderPrompt({ ...briefs[at], target_tokens: 400, lines: briefs[at].lines.slice(0, 1).concat(briefs[at].lines.slice(0, 1), briefs[at].lines.slice(0, 1)) }, 0, [])).toContain('Write about 300 words (about 400 tokens) in total, as at least 8 alternating turns');
+    expect(renderPrompt({ ...briefs[at], target_tokens: 1121, lines: [] }, 0, [])).toContain('Write about 940 words (about 1121 tokens) in total, as 24 to 26 alternating turns starting with the user, each about 39 words.');
+    expect(renderPrompt({ ...briefs[at], target_tokens: 3236, lines: [] }, 0, [])).toContain('Write about 2720 words (about 3236 tokens) in total, as 68 to 74 alternating turns');
+    expect(renderPrompt({ ...briefs[at], target_tokens: 400, lines: briefs[at].lines.slice(0, 1).concat(briefs[at].lines.slice(0, 1), briefs[at].lines.slice(0, 1)) }, 0, [])).toContain('Write about 340 words (about 400 tokens) in total, as 8 to 10 alternating turns');
+    expect(renderPrompt({ ...briefs[at], target_tokens: 300, lines: briefs[at].lines.slice(0, 1).concat(briefs[at].lines.slice(0, 1), briefs[at].lines.slice(0, 1)) }, 0, [])).toContain('Write about 250 words (about 300 tokens) in total, as 8 to 10 alternating turns');
     const small = { ...dev, sessions: dev.sessions.slice(0, 12) } as WorldPlan;
     const target = 12_000;
     const sized = renderBriefs(small, target);
@@ -728,26 +731,55 @@ describe('checkSession and renderWorld', () => {
     const measured = short.reduce((n, t) => n + encodingCount('cl100k_base', t.content), 0);
     expect(sized[0].target_tokens).toBeGreaterThanOrEqual(400);
     expect(measured).toBeLessThan(0.6 * sized[0].target_tokens);
+    const seen: RenderBrief[] = [];
     const models: Models = { renderer: real.renderer, check: real.check, render(brief, attempt, failures, lastTokens) {
+      seen.push(brief);
       const i = small.sessions.findIndex(s => s.id === brief.session);
       reply = JSON.stringify({ turns: i === 0 && attempt === 0 ? short : renderTemplateSession(small, small.sessions[i], brief.target_tokens) });
       return real.render(brief, attempt, failures, lastTokens);
     } };
     const out = await renderWorld(small, models, { targetTokens: target, concurrency: 1 });
     const renders = calls.filter(c => c.temperature === 1);
-    const words = (tokens: number) => Math.round((tokens * 0.75) / 10) * 10;
-    const range = `between ${Math.ceil((0.6 * sized[0].target_tokens * 0.75) / 10) * 10} and ${Math.floor((1.5 * sized[0].target_tokens * 0.75) / 10) * 10} words`;
+    const words = (tokens: number) => Math.round((tokens * 0.84) / 10) * 10;
+    const range = `between ${Math.ceil((0.6 * sized[0].target_tokens * 0.84) / 10) * 10} and ${Math.floor((1.5 * sized[0].target_tokens * 0.84) / 10) * 10} words`;
     expect(renders[1].prompt).toContain(`This is attempt 2. The last attempt broke these rules: The last attempt was about ${words(measured)} words (${measured} tokens); the session must be ${range}, so aim for about ${words(sized[0].target_tokens)}.`);
-    expect(renders[0].prompt).toContain(`Write about ${words(sized[0].target_tokens)} words (about ${sized[0].target_tokens} tokens) in total, as at least `);
+    expect(renders[0].prompt).toContain(`Write about ${words(sized[0].target_tokens)} words (about ${sized[0].target_tokens} tokens) in total, as ${turnRange(sized[0]).join(' to ')} alternating turns`);
     expect(out.world).not.toBeNull();
     expect(out.stats.regenerated).toBe(1);
     expect(out.stats.failures).toEqual({ length: 1 });
     expect(renders).toHaveLength(small.sessions.length + 1);
-    for (const c of renders) expect(c.schema).toEqual(renderSchema);
+    renders.forEach((c, k) => expect(c.schema).toEqual(renderSchema(...turnRange(seen[k]))));
     const checks = calls.filter(c => c.temperature === 0);
     expect(checks.filter(c => c.id === CHECK_MODELS[0]).map(c => [c.max, c.schema])).toEqual(checks.filter(c => c.id === CHECK_MODELS[0]).map(() => [256, checkSchema]));
     expect(checks.filter(c => c.id === CHECK_MODELS[1]).length).toBeGreaterThan(0);
     for (const c of checks.filter(x => x.id === CHECK_MODELS[1])) expect([c.max, c.schema]).toEqual([2048, undefined]);
+  });
+
+  // Value: protects=every BG1 session asks for a turn range that keeps it inside the length gate at the measured 36 to 58 tokens a turn, and leaves each planned line its own user turn; fails_when=the render schema or prompt carries no turn range or one off the rule, a range's N × 36 falls under 0.6 times its target or its top × 58 passes 1.5 times it, or a range holds fewer than 2 × (lines + 1) turns; why_new=stage 1's second real dev render (4ec6a610): gemini-3.8-flash kept to the turn count at a median of about 47 tokens a turn but wrote about 0.69 of the target, and 13 of its 36 attempts failed the length gate; seam=clientModels over a fake ModelClient that records each render request, for every target from 757 to 3,236 and every brief of the three dev worlds at BG1_TARGET_TOKENS; no_claim=how long gemini-3.8-flash writes, or that it honours minItems and maxItems
+  test('every target from 757 to 3,236 and every dev brief asks for a turn range that fits the length gate at 36 to 58 tokens a turn', async () => {
+    const sent: Array<{ prompt: string; schema?: object }> = [];
+    const client: ModelClient = { id: CHECK_MODELS[0], async complete(prompt, _max, _temperature, schema) { sent.push({ prompt, schema }); return ''; } };
+    const models = clientModels(client, client);
+    const sweep: RenderBrief[] = Array.from({ length: 3236 - 757 + 1 }, (_, k) => ({ ...briefs[at], target_tokens: 757 + k, lines: [] }));
+    const devBriefs = BG1_DEV_CONVERSATIONS.flatMap(id => renderBriefs(JSON.parse(readFileSync(join(REPO, `eval/data/changing-facts-v1/dev/worlds/${id}/plan.json`), 'utf8')) as WorldPlan, BG1_TARGET_TOKENS));
+    expect(devBriefs).toHaveLength(467);
+    expect(devBriefs.every(b => b.target_tokens >= 400)).toBe(true);
+    const wrong: string[] = [];
+    let low = Infinity, high = 0;
+    for (const b of [...sweep, ...devBriefs]) {
+      sent.length = 0;
+      await models.render(b, 0, []);
+      const turns = (sent[0].schema as { properties: { turns: { minItems?: number; maxItems?: number } } }).properties.turns;
+      const n = turns.minItems ?? 0, top = turns.maxItems ?? Infinity;
+      const [ruleN, ruleTop] = turnRange(b);
+      if (n !== ruleN || top !== ruleTop || n < 2 * (b.lines.length + 1) || !sent[0].prompt.includes(`as ${n} to ${top} alternating turns starting with the user, each about 39 words.`)) wrong.push(`${b.session} at ${b.target_tokens}`);
+      low = Math.min(low, (n * 36) / b.target_tokens);
+      high = Math.max(high, (top * 58) / b.target_tokens);
+    }
+    expect(wrong).toEqual([]);
+    expect(low).toBeGreaterThanOrEqual(0.6);
+    expect(high).toBeLessThanOrEqual(1.5);
+    expect([757, 997, 1082, 3236].map(t => turnRange({ ...briefs[at], target_tokens: t, lines: [] }))).toEqual([[16, 18], [22, 24], [24, 26], [68, 74]]);
   });
 
   // Value: protects=a cached reply is reused only for the same request, schema included, and no reply cached before the method changes is reused; fails_when=cachedClient's key leaves out the schema, or a v1-keyed reply is still found; why_new=the renderer method changes after 09b3f414 (requests now carry a schema); seam=cachedClient over a counting fake client, with a cache directory holding a v1-keyed reply; no_claim=caching in the metering proxies (they keep none)
@@ -763,6 +795,79 @@ describe('checkSession and renderWorld', () => {
     expect(await cache.complete('the prompt', 256, 0, b)).toBe('reply 2');
     expect(await cache.complete('the prompt', 256, 0)).toBe('reply 3');
     expect(n).toBe(3);
+  });
+
+  // Value: protects=a high-thinking request is never served the reply to the same prompt at low thinking, the level reaches the client, and no reply cached before thinking levels joined the key is reused; fails_when=cachedClient's key leaves out the thinking level, the level is not passed on, or a v2-keyed reply is still found; why_new=method change 3 (GBEV-3, 2026-11-09) renders long sessions and every re-render at high thinking, with prompts a low-thinking request has already sent; seam=cachedClient over a counting fake client that records each level, with a cache directory holding a v2-keyed reply; no_claim=caching in the metering proxies (they keep none)
+  test('the render cache keys on the thinking level, passes it on, and reuses no reply cached under v2', async () => {
+    const dir = scratch('cache-thinking');
+    const levels: Array<string | undefined> = [];
+    const base: ModelClient = { id: CHECK_MODELS[0], async complete(_prompt, _max, _temperature, _schema, thinking) { levels.push(thinking); return `reply ${levels.length}`; } };
+    const schema = { type: 'object' };
+    writeFileSync(join(dir, `${sha(['bg1-render-cache/v2', base.id, '256', '1', JSON.stringify(schema), 'the prompt'].join('\u0000'))}.txt`), 'cached under v2');
+    const cache = cachedClient(base, dir);
+    expect(await cache.complete('the prompt', 256, 1, schema, 'low')).toBe('reply 1');
+    expect(await cache.complete('the prompt', 256, 1, schema, 'high')).toBe('reply 2');
+    expect(await cache.complete('the prompt', 256, 1, schema, 'low')).toBe('reply 1');
+    expect(await cache.complete('the prompt', 256, 1, schema, 'high')).toBe('reply 2');
+    expect(levels).toEqual(['low', 'high']);
+  });
+
+  // Value: protects=gemini-3.8-flash renders a session of at least 2,000 target tokens, and every re-render, at high thinking and the rest at low, its check always at low, and the Haiku check as before; fails_when=a render goes out at another level than its target and attempt call for, a Gemini check goes out at anything but low, or geminiProxyClient sends a thinkingLevel other than the one asked for; why_new=stage 1's third real dev render (b5990b09): the six 3,236-token sessions failed 5 of their 10 attempts at a median of 0.73 of the target, against 3 of 48 for the shorter sessions, and bg1-dev-01 dropped at session 26; seam=clientModels over a fake ModelClient that records each request, for targets 757, 1,999, 2,000 and 3,236 at attempts 0 to 3 and every dev brief, and geminiProxyClient against a loopback server that records each body; no_claim=how well gemini-3.8-flash renders at high thinking
+  test('sessions of at least 2,000 tokens and every re-render go to Gemini at high thinking, short first attempts at low, and its check stays at low', async () => {
+    const sent: Array<{ id: string; max: number; temperature: number; thinking?: string }> = [];
+    const client = (id: string): ModelClient => ({ id, async complete(_prompt, max, temperature, _schema, thinking) { sent.push({ id, max, temperature, thinking }); return ''; } });
+    const models = clientModels(client(CHECK_MODELS[0]), client(CHECK_MODELS[1]));
+    const level = async (brief: RenderBrief, attempt: number) => { sent.length = 0; await models.render(brief, attempt, attempt ? ['length'] : []); return sent[0].thinking; };
+    const got: string[] = [];
+    for (const target of [757, 1999, 2000, 3236]) for (const attempt of [0, 1, 2, 3]) got.push(`${target}/${attempt} ${await level({ ...briefs[at], target_tokens: target }, attempt)}`);
+    expect(got).toEqual(['757/0 low', '757/1 high', '757/2 high', '757/3 high', '1999/0 low', '1999/1 high', '1999/2 high', '1999/3 high',
+      '2000/0 high', '2000/1 high', '2000/2 high', '2000/3 high', '3236/0 high', '3236/1 high', '3236/2 high', '3236/3 high']);
+    const high: number[] = [];
+    for (const id of BG1_DEV_CONVERSATIONS) {
+      let n = 0;
+      for (const b of renderBriefs(JSON.parse(readFileSync(join(REPO, `eval/data/changing-facts-v1/dev/worlds/${id}/plan.json`), 'utf8')) as WorldPlan, BG1_TARGET_TOKENS)) if ((await level(b, 0)) === 'high') n++;
+      high.push(n);
+    }
+    expect(high).toEqual([15, 17, 19]);
+    const long = { ...briefs[at], target_tokens: 3236 };
+    sent.length = 0;
+    await models.check(CHECK_MODELS[0], long, turns());
+    await models.check(CHECK_MODELS[0], long, turns(), true);
+    await models.check(CHECK_MODELS[1], long, turns());
+    expect(sent).toEqual([{ id: CHECK_MODELS[0], max: 256, temperature: 0, thinking: 'low' }, { id: CHECK_MODELS[0], max: 256, temperature: 0, thinking: 'low' }, { id: CHECK_MODELS[1], max: 2048, temperature: 0, thinking: undefined }]);
+    const levels: unknown[] = [];
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', async fetch(req) {
+      levels.push(((await req.json()) as { generationConfig?: { thinkingConfig?: unknown } }).generationConfig?.thinkingConfig);
+      return Response.json({ candidates: [{ content: { parts: [{ text: '{"extra_claims": false}' }] } }] });
+    } });
+    try {
+      const ready = join(scratch('thinking-wire'), 'gemini.json');
+      writeFileSync(ready, JSON.stringify({ env: { bg1: { GOOGLE_GEMINI_BASE_URL: `http://127.0.0.1:${server.port}/gemini`, GEMINI_API_KEY: 'mpwp-bg1-wire' } } }));
+      const wire = clientModels(geminiProxyClient(ready), client(CHECK_MODELS[1]));
+      await wire.render({ ...briefs[at], target_tokens: 757 }, 0, []);
+      await wire.render({ ...briefs[at], target_tokens: 757 }, 1, ['length']);
+      await wire.render(long, 0, []);
+      await wire.check(CHECK_MODELS[0], long, turns());
+    } finally { server.stop(true); }
+    expect(levels).toEqual([{ thinkingLevel: 'low' }, { thinkingLevel: 'high' }, { thinkingLevel: 'high' }, { thinkingLevel: 'low' }]);
+  });
+
+  // Value: protects=a high-thinking render asks for gemini-3.8-flash's whole 65,536-token output limit, because thinking counts toward maxOutputTokens and Google sets no ceiling on it at high, while a low-thinking render keeps 1.6 times its target plus 2,048 and Gemini's check keeps 256; fails_when=a high-thinking render asks for fewer than 65,536 output tokens, a low-thinking render's budget moves, or any render asks for more than 65,536; why_new=method change 3 (GBEV-3, 2026-11-09): Gemini's thinking guide ("Token limits and max_output_tokens") and a Google answer on its forum say maxOutputTokens caps thinking and reply together and cuts the reply off at the cap, so a 3,236-token session's low-thinking budget of 7,226 could cut it off at high; seam=clientModels over a fake ModelClient that records each request, for every target from 400 to 3,236 at attempts 0 and 1; no_claim=how many tokens gemini-3.8-flash thinks at high, or what the metering proxy reserves
+  test('a high-thinking render asks for the whole 65,536-token output limit and a low-thinking one keeps 1.6 × target + 2,048', async () => {
+    const sent: Array<{ max: number; thinking?: string }> = [];
+    const client: ModelClient = { id: CHECK_MODELS[0], async complete(_prompt, max, _temperature, _schema, thinking) { sent.push({ max, thinking }); return ''; } };
+    const models = clientModels(client, client);
+    const wrong: string[] = [];
+    for (let target = 400; target <= 3236; target++) for (const attempt of [0, 1]) {
+      sent.length = 0;
+      await models.render({ ...briefs[at], target_tokens: target, lines: [] }, attempt, attempt ? ['length'] : []);
+      const want = target >= 2000 || attempt > 0 ? 65_536 : Math.ceil(target * 1.6) + 2048;
+      if (sent[0].max !== want) wrong.push(`${target}/${attempt}: ${sent[0].max} at ${sent[0].thinking}`);
+    }
+    expect(wrong).toEqual([]);
+    sent.length = 0;
+    await models.check(CHECK_MODELS[0], briefs[at], turns());
+    expect(sent).toEqual([{ max: 256, thinking: 'low' }]);
   });
 
   // Value: protects=--fake mode, which the keyless tests and drills run, renders what it rendered before the method changes; fails_when=the schema, length or regeneration changes reach fakeModels or what renderWorld returns in --fake; why_new=the renderer method changes after stage 1's first real dev render (09b3f414); seam=render.ts --dev --fake at the fixture size against the committed template fixture; no_claim=the real renderer's output
@@ -792,6 +897,50 @@ describe('checkSession and renderWorld', () => {
     expect(dropped.world).toBeNull();
     expect(dropped.stats.dropped_session).toBe(0);
     expect(dropped.stats.attempts).toBe(4);
+  });
+
+  // Value: protects=an unreadable Gemini check reply is asked once more, with its own closing line and cache key, and fails the attempt only when the second reply is unreadable too, while a readable verdict and the Haiku check are never asked again; fails_when=renderWorld fails an attempt on Gemini's first unreadable reply, the second ask is not the same request plus the closing line, the cache serves it the first reply, stats.checks leaves it out, or a readable verdict or a Haiku reply is asked again; why_new=stage 1's second real dev render (4ec6a610): 2 Gemini check replies were the literal "Here is the JSON requested:\n" despite responseJsonSchema, and each failed its attempt; seam=renderWorld over fakeModels' renderer and clientModels' checks, with Gemini behind cachedClient over fake ModelClients that record each request; no_claim=how often gemini-3.8-flash answers the second ask readably
+  test('an unreadable Gemini check reply is asked once more with a closing line and its own cache key, and only a second unreadable reply fails the attempt', async () => {
+    const small = { ...dev, sessions: dev.sessions.slice(0, 12) } as WorldPlan;
+    const fake = fakeModels(small);
+    const closing = '\nReply with only the JSON object, with no other text.';
+    const ok = '{"extra_claims": false}', unreadable = 'Here is the JSON requested:\n';
+    type Sent = Array<{ prompt: string; max: number; temperature: number; schema?: object }>;
+    const client = (id: string, sent: Sent, reply: (prompt: string, sent: Sent) => string): ModelClient => ({ id, async complete(prompt, max, temperature, schema) { sent.push({ prompt, max, temperature, schema }); return reply(prompt, sent); } });
+    const render = async (gem: (prompt: string, sent: Sent) => string, hai: (prompt: string, sent: Sent) => string = () => ok, cache = false) => {
+      const gemini: Sent = [], haiku: Sent = [];
+      const g = client(CHECK_MODELS[0], gemini, gem);
+      const real = clientModels(cache ? cachedClient(g, scratch('reask')) : g, client(CHECK_MODELS[1], haiku, hai));
+      return { ...(await renderWorld(small, { ...fake, check: real.check }, { targetTokens: 400, concurrency: 1 })), gemini, haiku };
+    };
+    const clean = await render(() => ok);
+    expect(clean.stats.failures).toEqual({});
+    expect(clean.haiku.length).toBeGreaterThan(0);
+
+    const once = await render((_p, sent) => (sent.length === 1 ? unreadable : ok), undefined, true);
+    expect(once.world).not.toBeNull();
+    expect(once.stats.failures).toEqual({});
+    expect(once.stats.regenerated).toBe(0);
+    expect(once.stats.checks).toBe(clean.stats.checks + 1);
+    expect(once.gemini).toHaveLength(clean.gemini.length + 1);
+    expect(once.gemini[1]).toEqual({ prompt: once.gemini[0].prompt + closing, max: 256, temperature: 0, schema: checkSchema });
+    expect(once.gemini.filter(c => c.prompt.endsWith(closing))).toHaveLength(1);
+
+    const twice = await render((p, sent) => (p.endsWith(closing) ? (sent.filter(c => c.prompt.endsWith(closing)).length === 1 ? unreadable : ok) : p === sent[0].prompt ? unreadable : ok));
+    expect(twice.world).not.toBeNull();
+    expect(twice.stats.failures).toEqual({ 'check_unreadable:gemini:gemini-3.8-flash': 1 });
+    expect(twice.stats.regenerated).toBe(1);
+    expect(twice.stats.checks).toBe(clean.stats.checks + 3);
+
+    const claims = await render((_p, sent) => (sent.length === 1 ? '{"extra_claims": true}' : ok));
+    expect(claims.stats.failures).toEqual({ 'extra_claims:gemini:gemini-3.8-flash': 1 });
+    expect(claims.stats.checks).toBe(clean.stats.checks + 1);
+    expect(claims.gemini.some(c => c.prompt.endsWith(closing))).toBe(false);
+
+    const haikuOff = await render(() => ok, (_p, sent) => (sent.length === 1 ? unreadable : ok));
+    expect(haikuOff.stats.failures).toEqual({ 'check_unreadable:anthropic:claude-haiku-5-5': 1 });
+    expect(haikuOff.stats.checks).toBe(clean.stats.checks + 2);
+    expect([...haikuOff.gemini, ...haikuOff.haiku].some(c => c.prompt.endsWith(closing))).toBe(false);
   });
 });
 

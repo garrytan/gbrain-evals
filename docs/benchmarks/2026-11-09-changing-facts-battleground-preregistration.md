@@ -466,6 +466,44 @@ From commit `2c7ab96f`, rendering changes its method in these ways:
 Nothing that judges a session moves: every check and the length check's range, the three re-renders per session, and
 the rule that drops a world with a session that still fails (two drops among the first five mint slots pause minting).
 
+**Second render and calibration (2026-11-09).** Stage 1's second render of `bg1-dev-01`, at commit `4ec6a610`, dropped
+the world at session 14 of 154. It made 36 render attempts and 33 checks. Attempts failed the length check 13 times,
+the forbidden-value check twice and the planned-line check once, and 2 gemini-3.8-flash check replies were unreadable.
+gemini-3.8-flash wrote a median of about 0.69 of a session's target tokens. Its first attempts ran from 0.34 to 0.97 of
+the target, and 16 of 23 passed the 0.6 floor. Naming the last attempt's length moved one session from 0.40 to 0.51 to
+0.66 of its target, and a 3,236-token session from 0.34 to 0.46 to 0.59 to 0.47. It wrote about 0.75 of the words
+asked, at about 0.84 words per cl100k token, but kept to the number of turns asked, at a median of about 47 cl100k
+tokens per turn (36 to 58 for most turns). Both unreadable check replies were the literal text "Here is the JSON
+requested:" and a line break, about 7 visible tokens after about 25 reasoning tokens, so the 256-token budget did not
+cut them off. The JSON Schema failed in 2 of the 23 Gemini checks. The other 21 Gemini check replies, all 36 render replies and all 10
+claude-haiku-5-5 check replies were clean JSON. From commit
+`289801fe`, each render asks for N to N + 2·max(1, floor(0.05N)) alternating turns, where N is the even number nearest
+the session's target divided by 47 tokens per turn (ties round up), and never less than 2 × (planned lines + 1) or 4. The JSON Schema
+holds the reply to that range (`minItems` and `maxItems`) and the prompt states it. The width rounds down because,
+rounded up, the 22- and 24-turn ranges reach 26 and 28 turns, which at 58 tokens a turn pass 1.5 times targets near
+1,000 tokens. For every target from 757 to 3,236 and every dev-world session, N × 36 tokens is never under 0.72 of the
+target and the top of the range × 58 tokens never over 1.46 of it. The prompt's word counts use the measured 0.84
+words per token, and it says each turn is about 39 words. From commit `7fe8bdea`, a Gemini check reply with no
+readable verdict is asked once more, with the same prompt and a closing line asking for the JSON object alone, and the
+attempt fails as unreadable only if that reply is unreadable too. No check, the length check's range, the three
+re-renders per session or the yield rule moves.
+
+**Third render and high thinking (2026-11-09).** Stage 1's third render of `bg1-dev-01`, at commit `b5990b09`, dropped
+the world at session 26 of 154. It made 58 render attempts, which wrote a median of 0.84 of a session's target tokens
+(10th percentile 0.69, lowest 0.54, highest 1.05), and 46 of its 51 first attempts passed. The failures sat in the
+longest sessions. The six 3,236-token sessions made 10 attempts, and 5 failed, at a median of 0.73 of the target: both
+of the render's length failures and all three of its attempts that failed the planned-line and forbidden-value checks
+together. Session 26 went 0.60 (length), 0.69 and 0.89 (planned line and forbidden value), then 0.54 (length). The
+shorter sessions made 48 attempts, and 3 failed. Gemini accepted every bounded render schema, up to the 68-to-74-turn
+range. From commit `ab030f1e`, gemini-3.8-flash renders at high thinking (`thinkingConfig.thinkingLevel`) every session
+whose target is at least 2,000 tokens, which is 15, 17 and 19 sessions of `bg1-dev-01`, `-02` and `-03`, and every
+re-render of any session. The rest render at low thinking, as before. Gemini's check stays at low thinking, and the
+claude-haiku-5-5 check is unchanged. Gemini counts thinking tokens toward `maxOutputTokens` and cuts the reply off
+there, so from commit `bc1eada3` a high-thinking render asks for the model's whole output limit of 65,536 tokens, and a
+low-thinking render keeps 1.6 times its target plus 2,048. From commit `fd3c8cb4`, the reply cache keys on the thinking
+level, under a new version, so no reply cached before this change is reused. Keyless (`--fake`) rendering is unchanged.
+No check, the length check's range, the three re-renders per session or the yield rule moves.
+
 The three dev worlds are rendered again under this method. Before any stage 1 cell runs, this amendment gains each
 world's measured rendering cost, its yield and its world end.
 
@@ -475,6 +513,27 @@ DONE report reconciles each provider's usage against the campaign ledger, so spe
 show up there.
 
 GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
+
+### Amendment 3 (2026-11-09): stage 1's rendering cap
+
+Stage 1's dev-world rendering runs under its own cap, beside the campaign cap. GBEV-3 raised the rendering cap on
+2026-11-09, before any stage 1 cell ran, to cover rendering at high thinking (Amendment 2).
+
+Why: from commit `ab030f1e`, long sessions and every re-render go to gemini-3.8-flash at high thinking, and Gemini bills
+thinking tokens as output, so those renders cost more than renders at low thinking. Because the rendering cap sits
+beside the campaign cap, stage 1's total can now pass the fixed ceiling in Amendment 1 by the amount of this raise.
+GBEV-3 accepted that. The amounts are kept on GST-2010, not here.
+
+GBEV-3 granted this amendment on 2026-11-09, before any stage 1 cell ran.
+
+Update (2026-11-09): the fourth render, the first at high thinking, wrote bg1-dev-01 in full and then stopped partway
+into bg1-dev-02, when a request would have taken the rendering run past its own budget. The first raise had changed
+the program cap but not the run's budget, which was an operator error. A long session's render at high thinking also
+cost several times the rate the raise had been sized on, so the raised cap could not have covered all three dev worlds
+in any case. GBEV-3 raised the rendering cap a second time, at both the program and the run level, before any stage 1
+cell ran. The render then resumed on the same output directory, where the renderer's cache replays every reply
+already paid for, so nothing is bought twice. Stage 1's total now passes Amendment 1's ceiling by the sum of both
+raises, and GBEV-3 accepted that. The amounts are kept on GST-2010, not here.
 
 ### Expected amendments
 
