@@ -2,6 +2,74 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.205] - 2026-11-10
+
+### Code review now skips the predictive-measures raw scorecards and episode logs, so their results fit gstack's review limit
+
+- **What changed.** `.gstack/ship-policy.json` adds two `review_exclude_paths` patterns:
+  `docs/benchmarks/predictive-measures/**/scorecard.json` and `docs/benchmarks/predictive-measures/**/episodes.jsonl.gz`.
+  Neither matches anything outside that folder. The results report, the verdict JSONs, the scorecard `.md` summaries
+  and all code stay in review.
+- **Why.** The predictive-measures results diff is 2,594,160 bytes, over gstack's 2,000,000-byte review ceiling. Ten
+  scorecards of about 200 KB each (the nine G2 conditions and the batch 3 synthetic run) make up most of it. With both
+  patterns the diff is 567,892 bytes. The scorecard pattern does nearly all of that. Git shows each gzipped episode log
+  as one binary line, so the episode pattern saves about 1 KB and only hides that a log changed.
+- **What still checks these files.** CI scans every committed result file under `docs/benchmarks`, and each member of a
+  gzipped log, for machine-local paths, and gitleaks scans the gzipped logs' members for secrets. Nothing in CI compares
+  a scorecard's numbers with the verdict files or the report; `verdict.ts` reproduces the counted verdicts from them
+  when someone runs it.
+- **Known limits.** The scorecard pattern also covers the four small counted scorecards for G1, G3, G4 and G6 (about
+  42 KB together), which the ceiling alone doesn't require excluding. The patterns apply to every later pull request,
+  so a later change to a published scorecard won't reach a reviewer either.
+- No published score or verdict changes.
+
+## [0.10.204] - 2026-11-10
+
+### The nightly report's particle-1 agreement verdict follows stricter rules
+
+- **What changed.** The verdict now reads the item-weighted mean of each suite's kappa. The kappa of all suites pooled
+  stays in the report for reference only, because pooling counts differences in difficulty between suites as
+  agreement. A suite counts toward the verdict with at least 20 paired items, and the verdict needs at least 40. A kappa
+  of exactly 0.6 now passes; floating point used to compute it as 0.5999999999999996.
+- **Items particle-1 can't drop.** A particle-1 crash, invalid answer or provider error on an item counts as a fail.
+  An item is unpaired only when Opus has no counted trial for it or the night never ran it, and more than 10% of
+  scheduled items unpaired reads as not measured. `night.json` now records how many items each suite planned, so a
+  suite that stopped before writing any row counts all of them as unpaired. A night that ends on a budget stop
+  (including Particle's 402) or loses its VM reads as not measured, because the items it never reached aren't
+  particle-1's fails.
+- **Readers and judges.** GPT-6 Astra now judges particle-1's QA answers as well as Claude's, and Opus judges GPT's,
+  so both readers in the agreement check get the same judge and no judge grades its own family. particle-1 runs on the
+  QA suites only, because Part C's worker and the Cat 40 Hard runner take Claude and GPT readers. Qualified reader names
+  such as `particle:particle-1` match, and a suite a `--fake` night skipped is left out.
+- **Known limits.** No particle-1 night has run yet, so there is still no agreement number. The default nightly tier
+  plans no QA suite, so `--readers claude-opus-5-5,particle-1` on it puts particle-1 on no suite; name
+  `--suites lme-s-hard,beam-1m-hard` or a tier that includes them. A judge error on a particle-1 answer counts as a
+  fail.
+- Keyless fixture tests cover the item-weighted mean, the exact-0.6 case, both floors, a crash counted as a
+  fail, the unpaired floor, a suite lost before writing rows, a budget stop at 70% of each suite, qualified names and
+  fake-night skips. `docs/nightly.md` describes the rules.
+## [0.10.202] - 2026-11-10
+
+### How many BEAM questions their cited turns don't support, and our published BEAM results without them
+
+- **What it adds.** `docs/benchmarks/2026-11-10-beam-item-support.md` checks every cited question behind our published
+  BEAM results against the conversation turns it cites, with two validator models (gemini-3.8-flash and
+  claude-haiku-5-5), and rescores each published BEAM result it can on only the questions both validators pass. The
+  rescore reuses each result's recorded answers and judgments, so nothing was rerun. The support counts, the gates for
+  the 324 public questions (by id, with no question text) and the rescore tables are pinned beside it in
+  `docs/benchmarks/2026-11-10-beam-item-support/`.
+- **What it shows.** Of 1,521 cited questions, 33.8% have a reference answer that at least one validator finds
+  unsupported by the turns the question cites, or cite no turn the conversation has: 27.5% at 100,000 tokens, 31.3% at
+  500,000, 33.5% at 1 million and 52.2% at 10 million. Both validators reject 24.2%. Rescored on the questions both
+  pass, no published verdict changes. The BEAM-10M gap to the file agent holds at about 7.5 points with a wider
+  interval: -7.5 (95% interval -19.5 to +4.2) on 86 questions, against -8.7 (-16.4 to -1.4) on 198. Seven descriptive
+  gains for gbrain and the two published BEAM losses no longer exclude zero, one new descriptive loss appears on
+  BEAM-100K, and three gains newly exclude zero.
+- **What it doesn't cover.** The memory proof wave's sealed run and wave 2's 100,000- and 1-million-token strata can't
+  be rescored, the rerun's D8 set isn't rescored, and the frontier-judge results aren't covered.
+- README's Known limits gains a bullet on this, and the docs hub gains a row for the findings. No number in the README
+  tables changed.
+
 ## [0.10.201] - 2026-11-10
 
 ### The nightly report now checks whether particle-1 marks the same items right and wrong as Opus

@@ -59,8 +59,11 @@ export type Adapter = (run: SuiteRun, ctx: NightContext) => Promise<AdapterResul
 /** Suites whose items call a model: they need --fake, or --paid with the night's ledger run. */
 export const callsModels = (s: Pick<Suite, 'kind'>) => s.kind === 'agent' || s.kind === 'qa';
 
-/** The QA judge for a reader's rows: GPT-6 Astra judges Claude rows and Claude Opus 5.5 judges every other family's, so no judge grades its own family. */
-export const judgeFor = (reader: string) => (qualifiedModel(reader).startsWith('anthropic:') ? 'openai:gpt-6-astra' : 'anthropic:claude-opus-5-5');
+/**
+ * The QA judge for a reader's rows: GPT-6 Astra judges every family's but OpenAI's, which Claude Opus 5.5 judges, so no
+ * judge grades its own family, and claude-opus-5-5 and particle-1 share a judge, so their agreement compares readers.
+ */
+export const judgeFor = (reader: string) => (qualifiedModel(reader).startsWith('openai:') ? 'anthropic:claude-opus-5-5' : 'openai:gpt-6-astra');
 
 const providerOf = (model: string) => model.slice(0, model.indexOf(':')) as Provider;
 const slug = (s: string) => s.replace(/[^A-Za-z0-9.-]+/g, '_');

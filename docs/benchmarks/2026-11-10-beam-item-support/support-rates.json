@@ -1,0 +1,526 @@
+{
+  "schema": "beam-item-support/v1",
+  "what": "Cited BEAM questions behind published gbrain-evals BEAM results, checked by eval/custody/rs1/validate.ts (sha256 7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e) with gemini-3.8-flash and claude-haiku-5-5. fail_any: either validator finds the reference answer unsupported by the turns the question cites, no cited turn is in the conversation, or the duplicate gate. both: both validators find it unsupported. Abstention questions cite nothing and are not checked. Wilson 95% intervals treat questions as independent, though they cluster in conversations.",
+  "public": {
+    "all": {
+      "items": 324,
+      "checked": 324,
+      "not_checked": 0,
+      "validator_error_items": 0,
+      "pass": 219,
+      "fail_any": 105,
+      "fail_any_pct": 32.4,
+      "ci_any": [
+        27.5,
+        37.7
+      ],
+      "support_fail": 103,
+      "both": 67,
+      "both_pct": 20.7,
+      "ci_both": [
+        16.6,
+        25.4
+      ],
+      "gemini_only": 25,
+      "haiku_only": 11,
+      "uncited": 2,
+      "other_gates": []
+    },
+    "by_scale": {
+      "beam-100k": {
+        "items": 72,
+        "checked": 72,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 55,
+        "fail_any": 17,
+        "fail_any_pct": 23.6,
+        "ci_any": [
+          15.3,
+          34.6
+        ],
+        "support_fail": 17,
+        "both": 11,
+        "both_pct": 15.3,
+        "ci_both": [
+          8.8,
+          25.3
+        ],
+        "gemini_only": 5,
+        "haiku_only": 1,
+        "uncited": 0,
+        "other_gates": []
+      },
+      "beam-1m": {
+        "items": 126,
+        "checked": 126,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 79,
+        "fail_any": 47,
+        "fail_any_pct": 37.3,
+        "ci_any": [
+          29.4,
+          46.0
+        ],
+        "support_fail": 45,
+        "both": 33,
+        "both_pct": 26.2,
+        "ci_both": [
+          19.3,
+          34.5
+        ],
+        "gemini_only": 8,
+        "haiku_only": 4,
+        "uncited": 2,
+        "other_gates": []
+      },
+      "beam-500k": {
+        "items": 126,
+        "checked": 126,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 85,
+        "fail_any": 41,
+        "fail_any_pct": 32.5,
+        "ci_any": [
+          25.0,
+          41.1
+        ],
+        "support_fail": 41,
+        "both": 23,
+        "both_pct": 18.3,
+        "ci_both": [
+          12.5,
+          25.9
+        ],
+        "gemini_only": 12,
+        "haiku_only": 6,
+        "uncited": 0,
+        "other_gates": []
+      }
+    },
+    "by_row": {
+      "mpw2": {
+        "items": 324,
+        "checked": 324,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 219,
+        "fail_any": 105,
+        "fail_any_pct": 32.4,
+        "ci_any": [
+          27.5,
+          37.7
+        ],
+        "support_fail": 103,
+        "both": 67,
+        "both_pct": 20.7,
+        "ci_both": [
+          16.6,
+          25.4
+        ],
+        "gemini_only": 25,
+        "haiku_only": 11,
+        "uncited": 2,
+        "other_gates": []
+      }
+    }
+  },
+  "sealed": {
+    "all": {
+      "items": 1197,
+      "checked": 1197,
+      "not_checked": 0,
+      "validator_error_items": 0,
+      "pass": 788,
+      "fail_any": 409,
+      "fail_any_pct": 34.2,
+      "ci_any": [
+        31.5,
+        36.9
+      ],
+      "support_fail": 397,
+      "both": 301,
+      "both_pct": 25.1,
+      "ci_both": [
+        22.8,
+        27.7
+      ],
+      "gemini_only": 49,
+      "haiku_only": 47,
+      "uncited": 11,
+      "other_gates": [
+        "duplicate"
+      ]
+    },
+    "by_scale": {
+      "beam-100k": {
+        "items": 234,
+        "checked": 234,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 167,
+        "fail_any": 67,
+        "fail_any_pct": 28.6,
+        "ci_any": [
+          23.2,
+          34.7
+        ],
+        "support_fail": 61,
+        "both": 45,
+        "both_pct": 19.2,
+        "ci_both": [
+          14.7,
+          24.8
+        ],
+        "gemini_only": 9,
+        "haiku_only": 7,
+        "uncited": 5,
+        "other_gates": [
+          "duplicate"
+        ]
+      },
+      "beam-10m": {
+        "items": 180,
+        "checked": 180,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 86,
+        "fail_any": 94,
+        "fail_any_pct": 52.2,
+        "ci_any": [
+          45.0,
+          59.4
+        ],
+        "support_fail": 90,
+        "both": 79,
+        "both_pct": 43.9,
+        "ci_both": [
+          36.8,
+          51.2
+        ],
+        "gemini_only": 8,
+        "haiku_only": 3,
+        "uncited": 4,
+        "other_gates": []
+      },
+      "beam-1m": {
+        "items": 405,
+        "checked": 405,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 274,
+        "fail_any": 131,
+        "fail_any_pct": 32.3,
+        "ci_any": [
+          28.0,
+          37.0
+        ],
+        "support_fail": 130,
+        "both": 96,
+        "both_pct": 23.7,
+        "ci_both": [
+          19.8,
+          28.1
+        ],
+        "gemini_only": 17,
+        "haiku_only": 17,
+        "uncited": 1,
+        "other_gates": []
+      },
+      "beam-500k": {
+        "items": 378,
+        "checked": 378,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 261,
+        "fail_any": 117,
+        "fail_any_pct": 31.0,
+        "ci_any": [
+          26.5,
+          35.8
+        ],
+        "support_fail": 116,
+        "both": 81,
+        "both_pct": 21.4,
+        "ci_both": [
+          17.6,
+          25.8
+        ],
+        "gemini_only": 15,
+        "haiku_only": 20,
+        "uncited": 1,
+        "other_gates": []
+      }
+    },
+    "by_row": {
+      "mpw2": {
+        "items": 972,
+        "checked": 972,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 671,
+        "fail_any": 301,
+        "fail_any_pct": 31.0,
+        "ci_any": [
+          28.1,
+          33.9
+        ],
+        "support_fail": 293,
+        "both": 211,
+        "both_pct": 21.7,
+        "ci_both": [
+          19.2,
+          24.4
+        ],
+        "gemini_only": 39,
+        "haiku_only": 43,
+        "uncited": 7,
+        "other_gates": [
+          "duplicate"
+        ]
+      },
+      "q1.S1": {
+        "items": 180,
+        "checked": 180,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 86,
+        "fail_any": 94,
+        "fail_any_pct": 52.2,
+        "ci_any": [
+          45.0,
+          59.4
+        ],
+        "support_fail": 90,
+        "both": 79,
+        "both_pct": 43.9,
+        "ci_both": [
+          36.8,
+          51.2
+        ],
+        "gemini_only": 8,
+        "haiku_only": 3,
+        "uncited": 4,
+        "other_gates": []
+      },
+      "q1.S2a": {
+        "items": 126,
+        "checked": 126,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 95,
+        "fail_any": 31,
+        "fail_any_pct": 24.6,
+        "ci_any": [
+          17.9,
+          32.8
+        ],
+        "support_fail": 29,
+        "both": 24,
+        "both_pct": 19.0,
+        "ci_both": [
+          13.1,
+          26.8
+        ],
+        "gemini_only": 3,
+        "haiku_only": 2,
+        "uncited": 2,
+        "other_gates": []
+      },
+      "q1.S2b": {
+        "items": 216,
+        "checked": 216,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 141,
+        "fail_any": 75,
+        "fail_any_pct": 34.7,
+        "ci_any": [
+          28.7,
+          41.3
+        ],
+        "support_fail": 75,
+        "both": 57,
+        "both_pct": 26.4,
+        "ci_both": [
+          21.0,
+          32.6
+        ],
+        "gemini_only": 7,
+        "haiku_only": 11,
+        "uncited": 0,
+        "other_gates": []
+      }
+    }
+  },
+  "combined": {
+    "all": {
+      "items": 1521,
+      "fail_any": 514,
+      "fail_any_pct": 33.8,
+      "ci_any": [
+        31.5,
+        36.2
+      ],
+      "both": 368,
+      "both_pct": 24.2,
+      "ci_both": [
+        22.1,
+        26.4
+      ]
+    },
+    "by_scale": {
+      "beam-100k": {
+        "items": 306,
+        "fail_any": 84,
+        "fail_any_pct": 27.5,
+        "ci_any": [
+          22.8,
+          32.7
+        ],
+        "both": 56,
+        "both_pct": 18.3,
+        "ci_both": [
+          14.4,
+          23.0
+        ]
+      },
+      "beam-500k": {
+        "items": 504,
+        "fail_any": 158,
+        "fail_any_pct": 31.3,
+        "ci_any": [
+          27.5,
+          35.5
+        ],
+        "both": 104,
+        "both_pct": 20.6,
+        "ci_both": [
+          17.3,
+          24.4
+        ]
+      },
+      "beam-1m": {
+        "items": 531,
+        "fail_any": 178,
+        "fail_any_pct": 33.5,
+        "ci_any": [
+          29.6,
+          37.6
+        ],
+        "both": 129,
+        "both_pct": 24.3,
+        "ci_both": [
+          20.8,
+          28.1
+        ]
+      },
+      "beam-10m": {
+        "items": 180,
+        "fail_any": 94,
+        "fail_any_pct": 52.2,
+        "ci_any": [
+          45.0,
+          59.4
+        ],
+        "both": 79,
+        "both_pct": 43.9,
+        "ci_both": [
+          36.8,
+          51.2
+        ]
+      }
+    },
+    "by_result": {
+      "q1.S1 (BEAM-10M)": {
+        "items": 180,
+        "checked": 180,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 86,
+        "fail_any": 94,
+        "fail_any_pct": 52.2,
+        "ci_any": [
+          45.0,
+          59.4
+        ],
+        "support_fail": 90,
+        "both": 79,
+        "both_pct": 43.9,
+        "ci_both": [
+          36.8,
+          51.2
+        ],
+        "gemini_only": 8,
+        "haiku_only": 3,
+        "uncited": 4,
+        "other_gates": []
+      },
+      "q1.S2a (BEAM-100K sealed)": {
+        "items": 126,
+        "checked": 126,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 95,
+        "fail_any": 31,
+        "fail_any_pct": 24.6,
+        "ci_any": [
+          17.9,
+          32.8
+        ],
+        "support_fail": 29,
+        "both": 24,
+        "both_pct": 19.0,
+        "ci_both": [
+          13.1,
+          26.8
+        ],
+        "gemini_only": 3,
+        "haiku_only": 2,
+        "uncited": 2,
+        "other_gates": []
+      },
+      "q1.S2b (BEAM-1M sealed)": {
+        "items": 216,
+        "checked": 216,
+        "not_checked": 0,
+        "validator_error_items": 0,
+        "pass": 141,
+        "fail_any": 75,
+        "fail_any_pct": 34.7,
+        "ci_any": [
+          28.7,
+          41.3
+        ],
+        "support_fail": 75,
+        "both": 57,
+        "both_pct": 26.4,
+        "ci_both": [
+          21.0,
+          32.6
+        ],
+        "gemini_only": 7,
+        "haiku_only": 11,
+        "uncited": 0,
+        "other_gates": []
+      },
+      "wave 2 (72 conversations)": {
+        "items": 1296,
+        "fail_any": 406,
+        "fail_any_pct": 31.3,
+        "ci_any": [
+          28.9,
+          33.9
+        ],
+        "both": 278,
+        "both_pct": 21.5,
+        "ci_both": [
+          19.3,
+          23.8
+        ]
+      }
+    }
+  }
+}
