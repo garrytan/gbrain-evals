@@ -9,7 +9,9 @@ This records what each gbrain-evals release changed and what its measurements me
 - **What changed.** A pass-rate drop or cost rise against the previous master night now files as a flag only when it
   shows on two nights in a row against the same baseline night. The first night it is a watch line in the report and in
   `summary.json`'s `watches`, which carries the baseline night's per-item counts so the next night can test against
-  it. Deterministic signals, strong flips and every comparison with stable still flag the night they are seen.
+  it. Such a flag carries its own commit range in `summary.json`, from the baseline night to tonight, so a bisect
+  starts before the change landed. Deterministic signals, strong flips and every comparison with stable still flag
+  the night they are seen.
 - **Why.** On 2026-11-11, `refused-write-agents` on gpt-6.1-sol fell from 10 to 4 of 90 trials and filed an issue. It
   wasn't a gbrain change: seven runs of that suite varied in pass rate no more than trial sampling predicts, which the
   item bootstrap already covers, and the same bootstrap flagged 2 of their 21 pairs. The cause is how often the test

@@ -7,7 +7,8 @@
  * smallest drop the two-night rule catches with 80% power at 30 items and three trials.
  */
 import { describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Outcome } from '../../eval/runner/nightly/outcome.ts';
@@ -28,6 +29,14 @@ const cell = (night: string, passes: Record<string, number>, cellCost: number | 
 const night = (n: string, sha: string, passes: Record<string, number>, cost: number | null, digest = DIGEST) => ({ manifest: manifest(n, sha, digest), rows: cell(n, passes, cost, digest) });
 const all = Object.fromEntries(Array.from({ length: 30 }, (_, i) => [String(2001 + i), 3]));
 const minus = (items: string[]) => ({ ...all, ...Object.fromEntries(items.map(i => [i, 2])) });
+const DROP_1 = ['2002', '2005', '2009', '2013', '2017', '2021', '2025', '2029'], DROP_2 = ['2003', '2006', '2010', '2014', '2018', '2022', '2026', '2030'];
+const writeNight = (root: string, n: { manifest: NightManifest; rows: Outcome[] }) => {
+  const dir = join(root, n.manifest.night, 'master');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'night.json'), JSON.stringify(n.manifest));
+  writeFileSync(join(dir, 'outcomes.jsonl'), n.rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+  return dir;
+};
 
 const nov10 = night('2026-11-10', '001c8c39e84d726e9bb6ecbae053458c970d5af3', { 2001: 1, 2010: 1, 2011: 2, 2013: 1, 2015: 1, 2020: 1, 2022: 1, 2025: 1, 2026: 1 }, 2.730585);
 const nov11 = night('2026-11-11', '016ffa00c0edaa7e113918371bc41f1f2fe4dc11', { 2010: 1, 2019: 1, 2020: 1, 2026: 1 }, 2.833861);
@@ -76,13 +85,7 @@ describe('pass-rate and cost flags wait a night', () => {
 
   test('the report carries the watch in summary.json to the next night, which files the flag', () => {
     const root = mkdtempSync(join(tmpdir(), 'nightly-two-nights-'));
-    const write = (n: { manifest: NightManifest; rows: Outcome[] }) => {
-      const dir = join(root, n.manifest.night, 'master');
-      mkdirSync(dir, { recursive: true });
-      writeFileSync(join(dir, 'night.json'), JSON.stringify(n.manifest));
-      writeFileSync(join(dir, 'outcomes.jsonl'), n.rows.map(r => JSON.stringify(r)).join('\n') + '\n');
-      return dir;
-    };
+    const write = (n: { manifest: NightManifest; rows: Outcome[] }) => writeNight(root, n);
     const d0 = write(night('2026-11-20', 'a'.repeat(40), all, null));
     writeReport({ dir: d0, fixes: [] });
     const d1 = write(night('2026-11-21', 'b'.repeat(40), minus(['2002', '2005', '2009', '2013', '2017', '2021', '2025', '2029']), null));
@@ -92,5 +95,39 @@ describe('pass-rate and cost flags wait a night', () => {
     const d2 = write(night('2026-11-22', 'c'.repeat(40), minus(['2003', '2006', '2010', '2014', '2018', '2022', '2026', '2030']), null));
     const s2 = writeReport({ dir: d2, previous: d1, fixes: [] });
     expect(s2.flags).toMatchObject([{ kind: 'pass_rate', against: 'previous', suite: SUITE }]);
+  });
+
+  test('a two-night flag carries its own commit range from the baseline night, and the report gives its bisect start', () => {
+    const root = mkdtempSync(join(tmpdir(), 'nightly-two-nights-range-'));
+    const clone = join(root, 'gbrain');
+    mkdirSync(clone);
+    const git = (...args: string[]) => execFileSync('git', ['-C', clone, '-c', 'user.name=Example', '-c', 'user.email=example@example.invalid', ...args], { encoding: 'utf8' }).trim();
+    git('init', '-q', '-b', 'master');
+    const [baseline, culprit, later] = ['baseline', 'culprit', 'later'].map(m => { git('commit', '-q', '--allow-empty', '-m', m); return git('rev-parse', 'HEAD'); }) as [string, string, string];
+    const d0 = writeNight(root, night('2026-11-20', baseline, all, null));
+    writeReport({ dir: d0, fixes: [] });
+    const d1 = writeNight(root, night('2026-11-21', culprit, minus(DROP_1), null));
+    writeReport({ dir: d1, previous: d0, gbrainClone: clone, fixes: [] });
+    const d2 = writeNight(root, night('2026-11-22', later, minus(DROP_2), null));
+    const s2 = writeReport({ dir: d2, previous: d1, gbrainClone: clone, fixes: [] });
+    expect(s2.commit_range).toMatchObject({ from: culprit, to: later, commits: [expect.stringContaining('later')] });
+    expect(s2.flags).toMatchObject([{ kind: 'pass_rate', baseline: { night: '2026-11-20', sha: baseline },
+      commit_range: { from: baseline, to: later, commits: [expect.stringContaining('later'), expect.stringContaining('culprit')] } }]);
+    expect(readFileSync(join(d2, 'report.md'), 'utf8')).toContain(`bisect with \`--good ${baseline} --bad ${later}\``);
+  });
+
+  test('a held cost watch files a cost flag when the next night has no correct answers at the same spend (6, then 3, then 0 correct)', () => {
+    const spread = (n: number) => Object.fromEntries(Array.from({ length: n }, (_, i) => [String(2001 + i), 1]));
+    const base = night('2026-11-20', 'a'.repeat(40), spread(6), 6);
+    const first = night('2026-11-21', 'b'.repeat(40), spread(3), 6);
+    const none = night('2026-11-22', 'c'.repeat(40), {}, 6);
+    const c1 = compareNights(first, base, 'previous');
+    expect(c1.flags).toEqual([]);
+    expect(c1.watches).toMatchObject([{ kind: 'cost', detail: 'cost per correct answer up 100% with no gain in pass rate' }]);
+    const c2 = compareNights(none, first, 'previous', c1.watches);
+    expect(c2.flags).toMatchObject([{ kind: 'cost', baseline: { night: '2026-11-20' } }]);
+    expect(c2.flags[0]!.detail).toMatch(/^no correct answers at positive cost \(baseline \S+ per correct\) against 2026-11-20, a second night running \(2026-11-21: cost per correct answer up 100%/);
+    expect(c2.watches).toEqual([]);
+    expect(compareNights(none, first, 'previous').watches).toMatchObject([{ kind: 'cost', detail: expect.stringMatching(/^no correct answers at positive cost \(baseline \S+ per correct\)$/) }]);
   });
 });

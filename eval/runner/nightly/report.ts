@@ -153,7 +153,11 @@ export function nightCells(manifest: NightManifest, rows: Outcome[]): CellStats[
   return out;
 }
 
-export interface Flag { kind: 'signal' | 'pass_rate' | 'strong_flip' | 'cost'; against: 'previous' | 'stable'; suite: string; reader: string | null; detail: string; items?: string[] }
+export interface Flag {
+  kind: 'signal' | 'pass_rate' | 'strong_flip' | 'cost'; against: 'previous' | 'stable'; suite: string; reader: string | null; detail: string; items?: string[];
+  /** A pass-rate or cost flag that waited a night: its baseline night, where the change had not landed yet, and the commits from there to tonight. */
+  baseline?: { night: string; sha: string }; commit_range?: { from: string; to: string; commits: string[] | null };
+}
 /**
  * A pass-rate drop or cost rise that met its rule against the previous master night for the first time. It files as a
  * flag only if the next night meets the rule again against the same baseline night, so the baseline's per-item counts,
@@ -205,14 +209,15 @@ export function compareNights(tonight: { manifest: NightManifest; rows: Outcome[
       };
       const costRise = (costPerCorrect: number | null, pass1: number | null) => {
         const ratio = t.cost_per_correct !== null && costPerCorrect ? t.cost_per_correct / costPerCorrect : null;
-        const hit = ratio !== null && ratio >= COST_RISE && (t.pass1 ?? 0) <= (pass1 ?? 0);
-        return { ratio, hit, detail: hit ? `cost per correct answer up ${((ratio! - 1) * 100).toFixed(0)}% with no gain in pass rate` : '' };
+        const none = !!costPerCorrect && t.trials > 0 && t.passes === 0 && (t.cost_usd ?? 0) > 0;
+        const hit = none || (ratio !== null && ratio >= COST_RISE && (t.pass1 ?? 0) <= (pass1 ?? 0));
+        return { ratio, hit, detail: none ? `no correct answers at positive cost (baseline ${usd(costPerCorrect)} per correct)` : hit ? `cost per correct answer up ${((ratio! - 1) * 100).toFixed(0)}% with no gain in pass rate` : '' };
       };
       const hold = (kind: Watch['kind'], now: { hit: boolean; detail: string }, again: (w: Watch) => { hit: boolean; detail: string }) => {
         if (against === 'stable') { if (now.hit) flags.push({ kind, against, suite: id, reader, detail: now.detail }); return; }
         const w = held.find(x => x.kind === kind && x.suite === id && x.reader === reader && x.digest === a.digest);
         const repeat = w ? again(w) : null;
-        if (w && repeat!.hit) flags.push({ kind, against, suite: id, reader, detail: `${repeat!.detail} against ${w.baseline.night}, a second night running (${other.manifest.night}: ${w.detail})` });
+        if (w && repeat!.hit) flags.push({ kind, against, suite: id, reader, detail: `${repeat!.detail} against ${w.baseline.night}, a second night running (${other.manifest.night}: ${w.detail})`, baseline: { night: w.baseline.night, sha: w.baseline.sha } });
         else if (now.hit) watches.push({ kind, suite: id, reader, digest: a.digest, detail: now.detail, baseline: { night: other.manifest.night, sha: other.manifest.sha, per_item: p.per_item, pass1: p.pass1, cost_per_correct: p.cost_per_correct } });
       };
       const pass = passDrop(p.per_item), cost = costRise(p.cost_per_correct, p.pass1);
@@ -361,16 +366,18 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     .filter((x): x is { dir: string; against: 'previous' | 'stable' } => !!x && existsSync(join(x.dir, 'night.json')))
     .map(x => compareNights(night, loadNight(x.dir), x.against, x.against === 'previous' ? heldWatches(x.dir) : []));
   const prev = comparisons.find(c => c.against === 'previous');
-  let commits: string[] | null = null;
-  if (o.gbrainClone && prev && prev.sha && prev.sha !== m.sha) {
-    try { commits = execFileSync('git', ['-C', o.gbrainClone, 'log', '--oneline', '--first-parent', `${prev.sha}..${m.sha}`], { encoding: 'utf8' }).split('\n').filter(Boolean); }
-    catch (e) { commits = [`(git log failed: ${(e as Error).message.split('\n')[0]})`]; }
-  }
+  const log = (from: string): string[] | null => {
+    if (!o.gbrainClone || !from || from === m.sha) return null;
+    try { return execFileSync('git', ['-C', o.gbrainClone, 'log', '--oneline', '--first-parent', `${from}..${m.sha}`], { encoding: 'utf8' }).split('\n').filter(Boolean); }
+    catch (e) { return [`(git log failed: ${(e as Error).message.split('\n')[0]})`]; }
+  };
+  const commits = prev ? log(prev.sha) : null;
   const fixes = (o.fixes ?? loadFixes()).map(f => {
     const mine = rows.filter(r => r.suite === f.suite && f.items.includes(r.item) && !r.harness && !r.skipped);
     return { ...f, tonight: { rows: mine.length, passes: mine.filter(r => r.pass).length } };
   });
-  const flags = comparisons.flatMap(c => c.flags), watches = comparisons.flatMap(c => c.watches);
+  const flags = comparisons.flatMap(c => c.flags).map(f => (f.baseline ? { ...f, commit_range: { from: f.baseline.sha, to: m.sha, commits: log(f.baseline.sha) } } : f));
+  const watches = comparisons.flatMap(c => c.watches);
   const unsupported = rows.filter(r => !r.skipped && !(r.pass && !r.harness) && classify(nightlyFailure(r, `nightly-${r.suite}`, [])).cause === 'item_unsupported');
   const unsupportedItems = [...new Set(unsupported.map(r => `${r.suite} ${r.item}`))].sort();
   const agreement = nightAgreement(m, rows);
@@ -386,7 +393,10 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
   lines.push(`# Nightly gbrain check: ${m.ref} ${m.sha.slice(0, 12)}${m.version ? ` (v${m.version})` : ''}, ${m.night}`, '');
   lines.push(`Tier ${m.tier}${m.fake ? ', fake providers (plumbing only; no number here measures a model)' : ''}. Dev set ${m.devset.digest.slice(0, 12)}. Causes: failure-cause taxonomy ${TAXONOMY_VERSION}.`, '');
   lines.push(flags.length ? `**${flags.length} flags.**` : '**No flags.**', '');
-  for (const f of flags) lines.push(`- ${f.kind} (vs ${f.against}) ${f.suite} ${f.reader ?? 'keyless'}: ${f.detail}${f.items ? `: ${f.items.join(', ')}` : ''}`);
+  for (const f of flags) {
+    lines.push(`- ${f.kind} (vs ${f.against}) ${f.suite} ${f.reader ?? 'keyless'}: ${f.detail}${f.items ? `: ${f.items.join(', ')}` : ''}`);
+    if (f.commit_range) lines.push(`  - Commits since ${f.baseline!.night}, the night before it first showed (${f.commit_range.commits?.length ?? 0}): bisect with \`--good ${f.commit_range.from} --bad ${f.commit_range.to}\``, ...(f.commit_range.commits ?? []).map(c => `    - ${c}`));
+  }
   if (watches.length) lines.push('', `Watching ${watches.length}: a pass-rate drop or cost rise against the previous master night files as a flag only if the next night shows it again against the same night.`, '');
   for (const w of watches) lines.push(`- ${w.kind} ${w.suite} ${w.reader ?? 'keyless'}: ${w.detail} (against ${w.baseline.night})`);
   if (unsupported.length) lines.push('', `Item-unsupported: ${unsupported.length} failed rows on ${unsupportedItems.length} items where the cited gold sessions don't support the answer (both support validators reject it, or the item cites no turn) and the arm given every gold session fails too. They count as \`item_unsupported\` in the weekly failure causes, not as gbrain failures, and stay in the flags above: ${unsupportedItems.join(', ')}.`);

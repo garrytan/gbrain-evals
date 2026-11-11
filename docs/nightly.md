@@ -117,7 +117,9 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   per correct answer with no gain in pass rate, is first a watch line in the report and in `summary.json`'s
   `watches`. It becomes a flag only if the next night shows it again against the same baseline night; otherwise it
   lapses. A cut-off answer counts there as a harness error, never as a pass-rate drop or a flip. It also lists the
-  gbrain commits since that night.
+  gbrain commits since that night. A flag that waited a night carries its own `commit_range` in `summary.json`, from
+  its baseline night's commit to tonight's, because the change landed before the night it first showed; the report
+  prints that range and the bisect's `--good` under the flag.
 - **Why pass-rate and cost changes wait a night.** Every suite and reader is tested every night, so on a noisy suite a
   drop that clears the interval by chance comes about once a month: in a simulation of `refused-write-agents` with
   nothing changed, on 3.3% of nights. Run-to-run variation in the pass rate isn't the cause. Seven runs of that suite on
@@ -261,7 +263,9 @@ instead, so a second run never adds to a night's outcomes.
 ## Find the commit that broke something
 
 When a flag fires, `bisect.ts` binary-searches the first-parent commits between the good night and the bad one,
-rerunning only the firing items. A commit is bad when at least half of those items' trials fail there.
+rerunning only the firing items. A commit is bad when at least half of those items' trials fail there. For a pass-rate
+or cost flag, which waits a night, the good night is the flag's baseline night, not the previous one: take `--good`
+from the flag's own `commit_range.from` in `summary.json`, which the report prints under the flag.
 
 ```bash
 bun eval/runner/nightly/bisect.ts --suite <id> --items <a,b> --good <sha> --bad <sha> --gbrain-clone ../gbrain --out <dir> --fake
@@ -302,8 +306,9 @@ A pass-rate drop or cost rise against the previous master night used to file on 
 `refused-write-agents` on gpt-6.1-sol fell from 10 to 4 of 90 and filed an issue. Seven runs of that suite on 2026-11-10
 and 11 varied no more than trial sampling predicts, and the same test flagged 2 of their 21 pairs, so the drop was a
 chance hit from testing every suite every night. Now such a change is a watch line the first night and a flag only when
-the next night shows it again against the same baseline night. Deterministic signals, strong flips and the comparison
-with stable still flag at once. "Why pass-rate and cost changes wait a night" above gives the measurement.
+the next night shows it again against the same baseline night. Such a flag carries its own commit range from the
+baseline night, so a bisect starts before the change. Deterministic signals, strong flips and the comparison with
+stable still flag at once. "Why pass-rate and cost changes wait a night" above gives the measurement.
 
 ### 2026-11-11: gbrain's provider failures no longer count against either reader
 
