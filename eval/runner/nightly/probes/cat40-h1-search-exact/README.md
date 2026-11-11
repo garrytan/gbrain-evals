@@ -48,3 +48,14 @@ reader.
 - **Descriptive, per reader and pooled:** turn-cap stops, `search_exact` calls per episode and the turn of the first
   call (the probe's turn comes from the call-turn log; the 2026-11-10 rows give only the call's position), gold pages
   named in tool results and cited against gold pages needed, refusals and tool errors, and cost per episode.
+
+## Amendment, 2026-11-11 (after the run; analysis only, no change to the arm, the pairing or the decision rule)
+
+- The call-turn log records slot, turn, tool and time but no attempt id, and the cells ran 10 at a time on 5 slots, so
+  two episodes often shared a slot at once and a slot-and-time join cannot tell them apart. `analyze.py` now joins an
+  attempt only when exactly one slot's first calls in its window match its calls in order, and reports the rest as
+  unmatched. The first call's position, which the 2026-11-10 rows also give, is the like-for-like description of when
+  `search_exact` was first used; the turn is reported only for the episodes that joined.
+- `analyze.py` also reports cost per correct answer, calls per episode, and, from the probe's cell attempts,
+  `search_exact` result sizes and token use per episode.
+- Counting every `search_exact` call, refused ones included, 7 of the 2026-11-10 episodes called it, not 6.

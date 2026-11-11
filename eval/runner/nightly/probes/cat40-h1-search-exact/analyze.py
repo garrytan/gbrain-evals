@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Pairs the probe's Cat 40 H1 episodes with the 2026-11-10 master rows (same reader, item and trial) and writes the
 README's comparison: pass rates with a paired item-bootstrap interval and exact McNemar, turn-cap stops, search_exact
-use and the turn of its first call, gold pages, refusals and tool errors, and cost per episode.
+use and the turn of its first call, gold pages, refusals and tool errors, cost per episode and per correct answer, and
+(from the probe's cell attempts) result sizes and token use per episode.
 
   python3 analyze.py --probe <probe night dir> --baseline <2026-11-10 master by-suite/cat40-hard-m.jsonl.gz> --out <dir>
 
@@ -29,36 +30,44 @@ def when(s):
     return datetime.fromisoformat(s.replace('Z', '+00:00'))
 
 
-def first_turns(cells_dir):
-    """(reader, item, trial) -> list of (tool, turn) for the clean attempt, joined to the call-turn log by slot and time."""
+def from_cells(cells_dir):
+    """Two maps keyed (reader, item, trial) for the clean attempts: the (tool, turn) list joined from the call-turn log,
+    and the attempt's tool results and usage. An attempt joins the one slot whose first calls inside its time window
+    have its call names in order; the window can also hold the next episode's first calls on that slot."""
     attempts_path, log_path = os.path.join(cells_dir, 'attempts.jsonl'), os.path.join(cells_dir, 'gbrain-call-turns.jsonl')
     if not (os.path.exists(attempts_path) and os.path.exists(log_path)):
-        return {}, 'no call-turn log'
+        return {}, {}, 'no call-turn log'
     log = defaultdict(list)
     for line in open(log_path, encoding='utf8'):
         if line.strip():
             e = json.loads(line)
             log[e['slot']].append((when(e['at']), e['tool'], e['turn']))
-    out, unmatched = {}, 0
+    out, cells, unmatched, ambiguous = {}, {}, 0, 0
     for line in open(attempts_path, encoding='utf8'):
         if not line.strip():
             continue
         a = json.loads(line)
         if a.get('stop') == 'harness_error' or not str(a.get('task', '')).startswith('H1-'):
             continue
-        names = [c['name'] for s in a.get('sessions', []) for c in s['run'].get('tool_calls', [])]
+        key = (a['model'], a['task'], a['repeat'] + 1)
+        calls = [c for s in a.get('sessions', []) for c in s['run'].get('tool_calls', [])]
+        usage = Counter()
+        for s in a.get('sessions', []):
+            usage.update(s['run'].get('usage') or {})
+        cells[key] = {'calls': [(c['name'], c.get('chars') or 0) for c in calls], 'usage': dict(usage),
+                      'turns': sum(s['run'].get('turns') or 0 for s in a.get('sessions', []))}
+        names = [c['name'] for c in calls]
         t0 = when(a['started_at']); t1 = t0 + timedelta(milliseconds=a['wall_ms'])
-        found = None
+        found = []
         for slot, events in log.items():
-            inside = [(tool, turn) for at, tool, turn in events if t0 <= at <= t1]
+            inside = [(tool, turn) for at, tool, turn in events if t0 <= at <= t1][:len(names)]
             if [t for t, _ in inside] == names:
-                found = inside
-                break
-        if found is None:
-            unmatched += 1
+                found.append(inside)
+        if len(found) != 1:
+            unmatched += not found; ambiguous += len(found) > 1
             continue
-        out[(a['model'], a['task'], a['repeat'] + 1)] = found
-    return out, f'{unmatched} clean H1 attempts not matched to the log'
+        out[key] = found[0]
+    return out, cells, f'{unmatched} clean H1 attempts not matched to the log, {ambiguous} matched more than one slot'
 
 
 def members(s):
@@ -88,7 +97,7 @@ def wrong_kind(r):
     return 'list_extra_and_missing' if extra and missing else 'list_extra' if extra else 'list_missing' if missing else 'list_equal_but_failed'
 
 
-def describe(rs, turns=None):
+def describe(rs, turns=None, cells=None):
     n = len(rs)
     se = [sum(1 for c in (r.get('calls') or []) if c['name'] == 'search_exact') for r in rs]
     pos = [next((i + 1 for i, c in enumerate(r.get('calls') or []) if c['name'] == 'search_exact'), None) for r in rs]
@@ -109,6 +118,8 @@ def describe(rs, turns=None):
         'tool_errors': len(errs), 'refusals': sum(1 for e in errs if e.get('refused')),
         'tool_errors_by_tool_code': dict(Counter(f"{e.get('tool')}:{e.get('code') or (e.get('message') or '')[:40]}" for e in errs).most_common(12)),
         'cost_usd_total': sum(r.get('cost_usd') or 0 for r in rs), 'cost_usd_per_episode': sum(r.get('cost_usd') or 0 for r in rs) / n if n else None,
+        'cost_usd_per_correct': sum(r.get('cost_usd') or 0 for r in rs) / sum(1 for r in rs if r['pass']) if any(r['pass'] for r in rs) else None,
+        'calls_per_episode': sum(len(r.get('calls') or []) for r in rs) / n if n else None,
     }
     d['submitted_wrong'] = dict(Counter(wrong_kind(r) for r in rs if not r['pass'] and r.get('stop') == 'submitted'))
     if turns is not None:
@@ -116,6 +127,19 @@ def describe(rs, turns=None):
         d['first_search_exact_turn'] = {'matched_episodes': len(turns), 'calling': sum(1 for t in ft if t is not None),
             'median': statistics.median([t for t in ft if t is not None]) if any(t is not None for t in ft) else None,
             'distribution': dict(sorted(Counter(t for t in ft if t is not None).items()))}
+    if cells:
+        se_chars = [ch for c in cells.values() for name, ch in c['calls'] if name == 'search_exact']
+        all_chars = sum(ch for c in cells.values() for _, ch in c['calls'])
+        m = len(cells)
+        d['result_sizes'] = {'episodes': m, 'search_exact_calls': len(se_chars),
+            'search_exact_chars_median': statistics.median(se_chars) if se_chars else None,
+            'search_exact_chars_mean': sum(se_chars) / len(se_chars) if se_chars else None,
+            'search_exact_chars_max': max(se_chars) if se_chars else None,
+            'search_exact_chars_per_episode': sum(se_chars) / m, 'tool_chars_per_episode': all_chars / m,
+            'search_exact_share_of_tool_chars': sum(se_chars) / all_chars if all_chars else None}
+        d['usage_per_episode'] = {k: sum(c['usage'].get(k, 0) for c in cells.values()) / m
+                                  for k in ('input', 'output', 'cache_read', 'cache_write', 'requests')}
+        d['usage_per_episode']['turns'] = sum(c['turns'] for c in cells.values()) / m
     return d
 
 
@@ -149,7 +173,7 @@ def main():
     a = ap.parse_args()
     probe = h1(rows(os.path.join(a.probe, 'by-suite', 'cat40-hard-m.jsonl.gz')))
     base = h1(rows(a.baseline))
-    turns, turn_note = first_turns(os.path.join(a.probe, 'suites', 'cat40-hard-m', 'cells'))
+    turns, cells, turn_note = from_cells(os.path.join(a.probe, 'suites', 'cat40-hard-m', 'cells'))
     keys = sorted(set(probe) & set(base))
     unpaired = {'probe_only': sorted(map(list, set(probe) - set(base))), 'baseline_only': sorted(map(list, set(base) - set(probe)))}
     scored = [k for k in keys if not probe[k].get('harness') and not base[k].get('harness')]
@@ -159,9 +183,10 @@ def main():
     for scope in READERS + ['pooled']:
         ks = [k for k in scored if scope == 'pooled' or k[0] == scope]
         tk = {k: turns[k] for k in ks if k in turns}
+        ck = {k: cells[k] for k in ks if k in cells}
         res['by_reader'][scope] = {
             'paired': paired([(k[1], bool(base[k]['pass']), bool(probe[k]['pass'])) for k in ks]),
-            'baseline': describe([base[k] for k in ks]), 'probe': describe([probe[k] for k in ks], tk),
+            'baseline': describe([base[k] for k in ks]), 'probe': describe([probe[k] for k in ks], tk, ck),
         }
     pooled = res['by_reader']['pooled']['paired']
     res['clears_most_failures'] = pooled['fail_to_pass'] >= 38 and pooled['ci95_item_bootstrap'][0] > 0
