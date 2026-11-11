@@ -404,6 +404,26 @@ describe('G2 batch 4 replication (amendment of 2026-11-11)', () => {
     expect(b4.scores).toEqual(b2.scores);
   });
 
+  test('a batch 4 success@5 comparison with no pairs exports as skipped instead of crashing, so it cannot qualify', async () => {
+    const { B4_SCORECARD, buildReferences } = await import('../../eval/runner/predictive/export-references.ts');
+    const root = mkdtempSync(join(tmpdir(), 'export-b4-empty-'));
+    dirs.push(root);
+    for (const f of ['docs/benchmarks/2026-11-06-live-recall-batch1/attempt2-scorecard.json', 'docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json', 'docs/benchmarks/2026-11-10-live-recall-batch3/b3-641-scorecard.json']) {
+      mkdirSync(dirname(join(root, f)), { recursive: true });
+      copyFileSync(f, join(root, f));
+    }
+    const real = JSON.parse(readFileSync('docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json', 'utf8'));
+    const empty = (c: any) => ({ id: c.id, metric: c.metric, n_pairs: 0, n_clusters: 0, mean_a: null, mean_b: null, delta: null, ci95: null, p_two_sided: null, p_method: 'none', mcnemar: null, mde: null, family_ci95: null });
+    const comparisons = real.comparisons.map((c: any) => (c.metric !== 'success_at_5' ? c : c.id === 'window_vs_configured' ? empty(c) : { ...c, family_ci95: [c.ci95[0] - 0.05, c.ci95[1] + 0.05] }));
+    mkdirSync(dirname(join(root, B4_SCORECARD)), { recursive: true });
+    writeFileSync(join(root, B4_SCORECARD), JSON.stringify({ ...real, protocol: 'batch4', family: { method: 'max_t_cluster_bootstrap' }, comparisons }));
+    const b4 = buildReferences(root).files.find(([, r]) => r.id === 'live-recall-b4')![1];
+    expect(b4.skipped).toEqual(['window_vs_configured']);
+    expect(b4.contrasts.map(c => c.id)).not.toContain('window_vs_configured');
+    expect(b4.contrasts).toHaveLength(15);
+    expect(b4.contrasts.every(c => Number.isFinite(c.estimate) && Number.isFinite(c.lo) && Number.isFinite(c.hi))).toBe(true);
+  });
+
   test('verdict.json records a repo-relative scorecard path for a scorecard inside the repository', () => {
     const dir = mkdtempSync(join(tmpdir(), 'verdict-relpath-'));
     dirs.push(dir);

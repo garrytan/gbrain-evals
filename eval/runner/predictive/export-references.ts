@@ -25,16 +25,17 @@ export const MANIFEST = join(REFERENCE_DIR, 'manifest.json');
 /** Where batch 4's counted scorecard is committed (predictive-measures amendment of 2026-11-11). */
 export const B4_SCORECARD = 'docs/benchmarks/live-recall-batch4/b4-scorecard.json';
 
-interface Comparison { id: string; metric?: string; delta: number; ci95: [number, number]; family_ci95?: [number, number] | null; skipped?: string }
+interface Comparison { id: string; metric?: string; delta: number | null; ci95: [number, number] | null; family_ci95?: [number, number] | null; skipped?: string }
 type Arms = Record<string, { overall?: Record<string, { success_at?: { k5?: { rate?: number } } }> }>;
 
 function liveRecall(id: string, source: string, file: string, root = ROOT): ReferenceFile {
   const card = JSON.parse(readFileSync(join(root, file), 'utf8'));
   const comparisons = card.comparisons as Comparison[];
-  const contrasts: Contrast[] = comparisons
-    .filter((c) => c.metric === 'success_at_5')
-    .map((c) => ({ id: c.id, estimate: c.delta, lo: c.ci95[0], hi: c.ci95[1], ...(Array.isArray(c.family_ci95) ? { family_lo: c.family_ci95[0], family_hi: c.family_ci95[1] } : {}) }));
-  const skipped = comparisons.filter((c) => c.skipped).map((c) => c.id);
+  const success = comparisons.filter((c) => c.metric === 'success_at_5');
+  const contrasts: Contrast[] = success
+    .filter((c) => Array.isArray(c.ci95) && c.delta !== null)
+    .map((c) => ({ id: c.id, estimate: c.delta!, lo: c.ci95![0], hi: c.ci95![1], ...(Array.isArray(c.family_ci95) ? { family_lo: c.family_ci95[0], family_hi: c.family_ci95[1] } : {}) }));
+  const skipped = [...new Set([...comparisons.filter((c) => c.skipped), ...success.filter((c) => !Array.isArray(c.ci95) || c.delta === null)].map((c) => c.id))];
   const orderings: Record<string, string[]> = {};
   const scores: Record<string, Record<string, number>> = {};
   const arms = card.arms as Arms;
