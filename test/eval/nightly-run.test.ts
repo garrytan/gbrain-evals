@@ -18,7 +18,7 @@ import { canonicalDigest, loadDevSet } from '../../eval/runner/nightly/devset.ts
 import { NightlyCache } from '../../eval/runner/nightly/judge-cache.ts';
 import { buildDevSet } from '../../eval/runner/nightly/select-devset.ts';
 import { keylessEnv } from '../../eval/runner/nightly/keyless.ts';
-import { qualifiedModel, readOutcomes, resumable, type Outcome } from '../../eval/runner/nightly/outcome.ts';
+import { harnessCause, qualifiedModel, readOutcomes, resumable, type Outcome } from '../../eval/runner/nightly/outcome.ts';
 import { main, parseArgs, planSuites, requirementGap } from '../../eval/runner/nightly/run.ts';
 import { isContentMiss, recordedCalls, replayItems } from '../../eval/runner/nightly/tool-contract.ts';
 
@@ -217,6 +217,17 @@ describe('reading runner records into outcome rows', () => {
     writeFileSync(join(dir, 'rows.ndjson'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
     const all = qaRows(suiteRun('lme-s-hard', ['0a995998', '08f4fc43']), ctx(), 'gpt-6.1-sol', dir, 'anthropic:claude-opus-5-5');
     expect(latestRowPerItem(all, ['0a995998', '08f4fc43']).map(r => [r.item, r.pass, r.harness?.error ?? null])).toEqual([['0a995998', true, null], ['08f4fc43', false, 'anthropic 529']]);
+  });
+
+  test("QA rows: a failed reading lane records whose call failed, the judge's (a shared stage) or the reader's own, so a judge error isn't read as the reader's", () => {
+    const dir = tmp();
+    const rows = [{ id: '0a995998', abstention: false, qa_error: 'openai 500: The server had an error', qa_receipts: [{ role: 'reader', status: 'ok', finish: 'stop' }, { role: 'judge', status: 'error' }] },
+      { id: '08f4fc43', abstention: false, qa_error: 'particle 503: Service Unavailable', qa_receipts: [{ role: 'reader', status: 'error' }] },
+      { id: '0bc8ad93', abstention: false, qa_error: 'no call was made' }];
+    writeFileSync(join(dir, 'rows.ndjson'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+    const out = qaRows(suiteRun('lme-s-hard', ['0a995998', '08f4fc43', '0bc8ad93']), ctx(), 'particle-1', dir, 'openai:gpt-6-astra');
+    expect(out.map(r => r.harness)).toEqual([{ error: 'openai 500: The server had an error', cause: 'judge' }, { error: 'particle 503: Service Unavailable', cause: 'reader' }, { error: 'no call was made' }]);
+    expect(out.map(r => harnessCause(r.harness!))).toEqual(['judge', 'reader', 'reader']);
   });
 
   test('smokes: a harness_* code means the smoke could not run, so its row is a harness row and never a gbrain failure', () => {

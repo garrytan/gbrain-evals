@@ -94,7 +94,9 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   of nights can go through `bun eval/runner/failure-causes/cli.ts classify` and `report` beside the other evals. List a
   QA suite's published logs archive (`logs/<suite>.tar.gz`, role `logs`) beside its outcomes: its memory-qa receipts say
   how many sessions each reader was given, so a question with more gold sessions than that is labelled `reader_budget`,
-  a suite cause, instead of a gbrain retrieval or ranking cause. Without the archive those rows label as before.
+  a suite cause, instead of a gbrain retrieval or ranking cause. Without the archive those rows label as before. The
+  weekly report still shows what retrieval did on those rows: each one's first secondary cause, counted per source on
+  the "Suite causes" list and in `summary.json` as `reader_budget_secondary`.
 - **Items the support check rejects.** `eval/data/nightly/beam-1m-hard-support.json` records, per beam-1m-hard item,
   what the BEAM support check found: whether each of its two validators (gemini-3.8-flash and claude-haiku-5-5) judged
   the reference answer supported by the turns the item cites, and whether the October arm given every gold session
@@ -120,9 +122,14 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   Opus. particle-1 runs on the QA suites only: Part C's worker and the Cat 40 Hard runner take Claude and GPT readers,
   so the night leaves particle-1 off the agent suites. The nightly tier plans no QA suite, so pass `--suites
   lme-s-hard,beam-1m-hard` there, or use the matrix or smoke tier. particle-1's first trial of an item and Opus's first
-  counted trial are each reader's pass or fail. A particle-1 crash, invalid answer or harness failure counts as a fail,
-  so a reader that breaks on hard items can't drop them. An
-  item is unpaired only when Opus has no counted trial or the night didn't run it for particle-1. Per suite the report
+  counted trial are each reader's pass or fail. An error from particle-1's own provider or call (a crash, an invalid
+  answer, a 4xx or 5xx on the reader call) counts as a fail, so a reader that breaks on hard items can't drop them. A
+  failure in a stage both readers share, before or after the reader (embedding, retrieval, rerank or the judge), says
+  nothing about particle-1, so it leaves the item unpaired with its cause named. So does a row a run-level stop cut off,
+  an item Opus has no counted trial for and one the night didn't run for particle-1. Each harness row's cause is the one
+  the runner wrote with it, else a named marker in its error text (memory-qa's `RERANKER_INACTIVE` refusal, whose hint
+  is "make the reranker reachable", an embedding or retrieval failure, a judge error), else particle-1's own. The
+  report and `summary.json` count unpaired items by cause, per suite and for the verdict. Per suite the report
   shows raw agreement, Cohen's kappa (agreement beyond what the two pass rates give by chance) and particle-1's pass-rate
   gap to Opus. A suite counts toward the verdict with at least 20 paired items. particle-1 passes when the counted suites
   hold at least 40 items, no more than 10% of scheduled items are unpaired, the item-weighted mean of the counted suites'
@@ -257,6 +264,14 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-11: Shared-stage failures no longer count against particle-1
+
+A particle-1 harness row used to count as a particle-1 fail whatever failed. Now only an error from particle-1's own
+provider or call does. A failure in a stage both readers share (embedding, retrieval, rerank or the judge) leaves the
+item unpaired with its cause named, and the report counts unpaired items by cause. A judge error on a particle-1 answer,
+which counted as a fail, is now unpaired. Run-level stops still read not measured. The weekly failure-cause report now
+shows each `reader_budget` row's first secondary cause per source.
 
 ### 2026-11-11: Two suite causes keep rows out of gbrain's failure counts
 

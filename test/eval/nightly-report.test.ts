@@ -2,7 +2,8 @@
  * The nightly report (eval/runner/nightly/report.ts): pass^k and cost per correct answer, and the diff against an earlier
  * night with its flags, on fixture nights: a pass-rate drop, strong flips, a deterministic signal, a cost rise, a changed
  * suite digest, a suite the ref skipped, harness and skipped rows kept out of every rate, failures counted by the
- * failure-cause taxonomy, and particle-1's per-item agreement with claude-opus-5-5 (raw agreement and Cohen's kappa).
+ * failure-cause taxonomy, and particle-1's per-item agreement with claude-opus-5-5 (raw agreement and Cohen's kappa), with
+ * harness rows split by cause: particle-1's own provider errors are fails, shared-stage failures leave the item unpaired.
  */
 import { describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
@@ -10,7 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { TAXONOMY_VERSION } from '../../eval/runner/failure-causes/index.ts';
-import type { Outcome } from '../../eval/runner/nightly/outcome.ts';
+import { harnessCause, type Outcome } from '../../eval/runner/nightly/outcome.ts';
 import { cellStats, compareNights, findPreviousNight, nightAgreement, passHatK, writeReport, type NightManifest, type SuiteStatus } from '../../eval/runner/nightly/report.ts';
 import { row } from './nightly-fixtures.ts';
 
@@ -364,5 +365,59 @@ describe("particle-1's agreement with claude-opus-5-5", () => {
     expect(small).toContain('| suite-b | 19 | no (under 20) |');
     const none = reportOf(one, [...labelled('claude-opus-5-5', [true]), row({ reader: 'particle-1', item: 'item-0', skipped: 'not scheduled' })]).md;
     expect(none).toContain('**Not measured: no item both readers answered.**\n\n- suite-a: not measured, no particle-1 row that ran');
+  });
+
+  /** Both readers on suite-a from table a, and beam-1m-hard from table a plus items Opus passed whose particle-1 rows are the given harness rows. */
+  const withHarness = (harness: Array<NonNullable<Outcome['harness']>>, opus = [...a.opus, true, true]) => [...pair(a),
+    ...labelled('claude-opus-5-5', opus, { suite: 'beam-1m-hard' }), ...labelled('particle-1', a.particle, { suite: 'beam-1m-hard' }),
+    ...harness.map((h, i) => row({ suite: 'beam-1m-hard', reader: 'particle-1', item: `item-${20 + i}`, pass: false, score: null, stop: null, finish_reason: null, harness: h }))];
+  const beamNight = manifest([{ id: 'suite-a', readers: both, k: 1 }, { id: 'beam-1m-hard', readers: both, k: 1 }]);
+  const rerankStop = 'memory-qa exited 3:   next: ask the user: make the reranker reachable (provider key and endpoint for voyage:rerank-3-lite) and rerun the same command, which resumes; or pass --reranker off to measure without reranking on purpose and say so in the preregistration — stop until they answer';
+
+  test("the 1m-25 case: memory-qa's reranker guard stopping particle-1's beam run leaves those items unpaired with the rerank cause, not particle-1 fails", () => {
+    expect(harnessCause({ error: rerankStop })).toBe('rerank');
+    const ag = nightAgreement(beamNight, withHarness([{ error: rerankStop }, { error: rerankStop }]))!;
+    expect(ag.suites[1]).toMatchObject({ suite: 'beam-1m-hard', items: 20, both_pass: 10, candidate_only: 1, reference_only: 2, both_fail: 7, candidate_harness: 0, scheduled: 22, unpaired: 2, unpaired_causes: { rerank: 2 } });
+    expect([ag.scheduled, ag.unpaired, ag.unpaired_causes, ag.verdict]).toEqual([42, 2, { rerank: 2 }, 'pass']);
+    const { summary, md } = reportOf(beamNight, withHarness([{ error: rerankStop }, { error: rerankStop }]));
+    expect(summary.agreement).toMatchObject({ unpaired: 2, unpaired_causes: { rerank: 2 } });
+    expect(md).toContain('Unpaired items: 2 of 42 scheduled. By cause: rerank 2.');
+    expect(md).toContain('| beam-1m-hard | 20 | yes | 85.0% | 0.694 | 55.0% | 60.0% | -5.0 | 0 | 2 (rerank 2) |');
+  });
+
+  test("an error from particle-1's own provider or call (a Particle 5xx, an invalid answer, a reader failure memory-qa recorded) is still a particle-1 fail", () => {
+    const own = [{ error: 'particle 503: Service Unavailable after 3 attempts' }, { error: 'particle-1 returned an empty answer' }, { error: 'particle 400: the prompt exceeds the context window', cause: 'reader' as const }];
+    expect(own.map(h => harnessCause(h))).toEqual(['reader', 'reader', 'reader']);
+    const ag = nightAgreement(beamNight, withHarness(own, [...a.opus, true, true, true]))!;
+    expect(ag.suites[1]).toMatchObject({ items: 23, reference_only: 5, candidate_harness: 3, unpaired: 0, unpaired_causes: {} });
+    expect([ag.unpaired, ag.unpaired_causes, ag.verdict]).toEqual([0, {}, 'fail']);
+  });
+
+  test('a judge error, on either reader, leaves the item unpaired with the judge cause', () => {
+    const judged = [{ error: 'judge: openai:gpt-6-astra replied with no verdict' }, { error: 'openai 500: The server had an error', cause: 'judge' as const }];
+    expect(judged.map(h => harnessCause(h))).toEqual(['judge', 'judge']);
+    const rows = withHarness(judged).map(r => (r.suite === 'suite-a' && r.reader === 'claude-opus-5-5' && r.item === 'item-0' ? { ...r, pass: false, harness: { error: 'judge_error: truncated verdict' } } : r));
+    const ag = nightAgreement(beamNight, rows)!;
+    expect(ag.suites.map(s => (s as { unpaired_causes: object }).unpaired_causes)).toEqual([{ judge: 1 }, { judge: 2 }]);
+    expect(ag.suites[1]).toMatchObject({ items: 20, candidate_harness: 0, unpaired: 2 });
+    expect([ag.unpaired, ag.unpaired_causes]).toEqual([3, { judge: 3 }]);
+  });
+
+  test('a harness row whose text names no shared stage stays a particle-1 fail', () => {
+    const unknown = [{ error: 'memory-qa exited 1: TypeError: Cannot read properties of undefined' }, { error: 'no row recorded' }];
+    expect(unknown.map(h => harnessCause(h))).toEqual(['reader', 'reader']);
+    const ag = nightAgreement(beamNight, withHarness(unknown))!;
+    expect(ag.suites[1]).toMatchObject({ items: 22, reference_only: 4, candidate_harness: 2, unpaired: 0, unpaired_causes: {} });
+    expect(ag.verdict).toBe('fail');
+  });
+
+  test('a run-level stop is still not measured, and the rows it cut off are unpaired as run-level, not particle-1 fails', () => {
+    const cut = [{ error: 'memory-qa exited 3: stopped: budget', cause: 'run' as const }, { error: 'memory-qa exited null: SIGTERM', cause: 'run' as const }];
+    for (const exit of ['NIGHTLY_CAP_STOP', 'NIGHTLY_VM_LOST'] as const) {
+      const ag = nightAgreement({ ...beamNight, exit }, withHarness(cut))!;
+      expect(ag.suites[1]).toMatchObject({ items: 20, candidate_harness: 0, unpaired: 2, unpaired_causes: { run: 2 } });
+      expect([ag.verdict, ag.reason]).toEqual(['not_measured', `the night ended with ${exit}, so the items it never reached are not particle-1's fails`]);
+    }
+    expect(reportOf({ ...beamNight, exit: 'NIGHTLY_CAP_STOP' }, withHarness(cut)).md).toContain('| 2 (run-level stop 2) |');
   });
 });
