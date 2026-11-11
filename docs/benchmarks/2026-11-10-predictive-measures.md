@@ -1,17 +1,25 @@
 # Do synthetic memory tests predict an agent's real failures? Results
 
-- **We learned that a synthetic recall test agrees in sign with Garry's real brain on every qualifying contrast between
-  gbrain's search setups, but it catches the real brain's paraphrase gap only when it carries the real brain's embedding
-  gaps. You should build those gaps into a synthetic recall test (here, no synopsis vectors and 10% of chunks with no
-  vector) and check its signs against real-brain contrasts before it gates anything.** With the gaps, G2 (recall under
-  real conditions) reads PREDICTIVE on batch 2: all 13 of the 13 real batch 2 contrasts whose interval excludes zero
-  agree in sign with the synthetic brain. Without the gaps, the same brain reads NOT PREDICTIVE at both gbrain versions,
-  because it misses the paraphrase gap of configured search: the real brain finds 40 points fewer paraphrased questions
-  than exact ones (95% interval −56 to −24), and the clean synthetic brain shows no gap at all. The agreement is about
-  direction, not size. The synthetic brain is far easier (configured search finds 90% of paraphrases against the real
-  brain's 48%), and its configured paraphrase gap is 7 points against the real 40. Batch 3's contrasts compare search
-  setups rather than paraphrased and exact wording, and its synthetic brain is clean, with no embedding gaps: it agrees
-  in sign on all 5 that qualify, though 3 of those 5 synthetic intervals touch or cross zero. G4 (wrong entity) also
+- **We learned that a synthetic recall test predicts which of gbrain's search setups beats which on Garry's real brain,
+  and that a clean synthetic brain does this about as well as one that copies the real brain's embedding gaps. You
+  should use it to check the direction of a search change, and not yet to catch a paraphrase-recall regression: that
+  signal rests on one contrast and still needs a held-out test.** G2 (recall under real conditions) reads PREDICTIVE for
+  which search setup beats which. The synthetic brain counted for batch 2 copies the real brain's embedding gaps (no
+  synopsis vectors and 10% of chunks with no vector), and it agrees in sign with all 13 of the 13 real batch 2 contrasts
+  whose interval excludes zero. The clean synthetic brain agrees with 12 of the 13. Those 13 contrasts compare 5 search
+  setups on the same questions, so they're worth about 5 to 8 independent checks, not 13. The one contrast the clean
+  brain misses is the paraphrase gap of configured search: the real brain finds 40 points fewer paraphrased questions
+  than exact ones (95% interval −56 to −24), the gap-copied brain finds 7 points fewer, from 7 of its 100 questions, and
+  the clean brain finds every paraphrase, so it reads NOT PREDICTIVE at both gbrain versions. The gap values were
+  measured on the real brain on 2026-11-06, before batch 2 ran, but the gap-copied brain became the counted condition
+  through an amendment written on 2026-11-10, after batch 2's results were public. So the paraphrase-gap prediction is
+  PENDING a held-out replication on a new real batch, and until that lands nothing gates on G2 as a paraphrase-regression
+  detector. The agreement is about direction, not size. The synthetic brain is far easier (configured search finds 90%
+  of paraphrases against the real brain's 48%), and its configured paraphrase gap is 7 points against the real 40.
+  Batch 3's contrasts compare search setups rather than paraphrased and exact wording, and its synthetic brain is
+  clean, with no embedding gaps. Its real results came after every G2 choice was fixed, so it is a held-out check of
+  setup order: the synthetic brain agrees in sign on all 5 that qualify, though 3 of those 5 synthetic intervals touch
+  or cross zero. G4 (wrong entity) also
   reads PREDICTIVE, on all 3 of its real entity contrasts, from the same clean batch-3 brain, and 2 of its 3 synthetic
   intervals touch or cross zero. So G4 and G2's batch 3 layer come from a clean brain: they may gate on which search
   setup beats which, but they can't catch a paraphrase-recall regression.
@@ -137,7 +145,7 @@ from choosing the wrong person, as [the G1 and G4 agent cells](#g1-and-g4-agent-
 | Measure | Verdict | R48 call | Why |
 |---|---|---|---|
 | G1 freshness across pages | **NO REFERENCE YET** (retrieval layer: 2 of 3 real contrasts qualify, all 3 signs agree) | KEEP, report-only | A missing reference, not a null: the third contrast sits at the real brain's ceiling and floor |
-| G2 recall under real conditions | **PREDICTIVE** (batch 2 layer 13 of 13 agree; batch 3 layer 5 of 5) | KEEP | May gate the nightly loop, on direction only |
+| G2 recall under real conditions | **PREDICTIVE** for which search setup beats which (batch 2 layer 13 of 13 agree, and the clean brain 12 of 13; batch 3 layer 5 of 5). The paraphrase-gap prediction is **PENDING** its held-out replication | KEEP | May gate the nightly loop on which search setup beats which, on direction only. Nothing gates on it as a paraphrase-regression detector until the replication lands |
 | G3 write landing and call contract | **NO REFERENCE YET** | FIX-METHOD | Its reference can't exist as designed, and its scoring counts honest pending reports as failures |
 | G4 wrong entity | **PREDICTIVE** (retrieval layer: 3 of 3 agree) | KEEP | May gate the nightly loop, on direction only |
 | G5 latency at scale | **NO REFERENCE YET** | KEEP, report-only | Needs a later real p95 at both versions |
@@ -212,11 +220,13 @@ it abstained; the fixed schema scores that wrong. Three of those cited a decoy p
 ### G2: recall under real conditions, batch 2 layer
 
 The synthetic brain has 180 invented pages and 100 questions (20 each of identifier, error string, time window,
-cross-source and topic questions), each in an exact form and an Opus-written paraphrase. Four conditions copy measured
-conditions of the real brain: **clean**; **embedding** (no synopsis vectors and 10% of chunks with no vector, as on the
-real brain); **shells** (half the pages that aren't gold turned into empty shells, as with about half of sampled media
-pages); and **real** (both). Each condition ran at two gbrain versions on Voyage embeddings and reranking. The counted
-verdict reads the real condition at 0.60.593.0; the other seven scorecards are secondary.
+cross-source and topic questions), each in an exact form and an Opus-written paraphrase. It runs in four conditions:
+**clean**; **embedding**, with no synopsis vectors and 10% of chunks with no vector, as aggregates read from the real
+brain on 2026-11-06 found ([batch 1 report](2026-11-06-live-recall-batch1.md)); **shells**, with half the pages that
+aren't gold turned into empty shells, because in its 2026-11-09 interview Wintermute counted 17 of the first 33 media
+pages it sampled as having no usable body (a small sample whose record isn't in this repository); and **real**, with
+both. Each condition ran at two gbrain versions on Voyage embeddings and reranking. The counted verdict reads the real
+condition at 0.60.593.0; the other seven scorecards are secondary.
 
 Success@5 by arm, exact / paraphrase:
 
@@ -252,10 +262,15 @@ brain at 0.60.593.0):
 | paraphrase − exact, hybrid | −0.40 (−0.54 to −0.26) | −0.02 (−0.05 to 0.00) | agree |
 | paraphrase − exact, configured | −0.40 (−0.56 to −0.24) | −0.07 (−0.12 to −0.03) | agree |
 
-13 of 16 real contrasts qualify, and all 13 agree in sign. Kendall's tau over the arm order is 0.60 on exact forms and
-0.80 on paraphrases; it is reported and never gates. Two of the agreeing contrasts (vector's and hybrid's paraphrase
-gaps) have synthetic estimates of one or two points with intervals that touch zero. The rule counts their sign, so they
-agree, but they carry almost no information.
+13 of 16 real contrasts qualify, and all 13 agree in sign. They aren't 13 independent checks. Every one is a difference
+between the same 10 cells (5 search setups, each on exact and paraphrased forms) scored on the same questions, at most
+8 of the 13 are linearly independent, and 3 are forced, because keyword search finds no paraphrase on either side. A
+fair count is about 5 to 8 independent comparisons. Kendall's tau over the arm order is 0.60 on exact forms. On
+paraphrases `verdict.ts` reports 0.80, because it breaks the synthetic tie between vector and hybrid search (both find
+89 of 100 paraphrases) by the order the arms are listed in; counting the tie as a tie (tau-b), it's 0.949. Tau is
+reported and never gates. Two of the agreeing contrasts (vector's and hybrid's paraphrase gaps) have synthetic
+estimates of one or two points with intervals that touch zero. The rule counts their sign, so they agree, but they
+carry almost no information.
 
 **Secondary readings** (never gate):
 
@@ -266,10 +281,24 @@ agree, but they carry almost no information.
 | shells | NOT PREDICTIVE | NOT PREDICTIVE | paraphrase − exact, configured (synthetic 0.00) |
 | real | PREDICTIVE | PREDICTIVE (counted) | none |
 
-The whole difference between the passing and failing conditions is that one contrast. Without missing vectors,
-configured search finds every synthetic paraphrase, so there is no paraphrase gap to predict. With 10% of chunks
-unembedded, paraphrases whose answer sits in an unembedded chunk can only be found by keyword search, which doesn't
-match a paraphrase, and a gap opens. The gap is real in direction and much too small in size.
+The whole difference between the passing and failing conditions is that one contrast: the clean brain agrees with
+the other 12 qualifying contrasts. Without missing vectors, configured search finds every synthetic paraphrase, so there
+is no paraphrase gap to predict. With 10% of chunks unembedded, paraphrases whose answer sits in an unembedded chunk can
+only be found by keyword search, which doesn't match a paraphrase, and a gap opens. In the counted brain that gap comes
+from 7 of the 100 questions, which configured search finds in their exact form and misses in their paraphrase. Of the
+other 93, it finds 90 in both forms and 3 in neither. The gap is real in direction and much too small in size.
+
+**Why the paraphrase-gap prediction isn't held out yet.** The preregistration calls batch 2 held out, and the knob
+values weren't tuned to it: the real brain's missing synopsis vectors and unembedded chunks were read on 2026-11-06 at
+22:25 UTC, and batch 2 ran on 2026-11-07. But batch 2's results were committed on 2026-11-07 at 21:31 UTC, and the
+plan was written after that: the frozen preregistration (2026-11-09, 08:53 UTC, about 35 hours later) already quotes
+batch 2's 13 qualifying contrasts. It listed the measured conditions as knobs without saying which brain would count,
+and the gap-copied brain became the counted condition through the amendment of 2026-11-10 (07:36 UTC), whose author
+had seen keyless control runs against batch 2 that aren't in this repository. So batch 2 can't show that the gaps predict the real brain's paraphrase gap; it shows
+that the brain we chose after seeing batch 2 agrees with it. A new real batch, scored against this brain exactly as it
+is counted here and preregistered before the batch exists, is the test. Until it lands, the paraphrase-gap prediction
+reads PENDING and nothing gates on G2 as a paraphrase-regression detector. Batch 3 is held out, but its synthetic brain
+is clean, so it doesn't test the gaps.
 
 ### Batch 3: G2's batch 3 layer and G1's and G4's retrieval layers
 
@@ -407,15 +436,17 @@ YET**, as preregistered, until a later real p95 measurement at these two version
 
 ## What to use and what to avoid
 
-- **Use a synthetic recall test to check direction, after you've matched its embedding gaps to your brain's.** It agreed
-  in sign with the real brain on every qualifying contrast between six search setups. On batch 3's setup contrasts the
-  clean brain agreed in sign on all 5 that qualify, but 3 of those 5 synthetic intervals touch or cross zero, so those
-  three agreements carry little information; only the brain with the gaps caught batch 2's paraphrase gap. Don't read
-  its sizes: on the contrasts that qualify, it puts the gain of meaning-based search over keyword search at about two to
-  two and a half times the real one, and the paraphrase gap of configured search at a sixth of the real one (about a
-  twentieth for vector and hybrid search).
-- **Don't trust a clean synthetic brain for paraphrase recall.** Clean pages make configured search look perfect on
-  paraphrases, and the real brain loses 40 points there.
+- **Use a synthetic recall test to check which search setup beats which.** On batch 2's qualifying contrasts between
+  five search setups, the brain with the real embedding gaps agreed in sign with the real brain on all 13 and the clean
+  brain on 12, which together are worth about 5 to 8 independent checks. On batch 3's setup contrasts the clean brain
+  agreed in sign on all 5 that qualify, but 3 of those 5 synthetic intervals touch or cross zero, so those three
+  agreements carry little information. Don't read its sizes: on the contrasts that qualify, it puts the gain of
+  meaning-based search over keyword search at about two to two and a half times the real one, and the paraphrase gap of
+  configured search at a sixth of the real one (about a twentieth for vector and hybrid search).
+- **Don't trust a clean synthetic brain for paraphrase recall, and don't gate on the gap-copied one yet.** Clean pages
+  make configured search look perfect on paraphrases, and the real brain loses 40 points there. Copying the real brain's
+  embedding gaps opens a 7-point gap, from 7 of 100 questions, but that brain was chosen after batch 2 was public, so
+  whether it predicts the real paraphrase gap waits on a held-out batch.
 - **Verify writes against the brain, not the agent's report, when a low-cost model writes.** particle-1 claimed 7
   writes that never landed; Opus and Sol claimed none.
 - **Parse a low-cost model's answer before you score or act on it.** Every G4 answer of particle-1's that held a name or an
@@ -452,6 +483,11 @@ contrast no room, as the batch 3 section shows.
 
 - G2's verdict reads signs. A synthetic brain that gets every direction right and every size wrong reads PREDICTIVE,
   and this one does both.
+- Batch 2's results were public before this plan and G2's generator were written (2026-11-09), so batch 2 checks
+  brains we built after seeing it. Batch 3, whose results came after every choice for its layer was fixed, is the
+  held-out check of setup order, and it doesn't test the embedding gaps.
+- G2's 13 agreeing batch 2 contrasts share 5 setups and one set of questions, so they're worth about 5 to 8
+  independent checks, and the gap-copied brain differs from the clean one on only one of them.
 - Each G2 pair compares the synthetic brain on PGLite with the real brain on Postgres. The keyword candidate bound
   batch 1 recorded on 57 of 100 lexical-hybrid forms can't occur on PGLite, so the synthetic brain doesn't copy it.
 - The shells and real conditions turn non-gold pages into shells whatever their kind, which overstates shells on pages
@@ -502,6 +538,22 @@ contrast no room, as the batch 3 section shows.
 - Provider-side billing for the runs; cost per correct answer comes from the usage fields each response reported.
 - Why Sol recovered after 29.7% of its MCP refusals but 1.6% of its CLI refusals.
 - Why particle-1 wrapped or dropped the id on surname tasks far more than on the other G4 patterns.
+
+## Correction, 2026-11-11
+
+The first version of this report, merged on 2026-11-10, said that the synthetic recall brain catches the real brain's
+paraphrase gap only when it carries the real brain's embedding gaps, and its verdict table let G2 gate the nightly loop
+without separating setup order from the paraphrase gap. An independent check of every claim found that the numbers and
+verdicts reproduce, but that three claims went further than the records:
+
+- The gap-copied brain became the counted condition after batch 2's results were public, so batch 2 can't show that its
+  paraphrase gap is a prediction. A new real batch has to test it.
+- The clean brain agrees on 12 of the 13 contrasts, so the gaps' whole effect is one contrast, from 7 of 100 questions.
+- The 13 contrasts share 5 setups and one set of questions, so they're worth about 5 to 8 independent checks.
+
+The report now reads G2 as PREDICTIVE for which search setup beats which, and its paraphrase-gap prediction as PENDING a
+held-out replication. It also states the Kendall tau tie (0.80 as computed, 0.949 as tau-b) and where the media-shell
+figure comes from. No number or other verdict changed.
 
 ## Disclosures
 
