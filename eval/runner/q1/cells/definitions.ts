@@ -32,7 +32,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { CHAT_PRICE_OVERRIDES, type ChatPrice } from '../../budget-ledger.ts';
 import { lookupEmbeddingPrice } from '../../../../node_modules/gbrain/src/core/embedding-pricing.ts';
-import { READER_WINDOWS } from '../../systems/baselines.ts';
+import { FRONTIER_READERS, READER_WINDOWS } from '../../systems/baselines.ts';
 import type { Outcome } from '../../memory-qa/outcomes.ts';
 
 export const CELL_SCHEMA = 'gbrain-evals/q1-cell/v1';
@@ -43,11 +43,13 @@ export const PREREGISTRATION = 'docs/benchmarks/2026-10-06-scoreboard-preregistr
 
 export type Q1SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S3-smoke-default' | 'S2b-ingest';
 /** F6's own set (eval/runner/q1/cells/f6.ts): the D8 long-history reserve. */
-export type SetId = Q1SetId | 'D8' | RS1SetId | BG1SetId;
+export type SetId = Q1SetId | 'D8' | RS1SetId | BG1SetId | SotaSetId;
 /** RS1's sets (eval/runner/q1/cells/rs1.ts): the sealed set and stage 1's two public dev conversations. */
 export type RS1SetId = 'RS1' | 'RS1-dev2';
 /** BG1's sets (eval/runner/q1/cells/bg1.ts): the sealed changing-facts set, its full-context worlds and stage 1's three public dev worlds. */
 export type BG1SetId = 'BG1' | 'BG1-fc10' | 'BG1-dev3';
+/** The SOTA loop's sets (generateSotaDevCells). */
+export type SotaSetId = 'SOTA-dev';
 export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
 /** F6's spend blocks (eval/runner/q1/cells/f6.ts), charged to F6's own cap; F6-P1 is the particle-1 add-on's (GBEV-31). */
 export type F6BlockId = 'F6-S1' | 'F6-T2' | 'F6-D8' | 'F6-S4' | 'F6-dry' | 'F6-P1';
@@ -55,7 +57,8 @@ export type F6BlockId = 'F6-S1' | 'F6-T2' | 'F6-D8' | 'F6-S4' | 'F6-dry' | 'F6-P
 export type RS1BlockId = 'RS1-S1' | 'RS1';
 /** BG1's spend blocks (eval/runner/q1/cells/bg1.ts): stage 1 and the counted cells. */
 export type BG1BlockId = 'BG1-S1' | 'BG1';
-export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId;
+export type SotaBlockId = 'SOTA-dev';
+export type BlockId = Q1BlockId | F6BlockId | RS1BlockId | BG1BlockId | SotaBlockId;
 export type Split = 'dev' | 'sealed' | 'all';
 
 export type Selection =
@@ -65,7 +68,9 @@ export type Selection =
   /** `limit` questions round-robin over strata (category, or conversation then category), each stratum in sha256(seed, id) order; `min` reserves a floor per category first. */
   | { kind: 'stratified'; limit: number; stratify: 'category' | 'conversation-category'; seed: string; min?: Record<string, number> }
   /** The shootout's slice: `selectQuestions(questions, limit, seed)` from eval/runner/memory-qa/run.ts. */
-  | { kind: 'shootout-slice'; limit: number; seed: number };
+  | { kind: 'shootout-slice'; limit: number; seed: number }
+  /** Exactly these question ids, which every one must be in the loaded split; dev ids only, since sealed ids never live in a manifest. */
+  | { kind: 'ids'; ids: string[] };
 
 export type ArmMode = 'packed' | 'native-default' | 'own-answer' | 'agent' | 'full-context' | 'retrieval-only';
 
@@ -198,6 +203,8 @@ export interface Manifest {
   smoke_cells: CellDefinition[];
   /** Cells outside the counted list, the block totals and the publication, run only by a unit-selection campaign that names them (F6's particle-1 add-on, A6). */
   addon_cells?: CellDefinition[];
+  /** Q1's manifest: the SOTA loop's rates behind its addon_cells' estimates. */
+  sota_assumptions?: typeof SOTA_ASSUMPTIONS;
   total_usd: number;
   plan_total_usd: number;
   cap_usd: number;
@@ -251,8 +258,45 @@ export const BG1_SETS: Record<BG1SetId, SetFacts> = {
   'BG1-fc10': { id: 'BG1-fc10', benchmark: 'bg1', split: 'sealed', questions: 640, conversations: 10, corpus_tokens: 2_000_000, messages: 20_000, block: 'BG1', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'BG1 full-context reference, the first 10 kept worlds (descriptive)', sessions: 150 },
   'BG1-dev3': { id: 'BG1-dev3', benchmark: 'bg1-dev', split: 'dev', questions: 192, conversations: 3, corpus_tokens: 600_000, messages: 6_000, block: 'BG1-S1', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BG1 stage 1, three public dev worlds', only_conversations: ['bg1-dev-01', 'bg1-dev-02', 'bg1-dev-03'], sessions: 150 },
 };
-/** Every set a cell may name: Q1's, F6's, RS1's and BG1's. */
-export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS, ...BG1_SETS };
+/**
+ * The SOTA loop dev test's conversations (decision D2a): the four public BEAM-1M dev conversations with the most
+ * answerable questions (eval/data/answerability/beam-1m.json, supported or partial), ties broken by id. All four are in
+ * the nightly dev pool (eval/data/nightly/devset-v2.json, beam-1m-hard), whose other conversations the leader cache covers.
+ */
+export const SOTA_DEV_CONVERSATIONS = ['1m-2', '1m-24', '1m-25', '1m-3'];
+/**
+ * Every answerable question of those conversations, in id order. The list is written out because the cell runner's VM
+ * receives only its EXECUTES paths, not eval/data/answerability; test/eval/gbrain-agent.test.ts checks it against that file.
+ */
+export const SOTA_DEV_IDS: string[] = Object.entries({
+  '1m-2': ['event_ordering:0', 'event_ordering:1', 'information_extraction:0', 'information_extraction:1',
+    'instruction_following:0', 'instruction_following:1', 'knowledge_update:0', 'knowledge_update:1',
+    'multi_session_reasoning:0', 'multi_session_reasoning:1', 'preference_following:0', 'preference_following:1',
+    'summarization:0', 'summarization:1', 'temporal_reasoning:0', 'temporal_reasoning:1'],
+  '1m-24': ['contradiction_resolution:0', 'contradiction_resolution:1', 'event_ordering:0', 'event_ordering:1',
+    'information_extraction:0', 'information_extraction:1', 'instruction_following:0', 'instruction_following:1',
+    'knowledge_update:0', 'multi_session_reasoning:0', 'multi_session_reasoning:1', 'preference_following:0',
+    'preference_following:1', 'summarization:0', 'summarization:1', 'temporal_reasoning:0', 'temporal_reasoning:1'],
+  '1m-25': ['contradiction_resolution:0', 'contradiction_resolution:1', 'event_ordering:0', 'event_ordering:1',
+    'information_extraction:0', 'information_extraction:1', 'instruction_following:0', 'instruction_following:1',
+    'knowledge_update:0', 'knowledge_update:1', 'multi_session_reasoning:0', 'multi_session_reasoning:1',
+    'preference_following:0', 'preference_following:1', 'summarization:0', 'temporal_reasoning:0'],
+  '1m-3': ['contradiction_resolution:1', 'event_ordering:0', 'event_ordering:1', 'information_extraction:0',
+    'information_extraction:1', 'instruction_following:0', 'instruction_following:1', 'knowledge_update:0',
+    'knowledge_update:1', 'multi_session_reasoning:0', 'multi_session_reasoning:1', 'preference_following:0',
+    'preference_following:1', 'summarization:0', 'summarization:1', 'temporal_reasoning:0', 'temporal_reasoning:1'],
+}).flatMap(([conversation, questions]) => questions.map(q => `${conversation}:${q}`)).sort();
+/**
+ * The SOTA loop's sets. SOTA-dev's token and message counts are estimates, four times the per-conversation mean of
+ * RS1-dev2's two measured public BEAM-1M conversations, until the dev test's ingest receipts measure them.
+ */
+export const SOTA_SETS: Record<SotaSetId, SetFacts> = {
+  'SOTA-dev': { id: 'SOTA-dev', benchmark: 'beam-1m', split: 'dev', questions: SOTA_DEV_IDS.length, conversations: SOTA_DEV_CONVERSATIONS.length, corpus_tokens: Math.round(RS1_SETS['RS1-dev2'].corpus_tokens / 2 * SOTA_DEV_CONVERSATIONS.length),
+    messages: Math.round(RS1_SETS['RS1-dev2'].messages / 2 * SOTA_DEV_CONVERSATIONS.length), block: 'SOTA-dev', selection: { kind: 'ids', ids: SOTA_DEV_IDS }, exclusions: [], role: 'smoke', exposure: 'E2',
+    label: 'SOTA loop dev test: the answerable questions of four public BEAM-1M dev conversations', only_conversations: SOTA_DEV_CONVERSATIONS },
+};
+/** Every set a cell may name: Q1's, F6's, RS1's, BG1's and the SOTA loop's. */
+export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS, ...RS1_SETS, ...BG1_SETS, ...SOTA_SETS };
 
 /** PLAN §7 block lines (the approved estimate the re-priced manifest is compared with). */
 export const PLAN_BLOCKS: Record<Q1BlockId, { label: string; plan_usd: number }> = {
@@ -405,6 +449,27 @@ export const RS1_ASSUMPTIONS = {
   judge_usd_per_answer: { frontier: 113.31 / 3301, canonical: 0.0028 },
 };
 
+/**
+ * The SOTA loop dev test's rates (generateSotaDevCells), each a named assumption the dev test replaces with a
+ * measurement. They live apart from ASSUMPTIONS, which Q1's, F6's, RS1's and BG1's manifests carry, so those stay
+ * byte-identical.
+ */
+export const SOTA_ASSUMPTIONS = {
+  /**
+   * Agent input and output tokens per question per reader: the file agent's S2b line (ASSUMPTIONS.agent), for both
+   * agents, since both read BEAM-1M conversations with the same loop and nothing has measured the gbrain agent yet.
+   */
+  agent: {
+    'baseline-file-agent': { 'SOTA-dev': 73_000, output: 2_000 },
+    'gbrain-defaults': { 'SOTA-dev': 73_000, output: 2_000 },
+  } as Record<string, Record<string, number | Record<string, number>>>,
+  /** gbrain tool calls per answer, each priced at ASSUMPTIONS.gbrain_query_usd (which includes an expansion call, so it overstates a call at today's defaults); assumed, not measured. */
+  gbrain_tool_calls_per_answer: 10,
+  /** The gbrain agent's ingest, in process: the gbrain-defaults shim's measured shipped-defaults rates (ASSUMPTIONS ingest_usd_per_mtok and hours_per_mtok) until the dev test measures its own. */
+  ingest_usd_per_mtok: { 'gbrain-defaults:agent-tools': ASSUMPTIONS.ingest_usd_per_mtok['gbrain-defaults:shipped-defaults'] } as Record<string, number>,
+  hours_per_mtok: { 'gbrain-defaults:agent-tools': ASSUMPTIONS.hours_per_mtok['gbrain-defaults:shipped-defaults'] } as Record<string, number>,
+};
+
 /** An embedding model's list price per million tokens (gbrain's own price table, as budget-ledger prices embeddings). */
 function embeddingPrice(model: string): number {
   const p = lookupEmbeddingPrice(model);
@@ -516,12 +581,12 @@ function fullContextCost(set: SetFacts, reader: string, questions: number): numb
  */
 export const runsF6 = (def: Pick<CellDefinition, 'launch'>) => def.launch?.env.GBRAIN_F6 === '1';
 
-/** A cell's ingest dollars per million tokens: BG1's own on a BG1 benchmark, else for its benchmark family, then its configuration (Q1's, F6's, RS1's), else 0. */
+/** A cell's ingest dollars per million tokens: BG1's own on a BG1 benchmark, else for its benchmark family, then its configuration (Q1's, F6's, RS1's, the SOTA loop's), else 0. */
 export function ingestRate(def: Pick<CellDefinition, 'system' | 'configuration' | 'benchmark'>): number {
   const family = def.benchmark.startsWith('beam') ? 'beam' : def.benchmark;
   const key = `${def.system}:${def.configuration}`;
   if (isBg1Benchmark(def.benchmark)) return BG1_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? 0;
-  return ASSUMPTIONS.ingest_usd_per_mtok[`${key}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[key] ?? F6_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? RS1_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? 0;
+  return ASSUMPTIONS.ingest_usd_per_mtok[`${key}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[key] ?? F6_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? RS1_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? SOTA_ASSUMPTIONS.ingest_usd_per_mtok[key] ?? 0;
 }
 
 /**
@@ -581,7 +646,11 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
       if (arm.mode === 'packed') add('readers', answers(r) * call(r, arm.budget! * byReader(ASSUMPTIONS.reader_tokens_per_budget_token, r) + overhead(r), outTokens(r)));
       else if (arm.mode === 'native-default') add('readers', answers(r) * call(r, byReader(ASSUMPTIONS.vendor_default_tokens, def.system) * perCl100k(r) + overhead(r), outTokens(r)));
       else if (arm.mode === 'full-context') add('full_context', fullContextCost(set, r, n));
-      else if (arm.mode === 'agent') { const a = ASSUMPTIONS.agent[def.system]; add('agent', n * call(r, agentTokens(a[def.set], r), agentTokens(a[`output_${def.set}`] ?? a.output, r))); }
+      else if (arm.mode === 'agent') {
+        const a = (def.set in SOTA_SETS ? SOTA_ASSUMPTIONS.agent : ASSUMPTIONS.agent)[def.system];
+        add('agent', n * call(r, agentTokens(a[def.set], r), agentTokens(a[`output_${def.set}`] ?? a.output, r)));
+        if (def.set in SOTA_SETS && def.system === 'gbrain-defaults') add('system_queries', n * SOTA_ASSUMPTIONS.gbrain_tool_calls_per_answer * ASSUMPTIONS.gbrain_query_usd);
+      }
       else if (arm.mode === 'own-answer' && arm.variant === 'think') { const a = ASSUMPTIONS.agent.think; add('own_answer', n * call(r, agentTokens(a[def.set], r), agentTokens(a[`output_${def.set}`] ?? a.output, r))); }
     }
     if (arm.mode === 'own-answer' && arm.variant === 'synthesize') { const s = ASSUMPTIONS.synthesize; add('own_answer', n * (s.input * s.price.input + s.output * s.price.output) / 1e6); }
@@ -673,20 +742,20 @@ export const HOURS_OVERRIDES: Record<string, { hours: number; basis: string }> =
   's1.baseline-hybrid.baseline': { hours: 9, basis: 'A22: concurrent embedding ingests S1 in about 0.9 hours; the sequential question phase (2,200 answers, canonical and frontier judging) takes about 8' },
 };
 
-/** A system's ingest hours per million corpus tokens: for its benchmark family, then its configuration (Q1's, then F6's), then its runner's default. */
+/** A system's ingest hours per million corpus tokens: for its benchmark family, then its configuration (Q1's, then F6's, RS1's and the SOTA loop's), then its runner's default. */
 export function hoursPerMtok(system: string, configuration: string, benchmark: string, runner: 'shim' | 'in-process'): number {
   const family = benchmark.startsWith('beam') ? 'beam' : benchmark;
   const bg1 = isBg1Benchmark(benchmark) ? BG1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] : undefined;
   if (bg1 !== undefined) return bg1;
-  return ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? RS1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
+  return ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? RS1_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? SOTA_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
 }
 
-/** One cell. `extra`: F6 cells name their own block, probes and launch environment (Q1 cells pass none of these). */
+/** One cell. `extra`: F6 cells name their own block, probes and launch environment, and the SOTA loop's gbrain agent its runner (Q1 cells pass none of these). */
 export function makeCell(set: SetId, system: string, configuration: string, armSpecs: ArmSpec[],
-  extra: { ingest_replicate?: number; block?: BlockId; probes?: CellDefinition['probes']; launchEnv?: Record<string, string>; keptUnits?: number } = {}): CellDefinition {
+  extra: { ingest_replicate?: number; block?: BlockId; probes?: CellDefinition['probes']; launchEnv?: Record<string, string>; keptUnits?: number; runner?: CellDefinition['runner'] } = {}): CellDefinition {
   const s = ALL_SETS[set];
   const id = `${set.toLowerCase()}.${system}.${configuration}${extra.ingest_replicate && extra.ingest_replicate > 1 ? `.r${extra.ingest_replicate}` : ''}`;
-  const runner = SHIMS.has(system) ? 'shim' as const : 'in-process' as const;
+  const runner = extra.runner ?? (SHIMS.has(system) ? 'shim' as const : 'in-process' as const);
   const arms: ArmDefinition[] = armSpecs.map(a => {
     const component = a.mode === 'packed';
     return {
@@ -827,6 +896,27 @@ export function generateSmokeCells(): CellDefinition[] {
   return cells;
 }
 
+/**
+ * The SOTA loop's dev test (decision D2a): the grep agent (baseline-file-agent) and the gbrain agent (gbrain-defaults in
+ * process, systems/gbrain-agent.ts) on SOTA-dev's answerable public BEAM-1M questions. Each cell holds the frontier
+ * readers in one arm and particle-1 in another, so the particle-1 rows run in their own paid window (`--arms
+ * whole-agent-particle`). Judged per the BEAM judges rule: BEAM's canonical judge (gpt-4.1-mini, the bridge to earlier
+ * runs) on every answer, and one frontier judge per answer by the reader's family, never its own. No write-to-queryable
+ * probes. Outside the counted list, the block totals and the publication (addon_cells).
+ */
+export function generateSotaDevCells(): CellDefinition[] {
+  const perReader = (readers: string[]): NonNullable<ArmDefinition['frontier']> => ({ judges: [...new Set(readers.map(frontierJudgeOf))].sort(), readers: null, sample: null, per_reader: true, settings: { ...PER_READER_JUDGE_SETTINGS } });
+  const arms = (label: string): ArmSpec[] => [
+    { id: 'whole-agent', mode: 'agent', label, readers: [...FRONTIER_READERS], frontier: perReader([...FRONTIER_READERS]) },
+    { id: 'whole-agent-particle', mode: 'agent', label: `${label} (particle-1)`, readers: ['particle:particle-1'], frontier: perReader(['particle:particle-1']) },
+  ];
+  const extra = { block: 'SOTA-dev' as const, probes: { sample: 0, seed: 'sota-probes-dev', conversations: 0 }, runner: 'in-process' as const };
+  return [
+    makeCell('SOTA-dev', 'baseline-file-agent', 'baseline', arms('file agent, uncapped grep, 40 turns'), extra),
+    makeCell('SOTA-dev', 'gbrain-defaults', 'agent-tools', arms('gbrain agent: query, search and get_page, 40 turns'), extra),
+  ];
+}
+
 /** A stratified ~300-item frontier re-judge per set: the sample spread over the set's judged arms that have no other frontier scope. */
 function withFrontierSample(cells: CellDefinition[], set: SetId): CellDefinition[] {
   const open = cells.flatMap(c => c.arms.filter(a => a.set === set && !a.frontier && a.mode !== 'retrieval-only' && a.readers.length && a.readers[0] !== 'system-default'));
@@ -849,7 +939,7 @@ export function buildManifest(): Manifest {
   return {
     schema: MANIFEST_SCHEMA, generated_by: 'bun eval/runner/q1/cells/definitions.ts', preregistration: PREREGISTRATION, readers: READERS, effort: 'medium',
     prices: Object.fromEntries(models.sort(([a], [b]) => (a < b ? -1 : 1))), assumptions: ASSUMPTIONS,
-    sets: Object.values(SETS), blocks, cells, smoke_cells: generateSmokeCells(),
+    sets: Object.values(SETS), blocks, cells, smoke_cells: generateSmokeCells(), addon_cells: generateSotaDevCells(), sota_assumptions: SOTA_ASSUMPTIONS,
     total_usd: Math.round(blocks.reduce((s, b) => s + b.estimate_usd, 0) * 100) / 100,
     plan_total_usd: Object.values(PLAN_BLOCKS).reduce((s, b) => s + b.plan_usd, 0) + PLAN_SHARED_USD, cap_usd: CAP_USD,
   };
@@ -874,12 +964,14 @@ function selectionProblems(s: Selection, where: string): string[] {
   if (s.kind === 'per-conversation') return Number.isInteger(s.per_conversation) && s.per_conversation > 0 && typeof s.seed === 'string' && s.seed ? [] : [`${where}: per-conversation needs a positive per_conversation and a seed`];
   if (s.kind === 'stratified') return Number.isInteger(s.limit) && s.limit > 0 && ['category', 'conversation-category'].includes(s.stratify) && typeof s.seed === 'string' && s.seed ? [] : [`${where}: stratified needs a positive limit, stratify category|conversation-category and a seed`];
   if (s.kind === 'shootout-slice') return Number.isInteger(s.limit) && s.limit > 0 && Number.isInteger(s.seed) ? [] : [`${where}: shootout-slice needs an integer limit and seed`];
+  if (s.kind === 'ids') return Array.isArray(s.ids) && s.ids.length && s.ids.every(id => typeof id === 'string' && id) && new Set(s.ids).size === s.ids.length ? [] : [`${where}: ids needs a non-empty list of distinct question ids`];
   return [`${where}: unknown selection kind ${JSON.stringify((s as { kind?: unknown }).kind)}`];
 }
 
 export const F6_BLOCK_IDS: readonly F6BlockId[] = ['F6-S1', 'F6-T2', 'F6-D8', 'F6-S4', 'F6-dry', 'F6-P1'];
 export const RS1_BLOCK_IDS: readonly RS1BlockId[] = ['RS1-S1', 'RS1'];
 export const BG1_BLOCK_IDS: readonly BG1BlockId[] = ['BG1-S1', 'BG1'];
+export const SOTA_BLOCK_IDS: readonly SotaBlockId[] = ['SOTA-dev'];
 
 /** An arm's retrieval identity: only on gbrain cells whose stack runs F6 (GBRAIN_F6=1), on a packed or retrieval-only arm, naming a known op, its own arguments and all six overlay keys. */
 function retrievalProblems(d: CellDefinition, a: ArmDefinition, w: string): string[] {
@@ -924,9 +1016,10 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
   if (d.schema !== CELL_SCHEMA) p.push(`schema must be ${CELL_SCHEMA}`);
   if (!ID.test(d.id ?? '')) p.push(`id ${JSON.stringify(d.id)} must be 1-80 characters of [a-z0-9.-]`);
   if (!ALL_SETS[d.set]) p.push(`set ${d.set} is unknown`);
-  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
+  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !([...F6_BLOCK_IDS, ...RS1_BLOCK_IDS, ...BG1_BLOCK_IDS, ...SOTA_BLOCK_IDS] as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
   if (!['dev', 'sealed', 'all'].includes(d.split)) p.push('split must be dev, sealed or all');
   p.push(...selectionProblems(d.selection, 'selection'));
+  if (d.selection?.kind === 'ids' && d.split !== 'dev') p.push('an ids selection names dev questions only, since sealed ids never live in a manifest');
   if (!kinds.has(d.system)) p.push(`system ${d.system} is not a kind id in eval/systems/kinds.json`);
   if (!['shim', 'in-process'].includes(d.runner)) p.push('runner must be shim or in-process');
   if (!(Number.isInteger(d.ingest_replicate) && d.ingest_replicate >= 1)) p.push('ingest_replicate must be a positive integer');

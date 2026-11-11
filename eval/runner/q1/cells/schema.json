@@ -8,14 +8,14 @@
   "properties": {
     "schema": { "const": "gbrain-evals/q1-cell/v1" },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,79}$", "description": "<set>.<system>.<configuration>[.r<n>]" },
-    "set": { "enum": ["S1", "S1-sweep", "S2a", "S2b", "S3", "S4", "S4-slice", "S5", "S3-smoke", "S3-smoke-default", "S2b-ingest", "D8"], "description": "The preregistered set the cell selects questions from (S3-smoke and S2b-ingest: the paid dev smokes; D8: F6's long-history reserve)." },
-    "block": { "enum": ["T1", "T2-S2a", "T2-S2b", "T2-S3", "T2-S4-S5", "F6-S1", "F6-T2", "F6-D8", "F6-S4", "F6-dry"], "description": "The spend block (ledger run) the cell is charged to; F6-* blocks are charged to F6's own cap (eval/runner/q1/cells/f6.ts)." },
+    "set": { "enum": ["S1", "S1-sweep", "S2a", "S2b", "S3", "S4", "S4-slice", "S5", "S3-smoke", "S3-smoke-default", "S2b-ingest", "D8", "SOTA-dev"], "description": "The preregistered set the cell selects questions from (S3-smoke and S2b-ingest: the paid dev smokes; D8: F6's long-history reserve)." },
+    "block": { "enum": ["T1", "T2-S2a", "T2-S2b", "T2-S3", "T2-S4-S5", "F6-S1", "F6-T2", "F6-D8", "F6-S4", "F6-dry", "SOTA-dev"], "description": "The spend block (ledger run) the cell is charged to; F6-* blocks are charged to F6's own cap (eval/runner/q1/cells/f6.ts); SOTA-dev is the SOTA loop's dev test (generateSotaDevCells)." },
     "benchmark": { "enum": ["beam-10m", "beam-100k", "beam-1m", "locomo", "lme-s", "lme-m", "beam-d8"] },
     "split": { "enum": ["dev", "sealed", "all"], "description": "Conversations from the benchmark's split file; sealed and all need custody (GBRAIN_EVALS_CUSTODY_LOG and an output directory outside the repository)." },
     "selection": { "$ref": "#/$defs/selection" },
     "exclusions": { "type": "array", "items": { "type": "object", "required": ["question_id", "reason"], "properties": { "question_id": { "type": "string" }, "reason": { "type": "string" } } }, "description": "Preregistered exclusions: they run and are reported apart, never in a confirmatory cohort." },
     "system": { "type": "string", "description": "A kind id from eval/systems/kinds.json." },
-    "configuration": { "enum": ["shipped-defaults", "full-surface", "recipe", "common", "common-embedder", "baseline", "f6-master", "shipped-0.31"], "description": "full-surface: gbrain-defaults on a stack started with GBRAIN_FULL_SURFACE=1, for the labeled think row; every other Q1 gbrain row reads a starter-only stack. f6-master: gbrain-defaults at F6's pin with GBRAIN_F6=1 (the fact-extraction build and per-arm retrieval identities); shipped-0.31: the temporal graph's 0.31.2 shipped defaults from its own bundle directory." },
+    "configuration": { "enum": ["shipped-defaults", "full-surface", "recipe", "common", "common-embedder", "baseline", "f6-master", "shipped-0.31", "agent-tools"], "description": "full-surface: gbrain-defaults on a stack started with GBRAIN_FULL_SURFACE=1, for the labeled think row; every other Q1 gbrain row reads a starter-only stack. f6-master: gbrain-defaults at F6's pin with GBRAIN_F6=1 (the fact-extraction build and per-arm retrieval identities); shipped-0.31: the temporal graph's 0.31.2 shipped defaults from its own bundle directory; agent-tools: gbrain-defaults in process as the gbrain agent's query, search and get_page tools (eval/runner/systems/gbrain-agent.ts)." },
     "runner": { "enum": ["shim", "in-process"], "description": "shim: a protocol v1 system at --system-url (one VM per conversation shard on S1); in-process: a harness control or answering system." },
     "ingest_replicate": { "type": "integer", "minimum": 1, "description": "2 for the disclosed second LoCoMo ingest." },
     "effort": { "const": "medium" },
@@ -37,7 +37,8 @@
         { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "all" } } },
         { "type": "object", "required": ["kind", "per_conversation", "seed"], "properties": { "kind": { "const": "per-conversation" }, "per_conversation": { "type": "integer", "minimum": 1 }, "seed": { "type": "string" } } },
         { "type": "object", "required": ["kind", "limit", "stratify", "seed"], "properties": { "kind": { "const": "stratified" }, "limit": { "type": "integer", "minimum": 1 }, "stratify": { "enum": ["category", "conversation-category"] }, "seed": { "type": "string" }, "min": { "type": "object", "additionalProperties": { "type": "integer" } } } },
-        { "type": "object", "required": ["kind", "limit", "seed"], "properties": { "kind": { "const": "shootout-slice" }, "limit": { "type": "integer", "minimum": 1 }, "seed": { "type": "integer" } } }
+        { "type": "object", "required": ["kind", "limit", "seed"], "properties": { "kind": { "const": "shootout-slice" }, "limit": { "type": "integer", "minimum": 1 }, "seed": { "type": "integer" } } },
+        { "type": "object", "required": ["kind", "ids"], "properties": { "kind": { "const": "ids" }, "ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } } }, "description": "Exactly these dev question ids; every one must be in the loaded split." }
       ]
     },
     "arm": {
@@ -46,7 +47,7 @@
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$" },
         "cell_id": { "type": "string", "description": "The scoreboard cell id: <cell id>.<arm id>." },
-        "set": { "enum": ["S1", "S1-sweep", "S2a", "S2b", "S3", "S4", "S4-slice", "S5", "S3-smoke", "S3-smoke-default", "S2b-ingest", "D8"] },
+        "set": { "enum": ["S1", "S1-sweep", "S2a", "S2b", "S3", "S4", "S4-slice", "S5", "S3-smoke", "S3-smoke-default", "S2b-ingest", "D8", "SOTA-dev"] },
         "arm": { "enum": ["component", "whole-system", "diagnostic"] },
         "mode": { "enum": ["packed", "native-default", "own-answer", "agent", "full-context", "retrieval-only"], "description": "packed: the system's items packed into `budget` tokens, one frozen byte string per question for every reader; native-default: the system's own default amount; own-answer: the system's answer route; agent: an answering system's loop; full-context: the whole history where it fits each reader's window; retrieval-only: rows without readers." },
         "policy": { "enum": ["fixed-evidence", "vendor-default", null] },

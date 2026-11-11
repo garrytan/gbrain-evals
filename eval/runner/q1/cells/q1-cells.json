@@ -9553,6 +9553,363 @@
       "ingest_sessions": 93
     }
   ],
+  "addon_cells": [
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "sota-dev.baseline-file-agent.baseline",
+      "set": "SOTA-dev",
+      "block": "SOTA-dev",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "selection": {
+        "kind": "ids",
+        "ids": [
+          "1m-24:contradiction_resolution:0",
+          "1m-24:contradiction_resolution:1",
+          "1m-24:event_ordering:0",
+          "1m-24:event_ordering:1",
+          "1m-24:information_extraction:0",
+          "1m-24:information_extraction:1",
+          "1m-24:instruction_following:0",
+          "1m-24:instruction_following:1",
+          "1m-24:knowledge_update:0",
+          "1m-24:multi_session_reasoning:0",
+          "1m-24:multi_session_reasoning:1",
+          "1m-24:preference_following:0",
+          "1m-24:preference_following:1",
+          "1m-24:summarization:0",
+          "1m-24:summarization:1",
+          "1m-24:temporal_reasoning:0",
+          "1m-24:temporal_reasoning:1",
+          "1m-25:contradiction_resolution:0",
+          "1m-25:contradiction_resolution:1",
+          "1m-25:event_ordering:0",
+          "1m-25:event_ordering:1",
+          "1m-25:information_extraction:0",
+          "1m-25:information_extraction:1",
+          "1m-25:instruction_following:0",
+          "1m-25:instruction_following:1",
+          "1m-25:knowledge_update:0",
+          "1m-25:knowledge_update:1",
+          "1m-25:multi_session_reasoning:0",
+          "1m-25:multi_session_reasoning:1",
+          "1m-25:preference_following:0",
+          "1m-25:preference_following:1",
+          "1m-25:summarization:0",
+          "1m-25:temporal_reasoning:0",
+          "1m-2:event_ordering:0",
+          "1m-2:event_ordering:1",
+          "1m-2:information_extraction:0",
+          "1m-2:information_extraction:1",
+          "1m-2:instruction_following:0",
+          "1m-2:instruction_following:1",
+          "1m-2:knowledge_update:0",
+          "1m-2:knowledge_update:1",
+          "1m-2:multi_session_reasoning:0",
+          "1m-2:multi_session_reasoning:1",
+          "1m-2:preference_following:0",
+          "1m-2:preference_following:1",
+          "1m-2:summarization:0",
+          "1m-2:summarization:1",
+          "1m-2:temporal_reasoning:0",
+          "1m-2:temporal_reasoning:1",
+          "1m-3:contradiction_resolution:1",
+          "1m-3:event_ordering:0",
+          "1m-3:event_ordering:1",
+          "1m-3:information_extraction:0",
+          "1m-3:information_extraction:1",
+          "1m-3:instruction_following:0",
+          "1m-3:instruction_following:1",
+          "1m-3:knowledge_update:0",
+          "1m-3:knowledge_update:1",
+          "1m-3:multi_session_reasoning:0",
+          "1m-3:multi_session_reasoning:1",
+          "1m-3:preference_following:0",
+          "1m-3:preference_following:1",
+          "1m-3:summarization:0",
+          "1m-3:summarization:1",
+          "1m-3:temporal_reasoning:0",
+          "1m-3:temporal_reasoning:1"
+        ]
+      },
+      "exclusions": [],
+      "system": "baseline-file-agent",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 0,
+        "seed": "sota-probes-dev",
+        "conversations": 0
+      },
+      "only_conversations": [
+        "1m-2",
+        "1m-24",
+        "1m-25",
+        "1m-3"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "arms": [
+        {
+          "id": "whole-agent",
+          "cell_id": "sota-dev.baseline-file-agent.baseline.whole-agent",
+          "set": "SOTA-dev",
+          "arm": "whole-system",
+          "mode": "agent",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol"
+          ],
+          "reader_replicates": {},
+          "frontier": {
+            "judges": [
+              "anthropic:claude-opus-5-5",
+              "openai:gpt-6.1-sol"
+            ],
+            "readers": null,
+            "sample": null,
+            "per_reader": true,
+            "settings": {
+              "effort": "medium",
+              "max_tokens": 8000
+            }
+          },
+          "judge_repeats": null,
+          "label": "file agent, uncapped grep, 40 turns"
+        },
+        {
+          "id": "whole-agent-particle",
+          "cell_id": "sota-dev.baseline-file-agent.baseline.whole-agent-particle",
+          "set": "SOTA-dev",
+          "arm": "whole-system",
+          "mode": "agent",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": {
+            "judges": [
+              "openai:gpt-6.1-sol"
+            ],
+            "readers": null,
+            "sample": null,
+            "per_reader": true,
+            "settings": {
+              "effort": "medium",
+              "max_tokens": 8000
+            }
+          },
+          "judge_repeats": null,
+          "label": "file agent, uncapped grep, 40 turns (particle-1)"
+        }
+      ],
+      "estimate": {
+        "usd": 36.38,
+        "lines": {
+          "agent": 34.2,
+          "frontier_judges": 1.9,
+          "judges": 0.27
+        }
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "sota-dev.gbrain-defaults.agent-tools",
+      "set": "SOTA-dev",
+      "block": "SOTA-dev",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "selection": {
+        "kind": "ids",
+        "ids": [
+          "1m-24:contradiction_resolution:0",
+          "1m-24:contradiction_resolution:1",
+          "1m-24:event_ordering:0",
+          "1m-24:event_ordering:1",
+          "1m-24:information_extraction:0",
+          "1m-24:information_extraction:1",
+          "1m-24:instruction_following:0",
+          "1m-24:instruction_following:1",
+          "1m-24:knowledge_update:0",
+          "1m-24:multi_session_reasoning:0",
+          "1m-24:multi_session_reasoning:1",
+          "1m-24:preference_following:0",
+          "1m-24:preference_following:1",
+          "1m-24:summarization:0",
+          "1m-24:summarization:1",
+          "1m-24:temporal_reasoning:0",
+          "1m-24:temporal_reasoning:1",
+          "1m-25:contradiction_resolution:0",
+          "1m-25:contradiction_resolution:1",
+          "1m-25:event_ordering:0",
+          "1m-25:event_ordering:1",
+          "1m-25:information_extraction:0",
+          "1m-25:information_extraction:1",
+          "1m-25:instruction_following:0",
+          "1m-25:instruction_following:1",
+          "1m-25:knowledge_update:0",
+          "1m-25:knowledge_update:1",
+          "1m-25:multi_session_reasoning:0",
+          "1m-25:multi_session_reasoning:1",
+          "1m-25:preference_following:0",
+          "1m-25:preference_following:1",
+          "1m-25:summarization:0",
+          "1m-25:temporal_reasoning:0",
+          "1m-2:event_ordering:0",
+          "1m-2:event_ordering:1",
+          "1m-2:information_extraction:0",
+          "1m-2:information_extraction:1",
+          "1m-2:instruction_following:0",
+          "1m-2:instruction_following:1",
+          "1m-2:knowledge_update:0",
+          "1m-2:knowledge_update:1",
+          "1m-2:multi_session_reasoning:0",
+          "1m-2:multi_session_reasoning:1",
+          "1m-2:preference_following:0",
+          "1m-2:preference_following:1",
+          "1m-2:summarization:0",
+          "1m-2:summarization:1",
+          "1m-2:temporal_reasoning:0",
+          "1m-2:temporal_reasoning:1",
+          "1m-3:contradiction_resolution:1",
+          "1m-3:event_ordering:0",
+          "1m-3:event_ordering:1",
+          "1m-3:information_extraction:0",
+          "1m-3:information_extraction:1",
+          "1m-3:instruction_following:0",
+          "1m-3:instruction_following:1",
+          "1m-3:knowledge_update:0",
+          "1m-3:knowledge_update:1",
+          "1m-3:multi_session_reasoning:0",
+          "1m-3:multi_session_reasoning:1",
+          "1m-3:preference_following:0",
+          "1m-3:preference_following:1",
+          "1m-3:summarization:0",
+          "1m-3:summarization:1",
+          "1m-3:temporal_reasoning:0",
+          "1m-3:temporal_reasoning:1"
+        ]
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "agent-tools",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 0,
+        "seed": "sota-probes-dev",
+        "conversations": 0
+      },
+      "only_conversations": [
+        "1m-2",
+        "1m-24",
+        "1m-25",
+        "1m-3"
+      ],
+      "shards": 1,
+      "expected_hours": 4,
+      "arms": [
+        {
+          "id": "whole-agent",
+          "cell_id": "sota-dev.gbrain-defaults.agent-tools.whole-agent",
+          "set": "SOTA-dev",
+          "arm": "whole-system",
+          "mode": "agent",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol"
+          ],
+          "reader_replicates": {},
+          "frontier": {
+            "judges": [
+              "anthropic:claude-opus-5-5",
+              "openai:gpt-6.1-sol"
+            ],
+            "readers": null,
+            "sample": null,
+            "per_reader": true,
+            "settings": {
+              "effort": "medium",
+              "max_tokens": 8000
+            }
+          },
+          "judge_repeats": null,
+          "label": "gbrain agent: query, search and get_page, 40 turns"
+        },
+        {
+          "id": "whole-agent-particle",
+          "cell_id": "sota-dev.gbrain-defaults.agent-tools.whole-agent-particle",
+          "set": "SOTA-dev",
+          "arm": "whole-system",
+          "mode": "agent",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": {
+            "judges": [
+              "openai:gpt-6.1-sol"
+            ],
+            "readers": null,
+            "sample": null,
+            "per_reader": true,
+            "settings": {
+              "effort": "medium",
+              "max_tokens": 8000
+            }
+          },
+          "judge_repeats": null,
+          "label": "gbrain agent: query, search and get_page, 40 turns (particle-1)"
+        }
+      ],
+      "estimate": {
+        "usd": 40.33,
+        "lines": {
+          "agent": 34.2,
+          "frontier_judges": 1.9,
+          "ingest": 0.47,
+          "judges": 0.27,
+          "system_queries": 3.48
+        }
+      }
+    }
+  ],
+  "sota_assumptions": {
+    "agent": {
+      "baseline-file-agent": {
+        "SOTA-dev": 73000,
+        "output": 2000
+      },
+      "gbrain-defaults": {
+        "SOTA-dev": 73000,
+        "output": 2000
+      }
+    },
+    "gbrain_tool_calls_per_answer": 10,
+    "ingest_usd_per_mtok": {
+      "gbrain-defaults:agent-tools": 0.12
+    },
+    "hours_per_mtok": {
+      "gbrain-defaults:agent-tools": 0.9
+    }
+  },
   "total_usd": 8192.02,
   "plan_total_usd": 7710,
   "cap_usd": 8500
