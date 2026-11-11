@@ -39,6 +39,9 @@ The benchmark data, its public conversations and probing questions, is CC BY-SA 
 The dataset manifests in `eval/decisions/datasets/` record the data license and commit and hold hashes, not dataset text.
 The RS1 set is written by that MIT-licensed generator from new private topics rather than adapted from BEAM's conversations; the [narrowed RS1 preregistration](../docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md#licenses-and-attribution) gives its share-alike position.
 
+LongMemEval, the benchmark from *LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory* by Di Wu and coauthors ([arXiv 2410.10813](https://arxiv.org/abs/2410.10813); [xiaowu0162/LongMemEval](https://github.com/xiaowu0162/LongMemEval)), is MIT-licensed for its code ([LICENSE](https://github.com/xiaowu0162/LongMemEval/blob/main/LICENSE)) and its cleaned data ([dataset card](https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned), `license: mit`).
+The nightly `lme-s-hard` suite and the SOTA loop's LongMemEval rows use its cleaned S split; the Q1 LongMemEval-M selection in `eval/decisions/datasets/` records the M file's revision and hash.
+
 The [PrecisionMemBench attribution](precisionmembench/ATTRIBUTION.md) names the upstream author, license, pinned revision and local adaptations. Other external benchmark sources are identified in their individual reports.
 
 ## Influences
@@ -51,6 +54,12 @@ A **Codex** review challenged whether the early suite established anything beyon
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-12: LongMemEval's license
+
+"Data and upstream work" now credits LongMemEval and records that its code and its cleaned data are both MIT. The page
+had not named it, although the nightly `lme-s-hard` suite, Q1 and the SOTA loop's LongMemEval rows all use it. No other
+credit changed.
 
 ### 2026-11-09: The opening names `d253ec0ff`
 
