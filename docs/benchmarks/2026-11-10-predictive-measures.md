@@ -266,9 +266,10 @@ brain at 0.60.593.0):
 between the same 10 cells (5 search setups, each on exact and paraphrased forms) scored on the same questions, at most
 8 of the 13 are linearly independent, and 3 are forced, because keyword search finds no paraphrase on either side. A
 fair count is about 5 to 8 independent comparisons. Kendall's tau over the arm order is 0.60 on exact forms. On
-paraphrases `verdict.ts` reports 0.80, because it breaks the synthetic tie between vector and hybrid search (both find
-89 of 100 paraphrases) by the order the arms are listed in; counting the tie as a tie (tau-b), it's 0.949. Tau is
-reported and never gates. Two of the agreeing contrasts (vector's and hybrid's paraphrase gaps) have synthetic
+paraphrases the published verdict file reads 0.80, because `verdict.ts` broke the synthetic tie between vector and
+hybrid search (both find 89 of 100 paraphrases) by the order the arms are listed in; counting the tie as a tie (tau-b),
+it's 0.949. Since the [batch 4 replication amendment](2026-11-09-predictive-measures-preregistration.md#2026-11-11-g2s-held-out-replication-on-batch-4),
+`verdict.ts` reports tau-b, and the published verdict files stay as written. Tau is reported and never gates. Two of the agreeing contrasts (vector's and hybrid's paraphrase gaps) have synthetic
 estimates of one or two points with intervals that touch zero. The rule counts their sign, so they agree, but they
 carry almost no information.
 
