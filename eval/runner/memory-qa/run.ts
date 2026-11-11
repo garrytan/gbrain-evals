@@ -112,7 +112,7 @@ import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { loadCorpus, occurrenceId, renderSessionPage, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
 import { DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, latestDate, packSessions, readerPrompt, repeatsTrap, unresolvedRelativeTime, type SavedFact } from './qa.ts';
-import { anthropicMaxTokens, ChatClient, chatWithReceipts, checkEffort, hasChatRoute, isCompatModel, judgeResponse, sendsTemperature, type ChatLike } from './qa-v2.ts';
+import { anthropicMaxTokens, ChatClient, chatWithReceipts, checkEffort, hasChatRoute, isCompatModel, judgeResponse, sendsTemperature, tailVerdicts, VERDICT_RULE, type ChatLike, type VerdictPath } from './qa-v2.ts';
 import { COMPAT_PROVIDERS, compatRequest, modelsNotRun } from '../providers/openai-compatible.ts';
 import { normalizeUsage, receipt, sumUsage, thinkFinish, USAGE_RECEIPT_SCHEMA, type UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
@@ -186,6 +186,8 @@ export interface MemoryQaRow {
   qa_reference_date?: string;
   /** One usage-receipt/v1 record per attempted reader, think and judge invocation, every replicate. */
   qa_receipts?: UsageReceipt[];
+  /** Verdicts read from the last standalone yes or no of a complete judge reply, not its first three words (each judge receipt's `verdict_path`); absent when none were. */
+  qa_tail_verdicts?: number;
   qa_error?: string;
   qa_facts?: number;
   qa_facts_tokens?: number;
@@ -390,12 +392,12 @@ function sentMaxTokens(model: string, maxTokens: number, effort?: string): numbe
 
 /**
  * How the reading lane judges and what each call is sent, beyond its flags: the judging path (qa-v2's
- * `judgeResponse`, a 10-token verdict per prompt) and the output limit the judge and the reader are sent. Claude 5
- * judges moved from a 10-token to a 2,000-token verdict (#228) without changing the run config, so a partial run
- * resumed across that change pooled both kinds of verdict (#248).
+ * `judgeResponse`, a 10-token verdict per prompt), the rule that reads each verdict, and the output limit the judge and
+ * the reader are sent. Claude 5 judges moved from a 10-token to a 2,000-token verdict (#228) without changing the run
+ * config, so a partial run resumed across that change pooled both kinds of verdict (#248).
  */
 function readingIdentity(qa: RunArgs['qa']): Record<string, string | number> {
-  return { judging: 'qa-v2 judgeResponse', judge_max_tokens_sent: sentMaxTokens(qa.judge, 10),
+  return { judging: 'qa-v2 judgeResponse', verdict: VERDICT_RULE, judge_max_tokens_sent: sentMaxTokens(qa.judge, 10),
     ...(qa.mode === 'reader' ? { reader_max_tokens_sent: sentMaxTokens(qa.reader, qa.maxTokens ?? 1024, qa.effort) } : {}) };
 }
 
@@ -445,6 +447,7 @@ export async function readAndJudge(p: {
 }): Promise<Partial<MemoryQaRow>> {
   const receipts: UsageReceipt[] = [];
   const scores: number[] = [];
+  const paths: VerdictPath[] = [];
   let answer = '';
   let trap = 0;
   let referenceDate: string | undefined;
@@ -474,7 +477,7 @@ export async function readAndJudge(p: {
         const delivered = p.countTokens ? { tokenizer: 'cl100k', tokens: p.countTokens(p.prompt!) } : null;
         answer = (await chatWithReceipts(p.chat, { role: 'reader', question_id: p.q.id, replicate: r, model: p.qa.reader, delivered }, p.prompt!, { maxTokens: p.qa.maxTokens ?? 1024, replicate: r, ...(p.qa.effort !== undefined ? { effort: p.qa.effort } : {}) }, receipts)).text;
       }
-      scores.push(await judgeResponse(p.chat, p.benchmark, p.qa.judge, p.q, answer, r, receipts));
+      scores.push(await judgeResponse(p.chat, p.benchmark, p.qa.judge, p.q, answer, r, receipts, paths));
       if (p.q.abstention && repeatsTrap(answer, p.q.trap)) trap++;
     }
   } catch (e) {
@@ -488,7 +491,7 @@ export async function readAndJudge(p: {
     qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length, ...(p.q.trap ? { qa_trap: trap / scores.length } : {}),
     ...(missing ? { qa_usage_missing: missing } : { qa_input_tokens: mean(answers.map(x => x.usage!.input_total)), qa_output_tokens: mean(answers.map(x => x.usage!.output_total)) }),
     ...(answers.every(x => x.delivered) ? { qa_delivered_tokens: mean(answers.map(x => x.delivered!.tokens)) } : {}),
-    qa_answer: answer, qa_receipts: receipts, ...(referenceDate ? { qa_reference_date: referenceDate } : {}),
+    qa_answer: answer, qa_receipts: receipts, ...(referenceDate ? { qa_reference_date: referenceDate } : {}), ...tailVerdicts(paths),
   };
 }
 
