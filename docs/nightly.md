@@ -114,7 +114,8 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   deterministic signal (refused tool calls, tool errors, harness errors, lost, stuck, duplicated or overwritten writes,
   failed smokes) and a strong flip (an item that passed every trial and now passes none) on the night it happens. A
   pass-rate drop of at least 5 points whose paired bootstrap interval excludes zero, or a rise of 25% or more in cost
-  per correct answer with no gain in pass rate, is first a watch line in the report and in `summary.json`'s
+  per correct answer with no gain in pass rate (a night with no correct answers at a positive cost counts as a rise),
+  is first a watch line in the report and in `summary.json`'s
   `watches`. It becomes a flag only if the next night shows it again against the same baseline night; otherwise it
   lapses. A cut-off answer counts there as a harness error, never as a pass-rate drop or a flip. It also lists the
   gbrain commits since that night. A flag that waited a night carries its own `commit_range` in `summary.json`, from
