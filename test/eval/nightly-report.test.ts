@@ -62,11 +62,13 @@ describe('pass^k and cost per correct answer', () => {
 describe('the diff against an earlier night', () => {
   const previous = { manifest: manifest([{ id: 'suite-a' }], { night: '2026-11-08', sha: 'a'.repeat(40) }), rows: trials(Array(20).fill(3)) };
 
-  test('a pass-rate drop of at least 5 points whose interval excludes zero is flagged, with the strong flips named (cost unrecorded, so no cost flag)', () => {
+  test('a pass-rate drop of at least 5 points whose interval excludes zero is watched on its first night, with the strong flips flagged at once (cost unrecorded, so no cost watch)', () => {
     const tonight = { manifest: manifest([{ id: 'suite-a' }]), rows: trials([...Array(14).fill(3), ...Array(6).fill(0)], 3, { cost_usd: null }) };
     const c = compareNights(tonight, previous, 'previous');
-    expect(c.flags.map(f => f.kind).sort()).toEqual(['pass_rate', 'strong_flip']);
+    expect(c.flags.map(f => f.kind)).toEqual(['strong_flip']);
     expect(c.flags.find(f => f.kind === 'strong_flip')!.items).toEqual(['item-14', 'item-15', 'item-16', 'item-17', 'item-18', 'item-19']);
+    expect(c.watches).toMatchObject([{ kind: 'pass_rate', suite: 'suite-a', reader: 'gpt-6.1-sol', digest: 'digest-a', detail: expect.stringMatching(/^pass rate down 30\.0 points over 20 paired items/),
+      baseline: { night: '2026-11-08', sha: 'a'.repeat(40), pass1: 1 } }]);
     expect(c.suites[0]).toMatchObject({ suite: 'suite-a', compared: true, pass_diff: { mean: -0.3, items: 20 } });
   });
 
@@ -146,9 +148,10 @@ describe('the diff against an earlier night', () => {
     expect(JSON.stringify((summary.suites as Array<{ cells: Array<{ failures_by_cause: Record<string, number> }> }>)[0]!.cells[0]!.failures_by_cause)).not.toContain('item_unsupported');
   });
 
-  test('cost per correct answer up 25% or more with no pass-rate gain is flagged', () => {
+  test('cost per correct answer up 25% or more with no pass-rate gain is watched on its first night', () => {
     const c = compareNights({ manifest: manifest([{ id: 'suite-a' }]), rows: trials(Array(20).fill(3), 3, { cost_usd: 0.7 }) }, previous, 'previous');
-    expect(c.flags).toMatchObject([{ kind: 'cost', detail: 'cost per correct answer up 40% with no gain in pass rate' }]);
+    expect(c.flags).toEqual([]);
+    expect(c.watches).toMatchObject([{ kind: 'cost', detail: 'cost per correct answer up 40% with no gain in pass rate', baseline: { night: '2026-11-08', cost_per_correct: 0.5 } }]);
   });
 
   test('a changed suite digest starts a new baseline: nothing is compared or flagged', () => {
@@ -185,10 +188,12 @@ describe('the report files', () => {
       [...trials([...Array(14).fill(3), ...Array(6).fill(0)], 3, { cost_usd: null }), row({ suite: 'suite-b', item: 'smoke-1', skipped: 'smokes missing' })]);
     expect(findPreviousNight(root, '2026-11-09', 'master')).toBe(prev);
     const summary = writeReport({ dir, previous: prev, fixes: [{ issue: 'ISSUE-1', pr: 'gbrain#1', gbrain_version: '0.60.621.0', suite: 'suite-a', items: ['item-0', 'item-19'] }] });
-    expect((summary.flags as unknown[]).length).toBe(2);
+    expect((summary.flags as Array<{ kind: string }>).map(f => f.kind)).toEqual(['strong_flip']);
+    expect((summary.watches as Array<{ kind: string }>).map(w => w.kind)).toEqual(['pass_rate']);
     expect(summary.fixes).toEqual([expect.objectContaining({ issue: 'ISSUE-1', tonight: { rows: 6, passes: 3 } })]);
     const md = readFileSync(join(dir, 'report.md'), 'utf8');
-    expect(md).toContain('**2 flags.**');
+    expect(md).toContain('**1 flags.**');
+    expect(md).toContain('Watching 1: a pass-rate drop or cost rise against the previous master night files as a flag only if the next night shows it again against the same night.\n\n- pass_rate suite-a gpt-6.1-sol: pass rate down 30.0 points over 20 paired items');
     expect(md).toContain('| suite-b | | | | | | | | not built: smokes missing |');
     expect(md).toContain('## Against the previous master night');
     expect(md).toContain('ISSUE-1 (gbrain#1, gbrain 0.60.621.0): suite-a item-0, item-19: 3 of 6 passing tonight');
