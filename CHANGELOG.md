@@ -2,6 +2,23 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.214] - 2026-11-11
+
+### The predictive-measures report says what recall (G2) predicts and what still needs a held-out test
+
+- **What changed.** The [predictive-measures results](docs/benchmarks/2026-11-10-predictive-measures.md) now read
+  recall (G2) as PREDICTIVE for which of gbrain's search setups beats which, and its paraphrase-gap prediction as
+  PENDING a held-out replication on a new real batch. The synthetic brain that copies the real brain's embedding gaps
+  became the counted condition after batch 2's results were public, and the clean synthetic brain agrees with 12 of the
+  13 qualifying batch 2 contrasts, so the gaps' whole effect is one contrast, from 7 of 100 questions. The report also
+  says the 13 contrasts share 5 setups and one set of questions, gives the paraphrase Kendall tau both as computed
+  (0.80, which breaks a tie by list order) and as tau-b (0.949), and says where the media-shell figure comes from.
+- **What stays the same.** No number, verdict, scorecard, verdict file or preregistration changes. G2 and G4 may still
+  gate gbrain's nightly loop on which search setup beats which, on direction only.
+- **What to expect.** Nothing gates on G2 as a paraphrase-regression detector until a new real batch, preregistered
+  before it exists, tests the gap-copied brain. The [docs hub](docs/README.md) row and the
+  [corrections page](docs/corrections.md) carry the same reading.
+
 ## [0.10.213] - 2026-11-11
 
 ### Nightly pass-rate and cost flags wait for a second night
