@@ -471,4 +471,12 @@ describe("particle-1's agreement with claude-opus-5-5", () => {
     expect([ag.unpaired, ag.verdict]).toEqual([0, 'fail']);
     expect(nightAgreement(beamNight, withSearchErrors([searchError(own[0]!)], 'claude-opus-5-5'))!.suites[1]).toMatchObject({ items: 21, candidate_only: 2, unpaired: 0 });
   });
+
+  test('every provider marker docs/nightly.md lists names a cause, and a retry-exhaustion message counts through the error it quotes', () => {
+    const markers = ['HTTP 503', 'status 429', 'status code: 429', 'search: returned 503: upstream', '429 status code (no body)', 'Rate limit reached for requests',
+      'rate limit exceeded', 'The server had an error while processing your request', 'Too Many Requests', 'Internal Server Error', 'Bad Gateway',
+      'Service Unavailable', 'Gateway Timeout'];
+    expect(markers.map(providerCause)).toEqual(markers.map(() => 'retrieval'));
+    expect(providerCause('Failed after 3 attempts. Last error: Rate limit reached for text-embedding-3-large')).toBe('embedding');
+  });
 });

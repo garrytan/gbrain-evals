@@ -233,7 +233,9 @@ bun eval/runner/nightly/run.ts --resume <night dir>
 `--resume` reruns only what is missing or recorded as a harness failure, on the gbrain commit the night started on,
 even if the ref has moved since. An answer cut off at its output limit stays as recorded, because memory-qa keeps it as
 answered and the reader's cached reply would be cut off the same way, so it neither ends a night with exit 5 nor gets
-rerun. The report still counts it as a harness row and flags a rise. A resume first settles the stopped run's open ledger reservations. Run it only after every
+rerun. The report still counts it as a harness row and flags a rise. A gbrain tool error isn't a harness failure
+either, so a resume keeps it as recorded, and an item a provider's 429 or 5xx left unpaired stays unpaired in that
+night's agreement check. A resume first settles the stopped run's open ledger reservations. Run it only after every
 child process of the stopped run has exited. On a Ubicloud VM that holds by construction, because `ubi-runner.sh`
 destroys the VM, and every child with it, on every exit path. A night can be resumed at most twice.
 
@@ -285,8 +287,9 @@ error, not a harness row. So an embedding provider's 429 that hit only particle-
 fail, although the entry below said embedding and retrieval failures leave the item unpaired; that held only for
 harness rows. Now a gbrain tool error whose embedding or retrieval provider returned a 429 or 5xx leaves the item
 unpaired with the embedding or retrieval cause, on Opus's row as well as particle-1's, and the report counts it with the
-other unpaired causes. A gbrain tool error with no provider marker is still a fail for the reader whose row it is. Pass
-rates, flags and failure causes don't change.
+other unpaired causes. A gbrain tool error with no provider marker is still a fail for the reader whose row it is. A
+resume keeps these rows as recorded, because they aren't harness failures, so such an item stays unpaired for that
+night. Pass rates, flags and failure causes don't change.
 
 ### 2026-11-11: Shared-stage failures no longer count against particle-1
 
