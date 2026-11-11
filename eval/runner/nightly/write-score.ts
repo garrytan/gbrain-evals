@@ -10,6 +10,7 @@
  *
  * An episode passes when every fact landed exactly once (in Git at most once), the agent's report is right for every fact
  * (saved or pending for a landed fact, failed for one that did not land), and no write was reissued under a new request id.
+ * A replay under the request id a refusal named for it is a retry under the same id (agent.ts writeBehavior).
  */
 import { execFileSync } from 'node:child_process';
 import { FACT_IDS, type AgentTask, type FactId, type Report } from '../refresh-barrier/agent.ts';

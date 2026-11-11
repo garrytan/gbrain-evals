@@ -254,7 +254,8 @@
           "id": "1030",
           "role": "headroom"
         }
-      ]
+      ],
+      "note": "Scored so that a write replayed under the request id a refusal names counts as a retry under the same id, never as a reissue (refresh-barrier preregistration, Amendment 7). Nights scored before that rule have another digest, so their pass rates are not compared with these."
     },
     {
       "id": "refused-write-agents",
@@ -386,7 +387,8 @@
           "id": "2030",
           "role": "headroom"
         }
-      ]
+      ],
+      "note": "Scored so that a write replayed under the request id a refusal names counts as a retry under the same id, never as a reissue (refresh-barrier preregistration, Amendment 7). Nights scored before that rule have another digest, so their pass rates are not compared with these."
     },
     {
       "id": "concurrent-writers",
@@ -1357,5 +1359,5 @@
     "per-family tool-call shape fuzzer (gap-map generator), after the same check",
     "tasks mined from real misses"
   ],
-  "digest": "2d8dc1669b309edf5c58b67d10318b12774c1e100235bf0b8b2749a4a78f938a"
+  "digest": "22ba6b3268e88333384a777e0512c824c69141357d08cd582c2c09933bae4259"
 }
