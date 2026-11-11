@@ -97,7 +97,7 @@ describe('leader cells in the q1 manifest', () => {
 });
 
 describe('leaderSpec', () => {
-  test('pins the leader code, the reader output limit each leader sends, the per-row frontier judge and the instrument and judge prompt versions', () => {
+  test('pins the leader code, the reader output limit each leader sends, the per-row frontier judge and the instrument and judge prompt versions, for the nightly frontier readers only', () => {
     for (const b of ['beam-1m', 'lme-s']) for (const r of [OPUS, SOL]) {
       const s = leaderSpec(b, r)!;
       expect(s).toMatchObject({ kind: 'leader', benchmark: b, reader: r, judge: frontierJudgeOf(r), pass_threshold: 0.5, effort: 'medium',
@@ -107,7 +107,7 @@ describe('leaderSpec', () => {
     expect([leaderSpec('beam-1m', OPUS)!.max_tokens, leaderSpec('beam-1m', SOL)!.max_tokens]).toEqual([AGENT_ARM_PARITY.output_tokens.anthropic, AGENT_ARM_PARITY.output_tokens.openai]);
     expect([leaderSpec('lme-s', OPUS)!.max_tokens, leaderSpec('lme-s', SOL)!.max_tokens]).toEqual([readerMaxTokens(OPUS), readerMaxTokens(SOL)]);
     expect([leaderSpec('beam-1m', OPUS)!.system, leaderSpec('lme-s', OPUS)!.system]).toEqual(['grep-agent', 'whole-history']);
-    expect(leaderSpec('cat40-hard-m', OPUS)).toBeNull();
+    expect([leaderSpec('cat40-hard-m', OPUS), leaderSpec('beam-1m', PARTICLE), leaderSpec('lme-s', 'fake')]).toEqual([null, null, null]);
   });
 });
 

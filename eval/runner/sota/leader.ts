@@ -62,10 +62,10 @@ export const LEADERS: Record<string, { system: string; cell: string; arm: string
 /** The leader's judge for a reader: the q1 cells' frontier judge, the BEAM judges rule (gpt-6.1-sol grades Claude and particle-1 rows, claude-opus-5-5 grades GPT rows). */
 export const leaderJudge = frontierJudgeOf;
 
-/** The current inputs for a benchmark's leader rows with one reader, or null when the benchmark has no leader. */
+/** The current inputs for a benchmark's leader rows with one reader, or null when the benchmark has no leader or the leader cells don't run the reader (only the nightly's frontier readers). */
 export function leaderSpec(benchmark: string, reader: string): Spec | null {
   const l = LEADERS[benchmark];
-  if (!l) return null;
+  if (!l || !(FRONTIER_READERS as readonly string[]).includes(reader)) return null;
   return {
     kind: 'leader', benchmark, system: l.system, reader, system_version: sha16(...l.code), effort: l.effort, max_tokens: l.maxTokens(reader),
     judge: leaderJudge(reader), judge_prompt: `${instrumentFor(benchmark).sha256.slice(0, 16)}:${qaPromptVersion()}`, pass_threshold: ORACLE_PASS, dataset: datasetPin(benchmark),
