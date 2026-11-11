@@ -65,6 +65,7 @@ with `from_cache: true` and the original call's usage.
 | `delivered` | Tokens of the text delivered to the model, with the tokenizer named (`cl100k` for reader prompts; `think` reports its own delivery count) |
 | `request` | Optional: what the request sent, for calls made through the OpenAI-compatible provider module and every Cat 40 loop attempt (below) |
 | `response_meta` | Optional: what identifies the serving model and tier, for calls made through the provider module (below) |
+| `verdict_path` | Optional, on a yes-or-no judge record: where the verdict came from. `head` is a yes or no in the reply's first three words, `tail` the last standalone yes or no of a reply that was not cut off, and `none` is neither, which makes the question a judge error instead of a "no" |
 
 `usage` holds:
 
@@ -167,6 +168,11 @@ The arm's `receipt.json` adds `usage.by_role`, the `sumUsage` totals per role ov
 budget-stopped row's reader call and the rerun's cached replay of it count once. A question stopped by a budget stop
 (the ledger's cap, or Particle's credit 402) keeps the records gathered before the stop on its error row. Memory-system
 cells (`eval/runner/memory-qa/run-systems.ts`) write `qa_receipts` for their reader calls.
+
+Each judge record carries `verdict_path`. A row where any replicate's verdict came from the reply's tail has
+`qa_tail_verdicts`, the number of those verdicts, and memory-system rows count them the same way. A judge reply with no
+verdict leaves the question an error row whose `qa_error` starts `judge reply holds no yes or no verdict`, with that
+judge record last, so the nightly counts it as a judge harness error rather than a wrong answer.
 
 ## How a Q1 answer uses it
 

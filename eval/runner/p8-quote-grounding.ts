@@ -60,7 +60,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { renderCorpus } from './chronicle-lift.ts';
 import { importGbrain, resolveGbrainUnderTest } from './gbrain-under-test.ts';
-import { ChatClient } from './memory-qa/qa.ts';
+import { ChatClient, TRUNCATED_FINISHES, UnansweredJudgment } from './memory-qa/qa-v2.ts';
 import {
   appendAccessLog, assertOutsideRepository, openCustodyFile, sha256Hex, validateQuestionsFile,
   type HaystackSession, type QuestionsFile,
@@ -204,6 +204,7 @@ ${evidence}
 <quotation>${span}</quotation>`;
   const r = await chat.chat(model, prompt, { maxTokens: 20, replicate: 0 });
   const w = r.text.trim().toLowerCase();
+  if (!w || ((TRUNCATED_FINISHES as readonly string[]).includes(String(r.finish)) && !/^(verbatim|close|unsupported)/.test(w))) throw new UnansweredJudgment(r.finish, 'verbatim, close or unsupported');
   return w.startsWith('verbatim') ? 'verbatim' : w.startsWith('close') ? 'close' : 'unsupported';
 }
 

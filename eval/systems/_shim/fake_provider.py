@@ -10,6 +10,7 @@ Routes (any path prefix, so `/openai/v1/...` and `/<slot>/openai/v1/...` both wo
                              words, knowledge graphs get nodes and edges); a forced tool call gets schema-valid
                              arguments; an extract-first-style "## New Messages" prompt gets one memory per message line;
                              a BG1 verdict prompt (eval/runner/memory-qa/instruments.ts) gets {"correct": 1};
+                             a memory-qa yes-or-no judge prompt (qa.ts judgePromptsFor) gets "no";
                              anything else gets "ok". `stream: true` answers as server-sent events with usage.
   POST .../responses         `text.format: json_schema` gets the temporal graph library's named structured outputs (ExtractedEntities,
                              ExtractedEdges, EdgeTimestamps) or a schema-valid instance for any other schema.
@@ -193,6 +194,7 @@ def temporal_graph_structured(name: str, schema: dict[str, Any], prompt: str) ->
 
 
 BG1_VERDICT_OPENING = "You are grading one answer to a question about a long chat history in which facts change over time."
+YES_NO_JUDGE_ENDING = "Answer yes or no only."
 
 
 def usage_chat(prompt: str, completion: str) -> dict[str, int]:
@@ -226,6 +228,8 @@ def chat(body: dict[str, Any]) -> dict[str, Any]:
         message["tool_calls"] = [{"id": "call_fake", "type": "function", "function": {"name": fn["name"], "arguments": json.dumps(SchemaFiller(params, last_user).fill(params))}}]
     elif last_user.startswith(BG1_VERDICT_OPENING):
         message["content"] = json.dumps({"correct": 1})
+    elif last_user.rstrip().endswith(YES_NO_JUDGE_ENDING):
+        message["content"] = "no"
     else:
         extracted = extract_first_extraction(prompt)
         message["content"] = extracted if extracted is not None else "{}" if rf.get("type") == "json_object" else "ok"
