@@ -44,7 +44,7 @@ export const LOST_CAUSES: ReadonlySet<string> = new Set(['retrieval_miss', 'part
 export interface AttributedRow {
   run_id: string; case_id: string; suite: string; item: string; reader: string;
   cause: string | null; rule_id: string; bucket: Bucket; reason: string | null;
-  oracle: 'pass' | 'fail' | null; leader_solved: boolean | null;
+  oracle: 'pass' | 'fail' | null; leader_solved: boolean | null; visibility: string; evidence: string[];
 }
 
 export interface Cell {
@@ -122,7 +122,7 @@ export function attribute(labels: readonly CauseLabel[], o: AttributeOptions): A
       const o = oracle?.hits.get(c.item) ?? null, lr = lead?.hits.get(c.item) ?? null;
       const verdict = o?.pass === true ? 'pass' : o?.pass === false ? 'fail' : null;
       const put = (bucket: Bucket, reason: string | null = null) => cellRows.push({ run_id: l.run_id, case_id: l.case_id, suite, item: c.item, reader, cause: l.cause, rule_id: l.rule_id,
-        bucket, reason, oracle: verdict, leader_solved: lr ? lr.pass === true : null });
+        bucket, reason, oracle: verdict, leader_solved: lr ? lr.pass === true : null, visibility: l.visibility, evidence: l.evidence });
       if (l.cause === 'harness_error') put('harness');
       else if (cls === 'unsupported' || (cls === null && l.cause === 'item_unsupported')) put('unsupported');
       else if (!ANSWERABLE.includes(cls as AnswerClass)) put('unknown', `answerability ${cls ?? 'missing'}`);
