@@ -9,7 +9,7 @@ The gap-map column links each cause to a failure mode (F1 to F16) in the gap map
 the nightly loop use. Rendered from `eval/runner/failure-causes/taxonomy.ts` by
 `bun eval/runner/failure-causes/cli.ts taxonomy --write`; edit the TypeScript, not this file.
 
-Taxonomy version `2026-11-11.1`. Stages, earliest first: `harness`, `operations`, `ingest`, `visibility`, `tool_call`, `write`, `consult`, `retrieval`, `ranking`, `open`, `presentation`, `reasoning`, `budget`. The last stage, 
+Taxonomy version `2026-11-11.2`. Stages, earliest first: `harness`, `operations`, `ingest`, `visibility`, `tool_call`, `write`, `consult`, `retrieval`, `ranking`, `open`, `presentation`, `reasoning`, `budget`. The last stage, 
 `budget`, is a fallback: a turn cap or timeout is the primary cause only when no earlier stage has a signal.
 
 | Cause | Gap map | Stage | Assigned by | gbrain can fix | Meaning | Signal |

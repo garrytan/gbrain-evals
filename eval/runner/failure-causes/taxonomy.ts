@@ -8,7 +8,7 @@
  * (bun eval/runner/failure-causes/cli.ts taxonomy --write); a test keeps them equal.
  */
 
-export const TAXONOMY_VERSION = '2026-11-11.1';
+export const TAXONOMY_VERSION = '2026-11-11.2';
 
 /** Pipeline stages, earliest first. A failure's primary cause is the first stage with a signal on its failure path. */
 export const STAGES = ['harness', 'operations', 'ingest', 'visibility', 'tool_call', 'write', 'consult', 'retrieval', 'ranking', 'open', 'presentation', 'reasoning', 'budget'] as const;
