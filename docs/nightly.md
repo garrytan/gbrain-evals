@@ -112,11 +112,27 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   change that costs more for the same result.
 - **Against the previous master night.** Suite by suite, where the digests match, the report flags any increase in a
   deterministic signal (refused tool calls, tool errors, harness errors, lost, stuck, duplicated or overwritten writes,
-  failed smokes), a pass-rate drop whose paired bootstrap interval excludes zero, a strong flip (an item that passed
-  every trial and now passes none) and a rise in cost per correct answer with no gain in pass rate. A cut-off answer
-  counts there as a harness error, never as a pass-rate drop or a flip. It also lists the gbrain commits since that
-  night.
-- **Against stable.** On matrix nights the same rules compare master with the stable release, in their own section.
+  failed smokes) and a strong flip (an item that passed every trial and now passes none) on the night it happens. A
+  pass-rate drop of at least 5 points whose paired bootstrap interval excludes zero, or a rise of 25% or more in cost
+  per correct answer with no gain in pass rate, is first a watch line in the report and in `summary.json`'s
+  `watches`. It becomes a flag only if the next night shows it again against the same baseline night; otherwise it
+  lapses. A cut-off answer counts there as a harness error, never as a pass-rate drop or a flip. It also lists the
+  gbrain commits since that night.
+- **Why pass-rate and cost changes wait a night.** Every suite and reader is tested every night, so on a noisy suite a
+  drop that clears the interval by chance comes about once a month: in a simulation of `refused-write-agents` with
+  nothing changed, on 3.3% of nights. Run-to-run variation in the pass rate isn't the cause. Seven runs of that suite on
+  gpt-6.1-sol on 2026-11-10 and 11, all scored the same under either scoring rule (four nightly cells and three
+  same-day control cells, gbrain v0.60.620.0 to v0.60.666.0), varied in pass rate 1.04 times as much as trial sampling
+  predicts, which the item bootstrap already covers, and 2 of their 21 pairs still flagged, the 2026-11-11 flag among
+  them. Which tool the agent reaches for first does swing between runs far more than sampling predicts (the trials whose
+  first refused write is `remember` ran from 34 to 70 of 90), but at these pass rates that didn't move the pass rate.
+  Requiring the drop on two nights against the same baseline cuts chance flags to 0.5% of nights in the same
+  simulation. It costs a night of delay and a little power: from a 90-of-90 baseline at 30 items and three trials, the
+  smallest drop it catches with 80% power is about 9 points (8 of 90 trials), against about 8 on one night, and about 13
+  points from a 97% baseline. It applies to every suite, because the chance flags come from testing every night, not
+  from one suite's variance. Deterministic signals and strong flips don't wait.
+- **Against stable.** On matrix nights the same rules compare master with the stable release, in their own section,
+  and flag on the night they are seen, because the next matrix night is a week away.
 - **particle-1's agreement with Opus.** On a night that runs particle-1 beside claude-opus-5-5 (`--readers
   claude-opus-5-5,particle-1`), the report checks whether the low-cost reader marks the same items right and wrong as
   Opus. particle-1 runs on the QA suites only: Part C's worker and the Cat 40 Hard runner take Claude and GPT readers,
@@ -279,6 +295,15 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-11: Pass-rate and cost flags wait a night
+
+A pass-rate drop or cost rise against the previous master night used to file on the night it was seen. On 2026-11-11,
+`refused-write-agents` on gpt-6.1-sol fell from 10 to 4 of 90 and filed an issue. Seven runs of that suite on 2026-11-10
+and 11 varied no more than trial sampling predicts, and the same test flagged 2 of their 21 pairs, so the drop was a
+chance hit from testing every suite every night. Now such a change is a watch line the first night and a flag only when
+the next night shows it again against the same baseline night. Deterministic signals, strong flips and the comparison
+with stable still flag at once. "Why pass-rate and cost changes wait a night" above gives the measurement.
 
 ### 2026-11-11: gbrain's provider failures no longer count against either reader
 

@@ -22,7 +22,11 @@
  *     seed 1): when the 95% interval of tonight minus the previous night excludes zero and the drop is at least 5 points;
  *   - a strong flip: an item that passed k of k trials and now passes 0 of k;
  *   - cost per correct answer up 25% or more with no gain in pass rate.
- * The same rules compare master with stable, reported in their own section. An item whose support record says the cited
+ * The pass-rate and cost rules wait a night: the first night one meets is a watch (summary.json watches, with the baseline
+ * night's per-item counts), and it is a flag only if the next night meets it again against that baseline. The test runs on
+ * every suite and reader each night, so chance hits are common, while run-to-run variation in pass rate measured no larger
+ * than the item bootstrap already allows (docs/nightly.md). The same rules compare master with stable, reported in their own
+ * section, where every rule that meets flags at once. An item whose support record says the cited
  * gold sessions don't support the answer (eval/runner/nightly/item-support.ts) stays in every comparison; its failed rows
  * count as item_unsupported, a weekly cause label, and are listed on their own line.
  *
@@ -150,16 +154,32 @@ export function nightCells(manifest: NightManifest, rows: Outcome[]): CellStats[
 }
 
 export interface Flag { kind: 'signal' | 'pass_rate' | 'strong_flip' | 'cost'; against: 'previous' | 'stable'; suite: string; reader: string | null; detail: string; items?: string[] }
+/**
+ * A pass-rate drop or cost rise that met its rule against the previous master night for the first time. It files as a
+ * flag only if the next night meets the rule again against the same baseline night, so the baseline's per-item counts,
+ * pass rate and cost per correct answer travel with it in summary.json, the one file of that night the next night reads.
+ */
+export interface Watch {
+  kind: 'pass_rate' | 'cost'; suite: string; reader: string | null; digest: string; detail: string;
+  baseline: { night: string; sha: string; per_item: Record<string, { c: number; n: number }>; pass1: number | null; cost_per_correct: number | null };
+}
 export interface Comparison {
   against: 'previous' | 'stable'; night: string; ref: string; sha: string;
   suites: Array<{ suite: string; reader: string | null; compared: boolean; reason?: string; pass_diff?: { mean: number | null; lo: number | null; hi: number | null; items: number }; strong_flips?: string[]; cost_ratio?: number | null }>;
   flags: Flag[];
+  watches: Watch[];
 }
 
-export function compareNights(tonight: { manifest: NightManifest; rows: Outcome[] }, other: { manifest: NightManifest; rows: Outcome[] }, against: 'previous' | 'stable'): Comparison {
+/**
+ * Tonight against an earlier night. Against the previous master night, `held` is that night's watches: a pass-rate or
+ * cost rule that meets again against a watch's baseline is a flag, and one that meets for the first time is a watch.
+ * Against stable, every rule that meets is a flag.
+ */
+export function compareNights(tonight: { manifest: NightManifest; rows: Outcome[] }, other: { manifest: NightManifest; rows: Outcome[] }, against: 'previous' | 'stable', held: Watch[] = []): Comparison {
   const mine = nightCells(tonight.manifest, tonight.rows), theirs = nightCells(other.manifest, other.rows);
   const status = (m: NightManifest, id: string) => m.suites.find(s => s.id === id);
   const flags: Flag[] = [];
+  const watches: Watch[] = [];
   const suites: Comparison['suites'] = [];
   const ids = [...new Set([...tonight.manifest.suites.map(s => s.id), ...other.manifest.suites.map(s => s.id)])];
   for (const id of ids) {
@@ -177,22 +197,33 @@ export function compareNights(tonight: { manifest: NightManifest; rows: Outcome[
       for (const name of SIGNAL_NAMES) {
         if (t.signals[name] > p.signals[name]) flags.push({ kind: 'signal', against, suite: id, reader, detail: `${name.replace('_', ' ')} rose from ${p.signals[name]} to ${t.signals[name]}` });
       }
-      const common = Object.keys(t.per_item).filter(i => p.per_item[i]).sort();
-      const diffs = common.map(i => t.per_item[i]!.c / t.per_item[i]!.n - p.per_item[i]!.c / p.per_item[i]!.n);
-      const boot = pairedBootstrap(diffs);
-      if (boot.hi !== null && boot.mean !== null && boot.hi < 0 && -boot.mean >= PASS_DROP) {
-        flags.push({ kind: 'pass_rate', against, suite: id, reader, detail: `pass rate down ${(-boot.mean * 100).toFixed(1)} points over ${common.length} paired items (95% interval ${(boot.lo! * 100).toFixed(1)} to ${(boot.hi * 100).toFixed(1)})` });
-      }
-      const flips = common.filter(i => { const x = p.per_item[i]!, y = t.per_item[i]!; return x.n === y.n && x.c === x.n && y.c === 0; });
+      const passDrop = (base: Record<string, { c: number; n: number }>) => {
+        const common = Object.keys(t.per_item).filter(i => base[i]).sort();
+        const boot = pairedBootstrap(common.map(i => t.per_item[i]!.c / t.per_item[i]!.n - base[i]!.c / base[i]!.n));
+        const hit = boot.hi !== null && boot.mean !== null && boot.hi < 0 && -boot.mean >= PASS_DROP;
+        return { common, boot, hit, detail: hit ? `pass rate down ${(-boot.mean! * 100).toFixed(1)} points over ${common.length} paired items (95% interval ${(boot.lo! * 100).toFixed(1)} to ${(boot.hi! * 100).toFixed(1)})` : '' };
+      };
+      const costRise = (costPerCorrect: number | null, pass1: number | null) => {
+        const ratio = t.cost_per_correct !== null && costPerCorrect ? t.cost_per_correct / costPerCorrect : null;
+        const hit = ratio !== null && ratio >= COST_RISE && (t.pass1 ?? 0) <= (pass1 ?? 0);
+        return { ratio, hit, detail: hit ? `cost per correct answer up ${((ratio! - 1) * 100).toFixed(0)}% with no gain in pass rate` : '' };
+      };
+      const hold = (kind: Watch['kind'], now: { hit: boolean; detail: string }, again: (w: Watch) => { hit: boolean; detail: string }) => {
+        if (against === 'stable') { if (now.hit) flags.push({ kind, against, suite: id, reader, detail: now.detail }); return; }
+        const w = held.find(x => x.kind === kind && x.suite === id && x.reader === reader && x.digest === a.digest);
+        const repeat = w ? again(w) : null;
+        if (w && repeat!.hit) flags.push({ kind, against, suite: id, reader, detail: `${repeat!.detail} against ${w.baseline.night}, a second night running (${other.manifest.night}: ${w.detail})` });
+        else if (now.hit) watches.push({ kind, suite: id, reader, digest: a.digest, detail: now.detail, baseline: { night: other.manifest.night, sha: other.manifest.sha, per_item: p.per_item, pass1: p.pass1, cost_per_correct: p.cost_per_correct } });
+      };
+      const pass = passDrop(p.per_item), cost = costRise(p.cost_per_correct, p.pass1);
+      hold('pass_rate', pass, w => passDrop(w.baseline.per_item));
+      const flips = pass.common.filter(i => { const x = p.per_item[i]!, y = t.per_item[i]!; return x.n === y.n && x.c === x.n && y.c === 0; });
       if (flips.length) flags.push({ kind: 'strong_flip', against, suite: id, reader, detail: `${flips.length} items went from all trials passing to none`, items: flips });
-      const ratio = t.cost_per_correct !== null && p.cost_per_correct ? t.cost_per_correct / p.cost_per_correct : null;
-      if (ratio !== null && ratio >= COST_RISE && (t.pass1 ?? 0) <= (p.pass1 ?? 0)) {
-        flags.push({ kind: 'cost', against, suite: id, reader, detail: `cost per correct answer up ${((ratio - 1) * 100).toFixed(0)}% with no gain in pass rate` });
-      }
-      suites.push({ suite: id, reader, compared: true, pass_diff: { ...boot, items: common.length }, strong_flips: flips, cost_ratio: ratio });
+      hold('cost', cost, w => costRise(w.baseline.cost_per_correct, w.baseline.pass1));
+      suites.push({ suite: id, reader, compared: true, pass_diff: { ...pass.boot, items: pass.common.length }, strong_flips: flips, cost_ratio: cost.ratio });
     }
   }
-  return { against, night: other.manifest.night, ref: other.manifest.ref, sha: other.manifest.sha, suites, flags };
+  return { against, night: other.manifest.night, ref: other.manifest.ref, sha: other.manifest.sha, suites, flags, watches };
 }
 
 export const AGREEMENT = { candidate: 'particle-1', reference: 'claude-opus-5-5', min_kappa: 0.6, min_raw: 0.85, min_suite_items: 20, min_items: 40, max_unpaired: 0.1 } as const;
@@ -311,6 +342,12 @@ export function findPreviousNight(outRoot: string, night: string, ref: string): 
   return hit ? join(outRoot, hit, ref) : null;
 }
 
+/** The watches a night's summary.json recorded; none for a summary written before watches existed. */
+export const heldWatches = (dir: string): Watch[] => {
+  const path = join(dir, 'summary.json');
+  return existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as { watches?: Watch[] }).watches ?? [] : [];
+};
+
 export const loadNight = (dir: string) => ({ manifest: JSON.parse(readFileSync(join(dir, 'night.json'), 'utf8')) as NightManifest, rows: readOutcomes(join(dir, 'outcomes.jsonl')) });
 
 const pct = (x: number | null) => (x === null ? 'n/a' : `${(x * 100).toFixed(1)}%`);
@@ -322,7 +359,7 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
   const cells = nightCells(m, rows);
   const comparisons = [o.previous && { dir: o.previous, against: 'previous' as const }, o.stable && { dir: o.stable, against: 'stable' as const }]
     .filter((x): x is { dir: string; against: 'previous' | 'stable' } => !!x && existsSync(join(x.dir, 'night.json')))
-    .map(x => compareNights(night, loadNight(x.dir), x.against));
+    .map(x => compareNights(night, loadNight(x.dir), x.against, x.against === 'previous' ? heldWatches(x.dir) : []));
   const prev = comparisons.find(c => c.against === 'previous');
   let commits: string[] | null = null;
   if (o.gbrainClone && prev && prev.sha && prev.sha !== m.sha) {
@@ -333,7 +370,7 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     const mine = rows.filter(r => r.suite === f.suite && f.items.includes(r.item) && !r.harness && !r.skipped);
     return { ...f, tonight: { rows: mine.length, passes: mine.filter(r => r.pass).length } };
   });
-  const flags = comparisons.flatMap(c => c.flags);
+  const flags = comparisons.flatMap(c => c.flags), watches = comparisons.flatMap(c => c.watches);
   const unsupported = rows.filter(r => !r.skipped && !(r.pass && !r.harness) && classify(nightlyFailure(r, `nightly-${r.suite}`, [])).cause === 'item_unsupported');
   const unsupportedItems = [...new Set(unsupported.map(r => `${r.suite} ${r.item}`))].sort();
   const agreement = nightAgreement(m, rows);
@@ -343,13 +380,15 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     suites: m.suites.map(s => ({ ...s, cells: cells.filter(c => c.suite === s.id).map(({ per_item: _items, ...c }) => c) })),
     harness_rows: rows.filter(r => r.harness).length,
     item_unsupported: { rows: unsupported.length, items: unsupportedItems },
-    flags, comparisons, commit_range: prev ? { from: prev.sha, to: m.sha, commits } : null, fixes, agreement,
+    flags, watches, comparisons: comparisons.map(({ watches: _watches, ...c }) => c), commit_range: prev ? { from: prev.sha, to: m.sha, commits } : null, fixes, agreement,
   };
   const lines: string[] = [];
   lines.push(`# Nightly gbrain check: ${m.ref} ${m.sha.slice(0, 12)}${m.version ? ` (v${m.version})` : ''}, ${m.night}`, '');
   lines.push(`Tier ${m.tier}${m.fake ? ', fake providers (plumbing only; no number here measures a model)' : ''}. Dev set ${m.devset.digest.slice(0, 12)}. Causes: failure-cause taxonomy ${TAXONOMY_VERSION}.`, '');
   lines.push(flags.length ? `**${flags.length} flags.**` : '**No flags.**', '');
   for (const f of flags) lines.push(`- ${f.kind} (vs ${f.against}) ${f.suite} ${f.reader ?? 'keyless'}: ${f.detail}${f.items ? `: ${f.items.join(', ')}` : ''}`);
+  if (watches.length) lines.push('', `Watching ${watches.length}: a pass-rate drop or cost rise against the previous master night files as a flag only if the next night shows it again against the same night.`, '');
+  for (const w of watches) lines.push(`- ${w.kind} ${w.suite} ${w.reader ?? 'keyless'}: ${w.detail} (against ${w.baseline.night})`);
   if (unsupported.length) lines.push('', `Item-unsupported: ${unsupported.length} failed rows on ${unsupportedItems.length} items where the cited gold sessions don't support the answer (both support validators reject it, or the item cites no turn) and the arm given every gold session fails too. They count as \`item_unsupported\` in the weekly failure causes, not as gbrain failures, and stay in the flags above: ${unsupportedItems.join(', ')}.`);
   lines.push('', '## Suites', '', '| Suite | Reader | Items | Trials | pass^1 | pass^k | Harness | Cost per correct | Failures by cause |', '|---|---|---|---|---|---|---|---|---|');
   for (const s of m.suites) {
