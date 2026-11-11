@@ -2,6 +2,24 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.210] - 2026-11-11
+
+### The nightly particle-1 agreement check also leaves an item unpaired when gbrain's embedding or retrieval provider fails with a 429 or 5xx
+
+- **What changed.** memory-qa records a gbrain search or import failure as gbrain's own error, and the QA adapter
+  turns it into a `search` tool error rather than a harness row, so 0.10.209's shared-stage rule didn't reach it, and an
+  embedding provider's 429 on particle-1's search still counted as a particle-1 fail. Now a gbrain tool error on either
+  reader's counted row whose embedding or retrieval provider returned a 429 or 5xx leaves the item unpaired, with an
+  `embedding` or `retrieval` cause, counted with the other unpaired causes per suite and for the verdict. The QA
+  adapter writes that cause on the tool error from the whole error text. A tool error stored without one, other than a
+  refusal, gets it from named markers in its message, such as an HTTP 429 or 5xx status or a provider's wording for one.
+  A gbrain tool error with no such marker is still a fail for the reader whose row it is.
+- **What stays the same.** Only the agreement check reads the cause, so pass rates, flags and failure-cause counts
+  don't change. A resume keeps these rows as recorded, so such an item stays unpaired for that night.
+- **What to expect.** Rebuilt keyless from its stored rows, the 2026-11-10 master night has no such rows, so its verdict
+  still fails at kappa 0.640 and raw agreement 83.0% over 100 items, and only the report's agreement paragraph gains a
+  sentence. The weekly 2026-11-10 reader-budget failure-cause report rebuilds byte-identical.
+
 ## [0.10.209] - 2026-11-11
 
 ### The nightly particle-1 agreement check stops counting shared-stage failures as particle-1's fails

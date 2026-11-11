@@ -25,6 +25,8 @@ export interface ToolError {
   /** True for an error gbrain returned to a call the model could make; false for a crash, timeout or server error. */
   refused: boolean;
   message?: string;
+  /** The shared stage whose provider caused the error with a 429 or 5xx, written by the QA adapter (providerCause). */
+  cause?: ProviderCause;
 }
 
 export interface Outcome {
@@ -108,6 +110,8 @@ export type UpstreamCause = (typeof UPSTREAM_CAUSES)[number];
  */
 export type HarnessCause = 'reader' | UpstreamCause | 'run';
 
+const EMBEDDING = /\bembed(ding)?s?\b/i;
+
 /**
  * Named markers for a row stored with only its error text, the first match winning: memory-qa's reranker refusal
  * (RERANKER_INACTIVE, whose hint is "make the reranker reachable"), an embedding or retrieval failure, and a judge error
@@ -115,7 +119,7 @@ export type HarnessCause = 'reader' | UpstreamCause | 'run';
  */
 const CAUSE_MARKERS: ReadonlyArray<readonly [UpstreamCause, RegExp]> = [
   ['rerank', /RERANKER_INACTIVE|make the reranker reachable|rerank degradation|without rerank scores/i],
-  ['embedding', /\bembed(ding)?s?\b/i],
+  ['embedding', EMBEDDING],
   ['retrieval', /\bretrieval[ _](error|failed)|no frozen ranked list/i],
   ['judge', /^judge\b|\bjudge[ _]error\b/i],
 ];
@@ -123,6 +127,36 @@ const CAUSE_MARKERS: ReadonlyArray<readonly [UpstreamCause, RegExp]> = [
 /** A harness row's cause: the one written when the row was made, else the first named marker in its text, else the reader's. */
 export function harnessCause(h: NonNullable<Outcome['harness']>): HarnessCause {
   return h.cause ?? CAUSE_MARKERS.find(([, marker]) => marker.test(h.error))?.[0] ?? 'reader';
+}
+
+/** The shared stages a gbrain tool error can name as the provider that failed it. */
+export type ProviderCause = Extract<UpstreamCause, 'embedding' | 'retrieval'>;
+
+/**
+ * Named markers of a provider's HTTP 429 or 5xx in an error's text: the status after HTTP or status (HTTP 503, status
+ * code: 429), gbrain's gateway form (Voyage returned 503:), the OpenAI SDK's "429 status code (no body)", and the
+ * providers' wording for those statuses (OpenAI's "Rate limit reached" and "The server had an error", rate limit
+ * exceeded, Too Many Requests, Internal Server Error, Bad Gateway, Service Unavailable, Gateway Timeout). A
+ * retry-exhaustion message (the AI SDK's "Failed after 3 attempts. Last error: ...") matches through the error it quotes.
+ */
+const PROVIDER_FAILURE = [
+  /\b(?:HTTP|status(?: code)?)[\s:=]*(?:429|5\d\d)\b/i,
+  /\breturned (?:429|5\d\d):|\b(?:429|5\d\d) status code\b/i,
+  /\b(?:rate limit (?:reached|exceeded)|the server had an error|too many requests|internal server error|bad gateway|service unavailable|gateway timeout)\b/i,
+];
+
+/**
+ * Which shared stage's provider caused a gbrain error, from its text: none without a provider 429 or 5xx marker, so the
+ * error stays gbrain's own; embedding when the text names embedding (text-embedding-3-large, [embed(...)]); else retrieval.
+ */
+export function providerCause(text: string): ProviderCause | null {
+  if (!PROVIDER_FAILURE.some(marker => marker.test(text))) return null;
+  return EMBEDDING.test(text) ? 'embedding' : 'retrieval';
+}
+
+/** A tool error's provider cause: the one written when the row was made, else, for an error that isn't a refusal, providerCause of its message. */
+export function toolErrorCause(t: ToolError): ProviderCause | null {
+  return t.cause ?? (t.refused || !t.message ? null : providerCause(t.message));
 }
 
 /**
