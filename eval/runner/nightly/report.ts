@@ -55,6 +55,7 @@ import { join, resolve } from 'node:path';
 import { pairedBootstrap } from '../refresh-barrier/analyze.ts';
 import { CAUSE_IDS, TAXONOMY_VERSION, UNCLASSIFIED, classify, nightlyFailure, type Cause } from '../failure-causes/index.ts';
 import { harnessCause, readOutcomes, toolErrorCause, UPSTREAM_CAUSES, type Outcome } from './outcome.ts';
+import type { FixLedger, FixTarget } from '../sota/ledger.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
 export const FIXES_PATH = 'eval/data/nightly/fixes.json';
@@ -336,7 +337,8 @@ export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreem
     verdict: reason ? 'not_measured' : c.mean_kappa !== null && meets(c.mean_kappa, min_kappa) && meets(c.raw!, min_raw) ? 'pass' : 'fail' };
 }
 
-export interface Fix { issue: string; pr: string; gbrain_version: string; suite: string; items: string[]; note?: string }
+/** A shipped fix. target is the fix list item it answers, and ledger what sota/ledger.ts measured for it. */
+export interface Fix { issue: string; pr: string; gbrain_version: string; suite: string; items: string[]; note?: string; target?: FixTarget; ledger?: FixLedger }
 
 export function loadFixes(path = join(REPO, FIXES_PATH)): Fix[] {
   return existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as { fixes: Fix[] }).fixes : [];
