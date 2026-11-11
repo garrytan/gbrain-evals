@@ -108,7 +108,7 @@ describe('qa-v2 judgeResponse against the fake upstream', () => {
     expect(paths).toEqual(['head', 'tail']);
   });
 
-  // Value: protects=a later call for the same question asks the judge again after a reply with no verdict, while a reply with one replays from the cache; fails_when=judgeResponse caches the unanswered reply, so every later run replays the same judge error without a call; why_new=the next nightly and a fresh memory-qa run judge through the same cache; seam=ChatClient's cache against the local upstream; no_claim=caches written before this change, or a resume that keeps the error row
+  // Value: protects=a resume or rerun asks the judge again after a reply with no verdict, while a reply with one replays from the cache; fails_when=judgeResponse caches the unanswered reply, so every rerun replays the same judge error without a call; why_new=the nightly and memory-qa resume a judge harness row through the same cache; seam=ChatClient's cache against the local upstream; no_claim=caches written before this change
   test('a reply with no verdict is not cached, so a rerun asks the judge again', async () => {
     replies.push({ text: '', stop: 'max_tokens' }, { text: 'yes', stop: 'end_turn' });
     const chat = new ChatClient(tmp(), () => 0);
