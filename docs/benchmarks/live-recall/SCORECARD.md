@@ -60,12 +60,12 @@ scorecard). `eval/runner/predictive/verdict.ts` refuses a `hash` scorecard unles
 `default_transaction_read_only = on` and gbrain's direct pool was off, before the first search and after the last),
 and `guard_refusals` by verb (for example `telemetry_write`, gbrain's per-query counters, which the guard refuses).
 
-**`questions`**: `loaded`, `gold_missing` (dropped because a gold page was absent), `by_type` counts,
-`gold_found_by` counts, `paraphrase_shares_identifier_token` (the share of paraphrases that still contain an
-identifier-like token from their exact form) and `freeze_sha_prefix` (the first 12 hex characters of the question
-file's sha256, to match against the freeze). Under `batch4` it also has `prior_overlap`, copied from the freeze: `files`
-(the sha256 of the three earlier question files it was checked against) and the `question_ids`, `forms` and
-`gold_pages` it shares with them, all zero for a freeze the runner accepted.
+**`questions`**: `loaded`, `gold_missing` (dropped because a gold page was absent), `by_type` counts, `gold_found_by`
+counts, `paraphrase_shares_identifier_token` (the share of paraphrases that still contain an identifier-like token from
+their exact form) and `freeze_sha_prefix` (the first 12 hex characters of the question file's sha256, to match against
+the freeze). Under `batch4` it also has `prior_overlap`, which the runner writes after checking the freeze's held-out
+record: `files` (the first 12 hex characters of each earlier question file's sha256) and the `question_ids`,
+`forms` and `gold_pages` the new questions share with them, all zero for a freeze the runner accepted.
 
 **`eligibility`**: `eligible_question_forms`, `exclusions` (`<arm>_<status>` counts for the first failing arm of
 each excluded form), `invalid_arms` (`rerank_fail_open_over_cap`, `embedding_opted_out`) and `common_arms`.

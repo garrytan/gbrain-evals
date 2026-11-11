@@ -336,7 +336,9 @@ in `vm-setup.sh`, with a 12-hour time limit. The VM is destroyed when the run en
 
 Fixed before any batch 4 question exists. Wintermute is asked for batch 4 only after this amendment is on main, and
 batch 4's freeze and counted run use gbrain-evals at this amendment's merge commit. The results record that commit and
-its time.
+its time, and commit batch 4's counted scorecard at `docs/benchmarks/live-recall-batch4/b4-scorecard.json`
+(`B4_SCORECARD` in `eval/runner/predictive/export-references.ts`), the one path the reference export reads as
+`live-recall-b4`; until a counted batch4 scorecard is there, the `b4` layer reads NO_REFERENCE_YET.
 
 **Why.** G2's batch 2 layer reads PREDICTIVE, and its counted condition copies the real brain's gaps. But the condition
 was named on 2026-11-10, after batch 2's results were committed on 2026-11-07, so its prediction that paraphrases are
@@ -436,15 +438,16 @@ rule. The rule reads signs, as G2's claim does: the gap-copied brain predicts a 
 | Comparison | 20% discordant | 30% discordant | 40% discordant | 50% discordant |
 |---|---|---|---|---|
 | Primary, on its own interval (50 pairs) | 17.7 | 21.7 | 25.1 | 28.0 |
-| A one-form contrast on the family band (50 pairs, critical value at most 2.955) | 24.0 | 29.4 | 34.0 | 38.0 |
+| A one-form contrast on the family band (50 pairs, critical value 2.955) | 24.0 | 29.4 | 34.0 | 38.0 |
 | A both-forms contrast on the family band (forms independent to fully correlated) | 17.0 to 24.0 | 20.8 to 29.4 | 24.0 to 34.0 | 26.8 to 38.0 |
 
 Batch 2's primary had 48% discordant pairs (24 of 50), where the MDD is 27.4 points.
 
-The family band's critical value lies between 1.96 and Bonferroni's 2.955 for 16 contrasts; the table uses the upper
-end. Batches 1 to 3 measured configured gaps of 28 to 44 points, all above the primary's MDD. On batch 2, 13 contrasts
-had intervals that excluded zero; widening each interval to the upper-end critical value (1.51 times its half-width)
-leaves 12, so batch 2's effects would have cleared the band.
+The family band's critical value usually lies between 1.96 and Bonferroni's 2.955 for 16 contrasts. A max-t bootstrap
+isn't bounded by Bonferroni's normal value, so it can exceed 2.955 when a contrast has very few discordant pairs; the
+table assumes 2.955. Batches 1 to 3 measured configured gaps of 28 to 44 points, all above the primary's MDD. On batch
+2, 13 contrasts had intervals that excluded zero; widening each interval to a critical value of 2.955 (1.51 times its
+half-width) leaves 12, so batch 2's effects would have cleared the band.
 
 **Held out.** Batch 4 is written the way batch 2 was (live-recall [batch 2
 amendment](live-recall/PREREGISTRATION.md#batch-2-amendment)): 50 new questions, 10 of each of the five live types,
