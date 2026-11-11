@@ -34,7 +34,7 @@ import { READER_TEMPLATE } from '../memory-qa/qa-v2.ts';
 import { readRecords, type AnswerRecord } from '../memory-qa/records.ts';
 import { qaPromptVersion } from '../nightly/judge-cache.ts';
 import { frontierInstrumentId, paidGuard, readerMaxTokens, runCell } from '../q1/cell.ts';
-import { frontierJudgeOf, loadManifest, type CellDefinition } from '../q1/cells/definitions.ts';
+import { estimateCell, frontierJudgeOf, loadManifest, type CellDefinition } from '../q1/cells/definitions.ts';
 import { FRONTIER_READERS, FULL_CONTEXT_EFFORT } from '../systems/baselines.ts';
 import { FILE_AGENT_EFFORT, FILE_AGENT_SYSTEM } from '../systems/file-agent.ts';
 import { AGENT_ARM_PARITY } from '../systems/gbrain-agent.ts';
@@ -125,7 +125,7 @@ export function importLeader(cache: OutcomeCache, rows: readonly Row[]): number 
   return fresh.length;
 }
 
-/** The leader cell narrowed to the items and to the reader's arm, for a run that buys exactly those rows. */
+/** The leader cell narrowed to the items and to the reader's arm, with that arm's own estimate, for a run that buys exactly those rows. */
 export function leaderRunCell(benchmark: string, reader: string, items: readonly string[], manifest = loadManifest()): CellDefinition {
   const l = LEADERS[benchmark];
   if (!l) throw new Error(`${benchmark} has no leader (leaders: ${Object.keys(LEADERS).join(', ')})`);
@@ -136,7 +136,8 @@ export function leaderRunCell(benchmark: string, reader: string, items: readonly
   const ids = [...new Set(items)].sort();
   if (!ids.length) throw new Error('no items to run');
   const conversations = benchmark.startsWith('beam-') ? { only_conversations: [...new Set(ids.map(id => id.slice(0, id.indexOf(':'))))].sort() } : {};
-  return { ...base, ...conversations, selection: { kind: 'ids', ids }, arms: [arm] };
+  const { estimate: _whole, ...narrowed } = { ...base, ...conversations, selection: { kind: 'ids' as const, ids }, arms: [arm] };
+  return { ...narrowed, estimate: estimateCell(narrowed) };
 }
 
 export interface RunOptions { benchmark: string; system: string; reader: string; items: string[]; cache: string; work: string; argv: string[] }

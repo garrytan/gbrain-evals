@@ -15,7 +15,7 @@ import type { Outcome } from '../../eval/runner/memory-qa/outcomes.ts';
 import { answerRecord, rawSha256, type AnswerRecord, type JudgmentRecord } from '../../eval/runner/memory-qa/records.ts';
 import { qaPromptVersion } from '../../eval/runner/nightly/judge-cache.ts';
 import { frontierInstrumentId, readerMaxTokens, runConfigText } from '../../eval/runner/q1/cell.ts';
-import { ALL_SETS, buildManifest, definitionProblems, frontierJudgeOf, loadManifest, SOTA_DEV_IDS, SOTA_LEADER_BEAM_CONVERSATIONS, SOTA_LEADER_BEAM_IDS, SOTA_LEADER_LME_IDS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { ALL_SETS, buildManifest, definitionProblems, estimateCell, frontierJudgeOf, loadManifest, SOTA_DEV_IDS, SOTA_LEADER_BEAM_CONVERSATIONS, SOTA_LEADER_BEAM_IDS, SOTA_LEADER_LME_IDS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { freshness, OutcomeCache } from '../../eval/runner/sota/cache.ts';
 import { importLeader, LEADERS, leaderRows, leaderRunCell, leaderSpec, main, runLeader } from '../../eval/runner/sota/leader.ts';
 import { poolItems } from '../../eval/runner/sota/oracle.ts';
@@ -122,6 +122,9 @@ describe('leaderRunCell', () => {
     const lme = leaderRunCell('lme-s', OPUS, [SOTA_LEADER_LME_IDS[3]!]);
     expect([lme.arms.map(a => a.id), lme.only_conversations, lme.selection]).toEqual([['whole-full-context-opus'], undefined, { kind: 'ids', ids: [SOTA_LEADER_LME_IDS[3]] }]);
     expect(definitionProblems(lme, kinds)).toEqual([]);
+    const { estimate, ...rest } = lme;
+    expect(estimate).toEqual(estimateCell(rest));
+    expect(estimate.usd + leaderRunCell('lme-s', SOL, [SOTA_LEADER_LME_IDS[3]!]).estimate.usd).toBeCloseTo(cellOf(LME_CELL).estimate.usd, 1);
     expect(() => leaderRunCell('lme-s', PARTICLE, [SOTA_LEADER_LME_IDS[0]!])).toThrow(/no arm for particle/);
     expect(() => leaderRunCell('cat40-hard-m', OPUS, ['x'])).toThrow(/has no leader/);
     expect(() => leaderRunCell('lme-s', OPUS, [])).toThrow(/no items/);
