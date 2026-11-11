@@ -22,7 +22,7 @@ checks that nothing changed.
 |---|---|---|
 | `cat40-hard-m` | Cat 40 Hard world M: company questions an agent answers through gbrain's MCP tools | deterministic |
 | `refresh-barrier-agents` | An agent saves four facts while a refresh holds the first write, as production runs it | deterministic, from the brain, Git and the tool log |
-| `refused-write-agents` | The same task with the barrier off, so the first write is refused: does the agent recover? | deterministic |
+| `refused-write-agents` | The same task with the barrier off, so the first write is refused: does the agent recover? A replay under the request id the refusal names is a retry, not a resend | deterministic |
 | `concurrent-writers` | Seeded keyless trials where writers race refreshes, crashes, kills and imports, on PGLite and Postgres | deterministic |
 | `system-smokes` | Seven keyless smokes on a seeded synthetic brain (below) | deterministic |
 | `lme-s-hard` | LongMemEval-S questions a frontier reader on gbrain got wrong, plus canaries | judge |
@@ -279,6 +279,16 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-11: A replay of the request id a refusal names counts as a retry
+
+Since gbrain v0.60.671.0, a write refused `worktree_refreshing` names the request id to replay it with, a new one when
+the call sent none. The write scorer read a refused call's id only from the agent's own arguments, so a replay of the
+named id counted as a resend under a new id, and `refused-write-agents` scored v0.60.671.0 at 2 of 90 trials where the
+agent had replayed correctly in 88 of 88. Now a replay of the named id is a retry under the same id, as the
+refresh-barrier preregistration's Amendment 7 records, and only a new id is a resend. The same trials score 90 of 90;
+every row scored at an earlier gbrain commit keeps its score. `refresh-barrier-agents` and `refused-write-agents` share
+the scorer, so both suites' digests changed and their first night under the new rule starts a new baseline.
 
 ### 2026-11-11: gbrain's provider failures no longer count against either reader
 

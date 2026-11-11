@@ -780,3 +780,61 @@ Recorded after B2 and the Part C smoke at G and before any counted Part C episod
   this entry, with gbrain fetched at G from github.com/garrytan/gbrain and checked to be `773a29ee`. There are four
   invocations, one per model and arm, each running tasks 1 to 60, in parallel, on one ledger file. The outputs and the
   ledger are pulled, and the VM is deleted.
+
+### Amendment 7, 2026-11-11: a replay of the request id a refusal names is a retry under the same id
+
+A measurement fix to a counted rule, made after results were seen: after Part C's counted results (2026-11-08) and after
+the nightly check's `refused-write-agents` suite had scored gbrain v0.60.671.0. It changes no threshold, task count,
+seed range, arm, cap or verdict rule, and no counted Part C number.
+
+- **Old rule** (Part C, "Scoring"; `writeBehavior` in `eval/runner/refresh-barrier/agent.ts`): a write call's request id
+  is the `request_id` in the agent's own arguments. A later write of the same fact is a retry under the same request id
+  only when it sends the id the earlier call sent. A refused call that sent no id has none, so every later write of its
+  fact counted as reissued under a new id, and the episode failed strict success on "no write was reissued under a new
+  request id".
+- **New rule:** a refused write also has the request id its refusal names for the replay: the `request_id` in the refused
+  tool result's `fix.mcp`, when that `fix.mcp` calls the refused tool again (`namedRequestId`). A later write that sends
+  the id the agent sent, or the id its refusal named, is a retry under the same request id. Only a write under any other
+  id is reissued. A `fix.mcp` that calls another tool, such as polling `get_write_request`, names no replay.
+- **Why:** from gbrain v0.60.671.0 (#9134, commit `927677e9`), a write refused `worktree_refreshing` names the request id
+  to retry with, minting one when the call sent none, and its `fix.mcp` is the same call with that id. gbrain records
+  nothing for the refused call, and the replay commits under the named id, so replaying that id repeats the same write
+  request, exactly as replaying the agent's own id does. The old rule couldn't see that id and scored the replay as a
+  reissue. Before `927677e9`, the only `fix.mcp` in gbrain that carries a request id polls `get_write_request`, so the
+  new rule changes no episode scored at an earlier commit.
+- **Where it applies:** Part C's strict success (`scoreEpisode`) and the nightly write scorer
+  (`eval/runner/nightly/write-score.ts`) both take reissues from `writeBehavior`, so the rule covers Part C and the
+  nightly `refresh-barrier-agents` and `refused-write-agents` suites. Both suites' dev-set entries now carry a note
+  naming this rule. That changes their digests (`refused-write-agents` `36a93938ce18` to `0b5166596576`,
+  `refresh-barrier-agents` `d71fa7a1b30d` to `bd314553324b`, the dev set `2d8dc1669b30` to `22ba6b3268e8`), so the
+  nightly report never compares a night scored under one rule with a night scored under the other.
+- **Counted Part C:** unchanged. Its episodes ran at G (`773a29ee`, v0.60.614.0), which predates `927677e9`, so no
+  refusal in them names a replay id, and the verdict in the results stands.
+
+**Before and after, rescored keyless.** The four cells of the 2026-11-11 control probe for the nightly flag GST-2427
+(gpt-6.1-sol, items 2001 to 2030, three trials each, harness digest `856a372a`), rescored from their stored episode records
+with `bun eval/runner/refresh-barrier/rescore.ts <dir>` at this amendment's commit. The records are kept outside the
+repository; `test/eval/refresh-barrier-named-replay.test.ts` checks one of them.
+
+| gbrain | Refused writes that sent no id | Refusals that named a replay id | Of those no-id refusals, replayed under the named id | Passes, old rule | Passes, new rule |
+|---|---|---|---|---|---|
+| v0.60.647.0 (`001c8c39`) | 82 of 90 | 0 | 0 | 8 of 90 | 8 of 90 |
+| v0.60.661.0 (`9e9d6711`) | 86 of 90 | 0 | 0 | 4 of 90 | 4 of 90 |
+| v0.60.662.0 (`afabc9ce`) | 85 of 90 | 0 | 0 | 5 of 90 | 5 of 90 |
+| v0.60.671.0 (`cbca51e7`) | 88 of 90 | 90 | 88 | 2 of 90 | 90 of 90 |
+
+Passes are the nightly score; Part C's strict success on the same records gives the same counts under each rule. At
+v0.60.671.0 every fact landed exactly once and the report was right in all 90 trials, so all 88 failures under the old
+rule were the named-id replay counted as a reissue.
+
+**Nightly rows, 2026-11-10 and 2026-11-11.** The nightly check keeps outcome rows, not episode records, so these rows
+can't be replayed through the new rule call by call. Each ran gbrain at a commit before `927677e9`, where no refusal
+names a replay id, and the control probe's 90 records at `001c8c39`, the 2026-11-10 master commit, have no refusal that
+does. So every row keeps its score under the new rule:
+
+| Night | Run | gbrain | `refused-write-agents`, gpt-6.1-sol | `refused-write-agents`, claude-opus-5-5 | `refresh-barrier-agents`, gpt-6.1-sol | `refresh-barrier-agents`, claude-opus-5-5 |
+|---|---|---|---|---|---|---|
+| 2026-11-10 | master | v0.60.647.0 (`001c8c39`) | 10 of 90 | 24 of 90 | 90 of 90 | 82 of 90 |
+| 2026-11-10 | stable | v0.60.620.0 (`555b73a8`) | 8 of 90 | 29 of 90 | 88 of 90 | 87 of 90 |
+| 2026-11-10 | first run | v0.60.645.0 (`358e3476`) | 5 of 90 | not run | 90 of 90 | not run |
+| 2026-11-11 | master | v0.60.666.0 (`016ffa00`) | 4 of 90 | not run | 90 of 90 | not run |
