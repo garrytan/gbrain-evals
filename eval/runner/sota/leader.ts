@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { qaPromptVersion } from '../nightly/judge-cache.ts';
+import { frontierJudgeOf } from '../q1/cells/definitions.ts';
 import { FILE_AGENT_EFFORT } from '../systems/file-agent.ts';
 import { ORACLE_PASS } from './answerability.ts';
 import type { Spec } from './cache.ts';
@@ -23,8 +24,8 @@ export const LEADERS: Record<string, { system: string; code: string[]; effort: s
   'lme-s': { system: 'whole-history', code: ['eval/runner/memory-qa/qa.ts'], effort: null },
 };
 
-/** The leader's judge for a reader: the BEAM judges rule (gpt-6.1-sol grades Claude rows, claude-opus-5-5 grades the rest). */
-export const leaderJudge = (reader: string) => (reader.startsWith('anthropic:') ? 'openai:gpt-6.1-sol' : 'anthropic:claude-opus-5-5');
+/** The leader's judge for a reader: the q1 cells' frontier judge, the BEAM judges rule (gpt-6.1-sol grades Claude and particle-1 rows, claude-opus-5-5 grades GPT rows). */
+export const leaderJudge = frontierJudgeOf;
 
 /** The current inputs for a benchmark's leader rows with one reader, or null when the benchmark has no leader. */
 export function leaderSpec(benchmark: string, reader: string): Spec | null {
