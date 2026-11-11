@@ -232,8 +232,8 @@ export interface SimultaneousBand {
  * over the union of the members' clusters, resampling within each stratum (a question type, fixed by design) when
  * strata are given, every member recomputed on the same draw from its own clusters, each studentized by its own
  * bootstrap standard error, and the band's half-width the level quantile of the largest absolute studentized deviation
- * times that error. All members' bands then cover together at about the stated level, because the correlation that
- * shared questions create is in the draws rather than assumed away. No returned number is non-finite.
+ * times that error. The correlation that shared questions create is in the draws rather than assumed away. The level is
+ * nominal: with few clusters the bands cover together less often than it says. No returned number is non-finite.
  */
 export function simultaneousBand(members: readonly BandMember[], options: { seed: number; draws: number; level?: number; strata?: Readonly<Record<string, string>> }): SimultaneousBand {
   const level = options.level ?? 0.95;

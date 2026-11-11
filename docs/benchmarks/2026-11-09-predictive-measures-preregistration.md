@@ -397,8 +397,11 @@ A contrast qualifies when its simultaneous 95% band excludes zero. The band come
 batch 4's questions within each of the five question types (seed 20261106, 10,000 draws), recomputes all 16 contrasts on
 each draw from their own questions, scales each by its own bootstrap standard error, and takes the 95th percentile of
 the largest scaled deviation as the shared critical value (`simultaneousBand` in `eval/runner/stats/paired.ts`).
-Because every draw keeps the contrasts' shared questions together, the 16 bands cover together at about 95%, and
-correlated contrasts count for less than independent ones. Resampling within types keeps `window_vs_configured`, which
+Because every draw keeps the contrasts' shared questions together, correlated contrasts count for less than independent
+ones. The 95% is nominal. At 50 questions a bootstrap band covers less than its stated level: in simulations of this
+design, the 16 bands together held every true difference several points less often than 95%, mostly by missing small
+differences near zero rather than by pointing the wrong way. So a qualifying contrast is read for its direction, not as
+an exact 95% statement. Resampling within types keeps `window_vs_configured`, which
 only time_window questions carry, in every draw. The runner computes the band on Wintermute's box under
 `--protocol batch4` and sends it as `family_ci95` beside each contrast's own interval. Fixed details:
 
@@ -424,7 +427,8 @@ only time_window questions carry, in every draw. The runner computes the band on
 
 The `b4` layer's verdict is reported beside the outcome and doesn't enter it, so a side contrast that changes sign by
 chance can't decide whether the paraphrase gap held. The layer still counts in G2's summary line under the decision
-rule. The rule reads signs, as G2's claim does: the gap-copied brain predicts a configured gap of 7 points, and batches
+rule: if it reads NOT PREDICTIVE, for instance because `window_vs_configured` qualifies, G2's summary line reads NOT
+PREDICTIVE even when the outcome is HELD, and the results report both. The rule reads signs, as G2's claim does: the gap-copied brain predicts a configured gap of 7 points, and batches
 1 to 3 measured 28, 40 and 44.
 
 **What each outcome changes.**
@@ -471,12 +475,14 @@ windows had been applied at the freeze and at the run.
 the primary, with a 95% Fieller interval for the ratio of two independent estimates, each standard error read from its
 95% interval as width over 3.92 (`fiellerRatio` in `eval/runner/stats/paired.ts`, in verdict.ts's primary block).
 On batch 2 it is 0.175 (0.060 to 0.357). The results call the underestimate stable if batch 4's interval contains 0.175,
-and not stable if it doesn't. A stable ratio is a number a nightly gate could calibrate on; an unstable one means it
-can't. The ratio never changes the outcome.
+and not stable if it doesn't. An interval wide enough to contain both 0.175 and half or twice it can't tell a stable
+underestimate from a changed one, and the results say so beside the reading. A stable ratio is a number a nightly gate
+could calibrate on; an unstable one means it can't. The ratio never changes the outcome.
 
 **Other secondaries** (reported, never gating):
 
-- The `b4` layer's verdict, with the qualifying count with and without the three sign-forced contrasts.
+- The `b4` layer's verdict, with the qualifying count with and without the three sign-forced contrasts. It never
+  changes the outcome, and it counts in G2's summary line as the pass rule says.
 - The clean brain's reading of batch 4: `verdict.ts --secondary` on `g2/secondary/clean-593/scorecard.json`.
 - Batch 4's own live-recall P1 and P2, batch 2's primaries replicated on new questions (live-recall [batch 4
   amendment](live-recall/PREREGISTRATION.md#batch-4-amendment)).
