@@ -2,6 +2,35 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.217] - 2026-11-11
+
+### Judges count a verdict a Claude reply gives last, and an empty judge reply is an error instead of a wrong answer
+
+- **What changed.** Claude 5 judges sometimes explain before they answer, and a reply can come back empty at its output
+  limit. memory-qa's judge read only a reply's first three words, so a reply that ended "so the answer is yes", or came
+  back empty, scored as "no". Every yes-or-no judge reply in qa-v2 is now read by one rule (`judgeVerdict`): a yes or no
+  in the first three words decides, as before; otherwise the last standalone yes or no of a reply that wasn't cut off
+  decides; a reply with neither is a judge error. memory-qa writes that error as the row's `qa_error`, and the nightly
+  counts it as a judge harness error, not a wrong answer. Each judge record says where its verdict came from
+  (`verdict_path`: `head`, `tail` or `none`), and a row counts its tail verdicts in `qa_tail_verdicts`. The four
+  runners that judged through qa.ts's older chat client (c8k's dev score, p4-stream, the feedback think replay and p8
+  quote grounding) now judge through qa-v2's client, so a Claude 5 judge there is sent the same 2,000-token output floor.
+  An import test keeps runners off the old client. p8's three-label judge treats an empty reply, or a cut-off reply that
+  doesn't start with a label, as an error, logs it and moves to the next question. A judge reply with no verdict is not
+  written to the response cache, so a later run that asks the same question asks the judge again.
+- **What stays the same.** No judge prompt, default judge model or published number changes. GPT judges are sent the
+  same requests byte for byte, so cached verdicts replay. A verdict in the first three words reads exactly as before.
+  qa.ts and the two lifecycle-lite files keep the bytes their preregistrations pin, so lifecycle-lite still judges
+  through qa.ts's client with its gpt-4o judge. W10b scored "yes" anywhere in a reply and is unaffected. On its committed
+  Sonnet 5.5 second-judge replies, 971 of 1,000 decide in their first three words and the other 29 all end in a
+  standalone verdict.
+- **What to expect.** On the 2026-11-10 nightly, the Opus 5.5 judge of gpt-6.1-sol rows gave no verdict in its first
+  three words on 12 to 18 of 222 beam-1m-hard replies and 2 to 4 of 50 lme-s-hard replies. Read by the new rule, 3 of 60
+  beam-1m-hard rows change score on each ref, no row's pass changes, and lme-s-hard doesn't change. Rows judged by
+  GPT-6 Astra put every verdict in the first three words. memory-qa's run config hash now includes the verdict rule, so
+  a run started on an earlier release is refused on resume instead of mixing verdicts read two ways. A judge reply
+  cached before this release that holds no verdict still replays from the cache, now as a judge error.
+
 ## [0.10.216] - 2026-11-11
 
 ### Recall's (G2) paraphrase-gap prediction gets a held-out test, fixed before the new questions exist
