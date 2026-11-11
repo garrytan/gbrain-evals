@@ -24,7 +24,7 @@ import { isCapStop } from '../refresh-barrier/ledger.ts';
 import type { Item, Suite } from './devset.ts';
 import { contextDigest, NightlyCache, qaPromptVersion } from './judge-cache.ts';
 import { keylessEnv, paidEnv, type Provider } from './keyless.ts';
-import { harnessOf, OUTCOME_SCHEMA, qualifiedModel, type HarnessCause, type Outcome, type ToolError } from './outcome.ts';
+import { harnessOf, OUTCOME_SCHEMA, providerCause, qualifiedModel, type HarnessCause, type Outcome, type ToolError } from './outcome.ts';
 import type { DevSetRun } from './report.ts';
 import type { WriteScore } from './write-score.ts';
 
@@ -400,7 +400,9 @@ const QA_PASS = 0.5;
  * Gold coverage comes from the runner's ranked sessions: recall_any_at_10 is computed from that list and the question's gold
  * sessions beside the runner's recall_all_at_10, and retrieved is the coverage at 10 (at 5 when the question is not in
  * questions). A reader given the top sessions (--qa reader, --qa-context sessions) read the first qa_sessions of that list,
- * so delivered is that prefix's coverage; under any other reading it is null.
+ * so delivered is that prefix's coverage; under any other reading it is null. A gbrain error (error_origin sut) is a
+ * search tool error, never a harness row, and carries the shared stage whose provider caused it with a 429 or 5xx
+ * (outcome.ts providerCause) as its cause, which only the agreement check reads.
  */
 export function qaRows(run: SuiteRun, ctx: NightContext, reader: string, out: string, judge: string | null, questions: ReadonlyMap<string, MemoryQuestion> = new Map()): Outcome[] {
   const rowsFile = join(out, 'rows.ndjson');
@@ -413,6 +415,8 @@ export function qaRows(run: SuiteRun, ctx: NightContext, reader: string, out: st
   return rows.filter(r => run.items.some(i => i.id === r.id)).map(r => {
     const judged = judge !== null;
     const harnessError = r.qa_error ?? (r.error && r.error_origin !== 'sut' ? r.error : null);
+    const gbrainError = r.error && r.error_origin === 'sut' ? String(r.error) : null;
+    const provider = gbrainError ? providerCause(gbrainError) : null;
     const lastCall = r.qa_error ? (r.qa_receipts ?? []).at(-1) : undefined;
     const readerReceipts = (r.qa_receipts ?? []).filter((x: any) => x.role !== 'judge');
     const q = questions.get(r.id);
@@ -424,7 +428,7 @@ export function qaRows(run: SuiteRun, ctx: NightContext, reader: string, out: st
       item: r.id, reader, pass: judged ? (r.qa_score ?? 0) >= QA_PASS : r.abstention === true || r.recall_all_at_5 === 1,
       score: judged ? r.qa_score ?? null : r.recall_all_at_5 ?? null, cost_usd: perRow, stop: harnessError ? 'error' : 'answered',
       harness: harnessError ? { error: String(harnessError).slice(0, 300), ...(lastCall ? { cause: lastCall.role === 'judge' ? 'judge' as const : 'reader' as const } : {}) } : null,
-      tool_errors: r.error && r.error_origin === 'sut' ? [{ tool: 'search', code: null, refused: false, message: String(r.error).slice(0, 200) }] : [],
+      tool_errors: gbrainError ? [{ tool: 'search', code: null, refused: false, message: gbrainError.slice(0, 200), ...(provider ? { cause: provider } : {}) }] : [],
       category: r.category ?? null, gold_count: typeof r.gold_count === 'number' ? r.gold_count : null,
       retrieved: r.gold_count === 0 ? null : gold ? cover(any10, r.recall_all_at_10) : cover(r.recall_any_at_5, r.recall_all_at_5),
       delivered: top ? cover(recallAnyAtK(top, gold!, top.length), recallAllAtK(top, gold!, top.length)) : null,

@@ -122,14 +122,27 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   Opus. particle-1 runs on the QA suites only: Part C's worker and the Cat 40 Hard runner take Claude and GPT readers,
   so the night leaves particle-1 off the agent suites. The nightly tier plans no QA suite, so pass `--suites
   lme-s-hard,beam-1m-hard` there, or use the matrix or smoke tier. particle-1's first trial of an item and Opus's first
-  counted trial are each reader's pass or fail. An error from particle-1's own provider or call (a crash, an invalid
-  answer, a 4xx or 5xx on the reader call) counts as a fail, so a reader that breaks on hard items can't drop them. A
-  failure in a stage both readers share, before or after the reader (embedding, retrieval, rerank or the judge), says
-  nothing about particle-1, so it leaves the item unpaired with its cause named. So does a row a run-level stop cut off,
-  an item Opus has no counted trial for and one the night didn't run for particle-1. Each harness row's cause is the one
-  the runner wrote with it, else a named marker in its error text (memory-qa's `RERANKER_INACTIVE` refusal, whose hint
-  is "make the reranker reachable", an embedding or retrieval failure, a judge error), else particle-1's own. The
-  report and `summary.json` count unpaired items by cause, per suite and for the verdict. Per suite the report
+  counted trial are each reader's pass or fail. Two kinds of error say nothing about either reader, so they leave the
+  item unpaired with their cause named: a harness row whose cause is a stage both readers share, before or after the
+  reader (embedding, retrieval, rerank or the judge), and a gbrain tool error, on either reader's row, whose embedding
+  or retrieval provider returned a 429 or 5xx. So do a row a run-level stop cut off, an item Opus has no counted trial
+  for and one the night didn't run for particle-1. Three kinds of error stay fails: an error from particle-1's own
+  provider or call (a crash, an invalid answer, a 4xx or 5xx on the reader call), so a reader that breaks on hard items
+  can't drop them; a particle-1 harness row whose text names no shared stage, which counts as particle-1's own; and a
+  gbrain tool error with no provider marker, which is gbrain's own failure and a fail for the reader whose row it is.
+  Each harness row's cause is the one the runner wrote with it, else a named marker in its error text (memory-qa's
+  `RERANKER_INACTIVE` refusal, whose hint is "make the reranker reachable", an embedding or retrieval failure, a judge
+  error), else particle-1's own. memory-qa records a gbrain search or import failure as gbrain's own error, not a
+  harness row, and the QA adapter turns it into a `search` tool error. That error's provider cause is the one the
+  adapter wrote from the whole error text, else, for an error that isn't a refusal, a marker in its stored message: an
+  HTTP 429 or 5xx status (`HTTP 503`, `status 429`, gbrain's `returned 503:`, the OpenAI SDK's `429 status code`) or
+  a provider's wording for one (`Rate limit reached`, `rate limit exceeded`, `The server had an error`, `Too Many
+  Requests`, `Internal Server Error`, `Bad Gateway`, `Service Unavailable`, `Gateway Timeout`). A retry-exhaustion
+  message such as `Failed after 3 attempts. Last error: ...` counts through the error it quotes, so retries that ended
+  on a dropped connection stay a fail. The cause is embedding when the text names embedding (`text-embedding-3-large`,
+  `[embed(...)]`) and retrieval otherwise. Only the agreement check reads that cause: pass rates, flags and failure
+  causes count the row as they did before. The report and `summary.json` count unpaired items by cause, per suite and
+  for the verdict. Per suite the report
   shows raw agreement, Cohen's kappa (agreement beyond what the two pass rates give by chance) and particle-1's pass-rate
   gap to Opus. A suite counts toward the verdict with at least 20 paired items. particle-1 passes when the counted suites
   hold at least 40 items, no more than 10% of scheduled items are unpaired, the item-weighted mean of the counted suites'
@@ -264,6 +277,16 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-11: gbrain's provider failures no longer count against either reader
+
+memory-qa records a gbrain search or embedding failure as gbrain's own error, which the QA adapter turns into a tool
+error, not a harness row. So an embedding provider's 429 that hit only particle-1's search still counted as a particle-1
+fail, although the entry below said embedding and retrieval failures leave the item unpaired; that held only for
+harness rows. Now a gbrain tool error whose embedding or retrieval provider returned a 429 or 5xx leaves the item
+unpaired with the embedding or retrieval cause, on Opus's row as well as particle-1's, and the report counts it with the
+other unpaired causes. A gbrain tool error with no provider marker is still a fail for the reader whose row it is. Pass
+rates, flags and failure causes don't change.
 
 ### 2026-11-11: Shared-stage failures no longer count against particle-1
 

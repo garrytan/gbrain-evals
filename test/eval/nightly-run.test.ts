@@ -12,6 +12,7 @@ import { join, resolve } from 'node:path';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import type { HardTask } from '../../eval/generators/hard/schema.ts';
 import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
+import { classify, nightlyFailure } from '../../eval/runner/failure-causes/index.ts';
 import { cat40Commands, cat40DevSet, cat40Rows, episodeRows, judgeFor, latestRowPerItem, outcome, qaCommand, qaRows, replayAdapter, seedRanges, skippedRows, smokeRows, SUITE_FACTS, toolErrorFromText,
   trialRows, type NightContext, type SuiteRun } from '../../eval/runner/nightly/adapters.ts';
 import { canonicalDigest, loadDevSet } from '../../eval/runner/nightly/devset.ts';
@@ -230,6 +231,20 @@ describe('reading runner records into outcome rows', () => {
     expect(out.map(r => harnessCause(r.harness!))).toEqual(['judge', 'reader', 'reader']);
   });
 
+  test("(e) QA rows: gbrain's own error (error_origin sut) is a search tool error that carries the provider stage whose 429 or 5xx caused it, read from the whole error", () => {
+    const dir = tmp();
+    const late = `import failed: chat/${'lme-s-0a995998-session-'.repeat(8)} could not be embedded: [embed(openai:text-embedding-3-large)] status 429`;
+    const rows = [{ id: '0a995998', abstention: false, error: 'Rate limit reached for text-embedding-3-large in organization org-test on tokens per min (TPM). (429)', error_origin: 'sut', error_kind: 'product_error', outcome: 'retrieval_error' },
+      { id: '08f4fc43', abstention: false, error: late, error_origin: 'sut' },
+      { id: '0bc8ad93', abstention: false, error: 'search failed: Voyage returned 503: upstream overloaded', error_origin: 'sut' },
+      { id: '10d9b85a', abstention: false, error: "TypeError: Cannot read properties of undefined (reading 'slug')", error_origin: 'sut' }];
+    writeFileSync(join(dir, 'rows.ndjson'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+    const out = qaRows(suiteRun('lme-s-hard', rows.map(r => r.id)), ctx(), 'particle-1', dir, 'openai:gpt-6-astra');
+    expect(out.map(r => [r.item, r.pass, r.stop, r.harness])).toEqual(rows.map(r => [r.id, false, 'answered', null]));
+    const search = (message: string, cause?: 'embedding' | 'retrieval') => [{ tool: 'search', code: null, refused: false, message, ...(cause ? { cause } : {}) }];
+    expect(out.map(r => r.tool_errors)).toEqual([search(rows[0]!.error, 'embedding'), search(late.slice(0, 200), 'embedding'), search(rows[2]!.error, 'retrieval'), search(rows[3]!.error)]);
+  });
+
   test('smokes: a harness_* code means the smoke could not run, so its row is a harness row and never a gbrain failure', () => {
     const rows = smokeRows(suiteRun('system-smokes', ['managed-sync', 'postgres-15', 'query-contract', 'upgrade-from-old']), ctx(), [
       { id: 'managed-sync', pass: false, code: 'harness_error', detail: 'TypeError', ms: 1 },
@@ -253,6 +268,16 @@ describe('reading runner records into outcome rows', () => {
 });
 
 describe('the fields the failure-cause adapter reads', () => {
+  test("(f) a gbrain search error whose embedding provider returned a 429 keeps its failure-cause label; the provider cause is for the agreement check only", () => {
+    const dir = tmp();
+    writeFileSync(join(dir, 'rows.ndjson'), JSON.stringify({ id: '0a995998', abstention: false, error: 'Rate limit reached for text-embedding-3-large in organization org-test on tokens per min (TPM). (429)', error_origin: 'sut', outcome: 'retrieval_error' }) + '\n');
+    const [o] = qaRows(suiteRun('lme-s-hard', ['0a995998']), ctx(), 'particle-1', dir, 'openai:gpt-6-astra');
+    const label = classify(nightlyFailure(o!, 'nightly-lme-s-hard', []));
+    expect(label).toMatchObject({ cause: 'unclassified', basis: 'unclassified', rule_id: 'residual.delivery_unmeasured', secondary: [], tags: [] });
+    const bare = o!.tool_errors.map(({ tool, code, refused, message }) => ({ tool, code, refused, message }));
+    expect(classify(nightlyFailure({ ...o!, tool_errors: bare }, 'nightly-lme-s-hard', []))).toEqual(label);
+  });
+
   test('every dev-set suite has its facts; a row says gbrain, the suite at its ref, and default on master or variant elsewhere', () => {
     expect(devset.suites.map(s => s.id).filter(id => !SUITE_FACTS[id])).toEqual([]);
     const run = suiteRun('lme-s-hard');

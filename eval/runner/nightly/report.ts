@@ -30,8 +30,10 @@
  * trial and Opus's first counted trial are each reader's pass or fail. A harness row from particle-1's own provider or call
  * (a crash, an invalid answer, a 4xx or 5xx on the reader call) is a fail for particle-1, never a dropped item. A harness
  * row from a stage both readers share (embedding, retrieval, rerank or the judge: outcome.ts harnessCause) or one a
- * run-level stop cut off leaves the item unpaired with that cause, as does an item Opus has no counted trial for or the
- * night didn't run for particle-1, and the suite and the verdict count unpaired items by cause. A night that ends on a
+ * run-level stop cut off leaves the item unpaired with that cause, as does a gbrain tool error on either reader's counted
+ * row whose embedding or retrieval provider returned a 429 or 5xx (outcome.ts toolErrorCause), an item Opus has no
+ * counted trial for or the night didn't run for particle-1, and the suite and the verdict count unpaired items by cause.
+ * Any other gbrain tool error stays a fail for the reader whose row it is. A night that ends on a
  * budget stop or loses its VM is not measured. Each suite's 2x2 table gives its raw agreement, Cohen's kappa and
  * particle-1's pass-rate gap to Opus, and a suite counts toward the verdict with at least 20 paired items. particle-1
  * passes with at least 40 counted items, no more than 10% of scheduled items unpaired, an item-weighted mean of the
@@ -47,7 +49,7 @@ import { gzipSync } from 'node:zlib';
 import { join, resolve } from 'node:path';
 import { pairedBootstrap } from '../refresh-barrier/analyze.ts';
 import { CAUSE_IDS, TAXONOMY_VERSION, UNCLASSIFIED, classify, nightlyFailure, type Cause } from '../failure-causes/index.ts';
-import { harnessCause, readOutcomes, UPSTREAM_CAUSES, type Outcome } from './outcome.ts';
+import { harnessCause, readOutcomes, toolErrorCause, UPSTREAM_CAUSES, type Outcome } from './outcome.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
 export const FIXES_PATH = 'eval/data/nightly/fixes.json';
@@ -242,8 +244,14 @@ export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreem
   const empty = (): AgreementTable => ({ items: 0, both_pass: 0, candidate_only: 0, reference_only: 0, both_fail: 0 });
   const add = (into: AgreementTable, t: AgreementTable) => { for (const key of Object.keys(into) as Array<keyof AgreementTable>) into[key] += t[key]; };
   const tally = (causes: UnpairedCause[]): UnpairedCounts => Object.fromEntries(UNPAIRED_CAUSES.map(c => [c, causes.filter(x => x === c).length]).filter(([, n]) => n));
-  /** A harness row's cause when it isn't the reader's own failure, which leaves its item unpaired; null otherwise. */
-  const shared = (o: Outcome | undefined) => { const c = o?.harness ? harnessCause(o.harness) : 'reader'; return c === 'reader' ? null : c; };
+  /**
+   * Why a reader's row leaves its item unpaired, or null when it is the reader's pass or fail: a harness row's cause when
+   * it isn't the reader's own failure, else a gbrain tool error's provider cause.
+   */
+  const shared = (o: Outcome | undefined): UnpairedCause | null => {
+    if (o?.harness) { const c = harnessCause(o.harness); return c === 'reader' ? null : c; }
+    return o?.tool_errors.map(toolErrorCause).find(c => c !== null) ?? null;
+  };
   const suites: SuiteAgreement[] = [];
   const pooled = empty(), counted = empty();
   const unpairedAll: UnpairedCause[] = [];
@@ -251,10 +259,10 @@ export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreem
   for (const s of scheduledOn) {
     const items = new Set(rows.filter(r => r.suite === s.id && (isModel(r.reader, candidate) || isModel(r.reader, reference))).map(r => r.item));
     const mine = firstTrials(s.id, candidate, true), theirs = firstTrials(s.id, reference, false), theirFirst = firstTrials(s.id, reference, true);
-    const paired = [...items].filter(i => mine.has(i) && !shared(mine.get(i)) && theirs.has(i));
+    const paired = [...items].filter(i => mine.has(i) && !shared(mine.get(i)) && theirs.has(i) && !shared(theirs.get(i)));
     const planned = Math.max(items.size, s.items ?? 0);
     const causes: UnpairedCause[] = [...items].filter(i => !paired.includes(i))
-      .map(i => shared(mine.get(i)) ?? (theirs.has(i) ? 'not_run' : shared(theirFirst.get(i)) ?? 'no_reference_trial'));
+      .map(i => shared(mine.get(i)) ?? (!theirs.has(i) ? shared(theirFirst.get(i)) ?? 'no_reference_trial' : mine.has(i) ? shared(theirs.get(i))! : 'not_run'));
     causes.push(...Array<UnpairedCause>(planned - items.size).fill('not_run'));
     scheduled += planned;
     unpairedAll.push(...causes);
@@ -362,7 +370,7 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     const a = agreement, v = a.counted, kappa = (x: number | null) => (x === null ? 'n/a' : x.toFixed(3));
     const points = (x: number | null) => (x === null ? 'n/a' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}`);
     lines.push('', `## ${a.candidate} agreement with ${a.reference}`, '');
-    lines.push(`Per item, ${a.candidate}'s first trial and ${a.reference}'s first counted trial are each reader's pass or fail. An error from ${a.candidate}'s own provider or call (a crash, an invalid answer, a 4xx or 5xx on the reader call) is a fail for ${a.candidate}. A failure in a stage both readers share (embedding, retrieval, rerank or the judge) leaves the item unpaired, with its cause named, as do a run-level stop, an item ${a.reference} has no counted trial for and one the night didn't run for ${a.candidate}. A night that ends on a budget stop or loses its machine is not measured. A suite counts toward the verdict with at least ${a.min_suite_items} paired items. ${a.candidate} passes with at least ${a.min_items} such items, no more than ${pct(a.max_unpaired)} of scheduled items unpaired, an item-weighted mean of the counted suites' kappas of at least ${a.min_kappa} and their raw agreement of at least ${pct(a.min_raw)}. The pooled kappa over every measured suite is shown for reference only.`, '');
+    lines.push(`Per item, ${a.candidate}'s first trial and ${a.reference}'s first counted trial are each reader's pass or fail. An error from ${a.candidate}'s own provider or call (a crash, an invalid answer, a 4xx or 5xx on the reader call) is a fail for ${a.candidate}. A failure in a stage both readers share (embedding, retrieval, rerank or the judge) leaves the item unpaired, with its cause named, as do a run-level stop, an item ${a.reference} has no counted trial for and one the night didn't run for ${a.candidate}. A gbrain error in either reader's row counts as a shared-stage failure only when gbrain's embedding or retrieval provider returned a 429 or 5xx; any other gbrain error is a fail for that reader. A night that ends on a budget stop or loses its machine is not measured. A suite counts toward the verdict with at least ${a.min_suite_items} paired items. ${a.candidate} passes with at least ${a.min_items} such items, no more than ${pct(a.max_unpaired)} of scheduled items unpaired, an item-weighted mean of the counted suites' kappas of at least ${a.min_kappa} and their raw agreement of at least ${pct(a.min_raw)}. The pooled kappa over every measured suite is shown for reference only.`, '');
     lines.push(a.verdict === 'not_measured' ? `**Not measured: ${a.reason}.**`
       : `**${a.verdict === 'pass' ? 'Passes' : 'Fails'}: kappa ${kappa(v.mean_kappa)}${v.mean_kappa === null ? ' (both readers gave every item the same label in every counted suite)' : ` (item-weighted mean over ${v.suites} suite${v.suites === 1 ? '' : 's'})`}, raw agreement ${pct(v.raw)}, over ${v.items} items.** ${a.candidate} passes ${pct(v.candidate_pass)} of them and ${a.reference} ${pct(v.reference_pass)}, a gap of ${points(v.gap)} points.`);
     const label = (c: string) => (c === 'run' ? 'run-level stop' : c === 'no_reference_trial' ? `no counted ${a.reference} trial` : c === 'not_run' ? `not run for ${a.candidate}` : c);

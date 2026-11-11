@@ -3,7 +3,8 @@
  * night with its flags, on fixture nights: a pass-rate drop, strong flips, a deterministic signal, a cost rise, a changed
  * suite digest, a suite the ref skipped, harness and skipped rows kept out of every rate, failures counted by the
  * failure-cause taxonomy, and particle-1's per-item agreement with claude-opus-5-5 (raw agreement and Cohen's kappa), with
- * harness rows split by cause: particle-1's own provider errors are fails, shared-stage failures leave the item unpaired.
+ * harness rows split by cause: particle-1's own provider errors are fails, shared-stage failures leave the item unpaired,
+ * and so does a gbrain tool error, on either reader's row, whose embedding or retrieval provider returned a 429 or 5xx.
  */
 import { describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
@@ -11,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { TAXONOMY_VERSION } from '../../eval/runner/failure-causes/index.ts';
-import { harnessCause, type Outcome } from '../../eval/runner/nightly/outcome.ts';
+import { harnessCause, providerCause, toolErrorCause, type Outcome, type ProviderCause, type ToolError } from '../../eval/runner/nightly/outcome.ts';
 import { cellStats, compareNights, findPreviousNight, nightAgreement, passHatK, writeReport, type NightManifest, type SuiteStatus } from '../../eval/runner/nightly/report.ts';
 import { row } from './nightly-fixtures.ts';
 
@@ -419,5 +420,55 @@ describe("particle-1's agreement with claude-opus-5-5", () => {
       expect([ag.verdict, ag.reason]).toEqual(['not_measured', `the night ended with ${exit}, so the items it never reached are not particle-1's fails`]);
     }
     expect(reportOf({ ...beamNight, exit: 'NIGHTLY_CAP_STOP' }, withHarness(cut)).md).toContain('| 2 (run-level stop 2) |');
+  });
+
+  /** gbrain's search error as qaRows records it: a tool error, not a harness row, with the provider cause when one is written. */
+  const searchError = (message: string, cause?: ProviderCause): ToolError => ({ tool: 'search', code: null, refused: false, message, ...(cause ? { cause } : {}) });
+  /** Both suites from table a, plus a beam-1m-hard item per error where the other reader passes and `on`'s row failed on that search error. */
+  const withSearchErrors = (errors: ToolError[], on = 'particle-1') => [...pair(a),
+    ...labelled('claude-opus-5-5', a.opus, { suite: 'beam-1m-hard' }), ...labelled('particle-1', a.particle, { suite: 'beam-1m-hard' }),
+    ...errors.flatMap((e, i) => both.map(reader => row({ suite: 'beam-1m-hard', reader, item: `item-${20 + i}`, stop: 'answered',
+      ...(reader === on ? { pass: false, score: null, tool_errors: [e] } : { pass: true, score: 1 }) })))];
+  const embed429 = 'import failed: [embed(openai:text-embedding-3-large)] Rate limit reached for text-embedding-3-large in organization org-test on tokens per min (TPM): Limit 1000000, Used 998214, Requested 4096. Please try again in 245ms. (429)';
+  /** The same error stored with its marker past the cut message, so only the cause qaRows wrote names the provider. */
+  const embed429Cut = searchError(embed429.slice(0, 40), 'embedding');
+
+  test("(a) an embedding 429 on particle-1's gbrain search, a gbrain tool error and not a harness row, leaves the item unpaired with the embedding cause", () => {
+    expect(providerCause(embed429)).toBe('embedding');
+    expect(providerCause(embed429Cut.message!)).toBeNull();
+    const rows = withSearchErrors([searchError(embed429), embed429Cut]);
+    const ag = nightAgreement(beamNight, rows)!;
+    expect(ag.suites[1]).toMatchObject({ suite: 'beam-1m-hard', items: 20, both_pass: 10, candidate_only: 1, reference_only: 2, both_fail: 7, candidate_harness: 0, scheduled: 22, unpaired: 2, unpaired_causes: { embedding: 2 } });
+    expect([ag.scheduled, ag.unpaired, ag.unpaired_causes, ag.verdict]).toEqual([42, 2, { embedding: 2 }, 'pass']);
+    const { summary, md } = reportOf(beamNight, rows);
+    expect(summary.agreement).toMatchObject({ unpaired: 2, unpaired_causes: { embedding: 2 } });
+    expect(md).toContain('Unpaired items: 2 of 42 scheduled. By cause: embedding 2.');
+    expect(md).toContain('| beam-1m-hard | 20 | yes | 85.0% | 0.694 | 55.0% | 60.0% | -5.0 | 0 | 2 (embedding 2) |');
+  });
+
+  test("(b) the same provider error on Opus's counted row leaves the item unpaired too, because it says nothing about either reader", () => {
+    const ag = nightAgreement(beamNight, withSearchErrors([searchError(embed429), embed429Cut], 'claude-opus-5-5'))!;
+    expect(ag.suites[1]).toMatchObject({ items: 20, both_pass: 10, candidate_only: 1, reference_only: 2, both_fail: 7, scheduled: 22, unpaired: 2, unpaired_causes: { embedding: 2 } });
+    expect([ag.unpaired, ag.unpaired_causes, ag.verdict]).toEqual([2, { embedding: 2 }, 'pass']);
+  });
+
+  test('(c) a provider 5xx on retrieval, on either reader, leaves the item unpaired with the retrieval cause', () => {
+    const retrieval = ['gbrain search: the retrieval provider returned 503: upstream connect error', 'search failed: HTTP 502 from the vector store', 'hybrid search: Service Unavailable'];
+    expect(retrieval.map(providerCause)).toEqual(['retrieval', 'retrieval', 'retrieval']);
+    const ag = nightAgreement(beamNight, withSearchErrors(retrieval.map(m => searchError(m))))!;
+    expect(ag.suites[1]).toMatchObject({ items: 20, candidate_harness: 0, scheduled: 23, unpaired: 3, unpaired_causes: { retrieval: 3 } });
+    expect([ag.unpaired, ag.unpaired_causes]).toEqual([3, { retrieval: 3 }]);
+    expect(nightAgreement(beamNight, withSearchErrors([searchError(retrieval[0]!)], 'claude-opus-5-5'))!.unpaired_causes).toEqual({ retrieval: 1 });
+  });
+
+  test("(d) a gbrain error with no provider 429 or 5xx marker stays gbrain's, a fail for the reader whose row it is", () => {
+    const own = ["TypeError: Cannot read properties of undefined (reading 'slug')", 'invalid_params: limit must be at most 500',
+      'embedding failed for chat/x: gbrain saved the text without vectors (embedding_deferred)', 'Failed after 3 attempts. Last error: Cannot connect to API: ECONNRESET'];
+    expect(own.map(providerCause)).toEqual([null, null, null, null]);
+    expect(toolErrorCause({ tool: 'search', code: 'rate_limited', refused: true, message: 'Too Many Requests' })).toBeNull();
+    const ag = nightAgreement(beamNight, withSearchErrors(own.map(m => searchError(m))))!;
+    expect(ag.suites[1]).toMatchObject({ items: 24, reference_only: 6, candidate_harness: 0, unpaired: 0, unpaired_causes: {} });
+    expect([ag.unpaired, ag.verdict]).toEqual([0, 'fail']);
+    expect(nightAgreement(beamNight, withSearchErrors([searchError(own[0]!)], 'claude-opus-5-5'))!.suites[1]).toMatchObject({ items: 21, candidate_only: 2, unpaired: 0 });
   });
 });
