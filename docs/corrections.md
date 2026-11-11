@@ -251,7 +251,24 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   [particle-1 replay](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md) say so beside the figures. No
   accuracy figure or verdict changes. gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
+## Predictive measures
+
+- **Recall (G2)'s paraphrase-gap claim was stated as a prediction before anything tested it as one** (2026-11-11). The
+  [results](benchmarks/2026-11-10-predictive-measures.md) said the synthetic recall brain catches the real brain's
+  paraphrase gap only when it carries the real brain's embedding gaps. Every number and verdict reproduces, but the
+  gap-copied brain became the counted condition after batch 2's results were public. The clean brain agrees on 12 of
+  the 13 qualifying contrasts, so the gaps' whole effect is one contrast, from 7 of 100 questions. And the 13 contrasts
+  share 5 setups and one set of questions, so they're worth about 5 to 8 independent checks. G2 now reads PREDICTIVE for
+  which search setup beats which, and its paraphrase-gap prediction reads PENDING a held-out replication. Until that
+  lands, nothing gates on G2 as a paraphrase-regression detector. Its paraphrase Kendall tau of 0.80 breaks a synthetic
+  tie by list order; as tau-b it is 0.949. Tau never gates. gbrain is Garry Tan's own project.
+
 ## Changelog
+
+### 2026-11-11: Predictive measures
+
+A new section says that recall (G2)'s PREDICTIVE reading covers which search setup beats which, that its
+paraphrase-gap prediction is PENDING a held-out replication, and why, with the paraphrase Kendall tau's tie.
 
 ### 2026-11-10: Full-context reads and OpenAI's prompt cache
 
