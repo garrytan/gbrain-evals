@@ -219,6 +219,8 @@ export interface FaultRecord {
 export interface CallLog {
   i: number; name: string; t_ms: number; ms: number; write: boolean; held: boolean; is_error: boolean;
   cls: string | null; code: string | null; state: string | null; retry_after_ms: number | null; request_id: string | null;
+  /** The request_id a refused write's answer names for replaying the call (namedRequestId); null when it names none. */
+  named_request_id: string | null;
   /** Facts whose token the call's arguments carry. */
   tokens: FactId[];
   /** An isError answer that is an admitted write still in flight (classifyWrite). */
@@ -245,6 +247,16 @@ export function classifyWrite(isError: boolean, body: Record<string, any>): Writ
   if (request && typeof request === 'object' && typeof request.state === 'string' && !TERMINAL.has(request.state)) return { ...c, cls: 'pending', code, state: request.state, error_pending: true };
   const retryable = body.retryable === true || body.class === 'retryable';
   return { ...c, cls: retryable ? 'refused_retryable' : 'refused', code, state: request?.state ?? null, error_pending: false };
+}
+
+/**
+ * The request_id a refused write's answer names for replaying the call: the id in its `fix.mcp`, when that is the same
+ * tool. gbrain names one from v0.60.671.0 (#9134), minting it when the call sent none, so the replay commits under it. A
+ * fix that calls another tool (polling get_write_request, reading a page) names no replay. Null when there is none.
+ */
+export function namedRequestId(tool: string, body: Record<string, any>): string | null {
+  const mcp = body.fix?.mcp;
+  return mcp?.tool === tool && typeof mcp.arguments?.request_id === 'string' ? mcp.arguments.request_id : null;
 }
 
 /** A dispatcher result as the Cat 40 MCP client shows it to the model. */
@@ -279,7 +291,7 @@ class EpisodeArm implements Arm {
     if (held) this.fault = await this.startFault(name);
     const started = Date.now();
     const log: CallLog = { i: this.calls.length, name, t_ms: started - this.t0, ms: 0, write, held, is_error: false, cls: null, code: null, state: null, retry_after_ms: null,
-      request_id: typeof args.request_id === 'string' ? args.request_id : null, tokens: [], error_pending: false, harness_error: null };
+      request_id: typeof args.request_id === 'string' ? args.request_id : null, named_request_id: null, tokens: [], error_pending: false, harness_error: null };
     const carried = JSON.stringify(args);
     log.tokens = this.task.facts.filter(f => carried.includes(f.token)).map(f => f.id);
     this.calls.push(log);
@@ -295,7 +307,8 @@ class EpisodeArm implements Arm {
       log.is_error = r.isError === true;
       if (write) {
         const c = classifyWrite(log.is_error, body);
-        Object.assign(log, { cls: c.cls, code: c.code, state: c.state, retry_after_ms: c.retry_after_ms, error_pending: c.error_pending });
+        Object.assign(log, { cls: c.cls, code: c.code, state: c.state, retry_after_ms: c.retry_after_ms, error_pending: c.error_pending,
+          named_request_id: c.cls === 'refused' || c.cls === 'refused_retryable' ? namedRequestId(name, body) : null });
       } else if (log.is_error) log.code = String(body.code ?? body.error ?? 'unknown');
       return text;
     } catch (error) {
@@ -403,20 +416,22 @@ export function scoreEpisode(counts: Record<FactId, TokenCount>, report: Report,
 /** Answers that settle whether a later write of the same token is a reissue: every answer except a timeout or a harness failure. */
 const ANSWERED = new Set(['committed', 'ok', 'pending', 'refused', 'refused_retryable']);
 
-export type WriteCall = Pick<CallLog, 'i' | 'name' | 'request_id' | 'tokens' | 'cls' | 'code' | 'retry_after_ms' | 't_ms' | 'ms' | 'error_pending'>;
+/** A logged write call; records written before named_request_id existed lack it (rescore.ts fills it in). */
+export type WriteCall = Pick<CallLog, 'i' | 'name' | 'request_id' | 'tokens' | 'cls' | 'code' | 'retry_after_ms' | 't_ms' | 'ms' | 'error_pending'> & Partial<Pick<CallLog, 'named_request_id'>>;
 
 /**
  * How the agent's writes behaved, from the write calls in order:
  * - reissues: a write carrying a fact's token after an earlier write of that token was answered committed, ok, pending or
- *   refused, unless it reuses that earlier call's request_id (one entry per call and fact, naming the first such call);
- * - refusals: every refused write, the next write sharing a token or its request_id, the wait between the refusal's answer
- *   and that call, whether the wait reached retry_after_ms, and the outcome (retried under the same request_id, reissued
- *   under a new one, or gave up);
+ *   refused, unless it reuses that earlier call's request_id, or the request_id that call's refusal named for its replay
+ *   (one entry per call and fact, naming the first such call);
+ * - refusals: every refused write, the next write sharing a token or reusing its request_id or the one its refusal named,
+ *   the wait between the refusal's answer and that call, whether the wait reached retry_after_ms, and the outcome (retried
+ *   under the same request_id, reissued under a new one, or gave up);
  * - error_pending: every isError answer that was an admitted pending write (classifyWrite), and whether a later write
  *   reissued its token under another request_id.
  */
 export function writeBehavior(calls: WriteCall[]) {
-  const sameId = (a: WriteCall, b: WriteCall) => a.request_id !== null && a.request_id === b.request_id;
+  const sameId = (later: WriteCall, earlier: WriteCall) => later.request_id !== null && (later.request_id === earlier.request_id || later.request_id === earlier.named_request_id);
   const shares = (a: WriteCall, b: WriteCall) => a.tokens.some(t => b.tokens.includes(t));
   const reissues: Array<{ call: number; fact: FactId; earlier: number }> = [];
   calls.forEach((c, k) => {

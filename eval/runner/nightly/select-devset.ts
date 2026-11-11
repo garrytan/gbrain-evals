@@ -39,6 +39,8 @@ function cat40(): Suite {
 const BARRIER = '773a29eede3b3ea91e0e2cba4012078b5d42c602';
 const range = (from: number, n: number) => Array.from({ length: n }, (_, i) => String(from + i));
 
+const NAMED_REPLAY_NOTE = 'Scored so that a write replayed under the request id a refusal names counts as a retry under the same id, never as a reissue (refresh-barrier preregistration, Amendment 7). Nights scored before that rule have another digest, so their pass rates are not compared with these.';
+
 function refreshBarrier(): Suite {
   return {
     id: 'refresh-barrier-agents', kind: 'agent', scoring: 'deterministic',
@@ -46,6 +48,7 @@ function refreshBarrier(): Suite {
     source: 'eval/runner/refresh-barrier/agent.ts task generator, ids 1001-1030 (outside the counted 1-60)',
     config: { arm: 'on' }, requires: { gbrain_commit: BARRIER },
     items: range(1001, 30).map(id => ({ id, role: 'headroom' as const })),
+    note: NAMED_REPLAY_NOTE,
   };
 }
 
@@ -56,6 +59,7 @@ function refusedWrite(): Suite {
     source: 'eval/runner/refresh-barrier/agent.ts task generator, ids 2001-2030 (outside the counted 1-60)',
     config: { arm: 'off' },
     items: range(2001, 30).map(id => ({ id, role: 'headroom' as const })),
+    note: NAMED_REPLAY_NOTE,
   };
 }
 

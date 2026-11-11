@@ -23,6 +23,26 @@ This records what each gbrain-evals release changed and what its measurements me
   commit. HELD was expected from batches 1 to 3 and shows the gap's direction only; gating on its size needs the ratio
   to be stable.
 
+## [0.10.215] - 2026-11-11
+
+### The refused-write suite counts a replay of the request id gbrain names as a retry
+
+- **What changed.** Since gbrain v0.60.671.0, a write refused `worktree_refreshing` names the request id to replay it
+  with, a new one when the call sent none, and its `fix.mcp` is that exact call. The write scorer read a refused call's
+  request id only from the agent's own arguments, so a replay of the named id counted as a write reissued under a new
+  id. On the v0.60.671.0 control cell, gpt-6.1-sol replayed the named id in all 88 trials whose refused call sent no id,
+  every fact landed once and every report was right, and the suite scored 2 of 90. Now a replay of the id the refusal
+  named is a retry under the same id, exactly like a replay of the agent's own id, and only a genuinely new id is a
+  reissue. The same trials score 90 of 90.
+- **What stays the same.** Every episode scored at a gbrain commit before v0.60.671.0 keeps its score, because those
+  refusals name no replay id. The three older control cells stay at 8, 4 and 5 of 90, and the 2026-11-10 and 2026-11-11
+  nightly rows are unchanged. The refresh barrier's counted Part C ran at an earlier commit, so its numbers and verdict
+  stand. Amendment 7 of the refresh-barrier preregistration records the old rule, the new one, why, and these before
+  and after scores. `bun eval/runner/refresh-barrier/rescore.ts <dir>` rescores stored episode records keyless.
+- **What to expect.** `refresh-barrier-agents` and `refused-write-agents` share this scorer, so both suites' digests
+  changed. Each suite's first night on this release starts a new baseline instead of being compared with a night
+  scored under the old rule.
+
 ## [0.10.214] - 2026-11-11
 
 ### The predictive-measures report says what recall (G2) predicts and what still needs a held-out test
