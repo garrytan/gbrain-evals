@@ -135,7 +135,7 @@ export function octoberOracle(): Map<string, OracleRow> {
  * A4's 220, or whose verdict disagrees with its score.
  */
 export function oracleFromRejudge(text: string) {
-  const a = JSON.parse(text) as { schema: string; judge: string; answers: string; judge_prompt: unknown; pass_threshold: number;
+  const a = JSON.parse(text) as { schema: string; judge: string; answers: string; judge_prompt: unknown; pass_threshold: number; rescore?: { rule: string };
     rows: Record<string, { score: number | null; pass: boolean | null; empty_at_limit: boolean }> };
   if (a.schema !== 'sota-a4-rejudge/1') throw new Error('not a sota-a4-rejudge/1 file');
   if (a.judge !== 'anthropic:claude-opus-5-5') throw new Error(`the A4 oracle must be judged by anthropic:claude-opus-5-5, not ${a.judge}`);
@@ -152,7 +152,7 @@ export function oracleFromRejudge(text: string) {
   const file = {
     schema: ORACLE_SCHEMA, benchmark: 'beam-1m',
     about: "A4's gpt-6.1-sol answers given every gold session (arm a4-oracle-gpt61sol), re-judged by claude-opus-5-5 with BEAM's judge prompts, one yes-or-no call per rubric item. pass is a score of at least 0.5; an empty answer that stopped at the output limit has no verdict (pass null). Ids and scores only.",
-    reader: 'openai:gpt-6.1-sol', judge: a.judge, answers: a.answers, judge_prompt: a.judge_prompt, pass_threshold: ORACLE_PASS,
+    reader: 'openai:gpt-6.1-sol', judge: a.judge, answers: a.answers, judge_prompt: a.judge_prompt, ...(a.rescore ? { verdict_parse: a.rescore.rule } : {}), pass_threshold: ORACLE_PASS,
     source_sha256: sha256(text), rows,
   };
   const out = JSON.stringify(file, null, 1) + '\n';

@@ -8,12 +8,13 @@
  "judge_prompt": {
   "prompts": "eval/runner/memory-qa/qa.ts judgePromptsFor (beam: one yes-or-no call per rubric item, score = share met)",
   "qa_ts_sha256": "88c2c28c24a7e38b165687c01d7141b0eb4bad97f83ace011c9507986788b1f7",
-  "client": "eval/runner/memory-qa/qa-v2.ts ChatClient and judgeResponse, as memory-qa run.ts and the nightly runner call them (a Claude 5 verdict call is sent 2,000 output tokens)",
+  "client": "eval/runner/memory-qa/qa-v2.ts ChatClient, as memory-qa run.ts and the nightly runner call it (a Claude 5 verdict call is sent 2,000 output tokens); verdicts parsed by the rescore rule above, not judgeYes",
   "qa_v2_ts_sha256": "e931b44a9cda5851c6792584871eb3917b43cbb52005e1bc73a8a5b3dd4054c9",
   "commit": "ecf8169c"
  },
+ "verdict_parse": "Keep every first-three-words verdict (a standalone yes, else a standalone no); where the first three words hold neither, take the last standalone yes or no in the reply; a reply with neither is unparseable and left out of its row score.",
  "pass_threshold": 0.5,
- "source_sha256": "aed014ed85d4442afb303bbf96eaca2d21e07e7020483041fffdc6dbd6489200",
+ "source_sha256": "a36f12160cd695be7c634acd3f9ca0388c9e068be35f11ecc75c85a6bbdc9a8f",
  "rows": {
   "1m-16:abstention:0": {
    "score": 1,
@@ -32,7 +33,7 @@
    "pass": true
   },
   "1m-16:event_ordering:0": {
-   "score": 0.8571428571428571,
+   "score": 1,
    "pass": true
   },
   "1m-16:event_ordering:1": {
@@ -76,7 +77,7 @@
    "pass": true
   },
   "1m-16:preference_following:1": {
-   "score": 0.5,
+   "score": 0.75,
    "pass": true
   },
   "1m-16:summarization:0": {
@@ -148,7 +149,7 @@
    "pass": true
   },
   "1m-20:multi_session_reasoning:1": {
-   "score": 0.5,
+   "score": 0.75,
    "pass": true
   },
   "1m-20:preference_following:0": {
@@ -204,7 +205,7 @@
    "pass": true
   },
   "1m-21:information_extraction:1": {
-   "score": 0.875,
+   "score": 1,
    "pass": true
   },
   "1m-21:instruction_following:0": {
@@ -268,15 +269,15 @@
    "pass": true
   },
   "1m-22:contradiction_resolution:1": {
-   "score": 0.5,
+   "score": 0.75,
    "pass": true
   },
   "1m-22:event_ordering:0": {
-   "score": 0.8333333333333334,
+   "score": 1,
    "pass": true
   },
   "1m-22:event_ordering:1": {
-   "score": 0.9,
+   "score": 1,
    "pass": true
   },
   "1m-22:information_extraction:0": {
@@ -292,7 +293,7 @@
    "pass": true
   },
   "1m-22:instruction_following:1": {
-   "score": 0.6666666666666666,
+   "score": 1,
    "pass": true
   },
   "1m-22:knowledge_update:0": {
@@ -308,7 +309,7 @@
    "pass": true
   },
   "1m-22:multi_session_reasoning:1": {
-   "score": 0.6,
+   "score": 0.8,
    "pass": true
   },
   "1m-22:preference_following:0": {
@@ -352,7 +353,7 @@
    "pass": true
   },
   "1m-24:event_ordering:0": {
-   "score": 0.8888888888888888,
+   "score": 1,
    "pass": true
   },
   "1m-24:event_ordering:1": {
@@ -388,7 +389,7 @@
    "pass": true
   },
   "1m-24:multi_session_reasoning:1": {
-   "score": 0.6666666666666666,
+   "score": 1,
    "pass": true
   },
   "1m-24:preference_following:0": {
@@ -452,7 +453,7 @@
    "pass": false
   },
   "1m-25:instruction_following:1": {
-   "score": 0.5,
+   "score": 1,
    "pass": true
   },
   "1m-25:knowledge_update:0": {
@@ -516,7 +517,7 @@
    "pass": true
   },
   "1m-28:event_ordering:1": {
-   "score": 0.8,
+   "score": 0.9,
    "pass": true
   },
   "1m-28:information_extraction:0": {
@@ -524,7 +525,7 @@
    "pass": true
   },
   "1m-28:information_extraction:1": {
-   "score": 0.8,
+   "score": 1,
    "pass": true
   },
   "1m-28:instruction_following:0": {
@@ -592,11 +593,11 @@
    "pass": false
   },
   "1m-2:event_ordering:0": {
-   "score": 0.8,
+   "score": 0.9,
    "pass": true
   },
   "1m-2:event_ordering:1": {
-   "score": 0.9,
+   "score": 1,
    "pass": true
   },
   "1m-2:information_extraction:0": {
@@ -628,7 +629,7 @@
    "pass": true
   },
   "1m-2:multi_session_reasoning:1": {
-   "score": 0.8333333333333334,
+   "score": 1,
    "pass": true
   },
   "1m-2:preference_following:0": {
@@ -724,7 +725,7 @@
    "pass": null
   },
   "1m-30:summarization:1": {
-   "score": 0.7777777777777778,
+   "score": 0.8888888888888888,
    "pass": true
   },
   "1m-30:temporal_reasoning:0": {
@@ -756,7 +757,7 @@
    "pass": true
   },
   "1m-32:event_ordering:1": {
-   "score": 0.8,
+   "score": 0.9,
    "pass": true
   },
   "1m-32:information_extraction:0": {
@@ -784,7 +785,7 @@
    "pass": true
   },
   "1m-32:multi_session_reasoning:0": {
-   "score": 0,
+   "score": 0.2,
    "pass": false
   },
   "1m-32:multi_session_reasoning:1": {
@@ -836,7 +837,7 @@
    "pass": true
   },
   "1m-3:event_ordering:1": {
-   "score": 0.9,
+   "score": 1,
    "pass": true
   },
   "1m-3:information_extraction:0": {
@@ -892,7 +893,7 @@
    "pass": true
   },
   "1m-3:temporal_reasoning:1": {
-   "score": 0.5,
+   "score": 1,
    "pass": true
   }
  }

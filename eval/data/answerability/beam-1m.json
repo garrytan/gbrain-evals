@@ -13,7 +13,7 @@
   },
   "oracle": {
    "file": "eval/data/answerability/oracle/beam-1m.json",
-   "sha256": "b7a7aab146c4e2d866b72fd753700e4548e9dc379dc63fe06d4b6aa11a0247ba"
+   "sha256": "5230b42455601c76feffa3f77027e2b859e2ba324fa67797d559e16be0a5717f"
   }
  },
  "counts": {
