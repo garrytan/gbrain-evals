@@ -98,6 +98,19 @@ export const UNCLASSIFIED = 'unclassified' as const;
 /** Causes the residual labeller may choose, plus unclassified when it abstains. */
 export const MODEL_CAUSES: readonly Cause[] = CAUSES.filter(c => c.basis !== 'deterministic').map(c => c.id);
 
+/**
+ * The SOTA loop's attribution buckets (decision D5a, attribution.ts), applied on top of the causes to the failed rows of QA
+ * suites that have an answerability file and an oracle: one per row, the first that applies.
+ */
+export const ATTRIBUTION_BUCKETS = [
+  { id: 'harness', meaning: 'Our harness failed the row: a provider or harness error, or an answer cut off at its output limit (cause harness_error). Left out of every answerable denominator.' },
+  { id: 'unsupported', meaning: 'The item\'s answerability class is unsupported: both validators reject it (or it cites no turn) and the oracle fails it.' },
+  { id: 'reader_limited', meaning: 'The oracle, the same reader given only the gold evidence, fails the item too.' },
+  { id: 'retrieval_lost', meaning: 'The oracle passes, and the gold never reached the reader whole: missed, partly retrieved, ranked out, not opened or not stored.' },
+  { id: 'context_use', meaning: 'The oracle passes and the gold reached the reader, yet the answer failed.' },
+  { id: 'unknown', meaning: 'A step is missing: an unresolved or unchecked item, no oracle row or verdict, or gold delivery not measured. Counted, never guessed.' },
+] as const;
+
 /** Tags that qualify a cause without changing it. */
 export const TAGS = ['wrong_stored_fact', 'scorer_artifact', 'untitled_capture_duplicate', 'recovered_tool_error', 'score_zero', 'measured_at_10',
   'retrieval_or_ranking', 'said_wrong', 'unparseable_answer', 'record_session_not_recorded', 'excused_resend', 'misreport', 'turn_cap',
@@ -131,6 +144,16 @@ export function renderTaxonomyMarkdown(): string {
     `| \`${UNCLASSIFIED}\` | none | none | labeller abstained, or no signal | no | No signal applies and the labeller abstained. | none |`,
     '',
     `Tags qualify a cause without changing it: ${TAGS.map(t => '`' + t + '`').join(', ')}.`,
+    '',
+    '## Attribution buckets',
+    '',
+    'The weekly attribution (`cli.ts attribute`) puts each failed row of a QA suite with an answerability file and an',
+    'oracle into one bucket, the first that applies, from its cause, its item\'s answerability class and the outcome',
+    'cache\'s oracle row. Recoverable points are reported for reader_limited, retrieval_lost and context_use only.',
+    '',
+    '| Bucket | Meaning |',
+    '|---|---|',
+    ...ATTRIBUTION_BUCKETS.map(b => `| \`${b.id}\` | ${b.meaning} |`),
   ];
   return lines.join('\n') + '\n';
 }

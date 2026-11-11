@@ -22,6 +22,7 @@
 import { CAUSES, MODEL_CAUSES, STAGES, TAXONOMY_VERSION, UNCLASSIFIED, causeInfo, type Cause, type Stage } from './taxonomy.ts';
 import { NO_LABEL_RULES } from './agreement.ts';
 import type { CauseLabel, StressCount } from './types.ts';
+import { renderAttribution, type Attribution } from './attribution.ts';
 
 const NOT_FOR_GBRAIN: readonly string[] = [...CAUSES.filter(c => !c.gbrain_actionable).map(c => c.id), UNCLASSIFIED];
 /** Our own side (gap map eval): harness errors, and suite causes for rows that say nothing about gbrain. Never in gbrain's shares. */
@@ -222,7 +223,7 @@ function context(r: RankedCause): string[] {
   return out;
 }
 
-export function renderReport(s: Summary, options: { heading: string; notes?: string[] }): string {
+export function renderReport(s: Summary, options: { heading: string; notes?: string[]; attribution?: Attribution }): string {
   const lines = [`# ${options.heading}`, ''];
   if (options.notes?.length) lines.push(...options.notes.map(n => `- ${n}`), '');
   lines.push(`Taxonomy ${s.taxonomy_version}. ${s.failures} failed rows; ${s.pending} still wait for the labeller.`, '');
@@ -244,6 +245,7 @@ export function renderReport(s: Summary, options: { heading: string; notes?: str
     if (s.waiting_hidden) lines.push(`- ${s.waiting_hidden} more from private sources (counts only)`);
     lines.push('');
   }
+  if (options.attribution) lines.push(...renderAttribution(options.attribution));
   lines.push('## Under stress', '', 'Runs built to force a cause, and call-level or aggregate counts. Not ranked with the list above.', '', '| Source | Cause | Count | Of | Detail | Status |', '|---|---|---|---|---|---|',
     ...s.under_stress.map(u => `| ${u.source} | \`${u.cause}\` | ${u.count} | ${u.of} ${u.unit} | ${u.detail} | ${u.status ?? ''} |`), '');
   lines.push('## Other systems and controls', '', '| System | Role | Cause | Rows |', '|---|---|---|---|', ...s.contrast.map(c => `| ${c.system} | ${c.arm_role} | \`${c.cause}\` | ${c.count} |`), '');
