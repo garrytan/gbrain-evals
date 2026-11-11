@@ -24,7 +24,7 @@ import { isCapStop } from '../refresh-barrier/ledger.ts';
 import type { Item, Suite } from './devset.ts';
 import { contextDigest, NightlyCache, qaPromptVersion } from './judge-cache.ts';
 import { keylessEnv, paidEnv, type Provider } from './keyless.ts';
-import { harnessOf, OUTCOME_SCHEMA, qualifiedModel, type Outcome, type ToolError } from './outcome.ts';
+import { harnessOf, OUTCOME_SCHEMA, qualifiedModel, type HarnessCause, type Outcome, type ToolError } from './outcome.ts';
 import type { DevSetRun } from './report.ts';
 import type { WriteScore } from './write-score.ts';
 
@@ -413,6 +413,7 @@ export function qaRows(run: SuiteRun, ctx: NightContext, reader: string, out: st
   return rows.filter(r => run.items.some(i => i.id === r.id)).map(r => {
     const judged = judge !== null;
     const harnessError = r.qa_error ?? (r.error && r.error_origin !== 'sut' ? r.error : null);
+    const lastCall = r.qa_error ? (r.qa_receipts ?? []).at(-1) : undefined;
     const readerReceipts = (r.qa_receipts ?? []).filter((x: any) => x.role !== 'judge');
     const q = questions.get(r.id);
     const ranked: string[] | null = Array.isArray(r.retrieved) ? r.retrieved : null;
@@ -422,7 +423,7 @@ export function qaRows(run: SuiteRun, ctx: NightContext, reader: string, out: st
     return outcome(run, ctx, {
       item: r.id, reader, pass: judged ? (r.qa_score ?? 0) >= QA_PASS : r.abstention === true || r.recall_all_at_5 === 1,
       score: judged ? r.qa_score ?? null : r.recall_all_at_5 ?? null, cost_usd: perRow, stop: harnessError ? 'error' : 'answered',
-      harness: harnessError ? { error: String(harnessError).slice(0, 300) } : null,
+      harness: harnessError ? { error: String(harnessError).slice(0, 300), ...(lastCall ? { cause: lastCall.role === 'judge' ? 'judge' as const : 'reader' as const } : {}) } : null,
       tool_errors: r.error && r.error_origin === 'sut' ? [{ tool: 'search', code: null, refused: false, message: String(r.error).slice(0, 200) }] : [],
       category: r.category ?? null, gold_count: typeof r.gold_count === 'number' ? r.gold_count : null,
       retrieved: r.gold_count === 0 ? null : gold ? cover(any10, r.recall_all_at_10) : cover(r.recall_any_at_5, r.recall_all_at_5),
@@ -491,7 +492,9 @@ export const qaAdapter: Adapter = async (run, ctx) => {
     const receipt = existsSync(join(out, 'receipt.json')) ? JSON.parse(readFileSync(join(out, 'receipt.json'), 'utf8')) as Record<string, any> : null;
     const capStop = receipt?.summary?.stopped === 'budget';
     const all = latestRowPerItem(rows, run.items.map(i => i.id));
-    return { rows: [...all, ...missingRows(run, ctx, reader, all, r.code === 0 ? 'no row recorded' : `memory-qa exited ${r.code ?? r.signal}: ${r.tail.split('\n').at(-1)}`)], ok: r.code === 0, capStop, tail: r.tail };
+    const cause: HarnessCause | null = receipt?.refusal?.code === 'RERANKER_INACTIVE' ? 'rerank' : capStop || ctx.signal?.aborted ? 'run' : null;
+    const missing = missingRows(run, ctx, reader, all, r.code === 0 ? 'no row recorded' : `memory-qa exited ${r.code ?? r.signal}: ${r.tail.split('\n').at(-1)}`);
+    return { rows: [...all, ...missing.map(o => (cause ? { ...o, harness: { ...o.harness!, cause } } : o))], ok: r.code === 0, capStop, tail: r.tail };
   }));
   const bad = results.filter(r => !r.ok);
   return { status: bad.length ? 'partial' : 'ran', reason: bad.map(r => r.tail.split('\n').at(-1)).join('; ') || undefined, capStop: results.some(r => r.capStop), rows: results.flatMap(r => r.rows) };

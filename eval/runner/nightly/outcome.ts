@@ -48,7 +48,7 @@ export interface Outcome {
   tool_errors: ToolError[];
   /** The evidence fields the suite's runner records: gold evidence read, landed writes, recall, failure classes. */
   evidence: Record<string, unknown>;
-  harness: { error: string } | null;
+  harness: { error: string; cause?: HarnessCause } | null;
   system: string;
   /** `<suite>@<ref>`. */
   arm: string;
@@ -97,6 +97,33 @@ export function qualifiedModel(reader: string): string {
 }
 
 const CUT_OFF = 'output_truncated';
+
+/** The stages both readers of a night share, before or after the reader call: a failure there says nothing about the reader. */
+export const UPSTREAM_CAUSES = ['embedding', 'retrieval', 'rerank', 'judge'] as const;
+export type UpstreamCause = (typeof UPSTREAM_CAUSES)[number];
+/**
+ * What a harness row's failure was: `reader` when the reader's own provider or call failed (a crash, an invalid answer, a
+ * 4xx or 5xx on the reader call), an upstream cause when a shared stage failed, or `run` for a row a run-level stop cut
+ * off (a budget stop or a lost machine).
+ */
+export type HarnessCause = 'reader' | UpstreamCause | 'run';
+
+/**
+ * Named markers for a row stored with only its error text, the first match winning: memory-qa's reranker refusal
+ * (RERANKER_INACTIVE, whose hint is "make the reranker reachable"), an embedding or retrieval failure, and a judge error
+ * (run-systems prefixes it `judge:`, the outcome is `judge_error`).
+ */
+const CAUSE_MARKERS: ReadonlyArray<readonly [UpstreamCause, RegExp]> = [
+  ['rerank', /RERANKER_INACTIVE|make the reranker reachable|rerank degradation|without rerank scores/i],
+  ['embedding', /\bembed(ding)?s?\b/i],
+  ['retrieval', /\bretrieval[ _](error|failed)|no frozen ranked list/i],
+  ['judge', /^judge\b|\bjudge[ _]error\b/i],
+];
+
+/** A harness row's cause: the one written when the row was made, else the first named marker in its text, else the reader's. */
+export function harnessCause(h: NonNullable<Outcome['harness']>): HarnessCause {
+  return h.cause ?? CAUSE_MARKERS.find(([, marker]) => marker.test(h.error))?.[0] ?? 'reader';
+}
 
 /**
  * The row's harness failure: the one it records, else, for an answer cut off at its output limit (a finish reason in

@@ -63,6 +63,8 @@ export interface Summary {
   harness: Array<{ rule_id: string; count: number; sources: string[] }>;
   /** Failed rows that say nothing about gbrain (the suite causes), by cause and source. */
   suite: Array<{ cause: string; count: number; by_source: Record<string, number> }>;
+  /** reader_budget rows by source and their first secondary cause (what retrieval did on them, 'none' when they have none); no count above changes. */
+  reader_budget_secondary: Record<string, Record<string, number>>;
   capability: Record<string, Partial<Record<Stage, number>>>;
   pending: number;
   /** The share the gbrain rows waiting for the labeller hold; one cause could gain all of it. */
@@ -159,6 +161,8 @@ export function summarize(labels: CauseLabel[], stress: StressCount[] = [], opti
   }
   const harnessRows = failed.filter(l => l.cause === 'harness_error');
   const suiteRows = failed.filter(l => SUITE_CAUSES.includes(l.cause ?? ''));
+  const budgetRows = failed.filter(l => l.cause === 'reader_budget');
+  const bySecondary = (ls: CauseLabel[]) => Object.fromEntries([...tally(ls.map(l => l.secondary[0] ?? 'none'))].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])));
   return {
     schema: 'failure-cause-summary/1', taxonomy_version: TAXONOMY_VERSION, failures: failed.length, sources,
     ranked, top_three: forGbrain.slice(0, 3),
@@ -167,6 +171,7 @@ export function summarize(labels: CauseLabel[], stress: StressCount[] = [], opti
       .map(([k, count]) => { const [system, arm_role, cause] = k.split('\t'); return { system, arm_role, cause, count }; }).sort((a, b) => b.count - a.count),
     harness: [...tally(harnessRows.map(l => l.rule_id))].map(([rule_id, count]) => ({ rule_id, count, sources: [...new Set(harnessRows.filter(l => l.rule_id === rule_id).map(l => l.source))] })),
     suite: [...tally(suiteRows.map(l => l.cause!))].map(([cause, count]) => ({ cause, count, by_source: Object.fromEntries(tally(suiteRows.filter(l => l.cause === cause).map(l => l.source))) })),
+    reader_budget_secondary: Object.fromEntries([...new Set(budgetRows.map(l => l.source))].sort().map(src => [src, bySecondary(budgetRows.filter(l => l.source === src))])),
     capability, pending: failed.filter(waiting).length, pending_share: pendingShare,
     waiting: waitingRows.filter(showable).map(example), waiting_hidden: waitingRows.filter(l => !showable(l)).length,
     model_labelled: failed.filter(l => l.basis === 'model').length,
@@ -244,7 +249,10 @@ export function renderReport(s: Summary, options: { heading: string; notes?: str
   lines.push('## Other systems and controls', '', '| System | Role | Cause | Rows |', '|---|---|---|---|', ...s.contrast.map(c => `| ${c.system} | ${c.arm_role} | \`${c.cause}\` | ${c.count} |`), '');
   lines.push('## Our own fix list (harness errors)', '', ...(s.harness.length ? s.harness.map(h => `- \`${h.rule_id}\`: ${h.count} rows (${h.sources.join(', ')})`) : ['- none']), '');
   lines.push('## Suite causes', '', 'Failed rows that say nothing about gbrain: the question has more gold than the reader is given, or the cited gold sessions don\'t support the answer. Not ranked and not in the shares above.', '',
-    ...(s.suite.length ? s.suite.map(x => `- ${title(x.cause)} (\`${x.cause}\`): ${x.count} rows (${listCounts(x.by_source)})`) : ['- none']), '');
+    ...(s.suite.length ? s.suite.map(x => `- ${title(x.cause)} (\`${x.cause}\`): ${x.count} rows (${listCounts(x.by_source)})`) : ['- none']));
+  const secondary = Object.entries(s.reader_budget_secondary);
+  if (secondary.length) lines.push(`- What retrieval did on the \`reader_budget\` rows (each row's first secondary cause, for information only): ${secondary.map(([src, m]) => `${src} ${listCounts(m)}`).join('; ')}.`);
+  lines.push('');
   lines.push('## What each source can measure', '', `| Source | ${STAGES.join(' | ')} |`, `|---|${STAGES.map(() => '---').join('|')}|`,
     ...Object.entries(s.capability).map(([src, c]) => `| ${src} | ${STAGES.map(st => pct(c[st] ?? 0)).join(' | ')} |`), '');
   const appendix = s.top_three.filter(r => r.tasks.some(t => Object.keys(t.others).length || t.not_run.length));

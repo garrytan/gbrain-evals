@@ -2,6 +2,28 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.209] - 2026-11-11
+
+### The nightly particle-1 agreement check stops counting shared-stage failures as particle-1's fails
+
+- **What changed.** Each harness row in the nightly outcomes now has a cause: `reader` when the reader's own provider
+  or call failed, `embedding`, `retrieval`, `rerank` or `judge` when a stage both readers share failed, or `run` when a
+  budget stop or an aborted night cut the row off. memory-qa's QA rows take it from the failed call (the judge's or the
+  reader's). The QA adapter writes `rerank` on rows memory-qa never answered after its `RERANKER_INACTIVE` refusal, and
+  `run` after a budget stop or an aborted night. Rows stored before this release read it from named markers in their
+  error text, and a row with no marker stays the reader's.
+- **The agreement check.** A particle-1 harness row with a shared-stage or run cause leaves its item unpaired instead
+  of counting as a particle-1 fail. The report and `summary.json` count unpaired items by cause, per suite and for the
+  verdict (`unpaired_causes`). The 10% unpaired limit, the kappa and raw-agreement bars, the judge pairing and the
+  not-measured rule for a night that ends on a budget stop or loses its machine are unchanged.
+- **The weekly failure-cause report.** `summary.json` gains `reader_budget_secondary`: each source's `reader_budget`
+  rows counted by their first secondary cause. The report shows it as one line under "Suite causes". No cause count or
+  rule changes.
+- **What to expect.** Rebuilt keyless from its stored rows, the 2026-11-10 master night moves the 10 beam-1m-hard items
+  that memory-qa's reranker guard stopped from particle-1 fails to unpaired (rerank). The verdict still fails, at kappa
+  0.640 and raw agreement 83.0% over 100 items. Search or embedding errors that memory-qa records as gbrain tool errors
+  still count as that reader's fails.
+
 ## [0.10.208] - 2026-11-10
 
 ### The weekly failure causes stop blaming gbrain for questions the suite can't fairly test

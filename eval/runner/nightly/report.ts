@@ -27,13 +27,16 @@
  * count as item_unsupported, a weekly cause label, and are listed on their own line.
  *
  * particle-1's agreement with claude-opus-5-5, scored on a night that schedules particle-1: per item, particle-1's first
- * trial and Opus's first counted trial are each reader's pass or fail. A particle-1 crash, invalid answer or harness row is
- * a fail for particle-1, never a dropped item; an item is unpaired only when Opus has no counted trial or the night didn't
- * run it for particle-1. Each suite's 2x2 table gives its raw agreement, Cohen's kappa and particle-1's pass-rate gap to
- * Opus, and a suite counts toward the verdict with at least 20 paired items. particle-1 passes with at least 40 counted
- * items, no more than 10% of scheduled items unpaired, an item-weighted mean of the counted suites' kappas of at least 0.6
- * and their raw agreement of at least 85%, each bar within floating-point error; below the floors it is not measured, with
- * the reason. A suite's kappa is undefined (null, left out of the mean) when both readers give every item the same label.
+ * trial and Opus's first counted trial are each reader's pass or fail. A harness row from particle-1's own provider or call
+ * (a crash, an invalid answer, a 4xx or 5xx on the reader call) is a fail for particle-1, never a dropped item. A harness
+ * row from a stage both readers share (embedding, retrieval, rerank or the judge: outcome.ts harnessCause) or one a
+ * run-level stop cut off leaves the item unpaired with that cause, as does an item Opus has no counted trial for or the
+ * night didn't run for particle-1, and the suite and the verdict count unpaired items by cause. A night that ends on a
+ * budget stop or loses its VM is not measured. Each suite's 2x2 table gives its raw agreement, Cohen's kappa and
+ * particle-1's pass-rate gap to Opus, and a suite counts toward the verdict with at least 20 paired items. particle-1
+ * passes with at least 40 counted items, no more than 10% of scheduled items unpaired, an item-weighted mean of the
+ * counted suites' kappas of at least 0.6 and their raw agreement of at least 85%, each bar within floating-point error;
+ * below the floors it is not measured, with the reason. A suite's kappa is undefined (null, left out of the mean) when both readers give every item the same label.
  * The kappa of every measured suite's tables pooled is reported for reference only, because pooling credits differences
  * in difficulty between suites as agreement. Writes report.md, summary.json and outcomes.jsonl.gz into the night
  * directory.
@@ -44,7 +47,7 @@ import { gzipSync } from 'node:zlib';
 import { join, resolve } from 'node:path';
 import { pairedBootstrap } from '../refresh-barrier/analyze.ts';
 import { CAUSE_IDS, TAXONOMY_VERSION, UNCLASSIFIED, classify, nightlyFailure, type Cause } from '../failure-causes/index.ts';
-import { readOutcomes, type Outcome } from './outcome.ts';
+import { harnessCause, readOutcomes, UPSTREAM_CAUSES, type Outcome } from './outcome.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
 export const FIXES_PATH = 'eval/data/nightly/fixes.json';
@@ -191,10 +194,15 @@ export function compareNights(tonight: { manifest: NightManifest; rows: Outcome[
 }
 
 export const AGREEMENT = { candidate: 'particle-1', reference: 'claude-opus-5-5', min_kappa: 0.6, min_raw: 0.85, min_suite_items: 20, min_items: 40, max_unpaired: 0.1 } as const;
+/** Why an item is unpaired: a shared stage failed, a run-level stop cut it off, Opus has no counted trial, or particle-1 never ran it. */
+export const UNPAIRED_CAUSES = [...UPSTREAM_CAUSES, 'run', 'no_reference_trial', 'not_run'] as const;
+export type UnpairedCause = (typeof UNPAIRED_CAUSES)[number];
 
 export interface AgreementTable { items: number; both_pass: number; candidate_only: number; reference_only: number; both_fail: number }
+/** Unpaired items by cause, in UNPAIRED_CAUSES order, causes with none left out. */
+export type UnpairedCounts = Partial<Record<UnpairedCause, number>>;
 export interface AgreementStats extends AgreementTable { raw: number | null; kappa: number | null; candidate_pass: number | null; reference_pass: number | null; gap: number | null }
-export type SuiteAgreement = ({ suite: string; measured: true; counted: boolean; scheduled: number; unpaired: number; candidate_harness: number } & AgreementStats)
+export type SuiteAgreement = ({ suite: string; measured: true; counted: boolean; scheduled: number; unpaired: number; unpaired_causes: UnpairedCounts; candidate_harness: number } & AgreementStats)
   | { suite: string; measured: false; reason: string; scheduled: number; unpaired: number };
 export interface Agreement {
   candidate: string; reference: string; min_kappa: number; min_raw: number; min_suite_items: number; min_items: number; max_unpaired: number;
@@ -203,7 +211,7 @@ export interface Agreement {
   counted: AgreementStats & { suites: number; mean_kappa: number | null };
   /** Every measured suite's table summed; descriptive only. */
   pooled: AgreementStats;
-  scheduled: number; unpaired: number;
+  scheduled: number; unpaired: number; unpaired_causes: UnpairedCounts;
   verdict: 'pass' | 'fail' | 'not_measured'; reason: string | null;
 }
 
@@ -233,16 +241,23 @@ export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreem
   };
   const empty = (): AgreementTable => ({ items: 0, both_pass: 0, candidate_only: 0, reference_only: 0, both_fail: 0 });
   const add = (into: AgreementTable, t: AgreementTable) => { for (const key of Object.keys(into) as Array<keyof AgreementTable>) into[key] += t[key]; };
+  const tally = (causes: UnpairedCause[]): UnpairedCounts => Object.fromEntries(UNPAIRED_CAUSES.map(c => [c, causes.filter(x => x === c).length]).filter(([, n]) => n));
+  /** A harness row's cause when it isn't the reader's own failure, which leaves its item unpaired; null otherwise. */
+  const shared = (o: Outcome | undefined) => { const c = o?.harness ? harnessCause(o.harness) : 'reader'; return c === 'reader' ? null : c; };
   const suites: SuiteAgreement[] = [];
   const pooled = empty(), counted = empty();
-  let scheduled = 0, unpaired = 0, countedSuites = 0, kappaWeight = 0, kappaSum = 0;
+  const unpairedAll: UnpairedCause[] = [];
+  let scheduled = 0, countedSuites = 0, kappaWeight = 0, kappaSum = 0;
   for (const s of scheduledOn) {
     const items = new Set(rows.filter(r => r.suite === s.id && (isModel(r.reader, candidate) || isModel(r.reader, reference))).map(r => r.item));
-    const mine = firstTrials(s.id, candidate, true), theirs = firstTrials(s.id, reference, false);
-    const paired = [...items].filter(i => mine.has(i) && theirs.has(i));
+    const mine = firstTrials(s.id, candidate, true), theirs = firstTrials(s.id, reference, false), theirFirst = firstTrials(s.id, reference, true);
+    const paired = [...items].filter(i => mine.has(i) && !shared(mine.get(i)) && theirs.has(i));
     const planned = Math.max(items.size, s.items ?? 0);
+    const causes: UnpairedCause[] = [...items].filter(i => !paired.includes(i))
+      .map(i => shared(mine.get(i)) ?? (theirs.has(i) ? 'not_run' : shared(theirFirst.get(i)) ?? 'no_reference_trial'));
+    causes.push(...Array<UnpairedCause>(planned - items.size).fill('not_run'));
     scheduled += planned;
-    unpaired += planned - paired.length;
+    unpairedAll.push(...causes);
     if (!paired.length) {
       const absent = s.status === 'ran' || s.status === 'partial' ? null : `${s.status.replace('_', ' ')}${s.reason ? `: ${s.reason}` : ''}`;
       suites.push({ suite: s.id, measured: false, scheduled: planned, unpaired: planned,
@@ -259,17 +274,18 @@ export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreem
       countedSuites++;
       if (stats.kappa !== null) { kappaWeight += t.items; kappaSum += t.items * stats.kappa; }
     }
-    suites.push({ suite: s.id, measured: true, counted: countsToward, scheduled: planned, unpaired: planned - paired.length,
+    suites.push({ suite: s.id, measured: true, counted: countsToward, scheduled: planned, unpaired: causes.length, unpaired_causes: tally(causes),
       candidate_harness: paired.filter(i => mine.get(i)!.harness).length, ...stats });
   }
   const c = { ...agreementStats(counted), suites: countedSuites, mean_kappa: kappaWeight ? kappaSum / kappaWeight : null };
   const stopped = manifest.exit === 'NIGHTLY_CAP_STOP' || manifest.exit === 'NIGHTLY_VM_LOST' ? manifest.exit : null;
   const reason = stopped ? `the night ended with ${stopped}, so the items it never reached are not particle-1's fails`
     : !pooled.items ? 'no item both readers answered'
-    : unpaired > max_unpaired * scheduled + 1e-9 ? `${unpaired} of ${scheduled} scheduled items are unpaired, more than ${max_unpaired * 100}%`
+    : unpairedAll.length > max_unpaired * scheduled + 1e-9 ? `${unpairedAll.length} of ${scheduled} scheduled items are unpaired, more than ${max_unpaired * 100}%`
     : c.items < min_items ? `${c.items} paired items in suites with at least ${min_suite_items}, fewer than ${min_items}`
     : null;
-  return { candidate, reference, min_kappa, min_raw, min_suite_items, min_items, max_unpaired, suites, counted: c, pooled: agreementStats(pooled), scheduled, unpaired, reason,
+  return { candidate, reference, min_kappa, min_raw, min_suite_items, min_items, max_unpaired, suites, counted: c, pooled: agreementStats(pooled), scheduled,
+    unpaired: unpairedAll.length, unpaired_causes: tally(unpairedAll), reason,
     verdict: reason ? 'not_measured' : c.mean_kappa !== null && meets(c.mean_kappa, min_kappa) && meets(c.raw!, min_raw) ? 'pass' : 'fail' };
 }
 
@@ -346,13 +362,15 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     const a = agreement, v = a.counted, kappa = (x: number | null) => (x === null ? 'n/a' : x.toFixed(3));
     const points = (x: number | null) => (x === null ? 'n/a' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}`);
     lines.push('', `## ${a.candidate} agreement with ${a.reference}`, '');
-    lines.push(`Per item, ${a.candidate}'s first trial and ${a.reference}'s first counted trial are each reader's pass or fail. A ${a.candidate} crash, invalid answer or harness failure is a fail for ${a.candidate}; an item is unpaired when ${a.reference} has no counted trial or the night didn't run it for ${a.candidate}. A suite counts toward the verdict with at least ${a.min_suite_items} paired items. ${a.candidate} passes with at least ${a.min_items} such items, no more than ${pct(a.max_unpaired)} of scheduled items unpaired, an item-weighted mean of the counted suites' kappas of at least ${a.min_kappa} and their raw agreement of at least ${pct(a.min_raw)}. The pooled kappa over every measured suite is shown for reference only.`, '');
+    lines.push(`Per item, ${a.candidate}'s first trial and ${a.reference}'s first counted trial are each reader's pass or fail. An error from ${a.candidate}'s own provider or call (a crash, an invalid answer, a 4xx or 5xx on the reader call) is a fail for ${a.candidate}. A failure in a stage both readers share (embedding, retrieval, rerank or the judge) leaves the item unpaired, with its cause named, as do a run-level stop, an item ${a.reference} has no counted trial for and one the night didn't run for ${a.candidate}. A night that ends on a budget stop or loses its machine is not measured. A suite counts toward the verdict with at least ${a.min_suite_items} paired items. ${a.candidate} passes with at least ${a.min_items} such items, no more than ${pct(a.max_unpaired)} of scheduled items unpaired, an item-weighted mean of the counted suites' kappas of at least ${a.min_kappa} and their raw agreement of at least ${pct(a.min_raw)}. The pooled kappa over every measured suite is shown for reference only.`, '');
     lines.push(a.verdict === 'not_measured' ? `**Not measured: ${a.reason}.**`
       : `**${a.verdict === 'pass' ? 'Passes' : 'Fails'}: kappa ${kappa(v.mean_kappa)}${v.mean_kappa === null ? ' (both readers gave every item the same label in every counted suite)' : ` (item-weighted mean over ${v.suites} suite${v.suites === 1 ? '' : 's'})`}, raw agreement ${pct(v.raw)}, over ${v.items} items.** ${a.candidate} passes ${pct(v.candidate_pass)} of them and ${a.reference} ${pct(v.reference_pass)}, a gap of ${points(v.gap)} points.`);
-    if (a.pooled.items) lines.push('', `Pooled kappa over every measured suite, for reference only: ${kappa(a.pooled.kappa)} over ${a.pooled.items} items. Unpaired items: ${a.unpaired} of ${a.scheduled} scheduled.`);
+    const label = (c: string) => (c === 'run' ? 'run-level stop' : c === 'no_reference_trial' ? `no counted ${a.reference} trial` : c === 'not_run' ? `not run for ${a.candidate}` : c);
+    const byCause = (m: UnpairedCounts) => Object.entries(m).map(([c, n]) => `${label(c)} ${n}`).join(', ');
+    if (a.pooled.items) lines.push('', `Pooled kappa over every measured suite, for reference only: ${kappa(a.pooled.kappa)} over ${a.pooled.items} items. Unpaired items: ${a.unpaired} of ${a.scheduled} scheduled.${a.unpaired ? ` By cause: ${byCause(a.unpaired_causes)}.` : ''}`);
     const measured = a.suites.flatMap(s => (s.measured ? [s] : []));
-    if (measured.length) lines.push('', `| Suite | Paired items | Counts toward verdict | Raw agreement | Kappa | ${a.candidate} pass rate | ${a.reference} pass rate | Gap (points) | ${a.candidate} crashes counted as fails | Unpaired items |`, '|---|---|---|---|---|---|---|---|---|---|');
-    for (const s of measured) lines.push(`| ${s.suite} | ${s.items} | ${s.counted ? 'yes' : `no (under ${a.min_suite_items})`} | ${pct(s.raw)} | ${kappa(s.kappa)} | ${pct(s.candidate_pass)} | ${pct(s.reference_pass)} | ${points(s.gap)} | ${s.candidate_harness} | ${s.unpaired} |`);
+    if (measured.length) lines.push('', `| Suite | Paired items | Counts toward verdict | Raw agreement | Kappa | ${a.candidate} pass rate | ${a.reference} pass rate | Gap (points) | ${a.candidate} reader errors counted as fails | Unpaired items |`, '|---|---|---|---|---|---|---|---|---|---|');
+    for (const s of measured) lines.push(`| ${s.suite} | ${s.items} | ${s.counted ? 'yes' : `no (under ${a.min_suite_items})`} | ${pct(s.raw)} | ${kappa(s.kappa)} | ${pct(s.candidate_pass)} | ${pct(s.reference_pass)} | ${points(s.gap)} | ${s.candidate_harness} | ${s.unpaired}${s.unpaired ? ` (${byCause(s.unpaired_causes)})` : ''} |`);
     const unmeasured = a.suites.flatMap(s => (s.measured ? [] : [`- ${s.suite}: not measured, ${s.reason}`]));
     if (unmeasured.length) lines.push('', ...unmeasured);
   }
