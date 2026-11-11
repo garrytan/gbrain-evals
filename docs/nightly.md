@@ -200,7 +200,11 @@ of answers bought once, in a paid run of its own, and never calls a model.
   measured on: the system's code, the reader's effort and output limit, the judge and its prompt, the pass bar, the
   dataset, the answerability file and the harness. A question with no row is *unknown* and never guessed. A row measured
   on other inputs is *stale*, and the step that needed it stops with `SOTA_CACHE_STALE` (below), the inputs that changed
-  and the command that buys fresh rows.
+  and the command that buys fresh rows. Rows are bought in paid runs of their own: `bun eval/runner/sota/oracle.ts run`
+  for the oracle, and `bun eval/runner/sota/leader.ts run` for the leader, which runs two cells of the Q1 scoreboard's
+  runner (the whole history on every `lme-s-hard` question, the grep agent on the `beam-1m-hard` questions the SOTA
+  dev test leaves out) judged by the reader's frontier judge from the other model family. `leader.ts import` reuses the
+  dev test's own grep-agent answers, and `plan` on either tool lists the rows still missing.
 - **Attribution.** `bun eval/runner/failure-causes/cli.ts attribute --labels <week's labels> --cache <cache> --out
   attribution.json` puts each failed row of a QA suite into one bucket, the first that applies: *harness* (a provider
   or harness error, or an answer cut off at its output limit), *unsupported*, *reader limited* (the oracle fails it
@@ -361,11 +365,12 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 
 ### 2026-11-12: The weekly SOTA loop, dev set v2 and one stable trial for Cat 40
 
-Added the SOTA loop section: the answerability classes, the outcome cache, attribution buckets, the fix list, the fix
-ledger, the scorecard rules and the custody provider check, with the `SOTA_CACHE_STALE` and `CUSTODY_PROVIDER_CHANGED`
-stops beside the exit codes. The dev set is now `devset-v2.json`: `beam-1m-hard` holds every answerable question of
-eight public BEAM-1M dev conversations (126, was 60 from three), and Cat 40 world M's stable leg runs one trial while
-master keeps three. Both suites get new digests and start new baselines; the other suites keep theirs.
+Added the SOTA loop section: the answerability classes, the outcome cache and how its rows are bought, attribution
+buckets, the fix list, the fix ledger, the scorecard rules and the custody provider check, with the `SOTA_CACHE_STALE`
+and `CUSTODY_PROVIDER_CHANGED` stops beside the exit codes. The dev set is now `devset-v2.json`: `beam-1m-hard` holds
+every answerable question of eight public BEAM-1M dev conversations (126, was 60 from three), and Cat 40 world M's
+stable leg runs one trial while master keeps three. Both suites get new digests and start new baselines; the other
+suites keep theirs.
 
 ### 2026-11-11: A replay of the request id a refusal names counts as a retry
 

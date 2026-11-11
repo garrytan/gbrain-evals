@@ -32,7 +32,7 @@ afterAll(() => { globalThis.fetch = realFetch; rmSync(tmp, { recursive: true, fo
 
 const raw = JSON.parse(readFileSync(join(ROOT, 'test/eval/fixtures/q1-cell/locomo-shaped.json'), 'utf8')) as { conversations: Corpus['conversations']; questions: MemoryQuestion[] };
 const corpus: Corpus = { benchmark: 'fixture', conversations: raw.conversations, questions: raw.questions, source: { name: 'LoCoMo-shaped fixture (invented)', files: [{ path: 'test/eval/fixtures/q1-cell/locomo-shaped.json', sha256: 'fixture' }], revision: 'repo', license: 'MIT' } };
-const sotaCells = () => buildManifest().addon_cells!;
+const sotaCells = () => buildManifest().addon_cells!.filter(c => c.id.startsWith('sota-dev.'));
 /** Personal names and private-agent words that no new module, prompt or model-visible request may carry. */
 const BANNED = [/garry/i, /wintermute/i, /\bYC\b/, /y combinator/i, /openclaw/i, /alphaclaw/i, /telegram/i];
 const readersOf = (c: CellDefinition) => c.arms.flatMap(a => a.readers);
@@ -186,7 +186,7 @@ describe('SOTA dev cells', () => {
   test('both cells are valid, in process, outside the counted list, and select every answerable question of the four dev conversations', () => {
     const m = buildManifest();
     const kinds = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
-    const cells = m.addon_cells!;
+    const cells = m.addon_cells!.filter(c => c.set === 'SOTA-dev');
     expect(cells.map(c => c.id)).toEqual(['sota-dev.baseline-file-agent.baseline', 'sota-dev.gbrain-defaults.agent-tools']);
     for (const c of cells) {
       expect(definitionProblems(c, kinds)).toEqual([]);
