@@ -5,11 +5,13 @@
  * Nothing reaches a provider: fetch is replaced for the whole test and the keys stay blank.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
+import { loadSplit } from '../../eval/runner/decisions/splits.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
 import { OutcomeCache } from '../../eval/runner/sota/cache.ts';
 import { a4Rows, a4Spec, oracleJudge, oraclePrompt, oracleSpec, poolItems, runOracle } from '../../eval/runner/sota/oracle.ts';
@@ -85,6 +87,17 @@ describe('oracle specs', () => {
     expect(oracleSpec('beam-1m', 'anthropic:claude-opus-5-5')).toMatchObject({ max_tokens: 8192, judge: 'openai:gpt-6-astra', system: 'oracle' });
     expect(oracleSpec('lme-s', 'openai:gpt-6.1-sol')).toMatchObject({ max_tokens: 8192, judge: 'anthropic:claude-opus-5-5' });
     expect([poolItems('beam-1m').length, poolItems('lme-s').length]).toEqual([126, 50]);
+  });
+
+  test('a BEAM-1M run reads the dev conversations only, never a held-out one', () => {
+    const empty = scratch();
+    const probe = `import { runOracle } from './eval/runner/sota/oracle.ts';
+      try { await runOracle({ benchmark: 'beam-1m', reader: 'anthropic:claude-opus-5-5', items: ['1m-2:event_ordering:0'], cache: '${scratch()}', work: '${scratch()}', budgetLedger: 'x', budgetRunId: 'x' }); console.log('no error'); }
+      catch (e) { console.log(String((e as Error).message)); }`;
+    const out = spawnSync('bun', ['-e', probe], { cwd: join(import.meta.dir, '../..'), env: { PATH: process.env.PATH!, HOME: empty, GBRAIN_EVALS_DATASETS: empty }, encoding: 'utf8' }).stdout;
+    const missing = /chats\/1M\/(\d+)\//.exec(out)?.[1];
+    expect(out).toContain('DATASET_MISSING');
+    expect(loadSplit('beam-1m').dev).toContain(`1m-${missing}`);
   });
 
   test('Sol\'s BEAM-1M rows are A4\'s, pinned: every pool item is covered, and a re-buy is refused', async () => {

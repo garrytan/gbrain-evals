@@ -23,6 +23,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
+import { devConversations } from '../decisions/splits.ts';
 import { loadCorpus, filesFor, type MemoryQuestion, type Session } from '../memory-qa/corpus.ts';
 import { latestDate, readerPrompt } from '../memory-qa/qa.ts';
 import { parseRunArgs, runArm } from '../memory-qa/run.ts';
@@ -162,7 +163,7 @@ export async function runOracle(o: RunOptions): Promise<{ bought: number; fresh:
   const out = join(o.work, tag), ids = join(o.work, `${tag}.ids.txt`);
   mkdirSync(o.work, { recursive: true });
   writeFileSync(ids, todo.join('\n') + '\n');
-  const corpus = loadCorpus(o.benchmark);
+  const corpus = loadCorpus(o.benchmark, undefined, devConversations(o.benchmark) ?? undefined);
   const wanted = new Set(todo);
   const prompts = new Map(corpus.questions.filter(q => wanted.has(q.id)).map(q => [q.id, oraclePrompt(q, corpus.conversations.find(c => c.id === q.conversation)!.sessions)]));
   const prevCache = process.env.GBRAIN_EVALS_QA_CACHE;
