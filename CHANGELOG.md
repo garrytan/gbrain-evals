@@ -14,7 +14,7 @@ This records what each gbrain-evals release changed and what its measurements me
   named is a retry under the same id, exactly like a replay of the agent's own id, and only a genuinely new id is a
   reissue. The same trials score 90 of 90.
 - **What stays the same.** Every episode scored at a gbrain commit before v0.60.671.0 keeps its score, because those
-  refusals name no replay id: the three older control cells stay at 8, 4 and 5 of 90, and the 2026-11-10 and 2026-11-11
+  refusals name no replay id. The three older control cells stay at 8, 4 and 5 of 90, and the 2026-11-10 and 2026-11-11
   nightly rows are unchanged. The refresh barrier's counted Part C ran at an earlier commit, so its numbers and verdict
   stand. Amendment 7 of the refresh-barrier preregistration records the old rule, the new one, why, and these before
   and after scores. `bun eval/runner/refresh-barrier/rescore.ts <dir>` rescores stored episode records keyless.
