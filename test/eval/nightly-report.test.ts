@@ -72,6 +72,17 @@ describe('the diff against an earlier night', () => {
     expect(c.suites[0]).toMatchObject({ suite: 'suite-a', compared: true, pass_diff: { mean: -0.3, items: 20 } });
   });
 
+  test('against a stable leg run at fewer trials, items compare at pass^1 over all trials and no strong flip is filed; equal trials still flip', () => {
+    const stable = { manifest: manifest([{ id: 'suite-a', k: 1 }], { night: '2026-11-09', ref: 'stable', sha: 'e'.repeat(40) }), rows: trials(Array(20).fill(1), 1) };
+    const master = { manifest: manifest([{ id: 'suite-a' }]), rows: trials([...Array(14).fill(3), ...Array(6).fill(0)], 3, { cost_usd: null }) };
+    const c = compareNights(master, stable, 'stable');
+    expect(c.flags.map(f => f.kind)).toEqual(['pass_rate']);
+    expect(c.suites[0]).toMatchObject({ compared: true, strong_flips: [], trials: { tonight: 3, other: 1 }, pass_diff: { mean: -0.3, items: 20 } });
+    const same = compareNights(master, { manifest: manifest([{ id: 'suite-a' }], { ref: 'stable' }), rows: trials(Array(20).fill(3)) }, 'stable');
+    expect(same.flags.find(f => f.kind === 'strong_flip')!.items).toHaveLength(6);
+    expect(same.suites[0]!.trials).toBeUndefined();
+  });
+
   test('a drop under 5 points, or one whose interval reaches zero, is not flagged', () => {
     const one = { manifest: manifest([{ id: 'suite-a' }]), rows: trials([...Array(19).fill(3), 2]) };
     expect(compareNights(one, previous, 'previous').flags).toEqual([]);

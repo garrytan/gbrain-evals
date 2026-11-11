@@ -1,5 +1,5 @@
 /**
- * The nightly system smokes (suite `system-smokes` in eval/data/nightly/devset-v1.json): keyless checks on a seeded
+ * The nightly system smokes (suite `system-smokes` in the nightly dev set, eval/data/nightly/devset-v2.json): keyless checks on a seeded
  * synthetic brain of the surfaces that need a cross-version upgrade, a seeded brain or a real Postgres version. Each
  * smoke is one deterministic pass or fail; a failing one names the refusal code or count that failed.
  *

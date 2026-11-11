@@ -18,7 +18,9 @@
  * Tiers:
  *   nightly  tool-contract-replay, concurrent-writers, system-smokes, refresh-barrier-agents and refused-write-agents;
  *            agent suites on gpt-6.1-sol at k = 3
- *   matrix   every suite; claude-opus-5-5 and gpt-6.1-sol; k = 3 on agent suites, 1 on QA
+ *   matrix   every suite; claude-opus-5-5 and gpt-6.1-sol; k = 3 on agent suites, 1 on QA, except that a suite whose config
+ *            names stable_trials runs that many on --ref stable (Cat 40 world M runs one trial on stable and three on
+ *            master; report.ts then compares the two at pass^1 and files no strong flip between unequal trial counts)
  *   smoke    every item once on master with both readers
  *   bisect   one suite's firing items on one commit (bisect.ts calls it)
  * Keyless suites (replay, trials, smokes) never call a model and run without keys on every tier. Suites that call models
@@ -51,7 +53,7 @@ import { resolveGbrainUnderTest } from '../gbrain-under-test.ts';
 import { ledgerStatus } from '../budget-ledger.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
 import { ADAPTERS, callsModels, skippedRows, type NightContext, type SuiteRun, type Tier, worktreeAt } from './adapters.ts';
-import { loadDevSet, suiteDigest, type DevSet } from './devset.ts';
+import { DEVSET_PATH, loadDevSet, suiteDigest, type DevSet } from './devset.ts';
 import { NightlyCache } from './judge-cache.ts';
 import { closeOwnedNightRun, NIGHTLY_RUNNER_PREFIX, NightlyCapStop, openNightRun, reconcileNightRun } from './ledger.ts';
 import { appendOutcome, outcomeKey, qualifiedModel, readOutcomes, resumable, type Outcome } from './outcome.ts';
@@ -111,8 +113,12 @@ export function parseArgs(argv: readonly string[]): NightArgs {
  */
 export const runsReader = (s: Pick<DevSet['suites'][number], 'kind'>, reader: string) => s.kind !== 'agent' || /^(anthropic|openai):/.test(qualifiedModel(reader));
 
+/** A suite's trial count on a matrix night's stable leg (its config's stable_trials), or null when it runs the tier's k. */
+export const stableTrials = (s: Pick<DevSet['suites'][number], 'config'>, a: { tier: Tier; ref?: string }): number | null =>
+  a.tier === 'matrix' && a.ref === 'stable' && Number.isInteger(s.config?.stable_trials) ? Number(s.config!.stable_trials) : null;
+
 /** The suites a night runs, with their items, readers and k; a reader goes only to the suites whose runner runs it. */
-export function planSuites(devset: DevSet, a: Pick<NightArgs, 'tier' | 'suites' | 'items' | 'readers' | 'k'>): SuiteRun[] {
+export function planSuites(devset: DevSet, a: Pick<NightArgs, 'tier' | 'suites' | 'items' | 'readers' | 'k'> & Partial<Pick<NightArgs, 'ref'>>): SuiteRun[] {
   const tier = TIERS[a.tier];
   const known = new Set(devset.suites.map(s => s.id));
   const unknown = (a.suites ?? []).filter(id => !known.has(id));
@@ -120,7 +126,7 @@ export function planSuites(devset: DevSet, a: Pick<NightArgs, 'tier' | 'suites' 
   return devset.suites
     .filter(s => (tier.suites === null || tier.suites.includes(s.id)) && (a.suites === null || a.suites.includes(s.id)))
     .map(s => ({ suite: s, digest: suiteDigest(s), items: s.items.filter(i => a.items === null || a.items.some(x => x === i.id || x.endsWith(`:${i.id}`))),
-      readers: callsModels(s) ? (a.readers ?? tier.readers ?? devset.readers).filter(r => runsReader(s, r)) : [null], k: a.k ?? tier.k ?? devset.k[s.kind] }))
+      readers: callsModels(s) ? (a.readers ?? tier.readers ?? devset.readers).filter(r => runsReader(s, r)) : [null], k: a.k ?? stableTrials(s, a) ?? tier.k ?? devset.k[s.kind] }))
     .filter(r => r.items.length > 0 && r.readers.length > 0);
 }
 
@@ -221,7 +227,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     });
     const manifest: NightManifest = {
       schema: 'nightly-night/1', night: a.night, ref: a.ref, sha, version: gut.version, tier: a.tier, fake: a.fake,
-      devset: { path: a.devset ?? 'eval/data/nightly/devset-v1.json', digest: devset.digest }, suites: statuses, started_at: saved?.started_at ?? new Date().toISOString(),
+      devset: { path: a.devset ?? DEVSET_PATH, digest: devset.digest }, suites: statuses, started_at: saved?.started_at ?? new Date().toISOString(),
       budget: paid ? { run_id: paid.runId, ledger: paid.ledger, opened_by_night: saved?.budget ? saved.budget.opened_by_night === true : paid.opened } : null,
       argv: saved?.argv ?? [...argv], attempts: (saved?.attempts ?? 0) + 1,
     };

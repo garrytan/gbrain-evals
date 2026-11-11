@@ -7,11 +7,19 @@
  * source, plus a few they got right, kept as canaries that flag a regression on work gbrain already does. Each suite
  * records where its items came from, so the set can be rebuilt and audited. --check rebuilds in memory and fails when
  * the committed file differs.
+ *
+ * Version 2 (the SOTA loop, GST-2485): beam-1m-hard is every answerable question (supported or partial under the
+ * answerability rule, eval/data/answerability/beam-1m.json) of the public BEAM-1M dev conversations whose items are
+ * support-checked, about twice v1's 60, with unsupported, unresolved and unchecked items dropped and a sealed
+ * conversation refused. cat40-hard-m's stable leg runs one trial on matrix nights (config stable_trials, read by
+ * run.ts). The other suites are unchanged, so their digests carry over from v1.
  */
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { join, resolve } from 'node:path';
 import { canonicalDigest, DEVSET_FIX, DEVSET_PATH, type DevSet, type Suite } from './devset.ts';
+import { loadSplit } from '../decisions/splits.ts';
+import { ANSWERABLE, loadClasses, type AnswerClass } from '../sota/answerability.ts';
 
 const ROOT = resolve(import.meta.dir, '../../..');
 const BENCH = join(ROOT, 'docs/benchmarks');
@@ -32,6 +40,7 @@ function cat40(): Suite {
     id: 'cat40-hard-m', kind: 'agent', scoring: 'deterministic',
     about: 'Cat 40 Hard world M (public seed 20261021, 50k documents): company questions an agent answers through gbrain MCP',
     source: `docs/benchmarks/${source} (gbrain-hard arm)`,
+    config: { stable_trials: 1 },
     items: [...failed.map(id => ({ id, role: 'headroom' as const })), ...canaries.map(id => ({ id, role: 'canary' as const }))],
   };
 }
@@ -128,19 +137,27 @@ function lme(): Suite {
   };
 }
 
+/** The answerable (supported or partial) BEAM-1M items, sorted; refuses any outside the dev conversations. */
+export function answerableBeamItems(classes: ReadonlyMap<string, AnswerClass>, dev: readonly string[]): string[] {
+  const ids = [...classes].filter(([, c]) => ANSWERABLE.includes(c)).map(([id]) => id).sort();
+  const sealed = ids.filter(id => !dev.includes(id.split(':')[0]!));
+  if (sealed.length) throw new Error(`DEVSET_SEALED: ${sealed.length} answerable BEAM-1M items are not in a dev conversation; the dev set never holds a sealed item`);
+  return ids;
+}
+
 function beam(): Suite {
   const dir = join(BENCH, '2026-10-08-beam-1m-failure-analysis/arms');
   const rows = ['a2-top5-opus55', 'a2-top5-gpt61sol'].flatMap(arm =>
     readdirSync(join(dir, arm)).sort().filter(s => s.startsWith('shard-')).flatMap(s => jsonl(join(dir, arm, s, 'rows.ndjson.gz'))));
-  const misses = new Map<string, number>();
-  for (const r of rows) misses.set(r.conversation, (misses.get(r.conversation) ?? 0) + (Number(r.qa_score) < 1 ? 1 : 0));
-  const convs = [...misses.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 3).map(([c]) => c).sort();
-  const ids = [...new Set(rows.filter(r => convs.includes(r.conversation)).map(r => r.id as string))].sort();
+  const classes = loadClasses('beam-1m', ROOT);
+  if (!classes) throw new Error('eval/data/answerability/beam-1m.json is missing; fix: bun eval/runner/sota/answerability.ts');
+  const ids = answerableBeamItems(classes, loadSplit('beam-1m').dev);
+  const convs = [...new Set(ids.map(id => id.split(':')[0]!))].sort();
   const wrong = new Set(rows.filter(r => Number(r.qa_score) < 1).map(r => r.id as string));
   return {
     id: 'beam-1m-hard', kind: 'qa', scoring: 'judge',
-    about: 'Every question of the three public BEAM-1M dev conversations where frontier readers on gbrain missed most rubric items',
-    source: 'docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/{a2-top5-opus55,a2-top5-gpt61sol}',
+    about: 'Every answerable question (supported or partial) of the public BEAM-1M dev conversations whose items are support-checked',
+    source: 'eval/data/answerability/beam-1m.json (supported or partial); roles from docs/benchmarks/2026-10-08-beam-1m-failure-analysis/arms/{a2-top5-opus55,a2-top5-gpt61sol}',
     config: { benchmark: 'beam-1m', split: 'dev', conversations: convs, qa_max_tokens: QA_MAX_TOKENS },
     items: ids.map(id => ({ id, role: wrong.has(id) ? 'headroom' as const : 'canary' as const })),
   };
@@ -161,7 +178,7 @@ function toolContract(): Suite {
 
 export function buildDevSet(): DevSet {
   const suites = [cat40(), refreshBarrier(), refusedWrite(), concurrencyTrials(), systemSmokes(), lme(), beam(), toolContract()];
-  const body = { version: 1, readers: [...READERS], k: { agent: 3, qa: 1, replay: 1, trials: 1, smoke: 1 }, suites,
+  const body = { version: 2, readers: [...READERS], k: { agent: 3, qa: 1, replay: 1, trials: 1, smoke: 1 }, suites,
     reserved: [
       'paired exact and paraphrase forms on the same gold page (gap-map generator), after it passes the live-recall check',
       'per-family tool-call shape fuzzer (gap-map generator), after the same check',

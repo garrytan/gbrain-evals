@@ -1,0 +1,916 @@
+{
+ "schema": "answerability/1",
+ "benchmark": "beam-1m",
+ "rule": "D5a: supported when at most one validator rejects; partial when both reject (or it cites no turn) and the oracle passes (score >= 0.5); unsupported when both reject and the oracle fails; unresolved when both reject and no oracle verdict exists; unchecked when the support check left it out.",
+ "sources": {
+  "validators": {
+   "file": "docs/benchmarks/2026-11-10-beam-item-support/public-items.json",
+   "sha256": "cce927bcda46953595263bec0fd446740e373abc792c22d19b77dd10e33b9a28"
+  },
+  "nightly": {
+   "file": "eval/data/nightly/beam-1m-hard-support.json",
+   "sha256": "71f52977a7811597bf615c02945fab21a4bdb0adca645159764eaddfb4d9e345"
+  },
+  "oracle": {
+   "file": "eval/data/answerability/oracle/beam-1m.json",
+   "sha256": "b7a7aab146c4e2d866b72fd753700e4548e9dc379dc63fe06d4b6aa11a0247ba"
+  }
+ },
+ "counts": {
+  "supported": 106,
+  "partial": 20,
+  "unsupported": 13,
+  "unresolved": 5,
+  "unchecked": 6
+ },
+ "items": {
+  "1m-20:contradiction_resolution:0": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-20:contradiction_resolution:1": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-20:event_ordering:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:event_ordering:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:information_extraction:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:information_extraction:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:instruction_following:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-20:instruction_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:knowledge_update:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:multi_session_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:multi_session_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:preference_following:1": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-20:summarization:0": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "1m-20:summarization:1": {
+   "class": "unsupported",
+   "gates": [
+    "uncited"
+   ],
+   "oracle": "fail"
+  },
+  "1m-20:temporal_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-20:temporal_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:abstention:0": {
+   "class": "unchecked",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:abstention:1": {
+   "class": "unchecked",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:contradiction_resolution:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:contradiction_resolution:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:event_ordering:0": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-24:event_ordering:1": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-24:information_extraction:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:information_extraction:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:instruction_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:instruction_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:knowledge_update:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-24:knowledge_update:1": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-24:multi_session_reasoning:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-24:multi_session_reasoning:1": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-24:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:preference_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:summarization:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-24:summarization:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:temporal_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-24:temporal_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:abstention:0": {
+   "class": "unchecked",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:abstention:1": {
+   "class": "unchecked",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:contradiction_resolution:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:contradiction_resolution:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:event_ordering:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:event_ordering:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:information_extraction:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-25:information_extraction:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:instruction_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "fail"
+  },
+  "1m-25:instruction_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:knowledge_update:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:multi_session_reasoning:0": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-25:multi_session_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:preference_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:summarization:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:summarization:1": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "1m-25:temporal_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-25:temporal_reasoning:1": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-28:contradiction_resolution:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-28:contradiction_resolution:1": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-28:event_ordering:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-28:event_ordering:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-28:information_extraction:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-28:information_extraction:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-28:instruction_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-28:instruction_following:1": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-28:knowledge_update:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-28:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-28:multi_session_reasoning:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-28:multi_session_reasoning:1": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-28:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-28:preference_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-28:summarization:0": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "1m-28:summarization:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "1m-28:temporal_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-28:temporal_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:abstention:0": {
+   "class": "unchecked",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:abstention:1": {
+   "class": "unchecked",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:contradiction_resolution:0": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-2:contradiction_resolution:1": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-2:event_ordering:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-2:event_ordering:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:information_extraction:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:information_extraction:1": {
+   "class": "supported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "oracle": "pass"
+  },
+  "1m-2:instruction_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:instruction_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:knowledge_update:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:multi_session_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:multi_session_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:preference_following:0": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-2:preference_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-2:summarization:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "1m-2:summarization:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "1m-2:temporal_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "fail"
+  },
+  "1m-2:temporal_reasoning:1": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-30:contradiction_resolution:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:contradiction_resolution:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:event_ordering:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-30:event_ordering:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:information_extraction:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:information_extraction:1": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-30:instruction_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:instruction_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:knowledge_update:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:multi_session_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:multi_session_reasoning:1": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-30:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:preference_following:1": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-30:summarization:0": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "1m-30:summarization:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-30:temporal_reasoning:0": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-30:temporal_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-32:contradiction_resolution:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "fail"
+  },
+  "1m-32:contradiction_resolution:1": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-32:event_ordering:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-32:event_ordering:1": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-32:information_extraction:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-32:information_extraction:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-32:instruction_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-32:instruction_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "fail"
+  },
+  "1m-32:knowledge_update:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-32:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-32:multi_session_reasoning:0": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-32:multi_session_reasoning:1": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-32:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-32:preference_following:1": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-32:summarization:0": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "1m-32:summarization:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-32:temporal_reasoning:0": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-32:temporal_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-3:contradiction_resolution:0": {
+   "class": "unsupported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "fail"
+  },
+  "1m-3:contradiction_resolution:1": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-3:event_ordering:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-3:event_ordering:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-3:information_extraction:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-3:information_extraction:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-3:instruction_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-3:instruction_following:1": {
+   "class": "supported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "oracle": "pass"
+  },
+  "1m-3:knowledge_update:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-3:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-3:multi_session_reasoning:0": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-3:multi_session_reasoning:1": {
+   "class": "partial",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": "pass"
+  },
+  "1m-3:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-3:preference_following:1": {
+   "class": "partial",
+   "gates": [
+    "uncited"
+   ],
+   "oracle": "pass"
+  },
+  "1m-3:summarization:0": {
+   "class": "supported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "oracle": "pass"
+  },
+  "1m-3:summarization:1": {
+   "class": "supported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "oracle": "pass"
+  },
+  "1m-3:temporal_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  },
+  "1m-3:temporal_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": "pass"
+  }
+ }
+}

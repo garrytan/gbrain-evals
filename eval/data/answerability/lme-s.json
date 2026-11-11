@@ -1,0 +1,330 @@
+{
+ "schema": "answerability/1",
+ "benchmark": "lme-s",
+ "rule": "D5a: supported when at most one validator rejects; partial when both reject (or it cites no turn) and the oracle passes (score >= 0.5); unsupported when both reject and the oracle fails; unresolved when both reject and no oracle verdict exists; unchecked when the support check left it out.",
+ "sources": {
+  "validators": {
+   "file": "eval/data/nightly/lme-s-hard-support.json",
+   "sha256": "b6dc552d2c2842d6dffe13fa7d67a646551e9dcf2329b010df23b67852741581"
+  },
+  "oracle": null
+ },
+ "counts": {
+  "supported": 35,
+  "partial": 0,
+  "unsupported": 0,
+  "unresolved": 15,
+  "unchecked": 0
+ },
+ "items": {
+  "71017277": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "001be529": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "031748ae_abs": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "08f4fc43": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "09ba9854_abs": {
+   "class": "unresolved",
+   "gates": [
+    "absence:anthropic:claude-haiku-5-5",
+    "absence:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "0a995998": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "0bc8ad93": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "10d9b85a": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "1a1907b4": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "2133c1b5": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "2bf43736": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "35a27287": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "370a8ff4": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "37f165cf": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "3b6f954b": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "51c32626": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "5d3d2817": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "61f8c8f8": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "6d550036": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "7024f17c": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "7405e8b1": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "75f70248": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "81507db6": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "88432d0a": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "8e91e7d9": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "92a0aa75": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "9a707b81": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "9bbe84a2": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "9ee3ecd6": {
+   "class": "supported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "oracle": null
+  },
+  "a2f3aa27": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "a3838d2b": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "a96c20ee_abs": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "bf659f65": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "c14c00dd": {
+   "class": "supported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "oracle": null
+  },
+  "d851d5ba": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "dd2973ad": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "e3038f8c": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "e3fc4d6e": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "gpt4_0a05b494": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "gpt4_1a1dc16d": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "gpt4_2f8be40d": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "gpt4_59149c77": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "gpt4_68e94287": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "gpt4_731e37d7": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "gpt4_7abb270c": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "gpt4_7bc6cf22": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "gpt4_7fce9456": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "gpt4_85da3956": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "gpt4_a1b77f9c": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "gpt4_d6585ce9": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  }
+ }
+}

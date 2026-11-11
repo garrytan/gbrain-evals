@@ -53,6 +53,16 @@ describe('tiers and the ancestor check', () => {
     expect(plan('--tier', 'smoke').every(r => r.k === 1)).toBe(true);
   });
 
+  test('matrix on stable: Cat 40 world M runs one trial (its config\'s stable_trials), the write-agent suites keep three, master keeps three, and --k still wins', () => {
+    const k = (ref: string, ...argv: string[]) => Object.fromEntries(planSuites(devset, { ...parseArgs(['--out', '/tmp/x', '--tier', 'matrix', '--ref', ref, ...argv]) })
+      .filter(r => r.suite.kind === 'agent').map(r => [r.suite.id, r.k]));
+    expect(k('stable')).toEqual({ 'cat40-hard-m': 1, 'refresh-barrier-agents': 3, 'refused-write-agents': 3 });
+    expect(k('master')).toEqual({ 'cat40-hard-m': 3, 'refresh-barrier-agents': 3, 'refused-write-agents': 3 });
+    expect(k('stable', '--k', '2')['cat40-hard-m']).toBe(2);
+    expect(planSuites(devset, parseArgs(['--out', '/tmp/x', '--tier', 'smoke', '--ref', 'master'])).find(r => r.suite.id === 'cat40-hard-m')!.k).toBe(1);
+    expect(devset.suites.find(s => s.id === 'cat40-hard-m')!.config).toEqual({ stable_trials: 1 });
+  });
+
   test('a particle-1 reader goes to the QA suites only, because Part C and Cat 40 Hard run Claude and GPT readers', () => {
     const p = plan('--tier', 'matrix', '--readers', 'claude-opus-5-5,particle-1');
     for (const id of ['cat40-hard-m', 'refresh-barrier-agents', 'refused-write-agents']) expect(p.find(r => r.suite.id === id)!.readers).toEqual(['claude-opus-5-5']);
