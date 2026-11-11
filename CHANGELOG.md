@@ -2,6 +2,20 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.211] - 2026-11-11
+
+### The nightly check's stable baseline moves to gbrain's current stable release
+
+- **What changed.** Matrix nights compare gbrain master with gbrain's `stable` tag, which now points at v0.60.654.0
+  (`eb74799e`). The nightly check's pin still named v0.60.620.0, which was 484 commits behind the tag, so the
+  comparison with stable measured master against an older release than the one gbrain ships as stable.
+- **What stays the same.** Every suite's required gbrain commit is an ancestor of the new pin, so no suite is newly
+  skipped on stable. The keyless tool-contract replay gives the same results at the old pin, the new pin and master.
+  No published score or verdict changes.
+- **What to expect.** The first matrix night after this release compares master with the newer release, so a change in
+  its "Against stable" section can come from the baseline moving rather than from master. That section names the
+  stable commit it compared with. A night that started on the old pin keeps it when it resumes.
+
 ## [0.10.210] - 2026-11-11
 
 ### The nightly particle-1 agreement check also leaves an item unpaired when gbrain's embedding or retrieval provider fails with a 429 or 5xx
