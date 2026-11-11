@@ -284,7 +284,8 @@ function compatReceipts(receipts: UsageReceipt[], out: Omit<ChatResultV2, keyof 
  * floor) recording through this module's `chatWithReceipts`, so an OpenAI-compatible judge's receipts carry what each
  * attempt sent, the response's identity and the usage a failed attempt reported. Each reply is read by `judgeVerdict`;
  * its path goes on the judge's receipt as `verdict_path` and into `paths`, and a reply with no verdict throws
- * UnansweredJudgment once both are recorded. Such a reply is never cached, so a rerun asks the judge again.
+ * UnansweredJudgment once both are recorded. Such a reply is not written to the cache, so a later run that asks the same
+ * question asks the judge again; a resume that keeps the error row does not, and a reply cached before this rule replays.
  */
 export async function judgeResponse(client: ChatLike, benchmark: string, judgeModel: string, q: MemoryQuestion, response: string, replicate: number, receipts?: UsageReceipt[], paths?: VerdictPath[]): Promise<number> {
   const prompts = judgePromptsFor(benchmark, q, response);
