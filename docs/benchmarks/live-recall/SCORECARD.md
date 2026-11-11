@@ -27,9 +27,9 @@ The Markdown is rendered from the validated JSON alone. The per-query detail beh
 
 ## scorecard.json
 
-Top level: `schema` (`"live-recall-scorecard/v1"`), `protocol` (`batch1`, `batch2` or `batch3`: from `freeze.json` on a
-counted run, from `--protocol` on the fixture, and `batch1` when neither names one), `run`, `custody`, `questions`,
-`eligibility`, `arms`, `comparisons`.
+Top level: `schema` (`"live-recall-scorecard/v1"`), `protocol` (`batch1`, `batch2`, `batch3` or `batch4`: from
+`freeze.json` on a counted run, from `--protocol` on the fixture, and `batch1` when neither names one), `run`,
+`custody`, `questions`, `eligibility`, `arms`, `comparisons`, and under `batch4` only, `family`.
 
 **`run`**: what ran. `started_at`, `finished_at`; `runner_commit` and `runner_dirty` (gbrain-evals); the declared
 pin (`gbrain_pin_version`, `gbrain_pin_commit`) and what was loaded (`gbrain_loaded_version`,
@@ -43,7 +43,7 @@ runs with expansion off); `control` (true for the hash-embedding fixture, whose 
 `source_pgvector`, `source_server_version_num`, `copy_server_version_num` and `restore_errors`, read from the row
 `snapshot.sh` writes into the marker table (the copy runs the container image's pgvector, which can differ from the
 source's). Versions are `null` unless they are plain version numbers; `pgvector_version` is `null` when unknown, and the
-four copy fields are `null` when unknown or not a copy. Under `batch3` only, `run` also carries `visibility_epoch`
+four copy fields are `null` when unknown or not a copy. Under `batch3` and `batch4` only, `run` also carries `visibility_epoch`
 (`pre_gbra_398`, `post_gbra_398` or `unknown`, from the loaded gbrain version), `freeze_gbrain_version` and
 `freeze_visibility_epoch` (from the freeze; `null` on the fixture). A `run --synthetic <dir>` control (a conditions-recall
 brain from `eval/generators/conditions-recall-gen.ts`, or a batch-3 brain from `eval/generators/batch3-synthetic-gen.ts`
@@ -60,10 +60,12 @@ scorecard). `eval/runner/predictive/verdict.ts` refuses a `hash` scorecard unles
 `default_transaction_read_only = on` and gbrain's direct pool was off, before the first search and after the last),
 and `guard_refusals` by verb (for example `telemetry_write`, gbrain's per-query counters, which the guard refuses).
 
-**`questions`**: `loaded`, `gold_missing` (dropped because a gold page was absent), `by_type` counts,
-`gold_found_by` counts, `paraphrase_shares_identifier_token` (the share of paraphrases that still contain an
-identifier-like token from their exact form) and `freeze_sha_prefix` (the first 12 hex characters of the question
-file's sha256, to match against the freeze).
+**`questions`**: `loaded`, `gold_missing` (dropped because a gold page was absent), `by_type` counts, `gold_found_by`
+counts, `paraphrase_shares_identifier_token` (the share of paraphrases that still contain an identifier-like token from
+their exact form) and `freeze_sha_prefix` (the first 12 hex characters of the question file's sha256, to match against
+the freeze). Under `batch4` it also has `prior_overlap`, which the runner writes after checking the freeze's held-out
+record: `files` (the first 12 hex characters of each earlier question file's sha256) and the `question_ids`,
+`forms` and `gold_pages` the new questions share with them, all zero for a freeze the runner accepted.
 
 **`eligibility`**: `eligible_question_forms`, `exclusions` (`<arm>_<status>` counts for the first failing arm of
 each excluded form), `invalid_arms` (`rerank_fail_open_over_cap`, `embedding_opted_out`) and `common_arms`.
@@ -105,7 +107,18 @@ secondaries. The predictive-measures preregistration names which batch 3 contras
 against. Under both, the keyword contrasts
 (`hybrid_lexical_vs_keyword`, `hybrid_vs_keyword`, `configured_vs_keyword_paraphrase` and the rest) are descriptive.
 A comparison whose arm is invalid or absent is `{"id": ..., "skipped": "arm_invalid_or_absent"}`; a skipped primary
-still counts in the Holm family of two, as p = 1.
+still counts in the Holm family of two, as p = 1. `batch4` has batch 2's comparisons, primaries and secondaries.
+
+**`family`** (`batch4` only): a simultaneous 95% band over every success@5 comparison that has pairs, for the
+predictive-measures test of G2. One bootstrap resamples whole questions within each question type, recomputes every
+comparison on each draw from its own questions, scales each by its bootstrap standard error, and takes the 95th
+percentile of the largest scaled deviation as one shared critical value (`simultaneousBand` in
+`eval/runner/stats/paired.ts`). The block holds `method` (`max_t_cluster_bootstrap`), `level`, `seed` (20261106),
+`draws` (10,000), `n_clusters` (questions), `n_strata` (question types), `members` (comparisons banded),
+`critical_value` and, for reference, `bonferroni_critical_value`. Each of those success@5 rows gains `family_ci95`: the
+estimate plus or minus the critical value times its own standard error, not clipped. It is `null` when some draw had
+none of that comparison's questions, and a comparison that never varies gets a zero-width band at its estimate. A
+row's own `ci95` is unchanged.
 
 Rates, deltas and intervals are fractions rounded to four decimals; the Markdown shows them as percentages.
 
@@ -115,7 +128,9 @@ A header naming the gbrain version and commit, schema, engine, barrier, pgvector
 warning for the fixture, and a warning that vector search on the copy may differ from the live brain when the source's
 pgvector differs from the copy's or the restore reported errors); a line naming the protocol and its two primary comparisons; a table of every arm on all question forms (success@1, 5, 10, 20, MRR, pages returned); success@5 by type and
 form; every paired comparison with its interval, p, Holm p and MDE; and a custody paragraph (read-only checks, guard
-refusals, exclusions).
+refusals, exclusions). Under `batch3` and `batch4` the header also names the visibility epoch of the run and the freeze.
+Under `batch4` it names the held-out check (the three earlier files and the zero overlap), and a family band table
+lists each success@5 comparison's delta, family band and whether the band excludes zero.
 
 ## compare.json (live-recall-compare/v1)
 

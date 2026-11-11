@@ -5,16 +5,22 @@
  * preregistration.
  *
  * Rule (preregistered):
- * - A reference contrast qualifies when its real 95% interval excludes zero.
+ * - A reference contrast qualifies when its real 95% interval excludes zero. A layer
+ *   frozen with qualify 'family' (G2's batch 4 replication, amendment of 2026-11-11)
+ *   reads the reference's simultaneous band (family_lo, family_hi) instead; a
+ *   contrast with no band doesn't qualify, and a disagreement there is a qualifying
+ *   contrast of the other sign only.
  * - Fewer than minQualifying qualifying contrasts (default 3) reads NO_REFERENCE_YET.
  * - PREDICTIVE needs the synthetic estimate to share the sign of every qualifying
  *   contrast, and no mapped synthetic contrast whose interval excludes zero may
  *   point the other way from its reference estimate.
- * - Kendall's tau over a shared configuration ordering is reported, never gating.
+ * - Kendall's tau over a shared configuration ordering is reported, never gating;
+ *   kendallTauB reads per-arm scores so that tied arms count as ties.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { kendallTauB as tauB } from '../memory-qa/instruments.ts';
 
 export const VERDICTS = ['PREDICTIVE', 'NOT_PREDICTIVE', 'NO_REFERENCE_YET'] as const;
 export type Verdict = (typeof VERDICTS)[number];
@@ -25,6 +31,9 @@ export interface Contrast {
   estimate: number;
   lo: number;
   hi: number;
+  /** The simultaneous band over every contrast of its scorecard, when the scorecard has one. */
+  family_lo?: number;
+  family_hi?: number;
 }
 
 export interface ReferenceFile {
@@ -32,6 +41,10 @@ export interface ReferenceFile {
   source: string;
   contrasts: Contrast[];
   orderings?: Record<string, string[]>;
+  /** Per-arm success@5 by ordering key, for tau-b. */
+  scores?: Record<string, Record<string, number>>;
+  /** Comparison ids the scorecard skipped (an arm invalid or absent), which can't qualify. */
+  skipped?: string[];
 }
 
 export interface ManifestEntry {
@@ -53,7 +66,11 @@ function checkContrast(value: unknown, path: string): Contrast {
   if (!c || typeof c.id !== 'string' || ![c.estimate, c.lo, c.hi].every(Number.isFinite) || c.lo > c.hi) {
     throw new ValidityReferenceError(path, `malformed contrast ${JSON.stringify(value)}`);
   }
-  return { id: c.id, estimate: c.estimate, lo: c.lo, hi: c.hi };
+  const family = c.family_lo !== undefined || c.family_hi !== undefined;
+  if (family && (![c.family_lo, c.family_hi].every(Number.isFinite) || c.family_lo! > c.family_hi!)) {
+    throw new ValidityReferenceError(path, `malformed family band ${JSON.stringify(value)}`);
+  }
+  return { id: c.id, estimate: c.estimate, lo: c.lo, hi: c.hi, ...(family ? { family_lo: c.family_lo, family_hi: c.family_hi } : {}) };
 }
 
 /** Loads one reference. A pending reference returns null; anything missing, corrupt or off-digest throws. */
@@ -85,7 +102,7 @@ export function loadReference(manifestPath: string, id: string): ReferenceFile |
   return { ...parsed, contrasts: parsed.contrasts.map((c) => checkContrast(c, path)) };
 }
 
-const excludesZero = (c: Contrast) => c.lo > 0 || c.hi < 0;
+const excludesZero = (c: { lo: number; hi: number }) => c.lo > 0 || c.hi < 0;
 
 export interface VerdictInput {
   /** Reference contrast ids this measure is compared with, from its preregistration. */
@@ -94,6 +111,10 @@ export interface VerdictInput {
   synthetic: Contrast[];
   minQualifying?: number;
   ordering?: { key: string; synthetic: string[] };
+  /** Which reference interval decides qualification: its own 95% interval (default) or the simultaneous family band. */
+  qualify?: 'interval' | 'family';
+  /** Mapped contrasts that may qualify but don't count toward the minimum (sign-forced ones). */
+  notCounted?: string[];
 }
 
 export interface VerdictResult {
@@ -120,6 +141,28 @@ export function kendallTau(a: string[], b: string[]): number | null {
   return (concordant - discordant) / ((shared.length * (shared.length - 1)) / 2);
 }
 
+/** Kendall's tau-b over the arms both sides score (memory-qa's scipy-matching tau-b), so a tied pair counts as a tie; null when either side has no order. */
+export function kendallTauB(a: Record<string, number>, b: Record<string, number>): number | null {
+  const shared = Object.keys(a).filter((x) => x in b && Number.isFinite(a[x]) && Number.isFinite(b[x]));
+  const t = tauB(shared.map((x) => a[x]!), shared.map((x) => b[x]!));
+  return Number.isFinite(t) ? t : null;
+}
+
+export const PRIMARY_OUTCOMES = ['HELD', 'NOT_HELD', 'INCONCLUSIVE'] as const;
+export type PrimaryOutcome = (typeof PRIMARY_OUTCOMES)[number];
+
+/**
+ * A layer's preregistered primary contrast (G2's batch 4 replication, amendment of 2026-11-11), read on the
+ * reference's own 95% interval alone; the layer's verdict is reported beside it and doesn't enter. HELD: the interval
+ * lies wholly on the side the synthetic estimate predicts. NOT_HELD: it lies wholly on the other side (or excludes
+ * zero where the synthetic estimate is zero). INCONCLUSIVE: it includes zero.
+ */
+export function primaryOutcome(reference: Contrast, synthetic: Contrast): PrimaryOutcome {
+  const side = reference.hi < 0 ? -1 : reference.lo > 0 ? 1 : 0;
+  if (side === 0) return 'INCONCLUSIVE';
+  return side === Math.sign(synthetic.estimate) ? 'HELD' : 'NOT_HELD';
+}
+
 export function verdict(input: VerdictInput): VerdictResult {
   const min = input.minQualifying ?? DEFAULT_MIN_QUALIFYING;
   if (!Number.isInteger(min) || min < 1) throw new Error('minQualifying must be a positive integer');
@@ -130,10 +173,13 @@ export function verdict(input: VerdictInput): VerdictResult {
   for (const id of input.mapped) {
     if (!refById.has(id)) throw new Error(`preregistered contrast ${id} is not in reference ${input.reference.id}`);
   }
-  const qualifying = input.mapped.filter((id) => excludesZero(refById.get(id)!));
+  const family = input.qualify === 'family';
+  if (family && !input.mapped.some((id) => refById.get(id)!.family_lo !== undefined)) throw new Error(`reference ${input.reference.id} has no family band, which this layer qualifies on`);
+  const banded = (c: Contrast) => c.family_lo !== undefined && c.family_hi !== undefined && excludesZero({ lo: c.family_lo, hi: c.family_hi });
+  const qualifying = input.mapped.filter((id) => (family ? banded(refById.get(id)!) : excludesZero(refById.get(id)!)));
   const tauRef = input.ordering ? input.reference.orderings?.[input.ordering.key] : undefined;
   const kendall_tau = input.ordering && tauRef ? kendallTau(input.ordering.synthetic, tauRef) : null;
-  if (qualifying.length < min) return { ...empty, qualifying, kendall_tau };
+  if (qualifying.filter((id) => !input.notCounted?.includes(id)).length < min) return { ...empty, qualifying, kendall_tau };
   const agree: string[] = [];
   const disagree: string[] = [];
   for (const id of input.mapped) {
@@ -142,7 +188,7 @@ export function verdict(input: VerdictInput): VerdictResult {
     if (!syn) throw new Error(`synthetic result has no contrast ${id}`);
     const qualifies = qualifying.includes(id);
     const sameSign = Math.sign(syn.estimate) === Math.sign(ref.estimate) && syn.estimate !== 0;
-    const opposedSignificant = excludesZero(syn) && Math.sign(syn.estimate) === -Math.sign(ref.estimate) && ref.estimate !== 0;
+    const opposedSignificant = !family && excludesZero(syn) && Math.sign(syn.estimate) === -Math.sign(ref.estimate) && ref.estimate !== 0;
     if (opposedSignificant || (qualifies && !sameSign)) disagree.push(id);
     else if (qualifies) agree.push(id);
   }

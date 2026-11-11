@@ -2,20 +2,25 @@
   {
     "id": "live-recall-b1",
     "file": "live-recall-b1.json",
-    "sha256": "2401172b60be9cc6034c6938c0fb3a89f05f610f0a90d61757c4911e6a4cac78",
+    "sha256": "12de227d1cb232b48b1011c9f0d7218ed695c15258840d97327358a1feae81e9",
     "status": "available"
   },
   {
     "id": "live-recall-b2",
     "file": "live-recall-b2.json",
-    "sha256": "f051200fefb23a8e82d5ebf0431e3cc4aa9dc7d0697c542f088412dee707b6e3",
+    "sha256": "7cb0d87b2fe8f158b2bfa3f0288ba74ad3ce41f6eddd2243a120f3eff0cb2b6e",
     "status": "available"
   },
   {
     "id": "live-recall-b3",
     "file": "live-recall-b3.json",
-    "sha256": "6aa31f14f495cfa171890b61fbe0fc8f773c033d62a9e8279f1797ee4271d187",
+    "sha256": "7455768f739be6a8853dab3a56ce6f5abe1f154a5a4292f04091e1ec93d6aea2",
     "status": "available"
+  },
+  {
+    "id": "live-recall-b4",
+    "file": "live-recall-b4.json",
+    "status": "pending"
   },
   {
     "id": "phase2-agent",

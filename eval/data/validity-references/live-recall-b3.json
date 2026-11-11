@@ -132,5 +132,24 @@
       "hybrid_lexical",
       "keyword"
     ]
-  }
+  },
+  "scores": {
+    "arms_exact": {
+      "keyword": 0.96,
+      "vector": 0.86,
+      "hybrid_lexical": 0.98,
+      "hybrid": 1,
+      "configured": 1
+    },
+    "arms_paraphrase": {
+      "keyword": 0.0204,
+      "vector": 0.2857,
+      "hybrid_lexical": 0.1224,
+      "hybrid": 0.2857,
+      "configured": 0.5714
+    }
+  },
+  "skipped": [
+    "window_vs_configured"
+  ]
 }

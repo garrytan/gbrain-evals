@@ -2,6 +2,27 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.216] - 2026-11-11
+
+### Recall's (G2) paraphrase-gap prediction gets a held-out test, fixed before the new questions exist
+
+- **What changed.** The [predictive-measures preregistration](docs/benchmarks/2026-11-09-predictive-measures-preregistration.md#2026-11-11-g2s-held-out-replication-on-batch-4)
+  now fixes how G2's prediction that paraphrases are found less often than exact forms is checked on batch 4, 50 new
+  real questions that don't exist yet. The outcome comes from one primary contrast, the configured arm's paraphrase gap,
+  read on its own 95% interval: HELD, NOT HELD or INCONCLUSIVE. Batch 2's 16 contrasts are reported beside it on a
+  simultaneous band (one max-t cluster bootstrap that resamples questions within each question type), and the ratio of
+  the synthetic gap to the real one is a frozen secondary with a Fieller interval (0.175, 0.060 to 0.357, on batch 2).
+  `run.ts freeze --protocol batch4` checks the new questions against batches 1 to 3 by sha256 and refuses with
+  `LR_FREEZE_OVERLAP` if they share a question id, a form or a gold page, and a batch4 scorecard carries the family band
+  and the held-out check. `verdict.ts` now reports Kendall tau-b from per-arm scores, so tied arms count as ties.
+- **What stays the same.** Every published scorecard, verdict and verdict file stays as written. G2's batch 2 layer
+  still reads PREDICTIVE with 13 of 16 contrasts qualifying. Tau-b reads 0.600 exact and 0.949 paraphrase, where the
+  published file keeps 0.600 and 0.800. The new `b4` layer reads NO_REFERENCE_YET until batch 4's counted scorecard is
+  committed at `docs/benchmarks/live-recall-batch4/b4-scorecard.json`.
+- **What to expect.** Batch 4 is requested only after this is on main, and its freeze and counted run use this merge
+  commit. HELD was expected from batches 1 to 3 and shows the gap's direction only; gating on its size needs the ratio
+  to be stable.
+
 ## [0.10.215] - 2026-11-11
 
 ### The refused-write suite counts a replay of the request id gbrain names as a retry

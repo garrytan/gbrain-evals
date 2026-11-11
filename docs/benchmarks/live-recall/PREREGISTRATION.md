@@ -503,6 +503,70 @@ finishes. A post-relabel read, if anyone makes one, is descriptive, labelled tha
   and batch 3 layers each compare a synthetic brain with one real run and are never pooled, so the two layers differ in
   visibility epoch and label state as well as in questions, and their results say so.
 
+## Batch 4 amendment
+
+Fixed on 2026-11-11 by GBEV-77 (GST-2449), before any batch 4 question was written. Batch 4 is a fourth, independent set
+of 50 questions, made the way batch 2 was, for the predictive-measures test of G2's paraphrase-gap prediction
+([amendment of 2026-11-11](../2026-11-09-predictive-measures-preregistration.md#2026-11-11-g2s-held-out-replication-on-batch-4)).
+Arms, metrics, eligibility, custody, the read-only barrier and batch 2's comparisons are unchanged. What changes: the
+freeze proves the questions are new, records the gbrain version and visibility epoch, and the scorecard adds a
+simultaneous band over its success@5 comparisons.
+
+**Questions.** Written fresh on the box in batch 2's format and under batch 2's rules: 10 questions of each of the five
+live types, an exact and a paraphrased form each, gold chosen page first from a new seeded sample, error_string gold
+drawn from more than 6 pages, and a window on every time_window question. Nothing may come from batches 1 to 3: no
+question id, no form (compared after folding case, spacing and punctuation), and no gold page that was a batch 1 to 3
+gold, stale or decoy page.
+
+**The freeze checks that.** Wintermute freezes with `run.ts freeze --protocol batch4`, the `--gbrain` it will run, and
+the three earlier question files, one `--prior` each. The runner checks their sha256 against the frozen ones below,
+counts what the new file shares with them, and refuses with `LR_FREEZE_OVERLAP`, writing nothing, if it shares
+anything or a file is missing or wrong. Only counts are printed. `freeze.json` records the protocol, the question
+file's sha256, the counts by type, `gbrain_version`, `visibility_epoch`, the three earlier files' sha256
+(`prior_question_files`) and a zero `prior_overlap`.
+
+- Batch 1: `88eaa30c34d85d303aff2a0faf81e9adfe6a5815dadc5196879c827e6f02ae9f`
+- Batch 2: `dd69701c55534429fb758ca8335af175a3dfcc3c9aca6c9c2d2fc81bf3f11099`
+- Batch 3: `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e`
+
+**System under test and the visibility epoch.** Batch 4 measures the gbrain Wintermute's box runs at the freeze. As for
+batch 3, a counted run refuses a freeze from the other GBRA-398 epoch, and with the epoch `unknown` it needs the
+freeze's exact gbrain version. It also refuses a batch 4 freeze that records no clean check against the three earlier
+files (`LR_FREEZE_MISMATCH`). The counted run uses gbrain-evals at the merge commit of this amendment, on a clean tree.
+
+**If the box upgrades between freeze and run.** Batch 3's first counted attempt stopped with `LR_SCHEMA_MISMATCH` for
+that reason and needed a dated amendment. For batch 4 the rule is fixed now. The counted run passes `--gbrain` at the
+version the box runs when the run starts. If that version reads the freeze's visibility epoch, the freeze stands, and
+the scorecard records both versions (`gbrain_loaded_version` and `freeze_gbrain_version`); the results label every
+number with both. If the attempt stops with `LR_SCHEMA_MISMATCH` before any search, it is rerun once this way, with no
+new amendment. A run on the other epoch needs a new freeze, which counts as a new batch. There is one counted run: no
+later batch 4 run counts, and a second read, if anyone makes one, is descriptive and never pooled.
+
+**Relabel state.** If GBRA-398's relabel windows are still applying on the box, Wintermute records which windows had been
+applied at the freeze and at the run, and the results name both states. As in batch 3, a gold page still wrongly
+labelled private is missed by every arm alike, which pulls contrasts toward zero rather than reversing them.
+
+**Primary, secondaries and the family band.** Batch 2's P1 and P2 (paraphrase forms, Holm across the two) and its
+declared secondaries are batch 4's, replicated on new questions. The scorecard also carries a `family` block and a
+`family_ci95` on every success@5 comparison: a simultaneous 95% band over all of them from one bootstrap that resamples
+whole questions within each of the five question types (seed 20261106, 10,000 draws), computed on the box from the same
+records ([scorecard format](SCORECARD.md#scorecardjson)). The predictive-measures test reads that band; each comparison's own `ci95` is
+computed exactly as in batch 2.
+
+**Power.** At N = 50, as for batch 2: 12.5, 17.7 and 21.7 points for P1 or P2 at 10%, 20% and 30% discordant pairs.
+
+**What leaves the box.** `freeze.json` before any search, then `scorecard.json` and `scorecard.md` after the counted
+run, the relabel windows applied at the freeze and at the run, and the brain's embedding coverage at the freeze as
+aggregates (the share of chunks with no vector, the share with synopsis vectors, and the share of sampled media pages
+that are empty shells, with how each was counted). The coverage figures are descriptive: they show whether the
+conditions the synthetic brain copies still describe the real one, and they change no outcome.
+
+**Cost.** No paid model calls by us. Wintermute's keys pay for about one query embedding per form for `hybrid` and
+`configured` and one rerank call per configured query, as in batch 2.
+
+The batch 4 frozen sample, Wintermute's notes on it and the counted run commit are recorded in the results, as dated
+entries made before the counted run.
+
 ## Limits
 
 - One writer who knows the brain writes both the questions and the gold, so paraphrase difficulty and topic choice
