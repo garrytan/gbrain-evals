@@ -107,6 +107,17 @@ describe('qa-v2 judgeResponse against the fake upstream', () => {
     expect(receipts.filter(r => r.role === 'judge').map(r => r.verdict_path)).toEqual(['head', 'tail']);
     expect(paths).toEqual(['head', 'tail']);
   });
+
+  // Value: protects=a resume or rerun asks the judge again after a reply with no verdict, while a reply with one replays from the cache; fails_when=judgeResponse caches the unanswered reply, so every rerun replays the same judge error without a call; why_new=the nightly and memory-qa resume a judge harness row through the same cache; seam=ChatClient's cache against the local upstream; no_claim=caches written before this change
+  test('a reply with no verdict is not cached, so a rerun asks the judge again', async () => {
+    replies.push({ text: '', stop: 'max_tokens' }, { text: 'yes', stop: 'end_turn' });
+    const chat = new ChatClient(tmp(), () => 0);
+    const judge = () => judgeResponse(chat, 'lme-s', OPUS, question(), 'The trip took 21 days.', 0);
+    await expect(judge()).rejects.toBeInstanceOf(UnansweredJudgment);
+    expect(await judge()).toBe(1);
+    expect(await judge()).toBe(1);
+    expect(sent).toHaveLength(2);
+  });
 });
 
 describe('memory-qa and the nightly count an unanswered judgment as a judge harness row', () => {

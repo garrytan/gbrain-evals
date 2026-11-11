@@ -92,6 +92,8 @@ export interface ChatOptions {
   attempt?: number;
   /** Finish reasons whose reply is returned but never written to the cache (outside the key; a pinned judge's truncations and refusals). */
   uncachedFinishes?: readonly string[];
+  /** A reply is written to the cache only when this holds (outside the key; a yes-or-no judge reply that holds no verdict is not). */
+  cacheIf?: (reply: { text: string; finish: string | null }) => boolean;
 }
 
 /** One failed attempt to an OpenAI-compatible provider, in attempt order. */
@@ -191,7 +193,7 @@ export class ChatClient extends BaseChatClient implements ChatLike {
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
         const r = compat ? await compatChat(compat, this.compatTimeoutMs) : provider === 'anthropic' ? await anthropicChat(name, prompt, opts) : await openaiChat(name, prompt, opts);
-        if (!opts.uncachedFinishes?.includes(String(r.finish))) writeFileSync(path, JSON.stringify(r));
+        if (!opts.uncachedFinishes?.includes(String(r.finish)) && (opts.cacheIf?.(r) ?? true)) writeFileSync(path, JSON.stringify(r));
         return { ...r, cached: false, attempt_errors: attemptErrors, ...(compat ? { compat_attempts: compatAttempts } : {}) };
       } catch (e) {
         lastError = e;
@@ -282,14 +284,15 @@ function compatReceipts(receipts: UsageReceipt[], out: Omit<ChatResultV2, keyof 
  * floor) recording through this module's `chatWithReceipts`, so an OpenAI-compatible judge's receipts carry what each
  * attempt sent, the response's identity and the usage a failed attempt reported. Each reply is read by `judgeVerdict`;
  * its path goes on the judge's receipt as `verdict_path` and into `paths`, and a reply with no verdict throws
- * UnansweredJudgment once both are recorded.
+ * UnansweredJudgment once both are recorded. Such a reply is never cached, so a rerun asks the judge again.
  */
 export async function judgeResponse(client: ChatLike, benchmark: string, judgeModel: string, q: MemoryQuestion, response: string, replicate: number, receipts?: UsageReceipt[], paths?: VerdictPath[]): Promise<number> {
   const prompts = judgePromptsFor(benchmark, q, response);
   let yes = 0;
   for (const p of prompts) {
     const ctx = { role: 'judge' as const, question_id: q.id, replicate, model: judgeModel, delivered: null };
-    const out = receipts ? await chatWithReceipts(client, ctx, p, { maxTokens: 10, replicate }, receipts) : await client.chat(judgeModel, p, { maxTokens: 10, replicate });
+    const opts: ChatOptions = { maxTokens: 10, replicate, cacheIf: r => judgeVerdict(r).path !== 'none' };
+    const out = receipts ? await chatWithReceipts(client, ctx, p, opts, receipts) : await client.chat(judgeModel, p, opts);
     const verdict = judgeVerdict(out);
     if (receipts) receipts[receipts.length - 1]!.verdict_path = verdict.path;
     paths?.push(verdict.path);
