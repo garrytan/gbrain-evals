@@ -40,7 +40,7 @@ import { McpClient, MeteringProxy, directGitPath, GBRAIN_EMBED_MODEL } from '../
 import { provider } from '../cat40/loop.ts';
 import { runCli, type RunEnv } from '../lifecycle/drivers.ts';
 import { loadCorpus, type MemoryQuestion, type Session } from '../memory-qa/corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, judgeResponse } from '../memory-qa/qa.ts';
+import { ChatClient, DEFAULT_JUDGE, judgeResponse, tailVerdicts, UnansweredJudgment, type VerdictPath } from '../memory-qa/qa-v2.ts';
 import { loadBeamSplit, type BeamSize } from './beam.ts';
 import { ClaudeTranscript } from './transcript.ts';
 import { additionalContext, runHook, type HookEnv } from './hooks.ts';
@@ -108,6 +108,8 @@ export interface CellRow {
   id: string; conversation: string; question_id: string; category: string; abstention: boolean; arm: string; model: string; window: number;
   stream_questions: number; usd_stream: number;
   answer: string; qa_scores: number[]; qa_score: number;
+  /** Verdicts read from the last standalone yes or no of a complete judge reply (qa-v2 `judgeVerdict`); absent when none were. */
+  qa_tail_verdicts?: number;
   sessions: number; live_turns: number; compactions: number; notices: number; notice_segments: number; missed_segments: number;
   remember_calls: number; remember_batched: number; remember_items: number; facts_saved: number; evidence_saved: boolean; evidence_recall5: boolean | null;
   core_chars: number | null; tool_calls: Record<string, number>; tool_errors: Record<string, number>; tool_error_samples: string[]; truncated_tool_calls: number; errors: string[];
@@ -358,8 +360,15 @@ export async function runCell(ctx: Ctx, convId: string, qs: MemoryQuestion[], se
       usd_gbrain: row.usd_gbrain / qs.length, usd_profile: row.usd_profile / qs.length, ms: Date.now() - t0,
     };
     if (a && a.answer) {
-      for (let k = 0; k < ctx.judgeRuns; k++) r.qa_scores.push(await judgeResponse(ctx.chat, ctx.benchmark, ctx.judgeModel, q, r.answer, k));
-      r.qa_score = r.qa_scores.reduce((x, y) => x + y, 0) / r.qa_scores.length;
+      const paths: VerdictPath[] = [];
+      try {
+        for (let k = 0; k < ctx.judgeRuns; k++) r.qa_scores.push(await judgeResponse(ctx.chat, ctx.benchmark, ctx.judgeModel, q, r.answer, k, undefined, paths));
+        r.qa_score = r.qa_scores.reduce((x, y) => x + y, 0) / r.qa_scores.length;
+      } catch (e) {
+        if (!(e instanceof UnansweredJudgment)) throw e;
+        r.errors.push(`judge: ${e.message}`);
+      }
+      Object.assign(r, tailVerdicts(paths));
     } else if (!errors.length) r.errors.push('no answer');
     rows.push(r);
   }

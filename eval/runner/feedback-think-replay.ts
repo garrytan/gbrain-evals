@@ -37,7 +37,7 @@ import { gbrainSpecFrom, importGbrain, productIdentityFor, resolveGbrainUnderTes
 import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
 import { recallAllAtK, uniqueInOrder } from './metrics.ts';
 import { loadCorpus, occurrenceId, renderSessionPage, type MemoryQuestion } from './memory-qa/corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, judgePromptsFor, judgeYes, repeatsTrap } from './memory-qa/qa.ts';
+import { ChatClient, DEFAULT_JUDGE, judgePromptsFor, judgeVerdict, repeatsTrap, UnansweredJudgment } from './memory-qa/qa-v2.ts';
 import { DEFAULT_THINK_MODEL } from './memory-qa/run-systems.ts';
 import { devConversations, loadSplit } from './decisions/splits.ts';
 import { appendAccessLog } from './sealed-confirmation-lib.ts';
@@ -112,6 +112,8 @@ const PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.rerank
 interface Row {
   arm: string; id: string; conversation: string; category: string; abstention: boolean;
   judge: number[]; trap: number | null; gather_recall_at_5: number | null; synthesis_status: string | null; answer: string; error?: string;
+  /** Verdicts read from the last standalone yes or no of a complete judge reply (qa-v2 `judgeVerdict`); absent when none were. */
+  judge_tail_verdicts?: number;
 }
 const rowsPath = join(output, 'rows.ndjson');
 writeFileSync(rowsPath, '');
@@ -151,15 +153,22 @@ async function scoreQuestion(e: any, arm: string, q: MemoryQuestion, bySlug: Map
   try {
     const a = await answer(e, arm, q);
     const judge: number[] = [];
+    let tails = 0;
     for (let r = 0; r < judgeRuns; r++) {
       const prompts = judgePromptsFor('locomo', q, a.text);
       let yes = 0;
-      for (const p of prompts) if (judgeYes((await chat.chat(judgeModel, p, { maxTokens: 10, replicate: r, temperature: judgeTemperature })).text)) yes++;
+      for (const p of prompts) {
+        const reply = await chat.chat(judgeModel, p, { maxTokens: 10, replicate: r, temperature: judgeTemperature });
+        const verdict = judgeVerdict(reply);
+        if (verdict.path === 'none') throw new UnansweredJudgment(reply.finish);
+        if (verdict.path === 'tail') tails++;
+        if (verdict.yes) yes++;
+      }
       judge.push(yes / prompts.length);
     }
     const sessions = uniqueInOrder(a.gathered.map(s => bySlug.get(s) ?? `?${s}`)).slice(0, TOP_K);
     const row: Row = { ...base, judge, trap: q.abstention && q.trap ? (repeatsTrap(a.text, q.trap) ? 1 : 0) : null,
-      gather_recall_at_5: q.gold.length ? recallAllAtK(sessions, new Set(q.gold), TOP_K) : null, synthesis_status: a.status, answer: a.text.slice(0, 1500) };
+      gather_recall_at_5: q.gold.length ? recallAllAtK(sessions, new Set(q.gold), TOP_K) : null, synthesis_status: a.status, answer: a.text.slice(0, 1500), ...(tails ? { judge_tail_verdicts: tails } : {}) };
     rows.push(row);
     appendFileSync(rowsPath, JSON.stringify(row) + '\n');
   } catch (err) {
