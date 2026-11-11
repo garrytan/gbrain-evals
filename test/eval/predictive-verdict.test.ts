@@ -1,13 +1,13 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { MANIFEST, REFERENCE_DIR } from '../../eval/runner/predictive/export-references.ts';
 import { G3_CAUSES } from '../../eval/generators/write-contract-gen.ts';
 import { B2_CONTRASTS, B3_ENTITY, B3_FRESHNESS, COUNTED_B2, COUNTED_B3, MAPPING, MEASURES } from '../../eval/runner/predictive/mapping.ts';
 import { SyntheticScorecardError, evaluateMeasure, main, readSynthetic } from '../../eval/runner/predictive/verdict.ts';
-import { ValidityReferenceError, loadReference, verdict, type Contrast, type ManifestEntry } from '../../eval/runner/predictive/validity.ts';
+import { ValidityReferenceError, kendallTau, kendallTauB, loadReference, primaryOutcome, verdict, type Contrast, type ManifestEntry, type ReferenceFile } from '../../eval/runner/predictive/validity.ts';
 
 const b1 = loadReference(MANIFEST, 'live-recall-b1')!;
 const b2 = loadReference(MANIFEST, 'live-recall-b2')!;
@@ -118,7 +118,7 @@ describe('predictive verdict on the committed references', () => {
   test('a layer is read only from a live-recall scorecard of its protocol, and a scorecard carrying no layer of a measure with a live reference refuses', () => {
     const asBatch2 = evaluateMeasure('G2', readSynthetic({ ...liveCard(b2.contrasts), protocol: 'batch2' }));
     expect(asBatch2.verdict).toBe('PREDICTIVE');
-    expect(asBatch2.layers.map(l => [l.id, l.status, l.in_scorecard])).toEqual([['b2', 'available', true], ['b3', 'not_in_scorecard', false]]);
+    expect(asBatch2.layers.map(l => [l.id, l.status, l.in_scorecard])).toEqual([['b2', 'available', true], ['b3', 'not_in_scorecard', false], ['b4', 'pending', true]]);
     expect(() => evaluateMeasure('G2', readSynthetic({ ...liveCard(b2.contrasts), protocol: 'batch3' }))).toThrow('carries no G2 layer');
     expect(() => evaluateMeasure('G2', readSynthetic(card([])))).toThrow(SyntheticScorecardError);
   });
@@ -268,5 +268,154 @@ describe('predictive mapping', () => {
     const prereg = readFileSync('docs/benchmarks/2026-11-09-predictive-measures-preregistration.md', 'utf8');
     expect(prereg).toContain('### 2026-11-09: G3\'s `two_range_read` pair with phase 2 arm B is not informative');
     for (const c of kept) expect(prereg).toContain('`' + c + '`');
+  });
+});
+
+describe('G2 batch 4 replication (amendment of 2026-11-11)', () => {
+  const dirs: string[] = [];
+  afterAll(() => { for (const d of dirs) rmSync(d, { recursive: true, force: true }); });
+  /** A manifest with live-recall-b4 available, built from batch 2's contrasts with each family band the given multiple of its interval's half-width. */
+  const withB4 = (widen: number, edit: (c: Contrast) => Contrast = c => c) => {
+    const dir = mkdtempSync(join(tmpdir(), 'verdict-b4-'));
+    dirs.push(dir);
+    for (const e of committedManifest) if (e.status === 'available') copyFileSync(join(REFERENCE_DIR, e.file), join(dir, e.file));
+    const contrasts = b2.contrasts.map(edit).map(c => ({ ...c, family_lo: c.estimate - widen * (c.estimate - c.lo), family_hi: c.estimate + widen * (c.hi - c.estimate) }));
+    const body = JSON.stringify({ id: 'live-recall-b4', source: 'test', contrasts, orderings: b2.orderings, scores: b2.scores } satisfies ReferenceFile, null, 2) + '\n';
+    writeFileSync(join(dir, 'live-recall-b4.json'), body);
+    writeFileSync(join(dir, 'manifest.json'), JSON.stringify(committedManifest.map(e => (e.id === 'live-recall-b4' ? { ...e, sha256: createHash('sha256').update(body).digest('hex'), status: 'available' } : e)), null, 2));
+    return join(dir, 'manifest.json');
+  };
+  const counted = JSON.parse(readFileSync('docs/benchmarks/predictive-measures/g2/real-593/scorecard.json', 'utf8'));
+
+  test('the committed G2 verdict is unchanged, with tau-b from per-arm scores and batch 4 pending', () => {
+    const r = evaluateMeasure('G2', readSynthetic(counted));
+    expect(r.verdict).toBe('PREDICTIVE');
+    const [b2Layer, b3Layer, b4Layer] = r.layers;
+    expect(b2Layer).toMatchObject({ id: 'b2', verdict: 'PREDICTIVE', qualifying_count: 13, qualify: 'interval', kendall_tau_method: { arms_exact: 'tau_b', arms_paraphrase: 'tau_b' } });
+    expect(b2Layer!.kendall_tau.arms_exact).toBeCloseTo(0.6, 10);
+    expect(b2Layer!.kendall_tau.arms_paraphrase).toBeCloseTo(9 / Math.sqrt(90), 10);
+    expect(b3Layer!.verdict).toBe('NOT_IN_SCORECARD');
+    expect(b4Layer).toMatchObject({ id: 'b4', status: 'pending', verdict: 'NO_REFERENCE_YET', missing_reference: 'live-recall-b4', qualify: 'family', in_scorecard: true });
+    const published = JSON.parse(readFileSync('docs/benchmarks/predictive-measures/verdicts/G2-batch2.json', 'utf8'));
+    expect(b2Layer!.contrasts.map(c => [c.reference_id, c.counted])).toEqual(published.layers[0].contrasts.map((c: any) => [c.reference_id, c.counted]));
+  });
+
+  test('tau-b counts tied arms as ties; the ordering tau broke the tie one way', () => {
+    const syn = { keyword: 0, vector: 0.89, hybrid_lexical: 0.58, hybrid: 0.89, configured: 0.9 };
+    expect(kendallTauB(syn, b2.scores!.arms_paraphrase!)).toBeCloseTo(0.9487, 4);
+    expect(kendallTau(readSynthetic(counted).orderings.arms_paraphrase!, b2.orderings!.arms_paraphrase!)).toBeCloseTo(0.8, 10);
+    expect(kendallTauB({ a: 1, b: 2, c: 3 }, { a: 3, b: 2, c: 1 })).toBe(-1);
+    expect(kendallTauB({ a: 1, b: 1 }, { a: 1, b: 2 })).toBeNull();
+    expect(kendallTauB({ a: 1 }, { a: 1 })).toBeNull();
+  });
+
+  test('batch 4 qualifies on the family band, and its primary reads HELD when the counted brain\'s signs hold', () => {
+    const r = evaluateMeasure('G2', readSynthetic(counted), withB4(1.5));
+    const b4 = r.layers.find(l => l.id === 'b4')!;
+    expect(b4).toMatchObject({ status: 'available', verdict: 'PREDICTIVE', qualify: 'family' });
+    expect(b4.qualifying_count).toBeLessThan(13);
+    expect(b4.contrasts.find(c => c.reference_id === 'p1_hybrid_vs_hybrid_lexical_paraphrase')!.reference.qualifies).toBe(false);
+    expect(b4.primary).toMatchObject({ id: 'paraphrase_vs_exact_configured', outcome: 'HELD', reference: { estimate: -0.4 }, synthetic: { estimate: -0.07 } });
+    expect(b4.primary!.ratio!.estimate).toBeCloseTo(0.175, 10);
+    expect(b4.primary!.ratio!.lo).toBeCloseTo(0.0600, 3);
+    expect(b4.primary!.ratio!.hi).toBeCloseTo(0.3567, 3);
+    expect(b4.qualifying_counted).toBe(b4.qualifying_count - b4.contrasts.filter(c => c.reference.qualifies && ['configured_vs_keyword_paraphrase', 'hybrid_vs_keyword_paraphrase', 'paraphrase_vs_exact_keyword'].includes(c.reference_id)).length);
+    expect(quiet(() => { const lines: string[] = []; const log = console.log; console.log = (l: string) => lines.push(l); try { main(['--measure', 'G2', '--synthetic', 'docs/benchmarks/predictive-measures/g2/real-593/scorecard.json', '--manifest', withB4(1.5)]); } finally { console.log = log; } return lines; }).some(l => l.includes('primary paraphrase_vs_exact_configured: HELD'))).toBe(true);
+  });
+
+  test('the outcome comes from the primary alone: NOT_HELD on the other side, INCONCLUSIVE across zero, whatever the layer reads', () => {
+    const flip = (c: Contrast) => (c.id === 'paraphrase_vs_exact_configured' ? { ...c, estimate: 0.2, lo: 0.05, hi: 0.35 } : c);
+    const notHeld = evaluateMeasure('G2', readSynthetic(counted), withB4(1.2, flip)).layers.find(l => l.id === 'b4')!;
+    expect(notHeld.verdict).toBe('NOT_PREDICTIVE');
+    expect(notHeld.primary!.outcome).toBe('NOT_HELD');
+    const zero = (c: Contrast) => (c.id === 'paraphrase_vs_exact_configured' ? { ...c, estimate: -0.05, lo: -0.2, hi: 0.1 } : c);
+    const inconclusive = evaluateMeasure('G2', readSynthetic(counted), withB4(1.2, zero)).layers.find(l => l.id === 'b4')!;
+    expect(inconclusive.verdict).toBe('PREDICTIVE');
+    expect(inconclusive.primary!.outcome).toBe('INCONCLUSIVE');
+    const tooWide = evaluateMeasure('G2', readSynthetic(counted), withB4(20)).layers.find(l => l.id === 'b4')!;
+    expect(tooWide.verdict).toBe('NO_REFERENCE_YET');
+    expect(tooWide.primary!.outcome).toBe('HELD');
+    const sideFlip = (c: Contrast) => (c.id === 'vector_vs_keyword' ? { ...c, estimate: -0.02, lo: -0.12, hi: 0.08 } : c);
+    const noisy = evaluateMeasure('G2', readSynthetic(counted), withB4(1.2, sideFlip)).layers.find(l => l.id === 'b4')!;
+    expect(noisy.verdict).toBe('PREDICTIVE');
+    expect(noisy.primary!.outcome).toBe('HELD');
+  });
+
+  test('primaryOutcome reads the primary\'s own interval against the predicted sign', () => {
+    const syn = { id: 'p', estimate: -0.07, lo: -0.12, hi: -0.03 };
+    const ref = (lo: number, hi: number) => ({ id: 'p', estimate: (lo + hi) / 2, lo, hi });
+    expect(primaryOutcome(ref(-0.5, -0.2), syn)).toBe('HELD');
+    expect(primaryOutcome(ref(0.1, 0.3), syn)).toBe('NOT_HELD');
+    expect(primaryOutcome(ref(-0.3, 0.1), syn)).toBe('INCONCLUSIVE');
+    expect(primaryOutcome(ref(-0.5, -0.2), { ...syn, estimate: 0, lo: 0, hi: 0 })).toBe('NOT_HELD');
+  });
+
+  test('the sign-forced contrasts alone never reach the minimum of 3', () => {
+    const forced = ['configured_vs_keyword_paraphrase', 'hybrid_vs_keyword_paraphrase', 'paraphrase_vs_exact_keyword'];
+    const onlyForced = (c: Contrast) => (forced.includes(c.id) ? c : { ...c, estimate: 0.01, lo: -0.1, hi: 0.12 });
+    const b4 = evaluateMeasure('G2', readSynthetic(counted), withB4(1, onlyForced)).layers.find(l => l.id === 'b4')!;
+    expect(b4.qualifying_count).toBe(3);
+    expect(b4.qualifying_counted).toBe(0);
+    expect(b4.verdict).toBe('NO_REFERENCE_YET');
+  });
+
+  test('a contrast the batch 4 scorecard skipped counts as not qualifying, and a skipped primary reads INCONCLUSIVE', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verdict-b4-skip-'));
+    dirs.push(dir);
+    for (const e of committedManifest) if (e.status === 'available') copyFileSync(join(REFERENCE_DIR, e.file), join(dir, e.file));
+    const gone = ['paraphrase_vs_exact_configured', 'configured_vs_hybrid'];
+    const contrasts = b2.contrasts.filter(c => !gone.includes(c.id)).map(c => ({ ...c, family_lo: c.lo, family_hi: c.hi }));
+    const body = JSON.stringify({ id: 'live-recall-b4', source: 'test', contrasts, orderings: b2.orderings, scores: b2.scores, skipped: gone }, null, 2) + '\n';
+    writeFileSync(join(dir, 'live-recall-b4.json'), body);
+    writeFileSync(join(dir, 'manifest.json'), JSON.stringify(committedManifest.map(e => (e.id === 'live-recall-b4' ? { ...e, sha256: createHash('sha256').update(body).digest('hex'), status: 'available' } : e))));
+    const b4 = evaluateMeasure('G2', readSynthetic(counted), join(dir, 'manifest.json')).layers.find(l => l.id === 'b4')!;
+    expect(b4.skipped).toEqual(['configured_vs_hybrid', 'paraphrase_vs_exact_configured']);
+    expect(b4.contrasts).toHaveLength(14);
+    expect(b4.primary).toMatchObject({ outcome: 'INCONCLUSIVE', reason: 'reference_skipped', reference: null, ratio: null });
+  });
+
+  test('a family layer refuses a reference with no bands at all, and a contrast without a band doesn\'t qualify', () => {
+    const r = ref2(b2.contrasts);
+    expect(() => verdict({ mapped: b2.contrasts.map(c => c.id), reference: r, synthetic: b2.contrasts, qualify: 'family' })).toThrow('no family band');
+    expect(verdict({ mapped: b2.contrasts.map(c => c.id), reference: r, synthetic: b2.contrasts }).verdict).toBe('PREDICTIVE');
+    const partly = ref2(b2.contrasts.map(c => (c.id === 'p2_configured_vs_hybrid_lexical_paraphrase' ? c : { ...c, family_lo: c.lo, family_hi: c.hi })));
+    expect(verdict({ mapped: b2.contrasts.map(c => c.id), reference: partly, synthetic: b2.contrasts, qualify: 'family' }).qualifying).not.toContain('p2_configured_vs_hybrid_lexical_paraphrase');
+  });
+
+  test('the b4 reference exports as available only from a counted batch4 scorecard at its fixed path', async () => {
+    const { B4_SCORECARD, buildReferences } = await import('../../eval/runner/predictive/export-references.ts');
+    const root = mkdtempSync(join(tmpdir(), 'export-b4-'));
+    dirs.push(root);
+    for (const f of ['docs/benchmarks/2026-11-06-live-recall-batch1/attempt2-scorecard.json', 'docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json', 'docs/benchmarks/2026-11-10-live-recall-batch3/b3-641-scorecard.json']) {
+      mkdirSync(dirname(join(root, f)), { recursive: true });
+      copyFileSync(f, join(root, f));
+    }
+    expect(buildReferences(root).pending.map(e => e.id)).toContain('live-recall-b4');
+    const real = JSON.parse(readFileSync('docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json', 'utf8'));
+    mkdirSync(dirname(join(root, B4_SCORECARD)), { recursive: true });
+    writeFileSync(join(root, B4_SCORECARD), JSON.stringify(real));
+    expect(() => buildReferences(root)).toThrow('counted batch4 scorecard');
+    const banded = { ...real, protocol: 'batch4', family: { method: 'max_t_cluster_bootstrap' }, comparisons: real.comparisons.map((c: any) => (c.metric === 'success_at_5' ? { ...c, family_ci95: [c.ci95[0] - 0.05, c.ci95[1] + 0.05] } : c)) };
+    writeFileSync(join(root, B4_SCORECARD), JSON.stringify(banded));
+    const built = buildReferences(root);
+    expect(built.pending.map(e => e.id)).not.toContain('live-recall-b4');
+    const b4 = built.files.find(([, r]) => r.id === 'live-recall-b4')![1];
+    expect(b4.contrasts.every(c => c.family_lo !== undefined)).toBe(true);
+    expect(b4.scores).toEqual(b2.scores);
+  });
+
+  test('verdict.json records a repo-relative scorecard path for a scorecard inside the repository', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'verdict-relpath-'));
+    dirs.push(dir);
+    expect(quiet(() => main(['--measure', 'G2', '--synthetic', 'docs/benchmarks/predictive-measures/g2/real-593/scorecard.json', '--out', join(dir, 'v.json')]))).toBe(0);
+    expect(JSON.parse(readFileSync(join(dir, 'v.json'), 'utf8')).scorecard.path).toBe('docs/benchmarks/predictive-measures/g2/real-593/scorecard.json');
+  });
+  const ref2 = (contrasts: Contrast[]): ReferenceFile => ({ id: 'x', source: 'test', contrasts });
+
+  test('the G2 b4 layer is the 16 batch 2 contrasts on the counted scorecard, with the configured paraphrase gap as primary', () => {
+    const b4 = MAPPING.G2.layers.find(l => l.id === 'b4')!;
+    expect(b4).toMatchObject({ reference: 'live-recall-b4', protocol: 'batch2', counted: COUNTED_B2, qualify: 'family', primary: 'paraphrase_vs_exact_configured' });
+    expect(b4.pairs.map(p => p.reference)).toEqual([...B2_CONTRASTS]);
+    expect(committedManifest.find(e => e.id === 'live-recall-b4')).toEqual({ id: 'live-recall-b4', file: 'live-recall-b4.json', status: 'pending' });
   });
 });

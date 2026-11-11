@@ -332,6 +332,165 @@ choosing one now, after seeing keyless latencies, would be a choice made from re
 **Machine.** One Ubicloud standard-16 VM (16 vCPUs, 64 GB) in `eu-central-h1`, Postgres 16 with pgvector and the settings
 in `vm-setup.sh`, with a 12-hour time limit. The VM is destroyed when the run ends.
 
+### 2026-11-11: G2's held-out replication on batch 4
+
+Fixed before any batch 4 question exists. Wintermute is asked for batch 4 only after this amendment is on main, and
+batch 4's freeze and counted run use gbrain-evals at this amendment's merge commit. The results record that commit and
+its time.
+
+**Why.** G2's batch 2 layer reads PREDICTIVE, and its counted condition copies the real brain's gaps. But the condition
+was named on 2026-11-10, after batch 2's results were committed on 2026-11-07, so its prediction that paraphrases are
+found less often than exact forms was never tested on questions it hadn't seen. The 13 qualifying contrasts also share
+batch 2's 50 questions, so they are not 13 independent checks. The [results](2026-11-10-predictive-measures.md) say
+both, and read that prediction as pending. This amendment tests it once, on a fourth question set, with every choice
+below fixed first.
+
+**What the outcome can show.** HELD is the expected result. Batches 1 to 3 measured configured search's paraphrase gap
+at −28, −40 and −44 points, and the primary below is that gap's sign. So HELD shows that the direction the gap-copied
+brain predicts holds on questions it hasn't seen, and that the clean brain, which predicts no gap, misses it. It shows
+the direction only: the copy predicts a gap a quarter to a sixth of the size batches 1 to 3 measured. The size is
+tested as a frozen secondary, the ratio below. A NOT HELD or INCONCLUSIVE result would be the surprise.
+
+**The synthetic side is frozen as counted.** The prediction is G2's counted scorecard for batch 2, unchanged:
+`docs/benchmarks/predictive-measures/g2/real-593/scorecard.json` (sha256
+`9c46cada069b756cb7bba8eaee5a2727c5a1230a1a5cff23bf93c74cd30d0264`): the real condition (synopsis vectors off, 10% of
+chunks unembedded, half the pages that aren't gold as shells), gbrain 0.60.593.0 (`27f8b9d6`), Voyage transports,
+question file `077569d7…2e89`, directory digest `6b3791fe…3551`. No synthetic run is made for the verdict. The
+five search setups are batch 2's arms: `keyword`, `vector`, `hybrid_lexical`, `hybrid` and `configured`, with
+`configured_window` read only through `window_vs_configured`.
+
+**Predicted signs.** Each contrast's predicted sign is the sign of the counted scorecard's success@5 estimate (B minus
+A, 95% question-clustered interval):
+
+| Contrast | Synthetic estimate (95% interval) | Predicted sign |
+|---|---|---|
+| `p1_hybrid_vs_hybrid_lexical_paraphrase` | +0.31 (+0.20 to +0.42) | + |
+| `p2_configured_vs_hybrid_lexical_paraphrase` | +0.32 (+0.21 to +0.43) | + |
+| `batch1_p1_hybrid_vs_hybrid_lexical` | +0.11 (+0.035 to +0.18) | + |
+| `hybrid_lexical_vs_keyword` | +0.405 (+0.345 to +0.465) | + |
+| `hybrid_vs_keyword` | +0.515 (+0.445 to +0.585) | + |
+| `configured_vs_keyword_paraphrase` | +0.90 (+0.84 to +0.95) | + |
+| `configured_vs_hybrid` | +0.035 (+0.015 to +0.06) | + |
+| `vector_vs_keyword` | +0.51 (+0.435 to +0.58) | + |
+| `configured_vs_keyword_exact` | +0.20 (+0.13 to +0.28) | + |
+| `hybrid_vs_keyword_paraphrase` | +0.89 (+0.83 to +0.95) | + |
+| `window_vs_configured` | 0 (0 to 0) | none |
+| `paraphrase_vs_exact_keyword` | −0.77 (−0.85 to −0.69) | − |
+| `paraphrase_vs_exact_vector` | −0.01 (−0.03 to 0) | − |
+| `paraphrase_vs_exact_hybrid_lexical` | −0.42 (−0.52 to −0.32) | − |
+| `paraphrase_vs_exact_hybrid` | −0.02 (−0.05 to 0) | − |
+| `paraphrase_vs_exact_configured` | −0.07 (−0.12 to −0.03) | − |
+
+Under the decision rule, a qualifying contrast with no predicted sign counts as a disagreement, so
+`window_vs_configured` fails the layer if batch 4 makes it qualify.
+
+**Primary.** `paraphrase_vs_exact_configured` on batch 4: configured search on paraphrases minus on exact forms, one
+pair per question, read on its own 95% question-clustered interval. It is the setup people use, and the only
+paraphrase contrast where the gap-copied brain and the clean brain point differently with a synthetic interval that
+excludes zero (clean: 0, from 0 to 0). The keyword and `hybrid_lexical` gaps are negative in both brains, and the
+vector and hybrid gaps include zero in both.
+
+**The family, read together.** All 16 contrasts form G2's batch 4 layer (`b4` in `eval/runner/predictive/mapping.ts`).
+A contrast qualifies when its simultaneous 95% band excludes zero. The band comes from one bootstrap that resamples
+batch 4's questions within each of the five question types (seed 20261106, 10,000 draws), recomputes all 16 contrasts on
+each draw from their own questions, scales each by its own bootstrap standard error, and takes the 95th percentile of
+the largest scaled deviation as the shared critical value (`simultaneousBand` in `eval/runner/stats/paired.ts`).
+Because every draw keeps the contrasts' shared questions together, the 16 bands cover together at about 95%, and
+correlated contrasts count for less than independent ones. Resampling within types keeps `window_vs_configured`, which
+only time_window questions carry, in every draw. The runner computes the band on Wintermute's box under
+`--protocol batch4` and sends it as `family_ci95` beside each contrast's own interval. Fixed details:
+
+- That max-t critical value sets every band; Bonferroni's for the same contrasts is recorded beside it and not used.
+  Bands are symmetric about the estimate and aren't clipped, which can't change whether one excludes zero.
+- A contrast with no variation in any draw keeps a zero-width band at its estimate, so it qualifies when the estimate
+  isn't zero. A contrast with no questions in some draw gets no band (`family_ci95` null) and can't qualify. No band
+  carries a non-finite number.
+- A contrast the scorecard skips, because an arm is invalid, can't qualify and is listed. A skipped primary makes the
+  outcome INCONCLUSIVE.
+- At least 3 contrasts must qualify, not counting the three whose sign keyword search forces by finding almost no
+  paraphrases on either brain (`configured_vs_keyword_paraphrase`, `hybrid_vs_keyword_paraphrase`,
+  `paraphrase_vs_exact_keyword`). The results give the count both ways.
+- The layer reads PREDICTIVE when every qualifying contrast matches its predicted sign, and NOT PREDICTIVE when one
+  doesn't. A contrast whose band includes zero is no evidence either way, so in this layer it can't disagree, whatever
+  the synthetic interval says.
+
+**Pass rule.** From the primary alone, fixed in `primaryOutcome` in `eval/runner/predictive/validity.ts`:
+
+- **HELD**: the primary's 95% interval lies wholly below zero.
+- **NOT HELD**: it lies wholly above zero.
+- **INCONCLUSIVE**: it includes zero, or the scorecard skipped the primary.
+
+The `b4` layer's verdict is reported beside the outcome and doesn't enter it, so a side contrast that changes sign by
+chance can't decide whether the paraphrase gap held. The layer still counts in G2's summary line under the decision
+rule. The rule reads signs, as G2's claim does: the gap-copied brain predicts a configured gap of 7 points, and batches
+1 to 3 measured 28, 40 and 44.
+
+**What each outcome changes.**
+
+| HELD | NOT HELD | INCONCLUSIVE |
+|---|---|---|
+| The paraphrase-gap prediction counts as held out for its direction. Only then may G2 gate as a paraphrase detector, and only on the gap's direction; a gate on its size needs the ratio below to be stable | The results say so plainly, the paraphrase-gap claim is withdrawn, and the generator gets one "Why null?" cycle (did the copied conditions still describe the brain, were there enough questions) before any cut | The prediction stays pending, and the results name the batch that would settle it |
+
+**Smallest detectable difference** (two-sided 0.05, 80% power), in points, at batch 4's planned size of 50 questions:
+
+| Comparison | 20% discordant | 30% discordant | 40% discordant | 50% discordant |
+|---|---|---|---|---|
+| Primary, on its own interval (50 pairs) | 17.7 | 21.7 | 25.1 | 28.0 |
+| A one-form contrast on the family band (50 pairs, critical value at most 2.955) | 24.0 | 29.4 | 34.0 | 38.0 |
+| A both-forms contrast on the family band (forms independent to fully correlated) | 17.0 to 24.0 | 20.8 to 29.4 | 24.0 to 34.0 | 26.8 to 38.0 |
+
+Batch 2's primary had 48% discordant pairs (24 of 50), where the MDD is 27.4 points.
+
+The family band's critical value lies between 1.96 and Bonferroni's 2.955 for 16 contrasts; the table uses the upper
+end. Batches 1 to 3 measured configured gaps of 28 to 44 points, all above the primary's MDD. On batch 2, 13 contrasts
+had intervals that excluded zero; widening each interval to the upper-end critical value (1.51 times its half-width)
+leaves 12, so batch 2's effects would have cleared the band.
+
+**Held out.** Batch 4 is written the way batch 2 was (live-recall [batch 2
+amendment](live-recall/PREREGISTRATION.md#batch-2-amendment)): 50 new questions, 10 of each of the five live types,
+each with an exact and a paraphrased form, gold chosen page first from a new seeded sample. None may share a question
+id, a form or a gold page with batches 1 to 3. `run.ts freeze --protocol batch4` takes the three earlier question files
+with `--prior`, checks their sha256 against the frozen ones (`88eaa30c…`, `dd69701c…`, `c023694e…`), and refuses
+with `LR_FREEZE_OVERLAP` if any new question id matches an earlier one, any form matches an earlier form after folding
+case, spacing and punctuation, or any gold page was an earlier gold, stale or decoy page. The freeze records the gbrain
+version and the GBRA-398 visibility epoch as batch 3's does, and a counted batch 4 run refuses a freeze from the other
+epoch, or one without a clean check (`LR_FREEZE_MISMATCH`).
+
+**gbrain version.** Batch 4 measures the gbrain Wintermute's box runs at its freeze. The synthetic side stays at
+0.60.593.0, so the prediction crosses gbrain versions, and the results say which versions they compare. Batch 3's
+counted run stopped once with `LR_SCHEMA_MISMATCH` after the box upgraded between freeze and run, and needed an
+amendment. For batch 4 that case is fixed now: the counted run loads the gbrain the box runs at run time if its
+visibility epoch matches the freeze's, and both versions are recorded. After an `LR_SCHEMA_MISMATCH` it is rerun once
+under this rule, with no new amendment. There is one counted run. Wintermute also reports which GBRA-398 relabel
+windows had been applied at the freeze and at the run.
+
+**The size, as a frozen secondary** (GBEV-3 at the plan gate). The ratio of the synthetic gap to batch 4's real gap on
+the primary, with a 95% Fieller interval for the ratio of two independent estimates, each standard error read from its
+95% interval as width over 3.92 (`fiellerRatio` in `eval/runner/stats/paired.ts`, in verdict.ts's primary block).
+On batch 2 it is 0.175 (0.060 to 0.357). The results call the underestimate stable if batch 4's interval contains 0.175,
+and not stable if it doesn't. A stable ratio is a number a nightly gate could calibrate on; an unstable one means it
+can't. The ratio never changes the outcome.
+
+**Other secondaries** (reported, never gating):
+
+- The `b4` layer's verdict, with the qualifying count with and without the three sign-forced contrasts.
+- The clean brain's reading of batch 4: `verdict.ts --secondary` on `g2/secondary/clean-593/scorecard.json`.
+- Batch 4's own live-recall P1 and P2, batch 2's primaries replicated on new questions (live-recall [batch 4
+  amendment](live-recall/PREREGISTRATION.md#batch-4-amendment)).
+- The configured gap's size beside the synthetic estimate.
+- Kendall tau-b over the arms (below).
+- The real brain's embedding coverage at batch 4's freeze (unembedded chunk share, synopsis coverage, shell page share),
+  as aggregates Wintermute counts on the box and states how it counted, reported beside the knobs' measured values to
+  show whether the copied conditions still describe the brain. They are descriptive and can't change the outcome.
+- The same synthetic brain run again at batch 4's gbrain version, only if a paid window is granted for it. It is
+  descriptive whatever it shows.
+
+**Tau-b.** `verdict.ts` counted a tie as a disagreement: on batch 2 the counted brain's paraphrase rates tie
+`vector` and `hybrid` at 89%, and the ordering broke the tie against the real brain's order. It now reports Kendall's
+tau-b from each arm's success@5 on both sides, which counts ties as ties: 0.600 exact and 0.949 paraphrase on batch 2,
+where #419's verdict file reads 0.600 and 0.800. Tau is reported and never gates, so no verdict changes. The published
+verdict files stay as written.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.

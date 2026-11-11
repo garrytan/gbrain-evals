@@ -82,6 +82,26 @@ All commands run from the repository root.
      --gbrain <gbrain checkout>@<commit>
    ```
 
+   For batch 4 (a fourth set made like batch 2, [batch 4 amendment](PREREGISTRATION.md#batch-4-amendment)), check out
+   the gbrain-evals commit the request names, then freeze with `--protocol batch4`, the same `--gbrain` you will run
+   with, and the three earlier question files on the box, one `--prior` each, in any order. The runner checks each
+   file's sha256 against batches 1 to 3's, then counts the question ids, forms (after folding case, spacing and
+   punctuation) and gold pages the new file shares with them. Anything shared, or a missing or wrong file, refuses with
+   [`LR_FREEZE_OVERLAP`](#lr_freeze_overlap) and writes nothing. Only counts are printed. `freeze.json` also records
+   the epoch fields batch 3's does, the three files' sha256 (`prior_question_files`) and a zero `prior_overlap`.
+
+   ```bash
+   bun eval/runner/live-recall/run.ts freeze --questions <batch 4 questions.jsonl> --out freeze.json --protocol batch4 \
+     --gbrain <gbrain checkout>@<commit> \
+     --prior <batch 1 questions.jsonl> --prior <batch 2 questions.jsonl> --prior <batch 3 questions.jsonl>
+   ```
+
+   The earlier files' sha256 values:
+
+   - Batch 1: `88eaa30c34d85d303aff2a0faf81e9adfe6a5815dadc5196879c827e6f02ae9f`
+   - Batch 2: `dd69701c55534429fb758ca8335af175a3dfcc3c9aca6c9c2d2fc81bf3f11099`
+   - Batch 3: `c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e`
+
 5. **Run**, after we confirm the freeze is committed:
 
    ```bash
@@ -93,6 +113,13 @@ All commands run from the repository root.
    For batch 2's counted run, pass the gbrain commit of v0.60.593.0, the release the box runs after its 2026-11-07
    upgrade, instead of `52b9ccae` ([batch 2 amendment](PREREGISTRATION.md#batch-2-amendment)). A second run of the
    same batch 2 file at `52b9ccae` is what the pooled and version-change secondaries need.
+
+   For batch 4's counted run, use the same gbrain-evals commit as the freeze, on a clean tree, and pass `--gbrain` at the
+   version the box runs when the run starts. If the box upgraded since the freeze and that version reads the same
+   visibility epoch, the freeze stands and the scorecard records both versions. If the run stops with
+   [`LR_SCHEMA_MISMATCH`](#lr_schema_mismatch), rerun it once at the box's current version; no new freeze or
+   amendment is needed. Send the GBRA-398 relabel windows applied at the freeze and at the run, and the brain's embedding
+   coverage at the freeze as aggregates, with the scorecard. There is one counted batch 4 run.
 
    Before the first question, the runner sends one public probe query through every arm and stops with
    [`LR_ARM_PREFLIGHT`](#lr_arm_preflight) if any arm errors, is refused a model call, fails its reranker open or
@@ -425,8 +452,10 @@ The question file has a problem at the line and field named. Fix it and freeze a
 ### LR_FREEZE_MISMATCH
 
 The question file's hash differs from `freeze.json`, or a counted run was started without `--questions` and
-`--freeze`. Under batch 3 it also means the freeze records no `visibility_epoch`, or its epoch differs from the run's
-(GBRA-398), or both epochs read `unknown` and the gbrain versions differ: freeze again with the gbrain you run. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
+`--freeze`. Under batch 3 and batch 4 it also means the freeze records no `visibility_epoch`, or its epoch differs from the run's
+(GBRA-398), or both epochs read `unknown` and the gbrain versions differ: freeze again with the gbrain you run. Under
+batch 4 it also means the freeze records no clean check against the three earlier question files
+(`prior_question_files`, `prior_overlap`): freeze again with the three `--prior` files. Freeze this exact file and send the new numbers before the counted run. From `compare`, it means the two
 run directories were made on different question files. In phase 2 it means the task file's hash differs from
 `freeze.json`, or the kept line count does not match it: run with the frozen file, or freeze again. On a phase 2
 `--resume` it means the resume differs from the session that started the run directory in its harness digest, loaded
@@ -434,6 +463,14 @@ gbrain version or commit, schema version, barrier kind, the source it reads, con
 mode, reranker or embedding model, CRAG settings, result cache flag, tool definitions), models, arms, forms or kept
 tasks (the detail names which). Resume with the same harness, barrier, source, brain configuration and flags, or start
 a new run directory.
+
+### LR_FREEZE_OVERLAP
+
+A batch 4 freeze found a problem with the held-out check, and wrote nothing. Either the three `--prior` files aren't
+batches 1 to 3 (one is missing, repeated or has another sha256; the detail names the first 12 characters of each missing
+hash and how many files were given), or the new question file shares question ids, forms or gold pages with them (the
+detail gives the three counts). Pass the right files, or replace the shared questions, and freeze again. A gold page
+counts as shared when it was a gold, stale or decoy page in batches 1 to 3.
 
 ### LR_COMPARE_CONTROL
 

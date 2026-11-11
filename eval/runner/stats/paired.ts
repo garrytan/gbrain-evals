@@ -205,6 +205,117 @@ export function clusteredPairedDelta(pairs: readonly PairedItem[], options: Pair
   };
 }
 
+export interface BandMember { id: string; pairs: readonly PairedItem[] }
+
+export interface SimultaneousBand {
+  method: 'max_t_cluster_bootstrap';
+  level: number;
+  seed: number;
+  draws: number;
+  /** Distinct clusters across every member; each draw resamples as many from each stratum as the stratum holds. */
+  n_clusters: number;
+  n_strata: number;
+  /** The level quantile of the largest studentized deviation across banded members, which sets every band; null with no varying member. */
+  critical_value: number | null;
+  /** The normal critical value a Bonferroni split over the same members would use, recorded beside it and never used. */
+  bonferroni_critical_value: number;
+  /**
+   * In input order: each member's delta, its bootstrap standard error and its band: zero width for a member that never
+   * varies, and null (no band, so it cannot qualify) for a member that has no pairs in some draw or fewer than two
+   * clusters in all.
+   */
+  members: Array<{ id: string; delta: number; se_boot: number | null; ci: [number, number] | null }>;
+}
+
+/**
+ * A simultaneous band over several paired deltas measured on shared clusters (question ids): one cluster bootstrap
+ * over the union of the members' clusters, resampling within each stratum (a question type, fixed by design) when
+ * strata are given, every member recomputed on the same draw from its own clusters, each studentized by its own
+ * bootstrap standard error, and the band's half-width the level quantile of the largest absolute studentized deviation
+ * times that error. All members' bands then cover together at about the stated level, because the correlation that
+ * shared questions create is in the draws rather than assumed away. No returned number is non-finite.
+ */
+export function simultaneousBand(members: readonly BandMember[], options: { seed: number; draws: number; level?: number; strata?: Readonly<Record<string, string>> }): SimultaneousBand {
+  const level = options.level ?? 0.95;
+  if (!members.length) throw new Error('simultaneousBand needs at least one member');
+  if (!Number.isSafeInteger(options.draws) || options.draws < 1000) throw new Error('simultaneousBand needs at least 1000 draws');
+  if (!(level > 0 && level < 1)) throw new Error('simultaneousBand level must be between 0 and 1');
+  if (new Set(members.map(m => m.id)).size !== members.length) throw new Error('simultaneousBand member ids must be unique');
+  for (const m of members) {
+    if (!m.pairs.length || !m.pairs.every(p => finite(p.a) && finite(p.b) && typeof p.cluster === 'string' && p.cluster)) throw new Error('invalid paired observations in member ' + m.id);
+  }
+  const clusterIds = [...new Set(members.flatMap(m => m.pairs.map(p => p.cluster)))].sort((x, y) => x < y ? -1 : x > y ? 1 : 0);
+  const index = new Map(clusterIds.map((id, i) => [id, i]));
+  const g = clusterIds.length;
+  const sums = members.map(m => {
+    const s = new Float64Array(g), c = new Float64Array(g);
+    for (const p of m.pairs) { const j = index.get(p.cluster)!; s[j] += p.b - p.a; c[j] += 1; }
+    return { s, c };
+  });
+  const deltas = sums.map(({ s, c }) => s.reduce((a, x) => a + x, 0) / c.reduce((a, x) => a + x, 0));
+  const byStratum = new Map<string, number[]>();
+  clusterIds.forEach((id, j) => { const k = options.strata?.[id] ?? ''; byStratum.set(k, [...(byStratum.get(k) ?? []), j]); });
+  const strata = [...byStratum.entries()].sort(([x], [y]) => x < y ? -1 : x > y ? 1 : 0).map(([, js]) => js);
+  const base = { method: 'max_t_cluster_bootstrap' as const, level, seed: options.seed, draws: options.draws, n_clusters: g, n_strata: strata.length };
+  const bonferroni = (k: number) => normalQuantile(1 - (1 - level) / (2 * Math.max(1, k)));
+  if (g < 2) return { ...base, critical_value: null, bonferroni_critical_value: bonferroni(members.length), members: members.map((m, i) => ({ id: m.id, delta: deltas[i]!, se_boot: null, ci: null })) };
+
+  const rng = seededRandom(options.seed);
+  const boot = members.map(() => new Float64Array(options.draws));
+  const weight = new Float64Array(g);
+  for (let d = 0; d < options.draws; d++) {
+    weight.fill(0);
+    for (const js of strata) for (let j = 0; j < js.length; j++) weight[js[Math.floor(rng() * js.length)]!] += 1;
+    for (let m = 0; m < members.length; m++) {
+      const { s, c } = sums[m]!;
+      let sum = 0, count = 0;
+      for (let j = 0; j < g; j++) if (weight[j]) { sum += weight[j]! * s[j]!; count += weight[j]! * c[j]!; }
+      boot[m]![d] = count > 0 ? sum / count : Number.NaN;
+    }
+  }
+  const se = boot.map(draws => {
+    if (!draws.every(Number.isFinite)) return null;
+    const mean = draws.reduce((a, x) => a + x, 0) / draws.length;
+    return Math.sqrt(draws.reduce((a, x) => a + (x - mean) ** 2, 0) / (draws.length - 1));
+  });
+  const varying = se.map(s => s !== null && s > 1e-12);
+  const maxT = new Array<number>(options.draws);
+  for (let d = 0; d < options.draws; d++) {
+    let t = 0;
+    for (let m = 0; m < members.length; m++) if (varying[m]) t = Math.max(t, Math.abs(boot[m]![d]! - deltas[m]!) / se[m]!);
+    maxT[d] = t;
+  }
+  maxT.sort((x, y) => x - y);
+  const k = varying.filter(Boolean).length;
+  const critical = k ? maxT[Math.ceil(level * options.draws) - 1]! : null;
+  return {
+    ...base,
+    critical_value: critical,
+    bonferroni_critical_value: bonferroni(k || members.length),
+    members: members.map((m, i) => ({
+      id: m.id, delta: deltas[i]!, se_boot: se[i]!,
+      ci: se[i] === null ? null : varying[i] && critical !== null ? [deltas[i]! - critical * se[i]!, deltas[i]! + critical * se[i]!] : [deltas[i]!, deltas[i]!],
+    })),
+  };
+}
+
+/**
+ * Fieller's interval for the ratio of two independent estimates, each given as an estimate with a two-sided interval
+ * at the same level (its standard error read as the interval's width over 2z). Null bounds when the denominator's
+ * interval is too close to zero for the ratio to be bounded.
+ */
+export function fiellerRatio(num: { estimate: number; lo: number; hi: number }, den: { estimate: number; lo: number; hi: number }, level = 0.95): { estimate: number | null; lo: number | null; hi: number | null } {
+  const z = normalQuantile(1 - (1 - level) / 2);
+  const a = num.estimate, b = den.estimate;
+  const sa = (num.hi - num.lo) / (2 * z), sb = (den.hi - den.lo) / (2 * z);
+  const estimate = b !== 0 ? a / b : null;
+  const qa = b * b - z * z * sb * sb, qb = -2 * a * b, qc = a * a - z * z * sa * sa;
+  const disc = qb * qb - 4 * qa * qc;
+  if (!(qa > 0) || disc < 0) return { estimate, lo: null, hi: null };
+  const root = Math.sqrt(disc);
+  return { estimate, lo: (-qb - root) / (2 * qa), hi: (-qb + root) / (2 * qa) };
+}
+
 export interface McNemarResult {
   /** A pass, B fail. */
   losses: number;

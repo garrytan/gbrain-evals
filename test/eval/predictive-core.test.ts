@@ -114,7 +114,8 @@ describe('published references', () => {
       expect(loaded).toEqual(built);
       expect(built.contrasts.filter((c) => c.lo > 0 || c.hi < 0).length).toBeGreaterThanOrEqual(3);
     }
-    expect(files.map(([, built]) => built.id)).toEqual(['live-recall-b1', 'live-recall-b2', 'live-recall-b3']);
+    const { B4_SCORECARD } = await import('../../eval/runner/predictive/export-references.ts');
+    expect(files.map(([, built]) => built.id)).toEqual(['live-recall-b1', 'live-recall-b2', 'live-recall-b3', ...(existsSync(B4_SCORECARD) ? ['live-recall-b4'] : [])]);
     expect(loadReference(MANIFEST, 'phase2-agent')).toBeNull();
   });
 });

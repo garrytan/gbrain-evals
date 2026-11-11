@@ -12,7 +12,18 @@
  * must qualify, and PREDICTIVE needs every qualifying contrast's sign matched
  * and no significant synthetic contrast pointing the other way. It prints each
  * layer's verdict, the qualifying count, sign agreement per contrast and
- * Kendall's tau over the reference's arm orderings (reported, never gating).
+ * Kendall's tau over the arms (reported, never gating): tau-b from per-arm
+ * success@5 where both sides carry scores, so tied arms count as ties, and
+ * tau over the orderings otherwise.
+ *
+ * A layer frozen with qualify 'family' (G2's b4 layer, amendment of
+ * 2026-11-11) qualifies reference contrasts on the reference's simultaneous
+ * band instead of their own intervals, leaves its sign-forced contrasts out of
+ * the minimum, and counts a contrast the reference skipped (an arm invalid) as
+ * not qualifying. A layer with a primary contrast also reads it with
+ * validity.ts's primaryOutcome, from the primary alone: HELD, NOT_HELD or
+ * INCONCLUSIVE (also when the reference skipped it), with the ratio of the
+ * synthetic estimate to the reference's and its Fieller interval.
  *
  * One scorecard need not carry every layer. A layer is in the scorecard when it
  * holds all of the layer's mapped contrasts (and, for a live-recall scorecard,
@@ -43,19 +54,22 @@
  * 2026-11-10) reads only that one: a non-control scorecard carrying the layer
  * must record the named gbrain commit, knobs and question file, or the command
  * refuses with SYNTHETIC_SCORECARD_INVALID and writes nothing. verdict.json
- * records the scorecard's absolute path, sha256 and identity, and counted: true
+ * records the scorecard's path (relative to the repository root when it is
+ * inside it), sha256 and identity, and counted: true
  * only for a non-control scorecard that passed the check on at least one such
  * layer. --secondary reads any other scorecard as a secondary result: the output
  * and verdict.json say so, and it is never the verdict we report.
  */
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { isAbsolute, relative, resolve } from 'node:path';
+import { fiellerRatio } from '../stats/paired.ts';
 import { MANIFEST } from './export-references.ts';
 import { MAPPING, isMeasure, MEASURES, type Measure } from './mapping.ts';
-import { DEFAULT_MIN_QUALIFYING, ValidityReferenceError, kendallTau, loadReference, verdict, type Contrast, type Verdict } from './validity.ts';
+import { DEFAULT_MIN_QUALIFYING, ValidityReferenceError, kendallTau, kendallTauB, loadReference, primaryOutcome, verdict, type Contrast, type PrimaryOutcome, type Verdict } from './validity.ts';
 
 export const VERDICT_SCHEMA = 'predictive-verdict/v1';
+const REPO_ROOT = resolve(import.meta.dir, '../../..');
 
 export class SyntheticScorecardError extends Error {
   readonly code = 'SYNTHETIC_SCORECARD_INVALID';
@@ -64,7 +78,7 @@ export class SyntheticScorecardError extends Error {
   }
 }
 
-export interface SyntheticCard { schema: string; protocol?: string; transports?: string; control: boolean; contrasts: Contrast[]; orderings: Record<string, string[]> }
+export interface SyntheticCard { schema: string; protocol?: string; transports?: string; control: boolean; contrasts: Contrast[]; orderings: Record<string, string[]>; scores: Record<string, Record<string, number>> }
 
 const finite = (...xs: unknown[]) => xs.every(x => typeof x === 'number' && Number.isFinite(x));
 
@@ -76,17 +90,18 @@ export function readSynthetic(value: any): SyntheticCard {
       .filter((c: any) => c?.metric === 'success_at_5' && finite(c.delta) && Array.isArray(c.ci95) && finite(c.ci95[0], c.ci95[1]))
       .map((c: any) => ({ id: c.id, estimate: c.delta, lo: c.ci95[0], hi: c.ci95[1] }));
     const orderings: Record<string, string[]> = {};
+    const scores: Record<string, Record<string, number>> = {};
     for (const form of ['exact', 'paraphrase']) {
-      orderings['arms_' + form] = Object.entries(value.arms ?? {})
+      const scored = Object.entries(value.arms ?? {})
         .filter(([arm]) => arm !== 'configured_window')
         .map(([arm, row]: [string, any]) => [arm, row?.overall?.[form]?.success_at?.k5?.rate] as const)
-        .filter((pair): pair is readonly [string, number] => finite(pair[1]))
-        .sort((a, b) => b[1] - a[1])
-        .map(([arm]) => arm);
+        .filter((pair): pair is readonly [string, number] => finite(pair[1]));
+      orderings['arms_' + form] = [...scored].sort((a, b) => b[1] - a[1]).map(([arm]) => arm);
+      scores['arms_' + form] = Object.fromEntries(scored);
     }
     const transports = typeof value.run?.transports === 'string' ? value.run.transports : undefined;
     const control = transports === undefined ? value.run?.control === true : transports === 'hash';
-    return { schema: value.schema, ...(typeof value.protocol === 'string' ? { protocol: value.protocol } : {}), ...(transports ? { transports } : {}), control, contrasts, orderings };
+    return { schema: value.schema, ...(typeof value.protocol === 'string' ? { protocol: value.protocol } : {}), ...(transports ? { transports } : {}), control, contrasts, orderings, scores };
   }
   if (Array.isArray(value?.contrasts)) {
     const contrasts = value.contrasts.map((c: any, i: number) => {
@@ -94,7 +109,7 @@ export function readSynthetic(value: any): SyntheticCard {
       return { id: c.id, estimate: c.estimate, lo: c.lo, hi: c.hi };
     });
     const transports = typeof value.transports === 'string' ? value.transports : undefined;
-    return { schema: typeof value.schema === 'string' ? value.schema : 'contrasts', ...(transports ? { transports } : {}), control: value.control === true || transports === 'hash', contrasts, orderings: value.orderings ?? {} };
+    return { schema: typeof value.schema === 'string' ? value.schema : 'contrasts', ...(transports ? { transports } : {}), control: value.control === true || transports === 'hash', contrasts, orderings: value.orderings ?? {}, scores: value.scores ?? {} };
   }
   throw new SyntheticScorecardError('not a live-recall scorecard or a { contrasts } file');
 }
@@ -108,16 +123,31 @@ export interface LayerResult {
   verdict: Verdict | 'NOT_IN_SCORECARD';
   in_scorecard: boolean;
   min_qualifying: number;
+  /** interval: a reference contrast qualifies on its own 95% interval; family: on the reference's simultaneous band. */
+  qualify: 'interval' | 'family';
   qualifying_count: number;
+  /** Qualifying contrasts that count toward the minimum (the layer's not_counted left out). */
+  qualifying_counted: number;
   mapped_count: number;
   missing_reference?: string;
+  /** Mapped contrasts the reference skipped (an arm invalid or absent); they can't qualify. */
+  skipped: string[];
   contrasts: Array<{
     reference_id: string; synthetic_id: string;
-    reference: { estimate: number; lo: number; hi: number; qualifies: boolean };
+    reference: { estimate: number; lo: number; hi: number; family_lo?: number; family_hi?: number; qualifies: boolean };
     synthetic: { estimate: number; lo: number; hi: number; excludes_zero: boolean };
     sign_agrees: boolean; counted: 'agree' | 'disagree' | 'not_qualifying';
   }>;
   kendall_tau: Record<string, number | null>;
+  /** tau_b: from per-arm scores on both sides; ordering: over the two arm orderings, where a tie counts one way. */
+  kendall_tau_method: Record<string, 'tau_b' | 'ordering'>;
+  primary?: {
+    id: string; outcome: PrimaryOutcome; reason?: 'reference_skipped';
+    reference: { estimate: number; lo: number; hi: number } | null;
+    synthetic: { estimate: number; lo: number; hi: number };
+    /** Synthetic estimate over the reference's, with a Fieller 95% interval (null bounds when unbounded). */
+    ratio: { estimate: number | null; lo: number | null; hi: number | null } | null;
+  };
   note: string;
 }
 
@@ -130,28 +160,49 @@ export function evaluateMeasure(measure: Measure, synthetic: SyntheticCard, mani
     const missing = layer.pairs.filter(p => !synById.has(p.synthetic)).map(p => p.synthetic);
     if (!otherProtocol && missing.length && missing.length < layer.pairs.length) throw new SyntheticScorecardError('the synthetic scorecard has only part of ' + measure + ' layer ' + layer.id + ': no ' + measure + ' contrast ' + missing.join(', ') + ' (for ' + layer.reference + ')');
     const in_scorecard = !otherProtocol && missing.length === 0;
-    const base = { id: layer.id, reference: layer.reference, min_qualifying: DEFAULT_MIN_QUALIFYING, mapped_count: layer.pairs.length, note: layer.note, in_scorecard };
+    const qualify: LayerResult['qualify'] = layer.qualify ?? 'interval';
+    const base = { id: layer.id, reference: layer.reference, min_qualifying: DEFAULT_MIN_QUALIFYING, qualify, mapped_count: layer.pairs.length, note: layer.note, in_scorecard };
+    const empty = { qualifying_count: 0, qualifying_counted: 0, skipped: [] as string[], contrasts: [], kendall_tau: {}, kendall_tau_method: {} };
     if (!ref) {
-      layers.push({ ...base, status: 'pending', verdict: 'NO_REFERENCE_YET', qualifying_count: 0, missing_reference: layer.reference, contrasts: [], kendall_tau: {} });
+      layers.push({ ...base, ...empty, status: 'pending', verdict: 'NO_REFERENCE_YET', missing_reference: layer.reference });
       continue;
     }
     const refById = new Map(ref.contrasts.map(c => [c.id, c]));
-    const unknown = layer.pairs.filter(p => !refById.has(p.reference)).map(p => p.reference);
+    const skipped = layer.pairs.filter(p => !refById.has(p.reference) && ref.skipped?.includes(p.reference)).map(p => p.reference);
+    const unknown = layer.pairs.filter(p => !refById.has(p.reference) && !skipped.includes(p.reference)).map(p => p.reference);
     if (unknown.length) throw new ValidityReferenceError(manifestPath, 'reference ' + layer.reference + ' has no contrast ' + unknown.join(', ') + ' named by the ' + measure + ' mapping');
     if (!in_scorecard) {
-      layers.push({ ...base, status: 'not_in_scorecard', verdict: 'NOT_IN_SCORECARD', qualifying_count: 0, contrasts: [], kendall_tau: {} });
+      layers.push({ ...base, ...empty, status: 'not_in_scorecard', verdict: 'NOT_IN_SCORECARD' });
       continue;
     }
-    const mapped = layer.pairs.map(p => ({ ...synById.get(p.synthetic)!, id: p.reference }));
-    const result = verdict({ mapped: layer.pairs.map(p => p.reference), reference: ref, synthetic: mapped });
-    const kendall_tau = Object.fromEntries((layer.ordering_keys ?? []).map(key => [key, ref.orderings?.[key] && synthetic.orderings[key] ? kendallTau(synthetic.orderings[key]!, ref.orderings[key]!) : null]));
+    const pairs = layer.pairs.filter(p => refById.has(p.reference));
+    const mapped = pairs.map(p => ({ ...synById.get(p.synthetic)!, id: p.reference }));
+    let result: ReturnType<typeof verdict>;
+    try {
+      result = verdict({ mapped: pairs.map(p => p.reference), reference: ref, synthetic: mapped, qualify, ...(layer.not_counted ? { notCounted: [...layer.not_counted] } : {}) });
+    } catch (error) {
+      throw new ValidityReferenceError(manifestPath, (error as Error).message + ' (' + measure + ' layer ' + layer.id + ')');
+    }
+    const tauB = (key: string) => (ref.scores?.[key] && synthetic.scores[key] ? kendallTauB(synthetic.scores[key]!, ref.scores[key]!) : undefined);
+    const keys = layer.ordering_keys ?? [];
+    const kendall_tau = Object.fromEntries(keys.map(key => [key, tauB(key) !== undefined ? tauB(key)! : ref.orderings?.[key] && synthetic.orderings[key] ? kendallTau(synthetic.orderings[key]!, ref.orderings[key]!) : null]));
+    const kendall_tau_method = Object.fromEntries(keys.map(key => [key, tauB(key) !== undefined ? 'tau_b' as const : 'ordering' as const]));
+    const primaryPair = layer.primary ? layer.pairs.find(p => p.reference === layer.primary) : undefined;
+    if (layer.primary && !primaryPair) throw new SyntheticScorecardError(measure + ' layer ' + layer.id + ' names primary ' + layer.primary + ', which it does not map');
+    const primary = primaryPair ? (() => {
+      const r = refById.get(primaryPair.reference), s = synById.get(primaryPair.synthetic)!;
+      const syn = { estimate: s.estimate, lo: s.lo, hi: s.hi };
+      if (!r) return { id: primaryPair.reference, outcome: 'INCONCLUSIVE' as const, reason: 'reference_skipped' as const, reference: null, synthetic: syn, ratio: null };
+      return { id: primaryPair.reference, outcome: primaryOutcome(r, s), reference: { estimate: r.estimate, lo: r.lo, hi: r.hi }, synthetic: syn, ratio: fiellerRatio(s, r) };
+    })() : undefined;
     layers.push({
-      ...base, status: 'available', verdict: result.verdict, qualifying_count: result.qualifying.length, kendall_tau,
-      contrasts: layer.pairs.map(p => {
+      ...base, status: 'available', verdict: result.verdict, qualifying_count: result.qualifying.length,
+      qualifying_counted: result.qualifying.filter(id => !layer.not_counted?.includes(id)).length, skipped, kendall_tau, kendall_tau_method, ...(primary ? { primary } : {}),
+      contrasts: pairs.map(p => {
         const r = refById.get(p.reference)!, s = synById.get(p.synthetic)!;
         return {
           reference_id: p.reference, synthetic_id: p.synthetic,
-          reference: { estimate: r.estimate, lo: r.lo, hi: r.hi, qualifies: excludesZero(r) },
+          reference: { estimate: r.estimate, lo: r.lo, hi: r.hi, ...(r.family_lo !== undefined ? { family_lo: r.family_lo, family_hi: r.family_hi } : {}), qualifies: result.qualifying.includes(p.reference) },
           synthetic: { estimate: s.estimate, lo: s.lo, hi: s.hi, excludes_zero: excludesZero(s) },
           sign_agrees: s.estimate !== 0 && Math.sign(s.estimate) === Math.sign(r.estimate),
           counted: result.disagree.includes(p.reference) ? 'disagree' as const : result.agree.includes(p.reference) ? 'agree' as const : 'not_qualifying' as const,
@@ -206,9 +257,11 @@ export function renderVerdict(r: ReturnType<typeof evaluateMeasure>, secondary =
   for (const l of r.layers) {
     if (l.status === 'pending') { lines.push('  layer ' + l.id + ' vs ' + l.reference + ': NO_REFERENCE_YET (reference ' + l.reference + ' is pending)' + (l.in_scorecard ? '; ' + l.mapped_count + ' mapped contrasts in this scorecard' : '; not in this scorecard')); continue; }
     if (l.status === 'not_in_scorecard') { lines.push('  layer ' + l.id + ' vs ' + l.reference + ': not in this scorecard'); continue; }
-    const taus = Object.entries(l.kendall_tau).map(([k, t]) => k + ' ' + (t === null ? 'n/a' : t.toFixed(3)));
-    lines.push('  layer ' + l.id + ' vs ' + l.reference + ': ' + l.verdict + ', ' + l.qualifying_count + ' of ' + l.mapped_count + ' reference contrasts qualify (minimum ' + l.min_qualifying + ')' + (taus.length ? '; Kendall tau ' + taus.join(', ') : ''));
-    for (const c of l.contrasts) lines.push('    ' + c.counted.padEnd(14) + ' ' + c.reference_id + ': reference ' + iv(c.reference) + (c.reference.qualifies ? ' qualifies' : '') + '; synthetic ' + iv(c.synthetic) + '; sign ' + (c.sign_agrees ? 'agrees' : 'differs'));
+    const taus = Object.entries(l.kendall_tau).map(([k, t]) => k + ' ' + (t === null ? 'n/a' : t.toFixed(3)) + (l.kendall_tau_method[k] === 'ordering' ? ' (orderings)' : ''));
+    lines.push('  layer ' + l.id + ' vs ' + l.reference + ': ' + l.verdict + ', ' + l.qualifying_count + ' of ' + l.mapped_count + ' reference contrasts qualify' + (l.qualify === 'family' ? ' on the family band' : '') + (l.qualifying_counted !== l.qualifying_count ? ' (' + l.qualifying_counted + ' toward the minimum)' : '') + ' (minimum ' + l.min_qualifying + ')' + (l.skipped.length ? '; skipped by the reference: ' + l.skipped.join(', ') : '') + (taus.length ? '; Kendall tau-b ' + taus.join(', ') : ''));
+    const p = l.primary;
+    if (p) lines.push('    primary ' + p.id + ': ' + p.outcome + (p.reference ? '; reference ' + iv(p.reference) : '; the reference skipped it') + ', synthetic ' + iv(p.synthetic) + (p.ratio?.estimate != null ? '; ratio synthetic/reference ' + p.ratio.estimate.toFixed(3) + (p.ratio.lo !== null ? ' [' + p.ratio.lo.toFixed(3) + ', ' + p.ratio.hi!.toFixed(3) + ']' : ' (interval unbounded)') : ''));
+    for (const c of l.contrasts) lines.push('    ' + c.counted.padEnd(14) + ' ' + c.reference_id + ': reference ' + iv(c.reference) + (c.reference.family_lo !== undefined ? ' family [' + num(c.reference.family_lo) + ', ' + num(c.reference.family_hi!) + ']' : '') + (c.reference.qualifies ? ' qualifies' : '') + '; synthetic ' + iv(c.synthetic) + '; sign ' + (c.sign_agrees ? 'agrees' : 'differs'));
   }
   return lines;
 }
@@ -233,7 +286,8 @@ export function main(argv: string[]): number {
     const secondary = argv.includes('--secondary');
     const counted = !synthetic.control && !secondary && checkCountedScorecard(measure, parsed, result) > 0;
     for (const line of renderVerdict(result, secondary)) console.log(line);
-    if (out) writeFileSync(out, JSON.stringify({ ...result, counted, ...(secondary ? { secondary: true } : {}), scorecard: { path: resolve(syntheticPath), sha256: createHash('sha256').update(raw).digest('hex'), ...scorecardIdentity(parsed) } }, null, 2) + '\n');
+    const inRepo = relative(REPO_ROOT, resolve(syntheticPath));
+    if (out) writeFileSync(out, JSON.stringify({ ...result, counted, ...(secondary ? { secondary: true } : {}), scorecard: { path: inRepo.startsWith('..') || isAbsolute(inRepo) ? resolve(syntheticPath) : inRepo, sha256: createHash('sha256').update(raw).digest('hex'), ...scorecardIdentity(parsed) } }, null, 2) + '\n');
     return 0;
   } catch (error) {
     if (error instanceof ValidityReferenceError || error instanceof SyntheticScorecardError) {

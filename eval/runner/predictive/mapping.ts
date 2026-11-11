@@ -33,6 +33,12 @@ export interface Layer {
   protocol?: 'batch2' | 'batch3';
   /** The one non-control scorecard this layer's counted verdict reads (preregistration, corrections of 2026-11-10). */
   counted?: CountedScorecard;
+  /** 'family': a reference contrast qualifies on the reference scorecard's simultaneous band instead of its own interval. */
+  qualify?: 'family';
+  /** A preregistered primary contrast, read on its own interval with validity.ts's primaryOutcome. */
+  primary?: string;
+  /** Mapped contrasts that may qualify but don't count toward the minimum of 3. */
+  not_counted?: readonly string[];
   note: string;
 }
 
@@ -68,6 +74,8 @@ export const B2_CONTRASTS = [
   'configured_vs_keyword_exact', 'hybrid_vs_keyword_paraphrase', 'window_vs_configured',
   'paraphrase_vs_exact_keyword', 'paraphrase_vs_exact_vector', 'paraphrase_vs_exact_hybrid_lexical', 'paraphrase_vs_exact_hybrid', 'paraphrase_vs_exact_configured',
 ] as const;
+/** Contrasts whose sign is forced because keyword finds about no paraphrase on either brain (claim check of 2026-11-11); batch 4 doesn't count them toward the minimum. */
+export const B2_SIGN_FORCED = ['configured_vs_keyword_paraphrase', 'hybrid_vs_keyword_paraphrase', 'paraphrase_vs_exact_keyword'] as const;
 export const B3_FRESHNESS = ['p1_configured_vs_hybrid_lexical_freshness', 'hybrid_vs_hybrid_lexical_freshness', 'configured_vs_keyword_freshness'] as const;
 export const B3_ENTITY = ['p2_configured_vs_hybrid_lexical_entity', 'hybrid_vs_hybrid_lexical_entity', 'configured_vs_keyword_entity'] as const;
 /** Phase 2's arm B vs arm A contrast per model, and the model pair under arm B. */
@@ -92,6 +100,7 @@ export const MAPPING: Record<Measure, { title: string; layers: Layer[] }> = {
     layers: [
       { id: 'b2', reference: 'live-recall-b2', pairs: same(...B2_CONTRASTS), ordering_keys: ['arms_exact', 'arms_paraphrase'], protocol: 'batch2', counted: COUNTED_B2, note: 'all 16 success@5 contrasts of live recall batch 2, id to id' },
       { id: 'b3', reference: 'live-recall-b3', pairs: same(...B3_FRESHNESS, ...B3_ENTITY), protocol: 'batch3', counted: COUNTED_B3, note: 'batch 3 freshness and entity success@5, once batch 3 lands' },
+      { id: 'b4', reference: 'live-recall-b4', pairs: same(...B2_CONTRASTS), ordering_keys: ['arms_exact', 'arms_paraphrase'], protocol: 'batch2', counted: COUNTED_B2, qualify: 'family', primary: 'paraphrase_vs_exact_configured', not_counted: B2_SIGN_FORCED, note: 'the held-out replication (amendment of 2026-11-11): the same 16 contrasts and counted scorecard against batch 4, qualifying on its family band, the three sign-forced keyword-paraphrase contrasts outside the minimum, and the configured paraphrase gap as the primary that gives the outcome' },
     ],
   },
   G3: {

@@ -108,5 +108,21 @@
       "hybrid_lexical",
       "keyword"
     ]
+  },
+  "scores": {
+    "arms_exact": {
+      "keyword": 0.72,
+      "vector": 0.5,
+      "hybrid_lexical": 0.82,
+      "hybrid": 0.8,
+      "configured": 0.9
+    },
+    "arms_paraphrase": {
+      "keyword": 0,
+      "vector": 0.3,
+      "hybrid_lexical": 0.12,
+      "hybrid": 0.34,
+      "configured": 0.62
+    }
   }
 }

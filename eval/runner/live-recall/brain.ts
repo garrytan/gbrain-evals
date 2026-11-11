@@ -28,6 +28,7 @@ export const ABORT_CODES = {
   LR_SCHEMA_MISMATCH: 'Run with --gbrain <checkout>@<commit> at the gbrain version that wrote the brain.',
   LR_QUESTIONS_INVALID: 'Fix the question file at the reported line and field, then rerun freeze.',
   LR_FREEZE_MISMATCH: 'Rerun freeze on this exact question file and send the new freeze numbers before the counted run. On a phase 2 --resume, resume with the first session\'s harness, gbrain, barrier kind, source, retrieval settings, models, arms, forms and tasks, or start a new run directory.',
+  LR_FREEZE_OVERLAP: 'A batch 4 freeze checks the new questions against the three earlier question files on this box, passed with one --prior each (their sha256 values are in RUN-KIT.md). The detail names a missing or wrong file, or how many question ids, forms and gold pages are shared; replace the shared questions and freeze again. Only counts are printed.',
   LR_COMPARE_CONTROL: 'One run directory is a --fixture control; compare or pool counted runs only.',
   LR_POOL_MISMATCH: 'Pool two counted runs made on different frozen question files with the same gbrain commit and search settings; the detail names what differs.',
   LR_GOLD_MISSING_CAP: 'More than 10% of questions name a gold page the brain does not hold; fix the gold slugs or use a fresher copy.',
