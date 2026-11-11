@@ -172,7 +172,8 @@ cells (`eval/runner/memory-qa/run-systems.ts`) write `qa_receipts` for their rea
 Each judge record carries `verdict_path`. A row where any replicate's verdict came from the reply's tail has
 `qa_tail_verdicts`, the number of those verdicts, and memory-system rows count them the same way. A judge reply with no
 verdict leaves the question an error row whose `qa_error` starts `judge reply holds no yes or no verdict`, with that
-judge record last, so the nightly counts it as a judge harness error rather than a wrong answer.
+judge record last, so the nightly counts it as a judge harness error rather than a wrong answer. Such a reply is not
+written to the response cache, so a later run that asks the same question asks the judge again.
 
 ## How a Q1 answer uses it
 
@@ -205,6 +206,7 @@ For the Q1 scoreboard (`evals/q1-scoreboard`, `eval/runner/q1/cell.ts`), the cha
 bun test test/eval/memory-qa-usage.test.ts test/eval/openai-compatible.test.ts test/eval/memory-qa-particle.test.ts
 bun test test/eval/cat40-particle-loop.test.ts test/eval/cat40-particle-ladder.test.ts test/eval/file-agent.test.ts
 bun test test/eval/q1-cell.test.ts
+bun test test/eval/judge-verdict.test.ts
 ```
 
 The first file serves recorded synthetic Anthropic and OpenAI responses through a mocked fetch and checks that both
@@ -222,5 +224,6 @@ its rerun numbering. `file-agent` checks `receipts.ndjson`, keyed by answer id, 
 reading's attempts and truncation. The third command runs Q1's packed and full-context cells with particle-1 through
 the real lease proxy in front of a fake Particle, and checks each answer record's `attempts`, the truncation count and
 the attempt a lease refusal leaves. It also runs a file-agent cell with particle-1, through the proxy and straight to a
-fake Particle, and checks that a turn that times out leaves its question a final `reader_error`. None of these files
-makes a provider call.
+fake Particle, and checks that a turn that times out leaves its question a final `reader_error`. The fourth command
+checks how a yes-or-no judge reply is read (`head`, `tail` or `none`), that a reply with no verdict is a judge error
+that is not cached, and that the nightly counts it as a judge harness row. None of these files makes a provider call.
