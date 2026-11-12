@@ -13,9 +13,12 @@ This records what each gbrain-evals release changed and what its measurements me
   [report](docs/benchmarks/2026-11-12-strict-pageless-facts.md) compares gbrain v0.60.684.0 with v0.60.685.0 on
   claude-opus-5-5 and gpt-6.1-sol, 72 trials per cell, under a
   [preregistration](docs/benchmarks/2026-11-12-strict-pageless-facts-preregistration.md) whose recorded freeze leads the
-  first counted trial by seconds, not minutes (the report's Agent notes give the timestamps; GBEV-3 decides whether the
-  run counts as preregistered). Verdict KEEP: kept in Git 0 to 144 of 144; claude-opus-5-5's truthful reports 62 to 72 of 72; gpt-6.1-sol
-  already 72 of 72. The new notice also leads agents to create the entity's page without being asked.
+  first counted trial by seconds, not minutes (the report gives the timestamps, and the eval's owner ruled that the run
+  counts as preregistered). Verdict KEEP: kept in Git 0 to 144 of 144; claude-opus-5-5's truthful reports 62 to 72 of 72; gpt-6.1-sol
+  already 72 of 72. The new notice also leads agents to create the entity's page without being asked. The report names
+  two known errors in its reply rule, each right by hand, and its tables keep the rule's scores.
+- **Tests.** Keyless tests cover the reply rule, the paired intervals, how the cell matches facts to entities, its
+  command-line refusals, the rerun skip and one scripted episode; they blank every provider key and ignore `.env`.
 - **What stays the same.** No existing runner, scorer, fixture or published number changes. The refused-write-agents
   harness files are imported, not edited, so its harness digest is unchanged.
 
