@@ -30,7 +30,12 @@
  * validate.ts applies its duplicate gate to the selection.
  *
  * A validator call that errors or answers in the wrong shape leaves its conversation "incomplete": rerun, and replies
- * already cached are not bought again. Otherwise the conversation is "checked". The select step refuses a conversation
+ * already cached are not bought again. Otherwise the conversation is "checked". The paid clients send validate.ts's own
+ * requests (anthropicRequest, geminiRequest) through global fetch as validate.ts's post does, and return the reply text
+ * validate.ts's clients return, but each also keeps how its reply ended: Anthropic's stop_reason or Gemini's finishReason
+ * (a word of the provider's vocabulary, else "other"), the output token count and the kinds of content block, or the HTTP
+ * status of a refused request. The report lists that for every unusable reply, per conversation, and its totals count
+ * unusable replies by how they ended (unusable_<reason>), so an empty reply's cause is known without keeping its text. The select step refuses a conversation
  * that the report does not hold as checked or drop, or whose chat_sha256 is not its chat's.
  *
  * The reply cache is validate.ts's: the same default directory and the same file for the same validator and prompt, so
@@ -51,7 +56,7 @@ import { ledgerCaps, PaidArmRefusal, requirePaidArm, requireRs1Window, WindowRef
 import { encodingCount } from '../../runner/systems/render-v2.ts';
 
 import {
-  ABILITIES, absencePrompt, ANSWER_FIELD, anthropicClient, buildPublicIndex, chunkMessages, DEFAULTS, fakeClient, geminiClient,
+  ABILITIES, absencePrompt, ANSWER_FIELD, anthropicRequest, buildPublicIndex, chunkMessages, DEFAULTS, fakeClient, geminiRequest,
   ITEMS_PER_ABILITY, ngrams, normalize, runCalls, singleSourceShares, supportPrompt, THRESHOLDS, ValidateError, VALIDATOR_IDS,
   type Ability, type Message, type ModelClient, type Options, type PublicIndex,
 } from './validate.ts';
@@ -62,6 +67,58 @@ const CACHE_VERSION = 'rs1-validate-cache/v2';
 const MAX_OUTPUT_TOKENS = 8192;
 /** validate.ts's per-message framing in a window prompt ("[id N] ROLE: "), in cl100k tokens. */
 const MESSAGE_FRAME_TOKENS = 8;
+
+/** How a paid validator reply ended: provider vocabulary words and numbers only, never reply text. */
+export interface StopRecord { stop: string; output_tokens: number | null; blocks: string[] }
+/** A validator that keeps each prompt's last StopRecord. */
+export interface RecordingClient extends ModelClient { readonly stops: Map<string, StopRecord> }
+
+const vocab = (v: unknown) => (typeof v === 'string' && /^[A-Za-z_]{1,40}$/.test(v) ? v : v === undefined || v === null ? 'none' : 'other');
+const tokenCount = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+const kinds = (types: string[]) => [...new Set(types)].sort();
+
+/**
+ * validate.ts's client for one provider: its request, its post (global fetch, so the paid run's fetch guard prices and
+ * reserves the request, and an error naming only host and status) and its reply text, plus the reply's StopRecord.
+ */
+function recordingClient(id: string, request: (prompt: string, max: number) => { url: string; body: unknown }, headers: Record<string, string>,
+  text: (reply: any) => string, ended: (reply: any) => StopRecord): RecordingClient {
+  const stops = new Map<string, StopRecord>();
+  return {
+    id,
+    stops,
+    async complete(prompt, max) {
+      const record = (stop: string) => void stops.set(prompt, { stop, output_tokens: null, blocks: [] });
+      const { url, body } = request(prompt, max);
+      let res: Response;
+      try { res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }); } catch (error) {
+        if (!(error instanceof BudgetExceededError)) record('send_error');
+        throw error;
+      }
+      if (!res.ok) { record(`http_${res.status}`); throw new ValidateError(`${new URL(url).hostname} answered HTTP ${res.status}`); }
+      let reply: any, out: string;
+      try { reply = await res.json(); out = text(reply); } catch (error) { record('bad_reply'); throw error; }
+      try { stops.set(prompt, ended(reply)); } catch { record('other'); }
+      return out;
+    },
+  };
+}
+
+export const recordingGeminiClient = (apiKey: string) => recordingClient(VALIDATOR_IDS[0], geminiRequest, { 'x-goog-api-key': apiKey },
+  reply => (reply.candidates?.[0]?.content?.parts ?? []).map((p: { text?: string }) => p.text ?? '').join(''),
+  reply => {
+    const candidate = reply.candidates?.[0];
+    const block = reply.promptFeedback?.blockReason;
+    return {
+      stop: candidate ? vocab(candidate.finishReason) : block ? `blocked_${vocab(block)}` : 'no_candidate',
+      output_tokens: tokenCount(reply.usageMetadata?.candidatesTokenCount),
+      blocks: kinds((candidate?.content?.parts ?? []).map((p: { text?: unknown; thought?: unknown }) => (p.thought ? 'thought' : typeof p.text === 'string' ? 'text' : 'other'))),
+    };
+  });
+
+export const recordingAnthropicClient = (apiKey: string) => recordingClient(VALIDATOR_IDS[1], anthropicRequest, { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+  reply => (reply.content ?? []).filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join(''),
+  reply => ({ stop: vocab(reply.stop_reason), output_tokens: tokenCount(reply.usage?.output_tokens), blocks: kinds((reply.content ?? []).map((b: { type?: unknown }) => vocab(b.type))) }));
 
 const sha256 = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex');
 const readJson = (path: string) => JSON.parse(readFileSync(path, 'utf8'));
@@ -137,6 +194,8 @@ export interface CandidateConversation {
   contamination_share: number | null;
   windows: number;
   candidates: Record<string, CandidateResult>;
+  /** Every unusable validator reply: the validator, the call (a candidate key or a window index) and how the reply ended. */
+  validator_errors: Array<{ validator: string; kind: 'support' | 'absence'; candidate: string | null; window: number | null; prompt_tokens: number } & StopRecord>;
   /** Passed candidates per ability. */
   passed: Record<string, number>;
 }
@@ -160,13 +219,23 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
   const questions = new Map<string, Map<string, string>>();
   const calls: Call[] = [];
   const low = Math.round(opts.targetTokens * (1 - opts.tolerance)), high = Math.round(opts.targetTokens * (1 + opts.tolerance));
-  const call = (client: number, prompt: string, tokens: number, kind: Call['kind'], settle: Call['settle']) => {
+  const call = (cid: string, at: { candidate?: string; window?: number }, client: number, prompt: string, tokens: number, kind: Call['kind'], settle: Call['settle']) => {
     const cacheFile = opts.cacheDir ? join(opts.cacheDir, `${sha256(`${CACHE_VERSION}\0${clients[client].id}\0${prompt}`)}.json`) : null;
-    calls.push({ client, prompt, tokens, cacheFile, cached: !!cacheFile && existsSync(cacheFile), kind, settle });
+    calls.push({
+      client, prompt, tokens, cacheFile, cached: !!cacheFile && existsSync(cacheFile), kind,
+      settle: reply => {
+        const usableReply = settle(reply);
+        if (!usableReply) {
+          const ended = (clients[client] as Partial<RecordingClient>).stops?.get(prompt) ?? { stop: 'unrecorded', output_tokens: null, blocks: [] };
+          results[cid].validator_errors.push({ validator: clients[client].id, kind, candidate: at.candidate ?? null, window: at.window ?? null, prompt_tokens: tokens, ...ended });
+        }
+        return usableReply;
+      },
+    });
   };
 
   const measured = cids.flatMap(cid => {
-    const result: CandidateConversation = { status: 'unfinished', reasons: [], chat_sha256: null, tokens: null, contamination_share: null, windows: 0, candidates: {}, passed: {} };
+    const result: CandidateConversation = { status: 'unfinished', reasons: [], chat_sha256: null, tokens: null, contamination_share: null, windows: 0, candidates: {}, validator_errors: [], passed: {} };
     results[cid] = result;
     const conv = loadProbed(opts.setDir, cid);
     if (!conv) { result.reasons.push('unfinished'); return []; }
@@ -207,7 +276,7 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
       const prompt = supportPrompt(turns, question, answer);
       const tokens = encodingCount('cl100k_base', prompt);
       for (let c = 0; c < 2; c++) {
-        call(c, prompt, tokens, 'support', reply => {
+        call(cid, { candidate: key }, c, prompt, tokens, 'support', reply => {
           const supported = reply === null ? undefined : jsonObject(reply)?.supported;
           if (typeof supported !== 'boolean') { fail(`validator_error:${clients[c].id}`); return false; }
           if (!supported) fail(`support:${clients[c].id}`);
@@ -219,11 +288,11 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
     if (!abstention.length) continue;
     const windows = chunkMessages(contentTokens.map(t => t + MESSAGE_FRAME_TOKENS), opts.windowTokens, opts.overlapTokens);
     result.windows = windows.length;
-    for (const [start, end] of windows) {
+    for (const [window, [start, end]] of windows.entries()) {
       const prompt = absencePrompt(conv.messages.slice(start, end), abstention.map(a => a.question));
       const tokens = contentTokens.slice(start, end).reduce((s, t) => s + t + MESSAGE_FRAME_TOKENS, 300);
       for (let c = 0; c < 2; c++) {
-        call(c, prompt, tokens, 'absence', reply => {
+        call(cid, { window }, c, prompt, tokens, 'absence', reply => {
           const answered = reply === null ? undefined : jsonObject(reply)?.answered;
           const usableReply = Array.isArray(answered);
           abstention.forEach((a, i) => {
@@ -259,6 +328,7 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
     const abilities = Object.fromEntries(ABILITIES.map(a => [a, { pass: 0, fail: 0 }]));
     for (const [cid, result] of Object.entries(results)) {
       totals.windows += result.windows;
+      for (const e of result.validator_errors) totals[`unusable_${e.stop.toLowerCase()}`] = (totals[`unusable_${e.stop.toLowerCase()}`] ?? 0) + 1;
       const items = Object.values(result.candidates);
       if (!result.reasons.length && items.some(i => i.gates.some(g => g.startsWith('validator_error:')))) result.reasons.push('validator_error');
       if (result.reasons.includes('unfinished')) result.status = 'unfinished';
@@ -314,6 +384,7 @@ export function summaryLines(report: CandidateReport, reportSha256: string): str
     `rs1-validate-candidates ${kv({ candidates: t.candidates, pass: t.pass, fail: t.fail, ...gates })}`,
     ...ABILITIES.map(a => `rs1-validate-candidates ${kv({ ability: a, pass: report.abilities[a].pass, fail: report.abilities[a].fail })}`),
     `rs1-validate-candidates ${kv({ calls: t.calls, support_calls: t.support_calls, absence_calls: t.absence_calls, support_tokens: t.support_tokens, absence_tokens: t.absence_tokens, cached_calls: t.cached_calls, validator_errors: t.validator_errors, windows: t.windows })}`,
+    `rs1-validate-candidates ${kv({ unusable: Object.values(report.conversations).reduce((s, c) => s + c.validator_errors.length, 0), ...Object.fromEntries(Object.entries(t).filter(([k]) => k.startsWith('unusable_')).sort()) })}`,
     `rs1-validate-candidates ${kv({ public_sources: report.public_index.sources, public_ngrams: report.public_index.ngrams, report_sha256: reportSha256 })}`,
   ];
 }
@@ -344,7 +415,7 @@ async function main(argv: string[]): Promise<number> {
   if (!existsSync(join(opts.setDir, 'conversations'))) throw new ValidateError(`${opts.setDir} holds no conversations/`);
   const geminiKey = process.env.GEMINI_API_KEY, anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (!fake && (!geminiKey || !anthropicKey)) throw new ValidateError('paid candidate validation needs GEMINI_API_KEY and ANTHROPIC_API_KEY');
-  const clients = fake ? VALIDATOR_IDS.map(id => fakeClient(`fake-${id}`)) : [geminiClient(geminiKey!), anthropicClient(anthropicKey!)];
+  const clients = fake ? VALIDATOR_IDS.map(id => fakeClient(`fake-${id}`)) : [recordingGeminiClient(geminiKey!), recordingAnthropicClient(anthropicKey!)];
   const plan = planCandidates(opts, clients, buildPublicIndex(opts.beamDir, opts.publicIndexPath));
   const paid = !fake && plan.calls.some(c => !c.cached);
   if (paid) requirePaidArm(argv, { arm: 'rs1 validate-candidates', estimateUsd: plan.estimateUsd });

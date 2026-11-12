@@ -12,9 +12,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
 import { readBeamPaths } from '../../eval/custody/rs1/beam-paths.ts';
-import { validateCandidates, writeCandidateReport, type CandidateReport } from '../../eval/custody/rs1/validate-candidates.ts';
+import { BudgetExceededError, BudgetRun, initLedger, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
 import {
-  ABILITIES, ANSWER_FIELD, SLOTS, VALIDATOR_IDS, buildPublicIndex, fakeClient, validateSet, writeReport,
+  recordingAnthropicClient, recordingGeminiClient, validateCandidates, writeCandidateReport, type CandidateReport, type StopRecord,
+} from '../../eval/custody/rs1/validate-candidates.ts';
+import {
+  ABILITIES, ANSWER_FIELD, SLOTS, VALIDATOR_IDS, anthropicClient, buildPublicIndex, fakeClient, geminiClient, validateSet, writeReport,
   type Ability, type ModelClient, type Options, type PublicIndex,
 } from '../../eval/custody/rs1/validate.ts';
 
@@ -442,6 +445,110 @@ describe('validate-candidates.ts gates', () => {
       expect(r.all).not.toContain('not-real');
     }
     expect(existsSync(join(root, 'cli-report.json'))).toBe(false);
+  });
+});
+
+// ─── validate-candidates.ts stop reasons (GST-1886, 2026-11-12) ──────
+
+describe('validate-candidates.ts stop reasons', () => {
+  let root = '', beam = '', index: PublicIndex;
+  beforeAll(() => { root = scratch('candidate-stops'); beam = fakeBeam(root); index = buildPublicIndex(beam); });
+  const KEY = 'test-key-not-real';
+  const PROMPT = 'prompt ' + words('stop-prompt', 30);
+
+  /** Runs body with a ledger guard whose sender is send, and returns the requests the guard passed on and its entries. */
+  async function guarded<T>(send: (url: string, init: RequestInit) => unknown | Promise<unknown>, body: () => Promise<T>) {
+    const ledgerPath = join(mkdtempSync(join(root, 'ledger-')), 'l.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5 });
+    const run = BudgetRun.open({ runner: 'rs1-stop-test', budgetUsd: 5, ledgerPath });
+    const sent: Array<{ url: string; headers: unknown; body: unknown }> = [];
+    const guard = installPaidRequestGuard(run, { fetchImpl: (async (input: RequestInfo | URL, init: RequestInit = {}) => {
+      sent.push({ url: String(input), headers: init.headers, body: JSON.parse(String(init.body)) });
+      const reply = await send(String(input), init);
+      return reply instanceof Response ? reply : Response.json(reply);
+    }) as unknown as typeof fetch });
+    let result: T | Error;
+    try { result = await body(); } catch (error) { result = error as Error; } finally { guard.uninstall(); run.close(); }
+    return { result, sent, entries: readLedger(ledgerPath).entries.map(e => ({ reserved_usd: e.reserved_usd, actual_usd: e.actual_usd, status: e.status })) };
+  }
+
+  const anthropicReplies: Array<[unknown, StopRecord]> = [
+    [{ content: [{ type: 'thinking', thinking: 'x' }, { type: 'text', text: '{"answered": [' }, { type: 'text', text: '2]}' }], stop_reason: 'end_turn', usage: { input_tokens: 90, output_tokens: 12 } },
+      { stop: 'end_turn', output_tokens: 12, blocks: ['text', 'thinking'] }],
+    [{ content: [], stop_reason: 'end_turn', usage: { input_tokens: 90, output_tokens: 0 } }, { stop: 'end_turn', output_tokens: 0, blocks: [] }],
+    [{ content: [], stop_reason: 'refusal', usage: { input_tokens: 90, output_tokens: 3 } }, { stop: 'refusal', output_tokens: 3, blocks: [] }],
+    [{ stop_reason: 'stopped because of sealed text', usage: { input_tokens: 90 } }, { stop: 'other', output_tokens: null, blocks: [] }],
+  ];
+  const geminiReplies: Array<[unknown, StopRecord]> = [
+    [{ candidates: [{ content: { parts: [{ thought: true, text: 'x' }, { text: '{"supported": true}' }] }, finishReason: 'STOP' }], usageMetadata: { promptTokenCount: 90, candidatesTokenCount: 7 } },
+      { stop: 'STOP', output_tokens: 7, blocks: ['text', 'thought'] }],
+    [{ candidates: [{ finishReason: 'MAX_TOKENS' }], usageMetadata: { promptTokenCount: 90, candidatesTokenCount: 0 } }, { stop: 'MAX_TOKENS', output_tokens: 0, blocks: [] }],
+    [{ promptFeedback: { blockReason: 'PROHIBITED_CONTENT' }, usageMetadata: { promptTokenCount: 90 } }, { stop: 'blocked_PROHIBITED_CONTENT', output_tokens: null, blocks: [] }],
+    [{ usageMetadata: { promptTokenCount: 90 } }, { stop: 'no_candidate', output_tokens: null, blocks: [] }],
+  ];
+
+  test('the recording clients send validate.ts\'s requests through the ledger guard, return validate.ts\'s text, and keep only how each reply ended', async () => {
+    for (const [make, record, replies] of [
+      [anthropicClient, recordingAnthropicClient, anthropicReplies], [geminiClient, recordingGeminiClient, geminiReplies],
+    ] as const) {
+      for (const [reply, ended] of replies) {
+        const plain = await guarded(() => reply, () => make(KEY).complete(PROMPT, 8192));
+        const client = record(KEY);
+        const recorded = await guarded(() => reply, () => client.complete(PROMPT, 8192));
+        expect(typeof plain.result).toBe('string');
+        expect(recorded.result).toBe(plain.result);
+        expect(recorded.sent).toEqual(plain.sent);
+        expect(recorded.sent).toHaveLength(1);
+        expect(recorded.entries).toEqual(plain.entries);
+        expect(recorded.entries.map(e => e.status)).toEqual(['reconciled']);
+        expect(client.stops.get(PROMPT)).toEqual(ended);
+        expect(JSON.stringify([...client.stops])).not.toContain('sealed');
+      }
+      const status = await guarded(() => new Response('{"error": "sealed text"}', { status: 503 }), () => make(KEY).complete(PROMPT, 8192));
+      const client = record(KEY);
+      const refused = await guarded(() => new Response('{"error": "sealed text"}', { status: 503 }), () => client.complete(PROMPT, 8192));
+      expect((refused.result as Error).message).toBe((status.result as Error).message);
+      expect((refused.result as Error).message).toMatch(/ answered HTTP 503$/);
+      expect(client.stops.get(PROMPT)).toEqual({ stop: 'http_503', output_tokens: null, blocks: [] });
+    }
+  });
+
+  test('a request the guard refuses is never sent and records nothing', async () => {
+    const ledgerPath = join(mkdtempSync(join(root, 'ledger-')), 'l.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5 });
+    const run = BudgetRun.open({ runner: 'rs1-stop-test', budgetUsd: 0.0001, ledgerPath });
+    let sent = 0;
+    const guard = installPaidRequestGuard(run, { fetchImpl: (async () => { sent++; return Response.json({}); }) as unknown as typeof fetch });
+    const client = recordingAnthropicClient(KEY);
+    try { await expect(client.complete(PROMPT.repeat(400), 8192)).rejects.toBeInstanceOf(BudgetExceededError); } finally { guard.uninstall(); run.close(); }
+    expect(sent).toBe(0);
+    expect(client.stops.size).toBe(0);
+  });
+
+  test('every unusable reply is listed with its validator, call and how it ended, and totals count them by stop reason', async () => {
+    const fake = fakeClient(VALIDATOR_IDS[1]);
+    const client = recordingAnthropicClient(KEY);
+    const set = writeProbedSet(root, [probedConversation('stops')]);
+    const opts: Options = { setDir: set, beamDir: beam, reportPath: join(root, 'report.json'), targetTokens: 1_000_000, tolerance: 0.9999, windowTokens: 600, overlapTokens: 60, concurrency: 4 };
+    const { result: report, sent } = await guarded(async (_url, init) => {
+      const prompt = JSON.parse(String(init.body)).messages[0].content as string;
+      if (prompt.includes('<conversation_part>')) return { content: [], stop_reason: 'end_turn', usage: { input_tokens: 900, output_tokens: 0 } };
+      return { content: [{ type: 'text', text: await fake.complete(prompt, 8192) }], stop_reason: 'end_turn', usage: { input_tokens: 90, output_tokens: 6 } };
+    }, () => validateCandidates(opts, [fakeClient(VALIDATOR_IDS[0]), client], index));
+    const r = report as CandidateReport;
+    const c = r.conversations.c001;
+    expect(c.status).toBe('incomplete');
+    expect(sent).toHaveLength(27 + c.windows);
+    expect(c.validator_errors).toHaveLength(c.windows);
+    expect([...c.validator_errors].sort((a, b) => a.window! - b.window!)).toEqual(Array.from({ length: c.windows }, (_, window) => ({
+      validator: VALIDATOR_IDS[1], kind: 'absence', candidate: null, window, prompt_tokens: expect.any(Number), stop: 'end_turn', output_tokens: 0, blocks: [],
+    })));
+    expect(r.totals).toMatchObject({ unusable_end_turn: c.windows, validator_errors: 0 });
+    expect(Object.values(c.candidates).filter(i => !i.pass).map(i => i.gates)).toEqual([0, 1, 2].map(() => [`validator_error:${VALIDATOR_IDS[1]}`]));
+    const broken: ModelClient = { id: VALIDATOR_IDS[0], complete: async (p, m) => (p.includes('<question>') ? 'no json here' : fakeClient(VALIDATOR_IDS[0]).complete(p, m)) };
+    const unrecorded = await validateCandidates(opts, [broken, fakeClient(VALIDATOR_IDS[1])], index);
+    expect(unrecorded.conversations.c001.validator_errors.map(e => [e.kind, e.stop, typeof e.candidate])).toEqual(Array.from({ length: 27 }, () => ['support', 'unrecorded', 'string']));
+    expect(unrecorded.totals).toMatchObject({ unusable_unrecorded: 27 });
   });
 });
 
