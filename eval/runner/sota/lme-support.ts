@@ -52,14 +52,14 @@ export interface LmeRecord {
 export interface Message { id: number; role: string; content: string }
 
 /** The BEAM ability whose reference-answer field and prompt fit each LongMemEval question type. */
-export const SLOT_FOR: Record<string, Ability> = {
-  'single-session-user': 'information_extraction',
-  'single-session-assistant': 'information_extraction',
-  'single-session-preference': 'preference_following',
-  'multi-session': 'multi_session_reasoning',
-  'temporal-reasoning': 'temporal_reasoning',
-  'knowledge-update': 'knowledge_update',
-};
+export const SLOT_FOR: Record<string, Ability> = Object.fromEntries([
+  ['single-session-user', 'information_extraction'],
+  ['single-session-assistant', 'information_extraction'],
+  ['single-session-preference', 'preference_following'],
+  ['multi-session', 'multi_session_reasoning'],
+  ['temporal-reasoning', 'temporal_reasoning'],
+  ['knowledge-update', 'knowledge_update'],
+] as const);
 
 export interface BuiltItem {
   id: string;
