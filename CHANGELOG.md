@@ -2,6 +2,27 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.220] - 2026-11-12
+
+### Recall's (G2) paraphrase-gap prediction held on 50 new questions, for direction only
+
+- **What changed.** Batch 4, 50 new real questions frozen before any search, is scored and published as the held-out
+  test that [0.10.216](#010216---2026-11-11) fixed. Configured search found 23 of 49 reworded questions against 36
+  of the same 49 in exact words: a gap of 26.53 points (95% interval 14.29 to 40.82). The gap-copied synthetic brain
+  predicted 7 points (3 to 12), so the preregistered outcome is HELD, for the gap's direction only. The clean synthetic
+  brain predicted no gap and reads NOT HELD. The synthetic-to-real ratio is 0.2638 (0.0885 to 0.6151), which contains
+  batch 2's 0.175 but also twice it, so the size still can't be gated on. G2's batch 4 layer reads PREDICTIVE, with 14
+  of 16 contrasts qualifying on the family band (11 without the three whose sign is forced). The scorecard is committed
+  as the run wrote it, with the exported `live-recall-b4` reference, `verdicts/G2-batch4.json` and the clean brain's
+  secondary, and the [results page](docs/benchmarks/2026-11-12-g2-paraphrase-gap-replication.md) gives every caveat the
+  preregistration requires.
+- **Fixed.** The reference export lists a comparison with no pairs as skipped instead of crashing, so it can't qualify.
+  Batch 4 skipped none. A keyless test now checks that the committed batch 4 scorecard matches its freeze record
+  (question hash, counts, no overlap with batches 1 to 3, gbrain version and runner commit).
+- **What stays the same.** No frozen rule, threshold, sign or synthetic file changed, and the batch 2 and batch 3
+  verdict files are unchanged. The batch 4 preregistration note on two refused question builds before the freeze keeps
+  its facts and drops internal tooling details, with a dated line saying so.
+
 ## [0.10.219] - 2026-11-11
 
 ### Five comparison shims install patched versions of their vulnerable Python packages
