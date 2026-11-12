@@ -26,8 +26,9 @@
  *     analysis, arm a4-oracle-gpt61sol), re-judged by claude-opus-5-5 with the BEAM judge
  *     (eval/data/answerability/oracle/beam-1m.json, imported with --import-a4 <re-judge file>); the October judge's
  *     scores stay as the bridge, never as the verdict;
- *   - lme-s-hard validator verdicts: eval/data/nightly/lme-s-hard-support.json; its oracle,
- *     eval/data/answerability/oracle/lme-s.json once it exists.
+ *   - lme-s-hard validator verdicts: eval/data/nightly/lme-s-hard-support.json; its oracle: gpt-6.1-sol given only the
+ *     answer sessions, judged by claude-opus-5-5 (eval/data/answerability/oracle/lme-s.json, written by
+ *     `bun eval/runner/sota/oracle.ts export --benchmark lme-s`).
  * A sealed id refuses the write (eval/runner/sota/sealed-guard.ts).
  */
 import { createHash } from 'node:crypto';

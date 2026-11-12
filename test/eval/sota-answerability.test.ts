@@ -100,7 +100,7 @@ describe('the committed answerability files', () => {
     expect(files.map(f => f.benchmark)).toEqual(['beam-100k', 'beam-500k', 'beam-1m', 'lme-s']);
     for (const f of files) expect(read(join(ANSWERABILITY_DIR, `${f.benchmark}.json`))).toBe(fileText(f));
     expect(readdirSync(join(ROOT, ANSWERABILITY_DIR)).sort()).toEqual(['beam-100k.json', 'beam-1m.json', 'beam-500k.json', 'lme-s.json', 'oracle']);
-    expect(readdirSync(join(ROOT, ANSWERABILITY_DIR, 'oracle'))).toEqual(['beam-1m.json']);
+    expect(readdirSync(join(ROOT, ANSWERABILITY_DIR, 'oracle')).sort()).toEqual(['beam-1m.json', 'lme-s.json']);
   });
 
   test('BEAM-1M on the 126 checked items matches the A4 re-judge\'s table, overall and per ability', () => {
@@ -127,9 +127,13 @@ describe('the committed answerability files', () => {
     expect([...opus.values()].filter(r => r.pass === null)).toHaveLength(9);
   });
 
-  test('lme-s-hard: 35 supported, and the 15 both validators reject stay unresolved until the LongMemEval oracle judges them', () => {
+  test('lme-s-hard: 35 supported; of the 15 both validators reject, the LongMemEval oracle passes 11 (partial) and fails 4', () => {
     expect(loadClasses('lme-s')!.size).toBe(50);
-    expect(JSON.parse(read(join(ANSWERABILITY_DIR, 'lme-s.json'))).counts).toEqual({ supported: 35, partial: 0, unsupported: 0, unresolved: 15, unchecked: 0 });
+    expect(JSON.parse(read(join(ANSWERABILITY_DIR, 'lme-s.json'))).counts).toEqual({ supported: 35, partial: 11, unsupported: 4, unresolved: 0, unchecked: 0 });
+    const oracle = oracleRows('lme-s');
+    expect(oracle.size).toBe(50);
+    expect([...oracle.values()].filter(r => r.pass === true)).toHaveLength(41);
+    expect([...oracle.values()].filter(r => r.pass === null)).toHaveLength(0);
   });
 
   test('the A4 import refuses another judge, a wrong row count, a verdict that disagrees with its score, and a sealed id', () => {
