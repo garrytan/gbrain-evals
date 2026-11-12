@@ -20,7 +20,8 @@
  *     smoke failures) on any increase;
  *   - the pass rate, paired by item with a task-clustered bootstrap (items resampled with their trials, 10,000 resamples,
  *     seed 1): when the 95% interval of tonight minus the previous night excludes zero and the drop is at least 5 points;
- *   - a strong flip: an item that passed k of k trials and now passes 0 of k;
+ *   - a strong flip: an item that passed k of k trials and now passes 0 of k, only between nights that ran the suite at the
+ *     same k (a matrix night's stable leg can run fewer trials: run.ts stableTrials);
  *   - cost per correct answer up 25% or more with no gain in pass rate.
  * The pass-rate and cost rules wait a night: the first night one meets is a watch (summary.json watches, with the baseline
  * night's per-item counts), and it is a flag only if the next night meets it again against that baseline. The test runs on
@@ -54,6 +55,7 @@ import { join, resolve } from 'node:path';
 import { pairedBootstrap } from '../refresh-barrier/analyze.ts';
 import { CAUSE_IDS, TAXONOMY_VERSION, UNCLASSIFIED, classify, nightlyFailure, type Cause } from '../failure-causes/index.ts';
 import { harnessCause, readOutcomes, toolErrorCause, UPSTREAM_CAUSES, type Outcome } from './outcome.ts';
+import type { FixLedger, FixTarget } from '../sota/ledger.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
 export const FIXES_PATH = 'eval/data/nightly/fixes.json';
@@ -169,7 +171,9 @@ export interface Watch {
 }
 export interface Comparison {
   against: 'previous' | 'stable'; night: string; ref: string; sha: string;
-  suites: Array<{ suite: string; reader: string | null; compared: boolean; reason?: string; pass_diff?: { mean: number | null; lo: number | null; hi: number | null; items: number }; strong_flips?: string[]; cost_ratio?: number | null }>;
+  suites: Array<{ suite: string; reader: string | null; compared: boolean; reason?: string; pass_diff?: { mean: number | null; lo: number | null; hi: number | null; items: number }; strong_flips?: string[]; cost_ratio?: number | null;
+    /** Each night's trials per item when they differ: the pass rates are compared at pass^1 and no strong flip is filed. */
+    trials?: { tonight: number; other: number } }>;
   flags: Flag[];
   watches: Watch[];
 }
@@ -222,10 +226,10 @@ export function compareNights(tonight: { manifest: NightManifest; rows: Outcome[
       };
       const pass = passDrop(p.per_item), cost = costRise(p.cost_per_correct, p.pass1);
       hold('pass_rate', pass, w => passDrop(w.baseline.per_item));
-      const flips = pass.common.filter(i => { const x = p.per_item[i]!, y = t.per_item[i]!; return x.n === y.n && x.c === x.n && y.c === 0; });
+      const flips = a.k !== b.k ? [] : pass.common.filter(i => { const x = p.per_item[i]!, y = t.per_item[i]!; return x.n === y.n && x.c === x.n && y.c === 0; });
       if (flips.length) flags.push({ kind: 'strong_flip', against, suite: id, reader, detail: `${flips.length} items went from all trials passing to none`, items: flips });
       hold('cost', cost, w => costRise(w.baseline.cost_per_correct, w.baseline.pass1));
-      suites.push({ suite: id, reader, compared: true, pass_diff: { ...pass.boot, items: pass.common.length }, strong_flips: flips, cost_ratio: cost.ratio });
+      suites.push({ suite: id, reader, compared: true, pass_diff: { ...pass.boot, items: pass.common.length }, strong_flips: flips, cost_ratio: cost.ratio, ...(a.k !== b.k ? { trials: { tonight: a.k, other: b.k } } : {}) });
     }
   }
   return { against, night: other.manifest.night, ref: other.manifest.ref, sha: other.manifest.sha, suites, flags, watches };
@@ -333,7 +337,8 @@ export function nightAgreement(manifest: NightManifest, rows: Outcome[]): Agreem
     verdict: reason ? 'not_measured' : c.mean_kappa !== null && meets(c.mean_kappa, min_kappa) && meets(c.raw!, min_raw) ? 'pass' : 'fail' };
 }
 
-export interface Fix { issue: string; pr: string; gbrain_version: string; suite: string; items: string[]; note?: string }
+/** A shipped fix. target is the fix list item it answers, and ledger what sota/ledger.ts measured for it. */
+export interface Fix { issue: string; pr: string; gbrain_version: string; suite: string; items: string[]; note?: string; target?: FixTarget; ledger?: FixLedger }
 
 export function loadFixes(path = join(REPO, FIXES_PATH)): Fix[] {
   return existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as { fixes: Fix[] }).fixes : [];
@@ -435,7 +440,7 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     lines.push('', `## Against ${c.against === 'previous' ? 'the previous master night' : 'stable'} (${c.ref} ${c.sha.slice(0, 12)}, ${c.night})`, '');
     for (const s of c.suites) {
       lines.push(s.compared
-        ? `- ${s.suite} ${s.reader ?? 'keyless'}: pass rate change ${s.pass_diff!.mean === null ? 'n/a' : `${(s.pass_diff!.mean * 100).toFixed(1)} points (95% interval ${(s.pass_diff!.lo! * 100).toFixed(1)} to ${(s.pass_diff!.hi! * 100).toFixed(1)})`} over ${s.pass_diff!.items} items${s.strong_flips?.length ? `; strong flips ${s.strong_flips.join(', ')}` : ''}`
+        ? `- ${s.suite} ${s.reader ?? 'keyless'}: pass rate change ${s.pass_diff!.mean === null ? 'n/a' : `${(s.pass_diff!.mean * 100).toFixed(1)} points (95% interval ${(s.pass_diff!.lo! * 100).toFixed(1)} to ${(s.pass_diff!.hi! * 100).toFixed(1)})`} over ${s.pass_diff!.items} items${s.trials ? ` (pass^1 over all trials: ${s.trials.tonight} per item tonight, ${s.trials.other} on the ${c.against === 'stable' ? 'stable' : 'previous'} night, so no strong flip is filed)` : ''}${s.strong_flips?.length ? `; strong flips ${s.strong_flips.join(', ')}` : ''}`
         : `- ${s.suite} ${s.reader ?? 'keyless'}: not compared, ${s.reason}`);
     }
   }

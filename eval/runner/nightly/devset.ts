@@ -9,7 +9,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-export const DEVSET_PATH = 'eval/data/nightly/devset-v1.json';
+/** The current dev set. devset-v1.json stays committed: nights recorded before v2 name it, and its suites' digests are theirs. */
+export const DEVSET_PATH = 'eval/data/nightly/devset-v2.json';
 export const DEVSET_FIX = `fix: bun eval/runner/nightly/select-devset.ts && git diff ${DEVSET_PATH}`;
 
 export interface Item { id: string; role: 'headroom' | 'canary' }

@@ -1,6 +1,6 @@
 /**
  * Cause ids every predictive measure emits. They mirror GBEV-57's failure-cause
- * taxonomy (eval/runner/failure-causes/taxonomy.ts, TAXONOMY_VERSION 2026-11-11.1)
+ * taxonomy (eval/runner/failure-causes/taxonomy.ts, TAXONOMY_VERSION 2026-11-11.2)
  * so the gap measures, the nightly loop and the weekly report count the same
  * causes. test/eval/predictive-core.test.ts compares this list with that module
  * whenever it is present.

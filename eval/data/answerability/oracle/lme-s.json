@@ -1,0 +1,213 @@
+{
+ "schema": "answerability-oracle/1",
+ "benchmark": "lme-s",
+ "about": "gpt-6.1-sol answers given only each question's gold evidence (memory-qa's oracle reading arm at 8192 output tokens), judged by anthropic:claude-opus-5-5 with memory-qa's judge prompts. pass is a score of at least 0.5; an empty answer that stopped at the output limit has no verdict (pass null). Ids and scores only.",
+ "reader": "openai:gpt-6.1-sol",
+ "judge": "anthropic:claude-opus-5-5",
+ "judge_prompt": "acd9c261fd1a2f59",
+ "reader_version": "10d86f93739c80a4",
+ "max_tokens": 8192,
+ "pass_threshold": 0.5,
+ "rows": {
+  "71017277": {
+   "score": 1,
+   "pass": true
+  },
+  "001be529": {
+   "score": 1,
+   "pass": true
+  },
+  "031748ae_abs": {
+   "score": 1,
+   "pass": true
+  },
+  "08f4fc43": {
+   "score": 1,
+   "pass": true
+  },
+  "09ba9854_abs": {
+   "score": 1,
+   "pass": true
+  },
+  "0a995998": {
+   "score": 0,
+   "pass": false
+  },
+  "0bc8ad93": {
+   "score": 0,
+   "pass": false
+  },
+  "10d9b85a": {
+   "score": 1,
+   "pass": true
+  },
+  "1a1907b4": {
+   "score": 1,
+   "pass": true
+  },
+  "2133c1b5": {
+   "score": 1,
+   "pass": true
+  },
+  "2bf43736": {
+   "score": 1,
+   "pass": true
+  },
+  "35a27287": {
+   "score": 1,
+   "pass": true
+  },
+  "370a8ff4": {
+   "score": 0,
+   "pass": false
+  },
+  "37f165cf": {
+   "score": 1,
+   "pass": true
+  },
+  "3b6f954b": {
+   "score": 1,
+   "pass": true
+  },
+  "51c32626": {
+   "score": 1,
+   "pass": true
+  },
+  "5d3d2817": {
+   "score": 1,
+   "pass": true
+  },
+  "61f8c8f8": {
+   "score": 1,
+   "pass": true
+  },
+  "6d550036": {
+   "score": 0,
+   "pass": false
+  },
+  "7024f17c": {
+   "score": 0,
+   "pass": false
+  },
+  "7405e8b1": {
+   "score": 1,
+   "pass": true
+  },
+  "75f70248": {
+   "score": 1,
+   "pass": true
+  },
+  "81507db6": {
+   "score": 1,
+   "pass": true
+  },
+  "88432d0a": {
+   "score": 0,
+   "pass": false
+  },
+  "8e91e7d9": {
+   "score": 1,
+   "pass": true
+  },
+  "92a0aa75": {
+   "score": 1,
+   "pass": true
+  },
+  "9a707b81": {
+   "score": 1,
+   "pass": true
+  },
+  "9bbe84a2": {
+   "score": 1,
+   "pass": true
+  },
+  "9ee3ecd6": {
+   "score": 1,
+   "pass": true
+  },
+  "a2f3aa27": {
+   "score": 1,
+   "pass": true
+  },
+  "a3838d2b": {
+   "score": 1,
+   "pass": true
+  },
+  "a96c20ee_abs": {
+   "score": 1,
+   "pass": true
+  },
+  "bf659f65": {
+   "score": 1,
+   "pass": true
+  },
+  "c14c00dd": {
+   "score": 1,
+   "pass": true
+  },
+  "d851d5ba": {
+   "score": 1,
+   "pass": true
+  },
+  "dd2973ad": {
+   "score": 1,
+   "pass": true
+  },
+  "e3038f8c": {
+   "score": 1,
+   "pass": true
+  },
+  "e3fc4d6e": {
+   "score": 1,
+   "pass": true
+  },
+  "gpt4_0a05b494": {
+   "score": 1,
+   "pass": true
+  },
+  "gpt4_1a1dc16d": {
+   "score": 1,
+   "pass": true
+  },
+  "gpt4_2f8be40d": {
+   "score": 1,
+   "pass": true
+  },
+  "gpt4_59149c77": {
+   "score": 1,
+   "pass": true
+  },
+  "gpt4_68e94287": {
+   "score": 1,
+   "pass": true
+  },
+  "gpt4_731e37d7": {
+   "score": 1,
+   "pass": true
+  },
+  "gpt4_7abb270c": {
+   "score": 0,
+   "pass": false
+  },
+  "gpt4_7bc6cf22": {
+   "score": 1,
+   "pass": true
+  },
+  "gpt4_7fce9456": {
+   "score": 0,
+   "pass": false
+  },
+  "gpt4_85da3956": {
+   "score": 0,
+   "pass": false
+  },
+  "gpt4_a1b77f9c": {
+   "score": 1,
+   "pass": true
+  },
+  "gpt4_d6585ce9": {
+   "score": 1,
+   "pass": true
+  }
+ }
+}

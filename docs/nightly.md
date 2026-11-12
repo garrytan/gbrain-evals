@@ -12,8 +12,9 @@ published benchmark result and never stand in for one.
 ## What a night runs
 
 The dev set is a versioned list of suites and items in
-[`eval/data/nightly/devset-v1.json`](../eval/data/nightly/devset-v1.json), chosen for headroom: items that frontier
-models on gbrain still miss, plus a few spread-out canaries. Each suite has its own digest. A night is compared with an
+[`eval/data/nightly/devset-v2.json`](../eval/data/nightly/devset-v2.json), chosen for headroom: items that frontier
+models on gbrain still miss, plus a few spread-out canaries. `devset-v1.json` stays committed because the nights
+recorded before v2 name it. Each suite has its own digest. A night is compared with an
 earlier night only suite by suite, and only where the digests match, so changing one suite starts a new baseline for
 that suite alone. `bun eval/runner/nightly/select-devset.ts --check` rebuilds the file from the committed results and
 checks that nothing changed.
@@ -26,7 +27,7 @@ checks that nothing changed.
 | `concurrent-writers` | Seeded keyless trials where writers race refreshes, crashes, kills and imports, on PGLite and Postgres | deterministic |
 | `system-smokes` | Seven keyless smokes on a seeded synthetic brain (below) | deterministic |
 | `lme-s-hard` | LongMemEval-S questions a frontier reader on gbrain got wrong, plus canaries | judge |
-| `beam-1m-hard` | Questions from three public BEAM-1M dev conversations where frontier readers on gbrain missed most rubric items | judge |
+| `beam-1m-hard` | Every answerable question of the eight public BEAM-1M dev conversations whose items are support-checked: 126 questions, supported or partial in [the answerability classes](#the-sota-loop-answerability-attribution-and-the-fix-list) | judge |
 | `tool-contract-replay` | Each model family's recorded tool calls replayed keyless through gbrain's rollout, write-capture and MCP paths | deterministic |
 
 The seven system smokes cover the places where gbrain master broke in the 30 days before the check was built:
@@ -58,7 +59,9 @@ A reader is the model that answers or acts in a suite. The dev set's readers are
 the nightly tier uses `gpt-6.1-sol` alone, and keyless suites have no reader.
 
 k is the number of trials per item. Agent suites run each item 3 times; QA suites, the replay, the trials and the
-smokes run once, and the smoke tier runs everything once. The QA suites are judged across model families, so no judge
+smokes run once, and the smoke tier runs everything once. One exception: Cat 40 world M's stable leg runs each item
+once (`stable_trials` in its suite config) while master keeps 3, so master and stable are compared at pass^1 over all
+trials and no strong flip is filed between them. The QA suites are judged across model families, so no judge
 grades its own family: GPT-6 Astra judges every family's answers except OpenAI's, which Claude Opus 5.5 judges. So
 claude-opus-5-5 and particle-1 share a judge, and their agreement compares the two readers, not two reader-and-judge
 pairs. QA judgments and provider calls are cached by content, so a resumed night repeats none of them.
@@ -176,6 +179,58 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
 
 A night run with `--fake` says so at the top of its report: its numbers test the plumbing and measure no model.
 
+## The SOTA loop: answerability, attribution and the fix list
+
+The nightly says what failed. The weekly SOTA loop asks which of those misses gbrain could fix, how many points each
+fix could return, and whether a shipped fix delivered them. Each step is keyless: it reads the week's nights and a cache
+of answers bought once, in a paid run of its own, and never calls a model.
+
+- **Answerability.** Every dev question gets one class, frozen in
+  [`eval/runner/sota/answerability.ts`](../eval/runner/sota/answerability.ts) and written to
+  `eval/data/answerability/<benchmark>.json` (`--check` rebuilds them and fails on a difference). *Supported*: at most
+  one of the two support validators rejects the turns the question cites. *Partial*: both reject them (or it cites no
+  turn), yet the oracle, a frontier reader given only the gold evidence, answers it right; BEAM's rubric gives partial
+  credit, so an answer can be right where the cited turns don't spell it out. *Unsupported*: both reject it and the
+  oracle fails it. *Unresolved*: both reject it and no oracle verdict exists yet. *Unchecked*: the support check left
+  it out. The answerable questions are supported plus partial, which is how `beam-1m-hard` holds every answerable
+  question of its eight conversations.
+- **The outcome cache.** [`eval/runner/sota/cache.ts`](../eval/runner/sota/cache.ts) keeps one oracle answer and one
+  leader answer per question and reader. The leader is the strongest system we have for the benchmark: the
+  whole-history reader on LongMemEval and the grep agent on BEAM. A row counts only for the exact inputs it was
+  measured on: the system's code, the reader's effort and output limit, the judge and its prompt, the pass bar, the
+  dataset, the answerability file and the harness. A question with no row is *unknown* and never guessed. A row measured
+  on other inputs is *stale*, and the step that needed it stops with `SOTA_CACHE_STALE` (below), the inputs that changed
+  and the command that buys fresh rows. Rows are bought in paid runs of their own: `bun eval/runner/sota/oracle.ts run`
+  for the oracle, and `bun eval/runner/sota/leader.ts run` for the leader, which runs two cells of the Q1 scoreboard's
+  runner (the whole history on every `lme-s-hard` question, the grep agent on the `beam-1m-hard` questions the SOTA
+  dev test leaves out) judged by the reader's frontier judge from the other model family. `leader.ts import` reuses the
+  dev test's own grep-agent answers, and `plan` on either tool lists the rows still missing.
+- **Attribution.** `bun eval/runner/failure-causes/cli.ts attribute --labels <week's labels> --cache <cache> --out
+  attribution.json` puts each failed row of a QA suite into one bucket, the first that applies: *harness* (a provider
+  or harness error, or an answer cut off at its output limit), *unsupported*, *reader limited* (the oracle fails it
+  too), *retrieval lost* (the oracle passes it and the gold never reached the reader whole), *context use* (the oracle
+  passes it and the gold reached the reader) and *unknown* (a step is missing). The buckets are listed in
+  [TAXONOMY.md](failure-causes/TAXONOMY.md#attribution-buckets). Harness rows are left out of every denominator, and
+  the recoverable points of each bucket are an upper bound: what the pass rate would gain if every row in it passed.
+  `report --attribution attribution.json` adds the table beside the cause counts. The nightly report's harness column
+  and the failure-cause `harness_error` count are the same number on the same rows.
+- **The fix list.** [`eval/runner/sota/fixlist.ts`](../eval/runner/sota/fixlist.ts) turns the attribution into at most
+  three fixes for gbrain's crew, ranked by recoverable points, each built from misses the oracle or the leader has shown
+  can pass. Causes that aren't gbrain's to fix (harness errors, unsupported items, the reader's session budget, model
+  error, unlabelled rows) never enter. Each item carries public example ids, its leader-solved count, a predicted gain and
+  the shape of a keyless gbrain test. The list is marked changed only when the ranking moves or a fix lands, so a week
+  that moved only the points refiles nothing.
+- **The fix ledger.** `bun eval/runner/sota/ledger.ts dev --master <night dir> --stable <night dir> --fixes
+  eval/data/nightly/fixes.json --out ledger.json` measures each fix on a night when master carries it and stable
+  doesn't: the paired master-against-stable contrast on the fix's own items, beside the noise baseline (how often
+  untouched outcomes flip between the two refs) and the collateral losses elsewhere. Every contrast is paired by
+  question and reader, clustered by conversation on BEAM, by question on LongMemEval and by task on Cat 40, and states
+  the smallest difference it can detect.
+- **The scorecard and custody.** [The scorecard rules](sota/scorecard-rules.md) say when gbrain counts as ahead of,
+  behind or at parity with each benchmark's leader, and what a fix can claim. Before a custody run on held-out data at a
+  newer gbrain, `bun eval/runner/sota/custody.ts check-providers --gbrain <checkout>` refuses when that gbrain's
+  embedding or rerank model names a provider the held-out set's preregistration didn't vet.
+
 ## Cat 40 world M is a dev set, never a Hard-freeze result
 
 The nightly runs Cat 40 world M with the ladder's `--dev-set` flag. That runs it on the current harness code instead of
@@ -245,6 +300,13 @@ The runner exits with a code and prints the command that resumes the night:
 
 A refused paid run exits 2, and any other error exits 1.
 
+The SOTA loop's commands have two stops of their own:
+
+| Exit | Name | Meaning |
+|---|---|---|
+| 6 | `SOTA_CACHE_STALE` | `attribute` or `cache.ts check` found oracle or leader rows measured on other inputs. The message names the changed inputs, the re-buy command and its paid-window request. `attribute` still writes its file, marked stale, and the fix list files nothing that week. |
+| 7 | `CUSTODY_PROVIDER_CHANGED` | `custody.ts check-providers` found an embedding or rerank provider the held-out set didn't vet, or `CUSTODY_PROVIDER_UNKNOWN` when it couldn't read them. The custody run doesn't start. |
+
 ```bash
 bun eval/runner/nightly/run.ts --resume <night dir>
 ```
@@ -300,6 +362,15 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-12: The weekly SOTA loop, dev set v2 and one stable trial for Cat 40
+
+Added the SOTA loop section: the answerability classes, the outcome cache and how its rows are bought, attribution
+buckets, the fix list, the fix ledger, the scorecard rules and the custody provider check, with the `SOTA_CACHE_STALE`
+and `CUSTODY_PROVIDER_CHANGED` stops beside the exit codes. The dev set is now `devset-v2.json`: `beam-1m-hard` holds
+every answerable question of eight public BEAM-1M dev conversations (126, was 60 from three), and Cat 40 world M's
+stable leg runs one trial while master keeps three. Both suites get new digests and start new baselines; the other
+suites keep theirs.
 
 ### 2026-11-11: A replay of the request id a refusal names counts as a retry
 

@@ -47,7 +47,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { CHAT_PRICE_OVERRIDES } from '../budget-ledger.ts';
 import { cleanPath, FileStore, FsArm, type GrepRequest, type UncappedGrep } from '../cat40/arms.ts';
-import { attemptReceipt, priceUsage, provider, runAgent, type AgentRun, type ProviderAttempt, type ScriptedModel, type ToolSpec } from '../cat40/loop.ts';
+import { attemptReceipt, priceUsage, provider, runAgent, type AgentRun, type Arm, type ProviderAttempt, type ScriptedModel, type ToolSpec } from '../cat40/loop.ts';
 import { decideError } from '../decisions/errors.ts';
 import { FRONTIER_READERS } from './baselines.ts';
 import type { Outcome } from '../memory-qa/outcomes.ts';
@@ -269,6 +269,87 @@ export function evidenceOpened(opened: readonly string[], gold: readonly string[
   return { gold: new Set(gold).size, opened_gold: hit, share: gold.length ? hit / new Set(gold).size : null };
 }
 
+// ─── The shared answer path ─────────────────────────────────────────
+
+/**
+ * Every provider attempt's receipt (FileAgentReceipt), one JSON line each in `path`, under one lane. Receipts already
+ * written are counted once per instance: the cell retries a failed answer under the same answer id (A22), and its
+ * attempts are numbered on from the earlier ones, so (model, question_id, replicate, attempt) names one attempt. A line
+ * a killed run left half-written is not counted.
+ */
+export class AttemptReceipts {
+  /** Receipts already in path per reader, question and replicate, and the newline a half-written last line needs. */
+  private recorded: { counts: Map<string, number>; lead: string } | null = null;
+
+  constructor(readonly path: string, private lane: string) {}
+
+  private log() {
+    if (this.recorded) return this.recorded;
+    const text = existsSync(this.path) ? readFileSync(this.path, 'utf8') : '';
+    const counts = new Map<string, number>();
+    for (const line of text.split('\n')) {
+      let r: FileAgentReceipt | null;
+      try { r = JSON.parse(line) as FileAgentReceipt | null; } catch { continue; }
+      if (!r || typeof r !== 'object') continue;
+      const key = `${r.model}|${r.question_id}|${r.replicate}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return this.recorded = { counts, lead: text && !text.endsWith('\n') ? '\n' : '' };
+  }
+
+  /** Writes one attempt's receipt, `question_id` the cell's answer id, else the namespace. */
+  record(model: string, a: ProviderAttempt, ns: string, opts: AnswerOptions): FileAgentReceipt {
+    const log = this.log();
+    const key = `${opts.reader}|${opts.answer_id ?? ns}|${opts.replicate}`;
+    const attempt = log.counts.get(key) ?? 0;
+    const r = attemptReceipt(model, a, { lane: this.lane, role: 'reader', question_id: opts.answer_id ?? ns, replicate: opts.replicate, attempt });
+    log.counts.set(key, attempt + 1);
+    mkdirSync(dirname(this.path), { recursive: true });
+    appendFileSync(this.path, log.lead + JSON.stringify(r) + '\n');
+    log.lead = '';
+    return r;
+  }
+}
+
+/** What an answering system on the Cat 40 loop passes for one question; only `arm` and `system` differ between the arms. */
+export interface ArmAnswerConfig {
+  arm: Arm;
+  system: string;
+  maxTurns: number;
+  effort: string;
+  fetchImpl: typeof fetch;
+  scripted?: ScriptedModel;
+  receipts: AttemptReceipts;
+  /** Evaluator-side: the ingested source ids the run opened, from its tool events. */
+  opened: (run: AgentRun) => string[];
+}
+
+/**
+ * One question through the Cat 40 loop (prose `submit_answer`, every tool result whole) with a receipt per provider
+ * attempt: the answer path the file agent and the gbrain agent share, so they differ only in their tools and the
+ * system prompt that names them. A budget stop ends the question as `budget_not_run` with the usage already billed.
+ */
+export async function answerWithArm(ns: string, q: PublicQuestion, opts: AnswerOptions, cfg: ArmAnswerConfig): Promise<AgentAnswer> {
+  const model = cfg.scripted ? opts.reader : parseReader(opts.reader).model;
+  const t0 = performance.now();
+  const receipts: FileAgentReceipt[] = [];
+  let run: AgentRun;
+  try {
+    run = await runAgent({ model, system: cfg.system, user: fileAgentUser(q), arm: cfg.arm, maxTurns: cfg.maxTurns, maxToolChars: null,
+      submitTool: PROSE_ANSWER_TOOL, fetchImpl: cfg.fetchImpl, scripted: cfg.scripted, effort: cfg.effort, onAttempt: a => { receipts.push(cfg.receipts.record(model, a, ns, opts)); } });
+  } catch (e) {
+    if ((e as Error).name !== 'BudgetExceededError') throw e;
+    const billed = receipts.flatMap(r => r.usage ? [r.usage] : []);
+    const sum = (f: (u: (typeof billed)[number]) => number) => billed.reduce((s, u) => s + f(u), 0);
+    const usage = { input: sum(u => u.input_uncached ?? u.input_total), output: sum(u => u.output_total), cache_read: sum(u => u.cache_read ?? 0), cache_write: sum(u => u.cache_write ?? 0) };
+    return { text: '', stop_reason: 'budget', outcome: 'budget_not_run', error: (e as Error).message, usage, provider_input_tokens: sum(u => u.input_total),
+      latency_ms: performance.now() - t0, turns: receipts.reduce((n, r) => Math.max(n, r.turn ?? 0), 0), usd: priceUsage(model, { ...usage, requests: receipts.length }), opened_source_ids: [] };
+  }
+  const { input, output, cache_read, cache_write } = run.usage;
+  return { ...classifyRun(run), usage: { input, output, cache_read, cache_write }, provider_input_tokens: input + cache_read + cache_write,
+    latency_ms: performance.now() - t0, turns: run.turns, usd: run.usd, opened_source_ids: cfg.opened(run), ...(run.timed_out ? { timed_out: true as const } : {}) };
+}
+
 // ─── The system ─────────────────────────────────────────────────────
 
 export interface FileAgentOptions {
@@ -292,13 +373,13 @@ export class FileAgentSystem implements AnsweringSystem {
   private workDir: string;
   /** Every provider attempt's receipt (FileAgentReceipt), one per line. */
   readonly receiptsPath: string;
-  /** Receipts already in receiptsPath per reader, question and replicate, and the newline a half-written last line needs. */
-  private recorded: { counts: Map<string, number>; lead: string } | null = null;
+  private receipts: AttemptReceipts;
 
   constructor(private opts: FileAgentOptions = {}) {
     requireRipgrep();
     this.workDir = opts.workDir ?? mkdtempSync(join(tmpdir(), 'file-agent-'));
     this.receiptsPath = join(this.workDir, 'receipts.ndjson');
+    this.receipts = new AttemptReceipts(this.receiptsPath, 'q1-file-agent');
   }
 
   async capabilities(): Promise<CapabilityRecord> {
@@ -357,66 +438,24 @@ export class FileAgentSystem implements AnsweringSystem {
     return t;
   }
 
-  /**
-   * The receipts already written, counted once per instance: the cell retries a failed answer under the same answer id
-   * (A22), and its attempts are numbered on from the earlier ones, so (model, question_id, replicate, attempt) names one
-   * attempt. A line a killed run left half-written is not counted.
-   */
-  private receiptLog() {
-    if (this.recorded) return this.recorded;
-    const text = existsSync(this.receiptsPath) ? readFileSync(this.receiptsPath, 'utf8') : '';
-    const counts = new Map<string, number>();
-    for (const line of text.split('\n')) {
-      let r: FileAgentReceipt | null;
-      try { r = JSON.parse(line) as FileAgentReceipt | null; } catch { continue; }
-      if (!r || typeof r !== 'object') continue;
-      const key = `${r.model}|${r.question_id}|${r.replicate}`;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return this.recorded = { counts, lead: text && !text.endsWith('\n') ? '\n' : '' };
-  }
-
   async answer(ns: string, q: PublicQuestion, opts: AnswerOptions): Promise<AgentAnswer> {
-    const scripted = this.opts.scripted?.(q);
-    const model = scripted ? opts.reader : parseReader(opts.reader).model;
     const { root, files } = this.tree(ns);
     const store = new FileStore(new Map([...files].map(([p, f]) => [p, f.content])));
     const arm = new FsArm('file-agent', store, { grep: ripgrep(root, this.opts.grepLimits ?? DEFAULT_GREP_LIMITS, e => this.limitEvents.push(e)), write: false });
-    const t0 = performance.now();
-    const receipts: FileAgentReceipt[] = [];
-    const onAttempt = (a: ProviderAttempt) => {
-      const log = this.receiptLog();
-      const key = `${opts.reader}|${opts.answer_id ?? ns}|${opts.replicate}`;
-      const attempt = log.counts.get(key) ?? 0;
-      const r = attemptReceipt(model, a, { lane: 'q1-file-agent', role: 'reader', question_id: opts.answer_id ?? ns, replicate: opts.replicate, attempt });
-      log.counts.set(key, attempt + 1);
-      receipts.push(r);
-      mkdirSync(this.workDir, { recursive: true });
-      appendFileSync(this.receiptsPath, log.lead + JSON.stringify(r) + '\n');
-      log.lead = '';
-    };
-    let run: AgentRun;
-    try {
-      run = await runAgent({ model, system: FILE_AGENT_SYSTEM, user: fileAgentUser(q), arm, maxTurns: this.opts.maxTurns ?? FILE_AGENT_MAX_TURNS, maxToolChars: null,
-        submitTool: PROSE_ANSWER_TOOL, fetchImpl: this.opts.fetchImpl ?? proxiedFetch(), scripted, effort: this.opts.effort ?? FILE_AGENT_EFFORT, onAttempt });
-    } catch (e) {
-      if ((e as Error).name !== 'BudgetExceededError') throw e;
-      const billed = receipts.flatMap(r => r.usage ? [r.usage] : []);
-      const sum = (f: (u: (typeof billed)[number]) => number) => billed.reduce((s, u) => s + f(u), 0);
-      const usage = { input: sum(u => u.input_uncached ?? u.input_total), output: sum(u => u.output_total), cache_read: sum(u => u.cache_read ?? 0), cache_write: sum(u => u.cache_write ?? 0) };
-      return { text: '', stop_reason: 'budget', outcome: 'budget_not_run', error: (e as Error).message, usage, provider_input_tokens: sum(u => u.input_total),
-        latency_ms: performance.now() - t0, turns: receipts.reduce((n, r) => Math.max(n, r.turn ?? 0), 0), usd: priceUsage(model, { ...usage, requests: receipts.length }), opened_source_ids: [] };
-    }
-    const opened: string[] = [];
-    for (const t of run.tools) {
-      if (t.name !== 'read_file' || t.error) continue;
-      const p = cleanPath(t.args.path);
-      const src = (files.get(p) ?? files.get(`${p}.md`))?.source_id;
-      if (src && !opened.includes(src)) opened.push(src);
-    }
-    const { input, output, cache_read, cache_write } = run.usage;
-    return { ...classifyRun(run), usage: { input, output, cache_read, cache_write }, provider_input_tokens: input + cache_read + cache_write,
-      latency_ms: performance.now() - t0, turns: run.turns, usd: run.usd, opened_source_ids: opened, ...(run.timed_out ? { timed_out: true as const } : {}) };
+    return answerWithArm(ns, q, opts, {
+      arm, system: FILE_AGENT_SYSTEM, maxTurns: this.opts.maxTurns ?? FILE_AGENT_MAX_TURNS, effort: this.opts.effort ?? FILE_AGENT_EFFORT,
+      fetchImpl: this.opts.fetchImpl ?? proxiedFetch(), scripted: this.opts.scripted?.(q), receipts: this.receipts,
+      opened: run => {
+        const opened: string[] = [];
+        for (const t of run.tools) {
+          if (t.name !== 'read_file' || t.error) continue;
+          const p = cleanPath(t.args.path);
+          const src = (files.get(p) ?? files.get(`${p}.md`))?.source_id;
+          if (src && !opened.includes(src)) opened.push(src);
+        }
+        return opened;
+      },
+    });
   }
 
   async close() {

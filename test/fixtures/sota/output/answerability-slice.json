@@ -1,0 +1,10 @@
+{
+ "schema": "answerability/1",
+ "benchmark": "beam-1m",
+ "note": "A slice of an eval/runner/sota output, kept as the sealed-id guard's output fixture: ids and classes only.",
+ "items": {
+  "1m-2:contradiction_resolution:0": { "class": "unsupported", "gates": ["support:anthropic:claude-haiku-5-5", "support:gemini:gemini-3.8-flash"], "oracle": "fail" },
+  "1m-20:event_ordering:0": { "class": "supported", "gates": [], "oracle": "pass" },
+  "1m-24:summarization:1": { "class": "supported", "gates": [], "oracle": "pass" }
+ }
+}

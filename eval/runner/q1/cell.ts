@@ -97,11 +97,12 @@ import { DEFAULT_ROUTE_CLASSES, EXECUTES, Q1_CAMPAIGN_ID, type CampaignManifest 
 import { AgentRuntimeSystem } from '../systems/agent-runtime.ts';
 import { answerFullContext, FullContextSystem, NoMemorySystem, PlainHybridSystem, type FitTokenizer } from '../systems/baselines.ts';
 import { FILE_AGENT_SYSTEM, FileAgentSystem, type AnsweringSystem } from '../systems/file-agent.ts';
+import { GBRAIN_AGENT_SYSTEM, GbrainAgentSystem } from '../systems/gbrain-agent.ts';
 import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render-v2.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
-import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
+import { ALL_SETS, definitionProblems, estimateCell, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
 import { bg1Stage1OverCap, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
@@ -196,6 +197,12 @@ const groupBy = (qs: readonly MemoryQuestion[], key: (q: MemoryQuestion) => stri
 export function selectCellQuestions(questions: readonly MemoryQuestion[], sel: Selection): MemoryQuestion[] {
   const order = (qs: MemoryQuestion[]) => [...qs].sort((a, b) => (a.conversation === b.conversation ? (a.id < b.id ? -1 : 1) : a.conversation < b.conversation ? -1 : 1));
   if (sel.kind === 'all') return order([...questions]);
+  if (sel.kind === 'ids') {
+    const named = questions.filter(q => sel.ids.includes(q.id));
+    if (named.length !== new Set(sel.ids).size) throw refuse({ code: 'USAGE', message: `the selection names ${new Set(sel.ids).size} question ids, and only ${named.length} are in the loaded split`,
+      why: 'an ids selection names the exact questions a cell runs, so a missing one means the corpus is not the one the cell was defined on', fix: { next: 'report', user_message: 'check the cell\'s benchmark, split and only_conversations against its ids' } });
+    return order(named);
+  }
   if (sel.kind === 'shootout-slice') return order(selectQuestions([...questions], sel.limit, sel.seed));
   if (sel.kind === 'per-conversation') return order([...groupBy(questions, q => q.conversation).values()].flatMap(qs => roundRobin(groupBy(qs, q => q.category), sel.per_conversation, sel.seed)));
   const floor: MemoryQuestion[] = [];
@@ -491,6 +498,10 @@ export function systemFor(def: CellDefinition, opts: CellOptions, sanitizer: San
     case 'baseline-hybrid': return new PlainHybridSystem(opts.embed === 'hash' ? async texts => texts.map(t => hashEmbed(t, PG_EMBED_DIMS))
       : cachedOpenAIEmbedder(join(process.env.GBRAIN_EVALS_EMBED_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'embed-cache'), 'plain-hybrid-te3l-1536.json'), fetch, opts.providerProxy ? `${opts.providerProxy}/${def.system}/openai/v1` : undefined), opts.embed === 'hash' ? `hash@${PG_EMBED_DIMS} (keyless control)` : undefined);
     case 'baseline-file-agent': return new FileAgentSystem({ workDir: join(opts.out, 'runs', def.id, 'file-agent'), effort: def.effort });
+    case 'gbrain-defaults':
+      if (opts.providerProxy) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} runs the gbrain agent in process, and a metering proxy was given`,
+        why: 'gbrain\'s own embedding and reranker calls go to the provider from this process, where the budget ledger reserves them; they would not reach the proxy', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--paid', '--budget-run-id', '<id>'], user_message: 'run the cell under a budget ledger run, without --provider-proxy or SHOOTOUT_PROXY' } });
+      return new GbrainAgentSystem({ workDir: join(opts.out, 'runs', def.id, 'gbrain-agent'), effort: def.effort, embed: opts.embed });
     case 'ext-agent-runtime': return new AgentRuntimeSystem();
     default: throw refuse({ code: 'NOT_YET_AVAILABLE', message: `no in-process system for ${def.system}`, why: 'only harness controls and answering systems run in process', fix: { next: 'report', user_message: `check ${def.id}'s runner in eval/runner/q1/cells/definitions.ts` } });
   }
@@ -516,7 +527,7 @@ export function armReaders(arm: ArmDefinition, cap: CapabilityRecord): string[] 
 
 // ─── Run config ──────────────────────────────────────────────────────
 
-const PROMPTS: Record<string, string> = { native: NATIVE_READER_TEMPLATE, rehydrated: READER_TEMPLATE, agent: FILE_AGENT_SYSTEM };
+const PROMPTS: Record<string, string> = { native: NATIVE_READER_TEMPLATE, rehydrated: READER_TEMPLATE, agent: FILE_AGENT_SYSTEM, 'gbrain-agent': GBRAIN_AGENT_SYSTEM };
 
 /**
  * Launch-control fields of a cell definition: how its units are leased, laid out on VMs, snapshotted and sent back to
@@ -530,7 +541,7 @@ export function runConfigText(def: CellDefinition, arm: ArmDefinition, ctx: { in
   const { estimate: _e, arms: _a, ...rest } = def;
   const cell = Object.fromEntries(Object.entries(rest).filter(([k]) => !(LAUNCH_CONTROL_FIELDS as readonly string[]).includes(k)));
   const counter = arm.mode === 'packed' || arm.mode === 'native-default' ? readerCounter(arm.readers).identity : arm.mode === 'full-context' ? arm.readers.map(r => ({ reader: r, ...readerTokenizer(r) })) : null;
-  const prompt = arm.mode === 'full-context' ? PROMPTS.rehydrated : arm.mode === 'agent' && def.system === 'baseline-file-agent' ? PROMPTS.agent : arm.mode === 'packed' || arm.mode === 'native-default' ? PROMPTS.native : null;
+  const prompt = arm.mode === 'full-context' ? PROMPTS.rehydrated : arm.mode === 'agent' && def.system === 'baseline-file-agent' ? PROMPTS.agent : arm.mode === 'agent' && def.system === 'gbrain-defaults' ? PROMPTS['gbrain-agent'] : arm.mode === 'packed' || arm.mode === 'native-default' ? PROMPTS.native : null;
   const raised = arm.mode === 'packed' || arm.mode === 'native-default' || arm.mode === 'full-context' ? arm.readers.filter(r => readerMaxTokens(r) !== READER_MAX_TOKENS) : [];
   return JSON.stringify({
     schema: RUN_CONFIG_SCHEMA, cell_id: arm.cell_id, run_cell: def.id, cell, arm,
@@ -1614,8 +1625,12 @@ export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Re
 }
 
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
-export function paidGuard(argv: string[], def: CellDefinition, limit: number | null): number {
-  const estimate = Math.round((limit ? def.estimate.usd * Math.min(1, limit / ALL_SETS[def.set].questions) + (def.estimate.lines.ingest ?? 0) : def.estimate.usd) * 100) / 100;
+/** Refuses a run the budget run can't cover: the estimate of the arms it runs (every arm without --arms), cut to --limit's share. */
+export function paidGuard(argv: string[], def: CellDefinition, limit: number | null, arms: readonly string[] | null = null): number {
+  const { estimate: whole, ...rest } = def;
+  const picked = arms ? def.arms.filter(a => arms.includes(a.id)) : def.arms;
+  const cell = picked.length && picked.length < def.arms.length ? estimateCell({ ...rest, arms: picked }) : whole;
+  const estimate = Math.round((limit ? cell.usd * Math.min(1, limit / ALL_SETS[def.set].questions) + (cell.lines.ingest ?? 0) : cell.usd) * 100) / 100;
   try { requirePaidArm(argv, { arm: `q1 cell ${def.id}`, estimateUsd: estimate, ledgerPath: budgetOptionsFrom(argv).ledgerPath }); }
   catch (e) {
     if (!(e instanceof PaidArmRefusal)) throw e;
@@ -1681,8 +1696,8 @@ export async function main(argv: string[]): Promise<number> {
     const limit = one('--limit') ? Number(one('--limit')) : null;
     const proxy = (one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
     if (!proxy) {
-      paidGuard(argv, def, limit);
-      startPaidRun(`q1-cell:${def.id}`, { ...budgetOptionsFrom(argv), estimateUsd: def.estimate.usd });
+      const estimate = paidGuard(argv, def, limit, one('--arms')?.split(',') ?? null);
+      startPaidRun(`q1-cell:${def.id}`, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
     }
     const shardRaw = one('--shard') ?? '0/1';
     const [si, sn] = shardRaw.split('/').map(Number);
