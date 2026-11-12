@@ -903,11 +903,12 @@ stop line below.
 several slots at once (four by default, at most eight), one unchanged `mint.sh` per slot.
 - Each slot's topic, topic check and plan still run one slot at a time, in slot order, so each topic check compares
   against the same earlier topics as a one-at-a-time mint. The rest of a slot's first pass runs beside the next slots'.
-- The driver refuses to start more slots than the kept conversations still needed: 20 (wave A's size and N_final's
-  floor) less those kept, until N_final is known, and N_final less those kept after that. So no slot is minted past
-  N_final, as slot order requires.
-- A provider refusal, the metering proxy's budget refusal included, starts no new slot. A step failure is retried in its
-  lane a limited number of times. Finished steps are verified and skipped on a rerun, as before.
+- The driver refuses to start more slots than are still needed: 20 (wave A's size and N_final's floor) until N_final is
+  known, and N_final after that, less the slots already kept and less the slots minted but not yet validated. So no slot
+  is minted past N_final, as slot order requires. Only one driver runs on a custody directory at a time.
+- A provider refusal, the metering proxy's budget refusal included, starts no new slot, whether the step or one of its
+  parts met it. A step failure is retried in its lane a limited number of times. Finished steps are verified and skipped
+  on a rerun, as before.
 - Candidate validation, selection and `validate.ts` run as before, over the whole set.
 
 The kept set is still the first N_final slots that pass validation, in slot order: running slots side by side changes
@@ -916,8 +917,9 @@ as one mint.sh over the same slots and seed.
 
 **Change 2: regrouped window checks.** `validate-candidates.ts` asks each window about all of a conversation's
 abstention candidates in one prompt. When a validator answers that prompt in the wrong shape without an error (an empty
-reply or a refusal), the window is now asked again with one prompt per abstention candidate, for up to four windows per
-run. Each candidate then passes or fails on its own reply:
+reply or a refusal), the window is now asked again with one prompt per abstention candidate, for up to four new windows
+per run. A window regrouped once is asked one candidate at a time on every later run, reusing the single replies already
+cached, and doesn't count toward the four. Each candidate then passes or fails on its own reply:
 - it fails on absence if its own prompt answers it;
 - it fails on a new gate, refusal, if the validator refuses its own prompt;
 - any other reply in the wrong shape is a validator error, as before.
@@ -925,7 +927,8 @@ run. Each candidate then passes or fails on its own reply:
 A window past the four is a validator error for every abstention candidate, as before, and a request that errors is
 asked again on a rerun, not regrouped. The question asked of each window and the pass rule are unchanged: a candidate
 passes only if every window, from both validators, leaves it unanswered. A refusal fails its candidate instead of
-leaving the conversation incomplete, because asking again gets the same refusal. `validate.ts`'s own absence scan of
+leaving the conversation incomplete, so one refused question doesn't hold back the others; a rerun asks a refused prompt
+again. `validate.ts`'s own absence scan of
 the two selected abstention items is unchanged and still decides keep or drop, so a conversation whose selected items
 `validate.ts` can't check stays incomplete there and is not kept.
 
@@ -944,12 +947,12 @@ GBEV-3 if any of these holds:
 
 Both limits are recorded on the tracking issue, not here. The kept set, the waves and the internal pilot are unchanged.
 
-**Code.** Minting, the driver and candidate validation run from `642ad77ca398bfaf32a3694a3effffe530968f9d` or a later
-commit on the results branch, and the custodian records the commit each pass ran. At `642ad77c`:
-- `mint-lanes.ts` has SHA-256 `a4a207a1368b396e28b134c5bb20efb92a166b29f29201115966a718509fb777`;
-- `mint.sh` has `dfc833ddd2ae89bf9117498f1cb14cb0204db22f11892d02b7419a2f3ec7d30a`, and its only change is
-  `--no-usage`, which the driver passes;
-- `validate-candidates.ts` has `e8e0562ce655732f6aad112e13fc50f050097c8e73ad1eeddee3055e9c9a41cb`;
+**Code.** Minting, the driver and candidate validation run from `5d7e1145c06d8f24aa42efb35545bded699d255c` or a later
+commit on the results branch, and the custodian records the commit each pass ran. At `5d7e1145`:
+- `mint-lanes.ts` has SHA-256 `c2ae8331e00f9779482a6eb9aa4070f537ab9b33fc7b2458e33036ed32fcdde2`;
+- `mint.sh` has `dfc833ddd2ae89bf9117498f1cb14cb0204db22f11892d02b7419a2f3ec7d30a`, and its only change in behaviour
+  is `--no-usage`, which the driver passes;
+- `validate-candidates.ts` has `e3890ae78910c2c62373d8c96d2a0546426ca6d2d5eccdb01951c5f89e971dd5`;
 - `rs1_mint.py` keeps `261889adf003eb6239205db308904a29e85bf19b5b10119b247a63f72f4327ad`;
 - `validate.ts` keeps `7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e`.
 
