@@ -11,7 +11,7 @@ import { describe, expect, test } from 'bun:test';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import {
-  ANSWERABILITY_DIR, beamChecks, buildAll, classify, classTable, fileText, loadClasses, octoberOracle, oracleFromRejudge, oracleRows,
+  ANSWERABILITY_DIR, beamChecks, buildAll, buildFile, classify, classTable, fileText, loadClasses, octoberOracle, oracleFromRejudge, oracleRows,
   rejectedByBoth, SOURCES, type Check, type ItemClass, type OracleRow,
 } from '../../eval/runner/sota/answerability.ts';
 import { assertNoSealedIds, findSealedIds, sealedIds, SealedIdError, SPLITS_DIR } from '../../eval/runner/sota/sealed-guard.ts';
@@ -55,6 +55,11 @@ describe('the answerability rule (D5a)', () => {
     expect(classify(abs(['absence:gemini:gemini-3.8-flash']), null).class).toBe('supported');
     expect(classify(abs(['absence:gemini:gemini-3.8-flash', 'absence:anthropic:claude-haiku-5-5']), fail).class).toBe('unsupported');
     expect(classify(abs(['absence:gemini:gemini-3.8-flash', 'absence:anthropic:claude-haiku-5-5']), null).class).toBe('unresolved');
+  });
+
+  test('an input where a validator errored is refused, never classed', () => {
+    const checks = new Map([['1m-2:event_ordering:0', check(['validator_error:gemini:gemini-3.8-flash', BOTH[1]!])]]);
+    expect(() => buildFile('beam-1m', checks, new Map(), { validators: null })).toThrow('beam-1m: a validator errored on 1 item (1m-2:event_ordering:0)');
   });
 
   test('an item the support check left out is unchecked, oracle or not', () => {

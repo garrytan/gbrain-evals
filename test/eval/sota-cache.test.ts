@@ -125,6 +125,21 @@ describe('the stale refusal', () => {
     expect(readFileSync(items, 'utf8')).toBe('a\nb\n');
   });
 
+  test('stale A4 oracle rows point to the keyless re-import, never a re-buy or a paid window', () => {
+    const a4: Spec = { ...SPEC, reader: 'openai:gpt-6.1-sol', system_version: 'a4-oracle-gpt61sol' };
+    const dir = scratch();
+    new OutcomeCache(join(dir, 'cache')).put([{ ...row('a'), ...a4, validator_version: 'answerability-0000' }]);
+    writeFileSync(join(dir, 'spec.json'), JSON.stringify([a4]));
+    writeFileSync(join(dir, 'items.txt'), 'a\n');
+    const err: string[] = [];
+    expect(main(['check', '--cache', join(dir, 'cache'), '--spec', join(dir, 'spec.json'), '--items', join(dir, 'items.txt')], () => {}, s => err.push(s))).toBe(STALE_EXIT);
+    expect(err.join('\n').split('\n')).toEqual([
+      'SOTA_CACHE_STALE: 1 oracle row for beam-1m, system oracle, reader openai:gpt-6.1-sol were measured on other inputs',
+      '  changed validator_version: answerability-0000 -> answerability-0001 (1 rows)',
+      `  re-import: bun eval/runner/sota/oracle.ts import-a4 --cache ${join(dir, 'cache')} (A4's answers are imported keyless, never bought, so no paid window is needed)`,
+    ]);
+  });
+
   test('fresh and unknown rows exit 0: unknown is counted, never bought', () => {
     const { code, out, err } = setup([row('a'), row('b')]);
     expect([code, out, err]).toEqual([0, 'oracle beam-1m oracle anthropic:claude-opus-5-5: 2 fresh, 2 unknown, 0 stale', '']);

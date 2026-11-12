@@ -111,6 +111,22 @@ describe('dev result', () => {
     expect(devResult({ ...FIX, target: { ...FIX.target!, held_out_share: null } }, master, stable, DEVSET).prediction).toMatchObject({ held_out_share: null, points: null, success_rate: 2 / 3 });
   });
 
+  test('harness and skipped rows stay out of the dev and noise contrasts', () => {
+    const { master, stable } = nights();
+    const base = devResult(FIX, master, stable, DEVSET);
+    const broke = (item: string, patch: Partial<Outcome>) => ({ ...master.rows.find(r => r.item === item)!, trial: 2, pass: false, ...patch });
+    const noisy: Night = { ...master, rows: [...master.rows, broke(DEV[0]!, { harness: { error: 'provider 500' } }), broke(untouched[0]!, { skipped: 'not scheduled' })] };
+    const r = devResult(FIX, noisy, stable, DEVSET);
+    expect(r.dev!.delta_points).toBe(base.dev!.delta_points);
+    expect(r.noise.contrast!.delta_points).toBe(base.noise.contrast!.delta_points);
+  });
+
+  test('collateral compares only items both refs ran the same number of trials', () => {
+    const { master, stable } = nights();
+    const oneTrial: Night = { ...stable, rows: stable.rows.filter(r => r.suite !== 'refresh-barrier-agents' || r.trial === 1) };
+    expect(devResult(FIX, master, oneTrial, DEVSET).collateral).toEqual({ losses: ['beam-1m-hard|conv-5:event_ordering:2|gpt-6.1-sol'], gains: [], pairs: 9 });
+  });
+
   test('versions compare numerically', () => {
     expect(compareVersion('0.60.671.0', '0.60.670.0')).toBe(1);
     expect(compareVersion('0.60.99.0', '0.60.100.0')).toBe(-1);

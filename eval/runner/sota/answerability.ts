@@ -176,6 +176,8 @@ const source = (rel: string) => (existsSync(join(ROOT, rel)) ? { file: rel, sha2
 
 export function buildFile(benchmark: string, checks: Map<string, Check>, oracle: Map<string, OracleRow>, sources: AnswerabilityFile['sources']): AnswerabilityFile {
   const ids = [...checks.keys()].sort();
+  const errored = ids.filter(id => checks.get(id)!.gates.some(g => g.startsWith('validator_error:')));
+  if (errored.length) throw new Error(`${benchmark}: a validator errored on ${errored.length} item${errored.length === 1 ? '' : 's'} (${errored.slice(0, 3).join(', ')}${errored.length > 3 ? ', ...' : ''}); an errored validator neither supports nor rejects, so rerun the support check for them before classing`);
   const items = Object.fromEntries(ids.map(id => [id, classify(checks.get(id)!, oracle.get(id) ?? null)]));
   const counts = Object.fromEntries(CLASSES.map(c => [c, Object.values(items).filter(i => i.class === c).length])) as Record<AnswerClass, number>;
   return { schema: ANSWERABILITY_SCHEMA, benchmark, rule: RULE, sources, counts, items };

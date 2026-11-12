@@ -2,8 +2,9 @@
  * The custody provider check (SOTA plan item 11). Sealed RS1 text may reach only the providers RS1 vetted: for gbrain's
  * embeddings and reranking that is Voyage (docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md, "Provider data
  * use"). Before any custody run at a later gbrain version, this reads the embedding and rerank models that version
- * configures and refuses when one names another provider, so sealed text never reaches an unvetted provider until
- * GBEV-3 rules.
+ * configures and refuses when one names another provider, so sealed text sent for embedding or reranking never reaches
+ * an unvetted provider until GBEV-3 rules. It reads those two roles only: gbrain's other model calls (fact extraction,
+ * query expansion, chat) are not checked here.
  *
  *   bun eval/runner/sota/custody.ts check-providers --gbrain <gbrain checkout at the version to run> [--config <json>]
  *

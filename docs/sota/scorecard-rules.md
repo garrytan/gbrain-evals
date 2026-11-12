@@ -49,7 +49,8 @@ Each fix gbrain ships for a fix-list item is recorded in
   dev questions, times a fixed 0.5 that is never adjusted from results.
 - **Dev result.** The same-night contrast of master (with the fix) against stable (without it) on the fix's dev
   questions, shown beside the noise baseline: the share of untouched outcomes that flip between the two refs on the same
-  night. Collateral losses are questions elsewhere that pass every trial on stable and none on master.
+  night. Collateral losses are questions elsewhere that pass every trial on stable and none on master, counted only where
+  both refs ran the question the same number of trials.
 - **Held-out credit.** Each release is compared with the previous stable on the same held-out questions, and that gain
   is shared among the release's fixes in proportion to their predictions. A single fix gets its own held-out verdict
   only from a revert build in custody, and only when it was predicted at 3 points or more: *helps* when the release

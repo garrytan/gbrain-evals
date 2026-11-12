@@ -156,7 +156,7 @@ export function projectUsd(spec: Spec, stale: Freshness['stale']): number | null
   return Math.ceil((costs as number[]).reduce((a, b) => a + b, 0) * 1.25 * 100) / 100;
 }
 
-/** The SOTA_CACHE_STALE message: what changed (cached value and current value, with the row count), the re-buy command and the window request. */
+/** The SOTA_CACHE_STALE message: what changed (cached value and current value, with the row count), the re-buy command and the window request, or for A4's imported oracle rows the keyless re-import. */
 export function staleMessage(f: Freshness, itemsFile: string, cacheDir: string): string {
   const { spec } = f;
   const fields = new Map<string, { from: Set<string>; count: number }>();
@@ -168,9 +168,13 @@ export function staleMessage(f: Freshness, itemsFile: string, cacheDir: string):
   }
   const now = (k: string) => (k === 'context_digest' ? '(the evidence now built)' : String(spec[k as KeyField]));
   const cap = projectUsd(spec, f.stale);
-  return [
+  const what = [
     `SOTA_CACHE_STALE: ${f.stale.length} ${spec.kind} row${f.stale.length === 1 ? '' : 's'} for ${spec.benchmark}, system ${spec.system}, reader ${spec.reader} were measured on other inputs`,
     ...[...fields].map(([k, e]) => `  changed ${k}: ${[...e.from].sort().join(', ')} -> ${now(k)} (${e.count} rows)`),
+  ];
+  if (spec.system_version === 'a4-oracle-gpt61sol') return [...what, `  re-import: bun eval/runner/sota/oracle.ts import-a4 --cache ${cacheDir} (A4's answers are imported keyless, never bought, so no paid window is needed)`].join('\n');
+  return [
+    ...what,
     `  re-buy: ${rebuyCommand(spec, itemsFile, cacheDir)}`,
     cap === null
       ? `  paid window: PAID WINDOW REQUEST ${rebuyUnit(spec)} <cap> (${f.stale.length} rows; no recorded usage or list price to project from, so size the cap with a one-item smoke)`

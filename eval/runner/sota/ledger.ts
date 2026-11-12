@@ -9,7 +9,8 @@
  * on those items, computed only on a night when master carries the fix and stable doesn't (night.json versions). Beside
  * it sit the noise baseline (the share of the suite's untouched outcomes that flip between the two refs, and the
  * contrast on those items) and the collateral losses (items outside the fix that pass every trial on stable and none on
- * master, in every suite both refs ran). The fix's success rate is master's pass rate on the dev items that stable
+ * master, in every suite both refs ran, where both refs ran the item the same number of trials). Skipped and harness
+ * rows are left out of every count and contrast. The fix's success rate is master's pass rate on the dev items that stable
  * failed, and its D6a prediction is held-out share x success rate x 0.5 (the fixed prior, never fed back).
  *
  * Every contrast is the pass-rate difference in points, paired by item and reader (pass^1 over trials), with a cluster
@@ -114,11 +115,11 @@ export function devResult(fix: Fix, master: Night, stable: Night, devset: DevSet
   if (compareVersion(sv, fix.gbrain_version) >= 0) return skip(`stable ${sv} already carries the fix (${fix.gbrain_version})`);
   const dev = new Set(fix.items);
   const o = { suite: fix.suite, benchmark };
-  const devContrast = pairedContrast(stable.rows, master.rows, { ...o, items: dev });
+  const counted = (rows: Outcome[]) => rows.filter(r => !r.skipped && !r.harness);
+  const devContrast = pairedContrast(counted(stable.rows), counted(master.rows), { ...o, items: dev });
   if (!devContrast) return skip('no dev item ran on both refs');
   const untouched = new Set((suite?.items.map(i => i.id) ?? [...new Set([...master.rows, ...stable.rows].filter(r => r.suite === fix.suite).map(r => r.item))]).filter(i => !dev.has(i)));
   const trialKey = (r: Scored) => `${r.suite}\u0000${r.item}\u0000${r.reader ?? ''}\u0000${r.trial}`;
-  const counted = (rows: Outcome[]) => rows.filter(r => !r.skipped && !r.harness);
   const sm = new Map(counted(stable.rows).filter(r => r.suite === fix.suite && untouched.has(r.item)).map(r => [trialKey(r), r.pass]));
   const paired = counted(master.rows).filter(r => sm.has(trialKey(r)));
   const flips = paired.filter(r => sm.get(trialKey(r)) !== r.pass).length;
@@ -129,7 +130,7 @@ export function devResult(fix: Fix, master: Night, stable: Night, devset: DevSet
     if (r.suite === fix.suite && dev.has(r.item)) continue;
     const e = m.get(suiteKey(r)) ?? { c: 0, n: 0 }; e.n++; if (r.pass) e.c++; m.set(suiteKey(r), e);
   }
-  const both = [...sAll.keys()].filter(k => mAll.has(k)).sort();
+  const both = [...sAll.keys()].filter(k => mAll.get(k)?.n === sAll.get(k)!.n).sort();
   const label = (k: string) => k.split('\u0000').filter(Boolean).join('|');
   const losses = both.filter(k => sAll.get(k)!.c === sAll.get(k)!.n && mAll.get(k)!.c === 0).map(label);
   const gains = both.filter(k => sAll.get(k)!.c === 0 && mAll.get(k)!.c === mAll.get(k)!.n).map(label);
@@ -137,7 +138,7 @@ export function devResult(fix: Fix, master: Night, stable: Night, devset: DevSet
   const success = misses.length ? misses.reduce((s, k) => s + mr.get(k)!.c / mr.get(k)!.n, 0) / misses.length : null;
   return {
     ...base, status: 'measured', reason: null, dev: devContrast,
-    noise: { flip_share: paired.length ? Math.round((10000 * flips) / paired.length) / 10000 : null, outcomes: paired.length, contrast: pairedContrast(stable.rows, master.rows, { ...o, items: untouched }) },
+    noise: { flip_share: paired.length ? Math.round((10000 * flips) / paired.length) / 10000 : null, outcomes: paired.length, contrast: pairedContrast(counted(stable.rows), counted(master.rows), { ...o, items: untouched }) },
     collateral: { losses, gains, pairs: both.length }, success_rate: success === null ? null : Math.round(success * 10000) / 10000,
     prediction: { held_out_share: share, success_rate: success, prior: PRIOR, points: share === null || success === null ? null : points(share * success * PRIOR) },
   };
