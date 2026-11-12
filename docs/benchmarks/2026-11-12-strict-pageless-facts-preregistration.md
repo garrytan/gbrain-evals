@@ -64,3 +64,10 @@ Per model and pooled, for kept-in-Git and truthful: the after-minus-before rate 
 ## Not measured
 
 Postgres; a refresh during the write; managed (non-strict) or repo-less sources; the move into the page once it exists (gbrain's own tests cover it); several turns or a later session; real brains; particle-1.
+
+
+## Change 1 (2026-11-12, written before any cell resumed)
+
+- What happened: the four counted cells started together at 02:57Z. After about six minutes the machine's 12.6 GiB memory cap killed the Opus after-arm process (exit 137): each process keeps memory from every episode's in-process PGLite databases (the Sol after-arm process was at 4.8 GB after 12 trials). I stopped the other three (exit 143) to restart them safely. Episodes written before the stop: Opus before 24, Opus after 18, Sol before 15, Sol after 12 (all replicate 1). Each stopped process lost its one in-flight episode; that spend is in the ledger and in no episode, and is reported as such.
+- Change to the run, not the method: each cell now runs as a sequence of processes of at most 4 items each, in the preregistered order (replicate 1 items 1 to 24, then replicate 2, then 3). A process skips any episode already written. Items, prompts, models, scoring, analysis and sample size are unchanged; the harness files keep the hashes above.
+- Change to the per-cell budgets, because the first trials cost more than the pilot predicted (Opus after arm about $0.089 a trial against $0.055): Opus cells $7.50 each, Sol cells $2.50 each, measured over all of a cell's ledger runs; each process gets the cell's remaining budget. The program cap stays $20 for everything and is the hard stop.
