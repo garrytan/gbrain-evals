@@ -1,0 +1,618 @@
+{
+ "before": "47cbca02",
+ "after": "505204a9",
+ "cells": [
+  {
+   "model": "gpt-6.1-sol",
+   "arm": "before",
+   "gbrain": "47cbca02",
+   "trials": 72,
+   "kept_in_git": 0,
+   "truthful": 72,
+   "exposure": 72,
+   "located": 26,
+   "false_no_repo": 6,
+   "entity_page_created": 2,
+   "errored_or_harness_attempts": 0,
+   "stops": {
+    "submitted": 72
+   }
+  },
+  {
+   "model": "gpt-6.1-sol",
+   "arm": "after",
+   "gbrain": "505204a9",
+   "trials": 72,
+   "kept_in_git": 72,
+   "truthful": 72,
+   "exposure": 72,
+   "located": 40,
+   "false_no_repo": 0,
+   "entity_page_created": 58,
+   "errored_or_harness_attempts": 0,
+   "stops": {
+    "submitted": 72
+   }
+  },
+  {
+   "model": "claude-opus-5-5",
+   "arm": "before",
+   "gbrain": "47cbca02",
+   "trials": 72,
+   "kept_in_git": 0,
+   "truthful": 62,
+   "exposure": 72,
+   "located": 52,
+   "false_no_repo": 34,
+   "entity_page_created": 0,
+   "errored_or_harness_attempts": 0,
+   "stops": {
+    "submitted": 72
+   }
+  },
+  {
+   "model": "claude-opus-5-5",
+   "arm": "after",
+   "gbrain": "505204a9",
+   "trials": 72,
+   "kept_in_git": 72,
+   "truthful": 72,
+   "exposure": 72,
+   "located": 72,
+   "false_no_repo": 0,
+   "entity_page_created": 41,
+   "errored_or_harness_attempts": 0,
+   "stops": {
+    "submitted": 72
+   }
+  }
+ ],
+ "comparisons": {
+  "gpt-6.1-sol": {
+   "kept_in_git": {
+    "pairs": 72,
+    "before": 0,
+    "after": 72,
+    "before_rate": 0,
+    "after_rate": 1,
+    "diff": 1,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 72
+    },
+    "ci95_cluster_bootstrap": [
+     1,
+     1
+    ],
+    "ci95_newcombe": [
+     0.9283684236911852,
+     1
+    ]
+   },
+   "truthful": {
+    "pairs": 72,
+    "before": 72,
+    "after": 72,
+    "before_rate": 1,
+    "after_rate": 1,
+    "diff": 0,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 0
+    },
+    "ci95_cluster_bootstrap": [
+     0,
+     0
+    ],
+    "ci95_newcombe": [
+     -0.050651173355044654,
+     0.050651173355044654
+    ]
+   },
+   "exposure": {
+    "pairs": 72,
+    "before": 72,
+    "after": 72,
+    "before_rate": 1,
+    "after_rate": 1,
+    "diff": 0,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 0
+    },
+    "ci95_cluster_bootstrap": [
+     0,
+     0
+    ],
+    "ci95_newcombe": [
+     -0.050651173355044654,
+     0.050651173355044654
+    ]
+   },
+   "located": {
+    "pairs": 72,
+    "before": 26,
+    "after": 40,
+    "before_rate": 0.3611111111111111,
+    "after_rate": 0.5555555555555556,
+    "diff": 0.19444444444444445,
+    "discordant": {
+     "before_only": 4,
+     "after_only": 18
+    },
+    "ci95_cluster_bootstrap": [
+     0.06944444444444445,
+     0.3333333333333333
+    ],
+    "ci95_newcombe": [
+     0.06955727805045309,
+     0.3088227203662111
+    ]
+   },
+   "false_no_repo": {
+    "pairs": 72,
+    "before": 6,
+    "after": 0,
+    "before_rate": 0.08333333333333333,
+    "after_rate": 0,
+    "diff": -0.08333333333333333,
+    "discordant": {
+     "before_only": 6,
+     "after_only": 0
+    },
+    "ci95_cluster_bootstrap": [
+     -0.20833333333333334,
+     0
+    ],
+    "ci95_newcombe": [
+     -0.17012355306549654,
+     -0.015857420785905005
+    ]
+   },
+   "entity_page_created": {
+    "pairs": 72,
+    "before": 2,
+    "after": 58,
+    "before_rate": 0.027777777777777776,
+    "after_rate": 0.8055555555555556,
+    "diff": 0.7777777777777778,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 56
+    },
+    "ci95_cluster_bootstrap": [
+     0.6388888888888888,
+     0.9027777777777778
+    ],
+    "ci95_newcombe": [
+     0.6519590886939777,
+     0.8553634653816655
+    ]
+   },
+   "kept_in_git_exposed_both": {
+    "pairs": 72,
+    "before": 0,
+    "after": 72,
+    "before_rate": 0,
+    "after_rate": 1,
+    "diff": 1,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 72
+    },
+    "ci95_cluster_bootstrap": [
+     1,
+     1
+    ],
+    "ci95_newcombe": [
+     0.9283684236911852,
+     1
+    ]
+   },
+   "truthful_ask_where": {
+    "pairs": 12,
+    "before": 12,
+    "after": 12,
+    "before_rate": 1,
+    "after_rate": 1,
+    "diff": 0,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 0
+    },
+    "ci95_cluster_bootstrap": [
+     0,
+     0
+    ],
+    "ci95_newcombe": [
+     -0.24249400955309786,
+     0.24249400955309786
+    ]
+   },
+   "truthful_ask_on_page": {
+    "pairs": 12,
+    "before": 12,
+    "after": 12,
+    "before_rate": 1,
+    "after_rate": 1,
+    "diff": 0,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 0
+    },
+    "ci95_cluster_bootstrap": [
+     0,
+     0
+    ],
+    "ci95_newcombe": [
+     -0.24249400955309786,
+     0.24249400955309786
+    ]
+   }
+  },
+  "claude-opus-5-5": {
+   "kept_in_git": {
+    "pairs": 72,
+    "before": 0,
+    "after": 72,
+    "before_rate": 0,
+    "after_rate": 1,
+    "diff": 1,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 72
+    },
+    "ci95_cluster_bootstrap": [
+     1,
+     1
+    ],
+    "ci95_newcombe": [
+     0.9283684236911852,
+     1
+    ]
+   },
+   "truthful": {
+    "pairs": 72,
+    "before": 62,
+    "after": 72,
+    "before_rate": 0.8611111111111112,
+    "after_rate": 1,
+    "diff": 0.1388888888888889,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 10
+    },
+    "ci95_cluster_bootstrap": [
+     0.05555555555555555,
+     0.2361111111111111
+    ],
+    "ci95_newcombe": [
+     0.05909106936664496,
+     0.23713187340954112
+    ]
+   },
+   "exposure": {
+    "pairs": 72,
+    "before": 72,
+    "after": 72,
+    "before_rate": 1,
+    "after_rate": 1,
+    "diff": 0,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 0
+    },
+    "ci95_cluster_bootstrap": [
+     0,
+     0
+    ],
+    "ci95_newcombe": [
+     -0.050651173355044654,
+     0.050651173355044654
+    ]
+   },
+   "located": {
+    "pairs": 72,
+    "before": 52,
+    "after": 72,
+    "before_rate": 0.7222222222222222,
+    "after_rate": 1,
+    "diff": 0.2777777777777778,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 20
+    },
+    "ci95_cluster_bootstrap": [
+     0.18055555555555555,
+     0.3888888888888889
+    ],
+    "ci95_newcombe": [
+     0.1743511974178501,
+     0.3904643301898306
+    ]
+   },
+   "false_no_repo": {
+    "pairs": 72,
+    "before": 34,
+    "after": 0,
+    "before_rate": 0.4722222222222222,
+    "after_rate": 0,
+    "diff": -0.4722222222222222,
+    "discordant": {
+     "before_only": 34,
+     "after_only": 0
+    },
+    "ci95_cluster_bootstrap": [
+     -0.6388888888888888,
+     -0.3194444444444444
+    ],
+    "ci95_newcombe": [
+     -0.5859932959618586,
+     -0.3502508166943158
+    ]
+   },
+   "entity_page_created": {
+    "pairs": 72,
+    "before": 0,
+    "after": 41,
+    "before_rate": 0,
+    "after_rate": 0.5694444444444444,
+    "diff": 0.5694444444444444,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 41
+    },
+    "ci95_cluster_bootstrap": [
+     0.4027777777777778,
+     0.7361111111111112
+    ],
+    "ci95_newcombe": [
+     0.44377360560912105,
+     0.6774209429159974
+    ]
+   },
+   "kept_in_git_exposed_both": {
+    "pairs": 72,
+    "before": 0,
+    "after": 72,
+    "before_rate": 0,
+    "after_rate": 1,
+    "diff": 1,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 72
+    },
+    "ci95_cluster_bootstrap": [
+     1,
+     1
+    ],
+    "ci95_newcombe": [
+     0.9283684236911852,
+     1
+    ]
+   },
+   "truthful_ask_where": {
+    "pairs": 12,
+    "before": 9,
+    "after": 12,
+    "before_rate": 0.75,
+    "after_rate": 1,
+    "diff": 0.25,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 3
+    },
+    "ci95_cluster_bootstrap": [
+     0,
+     0.5
+    ],
+    "ci95_newcombe": [
+     -0.04110673484830707,
+     0.5323053370816634
+    ]
+   },
+   "truthful_ask_on_page": {
+    "pairs": 12,
+    "before": 11,
+    "after": 12,
+    "before_rate": 0.9166666666666666,
+    "after_rate": 1,
+    "diff": 0.08333333333333333,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 1
+    },
+    "ci95_cluster_bootstrap": [
+     0,
+     0.25
+    ],
+    "ci95_newcombe": [
+     -0.1686413567324052,
+     0.3538799137212456
+    ]
+   }
+  },
+  "pooled": {
+   "kept_in_git": {
+    "pairs": 144,
+    "before": 0,
+    "after": 144,
+    "before_rate": 0,
+    "after_rate": 1,
+    "diff": 1,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 144
+    },
+    "ci95_cluster_bootstrap": [
+     1,
+     1
+    ],
+    "ci95_newcombe": [
+     0.9632535873878969,
+     1
+    ]
+   },
+   "truthful": {
+    "pairs": 144,
+    "before": 134,
+    "after": 144,
+    "before_rate": 0.9305555555555556,
+    "after_rate": 1,
+    "diff": 0.06944444444444445,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 10
+    },
+    "ci95_cluster_bootstrap": [
+     0.027777777777777776,
+     0.11805555555555555
+    ],
+    "ci95_newcombe": [
+     0.02877295657037348,
+     0.12310854681848982
+    ]
+   },
+   "exposure": {
+    "pairs": 144,
+    "before": 144,
+    "after": 144,
+    "before_rate": 1,
+    "after_rate": 1,
+    "diff": 0,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 0
+    },
+    "ci95_cluster_bootstrap": [
+     0,
+     0
+    ],
+    "ci95_newcombe": [
+     -0.025983637542296933,
+     0.025983637542296933
+    ]
+   },
+   "located": {
+    "pairs": 144,
+    "before": 78,
+    "after": 112,
+    "before_rate": 0.5416666666666666,
+    "after_rate": 0.7777777777777778,
+    "diff": 0.2361111111111111,
+    "discordant": {
+     "before_only": 4,
+     "after_only": 38
+    },
+    "ci95_cluster_bootstrap": [
+     0.14583333333333334,
+     0.3333333333333333
+    ],
+    "ci95_newcombe": [
+     0.15389495707380846,
+     0.313786819537118
+    ]
+   },
+   "false_no_repo": {
+    "pairs": 144,
+    "before": 40,
+    "after": 0,
+    "before_rate": 0.2777777777777778,
+    "after_rate": 0,
+    "diff": -0.2777777777777778,
+    "discordant": {
+     "before_only": 40,
+     "after_only": 0
+    },
+    "ci95_cluster_bootstrap": [
+     -0.3958333333333333,
+     -0.16666666666666666
+    ],
+    "ci95_newcombe": [
+     -0.35598193742283374,
+     -0.20623649414163497
+    ]
+   },
+   "entity_page_created": {
+    "pairs": 144,
+    "before": 2,
+    "after": 99,
+    "before_rate": 0.013888888888888888,
+    "after_rate": 0.6875,
+    "diff": 0.6736111111111112,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 97
+    },
+    "ci95_cluster_bootstrap": [
+     0.5694444444444444,
+     0.7777777777777778
+    ],
+    "ci95_newcombe": [
+     0.5869061988091899,
+     0.7441745853625572
+    ]
+   },
+   "kept_in_git_exposed_both": {
+    "pairs": 144,
+    "before": 0,
+    "after": 144,
+    "before_rate": 0,
+    "after_rate": 1,
+    "diff": 1,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 144
+    },
+    "ci95_cluster_bootstrap": [
+     1,
+     1
+    ],
+    "ci95_newcombe": [
+     0.9632535873878969,
+     1
+    ]
+   },
+   "truthful_ask_where": {
+    "pairs": 24,
+    "before": 21,
+    "after": 24,
+    "before_rate": 0.875,
+    "after_rate": 1,
+    "diff": 0.125,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 3
+    },
+    "ci95_cluster_bootstrap": [
+     0,
+     0.25
+    ],
+    "ci95_newcombe": [
+     -0.03527764126446825,
+     0.3100388144515547
+    ]
+   },
+   "truthful_ask_on_page": {
+    "pairs": 24,
+    "before": 23,
+    "after": 24,
+    "before_rate": 0.9583333333333334,
+    "after_rate": 1,
+    "diff": 0.041666666666666664,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 1
+    },
+    "ci95_cluster_bootstrap": [
+     0,
+     0.125
+    ],
+    "ci95_newcombe": [
+     -0.10050255130250615,
+     0.2024180665884533
+    ]
+   }
+  }
+ }
+}
