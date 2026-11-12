@@ -11,7 +11,7 @@ configuration runs end to end without any provider call.
 
 | Piece | Value |
 |---|---|
-| Package | the pinned markdown-notes package, every transitive dependency held to the vendor's own `uv.lock` at the pinned tag (commit `c0bd87c6`) through `constraint-dependencies` in `pyproject.toml` |
+| Package | the pinned markdown-notes package, every transitive dependency held to the vendor's own `uv.lock` at the pinned tag (commit `c0bd87c6`) through `constraint-dependencies` in `pyproject.toml`, except eight raised above it for security fixes on 2026-11-11: `aiohttp` 3.14.4, `certifi` 2026.10.19, `cryptography` 50.0.0, `httpcore2` and `httpx2` 2.12.0, `pyjwt` 2.15.0, `urllib3` 2.8.0 and `yarl` 1.25.1 |
 | Prereleases | `fastmcp==4.0.0b1` and `fastmcp-slim==4.0.0b1` (markdown-notes requires `fastmcp==4.0.0b1`), plus `opentelemetry-instrumentation` and `opentelemetry-semantic-conventions` `0.63b1` from the vendor lock. uv's default `if-necessary` prerelease mode resolves them; `prerelease = "allow"` is not needed and would pull newer betas |
 | Base image | `python:3.12-slim-bookworm@sha256:54c85f3c…`, uv `0.12.3` by digest |
 | Recipe embedder | FastEmbed `bge-small-en-v1.5` (384 dimensions), baked into the image at build time |
@@ -104,6 +104,15 @@ configuration changes only the embedder, so the floor stays at its default; text
 similarities mean markdown-notes returns fewer results in that row. The report should say this rather than tune it.
 
 ## Changelog
+
+### 2026-11-11: security fixes in the lock
+
+`aiohttp` 3.14.1 to 3.14.4, `certifi` 2026.6.17 to 2026.10.19, `cryptography` 49.0.0 to 50.0.0, `httpcore2` and
+`httpx2` 2.9.1 to 2.12.0, `pyjwt` 2.13.0 to 2.15.0, `urllib3` 2.7.0 to 2.8.0 and `yarl` 1.24.2 to 1.25.1 (the new
+`aiohttp` needs it), raised in `constraint-dependencies` and relocked with the Dockerfile's uv 0.12.3. uv also adds
+`httpx2-jsfetch`, which installs only on Emscripten. Masashi-Ono0611 reported the advisories in
+[gbrain-evals#183](https://github.com/garrytan/gbrain-evals/pull/183). `uv.lock` moves from `e1a14a19` to `90b883f1`: runs started after this change record
+the new hash, and earlier results keep the hash they recorded.
 
 ### 2026-10-05: metered smoke
 Common configuration measured through the metering proxy; compose sends calls to the proxy slot

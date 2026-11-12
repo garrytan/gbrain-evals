@@ -167,14 +167,14 @@ describe('live-recall run --synthetic --protocol batch3 (keyless), and the verdi
       expect(r.layers.map(l => [l.id, l.verdict, l.missing_reference, l.in_scorecard])).toEqual([['retrieval', 'NO_REFERENCE_YET', 'live-recall-b3', true], ['agent', 'NO_REFERENCE_YET', 'phase2-agent', false]]);
     }
     expect(g2.verdict).toBe('NO_REFERENCE_YET');
-    expect(g2.layers.map(l => [l.id, l.status, l.verdict, l.in_scorecard])).toEqual([['b2', 'not_in_scorecard', 'NOT_IN_SCORECARD', false], ['b3', 'pending', 'NO_REFERENCE_YET', true], ['b4', 'pending', 'NO_REFERENCE_YET', false]]);
+    expect(g2.layers.map(l => [l.id, l.status, l.verdict, l.in_scorecard])).toEqual([['b2', 'not_in_scorecard', 'NOT_IN_SCORECARD', false], ['b3', 'pending', 'NO_REFERENCE_YET', true], ['b4', 'not_in_scorecard', 'NOT_IN_SCORECARD', false]]);
     expect(g2.layers[1]!.missing_reference).toBe('live-recall-b3');
   });
 
   test('with live-recall-b3 published, the same scorecard reads G1 and G4 retrieval and G2 b3 against it', () => {
     const syn = readSynthetic(card);
     for (const m of ['G1', 'G4'] as const) expect(evaluateMeasure(m, syn).layers.map(l => [l.id, l.reference, l.status, l.in_scorecard])).toEqual([['retrieval', 'live-recall-b3', 'available', true], ['agent', 'phase2-agent', 'pending', false]]);
-    expect(evaluateMeasure('G2', syn).layers.map(l => [l.id, l.status, l.in_scorecard])).toEqual([['b2', 'not_in_scorecard', false], ['b3', 'available', true], ['b4', 'pending', false]]);
+    expect(evaluateMeasure('G2', syn).layers.map(l => [l.id, l.status, l.in_scorecard])).toEqual([['b2', 'not_in_scorecard', false], ['b3', 'available', true], ['b4', 'not_in_scorecard', false]]);
   });
 
   test('a batch-3 scorecard missing one entity contrast refuses G2 and G4 by name, and still reads G1', () => {

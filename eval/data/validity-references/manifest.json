@@ -20,7 +20,8 @@
   {
     "id": "live-recall-b4",
     "file": "live-recall-b4.json",
-    "status": "pending"
+    "sha256": "f02431be1f7ae7de819caa1765eb8097e7b6dc70c4e2a457f607541718093d0b",
+    "status": "available"
   },
   {
     "id": "phase2-agent",
