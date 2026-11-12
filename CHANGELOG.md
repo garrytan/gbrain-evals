@@ -2,6 +2,113 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.223] - 2026-11-12
+
+### The nightly check's stable baseline moves to gbrain's current stable release
+
+- **What changed.** Matrix nights compare gbrain master with gbrain's `stable` tag, which now points at v0.60.672.0
+  (`64de25c0`). The nightly check's pin still named v0.60.654.0 (`eb74799e`), which was 311 commits behind the tag,
+  so the comparison with stable measured master against an older release than the one gbrain ships as stable.
+- **What stays the same.** Every suite's required gbrain commit is an ancestor of the new pin, so no suite is newly
+  skipped on stable. No published score or verdict changes. A night that started on the old pin keeps it when it
+  resumes.
+- **What to expect.** The first matrix night after this release compares master with the newer release, so a change in
+  its "Against stable" section can come from the baseline moving rather than from master. One such change is already
+  visible in the keyless tool-contract replay. The new pin refuses 6 of the 650 recorded gpt-6.1-sol tool calls it can
+  parse, where the old pin refused 178, and it refuses none of claude-opus-5-5's 166 calls, as before. That section
+  names the stable commit it compared with.
+
+## [0.10.222] - 2026-11-12
+
+### Re-run: a notice with no step to run stops agents creating pages nobody asked for
+
+- **What changed.** The [strict-source pageless facts report](docs/benchmarks/2026-11-12-strict-pageless-facts.md) adds a
+  preregistered re-run of its after arm on gbrain#9202 (`e09d662c`, v0.60.688.0), whose `entity_page_missing` notice
+  says where the fact is held and that nothing needs to run, with no `put_page` step. Paired by item and replicate
+  with the first run's after arm, page creation fell from 58 to 0 of 72 trials on gpt-6.1-sol and from 41 to 0 of 72 on
+  claude-opus-5-5; kept in Git and truthful reports stayed at 72 of 72 on both, a ceiling. Verdict KEEP, under
+  [Change 2](docs/benchmarks/2026-11-12-strict-pageless-facts-preregistration.md), committed and pushed three minutes
+  before the first counted trial.
+- **Harness guards.** `eval/runner/strict-pageless/agent.ts` now refuses to relaunch a cell that stopped at its cap,
+  counts a trial's attempts across processes from the files on disk, writes every episode and attempt file without
+  overwriting, and treats a rebuild that throws or an unquiesced brain as a harness error instead of a scored "not
+  kept". A sync that reports a blocked or partial status without throwing is not caught; every counted episode in both
+  runs reported a first sync.
+  Each guard has a keyless test that fails without it. The reply rule (`report.ts`) is unchanged.
+- **Analysis.** `analyze.ts` adds two per-trial columns, the created page lacks the fact and the created page is
+  title-only, and per cell their shares with Wilson intervals. The first run's `outcomes.jsonl` and `summary.json` are
+  regenerated with them; no earlier value changes. The report's first-run text now says 45 of the 99 created pages
+  lack the fact and 39 carry only a title, where it said 45 carry only a title.
+- **Who labelled the rule checks.** The report now says that the hand-check labels in both runs came from the eval
+  agent that ran the experiment, on claude-opus-5-5, one of the two models under test, and that the re-run's 40-reply
+  sample was not blind to the rule's total. It drops the re-run table's "Truthful, hand" column, which repeated the
+  rule's count, and says that two of the first run's four restarted trials had already sent requests. The
+  [corrections page](docs/corrections.md) lists both first-run corrections. No number or verdict changes.
+
+## [0.10.221] - 2026-11-12
+
+### A before-and-after eval of facts about an entity with no page, on a Git-canonical source
+
+- **What changed.** A new agent cell, `eval/runner/strict-pageless/`, measures what happens when an agent remembers a
+  fact about a person or project that has no page, on a source whose pages are canonical in Git. It reuses the
+  refused-write-agents suite's synthetic brain, tool catalog, agent loop and ledger, and scores each trial by code: is
+  the fact in a database rebuilt from Git, and is the agent's report of where it was saved right. The
+  [report](docs/benchmarks/2026-11-12-strict-pageless-facts.md) compares gbrain v0.60.684.0 with v0.60.685.0 on
+  claude-opus-5-5 and gpt-6.1-sol, 72 trials per cell, under a
+  [preregistration](docs/benchmarks/2026-11-12-strict-pageless-facts-preregistration.md) whose recorded freeze leads the
+  first counted trial by seconds, not minutes (the report gives the timestamps, and the eval's owner ruled that the run
+  counts as preregistered). Verdict KEEP: kept in Git 0 to 144 of 144; claude-opus-5-5's truthful reports 62 to 72 of 72; gpt-6.1-sol
+  already 72 of 72. The new notice also leads agents to create the entity's page without being asked. The report names
+  two known errors in its reply rule, each right by hand, and its tables keep the rule's scores.
+- **Tests.** Keyless tests cover the reply rule, the paired intervals, how the cell matches facts to entities, its
+  command-line refusals, the rerun skip and one scripted episode; they blank every provider key and ignore `.env`.
+- **What stays the same.** No existing runner, scorer, fixture or published number changes. The refused-write-agents
+  harness files are imported, not edited, so its harness digest is unchanged.
+
+## [0.10.220] - 2026-11-12
+
+### Recall's (G2) paraphrase-gap prediction held on 50 new questions, for direction only
+
+- **What changed.** Batch 4, 50 new real questions frozen before any search, is scored and published as the held-out
+  test that [0.10.216](#010216---2026-11-11) fixed. Configured search found 23 of 49 reworded questions against 36
+  of the same 49 in exact words: a gap of 26.53 points (95% interval 14.29 to 40.82). The gap-copied synthetic brain
+  predicted 7 points (3 to 12), so the preregistered outcome is HELD, for the gap's direction only. The clean synthetic
+  brain predicted no gap and reads NOT HELD. The synthetic-to-real ratio is 0.2638 (0.0885 to 0.6151), which contains
+  batch 2's 0.175 but also twice it, so the size still can't be gated on. G2's batch 4 layer reads PREDICTIVE, with 14
+  of 16 contrasts qualifying on the family band (11 without the three whose sign is forced). The scorecard is committed
+  as the run wrote it, with the exported `live-recall-b4` reference, `verdicts/G2-batch4.json` and the clean brain's
+  secondary, and the [results page](docs/benchmarks/2026-11-12-g2-paraphrase-gap-replication.md) gives every caveat the
+  preregistration requires.
+- **Fixed.** The reference export lists a comparison with no pairs as skipped instead of crashing, so it can't qualify.
+  Batch 4 skipped none. A keyless test now checks that the committed batch 4 scorecard matches its freeze record
+  (question hash, counts, no overlap with batches 1 to 3, gbrain version and runner commit).
+- **What stays the same.** No frozen rule, threshold, sign or synthetic file changed, and the batch 2 and batch 3
+  verdict files are unchanged. The batch 4 preregistration note on two refused question builds before the freeze keeps
+  its facts and drops internal tooling details, with a dated line saying so.
+
+## [0.10.219] - 2026-11-11
+
+### Five comparison shims install patched versions of their vulnerable Python packages
+
+- **What changed.** The markdown-notes, memory-bank, temporal-graph, graph-pipeline and extract-first shims under
+  `eval/systems/` locked Python packages with published security advisories. Each lock now installs a patched release:
+  `aiohttp` 3.14.4, `certifi` 2026.10.19, `cryptography` 50.0.0, `httpcore2` and `httpx2` 2.12.0, `pyjwt` 2.15.0
+  and `urllib3` 2.8.0 in markdown-notes; `aiohttp` 3.14.4 and `urllib3` 2.8.0 in memory-bank; `anyio` 4.14.2,
+  `certifi` 2026.10.19 and `urllib3` 2.8.0 in temporal-graph; `certifi` 2026.10.19 in graph-pipeline and
+  extract-first. `yarl` moves to 1.25.1 in markdown-notes and memory-bank because the new `aiohttp` needs it. Each
+  lock was regenerated with the uv version its Dockerfile pins, so no other package moves (markdown-notes gains
+  `httpx2-jsfetch`, which installs only on Emscripten). Where `constraint-dependencies` hold a shim to its vendor's own
+  lock, those pins move with the bump, and extract-first lets `certifi` alone past its 2026-10-05 `exclude-newer`
+  cutoff. Masashi-Ono0611 reported the advisories in [#183](https://github.com/garrytan/gbrain-evals/pull/183).
+- **What stays the same.** No vendor package, shim code, base image or setting changes. The comparison bundles in
+  `docs/comparison-systems/` keep their locks, because running preregistrations pin those hashes, so the pin table and
+  every preregistration are unchanged. Advisories in other packages these locks hold, pillow among them, are outside
+  this change.
+- **What to expect.** From 2026-11-11, runs started after this change use new lock hashes: markdown-notes `e1a14a19`
+  to `90b883f1`, memory-bank `f54d89df` to `29b875e0`, temporal-graph `4ce9b216` to `6894bade`, graph-pipeline
+  `59af44d5` to `bdfac8b6` and extract-first `9777b7a8` to `9c32b495`. The three capability records that store a lock
+  hash carry the new one. Earlier results keep the hashes they recorded.
+
 ## [0.10.217] - 2026-11-11
 
 ### Judges count a verdict a Claude reply gives last, and an empty judge reply is an error instead of a wrong answer

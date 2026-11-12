@@ -92,6 +92,12 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
 - **The May snapshot's Category 18b to 29 rows** came from runners written before the August audit; Cat 29's +4.00
   synthesis lift also scored the same single-answer call twice.
   [Report](benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
+- **The strict-source pageless facts report overstated its title-only pages and called agent labels hand-made**
+  (2026-11-12). It said 45 of the 99 entity pages agents created unasked on v0.60.685.0 carry only a title; 45 lack
+  the fact, and 39 of those carry nothing but frontmatter and a heading. It described its rule checks as labelled by
+  hand; the labels came from the eval agent that ran the experiment, on claude-opus-5-5, one of the two models under
+  test. Both outcomes are scored by code, and no counted number or verdict changes. The report carries both
+  corrections. [Report](benchmarks/2026-11-12-strict-pageless-facts.md). gbrain is Garry Tan's own project.
 
 ## Agent tasks
 
@@ -259,11 +265,22 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   gap-copied brain became the counted condition after batch 2's results were public. The clean brain agrees on 12 of
   the 13 qualifying contrasts, so the gaps' whole effect is one contrast, from 7 of 100 questions. And the 13 contrasts
   share 5 setups and one set of questions, so they're worth about 5 to 8 independent checks. G2 now reads PREDICTIVE for
-  which search setup beats which, and its paraphrase-gap prediction reads PENDING a held-out replication. Until that
-  lands, nothing gates on G2 as a paraphrase-regression detector. Its paraphrase Kendall tau of 0.80 breaks a synthetic
+  which search setup beats which. Its paraphrase-gap prediction read PENDING until a held-out replication on batch 4
+  (2026-11-12) found it HELD for direction ([results](benchmarks/2026-11-12-g2-paraphrase-gap-replication.md)), so G2
+  may gate on the gap's direction, never its size. Its paraphrase Kendall tau of 0.80 breaks a synthetic
   tie by list order; as tau-b it is 0.949. Tau never gates. gbrain is Garry Tan's own project.
 
 ## Changelog
+
+### 2026-11-12: Strict-source pageless facts
+
+A new Writing memory entry says the strict-source pageless facts report overstated its title-only pages (45 of 99,
+now 39) and described labels its eval agent made as hand-made.
+
+### 2026-11-12: Predictive measures, batch 4
+
+The recall (G2) entry says that its paraphrase-gap prediction, PENDING when the entry was written, held for direction
+on held-out batch 4.
 
 ### 2026-11-11: Predictive measures
 
