@@ -9,7 +9,7 @@
  *   bun eval/custody/rs1/validate-candidates.ts --set <out>/set --beam-dir <out>/tooling/beam --report <out>/validation/candidates.json
  *       (--fake | --paid --budget-run-id <id> --budget-ledger <RS1 ledger> --paid-window <unit> --window-cap-usd <n>)
  *       [--cache <dir>, default <set>/../validate-cache] [--public-index <file>] [--target-tokens 1070000] [--tolerance 0.15]
- *       [--window-tokens 60000] [--overlap-tokens 2000] [--concurrency 8]
+ *       [--window-tokens 60000] [--overlap-tokens 2000] [--concurrency 8] [--regroup-windows 4]
  *
  * Conversations: every one whose probe step is done (manifest probe@1). Any other is "unfinished" and gets no call. The
  * conversation gates come first, computed as validate.ts computes them: length (the cl100k token count of its messages
@@ -25,7 +25,14 @@
  *   - support: the two validators, gemini-3.8-flash and claude-haiku-5-5, must each find the reference answer supported
  *     by the cited turns, asked with validate.ts's own prompt;
  *   - absence: an abstention candidate fails if any window of validate.ts's windowed scan answers it. Each window asks
- *     each validator about all of the conversation's abstention candidates in one prompt.
+ *     each validator about all of the conversation's abstention candidates in one prompt. When a validator answers that
+ *     prompt in the wrong shape (an empty reply or a refusal, not an error), the window is regrouped: asked again with
+ *     one prompt per abstention candidate, for at most --regroup-windows windows per run (default 4), whose worst case
+ *     the estimate includes. A regrouped candidate fails on "absence" if its own prompt answers it, on "refusal" if the
+ *     validator refuses its prompt (Anthropic's stop reason refusal, Gemini's SAFETY, PROHIBITED_CONTENT, BLOCKLIST or
+ *     SPII, or a blocked prompt; a refusal does not change on a rerun, so it fails the candidate, not the conversation),
+ *     and on validator_error otherwise. A window past the limit fails every abstention candidate on validator_error.
+ *     A candidate passes only if every window, from both validators, leaves it unanswered.
  * There is no duplicate gate among candidates: the select step skips a repeated question within an ability, and
  * validate.ts applies its duplicate gate to the selection.
  *
@@ -67,6 +74,11 @@ const CACHE_VERSION = 'rs1-validate-cache/v2';
 const MAX_OUTPUT_TOKENS = 8192;
 /** validate.ts's per-message framing in a window prompt ("[id N] ROLE: "), in cl100k tokens. */
 const MESSAGE_FRAME_TOKENS = 8;
+/** Windows regrouped per run, by default. */
+export const REGROUP_WINDOWS = 4;
+/** Stop reasons that mean the validator refused the prompt. */
+const REFUSALS = new Set(['refusal', 'SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII']);
+const refused = (stop: string | undefined) => !!stop && (REFUSALS.has(stop) || stop.startsWith('blocked_'));
 
 /** How a paid validator reply ended: provider vocabulary words and numbers only, never reply text. */
 export interface StopRecord { stop: string; output_tokens: number | null; blocks: string[] }
@@ -184,7 +196,7 @@ function loadProbed(setDir: string, cid: string): { chatSha256: string; messages
   return { chatSha256: sha256(raw), messages: messagesOf(JSON.parse(raw.toString('utf8'))), candidates };
 }
 
-interface Call { client: number; prompt: string; tokens: number; cacheFile: string | null; cached: boolean; kind: 'support' | 'absence'; settle: (reply: string | null) => boolean }
+interface Call { client: number; prompt: string; tokens: number; cacheFile: string | null; cached: boolean; kind: 'support' | 'absence' | 'absence_single'; settle: (reply: string | null) => boolean }
 export interface CandidateResult { pass: boolean; gates: string[] }
 export interface CandidateConversation {
   status: 'checked' | 'drop' | 'incomplete' | 'unfinished';
@@ -194,8 +206,10 @@ export interface CandidateConversation {
   contamination_share: number | null;
   windows: number;
   candidates: Record<string, CandidateResult>;
-  /** Every unusable validator reply: the validator, the call (a candidate key or a window index) and how the reply ended. */
-  validator_errors: Array<{ validator: string; kind: 'support' | 'absence'; candidate: string | null; window: number | null; prompt_tokens: number } & StopRecord>;
+  /** Every unusable validator reply: the validator, the call (a candidate key and/or a window index) and how it ended. */
+  validator_errors: Array<{ validator: string; kind: Call['kind']; candidate: string | null; window: number | null; prompt_tokens: number } & StopRecord>;
+  /** Windows asked again one candidate at a time, and those past the run's limit. */
+  regrouped: Array<{ validator: string; window: number; over_cap: boolean }>;
   /** Passed candidates per ability. */
   passed: Record<string, number>;
 }
@@ -208,9 +222,10 @@ export interface CandidateReport {
   totals: Record<string, number>;
   abilities: Record<string, { pass: number; fail: number }>;
 }
-export interface CandidatePlan { calls: Call[]; estimateUsd: number; finish: (run: { errors: number; cached: number }) => CandidateReport }
+/** calls first; then regroup() returns the calls for the windows whose replies were unusable; then finish. */
+export interface CandidatePlan { calls: Call[]; estimateUsd: number; regroup: () => Call[]; finish: (run: { errors: number; cached: number }) => CandidateReport }
 
-export function planCandidates(opts: Options, clients: ModelClient[], index: PublicIndex): CandidatePlan {
+export function planCandidates(opts: Options, clients: ModelClient[], index: PublicIndex, regroupWindows = REGROUP_WINDOWS): CandidatePlan {
   if (clients.length !== 2 || clients[0].id.split(':')[0] === clients[1].id.split(':')[0]) throw new ValidateError('validation needs two validators from different families');
   const root = join(opts.setDir, 'conversations');
   const cids = existsSync(root) ? readdirSync(root).filter(n => /^c\d{3,}$/.test(n)).sort() : [];
@@ -219,23 +234,45 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
   const questions = new Map<string, Map<string, string>>();
   const calls: Call[] = [];
   const low = Math.round(opts.targetTokens * (1 - opts.tolerance)), high = Math.round(opts.targetTokens * (1 + opts.tolerance));
-  const call = (cid: string, at: { candidate?: string; window?: number }, client: number, prompt: string, tokens: number, kind: Call['kind'], settle: Call['settle']) => {
+  const endedOf = (client: number, prompt: string) => (clients[client] as Partial<RecordingClient>).stops?.get(prompt);
+  const failItem = (cid: string, key: string, gate: string) => {
+    const item = results[cid].candidates[key];
+    item.pass = false;
+    if (!item.gates.includes(gate)) item.gates.push(gate);
+  };
+  const call = (cid: string, at: { candidate?: string; window?: number }, client: number, prompt: string, tokens: number, kind: Call['kind'], settle: Call['settle']): Call => {
     const cacheFile = opts.cacheDir ? join(opts.cacheDir, `${sha256(`${CACHE_VERSION}\0${clients[client].id}\0${prompt}`)}.json`) : null;
-    calls.push({
+    return {
       client, prompt, tokens, cacheFile, cached: !!cacheFile && existsSync(cacheFile), kind,
       settle: reply => {
         const usableReply = settle(reply);
         if (!usableReply) {
-          const ended = (clients[client] as Partial<RecordingClient>).stops?.get(prompt) ?? { stop: 'unrecorded', output_tokens: null, blocks: [] };
+          const ended = endedOf(client, prompt) ?? { stop: 'unrecorded', output_tokens: null, blocks: [] };
           results[cid].validator_errors.push({ validator: clients[client].id, kind, candidate: at.candidate ?? null, window: at.window ?? null, prompt_tokens: tokens, ...ended });
         }
         return usableReply;
       },
-    });
+    };
   };
+  // validate.ts's worst case: Claude counts about 1.47 tokens per cl100k token (the Claude 5 calibration in
+  // eval/runner/systems/render-v2.ts), every reply uses its whole output allowance, and long-prompt rates apply above
+  // their threshold.
+  const worstUsd = (client: number, tokens: number) => {
+    const id = clients[client].id.replace(/^fake-/, '');
+    const p = chatPrice(id) ?? (() => { throw new ValidateError(`no price for ${id}`); })();
+    const input = (id.startsWith('anthropic:') ? 1.47 : 1) * tokens;
+    const rates = p.long && input > p.long.above_input_tokens ? p.long : p;
+    return (input * rates.input + MAX_OUTPUT_TOKENS * rates.output) / 1e6;
+  };
+  /** One window and validator whose reply may need regrouping, with its worst-case price if it does. */
+  interface Regroupable { order: number; cid: string; window: number; client: number; batched: Call; usd: number; calls: () => Call[]; failAll: (gate: string) => void }
+  const regroupable: Regroupable[] = [];
+  const queued: Regroupable[] = [];
+  const singles: Call[] = [];
+  let regrouped = false;
 
   const measured = cids.flatMap(cid => {
-    const result: CandidateConversation = { status: 'unfinished', reasons: [], chat_sha256: null, tokens: null, contamination_share: null, windows: 0, candidates: {}, validator_errors: [], passed: {} };
+    const result: CandidateConversation = { status: 'unfinished', reasons: [], chat_sha256: null, tokens: null, contamination_share: null, windows: 0, candidates: {}, validator_errors: [], regrouped: [], passed: {} };
     results[cid] = result;
     const conv = loadProbed(opts.setDir, cid);
     if (!conv) { result.reasons.push('unfinished'); return []; }
@@ -276,12 +313,12 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
       const prompt = supportPrompt(turns, question, answer);
       const tokens = encodingCount('cl100k_base', prompt);
       for (let c = 0; c < 2; c++) {
-        call(cid, { candidate: key }, c, prompt, tokens, 'support', reply => {
+        calls.push(call(cid, { candidate: key }, c, prompt, tokens, 'support', reply => {
           const supported = reply === null ? undefined : jsonObject(reply)?.supported;
           if (typeof supported !== 'boolean') { fail(`validator_error:${clients[c].id}`); return false; }
           if (!supported) fail(`support:${clients[c].id}`);
           return true;
-        });
+        }));
       }
     }
 
@@ -289,41 +326,67 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
     const windows = chunkMessages(contentTokens.map(t => t + MESSAGE_FRAME_TOKENS), opts.windowTokens, opts.overlapTokens);
     result.windows = windows.length;
     for (const [window, [start, end]] of windows.entries()) {
-      const prompt = absencePrompt(conv.messages.slice(start, end), abstention.map(a => a.question));
+      const part = conv.messages.slice(start, end);
+      const prompt = absencePrompt(part, abstention.map(a => a.question));
       const tokens = contentTokens.slice(start, end).reduce((s, t) => s + t + MESSAGE_FRAME_TOKENS, 300);
       for (let c = 0; c < 2; c++) {
-        call(cid, { window }, c, prompt, tokens, 'absence', reply => {
-          const answered = reply === null ? undefined : jsonObject(reply)?.answered;
-          const usableReply = Array.isArray(answered);
-          abstention.forEach((a, i) => {
-            const gate = !usableReply ? `validator_error:${clients[c].id}` : answered.includes(i + 1) ? `absence:${clients[c].id}` : null;
-            const item = result.candidates[a.key];
-            if (gate) { item.pass = false; if (!item.gates.includes(gate)) item.gates.push(gate); }
-          });
-          return usableReply;
-        });
+        const id = clients[c].id;
+        const entry: Regroupable = {
+          order: regroupable.length, cid, window, client: c, usd: abstention.length * worstUsd(c, tokens),
+          failAll: gate => abstention.forEach(a => failItem(cid, a.key, gate)),
+          batched: call(cid, { window }, c, prompt, tokens, 'absence', reply => {
+            const answered = reply === null ? undefined : jsonObject(reply)?.answered;
+            if (!Array.isArray(answered)) {
+              if (reply === null) entry.failAll(`validator_error:${id}`);
+              else queued.push(entry);
+              return false;
+            }
+            abstention.forEach((a, i) => { if (answered.includes(i + 1)) failItem(cid, a.key, `absence:${id}`); });
+            return true;
+          }),
+          calls: () => abstention.map(a => {
+            const single = absencePrompt(part, [a.question]);
+            return call(cid, { window, candidate: a.key }, c, single, tokens, 'absence_single', reply => {
+              const answered = reply === null ? undefined : jsonObject(reply)?.answered;
+              if (Array.isArray(answered)) {
+                if (answered.includes(1)) failItem(cid, a.key, `absence:${id}`);
+                return true;
+              }
+              failItem(cid, a.key, reply !== null && refused(endedOf(c, single)?.stop) ? `refusal:${id}` : `validator_error:${id}`);
+              return false;
+            });
+          }),
+        };
+        regroupable.push(entry);
+        calls.push(entry.batched);
       }
     }
   }
 
-  // validate.ts's worst case: Claude counts about 1.47 tokens per cl100k token (the Claude 5 calibration in
-  // eval/runner/systems/render-v2.ts), every reply uses its whole output allowance, and long-prompt rates apply above
-  // their threshold.
-  const estimateUsd = calls.filter(c => !c.cached).reduce((s, c) => {
-    const id = clients[c.client].id.replace(/^fake-/, '');
-    const p = chatPrice(id) ?? (() => { throw new ValidateError(`no price for ${id}`); })();
-    const input = (id.startsWith('anthropic:') ? 1.47 : 1) * c.tokens;
-    const rates = p.long && input > p.long.above_input_tokens ? p.long : p;
-    return s + (input * rates.input + MAX_OUTPUT_TOKENS * rates.output) / 1e6;
-  }, 0);
+  // The batched calls not yet cached, plus the dearest regroupings the run may make. A cached window reply was usable,
+  // so it is never regrouped.
+  const estimateUsd = calls.filter(c => !c.cached).reduce((s, c) => s + worstUsd(c.client, c.tokens), 0)
+    + regroupable.filter(r => !r.batched.cached).map(r => r.usd).sort((a, b) => b - a).slice(0, regroupWindows).reduce((s, u) => s + u, 0);
+
+  const regroup = (): Call[] => {
+    regrouped = true;
+    const order = [...queued].sort((a, b) => a.order - b.order);
+    order.forEach((r, i) => results[r.cid].regrouped.push({ validator: clients[r.client].id, window: r.window, over_cap: i >= regroupWindows }));
+    for (const r of order.slice(regroupWindows)) r.failAll(`validator_error:${clients[r.client].id}`);
+    singles.push(...order.slice(0, regroupWindows).flatMap(r => r.calls()));
+    return singles;
+  };
 
   const finish = (run: { errors: number; cached: number }): CandidateReport => {
+    if (!regrouped) for (const r of queued) r.failAll(`validator_error:${clients[r.client].id}`);
     const of = (kind: Call['kind']) => calls.filter(c => c.kind === kind);
     const totals: Record<string, number> = {
       conversations: cids.length, checked: 0, drop: 0, incomplete: 0, unfinished: 0, fillable: 0, candidates: 0, pass: 0, fail: 0,
       calls: calls.length, support_calls: of('support').length, absence_calls: of('absence').length,
       support_tokens: of('support').reduce((s, c) => s + c.tokens, 0), absence_tokens: of('absence').reduce((s, c) => s + c.tokens, 0),
       cached_calls: run.cached, validator_errors: run.errors, windows: 0,
+      absence_single_calls: singles.length, absence_single_tokens: singles.reduce((s, c) => s + c.tokens, 0),
+      regrouped_windows: regrouped ? Math.min(queued.length, regroupWindows) : 0, regroup_over_cap: Math.max(0, queued.length - regroupWindows),
     };
     const abilities = Object.fromEntries(ABILITIES.map(a => [a, { pass: 0, fail: 0 }]));
     for (const [cid, result] of Object.entries(results)) {
@@ -353,19 +416,25 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
     return {
       schema: 'rs1-candidates/v1',
       validators: clients.map(c => c.id),
-      params: { target_tokens: opts.targetTokens, tolerance: opts.tolerance, window_tokens: opts.windowTokens, overlap_tokens: opts.overlapTokens, contamination_max: THRESHOLDS.contamination_max, item_contamination_max: THRESHOLDS.item_contamination_max },
+      params: { target_tokens: opts.targetTokens, tolerance: opts.tolerance, window_tokens: opts.windowTokens, overlap_tokens: opts.overlapTokens, contamination_max: THRESHOLDS.contamination_max, item_contamination_max: THRESHOLDS.item_contamination_max, regroup_windows: regroupWindows },
       public_index: { sources: index.sources, ngrams: index.ngrams, sources_sha256: index.sourcesSha256, source_list_sha256: index.sourceListSha256 },
       conversations: results,
       totals,
       abilities,
     };
   };
-  return { calls, estimateUsd, finish };
+  return { calls, estimateUsd, regroup, finish };
 }
 
-export async function validateCandidates(opts: Options, clients: ModelClient[], index = buildPublicIndex(opts.beamDir, opts.publicIndexPath)): Promise<CandidateReport> {
-  const plan = planCandidates(opts, clients, index);
-  return plan.finish(await runCalls(plan.calls, clients, opts.concurrency));
+/** Runs a plan's calls, then its regrouped windows' calls, and writes nothing. */
+export async function runPlan(plan: CandidatePlan, clients: ModelClient[], concurrency: number): Promise<CandidateReport> {
+  const first = await runCalls(plan.calls, clients, concurrency);
+  const second = await runCalls(plan.regroup(), clients, concurrency);
+  return plan.finish({ errors: first.errors + second.errors, cached: first.cached + second.cached });
+}
+
+export async function validateCandidates(opts: Options, clients: ModelClient[], index = buildPublicIndex(opts.beamDir, opts.publicIndexPath), regroupWindows = REGROUP_WINDOWS): Promise<CandidateReport> {
+  return runPlan(planCandidates(opts, clients, index, regroupWindows), clients, opts.concurrency);
 }
 
 export function writeCandidateReport(path: string, report: CandidateReport): string {
@@ -384,7 +453,7 @@ export function summaryLines(report: CandidateReport, reportSha256: string): str
     `rs1-validate-candidates ${kv({ candidates: t.candidates, pass: t.pass, fail: t.fail, ...gates })}`,
     ...ABILITIES.map(a => `rs1-validate-candidates ${kv({ ability: a, pass: report.abilities[a].pass, fail: report.abilities[a].fail })}`),
     `rs1-validate-candidates ${kv({ calls: t.calls, support_calls: t.support_calls, absence_calls: t.absence_calls, support_tokens: t.support_tokens, absence_tokens: t.absence_tokens, cached_calls: t.cached_calls, validator_errors: t.validator_errors, windows: t.windows })}`,
-    `rs1-validate-candidates ${kv({ unusable: Object.values(report.conversations).reduce((s, c) => s + c.validator_errors.length, 0), ...Object.fromEntries(Object.entries(t).filter(([k]) => k.startsWith('unusable_')).sort()) })}`,
+    `rs1-validate-candidates ${kv({ unusable: Object.values(report.conversations).reduce((s, c) => s + c.validator_errors.length, 0), ...Object.fromEntries(Object.entries(t).filter(([k]) => k.startsWith('unusable_')).sort()), regrouped_windows: t.regrouped_windows, regroup_over_cap: t.regroup_over_cap, absence_single_calls: t.absence_single_calls })}`,
     `rs1-validate-candidates ${kv({ public_sources: report.public_index.sources, public_ngrams: report.public_index.ngrams, report_sha256: reportSha256 })}`,
   ];
 }
@@ -397,6 +466,8 @@ async function main(argv: string[]): Promise<number> {
     return n;
   };
   const setDir = flag('--set'), beamDir = flag('--beam-dir'), reportPath = flag('--report');
+  const regroupWindows = Number(flag('--regroup-windows') ?? REGROUP_WINDOWS);
+  if (!Number.isInteger(regroupWindows) || regroupWindows < 0) throw new ValidateError('--regroup-windows must be a whole number');
   if (!setDir || !beamDir || !reportPath) throw new ValidateError('--set, --beam-dir and --report are required');
   const fake = argv.includes('--fake');
   if (fake === argv.includes('--paid')) throw new ValidateError('pass exactly one of --fake and --paid');
@@ -416,12 +487,12 @@ async function main(argv: string[]): Promise<number> {
   const geminiKey = process.env.GEMINI_API_KEY, anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (!fake && (!geminiKey || !anthropicKey)) throw new ValidateError('paid candidate validation needs GEMINI_API_KEY and ANTHROPIC_API_KEY');
   const clients = fake ? VALIDATOR_IDS.map(id => fakeClient(`fake-${id}`)) : [recordingGeminiClient(geminiKey!), recordingAnthropicClient(anthropicKey!)];
-  const plan = planCandidates(opts, clients, buildPublicIndex(opts.beamDir, opts.publicIndexPath));
+  const plan = planCandidates(opts, clients, buildPublicIndex(opts.beamDir, opts.publicIndexPath), regroupWindows);
   const paid = !fake && plan.calls.some(c => !c.cached);
   if (paid) requirePaidArm(argv, { arm: 'rs1 validate-candidates', estimateUsd: plan.estimateUsd });
   const started = paid ? startPaidRun('rs1-validate-candidates', { ...budgetOptionsFrom(argv), estimateUsd: plan.estimateUsd }) : null;
   try {
-    const report = plan.finish(await runCalls(plan.calls, clients, opts.concurrency));
+    const report = await runPlan(plan, clients, opts.concurrency);
     for (const line of summaryLines(report, writeCandidateReport(opts.reportPath, report))) console.log(line);
     return 0;
   } finally {

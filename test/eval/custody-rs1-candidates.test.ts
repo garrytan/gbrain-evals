@@ -14,7 +14,7 @@ import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
 import { readBeamPaths } from '../../eval/custody/rs1/beam-paths.ts';
 import { BudgetExceededError, BudgetRun, initLedger, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
 import {
-  recordingAnthropicClient, recordingGeminiClient, validateCandidates, writeCandidateReport, type CandidateReport, type StopRecord,
+  planCandidates, recordingAnthropicClient, recordingGeminiClient, validateCandidates, writeCandidateReport, type CandidateReport, type StopRecord,
 } from '../../eval/custody/rs1/validate-candidates.ts';
 import {
   ABILITIES, ANSWER_FIELD, SLOTS, VALIDATOR_IDS, anthropicClient, buildPublicIndex, fakeClient, geminiClient, validateSet, writeReport,
@@ -534,7 +534,7 @@ describe('validate-candidates.ts stop reasons', () => {
       const prompt = JSON.parse(String(init.body)).messages[0].content as string;
       if (prompt.includes('<conversation_part>')) return { content: [], stop_reason: 'end_turn', usage: { input_tokens: 900, output_tokens: 0 } };
       return { content: [{ type: 'text', text: await fake.complete(prompt, 8192) }], stop_reason: 'end_turn', usage: { input_tokens: 90, output_tokens: 6 } };
-    }, () => validateCandidates(opts, [fakeClient(VALIDATOR_IDS[0]), client], index));
+    }, () => validateCandidates(opts, [fakeClient(VALIDATOR_IDS[0]), client], index, 0));
     const r = report as CandidateReport;
     const c = r.conversations.c001;
     expect(c.status).toBe('incomplete');
@@ -549,6 +549,91 @@ describe('validate-candidates.ts stop reasons', () => {
     const unrecorded = await validateCandidates(opts, [broken, fakeClient(VALIDATOR_IDS[1])], index);
     expect(unrecorded.conversations.c001.validator_errors.map(e => [e.kind, e.stop, typeof e.candidate])).toEqual(Array.from({ length: 27 }, () => ['support', 'unrecorded', 'string']));
     expect(unrecorded.totals).toMatchObject({ unusable_unrecorded: 27 });
+  });
+});
+
+// ─── validate-candidates.ts regrouped windows (GST-1886, 2026-11-12) ─
+
+describe('validate-candidates.ts regrouped windows', () => {
+  let root = '', beam = '', index: PublicIndex;
+  beforeAll(() => { root = scratch('candidate-regroup'); beam = fakeBeam(root); index = buildPublicIndex(beam); });
+  const options = (set: string, extra: Partial<Options> = {}): Options => ({ setDir: set, beamDir: beam, reportPath: join(root, 'report.json'), targetTokens: 1_000_000, tolerance: 0.9999, windowTokens: 600, overlapTokens: 60, concurrency: 4, ...extra });
+  const questionsOf = (prompt: string) => between(prompt, '<questions>', '</questions>').trim().split('\n');
+  /** fakeClient with a stop record per prompt; prompts for which refuse() names a stop reason come back empty with it. */
+  function stopping(id: string, refuse: (prompt: string) => string | null): ModelClient & { stops: Map<string, StopRecord>; asked: string[] } {
+    const inner = fakeClient(id), stops = new Map<string, StopRecord>(), asked: string[] = [];
+    return {
+      id, stops, asked,
+      async complete(prompt, max) {
+        asked.push(prompt);
+        const stop = refuse(prompt);
+        stops.set(prompt, stop ? { stop, output_tokens: 0, blocks: [] } : { stop: 'end_turn', output_tokens: 9, blocks: ['text'] });
+        return stop ? '' : inner.complete(prompt, max);
+      },
+    };
+  }
+  const windowOf = (prompt: string, conv: ProbedConversation, n: number) => prompt.includes(conv.messages[n].slice(0, 60));
+
+  test('a window answered in the wrong shape is asked again one candidate at a time, and each candidate passes or fails on its own reply', async () => {
+    const conv = probedConversation('regroup', 120);
+    const nonce = (k: number) => /nonce-[0-9a-f]+/.exec(String(conv.candidates.abstention[k].question))![0];
+    conv.messages[61] += ` I decided on ${nonce(2)} after all.`;
+    const haiku = stopping(VALIDATOR_IDS[1], p => {
+      if (!p.includes('<conversation_part>') || !windowOf(p, conv, 61)) return null;
+      const qs = questionsOf(p);
+      return qs.length > 1 ? 'refusal' : qs[0].includes(nonce(1)) ? 'refusal' : null;
+    });
+    const gemini = counting(fakeClient(VALIDATOR_IDS[0]));
+    const set = writeProbedSet(root, [conv]);
+    const report = await validateCandidates(options(set, { cacheDir: join(root, 'cache-1') }), [gemini, haiku], index);
+    const c = report.conversations.c001;
+    expect(c.status).toBe('checked');
+    const abstention = Object.fromEntries(Object.entries(c.candidates).filter(([k]) => k.startsWith('abstention/')).map(([k, r]) => [k, r.gates]));
+    expect(abstention).toEqual({ 'abstention/0': [], 'abstention/1': [`refusal:${VALIDATOR_IDS[1]}`], 'abstention/2': expect.arrayContaining([`absence:${VALIDATOR_IDS[0]}`, `absence:${VALIDATOR_IDS[1]}`]) });
+    expect(c.passed.abstention).toBe(1);
+    const refusedWindows = c.regrouped.map(r => r.window);
+    expect(refusedWindows.length).toBeGreaterThanOrEqual(1);
+    expect(c.regrouped.every(r => r.validator === VALIDATOR_IDS[1] && !r.over_cap)).toBe(true);
+    const singles = haiku.asked.filter(p => p.includes('<conversation_part>') && questionsOf(p).length === 1);
+    expect(singles).toHaveLength(3 * refusedWindows.length);
+    expect(gemini.calls.absence).toBe(c.windows);
+    expect(c.validator_errors.map(e => [e.kind, e.stop, e.candidate])).toEqual(expect.arrayContaining([['absence', 'refusal', null], ['absence_single', 'refusal', 'abstention/1']]));
+    expect(report.totals).toMatchObject({ regrouped_windows: refusedWindows.length, regroup_over_cap: 0, absence_single_calls: 3 * refusedWindows.length, gate_refusal: 1, validator_errors: 0 });
+    const again = stopping(VALIDATOR_IDS[1], p => (p.includes('<conversation_part>') && windowOf(p, conv, 61) && questionsOf(p).length > 1 ? 'refusal' : null));
+    const second = await validateCandidates(options(set, { cacheDir: join(root, 'cache-1') }), [fakeClient(VALIDATOR_IDS[0]), again], index);
+    expect(again.asked.filter(p => questionsOf(p).length === 1 && p.includes('<conversation_part>'))).toHaveLength(refusedWindows.length);
+    expect(second.conversations.c001.candidates['abstention/1'].pass).toBe(true);
+  });
+
+  test('a single reply in the wrong shape that is not a refusal, a window past the limit and a window that errors fail closed as validator_error', async () => {
+    const conv = probedConversation('regroup-cap', 120);
+    const set = writeProbedSet(root, [conv]);
+    const empty = stopping(VALIDATOR_IDS[1], p => (p.includes('<conversation_part>') ? 'end_turn' : null));
+    const report = await validateCandidates(options(set), [fakeClient(VALIDATOR_IDS[0]), empty], index, 1);
+    const c = report.conversations.c001;
+    expect(c.status).toBe('incomplete');
+    expect(c.regrouped.filter(r => !r.over_cap)).toHaveLength(1);
+    expect(c.regrouped.filter(r => r.over_cap)).toHaveLength(c.windows - 1);
+    expect(report.totals).toMatchObject({ regrouped_windows: 1, regroup_over_cap: c.windows - 1, absence_single_calls: 3 });
+    for (const k of [0, 1, 2]) expect(c.candidates[`abstention/${k}`].gates).toEqual([`validator_error:${VALIDATOR_IDS[1]}`]);
+    let thrown = 0;
+    const failing: ModelClient = { id: VALIDATOR_IDS[1], complete: async (p, m) => { if (p.includes('<conversation_part>')) { thrown++; throw new Error('HTTP 503'); } return fakeClient(VALIDATOR_IDS[1]).complete(p, m); } };
+    const errored = await validateCandidates(options(set), [fakeClient(VALIDATOR_IDS[0]), failing], index);
+    expect(thrown).toBe(errored.conversations.c001.windows);
+    expect(errored.totals).toMatchObject({ regrouped_windows: 0, absence_single_calls: 0, validator_errors: thrown });
+    expect(errored.conversations.c001.status).toBe('incomplete');
+  });
+
+  test('the estimate adds the dearest regroupings the limit allows, for windows not yet answered', async () => {
+    const set = writeProbedSet(root, [probedConversation('regroup-price', 120)]);
+    const opts = options(set, { cacheDir: join(root, 'cache-price') });
+    const clients = [fakeClient(VALIDATOR_IDS[0]), fakeClient(VALIDATOR_IDS[1])];
+    const [none, one, two] = [0, 1, 2].map(k => planCandidates(opts, clients, index, k).estimateUsd);
+    expect(one).toBeGreaterThan(none);
+    expect(two - one).toBeGreaterThan(0);
+    expect(two - one).toBeLessThanOrEqual(one - none + 1e-12);
+    await validateCandidates(opts, clients, index);
+    expect(planCandidates(opts, clients, index, 2).estimateUsd).toBe(0);
   });
 });
 

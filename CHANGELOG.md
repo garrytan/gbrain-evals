@@ -48,6 +48,14 @@ This records what each gbrain-evals release changed and what its measurements me
   sharing validate.ts's reply cache, and `mint.sh --candidates <report>` selects only candidates both passed. A real
   mint without a report stops each conversation after its probe step. validate.ts is unchanged and still decides what is
   kept.
+- **Parallel minting and regrouped window checks.** `eval/custody/rs1/mint-lanes.ts` runs mint.sh's first pass for up
+  to eight slots at once, one unchanged mint.sh per slot, with each slot's topic, topic check and plan still run one at a
+  time in slot order. It refuses to start more slots than are still needed, stops starting slots on a provider refusal,
+  and writes `usage.json` once at the end (`mint.sh --no-usage` skips mint.sh's own write). validate-candidates.ts now
+  asks a window again with one prompt per abstention candidate when a validator answers the batched prompt in the wrong
+  shape, fails a candidate whose own prompt the validator refuses on a new `refusal` gate, and records how each
+  unusable reply ended (stop reason, output tokens, content block kinds or HTTP status), never its text. validate.ts is
+  unchanged.
 - **Records.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` gains its amendments, and
   `docs/benchmarks/2026-11-08-rs1-narrow-results.md` starts with the stage 1 run log. No counted RS1 result exists yet.
 

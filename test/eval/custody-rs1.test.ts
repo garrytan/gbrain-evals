@@ -614,6 +614,23 @@ describe('beam-checkout.sh', () => {
     expect(existsSync(dir)).toBe(false);
   });
 
+  test('eight verifications of one checkout at once, as mint-lanes.ts runs them, all pass and change nothing', async () => {
+    const dir = join(root, 'lanes/beam');
+    expect(checkout(dir).code).toBe(0);
+    const before = onDisk(dir);
+    const runs = await Promise.all(Array.from({ length: 8 }, async () => {
+      const p = Bun.spawn(['bash', CHECKOUT, dir, url, commit, BEAM_PATHS_FILE], { cwd: REPO, env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: root }, stdout: 'pipe', stderr: 'pipe' });
+      const [out, err, code] = await Promise.all([new Response(p.stdout).text(), new Response(p.stderr).text(), p.exited]);
+      return { code, out, err };
+    }));
+    for (const r of runs) {
+      expect([r.code, r.err]).toEqual([0, '']);
+      expect(r.out).toContain(' replaced=0');
+    }
+    expect(onDisk(dir)).toEqual(before);
+    expect(git(dir, ['status', '--porcelain', '--untracked-files=all']).stdout).toBe('');
+  });
+
   test('a full checkout from before F28 is deleted and fetched again sparse', () => {
     const dir = join(root, 'full/beam');
     mkdirSync(dirname(dir), { recursive: true });

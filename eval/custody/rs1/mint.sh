@@ -6,12 +6,13 @@
 #       (--fake --beam-dir <fake BEAM tree> | --stub-model
 #        | --budget-ledger <sqlite> --budget-run-id <id> --paid-window <unit> --window-cap-usd <n>)
 #       [--topic-source seeded|public] [--until <step>] [--candidates <candidate report>]
-#       [--regenerate <validation report>]
+#       [--regenerate <validation report>] [--no-usage]
 #
 # A real mint runs in three passes: mint.sh without --candidates stops each conversation after its probe step;
 # eval/custody/rs1/validate-candidates.ts asks both validators about every candidate and writes the candidate report;
 # mint.sh --candidates <report> selects only from the candidates both passed and writes the rubrics. validate.ts then
 # decides what is kept, and mint.sh --candidates <report> --regenerate <validation report> replaces the items it failed.
+# eval/custody/rs1/mint-lanes.ts runs the first pass for several slots at once, one mint.sh per slot.
 #
 # What it guarantees:
 #   - Output only counts and hashes. Every line is "rs1-mint key=value ..."; BEAM's own output goes to /dev/null and
@@ -74,8 +75,9 @@
 #
 # Layout under --out: set/ (the minted set: set/conversations/cNNN/{manifest.json,topic.json,beam/1/...}),
 # usage.json (counts-only usage per step and conversation), proxy/ (request logs, and request bodies holding RS1
-# text), tooling/ (sparse BEAM checkout, venv, tiktoken cache). Everything but tooling/ belongs in the encrypted
-# archive.
+# text), lanes/ (mint-lanes.ts's per-slot logs), tooling/ (sparse BEAM checkout, venv, tiktoken cache). Everything but
+# tooling/ belongs in the encrypted archive. usage.json is rewritten at the end of every run; --no-usage skips that, for
+# mint-lanes.ts, whose concurrent runs would race on the one file and which writes it once after they all end.
 set -euo pipefail
 umask 077
 
@@ -92,7 +94,7 @@ sha256_file() {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum -- "$1"; else shasum -a 256 -- "$1"; fi | cut -d' ' -f1
 }
 
-OUT="" SEED_FILE="${RS1_SEED_FILE:-}" COUNT=75 START=1 MODE=real BEAM_DIR="" TOPIC_SOURCE=seeded REGENERATE="" CANDIDATES="" UNTIL=""
+OUT="" SEED_FILE="${RS1_SEED_FILE:-}" COUNT=75 START=1 MODE=real BEAM_DIR="" TOPIC_SOURCE=seeded REGENERATE="" CANDIDATES="" UNTIL="" USAGE=1
 LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP=""
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -107,6 +109,7 @@ while [ $# -gt 0 ]; do
     --regenerate) REGENERATE="$2"; shift 2 ;;
     --candidates) CANDIDATES="$2"; shift 2 ;;
     --until) UNTIL="$2"; shift 2 ;;
+    --no-usage) USAGE=0; shift ;;
     --budget-ledger) LEDGER="$2"; shift 2 ;;
     --budget-run-id) RUN_ID="$2"; shift 2 ;;
     --paid-window) WINDOW="$2"; shift 2 ;;
@@ -258,7 +261,7 @@ for ((i = START; i < START + COUNT; i++)); do
   COMPLETE=$((COMPLETE + 1))
 done
 
-"$PY" "$HERE/rs1_mint.py" usage --out "$OUT"
+[ "$USAGE" = 0 ] || "$PY" "$HERE/rs1_mint.py" usage --out "$OUT"
 AWAITING=0
 [ "$UNTIL" != probe ] || AWAITING=$STOPPED
 say "summary=mint mode=$MODE conversations=$COUNT complete=$COMPLETE dropped=$DROPPED select_exhausted=$EXHAUSTED steps_run=$STEPS_RUN steps_skipped=$STEPS_SKIPPED until=${UNTIL:-none} stopped=$STOPPED awaiting_candidates=$AWAITING"
