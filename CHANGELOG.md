@@ -15,12 +15,19 @@ This records what each gbrain-evals release changed and what its measurements me
   before the first counted trial.
 - **Harness guards.** `eval/runner/strict-pageless/agent.ts` now refuses to relaunch a cell that stopped at its cap,
   counts a trial's attempts across processes from the files on disk, writes every episode and attempt file without
-  overwriting, and treats a failed rebuild or an unquiesced brain as a harness error instead of a scored "not kept".
+  overwriting, and treats a rebuild that throws or an unquiesced brain as a harness error instead of a scored "not
+  kept". A sync that reports a blocked or partial status without throwing is not caught; every counted episode in both
+  runs reported a first sync.
   Each guard has a keyless test that fails without it. The reply rule (`report.ts`) is unchanged.
 - **Analysis.** `analyze.ts` adds two per-trial columns, the created page lacks the fact and the created page is
   title-only, and per cell their shares with Wilson intervals. The first run's `outcomes.jsonl` and `summary.json` are
   regenerated with them; no earlier value changes. The report's first-run text now says 45 of the 99 created pages
   lack the fact and 39 carry only a title, where it said 45 carry only a title.
+- **Who labelled the rule checks.** The report now says that the hand-check labels in both runs came from the eval
+  agent that ran the experiment, on claude-opus-5-5, one of the two models under test, and that the re-run's 40-reply
+  sample was not blind to the rule's total. It drops the re-run table's "Truthful, hand" column, which repeated the
+  rule's count, and says that two of the first run's four restarted trials had already sent requests. The
+  [corrections page](docs/corrections.md) lists both first-run corrections. No number or verdict changes.
 
 ## [0.10.221] - 2026-11-12
 
