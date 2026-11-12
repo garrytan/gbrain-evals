@@ -2,6 +2,22 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.218] - 2026-11-12
+
+### A before-and-after eval of facts about an entity with no page, on a Git-canonical source
+
+- **What changed.** A new agent cell, `eval/runner/strict-pageless/`, measures what happens when an agent remembers a
+  fact about a person or project that has no page, on a source whose pages are canonical in Git. It reuses the
+  refused-write-agents suite's synthetic brain, tool catalog, agent loop and ledger, and scores each trial by code: is
+  the fact in a database rebuilt from Git, and is the agent's report of where it was saved right. The
+  [report](docs/benchmarks/2026-11-12-strict-pageless-facts.md) compares gbrain v0.60.684.0 with v0.60.685.0 on
+  claude-opus-5-5 and gpt-6.1-sol, 72 trials per cell, under a
+  [preregistration](docs/benchmarks/2026-11-12-strict-pageless-facts-preregistration.md) frozen before the first counted
+  trial. Verdict KEEP: kept in Git 0 to 144 of 144; claude-opus-5-5's truthful reports 62 to 72 of 72; gpt-6.1-sol
+  already 72 of 72. The new notice also leads agents to create the entity's page without being asked.
+- **What stays the same.** No existing runner, scorer, fixture or published number changes. The refused-write-agents
+  harness files are imported, not edited, so its harness digest is unchanged.
+
 ## [0.10.217] - 2026-11-11
 
 ### Judges count a verdict a Claude reply gives last, and an empty judge reply is an error instead of a wrong answer

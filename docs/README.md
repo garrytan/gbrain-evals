@@ -163,6 +163,7 @@ gap does not isolate the effect of a graph alone.
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
 | What did the earlier ingestion worker comparisons measure? | [Subagent comparison](benchmarks/2026-04-18-minions-vs-openclaw-subagents.md), [production comparison](benchmarks/2026-04-18-minions-vs-openclaw-production.md) |
 | Does gbrain's refresh write barrier (`persistence.refresh_barrier`) land every write made during a refresh exactly once and in order, without slowing writes, changing retrieval or confusing agents? | [November 8 refresh write barrier results](benchmarks/2026-11-08-refresh-barrier-results.md) at gbrain `773a29ee`, under the [November 6 preregistration](benchmarks/2026-11-06-refresh-barrier-preregistration.md) and its six amendments: PASS. No write was lost, stuck, duplicated or overwritten in 2,000 concurrency trials on Postgres and PGLite in either arm; with the flag on, `worktree_refreshing` refusals went to 0 and p95 blocked time from about 10 s to under 0.1 s, with quiet writes inside the 25 ms margin and retrieval unchanged. Agents did at least as well with it on (claude-opus-5-5 +36.7 points adjudicated strict success, 95% +18.3 to +55.0, and +23.3 raw, 95% +6.7 to +40.0; gpt-6.1-sol +93.3, +86.7 to +98.3), so the findings recommend the flag on. The first counted run, at `431cb3f9`, read FAIL on two hangs gbrain then fixed and four overwrites that matched a fault in our own detector. gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. ([Disclosures](disclosures.md)) |
+| On a Git-canonical source, does gbrain keep a fact about an entity with no page in Git, and does the agent then say correctly where it was saved? | [November 12 strict-source pageless facts](benchmarks/2026-11-12-strict-pageless-facts.md), gbrain `47cbca02` (v0.60.684.0) against `505204a9` (v0.60.685.0), under its [preregistration](benchmarks/2026-11-12-strict-pageless-facts-preregistration.md): KEEP. A database rebuilt from Git had the fact in 144 of 144 trials on v0.60.685.0 and 0 of 144 before, on claude-opus-5-5 and gpt-6.1-sol. claude-opus-5-5's truthful reports rose from 62 to 72 of 72 (+13.9 points, 95% +5.6 to +23.6); gpt-6.1-sol was already 72 of 72, a ceiling. The new notice also leads agents to create the entity's page unasked (58 and 41 of 72). gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. ([Disclosures](disclosures.md)) |
 
 ## Correctness and access checks (keyless, synthetic worlds)
 
@@ -286,6 +287,12 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-12: Strict-source pageless facts row
+
+New row for the [strict-source pageless facts](benchmarks/2026-11-12-strict-pageless-facts.md) before-and-after eval of
+gbrain v0.60.685.0: a fact about an entity with no page, on a Git-canonical source, now survives a rebuild from Git
+(0 to 144 of 144 trials), and claude-opus-5-5's reports of where it was saved became right in every trial.
 
 ### 2026-11-11: Live recall links its batch 4 amendment
 
