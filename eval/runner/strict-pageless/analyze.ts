@@ -1,7 +1,7 @@
 /**
  * Analysis for the strict-pageless cell (docs/benchmarks/2026-11-12-strict-pageless-facts-preregistration.md, "Analysis").
  * Reads the four cells' episode records, writes one outcome row per trial (outcomes.jsonl) and a summary (summary.json):
- * per cell the trial, exposure, kept-in-Git, truthful and secondary counts and the ledger cost; per model and pooled the
+ * per cell the trial, exposure, kept-in-Git, truthful and secondary counts; per model and pooled the
  * paired after-minus-before differences, paired by item and replicate, with two 95% intervals: an item-cluster bootstrap
  * (the 24 items resampled with replacement, 10,000 draws, seed 449, percentile) and Newcombe's hybrid score interval for
  * paired proportions (method 10), which ignores the clustering.
@@ -25,7 +25,7 @@ export function outcomeRow(r: Row, arm: 'before' | 'after'): Row {
     token_on_hold: r.truth.token_on_hold, token_on_entity_page: r.truth.token_on_entity_page, fact_row_active: r.truth.fact_row_active,
     remember_calls: r.remembers.length, remember_entities: r.remembers.map((x: Row) => x.entity), reply_pages: r.remembers.map((x: Row) => x.reply_page),
     entity_page_missing_notices: r.remembers.reduce((n: number, x: Row) => n + (x.notices?.length ?? 0), 0),
-    tools: r.tool_calls.map((c: Row) => c.name), usd: r.usd,
+    tools: r.tool_calls.map((c: Row) => c.name),
   };
 }
 
@@ -87,10 +87,9 @@ if (import.meta.main) {
     const cellRows = recs.map(r => outcomeRow(r, arm)).sort((x, y) => x.replicate - y.replicate || x.item - y.item);
     rows.push(...cellRows);
     const count = (k: string) => cellRows.filter(r => r[k]).length;
-    const extra = existsSync(dir) ? readdirSync(dir).filter(f => /errored|harness-error/.test(f)).sort().map(f => JSON.parse(readFileSync(join(dir, f), 'utf8'))) : [];
+    const errored = existsSync(dir) ? readdirSync(dir).filter(f => /errored|harness-error/.test(f)).length : 0;
     cells.push({ model, arm, gbrain: sha, trials: cellRows.length, ...Object.fromEntries(OUTCOMES.map(k => [k, count(k)])),
-      usd_counted_episodes: cellRows.reduce((s, r) => s + Number(r.usd ?? 0), 0), usd_errored_attempts: extra.reduce((s, r) => s + Number(r.usd ?? 0), 0),
-      errored_or_harness_attempts: extra.length, stops: cellRows.reduce((m: Row, r) => (m[r.stop] = (m[r.stop] ?? 0) + 1, m), {}) });
+      errored_or_harness_attempts: errored, stops: cellRows.reduce((m: Row, r) => (m[r.stop] = (m[r.stop] ?? 0) + 1, m), {}) });
   }
   const comparisons: Row = {};
   for (const scope of [...MODELS, 'pooled']) {

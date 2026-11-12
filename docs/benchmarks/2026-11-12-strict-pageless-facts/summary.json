@@ -13,8 +13,6 @@
    "located": 26,
    "false_no_repo": 6,
    "entity_page_created": 2,
-   "usd_counted_episodes": 1.0468474,
-   "usd_errored_attempts": 0,
    "errored_or_harness_attempts": 0,
    "stops": {
     "submitted": 72
@@ -31,8 +29,6 @@
    "located": 40,
    "false_no_repo": 0,
    "entity_page_created": 58,
-   "usd_counted_episodes": 1.5413517999999997,
-   "usd_errored_attempts": 0,
    "errored_or_harness_attempts": 0,
    "stops": {
     "submitted": 72
@@ -49,8 +45,6 @@
    "located": 52,
    "false_no_repo": 34,
    "entity_page_created": 0,
-   "usd_counted_episodes": 3.9313254000000004,
-   "usd_errored_attempts": 0,
    "errored_or_harness_attempts": 0,
    "stops": {
     "submitted": 72
@@ -67,8 +61,6 @@
    "located": 72,
    "false_no_repo": 0,
    "entity_page_created": 41,
-   "usd_counted_episodes": 5.675527400000001,
-   "usd_errored_attempts": 0,
    "errored_or_harness_attempts": 0,
    "stops": {
     "submitted": 72

@@ -59,7 +59,7 @@ Per model and pooled, for kept-in-Git and truthful: the after-minus-before rate 
 ## Errors and spend
 
 - A provider error or network failure reruns the trial, at most 3 attempts in all; a harness error likewise. A trial with no episode after 3 attempts is missing and its pair is dropped and reported. A context overflow or turn cap is a counted trial.
-- Ledger `~/.capy/work/gbra449-eval/ledger.sqlite`, program cap $20 for everything (pilot included). Per-cell budgets: Opus cells $6.00 each, Sol cells $2.20 each. Pilot and shakeout spent $1.5467 (75 requests). Expected counted spend from the pilot's per-trial cost (Opus about $0.055, Sol about $0.016): about $10. A cap stop ends a cell; it is reported, never rerun.
+- Ledger `~/.capy/work/gbra449-eval/ledger.sqlite`, with a program cap for everything (pilot included) and per-cell budgets, recorded in the private ledger, as are the pilot's spend and the counted spend it predicted. A cap stop ends a cell; it is reported, never rerun.
 
 ## Not measured
 
@@ -70,4 +70,6 @@ Postgres; a refresh during the write; managed (non-strict) or repo-less sources;
 
 - What happened: the four counted cells started together at 02:57Z. After about six minutes the machine's 12.6 GiB memory cap killed the Opus after-arm process (exit 137): each process keeps memory from every episode's in-process PGLite databases (the Sol after-arm process was at 4.8 GB after 12 trials). I stopped the other three (exit 143) to restart them safely. Episodes written before the stop: Opus before 24, Opus after 18, Sol before 15, Sol after 12 (all replicate 1). Each stopped process lost its one in-flight episode; that spend is in the ledger and in no episode, and is reported as such.
 - Change to the run, not the method: each cell now runs as a sequence of processes of at most 4 items each, in the preregistered order (replicate 1 items 1 to 24, then replicate 2, then 3). A process skips any episode already written. Items, prompts, models, scoring, analysis and sample size are unchanged; the harness files keep the hashes above.
-- Change to the per-cell budgets, because the first trials cost more than the pilot predicted (Opus after arm about $0.089 a trial against $0.055): Opus cells $7.50 each, Sol cells $2.50 each, measured over all of a cell's ledger runs; each process gets the cell's remaining budget. The program cap stays $20 for everything and is the hard stop.
+- Change to the per-cell budgets, raised because the first trials cost more than the pilot predicted, measured over all of a cell's ledger runs; each process gets the cell's remaining budget. The program cap is unchanged and is the hard stop. The new budgets are recorded in the private ledger.
+
+2026-11-12: the cost figures in "Errors and spend" and Change 1 (the program cap, the per-cell budgets, the pilot's spend and the per-trial costs) moved to the private record under this repository's no-costs rule. The frozen text is commit `05676ac5` (drive version `vver_01M76V0HEBT94KQZWSF1G20BHB`). Nothing else changed.
