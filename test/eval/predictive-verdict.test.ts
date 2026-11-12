@@ -415,6 +415,20 @@ describe('G2 batch 4 replication (amendment of 2026-11-11)', () => {
     expect(b4.scores).toEqual(b2.scores);
   });
 
+  test('the committed batch 4 scorecard scores the frozen batch 4 questions from the counted runner commit', async () => {
+    const { B4_SCORECARD } = await import('../../eval/runner/predictive/export-references.ts');
+    const freeze = JSON.parse(readFileSync('docs/benchmarks/live-recall-batch4/freeze.json', 'utf8'));
+    const scorecard = JSON.parse(readFileSync(B4_SCORECARD, 'utf8'));
+    expect([scorecard.protocol, freeze.protocol]).toEqual(['batch4', 'batch4']);
+    expect(freeze.questions_sha256.startsWith(scorecard.questions.freeze_sha_prefix)).toBe(true);
+    expect(scorecard.questions.loaded).toBe(freeze.n_questions);
+    expect(scorecard.questions.by_type).toEqual(freeze.by_type);
+    expect(freeze.prior_overlap).toEqual({ question_ids: 0, forms: 0, gold_pages: 0 });
+    expect(scorecard.questions.prior_overlap).toEqual({ files: freeze.prior_question_files.map((h: string) => h.slice(0, 12)), ...freeze.prior_overlap });
+    expect(scorecard.run.freeze_gbrain_version).toBe(freeze.gbrain_version);
+    expect(scorecard.run.runner_commit.startsWith('ecf8169c')).toBe(true);
+  });
+
   test('a batch 4 success@5 comparison with no pairs exports as skipped instead of crashing, so it cannot qualify', async () => {
     const { B4_SCORECARD, buildReferences } = await import('../../eval/runner/predictive/export-references.ts');
     const root = mkdtempSync(join(tmpdir(), 'export-b4-empty-'));

@@ -600,13 +600,13 @@ Wintermute's notes on the sample, aggregates only:
   58, so batch 4 leans to older pages.
 - Checks before the freeze, all passed: every gold page exists on disk and in the brain's page list, every exact form
   contains its key tokens and no paraphrase does, question ids are unique, and nothing is shared with batches 1 to 3.
-- On 2026-11-11 a box guard refused the question build twice, before anything was saved. The relay guard's reason was
-  "would change what decides relay trust"; the AlphaClaw crew diagnosed a false positive (GST-2473). In those
-  attempts Wintermute drew the seeded sample, built the exclusion and page lists and read candidate pages. No question
-  file was saved, nothing was frozen and nothing was searched. An error_string replacement planned then was never
-  saved. The frozen file is a fresh set of 50 written from the same sample, exclusion list and rules, run through the
-  AlphaClaw crew's workaround for that guard. It counts as batch 4: the amendment fixes the question set at the freeze,
-  and no search informed it, as with batch 2's discarded draw.
+- On 2026-11-11 a guard on the box refused the question build twice, before anything was saved; it was diagnosed as a
+  false positive. In those attempts Wintermute drew the seeded sample, built the exclusion and page lists and read
+  candidate pages. No question file was saved, nothing was frozen and nothing was searched. An error_string
+  replacement planned then was never saved. The frozen file is a fresh set of 50 written from the same sample,
+  exclusion list and rules once the build could run. It counts as batch 4: the amendment fixes the question set at the
+  freeze, and no search informed it, as with batch 2's discarded draw. (On 2026-11-12, after the counted run, this
+  note dropped internal tooling details about that guard; no fact about the sample or the rules changed.)
 - The checkout ran `bun install` rather than `bun install --frozen-lockfile`. The tree stayed clean, so the lockfile
   didn't change.
 
