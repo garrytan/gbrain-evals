@@ -207,7 +207,7 @@ export async function runEpisode(item: Item, o: EpisodeOptions): Promise<Record<
     const reply = typeof final?.answer === 'string' ? final.answer : run.text ?? '';
     const report = scoreReport(reply, item, truth);
     return {
-      schema: 'strict-pageless-agent/1', item: item.id, replicate: o.replicate, attempt: o.attempt, model: o.model, loop_model: loopModel,
+      schema: 'strict-pageless-agent/1', replicate: o.replicate, attempt: o.attempt, model: o.model, loop_model: loopModel,
       gbrain: { root: o.gbrainRoot, commit: gitHead(o.gbrainRoot), version: catalog.server.version },
       tools: { sha256: sha, file: toolsFile, count: catalog.tools.length },
       system_sha256: createHash('sha256').update(system).digest('hex'), user: item.user, item,

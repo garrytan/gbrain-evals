@@ -85,4 +85,4 @@ bun eval/runner/strict-pageless/analyze.ts --before 47cbca02 --after 505204a9 --
 
 ## Agent notes
 
-GBRA-449, for GBRA-108. Preregistration frozen first in GBrain Minder's drive and copied here; this repository's runtime attestation against `origin` was not used, so the commit order is the only in-repository evidence of it. Harness commit `43f8cd15`. Model freshness checked with `scripts/model-freshness.ts` on 2026-11-12.
+GBRA-449, for GBRA-108. Preregistration frozen first in GBrain Minder's drive and copied here; this repository's runtime attestation against `origin` was not used, so the commit order is the only in-repository evidence of it. Harness commit `43f8cd15` (agent.ts sha256 `b73fb5a8…` for every counted trial). After the run, one typecheck-only edit removed a duplicate `item` key from the episode record; the later key, the whole item, already won at run time, so recorded episodes are unchanged. Model freshness checked with `scripts/model-freshness.ts` on 2026-11-12.
