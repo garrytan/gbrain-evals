@@ -904,8 +904,8 @@ several slots at once (four by default, at most eight), one unchanged `mint.sh` 
 - Each slot's topic, topic check and plan still run one slot at a time, in slot order, so each topic check compares
   against the same earlier topics as a one-at-a-time mint. The rest of a slot's first pass runs beside the next slots'.
 - The driver refuses to start more slots than are still needed: 20 (wave A's size and N_final's floor) until N_final is
-  known, and N_final after that, less the slots already kept and less the slots minted but not yet validated. So no slot
-  is minted past N_final, as slot order requires. Only one driver runs on a custody directory at a time.
+  known, and N_final after that, less the slots already kept and less any slots outside the range being minted that are
+  minted but not yet validated. So no slot is minted past N_final, as slot order requires. Only one driver runs on a custody directory at a time.
 - A provider refusal, the metering proxy's budget refusal included, starts no new slot, whether the step or one of its
   parts met it. A step failure is retried in its lane a limited number of times. Finished steps are verified and skipped
   on a rerun, as before.

@@ -168,8 +168,11 @@ echo "rs1-mint summary=mint mode=fake conversations=1 complete=0 dropped=0 selec
     expect(Number(s.started) + Number(s.not_started)).toBe(8);
     const log = calls('rs1-custody-402');
     expect(log.filter(l => l.startsWith('start')).length).toBe(log.filter(l => l.startsWith('end')).length);
-    const refusedAt = log.indexOf('end 3 probe');
-    expect(log.slice(refusedAt + 1).filter(l => l.startsWith('start'))).toEqual([]);
+    const ev = events(r.out);
+    const refusedAt = ev.findIndex(e => e.event === 'end' && e.slot === '3' && e.phase === 'probe' && e.status === 'refused');
+    expect(refusedAt).toBeGreaterThan(-1);
+    expect(ev.slice(refusedAt + 1).filter(e => e.event === 'start')).toEqual([]);
+    expect(ev.filter(e => e.event === 'start').length).toBe(ev.filter(e => e.event === 'end').length);
     expect(log.filter(l => l.startsWith('start 3 '))).toEqual(['start 3 plan 1', 'start 3 probe 1']);
     expect(Number(s.max_in_flight)).toBeLessThanOrEqual(3);
     expect(existsSync(join(root, 'rs1-custody-402/usage.json'))).toBe(true);
