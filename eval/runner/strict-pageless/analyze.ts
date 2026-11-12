@@ -82,12 +82,12 @@ if (import.meta.main) {
   const rows: Row[] = [], cells: Row[] = [];
   for (const model of MODELS) for (const [arm, sha] of [['before', before], ['after', after]] as const) {
     const dir = join(runs, `${model}-${sha}`);
-    const files = existsSync(dir) ? readdirSync(dir).filter(f => /^item-\d+-r\d+\.json$/.test(f)) : [];
+    const files = existsSync(dir) ? readdirSync(dir).filter(f => /^item-\d+-r\d+\.json$/.test(f)).sort() : [];
     const recs = files.map(f => JSON.parse(readFileSync(join(dir, f), 'utf8')));
     const cellRows = recs.map(r => outcomeRow(r, arm)).sort((x, y) => x.replicate - y.replicate || x.item - y.item);
     rows.push(...cellRows);
     const count = (k: string) => cellRows.filter(r => r[k]).length;
-    const extra = existsSync(dir) ? readdirSync(dir).filter(f => /errored|harness-error/.test(f)).map(f => JSON.parse(readFileSync(join(dir, f), 'utf8'))) : [];
+    const extra = existsSync(dir) ? readdirSync(dir).filter(f => /errored|harness-error/.test(f)).sort().map(f => JSON.parse(readFileSync(join(dir, f), 'utf8'))) : [];
     cells.push({ model, arm, gbrain: sha, trials: cellRows.length, ...Object.fromEntries(OUTCOMES.map(k => [k, count(k)])),
       usd_counted_episodes: cellRows.reduce((s, r) => s + Number(r.usd ?? 0), 0), usd_errored_attempts: extra.reduce((s, r) => s + Number(r.usd ?? 0), 0),
       errored_or_harness_attempts: extra.length, stops: cellRows.reduce((m: Row, r) => (m[r.stop] = (m[r.stop] ?? 0) + 1, m), {}) });
