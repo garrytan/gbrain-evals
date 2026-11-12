@@ -118,7 +118,7 @@ describe('predictive verdict on the committed references', () => {
   test('a layer is read only from a live-recall scorecard of its protocol, and a scorecard carrying no layer of a measure with a live reference refuses', () => {
     const asBatch2 = evaluateMeasure('G2', readSynthetic({ ...liveCard(b2.contrasts), protocol: 'batch2' }));
     expect(asBatch2.verdict).toBe('PREDICTIVE');
-    expect(asBatch2.layers.map(l => [l.id, l.status, l.in_scorecard])).toEqual([['b2', 'available', true], ['b3', 'not_in_scorecard', false], ['b4', 'pending', true]]);
+    expect(asBatch2.layers.map(l => [l.id, l.status, l.in_scorecard])).toEqual([['b2', 'available', true], ['b3', 'not_in_scorecard', false], ['b4', 'available', true]]);
     expect(() => evaluateMeasure('G2', readSynthetic({ ...liveCard(b2.contrasts), protocol: 'batch3' }))).toThrow('carries no G2 layer');
     expect(() => evaluateMeasure('G2', readSynthetic(card([])))).toThrow(SyntheticScorecardError);
   });
@@ -287,7 +287,7 @@ describe('G2 batch 4 replication (amendment of 2026-11-11)', () => {
   };
   const counted = JSON.parse(readFileSync('docs/benchmarks/predictive-measures/g2/real-593/scorecard.json', 'utf8'));
 
-  test('the committed G2 verdict is unchanged, with tau-b from per-arm scores and batch 4 pending', () => {
+  test('the committed G2 verdict is unchanged on batch 2, with tau-b from per-arm scores, and batch 4 reads its published reference', () => {
     const r = evaluateMeasure('G2', readSynthetic(counted));
     expect(r.verdict).toBe('PREDICTIVE');
     const [b2Layer, b3Layer, b4Layer] = r.layers;
@@ -295,9 +295,20 @@ describe('G2 batch 4 replication (amendment of 2026-11-11)', () => {
     expect(b2Layer!.kendall_tau.arms_exact).toBeCloseTo(0.6, 10);
     expect(b2Layer!.kendall_tau.arms_paraphrase).toBeCloseTo(9 / Math.sqrt(90), 10);
     expect(b3Layer!.verdict).toBe('NOT_IN_SCORECARD');
-    expect(b4Layer).toMatchObject({ id: 'b4', status: 'pending', verdict: 'NO_REFERENCE_YET', missing_reference: 'live-recall-b4', qualify: 'family', in_scorecard: true });
+    expect(b4Layer).toMatchObject({ id: 'b4', status: 'available', verdict: 'PREDICTIVE', qualifying_count: 14, qualifying_counted: 11, qualify: 'family', in_scorecard: true });
+    expect(b4Layer!.primary).toMatchObject({ id: 'paraphrase_vs_exact_configured', outcome: 'HELD', reference: { estimate: -0.2653, lo: -0.4082, hi: -0.1429 }, synthetic: { estimate: -0.07 } });
+    expect(b4Layer!.primary!.ratio!.estimate).toBeCloseTo(0.07 / 0.2653, 10);
+    expect(b4Layer!.primary!.ratio!.lo).toBeLessThan(0.175);
+    expect(b4Layer!.primary!.ratio!.hi).toBeGreaterThan(0.175);
     const published = JSON.parse(readFileSync('docs/benchmarks/predictive-measures/verdicts/G2-batch2.json', 'utf8'));
     expect(b2Layer!.contrasts.map(c => [c.reference_id, c.counted])).toEqual(published.layers[0].contrasts.map((c: any) => [c.reference_id, c.counted]));
+    const publishedB4 = JSON.parse(readFileSync('docs/benchmarks/predictive-measures/verdicts/G2-batch4.json', 'utf8'));
+    expect(JSON.parse(JSON.stringify(r.layers))).toEqual(publishedB4.layers);
+    const dir = mkdtempSync(join(tmpdir(), 'verdict-b4-pending-'));
+    dirs.push(dir);
+    for (const e of committedManifest) if (e.status === 'available') copyFileSync(join(REFERENCE_DIR, e.file), join(dir, e.file));
+    writeFileSync(join(dir, 'manifest.json'), JSON.stringify(committedManifest.map(e => (e.id === 'live-recall-b4' ? { id: e.id, file: e.file, status: 'pending' } : e))));
+    expect(evaluateMeasure('G2', readSynthetic(counted), join(dir, 'manifest.json')).layers[2]).toMatchObject({ id: 'b4', status: 'pending', verdict: 'NO_REFERENCE_YET', missing_reference: 'live-recall-b4', qualify: 'family', in_scorecard: true });
   });
 
   test('tau-b counts tied arms as ties; the ordering tau broke the tie one way', () => {
@@ -404,6 +415,40 @@ describe('G2 batch 4 replication (amendment of 2026-11-11)', () => {
     expect(b4.scores).toEqual(b2.scores);
   });
 
+  test('the committed batch 4 scorecard scores the frozen batch 4 questions from the counted runner commit', async () => {
+    const { B4_SCORECARD } = await import('../../eval/runner/predictive/export-references.ts');
+    const freeze = JSON.parse(readFileSync('docs/benchmarks/live-recall-batch4/freeze.json', 'utf8'));
+    const scorecard = JSON.parse(readFileSync(B4_SCORECARD, 'utf8'));
+    expect([scorecard.protocol, freeze.protocol]).toEqual(['batch4', 'batch4']);
+    expect(freeze.questions_sha256.startsWith(scorecard.questions.freeze_sha_prefix)).toBe(true);
+    expect(scorecard.questions.loaded).toBe(freeze.n_questions);
+    expect(scorecard.questions.by_type).toEqual(freeze.by_type);
+    expect(freeze.prior_overlap).toEqual({ question_ids: 0, forms: 0, gold_pages: 0 });
+    expect(scorecard.questions.prior_overlap).toEqual({ files: freeze.prior_question_files.map((h: string) => h.slice(0, 12)), ...freeze.prior_overlap });
+    expect(scorecard.run.freeze_gbrain_version).toBe(freeze.gbrain_version);
+    expect(scorecard.run.runner_commit.startsWith('ecf8169c')).toBe(true);
+  });
+
+  test('a batch 4 success@5 comparison with no pairs exports as skipped instead of crashing, so it cannot qualify', async () => {
+    const { B4_SCORECARD, buildReferences } = await import('../../eval/runner/predictive/export-references.ts');
+    const root = mkdtempSync(join(tmpdir(), 'export-b4-empty-'));
+    dirs.push(root);
+    for (const f of ['docs/benchmarks/2026-11-06-live-recall-batch1/attempt2-scorecard.json', 'docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json', 'docs/benchmarks/2026-11-10-live-recall-batch3/b3-641-scorecard.json']) {
+      mkdirSync(dirname(join(root, f)), { recursive: true });
+      copyFileSync(f, join(root, f));
+    }
+    const real = JSON.parse(readFileSync('docs/benchmarks/2026-11-07-live-recall-batch2/b2-593-scorecard.json', 'utf8'));
+    const empty = (c: any) => ({ id: c.id, metric: c.metric, n_pairs: 0, n_clusters: 0, mean_a: null, mean_b: null, delta: null, ci95: null, p_two_sided: null, p_method: 'none', mcnemar: null, mde: null, family_ci95: null });
+    const comparisons = real.comparisons.map((c: any) => (c.metric !== 'success_at_5' ? c : c.id === 'window_vs_configured' ? empty(c) : { ...c, family_ci95: [c.ci95[0] - 0.05, c.ci95[1] + 0.05] }));
+    mkdirSync(dirname(join(root, B4_SCORECARD)), { recursive: true });
+    writeFileSync(join(root, B4_SCORECARD), JSON.stringify({ ...real, protocol: 'batch4', family: { method: 'max_t_cluster_bootstrap' }, comparisons }));
+    const b4 = buildReferences(root).files.find(([, r]) => r.id === 'live-recall-b4')![1];
+    expect(b4.skipped).toEqual(['window_vs_configured']);
+    expect(b4.contrasts.map(c => c.id)).not.toContain('window_vs_configured');
+    expect(b4.contrasts).toHaveLength(15);
+    expect(b4.contrasts.every(c => Number.isFinite(c.estimate) && Number.isFinite(c.lo) && Number.isFinite(c.hi))).toBe(true);
+  });
+
   test('verdict.json records a repo-relative scorecard path for a scorecard inside the repository', () => {
     const dir = mkdtempSync(join(tmpdir(), 'verdict-relpath-'));
     dirs.push(dir);
@@ -416,6 +461,6 @@ describe('G2 batch 4 replication (amendment of 2026-11-11)', () => {
     const b4 = MAPPING.G2.layers.find(l => l.id === 'b4')!;
     expect(b4).toMatchObject({ reference: 'live-recall-b4', protocol: 'batch2', counted: COUNTED_B2, qualify: 'family', primary: 'paraphrase_vs_exact_configured' });
     expect(b4.pairs.map(p => p.reference)).toEqual([...B2_CONTRASTS]);
-    expect(committedManifest.find(e => e.id === 'live-recall-b4')).toEqual({ id: 'live-recall-b4', file: 'live-recall-b4.json', status: 'pending' });
+    expect(committedManifest.find(e => e.id === 'live-recall-b4')).toEqual({ id: 'live-recall-b4', file: 'live-recall-b4.json', sha256: createHash('sha256').update(readFileSync(join(REFERENCE_DIR, 'live-recall-b4.json'))).digest('hex'), status: 'available' });
   });
 });
