@@ -3,7 +3,8 @@
 - **We learned that a synthetic recall test predicts which of gbrain's search setups beats which on Garry's real brain,
   and that a clean synthetic brain does this about as well as one that copies the real brain's embedding gaps. Only the
   gap-copied brain predicts configured search's paraphrase gap, and on a held-out batch that prediction held for its
-  direction. You should use it to check the direction of a search change or of the paraphrase gap, never its size.** G2 (recall under real conditions) reads PREDICTIVE for
+  direction. You should use it to check which search setup beats which and which way the paraphrase gap points, never
+  how big either is.** G2 (recall under real conditions) reads PREDICTIVE for
   which search setup beats which. The synthetic brain counted for batch 2 copies the real brain's embedding gaps (no
   synopsis vectors and 10% of chunks with no vector), and it agrees in sign with all 13 of the 13 real batch 2 contrasts
   whose interval excludes zero. The clean synthetic brain agrees with 12 of the 13. Those 13 contrasts compare 5 search
@@ -14,9 +15,10 @@
   measured on the real brain on 2026-11-06, before batch 2 ran, but the gap-copied brain became the counted condition
   through an amendment written on 2026-11-10, after batch 2's results were public, so batch 2 couldn't test that
   prediction. Batch 4, 50 new real questions preregistered before they existed, did: configured search's real
-  paraphrase gap was 26.5 points (95% interval −40.8 to −14.3), the gap-copied brain's 7 points held for its direction,
-  and the clean brain's prediction of no gap didn't ([results](2026-11-12-g2-paraphrase-gap-replication.md)). So G2 may
-  gate as a paraphrase-regression detector on direction only. The agreement is about direction, not size. The synthetic brain is far easier (configured search finds 90%
+  paraphrase gap was 26.53 points (95% interval −40.82 to −14.29), the gap-copied brain's 7 points held for its
+  direction, and the clean brain's prediction of no gap didn't ([results](2026-11-12-g2-paraphrase-gap-replication.md)).
+  So G2 may gate on the paraphrase gap's direction, never its size; whether a change in the synthetic gap tracks a
+  change in the real one is untested. The agreement is about direction, not size. The synthetic brain is far easier (configured search finds 90%
   of paraphrases against the real brain's 48%), and its configured paraphrase gap is 7 points against the real 40.
   Batch 3's contrasts compare search setups rather than paraphrased and exact wording, and its synthetic brain is
   clean, with no embedding gaps. Its real results came after every G2 choice was fixed, so it is a held-out check of
@@ -147,7 +149,7 @@ from choosing the wrong person, as [the G1 and G4 agent cells](#g1-and-g4-agent-
 | Measure | Verdict | R48 call | Why |
 |---|---|---|---|
 | G1 freshness across pages | **NO REFERENCE YET** (retrieval layer: 2 of 3 real contrasts qualify, all 3 signs agree) | KEEP, report-only | A missing reference, not a null: the third contrast sits at the real brain's ceiling and floor |
-| G2 recall under real conditions | **PREDICTIVE** for which search setup beats which (batch 2 layer 13 of 13 agree, and the clean brain 12 of 13; batch 3 layer 5 of 5; batch 4 layer 14 of 14). The paraphrase-gap prediction **HELD** on held-out batch 4 ([results](2026-11-12-g2-paraphrase-gap-replication.md)) | KEEP | May gate the nightly loop on which search setup beats which, and as a paraphrase-regression detector, on direction only |
+| G2 recall under real conditions | **PREDICTIVE** for which search setup beats which (batch 2 layer 13 of 13 agree, and the clean brain 12 of 13; batch 3 layer 5 of 5; batch 4 layer 14 of 14). The paraphrase-gap prediction **HELD** on held-out batch 4 ([results](2026-11-12-g2-paraphrase-gap-replication.md)) | KEEP | May gate the nightly loop on which search setup beats which and on the direction of the paraphrase gap, never on size |
 | G3 write landing and call contract | **NO REFERENCE YET** | FIX-METHOD | Its reference can't exist as designed, and its scoring counts honest pending reports as failures |
 | G4 wrong entity | **PREDICTIVE** (retrieval layer: 3 of 3 agree) | KEEP | May gate the nightly loop, on direction only |
 | G5 latency at scale | **NO REFERENCE YET** | KEEP, report-only | Needs a later real p95 at both versions |
@@ -448,7 +450,7 @@ YET**, as preregistered, until a later real p95 measurement at these two version
   configured search at a sixth of the real one (about a twentieth for vector and hybrid search).
 - **Don't trust a clean synthetic brain for paraphrase recall, and read the gap-copied one for direction only.** Clean
   pages make configured search look perfect on paraphrases, and the real brain loses 40 points there on batch 2 and
-  26.5 on batch 4. Copying the real brain's embedding gaps opens a 7-point gap, from 7 of 100 questions. That brain was
+  26.53 on batch 4. Copying the real brain's embedding gaps opens a 7-point gap, from 7 of 100 questions. That brain was
   chosen after batch 2 was public. On held-out batch 4 its direction held, but its gap was a quarter of the real one,
   and one batch can't say whether that factor is stable.
 - **Verify writes against the brain, not the agent's report, when a low-cost model writes.** particle-1 claimed 7
@@ -563,7 +565,7 @@ media-shell figure comes from. No number or other verdict changed.
 ## Update, 2026-11-12
 
 Batch 4, the held-out replication the correction called for, read HELD: configured search's real paraphrase gap was
-26.5 points (95% interval −40.8 to −14.3) on 50 new questions, in the direction the gap-copied brain predicts, and G2's
+26.53 points (95% interval −40.82 to −14.29) on 50 new questions, in the direction the gap-copied brain predicts, and G2's
 batch 4 layer reads PREDICTIVE ([results](2026-11-12-g2-paraphrase-gap-replication.md)). The first takeaway, the G2
 verdict row, the end of the batch 2 section, the advice on paraphrase recall and the caveats now say so. No batch 1 to
 3 number or verdict changed.
