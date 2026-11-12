@@ -884,6 +884,79 @@ the results branch, and the custodian records the commit each pass ran. At `228e
 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, unchanged at `228ed99a`, and the final verdict
 from `d927c88f` or later; this change touches neither.
 
+### 2026-11-12: parallel minting, regrouped window checks, stop reasons, and a new stop line
+
+No counted cell has run and no system has answered an RS1 question, so everything here comes before any result. It
+changes no arm, reader, judge, margin or verdict rule, no gate in `validate.ts`, which stays byte-identical, and not
+the kept set.
+
+**What the pilot showed.** Of the pilot slots `rs1-006` to `rs1-010`, two are kept (`rs1-006` and `rs1-008`), so
+slots 1 to 10 hold five kept conversations. All four pilot chats that finished minting passed the length and
+contamination gates. `rs1-009` has only one passing contradiction_resolution candidate, so it can't fill that ability
+and is dropped on the item floor. `rs1-010` stopped in its answer step when the provider refused requests, and is being
+resumed. `rs1-007`'s candidate check could not finish: claude-haiku-5-5 refused one of its window prompts (stop reason
+`refusal`, no output) all four times it was asked, so none of its abstention candidates got an answer from that window.
+The pilot's cost per kept conversation passed the limit set for the pilot gate, and GBEV-3 chose to continue under the
+stop line below.
+
+**Change 1: parallel minting.** `eval/custody/rs1/mint-lanes.ts` runs mint.sh's first pass, up to the probe step, for
+several slots at once (four by default, at most eight), one unchanged `mint.sh` per slot.
+- Each slot's topic, topic check and plan still run one slot at a time, in slot order, so each topic check compares
+  against the same earlier topics as a one-at-a-time mint. The rest of a slot's first pass runs beside the next slots'.
+- The driver refuses to start more slots than the kept conversations still needed: 20 (wave A's size and N_final's
+  floor) less those kept, until N_final is known, and N_final less those kept after that. So no slot is minted past
+  N_final, as slot order requires.
+- A provider refusal, the metering proxy's budget refusal included, starts no new slot. A step failure is retried in its
+  lane a limited number of times. Finished steps are verified and skipped on a rerun, as before.
+- Candidate validation, selection and `validate.ts` run as before, over the whole set.
+
+The kept set is still the first N_final slots that pass validation, in slot order: running slots side by side changes
+when a slot is minted, not which slots count. A keyless test shows that four lanes write the same files, byte for byte,
+as one mint.sh over the same slots and seed.
+
+**Change 2: regrouped window checks.** `validate-candidates.ts` asks each window about all of a conversation's
+abstention candidates in one prompt. When a validator answers that prompt in the wrong shape without an error (an empty
+reply or a refusal), the window is now asked again with one prompt per abstention candidate, for up to four windows per
+run. Each candidate then passes or fails on its own reply:
+- it fails on absence if its own prompt answers it;
+- it fails on a new gate, refusal, if the validator refuses its own prompt;
+- any other reply in the wrong shape is a validator error, as before.
+
+A window past the four is a validator error for every abstention candidate, as before, and a request that errors is
+asked again on a rerun, not regrouped. The question asked of each window and the pass rule are unchanged: a candidate
+passes only if every window, from both validators, leaves it unanswered. A refusal fails its candidate instead of
+leaving the conversation incomplete, because asking again gets the same refusal. `validate.ts`'s own absence scan of
+the two selected abstention items is unchanged and still decides keep or drop, so a conversation whose selected items
+`validate.ts` can't check stays incomplete there and is not kept.
+
+**Change 3: stop reasons.** For every unusable validator reply, `validate-candidates.ts` now keeps how it ended: the
+provider's stop reason (Anthropic's stop_reason or Gemini's finishReason), the output token count and the kinds of
+content block, or the HTTP status of a refused request. The candidate report holds these per conversation, never reply
+text. Its requests are `validate.ts`'s own, sent the same way, and a keyless test shows they return the same text and
+make the same budget-ledger entries as `validate.ts`'s clients.
+
+**Stop line.** It replaces the pilot gate for the slots minted after the pilot. Minting pauses and the counts go to
+GBEV-3 if any of these holds:
+- the ten slots after the pilot, `rs1-011` to `rs1-020`, cost more per kept conversation than the limit GBEV-3 set
+  when granting them, counting all of their mint and validation spend, retries and failed calls included;
+- `pricing.ts`'s check-in projection at the planned N passes the limit GBEV-3 set;
+- the internal pilot's N_final is 31 or more.
+
+Both limits are recorded on the tracking issue, not here. The kept set, the waves and the internal pilot are unchanged.
+
+**Code.** Minting, the driver and candidate validation run from `642ad77ca398bfaf32a3694a3effffe530968f9d` or a later
+commit on the results branch, and the custodian records the commit each pass ran. At `642ad77c`:
+- `mint-lanes.ts` has SHA-256 `a4a207a1368b396e28b134c5bb20efb92a166b29f29201115966a718509fb777`;
+- `mint.sh` has `dfc833ddd2ae89bf9117498f1cb14cb0204db22f11892d02b7419a2f3ec7d30a`, and its only change is
+  `--no-usage`, which the driver passes;
+- `validate-candidates.ts` has `e8e0562ce655732f6aad112e13fc50f050097c8e73ad1eeddee3055e9c9a41cb`;
+- `rs1_mint.py` keeps `261889adf003eb6239205db308904a29e85bf19b5b10119b247a63f72f4327ad`;
+- `validate.ts` keeps `7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e`.
+
+Counted cells still run from `de9435047201fbc2e6a980b17f473ba6a576494a` with `rs1-cells.json` SHA-256
+`d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, and the final verdict from `d927c88f` or later.
+This change touches neither.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.
