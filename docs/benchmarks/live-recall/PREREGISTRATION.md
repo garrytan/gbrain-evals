@@ -604,9 +604,10 @@ Wintermute's notes on the sample, aggregates only:
   false positive. In those attempts Wintermute drew the seeded sample, built the exclusion and page lists and read
   candidate pages. No question file was saved, nothing was frozen and nothing was searched. An error_string
   replacement planned then was never saved. The frozen file is a fresh set of 50 written from the same sample,
-  exclusion list and rules once the build could run. It counts as batch 4: the amendment fixes the question set at the
-  freeze, and no search informed it, as with batch 2's discarded draw. (On 2026-11-12, after the counted run, this
-  note dropped internal tooling details about that guard; no fact about the sample or the rules changed.)
+  exclusion list and rules, run through a workaround for that guard. It counts as batch 4: the amendment fixes the
+  question set at the freeze, and no search informed it, as with batch 2's discarded draw. (On 2026-11-12, after the
+  counted run, this note dropped internal tooling details about that guard; no fact about the sample or the rules
+  changed.)
 - The checkout ran `bun install` rather than `bun install --frozen-lockfile`. The tree stayed clean, so the lockfile
   didn't change.
 
