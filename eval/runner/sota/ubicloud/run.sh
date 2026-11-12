@@ -23,7 +23,8 @@
 # skip what they already hold (the q1 cells resume, the oracle and leader runs buy only rows the cache lacks). Provider
 # keys travel only through ubi-runner's --pass, never onto local disk or the command line. It refuses to launch while any
 # VM of owner gbev78 exists or another launch of the window holds its state directory, so the ledger has one writer, and
-# the teardown check runs after every launch.
+# the teardown check runs after every launch. It also refuses to launch through a runner that does not honour
+# UBI_TTL_HOURS, because such a runner puts no lifetime cap on the VMs it creates.
 set -euo pipefail
 REPO=$(cd "$(dirname "$0")/../../../.." && pwd)
 UBI=${UBI_RUNNER:-$REPO/scripts/ubicloud/ubi-runner.sh}
@@ -41,6 +42,7 @@ check() {
   echo "teardown check: no VMs of owner $UBI_OWNER remain"
 }
 [ "${1:-}" != check ] || { check; exit; }
+grep -q 'UBI_TTL_HOURS' "$UBI" 2>/dev/null || { echo "run.sh: refusing to launch: $UBI puts no lifetime cap on its VMs (it does not honour UBI_TTL_HOURS), so a VM left behind by a killed launcher or a failed pull would keep billing; set UBI_RUNNER to a runner that honours UBI_TTL_HOURS" >&2; exit 2; }
 window=${1:?usage: run.sh <window> <cap-usd> [--cache-seed <dir>] | run.sh check}; cap=${2:?cap in dollars}; shift 2
 seed=
 while [ $# -gt 0 ]; do case $1 in --cache-seed) seed=${2:?--cache-seed <dir>}; shift 2 ;; *) echo "run.sh: unknown option $1" >&2; exit 2 ;; esac; done

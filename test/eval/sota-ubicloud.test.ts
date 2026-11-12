@@ -13,16 +13,17 @@ const REPO = join(import.meta.dir, '../..');
 const dir = mkdtempSync(join(tmpdir(), 'sota-ubicloud-'));
 const DUMMIES = { ANTHROPIC_API_KEY: 'dummy-anthropic', OPENAI_API_KEY: 'dummy-openai', VOYAGE_API_KEY: 'dummy-voyage', PARTICLE_API_KEY: 'dummy-particle' };
 
-/** A fake ubi-runner: list prints <root>/vms, run appends its arguments to <root>/launches. */
-function fakeRunner(name: string, list = 'cat "$(dirname "$0")/vms" 2>/dev/null || true') {
+/** A fake ubi-runner: it declares UBI_TTL_HOURS support unless ttl is false, logs each subcommand to <root>/calls, list prints <root>/vms, run appends its arguments to <root>/launches. */
+function fakeRunner(name: string, list = 'cat "$(dirname "$0")/vms" 2>/dev/null || true', ttl = true) {
   const root = join(dir, name);
   mkdirSync(root, { recursive: true });
   const fake = join(root, 'fake-ubi.sh');
-  writeFileSync(fake, `#!/usr/bin/env bash\ncase "$1" in\n  list) ${list} ;;\n  run) shift; echo "$*" >> "$(dirname "$0")/launches" ;;\nesac\n`, { mode: 0o755 });
+  writeFileSync(fake, `#!/usr/bin/env bash\n${ttl ? '# honours UBI_TTL_HOURS\n' : ''}echo "$1" >> "$(dirname "$0")/calls"\ncase "$1" in\n  list) ${list} ;;\n  run) shift; echo "$*" >> "$(dirname "$0")/launches" ;;\nesac\n`, { mode: 0o755 });
   const home = join(root, 'home');
   const launch = (args: string[], env: Record<string, string> = DUMMIES) => spawnSync('bash', ['eval/runner/sota/ubicloud/run.sh', ...args], { cwd: REPO, env: { PATH: process.env.PATH!, HOME: home, UBI_RUNNER: fake, ...env }, encoding: 'utf8' });
   const launches = () => (existsSync(join(root, 'launches')) ? readFileSync(join(root, 'launches'), 'utf8').trim().split('\n') : []);
-  return { root, home, launch, launches };
+  const calls = () => (existsSync(join(root, 'calls')) ? readFileSync(join(root, 'calls'), 'utf8').trim().split('\n') : []);
+  return { root, home, launch, launches, calls };
 }
 const passed = (line: string) => [...line.matchAll(/--pass (\S+)/g)].map(m => m[1]);
 
@@ -57,6 +58,15 @@ describe('run.sh, with a fake runner', () => {
     const r = broken.launch(['oracle-dev', '5']);
     expect([r.status, r.stderr]).toEqual([2, expect.stringContaining('could not list the VMs of owner gbev78')]);
     expect(broken.launches()).toEqual([]);
+  });
+
+  test('refuses to launch through a runner that puts no lifetime cap on its VMs, before any VM exists', () => {
+    const f = fakeRunner('no-ttl', undefined, false);
+    const r = f.launch(['oracle-dev', '5']);
+    expect([r.status, r.stderr]).toEqual([2, expect.stringContaining('puts no lifetime cap on its VMs (it does not honour UBI_TTL_HOURS)')]);
+    expect(r.stderr).toContain('set UBI_RUNNER to a runner that honours UBI_TTL_HOURS');
+    expect(f.calls().filter(c => c === 'up' || c === 'run')).toEqual([]);
+    expect(f.launches()).toEqual([]);
   });
 
   test('seeds the window\'s cache from --cache-seed on its first launch only', () => {
