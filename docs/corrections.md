@@ -259,11 +259,17 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   gap-copied brain became the counted condition after batch 2's results were public. The clean brain agrees on 12 of
   the 13 qualifying contrasts, so the gaps' whole effect is one contrast, from 7 of 100 questions. And the 13 contrasts
   share 5 setups and one set of questions, so they're worth about 5 to 8 independent checks. G2 now reads PREDICTIVE for
-  which search setup beats which, and its paraphrase-gap prediction reads PENDING a held-out replication. Until that
-  lands, nothing gates on G2 as a paraphrase-regression detector. Its paraphrase Kendall tau of 0.80 breaks a synthetic
+  which search setup beats which. Its paraphrase-gap prediction read PENDING until a held-out replication on batch 4
+  (2026-11-12) found it HELD for direction ([results](benchmarks/2026-11-12-g2-paraphrase-gap-replication.md)), so G2
+  may gate on the gap's direction, never its size. Its paraphrase Kendall tau of 0.80 breaks a synthetic
   tie by list order; as tau-b it is 0.949. Tau never gates. gbrain is Garry Tan's own project.
 
 ## Changelog
+
+### 2026-11-12: Predictive measures, batch 4
+
+The recall (G2) entry says that its paraphrase-gap prediction, PENDING when the entry was written, held for direction
+on held-out batch 4.
 
 ### 2026-11-11: Predictive measures
 
