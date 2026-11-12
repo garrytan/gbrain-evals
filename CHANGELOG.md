@@ -2,6 +2,43 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.224] - 2026-11-12
+
+### A weekly loop shows where gbrain loses long-memory answers and which fixes would win them back
+
+- **Which questions can be answered.** Every BEAM-1M and LongMemEval dev question now has one frozen class: supported,
+  partial, unsupported, unresolved or unchecked (`eval/runner/sota/answerability.ts`, written to
+  `eval/data/answerability/`). LongMemEval's 50 dev questions are 35 supported, 11 partial and 4 unsupported. A build
+  refuses when a support validator errored on any item, since an errored check neither supports nor rejects.
+- **Reference answers, kept in a cache.** `eval/runner/sota/cache.ts` keeps two reference answers per question and
+  reader: the oracle (a frontier reader given only the gold evidence) and the leader (the whole history on LongMemEval,
+  the grep agent on BEAM). A row measured on other inputs is stale and never reused. The weekly step stops and names
+  the inputs that changed and how to refresh the rows. `oracle.ts` and `leader.ts` fill the cache, and particle-1
+  reads at its own 16,000-token output floor.
+- **Why each answer was lost.** The weekly failure-cause step puts each failed QA row into one bucket (harness,
+  unsupported, reader limited, retrieval lost, context use, unknown) with the pass-rate points each recoverable bucket
+  could return. The nightly report's harness column and the failure-cause `harness_error` count are now one number.
+- **What to fix, and whether a fix worked.** `fixlist.ts` ranks at most three gbrain fixes by the points they could
+  return. `ledger.ts` measures a shipped fix as a paired contrast of master against stable on its own questions, beside
+  the noise baseline and the collateral losses, with harness and skipped rows left out. `scorecard.ts` and
+  [the scorecard rules](docs/sota/scorecard-rules.md) say when gbrain is ahead of, behind or level with each
+  benchmark's leader.
+- **A custody check.** `custody.ts check-providers` refuses a held-out run when the gbrain under test would send
+  held-out text to an embedding or rerank provider that the held-out set's preregistration didn't vet. It checks those
+  two roles only.
+- **A gbrain agent beside the grep agent.** `eval/runner/systems/gbrain-agent.ts` answers in the same 40-turn loop as
+  the grep agent, with gbrain's own `query`, `search` and `get_page` tools. A Q1 cell run's paid guard now prices only
+  the arms it runs.
+- **Paid windows on a throwaway VM.** `eval/runner/sota/ubicloud/run.sh` runs each paid window on an ephemeral Ubicloud
+  VM with one ledger writer. It refuses to launch through a runner that doesn't honour `UBI_TTL_HOURS`, because such a
+  runner puts no lifetime cap on its VMs. The repository's current runner doesn't honour it, so every window refuses
+  until a runner that does is wired in.
+- **What changes for the nightly.** From the first night that includes this release, `beam-1m-hard` holds the 126
+  supported or partial questions of eight public BEAM-1M dev conversations, where it had 60, and Cat 40 world M's
+  stable leg runs one trial while master keeps three, so Cat 40 compares the two at pass^1. Both suites' digests
+  change, so their pass rates before and after that night are not comparable. The other suites are unchanged.
+- LongMemEval's MIT licence is listed in `eval/CREDITS.md`.
+
 ## [0.10.223] - 2026-11-12
 
 ### The nightly check's stable baseline moves to gbrain's current stable release
