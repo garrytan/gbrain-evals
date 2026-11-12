@@ -9698,7 +9698,7 @@
           "reader_replicates": {},
           "frontier": {
             "judges": [
-              "openai:gpt-6.1-sol"
+              "anthropic:claude-opus-5-5"
             ],
             "readers": null,
             "sample": null,
@@ -9706,6 +9706,9 @@
             "settings": {
               "effort": "medium",
               "max_tokens": 8000
+            },
+            "judge_by_reader": {
+              "particle:particle-1": "anthropic:claude-opus-5-5"
             }
           },
           "judge_repeats": null,
@@ -9865,7 +9868,7 @@
           "reader_replicates": {},
           "frontier": {
             "judges": [
-              "openai:gpt-6.1-sol"
+              "anthropic:claude-opus-5-5"
             ],
             "readers": null,
             "sample": null,
@@ -9873,6 +9876,9 @@
             "settings": {
               "effort": "medium",
               "max_tokens": 8000
+            },
+            "judge_by_reader": {
+              "particle:particle-1": "anthropic:claude-opus-5-5"
             }
           },
           "judge_repeats": null,

@@ -15,7 +15,7 @@ import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-u
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { runCell, systemFor } from '../../eval/runner/q1/cell.ts';
-import { ALL_SETS, buildManifest, definitionProblems, SOTA_DEV_CONVERSATIONS, SOTA_DEV_IDS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { ALL_SETS, buildManifest, definitionProblems, frontierJudgesFor, SOTA_DEV_CONVERSATIONS, SOTA_DEV_IDS, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { ANSWERABLE, loadClasses } from '../../eval/runner/sota/answerability.ts';
 import { FILE_AGENT_EFFORT, FILE_AGENT_MAX_TURNS, FILE_AGENT_SYSTEM, FileAgentSystem, PROSE_ANSWER_TOOL } from '../../eval/runner/systems/file-agent.ts';
@@ -193,8 +193,9 @@ describe('SOTA dev cells', () => {
       expect(c).toMatchObject({ runner: 'in-process', set: 'SOTA-dev', block: 'SOTA-dev', benchmark: 'beam-1m', split: 'dev', only_conversations: SOTA_DEV_CONVERSATIONS, selection: { kind: 'ids', ids: SOTA_DEV_IDS } });
       expect(c.arms.map(a => [a.id, a.mode, a.readers, a.frontier?.judges])).toEqual([
         ['whole-agent', 'agent', ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'], ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol']],
-        ['whole-agent-particle', 'agent', ['particle:particle-1'], ['openai:gpt-6.1-sol']],
+        ['whole-agent-particle', 'agent', ['particle:particle-1'], ['anthropic:claude-opus-5-5']],
       ]);
+      expect(frontierJudgesFor(c.arms[1]!, 'particle:particle-1')).toEqual(['anthropic:claude-opus-5-5']);
       expect(m.cells.some(x => x.id === c.id)).toBe(false);
     }
     const classes = loadClasses('beam-1m')!;

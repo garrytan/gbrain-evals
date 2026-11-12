@@ -937,13 +937,14 @@ export function generateSmokeCells(): CellDefinition[] {
  * process, systems/gbrain-agent.ts) on SOTA-dev's answerable public BEAM-1M questions. Each cell holds the frontier
  * readers in one arm and particle-1 in another, so the particle-1 rows run in their own paid window (`--arms
  * whole-agent-particle`). Judged per the BEAM judges rule: BEAM's canonical judge (gpt-4.1-mini, the bridge to earlier
- * runs) on every answer, and one frontier judge per answer by the reader's family, never its own. No write-to-queryable
- * probes. Outside the counted list, the block totals and the publication (addon_cells).
+ * runs) on every answer, and one frontier judge per answer by the reader's family, never its own; particle-1's answers
+ * by claude-opus-5-5, the crew's judge for particle-1 (GBEV-3, 2026-11-12). No write-to-queryable probes. Outside the counted list, the block totals and the publication (addon_cells).
  */
 export function generateSotaDevCells(): CellDefinition[] {
   const arms = (label: string): ArmSpec[] => [
     { id: 'whole-agent', mode: 'agent', label, readers: [...FRONTIER_READERS], frontier: perReader([...FRONTIER_READERS]) },
-    { id: 'whole-agent-particle', mode: 'agent', label: `${label} (particle-1)`, readers: ['particle:particle-1'], frontier: perReader(['particle:particle-1']) },
+    { id: 'whole-agent-particle', mode: 'agent', label: `${label} (particle-1)`, readers: ['particle:particle-1'],
+      frontier: { ...perReader(['particle:particle-1']), judges: ['anthropic:claude-opus-5-5'], judge_by_reader: { 'particle:particle-1': 'anthropic:claude-opus-5-5' } } },
   ];
   const extra = { block: 'SOTA-dev' as const, probes: { sample: 0, seed: 'sota-probes-dev', conversations: 0 }, runner: 'in-process' as const };
   return [
