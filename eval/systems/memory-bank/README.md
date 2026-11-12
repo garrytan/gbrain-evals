@@ -109,6 +109,13 @@ outcomes and the Phase 4 cost extrapolation. Its scores are setup evidence, not 
 
 ## Changelog
 
+### 2026-11-11: security fixes in the lock
+
+`aiohttp` 3.14.3 to 3.14.4, `urllib3` 2.7.0 to 2.8.0 and `yarl` 1.22.0 to 1.25.1 (the new `aiohttp` needs it), raised
+in `constraint-dependencies` and relocked with the Dockerfile's uv 0.9.5. Masashi-Ono0611 reported the advisories in
+[gbrain-evals#183](https://github.com/garrytan/gbrain-evals/pull/183). `uv.lock` moves from `f54d89df` to `29b875e0`, and `capability.json` records the
+new hash: runs started after this change record it, and earlier results keep the hash they recorded.
+
 ### 2026-10-05: Phase 2 pilot, policy settings
 
 Added PILOT.md. Retrieval policies keep their knobs under `retrieval_policies.<mode>.settings` (PROTOCOL.md), offset-less

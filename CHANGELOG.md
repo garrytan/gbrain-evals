@@ -2,6 +2,29 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.219] - 2026-11-11
+
+### Five comparison shims install patched versions of their vulnerable Python packages
+
+- **What changed.** The markdown-notes, memory-bank, temporal-graph, graph-pipeline and extract-first shims under
+  `eval/systems/` locked Python packages with published security advisories. Each lock now installs a patched release:
+  `aiohttp` 3.14.4, `certifi` 2026.10.19, `cryptography` 50.0.0, `httpcore2` and `httpx2` 2.12.0, `pyjwt` 2.15.0
+  and `urllib3` 2.8.0 in markdown-notes; `aiohttp` 3.14.4 and `urllib3` 2.8.0 in memory-bank; `anyio` 4.14.2,
+  `certifi` 2026.10.19 and `urllib3` 2.8.0 in temporal-graph; `certifi` 2026.10.19 in graph-pipeline and
+  extract-first. `yarl` moves to 1.25.1 in markdown-notes and memory-bank because the new `aiohttp` needs it. Each
+  lock was regenerated with the uv version its Dockerfile pins, so no other package moves (markdown-notes gains
+  `httpx2-jsfetch`, which installs only on Emscripten). Where `constraint-dependencies` hold a shim to its vendor's own
+  lock, those pins move with the bump, and extract-first lets `certifi` alone past its 2026-10-05 `exclude-newer`
+  cutoff. Masashi-Ono0611 reported the advisories in [#183](https://github.com/garrytan/gbrain-evals/pull/183).
+- **What stays the same.** No vendor package, shim code, base image or setting changes. The comparison bundles in
+  `docs/comparison-systems/` keep their locks, because running preregistrations pin those hashes, so the pin table and
+  every preregistration are unchanged. Advisories in other packages these locks hold, pillow among them, are outside
+  this change.
+- **What to expect.** From 2026-11-11, runs started after this change use new lock hashes: markdown-notes `e1a14a19`
+  to `90b883f1`, memory-bank `f54d89df` to `29b875e0`, temporal-graph `4ce9b216` to `6894bade`, graph-pipeline
+  `59af44d5` to `bdfac8b6` and extract-first `9777b7a8` to `9c32b495`. The three capability records that store a lock
+  hash carry the new one. Earlier results keep the hashes they recorded.
+
 ## [0.10.217] - 2026-11-11
 
 ### Judges count a verdict a Claude reply gives last, and an empty judge reply is an error instead of a wrong answer
