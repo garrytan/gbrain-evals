@@ -998,7 +998,7 @@ describe('custody and the paid guard', () => {
     const particle = estimateCell({ ...rest, arms: def.arms.filter(a => a.id === 'whole-agent-particle') }).usd;
     expect(particle).toBeLessThan(10);
     expect(whole.usd).toBeGreaterThan(10);
-    let priced: number | null = null;
+    let priced = null as number | null;
     expect(() => { priced = paidGuard(argv, def, null, ['whole-agent-particle']); }).not.toThrow();
     expect(priced).toBe(Math.round(particle * 100) / 100);
     expect(() => paidGuard(argv, def, null, null)).toThrow('has only $10.00 left');
