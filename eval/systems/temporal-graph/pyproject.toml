@@ -9,9 +9,9 @@ dependencies = ["graphiti-core==0.30.2"]
 package = false
 constraint-dependencies = [
   "annotated-types==0.7.0",
-  "anyio==4.12.1",
+  "anyio==4.14.2",
   "backoff==2.2.1",
-  "certifi==2026.1.4",
+  "certifi==2026.10.19",
   "charset-normalizer==3.4.4",
   "colorama==0.4.6",
   "distro==1.9.0",
@@ -37,5 +37,5 @@ constraint-dependencies = [
   "tqdm==4.67.1",
   "typing-extensions==4.15.0",
   "typing-inspection==0.4.2",
-  "urllib3==2.7.0",
+  "urllib3==2.8.0",
 ]
