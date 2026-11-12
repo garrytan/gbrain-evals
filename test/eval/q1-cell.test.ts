@@ -12,7 +12,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:tes
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { campaignCells, campaignManifest, cellAggregates, contextKey, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, scoreboardCampaignCell, selectCellQuestions, type CellDeps, type CellOptions, type CellResult } from '../../eval/runner/q1/cell.ts';
+import { campaignCells, campaignManifest, cellAggregates, contextKey, paidGuard, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, scoreboardCampaignCell, selectCellQuestions, type CellDeps, type CellOptions, type CellResult } from '../../eval/runner/q1/cell.ts';
 import { buildManifest, COUNTED_READERS, definitionProblems, estimateCell, loadManifest, manifestText, MANIFEST_PATH, SETS, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { classifyV2, CLASSIFIER_VERSION_V2, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
@@ -987,6 +987,24 @@ describe('custody and the paid guard', () => {
     expect(err).toContain('--paid');
     expect(err).toContain('next: ask the user');
     expect(existsSync(join(tmp, 'unpaid'))).toBe(false);
+  });
+
+  test('the paid guard prices only the arms a run selects, so one cheap arm of a costly cell fits a small budget run', () => {
+    const def = loadManifest().addon_cells!.find(c => c.id === 'sota-dev.gbrain-defaults.agent-tools')!;
+    const ledgerPath = join(tmp, 'arms-guard.sqlite');
+    const run = BudgetRun.open({ runner: 'arms-guard', budgetUsd: 10, ledgerPath, programCapUsd: 10 });
+    const argv = ['--paid', '--budget-run-id', run.runId, '--budget-ledger', ledgerPath];
+    const { estimate: whole, ...rest } = def;
+    const particle = estimateCell({ ...rest, arms: def.arms.filter(a => a.id === 'whole-agent-particle') }).usd;
+    expect(particle).toBeLessThan(10);
+    expect(whole.usd).toBeGreaterThan(10);
+    let priced: number | null = null;
+    expect(() => { priced = paidGuard(argv, def, null, ['whole-agent-particle']); }).not.toThrow();
+    expect(priced).toBe(Math.round(particle * 100) / 100);
+    expect(() => paidGuard(argv, def, null, null)).toThrow('has only $10.00 left');
+    expect(() => paidGuard(argv, def, null, ['whole-agent'])).toThrow('has only $10.00 left');
+    expect(() => paidGuard(argv, def, null, ['whole-agent', 'whole-agent-particle'])).toThrow('has only $10.00 left');
+    closeLedgers();
   });
 
   // Value: protects=particle-1 never judges a Q1 cell; fails_when=a particle frontier judge reaches the judge slot, behind the lease proxy or on the ledger; why_new=U5 lifts U2's lease-proxy refusal for particle readers only; seam=none; no_claim=keyless, refused before any request

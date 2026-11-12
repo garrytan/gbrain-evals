@@ -102,7 +102,7 @@ import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render-v2.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
-import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
+import { ALL_SETS, definitionProblems, estimateCell, F6_ASSUMPTIONS, frontierJudgesFor, launchPrefix, loadManifest, MANIFEST_PATH, pinnedJudgeRouteCaps, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type JudgeSettings, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { loadRS1Manifest, stage1OverCap, type RS1Manifest } from './cells/rs1.ts';
 import { bg1Stage1OverCap, loadBG1Manifest, type BG1Manifest } from './cells/bg1.ts';
@@ -1625,8 +1625,12 @@ export async function bg1CellWindow(argv: string[], def: CellDefinition, env: Re
 }
 
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
-export function paidGuard(argv: string[], def: CellDefinition, limit: number | null): number {
-  const estimate = Math.round((limit ? def.estimate.usd * Math.min(1, limit / ALL_SETS[def.set].questions) + (def.estimate.lines.ingest ?? 0) : def.estimate.usd) * 100) / 100;
+/** Refuses a run the budget run can't cover: the estimate of the arms it runs (every arm without --arms), cut to --limit's share. */
+export function paidGuard(argv: string[], def: CellDefinition, limit: number | null, arms: readonly string[] | null = null): number {
+  const { estimate: whole, ...rest } = def;
+  const picked = arms ? def.arms.filter(a => arms.includes(a.id)) : def.arms;
+  const cell = picked.length && picked.length < def.arms.length ? estimateCell({ ...rest, arms: picked }) : whole;
+  const estimate = Math.round((limit ? cell.usd * Math.min(1, limit / ALL_SETS[def.set].questions) + (cell.lines.ingest ?? 0) : cell.usd) * 100) / 100;
   try { requirePaidArm(argv, { arm: `q1 cell ${def.id}`, estimateUsd: estimate, ledgerPath: budgetOptionsFrom(argv).ledgerPath }); }
   catch (e) {
     if (!(e instanceof PaidArmRefusal)) throw e;
@@ -1692,8 +1696,8 @@ export async function main(argv: string[]): Promise<number> {
     const limit = one('--limit') ? Number(one('--limit')) : null;
     const proxy = (one('--provider-proxy') ?? process.env.SHOOTOUT_PROXY ?? '').replace(/\/$/, '') || null;
     if (!proxy) {
-      paidGuard(argv, def, limit);
-      startPaidRun(`q1-cell:${def.id}`, { ...budgetOptionsFrom(argv), estimateUsd: def.estimate.usd });
+      const estimate = paidGuard(argv, def, limit, one('--arms')?.split(',') ?? null);
+      startPaidRun(`q1-cell:${def.id}`, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
     }
     const shardRaw = one('--shard') ?? '0/1';
     const [si, sn] = shardRaw.split('/').map(Number);
