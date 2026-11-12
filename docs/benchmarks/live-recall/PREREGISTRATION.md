@@ -567,6 +567,64 @@ conditions the synthetic brain copies still describe the real one, and they chan
 The batch 4 frozen sample, Wintermute's notes on it and the counted run commit are recorded in the results, as dated
 entries made before the counted run.
 
+### 2026-11-12: Batch 4 frozen sample
+
+Written after the freeze and before any batch 4 search. Frozen on 2026-11-12 at 04:09Z from Wintermute's
+`run.ts freeze --protocol batch4` at gbrain-evals `ecf8169c`, the merge commit of this amendment (2026-11-11T19:27:24Z),
+on a clean tree, with `--gbrain` at gbrain 0.60.682.0 (`42faabf2`) and the three earlier question files as `--prior`.
+`freeze.json` records `gbrain_version` 0.60.682.0, `visibility_epoch` `post_gbra_398`, the three earlier files' sha256
+(each matching the values above) and a `prior_overlap` of 0 question ids, 0 forms and 0 gold pages.
+
+- **N = 50 questions** (100 question forms), 10 of each type, and all 10 time_window questions carry a window.
+- **Question file sha256:** `69f923673764fc11aa501a4d3b0efae53ff7d2ec8ce806a32176472662b3ca04`.
+- **freeze.json sha256:** `ca66175ab378c2688317c057fa9e7dad0e8cad881d31af81a0d69cc1296b11f2`, committed as
+  [`live-recall-batch4/freeze.json`](../live-recall-batch4/freeze.json).
+- **Minimum detectable difference** in success@5 (two-sided alpha 0.05, 80% power), in points:
+
+| Comparison | 10% discordant | 20% discordant | 30% discordant |
+|---|---|---|---|
+| P1 or P2 (paraphrase forms), and G2's primary `paraphrase_vs_exact_configured` | 12.5 | 17.7 | 21.7 |
+| `batch1_p1_hybrid_vs_hybrid_lexical`, both forms (forms independent to fully correlated) | 8.9 to 12.5 | 12.5 to 17.7 | 15.3 to 21.7 |
+
+Wintermute's notes on the sample, aggregates only:
+
+- 60 distinct gold pages, chosen page first from a seeded sample (seed 20261111) drawn on 2026-11-11 at 19:31Z: 40 from
+  meeting pages, 10 from company pages and 10 from conversations, none off-sample. The sample gave no other kind of
+  gold page, so all 10 topic questions are about meetings.
+- The sample skipped held pages, pages with a privacy label, and every batch 1 to 3 gold, stale or decoy page. A recheck
+  found no access, visibility or confidentiality label on any of the 60 gold pages.
+- The 10 error_string questions have 10 distinct gold pages. Their key strings appear in 1 to 14 files across the brain,
+  so some are less unique than others. Each cross_source question pairs two meetings about the same company, both in
+  the sample.
+- 49 of the 60 gold pages carry a date in their path, and 8 of those are dated 2026-10-09 or later. Batch 2 had 33 of
+  58, so batch 4 leans to older pages.
+- Checks before the freeze, all passed: every gold page exists on disk and in the brain's page list, every exact form
+  contains its key tokens and no paraphrase does, question ids are unique, and nothing is shared with batches 1 to 3.
+- On 2026-11-11 a box guard refused the question build twice, before anything was saved. The relay guard's reason was
+  "would change what decides relay trust"; the AlphaClaw crew diagnosed a false positive (GST-2473). In those
+  attempts Wintermute drew the seeded sample, built the exclusion and page lists and read candidate pages. No question
+  file was saved, nothing was frozen and nothing was searched. An error_string replacement planned then was never
+  saved. The frozen file is a fresh set of 50 written from the same sample, exclusion list and rules, run through the
+  AlphaClaw crew's workaround for that guard. It counts as batch 4: the amendment fixes the question set at the freeze,
+  and no search informed it, as with batch 2's discarded draw.
+- The checkout ran `bun install` rather than `bun install --frozen-lockfile`. The tree stayed clean, so the lockfile
+  didn't change.
+
+**State of the brain at the freeze** (read-only, 2026-11-12 from 04:13Z to 04:15Z, just after the freeze; descriptive,
+and it changes no outcome):
+
+- **GBRA-398 relabel windows:** which windows had been applied couldn't be reconstructed on the box. Window 1 applied on
+  2026-11-10 (above). The brain's checkout holds two commits titled "relabel: commit parked label writes" at 2026-11-11
+  04:11Z that name no window. At about 03:50Z, 932 live pages still carried `access: private` with no `visibility`.
+- **Embedding coverage:** 5.5% of chunks on live pages have no vector in the configured column (`embedding`,
+  voyage-4), or 5.5% leaving out image-asset chunks. No page has synopsis vectors. Of 400 seeded-sampled media or video
+  pages, none has zero chunks, 38% have under 500 characters of main-body text and 21% under 200. G2's counted synthetic
+  brain copies 10% unembedded chunks, synopsis vectors off and about half the pages that aren't gold as shells, by a
+  different shell rule, so the unembedded share it copies is about twice the share measured now.
+
+**Counted run.** From gbrain-evals `ecf8169c` on a clean tree, after this entry is pushed, with `--gbrain` at the
+version the box runs when the run starts, under the rule above for an upgrade between freeze and run.
+
 ## Limits
 
 - One writer who knows the brain writes both the questions and the gold, so paraphrase difficulty and topic choice
