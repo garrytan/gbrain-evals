@@ -1,8 +1,9 @@
 /**
- * The SOTA loop's oracle (plan item 4): each dev-pool question answered by a frontier reader given only its gold
- * evidence (BEAM: every turn group holding a cited turn; LongMemEval: the answer sessions), through memory-qa's reading
- * arm (--qa reader --qa-context oracle, the reader prompt and judging code the nightly and A4 use) at the suite's output
- * limit, judged by the reader's cross-family judge (RS1's per-row judges: gpt-6-astra grades Claude answers,
+ * The SOTA loop's oracle (plan item 4): each dev-pool question answered by each nightly reader (claude-opus-5-5,
+ * gpt-6.1-sol and particle-1) given only its gold evidence (BEAM: every turn group holding a cited turn; LongMemEval: the
+ * answer sessions), through memory-qa's reading arm (--qa reader --qa-context oracle, the reader prompt and judging code
+ * the nightly and A4 use) at the suite's output limit, raised to particle-1's 16,000-token floor, judged by the reader's
+ * cross-family judge (RS1's per-row judges: gpt-6-astra grades Claude answers,
  * claude-opus-5-5 grades GPT and particle-1 answers), and written to the outcome cache with its finish_reason. Cat 40 is
  * out of v1: its scorer and agent loop don't fit a QA reader.
  *
@@ -29,6 +30,7 @@ import { latestDate, readerPrompt } from '../memory-qa/qa.ts';
 import { parseRunArgs, runArm } from '../memory-qa/run.ts';
 import { loadDevSet } from '../nightly/devset.ts';
 import { qaPromptVersion } from '../nightly/judge-cache.ts';
+import { COMPAT_PROVIDERS } from '../providers/openai-compatible.ts';
 import { ANSWERABILITY_DIR, ORACLE_PASS, ORACLE_SCHEMA, SOURCES } from './answerability.ts';
 import { CACHE_SCHEMA, freshness, OutcomeCache, type Row, type Spec, type Usage } from './cache.ts';
 import { assertNoSealedIds } from './sealed-guard.ts';
@@ -38,7 +40,7 @@ const sha16 = (...parts: Array<string | Uint8Array>) => { const h = createHash('
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 
 /** The readers the oracle buys, and the nightly suite whose items and output limit each benchmark takes. */
-export const ORACLE_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'] as const;
+export const ORACLE_READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'] as const;
 export const SUITE: Record<string, string> = { 'beam-1m': 'beam-1m-hard', 'lme-s': 'lme-s-hard' };
 const TRUNCATED = new Set(['length', 'max_tokens']);
 
@@ -85,11 +87,17 @@ export function a4Spec(): Spec {
   };
 }
 
+/** The output limit memory-qa sends a reader: the one asked for, raised to an OpenAI-compatible model's floor (particle-1's 16,000). */
+const sentMaxTokens = (reader: string, maxTokens: number) => {
+  const [provider, model] = reader.split(':');
+  return Math.max(maxTokens, COMPAT_PROVIDERS[provider!]?.models[model!]?.output_floor ?? 0);
+};
+
 /** The current inputs for one benchmark and reader's oracle rows. */
 export function oracleSpec(benchmark: string, reader: string, maxTokens = suiteMaxTokens(benchmark)): Spec {
   if (benchmark === 'beam-1m' && reader === 'openai:gpt-6.1-sol') return a4Spec();
   return {
-    kind: 'oracle', benchmark, system: 'oracle', reader, system_version: readerVersion(), effort: null, max_tokens: maxTokens,
+    kind: 'oracle', benchmark, system: 'oracle', reader, system_version: readerVersion(), effort: null, max_tokens: sentMaxTokens(reader, maxTokens),
     judge: oracleJudge(reader), judge_prompt: qaPromptVersion(), pass_threshold: ORACLE_PASS, dataset: datasetPin(benchmark),
     validator_version: validatorVersion(benchmark), harness_digest: harnessDigest(),
   };

@@ -11,8 +11,9 @@
 #                 cache lacks (sota/oracle.ts)
 #   dev-agent     the SOTA dev test's Opus and Sol rows on both agents (q1 cells sota-dev.*, arm whole-agent), then the
 #                 grep agent's rows into the leader cache (sota/leader.ts import)
-#   particle      the SOTA dev test's particle-1 rows on both agents (arm whole-agent-particle); PARTICLE_API_KEY goes
-#                 to the VM in this window only
+#   particle      particle-1's oracle rows on the dev pool, then the SOTA dev test's particle-1 rows on both agents (arm
+#                 whole-agent-particle; the gbrain agent's ingest needs VOYAGE_API_KEY); PARTICLE_API_KEY goes to the VM
+#                 in this window only
 #   leader-cache  the leader rows the cache lacks: the whole history on lme-s-hard, the grep agent on beam-1m-hard
 #
 # Start a paid window only once it is granted. State is ~/.capy/work/sota-windows/<window>/ (pushed to the VM and pulled
@@ -55,7 +56,7 @@ fi
 keys=()
 case $window in
   rehearse) ;;
-  particle) keys=(ANTHROPIC_API_KEY OPENAI_API_KEY PARTICLE_API_KEY) ;;
+  particle) keys=(ANTHROPIC_API_KEY OPENAI_API_KEY VOYAGE_API_KEY PARTICLE_API_KEY) ;;
   dev-agent) keys=(ANTHROPIC_API_KEY OPENAI_API_KEY VOYAGE_API_KEY) ;;
   *) keys=(ANTHROPIC_API_KEY OPENAI_API_KEY) ;;
 esac

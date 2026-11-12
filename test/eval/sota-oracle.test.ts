@@ -14,7 +14,7 @@ import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-le
 import { loadSplit } from '../../eval/runner/decisions/splits.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
 import { OutcomeCache } from '../../eval/runner/sota/cache.ts';
-import { a4Rows, a4Spec, oracleJudge, oraclePrompt, oracleSpec, poolItems, runOracle } from '../../eval/runner/sota/oracle.ts';
+import { a4Rows, a4Spec, ORACLE_READERS, oracleJudge, oraclePrompt, oracleSpec, poolItems, runOracle } from '../../eval/runner/sota/oracle.ts';
 
 const roots: string[] = [];
 const scratch = () => { const d = mkdtempSync(join(tmpdir(), 'sota-oracle-')); roots.push(d); return d; };
@@ -83,9 +83,11 @@ describe('oracle specs', () => {
     expect(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1'].map(oracleJudge)).toEqual(['openai:gpt-6-astra', 'anthropic:claude-opus-5-5', 'anthropic:claude-opus-5-5']);
   });
 
-  test('the readers take their nightly suite\'s 8,192-token output limit, and the pool is the nightly suites\' items', () => {
+  test('the three nightly readers take their suite\'s 8,192-token output limit, particle-1 its 16,000-token floor, and the pool is the nightly suites\' items', () => {
     expect(oracleSpec('beam-1m', 'anthropic:claude-opus-5-5')).toMatchObject({ max_tokens: 8192, judge: 'openai:gpt-6-astra', system: 'oracle' });
     expect(oracleSpec('lme-s', 'openai:gpt-6.1-sol')).toMatchObject({ max_tokens: 8192, judge: 'anthropic:claude-opus-5-5' });
+    expect(oracleSpec('beam-1m', 'particle:particle-1')).toMatchObject({ max_tokens: 16_000, judge: 'anthropic:claude-opus-5-5' });
+    expect(ORACLE_READERS).toEqual(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1']);
     expect([poolItems('beam-1m').length, poolItems('lme-s').length]).toEqual([126, 50]);
   });
 

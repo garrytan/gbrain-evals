@@ -13,7 +13,7 @@ window=${1:?window}; cap=${2:?cap in dollars}
 S=$HOME/work/$window
 L=$S/ledger.sqlite C=$S/cache O=$S/out
 mkdir -p "$C" "$O"
-OPUS=anthropic:claude-opus-5-5 SOL=openai:gpt-6.1-sol
+OPUS=anthropic:claude-opus-5-5 SOL=openai:gpt-6.1-sol PARTICLE=particle:particle-1
 GREP=sota-dev.baseline-file-agent.baseline GBRAIN=sota-dev.gbrain-defaults.agent-tools
 rc=0
 step() { echo "vm-run: $*"; "$@" || { echo "vm-run: FAILED ($?): $*"; rc=1; }; }
@@ -49,6 +49,11 @@ case $window in
     for cell in $GREP $GBRAIN; do step bun eval/runner/q1/cell.ts run --cell "$cell" --arms whole-agent --out "$O/$cell" "${P[@]}"; done
     step bun eval/runner/sota/leader.ts import --from "$O/$GREP" --cell "$GREP" --cache "$C" ;;
   particle)
+    step bun eval/runner/sota/oracle.ts plan --cache "$C"
+    for b in beam-1m lme-s; do
+      f=$(plan_file oracle "$b" "$PARTICLE")
+      [ -s "$f" ] && step bun eval/runner/sota/oracle.ts run --benchmark "$b" --reader "$PARTICLE" --items "$f" --cache "$C" --work "$O/oracle" "${P[@]}"
+    done
     for cell in $GREP $GBRAIN; do step bun eval/runner/q1/cell.ts run --cell "$cell" --arms whole-agent-particle --out "$O/$cell" "${P[@]}"; done ;;
   leader-cache)
     step bun eval/runner/sota/leader.ts plan --cache "$C"

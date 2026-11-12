@@ -27,11 +27,11 @@ function fakeRunner(name: string, list = 'cat "$(dirname "$0")/vms" 2>/dev/null 
 const passed = (line: string) => [...line.matchAll(/--pass (\S+)/g)].map(m => m[1]);
 
 describe('run.sh, with a fake runner', () => {
-  test('each window takes only the keys it needs: none to rehearse, Voyage for the dev test, particle-1\'s key in its own window only', () => {
+  test('each window takes only the keys it needs: none to rehearse, Voyage for the gbrain agent\'s ingest, particle-1\'s key in its own window only', () => {
     const f = fakeRunner('keys');
     for (const w of ['rehearse', 'oracle-dev', 'dev-agent', 'particle', 'leader-cache']) expect(f.launch([w, '5']).status).toBe(0);
     expect(f.launches().map(passed)).toEqual([
-      [], ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY'], ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'VOYAGE_API_KEY'], ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'PARTICLE_API_KEY'], ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY']]);
+      [], ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY'], ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'VOYAGE_API_KEY'], ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'PARTICLE_API_KEY'], ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY']]);
     expect(f.launches()[3]).toContain('--setup eval/runner/sota/ubicloud/setup.sh');
     expect(f.launches()[3]).toContain(`--push ${f.home}/.capy/work/sota-windows/particle:work/particle`);
     expect(f.launches()[3]).toContain('-- bash eval/runner/sota/ubicloud/vm-run.sh particle 5');
@@ -89,7 +89,8 @@ describe('vm-run.sh, on this machine with no keys and no dataset', () => {
     const home = join(dir, 'vm-particle');
     const first = vmRun(home, 'particle');
     expect(first.status).toBe(1);
-    expect(first.stdout.match(/vm-run: FAILED/g)).toHaveLength(2);
+    expect(first.stdout).toContain('vm-run: bun eval/runner/sota/oracle.ts run --benchmark lme-s --reader particle:particle-1');
+    expect(first.stdout.match(/vm-run: FAILED/g)).toHaveLength(4);
     const S = join(home, 'work/particle');
     const rid = readFileSync(join(S, 'run-id'), 'utf8').trim();
     expect(JSON.parse(readFileSync(join(S, 'ledger-status.json'), 'utf8')).run).toMatchObject({ finished_at: null });
