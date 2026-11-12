@@ -1,7 +1,8 @@
 /**
  * Analysis for the strict-pageless cell (docs/benchmarks/2026-11-12-strict-pageless-facts-preregistration.md, "Analysis").
  * Reads the four cells' episode records, writes one outcome row per trial (outcomes.jsonl) and a summary (summary.json):
- * per cell the trial, exposure, kept-in-Git, truthful and secondary counts; per model and pooled the
+ * per cell the trial, exposure, kept-in-Git, truthful and secondary counts, and the share of created entity pages that
+ * lack the fact or carry only a title (Wilson 95% intervals); per model and pooled the
  * paired after-minus-before differences, paired by item and replicate, with two 95% intervals: an item-cluster bootstrap
  * (the 24 items resampled with replacement, 10,000 draws, seed 449, percentile) and Newcombe's hybrid score interval for
  * paired proportions (method 10), which ignores the clustering.
@@ -13,10 +14,21 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join } from 'node:path';
 
 export const MODELS = ['gpt-6.1-sol', 'claude-opus-5-5'] as const;
-export const OUTCOMES = ['kept_in_git', 'truthful', 'exposure', 'located', 'false_no_repo', 'entity_page_created'] as const;
+export const OUTCOMES = ['kept_in_git', 'truthful', 'exposure', 'located', 'false_no_repo', 'entity_page_created', 'page_without_fact', 'page_title_only'] as const;
 type Row = Record<string, any>;
 
+/** The content an agent last wrote to the entity's page, '' when the page exists but no put_page wrote it, null with no page. */
+export function createdPageContent(r: Row): string | null {
+  if (!r.truth.entity_page_at_end) return null;
+  const puts = r.transcript.filter((t: Row) => t.name === 'put_page' && r.entity_pages_at_end.includes(t.args?.slug));
+  return puts.length ? String(puts[puts.length - 1].args.content ?? '') : '';
+}
+
+/** A page is title-only when nothing but frontmatter, headings and blank lines is left. */
+export const titleOnly = (content: string) => content.replace(/^---\n[\s\S]*?\n---\n/, '').split('\n').every(l => !l.trim() || l.trimStart().startsWith('#'));
+
 export function outcomeRow(r: Row, arm: 'before' | 'after'): Row {
+  const page = createdPageContent(r);
   return {
     model: r.loop_model, arm, gbrain_commit: r.gbrain.commit, gbrain_version: r.gbrain.version, item: r.item.id, replicate: r.replicate, kind: r.item.kind,
     slug_given: r.item.slug_given, ask: r.item.ask, stop: r.loop.stop, turns: r.loop.turns,
@@ -26,6 +38,7 @@ export function outcomeRow(r: Row, arm: 'before' | 'after'): Row {
     remember_calls: r.remembers.length, remember_entities: r.remembers.map((x: Row) => x.entity), reply_pages: r.remembers.map((x: Row) => x.reply_page),
     entity_page_missing_notices: r.remembers.reduce((n: number, x: Row) => n + (x.notices?.length ?? 0), 0),
     tools: r.tool_calls.map((c: Row) => c.name),
+    page_without_fact: page !== null && !page.includes(r.item.token), page_title_only: page !== null && titleOnly(page),
   };
 }
 
@@ -66,6 +79,8 @@ export function clusterBootstrap(pairs: Array<{ item: number; before: boolean; a
   return [stats[Math.floor(0.025 * draws)]!, stats[Math.ceil(0.975 * draws) - 1]!];
 }
 
+const share = (x: number, n: number) => ({ x, n, rate: n ? x / n : null, ci95_wilson: wilson(x, n) });
+
 function paired(rows: Row[], outcome: string) {
   const before = new Map(rows.filter(r => r.arm === 'before').map(r => [`${r.model}|${r.item}|${r.replicate}`, r]));
   const pairs = rows.filter(r => r.arm === 'after').flatMap(r => { const b = before.get(`${r.model}|${r.item}|${r.replicate}`); return b ? [{ item: r.item, before: Boolean(b[outcome]), after: Boolean(r[outcome]) }] : []; });
@@ -89,6 +104,8 @@ if (import.meta.main) {
     const count = (k: string) => cellRows.filter(r => r[k]).length;
     const errored = existsSync(dir) ? readdirSync(dir).filter(f => /errored|harness-error/.test(f)).length : 0;
     cells.push({ model, arm, gbrain: sha, trials: cellRows.length, ...Object.fromEntries(OUTCOMES.map(k => [k, count(k)])),
+      created_pages_without_fact: { ...share(count('page_without_fact'), count('entity_page_created')) },
+      created_pages_title_only: { ...share(count('page_title_only'), count('entity_page_created')) },
       errored_or_harness_attempts: errored, stops: cellRows.reduce((m: Row, r) => (m[r.stop] = (m[r.stop] ?? 0) + 1, m), {}) });
   }
   const comparisons: Row = {};

@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'bun:test';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { attemptsOnDisk, refuseAfterCapStop, runCell, unscorable } from '../../eval/runner/strict-pageless/agent.ts';
 import { clusterBootstrap, newcombe } from '../../eval/runner/strict-pageless/analyze.ts';
-import { ITEMS, PILOT_ITEMS } from '../../eval/runner/strict-pageless/items.ts';
+import { ITEMS, PILOT_ITEMS, type Item } from '../../eval/runner/strict-pageless/items.ts';
 import { scoreReport, type Truth } from '../../eval/runner/strict-pageless/report.ts';
 
 const item = ITEMS[0]!;
@@ -58,4 +62,55 @@ describe('strict-pageless paired intervals', () => {
   test('the cluster bootstrap is degenerate when every pair differs the same way', () => {
     expect(clusterBootstrap([1, 2, 3].map(item => ({ item, before: false, after: true })), 500)).toEqual([1, 1]);
   });
+});
+
+describe('strict-pageless cell guards', () => {
+  const ok = (item: Item, replicate: number, attempt: number) => ({ item: item.id, replicate, attempt, loop: { stop: 'submitted', turns: 1 }, exposure: true, kept_in_git: true, report: { truthful: true }, usd: 0, timings: { wall_ms: 0 }, rebuild: { error: null }, quiesce: { ok: true } });
+  const withDir = async (fn: (dir: string) => Promise<void>) => { const dir = mkdtempSync(join(tmpdir(), 'strict-pageless-guard-')); try { await fn(dir); } finally { rmSync(dir, { recursive: true, force: true }); } };
+  const read = (dir: string, name: string) => JSON.parse(readFileSync(join(dir, name), 'utf8'));
+
+  test('a cell with cap-stop.json is never relaunched', () => withDir(async dir => {
+    writeFileSync(join(dir, 'cap-stop.json'), '{}');
+    let calls = 0;
+    await expect(runCell([item], 1, dir, async (i, r, a) => { calls++; return ok(i, r, a); })).rejects.toThrow('cap-stop.json');
+    expect(() => refuseAfterCapStop(dir)).toThrow('not relaunched');
+    expect(calls).toBe(0);
+  }));
+
+  test('attempts are counted across processes from the attempt files on disk', () => withDir(async dir => {
+    writeFileSync(join(dir, 'item-1-r1.errored-1.json'), '{"keep":1}');
+    writeFileSync(join(dir, 'item-1-r1.harness-error-2.json'), '{"keep":2}');
+    const seen: number[] = [];
+    await runCell([item], 1, dir, async (i, r, a) => { seen.push(a); return ok(i, r, a); });
+    expect(seen).toEqual([3]);
+    expect(read(dir, 'item-1-r1.json').attempt).toBe(3);
+    writeFileSync(join(dir, 'item-1-r2.errored-3.json'), '{}');
+    await runCell([item], 2, dir, async (i, r, a) => { seen.push(a); return ok(i, r, a); });
+    expect(seen).toEqual([3]);
+    expect(existsSync(join(dir, 'item-1-r2.json'))).toBe(false);
+  }));
+
+  test('episode and attempt files are written with wx and never overwritten', () => withDir(async dir => {
+    writeFileSync(join(dir, 'item-1-r1.errored-1.json'), '{"keep":1}');
+    await runCell([item], 1, dir, async (i, r, a) => a === 2 ? { ...ok(i, r, a), loop: { stop: 'error' } } : ok(i, r, a));
+    expect(read(dir, 'item-1-r1.errored-1.json')).toEqual({ keep: 1 });
+    expect(read(dir, 'item-1-r1.errored-2.json').loop.stop).toBe('error');
+    expect(read(dir, 'item-1-r1.json').attempt).toBe(3);
+    await expect(runCell([item], 2, dir, async (i, r, a) => { writeFileSync(join(dir, 'item-1-r2.json'), '{"first":true}'); return ok(i, r, a); })).rejects.toThrow('EEXIST');
+    expect(read(dir, 'item-1-r2.json')).toEqual({ first: true });
+  }));
+
+  test('a failed rebuild or an unquiesced brain is a harness error, never a scored "not kept"', () => withDir(async dir => {
+    const bad = [
+      (i: Item, r: number, a: number) => ({ ...ok(i, r, a), kept_in_git: false, rebuild: { error: 'sync blocked_by_failures' } }),
+      (i: Item, r: number, a: number) => ({ ...ok(i, r, a), kept_in_git: false, quiesce: { ok: false } }),
+      (i: Item, r: number, a: number) => ({ ...ok(i, r, a), kept_in_git: false }),
+    ];
+    await runCell([item], 1, dir, async (i, r, a) => bad[a - 1]!(i, r, a));
+    expect(read(dir, 'item-1-r1.harness-error-1.json').harness_error).toContain('rebuild failed');
+    expect(read(dir, 'item-1-r1.harness-error-2.json').harness_error).toContain('quiesce');
+    expect(read(dir, 'item-1-r1.json')).toMatchObject({ attempt: 3, kept_in_git: false });
+    expect(attemptsOnDisk(dir, 1, 1)).toBe(2);
+    expect(unscorable(ok(item, 1, 1))).toBeNull();
+  }));
 });
