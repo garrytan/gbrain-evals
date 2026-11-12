@@ -27,8 +27,10 @@
  *   - absence: an abstention candidate fails if any window of validate.ts's windowed scan answers it. Each window asks
  *     each validator about all of the conversation's abstention candidates in one prompt. When a validator answers that
  *     prompt in the wrong shape (an empty reply or a refusal, not an error), the window is regrouped: asked again with
- *     one prompt per abstention candidate, for at most --regroup-windows windows per run (default 4), whose worst case
- *     the estimate includes. A regrouped candidate fails on "absence" if its own prompt answers it, on "refusal" if the
+ *     one prompt per abstention candidate, for at most --regroup-windows new windows per run (default 4), whose worst
+ *     case the estimate includes. A marker in the reply cache records each regrouped window, and from then on it is
+ *     asked one candidate at a time directly: its batched prompt isn't bought again, its cached single replies are
+ *     reused, and it doesn't count toward the limit. A regrouped candidate fails on "absence" if its own prompt answers it, on "refusal" if the
  *     validator refuses its prompt (Anthropic's stop reason refusal, Gemini's SAFETY, PROHIBITED_CONTENT, BLOCKLIST or
  *     SPII, or a blocked prompt; a refusal does not change on a rerun, so it fails the candidate, not the conversation),
  *     and on validator_error otherwise. A window past the limit fails every abstention candidate on validator_error.
@@ -265,7 +267,7 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
     return (input * rates.input + MAX_OUTPUT_TOKENS * rates.output) / 1e6;
   };
   /** One window and validator whose reply may need regrouping, with its worst-case price if it does. */
-  interface Regroupable { order: number; cid: string; window: number; client: number; batched: Call; usd: number; calls: () => Call[]; failAll: (gate: string) => void }
+  interface Regroupable { order: number; cid: string; window: number; client: number; batched: Call; mark: string | null; usd: number; calls: () => Call[]; failAll: (gate: string) => void }
   const regroupable: Regroupable[] = [];
   const queued: Regroupable[] = [];
   const singles: Call[] = [];
@@ -333,6 +335,7 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
         const id = clients[c].id;
         const entry: Regroupable = {
           order: regroupable.length, cid, window, client: c, usd: abstention.length * worstUsd(c, tokens),
+          mark: opts.cacheDir ? join(opts.cacheDir, `${sha256(`${CACHE_VERSION}\0regrouped\0${id}\0${prompt}`)}.json`) : null,
           failAll: gate => abstention.forEach(a => failItem(cid, a.key, gate)),
           batched: call(cid, { window }, c, prompt, tokens, 'absence', reply => {
             const answered = reply === null ? undefined : jsonObject(reply)?.answered;
@@ -357,14 +360,19 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
             });
           }),
         };
+        if (entry.mark && existsSync(entry.mark)) {
+          result.regrouped.push({ validator: id, window, over_cap: false });
+          calls.push(...entry.calls());
+          continue;
+        }
         regroupable.push(entry);
         calls.push(entry.batched);
       }
     }
   }
 
-  // The batched calls not yet cached, plus the dearest regroupings the run may make. A cached window reply was usable,
-  // so it is never regrouped.
+  // The calls not yet cached (a marked window's single prompts among them), plus the dearest new regroupings the run may
+  // make. A cached window reply was usable, so it is never regrouped.
   const estimateUsd = calls.filter(c => !c.cached).reduce((s, c) => s + worstUsd(c.client, c.tokens), 0)
     + regroupable.filter(r => !r.batched.cached).map(r => r.usd).sort((a, b) => b - a).slice(0, regroupWindows).reduce((s, u) => s + u, 0);
 
@@ -373,7 +381,10 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
     const order = [...queued].sort((a, b) => a.order - b.order);
     order.forEach((r, i) => results[r.cid].regrouped.push({ validator: clients[r.client].id, window: r.window, over_cap: i >= regroupWindows }));
     for (const r of order.slice(regroupWindows)) r.failAll(`validator_error:${clients[r.client].id}`);
-    singles.push(...order.slice(0, regroupWindows).flatMap(r => r.calls()));
+    for (const r of order.slice(0, regroupWindows)) {
+      if (r.mark) { mkdirSync(dirname(r.mark), { recursive: true }); writeFileSync(r.mark, JSON.stringify({ regrouped: true })); }
+      singles.push(...r.calls());
+    }
     return singles;
   };
 
@@ -385,8 +396,10 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
       calls: calls.length, support_calls: of('support').length, absence_calls: of('absence').length,
       support_tokens: of('support').reduce((s, c) => s + c.tokens, 0), absence_tokens: of('absence').reduce((s, c) => s + c.tokens, 0),
       cached_calls: run.cached, validator_errors: run.errors, windows: 0,
-      absence_single_calls: singles.length, absence_single_tokens: singles.reduce((s, c) => s + c.tokens, 0),
-      regrouped_windows: regrouped ? Math.min(queued.length, regroupWindows) : 0, regroup_over_cap: Math.max(0, queued.length - regroupWindows),
+      absence_single_calls: [...calls, ...singles].filter(c => c.kind === 'absence_single').length,
+      absence_single_tokens: [...calls, ...singles].filter(c => c.kind === 'absence_single').reduce((s, c) => s + c.tokens, 0),
+      regrouped_windows: Object.values(results).reduce((s, r) => s + r.regrouped.filter(g => !g.over_cap).length, 0),
+      regroup_over_cap: Object.values(results).reduce((s, r) => s + r.regrouped.filter(g => g.over_cap).length, 0),
     };
     const abilities = Object.fromEntries(ABILITIES.map(a => [a, { pass: 0, fail: 0 }]));
     for (const [cid, result] of Object.entries(results)) {

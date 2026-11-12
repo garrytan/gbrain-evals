@@ -19,8 +19,9 @@
  *     + 1 is more than --still-needed, the kept conversations the run still lacks (until N_final is known, 20, wave A's
  *     size and N_final's floor, less those already kept).
  *   - At most --lanes (1 to 8) mint.sh processes run at once, the topic pass included.
- *   - A refusal stops it: a ProviderRefusal (an HTTP 4xx other than 408 and 429, the metering proxy's 402 included) or
- *     a mint.sh exit 2 starts no new slot, no retry and no lane; the lanes already running finish, and it exits 3.
+ *   - A refusal stops it: a ProviderRefusal (an HTTP 4xx other than 408 and 429, the metering proxy's 402 included,
+ *     whether the step raised it or one of its parts did, as the step's traceback shows) or a mint.sh exit 2 starts no
+ *     new slot, no retry and no lane; the lanes already running finish, and it exits 3.
  *     stop=http_402 names a 402. A slot whose topic pass was running when the stop came is counted as held: its
  *     topic and plan are done, and a rerun picks it up.
  *   - A StepFailure or PartFailure is retried in its lane, at most --retries more times; finished steps are verified
@@ -29,11 +30,13 @@
  *     concurrent runs would race on the one file).
  *   - Output is counts only: one "rs1-mint-lanes key=value ..." line per mint.sh start and end, and a summary. Each
  *     mint.sh's own counts-only output goes to <out>/lanes/<cid>-<until>-<attempt>.log, inside custody.
+ *   - One driver per --out: <out>/lanes/.lock names the driver and its mint.sh process groups, and a second driver
+ *     refuses while any of them is alive. SIGINT, SIGTERM and SIGHUP are passed to every mint.sh it runs.
  * A rerun over the same range resumes: slots already past the probe step are verified and skipped.
  */
-import { spawn, type ChildProcess } from 'node:child_process';
-import { closeSync, mkdirSync, openSync, readFileSync } from 'node:fs';
-import { basename, join, resolve } from 'node:path';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 
 const HERE = import.meta.dir;
 const RETRYABLE = new Set(['StepFailure', 'PartFailure']);
@@ -70,6 +73,9 @@ function parse(argv: string[]) {
   const outAt = mintArgs.indexOf('--out');
   if (outAt < 0 || !mintArgs[outAt + 1]) throw new LanesRefusal('mint.sh needs --out');
   if (!basename(mintArgs[outAt + 1].replace(/\/+$/, '')).startsWith('rs1-custody')) throw new LanesRefusal('--out must be a directory whose name starts with rs1-custody');
+  let near = resolve(mintArgs[outAt + 1]);
+  while (!existsSync(near)) near = dirname(near);
+  if (spawnSync('git', ['-C', near, 'rev-parse', '--is-inside-work-tree'], { stdio: 'ignore' }).status === 0) throw new LanesRefusal('--out must sit outside any git checkout');
   return { first, last, lanes, retries, mintArgs, fake, mintSh: resolve(mintSh ?? join(HERE, 'mint.sh')), out: resolve(mintArgs[outAt + 1]) };
 }
 
@@ -79,6 +85,22 @@ export async function runLanes(argv: string[], print: (line: string) => void = l
   const lanesDir = join(o.out, 'lanes');
   mkdirSync(lanesDir, { recursive: true, mode: 0o700 });
   const children = new Set<ChildProcess>();
+  // One driver per --out: the lock names this process and every mint.sh process group it runs, so a rerun refuses
+  // while any of them is alive, even after this process was killed.
+  const lock = join(lanesDir, '.lock');
+  const alive = (pid: number) => { try { process.kill(pid, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code === 'EPERM'; } };
+  const writeLock = () => writeFileSync(lock, JSON.stringify({ pid: process.pid, groups: [...children].map(c => c.pid) }));
+  try { closeSync(openSync(lock, 'wx', 0o600)); } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+    let held: { pid?: number; groups?: number[] } = {};
+    try { held = JSON.parse(readFileSync(lock, 'utf8')); } catch {}
+    if ((held.pid && alive(held.pid)) || (held.groups ?? []).some(g => alive(-g))) {
+      throw new LanesRefusal(`another mint-lanes run on this --out, or a mint.sh it started, is still running (lock ${lock}); let it finish or stop its process groups first`);
+    }
+    unlinkSync(lock);
+    closeSync(openSync(lock, 'wx', 0o600));
+  }
+  writeLock();
   let inFlight = 0, maxInFlight = 0, retried = 0;
   let stop: string | null = null;
   const counts = { done: 0, dropped: 0, failed: 0, refused: 0, held: 0 };
@@ -89,23 +111,29 @@ export async function runLanes(argv: string[], print: (line: string) => void = l
   };
   process.on('SIGINT', forward);
   process.on('SIGTERM', forward);
+  process.on('SIGHUP', forward);
 
   const mint = (slot: number, until: 'plan' | 'probe', attempt: number) => new Promise<Outcome>(done => {
     const cid = `c${String(slot).padStart(3, '0')}`;
     const log = join(lanesDir, `${cid}-${until}-${attempt}.log`);
+    const offset = existsSync(log) ? statSync(log).size : 0;
+    const startedAt = Date.now();
     const fd = openSync(log, 'a', 0o600);
     inFlight++;
     maxInFlight = Math.max(maxInFlight, inFlight);
     say({ event: 'start', slot, phase: until, attempt, in_flight: inFlight });
     const child = spawn('bash', [o.mintSh, ...o.mintArgs, '--start', String(slot), '--count', '1', '--until', until, '--no-usage'], { stdio: ['ignore', fd, fd], detached: true });
     children.add(child);
+    writeLock();
     const settle = (code: number) => {
       children.delete(child);
+      writeLock();
       closeSync(fd);
       inFlight--;
-      const text = readFileSync(log, 'utf8');
-      const errorClass = [...text.matchAll(/ error_class=(\w+)/g)].pop()?.[1] ?? null;
-      const http = /^rs1-mint refused: HTTP (\d{3})\b/m.exec(text)?.[1] ?? null;
+      const text = readFileSync(log).subarray(offset).toString('utf8');
+      const failed = [...text.matchAll(/ step=(\w+) status=error error_class=(\w+)/g)].pop();
+      const errorClass = failed?.[2] ?? null;
+      const http = /^rs1-mint refused: HTTP (\d{3})\b/m.exec(text)?.[1] ?? (failed && code !== 0 ? refusalIn(cid, failed[1], startedAt) : null);
       const status: Outcome['status'] = code === 0
         ? (/ dropped=1 /.test(text) ? 'dropped' : 'done')
         : code === 2 || errorClass === 'ProviderRefusal' || http ? 'refused'
@@ -116,6 +144,18 @@ export async function runLanes(argv: string[], print: (line: string) => void = l
     child.on('error', () => settle(127));
     child.on('close', (code, signal) => settle(code ?? (signal ? 128 : 1)));
   });
+
+  /**
+   * A refusal inside a step's traceback, written by this attempt: a ProviderRefusal a part of the step raised (the
+   * step then fails as PartFailure) or an HTTP 4xx other than 408 and 429 from urllib. Only the status is read.
+   */
+  const refusalIn = (cid: string, step: string, since: number): string | null => {
+    const path = join(o.out, 'set', 'conversations', cid, 'errors', `${step}.traceback`);
+    if (!existsSync(path) || statSync(path).mtimeMs < since - 1000) return null;
+    const text = readFileSync(path, 'utf8');
+    const status = Number((/ProviderRefusal: HTTP (\d{3})\b/.exec(text) ?? /HTTPError: HTTP Error (\d{3})\b/.exec(text))?.[1]);
+    return status >= 400 && status < 500 && status !== 408 && status !== 429 ? String(status) : null;
+  };
 
   /** One slot's pass up to until, with its retries; records why it stopped. */
   const pass = async (slot: number, until: 'plan' | 'probe'): Promise<Outcome> => {
@@ -149,6 +189,8 @@ export async function runLanes(argv: string[], print: (line: string) => void = l
   await Promise.all(running);
   process.off('SIGINT', forward);
   process.off('SIGTERM', forward);
+  process.off('SIGHUP', forward);
+  unlinkSync(lock);
 
   const py = o.fake ? 'python3' : join(o.out, 'tooling', 'venv', 'bin', 'python');
   const usage = await new Promise<number>(done => {

@@ -51,9 +51,10 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Parallel minting and regrouped window checks.** `eval/custody/rs1/mint-lanes.ts` runs mint.sh's first pass for up
   to eight slots at once, one unchanged mint.sh per slot, with each slot's topic, topic check and plan still run one at a
   time in slot order. It refuses to start more slots than are still needed, stops starting slots on a provider refusal,
+  holds a lock so only one driver runs on a custody directory, passes a hangup or interrupt to every mint.sh it runs,
   and writes `usage.json` once at the end (`mint.sh --no-usage` skips mint.sh's own write). validate-candidates.ts now
   asks a window again with one prompt per abstention candidate when a validator answers the batched prompt in the wrong
-  shape, fails a candidate whose own prompt the validator refuses on a new `refusal` gate, and records how each
+  shape (and keeps asking that window one candidate at a time on later runs), fails a candidate whose own prompt the validator refuses on a new `refusal` gate, and records how each
   unusable reply ended (stop reason, output tokens, content block kinds or HTTP status), never its text. validate.ts is
   unchanged.
 - **Records.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` gains its amendments, and

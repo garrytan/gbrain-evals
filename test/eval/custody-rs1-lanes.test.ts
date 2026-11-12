@@ -143,8 +143,10 @@ describe('mint-lanes.ts stops and retries (stub mint.sh)', () => {
 set -euo pipefail
 while [ $# -gt 0 ]; do case "$1" in --out) OUT="$2"; shift 2 ;; --start) K="$2"; shift 2 ;; --until) U="$2"; shift 2 ;; *) shift ;; esac; done
 mkdir -p "$OUT/stub"; N=$(( $(cat "$OUT/stub/$K-$U" 2>/dev/null || echo 0) + 1 )); echo "$N" > "$OUT/stub/$K-$U"
-echo "start $K $U $N" >> "$OUT/stub/calls.log"; sleep 0.4
+echo "start $K $U $N" >> "$OUT/stub/calls.log"; sleep "$STUB_SLEEP"
 case " $STUB_PLAN " in
+  *" $K:$U:$N:part402 "*) mkdir -p "$OUT/set/conversations/c00$K/errors"; printf 'Traceback\nrs1_mint.ProviderRefusal: HTTP 402 ClientError\n' > "$OUT/set/conversations/c00$K/errors/probe.traceback"
+    echo "rs1-mint conv=c00$K step=probe status=error error_class=PartFailure error_sha256=0"; echo "end $K $U" >> "$OUT/stub/calls.log"; exit 1 ;;
   *" $K:$U:$N:402 "*) echo "rs1-mint conv=c00$K step=answer status=error error_class=ProviderRefusal error_sha256=0"; echo "rs1-mint refused: HTTP 402 ClientError" >&2; echo "end $K $U" >> "$OUT/stub/calls.log"; exit 1 ;;
   *" $K:$U:$N:step "*) echo "rs1-mint conv=c00$K step=answer status=error error_class=StepFailure error_sha256=0"; echo "end $K $U" >> "$OUT/stub/calls.log"; exit 1 ;;
   *" $K:$U:$N:drop "*) echo "rs1-mint summary=mint mode=fake conversations=1 complete=0 dropped=1 select_exhausted=0"; echo "end $K $U" >> "$OUT/stub/calls.log"; exit 0 ;;
@@ -153,7 +155,8 @@ echo "rs1-mint summary=mint mode=fake conversations=1 complete=0 dropped=0 selec
 `;
   let root = '', stub = '';
   beforeAll(() => { root = scratch('lanes-stub'); stub = join(root, 'mint-stub.sh'); writeFileSync(stub, STUB, { mode: 0o700 }); });
-  const lanes = (out: string, plan: string, last = 8) => run('bun', [LANES, '--first', '1', '--last', String(last), '--still-needed', '8', '--lanes', '3', '--mint-sh', stub, '--', '--fake', '--out', join(root, out)], { STUB_PLAN: plan });
+  const args = (out: string, last = 8) => [LANES, '--first', '1', '--last', String(last), '--still-needed', '8', '--lanes', '3', '--mint-sh', stub, '--', '--fake', '--out', join(root, out)];
+  const lanes = (out: string, plan: string, last = 8) => run('bun', args(out, last), { STUB_PLAN: plan, STUB_SLEEP: '0.4' });
   const calls = (out: string) => readFileSync(join(root, out, 'stub/calls.log'), 'utf8').trim().split('\n');
 
   test('a 402 starts no new slot and no retry, lets the running lanes finish, and exits 3 naming it', () => {
@@ -183,6 +186,45 @@ echo "rs1-mint summary=mint mode=fake conversations=1 complete=0 dropped=0 selec
     expect(summary(bad.out)).toMatchObject({ failed: '1', stop: 'failed', retries: '2' });
     expect(calls('rs1-custody-fail').filter(l => l.startsWith('start 2 probe'))).toHaveLength(3);
     expect(Number(summary(bad.out).not_started)).toBeGreaterThan(0);
+  }, 120_000);
+
+  test('a refusal one of a step\'s parts raised, which the step reports as PartFailure, stops it like any other', () => {
+    const r = lanes('rs1-custody-part402', '2:probe:1:part402', 6);
+    expect(r.code).toBe(3);
+    expect(summary(r.out)).toMatchObject({ stop: 'http_402', refused: '1', retries: '0' });
+    expect(calls('rs1-custody-part402').filter(l => l.startsWith('start 2 probe'))).toEqual(['start 2 probe 1']);
+    expect(r.all).not.toContain('Traceback');
+  }, 120_000);
+
+  test('a rerun reads only what each attempt wrote, not the earlier run\'s lines in the same log', () => {
+    expect(lanes('rs1-custody-rerun', '4:plan:1:drop', 5).out).toContain(' dropped=1 ');
+    const again = lanes('rs1-custody-rerun', '', 5);
+    expect(again.code).toBe(0);
+    expect(summary(again.out)).toMatchObject({ done: '5', dropped: '0' });
+    expect(readFileSync(join(root, 'rs1-custody-rerun/lanes/c004-plan-1.log'), 'utf8')).toContain(' dropped=1 ');
+  }, 120_000);
+
+  test('a hangup reaches every mint.sh it runs, and a second driver on the same --out refuses while either is alive', async () => {
+    const out = 'rs1-custody-hup';
+    const env = { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', STUB_PLAN: '', STUB_SLEEP: '30' };
+    const driver = Bun.spawn(['bun', ...args(out)], { cwd: REPO, env, stdout: 'pipe', stderr: 'pipe' });
+    const log = join(root, out, 'stub/calls.log');
+    for (let i = 0; i < 100 && !(existsSync(log) && readFileSync(log, 'utf8').includes('start 1 plan')); i++) await Bun.sleep(100);
+    const second = run('bun', args(out), env);
+    expect(second.code).toBe(2);
+    expect(second.err).toContain('rs1-mint-lanes refused: another mint-lanes run on this --out');
+    const held = JSON.parse(readFileSync(join(root, out, 'lanes/.lock'), 'utf8')) as { pid: number; groups: number[] };
+    expect(held.pid).toBe(driver.pid);
+    expect(held.groups).toHaveLength(1);
+    driver.kill('SIGHUP');
+    const [stdout, code] = await Promise.all([new Response(driver.stdout).text(), driver.exited]);
+    expect(code).toBe(3);
+    expect(summary(stdout)).toMatchObject({ stop: 'signal_sighup', started: '1', not_started: '7' });
+    expect(() => process.kill(-held.groups[0], 0)).toThrow();
+    expect(existsSync(join(root, out, 'lanes/.lock'))).toBe(false);
+    expect(readFileSync(log, 'utf8').trim().split('\n')).toEqual(['start 1 plan 1']);
+    writeFileSync(join(root, out, 'lanes/.lock'), JSON.stringify({ pid: 2 ** 22 + 1, groups: [2 ** 22 + 3] }));
+    expect(run('bun', args(out, 2), { ...env, STUB_SLEEP: '0.1' }).code).toBe(0);
   }, 120_000);
 
   test('a slot whose topic is dropped runs no lane', () => {

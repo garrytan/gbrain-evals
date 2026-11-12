@@ -624,6 +624,29 @@ describe('validate-candidates.ts regrouped windows', () => {
     expect(errored.conversations.c001.status).toBe('incomplete');
   });
 
+  test('a window regrouped once is asked one candidate at a time from then on, so the limit holds only new windows and every refused window regroups in time', async () => {
+    const convs = [probedConversation('mark-a', 120), probedConversation('mark-b', 120)];
+    const opts = options(writeProbedSet(root, convs), { cacheDir: join(root, 'cache-mark') });
+    const refusedWindow = (p: string) => p.includes('<conversation_part>') && convs.some(c => windowOf(p, c, 61));
+    let queued = 0, marked = 0;
+    for (let round = 1; round <= 8 && (round === 1 || marked < queued); round++) {
+      const haiku = stopping(VALIDATOR_IDS[1], p => (refusedWindow(p) && questionsOf(p).length > 1 ? 'refusal' : null));
+      const report = await validateCandidates(opts, [fakeClient(VALIDATOR_IDS[0]), haiku], index, 1);
+      if (round === 1) queued = report.totals.regrouped_windows + report.totals.regroup_over_cap;
+      expect(haiku.asked.filter(p => refusedWindow(p) && questionsOf(p).length > 1)).toHaveLength(queued - marked);
+      expect(haiku.asked.filter(p => refusedWindow(p) && questionsOf(p).length === 1)).toHaveLength(3);
+      marked++;
+      expect(report.totals).toMatchObject({ regrouped_windows: marked, regroup_over_cap: queued - marked });
+      if (marked === queued) expect([report.conversations.c001.status, report.conversations.c002.status]).toEqual(['checked', 'checked']);
+    }
+    expect(queued).toBeGreaterThanOrEqual(2);
+    expect(marked).toBe(queued);
+    const last = stopping(VALIDATOR_IDS[1], () => 'refusal');
+    const settled = await validateCandidates(opts, [fakeClient(VALIDATOR_IDS[0]), last], index, 0);
+    expect(last.asked.filter(refusedWindow)).toEqual([]);
+    expect(settled.totals).toMatchObject({ regrouped_windows: queued, regroup_over_cap: 0 });
+  });
+
   test('the estimate adds the dearest regroupings the limit allows, for windows not yet answered', async () => {
     const set = writeProbedSet(root, [probedConversation('regroup-price', 120)]);
     const opts = options(set, { cacheDir: join(root, 'cache-price') });
