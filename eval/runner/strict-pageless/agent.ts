@@ -22,7 +22,7 @@
  */
 import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { budgetOptionsFrom, startPaidRun } from '../budget-ledger.ts';
 import { attemptReceipt, provider, runAgent, type Arm, type ProviderAttempt, type ToolSpec } from '../cat40/loop.ts';
@@ -231,6 +231,72 @@ function parseIds(spec: string): number[] {
   return spec.split(',').flatMap(part => { const [a, z] = part.split('-').map(Number); return Array.from({ length: (z ?? a!) - a! + 1 }, (_, i) => a! + i); });
 }
 
+export type EpisodeRunner = (item: Item, replicate: number, attempt: number) => Promise<Record<string, any>>;
+
+/** A cell that stopped at its cap stays stopped: no process may relaunch it. */
+export function refuseAfterCapStop(outDir: string): void {
+  if (existsSync(join(outDir, 'cap-stop.json'))) throw new Error(`${outDir} has cap-stop.json: this cell stopped at its cap and is not relaunched`);
+}
+
+/** Attempts already made for one trial, by any process: the highest attempt number among its errored and harness-error files. */
+export function attemptsOnDisk(outDir: string, id: number, replicate: number): number {
+  if (!existsSync(outDir)) return 0;
+  const re = new RegExp(`^item-${id}-r${replicate}\\.(?:errored|harness-error)-(\\d+)\\.json$`);
+  return readdirSync(outDir).sort().reduce((n, f) => Math.max(n, Number(re.exec(f)?.[1] ?? 0)), 0);
+}
+
+/** Why a finished episode cannot be scored: its database rebuild from Git failed, or the brain never quiesced. */
+export function unscorable(r: Record<string, any>): string | null {
+  if (r.rebuild?.error) return `rebuild failed: ${String(r.rebuild.error).slice(0, 500)}`;
+  if (r.quiesce?.ok === false) return 'the brain did not quiesce before scoring';
+  return null;
+}
+
+/**
+ * Runs each item and replicate not yet on disk, up to ATTEMPTS attempts per trial counted across processes, so a relaunch
+ * never grants a trial fresh attempts. A failed rebuild or an unquiesced brain is a harness error, never "not kept". Every
+ * file is written with the wx flag, so nothing is overwritten. Returns 2 on a cap stop, after writing cap-stop.json.
+ */
+export async function runCell(items: Item[], k: number, outDir: string, episode: EpisodeRunner): Promise<number> {
+  refuseAfterCapStop(outDir);
+  mkdirSync(outDir, { recursive: true });
+  const put = (name: string, value: unknown) => writeFileSync(join(outDir, name), JSON.stringify(value, null, 1), { flag: 'wx' });
+  for (let replicate = 1; replicate <= k; replicate++) for (const item of items) {
+    const name = `item-${item.id}-r${replicate}.json`;
+    if (existsSync(join(outDir, name))) { console.log(`item ${item.id} r${replicate}: exists`); continue; }
+    let record: Record<string, any> | null = null;
+    for (let attempt = attemptsOnDisk(outDir, item.id, replicate) + 1; attempt <= ATTEMPTS && !record; attempt++) {
+      let r: Record<string, any>;
+      try { r = await episode(item, replicate, attempt); }
+      catch (error) {
+        if (isCapStop(error)) {
+          put('cap-stop.json', { at: new Date().toISOString(), item: item.id, replicate, message: (error as Error).message });
+          console.error(`cap stop: ${(error as Error).message}`);
+          return 2;
+        }
+        r = { item: item.id, replicate, attempt, harness_error: String((error as Error)?.stack ?? error).slice(0, 2_000) };
+      }
+      const why = r.harness_error ? null : unscorable(r);
+      if (why) r = { ...r, harness_error: why };
+      if (r.harness_error) {
+        put(`item-${item.id}-r${replicate}.harness-error-${attempt}.json`, r);
+        console.log(`item ${item.id} r${replicate} attempt ${attempt}: harness error ${String(r.harness_error).slice(0, 300)}`);
+        continue;
+      }
+      if (ERRORED.has(r.loop?.stop)) {
+        put(`item-${item.id}-r${replicate}.errored-${attempt}.json`, r);
+        console.log(`item ${item.id} r${replicate} attempt ${attempt}: errored (${r.loop.stop}: ${String(r.loop.error ?? '').slice(0, 200)})`);
+        continue;
+      }
+      record = r;
+    }
+    if (!record) { console.log(`item ${item.id} r${replicate}: no episode after ${ATTEMPTS} attempts`); continue; }
+    put(name, record);
+    console.log(`item ${item.id} r${replicate}: stop=${record.loop.stop} turns=${record.loop.turns} exposure=${record.exposure} kept=${record.kept_in_git} truthful=${record.report.truthful} usd=${Number(record.usd).toFixed(4)} wall=${Math.round(record.timings.wall_ms / 1000)}s`);
+  }
+  return 0;
+}
+
 async function main(argv: string[]): Promise<number> {
   const get = (k: string) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
   const model = get('--model'), out = get('--out'), root = get('--gbrain-root'), ids = get('--items');
@@ -239,6 +305,7 @@ async function main(argv: string[]): Promise<number> {
   const items = parseIds(ids).map(itemById);
   if (items.some(i => (i.id > 100) !== pilot)) throw new Error(pilot ? 'a pilot runs items above 100 only' : 'a counted run takes items 1 to 24 only');
   const outDir = resolve(out), gbrainRoot = resolve(root);
+  refuseAfterCapStop(outDir);
   let providerFetch: typeof fetch | undefined, paid: ReturnType<typeof startPaidRun> | null = null, budget: unknown = null;
   if (model !== 'fake') {
     const prov = model.slice(0, model.indexOf(':')) as keyof typeof KEY_ENV;
@@ -250,38 +317,8 @@ async function main(argv: string[]): Promise<number> {
     paid = startPaidRun(runner, { ...budgetOptionsFrom(argv), estimateUsd: null });
     budget = { runner, run_id: paid.run.runId, cap_usd: paid.run.budgetUsd };
   }
-  mkdirSync(outDir, { recursive: true });
   try {
-    for (let replicate = 1; replicate <= k; replicate++) for (const item of items) {
-      const path = join(outDir, `item-${item.id}-r${replicate}.json`);
-      if (existsSync(path)) { console.log(`item ${item.id} r${replicate}: exists`); continue; }
-      let record: Record<string, any> | null = null;
-      for (let attempt = 1; attempt <= ATTEMPTS && !record; attempt++) {
-        let r: Record<string, any>;
-        try { r = await runEpisode(item, { model, gbrainRoot, out: outDir, providerFetch, replicate, attempt, budget }); }
-        catch (error) {
-          if (isCapStop(error)) {
-            writeFileSync(join(outDir, 'cap-stop.json'), JSON.stringify({ at: new Date().toISOString(), item: item.id, replicate, message: (error as Error).message }));
-            console.error(`cap stop: ${(error as Error).message}`);
-            return 2;
-          }
-          r = { item: item.id, replicate, attempt, harness_error: String((error as Error)?.stack ?? error).slice(0, 2_000) };
-          writeFileSync(join(outDir, `item-${item.id}-r${replicate}.harness-error-${attempt}.json`), JSON.stringify(r, null, 1));
-          console.log(`item ${item.id} r${replicate} attempt ${attempt}: harness error ${String(r.harness_error).slice(0, 300)}`);
-          continue;
-        }
-        if (ERRORED.has(r.loop?.stop)) {
-          writeFileSync(join(outDir, `item-${item.id}-r${replicate}.errored-${attempt}.json`), JSON.stringify(r, null, 1));
-          console.log(`item ${item.id} r${replicate} attempt ${attempt}: errored (${r.loop.stop}: ${String(r.loop.error ?? '').slice(0, 200)})`);
-          continue;
-        }
-        record = r;
-      }
-      if (!record) { console.log(`item ${item.id} r${replicate}: no episode after ${ATTEMPTS} attempts`); continue; }
-      writeFileSync(path, JSON.stringify(record, null, 1), { flag: 'wx' });
-      console.log(`item ${item.id} r${replicate}: stop=${record.loop.stop} turns=${record.loop.turns} exposure=${record.exposure} kept=${record.kept_in_git} truthful=${record.report.truthful} usd=${Number(record.usd).toFixed(4)} wall=${Math.round(record.timings.wall_ms / 1000)}s`);
-    }
-    return 0;
+    return await runCell(items, k, outDir, (item, replicate, attempt) => runEpisode(item, { model, gbrainRoot, out: outDir, providerFetch, replicate, attempt, budget }));
   } finally {
     if (paid) { paid.guard.uninstall(); console.log(JSON.stringify({ budget: paid.run.close() })); }
   }
