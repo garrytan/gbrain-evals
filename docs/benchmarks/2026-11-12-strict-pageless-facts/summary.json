@@ -13,6 +13,26 @@
    "located": 26,
    "false_no_repo": 6,
    "entity_page_created": 2,
+   "page_without_fact": 0,
+   "page_title_only": 0,
+   "created_pages_without_fact": {
+    "x": 0,
+    "n": 2,
+    "rate": 0,
+    "ci95_wilson": [
+     0,
+     0.6576197760453506
+    ]
+   },
+   "created_pages_title_only": {
+    "x": 0,
+    "n": 2,
+    "rate": 0,
+    "ci95_wilson": [
+     0,
+     0.6576197760453506
+    ]
+   },
    "errored_or_harness_attempts": 0,
    "stops": {
     "submitted": 72
@@ -29,6 +49,26 @@
    "located": 40,
    "false_no_repo": 0,
    "entity_page_created": 58,
+   "page_without_fact": 22,
+   "page_title_only": 22,
+   "created_pages_without_fact": {
+    "x": 22,
+    "n": 58,
+    "rate": 0.3793103448275862,
+    "ci95_wilson": [
+     0.26564272598400496,
+     0.5079719290830295
+    ]
+   },
+   "created_pages_title_only": {
+    "x": 22,
+    "n": 58,
+    "rate": 0.3793103448275862,
+    "ci95_wilson": [
+     0.26564272598400496,
+     0.5079719290830295
+    ]
+   },
    "errored_or_harness_attempts": 0,
    "stops": {
     "submitted": 72
@@ -45,6 +85,26 @@
    "located": 52,
    "false_no_repo": 34,
    "entity_page_created": 0,
+   "page_without_fact": 0,
+   "page_title_only": 0,
+   "created_pages_without_fact": {
+    "x": 0,
+    "n": 0,
+    "rate": null,
+    "ci95_wilson": [
+     0,
+     1
+    ]
+   },
+   "created_pages_title_only": {
+    "x": 0,
+    "n": 0,
+    "rate": null,
+    "ci95_wilson": [
+     0,
+     1
+    ]
+   },
    "errored_or_harness_attempts": 0,
    "stops": {
     "submitted": 72
@@ -61,6 +121,26 @@
    "located": 72,
    "false_no_repo": 0,
    "entity_page_created": 41,
+   "page_without_fact": 23,
+   "page_title_only": 17,
+   "created_pages_without_fact": {
+    "x": 23,
+    "n": 41,
+    "rate": 0.5609756097560976,
+    "ci95_wilson": [
+     0.4104052710960994,
+     0.7010986836087636
+    ]
+   },
+   "created_pages_title_only": {
+    "x": 17,
+    "n": 41,
+    "rate": 0.4146341463414634,
+    "ci95_wilson": [
+     0.27756549360403493,
+     0.5663289698091571
+    ]
+   },
    "errored_or_harness_attempts": 0,
    "stops": {
     "submitted": 72
@@ -187,6 +267,46 @@
     "ci95_newcombe": [
      0.6519590886939777,
      0.8553634653816655
+    ]
+   },
+   "page_without_fact": {
+    "pairs": 72,
+    "before": 0,
+    "after": 22,
+    "before_rate": 0,
+    "after_rate": 0.3055555555555556,
+    "diff": 0.3055555555555556,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 22
+    },
+    "ci95_cluster_bootstrap": [
+     0.1527777777777778,
+     0.4722222222222222
+    ],
+    "ci95_newcombe": [
+     0.1985228345913006,
+     0.41954248052541393
+    ]
+   },
+   "page_title_only": {
+    "pairs": 72,
+    "before": 0,
+    "after": 22,
+    "before_rate": 0,
+    "after_rate": 0.3055555555555556,
+    "diff": 0.3055555555555556,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 22
+    },
+    "ci95_cluster_bootstrap": [
+     0.1527777777777778,
+     0.4722222222222222
+    ],
+    "ci95_newcombe": [
+     0.1985228345913006,
+     0.41954248052541393
     ]
    },
    "kept_in_git_exposed_both": {
@@ -371,6 +491,46 @@
      0.6774209429159974
     ]
    },
+   "page_without_fact": {
+    "pairs": 72,
+    "before": 0,
+    "after": 23,
+    "before_rate": 0,
+    "after_rate": 0.3194444444444444,
+    "diff": 0.3194444444444444,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 23
+    },
+    "ci95_cluster_bootstrap": [
+     0.18055555555555555,
+     0.4722222222222222
+    ],
+    "ci95_newcombe": [
+     0.21073502185177703,
+     0.43392348825334437
+    ]
+   },
+   "page_title_only": {
+    "pairs": 72,
+    "before": 0,
+    "after": 17,
+    "before_rate": 0,
+    "after_rate": 0.2361111111111111,
+    "diff": 0.2361111111111111,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 17
+    },
+    "ci95_cluster_bootstrap": [
+     0.09722222222222222,
+     0.3888888888888889
+    ],
+    "ci95_newcombe": [
+     0.13875368339200858,
+     0.34598769066528323
+    ]
+   },
    "kept_in_git_exposed_both": {
     "pairs": 72,
     "before": 0,
@@ -551,6 +711,46 @@
     "ci95_newcombe": [
      0.5869061988091899,
      0.7441745853625572
+    ]
+   },
+   "page_without_fact": {
+    "pairs": 144,
+    "before": 0,
+    "after": 45,
+    "before_rate": 0,
+    "after_rate": 0.3125,
+    "diff": 0.3125,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 45
+    },
+    "ci95_cluster_bootstrap": [
+     0.19444444444444445,
+     0.4305555555555556
+    ],
+    "ci95_newcombe": [
+     0.237830875312716,
+     0.39224621233637136
+    ]
+   },
+   "page_title_only": {
+    "pairs": 144,
+    "before": 0,
+    "after": 39,
+    "before_rate": 0,
+    "after_rate": 0.2708333333333333,
+    "diff": 0.2708333333333333,
+    "discordant": {
+     "before_only": 0,
+     "after_only": 39
+    },
+    "ci95_cluster_bootstrap": [
+     0.1527777777777778,
+     0.3958333333333333
+    ],
+    "ci95_newcombe": [
+     0.19997187264375088,
+     0.3486681950085508
     ]
    },
    "kept_in_git_exposed_both": {
