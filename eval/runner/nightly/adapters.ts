@@ -402,7 +402,8 @@ const QA_PASS = 0.5;
  * questions). A reader given the top sessions (--qa reader, --qa-context sessions) read the first qa_sessions of that list,
  * so delivered is that prefix's coverage; under any other reading it is null. A gbrain error (error_origin sut) is a
  * search tool error, never a harness row, and carries the shared stage whose provider caused it with a 429 or 5xx
- * (outcome.ts providerCause) as its cause, which only the agreement check reads.
+ * (outcome.ts providerCause) as its cause, which only the agreement check reads. evidence.tail_verdicts counts the
+ * verdicts a judge reply's tail decided (memory-qa's qa_tail_verdicts), present only when any did.
  */
 export function qaRows(run: SuiteRun, ctx: NightContext, reader: string, out: string, judge: string | null, questions: ReadonlyMap<string, MemoryQuestion> = new Map()): Outcome[] {
   const rowsFile = join(out, 'rows.ndjson');
@@ -436,7 +437,8 @@ export function qaRows(run: SuiteRun, ctx: NightContext, reader: string, out: st
       question: q?.question ?? null, expected: q ? q.answer ?? (q.rubric?.length ? q.rubric.join(' | ') : null) : null, answer: r.qa_answer ?? null,
       evidence: { kind: 'qa', judge, abstention: r.abstention ?? false, recall_any_at_5: r.recall_any_at_5 ?? null, recall_all_at_5: r.recall_all_at_5 ?? null,
         recall_any_at_10: any10, recall_all_at_10: r.recall_all_at_10 ?? null,
-        answer: r.qa_answer ?? null, retrieved: r.retrieved ?? null, reader_from_cache: readerReceipts.length > 0 && readerReceipts.every((x: any) => x.from_cache === true) },
+        answer: r.qa_answer ?? null, retrieved: r.retrieved ?? null, reader_from_cache: readerReceipts.length > 0 && readerReceipts.every((x: any) => x.from_cache === true),
+        ...(typeof r.qa_tail_verdicts === 'number' ? { tail_verdicts: r.qa_tail_verdicts } : {}) },
     });
   });
 }
