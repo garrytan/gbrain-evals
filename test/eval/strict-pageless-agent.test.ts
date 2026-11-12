@@ -14,8 +14,8 @@ import { itemById } from '../../eval/runner/strict-pageless/items.ts';
 const AGENT = resolve(import.meta.dir, '../../eval/runner/strict-pageless/agent.ts');
 const GBRAIN = resolve(import.meta.dir, '../../node_modules/gbrain');
 const KEYS = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'PARTICLE_API_KEY', 'GEMINI_API_KEY', 'VOYAGE_API_KEY'];
-const keyless = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !KEYS.includes(k))) as Record<string, string>;
-const run = (args: string[]) => spawnSync('bun', [AGENT, ...args], { env: keyless(), encoding: 'utf8', timeout: 110_000 });
+const keyless = () => ({ ...process.env, ...Object.fromEntries(KEYS.map(k => [k, ''])) }) as Record<string, string>;
+const run = (args: string[], cwd?: string) => spawnSync('bun', ['--no-env-file', AGENT, ...args], { cwd, env: keyless(), encoding: 'utf8', timeout: 110_000 });
 const scratch = () => mkdtempSync(join(tmpdir(), 'sp-'));
 
 describe('namesEntity', () => {
@@ -46,9 +46,10 @@ describe('strict-pageless agent CLI guards', () => {
     }
     expect(existsSync(out)).toBe(false);
   });
-  test('a missing key refuses before any output or ledger write', () => {
+  test('a missing key refuses before any output or ledger write, even with a key in a .env file', () => {
     const dir = scratch(), out = join(dir, 'o'), ledger = join(dir, 'ledger.jsonl');
-    const r = run(['--model', 'anthropic:claude-opus-5-5', '--items', '1', ...base(out), '--budget-ledger', ledger, '--program-cap-usd', '1', '--budget-usd', '1']);
+    writeFileSync(join(dir, '.env'), 'ANTHROPIC_API_KEY=placeholder-not-a-key\n');
+    const r = run(['--model', 'anthropic:claude-opus-5-5', '--items', '1', '--gbrain-root', join(dir, 'no-gbrain'), '--out', out, '--budget-ledger', ledger, '--program-cap-usd', '1', '--budget-usd', '1'], dir);
     expect(r.status).not.toBe(0);
     expect(r.stderr).toContain('ANTHROPIC_API_KEY is not set');
     expect(existsSync(out)).toBe(false);
