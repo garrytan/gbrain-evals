@@ -3,12 +3,12 @@
  * GST-2010), built with Q1's tooling (definitions.ts makeCell, estimateCell, definitionProblems) and F6's helpers, so a
  * BG1 cell is a Q1 cell definition the same runner executes: `bun eval/runner/q1/cell.ts run --cell <id> --manifest bg1`.
  *
- *   Counted (set BG1, sealed, at the cap of 40 kept worlds, 64 questions each): gbrain at the `stable` tag (configuration
+ *   Counted (set BG1, sealed, at N_final = 30 kept worlds, 64 questions each): gbrain at the `stable` tag (configuration
  *     rs1-stable, F6's build path with arm P's retrieval), the memory-bank server (recipe), the extract-first server
  *     (common), the temporal-graph library (shipped-0.31), hybrid search (baseline) and the no-memory floor, all at 8,000
  *     tokens; readers claude-opus-5-5 and gpt-6.1-sol at effort medium with a 2,048-token output limit. Each cell runs
  *     as launch units of six kept worlds in slot order (kept_units): units 0 and 1 are wave A (the first 12 kept, the
- *     internal pilot), the rest wave B, whose cells a dated amendment regenerates once the pilot sets N_final.
+ *     internal pilot), the rest wave B (units 2 to 4), regenerated at N_final 30 by the preregistration's Amendment 7.
  *   Full-context reference (set BG1-fc10, descriptive): Opus and Sol read each whole history with prompt caching
  *     (system baseline-full-context, arm whole-full-context) on the first 10 kept worlds, as two launch units of five
  *     (inside wave A). It is its own set so its estimate, lease and receipts cover those 10 worlds only, and the
@@ -167,7 +167,7 @@ export function rereadPlans(cells: CellDefinition[]): RereadPlan[] {
 
 const BG1_BLOCKS: Record<BG1BlockId, string> = {
   'BG1-S1': 'BG1 stage 1 (the three public dev worlds; every row, the full-context reference, particle-1 re-reads and the judge check)',
-  BG1: 'BG1 counted cells at the cap of 40 kept worlds (gbrain arm P at the stable tag, the three comparators, hybrid search, the floor) and the full-context reference on the first 10',
+  BG1: 'BG1 counted cells at N_final = 30 kept worlds (gbrain arm P at the stable tag, the three comparators, hybrid search, the floor) and the full-context reference on the first 10',
 };
 
 export interface BG1Manifest extends Manifest {

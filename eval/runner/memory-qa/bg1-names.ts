@@ -51,3 +51,5 @@ export const BG1_KEPT_UNITS = 6;
 export const BG1_WAVE_A = 12;
 export const BG1_N_FLOOR = 30;
 export const BG1_N_CAP = 40;
+/** N_final, set by the internal pilot (the preregistration's Amendment 7): the counted cells run on the first 30 kept worlds. */
+export const BG1_N_FINAL = 30;

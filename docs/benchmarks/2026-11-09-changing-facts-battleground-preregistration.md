@@ -700,6 +700,36 @@ Stage 2 runs from this file's results branch at the commit that adds this amendm
 
 Each code change has a keyless test that fails without it.
 
+### Amendment 7 (2026-11-13): N_final and wave B's cells
+
+The internal pilot ran on wave A: the first 12 kept worlds through every row, reader and judge. `verdict.ts pilot` emitted only
+these figures, under the gating view:
+
+- the per-world SDs of the three primary differences: 4.66 against the memory-bank server, 7.02 against the
+  extract-first server and 8.71 against the temporal-graph library (the central scenario modelled 8.01);
+- their correlations: memory-bank with extract-first 0.81, memory-bank with temporal-graph 0.04, extract-first with
+  temporal-graph 0.31.
+
+`power.ts` gives N_required of 11, 20 and 30, so N_final = min(40, max(30, 30)) = 30, and the run does not pause. The
+temporal-graph comparison sets it: its MDD at the strictest Holm step is 5.00 points at N = 29 and 4.91 at N = 30. At
+N = 30 the strict-step MDDs are 2.63, 3.96 and 4.91 points. They are for the primary family. The time-indexed family's
+power stays as the Power section models it.
+
+- **The kept set.** The custodian minted slots 13 to 30 in slot order. All 18 passed validation and none was dropped,
+  so the kept set is `bg1-001` to `bg1-030`. One slot's first render stopped on a provider outage before its world was
+  written, and it was rendered again from the reply cache. The refilled manifest has n_final 30 and SHA-256
+  `0c82a3039aa93fee43696685e431bf21dcafe2c83041b548ef7116b172dd6733`. It lists wave A's fill
+  (`7066057df5312925dca8bf75a5f0333ed4a220578cf1fd25a517b8fcfe5a0380`) under `earlier_fills`, so wave A's receipts still
+  read against it, and every file that fill pinned keeps its hash.
+- **Wave B's cells.** Set BG1 is now the first 30 kept worlds (`BG1_N_FINAL` in `eval/runner/memory-qa/bg1-names.ts`,
+  regenerated into `bg1-cells.json`). Each row runs five launch units of six worlds, and wave B is units 2 to 4 of each
+  row, 18 units. Estimates, leases and unit hours follow from the set's size. The full-context reference is unchanged.
+- **Wave A stays valid.** Every field `verdict.ts` compares for a unit's run identity is unchanged, so wave A's receipts,
+  run at Amendment 6's commit, still match the committed cells. A test pins those identities at that commit.
+
+Wave B and its particle-1 re-reads run from this file's results branch at the commit that adds this amendment. GBEV-3
+accepted N_final 30 and wave B's 18 units on 2026-11-12, before any wave B cell ran.
+
 ### Expected amendments
 
 The expected ones, each dated and committed before the cells it governs:

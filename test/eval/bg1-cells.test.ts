@@ -11,8 +11,10 @@ import {
   ALL_SETS, BG1_ASSUMPTIONS, BG1_JUDGE_BY_READER, BG1_MEASURED, BG1_SETS, bg1JudgeOf, definitionProblems, frontierJudgesFor, hoursPerMtok, isBg1Benchmark, PER_READER_JUDGE_SETTINGS,
 } from '../../eval/runner/q1/cells/definitions.ts';
 import { BG1_FC_UNITS, BG1_MANIFEST_PATH, bg1ManifestText, bg1Stage1OverCap, buildBG1Manifest, canonicalJudgeUsd, OPUS, PARTICLE, SOL, stage1CapUsd } from '../../eval/runner/q1/cells/bg1.ts';
-import { BG1_DEV_CONVERSATIONS, BG1_KEPT_UNITS, BG1_N_CAP, BG1_QUESTIONS_PER_WORLD } from '../../eval/runner/bg1/types.ts';
-import { campaignCells } from '../../eval/runner/q1/cell.ts';
+import { createHash } from 'node:crypto';
+import { BG1_DEV_CONVERSATIONS, BG1_KEPT_UNITS, BG1_N_FINAL, BG1_QUESTIONS_PER_WORLD } from '../../eval/runner/bg1/types.ts';
+import { campaignCells, runConfigIdentity, runConfigText } from '../../eval/runner/q1/cell.ts';
+import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 
 const ROOT = join(import.meta.dir, '..', '..');
 const KINDS = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
@@ -34,8 +36,9 @@ describe('bg1-cells.json', () => {
     for (const c of [...m.cells, ...m.smoke_cells]) expect(definitionProblems(c, KINDS)).toEqual([]);
   });
 
-  test('the sets: the sealed headline at the cap of 40 kept worlds, ten worlds for the reference and the three public dev worlds', () => {
-    expect(BG1_SETS.BG1).toMatchObject({ benchmark: 'bg1', conversations: BG1_N_CAP, questions: BG1_N_CAP * BG1_QUESTIONS_PER_WORLD, role: 'headline' });
+  test('the sets: the sealed headline at N_final = 30 kept worlds (Amendment 7), ten worlds for the reference and the three public dev worlds', () => {
+    expect(BG1_N_FINAL).toBe(30);
+    expect(BG1_SETS.BG1).toMatchObject({ benchmark: 'bg1', conversations: BG1_N_FINAL, questions: BG1_N_FINAL * BG1_QUESTIONS_PER_WORLD, corpus_tokens: BG1_N_FINAL * 200_000, role: 'headline' });
     expect(BG1_SETS['BG1-fc10']).toMatchObject({ benchmark: 'bg1', conversations: 10, questions: 10 * BG1_QUESTIONS_PER_WORLD });
     expect(BG1_SETS['BG1-dev3']).toMatchObject({ benchmark: 'bg1-dev', split: 'dev', role: 'smoke', only_conversations: [...BG1_DEV_CONVERSATIONS] });
     for (const id of ['BG1', 'BG1-fc10', 'BG1-dev3'] as const) expect(ALL_SETS[id]).toBe(BG1_SETS[id]);
@@ -52,18 +55,34 @@ describe('bg1-cells.json', () => {
     }
   });
 
-  test('launch units: six kept worlds per unit on BG1 (seven shards to the cap), five on the reference (two shards), none on the dev worlds', () => {
-    for (const c of m.cells.slice(0, 6)) expect([c.kept_units, c.shards]).toEqual([BG1_KEPT_UNITS, Math.ceil(BG1_N_CAP / BG1_KEPT_UNITS)]);
+  test('launch units: six kept worlds per unit on BG1 (five shards at N_final), five on the reference (two shards), none on the dev worlds', () => {
+    for (const c of m.cells.slice(0, 6)) expect([c.kept_units, c.shards]).toEqual([BG1_KEPT_UNITS, Math.ceil(BG1_N_FINAL / BG1_KEPT_UNITS)]);
     expect([m.cells[6].kept_units, m.cells[6].shards]).toEqual([BG1_FC_UNITS, 2]);
     for (const c of m.smoke_cells) expect([c.kept_units ?? null, c.shards]).toEqual([null, 1]);
   });
 
-  test('waves: A holds units 0 and 1 of each row and both reference units, B the rest', () => {
+  test('waves: A holds units 0 and 1 of each row and both reference units, B units 2 to 4 of each row (Amendment 7)', () => {
     expect(m.waves.A).toHaveLength(6 * 2 + 2);
-    expect(m.waves.B).toHaveLength(6 * 5);
     expect(m.waves.A).toContain('bg1-fc10.baseline-full-context.baseline.c1');
-    expect(m.waves.B).not.toContain('bg1.gbrain-defaults.rs1-stable.c1');
-    expect(m.waves.B).toContain('bg1.gbrain-defaults.rs1-stable.c2');
+    expect(m.waves.B).toEqual(ROWS.flatMap(r => [2, 3, 4].map(i => `bg1.${r}.c${i}`)));
+  });
+
+  // Value: protects=Amendment 7 regenerates wave B at N_final 30 without moving an identity field verdict.ts compares, so wave A's receipts stay readable; fails_when=a set fact the regeneration changed (worlds, questions, tokens, messages) reaches a cell's or arm's run identity, such as gbrain's extraction cap
+  test('Amendment 7: every counted cell keeps the run identity wave A ran under at the stage 2 freeze (d4b36d93)', () => {
+    const FREEZE: Record<string, string> = {
+      'bg1.gbrain-defaults.rs1-stable': '9a31b25fd6eedac550f16b2a834fe05869e39b0c772bac95c322e7974a9235b3',
+      'bg1.ext-memory-bank.recipe': 'f0e4c029bf16ecc2320ff3f481ab931232463c5d1b78da3ac04734c916cf4d9f',
+      'bg1.ext-extract-first.common': 'e7e52383b9c8100882c386cb3a2cdd89d47a04768db5a64643403703c89af45f',
+      'bg1.ext-temporal-graph.shipped-0.31': '5c6af12896a12241063f610e1dcfc164b8e3a7fb3bb00b589c1f6e49fac93a3d',
+      'bg1.baseline-hybrid.baseline': 'c0aec28214cd3d9bf7db56cbbda48a88c7426d2922e0c00f567c8189913692df',
+      'bg1.baseline-none.baseline': 'b1805b316a7c74e6a847b21870efc0efe3ccb70dfd992d310bac1b33e16ffa88',
+      'bg1-fc10.baseline-full-context.baseline': 'e23245a8373d4109228b32dc4116e57340f953eab7133960aac2732d3b9db92f',
+    };
+    const identity = (def: (typeof m.cells)[number]) => {
+      const { dataset: _d, scheduled_sha256: _s, limit: _l, ...rest } = JSON.parse(runConfigText(def, def.arms[0], { instrument: instrumentFor(def.canonical_instrument), dataset: null as never, scheduledSha: '', limit: null }));
+      return createHash('sha256').update(runConfigIdentity(JSON.stringify(rest))).digest('hex');
+    };
+    expect(Object.fromEntries(m.cells.map(def => [def.id, identity(def)]))).toEqual(FREEZE);
   });
 });
 

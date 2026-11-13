@@ -34,6 +34,7 @@ import { CHAT_PRICE_OVERRIDES } from '../../budget-ledger.ts';
 import { lookupEmbeddingPrice } from '../../../../node_modules/gbrain/src/core/embedding-pricing.ts';
 import { READER_WINDOWS } from '../../systems/baselines.ts';
 import type { Outcome } from '../../memory-qa/outcomes.ts';
+import { BG1_N_FINAL } from '../../memory-qa/bg1-names.ts';
 
 export const CELL_SCHEMA = 'gbrain-evals/q1-cell/v1';
 export const MANIFEST_SCHEMA = 'gbrain-evals/q1-cell-manifest/v1';
@@ -241,13 +242,14 @@ export const RS1_SETS: Record<RS1SetId, SetFacts> = {
 };
 /**
  * BG1's sets (docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md). BG1 is the sealed set in owner
- * custody (loader bg1) at its cap of 40 kept worlds, 64 questions each, about 200,000 cl100k tokens and about 150
+ * custody (loader bg1) at N_final, the first 30 kept worlds (BG1_N_FINAL, Amendment 7; the cap is 40), 64 questions
+ * each, about 200,000 cl100k tokens and about 150
  * sessions per world; its message count is a placeholder (about 13 turns a session) until the custodian reports the
  * aggregates. BG1-fc10 is the full-context reference's worlds: the first 10 kept worlds of BG1 (inside wave A),
  * descriptive. BG1-dev3 is stage 1's three public dev worlds (loader bg1-dev), sized the same way until they are rendered.
  */
 export const BG1_SETS: Record<BG1SetId, SetFacts> = {
-  BG1: { id: 'BG1', benchmark: 'bg1', split: 'sealed', questions: 2_560, conversations: 40, corpus_tokens: 8_000_000, messages: 80_000, block: 'BG1', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'BG1 changing-facts set (kept worlds, cap 40)', sessions: 150 },
+  BG1: { id: 'BG1', benchmark: 'bg1', split: 'sealed', questions: BG1_N_FINAL * 64, conversations: BG1_N_FINAL, corpus_tokens: BG1_N_FINAL * 200_000, messages: BG1_N_FINAL * 2_000, block: 'BG1', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'BG1 changing-facts set (the first 30 kept worlds, N_final)', sessions: 150 },
   'BG1-fc10': { id: 'BG1-fc10', benchmark: 'bg1', split: 'sealed', questions: 640, conversations: 10, corpus_tokens: 2_000_000, messages: 20_000, block: 'BG1', selection: { kind: 'all' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'BG1 full-context reference, the first 10 kept worlds (descriptive)', sessions: 150 },
   'BG1-dev3': { id: 'BG1-dev3', benchmark: 'bg1-dev', split: 'dev', questions: 192, conversations: 3, corpus_tokens: 600_000, messages: 6_000, block: 'BG1-S1', selection: { kind: 'all' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BG1 stage 1, three public dev worlds', only_conversations: ['bg1-dev-01', 'bg1-dev-02', 'bg1-dev-03'], sessions: 150 },
 };
