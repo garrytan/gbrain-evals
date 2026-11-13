@@ -2,6 +2,22 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.225] - 2026-11-13
+
+### Correct the strict-pageless report: the notice change was two edits, and the pilot made no pages
+
+- **What changed.** An outside check of the [strict-source pageless facts report](docs/benchmarks/2026-11-12-strict-pageless-facts.md)
+  against its public rows and its full episode records reproduced every number and verdict, and found wording that went
+  too far and context that was missing. The report now says the re-run changed one notice in two ways (it dropped the
+  `fix: put_page` and `next: run` lines and added "Nothing needs to run:"), so the re-run can't tell which edit stopped
+  the pages, and it adds the check's evidence that nothing else the agent sees changed between the two gbrain commits.
+  It gives the pilot's result next to the freeze times (no page in 4 paid trials, seen before the freeze), says the
+  tested notice shipped unchanged in gbrain v0.60.692.0 (`3ae72de9`), adds two limits (a notice whose step is for the
+  user, which the two models treated very differently, and arms run five hours apart), and reports what the agents'
+  `put_page` reasons and final replies said. The [corrections page](docs/corrections.md) lists the correction, and the
+  report ends with a changelog.
+- **What stays the same.** No counted row, score, interval, verdict or preregistration text changes.
+
 ## [0.10.224] - 2026-11-12
 
 ### A weekly loop shows where gbrain loses long-memory answers and which fixes would win them back

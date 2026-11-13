@@ -98,6 +98,15 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   hand; the labels came from the eval agent that ran the experiment, on claude-opus-5-5, one of the two models under
   test. Both outcomes are scored by code, and no counted number or verdict changes. The report carries both
   corrections. [Report](benchmarks/2026-11-12-strict-pageless-facts.md). gbrain is Garry Tan's own project.
+- **The strict-source pageless facts re-run called its notice change one change** (2026-11-13). It said gbrain#9202
+  changes one thing an agent sees. The notice changed in two ways at once: it dropped its `fix: put_page` and
+  `next: run` lines, and it added "Nothing needs to run:", so the re-run can't say which edit stopped the pages. An
+  outside check found nothing else the agent sees changed between the two commits. The report also left out that the
+  paid pilot before the re-run's freeze created no page in 4 trials, and that the result holds for a step the agent
+  can run itself: a second notice in the same runs, whose step is for the user, was passed on by claude-opus-5-5 in 41
+  of 46 trials and by gpt-6.1-sol in 1 of 49. No number or verdict changes, and the report carries the corrections.
+  [Report](benchmarks/2026-11-12-strict-pageless-facts.md). gbrain is Garry Tan's own project. Disclosure: OpenAI began
+  through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 ## Agent tasks
 
@@ -271,6 +280,11 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   tie by list order; as tau-b it is 0.949. Tau never gates. gbrain is Garry Tan's own project.
 
 ## Changelog
+
+### 2026-11-13: Strict-source pageless facts re-run
+
+A new Writing memory entry says the strict-source pageless facts report called its re-run's notice change one change
+when it was two edits, and left out the pilot's result and the limit to a step the agent can run itself.
 
 ### 2026-11-12: Strict-source pageless facts
 
