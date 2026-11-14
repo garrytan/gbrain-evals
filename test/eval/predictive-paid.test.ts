@@ -460,7 +460,8 @@ describe('the OpenAI and particle routes', () => {
     expect(seen[0].body).toMatchObject({ model, instructions: expect.stringContaining('test'), input: [{ role: 'user', content: 'fictional question' }] });
     expect(seen[0].body.tools.map((t: { name: string }) => t.name)).toEqual(['lookup', 'submit_answer']);
     expect(seen[0].body.temperature).toBeUndefined();
-    expect(seen[1].body).toMatchObject({ previous_response_id: 'resp_fake_1', input: [{ type: 'function_call_output', call_id: 'call_1', output: 'fictional lookup result' }] });
+    expect(seen[1].body).toMatchObject({ store: false, input: [{ role: 'user', content: 'fictional question' }, { type: 'function_call', call_id: 'call_1', name: 'lookup' }, { type: 'function_call_output', call_id: 'call_1', output: 'fictional lookup result' }] });
+    expect(seen[1].body.previous_response_id).toBeUndefined();
     expect(result.status).toBe('complete');
     const row = result.done[0];
     expect(row.record).toMatchObject({ stop: 'submitted', success: true });
