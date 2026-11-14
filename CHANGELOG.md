@@ -2,6 +2,20 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.226] - 2026-11-14
+
+### The nightly check's stable baseline moves to gbrain's current stable release
+
+- **What changed.** Matrix nights compare gbrain master with gbrain's `stable` tag, which now points at v0.60.707.0
+  (`144587ce`). The nightly check's pin still named v0.60.672.0 (`64de25c0`), which was 502 commits behind the tag,
+  so the comparison with stable measured master against an older release than the one gbrain ships as stable.
+- **What stays the same.** Every suite's required gbrain commit is an ancestor of the new pin, so no suite is newly
+  skipped on stable. No published score or verdict changes. A night that started on the old pin keeps it when it
+  resumes.
+- **What to expect.** The first matrix night after this release compares master with the newer release, so a change in
+  its "Against stable" section can come from the baseline moving rather than from master. That section names the
+  stable commit it compared with.
+
 ## [0.10.225] - 2026-11-13
 
 ### Correct the strict-pageless report: the notice change was two edits, and the pilot made no pages
