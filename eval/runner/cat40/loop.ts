@@ -10,12 +10,13 @@
  * Anthropic: Messages API, prompt caching on the system prompt, tools and the
  * latest message (what Claude Code does). Native tools such as the memory
  * tool pass through as `native_anthropic` definitions.
- * OpenAI: Responses API with `previous_response_id`, automatic caching; with `openaiStore: false`, stateless calls that
- * store nothing and resend the conversation with its encrypted reasoning items.
+ * OpenAI: Responses API, automatic caching, and stateless: every request sends `store: false`, asks for encrypted
+ * reasoning items and resends the whole conversation with them. It never sends `previous_response_id`, which keeps
+ * responses in the account and which an organization with Zero Data Retention refuses with HTTP 400.
  * Particle (`particle-1`): Chat Completions built, parsed and classified by the provider module
- * (eval/runner/providers/openai-compatible.ts) and sent through the same retry loop. It resends the whole transcript
- * each turn, so its input grows with the square of the turn count, where the OpenAI branch sends only new input after
- * `previous_response_id`; Particle caches repeated prefixes implicitly. Only this branch waits a provider's
+ * (eval/runner/providers/openai-compatible.ts) and sent through the same retry loop. Like the OpenAI branch, it resends
+ * the whole transcript each turn, so input grows with the square of the turn count; Particle caches repeated prefixes
+ * implicitly. Only this branch waits a provider's
  * Retry-After (capped at 120 s), and an empty Particle balance (HTTP 402) stops the run as a budget stop.
  */
 import { createHash } from 'node:crypto';
@@ -160,11 +161,6 @@ export interface LoopConfig {
    * added, so Cat 40's requests stay byte-identical. Particle always sends `reasoning_effort`: this value, else `high`.
    */
   effort?: string;
-  /**
-   * OpenAI only. `false` sends `store: false`, asks for encrypted reasoning items, and resends the accumulated input each
-   * turn instead of chaining on `previous_response_id`, so no response is kept in the account. Absent, requests are unchanged.
-   */
-  openaiStore?: false;
   /** Called once per provider attempt, retries included, with the parsed response or the error (for usage receipts). */
   onAttempt?: (a: ProviderAttempt) => void;
 }
@@ -422,28 +418,24 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
   const headers = { authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` };
   const request = sentRequest(cfg.effort, 'max_output_tokens', cfg.maxOutputTokens ?? 16_000);
   const onAttempt = attemptHook(cfg, run, () => request);
-  const stateless = cfg.openaiStore === false;
   let input: unknown[] = [{ role: 'user', content: cfg.user }];
-  let previous: string | undefined;
   let nudged = false;
   for (let turn = 0; turn < maxTurns; turn++) {
     run.turns++;
     const s = Date.now();
     const res = await postJson(fetchImpl, 'https://api.openai.com/v1/responses', headers, {
       model: cfg.model, instructions: cfg.system, input, tools: currentTools(), max_output_tokens: cfg.maxOutputTokens ?? 16_000,
-      ...(previous ? { previous_response_id: previous } : {}), ...(cfg.effort !== undefined ? { reasoning: { effort: cfg.effort } } : {}),
-      ...(stateless ? { store: false, include: ['reasoning.encrypted_content'] } : {}),
+      ...(cfg.effort !== undefined ? { reasoning: { effort: cfg.effort } } : {}), store: false, include: ['reasoning.encrypted_content'],
     }, onAttempt);
     run.model_ms += Date.now() - s;
     addUsage(run, res.usage);
-    if (!stateless) previous = String(res.id);
     const output = (res.output ?? []) as Array<Record<string, unknown>>;
     const calls = output.filter(o => o.type === 'function_call');
     if (!calls.length) {
       run.text = output.filter(o => o.type === 'message').flatMap(o => (o.content as Array<Record<string, unknown>>) ?? []).map(c => c.text).join('\n');
       if (nudged) { run.stop = 'no_tool_call'; return; }
       nudged = true;
-      input = stateless ? [...input, ...output, { role: 'user', content: NUDGE }] : [{ role: 'user', content: NUDGE }];
+      input = [...input, ...output, { role: 'user', content: NUDGE }];
       continue;
     }
     const outputs: unknown[] = [];
@@ -456,7 +448,7 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
       submitted ||= r.submitted;
     }
     if (submitted) { run.stop = 'submitted'; return; }
-    input = stateless ? [...input, ...output, ...outputs] : outputs;
+    input = [...input, ...output, ...outputs];
   }
 }
 

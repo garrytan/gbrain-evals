@@ -346,7 +346,7 @@ function statusOf(run: AgentRun): Status {
 }
 
 const use = (run: AgentRun, toolCalls: number): RoleUse => ({ usage: run.usage, usd: run.usd, turns: run.turns, ms: run.ms, stop: run.stop, tool_calls: toolCalls });
-const loopConfig = (model: string) => ({ model, effort: EFFORT, maxTurns: MAX_TURNS, maxOutputTokens: MAX_OUTPUT_TOKENS, maxToolChars: TOOL_RESULT_CHARS, classifyStops: true, openaiStore: false as const });
+const loopConfig = (model: string) => ({ model, effort: EFFORT, maxTurns: MAX_TURNS, maxOutputTokens: MAX_OUTPUT_TOKENS, maxToolChars: TOOL_RESULT_CHARS, classifyStops: true });
 
 /**
  * One answer for one task form, arm and model. Model calls that fail for the provider's reasons come back as a status, a
@@ -469,7 +469,7 @@ export async function judgeEpisode(ctx: Pick<EpisodeContext, 'limit' | 'capCheck
   };
   const head = { kind, key: rec.key, judge, effort, max_output_tokens: MAX_OUTPUT_TOKENS };
   for (let i = 0; i < 2; i++) {
-    const run = await ctx.limit(judge, () => runAgent({ model: judge, system: JUDGE_SYSTEM, user, arm: NO_TOOLS, submitTool: VERDICT_TOOL, maxTurns: 2, maxOutputTokens: MAX_OUTPUT_TOKENS, effort, classifyStops: true, openaiStore: false, onAttempt }));
+    const run = await ctx.limit(judge, () => runAgent({ model: judge, system: JUDGE_SYSTEM, user, arm: NO_TOOLS, submitTool: VERDICT_TOOL, maxTurns: 2, maxOutputTokens: MAX_OUTPUT_TOKENS, effort, classifyStops: true, onAttempt }));
     ctx.capCheck();
     assertAccepted(run);
     usd += run.usd; ms += run.ms;

@@ -520,7 +520,7 @@ describe('phase 2 judge', () => {
 
 // ─── The loop's stateless OpenAI option ────────────────────────────────────────────────────────────────────────────
 
-describe('Cat 40 loop, openaiStore false', () => {
+describe('Cat 40 loop, stateless OpenAI requests', () => {
   test('every OpenAI request sends store false and resends the accumulated input instead of chaining', async () => {
     const bodies: any[] = [];
     let turn = 0;
@@ -531,7 +531,7 @@ describe('Cat 40 loop, openaiStore false', () => {
       return Response.json({ id: 'resp_' + turn, status: 'completed', output: [{ type: 'reasoning', id: 'rs_' + turn, encrypted_content: 'opaque' }, { type: 'function_call', call_id: 'call_' + turn, name: call.name, arguments: call.args }], usage: { input_tokens: 10, output_tokens: 5 } });
     }) as unknown as typeof fetch;
     const arm: Arm = { name: 't', systemHint: () => '', writeTools: () => [], tools: () => [{ name: 'lookup', description: 'Look up.', input_schema: { type: 'object', properties: { key: { type: 'string' } } } }], call: async () => 'value' };
-    const run = await runAgent({ model: 'gpt-6.1-sol', system: 's', user: 'u', arm, fetchImpl, openaiStore: false, effort: 'medium' });
+    const run = await runAgent({ model: 'gpt-6.1-sol', system: 's', user: 'u', arm, fetchImpl, effort: 'medium' });
     expect(run.stop).toBe('submitted');
     expect(bodies).toHaveLength(2);
     for (const b of bodies) {
@@ -551,7 +551,7 @@ describe('Cat 40 loop, openaiStore false', () => {
       return Response.json({ id: 'resp_' + bodies.length, status: 'completed', output, usage: { input_tokens: 10, output_tokens: 5 } });
     }) as unknown as typeof fetch;
     const arm: Arm = { name: 't', systemHint: () => '', writeTools: () => [], tools: () => [], call: async () => '' };
-    const run = await runAgent({ model: 'gpt-6.1-sol', system: 's', user: 'u', arm, fetchImpl, openaiStore: false, effort: 'medium' });
+    const run = await runAgent({ model: 'gpt-6.1-sol', system: 's', user: 'u', arm, fetchImpl, effort: 'medium' });
     expect(run.stop).toBe('submitted');
     expect(bodies).toHaveLength(2);
     expect(bodies[1].previous_response_id).toBeUndefined();
