@@ -4,17 +4,34 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [0.10.226] - 2026-11-14
 
-### The nightly check's stable baseline moves to gbrain's current stable release
+### Nightly agent runs work with OpenAI zero data retention, and the stable baseline moves to gbrain v0.60.707.0
 
-- **What changed.** Matrix nights compare gbrain master with gbrain's `stable` tag, which now points at v0.60.707.0
-  (`144587ce`). The nightly check's pin still named v0.60.672.0 (`64de25c0`), which was 502 commits behind the tag,
-  so the comparison with stable measured master against an older release than the one gbrain ships as stable.
-- **What stays the same.** Every suite's required gbrain commit is an ancestor of the new pin, so no suite is newly
-  skipped on stable. No published score or verdict changes. A night that started on the old pin keeps it when it
-  resumes.
+- **OpenAI agent requests are stateless.** Since 2026-11-14 the OpenAI organization behind the eval key enforces Zero
+  Data Retention, which refuses a request that continues a stored response (`previous_response_id`) with HTTP 400.
+  That failed all 180 gpt-6.1-sol rows of that night's refresh-barrier-agents and refused-write-agents suites. The
+  agent loop those suites share with Cat 40 and the other agent harnesses (`eval/runner/cat40/loop.ts`) now sends every
+  OpenAI request with `store: false`, asks for encrypted reasoning items, and resends the whole conversation each
+  turn. Live recall already used that path through an opt-in `openaiStore: false`; it is now the only path, and the
+  option is gone. A keyless test (`test/eval/cat40-openai-stateless.test.ts`) fails if a loop request carries
+  `previous_response_id` or `store: true`, or if any source under `eval/` or `scripts/` sends either. A live
+  eight-turn gpt-6.1-sol run on one Cat 40 Hard question got HTTP 200 on every turn.
+- **What changes in the requests.** gpt-6.1-sol request bodies in the agent suites and Cat 40 are no longer
+  byte-identical to earlier runs, because each turn resends the conversation instead of only its new input. The
+  nightly dev set's suite digests don't change, since they hash suite definitions rather than harness code, so the
+  nightly report still compares these suites with earlier nights. Claude and particle-1 requests are unchanged.
+- **Budget reservations.** A stateless request carries no `previous_response_id`, so the budget ledger reserves it
+  by its own resent input, reasoning items included, and adds no chain estimate. On the live run, every turn's
+  reservation was at or above the input tokens OpenAI reported.
+- **The stable baseline.** Matrix nights compare gbrain master with gbrain's `stable` tag, which now points at
+  v0.60.707.0 (`144587ce`). The nightly check's pin still named v0.60.672.0 (`64de25c0`), which was 502 commits
+  behind the tag, so the comparison with stable measured master against an older release than the one gbrain ships
+  as stable. Every suite's required gbrain commit is an ancestor of the new pin, so no suite is newly skipped on
+  stable, and a night that started on the old pin keeps it when it resumes.
+- **What stays the same.** No published score or verdict changes.
 - **What to expect.** The first matrix night after this release compares master with the newer release, so a change in
-  its "Against stable" section can come from the baseline moving rather than from master. That section names the
-  stable commit it compared with.
+  its "Against stable" section can come from the baseline moving rather than from master; that section names the
+  stable commit it compared with. A shift in gpt-6.1-sol agent rows from 2026-11-14 on can also come from the
+  stateless requests.
 
 ## [0.10.225] - 2026-11-13
 
