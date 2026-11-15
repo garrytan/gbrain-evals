@@ -2,6 +2,17 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.229] - 2026-11-15
+
+### Code review skips the generated BG1 dev-world files
+
+- **What changed.** The code review that runs before a pull request is marked ready now leaves out
+  `eval/data/changing-facts-v1/dev/worlds/*/world.json`, the three generated dev worlds of the changing-facts
+  battleground (about 3.6 MB of JSON). With them in, that battleground's results pull request has a 4.2 MB diff, over the
+  review's 2 MB limit, so no reviewer could read it.
+- **What stays the same.** The files stay in the repository and on the eval VMs, and the code and tests that read them
+  are still reviewed. No score or verdict changes.
+
 ## [0.10.228] - 2026-11-15
 
 ### Keyless gbrain search's partial-word fill, reproduced: LongMemEval recall_all@10 from 80.64% to 91.06%
