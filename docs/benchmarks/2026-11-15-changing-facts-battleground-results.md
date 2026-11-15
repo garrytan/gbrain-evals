@@ -182,9 +182,9 @@ custody before this file was written:
 - **Headroom?** The reader with the whole history answered over 99% of questions, and gbrain's rows sit at 85% to 91%,
   below both servers, so there was room to win.
 
-The verdict is to keep gbrain's fact design, which beats plain search by a wide margin and holds level with the best
-servers on current values, and to fix the named failures above: dated history for questions about the past, and
-withdrawn facts.
+The verdict is to keep gbrain's fact design, which beats plain search by a wide margin and holds level with the
+memory-bank and extract-first servers on current values, and to fix the named failures above: dated history for
+questions about the past, and withdrawn facts.
 
 ## What it can and can't claim
 
