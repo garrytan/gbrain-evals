@@ -15,7 +15,8 @@ Definitions:
   scored          the 470 questions that are not abstention (_abs) questions.
   recall_all@k    every gold session appears among the sessions of the first k returned rows.
   MRR@10          1 / rank of the first of the first 10 rows whose session is gold, else 0.
-  interval        paired bootstrap over scored questions: 10,000 resamples with replacement, Python
+  interval        paired bootstrap over scored questions, taken in the order their rows appear in the
+                  pair's before-arm file: 10,000 resamples with replacement, Python
                   random.Random(7), the 2.5th and 97.5th percentiles (sorted resample means at 0-based
                   positions 250 and 9749).
   p50, p95        the value at 0-based position floor(q * n) of the sorted list.

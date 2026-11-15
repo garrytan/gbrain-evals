@@ -17,7 +17,7 @@
       },
       "branch-b0529e73": {
         "commit": "b0529e73cdaa8e611f601ff3e7f3ec673260dbed",
-        "role": "the pull request's final branch head; the gbrain team's branch",
+        "role": "a commit on the pull request's branch, the one the gbrain team measured; not the final head (b6884dd0d), and since 4244fd77 the branch had also merged other pull requests' work not yet on master, so pair 2 is the clean comparison",
         "subject": "Run only the any-word statement for the keyless fill, so it stops repeating the all-words one (GST-2762)"
       },
       "parent-0a4ed211": {

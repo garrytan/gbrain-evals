@@ -27,9 +27,11 @@ What the change does, from gbrain's release note and code: when the first page o
   | Arm | gbrain commit | What it is |
   |---|---|---|
   | Before, pair 1 | `4244fd77` | master before the change, the gbrain team's base |
-  | After, pair 1 | `b0529e73` | the pull request's final branch head, the gbrain team's branch |
+  | After, pair 1 | `b0529e73` | a commit on the pull request's branch, the one the gbrain team measured |
   | Before, pair 2 | `0a4ed211` | master just before the merge (the merge's parent) |
   | After, pair 2 | `23a163fc` | the merge of #9414 on master |
+
+  Pair 1 carries more than this change. `b0529e73` is not the pull request's final head: `b6884dd0d` came later, with master merges and release-note, changelog and test commits. Since `4244fd77`, the branch had also merged work from other pull requests that was not yet on master. Pair 2 isolates the change: `23a163fc` is #9414's squash merge, `0a4ed211` is its only parent, and merging the final head into `0a4ed211` gives exactly `23a163fc`'s tree.
 
 - **No keys.** Every provider key was unset and each arm got a new, empty `GBRAIN_HOME`. Every row of every arm records that vector search was off for lack of a provider, and no arm made a model call.
 - **Command,** run from each gbrain checkout:
@@ -43,7 +45,7 @@ What the change does, from gbrain's release note and code: when the first page o
   - *recall_all@10*: every gold conversation appears among the conversations of the top 10 rows. It is the complete-evidence rate a reader needs.
   - *recall_all@5*: the same within the top 5 rows.
   - *MRR@10*: 1 divided by the rank of the first row from a gold conversation in the top 10, or 0 if none.
-  - *Intervals*: paired bootstrap over the 470 questions, 10,000 resamples, seed 7, 2.5th and 97.5th percentiles.
+  - *Intervals*: paired bootstrap over the 470 questions, taken in the order their rows appear in each pair's before-arm file, 10,000 resamples, seed 7, 2.5th and 97.5th percentiles. Resampling the questions in another order can move a bound slightly.
   - *Unchanged rows*: the after arm's first rows equal every row the before arm returned, field by field and in order.
 
 ## Results
@@ -81,6 +83,8 @@ Where the 49 better questions come from, by how many gold conversations each nee
 | Pair 1, our machine | 137 / 184 ms | 144 / 193 ms | +73 / +114 ms | -2 ms |
 | Pair 2, our machine | 140 / 195 ms | 153 / 204 ms | +83 / +125 ms | +1 ms |
 | Pair 1, gbrain team's machine | 251 / 342 ms | 268 / 368 ms | +125 / +210 ms | 0 ms |
+
+Each median and p95 is the sorted value at 0-based position floor(0.5 × n) or floor(0.95 × n), as `analyze.py` computes them. With 500 questions that is one place above the nearest-rank figures in the harness's summary line at the end of each row file, so some of those differ by 1 or 2 ms.
 
 The `query` operation costs more than one extra keyword lookup because it runs its later steps twice, once without the added rows and once with them, and returns the second result only when every other row, the confidence grade and the delivered text are the same. That check is what guarantees the unchanged rows. The gbrain team also timed the search function alone, with a timing harness that was not committed ([`bench4.jsonl.gz`](2026-11-15-keyless-partial-match-search/gbrain-team/bench4.jsonl.gz)): the extra lookup added a median 37.8 ms (p95 55.3 ms) on the 103 questions where it ran and 0.3 ms on the others. We did not reproduce that figure. Each arm ran once, so the 10 ms gap between our two pairs is not a measured difference between the branch and the merge, whose rows are identical.
 
