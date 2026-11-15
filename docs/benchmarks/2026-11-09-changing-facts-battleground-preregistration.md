@@ -601,7 +601,7 @@ Separately, one unit's first VM stalled while installing its system's dependenci
 It was stopped, its lease was closed at no charge through the unstarted path, and the unit was relaunched as a second
 attempt. No provider call was made under the first attempt.
 
-### Deviation 3 (2026-11-10): stage 1's mem0 unit reruns with a longer timeout
+### Deviation 3 (2026-11-10): stage 1's extract-first unit reruns with a longer timeout
 
 The ext-extract-first dev unit could not finish inside its timeout. That system adds one session at a time, and its
 ingest took 95 minutes on `bg1-dev-01` and 106 on `bg1-dev-02`, so three worlds and their questions run past the
