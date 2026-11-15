@@ -17,12 +17,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 /**
- * Every provider key gbrain reads at the pinned version, plus particle-1's. test/eval/no-provider-keys-gbrain-source.test.ts
+ * Every provider key gbrain reads at the pinned version, plus particle-1's and BG1's own Gemini key (BG1_GEMINI_API_KEY,
+ * which BG1's lease proxies and re-reads hand the Gemini judge; eval/runner/q1/cell.ts). test/eval/no-provider-keys-gbrain-source.test.ts
  * derives gbrain's from its source (its config-plane keys, every recipe's auth env, every *_API_KEY name it quotes) and
  * fails when a later pin reads a key this list misses.
  */
 export const PROVIDER_KEYS = [
-  'ANTHROPIC_API_KEY', 'AZURE_OPENAI_API_KEY', 'DASHSCOPE_API_KEY', 'DEEPGRAM_API_KEY', 'DEEPSEEK_API_KEY', 'GEMINI_API_KEY',
+  'ANTHROPIC_API_KEY', 'AZURE_OPENAI_API_KEY', 'BG1_GEMINI_API_KEY', 'DASHSCOPE_API_KEY', 'DEEPGRAM_API_KEY', 'DEEPSEEK_API_KEY', 'GEMINI_API_KEY',
   'GOOGLE_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'GROQ_API_KEY', 'JEV_TYPESAFE_API_KEY', 'LITELLM_API_KEY',
   'LLAMA_SERVER_API_KEY', 'LLAMA_SERVER_RERANKER_API_KEY', 'LMSTUDIO_API_KEY', 'MINIMAX_API_KEY', 'MISTRAL_API_KEY',
   'MOONSHOT_API_KEY', 'NAN_API_KEY', 'NVIDIA_API_KEY', 'OLLAMA_API_KEY', 'OPENAI_API_KEY', 'OPENROUTER_API_KEY',

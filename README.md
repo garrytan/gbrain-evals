@@ -136,7 +136,9 @@ a model call without a measured gain.
 
 Where we can put other systems on the same footing, gbrain finds all the evidence a question needs more often than any
 system we can score strictly, and in a matched, preregistered test on sealed BEAM conversations it answers more
-questions than a memory-bank server at the same budget. On the largest sealed head-to-head, below, the set is too small
+questions than a memory-bank server at the same budget. On sealed histories where facts change, it is level with the
+memory-bank and extract-first servers on what is true now and behind them on questions about the past. On the largest sealed
+head-to-head, below, the set is too small
 to rank any system, and an agent with grep and read tools over plain files has the highest score. Other systems publish
 different metrics on different protocols, so this section uses only published numbers we can put on the same footing,
 and says so where we cannot. Systems are named by kind; their names, versions, sources and every row we could not match
@@ -230,6 +232,25 @@ under gpt-4.1-mini and 3.4 points (-1.2 to 8.3) under frontier judges, so it dep
 disagree, a gemini-4-argon referee sided with the frontier judge on 73.2% of 2,280 answers, and on known-answer controls
 gpt-4.1-mini was no more accurate than either frontier judge ([judge-robustness
 results](docs/benchmarks/2026-11-05-gst-1365-judge-robustness.md)).
+
+**Facts that change: measured, preregistered.** The [changing-facts battleground](docs/benchmarks/2026-11-15-changing-facts-battleground-results.md) gives gbrain
+`27f8b9d6` (its `stable` tag, v0.60.593.0), three other memory systems and plain hybrid search the same 30 sealed,
+made-up chat histories of about 200,000 tokens, in which facts are updated, corrected, repeated after they went stale,
+contradicted or withdrawn. Each system hands three readers (claude-opus-5-5, gpt-6.1-sol, particle-1) 8,000 tokens per
+question, and a judge from another model family grades every answer.
+
+| gbrain minus | What is true now (1,200 questions) | What was true or known at a date, and how it changed (720) |
+|---|---|---|
+| memory-bank server | -0.4 points (95% interval -2.4 to +1.5): no measurable difference | **-10.3 (-13.0 to -7.7): behind** |
+| extract-first server | -1.8 (-3.9 to +0.3): no measurable difference | **-8.1 (-10.8 to -5.3): behind** |
+| temporal-graph library | **+20.9 (+17.7 to +24.1): ahead** | +5.4 (+2.4 to +8.4): ahead |
+| hybrid search, no fact layer | **+73.7 (+70.0 to +77.4): ahead** | not part of the design control |
+
+gbrain's fact layer is what beats plain search, and it holds level with the memory-bank and extract-first servers on
+current values. It loses questions about the past and withdrawn facts, which go to gbrain's maintainers as named
+failures. gbrain is Garry Tan's own project. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator.
+Garry Tan runs Y Combinator.
 
 **Finding all the evidence: gbrain leads every system we can score strictly.** A question counts only if every
 required session is in the top five. gbrain was measured at `109b992`
@@ -442,6 +463,13 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-15: How gbrain compares adds the changing-facts battleground
+
+"How gbrain compares" gains a paragraph and table for the
+[changing-facts battleground results](docs/benchmarks/2026-11-15-changing-facts-battleground-results.md) (BG1), and its opening paragraph says
+where gbrain stands there: level with the memory-bank and extract-first servers on current values, behind them on
+questions about the past. The paragraph carries the gbrain, Particle and OpenAI lines.
 
 ### 2026-11-10: A known limit on BEAM questions their cited turns don't support
 

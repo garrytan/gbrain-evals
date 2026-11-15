@@ -232,7 +232,10 @@ describe('raise-lease (A17 campaigns)', () => {
       writeFileSync(join(s.state, 'campaign.json'), JSON.stringify({ ...JSON.parse(saved), ledger: 'gone/campaign.sqlite' }));
       return run();
     });
-    expect(s.raiseTo5).toThrow(/was not raised \(exit 3\): lease .* is not open in .*; giving the host reservation back then failed: .*; the host reservation stays at \$5.00 with no raise recorded, so give the \$1.00 back on the host ledger by hand/);
+    let refused = '';
+    try { s.raiseTo5(); } catch (e) { refused = (e as Error).message; }
+    expect(refused).toMatch(/was not raised \(exit 3\): lease .* is not open in .*; giving the host reservation back then failed: .*; the host reservation stays at \$5.00 with no raise recorded, \$1.00 above the lease's \$4.00, and no raise lock is held\. The person running the campaign stops there: they leave the ledger and raises\.ndjson as they are, raise this lease no further, and bring these amounts to the campaign owner \(GBEV-3 for BG1\)/);
+    expect(refused).not.toContain('by hand');
     writeFileSync(join(s.state, 'campaign.json'), saved);
     expect(s.ledgers()).toEqual([5, 4, []]);
     expect(existsSync(join(s.state, 'raise.lock'))).toBe(false);
@@ -285,7 +288,7 @@ describe('raise-lease (A17 campaigns)', () => {
     };
 
     hold(process.pid);
-    for (const dryRun of [true, false]) expect(() => raise(c, l.lease_id, 5, 'while held', ssh, { dryRun })).toThrow(/another raise holds .*raise.lock \(pid \d+ on .* since 2026-11-03T00:00:00.000Z, raising .* to \$6.00\)\. One raise runs at a time per freeze, and nothing breaks a held lock\..*the person running the campaign first runs `bun eval\/runner\/q1\/raise-lease.ts show .*` and compares its lease_usd with the VM's budget_usd\. Only if the VM holds more, .*from lease_usd to the VM's amount\. Otherwise they change nothing, and an unknown raise stands until the lease settles\..*`bun eval\/runner\/q1\/raise-lease.ts clear-stale-lock --campaign .* --confirm raise-\d+`/);
+    for (const dryRun of [true, false]) expect(() => raise(c, l.lease_id, 5, 'while held', ssh, { dryRun })).toThrow(/another raise holds .*raise.lock \(pid \d+ on .* since 2026-11-03T00:00:00.000Z, raising .* to \$6.00\)\. One raise runs at a time per freeze, and nothing breaks a held lock\..*the person running the campaign first runs `bun eval\/runner\/q1\/raise-lease.ts show .*` and compares its lease_usd with the VM's budget_usd\. Only if the VM holds more, .*from lease_usd to the VM's amount\. Otherwise \(the VM holds the old amount, or show reads no VM because the lease has closed\), they compare the host ledger with the lease\. As read when this was printed: the host ledger reserves \$4\.00 for lease \S+ \(ledger entry \S+, still open\), and the lease's launch amount of \$4\.00 plus its 0 recorded raises comes to \$4\.00, so the host holds the same\. If the host holds more or less than the lease and its recorded raises, or that could not be read, .*they stop there, leave the ledger, raises\.ndjson and this lock as they are, and bring these amounts to the campaign owner \(GBEV-3 for BG1\)\. Otherwise they change nothing, and an unknown raise stands until the lease settles\..*`bun eval\/runner\/q1\/raise-lease.ts clear-stale-lock --campaign .* --confirm raise-\d+`/);
     expect(() => clearStaleLock(c, c.manifest.campaign_id)).toThrow(/held by pid \d+, which is still running on this host/);
 
     const gone = Bun.spawnSync(['true']).pid;

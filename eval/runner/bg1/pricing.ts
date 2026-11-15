@@ -13,7 +13,7 @@
  * and the canonical judge only). The full-context reference (Opus and Sol on 10 worlds, prompt caching) and stage 1 (the
  * three dev worlds through every row, the full-context reference on them, and the judge check) are priced apart.
  *
- *   stage 1 cap   min(300, the stage 1 estimate / 0.75 rounded up to the dollar)
+ *   stage 1 cap   min(300, the larger of the stage 1 estimate / 0.75 and its smoke leases, rounded up to the dollar)
  *   plan          the paid spend expected at N = 30 at the assumed rates, computed here, never committed
  *   projection    paid spent to date + paid still to spend at the planned N x 1.10 reserve
  *   check-in      exit 3 (BG1_CHECKIN) when the projection passes the plan by 25%
@@ -24,7 +24,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ASSUMPTIONS, BG1_ASSUMPTIONS, f6ExtractionUsd } from '../q1/cells/definitions.ts';
-import { JUDGE_CHECK_PLAN, listPrice, stage1CapUsd } from '../q1/cells/bg1.ts';
+import { generateBG1Stage1Cells, JUDGE_CHECK_PLAN, listPrice, stage1CapUsd, stage1SmokeLeaseUsd } from '../q1/cells/bg1.ts';
 import { BG1_DEV_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_QUESTIONS_PER_WORLD } from './types.ts';
 
 export const OPUS = 'anthropic:claude-opus-5-5';
@@ -110,13 +110,13 @@ export function perWorld(r: Rates) {
   return { lines, total: Object.values(lines).reduce((a, b) => a + b, 0) };
 }
 
-/** Stage 1: the three dev worlds through every row, the full-context reference on them, and the judge check. */
+/** Stage 1: the three dev worlds through every row, the full-context reference on them, and the judge check; its smoke leases are the cell definitions'. */
 export function stage1(r: Rates) {
   const worlds = BG1_DEV_CONVERSATIONS.length;
   const judge_check = (JUDGE_CHECK_PLAN.dev_answers + JUDGE_CHECK_PLAN.construction_items) * (r.judge_usd_per_call.astra + r.judge_usd_per_call.opus);
   const rows = worlds * perWorld(r).total, full_context = worlds * r.full_context_usd_per_world;
-  const estimate = rows + full_context + judge_check;
-  return { rows: r2(rows), full_context: r2(full_context), judge_check: r2(judge_check), estimate: r2(estimate), cap: stage1CapUsd(estimate) };
+  const estimate = rows + full_context + judge_check, smoke_leases = stage1SmokeLeaseUsd(generateBG1Stage1Cells());
+  return { rows: r2(rows), full_context: r2(full_context), judge_check: r2(judge_check), estimate: r2(estimate), smoke_leases, cap: stage1CapUsd(estimate, smoke_leases) };
 }
 
 /** Paid spend at N kept worlds: stage 1, the worlds and the full-context reference. */

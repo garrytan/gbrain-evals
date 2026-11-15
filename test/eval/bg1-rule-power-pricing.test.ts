@@ -159,13 +159,15 @@ describe('the pricing model', () => {
     expect(w.total).toBeCloseTo(Object.values(w.lines).reduce((a, b) => a + b, 0), 9);
   });
 
-  test('stage 1 is the three dev worlds, the full-context reference on them and the judge check, under a cap of the estimate over 0.75, at most 300', () => {
+  test('stage 1 is the three dev worlds, the full-context reference on them and the judge check, under a cap of the larger of the estimate over 0.75 and the smoke leases, at most 300', () => {
     const s = stage1(r);
     expect(s.judge_check).toBeCloseTo((JUDGE_CHECK_PLAN.dev_answers + JUDGE_CHECK_PLAN.construction_items) * (0.022 + 0.016), 2);
     expect(s.rows).toBeCloseTo(BG1_DEV_CONVERSATIONS.length * perWorld(r).total, 1);
-    expect(s.cap).toBe(stage1CapUsd(s.estimate));
-    expect(stage1CapUsd(150)).toBe(200);
-    expect(stage1CapUsd(400)).toBe(STAGE1_CAP_CEILING_USD);
+    expect(s.cap).toBe(stage1CapUsd(s.estimate, s.smoke_leases));
+    expect(stage1CapUsd(150, 0)).toBe(200);
+    expect(stage1CapUsd(150, 250.01)).toBe(251);
+    expect(stage1CapUsd(400, 0)).toBe(STAGE1_CAP_CEILING_USD);
+    expect(stage1CapUsd(150, 320)).toBe(STAGE1_CAP_CEILING_USD);
   });
 
   test('the full-context reference runs on at most ten worlds, and the cap scenario is N = 40', () => {
