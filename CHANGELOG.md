@@ -10,8 +10,8 @@ This records what each gbrain-evals release changed and what its measurements me
   [keyless partial-match search](docs/benchmarks/2026-11-15-keyless-partial-match-search.md), reproduces the gbrain
   team's measurement of gbrain#9414. On a brain with no embedding provider, gbrain's `search` and `query` now add pages
   that hold only some of the question's words when the first page of results comes back short. We ran LongMemEval S
-  keyless through `query` on four gbrain commits: the pair the gbrain team measured (`4244fd77` against `b0529e73`) and
-  the merge on master against its parent (`0a4ed211` against `23a163fc`). Both pairs give the same figures:
+  keyless through `query` on two pairs of gbrain commits, the pair the gbrain team measured (`4244fd77` against
+  `b0529e73`) and the merge on master against its parent (`0a4ed211` against `23a163fc`). Both pairs give the same figures:
   recall_all@10 from 80.64% to 91.06% (+10.43 points, 95% interval +7.87 to +13.19; 49 of 470 questions better, none
   worse), recall_all@5 from 72.13% to 81.06%, and MRR@10 from 0.8726 to 0.8770. Every row returned before comes back
   unchanged on 500 of 500 questions; rows are added on 103.
