@@ -4,9 +4,10 @@
 # benchmarks (LongMemEval embeds, judge-based cats) run manually and land
 # receipts; see TODOS.md and eval/RUNBOOK.md. Actions are pinned to commit
 # SHAs; bun is pinned by `bun-version` below; installs are frozen-lockfile.
-# The unit suite is split across four shard jobs (ordinary `bun test
-# --shard`, not the experimental parallel worker mode), all loading a
-# shared pre-migrated PGLite snapshot (test/support/pglite-snapshot.ts).
+# The unit suite is split across six shard jobs (ordinary `bun test
+# --shard`, not the experimental parallel worker mode), balanced by the
+# per-file times in test/timings.json, all loading a shared pre-migrated
+# PGLite snapshot (test/support/pglite-snapshot.ts).
 # Per-job timeouts bound every job well above its observed runtime rather
 # than hoping for it.
 name: ci
@@ -193,7 +194,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -216,8 +217,13 @@ jobs:
 
       # test/eval/ plus the unit tests colocated under eval/. The JUnit report
       # names the files this shard ran, for the tested-tree job below.
-      - name: Unit + integration tests (shard ${{ matrix.shard }}/4)
-        run: bun test --shard=${{ matrix.shard }}/4 test/eval/ eval/ --reporter=junit --reporter-outfile="$RUNNER_TEMP/tests-${{ matrix.shard }}.xml"
+      # --timings splits the files by their measured time, so a slow file no
+      # longer lands beside other slow files by its place in the sorted list,
+      # as file-count sharding did. A file missing from test/timings.json
+      # counts as a median file; when a shard nears 10 minutes, refresh the
+      # file from a main run's reports with scripts/test-timings.ts.
+      - name: Unit + integration tests (shard ${{ matrix.shard }}/${{ strategy.job-total }})
+        run: bun test --shard=${{ matrix.shard }}/${{ strategy.job-total }} --timings=test/timings.json test/eval/ eval/ --reporter=junit --reporter-outfile="$RUNNER_TEMP/tests-${{ matrix.shard }}.xml"
 
       - name: Upload the files this shard ran
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

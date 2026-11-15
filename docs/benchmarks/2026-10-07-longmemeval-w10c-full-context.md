@@ -1,6 +1,8 @@
-# gbrain against pasting the whole history: within 7 points on LongMemEval, at about one seventh of the reader cost
+# gbrain against pasting the whole history: within 7 points on LongMemEval, at about one seventh of the reader cost with one question per history
 
 *Note added 2026-11-04, after publication:* gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. See [disclosures](../disclosures.md).
+
+*Note added 2026-11-10:* Each of these 150 questions comes with its own history, and each history was read once, so every whole-history cost on this page is the cost of one full read of a history. No read could reuse a prompt cache: all 150 `gpt-6.1-sol` whole-history reads were cache writes with no cache reads. "About one seventh of the reader cost" holds when each history is asked one question. A history that answers several questions can stay in a prompt cache, and later questions then pay the cached-input rate for it. This experiment did not measure that, so with several questions per history the whole history would cost less per question than shown here, and gbrain's cost advantage would be smaller. Accuracy figures and verdicts are unchanged. See [corrections](../corrections.md#full-context-reads-and-openais-prompt-cache).
 
 Measured 2026-10-06. Status: **Complete** (150 of 150 questions in all four arms). Evidence class: development (LongMemEval-S was used to tune gbrain's retrieval). Builds: gbrain `c5fb0201` (v0.60.95.0) for retrieval and for rendering the full history. Readers: `claude-sonnet-5-5` and `gpt-6.1-sol`. **This table compares 150-question pairs only; do not set it beside the 500-question numbers.**
 
@@ -15,7 +17,7 @@ Measured 2026-10-06. Status: **Complete** (150 of 150 questions in all four arms
 
 **The whole history scored a little higher with both readers, and the gap sits in multi-session questions.** The preregistered test of "whole history better by more than 7 points" did not pass for either reader, so the result is "gbrain within 7 points", not "the same". All of Sonnet's five-question gap and all of `gpt-6.1-sol`'s net four are in multi-session questions, where the answer is spread over more conversations than gbrain's top 5 always returns.
 
-**gbrain's reader input is about one eighth of the whole history, and its recurring cost per question is about one seventh.** The Sonnet 5.5 reader cost $0.024 per question with gbrain (reader plus rerank) and $0.173 with the whole history, at batch prices. For `gpt-6.1-sol`: $0.015 against $0.107 ([corrected 2026-11-01](../corrections.md#longmemeval)). gbrain also pays a one-time $0.015 per history to embed it.
+**gbrain's reader input is about one eighth of the whole history, and its recurring cost per question is about one seventh, with one question per history.** The Sonnet 5.5 reader cost $0.024 per question with gbrain (reader plus rerank) and $0.173 with the whole history, at batch prices. For `gpt-6.1-sol`: $0.015 against $0.107 ([corrected 2026-11-01](../corrections.md#longmemeval)). gbrain also pays a one-time $0.015 per history to embed it.
 
 ## The concrete case
 
@@ -73,9 +75,11 @@ By type (official judge):
 
 Recurring cost is paid on every question; the one-time cost is paid once per history and amortizes over every question asked of it. Judging is excluded from both. At list prices (no batch discount), every reader figure doubles. Latency is not reported: batch requests carry no per-request timing, and batch turnaround is not latency.
 
+*Note added 2026-11-10:* Every question here came with its own history, so the whole history's recurring cost is the cost of reading a history once, with nothing read from a prompt cache. When one history answers several questions, later questions can read it from a prompt cache at the cached-input rate, which was not measured here. See the note under the title.
+
 ## What to use and what to avoid
 
-- **Use gbrain's retrieval when cost per question matters.** Within 7 points of the whole history at about one seventh of the recurring cost on this benchmark, and it keeps working when the history grows past any context window, which LongMemEval-S does not test.
+- **Use gbrain's retrieval when cost per question matters.** Within 7 points of the whole history at about one seventh of the recurring cost on this benchmark (with one question per history; see the note added 2026-11-10 under the title), and it keeps working when the history grows past any context window, which LongMemEval-S does not test.
 - **Paste the whole history when it fits, accuracy is everything and multi-session questions dominate.** The whole history answered 4 to 5 more of 36 multi-session questions with both readers.
 - **Limits.** 150 questions, a 7-point margin chosen for this sample size, development data, one sample per question; LongMemEval-S histories are short enough to paste, so this says nothing about histories that are not; privacy (what leaves the machine) and latency are not measured here.
 
@@ -104,6 +108,13 @@ done
 ```
 
 ## Changelog
+
+### 2026-11-10: The cost comparison is for one question per history
+
+The title, the cost finding, notes under the title and the cost table, and a clause in the first "What to use" bullet say that each history here
+was read once, so each whole-history cost is one full read and "about one seventh" holds for one question per history.
+A history asked several questions can be read from a prompt cache after the first, which this experiment did not
+measure. No figure, accuracy or verdict changes. [Corrections](../corrections.md#full-context-reads-and-openais-prompt-cache).
 
 ### 2026-11-04: Exact p for the "whole history better" tests
 

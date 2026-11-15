@@ -98,6 +98,13 @@ export class BudgetExceededError extends Error {
   }
 }
 
+/**
+ * A response reported usage the ledger has no rate for: a cache tier it does not price, or cache writes on a model with no
+ * write rate. Its request was already sent, so the caller charges the reservation, stops spending and closes the run (or
+ * lease), so a rerun cannot join it and pay again before the rate is registered.
+ */
+export class UnpricedUsageError extends BudgetExceededError {}
+
 /** A caller mistake (settling an unknown or settled reservation); never a durability failure. */
 class LedgerUsageError extends Error {}
 
@@ -1109,19 +1116,22 @@ const RERANK_PRICES: Record<string, number> = {
   'voyage:rerank-3-lite': 0.02,
 };
 
-interface TokenPrices { input: number; output: number; cache_read?: number; cache_write?: number }
+/** `cache_write` is the default cache lifetime's write rate; `cache_write_12h` OpenAI's 12-hour lifetime's. */
+interface TokenPrices { input: number; output: number; cache_read?: number; cache_write?: number; cache_write_12h?: number }
 /**
  * A model whose prompts over `above_input_tokens` (cache reads and writes included) are billed at other rates for the whole
- * request. `max_output` is the output the provider allows a request that names no limit, reserved for such a request.
+ * request; `null` records that the provider lists no long-prompt tier for it. `max_output` is the output the provider
+ * allows a request that names no limit, reserved for such a request.
  */
-export interface ChatPrice extends TokenPrices { long?: TokenPrices & { above_input_tokens: number }; max_output?: number }
+export interface ChatPrice extends TokenPrices { long?: (TokenPrices & { above_input_tokens: number }) | null; max_output?: number }
 
 /**
  * Chat list prices, USD per 1M tokens, checked against the providers' pricing
  * pages on 2026-10-02 (claude-fable-5-1 on 2026-10-05; claude-haiku-5-5 and the
- * GPT-6 long-prompt tiers on 2026-10-08). They take precedence over the pinned gbrain table,
- * which lacks newer models and lists stale prices for some (gpt-5.5, gpt-5.2).
- * Cache prices apply when the response reports cached tokens.
+ * GPT-6 long-prompt tiers on 2026-10-08; every OpenAI row's cache writes and long-prompt tier on 2026-11-09). They take
+ * precedence over the pinned gbrain table, which lacks newer models and lists stale prices for some (gpt-5.5, gpt-5.2).
+ * Cache prices apply when the response reports cached tokens. Every OpenAI row states its cache-write rate and its
+ * long-prompt tier (`long: null` where there is none); chatPrice refuses an OpenAI model that states neither.
  */
 export const CHAT_PRICE_OVERRIDES: Record<string, ChatPrice> = {
   'anthropic:claude-haiku-4-5': { input: 1, output: 5, cache_read: 0.1, cache_write: 1.25 },
@@ -1136,27 +1146,29 @@ export const CHAT_PRICE_OVERRIDES: Record<string, ChatPrice> = {
   'anthropic:claude-opus-5': { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 },
   'anthropic:claude-opus-5-5': { input: 4, output: 20, cache_read: 0.2, cache_write: 5 },
   'anthropic:claude-fable-5-1': { input: 10, output: 50, cache_read: 0.25, cache_write: 12.5 },
-  // Vendor-default and common models for the open-source memory shootout; developers.openai.com model pages, checked 2026-10-05.
-  'openai:gpt-4o': { input: 2.5, output: 10, cache_read: 1.25 },
-  'openai:gpt-4o-mini': { input: 0.15, output: 0.6, cache_read: 0.075 },
-  'openai:gpt-4.1': { input: 2, output: 8, cache_read: 0.5 },
-  'openai:gpt-4.1-mini': { input: 0.4, output: 1.6, cache_read: 0.1 },
-  'openai:gpt-4.1-nano': { input: 0.1, output: 0.4, cache_read: 0.025 },
-  'openai:gpt-5': { input: 1.25, output: 10, cache_read: 0.125 },
-  'openai:gpt-5-mini': { input: 0.25, output: 2, cache_read: 0.025 },
-  'openai:gpt-5-nano': { input: 0.05, output: 0.4, cache_read: 0.005 },
-  'openai:o4-mini': { input: 1.1, output: 4.4, cache_read: 0.275 },
-  'openai:gpt-5.2': { input: 1.75, output: 14, cache_read: 0.175 },
-  'openai:gpt-5.4': { input: 2.5, output: 15, cache_read: 0.25 },
-  'openai:gpt-5.4-mini': { input: 0.75, output: 4.5, cache_read: 0.075 },
-  'openai:gpt-5.5': { input: 5, output: 30, cache_read: 0.5 },
-  'openai:gpt-6-sol': { input: 2, output: 10, cache_read: 0.2 },
-  // developers.openai.com/api/docs/pricing, short-context standard rates checked 2026-10-05; the long-prompt tier
-  // ("Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full
-  // request", developers.openai.com/api/docs/models/<model>) checked 2026-10-08.
-  'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5, long: { above_input_tokens: 272_000, input: 4, output: 15, cache_read: 0.2, cache_write: 5 } },
-  'openai:gpt-6-luna': { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125, long: { above_input_tokens: 272_000, input: 0.2, output: 0.75, cache_read: 0.02, cache_write: 0.25 } },
-  'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5, long: { above_input_tokens: 272_000, input: 20, output: 75, cache_read: 2, cache_write: 25 } },
+  // OpenAI standard rates from developers.openai.com/api/docs/pricing.md ("Standard pricing data"), checked 2026-11-09
+  // (gpt-4.1-nano and o4-mini from their developers.openai.com/api/docs/models/<model> pages). Cache writes: models before
+  // GPT-5.6 bill them as ordinary input ("No additional cache-write charge"), so cache_write equals input; GPT-5.6 and later
+  // bill 1.25x input for the default 30-minute lifetime and 2.5x for the 12-hour one that prompt_cache_options.ttl "12h"
+  // selects in the Responses API (developers.openai.com/api/docs/guides/prompt-caching, checked 2026-11-09). Long prompts:
+  // above 272K input tokens gpt-5.4, gpt-5.5 and the GPT-6 models bill their long-context rates for the whole request.
+  'openai:gpt-4o': { input: 2.5, output: 10, cache_read: 1.25, cache_write: 2.5, long: null },
+  'openai:gpt-4o-mini': { input: 0.15, output: 0.6, cache_read: 0.075, cache_write: 0.15, long: null },
+  'openai:gpt-4.1': { input: 2, output: 8, cache_read: 0.5, cache_write: 2, long: null },
+  'openai:gpt-4.1-mini': { input: 0.4, output: 1.6, cache_read: 0.1, cache_write: 0.4, long: null },
+  'openai:gpt-4.1-nano': { input: 0.1, output: 0.4, cache_read: 0.025, cache_write: 0.1, long: null },
+  'openai:gpt-5': { input: 1.25, output: 10, cache_read: 0.125, cache_write: 1.25, long: null },
+  'openai:gpt-5-mini': { input: 0.25, output: 2, cache_read: 0.025, cache_write: 0.25, long: null },
+  'openai:gpt-5-nano': { input: 0.05, output: 0.4, cache_read: 0.005, cache_write: 0.05, long: null },
+  'openai:o4-mini': { input: 1.1, output: 4.4, cache_read: 0.275, cache_write: 1.1, long: null },
+  'openai:gpt-5.2': { input: 1.75, output: 14, cache_read: 0.175, cache_write: 1.75, long: null },
+  'openai:gpt-5.4': { input: 2.5, output: 15, cache_read: 0.25, cache_write: 2.5, long: { above_input_tokens: 272_000, input: 5, output: 22.5, cache_read: 0.5, cache_write: 5 } },
+  'openai:gpt-5.4-mini': { input: 0.75, output: 4.5, cache_read: 0.075, cache_write: 0.75, long: null },
+  'openai:gpt-5.5': { input: 5, output: 30, cache_read: 0.5, cache_write: 5, long: { above_input_tokens: 272_000, input: 10, output: 45, cache_read: 1, cache_write: 10 } },
+  'openai:gpt-6-sol': { input: 2, output: 10, cache_read: 0.2, cache_write: 2.5, cache_write_12h: 5, long: { above_input_tokens: 272_000, input: 4, output: 15, cache_read: 0.4, cache_write: 5, cache_write_12h: 10 } },
+  'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5, cache_write_12h: 5, long: { above_input_tokens: 272_000, input: 4, output: 15, cache_read: 0.2, cache_write: 5, cache_write_12h: 10 } },
+  'openai:gpt-6-luna': { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125, cache_write_12h: 0.25, long: { above_input_tokens: 272_000, input: 0.2, output: 0.75, cache_read: 0.02, cache_write: 0.25, cache_write_12h: 0.5 } },
+  'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5, cache_write_12h: 25, long: { above_input_tokens: 272_000, input: 20, output: 75, cache_read: 2, cache_write: 25, cache_write_12h: 50 } },
   // docs.particle.ai/models and /usage-billing, checked 2026-10-31: peak list rates, reasoning tokens billed as output
   // inside completion_tokens, and a 32,000-token output cap when a request sends no limit. Off-peak (20:30-04:00 New York)
   // bills half and is settled here at the peak rates. Hosted web search ($0.0025 a search) is not in usage, so priceRequest refuses it.
@@ -1178,7 +1190,7 @@ export const CHAT_PRICE_OVERRIDES: Record<string, ChatPrice> = {
  * Gemini 3.6, 3.7 and 3.8 Flash list $0.75/$3.75 through 2026-12-31 and
  * $1.50/$7.50 from 2027-01-01: update those rows then.
  */
-export const HARNESS_CHAT_PRICES: Record<string, { input: number; output: number; cache_read?: number; cache_write?: number; max_output?: number;
+export const HARNESS_CHAT_PRICES: Record<string, { input: number; output: number; cache_read?: number; cache_write?: number; cache_write_12h?: number; max_output?: number;
   long?: ChatPrice['long'] }> = {
   'gemini:gemini-3.8-flash': { input: 0.75, output: 3.75, cache_read: 0.075, max_output: 65_536 },
   'gemini:gemini-3.7-flash': { input: 0.75, output: 3.75, cache_read: 0.075, max_output: 65_536 },
@@ -1194,11 +1206,16 @@ export const HARNESS_CHAT_PRICES: Record<string, { input: number; output: number
   'groq:openai/gpt-oss-120b': { input: 0.15, output: 0.6, cache_read: 0.075, max_output: 65_536 },
 };
 
-/** A dated API snapshot (`gpt-4o-2024-08-06`) is billed at its family's list price. */
-export const chatPrice = (id: string) => {
+/**
+ * A dated API snapshot (`gpt-4o-2024-08-06`) is billed at its family's list price. An OpenAI model whose row states no
+ * cache-write rate or no long-prompt tier (the pinned gbrain table's rows state neither) has no price: the ledger would
+ * otherwise charge its cache writes as input and its long prompts at the short rates.
+ */
+export const chatPrice = (id: string): ChatPrice | undefined => {
   const undated = id.replace(/-\d{4}-?\d{2}-?\d{2}$/, '');
-  return CHAT_PRICE_OVERRIDES[id] ?? CHAT_PRICE_OVERRIDES[undated] ?? HARNESS_CHAT_PRICES[id] ?? HARNESS_CHAT_PRICES[undated]
+  const price: ChatPrice | undefined = CHAT_PRICE_OVERRIDES[id] ?? CHAT_PRICE_OVERRIDES[undated] ?? HARNESS_CHAT_PRICES[id] ?? HARNESS_CHAT_PRICES[undated]
     ?? canonicalLookup(id) ?? canonicalLookup(undated);
+  return price && id.startsWith('openai:') && (price.cache_write === undefined || price.long === undefined) ? undefined : price;
 };
 
 export interface RequestPrice {
@@ -1208,11 +1225,14 @@ export interface RequestPrice {
   /** USD per 1M tokens. */
   input: number;
   output: number;
-  /** USD per 1M cached input tokens read / written, when the provider reports them. */
+  /** USD per 1M cached input tokens read / written (the default lifetime, and OpenAI's 12-hour one), when the provider reports them. */
   cache_read?: number;
   cache_write?: number;
-  /** True when the request may write the prompt cache at a price above `input`; the reservation then prices all input at `cache_write`. */
+  cache_write_12h?: number;
+  /** True when the request may write the prompt cache at a price above `input`; the reservation then prices all input at its write rate. */
   cacheWritePremium?: boolean;
+  /** True when the request selects OpenAI's 12-hour cache lifetime anywhere; its writes reserve, and settle without a split, at `cache_write_12h`. */
+  cacheWrite12h?: boolean;
   /** Long-prompt rates, used when the input estimate (reservation) or the reported input (settlement) exceeds the threshold. */
   long?: ChatPrice['long'];
   /** Conservative input-token estimate (3 bytes per token), including tool schemas and continuation context. */
@@ -1283,11 +1303,37 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
     }
     return { provider, model, kind: 'chat', input: maxPrice.prompt, output: maxPrice.completion, inputTokens, maxOutputTokens };
   }
-  if (!price) throw new BudgetExceededError(`no chat price for ${provider}:${model}; cannot reserve its cost. Look up the provider's current list price for ${model} (input, output and cache rates per million tokens) and register it in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts as '${provider}:${model}' with the date you checked, then rerun; never guess a rate`);
+  if (!price) throw new BudgetExceededError(`no chat price for ${provider}:${model}; cannot reserve its cost. Look up the provider's current list price for ${model} (input, output, cached-input and cache-write rates per million tokens, and for OpenAI its long-prompt tier or long: null) and register it in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts as '${provider}:${model}' with the date you checked, then rerun; never guess a rate`);
+  const lifetimes = cacheLifetimes(b);
+  const priced = provider === 'anthropic' ? ['5m'] : provider === 'openai' ? ['30m', ...(price.cache_write_12h !== undefined && (!price.long || price.long.cache_write_12h !== undefined) ? ['12h'] : [])] : [];
+  const unpriced = [...lifetimes].filter(t => !priced.includes(t));
+  if (unpriced.length) throw new BudgetExceededError(`${provider}:${model} request selects the ${unpriced.join(', ')} cache lifetime, which has no write rate in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts, so the ledger can neither reserve nor settle it; register the provider's rate for it with the date you checked, or send the request with the default lifetime`);
+  if (provider === 'openai' && b.prompt_cache_retention !== undefined && price.cache_write! > price.input) {
+    throw new BudgetExceededError(`openai:${model} request sets prompt_cache_retention, which OpenAI documents only for models before GPT-5.6 and prices no cache write for on this one, so the ledger cannot price it; select a cache lifetime with prompt_cache_options.ttl instead`);
+  }
   // OpenAI caches automatically; Anthropic writes its cache only where a request sets cache_control.
   const cacheWritePremium = price.cache_write !== undefined && price.cache_write > price.input
     && (provider !== 'anthropic' || JSON.stringify(b).includes('"cache_control"'));
-  return { provider, model, kind: 'chat', input: price.input, output: price.output, cache_read: price.cache_read, cache_write: price.cache_write, cacheWritePremium, inputTokens, maxOutputTokens, ...(price.long ? { long: price.long } : {}) };
+  return { provider, model, kind: 'chat', input: price.input, output: price.output, cache_read: price.cache_read, cache_write: price.cache_write, cache_write_12h: price.cache_write_12h,
+    cacheWritePremium, cacheWrite12h: lifetimes.has('12h'), inputTokens, maxOutputTokens, ...(price.long ? { long: price.long } : {}) };
+}
+
+/**
+ * Every cache lifetime a request selects: OpenAI's `prompt_cache_options.ttl` and `prompt_cache_breakpoint.ttl`, and
+ * Anthropic's `cache_control.ttl`. A request that names none uses the provider's default lifetime. Tool-call arguments
+ * and JSON schemas are data the provider never reads cache settings from, so they are not searched.
+ */
+function cacheLifetimes(value: unknown, out = new Set<string>()): Set<string> {
+  if (Array.isArray(value)) for (const v of value) cacheLifetimes(v, out);
+  else if (value && typeof value === 'object') {
+    const type = (value as { type?: unknown }).type;
+    for (const [key, v] of Object.entries(value)) {
+      if ((key === 'input' && typeof type === 'string' && type.endsWith('tool_use')) || key === 'input_schema' || key === 'parameters' || key === 'schema') continue;
+      if ((key === 'prompt_cache_options' || key === 'prompt_cache_breakpoint' || key === 'cache_control') && v && typeof v === 'object' && 'ttl' in v) out.add(String(v.ttl));
+      cacheLifetimes(v, out);
+    }
+  }
+  return out;
 }
 
 const GEMINI_METHOD = /\/models\/([^/:]+):([A-Za-z]+)$/;
@@ -1358,7 +1404,7 @@ function priceGemini(url: string, body: unknown): RequestPrice | null {
 /** Worst-case reservation: input estimate (at the cache-write price when it applies) plus the full output allowance, at long-prompt rates when the estimate crosses the model's threshold. */
 export function reservationUsd(price: RequestPrice): number {
   const rates = price.long && price.inputTokens > price.long.above_input_tokens ? price.long : price;
-  const inputPrice = price.cacheWritePremium ? Math.max(rates.input, rates.cache_write ?? 0) : rates.input;
+  const inputPrice = price.cacheWritePremium ? Math.max(rates.input, (price.cacheWrite12h ? rates.cache_write_12h : rates.cache_write) ?? 0) : rates.input;
   return (price.inputTokens * inputPrice + price.maxOutputTokens * rates.output) / 1e6;
 }
 
@@ -1380,12 +1426,44 @@ export function usageCost(price: RequestPrice, responseBody: unknown): { usd: nu
   // Cached input: Anthropic reports reads and writes beside input_tokens; OpenAI counts cache reads and writes inside input_tokens.
   const details = (usage.input_tokens_details ?? usage.prompt_tokens_details) as Record<string, unknown> | undefined;
   const detail = (key: string) => (typeof details?.[key] === 'number' ? details[key] as number : 0);
+  // OpenAI splits writes by lifetime (cache_write_tokens_details); Anthropic by TTL (cache_creation).
+  const lifetimes = objectOf(details?.cache_write_tokens_details);
+  const ttls = objectOf(usage.cache_creation);
+  const unknown = [
+    ...([[usage, PRICED_CACHE_FIELDS.usage], [details ?? {}, PRICED_CACHE_FIELDS.details]] as const).flatMap(([o, priced]) => Object.keys(o).filter(k => /cach/i.test(k) && !priced.has(k) && reportsTokens(o[k]))),
+    ...Object.keys(lifetimes).filter(k => k !== 'ttl_30m_tokens' && k !== 'ttl_12h_tokens' && reportsTokens(lifetimes[k])),
+    ...Object.keys(ttls).filter(k => k !== 'ephemeral_5m_input_tokens' && reportsTokens(ttls[k])),
+  ];
+  if (unknown.length) throw new UnpricedUsageError(`${price.provider}:${price.model} reported ${unknown.join(', ')}, a cache tier the budget ledger has no rate for; it is charged at its reservation and spending stops. Register the provider's rate for that tier in eval/runner/budget-ledger.ts, with the date you checked`);
   const cacheRead = n('cache_read_input_tokens') + detail('cached_tokens');
-  const cacheWrite = n('cache_creation_input_tokens') + detail('cache_write_tokens');
+  const split = typeof lifetimes.ttl_30m_tokens === 'number' || typeof lifetimes.ttl_12h_tokens === 'number';
+  const cacheWrite = Math.max(n('cache_creation_input_tokens') + detail('cache_write_tokens'), split ? numberOf(lifetimes.ttl_30m_tokens) + numberOf(lifetimes.ttl_12h_tokens) : 0);
+  const write12h = split ? numberOf(lifetimes.ttl_12h_tokens) : price.cacheWrite12h ? cacheWrite : 0;
   const rates = price.long && inputTokens > price.long.above_input_tokens ? price.long : price;
+  const missing = [...(cacheWrite > write12h && rates.cache_write === undefined ? ['cache-write rate'] : []), ...(write12h > 0 && rates.cache_write_12h === undefined ? ['12-hour cache-write rate'] : [])];
+  if (missing.length) throw new UnpricedUsageError(`${price.provider}:${price.model} reported cache writes, but the budget ledger has no ${missing.join(' or ')} for it${rates === price ? '' : ' above its long-prompt threshold'}; it is charged at its reservation and spending stops. Register the provider's rate in eval/runner/budget-ledger.ts, with the date you checked`);
   const usd = ((inputTokens - cacheRead - cacheWrite) * rates.input + cacheRead * (rates.cache_read ?? rates.input)
-    + cacheWrite * (rates.cache_write ?? rates.input) + outputTokens * rates.output) / 1e6;
+    + (cacheWrite - write12h) * (rates.cache_write ?? 0) + write12h * (rates.cache_write_12h ?? 0) + outputTokens * rates.output) / 1e6;
   return { usd, input_tokens: inputTokens, output_tokens: outputTokens };
+}
+
+/** The cache fields usageCost prices, at the level it reads each from. Any other field naming a cache at either level is a tier the ledger cannot price. */
+const PRICED_CACHE_FIELDS = { usage: new Set(['cache_read_input_tokens', 'cache_creation_input_tokens', 'cache_creation']), details: new Set(['cached_tokens', 'cache_write_tokens', 'cache_write_tokens_details']) };
+const objectOf = (value: unknown): Record<string, unknown> => (value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {});
+const numberOf = (value: unknown): number => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+/** True when a usage field reports tokens: a positive count, or an object holding one. */
+const reportsTokens = (value: unknown): boolean => typeof value === 'number' ? value > 0 : Object.values(objectOf(value)).some(reportsTokens);
+
+/**
+ * List-price cost of one chat response's reported usage, settled exactly as the ledger settles a request to
+ * `provider:model`: long-prompt rates above the model's threshold, cache reads and writes at their own rates, and a cache
+ * tier with no rate refused (UnpricedUsageError). Runners record it per request. Null when the response reports no usage.
+ */
+export function responseUsd(provider: string, model: string, response: unknown): number | null {
+  const price = chatPrice(`${provider}:${model}`);
+  if (!price) throw new BudgetExceededError(`no chat price for ${provider}:${model}; register it in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts`);
+  return usageCost({ provider, model, kind: 'chat', input: price.input, output: price.output, cache_read: price.cache_read, cache_write: price.cache_write, cache_write_12h: price.cache_write_12h,
+    inputTokens: 0, maxOutputTokens: 0, ...(price.long ? { long: price.long } : {}) }, response)?.usd ?? null;
 }
 
 /**
@@ -1537,7 +1615,10 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
   if (active) throw new Error('a paid-request guard is already installed in this process');
   const previous = globalThis.fetch;
   const send = options.fetchImpl ?? (previous === delegatingFetch ? baseFetch : previous);
-  const state = { exhausted: false };
+  const state: { exhausted: boolean; unpriced: string | null } = { exhausted: false, unpriced: null };
+  const refuseAfterUnpriced = () => { if (state.unpriced) throw new BudgetExceededError(`refused before sending: an earlier response in this run reported usage the ledger cannot price (${state.unpriced})`); };
+  /** Usage the ledger cannot price: every later paid request here is refused, and the run is closed so no process reserves against it again. */
+  const stopUnpriced = (error: unknown) => { state.exhausted = true; state.unpriced = (error as Error).message; closeRun(run.ledgerPath, run.runId); };
   /** OpenAI response id -> input plus output tokens it reported: the context a continuation re-sends. */
   const chain = new Map<string, number>();
   const pricing: PriceOptions = { chainContextTokens: id => chain.get(id) };
@@ -1567,6 +1648,7 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
     if (batchKind === 'free') return send(input, init);
     const direct: RequestInit = { ...init, redirect: 'error' };
     if (batchKind === 'submission') {
+      refuseAfterUnpriced();
       if (batchLaneScope.getStore()) return send(input, direct);
       state.exhausted = true;
       throw new BudgetExceededError(`batch submission to ${url} did not come through the batch lane; submit batches with eval/runner/batch/ so the ledger reserves their worst case first`);
@@ -1585,6 +1667,7 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
         }
         return send(input, direct);
       }
+      refuseAfterUnpriced();
       const allowance = allowanceScope.getStore();
       if (allowance) {
         if (allowance.budget !== run) throw new BudgetExceededError(`allowance ${allowance.description} belongs to another budget run`);
@@ -1593,7 +1676,10 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
         let res: Response;
         try { res = await send(input, direct); }
         catch (error) { allowance.charge(held, null); throw error; }
-        allowance.charge(held, await measure(price, res));
+        let cost: Awaited<ReturnType<typeof measure>>;
+        try { cost = await measure(price, res); }
+        catch (error) { allowance.charge(held, null); stopUnpriced(error); throw error; }
+        allowance.charge(held, cost);
         return res;
       }
       id = run.reserve(reservationUsd(price), `${price.provider}:${price.model} ${price.kind}`);
@@ -1604,7 +1690,10 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
     let response: Response;
     try { response = await send(input, direct); }
     catch (error) { run.settle(id, null); throw error; }
-    run.settle(id, await measure(price, response));
+    let cost: Awaited<ReturnType<typeof measure>>;
+    try { cost = await measure(price, response); }
+    catch (error) { run.settle(id, null); stopUnpriced(error); throw error; }
+    run.settle(id, cost);
     return response;
   };
   const guard = { handle };

@@ -31,7 +31,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 import { appendAccessLog, assertCommitment, sha256File, sha256Hex, validateQuestionsFile, type QuestionsFile } from '../sealed-confirmation-lib.ts';
 import { fetchDataset, loadCorpus, loadCustodyCorpus, type Corpus } from '../memory-qa/corpus.ts';
 import { checkCustodyPaths } from '../memory-qa/sealed-profile.ts';
-import { ChatClient, judgePromptsFor, judgeYes } from '../memory-qa/qa.ts';
+import { ChatClient, judgeResponse, type VerdictPath } from '../memory-qa/qa-v2.ts';
 import { hashEmbed, selectQuestions } from '../memory-qa/run.ts';
 import { opaqueSourceId } from '../systems/sanitize.ts';
 import { sourceOfSlug } from '../systems/gbrain.ts';
@@ -465,7 +465,11 @@ export function writeAnswers(o: { custodyRoot: string; decision: C8kDecision; de
   return summary;
 }
 
-/** Development only: the official LongMemEval judge over the dev answers, as sealed-runner-shaped score reports (per_question rows). */
+/**
+ * Development only: the official LongMemEval judge over the dev answers, as sealed-runner-shaped score reports
+ * (per_question rows), through qa-v2's `judgeResponse`. A row whose verdict came from the judge reply's tail carries
+ * `verdict_path: 'tail'`, and a reply with no verdict stops the step (UnansweredJudgment) instead of scoring a "no".
+ */
 export async function devScore(o: { custodyRoot: string; decision: C8kDecision; corpus: Corpus; answersDir: string; outDir: string; cache: string }) {
   checkCustodyPaths(o.custodyRoot, [['scores directory', o.outDir], ['QA cache', o.cache]]);
   const chat = new ChatClient(o.cache);
@@ -478,12 +482,11 @@ export async function devScore(o: { custodyRoot: string; decision: C8kDecision; 
       const q = qs.get(r.question_id)!;
       const kind = q.abstention ? 'abstention' : q.category;
       let correct = false;
-      if (typeof r.hypothesis === 'string' && r.hypothesis.trim()) {
-        const [prompt] = judgePromptsFor('lme-s', q, r.hypothesis);
-        correct = judgeYes((await chat.chat(o.decision.development.judge, prompt, { maxTokens: 10, replicate: 0 })).text);
-      }
+      const paths: VerdictPath[] = [];
+      if (typeof r.hypothesis === 'string' && r.hypothesis.trim()) correct = await judgeResponse(chat, 'lme-s', o.decision.development.judge, q, r.hypothesis, 0, undefined, paths) === 1;
       const gold = new Set(q.gold);
-      per.push({ question_id: q.id, question_type: kind, haystack_id: q.conversation, answer_correct: correct, recall_all: gold.size ? [...gold].every(g => r.retrieved.includes(g)) : null });
+      per.push({ question_id: q.id, question_type: kind, haystack_id: q.conversation, answer_correct: correct, recall_all: gold.size ? [...gold].every(g => r.retrieved.includes(g)) : null,
+        ...(paths.includes('tail') ? { verdict_path: 'tail' } : {}) });
     }
     const report = { set: o.corpus.source?.name ?? 'lme-s', judge: o.decision.development.judge, per_question: per, answers: { n: per.length, correct: per.filter(p => p.answer_correct).length } };
     writeJson(join(o.outDir, f.replace(/\.jsonl$/, '.json')), report);

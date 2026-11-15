@@ -25,6 +25,7 @@ import type { CauseId } from './causes.ts';
 import { costPerCorrect, passHatCurve, passHatK, type TaskTrials } from './passk.ts';
 import type { ArmCall, BrainSnapshot } from './cli-arm.ts';
 import { G3_CAUSES, PENDING_OK, type G3Cause, type G3Surface, type WriteTask } from '../../generators/write-contract-gen.ts';
+import { compareVersions } from '../live-recall/visibility-epoch.ts';
 
 export const G3_K = 4;
 
@@ -283,11 +284,14 @@ export const CONTRACT_OPS: Record<string, Record<string, unknown>> = {
 
 const WRONG_TYPE: Record<string, unknown> = { string: 12345, number: 'not-a-number', boolean: 'yes', object: 'not-an-object', array: 'not-an-array' };
 
+/** gbrain#8509 (v0.60.570.0) reads one window from several selectors instead of refusing the call. */
+export const multiWindowReads = (gbrainVersion: string): boolean => compareVersions(gbrainVersion, '0.60.570.0') >= 0;
+
 /**
  * Shapes from each op's served schema: the valid set, each required parameter dropped, and each typed parameter given
- * the wrong type; plus the cause shapes the agent tasks run into.
+ * the wrong type; plus the cause shapes the agent tasks run into, as the gbrain under test answers them.
  */
-export function schemaShapes(schemas: ReadonlyArray<{ name: string; inputSchema: Record<string, unknown> }>): SchemaShape[] {
+export function schemaShapes(schemas: ReadonlyArray<{ name: string; inputSchema: Record<string, unknown> }>, gbrainVersion: string): SchemaShape[] {
   const shapes: SchemaShape[] = [];
   for (const [op, valid] of Object.entries(CONTRACT_OPS)) {
     const schema = schemas.find(s => s.name === op)?.inputSchema as { properties?: Record<string, { type?: string }>; required?: string[] } | undefined;
@@ -307,7 +311,7 @@ export function schemaShapes(schemas: ReadonlyArray<{ name: string; inputSchema:
     { id: 'cause:missing_provenance', op: 'remember', args: { fact: r.fact, entity: r.entity }, expect: 'refuse', cause: 'missing_provenance' },
     { id: 'cause:fact_and_items', op: 'remember', args: { ...r, items: [{ fact: 'Second.', entity: r.entity, provenance: r.provenance }] }, expect: 'refuse', cause: 'fact_and_items' },
     { id: 'cause:ambiguous_entity', op: 'remember', args: { ...r, entity: 'Grammar Twin' }, expect: 'refuse', cause: 'ambiguous_entity' },
-    { id: 'cause:two_range_read', op: 'get_page', args: { slug: 'notes/grammar-probe', lines: { from: 1, count: 2 }, bytes: { offset: 0, length: 10 } }, expect: 'refuse', cause: 'two_range_read' },
+    { id: 'cause:two_range_read', op: 'get_page', args: { slug: 'notes/grammar-probe', lines: { from: 1, count: 2 }, bytes: { offset: 0, length: 10 } }, expect: multiWindowReads(gbrainVersion) ? 'accept' : 'refuse', cause: 'two_range_read' },
   );
   return shapes;
 }

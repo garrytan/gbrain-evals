@@ -45,10 +45,14 @@ By task kind (pooled over models): trials with any cross-source page / answer le
 | claude-opus-5-5 | pr | 19785 | 69 | 69/69 (100.0% [94.7, 100.0]) | 69/69 (100.0% [94.7, 100.0]) | 23196 | 320 | 1.65 | 2.46 | $0.0238 |
 | claude-sonnet-5-5 | base | 26580 | 69 | 69/69 (100.0% [94.7, 100.0]) | 69/69 (100.0% [94.7, 100.0]) | 30602 | 345 | 2.16 | 2.46 | $0.0159 |
 | claude-sonnet-5-5 | pr | 19785 | 69 | 69/69 (100.0% [94.7, 100.0]) | 69/69 (100.0% [94.7, 100.0]) | 25553 | 344 | 2.26 | 2.58 | $0.0163 |
-| gpt-6.1-sol | base | 26580 | 69 | 69/69 (100.0% [94.7, 100.0]) | 69/69 (100.0% [94.7, 100.0]) | 15975 | 123 | 2.42 | 3.38 | $0.0046 |
-| gpt-6.1-sol | pr | 19785 | 69 | 69/69 (100.0% [94.7, 100.0]) | 69/69 (100.0% [94.7, 100.0]) | 12664 | 125 | 2.54 | 3.49 | $0.0040 |
-| gpt-6-astra | base | 26580 | 23 | 23/23 (100.0% [85.7, 100.0]) | 23/23 (100.0% [85.7, 100.0]) | 15572 | 120 | 2.35 | 3.30 | $0.0322 |
-| gpt-6-astra | pr | 19785 | 23 | 23/23 (100.0% [85.7, 100.0]) | 23/23 (100.0% [85.7, 100.0]) | 12886 | 128 | 2.61 | 3.57 | $0.0296 |
+| gpt-6.1-sol | base | 26580 | 69 | 69/69 (100.0% [94.7, 100.0]) | 69/69 (100.0% [94.7, 100.0]) | 15975 | 123 | 2.42 | 3.38 | $0.0050 (corrected 2026-11-09: cache writes were under-counted; was $0.0046) |
+| gpt-6.1-sol | pr | 19785 | 69 | 69/69 (100.0% [94.7, 100.0]) | 69/69 (100.0% [94.7, 100.0]) | 12664 | 125 | 2.54 | 3.49 | $0.0044 (corrected 2026-11-09: cache writes were under-counted; was $0.0040) |
+| gpt-6-astra | base | 26580 | 23 | 23/23 (100.0% [85.7, 100.0]) | 23/23 (100.0% [85.7, 100.0]) | 15572 | 120 | 2.35 | 3.30 | $0.0351 (corrected 2026-11-09: cache writes were under-counted; was $0.0322) |
+| gpt-6-astra | pr | 19785 | 23 | 23/23 (100.0% [85.7, 100.0]) | 23/23 (100.0% [85.7, 100.0]) | 12886 | 128 | 2.61 | 3.57 | $0.0325 (corrected 2026-11-09: cache writes were under-counted; was $0.0296) |
+
+Correction, 2026-11-09: the agent loop priced each answer's recorded usage without OpenAI's cache-write count, which the trial records show as 0, so it charged gpt-6.1-sol's and gpt-6-astra's cache writes at the input rate. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input (gpt-6-astra's at $12.50 against $10), so the two OpenAI models' dollars per trial were low; they are repriced from the committed trial records, and the budget ledger, which priced cache writes, agrees with them. No score, verdict or ranking changes: Sol is still the cheapest model per trial, and the PR arm is still cheaper than base for both OpenAI models. ([corrections](../../corrections.md#openai-cache-writes))
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 PR minus base, per model (95% paired bootstrap over tasks):
 
@@ -80,4 +84,4 @@ Hidden-parameter tasks (the PR leaves the parameter out of the starter list; it 
 | H02 | gpt-6-astra | base | 1 | 1/1 | 0/1 | 0/1 | 3.00 |
 | H02 | gpt-6-astra | pr | 1 | 1/1 | 0/1 | 0/1 | 2.00 |
 
-Model spend in counted trials (priced from provider usage): $20.76 over 964 trials.
+Model spend in counted trials (priced from provider usage): $20.76 over 964 trials (corrected 2026-11-09: cache writes were under-counted, so this is about 3% low).

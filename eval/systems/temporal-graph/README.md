@@ -17,6 +17,8 @@ carries the time it became true and, once contradicted, the time it stopped bein
 
 The lock resolves the library's dependencies to the versions in temporal-graph's own `uv.lock` at the pinned tag
 (through `constraint-dependencies`): the newest `openai` on PyPI no longer ships `httpx`, which the library imports.
+Three are raised above that lock for security fixes (2026-11-11): `anyio` 4.14.2, `certifi` 2026.10.19 and `urllib3`
+2.8.0.
 
 One `group_id` per namespace. Ingestion calls `add_episode(reference_time=<session date>)`. Retrieval calls
 `search_()`, which returns separate ranked lists of facts (edges), entities (nodes), episodes and communities; the
@@ -130,6 +132,13 @@ LongMemEval-S haystack, one BEAM-100K conversation): costs per ingested item, re
 outcomes and the Phase 4 cost extrapolation. Its scores are setup evidence, not results.
 
 ## Changelog
+
+### 2026-11-11: security fixes in the lock
+
+`anyio` 4.12.1 to 4.14.2, `certifi` 2026.1.4 to 2026.10.19 and `urllib3` 2.7.0 to 2.8.0, raised in
+`constraint-dependencies` and relocked with the Dockerfile's uv 0.9.5. Masashi-Ono0611 reported the advisories in
+[gbrain-evals#183](https://github.com/garrytan/gbrain-evals/pull/183). `uv.lock` moves from `4ce9b216` to `6894bade`, and `capability.json` records the
+new hash: runs started after this change record it, and earlier results keep the hash they recorded.
 
 ### 2026-10-05: Phase 2 pilot, policy settings
 

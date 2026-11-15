@@ -1,0 +1,275 @@
+{
+  "mode": "paid",
+  "counted": true,
+  "unit": "g1",
+  "plan": {
+    "unit": "g1",
+    "tasks": 120,
+    "surfaces": 1,
+    "k": 4,
+    "models": [
+      "claude-opus-5-5",
+      "gpt-6.1-sol",
+      "particle-1"
+    ],
+    "episodes": 1440,
+    "digest": "51589efdd23764d616f73ffd0c96d918ab94ece9ad562d176e971c3064433018",
+    "per_model": [
+      {
+        "model": "claude-opus-5-5",
+        "episodes": 480
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "episodes": 480
+      },
+      {
+        "model": "particle-1",
+        "episodes": 480
+      }
+    ]
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-09-predictive-measures-preregistration.md",
+    "preregistration_commit": "a5634d006eee26b6a887c2add678e2016da6bfea",
+    "runner_commit": "023012e11805ea9ba4cc848885b7697ed3f3a362",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-10T11:37:18.722Z"
+  },
+  "gbrain_version": "0.60.557.0",
+  "overlay": null,
+  "status": "complete",
+  "ran": 1440,
+  "skipped": {
+    "done": 0,
+    "errored": 0,
+    "in_flight": 0
+  },
+  "pause_reason": null,
+  "done": 1440,
+  "errored": [],
+  "errored_by_model": {
+    "claude-opus-5-5": 0,
+    "gpt-6.1-sol": 0,
+    "particle-1": 0
+  },
+  "scorecards": [
+    {
+      "unit": "G1",
+      "model": "claude-opus-5-5",
+      "pressured": false,
+      "episodes": 480,
+      "valid": 480,
+      "invalid": 0,
+      "tasks": 120,
+      "correct": 480,
+      "accuracy_valid": 1,
+      "causes": {
+        "correct": 480,
+        "stale_fact": 0,
+        "gold_unopened": 0,
+        "time_reasoning": 0,
+        "memory_not_consulted": 0,
+        "invalid": 0
+      },
+      "by_pattern": {
+        "entity_lag": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        },
+        "summary_vs_timeline": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        },
+        "decision_reversed": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        },
+        "shared_vs_published": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        },
+        "last_week_tz": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        }
+      },
+      "mean_pages_opened": 1.64375,
+      "opened_fresh_share": 0.9,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 1,
+        "curve": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "usd": 8.757501000000003,
+      "cost_per_correct_usd": 0.018244793750000005,
+      "errored_usd": 0
+    },
+    {
+      "unit": "G1",
+      "model": "gpt-6.1-sol",
+      "pressured": false,
+      "episodes": 480,
+      "valid": 480,
+      "invalid": 0,
+      "tasks": 120,
+      "correct": 478,
+      "accuracy_valid": 0.9958333333333333,
+      "causes": {
+        "correct": 478,
+        "stale_fact": 0,
+        "gold_unopened": 2,
+        "time_reasoning": 0,
+        "memory_not_consulted": 0,
+        "invalid": 0
+      },
+      "by_pattern": {
+        "entity_lag": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        },
+        "summary_vs_timeline": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        },
+        "decision_reversed": {
+          "episodes": 96,
+          "correct": 94,
+          "causes": {
+            "correct": 94,
+            "gold_unopened": 2
+          }
+        },
+        "shared_vs_published": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        },
+        "last_week_tz": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        }
+      },
+      "mean_pages_opened": 1.8208333333333333,
+      "opened_fresh_share": 0.9958333333333333,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.9833333333333333,
+        "curve": [
+          0.9958333333333333,
+          0.9916666666666667,
+          0.9875,
+          0.9833333333333333
+        ]
+      },
+      "usd": 4.757782799999997,
+      "cost_per_correct_usd": 0.009953520502092044,
+      "errored_usd": 0
+    },
+    {
+      "unit": "G1",
+      "model": "particle-1",
+      "pressured": false,
+      "episodes": 480,
+      "valid": 479,
+      "invalid": 1,
+      "tasks": 120,
+      "correct": 472,
+      "accuracy_valid": 0.9853862212943633,
+      "causes": {
+        "correct": 472,
+        "stale_fact": 0,
+        "gold_unopened": 0,
+        "time_reasoning": 7,
+        "memory_not_consulted": 0,
+        "invalid": 1
+      },
+      "by_pattern": {
+        "entity_lag": {
+          "episodes": 96,
+          "correct": 95,
+          "causes": {
+            "correct": 95,
+            "invalid": 1
+          }
+        },
+        "summary_vs_timeline": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        },
+        "decision_reversed": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        },
+        "shared_vs_published": {
+          "episodes": 96,
+          "correct": 96,
+          "causes": {
+            "correct": 96
+          }
+        },
+        "last_week_tz": {
+          "episodes": 96,
+          "correct": 89,
+          "causes": {
+            "correct": 89,
+            "time_reasoning": 7
+          }
+        }
+      },
+      "mean_pages_opened": 2.0375,
+      "opened_fresh_share": 0.9979166666666667,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.9416666666666667,
+        "curve": [
+          0.9833333333333333,
+          0.9680555555555554,
+          0.9541666666666667,
+          0.9416666666666667
+        ]
+      },
+      "usd": 1.7867435700000014,
+      "cost_per_correct_usd": 0.0037854736652542403,
+      "errored_usd": 0
+    }
+  ]
+}

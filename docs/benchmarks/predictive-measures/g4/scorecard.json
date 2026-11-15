@@ -1,0 +1,224 @@
+{
+  "mode": "paid",
+  "counted": true,
+  "unit": "g4",
+  "plan": {
+    "unit": "g4",
+    "tasks": 60,
+    "surfaces": 1,
+    "k": 4,
+    "models": [
+      "claude-opus-5-5",
+      "gpt-6.1-sol",
+      "particle-1"
+    ],
+    "episodes": 720,
+    "digest": "5a7c2583871d7a44625e1e8a8b9caba3943dc9d0c353be535afeea5ae4dff347",
+    "per_model": [
+      {
+        "model": "claude-opus-5-5",
+        "episodes": 240
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "episodes": 240
+      },
+      {
+        "model": "particle-1",
+        "episodes": 240
+      }
+    ]
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-09-predictive-measures-preregistration.md",
+    "preregistration_commit": "a5634d006eee26b6a887c2add678e2016da6bfea",
+    "runner_commit": "023012e11805ea9ba4cc848885b7697ed3f3a362",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-10T15:44:21.257Z"
+  },
+  "gbrain_version": "0.60.557.0",
+  "overlay": null,
+  "status": "complete",
+  "ran": 720,
+  "skipped": {
+    "done": 0,
+    "errored": 0,
+    "in_flight": 0
+  },
+  "pause_reason": null,
+  "done": 720,
+  "errored": [],
+  "errored_by_model": {
+    "claude-opus-5-5": 0,
+    "gpt-6.1-sol": 0,
+    "particle-1": 0
+  },
+  "scorecards": [
+    {
+      "unit": "G4",
+      "model": "claude-opus-5-5",
+      "episodes": 240,
+      "tasks": 60,
+      "valid": 240,
+      "invalid": 0,
+      "correct": 240,
+      "wrong_entity": 0,
+      "accuracy_valid": 1,
+      "b3": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "by_pattern": {
+        "moved_namesake": {
+          "episodes": 60,
+          "correct": 60,
+          "wrong_entity": 0,
+          "invalid": 0
+        },
+        "family_surname": {
+          "episodes": 60,
+          "correct": 60,
+          "wrong_entity": 0,
+          "invalid": 0
+        },
+        "company_handle": {
+          "episodes": 60,
+          "correct": 60,
+          "wrong_entity": 0,
+          "invalid": 0
+        },
+        "father_son": {
+          "episodes": 60,
+          "correct": 60,
+          "wrong_entity": 0,
+          "invalid": 0
+        }
+      },
+      "pass_hat_k": {
+        "k": 4,
+        "value": 1,
+        "curve": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "usd": 3.2065792,
+      "cost_per_correct_usd": 0.013360746666666668,
+      "errored_usd": 0
+    },
+    {
+      "unit": "G4",
+      "model": "gpt-6.1-sol",
+      "episodes": 240,
+      "tasks": 60,
+      "valid": 240,
+      "invalid": 0,
+      "correct": 240,
+      "wrong_entity": 0,
+      "accuracy_valid": 1,
+      "b3": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "by_pattern": {
+        "moved_namesake": {
+          "episodes": 60,
+          "correct": 60,
+          "wrong_entity": 0,
+          "invalid": 0
+        },
+        "family_surname": {
+          "episodes": 60,
+          "correct": 60,
+          "wrong_entity": 0,
+          "invalid": 0
+        },
+        "company_handle": {
+          "episodes": 60,
+          "correct": 60,
+          "wrong_entity": 0,
+          "invalid": 0
+        },
+        "father_son": {
+          "episodes": 60,
+          "correct": 60,
+          "wrong_entity": 0,
+          "invalid": 0
+        }
+      },
+      "pass_hat_k": {
+        "k": 4,
+        "value": 1,
+        "curve": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "usd": 1.6255136000000008,
+      "cost_per_correct_usd": 0.0067729733333333365,
+      "errored_usd": 0
+    },
+    {
+      "unit": "G4",
+      "model": "particle-1",
+      "episodes": 240,
+      "tasks": 60,
+      "valid": 190,
+      "invalid": 50,
+      "correct": 190,
+      "wrong_entity": 0,
+      "accuracy_valid": 1,
+      "b3": {
+        "precision": 1,
+        "recall": 0.7895833333333333,
+        "f1": 0.8824214202561117
+      },
+      "by_pattern": {
+        "moved_namesake": {
+          "episodes": 60,
+          "correct": 60,
+          "wrong_entity": 0,
+          "invalid": 0
+        },
+        "family_surname": {
+          "episodes": 60,
+          "correct": 17,
+          "wrong_entity": 0,
+          "invalid": 43
+        },
+        "company_handle": {
+          "episodes": 60,
+          "correct": 54,
+          "wrong_entity": 0,
+          "invalid": 6
+        },
+        "father_son": {
+          "episodes": 60,
+          "correct": 59,
+          "wrong_entity": 0,
+          "invalid": 1
+        }
+      },
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.65,
+        "curve": [
+          0.7916666666666666,
+          0.7194444444444444,
+          0.6833333333333333,
+          0.65
+        ]
+      },
+      "usd": 0.8229829800000001,
+      "cost_per_correct_usd": 0.004331489368421053,
+      "errored_usd": 0
+    }
+  ]
+}

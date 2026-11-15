@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS } from '../../eval/runner/hermetic-env.ts';
 import { main, MODELS, planUnit, runGrammar } from '../../eval/runner/predictive/run.ts';
 import { runEntityEpisode, runFreshnessEpisode, scriptedEntityPolicy, scriptedFreshnessPolicy } from '../../eval/runner/predictive/episodes.ts';
+import { multiWindowReads } from '../../eval/runner/predictive/write-contract.ts';
 import { generateFreshnessTasks } from '../../eval/generators/freshness-world-gen.ts';
 import { generateEntityTasks } from '../../eval/generators/entity-agent-gen.ts';
 
@@ -65,7 +66,11 @@ describe('real gbrain, scripted models', () => {
   test('the schema grammar meets every expected refusal and acceptance at the pin', async () => {
     const g = await runGrammar();
     expect(g.surprises).toEqual([]);
-    expect(g.rows.filter(r => r.id.startsWith('cause:') && r.cause !== r.id.slice(6))).toEqual([]);
+    expect(g.rows.filter(r => r.id.startsWith('cause:') && r.expect === 'refuse' && r.cause !== r.id.slice(6))).toEqual([]);
+    const twoRange = g.rows.filter(r => r.id === 'cause:two_range_read').map(r => ({ surface: r.surface, refused: r.refused, cause: r.cause }));
+    expect(twoRange).toEqual(multiWindowReads(g.gbrain_version)
+      ? [{ surface: 'mcp', refused: false, cause: null }, { surface: 'cli', refused: false, cause: null }]
+      : [{ surface: 'mcp', refused: true, cause: 'two_range_read' }, { surface: 'cli', refused: true, cause: 'two_range_read' }]);
     expect(new Set(g.rows.map(r => r.surface))).toEqual(new Set(['mcp', 'cli']));
   }, 180_000);
 

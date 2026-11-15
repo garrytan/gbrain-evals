@@ -1,0 +1,163 @@
+{
+  "schema": "predictive-verdict/v1",
+  "measure": "G2",
+  "title": "recall under real conditions",
+  "verdict": "PREDICTIVE",
+  "synthetic": {
+    "schema": "live-recall-scorecard/v1",
+    "control": false,
+    "transports": "voyage"
+  },
+  "layers": [
+    {
+      "id": "b2",
+      "reference": "live-recall-b2",
+      "min_qualifying": 3,
+      "mapped_count": 16,
+      "note": "all 16 success@5 contrasts of live recall batch 2, id to id",
+      "in_scorecard": false,
+      "status": "not_in_scorecard",
+      "verdict": "NOT_IN_SCORECARD",
+      "qualifying_count": 0,
+      "contrasts": [],
+      "kendall_tau": {}
+    },
+    {
+      "id": "b3",
+      "reference": "live-recall-b3",
+      "min_qualifying": 3,
+      "mapped_count": 6,
+      "note": "batch 3 freshness and entity success@5, once batch 3 lands",
+      "in_scorecard": true,
+      "status": "available",
+      "verdict": "PREDICTIVE",
+      "qualifying_count": 5,
+      "kendall_tau": {},
+      "contrasts": [
+        {
+          "reference_id": "p1_configured_vs_hybrid_lexical_freshness",
+          "synthetic_id": "p1_configured_vs_hybrid_lexical_freshness",
+          "reference": {
+            "estimate": 0.1875,
+            "lo": 0.087,
+            "hi": 0.2857,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.0333,
+            "lo": 0,
+            "hi": 0.0833,
+            "excludes_zero": false
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "hybrid_vs_hybrid_lexical_freshness",
+          "synthetic_id": "hybrid_vs_hybrid_lexical_freshness",
+          "reference": {
+            "estimate": 0.0417,
+            "lo": -0.0408,
+            "hi": 0.125,
+            "qualifies": false
+          },
+          "synthetic": {
+            "estimate": 0.0333,
+            "lo": 0,
+            "hi": 0.0833,
+            "excludes_zero": false
+          },
+          "sign_agrees": true,
+          "counted": "not_qualifying"
+        },
+        {
+          "reference_id": "configured_vs_keyword_freshness",
+          "synthetic_id": "configured_vs_keyword_freshness",
+          "reference": {
+            "estimate": 0.1875,
+            "lo": 0.0889,
+            "hi": 0.2857,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.5,
+            "lo": 0.5,
+            "hi": 0.5,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "p2_configured_vs_hybrid_lexical_entity",
+          "synthetic_id": "p2_configured_vs_hybrid_lexical_entity",
+          "reference": {
+            "estimate": 0.2745,
+            "lo": 0.1731,
+            "hi": 0.375,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.05,
+            "lo": 0,
+            "hi": 0.1,
+            "excludes_zero": false
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "hybrid_vs_hybrid_lexical_entity",
+          "synthetic_id": "hybrid_vs_hybrid_lexical_entity",
+          "reference": {
+            "estimate": 0.1373,
+            "lo": 0.0385,
+            "hi": 0.2449,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.0333,
+            "lo": -0.0333,
+            "hi": 0.1,
+            "excludes_zero": false
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        },
+        {
+          "reference_id": "configured_vs_keyword_entity",
+          "synthetic_id": "configured_vs_keyword_entity",
+          "reference": {
+            "estimate": 0.3922,
+            "lo": 0.2745,
+            "hi": 0.5098,
+            "qualifies": true
+          },
+          "synthetic": {
+            "estimate": 0.5,
+            "lo": 0.5,
+            "hi": 0.5,
+            "excludes_zero": true
+          },
+          "sign_agrees": true,
+          "counted": "agree"
+        }
+      ]
+    }
+  ],
+  "counted": true,
+  "scorecard": {
+    "path": "docs/benchmarks/predictive-measures/batch3-synthetic-641/scorecard.json",
+    "sha256": "be10544995c0f994def3bf48d02d3efac0eb4ba0f84617c0ce63a5c8ed1403c7",
+    "gbrain_loaded_version": "0.60.641.0",
+    "gbrain_loaded_commit": "2560ffddb85244b82f2b325ee2ddc846f77c3cac",
+    "knobs": {
+      "unembedded_chunk_share": 0,
+      "synopsis_vectors_off": false,
+      "keyword_candidate_bound": null,
+      "shell_page_share": 0
+    },
+    "questions_sha256": "3664863bc9916952ac987a225d4393013fed94c48e8de27a4dd78b0c9cd6f1f7",
+    "digest": "c2dcf99f4775a8d74181dd8eca150fb00025e4ab42999dfa2966f787ef5b0596"
+  }
+}

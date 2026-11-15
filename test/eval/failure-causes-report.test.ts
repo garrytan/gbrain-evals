@@ -79,6 +79,28 @@ describe('summarize', () => {
     expect(md).toContain("Turn cap: 2 of 3 rows hit the agent's turn cap (H1 2). The cap is our harness setting and part of what these rows measure. For these rows the lever may be reaching many pages in fewer calls, not better ranking.");
   });
 
+  test('suite-cause rows (reader_budget, item_unsupported) get their own list, out of gbrain\'s ranking, its shares and its issue drafts', () => {
+    const over = { ...failure().gold, gold_count: 6, reader_budget: 5, retrieved: 'all' as const, delivered: 'partial' as const };
+    const unsupported = { ...failure().gold, gold_count: 2, retrieved: 'partial' as const, delivered: 'partial' as const, unsupported: 'both_validators' as const };
+    const c = summarize([...row('a', 4, { gold: over }), ...row('a', 2, { gold: unsupported }), ...row('b', 1, { gold: over }), ...row('a', 1, { gold: gold('none') })]);
+    expect(c.ranked.map(r => [r.cause, r.count, r.score])).toEqual([['retrieval_miss', 1, 1]]);
+    expect(c.top_three.map(r => r.cause)).toEqual(['retrieval_miss']);
+    expect(issueDrafts(c).map(d => d.cause)).toEqual(['retrieval_miss']);
+    expect(c.suite).toEqual([{ cause: 'reader_budget', count: 5, by_source: { a: 4, b: 1 } }, { cause: 'item_unsupported', count: 2, by_source: { a: 2 } }]);
+    expect(renderReport(c, { heading: 'w' })).toContain('- More gold than the reader is given (`reader_budget`): 5 rows (a 4, b 1)\n- Item its cited turns don\'t support (`item_unsupported`): 2 rows (a 2)');
+  });
+
+  test("reader_budget rows show what retrieval did on them, per source, from each row's first secondary cause, and no count changes", () => {
+    const over = (retrieved: 'none' | 'partial' | 'all', delivered: 'none' | 'partial' | 'all') => ({ ...failure().gold, gold_count: 6, reader_budget: 5, retrieved, delivered });
+    const c = summarize([...row('a', 2, { gold: over('all', 'partial') }), ...row('a', 3, { gold: over('partial', 'partial') }), ...row('b', 1, { gold: over('none', 'none') }),
+      ...row('b', 1, { gold: over('all', 'partial') }), ...row('b', 1, { gold: over('all', 'all') }), ...row('a', 1, { gold: gold('none') })]);
+    expect(c.suite).toEqual([{ cause: 'reader_budget', count: 8, by_source: { a: 5, b: 3 } }]);
+    expect(c.ranked.map(r => [r.cause, r.count])).toEqual([['retrieval_miss', 1]]);
+    expect(c.reader_budget_secondary).toEqual({ a: { partial_evidence: 3, wrong_ranking: 2 }, b: { none: 1, retrieval_miss: 1, wrong_ranking: 1 } });
+    expect(renderReport(c, { heading: 'w' })).toContain("- More gold than the reader is given (`reader_budget`): 8 rows (a 5, b 3)\n- What retrieval did on the `reader_budget` rows (each row's first secondary cause, for information only): a partial_evidence 3, wrong_ranking 2; b none 1, retrieval_miss 1, wrong_ranking 1.\n");
+    expect(summarize(row('a', 1, { gold: gold('none') })).reader_budget_secondary).toEqual({});
+  });
+
   test('a top-three place is provisional when the rows waiting for the labeller could move it, and those rows are listed', () => {
     const waiting = Array.from({ length: 2 }, (_, i) => residualLabel('a', `w${i}`));
     const c = summarize([...row('a', 5, { gold: gold('none') }), ...row('a', 2, { stop: 'harness_error' }), ...row('a', 1, { stop: 'turn_cap' }), ...row('a', 2, { category: 'abstention', gold: { ...failure().gold, gold_count: 0 } }), ...waiting]);

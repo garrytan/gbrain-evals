@@ -125,9 +125,24 @@ names rows carrying records falls from about 82% to 60%, and the names call gets
 | arm, run 2 (106 cells) | $53.85 |
 | **round 3 total** | **$187.20** (cap $228.19) |
 
-Agent plus judge cost recorded on the 300 attempts is $148.52; the ledger's arm total is $155.83. I did not trace the
-$7.31 difference; the ledger figure is the one the caps bind on. Development program committed after round 3: $1,518.50 of $1,777.15
-(`ledger-program.json`, `ledger-runs.json`).
+Agent plus judge cost recorded on the 300 attempts is $148.52 (corrected 2026-11-09: cache writes were under-counted,
+so this is 3% to 5% low); the ledger's arm total is $155.83. I did not trace the $7.31 difference; the ledger figure
+is the one the caps bind on. Most of the difference is now traced: the attempts priced gpt-6.1-sol's cache writes as
+plain input, which accounts for about two thirds of it, and the rest fits the Sol judge's cache writes (up to about a
+fifth) and Sol requests over 272,000 input tokens, which the ledger priced at OpenAI's long-context rates and the
+attempts didn't. Development program committed after round 3: $1,518.50 of $1,777.15 (`ledger-program.json`,
+`ledger-runs.json`).
+
+Correction, 2026-11-09: the Cat 40 runner priced gpt-6.1-sol agent turns and judge calls from usage that counted
+OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or
+more as a cache write, at $2.50 per million against $2.00 for input, so the attempts' recorded cost was low; the share
+is worked out from the committed attempts and the ledger, which priced cache writes. OpenAI also bills a request over
+272,000 input tokens at long-context rates (twice the input, cached-input and cache-write prices, 1.5 times output),
+which the runner didn't apply; the rows don't record which requests passed that line, so where a correction is a
+range, its low end prices no request at those rates and its high end prices every session that could have held one, up
+to the ledger's surplus over the rows, since the ledger applied those rates. No score or verdict changes.
+([corrections](../../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 ## Files
 

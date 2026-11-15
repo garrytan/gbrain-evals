@@ -238,22 +238,42 @@ export function refreshProviderBaseUrls(home: string, voyageBase: string, advert
   return changed;
 }
 
-type ProbeSlot = { id: string; client: { call(name: string, args: Record<string, unknown>): Promise<string> } | null; restore(): Promise<void> };
-type ProbeProxy = { bind(slot: string, key: string): void; unbind(slot: string, key?: string): void; finalize(key: string, timeoutMs?: number): Promise<{ byModel: Record<string, { requests: number }> }> };
+type ProbeSlot = { id: string; client: { call(name: string, args: Record<string, unknown>): Promise<string>; stderr?: string[] } | null; restore(): Promise<void> };
+type ProbeProxy = { bind(slot: string, key: string): void; unbind(slot: string, key?: string): void; finalize(key: string, timeoutMs?: number): Promise<{ byModel: Record<string, { requests: number }>; refused?: Record<string, number>; last_refusal?: string }> };
+
+/** gbrain's marker on a search that fell back to keyword matching because its query embed missed gbrain's deadline (6 s by default). */
+const EMBED_TIMEOUT_MARK = '[gbrain degraded: embed_timeout]';
 
 /**
  * One search per started slot must reach a reranker through this process's proxy; otherwise fail closed before any
  * cell runs (from GBRA-39's #76, Cat 40 Hard R0). Each slot is restored after its probe.
+ * A search whose query embed missed gbrain's deadline never tries the reranker, so it says nothing about whether the
+ * reranker is reachable. On a CPU-saturated machine the embed can be aborted before it reaches the proxy (reproduced
+ * locally, 2026-11-09). Only that case repeats, up to `attempts` searches `gapMs` apart; a rerank request must still be
+ * seen. A provider request the proxy refused on the budget fails at once and names the refusal, since waiting never
+ * lifts it: gbrain retries the proxy's 502 until its own deadline, so such a search also reads as embed_timeout.
  */
-export async function rerankProbe(slots: ProbeSlot[], proxy: ProbeProxy, query: string): Promise<void> {
+export async function rerankProbe(slots: ProbeSlot[], proxy: ProbeProxy, query: string, opts: { attempts?: number; gapMs?: number } = {}): Promise<void> {
+  const attempts = opts.attempts ?? 4, gapMs = opts.gapMs ?? 15_000;
   for (const s of slots) {
     const key = `rerank-probe:${s.id}`;
-    proxy.bind(s.id, key);
-    try { await s.client!.call('search', { query }); }
-    finally { proxy.unbind(s.id, key); }
-    const m = await proxy.finalize(key, 30_000);
-    const reranks = Object.entries(m.byModel).filter(([k]) => /rerank/i.test(k)).reduce((n, [, v]) => n + v.requests, 0);
-    if (!reranks) throw new HarnessError(`gbrain ${s.id}: a probe search made no rerank request (provider calls: ${JSON.stringify(m.byModel)}); the reranker is unreachable or off, so the arm would run degraded. Fix the provider endpoint, or pass --gbrain-config search.reranker.enabled=false to measure without reranking on purpose and say so in the preregistration.`);
+    for (let attempt = 1; ; attempt++) {
+      proxy.bind(s.id, key);
+      let out: string;
+      try { out = await s.client!.call('search', { query }); }
+      finally { proxy.unbind(s.id, key); }
+      const m = await proxy.finalize(key, 30_000);
+      const reranks = Object.entries(m.byModel).filter(([k]) => /rerank/i.test(k)).reduce((n, [, v]) => n + v.requests, 0);
+      if (reranks) break;
+      if (m.refused?.budget) throw new HarnessError(`gbrain ${s.id}: the proxy refused ${m.refused.budget} of the probe search's provider requests on the budget (${m.last_refusal}), so no search reached the reranker`);
+      const timedOut = out.includes(EMBED_TIMEOUT_MARK);
+      if (timedOut && attempt < attempts) { await new Promise(r => setTimeout(r, gapMs)); continue; }
+      const cause = timedOut
+        ? `all ${attempts} probe searches, ${gapMs / 1000} s apart, fell back to keyword matching because the query embed missed gbrain's deadline (embed_timeout), so no search reached the reranker and the arm would run degraded. Run the slots on a machine that is not saturated`
+        : 'the reranker is unreachable or off, so the arm would run degraded. Fix the provider endpoint, or pass --gbrain-config search.reranker.enabled=false to measure without reranking on purpose and say so in the preregistration';
+      const stderr = s.client?.stderr?.slice(-3).join(' | ').slice(0, 600);
+      throw new HarnessError(`gbrain ${s.id}: a probe search made no rerank request (provider calls: ${JSON.stringify(m.byModel)}); ${cause}.${stderr ? ` Server stderr: ${stderr}` : ''}`);
+    }
     await s.restore();
   }
 }

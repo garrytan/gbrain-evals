@@ -125,6 +125,8 @@ describe("Sol's 651 recorded calls from #304, replayed at the installed pin", ()
     '311a83bbefb127118acb252fe827cb047126aa4d': { refused: { 'multi-window-selector': 436, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 36 },
     // v0.60.557.0, the ceiling attempt's pin (plan decision S, as amended 2026-11-03): each refusal's text is now MCP's JSON error (gbrain#8458), and the classes are unchanged.
     '62637c96a5a5c2e9d55594f87a33d79c2f30b54f': { refused: { 'multi-window-selector': 436, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 36 },
+    // v0.60.623.0: gbrain#8509 (v0.60.570.0) reads one window from several selectors, so the 436 multi-selector calls read.
+    d253ec0ff12ed370ed3a846cb7da0191639c4a9e: { refused: { 'multi-window-selector': 0, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 472 },
   };
 
   test('every recorded get_page, traverse_graph and get_backlinks call, classified by the refusal text this pin returns', async () => {

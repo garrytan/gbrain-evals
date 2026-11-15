@@ -10,7 +10,7 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
@@ -28,7 +28,7 @@ import {
 import { project, stepPlan, loadCostBasis, checkRoster, budgetCheck, STEPS } from '../../eval/runner/cat40/hard-ops.ts';
 import { runAgent, ProviderError, HarnessError, type Arm, type AgentRun } from '../../eval/runner/cat40/loop.ts';
 import { OracleArm, FsArm, FileStore } from '../../eval/runner/cat40/arms.ts';
-import { main, checkRunnerFlags, experimentFlags, bindExperiment, rerankProbe } from '../../eval/runner/cat40-model-ladder.ts';
+import { main, checkRunnerFlags, experimentFlags, bindExperiment, DEV_SET_LABEL, freezeGate, rerankProbe } from '../../eval/runner/cat40-model-ladder.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { canonicalCells, readRecords, type CellRecordV2 } from '../../eval/runner/cat40/records.ts';
 import { closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
@@ -358,6 +358,27 @@ describe('runner (T1, T2, T6: CEO-F3, CEO-F12, DX-F3, DX-F7, ENG-F1, ENG-F2, ENG
   test('the smoke and held-out seeds refuse knobs other than knobs.frozen.json', async () => {
     const heldout = generateHardWorld(SMOKE);
     await expect(main(['--world', writeWorld(heldout), '--models', 'claude-sonnet-5-5', '--judge', 'gpt-6.1-sol', '--arms', 'fs', '--out', tmp(), '--preflight'])).rejects.toThrow('HARD_KNOBS_NOT_FROZEN');
+  });
+  test('a paid slot build on a frozen seed checks the freeze before it spends, as its cells would', async () => {
+    await expect(main(['--world', writeWorld(generateHardWorld(SMOKE)), '--build-slots', '--gbrain-repo', tmp(), '--gbrain-root', tmp(), '--slots', '1', '--out', tmp(), '--budget-usd', '1'])).rejects.toThrow('HARD_KNOBS_NOT_FROZEN');
+  });
+  test('the freeze gate: drift stops a run unless accepted; --dev-set runs on drifted code, returns the files for the receipt, and never runs a step or accepts drift', () => {
+    const asked: boolean[] = [];
+    const drift = (files: string[]) => (accept: boolean) => { asked.push(accept); return files; };
+    expect(() => freezeGate({ devSet: false, accept: false, step: undefined, drift: drift(['eval/runner/cat40/loop.ts']) })).toThrow('HARD_FREEZE_DRIFT');
+    expect(() => freezeGate({ devSet: false, accept: true, step: undefined, drift: drift(['eval/runner/cat40/loop.ts']) })).toThrow('accepted-drift.json does not list');
+    expect(freezeGate({ devSet: false, accept: false, step: undefined, drift: drift([]) })).toBeNull();
+    expect(freezeGate({ devSet: true, accept: false, step: undefined, drift: drift(['eval/runner/cat40/loop.ts']) })).toEqual(['eval/runner/cat40/loop.ts']);
+    expect(asked).toEqual([false, true, false, false]);
+    expect(() => freezeGate({ devSet: true, accept: false, step: 'cells-50k', drift: drift([]) })).toThrow('never the preregistered step cells-50k');
+    expect(() => freezeGate({ devSet: true, accept: true, step: undefined, drift: drift([]) })).toThrow('drop --accept-freeze-drift');
+  });
+  test('a --dev-set receipt labels itself as not a Hard-freeze result, with drift null when the freeze was not checked', async () => {
+    const out = tmp();
+    await main(['--scripted', '--dev-set', '--world', writeWorld(world), '--arms', 'oracle', '--families', 'H1', '--per-family', '1', '--out', out]);
+    const receipt = JSON.parse(readFileSync(join(out, readdirSync(out).find(f => f.startsWith('receipt-'))!), 'utf8'));
+    expect(receipt.dev_set).toEqual({ label: DEV_SET_LABEL, freeze_drift: null });
+    expect(DEV_SET_LABEL).toContain('not a Hard-freeze result');
   });
   test('particle-1 does not run on Hard worlds: amendment A6 keeps the model list, and the Hard freeze does not cover its transport', async () => {
     await expect(main(['--world', writeWorld(world), '--models', 'particle-1', '--judge', 'gpt-6.1-sol', '--arms', 'fs', '--out', tmp(), '--preflight'])).rejects.toThrow('particle-1 does not run on Hard worlds');

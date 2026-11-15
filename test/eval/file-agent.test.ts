@@ -388,7 +388,7 @@ describe('true full context', () => {
     expect(bodies).toHaveLength(2);
     for (const b of bodies) { expect(b.body.output_config).toBeUndefined(); expect(b.body.reasoning).toBeUndefined(); expect(b.body.reasoning_effort).toBeUndefined(); }
     expect(Object.keys(bodies[0].body)).toEqual(['model', 'max_tokens', 'system', 'tools', 'messages']);
-    expect(Object.keys(bodies[1].body)).toEqual(['model', 'instructions', 'input', 'tools', 'max_output_tokens']);
+    expect(Object.keys(bodies[1].body)).toEqual(['model', 'instructions', 'input', 'tools', 'max_output_tokens', 'store', 'include']);
     await sys.close();
   });
 

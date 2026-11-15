@@ -4,6 +4,9 @@ This file records every calibration round of the Hard generator: the knobs, the 
 
 Calibration uses seed 20261005, 10 tasks per family from a world generated at the held-out density of 20 per family (the first 10 of each family, the same indices every round), fs, pg and oracle, 1 repeat, `--judge gpt-6.1-sol`. gbrain never runs on this seed.
 
+Correction, 2026-11-09: the calibration rounds priced GPT-6 Astra agent turns and gpt-6.1-sol judge calls from usage that counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached token of a prompt of 1,027 tokens or more to these models as a cache write, at $12.50 per million against $10 for input for gpt-6-astra and $2.50 against $2.00 for gpt-6.1-sol, so the cost figures in this file were low (not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so they're low by at most 25% if no request passed 272,000 input tokens, and by up to 150% if requests did, since OpenAI bills those at long-context rates the runner didn't apply). No knob, freeze decision or verdict changes. ([corrections](../../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 ## Round plan
 
 | Round | Knob file | Change from the previous round and why | Result |

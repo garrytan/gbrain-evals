@@ -15,7 +15,11 @@ gbrain's memory trust feature ([#5575](https://github.com/garrytan/gbrain/issues
 
 - **On ordinary conversations the gate flags little and the review queue stays empty** (amendment 5, at the shipped tree). Across 12 simulated users (563 LongMemEval-S sessions on 171 days), 0 of 5,124 agent-written facts were flagged, whether extracted by the default model (Claude Haiku 5.5) or saved with `remember`, and 15 of 563 transcript pages were (0.09 per active day). `gbrain trust review` listed 0 items for every user. All 15 page flags were false flags: 3 were the user's own prompts to the assistant, 12 were not instructions at all, 8 of them the assistant's own "As an AI language model, I don't…, but I can…" replies. Every one of 15 injected instruction lines was flagged.
 
-Real spend: $212.15 of the $500 cap ([spend](#cost-and-the-ledger)).
+Real spend: $212.15 of the $500 cap ([spend](#cost-and-the-ledger)) (not recomputed 2026-11-09: the GPT rows are not committed; cache writes were under-counted, so this is about 2% low, and low by at most 5%).
+
+Correction, 2026-11-09: Cat 37's counted GPT cell, its labels-absent arm, the Cat 38 and Cat 39 model arms and the utility guard's GPT reader ran on runner code from before the budget ledger began pricing OpenAI cache writes (`8a8e502a`), so their gpt-6.1-sol cache writes were charged at the input rate. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so those figures were low. Their per-request usage is not committed, so they are not recomputed: the utility guard's GPT reader is the same LongMemEval notes reader as W10b, so W10b's corrected ratio puts it about 24% low, and the others carry upper bounds in the table below. The preference and relay runs of amendments 3 and 4 were priced after the fix and don't move. No score or verdict changes. ([corrections](../corrections.md#openai-cache-writes))
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 ## The concrete case
 
@@ -213,20 +217,20 @@ Keep trust labels on: they are what kept frontier models from adopting planted c
 
 | Line | Real spend (ledger, settled) |
 |---|---|
-| Cat 37 counted cells (Opus $18.18, Sonnet $9.42, GPT $6.17) | $33.77 |
-| Cat 37 labels-absent arm (amendment 2) | $17.01 |
-| Cat 37 Fable smoke, GPT pre-flight | $0.35 |
-| Cat 38 model arm | $5.44 |
-| Cat 39 model arm and embedding probe | $0.85 |
+| Cat 37 counted cells (Opus $18.18, Sonnet $9.42, GPT $6.17; not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so the GPT figure is low by at most 19%) | $33.77 (low by at most 4%) |
+| Cat 37 labels-absent arm (amendment 2) | $17.01 (not recomputed 2026-11-09: the per-model usage is not committed; cache writes were under-counted on its GPT-6.1 Sol share, so this is low by at most 23%) |
+| Cat 37 Fable smoke, GPT pre-flight | $0.35 (not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so this is low by at most 2%) |
+| Cat 38 model arm | $5.44 (not recomputed 2026-11-09: the per-model usage is not committed; cache writes were under-counted on its GPT-6.1 Sol share, so this is low by at most 25%) |
+| Cat 39 model arm and embedding probe | $0.85 (not recomputed 2026-11-09: the per-model usage is not committed; cache writes were under-counted on its GPT-6.1 Sol share, so this is low by at most 24%) |
 | Utility guard: capture (embeddings $7.58, rerank $0.35) | $7.93 |
-| Utility guard: Sonnet reader $23.20 and judge $0.37, Opus reader $47.28 and judge $0.38, GPT reader $14.72 and judge $0.27 (booked at list price; the batch APIs bill about half) | $86.23 |
+| Utility guard: Sonnet reader $23.20 and judge $0.37, Opus reader $47.28 and judge $0.38, GPT reader $14.72 and judge $0.27 (booked at list price; the batch APIs bill about half; not recomputed 2026-11-09: the rows are not committed; cache writes were under-counted, so the GPT reader is about 24% low) | $86.23 (about 4% low) |
 | User-stated preferences (amendment 3): Opus $6.60, Sonnet $3.85, GPT $3.12 | $13.57 |
 | Amendment 4 (a), user-stated preferences v2: Opus $6.32, Sonnet $3.66, GPT $2.50 | $12.47 |
 | Amendment 4 (b), Cat 37 relay-origin and plain: Opus $5.92 + $5.64, Sonnet $3.23 + $3.14, GPT $2.14 + $2.12 | $22.19 |
 | Amendment 5, flag rate and review load (Sonnet agent pass, Haiku extraction, embeddings, judge) | $12.35 |
-| **Total** | **$212.15** |
+| **Total** | **$212.15** (about 2% low, and low by at most 5%) |
 
-The ledger also holds $238.14 of reservations that never left the process: amendment 1's first capture attempt imported the batch helper's `realFetch` after modules that replace `globalThis.fetch`, so the guard wrapped a fetch that called back into itself and reserved about 3.66 million times in 16 minutes without sending a request (no reservation ever settled; a fixed run of the same capture settles every request). The cause is fixed in `eval/runner/memory-trust/utility-guard.ts` (it imports `realFetch` first). The ledger has no release command and was not hand-edited, so its committed total overstates spend by that amount and its cap stayed the binding check throughout. Closing the run settled those reservations at their reserved amount, so the closed run reports $403.28: the $165.14 spent before amendment 4 plus the $238.14 that was never sent. Amendment 4 ran in its own budget run, `memory-trust-amendment-4` ($96). It closed at $34.66 settled over 10,150 requests. Each command passed `--estimate-usd` (Opus 27 and 20, Sonnet 14 and 12, GPT 10 and 10, for (b) and (a)) for the start-only-if-fits check. Every request still reserved its own worst case, and the cap was not changed. The Cat 37 receipts record the estimate under `resolved_config.model_arm.estimate_usd`. The preference receipts from this run do not record it; the runner now writes `resolved_config.estimate_usd`.
+The ledger also holds $238.14 of reservations that never left the process: amendment 1's first capture attempt imported the batch helper's `realFetch` after modules that replace `globalThis.fetch`, so the guard wrapped a fetch that called back into itself and reserved about 3.66 million times in 16 minutes without sending a request (no reservation ever settled; a fixed run of the same capture settles every request). The cause is fixed in `eval/runner/memory-trust/utility-guard.ts` (it imports `realFetch` first). The ledger has no release command and was not hand-edited, so its committed total overstates spend by that amount and its cap stayed the binding check throughout. Closing the run settled those reservations at their reserved amount, so the closed run reports $403.28: the $165.14 spent before amendment 4 (not recomputed 2026-11-09: the GPT rows are not committed; cache writes were under-counted, so this is about 2% low, and low by at most 7%) plus the $238.14 that was never sent. Amendment 4 ran in its own budget run, `memory-trust-amendment-4` ($96). It closed at $34.66 settled over 10,150 requests. Each command passed `--estimate-usd` (Opus 27 and 20, Sonnet 14 and 12, GPT 10 and 10, for (b) and (a)) for the start-only-if-fits check. Every request still reserved its own worst case, and the cap was not changed. The Cat 37 receipts record the estimate under `resolved_config.model_arm.estimate_usd`. The preference receipts from this run do not record it; the runner now writes `resolved_config.estimate_usd`.
 
 ## Reproduce and inspect
 

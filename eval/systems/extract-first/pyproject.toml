@@ -14,3 +14,5 @@ dependencies = [
 package = false
 prerelease = "if-necessary"
 exclude-newer = "2026-10-05T00:00:00Z"
+# certifi is the one exception to the cutoff, raised to 2026.10.19 for a security fix (2026-11-11).
+exclude-newer-package = { certifi = "2026-10-22T00:00:00Z" }

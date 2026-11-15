@@ -11,7 +11,8 @@
  *     `refused`, and prints the command that resumes the run once the cap is raised.
  *   - No silent resend. An episode whose last log row is `errored` (a provider or harness error) or `started` (in flight
  *     when the process died) may already have been billed, so a resume skips it unless --retry-errored is passed. A
- *     `refused` episode is re-run on resume: its refused request never left the process. Completed episodes are skipped.
+ *     `refused` episode is re-run on resume: its refused request never left the process. Turns it sent before the
+ *     refusal stay in that row's usage, and cost per correct answer counts them. Completed episodes are skipped.
  *   - One build per result. Every row records the gbrain version and commit it ran on, and a resume refuses, before
  *     sending anything, when any row it would reuse ran on another build (or records none).
  */
@@ -91,7 +92,11 @@ export interface PaidResult {
   /** The latest done row of every job, this invocation's and earlier ones'. */
   done: LogRow[];
   errored: LogRow[];
-  /** Every errored row of these jobs in the log, earlier attempts of a since-retried episode included: spend cost per correct counts. */
+  /**
+   * Every errored row of these jobs in the log, earlier attempts of a since-retried episode included, and every refused
+   * row whose usage records turns billed before the refusal (a mid-episode cap stop, re-run on resume): spend cost per
+   * correct counts. Each row is one attempt's own usage, so each dollar appears once.
+   */
   errored_attempts: LogRow[];
 }
 
@@ -155,6 +160,7 @@ export async function runPaid(jobs: readonly PaidJob[], opts: { log: string; con
   const done = jobs.map(j => latest.get(j.key)).filter((r): r is LogRow => r?.status === 'done');
   const errored = jobs.map(j => latest.get(j.key)).filter((r): r is LogRow => r?.status === 'errored');
   if (pause !== null) print(`paused: ${pause}\nRaise the budget run's cap (a ledger extension from GBEV-3) or open a new run, then resume with:\n  ${opts.resumeCommand}`);
-  const errored_attempts = readLogRows(opts.log, opts.counted).filter(r => r.status === 'errored' && keys.has(r.key));
+  const billed = (r: LogRow) => r.status === 'errored' || (r.status === 'refused' && Object.values(r.usage ?? {}).some(n => n > 0));
+  const errored_attempts = readLogRows(opts.log, opts.counted).filter(r => billed(r) && keys.has(r.key));
   return { status: pause !== null ? 'paused' : done.length === jobs.length ? 'complete' : 'incomplete', ran, skipped, pause_reason: pause, done, errored, errored_attempts };
 }

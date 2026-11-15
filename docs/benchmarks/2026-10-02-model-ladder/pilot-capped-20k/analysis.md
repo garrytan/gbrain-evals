@@ -1,3 +1,5 @@
+> Correction, 2026-11-09: this page's dollar figures for gpt-6.1-sol count OpenAI cache writes as plain input, so they are low. The corrected cells are in the [cache-write audit](../../../audit/2026-11-09-openai-cache-writes.md#cw-ladder-pilot-capped-20k-analysis). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 Cells: 1560. Spend in these records: $79.64.
 
 | Model | capability (oracle) | fs | fs-acl | gbrain | memory | pg | gbrain advantage [95% CI] |

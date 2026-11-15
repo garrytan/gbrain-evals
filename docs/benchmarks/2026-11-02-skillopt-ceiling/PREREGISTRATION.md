@@ -185,6 +185,12 @@ The 2026-11-03 amendment below records this calibration as exploratory and super
 | 2 | 4 to 5 / 20 / 24 / 6 | `3f416c5e…6d85` | Opus (24) | 1.000 | 1.000 | 0.875 | 0.1611 |
 | 2, frozen | same | same | Sol, half (12) | 1.000 | 1.000 | 0.750 | 0.0626 |
 
+(not recomputed 2026-11-09: the first calibration's rows are not committed; cache writes were under-counted, so the Sol means in this table are about 13% low, by the ratio the re-read's committed rows show.)
+
+Correction, 2026-11-09: the rollout meter priced gpt-6.1-sol's cache writes as plain input, because it reads gbrain's `cache_creation_tokens`, which is 0 for Sol calls. OpenAI reports almost every uncached token of a gpt-6.1-sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so every Sol mean cost per rollout in this file is low, and so are the re-priced stage figures built on them. The budget ledger priced cache writes, so ledger spend and the caps are unaffected. The re-read's means are repriced from its committed rows in the notes below. No score, gate result, cap, stage rule or verdict changes. ([corrections](../../corrections.md#openai-cache-writes))
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 No round reached the 0.30 to 0.60 band, and the knobs did not move Opus at all. Round 2 tripled the distractors, added a record to the shortest chains and raised the look-alike pairs from 35 to 44, and Opus scored the same on every skill. The reason is that search puts the deciding pages on its first result page: Opus answered query in 1.5 tool calls on average.
 
 A third round had no harder setting to try. Within the dataset's own checks (`test/eval/skillopt-method-v3.test.ts`), round 2 is as hard as the knobs go:
@@ -212,6 +218,8 @@ Sol still passed 12 of 12 briefing rollouts and 9 of 12 fact-check rollouts that
 | A2/A3 gate attempt | $415.80 | $311.42 | $470 |
 | A4 stop-path read | $518.40 | $386.55 | $650 |
 | B0 E1 check | $203.40 | $152.13 | $300 |
+
+(not recomputed 2026-11-09: the round-2 rows are not committed; cache writes were under-counted, so these re-priced figures are about 3% to 4% low, and each stays inside its cap.)
 
 B2 is re-priced from the gate's own metered costs in the counted amendment (section 6).
 
@@ -247,14 +255,14 @@ No spend total, stage cap, arm, split or verdict rule changes in this amendment.
 
 ### 2026-11-03, after the calibration re-read: scores, Sol refusals and re-priced stages
 
-**Calibration re-read.** Ledger run `n15-ceiling-calibration-2026-11-03T12-54-22-002Z-99f3820d` (cap $22.04, inside the $22.05 the stage had left) metered $15.45 over 580 requests and is closed, so the calibration stage holds $43.40 of its $50. It ran at commit `d9649d09`, gbrain `62637c96a` (v0.60.557.0) and MANIFEST `5729db40…a615`, on train only, with the knobs frozen and the seed at 1 run. A machine restart during Sol's fact-check read left $0.42 of reservations open, which keep counting at their full amount, and about $0.52 of settled spend on rollouts that were in flight, which `--resume` ran again. Both are inside the $15.45. Seed substance scores:
+**Calibration re-read.** Ledger run `n15-ceiling-calibration-2026-11-03T12-54-22-002Z-99f3820d` (cap $22.04, inside the $22.05 the stage had left) metered $15.45 over 580 requests and is closed, so the calibration stage holds $43.40 of its $50. It ran at commit `d9649d09`, gbrain `62637c96a` (v0.60.557.0) and MANIFEST `5729db40…a615`, on train only, with the knobs frozen and the seed at 1 run. A machine restart during Sol's fact-check read left $0.42 of reservations open, which keep counting at their full amount, and about $0.52 of settled spend on rollouts that were in flight, which `--resume` ran again (corrected 2026-11-09: cache writes were under-counted; the $0.52 is the whole gap between Sol's ledger entries and its rollout meters, and about two thirds of it is the cache-write premium the meters missed on the counted rollouts, so the in-flight spend was about a third of it). Both are inside the $15.45. Seed substance scores:
 
 | Target (train tasks per skill) | query | briefing | fact-check | Mean $ per rollout |
 |---|---|---|---|---|
 | Opus (24) | 1.000 | 1.000 | 1.000 | 0.1647 |
 | Sol, half (12) | 1.000 | 1.000 | 0.917 | 0.0736 |
 
-Full scores match except Opus briefing (0.958) and Sol fact-check (0.917, where one rollout stopped at the turn limit). Opus's mean rollout cost $0.0766 on query, $0.2784 on briefing and $0.1390 on fact-check, and Sol's $0.0141, $0.1084 and $0.0983. On Opus the seed sits at the top of train, above the 0.30 to 0.60 band as in the first calibration (where fact-check scored 0.875). The knobs stay frozen, and the gate's held-out families decide whether there is headroom.
+Full scores match except Opus briefing (0.958) and Sol fact-check (0.917, where one rollout stopped at the turn limit). Opus's mean rollout cost $0.0766 on query, $0.2784 on briefing and $0.1390 on fact-check, and Sol's $0.0141, $0.1084 and $0.0983 (corrected 2026-11-09: cache writes were under-counted; from the committed rows, Sol's mean per rollout is $0.0829 rather than $0.0736, and $0.0170, $0.1230 and $0.1087 by skill). On Opus the seed sits at the top of train, above the 0.30 to 0.60 band as in the first calibration (where fact-check scored 0.875). The knobs stay frozen, and the gate's held-out families decide whether there is headroom.
 
 **Sol at this pin.** Opus made 336 tool calls and none was refused, and Sol's query made 16 with none refused. On briefing, 127 of Sol's 246 calls were refused (52%: `get_page` with two window selectors 87, other 40), and on fact-check 178 of 212 (84%: 146 and 32). The receipts count no recovered read after a refusal, 0 of 305, and 12 abandoned two-selector reads on each of the two skills. So gbrain#8458's structured error did not change Sol's refusal rate from the first calibration's 48% and 84%. Sol still scored 12 of 12 on briefing and 11 of 12 on fact-check. The gate's cause table decides whether a Sol pair fails as `harness`.
 
@@ -265,6 +273,8 @@ Full scores match except Opus briefing (0.958) and Sol fact-check (0.917, where 
 | A2/A3 gate attempt | $415.80 | $331.34 | $470 |
 | A4 stop-path read | $518.40 | $411.71 | $650 |
 | B0 E1 check | $203.40 | $161.91 | $300 |
+
+(corrected 2026-11-09: cache writes were under-counted, so these three re-priced figures are about 4% low; each stays inside its cap, and Sol's corrected mean stays under its $0.0920 re-price threshold. Sol's gate never ran.)
 
 If no Opus pair shows headroom and the Opus pairs read `saturated`, Sol's gate does not run (section 4), and a gate attempt costs about $227.96: Opus's 1,368 rollouts and 9 proposer calls. The re-price rule's 1.25× thresholds are $0.2058 per scored rollout on Opus and $0.0920 on Sol. The gate runs Opus's query pair first and briefing second. At train costs, Opus's window after those two pairs averages about $0.178, under its threshold, so the trigger fires there only if gate rollouts cost about 16% more than train's. B2 is re-priced from the gate's own metered costs in the counted amendment (section 6).
 
@@ -301,7 +311,7 @@ The receipt gives every column but the last, which is computed from the receipt'
 - GST-956, preliminary and never deciding (section 7): #304's rewrite against seed run 1 is +0 [0, 0] on all three pairs, 0 wins and 0 losses, McNemar p 1.0, `no-difference-shown`.
 - Opus made 4,756 tool calls in the stage's 1,068 rollouts and none was refused; no rollout stopped at the turn limit or the output limit. No arm was voided, no spend went unscored and the re-price trigger did not fire: the stage's mean rollout cost was $0.061 after `query`, $0.132 after `briefing` and $0.123 after `fact-check`, under the $0.2058 threshold. Per pair, `query` cost $23.74, `briefing` $67.92 and `fact-check` $42.21, proposer calls included.
 
-**The re-priced figures' precision (#349).** The previous amendment's re-priced figures come from the re-read receipts' unrounded means, $0.164665525 per Opus rollout and $0.0735933139 per Sol rollout (the gate receipt's `resolved_config.prices`), not from the $0.1647 and $0.0736 its table prints. With the unrounded means the stop-path read is 1,728 × ($0.164665525 + $0.0735933139) = $411.71, the gate attempt $331.34, the Opus-only attempt $227.96, B0 $161.91 and Opus's 1.25× trigger $0.2058. Recomputed from the rounded means they would read $411.78, $331.39, $228.01, $161.94 and $0.2059. Sol's trigger is $0.0920 either way. No figure, cap or rule changes.
+**The re-priced figures' precision (#349).** The previous amendment's re-priced figures come from the re-read receipts' unrounded means, $0.164665525 per Opus rollout and $0.0735933139 per Sol rollout (the gate receipt's `resolved_config.prices`), not from the $0.1647 and $0.0736 its table prints. With the unrounded means the stop-path read is 1,728 × ($0.164665525 + $0.0735933139) = $411.71, the gate attempt $331.34, the Opus-only attempt $227.96, B0 $161.91 and Opus's 1.25× trigger $0.2058. Recomputed from the rounded means they would read $411.78, $331.39, $228.01, $161.94 and $0.2059. Sol's trigger is $0.0920 either way. No figure, cap or rule changes. (corrected 2026-11-09: cache writes were under-counted, so Sol's unrounded mean and the stage figures built on it are about 13% and 4% low, as the notes above give; the trigger itself stays $0.0920.)
 
 Under section 4 the next step would be the one revision and a second gate. The next amendment records why neither runs.
 

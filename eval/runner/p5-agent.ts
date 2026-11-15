@@ -26,9 +26,9 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { BudgetRun, budgetOptionsFrom, ledgerStatus, startPaidRun, type PaidRequestGuard, type RunSummary } from './budget-ledger.ts';
+import { BudgetRun, budgetOptionsFrom, ledgerStatus, responseUsd, startPaidRun, type PaidRequestGuard, type RunSummary } from './budget-ledger.ts';
 import { McpClient } from './cat40/gbrain-arm.ts';
-import { priceUsage, provider, type Arm, type ToolSpec } from './cat40/loop.ts';
+import { provider, type Arm, type ToolSpec } from './cat40/loop.ts';
 import { runCli, type RunEnv } from './lifecycle/drivers.ts';
 import { PairingError, clusteredPairedDelta, pairObservations, seededRandom, type PairedDelta } from './stats/paired.ts';
 import { loadRows, toObservation } from './stats/rows.ts';
@@ -204,17 +204,14 @@ export async function chatText(model: string, system: string, user: string, opts
     const j = await post('https://api.openai.com/v1/responses', { authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` },
       { model, instructions: system, input: user, max_output_tokens: opts.maxTokens ?? 4000, reasoning: { effort: 'low' } });
     const text = ((j.output ?? []) as Array<Record<string, unknown>>).filter(o => o.type === 'message').flatMap(o => (o.content as Array<Record<string, unknown>>) ?? []).map(c => String(c.text ?? '')).join('\n');
-    const u = (j.usage ?? {}) as Record<string, number> & { input_tokens_details?: Record<string, number> };
-    const cached = u.input_tokens_details?.cached_tokens ?? 0;
-    return { text, input_tokens: u.input_tokens ?? 0, output_tokens: u.output_tokens ?? 0,
-      usd: priceUsage(model, { input: (u.input_tokens ?? 0) - cached, cache_read: cached, cache_write: 0, output: u.output_tokens ?? 0, requests: 1 }) };
+    const u = (j.usage ?? {}) as Record<string, number>;
+    return { text, input_tokens: u.input_tokens ?? 0, output_tokens: u.output_tokens ?? 0, usd: responseUsd('openai', model, j) ?? 0 };
   }
   const j = await post('https://api.anthropic.com/v1/messages', { 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
     { model, max_tokens: opts.maxTokens ?? 2000, system, messages: [{ role: 'user', content: user }] });
   const text = ((j.content ?? []) as Array<Record<string, unknown>>).filter(c => c.type === 'text').map(c => String(c.text)).join('\n');
   const u = (j.usage ?? {}) as Record<string, number>;
-  return { text, input_tokens: u.input_tokens ?? 0, output_tokens: u.output_tokens ?? 0,
-    usd: priceUsage(model, { input: u.input_tokens ?? 0, output: u.output_tokens ?? 0, cache_read: u.cache_read_input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0, requests: 1 }) };
+  return { text, input_tokens: u.input_tokens ?? 0, output_tokens: u.output_tokens ?? 0, usd: responseUsd('anthropic', model, j) ?? 0 };
 }
 
 /** The first JSON object in a model's text (fenced or bare), or null. */

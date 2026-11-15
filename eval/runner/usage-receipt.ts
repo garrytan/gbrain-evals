@@ -95,6 +95,11 @@ export interface UsageReceipt {
   response_meta?: ResponseMeta;
   /** A failed attempt's wait before the next one, from the provider's Retry-After, capped at 120 s; absent (memory-qa) or null (the Cat 40 loop) when it sent none. Recorded by lanes that call an OpenAI-compatible provider. */
   retry_after_ms?: number | null;
+  /**
+   * A yes-or-no judge reply's verdict: from its first three words (`head`), from the last standalone yes or no of a complete
+   * reply (`tail`), or none, a judge error. Recorded on the judge records of memory-qa's `judgeResponse` (qa-v2.ts `judgeVerdict`).
+   */
+  verdict_path?: 'head' | 'tail' | 'none';
 }
 
 /** The settings a request sent that change the answer. */

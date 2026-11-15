@@ -1,0 +1,273 @@
+{
+  "mode": "paid",
+  "counted": true,
+  "unit": "g6",
+  "plan": {
+    "unit": "g6",
+    "tasks": 50,
+    "surfaces": 2,
+    "k": 4,
+    "models": [
+      "claude-opus-5-5",
+      "gpt-6.1-sol",
+      "particle-1"
+    ],
+    "episodes": 1200,
+    "digest": "e701fa480a6df11ec9fd0c2edeec1e30a55cf61b627fa95c851d078115c554fd",
+    "per_model": [
+      {
+        "model": "claude-opus-5-5",
+        "episodes": 400
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "episodes": 400
+      },
+      {
+        "model": "particle-1",
+        "episodes": 400
+      }
+    ]
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-09-predictive-measures-preregistration.md",
+    "preregistration_commit": "a1cfff13fbabc2eb9cd019638b4d3a967a71cbc9",
+    "runner_commit": "a1cfff13fbabc2eb9cd019638b4d3a967a71cbc9",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-09T19:08:27.014Z"
+  },
+  "gbrain_version": "0.60.557.0",
+  "overlay": null,
+  "status": "complete",
+  "ran": 1200,
+  "skipped": {
+    "done": 0,
+    "errored": 0,
+    "in_flight": 0
+  },
+  "pause_reason": null,
+  "done": 1200,
+  "errored": [],
+  "errored_by_model": {
+    "claude-opus-5-5": 0,
+    "gpt-6.1-sol": 0,
+    "particle-1": 0
+  },
+  "scorecards": [
+    {
+      "unit": "G6",
+      "model": "claude-opus-5-5",
+      "episodes": 400,
+      "by_caller": {
+        "local": {
+          "episodes": 200,
+          "verdicts": {
+            "correct": 199,
+            "abstained_correctly": 0,
+            "answered_without_gold": 1,
+            "wrong": 0,
+            "invalid": 0
+          },
+          "answered_without_gold": 1,
+          "success": 199
+        },
+        "remote": {
+          "episodes": 200,
+          "verdicts": {
+            "correct": 44,
+            "abstained_correctly": 155,
+            "answered_without_gold": 0,
+            "wrong": 1,
+            "invalid": 0
+          },
+          "answered_without_gold": 0,
+          "success": 199
+        }
+      },
+      "by_subcause": {
+        "direct_flag": {
+          "episodes": 76,
+          "verdicts": {
+            "abstained_correctly": 75,
+            "wrong": 1
+          }
+        },
+        "alias_inheritance": {
+          "episodes": 56,
+          "verdicts": {
+            "abstained_correctly": 56
+          }
+        },
+        "derived_default": {
+          "episodes": 56,
+          "verdicts": {
+            "abstained_correctly": 56
+          }
+        }
+      },
+      "answered_without_gold": 1,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.98,
+        "curve": [
+          0.995,
+          0.99,
+          0.985,
+          0.98
+        ]
+      },
+      "usd": 16.652497599999982,
+      "cost_per_correct_usd": 0.04184044623115574,
+      "failure_causes": {
+        "citation_abstention": 2
+      },
+      "errored_usd": 0
+    },
+    {
+      "unit": "G6",
+      "model": "gpt-6.1-sol",
+      "episodes": 400,
+      "by_caller": {
+        "local": {
+          "episodes": 200,
+          "verdicts": {
+            "correct": 200,
+            "abstained_correctly": 0,
+            "answered_without_gold": 0,
+            "wrong": 0,
+            "invalid": 0
+          },
+          "answered_without_gold": 0,
+          "success": 200
+        },
+        "remote": {
+          "episodes": 200,
+          "verdicts": {
+            "correct": 44,
+            "abstained_correctly": 156,
+            "answered_without_gold": 0,
+            "wrong": 0,
+            "invalid": 0
+          },
+          "answered_without_gold": 0,
+          "success": 200
+        }
+      },
+      "by_subcause": {
+        "direct_flag": {
+          "episodes": 76,
+          "verdicts": {
+            "abstained_correctly": 76
+          }
+        },
+        "alias_inheritance": {
+          "episodes": 56,
+          "verdicts": {
+            "abstained_correctly": 56
+          }
+        },
+        "derived_default": {
+          "episodes": 56,
+          "verdicts": {
+            "abstained_correctly": 56
+          }
+        }
+      },
+      "answered_without_gold": 0,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 1,
+        "curve": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "usd": 6.932165499999998,
+      "cost_per_correct_usd": 0.017330413749999996,
+      "failure_causes": {},
+      "errored_usd": 0
+    },
+    {
+      "unit": "G6",
+      "model": "particle-1",
+      "episodes": 400,
+      "by_caller": {
+        "local": {
+          "episodes": 200,
+          "verdicts": {
+            "correct": 194,
+            "abstained_correctly": 0,
+            "answered_without_gold": 2,
+            "wrong": 4,
+            "invalid": 0
+          },
+          "answered_without_gold": 2,
+          "success": 194
+        },
+        "remote": {
+          "episodes": 200,
+          "verdicts": {
+            "correct": 44,
+            "abstained_correctly": 118,
+            "answered_without_gold": 5,
+            "wrong": 31,
+            "invalid": 2
+          },
+          "answered_without_gold": 5,
+          "success": 162
+        }
+      },
+      "by_subcause": {
+        "direct_flag": {
+          "episodes": 76,
+          "verdicts": {
+            "abstained_correctly": 62,
+            "wrong": 12,
+            "answered_without_gold": 1,
+            "invalid": 1
+          }
+        },
+        "alias_inheritance": {
+          "episodes": 56,
+          "verdicts": {
+            "abstained_correctly": 42,
+            "wrong": 9,
+            "invalid": 2,
+            "answered_without_gold": 3
+          }
+        },
+        "derived_default": {
+          "episodes": 57,
+          "verdicts": {
+            "abstained_correctly": 45,
+            "wrong": 10,
+            "answered_without_gold": 2
+          }
+        }
+      },
+      "answered_without_gold": 7,
+      "pass_hat_k": {
+        "k": 4,
+        "value": 0.73,
+        "curve": [
+          0.89,
+          0.815,
+          0.765,
+          0.73
+        ]
+      },
+      "usd": 5.86471362,
+      "cost_per_correct_usd": 0.01647391466292135,
+      "failure_causes": {
+        "citation_abstention": 35,
+        "partial_evidence": 2,
+        "model_error": 2,
+        "wrong_entity": 5
+      },
+      "errored_usd": 0
+    }
+  ]
+}

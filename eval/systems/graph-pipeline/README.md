@@ -107,3 +107,12 @@ All three questions returned the session holding the answer, with the answer wor
 a real extractor the delete left no entity or fact mentioning the deleted fact (the keyless run, with canned
 extraction, did leave some). One tiny conversation does not predict LoCoMo cost;
 the Phase 2 pilots measure cost per conversation.
+
+## Changelog
+
+### 2026-11-11: security fix in the lock
+
+`certifi` 2026.7.22 to 2026.10.19, relocked with the Dockerfile's uv 0.12.3; nothing else moved. Masashi-Ono0611
+reported the advisory in [gbrain-evals#183](https://github.com/garrytan/gbrain-evals/pull/183). `uv.lock` moves from `59af44d5` to `bdfac8b6`, and
+`capability.json` records the new hash: runs started after this change record it, and earlier results keep the hash
+they recorded.

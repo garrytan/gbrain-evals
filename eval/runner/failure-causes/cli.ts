@@ -9,8 +9,14 @@
  *   bun eval/runner/failure-causes/cli.ts label --failures <failures.ndjson> --out <file> --cache <dir> [--mode production|labelset]
  *       [--labelset-per-family <n>] --paid --budget-run-id <id>
  *   bun eval/runner/failure-causes/cli.ts agree --labelset <double.ndjson> --production <labels.ndjson> --out <label-check.json>
+ *   bun eval/runner/failure-causes/cli.ts attribute --labels <labels.ndjson> --cache <sota cache dir> --out <attribution.json>
  *   bun eval/runner/failure-causes/cli.ts report --labels <a.ndjson>[,<b.ndjson>] [--gates <label-check.json>] [--stress <stress.json>]
- *       [--known <known.json>] --out-dir <dir> --heading <text> [--allow-stale]
+ *       [--known <known.json>] [--attribution <attribution.json>] --out-dir <dir> --heading <text> [--allow-stale]
+ *
+ * attribute (keyless; attribution.ts) puts each failed QA row in its D5a bucket from the SOTA outcome cache, which it
+ * reads and never fills. When the cache holds rows measured on other inputs it still writes the file, marked stale, and
+ * exits 6 with SOTA_CACHE_STALE, the changed inputs, the re-buy command and the paid-window request; report then prints
+ * the cause counts with attribution marked stale.
  *
  * --known holds { known: [{ source, cause, detail_includes?, status }] }, a status shown beside matching under-stress rows
  * (such as a fix gbrain already shipped). report counts each source, run and case once when label files overlap, the last file winning, and refuses any model
@@ -35,6 +41,8 @@ import { classify } from './classify.ts';
 import { buildLabelPrompt, LABEL_PROMPT_SHA256, LABEL_SET_LABELLERS, labellerFor, labelResidual, labelSet, type LabellerSpec } from './label.ts';
 import { loadSource, readManifest } from './manifest.ts';
 import { issueDrafts, renderReport, summarize, type KnownStatus } from './report.ts';
+import { attribute, attributionText, type Attribution } from './attribution.ts';
+import { STALE_EXIT } from '../sota/cache.ts';
 import { renderTaxonomyMarkdown, TAXONOMY_VERSION } from './taxonomy.ts';
 import type { CauseLabel, EvalFailure, SourceCounts, StressCount } from './types.ts';
 
@@ -180,6 +188,15 @@ async function run(argv: string[]): Promise<number> {
     if (!gates.length) console.error('no labeller path to gate: the production labels hold no model label');
     return gates.length && gates.every(g => g.pass) ? 0 : 1;
   }
+  if (command === 'attribute') {
+    const out = need(rest, '--out');
+    const [{ oracleSpec }, { leaderSpec }] = await Promise.all([import('../sota/oracle.ts'), import('../sota/leader.ts')]);
+    const a = attribute(readNdjson<CauseLabel>(need(rest, '--labels')), { cacheDir: need(rest, '--cache'), specs: { oracle: oracleSpec, leader: leaderSpec } });
+    writeFileSync(out, attributionText(a, out));
+    if (a.status === 'stale') { for (const s of a.stale) console.error(s.message); return STALE_EXIT; }
+    console.log(JSON.stringify({ status: a.status, rows: a.rows.length, outside: a.outside, cells: a.cells.map(c => ({ suite: c.suite, reader: c.reader, rows: c.rows, points: c.points })) }, null, 1));
+    return 0;
+  }
   if (command === 'report') {
     const files = need(rest, '--labels').split(',');
     if (!rest.includes('--allow-stale')) for (const f of files) if (Date.now() - statSync(f).mtimeMs > STALE_MS) throw new Error(`${f} is more than 8 days old; a weekly report needs this week's labels (or pass --allow-stale for a back-classification)`);
@@ -199,12 +216,13 @@ async function run(argv: string[]): Promise<number> {
     mkdirSync(dir, { recursive: true });
     const summary = summarize(labels, stress, { known });
     writeFileSync(join(dir, 'summary.json'), JSON.stringify(summary, null, 1) + '\n');
-    writeFileSync(join(dir, 'report.md'), renderReport(summary, { heading: need(rest, '--heading') }));
+    const attribution: Attribution | undefined = flag(rest, '--attribution') ? JSON.parse(readFileSync(flag(rest, '--attribution')!, 'utf8')) : undefined;
+    writeFileSync(join(dir, 'report.md'), renderReport(summary, { heading: need(rest, '--heading'), attribution }));
     writeFileSync(join(dir, 'issues.json'), JSON.stringify(issueDrafts(summary), null, 1) + '\n');
     console.log(JSON.stringify({ failures: summary.failures, pending: summary.pending, top_three: summary.top_three.map(r => ({ cause: r.cause, score: r.score, count: r.count })) }, null, 1));
     return 0;
   }
-  console.error('usage: bun eval/runner/failure-causes/cli.ts taxonomy|classify|estimate|label|agree|report (see the header of this file)');
+  console.error('usage: bun eval/runner/failure-causes/cli.ts taxonomy|classify|estimate|label|agree|attribute|report (see the header of this file)');
   return 2;
 }
 

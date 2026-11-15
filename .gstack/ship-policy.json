@@ -5,6 +5,8 @@
     "eval/data/skillopt-method-v3/fact-check/**",
     "eval/data/skillopt-method-v3/query/**",
     "eval/data/skillopt-method-v3/seeds/**",
-    "eval/data/skillopt-method-v3/world/**"
+    "eval/data/skillopt-method-v3/world/**",
+    "docs/benchmarks/predictive-measures/**/scorecard.json",
+    "docs/benchmarks/predictive-measures/**/episodes.jsonl.gz"
   ]
 }

@@ -89,6 +89,8 @@ CI is the one full test run. `.gstack/pregate.json` maps these exact /ship lane 
 
 Pass the full suite to /ship as `--lane test='bun run test'` and push early, so CI runs beside the review. A pull-request run tests GitHub's merge of the branch into main, so it carries only while the branch contains main's tip. Any other lane command, the typecheck included, runs on your machine. The `tested-tree` job fails when a test file under `test/eval/` or `eval/` registers no tests, because Bun's report leaves the file out and no lane could carry; give it at least one test (a skipped one counts).
 
+CI splits the Bun suite into six shard jobs, each with a 15-minute limit, by the per-file times in `test/timings.json`. Bun shards whole files, so one slow file can't be split, and a file the timings don't list counts as a median file. When you add a test file that takes more than a minute, or a shard job nears 10 minutes, refresh the timings from a CI run's `tested-files-*` reports with `bun scripts/test-timings.ts` (its header has the commands).
+
 ### Choose models
 
 gbrain and gstack are built for frontier models, so every model-comparison run (Cat 40 Model Ladder, answer-model

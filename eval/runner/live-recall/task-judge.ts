@@ -3,9 +3,11 @@
  * gets the loop's retries, usage receipts, medium effort and, on OpenAI, store false. The judge ends by calling a tool
  * named submit_answer whose arguments are the verdict, so nothing is parsed out of prose.
  *
- * Routing (docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md, "Grading"): gpt-6.1-sol judges claude-opus-5-5 and
+ * Routing (docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md, "Grading"): gpt-6-astra judges claude-opus-5-5 and
  * particle-1 rows, claude-opus-5-5 judges gpt-6.1-sol rows, and particle-1 never judges. judgeFor refuses a same-family
- * judge. claude-opus-5-5 is also the descriptive second judge on particle-1 rows.
+ * judge. claude-opus-5-5 is also the descriptive second judge on particle-1 rows. Before the counted run, the judge check
+ * (R78) has both labellers grade the same answers at effort high; the answers both grade alike are the label set each
+ * counted judge is measured against.
  *
  * Page and answer text are untrusted: they are wrapped as quoted data, the frozen prompt tells the judge to ignore any
  * instruction inside them, and the closing marker is neutralised inside the data.
@@ -17,7 +19,7 @@ export type Model = (typeof MODELS)[number];
 
 /** The counted judge for a model's rows; throws for a same-family judge or a particle judge. */
 export function judgeFor(model: string): string {
-  const judge = provider(model) === 'openai' ? 'claude-opus-5-5' : 'gpt-6.1-sol';
+  const judge = provider(model) === 'openai' ? 'claude-opus-5-5' : 'gpt-6-astra';
   assertJudge(judge, model);
   return judge;
 }
@@ -28,6 +30,10 @@ export function secondJudgeFor(model: string): string | null {
   assertJudge('claude-opus-5-5', model);
   return 'claude-opus-5-5';
 }
+
+/** The judge check's labellers, one per family, each at LABEL_EFFORT; the counted judges are among them. */
+export const LABELLERS = ['gpt-6-astra', 'claude-opus-5-5'] as const;
+export const LABEL_EFFORT = 'high';
 
 export function assertJudge(judge: string, model: string): void {
   if (provider(judge) === 'particle') throw new Error(judge + ' never judges a counted cell');

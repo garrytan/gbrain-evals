@@ -85,7 +85,7 @@ test('the CLI turns a mismatched --out into a usage error with exit 2, before an
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, 'upstream.json'), JSON.stringify({ keyless: true }) + '\n');
   const ledger = join(tmp, 'claim-cli.sqlite');
-  const r = Bun.spawnSync([process.execPath, 'eval/runner/q1/calibration-cell.ts', '--reader', 'particle:particle-1', '--out', out, '--budget-ledger', ledger, '--run-id', 'claim-cli', '--lease-usd', '0.01'],
+  const r = Bun.spawnSync([process.execPath, 'eval/runner/q1/calibration-cell.ts', '--reader', 'particle:particle-1', '--out', out, '--budget-ledger', ledger, '--run-id', 'claim-cli', '--lease-usd', '0.01', '--paid-window', 'TEST-WINDOW-1', '--window-cap-usd', '1', '--ledger-cap-usd', '1'],
     { cwd: join(import.meta.dir, '..', '..'), env: { PATH: process.env.PATH ?? '' }, stdout: 'pipe', stderr: 'pipe' });
   expect([r.exitCode, existsSync(ledger)]).toEqual([2, false]);
   expect(r.stderr.toString()).toContain('USAGE: ');

@@ -83,14 +83,16 @@ The plan's "61 none@5" counted the 4 unmappable questions with the 57.
 
 All arms read the same top-5 (or top-10) ranked lists the published row used, replayed from its committed rows; the replay reproduces the published retrieval exactly (strict@5 36 of 198).
 
+Correction, 2026-11-09: the `gpt-6.1-sol` costs below were settled by a budget ledger that did not yet price OpenAI cache writes. OpenAI reports almost every uncached token of a Sol prompt of 1,027 tokens or more as a cache write, at $2.50 per million against $2.00 for input, so each corrected cost adds that difference on the answers' recorded input tokens and keeps the original beside it. The no-memory floor is unchanged, because its prompts are shorter than 1,024 tokens ([corrections](../corrections.md#openai-cache-writes)). Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 | Arm | Reader | Score | All items met | Answerable | Abstention | No-memory floor | Committed-wrong | Input / output tokens per answer | Cost |
 |---|---|---:|---:|---:|---:|---:|---|---|---:|
 | A0 top 5 | `gpt-4.1-mini` | 0.539 | 78 | 0.571 | 0.250 | 0.262 (31) | 57 detector | 7,179 / 684 | $1.14 |
 | A2 top 5 | Sonnet 5.5 | 0.573 | 104 | 0.561 | 0.682 | 0.313 (45) | 62 detector | 11,818 / 767 | $7.03 |
 | A2 top 5 | Opus 5.5 | 0.527 | 89 | 0.507 | 0.705 | 0.310 (48) | 58 detector | 11,818 / 849 | $14.29 |
-| A2 top 5 | `gpt-6.1-sol` | 0.620 | 96 | 0.625 | 0.568 | 0.286 (41) | **40 hand** (45 detector) | 7,178 / 438 | $4.30 |
-| A3 top 10 | `gpt-6.1-sol` | 0.649 | 107 | 0.660 | 0.545 | 0.286 (41) | 43 detector | 14,121 / 465 | $7.42 |
-| A4 oracle | `gpt-6.1-sol` | 0.849 | 165 | 0.832 | 1.000 | 0.286 (41) | 13 detector | 6,937 / 404 | $4.05 |
+| A2 top 5 | `gpt-6.1-sol` | 0.620 | 96 | 0.625 | 0.568 | 0.286 (41) | **40 hand** (45 detector) | 7,178 / 438 | $5.09 (corrected 2026-11-09: cache writes were under-counted; was $4.30) |
+| A3 top 10 | `gpt-6.1-sol` | 0.649 | 107 | 0.660 | 0.545 | 0.286 (41) | 43 detector | 14,121 / 465 | $8.97 (corrected 2026-11-09: cache writes were under-counted; was $7.42) |
+| A4 oracle | `gpt-6.1-sol` | 0.849 | 165 | 0.832 | 1.000 | 0.286 (41) | 13 detector | 6,937 / 404 | $4.80 (corrected 2026-11-09: cache writes were under-counted; was $4.05) |
 
 Floors (A1, empty history): `gpt-4.1-mini` 0.262 (31 all items met; answerable 0.216, abstention 0.682), Sonnet 5.5 0.313 (45; 0.236, 1.0), Opus 5.5 0.310 (48; 0.234, 1.0), `gpt-6.1-sol` 0.286 (41; 0.206, 1.0); cost $0.25, $1.18, $2.15 and $0.60.
 
@@ -126,12 +128,12 @@ Floors (A1, empty history): `gpt-4.1-mini` 0.262 (31 all items met; answerable 0
 
 The reranker ran on every query: each of R1's and R3's 220 queries carried rerank scores, none reported a degradation, and the budget ledger holds 220 `voyage:rerank-2.5` requests for each (the runner now fails closed on all three checks). A deeper pool without the reranker changes almost nothing (205 of 220 ranked lists identical), because fusion cannot lift a candidate from rank 150 into the top 10; with the reranker reading 100 candidates it adds 7 strict hits at 10. Event ordering and summarization stay at 0 strict hits at 10 in every arm (their gold is larger than 10), with nDCG@10 between 0.19 and 0.27.
 
-**Do the retrieval gains reach the answers?** A5 reads R0's and R1's top 5 with `gpt-6.1-sol`:
+**Do the retrieval gains reach the answers?** A5 reads R0's and R1's top 5 with `gpt-6.1-sol` (costs corrected 2026-11-09 as in the reading-arms table above):
 
 | A5, `gpt-6.1-sol`, top 5 | Score | All items met | Abstention | Floor | Cost |
 |---|---:|---:|---:|---:|---:|
-| R0 (voyage-4, reranker off) | 0.628 | 100 | 0.591 | 0.286 (41) | $3.98 |
-| R1 (voyage-4, reranker on) | 0.661 | 104 | 0.659 | 0.286 (41) | $4.19 |
+| R0 (voyage-4, reranker off) | 0.628 | 100 | 0.591 | 0.286 (41) | $4.71 (corrected 2026-11-09: cache writes were under-counted; was $3.98) |
+| R1 (voyage-4, reranker on) | 0.661 | 104 | 0.659 | 0.286 (41) | $4.96 (corrected 2026-11-09: cache writes were under-counted; was $4.19) |
 | R1 minus R0 | +3.2 [-1.9, +7.6] | +1.8 [-3.2, +6.8] | | | |
 | R0 minus the published OpenAI top 5 (A2 `gpt-6.1-sol`) | +0.9 [-2.9, +5.8] | +1.8 [-4.5, +9.5] | | | |
 
@@ -179,4 +181,4 @@ bun eval/runner/memory-qa/run.ts --benchmark beam-1m --split dev --embed hash --
 
 Live arms need `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` and `VOYAGE_API_KEY`, a budget ledger and a gbrain checkout for the retrieval arms. The exact commands, one per arm, are in the [preregistration](2026-10-08-beam-1m-failure-analysis-preregistration.md#arms-in-run-order); each ran as 11 shards (3 for retrieval) joined to one ledger run, with `GBRAIN_EVALS_DATASETS`, `GBRAIN_EVALS_QA_CACHE` and `GBRAIN_EVALS_EMBED_CACHE` set to lane-local directories that started cold. Wall time: about 3 to 10 minutes per reading arm (11 shards in parallel on a 4-core machine), 18 minutes for R0's cold voyage-4 embedding and 3 to 4 minutes for R1 to R3 on the warm cache.
 
-Receipts are in [`2026-10-08-beam-1m-failure-analysis/arms/`](2026-10-08-beam-1m-failure-analysis/arms/): one directory per arm with each shard's `receipt.json`, `run-config.json`, `rows.ndjson.gz` (per-question retrieval and scores) and `answers.ndjson.gz` (full answers, finish reasons, provider tokens), plus `ledger-run-id.txt`. Spend is in the ledger `.budget/b2-beam-1m-2026-10-08.sqlite` (program cap $60): $52.42 in 21,429 paid requests, of which $52.01 is the arms in `arms-summary.json`, $0.37 the smoke (arm S) and $0.04 R1's refused first attempt.
+Receipts are in [`2026-10-08-beam-1m-failure-analysis/arms/`](2026-10-08-beam-1m-failure-analysis/arms/): one directory per arm with each shard's `receipt.json`, `run-config.json`, `rows.ndjson.gz` (per-question retrieval and scores) and `answers.ndjson.gz` (full answers, finish reasons, provider tokens), plus `ledger-run-id.txt`. Spend is in the ledger `.budget/b2-beam-1m-2026-10-08.sqlite` (program cap $60): $52.42 in 21,429 paid requests, of which $52.01 is the arms in `arms-summary.json`, $0.37 the smoke (arm S) and $0.04 R1's refused first attempt. Correction, 2026-11-09: that ledger did not yet price OpenAI cache writes, so its `gpt-6.1-sol` figures are low, as the correction above the reading-arms table says.

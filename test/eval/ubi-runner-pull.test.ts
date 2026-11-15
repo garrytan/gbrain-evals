@@ -1,8 +1,9 @@
 /**
  * ubi-runner pulls of one VM never overlap: a periodic pull (the campaign
  * launcher's checkpoint pull) and the run's final pull take the VM's pull lock
- * in turn, and a periodic pull after the final pull has begun is skipped. A
- * pull cut short keeps the previous copy (A22). Detached commands (A22) survive
+ * in turn, even where mkdir tells two racing calls that both succeeded (uutils
+ * coreutils 0.8.0, GitHub's ubuntu-26.04 image), and a periodic pull after the
+ * final pull has begun is skipped. A pull cut short keeps the previous copy (A22). Detached commands (A22) survive
  * a dropped session, follow retries, and stop forwards SIGTERM. A push whose stream fails is retried, and the ssh
  * control socket fits the 104-byte limit under a long state root (A23).
  */
@@ -48,6 +49,19 @@ describe('ubi-runner pull lock', () => {
     expect(ts.length).toBe(2);
     expect(overlaps(ts)).toBe(false);
     expect(readFileSync(join(v.root, 'out-b', 'checkpoint', 'rows.ndjson'), 'utf8')).toBe('{"row":1}\n');
+    expect(existsSync(join(v.dir, 'pull.lock'))).toBe(false);
+  }, 20_000);
+
+  test('two pulls that start together still run one after the other when mkdir reports success to both (uutils coreutils 0.8.0, Ubuntu 26.04)', async () => {
+    const v = vm(1);
+    const mkdir = Bun.which('mkdir')!;
+    writeFileSync(join(v.root, 'bin', 'mkdir'), `#!/usr/bin/env bash\n[ "$1" = -p ] && exec ${mkdir} "$@"\n[ -e "$1" ] && exit 1\nsleep 0.5\n${mkdir} "$1" 2>/dev/null || [ -d "$1" ]\n`);
+    chmodSync(join(v.root, 'bin', 'mkdir'), 0o755);
+    const [a, b] = [v.pull(join(v.root, 'out-a')), v.pull(join(v.root, 'out-b'))];
+    expect([await a.exited, await b.exited]).toEqual([0, 0]);
+    const ts = v.transfers();
+    expect(ts.length).toBe(2);
+    expect(overlaps(ts)).toBe(false);
     expect(existsSync(join(v.dir, 'pull.lock'))).toBe(false);
   }, 20_000);
 

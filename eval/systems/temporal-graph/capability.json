@@ -2,7 +2,7 @@
   "system": "temporal-graph",
   "versions": {
     "package": "see comparison-systems table: temporal-graph (upstream commit eaa4128681bc53487138a4bbc22d58336ebe70d2)",
-    "lock_sha256": "4ce9b2163c7c7596e0d617586ddf238befdf0fe17bccbfc6db856c1bcddd1d13",
+    "lock_sha256": "6894bade472d3c319bc23ca49fa3f21bcec7fa28a8e9f5c991adc1aa0329f3ea",
     "image": "shim built from temporal-graph/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
     "backend_image": "neo4j:5.26.2@sha256:099b9f74968c123209972835417985ed2a1cc19c0422c0753a313e26a736c365 (the Neo4j tag in temporal-graph's own docker-compose.yml at the pinned release)",
     "vendor_benchmark_code": "see comparison-systems table: temporal-graph (vendor benchmark code at commit 4b7f26cc76cca20743314ba9acb8c2cb6adc42f6: its LoCoMo ingestion and search scripts, written for the hosted service's client and translated to the library calls that client wraps)"

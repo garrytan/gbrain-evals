@@ -1,0 +1,199 @@
+/**
+ * One row per (suite, item, reader, ref, sha, trial) of a nightly run, appended to `<night dir>/outcomes.jsonl` as each
+ * finishes, so `run.ts --resume` continues where a stopped run left off and the report reads one shape for every suite.
+ *
+ * `harness` marks a row that measured the harness or a provider, not gbrain (a provider error, a crashed child, a
+ * placeholder result, an answer cut off at its output limit). The report counts those rows apart and never as a gbrain
+ * failure. `skipped` marks an item the night
+ * scheduled and did not run, with the reason; it is neither a pass, a failure nor a harness row.
+ *
+ * The fields after `harness` are what eval/runner/failure-causes/adapters/nightly.ts reads into an EvalFailure. The suite's
+ * facts (system, arm, arm_role, condition, visibility, agent_loop) are on every row; a measured field the suite does not
+ * measure is absent or null, never a guess, so classify lists that stage as unmeasured.
+ */
+import { appendFileSync, existsSync, readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
+import { TRUNCATED_FINISH } from '../failure-causes/classify.ts';
+import type { ArmRole, Condition, Coverage, ToolCall, Visibility, WriteRecord } from '../failure-causes/types.ts';
+
+export const OUTCOME_SCHEMA = 'nightly-outcome/1';
+
+export interface ToolError {
+  tool: string;
+  /** gbrain's error code (invalid_params, worktree_refreshing, ...) or null when the answer named none. */
+  code: string | null;
+  /** True for an error gbrain returned to a call the model could make; false for a crash, timeout or server error. */
+  refused: boolean;
+  message?: string;
+  /** The shared stage whose provider caused the error with a 429 or 5xx, written by the QA adapter (providerCause). */
+  cause?: ProviderCause;
+}
+
+export interface Outcome {
+  schema: typeof OUTCOME_SCHEMA;
+  night: string;
+  suite: string;
+  suite_digest: string;
+  item: string;
+  role: 'headroom' | 'canary';
+  /** The model under test, or null for a keyless suite. */
+  reader: string | null;
+  ref: string;
+  sha: string;
+  /** 1-based. */
+  trial: number;
+  pass: boolean;
+  score: number | null;
+  cost_usd: number | null;
+  /** How the item ended (submitted, turn_cap, error, harness_error, refused, ...), as the suite's runner records it. */
+  stop: string | null;
+  tool_errors: ToolError[];
+  /** The evidence fields the suite's runner records: gold evidence read, landed writes, recall, failure classes. */
+  evidence: Record<string, unknown>;
+  harness: { error: string; cause?: HarnessCause } | null;
+  system: string;
+  /** `<suite>@<ref>`. */
+  arm: string;
+  arm_role: ArmRole;
+  condition: Condition;
+  visibility: Visibility;
+  agent_loop: boolean;
+  /** The task family or question category. */
+  category?: string | null;
+  /** Gold items the task needs; 0 for an abstention question. */
+  gold_count?: number | null;
+  /** How much of the gold any retrieval result held (QA: at 10 when recorded, else at 5). */
+  retrieved?: Coverage | null;
+  /** How much of the gold the reader received after packing. */
+  delivered?: Coverage | null;
+  /** Agent suites: how much of the gold the agent read, from evidence_cited and missed_evidence. */
+  opened?: Coverage | null;
+  /** Agent suites: gold ids named in any tool result. */
+  searched_gold?: string[] | null;
+  /** Every tool call; null when the suite does not record them call by call. */
+  calls?: ToolCall[] | null;
+  writes?: WriteRecord | null;
+  /** System smokes: the operation that failed (the smoke) and its code. */
+  operation?: { step: string; error: string } | null;
+  /** False when there is nothing to judge: no submission, an empty answer, no report. */
+  answered?: boolean | null;
+  /**
+   * The reader's finish reason as the suite's runner records it (memory-qa's reader receipt), or null where the suite
+   * records none: Cat 40 Hard and Part C keep no per-call finish, and the keyless suites have no reader.
+   */
+  finish_reason: string | null;
+  question?: string | null;
+  expected?: string | null;
+  answer?: string | null;
+  context?: string | null;
+  skipped?: string;
+}
+
+/** A dev-set reader as provider:model. */
+export function qualifiedModel(reader: string): string {
+  if (reader.includes(':')) return reader;
+  if (reader.startsWith('claude-')) return `anthropic:${reader}`;
+  if (reader.startsWith('gpt-') || /^o\d/.test(reader)) return `openai:${reader}`;
+  if (reader.startsWith('particle-')) return `particle:${reader}`;
+  throw new Error(`no provider for reader ${reader}`);
+}
+
+const CUT_OFF = 'output_truncated';
+
+/** The stages both readers of a night share, before or after the reader call: a failure there says nothing about the reader. */
+export const UPSTREAM_CAUSES = ['embedding', 'retrieval', 'rerank', 'judge'] as const;
+export type UpstreamCause = (typeof UPSTREAM_CAUSES)[number];
+/**
+ * What a harness row's failure was: `reader` when the reader's own provider or call failed (a crash, an invalid answer, a
+ * 4xx or 5xx on the reader call), an upstream cause when a shared stage failed, or `run` for a row a run-level stop cut
+ * off (a budget stop or a lost machine).
+ */
+export type HarnessCause = 'reader' | UpstreamCause | 'run';
+
+const EMBEDDING = /\bembed(ding)?s?\b/i;
+
+/**
+ * Named markers for a row stored with only its error text, the first match winning: memory-qa's reranker refusal
+ * (RERANKER_INACTIVE, whose hint is "make the reranker reachable"), an embedding or retrieval failure, and a judge error
+ * (run-systems prefixes it `judge:`, the outcome is `judge_error`).
+ */
+const CAUSE_MARKERS: ReadonlyArray<readonly [UpstreamCause, RegExp]> = [
+  ['rerank', /RERANKER_INACTIVE|make the reranker reachable|rerank degradation|without rerank scores/i],
+  ['embedding', EMBEDDING],
+  ['retrieval', /\bretrieval[ _](error|failed)|no frozen ranked list/i],
+  ['judge', /^judge\b|\bjudge[ _]error\b/i],
+];
+
+/** A harness row's cause: the one written when the row was made, else the first named marker in its text, else the reader's. */
+export function harnessCause(h: NonNullable<Outcome['harness']>): HarnessCause {
+  return h.cause ?? CAUSE_MARKERS.find(([, marker]) => marker.test(h.error))?.[0] ?? 'reader';
+}
+
+/** The shared stages a gbrain tool error can name as the provider that failed it. */
+export type ProviderCause = Extract<UpstreamCause, 'embedding' | 'retrieval'>;
+
+/**
+ * Named markers of a provider's HTTP 429 or 5xx in an error's text: the status after HTTP or status (HTTP 503, status
+ * code: 429), gbrain's gateway form (Voyage returned 503:), the OpenAI SDK's "429 status code (no body)", and the
+ * providers' wording for those statuses (OpenAI's "Rate limit reached" and "The server had an error", rate limit
+ * exceeded, Too Many Requests, Internal Server Error, Bad Gateway, Service Unavailable, Gateway Timeout). A
+ * retry-exhaustion message (the AI SDK's "Failed after 3 attempts. Last error: ...") matches through the error it quotes.
+ */
+const PROVIDER_FAILURE = [
+  /\b(?:HTTP|status(?: code)?)[\s:=]*(?:429|5\d\d)\b/i,
+  /\breturned (?:429|5\d\d):|\b(?:429|5\d\d) status code\b/i,
+  /\b(?:rate limit (?:reached|exceeded)|the server had an error|too many requests|internal server error|bad gateway|service unavailable|gateway timeout)\b/i,
+];
+
+/**
+ * Which shared stage's provider caused a gbrain error, from its text: none without a provider 429 or 5xx marker, so the
+ * error stays gbrain's own; embedding when the text names embedding (text-embedding-3-large, [embed(...)]); else retrieval.
+ */
+export function providerCause(text: string): ProviderCause | null {
+  if (!PROVIDER_FAILURE.some(marker => marker.test(text))) return null;
+  return EMBEDDING.test(text) ? 'embedding' : 'retrieval';
+}
+
+/** A tool error's provider cause: the one written when the row was made, else, for an error that isn't a refusal, providerCause of its message. */
+export function toolErrorCause(t: ToolError): ProviderCause | null {
+  return t.cause ?? (t.refused || !t.message ? null : providerCause(t.message));
+}
+
+/**
+ * The row's harness failure: the one it records, else, for an answer cut off at its output limit (a finish reason in
+ * classify's TRUNCATED_FINISH), that cut, because the answer measured our output limit rather than gbrain. Rows written
+ * before the cut was recorded as a harness failure read the same way.
+ */
+export function harnessOf(o: Pick<Outcome, 'harness'> & { finish_reason?: string | null }): Outcome['harness'] {
+  if (o.harness) return o.harness;
+  return o.finish_reason && TRUNCATED_FINISH.has(o.finish_reason) ? { error: `${CUT_OFF}: the answer was cut off at its output limit (finish ${o.finish_reason})` } : null;
+}
+
+/**
+ * Whether a resume runs the row again: a skipped row, or a harness row other than a cut-off answer. A resume can't redo a
+ * cut-off answer, because memory-qa keeps it as answered and the reader's cached reply is the same cut-off one, so it stands.
+ */
+export const resumable = (o: Pick<Outcome, 'harness' | 'skipped'>): boolean => !!o.skipped || (o.harness !== null && !o.harness.error.startsWith(`${CUT_OFF}:`));
+
+export const outcomeKey = (o: Pick<Outcome, 'suite' | 'item' | 'reader' | 'trial'>) => `${o.suite}\u0000${o.item}\u0000${o.reader ?? ''}\u0000${o.trial}`;
+
+export function appendOutcome(path: string, o: Outcome): void {
+  appendFileSync(path, JSON.stringify(o) + '\n');
+}
+
+/**
+ * Rows from outcomes.jsonl, else outcomes.jsonl.gz; the last row per key wins, so a rerun row replaces an earlier one.
+ * A row written before every row carried a finish reason reads it as null, and its harness failure is harnessOf's.
+ */
+export function readOutcomes(path: string): Outcome[] {
+  const plain = path.endsWith('.gz') ? path.slice(0, -3) : path;
+  const gz = `${plain}.gz`;
+  const text = existsSync(plain) ? readFileSync(plain, 'utf8') : existsSync(gz) ? gunzipSync(readFileSync(gz)).toString('utf8') : '';
+  const rows = new Map<string, Outcome>();
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue;
+    const o = JSON.parse(line) as Outcome;
+    rows.set(outcomeKey(o), { ...o, finish_reason: o.finish_reason ?? null, harness: harnessOf(o) });
+  }
+  return [...rows.values()];
+}

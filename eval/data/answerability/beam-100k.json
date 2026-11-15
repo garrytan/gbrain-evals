@@ -1,0 +1,427 @@
+{
+ "schema": "answerability/1",
+ "benchmark": "beam-100k",
+ "rule": "D5a: supported when at most one validator rejects; partial when both reject (or it cites no turn) and the oracle passes (score >= 0.5); unsupported when both reject and the oracle fails; unresolved when both reject and no oracle verdict exists; unchecked when the support check left it out.",
+ "sources": {
+  "validators": {
+   "file": "docs/benchmarks/2026-11-10-beam-item-support/public-items.json",
+   "sha256": "cce927bcda46953595263bec0fd446740e373abc792c22d19b77dd10e33b9a28"
+  },
+  "nightly": null,
+  "oracle": null
+ },
+ "counts": {
+  "supported": 61,
+  "partial": 0,
+  "unsupported": 0,
+  "unresolved": 11,
+  "unchecked": 0
+ },
+ "items": {
+  "100k-16:contradiction_resolution:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:contradiction_resolution:1": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-16:event_ordering:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:event_ordering:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:information_extraction:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:information_extraction:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:instruction_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:instruction_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:knowledge_update:0": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-16:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:multi_session_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:multi_session_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:preference_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:summarization:0": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-16:summarization:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:temporal_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-16:temporal_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:contradiction_resolution:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:contradiction_resolution:1": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-19:event_ordering:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:event_ordering:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:information_extraction:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:information_extraction:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:instruction_following:0": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-19:instruction_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:knowledge_update:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:multi_session_reasoning:0": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-19:multi_session_reasoning:1": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-19:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:preference_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:summarization:0": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-19:summarization:1": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-19:temporal_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-19:temporal_reasoning:1": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-1:contradiction_resolution:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:contradiction_resolution:1": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-1:event_ordering:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:event_ordering:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:information_extraction:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:information_extraction:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:instruction_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:instruction_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:knowledge_update:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:multi_session_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:multi_session_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:preference_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:summarization:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:summarization:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-1:temporal_reasoning:0": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-1:temporal_reasoning:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:contradiction_resolution:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:contradiction_resolution:1": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-4:event_ordering:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:event_ordering:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:information_extraction:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:information_extraction:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:instruction_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:instruction_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:knowledge_update:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:knowledge_update:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:multi_session_reasoning:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:multi_session_reasoning:1": {
+   "class": "unresolved",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5",
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-4:preference_following:0": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:preference_following:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:summarization:0": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  },
+  "100k-4:summarization:1": {
+   "class": "supported",
+   "gates": [],
+   "oracle": null
+  },
+  "100k-4:temporal_reasoning:0": {
+   "class": "supported",
+   "gates": [
+    "support:anthropic:claude-haiku-5-5"
+   ],
+   "oracle": null
+  },
+  "100k-4:temporal_reasoning:1": {
+   "class": "supported",
+   "gates": [
+    "support:gemini:gemini-3.8-flash"
+   ],
+   "oracle": null
+  }
+ }
+}

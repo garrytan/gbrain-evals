@@ -50,9 +50,19 @@ repeat, uncapped tool results, no judge. Builds: P8 candidate `6c958d6e2`
   therefore reachable without the takes tools when a chat key is configured.
 - No leaks, unsafe writes or tool errors in any cell.
 
-Spend: $0.90 in the ledger `.budget/p8-h-smoke.sqlite`: two slot builds at
-$0.21 each (8,814 embedding requests) and $0.48 of cells, the 2-task pilot
-included.
+Spend: $0.90 in the ledger `.budget/p8-h-smoke.sqlite`: two slot builds at $0.21
+each (8,814 embedding requests) and $0.48 of cells, the 2-task pilot included
+(corrected 2026-11-09: cache writes were under-counted, so the total is about 7%
+low and the cells about 14% low).
+
+Correction, 2026-11-09: these cells priced gpt-6-luna turns from usage that
+counted OpenAI's cache writes as plain input. OpenAI reports almost every uncached
+token of a gpt-6-luna prompt of 1,027 tokens or more as a cache write, at $0.125 per
+million against $0.10 for input, so the cell spend and the dollar cells in each
+set's `analysis.md` were low; the percentages come from repricing the committed
+rows. No score or verdict changes.
+([corrections](../../../corrections.md#openai-cache-writes))
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 ## Reproduce
 
@@ -73,4 +83,5 @@ receipt, per-cell results, run log, compressed transcripts and the analysis.
 
 ## Changelog
 
+- 2026-11-09: The spend line carries a note that it missed OpenAI cache writes for gpt-6-luna, with the original unchanged ([corrections](../../../corrections.md#openai-cache-writes)).
 - 2026-10-09: [Correction](#correction-2026-10-09) added: all 102 cells searched without gbrain's reranker (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). Original numbers unchanged.

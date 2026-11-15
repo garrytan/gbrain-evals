@@ -41,6 +41,10 @@ export interface GoldExposure {
   opened: Coverage | null;
   /** true when the delivered gold reached the model only as a summary or a cut page. */
   summary_only: boolean | null;
+  /** The most gold items the reader can be given, as its run records it (memory-qa's sessions per answer); absent or null when the source records none. */
+  reader_budget?: number | null;
+  /** Why the item's cited gold doesn't support its reference answer: both support validators reject it, or it cites no turn; absent or null when unchecked or supported. */
+  unsupported?: 'both_validators' | 'uncited' | null;
 }
 
 export interface WriteRecord {

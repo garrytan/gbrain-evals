@@ -12,7 +12,7 @@ questions (opaque session ids, gbrain `109b992`). The interesting engineering
 question is how it gets there, and which parts help on other kinds of material.
 
 This page states what the experiments show about gbrain as this repository pins
-it (master `62637c96a`, v0.60.557.0); each number names the gbrain commit it was
+it (master `d253ec0ff`, v0.60.623.0); each number names the gbrain commit it was
 measured at. Everything above [Changelog](#changelog) is current.
 [Conversation results](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 
@@ -254,6 +254,13 @@ application resemble the ones a measured configuration solves.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-09: The opening names `d253ec0ff`
+
+The opening names gbrain master `d253ec0ff` (v0.60.623.0) as the pin (was `62637c96a`, v0.60.557.0). The search mode
+bundles gain only `keyword_phrase`, off in every bundle. Since v0.60.575.0 the keyword arm also matches identifiers and
+hyphenated handles a question names and ranks longer any-word retries by rare words. Every number here was measured
+before v0.60.575.0 and names its commit, so no lesson changes.
 
 ### 2026-11-03: The opening names `62637c96a`
 

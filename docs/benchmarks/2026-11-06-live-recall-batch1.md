@@ -10,7 +10,14 @@ embeddings `voyage:voyage-4`, reranker `voyage:rerank-2.5`.
 gbrain is a personal knowledge brain: it stores Markdown pages in Postgres and finds them with keyword, vector and hybrid
 search. Wintermute is the agent that runs on Garry's box. It wrote 50 questions about pages in the brain, each in two
 forms, ran this harness against the live brain through a database role that cannot write, and sent back an aggregate
-scorecard. No question, page text, slug or result left the box.
+scorecard. The run's only model calls were gbrain's own search calls to Voyage AI, the brain's configured embedding and
+reranking provider: gbrain sent each question form there to be embedded and, in configured search, sent the form with
+its candidate passages to be reranked. Only aggregates came back to us, and none of the run's questions, page text or
+slugs is in this repository.
+
+> **Correction, 2026-11-09.** The first version of this page said that no question, page text, slug or result left the
+> box, as the [preregistration](live-recall/PREREGISTRATION.md) still does. The paragraph above now says what the run
+> sent to Voyage AI.
 
 ## The finding
 
@@ -34,7 +41,7 @@ real question that once failed. The [caveats](#caveats) apply to every number he
 
 ## The concrete case
 
-These examples are invented. The real questions stay on Garry's box.
+These examples are invented. The real questions aren't in this repository.
 
 - **identifier.** Exact: "What changed in the VND-4417 migration?" Paraphrase: "What did the vendor-table migration
   last spring change?"

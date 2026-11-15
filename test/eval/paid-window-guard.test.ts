@@ -1,6 +1,7 @@
 /**
  * The paid-window guard (eval/runner/paid-arm.ts) and its command line (eval/runner/rs1/paid-window.ts), shared by
- * every entry point that can spend real keys, and the re-read's window flags (eval/runner/q1/reread-cell.ts): a run
+ * every entry point that can spend real keys, and the window flags of the re-read (eval/runner/q1/reread-cell.ts) and
+ * of Q1's calibration cell, second judge and judge-robustness rejudge (GST-1969): a run
  * that is neither keyless nor inside a granted window refuses, and so does one whose ledger cap or run budget is above
  * the window cap, with exit 2 before any provider client or output exists. Keyless: no key is set and nothing is sent.
  */
@@ -12,6 +13,7 @@ import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { ledgerCaps, paidWindowArgs, requireRs1Window, WindowRefusal } from '../../eval/runner/paid-arm.ts';
 import { loadManifest } from '../../eval/runner/q1/cells/definitions.ts';
+import { PROVIDER_KEYS } from '../support/no-provider-keys.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 const roots: string[] = [];
@@ -19,7 +21,7 @@ const scratch = () => { const d = mkdtempSync(join(tmpdir(), 'paid-window-')); r
 afterAll(() => { closeLedgers(); for (const d of roots) rmSync(d, { recursive: true, force: true }); });
 
 function run(args: string[]) {
-  const r = spawnSync('bun', args, { cwd: REPO, encoding: 'utf8', env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp' }, timeout: 60_000 });
+  const r = spawnSync('bun', args, { cwd: REPO, encoding: 'utf8', env: { PATH: process.env.PATH ?? '/usr/bin:/bin', HOME: process.env.HOME ?? '/tmp', ...Object.fromEntries(PROVIDER_KEYS.map(k => [k, ''])) }, timeout: 60_000 });
   return { code: r.status, out: r.stdout ?? '', err: r.stderr ?? '' };
 }
 /** A ledger whose program cap and one open run's budget are the given amounts, with a closed run beside it. */
@@ -80,5 +82,44 @@ describe('the re-read\'s window flags', () => {
     expect(o.code).toBe(2);
     expect(o.err).toContain("above the paid window's cap of 1");
     for (const d of [bare, half, over]) expect(existsSync(d)).toBe(false);
+  });
+});
+
+describe('the window flags of Q1\'s calibration cell, second judge and rejudge (GST-1969)', () => {
+  const refused = (r: ReturnType<typeof run>, text: string) => { expect(r.code).toBe(2); expect(r.err).toContain(text); };
+
+  // Value: protects=a calibration cell never reaches a real provider outside a granted paid window or under a ledger ceiling above it; fails_when=calibration-cell.ts without --keyless-upstream takes the paid branch with no window, with no --ledger-cap-usd, or with a ledger cap above the window cap; why_new=GST-1969: the CLI took the paid branch whenever the keyless flag was missing; seam=none; no_claim=the ceiling refusal itself (openRereadLease, q1-reread.test.ts)
+  test('a calibration cell without --keyless-upstream needs the window and a --ledger-cap-usd within it, before any lease or output', () => {
+    const tmp = scratch();
+    const base = (name: string) => ['eval/runner/q1/calibration-cell.ts', '--reader', 'particle:particle-1', '--out', join(tmp, name), '--budget-ledger', join(tmp, `${name}.sqlite`), '--run-id', name, '--lease-usd', '0.5'];
+    refused(run(base('bare')), 'needs --paid-window <unit> and --window-cap-usd <n>');
+    refused(run([...base('half'), '--paid-window', 'TEST-WINDOW-1']), '--window-cap-usd needs the granted window cap');
+    refused(run([...base('nocap'), '--paid-window', 'TEST-WINDOW-1', '--window-cap-usd', '1']), '--ledger-cap-usd is unknown');
+    refused(run([...base('over'), '--paid-window', 'TEST-WINDOW-1', '--window-cap-usd', '1', '--ledger-cap-usd', '2']), "--ledger-cap-usd is above paid window TEST-WINDOW-1's cap");
+    refused(run([...base('lease'), '--paid-window', 'TEST-WINDOW-1', '--window-cap-usd', '0.25', '--ledger-cap-usd', '0.25']), "--lease-usd is above paid window TEST-WINDOW-1's cap");
+    for (const name of ['bare', 'half', 'nocap', 'over', 'lease']) expect([existsSync(join(tmp, name)), existsSync(join(tmp, `${name}.sqlite`))]).toEqual([false, false]);
+  });
+
+  // Value: protects=A6's second judge never reaches a real provider outside a granted paid window or under a cap above it; fails_when=second-judge.ts without --keyless-upstream takes the paid branch with no window, or with a ledger cap or lease above the window cap; why_new=GST-1969: the CLI took the paid branch whenever the keyless flag was missing; seam=none; no_claim=the keyless branch's own run
+  test('a second judge without --keyless-upstream needs the window, and its ledger cap and lease within it, before any lease or output', () => {
+    const tmp = scratch();
+    const cell = loadManifest().cells[0];
+    const base = (name: string, cap = '2') => ['eval/runner/q1/second-judge.ts', '--cell', cell.id, '--arm', cell.arms[0].id, '--root', join(tmp, 'missing'), '--out', join(tmp, name),
+      '--budget-ledger', join(tmp, `${name}.sqlite`), '--run-id', name, '--lease-usd', '1', '--ledger-cap-usd', cap];
+    refused(run(base('bare')), 'needs --paid-window <unit> and --window-cap-usd <n>');
+    refused(run([...base('over'), '--paid-window', 'TEST-WINDOW-1', '--window-cap-usd', '1.5']), "--ledger-cap-usd is above paid window TEST-WINDOW-1's cap");
+    refused(run([...base('lease', '0.5'), '--paid-window', 'TEST-WINDOW-1', '--window-cap-usd', '0.5']), "--lease-usd is above paid window TEST-WINDOW-1's cap");
+    for (const name of ['bare', 'over', 'lease']) expect([existsSync(join(tmp, name)), existsSync(join(tmp, `${name}.sqlite`))]).toEqual([false, false]);
+  });
+
+  // Value: protects=GST-1365's paid stages never reach a real provider (key preflight included) outside a granted paid window or with a lease above it; fails_when=rejudge-systems.ts judge, reuse-check, referee or controls without --keyless-upstream runs with no window, with no lease or with a lease above the window cap; why_new=GST-1969: the CLI took the paid branch whenever the keyless flag was missing; seam=none; no_claim=the ceiling refusal (q1-rejudge-systems.test.ts)
+  test('a paid rejudge stage without --keyless-upstream needs the window and a lease within it, before any output, key check or lease', () => {
+    const tmp = scratch();
+    const base = (sub: string, name: string, lease = ['--lease-usd', '1']) => ['eval/runner/q1/rejudge-systems.ts', sub, ...(sub === 'judge' ? ['--stratum', 'A'] : []), '--root', `f6=${join(tmp, 'missing.json')}`,
+      '--out', join(tmp, name), '--budget-ledger', join(tmp, `${name}.sqlite`), '--run-id', `gst-1365-${name}`, ...lease];
+    for (const sub of ['judge', 'reuse-check', 'referee', 'controls']) refused(run(base(sub, `bare-${sub}`)), `rejudge-systems.ts ${sub} without --keyless-upstream spends real keys, so it needs --paid-window <unit> and --window-cap-usd <n>`);
+    refused(run([...base('judge', 'nolease', []), '--paid-window', 'TEST-WINDOW-1', '--window-cap-usd', '1']), '--lease-usd is unknown');
+    refused(run([...base('judge', 'over'), '--paid-window', 'TEST-WINDOW-1', '--window-cap-usd', '0.5']), "--lease-usd is above paid window TEST-WINDOW-1's cap");
+    for (const name of ['bare-judge', 'bare-reuse-check', 'bare-referee', 'bare-controls', 'nolease', 'over']) expect([existsSync(join(tmp, name)), existsSync(join(tmp, `${name}.sqlite`))]).toEqual([false, false]);
   });
 });

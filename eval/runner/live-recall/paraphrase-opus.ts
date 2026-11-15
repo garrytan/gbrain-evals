@@ -15,8 +15,11 @@
  * from eval/generators/batch3-synthetic-gen.ts works the same way and takes
  * the file back through batch3-synthetic-gen.ts --paraphrases <file>.
  *
- * It refuses an existing --out before anything else, so a rerun never overwrites
- * paraphrases an earlier run paid for: move the file aside or name a new one.
+ * Before it opens the paid run it claims --out and <out>.receipt.json, creating
+ * each with O_EXCL ('wx'), and refuses if either already exists, so neither a
+ * rerun nor a concurrent run with the same --out can overwrite paraphrases or a
+ * receipt another run paid for: move both aside or name a new --out. A run that
+ * refuses before its paid run opens removes the empty claims it made.
  *
  * It spends money, so requirePaidArm (paid-arm.ts) refuses it without --paid
  * and --budget-run-id naming an open budget-ledger run, before any client or
@@ -26,7 +29,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { createHash } from 'node:crypto';
-import { existsSync, writeFileSync } from 'node:fs';
+import { closeSync, existsSync, fstatSync, openSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { fitAnthropicRequest, withThinkingRoom } from '../anthropic-request.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from '../budget-ledger.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
@@ -68,18 +71,34 @@ export async function main(argv: string[], deps: { makeClient?: () => Client } =
     console.error('usage: bun eval/runner/live-recall/paraphrase-opus.ts --dir <generated dir> --out <paraphrases.jsonl> --paid --budget-run-id <id>');
     return 2;
   }
-  if (existsSync(out)) {
-    console.error('paraphrase-opus: REFUSED: ' + out + ' already exists, and this run would overwrite the paraphrases in it; move it aside or pass a new --out. Nothing was sent.');
-    return 2;
-  }
   const { pages, questionsText, protocol } = readSyntheticDir(dir);
   const questions = parseQuestions(questionsText, protocol);
+  const claims: Array<{ path: string; fd: number }> = [];
+  const release = () => {
+    for (const { path, fd } of claims.splice(0)) {
+      const mine = fstatSync(fd);
+      closeSync(fd);
+      const now = existsSync(path) ? statSync(path) : null;
+      if (now && now.dev === mine.dev && now.ino === mine.ino && now.size === 0) unlinkSync(path);
+    }
+  };
+  for (const path of [out, out + '.receipt.json']) {
+    try {
+      claims.push({ path, fd: openSync(path, 'wx') });
+    } catch (error) {
+      release();
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      console.error('paraphrase-opus: REFUSED: ' + path + ' already exists, and this run would overwrite what an earlier or concurrent run paid for; move it aside or pass a new --out. Nothing was sent.');
+      return 2;
+    }
+  }
   const paid = (() => {
     try {
       const estimateUsd = questions.length * ESTIMATE_USD_PER_QUESTION;
       const { budgetRunId } = requirePaidArm(argv, { arm: 'conditions-recall paraphrases (' + MODEL + ')', estimateUsd });
       return startPaidRun('conditions-recall-paraphrases', { ...budgetOptionsFrom(argv), runId: budgetRunId, estimateUsd });
     } catch (error) {
+      release();
       if (!(error instanceof PaidArmRefusal)) throw error;
       console.error('paraphrase-opus: REFUSED: ' + error.message);
       return null;
@@ -109,9 +128,11 @@ export async function main(argv: string[], deps: { makeClient?: () => Client } =
     paid.guard.uninstall();
   }
   const body = rows.map(r => JSON.stringify(r)).join('\n') + '\n';
-  writeFileSync(out, body);
+  const [outClaim, receiptClaim] = claims;
+  writeFileSync(outClaim.fd, body);
+  closeSync(outClaim.fd);
   const missing = questions.length - rows.length;
-  writeFileSync(out + '.receipt.json', JSON.stringify({
+  writeFileSync(receiptClaim.fd, JSON.stringify({
     model: MODEL,
     prompt_version: PROMPT_VERSION,
     questions_sha256: createHash('sha256').update(questionsText).digest('hex'),
@@ -123,6 +144,7 @@ export async function main(argv: string[], deps: { makeClient?: () => Client } =
     stopped_by_error: stoppedBy,
     cost: receiptCost(paid.run.close()),
   }, null, 2) + '\n');
+  closeSync(receiptClaim.fd);
   if (stoppedBy) console.error('paraphrase-opus: stopped at ' + stoppedBy + '; the paraphrases already paid for are kept');
   console.log('paraphrase-opus: ' + rows.length + ' of ' + questions.length + ' paraphrases written to ' + out + (missing ? '; ' + missing + ' missing, so the generator will refuse this file until they are filled' : ''));
   return missing ? 1 : 0;
