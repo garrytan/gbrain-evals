@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "question": "On a gbrain brain with no embedding provider, does letting search and query add pages that hold only some of the question's words, when the first page comes back short, raise LongMemEval retrieval recall without changing any row returned before, and what does it cost in latency?",
+  "preregistered": false,
+  "first_measurement": "The gbrain team measured 4244fd77 against b0529e73 first and shared its raw rows (gbrain-team/). gbrain-evals reran that pair and the landed merge against its first parent on its own machine.",
+  "run_date_utc": "2026-11-15",
+  "gbrain": {
+    "repository": "https://github.com/garrytan/gbrain",
+    "pull_request": "https://github.com/garrytan/gbrain/pull/9414",
+    "released": false,
+    "newest_release_at_run_time": "v0.60.724.0 (6c833d982), an ancestor of 0a4ed211, so the change is in no release yet",
+    "arms": {
+      "master-4244fd77": {
+        "commit": "4244fd774f8af9ad4cb35aaf3a91b906562cf780",
+        "role": "master before the change; the gbrain team's base",
+        "subject": "Purge retires extracted facts, embedding migrations stop refusing, re-synthesis and re-embeds stop repeating (#9395)"
+      },
+      "branch-b0529e73": {
+        "commit": "b0529e73cdaa8e611f601ff3e7f3ec673260dbed",
+        "role": "a commit on the pull request's branch, the one the gbrain team measured; not the final head (b6884dd0d), and since 4244fd77 the branch had also merged other pull requests' work not yet on master, so pair 2 is the clean comparison",
+        "subject": "Run only the any-word statement for the keyless fill, so it stops repeating the all-words one (GST-2762)"
+      },
+      "parent-0a4ed211": {
+        "commit": "0a4ed211e2b811cc95c6ae502166dd8e6dc93d91",
+        "role": "first (only) parent of the squash merge on master",
+        "subject": "Codex starts the gbrain MCP server and hooks when bun is not on its PATH (GST-2784) (#9421)"
+      },
+      "landed-23a163fc": {
+        "commit": "23a163fc5150397f931defc93a724e6a5d23b161",
+        "role": "the squash merge of #9414 on master",
+        "subject": "Keyless search finds pages that hold some of the question's words (GST-2762) (#9414)"
+      }
+    },
+    "tree_state": "clean worktrees at each commit, bun install --frozen-lockfile, no local changes",
+    "bun": "1.4.4"
+  },
+  "dataset": {
+    "file": "longmemeval_s_cleaned.json",
+    "source": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned",
+    "license": "MIT",
+    "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "questions": 500,
+    "abstention_questions_excluded": 30,
+    "scored": 470,
+    "committed": false
+  },
+  "command": "bun run src/cli.ts eval longmemeval longmemeval_s_cleaned.json --retrieval-only --top-k 10 --no-trajectory --mode balanced --reranker off --autocut off --by-type --via-operation query --op-expand off --output <arm>.jsonl",
+  "keyless": {
+    "unset_before_each_run": [
+      "ANTHROPIC_API_KEY",
+      "GEMINI_API_KEY",
+      "GOOGLE_API_KEY",
+      "GOOGLE_GENERATIVE_AI_API_KEY",
+      "OPENAI_API_KEY",
+      "PARTICLE_API_KEY",
+      "UBICLOUD_API_KEY",
+      "VOYAGE_API_KEY",
+      "GROQ_API_KEY",
+      "OPENROUTER_API_KEY",
+      "TOGETHER_API_KEY",
+      "DEEPSEEK_API_KEY",
+      "DEEPGRAM_API_KEY",
+      "MISTRAL_API_KEY",
+      "COHERE_API_KEY",
+      "ZEROENTROPY_API_KEY",
+      "XAI_API_KEY",
+      "AZURE_OPENAI_API_KEY",
+      "DATABASE_URL",
+      "GBRAIN_DATABASE_URL",
+      "GBRAIN_DIRECT_DATABASE_URL",
+      "OLLAMA_BASE_URL",
+      "LMSTUDIO_BASE_URL",
+      "LLAMA_SERVER_BASE_URL",
+      "LLAMA_SERVER_RERANKER_BASE_URL",
+      "LITELLM_BASE_URL",
+      "OPENROUTER_BASE_URL",
+      "GBRAIN_REMOTE_MCP_URL"
+    ],
+    "gbrain_home": "a new empty GBRAIN_HOME (and TMPDIR) per arm",
+    "evidence": "every row of every arm has search_meta.vector_enabled false with degraded stage embed_unavailable (no_provider), via_operation.model_calls is empty, and the summary line records embedder unconfigured",
+    "model_calls": 0
+  },
+  "machine": {
+    "where": "Capy cloud machine",
+    "os": "Ubuntu 24.04, x86_64",
+    "vcpus": 4,
+    "memory_gib": 15,
+    "schedule": "master-4244fd77 and branch-b0529e73 side by side from 12:44:21Z; then parent-0a4ed211 and landed-23a163fc side by side from 12:51:01Z"
+  },
+  "runs": {
+    "master-4244fd77": {
+      "seconds_reported": 384,
+      "max_rss_kb": 4331780,
+      "errors": 0,
+      "exit_status": 1
+    },
+    "branch-b0529e73": {
+      "seconds_reported": 390,
+      "max_rss_kb": 5577096,
+      "errors": 0,
+      "exit_status": 1
+    },
+    "parent-0a4ed211": {
+      "seconds_reported": 405,
+      "max_rss_kb": 5826796,
+      "errors": 0,
+      "exit_status": 1
+    },
+    "landed-23a163fc": {
+      "seconds_reported": 416,
+      "max_rss_kb": 4744172,
+      "errors": 0,
+      "exit_status": 1
+    },
+    "exit_status_note": "Each run finished all 500 questions with 0 errors. The harness then exits 1 on its vector-arm check (500 rows scored keyword-only), which is the intended condition here. The gbrain team's summary lines record the same 500 vector_degraded_rows."
+  },
+  "rows": {
+    "note": "Each file is the run's --output with three dataset-text fields removed from every question row (question, answer and hypothesis; with --retrieval-only, hypothesis holds the retrieved sessions' text) and written as compact JSON, then gzipped. Every other field and the by_type_summary line are unchanged. raw_sha256 is the run's original output; stripped_sha256 is the uncompressed committed text.",
+    "fields_removed": [
+      "question",
+      "answer",
+      "hypothesis"
+    ],
+    "rows/base-4244fd77.jsonl.gz": {
+      "arm": "master-4244fd77",
+      "lines": 501,
+      "raw_sha256": "d11715a5136e1367a5b796c1908e291daf3c5a6903ccc09324b83ddd0d27bac7",
+      "stripped_sha256": "0b2522c3bbfcf6493fd60d94cd95fcaf631294aa68ce8aca60eb4a98f362095e"
+    },
+    "rows/branch-b0529e73.jsonl.gz": {
+      "arm": "branch-b0529e73",
+      "lines": 501,
+      "raw_sha256": "5dd2b599a83fc5b9d71a8bea7375051f7bdc86564238e6dc90c6821a1a23ee91",
+      "stripped_sha256": "6dc01db328632353ee8b0ac25c60963e50c44f13177d17f08f51707d8b21fadc"
+    },
+    "rows/parent-0a4ed211.jsonl.gz": {
+      "arm": "parent-0a4ed211",
+      "lines": 501,
+      "raw_sha256": "fb38a880322a469a365f0d67f20f9568572db334e096fbba9a96aa0bd3f64c01",
+      "stripped_sha256": "8849ed95bb6091b82ff89e0c4de0fd90af0c71e14f486c9949df85fe7cc17751"
+    },
+    "rows/landed-23a163fc.jsonl.gz": {
+      "arm": "landed-23a163fc",
+      "lines": 501,
+      "raw_sha256": "95ecbb5ed5d46ada6352f34ecdbd6953b9f2e6088c371fdb164d8a88f1302c58",
+      "stripped_sha256": "8fd45c5b78e4d6ecb7cc8ea80bcddce105af4dd3caf4ec14741948a93157f842"
+    }
+  },
+  "gbrain_team_rows": {
+    "note": "The gbrain team's own raw rows, byte for byte as shared (question, answer and hypothesis text already removed by them), gzipped here. Same command on 4244fd77 and b0529e73, the two run side by side on one 4-CPU machine. bench4 comes from a scratch harness that was not committed: it ran each question's search function with the fill asked for and not asked for in one process (fill_bench.on_ms and off_ms, median of 3, order alternated) and compared the rows with the clock frozen.",
+    "gbrain-team/base-query4.jsonl.gz": {
+      "commit": "4244fd774f8af9ad4cb35aaf3a91b906562cf780",
+      "lines": 501,
+      "sha256": "670d4e11b27e07a8a45b2d1d85441e461d283b6a0cc3bb286a5fefaf1e0b862c"
+    },
+    "gbrain-team/branch-query4.jsonl.gz": {
+      "commit": "b0529e73cdaa8e611f601ff3e7f3ec673260dbed",
+      "lines": 501,
+      "sha256": "a8cf711ba4ce0d50adf40f76d19ac35416559b64c8cf4ee1ab3c3d848dce80d7"
+    },
+    "gbrain-team/bench4.jsonl.gz": {
+      "commit": "b0529e73cdaa8e611f601ff3e7f3ec673260dbed plus an uncommitted timing harness",
+      "lines": 501,
+      "sha256": "38d652774d47e3517c35fa92e597b62e481f307900e7aa0c4cdaa1cda49f0774"
+    }
+  },
+  "analysis": {
+    "script": "analyze.py (Python 3 standard library; run with Python 3.12.3)",
+    "output": "summary.json",
+    "bootstrap": "paired over the 470 scored questions, 10,000 resamples, random.Random(7), percentiles at sorted positions 250 and 9749",
+    "cross_check": "The gbrain team's own analysis script, run on our rows, prints the same recall, MRR, unchanged-row and moved-down figures."
+  },
+  "tracking": {
+    "gbrain_evals": "GST-2789",
+    "gbrain": "GST-2762, measured under GBRA-535"
+  }
+}
