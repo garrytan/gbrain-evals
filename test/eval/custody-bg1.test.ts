@@ -713,6 +713,33 @@ describe('checkSession and renderWorld', () => {
     expect(haiku.body.max_tokens).toBe(2048);
   });
 
+  // Value: protects=a render's 402 names who refused it, and a long render is not cut off by bun's socket idle timeout; fails_when=a provider's own 402 reads as the metering proxy's budget refusal, a marked proxy refusal stops reading as one, or post() sends without timeout: false; why_new=BG1-MINT-B stopped on Google's 402 with the proxy's budget message, and bun's 300-360 s idle timeout stopped BG1-MINT-A's first run on a render the proxy allows 900 s; seam=geminiProxyClient and haikuProxyClient against a loopback server answering 402, with fetch wrapped to record each request's init; no_claim=what a provider's 402 body says, or bun's timeout itself (proved separately against a server that answers after 370 s)
+  test('a 402 names the provider unless the metering proxy marked it, and every request turns bun\'s idle timeout off', async () => {
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch(req) {
+      const proxy = new URL(req.url).pathname.startsWith('/proxy/');
+      return new Response(proxy ? JSON.stringify({ error: { type: 'budget', message: 'metering proxy: the lease cannot cover this request' } }) : '{"error":{"code":402,"status":"FAILED_PRECONDITION"}}', { status: 402, headers: { 'content-type': 'application/json' } });
+    } });
+    const realFetch = globalThis.fetch;
+    const inits: RequestInit[] = [];
+    globalThis.fetch = ((input: Parameters<typeof fetch>[0], init?: RequestInit) => { inits.push(init ?? {}); return realFetch(input, init); }) as typeof fetch;
+    const dir = scratch('render-402');
+    const ready = (name: string, bg1: Record<string, string>) => { const p = join(dir, name); writeFileSync(p, JSON.stringify({ env: { bg1 } })); return p; };
+    const fail = async (client: ModelClient) => { try { await client.complete('p', 16, 0); return 'no error'; } catch (e) { return (e as Error).message; } };
+    const url = (path: string) => `http://127.0.0.1:${server.port}/${path}/`;
+    let gemini = '', haiku = '', proxy = '';
+    try {
+      gemini = await fail(geminiProxyClient(ready('gemini.json', { GOOGLE_GEMINI_BASE_URL: url('google'), GEMINI_API_KEY: 'mpwp-bg1-402' })));
+      haiku = await fail(haikuProxyClient(ready('anthropic.json', { ANTHROPIC_BASE_URL: url('anthropic'), ANTHROPIC_API_KEY: 'mpwp-bg1-402' })));
+      proxy = await fail(geminiProxyClient(ready('proxy.json', { GOOGLE_GEMINI_BASE_URL: url('proxy'), GEMINI_API_KEY: 'mpwp-bg1-402' })));
+    } finally { globalThis.fetch = realFetch; server.stop(true); }
+    expect(gemini).toContain('gemini answered HTTP 402 through the metering proxy, so its billing refused the request');
+    expect(gemini).not.toContain('budget run');
+    expect(haiku).toContain('anthropic answered HTTP 402 through the metering proxy');
+    expect(proxy).toContain('the metering proxy refused a request: the budget run or the program cap has no room');
+    expect(inits).toHaveLength(3);
+    expect(inits.every(i => (i as { timeout?: unknown }).timeout === false)).toBe(true);
+  });
+
   // Value: protects=the render prompt states each session's length as words and a range of turns, and a short session regenerates with its measured length and the allowed range in words; fails_when=the prompt gives the length only in tokens or no range of turns, or a regeneration after a length failure does not name the last attempt's length; why_new=stage 1's first real dev render (09b3f414): 15 length failures, sessions at about 450 to 1,500 tokens against targets of 757 to 3,236; seam=clientModels over a fake ModelClient that records each request, with renderWorld; no_claim=how long gemini-3.8-flash writes
   test('the render prompt states the length in words and turns, and a length failure regenerates with its measured length, then passes', async () => {
     expect(renderPrompt({ ...briefs[at], target_tokens: 1121, lines: [] }, 0, [])).toContain('Write about 940 words (about 1121 tokens) in total, as 24 to 26 alternating turns starting with the user, each about 39 words.');

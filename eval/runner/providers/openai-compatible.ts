@@ -391,17 +391,22 @@ export function compatMayHaveBilled(e: unknown): boolean {
   return compatTimedOut(e) || compatConnectionLost(e) || (typeof status === 'number' && status >= 200 && status < 300);
 }
 
-/** Particle answered 402 without a proxy's marker: the prepaid balance is empty. Throw it after the failing attempt's receipt is written. */
+/**
+ * A provider answered 402 without a proxy's marker: Particle's prepaid balance is empty, or another provider's billing
+ * refused the request. The message names the provider the request went to. Throw it after the failing attempt's receipt is written.
+ */
 export class ParticleCreditExhausted extends BudgetExceededError {
   readonly status = 402;
-  constructor(readonly body: string) {
-    super(`budget: Particle credit exhausted (HTTP 402); top up the balance at platform.particle.ai before rerunning. Body: ${body.slice(0, 300)}`);
+  constructor(readonly body: string, readonly provider = 'particle') {
+    super(provider === 'particle'
+      ? `budget: Particle credit exhausted (HTTP 402); top up the balance at platform.particle.ai before rerunning. Body: ${body.slice(0, 300)}`
+      : `budget: ${provider} answered HTTP 402, so its billing refused the request; check that provider's account before rerunning. Body: ${body.slice(0, 300)}`);
   }
 }
 
 /** The error to throw for a classified answer: the credit stop, a proxy's budget stop, or a CompatHttpError. */
 export function compatError(info: CompatErrorInfo): Error {
-  if (info.kind === 'credit_exhausted') return new ParticleCreditExhausted(info.body);
+  if (info.kind === 'credit_exhausted') return new ParticleCreditExhausted(info.body, info.provider);
   if (info.kind === 'proxy_budget') return Object.assign(new BudgetExceededError(`budget: the metering proxy refused the ${info.provider} request (HTTP ${info.status}): ${info.body.slice(0, 300)}`), { status: info.status, body: info.body });
   return new CompatHttpError(info);
 }

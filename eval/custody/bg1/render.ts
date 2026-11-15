@@ -70,6 +70,7 @@ import {
 import { readLedger } from '../../runner/budget-ledger.ts';
 import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS } from '../../runner/bg1/types.ts';
 import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/paid-arm.ts';
+import { PROXY_REFUSAL_MARKERS } from '../../runner/providers/openai-compatible.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
 
 export const RENDER_MODEL = 'gemini:gemini-3.8-flash';
@@ -320,13 +321,22 @@ export function proxyEndpoint(readyPath: string | undefined, provider: 'gemini' 
 }
 
 const RETRY_STATUS = new Set([429, 500, 502, 503, 504]);
-/** POST with up to three retries on a transient status. An error names only the status: a body could echo the prompt. */
-async function post(url: string, headers: Record<string, string>, body: unknown, sleep = (ms: number) => new Promise(r => setTimeout(r, ms))): Promise<any> {
+/**
+ * POST with up to three retries on a transient status. Bun's socket idle timeout is off (`timeout: false`): it fires
+ * between 300 and 360 s, and the metering proxy gives a long render up to 900 s (UPSTREAM_DEADLINE_MS). A 402 is the
+ * proxy's own refusal only when its body carries a proxy marker; any other 402 is the provider's billing. An error
+ * names only the status and the provider: a body could echo the prompt.
+ */
+async function post(provider: 'gemini' | 'anthropic', url: string, headers: Record<string, string>, body: unknown, sleep = (ms: number) => new Promise(r => setTimeout(r, ms))): Promise<any> {
   for (let attempt = 0; ; attempt++) {
-    const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
+    const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body), timeout: false } as RequestInit);
     if (res.ok) return res.json();
+    if (res.status === 402) {
+      const text = await res.text();
+      if (PROXY_REFUSAL_MARKERS.some(m => text.includes(m))) throw new RenderRefusal('the metering proxy refused a request: the budget run or the program cap has no room (the run pauses for an extension)');
+      throw new RenderRefusal(`${provider} answered HTTP 402 through the metering proxy, so its billing refused the request; check that provider's account before resuming`);
+    }
     await res.body?.cancel();
-    if (res.status === 402) throw new RenderRefusal('the metering proxy refused a request: the budget run or the program cap has no room (the run pauses for an extension)');
     if (!RETRY_STATUS.has(res.status) || attempt >= 3) throw new Error(`the metering proxy answered HTTP ${res.status}`);
     await sleep(2000 * 2 ** attempt);
   }
@@ -337,7 +347,7 @@ export function geminiProxyClient(readyPath: string | undefined): ModelClient {
   return {
     id: CHECK_MODELS[0],
     async complete(prompt, maxOutputTokens, temperature, schema, thinking = 'low') {
-      const reply = await post(`${base.replace(/\/$/, '')}/v1beta/models/gemini-3.8-flash:generateContent`, { 'x-goog-api-key': token },
+      const reply = await post('gemini', `${base.replace(/\/$/, '')}/v1beta/models/gemini-3.8-flash:generateContent`, { 'x-goog-api-key': token },
         { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens, temperature, responseMimeType: 'application/json', ...(schema ? { responseJsonSchema: schema } : {}), thinkingConfig: { thinkingLevel: thinking } } });
       return (reply.candidates?.[0]?.content?.parts ?? []).map((x: { text?: string }) => x.text ?? '').join('');
     },
@@ -350,7 +360,7 @@ export function haikuProxyClient(readyPath: string | undefined): ModelClient {
   return {
     id: CHECK_MODELS[1],
     async complete(prompt, maxTokens) {
-      const reply = await post(`${base.replace(/\/$/, '')}/v1/messages`, { 'x-api-key': token, 'anthropic-version': '2023-06-01' },
+      const reply = await post('anthropic', `${base.replace(/\/$/, '')}/v1/messages`, { 'x-api-key': token, 'anthropic-version': '2023-06-01' },
         { model: 'claude-haiku-5-5', max_tokens: maxTokens, messages: [{ role: 'user', content: prompt }] });
       return (reply.content ?? []).filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join('');
     },
