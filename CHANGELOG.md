@@ -10,8 +10,8 @@ This records what each gbrain-evals release changed and what its measurements me
   (`5dc712b9`). The nightly check's pin still named v0.60.707.0 (`144587ce`), which was 704 commits behind the tag,
   so the comparison with stable measured master against an older release than the one gbrain ships as stable.
 - **What stays the same.** Every suite's required gbrain commit is an ancestor of the new pin, so no suite is newly
-  skipped on stable. The keyless tool-contract replay gives identical results at the old and new pins: on each of its
-  three paths gbrain refuses 6 of the 650 recorded gpt-6.1-sol tool calls it can parse and none of claude-opus-5-5's
+  skipped on stable. The keyless tool-contract replay gives identical results at the old and new pins. On each of its
+  three paths, gbrain refuses 6 of the 650 recorded gpt-6.1-sol tool calls it can parse and none of claude-opus-5-5's
   166. No published score or verdict changes. A night that started on the old pin keeps it when it resumes.
 - **What to expect.** The first matrix night after this release compares master with the newer release, so a change in
   its "Against stable" section can come from the baseline moving rather than from master. That section names the
