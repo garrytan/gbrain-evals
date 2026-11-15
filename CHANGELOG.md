@@ -2,6 +2,26 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.228] - 2026-11-15
+
+### Keyless gbrain search's partial-word fill, reproduced: LongMemEval recall_all@10 from 80.64% to 91.06%
+
+- **What changed.** A new results page,
+  [keyless partial-match search](docs/benchmarks/2026-11-15-keyless-partial-match-search.md), reproduces the gbrain
+  team's measurement of gbrain#9414. On a brain with no embedding provider, gbrain's `search` and `query` now add pages
+  that hold only some of the question's words when the first page of results comes back short. We ran LongMemEval S
+  keyless through `query` on four gbrain commits: the pair the gbrain team measured (`4244fd77` against `b0529e73`) and
+  the merge on master against its parent (`0a4ed211` against `23a163fc`). Both pairs give the same figures:
+  recall_all@10 from 80.64% to 91.06% (+10.43 points, 95% interval +7.87 to +13.19; 49 of 470 questions better, none
+  worse), recall_all@5 from 72.13% to 81.06%, and MRR@10 from 0.8726 to 0.8770. Every row returned before comes back
+  unchanged on 500 of 500 questions; rows are added on 103.
+- **What it costs.** The 103 questions with added rows take a median 73 to 83 ms longer through `query` on our machine
+  (125 ms on the gbrain team's slower machine); the other 397 change by a median of 2 ms or less.
+- **What's committed.** Both pairs' raw rows (dataset text removed, full-output hashes in `provenance.json`), the gbrain
+  team's own rows for the first pair, and `analyze.py`, which recounts every number on the page from those files. The
+  gbrain team's numbers match ours to the digit. The check was not preregistered, and `23a163fc` is in no gbrain
+  release yet. The Retrieval experiments index in `docs/README.md` gains a row for it.
+
 ## [0.10.227] - 2026-11-15
 
 ### The nightly check's stable baseline moves to gbrain v0.60.717.0
