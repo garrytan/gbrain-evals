@@ -2,6 +2,22 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.230] - 2026-11-15
+
+### Changing-facts battleground results
+
+- **Results.** [docs/benchmarks/2026-11-15-changing-facts-battleground-results.md](docs/benchmarks/2026-11-15-changing-facts-battleground-results.md)
+  and its `verdict.json` report the battleground preregistered in 0.10.185. On 30 sealed, made-up chat histories where
+  facts change, gbrain is level with the memory-bank server (-0.4 points, 95% interval -2.4 to +1.5) and the
+  extract-first server (-1.8, -3.9 to +0.3) on what is true now, ahead of the temporal-graph library (+20.9) and of
+  plain hybrid search (+73.7), and behind both servers on questions about the past (-10.3 and -8.1). All 1,920 planned
+  questions are in every comparison. README's "How gbrain compares" and the docs hub show the verdict.
+- **Fixes the runs needed.** A 402 refusal names the provider that sent it, and renders no longer stop at bun's default
+  fetch timeout. Before any counted run, the paid stages' lease, ledger, window and key checks were made to fail closed,
+  each with a keyless test that fails without it.
+- **Merging with main.** The second judge keeps main's one paid-window check for every cell, Q1 VMs receive
+  `eval/runner/bg1/launch.ts`, and the battleground table sits below README's scoreboard block.
+
 ## [0.10.229] - 2026-11-15
 
 ### Code review skips the generated BG1 dev-world files
