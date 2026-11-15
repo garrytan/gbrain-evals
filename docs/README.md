@@ -67,6 +67,7 @@ describe current behavior first, then the older work behind a decision.
 
 | Engineering question | Report |
 |---|---|
+| With no embedding key, does gbrain find more of the conversations a question needs when search adds pages that hold only some of the question's words? | [November 15 keyless partial-match search](benchmarks/2026-11-15-keyless-partial-match-search.md) (gbrain#9414, on gbrain master as `23a163fc` and in no release yet; not preregistered: the gbrain team measured it first, and gbrain-evals reproduced it at `4244fd77` against `b0529e73` and at `0a4ed211` against `23a163fc`): on LongMemEval S through `query`, recall_all@10 rises from 80.64% to 91.06% (+10.43 points, 95% interval +7.87 to +13.19; 49 questions better, none worse), every row returned before comes back unchanged on 500 of 500 questions, MRR@10 moves only from 0.8726 to 0.8770, and the 103 questions that get added rows take a median 73 to 83 ms longer. gbrain is Garry Tan's own project. ([Disclosures](disclosures.md)) |
 | What does per-member read access cost a brain that uses no restrictions? | [October 28 member read access search cost](benchmarks/2026-10-28-member-read-access.md), re-measured October 31 on train M (gbrain #8134): hybrid +1.5 to 1.9% (within the 2% gate; +2.2 to 2.6% by paired ratio), keyword-only +2.2% (from reading one column per matched row; accepted with the fail-safe kept); folder rules and shared-agent audiences add no cost of their own; run order shifts results by about a point; members and shared agents get every page they may read (hit@10 1.0) |
 | Would a graph database walk gbrain's link graph faster than Postgres, for the same answer? | [October 17 graph backend, HydraDB vs Postgres](benchmarks/2026-10-17-graph-backend.md) ([preregistration](benchmarks/2026-10-17-graph-backend-preregistration.md)): no. Breadth-first walks on Postgres (gbrain #6934) beat HydraDB at 10,000 to 1,000,000 pages (warm p95 1.44 s vs 6.28 s at 100,000) with identical answers on 54,842 calls; HydraDB is faster only on deep `both` edge walks |
 | Would gbrain find the right passage of a long, sectioned document more often if each chunk's embedding carried its heading path, or if chunks started at their headings? | [October 28 structure-aware chunks](benchmarks/2026-10-28-structure-aware-chunks.md) ([preregistration](benchmarks/2026-10-28-structure-aware-chunks-preregistration.md); development, gbrain `5af37ba44` with a local experiment patch): no detectable gain, so neither idea earns a build proposal. The heading path raised hit@3 on 880 Qasper paper questions from 80.0% to 81.7% (exact p = 0.040) but lowered it on 39 messy-company questions from 76.9% to 74.4%, so the preregistered rule (a gain on both corpora and pooled p < 0.05) fails at p = 0.070; chunks that start at headings and the keyless heading-term arms add nothing detectable |
@@ -294,6 +295,12 @@ The [changing-facts battleground](benchmarks/2026-11-09-changing-facts-battlegro
 says no cell has run. It links the [results](benchmarks/2026-11-15-changing-facts-battleground-results.md) and gives
 the verdicts: level with the memory-bank and extract-first servers on current values, ahead of the temporal-graph
 library and hybrid search, behind both servers on questions about past states.
+
+### 2026-11-15: Keyless partial-match search row
+
+New first row in Retrieval experiments for the [keyless partial-match search](benchmarks/2026-11-15-keyless-partial-match-search.md)
+reproduction: with no embedding key, gbrain#9414 (`23a163fc`) raises LongMemEval recall_all@10 from 80.64% to 91.06% and leaves
+every earlier row unchanged. No other row changed.
 
 ### 2026-11-13: Strict-source pageless facts re-run correction
 
