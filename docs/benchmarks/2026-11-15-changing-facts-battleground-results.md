@@ -12,12 +12,13 @@
   fact changed. You should hand the reader every dated version of a fact when the question names a past date or asks
   for the history, not only the current value.** On those questions gbrain was behind the memory-bank server by 10.3
   points (-13.0 to -7.7) and the extract-first server by 8.1 (-10.8 to -5.3). On "how did it change" questions, the values
-  the answer needs reached the reader in 81% of gbrain's contexts against 97% and 98% for the two servers. On "what was
+  the answer needs reached the reader in 81% of gbrain's contexts against 98% and 97% for the two servers. On "what was
   known then" questions they reached it 96% of the time and gbrain still lost about 9 to 10 points, so most of that loss
   is in what gbrain hands the reader, not in finding it. gbrain also lost on withdrawn facts.
 - **We learned that gbrain's answers cost about a third as much per correct answer as the extract-first server's and
   the temporal-graph library's, and about 9% more than the memory-bank server's.** With particle-1 reading, a correct
-  answer cost $0.0079 with gbrain and $0.0082 with the memory-bank server.
+  answer cost $0.0079 with gbrain and $0.0082 with the memory-bank server; with claude-opus-5-5 reading, $0.0550 against
+  $0.0478, about 15% more.
 
 This is the results file of the [changing-facts battleground preregistration (BG1)](2026-11-09-changing-facts-battleground-preregistration.md).
 The preregistered verdict is **no measurable difference** against the memory-bank server and the extract-first server,
@@ -57,8 +58,9 @@ Every system read the same histories and handed the reader at most 8,000 tokens 
 Systems are named by kind; [comparisons and their protocols](../comparison-systems.md) names each product and version.
 claude-opus-5-5 and gpt-6.1-sol read each context live, and particle-1 read the same frozen contexts afterwards. A judge
 from another family graded every answer: gpt-6-astra graded Opus's answers, and claude-opus-5-5 graded Sol's and
-particle-1's. Before any counted cell, a check on 312 labelled answers found both judges in full agreement with the
-labels (kappa 1.0 each), and with each other on 320 real answers (kappa 0.95, 95% interval 0.92 to 0.98).
+particle-1's. Before any counted cell, both judges graded 160 answers built with known labels (80 right, 80 wrong in
+five ways) and matched every label (kappa 1.0 each); over those and 160 real answers, 320 in all, they agreed with each
+other at kappa 0.95 (95% interval 0.92 to 0.98).
 
 A question's score is the share of the three readers who got it right. The verdict compares gbrain with each comparator
 world by world on the 40 primary questions per world, with a one-sided paired test and Holm's correction over the three
@@ -114,8 +116,9 @@ Where each loss happened, from whether the values the answer needs reached the r
 them; gbrain against the memory-bank and extract-first servers):
 
 - **S8 history, retrieval:** 81% against 98% and 97%.
-- **S7 as known and S6 as of, mostly reading:** 96% and 95% against 98% to 100%, gaps of 3 to 5 points that are smaller
-  than the losses. The reader had the values it needed and still answered wrong more often with gbrain's context.
+- **S7 as known, mostly reading:** 96% against 99% and 100%, gaps of 3.3 and 3.8 points against losses of 9.2 and 10.1.
+  The reader had the values it needed and still answered wrong more often with gbrain's context.
+- **S6 as of, mostly retrieval:** 95% against 100% and 98%, gaps of 4.6 and 3.3 points against losses of 6.0 and 3.5.
 - **S5 withdrawn:** 60% against 52% and 80%. gbrain delivered the needed values more often than the memory-bank server
   and still lost to it, so that loss is in reading; against the extract-first server it is partly retrieval.
 - **S1 updated, against the memory-bank server, retrieval:** 95% against 99%.
@@ -179,7 +182,7 @@ custody before this file was written:
   values repeated many times.
 - **Enough samples?** The primary intervals are about 2 points wide on each side, well inside the preregistered 5-point
   smallest detectable difference, so the nulls don't come from too few worlds.
-- **Headroom?** The reader with the whole history answered over 99% of questions, and gbrain's rows sit at 85% to 91%,
+- **Headroom?** The reader with the whole history answered over 99% of questions, and gbrain's rows sit at 84.8% to 91.0%,
   below both servers, so there was room to win.
 
 The verdict is to keep gbrain's fact design, which beats plain search by a wide margin and holds level with the
