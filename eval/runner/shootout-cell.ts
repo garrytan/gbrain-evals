@@ -95,7 +95,7 @@ export const REPO_RUNNER = join(REPO_ROOT, 'scripts/ubicloud/ubi-runner.sh');
  * public dev worlds (corpus.ts BG1_DEV_ROOT). A Q1 launch sends only the tracked files under these and `executes`, without
  * .git (ubi-runner run --only), instead of the whole checkout with its benchmark docs and history (GST-2280).
  */
-export const Q1_VM_PATHS = ['patches', 'eval/runner/decide.ts', 'eval/runner/stats', 'eval/data/changing-facts-v1/dev'];
+export const Q1_VM_PATHS = ['patches', 'eval/runner/decide.ts', 'eval/runner/stats', 'eval/runner/bg1/launch.ts', 'eval/data/changing-facts-v1/dev'];
 
 export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/q1/usage.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions', 'eval/runner/providers',
   'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/openai-judge-shim.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
