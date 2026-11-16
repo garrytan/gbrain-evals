@@ -16,6 +16,8 @@
  * Code that writes through a tagged template outside these seams is not
  * intercepted; the server barrier is what stops it.
  */
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { importGbrain, type GbrainUnderTest } from '../gbrain-under-test.ts';
 
 export const COPY_MARKER_TABLE = 'gbrain_evals_live_recall_copy';
@@ -350,11 +352,44 @@ export async function checkSchema(engine: any, gut: GbrainUnderTest, referenceBu
  */
 const BLANKED_ENV = ['GBRAIN_DATABASE_URL', 'DATABASE_URL', 'GBRAIN_DIRECT_DATABASE_URL', 'TYPESAFE_API_KEY', 'JEV_TYPESAFE_API_KEY', 'GBRAIN_DECIDE_SLOTS'];
 
+/** A config key that names where the brain lives or holds a credential; never copied into a run's own gbrain home. */
+const UNCOPIED_CONFIG_KEY = /^database_(url|path)$|(^|_)(api_key|key|token|secret|password)$/i;
+
+function withoutCredentials(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(withoutCredentials);
+  if (value === null || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).filter(([k]) => !UNCOPIED_CONFIG_KEY.test(k)).map(([k, v]) => [k, withoutCredentials(v)]));
+}
+
+/**
+ * Give the loaded gbrain a home of its own (GBRAIN_HOME and HOME) inside the run directory, so nothing it writes to
+ * its home reaches the operator's install or another run, and no upkeep or conversation archive state is shared
+ * (from 0.60.733.0 an idle `gbrain serve` runs both under whatever home it shares; the runner starts no serve).
+ * Called after gbrain read the operator's config and ~/.gbrain/.env: the home gets a copy of that config file without
+ * the database location or any credential, so later reads see the same settings. Returns the restore.
+ */
+export async function isolateGbrainHome(gut: GbrainUnderTest, home: string): Promise<() => void> {
+  const { loadConfigFileOnly } = await importGbrain<any>(gut, 'src/core/config.ts');
+  const fileConfig = loadConfigFileOnly() ?? {};
+  mkdirSync(join(home, '.gbrain'), { recursive: true, mode: 0o700 });
+  writeFileSync(join(home, '.gbrain', 'config.json'), JSON.stringify(withoutCredentials(fileConfig), null, 2) + '\n', { mode: 0o600 });
+  const saved = { GBRAIN_HOME: process.env.GBRAIN_HOME, HOME: process.env.HOME };
+  process.env.GBRAIN_HOME = home;
+  process.env.HOME = home;
+  return () => {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  };
+}
+
 /**
  * Open a Postgres brain: env hygiene, barrier proof, guards, verification and
  * the schema check, in that order. Nothing is searched before all of them pass.
+ * With home, gbrain runs in that home of its own once its config is read (isolateGbrainHome).
  */
-export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: string, counters: GuardCounters, referenceBuild = false): Promise<OpenedBrain> {
+export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: string, counters: GuardCounters, referenceBuild = false, home?: string): Promise<OpenedBrain> {
   if (referenceBuild) assertReferenceBuild(gut);
   const source = process.env[databaseUrlEnv];
   if (!source) throw new LiveRecallAbort('LR_NO_DATABASE_URL', 'env ' + (/^[A-Z0-9_]+$/.test(databaseUrlEnv) ? databaseUrlEnv : 'var') + ' is empty');
@@ -371,10 +406,17 @@ export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: st
   const { url, connection, loopback } = readOnlyUrl(source);
   const config = { ...(loadConfig() ?? {}), engine: 'postgres', database_url: url };
   if (BLANKED_ENV.some(key => process.env[key] !== '')) throw new LiveRecallAbort('LR_DIRECT_URL_OVERRIDE', 'a blanked database variable was set again while loading gbrain config');
+  const restoreHome = home ? await isolateGbrainHome(gut, home) : () => {};
   configureGateway(buildGatewayConfig(config));
   const engineConfig = { ...toEngineConfig(config), pool_max: 2 };
-  const engine = await createEngine(engineConfig);
-  await engine.connect(engineConfig);
+  let engine: any;
+  try {
+    engine = await createEngine(engineConfig);
+    await engine.connect(engineConfig);
+  } catch (error) {
+    restoreHome();
+    throw error;
+  }
   try {
     const raw: Raw = sql => engine.executeRaw(sql);
     const barrier = await proveBarrier(raw, loopback);
@@ -382,9 +424,10 @@ export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: st
     await verifyReadOnly(engine);
     const schema = await checkSchema(engine, gut, referenceBuild);
     configureGateway(buildGatewayConfig(await loadConfigWithEngine(engine, config)));
-    return { engine, barrier, connection, ...schema, close: () => engine.disconnect() };
+    return { engine, barrier, connection, ...schema, close: async () => { try { await engine.disconnect(); } finally { restoreHome(); } } };
   } catch (error) {
     await engine.disconnect().catch(() => {});
+    restoreHome();
     throw error;
   }
 }
