@@ -4,9 +4,9 @@
  * is not pinned, sealed cells keeping the runner's wall-clock check, the settings check against the comparator cache,
  * scoring and why-rows. The cell runs on the fake memory system with a scripted reader and judge.
  */
-import { afterAll, afterEach, describe, expect, setSystemTime, test } from 'bun:test';
+import { afterAll, afterEach, beforeAll, describe, expect, setSystemTime, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -43,6 +43,14 @@ function scripted(): { reader: ChatLike; judge: ChatLike; calls: { reader: numbe
 class CountingFake extends FakeMemorySystem {
   calls = 0;
   async capabilities() { this.calls++; return super.capabilities(); }
+}
+
+/** PINNED_RUN as the first clock test leaves it, built here when a test that reads it runs on its own (bun test -t). */
+async function ensurePinnedRun() {
+  if (existsSync(join(PINNED_RUN, 'cells'))) return;
+  const s = scripted();
+  await runDevCell({ sha: SHA, world: 'bg1-dev-01', out: PINNED_RUN, systemUrl: null, env: { ...process.env, ...dead } },
+    { system: new FakeMemorySystem(), reader: s.reader, judge: s.judge, clockMs: () => Date.parse(DEV_AS_OF) });
 }
 
 const questionsAt = (iso: string) => {
@@ -148,6 +156,7 @@ describe('the dev cell and its launch', () => {
 });
 
 describe('scoring against the comparator cache', () => {
+  beforeAll(ensurePinnedRun, 120_000);
   const baselines = loadBaselines();
   const ids = Object.keys(baselines.rows['ext-memory-bank'].questions);
 
@@ -180,6 +189,41 @@ describe('scoring against the comparator cache', () => {
     expect(() => scoreRun(PINNED_RUN, { baselines, against: file })).toThrow(/comparators were read at/);
   });
 
+  test('a saved row graded on other worlds refuses without --allow-run-diff', () => {
+    const row = savedRow(PINNED_RUN);
+    const graded = new Set(Object.entries(row.questions).filter(([, q]) => q.score !== null).map(([id]) => id));
+    const file = join(tmp, 'saved-row-other-worlds.json');
+    writeFileSync(file, JSON.stringify({ ...row, questions: Object.fromEntries(Object.keys(row.questions).map(id => [id, { score: graded.has(id) ? null : 1, gold: null, stale: null }])) }));
+    expect(() => scoreRun(PINNED_RUN, { baselines, against: file })).toThrow(/differ in graded worlds.*--allow-run-diff/);
+    expect(scoreRun(PINNED_RUN, { baselines, against: file, allowRunDiff: true }).classes.find(c => c.label === 'all')!.against).toBeNull();
+  });
+
+  test('the comparator columns cover only the questions gbrain graded, and the n column says so', () => {
+    const s = scoreRun(PINNED_RUN, { baselines });
+    const all = s.classes.find(c => c.label === 'all')!;
+    const graded = Object.entries(savedRow(PINNED_RUN).questions).filter(([, q]) => q.score !== null).map(([id]) => id);
+    expect(all.graded).toBe(graded.length);
+    expect(graded.length).toBeLessThan(192);
+    const mb = graded.map(id => baselines.rows['ext-memory-bank'].questions[id].score).filter((x): x is number => typeof x === 'number');
+    expect(all.comparators['ext-memory-bank'].accuracy).toBeCloseTo(mb.reduce((a, b) => a + b, 0) / mb.length, 9);
+    expect(renderScore(s)).toContain(`| all | ${graded.length} of 192 |`);
+  });
+
+  test('a score refuses two runs mixed under one directory, by build or by question, and run refuses an --out that holds a run', async () => {
+    const mixed = join(tmp, 'mixed');
+    cpSync(PINNED_RUN, join(mixed, 'worlds', 'a'), { recursive: true });
+    cpSync(PINNED_RUN, join(mixed, 'worlds', 'b'), { recursive: true });
+    expect(() => scoreRun(mixed, { baselines })).toThrow(/answered under both/);
+    const rc = join(mixed, 'worlds', 'b', 'cells', 'bg1-dev3.gbrain-defaults.rs1-stable.p', 'run-config.json');
+    const conf = JSON.parse(readFileSync(rc, 'utf8'));
+    conf.cell.launch.env.GBRAIN_SHA = 'b'.repeat(40);
+    writeFileSync(rc, JSON.stringify(conf));
+    expect(() => scoreRun(mixed, { baselines })).toThrow(/ran gbrain b{40}, and the rest of its row ran/);
+    mkdirSync(join(tmp, 'used-out'), { recursive: true });
+    writeFileSync(join(tmp, 'used-out', 'run.json'), '{}');
+    await expect(main(['run', '--out', join(tmp, 'used-out')])).rejects.toThrow(/already holds a run/);
+  });
+
   test('gaps are gbrain minus each comparator in points, paired over questions both graded', () => {
     const recs = new Map<string, QuestionRecord>(ids.map(id => [id, { id, world: 'bg1-dev-01', stratum: 's1_updated', score: baselines.rows['ext-memory-bank'].questions[id].score === null ? null : 1, gold: true, stale: false, answer: null, context: null }]));
     const s1 = scoreRecords('synthetic', null, recs, baselines).classes.find(c => c.label === 's1_updated')!;
@@ -189,6 +233,7 @@ describe('scoring against the comparator cache', () => {
 });
 
 describe('why rows', () => {
+  beforeAll(ensurePinnedRun, 120_000);
   test('list each needed value and whether the context held it', () => {
     process.env.GBRAIN_EVALS_BG1_WORLD_END = DEV_WORLD_END;
     const q = loadCorpus('bg1-dev', undefined, undefined, { keyless: true }).questions.find(x => x.bg1?.ordered && x.bg1.gold_values.length > 1)!;
@@ -206,6 +251,7 @@ describe('why rows', () => {
 });
 
 describe('overlays', () => {
+  beforeAll(ensurePinnedRun, 120_000);
   const on = { 'search.evidence_date_header': true };
   test('parse into a sorted overlay of the shim\'s six keys, and refuse anything else', () => {
     expect(parseOverlays(['run', '--overlay', 'search.query_budget_unit=auto', '--overlay', 'search.evidence_date_header=false'])).toEqual({ 'search.evidence_date_header': false, 'search.query_budget_unit': 'auto' });
@@ -245,6 +291,12 @@ describe('overlays', () => {
     expect(parseOverlays(cmd.split(/\s+/))).toEqual(on);
   });
 
+  test("an overlay that sets a key to the stage 1 arm's own value refuses, since it would change nothing", () => {
+    expect(() => devCell(SHA, { 'search.query_facts_block': true })).toThrow(/already sets search.query_facts_block=true/);
+    expect(() => vmCommand(SHA, 'bg1-dev-01', { 'search.query_budget_unit': 'chunk' })).toThrow(/already sets/);
+    expect(devCell(SHA, { 'search.query_facts_block': false }).arms[0].retrieval!.overlay['search.query_facts_block']).toBe(false);
+  });
+
   const runAt = (name: string, info: Record<string, unknown>) => {
     const dir = join(tmp, name);
     cpSync(PINNED_RUN, dir, { recursive: true });
@@ -281,7 +333,7 @@ describe('overlays', () => {
   });
 
   test('why rows carry the overlay, and so must their file name', async () => {
-    const a = join(tmp, 'overlay-on');
+    const a = runAt('overlay-on-why', { overlay: on });
     expect(whyRows(a).every(r => r.overlay?.['search.evidence_date_header'] === true)).toBe(true);
     await expect(main(['why', '--run', a, '--out', join(tmp, 'why.jsonl')])).rejects.toThrow(/carries it, e.g. why-rows-evidence_date_header=true.jsonl/);
     expect(await main(['why', '--run', a, '--out', join(tmp, 'why-rows-evidence_date_header=true.jsonl')])).toBe(0);

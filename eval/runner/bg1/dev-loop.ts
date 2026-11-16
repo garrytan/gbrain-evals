@@ -23,14 +23,16 @@
  *     search.query_budget_unit chunk or auto) on top of the stage 1 arm's values. An unknown key, a bad value, or a key
  *     gbrain's config does not list at the resolved commit refuses before any VM starts. The overlay goes into run.json,
  *     the out and lease names, each VM's cell command and so its run-config, the score header and the why rows. With
- *     no --overlay nothing changes.
+ *     no --overlay nothing changes. An overlay value the stage 1 arm already has refuses, and so does an --out that
+ *     already holds a run.
  *   bun eval/runner/bg1/dev-loop.ts score --run <dir> [--against <earlier run dir or saved row>] [--allow-run-diff] [--save <row.json>] [--json]
  *     Per class S1 to S8, pooled (what is true now: S1 to S5; time-indexed: S6 to S8) and overall: gbrain's accuracy,
  *     its exposure rate (the context held every value the answer needs) and its gap to each comparator with a paired
- *     95% interval over questions, plus the smallest gap change each class can show. --against adds this run minus an
+ *     95% interval over questions, plus the smallest gap change each class can show. Every column covers the questions
+ *     gbrain graded, and a directory whose cells mix gbrain builds or answer a question twice refuses. --against adds this run minus an
  *     earlier gbrain run; --save writes this run's per-question scores and exposure (no answers or contexts), which a
  *     later --against reads in place of the run directory. Two runs compared under --against must match in everything
- *     but their gbrain ref and overlay (worlds, world end, question day, reader, judge, questions) unless
+ *     but their gbrain ref and overlay (worlds, the worlds each graded, world end, question day, reader, judge, questions) unless
  *     --allow-run-diff; when either has an overlay, the score opens with both and the keys where they differ. Keyless.
  *   bun eval/runner/bg1/dev-loop.ts why --run <dir> --out <file.jsonl> [--stage1 <dir>] [--classes s1_updated,...]
  *     One row per question gbrain missed in S1 and S5 to S8 (a run with an overlay needs it in the file name, and each row
@@ -162,6 +164,8 @@ export function devCell(sha: string, overlay: Overlay = {}): CellDefinition {
   if (!/^[0-9a-f]{40}$/.test(sha)) throw new DevLoopRefusal(`a dev cell needs a full 40-character gbrain commit, not ${JSON.stringify(sha)}`);
   const src = loadBG1Manifest().smoke_cells.find(c => c.id === STAGE1_GBRAIN_CELL);
   if (!src?.launch) throw new DevLoopRefusal(`${STAGE1_GBRAIN_CELL} is missing from eval/runner/q1/cells/bg1-cells.json`);
+  const same = Object.keys(overlay).filter(k => src.arms.some(a => a.retrieval?.overlay?.[k] === overlay[k]));
+  if (same.length) throw new DevLoopRefusal(`the stage 1 arm already sets ${same.map(k => `${k}=${overlay[k]}`).join(', ')}, so the overlay would change nothing`);
   const { estimate: _e, snapshot_command: _s, restore_command: _r, lease: _l, ...rest } = src;
   const def: Omit<CellDefinition, 'estimate'> = {
     ...rest, launch: { ...src.launch, env: { ...src.launch.env, GBRAIN_SHA: sha } },
@@ -309,6 +313,8 @@ async function launch(argv: string[]): Promise<number> {
   const unknown = worlds.filter(w => !(DEV_WORLDS as readonly string[]).includes(w));
   if (unknown.length) throw new DevLoopRefusal(`--worlds takes ${DEV_WORLDS.join(', ')}, not ${unknown.join(', ')}`);
   const overlay = parseOverlays(argv), slug = overlaySlug(overlay);
+  const outArg = one('--out');
+  if (outArg && existsSync(join(resolve(outArg), 'run.json'))) throw new DevLoopRefusal(`${outArg} already holds a run (run.json); pass a new --out so two runs never mix in one score`);
   const window = requireRs1Window(argv, { what: 'the BG1 dev loop', keyless: false, caps: () => [] })!;
   const missing = [...VM_KEYS, 'UBI_OWNER'].filter(k => !process.env[k]);
   if (missing.length) throw new DevLoopRefusal(`run needs ${missing.join(', ')} in the environment`);
@@ -319,9 +325,9 @@ async function launch(argv: string[]): Promise<number> {
   await checkOverlayHead(sha, overlay);
   console.error(`dev loop: gbrain ${ref} at ${sha}${slug ? ` with overlay ${slug}` : ''}`);
   const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15);
-  const out = resolve(one('--out') ?? join(REPO_ROOT, 'eval/reports/bg1-dev-loop', `${sha.slice(0, 12)}${slug ? `-${slug}` : ''}-${stamp}`));
+  const out = resolve(outArg ?? join(REPO_ROOT, 'eval/reports/bg1-dev-loop', `${sha.slice(0, 12)}${slug ? `-${slug}` : ''}-${stamp}`));
   const leaseUsd = Math.floor(window.cap_usd / worlds.length * 100) / 100;
-  const def = devCell(sha);
+  const def = devCell(sha, overlay);
   mkdirSync(join(out, 'setup'), { recursive: true });
   const shipFile = join(out, 'setup', 'ship.txt');
   writeFileSync(shipFile, SHIP_PATHS.join('\n') + '\n');
@@ -405,6 +411,7 @@ export function readRow(roots: string[], system: string): { settings: Record<str
   const qs = devQuestions();
   const records = new Map<string, QuestionRecord>();
   let settings: Record<string, unknown> | null = null, gbrainSha: string | null = null;
+  const answeredUnder = new Map<string, string>();
   for (const root of roots.flatMap(r => cellRoots(r))) {
     for (const cell of dirsUnder(join(root, 'cells'))) {
       const rc = JSON.parse(readFileSync(join(cell, 'run-config.json'), 'utf8')) as RunConfigLike;
@@ -412,7 +419,9 @@ export function readRow(roots: string[], system: string): { settings: Record<str
       const s = readingSettings(rc);
       if (settings && JSON.stringify(settings) !== JSON.stringify(s)) throw new DevLoopRefusal(`${cell} reads at other settings than the rest of its row`);
       settings = s;
-      gbrainSha = rc.cell?.launch?.env?.GBRAIN_SHA ?? gbrainSha;
+      const sha = rc.cell?.launch?.env?.GBRAIN_SHA;
+      if (sha && gbrainSha && sha !== gbrainSha) throw new DevLoopRefusal(`${cell} ran gbrain ${sha}, and the rest of its row ran ${gbrainSha}; score one run at a time`);
+      gbrainSha = sha ?? gbrainSha;
       const contexts = new Map<string, string>();
       for (const run of dirsUnder(join(root, 'runs'))) for (const c of ndjson<{ key: string; prompt: string }>(join(run, 'contexts.ndjson'))) contexts.set(c.key.split('|')[1], c.prompt);
       const grades = new Map(ndjson<{ answer_id: string; instrument_id: string; score: number | null }>(join(cell, 'judgments.ndjson')).filter(j => j.instrument_id === GATING_INSTRUMENT).map(j => [j.answer_id, j]));
@@ -420,6 +429,9 @@ export function readRow(roots: string[], system: string): { settings: Record<str
         if (a.reader !== DEV_READER || a.replicate !== 0) continue;
         const q = qs.get(a.question_id);
         if (!q) throw new DevLoopRefusal(`${cell} answers ${a.question_id}, which is not a dev question`);
+        const seen = answeredUnder.get(q.id);
+        if (seen !== undefined && seen !== root) throw new DevLoopRefusal(`${q.id} is answered under both ${seen} and ${root}; score one run at a time`);
+        answeredUnder.set(q.id, root);
         const g = grades.get(a.answer_id);
         const prompt = contexts.get(a.question_id);
         const context = prompt === undefined ? null : evidenceOf(prompt);
@@ -495,10 +507,10 @@ export function scoreRecords(run: string, gbrainSha: string | null, mine: Readon
     run, gbrain_sha: gbrainSha, questions: all.length, ungraded: all.filter(q => q.score === null).length,
     classes: GROUPS.map(g => {
       const ids = all.filter(q => g.strata.includes(q.stratum)).map(q => q.id).sort();
-      const graded = ids.map(id => mine.get(id)!.score).filter((x): x is number => x !== null);
+      const covered = ids.filter(id => mine.get(id)!.score !== null);
       return {
-        label: g.label, n: ids.length, graded: graded.length, accuracy: mean(graded), exposure: exposureOf(mine, ids),
-        comparators: Object.fromEntries(COMPARATORS.map(c => [c, { accuracy: mean(ids.map(id => comps[c].get(id)?.score).filter((x): x is number => typeof x === 'number')), exposure: exposureOf(comps[c], ids), gap: gap(mine, comps[c], ids) }])),
+        label: g.label, n: ids.length, graded: covered.length, accuracy: mean(covered.map(id => mine.get(id)!.score!)), exposure: exposureOf(mine, covered),
+        comparators: Object.fromEntries(COMPARATORS.map(c => [c, { accuracy: mean(covered.map(id => comps[c].get(id)?.score).filter((x): x is number => typeof x === 'number')), exposure: exposureOf(comps[c], covered), gap: gap(mine, comps[c], ids) }])),
         ...(against ? { against: gap(mine, against, ids) } : {}),
       };
     }),
@@ -537,8 +549,10 @@ export function scoreRun(dir: string, opts: { baselines?: Baselines; against?: s
     check(opts.against, other.settings);
     againstOverlay = other.overlay ?? {};
     const mine = runInfo(dir), theirs = opts.against.endsWith('.json') ? null : runInfo(opts.against);
+    const gradedWorlds = (qs: Array<[string, { score: number | null }]>) => [...new Set(qs.filter(([, q]) => typeof q.score === 'number').map(([id]) => row.records.get(id)?.world ?? id))].sort().join();
     const differs = [...(mine && theirs ? SAME_RUN_FIELDS.filter(k => JSON.stringify(mine[k]) !== JSON.stringify(theirs[k])) : []),
-      ...(Object.keys(other.questions).sort().join() !== [...row.records.keys()].sort().join() ? ['questions'] : [])];
+      ...(Object.keys(other.questions).sort().join() !== [...row.records.keys()].sort().join() ? ['questions'] : []),
+      ...(gradedWorlds([...row.records]) !== gradedWorlds(Object.entries(other.questions)) ? ['graded worlds'] : [])];
     if (differs.length && !opts.allowRunDiff) throw new DevLoopRefusal(`${dir} and ${opts.against} differ in ${differs.join(', ')}, not only in their overlay and gbrain ref; pass --allow-run-diff to compare them anyway`);
     against = new Map(Object.entries(other.questions).map(([id, q]) => [id, { ...row.records.get(id)!, ...q, answer: null, context: null }]));
   }
@@ -568,7 +582,7 @@ export function renderScore(s: Score): string {
   for (const c of s.classes) {
     const mb = c.comparators['ext-memory-bank'], ef = c.comparators['ext-extract-first'];
     const mde = Math.max(mb.gap?.mde ?? 0, ef.gap?.mde ?? 0);
-    lines.push(`| ${c.label} | ${c.n} | ${pct(c.accuracy)} | ${pct(c.exposure)} | ${pct(mb.accuracy)} | ${pct(mb.exposure)} | ${pts(mb.gap)} | ${pct(ef.accuracy)} | ${pct(ef.exposure)} | ${pts(ef.gap)} | ${mde ? `${mde.toFixed(1)} pts` : 'n/a'} |${vs ? ` ${pts(c.against)} |` : ''}`);
+    lines.push(`| ${c.label} | ${c.graded === c.n ? c.n : `${c.graded} of ${c.n}`} | ${pct(c.accuracy)} | ${pct(c.exposure)} | ${pct(mb.accuracy)} | ${pct(mb.exposure)} | ${pts(mb.gap)} | ${pct(ef.accuracy)} | ${pct(ef.exposure)} | ${pts(ef.gap)} | ${mde ? `${mde.toFixed(1)} pts` : 'n/a'} |${vs ? ` ${pts(c.against)} |` : ''}`);
   }
   lines.push('', 'The smallest visible change is the paired difference a two-sided 0.05 test detects with 80% power in that class (the larger of the two comparisons). The intervals cover question sampling within these three worlds, not new worlds.');
   return lines.join('\n');
