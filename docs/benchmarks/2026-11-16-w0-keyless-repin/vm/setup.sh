@@ -2,7 +2,8 @@
 # Ubicloud VM bootstrap for the W0 keyless re-pin (2026-11-16-w0-keyless-repin-preregistration.md). Installs Bun 1.4.4,
 # Docker with the digest-pinned pgvector image used by every earlier re-pin, two copies of this checkout under ~/w/old and
 # ~/w/new that differ only in package.json and bun.lock (copied from vm/pins/, frozen install), a blobless gbrain clone for
-# the lifecycle runner, and the cleaned LongMemEval-S file checked against its sha256. No provider key is set on the VM.
+# the lifecycle runner, and the cleaned LongMemEval-S file checked against its sha256 (skipped with W0_KEPT=1, because no
+# kept row reads it). No provider key is set on the VM.
 set -euo pipefail
 for k in ANTHROPIC_API_KEY OPENAI_API_KEY VOYAGE_API_KEY PARTICLE_API_KEY GEMINI_API_KEY GOOGLE_API_KEY GOOGLE_GENERATIVE_AI_API_KEY GROQ_API_KEY OPENROUTER_API_KEY TOGETHER_API_KEY TYPESAFE_API_KEY JEV_TYPESAFE_API_KEY UBICLOUD_API_KEY UBICLOUD_API_TOKEN; do unset "$k"; done
 R=docs/benchmarks/2026-11-16-w0-keyless-repin
@@ -26,7 +27,9 @@ for side in old new; do
 done
 git clone -q --filter=blob:none https://github.com/garrytan/gbrain.git "$HOME/gbrain"
 git -C "$HOME/gbrain" cat-file -e "$OLD^{commit}" && git -C "$HOME/gbrain" cat-file -e "$NEW^{commit}"
-mkdir -p "$HOME/data"
-curl -fsSL -o "$HOME/data/longmemeval_s_cleaned.json" https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json
-echo "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442  $HOME/data/longmemeval_s_cleaned.json" | sha256sum -c -
+if [ "${W0_KEPT:-0}" != 1 ]; then
+  mkdir -p "$HOME/data"
+  curl -fsSL -o "$HOME/data/longmemeval_s_cleaned.json" https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json
+  echo "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442  $HOME/data/longmemeval_s_cleaned.json" | sha256sum -c -
+fi
 echo setup-ok

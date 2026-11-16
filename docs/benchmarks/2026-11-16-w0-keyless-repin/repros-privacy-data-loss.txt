@@ -1,0 +1,14 @@
+# W0 kept rows: the privacy and data-loss commands of the bug ledger, rerun at the newest release only (amendment of
+# 2026-11-16, "Kept rows"). Taken from ../2026-10-03-wave8-f1-repin/repros-109b992.txt (updates, forget, private pages,
+# stored contradiction reports, unsolicited recall) plus the N1-7 repro. run-repros.ts runs every line that starts with "$ ".
+
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-1-ontology-propose-managed.ts
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-2-ontology-revert-noop.ts
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n1-3-ontology-private-remote.ts
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-1-hot-memory-after-forget.ts
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-2-forget-owner-unavailable.ts
+$ bun docs/benchmarks/2026-10-01-n1-n5/repro/n5-3-remember-after-forget-pglite.ts
+$ bun docs/benchmarks/2026-10-01-n2-contradiction-surfacing/repro/n2-2-find-contradictions-default-cli.ts
+$ bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-1-private-volunteer-remote.ts
+$ bun docs/benchmarks/2026-10-01-n8-proactive-recall/repro/n8-2-private-turn-context.ts
+$ bun docs/benchmarks/2026-10-06-followups-repin/repros/n1-7-sweep-fences-ontology.ts

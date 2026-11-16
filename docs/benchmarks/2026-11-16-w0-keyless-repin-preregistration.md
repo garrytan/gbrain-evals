@@ -204,3 +204,61 @@ preregistration (`git ls-remote` still gives v0.60.733.0). Frozen before any cou
    during which `serve-ages.log` shows a live server does not count toward a timing verdict, and is reported. If the
    log shows a server older than 10 minutes during the offline tier, that tier's Cat 7 and Cat 28 results are reported
    but do not decide a latency verdict.
+
+### 2026-11-16: only rows that a named gbrain change could move run now, at the newest release only
+
+The program this check belongs to narrowed before any counted run started. A published number is re-measured now only when
+a gbrain change since the build it was measured on could move it. Every other number waits for the December refresh on
+that month's `stable` tag and stays published with the build it names. The newest release is still v0.60.733.0
+(`6ce7195b`, checked again with `git ls-remote` before this commit), so "new" doesn't move. This amendment replaces
+"What runs" and the old-build pairing for counted purposes; the upkeep amendment above still applies.
+
+**Run on one or two `standard-16` VMs, new build only** ([`vm/run-kept.sh`](2026-11-16-w0-keyless-repin/vm/run-kept.sh), part
+`a` and part `b`, or `all` on one VM; `setup.sh` with `W0_KEPT=1` skips the LongMemEval download no kept row reads).
+Commits are gbrain squash merges on master between the row's build and `6ce7195b`.
+
+| Row (build it names) | Step | gbrain changes that could move it |
+|---|---|---|
+| Serving the new value after an update, N1 (`77cf8e111`) | a: full N1, PGLite and Postgres, CLI, MCP stdio and MCP HTTP | #8481 (`4dd9ba471`, forget as fence edits, recall weighting), #9136 (`e97918886`, write path), #9233 (`d5502298c`, wrong search and recall answers) |
+| N1 with the belief ledger on (`09943580e`) | a: the same with `EVAL_BELIEF_LEDGER=1` | #9036 (`2560ffddb`), #9038 (`aa05c4663`), #9236 (`6c66cb900`) in `src/core/belief` |
+| Nothing left after `forget`, N5 (`77cf8e111`) | a: full N5, the same six cells | #8481 (`4dd9ba471`), #9395 (`4244fd774`), #9407 (`34b7281fc`), #9479 (`dbb203149`) |
+| Private pages on Postgres over HTTP, N6 (`77cf8e111`) | a: N6 on Postgres over HTTP, attested, and its negative control | #8134 (`b85dd6450`, per-member read access), #8917 (`d253ec0ff`, owner reads private pages), #9038 (`aa05c4663`), #9361 (`b3d43b163`), #9354 (`c21a42878`) |
+| The bug ledger's privacy and data-loss repros (`77cf8e111`) | a: the ten commands of [`repros-privacy-data-loss.txt`](2026-11-16-w0-keyless-repin/repros-privacy-data-loss.txt) | the N1, N5 and N6 changes above |
+| Index truth across moves, renames, forget and restarts, lifecycle (`b80cad6`) | b: the lifecycle matrix, new build only, PGLite and Postgres, three interfaces | #9290 (`3f138e1b4`), #9238 (`eb71eb3cb`), #9044 (`2137b1583`), #9341 (`1f72157e3`), #8481 |
+| One very large page, N14 (`7a6bdd3`) | b: Wave B4's command set (PGLite 2 MB to 260 MiB, Postgres 2 MB and 100 MiB to 260 MiB) | #8496 (`c7501cc54`, a segmented write can't publish without its rows), #8735 (`c195c3d53`), #8684 (`0ba29f908`), #9299 (`9f376b583`) |
+
+**Run keyless on a Capy machine, new build only** (each under 2 minutes; the tree at this branch's head with
+`vm/pins/6ce7195b….{package.json,bun.lock}`, `bun install --frozen-lockfile`, no provider key set):
+
+| Row (build it names) | Command | gbrain changes that could move it, expected direction |
+|---|---|---|
+| Agent retrieval shapes, 9 of 15 reproduce (`6e1086492`) | `agent-retrieval-shapes.ts` | #7186 (`104983fe2`), #7195 (`a62043673`), #9414 (`23a163fc5`): fewer shapes reproduce |
+| Namesakes, N4 (`6c8373c`) | `n4-entity-resolution.ts`, default seed and seed 7 | #7195 (`a62043673`), #7472 (`7a4746b38`), #7254 (`dfe501e2f`), #6901 (`4597d3cc4`): up |
+| Dates, N3, 500 of 513 (`6c8373c`) | `n3-temporal-asof.ts`, default seed and seed 7 | #6066 (`36fa693ad`), #6850 (`933a76779`), #9138 (`9e9d6711a`), #6018 (`99de5707f`): up |
+| Abstention, A4's keyless arm (`48ed5e8`) | `a4-abstention.ts` | #6445 (`61467ca9b`), #6391 (`f05943e65`) in `src/core/search/crag.ts`: the grade on answerable questions could move |
+| Open loops, N7, closure 34 of 39 (`48ed5e8`) | `n7-open-loops-email.ts`, hermetic arm | #6480 (`af7dffc81`), #6853 (`8ecc56717`), #9299 (`9f376b583`): up |
+| BrainBench memory conformance, Cat 34 (`2a56b512`) | `cat34-brainbench-memory.ts` with `GBRAIN_REPO=node_modules/gbrain` | `acf58e0eb` (v0.48.0.0, relaxed-arm fusion and the volunteer arm), #6396 (`d4dc2d4d8`): up |
+
+**Already measured at the new build, no new run.** CI run
+[43940805988](https://github.com/garrytan/gbrain-evals/actions/runs/43940805988) installed gbrain `6ce7195` and passed
+N6 in process (safety 6 of 6, which holds the `find_contradictions`, `known_as_of` and held-take probes), N8 (safety 4
+of 4; `--attest` only adds an attestation to the same run) and N12 (safety 4 of 4, quality 2 of 2). CI keeps no
+receipts, so those rows cite the run and its gate verdicts, not recounted numbers. The known limits "open loops cover
+Gmail only" and "no whole-brain contradiction scanner" cite the two source checks at `6ce7195b`.
+
+**Moved to the December refresh, keeping their builds:** Cat 7 and the Cat7-1 timeline limit, `volunteer_context` (0 of
+240), the multi-relation planner, the attendance world and attendee role planner, the forecast journal, N13, N2's
+keyless part, the memory trust repros, keyless partial-match search, the other bug-ledger repros, the wave 8 and
+operator-wave checks, and the verbatim probe. README's reworded one-hop row (0.411 to 0.537) also moves there: it is the
+paid run of `relational-ab.ts` with OpenAI embeddings, so no keyless run can refresh it.
+
+**Old build and failures.** No counted run at `77cf8e111`: the published passes are the reference. A contract that
+fails at the new build is run a second time at the new build (`run-kept.sh <step> new r2`), and, for rows measured at
+`77cf8e111`, once at `77cf8e111` on the same VM (`run-kept.sh <step> old`), before it is called a regression. The
+lifecycle runner can run its own published build directly (`--builds`). N6 on Postgres over HTTP lost 2 of 155 cells
+once at `77cf8e111` from a host cause in the October re-pin, so its second run decides. A privacy or data-loss failure
+is reported the same day with its probe ids and a repro command.
+
+**What each outcome changes.** A row that holds moves to `6ce7195b` in README, the documentation hub and
+`docs/gbrain-under-test.md`. A row that improves publishes its new number with `6ce7195b`. A confirmed failure is a
+regression, reported to gbrain's maintainers, and severe when it is privacy or data loss; the row shows the new result.
