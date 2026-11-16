@@ -7,7 +7,7 @@
   `--allow-repo-commands`.
 - **Why.** Before this, land merged a branch that was behind main with only a `STALE_BASE: warn` line, so a break that
   needs both sides, such as a new link to a page main has just renamed, could reach main without a check. The other
-  way round, merging main into every stale branch and rerunning CI, cost a full CI run per merge.
+  way round, merging main into every stale branch and rerunning CI, needed a full CI run per merge.
 - **Releases without `gh`.** [CLAUDE.md](CLAUDE.md) gives the release steps: `gstack-release-stamp open`, run with
   `gh` switched off, sets the next version, folds the entries into CHANGELOG.md and pushes `release/<version>`; the
   pull request is opened from that branch without `gh` and merges with `gstack-ship-queue land` at its green head.
