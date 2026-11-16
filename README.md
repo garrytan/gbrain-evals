@@ -319,10 +319,10 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
   1 release (0.075 and 0.078 ms on the two hosts measured). It has not been measured at the pin. This and the next three
   items are open entries in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md).
 - Open loops (commitments gbrain tracks from your email) cover Gmail only, and a commitment fulfilled by reply does not
-  close. gbrain's open-loops guide at the pin still describes Gmail threads only and calls fulfilment by reply future
-  work.
-- There is no scanner for contradictions across a whole brain. At the pin, the contradiction probe behind
-  `find_contradictions` still judges pairs drawn from the top results of the queries it is given.
+  close. gbrain's open-loops guide at `6ce7195b4` (v0.60.733.0) still describes Gmail threads only and calls fulfilment
+  by reply future work.
+- There is no scanner for contradictions across a whole brain. At `6ce7195b4` (v0.60.733.0), the contradiction probe
+  behind `find_contradictions` still judges pairs drawn from the top results of the queries it is given.
 - Associative recall, which gbrain does not claim: `volunteer_context` delivered the needed page on 0 of 240 indirect
   probes at `3a284ae`.
 - Several retrieval settings were chosen on the same LongMemEval questions they are scored on; held-out confirmation
@@ -468,6 +468,11 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-16: Two known limits name the commit they were checked at
+
+The open-loops and contradiction-probe limits say "at `6ce7195b4` (v0.60.733.0)" instead of "at the pin", the commit
+where gbrain's source was read for them, so a later re-pin doesn't attach them to a build nobody checked.
 
 ### 2026-11-16: The pin is named on one page
 

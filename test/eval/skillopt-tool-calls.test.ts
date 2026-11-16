@@ -117,7 +117,11 @@ describe("Sol's 651 recorded calls from #304, replayed at the installed pin", ()
     return [{ tool: m[1]!, args }];
   });
 
-  /** Per pin: the refusal classes and successful reads the 651 calls give (a call whose arguments are not JSON reads other). */
+  /**
+   * Per pin: the refusal classes and successful reads the 651 calls give (a call whose arguments are not JSON reads other).
+   * A pin without a row must give the newest row's counts, so a re-pin that changes nothing here needs no new row; when
+   * gbrain changes the counts, add a row for the new pin naming the gbrain change.
+   */
   const EXPECTED: Record<string, { refused: Record<RefusalClass, number>; read: number }> = {
     // v0.60.549.0: the window refusal still read "context applies to grep".
     a131fb20ef4aafd017f0c6a6565ce5627dc46897: { refused: { 'multi-window-selector': 0, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 38, other: 438 }, read: 6 },
@@ -137,7 +141,6 @@ describe("Sol's 651 recorded calls from #304, replayed at the installed pin", ()
     expect(recorded.length).toBe(651);
     expect(loadCorpora().pages.has(SLUG.traverse_graph!)).toBe(true);
     const pin = gbrainPin().split('#')[1]!;
-    expect(Object.keys(EXPECTED)).toContain(pin);
     const records = await withHermeticEnv('n15-sol-recorded-classes', async () => {
       const engine = await openBrain();
       try {
@@ -158,7 +161,7 @@ describe("Sol's 651 recorded calls from #304, replayed at the installed pin", ()
       }
     });
     const tally = tallyRefusals(records.map(r => [r]));
-    expect({ refused: tally.refused, read: tally.read }).toEqual(EXPECTED[pin]!);
+    expect({ refused: tally.refused, read: tally.read }).toEqual(EXPECTED[pin] ?? Object.values(EXPECTED).at(-1)!);
     expect(tally.calls).toBe(651);
   }, 120_000);
 });
