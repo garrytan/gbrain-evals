@@ -5,9 +5,10 @@
  * nothing here is a counted or held-out result; the preregistration
  * (docs/benchmarks/2026-11-09-changing-facts-battleground-preregistration.md) keeps its sealed worlds for that.
  *
- *   bun eval/runner/bg1/dev-loop.ts run --gbrain <tag|branch|sha> --paid-window <unit> --window-cap-usd <n> [--out <dir>]
+ *   bun eval/runner/bg1/dev-loop.ts run [--gbrain <tag|branch|sha>] --paid-window <unit> --window-cap-usd <n> [--out <dir>]
  *       [--worlds bg1-dev-01,...] [--vm-size standard-4] [--location eu-central-h1]
- *     Resolves the ref to a gbrain commit and runs BG1's gbrain cell at it (configuration rs1-stable, arm P: query with
+ *     Resolves the ref to a gbrain commit (without --gbrain, gbrain's newest release tag, so the baseline is always the
+ *     newest build) and runs BG1's gbrain cell at it (configuration rs1-stable, arm P: query with
  *     the facts block, packed to 8,000 tokens) on one Ubicloud VM per dev world, each under its own metering proxy
  *     whose lease is the window cap over the worlds, then pulls the outputs into --out and prints `score`. The reader is
  *     claude-opus-5-5 at effort medium with 2,048 output tokens, and the gating judge is gpt-6-astra at the pinned judge
@@ -152,6 +153,16 @@ export async function runDevCell(o: DevCellOptions, deps: CellDeps & { clockMs?:
 
 // ─── Launch ──────────────────────────────────────────────────────────
 
+/** gbrain's newest release tag (vN.N.N.N, highest by number) and its commit. */
+export function newestRelease(lsTags: () => string = () => execFileSync('git', ['ls-remote', '--tags', GBRAIN_REPO], { encoding: 'utf8' })): { tag: string; sha: string } {
+  const refs = new Map(lsTags().split('\n').filter(Boolean).map(l => { const [sha, ref] = l.split('\t'); return [ref, sha] as const; }));
+  const num = (t: string) => t.slice(1).split('.').map(Number);
+  const newer = (a: string, b: string) => { const x = num(a), y = num(b); for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) > (y[i] ?? 0); return false; };
+  const tag = [...refs.keys()].flatMap(r => /^refs\/tags\/(v\d+(?:\.\d+)+)$/.exec(r)?.[1] ?? []).reduce<string | null>((best, t) => (best === null || newer(t, best) ? t : best), null);
+  if (!tag) throw new DevLoopRefusal('gbrain has no release tag (vN.N.N.N); pass --gbrain <tag|branch|sha>');
+  return { tag, sha: refs.get(`refs/tags/${tag}^{}`) ?? refs.get(`refs/tags/${tag}`)! };
+}
+
 /** A gbrain ref as a commit: a full sha as given, else the tag or branch `git ls-remote` resolves. */
 export function resolveGbrainRef(ref: string, lsRemote: (ref: string) => string = r => execFileSync('git', ['ls-remote', GBRAIN_REPO, r], { encoding: 'utf8' })): string {
   if (/^[0-9a-f]{40}$/.test(ref)) return ref;
@@ -180,15 +191,17 @@ export const SHIP_PATHS = [...new Set([...EXECUTES, ...Q1_VM_PATHS, 'eval/runner
 
 async function launch(argv: string[]): Promise<number> {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
-  const ref = one('--gbrain');
-  if (!ref) throw new DevLoopRefusal('run needs --gbrain <tag|branch|sha>');
   const worlds = (one('--worlds') ?? DEV_WORLDS.join(',')).split(',');
   const unknown = worlds.filter(w => !(DEV_WORLDS as readonly string[]).includes(w));
   if (unknown.length) throw new DevLoopRefusal(`--worlds takes ${DEV_WORLDS.join(', ')}, not ${unknown.join(', ')}`);
   const window = requireRs1Window(argv, { what: 'the BG1 dev loop', keyless: false, caps: () => [] })!;
   const missing = [...VM_KEYS, 'UBI_OWNER'].filter(k => !process.env[k]);
   if (missing.length) throw new DevLoopRefusal(`run needs ${missing.join(', ')} in the environment`);
-  const sha = resolveGbrainRef(ref);
+  const named = one('--gbrain');
+  const newest = named ? null : newestRelease();
+  const ref = named ?? newest!.tag;
+  const sha = named ? resolveGbrainRef(named) : newest!.sha;
+  console.error(`dev loop: gbrain ${ref} at ${sha}`);
   const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15);
   const out = resolve(one('--out') ?? join(REPO_ROOT, 'eval/reports/bg1-dev-loop', `${sha.slice(0, 12)}-${stamp}`));
   const leaseUsd = Math.floor(window.cap_usd / worlds.length * 100) / 100;
@@ -301,11 +314,10 @@ export function readRow(roots: string[], system: string): { settings: Record<str
 export interface BaselineRow { source: string; settings: Record<string, unknown>; gbrain_sha?: string; questions: Record<string, { score: number | null; gold: boolean | null; stale: boolean | null }> }
 export interface Baselines { schema: string; note: string; world_end: string; reader: string; judge: string; rows: Record<string, BaselineRow> }
 
-/** The stage 1 unit directories `baselines` reads, by row: the two comparators and gbrain at BG1's pin, for reference. */
+/** The stage 1 unit directories `baselines` reads, by row: the two comparators. */
 export const STAGE1_UNITS: Record<string, { system: string; dir: string }> = {
   'ext-memory-bank': { system: 'ext-memory-bank', dir: 'stage1b/results/bg1-dev3.ext-memory-bank.recipe/bg1-dev3.ext-memory-bank.recipe-a1-961b852d' },
   'ext-extract-first': { system: 'ext-extract-first', dir: 'stage1c/results/bg1-dev3.ext-extract-first.common/bg1-dev3.ext-extract-first.common-a1-7a7c53d3' },
-  'gbrain-stage1': { system: 'gbrain-defaults', dir: 'stage1b/results/bg1-dev3.gbrain-defaults.rs1-stable/bg1-dev3.gbrain-defaults.rs1-stable-a1-cf167e0a' },
 };
 
 export function buildBaselines(stage1: string): Baselines {
@@ -333,7 +345,7 @@ export const loadBaselines = (path = BASELINES_PATH): Baselines => {
 /** A paired difference in points over the questions both rows graded, its percentile interval and the smallest change it can show. */
 export interface Gap { delta: number; ci95: [number, number] | null; n: number; mde: number | null }
 export interface ClassScore { label: string; n: number; graded: number; accuracy: number | null; exposure: number | null; comparators: Record<string, { accuracy: number | null; exposure: number | null; gap: Gap | null }>; against?: Gap | null }
-export interface Score { run: string; gbrain_sha: string | null; questions: number; ungraded: number; classes: ClassScore[] }
+export interface Score { run: string; gbrain_ref?: string | null; gbrain_sha: string | null; questions: number; ungraded: number; classes: ClassScore[] }
 
 export const GROUPS: Array<{ label: string; strata: readonly Bg1Stratum[] }> = [
   ...BG1_STRATA.map(s => ({ label: s, strata: [s] })),
@@ -378,7 +390,9 @@ export function scoreRun(dir: string, opts: { baselines?: Baselines; against?: s
   const row = gbrainRow(dir);
   const want = b.rows['ext-memory-bank'].settings;
   if (JSON.stringify(row.settings) !== JSON.stringify(want)) throw new DevLoopRefusal(`the run at ${dir} reads at ${JSON.stringify(row.settings)}, and the comparators were read at ${JSON.stringify(want)}`);
-  return scoreRecords(dir, row.gbrainSha, row.records, b, opts.against ? gbrainRow(opts.against).records : undefined);
+  const runJson = join(dir, 'run.json');
+  const ref = existsSync(runJson) ? (JSON.parse(readFileSync(runJson, 'utf8')) as { gbrain_ref?: string }).gbrain_ref ?? null : null;
+  return { ...scoreRecords(dir, row.gbrainSha, row.records, b, opts.against ? gbrainRow(opts.against).records : undefined), gbrain_ref: ref };
 }
 
 const pct = (x: number | null) => (x === null ? 'n/a' : `${(x * 100).toFixed(1)}%`);
@@ -387,7 +401,7 @@ const pts = (g: Gap | null | undefined) => (!g ? 'n/a' : `${signed(g.delta)} (${
 
 export function renderScore(s: Score): string {
   const vs = s.classes.some(c => c.against !== undefined);
-  const lines = [`BG1 dev loop: gbrain ${s.gbrain_sha ?? '(unknown commit)'} on ${s.questions} dev questions (${s.ungraded} without a gating grade), read by ${DEV_READER} and graded by ${DEV_JUDGE}.`,
+  const lines = [`BG1 dev loop: gbrain ${s.gbrain_ref ? `${s.gbrain_ref} (${s.gbrain_sha})` : s.gbrain_sha ?? '(unknown commit)'} on ${s.questions} dev questions (${s.ungraded} without a gating grade), read by ${DEV_READER} and graded by ${DEV_JUDGE}.`,
     'Accuracy, and exposure: the share of contexts that held every value the answer needs. Gaps are gbrain minus each server in points, with a paired 95% interval over questions.', '',
     `| Class | n | gbrain | exposure | memory-bank | exposure | gap | extract-first | exposure | gap | smallest visible change |${vs ? ' minus --against |' : ''}`,
     `|---|---:|---:|---:|---:|---:|---|---:|---:|---|---:|${vs ? '---|' : ''}`];

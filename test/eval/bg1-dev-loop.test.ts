@@ -10,13 +10,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   BASELINES_PATH, clockProblem, COMPARATORS, DEV_AS_OF, DEV_JUDGE, DEV_READER, DEV_WORLD_END, devCell, devClock, DevLoopRefusal, faketimeOffset, loadBaselines,
-  main, neededValues, resolveGbrainRef, runDevCell, scoreRecords, scoreRun, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
+  main, neededValues, newestRelease, resolveGbrainRef, runDevCell, scoreRecords, scoreRun, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
 } from '../../eval/runner/bg1/dev-loop.ts';
 import { bg1RunClock, loadCorpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
 
-const SHA = '91bdfd69d50d52e7bb968a36d3d029d75f7f5302';
+const SHA = '6ce7195b44a034f85aec811f11fbf862db376f50';
 const NO_META = { finish: null, usage: null, response_model: null, attempt_errors: [] as string[] };
 const tmp = mkdtempSync(join(tmpdir(), 'bg1-dev-loop-'));
 const PINNED_RUN = join(tmp, 'pinned-2026-11-23');
@@ -107,7 +107,7 @@ describe('the dev cell and its launch', () => {
     expect(def.launch?.env.GBRAIN_SHA).toBe(SHA);
     expect(def.arms.map(a => [a.readers, a.frontier?.judges])).toEqual([[[DEV_READER], [DEV_JUDGE]]]);
     expect(def.snapshot_command ?? null).toBeNull();
-    expect(() => devCell('91bdfd69')).toThrow(DevLoopRefusal);
+    expect(() => devCell('6ce7195b')).toThrow(DevLoopRefusal);
   });
 
   test('a ref resolves to the peeled tag, then the branch, and a full sha passes through', () => {
@@ -118,7 +118,16 @@ describe('the dev cell and its launch', () => {
     expect(() => resolveGbrainRef('nope', ls)).toThrow(DevLoopRefusal);
   });
 
+  test('without --gbrain the newest release tag wins by number, and other tags never do', () => {
+    const ls = () => ['c1\trefs/tags/v0.60.99.0', 'c2\trefs/tags/v0.60.733.0', 'c3\trefs/tags/v0.60.733.0-rc1', 'c4\trefs/tags/stable-v0.60.900.0', 'c5\trefs/tags/stable',
+      'a6\trefs/tags/v0.60.732.0', 'c6\trefs/tags/v0.60.732.0^{}', 'c7\trefs/heads/master'].join('\n');
+    expect(newestRelease(ls)).toEqual({ tag: 'v0.60.733.0', sha: 'c2' });
+    expect(newestRelease(() => ls().replace('c2\trefs/tags/v0.60.733.0\n', ''))).toEqual({ tag: 'v0.60.732.0', sha: 'c6' });
+    expect(() => newestRelease(() => 'c5\trefs/tags/stable\n')).toThrow(DevLoopRefusal);
+  });
+
   test('run refuses without a paid window, and with unknown worlds', async () => {
+    await expect(main(['run'])).rejects.toThrow(/--paid-window/);
     await expect(main(['run', '--gbrain', SHA])).rejects.toThrow(/--paid-window/);
     await expect(main(['run', '--gbrain', SHA, '--worlds', 'bg1-heldout-01'])).rejects.toThrow(/--worlds takes/);
   });
