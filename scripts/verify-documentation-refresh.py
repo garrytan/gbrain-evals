@@ -62,27 +62,17 @@ def candidate_references(root=ROOT):
     return errors
 
 
-# Hub pages that name the product pin, one pattern per sentence (CLAUDE.md, "Shape of a top-level document").
+# The one page that names the product pin; every other page links to it (CLAUDE.md, "Shape of a top-level document").
+# eval/runner/gbrain-pin.ts rewrites this sentence when it moves the pin.
 PRODUCT_PIN_SENTENCES = {
-    "README.md": [
-        r"\| Pinned product \| gbrain \[`(?P<sha>[a-f0-9]{7,40})`\]\(https://github\.com/garrytan/gbrain/tree/(?P<full>[a-f0-9]{40})\), release v(?P<version>[\d.]+),",
-        r"This repository installs gbrain v(?P<version>[\d.]+) \(`(?P<sha>[a-f0-9]{7,40})`\)",
+    "docs/gbrain-under-test.md": [
+        r"This repository installs gbrain v(?P<version>[\d.]+) \(\[`(?P<sha>[a-f0-9]{7,40})`\]\(https://github\.com/garrytan/gbrain/tree/(?P<full>[a-f0-9]{40})\)\)",
     ],
-    "docs/README.md": [r"with gbrain master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\) as the product under test"],
-    "docs/settings.md": [r"This page describes the gbrain this repository installs, master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+),"],
-    "docs/comparison-systems.md": [
-        r"as this repository pins it \(master `(?P<sha>[a-f0-9]{7,40})`, v(?P<version>[\d.]+)\)",
-        r"This repository now installs a different commit, gbrain master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)",
-    ],
-    "docs/retrieval-lessons.md": [r"as this repository pins it \(master `(?P<sha>[a-f0-9]{7,40})`, v(?P<version>[\d.]+)\)"],
-    "eval/README.md": [r"Every runner loads the gbrain declared in `package.json`: master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
-    "eval/CONTRIBUTING.md": [r"The gbrain under test is the one `package.json` declares, master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
-    "eval/CREDITS.md": [r"is current as of the gbrain this repository pins, master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
 }
 
 
 def product_pin_references(root=ROOT):
-    """The `gbrain` product pin: bun.lock and every hub sentence naming it agree with package.json, and the hubs name one release."""
+    """The `gbrain` product pin: bun.lock and the pin sentence agree with package.json, and the sentence names the installed release."""
     pin = json.loads((root / "package.json").read_text())["dependencies"]["gbrain"]
     match = re.fullmatch(r"github:garrytan/gbrain#([a-f0-9]{40})", pin)
     if not match:
@@ -109,9 +99,6 @@ def product_pin_references(root=ROOT):
         stale = sorted(f for v, files in versions.items() if v != version for f in files)
         if stale:
             errors.append([", ".join(stale), "Product pin sentences name a release other than the installed gbrain v" + version + " (run bun install if package.json moved)"])
-    if len(versions) > 1:
-        errors.append([", ".join(sorted({f for files in versions.values() for f in files})),
-                       "Product pin sentences name different releases: " + ", ".join(sorted(versions))])
     return errors
 
 

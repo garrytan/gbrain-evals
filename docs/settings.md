@@ -6,8 +6,8 @@ autocut off. That setup retrieves all labeled conversations for 451/470 answerab
 with opaque session ids at gbrain `109b992`. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md),
 [original experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-This page describes the gbrain this repository installs, master `6ce7195b4` (v0.60.733.0, declared in
-`package.json`). Most experiments here ran at gbrain v0.48.4.0 (`2efaaf8f`) or later commits named beside each
+This page describes the gbrain this repository installs, gbrain's newest release, declared in `package.json` ([the
+pin](gbrain-under-test.md#the-pin) names its version and commit). Most experiments here ran at gbrain v0.48.4.0 (`2efaaf8f`) or later commits named beside each
 number. The `balanced`, `conservative` and `tokenmax` mode definitions (`MODE_BUNDLES` in
 `src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `77cf8e111` (v0.60.169.0), apart from three
 keys v0.60.60.0 added for the multi-relation planner (`relational_planner`, on in `balanced` and `tokenmax`). The
@@ -79,7 +79,7 @@ as completed reranked measurements.
 | `search.adaptive_return` | Cap results according to query intent | Off for the broad-return baseline. Try it when irrelevant results cost more than missed additional evidence. |
 | `search.adaptive_return_entity_max` / `_other_max` / `_min_keep` | Caps for entity questions, other questions, and the minimum kept | Product defaults are 2, 6, and 1. The tight experiment explicitly uses 1, 1, and 1. |
 | `return_unit` on `search`, `query` and `recall` | How much text comes back around each hit: `chunk`, `window`, `section`, `page` or `auto` | `auto` (the default) returns the whole conversation behind each hit within a 24,000-token budget and leaves other hits as chunks. On a sealed held-out set it answered 192 of 200 against 132 for bare chunks, at about four times the reader input. Use `chunk` when reader tokens matter more than answer quality. [Sealed v2 decision](benchmarks/2026-10-02-sealed-v2-decision-1.md), [delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
-| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | Keep it on: gbrain v0.60.49.0 (`b9ee931`, PR #6010), which the installed `6ce7195b4` postdates, fixed the dated follow-ups that `739e5cc` (the pin from 2026-10-04 to 2026-10-06) wrote from meeting notes as events on their future dates (0.96 wrong events per page against gbrain's 0.20 gate). At `b9ee931` it finds 37 and 38 of 38 labeled events, writes 0 events dated after their page and 0.04 wrong events per judged page, for about $0.01 per page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md), [rerun](benchmarks/2026-10-04-auto-chronicle-rerun.md). |
+| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | Keep it on: gbrain v0.60.49.0 (`b9ee931`, PR #6010), which every later pin includes, fixed the dated follow-ups that `739e5cc` (the pin from 2026-10-04 to 2026-10-06) wrote from meeting notes as events on their future dates (0.96 wrong events per page against gbrain's 0.20 gate). At `b9ee931` it finds 37 and 38 of 38 labeled events, writes 0 events dated after their page and 0.04 wrong events per judged page, for about $0.01 per page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md), [rerun](benchmarks/2026-10-04-auto-chronicle-rerun.md). |
 | `GBRAIN_SOURCE_BOOST` | Override the source-prefix weight map | This is an environment setting, separate from the search mode. A stale prefix can make an intended preference do nothing. |
 
 The settings are defined in the pinned
@@ -175,6 +175,12 @@ the [refresh report](benchmarks/2026-09-09-retrieval-refresh.md) gives the full
 reproducible matrix used here.
 
 ## Changelog
+
+### 2026-11-16: The opening links the pin
+
+The opening links [the pin](gbrain-under-test.md#the-pin) instead of naming `6ce7195b4` (v0.60.733.0), and the
+`auto_chronicle` row says every pin after gbrain v0.60.49.0 includes its fix (was "the installed `6ce7195b4`
+postdates"), so a re-pin no longer changes this page.
 
 ### 2026-11-16: Installed pin moves to `6ce7195b4`
 

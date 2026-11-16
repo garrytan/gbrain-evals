@@ -7,7 +7,8 @@ another system.
 
 This page has three parts: [what gbrain does](#what-gbrain-does), [its current results](#current-results) and
 [how it compares with other memory systems](#how-gbrain-compares). Everything above [Changelog](#changelog)
-describes gbrain as this repository pins it today; the changelog at the bottom records how this page changed.
+describes gbrain as this repository pins it today ([the pin](docs/gbrain-under-test.md#the-pin)); the changelog at the
+bottom records how this page changed.
 
 ## What gbrain does
 
@@ -18,10 +19,10 @@ relationships between pages, hands the agent whole conversations, and labels eve
 an embedding key, a search still finds pages that hold most of the question's words. On a personal brain it keeps a
 redacted, searchable archive of your agent conversations, one page per conversation per day, and one brain can hold a
 company's notes beside your own or serve several people, each with their own key and a folder only they can read. This
-repository installs gbrain v0.60.733.0 (`6ce7195b4`), gbrain's newest release on 2026-11-16, which this page calls the
-pin; [CLAUDE.md](CLAUDE.md#choose-the-gbrain-build) keeps it at the newest release. Results measured at earlier commits
-name their own commit, and [the gbrain under test](docs/gbrain-under-test.md) lists every capability and what changed
-between those commits and the pin.
+repository installs gbrain's newest release, which this page calls the pin: [the gbrain under
+test](docs/gbrain-under-test.md#the-pin) names its version and commit, and [CLAUDE.md](CLAUDE.md#choose-the-gbrain-build)
+keeps it at the newest release. Results measured at earlier commits name their own commit, and that page lists every
+capability and what changed between those commits and the pin.
 
 ## Current results
 
@@ -407,7 +408,7 @@ The install gives you this gbrain:
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain [`6ce7195b4`](https://github.com/garrytan/gbrain/tree/6ce7195b44a034f85aec811f11fbf862db376f50), release v0.60.733.0, declared as `gbrain` in `package.json`; `bun eval/runner/gbrain-pin.ts bump` moves it to gbrain's newest release |
+| Pinned product | gbrain's newest release, declared as `gbrain` in `package.json`; [the gbrain under test](docs/gbrain-under-test.md#the-pin) names its version and commit, and `bun eval/runner/gbrain-pin.ts bump` moves it when gbrain tags a newer one |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), frozen pins used only by the experiments that name them |
 | This repository | gbrain-evals at the release [`VERSION`](VERSION) names; [CHANGELOG.md](CHANGELOG.md) records each release |
 
@@ -467,6 +468,13 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-16: The pin is named on one page
+
+"What gbrain does" and the quick start's pinned-product row link to [the gbrain under
+test](docs/gbrain-under-test.md#the-pin) for the version and commit instead of naming `6ce7195b4` (v0.60.733.0), and
+the opening's note on what the page describes links there too, so moving the pin changes that page alone. No result
+changed.
 
 ### 2026-11-16: Re-pin to gbrain `6ce7195b4`, gbrain's newest release
 
