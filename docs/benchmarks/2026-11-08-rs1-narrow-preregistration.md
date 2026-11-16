@@ -163,7 +163,7 @@ Systems are named by role. Product identities, images by digest, locks and capab
 
 | Row | Cell id | System and pin | Configuration | Role |
 |---|---|---|---|---|
-| gbrain | `rs1.gbrain-defaults.rs1-stable`, arm `p` | gbrain's newest release at wave A's launch, the highest version tag on gbrain's master: v0.60.733.0 (`6ce7195b44a034f85aec811f11fbf862db376f50`) on 2026-11-16, read again at launch | `rs1-stable`: F6's brain build (`GBRAIN_F6=1`: gbrain's default fact extraction, the quiesce barrier and the fact index) with F6's arm P retrieval (`query` limit 50, token budget 5,500, facts block on), packed to 8,000 cl100k tokens | subject |
+| gbrain | `rs1.gbrain-defaults.rs1-stable`, arm `p` | gbrain's newest release at wave A's launch, the highest version tag on gbrain's master: v0.60.733.0 (`6ce7195b44a034f85aec811f11fbf862db376f50`) on 2026-11-16, read again at launch | `rs1-stable`: F6's brain build (`GBRAIN_F6=1`: gbrain's default fact extraction, the quiesce barrier and the fact index) with F6's arm P retrieval (`query` limit 50, token budget 5,500, facts block on), packed to 8,000 cl100k tokens; serve's idle upkeep off (`GBRAIN_IDLE_UPKEEP=off`, amendment of 2026-11-16) | subject |
 | memory-bank server | `rs1.ext-memory-bank.recipe`, `component-b8000` | bundle lock `f54d89df`, capabilities `23a033f4` | `recipe`, exactly as F6 and Q1 ran it, 8,000 tokens | comparator |
 | extract-first server | `rs1.ext-extract-first.common`, `component-b8000` | bundle lock `9777b7a8`, capabilities `0acaff3a` | `common`, Q1's BEAM headline configuration, exactly as F6 and Q1 ran it, 8,000 tokens | comparator |
 | no-memory floor | `rs1.baseline-none.baseline`, `component-b8000` | harness baseline | the question alone | floor, never part of a claim |
@@ -1016,6 +1016,54 @@ in `eval/runner/q1/cell.ts`) differ only in this pin (`definitions.ts`, `rs1.ts`
 `package.json`'s version field. Minting, the driver and validation keep the code the 2026-11-12 amendment names, and the
 final verdict still runs from `d927c88f` or later. Later commits that change neither the cells nor a file counted cells
 execute don't change this.
+
+### 2026-11-16: serve's idle upkeep is off in gbrain's cells
+
+gbrain v0.60.715.0 added idle upkeep to `gbrain serve`, so the v0.60.733.0 pin brings it into RS1, and
+`stable-v0.60.593.0` had none of it. A stdio serve runs it when a whole 10-minute tick passes with no new input (its
+first tick only arms the check): gbrain's free maintenance on the brain it serves, meaning link and timeline extraction,
+stale-page and repair lanes, bookkeeping cleanup and, with an embedding key, a capped embedding step. The conversation
+archive, on by default on a brain gbrain classes as personal, runs inside the same pass. No counted RS1 cell has run, so
+this is settled before any counted number.
+
+- **Not allowed.** RS1 measures the brain the quiesce barrier leaves, so no gbrain cell runs idle upkeep. The shim never
+  leaves serve that quiet on purpose. The F6 build runs with serve stopped, doctor rounds keep serve up for at most 10
+  seconds, and a drain round's 11 minutes end before a fresh serve's first idle check could run anything, at 20 minutes.
+  Upkeep could start only when a cell sends serve nothing for more than 10 minutes, for example while a provider call
+  stalls. It would then change the brain between `/finish` and the cell's later questions, set by timing rather than by
+  the plan.
+- **The switch.** `rs1-stable` sets `GBRAIN_IDLE_UPKEEP=off` in the gbrain cells' launch environment, stage 1's
+  cells included. Every install in the stack then runs gbrain's own off switch, `gbrain config set maintenance.auto
+  false`, which is the "off" answer to the upkeep question `gbrain init` asks. The shim reads the key back and fails
+  the install on any other value, and the install receipt and `/capabilities` record it. Every other first-run question
+  keeps its default answer, and other configurations keep gbrain's default.
+- **The conversation archive.** It reads the session folders of agent harnesses (Claude Code, Codex, OpenClaw, Hermes
+  and Grok) under HOME. The shim already sets HOME and GBRAIN_HOME to the active brain's own directory, a fresh install
+  for each namespace inside the cell's container, so there is nothing for it to read, and with upkeep off nothing runs
+  it. No per-cell HOME change is needed.
+- **The idle sweep stays.** The older idle sweep shares the trigger and is unchanged, as it was at `27f8b9d6` and in
+  every gbrain build F6 and Q1 measured. After the same kind of pause it reconciles facts fences, links and timeline
+  entries for at most 20 recently written pages in a 3-second budget. gbrain's only switch for it, `GBRAIN_SWEEP=0`,
+  also turns off the sweep that runs at every serve start, which would change what every cell measures, so it stays as
+  shipped.
+- **Evidence.** Two keyless runs of the gbrain-defaults stack at `6ce7195b` against the fake upstream, with gbrain's
+  idle tick shortened to 2 seconds for the test only (`GBRAIN_SWEEP_IDLE_INTERVAL_MS`), wrote two sessions, ran
+  `/finish` and then left serve idle for 30 seconds. At gbrain's default, serve logged 3 idle sweeps and 1 idle upkeep
+  run, which ran its pass. With `GBRAIN_IDLE_UPKEEP=off`, it logged the same 3 idle sweeps and no upkeep run, and the
+  install receipt recorded `maintenance.auto` read back as `false`. Both installs listed `upkeep` and
+  `conversation_archive` among init's first-run questions, each with `on` as the default. The keyless F6
+  Docker smoke at `6ce7195b` with `GBRAIN_IDLE_UPKEEP=off` passed all 4 tests (35 checks, two of them on the switch).
+- **Unchanged.** The pin stays v0.60.733.0, and no bar, margin, N rule, reader, judge, cap or verdict rule changes. A
+  launch re-pin keeps the switch, and its keyless smoke runs with `GBRAIN_IDLE_UPKEEP=off` and checks that the install
+  receipt records it.
+
+**Code.** Counted cells run from `c0edd29635222c41405b76b4ba03643abdce4c48` on the results branch, or from the commit
+a launch re-pin names. At `c0edd296`, `eval/runner/q1/cells/rs1-cells.json` has SHA-256
+`1f8d7459654427c93569cb809bb0557de329725769e27735a1f7c795fd42a39e`. This replaces `4ec4ab92` from the amendment above,
+and `4ec4ab92` stays an ancestor. Between the two commits, the files counted cells execute differ only in this switch:
+`definitions.ts`, the header of `rs1.ts` and `rs1-cells.json`, and the gbrain-defaults bundle's `shim.py`,
+`docker-compose.yml` and `capability.json`. In wave A's identity fixture only the gbrain row changes. The gbrain row
+of the systems table above now names the switch.
 
 ## Disclosures
 

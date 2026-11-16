@@ -60,6 +60,10 @@ This records what each gbrain-evals release changed and what its measurements me
 - **gbrain's newest release.** RS1's gbrain arm runs gbrain's newest release when wave A launches, in place of the weekly
   `stable` tag: v0.60.733.0 (`6ce7195b`) on 2026-11-16, read again at launch and then frozen for every counted cell. Only
   the pin fields of `rs1-cells.json` change, and the keyless F6 Docker test passes at the new pin.
+- **No idle upkeep in gbrain's cells.** From v0.60.715.0 an idle `gbrain serve` runs gbrain's free maintenance on its
+  brain, which in RS1 could happen only when a cell's calls stall and would then change the brain between `/finish` and
+  later questions. RS1's gbrain cells set `GBRAIN_IDLE_UPKEEP=off`: every install writes gbrain's own off switch
+  (`maintenance.auto false`) and reads it back. The older idle sweep is unchanged.
 - **Records.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` gains its amendments, and
   `docs/benchmarks/2026-11-08-rs1-narrow-results.md` starts with the stage 1 run log. No counted RS1 result exists yet.
 
