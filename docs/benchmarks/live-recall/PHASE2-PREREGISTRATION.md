@@ -937,8 +937,10 @@ in gbrain.
 - Arm A is not asked again. It never touches gbrain, and its models, prompts, judges and tasks are the same, so the
   compare step reuses the A answers and verdicts stored on the box from phase 2's counted run (runner 4740c1f3, started
   2026-11-09 at 15:03:30 UTC). It reads them only when that run's task file hash, freeze, runner commit, harness digest
-  (`d27425cc…1e18`), models, judges and task ids match this re-run's, and it refuses otherwise. If the stored A records
-  can't be used, B(newest) minus B(0.60.613.0) stands on its own, and B minus A is reported only against phase 2's
+  (`d27425cc…1e18`), models, judges and task ids match this re-run's, and it refuses otherwise. The task file and the
+  freeze are matched by the sha256 prefixes phase 2's public scorecard and its frozen sample record (`0b849b89178b`,
+  `fe167378`) and by the freeze counts each run records; a stored run that lacks any arm A answer, or a file that is
+  missing or unreadable, is refused the same way. If the stored A records can't be used, B(newest) minus B(0.60.613.0) stands on its own, and B minus A is reported only against phase 2's
   published A rates, unpaired and labelled that way.
 - Arms C and D are not rerun.
 
@@ -1025,9 +1027,9 @@ compares, read-only and as counts only, the two builds' own predicates for the p
 (`privatePagesFilterFragment`, the newest build's loaded from its checkout, which the run takes as
 `--privacy-reference <checkout>@<commit>`), over every live page in the reader's source. Any page the reference build
 would show that the newest build hides stops the run with `LR_PRIVACY_RELAXED` before any model call. A gate that
-can't run (no newest checkout given, a commit that isn't the newest run's, a predicate missing from either build, a
-failing query) stops the run the same way. The gate compares page visibility; each build keeps its own chunk and fence
-rules. The run records the counts it compared.
+can't run (no newest checkout given, a predicate missing from either build, a failing query) stops the run the same
+way, and the compare refuses a reference run whose gate checked another build than the newest run's. The gate compares
+page visibility; each build keeps its own chunk and fence rules. The run records the counts it compared.
 
 **What leaves the box.** The two runs' scorecards, as public copies made with `redact-scorecard.ts`, and the cross-build
 compare file (`compare.json` and `compare.md`), all aggregates only. The compare file passes its own structural
