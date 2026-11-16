@@ -1,0 +1,3 @@
+# Changelog fragments
+
+A pull request adds its CHANGELOG entry here as `changelog.d/<branch-slug>.md`: the entry text only, with no `## [x]` heading, and `bump: minor` or `bump: major` front matter only when the change warrants more than a patch. It never edits VERSION, `package.json`'s version or a released CHANGELOG section. After each merge, the release pull request from `gstack-release-stamp open` assigns the version, folds every fragment into one CHANGELOG section and deletes the files. This README is skipped. See [gstack's changelog fragments](https://github.com/garrytan/gstack/blob/main/docs/ship-policy.md#changelog-fragments).
