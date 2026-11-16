@@ -12,7 +12,7 @@
  *     the facts block, packed to 8,000 tokens) on one Ubicloud VM per dev world, each under its own metering proxy
  *     whose lease is the window cap over the worlds, then pulls the outputs into --out and prints `score`. Each VM starts
  *     only after `ubi-runner.sh usage` shows room for it under the shared project's 464-vCPU line for evals and this
- *     crew's 208 (owners starting gbev); otherwise it reads usage again every 5 minutes. The reader is
+ *     crew's 208 (owners sharing UBI_OWNER's letters, gbev for gbev91); otherwise it reads usage again every 5 minutes. The reader is
  *     claude-opus-5-5 at effort medium with 2,048 output tokens, and the gating judge is gpt-6-astra at the pinned judge
  *     settings (the family rule). Every answer also gets the canonical gemini-3.8-flash grade, as stage 1 ran it
  *     (descriptive). Needs ANTHROPIC_API_KEY, OPENAI_API_KEY, VOYAGE_API_KEY, GEMINI_API_KEY, UBICLOUD_API_KEY and UBI_OWNER.
