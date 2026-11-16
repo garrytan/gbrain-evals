@@ -11,6 +11,10 @@ The frozen sample (N, the task file's hash, the count dropped as unreachable and
 that N) and the counted run's identity (runner commit and harness digest) go under [Frozen sample](#frozen-sample) as a
 dated, pushed commit on the results branch before any counted call.
 
+A dated amendment of 2026-11-16 measures arm B again on the same frozen tasks at gbrain's newest release, with
+0.60.613.0 run beside it the same day: see [2026-11-16 amendment: arm B at gbrain's newest
+release](#2026-11-16-amendment-arm-b-at-gbrains-newest-release).
+
 ## The question
 
 Phase 1 found that configured search puts the answer page in its top five for 88% of exactly-worded questions and 48%
@@ -889,6 +893,150 @@ the freeze and dropped with proof after the estimate, from a worktree at
   must pass the cost gate again before the counted run. If one lands during the run, the run pauses at the next cell boundary and GBEV-3 decides. Just before the
   counted run, Wintermute checks the install version and the access member count again.
 - The box's estimate passed the cost gate, for the counted run and for the judge check's own cap.
+
+## 2026-11-16 amendment: arm B at gbrain's newest release
+
+Written by GBEV-93 (GST-2866) on 2026-11-16, before any call of this re-run. Phase 2's counted run, its results and
+every section above stay as they were. This section adds one smaller measurement on the same frozen tasks.
+
+**Why.** README's first two rows quote phase 2: on paraphrased questions, claude-opus-5-5 answers 13.3% correctly with
+no retrieval and 86.7% with gbrain's tools, and particle-1 goes from 9.3% to 68.0%. Those numbers were measured on
+2026-11-09 at gbrain 0.60.613.0 (`98dda48fb9fd`). gbrain's newest release is now v0.60.733.0 (`6ce7195b44a0`, the
+highest version tag on gbrain's main branch in `git ls-remote --tags` on 2026-11-16). It is 2,435 commits later, and
+172 of those commits touch gbrain's search code, its MCP tools or its operations file (`src/core/search`, `src/mcp`,
+`src/core/operations.ts`). A published gbrain number is re-measured at the newest release rather than defended.
+
+**The public lesson.** Whether the gbrain release people install today still turns questions about a person's own notes
+into right answers as often as the build our published numbers came from, and how much its search changes moved that
+rate, measured on the same frozen questions on the same day so that a change in the brain's data is not read as a change
+in gbrain.
+
+**What the result changes.**
+
+- The newest build is within the smallest detectable difference of 0.60.613.0, or measurably above it: README's first
+  two rows move to the newest build's numbers, with B minus A measured again, and a gain is stated beside them.
+- A regression, as defined below: it goes to gbrain's crew the same day, with failure classes by task type, so they can
+  find the change that cost answers (a bisect between the two builds is theirs to run). README's first two rows still
+  move to the newest build's numbers, with the regression stated beside them.
+- A 95% interval wholly below zero whose point estimate is smaller than the smallest detectable difference: reported
+  plainly in the same places, labelled as a drop smaller than this test can reliably detect.
+
+**What runs.**
+
+- Arm B only, as defined under [Arms](#arms) and unchanged: gbrain's `query`, `search` and `get_page` tools, the same
+  prompt, tool definitions, loop settings and stop mapping. It runs on the 99 tasks phase 2 kept from its frozen task
+  file (sha256 `0b849b89…d434`, `freeze.json` `fe167378…1f832`), in both forms as phase 2 counted them, the
+  paraphrase pass first.
+- The readers are claude-opus-5-5, gpt-6.1-sol and particle-1, each at effort medium (particle-1 sent
+  `reasoning_effort: medium`), as in phase 2. The judges are phase 2's: gpt-6-astra judges claude-opus-5-5 and
+  particle-1 rows, claude-opus-5-5 judges gpt-6.1-sol rows, and claude-opus-5-5 is again the descriptive second judge on
+  particle-1's paraphrase rows.
+- Two runs, back to back in one session on Wintermute's box, newest first: arm B at v0.60.733.0, then arm B at
+  0.60.613.0 with `--reference-build`. Each run has its own run directory, ledger run and scorecard, and each keeps phase
+  2's read-only barrier, remote privacy posture, run-time gold check, error rules and custody.
+- Arm A is not asked again. It never touches gbrain, and its models, prompts, judges and tasks are the same, so the
+  compare step reuses the A answers and verdicts stored on the box from phase 2's counted run (runner 4740c1f3, started
+  2026-11-09 at 15:03:30 UTC). It reads them only when that run's task file hash, freeze, runner commit, harness digest
+  (`d27425cc…1e18`), models, judges and task ids match this re-run's, and it refuses otherwise. If the stored A records
+  can't be used, B(newest) minus B(0.60.613.0) stands on its own, and B minus A is reported only against phase 2's
+  published A rates, unpaired and labelled that way.
+- Arms C and D are not rerun.
+
+**The judge check carries over.** Phase 2's judge check passed (R78; `judge-check.json` on the box, sha256
+`0f55927916ab…` as Wintermute read it). The judges, the rubric, the judge prompt, the verdict tool and the scorer are
+unchanged, so that check stands for this re-run and no new check runs. It was made under phase 2's harness digest, and
+today's harness digest differs (privacy checks, stateless OpenAI requests by default and cost accounting changed
+since), so `tasks.ts run` accepts the check as carried only when every one of these holds, and refuses it with
+`LR_JUDGE_CHECK` otherwise:
+
+- its harness digest is exactly `d27425cc958de472b3e04b843bb199123b94b24820cd7963f89f0145ca7c1e18` and its runner commit
+  is 4740c1f3;
+- `eval/runner/live-recall/task-judge.ts` (the judge prompt, the verdict tool, judge routing, the judge's user message,
+  verdict parsing and the derived verdicts) and `eval/runner/live-recall/task-scorecard.ts` (scoring, the comparisons
+  and the judge check's own arithmetic) hash to their bytes at 4740c1f3;
+- for a fixed invented answer, each counted judge's request bodies and the judge record parsed from scripted verdicts
+  are byte-identical to what 4740c1f3's code produces, which covers the judge call in `task-arms.ts` and the agent loop
+  that sends it;
+- it was made on this task file, is complete with no cap stop, passed without a waiver, covers at least 20 tasks, and
+  covers this run's models and arm B.
+
+The run records that the check was carried, with the hashes it checked, in `run.json` and in the cross-build compare
+file.
+
+**Gold pages at run time.** Each run repeats phase 2's run-time gold check as written: a frozen task whose gold page a
+remote caller can no longer open is dropped from that run and counted, and more than 10% dropped aborts the run with
+`LR_GOLD_MISSING_CAP`. A pair is a task counted in both runs, so a task dropped or excluded by either run (a lost gold
+page, a degraded search, a harness or judge error) leaves the pair, and the compare file counts the pairs lost each way.
+B(newest) minus A pairs the newest run's counted tasks with stored A.
+
+**Primary comparison.** B(newest) minus B(0.60.613.0), on correct, paraphrase form, one pair per task, per model, with
+phase 2's gold-cluster bootstrap 95% interval (10,000 draws, seed 20261108) and the exact two-sided sign-flip p over
+gold clusters. claude-opus-5-5 and particle-1 are primary; gpt-6.1-sol is descriptive. There is no Holm pair: the two
+primaries ask one question (did the search path change?) through two readers of the same retrieval, a call leads only to
+a same-day report that gbrain's crew checks against the failure classes, and the decision rule already asks for a drop
+of at least the smallest detectable difference. Holm's adjusted p over the two primaries is printed beside each, for
+readers who want it.
+
+Descriptive, with intervals and the same reading: the same comparison on correct and grounded, on the exact form and on
+both forms pooled; B(newest) minus stored A per model, computed as phase 2 computed P1 (paraphrase form, correct, the
+same pairing, interval and test), which re-measures README's first two rows; and B(0.60.613.0) today minus phase 2's
+stored B per model, which separates changes in the brain's data since 2026-11-09 from changes in gbrain's code.
+
+**Smallest detectable difference.** Computed now, before any call, from phase 2's public scorecard. Phase 2 never ran
+one arm twice, so the closest paired comparison it stored is C minus B on plain correctness, paraphrase form: the same
+model, tasks and gbrain tools, different only in a summariser step, and its correctness did not move (minus 3.1, 0.0 and
+plus 5.1 points). Its discordant pairs were 9 of 98 for claude-opus-5-5 (3 better, 6 worse), 18 of 97 for particle-1 (9
+and 9) and 13 of 98 for gpt-6.1-sol (9 and 4). The assumption is that arm B at two builds disagrees on about as many
+tasks, since each reruns a model with one trial per cell. At 80% power and two-sided alpha 0.05, the smallest
+detectable difference is 2.8 × √(d / n), with d the discordant share and n the 87 gold clusters: 9.1 points for
+claude-opus-5-5, 12.9 for particle-1 and 10.9 for gpt-6.1-sol. A real change smaller than these may go undetected. The
+compare file also reports each comparison's observed minimum detectable difference from its own discordance; the
+decision rule uses the fixed figures above.
+
+**Decision rule.** For each primary model, a regression is a 95% interval wholly below zero with the point estimate at
+or below minus that model's smallest detectable difference (minus 9.1 points for claude-opus-5-5, minus 12.9 for
+particle-1). It goes to gbrain's crew the same day, with the failure classes below. Any interval wholly below zero is
+reported plainly whatever its size, gpt-6.1-sol's included. An interval that includes zero reads "no measurable
+difference" with the smallest detectable difference beside it, never "no regression". In every case README's first two
+rows move to the newest build's numbers with B minus A measured again, and a regression is stated beside them.
+
+Failure classes count, per model, form and task type (topic, identifier, error_string, time_window, cross_source), the
+tasks correct at 0.60.613.0 and not correct at the newest build, each in the first class that fits the newest
+episode: no submitted answer; gold not found (no search result held a gold page and none was opened); gold found but not
+cited; gold cited but the answer still not correct. Abstentions among them are counted too, and so are the tasks that
+moved the other way, so a fix can be weighed against what it costs.
+
+**The reference build.** 0.60.613.0 reads today's brain through `--reference-build`, which lets only a build a live
+recall preregistration names as its reference, at its exact commit, read a brain schema newer than the one it expects,
+never an older one, and migrates nothing. The box is expected to move from 0.60.728.0 (schema 315) to v0.60.733.0
+(schema 317) on 2026-11-17, before the session, so the newest build opens the brain's schema exactly and 0.60.613.0
+(schema 296) needs the flag. Tables and columns added since schema 296 are invisible to 0.60.613.0, among them gbrain's
+access-control migrations: v298 (attest-read), v299 (access-member-sources), v303 (access-page-rules), v304
+(access-owner-origin), v305 to v309 (lineage, withdrawal scope, page-label guards, labelled-only reads and requester
+scope), v311 (concept-inputs-private), and v312 and v314 (guest notes). So the reference run measures 0.60.613.0's code
+on today's data, not 0.60.613.0 as it ran on 2026-11-09. The brain's data also changed: gbrain#8917 (first in 0.60.623.0)
+relabelled pages over-stamped `access: private` and bound the owner and delegates, so pages private at the freeze may
+be open now, to both builds alike. 0.60.613.0 reports no `_meta.access`, so the runner's per-response access check
+applies to the newest build only, as it does to any build before 0.60.623.0; the private-page settings check and the
+private-page probe run on both.
+
+**Privacy gate before the reference build's first call.** Before any read or model call of the reference run, the runner
+compares, read-only and as counts only, the two builds' own predicates for the pages an unbound remote caller may see
+(`privatePagesFilterFragment`, the newest build's loaded from its checkout, which the run takes as
+`--privacy-reference <checkout>@<commit>`), over every live page in the reader's source. Any page the reference build
+would show that the newest build hides stops the run with `LR_PRIVACY_RELAXED` before any model call. A gate that
+can't run (no newest checkout given, a commit that isn't the newest run's, a predicate missing from either build, a
+failing query) stops the run the same way. The gate compares page visibility; each build keeps its own chunk and fence
+rules. The run records the counts it compared.
+
+**What leaves the box.** The two runs' scorecards, as public copies made with `redact-scorecard.ts`, and the cross-build
+compare file (`compare.json` and `compare.md`), all aggregates only. The compare file passes its own structural
+allowlist and the same leak scan as a scorecard, over every task form, gold fact, task id and slug of both runs and of
+stored A, before it is written. Failure classes leave as counts by task type. The records, page snapshots and logs stay
+on the box.
+
+**Order and identity.** The order of the paid steps is handled outside this document. The session's runner commit and
+harness digest go in a later dated entry here, before the session's first call.
 
 ## Disclosures
 
