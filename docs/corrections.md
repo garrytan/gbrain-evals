@@ -279,7 +279,27 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   may gate on the gap's direction, never its size. Its paraphrase Kendall tau of 0.80 breaks a synthetic
   tie by list order; as tau-b it is 0.949. Tau never gates. gbrain is Garry Tan's own project.
 
+## Changing-facts battleground
+
+- **The battleground's exposure figures for withdrawn facts were wrong** (2026-11-16). For S5, the share of gbrain's
+  contexts that held the withdrawal was published as 60%, against 52% for the memory-bank server and 80% for the
+  extract-first server, and gbrain's loss to the memory-bank server was put down to reading. That count took a call-off
+  form anywhere in the context as the withdrawal, so it counted other entities' call-offs and stray words such as
+  "nothing", and it missed call-offs worded with words its list lacked. Counted in one sentence that names the
+  question's entity, the withdrawn value and a call-off word, the shares are 85%, 95% and 97%: against both servers
+  gbrain's context held the withdrawal less often, by more than its S5 loss (10.4 and 12.1 points against losses of 6.4
+  and 9.6). Hybrid search's contexts held the right value for 20% of all questions, not 23%. No accuracy figure,
+  interval or verdict changes; verdict.json keeps the published figures, and the report carries the correction.
+  [Report](benchmarks/2026-11-15-changing-facts-battleground-results.md),
+  [corrected figures](benchmarks/2026-11-15-changing-facts-battleground-results/exposure-correction.json). gbrain is
+  Garry Tan's own project.
+
 ## Changelog
+
+### 2026-11-16: Changing-facts battleground exposure
+
+A new Changing-facts battleground entry says the battleground's exposure figures for withdrawn facts counted other
+entities' call-offs and missed call-offs its word list lacked, and gives the corrected figures.
 
 ### 2026-11-13: Strict-source pageless facts re-run
 
