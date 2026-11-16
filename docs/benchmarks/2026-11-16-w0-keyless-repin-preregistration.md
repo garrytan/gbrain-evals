@@ -170,4 +170,28 @@ None: no paid request. The VMs are compute only, and no provider key exists on t
 
 ## Amendments
 
-None yet.
+### 2026-11-16: background upkeep, one gbrain home per step and a log of live servers, before any counted run
+
+From v0.60.715.0, an idle `gbrain serve` (stdio or HTTP) runs gbrain's free upkeep, which includes link and timeline
+extraction, repair lanes, bookkeeping cleanup and the conversation archive. v0.60.169.0 has only the older idle sweep. A
+newer release tag was not published since the preregistration (`git ls-remote` still gives v0.60.733.0). Frozen before
+any counted run:
+
+1. **Which steps start a long-lived gbrain process.** `gbrain serve` runs in N1's and N5's MCP stdio and MCP HTTP cells
+   (the offline-tier slices and step 7), in N6 on Postgres over HTTP (step 8), in the lifecycle matrix's MCP cells
+   (step 18), in the wave 8 checks that talk to a stdio server (step 4), and wherever an offline-tier category starts
+   one. No timed step starts one: Cat 7 (`perf.ts`), the Cat7-1 repro and Cat 28 open their brains in process.
+2. **Homes.** Those runners already give each cell its own `GBRAIN_HOME`, and N6 on Postgres and the lifecycle matrix
+   also give each cell its own `HOME`. `vm/run.sh` now also gives every step a fresh `GBRAIN_HOME`, so no two steps
+   share a gbrain home and nothing uses `~/.gbrain`. `HOME` is the VM user's home, which holds no agent session
+   folders. `keys.txt` records that `.claude`, `.codex`, `.openclaw` and `.gbrain` are absent before the run, and
+   `host.txt` records whether `~/.gbrain` exists after it.
+3. **Upkeep stays on, as shipped, at both builds.** This check measures what an install does, so neither
+   `GBRAIN_SWEEP` nor `maintenance.auto` is set. A young server cannot run upkeep. Its idle timer ticks every 10
+   minutes and the first tick only opens the window, so a server must have been alive at least 20 minutes, with no
+   request in the last 10, before upkeep or the idle sweep can start (`armIdleUpkeep` in `src/core/maintenance/idle.ts`
+   and the stdio idle tick in `src/commands/serve.ts` at `6ce7195b`; the old build's idle sweep has the same
+   cadence). `vm/run.sh` logs every live server and its age every 10 seconds (`serve-ages.log`). A server seen older
+   than 20 minutes is reported with its step, and that step's results are reported as possibly touched by upkeep.
+4. **Timing.** Before each step-19 Cat 7 run, `vm/run.sh` records any server still alive and stops it. A timing run
+   during which `serve-ages.log` shows a live server does not count toward a timing verdict, and is reported.

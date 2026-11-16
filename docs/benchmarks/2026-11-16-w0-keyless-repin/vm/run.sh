@@ -4,6 +4,9 @@
 # both builds in one matrix), then step 19: three rounds of Cat 7 and the Cat7-1 repro, alternating which build goes
 # first. Output: ~/out/<old|new>/ and ~/out/{lifecycle,timing}. A step whose .exit file exists is skipped, so running the
 # script again resumes where it stopped. No provider key is set; the script unsets them and records that in ~/out/keys.txt.
+# gbrain runs with its shipped defaults, upkeep included (amendment of 2026-11-16, "Background upkeep"). Every step gets
+# a fresh GBRAIN_HOME, a background monitor logs every live `gbrain serve` with its age to ~/out/serve-ages.log, and
+# no serve may be alive when a timing step starts.
 set -u
 export PATH="$HOME/.bun/bin:$PATH"
 KEYS="ANTHROPIC_API_KEY OPENAI_API_KEY VOYAGE_API_KEY PARTICLE_API_KEY GEMINI_API_KEY GOOGLE_API_KEY GOOGLE_GENERATIVE_AI_API_KEY GROQ_API_KEY OPENROUTER_API_KEY TOGETHER_API_KEY TYPESAFE_API_KEY JEV_TYPESAFE_API_KEY UBICLOUD_API_KEY UBICLOUD_API_TOKEN"
@@ -16,8 +19,19 @@ D6=docs/benchmarks/2026-10-06-followups-repin
 AOW=docs/benchmarks/2026-10-04-operator-wave-repin
 PG_IMG=pgvector/pgvector:pg16
 mkdir -p "$HOME/out"
-{ for k in $KEYS; do if [ -n "${!k:-}" ]; then echo "$k set"; else echo "$k unset"; fi; done
-  for f in "$HOME/.env" "$HOME/.gbrain/config.json"; do if [ -e "$f" ]; then echo "$f exists"; else echo "$f absent"; fi; done; } > "$HOME/out/keys.txt"
+{ for k in $KEYS GBRAIN_SWEEP GBRAIN_SWEEP_IDLE_INTERVAL_MS GBRAIN_HOME; do if [ -n "${!k:-}" ]; then echo "$k set"; else echo "$k unset"; fi; done
+  for f in "$HOME/.env" "$HOME/.gbrain" "$HOME/.claude" "$HOME/.codex" "$HOME/.openclaw"; do if [ -e "$f" ]; then echo "$f exists"; else echo "$f absent"; fi; done; } > "$HOME/out/keys.txt"
+SERVE_RE='(cli\.ts|gbrain) serve'
+mkdir -p "$HOME/gh"
+( while true; do
+    for p in $(pgrep -f "$SERVE_RE" 2>/dev/null); do
+      a=$(ps -o etimes= -p "$p" 2>/dev/null | tr -d ' ')
+      [ -n "$a" ] && echo "$(date -u +%FT%TZ) pid=$p age_s=$a step=$(cat "$HOME/out/.step" 2>/dev/null)"
+    done
+    sleep 10
+  done >> "$HOME/out/serve-ages.log" ) &
+MON=$!
+trap 'kill $MON 2>/dev/null' EXIT
 sudo chmod 666 /var/run/docker.sock
 pgstart() { docker rm -f "$1" >/dev/null 2>&1; docker run -d --name "$1" -p "127.0.0.1:$2:5432" -e POSTGRES_HOST_AUTH_METHOD=trust "$PG_IMG" >/dev/null
   for _ in $(seq 60); do docker exec "$1" pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done; sleep 2; }
@@ -25,8 +39,9 @@ pgstop() { docker rm -f "$1" >/dev/null 2>&1; }
 step() {
   local name=$1; shift
   [ -f "$OUT/$name.exit" ] && return 0
-  local t0; t0=$(date +%s)
-  bash -c "$*" > "$OUT/$name.log" 2>&1; echo $? > "$OUT/$name.exit"
+  local t0 gh; t0=$(date +%s); gh=$(mktemp -d "$HOME/gh/$name.XXXX")
+  echo "$OUT/$name" > "$HOME/out/.step"
+  GBRAIN_HOME="$gh" bash -c "$*" > "$OUT/$name.log" 2>&1; echo $? > "$OUT/$name.exit"
   echo "$name $(( $(date +%s) - t0 ))" >> "$OUT/durations.txt"
 }
 for side in $ORDER; do
@@ -109,9 +124,14 @@ for i in 1 2 3; do
   if [ $((i % 2)) -eq 1 ]; then order="$ORDER"; else order=$(echo "$ORDER" | awk '{print $2" "$1}'); fi
   for side in $order; do
     OUT="$TOUT/$side"; mkdir -p "$OUT"; cd "$HOME/w/$side" || exit 2
+    if [ ! -f "$OUT/perf-$i.exit" ]; then
+      left=$(pgrep -f "$SERVE_RE" | tr '\n' ' '); echo "before perf-$i: live serve pids: ${left:-none}" >> "$OUT/serve-before.txt"
+      [ -n "$left" ] && pkill -f "$SERVE_RE" && sleep 2
+    fi
     step "perf-$i" "bun eval/runner/perf.ts && cp eval/reports/perf/receipt.json $OUT/perf-$i.json"
     step "cat7-1-repro-$i" "bun $W/repros/cat7-get-timeline-1k.ts"
   done
 done
 grep -m1 'model name' /proc/cpuinfo > "$HOME/out/host.txt"; nproc >> "$HOME/out/host.txt"; free -g >> "$HOME/out/host.txt"
+if [ -e "$HOME/.gbrain" ]; then echo "$HOME/.gbrain exists after the run" >> "$HOME/out/host.txt"; else echo "$HOME/.gbrain absent after the run" >> "$HOME/out/host.txt"; fi
 echo done > "$HOME/out/DONE"
