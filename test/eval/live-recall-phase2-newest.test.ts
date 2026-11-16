@@ -10,14 +10,15 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import postgres from 'postgres';
 import { BudgetRun, installPaidRequestGuard } from '../../eval/runner/budget-ledger.ts';
 import { importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { ABORT_CODES, LiveRecallAbort, installGuards } from '../../eval/runner/live-recall/brain.ts';
 import {
   COMPARE_SCHEMA, PHASE2_FREEZE_SHA256_PREFIX, PHASE2_HARNESS_DIGEST, PHASE2_JUDGE_FILES, PHASE2_JUDGE_REQUESTS, PHASE2_RUNNER_COMMIT, PHASE2_TASKS_SHA256_PREFIX, SDD, carriedJudgeCheck, checkCompareOutbound, compareBuilds, judgeFileHashes,
-  judgeRequestDigest, referencePrivacyGate, renderCompareMarkdown, sddFrom, validateCompare, verdictOf, type CompareRun, type PrivacyGate,
+  judgeRequestDigest, referencePrivacyGate, renderCompareMarkdown, sddFrom, unboundCallerSql, validateCompare, verdictOf, type BrainPages, type BuildVisibility, type CompareRun, type PrivacyGate,
 } from '../../eval/runner/live-recall/phase2-newest.ts';
-import { buildFixtureBrain } from '../../eval/runner/live-recall/run.ts';
+import { FIXTURE_DIM, buildFixtureBrain, ingestFixture, useFixtureTransports } from '../../eval/runner/live-recall/run.ts';
 import { episodeKey, judgeEpisode, type AnswerRecord, type JudgeRecord, type Task, type TaskArm, type TaskForm } from '../../eval/runner/live-recall/task-arms.ts';
 import { JUDGE_SYSTEM, judgeFor } from '../../eval/runner/live-recall/task-judge.ts';
 import { buildTaskScorecard } from '../../eval/runner/live-recall/task-scorecard.ts';
@@ -36,6 +37,10 @@ const sha256 = (t: string | Buffer) => createHash('sha256').update(t).digest('he
 const abortCode = async (run: () => unknown) => { try { await run(); return 'no abort'; } catch (e) { return e instanceof LiveRecallAbort ? e.code + ': ' + e.detail : String(e); } };
 const hasPhase2Runner = (() => { try { execFileSync('git', ['-C', REPO, 'cat-file', '-e', PHASE2_RUNNER_COMMIT + '^{commit}'], { stdio: 'ignore' }); return true; } catch { return false; } })();
 /** A reference build as brain.ts names it, loaded from the pinned gbrain's own source (the fixture has no 0.60.613.0 checkout). */
+const NEWEST_BUILD = { version: '0.60.733.0', commit: '6ce7195b44a034f85aec811f11fbf862db376f50' };
+const modulesOf = async (g: GbrainUnderTest): Promise<BuildVisibility> => ({ visibility: await importGbrain<any>(g, 'src/core/search/private-visibility.ts'), caller: await importGbrain<any>(g, 'src/core/access/caller.ts') });
+/** A build whose predicate for the runner's caller hides more: one extra conjunct on privatePagesFilterForCaller. */
+const narrowed = (b: BuildVisibility, extra: (alias: string) => string): BuildVisibility => ({ caller: b.caller, visibility: { ...b.visibility, privatePagesFilterForCaller: (a: string) => '(' + b.visibility.privatePagesFilterForCaller(a) + ' AND ' + extra(a) + ')' } });
 const asReference = (g: GbrainUnderTest) => ({ ...g, version: '0.60.613.0', overlay: { ...(g.overlay ?? {}), build: { commit: '98dda48fb9fd339609d6d4eef009811280ff648d' } } } as unknown as GbrainUnderTest);
 
 // ─── The carried judge check ───────────────────────────────────────────────────────────────────────────────────────
@@ -111,19 +116,21 @@ describe('the judge check carried over from phase 2', () => {
 
 describe('the reference build\'s privacy gate', () => {
   let brain: { engine: any; close: () => Promise<void> };
-  let fragment: (alias: string) => string;
+  let build: BuildVisibility;
   const publicSlug = () => fixtureTasks[0]!.gold_pages[0]!;
   beforeAll(async () => {
     brain = await buildFixtureBrain(gut, PHASE2_PAGES);
     installGuards(brain.engine, { refusals: {} });
-    const visibility = await importGbrain<any>(gut, 'src/core/search/private-visibility.ts');
-    fragment = (alias: string) => visibility.privatePagesFilterFragment(alias);
+    build = await modulesOf(gut);
   }, 120_000);
   afterAll(async () => { await brain?.close(); });
-  const newest = (f: (alias: string) => string) => ({ version: '0.60.733.0', commit: '6ce7195b44a034f85aec811f11fbf862db376f50', fragment: f });
+  const newest = (b: BuildVisibility = build) => ({ ...NEWEST_BUILD, ...b });
+  const relaxedBy = (gate: PrivacyGate | string) => 'LR_PRIVACY_RELAXED: reference-build privacy gate: ' + gate;
 
-  test('passes, counts only, when the reference build hides at least what the newest hides', async () => {
-    const gate = await referencePrivacyGate(brain.engine, 'default', fragment, newest(fragment));
+  test('judges each build by its own predicate for the runner\'s caller, and passes, counts only, when the reference build hides at least what the newest hides', async () => {
+    const access = await build.caller.remoteCallerAccess(brain.engine, undefined, undefined, 'stdio');
+    expect(await unboundCallerSql(brain.engine, build)).toBe(build.visibility.withCallerAccess(access, () => build.visibility.privatePagesFilterForCaller('p')));
+    const gate = await referencePrivacyGate(brain.engine, 'default', build, newest());
     expect(gate).toMatchObject({ newest_version: '0.60.733.0', shown_by_reference_hidden_by_newest: 0 });
     expect(gate.pages).toBeGreaterThan(30);
     expect(gate.hidden_by_newest).toBeGreaterThanOrEqual(1);
@@ -132,16 +139,34 @@ describe('the reference build\'s privacy gate', () => {
   });
 
   test('stops with LR_PRIVACY_RELAXED when the newest build hides a page the reference build shows', async () => {
-    const stricter = (alias: string) => '(' + fragment(alias) + ' AND ' + alias + '.slug <> \'' + publicSlug() + '\')';
-    expect(await abortCode(() => referencePrivacyGate(brain.engine, 'default', fragment, newest(stricter)))).toBe('LR_PRIVACY_RELAXED: reference-build privacy gate: 1 of ' + (await referencePrivacyGate(brain.engine, 'default', fragment, newest(fragment))).pages + ' pages in the reader\'s source would be shown by the reference build and are hidden by the newest');
-    expect(await abortCode(() => referencePrivacyGate(brain.engine, 'default', fragment, newest(() => 'NULL')))).toStartWith('LR_PRIVACY_RELAXED');
+    const pages = (await referencePrivacyGate(brain.engine, 'default', build, newest())).pages;
+    expect(await abortCode(() => referencePrivacyGate(brain.engine, 'default', build, newest(narrowed(build, a => a + ".slug <> '" + publicSlug() + "'"))))).toBe(relaxedBy('1 of ' + pages + ' pages in the reader\'s source would be shown by the reference build and are hidden by the newest'));
+    expect(await abortCode(() => referencePrivacyGate(brain.engine, 'default', build, newest(narrowed(build, () => 'NULL'))))).toStartWith(relaxedBy(''));
   });
 
-  test('fails closed when it cannot run', async () => {
-    for (const [ref, nw, engine] of [
-      [fragment, null, brain.engine], [null, newest(fragment), brain.engine], [fragment, newest(() => 'no such column here'), brain.engine],
-      [fragment, newest(fragment), { executeRaw: async () => [] }], [fragment, newest(fragment), { executeRaw: async () => [{ pages: 'x' }] }],
-    ] as const) expect(await abortCode(() => referencePrivacyGate(engine as any, 'default', ref as any, nw as any))).toStartWith('LR_PRIVACY_RELAXED: reference-build privacy gate: ');
+  test('counts what the newest build\'s access for that caller hides, beyond its bare private-page rule', async () => {
+    const prefix = publicSlug().slice(0, publicSlug().indexOf('/') + 1);
+    const covered = { visibility: build.visibility, caller: { remoteCallerAccess: async (...a: unknown[]) => ({ ...(await build.caller.remoteCallerAccess(...a)), restricted: true, folderCoverage: [{ source_id: 'default', prefix }] }) } };
+    const under = Number((await brain.engine.executeRaw("SELECT count(*)::int AS n FROM pages WHERE source_id = 'default' AND deleted_at IS NULL AND slug LIKE $1 AND (" + build.visibility.privatePagesFilterFragment('pages') + ')', [prefix + '%']))[0].n);
+    expect(under).toBeGreaterThan(0);
+    expect(await abortCode(() => referencePrivacyGate(brain.engine, 'default', build, newest(covered)))).toStartWith(relaxedBy(under + ' of '));
+  });
+
+  test('fails closed when it cannot run, or when either build would read wider than an unbound caller', async () => {
+    const wider = (over: Record<string, unknown>) => ({ visibility: build.visibility, caller: { remoteCallerAccess: async (...a: unknown[]) => ({ ...(await build.caller.remoteCallerAccess(...a)), ...over }) } });
+    const noCounts = (rows: unknown[]) => new Proxy(brain.engine, { get: (t, k) => (k === 'executeRaw' ? async (sql: string, p?: unknown[]) => (sql.includes(' AS relaxed ') ? rows : t.executeRaw(sql, p)) : typeof t[k] === 'function' ? t[k].bind(t) : t[k]) });
+    for (const [ref, nw, engine, why] of [
+      [build, null, brain.engine, 'no newest build to compare with'],
+      [build, newest({ visibility: build.visibility, caller: null }), brain.engine, 'the newest build gives no predicate'],
+      [{ visibility: { ...build.visibility, privatePagesFilterForCaller: undefined }, caller: build.caller }, newest(), brain.engine, 'the reference build gives no predicate'],
+      [build, newest(wider({ owner: true })), brain.engine, 'the newest build gives no predicate'],
+      [wider({ identity: ['member:someone'] }), newest(), brain.engine, 'the reference build gives no predicate'],
+      [build, newest(wider({ privateReadableSources: ['default'] })), brain.engine, 'the newest build gives no predicate'],
+      [build, newest(wider({ hidePrivate: false })), brain.engine, 'the newest build gives no predicate'],
+      [build, newest(narrowed(build, () => 'no such column here')), brain.engine, 'the comparison query failed'],
+      [build, newest(), noCounts([]), 'the comparison returned no counts'],
+      [build, newest(), noCounts([{ pages: 'x' }]), 'the comparison returned no counts'],
+    ] as const) expect(await abortCode(() => referencePrivacyGate(engine as any, 'default', ref as any, nw as any))).toStartWith(relaxedBy(why));
   });
 });
 
@@ -188,8 +213,7 @@ describe('tasks.ts run --reference-build', () => {
     await withPaid('refusals', async (paid, sent) => {
       expect(await abortCode(() => runTaskSet(options('unnamed', paid, { referenceBuild: true }), () => {}))).toStartWith('LR_REFERENCE_BUILD');
       expect(await abortCode(() => runTaskSet(options('no-newest', paid, { gut: asReference(gut), referenceBuild: true, privacyReference: null }), () => {}))).toStartWith('LR_PRIVACY_RELAXED: reference-build privacy gate: no newest build');
-      const visibility = await importGbrain<any>(gut, 'src/core/search/private-visibility.ts');
-      const stricter = { version: '0.60.733.0', commit: '6ce7195b44a034f85aec811f11fbf862db376f50', fragment: (a: string) => '(' + visibility.privatePagesFilterFragment(a) + ' AND ' + a + '.slug <> \'' + fixtureTasks[0]!.gold_pages[0] + '\')' };
+      const stricter = { ...NEWEST_BUILD, ...narrowed(await modulesOf(gut), a => a + ".slug <> '" + fixtureTasks[0]!.gold_pages[0] + "'") };
       expect(await abortCode(() => runTaskSet(options('relaxed', paid, { gut: asReference(gut), referenceBuild: true, privacyReference: stricter }), () => {}))).toStartWith('LR_PRIVACY_RELAXED: reference-build privacy gate: 1 of ');
       expect(sent).toHaveLength(0);
       for (const out of ['no-newest', 'relaxed']) expect(existsSync(join(dir, out, 'records.local.jsonl')) && readFileSync(join(dir, out, 'records.local.jsonl'), 'utf8').trim()).toBeFalsy();
@@ -197,9 +221,8 @@ describe('tasks.ts run --reference-build', () => {
   }, 120_000);
 
   test('records the reference build, the schema its code expects and the gate\'s counts, and a resume must keep them', async () => {
-    const visibility = await importGbrain<any>(gut, 'src/core/search/private-visibility.ts');
     const latest = Number((await importGbrain<any>(gut, 'src/core/migrate.ts')).LATEST_VERSION);
-    const newest = { version: '0.60.733.0', commit: '6ce7195b44a034f85aec811f11fbf862db376f50', fragment: (a: string) => visibility.privatePagesFilterFragment(a) };
+    const newest = { ...NEWEST_BUILD, ...(await modulesOf(gut)) };
     await withPaid('reference', async (paid, sent) => {
       const lines: string[] = [];
       const r = await runTaskSet(options('reference', paid, { gut: asReference(gut), referenceBuild: true, privacyReference: newest }), l => lines.push(l));
@@ -209,6 +232,9 @@ describe('tasks.ts run --reference-build', () => {
       expect(run.identity.gbrain_loaded_version).toBe('0.60.613.0');
       expect(run.build).toMatchObject({ reference_build: '0.60.613.0', code_schema_version: latest, privacy_gate: { newest_version: '0.60.733.0', newest_commit: newest.commit, shown_by_reference_hidden_by_newest: 0 } });
       expect(run.judge_check_carried).toBeNull();
+      expect(run.identity.runner_commit).toBe(execFileSync('git', ['-C', REPO, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim());
+      expect(run.brain_pages.at_start).toBeGreaterThan(30);
+      expect(run.brain_pages).toEqual({ at_start: run.brain_pages.at_start, at_end: run.brain_pages.at_start, updated_since_start: run.brain_pages.at_start });
       expect(lines.some(l => l.startsWith('reference build 0.60.613.0 (code expects schema ' + latest + '); privacy gate against 0.60.733.0'))).toBe(true);
       expect(readFileSync(r.scorecard, 'utf8')).not.toContain('reference_build');
       expect(await abortCode(() => runTaskSet({ ...options('reference', paid, { gut: asReference(gut) }), resume: true }, () => {}))).toBe('LR_FREEZE_MISMATCH: the resume differs from the first session in reference_build');
@@ -403,6 +429,23 @@ describe('tasks.ts compare: arm B at two builds, arm A from phase 2\'s stored ru
     expect(ABORT_CODES.LR_COMPARE_MISMATCH).toContain('--stored');
   });
 
+  test('shows how many pages each run saw change, and whether the brain changed during the session', () => {
+    const withPages = (r: CompareRun, p: BrainPages): CompareRun => ({ ...r, run: { ...r.run, brain_pages: p } });
+    const still = { at_start: 40, at_end: 40, updated_since_start: 0 };
+    const quiet = compareBuilds(input({ newest: withPages(newestRun(), still), reference: withPages(reference(), still) }));
+    expect([quiet.brain_changed, quiet.runs.reference.brain_pages]).toEqual([false, still]);
+    const md = renderCompareMarkdown(quiet);
+    expect(md).toContain('The brain during the session: newest run 40 pages at the start, 40 at the end, 0 written or changed since it started');
+    expect(md).toContain('No page changed during either run and the page count held between them.');
+    expect(JSON.parse(checkCompareOutbound(quiet, md, fixtureTasks, [newestRun(), reference(), stored()])).brain_changed).toBe(false);
+    for (const p of [{ ...still, updated_since_start: 2 }, { at_start: 41, at_end: 41, updated_since_start: 0 }, { ...still, at_end: 39 }]) {
+      expect(compareBuilds(input({ newest: withPages(newestRun(), still), reference: withPages(reference(), p) })).brain_changed).toBe(true);
+    }
+    const unknown = compareBuilds(input({ newest: withPages(newestRun(), still), reference: withPages(reference(), { ...still, at_end: null }) }));
+    expect(unknown.brain_changed).toBeNull();
+    expect(renderCompareMarkdown(compareBuilds(input()))).toContain('newest run not recorded; reference run not recorded. Whether pages changed between the runs is not known.');
+  });
+
   test('the CLI compares two finished run directories and refuses one that still owes calls', async () => {
     const root = mkdtempSync(join(tmpdir(), 'lr2-compare-'));
     try {
@@ -440,4 +483,122 @@ describe('tasks.ts compare: arm B at two builds, arm A from phase 2\'s stored ru
       expect(existsSync(join(root, 'out4'))).toBe(false);
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
+});
+
+
+// ─── A counted run on a real Postgres brain (opt-in) ───────────────────────────────────────────────────────────────
+
+/**
+ *   docker run -d --name lr-pg -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:55440:5432 pgvector/pgvector:pg17
+ *   LIVE_RECALL_PG_TEST_URL=postgresql://postgres:postgres@127.0.0.1:55440/postgres bun test test/eval/live-recall-phase2-newest.test.ts
+ *
+ * The URL must name a superuser on a scratch server. The fixture's phase 2 brain is built in a database of its own and
+ * read through a SELECT-only role, with hash embeddings and scripted model replies, so nothing leaves the process.
+ */
+const PG_URL = process.env.LIVE_RECALL_PG_TEST_URL;
+
+describe.skipIf(!PG_URL)('tasks.ts on a real Postgres brain (opt-in)', () => {
+  const suffix = String(process.pid), db = 'lr2_src_' + suffix, role = 'lr2_reader_' + suffix;
+  const dbUrl = (name: string, user?: string, password?: string) => {
+    const u = new URL(PG_URL!);
+    u.pathname = '/' + name;
+    if (user) { u.username = user; u.password = password!; }
+    return u.toString();
+  };
+  const ENV = ['GBRAIN_HOME', 'HOME', 'OPENAI_API_KEY', 'VOYAGE_API_KEY', 'LIVE_RECALL_DATABASE_URL', 'GBRAIN_DATABASE_URL', 'DATABASE_URL', 'GBRAIN_DIRECT_DATABASE_URL', 'GBRAIN_AUDIT_DIR', 'GIT_TEST_ASSUME_DIFFERENT_OWNER'];
+  const saved: Record<string, string | undefined> = {};
+  let admin: ReturnType<typeof postgres>;
+  let dir: string, operator: string;
+  let reset: () => void;
+
+  beforeAll(async () => {
+    for (const k of ENV) saved[k] = process.env[k];
+    for (const k of ['GBRAIN_DATABASE_URL', 'DATABASE_URL', 'GBRAIN_DIRECT_DATABASE_URL']) delete process.env[k];
+    dir = mkdtempSync(join(tmpdir(), 'lr2-pg-'));
+    operator = join(dir, 'operator');
+    mkdirSync(join(operator, '.gbrain'), { recursive: true });
+    process.env.GBRAIN_HOME = operator;
+    process.env.GBRAIN_AUDIT_DIR = dir;
+    process.env.OPENAI_API_KEY = 'fixture';
+    process.env.VOYAGE_API_KEY = 'fixture';
+    writeFileSync(join(operator, '.gbrain', 'config.json'), JSON.stringify({ engine: 'postgres', database_url: dbUrl(db), embedding_model: 'openai:text-embedding-3-small', embedding_dimensions: FIXTURE_DIM, voyage_api_key: 'fixture', search: { keyword_statement_timeout_ms: 9000, token: 'fixture' } }));
+    admin = postgres(PG_URL!, { max: 1, onnotice: () => {} });
+    await admin.unsafe('DROP DATABASE IF EXISTS ' + db + ' WITH (FORCE)');
+    await admin.unsafe('DROP ROLE IF EXISTS ' + role);
+    await admin.unsafe('CREATE DATABASE ' + db);
+    reset = await useFixtureTransports(gut);
+    const { createEngine } = await importGbrain<any>(gut, 'src/core/engine-factory.ts');
+    const engine = await createEngine({ engine: 'postgres', database_url: dbUrl(db) });
+    await engine.connect({ engine: 'postgres', database_url: dbUrl(db) });
+    await engine.initSchema();
+    await ingestFixture(gut, engine, PHASE2_PAGES);
+    await engine.disconnect();
+    await admin.unsafe('CREATE ROLE ' + role + " LOGIN PASSWORD 'reader-pw' BYPASSRLS");
+    await admin.unsafe('GRANT CONNECT ON DATABASE ' + db + ' TO ' + role);
+    const s = postgres(dbUrl(db), { max: 1, onnotice: () => {} });
+    await s.unsafe('REVOKE CREATE ON SCHEMA public FROM PUBLIC');
+    await s.unsafe('GRANT USAGE ON SCHEMA public TO ' + role);
+    await s.unsafe('GRANT SELECT ON ALL TABLES IN SCHEMA public TO ' + role);
+    await s.end();
+  }, 300_000);
+  const readerUrl = () => { process.env.LIVE_RECALL_DATABASE_URL = dbUrl(db, role, 'reader-pw'); };
+
+  afterAll(async () => {
+    reset?.();
+    if (admin) {
+      await admin.unsafe('DROP DATABASE IF EXISTS ' + db + ' WITH (FORCE)');
+      await admin.unsafe('DROP ROLE IF EXISTS ' + role);
+      await admin.end();
+    }
+    if (dir) rmSync(dir, { recursive: true, force: true });
+    for (const k of ENV) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+    }
+  });
+
+  test('freeze and run open the brain with gbrain in a home of its own inside the run directory, read the runner\'s commit before the home moves, and record the brain\'s page counts', async () => {
+    const freezePath = join(dir, 'freeze.json');
+    readerUrl();
+    expect(await main(['freeze', '--tasks', FIXTURE_TASKS, '--database-url-env', 'LIVE_RECALL_DATABASE_URL', '--out', freezePath])).toBe(5);
+    expect(JSON.parse(readFileSync(join(dir, 'freeze-log', 'gbrain-home', '.gbrain', 'config.json'), 'utf8')).database_url).toBeUndefined();
+    expect({ GBRAIN_HOME: process.env.GBRAIN_HOME, HOME: process.env.HOME }).toEqual({ GBRAIN_HOME: operator, HOME: saved.HOME });
+    const checkPath = join(dir, 'judge-check.json');
+    writeFileSync(checkPath, JSON.stringify({ schema: 'live-recall-judge-check/v1', passed: true, stop: null, complete: true, n_tasks_checked: 20, tasks_sha256: sha256(fixtureText), run: { harness_digest: PHASE2_HARNESS_DIGEST, runner_commit: PHASE2_RUNNER_COMMIT, control: false, models: ['claude-opus-5-5', 'gpt-6.1-sol', 'particle-1'], arms: ['A', 'B', 'C', 'D'] }, judges: {} }));
+    writeFileSync(join(operator, '.gitconfig'), '[safe]\n\tdirectory = *\n');
+    process.env.HOME = operator;
+    const before = { GBRAIN_HOME: process.env.GBRAIN_HOME, HOME: process.env.HOME };
+    const out = join(dir, 'run'), home = join(out, 'gbrain-home');
+    const p = scriptedOpus();
+    let during = null as Record<string, string | undefined> | null;
+    const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => { during ??= { GBRAIN_HOME: process.env.GBRAIN_HOME, HOME: process.env.HOME }; return p.fetchImpl(input, init); }) as typeof fetch;
+    const ledgerPath = join(dir, 'ledger.sqlite');
+    const budget = BudgetRun.open({ runner: 'live-recall-phase2-newest-test', budgetUsd: 2, ledgerPath, programCapUsd: 10 });
+    const paid: Paid = { run: budget, guard: installPaidRequestGuard(budget, { fetchImpl }), runner: 'live-recall-phase2-newest-test', capUsd: 2, ledgerPath };
+    try {
+      readerUrl();
+      process.env.GIT_TEST_ASSUME_DIFFERENT_OWNER = '1';
+      const r = await runTaskSet({
+        out, gut, fixture: false, tasksPath: FIXTURE_TASKS, freezePath, databaseUrlEnv: 'LIVE_RECALL_DATABASE_URL', forms: ['paraphrase'], arms: ['B'], models: ['claude-opus-5-5'],
+        limit: 2, concurrency: 1, resume: false, windowNote: null, paid, judgeCheckPath: checkPath, judgeCheckWaiver: null, truncationWaiver: null,
+      }, () => {});
+      expect(r.result).toBe('complete');
+    } finally {
+      delete process.env.GIT_TEST_ASSUME_DIFFERENT_OWNER;
+      paid.guard.uninstall();
+      budget.close({ finish: false });
+    }
+    expect(p.sent.length).toBeGreaterThan(0);
+    expect(during).toEqual({ GBRAIN_HOME: home, HOME: home });
+    expect({ GBRAIN_HOME: process.env.GBRAIN_HOME, HOME: process.env.HOME }).toEqual(before);
+    const copied = JSON.parse(readFileSync(join(home, '.gbrain', 'config.json'), 'utf8'));
+    expect(copied).toMatchObject({ engine: 'postgres', embedding_model: 'openai:text-embedding-3-small', embedding_dimensions: FIXTURE_DIM, search: { keyword_statement_timeout_ms: 9000 } });
+    expect([copied.database_url, copied.voyage_api_key, copied.search.token]).toEqual([undefined, undefined, undefined]);
+    expect(Object.keys(copied).filter(k => /_api_key$/.test(k))).toEqual([]);
+    const run = JSON.parse(readFileSync(join(out, 'run.json'), 'utf8'));
+    expect(run.identity).toMatchObject({ barrier: 'no_write_privilege', runner_commit: execFileSync('git', ['-C', REPO, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), runner_dirty: execFileSync('git', ['-C', REPO, 'status', '--porcelain', '--untracked-files=no'], { encoding: 'utf8' }).trim() !== '', engine: 'postgres' });
+    expect(run.judge_check_carried).toMatchObject({ from_harness_digest: PHASE2_HARNESS_DIGEST, judge_requests: PHASE2_JUDGE_REQUESTS });
+    expect(run.brain_pages.at_start).toBeGreaterThan(30);
+    expect(run.brain_pages).toEqual({ at_start: run.brain_pages.at_start, at_end: run.brain_pages.at_start, updated_since_start: 0 });
+  }, 300_000);
 });

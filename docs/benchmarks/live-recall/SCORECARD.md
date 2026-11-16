@@ -285,7 +285,12 @@ saw or cited.
   flag, harness digest, start and finish, `control`, `kept_tasks`, `judge_check` (`judge_check_sha256`, `passed` and
   `carried`) and `privacy_gate` (the reference run's counts: `newest_version`, `newest_commit`, `pages`,
   `hidden_by_newest`, `hidden_by_reference` and `shown_by_reference_hidden_by_newest`, which is 0 in any run that
-  ran). `stored`: phase 2's run's harness digest, runner commit, start and `kept_tasks`, or null.
+  ran, each build judging by its own rule for an unbound remote stdio caller) and `brain_pages` (`at_start`, `at_end`
+  and `updated_since_start`, or null when the run did not record them). `stored`: phase 2's run's harness digest,
+  runner commit, start and `kept_tasks`, or null.
+- `brain_changed`: true when either run saw pages written or changed after it started or the page counts at the start
+  and end of the two runs differ, false when none did, and null when either run lacks a count. A page rewritten between
+  the runs with no change in the count does not show.
 - `sdd`: the smallest detectable difference per model that the decision rule uses.
 - `builds`: newest minus reference per model, metric (`correct`, `correct_grounded`) and form (`paraphrase`, `exact`,
   `pooled`), with the task scorecard's comparison fields (`n_pairs`, `mean_a`, `mean_b`, `delta`, `ci95`,
@@ -302,14 +307,16 @@ saw or cited.
   into `no_answer`, `gold_not_found`, `gold_found_not_cited` and `gold_cited_not_correct` by the first that fits the
   newest episode, with `abstained` among the lost and `gained` for tasks that moved the other way.
 
-`compare.md` opens with both runs' identity lines and the privacy gate's counts, then the primary table, every build
-comparison, B minus A (labelled paired or unpaired), the drift table and the failure classes.
+`compare.md` opens with both runs' identity lines, the brain's page counts during the session and the privacy gate's
+counts, then the primary table, every build comparison, B minus A (labelled paired or unpaired), the drift table and the
+failure classes.
 
 Each run's own `scorecard.json` keeps phase 2's format unchanged, so a carried judge check shows there as phase 2's
 `judge_check_sha256`. Its `run.json`, which stays on the box, also records `build` (`reference_build`,
-`code_schema_version`, `privacy_gate`) and `judge_check_carried` (phase 2's harness digest and runner commit, the judge
-files' hashes and the judge request fingerprint), and a `--resume` must keep `reference_build` and
-`code_schema_version` as they were.
+`code_schema_version`, `privacy_gate`), `brain_pages` (the brain's page count when the run opened it, after its last
+episode, and pages written or changed since it started; a resume keeps the first start count) and
+`judge_check_carried` (phase 2's harness digest and runner commit, the judge files' hashes and the judge request
+fingerprint), and a `--resume` must keep `reference_build` and `code_schema_version` as they were.
 
 ## A release gate (proposal, not wired)
 

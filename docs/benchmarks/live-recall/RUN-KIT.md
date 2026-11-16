@@ -394,33 +394,43 @@ carries over while the judge's code is unchanged, and the runner checks that its
 
 What you need, beyond phase 2's list above:
 
-- The box's gbrain at v0.60.733.0, so the brain's schema is 317. `git -C /data/gbrain rev-parse v0.60.733.0` prints
-  `6ce7195b44a0…`. Both builds load from that checkout through the runner's verified overlay copy; the checkout is not
-  changed.
+- The box's gbrain at v0.60.733.0, so the brain's schema is 317.
+- A scratch clone of gbrain's repository under `/data/tmp`, written `<scratch gbrain clone>` below, never the box's live
+  install at `/data/gbrain`. It must contain both commits: `git -C <scratch gbrain clone> rev-parse v0.60.733.0` prints
+  `6ce7195b44a0…`, and `git -C <scratch gbrain clone> cat-file -e 98dda48fb9fd^{commit}` succeeds. Both builds load
+  from it through the runner's verified overlay copy; the clone is not changed.
 - Phase 2's task file, its `freeze.json`, its `judge-check.json` and its counted run directory, all as they were on
   2026-11-09. The runner and the compare check each by hash and refuse another.
 - A no-write role for the session, as for phase 2's counted run, and the ledger and cap the run request names.
+
+Each run gives gbrain a home of its own, `gbrain-home` in its run directory, and records the brain's page count when it
+opened the brain and after its last episode, and how many pages changed since it started (`brain_pages` in `run.json`).
+The box's own `gbrain serve` keeps running beside the session, so the compare shows whether pages changed between the
+two runs
+([amendment entry](PHASE2-PREREGISTRATION.md#2026-11-16-gbrains-home-and-its-background-upkeep-during-the-session)).
 
 1. **Newest build, arm B.** It prints `judge check: phase 2's passing check carried over (...)` before the first task.
    [`LR_JUDGE_CHECK`](#lr_judge_check) means the check did not carry: send the line and run nothing more.
 
    ```bash
    bun eval/runner/live-recall/tasks.ts run --tasks <phase 2 tasks.jsonl> --freeze <phase 2 freeze.json> \
-     --gbrain /data/gbrain@6ce7195b44a0 --database-url-env LIVE_RECALL_DATABASE_URL \
+     --gbrain <scratch gbrain clone>@6ce7195b44a0 --database-url-env LIVE_RECALL_DATABASE_URL \
      --judge-check <phase 2 judge-check.json> --arms B \
      --budget-usd <cap> --budget-ledger <ledger> --out <newest run dir>
    ```
 
 2. **0.60.613.0, arm B, right after.** `--reference-build` lets 0.60.613.0 read the newer schema: it reads only the
-   tables it knows and migrates nothing. `--privacy-reference` names the newest build, whose private-page rule the
-   runner compares with 0.60.613.0's over every live page in the reader's source before any read or model call. It
-   prints `reference build 0.60.613.0 (code expects schema 296); privacy gate against 0.60.733.0: ...` with counts
-   only. If 0.60.613.0 would show any page the newest build hides, or the gate can't run, it stops with
+   tables it knows and migrates nothing. `--privacy-reference` names the newest build. Before any read or model call
+   the runner compares, over every live page in the reader's source, the pages each build lets the runner's caller (a
+   remote stdio caller with no credential) see, by each build's own rule for that caller. It prints `reference build
+   0.60.613.0 (code expects schema 296); privacy gate against 0.60.733.0: ...` with counts only. If 0.60.613.0 would
+   show any page the newest build hides, or the gate can't run, it stops with
    [`LR_PRIVACY_RELAXED`](#lr_privacy_relaxed) before any model call.
 
    ```bash
    bun eval/runner/live-recall/tasks.ts run --tasks <phase 2 tasks.jsonl> --freeze <phase 2 freeze.json> \
-     --gbrain /data/gbrain@98dda48fb9fd --reference-build --privacy-reference /data/gbrain@6ce7195b44a0 \
+     --gbrain <scratch gbrain clone>@98dda48fb9fd --reference-build \
+     --privacy-reference <scratch gbrain clone>@6ce7195b44a0 \
      --database-url-env LIVE_RECALL_DATABASE_URL --judge-check <phase 2 judge-check.json> --arms B \
      --budget-usd <cap> --budget-ledger <ledger> --out <reference run dir>
    ```
@@ -577,7 +587,8 @@ and back on between two checks can go unnoticed. The runner never relaxes or wor
 
 A detail that starts `reference-build privacy gate:` comes from the check before a `--reference-build` run's first read:
 the older build would show pages the newest build hides from an unbound remote caller (the detail gives the count), or
-the check could not run (no `--privacy-reference`, a newest checkout without its private-page rule, a failing query).
+the check could not run (no `--privacy-reference`, a build that gives no rule for that caller or resolves the caller
+wider than an unbound one, a failing query).
 Nothing was read or sent to a model. Send the line to GBEV-3 through ALPH-72.
 
 ### LR_CAP_STOP

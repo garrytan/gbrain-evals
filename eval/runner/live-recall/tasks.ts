@@ -52,7 +52,7 @@ import { isCapStop, openBudgetItem } from '../refresh-barrier/ledger.ts';
 import { ABORT_CODES, LiveRecallAbort, assertReferenceBuild, checkSchema, installGuards, openPostgresBrain, verifyReadOnly, type GuardCounters } from './brain.ts';
 import {
   PHASE2_HARNESS_DIGEST, PHASE2_RUNNER_COMMIT, carriedJudgeCheck, checkCompareOutbound, compareBuilds, judgeRequestDigest, referencePrivacyGate, renderCompareMarkdown,
-  type CarriedJudgeCheck, type CompareRun, type PrivacyGate, type PrivacyReference,
+  type BrainPages, type CarriedJudgeCheck, type CompareRun, type PrivacyGate, type PrivacyReference,
 } from './phase2-newest.ts';
 import { FAILURE_STAGES, FIXTURE_DIR, GOLD_MISSING_CAP, PREFLIGHT_PROBE, buildFixtureBrain, captureOutput } from './run.ts';
 import { GOLD_FOUND_BY } from './scorecard.ts';
@@ -262,7 +262,7 @@ export async function assertPrivate(gut: GbrainUnderTest, engine: any, reader?: 
  * may read a newer brain schema than it expects, and before it reads any page through gbrain's tools the privacy gate
  * refuses it if it would show a page the newest build (privacyReference) hides from an unbound remote caller.
  */
-async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUrlEnv: string; referenceBuild?: boolean; privacyReference?: PrivacyReference | null }, capped: () => boolean): Promise<Brain> {
+async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUrlEnv: string; referenceBuild?: boolean; privacyReference?: PrivacyReference | null; home: string }, capped: () => boolean): Promise<Brain> {
   delete process.env.GBRAIN_REMOTE_PRIVATE_PAGES;
   const counters: GuardCounters = { refusals: {} };
   const referenceBuild = o.referenceBuild === true;
@@ -278,7 +278,7 @@ async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUr
     await verifyReadOnly(engine);
     ({ schema_version: schemaVersion, code_schema_version: codeSchemaVersion } = await checkSchema(engine, o.gut, referenceBuild));
   } else {
-    const brain = await openPostgresBrain(o.gut, o.databaseUrlEnv, counters, referenceBuild);
+    const brain = await openPostgresBrain(o.gut, o.databaseUrlEnv, counters, referenceBuild, o.home);
     ({ engine, barrier, connection, close } = brain);
     schemaVersion = brain.schema_version;
     codeSchemaVersion = brain.code_schema_version;
@@ -296,8 +296,8 @@ async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUr
     const reader = await openReader(o.gut, engine, Boolean(knobs.reranker_enabled), capped);
     let privacyGate: PrivacyGate | null = null;
     if (referenceBuild) {
-      const visibility = await importGbrain<any>(o.gut, 'src/core/search/private-visibility.ts');
-      privacyGate = await referencePrivacyGate(engine, reader.sourceId, typeof visibility.privatePagesFilterFragment === 'function' ? (alias: string) => visibility.privatePagesFilterFragment(alias) : null, o.privacyReference ?? null);
+      const build = { visibility: await importGbrain<any>(o.gut, 'src/core/search/private-visibility.ts'), caller: await importGbrain<any>(o.gut, 'src/core/access/caller.ts').catch(() => null) };
+      privacyGate = await referencePrivacyGate(engine, reader.sourceId, build, o.privacyReference ?? null);
     }
     await assertPrivate(o.gut, engine, reader);
     return {
@@ -581,6 +581,8 @@ interface RunFile {
   truncation_waivers?: TruncationWaiver[];
   /** The build as loaded: the reference build it was loaded as, if any, the schema its code expects and the privacy gate's counts. */
   build?: { reference_build: string | null; code_schema_version: number; privacy_gate: PrivacyGate | null } | null;
+  /** The brain's page count when the first session opened it and after the last episode, and pages written or changed since started_at. */
+  brain_pages?: BrainPages | null;
   /** Phase 2's judge check carried over to this run, with the hashes that let it carry; null when the run's own harness made the check. */
   judge_check_carried?: CarriedJudgeCheck | null;
 }
@@ -696,12 +698,15 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
   const judgeCheckRef = o.fixture || o.judgeCheck ? null : previous?.judge_check ?? (({ carried: _carried, ...ref }) => ref)(checked!);
   const judgeCheckCarried = previous?.judge_check ? previous.judge_check_carried ?? null : checked?.carried ?? null;
   const startedAt = new Date().toISOString();
+  const runner = { commit: git(['rev-parse', 'HEAD']) || 'unknown', dirty: git(['status', '--porcelain', '--untracked-files=no']) !== '' };
   const refusals = watchRefusals();
-  const brain = await openBrain(o, refusals.capped).catch(e => { refusals.restore(); throw e; });
+  const brain = await openBrain({ ...o, home: join(o.out, 'gbrain-home') }, refusals.capped).catch(e => { refusals.restore(); throw e; });
+  const countPages = async (since?: string) => Number((await brain.engine.executeRaw('SELECT count(*)::int AS n FROM pages' + (since ? ' WHERE updated_at >= $1::timestamptz' : ''), since ? [since] : []))[0]?.n);
   say('gbrain ' + o.gut.version + ', schema ' + brain.schemaVersion + ', barrier ' + brain.barrier + ', connection ' + brain.connection + '; read-only verified; private pages hidden from remote callers');
   if (brain.privacyGate) say('reference build ' + o.gut.version + ' (code expects schema ' + brain.codeSchemaVersion + '); privacy gate against ' + brain.privacyGate.newest_version + ': ' + brain.privacyGate.pages + ' pages, ' + brain.privacyGate.hidden_by_newest + ' hidden by the newest build, ' + brain.privacyGate.hidden_by_reference + ' by this one, none shown here that the newest hides');
   if (judgeCheckCarried) say('judge check: phase 2\'s passing check carried over (harness ' + judgeCheckCarried.from_harness_digest.slice(0, 12) + ', judge files and requests unchanged)');
   try {
+    const pagesAtOpen = await countPages();
     let candidates: Array<{ line: number; task: Task }>, summary: RunFile['task_summary'];
     if (o.fixture) {
       const { kept, dropped, reachable, gold } = await goldCheck(brain.reader, parsed);
@@ -736,7 +741,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
     const run: RunFile = {
       identity: {
         started_at: previous?.identity.started_at ?? startedAt, finished_at: null,
-        runner_commit: git(['rev-parse', 'HEAD']) || 'unknown', runner_dirty: git(['status', '--porcelain', '--untracked-files=no']) !== '', harness_digest: harnessDigest(),
+        runner_commit: runner.commit, runner_dirty: runner.dirty, harness_digest: harnessDigest(),
         gbrain_pin_version: JSON.parse(readFileSync(join(REPO_ROOT, 'node_modules/gbrain/package.json'), 'utf8')).version, gbrain_pin_commit: hex(pinCommit),
         gbrain_loaded_version: o.gut.version, gbrain_loaded_commit: o.gut.overlay?.build.commit ?? hex(pinCommit), gbrain_overlay: o.gut.overlay !== null,
         schema_version: brain.schemaVersion, engine: o.fixture ? 'pglite' : 'postgres', barrier: brain.barrier, connection: brain.connection, control: o.fixture,
@@ -754,6 +759,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       budget: { runner: o.paid.runner, run_id: o.paid.run.runId, ledger_path: o.paid.ledgerPath, cap_usd: ledgerSpend(o.paid.ledgerPath, o.paid.run.runId).cap_usd, extensions: previous?.budget.extensions ?? [] },
       forms: o.forms, arms: o.arms, models: o.models, judge_check: judgeCheckRef, judge_check_carried: judgeCheckCarried,
       build: { reference_build: o.referenceBuild ? o.gut.version : null, code_schema_version: brain.codeSchemaVersion, privacy_gate: brain.privacyGate },
+      brain_pages: { at_start: previous?.brain_pages?.at_start ?? pagesAtOpen, at_end: null, updated_since_start: null },
       judge_check_steps: o.judgeCheck ? [...new Set([...(previous?.judge_check_steps ?? []), tasks.length])] : null,
       truncation_waivers: waivers,
     };
@@ -812,6 +818,7 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
     }
     if (halt.fatal) throw halt.fatal;
     await verifyReadOnly(brain.engine);
+    run.brain_pages = { ...run.brain_pages!, at_end: await countPages(), updated_since_start: await countPages(String(run.identity.started_at)) };
     run.custody.readonly_verified_end = true;
     run.identity.finished_at = new Date().toISOString();
     writeJson(p.run, run);
@@ -1145,14 +1152,13 @@ function sayScorecard(path: string, say: (line: string) => void): void {
   if (invalid) say('LR_CELL_INVALID: ' + invalid + ' form, arm and model cells passed their error or degraded-search cap; the scorecard marks them invalid');
 }
 
-/** The newest build's private-page predicate for the reference-build privacy gate, or null (the gate then stops the run) when it can't be loaded. */
+/** The newest build's visibility and caller modules for the reference-build privacy gate, or null (the gate then stops the run) when they can't be loaded. */
 async function loadPrivacyReference(spec: string | undefined): Promise<PrivacyReference | null> {
   if (!spec) return null;
   try {
     const newest = resolveGbrainUnderTest(spec);
-    const visibility = await importGbrain<any>(newest, 'src/core/search/private-visibility.ts');
-    if (typeof visibility.privatePagesFilterFragment !== 'function') return null;
-    return { version: newest.version, commit: newest.overlay?.build.commit ?? 'unknown', fragment: (alias: string) => visibility.privatePagesFilterFragment(alias) };
+    const [visibility, caller] = await Promise.all([importGbrain<any>(newest, 'src/core/search/private-visibility.ts'), importGbrain<any>(newest, 'src/core/access/caller.ts')]);
+    return { version: newest.version, commit: newest.overlay?.build.commit ?? 'unknown', visibility, caller };
   } catch {
     return null;
   }
@@ -1236,11 +1242,12 @@ export async function main(argv: string[]): Promise<number> {
       console.error('usage: tasks.ts freeze (--fixture | --tasks <file> --gbrain <checkout>@<commit>) --out <freeze.json>\n       tasks.ts estimate --tasks <file> --freeze <freeze.json> --smoke <smoke run dir> --smoke-check <smoke judge-check dir> --gbrain <checkout>@<commit> [--out <estimate.json>]');
       return 2;
     }
-    return withLog(join(dirname(resolve(out ?? flag(argv, '--freeze')!)), command + '-log'), async say => {
+    const logDir = join(dirname(resolve(out ?? flag(argv, '--freeze')!)), command + '-log');
+    return withLog(logDir, async say => {
       const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
       const source = readFileSync(tasksPath, 'utf8');
       const parsed = parseTasks(source);
-      const brain = await openBrain({ fixture, gut, databaseUrlEnv }, () => false);
+      const brain = await openBrain({ fixture, gut, databaseUrlEnv, home: join(logDir, 'gbrain-home') }, () => false);
       try {
         if (command === 'freeze') {
           const summary = await writeFreeze(brain.reader, source, parsed, gut, out!, say);

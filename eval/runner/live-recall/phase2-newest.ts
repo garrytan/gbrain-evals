@@ -140,24 +140,48 @@ export function carriedJudgeCheck(check: any, judgeRequests: string | null, file
 
 // ─── The reference build's privacy gate ────────────────────────────────────────────────────────────────────────────
 
-/** The newest build's predicate for the pages an unbound remote caller may see, loaded from its checkout. */
-export interface PrivacyReference { version: string; commit: string; fragment: (pageAlias: string) => string }
+/** A build's own modules that decide what a remote caller may read: private-visibility.ts and access/caller.ts. */
+export interface BuildVisibility { visibility: any; caller: any }
+/** The newest build's modules, loaded from its checkout, with the version and commit they came from. */
+export interface PrivacyReference extends BuildVisibility { version: string; commit: string }
 export interface PrivacyGate { newest_version: string; newest_commit: string; pages: number; hidden_by_newest: number; hidden_by_reference: number; shown_by_reference_hidden_by_newest: number }
 
 /**
- * Before a reference build reads a page through gbrain's tools: count, read-only, the live pages in the reader's source
- * that the newest build's predicate hides from an unbound remote caller and the reference build's predicate shows. Any
- * such page stops the run with LR_PRIVACY_RELAXED, and so does a gate that cannot run (no newest build, a missing
- * predicate, a failing query or a missing count). A predicate that comes back null counts as hidden for the newest build
- * and as shown for the reference build, so the gate errs toward stopping. Counts only.
+ * A build's own predicate for the pages the runner's caller may see. The runner calls gbrain's tools as a remote stdio
+ * caller with no credential; gbrain's dispatcher gives such a call the access remoteCallerAccess resolves for it (its
+ * identity, folder rules and their coverage, granted sources, privacy) and runs it under withCallerAccess, and every
+ * search and page read filters by privatePagesFilterForCaller under that access. This builds the same SQL, alias p, with
+ * the build's own three functions. It throws when one is missing or when the access is wider than an unbound caller's
+ * (an identity, the owner, a granted source or privacy relaxed), so the gate fails closed.
  */
-export async function referencePrivacyGate(engine: { executeRaw: (sql: string, params?: unknown[]) => Promise<unknown[]> }, sourceId: string, reference: ((pageAlias: string) => string) | null, newest: PrivacyReference | null): Promise<PrivacyGate> {
+export async function unboundCallerSql(engine: unknown, build: BuildVisibility | null): Promise<string> {
+  const v = build?.visibility, c = build?.caller;
+  if (typeof c?.remoteCallerAccess !== 'function' || typeof v?.withCallerAccess !== 'function' || typeof v?.privatePagesFilterForCaller !== 'function') throw new Error('no caller predicate');
+  const access = await c.remoteCallerAccess(engine, undefined, undefined, 'stdio');
+  if (!access || access.owner === true || access.hidePrivate !== true || [access.identity, access.audienceIdentities, access.privateReadableSources].some(l => !Array.isArray(l) || l.length > 0)) throw new Error('wider than an unbound caller');
+  const sql = v.withCallerAccess(access, () => v.privatePagesFilterForCaller('p'));
+  if (typeof sql !== 'string' || !sql.trim()) throw new Error('empty predicate');
+  return sql;
+}
+
+/**
+ * Before a reference build reads a page through gbrain's tools: count, read-only, the live pages in the reader's source
+ * that the newest build hides from the runner's caller and the reference build shows, each build judging by its own
+ * predicate for that caller (unboundCallerSql). Any such page stops the run with LR_PRIVACY_RELAXED, and so does a gate
+ * that cannot run (no newest build, a predicate either build can't give, a failing query or a missing count). A
+ * predicate that comes back null counts as hidden for the newest build and as shown for the reference build, so the gate
+ * errs toward stopping. Counts only.
+ */
+export async function referencePrivacyGate(engine: { executeRaw: (sql: string, params?: unknown[]) => Promise<unknown[]> }, sourceId: string, reference: BuildVisibility | null, newest: PrivacyReference | null): Promise<PrivacyGate> {
   const stop = (why: string) => new LiveRecallAbort('LR_PRIVACY_RELAXED', 'reference-build privacy gate: ' + why);
-  if (!newest || typeof newest.fragment !== 'function') throw stop('no newest build to compare with; pass --privacy-reference <newest checkout>@<commit>');
-  if (typeof reference !== 'function') throw stop('the reference build has no private-page predicate');
+  if (!newest) throw stop('no newest build to compare with; pass --privacy-reference <newest checkout>@<commit>');
+  const newestSql = await unboundCallerSql(engine, newest).catch(() => null);
+  if (newestSql === null) throw stop('the newest build gives no predicate for an unbound remote caller');
+  const referenceSql = await unboundCallerSql(engine, reference).catch(() => null);
+  if (referenceSql === null) throw stop('the reference build gives no predicate for an unbound remote caller');
   let row: Record<string, unknown> | undefined;
   try {
-    const shownNewest = 'COALESCE((' + newest.fragment('p') + '), false)', shownReference = 'COALESCE((' + reference('p') + '), true)';
+    const shownNewest = 'COALESCE((' + newestSql + '), false)', shownReference = 'COALESCE((' + referenceSql + '), true)';
     [row] = await engine.executeRaw(
       'SELECT count(*)::int AS pages, count(*) FILTER (WHERE NOT ' + shownNewest + ')::int AS hidden_by_newest, count(*) FILTER (WHERE NOT ' + shownReference + ')::int AS hidden_by_reference, ' +
       'count(*) FILTER (WHERE NOT ' + shownNewest + ' AND ' + shownReference + ')::int AS relaxed FROM pages p WHERE p.source_id = $1 AND p.deleted_at IS NULL', [sourceId]) as Array<Record<string, unknown>>;
@@ -189,9 +213,12 @@ const short = (m: string) => (m === 'claude-opus-5-5' ? 'opus' : m === 'gpt-6.1-
 export const SDD: Readonly<Record<string, number>> = Object.freeze({ 'claude-opus-5-5': 0.091, 'particle-1': 0.129, 'gpt-6.1-sol': 0.109 });
 export const sddFrom = (discordant: number, pairs: number, clusters: number) => round(2.8 * Math.sqrt(discordant / pairs / clusters), 3);
 
+/** The brain's page count when a run opened it and after its last episode, and pages written or changed since the run started. */
+export interface BrainPages { at_start: number | null; at_end: number | null; updated_since_start: number | null }
+
 /** One run directory as the compare reads it: run.json and the run's records. */
 export interface CompareRun {
-  run: { identity: Record<string, any>; tasks_sha256: string; kept_ids: string[]; task_summary?: Record<string, any> | null; forms: TaskForm[]; arms: TaskArm[]; models: string[]; build?: Record<string, any> | null; judge_check?: Record<string, any> | null; judge_check_carried?: CarriedJudgeCheck | null };
+  run: { identity: Record<string, any>; tasks_sha256: string; kept_ids: string[]; task_summary?: Record<string, any> | null; forms: TaskForm[]; arms: TaskArm[]; models: string[]; build?: Record<string, any> | null; judge_check?: Record<string, any> | null; judge_check_carried?: CarriedJudgeCheck | null; brain_pages?: BrainPages | null };
   records: Array<AnswerRecord | JudgeRecord>;
 }
 
@@ -370,11 +397,16 @@ export function compareBuilds(i: CompareInput) {
     started_at: x.run.identity.started_at, finished_at: x.run.identity.finished_at, control: x.run.identity.control, kept_tasks: x.run.kept_ids.length,
     judge_check: x.run.judge_check ? { judge_check_sha256: x.run.judge_check.judge_check_sha256 ?? null, passed: x.run.judge_check.passed === true, carried: Boolean(x.run.judge_check_carried) } : null,
     privacy_gate: x.run.build?.privacy_gate ? { ...x.run.build.privacy_gate } as PrivacyGate : null,
+    brain_pages: x.run.brain_pages ? { at_start: x.run.brain_pages.at_start ?? null, at_end: x.run.brain_pages.at_end ?? null, updated_since_start: x.run.brain_pages.updated_since_start ?? null } : null,
   });
+  const counts = [i.newest, i.reference].map(x => x.run.brain_pages);
+  const known = counts.every(p => p && [p.at_start, p.at_end, p.updated_since_start].every(n => Number.isInteger(n)));
+  const brainChanged = !known ? null : counts.some(p => p!.updated_since_start! > 0) || new Set(counts.flatMap(p => [p!.at_start, p!.at_end])).size > 1;
   return {
     schema: COMPARE_SCHEMA,
     control: i.newest.run.identity.control === true,
     tasks: { sha_prefix: i.tasksSha256.slice(0, 12), freeze_sha256: i.freeze?.sha256 ?? null, frozen: i.freeze?.kept_ids.length ?? null, gold_clusters: goldClusterSummary(buildTasks) },
+    brain_changed: brainChanged,
     runs: { newest: runSummary(i.newest), reference: runSummary(i.reference), stored: i.stored ? { harness_digest: i.stored.run.identity.harness_digest, runner_commit: i.stored.run.identity.runner_commit, started_at: i.stored.run.identity.started_at, kept_tasks: i.stored.run.kept_ids.length } : null },
     sdd: { ...SDD },
     builds,
@@ -393,7 +425,7 @@ const COMPARE_IDS = new Set(ID_PARTS.lead.flatMap(l => ID_PARTS.metric.flatMap(m
 const COMPARE_KEYS = new Set<string>([
   'schema', 'control', 'tasks', 'sha_prefix', 'freeze_sha256', 'frozen', 'gold_clusters', 'n', 'shared', 'runs', 'newest', 'reference', 'stored', 'sdd', ...MODELS,
   'gbrain_loaded_version', 'gbrain_loaded_commit', 'schema_version', 'code_schema_version', 'reference_build', 'runner_commit', 'runner_dirty', 'harness_digest', 'started_at', 'finished_at', 'kept_tasks',
-  'judge_check', 'judge_check_sha256', 'passed', 'carried', 'privacy_gate', 'newest_version', 'newest_commit', 'pages', 'hidden_by_newest', 'hidden_by_reference', 'shown_by_reference_hidden_by_newest',
+  'judge_check', 'judge_check_sha256', 'passed', 'carried', 'brain_changed', 'brain_pages', 'at_start', 'at_end', 'updated_since_start', 'privacy_gate', 'newest_version', 'newest_commit', 'pages', 'hidden_by_newest', 'hidden_by_reference', 'shown_by_reference_hidden_by_newest',
   'builds', 'b_vs_a', 'paired', 'comparisons', 'drift', 'id', 'form', 'metric', 'model', 'a', 'b', 'n_pairs', 'pairs_lost', 'a_only', 'b_only', 'mean_a', 'mean_b', 'delta', 'ci95', 'worse_tasks', 'better_tasks',
   'reading', 'p_two_sided', 'mde', 'primary', 'sdd', 'verdict', 'p_holm', 'n_b', 'failure_classes', ...FORMS, ...TYPES, 'lost', ...FAILURE_CLASSES, 'abstained', 'gained',
 ]);
@@ -430,6 +462,8 @@ export function renderCompareMarkdown(c: BuildCompare): string {
   L.push('# Live recall phase 2: arm B at two gbrain builds', '');
   if (c.control) L.push('Fixture control: these numbers say nothing about Garry\'s brain.', '');
   L.push('Newest: ' + run(c.runs.newest) + '.', '', 'Reference: ' + run(c.runs.reference) + '.', '');
+  const pages = (r: BuildCompare['runs']['newest']) => (r.brain_pages ? r.brain_pages.at_start + ' pages at the start, ' + r.brain_pages.at_end + ' at the end, ' + r.brain_pages.updated_since_start + ' written or changed since it started' : 'not recorded');
+  L.push('The brain during the session: newest run ' + pages(c.runs.newest) + '; reference run ' + pages(c.runs.reference) + '. ' + (c.brain_changed === null ? 'Whether pages changed between the runs is not known.' : c.brain_changed ? 'Pages changed during the session, so part of any difference between the builds may come from the brain\'s data.' : 'No page changed during either run and the page count held between them.'), '');
   const g = c.runs.reference.privacy_gate;
   if (g) L.push('Privacy gate before the reference build: ' + g.pages + ' live pages in the reader\'s source, ' + g.hidden_by_newest + ' hidden by ' + g.newest_version + ', ' + g.hidden_by_reference + ' hidden by the reference build, ' + g.shown_by_reference_hidden_by_newest + ' shown by the reference build and hidden by the newest.', '');
   L.push('Tasks: task file ' + c.tasks.sha_prefix + ', freeze ' + (c.tasks.freeze_sha256?.slice(0, 12) ?? 'n/a') + ', ' + (c.tasks.frozen ?? 'n/a') + ' frozen, ' + c.tasks.gold_clusters.n + ' gold clusters across the two runs. Intervals and p-values treat each gold cluster as one unit.', '');
