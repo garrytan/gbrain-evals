@@ -17,9 +17,12 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Tests run in CI only.** `.gstack/pregate.json` declares a remote test gate that CI's verified run at the exact
   tree clears, so on a machine with fewer than 8 cores the check gstack runs before a push runs no tests locally and
   waits for CI instead.
+- **Entry links are checked where they will land.** `scripts/check-links.py` checks a link in a `changelog.d/` entry
+  from the repository root, because the release copies the entry into CHANGELOG.md unchanged. A link written as in
+  CHANGELOG.md passes, and a `../` link, which would pass in the entry and then break the release, fails before merge.
 - **A correction.** 0.10.228's entry said the gbrain team's numbers match ours to the digit. That holds for every
   recall and MRR figure; latency differed, because our machine was faster. The entry now says so.
-- **What stays the same.** No score, test or verdict changes.
+- **What stays the same.** No score or verdict changes.
 
 ## [0.10.231] - 2026-11-16
 
