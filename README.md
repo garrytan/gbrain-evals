@@ -7,17 +7,22 @@ another system.
 
 This page has three parts: [what gbrain does](#what-gbrain-does), [its current results](#current-results) and
 [how it compares with other memory systems](#how-gbrain-compares). Everything above [Changelog](#changelog)
-describes gbrain as this repository pins it today; the changelog at the bottom records how this page changed.
+describes gbrain as this repository pins it today ([the pin](docs/gbrain-under-test.md#the-pin)); the changelog at the
+bottom records how this page changed.
 
 ## What gbrain does
 
 gbrain keeps your notes, conversations and documents as Markdown files you own, indexes them in Postgres or embedded
 PGLite, and gives an agent such as Claude Code or Codex tools to save, search, update and forget what it knows, over a
 CLI or an MCP server. It mixes exact-word search, meaning-based search and an optional reranker, follows stored
-relationships between pages, hands the agent whole conversations, and labels everything it returns by source. This
-repository installs gbrain v0.60.623.0 (`d253ec0ff`), which this page calls the pin. Results measured at earlier commits
-name their own commit, and [the gbrain under test](docs/gbrain-under-test.md) lists every capability and what changed
-between those commits and the pin.
+relationships between pages, hands the agent whole conversations, and labels everything it returns by source. Without
+an embedding key, a search still finds pages that hold most of the question's words. On a personal brain it keeps a
+redacted, searchable archive of your agent conversations, one page per conversation per day, and one brain can hold a
+company's notes beside your own or serve several people, each with their own key and a folder only they can read. This
+repository installs gbrain's newest release, which this page calls the pin: [the gbrain under
+test](docs/gbrain-under-test.md#the-pin) names its version and commit, and [CLAUDE.md](CLAUDE.md#choose-the-gbrain-build)
+keeps it at the newest release. Results measured at earlier commits name their own commit, and that page lists every
+capability and what changed between those commits and the pin.
 
 ## Current results
 
@@ -67,7 +72,7 @@ between those commits and the pin.
 | Nothing left behind after `forget` | not tested | **0** prohibited outputs, 6 of 6 reinstatements¹⁰ | `6ce7195b4` (v0.60.733.0) | [Forget residue](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
 | Private pages reaching agent callers or remote callers | not tested | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Privacy on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md) |
 | Keeping speaker and time across chat export formats | not tested | **every** registered format keeps the conversation whole (29 of 29 formats at `77cf8e111`)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Chat formats](docs/benchmarks/2026-10-01-n12-format-fidelity.md) |
-| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | not tested | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; the checks that need no API keys pass at the pin, and CI runs them on every pull request | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `d253ec0ff` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md) |
+| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | not tested | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; the checks that need no API keys pass at the pin, and CI runs them on every pull request | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `6ce7195b4` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md) |
 | One very large document stored as one page (2 MB to 260 MiB, under the preregistered rules) | not tested | **Every preregistered rule passes**: 0 crashes, 0 responses over 1 MiB, 0 bytes lost on export, keyword recall in the top ten 1.00 at 2 MB¹¹ | `7a6bdd3` (v0.60.454.0) | [Large pages](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md) |
 | Finding notes that contradict each other | not tested | **146 of 150** conflicts with the default judge model (`claude-haiku-4-5`); 0 of 40 dated changes and 4 of 51 compatible pairs flagged | `77cf8e111` | [Contradiction re-run](docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm) |
 | Contradiction judging on current models | not tested | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models; the cheapest passing one costs $0.24 per 1,000 pairs | `c5fb0201` | [Contradiction judges](docs/benchmarks/2026-10-06-n2-judges.md) |
@@ -321,11 +326,11 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
   1 release (0.075 and 0.078 ms on the two hosts measured). It has not been measured at the pin. This and the next three
   items are open entries in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md).
 - Open loops (commitments gbrain tracks from your email) cover Gmail only, and a commitment fulfilled by reply does not
-  close. gbrain's open-loops guide at `6ce7195b4` still describes Gmail threads only and calls fulfilment by reply
-  future work. At that build a forwarded FYI whose forwarded part asks a question also opens a loop, against the
-  guide's own rule (3 of 3 such threads; [keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md#what-got-worse-and-where)).
-- There is no scanner for contradictions across a whole brain. At `6ce7195b4`, the contradiction probe behind
-  `find_contradictions` still judges pairs drawn from the top results of the queries it is given.
+  close. gbrain's open-loops guide at `6ce7195b4` (v0.60.733.0) still describes Gmail threads only and calls fulfilment
+  by reply future work. At that build a forwarded FYI whose forwarded part asks a question also opens a loop, against
+  the guide's own rule (3 of 3 such threads; [keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md#what-got-worse-and-where)).
+- There is no scanner for contradictions across a whole brain. At `6ce7195b4` (v0.60.733.0), the contradiction probe
+  behind `find_contradictions` still judges pairs drawn from the top results of the queries it is given.
 - Associative recall, which gbrain does not claim: `volunteer_context` delivered the needed page on 0 of 240 indirect
   probes at `3a284ae`.
 - Several retrieval settings were chosen on the same LongMemEval questions they are scored on; held-out confirmation
@@ -411,8 +416,8 @@ The install gives you this gbrain:
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain [`d253ec0ff`](https://github.com/garrytan/gbrain/tree/d253ec0ff12ed370ed3a846cb7da0191639c4a9e), release v0.60.623.0, declared as `gbrain` in `package.json` |
-| Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
+| Pinned product | gbrain's newest release, declared as `gbrain` in `package.json`; [the gbrain under test](docs/gbrain-under-test.md#the-pin) names its version and commit, and `bun eval/runner/gbrain-pin.ts bump` moves it when gbrain tags a newer one |
+| Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), frozen pins used only by the experiments that name them |
 | This repository | gbrain-evals at the release [`VERSION`](VERSION) names; [CHANGELOG.md](CHANGELOG.md) records each release |
 
 Paid runs come next. With `OPENAI_API_KEY` set, `BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --queries all` compares
@@ -479,8 +484,29 @@ keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md) reran them; chat
 checks every format and keeps no count. Footnote 10 says which rows were rerun in full and which come from CI. Footnote
 11 says the large-page row keeps `7a6bdd3`, because the 128 MiB PGLite slice passed the runner's memory ceiling on the
 rerun's host at both builds. A new footnote 16 gives the keyword-path drop on reworded one-hop questions beside the
-paid row, which waits for December. The open-loops and contradiction-scanner limits now name the build they were
-checked at, and the open-loops limit adds forwarded FYI emails opening loops.
+paid row, which waits for December. The open-loops limit adds forwarded FYI emails opening loops.
+
+### 2026-11-16: Two known limits name the commit they were checked at
+
+The open-loops and contradiction-probe limits say "at `6ce7195b4` (v0.60.733.0)" instead of "at the pin", the commit
+where gbrain's source was read for them, so a later re-pin doesn't attach them to a build nobody checked.
+
+### 2026-11-16: The pin is named on one page
+
+"What gbrain does" and the quick start's pinned-product row link to [the gbrain under
+test](docs/gbrain-under-test.md#the-pin) for the version and commit instead of naming `6ce7195b4` (v0.60.733.0), and
+the opening's note on what the page describes links there too, so moving the pin changes that page alone. No result
+changed.
+
+### 2026-11-16: Re-pin to gbrain `6ce7195b4`, gbrain's newest release
+
+The pinned product moves from `d253ec0ff` (v0.60.623.0) to `6ce7195b4` (v0.60.733.0), gbrain's newest release, 110
+releases later, and [CLAUDE.md](CLAUDE.md#choose-the-gbrain-build) now keeps the pin at the newest release. "What gbrain
+does" adds three capabilities from that range: keyless search that finds pages holding most of a question's words
+(v0.60.725.0), the conversation archive (v0.60.726.0) and brains for a company or for several people (v0.60.667.0 to
+v0.60.725.0). The quick start's pin table names the new pin and the command that moves it. The memory trust row's
+keyless check names the new pin: Cats 37 to 39 pass their keyless contracts at `6ce7195b4`. No paid result was rerun,
+and every other row keeps the commit it was measured at.
 
 ### 2026-11-15: How gbrain compares adds the changing-facts battleground
 
