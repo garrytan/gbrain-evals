@@ -262,6 +262,55 @@ checked by the same structure check and needle scan as the scorecard:
   and `arms` it covered (the counted run's must be among them) and its `truncation_waivers`.
 - `cost`: `model_calls_usd`, `by_role_usd` (answer, summariser, judge, label) and `ledger_usd`.
 
+## Build compare (live-recall-build-compare/v1)
+
+`tasks.ts compare` writes `compare.json` and renders `compare.md` from it, for phase 2's
+[2026-11-16 amendment](PHASE2-PREREGISTRATION.md#2026-11-16-amendment-arm-b-at-gbrains-newest-release). It reads two
+finished arm B runs on the box, one at gbrain's newest build and one at an older build loaded with `--reference-build`,
+and, with `--stored`, phase 2's counted run for arm A and phase 2's own arm B. It makes no model call and opens no
+database. It refuses with `LR_COMPARE_MISMATCH` when a file is missing or unreadable, when a run still owes calls, or
+when the inputs are not ones the amendment pairs: another task file or freeze (a counted compare takes only phase 2's,
+by the sha256 prefixes its public record names, and each run's freeze counts must match the freeze), different harness,
+judges, loop settings, models or forms, the same build twice, a reference run without `--reference-build` or whose
+privacy gate compared against another build than the newest run's, or a stored run that is not phase 2's counted run
+(harness digest `d27425cc…1e18`, runner 4740c1f3, clean), lacks an arm A answer, keeps fewer tasks, or holds an arm A
+verdict from another judge. Both files pass a structural allowlist of their own and the same needle scan as a
+scorecard, over every task form, gold answer and fact, gold slug and task id of the task file and every slug the runs
+saw or cited.
+
+- `schema`, `control` (fixture runs) and `tasks`: `sha_prefix`, `freeze_sha256`, `frozen` (kept at the freeze) and
+  `gold_clusters` over the two runs' tasks.
+- `runs`: `newest` and `reference`, each with gbrain's loaded version and commit, the brain's `schema_version` and the
+  `code_schema_version` the build's code expects, `reference_build` (the version, or null), runner commit and dirty
+  flag, harness digest, start and finish, `control`, `kept_tasks`, `judge_check` (`judge_check_sha256`, `passed` and
+  `carried`) and `privacy_gate` (the reference run's counts: `newest_version`, `newest_commit`, `pages`,
+  `hidden_by_newest`, `hidden_by_reference` and `shown_by_reference_hidden_by_newest`, which is 0 in any run that
+  ran). `stored`: phase 2's run's harness digest, runner commit, start and `kept_tasks`, or null.
+- `sdd`: the smallest detectable difference per model that the decision rule uses.
+- `builds`: newest minus reference per model, metric (`correct`, `correct_grounded`) and form (`paraphrase`, `exact`,
+  `pooled`), with the task scorecard's comparison fields (`n_pairs`, `mean_a`, `mean_b`, `delta`, `ci95`,
+  `worse_tasks`, `reading`, `p_two_sided`, `mde`) plus `better_tasks`, `pairs_lost` (`a_only`: counted by the
+  reference run only; `b_only`: by the newest only), `primary`, `sdd`, `verdict` (`regression`,
+  `drop_smaller_than_sdd`, `no_measurable_difference` or `newest_higher`, on paraphrase correct only) and `p_holm`
+  over the two primaries.
+- `b_vs_a`: with the stored run, `paired` true and newest B minus stored A per model and form on `correct`, computed
+  as phase 2 computed P1. Without it, `paired` false and newest B's rate against phase 2's published A rate
+  (`mean_a`, `mean_b`, `n_b`, `delta`), unpaired.
+- `drift`: the reference run minus phase 2's stored B per model and form on `correct`, which shows change in the
+  brain's data since 2026-11-09; null without the stored run.
+- `failure_classes`: model to form to task type to `lost` (correct at the reference build, not at the newest), split
+  into `no_answer`, `gold_not_found`, `gold_found_not_cited` and `gold_cited_not_correct` by the first that fits the
+  newest episode, with `abstained` among the lost and `gained` for tasks that moved the other way.
+
+`compare.md` opens with both runs' identity lines and the privacy gate's counts, then the primary table, every build
+comparison, B minus A (labelled paired or unpaired), the drift table and the failure classes.
+
+Each run's own `scorecard.json` keeps phase 2's format unchanged, so a carried judge check shows there as phase 2's
+`judge_check_sha256`. Its `run.json`, which stays on the box, also records `build` (`reference_build`,
+`code_schema_version`, `privacy_gate`) and `judge_check_carried` (phase 2's harness digest and runner commit, the judge
+files' hashes and the judge request fingerprint), and a `--resume` must keep `reference_build` and
+`code_schema_version` as they were.
+
 ## A release gate (proposal, not wired)
 
 Nothing here is wired into gbrain. Whether a gbrain release gate uses this scorecard is GBRA-108's decision, after at

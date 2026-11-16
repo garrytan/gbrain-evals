@@ -15,10 +15,13 @@
  *     --judge-check <judge-check.json> [--judge-check-waiver <GBEV-3 note>]) --budget-usd <dollars> --budget-ledger <ledger>
  *     [--forms paraphrase,exact] [--arms A,B,C,D] [--models <ids>] [--limit <tasks>] [--concurrency 4] [--out <run dir>]
  *     [--resume [--window-note <id>] [--truncation-waiver <GBEV-3 note>]]
+ *     [--reference-build --privacy-reference <newest checkout>@<commit>]
  *   bun eval/runner/live-recall/tasks.ts judge <run dir> [--window-note <extension id> --budget-usd <new cap>]
  *     [--truncation-waiver <GBEV-3 note>]
  *   bun eval/runner/live-recall/tasks.ts audit <run dir> [--n 30]
  *   bun eval/runner/live-recall/tasks.ts score <run dir> [--audit-grades <grades.jsonl>]
+ *   bun eval/runner/live-recall/tasks.ts compare --newest <run dir> --reference <run dir> --tasks <private.jsonl> --freeze <freeze.json>
+ *     [--stored <phase 2 run dir>] --out <compare dir>
  *
  * --fixture runs the public fixture (eval/data/live-recall-v1: thirty invented pages, one more flagged private, and
  * tasks.jsonl) in an in-memory brain with hash embeddings: the paid smoke, on crew keys, whose numbers say nothing about
@@ -31,6 +34,11 @@
  * `judge` on such a directory makes no call and finishes it. The protocol is docs/benchmarks/live-recall/PHASE2-PREREGISTRATION.md;
  * the steps, abort codes and recovery are in RUN-KIT.md, "Phase 2". Exit status: 0 complete, 1 incomplete, 2 usage error,
  * 3 abort, 4 unexpected error, 5 a freeze under 60 kept tasks, 6 cap stop, 7 a judge check that did not pass (R78).
+ *
+ * The 2026-11-16 amendment re-runs arm B at gbrain's newest release and at 0.60.613.0 on the same day: `run
+ * --reference-build` loads a named older build on today's newer brain schema behind a privacy gate against the newest
+ * build (--privacy-reference), a counted run may carry phase 2's own judge check, and `compare` pairs the two runs' arm B,
+ * reusing phase 2's stored arm A, as an aggregate compare.json (eval/runner/live-recall/phase2-newest.ts).
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -41,7 +49,11 @@ import { priceUsage, provider, type Usage } from '../cat40/loop.ts';
 import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { gbrainPin } from '../gbrain-version.ts';
 import { isCapStop, openBudgetItem } from '../refresh-barrier/ledger.ts';
-import { ABORT_CODES, LiveRecallAbort, checkSchema, installGuards, openPostgresBrain, verifyReadOnly, type GuardCounters } from './brain.ts';
+import { ABORT_CODES, LiveRecallAbort, assertReferenceBuild, checkSchema, installGuards, openPostgresBrain, verifyReadOnly, type GuardCounters } from './brain.ts';
+import {
+  PHASE2_HARNESS_DIGEST, PHASE2_RUNNER_COMMIT, carriedJudgeCheck, checkCompareOutbound, compareBuilds, judgeRequestDigest, referencePrivacyGate, renderCompareMarkdown,
+  type CarriedJudgeCheck, type CompareRun, type PrivacyGate, type PrivacyReference,
+} from './phase2-newest.ts';
 import { FAILURE_STAGES, FIXTURE_DIR, GOLD_MISSING_CAP, PREFLIGHT_PROBE, buildFixtureBrain, captureOutput } from './run.ts';
 import { GOLD_FOUND_BY } from './scorecard.ts';
 import {
@@ -84,7 +96,7 @@ export const SECOND_JUDGE_ARMS: readonly TaskArm[] = ['B', 'C', 'D'];
  */
 const RESUME_IDENTITY = [
   'harness_digest', 'gbrain_loaded_version', 'gbrain_loaded_commit', 'schema_version', 'barrier', 'source_id', 'search_mode', 'reranker_enabled', 'reranker_model', 'embedding_model',
-  'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest', 'models', 'arms', 'forms', 'kept_ids', 'judges', 'labellers', 'label_effort',
+  'crag_escalation', 'crag_think', 'result_cache', 'tool_defs_digest', 'models', 'arms', 'forms', 'kept_ids', 'judges', 'labellers', 'label_effort', 'reference_build', 'code_schema_version',
 ] as const;
 const AUDIT_ROWS = 30;
 const KEY_ENV = { anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', particle: 'PARTICLE_API_KEY' } as const;
@@ -94,6 +106,7 @@ export const HARNESS_FILES = [
   'eval/runner/budget-ledger.ts', 'eval/runner/refresh-barrier/ledger.ts', 'eval/runner/providers/openai-compatible.ts', 'eval/runner/stats/paired.ts', 'eval/runner/q2/stats.ts',
   'eval/runner/q1/usage.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/metering-proxy.ts', 'eval/runner/metrics.ts',
   'node_modules/gbrain/src/core/embedding-pricing.ts', 'node_modules/gbrain/src/core/model-pricing.ts', 'node_modules/gbrain/src/core/model-id.ts',
+  'eval/runner/live-recall/phase2-newest.ts',
 ];
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
@@ -211,7 +224,7 @@ export async function writeFreeze(reader: GbrainReader, source: string, parsed: 
 // ─── The brain ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
 interface Brain {
-  engine: any; barrier: string; connection: string; schemaVersion: number; counters: GuardCounters; reader: GbrainReader;
+  engine: any; barrier: string; connection: string; schemaVersion: number; codeSchemaVersion: number; privacyGate: PrivacyGate | null; counters: GuardCounters; reader: GbrainReader;
   knobs: { resolved_mode: unknown; reranker_enabled: boolean; reranker_model: unknown }; embeddingModel: string;
   crag: { escalation: boolean; think: boolean }; resultCache: boolean | null; close: () => Promise<void>;
 }
@@ -245,13 +258,17 @@ export async function assertPrivate(gut: GbrainUnderTest, engine: any, reader?: 
 /**
  * Open the fixture or the counted brain behind phase 1's barrier and guards, and refuse a brain that relaxes remote
  * private-page visibility. The env escape hatch is deleted from this process first, so only the brain's config could
- * relax it; runTaskSet checks again before every task and after every episode.
+ * relax it; runTaskSet checks again before every task and after every episode. A reference build (--reference-build)
+ * may read a newer brain schema than it expects, and before it reads any page through gbrain's tools the privacy gate
+ * refuses it if it would show a page the newest build (privacyReference) hides from an unbound remote caller.
  */
-async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUrlEnv: string }, capped: () => boolean): Promise<Brain> {
+async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUrlEnv: string; referenceBuild?: boolean; privacyReference?: PrivacyReference | null }, capped: () => boolean): Promise<Brain> {
   delete process.env.GBRAIN_REMOTE_PRIVATE_PAGES;
   const counters: GuardCounters = { refusals: {} };
-  let engine: any, barrier: string, connection: string, schemaVersion: number, close: () => Promise<void>;
+  const referenceBuild = o.referenceBuild === true;
+  let engine: any, barrier: string, connection: string, schemaVersion: number, codeSchemaVersion: number, close: () => Promise<void>;
   if (o.fixture) {
+    if (referenceBuild) assertReferenceBuild(o.gut);
     const brain = await buildFixtureBrain(o.gut, PHASE2_PAGES);
     engine = brain.engine;
     barrier = 'copy';
@@ -259,11 +276,12 @@ async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUr
     close = brain.close;
     installGuards(engine, counters);
     await verifyReadOnly(engine);
-    schemaVersion = (await checkSchema(engine, o.gut)).schema_version;
+    ({ schema_version: schemaVersion, code_schema_version: codeSchemaVersion } = await checkSchema(engine, o.gut, referenceBuild));
   } else {
-    const brain = await openPostgresBrain(o.gut, o.databaseUrlEnv, counters);
+    const brain = await openPostgresBrain(o.gut, o.databaseUrlEnv, counters, referenceBuild);
     ({ engine, barrier, connection, close } = brain);
     schemaVersion = brain.schema_version;
+    codeSchemaVersion = brain.code_schema_version;
   }
   try {
     await assertPrivate(o.gut, engine);
@@ -276,9 +294,14 @@ async function openBrain(o: { fixture: boolean; gut: GbrainUnderTest; databaseUr
     const config = async (key: string) => (await engine.getConfig(key).catch(() => null)) === 'true';
     const cache = await importGbrain<any>(o.gut, 'src/core/search/query-cache.ts').catch(() => null);
     const reader = await openReader(o.gut, engine, Boolean(knobs.reranker_enabled), capped);
+    let privacyGate: PrivacyGate | null = null;
+    if (referenceBuild) {
+      const visibility = await importGbrain<any>(o.gut, 'src/core/search/private-visibility.ts');
+      privacyGate = await referencePrivacyGate(engine, reader.sourceId, typeof visibility.privatePagesFilterFragment === 'function' ? (alias: string) => visibility.privatePagesFilterFragment(alias) : null, o.privacyReference ?? null);
+    }
     await assertPrivate(o.gut, engine, reader);
     return {
-      engine, barrier, connection, schemaVersion, counters, reader, knobs, embeddingModel,
+      engine, barrier, connection, schemaVersion, codeSchemaVersion, privacyGate, counters, reader, knobs, embeddingModel,
       crag: { escalation: await config('search.crag_escalation'), think: await config('search.crag_think') },
       resultCache: typeof cache?.semanticResultCacheAvailable === 'function' ? Boolean(cache.semanticResultCacheAvailable()) : null, close,
     };
@@ -538,6 +561,8 @@ export interface RunOptions {
   judgeCheckPath?: string | null; judgeCheckWaiver?: string | null;
   /** GBEV-3's note lifting an LR_JUDGE_TRUNCATED stop for the truncations recorded so far. */
   truncationWaiver?: string | null;
+  /** Load a named older build on a newer brain schema, behind the privacy gate against privacyReference, the newest build. */
+  referenceBuild?: boolean; privacyReference?: PrivacyReference | null;
 }
 
 interface RunFile {
@@ -554,6 +579,10 @@ interface RunFile {
   judge_check_steps?: number[] | null;
   /** GBEV-3's truncation waivers, oldest first. */
   truncation_waivers?: TruncationWaiver[];
+  /** The build as loaded: the reference build it was loaded as, if any, the schema its code expects and the privacy gate's counts. */
+  build?: { reference_build: string | null; code_schema_version: number; privacy_gate: PrivacyGate | null } | null;
+  /** Phase 2's judge check carried over to this run, with the hashes that let it carry; null when the run's own harness made the check. */
+  judge_check_carried?: CarriedJudgeCheck | null;
 }
 
 /** One extension past a cap stop: the cap it lifted, the new cap, GBEV-3's extension id and the cap stop it supersedes. */
@@ -581,21 +610,24 @@ const NOTE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/;
 
 /**
  * A counted run's judge check (R78): the judge-check.json `tasks.ts judge-check` wrote for this task file and harness.
- * A check that did not pass stops the run unless GBEV-3 waives it with a note, which the scorecard reports.
+ * A check that did not pass stops the run unless GBEV-3 waives it with a note, which the scorecard reports. A check made
+ * under another harness counts only as phase 2's own check carried over (carriedJudgeCheck, given judgeRequests from
+ * judgeRequestDigest), and then only when it passed; `carried` records it.
  */
-export function readJudgeCheck(path: string | null | undefined, source: string, waiver: string | null | undefined, need: { models: string[]; arms: string[] }) {
+export function readJudgeCheck(path: string | null | undefined, source: string, waiver: string | null | undefined, need: { models: string[]; arms: string[] }, judgeRequests: string | null = null) {
   if (!path) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'a counted run needs --judge-check <judge-check.json>');
   const text = readFileSync(path, 'utf8');
   const c = JSON.parse(text);
   if (c?.schema !== JUDGE_CHECK_SCHEMA || c.tasks_sha256 !== sha256(source)) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json was not made on this task file');
-  if (c.run?.harness_digest !== harnessDigest() || c.run?.control !== false) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json was made on another harness or on the fixture');
+  if (c.run?.control !== false) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json was made on another harness or on the fixture');
+  const carried = c.run?.harness_digest === harnessDigest() ? null : carriedJudgeCheck(c, judgeRequests);
   const covers = (have: unknown, want: string[]) => Array.isArray(have) && want.every(x => have.includes(x));
   if (c.stop !== null || c.complete !== true || !(c.n_tasks_checked >= JUDGE_CHECK_TASKS) || !covers(c.run?.models, need.models) || !covers(c.run?.arms, need.arms)) {
     throw new LiveRecallAbort('LR_JUDGE_CHECK', 'judge-check.json is unfinished or paused at its cap, or does not cover ' + JUDGE_CHECK_TASKS + ' finished tasks and this run\'s models and arms');
   }
   if (waiver !== null && waiver !== undefined && !NOTE.test(waiver)) throw new LiveRecallAbort('LR_JUDGE_CHECK', '--judge-check-waiver takes GBEV-3\'s note id');
   if (c.passed !== true && !waiver) throw new LiveRecallAbort('LR_JUDGE_CHECK', 'the judge check did not pass; send judge-check.json to GBEV-3 before any counted call');
-  return { judge_check_sha256: sha256(text), passed: c.passed === true, waiver: c.passed === true ? null : waiver!, judges: c.judges };
+  return { judge_check_sha256: sha256(text), passed: c.passed === true, waiver: c.passed === true ? null : waiver!, judges: c.judges, carried };
 }
 
 /** One ledger run's spend across every session that joined it, never another run's, and the cap it records now. */
@@ -660,11 +692,15 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
   }
   const previous = o.resume && existsSync(p.run) ? readRun(o.out) : null;
   if (previous && previous.tasks_sha256 !== sha256(source)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the resumed run was made on another task file');
-  const judgeCheckRef = o.fixture || o.judgeCheck ? null : previous?.judge_check ?? readJudgeCheck(o.judgeCheckPath, source, o.judgeCheckWaiver, { models: o.models, arms: o.arms });
+  const checked = o.fixture || o.judgeCheck || previous?.judge_check ? null : readJudgeCheck(o.judgeCheckPath, source, o.judgeCheckWaiver, { models: o.models, arms: o.arms }, await judgeRequestDigest());
+  const judgeCheckRef = o.fixture || o.judgeCheck ? null : previous?.judge_check ?? (({ carried: _carried, ...ref }) => ref)(checked!);
+  const judgeCheckCarried = previous?.judge_check ? previous.judge_check_carried ?? null : checked?.carried ?? null;
   const startedAt = new Date().toISOString();
   const refusals = watchRefusals();
   const brain = await openBrain(o, refusals.capped).catch(e => { refusals.restore(); throw e; });
   say('gbrain ' + o.gut.version + ', schema ' + brain.schemaVersion + ', barrier ' + brain.barrier + ', connection ' + brain.connection + '; read-only verified; private pages hidden from remote callers');
+  if (brain.privacyGate) say('reference build ' + o.gut.version + ' (code expects schema ' + brain.codeSchemaVersion + '); privacy gate against ' + brain.privacyGate.newest_version + ': ' + brain.privacyGate.pages + ' pages, ' + brain.privacyGate.hidden_by_newest + ' hidden by the newest build, ' + brain.privacyGate.hidden_by_reference + ' by this one, none shown here that the newest hides');
+  if (judgeCheckCarried) say('judge check: phase 2\'s passing check carried over (harness ' + judgeCheckCarried.from_harness_digest.slice(0, 12) + ', judge files and requests unchanged)');
   try {
     let candidates: Array<{ line: number; task: Task }>, summary: RunFile['task_summary'];
     if (o.fixture) {
@@ -716,12 +752,14 @@ export async function runTaskSet(o: RunOptions, say: (line: string) => void): Pr
       gold_page_chars_mean: await goldPageChars(brain.reader, tasks),
       custody: { readonly_verified_start: true, readonly_verified_end: null, guard_refusals: brain.counters.refusals },
       budget: { runner: o.paid.runner, run_id: o.paid.run.runId, ledger_path: o.paid.ledgerPath, cap_usd: ledgerSpend(o.paid.ledgerPath, o.paid.run.runId).cap_usd, extensions: previous?.budget.extensions ?? [] },
-      forms: o.forms, arms: o.arms, models: o.models, judge_check: judgeCheckRef,
+      forms: o.forms, arms: o.arms, models: o.models, judge_check: judgeCheckRef, judge_check_carried: judgeCheckCarried,
+      build: { reference_build: o.referenceBuild ? o.gut.version : null, code_schema_version: brain.codeSchemaVersion, privacy_gate: brain.privacyGate },
       judge_check_steps: o.judgeCheck ? [...new Set([...(previous?.judge_check_steps ?? []), tasks.length])] : null,
       truncation_waivers: waivers,
     };
     if (previous) {
-      const was: Record<string, unknown> = { ...previous.identity, kept_ids: previous.kept_ids, source_id: previous.source_id }, now: Record<string, unknown> = { ...run.identity, kept_ids: run.kept_ids, source_id: run.source_id };
+      const was: Record<string, unknown> = { ...previous.identity, kept_ids: previous.kept_ids, source_id: previous.source_id, reference_build: previous.build?.reference_build ?? null, code_schema_version: previous.build?.code_schema_version ?? null };
+      const now: Record<string, unknown> = { ...run.identity, kept_ids: run.kept_ids, source_id: run.source_id, reference_build: run.build?.reference_build ?? null, code_schema_version: run.build?.code_schema_version ?? null };
       const norm = (v: unknown) => JSON.stringify(Array.isArray(v) ? [...v].sort() : v);
       const changed = RESUME_IDENTITY.filter(k => !(o.judgeCheck && k === 'kept_ids') && norm(was[k]) !== norm(now[k]));
       if (changed.length) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the resume differs from the first session in ' + changed.join(', '));
@@ -1107,6 +1145,68 @@ function sayScorecard(path: string, say: (line: string) => void): void {
   if (invalid) say('LR_CELL_INVALID: ' + invalid + ' form, arm and model cells passed their error or degraded-search cap; the scorecard marks them invalid');
 }
 
+/** The newest build's private-page predicate for the reference-build privacy gate, or null (the gate then stops the run) when it can't be loaded. */
+async function loadPrivacyReference(spec: string | undefined): Promise<PrivacyReference | null> {
+  if (!spec) return null;
+  try {
+    const newest = resolveGbrainUnderTest(spec);
+    const visibility = await importGbrain<any>(newest, 'src/core/search/private-visibility.ts');
+    if (typeof visibility.privatePagesFilterFragment !== 'function') return null;
+    return { version: newest.version, commit: newest.overlay?.build.commit ?? 'unknown', fragment: (alias: string) => visibility.privatePagesFilterFragment(alias) };
+  } catch {
+    return null;
+  }
+}
+
+/** Phase 2's published A rates (correct, per form and model) from its public scorecard, for an unpaired B minus A. */
+function publishedA(): Record<string, Record<string, number | null>> {
+  const card = JSON.parse(readFileSync(join(REPO_ROOT, 'docs/benchmarks/2026-11-09-live-recall-phase2/scorecard.json'), 'utf8'));
+  return Object.fromEntries(FORMS.map(f => [f, Object.fromEntries(MODELS.map(m => [m, card.cells?.[f]?.A?.[m]?.rates?.correct?.point ?? null]))]));
+}
+
+/**
+ * `tasks.ts compare`: arm B of two finished run directories of one session paired per task, with phase 2's stored run for
+ * arm A when given, checked against the task file and the freeze, and written as compare.json and compare.md only after
+ * the structural check and the leak scan pass.
+ */
+export function compareRunDirs(o: { newest: string; reference: string; stored: string | null; tasksPath: string; freezePath: string | null; out: string }, say: (line: string) => void): string {
+  const mismatch = (why: string): never => { throw new LiveRecallAbort('LR_COMPARE_MISMATCH', why); };
+  const read = (path: string, what: string) => { try { return readFileSync(path, 'utf8'); } catch { return mismatch(what + ' is missing or unreadable'); } };
+  const json = (path: string, what: string) => { const text = read(path, what); try { return { text, value: JSON.parse(text) }; } catch { return mismatch(what + ' is not JSON'); } };
+  const source = read(o.tasksPath, 'the task file');
+  const parsed = parseTasks(source);
+  let freeze: Parameters<typeof compareBuilds>[0]['freeze'] = null;
+  if (o.freezePath) {
+    const { text, value: frozen } = json(o.freezePath, 'freeze.json');
+    if (frozen?.schema !== FREEZE_SCHEMA || frozen.tasks_sha256 !== sha256(source)) mismatch('the freeze was not made on this task file');
+    const lines = new Set<number>(frozen.kept_lines);
+    freeze = { sha256: sha256(text), kept_ids: parsed.filter(t => lines.has(t.line)).map(t => t.task.id), n_submitted: frozen.n_submitted, n_kept: frozen.n_kept, dropped_unreachable: frozen.dropped_unreachable };
+  }
+  const load = (dir: string, name: string, finished: boolean): CompareRun => {
+    const run = json(paths(dir).run, 'the ' + name + ' run\'s run.json').value as CompareRun['run'];
+    if (!existsSync(paths(dir).records)) mismatch('the ' + name + ' run has no records.local.jsonl');
+    if (finished && !owesNoCalls(dir)) mismatch('a run directory still owes calls (an unanswered or unjudged episode, or a cap or truncation stop); finish it first');
+    return { run, records: loadRecords(paths(dir).records).records };
+  };
+  const newest = load(o.newest, 'newest', true), reference = load(o.reference, 'reference', true), stored = o.stored ? load(o.stored, 'stored', false) : null;
+  const control = newest.run.identity.control === true;
+  const card = compareBuilds({
+    tasks: parsed.map(t => t.task), tasksSha256: sha256(source), freeze, newest, reference, stored,
+    storedIdentity: control ? { harness_digest: String(stored?.run.identity.harness_digest ?? ''), runner_commit: String(stored?.run.identity.runner_commit ?? '') } : { harness_digest: PHASE2_HARNESS_DIGEST, runner_commit: PHASE2_RUNNER_COMMIT },
+    publishedA: stored ? null : publishedA(),
+  });
+  const markdown = renderCompareMarkdown(card);
+  const checked = checkCompareOutbound(card, markdown, parsed.map(t => t.task), [newest, reference, ...(stored ? [stored] : [])]);
+  mkdirSync(o.out, { recursive: true, mode: 0o700 });
+  writeFileSync(join(o.out, 'compare.json'), checked);
+  writeFileSync(join(o.out, 'compare.md'), markdown);
+  const pct = (x: number | null) => (x === null ? 'n/a' : (100 * x).toFixed(1));
+  for (const c of card.builds.filter(c => c.sdd !== null)) say(c.model + ' paraphrase correct, newest minus reference: ' + pct(c.delta) + ' points (' + (c.ci95 ? pct(c.ci95[0]!) + ' to ' + pct(c.ci95[1]!) : 'n/a') + ') over ' + c.n_pairs + ' pairs; ' + (c.verdict ?? 'n/a') + (c.primary ? '' : ' (descriptive)'));
+  say('task file ' + card.tasks.sha_prefix + ', freeze ' + (freeze ? freeze.sha256.slice(0, 12) : 'n/a') + '; B minus A ' + (card.b_vs_a.paired ? 'paired with phase 2\'s stored A' : 'against phase 2\'s published A rates, unpaired'));
+  say('compare (send these two files): ' + join(o.out, 'compare.json') + ' and ' + join(o.out, 'compare.md'));
+  return join(o.out, 'compare.json');
+}
+
 function openPaid(argv: string[], runner: string, capUsd: number): Paid {
   const options = budgetOptionsFrom(argv);
   const paid = openBudgetItem({ runner, cap_usd: capUsd }, options);
@@ -1203,7 +1303,15 @@ export async function main(argv: string[]): Promise<number> {
       return command === 'judge' && existsSync(paths(dir).capStop) ? 6 : 0;
     });
   }
-  if (command !== 'run' && command !== 'judge-check') { console.error('usage: tasks.ts check|freeze|estimate|judge-check|run|judge|audit|score (see the header of this file)'); return 2; }
+  if (command === 'compare') {
+    const newest = flag(argv, '--newest'), reference = flag(argv, '--reference'), out = flag(argv, '--out');
+    if (!newest || !reference || !tasksPath || !out) { console.error('usage: tasks.ts compare --newest <run dir> --reference <run dir> --tasks <file> --freeze <freeze.json> [--stored <phase 2 run dir>] --out <compare dir>'); return 2; }
+    return withLog(resolve(out), async say => {
+      compareRunDirs({ newest: resolve(newest), reference: resolve(reference), stored: flag(argv, '--stored') ? resolve(flag(argv, '--stored')!) : null, tasksPath, freezePath: flag(argv, '--freeze') ?? null, out: resolve(out) }, say);
+      return 0;
+    });
+  }
+  if (command !== 'run' && command !== 'judge-check') { console.error('usage: tasks.ts check|freeze|estimate|judge-check|run|judge|audit|score|compare (see the header of this file)'); return 2; }
   const checking = command === 'judge-check';
   if (!tasksPath) { console.error('usage: tasks.ts ' + command + ' (--fixture | --tasks <file> --freeze <freeze.json> --gbrain <checkout>@<commit>' + (checking ? '' : ' --judge-check <judge-check.json>') + ') --budget-usd <dollars> --budget-ledger <ledger>'); return 2; }
   const out = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/live-recall-tasks', new Date().toISOString().replace(/[:.]/g, '-') + (checking ? '-judge-check' : '') + (fixture ? '-fixture' : '')));
@@ -1213,6 +1321,8 @@ export async function main(argv: string[]): Promise<number> {
     forms = checking ? ['paraphrase'] : list(flag(argv, '--forms'), FORMS, '--forms');
     arms = list(flag(argv, '--arms'), ARMS, '--arms');
   } catch (e) { console.error('live-recall: ' + (e as Error).message); return 2; }
+  const referenceBuild = argv.includes('--reference-build');
+  if ((referenceBuild || flag(argv, '--privacy-reference') !== undefined) && (checking || !referenceBuild)) { console.error('live-recall: --reference-build, with --privacy-reference <newest checkout>@<commit>, is for tasks.ts run only'); return 2; }
   const missing = [...new Set([...models, ...models.map(judgeFor), ...(checking ? LABELLERS : [])].map(m => KEY_ENV[provider(m)]))].filter(k => !process.env[k]);
   if (missing.length) { console.error('live-recall: set ' + missing.join(', ') + ' (test -n only; never print them)'); return 2; }
   const capUsd = fixture ? SMOKE_CAP_USD : checking ? JUDGE_CHECK_CAP_USD : COUNTED_CAP_USD;
@@ -1223,6 +1333,7 @@ export async function main(argv: string[]): Promise<number> {
   return withLog(out, async say => {
     process.env.GBRAIN_AUDIT_DIR = out;
     const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+    const privacyReference = referenceBuild ? await loadPrivacyReference(flag(argv, '--privacy-reference')) : null;
     const paid = openPaid(prior ? ['--budget-ledger', prior.ledger_path, ...argv] : argv, ledgerRunner(out, fixture, checking), budgetUsd);
     let finish = false;
     try {
@@ -1231,6 +1342,7 @@ export async function main(argv: string[]): Promise<number> {
         limit: flag(argv, '--limit') ? Number(flag(argv, '--limit')) : checking ? JUDGE_CHECK_TASKS : null, concurrency: Number(flag(argv, '--concurrency') ?? TASK_CONCURRENCY),
         resume: argv.includes('--resume'), windowNote: flag(argv, '--window-note') ?? null, paid,
         judgeCheckPath: flag(argv, '--judge-check') ?? null, judgeCheckWaiver: flag(argv, '--judge-check-waiver') ?? null, truncationWaiver: flag(argv, '--truncation-waiver') ?? null,
+        referenceBuild, privacyReference,
       };
       if (checking) {
         const { result, check } = await runJudgeCheck(opts, say);

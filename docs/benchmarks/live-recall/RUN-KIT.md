@@ -383,6 +383,64 @@ that have no verdict, reruns only episodes with no record or an unfinished harne
 answer that may have been billed. A cap stop pauses the run at its cap instead: it continues the same way once GBEV-3
 extends the cap, with the extension id and the new cap ([`LR_CAP_STOP`](#lr_cap_stop)).
 
+### Phase 2 at gbrain's newest release (2026-11-16)
+
+Phase 2's published numbers came from gbrain 0.60.613.0. This re-run measures arm B (gbrain's own read tools) again at
+gbrain's newest release, v0.60.733.0, and at 0.60.613.0 in the same session, on phase 2's 99 frozen tasks
+([amendment](PHASE2-PREREGISTRATION.md#2026-11-16-amendment-arm-b-at-gbrains-newest-release)). Two runs, newest first,
+then a compare step that pairs them per task. Arm A is not asked again: the compare reads phase 2's stored arm A
+answers and verdicts from its counted run directory. No new judge check runs: phase 2's passing `judge-check.json`
+carries over while the judge's code is unchanged, and the runner checks that itself.
+
+What you need, beyond phase 2's list above:
+
+- The box's gbrain at v0.60.733.0, so the brain's schema is 317. `git -C /data/gbrain rev-parse v0.60.733.0` prints
+  `6ce7195b44a0…`. Both builds load from that checkout through the runner's verified overlay copy; the checkout is not
+  changed.
+- Phase 2's task file, its `freeze.json`, its `judge-check.json` and its counted run directory, all as they were on
+  2026-11-09. The runner and the compare check each by hash and refuse another.
+- A no-write role for the session, as for phase 2's counted run, and the ledger and cap the run request names.
+
+1. **Newest build, arm B.** It prints `judge check: phase 2's passing check carried over (...)` before the first task.
+   [`LR_JUDGE_CHECK`](#lr_judge_check) means the check did not carry: send the line and run nothing more.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts run --tasks <phase 2 tasks.jsonl> --freeze <phase 2 freeze.json> \
+     --gbrain /data/gbrain@6ce7195b44a0 --database-url-env LIVE_RECALL_DATABASE_URL \
+     --judge-check <phase 2 judge-check.json> --arms B \
+     --budget-usd <cap> --budget-ledger <ledger> --out <newest run dir>
+   ```
+
+2. **0.60.613.0, arm B, right after.** `--reference-build` lets 0.60.613.0 read the newer schema: it reads only the
+   tables it knows and migrates nothing. `--privacy-reference` names the newest build, whose private-page rule the
+   runner compares with 0.60.613.0's over every live page in the reader's source before any read or model call. It
+   prints `reference build 0.60.613.0 (code expects schema 296); privacy gate against 0.60.733.0: ...` with counts
+   only. If 0.60.613.0 would show any page the newest build hides, or the gate can't run, it stops with
+   [`LR_PRIVACY_RELAXED`](#lr_privacy_relaxed) before any model call.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts run --tasks <phase 2 tasks.jsonl> --freeze <phase 2 freeze.json> \
+     --gbrain /data/gbrain@98dda48fb9fd --reference-build --privacy-reference /data/gbrain@6ce7195b44a0 \
+     --database-url-env LIVE_RECALL_DATABASE_URL --judge-check <phase 2 judge-check.json> --arms B \
+     --budget-usd <cap> --budget-ledger <ledger> --out <reference run dir>
+   ```
+
+3. **Compare.** It makes no model call and opens no database. It prints one line per model on the primary comparison,
+   then the task file and freeze prefixes and whether B minus A is paired, and writes `compare.json` and `compare.md`.
+   If it stops with [`LR_COMPARE_MISMATCH`](#lr_compare_mismatch) about the stored run, send the line, then run the same
+   command without `--stored`: B minus A is then read against phase 2's published A rates, unpaired, and the files say
+   so.
+
+   ```bash
+   bun eval/runner/live-recall/tasks.ts compare --newest <newest run dir> --reference <reference run dir> \
+     --tasks <phase 2 tasks.jsonl> --freeze <phase 2 freeze.json> --stored <phase 2 run dir> --out <compare dir>
+   ```
+
+4. **Send** `scorecard.json` and `scorecard.md` from each run directory, and `compare.json` and `compare.md`. Everything
+   else stays on the box.
+
+A resume, a cap stop, re-judging and `LR_JUDGE_ERROR` work as in phase 2's steps, on each run's own command.
+
 ## Abort codes
 
 Every abort prints its code, a one-line detail built only from counts, field names and line numbers, the fix below,
@@ -517,6 +575,11 @@ window may have reached a model. `visibility.honor_aliases` has no per-response 
 picks up `off`, the episodes already running can show alias-private pages to a model until they end, and turning it off
 and back on between two checks can go unnoticed. The runner never relaxes or works around it; GBEV-3 decides.
 
+A detail that starts `reference-build privacy gate:` comes from the check before a `--reference-build` run's first read:
+the older build would show pages the newest build hides from an unbound remote caller (the detail gives the count), or
+the check could not run (no `--privacy-reference`, a newest checkout without its private-page rule, a failing query).
+Nothing was read or sent to a model. Send the line to GBEV-3 through ALPH-72.
+
 ### LR_CAP_STOP
 
 Phase 2: the budget ledger refused a reservation at the cap. The runner wrote `cap-stop.json`, scored what finished as
@@ -576,6 +639,23 @@ have passed. A check paused at its cap is finished first (resume it
 in the window GBEV-3 grants). If the judge check did not pass (it exits with status 7), send `judge-check.json` to GBEV-3 through ALPH-72 and run
 nothing counted. If GBEV-3 decides to go ahead anyway, add `--judge-check-waiver <note id>` with GBEV-3's note id; the
 scorecard reports the waiver.
+
+For the 2026-11-16 re-run, the check is phase 2's own, made under phase 2's harness digest. It carries over only while
+the judge's files and the judge's requests are byte-identical to phase 2's runner (4740c1f3), the runner checks both
+itself, and a waiver does not carry. A refusal here means the judge changed since phase 2: send the line to GBEV-3.
+
+### LR_REFERENCE_BUILD
+
+`--reference-build` loads only a build a live-recall preregistration names as its reference, at that exact commit
+(0.60.613.0 at `98dda48fb9fd` for phase 2's re-run). Drop the flag, or load that build.
+
+### LR_COMPARE_MISMATCH
+
+`tasks.ts compare` was given a missing or unreadable file, a run that still owes calls, or inputs the amendment does
+not let it pair: another task file or freeze, runs that differ in harness, judges or settings, the same build twice, a
+reference run without `--reference-build` or whose privacy gate checked another build, or a stored run that is not
+phase 2's counted run or lacks some of its arm A answers. The detail names which. Finish an unfinished run with
+`--resume`. For a stored-run refusal, send the line and run the compare again without `--stored`.
 
 ### LR_JUDGE_TRUNCATED
 

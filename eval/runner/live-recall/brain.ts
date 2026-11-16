@@ -49,6 +49,7 @@ export const ABORT_CODES = {
   LR_JUDGE_CHECK: 'The counted run has no passing judge check (R78) for this task file and harness; run tasks.ts judge-check, and if it does not pass, send judge-check.json to GBEV-3, who decides before any counted call.',
   LR_PROVIDER_REJECTED: 'A provider refused the key, the model or the account (401, 403, 404, another 4xx, a credit or billing 400, OpenAI\'s 429 insufficient_quota, or Particle\'s 402 for an empty prepaid balance); that episode has no record. Fix the key, model access or balance, then continue with --resume.',
   LR_GOLD_OUT_OF_SOURCE: 'A gold page lives only in a source other than the one the runner reads (the source `gbrain sources current` names from the repository root in this shell); nothing was written and no task was dropped. Send the detail line to GBEV-3, which decides between fixing the gold slug and reading another source.',
+  LR_COMPARE_MISMATCH: 'The cross-build compare was given run directories, a stored phase 2 run or a freeze the amendment does not let it pair (another task file, another harness or judge, the same build twice, a reference run without --reference-build or its privacy gate, a run that still owes calls); pass the two finished runs of one session, phase 2\'s stored run and its freeze.json, or leave out --stored to compare against the published A rates.',
 } as const;
 export type AbortCode = keyof typeof ABORT_CODES;
 
