@@ -2,7 +2,8 @@
 
 This page names the gbrain that every result in this repository is read against, says what it does, and lists how its
 search and read defaults differ from the earlier commits some results were measured at. The [README](../README.md)
-gives the results; this page holds the version detail behind them.
+gives the results; this page holds the version detail behind them. Every row of the README and of the
+[documentation hub](README.md) links to a report, and each report names the gbrain build it measured.
 
 ## The pin
 
@@ -94,18 +95,31 @@ none of them.
 ## When the keyless correctness checks last ran
 
 The README's correctness rows (updates, `forget`, privacy, chat formats) come from keyless checks on synthetic worlds
-with generated answer keys. Their counts were last measured in full at `77cf8e111`, in the [October 11
-re-pin](benchmarks/2026-10-11-wave14-repin.md); no re-pin since has rerun them in full. CI's keyless BrainBench tier
+with generated answer keys. The [November 16 keyless re-pin](benchmarks/2026-11-16-w0-keyless-repin.md) reran
+updates, `forget`, privacy on Postgres over real HTTP, the lifecycle matrix and large pages at gbrain's newest
+release, `6ce7195b4` (v0.60.733.0), and read privacy in process and chat formats from CI's gates at that build. The
+README's rows for updates, `forget`, privacy and chat formats now name `6ce7195b4`; large pages keep `7a6bdd3`. The
+other keyless rows last ran in full at
+`77cf8e111`, in the [October 11 re-pin](benchmarks/2026-10-11-wave14-repin.md), and wait for the December refresh on
+that month's stable build. CI's keyless BrainBench tier
 runs the same checks on every pull request against the gbrain `package.json` pins, smaller (the update and `forget`
 worlds on a slice, privacy in process only), and every one passed at `3ec766c40` in [the checks on pull request
 #223](https://github.com/garrytan/gbrain-evals/actions/runs/41270941149), as did the large-page check's small tiers. The
 29 reproductions in the [bug ledger](benchmarks/2026-10-01-wave-bugs.md) and three memory trust reproductions (37-1,
 37-2 and 37-5 in the [memory trust ledger](benchmarks/2026-10-07-memory-trust-bugs.md)) last ran as a set in that
-October 11 re-pin, where they passed; the timeline-latency entry (Cat7-1) passed on the second pair of hosts, and stays
+October 11 re-pin, where they passed. The 10 privacy and data-loss reproductions among them ran again at `6ce7195b4`:
+9 behave as recorded, and N2-2 (`find-contradictions` with no `--source`) is fixed; the timeline-latency entry (Cat7-1) passed on the second pair of hosts, and stays
 open under its stricter closure rule (see the README's known limits). Rows marked `c5fb0201` were measured in the
 October round at an earlier pin (the paid runs and the attendance world).
 
 ## Changelog
+
+### 2026-11-16: The keyless correctness checks at gbrain v0.60.733.0
+
+The opening says that every row of the README and the documentation hub links to a report, and that each report names
+the gbrain build it measured. "When the keyless correctness checks last ran" now names the [November 16 keyless
+re-pin](benchmarks/2026-11-16-w0-keyless-repin.md) at `6ce7195b4`: which rows it reran, which it read from CI, which
+keep `77cf8e111` until the December refresh, and what the 10 privacy and data-loss reproductions showed.
 
 ### 2026-11-09: Page created from the README's "The gbrain under test"
 

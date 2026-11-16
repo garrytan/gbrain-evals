@@ -1,8 +1,8 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.186, with gbrain master `d253ec0ff` (v0.60.623.0) as the product under test. Results measured at
-other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
+gbrain-evals v0.10.186, with gbrain master `d253ec0ff` (v0.60.623.0) as the product under test. Every row links to a
+report, and each report names the gbrain build it measured, which can differ from that pin. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
 Start with [what gbrain does today](../README.md), then follow the route that fits what you are trying to do.
@@ -12,6 +12,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | How do words, vectors, and relationships work together? | [Retrieval lessons](retrieval-lessons.md) |
 | Which setup should I evaluate for my application? | [Settings by workload](settings.md) |
 | Which gbrain do these results test, and what changed since each was measured? | [The gbrain under test](gbrain-under-test.md) |
+| Do the keyless correctness checks still hold at gbrain's newest release, and what got better or worse? | [November 16 keyless re-pin to gbrain `6ce7195b4` (v0.60.733.0)](benchmarks/2026-11-16-w0-keyless-repin.md) ([preregistration](benchmarks/2026-11-16-w0-keyless-repin-preregistration.md)) |
 | What did the October 11 re-pin change, category by category? | [October 11 re-pin to gbrain `77cf8e111` (v0.60.169.0)](benchmarks/2026-10-11-wave14-repin.md) ([preregistration](benchmarks/2026-10-11-wave14-repin-preregistration.md)) |
 | What did the October 2026 follow-up round measure, and why? | [Follow-up round plan and its reviews](plans/2026-10-06-followups-round/PLAN.md) |
 | Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md); then [agents operating gbrain](#agents-operating-gbrain) for setup time to working memory and the meeting-prep program |
@@ -288,6 +289,12 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-16: The keyless re-pin at gbrain v0.60.733.0
+
+A new row near the top links the [November 16 keyless re-pin](benchmarks/2026-11-16-w0-keyless-repin.md), which
+reran the keyless correctness checks at gbrain `6ce7195b4` (v0.60.733.0). The opening now says that every row links to
+a report and that each report names the gbrain build it measured.
 
 ### 2026-11-15: The changing-facts battleground row gives its results
 
