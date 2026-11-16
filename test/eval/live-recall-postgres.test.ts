@@ -233,6 +233,8 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
     expect([card.run.source_pgvector, card.run.source_server_version_num, card.run.copy_server_version_num, card.run.restore_errors]).toEqual([null, null, null, null]);
     expect(card.eligibility.exclusions).toEqual({});
     expect(card.custody.readonly_verified_end).toBe(true);
+    expect(card.keyless_op.statuses).toEqual({ ok: 40 });
+    expect(card.run).toMatchObject({ reference_build: false, code_schema_version: card.run.schema_version });
     expect(await fingerprint(src)).toEqual(before);
   }, 300_000);
 
@@ -246,6 +248,7 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
     expect([card.run.source_pgvector, card.run.source_server_version_num, card.run.copy_server_version_num, card.run.restore_errors]).toEqual(['0.7.4', 160004, 170002, 2]);
     expect(readFileSync(paths.markdown, 'utf8')).toContain('vector search on this copy may differ from the live brain');
     expect(card.eligibility.eligible_question_forms).toBe(40);
+    expect(card.keyless_op.statuses).toEqual({ ok: 40 });
     expect(card.custody.guard_refusals.telemetry_write).toBeGreaterThan(0);
     expect(await fingerprint(copy)).toEqual(before);
   }, 300_000);

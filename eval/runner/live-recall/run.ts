@@ -10,7 +10,7 @@
  *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json> [--protocol batch1|batch2|batch3|batch4|batch5] [--gbrain <checkout>@<commit>]
  *     [--prior <batch 1 file> --prior <batch 2 file> --prior <batch 3 file> [--prior <batch 4 file>]]   (batch4 and batch5 only, required: the held-out check)
  *   bun eval/runner/live-recall/run.ts run --questions <private.jsonl> --freeze <freeze.json> \
- *     --gbrain <gbrain checkout>@<commit> [--database-url-env LIVE_RECALL_DATABASE_URL] [--out <dir>]
+ *     --gbrain <gbrain checkout>@<commit> [--database-url-env LIVE_RECALL_DATABASE_URL] [--out <dir>] [--reference-build]
  *   bun eval/runner/live-recall/run.ts compare --a <run dir> --b <run dir> --out <dir>
  *   bun eval/runner/live-recall/run.ts pool --a <run dir> --b <run dir> --out <dir>
  *
@@ -26,23 +26,25 @@
  * reranks with Voyage instead (run.transports: voyage), after printing an
  * estimate, with every request reserved and settled on the budget ledger and
  * nothing sent to any host but api.voyageai.com. A counted run takes its protocol from the freeze. A real run opens a Postgres brain
- * only after brain.ts proves a server-side read-only barrier. The run kit,
+ * only after brain.ts proves a server-side read-only barrier; --reference-build lets a build brain.ts names as a
+ * reference read a brain whose schema is newer than it expects. Every --fixture and real-brain run also starts
+ * `run.ts keyless-arm`, the search_op_keyless arm in a process of its own with no provider key. The run kit,
  * abort codes and scorecard format are in docs/benchmarks/live-recall/.
  */
 import { createHash } from 'node:crypto';
-import { execFileSync } from 'node:child_process';
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, statSync, writeFileSync, writeSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync, writeSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { rankOfFirstHit, recallAllAtK, uniqueInOrder } from '../metrics.ts';
 import { gbrainSpecFrom, importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { gbrainPin } from '../gbrain-version.ts';
 import { normalQuantile } from '../stats/paired.ts';
-import { ABORT_CODES, COPY_MARKER_TABLE, LiveRecallAbort, checkSchema, installGuards, openPostgresBrain, verifyReadOnly, type GuardCounters } from './brain.ts';
+import { ABORT_CODES, COPY_MARKER_TABLE, LiveRecallAbort, assertReferenceBuild, checkSchema, installGuards, openPostgresBrain, verifyReadOnly, type GuardCounters } from './brain.ts';
 import { visibilityEpoch } from './visibility-epoch.ts';
 import type { Transports } from './synthetic.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from '../budget-ledger.ts';
 import { PaidArmRefusal, paidRequested, requirePaidArm } from '../paid-arm.ts';
-import { ALL_TYPES, ARMS, EPOCH_PROTOCOLS, FILL_ALPHA, FILL_MIN_WINS, GOLD_FOUND_BY, KS, PROTOCOLS, PROTOCOL_TYPES, TYPES, buildScorecard, compareRuns, poolRuns, renderMarkdown, scanForLeaks, validateScorecard, versionOrNull, type Arm, type Form, type Protocol, type QType, type QueryRecord, type Status } from './scorecard.ts';
+import { ALL_TYPES, ARMS, EPOCH_PROTOCOLS, FILL_ALPHA, FILL_MIN_WINS, FORMS, GOLD_FOUND_BY, KEYLESS_ARM, KS, PROTOCOLS, PROTOCOL_TYPES, TYPES, buildScorecard, compareRuns, poolRuns, renderMarkdown, scanForLeaks, validateScorecard, versionOrNull, type Arm, type Form, type KeylessRecord, type Protocol, type QType, type QueryRecord, type Status } from './scorecard.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const FIXTURE_DIR = join(REPO_ROOT, 'eval/data/live-recall-v1');
@@ -396,6 +398,169 @@ export async function armPreflight(ctx: SearchContext): Promise<void> {
   if (failed.size) throw new LiveRecallAbort('LR_ARM_PREFLIGHT', [...failed.values()].join('; '));
 }
 
+/**
+ * Every environment variable gbrain's provider recipes read for a key, account or endpoint, plus anything named like a
+ * key: the search_op_keyless process gets each of them blank and its gateway none of them.
+ */
+export async function providerEnvNames(gut: GbrainUnderTest): Promise<Set<string>> {
+  const { listRecipes } = await importGbrain<any>(gut, 'src/core/ai/recipes/index.ts');
+  const names = new Set<string>((listRecipes() as Array<{ auth_env?: { required?: string[]; optional?: string[] } }>).flatMap(r => [...(r.auth_env?.required ?? []), ...(r.auth_env?.optional ?? [])]));
+  for (const name of Object.keys(process.env)) if (/(_API_KEY|_TOKEN|_SECRET)$/.test(name)) names.add(name);
+  return names;
+}
+
+/**
+ * Turn the loaded gbrain keyless: no test transports, and a gateway configured with every provider variable removed.
+ * Returns the check the arm runs before its preflight and before every query: gbrain must report no embedding provider
+ * (for the brain's own model and any multimodal one) and no reranker, or the process stops with LR_KEYLESS_PROVIDER.
+ */
+export async function makeKeyless(gut: GbrainUnderTest, names: Set<string>): Promise<() => void> {
+  const gateway = await importGbrain<any>(gut, 'src/core/ai/gateway.ts');
+  gateway.__setEmbedTransportForTests(null);
+  gateway.__setRerankTransportForTests(null);
+  const config = gateway.requireConfig();
+  gateway.configureGateway({ ...config, env: Object.fromEntries(Object.entries(config.env ?? {}).filter(([k]) => !names.has(k) && !/(KEY|TOKEN|SECRET)/i.test(k))) });
+  const multimodal = await importGbrain<any>(gut, 'src/core/ai/multimodal-model.ts').then(m => m.multimodalEmbeddingModel?.() ?? null).catch(() => null);
+  return () => {
+    const embedding = gateway.isAvailable('embedding', gateway.getEmbeddingModelProvenance() ?? undefined) || (multimodal !== null && gateway.isAvailable('embedding', multimodal));
+    if (embedding || gateway.isAvailable('reranker')) throw new LiveRecallAbort('LR_KEYLESS_PROVIDER', 'gbrain reports an ' + (embedding ? 'embedding' : 'reranking') + ' provider in the keyless process');
+  };
+}
+
+/**
+ * Pages from a search-operation response's rows in order, with and without the rows gbrain marked keyword_fill, and
+ * the fill's exposure: how many fill rows, whether a page only a fill row brought is in the first five, and whether a
+ * fill row came before a row without the flag.
+ */
+export function keylessPages(rows: ReadonlyArray<{ slug?: unknown; keyword_fill?: unknown }>, gold: ReadonlySet<string>) {
+  const pagesOf = (xs: typeof rows) => uniqueInOrder(xs.map(r => String(r.slug))).slice(0, PAGE_DEPTH);
+  const rank = (p: string[]) => { const k = rankOfFirstHit(p, gold); return Number.isFinite(k) ? k : null; };
+  const allFound = (p: string[]) => Object.fromEntries(KS.map(k => ['k' + k, recallAllAtK(p, gold, k) === 1]));
+  const pages = pagesOf(rows), offPages = pagesOf(rows.filter(r => r.keyword_fill !== true));
+  return {
+    pages, page_rank: rank(pages), all_found_at: allFound(pages), returned: pages.length,
+    fill_off: { pages: offPages, page_rank: rank(offPages), all_found_at: allFound(offPages) },
+    fill_rows: rows.filter(r => r.keyword_fill === true).length,
+    fill_in_top5: pages.slice(0, 5).some(p => !offPages.includes(p)),
+    prefix_broken: rows.some((r, i) => r.keyword_fill === true && rows.slice(i + 1).some(x => x.keyword_fill !== true)),
+  };
+}
+
+/**
+ * The seventh arm (batch 5 amendment): gbrain's search operation through gbrain's own dispatcher as a trusted local
+ * caller, the way `gbrain search "<question>"` runs it, with the question as its only parameter. It runs only in the
+ * search_op_keyless process (keylessArm). The AI guard refuses every model call. On the keyless path gbrain always
+ * reports embed_unavailable, so a response without it, with no retrieval meta, or with any other failure stage is
+ * degraded. fill_off is the same response without the rows gbrain marked keyword_fill, which gbrain returns only when
+ * the other rows are exactly its fill-off response (chooseFill in src/core/ops/search-fill.ts).
+ */
+export async function runKeylessQuestions(gut: GbrainUnderTest, engine: any, questions: Question[], check: () => void = () => {}): Promise<KeylessRecord[]> {
+  const [dispatch, invocation] = await Promise.all([importGbrain<any>(gut, 'src/mcp/dispatch.ts'), importGbrain<any>(gut, 'src/core/ai/invocation-guard.ts')]);
+  const records: KeylessRecord[] = [];
+  for (const q of questions) {
+    const gold = new Set(q.gold.map(g => g.slug));
+    for (const form of FORMS) {
+      check();
+      const calls: Record<string, number> = {};
+      let refused = false;
+      let meta: any = null;
+      let rows: Array<{ slug?: unknown; keyword_fill?: unknown }> = [];
+      let status: Status = 'ok';
+      const guard = async (call: { kind: Kind }) => {
+        calls[call.kind] = (calls[call.kind] ?? 0) + 1;
+        refused = true;
+        throw new Error('live-recall refused a ' + call.kind + ' call');
+      };
+      const metaHook = async (_name: string, c: { emitResponseMeta?: (k: string, v: unknown) => void }) => {
+        const previous = c.emitResponseMeta;
+        c.emitResponseMeta = (k, v) => { if (k === 'retrieval') meta = v; previous?.(k, v); };
+        return undefined;
+      };
+      const t0 = performance.now();
+      try {
+        const r = await invocation.withAIInvocationGuard(guard, () => dispatch.dispatchToolCall(engine, 'search', { query: q.forms[form] }, { remote: false, transport: 'stdio', metaHook }));
+        const parsed = r?.isError ? null : JSON.parse(r?.content?.[0]?.text ?? 'null');
+        if (Array.isArray(parsed)) rows = parsed;
+        else status = 'error';
+      } catch {
+        status = 'error';
+      }
+      const ms = Math.round(performance.now() - t0);
+      if (refused) status = 'ai_refused';
+      const degraded = ((meta?.degraded ?? []) as Array<{ stage?: unknown }>).map(d => String(d.stage)).filter(s => /^[a-z_]+$/.test(s));
+      if (status === 'ok' && (meta === null || !degraded.includes('embed_unavailable') || degraded.some(s => s !== 'embed_unavailable' && FAILURE_STAGES.has(s)))) status = 'degraded';
+      records.push({ qid: q.id, type: q.type, form, arm: KEYLESS_ARM, status, chunks: [], chunk_rank: null, gold_pages: gold.size, has_chunk_gold: false, ms, calls, degraded_stages: degraded, ...keylessPages(rows, gold) });
+    }
+  }
+  return records;
+}
+
+/**
+ * The search_op_keyless process (`run.ts keyless-arm`, started only by liveRecall): every provider variable blank,
+ * every HTTP request refused, the same brain opened the same way, gbrain's gateway made keyless and checked, one public
+ * probe through the arm, then every kept question. Writes keyless.local.jsonl, or keyless.abort.json naming the abort
+ * code, into the run directory; gbrain's output goes to keyless.local.log there.
+ */
+async function keylessArm(argv: string[]): Promise<number> {
+  const out = flag(argv, '--out'), questionsPath = flag(argv, '--questions');
+  if (!out || !questionsPath) { console.error('usage: run.ts keyless-arm is started by run.ts run'); return 2; }
+  const protocol = (flag(argv, '--protocol') ?? 'batch1') as Protocol;
+  const { restore } = captureOutput(join(out, 'keyless.local.log'));
+  globalThis.fetch = (async (input: RequestInfo | URL) => { throw new Error('the keyless search-operation process sends no HTTP request; refused ' + new URL(input instanceof Request ? input.url : String(input)).hostname); }) as unknown as typeof fetch;
+  try {
+    const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+    const names = await providerEnvNames(gut);
+    for (const name of names) process.env[name] = '';
+    process.env.GBRAIN_MODEL_DISCOVERY = 'off';
+    const counters: GuardCounters = { refusals: {} };
+    const brain = argv.includes('--fixture')
+      ? await buildFixtureBrain(gut, protocol === 'batch3' ? BATCH3_FIXTURE_PAGES : undefined)
+      : await openPostgresBrain(gut, flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', counters, argv.includes('--reference-build'));
+    try {
+      if (argv.includes('--fixture')) { installGuards(brain.engine, counters); await verifyReadOnly(brain.engine); }
+      const check = await makeKeyless(gut, names);
+      const probe: Question = { id: 'preflight', type: 'topic', forms: { exact: PREFLIGHT_PROBE, paraphrase: PREFLIGHT_PROBE }, gold: [{ slug: 'live-recall-preflight' }], gold_found_by: 'unknown' };
+      const failed = (await runKeylessQuestions(gut, brain.engine, [probe], check)).find(r => r.status !== 'ok');
+      if (failed) throw new LiveRecallAbort('LR_ARM_PREFLIGHT', KEYLESS_ARM + ' ' + failed.status);
+      const { kept } = await presenceCheck(brain.engine, parseQuestions(readFileSync(questionsPath, 'utf8'), protocol));
+      const records = await runKeylessQuestions(gut, brain.engine, kept, check);
+      check();
+      await verifyReadOnly(brain.engine);
+      writeFileSync(join(out, 'keyless.local.jsonl'), records.map(r => JSON.stringify(r)).join('\n') + '\n', { mode: 0o600 });
+      return 0;
+    } finally {
+      await brain.close();
+    }
+  } catch (error) {
+    writeFileSync(join(out, 'keyless.abort.json'), JSON.stringify({ code: error instanceof LiveRecallAbort ? error.code : 'LR_KEYLESS_ARM' }) + '\n', { mode: 0o600 });
+    console.error(error instanceof Error ? error.stack : String(error));
+    return 3;
+  } finally {
+    restore();
+  }
+}
+
+/**
+ * Start the search_op_keyless process for this run and read its records. It runs before this process opens the brain,
+ * with every provider variable blank and the same gbrain, questions, protocol, database variable and barrier. A process
+ * that stops ends the run with its abort code, before any other arm searches.
+ */
+async function runKeylessChild(o: RunOptions, questionsPath: string, protocol: Protocol): Promise<KeylessRecord[]> {
+  mkdirSync(o.out, { recursive: true, mode: 0o700 });
+  const recordsPath = join(o.out, 'keyless.local.jsonl'), abortPath = join(o.out, 'keyless.abort.json');
+  rmSync(recordsPath, { force: true });
+  rmSync(abortPath, { force: true });
+  const env: Record<string, string | undefined> = { ...process.env, GBRAIN_MODEL_DISCOVERY: 'off' };
+  for (const name of await providerEnvNames(o.gut)) env[name] = '';
+  delete env.GBRAIN_UNDER_TEST;
+  const args = [join(REPO_ROOT, 'eval/runner/live-recall/run.ts'), 'keyless-arm', '--questions', questionsPath, '--protocol', protocol, '--out', o.out, '--database-url-env', o.databaseUrlEnv,
+    ...(o.gut.overlay ? ['--gbrain', o.gut.overlay.requested] : []), ...(o.fixture ? ['--fixture'] : []), ...(o.referenceBuild ? ['--reference-build'] : [])];
+  const child = spawnSync(process.execPath, args, { env, stdio: 'ignore', cwd: REPO_ROOT, timeout: 3_600_000 });
+  if (child.status === 0 && existsSync(recordsPath)) return readFileSync(recordsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as KeylessRecord);
+  const code = existsSync(abortPath) ? JSON.parse(readFileSync(abortPath, 'utf8')).code : null;
+  throw new LiveRecallAbort(typeof code === 'string' && code in ABORT_CODES ? code as keyof typeof ABORT_CODES : 'LR_KEYLESS_ARM', 'the ' + KEYLESS_ARM + ' process stopped with exit ' + (child.status ?? 'none'));
+}
+
 /** Drop questions whose gold pages (or, under batch 3, stale or decoy pages) the brain does not hold; abort past the cap. */
 export async function presenceCheck(engine: any, questions: Question[]): Promise<{ kept: Question[]; missing: number }> {
   const kept: Question[] = [];
@@ -494,7 +659,7 @@ function git(args: string[]): string {
   try { return execFileSync('git', ['-C', REPO_ROOT, ...args], { encoding: 'utf8' }).trim(); } catch { return ''; }
 }
 
-interface RunOptions { fixture: boolean; synthetic?: string; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest; protocol?: Protocol; transports?: Transports }
+interface RunOptions { fixture: boolean; synthetic?: string; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest; protocol?: Protocol; transports?: Transports; referenceBuild?: boolean }
 
 /** One counted or control run. Returns the outbound file paths. */
 /** pgvector in the database searched and, on a copy, the versions and restore error count snapshot.sh wrote into the marker row. */
@@ -520,13 +685,17 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
   let frozenEpoch: { gbrain_version: string | null; visibility_epoch: string | null } | null = null;
   let priorCheck: { files: string[]; question_ids: number; forms: number; gold_pages: number } | null = null;
   const runEpoch = visibilityEpoch(o.gut.version);
+  let questionsFile = o.questionsPath;
   let synthetic: Awaited<ReturnType<typeof import('./synthetic.ts').buildSyntheticBrain>> | null = null;
   if (o.synthetic) {
     const { buildSyntheticBrain } = await import('./synthetic.ts');
     synthetic = await buildSyntheticBrain(o.gut, o.synthetic, o.transports);
     questionsText = synthetic.questionsText;
     if (!o.protocol && synthetic.protocol) protocol = synthetic.protocol;
-  } else if (o.fixture) questionsText = readFileSync(o.questionsPath ?? (protocol === 'batch3' ? BATCH3_FIXTURE_QUESTIONS : join(FIXTURE_DIR, 'questions.jsonl')), 'utf8');
+  } else if (o.fixture) {
+    questionsFile ??= protocol === 'batch3' ? BATCH3_FIXTURE_QUESTIONS : join(FIXTURE_DIR, 'questions.jsonl');
+    questionsText = readFileSync(questionsFile, 'utf8');
+  }
   else {
     if (!o.questionsPath || !o.freezePath) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'a counted run needs --questions and --freeze');
     questionsText = readFileSync(o.questionsPath, 'utf8');
@@ -558,8 +727,10 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     await synthetic?.close();
     throw error;
   }
+  const keyless = synthetic || !questionsFile ? null : await runKeylessChild(o, questionsFile, protocol);
+  if (keyless) say(KEYLESS_ARM + ': ' + keyless.length + ' question forms searched in its own keyless process');
 
-  let engine: any, barrier: string, connection: string, schemaVersion: number, close: () => Promise<void>;
+  let engine: any, barrier: string, connection: string, schemaVersion: number, codeSchemaVersion: number, close: () => Promise<void>;
   if (inProcess) {
     const brain = synthetic ?? await buildFixtureBrain(o.gut, protocol === 'batch3' ? BATCH3_FIXTURE_PAGES : undefined);
     engine = brain.engine;
@@ -568,11 +739,10 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     close = brain.close;
     installGuards(engine, counters);
     await verifyReadOnly(engine);
-    schemaVersion = (await checkSchema(engine, o.gut)).schema_version;
+    ({ schema_version: schemaVersion, code_schema_version: codeSchemaVersion } = await checkSchema(engine, o.gut));
   } else {
-    const brain = await openPostgresBrain(o.gut, o.databaseUrlEnv, counters);
-    ({ engine, barrier, connection, close } = brain);
-    schemaVersion = brain.schema_version;
+    const brain = await openPostgresBrain(o.gut, o.databaseUrlEnv, counters, o.referenceBuild);
+    ({ engine, barrier, connection, close, schema_version: schemaVersion, code_schema_version: codeSchemaVersion } = brain);
   }
   say('gbrain ' + o.gut.version + ', schema ' + schemaVersion + ', barrier ' + barrier + ', connection ' + connection + '; read-only verified');
   try {
@@ -626,6 +796,8 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       gbrain_loaded_commit: o.gut.overlay?.build.commit ?? (/^[0-9a-f]{7,64}$/.test(pinCommit) ? pinCommit : 'unknown'),
       gbrain_overlay: o.gut.overlay !== null,
       schema_version: schemaVersion,
+      code_schema_version: codeSchemaVersion,
+      reference_build: Boolean(o.referenceBuild),
       engine: (inProcess ? 'pglite' : 'postgres') as 'pglite' | 'postgres',
       barrier,
       connection,
@@ -653,10 +825,10 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     mkdirSync(o.out, { recursive: true });
     const detail = join(o.out, 'detail.local.jsonl');
     writeFileSync(detail, records.map(r => JSON.stringify(r)).join('\n') + '\n', { mode: 0o600 });
-    const scorecard = buildScorecard(records, summary, identity, { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: counters.refusals }, protocol);
+    const scorecard = buildScorecard(records, summary, identity, { readonly_verified_start: true, readonly_verified_end: true, guard_refusals: counters.refusals }, protocol, keyless);
     const json = JSON.stringify(scorecard, null, 2) + '\n';
     const markdown = renderMarkdown(scorecard);
-    const needles = new Set<string>([...questions.flatMap(q => [...Object.values(q.forms), ...q.gold.map(g => g.slug), ...(q.stale ?? []).map(s => s.slug), ...(q.decoy ?? []).map(s => s.slug)]), ...records.flatMap(r => r.pages)]);
+    const needles = new Set<string>([...questions.flatMap(q => [...Object.values(q.forms), ...q.gold.map(g => g.slug), ...(q.stale ?? []).map(s => s.slug), ...(q.decoy ?? []).map(s => s.slug)]), ...records.flatMap(r => r.pages), ...(keyless ?? []).flatMap(r => [...r.pages, ...r.fill_off.pages])]);
     scanForLeaks(json + markdown, needles);
     const jsonPath = join(o.out, 'scorecard.json'), mdPath = join(o.out, 'scorecard.md');
     writeFileSync(jsonPath, json);
@@ -670,9 +842,11 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
 function loadRunDir(dir: string) {
   const card = JSON.parse(readFileSync(join(dir, 'scorecard.json'), 'utf8'));
   const records = readFileSync(join(dir, 'detail.local.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as QueryRecord);
+  const keylessPath = join(dir, 'keyless.local.jsonl');
+  const keyless = existsSync(keylessPath) ? readFileSync(keylessPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as KeylessRecord) : [];
   const identity = { gbrain_loaded_version: card.run.gbrain_loaded_version, gbrain_loaded_commit: card.run.gbrain_loaded_commit, barrier: card.run.barrier, control: card.run.control, freeze_sha_prefix: card.questions.freeze_sha_prefix };
-  const invalid = ARMS.filter(arm => card.arms?.[arm]?.invalid);
-  return { card, identity, records, invalid };
+  const invalid: string[] = [...ARMS.filter(arm => card.arms?.[arm]?.invalid), ...(!card.keyless_op || card.keyless_op.invalid ? [KEYLESS_ARM] : [])];
+  return { card, identity, records, keyless, invalid };
 }
 
 function refuseControl(runA: ReturnType<typeof loadRunDir>, runB: ReturnType<typeof loadRunDir>) {
@@ -684,7 +858,7 @@ export function compareRunDirs(a: string, b: string) {
   const runA = loadRunDir(a), runB = loadRunDir(b);
   if (runA.identity.freeze_sha_prefix !== runB.identity.freeze_sha_prefix) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'run_a and run_b were made on different question files (freeze_sha_prefix differs)');
   refuseControl(runA, runB);
-  const { schema, comparisons } = compareRuns(runA.records, runB.records, new Set([...runA.invalid, ...runB.invalid]));
+  const { schema, comparisons } = compareRuns([...runA.records, ...runA.keyless], [...runB.records, ...runB.keyless], new Set([...runA.invalid, ...runB.invalid]));
   const result = { schema, run_a: runA.identity, run_b: runB.identity, comparisons };
   validateScorecard(result);
   return result;
@@ -765,9 +939,12 @@ export async function main(argv: string[]): Promise<number> {
     console.log('live-recall: ' + command + ' ' + join(out, command + '.json'));
     return 0;
   }
+  if (command === 'keyless-arm') return keylessArm(argv);
   if (command !== 'run') { console.error('usage: run.ts run|freeze|compare|pool (see the header of this file)'); return 2; }
   const fixture = argv.includes('--fixture');
   const synthetic = flag(argv, '--synthetic');
+  const referenceBuild = argv.includes('--reference-build');
+  if (referenceBuild && (fixture || synthetic)) { console.error('live-recall: --reference-build applies only to a run on a real brain (--questions and --freeze)'); return 2; }
   const paid = paidRequested(argv);
   if (paid && !synthetic) { console.error('live-recall: --paid applies only to run --synthetic <dir>, which then embeds and reranks with Voyage'); return 2; }
   let estimate: ReturnType<typeof import('./synthetic.ts').estimateVoyageUsd> | null = null;
@@ -799,7 +976,7 @@ export async function main(argv: string[]): Promise<number> {
       paidRun = startPaidRun('live-recall-synthetic-voyage', { ...budgetOptionsFrom(argv), runId: flag(argv, '--budget-run-id'), estimateUsd: estimate.usd, log: say });
       globalThis.fetch = voyageOnlyFetch(globalThis.fetch);
     }
-    const paths = await liveRecall({ fixture, synthetic: synthetic ? resolve(synthetic) : undefined, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut, protocol: protocol as Protocol | undefined, transports: estimate ? 'voyage' : 'hash' }, say);
+    const paths = await liveRecall({ fixture, synthetic: synthetic ? resolve(synthetic) : undefined, questionsPath: flag(argv, '--questions'), freezePath: flag(argv, '--freeze'), databaseUrlEnv: flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', out, gut, protocol: protocol as Protocol | undefined, transports: estimate ? 'voyage' : 'hash', referenceBuild }, say);
     say('scorecard (send these two files): ' + paths.scorecard + ' and ' + paths.markdown);
     say('detail and gbrain log (stay on this box): ' + paths.detail + ' and ' + join(out, 'gbrain.local.log'));
     return 0;

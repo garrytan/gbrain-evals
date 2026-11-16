@@ -26,6 +26,8 @@ export const ABORT_CODES = {
   LR_READONLY_UNVERIFIED: 'The session did not report read-only, or the direct pool is active; rerun against the copy and report the detail.',
   LR_DIRECT_URL_OVERRIDE: 'Unset GBRAIN_DIRECT_DATABASE_URL in the shell that runs the runner.',
   LR_SCHEMA_MISMATCH: 'Run with --gbrain <checkout>@<commit> at the gbrain version that wrote the brain. Only a reference build a preregistration names may read a newer schema, with --reference-build.',
+  LR_KEYLESS_PROVIDER: 'The search_op_keyless process saw an embedding or reranking provider after every provider key was removed (for example a keyless local model in the brain\'s config), so it stopped before its next search and no other arm searched. Send the line to GBEV-3.',
+  LR_KEYLESS_ARM: 'The search_op_keyless process stopped; its log, keyless.local.log in the run directory, stays on this box. Send the exit line to GBEV-3.',
   LR_REFERENCE_BUILD: '--reference-build loads only a build a live-recall preregistration names as its reference (REFERENCE_BUILDS in brain.ts), at that exact commit; drop the flag or load that build.',
   LR_QUESTIONS_INVALID: 'Fix the question file at the reported line and field, then rerun freeze.',
   LR_FREEZE_MISMATCH: 'Rerun freeze on this exact question file and send the new freeze numbers before the counted run. On a phase 2 --resume, resume with the first session\'s harness, gbrain, barrier kind, source, retrieval settings, models, arms, forms and tasks, or start a new run directory.',

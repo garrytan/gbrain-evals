@@ -86,7 +86,11 @@ export interface RunIdentity {
   source_server_version_num: number | null;
   copy_server_version_num: number | null;
   restore_errors: number | null;
-  /** batch3 and batch4 only: which side of GBRA-398 the run falls on, and the gbrain version and epoch its freeze recorded. */
+  /** The schema version the loaded gbrain expects; below schema_version only for a named reference build (reference_build). */
+  code_schema_version?: number;
+  /** The run loaded a named older build with --reference-build (batch 5 amendment's schema rule). */
+  reference_build?: boolean;
+  /** batch3, batch4 and batch5 only: which side of GBRA-398 the run falls on, and the gbrain version and epoch its freeze recorded. */
   visibility_epoch?: string;
   freeze_gbrain_version?: string | null;
   freeze_visibility_epoch?: string | null;
@@ -169,8 +173,8 @@ function cell(rows: QueryRecord[], pooled: boolean) {
   };
 }
 
-function pairUp(a: Map<string, QueryRecord>, b: Map<string, QueryRecord>, keys: string[], metric: 'success_at_5' | 'mrr'): PairedItem[] {
-  const value = (r: QueryRecord) => (metric === 'mrr' ? rr(r.page_rank) : hitAt(r.page_rank, 5));
+function pairUp(a: Map<string, Pick<QueryRecord, 'qid' | 'page_rank'>>, b: Map<string, Pick<QueryRecord, 'qid' | 'page_rank'>>, keys: string[], metric: 'success_at_5' | 'mrr'): PairedItem[] {
+  const value = (r: Pick<QueryRecord, 'page_rank'>) => (metric === 'mrr' ? rr(r.page_rank) : hitAt(r.page_rank, 5));
   const pairs: PairedItem[] = [];
   for (const key of keys) {
     const ra = a.get(key), rb = b.get(key);
@@ -197,6 +201,33 @@ export const PROTOCOLS = ['batch1', 'batch2', 'batch3', 'batch4', 'batch5'] as c
 /** batch5's fill primary: an exact one-sided sign test at FILL_ALPHA; with no losses it holds at FILL_MIN_WINS wins (0.5^5 = 0.031). */
 export const FILL_ALPHA = 0.05;
 export const FILL_MIN_WINS = Math.ceil(Math.log(FILL_ALPHA) / Math.log(0.5));
+/** The seventh arm (batch 5 amendment): gbrain's search operation as a keyless install runs it, in a process of its own. */
+export const KEYLESS_ARM = 'search_op_keyless' as const;
+export const FILL_PRIMARY_ID = 'fill_on_vs_fill_off_paraphrase';
+/** Protocols whose scorecard counts configured search's gap failures by question type. */
+export const GAP_PROTOCOLS: readonly Protocol[] = ['batch5'];
+
+/**
+ * One keyless search-operation answer. pages are the response's pages, fill rows included; fill_off holds the same
+ * response's pages without the rows gbrain marked keyword_fill, which gbrain guarantees is its fill-off response.
+ */
+export interface KeylessRecord extends Omit<QueryRecord, 'arm'> {
+  arm: typeof KEYLESS_ARM;
+  fill_off: { pages: string[]; page_rank: number | null; all_found_at: Record<string, boolean> };
+  fill_rows: number;
+  /** A page that only a fill row brought is among the first five pages. */
+  fill_in_top5: boolean;
+  /** A fill row came before a row without the flag, which gbrain's fill never does. */
+  prefix_broken: boolean;
+}
+
+/** Exact one-sided sign test: P(X >= wins) for X ~ Binomial(wins + losses, 1/2), which is P(X <= losses); 1 with no discordant pair. */
+export function signTestOneSided(wins: number, losses: number): number {
+  const n = wins + losses;
+  let term = 0.5 ** n, tail = 0;
+  for (let i = 0; i <= losses; i++) { tail += term; term = term * (n - i) / (i + 1); }
+  return Math.min(1, tail);
+}
 export type Protocol = (typeof PROTOCOLS)[number];
 /** The question types each protocol accepts and reports. batch1, batch2, batch4 and batch5 keep the five live types. */
 export const PROTOCOL_TYPES: Record<Protocol, readonly QType[]> = { batch1: TYPES, batch2: TYPES, batch3: ALL_TYPES, batch4: TYPES, batch5: TYPES };
@@ -261,7 +292,7 @@ export const decoyFirst = (r: Pick<QueryRecord, 'page_rank' | 'decoy_rank'>) => 
  * (stats/paired.ts simultaneousBand; null for a comparison the bootstrap can't band), and the result a family block;
  * each comparison's own ci95 is unchanged.
  */
-function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: Record<string, string> = {}, types: readonly QType[] = TYPES, family = false) {
+function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: Record<string, string> = {}, types: readonly QType[] = TYPES, family = false, gapClasses = false) {
   const byArm = new Map<Arm, QueryRecord[]>(ARMS.map(a => [a, records.filter(r => r.arm === a)]));
   const invalid: Record<string, string> = { ...seedInvalid };
   for (const arm of ['configured', 'configured_window'] as const) {
@@ -358,29 +389,85 @@ function scoreRecords(records: QueryRecord[], list: Comparison[], seedInvalid: R
   const primaries = comparisons.filter(c => c.primary && c.metric === 'success_at_5' && typeof c.p_two_sided === 'number');
   const holm = holmAdjusted(primaryIds.map(id => (primaries.find(c => c.id === id)?.p_two_sided as number | undefined) ?? 1));
   primaries.forEach(c => { c.p_holm = round(holm[primaryIds.indexOf(c.id as string)]!); });
-  return { eligibility: { eligible_question_forms: eligible.size, exclusions, invalid_arms: invalid, common_arms: common }, arms, comparisons, ...(familyBlock ? { family: familyBlock } : {}) };
+  // Batch 5's gap failure classes: questions configured search found in exact words and missed reworded, by where the reworded gold landed.
+  // The amendment's three classes, plus the rest: not in configured's 20 while only keyword or hybrid_lexical had it in five.
+  let gapFailures: Record<string, unknown> | null = null;
+  if (gapClasses && common.includes('configured')) {
+    const okBy = new Map<Arm, Map<string, QueryRecord>>(common.map(a => [a, new Map(ok(a).map(r => [keyOf(r), r] as const))] as const));
+    const configured = okBy.get('configured')!;
+    const top5In = (arms: readonly Arm[], p: QueryRecord) => arms.some(a => hitAt(okBy.get(a)?.get(keyOf(p))?.page_rank ?? null, 5));
+    gapFailures = Object.fromEntries(types.map(t => {
+      const c = { exact_only: 0, ranked_6_to_20: 0, not_in_20_hybrid_or_vector_top5: 0, not_in_20_other_arm_top5: 0, not_in_20_no_arm_top5: 0 };
+      for (const e of configured.values()) {
+        const p = configured.get(e.qid + '\u0000paraphrase');
+        if (e.type !== t || e.form !== 'exact' || !hitAt(e.page_rank, 5) || !p || hitAt(p.page_rank, 5)) continue;
+        c.exact_only += 1;
+        if (p.page_rank !== null) c.ranked_6_to_20 += 1;
+        else if (top5In(['hybrid', 'vector'], p)) c.not_in_20_hybrid_or_vector_top5 += 1;
+        else if (top5In(common.filter(a => a !== 'configured'), p)) c.not_in_20_other_arm_top5 += 1;
+        else c.not_in_20_no_arm_top5 += 1;
+      }
+      return [t, c];
+    }));
+  }
+  return { eligibility: { eligible_question_forms: eligible.size, exclusions, invalid_arms: invalid, common_arms: common }, arms, comparisons, ...(familyBlock ? { family: familyBlock } : {}), ...(gapFailures ? { gap_failures: gapFailures } : {}) };
 }
 
-export function buildScorecard(records: QueryRecord[], questions: QuestionSummary, identity: RunIdentity, custody: Custody, protocol: Protocol = 'batch1') {
-  const scorecard = { schema: SCHEMA, protocol, run: identity, custody, questions, ...scoreRecords(records, COMPARISONS[protocol], {}, PROTOCOL_TYPES[protocol], FAMILY_PROTOCOLS.includes(protocol)) };
+/**
+ * The keyless search operation's block (batch 5 amendment): success on the response with and without its fill rows, how
+ * often the fill fired and reached the first five pages, the fill primary (fill on minus fill off, success@5, reworded
+ * forms, one pair per question, exact one-sided sign test) and how many reworded forms gave gbrain's all-words keyword
+ * search (the keyword arm) between 1 and 19 rows, the only case in which the fill can fire. Counts only.
+ */
+export function keylessBlock(records: KeylessRecord[], keyword: QueryRecord[]) {
+  const ok = records.filter(r => r.status === 'ok');
+  const statuses = Object.fromEntries(STATUSES.map(s => [s, records.filter(r => r.status === s).length] as const).filter(([, n]) => n > 0));
+  if (!ok.length) return { invalid: 'no_eligible_queries', statuses };
+  const off = ok.map(r => ({ ...r, pages: r.fill_off.pages, page_rank: r.fill_off.page_rank, all_found_at: r.fill_off.all_found_at, returned: r.fill_off.pages.length }));
+  const forms = (rows: KeylessRecord[]) => {
+    const q = rows as unknown as QueryRecord[];
+    return { all: cell(q, true), exact: cell(q.filter(r => r.form === 'exact'), false), paraphrase: cell(q.filter(r => r.form === 'paraphrase'), false) };
+  };
+  const count = (pred: (r: KeylessRecord) => boolean) => ({ all: ok.filter(pred).length, exact: ok.filter(r => r.form === 'exact' && pred(r)).length, paraphrase: ok.filter(r => r.form === 'paraphrase' && pred(r)).length });
+  const reworded = (rows: KeylessRecord[]) => new Map(rows.filter(r => r.form === 'paraphrase').map(r => [r.qid, r as unknown as QueryRecord] as const));
+  const on = reworded(ok);
+  const pairs = pairUp(reworded(off), on, [...on.keys()], 'success_at_5');
+  const wins = pairs.filter(p => p.b > p.a).length, losses = pairs.filter(p => p.b < p.a).length;
+  const p = signTestOneSided(wins, losses);
+  const fit = keyword.filter(r => r.form === 'paraphrase' && r.status === 'ok');
+  return {
+    arm: KEYLESS_ARM,
+    statuses,
+    fill_on: forms(ok),
+    fill_off: forms(off),
+    exposure: { n: count(() => true), fired: count(r => r.fill_rows > 0), fill_in_top5: count(r => r.fill_in_top5), prefix_broken: count(r => r.prefix_broken) },
+    task_fit: { n: fit.length, keyword_rows_1_to_19: fit.filter(r => r.chunks.length >= 1 && r.chunks.length < 20).length },
+    primary: { ...compare(FILL_PRIMARY_ID, pairs, 'success_at_5', true), a: 'fill_off', b: 'fill_on', form: 'paraphrase', method: 'exact_one_sided_sign', wins, losses, p_one_sided: round(p), alpha: FILL_ALPHA, min_wins: FILL_MIN_WINS, holds: losses === 0 && p < FILL_ALPHA },
+  };
+}
+
+export function buildScorecard(records: QueryRecord[], questions: QuestionSummary, identity: RunIdentity, custody: Custody, protocol: Protocol = 'batch1', keyless: KeylessRecord[] | null = null) {
+  const scorecard = { schema: SCHEMA, protocol, run: identity, custody, questions, ...scoreRecords(records, COMPARISONS[protocol], {}, PROTOCOL_TYPES[protocol], FAMILY_PROTOCOLS.includes(protocol), GAP_PROTOCOLS.includes(protocol)), ...(keyless ? { keyless_op: keylessBlock(keyless, records.filter(r => r.arm === 'keyword')) } : {}) };
   validateScorecard(scorecard);
   return scorecard;
 }
 
 export const COMPARE_SCHEMA = 'live-recall-compare/v1';
 const COMPARE_FORMS = ['all', 'exact', 'paraphrase'] as const;
-const compareId = (arm: Arm, form: (typeof COMPARE_FORMS)[number]) => 'run_b_vs_run_a_' + arm + '_' + form;
+const COMPARE_ARMS = [...ARMS, KEYLESS_ARM] as const;
+const compareId = (arm: (typeof COMPARE_ARMS)[number], form: (typeof COMPARE_FORMS)[number]) => 'run_b_vs_run_a_' + arm + '_' + form;
 
 /**
  * Two runs on the same questions (a baseline and a candidate gbrain, or the
  * same gbrain twice for run-to-run noise), paired per arm on question forms
  * that are ok in both. Reads two detail.local.jsonl files on the box; emits
  * aggregates only, through the same structural check as the scorecard. An arm
- * invalid in either run's scorecard is skipped.
+ * invalid in either run's scorecard is skipped. The keyless search operation is
+ * paired on its pages as returned, fill rows included.
  */
-export function compareRuns(a: QueryRecord[], b: QueryRecord[], invalidArms: ReadonlySet<string> = new Set()) {
+export function compareRuns(a: Array<QueryRecord | KeylessRecord>, b: Array<QueryRecord | KeylessRecord>, invalidArms: ReadonlySet<string> = new Set()) {
   const comparisons: Array<Record<string, unknown>> = [];
-  for (const arm of ARMS) {
+  for (const arm of COMPARE_ARMS) {
     if (invalidArms.has(arm)) {
       for (const form of COMPARE_FORMS) comparisons.push({ id: compareId(arm, form), skipped: 'arm_invalid_or_absent' });
       continue;
@@ -429,7 +516,10 @@ const KEY_WORDS = new Set<string>([
   'synthetic', 'transports', 'digest', 'questions_sha256', 'unembedded_chunk_share', 'synopsis_vectors_off', 'keyword_candidate_bound', 'shell_page_share', 'chunks', 'unembedded_chunks',
   'family', 'family_ci95', 'method', 'level', 'seed', 'draws', 'n_strata', 'members', 'critical_value', 'bonferroni_critical_value',
   'prior_overlap', 'files', 'question_ids', 'forms', 'gold_pages',
-  ...ARMS, ...ALL_TYPES, ...KS.map(k => 'k' + k), ...STATUSES, ...GOLD_FOUND_BY,
+  'code_schema_version', 'reference_build', 'gap_failures', 'exact_only', 'ranked_6_to_20', 'not_in_20_hybrid_or_vector_top5', 'not_in_20_other_arm_top5', 'not_in_20_no_arm_top5',
+  'keyless_op', 'statuses', 'fill_on', 'fill_off', 'exposure', 'fired', 'fill_in_top5', 'prefix_broken', 'task_fit', 'keyword_rows_1_to_19',
+  'p_one_sided', 'alpha', 'min_wins', 'holds',
+  ...ARMS, KEYLESS_ARM, ...ALL_TYPES, ...KS.map(k => 'k' + k), ...STATUSES, ...GOLD_FOUND_BY,
 ]);
 const KEY_PATTERNS = [/^(keyword|vector|hybrid_lexical|hybrid|configured|configured_window|missing)_(ok|error|degraded|ai_refused|rerank_fail_open|skipped|record)$/, /^[a-z_]+$/];
 const STRING_WORDS = new Set<string>([
@@ -438,7 +528,8 @@ const STRING_WORDS = new Set<string>([
   'session_pooler', 'transaction_pooler_rewritten', 'direct_or_local', 'in_process', 'conservative', 'balanced', 'tokenmax',
   'rerank_fail_open_over_cap', 'embedding_opted_out', 'no_eligible_queries', 'arm_invalid_or_absent', 'invalid_in_one_run', 'unknown', 'max_t_cluster_bootstrap',
   ...PROTOCOLS, ...Object.values(COMPARISONS).flat().map(c => c.id), ...Object.keys(ABORT_CODES),
-  COMPARE_SCHEMA, POOL_SCHEMA, 'run_a', 'run_b', 'all', ...ARMS.flatMap(arm => COMPARE_FORMS.map(form => compareId(arm, form))),
+  COMPARE_SCHEMA, POOL_SCHEMA, 'run_a', 'run_b', 'all', ...COMPARE_ARMS.flatMap(arm => COMPARE_FORMS.map(form => compareId(arm, form))),
+  KEYLESS_ARM, FILL_PRIMARY_ID, 'fill_on', 'fill_off', 'exact_one_sided_sign',
 ]);
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(\.\d+)?$/;
 export const versionOrNull = (v: unknown): string | null => (typeof v === 'string' && VERSION_PATTERN.test(v) ? v : null);
@@ -512,6 +603,7 @@ export function renderMarkdown(s: ReturnType<typeof buildScorecard>): string {
   lines.push('gbrain ' + r.gbrain_loaded_version + ' (' + r.gbrain_loaded_commit.slice(0, 9) + '), schema ' + r.schema_version + ', ' + r.engine + ', barrier: ' + r.barrier + ', pgvector ' + (r.pgvector_version ?? 'n/a') + ', mode: ' + r.search_mode + (r.transports === 'voyage' ? '. Synthetic brain, Voyage embeddings and rerank (' + r.embedding_model + ', ' + r.reranker_model + ').' : r.control ? '. CONTROL RUN (hash embeddings): numbers say nothing about search quality.' : '.'));
   lines.push('Protocol: ' + s.protocol + '; primary comparisons (Holm family of two): ' + COMPARISONS[s.protocol].filter(c => c.primary).map(c => c.id + ' (' + c.primary + ')').join(', ') + '.');
   if (r.synthetic) lines.push('Synthetic conditions brain ' + r.synthetic.digest.slice(0, 12) + ': unembedded chunk share ' + r.synthetic.unembedded_chunk_share + ' (' + r.synthetic.unembedded_chunks + ' of ' + r.synthetic.chunks + ' chunks), synopsis vectors ' + (r.synthetic.synopsis_vectors_off ? 'off' : 'on') + ', keyword candidate bound ' + (r.synthetic.keyword_candidate_bound ?? 'none') + ', shell page share ' + r.synthetic.shell_page_share + '.');
+  if (r.reference_build) lines.push('Reference build on a newer schema: the brain is at schema ' + r.schema_version + ' and this gbrain expects ' + r.code_schema_version + ', so tables and columns added since are invisible to it.');
   if (EPOCH_PROTOCOLS.includes(s.protocol)) lines.push('Visibility epoch (GBRA-398): run ' + (r.visibility_epoch ?? 'unknown') + ', freeze ' + (r.freeze_visibility_epoch ?? 'none (fixture)') + (r.freeze_gbrain_version ? ' at gbrain ' + r.freeze_gbrain_version : '') + '.');
   if ((r.source_pgvector !== null && r.source_pgvector !== r.pgvector_version) || (r.restore_errors ?? 0) > 0) lines.push('Warning: vector search on this copy may differ from the live brain (source pgvector ' + (r.source_pgvector ?? 'unknown') + ', copy pgvector ' + (r.pgvector_version ?? 'none') + ', restore errors ' + (r.restore_errors ?? 'unknown') + ').');
   const prior = s.questions.prior_overlap;
@@ -564,6 +656,23 @@ export function renderMarkdown(s: ReturnType<typeof buildScorecard>): string {
       if (c.metric !== 'success_at_5' || !('family_ci95' in c)) continue;
       if (!Array.isArray(c.family_ci95)) { lines.push('| ' + c.id + ' | ' + pct(c.delta) + ' | none (some draw had none of its questions) | no |'); continue; }
       lines.push('| ' + c.id + ' | ' + pct(c.delta) + ' | ' + pct(c.family_ci95[0]) + ' to ' + pct(c.family_ci95[1]) + ' | ' + (c.family_ci95[0] > 0 || c.family_ci95[1] < 0 ? 'yes' : 'no') + ' |');
+    }
+  }
+  const gap = (s as { gap_failures?: Record<string, Record<string, number>> }).gap_failures;
+  if (gap) {
+    lines.push('', '## Gap failure classes (configured, success@5)', '', 'Questions configured search found in exact words and missed reworded, by where the reworded form\'s gold page landed. The last three columns are pages outside configured search\'s first 20.', '', '| Type | Exact only | Ranked 6 to 20 | hybrid or vector top 5 | Only another arm\'s top 5 | No arm\'s top 5 |', '|---|---|---|---|---|---|');
+    for (const [t, c] of Object.entries(gap)) lines.push('| ' + t + ' | ' + c.exact_only + ' | ' + c.ranked_6_to_20 + ' | ' + c.not_in_20_hybrid_or_vector_top5 + ' | ' + c.not_in_20_other_arm_top5 + ' | ' + c.not_in_20_no_arm_top5 + ' |');
+  }
+  const k = (s as { keyless_op?: Record<string, any> }).keyless_op;
+  if (k) {
+    lines.push('', '## Keyless search operation (' + KEYLESS_ARM + ')', '');
+    if (k.invalid) lines.push('Invalid: ' + k.invalid + '. Statuses: ' + (Object.entries(k.statuses).map(([st, n]) => st + ' ' + n).join(', ') || 'none') + '.');
+    else {
+      lines.push('gbrain\'s search operation in a separate process with no embedding or reranking provider. Fill off is the same response without the rows gbrain marked keyword_fill.', '', '| Form | n | Fill on success@5 | Fill off success@5 | Fill fired | Fill page in top 5 | Fill before a normal row |', '|---|---|---|---|---|---|---|');
+      for (const f of ['exact', 'paraphrase', 'all'] as const) lines.push('| ' + f + ' | ' + k.exposure.n[f] + ' | ' + pct(k.fill_on[f].success_at.k5.rate) + ' | ' + pct(k.fill_off[f].success_at.k5.rate) + ' | ' + k.exposure.fired[f] + ' | ' + k.exposure.fill_in_top5[f] + ' | ' + k.exposure.prefix_broken[f] + ' |');
+      const p = k.primary;
+      lines.push('', 'Fill primary (' + FILL_PRIMARY_ID + ', exact one-sided sign test at ' + p.alpha + '): ' + p.n_pairs + ' pairs, ' + p.wins + ' gained and ' + p.losses + ' lost, delta ' + pct(p.delta) + ' points, one-sided p ' + p.p_one_sided + '; ' + (p.holds ? 'holds' : 'does not hold') + ' (needs ' + p.min_wins + ' or more gained and none lost).');
+      lines.push('Task fit: ' + k.task_fit.keyword_rows_1_to_19 + ' of ' + k.task_fit.n + ' reworded forms gave the keyword arm between 1 and 19 rows, the only case in which the fill can fire.');
     }
   }
   lines.push('', '## Custody', '');
