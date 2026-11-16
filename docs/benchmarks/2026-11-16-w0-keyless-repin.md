@@ -194,8 +194,9 @@ README's large-page row keeps `7a6bdd3`.
 
 ### Harness defects (none in gbrain)
 
-Each fix has a test that fails without it and leaves every earlier receipt unchanged, and each was committed with a
-dated amendment before the next run.
+Each runner fix has a test that fails without it and leaves every earlier receipt unchanged; the VM script fix (2) is
+one line in `run-kept.sh`, shown by the third run reaching every cell. Each was committed with a dated amendment
+before the next run.
 
 1. **N4 read quote-fenced facts as raw text** (amendment of 2026-11-16, fix `8569f237`). Since v0.60.536.0 (#8367),
    a remote `recall` returns facts below the owner's trust tier inside a quote fence. N4 compared the raw text with its
@@ -230,11 +231,11 @@ repros, the wave 8 and operator-wave checks, the verbatim probe, and README's pa
 - `eval/runner/n4-entity-resolution.ts` and `eval/runner/lifecycle/observe.ts` read `recall` facts through the
   build's own unquote; `observe.ts`'s leak probes drop a notice line that repeats the probe's own call;
   `eval/runner/lifecycle/builds.ts` passes `--yes` to `embed --stale` on builds that take it; and the W0 VM script
-  runs the lifecycle matrix outside the checkout. Each has a test.
+  runs the lifecycle matrix outside the checkout. Each runner change has a test.
 - A real-brain copy of the N2-2 repro.
-- README, the documentation hub and `docs/gbrain-under-test.md` move the rows that hold to `6ce7195b4`. The N9 and
-  N7 drops are noted beside their rows, and the large-page row keeps `7a6bdd3`. `package.json` still pins
-  `d253ec0`; this report doesn't change the installed gbrain.
+- README, the documentation hub and `docs/gbrain-under-test.md` move the rows that hold to `6ce7195b4`. The N9 drop
+  is noted beside its row and the N7 drop in the open-loops limit, and the large-page row keeps `7a6bdd3`. This report
+  doesn't change `package.json`; its gbrain pin moved to `6ce7195b4` separately, in #448.
 
 ## Reproduce and inspect
 

@@ -14,5 +14,5 @@
   was 53 of 53; gbrain #9246). README notes both.
 - **Harness fixes.** N4 and the lifecycle matrix read `recall`'s quote-fenced facts through gbrain's own unquote, the
   lifecycle leak probes ignore a notice that repeats their own query, the lifecycle catch-up sweep passes `--yes` to a
-  build whose `embed` asks for consent, and the W0 VM script runs the lifecycle matrix outside the checkout. Each has a
-  test, and no earlier receipt changes.
+  build whose `embed` asks for consent, and the W0 VM script runs the lifecycle matrix outside the checkout. The runner
+  fixes have tests, and no earlier receipt changes.
