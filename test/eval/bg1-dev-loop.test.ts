@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   BASELINES_PATH, clockProblem, COMPARATORS, DEV_AS_OF, DEV_JUDGE, DEV_READER, DEV_WORLD_END, devCell, devClock, DevLoopRefusal, faketimeOffset, loadBaselines,
-  main, neededValues, newestRelease, resolveGbrainRef, runDevCell, savedRow, scoreRecords, scoreRun, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
+  main, neededValues, newestRelease, resolveGbrainRef, runDevCell, savedRow, scoreRecords, scoreRun, ubiRoom, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
 } from '../../eval/runner/bg1/dev-loop.ts';
 import { bg1RunClock, loadCorpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
@@ -126,6 +126,17 @@ describe('the dev cell and its launch', () => {
     expect(() => newestRelease(() => 'c5\trefs/tags/stable\n')).toThrow(DevLoopRefusal);
   });
 
+  test('a VM starts only when the shared project stays at or under 464 vCPUs and this crew at or under 208', () => {
+    const usage = (rows: Array<[string, number, number]>) => ['OWNER           VMS  VCPUS', ...rows.map(r => r.join('  ')), `total  ${rows.reduce((n, r) => n + r[1], 0)}  ${rows.reduce((n, r) => n + r[2], 0)}`].join('\n');
+    expect(ubiRoom(usage([['harn61', 9, 144], ['geva520', 2, 76], ['gbev91', 3, 12]]), 4)).toBe(49);
+    expect(ubiRoom(usage([['harn61', 30, 440], ['gbev91', 3, 12]]), 4)).toBe(3);
+    expect(ubiRoom(usage([['harn61', 30, 452], ['gbev91', 3, 12]]), 4)).toBe(0);
+    expect(ubiRoom(usage([['harn61', 30, 480], ['gbev91', 3, 12]]), 4)).toBe(0);
+    expect(ubiRoom(usage([['gbev53', 10, 160], ['gbev91', 11, 44]]), 4)).toBe(1);
+    expect(ubiRoom(usage([['gbev53', 10, 160], ['gbev91', 12, 48]]), 4)).toBe(0);
+    expect(ubiRoom('ubi-runner: usage failed (HTTP 502)', 4)).toBe(0);
+  });
+
   test('run refuses without a paid window, and with unknown worlds', async () => {
     await expect(main(['run'])).rejects.toThrow(/--paid-window/);
     await expect(main(['run', '--gbrain', SHA])).rejects.toThrow(/--paid-window/);
@@ -187,6 +198,6 @@ describe('why rows', () => {
   test("a run's misses in S1 and S5 to S8 come out with their question, gold, answer and context", () => {
     const rows = whyRows(PINNED_RUN);
     expect(rows.length).toBeGreaterThan(0);
-    expect(rows.every(r => WHY_CLASSES.includes(r.stratum) && r.gbrain.score === 0 && r.world === 'bg1-dev-01' && r.gbrain.answer !== null && r.gold.length > 0)).toBe(true);
+    expect(rows.every(r => WHY_CLASSES.includes(r.stratum) && r.gbrain.score === 0 && r.world === 'bg1-dev-01' && r.gbrain.answer !== null && !!r.gold)).toBe(true);
   });
 });

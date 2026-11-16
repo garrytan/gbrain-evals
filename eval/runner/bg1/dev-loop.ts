@@ -10,7 +10,9 @@
  *     Resolves the ref to a gbrain commit (without --gbrain, gbrain's newest release tag, so the baseline is always the
  *     newest build) and runs BG1's gbrain cell at it (configuration rs1-stable, arm P: query with
  *     the facts block, packed to 8,000 tokens) on one Ubicloud VM per dev world, each under its own metering proxy
- *     whose lease is the window cap over the worlds, then pulls the outputs into --out and prints `score`. The reader is
+ *     whose lease is the window cap over the worlds, then pulls the outputs into --out and prints `score`. Each VM starts
+ *     only after `ubi-runner.sh usage` shows room for it under the shared project's 464-vCPU line for evals and this
+ *     crew's 208 (owners starting gbev); otherwise it reads usage again every 5 minutes. The reader is
  *     claude-opus-5-5 at effort medium with 2,048 output tokens, and the gating judge is gpt-6-astra at the pinned judge
  *     settings (the family rule). Every answer also gets the canonical gemini-3.8-flash grade, as stage 1 ran it
  *     (descriptive). Needs ANTHROPIC_API_KEY, OPENAI_API_KEY, VOYAGE_API_KEY, GEMINI_API_KEY, UBICLOUD_API_KEY and UBI_OWNER.
@@ -187,6 +189,22 @@ export function vmPayload(sha: string, world: string, leaseId: string, leaseUsd:
     route_caps: { caps: { ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps(def.arms) }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' }, gemini_key_env: 'GEMINI_API_KEY' };
 }
 
+/** The shared Ubicloud project's line for eval VMs (512 vCPUs less 48 kept for merge checks), and one crew's share of it. */
+export const UBI_PROJECT_LINE = 464;
+export const UBI_CREW_LINE = 208;
+
+/**
+ * How many more VMs of `vcpus` each fit under both lines, from `ubi-runner.sh usage` (OWNER VMS VCPUS rows and a
+ * total row); this crew's VMs are the owners starting with `crewPrefix`. Unreadable usage fits none.
+ */
+export function ubiRoom(usage: string, vcpus: number, crewPrefix = 'gbev'): number {
+  const rows = usage.split('\n').map(l => l.trim().split(/\s+/)).filter(r => r.length === 3 && /^\d+$/.test(r[1]) && /^\d+$/.test(r[2]));
+  const total = rows.find(r => r[0] === 'total');
+  if (!total || !(vcpus > 0)) return 0;
+  const crew = rows.filter(r => r[0].startsWith(crewPrefix)).reduce((n, r) => n + Number(r[2]), 0);
+  return Math.max(0, Math.min(Math.floor((UBI_PROJECT_LINE - Number(total[2])) / vcpus), Math.floor((UBI_CREW_LINE - crew) / vcpus)));
+}
+
 /** What a dev-loop VM receives: the Q1 runner's paths, BG1's analysis code and the dev worlds. */
 export const SHIP_PATHS = [...new Set([...EXECUTES, ...Q1_VM_PATHS, 'eval/runner/bg1'])];
 
@@ -215,20 +233,32 @@ async function launch(argv: string[]): Promise<number> {
   writeFileSync(join(out, 'run.json'), JSON.stringify({ schema: RUN_SCHEMA, gbrain_ref: ref, gbrain_sha: sha, worlds, paid_window: window.unit, window_cap_usd: window.cap_usd, lease_usd_per_world: leaseUsd,
     reader: DEV_READER, judge: DEV_JUDGE, world_end: DEV_WORLD_END, as_of: DEV_AS_OF, started_at: new Date().toISOString() }, null, 2) + '\n');
   const runner = resolveRunner();
-  console.error(execFileSync('bash', [runner, 'usage'], { encoding: 'utf8' }));
-  const codes = await Promise.all(worlds.map((world, i) => new Promise<number>(done => {
+  const size = one('--vm-size') ?? 'standard-4';
+  const vcpus = Number(/^standard-(\d+)$/.exec(size)?.[1]);
+  if (!vcpus) throw new DevLoopRefusal(`--vm-size takes standard-<vcpus>, not ${size}`);
+  const running: Array<Promise<number>> = [];
+  for (const world of worlds) {
+    for (;;) {
+      let usage = '';
+      try { usage = execFileSync('bash', [runner, 'usage'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); } catch { usage = ''; }
+      if (ubiRoom(usage, vcpus) >= 1) break;
+      console.error(`dev loop: no room for a ${vcpus}-vCPU VM under the project's ${UBI_PROJECT_LINE} or this crew's ${UBI_CREW_LINE} (or usage unreadable); reading again in 5 minutes`);
+      await Bun.sleep(300_000);
+    }
     const leaseId = `devloop-${sha.slice(0, 12)}-${world}-${stamp}`;
     const payload = Buffer.from(JSON.stringify(vmPayload(sha, world, leaseId, leaseUsd))).toString('base64');
-    const args = [runner, 'run', '-s', one('--vm-size') ?? 'standard-4', '-l', one('--location') ?? 'eu-central-h1', '--src', REPO_ROOT, '--only', shipFile, '--setup', setup,
+    const args = [runner, 'run', '-s', size, '-l', one('--location') ?? 'eu-central-h1', '--src', REPO_ROOT, '--only', shipFile, '--setup', setup,
       ...VM_KEYS.flatMap(k => ['--pass', k]), '--pull', `work/${basename(REPO_ROOT)}/eval/reports/bg1-dev-loop/${leaseId}:${join(out, 'worlds')}`, '--', `bun eval/runner/shootout-cell.ts remote --cell-b64 ${payload}`];
-    setTimeout(() => {
+    running.push(new Promise<number>(done => {
       const p = spawn('bash', args, { cwd: REPO_ROOT, env: { ...process.env, UBI_TTL_HOURS: '7' }, stdio: ['ignore', 'pipe', 'pipe'] });
       const log = join(out, `${world}.log`);
       p.stdout.on('data', d => writeFileSync(log, d, { flag: 'a' }));
       p.stderr.on('data', d => writeFileSync(log, d, { flag: 'a' }));
       p.on('close', code => done(code ?? 1));
-    }, i * 20_000);
-  })));
+    }));
+    await Bun.sleep(90_000);
+  }
+  const codes = await Promise.all(running);
   console.error(`dev loop VMs exited ${codes.join(', ')}; outputs in ${join(out, 'worlds')}`);
   if (codes.some(c => c !== 0)) return 4;
   console.log(renderScore(scoreRun(out)));
@@ -432,7 +462,7 @@ export function renderScore(s: Score): string {
 // ─── Why rows ────────────────────────────────────────────────────────
 
 export interface WhyRow {
-  id: string; world: string; stratum: Bg1Stratum; question: string; gold: string;
+  id: string; world: string; stratum: Bg1Stratum; question: string; gold: string | null;
   /** Each needed value (every value of an ordered question, else the gold with its accepted forms as one) and whether gbrain's context held it. */
   needed: Array<{ value: string; in_context: boolean | null }>;
   stale_in_context: string[];
@@ -460,7 +490,7 @@ export function whyRows(dir: string, opts: { stage1?: string; classes?: readonly
   return [...row.records.values()].filter(r => classes.includes(r.stratum) && r.score === 0).sort((a, b) => (a.id < b.id ? -1 : 1)).map(r => {
     const q = qs.get(r.id)!;
     const { needed, stale } = neededValues(q, r.context);
-    return { id: r.id, world: r.world, stratum: r.stratum, question: q.question, gold: q.answer, needed, stale_in_context: stale, gbrain: { sha: row.gbrainSha, answer: r.answer, context: r.context, score: r.score },
+    return { id: r.id, world: r.world, stratum: r.stratum, question: q.question, gold: q.answer ?? null, needed, stale_in_context: stale, gbrain: { sha: row.gbrainSha, answer: r.answer, context: r.context, score: r.score },
       ...(comps ? { comparators: Object.fromEntries(COMPARATORS.map(c => { const x = comps[c].get(r.id)!; return [c, { answer: x.answer, context: x.context, score: x.score, gold_in_context: x.gold }]; })) } : {}) };
   });
 }
