@@ -242,3 +242,23 @@ result = {"a": a["items"][0], "recall": f.mcp_calls[1], "indexed": f.st["fact_in
     expect(f6('result = shim.fact_entry({"context": "from conversations/x/src-9 segment 2026-01-01T00:00:00Z..2026-01-01T00:00:00Z"})').ok.slug).toBe('conversations/x/src-9');
   });
 });
+
+// Value: protects=RS1's counted brains cannot change between /finish and their last question through serve's idle upkeep (gbrain 0.60.715.0+); fails_when=the shim stops writing or reading back maintenance.auto false under GBRAIN_IDLE_UPKEEP=off, or accepts a value it does not act on; why_new=RS1 moved to v0.60.733.0, which runs idle upkeep in serve (2026-11-16); seam=the fake adapter's config set/get; no_claim=that gbrain honours the key (the Docker smoke at the RS1 pin checks that)
+describe('idle upkeep switch (GBRAIN_IDLE_UPKEEP=off, RS1 cells)', () => {
+  test('off writes gbrain\'s own switch, maintenance.auto false, reads it back, and capabilities say so', () => {
+    const r = f6('f = Fake(); f.reference = None; result = [f.apply_posture(shim.IDLE_UPKEEP_POSTURE), f.cli_calls, f.capabilities()["idle_upkeep"]]', { GBRAIN_IDLE_UPKEEP: 'off' });
+    expect(r.ok).toEqual([{ 'maintenance.auto': 'false' }, [['config', 'set', 'maintenance.auto', 'false'], ['config', 'get', 'maintenance.auto']],
+      { configured_by: 'GBRAIN_IDLE_UPKEEP', off: true, posture: { 'maintenance.auto': 'false' } }]);
+  });
+  test('a switch that reads back any other value fails the install', () => {
+    const r = f6('result = Fake(readback={"maintenance.auto": "true"}).apply_posture(shim.IDLE_UPKEEP_POSTURE)', { GBRAIN_IDLE_UPKEEP: 'off' });
+    expect(r.error).toMatchObject({ kind: 'product_error' });
+    expect(r.error.message).toContain('maintenance.auto');
+  });
+  test('unset keeps gbrain\'s default; any value but off is refused before the install touches anything', () => {
+    expect(f6('f = Fake(); f.reference = None; result = f.capabilities()["idle_upkeep"]', {}).ok).toEqual({ configured_by: 'GBRAIN_IDLE_UPKEEP', off: false, posture: null });
+    const r = f6('result = Fake().install_brain()', { GBRAIN_IDLE_UPKEEP: 'on' });
+    expect(r.error).toMatchObject({ kind: 'invalid_request' });
+    expect(r.error.message).toContain('GBRAIN_IDLE_UPKEEP');
+  });
+});

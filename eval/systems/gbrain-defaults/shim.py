@@ -31,6 +31,13 @@ gbrain's safe-chunks repair, before the quiesce barrier; it then indexes every s
 An F6 policy names its op (query or recall), the op's arguments and an overlay of the six search keys. The shim applies
 an overlay only when it changes: stop serve, `gbrain config set` all six keys, read each back, start serve, and record
 the overlay's hash and switch time on the retrieval. Fact rows map to their source session through the fact index.
+
+GBRAIN_IDLE_UPKEEP=off (RS1's cells) turns off serve's idle upkeep: from gbrain 0.60.715.0 a stdio serve that has seen no
+input for a full 10-minute tick runs gbrain's free maintenance on the brain it serves (link and timeline extraction,
+repair lanes, bookkeeping GC, the capped embedding step and the conversation archive where it is on). Every install
+then writes gbrain's own off switch (`gbrain config set maintenance.auto false`, the "off" answer to init's upkeep
+question) and reads it back, so a pause in a cell's calls cannot change a brain between /finish and its last question.
+Every other first-run question keeps its default answer.
 """
 from __future__ import annotations
 
@@ -84,6 +91,9 @@ OVERLAY_VALUES = {"search.query_budget_unit": ("chunk", "auto")}
 # The arguments an F6 policy may pass to each op; the question fills query (and recall's question and query).
 F6_OPS = {"query": ("limit", "autocut", "expand", "token_budget"), "recall": ("budget_tokens",)}
 F6_POSTURE = (("facts.default_visibility", "world"),)
+# GBRAIN_IDLE_UPKEEP=off: the switch every install writes and reads back (module docstring); unset keeps gbrain's default.
+IDLE_UPKEEP = os.environ.get("GBRAIN_IDLE_UPKEEP", "")
+IDLE_UPKEEP_POSTURE = (("maintenance.auto", "false"),)
 EXTRACT_SESSION_PREFIX = "cli:extract-conversation-facts:"
 # Extraction is resumable per page; a pass that ends partial (some pages failed on a provider error) is run again.
 F6_EXTRACT_PASSES = 3
@@ -557,6 +567,8 @@ class GbrainDefaultsAdapter(Adapter):
         """One clean install at GBRAIN_HOME, the documented way: provider_base_urls first, init --pglite, the setup
         migrations, the scripted defaults reply; then the resolved configuration, the starter tools/list and a doctor
         run with the brain to itself."""
+        if IDLE_UPKEEP not in ("", "off"):
+            raise ShimError("invalid_request", f"GBRAIN_IDLE_UPKEEP is {IDLE_UPKEEP!r}; leave it unset for gbrain's default or set it to off")
         if not PROXY_BASE:
             raise ShimError("invalid_request", "GBRAIN_PROXY_BASE is unset; provider_base_urls must point at the metering proxy before init")
         pin = f6_pin_problem(IMAGE_SHA, LAUNCH_SHA) if F6 else None
@@ -573,7 +585,8 @@ class GbrainDefaultsAdapter(Adapter):
             raise ShimError("product_error", f"gbrain init --pglite did not succeed: {canonical(init)[:400]}")
         migrations = self.cli("apply-migrations", "--yes", "--non-interactive", "--no-autopilot-install", timeout_s=900, check=False)
         answered = self.answer_first_run_defaults(init)
-        posture = self.apply_f6_posture() if F6 else None
+        posture = self.apply_posture(F6_POSTURE) if F6 else None
+        upkeep = self.apply_posture(IDLE_UPKEEP_POSTURE) if IDLE_UPKEEP == "off" else None
         resolved = self.resolve_config()
         tools = self.capture_tools(["--surface", "starter"])
         missing = [op for op in STARTER_CALLS if op not in tools]
@@ -595,13 +608,15 @@ class GbrainDefaultsAdapter(Adapter):
             "starter_tools_sha256": sha256_text(canonical(sorted(tools))),
             "doctor": doctor_gate(doctor, 0),
             **({"f6_posture": posture} if F6 else {}),
+            **({"idle_upkeep": upkeep} if upkeep is not None else {}),
         }
         os.makedirs(os.path.join(HOME, "shim"), exist_ok=True)
         with open(os.path.join(HOME, "shim", "install.json"), "w") as f:
             json.dump(meta, f, indent=2)
         with open(os.path.join(HOME, "shim", "state.json"), "w") as f:
             json.dump({"sessions": {}}, f)
-        self.receipt("install", resolved_sha256=meta["resolved_sha256"], config_sha256=meta["config_sha256"], install_ms=meta["install_ms"], **({"f6_posture": posture} if F6 else {}))
+        self.receipt("install", resolved_sha256=meta["resolved_sha256"], config_sha256=meta["config_sha256"], install_ms=meta["install_ms"], **({"f6_posture": posture} if F6 else {}),
+                     **({"idle_upkeep": upkeep} if upkeep is not None else {}))
         return meta
 
     def answer_first_run_defaults(self, init: dict[str, Any]) -> list[dict[str, Any]]:
@@ -618,10 +633,10 @@ class GbrainDefaultsAdapter(Adapter):
                 out.append({"id": d.get("id"), "default": d.get("default"), "applied_argv": argv or None})
         return out
 
-    def apply_f6_posture(self) -> dict[str, str]:
-        """Write gbrain's single-principal facts posture and read it back (db-plane keys, outside config.json)."""
+    def apply_posture(self, pairs: tuple[tuple[str, str], ...]) -> dict[str, str]:
+        """Write db-plane config keys (F6's facts posture, the idle-upkeep switch) and read each back (outside config.json)."""
         out = {}
-        for key, value in F6_POSTURE:
+        for key, value in pairs:
             self.cli("config", "set", key, value)
             out[key] = self.cli("config", "get", key).stdout.strip()
             if out[key] != value:
@@ -792,6 +807,7 @@ class GbrainDefaultsAdapter(Adapter):
             out["versions"] = {**out["versions"], "package": f"gbrain (github:garrytan/gbrain#{IMAGE_SHA}{version}), installed with bun install -g",
                                "runtime": f"Bun {bun} ({BUN_IMAGE})"}
         out["f6"] = {**out.get("f6", {}), "enabled": F6, "gbrain_sha": IMAGE_SHA if F6 else None, "extract_cap_usd": float(F6_EXTRACT_CAP_USD) if F6 and F6_EXTRACT_CAP_USD else None, "overlay_keys": list(SEARCH_OVERLAY_KEYS)}
+        out["idle_upkeep"] = {"configured_by": "GBRAIN_IDLE_UPKEEP", "off": IDLE_UPKEEP == "off", "posture": dict(IDLE_UPKEEP_POSTURE) if IDLE_UPKEEP == "off" else None}
         out["shipped_behavior"] = {"delivery_fallbacks": sorted(SHIPPED_BEHAVIOR), "preregistered": list(PREREGISTERED_SHIPPED_BEHAVIOR),
                                    "configured_by": "GBRAIN_SHIPPED_FALLBACKS", "matches_preregistration": sorted(SHIPPED_BEHAVIOR) == sorted(PREREGISTERED_SHIPPED_BEHAVIOR)}
         if self.reference is not None:

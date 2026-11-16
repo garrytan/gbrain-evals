@@ -4,7 +4,7 @@
  * cell is a Q1 cell definition the same runner executes: `bun eval/runner/q1/cell.ts run --cell <id> --manifest rs1`.
  *
  *   Counted (set RS1, sealed, at the cap of 33 kept conversations): gbrain's newest release at wave A's launch
- *     (configuration rs1-stable, a name kept from the stable-tag pin; F6's build path with arm P's retrieval), the memory-bank server (recipe) and the extract-first server
+ *     (configuration rs1-stable, a name kept from the stable-tag pin; F6's build path with arm P's retrieval; serve's idle upkeep off), the memory-bank server (recipe) and the extract-first server
  *     (common) at 8,000 tokens, and the no-memory floor; readers claude-opus-5-5 and gpt-6.1-sol. Each cell runs as
  *     launch units of five kept conversations in slot order (kept_units): units 0 to 3 are wave A (the first 20 kept),
  *     the rest wave B, whose cells a dated amendment regenerates once the pilot sets N_final.

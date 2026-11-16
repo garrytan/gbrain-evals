@@ -27,6 +27,7 @@
       "gbrain init --pglite --json (dummy VOYAGE_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY in the environment)",
       "gbrain apply-migrations --yes --non-interactive --no-autopilot-install (the setup step gbrain's postinstall runs; bun install -g blocks postinstall scripts)",
       "the scripted 'defaults' reply: every first_run_decisions default option's argv, as init printed it",
+      "with GBRAIN_IDLE_UPKEEP=off (RS1's cells): gbrain config set maintenance.auto false, read back, so serve runs no idle upkeep (gbrain 0.60.715.0 and later; the off answer to init's upkeep question)",
       "gbrain serve --surface starter over MCP stdio (the registration gbrain's harness_wiring option names)"
     ],
     "first_run_defaults": {

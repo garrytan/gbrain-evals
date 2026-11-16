@@ -38,6 +38,7 @@ describe('rs1-cells.json', () => {
     expect([g.arms[0].retrieval, g.arms[0].policy]).toEqual([f6.retrieval, f6.policy]);
     expect(g.launch?.env.GBRAIN_F6).toBe('1');
     expect(g.launch?.env.GBRAIN_SHA).toBe('6ce7195b44a034f85aec811f11fbf862db376f50');
+    expect(g.launch?.env.GBRAIN_IDLE_UPKEEP).toBe('off');
     expect(Number(g.launch?.env.GBRAIN_F6_EXTRACT_CAP_USD)).toBeGreaterThan(0);
     expect(m.waves.A.length).toBe(16);
   });
