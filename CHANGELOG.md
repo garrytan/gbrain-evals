@@ -2,6 +2,31 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.237] - 2026-11-16
+
+### Changing-facts battleground: corrected exposure for withdrawn facts
+
+- **Corrected.** [docs/benchmarks/2026-11-15-changing-facts-battleground-results.md](docs/benchmarks/2026-11-15-changing-facts-battleground-results.md)
+  now says gbrain's contexts held the withdrawal for 85% of the withdrawn-fact (S5) questions, against 95% for the
+  memory-bank server and 97% for the extract-first server. It first said 60% against 52% and 80%, and put gbrain's S5
+  loss to the memory-bank server down to reading; with the corrected figures, gbrain's context held the withdrawal less
+  often than both servers' by more than its S5 loss to each. The published count took a call-off anywhere in the
+  context; the corrected one needs the entity, the withdrawn value and a call-off word in one sentence. Hybrid search's
+  contexts held the right value for 20% of all questions, not 23%. The corrected figures sit in
+  `exposure-correction.json` beside the unchanged `verdict.json`, and [docs/corrections.md](docs/corrections.md) lists
+  the correction. No accuracy figure, interval or verdict changes.
+
+### A re-pin needs a new row in the SkillOpt replay test only when gbrain's answers change
+
+- **What changed.** `test/eval/skillopt-tool-calls.test.ts` replays GPT-6.1 Sol's 651 recorded SkillOpt calls and
+  keeps the counts for each gbrain pin. A pin with no row of its own must now give the newest row's counts, instead of
+  failing because it has no row, so a re-pin that changes nothing there passes as is. When gbrain changes the counts,
+  the test still fails until the new pin gets its row. Two limits in [README.md](README.md) and two lines in
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md) name `6ce7195b4` (v0.60.733.0), where they were checked,
+  instead of "the pin".
+- **Why.** A daily re-pin should stay mechanical, and a claim checked at one commit shouldn't move to the next pin
+  unchecked.
+
 ## [0.10.236] - 2026-11-16
 
 ### One page names the gbrain pin, and `bump` updates it
