@@ -48,9 +48,9 @@
  * 2026-11-09 and 2026-11-10 at commits 4306e9e3 and 5958985d). `baselines` records the run-config settings that reach
  * the reader and the gating judge, and `score` refuses a gbrain run whose settings differ from them.
  */
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS } from '../metering-proxy.ts';
@@ -237,7 +237,8 @@ async function launch(argv: string[]): Promise<number> {
   const vcpus = Number(/^standard-(\d+)$/.exec(size)?.[1]);
   if (!vcpus) throw new DevLoopRefusal(`--vm-size takes standard-<vcpus>, not ${size}`);
   const running: Array<Promise<number>> = [];
-  for (const world of worlds) {
+  for (const [i, world] of worlds.entries()) {
+    if (i) await Bun.sleep(90_000);
     for (;;) {
       let usage = '';
       try { usage = execFileSync('bash', [runner, 'usage'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); } catch { usage = ''; }
@@ -249,14 +250,9 @@ async function launch(argv: string[]): Promise<number> {
     const payload = Buffer.from(JSON.stringify(vmPayload(sha, world, leaseId, leaseUsd))).toString('base64');
     const args = [runner, 'run', '-s', size, '-l', one('--location') ?? 'eu-central-h1', '--src', REPO_ROOT, '--only', shipFile, '--setup', setup,
       ...VM_KEYS.flatMap(k => ['--pass', k]), '--pull', `work/${basename(REPO_ROOT)}/eval/reports/bg1-dev-loop/${leaseId}:${join(out, 'worlds')}`, '--', `bun eval/runner/shootout-cell.ts remote --cell-b64 ${payload}`];
-    running.push(new Promise<number>(done => {
-      const p = spawn('bash', args, { cwd: REPO_ROOT, env: { ...process.env, UBI_TTL_HOURS: '7' }, stdio: ['ignore', 'pipe', 'pipe'] });
-      const log = join(out, `${world}.log`);
-      p.stdout.on('data', d => writeFileSync(log, d, { flag: 'a' }));
-      p.stderr.on('data', d => writeFileSync(log, d, { flag: 'a' }));
-      p.on('close', code => done(code ?? 1));
-    }));
-    await Bun.sleep(90_000);
+    const log = openSync(join(out, `${world}.log`), 'a');
+    const p = Bun.spawn(['bash', ...args], { cwd: REPO_ROOT, env: { ...process.env, UBI_TTL_HOURS: '7' }, stdin: 'ignore', stdout: log, stderr: log });
+    running.push(p.exited.finally(() => closeSync(log)));
   }
   const codes = await Promise.all(running);
   console.error(`dev loop VMs exited ${codes.join(', ')}; outputs in ${join(out, 'worlds')}`);
