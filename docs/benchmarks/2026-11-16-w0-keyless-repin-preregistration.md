@@ -173,25 +173,34 @@ None: no paid request. The VMs are compute only, and no provider key exists on t
 ### 2026-11-16: background upkeep, one gbrain home per step and a log of live servers, before any counted run
 
 From v0.60.715.0, an idle `gbrain serve` (stdio or HTTP) runs gbrain's free upkeep, which includes link and timeline
-extraction, repair lanes, bookkeeping cleanup and the conversation archive. v0.60.169.0 has only the older idle sweep. A
-newer release tag was not published since the preregistration (`git ls-remote` still gives v0.60.733.0). Frozen before
-any counted run:
+extraction, repair lanes, bookkeeping cleanup and, from v0.60.726.0, the conversation archive. Both builds also have
+older background work in a server: a stdio server sweeps once when it starts and again on its idle tick, and an HTTP
+server checks for corpus files waiting to be ingested. No newer release tag has been published since the
+preregistration (`git ls-remote` still gives v0.60.733.0). Frozen before any counted run:
 
-1. **Which steps start a long-lived gbrain process.** `gbrain serve` runs in N1's and N5's MCP stdio and MCP HTTP cells
-   (the offline-tier slices and step 7), in N6 on Postgres over HTTP (step 8), in the lifecycle matrix's MCP cells
-   (step 18), in the wave 8 checks that talk to a stdio server (step 4), and wherever an offline-tier category starts
-   one. No timed step starts one: Cat 7 (`perf.ts`), the Cat7-1 repro and Cat 28 open their brains in process.
+1. **Which steps start a long-lived gbrain process.** A `gbrain serve` (stdio or HTTP) runs in these steps: N1's and
+   N5's MCP cells (their offline-tier slices and step 7), the lifecycle matrix (its offline-tier slice and step 18),
+   forward-reference heal (offline tier), the wave 8 checks (step 4: a stdio server in `checks/lib.ts` and an HTTP
+   server in `grants-empty-sources-5231.ts`), the operator-wave check `grant-hint-token-id.ts` (step 5) and N6 on
+   Postgres over HTTP (step 8). No timed measurement runs beside one: `all.ts` runs Cat 7 and Cat 28 alone after the
+   offline tier's other categories finish, and Cat 7 (`perf.ts`), the Cat7-1 repro and Cat 28 open their brains in
+   process.
 2. **Homes.** Those runners already give each cell its own `GBRAIN_HOME`, and N6 on Postgres and the lifecycle matrix
    also give each cell its own `HOME`. `vm/run.sh` now also gives every step a fresh `GBRAIN_HOME`, so no two steps
    share a gbrain home and nothing uses `~/.gbrain`. `HOME` is the VM user's home, which holds no agent session
    folders. `keys.txt` records that `.claude`, `.codex`, `.openclaw` and `.gbrain` are absent before the run, and
    `host.txt` records whether `~/.gbrain` exists after it.
 3. **Upkeep stays on, as shipped, at both builds.** This check measures what an install does, so neither
-   `GBRAIN_SWEEP` nor `maintenance.auto` is set. A young server cannot run upkeep. Its idle timer ticks every 10
-   minutes and the first tick only opens the window, so a server must have been alive at least 20 minutes, with no
-   request in the last 10, before upkeep or the idle sweep can start (`armIdleUpkeep` in `src/core/maintenance/idle.ts`
-   and the stdio idle tick in `src/commands/serve.ts` at `6ce7195b`; the old build's idle sweep has the same
-   cadence). `vm/run.sh` logs every live server and its age every 10 seconds (`serve-ages.log`). A server seen older
-   than 20 minutes is reported with its step, and that step's results are reported as possibly touched by upkeep.
-4. **Timing.** Before each step-19 Cat 7 run, `vm/run.sh` records any server still alive and stops it. A timing run
-   during which `serve-ages.log` shows a live server does not count toward a timing verdict, and is reported.
+   `GBRAIN_SWEEP` nor `maintenance.auto` is set, and `keys.txt` records that `GBRAIN_SWEEP` and
+   `GBRAIN_SWEEP_IDLE_INTERVAL_MS` are unset. The startup sweep runs in every stdio cell at both builds, so it is part
+   of what those cells measure. Everything else waits on a 10-minute timer (source at `6ce7195b` and `77cf8e111`):
+   an HTTP server's corpus check first runs 10 minutes after it starts (`armCorpusDrain` in `src/core/sweep.ts`,
+   both builds), and a stdio server's idle sweep and the new build's idle upkeep, stdio or HTTP, skip their first
+   10-minute window, so they start no earlier than 20 minutes (`src/commands/serve.ts` and `armIdleUpkeep` in
+   `src/core/maintenance/idle.ts`). So a server younger than 10 minutes has run only its startup sweep. `vm/run.sh`
+   logs every live server and its age every 10 seconds (`serve-ages.log`). A server seen older than 10 minutes is
+   reported with its step, and that step's results are reported as possibly touched by background work.
+4. **Timing.** Before each step-19 Cat 7 run, `vm/run.sh` records any server still alive and stops it. A step-19 run
+   during which `serve-ages.log` shows a live server does not count toward a timing verdict, and is reported. If the
+   log shows a server older than 10 minutes during the offline tier, that tier's Cat 7 and Cat 28 results are reported
+   but do not decide a latency verdict.
