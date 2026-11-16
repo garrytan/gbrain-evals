@@ -60,6 +60,8 @@ export const MODEL_SETTINGS: Record<string, { provider: Provider; reasoning: boo
 };
 
 export const JUDGE_SECONDARY = { model: 'gpt-6.1-sol', effort: 'low', max_output_tokens: 2000 } as const;
+/** R3's co-judge of GPT readers' rows (R78: no judge grades its own family): Opus 5.5 with W10's secondary-judge settings. */
+export const JUDGE_OPUS = { model: 'claude-opus-5-5', effort: 'low', max_output_tokens: 2000 } as const;
 
 export function assertOutputFloor(model: string, maxOutputTokens: number, floor?: number): void {
   const settings = MODEL_SETTINGS[model];

@@ -16,17 +16,18 @@
  * discount). Workstream caps are the plan's: W10a $28, W10b $107, W10c $50,
  * W8's LongMemEval control $5.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { gzipSync } from 'node:zlib';
+import { gunzipSync, gzipSync } from 'node:zlib';
 import { BudgetRun, installPaidRequestGuard, ledgerStatus, readLedger } from '../budget-ledger.ts';
 import { attestPreregistration, type Attestation } from '../prereg.ts';
-import { buildManifest, freezeManifest, JUDGE_SECONDARY, MODEL_SETTINGS, readManifest, sha256, type ArmManifest } from './manifest.ts';
+import { buildManifest, freezeManifest, JUDGE_OPUS, JUDGE_SECONDARY, MODEL_SETTINGS, readManifest, sha256, type ArmManifest } from './manifest.ts';
 import {
   HOUSE_DIRECT_PROTOCOL, HOUSE_NOTES_PROTOCOL, JUDGE_PROTOCOL, OFFICIAL_PROTOCOL, assertFitsWindow, fullHistoryText, judgeBody, loadDataset, loadReplay,
   officialPromptFromReplay, officialReaderBody, parseSessionBlocks, readNdjson, readerBody, removeSessionBlock, reportType, seededPermutation, seededSample, stratifiedSample,
-  swapSessions, type Question, type ReplayRow,
+  swapSessions, type JudgeRole, type Question, type ReaderText, type ReplayRow,
 } from './sources.ts';
 import { anthropicTransport, openAiTransport } from './transport.ts';
 import { BatchLane } from './submit.ts';
@@ -43,14 +44,51 @@ export const SEED = 20261006;
 export const PILOT_SIZE = 10;
 export const PREREGISTERED_FACTOR = 0.5;
 
-export type Workstream = 'W10a' | 'W10b' | 'W10c' | 'W8-LME';
-export const CAPS: Record<Workstream, number> = { W10a: 28, W10b: 107, W10c: 50, 'W8-LME': 5 };
+export type Workstream = 'W10a' | 'W10b' | 'W10c' | 'W8-LME' | 'R3';
+export const CAPS: Record<Exclude<Workstream, 'R3'>, number> = { W10a: 28, W10b: 107, W10c: 50, 'W8-LME': 5 };
 export const PREREG: Record<Workstream, string> = {
   W10a: 'docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md',
   W10b: 'docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md',
   W10c: 'docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md',
   'W8-LME': 'docs/benchmarks/2026-10-06-w8-longmemeval-control-preregistration.md',
+  R3: 'docs/benchmarks/2026-10-06-longmemeval-w10-preregistration.md',
 };
+
+/**
+ * R3, the W10 amendment of 2026-11-16: W10c's comparison re-measured at gbrain's newest release at launch, frozen once
+ * its capture starts. Its budget runs are opened outside this file and passed as --budget-run-id, and every paid R3
+ * step names the paid window it runs in (--paid-window), so no cap or grant lives in the code.
+ */
+export const R3_GBRAIN = { version: '0.60.733.0', sha: '6ce7195b44a034f85aec811f11fbf862db376f50' } as const;
+export const R3_DIR = join(ROOT, 'docs/benchmarks/2026-11-16-longmemeval-w10-newest');
+export const R3_CAPTURE_DIR = join(STATE_DIR, 'r3-capture');
+export const R3_UNITS = { capture: 'R3-A', batch: 'R3-B', particle: 'R3-P' } as const;
+const PARTICLE_STATE_DIR = process.env.W10_PARTICLE_STATE_DIR ?? join(homedir(), '.capy/work/w10-particle');
+/** The whole-history text W10c's two arms and the particle replay read (the replay's build.json, sources.full). */
+const W10C_FULL_TEXT_SHA = 'dce4acb7fe76f3b0eb9a69917e2a4c0098a05cb469d2a092ee446c72ea0ad92b';
+
+/** A paid R3 step runs only inside the paid window it names: `--paid-window <unit>` on its command line, or it refuses before any client exists. */
+export function requireR3Window(argv: readonly string[], unit: string): void {
+  const i = argv.indexOf('--paid-window');
+  const named = i >= 0 ? argv[i + 1] : undefined;
+  if (named !== unit) throw new Error(`R3 refuses: this step spends money and runs only inside paid window ${unit}; pass --paid-window ${unit} once the window is granted (got ${named ?? 'none'})`);
+}
+
+/** The gbrain build node_modules/gbrain holds must be R3's frozen pin: a git checkout at R3_GBRAIN.sha whose package.json names its version. */
+export function assertR3Gbrain(root = join(ROOT, 'node_modules/gbrain')): { version: string; sha: string } {
+  const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+  let sha = '';
+  try { sha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(); } catch { sha = ''; }
+  if (version !== R3_GBRAIN.version || sha !== R3_GBRAIN.sha) throw new Error(`R3 runs gbrain v${R3_GBRAIN.version} at ${R3_GBRAIN.sha.slice(0, 8)}; ${root} holds v${version} at ${sha ? sha.slice(0, 8) : 'no git checkout'} (install it by sha: eval/runner/batch/r3-vm-setup.sh)`);
+  return { version, sha };
+}
+
+/** W10c's whole-history text, saved by `w10-particle.ts build` after it re-hashed both W10c whole-history manifests from a gbrain c5fb0201 checkout. */
+function r3FullText(): Map<string, ReaderText> {
+  const content = gunzipSync(readFileSync(join(PARTICLE_STATE_DIR, 'inputs', 'full.ndjson.gz'))).toString('utf8');
+  if (sha256(content) !== W10C_FULL_TEXT_SHA) throw new Error(`the saved whole-history text hashes to ${sha256(content).slice(0, 12)}, not the ${W10C_FULL_TEXT_SHA.slice(0, 12)} W10c and the particle replay read; run w10-particle.ts build --r3 --gbrain-c5fb0201 <checkout> first`);
+  return new Map(content.split('\n').filter(Boolean).map(l => { const r = JSON.parse(l); return [r.question_id, { system: r.system, user: r.user }]; }));
+}
 
 // ─── Inputs ─────────────────────────────────────────────────────────
 
@@ -72,12 +110,13 @@ export const subsets = {
 
 export const CAPTURE_PATH = join(STATE_DIR, 'w10a-capture/captures.ndjson');
 
-/** W10a captured reader text by question id: the last capture per question text and date, joined through the harness rows. */
-function captures(): Map<string, { system: string; user: string; max_tokens: number; model: string }> {
-  const committed = join(ROOT, 'docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin/capture');
-  const local = existsSync(CAPTURE_PATH);
-  const rows = readNdjson(local ? join(STATE_DIR, 'w10a-capture/rows.ndjson') : join(committed, 'harness-rows.ndjson.gz')).filter(r => typeof r.question_id === 'string');
-  const caps = readNdjson(local ? CAPTURE_PATH : join(committed, 'captures.ndjson.gz'));
+/** Captured reader text by question id (W10a's, or R3's at the newest release): the last capture per question text and date, joined through the harness rows. */
+function captures(which: 'w10a' | 'r3' = 'w10a'): Map<string, { system: string; user: string; max_tokens: number; model: string }> {
+  const committed = which === 'r3' ? join(R3_DIR, 'capture') : join(ROOT, 'docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin/capture');
+  const localDir = which === 'r3' ? R3_CAPTURE_DIR : join(STATE_DIR, 'w10a-capture');
+  const local = existsSync(join(localDir, 'captures.ndjson'));
+  const rows = readNdjson(local ? join(localDir, 'rows.ndjson') : join(committed, 'harness-rows.ndjson.gz')).filter(r => typeof r.question_id === 'string');
+  const caps = readNdjson(local ? join(localDir, 'captures.ndjson') : join(committed, 'captures.ndjson.gz'));
   const byKey = new Map(caps.map(c => [`${c.question}\u0000${c.question_date}`, c]));
   const ds = dataset();
   const out = new Map<string, { system: string; user: string; max_tokens: number; model: string }>();
@@ -178,6 +217,21 @@ export const ARMS: Record<string, ArmDef> = Object.fromEntries(([
       return { bodies, source: `full haystack in the house notes prompt (gbrain c5fb0201 haystackToPages + renderChatBlock at 60,000 chars per session + buildReaderRequest), W10c 150-question stratified subset (seed ${SEED}), dataset sha256 d6f21ea9`, protocol: HOUSE_NOTES_PROTOCOL, meta };
     },
   })),
+  ...(['claude-opus-5-5', 'gpt-6.1-sol'] as const).map(model => ({
+    id: `r3-${model === 'gpt-6.1-sol' ? 'sol' : 'opus55'}-newest`, workstream: 'R3' as const, model, build: () => {
+      const caps = captures('r3');
+      const ids = subsets.w10c150();
+      const missing = ids.filter(id => !caps.has(id));
+      if (missing.length) throw new Error(`R3 capture has no reader request for ${missing.length} of the 150 questions (first ${missing[0]}); resume the capture before building`);
+      return { bodies: new Map(ids.map(id => [id, readerBody(model, caps.get(id)!)])), source: `R3 stub-reader capture of gbrain eval longmemeval at ${R3_GBRAIN.sha.slice(0, 8)} (v${R3_GBRAIN.version}, release retrieval), W10c's 150-question stratified subset (seed ${SEED}); system and user text unchanged`, protocol: HOUSE_NOTES_PROTOCOL };
+    },
+  })),
+  {
+    id: 'r3-opus55-full', workstream: 'R3', model: 'claude-opus-5-5', build: () => {
+      const text = r3FullText();
+      return { bodies: new Map(subsets.w10c150().map(id => [id, readerBody('claude-opus-5-5', text.get(id)!)])), source: `W10c's whole-history text exactly as w10c-sonnet55-full and w10c-sol-full sent it (gbrain c5fb0201 rendering, text sha256 ${W10C_FULL_TEXT_SHA.slice(0, 8)}, re-hashed against both committed manifests by w10-particle.ts build), W10c 150-question stratified subset (seed ${SEED})`, protocol: HOUSE_NOTES_PROTOCOL };
+    },
+  },
   {
     id: 'w8-lme-swap', workstream: 'W8-LME', model: 'claude-sonnet-5-5', build: () => {
       const rows = r1();
@@ -222,7 +276,8 @@ function loadBodies(arm: string): Map<string, Record<string, unknown>> {
 }
 
 function workstreamOf(arm: string): Workstream {
-  const base = arm.split('--')[0];
+  const [base, role] = arm.split('--');
+  if (base.startsWith('r3-') || role === 'opus') return 'R3';
   if (ARMS[base]) return ARMS[base].workstream;
   if (base === 'r1-sonnet46' || base === 'r2-sonnet46') return 'W10b';
   throw new Error(`unknown arm ${arm}`);
@@ -238,9 +293,17 @@ export function attest(ws: Workstream): Attestation {
   return all[ws];
 }
 
-export function budgetRun(ws: Workstream, ledgerPath: string): BudgetRun {
+export function budgetRun(ws: Workstream, ledgerPath: string, r3RunId?: string): BudgetRun {
   const path = join(STATE_DIR, 'runs.json');
   const runs = jsonFile<Record<string, string>>(path, {});
+  if (ws === 'R3') {
+    const runId = r3RunId ?? runs[ws];
+    if (!runId) throw new Error('R3 joins a budget run opened for it outside this file: pass --budget-run-id <id>');
+    if (runs[ws] && runs[ws] !== runId) throw new Error(`R3's batch lane already settles against budget run ${runs[ws]}; pass that id`);
+    const run = BudgetRun.join({ runId, ledgerPath });
+    if (!runs[ws]) { runs[ws] = runId; writeJson(path, runs); }
+    return run;
+  }
   if (runs[ws]) return BudgetRun.join({ runId: runs[ws], ledgerPath });
   const run = BudgetRun.open({ runner: `${ws.toLowerCase()}-batch`, budgetUsd: CAPS[ws], ledgerPath });
   runs[ws] = run.runId;
@@ -254,8 +317,39 @@ function lane(run: BudgetRun): BatchLane {
 
 // ─── Judges ─────────────────────────────────────────────────────────
 
+/**
+ * Committed reader rows an R3 judge grades without calling their reader again: W10c's GPT-6.1 Sol rows (the reused whole
+ * history and the c5fb0201 retrieval of the old-build pair) and R3's particle-1 rows, with the reader family that rules
+ * out its own family's judge.
+ */
+export const STORED_ROWS: Record<string, { path: string; family: 'claude' | 'gpt' | 'particle' }> = {
+  'w10c-sol-full': { path: 'docs/benchmarks/2026-10-07-longmemeval-w10c-full-context/arms/w10c-sol-full/rows.ndjson', family: 'gpt' },
+  'w10c-sol-currentpin': { path: 'docs/benchmarks/2026-10-07-longmemeval-w10c-full-context/arms/w10c-sol-currentpin/rows.ndjson', family: 'gpt' },
+  'r3-particle-newest': { path: 'docs/benchmarks/2026-11-16-longmemeval-w10-newest/arms/r3-particle-newest/rows.ndjson', family: 'particle' },
+  'r3-particle-full': { path: 'docs/benchmarks/2026-11-16-longmemeval-w10-newest/arms/r3-particle-full/rows.ndjson', family: 'particle' },
+  'r3-particle-currentpin': { path: 'docs/benchmarks/2026-11-16-longmemeval-w10-newest/arms/r3-particle-currentpin/rows.ndjson', family: 'particle' },
+};
+
+/** The family of the reader whose rows a judge would grade; R3 refuses a judge of the same family (R78). */
+export function readerFamily(base: string): 'claude' | 'gpt' | 'particle' {
+  if (STORED_ROWS[base]) return STORED_ROWS[base].family;
+  const model = ARMS[base]?.model ?? '';
+  return model.startsWith('claude-') ? 'claude' : 'gpt';
+}
+
+/** R3 judges only rows from another family: Opus grades GPT readers' rows, gpt-6.1-sol grades Claude and particle-1 rows. */
+export function assertCrossFamily(base: string, role: JudgeRole): void {
+  const family = readerFamily(base);
+  if (role === 'opus' && family === 'claude') throw new Error(`${base}: claude-opus-5-5 never judges a Claude reader's rows`);
+  if (role === 'secondary' && workstreamOf(base) === 'R3' && family === 'gpt') throw new Error(`${base}: gpt-6.1-sol never judges a GPT reader's rows in R3`);
+}
+
 /** Reader rows of an arm (or the replayed Sonnet 4.6 baseline) that a judge should see: every row without a reader error. */
-function rowsToJudge(base: string, l: BatchLane): { question_id: string; hypothesis: string }[] {
+function rowsToJudge(base: string, l: BatchLane, role: JudgeRole = 'official'): { question_id: string; hypothesis: string }[] {
+  const stored = STORED_ROWS[base];
+  if (stored && (role === 'opus' || base.startsWith('r3-'))) {
+    return readNdjson(join(ROOT, stored.path)).filter(r => !r.error && typeof r.hypothesis === 'string' && r.hypothesis.trim() !== '').map(r => ({ question_id: r.question_id, hypothesis: r.hypothesis }));
+  }
   if (base === 'r1-sonnet46' || base === 'r2-sonnet46') {
     const replay = base === 'r1-sonnet46' ? r1() : r2();
     return [...replay.values()].filter(r => r.baseline.hypothesis).map(r => ({ question_id: r.question_id, hypothesis: r.baseline.hypothesis }));
@@ -266,16 +360,18 @@ function rowsToJudge(base: string, l: BatchLane): { question_id: string; hypothe
   return readerRows(manifest, l.results(base), types()).filter(r => !r.error);
 }
 
-function buildJudge(base: string, role: 'official' | 'secondary', l: BatchLane): { manifest: ArmManifest; bodies: Map<string, Record<string, unknown>> } {
-  const rows = rowsToJudge(base, l);
+function buildJudge(base: string, role: JudgeRole, l: BatchLane): { manifest: ArmManifest; bodies: Map<string, Record<string, unknown>> } {
+  if (workstreamOf(`${base}--${role}`) === 'R3') assertCrossFamily(base, role);
+  const rows = rowsToJudge(base, l, role);
   const r = r1();
   const bodies = new Map(rows.map(x => [x.question_id, judgeBody(role, r.get(x.question_id)!, x.hypothesis)]));
-  const model = role === 'official' ? 'gpt-4o-2024-08-06' : JUDGE_SECONDARY.model;
+  const judge = role === 'official' ? { model: 'gpt-4o-2024-08-06', effort: null, max_output_tokens: 10 } : role === 'opus' ? JUDGE_OPUS : JUDGE_SECONDARY;
+  const label = role === 'official' ? 'primary (official gpt-4o-2024-08-06, temperature 0, 10 tokens)' : role === 'opus' ? 'R3 co-judge (claude-opus-5-5, low effort, 2,000 tokens)' : 'secondary (gpt-6.1-sol, low effort, 2,000 tokens)';
   const manifest = buildManifest({
-    arm_id: `${base}--${role}`, workstream: workstreamOf(base), kind: 'judge', provider: 'openai', model,
-    max_output_tokens: role === 'official' ? 10 : JUDGE_SECONDARY.max_output_tokens, reasoning_effort: role === 'official' ? null : JUDGE_SECONDARY.effort,
-    protocol: JUDGE_PROTOCOL, source: `${role === 'official' ? 'primary (official gpt-4o-2024-08-06, temperature 0, 10 tokens)' : 'secondary (gpt-6.1-sol, low effort, 2,000 tokens)'} judge over ${base}'s rows without a reader error`,
-    denominator: bodies.size, bodies, ...(role === 'secondary' ? { outputFloor: JUDGE_SECONDARY.max_output_tokens } : {}),
+    arm_id: `${base}--${role}`, workstream: workstreamOf(`${base}--${role}`), kind: 'judge', provider: role === 'opus' ? 'anthropic' : 'openai', model: judge.model,
+    max_output_tokens: judge.max_output_tokens, reasoning_effort: judge.effort,
+    protocol: JUDGE_PROTOCOL, source: `${label} judge over ${base}'s rows without a reader error${STORED_ROWS[base] && (role === 'opus' || base.startsWith('r3-')) ? ` (committed rows, ${STORED_ROWS[base].path})` : ''}`,
+    denominator: bodies.size, bodies, ...(role === 'official' ? {} : { outputFloor: judge.max_output_tokens }),
   });
   return { manifest, bodies };
 }
@@ -321,12 +417,14 @@ export function exportArm(l: BatchLane, arm: string, dir: string): Record<string
   const judge = (role: string) => (existsSync(manifestPath(`${arm}--${role}`)) ? l.results(`${arm}--${role}`) : null);
   const official = judge('official') ?? new Map();
   const secondary = judge('secondary');
+  const opus = judge('opus');
   const scored = scoreRows(rows, official, secondary);
-  const summary = summarize(manifest, rows, scored);
-  const intents = [arm, `${arm}--official`, `${arm}--secondary`].flatMap(a => l.intents({ arm_id: a })).map(i => ({ ...i, items: i.items.map(x => ({ question_id: x.question_id, custom_id: x.custom_id, input_tokens: x.input_tokens, worst_list_usd: x.worst_list_usd })) }));
+  const byOpus = opus ? scoreRows(rows, official, opus) : null;
+  const summary = { ...summarize(manifest, rows, scored), ...(byOpus ? { correct_opus: byOpus.reduce((a, s) => a + (s.correct_secondary ?? 0), 0) } : {}) };
+  const intents = [arm, `${arm}--official`, `${arm}--secondary`, `${arm}--opus`].flatMap(a => l.intents({ arm_id: a })).map(i => ({ ...i, items: i.items.map(x => ({ question_id: x.question_id, custom_id: x.custom_id, input_tokens: x.input_tokens, worst_list_usd: x.worst_list_usd })) }));
   const factors = [...new Set(intents.map(i => `${i.provider}:${i.model}`))].map(k => { const [p, m] = k.split(':'); return l.factorFor(p as 'openai', m); });
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'rows.ndjson'), rows.map((r: ReaderRow, k) => JSON.stringify({ ...r, official: scored[k].official, secondary: scored[k].secondary, correct_official: scored[k].correct_official, correct_secondary: scored[k].correct_secondary })).join('\n') + '\n');
+  writeFileSync(join(dir, 'rows.ndjson'), rows.map((r: ReaderRow, k) => JSON.stringify({ ...r, official: scored[k].official, secondary: scored[k].secondary, correct_official: scored[k].correct_official, correct_secondary: scored[k].correct_secondary, ...(byOpus ? { opus: byOpus[k].secondary, correct_opus: byOpus[k].correct_secondary } : {}) })).join('\n') + '\n');
   const receipt = {
     schema_version: 1, arm_id: arm, workstream: manifest.workstream, model: manifest.model, manifest: `docs/benchmarks/2026-10-06-longmemeval-w10-manifests/${arm}.json`, manifest_sha256: sha256(readFileSync(manifestPath(arm))),
     summary, intents, factors, preregistration_attestation: jsonFile<Record<string, Attestation>>(join(STATE_DIR, 'attestations.json'), {})[manifest.workstream] ?? null,
@@ -359,7 +457,7 @@ async function main(argv: string[]) {
     for (const i of l.intents()) console.log(`${i.intent_id} ${i.arm_id} ${i.state} ${i.batch_id ?? ''} n=${i.items.length} reserved=$${i.reserved_usd.toFixed(4)} settled=${i.settled_usd === null ? '-' : `$${i.settled_usd.toFixed(4)}`} factor=${i.factor}${i.note ? ` (${i.note})` : ''}`);
     return;
   }
-  const ws = cmd === 'poll' ? null : workstreamOf(arm);
+  const ws = cmd === 'poll' ? null : workstreamOf(cmd === 'judge' && extra ? `${arm}--${extra}` : arm);
   if (cmd === 'poll') {
     const runs = jsonFile<Record<string, string>>(join(STATE_DIR, 'runs.json'), {});
     const first = Object.values(runs)[0];
@@ -377,26 +475,28 @@ async function main(argv: string[]) {
     const bodies = loadBodies(arm);
     const p = await l.plan(manifest, bodies);
     const atBatch = p.list_worst_usd * PREREGISTERED_FACTOR;
-    if (ARMS[arm]?.workstream === 'W10c') for (const [q, b] of bodies) {
+    if (ARMS[arm]?.workstream === 'W10c' || arm === 'r3-opus55-full') for (const [q, b] of bodies) {
       const sha = manifest.requests.find(r => r.question_id === q)!.body_sha256;
       assertFitsWindow(manifest.model, q, await l.inputTokens(manifest.provider, sha, b), manifest.max_output_tokens);
     }
-    console.log(JSON.stringify({ arm, ...p, worst_at_batch_factor_usd: atBatch, cap_usd: CAPS[ARMS[arm]?.workstream ?? 'W10b'] }));
+    const ws = workstreamOf(arm);
+    console.log(JSON.stringify({ arm, ...p, worst_at_batch_factor_usd: atBatch, ...(ws === 'R3' ? {} : { cap_usd: CAPS[ws] }) }));
     return;
   }
+  if (ws === 'R3' && cmd !== 'export' && cmd !== 'export-judge') requireR3Window(argv, R3_UNITS.batch);
   const att = attest(ws!);
-  const run = budgetRun(ws!, ledgerPath);
+  const run = budgetRun(ws!, ledgerPath, flag(argv, '--budget-run-id'));
   const guard = installPaidRequestGuard(run);
   try {
     const l = lane(run);
     if (cmd === 'run' || cmd === 'retry') {
-      if (arm.startsWith('w10c-') && arm.endsWith('-full')) {
+      if ((arm.startsWith('w10c-') || arm.startsWith('r3-')) && arm.endsWith('-full')) {
         const manifest = readManifest(manifestPath(arm));
         for (const [q, b] of loadBodies(arm)) assertFitsWindow(manifest.model, q, await l.inputTokens(manifest.provider, manifest.requests.find(r => r.question_id === q)!.body_sha256, b), manifest.max_output_tokens);
       }
       await submitArm(l, readManifest(manifestPath(arm)), loadBodies(arm), run, argv.includes('--list-price'), cmd === 'retry');
     } else if (cmd === 'judge') {
-      if (extra !== 'official' && extra !== 'secondary') throw new Error('judge role must be official or secondary');
+      if (extra !== 'official' && extra !== 'secondary' && extra !== 'opus') throw new Error('judge role must be official, secondary or opus');
       const id = `${arm}--${extra}`;
       let manifest: ArmManifest, bodies: Map<string, Record<string, unknown>>;
       if (existsSync(manifestPath(id))) { manifest = readManifest(manifestPath(id)); bodies = loadBodies(id); }
@@ -410,6 +510,14 @@ async function main(argv: string[]) {
       const lines = [...replay.keys()].sort().map(id => { const j = judgeOutcome(res.get(id)); return JSON.stringify({ question_id: id, secondary: j, correct_secondary: j.verdict === true ? 1 : 0 }); });
       writeFileSync(join(resolve(extra), 'rows.ndjson'), lines.join('\n') + '\n');
       writeJson(join(resolve(extra), 'receipt.json'), { arm_id: `${arm}--secondary`, manifest_sha256: sha256(readFileSync(manifestPath(`${arm}--secondary`))), intents: l.intents({ arm_id: `${arm}--secondary` }).map(i => ({ ...i, items: i.items.length })), preregistration_attestation: att });
+    } else if (cmd === 'export-judge') {
+      const [base, role] = arm.split('--');
+      if (!extra || !STORED_ROWS[base] || !role) throw new Error('export-judge <stored arm>--<role> <dir>: a judge over committed rows (STORED_ROWS)');
+      const res = l.results(arm);
+      const ids = readManifest(manifestPath(arm)).requests.map(r => r.question_id);
+      mkdirSync(resolve(extra), { recursive: true });
+      writeFileSync(join(resolve(extra), 'rows.ndjson'), ids.map(id => { const j = judgeOutcome(res.get(id)); return JSON.stringify({ question_id: id, judge: j, correct: j.verdict === true ? 1 : 0 }); }).join('\n') + '\n');
+      writeJson(join(resolve(extra), 'receipt.json'), { arm_id: arm, manifest: `docs/benchmarks/2026-10-06-longmemeval-w10-manifests/${arm}.json`, manifest_sha256: sha256(readFileSync(manifestPath(arm))), intents: l.intents({ arm_id: arm }).map(i => ({ ...i, items: i.items.length })), preregistration_attestation: att });
     } else if (cmd === 'export') {
       if (!extra) throw new Error('export needs an output directory');
       const receipt = exportArm(l, arm, resolve(extra));

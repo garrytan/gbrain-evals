@@ -165,3 +165,76 @@ The `w10b-fable51-notes` arm (200 questions) and its two judges had already run 
 - No further Fable cell runs in W10 (no retry, no extension to 500, no Fable cell in W10a or W10c, which never had one).
 - The preregistered W10b family `w10b-official.json` is not edited after its cells ran: the Fable comparison stays in it, so the Holm adjustment for every other arm is the one preregistered (keeping it can only make the other arms' adjusted p-values larger, never smaller). No decision, gate or README row rests on the Fable comparison; it is reported in its own labeled row after the others.
 - Opus 5.5 is the top Anthropic reader in every W10b statement. No other arm, model, judge or setting changes.
+
+
+### 2026-11-16, before any R3 request: R3 re-measures the whole-history comparison and the strict recall@5 rider at gbrain's newest release
+
+Every number this preregistration produced was measured on gbrain `c5fb0201` (v0.60.95.0), 616 releases behind gbrain's newest release on 2026-11-16. Under the rule that a published gbrain number is re-measured at the newest release (R100), R3 re-runs W10c's question, and the strict recall@5 figure behind README's heading "Finding all the evidence: gbrain leads every system we can score strictly", at the newest release. Nothing in R3 changes a W10 cell that already ran, and W10's own families, verdicts and reports stand as recorded. R3's results go to [`2026-11-16-longmemeval-w10-newest/`](2026-11-16-longmemeval-w10-newest/). Written before any R3 provider request. The only results looked at were W10's and the 2026-11-01 particle-1 replay's, which were already published.
+
+**What each outcome changes (R97).**
+
+| Result | What changes |
+|---|---|
+| gbrain non-inferior to the whole history at the 7-point margin for a reader, under both judges | README's whole-history row and its third takeaway move to the newest release for that reader |
+| The whole history better than gbrain by more than 7 points for a reader, under both judges | README's third takeaway says the whole history beats gbrain by more than 7 points at the newest release, and the multi-session failure classes go to gbrain's maintainers |
+| Neither, or the two judges disagree | The row moves to the newest release with "no claim at the measured precision", and nothing reads as a tie |
+| gbrain at the newest release worse than at `c5fb0201` on the paired regression test (GPT-6.1 Sol or particle-1) | The report names a regression at the newest release, with its failure classes. Nothing is tuned or re-run to make it go away |
+| Strict recall@5 at the newest release below 423 of 470 (the verbatim-session system's 90.0%) | The heading comes down. At 423 or above it is restated at the newest release |
+
+**Build.** gbrain v0.60.733.0, `6ce7195b44a034f85aec811f11fbf862db376f50`: the highest release tag on gbrain's master at launch (`git ls-remote --tags https://github.com/garrytan/gbrain.git`, 2026-11-16), not the weekly `stable` tag. The run machine installs it by commit (`eval/runner/batch/r3-vm-setup.sh`), and every R3 step that touches gbrain refuses any other build (`assertR3Gbrain`). `package.json`'s pin is unchanged. The build is frozen once the retrieval capture starts. If a newer release lands before then, a dated amendment re-pins it first. gbrain-evals: the commit that adds this amendment and R3's harness.
+
+**Data and prompts.** Same dataset file and SHA-256, the same 150-question subset (seed `20261006`) and the same house notes reader prompt. The newest release reports the same prompt version and hash, `gbrain-lme-reader-v4-notes-fullsessions`, `3db7ccbb…`, checked by a keyless capture at `6ce7195b`.
+
+**The whole-history text is `c5fb0201`'s, in every whole-history arm.** Re-rendered at the newest release, 91 of the 150 whole-history prompts differ from the stored ones. In `06878be2`, for example, `c5fb0201` rendered `[redacted](Prozorro)` where the newest release renders `system (Prozorro)`. `c5fb0201` reproduces all 150 byte for byte. So every whole-history arm (Opus 5.5's new arm, Sol's stored arm and particle-1's re-read) sends exactly the text W10c sent (text SHA-256 `dce4acb7…`, re-hashed at build time), and the report says so beside every whole-history number. The gbrain arms send what the newest release renders for the sessions it retrieves. The comparison is therefore gbrain at the newest release against the whole history as `c5fb0201` rendered it.
+
+**Arms** (150 questions each, W10c's subset):
+
+| Arm | Reader | Text | New requests? |
+|---|---|---|---|
+| `r3-opus55-newest` | `claude-opus-5-5` | gbrain at the newest release (R3's capture) | yes |
+| `r3-opus55-full` | `claude-opus-5-5` | the whole history (`c5fb0201` rendering) | yes |
+| `r3-sol-newest` | `gpt-6.1-sol` | gbrain at the newest release (R3's capture) | yes |
+| `w10c-sol-full` | `gpt-6.1-sol` | the whole history | no: W10c's committed rows, same manifest, prompt, settings and official judge |
+| `w10c-sol-currentpin` | `gpt-6.1-sol` | gbrain at `c5fb0201` | no: W10c's committed rows (the regression pair) |
+| `r3-particle-newest` | `particle-1` | gbrain at the newest release (R3's capture) | yes |
+| `r3-particle-full` | `particle-1` | the whole history (`c5fb0201` rendering) | yes, re-read |
+| `r3-particle-currentpin` | `particle-1` | gbrain at `c5fb0201` (W10a's capture) | yes, re-read (the regression pair) |
+
+Sonnet 5.5 is no longer a reader under test. Its W10c rows stay published as W10 recorded them.
+
+Reader settings are the ones this preregistration and the particle-1 replay set: Opus 5.5 at `effort: low` with 4,096 output tokens (the settings table above), Sol at `reasoning_effort: medium` with 12,000, and particle-1 at effort `high` with 16,000 (the replay's settings).
+
+The particle-1 replay's rows (2026-11-01) are not reused. The plan reused them only if today's weight version matched the one on their receipt, but Particle reported no weight version on any of the replay's 150 rows (`weight_versions: {"null": 150}`), so a match can't be shown. particle-1 therefore re-reads the whole-history and `c5fb0201` texts today. The replay's rows are compared with today's re-reads descriptively, as a weight-drift check (paired McNemar).
+
+**Judges.** Every answer gets the official `gpt-4o-2024-08-06` judge with the verbatim `evaluate_qa.py` prompt, as the bridge to the published numbers. That judge is in Sol's own model family, so under R78 every row also gets a co-primary judge from another family, with the same verbatim prompt. `claude-opus-5-5` (effort `low`, 2,000 tokens) grades Sol's rows: `r3-sol-newest`, `w10c-sol-full` and `w10c-sol-currentpin`. `gpt-6.1-sol` (effort `low`, 2,000 tokens, the settings table's secondary judge) grades Opus 5.5's and particle-1's rows. No judge grades its own family's rows (`assertCrossFamily`), and particle-1 judges nothing.
+
+**Judge check (R78)** (`eval/runner/batch/r3-judge-check.ts`). Its numbers count before any co-judge verdict does. The pool has 100 stored answers drawn with seed `20261116` from rows outside W10c's 150 questions. Set S has 50 Sol answers from W10b and W10c, for the Opus co-judge. Set N has 25 Opus 5.5 answers (W10b) and 25 particle-1 answers (the replay), for the Sol co-judge. Each set holds 28 answers the official judge called wrong and 22 it called right, so both classes are well represented. Two labellers from outside each set's reader family, `gpt-6-astra` and `claude-opus-5-5`, both at effort `high` with 8,000 tokens, grade every item. A label is an item both labellers agree on. The plan said about 60 answers. It is 100 because each co-judge needs at least 40 labels from its own set, and the labellers will disagree on some items. Gates: labeller kappa at least 0.6; for each co-judge, at least 40 labelled items with at least 15 of each class, kappa against the labels at least 0.6, and no judge errors. A co-judge that fails a gate leaves its readers with no claim. That fact is reported, and nothing is re-run to pass.
+
+**Metric and denominator.** As in this preregistration: accuracy under each judge on 150 questions. A reader error (a failed request after the one allowed resubmission, a `max_tokens` or `length` finish, or an empty answer) is wrong under both judges. Pairs join by question id.
+
+**Decision rule** (families in [`2026-11-16-longmemeval-w10-newest/families/`](2026-11-16-longmemeval-w10-newest/families/), run by `eval/runner/batch/r3-report.ts` through `compare.ts`):
+
+- **Non-inferiority** (`r3-noninferiority-official.json`, `r3-noninferiority-cojudge.json`): gbrain at the newest release (B) against the whole history (A), tolerance 0.07, per reader (Opus 5.5 and Sol), with Holm across the two readers. A reader's claim "gbrain within 7 points of the whole history" counts only when it passes under both judges and its co-judge passed the judge check.
+- **Loss** (`r3-loss-official.json`, `r3-loss-cojudge.json`): the whole history (B) better than gbrain (A) by more than 7 points (superiority, `min_effect` 0.07), per reader, with Holm across the two. The same both-judges rule applies.
+- **Regression** (`r3-oldbuild-official.json`, `r3-oldbuild-cojudge.json`): gbrain at `c5fb0201` (B) better than gbrain at the newest release (A), superiority at `min_effect` 0, with Holm across Sol (W10c's `c5fb0201` rows against `r3-sol-newest`) and particle-1 (`r3-particle-currentpin` against `r3-particle-newest`). A pass under the official judge reports a regression, and the co-judge's result is shown beside it. Every comparison reports its paired difference with a 95% interval and its exact McNemar test.
+- **particle-1 against the whole history** is descriptive: paired difference with a 95% interval under each judge, no gate.
+- The matched table shows the two-reader mean of Opus 5.5 and Sol under the official judge for gbrain and for the whole history. Opus 5.5 gets a new whole-history arm, so the mean is matched.
+
+**Smallest detectable differences, stated before any R3 row exists.** These are one-sided at Holm's strictest level (alpha 0.025) with 80% power, using SE = sqrt(discordant pairs) / n for paired binary outcomes. The table that opens this preregistration used sqrt(discordance / n), which is the same quantity written per question. The discordance figures come from the stored pairs:
+
+| Pair from stored rows | Discordant of 150 |
+|---|---|
+| Sol, whole history against gbrain `c5fb0201` | 6 |
+| Sonnet 5.5, whole history against gbrain `c5fb0201` | 9 |
+| particle-1, whole history against gbrain `c5fb0201` (replay) | 9 |
+| Sonnet 5.5, gbrain `c5fb0201` against `a7cb37b` (W10a against W10b) | 9 |
+| Sol, gbrain `c5fb0201` against `a7cb37b` | 2 |
+| particle-1, gbrain `c5fb0201` against `a7cb37b` | 1 |
+
+At 9 discordant of 150 (6%), the smallest detectable difference is (1.96 + 0.84) × 3 / 150 = 5.6 points. At 12% it is 7.9 points. At a true difference of 0, the 7-point non-inferiority test has about 94% power at 6% discordance and about 70% at 12%. The regression test detects about 5.6 points at 6% discordance (Sonnet 5.5's build pair) and about 2.6 points at Sol's 2 of 150. With so few discordant pairs the normal approximation is rough, and the exact McNemar test decides.
+
+**Rider: strict recall@5.** Strict recall@5 counts a question as hit when every labelled evidence session is among the top five retrieved sessions (the harness's `recall_all_hit`). It is measured on the 470 answerable questions of all 500 LongMemEval-S questions, from one retrieval capture at the newest release (`eval/runner/batch/w10a-capture.ts --r3`). The capture uses W10a's arguments, `--top-k 5 --no-trajectory --mode balanced --reranker on --autocut off`, with OpenAI `text-embedding-3-large` at 1,536 dimensions on a fresh embedding cache. The reranker is the newest release's shipped default, `voyage:rerank-3-lite` (gbrain-evals #148). `c5fb0201` used `voyage:rerank-2.5`, so the report counts the reranker as part of the build difference. The capture also records the reader requests R3's gbrain arms send, so the rider and the arms use one retrieval. Bar: 423 of 470. Paired with the same 470 questions at `c5fb0201` (449, W10a's capture) and at `109b992` (451, the published figure), shown with exact McNemar tests. These pairs are descriptive. At 3% discordance the smallest detectable difference is about 2.2 points.
+
+**Order.** The retrieval capture runs first and builds R3's manifests, which are committed and pushed before any reader request, as W10a's were. Then come the judge check, the three Opus and Sol reader arms, and every judge over them and over W10c's stored Sol rows. particle-1's three arms run last, in their own paid window, followed by their co-judge. Each reader arm keeps this preregistration's pilot, resubmission and start-only-if-fits rules, and runs through the batch lane except particle-1. All paid steps run on one Ubicloud machine with a single ledger writer.
+
+**Cost scope.** As in W10c. Each arm reports reader cost per question at the prices actually billed, and for Opus 5.5 and particle-1 the reader cost per correct answer under the official judge. Judging is excluded. Cached prompt tokens are reported beside every cost figure, since a cache hit lowers the cost of a whole-history prompt.

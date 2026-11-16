@@ -24,7 +24,7 @@ import { haystackToPages, type LongMemEvalQuestion } from '../../../node_modules
 import { renderChatBlock } from '../../../node_modules/gbrain/src/eval/longmemeval/sanitize.ts';
 import { sessionIdFromSlug } from '../../../node_modules/gbrain/src/eval/longmemeval/metrics.ts';
 import { buildReaderRequest, READER_MAX_SESSION_CHARS, resolveReaderConfig } from '../../../node_modules/gbrain/src/eval/longmemeval/reader.ts';
-import { assertOutputFloor, MODEL_SETTINGS, sha256, type Provider } from './manifest.ts';
+import { assertOutputFloor, JUDGE_OPUS, MODEL_SETTINGS, sha256, type Provider } from './manifest.ts';
 
 export interface Question {
   question_id: string;
@@ -244,7 +244,7 @@ export function fullHistoryText(q: Question): ReaderText & { sessions: number; t
 }
 
 /** Context windows the W10c build refuses to exceed (kept under both providers' long-context price tiers). */
-export const CONTEXT_LIMIT_TOKENS: Record<string, number> = { 'claude-sonnet-5-5': 200_000, 'gpt-6.1-sol': 200_000 };
+export const CONTEXT_LIMIT_TOKENS: Record<string, number> = { 'claude-sonnet-5-5': 200_000, 'gpt-6.1-sol': 200_000, 'claude-opus-5-5': 200_000 };
 
 export function assertFitsWindow(model: string, questionId: string, inputTokens: number, outputTokens: number): void {
   const limit = CONTEXT_LIMIT_TOKENS[model];
@@ -356,12 +356,17 @@ export const JUDGE_PROTOCOL = {
     .concat(officialJudgePrompt('multi-session', '{question}', '{answer}', '{response}', true)).join('\u0000')),
 };
 
-export type JudgeRole = 'official' | 'secondary';
+export type JudgeRole = 'official' | 'secondary' | 'opus';
 
-/** Primary judge: gpt-4o-2024-08-06, temperature 0, 10 tokens. Secondary: gpt-6.1-sol at low effort, 2,000 tokens. Same prompt. */
+/**
+ * Primary judge: gpt-4o-2024-08-06, temperature 0, 10 tokens. Secondary: gpt-6.1-sol at low effort, 2,000 tokens.
+ * Opus (the R3 amendment's cross-family co-judge of GPT readers' rows): claude-opus-5-5 at low effort, 2,000 tokens.
+ * Same prompt for all three.
+ */
 export function judgeBody(role: JudgeRole, q: { question_id: string; question_type: string; question: string; answer: string | number }, hypothesis: string): Record<string, unknown> {
   const content = officialJudgePrompt(q.question_type, q.question, q.answer, hypothesis, q.question_id.includes('_abs'));
   if (role === 'official') return { model: 'gpt-4o-2024-08-06', messages: [{ role: 'user', content }], n: 1, temperature: 0, max_tokens: 10 };
+  if (role === 'opus') return { model: JUDGE_OPUS.model, max_tokens: JUDGE_OPUS.max_output_tokens, messages: [{ role: 'user', content }], output_config: { effort: JUDGE_OPUS.effort } };
   return { model: 'gpt-6.1-sol', messages: [{ role: 'user', content }], reasoning_effort: 'low', max_completion_tokens: 2000 };
 }
 

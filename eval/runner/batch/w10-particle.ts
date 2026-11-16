@@ -51,7 +51,7 @@ import type { UsageReceipt } from '../usage-receipt.ts';
 import { bodySha, readManifest, sha256 } from './manifest.ts';
 import { crossArmRows } from './receipts.ts';
 import { JUDGE_PROTOCOL, judgeVerdict, loadDataset, officialJudgePrompt, readNdjson, readerBody, reportType, type ReaderText, type ReplayRow } from './sources.ts';
-import { ARMS, MANIFEST_DIR, r1, subsets } from './w10.ts';
+import { ARMS, assertR3Gbrain, MANIFEST_DIR, PREREG as W10_PREREG, R3_UNITS, r1, requireR3Window, subsets } from './w10.ts';
 import { scoreArm, type Scored } from './w10-rescore.ts';
 
 const ROOT = resolve(import.meta.dir, '../../..');
@@ -76,22 +76,31 @@ const TEMPLATE_MARGIN_TOKENS = 1024;
 const PARTICLE_URL = 'https://api.particle.ai/v1/chat/completions';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
-type TextSource = 'r1' | 'currentpin' | 'full';
+type TextSource = 'r1' | 'currentpin' | 'full' | 'newest';
 
-/** Each prompt set the replay reads, from the comparator arms that sent it: one Anthropic-shaped, one OpenAI-shaped, and any other comparator on the same text. */
+/**
+ * Each prompt set the replay reads, from the comparator arms that sent it: one Anthropic-shaped, one OpenAI-shaped, and
+ * any other comparator on the same text. `newest` is R3's (W10 amendment of 2026-11-16): gbrain's retrieval at the
+ * newest release, from R3's frozen manifests, built only with `build --r3`.
+ */
 export const TEXT_SOURCES: Record<TextSource, { anthropic: string; openai: string; also: string[] }> = {
   r1: { anthropic: 'w10b-sonnet55-notes', openai: 'w10b-sol-notes', also: ['w10b-opus55-notes'] },
   currentpin: { anthropic: 'w10a-sonnet55-notes', openai: 'w10c-sol-currentpin', also: [] },
   full: { anthropic: 'w10c-sonnet55-full', openai: 'w10c-sol-full', also: [] },
+  newest: { anthropic: 'r3-opus55-newest', openai: 'r3-sol-newest', also: [] },
 };
+const R3_SOURCES: TextSource[] = ['newest'];
 
-export interface ReplayArm { workstream: 'W10b' | 'W10c'; text: TextSource; effort: 'high' | 'none'; label: string }
+export interface ReplayArm { workstream: 'W10b' | 'W10c' | 'R3'; text: TextSource; effort: 'high' | 'none'; label: string }
 
 export const REPLAY_ARMS: Record<string, ReplayArm> = {
   'w10b-particle-notes': { workstream: 'W10b', text: 'r1', effort: 'high', label: 'R1: the 500 W10b notes prompts, retrieval from gbrain a7cb37b' },
   'w10c-particle-currentpin': { workstream: 'W10c', text: 'currentpin', effort: 'high', label: 'R2: the 150 W10c questions on gbrain c5fb0201 retrieval (W10a capture)' },
   'w10c-particle-full': { workstream: 'W10c', text: 'full', effort: 'high', label: 'R2: the 150 W10c questions with the whole history' },
   'w10c-particle-currentpin-none': { workstream: 'W10c', text: 'currentpin', effort: 'none', label: 'R2: the 150 W10c questions on gbrain c5fb0201 retrieval at effort none (descriptive)' },
+  'r3-particle-newest': { workstream: 'R3', text: 'newest', effort: 'high', label: 'R3: the 150 W10c questions on gbrain retrieval at the newest release (R3 capture)' },
+  'r3-particle-full': { workstream: 'R3', text: 'full', effort: 'high', label: 'R3: the 150 W10c questions with the whole history, re-read at today\'s weights' },
+  'r3-particle-currentpin': { workstream: 'R3', text: 'currentpin', effort: 'high', label: 'R3: the 150 W10c questions on gbrain c5fb0201 retrieval, re-read at today\'s weights (old-build pair)' },
 };
 
 const flag = (argv: string[], name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
@@ -155,10 +164,10 @@ export async function rehash(arm: string, c5fb0201: string | null): Promise<{ bo
 const inputPath = (source: TextSource) => join(STATE_DIR, 'inputs', `${source}.ndjson.gz`);
 
 /** Re-hash every comparator body, check that both shapes carry one text, and save each prompt set for run. */
-export async function build(c5fb0201: string | null): Promise<Record<string, unknown>> {
+export async function build(c5fb0201: string | null, r3 = false): Promise<Record<string, unknown>> {
   const comparators: Record<string, unknown> = {};
   const sources: Record<string, unknown> = {};
-  for (const [name, src] of Object.entries(TEXT_SOURCES) as [TextSource, (typeof TEXT_SOURCES)[TextSource]][]) {
+  for (const [name, src] of (Object.entries(TEXT_SOURCES) as [TextSource, (typeof TEXT_SOURCES)[TextSource]][]).filter(([n]) => r3 || !R3_SOURCES.includes(n))) {
     const built = new Map<string, Map<string, Record<string, unknown>>>();
     for (const arm of [src.openai, src.anthropic, ...src.also]) {
       const { bodies, record } = await rehash(arm, c5fb0201);
@@ -183,6 +192,7 @@ export async function build(c5fb0201: string | null): Promise<Record<string, unk
   }
   const record = {
     schema_version: 1, built_at: new Date().toISOString(), gbrain_pin: JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).dependencies?.gbrain ?? null,
+    ...(r3 ? { r3_gbrain_installed: assertR3Gbrain(), whole_history_rendered_with: c5fb0201 ? 'gbrain c5fb0201 checkout' : null } : {}),
     dataset_sha256: existsSync(DATASET) ? sha256(readFileSync(DATASET)) : null, comparators, sources,
   };
   writeJson(join(STATE_DIR, 'build.json'), scrub(record));
@@ -332,13 +342,14 @@ const tally = (xs: (string | null | undefined)[]) => xs.reduce((m, x) => ({ ...m
 export async function run(armId: string, argv: string[]): Promise<number> {
   const arm = REPLAY_ARMS[armId];
   if (!arm) throw new Error(`unknown arm ${armId}; arms: ${Object.keys(REPLAY_ARMS).join(', ')}`);
+  if (arm.workstream === 'R3') requireR3Window(argv, R3_UNITS.particle);
   const out = flag(argv, '--out');
   if (!out) throw new Error('pass --out <fresh directory> for the arm\'s rows, receipts and receipt.json');
   if (existsSync(join(out, 'rows.ndjson'))) throw new Error(`${out} already holds rows; a rerun goes to a fresh --out (every row of a rows file counts). Answers already paid for replay from the response cache, which measures neither bar 1 nor bar 2, so a rerun that counts takes a fresh --cache too`);
   const inputs = loadInputs(arm.text);
   for (const [id, text] of inputs) assertFitsParticleWindow(id, text);
   const build = JSON.parse(readFileSync(join(STATE_DIR, 'build.json'), 'utf8'));
-  const attestation = attestPreregistration(PREREG, ROOT);
+  const attestation = attestPreregistration(arm.workstream === 'R3' ? W10_PREREG.R3 : PREREG, ROOT);
   const estimate = [...inputs.values()].reduce((a, t) => a + ((Buffer.byteLength(t.system) + Buffer.byteLength(t.user)) / 4) * 0.25e-6 + 3000e-6 + 0.001, 0);
   requirePaidArm(argv, { arm: `particle replay ${armId}`, estimateUsd: estimate });
   const { run: budget, guard } = startPaidRun(`w10-particle:${armId}`, { ...budgetOptionsFrom(argv), estimateUsd: estimate });
@@ -382,6 +393,7 @@ export async function run(armId: string, argv: string[]): Promise<number> {
     response_models: tally(rows.map(r => r.response_model)), service_tiers: tally(rows.map(r => r.response_meta?.service_tier)), weight_versions: tally(rows.map(r => r.response_meta?.weight_version)),
     ledger: receiptCost(summary), bars,
     models_not_run: arm.workstream === 'W10c' ? [{ model: 'anthropic:claude-opus-5-5', reason: 'W10c has no Opus 5.5 rows to pair with; this replay calls particle-1 only' }] : [],
+    ...(arm.workstream === 'R3' ? { paid_window: R3_UNITS.particle } : {}),
     preregistration_attestation: attestation, started_at: startedAt, finished_at: new Date().toISOString(),
   };
   writeJson(join(out, 'receipt.json'), scrub(receipt));
@@ -580,7 +592,7 @@ export function report(dir: string, compareDir = dir): Record<string, unknown> {
 async function main(argv: string[]): Promise<number> {
   const [cmd, arg] = argv;
   if (cmd === 'build') {
-    const record = await build(flag(argv, '--gbrain-c5fb0201') ?? null);
+    const record = await build(flag(argv, '--gbrain-c5fb0201') ?? null, argv.includes('--r3'));
     const out = flag(argv, '--out');
     if (out) writeJson(join(out, 'build.json'), scrub(record));
     console.log(JSON.stringify(record, null, 1));

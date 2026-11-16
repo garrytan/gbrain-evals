@@ -1,0 +1,30 @@
+{
+ "schema_version": 1,
+ "family_id": "r3-gbrain-noninferior-to-full-context-cojudge",
+ "registered_at": "2026-11-16",
+ "description": "R3 primary (cross-family co-judge: gpt-6.1-sol on Opus rows, claude-opus-5-5 on Sol rows): gbrain retrieval at the newest release (B) non-inferior to the whole history in the prompt (A) at a 7-point margin, same reader, W10c's 150-question stratified subset, Holm across the two readers.",
+ "alpha": 0.05,
+ "seed": 20261116,
+ "draws": 10000,
+ "id_field": "question_id",
+ "comparisons": [
+  {
+   "id": "gbrain-vs-full-opus55",
+   "metric": "correct__opus",
+   "gate": "noninferiority",
+   "direction": "higher",
+   "tolerance": 0.07,
+   "cluster_by": "question_id",
+   "description": "reader claude-opus-5-5"
+  },
+  {
+   "id": "gbrain-vs-full-sol",
+   "metric": "correct__sol",
+   "gate": "noninferiority",
+   "direction": "higher",
+   "tolerance": 0.07,
+   "cluster_by": "question_id",
+   "description": "reader gpt-6.1-sol"
+  }
+ ]
+}

@@ -1,0 +1,30 @@
+{
+ "schema_version": 1,
+ "family_id": "r3-old-build-better-official",
+ "registered_at": "2026-11-16",
+ "description": "R3 regression test (official judge): gbrain at c5fb0201 (B) better than gbrain at the newest release (A), same reader and prompts, W10c's 150 questions, Holm across GPT-6.1 Sol (W10c's c5fb0201 rows) and particle-1 (c5fb0201 prompts re-read with the newest arm). A pass is a regression at the newest release.",
+ "alpha": 0.05,
+ "seed": 20261116,
+ "draws": 10000,
+ "id_field": "question_id",
+ "comparisons": [
+  {
+   "id": "old-vs-newest-sol",
+   "metric": "correct__sol",
+   "gate": "superiority",
+   "direction": "higher",
+   "min_effect": 0,
+   "cluster_by": "question_id",
+   "description": "reader gpt-6.1-sol"
+  },
+  {
+   "id": "old-vs-newest-particle",
+   "metric": "correct__particle",
+   "gate": "superiority",
+   "direction": "higher",
+   "min_effect": 0,
+   "cluster_by": "question_id",
+   "description": "reader particle-1"
+  }
+ ]
+}
