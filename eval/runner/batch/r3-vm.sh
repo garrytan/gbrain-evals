@@ -14,6 +14,8 @@ LEDGER=$ST/ledger.sqlite
 OUT=docs/benchmarks/2026-11-16-longmemeval-w10-newest
 W10=eval/runner/batch/w10.ts
 log() { echo "[r3 $(date -u +%FT%TZ)] $*"; }
+# Each step gets its own GBRAIN_HOME under the run directory, so nothing a gbrain call writes there reaches another step.
+home() { mkdir -p "$ST/gbrain-home/$1" && echo "$ST/gbrain-home/$1"; }
 mkdir -p "$ST/windows" "$ST/runs" "$OUT"
 
 wait_for() { until [ -s "$ST/windows/$1" ]; do log "waiting for $1"; sleep 300; done; }
@@ -36,11 +38,12 @@ settle() {
 drive() {
   local args=("$@") out
   for _ in 1 2; do
-    out=$(bun $W10 "${args[@]}" --budget-ledger "$LEDGER" --budget-run-id "$(run_for R3-B)" --paid-window R3-B 2>&1) || { grep -q 'some pending ids already had an attempt' <<<"$out" || { echo "$out"; exit 1; }; break; }
+    out=$(GBRAIN_HOME=$(home "${args[0]}-${args[1]}-${args[2]:-reader}") bun $W10 "${args[@]}" --budget-ledger "$LEDGER" --budget-run-id "$(run_for R3-B)" --paid-window R3-B 2>&1) || { grep -q 'some pending ids already had an attempt' <<<"$out" || { echo "$out"; exit 1; }; break; }
     echo "$out"
     grep -q 'nothing left to submit' <<<"$out" && return 0
     settle
   done
+  export GBRAIN_HOME; GBRAIN_HOME=$(home "${args[0]}-${args[1]}-${args[2]:-reader}")
   if [ "${args[0]}" = run ]; then bun $W10 retry "${args[1]}" --budget-ledger "$LEDGER" --budget-run-id "$(run_for R3-B)" --paid-window R3-B || true
   else bun $W10 "${args[@]}" --retry --budget-ledger "$LEDGER" --budget-run-id "$(run_for R3-B)" --paid-window R3-B || true; fi
   settle
@@ -51,13 +54,14 @@ drive() {
 # Stage A: retrieval at the newest release (embeddings and rerank), then the $0 builds that freeze R3's manifests.
 if [ ! -f "$ST/stage-A.done" ]; then
   wait_for R3-A
-  bun eval/runner/batch/w10a-capture.ts --r3 --budget-ledger "$LEDGER" --budget-run-id "$(run_for R3-A)" --paid-window R3-A 2>&1 | tee -a "$ST/capture.log"
+  GBRAIN_HOME=$(home capture) bun eval/runner/batch/w10a-capture.ts --r3 --budget-ledger "$LEDGER" --budget-run-id "$(run_for R3-A)" --paid-window R3-A 2>&1 | tee -a "$ST/capture.log"
   rows=$(grep -c '"question_id"' "$W10_STATE_DIR/r3-capture/rows.ndjson" || true)
   [ "$rows" = 500 ] || { log "capture holds $rows of 500 rows"; exit 2; }
   mkdir -p "$OUT/capture"
   gzip -c "$W10_STATE_DIR/r3-capture/captures.ndjson" > "$OUT/capture/captures.ndjson.gz"
   gzip -c "$W10_STATE_DIR/r3-capture/rows.ndjson" > "$OUT/capture/harness-rows.ndjson.gz"
   cp "$(ls -t "$W10_STATE_DIR"/r3-capture/capture-run-*.json | head -1)" "$OUT/capture/capture-run.json"
+  export GBRAIN_HOME; GBRAIN_HOME=$(home build)
   bun $W10 build r3-opus55-newest && bun $W10 build r3-sol-newest
   bun eval/runner/batch/w10-particle.ts build --r3 --gbrain-c5fb0201 "$ST/gbrain-c5fb0201" --out "$OUT" > /dev/null
   bun $W10 build r3-opus55-full
@@ -78,6 +82,7 @@ if [ ! -f "$ST/stage-B.done" ]; then
     fi
   done
   git merge -q --ff-only FETCH_HEAD
+  export GBRAIN_HOME; GBRAIN_HOME=$(home judge-check)
   bun eval/runner/batch/r3-judge-check.ts plan --out "$OUT/judge-check"
   bun eval/runner/batch/r3-judge-check.ts run --out "$OUT/judge-check" --cache "$ST/judge-check-cache" --budget-ledger "$LEDGER" --paid --budget-run-id "$(run_for R3-B)" --paid-window R3-B
   bun eval/runner/batch/r3-judge-check.ts report --out "$OUT/judge-check" > /dev/null || log "judge check: a gate failed (report.json says which)"
@@ -97,7 +102,7 @@ if [ ! -f "$ST/stage-P.done" ]; then
   for arm in r3-particle-newest r3-particle-full r3-particle-currentpin; do
     [ -f "$OUT/arms/$arm/receipt.json" ] && continue
     [ -d "$OUT/arms/$arm" ] && mv "$OUT/arms/$arm" "$ST/partial-$arm-$(date +%s)"
-    bun eval/runner/batch/w10-particle.ts run "$arm" --out "$OUT/arms/$arm" --cache "$ST/particle-cache" --budget-ledger "$LEDGER" --paid --budget-run-id "$(run_for R3-P)" --paid-window R3-P || log "$arm: the run exited non-zero (its receipt says why)"
+    GBRAIN_HOME=$(home "$arm") bun eval/runner/batch/w10-particle.ts run "$arm" --out "$OUT/arms/$arm" --cache "$ST/particle-cache" --budget-ledger "$LEDGER" --paid --budget-run-id "$(run_for R3-P)" --paid-window R3-P || log "$arm: the run exited non-zero (its receipt says why)"
   done
   for arm in r3-particle-newest r3-particle-full r3-particle-currentpin; do drive judge "$arm" secondary; done
   for arm in r3-particle-newest r3-particle-full r3-particle-currentpin; do bun $W10 export-judge "$arm--secondary" "$OUT/judges/$arm--secondary" --budget-ledger "$LEDGER"; done
