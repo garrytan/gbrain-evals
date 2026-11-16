@@ -312,3 +312,34 @@ keyless on the Capy machine, instead of on two fresh VMs with both builds. The f
 The other N4 move is a documented gbrain change, so it's reported as intended and isn't a regression: `remember` now
 leaves all 9 bare first names unresolved. v0.60.355.0 (#7254, `dfe501e2f`) refuses a name that only begins a page's
 name, and the same bisect puts the first unresolved first name at that merge.
+
+### 2026-11-16: the lifecycle matrix reads quoted facts, ignores a notice that repeats its own query, and approves its catch-up sweep, before a third run
+
+The lifecycle matrix's second run at the new build (`r2`, receipt kept) finished all six cells, and three of its
+results come from the harness, not from gbrain:
+
+1. **Quoted facts.** Each MCP cell counted 3 acknowledged facts as lost (`bob_email`, `alice_maps`, `frank_email`). The
+   facts came back, inside the quote fence that a remote `recall` has used since v0.60.536.0, and `observe.ts` compared
+   the raw text. This is the defect the N4 amendment above fixed. `observe()` now reads each fact through the build's own
+   `unquoteFactText` (`eval/runner/quoted-reads.ts`).
+2. **A notice that repeats the probe's query.** `recall(page marker)` was flagged as a remote content leak in every MCP
+   cell, and its control as a hit. A `recall` with `query` and no `question` now ends with a `recall_hint` notice
+   whose `fix:` line repeats the call with the probe's own arguments (`src/core/facts/question-recall.ts`), and the
+   probe asks for the private page's own marker. The leak probes now drop a `fix:` line whose every argument value is
+   one the probe sent, before matching markers. A marker anywhere else in the answer still counts as a leak.
+3. **The catch-up sweep asks for consent.** `gbrain embed --stale` has asked for spend consent since v0.60.46.0, and
+   without a terminal it exits 3 having embedded nothing. The lifecycle embedder is a local hash embedder that costs
+   nothing. The runner now passes `--yes` to a build whose `embed` takes it, and an older build runs the command it
+   always ran. On PGLite with `gbrain serve` live, the same step is refused with `pglite_busy`. That refusal is a
+   deliberate gbrain guard (the server holds the database), and the run reports it as observed.
+
+Each fix has a test that fails without it. A build that returns no quoted facts, no `fix:` line and no consent
+prompt reads and runs exactly as before, so the published receipts recount unchanged. The step runs once more at the
+new build on one fresh VM (`run-kept.sh lifecycle new r3`, from this commit). The first two receipts are kept and
+reported as harness errors.
+
+N2-2's published repro also failed at the new build (`engine.executeRaw is not a function`). Its stand-in engine has
+no database, and since #6784 (`3c16e9ba4`, v0.60.250.0) a source-scoped `find_contradictions` re-reads each stored
+finding live. A copy of the repro with one stored finding in an in-memory PGLite brain
+(`2026-11-16-w0-keyless-repin/repro/n2-2-find-contradictions-real-brain.ts`) runs keyless on the Capy machine at
+both builds. The published repro file stays unchanged.

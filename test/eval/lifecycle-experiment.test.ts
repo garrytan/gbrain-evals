@@ -10,12 +10,16 @@ import { describe, expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { assertBuildVerified, countSymlinks, type BuildInfo } from '../../eval/runner/lifecycle/builds.ts';
+import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { assertBuildVerified, countSymlinks, embedStaleArgs, type BuildInfo } from '../../eval/runner/lifecycle/builds.ts';
+import type { CallResult, Driver } from '../../eval/runner/lifecycle/drivers.ts';
 import { hashEmbedding } from '../../eval/runner/lifecycle/fake-embedder.ts';
-import type { PageObs, Snapshot } from '../../eval/runner/lifecycle/observe.ts';
+import { observe, probeLeaks, type PageObs, type Snapshot } from '../../eval/runner/lifecycle/observe.ts';
 import {
-  HAZARD_IDS, FACTS, FORGET_KEY, IDENTITIES, expectedAt, identityById, naiveSlug, renderFile, versionAt, type PhaseName,
+  HAZARD_IDS, FACTS, FORGET_KEY, IDENTITIES, PRIVATE_ID, expectedAt, identityById, naiveSlug, renderFile, versionAt, type PhaseName,
 } from '../../eval/runner/lifecycle/scenario.ts';
+import { loadFactUnquote } from '../../eval/runner/quoted-reads.ts';
+import { fenceTranscriptText } from '../../node_modules/gbrain/src/core/search/transcript-quote.ts';
 import { scoreBijection, scoreCheckpoint, scoreEdges, scoreFacts, scoreOldSlugs, scoreTimeline, type FactEvent } from '../../eval/runner/lifecycle/score.ts';
 import { compareRuns, summarizeCell } from '../../eval/runner/lifecycle-report.ts';
 
@@ -216,6 +220,49 @@ describe('facts', () => {
     const s = scoreFacts(snap, events, new Set([FORGET_KEY]), FORGET_KEY);
     expect(s.residue).toEqual(['alice_email']);
     expect(s.wrong_entity).toHaveLength(1);
+  });
+});
+
+describe('reads through a remote interface (gbrain v0.60.733.0)', () => {
+  const remote = (answer: (op: string, args: Record<string, unknown>) => CallResult | null): Driver => ({
+    kind: 'mcp-stdio', remote: true,
+    start: async () => {}, restart: async () => {}, close: async () => {}, sessions: () => 1,
+    call: async (op, args) => answer(op, args) ?? (op === 'list_pages' ? { ok: true, data: [], raw: '[]', ms: 0 } : { ok: false, data: null, error: 'unsupported', raw: '', ms: 0 }),
+  });
+  const reply = (data: unknown, notice = ''): CallResult => ({ ok: true, data, raw: JSON.stringify(data) + notice, ms: 0 });
+  const recallHint = (args: Record<string, unknown>) =>
+    `\n[gbrain notice recall_hint kind=info]\nwhy: \`query\` searches pages and does not rank facts.\nfix: recall ${JSON.stringify({ ...args, question: args.query })}\nnext: run`;
+
+  test('a quote-fenced recall fact reads as its stored text through the build\'s own unquote, and fails loudly without it', async () => {
+    const unquote = await loadFactUnquote(resolveGbrainUnderTest(null));
+    const fact = { fact_id: '2', fact: fenceTranscriptText('Prefers email', 'fact 2'), quoted: 'transcript', entity_slug: 'people/bob-example', expired_at: null };
+    const driver = remote(op => (op === 'recall' ? reply({ facts: [fact] }) : null));
+    const snap = await observe(driver, { unquote });
+    expect(snap.facts['people/bob-example'].active.map(f => f.fact)).toEqual(['Prefers email']);
+    await expect(observe(driver)).rejects.toThrow(/unquoteFactText/);
+  });
+
+  test('a notice that repeats the probe\'s own query is neither a leak nor a control hit, and a marker in the answer still is', async () => {
+    const priv = versionAt(identityById(PRIVATE_ID), 'ingest')!;
+    const recallProbe = async (facts: (args: Record<string, unknown>) => unknown[]) =>
+      (await probeLeaks(remote((op, args) => (op === 'recall' ? reply({ facts: facts(args), results: [] }, recallHint(args)) : null))))
+        .find(p => p.name === 'recall(page marker)')!;
+    const echoOnly = await recallProbe(() => []);
+    expect([echoOnly.content_leak, echoOnly.control]).toEqual([false, false]);
+    const leaked = await recallProbe(args => [{ fact: `a note that says ${args.query}` }]);
+    expect([leaked.content_leak, leaked.control]).toEqual([true, true]);
+    expect(leaked.evidence).toContain(priv.canary);
+  });
+});
+
+describe('embedding catch-up sweep', () => {
+  test('a build whose embed takes --yes gets it, and an older build runs the command it always ran', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lc-embed-'));
+    mkdirSync(join(dir, 'src/commands'), { recursive: true });
+    writeFileSync(join(dir, 'src/commands/embed.ts'), "if (args.includes('--stale')) run();\n");
+    expect(embedStaleArgs(dir)).toEqual(['embed', '--stale']);
+    writeFileSync(join(dir, 'src/commands/embed.ts'), "const yes = args.includes('--yes');\n");
+    expect(embedStaleArgs(dir)).toEqual(['embed', '--stale', '--yes']);
   });
 });
 
