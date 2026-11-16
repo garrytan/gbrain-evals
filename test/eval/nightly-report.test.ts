@@ -93,8 +93,25 @@ describe('the diff against an earlier night', () => {
     const rows = trials(Array(20).fill(3)).map((r, i) => (i === 0 ? { ...r, tool_errors: refused } : i === 1 ? { ...r, evidence: { kind: 'write', duplicated: ['F1'] } } : r));
     rows.push(row({ item: 'item-0', trial: 4, harness: { error: 'provider 529' } }));
     const c = compareNights({ manifest: manifest([{ id: 'suite-a' }]), rows }, previous, 'previous');
-    expect(c.flags.map(f => f.detail).sort()).toEqual(['harness errors rose from 0 to 1', 'lost writes rose from 0 to 1', 'refusals rose from 0 to 1']);
+    expect(c.flags.map(f => f.detail).sort()).toEqual(['harness errors rose from 0 in 60 trials (0 per trial) to 1 in 61 trials (0.0164 per trial)',
+      'lost writes rose from 0 in 60 trials (0 per trial) to 1 in 61 trials (0.0164 per trial)', 'refusals rose from 0 in 60 trials (0 per trial) to 1 in 61 trials (0.0164 per trial)']);
     expect(c.flags.every(f => f.kind === 'signal')).toBe(true);
+  });
+
+  test('against a stable leg run at fewer trials, a deterministic signal compares per trial run: 2 refusals in 25 trials against 5 in 75 is no rise, 1 in 25 against 11 in 75 is, and harness rows count as trials run', () => {
+    const refused = [{ tool: 'put_page', code: 'worktree_refreshing', refused: true }];
+    const night = (k: number, refusals: number, harness = 0, o: Partial<NightManifest> = {}) => ({
+      manifest: manifest([{ id: 'cat40-hard-m', k }], o),
+      rows: trials(Array(25).fill(k), k, { suite: 'cat40-hard-m' }).map((r, i) => (i < harness ? { ...r, pass: false, harness: { error: 'provider 529' } } : i < harness + refusals ? { ...r, tool_errors: refused } : r)),
+    });
+    const stable = (refusals: number, harness = 0) => night(1, refusals, harness, { ref: 'stable', sha: 'e'.repeat(40) });
+    const opus = compareNights(night(3, 5), stable(2), 'stable');
+    expect(opus.flags).toEqual([]);
+    expect(opus.suites[0]).toMatchObject({ compared: true, trials: { tonight: 3, other: 1 } });
+    const sol = compareNights(night(3, 11), stable(1), 'stable');
+    expect(sol.flags).toEqual([{ kind: 'signal', against: 'stable', suite: 'cat40-hard-m', reader: 'gpt-6.1-sol', detail: 'refusals rose from 1 in 25 trials (0.04 per trial) to 11 in 75 trials (0.147 per trial)' }]);
+    expect(compareNights(night(3, 0, 2), stable(0, 1), 'stable').flags).toEqual([]);
+    expect(compareNights(night(3, 0, 4), stable(0, 1), 'stable').flags.map(f => f.detail)).toEqual(['harness errors rose from 1 in 25 trials (0.04 per trial) to 4 in 75 trials (0.0533 per trial)']);
   });
 
   test('harness rows stay out of the pass rate: a night whose extra rows all failed on the provider has no pass-rate flag', () => {
@@ -116,7 +133,7 @@ describe('the diff against an earlier night', () => {
     const prev = write('2026-11-08', trials(Array(20).fill(3), 3, { cost_usd: null }));
     const cut = trials([...Array(14).fill(3), ...Array(6).fill(0)], 3, { cost_usd: null }).map((r, i) => (!r.pass || i === 0 ? { ...r, finish_reason: 'max_tokens' } : r));
     const summary = writeReport({ dir: write('2026-11-09', cut), previous: prev });
-    expect(summary.flags).toEqual([expect.objectContaining({ kind: 'signal', detail: 'harness errors rose from 0 to 19' })]);
+    expect(summary.flags).toEqual([expect.objectContaining({ kind: 'signal', detail: 'harness errors rose from 0 in 60 trials (0 per trial) to 19 in 60 trials (0.317 per trial)' })]);
     expect((summary.suites as Array<{ cells: Array<Record<string, unknown>> }>)[0]!.cells[0]).toMatchObject({ items: 14, trials: 41, pass1: 1, harness: 19, failures_by_cause: { harness_error: 19 } });
     expect(summary.harness_rows).toBe(19);
   });

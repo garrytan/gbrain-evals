@@ -113,9 +113,9 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   checked.
 - **Cost per correct answer.** The suite's recorded cost divided by its passing rows. It's a metric for spotting a
   change that costs more for the same result.
-- **Against the previous master night.** Suite by suite, where the digests match, the report flags any increase in a
-  deterministic signal (refused tool calls, tool errors, harness errors, lost, stuck, duplicated or overwritten writes,
-  failed smokes) and a strong flip (an item that passed every trial and now passes none) on the night it happens. A
+- **Against the previous master night.** Suite by suite, where the digests match, the report flags any increase per
+  trial run in a deterministic signal (refused tool calls, tool errors, harness errors, lost, stuck, duplicated or
+  overwritten writes, failed smokes), counting harness rows as trials run, and a strong flip (an item that passed every trial and now passes none) on the night it happens. A
   pass-rate drop of at least 5 points whose paired bootstrap interval excludes zero, or a rise of 25% or more in cost
   per correct answer with no gain in pass rate (a night with no correct answers at a positive cost counts as a rise),
   is first a watch line in the report and in `summary.json`'s
@@ -138,7 +138,9 @@ Each night writes `report.md`, `summary.json` and `outcomes.jsonl.gz` into its n
   points from a 97% baseline. It applies to every suite, because the chance flags come from testing every night, not
   from one suite's variance. Deterministic signals and strong flips don't wait.
 - **Against stable.** On matrix nights the same rules compare master with the stable release, in their own section,
-  and flag on the night they are seen, because the next matrix night is a week away.
+  and flag on the night they are seen, because the next matrix night is a week away. Cat 40 world M's stable leg runs
+  one trial against master's three, so comparing per trial matters there: 2 refusals in 25 trials (0.08 per trial)
+  against 5 in 75 (0.0667) is no rise. Each signal flag gives both nights' counts, trials run and rates per trial.
 - **particle-1's agreement with Opus.** On a night that runs particle-1 beside claude-opus-5-5 (`--readers
   claude-opus-5-5,particle-1`), the report checks whether the low-cost reader marks the same items right and wrong as
   Opus. particle-1 runs on the QA suites only: Part C's worker and the Cat 40 Hard runner take Claude and GPT readers,
@@ -362,6 +364,14 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-16: Deterministic signals compare per trial run
+
+Refusals, tool errors, harness errors, lost writes and failed smokes compare per trial run, harness rows included,
+instead of as raw counts, and each flag gives both nights' counts, trials and rates. Cat 40 world M's stable leg has run
+one trial against master's three since 2026-11-12, so on 2026-11-16 the report flagged claude-opus-5-5's refusals as
+rising from 2 to 5 against stable, when per trial they fell from 0.08 (2 in 25) to 0.0667 (5 in 75). gpt-6.1-sol's
+rise from 1 in 25 to 11 in 75 (0.04 to 0.147) still flags. Nights that ran the same number of trials flag as before.
 
 ### 2026-11-12: The weekly SOTA loop, dev set v2 and one stable trial for Cat 40
 
