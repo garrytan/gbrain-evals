@@ -16,6 +16,10 @@ for. Fable runs only in smoke tests, never in counted cells. A run drops older g
 to the previous eval's results (`gpt-4.1-mini` only as that bridge to earlier BEAM runs), and it never runs
 gpt-5.4-mini.
 
+gbrain build, in short (full rules in [CLAUDE.md, "Choose the gbrain build"](CLAUDE.md#choose-the-gbrain-build)): every new run
+measures gbrain's newest release tag on master at launch (`bun eval/runner/gbrain-pin.ts bump` moves the pin), an
+experiment's build freezes once its counted runs start, and an older build runs only when the question is about it.
+
 Top-level docs, in short (full rules in [CLAUDE.md, "Shape of a top-level document"](CLAUDE.md#shape-of-a-top-level-document)):
 README.md, the hub pages in `docs/` and the guides in `eval/` open with what gbrain does at the commit `package.json`
 pins, in present tense, and end with a `## Changelog` of how that document changed, newest first. Replace a superseded
