@@ -195,7 +195,8 @@ export const UBI_CREW_LINE = 208;
 
 /**
  * How many more VMs of `vcpus` each fit under both lines, from `ubi-runner.sh usage` (OWNER VMS VCPUS rows and a
- * total row); this crew's VMs are the owners starting with `crewPrefix`. Unreadable usage fits none.
+ * total row); the launching crew's VMs are the owners starting with `crewPrefix`, the letters of UBI_OWNER (`gbev` for
+ * gbev91). Unreadable usage fits none.
  */
 export function ubiRoom(usage: string, vcpus: number, crewPrefix = 'gbev'): number {
   const rows = usage.split('\n').map(l => l.trim().split(/\s+/)).filter(r => r.length === 3 && /^\d+$/.test(r[1]) && /^\d+$/.test(r[2]));
@@ -242,7 +243,7 @@ async function launch(argv: string[]): Promise<number> {
     for (;;) {
       let usage = '';
       try { usage = execFileSync('bash', [runner, 'usage'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); } catch { usage = ''; }
-      if (ubiRoom(usage, vcpus) >= 1) break;
+      if (ubiRoom(usage, vcpus, /^[a-z]+/i.exec(process.env.UBI_OWNER!)?.[0] ?? 'gbev') >= 1) break;
       console.error(`dev loop: no room for a ${vcpus}-vCPU VM under the project's ${UBI_PROJECT_LINE} or this crew's ${UBI_CREW_LINE} (or usage unreadable); reading again in 5 minutes`);
       await Bun.sleep(300_000);
     }

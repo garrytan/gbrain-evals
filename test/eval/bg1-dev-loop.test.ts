@@ -134,6 +134,7 @@ describe('the dev cell and its launch', () => {
     expect(ubiRoom(usage([['harn61', 30, 480], ['gbev91', 3, 12]]), 4)).toBe(0);
     expect(ubiRoom(usage([['gbev53', 10, 160], ['gbev91', 11, 44]]), 4)).toBe(1);
     expect(ubiRoom(usage([['gbev53', 10, 160], ['gbev91', 12, 48]]), 4)).toBe(0);
+    expect(ubiRoom(usage([['gbev53', 10, 160], ['gbev91', 12, 48], ['gbra108', 2, 8]]), 4, 'gbra')).toBe(50);
     expect(ubiRoom('ubi-runner: usage failed (HTTP 502)', 4)).toBe(0);
   });
 
