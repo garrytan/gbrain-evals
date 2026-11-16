@@ -661,6 +661,18 @@ function git(args: string[]): string {
 
 interface RunOptions { fixture: boolean; synthetic?: string; questionsPath?: string; freezePath?: string; databaseUrlEnv: string; out: string; gut: GbrainUnderTest; protocol?: Protocol; transports?: Transports; referenceBuild?: boolean }
 
+/**
+ * Live pages in gbrain's conversation-archive layout, the rows gbrain #9433 (v0.60.727.0) ranks below a written page that
+ * scores close to them (ARCHIVE_SLUG and ARCHIVE_SOURCES in src/core/search/rank-priors.ts at v0.60.733.0), and how many
+ * of the run's distinct gold pages are among them (batch 5's 2026-11-16 build entry). Counts only.
+ */
+export async function archiveLayoutCounts(engine: { executeRaw: (sql: string, params?: unknown[]) => Promise<any[]> }, goldSlugs: readonly string[]) {
+  const layout = "deleted_at IS NULL AND (slug ~ '^conversations/[a-z][a-z0-9-]*/[0-9]{4}-[0-9]{2}-[0-9]{2}(/|$)' OR source_id IN ('conversations', 'conversations-owner'))";
+  const [all] = await engine.executeRaw('SELECT count(*)::int AS n FROM pages WHERE ' + layout);
+  const [gold] = await engine.executeRaw('SELECT count(DISTINCT slug)::int AS n FROM pages WHERE ' + layout + ' AND slug = ANY($1::text[])', [[...new Set(goldSlugs)]]);
+  return { archive_layout_pages: Number(all?.n), gold_pages_in_archive_layout: Number(gold?.n) };
+}
+
 /** One counted or control run. Returns the outbound file paths. */
 /** pgvector in the database searched and, on a copy, the versions and restore error count snapshot.sh wrote into the marker row. */
 async function copyFacts(engine: any, barrier: string) {
@@ -749,6 +761,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
   const countPages = async (since?: string) => Number((await engine.executeRaw('SELECT count(*)::int AS n FROM pages' + (since ? " WHERE updated_at >= '" + since + "'::timestamptz" : '')))[0]?.n);
   try {
     const pagesAtStart = await countPages();
+    const archive = await archiveLayoutCounts(engine, questions.flatMap(q => q.gold.map(g => g.slug)));
     const facts = await copyFacts(engine, barrier);
     const { loadSearchModeConfig, resolveSearchMode } = await importGbrain<any>(o.gut, 'src/core/search/mode.ts');
     const knobs = resolveSearchMode(await loadSearchModeConfig(engine));
@@ -805,6 +818,7 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       brain_pages_at_start: pagesAtStart,
       brain_pages_at_end: pagesAtEnd,
       brain_pages_updated_since_start: pagesUpdated,
+      ...archive,
       engine: (inProcess ? 'pglite' : 'postgres') as 'pglite' | 'postgres',
       barrier,
       connection,

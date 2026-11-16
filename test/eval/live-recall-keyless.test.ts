@@ -136,8 +136,9 @@ describe('a fixture run starts the keyless process and scores it', () => {
     expect(card.keyless_op.primary.id).toBe(FILL_PRIMARY_ID);
     expect(Object.keys(card.gap_failures).sort()).toEqual([...TYPES].sort());
     for (const c of Object.values(card.gap_failures) as Array<Record<string, number>>) expect(c.ranked_6_to_20 + c.not_in_20_hybrid_or_vector_top5 + c.not_in_20_other_arm_top5 + c.not_in_20_no_arm_top5).toBe(c.exact_only);
-    expect(card.run).toMatchObject({ reference_build: false, code_schema_version: card.run.schema_version, brain_pages_at_end: card.run.brain_pages_at_start });
+    expect(card.run).toMatchObject({ reference_build: false, code_schema_version: card.run.schema_version, brain_pages_at_end: card.run.brain_pages_at_start, archive_layout_pages: 0, gold_pages_in_archive_layout: 0 });
     expect(markdown).toContain('Brain during the run: ' + card.run.brain_pages_at_start + ' pages');
+    expect(markdown).toContain('Conversation-archive layout, which gbrain #9433 ranks lower unless a question names a chat or a date: 0 live pages, 0 of them gold pages of this run.');
     expect(card.eligibility.common_arms).not.toContain(KEYLESS_ARM);
     expect(markdown).toContain('## Keyless search operation (' + KEYLESS_ARM + ')');
     expect(markdown).toContain('## Gap failure classes');

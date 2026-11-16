@@ -1,11 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { PGlite } from '@electric-sql/pglite';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { LiveRecallAbort } from '../../eval/runner/live-recall/brain.ts';
-import { BATCH3_FIXTURE_QUESTIONS, BATCH5_PRIOR_QUESTION_FILES, FIXTURE_DIR, HELD_OUT_PRIORS, PRIOR_QUESTION_FILES, freezeSummaryBatch5, liveRecall, main, parseQuestions, priorOverlap } from '../../eval/runner/live-recall/run.ts';
+import { BATCH3_FIXTURE_QUESTIONS, BATCH5_PRIOR_QUESTION_FILES, FIXTURE_DIR, HELD_OUT_PRIORS, PRIOR_QUESTION_FILES, archiveLayoutCounts, freezeSummaryBatch5, liveRecall, main, parseQuestions, priorOverlap } from '../../eval/runner/live-recall/run.ts';
 import { COMPARISONS, EPOCH_PROTOCOLS, FILL_MIN_WINS, PROTOCOL_TYPES, TYPES } from '../../eval/runner/live-recall/scorecard.ts';
 import { visibilityEpoch } from '../../eval/runner/live-recall/visibility-epoch.ts';
 
@@ -94,5 +95,28 @@ describe('batch5 freeze and counted run refusals', () => {
     expect(await quietly(() => main(['freeze', '--questions', join(dir, 'q.jsonl'), '--out', out, '--protocol', 'batch5']))).toBe(3);
     expect(await quietly(() => main(['freeze', '--questions', join(dir, 'q.jsonl'), '--out', out, '--protocol', 'batch5', '--prior', join(FIXTURE_DIR, 'questions.jsonl'), '--prior', BATCH3_FIXTURE_QUESTIONS, '--prior', join(dir, 'q.jsonl'), '--prior', join(dir, 'q.jsonl')]))).toBe(3);
     expect(existsSync(out)).toBe(false);
+  });
+});
+
+describe('conversation-archive layout counts (2026-11-16 build entry)', () => {
+  test('counts live pages in gbrain #9433\'s archive layout and the distinct gold pages among them', async () => {
+    const db = new PGlite();
+    try {
+      await db.exec('CREATE TABLE pages (slug text NOT NULL, source_id text NOT NULL, deleted_at timestamptz)');
+      await db.exec(`INSERT INTO pages VALUES
+        ('conversations/claude-code/2026-11-15/abc12345', 'default', NULL),
+        ('conversations/days/2026-11-14', 'default', NULL),
+        ('conversations/openclaw/2026-11-13', 'default', now()),
+        ('notes/kept', 'conversations-owner', NULL),
+        ('conversations/Claude/2026-11-15/x', 'default', NULL),
+        ('conversations/claude-code/notes', 'default', NULL),
+        ('meetings/2026-11-15-standup', 'default', NULL)`);
+      const engine = { executeRaw: async (sql: string, params?: unknown[]) => (await db.query(sql, params)).rows as any[] };
+      const gold = ['conversations/days/2026-11-14', 'notes/kept', 'notes/kept', 'meetings/2026-11-15-standup', 'conversations/openclaw/2026-11-13'];
+      expect(await archiveLayoutCounts(engine, gold)).toEqual({ archive_layout_pages: 3, gold_pages_in_archive_layout: 2 });
+      expect(await archiveLayoutCounts(engine, [])).toEqual({ archive_layout_pages: 3, gold_pages_in_archive_layout: 0 });
+    } finally {
+      await db.close();
+    }
   });
 });

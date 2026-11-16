@@ -38,7 +38,10 @@ pin (`gbrain_pin_version`, `gbrain_pin_commit`) and what was loaded (`gbrain_loa
 loaded gbrain expects) and `reference_build` (true when `--reference-build` let a named older build read a newer
 schema, so `code_schema_version` is below `schema_version`); `brain_pages_at_start`, `brain_pages_at_end` and
 `brain_pages_updated_since_start` (pages in the brain when the arms opened it and after the last search, and pages
-written or changed since the run started, the keyless process's time included); `engine` (`postgres`, or `pglite` for
+written or changed since the run started, the keyless process's time included); `archive_layout_pages` and `gold_pages_in_archive_layout`
+(live pages in gbrain's conversation-archive layout when the arms opened the brain, the pages gbrain #9433 ranks lower,
+and how many of the run's distinct gold pages are among them; [2026-11-16 build
+entry](PREREGISTRATION.md#2026-11-16-batch-5-runs-at-v0607330-only)); `engine` (`postgres`, or `pglite` for
 the fixture); `barrier` (`copy`, `standby` or `no_write_privilege`) and `connection` (`direct_or_local`,
 `session_pooler`, `transaction_pooler_rewritten`, or `in_process`); the brain's `search_mode`, `reranker_enabled`,
 `reranker_model`, `embedding_model`, `embedding_column` (the column `hybridSearch` and the `vector` arm search;

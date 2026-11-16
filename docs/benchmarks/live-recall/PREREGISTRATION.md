@@ -841,6 +841,43 @@ archive under whatever home it shares, so this entry says what batch 5's session
   search, and how many pages were written or changed since the run started (`run.brain_pages_*`). The results report
   them, and a build comparison whose two runs saw pages change says so beside its numbers.
 
+### 2026-11-16: Batch 5 runs at v0.60.733.0 only
+
+Written before any batch 5 search, after Garry's 2026-11-16 rule on re-runs: a published number is measured again only
+when someone can name gbrain changes since its build that could move it, and otherwise it waits for the monthly refresh
+on that month's `stable` tag. This entry replaces the same-day build pair and the descriptive reruns above.
+
+- **What runs.** Batch 5 runs once, at gbrain v0.60.733.0 (`6ce7195b`), with every arm: `keyword`, `vector`,
+  `hybrid_lexical`, `hybrid`, `configured`, `configured_window` and `search_op_keyless`. It is batch 5's counted run.
+- **What moves to the monthly refresh.** Batch 5's run at 0.60.682.0 and its `compare`, and the descriptive reruns of
+  batches 3 and 4 at both builds. The session loads no other build, and `--reference-build` stays in the runner unused.
+  Batch 3's and batch 4's published numbers stay up, labelled with 0.60.641.0 and 0.60.682.0.
+- **Why configured search still runs at the newest build.** `git log 42faabf2..6ce7195b` on the files configured search
+  runs names two changes that could move it. gbrain #7935 (`692a11a37`, `src/core/search/exact-lookup.ts`) puts the
+  best keyword match first when several exact identifier hits are promoted. It can lift exact forms only, because no
+  reworded form shares an identifier token with its exact form, so it can only widen the gap. gbrain #9433
+  (`d1859cb8d`, `src/core/search/rank-priors.ts`) ranks pages in the conversation-archive layout below a written page
+  that scores close to them and keeps at most two per day, unless the question names a chat or a date. It can move the
+  gap either way. Nothing in that range changes embedding, vector, rerank or fusion code on configured search's path,
+  and the fill doesn't run there. A published gap that may have grown shouldn't stand as current, but a build comparison
+  at N = 50 (17.7 to 21.7 points detectable) couldn't resolve changes this narrow.
+- **The fill.** Its primary, its R48 cycle and the task-fit reading stand as written. Fill off is the same 0.60.733.0
+  response without the rows gbrain marked `keyword_fill`, so the fill never used the reference run.
+- **The gap rule** stands. Its last branch changes: if the rule doesn't fire at 0.60.733.0, the results report batch 5's
+  gap beside batch 4's at 0.60.682.0 and say that the build, the questions and the brain's changes since 2026-11-12
+  can't be told apart here. A later refresh can run the pair.
+- **#9433's direction.** When the arms open the brain, the run counts its live pages in the archive layout
+  (`run.archive_layout_pages`) and how many of the run's distinct gold pages are among them
+  (`run.gold_pages_in_archive_layout`), using the slug pattern and sources from gbrain's `rank-priors.ts` at
+  v0.60.733.0. With no such page, #9433 can't move any arm. With such pages but no gold page among them, it can only lift
+  gold pages. With gold pages among them, it can also push those down on questions that name no chat or date. The
+  results say which case held. The box's brain serves one person and ran 0.60.728.0 on 2026-11-16, and since 0.60.727.0
+  gbrain turns the conversation archive on by default for such a brain, so archive pages may be appearing.
+- **What leaves the box.** `freeze.json` (already committed), then batch 5's `scorecard.json` and `scorecard.md`, and
+  the gbrain version the box runs and the brain's schema version at the session. There is no `compare.json`.
+- **Cost.** Wintermute's keys pay for about one query embedding per form for `hybrid` and `configured`, and one rerank
+  call per configured query, at one build. `search_op_keyless` sends nothing to any provider.
+
 ## Limits
 
 - One writer who knows the brain writes both the questions and the gold, so paraphrase difficulty and topic choice

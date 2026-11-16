@@ -94,6 +94,9 @@ export interface RunIdentity {
   brain_pages_at_start?: number;
   brain_pages_at_end?: number;
   brain_pages_updated_since_start?: number;
+  /** Live pages in gbrain's conversation-archive layout (gbrain #9433's rank prior) when the arms opened the brain, and how many of the run's distinct gold pages are among them. */
+  archive_layout_pages?: number;
+  gold_pages_in_archive_layout?: number;
   /** batch3, batch4 and batch5 only: which side of GBRA-398 the run falls on, and the gbrain version and epoch its freeze recorded. */
   visibility_epoch?: string;
   freeze_gbrain_version?: string | null;
@@ -520,7 +523,7 @@ const KEY_WORDS = new Set<string>([
   'synthetic', 'transports', 'digest', 'questions_sha256', 'unembedded_chunk_share', 'synopsis_vectors_off', 'keyword_candidate_bound', 'shell_page_share', 'chunks', 'unembedded_chunks',
   'family', 'family_ci95', 'method', 'level', 'seed', 'draws', 'n_strata', 'members', 'critical_value', 'bonferroni_critical_value',
   'prior_overlap', 'files', 'question_ids', 'forms', 'gold_pages',
-  'code_schema_version', 'reference_build', 'brain_pages_at_start', 'brain_pages_at_end', 'brain_pages_updated_since_start', 'gap_failures', 'exact_only', 'ranked_6_to_20', 'not_in_20_hybrid_or_vector_top5', 'not_in_20_other_arm_top5', 'not_in_20_no_arm_top5',
+  'code_schema_version', 'reference_build', 'brain_pages_at_start', 'brain_pages_at_end', 'brain_pages_updated_since_start', 'archive_layout_pages', 'gold_pages_in_archive_layout', 'gap_failures', 'exact_only', 'ranked_6_to_20', 'not_in_20_hybrid_or_vector_top5', 'not_in_20_other_arm_top5', 'not_in_20_no_arm_top5',
   'keyless_op', 'statuses', 'fill_on', 'fill_off', 'exposure', 'fired', 'fill_in_top5', 'prefix_broken', 'task_fit', 'keyword_rows_1_to_19',
   'p_one_sided', 'alpha', 'min_wins', 'holds',
   ...ARMS, KEYLESS_ARM, ...ALL_TYPES, ...KS.map(k => 'k' + k), ...STATUSES, ...GOLD_FOUND_BY,
@@ -608,6 +611,7 @@ export function renderMarkdown(s: ReturnType<typeof buildScorecard>): string {
   lines.push('Protocol: ' + s.protocol + '; primary comparisons (Holm family of two): ' + COMPARISONS[s.protocol].filter(c => c.primary).map(c => c.id + ' (' + c.primary + ')').join(', ') + '.');
   if (r.synthetic) lines.push('Synthetic conditions brain ' + r.synthetic.digest.slice(0, 12) + ': unembedded chunk share ' + r.synthetic.unembedded_chunk_share + ' (' + r.synthetic.unembedded_chunks + ' of ' + r.synthetic.chunks + ' chunks), synopsis vectors ' + (r.synthetic.synopsis_vectors_off ? 'off' : 'on') + ', keyword candidate bound ' + (r.synthetic.keyword_candidate_bound ?? 'none') + ', shell page share ' + r.synthetic.shell_page_share + '.');
   if (r.brain_pages_at_start !== undefined) lines.push('Brain during the run: ' + r.brain_pages_at_start + ' pages when the arms opened it, ' + r.brain_pages_at_end + ' after the last search, and ' + r.brain_pages_updated_since_start + ' pages written or changed since the run started.');
+  if (r.archive_layout_pages !== undefined) lines.push('Conversation-archive layout, which gbrain #9433 ranks lower unless a question names a chat or a date: ' + r.archive_layout_pages + ' live pages, ' + r.gold_pages_in_archive_layout + ' of them gold pages of this run.');
   if (r.reference_build) lines.push('Reference build on a newer schema: the brain is at schema ' + r.schema_version + ' and this gbrain expects ' + r.code_schema_version + ', so tables and columns added since are invisible to it.');
   if (EPOCH_PROTOCOLS.includes(s.protocol)) lines.push('Visibility epoch (GBRA-398): run ' + (r.visibility_epoch ?? 'unknown') + ', freeze ' + (r.freeze_visibility_epoch ?? 'none (fixture)') + (r.freeze_gbrain_version ? ' at gbrain ' + r.freeze_gbrain_version : '') + '.');
   if ((r.source_pgvector !== null && r.source_pgvector !== r.pgvector_version) || (r.restore_errors ?? 0) > 0) lines.push('Warning: vector search on this copy may differ from the live brain (source pgvector ' + (r.source_pgvector ?? 'unknown') + ', copy pgvector ' + (r.pgvector_version ?? 'none') + ', restore errors ' + (r.restore_errors ?? 'unknown') + ').');

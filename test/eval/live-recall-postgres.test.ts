@@ -256,7 +256,7 @@ describe.skipIf(!ADMIN_URL)('live-recall on a real Postgres (opt-in)', () => {
     expect(card.eligibility.exclusions).toEqual({});
     expect(card.custody.readonly_verified_end).toBe(true);
     expect(card.keyless_op.statuses).toEqual({ ok: 40 });
-    expect(card.run).toMatchObject({ reference_build: false, code_schema_version: card.run.schema_version, brain_pages_at_end: card.run.brain_pages_at_start, brain_pages_updated_since_start: 0 });
+    expect(card.run).toMatchObject({ reference_build: false, code_schema_version: card.run.schema_version, brain_pages_at_end: card.run.brain_pages_at_start, brain_pages_updated_since_start: 0, archive_layout_pages: 0, gold_pages_in_archive_layout: 0 });
     expect(card.run.brain_pages_at_start).toBeGreaterThan(0);
     for (const home of ['gbrain-home', 'keyless-gbrain-home']) expect(existsSync(join(dir, 'reader', home, '.gbrain', 'config.json'))).toBe(true);
     expect(await fingerprint(src)).toEqual(before);
