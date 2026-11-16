@@ -37,7 +37,7 @@ describe('rs1-cells.json', () => {
     const f6 = JSON.parse(readFileSync(join(ROOT, 'eval/runner/q1/cells/f6-cells.json'), 'utf8')).cells.find((c: CellDefinition) => c.system === 'gbrain-defaults').arms.find((a: { id: string }) => a.id === 'p');
     expect([g.arms[0].retrieval, g.arms[0].policy]).toEqual([f6.retrieval, f6.policy]);
     expect(g.launch?.env.GBRAIN_F6).toBe('1');
-    expect(g.launch?.env.GBRAIN_SHA).toBe('27f8b9d6287c2ba635532c7d3bc015c50e1d769b');
+    expect(g.launch?.env.GBRAIN_SHA).toBe('6ce7195b44a034f85aec811f11fbf862db376f50');
     expect(Number(g.launch?.env.GBRAIN_F6_EXTRACT_CAP_USD)).toBeGreaterThan(0);
     expect(m.waves.A.length).toBe(16);
   });
@@ -234,7 +234,7 @@ describe('wave A run identity across the wave B regeneration (2026-11-08 amendme
   });
 
   // Value: protects=wave A's counted units keep the run identity they started from through every later commit on the results branch; fails_when=a change to the RS1 cell definitions or to runConfigText moves a field verdict.ts compares for a wave A unit; why_new=verdict.ts aggregates mode lands after wave A started (GBEV-3, 2026-11-09) and must not change wave A's identity; seam=none; no_claim=wave B's units
-  test('every wave A unit still has the identity counted runs started from (test/fixtures/rs1/wave-a-identity.json, recorded at de943504)', () => {
+  test('every wave A unit still has the identity counted runs started from (test/fixtures/rs1/wave-a-identity.json, recorded at the gbrain re-pin)', () => {
     const pinned = JSON.parse(readFileSync(join(ROOT, 'test/fixtures/rs1/wave-a-identity.json'), 'utf8')) as { identity_sha256: Record<string, string> };
     const now = Object.fromEntries(committed.filter(c => waveA.has(c.id)).map(c => [c.id, createHash('sha256').update(identity(c)).digest('hex')]));
     expect(now).toEqual(pinned.identity_sha256);

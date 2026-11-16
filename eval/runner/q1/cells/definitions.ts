@@ -368,10 +368,13 @@ export const F6_ASSUMPTIONS = {
  * from ASSUMPTIONS and F6_ASSUMPTIONS so Q1's and F6's manifests stay byte-identical.
  */
 export const RS1_ASSUMPTIONS = {
-  /** gbrain's soaked stable release: the `stable` tag, stable-v0.60.593.0 (not `latest-stable`, the alpha channel). */
-  gbrain_sha: '27f8b9d6287c2ba635532c7d3bc015c50e1d769b',
-  gbrain_version: 'v0.60.593.0',
-  /** The stable tag's engines floor is Bun >= 1.4.4, the same image F6 built on. */
+  /**
+   * gbrain's newest release: the highest version tag on gbrain's master, v0.60.733.0 on 2026-11-16. Wave A's launch
+   * reads the tag again and re-pins here if a newer release exists; the pin then holds for every RS1 counted cell.
+   */
+  gbrain_sha: '6ce7195b44a034f85aec811f11fbf862db376f50',
+  gbrain_version: 'v0.60.733.0',
+  /** v0.60.733.0's engines floor is still Bun >= 1.4.4, the same image F6 built on. */
   bun_image: F6_ASSUMPTIONS.bun_image,
   /** F6's measured f6-master rates until stage 1 measures rs1-stable on its two public conversations. */
   ingest_usd_per_mtok: { 'gbrain-defaults:rs1-stable': 0.08 } as Record<string, number>,
