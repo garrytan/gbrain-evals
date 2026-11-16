@@ -13,7 +13,7 @@ import {
   BASELINES_PATH, clockProblem, COMPARATORS, DEV_AS_OF, DEV_JUDGE, DEV_READER, DEV_WORLD_END, devCell, devClock, DevLoopRefusal, faketimeOffset, loadBaselines,
   main, neededValues, newestRelease, resolveGbrainRef, runDevCell, savedRow, scoreRecords, scoreRun, ubiRoom, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
 } from '../../eval/runner/bg1/dev-loop.ts';
-import { BRAIN_SNAPSHOT, checkOverlayHead, overlaySlug, parseOverlays, renderScore, RUN_SCHEMA, upkeepRuns, vmPayload } from '../../eval/runner/bg1/dev-loop.ts';
+import { BRAIN_SNAPSHOT, DEV_VM_HOURS, devVm, devVmName, keptDevVms, reapDevVms, type UbiRunner, checkOverlayHead, overlaySlug, parseOverlays, renderScore, RUN_SCHEMA, upkeepRuns, vmPayload } from '../../eval/runner/bg1/dev-loop.ts';
 import { bg1RunClock, loadCorpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
@@ -395,5 +395,55 @@ describe('the brain and its upkeep', () => {
     const bare = join(dir, 'bare.tar');
     execFileSync('tar', ['-C', vol, '-cf', bare, '.']);
     await expect(main(['upkeep', '--snapshot', bare, '--out', out])).rejects.toThrow();
+  });
+});
+
+describe('leftover VMs', () => {
+  const NOW = Date.parse('2026-11-16T22:00:00Z');
+  const at = (hoursAgo: number) => Math.floor(NOW / 1000 - hoursAgo * 3600);
+  const fake = (rows: string[], failDown = false) => {
+    const calls: string[][] = [];
+    const ubi: UbiRunner = args => {
+      calls.push(args);
+      if (args[0] === 'owner') return 'gbev91\n';
+      if (args[0] === 'list') return rows.join('\n') + '\n';
+      if (args[0] === 'down' && failDown) throw new Error('down failed');
+      return '';
+    };
+    return { ubi, calls };
+  };
+
+  test('a dev-loop VM name carries the owner, the second it was made and the marker; other names are not dev-loop VMs', () => {
+    const name = devVmName('gbev91', 'bg1-dev-02', NOW);
+    expect(name).toMatch(/^ubirun-gbev91-\d{10}-devloop-bg1-dev-02-[0-9a-f]{4}$/);
+    expect(name.length).toBeLessThanOrEqual(63);
+    expect(devVm(name)).toEqual({ owner: 'gbev91', epoch: Math.floor(NOW / 1000) });
+    expect(devVm(`ubirun-gbev91-${at(9)}-1a2b3c4d`)).toBeNull();
+    expect(devVm('my-database-vm')).toBeNull();
+  });
+
+  test(`run destroys only this owner's dev-loop VMs older than ${DEV_VM_HOURS} hours`, () => {
+    const old = `ubirun-gbev91-${at(DEV_VM_HOURS + 1)}-devloop-bg1-dev-01-aaaa`;
+    const { ubi, calls } = fake([
+      `eu-central-h1  ${old}`,
+      `eu-central-h1  ubirun-gbev91-${at(DEV_VM_HOURS - 1)}-devloop-bg1-dev-02-bbbb`,
+      `eu-central-h1  ubirun-gbev91-${at(30)}-1a2b3c4d`,
+      `eu-central-h1  ubirun-gbra108-${at(30)}-devloop-bg1-dev-03-cccc`,
+      'a line the runner would never print',
+    ]);
+    expect(reapDevVms(ubi, NOW)).toEqual([old]);
+    expect(calls.filter(c => c[0] === 'down')).toEqual([['down', old, '-l', 'eu-central-h1']]);
+    expect(reapDevVms(fake([]).ubi, NOW)).toEqual([]);
+    expect(() => reapDevVms(fake([`eu-central-h1  ${old}`], true).ubi, NOW)).toThrow(/down failed/);
+  });
+
+  test('after the run, every VM of its own still standing is listed with its pull and down commands', () => {
+    const mine = { name: `ubirun-gbev91-${at(1)}-devloop-bg1-dev-01-aaaa`, remote: 'work/gbrain-evals/eval/reports/bg1-dev-loop/devloop-x', local: '/out/worlds' };
+    const gone = { ...mine, name: `ubirun-gbev91-${at(1)}-devloop-bg1-dev-02-bbbb` };
+    const { ubi } = fake([`eu-central-h1  ${mine.name}`, `eu-central-h1  ubirun-gbev91-${at(1)}-devloop-bg1-dev-03-cccc`]);
+    expect(keptDevVms(ubi, 'ubi-runner.sh', [mine, gone])).toEqual([
+      `eu-central-h1/${mine.name} is still running. Pull its outputs: bash ubi-runner.sh pull ${mine.name} ${mine.remote} /out/worlds; then destroy it: bash ubi-runner.sh down ${mine.name} -l eu-central-h1`,
+    ]);
+    expect(keptDevVms(fake([]).ubi, 'ubi-runner.sh', [mine])).toEqual([]);
   });
 });

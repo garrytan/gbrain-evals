@@ -18,7 +18,11 @@
  *     (descriptive). Needs ANTHROPIC_API_KEY, OPENAI_API_KEY, VOYAGE_API_KEY, GEMINI_API_KEY, UBICLOUD_API_KEY and UBI_OWNER.
  *     gbrain's idle upkeep stays on, as gbrain ships it. After the cell, each VM keeps the world's brain in its outputs
  *     (brain/gbrain-defaults.tar, a bootstrap.sh snapshot of the stack's volumes after the last question, with the
- *     shim's logs and receipts) and lists every idle upkeep run gbrain logged in upkeep.ndjson.
+ *     shim's logs and receipts) and lists every idle upkeep run gbrain logged in upkeep.ndjson. Each VM is named
+ *     ubirun-<owner>-<epoch>-devloop-<world>-<hex>. Before launching, run destroys this owner's dev-loop VMs older than
+ *     7 hours (never another owner's, never a VM without the dev-loop marker) and refuses if it can't; after the run it
+ *     prints each of its VMs still standing (a failed final pull or a lost ssh session keeps one) with the commands to
+ *     pull its outputs and destroy it, and exits 4.
  *     Each --overlay sets one of the six search keys the gbrain-defaults shim writes for the arm (true or false;
  *     search.query_budget_unit chunk or auto) on top of the stage 1 arm's values. An unknown key, a bad value, or a key
  *     gbrain's config does not list at the resolved commit refuses before any VM starts. The overlay goes into run.json,
@@ -65,7 +69,7 @@
  * the reader and the gating judge, and `score` refuses a gbrain run whose settings differ from them.
  */
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { loadCorpus, type MemoryQuestion } from '../memory-qa/corpus.ts';
@@ -304,6 +308,50 @@ export function ubiRoom(usage: string, vcpus: number, crewPrefix = 'gbev'): numb
   return Math.max(0, Math.min(Math.floor((UBI_PROJECT_LINE - Number(total[2])) / vcpus), Math.floor((UBI_CREW_LINE - crew) / vcpus)));
 }
 
+// ─── Leftover VMs ────────────────────────────────────────────────────
+
+/**
+ * The repo's ubi-runner.sh keeps a VM when its final pull fails (exit 253) or its ssh session is lost (255), and a
+ * killed launcher never reaches the runner's teardown, while the runner caps no VM's lifetime. So each dev-loop VM
+ * carries a dev-loop marker in its name, `run` first destroys this owner's dev-loop VMs older than DEV_VM_HOURS
+ * (a dev run takes about an hour), and after the run it lists every VM of its own still standing, with the commands
+ * to pull and destroy it, and exits non-zero. Other owners' VMs and VMs without the marker are never touched.
+ */
+export const DEV_VM_HOURS = 7;
+
+/** ubi-runner.sh as a function: its arguments in, its stdout out; it throws when the runner exits non-zero. */
+export type UbiRunner = (args: string[]) => string;
+
+/** A dev-loop VM name under the runner's ownership scheme: ubirun-<owner>-<epoch>-devloop-<world>-<4 hex>. */
+export const devVmName = (owner: string, world: string, nowMs: number) => `ubirun-${owner}-${Math.floor(nowMs / 1000)}-devloop-${world}-${randomBytes(2).toString('hex')}`;
+
+/** The owner and creation second of a dev-loop VM name, or null for any other name. */
+export function devVm(name: string): { owner: string; epoch: number } | null {
+  const m = /^ubirun-([a-z][a-z0-9]{0,11})-(\d{10})-devloop-/.exec(name);
+  return m ? { owner: m[1], epoch: Number(m[2]) } : null;
+}
+
+/** This owner's VMs, from `list --mine` ("<location>  <name>" per line). */
+const ownVms = (ubi: UbiRunner) => ubi(['list', '--mine']).split('\n').map(l => l.trim().split(/\s+/)).filter(r => r.length === 2).map(([loc, name]) => ({ loc, name }));
+
+/** Destroys this owner's dev-loop VMs created more than DEV_VM_HOURS ago and returns their names; a failed list or destroy throws. */
+export function reapDevVms(ubi: UbiRunner, nowMs: number): string[] {
+  const owner = ubi(['owner']).trim();
+  const stale = ownVms(ubi).filter(v => { const d = devVm(v.name); return d !== null && d.owner === owner && nowMs / 1000 - d.epoch >= DEV_VM_HOURS * 3600; });
+  for (const v of stale) {
+    console.error(`dev loop: destroying ${v.loc}/${v.name}, a dev-loop VM of ${owner} older than ${DEV_VM_HOURS} hours`);
+    ubi(['down', v.name, '-l', v.loc]);
+  }
+  return stale.map(v => v.name);
+}
+
+/** This run's VMs still standing after it, each with the commands that pull its outputs and destroy it. */
+export function keptDevVms(ubi: UbiRunner, runner: string, launched: ReadonlyArray<{ name: string; remote: string; local: string }>): string[] {
+  const standing = new Map(ownVms(ubi).map(v => [v.name, v.loc]));
+  return launched.filter(v => standing.has(v.name)).map(v =>
+    `${standing.get(v.name)}/${v.name} is still running. Pull its outputs: bash ${runner} pull ${v.name} ${v.remote} ${v.local}; then destroy it: bash ${runner} down ${v.name} -l ${standing.get(v.name)}`);
+}
+
 /** What a dev-loop VM receives: the Q1 runner's paths, BG1's analysis code and the dev worlds. */
 export const SHIP_PATHS = [...new Set([...EXECUTES, ...Q1_VM_PATHS, 'eval/runner/bg1'])];
 
@@ -323,6 +371,9 @@ async function launch(argv: string[]): Promise<number> {
   const ref = named ?? newest!.tag;
   const sha = named ? resolveGbrainRef(named) : newest!.sha;
   await checkOverlayHead(sha, overlay);
+  const runner = resolveRunner();
+  const ubi: UbiRunner = args => execFileSync('bash', [runner, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  try { reapDevVms(ubi, Date.now()); } catch (e) { throw new DevLoopRefusal(`could not clear this owner's dev-loop VMs older than ${DEV_VM_HOURS} hours (${(e as Error).message.split('\n')[0]}); check \`bash ${runner} list --mine\` before launching more`); }
   console.error(`dev loop: gbrain ${ref} at ${sha}${slug ? ` with overlay ${slug}` : ''}`);
   const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15);
   const out = resolve(outArg ?? join(REPO_ROOT, 'eval/reports/bg1-dev-loop', `${sha.slice(0, 12)}${slug ? `-${slug}` : ''}-${stamp}`));
@@ -335,11 +386,12 @@ async function launch(argv: string[]): Promise<number> {
   writeFileSync(setup, `set -euo pipefail\n${launchPrefix({ ...def.launch!, env: { GBRAIN_BUN_IMAGE: def.launch!.env.GBRAIN_BUN_IMAGE, GBRAIN_SHA: sha, GBRAIN_FAKETIME_LIB: '1' } })}bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets bg1-dev --conversations ${worlds.join(',')}\n`);
   writeFileSync(join(out, 'run.json'), JSON.stringify({ schema: RUN_SCHEMA, gbrain_ref: ref, gbrain_sha: sha, ...(slug ? { overlay } : {}), worlds, paid_window: window.unit, window_cap_usd: window.cap_usd, lease_usd_per_world: leaseUsd,
     reader: DEV_READER, judge: DEV_JUDGE, world_end: DEV_WORLD_END, as_of: DEV_AS_OF, started_at: new Date().toISOString() }, null, 2) + '\n');
-  const runner = resolveRunner();
   const size = one('--vm-size') ?? 'standard-4';
   const vcpus = Number(/^standard-(\d+)$/.exec(size)?.[1]);
   if (!vcpus) throw new DevLoopRefusal(`--vm-size takes standard-<vcpus>, not ${size}`);
   const running: Array<Promise<number>> = [];
+  const launched: Array<{ name: string; remote: string; local: string }> = [];
+  const owner = ubi(['owner']).trim();
   for (const [i, world] of worlds.entries()) {
     if (i) await Bun.sleep(90_000);
     for (;;) {
@@ -351,15 +403,20 @@ async function launch(argv: string[]): Promise<number> {
     }
     const leaseId = `devloop-${sha.slice(0, 12)}-${world}-${stamp}${slug ? `-o${createHash('sha256').update(slug).digest('hex').slice(0, 8)}` : ''}`;
     const payload = Buffer.from(JSON.stringify(vmPayload(sha, world, leaseId, leaseUsd, overlay))).toString('base64');
-    const args = [runner, 'run', '-s', size, '-l', one('--location') ?? 'eu-central-h1', '--src', REPO_ROOT, '--only', shipFile, '--setup', setup,
-      ...VM_KEYS.flatMap(k => ['--pass', k]), '--pull', `work/${basename(REPO_ROOT)}/eval/reports/bg1-dev-loop/${leaseId}:${join(out, 'worlds')}`, '--', `bun eval/runner/shootout-cell.ts remote --cell-b64 ${payload}`];
+    const vm = { name: devVmName(owner, world, Date.now()), remote: `work/${basename(REPO_ROOT)}/eval/reports/bg1-dev-loop/${leaseId}`, local: join(out, 'worlds') };
+    launched.push(vm);
+    const args = [runner, 'run', '-s', size, '-l', one('--location') ?? 'eu-central-h1', '-n', vm.name, '--src', REPO_ROOT, '--only', shipFile, '--setup', setup,
+      ...VM_KEYS.flatMap(k => ['--pass', k]), '--pull', `${vm.remote}:${vm.local}`, '--', `bun eval/runner/shootout-cell.ts remote --cell-b64 ${payload}`];
     const log = openSync(join(out, `${world}.log`), 'a');
-    const p = Bun.spawn(['bash', ...args], { cwd: REPO_ROOT, env: { ...process.env, UBI_TTL_HOURS: '7' }, stdin: 'ignore', stdout: log, stderr: log });
+    const p = Bun.spawn(['bash', ...args], { cwd: REPO_ROOT, env: process.env, stdin: 'ignore', stdout: log, stderr: log });
     running.push(p.exited.finally(() => closeSync(log)));
   }
   const codes = await Promise.all(running);
   console.error(`dev loop VMs exited ${codes.join(', ')}; outputs in ${join(out, 'worlds')}`);
-  if (codes.some(c => c !== 0)) return 4;
+  let kept: string[];
+  try { kept = keptDevVms(ubi, runner, launched); } catch (e) { kept = [`could not list this owner's VMs (${(e as Error).message.split('\n')[0]}); run bash ${runner} list --mine and destroy any of ${launched.map(v => v.name).join(', ')}`]; }
+  for (const line of kept) console.error(`dev loop: ${line}`);
+  if (kept.length || codes.some(c => c !== 0)) return 4;
   console.log(renderScore(scoreRun(out)));
   return 0;
 }
