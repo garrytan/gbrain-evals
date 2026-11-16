@@ -932,8 +932,9 @@ in gbrain.
   particle-1 rows, claude-opus-5-5 judges gpt-6.1-sol rows, and claude-opus-5-5 is again the descriptive second judge on
   particle-1's paraphrase rows.
 - Two runs, back to back in one session on Wintermute's box, newest first: arm B at v0.60.733.0, then arm B at
-  0.60.613.0 with `--reference-build`. Each run has its own run directory, ledger run and scorecard, and each keeps phase
-  2's read-only barrier, remote privacy posture, run-time gold check, error rules and custody.
+  0.60.613.0 with `--reference-build`, each build loaded from a scratch clone of gbrain's repository rather than the
+  box's live install. Each run has its own run directory, ledger run and scorecard, and each keeps phase 2's read-only
+  barrier, remote privacy posture, run-time gold check, error rules and custody.
 - Arm A is not asked again. It never touches gbrain, and its models, prompts, judges and tasks are the same, so the
   compare step reuses the A answers and verdicts stored on the box from phase 2's counted run (runner 4740c1f3, started
   2026-11-09 at 15:03:30 UTC). It reads them only when that run's task file hash, freeze, runner commit, harness digest
@@ -1023,13 +1024,21 @@ applies to the newest build only, as it does to any build before 0.60.623.0; the
 private-page probe run on both.
 
 **Privacy gate before the reference build's first call.** Before any read or model call of the reference run, the runner
-compares, read-only and as counts only, the two builds' own predicates for the pages an unbound remote caller may see
-(`privatePagesFilterFragment`, the newest build's loaded from its checkout, which the run takes as
-`--privacy-reference <checkout>@<commit>`), over every live page in the reader's source. Any page the reference build
-would show that the newest build hides stops the run with `LR_PRIVACY_RELAXED` before any model call. A gate that
-can't run (no newest checkout given, a predicate missing from either build, a failing query) stops the run the same
-way, and the compare refuses a reference run whose gate checked another build than the newest run's. The gate compares
-page visibility; each build keeps its own chunk and fence rules. The run records the counts it compared.
+compares, read-only and as counts only, the two builds' own predicates for the pages the runner's caller may see, over
+every live page in the reader's source. The runner calls gbrain's tools as a remote stdio caller with no credential. At
+both builds gbrain's dispatcher resolves that caller's access with `remoteCallerAccess` (`src/core/access/caller.ts`)
+and runs the call under it (`src/mcp/dispatch.ts`), and gbrain's search and page reads filter by
+`privatePagesFilterForCaller` under that access (`buildVisibilityClause` in `src/core/search/sql-ranking.ts`, and
+`src/core/engine-sql/pages.ts`). The gate builds that predicate from each build's own code, the newest build's loaded
+from its checkout, which the run takes as `--privacy-reference <checkout>@<commit>`. At v0.60.733.0 it covers
+`readable_by`, folder and page rules, rule coverage still being stamped, derived-page lineage, `access: private` and the
+other privacy labels. The bare `privatePagesFilterFragment` applies those rules without the caller's record (the brain's
+access policy and the rule coverage gbrain resolves for the caller), so the gate uses the caller's rule rather than it.
+Any page the reference build would show that the newest build hides stops the run with `LR_PRIVACY_RELAXED` before any
+model call. A gate that can't run (no newest checkout given, a build that gives no predicate for that caller or resolves
+it wider than an unbound caller's, a failing query) stops the run the same way, and the compare refuses a reference run
+whose gate checked another build than the newest run's. The gate compares page visibility; each build keeps its own
+chunk and fence rules. The run records the counts it compared.
 
 **What leaves the box.** The two runs' scorecards, as public copies made with `redact-scorecard.ts`, and the cross-build
 compare file (`compare.json` and `compare.md`), all aggregates only. The compare file passes its own structural
@@ -1039,6 +1048,34 @@ on the box.
 
 **Order and identity.** The order of the paid steps is handled outside this document. The session's runner commit and
 harness digest go in a later dated entry here, before the session's first call.
+
+### 2026-11-16: gbrain's home and its background upkeep during the session
+
+Written before any call of this re-run. From gbrain v0.60.733.0 an idle `gbrain serve` runs upkeep and the conversation
+archive under whatever home it shares, so this entry says what the session runs and what it allows.
+
+- **No long-lived gbrain process.** `tasks.ts run` loads gbrain's library modules, reads through its tools and exits,
+  and `tasks.ts compare` opens no database. Neither starts `gbrain serve`, autopilot or the maintenance runner. At
+  v0.60.733.0 idle upkeep is started only from `gbrain serve` (`src/core/maintenance/idle.ts`, used by
+  `src/commands/serve.ts`), and 0.60.613.0 has no idle upkeep.
+- **A gbrain home of its own for each process.** Once gbrain has read the operator's config file and `~/.gbrain/.env`,
+  each run copies that config file, without the database location or any credential, into `gbrain-home` in its run
+  directory and points `GBRAIN_HOME` and `HOME` there until the brain closes; a `freeze` or `estimate` uses
+  `gbrain-home` in its log directory. The runner reads its own commit and dirty flag before the home moves, so git
+  still finds the operator's settings. Bun's `os.homedir()` reads the password database rather than `HOME`, so gbrain
+  code that calls it directly would still find the operator's home. A file-write trace of batch 5's runner at
+  v0.60.733.0 found every gbrain write inside its run directory; no trace of this runner was made, so this is a limit
+  we state, not a guarantee.
+- **Upkeep.** The session's processes run none, and every brain connection goes through the read-only barrier, so any
+  write would be refused and counted under `custody.guard_refusals`. Both builds try one write of their own after a
+  read, a best-effort note of when a page was last retrieved; it is refused that way and gbrain carries on.
+- **What this can't rule out.** The box's own gbrain install keeps running its `gbrain serve`, with idle upkeep and,
+  from v0.60.733.0, the conversation archive, against the live brain the two runs read one after the other. It can
+  write pages during either run or between them. Each run records the brain's page count when it opened the brain and
+  after its last episode, and how many pages were written or changed since the run started (`brain_pages` in
+  `run.json`). The compare file shows both runs' counts and whether pages changed during the session, and the results
+  report them beside the build difference. A page rewritten between the end of the newest run and the start of the
+  reference run, with no change in the count, would not show.
 
 ## Disclosures
 
