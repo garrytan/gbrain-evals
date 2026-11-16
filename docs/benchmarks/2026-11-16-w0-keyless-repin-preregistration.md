@@ -262,3 +262,24 @@ is reported the same day with its probe ids and a repro command.
 **What each outcome changes.** A row that holds moves to `6ce7195b` in README, the documentation hub and
 `docs/gbrain-under-test.md`. A row that improves publishes its new number with `6ce7195b`. A confirmed failure is a
 regression, reported to gbrain's maintainers, and severe when it is privacy or data loss; the row shows the new result.
+
+### 2026-11-16: the reworded one-hop row runs now on the keyword path, and a recheck for N4's recall floor
+
+Written after the other Capy-machine rows ran, and before this row's run. The kept list that was accepted names the
+reworded one-hop row, but the amendment above moved it to December because README's number is paid. Its keyless
+sibling runs now instead: the hermetic arm of `n9-multi-hop-paraphrase.ts` (keyword path, every provider key stripped,
+ingestion seeds 1 to 3). Its `one_hop` block holds the keyword-path one-hop splits: paraphrase recall at five was 0.476 to
+0.555 at `3a284ae` ([receipt](2026-10-01-n9-multi-hop/n9-hermetic.receipt.json)). The gbrain changes that could move
+it are #5845 (`d44296cf4`, relational edge direction), #6018 (`99de5707f`), #6019 (`cb9abaf45`, multi-relation planner
+and one-hop orientation), #6014 (`aa02a8dec`) and #6898 (`e7afd1afd`, the relational title fallback skips retired
+pages). The expected direction is up. `688619e61` removed relational triplet scoring, so a smaller lift is also
+possible. README's paid number keeps `3a284ae` until the December refresh. The keyword result is reported beside it
+and does not replace it. The same run measures the composed two- and three-hop questions, and they're reported only as
+a description, with their row keeping its build.
+
+N4's `recall` exact-name floor, which isn't gated, fell from 50 of 50 on every published receipt (v0.60.13.0 to
+v0.60.104.0) to 48 of 50 at both seeds. The misses are m118 and m125 at each seed: an exact name, asked by a remote caller
+granted two sources, for a person linked across those sources, now comes back unresolved. N4's gated contracts and
+both gated floors hold. As the narrowed plan treats a failing contract, this one runs a second time at the new build
+and once at `77cf8e111`, keyless, on the Capy machine. The result is reported either way, and nothing is tuned or rerun until it
+passes.
