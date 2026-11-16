@@ -127,6 +127,10 @@ describe("Sol's 651 recorded calls from #304, replayed at the installed pin", ()
     '62637c96a5a5c2e9d55594f87a33d79c2f30b54f': { refused: { 'multi-window-selector': 436, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 36 },
     // v0.60.623.0: gbrain#8509 (v0.60.570.0) reads one window from several selectors, so the 436 multi-selector calls read.
     d253ec0ff12ed370ed3a846cb7da0191639c4a9e: { refused: { 'multi-window-selector': 0, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 472 },
+    // v0.60.733.0: gbrain#9134 (v0.60.671.0) sets aside the arguments a recorded-time read or a hop chain does not use, so the
+    // 8 hop chains read, and the 169 known_as_of calls now stop on the test brain's data instead: 164 at coverage_from (it
+    // records no belief history) and 5 at an instant still in the future (invalid_params), all classed other.
+    '6ce7195b44a034f85aec811f11fbf862db376f50': { refused: { 'multi-window-selector': 0, 'known-as-of-with-read-view': 0, 'hop-chain-with-depth': 0, other: 171 }, read: 480 },
   };
 
   test('every recorded get_page, traverse_graph and get_backlinks call, classified by the refusal text this pin returns', async () => {

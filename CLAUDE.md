@@ -111,6 +111,28 @@ A release follows each merge, and the agent whose pull request just merged cuts 
 3. **Report it ready.** When every required check is green at `<sha>` and the pull request's head is still `<sha>`, report it ready to merge with `<sha>` as the pin.
 4. **Merge.** The maintainer merges it with `gstack-ship-queue land --pr <n> --pin <sha>`. If another pull request landed after the stamp, land refuses with `RELEASE_STAMP_INVALID`; run step 1 again, which replaces the branch and updates the same pull request, and report the new sha.
 
+### Choose the gbrain build
+
+Every new run, development or counted, measures gbrain's newest release at the moment it starts (Garry, 2026-11-16:
+"We don't care about old Gbrain builds. We care about newest always!"). The newest release is the highest version tag
+on gbrain's master (`git ls-remote --tags https://github.com/garrytan/gbrain.git`). It is not the weekly `stable` tag,
+the `latest-stable` alias or this repository's `package.json` pin when that lags.
+
+- **Move the pin to it.** `bun eval/runner/gbrain-pin.ts bump` moves `gbrain` in `package.json` and `bun.lock` to the
+  newest release and prints the commit range and gbrain's changelog in between; it exits 2 when that release is
+  already pinned. The same pull request describes the new pin in README's "What gbrain does" and
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md). Results measured at older commits keep naming their commit,
+  and a re-pin changes no published number.
+- **A preregistration names "newest release at launch".** If a newer release lands before the experiment's first
+  counted gbrain run, re-pin in a dated amendment committed before that run.
+- **The build freezes once counted gbrain runs start,** so the experiment's numbers stay tied to one commit, which
+  the results record. A results branch keeps that pin when it merges main: resolve `package.json` and `bun.lock` to
+  it until its counted runs finish, then take main's pin at the last main merge, so main never moves back.
+- **Run an older build only when the question is about that build,** such as a regression bisect or a
+  stable-versus-master check, and say so. The nightly check keeps `stable` only as master's regression reference.
+  `gbrain-cues` and `gbrain-reader` are frozen pins of the experiments that name them
+  ([eval/runner/pins.ts](eval/runner/pins.ts)); new work uses `gbrain`.
+
 ### Choose models
 
 gbrain and gstack are built for frontier models, so every model-comparison run (Cat 40 Model Ladder, answer-model
