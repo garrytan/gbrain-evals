@@ -778,6 +778,45 @@ process, the scorecard's fill and gap-failure blocks, and `--reference-build`, e
 live-recall-v1 fixture, go on this branch as dated commits before the counted session. The runner commit, its harness
 digest and the session's commands are recorded in a dated entry before that session.
 
+### 2026-11-16: Batch 5 frozen sample
+
+Written after the freeze and before any batch 5 search. Frozen on 2026-11-16 at 20:21:43Z from Wintermute's
+`run.ts freeze --protocol batch5` at gbrain-evals `a5041923` (the batch 5 protocol commit on this branch), in a clean
+scratch clone (`bun install --frozen-lockfile` exited 0), with `--gbrain` at gbrain 0.60.733.0 (`6ce7195b`) in a
+scratch clone and the four earlier question files as `--prior`. 0.60.733.0 was still gbrain's newest release tag, so
+no re-pin was needed. `freeze.json` records `gbrain_version` 0.60.733.0, `visibility_epoch` `post_gbra_398` (also
+0.60.682.0's epoch), the four earlier files' sha256 (each matching the values above), a `prior_overlap` of 0 question
+ids, 0 forms and 0 gold pages, and the fill primary's threshold.
+
+- **N = 50 questions** (100 question forms), 10 of each type, and all 10 time_window questions carry a window.
+- **Question file sha256:** `8cc3e50f8e130b0a8820d6282327a9a33eeff4cff272ac6f264f88bc4b693039`.
+- **freeze.json sha256:** `4792912a367ada70c0425dd4be80baf9099a0e216cc859d169c0a50ac2b3c27a`, committed as
+  [`live-recall-batch5/freeze.json`](../live-recall-batch5/freeze.json).
+- **Minimum detectable difference** in success@5 (two-sided alpha 0.05, 80% power), in points, the same as batch 4's:
+  12.5, 17.7 and 21.7 for P1, P2 and the gap rule's `paraphrase_vs_exact_configured` at 10%, 20% and 30% discordant
+  pairs. The fill primary holds at 5 wins with no losses, 5 of 50 reworded forms, or 10 points.
+
+Wintermute's notes on the sample, aggregates only:
+
+- 58 distinct gold pages, all chosen page first from a seeded sample (seed 20261116) drawn on 2026-11-16 at 20:15Z,
+  before a large page import planned for the next day: 36 meeting pages, 14 company pages, 7 conversations and 1 other
+  page. 400 pages were drawn from each of four pools (meetings, company pages, conversations and everything else).
+- The sample skipped held pages, pages with a privacy label, pages under 600 characters, every batch 1 to 4 gold,
+  stale or decoy page, and the pages of that pending import, which were not yet labelled. Sampled pages with no file
+  on disk weren't used. A recheck found no access, visibility, confidentiality or `readable_by` label on any gold page.
+- 43 of the 58 gold pages carry a date in their path, and 11 of those are dated 2026-10-09 or later (batch 4: 8 of 49).
+- The 10 error_string questions use 8 distinct gold pages (two pages carry two errors each): 7 conversations and the 1
+  other page. Each cross_source question pairs two sampled pages about the same company: 4 pair a meeting with the
+  company's page, and 6 pair two meetings.
+- Checks before the freeze, all passed: 50 rows with unique ids, 10 per type; nothing shared with batches 1 to 4;
+  every gold page on disk, in the brain's page list and in the sample; every exact form holds its key tokens and no
+  paraphrase does; every time_window question has a window and every cross_source question two gold pages; every
+  error_string key string appears on its gold page. No search ran; Wintermute only read pages.
+- The writer left out pages about personal matters and error-scan hits that were capitalised words rather than errors.
+- The first freeze attempt (20:21:22Z) refused with `LR_QUESTIONS_INVALID` on line 1's `gold[0].slug`, because gold
+  was written as plain strings rather than the `{"slug": ...}` entries the runner and RUN-KIT have always required, and
+  wrote nothing. Only the gold field's shape changed before the freeze that counts.
+
 ### 2026-11-16: gbrain's home and its background upkeep during the session
 
 Written before any batch 5 search. From gbrain v0.60.733.0 an idle `gbrain serve` runs upkeep and the conversation
