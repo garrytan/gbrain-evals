@@ -17,7 +17,9 @@
  *
  * Flags against the previous master night, suite by suite and only where the suite digests match:
  *   - a deterministic signal (refused tool calls, tool errors, harness errors, lost, stuck, duplicated or overwritten writes,
- *     smoke failures) on any increase;
+ *     smoke failures) on any increase per trial run, harness rows included, so a night that ran more trials (a matrix night's
+ *     stable leg can run fewer: run.ts stableTrials) is not flagged for its larger count; the flag gives each night's count,
+ *     trials run and rate per trial;
  *   - the pass rate, paired by item with a task-clustered bootstrap (items resampled with their trials, 10,000 resamples,
  *     seed 1): when the 95% interval of tonight minus the previous night excludes zero and the drop is at least 5 points;
  *   - a strong flip: an item that passed k of k trials and now passes 0 of k, only between nights that ran the suite at the
@@ -202,8 +204,11 @@ export function compareNights(tonight: { manifest: NightManifest; rows: Outcome[
     for (const reader of readers) {
       const t = mine.find(c => c.suite === id && c.reader === reader), p = theirs.find(c => c.suite === id && c.reader === reader);
       if (!t || !p) { suites.push({ suite: id, reader, compared: false, reason: `no ${reader ?? 'keyless'} rows ${!t ? 'tonight' : `on the ${against} night`}` }); continue; }
+      const ranT = t.trials + t.harness, ranP = p.trials + p.harness;
+      const perTrial = (n: number, ran: number) => `${n} in ${ran} trial${ran === 1 ? '' : 's'}${ran ? ` (${Number((n / ran).toPrecision(3))} per trial)` : ''}`;
       for (const name of SIGNAL_NAMES) {
-        if (t.signals[name] > p.signals[name]) flags.push({ kind: 'signal', against, suite: id, reader, detail: `${name.replace('_', ' ')} rose from ${p.signals[name]} to ${t.signals[name]}` });
+        const x = t.signals[name], y = p.signals[name];
+        if (ranT && ranP ? x * ranP > y * ranT : x > y) flags.push({ kind: 'signal', against, suite: id, reader, detail: `${name.replace('_', ' ')} rose from ${perTrial(y, ranP)} to ${perTrial(x, ranT)}` });
       }
       const passDrop = (base: Record<string, { c: number; n: number }>) => {
         const common = Object.keys(t.per_item).filter(i => base[i]).sort();

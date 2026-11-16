@@ -2,6 +2,21 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.231] - 2026-11-16
+
+### The nightly report compares refusals and errors per trial, so stable's single trial no longer raises false flags
+
+- **What changed.** The nightly report's deterministic signals (refused tool calls, tool errors, harness errors, lost
+  writes and failed smokes) compare the count per trial run, harness rows included, instead of the raw count. Each flag
+  gives both nights' counts, trials and rates, for example "refusals rose from 1 in 25 trials (0.04 per trial) to 11 in
+  75 trials (0.147 per trial)".
+- **Why.** Since 0.10.224, Cat 40 world M's stable leg runs one trial per item while master runs three, so master's
+  counts came from three times as many trials. On 2026-11-16 that flagged claude-opus-5-5's refusals as rising from 2 to
+  5 against stable, when per trial they fell, from 0.08 (2 in 25) to 0.0667 (5 in 75). Re-running the report on that
+  night's files drops that flag and keeps gpt-6.1-sol's (1 in 25 to 11 in 75).
+- **What stays the same.** Nights that ran the same number of trials flag exactly as before. The pass-rate, strong-flip
+  and cost rules are unchanged. [docs/nightly.md](docs/nightly.md) describes the rule.
+
 ## [0.10.230] - 2026-11-15
 
 ### Changing-facts battleground results
