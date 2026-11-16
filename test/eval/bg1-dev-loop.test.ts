@@ -5,13 +5,14 @@
  * scoring and why-rows. The cell runs on the fake memory system with a scripted reader and judge.
  */
 import { afterAll, afterEach, describe, expect, setSystemTime, test } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   BASELINES_PATH, clockProblem, COMPARATORS, DEV_AS_OF, DEV_JUDGE, DEV_READER, DEV_WORLD_END, devCell, devClock, DevLoopRefusal, faketimeOffset, loadBaselines,
   main, neededValues, newestRelease, resolveGbrainRef, runDevCell, savedRow, scoreRecords, scoreRun, ubiRoom, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
 } from '../../eval/runner/bg1/dev-loop.ts';
+import { checkOverlayHead, overlaySlug, parseOverlays, renderScore, RUN_SCHEMA, vmPayload } from '../../eval/runner/bg1/dev-loop.ts';
 import { bg1RunClock, loadCorpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
@@ -201,4 +202,102 @@ describe('why rows', () => {
     expect(rows.length).toBeGreaterThan(0);
     expect(rows.every(r => WHY_CLASSES.includes(r.stratum) && r.gbrain.score === 0 && r.world === 'bg1-dev-01' && r.gbrain.answer !== null && !!r.gold)).toBe(true);
   });
+});
+
+describe('overlays', () => {
+  const on = { 'search.evidence_date_header': true };
+  test('parse into a sorted overlay of the shim\'s six keys, and refuse anything else', () => {
+    expect(parseOverlays(['run', '--overlay', 'search.query_budget_unit=auto', '--overlay', 'search.evidence_date_header=false'])).toEqual({ 'search.evidence_date_header': false, 'search.query_budget_unit': 'auto' });
+    expect(Object.keys(parseOverlays(['--overlay', 'search.query_budget_unit=auto', '--overlay', 'search.evidence_date_header=true']))).toEqual(['search.evidence_date_header', 'search.query_budget_unit']);
+    expect(parseOverlays(['run'])).toEqual({});
+    expect(() => parseOverlays(['--overlay', 'search.evidence_date_heder=true'])).toThrow(/not a key the gbrain-defaults shim sets/);
+    expect(() => parseOverlays(['--overlay', 'search.evidence_date_header=yes'])).toThrow(/takes true or false/);
+    expect(() => parseOverlays(['--overlay', 'search.query_budget_unit=true'])).toThrow(/takes chunk or auto/);
+    expect(() => parseOverlays(['--overlay', 'search.evidence_titles'])).toThrow(/takes <gbrain key>=<value>/);
+    expect(() => parseOverlays(['--overlay', 'search.evidence_titles=true', '--overlay', 'search.evidence_titles=false'])).toThrow(/given twice/);
+    expect(overlaySlug({ 'search.evidence_date_header': true, 'search.evidence_titles': false })).toBe('evidence_date_header=true+evidence_titles=false');
+  });
+
+  test('run refuses a bad overlay before it reads a key or starts a VM', async () => {
+    await expect(main(['run', '--overlay', 'search.evidence_date_heder=true', '--paid-window', 'w', '--window-cap-usd', '3'])).rejects.toThrow(/not a key the gbrain-defaults shim sets/);
+  });
+
+  test('a key gbrain does not list at the resolved commit refuses, and so does an unreadable config', async () => {
+    const urls: string[] = [];
+    const config = (text: string) => async (url: string) => { urls.push(url); return text; };
+    await checkOverlayHead(SHA, on, config("  'search.evidence_date_header', // C1"));
+    expect(urls).toEqual([`https://raw.githubusercontent.com/garrytan/gbrain/${SHA}/src/core/config.ts`]);
+    await expect(checkOverlayHead(SHA, on, config("  'search.evidence_titles',"))).rejects.toThrow(/does not list search.evidence_date_header/);
+    await expect(checkOverlayHead(SHA, on, async () => { throw new Error('HTTP 404'); })).rejects.toThrow(/could not read gbrain's config keys/);
+    await checkOverlayHead(SHA, {}, async () => { throw new Error('not called'); });
+  });
+
+  test('no overlay leaves the cell, the VM command and the payload as they were; an overlay reaches the arm and the cell command', () => {
+    expect(devCell(SHA, {})).toEqual(devCell(SHA));
+    expect(vmCommand(SHA, 'bg1-dev-01', {})).toBe(vmCommand(SHA, 'bg1-dev-01'));
+    expect(vmPayload(SHA, 'bg1-dev-01', 'l', 12, {})).toEqual(vmPayload(SHA, 'bg1-dev-01', 'l', 12));
+    const base = devCell(SHA).arms[0].retrieval!.overlay, set = devCell(SHA, on).arms[0].retrieval!.overlay;
+    expect(base['search.evidence_date_header']).toBe(false);
+    expect(set).toEqual({ ...base, 'search.evidence_date_header': true });
+    const cmd = vmCommand(SHA, 'bg1-dev-01', on);
+    expect(cmd).toContain('cell --sha ' + SHA + ' --world bg1-dev-01 --overlay search.evidence_date_header=true --system-url');
+    expect(parseOverlays(cmd.split(/\s+/))).toEqual(on);
+  });
+
+  const runAt = (name: string, info: Record<string, unknown>) => {
+    const dir = join(tmp, name);
+    cpSync(PINNED_RUN, dir, { recursive: true });
+    writeFileSync(join(dir, 'run.json'), JSON.stringify({ schema: RUN_SCHEMA, gbrain_ref: 'v0.60.733.0', gbrain_sha: SHA, worlds: ['bg1-dev-01'], world_end: DEV_WORLD_END, as_of: DEV_AS_OF, reader: DEV_READER, judge: DEV_JUDGE, ...info }));
+    return dir;
+  };
+
+  test('score opens with both overlays and their difference, and refuses runs that differ in more than overlay and ref', () => {
+    const baselines = loadBaselines();
+    const a = runAt('overlay-on', { overlay: on }), b = runAt('overlay-off', { overlay: { 'search.evidence_date_header': false }, gbrain_ref: 'v0.60.734.0' });
+    const s = scoreRun(a, { baselines, against: b });
+    expect(s.overlay).toEqual(on);
+    expect(s.against_overlay).toEqual({ 'search.evidence_date_header': false });
+    const lines = renderScore(s).split('\n');
+    expect(lines[0]).toBe('Overlay: evidence_date_header=true; --against: evidence_date_header=false.');
+    expect(lines[1]).toBe('Overlay difference: search.evidence_date_header true (this run) against false (--against).');
+    const file = join(tmp, 'overlay-off.json');
+    writeFileSync(file, JSON.stringify(savedRow(b)));
+    expect(scoreRun(a, { baselines, against: file }).against_overlay).toEqual({ 'search.evidence_date_header': false });
+    const plain = runAt('overlay-none', {});
+    expect(renderScore(scoreRun(a, { baselines, against: plain })).split('\n')[1]).toBe('Overlay difference: search.evidence_date_header true (this run) against arm default (--against).');
+    const other = runAt('overlay-other-worlds', { overlay: on, worlds: ['bg1-dev-02'] });
+    expect(() => scoreRun(a, { baselines, against: other })).toThrow(/differ in worlds.*--allow-run-diff/);
+    expect(scoreRun(a, { baselines, against: other, allowRunDiff: true }).overlay).toEqual(on);
+  });
+
+  test('a run without an overlay scores, saves and renders exactly as before', () => {
+    const baselines = loadBaselines();
+    const s = scoreRun(PINNED_RUN, { baselines });
+    expect('overlay' in s).toBe(false);
+    expect('overlay' in savedRow(PINNED_RUN)).toBe(false);
+    expect(renderScore(s).startsWith('BG1 dev loop: gbrain')).toBe(true);
+    expect(whyRows(PINNED_RUN).some(r => 'overlay' in r)).toBe(false);
+  });
+
+  test('why rows carry the overlay, and so must their file name', async () => {
+    const a = join(tmp, 'overlay-on');
+    expect(whyRows(a).every(r => r.overlay?.['search.evidence_date_header'] === true)).toBe(true);
+    await expect(main(['why', '--run', a, '--out', join(tmp, 'why.jsonl')])).rejects.toThrow(/carries it, e.g. why-rows-evidence_date_header=true.jsonl/);
+    expect(await main(['why', '--run', a, '--out', join(tmp, 'why-rows-evidence_date_header=true.jsonl')])).toBe(0);
+  });
+  test('an overlay reaches every retrieval the system serves and the cell\'s run-config and receipt', async () => {
+    const seen = new Set<string>();
+    class Recording extends FakeMemorySystem {
+      async retrieve(ns: string, q: Parameters<FakeMemorySystem['retrieve']>[1], policy: Parameters<FakeMemorySystem['retrieve']>[2]) { seen.add(JSON.stringify((policy.settings as { overlay?: unknown }).overlay ?? null)); return super.retrieve(ns, q, policy); }
+    }
+    const s = scripted();
+    const out = join(tmp, 'overlay-cell');
+    await runDevCell({ sha: SHA, world: 'bg1-dev-01', out, systemUrl: null, env: { ...process.env, ...dead }, overlay: on },
+      { system: new Recording(), reader: s.reader, judge: s.judge, clockMs: () => Date.parse(DEV_AS_OF) });
+    expect([...seen].map(t => JSON.parse(t))).toEqual([devCell(SHA, on).arms[0].retrieval!.overlay]);
+    const dir = join(out, 'cells', 'bg1-dev3.gbrain-defaults.rs1-stable.p');
+    expect(JSON.parse(readFileSync(join(dir, 'run-config.json'), 'utf8')).arm.retrieval.overlay['search.evidence_date_header']).toBe(true);
+    const plain = JSON.parse(readFileSync(join(PINNED_RUN, 'cells', 'bg1-dev3.gbrain-defaults.rs1-stable.p', 'receipt.json'), 'utf8')).config_sha256;
+    expect(JSON.parse(readFileSync(join(dir, 'receipt.json'), 'utf8')).config_sha256).not.toBe(plain);
+  }, 120_000);
 });
