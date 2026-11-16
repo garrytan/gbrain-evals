@@ -115,15 +115,15 @@ unwraps the fence on its `query` path, which reads locally
 ([`eval/runner/gbrain-under-test.ts`](../eval/runner/gbrain-under-test.ts)). Setups that run the pinned gbrain with its
 own defaults (the open-source comparison, the hard company benchmark's MCP setup and the agent tool bridges) take all
 five as shipped. The scoreboard's gbrain-defaults container builds its own gbrain, `f05943e6` (v0.60.138.0), so it runs
-none of them. gbrain's changelog names none of the five between v0.60.623.0 and the pin, and the three keys the harness
-holds keep their names and defaults.
+none of them. gbrain's changelog names none of the five between v0.60.623.0 and v0.60.733.0, and the three keys the
+harness holds keep their names and defaults.
 
 ## Other changes since v0.60.623.0
 
 - **Agent arms on GPT models.** `get_page` with `known_as_of` and `traverse_graph` with `hops` set aside the arguments
   they don't use instead of refusing the call (v0.60.671.0), and gbrain's tool loop sends OpenAI tool definitions
-  without strict mode, so the model no longer fills every optional argument (v0.60.675.0). Replayed at the pin, 480 of
-  GPT-6.1 Sol's 651 recorded SkillOpt page and graph calls read, against 472 at `d253ec0ff`
+  without strict mode, so the model no longer fills every optional argument (v0.60.675.0). Replayed at `6ce7195b4`,
+  480 of GPT-6.1 Sol's 651 recorded SkillOpt page and graph calls read, against 472 at `d253ec0ff`
   ([`test/eval/skillopt-tool-calls.test.ts`](../test/eval/skillopt-tool-calls.test.ts)).
 - **Deletes and purges hide more.** A soft-deleted page's facts, timeline rows, tags and links are hidden from every
   caller, local ones included (v0.60.639.0, v0.60.641.0). A purge expires the facts filed on the purged page
@@ -157,6 +157,12 @@ open under its stricter closure rule (see the README's known limits). Rows marke
 October round at an earlier pin (the paid runs and the attendance world).
 
 ## Changelog
+
+### 2026-11-16: Two lines name v0.60.733.0 instead of the pin
+
+The read-defaults paragraph says gbrain's changelog names none of the five between v0.60.623.0 and v0.60.733.0 (was
+"the pin"), and the replay of GPT-6.1 Sol's recorded calls reads "at `6ce7195b4`" (was "at the pin"), so a later
+re-pin doesn't carry those claims to a build nobody checked.
 
 ### 2026-11-16: This page alone names the pin
 
