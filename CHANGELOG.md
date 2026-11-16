@@ -2,6 +2,28 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.232] - 2026-11-16
+
+### Pull requests merge with gstack's own merge command, and changelog entries become files
+
+- **What changed.** `.gstack/ship-policy.json` sets `merge: direct`, `changelog_fragments` (directory `changelog.d`)
+  and `bump: patch`. From the next pull request on, a branch adds its changelog entry as `changelog.d/<branch-slug>.md`
+  and leaves `VERSION`, the `version` in `package.json` and CHANGELOG.md alone. Each pull request merges at its own
+  green head with `gstack-ship-queue land --pr <n> --pin <sha>`, and a release pull request from
+  `gstack-release-stamp open` then sets the next version and folds the entries into CHANGELOG.md.
+  [changelog.d/README.md](changelog.d/README.md) gives the entry format, and [CLAUDE.md](CLAUDE.md) the steps.
+- **Why.** Two pull requests open at the same time no longer claim the same version or conflict on CHANGELOG.md,
+  because neither writes a version.
+- **Tests run in CI only.** `.gstack/pregate.json` declares a remote test gate that CI's verified run at the exact
+  tree clears, so on a machine with fewer than 8 cores the check gstack runs before a push runs no tests locally and
+  waits for CI instead.
+- **Entry links are checked where they will land.** `scripts/check-links.py` checks a link in a `changelog.d/` entry
+  from the repository root, because the release copies the entry into CHANGELOG.md unchanged. A link written as in
+  CHANGELOG.md passes, and a `../` link, which would pass in the entry and then break the release, fails before merge.
+- **A correction.** 0.10.228's entry said the gbrain team's numbers match ours to the digit. That holds for every
+  recall and MRR figure; latency differed, because our machine was faster. The entry now says so.
+- **What stays the same.** No score or verdict changes.
+
 ## [0.10.231] - 2026-11-16
 
 ### The nightly report compares refusals and errors per trial, so stable's single trial no longer raises false flags
@@ -60,9 +82,10 @@ This records what each gbrain-evals release changed and what its measurements me
 - **What it costs.** The 103 questions with added rows take a median 73 to 83 ms longer through `query` on our machine
   (125 ms on the gbrain team's slower machine); the other 397 change by a median of 2 ms or less.
 - **What's committed.** Both pairs' raw rows (dataset text removed, full-output hashes in `provenance.json`), the gbrain
-  team's own rows for the first pair, and `analyze.py`, which recounts every number on the page from those files. The
-  gbrain team's numbers match ours to the digit. The check was not preregistered, and `23a163fc` is in no gbrain
-  release yet. The Retrieval experiments index in `docs/README.md` gains a row for it.
+  team's own rows for the first pair, and `analyze.py`, which recounts every number on the page from those files. Every
+  recall and MRR figure matches the gbrain team's to the digit; latency differed, because our machine was faster. The
+  check was not preregistered, and `23a163fc` is in no gbrain release yet. The Retrieval experiments index in
+  `docs/README.md` gains a row for it.
 
 ## [0.10.227] - 2026-11-15
 
