@@ -296,3 +296,19 @@ so no earlier result can change. The narrowed plan runs this row at the new buil
 with both builds that "What happens to a harness defect" names for the paired design, the step runs once more at the new
 build on the same VM after part `b` finishes (`run-kept.sh lifecycle new r2`, from this commit). The first run's
 receipt is kept and reported as a harness error.
+
+### 2026-11-16: N4 reads `recall`'s quoted facts through gbrain's own unquote, before N4 runs again
+
+N4's `recall` floor of 48 of 50 (amendment above) comes from a harness defect, not from a change in what `recall`
+finds. Since v0.60.536.0 (#8367, `1e763e28c`), a remote caller's `recall` returns facts below the owner's trust tier
+inside a quote fence, marked `quoted: 'transcript'`. A keyless bisect of gbrain's first-parent history with this runner
+puts the floor's first 48 of 50 at that merge. N4 compared the raw text with its marker, so the four remote two-source
+mentions of linked people (m118, m119, m125 and m126 at the default seed) scored as unresolved, although both markers
+came back, quoted. The fix reads each fact through the build's own `unquoteFactText`, as N1 and Cat 38 already do
+(`eval/runner/quoted-reads.ts`), and a test covers it. A build that returns no quoted facts reads exactly as before, so
+no earlier receipt changes. Under the narrowed plan, N4 runs again at the new build only, at the default seed and seed 7,
+keyless on the Capy machine, instead of on two fresh VMs with both builds. The first runs are kept and reported.
+
+The other N4 move is a documented gbrain change, so it's reported as intended and isn't a regression: `remember` now
+leaves all 9 bare first names unresolved. v0.60.355.0 (#7254, `dfe501e2f`) refuses a name that only begins a page's
+name, and the same bisect puts the first unresolved first name at that merge.
