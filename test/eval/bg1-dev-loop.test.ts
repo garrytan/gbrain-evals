@@ -5,14 +5,15 @@
  * scoring and why-rows. The cell runs on the fake memory system with a scripted reader and judge.
  */
 import { afterAll, afterEach, describe, expect, setSystemTime, test } from 'bun:test';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   BASELINES_PATH, clockProblem, COMPARATORS, DEV_AS_OF, DEV_JUDGE, DEV_READER, DEV_WORLD_END, devCell, devClock, DevLoopRefusal, faketimeOffset, loadBaselines,
   main, neededValues, newestRelease, resolveGbrainRef, runDevCell, savedRow, scoreRecords, scoreRun, ubiRoom, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
 } from '../../eval/runner/bg1/dev-loop.ts';
-import { checkOverlayHead, overlaySlug, parseOverlays, renderScore, RUN_SCHEMA, vmPayload } from '../../eval/runner/bg1/dev-loop.ts';
+import { BRAIN_SNAPSHOT, checkOverlayHead, overlaySlug, parseOverlays, renderScore, RUN_SCHEMA, upkeepRuns, vmPayload } from '../../eval/runner/bg1/dev-loop.ts';
 import { bg1RunClock, loadCorpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
@@ -300,4 +301,47 @@ describe('overlays', () => {
     const plain = JSON.parse(readFileSync(join(PINNED_RUN, 'cells', 'bg1-dev3.gbrain-defaults.rs1-stable.p', 'receipt.json'), 'utf8')).config_sha256;
     expect(JSON.parse(readFileSync(join(dir, 'receipt.json'), 'utf8')).config_sha256).not.toBe(plain);
   }, 120_000);
+});
+
+describe('the brain and its upkeep', () => {
+  test('every VM snapshots the brain and lists its upkeep after the cell, whatever the cell did, and exits with the cell\'s code', () => {
+    const cmd = vmCommand(SHA, 'bg1-dev-02');
+    const cell = cmd.indexOf('dev-loop.ts cell'), snap = cmd.indexOf('bootstrap.sh snapshot --system gbrain-defaults --out "$SHOOTOUT_OUT/' + BRAIN_SNAPSHOT + '"');
+    const list = cmd.indexOf('dev-loop.ts upkeep --snapshot "$SHOOTOUT_OUT/' + BRAIN_SNAPSHOT + '" --out "$SHOOTOUT_OUT/upkeep.ndjson"'), down = cmd.indexOf('bootstrap.sh down');
+    expect([cell, snap, list, down].every(i => i > 0)).toBe(true);
+    expect(cell < snap && snap < list && list < down).toBe(true);
+    expect(cmd.slice(cell, snap)).toContain('rc=$?;');
+    expect(cmd.slice(list)).toContain('|| echo');
+    expect(cmd.endsWith('exit $rc')).toBe(true);
+  });
+
+  test('upkeep runs are read from serve\'s log in order, and a run cut off has no finish', () => {
+    const log = ['[gbrain serve] ready', '[gbrain serve] idle upkeep: started', '[gbrain serve] idle sweep: started',
+      '[gbrain serve] idle upkeep: finished in 2875 ms (ran)', '[gbrain serve] idle upkeep: started', '[gbrain serve] idle upkeep: finished in 12 ms (skipped cycle_already_running)',
+      '[gbrain serve] idle upkeep: started'].join('\n');
+    expect(upkeepRuns(log)).toEqual([
+      { run: 1, finished: true, ms: 2875, status: 'ran', code: null },
+      { run: 2, finished: true, ms: 12, status: 'skipped', code: 'cycle_already_running' },
+      { run: 3, finished: false, ms: null, status: null, code: null },
+    ]);
+    expect(upkeepRuns('[gbrain serve] ready\n')).toEqual([]);
+  });
+
+  test('upkeep lists the runs in a bootstrap.sh snapshot, and refuses a tar without the serve log', async () => {
+    const dir = join(tmp, 'snapshot');
+    const vol = join(dir, 'vol'), work = join(dir, 'work');
+    mkdirSync(join(vol, 'logs'), { recursive: true });
+    mkdirSync(work, { recursive: true });
+    writeFileSync(join(vol, 'logs', 'serve.log'), '[gbrain serve] idle upkeep: started\n[gbrain serve] idle upkeep: finished in 40 ms (ran)\n');
+    execFileSync('tar', ['-C', vol, '-cf', join(work, 'gbrain-data.tar'), '.']);
+    writeFileSync(join(work, 'volumes.json'), '{}');
+    const tar = join(dir, 'brain.tar');
+    execFileSync('tar', ['-C', work, '-cf', tar, '.']);
+    const out = join(dir, 'upkeep.ndjson');
+    expect(await main(['upkeep', '--snapshot', tar, '--out', out])).toBe(0);
+    expect(readFileSync(out, 'utf8')).toBe(JSON.stringify({ run: 1, finished: true, ms: 40, status: 'ran', code: null }) + '\n');
+    const bare = join(dir, 'bare.tar');
+    execFileSync('tar', ['-C', vol, '-cf', bare, '.']);
+    await expect(main(['upkeep', '--snapshot', bare, '--out', out])).rejects.toThrow();
+  });
 });

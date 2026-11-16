@@ -16,6 +16,9 @@
  *     claude-opus-5-5 at effort medium with 2,048 output tokens, and the gating judge is gpt-6-astra at the pinned judge
  *     settings (the family rule). Every answer also gets the canonical gemini-3.8-flash grade, as stage 1 ran it
  *     (descriptive). Needs ANTHROPIC_API_KEY, OPENAI_API_KEY, VOYAGE_API_KEY, GEMINI_API_KEY, UBICLOUD_API_KEY and UBI_OWNER.
+ *     gbrain's idle upkeep stays on, as gbrain ships it. After the cell, each VM keeps the world's brain in its outputs
+ *     (brain/gbrain-defaults.tar, a bootstrap.sh snapshot of the stack's volumes after the last question, with the
+ *     shim's logs and receipts) and lists every idle upkeep run gbrain logged in upkeep.ndjson.
  *     Each --overlay sets one of the six search keys the gbrain-defaults shim writes for the arm (true or false;
  *     search.query_budget_unit chunk or auto) on top of the stage 1 arm's values. An unknown key, a bad value, or a key
  *     gbrain's config does not list at the resolved commit refuses before any VM starts. The overlay goes into run.json,
@@ -37,6 +40,9 @@
  *   bun eval/runner/bg1/dev-loop.ts baselines --stage1 <dir> [--out <file>]
  *     Rewrites the comparator cache (BASELINES_PATH) from stage 1's results, after checking that every row read at
  *     the same settings. Keyless.
+ *   bun eval/runner/bg1/dev-loop.ts upkeep --snapshot <brain tar> --out <file.ndjson>
+ *     Lists every idle upkeep run gbrain's serve logged in a world's brain snapshot: its order, duration and outcome.
+ *     Each VM runs it after its snapshot. Keyless.
  *   bun eval/runner/bg1/dev-loop.ts clock
  *     Prints the libfaketime offset that moves a clock read now back to the question day (the VM command uses it).
  *   bun eval/runner/bg1/dev-loop.ts cell --sha <sha> --world <id> --out <dir> --system-url <url>
@@ -231,13 +237,44 @@ export function resolveGbrainRef(ref: string, lsRemote: (ref: string) => string 
   throw new DevLoopRefusal(`gbrain has no tag or branch ${ref} (pass a full commit sha instead)`);
 }
 
-/** What one world's VM runs: the stack on the pinned clock, the cell, then the stack down. */
+/**
+ * What one world's VM runs: the stack on the pinned clock and the cell; then, whatever the cell's exit, the stack's
+ * volumes snapshotted to $SHOOTOUT_OUT/brain (the brain as it stood after the last question, with the shim's logs and
+ * receipts) and every idle upkeep run gbrain logged listed in $SHOOTOUT_OUT/upkeep.ndjson; then the stack down. A
+ * failed snapshot or upkeep list is logged and leaves the cell's exit code as it was.
+ */
 export function vmCommand(sha: string, world: string, overlay: Overlay = {}): string {
   const def = devCell(sha, overlay);
   const pre = launchPrefix({ ...def.launch!, env: { ...def.launch!.env, GBRAIN_FAKETIME_LIB: '1' } });
   return [`export GBRAIN_EVALS_BG1_WORLD_END=${DEV_WORLD_END}`, 'export GBRAIN_FAKETIME="$(bun eval/runner/bg1/dev-loop.ts clock)"',
-    `${pre}bash eval/systems/bootstrap.sh up --system gbrain-defaults --config ${def.launch!.config} && bun eval/runner/bg1/dev-loop.ts cell --sha ${sha} --world ${world}${Object.entries(overlay).map(([k, v]) => ` --overlay ${k}=${v}`).join('')} --system-url http://127.0.0.1:8700 --out "$SHOOTOUT_OUT"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc`].join('; ');
+    `${pre}bash eval/systems/bootstrap.sh up --system gbrain-defaults --config ${def.launch!.config} && bun eval/runner/bg1/dev-loop.ts cell --sha ${sha} --world ${world}${Object.entries(overlay).map(([k, v]) => ` --overlay ${k}=${v}`).join('')} --system-url http://127.0.0.1:8700 --out "$SHOOTOUT_OUT"; rc=$?; { ${pre}bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out "$SHOOTOUT_OUT/${BRAIN_SNAPSHOT}" && bun eval/runner/bg1/dev-loop.ts upkeep --snapshot "$SHOOTOUT_OUT/${BRAIN_SNAPSHOT}" --out "$SHOOTOUT_OUT/upkeep.ndjson"; } || echo "dev loop: the brain snapshot or the upkeep list failed" >&2; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc`].join('; ');
 }
+
+/** Where each world's brain snapshot sits in its outputs. */
+export const BRAIN_SNAPSHOT = 'brain/gbrain-defaults.tar';
+
+/**
+ * One idle upkeep run as gbrain's serve logs it on stderr (src/core/maintenance/idle.ts): its place in the log, how
+ * long it took and its outcome (ran, skipped or not_due, with gbrain's code). A run with no finish line was cut off,
+ * by a serve stop or the end of the run.
+ */
+export interface UpkeepRun { run: number; finished: boolean; ms: number | null; status: string | null; code: string | null }
+
+export function upkeepRuns(serveLog: string): UpkeepRun[] {
+  const runs: UpkeepRun[] = [];
+  for (const line of serveLog.split('\n')) {
+    const m = /\[gbrain serve\] idle upkeep: (?:(started)|finished in (\d+) ms \((\w+)(?: (\S+))?\))/.exec(line);
+    if (!m) continue;
+    const open = runs.at(-1);
+    if (m[1]) runs.push({ run: runs.length + 1, finished: false, ms: null, status: null, code: null });
+    else if (open && !open.finished) Object.assign(open, { finished: true, ms: Number(m[2]), status: m[3], code: m[4] ?? null });
+  }
+  return runs;
+}
+
+/** The serve log inside a bootstrap.sh snapshot: logs/serve.log in the gbrain-defaults data volume, where the shim sends serve's stderr. */
+const snapshotServeLog = (tar: string) =>
+  execFileSync('bash', ['-c', 'set -o pipefail; tar -xOf "$1" ./gbrain-data.tar | tar -xOf - ./logs/serve.log', 'serve-log', tar], { encoding: 'utf8', maxBuffer: 1 << 30 });
 
 /** The payload shootout-cell.ts remote runs on one world's VM: its own lease proxy, with Gemini on GEMINI_API_KEY. */
 export function vmPayload(sha: string, world: string, leaseId: string, leaseUsd: number, overlay: Overlay = {}): RemotePayload {
@@ -608,6 +645,14 @@ export async function main(argv: string[]): Promise<number> {
     mkdirSync(dirname(resolve(out)), { recursive: true });
     writeFileSync(resolve(out), rows.map(r => JSON.stringify(r)).join('\n') + (rows.length ? '\n' : ''));
     console.log(`${rows.length} missed questions written to ${out}`);
+    return 0;
+  }
+  if (sub === 'upkeep') {
+    const snapshot = one('--snapshot'), out = one('--out');
+    if (!snapshot || !out) throw new DevLoopRefusal('upkeep needs --snapshot <tar> and --out <file.ndjson>');
+    const runs = upkeepRuns(snapshotServeLog(resolve(snapshot)));
+    writeFileSync(resolve(out), runs.map(r => JSON.stringify(r)).join('\n') + (runs.length ? '\n' : ''));
+    console.log(`${runs.length} idle upkeep runs written to ${out}`);
     return 0;
   }
   if (sub === 'baselines') {
