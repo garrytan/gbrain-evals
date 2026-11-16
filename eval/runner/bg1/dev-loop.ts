@@ -14,11 +14,12 @@
  *     claude-opus-5-5 at effort medium with 2,048 output tokens, and the gating judge is gpt-6-astra at the pinned judge
  *     settings (the family rule). Every answer also gets the canonical gemini-3.8-flash grade, as stage 1 ran it
  *     (descriptive). Needs ANTHROPIC_API_KEY, OPENAI_API_KEY, VOYAGE_API_KEY, GEMINI_API_KEY, UBICLOUD_API_KEY and UBI_OWNER.
- *   bun eval/runner/bg1/dev-loop.ts score --run <dir> [--against <earlier run dir>] [--json]
+ *   bun eval/runner/bg1/dev-loop.ts score --run <dir> [--against <earlier run dir or saved row>] [--save <row.json>] [--json]
  *     Per class S1 to S8, pooled (what is true now: S1 to S5; time-indexed: S6 to S8) and overall: gbrain's accuracy,
  *     its exposure rate (the context held every value the answer needs) and its gap to each comparator with a paired
  *     95% interval over questions, plus the smallest gap change each class can show. --against adds this run minus an
- *     earlier gbrain run. Keyless.
+ *     earlier gbrain run; --save writes this run's per-question scores and exposure (no answers or contexts), which a
+ *     later --against reads in place of the run directory. Keyless.
  *   bun eval/runner/bg1/dev-loop.ts why --run <dir> --out <file.jsonl> [--stage1 <dir>] [--classes s1_updated,...]
  *     One row per question gbrain missed in S1 and S5 to S8: the question, the gold, gbrain's answer and context, which
  *     needed values the context held and, with --stage1 (the copied stage 1 results), each comparator's context and
@@ -384,15 +385,29 @@ export function scoreRecords(run: string, gbrainSha: string | null, mine: Readon
 /** The gbrain row of a dev run directory: its pulled world outputs, or the directory itself. */
 const gbrainRow = (dir: string) => readRow([existsSync(join(dir, 'worlds')) ? join(dir, 'worlds') : dir], 'gbrain-defaults');
 
-/** A dev run's score, refused when its reading settings differ from the comparators'. */
+const refOf = (dir: string) => { const f = join(dir, 'run.json'); return existsSync(f) ? (JSON.parse(readFileSync(f, 'utf8')) as { gbrain_ref?: string }).gbrain_ref ?? null : null; };
+
+/** A dev run's per-question scores and exposure, in the comparator cache's row shape. */
+export function savedRow(dir: string): BaselineRow & { gbrain_ref: string | null } {
+  const row = gbrainRow(dir);
+  return { source: `BG1 dev loop, ${basename(dir)}`, gbrain_ref: refOf(dir), settings: row.settings, ...(row.gbrainSha ? { gbrain_sha: row.gbrainSha } : {}),
+    questions: Object.fromEntries([...row.records.values()].sort((a, b) => (a.id < b.id ? -1 : 1)).map(q => [q.id, { score: q.score, gold: q.gold, stale: q.stale }])) };
+}
+
+/** A dev run's score, refused when its reading settings, or those of the run it is compared with, differ from the comparators'. */
 export function scoreRun(dir: string, opts: { baselines?: Baselines; against?: string } = {}): Score {
   const b = opts.baselines ?? loadBaselines();
+  const want = JSON.stringify(b.rows['ext-memory-bank'].settings);
+  const check = (where: string, settings: Record<string, unknown>) => { if (JSON.stringify(settings) !== want) throw new DevLoopRefusal(`the run at ${where} reads at ${JSON.stringify(settings)}, and the comparators were read at ${want}`); };
   const row = gbrainRow(dir);
-  const want = b.rows['ext-memory-bank'].settings;
-  if (JSON.stringify(row.settings) !== JSON.stringify(want)) throw new DevLoopRefusal(`the run at ${dir} reads at ${JSON.stringify(row.settings)}, and the comparators were read at ${JSON.stringify(want)}`);
-  const runJson = join(dir, 'run.json');
-  const ref = existsSync(runJson) ? (JSON.parse(readFileSync(runJson, 'utf8')) as { gbrain_ref?: string }).gbrain_ref ?? null : null;
-  return { ...scoreRecords(dir, row.gbrainSha, row.records, b, opts.against ? gbrainRow(opts.against).records : undefined), gbrain_ref: ref };
+  check(dir, row.settings);
+  let against: Map<string, QuestionRecord> | undefined;
+  if (opts.against) {
+    const other = opts.against.endsWith('.json') ? (JSON.parse(readFileSync(opts.against, 'utf8')) as BaselineRow) : savedRow(opts.against);
+    check(opts.against, other.settings);
+    against = new Map(Object.entries(other.questions).map(([id, q]) => [id, { ...row.records.get(id)!, ...q, answer: null, context: null }]));
+  }
+  return { ...scoreRecords(dir, row.gbrainSha, row.records, b, against), gbrain_ref: refOf(dir) };
 }
 
 const pct = (x: number | null) => (x === null ? 'n/a' : `${(x * 100).toFixed(1)}%`);
@@ -468,6 +483,8 @@ export async function main(argv: string[]): Promise<number> {
     const run = one('--run'), against = one('--against');
     if (!run) throw new DevLoopRefusal('score needs --run <dir>');
     const s = scoreRun(resolve(run), { against: against ? resolve(against) : undefined });
+    const save = one('--save');
+    if (save) { mkdirSync(dirname(resolve(save)), { recursive: true }); writeFileSync(resolve(save), JSON.stringify(savedRow(resolve(run)), null, 1) + '\n'); }
     console.log(argv.includes('--json') ? JSON.stringify(s, null, 2) : renderScore(s));
     return 0;
   }

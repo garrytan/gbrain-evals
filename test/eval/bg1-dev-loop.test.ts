@@ -5,12 +5,12 @@
  * scoring and why-rows. The cell runs on the fake memory system with a scripted reader and judge.
  */
 import { afterAll, afterEach, describe, expect, setSystemTime, test } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   BASELINES_PATH, clockProblem, COMPARATORS, DEV_AS_OF, DEV_JUDGE, DEV_READER, DEV_WORLD_END, devCell, devClock, DevLoopRefusal, faketimeOffset, loadBaselines,
-  main, neededValues, newestRelease, resolveGbrainRef, runDevCell, scoreRecords, scoreRun, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
+  main, neededValues, newestRelease, resolveGbrainRef, runDevCell, savedRow, scoreRecords, scoreRun, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
 } from '../../eval/runner/bg1/dev-loop.ts';
 import { bg1RunClock, loadCorpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
@@ -151,6 +151,19 @@ describe('scoring against the comparator cache', () => {
     const off: Baselines = structuredClone(baselines);
     off.rows['ext-memory-bank'].settings = { ...off.rows['ext-memory-bank'].settings, budget: 4000 };
     expect(() => scoreRun(PINNED_RUN, { baselines: off })).toThrow(/comparators were read at/);
+  });
+
+  test('a saved row stands in for its run directory under --against, and carries no answers or contexts', () => {
+    const file = join(tmp, 'saved-row.json');
+    writeFileSync(file, JSON.stringify(savedRow(PINNED_RUN)));
+    expect(readFileSync(file, 'utf8')).not.toContain('"context"');
+    const fromDir = scoreRun(PINNED_RUN, { baselines, against: join(tmp, 'pinned-2027-03-15') });
+    const fromFile = scoreRun(PINNED_RUN, { baselines, against: file });
+    expect(fromFile.classes.map(c => c.against)).toEqual(fromDir.classes.map(c => c.against));
+    expect(fromFile.classes.find(c => c.label === 'all')!.against!.delta).toBe(0);
+    const off = { ...JSON.parse(readFileSync(file, 'utf8')), settings: { ...savedRow(PINNED_RUN).settings, budget: 4000 } };
+    writeFileSync(file, JSON.stringify(off));
+    expect(() => scoreRun(PINNED_RUN, { baselines, against: file })).toThrow(/comparators were read at/);
   });
 
   test('gaps are gbrain minus each comparator in points, paired over questions both graded', () => {
