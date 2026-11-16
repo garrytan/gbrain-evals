@@ -6,14 +6,18 @@ gives the results; this page holds the version detail behind them.
 
 ## The pin
 
-This repository installs gbrain v0.60.733.0 (`6ce7195b4`), gbrain's newest release on 2026-11-16, declared as `gbrain`
-in `package.json`. Every new run measures gbrain's newest release ([CLAUDE.md, "Choose the gbrain
+This repository installs gbrain v0.60.733.0 ([`6ce7195b4`](https://github.com/garrytan/gbrain/tree/6ce7195b44a034f85aec811f11fbf862db376f50)), gbrain's newest release on 2026-11-16.
+It is declared as `gbrain` in `package.json`, and this is the one page that names it: the README and the other hub
+pages link here. Every new run measures gbrain's newest release ([CLAUDE.md, "Choose the gbrain
 build"](../CLAUDE.md#choose-the-gbrain-build)), and `bun eval/runner/gbrain-pin.ts bump` moves the pin there when gbrain
-tags a newer one. That is newer than gbrain's own default install, which follows its `stable` channel: stable moves to a
-release only after extra testing ([gbrain's STABILITY.md](https://github.com/garrytan/gbrain/blob/v0.60.733.0/docs/STABILITY.md)).
-Two fixed-purpose aliases, `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), are frozen pins of the
-experiments that name them and don't move with `gbrain`. gbrain-evals itself is at the release [`VERSION`](../VERSION) names, and
-[CHANGELOG.md](../CHANGELOG.md) records each release. The README's quick start shows the same pin as a table.
+tags a newer one, rewriting the line above. That is newer than gbrain's own default install, which follows its `stable`
+channel: stable moves to a release only after extra testing ([gbrain's
+STABILITY.md](https://github.com/garrytan/gbrain/blob/master/docs/STABILITY.md)). The rest of this page, and what the hub
+pages say gbrain does, were last read against v0.60.733.0; [gbrain's
+CHANGELOG](https://github.com/garrytan/gbrain/blob/master/CHANGELOG.md) lists what each later release changed. Two
+fixed-purpose aliases, `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), are frozen pins of the experiments
+that name them and don't move with `gbrain`. gbrain-evals itself is at the release [`VERSION`](../VERSION) names, and
+[CHANGELOG.md](../CHANGELOG.md) records each release.
 
 ## What gbrain does
 
@@ -153,6 +157,14 @@ open under its stricter closure rule (see the README's known limits). Rows marke
 October round at an earlier pin (the paid runs and the attendance world).
 
 ## Changelog
+
+### 2026-11-16: This page alone names the pin
+
+The pin sentence is a line of its own, with the commit linked, that `bun eval/runner/gbrain-pin.ts bump` rewrites; each
+bump also adds its own entry here. The README and the hub pages now link to this section instead of naming the commit,
+so a bump changes one page. The section says the page's descriptions were last read against v0.60.733.0 and links
+gbrain's CHANGELOG for later releases, and the STABILITY.md link follows gbrain's master instead of one release. Nothing
+else on the page changed.
 
 ### 2026-11-16: Re-pin to gbrain `6ce7195b4`, gbrain's newest release
 

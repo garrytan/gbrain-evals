@@ -13,8 +13,8 @@ plan sections 2 and 3). Its tasks test what a skill's procedure adds on a brain 
 
 The rollout brain is world-v3's 1,030 pages ([`world-v3.ts`](../../generators/skillopt-method/world-v3.ts)), and the seed
 skills are the ones gbrain ships at `311a83bbe` (v0.60.553.0). They are byte-identical to v1's and v2's seeds (gbrain
-`3ec766c40`): none of the three changed between the two commits. This commit's `package.json` pins gbrain `6ce7195b4`
-(v0.60.733.0), where `briefing` and `fact-check` are still byte-identical to the seeds and the shipped `query` skill
+`3ec766c40`): none of the three changed between the two commits. At gbrain `6ce7195b4`
+(v0.60.733.0, checked 2026-11-16), `briefing` and `fact-check` are still byte-identical to the seeds and the shipped `query` skill
 differs in two lines (its pointer to `brain-first.md` and its `empty_retrieval` advice); the seeds stay as committed.
 
 Every reader names v3 explicitly: [`dataset.ts`](../../runner/skillopt-method/dataset.ts) keeps v2 as the N15 default, and
@@ -140,6 +140,11 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
 - Briefing citation dates are not checked against the page.
 
 ## Changelog
+
+### 2026-11-16: The seed check names its commit and date
+
+The seed comparison reads "at gbrain `6ce7195b4` (v0.60.733.0, checked 2026-11-16)" instead of calling that commit
+this repository's pin, so it stays true when the pin moves.
 
 ### 2026-11-16: The pin sentence names gbrain `6ce7195b4`
 
