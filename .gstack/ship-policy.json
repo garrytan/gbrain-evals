@@ -13,6 +13,12 @@
     ]
   },
   "merge": "direct",
+  "land": {
+    "merged_checks": [
+      "bun run validate",
+      "bun eval/runner/prereg.ts"
+    ]
+  },
   "review_exclude_paths": [
     "eval/data/skillopt-method-v3/briefing/**",
     "eval/data/skillopt-method-v3/fact-check/**",
