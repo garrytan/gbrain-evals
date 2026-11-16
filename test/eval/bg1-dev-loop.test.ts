@@ -13,7 +13,7 @@ import {
   BASELINES_PATH, clockProblem, COMPARATORS, DEV_AS_OF, DEV_JUDGE, DEV_READER, DEV_WORLD_END, devCell, devClock, DevLoopRefusal, faketimeOffset, loadBaselines,
   main, neededValues, newestRelease, resolveGbrainRef, runDevCell, savedRow, scoreRecords, scoreRun, ubiRoom, vmCommand, WHY_CLASSES, whyRows, type Baselines, type QuestionRecord,
 } from '../../eval/runner/bg1/dev-loop.ts';
-import { BRAIN_SNAPSHOT, DEV_VM_HOURS, devVm, devVmName, keptDevVms, reapDevVms, type UbiRunner, checkOverlayHead, overlaySlug, parseOverlays, renderScore, RUN_SCHEMA, upkeepRuns, vmPayload } from '../../eval/runner/bg1/dev-loop.ts';
+import { BRAIN_SNAPSHOT, crewOf, DEV_VM_HOURS, devVm, devVmName, keptDevVms, reapDevVms, type UbiRunner, checkOverlayHead, overlaySlug, parseOverlays, renderScore, RUN_SCHEMA, upkeepRuns, vmPayload } from '../../eval/runner/bg1/dev-loop.ts';
 import { bg1RunClock, loadCorpus } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
@@ -146,6 +146,23 @@ describe('the dev cell and its launch', () => {
     expect(ubiRoom(usage([['gbev53', 10, 160], ['gbev91', 12, 48]]), 4)).toBe(0);
     expect(ubiRoom(usage([['gbev53', 10, 160], ['gbev91', 12, 48], ['gbra108', 2, 8]]), 4, 'gbra')).toBe(50);
     expect(ubiRoom('ubi-runner: usage failed (HTTP 502)', 4)).toBe(0);
+  });
+
+  test("the room check reads the runner's own usage table, the caller's (you) row included, and the runner's owner tag", () => {
+    const script = readFileSync('scripts/ubicloud/ubi-runner.sh', 'utf8');
+    const program = /awk -v me="\$OWNER" '([\s\S]*?)'\n/.exec(script)?.[1];
+    expect(program).toBeDefined();
+    const usage = (me: string, vms: Array<[string, number]>) => execFileSync('awk', ['-v', `me=${me}`, program!], {
+      encoding: 'utf8', input: vms.flatMap(([owner, n]) => Array.from({ length: n }, () => `${owner} standard-4`)).join('\n') + '\n' });
+    const atCap = usage('gbev91', [['gbev91', 52]]);
+    expect(atCap).toMatch(/^gbev91 +52 +208 +\(you\)$/m);
+    expect(ubiRoom(atCap, 4, crewOf('gbev91'))).toBe(0);
+    expect(ubiRoom(usage('gbev91', [['gbev91', 51]]), 4, crewOf('gbev91'))).toBe(1);
+    expect(ubiRoom(usage('gbev91', [['gbev53', 40], ['gbev91', 12]]), 4, crewOf('gbev91'))).toBe(0);
+    expect(ubiRoom(usage('gbra108', [['gbev91', 52], ['gbra108', 2]]), 4, crewOf('gbra108'))).toBe(50);
+    expect(ubiRoom(usage('gbra108', [['gbra108', 52]]), 4, crewOf('gbra108'))).toBe(0);
+    expect(execFileSync('bash', ['scripts/ubicloud/ubi-runner.sh', 'owner'], { encoding: 'utf8', env: { ...process.env, UBI_OWNER: 'GBRA-108' } }).trim()).toBe('gbra108');
+    expect([crewOf('gbra108'), crewOf('gbev91')]).toEqual(['gbra', 'gbev']);
   });
 
   test('run refuses without a paid window, and with unknown worlds', async () => {
@@ -442,7 +459,8 @@ describe('leftover VMs', () => {
     const gone = { ...mine, name: `ubirun-gbev91-${at(1)}-devloop-bg1-dev-02-bbbb` };
     const { ubi } = fake([`eu-central-h1  ${mine.name}`, `eu-central-h1  ubirun-gbev91-${at(1)}-devloop-bg1-dev-03-cccc`]);
     expect(keptDevVms(ubi, 'ubi-runner.sh', [mine, gone])).toEqual([
-      `eu-central-h1/${mine.name} is still running. Pull its outputs: bash ubi-runner.sh pull ${mine.name} ${mine.remote} /out/worlds; then destroy it: bash ubi-runner.sh down ${mine.name} -l eu-central-h1`,
+      `eu-central-h1/${mine.name} is still running. Pull its outputs: bash ubi-runner.sh pull ${mine.name} ${mine.remote} /out/worlds; then destroy it: bash ubi-runner.sh down ${mine.name} -l eu-central-h1. `
+        + `Pull it before ${new Date((at(1) + DEV_VM_HOURS * 3600) * 1000).toISOString()}: after that, this owner's next dev-loop run destroys it, pulled or not`,
     ]);
     expect(keptDevVms(fake([]).ubi, 'ubi-runner.sh', [mine])).toEqual([]);
   });

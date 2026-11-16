@@ -22,7 +22,7 @@
  *     ubirun-<owner>-<epoch>-devloop-<world>-<hex>. Before launching, run destroys this owner's dev-loop VMs older than
  *     7 hours (never another owner's, never a VM without the dev-loop marker) and refuses if it can't; after the run it
  *     prints each of its VMs still standing (a failed final pull or a lost ssh session keeps one) with the commands to
- *     pull its outputs and destroy it, and exits 4.
+ *     pull its outputs and destroy it and the time after which the next run destroys it unpulled, and exits 4.
  *     Each --overlay sets one of the six search keys the gbrain-defaults shim writes for the arm (true or false;
  *     search.query_budget_unit chunk or auto) on top of the stage 1 arm's values. An unknown key, a bad value, or a key
  *     gbrain's config does not list at the resolved commit refuses before any VM starts. The overlay goes into run.json,
@@ -291,17 +291,21 @@ export function vmPayload(sha: string, world: string, leaseId: string, leaseUsd:
     route_caps: { caps: { ...DEFAULT_ROUTE_CAPS, ...pinnedJudgeRouteCaps(def.arms) }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' }, gemini_key_env: 'GEMINI_API_KEY' };
 }
 
+/** A crew's owner prefix: the leading letters of the runner's owner tag, which it lowercases and strips to a-z0-9 (UBI_OWNER GBRA-108 is gbra108, so gbra). */
+export const crewOf = (ownerTag: string) => /^[a-z]+/.exec(ownerTag)?.[0] ?? 'gbev';
+
 /** The shared Ubicloud project's line for eval VMs (512 vCPUs less 48 kept for merge checks), and one crew's share of it. */
 export const UBI_PROJECT_LINE = 464;
 export const UBI_CREW_LINE = 208;
 
 /**
- * How many more VMs of `vcpus` each fit under both lines, from `ubi-runner.sh usage` (OWNER VMS VCPUS rows and a
- * total row); the launching crew's VMs are the owners starting with `crewPrefix`, the letters of UBI_OWNER (`gbev` for
- * gbev91). Unreadable usage fits none.
+ * How many more VMs of `vcpus` each fit under both lines, from `ubi-runner.sh usage` (OWNER VMS VCPUS rows, the
+ * caller's own marked "(you)", and a total row); the launching crew's VMs are the owners starting with `crewPrefix`
+ * (crewOf the runner's owner tag: `gbev` for gbev91). Unreadable usage fits none.
  */
 export function ubiRoom(usage: string, vcpus: number, crewPrefix = 'gbev'): number {
-  const rows = usage.split('\n').map(l => l.trim().split(/\s+/)).filter(r => r.length === 3 && /^\d+$/.test(r[1]) && /^\d+$/.test(r[2]));
+  const rows = usage.split('\n').map(l => l.trim().split(/\s+/)).map(r => (r.length === 4 && r[3] === '(you)' ? r.slice(0, 3) : r))
+    .filter(r => r.length === 3 && /^\d+$/.test(r[1]) && /^\d+$/.test(r[2]));
   const total = rows.find(r => r[0] === 'total');
   if (!total || !(vcpus > 0)) return 0;
   const crew = rows.filter(r => r[0].startsWith(crewPrefix)).reduce((n, r) => n + Number(r[2]), 0);
@@ -349,7 +353,8 @@ export function reapDevVms(ubi: UbiRunner, nowMs: number): string[] {
 export function keptDevVms(ubi: UbiRunner, runner: string, launched: ReadonlyArray<{ name: string; remote: string; local: string }>): string[] {
   const standing = new Map(ownVms(ubi).map(v => [v.name, v.loc]));
   return launched.filter(v => standing.has(v.name)).map(v =>
-    `${standing.get(v.name)}/${v.name} is still running. Pull its outputs: bash ${runner} pull ${v.name} ${v.remote} ${v.local}; then destroy it: bash ${runner} down ${v.name} -l ${standing.get(v.name)}`);
+    `${standing.get(v.name)}/${v.name} is still running. Pull its outputs: bash ${runner} pull ${v.name} ${v.remote} ${v.local}; then destroy it: bash ${runner} down ${v.name} -l ${standing.get(v.name)}. `
+    + `Pull it before ${new Date(((devVm(v.name)?.epoch ?? 0) + DEV_VM_HOURS * 3600) * 1000).toISOString()}: after that, this owner's next dev-loop run destroys it, pulled or not`);
 }
 
 /** What a dev-loop VM receives: the Q1 runner's paths, BG1's analysis code and the dev worlds. */
@@ -397,7 +402,7 @@ async function launch(argv: string[]): Promise<number> {
     for (;;) {
       let usage = '';
       try { usage = execFileSync('bash', [runner, 'usage'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); } catch { usage = ''; }
-      if (ubiRoom(usage, vcpus, /^[a-z]+/i.exec(process.env.UBI_OWNER!)?.[0] ?? 'gbev') >= 1) break;
+      if (ubiRoom(usage, vcpus, crewOf(owner)) >= 1) break;
       console.error(`dev loop: no room for a ${vcpus}-vCPU VM under the project's ${UBI_PROJECT_LINE} or this crew's ${UBI_CREW_LINE} (or usage unreadable); reading again in 5 minutes`);
       await Bun.sleep(300_000);
     }
