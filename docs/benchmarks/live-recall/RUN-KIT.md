@@ -146,6 +146,11 @@ All commands run from the repository root.
    with [`LR_KEYLESS_PROVIDER`](#lr_keyless_provider) if gbrain still reports an embedding or reranking provider, and the
    run stops with its code if it fails. It writes `keyless.local.jsonl` and `keyless.local.log` into the run directory.
 
+   On a real brain, each process gives gbrain a home of its own inside the run directory (`gbrain-home` and
+   `keyless-gbrain-home`) once gbrain has read your config: a copy of your `~/.gbrain/config.json` without the database
+   location or any key, with `GBRAIN_HOME` and `HOME` pointed there. Nothing gbrain writes to its home during the run
+   reaches your install. The runner starts no `gbrain serve`, so no upkeep or conversation archive runs from it.
+
    Before the first question, the runner sends one public probe query through every arm and stops with
    [`LR_ARM_PREFLIGHT`](#lr_arm_preflight) if any arm errors, is refused a model call, fails its reranker open or
    reports a failure stage, so a missing grant ends the run

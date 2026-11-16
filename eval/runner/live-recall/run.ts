@@ -515,7 +515,7 @@ async function keylessArm(argv: string[]): Promise<number> {
     const counters: GuardCounters = { refusals: {} };
     const brain = argv.includes('--fixture')
       ? await buildFixtureBrain(gut, protocol === 'batch3' ? BATCH3_FIXTURE_PAGES : undefined)
-      : await openPostgresBrain(gut, flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', counters, argv.includes('--reference-build'));
+      : await openPostgresBrain(gut, flag(argv, '--database-url-env') ?? 'LIVE_RECALL_DATABASE_URL', counters, argv.includes('--reference-build'), join(out, 'keyless-gbrain-home'));
     try {
       if (argv.includes('--fixture')) { installGuards(brain.engine, counters); await verifyReadOnly(brain.engine); }
       const check = await makeKeyless(gut, names);
@@ -679,6 +679,7 @@ async function copyFacts(engine: any, barrier: string) {
 
 export async function liveRecall(o: RunOptions, say: (line: string) => void): Promise<{ scorecard: string; markdown: string; detail: string }> {
   const startedAt = new Date().toISOString();
+  const runner = { commit: git(['rev-parse', 'HEAD']) || 'unknown', dirty: git(['status', '--porcelain', '--untracked-files=no']) !== '' };
   const counters: GuardCounters = { refusals: {} };
   let questionsText: string;
   let protocol: Protocol = o.protocol ?? 'batch1';
@@ -741,11 +742,13 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     await verifyReadOnly(engine);
     ({ schema_version: schemaVersion, code_schema_version: codeSchemaVersion } = await checkSchema(engine, o.gut));
   } else {
-    const brain = await openPostgresBrain(o.gut, o.databaseUrlEnv, counters, o.referenceBuild);
+    const brain = await openPostgresBrain(o.gut, o.databaseUrlEnv, counters, o.referenceBuild, join(o.out, 'gbrain-home'));
     ({ engine, barrier, connection, close, schema_version: schemaVersion, code_schema_version: codeSchemaVersion } = brain);
   }
   say('gbrain ' + o.gut.version + ', schema ' + schemaVersion + ', barrier ' + barrier + ', connection ' + connection + '; read-only verified');
+  const countPages = async (since?: string) => Number((await engine.executeRaw('SELECT count(*)::int AS n FROM pages' + (since ? " WHERE updated_at >= '" + since + "'::timestamptz" : '')))[0]?.n);
   try {
+    const pagesAtStart = await countPages();
     const facts = await copyFacts(engine, barrier);
     const { loadSearchModeConfig, resolveSearchMode } = await importGbrain<any>(o.gut, 'src/core/search/mode.ts');
     const knobs = resolveSearchMode(await loadSearchModeConfig(engine));
@@ -783,13 +786,14 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     say(questions.length + ' questions loaded, ' + missing + ' with an absent gold page; arms ' + ARMS.join(','));
     const records = await runQuestions(ctx, kept, done => { if (done % 10 === 0 || done === kept.length) say(done + '/' + kept.length + ' questions'); });
     await verifyReadOnly(engine);
+    const pagesAtEnd = await countPages(), pagesUpdated = await countPages(startedAt);
 
     const pinCommit = (gbrainPin().split('#')[1] ?? 'unknown').toLowerCase();
     const identity = {
       started_at: startedAt,
       finished_at: new Date().toISOString(),
-      runner_commit: git(['rev-parse', 'HEAD']) || 'unknown',
-      runner_dirty: git(['status', '--porcelain', '--untracked-files=no']) !== '',
+      runner_commit: runner.commit,
+      runner_dirty: runner.dirty,
       gbrain_pin_version: JSON.parse(readFileSync(join(REPO_ROOT, 'node_modules/gbrain/package.json'), 'utf8')).version,
       gbrain_pin_commit: /^[0-9a-f]{7,64}$/.test(pinCommit) ? pinCommit : 'unknown',
       gbrain_loaded_version: o.gut.version,
@@ -798,6 +802,9 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
       schema_version: schemaVersion,
       code_schema_version: codeSchemaVersion,
       reference_build: Boolean(o.referenceBuild),
+      brain_pages_at_start: pagesAtStart,
+      brain_pages_at_end: pagesAtEnd,
+      brain_pages_updated_since_start: pagesUpdated,
       engine: (inProcess ? 'pglite' : 'postgres') as 'pglite' | 'postgres',
       barrier,
       connection,

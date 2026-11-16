@@ -778,6 +778,30 @@ process, the scorecard's fill and gap-failure blocks, and `--reference-build`, e
 live-recall-v1 fixture, go on this branch as dated commits before the counted session. The runner commit, its harness
 digest and the session's commands are recorded in a dated entry before that session.
 
+### 2026-11-16: gbrain's home and its background upkeep during the session
+
+Written before any batch 5 search. From gbrain v0.60.733.0 an idle `gbrain serve` runs upkeep and the conversation
+archive under whatever home it shares, so this entry says what batch 5's session runs and what it allows.
+
+- **No long-lived gbrain process.** `run.ts run` and the `search_op_keyless` process it starts load gbrain's library
+  modules, search and exit. Neither starts `gbrain serve`, autopilot or the maintenance runner, and at v0.60.733.0 idle
+  upkeep and the archive are started only from those (`src/commands/serve.ts`, `src/core/maintenance/idle.ts`). The
+  same holds at 0.60.682.0.
+- **A gbrain home of its own for each process.** Once gbrain has read the operator's config file and `~/.gbrain/.env`,
+  each process copies that config file, without the database location or any credential, into its run directory
+  (`gbrain-home`, and `keyless-gbrain-home` for the keyless process) and points `GBRAIN_HOME` and `HOME` there. A
+  file-write trace of a full run at v0.60.733.0 on the public fixture in Postgres, as a SELECT-only role, found every
+  gbrain write inside the run directory (audit files, the keyless search's backup status and a type cache), and none
+  in the operator's gbrain home. Bun's `os.homedir()` reads the password database rather than `HOME`, so gbrain code
+  that calls it directly would still find the operator's home; none of that code ran in the trace.
+- **Upkeep.** The session's processes run none, and every brain connection goes through the read-only barrier, so any
+  write would be refused and counted under `custody.guard_refusals`.
+- **What this can't rule out.** The box's own gbrain install keeps running its `gbrain serve`, with idle upkeep and,
+  from 0.60.733.0, the conversation archive, against the live brain the session reads. It can write pages between the
+  newest and reference runs. Each scorecard records the brain's page count when the arms opened it and after the last
+  search, and how many pages were written or changed since the run started (`run.brain_pages_*`). The results report
+  them, and a build comparison whose two runs saw pages change says so beside its numbers.
+
 ## Limits
 
 - One writer who knows the brain writes both the questions and the gold, so paraphrase difficulty and topic choice
