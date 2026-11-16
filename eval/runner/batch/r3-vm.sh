@@ -2,8 +2,8 @@
 # R3's driver on its Ubicloud VM (W10 preregistration, amendment of 2026-11-16): one process, so one ledger writer, and
 # resumable, because every step skips what its state already holds. A paid stage starts only once the controller has
 # written its paid-window marker, $R3_STATE/windows/<unit>, holding that unit's budget in dollars; the stage opens one
-# budget run for the unit and passes --paid-window <unit> to every paid command. The reader stage also waits for
-# windows/manifests-on-origin, written once the frozen R3 manifests are committed and pushed.
+# budget run for the unit and passes --paid-window <unit> to every paid command. Every reader stage also waits for
+# windows/manifests-on-origin, written once the frozen R3 manifests are committed and pushed. Order: A, P, B.
 #
 #   R3_PROGRAM_CAP_USD=<n> bash eval/runner/batch/r3-vm.sh
 set -euo pipefail
@@ -69,12 +69,11 @@ if [ ! -f "$ST/stage-A.done" ]; then
   log "stage A done: pull the manifests, commit and push them, then write windows/manifests-on-origin"
 fi
 
-# Stage B: the judge check, the three new reader arms, then every judge over them and over W10c's stored Sol rows.
-if [ ! -f "$ST/stage-B.done" ]; then
+# R3's manifests reach origin before any reader request (the amendment's order): once the controller has committed and
+# pushed what stage A froze, this VM checks its untracked copies byte for byte against that commit and fast-forwards.
+if [ ! -f "$ST/manifests.merged" ]; then
   wait_for manifests-on-origin
-  wait_for R3-B
   git fetch -q origin "$(cat "$ST/windows/manifests-on-origin")"
-  # The pushed commit adds the manifests this VM froze; its untracked copies must be byte-identical before the merge.
   git diff --name-only HEAD FETCH_HEAD | while read -r f; do
     if [ -f "$f" ] && ! git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
       git show "FETCH_HEAD:$f" | cmp -s - "$f" || { log "$f differs from the pushed copy"; exit 5; }
@@ -82,21 +81,11 @@ if [ ! -f "$ST/stage-B.done" ]; then
     fi
   done
   git merge -q --ff-only FETCH_HEAD
-  export GBRAIN_HOME; GBRAIN_HOME=$(home judge-check)
-  bun eval/runner/batch/r3-judge-check.ts plan --out "$OUT/judge-check"
-  bun eval/runner/batch/r3-judge-check.ts run --out "$OUT/judge-check" --cache "$ST/judge-check-cache" --budget-ledger "$LEDGER" --paid --budget-run-id "$(run_for R3-B)" --paid-window R3-B
-  bun eval/runner/batch/r3-judge-check.ts report --out "$OUT/judge-check" > /dev/null || log "judge check: a gate failed (report.json says which)"
-  for arm in r3-opus55-newest r3-sol-newest r3-opus55-full; do drive run "$arm"; done
-  for arm in r3-opus55-newest r3-sol-newest r3-opus55-full; do drive judge "$arm" official; done
-  for arm in r3-opus55-newest r3-opus55-full; do drive judge "$arm" secondary; done
-  for arm in r3-sol-newest w10c-sol-full w10c-sol-currentpin; do drive judge "$arm" opus; done
-  for arm in r3-opus55-newest r3-sol-newest r3-opus55-full; do bun $W10 export "$arm" "$OUT/arms/$arm" --budget-ledger "$LEDGER" > /dev/null; done
-  for j in w10c-sol-full--opus w10c-sol-currentpin--opus; do bun $W10 export-judge "$j" "$OUT/judges/$j" --budget-ledger "$LEDGER"; done
-  touch "$ST/stage-B.done"
-  log "stage B done"
+  touch "$ST/manifests.merged"
 fi
 
-# Stage P: particle-1 reads (its own window), then gpt-6.1-sol co-judges its rows under R3-B.
+# Stage P: particle-1's reads, in their own paid window, first after the capture: Particle windows run one at a time
+# across the crew, so R3-P closes before the batch lane's long waits. Its co-judge runs in stage B under R3-B.
 if [ ! -f "$ST/stage-P.done" ]; then
   wait_for R3-P
   for arm in r3-particle-newest r3-particle-full r3-particle-currentpin; do
@@ -104,10 +93,26 @@ if [ ! -f "$ST/stage-P.done" ]; then
     [ -d "$OUT/arms/$arm" ] && mv "$OUT/arms/$arm" "$ST/partial-$arm-$(date +%s)"
     GBRAIN_HOME=$(home "$arm") bun eval/runner/batch/w10-particle.ts run "$arm" --out "$OUT/arms/$arm" --cache "$ST/particle-cache" --budget-ledger "$LEDGER" --paid --budget-run-id "$(run_for R3-P)" --paid-window R3-P || log "$arm: the run exited non-zero (its receipt says why)"
   done
-  for arm in r3-particle-newest r3-particle-full r3-particle-currentpin; do drive judge "$arm" secondary; done
-  for arm in r3-particle-newest r3-particle-full r3-particle-currentpin; do bun $W10 export-judge "$arm--secondary" "$OUT/judges/$arm--secondary" --budget-ledger "$LEDGER"; done
   touch "$ST/stage-P.done"
-  log "stage P done"
+  log "stage P done: particle-1's reads are finished"
+fi
+
+# Stage B: the judge check, the three new reader arms, then every judge over them, over W10c's stored Sol rows and
+# over particle-1's rows.
+if [ ! -f "$ST/stage-B.done" ]; then
+  wait_for R3-B
+  export GBRAIN_HOME; GBRAIN_HOME=$(home judge-check)
+  bun eval/runner/batch/r3-judge-check.ts plan --out "$OUT/judge-check"
+  bun eval/runner/batch/r3-judge-check.ts run --out "$OUT/judge-check" --cache "$ST/judge-check-cache" --budget-ledger "$LEDGER" --paid --budget-run-id "$(run_for R3-B)" --paid-window R3-B
+  bun eval/runner/batch/r3-judge-check.ts report --out "$OUT/judge-check" > /dev/null || log "judge check: a gate failed (report.json says which)"
+  for arm in r3-opus55-newest r3-sol-newest r3-opus55-full; do drive run "$arm"; done
+  for arm in r3-opus55-newest r3-sol-newest r3-opus55-full; do drive judge "$arm" official; done
+  for arm in r3-opus55-newest r3-opus55-full r3-particle-newest r3-particle-full r3-particle-currentpin; do drive judge "$arm" secondary; done
+  for arm in r3-sol-newest w10c-sol-full w10c-sol-currentpin; do drive judge "$arm" opus; done
+  for arm in r3-opus55-newest r3-sol-newest r3-opus55-full; do bun $W10 export "$arm" "$OUT/arms/$arm" --budget-ledger "$LEDGER" > /dev/null; done
+  for j in w10c-sol-full--opus w10c-sol-currentpin--opus r3-particle-newest--secondary r3-particle-full--secondary r3-particle-currentpin--secondary; do bun $W10 export-judge "$j" "$OUT/judges/$j" --budget-ledger "$LEDGER"; done
+  touch "$ST/stage-B.done"
+  log "stage B done"
 fi
 bun eval/runner/budget-ledger.ts status --budget-ledger "$LEDGER" > "$ST/ledger-status.json" || true
 log "all stages done"
