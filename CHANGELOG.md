@@ -2,6 +2,19 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.234] - 2026-11-16
+
+### Merging this repository needs gstack 1.97.0.0 or later
+
+- **What changed.** `.gstack/ship-policy.json` raises `min_gstack_version` from 1.96.0.0 to 1.97.0.0, so every gstack
+  command that reads this repository's policy, `gstack-ship-queue land` included, needs 1.97.0.0 or later.
+- **Why.** When main has moved past a pull request's merge base, land runs `bun run validate` and
+  `bun eval/runner/prereg.ts` on the pull request merged onto main's tip, from its own process, which holds the merging
+  account's GitHub token. On Linux, gstack 1.97.0.0 is the first release that stops those checks from reading land's
+  environment through `/proc` and stops anything a check leaves running before land goes on, so a merge run with 1.96
+  could expose that token to a check. A check can still read any other file the merging account can, so pass land
+  `--allow-repo-commands` only for pull requests whose code you trust.
+
 ## [0.10.233] - 2026-11-16
 
 ### A pull request that is behind main merges only after checks on the merged result
