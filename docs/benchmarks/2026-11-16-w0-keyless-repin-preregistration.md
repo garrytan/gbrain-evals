@@ -283,3 +283,16 @@ granted two sources, for a person linked across those sources, now comes back un
 both gated floors hold. As the narrowed plan treats a failing contract, this one runs a second time at the new build
 and once at `77cf8e111`, keyless, on the Capy machine. The result is reported either way, and nothing is tuned or rerun until it
 passes.
+
+### 2026-11-16: the lifecycle matrix works outside the repository checkout, after its first run stopped at `init`
+
+The lifecycle matrix's first run at the new build (part `b`) stopped in all six cells at `gbrain init`, before
+anything was measured. v0.60.733.0 refuses to set up a content directory inside another Git worktree
+(`local_conflict` in gbrain's `docs/guides/error-codes.md`), and the runner's default work directory,
+`eval/reports/lifecycle/<stamp>`, sits inside this checkout. That is a harness defect: the cause is the runner's default
+here, and gbrain's refusal is a deliberate guard, not a regression. The fix passes the runner's existing `--work`
+option a directory outside the checkout (`$HOME/lc-work/<side>[-<label>]`) in `vm/run-kept.sh`. No runner code changes,
+so no earlier result can change. The narrowed plan runs this row at the new build only, so instead of the two fresh VMs
+with both builds that "What happens to a harness defect" names for the paired design, the step runs once more at the new
+build on the same VM after part `b` finishes (`run-kept.sh lifecycle new r2`, from this commit). The first run's
+receipt is kept and reported as a harness error.

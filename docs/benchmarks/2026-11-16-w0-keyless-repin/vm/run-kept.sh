@@ -80,7 +80,7 @@ fi
 if want b lifecycle; then
   mkdir -p "$OUT/lifecycle"
   pgstart kept-lc-pg 55462
-  step lifecycle "bun eval/runner/lifecycle-experiment.ts --gbrain-repo $HOME/gbrain --builds $SIDE=$SHA --engines pglite,postgres --pg-url postgres://postgres@127.0.0.1:55462/postgres --concurrency 6 --out $OUT/lifecycle/receipt.json"
+  step lifecycle "bun eval/runner/lifecycle-experiment.ts --gbrain-repo $HOME/gbrain --builds $SIDE=$SHA --engines pglite,postgres --pg-url postgres://postgres@127.0.0.1:55462/postgres --concurrency 6 --work $HOME/lc-work/$SIDE${LABEL:+-$LABEL} --out $OUT/lifecycle/receipt.json"
   pgstop kept-lc-pg
   step lifecycle-report "bun eval/runner/lifecycle-report.ts $OUT/lifecycle/receipt.json"
 fi
