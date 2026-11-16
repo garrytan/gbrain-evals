@@ -341,7 +341,7 @@ export function readingSettings(rc: RunConfigLike): Record<string, unknown> {
 }
 
 const ndjson = <T>(path: string): T[] => existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l) as T) : [];
-const dirsUnder = (dir: string) => existsSync(dir) ? readdirSync(dir).filter(d => !d.startsWith('.') && statSync(join(dir, d)).isDirectory()).map(d => join(dir, d)) : [];
+const dirsUnder = (dir: string) => existsSync(dir) ? readdirSync(dir).sort().filter(d => !d.startsWith('.') && statSync(join(dir, d)).isDirectory()).map(d => join(dir, d)) : [];
 
 /** Every directory under `root` (itself included, four levels down) that holds published cells (cells/<cell id>/run-config.json). */
 export function cellRoots(root: string, depth = 4): string[] {

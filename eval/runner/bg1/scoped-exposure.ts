@@ -101,7 +101,7 @@ if (import.meta.main) {
   const files = argv.filter((_, i) => i !== at && i !== at + 1);
   if (!dir || !files.length) { console.error('usage: bun eval/runner/bg1/scoped-exposure.ts --worlds <dir> <contexts.ndjson>...'); process.exit(2); }
   const { readdirSync } = await import('node:fs');
-  const qs = worldQuestions(dir, readdirSync(dir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name));
+  const qs = worldQuestions(dir, readdirSync(dir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name).sort());
   const contexts = files.flatMap(f => readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as { key: string; prompt: string }));
   const r = rescore(contexts, qs);
   const pct = (k: number, n: number) => `${(k / n * 100).toFixed(1)}%`;
