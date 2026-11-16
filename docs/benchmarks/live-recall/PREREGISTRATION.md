@@ -8,7 +8,8 @@ sample size (50 questions), question file hash and minimum detectable difference
 question set, batch 2, runs under the [batch 2 amendment](#batch-2-amendment), fixed before that set was frozen; its
 frozen sample (N, question file hash and minimum detectable differences) closes the amendment. A third set, batch 3,
 adds freshness and entity questions under the [batch 3 amendment](#batch-3-amendment), fixed before any of its
-questions was written.
+questions was written. Batch 4 and batch 5 follow under their own amendments; batch 5 re-measures the paraphrase gap at
+gbrain's newest release and adds an arm for gbrain's keyless partial-word fill.
 
 ## The question
 
@@ -625,6 +626,157 @@ and it changes no outcome):
 
 **Counted run.** From gbrain-evals `ecf8169c` on a clean tree, after this entry is pushed, with `--gbrain` at the
 version the box runs when the run starts, under the rule above for an upgrade between freeze and run.
+
+## Batch 5 amendment
+
+Fixed on 2026-11-16 by GBEV-93 (GST-2866), before any batch 5 question was written. Batch 5 is a fifth, independent set
+of 50 questions, made the way batch 4 was. It re-measures configured search's paraphrase gap at gbrain's newest
+release, measures gbrain's keyless partial-word fill on a real brain for the first time, and runs the build batch 4
+measured on the same day, so a change in the gap can be tied to the build or to the questions. Arms, metrics,
+eligibility, custody, the read-only barrier and batch 2's comparisons are unchanged. What changes: the gbrain under
+test, a seventh arm that only reads, a primary for the fill, two scorecard blocks, and a rule that lets one named older
+build read a brain whose schema is newer than it expects.
+
+**The public lesson.** Whether gbrain's search on a real brain still misses questions asked in other words at its
+newest release, and whether a brain with no embedding key finds more of them now that gbrain's search adds pages that
+hold only some of the question's words.
+
+**Why.**
+
+- Batch 4's gap (configured search found 23 of 49 reworded forms against 36 of the same 49 exact ones, −26.53 points,
+  interval −40.82 to −14.29) was measured on gbrain 0.60.682.0. gbrain publishes many releases a week, and a published
+  number measured on an old build is re-measured at the newest release.
+- gbrain#9414 (merged as `23a163fc`, first released in v0.60.725.0) adds the keyless any-word fill. On a brain with no
+  embedding provider, when the all-words keyword search returns at least one row and fewer than the limit, gbrain's
+  `search` and `query` operations add pages that hold only some of the question's words, after every row they returned
+  before, marked `keyword_fill` (`src/core/search/hybrid/keyword-only.ts` and `src/core/ops/search-fill.ts` at
+  v0.60.733.0). Its only measurement is on LongMemEval S, a public set of conversations. None of the six arms can trigger
+  it: they call `hybridSearch` directly rather than the search operation, `hybrid_lexical` sets `decide.keywordOnly`,
+  which turns the fill off, and every other arm runs with an embedding provider.
+
+**System under test.** gbrain v0.60.733.0 at `6ce7195b44a034f85aec811f11fbf862db376f50`, the highest release tag on
+gbrain's main branch when this amendment was written (`git ls-remote --tags`, 2026-11-16, about 20:00 UTC). If a newer
+release tag exists when Wintermute freezes batch 5, a dated entry below re-pins batch 5 to it before the freeze; once
+the first counted batch 5 search runs, the build is fixed for batch 5 and recorded in the results. The reference build is
+gbrain 0.60.682.0 (`42faabf2`), the build batch 4 measured. Both load with `--gbrain <checkout>@<commit>`, as before.
+gbrain-evals' own `package.json` pin is not the build under test, and the scorecard records both.
+
+**Questions.** Written fresh on the box in batch 4's format and under batch 4's rules: 10 questions of each of the five
+live types, an exact and a paraphrased form each, gold chosen page first from a new seeded sample, error_string gold
+drawn from more than 6 pages, and a window on every time_window question. Nothing may come from batches 1 to 4: no
+question id, no form (compared after folding case, spacing and punctuation), and no gold page that was a batch 1 to 4
+gold, stale or decoy page.
+
+**The freeze checks that.** Wintermute freezes with `run.ts freeze --protocol batch5`, `--gbrain` at the newest build,
+and the four earlier question files, one `--prior` each. The runner checks them as it does for batch 4, against the
+three sha256 values listed under batch 4 and batch 4's own,
+`69f923673764fc11aa501a4d3b0efae53ff7d2ec8ce806a32176472662b3ca04`, and refuses with `LR_FREEZE_OVERLAP`, writing
+nothing, if the new file shares anything with them or a file is missing or wrong. `freeze.json` records the protocol,
+the question file's sha256, the counts by type, `gbrain_version`, `visibility_epoch`, the four earlier files' sha256 and
+a zero `prior_overlap`. It leaves the box before any search and is committed here in a dated entry with the frozen
+sample's notes.
+
+**A seventh arm: `search_op_keyless`.** gbrain's `search` operation, called through gbrain's own dispatcher as a trusted
+local caller, the way `gbrain search "<question>"` runs it on the command line, with the operation's own defaults (no
+parameter but the question, so its default limit of 20 applies). It runs in a separate process that the runner starts
+for this arm alone, with no embedding or reranking provider: every provider key gbrain's recipes name is blank in that
+process's environment, gbrain's gateway there is configured with no key, and the process refuses to search unless
+gbrain reports that neither embedding nor reranking is available. Nothing else changes: the same brain, barrier, guards
+and loaded build. gbrain's AI invocation guard allows the arm no model call of any kind, and the process refuses any
+HTTP request. Pages come from the response's rows in order, and each record keeps, row by row, whether gbrain marked the
+row `keyword_fill`.
+
+- **Fill on:** success@5 on the arm's first five pages.
+- **Fill off:** success@5 on the first five pages of the same response after removing every row marked `keyword_fill`.
+  gbrain returns the fill only when the response's other rows are exactly the response it gives without the fill
+  (`chooseFill`), so this is the fill-off response without a second call.
+- **Exposure:** forms where the fill fired (at least one `keyword_fill` row), forms where a fill row entered the first
+  five pages, and forms where a fill row came before a row without the flag. That last count should be 0, because gbrain
+  puts fill rows last; a form where it isn't 0 is counted and reported.
+
+The arm stays out of the eligibility rule's common arms, so it changes no other arm's eligible forms or comparisons. Its
+own forms count when its status is `ok`. On 0.60.682.0 the fill doesn't exist, so the arm runs the same search operation
+with no fill, and its exposure must read 0 there. Every run from this amendment's runner adds the arm, batches 3 and 4
+included.
+
+**Primary for the fill.** Fill on minus fill off, success@5, on reworded (paraphrase) forms, one pair per question, at
+the newest build: an exact one-sided sign test at alpha 0.05, with fill off as A and fill on as B. It is a family of
+one, not Holm-adjusted with P1 and P2, because it answers a different question and drives a different decision. Fill
+rows can only follow the rows already returned, so a form can move from a miss to a hit and never the other way: every
+discordant pair should favour the fill, and k wins with no losses gives p = 0.5^k. The primary holds at 5 or more wins
+with no losses (p = 0.031), which is 5 of 49 forms, about 10 points. A loss would mean a fill row displaced a page, and
+the scorecard reports any beside the prefix count.
+
+**Batch 2's primaries and secondaries.** P1 and P2 (paraphrase forms, Holm across the two) and batch 2's declared
+secondaries are batch 5's too, replicated at the newest build. The paraphrase gap of configured search,
+`paraphrase_vs_exact_configured`, is the comparison the gap rule reads. Batch 4's family band is not computed, because
+nothing reads it here.
+
+**Gap failure classes.** For configured search on each question type, the scorecard counts the questions whose exact
+form it found in its first five pages and whose reworded form it didn't, split by where the reworded form's gold page
+landed: ranked 6 to 20; not in its first 20 while `hybrid` or `vector` had it in their first five; or in no arm's first
+five. These are counts only.
+
+**The same-day build pair.** In one session on the box, batch 5 runs every arm at the newest build and then at
+0.60.682.0, back to back, from the same runner commit, and `run.ts compare --a <0.60.682.0 run> --b <newest run>` pairs
+them. The newest run is batch 5's counted run. The 0.60.682.0 run counts only for the build comparison. The fill can't
+move configured search, because configured search has an embedding provider.
+
+**The schema rule for two builds in one session.** The runner still opens a brain only when the loaded build expects
+exactly the brain's schema version, with one exception: a run that passes `--reference-build` may load an older build on
+a brain whose schema is newer, never the reverse, and only a build this preregistration names as a reference (here
+0.60.682.0). It never migrates. The scorecard records the brain's schema version, the version the loaded build expects
+and `reference_build`. So the reference run measures 0.60.682.0's search code on today's brain and schema; tables and
+columns added since that build are invisible to it, and it is not the build as it was deployed on 2026-11-12. If an
+older statement fails on the newer schema, the arm preflight stops the reference run before any question, and batch 5
+reports the gap at the newest build with no build comparison. The newest build gets no exception: if the box upgrades
+before the session and its brain's schema moves past the newest build's, the session stops before any search, and a
+dated entry re-pins to the box's build when that is the newest release, before the session runs again.
+
+**Visibility epoch.** 0.60.682.0 and 0.60.733.0 both read `post_gbra_398`, as do batch 3's freeze (0.60.623.0) and
+batch 4's (0.60.682.0), so every freeze here is accepted at both builds and no new epoch rule is needed. gbrain added
+access rules between the two builds (schema versions 303 to 309). Every arm here reads as a trusted local caller, the
+brain's owner, and the results say if any count suggests a page became hidden to it.
+
+**Batches 3 and 4, descriptive.** Their frozen question files and `freeze.json` run again at both builds in the same
+session, from batch 5's runner commit, each under its own frozen protocol, with `run.ts compare` per batch. They are
+descriptive: labelled that way, never pooled with each other or with batch 5, and they never replace batch 3's or batch
+4's counted numbers.
+
+**Decision rules.**
+
+- **The fill holds** (5 or more wins, no losses, p below 0.05): the fill is shown to find pages on a real brain's
+  keyless search, and README and the docs hub get that row, with its exposure counts.
+- **The fill doesn't hold:** one R48 "Why null?" cycle, exposure first (how many reworded forms the fill fired on, and on
+  how many a fill row reached the first five pages), then task fit (how many reworded forms got between 1 and 19
+  all-words rows, the only case in which the fill can fire), then power, then whether all-words keyword search already
+  finds the page, with a verdict of KEEP, FIX-METHOD or CUT-CANDIDATE that goes to gbrain's crew.
+- **The gap is still 20 points or more at the newest build** (`paraphrase_vs_exact_configured` at or below −20 points
+  with its interval excluding 0, the paraphrase-gap rule under [Decision rules](#decision-rules)): it goes to gbrain's
+  crew (GBRA-108) as the top retrieval item, with batch 5's gap failure classes by question type. No private question
+  goes with it.
+- **The gap has closed** (that rule doesn't fire at the newest build): the reference run says whether the build closed
+  it. If 0.60.682.0's gap on batch 5 doesn't fire the rule either, batch 5's questions, not the build, explain the change
+  from batch 4. If it does, the build closed it when compare's `run_b_vs_run_a_configured_paraphrase` success@5 delta has
+  a 95% interval above 0; otherwise the change can't be told from noise at this sample size, and the results say so.
+
+**Power.** At N = 50, as for batches 2 and 4: 12.5, 17.7 and 21.7 points for P1, P2, the gap and the build comparison
+on paraphrase forms at 10%, 20% and 30% discordant pairs. Batch 4's gap had 15 discordant pairs of 49 (31%), where the
+smallest detectable gap is about 22 points. The fill's primary detects 5 of 49 forms, about 10 points.
+
+**What leaves the box.** `freeze.json` before any search; then, after the session, `scorecard.json` and `scorecard.md`
+for each run (batches 5, 3 and 4, each at both builds), `compare.json` for each batch's build pair, and the gbrain version
+the box runs and the brain's schema version at the freeze and at the session. The new arm sends nothing to any provider.
+`hybrid`, `configured` and `configured_window` send question forms and, for the reranker, passages to Voyage, as in
+every earlier batch.
+
+**Cost.** No paid model calls by us. Wintermute's keys pay for about one query embedding per form for `hybrid` and
+`configured` and one rerank call per configured query at each build, for batch 5 and the two descriptive reruns.
+
+**Harness changes.** The `batch5` protocol and its four-file freeze check, the `search_op_keyless` arm and its separate
+process, the scorecard's fill and gap-failure blocks, and `--reference-build`, each with keyless tests on the public
+live-recall-v1 fixture, go on this branch as dated commits before the counted session. The runner commit, its harness
+digest and the session's commands are recorded in a dated entry before that session.
 
 ## Limits
 
