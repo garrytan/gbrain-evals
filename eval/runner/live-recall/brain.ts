@@ -25,7 +25,8 @@ export const ABORT_CODES = {
   LR_NO_BARRIER: 'Make a copy with eval/runner/live-recall/snapshot.sh and connect to it on 127.0.0.1, or use a hot standby or a role without write privileges.',
   LR_READONLY_UNVERIFIED: 'The session did not report read-only, or the direct pool is active; rerun against the copy and report the detail.',
   LR_DIRECT_URL_OVERRIDE: 'Unset GBRAIN_DIRECT_DATABASE_URL in the shell that runs the runner.',
-  LR_SCHEMA_MISMATCH: 'Run with --gbrain <checkout>@<commit> at the gbrain version that wrote the brain.',
+  LR_SCHEMA_MISMATCH: 'Run with --gbrain <checkout>@<commit> at the gbrain version that wrote the brain. Only a reference build a preregistration names may read a newer schema, with --reference-build.',
+  LR_REFERENCE_BUILD: '--reference-build loads only a build a live-recall preregistration names as its reference (REFERENCE_BUILDS in brain.ts), at that exact commit; drop the flag or load that build.',
   LR_QUESTIONS_INVALID: 'Fix the question file at the reported line and field, then rerun freeze.',
   LR_FREEZE_MISMATCH: 'Rerun freeze on this exact question file and send the new freeze numbers before the counted run. On a phase 2 --resume, resume with the first session\'s harness, gbrain, barrier kind, source, retrieval settings, models, arms, forms and tasks, or start a new run directory.',
   LR_FREEZE_OVERLAP: 'A batch 4 freeze checks the new questions against the three earlier question files on this box, passed with one --prior each (their sha256 values are in RUN-KIT.md). The detail names a missing or wrong file, or how many question ids, forms and gold pages are shared; replace the shared questions and freeze again. Only counts are printed.',
@@ -312,10 +313,31 @@ export interface OpenedBrain {
 }
 
 /** Refuse a brain whose schema differs from the gbrain code loaded; the runner never migrates. */
-export async function checkSchema(engine: any, gut: GbrainUnderTest): Promise<{ schema_version: number; code_schema_version: number }> {
+/**
+ * The older builds a live-recall preregistration names as its same-day reference: live recall batch 5's 0.60.682.0 and
+ * phase 2's 0.60.613.0. Only these, at these exact commits, may read a brain whose schema is newer than they expect.
+ */
+export const REFERENCE_BUILDS: Readonly<Record<string, string>> = Object.freeze({
+  '0.60.682.0': '42faabf28882a9197fcf504c5f8b3c7f6e9d9672',
+  '0.60.613.0': '98dda48fb9fd339609d6d4eef009811280ff648d',
+});
+
+/** Refuse --reference-build unless the loaded gbrain is a named reference build, loaded from its exact commit. */
+export function assertReferenceBuild(gut: GbrainUnderTest): void {
+  const commit = gut.overlay?.build.commit ?? '';
+  if (REFERENCE_BUILDS[gut.version] === undefined || commit !== REFERENCE_BUILDS[gut.version]) {
+    throw new LiveRecallAbort('LR_REFERENCE_BUILD', 'loaded gbrain ' + (/^\d+\.\d+\.\d+(\.\d+)?$/.test(gut.version) ? gut.version : 'unparsed') + ' is not a named reference build at its commit');
+  }
+}
+
+/**
+ * The loaded gbrain must expect exactly the brain's schema version, since the runner never migrates. A named reference
+ * build (referenceBuild, after assertReferenceBuild) may also read a newer schema, never an older one.
+ */
+export async function checkSchema(engine: any, gut: GbrainUnderTest, referenceBuild = false): Promise<{ schema_version: number; code_schema_version: number }> {
   const { LATEST_VERSION } = await importGbrain<{ LATEST_VERSION: number }>(gut, 'src/core/migrate.ts');
   const schema_version = Number(await engine.getConfig('version'));
-  if (schema_version !== LATEST_VERSION) throw new LiveRecallAbort('LR_SCHEMA_MISMATCH', 'brain schema ' + schema_version + ', loaded gbrain expects ' + LATEST_VERSION);
+  if (schema_version !== LATEST_VERSION && !(referenceBuild && schema_version > LATEST_VERSION)) throw new LiveRecallAbort('LR_SCHEMA_MISMATCH', 'brain schema ' + schema_version + ', loaded gbrain expects ' + LATEST_VERSION);
   return { schema_version, code_schema_version: LATEST_VERSION };
 }
 
@@ -330,7 +352,8 @@ const BLANKED_ENV = ['GBRAIN_DATABASE_URL', 'DATABASE_URL', 'GBRAIN_DIRECT_DATAB
  * Open a Postgres brain: env hygiene, barrier proof, guards, verification and
  * the schema check, in that order. Nothing is searched before all of them pass.
  */
-export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: string, counters: GuardCounters): Promise<OpenedBrain> {
+export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: string, counters: GuardCounters, referenceBuild = false): Promise<OpenedBrain> {
+  if (referenceBuild) assertReferenceBuild(gut);
   const source = process.env[databaseUrlEnv];
   if (!source) throw new LiveRecallAbort('LR_NO_DATABASE_URL', 'env ' + (/^[A-Z0-9_]+$/.test(databaseUrlEnv) ? databaseUrlEnv : 'var') + ' is empty');
   if (process.env.GBRAIN_DIRECT_DATABASE_URL) throw new LiveRecallAbort('LR_DIRECT_URL_OVERRIDE', 'GBRAIN_DIRECT_DATABASE_URL is set');
@@ -355,7 +378,7 @@ export async function openPostgresBrain(gut: GbrainUnderTest, databaseUrlEnv: st
     const barrier = await proveBarrier(raw, loopback);
     installGuards(engine, counters);
     await verifyReadOnly(engine);
-    const schema = await checkSchema(engine, gut);
+    const schema = await checkSchema(engine, gut, referenceBuild);
     configureGateway(buildGatewayConfig(await loadConfigWithEngine(engine, config)));
     return { engine, barrier, connection, ...schema, close: () => engine.disconnect() };
   } catch (error) {
