@@ -193,12 +193,15 @@ function compare(id: string, pairs: PairedItem[], metric: 'success_at_5' | 'mrr'
   };
 }
 
-export const PROTOCOLS = ['batch1', 'batch2', 'batch3', 'batch4'] as const;
+export const PROTOCOLS = ['batch1', 'batch2', 'batch3', 'batch4', 'batch5'] as const;
+/** batch5's fill primary: an exact one-sided sign test at FILL_ALPHA; with no losses it holds at FILL_MIN_WINS wins (0.5^5 = 0.031). */
+export const FILL_ALPHA = 0.05;
+export const FILL_MIN_WINS = Math.ceil(Math.log(FILL_ALPHA) / Math.log(0.5));
 export type Protocol = (typeof PROTOCOLS)[number];
-/** The question types each protocol accepts and reports. batch1, batch2 and batch4 keep the five live types. */
-export const PROTOCOL_TYPES: Record<Protocol, readonly QType[]> = { batch1: TYPES, batch2: TYPES, batch3: ALL_TYPES, batch4: TYPES };
+/** The question types each protocol accepts and reports. batch1, batch2, batch4 and batch5 keep the five live types. */
+export const PROTOCOL_TYPES: Record<Protocol, readonly QType[]> = { batch1: TYPES, batch2: TYPES, batch3: ALL_TYPES, batch4: TYPES, batch5: TYPES };
 /** Protocols whose freeze records the gbrain version and GBRA-398 visibility epoch, and whose counted run refuses the other epoch. */
-export const EPOCH_PROTOCOLS: readonly Protocol[] = ['batch3', 'batch4'];
+export const EPOCH_PROTOCOLS: readonly Protocol[] = ['batch3', 'batch4', 'batch5'];
 /** Protocols whose scorecard carries a simultaneous band over its success@5 comparisons (the G2 replication, predictive-measures amendment of 2026-11-11). */
 export const FAMILY_PROTOCOLS: readonly Protocol[] = ['batch4'];
 type Comparison = { id: string; a: Arm; b: Arm; form: Form | 'all' | 'exact_vs_paraphrase'; primary?: 'P1' | 'P2'; windowed?: boolean; type?: QType };
@@ -220,7 +223,7 @@ const SECONDARIES: Comparison[] = [
  * sharpens P1 to paraphrases and keeps batch 1's all-forms P1 as a secondary
  * replication; the freeze names the protocol, so a counted run cannot pick it.
  * batch4 (the G2 held-out replication) asks batch 2's comparisons of a fourth,
- * independent question set.
+ * independent question set, and batch5 (the gap at gbrain's newest release) of a fifth.
  */
 const BATCH2: Comparison[] = [
   { id: 'p1_hybrid_vs_hybrid_lexical_paraphrase', a: 'hybrid_lexical', b: 'hybrid', form: 'paraphrase', primary: 'P1' },
@@ -232,6 +235,7 @@ export const COMPARISONS: Record<Protocol, Comparison[]> = {
   batch1: [{ id: 'p1_hybrid_vs_hybrid_lexical', a: 'hybrid_lexical', b: 'hybrid', form: 'all', primary: 'P1' }, P2, ...SECONDARIES],
   batch2: BATCH2,
   batch4: BATCH2,
+  batch5: BATCH2,
   batch3: [
     { id: 'p1_configured_vs_hybrid_lexical_freshness', a: 'hybrid_lexical', b: 'configured', form: 'all', type: 'freshness', primary: 'P1' },
     { id: 'p2_configured_vs_hybrid_lexical_entity', a: 'hybrid_lexical', b: 'configured', form: 'all', type: 'entity', primary: 'P2' },

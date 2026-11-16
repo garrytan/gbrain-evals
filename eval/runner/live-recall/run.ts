@@ -7,8 +7,8 @@
  *   bun eval/runner/live-recall/run.ts run --fixture
  *   bun eval/runner/live-recall/run.ts run --synthetic <dir from eval/generators/conditions-recall-gen.ts or batch3-synthetic-gen.ts> [--protocol batch3] [--out <dir>]
  *     [--paid --budget-run-id <id> [--budget-ledger <path>]]   (Voyage embeddings and rerank; see synthetic.ts)
- *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json> [--protocol batch1|batch2|batch3|batch4] [--gbrain <checkout>@<commit>]
- *     [--prior <batch 1 file> --prior <batch 2 file> --prior <batch 3 file>]   (batch4 only, required: the held-out check)
+ *   bun eval/runner/live-recall/run.ts freeze --questions <private.jsonl> --out <freeze.json> [--protocol batch1|batch2|batch3|batch4|batch5] [--gbrain <checkout>@<commit>]
+ *     [--prior <batch 1 file> --prior <batch 2 file> --prior <batch 3 file> [--prior <batch 4 file>]]   (batch4 and batch5 only, required: the held-out check)
  *   bun eval/runner/live-recall/run.ts run --questions <private.jsonl> --freeze <freeze.json> \
  *     --gbrain <gbrain checkout>@<commit> [--database-url-env LIVE_RECALL_DATABASE_URL] [--out <dir>]
  *   bun eval/runner/live-recall/run.ts compare --a <run dir> --b <run dir> --out <dir>
@@ -42,7 +42,7 @@ import { visibilityEpoch } from './visibility-epoch.ts';
 import type { Transports } from './synthetic.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from '../budget-ledger.ts';
 import { PaidArmRefusal, paidRequested, requirePaidArm } from '../paid-arm.ts';
-import { ALL_TYPES, ARMS, EPOCH_PROTOCOLS, GOLD_FOUND_BY, KS, PROTOCOLS, PROTOCOL_TYPES, TYPES, buildScorecard, compareRuns, poolRuns, renderMarkdown, scanForLeaks, validateScorecard, versionOrNull, type Arm, type Form, type Protocol, type QType, type QueryRecord, type Status } from './scorecard.ts';
+import { ALL_TYPES, ARMS, EPOCH_PROTOCOLS, FILL_ALPHA, FILL_MIN_WINS, GOLD_FOUND_BY, KS, PROTOCOLS, PROTOCOL_TYPES, TYPES, buildScorecard, compareRuns, poolRuns, renderMarkdown, scanForLeaks, validateScorecard, versionOrNull, type Arm, type Form, type Protocol, type QType, type QueryRecord, type Status } from './scorecard.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export const FIXTURE_DIR = join(REPO_ROOT, 'eval/data/live-recall-v1');
@@ -197,6 +197,15 @@ export const PRIOR_QUESTION_FILES: ReadonlyArray<{ batch: string; protocol: Prot
   { batch: 'batch3', protocol: 'batch3', sha256: 'c023694ef59e03e64fd1b0553b6516f7bccad424b85f0f74bdf95d2a08b6014e' },
 ];
 
+/** The earlier question files a batch 5 freeze is checked against: batch 4's three and batch 4 itself. */
+export const BATCH5_PRIOR_QUESTION_FILES: ReadonlyArray<{ batch: string; protocol: Protocol; sha256: string }> = [
+  ...PRIOR_QUESTION_FILES,
+  { batch: 'batch4', protocol: 'batch4', sha256: '69f923673764fc11aa501a4d3b0efae53ff7d2ec8ce806a32176472662b3ca04' },
+];
+
+/** The protocols whose freeze is a held-out check, and the earlier files each is checked against. */
+export const HELD_OUT_PRIORS: Partial<Record<Protocol, ReadonlyArray<{ batch: string; protocol: Protocol; sha256: string }>>> = { batch4: PRIOR_QUESTION_FILES, batch5: BATCH5_PRIOR_QUESTION_FILES };
+
 const normalForm = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 
 /**
@@ -208,7 +217,7 @@ export function priorOverlap(questions: Question[], priorTexts: string[], expect
   const byHash = new Map(priorTexts.map(text => [sha256(text), text]));
   const missing = expected.filter(p => !byHash.has(p.sha256));
   if (missing.length || byHash.size !== expected.length || priorTexts.length !== expected.length) {
-    throw new LiveRecallAbort('LR_FREEZE_OVERLAP', 'the batch4 freeze needs exactly the ' + expected.length + ' earlier question files, one --prior each (missing sha256 ' + (missing.map(p => p.sha256.slice(0, 12)).join(', ') || 'none') + ', ' + priorTexts.length + ' given, ' + byHash.size + ' distinct)');
+    throw new LiveRecallAbort('LR_FREEZE_OVERLAP', 'the freeze needs exactly the ' + expected.length + ' earlier question files, one --prior each (missing sha256 ' + (missing.map(p => p.sha256.slice(0, 12)).join(', ') || 'none') + ', ' + priorTexts.length + ' given, ' + byHash.size + ' distinct)');
   }
   const prior = expected.flatMap(p => parseQuestions(byHash.get(p.sha256)!, p.protocol));
   const ids = new Set(prior.map(q => q.id));
@@ -229,7 +238,7 @@ export function priorOverlap(questions: Question[], priorTexts: string[], expect
  */
 export function freezeSummaryBatch4(text: string, questions: Question[], gbrain: { version: string }, overlap: ReturnType<typeof priorOverlap>) {
   if (overlap.question_ids || overlap.forms || overlap.gold_pages) {
-    throw new LiveRecallAbort('LR_FREEZE_OVERLAP', 'the new questions share ' + overlap.question_ids + ' question ids, ' + overlap.forms + ' forms and ' + overlap.gold_pages + ' gold pages with batches 1 to 3');
+    throw new LiveRecallAbort('LR_FREEZE_OVERLAP', 'the new questions share ' + overlap.question_ids + ' question ids, ' + overlap.forms + ' forms and ' + overlap.gold_pages + ' gold pages with the earlier batches');
   }
   const base = freezeSummary(text, questions, 'batch2');
   return {
@@ -240,6 +249,19 @@ export function freezeSummaryBatch4(text: string, questions: Question[], gbrain:
     prior_question_files: overlap.files,
     prior_overlap: { question_ids: 0, forms: 0, gold_pages: 0 },
     mde_success_at_5: { ...base.mde_success_at_5, g2_primary_paraphrase_vs_exact_configured: byPd(pd => mde(questions.length, pd)) },
+  };
+}
+
+/**
+ * The batch 5 freeze (the paraphrase gap at gbrain's newest release, and the keyless fill's primary): batch 4's freeze,
+ * checked against the four earlier question files, plus the fill primary's threshold. Fill rows only follow the rows
+ * returned without them, so its exact one-sided sign test holds at FILL_MIN_WINS wins with no losses, whatever N is.
+ */
+export function freezeSummaryBatch5(text: string, questions: Question[], gbrain: { version: string }, overlap: ReturnType<typeof priorOverlap>) {
+  return {
+    ...freezeSummaryBatch4(text, questions, gbrain, overlap),
+    protocol: 'batch5' as const,
+    fill_primary: { test: 'exact_one_sided_sign', alpha: FILL_ALPHA, min_wins_no_losses: FILL_MIN_WINS, smallest_detectable_paraphrase: Math.round((FILL_MIN_WINS / questions.length) * 10000) / 10000 },
   };
 }
 
@@ -514,11 +536,12 @@ export async function liveRecall(o: RunOptions, say: (line: string) => void): Pr
     if (!(PROTOCOLS as readonly string[]).includes(frozenProtocol)) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the freeze names an unknown protocol');
     if (o.protocol && o.protocol !== frozenProtocol) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', '--protocol differs from the protocol in the freeze');
     protocol = frozenProtocol;
-    if (protocol === 'batch4') {
+    const priorFiles = HELD_OUT_PRIORS[protocol];
+    if (priorFiles) {
       const files = frozen.prior_question_files, o = frozen.prior_overlap;
-      const clean = Array.isArray(files) && JSON.stringify(files) === JSON.stringify(PRIOR_QUESTION_FILES.map(p => p.sha256)) && o?.question_ids === 0 && o?.forms === 0 && o?.gold_pages === 0;
-      if (!clean) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the batch4 freeze records no clean check against the three earlier question files (prior_question_files, prior_overlap)');
-      priorCheck = { files: PRIOR_QUESTION_FILES.map(p => p.sha256.slice(0, 12)), question_ids: 0, forms: 0, gold_pages: 0 };
+      const clean = Array.isArray(files) && JSON.stringify(files) === JSON.stringify(priorFiles.map(p => p.sha256)) && o?.question_ids === 0 && o?.forms === 0 && o?.gold_pages === 0;
+      if (!clean) throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the ' + protocol + ' freeze records no clean check against the ' + priorFiles.length + ' earlier question files (prior_question_files, prior_overlap)');
+      priorCheck = { files: priorFiles.map(p => p.sha256.slice(0, 12)), question_ids: 0, forms: 0, gold_pages: 0 };
     }
     if (EPOCH_PROTOCOLS.includes(protocol)) {
       if (typeof frozen.visibility_epoch !== 'string') throw new LiveRecallAbort('LR_FREEZE_MISMATCH', 'the ' + protocol + ' freeze records no visibility_epoch');
@@ -703,15 +726,17 @@ export async function main(argv: string[]): Promise<number> {
   if (command === 'freeze') {
     const path = flag(argv, '--questions'), out = flag(argv, '--out');
     const priors = argv.flatMap((a, i) => (a === '--prior' && argv[i + 1] ? [argv[i + 1]!] : []));
-    if (!path || !out) { console.error('usage: run.ts freeze --questions <file> --out <freeze.json> [--protocol ' + PROTOCOLS.join('|') + '] [--gbrain <checkout>@<commit>] [--prior <file> (batch4: one per earlier batch)]'); return 2; }
+    if (!path || !out) { console.error('usage: run.ts freeze --questions <file> --out <freeze.json> [--protocol ' + PROTOCOLS.join('|') + '] [--gbrain <checkout>@<commit>] [--prior <file> (batch4 and batch5: one per earlier batch)]'); return 2; }
     const text = readFileSync(path, 'utf8');
     const p = (protocol ?? 'batch1') as Protocol;
-    if (priors.length && p !== 'batch4') { console.error('usage: --prior applies only to freeze --protocol batch4'); return 2; }
+    const priorFiles = HELD_OUT_PRIORS[p];
+    if (priors.length && !priorFiles) { console.error('usage: --prior applies only to freeze --protocol batch4 or batch5'); return 2; }
     let summary;
     try {
       const questions = parseQuestions(text, p);
       summary = p === 'batch3' ? freezeSummaryBatch3(text, questions, resolveGbrainUnderTest(gbrainSpecFrom(argv)))
-        : p === 'batch4' ? freezeSummaryBatch4(text, questions, resolveGbrainUnderTest(gbrainSpecFrom(argv)), priorOverlap(questions, priors.map(f => readFileSync(f, 'utf8'))))
+        : p === 'batch4' ? freezeSummaryBatch4(text, questions, resolveGbrainUnderTest(gbrainSpecFrom(argv)), priorOverlap(questions, priors.map(f => readFileSync(f, 'utf8')), priorFiles))
+        : p === 'batch5' ? freezeSummaryBatch5(text, questions, resolveGbrainUnderTest(gbrainSpecFrom(argv)), priorOverlap(questions, priors.map(f => readFileSync(f, 'utf8')), priorFiles))
         : freezeSummary(text, questions, p);
     } catch (error) {
       if (!(error instanceof LiveRecallAbort)) throw error;
