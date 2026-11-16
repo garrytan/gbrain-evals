@@ -23,8 +23,8 @@ stopped at stage 0 on 2026-11-04 because it did not fit the $2,000 planning line
 ## The question
 
 On million-token conversations that no system and no gbrain contributor has seen, written by BEAM's own generator: is
-gbrain at its stable release, reading 8,000 tokens of memory, at most 3.5 points behind each of the two leading memory
-servers, under both BEAM's judge and frontier judges?
+gbrain's newest release at launch, reading 8,000 tokens of memory, at most 3.5 points behind each of the two leading
+memory servers, under both BEAM's judge and frontier judges?
 
 That is a non-inferiority question. It asks whether gbrain is in the leading group, not whether it is first.
 
@@ -163,7 +163,7 @@ Systems are named by role. Product identities, images by digest, locks and capab
 
 | Row | Cell id | System and pin | Configuration | Role |
 |---|---|---|---|---|
-| gbrain | `rs1.gbrain-defaults.rs1-stable`, arm `p` | gbrain at the `stable` tag, `27f8b9d6287c2ba635532c7d3bc015c50e1d769b` (`stable-v0.60.593.0`), not `latest-stable` | `rs1-stable`: F6's brain build (`GBRAIN_F6=1`: gbrain's default fact extraction, the quiesce barrier and the fact index) with F6's arm P retrieval (`query` limit 50, token budget 5,500, facts block on), packed to 8,000 cl100k tokens | subject |
+| gbrain | `rs1.gbrain-defaults.rs1-stable`, arm `p` | gbrain's newest release at wave A's launch, the highest version tag on gbrain's master: v0.60.733.0 (`6ce7195b44a034f85aec811f11fbf862db376f50`) on 2026-11-16, read again at launch | `rs1-stable`: F6's brain build (`GBRAIN_F6=1`: gbrain's default fact extraction, the quiesce barrier and the fact index) with F6's arm P retrieval (`query` limit 50, token budget 5,500, facts block on), packed to 8,000 cl100k tokens | subject |
 | memory-bank server | `rs1.ext-memory-bank.recipe`, `component-b8000` | bundle lock `f54d89df`, capabilities `23a033f4` | `recipe`, exactly as F6 and Q1 ran it, 8,000 tokens | comparator |
 | extract-first server | `rs1.ext-extract-first.common`, `component-b8000` | bundle lock `9777b7a8`, capabilities `0acaff3a` | `common`, Q1's BEAM headline configuration, exactly as F6 and Q1 ran it, 8,000 tokens | comparator |
 | no-memory floor | `rs1.baseline-none.baseline`, `component-b8000` | harness baseline | the question alone | floor, never part of a claim |
@@ -173,17 +173,20 @@ running inside the product under a per-conversation runaway cap (`GBRAIN_F6_EXTR
 under test, not a reader and not a model under test. The cell definitions refuse an F6-mode gbrain cell with no extract
 cap or a zero ingest rate.
 
-**Why the stable tag.** gbrain's `latest-stable` ref is its alpha channel; the `stable` tag is the soaked release. The
-new configuration id `rs1-stable` keeps F6's `f6-master` manifest byte-identical. Before stage 1, a free, keyless
-compatibility smoke ran the stable sha through the gbrain-defaults stack in F6 mode.
+**Why the newest release.** The claim is about the gbrain people install, so the arm measures gbrain's newest release
+when wave A launches: the highest version tag on gbrain's master, read with
+`git ls-remote --tags https://github.com/garrytan/gbrain.git`. That build is then frozen for wave A, wave B and every
+re-read, so every counted number comes from one commit, and the results record it. The configuration id `rs1-stable` is
+kept as a name, so cell ids and receipts don't change; it no longer means gbrain's `stable` tag.
 
-**Smoke result.** On 2026-11-08 the repository's keyless F6 Docker test (`test/eval/gbrain-defaults-f6-docker.test.ts`,
-run from a copy with its pin set to `27f8b9d6`, with every provider key unset) built gbrain at the stable sha on
-`oven/bun:1.4.4-slim`, which meets gbrain's `engines` floor of bun 1.4.4. Against the fake upstream it brought the
-gbrain-defaults stack up in F6 mode, ingested two sessions, ran extraction under the recorded cap with the safe-chunks
-repair and the fact index, and answered a query with arm P's settings (`query`, limit 50, token budget 5,500, facts block
-on) that returned a fact first. All 4 tests passed (33 checks, 143 seconds), with no incompatibility in the shim's F6 mode.
-The smoke measures neither ingest cost nor answer quality; stage 1 measures both.
+**Smoke result.** Before any paid call at a new pin, a free, keyless compatibility smoke runs that sha through the
+gbrain-defaults stack in F6 mode: the repository's keyless F6 Docker test (`test/eval/gbrain-defaults-f6-docker.test.ts`),
+run from a copy with its pin set to that sha and every provider key unset. On 2026-11-16 at v0.60.733.0 (`6ce7195b`) it
+built gbrain on `oven/bun:1.4.4-slim`, which still meets gbrain's `engines` floor of bun 1.4.4. Against the fake upstream it
+brought the gbrain-defaults stack up in F6 mode, ingested two sessions, ran extraction under the recorded cap with the
+safe-chunks repair and the fact index, and answered a query with arm P's settings (`query`, limit 50, token budget 5,500,
+facts block on) that returned a fact first. All 4 tests passed (33 checks, 134 seconds). The smoke measures neither
+ingest cost nor answer quality.
 
 **Why arm P.** On F6's S2b (24 sealed BEAM-1M conversations at gbrain `0ccf2bdd`), arm P scored highest of the MCP
 query arms ([F6 scoreboard](2026-10-29-f6-current-master/scoreboard.md)).
@@ -445,15 +448,19 @@ The yield gate (2 or more drops in the first 5) also pauses minting and goes to 
   the custodian confirms the custody host's key belongs to it.
 - **Custody host readiness.** mint.sh needs uv and Python 3.12 on the custody host, and the Gemini billing probe there
   has not run. Both are mint blockers.
-- **The stable tag moving.** If the `stable` tag moves before the freeze merges, the new sha is re-read and pinned in
-  this file before it freezes.
+- **A newer gbrain release before launch.** gbrain releases several times a day. Wave A's launch reads the tag again
+  and, if a newer release exists, re-pins to it by a dated amendment, with the keyless smoke at that sha, before any paid
+  call. After that the pin doesn't move.
+- **A build the arm's settings weren't chosen on.** Arm P's settings and F6's 0.938 fill rate come from gbrain
+  `0ccf2bdd`. The delivered-context gate applies at the new build as before: a mean fill rate under 0.90 makes gbrain's
+  comparisons descriptive.
 - **Minted versus BEAM's own conversations.** Minted chats may vary differently from BEAM's sealed ones. The pilot
   measures this too.
 
 ## What it can and can't claim
 
-**If it passes:** on newly minted 1M-token conversations written by BEAM's generator from new topics, gbrain at the
-stable tag (`27f8b9d6`), reading 8,000 tokens, is at most 3.5 points behind each of the two leading servers, the
+**If it passes:** on newly minted 1M-token conversations written by BEAM's generator from new topics, gbrain's
+newest release at wave A's launch (the version and commit the results record), reading 8,000 tokens, is at most 3.5 points behind each of the two leading servers, the
 memory-bank server and the extract-first server, under both BEAM's judge and frontier judges, read by Opus 5.5, GPT-6.1
 Sol and particle-1. That puts gbrain in the leading group.
 
@@ -472,7 +479,8 @@ the headline.
 
 - **Freeze commit:** PR 1's merge commit.
 - **verdict.ts SHA-256:** PR 2 cites it at the freeze commit.
-- **gbrain:** `27f8b9d6287c2ba635532c7d3bc015c50e1d769b` (`stable-v0.60.593.0`), re-read on freeze day.
+- **gbrain:** the newest release at wave A's launch, read then and frozen for every counted cell (see the 2026-11-16
+  amendment). At the freeze it was `27f8b9d6287c2ba635532c7d3bc015c50e1d769b` (`stable-v0.60.593.0`).
 - **Server bundles:** memory-bank lock `f54d89df`, capabilities `23a033f4`; extract-first lock `9777b7a8`, capabilities
   `0acaff3a`.
 - **RS1 manifest:** `eval/decisions/datasets/rs1-manifest.json`, filled by the custodian after validation, with the
@@ -959,6 +967,55 @@ commit on the results branch, and the custodian records the commit each pass ran
 Counted cells still run from `de9435047201fbc2e6a980b17f473ba6a576494a` with `rs1-cells.json` SHA-256
 `d89528cedf676bdceefa9948a1b3c7a23c8ba3a1c1799aa33b17bb4d4e4a64ab`, and the final verdict from `d927c88f` or later.
 This change touches neither.
+
+### 2026-11-16: gbrain's newest release at launch, in place of the stable tag
+
+Garry ruled on 2026-11-16 that gbrain evals measure gbrain's newest release, not an older build. No counted RS1 cell has
+run, so RS1 moves to the newest release before wave A. Stage 1 (2026-11-08) and the judge check ran gbrain at
+`27f8b9d6`, and neither is a counted result.
+
+- **The pin.** Arm `p` runs gbrain's newest release at wave A's launch: the highest version tag on gbrain's master, read
+  with `git ls-remote --tags https://github.com/garrytan/gbrain.git` when wave A launches. On 2026-11-16 that is
+  v0.60.733.0 at `6ce7195b44a034f85aec811f11fbf862db376f50`, about 140 releases after `stable-v0.60.593.0`
+  (`27f8b9d6`). Commit `4ec4ab92` pins it.
+- **At launch.** If a newer release exists when wave A launches, a dated amendment commit pins it the same way:
+  `RS1_ASSUMPTIONS` in `eval/runner/q1/cells/definitions.ts`, `rs1-cells.json` regenerated with
+  `bun eval/runner/q1/cells/rs1.ts`, and the two test files that name the pin (`test/eval/rs1-cells.test.ts` and
+  `test/fixtures/rs1/wave-a-identity.json`). The keyless F6 Docker smoke then runs at that sha, and no paid call is made
+  until it passes. That amendment names its commit and the new `rs1-cells.json` SHA-256.
+- **Frozen once counted.** The pin read at wave A's launch holds for wave A, wave B's regenerated cells and every
+  particle-1 re-read. verdict.ts already refuses a receipt whose `GBRAIN_SHA` differs from the committed cells
+  (`test/eval/rs1-verdict.test.ts`), so a result from mixed builds can't be scored.
+- **What changed above.** The question, the gbrain row of the systems table, the paragraph on why the stable tag (now
+  "Why the newest release"), the smoke result, the stable-tag risk, the claim and the freeze line now name the newest
+  release at launch. At the freeze they named `27f8b9d6` (`stable-v0.60.593.0`), and that text stays at `325a1c04`. The
+  stage 1 section still describes stage 1 as it ran, at the stable tag.
+- **Cells.** Only the pin fields change: `gbrain_sha`, `gbrain_version`, and `GBRAIN_SHA` in the gbrain cells' launch
+  environment and their snapshot and restore commands. Stage 1's cells on set RS1-dev2 move too, so any later dev run
+  also measures the newest release. The configuration id `rs1-stable` stays as a name. In wave A's identity fixture
+  only the gbrain row's identity changes, and the other three rows keep theirs.
+- **Compatibility.** The keyless F6 Docker smoke at `6ce7195b` passed all 4 tests (33 checks) on the same
+  `oven/bun:1.4.4-slim` image, and gbrain's `engines` floor is still bun 1.4.4. Beside the same smoke at `27f8b9d6`, with
+  a byte count added to the fake upstream's request log, the new build sent the same two claude-haiku-5-5 extraction
+  requests byte for byte, and every one of its other requests matched one the old build sent. It sent one more: a repeat
+  of a 288-byte embedding request after extraction.
+- **Ingest rates.** Stage 1's measured gbrain ingest rates (API spend and VM hours per million tokens) feed only
+  `pricing.ts`'s cost projection, not N, power or the pilot. gbrain's conversation segmenting
+  (`src/core/facts/conversation-windows.ts`), its extraction model (claude-haiku-5-5 through the reasoning tier) and its
+  embedding default (voyage-4) are the same in both builds, so the projection keeps stage 1's rates. Wave A's ingest
+  receipts measure the rate at the new build, and later projections use them.
+- **Unchanged.** No bar, margin, N rule, reader, judge, cap or verdict rule changes. The judge check stands: it measured
+  how the judges grade answers, and the gbrain build changes only the context gbrain gives the readers. The
+  delivered-context gate applies at the new build as before.
+
+**Code.** Counted cells run from `4ec4ab92b98d18dc8bd70bc2a8afab392dc6a76b` on the results branch, or from the commit a
+launch re-pin names. At `4ec4ab92`, `eval/runner/q1/cells/rs1-cells.json` has SHA-256
+`76a33028a605155cb919e2e34f518e790705b86500e6e6efb1b6f8d606bc2cf6`. This replaces `de9435047201` and `d89528ce` from the
+amendments above, and `de943504` stays an ancestor. Between the two commits, the files counted cells execute (`EXECUTES`
+in `eval/runner/q1/cell.ts`) differ only in this pin (`definitions.ts`, `rs1.ts` and `rs1-cells.json`) and in
+`package.json`'s version field. Minting, the driver and validation keep the code the 2026-11-12 amendment names, and the
+final verdict still runs from `d927c88f` or later. Later commits that change neither the cells nor a file counted cells
+execute don't change this.
 
 ## Disclosures
 

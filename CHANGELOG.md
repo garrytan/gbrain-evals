@@ -57,6 +57,9 @@ This records what each gbrain-evals release changed and what its measurements me
   shape (and keeps asking that window one candidate at a time on later runs), fails a candidate whose own prompt the validator refuses on a new `refusal` gate, and records how each
   unusable reply ended (stop reason, output tokens, content block kinds or HTTP status), never its text. validate.ts is
   unchanged.
+- **gbrain's newest release.** RS1's gbrain arm runs gbrain's newest release when wave A launches, in place of the weekly
+  `stable` tag: v0.60.733.0 (`6ce7195b`) on 2026-11-16, read again at launch and then frozen for every counted cell. Only
+  the pin fields of `rs1-cells.json` change, and the keyless F6 Docker test passes at the new pin.
 - **Records.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` gains its amendments, and
   `docs/benchmarks/2026-11-08-rs1-narrow-results.md` starts with the stage 1 run log. No counted RS1 result exists yet.
 
