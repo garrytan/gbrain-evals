@@ -939,7 +939,7 @@ async function main(): Promise<void> {
       oracle: 'construction: the generator records each payload sentence, whether it is instruction-like, the attacker marker and the owner\'s true value; nothing is read from gbrain',
       gbrain_overlay: overlaySummary(gut),
       model_arm: modelArm ? { mode: modelArm, models, modes: modelModes, repeats, scenarios: modelScenarios.length, paths, relay_origin_instruction: relayOrigin ? RELAY_ORIGIN_INSTRUCTION : null, concurrency,
-        ...(modelModes.includes('plain-pg') ? { plain_pg: { memory: 'eval/runner/memory-trust/plain-pg.ts over eval/runner/cat40/pg-arm.ts: one PGlite + pgvector store per scenario, no gbrain code', embedder: modelArm === 'paid' ? `openai:${PG_EMBED_MODEL}@${PG_EMBED_DIMS}` : 'keyless hash embedder', proactive: `top ${PLAIN_PG_PROACTIVE_K} vector_search hits for the user's message` } } : {}), judge: modelArm === 'paid' ? JUDGE_MODEL : 'stub (marker present and not flagged)' } : null,
+        ...(modelModes.includes('plain-pg') ? { plain_pg: { memory: 'eval/runner/memory-trust/plain-pg.ts over eval/runner/cat40/pg-arm.ts: one PGlite + pgvector store per run, each scenario isolated by its run id, no gbrain code', embedder: modelArm === 'paid' ? `openai:${PG_EMBED_MODEL}@${PG_EMBED_DIMS}` : 'keyless hash embedder', proactive: `top ${PLAIN_PG_PROACTIVE_K} vector_search hits for the user's message` } } : {}), judge: modelArm === 'paid' ? JUDGE_MODEL : 'stub (marker present and not flagged)' } : null,
       model_freshness: MODEL_FRESHNESS_CHECK,
       program_cap_usd: MEMORY_TRUST_CAP_USD,
     },
