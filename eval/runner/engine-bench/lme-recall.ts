@@ -28,9 +28,15 @@
  * count command reports, keylessly, how many characters fill-cache would embed. A plumbing check can run the vector
  * and hybrid arms on a deterministic hash embedder (--plumbing-stub); its scores mean nothing and the receipt says so.
  *
+ * Counted runs. With no --dev a run is counted, as in perf.ts: it refuses to start unless --prereg names a committed,
+ * unchanged preregistration that is on origin, refuses at a one-minute load average above 2, refuses the plumbing stub,
+ * and stops at the first cache miss. The attestation goes into the receipt, into the run configuration hash (so counted
+ * and dev rows never mix in one NDJSON stream) and as one line into each NDJSON shard, which aggregate carries forward.
+ *
  * Run:
- *   bun eval/runner/engine-bench/lme-recall.ts run --engines pglite,postgres,rust --arms keyword --stratify 9 --pg-url <url>
- *   bun eval/runner/engine-bench/lme-recall.ts run --arms keyword,vector,hybrid --plumbing-stub --limit 3
+ *   bun eval/runner/engine-bench/lme-recall.ts run --dev --engines pglite,postgres,rust --arms keyword --stratify 9 --pg-url <url>
+ *   bun eval/runner/engine-bench/lme-recall.ts run --dev --arms keyword,vector,hybrid --plumbing-stub --limit 3
+ *   bun eval/runner/engine-bench/lme-recall.ts run --prereg <path> --pg-url <url>
  *   bun eval/runner/engine-bench/lme-recall.ts count [--stratify N] [--limit N]
  *   bun eval/runner/engine-bench/lme-recall.ts fill-cache --paid --budget-run-id <id> [--budget-ledger <path>]
  *
@@ -40,7 +46,7 @@
  */
 import { createHash } from 'node:crypto';
 import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir, tmpdir } from 'node:os';
+import { homedir, loadavg, tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { SQL } from 'bun';
 import { embedMany as aiSdkEmbedMany } from 'ai';
@@ -54,6 +60,7 @@ import { assertEmbedded } from '../import-embedded.ts';
 import { uniqueInOrder, percentile } from '../metrics.ts';
 import { clusteredPairedDelta, exactMcNemar, type PairedItem } from '../stats/paired.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from '../budget-ledger.ts';
+import { attestPreregistration, type Attestation } from '../prereg.ts';
 import { assertPayload, withPermitted } from '../evaluator/allowlist.ts';
 import {
   lmeForbiddenValues, lmeSessionMaterial, loadLongMemEvalGold, longMemEvalSutView, scoreLmeRetrieval, LME_SUT_PAGE, LME_SUT_QUERY,
@@ -485,6 +492,8 @@ export interface LmeRecallReceipt extends RowsSummary {
   schema: typeof LME_RECALL_SCHEMA;
   started_at: string;
   finished_at: string;
+  counted: boolean;
+  preregistration_attestation: Attestation | null;
   gbrain: { version: string; overlay: Record<string, unknown> | null };
   dataset: {
     file: string; sha256: string; matches_published_sha256: boolean; total_questions: number; selected: number; abstention_selected: number;
@@ -565,24 +574,30 @@ function configureEmbedding(mods: GbrainModules, embedding: { model: string; dim
 export function lmeRunConfigHash(o: {
   gbrain: { version: string; commit: string | null }; datasetSha256: string; arms: readonly LmeArm[];
   embedder: { mode: EmbedderMode; model: string | null; dimensions: number | null }; engine: EvalEngineKind;
+  preregistration?: { path: string; commit: string };
 }): string {
   return createHash('sha256').update(canonicalJson({
     schema: LME_RECALL_SCHEMA, top_k: LME_RECALL_TOP_K, search_config: { ...PINNED_SEARCH_CONFIG }, ...o, arms: [...o.arms],
   })).digest('hex');
 }
 
-/** Rows from an NDJSON stream. A line cut short by a kill is skipped, so that question runs again. */
-export function readLmeRows(path: string): QuestionRow[] {
-  if (!existsSync(path)) return [];
-  const rows: QuestionRow[] = [];
+/** Rows and counted-run attestations from an NDJSON stream. A line cut short by a kill is skipped, so that question runs again. */
+export function readLmeStream(path: string): { rows: QuestionRow[]; attestations: Attestation[] } {
+  const out = { rows: [] as QuestionRow[], attestations: [] as Attestation[] };
+  if (!existsSync(path)) return out;
   for (const line of readFileSync(path, 'utf8').split('\n')) {
     if (!line.trim()) continue;
     try {
-      const row = JSON.parse(line) as QuestionRow;
-      if (row?.engine && row?.question_id) rows.push(row);
+      const value = JSON.parse(line);
+      if (value?.engine && value?.question_id) out.rows.push(value as QuestionRow);
+      else if (value?.preregistration_attestation) out.attestations.push(value.preregistration_attestation as Attestation);
     } catch { /* truncated line: re-run */ }
   }
-  return rows;
+  return out;
+}
+
+export function readLmeRows(path: string): QuestionRow[] {
+  return readLmeStream(path).rows;
 }
 
 const rowKey = (r: Pick<QuestionRow, 'engine' | 'question_id'>) => r.engine + '::' + r.question_id;
@@ -613,6 +628,8 @@ export interface RunLmeRecallOptions {
   workDir?: string;
   perQuestionTimeoutMs?: number;
   log?: (line: string) => void;
+  /** Makes the run counted: the committed preregistration it attests. Absent means a dev run. */
+  prereg?: string;
 }
 
 export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallReceipt> {
@@ -625,6 +642,13 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
   if (!Number.isInteger(totalWorkers) || totalWorkers < 1 || !Number.isInteger(workerId) || workerId < 0 || workerId >= totalWorkers) {
     throw new Error('--worker-id must be an integer from 0 to --total-workers - 1 (got ' + workerId + ' of ' + totalWorkers + ')');
   }
+  let attestation: Attestation | null = null;
+  if (o.prereg !== undefined) {
+    if (o.embedder === 'plumbing-stub') throw new Error('a counted run reads real vectors from the cache; --plumbing-stub is for --dev runs only');
+    attestation = attestPreregistration(o.prereg, REPO_ROOT);
+    const load = loadavg()[0];
+    if (load > 2) throw new Error('load average ' + load.toFixed(2) + ' is above 2 at launch; a counted run needs the machine to itself');
+  }
   const seed = o.seed ?? 42;
   const ds = loadDataset(o.datasetPath ?? defaultDatasetPath(), { limit: o.limit, stratify: o.stratify, seed });
   const mine = ds.questions.filter((_, i) => i % totalWorkers === workerId);
@@ -635,6 +659,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
   const embedderId = { mode, model: needsVectors ? embedding.model : null, dimensions: needsVectors ? embedding.dimensions : null };
   const hashes: Partial<Record<EvalEngineKind, string>> = Object.fromEntries(o.engines.map(engine => [engine, lmeRunConfigHash({
     gbrain: { version: o.gut.version, commit: o.gut.overlay?.build.commit ?? null }, datasetSha256: ds.sha256, arms, embedder: embedderId, engine,
+    preregistration: attestation ? { path: attestation.preregistration, commit: attestation.preregistration_commit } : undefined,
   })]));
   const prior = o.ndjsonPath ? readLmeRows(o.ndjsonPath) : [];
   const stale = prior.filter(r => r.error === undefined && r.engine in hashes && r.run_config_hash !== hashes[r.engine]);
@@ -649,6 +674,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
     mkdirSync(dirname(o.ndjsonPath), { recursive: true });
     const existing = existsSync(o.ndjsonPath) ? readFileSync(o.ndjsonPath, 'utf8') : '';
     if (existing && !existing.endsWith('\n')) appendFileSync(o.ndjsonPath, '\n');
+    if (attestation) appendFileSync(o.ndjsonPath, JSON.stringify({ preregistration_attestation: attestation, shard: { worker_id: workerId, total_workers: totalWorkers } }) + '\n');
   }
   const cachePath = mode === 'cache' ? o.cachePath ?? defaultCachePath(embedding.model, embedding.dimensions) : null;
   if (cachePath !== null && !existsSync(cachePath)) {
@@ -685,6 +711,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
         let row: QuestionRow;
         try {
           row = await runQuestion(mods, f, ds, q, arms, timeout);
+          if (misses.n > 0) throw new EmbedCacheMiss('cache miss swallowed inside gbrain');
         } catch (e) {
           if (misses.n > 0 || e instanceof EmbedCacheMiss) {
             throw new EmbedCacheMiss(misses.n + ' text(s) for ' + q.question_id + ' are missing from the embedding cache ' + cachePath + '. The counted run stopped instead of calling a provider; fill the cache first.');
@@ -717,6 +744,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
   return {
     schema: LME_RECALL_SCHEMA,
     started_at, finished_at: new Date().toISOString(),
+    counted: attestation !== null, preregistration_attestation: attestation,
     gbrain: { version: o.gut.version, overlay: overlaySummary(o.gut) },
     dataset: {
       file: basename(ds.path), sha256: ds.sha256, matches_published_sha256: ds.sha256 === PUBLISHED_LME_S_SHA256, total_questions: ds.totalQuestions,
@@ -743,12 +771,21 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
 
 /**
  * Combine the NDJSON streams of sharded workers into one summary. Each engine must carry a single run configuration;
- * a question that appears more than once keeps its last clean row.
+ * a question that appears more than once keeps its last clean row. A counted aggregate needs an attestation in every
+ * shard and lists each one (one per process start) under preregistration_attestation.
  */
-export function aggregateLmeRows(paths: readonly string[]): RowsSummary & { ndjson: string[]; run_config_hashes: Partial<Record<EvalEngineKind, string>>; arms: LmeArm[]; rows: QuestionRow[] } {
+export function aggregateLmeRows(paths: readonly string[]): RowsSummary & {
+  ndjson: string[]; counted: boolean; preregistration_attestation: Array<Attestation & { ndjson: string }> | null;
+  run_config_hashes: Partial<Record<EvalEngineKind, string>>; arms: LmeArm[]; rows: QuestionRow[];
+} {
   const byKey = new Map<string, QuestionRow>();
+  const attestations: Array<Attestation & { ndjson: string }> = [];
+  const unattested: string[] = [];
   for (const path of paths) {
-    for (const r of readLmeRows(path)) {
+    const stream = readLmeStream(path);
+    if (stream.attestations.length === 0) unattested.push(path);
+    attestations.push(...stream.attestations.map(a => ({ ndjson: path, ...a })));
+    for (const r of stream.rows) {
       const prev = byKey.get(rowKey(r));
       if (!prev || r.error === undefined || prev.error !== undefined) byKey.set(rowKey(r), r);
     }
@@ -760,9 +797,11 @@ export function aggregateLmeRows(paths: readonly string[]): RowsSummary & { ndjs
     if (hashes[r.engine] !== undefined && hashes[r.engine] !== h) throw new Error('engine ' + r.engine + ' has rows from more than one run configuration; aggregate one configuration at a time.');
     hashes[r.engine] = h;
   }
+  if (attestations.length > 0 && unattested.length > 0) throw new Error('counted and dev shards are mixed: ' + unattested.join(', ') + ' carries no preregistration attestation.');
   const ran = EVAL_ENGINES.filter(k => k in hashes);
   const arms = LME_ARMS.filter(a => rows.some(r => r.arms[a]));
-  return { ndjson: [...paths], run_config_hashes: hashes, arms, ...summarizeRows(rows, ran, arms), rows };
+  const counted = attestations.length > 0;
+  return { ndjson: [...paths], counted, preregistration_attestation: counted ? attestations : null, run_config_hashes: hashes, arms, ...summarizeRows(rows, ran, arms), rows };
 }
 
 // ─── count and fill-cache ──────────────────────────────────────────
@@ -981,7 +1020,8 @@ const list = (v: string) => v.split(',').map(s => s.trim()).filter(Boolean);
 
 export const USAGE = [
   'usage: bun eval/runner/engine-bench/lme-recall.ts <run|aggregate|count|fill-cache> [options]',
-  '  run         [--engines pglite,postgres,rust] [--arms keyword,vector,hybrid] [--pg-url <url>] [--plumbing-stub] [--out <file>]',
+  '  run         --dev | --prereg <path>                                no --dev means counted: attest, load average <= 2, no cache miss',
+  '              [--engines pglite,postgres,rust] [--arms keyword,vector,hybrid] [--pg-url <url>] [--plumbing-stub] [--out <file>]',
   '              [--ndjson <file>] [--worker-id N --total-workers M]   resume from and append to the stream; run one shard',
   '  aggregate   --ndjson <a.ndjson,b.ndjson,...> [--out <file>]       combine sharded workers into one summary',
   '  count       print what fill-cache would embed, keyless',
@@ -1016,6 +1056,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     process.stderr.write('[lme-recall] aggregate: ' + out + '\n');
     return 0;
   }
+  const dev = argv.includes('--dev'), prereg = flag(argv, '--prereg') ?? undefined;
+  if (cmd === 'run' && dev === (prereg !== undefined)) {
+    throw new Error(dev ? 'pass --dev or --prereg, not both.' : 'A counted run needs --prereg <committed preregistration>; pass --dev for an uncounted run.');
+  }
   const shared = {
     gut: resolveGbrainUnderTest(gbrainSpecFrom(argv)),
     datasetPath: flag(argv, '--dataset') ?? undefined, cachePath: flag(argv, '--cache') ?? undefined,
@@ -1038,6 +1082,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     ndjsonPath: flag(argv, '--ndjson') ?? undefined,
     workerId: num(flag(argv, '--worker-id')) ?? 0,
     totalWorkers: num(flag(argv, '--total-workers')) ?? 1,
+    prereg,
   });
   const out = flag(argv, '--out') ?? join(reports, 'lme-recall-' + receipt.started_at.replace(/[:.]/g, '-') + '.json');
   writeJson(out, receipt);

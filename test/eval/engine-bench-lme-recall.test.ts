@@ -265,6 +265,33 @@ describe('sharding and NDJSON resume', () => {
     writeFileSync(path, [{ ...base, question_id: 'a', run_config_hash: 'x' }, { ...base, question_id: 'b', run_config_hash: 'y' }].map(r => JSON.stringify(r)).join('\n') + '\n');
     expect(() => aggregateLmeRows([path])).toThrow(/more than one run configuration/);
   });
+
+  test('aggregate carries each shard attestation and refuses counted shards mixed with dev shards', () => {
+    const base = { engine: 'pglite', question_type: 't', is_abs: false, num_sessions: 1, arms: {}, timing_ms: { open: 0, import: 0, search: 0, total: 0 }, run_config_hash: 'c' };
+    const attestation = { preregistration: 'docs/p.md', preregistration_commit: 'abc', runner_commit: 'def', worktree_clean_for_preregistration: true, on_origin: true, attested_at: '2026-11-17T00:00:00.000Z' };
+    const [a, b, dev] = [nd('counted-0.ndjson'), nd('counted-1.ndjson'), nd('dev.ndjson')];
+    writeFileSync(a, JSON.stringify({ preregistration_attestation: attestation, shard: { worker_id: 0, total_workers: 2 } }) + '\n' + JSON.stringify({ ...base, question_id: 'a' }) + '\n');
+    writeFileSync(b, JSON.stringify({ preregistration_attestation: attestation, shard: { worker_id: 1, total_workers: 2 } }) + '\n' + JSON.stringify({ ...base, question_id: 'b' }) + '\n');
+    writeFileSync(dev, JSON.stringify({ ...base, question_id: 'c' }) + '\n');
+    const counted = aggregateLmeRows([a, b]);
+    expect(counted.counted).toBe(true);
+    expect(counted.rows).toHaveLength(2);
+    expect(counted.preregistration_attestation?.map(x => x.ndjson)).toEqual([a, b]);
+    expect(aggregateLmeRows([dev]).preregistration_attestation).toBeNull();
+    expect(() => aggregateLmeRows([a, dev])).toThrow(/counted and dev shards are mixed/);
+  });
+});
+
+describe('counted runs', () => {
+  test('a run without --dev and without --prereg is refused, and so is one with both', async () => {
+    await expect(main(['run', '--limit', '1'])).rejects.toThrow(/counted run needs --prereg/);
+    await expect(main(['run', '--dev', '--prereg', 'docs/x.md', '--limit', '1'])).rejects.toThrow(/not both/);
+  });
+
+  test('a counted run refuses the plumbing stub and a preregistration that is not committed', async () => {
+    await expect(runLmeRecall({ gut: pinned, engines: ['pglite'], arms: ['vector'], embedder: 'plumbing-stub', prereg: 'docs/x.md', log: quiet })).rejects.toThrow(/--dev runs only/);
+    await expect(runLmeRecall({ gut: pinned, engines: ['pglite'], arms: ['keyword'], prereg: 'docs/no-such-preregistration.md', log: quiet })).rejects.toThrow(/does not exist/);
+  });
 });
 
 describe('no provider calls', () => {
