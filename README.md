@@ -43,54 +43,73 @@ capability and what changed between those commits and the pin.
   is cost: with one question per history, its reader cost per question was about a seventh of the whole history's. A
   history asked several questions can be read from a prompt cache after the first, which we haven't measured.
 
+Each row of the first table names the alternative a developer would use instead of gbrain, measured on the same tasks.
+The second table lists results whose alternative is being measured now, and names it. The third holds checks of
+gbrain's own behaviour, such as `forget` leaving nothing behind or a sync catching up, where there is nothing to
+compare against.
+
 | What we measure | Without gbrain | With gbrain | gbrain commit | Report |
 |---|---|---|---|---|
 | **Agents answering with and without gbrain** | | | | |
 | Questions about one person's own notes, asked in other words (99 tasks on Garry Tan's own brain), Opus 5.5 | 13.3% with no retrieval | **86.7%** with gbrain's tools (+73.5 points, 95% interval 63.9 to 82.5)¹ | `98dda48fb9fd` (v0.60.613.0) | [Live recall](docs/benchmarks/2026-11-09-live-recall-phase2.md) |
 | The same questions, particle-1 | 9.3% with no retrieval | **68.0%** with gbrain's tools (+58.8 points, 48.5 to 68.8)¹ ² | `98dda48fb9fd` (v0.60.613.0) | [Live recall](docs/benchmarks/2026-11-09-live-recall-phase2.md) |
 | Hard questions about a large, messy company, answered by agents (two worlds of about 55,000 documents; Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | the same files with `grep`: 71.0% on a fresh world, 53.0% on a sealed one | **78.7%** and **66.0%** (+7.7 points, 95% interval +2.7 to +12.7; +13.0, +7.7 to +18.3)³ | `3e4ff61ce` (shipped as v0.60.174.0) | [Hard company questions](docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md) |
-| The same kind of questions on two newer sealed worlds, with the configuration that ships (same three models) | the same files with `grep` | **+10.67 points** ahead of files (95% interval +7.00 to +14.50)⁴ | `4e10136b4` | [Hard questions, next build](docs/benchmarks/2026-10-15-cat40-next-confirm/README.md) |
+| The same kind of questions on two newer sealed worlds, with the configuration that ships (same three models) | the same files with `grep`: 318 of 600 (53.0%) | **382 of 600 (63.7%)**, +10.67 points ahead of files (95% interval +7.00 to +14.50)⁴ | `4e10136b4` | [Hard questions, next build](docs/benchmarks/2026-10-15-cat40-next-confirm/README.md) |
 | Finance-only text reaching an agent's context in 100 permission runs, on the first, easier company world (five frontier models) | the same files: 100; plain Postgres: 97, with 4 leaked answers | **0** | `51f865d78` | [Permission runs](docs/benchmarks/2026-10-02-model-ladder.md) |
 | Right answers on 150 LongMemEval questions, against pasting each whole history (about 50 conversations) into the prompt | whole history: 144 (Sonnet 5.5 reader) and 141 (GPT-6.1 Sol) of 150 | **139** and **137** of 150, within the preregistered 7-point margin, at about a seventh of the reader cost per question, with one question per history⁵ | `c5fb0201` | [Whole-history comparison](docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md) |
 | Right answers about very long chat histories (BEAM-10M, never used to tune gbrain; three answer models, 8,000 tokens of memory) | the question alone: 25.8% | **56.3%** (197 of 199 questions scored)⁶ | `f05943e6` (v0.60.138.0) | [Head-to-head scoreboard](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md) |
 | The same questions, against an agent with list, `grep` and read tools over the same files (each at its own default amount of evidence) | the file agent: 67.6% | **58.9%** on the 198 questions scored for both, a gap this test can't separate⁶ | `f05943e6` (v0.60.138.0) | [Head-to-head scoreboard](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md) |
 | **Finding the right evidence** | | | | |
-| Finding every conversation a question needs in the top five results (LongMemEval; a question counts only if all its conversations are found) | not tested | **451 of 470 (95.96%)** | `109b992` | [Recount](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md) |
-| Right answers on LongMemEval with gbrain's release search settings and a Sonnet 5.5 reader (gbrain's note-taking benchmark reader, not its production `think`; official GPT-4o judge) | not tested | **468 of 500 (93.6%)** | `c5fb0201` | [End to end at the pin of the day](docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) |
-| A newer reader, Opus 5.5, reading search results saved on September 29 (official GPT-4o judge) | not tested | **474 of 500 (94.8%)**, above Sonnet 4.6's 451 on the same saved results (Holm-adjusted p = 0.0002)⁷ | `a7cb37b` retrieval | [Reader replay](docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
-| Handing the reader whole conversations instead of bare passages (a sealed set never used in development) | not tested | **192 vs 132 of 200** (60 gained, 0 lost) | `d44296c` | [Sealed decision](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md) |
+| Handing the reader whole conversations instead of bare passages (a sealed set never used in development) | the question alone, no memory: 40 of 200, every one an abstention (0 of the 160 answerable), with the same reader (Sonnet 4.6) and judge in the set's solvability check | **192 vs 132 of 200** (60 gained, 0 lost) | `d44296c` | [Sealed decision](docs/benchmarks/2026-10-02-sealed-v2-decision-1.md) |
 | Concept questions in other words, the right page ranked first (with reranker) | a plain vector index: 118, or 128 with the same Voyage reranker | **130 of 181**, level with the reranked vector index | `d44296c` | [Concept search](docs/benchmarks/2026-10-02-concept-vector-rerank.md) |
-| Reworded one-hop relationship questions, recall in the top five | not tested | **0.411 → 0.537**, 19 better, 0 worse | `3a284ae` | [Relationship questions](docs/benchmarks/2026-10-01-n9-multi-hop.md) |
-| Questions chaining two or three relationships (multi-relation planner, held-out) | not tested | **24 better, 0 worse**; +27 points in the share of questions with every answer in the top ten | `94bd52e01` (shipped in v0.60.60.0) | [Held-out program](docs/benchmarks/2026-10-05-heldout-program.md) |
-| Meeting attendance from a `## Attendees` list of links, the form gbrain documents | not tested | **132 of 132** attendees stored, 0 false; "who attended" recall in the top five 32% → 80% | `c5fb0201` | [Attendance world](docs/benchmarks/2026-10-06-attendance-world.md) |
-| A search that quotes a saved message word for word (LongMemEval-S, 500 questions) | not tested | **500 of 500** return the conversation as a clean read (was 429); strict recall in the top ten unchanged at 496 | `fecc7827` (merged as `f05943e65`) | [Verbatim probe](docs/benchmarks/2026-10-09-verbatim-probe-preregistration.md) |
-| Vector search inside a 10% source or visibility scope, 1M to 2M chunks on Postgres | not tested | recall in the top 50 **0.96 to 0.99** (was 0.52 to 0.77)⁸ | `2e84d234e` | [Scoped vector search](docs/benchmarks/2026-10-09-hnsw-scale.md) |
-| Returning only the right facts (PrecisionMemBench, which penalises extra results; tight mode with reranker) | not tested | **0.586 precision**, 0.825 recall | `2efaaf8f` | [Retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) |
-| Graph walks on fictional graphs of 10,000 to 1,000,000 pages: Postgres against HydraDB as the walk engine | not tested | Postgres faster at every size, same answer on all 54,842 compared calls: 95th-percentile warm time **1.44 s vs 6.28 s** at 100,000 pages and 3.45 s vs 6.28 s at 1,000,000⁹ | `fc1121cae58` | [Graph backend](docs/benchmarks/2026-10-17-graph-backend.md) |
+
+**Results whose baseline is being measured.** Each row names the no-gbrain arm running on the same tasks, reader and judge.
+
+| What we measure | Baseline being measured | With gbrain | gbrain commit | Report |
+|---|---|---|---|---|
+| **Finding the right evidence** | | | | |
+| Finding every conversation a question needs in the top five results (LongMemEval; a question counts only if all its conversations are found) | plain Postgres full-text plus pgvector search, fused by reciprocal rank, on the same 470 questions | **451 of 470 (95.96%)** | `109b992` | [Recount](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md) |
+| Right answers on LongMemEval with gbrain's release search settings and a Sonnet 5.5 reader (gbrain's note-taking benchmark reader, not its production `think`; official GPT-4o judge) | the whole history in the prompt, plain hybrid search's top five conversations, and the question alone, each with the same reader and judge | **468 of 500 (93.6%)** | `c5fb0201` | [End to end at the pin of the day](docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) |
+| A newer reader, Opus 5.5, reading search results saved on September 29 (official GPT-4o judge) | plain hybrid search's top five conversations, read by Opus 5.5 and graded by the same judge | **474 of 500 (94.8%)**, above Sonnet 4.6's 451 on the same saved results (Holm-adjusted p = 0.0002)⁷ | `a7cb37b` retrieval | [Reader replay](docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
+| A search that quotes a saved message word for word (LongMemEval-S, 500 questions) | the same quote and the question, sent to plain hybrid search | **500 of 500** return the conversation as a clean read (was 429); strict recall in the top ten unchanged at 496 | `fecc7827` (merged as `f05943e65`) | [Verbatim probe](docs/benchmarks/2026-10-09-verbatim-probe-preregistration.md) |
+| Reworded one-hop relationship questions, recall in the top five | a keyword (BM25) ranker, vector-only search and plain hybrid search over the same pages and wordings | **0.411 → 0.537**, 19 better, 0 worse¹⁶ | `3a284ae` | [Relationship questions](docs/benchmarks/2026-10-01-n9-multi-hop.md) |
+| Meeting attendance from a `## Attendees` list of links, the form gbrain documents | a keyword (BM25) ranker and plain hybrid search over the same world | **132 of 132** attendees stored, 0 false; "who attended" recall in the top five 32% → 80% | `c5fb0201` | [Attendance world](docs/benchmarks/2026-10-06-attendance-world.md) |
+| Returning only the right facts (PrecisionMemBench, which penalises extra results; tight mode with reranker) | plain hybrid search cut to one result, the size tight mode returns | **0.586 precision**, 0.825 recall | `2efaaf8f` | [Retrieval refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) |
 | **Keeping memory correct, private and safe** | | | | |
-| Serving the new value after an update | not tested | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP¹⁰ | `77cf8e111` | [Knowledge updates](docs/benchmarks/2026-10-01-n1-knowledge-update.md) |
-| Nothing left behind after `forget` | not tested | **0** prohibited outputs, 6 of 6 reinstatements¹⁰ | `77cf8e111` | [Forget residue](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
-| Private pages reaching agent callers or remote callers | not tested | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller)¹⁰ | `77cf8e111` | [Privacy on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md) |
-| Keeping speaker and time across chat export formats | not tested | **29 of 29** formats¹⁰ | `77cf8e111` | [Chat formats](docs/benchmarks/2026-10-01-n12-format-fidelity.md) |
-| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | not tested | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; the checks that need no API keys pass at the pin, and CI runs them on every pull request | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `6ce7195b4` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md) |
-| One very large document stored as one page (2 MB to 260 MiB, under the preregistered rules) | not tested | **Every preregistered rule passes**: 0 crashes, 0 responses over 1 MiB, 0 bytes lost on export, keyword recall in the top ten 1.00 at 2 MB¹¹ | `7a6bdd3` (v0.60.454.0) | [Large pages](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md) |
-| Finding notes that contradict each other | not tested | **146 of 150** conflicts with the default judge model (`claude-haiku-4-5`); 0 of 40 dated changes and 4 of 51 compatible pairs flagged | `77cf8e111` | [Contradiction re-run](docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm) |
-| Contradiction judging on current models | not tested | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models; the cheapest passing one costs $0.24 per 1,000 pairs | `c5fb0201` | [Contradiction judges](docs/benchmarks/2026-10-06-n2-judges.md) |
-| Crediting someone else's claim to the page's owner (the classifier for takes, gbrain's saved claims, still experimental) | not tested | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5) | `c5fb0201` | [Takes](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
-| Real agents (Claude Code, Codex) spending money or destroying data without consent | not tested | **0** violations in 66 safety sessions; 96 of 102 tasks finished | `b3f4e8b` (shipped in v0.60.46.0) | [Agent operator](docs/benchmarks/2026-10-03-agent-operator.md) |
+| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | an agent whose memory is plain Postgres keyword and vector search, with the same scenarios and models | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; the checks that need no API keys pass at the pin, and CI runs them on every pull request | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `6ce7195b4` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md) |
+| Finding notes that contradict each other | the same model with a plain prompt on the same candidate pairs | **146 of 150** conflicts with the default judge model (`claude-haiku-4-5`); 0 of 40 dated changes and 4 of 51 compatible pairs flagged | `77cf8e111` | [Contradiction re-run](docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm) |
+| Contradiction judging on current models | the same four models with a plain prompt on the same pairs | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models; the cheapest passing one costs $0.24 per 1,000 pairs | `c5fb0201` | [Contradiction judges](docs/benchmarks/2026-10-06-n2-judges.md) |
 | **Writing and syncing memory** | | | | |
-| Timeline events extracted from meetings and chats | not tested | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [Timeline extraction](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
-| Useful material kept when an agent session becomes a memory page | not tested | **88.1%** judged, while the judge's calibration awaits a person's review; 74.9% with quoted evidence | `079941d2` (shipped as v0.47.8.0) | [Session pages](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
-| Catching up a 10,000-file backlog on managed Postgres 57 ms from the database | not tested | **367.9 pages/min** steady, **33.6 min** for the backlog (was 174.8 pages/min and 74.5 min on the same rig); a page save 2.5 s instead of 8.6 s | `0ba3b1f7c` (merged as `9d013e52d`, v0.60.111.0) | [Sync lanes](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md) |
-| The same catch-up when one write can't finish preparing (15,000 entries, heavy fact adoption, a connection pooler in transaction mode) | not tested | drains in **2 passes** (91 min, 10 connections) and 3 passes (3 connections), with no failed fact adoptions and no watchdog stops; v0.60.105.0 never drained¹² | `846bea442` (15,000 entries) and `a99c00565` (table lock), merged as `b65d4bae7` (v0.60.112.0) | [Preparation stall](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md) |
-| A managed Postgres sync behind a connection pooler in transaction mode whose round trip never completes | not tested | wedges with one sync process running alone on v0.60.110.0 and on the stall fix's head; **0 wedges in 2 h 49 min** with two consumers (4,951 pages)¹³ | `1935c74a` (v0.60.110.0) | [Stuck connection](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md) |
-| A one-file commit becoming keyword-searchable through a running `gbrain serve` (10,000 synthetic pages, local database, 4 vCPUs) | not tested | **0.60 s** median on Postgres when watching for commits (95th percentile 0.61 s, n = 40), was 3.7 s on managed sources; 2.15 s median when polling¹⁴ | `4ba4c36f` (v0.60.316.0) | [Sync freshness](docs/benchmarks/2026-10-19-sync-freshness.md) |
-| The first managed sync of a brain that classic sync had already brought up to date (synthetic pages, local database, 4 vCPUs) | not tested | converges in **1 pass** on every run: 10,000 pages in 13.2 s on Postgres and 12.9 s on PGLite, 100,000 pages in **129.6 s** | `426c4ef5` (merged as `c9f309f3`, v0.60.320.0) | [First managed sync](docs/benchmarks/2026-10-19-sync-freshness.md#first-managed-sync-after-activating-a-classic-brain-gbrain-v0603200-6712-pr-4b) |
-| **Judgment calls by a model** | | | | |
-| Broken facts and takes tables (gbrain's tables of saved facts and claims) repaired by a model without a wrong cell (held-out set, model step only) | not tested | **96.0%** repaired, **0** wrong cells (gpt-6.1-sol and claude-opus-5-5, the measured defaults); every other case held | v0.60.102.0 (`5b58910`) | [Table repair](docs/benchmarks/2026-10-06-fence-repair-tier3.md) |
-| A file whose `slug:` line names a different page: merge the duplicate, delete the stray line, or leave it to a person | not tested | **0** harmful answers in 432 pair runs; true duplicates recognised 92.0% (Opus 5.5), 85.3% (gpt-6.1-sol) and 80.0% (Sonnet 5.5), the rest left to a person | `ac6e0868` | [Slug conflicts](docs/benchmarks/2026-10-09-content-repair-judgment.md) |
-| Grading a forecast, among verdicts confident enough to apply (0.95 or more) | not tested | **0** wrong in 496 applied verdicts by gpt-6.1-sol (upper bound 0.6%, bar 1%); it resolved 99.2% of resolvable forecasts and held back on all 250 unresolvable ones¹⁵ | `d99b84694` | [Forecast grading](docs/benchmarks/2026-10-16-take-grading.md) |
-| A forecast journal over synthetic forecasters of known skill (private, trusted local readers only) | not tested | ranks them in their true order, median rank correlation (Spearman ρ) **0.905** (bar 0.80); who-was-right lists exactly right (set-F1 1.000); 8 of 8 remote probes see none of it | `65ed40ec6` (v0.60.286.0) | [Forecast journal](docs/benchmarks/2026-10-17-forecast-journal.md) |
+| Timeline events extracted from meetings and chats | the same model with a plain prompt, page by page | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [Timeline extraction](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
+| Useful material kept when an agent session becomes a memory page | the same model writing the page from a plain prompt, graded by the same judge | **88.1%** judged, while the judge's calibration awaits a person's review; 74.9% with quoted evidence | `079941d2` (shipped as v0.47.8.0) | [Session pages](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
+
+**Checks of gbrain's own behaviour (nothing to compare against).**
+
+| What we check | Result | gbrain commit | Report |
+|---|---|---|---|
+| **Finding the right evidence** | | | |
+| Questions chaining two or three relationships (multi-relation planner, held-out; no baseline is run on a held-out set) | **24 better, 0 worse**; +27 points in the share of questions with every answer in the top ten | `94bd52e01` (shipped in v0.60.60.0) | [Held-out program](docs/benchmarks/2026-10-05-heldout-program.md) |
+| Vector search inside a 10% source or visibility scope, 1M to 2M chunks on Postgres | recall in the top 50 **0.96 to 0.99** (was 0.52 to 0.77)⁸ | `2e84d234e` | [Scoped vector search](docs/benchmarks/2026-10-09-hnsw-scale.md) |
+| Graph walks on fictional graphs of 10,000 to 1,000,000 pages: Postgres against HydraDB as the walk engine | Postgres faster at every size, same answer on all 54,842 compared calls: 95th-percentile warm time **1.44 s vs 6.28 s** at 100,000 pages and 3.45 s vs 6.28 s at 1,000,000⁹ | `fc1121cae58` | [Graph backend](docs/benchmarks/2026-10-17-graph-backend.md) |
+| **Keeping memory correct, private and safe** | | | |
+| Serving the new value after an update | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP¹⁰ | `6ce7195b4` (v0.60.733.0) | [Knowledge updates](docs/benchmarks/2026-10-01-n1-knowledge-update.md) |
+| Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements¹⁰ | `6ce7195b4` (v0.60.733.0) | [Forget residue](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
+| Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Privacy on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md) |
+| Keeping speaker and time across chat export formats | **every** registered format keeps the conversation whole (29 of 29 formats at `77cf8e111`)¹⁰ | `6ce7195b4` (v0.60.733.0) | [Chat formats](docs/benchmarks/2026-10-01-n12-format-fidelity.md) |
+| One very large document stored as one page (2 MB to 260 MiB, under the preregistered rules) | **Every preregistered rule passes**: 0 crashes, 0 responses over 1 MiB, 0 bytes lost on export, keyword recall in the top ten 1.00 at 2 MB¹¹ | `7a6bdd3` (v0.60.454.0) | [Large pages](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md) |
+| Crediting someone else's claim to the page's owner (the classifier for takes, gbrain's saved claims, still experimental) | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5) | `c5fb0201` | [Takes](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
+| Real agents (Claude Code, Codex) spending money or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | `b3f4e8b` (shipped in v0.60.46.0) | [Agent operator](docs/benchmarks/2026-10-03-agent-operator.md) |
+| **Writing and syncing memory** | | | |
+| Catching up a 10,000-file backlog on managed Postgres 57 ms from the database | **367.9 pages/min** steady, **33.6 min** for the backlog (was 174.8 pages/min and 74.5 min on the same rig); a page save 2.5 s instead of 8.6 s | `0ba3b1f7c` (merged as `9d013e52d`, v0.60.111.0) | [Sync lanes](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md) |
+| The same catch-up when one write can't finish preparing (15,000 entries, heavy fact adoption, a connection pooler in transaction mode) | drains in **2 passes** (91 min, 10 connections) and 3 passes (3 connections), with no failed fact adoptions and no watchdog stops; v0.60.105.0 never drained¹² | `846bea442` (15,000 entries) and `a99c00565` (table lock), merged as `b65d4bae7` (v0.60.112.0) | [Preparation stall](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md) |
+| A managed Postgres sync behind a connection pooler in transaction mode whose round trip never completes | wedges with one sync process running alone on v0.60.110.0 and on the stall fix's head; **0 wedges in 2 h 49 min** with two consumers (4,951 pages)¹³ | `1935c74a` (v0.60.110.0) | [Stuck connection](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md) |
+| A one-file commit becoming keyword-searchable through a running `gbrain serve` (10,000 synthetic pages, local database, 4 vCPUs) | **0.60 s** median on Postgres when watching for commits (95th percentile 0.61 s, n = 40), was 3.7 s on managed sources; 2.15 s median when polling¹⁴ | `4ba4c36f` (v0.60.316.0) | [Sync freshness](docs/benchmarks/2026-10-19-sync-freshness.md) |
+| The first managed sync of a brain that classic sync had already brought up to date (synthetic pages, local database, 4 vCPUs) | converges in **1 pass** on every run: 10,000 pages in 13.2 s on Postgres and 12.9 s on PGLite, 100,000 pages in **129.6 s** | `426c4ef5` (merged as `c9f309f3`, v0.60.320.0) | [First managed sync](docs/benchmarks/2026-10-19-sync-freshness.md#first-managed-sync-after-activating-a-classic-brain-gbrain-v0603200-6712-pr-4b) |
+| **Judgment calls by a model** | | | |
+| Broken facts and takes tables (gbrain's tables of saved facts and claims) repaired by a model without a wrong cell (held-out set, model step only) | **96.0%** repaired, **0** wrong cells (gpt-6.1-sol and claude-opus-5-5, the measured defaults); every other case held | v0.60.102.0 (`5b58910`) | [Table repair](docs/benchmarks/2026-10-06-fence-repair-tier3.md) |
+| A file whose `slug:` line names a different page: merge the duplicate, delete the stray line, or leave it to a person | **0** harmful answers in 432 pair runs; true duplicates recognised 92.0% (Opus 5.5), 85.3% (gpt-6.1-sol) and 80.0% (Sonnet 5.5), the rest left to a person | `ac6e0868` | [Slug conflicts](docs/benchmarks/2026-10-09-content-repair-judgment.md) |
+| Grading a forecast, among verdicts confident enough to apply (0.95 or more) | **0** wrong in 496 applied verdicts by gpt-6.1-sol (upper bound 0.6%, bar 1%); it resolved 99.2% of resolvable forecasts and held back on all 250 unresolvable ones¹⁵ | `d99b84694` | [Forecast grading](docs/benchmarks/2026-10-16-take-grading.md) |
+| A forecast journal over synthetic forecasters of known skill (private, trusted local readers only) | ranks them in their true order, median rank correlation (Spearman ρ) **0.905** (bar 0.80); who-was-right lists exactly right (set-F1 1.000); 8 of 8 remote probes see none of it | `65ed40ec6` (v0.60.286.0) | [Forecast journal](docs/benchmarks/2026-10-17-forecast-journal.md) |
 
 1. Paired on the tasks both setups completed (98 for Opus, 97 for particle-1); one run on one brain, with tasks written
    by one agent from pages a remote agent may open.
@@ -121,17 +140,24 @@ capability and what changed between those commits and the pin.
 8. A topic-coherent 10% source scope still reaches only 0.78.
 9. HydraDB is faster only on deep walks in both directions (2.7x at depth 3), and production routing to HydraDB is not
    built.
-10. Checks that need no API keys, on synthetic worlds with generated answer keys, last run in full at `77cf8e111` in the
-    [October 11 re-pin](docs/benchmarks/2026-10-11-wave14-repin.md); CI runs smaller versions on every pull request
+10. Checks that need no API keys, on synthetic worlds with generated answer keys. Updates, `forget` and privacy on
+    Postgres over HTTP were rerun in full at `6ce7195b4` in the [November 16 keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md); privacy in process
+    and chat formats come from CI's gates at that build, and the other keyless rows last ran in full at `77cf8e111` in
+    the [October 11 re-pin](docs/benchmarks/2026-10-11-wave14-repin.md). CI runs smaller versions on every pull request
     ([when each check last ran](docs/gbrain-under-test.md#when-the-keyless-correctness-checks-last-ran)), and proactive
     recall is [gated in CI](docs/benchmarks/2026-10-06-n8-privacy-gate.md).
 11. PGLite stores up to 128 MiB and Postgres stored up to 256 MiB, but `put_page` refuses anything above 24 MiB; larger
     documents are refused (`request_too_large`), not stored, and `forget` on pages over 24 MiB is still unreachable
-    (`request_too_large` at 100 MiB and above).
+    (`request_too_large` at 100 MiB and above). At `6ce7195b4` every slice matched these numbers except the 128 MiB
+    PGLite page through gbrain's own tools, which passed the runner's 6 GiB memory ceiling on the rerun's host at both
+    `6ce7195b4` and `7a6bdd3` ([keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md#n14s-128-mib-crash-comes-from-the-host)).
 12. A stuck write is held in 240 s, but a table lock still pins 9 of 10 connections.
 13. gbrain's fix, the bounded settle in v0.60.114.0, was not measured here.
 14. After a 30 s embedding outage, PGLite left about 3% of a 1,000-chunk backlog unembedded.
 15. Opus 5.5 and Sonnet 5.5 rarely reach 0.95 (2 and 121 verdicts applied, 1 of Sonnet's wrong).
+16. This paid run used OpenAI embeddings and is remeasured in December. On the keyword path alone, the same questions
+    went from 0.476 → 0.572 at `77cf8e111` to 0.380 → 0.511 at `6ce7195b4`, mostly from gbrain #7201
+    ([keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md#what-got-worse-and-where)), so the hybrid number may have moved too.
 
 Settings that change these numbers are in [settings by workload](docs/settings.md). Two matter most: keep autocut off
 for questions that need several conversations (451 against 384 of 470), and leave query expansion off, since it adds
@@ -320,7 +346,9 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
   items are open entries in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md).
 - Open loops (commitments gbrain tracks from your email) cover Gmail only, and a commitment fulfilled by reply does not
   close. gbrain's open-loops guide at `6ce7195b4` (v0.60.733.0) still describes Gmail threads only and calls fulfilment
-  by reply future work.
+  by reply future work. At that build a forwarded FYI whose forwarded part asks a question also opens a loop, against
+  the guide's own rule (3 of 3 such threads), so open-loop precision fell to 53 of 56 from 53 of 53, since gbrain #9246
+  ([keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md#what-got-worse-and-where)).
 - There is no scanner for contradictions across a whole brain. At `6ce7195b4` (v0.60.733.0), the contradiction probe
   behind `find_contradictions` still judges pairs drawn from the top results of the queries it is given.
 - Associative recall, which gbrain does not claim: `volunteer_context` delivered the needed page on 0 of 240 indirect
@@ -468,6 +496,27 @@ Garry Tan runs Y Combinator.
 [Disclosures](docs/disclosures.md) lists every relationship and where each line goes.
 
 ## Changelog
+
+### 2026-11-17: Results split by whether they have a measured alternative
+
+Most rows' "Without gbrain" cell said "not tested", which tells a reader nothing. The results table now holds only
+rows with a measured no-gbrain number, and each names its own. Two rows gained one from their own reports: the newer
+sealed worlds show the same files with `grep` at 318 of 600 (53.0%) against gbrain's 382 of 600 (63.7%), where the row
+showed only the gap, and the sealed whole-conversation row shows the question alone at 40 of 200, from the set's
+solvability check. Twelve rows whose alternative was never run moved to a second table that names the no-gbrain arm
+being measured on the same tasks, reader and judge. Nineteen rows that check gbrain's own behaviour (updates,
+`forget`, privacy, chat formats, large pages, sync, table repair, slug conflicts, forecasts, agent safety, takes,
+scoped vector search, the graph walk engine and the held-out multi-relation planner) moved unchanged to a third table
+with no comparison column. No gbrain number changed.
+
+### 2026-11-16: Updates, `forget`, privacy and chat formats measured at gbrain v0.60.733.0
+
+The rows for updates, `forget`, privacy and chat formats now name `6ce7195b4` (v0.60.733.0), where the [November 16
+keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md) reran them; chat formats now say every registered format passes, since CI's gate at that build
+checks every format and keeps no count. Footnote 10 says which rows were rerun in full and which come from CI. Footnote
+11 says the large-page row keeps `7a6bdd3`, because the 128 MiB PGLite slice passed the runner's memory ceiling on the
+rerun's host at both builds. A new footnote 16 gives the keyword-path drop on reworded one-hop questions beside the
+paid row, which waits for December. The open-loops limit adds forwarded FYI emails opening loops.
 
 ### 2026-11-16: Two known limits name the commit they were checked at
 

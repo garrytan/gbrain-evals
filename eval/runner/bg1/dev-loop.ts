@@ -20,10 +20,11 @@
  *     gbrain's idle upkeep stays on, as gbrain ships it. After the cell, each VM keeps the world's brain in its outputs
  *     (brain/gbrain-defaults.tar, a bootstrap.sh snapshot of the stack's volumes after the last question, with the
  *     shim's logs and receipts) and lists every idle upkeep run gbrain logged in upkeep.ndjson. Each VM is named
- *     ubirun-<owner>-<epoch>-devloop-<world>-<hex>. Before launching, run destroys this owner's dev-loop VMs older than
- *     7 hours (never another owner's, never a VM without the dev-loop marker) and refuses if it can't; after the run it
- *     prints each of its VMs still standing (a failed final pull or a lost ssh session keeps one) with the commands to
- *     pull its outputs and destroy it and the time after which the next run destroys it unpulled, and exits 4.
+ *     ubirun-<owner>-<epoch>-devloop-<world>-<hex>-t7, so the runner's own reaper destroys it once its 7-hour TTL
+ *     ends. Before launching, run destroys this owner's dev-loop VMs older than 7 hours (never another owner's, never a
+ *     VM without the dev-loop marker) and refuses if it can't; after the run it prints each of its VMs still standing
+ *     (a failed final pull or a lost ssh session keeps one) with the commands to pull its outputs and destroy it and
+ *     the time after which the next run destroys it unpulled, and exits 4.
  *     Each --overlay sets one of the six search keys the gbrain-defaults shim writes for the arm (true or false;
  *     search.query_budget_unit chunk or auto) on top of the stage 1 arm's values. An unknown key, a bad value, or a key
  *     gbrain's config does not list at the resolved commit refuses before any VM starts. The overlay goes into run.json,
@@ -372,18 +373,18 @@ export function ubiRoom(usage: string, vcpus: number, crewPrefix = 'gbev'): numb
 
 /**
  * The repo's ubi-runner.sh keeps a VM when its final pull fails (exit 253) or its ssh session is lost (255), and a
- * killed launcher never reaches the runner's teardown, while the runner caps no VM's lifetime. So each dev-loop VM
- * carries a dev-loop marker in its name, `run` first destroys this owner's dev-loop VMs older than DEV_VM_HOURS
- * (a dev run takes about an hour), and after the run it lists every VM of its own still standing, with the commands
- * to pull and destroy it, and exits non-zero. Other owners' VMs and VMs without the marker are never touched.
+ * killed launcher never reaches the runner's teardown. So each dev-loop VM carries a DEV_VM_HOURS TTL (which the
+ * runner's reaper enforces on this owner's next launch) and a dev-loop marker in its name, `run` first destroys this
+ * owner's dev-loop VMs older than DEV_VM_HOURS (a dev run takes about an hour), and after the run it lists every VM of
+ * its own still standing, with the commands to pull and destroy it, and exits non-zero. Other owners' VMs and VMs without the marker are never touched.
  */
 export const DEV_VM_HOURS = 7;
 
 /** ubi-runner.sh as a function: its arguments in, its stdout out; it throws when the runner exits non-zero. */
 export type UbiRunner = (args: string[]) => string;
 
-/** A dev-loop VM name under the runner's ownership scheme: ubirun-<owner>-<epoch>-devloop-<world>-<4 hex>. */
-export const devVmName = (owner: string, world: string, nowMs: number) => `ubirun-${owner}-${Math.floor(nowMs / 1000)}-devloop-${world}-${randomBytes(2).toString('hex')}`;
+/** A dev-loop VM name under the runner's ownership scheme, with its TTL: ubirun-<owner>-<epoch>-devloop-<world>-<4 hex>-t<DEV_VM_HOURS>. */
+export const devVmName = (owner: string, world: string, nowMs: number) => `ubirun-${owner}-${Math.floor(nowMs / 1000)}-devloop-${world}-${randomBytes(2).toString('hex')}-t${DEV_VM_HOURS}`;
 
 /** The owner and creation second of a dev-loop VM name, or null for any other name. */
 export function devVm(name: string): { owner: string; epoch: number } | null {
