@@ -20,6 +20,7 @@ import {
   ABILITIES, ANSWER_FIELD, SLOTS, VALIDATOR_IDS, anthropicClient, buildPublicIndex, fakeClient, geminiClient, validateSet, writeReport,
   type Ability, type ModelClient, type Options, type PublicIndex,
 } from '../../eval/custody/rs1/validate.ts';
+import { fakeAsk, fallbackAsk, fallbackRequest, parsePicks, probe, ProbeError, resolvePicks, summaryLines } from '../../eval/custody/rs1/probe-fallback.ts';
 
 const REPO = resolve(import.meta.dir, '../..');
 const RS1 = join(REPO, 'eval/custody/rs1');
@@ -993,5 +994,176 @@ describe('rs1_mint.py fifteen planned batches (stubbed BEAM)', () => {
 describe('validate.ts', () => {
   test('is byte-identical to the preregistered file', () => {
     expect(sha(readFileSync(join(RS1, 'validate.ts')))).toBe('7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e');
+  });
+});
+
+
+// ─── probe-fallback.ts (GST-1886, 2026-11-17) ───────────────────────
+
+describe('probe-fallback.ts', () => {
+  let root = '', beam = '', index: PublicIndex;
+  beforeAll(() => { root = scratch('fallback-probe'); beam = fakeBeam(root); index = buildPublicIndex(beam); });
+  const options = (set: string, extra: Partial<Options> = {}): Options => ({ setDir: set, beamDir: beam, reportPath: join(root, 'report.json'), targetTokens: 1_000_000, tolerance: 0.9999, windowTokens: 600, overlapTokens: 60, concurrency: 4, ...extra });
+  const questionsOf = (prompt: string) => between(prompt, '<questions>', '</questions>').trim().split('\n');
+  const listing = (dir: string) => (existsSync(dir) ? files(dir).map(f => relative(dir, f) + ':' + sha(readFileSync(f))).sort() : []);
+
+  /**
+   * A candidate check in which Haiku refuses one support prompt, every batched window holding message 61 or 100, and the
+   * single prompt for abstention/1 over message 61, with one regrouping allowed, so another refused window is over the cap.
+   */
+  async function refusedCheck(seed: string) {
+    const conv = probedConversation(seed, 120);
+    const nonce = (k: number) => /nonce-[0-9a-f]+/.exec(String(conv.candidates.abstention[k].question))![0];
+    const supportQuestion = String(conv.candidates.event_ordering[1].question);
+    const holds = (p: string, n: number) => p.includes(conv.messages[n].slice(0, 60));
+    const refuse = (p: string) => {
+      if (p.includes('<question>')) return p.includes(supportQuestion) ? 'refusal' : null;
+      if (!p.includes('<conversation_part>') || !(holds(p, 61) || holds(p, 100))) return null;
+      const qs = questionsOf(p);
+      return qs.length > 1 ? 'refusal' : holds(p, 61) && qs[0].includes(nonce(1)) ? 'refusal' : null;
+    };
+    const inner = fakeClient(VALIDATOR_IDS[1]), stops = new Map<string, StopRecord>(), refused = new Set<string>();
+    const haiku: ModelClient & { stops: Map<string, StopRecord> } = {
+      id: VALIDATOR_IDS[1], stops,
+      async complete(prompt, max) {
+        const stop = refuse(prompt);
+        stops.set(prompt, stop ? { stop, output_tokens: 0, blocks: [] } : { stop: 'end_turn', output_tokens: 9, blocks: ['text'] });
+        if (stop) refused.add(prompt);
+        return stop ? '' : inner.complete(prompt, max);
+      },
+    };
+    const set = writeProbedSet(join(root, seed), [conv]);
+    const cache = join(root, seed, 'cache');
+    const report = await validateCandidates(options(set, { cacheDir: cache }), [fakeClient(VALIDATOR_IDS[0]), haiku], index, 1);
+    const reportPath = join(root, seed, 'candidates.json');
+    writeCandidateReport(reportPath, report);
+    return { conv, set, cache, report, reportPath, refused, supportQuestion, nonce };
+  }
+
+  test('each pick resolves to the exact prompt Haiku refused, and the probe keeps how the fallback ended, never its text, and writes no cache', async () => {
+    const { conv, set, cache, report, refused, supportQuestion, nonce } = await refusedCheck('probe-exact');
+    const c = report.conversations.c001;
+    expect(c.status).toBe('incomplete');
+    const kinds = c.validator_errors.filter(e => e.stop === 'refusal').map(e => e.kind);
+    expect(kinds.filter(k => k === 'support')).toHaveLength(1);
+    expect(kinds.filter(k => k === 'absence').length).toBeGreaterThanOrEqual(2);
+    expect(kinds.filter(k => k === 'absence_single')).toHaveLength(1);
+    expect(report.totals.regroup_over_cap).toBeGreaterThanOrEqual(1);
+    const before = listing(cache);
+    const picks = parsePicks('c001:support:1,c001:absence:1,c001:absence:2,c001:absence_single:1');
+    const resolved = resolvePicks(options(set, { targetTokens: 1, tolerance: 0.1, windowTokens: 99, overlapTokens: 9 }), index, report, picks);
+    for (const r of resolved) expect(refused.has(r.prompt)).toBe(true);
+    expect(new Set(resolved.map(r => r.prompt)).size).toBe(4);
+    const refusals = c.validator_errors.filter(e => e.stop === 'refusal');
+    expect(resolved.map(r => [r.kind, r.candidate, r.window, r.prompt_tokens])).toEqual([
+      ['support', 'event_ordering/1', null, refusals.find(e => e.kind === 'support')!.prompt_tokens],
+      ...refusals.filter(e => e.kind === 'absence').slice(0, 2).map(e => ['absence', null, e.window, e.prompt_tokens]),
+      ['absence_single', 'abstention/1', refusals.find(e => e.kind === 'absence_single')!.window, refusals.find(e => e.kind === 'absence_single')!.prompt_tokens],
+    ]);
+    expect(resolved[0].prompt).toContain(supportQuestion);
+    expect(questionsOf(resolved[3].prompt)).toHaveLength(1);
+    expect(resolved[3].prompt).toContain(nonce(1));
+    expect(resolved.every(r => r.haiku.stop === 'refusal')).toBe(true);
+
+    let asked = 0;
+    const fake = fakeAsk();
+    const out = await probe(resolved, async prompt => {
+      asked++;
+      if (asked === 1) return { text: '', ended: { stop: 'refusal', category: 'frontier_llm', output_tokens: 0, blocks: [] } };
+      return fake(prompt);
+    }, 'f'.repeat(64));
+    expect(asked).toBe(4);
+    expect(out.picks.map(p => [p.conversation, p.kind, p.n, p.fallback.stop, p.fallback.category, p.fallback.shape])).toEqual([
+      ['c001', 'support', 1, 'refusal', 'frontier_llm', 'wrong'],
+      ['c001', 'absence', 1, 'end_turn', 'none', 'ok'],
+      ['c001', 'absence', 2, 'end_turn', 'none', 'ok'],
+      ['c001', 'absence_single', 1, 'end_turn', 'none', 'ok'],
+    ]);
+    expect(out.totals).toEqual({ asked: 4, shape_ok: 3, stop_refusal: 1, stop_end_turn: 3 });
+    const text = JSON.stringify(out) + summaryLines(out, 'x').join('\n');
+    for (const probeText of [conv.messages[61].slice(0, 60), conv.messages[100].slice(0, 60), supportQuestion, nonce(0), nonce(1), nonce(2), 'answered', 'supported']) expect(text).not.toContain(probeText);
+    expect(JSON.stringify(out)).not.toContain('"prompt"');
+    expect(listing(cache)).toEqual(before);
+  });
+
+  test('a pick it cannot match refuses before any call', async () => {
+    const { set, report } = await refusedCheck('probe-refuse');
+    const opts = options(set);
+    expect(() => parsePicks('c001:absence')).toThrow(ProbeError);
+    expect(() => parsePicks('c001:support:1,c001:support:1')).toThrow(/twice/);
+    expect(() => parsePicks('c001:judge:1')).toThrow(ProbeError);
+    expect(() => resolvePicks(opts, index, report, parsePicks('c001:absence_single:2'))).toThrow(/has 1 Haiku refusal\(s\) of kind absence_single, not 2/);
+    expect(() => resolvePicks(opts, index, report, parsePicks('c009:support:1'))).toThrow(/not in the candidate report/);
+    const tokens = structuredClone(report);
+    tokens.conversations.c001.validator_errors.find(e => e.kind === 'support' && e.stop === 'refusal')!.prompt_tokens += 1;
+    expect(() => resolvePicks(opts, index, tokens, parsePicks('c001:support:1'))).toThrow(/rebuilds at \d+ tokens/);
+    const chat = structuredClone(report);
+    chat.conversations.c001.chat_sha256 = '0'.repeat(64);
+    expect(() => resolvePicks(opts, index, chat, parsePicks('c001:support:1'))).toThrow(/not the one the candidate report checked/);
+    const moved = structuredClone(report);
+    moved.conversations.c001.validator_errors.find(e => e.kind === 'absence_single' && e.stop === 'refusal')!.candidate = 'abstention/2';
+    expect(() => resolvePicks(opts, index, moved, parsePicks('c001:absence_single:1'))).not.toThrow();
+    moved.conversations.c001.validator_errors.find(e => e.kind === 'absence_single' && e.stop === 'refusal')!.window = 999;
+    expect(() => resolvePicks(opts, index, moved, parsePicks('c001:absence_single:1'))).toThrow(/no longer plans/);
+  });
+
+  test('the paid ask sends validate.ts\'s request with the fallback model through the ledger guard and keeps no reply text', async () => {
+    const ledgerPath = join(mkdtempSync(join(root, 'ledger-')), 'l.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5 });
+    const replies: unknown[] = [
+      { content: [], stop_reason: 'refusal', stop_details: { type: 'refusal', category: 'frontier_llm', explanation: 'sealed text' }, usage: { input_tokens: 90, output_tokens: 0 } },
+      { content: [{ type: 'text', text: '{"answered": []}' }], stop_reason: 'end_turn', stop_details: null, usage: { input_tokens: 90, output_tokens: 6 } },
+      new Response('{"error": "sealed text"}', { status: 503 }),
+    ];
+    const sent: Array<{ url: string; headers: Record<string, string>; body: Record<string, unknown> }> = [];
+    const run = BudgetRun.open({ runner: 'rs1-probe-test', budgetUsd: 5, ledgerPath });
+    const guard = installPaidRequestGuard(run, { fetchImpl: (async (input: RequestInfo | URL, init: RequestInit = {}) => {
+      sent.push({ url: String(input), headers: init.headers as Record<string, string>, body: JSON.parse(String(init.body)) });
+      const reply = replies[sent.length - 1];
+      return reply instanceof Response ? reply : Response.json(reply);
+    }) as unknown as typeof fetch });
+    const ask = fallbackAsk('test-key-not-real');
+    const results = [];
+    try { for (let i = 0; i < 3; i++) results.push(await ask('prompt ' + words('probe-prompt', 30))); } finally { guard.uninstall(); run.close(); }
+    expect(results).toEqual([
+      { text: '', ended: { stop: 'refusal', category: 'frontier_llm', output_tokens: 0, blocks: [] } },
+      { text: '{"answered": []}', ended: { stop: 'end_turn', category: 'none', output_tokens: 6, blocks: ['text'] } },
+      { text: null, ended: { stop: 'http_503', category: 'none', output_tokens: null, blocks: [] } },
+    ]);
+    expect(JSON.stringify(results.map(r => r.ended))).not.toContain('sealed');
+    expect(sent.map(s => s.url)).toEqual(Array(3).fill('https://api.anthropic.com/v1/messages'));
+    for (const s of sent) {
+      expect(s.body).toEqual({ model: 'claude-sonnet-5-5', max_tokens: 8192, messages: [{ role: 'user', content: 'prompt ' + words('probe-prompt', 30) }] });
+      expect(s.headers['anthropic-version']).toBe('2023-06-01');
+    }
+    expect(fallbackRequest('p', 8192).body).not.toHaveProperty('temperature');
+    expect(readLedger(ledgerPath).entries.map(e => e.status)).toEqual(['reconciled', 'reconciled', expect.any(String)]);
+  });
+
+  test('the CLI dry-runs keyless, and refuses a paid probe without the granted window', async () => {
+    const { set, reportPath, conv, cache } = await refusedCheck('probe-cli');
+    const before = listing(cache);
+    const out = join(root, 'probe-cli', 'probe.json');
+    const base = [join(RS1, 'probe-fallback.ts'), '--set', set, '--beam-dir', beam, '--candidates', reportPath, '--pick', 'c001:support:1,c001:absence_single:1', '--out', out];
+    const env = { ANTHROPIC_API_KEY: 'not-real' };
+    for (const args of [base, [...base, '--paid'], [...base, '--fake', '--paid'], [...base.slice(0, -2), '--fake']]) {
+      const r = run('bun', args, env);
+      expect(r.code).toBe(2);
+      expect(r.err).toMatch(/^rs1-fallback-probe refused: /);
+      expect(r.all).not.toContain('not-real');
+    }
+    expect(existsSync(out)).toBe(false);
+    const r = run('bun', [...base, '--fake'], env);
+    expect(r.code).toBe(0);
+    const lines = r.out.trim().split('\n');
+    expect(lines).toHaveLength(3);
+    expect(lines[0]).toMatch(/^rs1-fallback-probe pick=c001:support:1 candidate=event_ordering\/1 window=- prompt_tokens=\d+ haiku_stop=refusal stop=end_turn category=none output_tokens=- blocks=text shape=ok$/);
+    expect(lines[1]).toMatch(/^rs1-fallback-probe pick=c001:absence_single:1 candidate=abstention\/1 window=\d+ /);
+    expect(lines[2]).toMatch(/^rs1-fallback-probe asked=2 shape_ok=2 stop_end_turn=2 fallback=anthropic:claude-sonnet-5-5 candidates_sha256=[0-9a-f]{64} report_sha256=[0-9a-f]{64}$/);
+    const written = readFileSync(out, 'utf8');
+    expect(lines[2]).toContain('report_sha256=' + sha(written));
+    expect(lines[2]).toContain('candidates_sha256=' + sha(readFileSync(reportPath)));
+    for (const probeText of [conv.messages[61].slice(0, 60), String(conv.candidates.event_ordering[1].question)]) expect(r.all + written).not.toContain(probeText);
+    expect(listing(cache)).toEqual(before);
   });
 });
