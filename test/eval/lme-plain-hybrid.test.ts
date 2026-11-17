@@ -18,8 +18,8 @@ const fakeEmbed = async (texts: string[]) => texts.map(t => {
 describe('verbatimProbe', () => {
   test('takes the first 300 characters of the longest turn, wherever it starts', () => {
     const long = 'x'.repeat(900) + 'tail';
-    expect(verbatimProbe({ source_id: 's', turns: [{ speaker: 'user', content: 'short' }, { speaker: 'assistant', content: 'y'.repeat(2000) }, { speaker: 'user', content: long }] })).toBe('y'.repeat(300));
-    expect(verbatimProbe({ source_id: 's', turns: [{ speaker: 'user', content: '   ' }] })).toBeNull();
+    expect(verbatimProbe({ source_id: 's', turns: [{ role: 'user', speaker: 'user', content: 'short' }, { role: 'assistant', speaker: 'assistant', content: 'y'.repeat(2000) }, { role: 'user', speaker: 'user', content: long }] })).toBe('y'.repeat(300));
+    expect(verbatimProbe({ source_id: 's', turns: [{ role: 'user', speaker: 'user', content: '   ' }] })).toBeNull();
   });
 });
 

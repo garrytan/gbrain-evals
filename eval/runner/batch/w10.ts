@@ -102,7 +102,7 @@ function captures(): Map<string, { system: string; user: string; max_tokens: num
 // ─── Arms ───────────────────────────────────────────────────────────
 
 interface Built { bodies: Map<string, Record<string, unknown>>; source: string; protocol: { name: string; sha256: string }; meta?: Record<string, unknown> }
-interface ArmDef { id: string; workstream: Workstream; model: string; build: () => Built | Promise<Built>; /** A preregistered per-arm output limit (amendment) in place of the model's. */ maxOutputTokens?: number }
+interface ArmDef { id: string; workstream: Workstream; model: string; build: () => Built; /** A preregistered per-arm output limit (amendment) in place of the model's. */ maxOutputTokens?: number }
 
 /** W10 amendment of 2026-10-06: W10a's Sonnet 5.5 arm at 3,500 output tokens so its worst case fits W10a's cap after retrieval. */
 export const W10A_MAX_OUTPUT = 3500;
@@ -155,14 +155,15 @@ export const RB_RENDER_COMMIT = 'c5fb0201d1960a0a5a81c35d77718311b03154b7';
 export const RB_RETRIEVAL = 'docs/benchmarks/2026-11-17-readme-baselines/longmemeval/retrieval/rows.ndjson.gz';
 
 let _rbRenderer: Promise<HouseRenderer> | null = null;
-/** c5fb0201's renderers from a checkout named by RB_GBRAIN_DIR; refuses any other commit. */
+let _rbLoaded: HouseRenderer | null = null;
+/** c5fb0201's renderers from a checkout named by RB_GBRAIN_DIR; refuses any other commit. Load it before building an RB-LME arm. */
 export function rbRenderer(): Promise<HouseRenderer> {
   return (_rbRenderer ??= (async () => {
     const dir = process.env.RB_GBRAIN_DIR;
     if (!dir) throw new Error(`RB-LME arms render with gbrain ${RB_RENDER_COMMIT.slice(0, 8)}: set RB_GBRAIN_DIR to a checkout of that commit`);
     const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
     if (head !== RB_RENDER_COMMIT) throw new Error(`RB_GBRAIN_DIR is at ${head.slice(0, 12)}, not ${RB_RENDER_COMMIT.slice(0, 12)}`);
-    return loadHouseRenderer(dir);
+    return (_rbLoaded = await loadHouseRenderer(dir));
   })());
 }
 
@@ -176,8 +177,9 @@ export function rbHybridTop(k: number, path = join(ROOT, RB_RETRIEVAL)): Map<str
 /** An RB-LME reader arm: the house notes prompt over each question's sessions as `pick` chooses them, rendered by c5fb0201. */
 function rbArm(id: string, model: string, label: string, pick: () => (q: Question) => number[] | null, maxOutputTokens?: number): ArmDef {
   return {
-    id, workstream: 'RB-LME', model, maxOutputTokens, build: async () => {
-      const r = await rbRenderer();
+    id, workstream: 'RB-LME', model, maxOutputTokens, build: () => {
+      const r = _rbLoaded;
+      if (!r) throw new Error(`${id}: load gbrain ${RB_RENDER_COMMIT.slice(0, 8)}'s renderers with rbRenderer() before building`);
       const ds = dataset();
       const choose = pick();
       const bodies = new Map<string, Record<string, unknown>>();
@@ -412,7 +414,8 @@ async function main(argv: string[]) {
   if (cmd === 'build') {
     const def = ARMS[arm];
     if (!def) throw new Error(`unknown arm ${arm}; arms: ${Object.keys(ARMS).join(', ')}`);
-    const built = await def.build();
+    if (def.workstream === 'RB-LME') await rbRenderer();
+    const built = def.build();
     const s = MODEL_SETTINGS[def.model];
     const manifest = buildManifest({ arm_id: def.id, workstream: def.workstream, kind: 'reader', provider: s.provider, model: def.model, max_output_tokens: def.maxOutputTokens ?? s.max_output_tokens, reasoning_effort: s.effort, protocol: built.protocol, source: built.source, denominator: built.bodies.size, bodies: built.bodies, ...(def.maxOutputTokens ? { outputFloor: def.maxOutputTokens } : {}) });
     // RB-LME arms check each question's own answer_ session ids instead: whole histories hold source code with `answer_start`.
