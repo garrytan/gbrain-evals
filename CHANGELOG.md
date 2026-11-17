@@ -2,6 +2,10 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.241] - 2026-11-17
+
+- New multi-evidence dev loop (`bun eval/runner/multi-evidence/dev-loop.ts`): scores any gbrain build, by default the newest release, on 152 public or synthetic questions whose answer needs two or more pieces of evidence, and reports per item how much gold reached the model, what was cut, turns used against the agent's cap and whether the answer was right. Arms at twice the turn cap and with batch page reads separate "gbrain can't find it" from "the agent ran out of turns". See [eval/runner/multi-evidence/README.md](eval/runner/multi-evidence/README.md).
+
 ## [0.10.240] - 2026-11-17
 
 ### The Ubicloud runner keeps the shared vCPU lines and puts a lifetime on every VM
