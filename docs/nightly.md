@@ -353,8 +353,8 @@ Ubicloud VM:
 2. From that export, `UBI_OWNER=<thread code> scripts/ubicloud/ubi-runner.sh run -s standard-16 --src . --setup scripts/nightly-vm.sh -- '<night command>'`
    boots the VM, runs the night and destroys the VM on every exit path. `ubi-runner.sh list --mine` printing nothing
    confirms it is gone. The runner refuses without `UBI_OWNER`, starts the VM only while the shared project stays at or
-   under 464 vCPUs and your team (owner tags with your tag's leading letters) at or under 208, and names the VM with a 12-hour lifetime (`UBI_TTL_HOURS` sets
-   another), after which your next launch destroys it if it is still there.
+   under 464 vCPUs and your team (owner tags with your tag's leading letters) at or under 208, and names the VM with a
+   12-hour lifetime (`UBI_TTL_HOURS` sets another), after which your next launch destroys it if it is still there.
 3. [`scripts/nightly-vm.sh`](../scripts/nightly-vm.sh) mirrors CI: the Bun version CI pins, a frozen install, then
    Docker with pgvector images for Postgres 15 and Postgres 18 (pinned by digest, bound to 127.0.0.1) and a gbrain
    clone with every release tag. It prints the two Postgres admin URLs to pass as `--pg-admin` and `--pg15-admin`.

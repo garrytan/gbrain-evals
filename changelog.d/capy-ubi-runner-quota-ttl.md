@@ -1,8 +1,8 @@
 ### The Ubicloud runner keeps the shared vCPU lines and caps every VM's lifetime on its own
 
 - `scripts/ubicloud/ubi-runner.sh` reads the project's usage before every VM it creates and refuses, before any create
-  request, unless the project's VMs stay at or under 464 vCPUs and the caller's team (every owner tag with the same leading
-  letters, the caller's own VMs included) at or under 208. An unreadable usage refuses too. Creates from one machine take
+  request, unless the project's VMs stay at or under 464 vCPUs and the caller's team (every owner tag with the same
+  leading letters, the caller's own VMs included) at or under 208. An unreadable usage refuses too. Creates from one machine take
   turns through that check, and `ubi-runner.sh room -s <size>` prints how many more VMs of a size fit, for launchers
   that start VMs from several machines. `UBI_QUOTA_WAIT=<seconds>` waits for room instead of refusing.
 - Every VM's name now carries its lifetime, `-t<hours>` from `UBI_TTL_HOURS` (default 12), and every launch first
