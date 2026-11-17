@@ -759,10 +759,11 @@ export async function freshPostgresDatabase(adminUrl: string, name: string): Pro
 export async function startPgvectorContainer(image = 'pgvector/pgvector:pg16'): Promise<{ url: string; name: string; image_digest: string; stop: () => void }> {
   const port = await freePort(0);
   const name = `engine-bench-surface-parity-${process.pid}-${Date.now()}`;
-  const run = spawnSync('docker', ['run', '-d', '--rm', '--name', name, '-e', 'POSTGRES_PASSWORD=parity', '-p', `127.0.0.1:${port}:5432`, image], { encoding: 'utf8' });
+  const password = createHash('sha256').update(`${name}${Math.random()}`).digest('hex').slice(0, 24);
+  const run = spawnSync('docker', ['run', '-d', '--rm', '--name', name, '-e', `POSTGRES_PASSWORD=${password}`, '-p', `127.0.0.1:${port}:5432`, image], { encoding: 'utf8' });
   if (run.status !== 0) throw new Error(`docker run ${image} failed: ${tail(run.stderr)}`);
   const stop = () => { spawnSync('docker', ['rm', '-f', name], { encoding: 'utf8' }); };
-  const url = `postgres://postgres:parity@127.0.0.1:${port}/postgres`;
+  const url = `postgres://postgres:${password}@127.0.0.1:${port}/postgres`;
   for (let i = 0; ; i++) {
     const ready = spawnSync('docker', ['exec', name, 'pg_isready', '-U', 'postgres', '-h', '127.0.0.1'], { encoding: 'utf8' });
     if (ready.status === 0) {
