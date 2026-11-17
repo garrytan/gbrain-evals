@@ -23,6 +23,12 @@ describe('G6 probe-race correction', () => {
     expect(fixed.filter((r, i) => r !== done[i])).toHaveLength(3);
   });
 
+  test('refuses a remote record that differs from the intended view', () => {
+    const i = done.findIndex(r => r.caller === 'remote');
+    const rows = done.map((r, j) => j === i ? { ...r, out_of_view: [...r.out_of_view, 'notes/not-a-page'] } : r);
+    expect(() => rescoreProbeRace(rows)).toThrow(/remote record .* differs from the intended view/);
+  });
+
   test('the committed scorecard holds the rescored cards and the original ones the log reproduces', () => {
     expect(published.scorecards).toEqual(JSON.parse(JSON.stringify(scorecards('g6', fixed, 4))));
     expect(published.correction.original_scorecards).toEqual(JSON.parse(JSON.stringify(scorecards('g6', done, 4))));

@@ -61,7 +61,7 @@
   ],
   "paired": {
     "method": "per-task success, percentile bootstrap over tasks, 10,000 draws, seed 2005 (eval/runner/stats/paired.ts)",
-    "as_published": [
+    "uncorrected": [
       {
         "caller": "local",
         "comparison": "claude-opus-5-5 - particle-1",

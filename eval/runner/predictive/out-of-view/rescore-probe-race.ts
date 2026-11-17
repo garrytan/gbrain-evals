@@ -77,7 +77,7 @@ if (import.meta.main) {
     schema: 'gbrain-evals/predictive-g6-correction/v1', date: '2026-11-17', script: 'eval/runner/predictive/out-of-view/rescore-probe-race.ts',
     reason: 'Local gold marked out of view by a probe race: concurrent gbrain call probes on one single-writer PGLite brain (fixed in #477).',
     rescored: changed,
-    paired: { method: 'per-task success, percentile bootstrap over tasks, 10,000 draws, seed 2005 (eval/runner/stats/paired.ts)', as_published: pairedG6(done), corrected: pairedG6(fixed) },
+    paired: { method: 'per-task success, percentile bootstrap over tasks, 10,000 draws, seed 2005 (eval/runner/stats/paired.ts)', uncorrected: pairedG6(done), corrected: pairedG6(fixed) },
     scorecards: { original, corrected },
   };
   console.log(JSON.stringify({ rescored: changed, paired: report.paired }, null, 2));
