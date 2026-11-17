@@ -54,9 +54,11 @@ function fakeRustGbrain(): GbrainUnderTest {
   mkdirSync(join(root, 'src/core/search'), { recursive: true });
   mkdirSync(join(root, 'src/core/ai'), { recursive: true });
   const p = (sub: string) => JSON.stringify(join(pinned.root, sub));
+  writeFileSync(join(root, 'src/cli.ts'), '');
   writeFileSync(join(root, 'src/core/engine-construct.ts'),
     'import { PGLiteEngine } from ' + p('src/core/pglite-engine.ts') + ';\n'
-    + 'export async function constructEngine() { return new PGLiteEngine(); }\n');
+    + '// The real Rust brain gets its schema from gbrain init; this PGLite stand-in brings it up at connect.\n'
+    + 'export async function constructEngine() { const e = new PGLiteEngine(); const connect = e.connect.bind(e); e.connect = async c => { await connect(c); await e.initSchema(); }; return e; }\n');
   for (const sub of ['src/core/import-file.ts', 'src/core/search/hybrid.ts', 'src/core/embedding.ts', 'src/core/ai/gateway.ts', 'src/core/embedding-pricing.ts', 'src/core/embed-retry.ts']) {
     writeFileSync(join(root, sub), 'export * from ' + p(sub) + ';\n');
   }

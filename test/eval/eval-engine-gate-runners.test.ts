@@ -23,6 +23,7 @@ function fakeGbrain(constructSource: string): GbrainUnderTest {
   const root = mkdtempSync(join(tmpdir(), 'gate-runners-'));
   mkdirSync(join(root, 'src/core/rust-engine'), { recursive: true });
   writeFileSync(join(root, 'src/core/engine-construct.ts'), constructSource);
+  writeFileSync(join(root, 'src/cli.ts'), '');
   return { root, version: '0.0.0-fake', overlay: null };
 }
 
