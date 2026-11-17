@@ -432,7 +432,7 @@ describe('leftover VMs', () => {
 
   test('a dev-loop VM name carries the owner, the second it was made and the marker; other names are not dev-loop VMs', () => {
     const name = devVmName('gbev91', 'bg1-dev-02', NOW);
-    expect(name).toMatch(/^ubirun-gbev91-\d{10}-devloop-bg1-dev-02-[0-9a-f]{4}$/);
+    expect(name).toMatch(new RegExp(`^ubirun-gbev91-\\d{10}-devloop-bg1-dev-02-[0-9a-f]{4}-t${DEV_VM_HOURS}$`));
     expect(name.length).toBeLessThanOrEqual(63);
     expect(devVm(name)).toEqual({ owner: 'gbev91', epoch: Math.floor(NOW / 1000) });
     expect(devVm(`ubirun-gbev91-${at(9)}-1a2b3c4d`)).toBeNull();

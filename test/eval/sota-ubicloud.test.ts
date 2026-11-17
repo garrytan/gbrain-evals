@@ -13,12 +13,16 @@ const REPO = join(import.meta.dir, '../..');
 const dir = mkdtempSync(join(tmpdir(), 'sota-ubicloud-'));
 const DUMMIES = { ANTHROPIC_API_KEY: 'dummy-anthropic', OPENAI_API_KEY: 'dummy-openai', VOYAGE_API_KEY: 'dummy-voyage', PARTICLE_API_KEY: 'dummy-particle' };
 
-/** A fake ubi-runner: it declares UBI_TTL_HOURS support unless ttl is false, logs each subcommand to <root>/calls, list prints <root>/vms, run appends its arguments to <root>/launches. */
-function fakeRunner(name: string, list = 'cat "$(dirname "$0")/vms" 2>/dev/null || true', ttl = true) {
+/**
+ * A fake ubi-runner: it declares UBI_TTL_HOURS support unless ttl is false, logs each subcommand to <root>/calls, list
+ * prints <root>/vms, run appends its arguments to <root>/launches and exits runExit (leaving its -n VM in <root>/vms
+ * when keep is set), pull appends its arguments to <root>/pulls, and down removes the VM from <root>/vms.
+ */
+function fakeRunner(name: string, list = 'cat "$(dirname "$0")/vms" 2>/dev/null || true', ttl = true, runExit = 0, keep = false) {
   const root = join(dir, name);
   mkdirSync(root, { recursive: true });
   const fake = join(root, 'fake-ubi.sh');
-  writeFileSync(fake, `#!/usr/bin/env bash\n${ttl ? '# honours UBI_TTL_HOURS\n' : ''}echo "$1" >> "$(dirname "$0")/calls"\ncase "$1" in\n  list) ${list} ;;\n  run) shift; echo "$*" >> "$(dirname "$0")/launches" ;;\nesac\n`, { mode: 0o755 });
+  writeFileSync(fake, `#!/usr/bin/env bash\n${ttl ? '# honours UBI_TTL_HOURS\n' : ''}echo "$1" >> "$(dirname "$0")/calls"\ncase "$1" in\n  list) ${list} ;;\n  run) shift; echo "$*" >> "$(dirname "$0")/launches"; ${keep ? 'echo "$2 running" >> "$(dirname "$0")/vms"; ' : ''}exit ${runExit} ;;\n  pull) shift; echo "$*" >> "$(dirname "$0")/pulls" ;;\n  down) sed -i "/^$2 /d" "$(dirname "$0")/vms" ;;\nesac\n`, { mode: 0o755 });
   const home = join(root, 'home');
   const launch = (args: string[], env: Record<string, string> = DUMMIES) => spawnSync('bash', ['eval/runner/sota/ubicloud/run.sh', ...args], { cwd: REPO, env: { PATH: process.env.PATH!, HOME: home, UBI_RUNNER: fake, ...env }, encoding: 'utf8' });
   const launches = () => (existsSync(join(root, 'launches')) ? readFileSync(join(root, 'launches'), 'utf8').trim().split('\n') : []);
@@ -67,6 +71,48 @@ describe('run.sh, with a fake runner', () => {
     expect(r.stderr).toContain('set UBI_RUNNER to a runner that honours UBI_TTL_HOURS');
     expect(f.calls().filter(c => c === 'up' || c === 'run')).toEqual([]);
     expect(f.launches()).toEqual([]);
+  });
+
+  test('a window whose final pull never landed keeps its in-flight marker: the next launch and the teardown check refuse with the pull command, and pull clears it', () => {
+    const f = fakeRunner('in-flight', undefined, true, 253, true);
+    const first = f.launch(['oracle-dev', '5']);
+    expect(first.status).toBe(253);
+    expect(f.calls()[0]).toBe('reap');
+    const marker = join(f.home, '.capy/work/sota-windows/oracle-dev.in-flight');
+    const vm = /^vm=(.*)$/m.exec(readFileSync(marker, 'utf8'))?.[1] ?? '';
+    expect(vm).toMatch(/^ubirun-gbev78-\d{10}-sota-[0-9a-f]{6}-t12$/);
+    expect(readFileSync(marker, 'utf8')).toMatch(/^launched_at=\d{4}-\d{2}-\d{2}T/m);
+    expect(f.launches()[0]).toContain(`-n ${vm} `);
+    const next = f.launch(['dev-agent', '5']);
+    expect(next.status).toBe(2);
+    expect(next.stderr).toContain('final pull never landed');
+    expect(next.stderr).toContain('run.sh pull oracle-dev');
+    expect(next.stderr).toContain(`pull ${vm} work/oracle-dev ${f.home}/.capy/work/sota-windows`);
+    expect(f.calls().filter(c => c === 'reap')).toHaveLength(1);
+    expect(f.launches()).toHaveLength(1);
+    const check = f.launch(['check']);
+    expect([check.status, check.stderr]).toEqual([1, expect.stringContaining('run.sh pull oracle-dev')]);
+    const pull = f.launch(['pull', 'oracle-dev']);
+    expect(pull.status).toBe(0);
+    expect(readFileSync(join(f.root, 'pulls'), 'utf8').trim()).toBe(`${vm} work/oracle-dev ${f.home}/.capy/work/sota-windows`);
+    expect(existsSync(marker)).toBe(false);
+    expect(f.calls().at(-1)).toBe('down');
+    expect(f.launch(['check']).status).toBe(0);
+  });
+
+  test('the marker clears only when the run ends with its pull landed and its VM gone', () => {
+    const marker = (f: ReturnType<typeof fakeRunner>) => existsSync(join(f.home, '.capy/work/sota-windows/oracle-dev.in-flight'));
+    for (const code of [255, 130]) {
+      const f = fakeRunner(`exit-${code}`, undefined, true, code);
+      expect(f.launch(['oracle-dev', '5']).status).toBe(code);
+      expect(marker(f)).toBe(true);
+    }
+    const kept = fakeRunner('vm-kept', undefined, true, 0, true);
+    expect(kept.launch(['oracle-dev', '5']).status).toBe(1);
+    expect(marker(kept)).toBe(true);
+    const failed = fakeRunner('step-failed', undefined, true, 1);
+    expect(failed.launch(['oracle-dev', '5']).status).toBe(1);
+    expect(marker(failed)).toBe(false);
   });
 
   test('seeds the window\'s cache from --cache-seed on its first launch only', () => {
