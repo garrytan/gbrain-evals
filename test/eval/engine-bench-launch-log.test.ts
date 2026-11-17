@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { main, scrubLauncherLog } from '../../eval/runner/engine-bench/launch-log.ts';
@@ -73,7 +73,8 @@ describe('scrubLauncherLog', () => {
     try {
       const out = join(dir, 'c.log');
       const run = main(['--out', out, '--', 'sh', '-c', 'trap "echo got-term; exit 7" TERM; echo ready; while :; do sleep 0.05; done']);
-      await Bun.sleep(300);
+      const deadline = Date.now() + 10_000;
+      while (!(existsSync(out) && readFileSync(out, 'utf8').includes('ready\n')) && Date.now() < deadline) await Bun.sleep(20);
       process.emit('SIGTERM', 'SIGTERM');
       expect(await run).toBe(7);
       expect(readFileSync(out, 'utf8')).toBe('ready\ngot-term\n');
