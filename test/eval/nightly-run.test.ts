@@ -1,12 +1,13 @@
 /**
  * The nightly runner (eval/runner/nightly/run.ts) and its suite adapters (adapters.ts): tiers, the ancestor check, each
  * adapter's command and its reading of the runner's records into outcome rows, the tool-contract replay through all
- * three paths of the pinned build, and run.ts --fake end to end on a two-item slice with every key blanked and a dead
- * upstream (that last test needs a gbrain clone in NIGHTLY_GBRAIN_CLONE; it builds an overlay and a worktree there).
+ * three paths of the pinned build, --ref stable read from a local bare remote's tag (file://, no network), and run.ts
+ * --fake end to end on a two-item slice with every key blanked and a dead upstream (that last test needs a gbrain clone in
+ * NIGHTLY_GBRAIN_CLONE; it builds an overlay and a worktree there).
  */
 import { describe, expect, test } from 'bun:test';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
@@ -20,7 +21,7 @@ import { NightlyCache } from '../../eval/runner/nightly/judge-cache.ts';
 import { buildDevSet } from '../../eval/runner/nightly/select-devset.ts';
 import { keylessEnv } from '../../eval/runner/nightly/keyless.ts';
 import { harnessCause, qualifiedModel, readOutcomes, resumable, type Outcome } from '../../eval/runner/nightly/outcome.ts';
-import { main, parseArgs, planSuites, requirementGap } from '../../eval/runner/nightly/run.ts';
+import { main, nightCommit, parseArgs, planSuites, requirementGap, resolveRef, resolveStable } from '../../eval/runner/nightly/run.ts';
 import { isContentMiss, recordedCalls, replayItems } from '../../eval/runner/nightly/tool-contract.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -471,6 +472,101 @@ describe('tool-contract replay', () => {
     expect(r!.refusals).toBe(0);
     expect(r!.paths.mcp.ok).toBe(r!.calls - r!.unparseable);
   }, 120_000);
+});
+
+describe('--ref stable reads gbrain\'s stable tag from the remote at launch', () => {
+  const g = (dir: string, ...args: string[]) => execFileSync('git', ['-C', dir, '-c', 'user.name=Example', '-c', 'user.email=example@example.invalid', ...args], { encoding: 'utf8' }).trim();
+  /** A bare remote with an annotated stable tag on its first commit, a work repo that pushes to it, and the nightly's clone. */
+  const fixture = () => {
+    const root = tmp();
+    const remote = join(root, 'gbrain.git'), work = join(root, 'work'), clone = join(root, 'clone'), url = `file://${remote}`;
+    execFileSync('git', ['init', '-q', '--bare', '-b', 'master', remote]);
+    execFileSync('git', ['init', '-q', '-b', 'master', work]);
+    g(work, 'commit', '-q', '--allow-empty', '-m', 'v1');
+    g(work, 'tag', '-a', 'stable', '-m', 'v1');
+    g(work, 'push', '-q', url, 'master', 'refs/tags/stable');
+    execFileSync('git', ['clone', '-q', url, clone]);
+    return { root, work, clone, url, v1: g(work, 'rev-parse', 'HEAD') };
+  };
+  /** A new commit on the work repo, tagged stable (annotated unless lightweight) and pushed as the tag only, so the clone lacks it. */
+  const moveStable = (f: ReturnType<typeof fixture>, o: { lightweight?: boolean } = {}) => {
+    g(f.work, 'commit', '-q', '--allow-empty', '-m', 'v2');
+    g(f.work, 'tag', '-f', ...(o.lightweight ? [] : ['-a', '-m', 'v2']), 'stable');
+    g(f.work, 'push', '-q', '-f', f.url, 'refs/tags/stable');
+    return g(f.work, 'rev-parse', 'HEAD');
+  };
+
+  test('an annotated tag peels to its commit, and night.json\'s record names the tag object, the remote and the time', () => {
+    const f = fixture();
+    const r = resolveStable(f.clone);
+    expect(r.sha).toBe(f.v1);
+    expect(r.stable).toEqual({ remote: f.url, tag_object: g(f.work, 'rev-parse', 'refs/tags/stable'), resolved_at: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T.*Z$/) });
+    expect(r.stable.tag_object).not.toBe(f.v1);
+    expect(resolveRef(f.clone, 'stable')).toBe(f.v1);
+  });
+
+  test('a tag moved on the remote is read there, not from the clone\'s stale tag, and its commit is fetched into the clone', () => {
+    const f = fixture();
+    const v2 = moveStable(f);
+    expect(g(f.clone, 'rev-parse', 'refs/tags/stable^{commit}')).toBe(f.v1);
+    expect(spawnSync('git', ['-C', f.clone, 'cat-file', '-e', `${v2}^{commit}`]).status).not.toBe(0);
+    const r = resolveStable(f.clone);
+    expect(r.sha).toBe(v2);
+    expect(r.stable.tag_object).toBe(g(f.work, 'rev-parse', 'refs/tags/stable'));
+    expect(g(f.clone, 'rev-parse', `${v2}^{commit}`)).toBe(v2);
+  });
+
+  test('a lightweight tag resolves to the commit it names, with no tag object', () => {
+    const f = fixture();
+    const v2 = moveStable(f, { lightweight: true });
+    expect(resolveStable(f.clone)).toEqual({ sha: v2, stable: { remote: f.url, tag_object: null, resolved_at: expect.any(String) } });
+  });
+
+  test('a remote with no stable tag fails closed before anything is written', async () => {
+    const f = fixture();
+    g(f.work, 'push', '-q', f.url, ':refs/tags/stable');
+    expect(g(f.clone, 'rev-parse', 'refs/tags/stable^{commit}')).toBe(f.v1);
+    expect(() => resolveStable(f.clone)).toThrow(`--ref stable: ${f.url} has no stable tag. The night does not start: it never falls back to the clone's own stable tag`);
+    const out = join(f.root, 'out');
+    await expect(main(['--ref', 'stable', '--tier', 'nightly', '--fake', '--out', out, '--gbrain-clone', f.clone, '--night', '2026-11-23'])).rejects.toThrow('has no stable tag');
+    expect(existsSync(out)).toBe(false);
+  });
+
+  test('an unreachable remote, or a clone with no origin, fails closed with a non-zero exit', () => {
+    const f = fixture();
+    const gone = `file://${join(f.root, 'missing.git')}`;
+    g(f.clone, 'remote', 'set-url', 'origin', gone);
+    expect(() => resolveStable(f.clone)).toThrow(`--ref stable: git ls-remote ${gone} failed: `);
+    const out = join(f.root, 'out');
+    const r = spawnSync('bun', ['--no-env-file', join(ROOT, 'eval/runner/nightly/run.ts'), '--ref', 'stable', '--tier', 'nightly', '--fake', '--out', out, '--gbrain-clone', f.clone, '--night', '2026-11-23'],
+      { cwd: ROOT, env: keylessEnv(), encoding: 'utf8', timeout: 60_000 });
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain(`--ref stable: git ls-remote ${gone} failed: `);
+    expect(existsSync(out)).toBe(false);
+    g(f.clone, 'remote', 'remove', 'origin');
+    expect(() => resolveStable(f.clone)).toThrow('has no origin remote to read gbrain\'s stable tag from');
+  });
+
+  test('a credential in the origin URL never reaches the error, which names the remote the way night.json records it', () => {
+    const f = fixture();
+    g(f.clone, 'remote', 'set-url', 'origin', 'https://x-access-token:PLACEHOLDER@127.0.0.1:9/gbrain.git');
+    let message = '';
+    try { resolveStable(f.clone); } catch (e) { message = (e as Error).message; } finally { rmSync(f.root, { recursive: true, force: true }); }
+    expect(message).toContain('--ref stable: git ls-remote https://127.0.0.1:9/gbrain.git failed: ');
+    expect(message).not.toContain('PLACEHOLDER');
+    expect(message).not.toContain('x-access-token');
+  });
+
+  test('a resume keeps the commit the night started on: it neither reads the remote nor follows a moved tag', () => {
+    const f = fixture();
+    const saved = { sha: f.v1, stable: { remote: f.url, tag_object: g(f.work, 'rev-parse', 'refs/tags/stable'), resolved_at: '2026-11-23T09:00:00.000Z' } };
+    const v2 = moveStable(f);
+    expect(nightCommit(f.clone, 'stable', null).sha).toBe(v2);
+    g(f.clone, 'remote', 'set-url', 'origin', `file://${join(f.root, 'missing.git')}`);
+    expect(nightCommit(f.clone, 'stable', saved)).toEqual({ sha: f.v1, stable: saved.stable });
+    expect(nightCommit(f.clone, 'stable', { sha: f.v1 })).toEqual({ sha: f.v1, stable: null });
+    expect(nightCommit(f.clone, 'master', null)).toEqual({ sha: g(f.clone, 'rev-parse', 'master'), stable: null });
+  });
 });
 
 const CLONE = process.env.NIGHTLY_GBRAIN_CLONE;

@@ -53,6 +53,15 @@ Each invocation runs one gbrain ref (`--ref master`, `--ref stable` or a commit)
 `--suites`, `--items`, `--readers` and `--k` narrow or override a tier's plan. Keyless suites (the replay, the trials
 and the smokes) never call a model, so they run without keys on every tier.
 
+`--ref stable` is gbrain's soaked release, the commit its `stable` tag points to (`latest-stable` is the alpha
+channel). The runner reads the tag from the gbrain clone's `origin` when a night starts, with `git ls-remote`, and
+fetches the commit if the clone lacks it. It never reads the clone's own `stable` tag, because a plain `git fetch`
+doesn't move a tag the clone already has. If the remote can't be reached, has no `stable` tag or the commit can't be
+fetched, the night doesn't start and the runner exits 1. `night.json` records where the commit came from under
+`stable`: the remote, the tag object when the tag is annotated, and when the tag was read. The stable night's report
+says so under its title, and master's section against stable names the stable commit and version. `--resume` keeps
+the commit the night started on, even if the tag has moved since.
+
 ## Readers and k
 
 A reader is the model that answers or acts in a suite. The dev set's readers are `claude-opus-5-5` and `gpt-6.1-sol`;
@@ -366,6 +375,13 @@ Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, whic
 [disclosures](disclosures.md).
 
 ## Changelog
+
+### 2026-11-17: `--ref stable` reads gbrain's stable tag when a night starts
+
+The stable leg ran a commit written into `run.ts`, v0.60.717.0 (`5dc712b9`), which had to be bumped by hand each time
+gbrain's `stable` tag moved; on 2026-11-17 the tag pointed to v0.60.733.0 (`6ce7195b`). The runner now reads the tag
+from the gbrain clone's remote at launch, records where the commit came from in `night.json` and the report, and
+refuses to start when it can't read the tag.
 
 ### 2026-11-17: The Ubicloud runner needs an owner and keeps the vCPU lines
 

@@ -75,8 +75,13 @@ export interface SuiteStatus {
 }
 /** A suite run as a dev set on the current harness rather than a frozen experiment's (Cat 40 world M under --dev-set); freeze_drift is null when the freeze was not checked. */
 export interface DevSetRun { label: string; freeze_drift: string[] | null }
+/** How a stable night read gbrain's stable release (run.ts resolveStable): the remote asked, the annotated tag's object (null for a lightweight tag) and when. */
+export interface StableResolution { remote: string; tag_object: string | null; resolved_at: string }
+
 export interface NightManifest {
   schema: 'nightly-night/1'; night: string; ref: string; sha: string; version: string | null; tier: string; fake: boolean;
+  /** Where a --ref stable night's commit came from; null on other refs and absent on nights recorded before 2026-11-17. */
+  stable?: StableResolution | null;
   devset: { path: string; digest: string }; suites: SuiteStatus[]; started_at: string; finished_at?: string;
   /** The night's ledger run; opened_by_night when run.ts opened it itself, and closed_at once it closed it. */
   budget?: { run_id: string; ledger: string; opened_by_night?: boolean; closed_at?: string } | null;
@@ -172,7 +177,7 @@ export interface Watch {
   baseline: { night: string; sha: string; per_item: Record<string, { c: number; n: number }>; pass1: number | null; cost_per_correct: number | null };
 }
 export interface Comparison {
-  against: 'previous' | 'stable'; night: string; ref: string; sha: string;
+  against: 'previous' | 'stable'; night: string; ref: string; sha: string; version: string | null;
   suites: Array<{ suite: string; reader: string | null; compared: boolean; reason?: string; pass_diff?: { mean: number | null; lo: number | null; hi: number | null; items: number }; strong_flips?: string[]; cost_ratio?: number | null;
     /** Each night's trials per item when they differ: the pass rates are compared at pass^1 and no strong flip is filed. */
     trials?: { tonight: number; other: number } }>;
@@ -237,7 +242,7 @@ export function compareNights(tonight: { manifest: NightManifest; rows: Outcome[
       suites.push({ suite: id, reader, compared: true, pass_diff: { ...pass.boot, items: pass.common.length }, strong_flips: flips, cost_ratio: cost.ratio, ...(a.k !== b.k ? { trials: { tonight: a.k, other: b.k } } : {}) });
     }
   }
-  return { against, night: other.manifest.night, ref: other.manifest.ref, sha: other.manifest.sha, suites, flags, watches };
+  return { against, night: other.manifest.night, ref: other.manifest.ref, sha: other.manifest.sha, version: other.manifest.version ?? null, suites, flags, watches };
 }
 
 export const AGREEMENT = { candidate: 'particle-1', reference: 'claude-opus-5-5', min_kappa: 0.6, min_raw: 0.85, min_suite_items: 20, min_items: 40, max_unpaired: 0.1 } as const;
@@ -401,6 +406,7 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
   };
   const lines: string[] = [];
   lines.push(`# Nightly gbrain check: ${m.ref} ${m.sha.slice(0, 12)}${m.version ? ` (v${m.version})` : ''}, ${m.night}`, '');
+  if (m.stable) lines.push(`Stable is gbrain's \`stable\` tag as ${m.stable.remote} had it at ${m.stable.resolved_at}: commit ${m.sha}${m.stable.tag_object ? `, tag object ${m.stable.tag_object}` : ' (a lightweight tag)'}.`, '');
   lines.push(`Tier ${m.tier}${m.fake ? ', fake providers (plumbing only; no number here measures a model)' : ''}. Dev set ${m.devset.digest.slice(0, 12)}. Causes: failure-cause taxonomy ${TAXONOMY_VERSION}.`, '');
   lines.push(flags.length ? `**${flags.length} flags.**` : '**No flags.**', '');
   for (const f of flags) {
@@ -442,7 +448,7 @@ export function buildReport(o: { dir: string; previous?: string | null; stable?:
     if (unmeasured.length) lines.push('', ...unmeasured);
   }
   for (const c of comparisons) {
-    lines.push('', `## Against ${c.against === 'previous' ? 'the previous master night' : 'stable'} (${c.ref} ${c.sha.slice(0, 12)}, ${c.night})`, '');
+    lines.push('', `## Against ${c.against === 'previous' ? 'the previous master night' : 'stable'} (${c.ref} ${c.sha.slice(0, 12)}${c.version ? ` v${c.version}` : ''}, ${c.night})`, '');
     for (const s of c.suites) {
       lines.push(s.compared
         ? `- ${s.suite} ${s.reader ?? 'keyless'}: pass rate change ${s.pass_diff!.mean === null ? 'n/a' : `${(s.pass_diff!.mean * 100).toFixed(1)} points (95% interval ${(s.pass_diff!.lo! * 100).toFixed(1)} to ${(s.pass_diff!.hi! * 100).toFixed(1)})`} over ${s.pass_diff!.items} items${s.trials ? ` (pass^1 over all trials: ${s.trials.tonight} per item tonight, ${s.trials.other} on the ${c.against === 'stable' ? 'stable' : 'previous'} night, so no strong flip is filed)` : ''}${s.strong_flips?.length ? `; strong flips ${s.strong_flips.join(', ')}` : ''}`
