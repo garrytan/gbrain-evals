@@ -5,11 +5,13 @@
  * each engine put the same sessions in its top 5? Every engine (PGLite, Postgres with pgvector, and Rust once a gbrain
  * build carries it) is opened through openEvalEngine, gets a fresh store for each question, imports the question's
  * haystack sessions through gbrain's own importFromContent, and runs keyword, vector and hybrid retrieval at top-k 5
- * with the search config longmemeval.ts pins (PINNED_SEARCH_CONFIG). Scores are recall_all@5 (the official
+ * through gbrain's hybridSearch, the keyword arm on its keyless path (embeddings opted out, with the any-word fill the
+ * search operation asks for) as a brain with no embedding provider searches, with the search config longmemeval.ts pins (PINNED_SEARCH_CONFIG). Scores are recall_all@5 (the official
  * LongMemEval headline: every evidence session is in the top 5) and recall_any@5, with abstention questions excluded
  * from both as the official protocol does. Engines are then compared question by question: the paired difference in
  * recall_all@5 with a cluster bootstrap interval (stats/paired.ts), the questions whose top-5 lists differ and which
- * session ids differ, and the share of questions whose top-5 lists are identical across every engine that ran.
+ * session ids differ, and the share of questions whose top-5 lists are identical across every engine that ran, with
+ * the number of those where every engine returned nothing.
  *
  * Fresh stores, never raw SQL from this runner. longmemeval.ts resets one PGLite with TRUNCATE between questions; the
  * Rust engine refuses raw SQL, so this runner never calls executeRaw. Each question gets a copy of a store that was
@@ -96,7 +98,7 @@ type EmbedTransport = (params: { values: string[] } & Record<string, unknown>) =
 
 interface GbrainModules {
   importFromContent: (engine: BrainEngine, slug: string, content: string, opts?: { noEmbed?: boolean }) => Promise<{ embedding_deferred?: boolean }>;
-  hybridSearch: (engine: BrainEngine, query: string, opts?: { limit?: number; expansion?: boolean }) => Promise<SearchResult[]>;
+  hybridSearch: (engine: BrainEngine, query: string, opts?: { limit?: number; expansion?: boolean; anyWordFill?: boolean; _embeddingOptedOut?: boolean }) => Promise<SearchResult[]>;
   embedQuery: (text: string) => Promise<Float32Array>;
   /** The document-side embed gbrain's import path calls (embed-retry.ts embedBatchKeepingUsable). */
   embedDocuments: (texts: string[]) => Promise<unknown>;
@@ -349,7 +351,7 @@ async function runQuestion(mods: GbrainModules, store: StoreFactory, ds: LoadedD
       for (const arm of arms) {
         const ts = performance.now();
         const results = arm === 'keyword'
-          ? await opened.engine.searchKeyword(q.question, { limit: LME_RECALL_TOP_K })
+          ? await mods.hybridSearch(opened.engine, q.question, { limit: LME_RECALL_TOP_K, expansion: false, anyWordFill: true, _embeddingOptedOut: true })
           : arm === 'vector'
             ? await opened.engine.searchVector(await mods.embedQuery(q.question), { limit: LME_RECALL_TOP_K })
             : await mods.hybridSearch(opened.engine, q.question, { limit: LME_RECALL_TOP_K, expansion: false });
@@ -415,6 +417,8 @@ export interface ArmAgreement {
   /** Share of questions whose ordered top-5 lists are the same on every engine that ran; null with no shared question. */
   identical_top5_share: number | null;
   identical_top5_set_share: number | null;
+  /** Questions where every engine returned an empty top 5: they count as identical, so a share is read beside this. */
+  n_all_empty: number;
 }
 
 const top5 = (r: ArmResult | undefined) => (r?.retrieved ?? []).slice(0, LME_RECALL_TOP_K);
@@ -470,7 +474,7 @@ export function comparePair(rows: readonly QuestionRow[], arm: LmeArm, a: EvalEn
 
 export function armAgreement(rows: readonly QuestionRow[], arm: LmeArm, engines: readonly EvalEngineKind[]): ArmAgreement {
   const ids = [...new Set(rows.map(r => r.question_id))].sort();
-  let n = 0, ordered = 0, set = 0;
+  let n = 0, ordered = 0, set = 0, empty = 0;
   for (const id of ids) {
     const found = engines.map(k => rows.find(r => r.engine === k && r.question_id === id));
     if (found.some(r => !r || r.error !== undefined || !r.arms[arm])) continue;
@@ -478,8 +482,9 @@ export function armAgreement(rows: readonly QuestionRow[], arm: LmeArm, engines:
     const tops = found.map(r => top5(r!.arms[arm]));
     if (tops.every(t => sameOrder(t, tops[0]))) ordered++;
     if (tops.every(t => sameSet(t, tops[0]))) set++;
+    if (tops.every(t => t.length === 0)) empty++;
   }
-  return { arm, engines: [...engines], n_questions: n, identical_top5_share: n ? ordered / n : null, identical_top5_set_share: n ? set / n : null };
+  return { arm, engines: [...engines], n_questions: n, identical_top5_share: n ? ordered / n : null, identical_top5_set_share: n ? set / n : null, n_all_empty: empty };
 }
 
 // ─── Receipt ───────────────────────────────────────────────────────

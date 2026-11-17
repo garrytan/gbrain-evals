@@ -1,0 +1,6008 @@
+{
+  "schema": "engine-bench.lme-recall/1",
+  "started_at": "2026-11-17T22:42:18.749Z",
+  "finished_at": "2026-11-17T22:46:48.084Z",
+  "counted": false,
+  "preregistration_attestation": null,
+  "gbrain": {
+    "version": "0.60.737.0",
+    "overlay": {
+      "requested": "gbrain@v0.60.737.0",
+      "ref": "v0.60.737.0",
+      "commit": "291b7996a4e2881acc921b1085d818bb9640f5d0",
+      "tree": "f70d75676ce1cb0234fe6c3afa2e7fe392d07730",
+      "version": "0.60.737.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "f70d75676ce1cb0234fe6c3afa2e7fe392d07730",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.737.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    }
+  },
+  "dataset": {
+    "file": "longmemeval_s_cleaned.json",
+    "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "matches_published_sha256": true,
+    "total_questions": 500,
+    "selected": 102,
+    "abstention_selected": 6,
+    "stratify": 17,
+    "limit": null,
+    "seed": 42,
+    "question_ids": [
+      "c960da58",
+      "c8c3f81d",
+      "0862e8bf",
+      "d52b4f67",
+      "86b68151",
+      "577d4d32",
+      "15745da0",
+      "bc8a6e93",
+      "ccb36322",
+      "4fd1909e",
+      "545bd2b5",
+      "76d63226",
+      "c14c00dd",
+      "3d86fd0a",
+      "0862e8bf_abs",
+      "bc8a6e93_abs",
+      "19b5f2b3_abs",
+      "aae3761f",
+      "46a3abf7",
+      "gpt4_15e38248",
+      "80ec1f4f",
+      "gpt4_2ba83207",
+      "9d25d4e0",
+      "d851d5ba",
+      "c2ac3c61",
+      "bf659f65",
+      "gpt4_372c3eed",
+      "60bf93ed_abs",
+      "06878be2",
+      "35a27287",
+      "32260d93",
+      "195a1a1b",
+      "afdc33df",
+      "6b7dfb22",
+      "1a1907b4",
+      "09d032c9",
+      "38146c39",
+      "95228167",
+      "505af2f5",
+      "75f70248",
+      "d6233ab6",
+      "b6025781",
+      "a89d7624",
+      "1d4e3b97",
+      "0a34ad58",
+      "60036106",
+      "9ee3ecd6",
+      "ef9cf60a",
+      "a3332713",
+      "21d02d0d",
+      "09ba9854_abs",
+      "71017276",
+      "gpt4_1d4ab0c9",
+      "gpt4_18c2b244",
+      "gpt4_7a0daae1",
+      "2ebe6c90",
+      "370a8ff4",
+      "eac54adc",
+      "gpt4_85da3956",
+      "gpt4_68e94287",
+      "gpt4_e061b84g",
+      "gpt4_2655b836",
+      "08f4fc43",
+      "f0853d11",
+      "b9cfe692",
+      "b29f3365",
+      "gpt4_fe651585",
+      "gpt4_93159ced_abs",
+      "6aeb4375",
+      "71315a70",
+      "07741c44",
+      "b6019101",
+      "45dc21b6",
+      "72e3ee87",
+      "01493427",
+      "db467c8c",
+      "7a87bd0c",
+      "22d2cb42",
+      "0e4e4c46",
+      "4b24c848",
+      "f685340e",
+      "69fee5aa",
+      "10e09553",
+      "5c40ec5b",
+      "0977f2af",
+      "4c36ccef",
+      "7e00a6cb",
+      "f523d9fe",
+      "1d4da289",
+      "70b3e69b",
+      "e8a79c70",
+      "d596882b",
+      "e3fc4d6e",
+      "352ab8bd",
+      "7a8d0b71",
+      "a40e080f",
+      "8b9d4367",
+      "4baee567",
+      "561fabcd",
+      "28bcfaac",
+      "c7cf7dfd",
+      "778164c6"
+    ]
+  },
+  "shard": {
+    "worker_id": 0,
+    "total_workers": 1,
+    "questions": 102
+  },
+  "ndjson": "<work>/lme-kw/kw102.ndjson",
+  "resumed_rows": 0,
+  "run_config_hashes": {
+    "pglite": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0",
+    "postgres": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+  },
+  "top_k": 5,
+  "arms": [
+    "keyword"
+  ],
+  "search_config": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedder": {
+    "mode": "none",
+    "model": null,
+    "dimensions": null,
+    "cache_path": null,
+    "plumbing_only": false,
+    "note": "Keyword arm only; nothing was embedded."
+  },
+  "network": "every HTTP(S) request to a non-loopback host was refused during the run",
+  "engines": [
+    {
+      "kind": "pglite",
+      "status": "ran",
+      "store_strategy": "copy of a store initialized once",
+      "n_questions": 102,
+      "n_errors": 0,
+      "errors": [],
+      "recall": {
+        "keyword": {
+          "recall_all_at_5": 0.84375,
+          "recall_any_at_5": 0.90625,
+          "n_scored": 96
+        }
+      },
+      "timing_ms": {
+        "total": {
+          "mean": 1368.3,
+          "p50": 1338.5,
+          "p90": 1543.4,
+          "max": 1780.8
+        },
+        "open": {
+          "mean": 553.6,
+          "p50": 546.3
+        },
+        "import": {
+          "mean": 687.8,
+          "p50": 668.3,
+          "p90": 805.8
+        },
+        "search_by_arm": {
+          "keyword": {
+            "mean": 64,
+            "p50": 61.7
+          }
+        }
+      },
+      "projected_full_run_minutes": 11.4
+    },
+    {
+      "kind": "postgres",
+      "status": "ran",
+      "store_strategy": "CREATE DATABASE ... TEMPLATE of a store initialized once (on the harness admin connection, not the engine)",
+      "n_questions": 102,
+      "n_errors": 0,
+      "errors": [],
+      "recall": {
+        "keyword": {
+          "recall_all_at_5": 0.84375,
+          "recall_any_at_5": 0.90625,
+          "n_scored": 96
+        }
+      },
+      "timing_ms": {
+        "total": {
+          "mean": 1203.3,
+          "p50": 1181.6,
+          "p90": 1342,
+          "max": 1650.9
+        },
+        "open": {
+          "mean": 368.7,
+          "p50": 367.1
+        },
+        "import": {
+          "mean": 734.7,
+          "p50": 717.4,
+          "p90": 851.7
+        },
+        "search_by_arm": {
+          "keyword": {
+            "mean": 49.4,
+            "p50": 47.2
+          }
+        }
+      },
+      "projected_full_run_minutes": 10
+    }
+  ],
+  "comparisons": [
+    {
+      "arm": "keyword",
+      "a": "pglite",
+      "b": "postgres",
+      "n_questions": 102,
+      "excluded_errors": [],
+      "recall_all_delta": {
+        "n_pairs": 96,
+        "mean_a": 0.84375,
+        "mean_b": 0.84375,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "p_two_sided": 1,
+        "wins_b": 0,
+        "losses_b": 0,
+        "mcnemar_p": 1
+      },
+      "identical_top5_ordered": 1,
+      "identical_top5_set": 1,
+      "differences": []
+    }
+  ],
+  "agreement": [
+    {
+      "arm": "keyword",
+      "engines": [
+        "pglite",
+        "postgres"
+      ],
+      "n_questions": 102,
+      "identical_top5_share": 1,
+      "identical_top5_set_share": 1,
+      "n_all_empty": 0
+    }
+  ],
+  "bootstrap": {
+    "seed": 20261117,
+    "draws": 10000
+  },
+  "rows": [
+    {
+      "engine": "pglite",
+      "question_id": "c960da58",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_e05e4612",
+            "ultrachat_129096",
+            "ultrachat_36718",
+            "fb5dd87f_1",
+            "f7ffddbc"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 92.91547699999865
+        }
+      },
+      "timing_ms": {
+        "open": 533.161497000001,
+        "import": 943.2059520000003,
+        "search": 92.91547699999865,
+        "total": 1631.0637380000007
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "c960da58",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_e05e4612",
+            "ultrachat_129096",
+            "ultrachat_36718",
+            "fb5dd87f_1",
+            "f7ffddbc"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 60.0342729999993
+        }
+      },
+      "timing_ms": {
+        "open": 456.9223519999996,
+        "import": 740.4860750000007,
+        "search": 60.0342729999993,
+        "total": 1342.2174289999984
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "c8c3f81d",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 52,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_761acef8",
+            "19ec83c5_1",
+            "2b16f3d6_1",
+            "66e94928",
+            "eb403c80_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 67.81347599999935
+        }
+      },
+      "timing_ms": {
+        "open": 572.0300450000013,
+        "import": 810.3066100000015,
+        "search": 67.81347599999935,
+        "total": 1507.7453050000004
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "c8c3f81d",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 52,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_761acef8",
+            "19ec83c5_1",
+            "2b16f3d6_1",
+            "66e94928",
+            "eb403c80_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 49.5616680000021
+        }
+      },
+      "timing_ms": {
+        "open": 445.2769999999982,
+        "import": 789.4564969999992,
+        "search": 49.5616680000021,
+        "total": 1338.465412999998
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "0862e8bf",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_c6fd8ebd",
+            "sharegpt_2i1txkw_0",
+            "0566c21b",
+            "2442d5b9",
+            "sharegpt_koaa4jf_0"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 51.79019699999844
+        }
+      },
+      "timing_ms": {
+        "open": 532.3652419999999,
+        "import": 749.9015250000011,
+        "search": 51.79019699999844,
+        "total": 1391.162994000002
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "0862e8bf",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_c6fd8ebd",
+            "sharegpt_2i1txkw_0",
+            "0566c21b",
+            "2442d5b9",
+            "sharegpt_koaa4jf_0"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 40.21621600000071
+        }
+      },
+      "timing_ms": {
+        "open": 332.71954800000094,
+        "import": 801.0202280000012,
+        "search": 40.21621600000071,
+        "total": 1218.6832280000017
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "d52b4f67",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 52,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_0df6aa4b",
+            "da1797c4_1",
+            "d31c3ec8_3",
+            "c578da1f_1",
+            "29545df8_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 61.741180000000895
+        }
+      },
+      "timing_ms": {
+        "open": 540.018336000001,
+        "import": 839.564279000002,
+        "search": 61.741180000000895,
+        "total": 1503.4084650000004
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "d52b4f67",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 52,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_0df6aa4b",
+            "da1797c4_1",
+            "d31c3ec8_3",
+            "c578da1f_1",
+            "29545df8_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 69.35075400000278
+        }
+      },
+      "timing_ms": {
+        "open": 322.1354109999993,
+        "import": 780.6971890000023,
+        "search": 69.35075400000278,
+        "total": 1225.1068859999978
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "86b68151",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_dc11c1eb",
+            "4e671700",
+            "sharegpt_bev15zo_0",
+            "0abaca24_1",
+            "a410bab2_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 91.40371099999902
+        }
+      },
+      "timing_ms": {
+        "open": 642.7686950000025,
+        "import": 901.4535079999987,
+        "search": 91.40371099999902,
+        "total": 1705.113959000002
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "86b68151",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_dc11c1eb",
+            "4e671700",
+            "sharegpt_bev15zo_0",
+            "0abaca24_1",
+            "a410bab2_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 45.41059900000255
+        }
+      },
+      "timing_ms": {
+        "open": 439.27232500000173,
+        "import": 777.6696870000014,
+        "search": 45.41059900000255,
+        "total": 1305.328338000003
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "577d4d32",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_0dd4d99a",
+            "6e2cca63_2",
+            "b283f9eb_1",
+            "2ef53f61_2",
+            "f60245ed"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 87.89489500000127
+        }
+      },
+      "timing_ms": {
+        "open": 520.5202600000011,
+        "import": 758.1091010000018,
+        "search": 87.89489500000127,
+        "total": 1427.863174000002
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "577d4d32",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_0dd4d99a",
+            "6e2cca63_2",
+            "b283f9eb_1",
+            "2ef53f61_2",
+            "f60245ed"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 73.45378199999686
+        }
+      },
+      "timing_ms": {
+        "open": 347.30716100000063,
+        "import": 852.370944000002,
+        "search": 73.45378199999686,
+        "total": 1328.967342
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "15745da0",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_586de428",
+            "07d33eaa",
+            "ultrachat_155656",
+            "3cec6e2b_2",
+            "a4f22269"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 76.48447500000111
+        }
+      },
+      "timing_ms": {
+        "open": 544.6017950000023,
+        "import": 742.2097409999988,
+        "search": 76.48447500000111,
+        "total": 1446.6998569999996
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "15745da0",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_586de428",
+            "07d33eaa",
+            "ultrachat_155656",
+            "3cec6e2b_2",
+            "a4f22269"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 42.835878000001685
+        }
+      },
+      "timing_ms": {
+        "open": 377.5519329999988,
+        "import": 768.6903970000021,
+        "search": 42.835878000001685,
+        "total": 1237.7468410000001
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "bc8a6e93",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_e6143162",
+            "sharegpt_qywsgp8_13",
+            "8c1da8f9_1",
+            "b869d7ed_2",
+            "6f8c03ab"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 58.00822299999709
+        }
+      },
+      "timing_ms": {
+        "open": 541.1140300000006,
+        "import": 704.7096769999989,
+        "search": 58.00822299999709,
+        "total": 1362.2146170000015
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "bc8a6e93",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_e6143162",
+            "sharegpt_qywsgp8_13",
+            "8c1da8f9_1",
+            "b869d7ed_2",
+            "6f8c03ab"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 41.909654000002774
+        }
+      },
+      "timing_ms": {
+        "open": 341.0715229999987,
+        "import": 757.4852969999993,
+        "search": 41.909654000002774,
+        "total": 1188.4528050000008
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "ccb36322",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "bdcee74e_3",
+            "04a0b385",
+            "f79a48dd_1",
+            "8b1019b8_1",
+            "c38b33ae"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 55.249721000000136
+        }
+      },
+      "timing_ms": {
+        "open": 526.3318159999981,
+        "import": 645.4662880000033,
+        "search": 55.249721000000136,
+        "total": 1294.2138489999998
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "ccb36322",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "bdcee74e_3",
+            "04a0b385",
+            "f79a48dd_1",
+            "8b1019b8_1",
+            "c38b33ae"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 93.78063100000145
+        }
+      },
+      "timing_ms": {
+        "open": 328.32288900000276,
+        "import": 693.6224779999975,
+        "search": 93.78063100000145,
+        "total": 1167.0356530000063
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "4fd1909e",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 55,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_2952aee4",
+            "ultrachat_59418",
+            "ultrachat_186237",
+            "2479cbae",
+            "sharegpt_xx1l0kg_29"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 61.90257200000633
+        }
+      },
+      "timing_ms": {
+        "open": 518.2282489999998,
+        "import": 735.2661999999982,
+        "search": 61.90257200000633,
+        "total": 1407.9017069999973
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "4fd1909e",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 55,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_2952aee4",
+            "ultrachat_59418",
+            "ultrachat_186237",
+            "2479cbae",
+            "sharegpt_xx1l0kg_29"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 49.90727899999911
+        }
+      },
+      "timing_ms": {
+        "open": 347.5316329999987,
+        "import": 811.1953220000069,
+        "search": 49.90727899999911,
+        "total": 1261.110345000001
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "545bd2b5",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_47ffab4c",
+            "b7f69a7d_1",
+            "6e672b84_2",
+            "1351505a_1",
+            "ultrachat_317048"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 94.45921400000225
+        }
+      },
+      "timing_ms": {
+        "open": 673.2684790000058,
+        "import": 713.200294000002,
+        "search": 94.45921400000225,
+        "total": 1569.478925000003
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "545bd2b5",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_47ffab4c",
+            "b7f69a7d_1",
+            "6e672b84_2",
+            "1351505a_1",
+            "ultrachat_317048"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 63.53011900000274
+        }
+      },
+      "timing_ms": {
+        "open": 388.9212929999994,
+        "import": 638.6628469999996,
+        "search": 63.53011900000274,
+        "total": 1142.094581999998
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "76d63226",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_bbdc7b0a",
+            "cb289226_1",
+            "b0729ec8_1",
+            "f27e27f9_2",
+            "adc47df1_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 64.52462299999752
+        }
+      },
+      "timing_ms": {
+        "open": 534.9719330000007,
+        "import": 651.9943459999995,
+        "search": 64.52462299999752,
+        "total": 1326.7366920000059
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "76d63226",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_bbdc7b0a",
+            "cb289226_1",
+            "b0729ec8_1",
+            "f27e27f9_2",
+            "adc47df1_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 41.88975300000311
+        }
+      },
+      "timing_ms": {
+        "open": 343.5413039999985,
+        "import": 721.854972000001,
+        "search": 41.88975300000311,
+        "total": 1154.2225459999972
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "c14c00dd",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "c77250d2",
+            "sharegpt_gu0qvzu_0",
+            "answer_304511ce",
+            "cd1f5147",
+            "7cd7c296_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 65.14546600000176
+        }
+      },
+      "timing_ms": {
+        "open": 541.4433820000049,
+        "import": 614.8613929999992,
+        "search": 65.14546600000176,
+        "total": 1276.1678600000014
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "c14c00dd",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "c77250d2",
+            "sharegpt_gu0qvzu_0",
+            "answer_304511ce",
+            "cd1f5147",
+            "7cd7c296_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 80.33183100000315
+        }
+      },
+      "timing_ms": {
+        "open": 376.3276689999984,
+        "import": 1117.3640640000012,
+        "search": 80.33183100000315,
+        "total": 1650.9047120000032
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "3d86fd0a",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 55,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_19c24c11",
+            "7e4dab66_2",
+            "cf8e352f_1",
+            "1f643033_2",
+            "ultrachat_231397"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 76.11228399999527
+        }
+      },
+      "timing_ms": {
+        "open": 535.2228440000035,
+        "import": 806.4284830000033,
+        "search": 76.11228399999527,
+        "total": 1481.7190709999995
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "3d86fd0a",
+      "question_type": "single-session-user",
+      "is_abs": false,
+      "num_sessions": 55,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_19c24c11",
+            "7e4dab66_2",
+            "cf8e352f_1",
+            "1f643033_2",
+            "ultrachat_231397"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 38.91149099999893
+        }
+      },
+      "timing_ms": {
+        "open": 424.7838400000037,
+        "import": 761.7389760000005,
+        "search": 38.91149099999893,
+        "total": 1271.2099570000064
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "0862e8bf_abs",
+      "question_type": "single-session-user",
+      "is_abs": true,
+      "num_sessions": 52,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "ultrachat_210818",
+            "ultrachat_404562",
+            "sharegpt_psjpano_35",
+            "sharegpt_8t6d65a_83",
+            "0e69d205_1"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 56.76712899999984
+        }
+      },
+      "timing_ms": {
+        "open": 544.6308549999958,
+        "import": 698.1485780000003,
+        "search": 56.76712899999984,
+        "total": 1362.4551779999965
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "0862e8bf_abs",
+      "question_type": "single-session-user",
+      "is_abs": true,
+      "num_sessions": 52,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "ultrachat_210818",
+            "ultrachat_404562",
+            "sharegpt_psjpano_35",
+            "sharegpt_8t6d65a_83",
+            "0e69d205_1"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 24.039254999996047
+        }
+      },
+      "timing_ms": {
+        "open": 327.0063430000009,
+        "import": 669.1175309999962,
+        "search": 24.039254999996047,
+        "total": 1095.4615980000017
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "bc8a6e93_abs",
+      "question_type": "single-session-user",
+      "is_abs": true,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_e6143162_abs",
+            "sharegpt_hn3is1q_0",
+            "ultrachat_551398",
+            "sharegpt_sf6kww1_9",
+            "375354d1_2"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 40.40256599999702
+        }
+      },
+      "timing_ms": {
+        "open": 514.8247540000011,
+        "import": 696.5038510000013,
+        "search": 40.40256599999702,
+        "total": 1308.0447090000016
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "bc8a6e93_abs",
+      "question_type": "single-session-user",
+      "is_abs": true,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_e6143162_abs",
+            "sharegpt_hn3is1q_0",
+            "ultrachat_551398",
+            "sharegpt_sf6kww1_9",
+            "375354d1_2"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 36.60765999999421
+        }
+      },
+      "timing_ms": {
+        "open": 365.36001000000397,
+        "import": 1105.922274000004,
+        "search": 36.60765999999421,
+        "total": 1568.6237309999997
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "19b5f2b3_abs",
+      "question_type": "single-session-user",
+      "is_abs": true,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "d0b0dabe",
+            "sharegpt_g9rabbh_0",
+            "answer_5ff494b9_abs",
+            "e44a5733_1",
+            "6b895848_2"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 46.034332000002905
+        }
+      },
+      "timing_ms": {
+        "open": 573.6492629999993,
+        "import": 673.9490619999997,
+        "search": 46.034332000002905,
+        "total": 1350.683656000001
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "19b5f2b3_abs",
+      "question_type": "single-session-user",
+      "is_abs": true,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "d0b0dabe",
+            "sharegpt_g9rabbh_0",
+            "answer_5ff494b9_abs",
+            "e44a5733_1",
+            "6b895848_2"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 28.58895399999892
+        }
+      },
+      "timing_ms": {
+        "open": 357.48699599999964,
+        "import": 629.7972890000019,
+        "search": 28.58895399999892,
+        "total": 1059.4830910000019
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "aae3761f",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_526354c8_1",
+            "answer_526354c8_2",
+            "b192ae00_2",
+            "0e193841_10",
+            "answer_526354c8_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 52.042958000005456
+        }
+      },
+      "timing_ms": {
+        "open": 512.1098750000019,
+        "import": 545.1744580000013,
+        "search": 52.042958000005456,
+        "total": 1212.399452000005
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "aae3761f",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_526354c8_1",
+            "answer_526354c8_2",
+            "b192ae00_2",
+            "0e193841_10",
+            "answer_526354c8_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 53.29355399999622
+        }
+      },
+      "timing_ms": {
+        "open": 372.5968720000019,
+        "import": 570.5639679999949,
+        "search": 53.29355399999622,
+        "total": 1043.2473899999968
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "46a3abf7",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "e224317f_2",
+            "answer_c65042d7_2",
+            "a95bedca",
+            "8acfa731",
+            "answer_c65042d7_3"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 53.4171239999996
+        }
+      },
+      "timing_ms": {
+        "open": 544.977856999998,
+        "import": 628.3856229999947,
+        "search": 53.4171239999996,
+        "total": 1283.069199999998
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "46a3abf7",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "e224317f_2",
+            "answer_c65042d7_2",
+            "a95bedca",
+            "8acfa731",
+            "answer_c65042d7_3"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 56.938170000001264
+        }
+      },
+      "timing_ms": {
+        "open": 377.39590200000384,
+        "import": 834.8624869999985,
+        "search": 56.938170000001264,
+        "total": 1326.4451400000034
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_15e38248",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "sharegpt_mm9tc5g_0",
+            "answer_8858d9dc_2",
+            "answer_8858d9dc_4",
+            "530742d1",
+            "15acfb99"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 53.43996399999742
+        }
+      },
+      "timing_ms": {
+        "open": 521.0355229999986,
+        "import": 666.7224510000015,
+        "search": 53.43996399999742,
+        "total": 1300.0191649999979
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_15e38248",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "sharegpt_mm9tc5g_0",
+            "answer_8858d9dc_2",
+            "answer_8858d9dc_4",
+            "530742d1",
+            "15acfb99"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 40.19603599999391
+        }
+      },
+      "timing_ms": {
+        "open": 414.662857000003,
+        "import": 820.5980840000047,
+        "search": 40.19603599999391,
+        "total": 1339.6278179999936
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "80ec1f4f",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "f6ce25ef",
+            "answer_990c8992_2",
+            "answer_990c8992_1",
+            "ultrachat_318441",
+            "answer_990c8992_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 64.03548099999898
+        }
+      },
+      "timing_ms": {
+        "open": 566.1254899999913,
+        "import": 624.6633170000132,
+        "search": 64.03548099999898,
+        "total": 1318.3288639999955
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "80ec1f4f",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "f6ce25ef",
+            "answer_990c8992_2",
+            "answer_990c8992_1",
+            "ultrachat_318441",
+            "answer_990c8992_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 47.15912699999171
+        }
+      },
+      "timing_ms": {
+        "open": 340.9761940000026,
+        "import": 627.6136590000096,
+        "search": 47.15912699999171,
+        "total": 1060.7382859999925
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_2ba83207",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_6a3b5c13_2",
+            "answer_6a3b5c13_3",
+            "answer_6a3b5c13_1",
+            "answer_6a3b5c13_4",
+            "58d66fec"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 48.54975299999933
+        }
+      },
+      "timing_ms": {
+        "open": 576.3797849999974,
+        "import": 614.1504209999985,
+        "search": 48.54975299999933,
+        "total": 1294.7396509999962
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_2ba83207",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_6a3b5c13_2",
+            "answer_6a3b5c13_3",
+            "answer_6a3b5c13_1",
+            "answer_6a3b5c13_4",
+            "58d66fec"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 44.772506000008434
+        }
+      },
+      "timing_ms": {
+        "open": 408.41223800000444,
+        "import": 815.4545229999931,
+        "search": 44.772506000008434,
+        "total": 1319.9533110000048
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "9d25d4e0",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "464f3821",
+            "answer_fcff2dc4_3",
+            "answer_fcff2dc4_2",
+            "answer_fcff2dc4_1",
+            "a4b774c4"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 60.59479600000486
+        }
+      },
+      "timing_ms": {
+        "open": 584.5830400000123,
+        "import": 867.1212990000058,
+        "search": 60.59479600000486,
+        "total": 1573.1520100000052
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "9d25d4e0",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "464f3821",
+            "answer_fcff2dc4_3",
+            "answer_fcff2dc4_2",
+            "answer_fcff2dc4_1",
+            "a4b774c4"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 52.1524289999943
+        }
+      },
+      "timing_ms": {
+        "open": 334.19742399999814,
+        "import": 712.2384489999968,
+        "search": 52.1524289999943,
+        "total": 1146.8759629999986
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "d851d5ba",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_5cdf9bd2_1",
+            "answer_5cdf9bd2_3",
+            "answer_5cdf9bd2_2",
+            "answer_5cdf9bd2_4",
+            "sharegpt_dxirwr4_25"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 68.49701999999525
+        }
+      },
+      "timing_ms": {
+        "open": 555.3434220000054,
+        "import": 800.4956160000002,
+        "search": 68.49701999999525,
+        "total": 1490.4147370000137
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "d851d5ba",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_5cdf9bd2_1",
+            "answer_5cdf9bd2_3",
+            "answer_5cdf9bd2_2",
+            "answer_5cdf9bd2_4",
+            "sharegpt_dxirwr4_25"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 57.056809999994584
+        }
+      },
+      "timing_ms": {
+        "open": 373.15070499999274,
+        "import": 924.3121979999996,
+        "search": 57.056809999994584,
+        "total": 1408.6469890000008
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "c2ac3c61",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_923c0221_2",
+            "0c483a3c",
+            "answer_923c0221_1",
+            "sharegpt_2bshrqc_25",
+            "e11e9a6d"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 84.62308099999791
+        }
+      },
+      "timing_ms": {
+        "open": 672.6740560000035,
+        "import": 784.7123470000079,
+        "search": 84.62308099999791,
+        "total": 1608.486705000003
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "c2ac3c61",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_923c0221_2",
+            "0c483a3c",
+            "answer_923c0221_1",
+            "sharegpt_2bshrqc_25",
+            "e11e9a6d"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 52.58847999999125
+        }
+      },
+      "timing_ms": {
+        "open": 369.5193089999957,
+        "import": 845.2714129999949,
+        "search": 52.58847999999125,
+        "total": 1313.3321730000025
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "bf659f65",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 52,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_7726e7e9_1",
+            "ultrachat_465222",
+            "9d480413_5",
+            "sharegpt_sbjezex_4",
+            "answer_7726e7e9_2"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 81.34752599999774
+        }
+      },
+      "timing_ms": {
+        "open": 559.4955320000008,
+        "import": 758.5596329999971,
+        "search": 81.34752599999774,
+        "total": 1459.7756240000017
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "bf659f65",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 52,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_7726e7e9_1",
+            "ultrachat_465222",
+            "9d480413_5",
+            "sharegpt_sbjezex_4",
+            "answer_7726e7e9_2"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 62.83916399998998
+        }
+      },
+      "timing_ms": {
+        "open": 400.95845499999996,
+        "import": 781.710024,
+        "search": 62.83916399998998,
+        "total": 1296.7415790000086
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_372c3eed",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_35c5419d_1",
+            "ultrachat_290513",
+            "sharegpt_2hmuduq_1",
+            "answer_35c5419d_3",
+            "ultrachat_424492"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 57.03570000000764
+        }
+      },
+      "timing_ms": {
+        "open": 561.3205690000032,
+        "import": 780.3754369999951,
+        "search": 57.03570000000764,
+        "total": 1459.8590860000113
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_372c3eed",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_35c5419d_1",
+            "ultrachat_290513",
+            "sharegpt_2hmuduq_1",
+            "answer_35c5419d_3",
+            "ultrachat_424492"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 42.54552500000864
+        }
+      },
+      "timing_ms": {
+        "open": 341.1316349999979,
+        "import": 645.694119000007,
+        "search": 42.54552500000864,
+        "total": 1074.7655870000017
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "60bf93ed_abs",
+      "question_type": "multi-session",
+      "is_abs": true,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "755c2d32_1",
+            "a95d014c_3",
+            "1a892e14",
+            "answer_e0956e0a_abs_1",
+            "36d5bbde_1"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 55.725393999993685
+        }
+      },
+      "timing_ms": {
+        "open": 526.8883079999941,
+        "import": 742.3237420000078,
+        "search": 55.725393999993685,
+        "total": 1384.4302139999927
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "60bf93ed_abs",
+      "question_type": "multi-session",
+      "is_abs": true,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "755c2d32_1",
+            "a95d014c_3",
+            "1a892e14",
+            "answer_e0956e0a_abs_1",
+            "36d5bbde_1"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 53.85986500000581
+        }
+      },
+      "timing_ms": {
+        "open": 332.03674599999795,
+        "import": 826.3561499999923,
+        "search": 53.85986500000581,
+        "total": 1264.6721610000095
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "06878be2",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "ultrachat_319509",
+            "ultrachat_556731",
+            "8fcfbe43_2",
+            "ca929779_1",
+            "a67c1862_4"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 73.89175300000352
+        }
+      },
+      "timing_ms": {
+        "open": 507.16454100000556,
+        "import": 698.1037780000042,
+        "search": 73.89175300000352,
+        "total": 1337.4057380000013
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "06878be2",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "ultrachat_319509",
+            "ultrachat_556731",
+            "8fcfbe43_2",
+            "ca929779_1",
+            "a67c1862_4"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 47.79682000000321
+        }
+      },
+      "timing_ms": {
+        "open": 305.43568799999775,
+        "import": 732.2840869999927,
+        "search": 47.79682000000321,
+        "total": 1133.5395660000067
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "35a27287",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "ultrachat_267380",
+            "880ee13e",
+            "answer_9b182436",
+            "58ae7c4f_3",
+            "a98ff421_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 68.86344099999405
+        }
+      },
+      "timing_ms": {
+        "open": 555.8436249999941,
+        "import": 667.178132999994,
+        "search": 68.86344099999405,
+        "total": 1351.5929509999987
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "35a27287",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "ultrachat_267380",
+            "880ee13e",
+            "answer_9b182436",
+            "58ae7c4f_3",
+            "a98ff421_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 54.82868999999482
+        }
+      },
+      "timing_ms": {
+        "open": 377.8901749999932,
+        "import": 692.5459030000056,
+        "search": 54.82868999999482,
+        "total": 1172.513095000002
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "32260d93",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "573dc24b_1",
+            "6d3f5c68_4",
+            "04bef53b",
+            "ultrachat_26485",
+            "answer_0250ae1c"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 66.96127400000114
+        }
+      },
+      "timing_ms": {
+        "open": 512.9789579999924,
+        "import": 659.0250060000108,
+        "search": 66.96127400000114,
+        "total": 1298.4727790000034
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "32260d93",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "573dc24b_1",
+            "6d3f5c68_4",
+            "04bef53b",
+            "ultrachat_26485",
+            "answer_0250ae1c"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 74.3084450000024
+        }
+      },
+      "timing_ms": {
+        "open": 333.45612000000256,
+        "import": 752.5655760000082,
+        "search": 74.3084450000024,
+        "total": 1212.0249080000067
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "195a1a1b",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "9f12daa1_1",
+            "answer_6dc4305e",
+            "ultrachat_396124",
+            "87fff4b4_1",
+            "d03b6a05_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 90.29010500000732
+        }
+      },
+      "timing_ms": {
+        "open": 554.0545169999968,
+        "import": 707.046405999994,
+        "search": 90.29010500000732,
+        "total": 1409.6173049999925
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "195a1a1b",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "9f12daa1_1",
+            "answer_6dc4305e",
+            "ultrachat_396124",
+            "87fff4b4_1",
+            "d03b6a05_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 68.29150000000664
+        }
+      },
+      "timing_ms": {
+        "open": 363.490232000011,
+        "import": 877.0160909999977,
+        "search": 68.29150000000664,
+        "total": 1361.206462000002
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "afdc33df",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_8549e5e0",
+            "0b0bc8ae_2",
+            "ad8d9f0f",
+            "22f9f163_3",
+            "d03b6a05_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 69.1169540000119
+        }
+      },
+      "timing_ms": {
+        "open": 647.6397970000107,
+        "import": 853.1834059999965,
+        "search": 69.1169540000119,
+        "total": 1632.4508810000116
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "afdc33df",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_8549e5e0",
+            "0b0bc8ae_2",
+            "ad8d9f0f",
+            "22f9f163_3",
+            "d03b6a05_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 48.736942999996245
+        }
+      },
+      "timing_ms": {
+        "open": 369.7032889999973,
+        "import": 884.9782669999986,
+        "search": 48.736942999996245,
+        "total": 1373.4370170000038
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "6b7dfb22",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "574df152_1",
+            "answer_f6502d0f",
+            "fd418106_3",
+            "be581797",
+            "4e0da76d"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 61.7375400000019
+        }
+      },
+      "timing_ms": {
+        "open": 498.16073199998937,
+        "import": 601.2461340000009,
+        "search": 61.7375400000019,
+        "total": 1223.3131679999933
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "6b7dfb22",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "574df152_1",
+            "answer_f6502d0f",
+            "fd418106_3",
+            "be581797",
+            "4e0da76d"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 51.023354000004474
+        }
+      },
+      "timing_ms": {
+        "open": 336.9168950000021,
+        "import": 651.7345839999907,
+        "search": 51.023354000004474,
+        "total": 1093.0725870000024
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "1a1907b4",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "e622a1bd",
+            "4f3b36d4_5",
+            "e42e7876_5",
+            "4e3da326_1",
+            "8e78fa70_1"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 61.40342899999814
+        }
+      },
+      "timing_ms": {
+        "open": 554.7054110000026,
+        "import": 685.8636750000005,
+        "search": 61.40342899999814,
+        "total": 1360.376178999999
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "1a1907b4",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "e622a1bd",
+            "4f3b36d4_5",
+            "e42e7876_5",
+            "4e3da326_1",
+            "8e78fa70_1"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 48.90627500000119
+        }
+      },
+      "timing_ms": {
+        "open": 346.0290870000026,
+        "import": 806.2828010000085,
+        "search": 48.90627500000119,
+        "total": 1256.2904030000063
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "09d032c9",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 43,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "3fc2244f",
+            "af631aa3_2",
+            "d3971322_1",
+            "2a17ea02_1",
+            "b21bd3e2"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 63.923681000000215
+        }
+      },
+      "timing_ms": {
+        "open": 576.2309649999952,
+        "import": 621.7968640000036,
+        "search": 63.923681000000215,
+        "total": 1327.6025459999946
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "09d032c9",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 43,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "3fc2244f",
+            "af631aa3_2",
+            "d3971322_1",
+            "2a17ea02_1",
+            "b21bd3e2"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 37.86224499999662
+        }
+      },
+      "timing_ms": {
+        "open": 406.31091000000015,
+        "import": 626.0865230000054,
+        "search": 37.86224499999662,
+        "total": 1132.3886999999959
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "38146c39",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_772472c8",
+            "5806662d_1",
+            "a86b30e4",
+            "87aaee77",
+            "15ed03f0_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 55.545553000003565
+        }
+      },
+      "timing_ms": {
+        "open": 538.7818590000097,
+        "import": 588.8577789999981,
+        "search": 55.545553000003565,
+        "total": 1269.8702910000138
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "38146c39",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_772472c8",
+            "5806662d_1",
+            "a86b30e4",
+            "87aaee77",
+            "15ed03f0_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 37.525534000000334
+        }
+      },
+      "timing_ms": {
+        "open": 367.4306979999965,
+        "import": 558.1392049999995,
+        "search": 37.525534000000334,
+        "total": 1005.7452150000026
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "95228167",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "8199fb3a_4",
+            "084802f9_2",
+            "cb88f886_1",
+            "sharegpt_1hqne9g_0",
+            "b916da64_2"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 53.56563599999936
+        }
+      },
+      "timing_ms": {
+        "open": 560.8580569999904,
+        "import": 666.2644480000017,
+        "search": 53.56563599999936,
+        "total": 1336.3191129999905
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "95228167",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "8199fb3a_4",
+            "084802f9_2",
+            "cb88f886_1",
+            "sharegpt_1hqne9g_0",
+            "b916da64_2"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 38.374717999991844
+        }
+      },
+      "timing_ms": {
+        "open": 358.5131410000031,
+        "import": 548.1539809999958,
+        "search": 38.374717999991844,
+        "total": 988.4700400000002
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "505af2f5",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "4f2d6be4_2",
+            "7d52ca48_2",
+            "ebeb4c51",
+            "078db67b",
+            "69a42467_1"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 65.31557499998598
+        }
+      },
+      "timing_ms": {
+        "open": 517.4345869999961,
+        "import": 621.5883840000024,
+        "search": 65.31557499998598,
+        "total": 1259.110084999993
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "505af2f5",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "4f2d6be4_2",
+            "7d52ca48_2",
+            "ebeb4c51",
+            "078db67b",
+            "69a42467_1"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 54.979321000006166
+        }
+      },
+      "timing_ms": {
+        "open": 391.76556600000185,
+        "import": 622.2449259999994,
+        "search": 54.979321000006166,
+        "total": 1112.9607649999962
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "75f70248",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 42,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "204862e4_2",
+            "75671e3f_1",
+            "53dc1394",
+            "ff67236f_3",
+            "answer_8ee04a2e"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 55.86784500000067
+        }
+      },
+      "timing_ms": {
+        "open": 571.2863530000031,
+        "import": 569.4529039999907,
+        "search": 55.86784500000067,
+        "total": 1251.062220000007
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "75f70248",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 42,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "204862e4_2",
+            "75671e3f_1",
+            "53dc1394",
+            "ff67236f_3",
+            "answer_8ee04a2e"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 45.00581800000509
+        }
+      },
+      "timing_ms": {
+        "open": 403.98044899999513,
+        "import": 539.218842000002,
+        "search": 45.00581800000509,
+        "total": 1032.816083999991
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "d6233ab6",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "e419b7c3_4",
+            "ultrachat_125013",
+            "0e726047",
+            "87cfeb28_2",
+            "d850eba6_2"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 55.23686099999759
+        }
+      },
+      "timing_ms": {
+        "open": 590.3689760000125,
+        "import": 584.4674499999965,
+        "search": 55.23686099999759,
+        "total": 1288.1895930000028
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "d6233ab6",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "e419b7c3_4",
+            "ultrachat_125013",
+            "0e726047",
+            "87cfeb28_2",
+            "d850eba6_2"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 41.07573899999261
+        }
+      },
+      "timing_ms": {
+        "open": 345.22205199999735,
+        "import": 608.3401649999869,
+        "search": 41.07573899999261,
+        "total": 1046.5854830000026
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "b6025781",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "f20c73f5_3",
+            "answer_8414cc57",
+            "1d6744b5_1",
+            "1a693999_4",
+            "ddb3ab46"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 83.67844699999841
+        }
+      },
+      "timing_ms": {
+        "open": 541.1462310000061,
+        "import": 603.238652,
+        "search": 83.67844699999841,
+        "total": 1299.6763429999992
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "b6025781",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "f20c73f5_3",
+            "answer_8414cc57",
+            "1d6744b5_1",
+            "1a693999_4",
+            "ddb3ab46"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 41.36750100000063
+        }
+      },
+      "timing_ms": {
+        "open": 380.1745440000086,
+        "import": 605.9926140000025,
+        "search": 41.36750100000063,
+        "total": 1074.1115240000072
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "a89d7624",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "99f2f5b1_1",
+            "02f70006_1",
+            "a479a7d6_4",
+            "3cb41ab8_4",
+            "39a056ae"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 52.2587799999892
+        }
+      },
+      "timing_ms": {
+        "open": 508.48613699999987,
+        "import": 620.3215459999919,
+        "search": 52.2587799999892,
+        "total": 1254.086334000007
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "a89d7624",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "99f2f5b1_1",
+            "02f70006_1",
+            "a479a7d6_4",
+            "3cb41ab8_4",
+            "39a056ae"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 39.609043999997084
+        }
+      },
+      "timing_ms": {
+        "open": 361.1369609999965,
+        "import": 717.1084909999918,
+        "search": 39.609043999997084,
+        "total": 1165.407264999987
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "1d4e3b97",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "ecb24dd8_2",
+            "answer_e6b6353d",
+            "809cabca_1",
+            "03633a51",
+            "c51583cd_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 56.07621699999436
+        }
+      },
+      "timing_ms": {
+        "open": 530.1079220000101,
+        "import": 616.0501579999982,
+        "search": 56.07621699999436,
+        "total": 1286.8237460000091
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "1d4e3b97",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "ecb24dd8_2",
+            "answer_e6b6353d",
+            "809cabca_1",
+            "03633a51",
+            "c51583cd_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 39.699194000000716
+        }
+      },
+      "timing_ms": {
+        "open": 328.4489789999934,
+        "import": 612.7097340000037,
+        "search": 39.699194000000716,
+        "total": 1040.5051079999976
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "0a34ad58",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 42,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_cebb7159",
+            "9ca2a195_1",
+            "b869d7ed_2",
+            "ultrachat_395652",
+            "f849dd04"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 55.860264000002644
+        }
+      },
+      "timing_ms": {
+        "open": 520.2413780000061,
+        "import": 561.8620299999893,
+        "search": 55.860264000002644,
+        "total": 1192.1434220000083
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "0a34ad58",
+      "question_type": "single-session-preference",
+      "is_abs": false,
+      "num_sessions": 42,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_cebb7159",
+            "9ca2a195_1",
+            "b869d7ed_2",
+            "ultrachat_395652",
+            "f849dd04"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 57.554392000005464
+        }
+      },
+      "timing_ms": {
+        "open": 313.38602200000605,
+        "import": 873.3015250000026,
+        "search": 57.554392000005464,
+        "total": 1311.1804320000083
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "60036106",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_e552e1f9_2",
+            "answer_e552e1f9_1",
+            "sharegpt_moarqa7_0",
+            "sharegpt_ckvrgf1_99",
+            "ultrachat_134557"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 49.01375399999961
+        }
+      },
+      "timing_ms": {
+        "open": 510.2992040000099,
+        "import": 573.5770620000112,
+        "search": 49.01375399999961,
+        "total": 1188.5293460000103
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "60036106",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_e552e1f9_2",
+            "answer_e552e1f9_1",
+            "sharegpt_moarqa7_0",
+            "sharegpt_ckvrgf1_99",
+            "ultrachat_134557"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 35.14228400000138
+        }
+      },
+      "timing_ms": {
+        "open": 386.7896529999998,
+        "import": 911.9647950000071,
+        "search": 35.14228400000138,
+        "total": 1378.6358180000097
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "9ee3ecd6",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_66c23110_2",
+            "answer_66c23110_1",
+            "fd56c5bd_2",
+            "fa0fa74d_2",
+            "6577a6d9_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 63.63041799998609
+        }
+      },
+      "timing_ms": {
+        "open": 505.55820500000846,
+        "import": 650.5166320000135,
+        "search": 63.63041799998609,
+        "total": 1275.8404889999947
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "9ee3ecd6",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_66c23110_2",
+            "answer_66c23110_1",
+            "fd56c5bd_2",
+            "fa0fa74d_2",
+            "6577a6d9_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 59.62152099999366
+        }
+      },
+      "timing_ms": {
+        "open": 408.99567199999,
+        "import": 799.9865350000036,
+        "search": 59.62152099999366,
+        "total": 1324.6479340000078
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "ef9cf60a",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 54,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_87e3a1cb_2",
+            "answer_87e3a1cb_1",
+            "b330d6b1",
+            "0babf5b6_2",
+            "2357de36_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 59.05311999999685
+        }
+      },
+      "timing_ms": {
+        "open": 575.7681419999863,
+        "import": 780.3158969999931,
+        "search": 59.05311999999685,
+        "total": 1476.5436579999805
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "ef9cf60a",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 54,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_87e3a1cb_2",
+            "answer_87e3a1cb_1",
+            "b330d6b1",
+            "0babf5b6_2",
+            "2357de36_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 30.323663000017405
+        }
+      },
+      "timing_ms": {
+        "open": 315.7258230000152,
+        "import": 745.2788239999791,
+        "search": 30.323663000017405,
+        "total": 1134.8634420000017
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "a3332713",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 42,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_16ece55f_2",
+            "answer_16ece55f_1",
+            "62be624f",
+            "67388dfc_2",
+            "sharegpt_byymtlw_0"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 46.014411999989534
+        }
+      },
+      "timing_ms": {
+        "open": 505.58790499999304,
+        "import": 599.6394559999753,
+        "search": 46.014411999989534,
+        "total": 1207.5886689999897
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "a3332713",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 42,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_16ece55f_2",
+            "answer_16ece55f_1",
+            "62be624f",
+            "67388dfc_2",
+            "sharegpt_byymtlw_0"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 38.836530000000494
+        }
+      },
+      "timing_ms": {
+        "open": 311.41745400000946,
+        "import": 660.5421329999808,
+        "search": 38.836530000000494,
+        "total": 1061.1285980000102
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "21d02d0d",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_2c637141_2",
+            "answer_2c637141_1",
+            "ultrachat_71299",
+            "ultrachat_417352",
+            "sharegpt_adeei7y_7"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 51.8640670000168
+        }
+      },
+      "timing_ms": {
+        "open": 551.4866150000016,
+        "import": 649.923627000011,
+        "search": 51.8640670000168,
+        "total": 1311.42975499999
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "21d02d0d",
+      "question_type": "multi-session",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_2c637141_2",
+            "answer_2c637141_1",
+            "ultrachat_71299",
+            "ultrachat_417352",
+            "sharegpt_adeei7y_7"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 41.19164999999339
+        }
+      },
+      "timing_ms": {
+        "open": 361.99475600000005,
+        "import": 705.1319289999956,
+        "search": 41.19164999999339,
+        "total": 1161.9873099999968
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "09ba9854_abs",
+      "question_type": "multi-session",
+      "is_abs": true,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_96c743d0_abs_1",
+            "answer_96c743d0_abs_2",
+            "ultrachat_342361",
+            "66e58c90_2",
+            "a50b0d73_2"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 75.71905099999276
+        }
+      },
+      "timing_ms": {
+        "open": 509.7784040000115,
+        "import": 614.4317909999809,
+        "search": 75.71905099999276,
+        "total": 1269.417431000009
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "09ba9854_abs",
+      "question_type": "multi-session",
+      "is_abs": true,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_96c743d0_abs_1",
+            "answer_96c743d0_abs_2",
+            "ultrachat_342361",
+            "66e58c90_2",
+            "a50b0d73_2"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 45.88832100000582
+        }
+      },
+      "timing_ms": {
+        "open": 390.659450999985,
+        "import": 828.3019789999817,
+        "search": 45.88832100000582,
+        "total": 1312.2185379999864
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "71017276",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_0b4a8adc_1",
+            "4a545031_2",
+            "10889cf0_1",
+            "398f23e7",
+            "58ec258f_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 68.26668900001096
+        }
+      },
+      "timing_ms": {
+        "open": 534.9333130000159,
+        "import": 712.028278999991,
+        "search": 68.26668900001096,
+        "total": 1385.1095370000112
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "71017276",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_0b4a8adc_1",
+            "4a545031_2",
+            "10889cf0_1",
+            "398f23e7",
+            "58ec258f_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 38.09042699998827
+        }
+      },
+      "timing_ms": {
+        "open": 397.51974200000404,
+        "import": 664.7571809999936,
+        "search": 38.09042699998827,
+        "total": 1153.6008730000176
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_1d4ab0c9",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_febde667_2",
+            "answer_febde667_1",
+            "082b7e52_1",
+            "ultrachat_201007",
+            "sharegpt_6cz1sq6_328"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 57.315910000004806
+        }
+      },
+      "timing_ms": {
+        "open": 532.7288340000086,
+        "import": 776.3893009999883,
+        "search": 57.315910000004806,
+        "total": 1422.668021999998
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_1d4ab0c9",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_febde667_2",
+            "answer_febde667_1",
+            "082b7e52_1",
+            "ultrachat_201007",
+            "sharegpt_6cz1sq6_328"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 37.7428249999939
+        }
+      },
+      "timing_ms": {
+        "open": 344.84187999999267,
+        "import": 632.2910590000101,
+        "search": 37.7428249999939,
+        "total": 1058.439075000002
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_18c2b244",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_c862f65a_3",
+            "answer_c862f65a_1",
+            "answer_c862f65a_2",
+            "dfbc46bd_1",
+            "ultrachat_503659"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 60.6157050000038
+        }
+      },
+      "timing_ms": {
+        "open": 526.7247669999779,
+        "import": 621.5949630000105,
+        "search": 60.6157050000038,
+        "total": 1266.2497670000012
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_18c2b244",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_c862f65a_3",
+            "answer_c862f65a_1",
+            "answer_c862f65a_2",
+            "dfbc46bd_1",
+            "ultrachat_503659"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 56.97737999999663
+        }
+      },
+      "timing_ms": {
+        "open": 350.0698839999968,
+        "import": 645.0342560000136,
+        "search": 56.97737999999663,
+        "total": 1099.5359460000182
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_7a0daae1",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 61,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_4d5490f1_1",
+            "answer_4d5490f1_2",
+            "7c08d74b_2",
+            "sharegpt_zwqmvol_607",
+            "819dfad7_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 54.49383900000248
+        }
+      },
+      "timing_ms": {
+        "open": 614.3848519999883,
+        "import": 818.6535149999836,
+        "search": 54.49383900000248,
+        "total": 1544.497745999979
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_7a0daae1",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 61,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_4d5490f1_1",
+            "answer_4d5490f1_2",
+            "7c08d74b_2",
+            "sharegpt_zwqmvol_607",
+            "819dfad7_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 41.919204000005266
+        }
+      },
+      "timing_ms": {
+        "open": 424.998041999992,
+        "import": 843.3319439999759,
+        "search": 41.919204000005266,
+        "total": 1362.276098000002
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "2ebe6c90",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 43,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_c9d35c00_2",
+            "0fe848c5_3",
+            "answer_c9d35c00_1",
+            "8fa64936_1",
+            "0f73eee7_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 54.99595099998987
+        }
+      },
+      "timing_ms": {
+        "open": 546.0544119999977,
+        "import": 581.9299400000018,
+        "search": 54.99595099998987,
+        "total": 1240.5586339999863
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "2ebe6c90",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 43,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_c9d35c00_2",
+            "0fe848c5_3",
+            "answer_c9d35c00_1",
+            "8fa64936_1",
+            "0f73eee7_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 44.841746000020066
+        }
+      },
+      "timing_ms": {
+        "open": 373.50770600000396,
+        "import": 672.9597970000177,
+        "search": 44.841746000020066,
+        "total": 1139.7298730000039
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "370a8ff4",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_61d1be50_2",
+            "answer_61d1be50_1",
+            "cfde748a",
+            "sharegpt_ubmvpdp_93",
+            "d028f447"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 49.58423700000276
+        }
+      },
+      "timing_ms": {
+        "open": 506.9255499999854,
+        "import": 633.3562650000094,
+        "search": 49.58423700000276,
+        "total": 1248.4056280000077
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "370a8ff4",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_61d1be50_2",
+            "answer_61d1be50_1",
+            "cfde748a",
+            "sharegpt_ubmvpdp_93",
+            "d028f447"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 47.29632700001821
+        }
+      },
+      "timing_ms": {
+        "open": 359.29199399999925,
+        "import": 657.2384489999968,
+        "search": 47.29632700001821,
+        "total": 1115.719758000021
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "eac54adc",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_0d4d0347_2",
+            "answer_0d4d0347_1",
+            "sharegpt_pgmap0p_0",
+            "89ea5a4e",
+            "ae051325_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 56.31549599999562
+        }
+      },
+      "timing_ms": {
+        "open": 532.7251040000119,
+        "import": 632.8854620000056,
+        "search": 56.31549599999562,
+        "total": 1280.447988
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "eac54adc",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_0d4d0347_2",
+            "answer_0d4d0347_1",
+            "sharegpt_pgmap0p_0",
+            "89ea5a4e",
+            "ae051325_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 41.70333300001221
+        }
+      },
+      "timing_ms": {
+        "open": 350.60325600000215,
+        "import": 610.6644950000045,
+        "search": 41.70333300001221,
+        "total": 1046.5145140000095
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_85da3956",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_581ab834_1",
+            "fcc7fe77_2",
+            "ultrachat_373754",
+            "sharegpt_h1uxagu_1",
+            "8da8c7e0"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 71.0052999999898
+        }
+      },
+      "timing_ms": {
+        "open": 549.9636589999718,
+        "import": 603.806104999996,
+        "search": 71.0052999999898,
+        "total": 1286.6381249999977
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_85da3956",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_581ab834_1",
+            "fcc7fe77_2",
+            "ultrachat_373754",
+            "sharegpt_h1uxagu_1",
+            "8da8c7e0"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 35.709898000000976
+        }
+      },
+      "timing_ms": {
+        "open": 389.0460650000023,
+        "import": 707.8045310000016,
+        "search": 35.709898000000976,
+        "total": 1175.030877000012
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_68e94287",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_9793daa3_2",
+            "60876def_1",
+            "50f136f2_3",
+            "answer_9793daa3_1",
+            "sharegpt_xzaefl4_0"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 55.19854100001976
+        }
+      },
+      "timing_ms": {
+        "open": 537.0052319999959,
+        "import": 596.8830049999815,
+        "search": 55.19854100001976,
+        "total": 1250.0243250000058
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_68e94287",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_9793daa3_2",
+            "60876def_1",
+            "50f136f2_3",
+            "answer_9793daa3_1",
+            "sharegpt_xzaefl4_0"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 43.3939900000114
+        }
+      },
+      "timing_ms": {
+        "open": 430.2381640000094,
+        "import": 639.6342120000045,
+        "search": 43.3939900000114,
+        "total": 1162.230631000013
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_e061b84g",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 58,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "9dac9e37_1",
+            "ae15e8b6_1",
+            "0e3d8491_1",
+            "ultrachat_391029",
+            "09d021e7_2"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 49.76087800000096
+        }
+      },
+      "timing_ms": {
+        "open": 549.5577659999835,
+        "import": 701.7083240000065,
+        "search": 49.76087800000096,
+        "total": 1358.5087389999826
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_e061b84g",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 58,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "9dac9e37_1",
+            "ae15e8b6_1",
+            "0e3d8491_1",
+            "ultrachat_391029",
+            "09d021e7_2"
+          ],
+          "recall_all": 0,
+          "recall_any": 0,
+          "search_ms": 44.24329400001443
+        }
+      },
+      "timing_ms": {
+        "open": 410.8002090000082,
+        "import": 823.468418000004,
+        "search": 44.24329400001443,
+        "total": 1340.1060400000133
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_2655b836",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_4be1b6b4_2",
+            "answer_4be1b6b4_1",
+            "0f2434e8",
+            "ultrachat_268202",
+            "3bc55308"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 55.0446809999994
+        }
+      },
+      "timing_ms": {
+        "open": 544.6733759999915,
+        "import": 624.6767269999837,
+        "search": 55.0446809999994,
+        "total": 1283.606522999995
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_2655b836",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_4be1b6b4_2",
+            "answer_4be1b6b4_1",
+            "0f2434e8",
+            "ultrachat_268202",
+            "3bc55308"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 38.24028699999326
+        }
+      },
+      "timing_ms": {
+        "open": 384.17097300000023,
+        "import": 708.4429240000027,
+        "search": 38.24028699999326,
+        "total": 1175.1763280000014
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "08f4fc43",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_6ea1541e_1",
+            "answer_6ea1541e_2",
+            "sharegpt_wxqtiue_0",
+            "9216c4d3_4",
+            "f3bd00ec_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 50.29000000000815
+        }
+      },
+      "timing_ms": {
+        "open": 555.930045999994,
+        "import": 584.8420909999986,
+        "search": 50.29000000000815,
+        "total": 1247.3276640000113
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "08f4fc43",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_6ea1541e_1",
+            "answer_6ea1541e_2",
+            "sharegpt_wxqtiue_0",
+            "9216c4d3_4",
+            "f3bd00ec_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 40.709038000000874
+        }
+      },
+      "timing_ms": {
+        "open": 358.57419100002153,
+        "import": 613.7104980000004,
+        "search": 40.709038000000874,
+        "total": 1060.2909240000008
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "f0853d11",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_932ea3bf_2",
+            "answer_932ea3bf_1",
+            "10c0752c",
+            "bd8708e2_2",
+            "sharegpt_9uposle_27"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 57.91707399999723
+        }
+      },
+      "timing_ms": {
+        "open": 581.2742749999743,
+        "import": 626.3384730000107,
+        "search": 57.91707399999723,
+        "total": 1325.3244649999833
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "f0853d11",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 46,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_932ea3bf_2",
+            "answer_932ea3bf_1",
+            "10c0752c",
+            "bd8708e2_2",
+            "sharegpt_9uposle_27"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 39.443333000002895
+        }
+      },
+      "timing_ms": {
+        "open": 357.0362740000128,
+        "import": 577.8284210000129,
+        "search": 39.443333000002895,
+        "total": 1023.1687120000133
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "b9cfe692",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_5e3bb940_2",
+            "answer_5e3bb940_1",
+            "answer_5e3bb940_3",
+            "sharegpt_oxgin7q_53",
+            "sharegpt_rx0hm6s_9"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 53.38204399999813
+        }
+      },
+      "timing_ms": {
+        "open": 594.167053000012,
+        "import": 593.2610290000157,
+        "search": 53.38204399999813,
+        "total": 1297.1165829999954
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "b9cfe692",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_5e3bb940_2",
+            "answer_5e3bb940_1",
+            "answer_5e3bb940_3",
+            "sharegpt_oxgin7q_53",
+            "sharegpt_rx0hm6s_9"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 39.98412500001723
+        }
+      },
+      "timing_ms": {
+        "open": 376.418679000024,
+        "import": 766.1392549999873,
+        "search": 39.98412500001723,
+        "total": 1226.2871810000215
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "b29f3365",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_436d4309_1",
+            "answer_436d4309_2",
+            "6b7605d1_1",
+            "c279c578",
+            "95c9666f_5"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 53.20054399999208
+        }
+      },
+      "timing_ms": {
+        "open": 514.1373519999906,
+        "import": 669.6938329999975,
+        "search": 53.20054399999208,
+        "total": 1291.845868000004
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "b29f3365",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_436d4309_1",
+            "answer_436d4309_2",
+            "6b7605d1_1",
+            "c279c578",
+            "95c9666f_5"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 41.66226200002711
+        }
+      },
+      "timing_ms": {
+        "open": 371.41039599999203,
+        "import": 833.720032000012,
+        "search": 41.66226200002711,
+        "total": 1291.1125549999997
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_fe651585",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_65600ff6_2",
+            "da828711",
+            "e30c4a7b_2",
+            "answer_65600ff6_1",
+            "ff6b8624"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 84.92777199999546
+        }
+      },
+      "timing_ms": {
+        "open": 604.1008760000113,
+        "import": 630.0907000000007,
+        "search": 84.92777199999546,
+        "total": 1375.841986000014
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_fe651585",
+      "question_type": "temporal-reasoning",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_65600ff6_2",
+            "da828711",
+            "e30c4a7b_2",
+            "answer_65600ff6_1",
+            "ff6b8624"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 46.66522399999667
+        }
+      },
+      "timing_ms": {
+        "open": 405.9670080000069,
+        "import": 683.389182999992,
+        "search": 46.66522399999667,
+        "total": 1180.791442000016
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "gpt4_93159ced_abs",
+      "question_type": "temporal-reasoning",
+      "is_abs": true,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "76385c25",
+            "sharegpt_pfa0sfh_17",
+            "f5eb52d6",
+            "2f097fba_1",
+            "7c9732ff_2"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 56.03997499999241
+        }
+      },
+      "timing_ms": {
+        "open": 592.7110849999881,
+        "import": 638.2277959999919,
+        "search": 56.03997499999241,
+        "total": 1343.2659339999955
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "gpt4_93159ced_abs",
+      "question_type": "temporal-reasoning",
+      "is_abs": true,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "76385c25",
+            "sharegpt_pfa0sfh_17",
+            "f5eb52d6",
+            "2f097fba_1",
+            "7c9732ff_2"
+          ],
+          "recall_all": null,
+          "recall_any": null,
+          "search_ms": 37.465442999993684
+        }
+      },
+      "timing_ms": {
+        "open": 337.4207270000188,
+        "import": 627.6280200000037,
+        "search": 37.465442999993684,
+        "total": 1049.7914670000027
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "6aeb4375",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_3f9693b7_1",
+            "answer_3f9693b7_2",
+            "93bed3d8_1",
+            "sharegpt_md0bl69_53",
+            "aa6afba8"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 68.77545300000929
+        }
+      },
+      "timing_ms": {
+        "open": 546.4694630000158,
+        "import": 639.1097690000024,
+        "search": 68.77545300000929,
+        "total": 1310.3616800000018
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "6aeb4375",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_3f9693b7_1",
+            "answer_3f9693b7_2",
+            "93bed3d8_1",
+            "sharegpt_md0bl69_53",
+            "aa6afba8"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 56.206116000015754
+        }
+      },
+      "timing_ms": {
+        "open": 392.73886899999343,
+        "import": 644.1804929999926,
+        "search": 56.206116000015754,
+        "total": 1137.251860999997
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "71315a70",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_c44b9df4_1",
+            "answer_c44b9df4_2",
+            "ultrachat_42515",
+            "ultrachat_399278",
+            "1a43e6cf"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 85.28956399997696
+        }
+      },
+      "timing_ms": {
+        "open": 547.2665860000125,
+        "import": 712.212910000002,
+        "search": 85.28956399997696,
+        "total": 1403.0691750000115
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "71315a70",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_c44b9df4_1",
+            "answer_c44b9df4_2",
+            "ultrachat_42515",
+            "ultrachat_399278",
+            "1a43e6cf"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 59.44441100000404
+        }
+      },
+      "timing_ms": {
+        "open": 402.7309939999832,
+        "import": 781.4664629999897,
+        "search": 59.44441100000404,
+        "total": 1295.070424000005
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "07741c44",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_7e9ad7b4_2",
+            "answer_7e9ad7b4_1",
+            "sharegpt_vwo8y7i_35",
+            "d1d6b55b_1",
+            "8d969f3e_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 77.3173400000087
+        }
+      },
+      "timing_ms": {
+        "open": 529.601988999988,
+        "import": 700.6838890000072,
+        "search": 77.3173400000087,
+        "total": 1365.193579999992
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "07741c44",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_7e9ad7b4_2",
+            "answer_7e9ad7b4_1",
+            "sharegpt_vwo8y7i_35",
+            "d1d6b55b_1",
+            "8d969f3e_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 84.96383199997945
+        }
+      },
+      "timing_ms": {
+        "open": 364.06109500001185,
+        "import": 643.7997800000012,
+        "search": 84.96383199997945,
+        "total": 1142.930926000001
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "b6019101",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_67074b4b_2",
+            "answer_67074b4b_1",
+            "ultrachat_72569",
+            "de43030f_2",
+            "2ed7c45e_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 89.79146300000139
+        }
+      },
+      "timing_ms": {
+        "open": 534.8307919999934,
+        "import": 632.9666529999813,
+        "search": 89.79146300000139,
+        "total": 1316.693467999983
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "b6019101",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_67074b4b_2",
+            "answer_67074b4b_1",
+            "ultrachat_72569",
+            "de43030f_2",
+            "2ed7c45e_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 52.65295099999639
+        }
+      },
+      "timing_ms": {
+        "open": 335.42356900000595,
+        "import": 639.1034900000086,
+        "search": 52.65295099999639,
+        "total": 1072.6369579999882
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "45dc21b6",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_07664d43_1",
+            "answer_07664d43_2",
+            "eb34144a_2",
+            "2f57c190_1",
+            "ultrachat_494140"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 65.52264700000524
+        }
+      },
+      "timing_ms": {
+        "open": 508.56082799998694,
+        "import": 622.76829800001,
+        "search": 65.52264700000524,
+        "total": 1267.487552000006
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "45dc21b6",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_07664d43_1",
+            "answer_07664d43_2",
+            "eb34144a_2",
+            "2f57c190_1",
+            "ultrachat_494140"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 53.23912299997755
+        }
+      },
+      "timing_ms": {
+        "open": 320.99406599998474,
+        "import": 675.8686199999938,
+        "search": 53.23912299997755,
+        "total": 1097.4539769999974
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "72e3ee87",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_d7de9a6a_2",
+            "answer_d7de9a6a_1",
+            "1c1f5ccc_4",
+            "ultrachat_523550",
+            "ultrachat_195333"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 71.86827399997856
+        }
+      },
+      "timing_ms": {
+        "open": 577.7467499999912,
+        "import": 698.7718910000112,
+        "search": 71.86827399997856,
+        "total": 1418.7803549999953
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "72e3ee87",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_d7de9a6a_2",
+            "answer_d7de9a6a_1",
+            "1c1f5ccc_4",
+            "ultrachat_523550",
+            "ultrachat_195333"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 41.75854400001117
+        }
+      },
+      "timing_ms": {
+        "open": 340.6351909999794,
+        "import": 798.8649990000122,
+        "search": 41.75854400001117,
+        "total": 1233.090480999992
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "01493427",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_a7b44747_1",
+            "answer_a7b44747_2",
+            "d8e33f5c_1",
+            "55e6ff53",
+            "a4d6c239_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 62.7820060000231
+        }
+      },
+      "timing_ms": {
+        "open": 535.7881470000139,
+        "import": 642.337732999993,
+        "search": 62.7820060000231,
+        "total": 1298.2380260000064
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "01493427",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 47,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_a7b44747_1",
+            "answer_a7b44747_2",
+            "d8e33f5c_1",
+            "55e6ff53",
+            "a4d6c239_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 79.65505800000392
+        }
+      },
+      "timing_ms": {
+        "open": 374.88649199999054,
+        "import": 633.5220850000042,
+        "search": 79.65505800000392,
+        "total": 1134.0113469999924
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "db467c8c",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_611b6e83_2",
+            "answer_611b6e83_1",
+            "sharegpt_hbmf6q0_0",
+            "sharegpt_wrn9uuo_53",
+            "ecfd2047_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 60.651167000003625
+        }
+      },
+      "timing_ms": {
+        "open": 535.4361050000007,
+        "import": 711.7947660000063,
+        "search": 60.651167000003625,
+        "total": 1385.987140000012
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "db467c8c",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_611b6e83_2",
+            "answer_611b6e83_1",
+            "sharegpt_hbmf6q0_0",
+            "sharegpt_wrn9uuo_53",
+            "ecfd2047_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 52.57302000001073
+        }
+      },
+      "timing_ms": {
+        "open": 349.2479699999967,
+        "import": 655.8774529999937,
+        "search": 52.57302000001073,
+        "total": 1102.0729280000087
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "7a87bd0c",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_d08a934d_1",
+            "answer_d08a934d_2",
+            "15519944_1",
+            "62369c56_1",
+            "381227c4_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 56.70851699999184
+        }
+      },
+      "timing_ms": {
+        "open": 553.0655430000043,
+        "import": 656.8687669999781,
+        "search": 56.70851699999184,
+        "total": 1326.1093380000093
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "7a87bd0c",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_d08a934d_1",
+            "answer_d08a934d_2",
+            "15519944_1",
+            "62369c56_1",
+            "381227c4_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 56.418587000021944
+        }
+      },
+      "timing_ms": {
+        "open": 355.02867500000866,
+        "import": 765.7889439999999,
+        "search": 56.418587000021944,
+        "total": 1225.9317600000068
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "22d2cb42",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_bcce0b73_1",
+            "answer_bcce0b73_2",
+            "a2defa66_2",
+            "2d84a7ae_1",
+            "d74e8a57_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 76.35497400001623
+        }
+      },
+      "timing_ms": {
+        "open": 627.9692210000067,
+        "import": 828.0765470000042,
+        "search": 76.35497400001623,
+        "total": 1590.6030460000038
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "22d2cb42",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_bcce0b73_1",
+            "answer_bcce0b73_2",
+            "a2defa66_2",
+            "2d84a7ae_1",
+            "d74e8a57_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 55.75679400001536
+        }
+      },
+      "timing_ms": {
+        "open": 400.31139299998176,
+        "import": 760.9152929999982,
+        "search": 55.75679400001536,
+        "total": 1264.187637999974
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "0e4e4c46",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_f2f998c7_1",
+            "answer_f2f998c7_2",
+            "60876def_2",
+            "71d1e644",
+            "debc34d7_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 56.96522999997251
+        }
+      },
+      "timing_ms": {
+        "open": 571.023801000003,
+        "import": 728.1912400000147,
+        "search": 56.96522999997251,
+        "total": 1412.610967000015
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "0e4e4c46",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_f2f998c7_1",
+            "answer_f2f998c7_2",
+            "60876def_2",
+            "71d1e644",
+            "debc34d7_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 52.7856010000105
+        }
+      },
+      "timing_ms": {
+        "open": 359.0947339999839,
+        "import": 739.0731169999926,
+        "search": 52.7856010000105,
+        "total": 1195.4303070000024
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "4b24c848",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_2cec623b_1",
+            "answer_2cec623b_2",
+            "1815d1b7",
+            "3b5884c7_3",
+            "f5245daf_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 66.73579199999222
+        }
+      },
+      "timing_ms": {
+        "open": 541.5955620000022,
+        "import": 703.0133679999853,
+        "search": 66.73579199999222,
+        "total": 1366.476565000019
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "4b24c848",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_2cec623b_1",
+            "answer_2cec623b_2",
+            "1815d1b7",
+            "3b5884c7_3",
+            "f5245daf_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 57.1675610000093
+        }
+      },
+      "timing_ms": {
+        "open": 372.3550319999922,
+        "import": 706.9671780000208,
+        "search": 57.1675610000093,
+        "total": 1180.2747309999831
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "f685340e",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 41,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_25df025b_1",
+            "answer_25df025b_2",
+            "e7dcd5df",
+            "ee402e51_1",
+            "5035d8d6"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 67.73793699999806
+        }
+      },
+      "timing_ms": {
+        "open": 565.4835069999972,
+        "import": 611.9029200000223,
+        "search": 67.73793699999806,
+        "total": 1312.4290190000029
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "f685340e",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 41,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_25df025b_1",
+            "answer_25df025b_2",
+            "e7dcd5df",
+            "ee402e51_1",
+            "5035d8d6"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 42.111493999982486
+        }
+      },
+      "timing_ms": {
+        "open": 378.8563789999753,
+        "import": 614.1002190000145,
+        "search": 42.111493999982486,
+        "total": 1090.3316269999777
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "69fee5aa",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_d6028d6e_1",
+            "answer_d6028d6e_2",
+            "a554ed79_2",
+            "a0b8b0ad_7",
+            "8464304d_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 69.87427500000922
+        }
+      },
+      "timing_ms": {
+        "open": 555.4647220000043,
+        "import": 648.5567120000196,
+        "search": 69.87427500000922,
+        "total": 1330.7992290000257
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "69fee5aa",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_d6028d6e_1",
+            "answer_d6028d6e_2",
+            "a554ed79_2",
+            "a0b8b0ad_7",
+            "8464304d_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 56.112335000012536
+        }
+      },
+      "timing_ms": {
+        "open": 322.17551200001617,
+        "import": 613.8966700000165,
+        "search": 56.112335000012536,
+        "total": 1039.6181150000193
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "10e09553",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_67be2c38_2",
+            "answer_67be2c38_1",
+            "7d1f5395",
+            "ultrachat_196381",
+            "d3da4592_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 59.802751000010176
+        }
+      },
+      "timing_ms": {
+        "open": 572.6644189999788,
+        "import": 619.8949349999893,
+        "search": 59.802751000010176,
+        "total": 1311.2089039999992
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "10e09553",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_67be2c38_2",
+            "answer_67be2c38_1",
+            "7d1f5395",
+            "ultrachat_196381",
+            "d3da4592_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 43.39809100001003
+        }
+      },
+      "timing_ms": {
+        "open": 343.5444150000112,
+        "import": 621.4592420000117,
+        "search": 43.39809100001003,
+        "total": 1058.106654000003
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "5c40ec5b",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_1cb52d0a_2",
+            "answer_1cb52d0a_1",
+            "sharegpt_rvk16qk_0",
+            "a200b713_3",
+            "ultrachat_216243"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 71.08396200000425
+        }
+      },
+      "timing_ms": {
+        "open": 563.2468069999886,
+        "import": 649.6398859999899,
+        "search": 71.08396200000425,
+        "total": 1339.6308779999963
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "5c40ec5b",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_1cb52d0a_2",
+            "answer_1cb52d0a_1",
+            "sharegpt_rvk16qk_0",
+            "a200b713_3",
+            "ultrachat_216243"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 50.76313300000038
+        }
+      },
+      "timing_ms": {
+        "open": 387.47607699999935,
+        "import": 750.9668989999918,
+        "search": 50.76313300000038,
+        "total": 1233.0862020000059
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "0977f2af",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_3bf5b73b_2",
+            "b1d9eb66_4",
+            "b24eddd9_1",
+            "f115a3db_1",
+            "ultrachat_554962"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 56.7821690000128
+        }
+      },
+      "timing_ms": {
+        "open": 528.0882329999877,
+        "import": 586.6098599999968,
+        "search": 56.7821690000128,
+        "total": 1253.9903129999875
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "0977f2af",
+      "question_type": "knowledge-update",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_3bf5b73b_2",
+            "b1d9eb66_4",
+            "b24eddd9_1",
+            "f115a3db_1",
+            "ultrachat_554962"
+          ],
+          "recall_all": 0,
+          "recall_any": 1,
+          "search_ms": 72.15131600000313
+        }
+      },
+      "timing_ms": {
+        "open": 339.2108349999762,
+        "import": 1097.5750980000012,
+        "search": 72.15131600000313,
+        "total": 1584.6107699999993
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "4c36ccef",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_448704",
+            "sharegpt_m8f4nxl_0",
+            "1ba83815_4",
+            "3dc8ba5f_2",
+            "7b1d1f43_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 61.66412999999011
+        }
+      },
+      "timing_ms": {
+        "open": 564.317252000008,
+        "import": 626.6474539999908,
+        "search": 61.66412999999011,
+        "total": 1309.9291779999912
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "4c36ccef",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_448704",
+            "sharegpt_m8f4nxl_0",
+            "1ba83815_4",
+            "3dc8ba5f_2",
+            "7b1d1f43_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 41.80502400000114
+        }
+      },
+      "timing_ms": {
+        "open": 345.1742310000118,
+        "import": 749.1910309999948,
+        "search": 41.80502400000114,
+        "total": 1189.4216700000106
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "7e00a6cb",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 62,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "24f78a31_2",
+            "answer_ultrachat_370515",
+            "4dd1ba8d_2",
+            "2fa50779_5",
+            "39358a85_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 59.19951999999466
+        }
+      },
+      "timing_ms": {
+        "open": 512.1843719999888,
+        "import": 761.0401540000166,
+        "search": 59.19951999999466,
+        "total": 1397.432209999999
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "7e00a6cb",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 62,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "24f78a31_2",
+            "answer_ultrachat_370515",
+            "4dd1ba8d_2",
+            "2fa50779_5",
+            "39358a85_3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 42.431165000016335
+        }
+      },
+      "timing_ms": {
+        "open": 325.0188339999877,
+        "import": 836.3482430000149,
+        "search": 42.431165000016335,
+        "total": 1252.218904999987
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "f523d9fe",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_m2xjfjo_0",
+            "a07f9d5c_1",
+            "9ccea2f0_1",
+            "22aa7cca_4",
+            "636e0e32_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 66.24397000001045
+        }
+      },
+      "timing_ms": {
+        "open": 516.6216120000172,
+        "import": 676.911976000003,
+        "search": 66.24397000001045,
+        "total": 1320.5985550000041
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "f523d9fe",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_m2xjfjo_0",
+            "a07f9d5c_1",
+            "9ccea2f0_1",
+            "22aa7cca_4",
+            "636e0e32_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 50.08913899998879
+        }
+      },
+      "timing_ms": {
+        "open": 400.07860300000175,
+        "import": 810.903651999979,
+        "search": 50.08913899998879,
+        "total": 1311.2084240000113
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "1d4da289",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 55,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_348449",
+            "ultrachat_213759",
+            "517ad0f0",
+            "4cd929f8_1",
+            "09f1c793"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 60.03443299999344
+        }
+      },
+      "timing_ms": {
+        "open": 551.0107339999813,
+        "import": 733.7768449999858,
+        "search": 60.03443299999344,
+        "total": 1401.730809999979
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "1d4da289",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 55,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_348449",
+            "ultrachat_213759",
+            "517ad0f0",
+            "4cd929f8_1",
+            "09f1c793"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 44.58005600000615
+        }
+      },
+      "timing_ms": {
+        "open": 427.88808500001323,
+        "import": 717.6081730000151,
+        "search": 44.58005600000615,
+        "total": 1233.769105000014
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "70b3e69b",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_334948",
+            "sharegpt_o8qjclh_0",
+            "ultrachat_47234",
+            "ultrachat_146029",
+            "40afb91c_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 68.7363910000131
+        }
+      },
+      "timing_ms": {
+        "open": 555.4418319999822,
+        "import": 738.5020660000155,
+        "search": 68.7363910000131,
+        "total": 1418.8862649999792
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "70b3e69b",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_334948",
+            "sharegpt_o8qjclh_0",
+            "ultrachat_47234",
+            "ultrachat_146029",
+            "40afb91c_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 47.32459900001413
+        }
+      },
+      "timing_ms": {
+        "open": 418.5671239999938,
+        "import": 702.8390190000064,
+        "search": 47.32459900001413,
+        "total": 1213.4536160000134
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "e8a79c70",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_13075",
+            "sharegpt_ha8kuer_0",
+            "c0d099e6_2",
+            "486705ce",
+            "89aed484_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 67.63680700000259
+        }
+      },
+      "timing_ms": {
+        "open": 527.8926230000216,
+        "import": 691.5209890000115,
+        "search": 67.63680700000259,
+        "total": 1351.6449010000215
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "e8a79c70",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_13075",
+            "sharegpt_ha8kuer_0",
+            "c0d099e6_2",
+            "486705ce",
+            "89aed484_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 56.77255900000455
+        }
+      },
+      "timing_ms": {
+        "open": 347.89193399998476,
+        "import": 656.51105500001,
+        "search": 56.77255900000455,
+        "total": 1109.7948909999977
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "d596882b",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_252214",
+            "71888aff_2",
+            "ultrachat_299672",
+            "456807b7_1",
+            "9f6bec4f"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 61.52749899998889
+        }
+      },
+      "timing_ms": {
+        "open": 552.1536090000009,
+        "import": 698.438399000006,
+        "search": 61.52749899998889,
+        "total": 1376.7967309999804
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "d596882b",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 44,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_252214",
+            "71888aff_2",
+            "ultrachat_299672",
+            "456807b7_1",
+            "9f6bec4f"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 55.5036319999781
+        }
+      },
+      "timing_ms": {
+        "open": 371.5912679999892,
+        "import": 672.2816349999921,
+        "search": 55.5036319999781,
+        "total": 1145.4635879999842
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "e3fc4d6e",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_5m7gg5f_0",
+            "d31c3ec8_1",
+            "05be3ff0_4",
+            "sharegpt_1iiu5zx_0",
+            "sharegpt_naacldl_21"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 60.11499400000321
+        }
+      },
+      "timing_ms": {
+        "open": 550.1647999999986,
+        "import": 785.1996189999918,
+        "search": 60.11499400000321,
+        "total": 1460.5285370000056
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "e3fc4d6e",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_5m7gg5f_0",
+            "d31c3ec8_1",
+            "05be3ff0_4",
+            "sharegpt_1iiu5zx_0",
+            "sharegpt_naacldl_21"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 59.99304299999494
+        }
+      },
+      "timing_ms": {
+        "open": 340.2317600000242,
+        "import": 808.0656399999862,
+        "search": 59.99304299999494,
+        "total": 1260.525512000022
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "352ab8bd",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_nodzzot_7",
+            "27971ce6_5",
+            "337cbfc8_2",
+            "ultrachat_101751",
+            "sharegpt_cdlyqsf_21"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 73.6011620000063
+        }
+      },
+      "timing_ms": {
+        "open": 570.705340000015,
+        "import": 688.776978000009,
+        "search": 73.6011620000063,
+        "total": 1405.551797000022
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "352ab8bd",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_nodzzot_7",
+            "27971ce6_5",
+            "337cbfc8_2",
+            "ultrachat_101751",
+            "sharegpt_cdlyqsf_21"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 52.670100999996066
+        }
+      },
+      "timing_ms": {
+        "open": 347.237420999998,
+        "import": 686.3332060000103,
+        "search": 52.670100999996066,
+        "total": 1133.330283999996
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "7a8d0b71",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_i0tmt9q_9",
+            "f07752be_1",
+            "sharegpt_nxyzhbn_241",
+            "881d8e9b_1",
+            "ccc6ab06_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 65.25176600000123
+        }
+      },
+      "timing_ms": {
+        "open": 532.5136540000094,
+        "import": 669.4334019999951,
+        "search": 65.25176600000123,
+        "total": 1327.6786760000105
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "7a8d0b71",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 45,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_i0tmt9q_9",
+            "f07752be_1",
+            "sharegpt_nxyzhbn_241",
+            "881d8e9b_1",
+            "ccc6ab06_2"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 52.819000999996206
+        }
+      },
+      "timing_ms": {
+        "open": 383.54011000000173,
+        "import": 708.1557420000026,
+        "search": 52.819000999996206,
+        "total": 1193.5789280000026
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "a40e080f",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_269020",
+            "4d32ba1b_1",
+            "sharegpt_oxgin7q_327",
+            "4fd6129f_1",
+            "ed109bc3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 92.98925800001598
+        }
+      },
+      "timing_ms": {
+        "open": 693.5931379999965,
+        "import": 926.6232790000213,
+        "search": 92.98925800001598,
+        "total": 1780.7805600000138
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "a40e080f",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 48,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_269020",
+            "4d32ba1b_1",
+            "sharegpt_oxgin7q_327",
+            "4fd6129f_1",
+            "ed109bc3"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 53.50076399999671
+        }
+      },
+      "timing_ms": {
+        "open": 392.6539000000048,
+        "import": 891.1381439999968,
+        "search": 53.50076399999671,
+        "total": 1389.577287000022
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "8b9d4367",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_289157",
+            "sharegpt_mhic4j8_0",
+            "7babf05b",
+            "ultrachat_556482",
+            "ultrachat_79945"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 72.085196
+        }
+      },
+      "timing_ms": {
+        "open": 571.846435000014,
+        "import": 952.9741240000003,
+        "search": 72.085196,
+        "total": 1666.3387600000133
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "8b9d4367",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 53,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_289157",
+            "sharegpt_mhic4j8_0",
+            "7babf05b",
+            "ultrachat_556482",
+            "ultrachat_79945"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 45.29363899998134
+        }
+      },
+      "timing_ms": {
+        "open": 447.41015999999945,
+        "import": 970.0353389999946,
+        "search": 45.29363899998134,
+        "total": 1506.536638999998
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "4baee567",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_i9adwqn_0",
+            "b3272f34_1",
+            "sharegpt_wduybsx_0",
+            "sharegpt_lwlbuhq_547",
+            "385683f0_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 61.00616800005082
+        }
+      },
+      "timing_ms": {
+        "open": 641.3191289999813,
+        "import": 767.9107639999711,
+        "search": 61.00616800005082,
+        "total": 1533.2609660000016
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "4baee567",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_i9adwqn_0",
+            "b3272f34_1",
+            "sharegpt_wduybsx_0",
+            "sharegpt_lwlbuhq_547",
+            "385683f0_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 55.56407300004503
+        }
+      },
+      "timing_ms": {
+        "open": 367.48600900004385,
+        "import": 842.5191399999894,
+        "search": 55.56407300004503,
+        "total": 1323.7810180000379
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "561fabcd",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_hchswop_97",
+            "aee13015_3",
+            "33da50d0_5",
+            "34b38398_2",
+            "a910073f"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 68.65598999999929
+        }
+      },
+      "timing_ms": {
+        "open": 635.9844060000032,
+        "import": 782.5871380000026,
+        "search": 68.65598999999929,
+        "total": 1568.5973009999725
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "561fabcd",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 49,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_sharegpt_hchswop_97",
+            "aee13015_3",
+            "33da50d0_5",
+            "34b38398_2",
+            "a910073f"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 44.775136000011116
+        }
+      },
+      "timing_ms": {
+        "open": 386.8048350000172,
+        "import": 704.6274459999986,
+        "search": 44.775136000011116,
+        "total": 1182.3603890000377
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "28bcfaac",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_446979",
+            "8d410160",
+            "17cb8d2f_5",
+            "135a62d7_2",
+            "4b637e89_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 63.37759799999185
+        }
+      },
+      "timing_ms": {
+        "open": 583.158684999973,
+        "import": 685.8183340000105,
+        "search": 63.37759799999185,
+        "total": 1392.4163389999885
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "28bcfaac",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_446979",
+            "8d410160",
+            "17cb8d2f_5",
+            "135a62d7_2",
+            "4b637e89_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 49.59284800000023
+        }
+      },
+      "timing_ms": {
+        "open": 383.61392100004014,
+        "import": 733.7534839999862,
+        "search": 49.59284800000023,
+        "total": 1214.924502000038
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "c7cf7dfd",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_456407",
+            "9db6d988_2",
+            "95cec590_1",
+            "de5a59bf",
+            "b90109d2_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 65.15765599999577
+        }
+      },
+      "timing_ms": {
+        "open": 590.7471479999949,
+        "import": 654.8577189999633,
+        "search": 65.15765599999577,
+        "total": 1374.333890000009
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "c7cf7dfd",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 51,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_456407",
+            "9db6d988_2",
+            "95cec590_1",
+            "de5a59bf",
+            "b90109d2_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 40.54082900000503
+        }
+      },
+      "timing_ms": {
+        "open": 340.98433399997884,
+        "import": 623.9184229999664,
+        "search": 40.54082900000503,
+        "total": 1049.2944160000188
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    },
+    {
+      "engine": "pglite",
+      "question_id": "778164c6",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_399000",
+            "ultrachat_346016",
+            "483ddd90",
+            "c15dadce_4",
+            "490bb46d_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 50.522881000011694
+        }
+      },
+      "timing_ms": {
+        "open": 489.3274129999918,
+        "import": 586.322079000005,
+        "search": 50.522881000011694,
+        "total": 1181.4643449999858
+      },
+      "run_config_hash": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0"
+    },
+    {
+      "engine": "postgres",
+      "question_id": "778164c6",
+      "question_type": "single-session-assistant",
+      "is_abs": false,
+      "num_sessions": 50,
+      "arms": {
+        "keyword": {
+          "retrieved": [
+            "answer_ultrachat_399000",
+            "ultrachat_346016",
+            "483ddd90",
+            "c15dadce_4",
+            "490bb46d_1"
+          ],
+          "recall_all": 1,
+          "recall_any": 1,
+          "search_ms": 40.6156680000131
+        }
+      },
+      "timing_ms": {
+        "open": 366.83466699998826,
+        "import": 794.6246810000157,
+        "search": 40.6156680000131,
+        "total": 1247.979816999985
+      },
+      "run_config_hash": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+    }
+  ]
+}

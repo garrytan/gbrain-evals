@@ -189,6 +189,16 @@ process.exit(plan.exit);
     expect(seen).toEqual({ argv: ['--output', join(dir, 'work', 'fake-rust')], pg: 'postgres://u@127.0.0.1:1/postgres', n14: 'postgres://u@127.0.0.1:1/postgres', key: false });
   });
 
+  test('a runner that loaded a different gbrain commit than the stage is an error, and each run records the commit it loaded', async () => {
+    const other = pass({ leaks: 0, sealed: 0 });
+    const { receipt } = await stage({ pglite: pass({ leaks: 0, sealed: 0 }), postgres: { ...other, receipt: { ...other.receipt, execution: { product: { loaded_git_head: 'deadbeef' } } } } }, ['pglite', 'postgres']);
+    const row = receipt.checks[0]!;
+    expect(row.engines.pglite!.status).toBe('pass');
+    expect(row.engines.postgres).toMatchObject({ status: 'error', gbrain_commit: 'deadbeef' });
+    expect(row.engines.postgres!.error).toMatch(/^ran gbrain deadbeef, expected /);
+    expect(receipt.summary.errored).toEqual(['fake:postgres']);
+  });
+
   test('a rust run with a not_applicable contract passes on the rest; a harness error is reported as errored', async () => {
     const { receipt } = await stage({ pglite: pass({ leaks: 0, sealed: 0 }), postgres: { exit: 3 }, rust: pass({ leaks: 0 }, [SEALED_NA]) }, ['pglite', 'postgres', 'rust']);
     const row = receipt.checks[0]!;

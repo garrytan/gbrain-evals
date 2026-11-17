@@ -144,4 +144,10 @@ Rust is no slower when every metric's 95% interval clears the margin against bot
 
 ## Amendments
 
-None yet.
+### 2026-11-17: the keyword arm searches as a keyless brain does, and two Stage 3 sentences read as the runner applies them
+
+Committed before any counted run. Nothing here changes a margin, a rule or a verdict.
+
+1. **Keyword arm.** "Arms: keyword (keyless)" means gbrain's own search on a brain with no embedding provider: `hybridSearch` with embeddings opted out and the any-word fill that gbrain's search operation asks for, so a question whose words do not all appear in one passage still gets the passages that hold some of them. Until this amendment the runner called the engine's own keyword search, which needs every word in one passage. In the development run published with the baseline it returned nothing on 82 of 102 questions on both TypeScript engines, so that arm's identical top 5 mostly compared empty lists. The runner now goes through `hybridSearch`, and the report gives, beside the identical-top-5 share, the number of questions where every engine returned nothing. The keyword arm's development numbers from the first run are kept in the baseline report, marked as superseded.
+2. **Stage 3 errors, as the runner applies them.** The runner compares Rust with each TypeScript engine in turn, so an arm fails as soon as Rust errors on a non-abstention question that the TypeScript engine in that pair answered. That is stricter than "both TypeScript engines answered", and it fails closed.
+3. **Stage 3 interval, as the runner applies it.** A question that a TypeScript engine errored on is left out of that pair's interval and listed in the report. A Rust error is scored 0 inside the interval. So "the interval covers every non-abstention question" means every non-abstention question both engines in the pair could be scored on.

@@ -1,0 +1,325 @@
+  Setting up brain schema (v319)...
+  v142: takes.embedding resized to vector(1024); existing take vectors cleared
+  314 migration(s) applied
+[lme-recall] pglite: store template ready
+  Setting up brain schema (v319)...
+  v142: takes.embedding resized to vector(1024); existing take vectors cleared
+  314 migration(s) applied
+[lme-recall] postgres: store template ready
+[gbrain] embeddings are off on this brain by choice (embedding_disabled), so search is keyword-only and no query text is sent to an embedding provider. If the user wants semantic search, `gbrain doctor --json` names the enable command; turning it on needs their consent.
+[lme-recall] 5/102 pglite 1.55s/question, postgres 1.29s/question
+[lme-recall] 10/102 pglite 1.47s/question, postgres 1.26s/question
+[lme-recall] 15/102 pglite 1.45s/question, postgres 1.26s/question
+[lme-recall] 20/102 pglite 1.41s/question, postgres 1.26s/question
+[lme-recall] 25/102 pglite 1.42s/question, postgres 1.26s/question
+[lme-recall] 30/102 pglite 1.41s/question, postgres 1.25s/question
+[lme-recall] 35/102 pglite 1.41s/question, postgres 1.25s/question
+[lme-recall] 40/102 pglite 1.39s/question, postgres 1.23s/question
+[lme-recall] 45/102 pglite 1.38s/question, postgres 1.21s/question
+[lme-recall] 50/102 pglite 1.37s/question, postgres 1.21s/question
+[lme-recall] 55/102 pglite 1.37s/question, postgres 1.21s/question
+[lme-recall] 60/102 pglite 1.36s/question, postgres 1.21s/question
+[lme-recall] 65/102 pglite 1.36s/question, postgres 1.20s/question
+[lme-recall] 70/102 pglite 1.36s/question, postgres 1.20s/question
+[lme-recall] 75/102 pglite 1.36s/question, postgres 1.20s/question
+[lme-recall] 80/102 pglite 1.36s/question, postgres 1.20s/question
+[lme-recall] 85/102 pglite 1.36s/question, postgres 1.20s/question
+[lme-recall] 90/102 pglite 1.36s/question, postgres 1.20s/question
+[lme-recall] 95/102 pglite 1.36s/question, postgres 1.20s/question
+[lme-recall] 100/102 pglite 1.37s/question, postgres 1.20s/question
+[lme-recall] 102/102 pglite 1.37s/question, postgres 1.20s/question
+{
+  "schema": "engine-bench.lme-recall/1",
+  "started_at": "2026-11-17T22:42:18.749Z",
+  "finished_at": "2026-11-17T22:46:48.084Z",
+  "counted": false,
+  "preregistration_attestation": null,
+  "gbrain": {
+    "version": "0.60.737.0",
+    "overlay": {
+      "requested": "gbrain@v0.60.737.0",
+      "ref": "v0.60.737.0",
+      "commit": "291b7996a4e2881acc921b1085d818bb9640f5d0",
+      "tree": "f70d75676ce1cb0234fe6c3afa2e7fe392d07730",
+      "version": "0.60.737.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "f70d75676ce1cb0234fe6c3afa2e7fe392d07730",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.737.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    }
+  },
+  "dataset": {
+    "file": "longmemeval_s_cleaned.json",
+    "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "matches_published_sha256": true,
+    "total_questions": 500,
+    "selected": 102,
+    "abstention_selected": 6,
+    "stratify": 17,
+    "limit": null,
+    "seed": 42,
+    "question_ids": [
+      "c960da58",
+      "c8c3f81d",
+      "0862e8bf",
+      "d52b4f67",
+      "86b68151",
+      "577d4d32",
+      "15745da0",
+      "bc8a6e93",
+      "ccb36322",
+      "4fd1909e",
+      "545bd2b5",
+      "76d63226",
+      "c14c00dd",
+      "3d86fd0a",
+      "0862e8bf_abs",
+      "bc8a6e93_abs",
+      "19b5f2b3_abs",
+      "aae3761f",
+      "46a3abf7",
+      "gpt4_15e38248",
+      "80ec1f4f",
+      "gpt4_2ba83207",
+      "9d25d4e0",
+      "d851d5ba",
+      "c2ac3c61",
+      "bf659f65",
+      "gpt4_372c3eed",
+      "60bf93ed_abs",
+      "06878be2",
+      "35a27287",
+      "32260d93",
+      "195a1a1b",
+      "afdc33df",
+      "6b7dfb22",
+      "1a1907b4",
+      "09d032c9",
+      "38146c39",
+      "95228167",
+      "505af2f5",
+      "75f70248",
+      "d6233ab6",
+      "b6025781",
+      "a89d7624",
+      "1d4e3b97",
+      "0a34ad58",
+      "60036106",
+      "9ee3ecd6",
+      "ef9cf60a",
+      "a3332713",
+      "21d02d0d",
+      "09ba9854_abs",
+      "71017276",
+      "gpt4_1d4ab0c9",
+      "gpt4_18c2b244",
+      "gpt4_7a0daae1",
+      "2ebe6c90",
+      "370a8ff4",
+      "eac54adc",
+      "gpt4_85da3956",
+      "gpt4_68e94287",
+      "gpt4_e061b84g",
+      "gpt4_2655b836",
+      "08f4fc43",
+      "f0853d11",
+      "b9cfe692",
+      "b29f3365",
+      "gpt4_fe651585",
+      "gpt4_93159ced_abs",
+      "6aeb4375",
+      "71315a70",
+      "07741c44",
+      "b6019101",
+      "45dc21b6",
+      "72e3ee87",
+      "01493427",
+      "db467c8c",
+      "7a87bd0c",
+      "22d2cb42",
+      "0e4e4c46",
+      "4b24c848",
+      "f685340e",
+      "69fee5aa",
+      "10e09553",
+      "5c40ec5b",
+      "0977f2af",
+      "4c36ccef",
+      "7e00a6cb",
+      "f523d9fe",
+      "1d4da289",
+      "70b3e69b",
+      "e8a79c70",
+      "d596882b",
+      "e3fc4d6e",
+      "352ab8bd",
+      "7a8d0b71",
+      "a40e080f",
+      "8b9d4367",
+      "4baee567",
+      "561fabcd",
+      "28bcfaac",
+      "c7cf7dfd",
+      "778164c6"
+    ]
+  },
+  "shard": {
+    "worker_id": 0,
+    "total_workers": 1,
+    "questions": 102
+  },
+  "ndjson": "docs/benchmarks/2026-11-17-engine-bench/lme-recall/keyword-v0.60.737.0.ndjson",
+  "resumed_rows": 0,
+  "run_config_hashes": {
+    "pglite": "190dfc2d6c057e382a0cde7002584c5faed228ba8e13222220ef6bd9254406a0",
+    "postgres": "3e095d3c81ff8b746c5325e71cf85976df5aa3c829fbbd47163b27ea0e2bfe47"
+  },
+  "top_k": 5,
+  "arms": [
+    "keyword"
+  ],
+  "search_config": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.autocut": "false"
+  },
+  "embedder": {
+    "mode": "none",
+    "model": null,
+    "dimensions": null,
+    "cache_path": null,
+    "plumbing_only": false,
+    "note": "Keyword arm only; nothing was embedded."
+  },
+  "network": "every HTTP(S) request to a non-loopback host was refused during the run",
+  "engines": [
+    {
+      "kind": "pglite",
+      "status": "ran",
+      "store_strategy": "copy of a store initialized once",
+      "n_questions": 102,
+      "n_errors": 0,
+      "errors": [],
+      "recall": {
+        "keyword": {
+          "recall_all_at_5": 0.84375,
+          "recall_any_at_5": 0.90625,
+          "n_scored": 96
+        }
+      },
+      "timing_ms": {
+        "total": {
+          "mean": 1368.3,
+          "p50": 1338.5,
+          "p90": 1543.4,
+          "max": 1780.8
+        },
+        "open": {
+          "mean": 553.6,
+          "p50": 546.3
+        },
+        "import": {
+          "mean": 687.8,
+          "p50": 668.3,
+          "p90": 805.8
+        },
+        "search_by_arm": {
+          "keyword": {
+            "mean": 64,
+            "p50": 61.7
+          }
+        }
+      },
+      "projected_full_run_minutes": 11.4
+    },
+    {
+      "kind": "postgres",
+      "status": "ran",
+      "store_strategy": "CREATE DATABASE ... TEMPLATE of a store initialized once (on the harness admin connection, not the engine)",
+      "n_questions": 102,
+      "n_errors": 0,
+      "errors": [],
+      "recall": {
+        "keyword": {
+          "recall_all_at_5": 0.84375,
+          "recall_any_at_5": 0.90625,
+          "n_scored": 96
+        }
+      },
+      "timing_ms": {
+        "total": {
+          "mean": 1203.3,
+          "p50": 1181.6,
+          "p90": 1342,
+          "max": 1650.9
+        },
+        "open": {
+          "mean": 368.7,
+          "p50": 367.1
+        },
+        "import": {
+          "mean": 734.7,
+          "p50": 717.4,
+          "p90": 851.7
+        },
+        "search_by_arm": {
+          "keyword": {
+            "mean": 49.4,
+            "p50": 47.2
+          }
+        }
+      },
+      "projected_full_run_minutes": 10
+    }
+  ],
+  "agreement": [
+    {
+      "arm": "keyword",
+      "engines": [
+        "pglite",
+        "postgres"
+      ],
+      "n_questions": 102,
+      "identical_top5_share": 1,
+      "identical_top5_set_share": 1,
+      "n_all_empty": 0
+    }
+  ],
+  "bootstrap": {
+    "seed": 20261117,
+    "draws": 10000
+  },
+  "comparisons": [
+    {
+      "arm": "keyword",
+      "a": "pglite",
+      "b": "postgres",
+      "n_questions": 102,
+      "excluded_errors": [],
+      "recall_all_delta": {
+        "n_pairs": 96,
+        "mean_a": 0.84375,
+        "mean_b": 0.84375,
+        "delta": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "p_two_sided": 1,
+        "wins_b": 0,
+        "losses_b": 0,
+        "mcnemar_p": 1
+      },
+      "identical_top5_ordered": 1,
+      "identical_top5_set": 1,
+      "n_differences": 0
+    }
+  ]
+}
+[lme-recall] receipt: docs/benchmarks/2026-11-17-engine-bench/lme-recall/keyword-v0.60.737.0.json
