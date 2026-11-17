@@ -14,6 +14,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | Which setup should I evaluate for my application? | [Settings by workload](settings.md) |
 | Which gbrain do these results test, and what changed since each was measured? | [The gbrain under test](gbrain-under-test.md) |
 | Do the keyless correctness checks still hold at gbrain's newest release, and what got better or worse? | [November 16 keyless re-pin to gbrain `6ce7195b4` (v0.60.733.0)](benchmarks/2026-11-16-w0-keyless-repin.md) ([preregistration](benchmarks/2026-11-16-w0-keyless-repin-preregistration.md)) |
+| What does gbrain add over what a developer would build instead, on the README's compared results? | [November 17 measured no-gbrain baselines](benchmarks/2026-11-17-readme-baselines/README.md) ([preregistration](plans/2026-11-17-readme-baselines/PREREG.md)): gbrain is ahead of plain Postgres hybrid search on LongMemEval recall and answers, attendance and attacker claims; level with the whole history in the prompt on 500 LongMemEval questions, with BM25 on reworded relationship questions and with plain hybrid on PrecisionMemBench |
 | What did the October 11 re-pin change, category by category? | [October 11 re-pin to gbrain `77cf8e111` (v0.60.169.0)](benchmarks/2026-10-11-wave14-repin.md) ([preregistration](benchmarks/2026-10-11-wave14-repin-preregistration.md)) |
 | What did the October 2026 follow-up round measure, and why? | [Follow-up round plan and its reviews](plans/2026-10-06-followups-round/PLAN.md) |
 | Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md); then [agents operating gbrain](#agents-operating-gbrain) for setup time to working memory and the meeting-prep program |
@@ -290,6 +291,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-17: The measured no-gbrain baselines
+
+A new row near the top links the [November 17 baselines](benchmarks/2026-11-17-readme-baselines/README.md), which
+measured a no-gbrain alternative for each of the twelve README result rows that lacked one.
 
 ### 2026-11-16: The keyless re-pin at gbrain v0.60.733.0
 

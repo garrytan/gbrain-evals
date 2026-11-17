@@ -230,17 +230,47 @@ const HOUSE_NOTES = resolveReaderConfig({ mode: 'notes' });
 export const HOUSE_NOTES_PROTOCOL = { name: HOUSE_NOTES.promptVersion, sha256: HOUSE_NOTES.promptSha };
 export const HOUSE_DIRECT_PROTOCOL = (() => { const c = resolveReaderConfig({ mode: 'direct' }); return { name: c.promptVersion, sha256: c.promptSha }; })();
 
+/** gbrain's page renderer, `<chat_session>` renderer and house reader request builder, all from one gbrain build. */
+export interface HouseRenderer {
+  haystackToPages: typeof haystackToPages;
+  renderChatBlock: typeof renderChatBlock;
+  sessionIdFromSlug: typeof sessionIdFromSlug;
+  buildReaderRequest: typeof buildReaderRequest;
+  resolveReaderConfig: typeof resolveReaderConfig;
+  READER_MAX_SESSION_CHARS: number;
+}
+
+/** The renderers of the gbrain this repository pins. */
+export const PINNED_RENDERER: HouseRenderer = { haystackToPages, renderChatBlock, sessionIdFromSlug, buildReaderRequest, resolveReaderConfig, READER_MAX_SESSION_CHARS };
+
+/** The same renderers from another gbrain checkout, for arms whose prompts must match a build other than the pin. */
+export async function loadHouseRenderer(gbrainDir: string): Promise<HouseRenderer> {
+  const dir = join(gbrainDir, 'src/eval/longmemeval');
+  const [adapter, sanitize, metrics, reader] = await Promise.all(['adapter.ts', 'sanitize.ts', 'metrics.ts', 'reader.ts'].map(f => import(join(dir, f))));
+  return { haystackToPages: adapter.haystackToPages, renderChatBlock: sanitize.renderChatBlock, sessionIdFromSlug: metrics.sessionIdFromSlug, buildReaderRequest: reader.buildReaderRequest, resolveReaderConfig: reader.resolveReaderConfig, READER_MAX_SESSION_CHARS: reader.READER_MAX_SESSION_CHARS };
+}
+
 /**
- * The house notes reader's request with every haystack session, in haystack
- * order, rendered exactly as the harness renders retrieved ones (gbrain's page
- * renderer, `<chat_session>` framing, the reader's 60,000-character bound).
+ * The house notes reader's request over the haystack sessions at `indices`, in
+ * that order, rendered exactly as the harness renders retrieved ones (gbrain's
+ * page renderer, `<chat_session>` framing, the reader's 60,000-character
+ * bound). `null` takes every session in haystack order; `[]` asks the question
+ * with no sessions at all.
  */
-export function fullHistoryText(q: Question): ReaderText & { sessions: number; truncated: number; chars: number } {
-  const pages = haystackToPages(q as unknown as LongMemEvalQuestion);
-  const sessions = pages.map((p, i) => ({ session_id: sessionIdFromSlug(p.slug), date: q.haystack_dates[i], body: p.content }));
-  const { rendered, truncatedCount } = renderChatBlock(sessions, { maxSessionChars: READER_MAX_SESSION_CHARS });
-  const req = buildReaderRequest({ question: q.question, questionDate: q.question_date, rendered }, 'placeholder', HOUSE_NOTES);
+export function houseNotesText(q: Question, indices: number[] | null, r: HouseRenderer = PINNED_RENDERER): ReaderText & { sessions: number; truncated: number; chars: number } {
+  const pages = r.haystackToPages(q as unknown as LongMemEvalQuestion);
+  const sessions = (indices ?? pages.map((_, i) => i)).map(i => {
+    if (!pages[i]) throw new Error(`${q.question_id}: no haystack session at index ${i}`);
+    return { session_id: r.sessionIdFromSlug(pages[i].slug), date: q.haystack_dates[i], body: pages[i].content };
+  });
+  const { rendered, truncatedCount } = r.renderChatBlock(sessions, { maxSessionChars: r.READER_MAX_SESSION_CHARS });
+  const req = r.buildReaderRequest({ question: q.question, questionDate: q.question_date, rendered }, 'placeholder', r.resolveReaderConfig({ mode: 'notes' }));
   return { system: req.system, user: req.messages[0].content, sessions: sessions.length, truncated: truncatedCount, chars: rendered.length };
+}
+
+/** The house notes reader's request with every haystack session, in haystack order. */
+export function fullHistoryText(q: Question): ReaderText & { sessions: number; truncated: number; chars: number } {
+  return houseNotesText(q, null);
 }
 
 /** Context windows the W10c build refuses to exceed (kept under both providers' long-context price tiers). */

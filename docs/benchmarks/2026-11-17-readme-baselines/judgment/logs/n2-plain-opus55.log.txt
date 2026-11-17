@@ -1,0 +1,15 @@
+[budget] n2-judge-replay-plain-anthropic-claude-opus-5-5: estimated cost $3.00; ledger /home/user/.capy/work/gbev97/ledger.sqlite
+[w9] anthropic:claude-opus-5-5: 50/741
+[w9] anthropic:claude-opus-5-5: 100/741
+[w9] anthropic:claude-opus-5-5: 150/741
+[w9] anthropic:claude-opus-5-5: 200/741
+[w9] anthropic:claude-opus-5-5: 250/741
+[w9] anthropic:claude-opus-5-5: 300/741
+[w9] anthropic:claude-opus-5-5: 350/741
+[w9] anthropic:claude-opus-5-5: 400/741
+[w9] anthropic:claude-opus-5-5: 450/741
+[w9] anthropic:claude-opus-5-5: 500/741
+[w9] anthropic:claude-opus-5-5: 550/741
+[w9] anthropic:claude-opus-5-5: 600/741
+[w9] anthropic:claude-opus-5-5: 650/741
+[w9] anthropic:claude-opus-5-5: 700/741

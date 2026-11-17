@@ -1,0 +1,3904 @@
+{
+  "runner": "eval/runner/retrieval-baselines.ts",
+  "runner_sha256": "8bd6b43c04ea2eba29416f4cdcccddf0760d849dc2a19a54b4e23f04273edf4b",
+  "started_at": "2026-11-17T07:39:49.696Z",
+  "finished_at": "2026-11-17T07:40:20.406Z",
+  "arm": "plain-hybrid",
+  "split": "template",
+  "template_filter": "attended",
+  "corpus": "eval/data/world-v1-attendees",
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "embedder": "openai:text-embedding-3-large@1536",
+  "top_k": 5,
+  "scoring_unit": "first five distinct pages in rank order; recall@5 = gold pages among them / gold pages",
+  "corpus_sha256": "b0ed04a2d730dbbaf37ebaa379c20e9e577783987a63d613f274c174a1b15ac7",
+  "queries_sha256": "4277eff8b9389aad657a1c3a421459fd17a3376fa2770bee4a5c818959eee60b",
+  "cost": {
+    "usd": 0.00435,
+    "input_tokens": 33465,
+    "output_tokens": 0,
+    "basis": "budget ledger readme-baselines-retrieval-2026-11-17T07-36-22-517Z-a39fd34c: 100 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/ledger.sqlite",
+    "program_cap_usd": 5,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 15,
+      "max": 1467.5
+    }
+  },
+  "summary": {
+    "runs": 150,
+    "errors": 0,
+    "recall_at_5": 0.24666666666666667,
+    "hit_at_1": 0,
+    "hit_at_5": 0.38,
+    "precision_at_5": 0.09199999999999994
+  },
+  "indices": [
+    {
+      "seed": 1,
+      "ingestion_order_sha256": "0407e6c4d2599f2492ce1a56113f9518e7b79b98c90442d80349885effbbb236"
+    },
+    {
+      "seed": 2,
+      "ingestion_order_sha256": "4c83c49be47ff0738a6d6769dfb08f4cfd2952f350aac6fac989559a55938f34"
+    },
+    {
+      "seed": 3,
+      "ingestion_order_sha256": "9d57252b150474f015a9ec4cd193bd5bd66ca593feb77ab7017b5e59e2b89d8a"
+    }
+  ],
+  "rows": [
+    {
+      "seed": 1,
+      "query_id": "q-0001",
+      "text": "Who attended Acme Board Meeting Q1 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-jackson-91"
+      ],
+      "pages": [
+        "meetings/board-acme-2025-q1-0",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/board-gamma-2025-q3-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0002",
+      "text": "Who attended Beta Board Meeting Q2 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/victor-taylor-1"
+      ],
+      "pages": [
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/board-helix-2025-q2-9",
+        "meetings/board-pulse-2025-q1-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0003",
+      "text": "Who attended Delta Board Meeting Q4 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/victor-wilson-3",
+        "people/david-zhang-83",
+        "people/rachel-brown-95"
+      ],
+      "pages": [
+        "meetings/board-delta-2025-q4-3",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-gamma-2025-q3-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0004",
+      "text": "Who attended Epsilon Board Meeting Q1 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/paul-rodriguez-4",
+        "people/sarah-lopez-84",
+        "people/sarah-williams-92",
+        "people/olivia-miller-176"
+      ],
+      "pages": [
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/demo-day-2024-05-19-batch-4"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0005",
+      "text": "Who attended Gamma Board Meeting Q3 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/mark-jones-2"
+      ],
+      "pages": [
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/demo-day-2024-03-17-batch-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0006",
+      "text": "Who attended Helix Board Meeting Q2 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rachel-garcia-9"
+      ],
+      "pages": [
+        "meetings/board-helix-2025-q2-9",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/demo-day-2024-10-24-batch-9",
+        "meetings/board-delta-2025-q4-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0007",
+      "text": "Who attended Nimbus Board Meeting Q2 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/mia-anderson-5",
+        "people/tina-lopez-117"
+      ],
+      "pages": [
+        "meetings/board-nimbus-2025-q2-5",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/demo-day-2024-06-20-batch-5",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-helix-2025-q2-9"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0008",
+      "text": "Who attended Pulse Board Meeting Q1 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/yara-johnson-8",
+        "people/eric-martinez-93"
+      ],
+      "pages": [
+        "meetings/board-pulse-2025-q1-8",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0009",
+      "text": "Who attended Quantum Board Meeting Q4 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/ulrich-johnson-7"
+      ],
+      "pages": [
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/oneonone-7-2025-08-08",
+        "meetings/board-acme-2025-q1-0"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0010",
+      "text": "Who attended Vector Board Meeting Q3 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/uma-brown-6",
+        "people/david-zhang-83",
+        "people/wendy-wilson-170"
+      ],
+      "pages": [
+        "meetings/board-vector-2025-q3-6",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/board-epsilon-2025-q1-4"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0011",
+      "text": "Who attended Demo Day W24 — Acme?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/wendy-hernandez-80",
+        "people/mia-brown-0",
+        "people/mia-anderson-5",
+        "people/mark-thomas-11",
+        "people/chris-smith-110"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-01-15-batch-0",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0012",
+      "text": "Who attended Demo Day W25 - Beta Cybersecurity Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/carol-jackson-81",
+        "people/victor-taylor-1",
+        "people/uma-brown-6",
+        "people/henry-johnson-12",
+        "people/tara-kapoor-111"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-02-16-batch-1",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0013",
+      "text": "Who attended Demo Day W26 – Gamma Presentation?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/iris-lee-82",
+        "people/mark-jones-2",
+        "people/ulrich-johnson-7",
+        "people/mia-lee-13",
+        "people/tina-jones-112",
+        "people/chris-singh-96"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-03-17-batch-2",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0014",
+      "text": "Who attended Demo Day W27 - Delta Biotech Presentation?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/david-zhang-83",
+        "people/victor-wilson-3",
+        "people/yara-johnson-8",
+        "people/vera-chen-14",
+        "people/adam-lopez-113"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2025-01-17-batch-12",
+        "meetings/demo-day-2024-03-17-batch-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0015",
+      "text": "Who attended Demo Day W28 – Epsilon Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-lopez-84",
+        "people/paul-rodriguez-4",
+        "people/rachel-garcia-9",
+        "people/noah-kapoor-15",
+        "people/julia-johnson-114"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-03-17-batch-2",
+        "meetings/demo-day-2024-11-15-batch-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0016",
+      "text": "Who attended Demo Day W29 – Nimbus Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/priya-taylor-85",
+        "people/david-wang-10",
+        "people/ulrich-wang-16",
+        "people/quinten-nakamura-115"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-06-20-batch-5",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0017",
+      "text": "Who attended Demo Day W30?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/julia-davis-86",
+        "people/uma-brown-6",
+        "people/mark-thomas-11",
+        "people/quinten-wang-17",
+        "people/victor-jackson-116"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-01-15-batch-0",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-11-15-batch-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0018",
+      "text": "Who attended Demo Day W31 – Quantum?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/helen-martinez-87",
+        "people/ulrich-johnson-7",
+        "people/henry-johnson-12",
+        "people/nina-rodriguez-18",
+        "people/tina-lopez-117"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-08-22-batch-7",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-12-16-batch-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0019",
+      "text": "Who attended Demo Day W32 – Pulse?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/fiona-moore-88",
+        "people/yara-johnson-8",
+        "people/mia-lee-13",
+        "people/adam-lee-19",
+        "people/xavier-nakamura-118"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-09-23-batch-8",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-02-16-batch-1"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0020",
+      "text": "Who attended Demo Day W33 – Helix Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/jack-davis-89",
+        "people/rachel-garcia-9",
+        "people/vera-chen-14",
+        "people/vera-singh-20",
+        "people/quinn-park-119"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-10-24-batch-9",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-11-15-batch-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0021",
+      "text": "Who attended Demo Day W34 – Beacon Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-jackson-90",
+        "people/david-wang-10",
+        "people/noah-kapoor-15",
+        "people/eric-lee-21"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0022",
+      "text": "Who attended Demo Day W35 – Compass?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-jackson-91",
+        "people/mark-thomas-11",
+        "people/ulrich-wang-16",
+        "people/quinten-rodriguez-22"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/demo-day-2024-01-15-batch-0"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0023",
+      "text": "Who attended Demo Day W36 — Lumen (Batch 12)?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-williams-92",
+        "people/henry-johnson-12",
+        "people/quinten-wang-17",
+        "people/paul-anderson-23"
+      ],
+      "pages": [
+        "meetings/demo-day-2025-01-17-batch-12",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2025-02-18-batch-13",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0024",
+      "text": "Who attended Demo Day W37 – Cipher Batch 13 Presentation?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/eric-martinez-93",
+        "people/mia-lee-13",
+        "people/nina-rodriguez-18",
+        "people/quinten-lee-24"
+      ],
+      "pages": [
+        "meetings/demo-day-2025-02-18-batch-13",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0025",
+      "text": "Who attended Demo Day W38 – Mosaic Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-nakamura-94",
+        "people/vera-chen-14",
+        "people/adam-lee-19",
+        "people/vera-wilson-25"
+      ],
+      "pages": [
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0026",
+      "text": "Who attended 1:1 Wendy Hernandez + Mia Brown?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/wendy-hernandez-80",
+        "people/mia-brown-0"
+      ],
+      "pages": [
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-13-2025-02-14",
+        "meetings/oneonone-5-2025-06-06",
+        "meetings/oneonone-18-2025-07-19",
+        "people/wendy-hernandez-80"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0027",
+      "text": "Who attended 1:1 Carol Jackson + Victor Taylor?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/carol-jackson-81",
+        "people/victor-taylor-1"
+      ],
+      "pages": [
+        "meetings/oneonone-1-2025-02-02",
+        "people/carol-jackson-81",
+        "meetings/oneonone-10-2025-11-11",
+        "people/victor-jackson-116",
+        "meetings/oneonone-3-2025-04-04"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0028",
+      "text": "Who attended 1:1 Rosa Jackson + David Wang?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/david-wang-10"
+      ],
+      "pages": [
+        "meetings/oneonone-10-2025-11-11",
+        "meetings/oneonone-14-2025-03-15",
+        "meetings/oneonone-18-2025-07-19",
+        "people/rosa-jackson-90",
+        "meetings/demo-day-2025-03-19-batch-14"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0029",
+      "text": "Who attended 1:1 Chris Jackson + Mark Thomas?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-jackson-91",
+        "people/mark-thomas-11"
+      ],
+      "pages": [
+        "meetings/oneonone-11-2025-12-12",
+        "people/chris-jackson-91",
+        "meetings/oneonone-10-2025-11-11",
+        "meetings/oneonone-1-2025-02-02",
+        "meetings/oneonone-2-2025-03-03"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0030",
+      "text": "Who attended 1:1 Sarah Williams + Henry Johnson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-williams-92",
+        "people/henry-johnson-12",
+        "people/eric-miller-35"
+      ],
+      "pages": [
+        "meetings/oneonone-12-2025-01-13",
+        "people/sarah-williams-92",
+        "meetings/oneonone-8-2025-09-09",
+        "meetings/oneonone-24-2025-01-25",
+        "meetings/oneonone-0-2025-01-01"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.3333333333333333,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0031",
+      "text": "Who attended 1:1 Eric Martinez + Mia Lee – February 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/eric-martinez-93"
+      ],
+      "pages": [
+        "meetings/oneonone-13-2025-02-14",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-21-2025-10-22",
+        "meetings/oneonone-5-2025-06-06",
+        "people/eric-martinez-93"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0032",
+      "text": "Who attended 1:1 Rosa Nakamura + Vera Chen?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-nakamura-94",
+        "people/vera-chen-14"
+      ],
+      "pages": [
+        "meetings/oneonone-14-2025-03-15",
+        "people/rosa-nakamura-94",
+        "meetings/oneonone-18-2025-07-19",
+        "meetings/oneonone-20-2025-09-21",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0033",
+      "text": "Who attended 1:1 Rachel Brown + Noah Kapoor?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rachel-brown-95",
+        "people/noah-kapoor-15"
+      ],
+      "pages": [
+        "meetings/oneonone-15-2025-04-16",
+        "people/rachel-brown-95",
+        "meetings/oneonone-18-2025-07-19",
+        "people/noah-kapoor-15",
+        "meetings/oneonone-9-2025-10-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0034",
+      "text": "Who attended 1:1 Chris Singh + Ulrich Wang?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-singh-96",
+        "people/ulrich-wang-16"
+      ],
+      "pages": [
+        "meetings/oneonone-16-2025-05-17",
+        "people/chris-singh-96",
+        "people/ulrich-wang-16",
+        "meetings/oneonone-10-2025-11-11",
+        "meetings/oneonone-11-2025-12-12"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0035",
+      "text": "Who attended 1:1 Tina Hernandez + Quinten Wang?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/tina-hernandez-97",
+        "people/quinten-wang-17"
+      ],
+      "pages": [
+        "meetings/oneonone-17-2025-06-18",
+        "meetings/oneonone-24-2025-01-25",
+        "people/tina-hernandez-97",
+        "meetings/oneonone-22-2025-11-23",
+        "people/tina-wang-179"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0036",
+      "text": "Who attended 1:1 Rosa Miller + Nina Rodriguez?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-miller-98",
+        "people/nina-rodriguez-18"
+      ],
+      "pages": [
+        "meetings/oneonone-18-2025-07-19",
+        "meetings/oneonone-14-2025-03-15",
+        "people/rosa-miller-98",
+        "meetings/oneonone-10-2025-11-11",
+        "people/rosa-nakamura-94"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0037",
+      "text": "Who attended 1:1 Kate Lopez + Adam Lee?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/kate-lopez-99",
+        "people/adam-lee-19"
+      ],
+      "pages": [
+        "meetings/oneonone-19-2025-08-20",
+        "people/kate-lopez-99",
+        "people/adam-lopez-113",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0038",
+      "text": "Who attended 1:1 Iris Lee + Mark Jones?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/iris-lee-82",
+        "people/mark-jones-2"
+      ],
+      "pages": [
+        "meetings/oneonone-2-2025-03-03",
+        "people/iris-lee-82",
+        "meetings/oneonone-11-2025-12-12",
+        "companies/iris-36",
+        "meetings/oneonone-13-2025-02-14"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0039",
+      "text": "Who attended 1:1 Zoe Gonzalez + Vera Singh?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/vera-singh-20"
+      ],
+      "pages": [
+        "meetings/oneonone-20-2025-09-21",
+        "meetings/oneonone-14-2025-03-15",
+        "meetings/oneonone-23-2025-12-24",
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/oneonone-15-2025-04-16"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0040",
+      "text": "Who attended 1:1 Chris Miller + Eric Lee?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/eric-lee-21"
+      ],
+      "pages": [
+        "meetings/oneonone-21-2025-10-22",
+        "meetings/oneonone-13-2025-02-14",
+        "meetings/oneonone-11-2025-12-12",
+        "people/eric-miller-35",
+        "meetings/oneonone-16-2025-05-17"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0041",
+      "text": "Who attended 1:1 Kevin Taylor + Quinten Rodriguez?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/quinten-rodriguez-22"
+      ],
+      "pages": [
+        "meetings/oneonone-22-2025-11-23",
+        "meetings/oneonone-24-2025-01-25",
+        "meetings/oneonone-17-2025-06-18",
+        "people/quinten-rodriguez-22",
+        "meetings/oneonone-1-2025-02-02"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0042",
+      "text": "Who attended 1:1 Vera Gonzalez + Paul Anderson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/paul-anderson-23"
+      ],
+      "pages": [
+        "meetings/oneonone-23-2025-12-24",
+        "meetings/oneonone-20-2025-09-21",
+        "meetings/oneonone-14-2025-03-15",
+        "meetings/oneonone-4-2025-05-05",
+        "meetings/oneonone-18-2025-07-19"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0043",
+      "text": "Who attended 1:1 Sarah Wang + Quinten Lee?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/quinten-lee-24"
+      ],
+      "pages": [
+        "meetings/oneonone-24-2025-01-25",
+        "meetings/oneonone-17-2025-06-18",
+        "meetings/oneonone-22-2025-11-23",
+        "people/quinten-wang-17",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0044",
+      "text": "Who attended 1:1 David Zhang + Victor Wilson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/david-zhang-83",
+        "people/victor-wilson-3"
+      ],
+      "pages": [
+        "meetings/oneonone-3-2025-04-04",
+        "meetings/oneonone-10-2025-11-11",
+        "people/david-zhang-83",
+        "meetings/oneonone-1-2025-02-02",
+        "people/victor-wilson-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0045",
+      "text": "Who attended 1:1 Sarah Lopez + Paul Rodriguez?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-lopez-84",
+        "people/paul-rodriguez-4"
+      ],
+      "pages": [
+        "meetings/oneonone-4-2025-05-05",
+        "people/sarah-lopez-84",
+        "meetings/oneonone-23-2025-12-24",
+        "people/paul-rodriguez-4",
+        "meetings/oneonone-18-2025-07-19"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0046",
+      "text": "Who attended 1:1 Priya Taylor + Mia Anderson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/priya-taylor-85",
+        "people/mia-anderson-5"
+      ],
+      "pages": [
+        "meetings/oneonone-5-2025-06-06",
+        "meetings/oneonone-13-2025-02-14",
+        "people/priya-taylor-85",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-8-2025-09-09"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0047",
+      "text": "Who attended 1:1 Julia Davis + Uma Brown?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/julia-davis-86",
+        "people/uma-brown-6"
+      ],
+      "pages": [
+        "meetings/oneonone-6-2025-07-07",
+        "people/julia-davis-86",
+        "meetings/oneonone-8-2025-09-09",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/oneonone-0-2025-01-01"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0048",
+      "text": "Who attended 1:1 Helen Martinez + Ulrich Johnson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/ulrich-johnson-7"
+      ],
+      "pages": [
+        "meetings/oneonone-7-2025-08-08",
+        "people/helen-martinez-87",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-8-2025-09-09",
+        "meetings/oneonone-12-2025-01-13"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0049",
+      "text": "Who attended 1:1 Fiona Moore + Yara Johnson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/fiona-moore-88",
+        "people/yara-johnson-8"
+      ],
+      "pages": [
+        "meetings/oneonone-8-2025-09-09",
+        "people/fiona-moore-88",
+        "people/yara-moore-174",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-5-2025-06-06"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 1,
+      "query_id": "q-0050",
+      "text": "Who attended 1:1 Jack Davis + Rachel Garcia?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/jack-davis-89",
+        "people/rachel-garcia-9"
+      ],
+      "pages": [
+        "meetings/oneonone-9-2025-10-10",
+        "people/jack-davis-89",
+        "people/rachel-gonzalez-175",
+        "meetings/oneonone-15-2025-04-16",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0001",
+      "text": "Who attended Acme Board Meeting Q1 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-jackson-91"
+      ],
+      "pages": [
+        "meetings/board-acme-2025-q1-0",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/board-gamma-2025-q3-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0002",
+      "text": "Who attended Beta Board Meeting Q2 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/victor-taylor-1"
+      ],
+      "pages": [
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/board-helix-2025-q2-9",
+        "meetings/board-pulse-2025-q1-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0003",
+      "text": "Who attended Delta Board Meeting Q4 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/victor-wilson-3",
+        "people/david-zhang-83",
+        "people/rachel-brown-95"
+      ],
+      "pages": [
+        "meetings/board-delta-2025-q4-3",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-gamma-2025-q3-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0004",
+      "text": "Who attended Epsilon Board Meeting Q1 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/paul-rodriguez-4",
+        "people/sarah-lopez-84",
+        "people/sarah-williams-92",
+        "people/olivia-miller-176"
+      ],
+      "pages": [
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/demo-day-2024-05-19-batch-4"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0005",
+      "text": "Who attended Gamma Board Meeting Q3 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/mark-jones-2"
+      ],
+      "pages": [
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/demo-day-2024-03-17-batch-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0006",
+      "text": "Who attended Helix Board Meeting Q2 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rachel-garcia-9"
+      ],
+      "pages": [
+        "meetings/board-helix-2025-q2-9",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/demo-day-2024-10-24-batch-9",
+        "meetings/board-delta-2025-q4-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0007",
+      "text": "Who attended Nimbus Board Meeting Q2 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/mia-anderson-5",
+        "people/tina-lopez-117"
+      ],
+      "pages": [
+        "meetings/board-nimbus-2025-q2-5",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/demo-day-2024-06-20-batch-5",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-helix-2025-q2-9"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0008",
+      "text": "Who attended Pulse Board Meeting Q1 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/yara-johnson-8",
+        "people/eric-martinez-93"
+      ],
+      "pages": [
+        "meetings/board-pulse-2025-q1-8",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0009",
+      "text": "Who attended Quantum Board Meeting Q4 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/ulrich-johnson-7"
+      ],
+      "pages": [
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/oneonone-7-2025-08-08",
+        "meetings/board-acme-2025-q1-0"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0010",
+      "text": "Who attended Vector Board Meeting Q3 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/uma-brown-6",
+        "people/david-zhang-83",
+        "people/wendy-wilson-170"
+      ],
+      "pages": [
+        "meetings/board-vector-2025-q3-6",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/board-epsilon-2025-q1-4"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0011",
+      "text": "Who attended Demo Day W24 — Acme?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/wendy-hernandez-80",
+        "people/mia-brown-0",
+        "people/mia-anderson-5",
+        "people/mark-thomas-11",
+        "people/chris-smith-110"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-01-15-batch-0",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0012",
+      "text": "Who attended Demo Day W25 - Beta Cybersecurity Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/carol-jackson-81",
+        "people/victor-taylor-1",
+        "people/uma-brown-6",
+        "people/henry-johnson-12",
+        "people/tara-kapoor-111"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-02-16-batch-1",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0013",
+      "text": "Who attended Demo Day W26 – Gamma Presentation?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/iris-lee-82",
+        "people/mark-jones-2",
+        "people/ulrich-johnson-7",
+        "people/mia-lee-13",
+        "people/tina-jones-112",
+        "people/chris-singh-96"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-03-17-batch-2",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0014",
+      "text": "Who attended Demo Day W27 - Delta Biotech Presentation?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/david-zhang-83",
+        "people/victor-wilson-3",
+        "people/yara-johnson-8",
+        "people/vera-chen-14",
+        "people/adam-lopez-113"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2025-01-17-batch-12",
+        "meetings/demo-day-2024-03-17-batch-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0015",
+      "text": "Who attended Demo Day W28 – Epsilon Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-lopez-84",
+        "people/paul-rodriguez-4",
+        "people/rachel-garcia-9",
+        "people/noah-kapoor-15",
+        "people/julia-johnson-114"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-03-17-batch-2",
+        "meetings/demo-day-2024-11-15-batch-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0016",
+      "text": "Who attended Demo Day W29 – Nimbus Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/priya-taylor-85",
+        "people/david-wang-10",
+        "people/ulrich-wang-16",
+        "people/quinten-nakamura-115"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-06-20-batch-5",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0017",
+      "text": "Who attended Demo Day W30?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/julia-davis-86",
+        "people/uma-brown-6",
+        "people/mark-thomas-11",
+        "people/quinten-wang-17",
+        "people/victor-jackson-116"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-01-15-batch-0",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-11-15-batch-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0018",
+      "text": "Who attended Demo Day W31 – Quantum?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/helen-martinez-87",
+        "people/ulrich-johnson-7",
+        "people/henry-johnson-12",
+        "people/nina-rodriguez-18",
+        "people/tina-lopez-117"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-08-22-batch-7",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-12-16-batch-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0019",
+      "text": "Who attended Demo Day W32 – Pulse?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/fiona-moore-88",
+        "people/yara-johnson-8",
+        "people/mia-lee-13",
+        "people/adam-lee-19",
+        "people/xavier-nakamura-118"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-09-23-batch-8",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-02-16-batch-1"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0020",
+      "text": "Who attended Demo Day W33 – Helix Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/jack-davis-89",
+        "people/rachel-garcia-9",
+        "people/vera-chen-14",
+        "people/vera-singh-20",
+        "people/quinn-park-119"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-10-24-batch-9",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-11-15-batch-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0021",
+      "text": "Who attended Demo Day W34 – Beacon Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-jackson-90",
+        "people/david-wang-10",
+        "people/noah-kapoor-15",
+        "people/eric-lee-21"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0022",
+      "text": "Who attended Demo Day W35 – Compass?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-jackson-91",
+        "people/mark-thomas-11",
+        "people/ulrich-wang-16",
+        "people/quinten-rodriguez-22"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/demo-day-2024-01-15-batch-0"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0023",
+      "text": "Who attended Demo Day W36 — Lumen (Batch 12)?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-williams-92",
+        "people/henry-johnson-12",
+        "people/quinten-wang-17",
+        "people/paul-anderson-23"
+      ],
+      "pages": [
+        "meetings/demo-day-2025-01-17-batch-12",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2025-02-18-batch-13",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0024",
+      "text": "Who attended Demo Day W37 – Cipher Batch 13 Presentation?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/eric-martinez-93",
+        "people/mia-lee-13",
+        "people/nina-rodriguez-18",
+        "people/quinten-lee-24"
+      ],
+      "pages": [
+        "meetings/demo-day-2025-02-18-batch-13",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0025",
+      "text": "Who attended Demo Day W38 – Mosaic Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-nakamura-94",
+        "people/vera-chen-14",
+        "people/adam-lee-19",
+        "people/vera-wilson-25"
+      ],
+      "pages": [
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0026",
+      "text": "Who attended 1:1 Wendy Hernandez + Mia Brown?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/wendy-hernandez-80",
+        "people/mia-brown-0"
+      ],
+      "pages": [
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-13-2025-02-14",
+        "meetings/oneonone-5-2025-06-06",
+        "meetings/oneonone-18-2025-07-19",
+        "people/wendy-hernandez-80"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0027",
+      "text": "Who attended 1:1 Carol Jackson + Victor Taylor?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/carol-jackson-81",
+        "people/victor-taylor-1"
+      ],
+      "pages": [
+        "meetings/oneonone-1-2025-02-02",
+        "people/carol-jackson-81",
+        "meetings/oneonone-10-2025-11-11",
+        "people/victor-jackson-116",
+        "meetings/oneonone-3-2025-04-04"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0028",
+      "text": "Who attended 1:1 Rosa Jackson + David Wang?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/david-wang-10"
+      ],
+      "pages": [
+        "meetings/oneonone-10-2025-11-11",
+        "meetings/oneonone-14-2025-03-15",
+        "meetings/oneonone-18-2025-07-19",
+        "people/rosa-jackson-90",
+        "meetings/demo-day-2025-03-19-batch-14"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0029",
+      "text": "Who attended 1:1 Chris Jackson + Mark Thomas?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-jackson-91",
+        "people/mark-thomas-11"
+      ],
+      "pages": [
+        "meetings/oneonone-11-2025-12-12",
+        "people/chris-jackson-91",
+        "meetings/oneonone-10-2025-11-11",
+        "meetings/oneonone-1-2025-02-02",
+        "meetings/oneonone-2-2025-03-03"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0030",
+      "text": "Who attended 1:1 Sarah Williams + Henry Johnson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-williams-92",
+        "people/henry-johnson-12",
+        "people/eric-miller-35"
+      ],
+      "pages": [
+        "meetings/oneonone-12-2025-01-13",
+        "people/sarah-williams-92",
+        "meetings/oneonone-8-2025-09-09",
+        "meetings/oneonone-24-2025-01-25",
+        "meetings/oneonone-0-2025-01-01"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.3333333333333333,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0031",
+      "text": "Who attended 1:1 Eric Martinez + Mia Lee – February 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/eric-martinez-93"
+      ],
+      "pages": [
+        "meetings/oneonone-13-2025-02-14",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-21-2025-10-22",
+        "meetings/oneonone-5-2025-06-06",
+        "people/eric-martinez-93"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0032",
+      "text": "Who attended 1:1 Rosa Nakamura + Vera Chen?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-nakamura-94",
+        "people/vera-chen-14"
+      ],
+      "pages": [
+        "meetings/oneonone-14-2025-03-15",
+        "people/rosa-nakamura-94",
+        "meetings/oneonone-18-2025-07-19",
+        "meetings/oneonone-20-2025-09-21",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0033",
+      "text": "Who attended 1:1 Rachel Brown + Noah Kapoor?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rachel-brown-95",
+        "people/noah-kapoor-15"
+      ],
+      "pages": [
+        "meetings/oneonone-15-2025-04-16",
+        "people/rachel-brown-95",
+        "meetings/oneonone-18-2025-07-19",
+        "people/noah-kapoor-15",
+        "meetings/oneonone-9-2025-10-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0034",
+      "text": "Who attended 1:1 Chris Singh + Ulrich Wang?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-singh-96",
+        "people/ulrich-wang-16"
+      ],
+      "pages": [
+        "meetings/oneonone-16-2025-05-17",
+        "people/chris-singh-96",
+        "people/ulrich-wang-16",
+        "meetings/oneonone-10-2025-11-11",
+        "meetings/oneonone-11-2025-12-12"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0035",
+      "text": "Who attended 1:1 Tina Hernandez + Quinten Wang?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/tina-hernandez-97",
+        "people/quinten-wang-17"
+      ],
+      "pages": [
+        "meetings/oneonone-17-2025-06-18",
+        "meetings/oneonone-24-2025-01-25",
+        "people/tina-hernandez-97",
+        "meetings/oneonone-22-2025-11-23",
+        "people/tina-wang-179"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0036",
+      "text": "Who attended 1:1 Rosa Miller + Nina Rodriguez?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-miller-98",
+        "people/nina-rodriguez-18"
+      ],
+      "pages": [
+        "meetings/oneonone-18-2025-07-19",
+        "meetings/oneonone-14-2025-03-15",
+        "people/rosa-miller-98",
+        "meetings/oneonone-10-2025-11-11",
+        "people/rosa-nakamura-94"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0037",
+      "text": "Who attended 1:1 Kate Lopez + Adam Lee?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/kate-lopez-99",
+        "people/adam-lee-19"
+      ],
+      "pages": [
+        "meetings/oneonone-19-2025-08-20",
+        "people/kate-lopez-99",
+        "people/adam-lopez-113",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0038",
+      "text": "Who attended 1:1 Iris Lee + Mark Jones?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/iris-lee-82",
+        "people/mark-jones-2"
+      ],
+      "pages": [
+        "meetings/oneonone-2-2025-03-03",
+        "people/iris-lee-82",
+        "meetings/oneonone-11-2025-12-12",
+        "companies/iris-36",
+        "meetings/oneonone-13-2025-02-14"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0039",
+      "text": "Who attended 1:1 Zoe Gonzalez + Vera Singh?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/vera-singh-20"
+      ],
+      "pages": [
+        "meetings/oneonone-20-2025-09-21",
+        "meetings/oneonone-14-2025-03-15",
+        "meetings/oneonone-23-2025-12-24",
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/oneonone-15-2025-04-16"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0040",
+      "text": "Who attended 1:1 Chris Miller + Eric Lee?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/eric-lee-21"
+      ],
+      "pages": [
+        "meetings/oneonone-21-2025-10-22",
+        "meetings/oneonone-13-2025-02-14",
+        "meetings/oneonone-11-2025-12-12",
+        "people/eric-miller-35",
+        "meetings/oneonone-16-2025-05-17"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0041",
+      "text": "Who attended 1:1 Kevin Taylor + Quinten Rodriguez?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/quinten-rodriguez-22"
+      ],
+      "pages": [
+        "meetings/oneonone-22-2025-11-23",
+        "meetings/oneonone-24-2025-01-25",
+        "meetings/oneonone-17-2025-06-18",
+        "people/quinten-rodriguez-22",
+        "meetings/oneonone-1-2025-02-02"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0042",
+      "text": "Who attended 1:1 Vera Gonzalez + Paul Anderson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/paul-anderson-23"
+      ],
+      "pages": [
+        "meetings/oneonone-23-2025-12-24",
+        "meetings/oneonone-20-2025-09-21",
+        "meetings/oneonone-14-2025-03-15",
+        "meetings/oneonone-4-2025-05-05",
+        "meetings/oneonone-18-2025-07-19"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0043",
+      "text": "Who attended 1:1 Sarah Wang + Quinten Lee?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/quinten-lee-24"
+      ],
+      "pages": [
+        "meetings/oneonone-24-2025-01-25",
+        "meetings/oneonone-17-2025-06-18",
+        "meetings/oneonone-22-2025-11-23",
+        "people/quinten-wang-17",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0044",
+      "text": "Who attended 1:1 David Zhang + Victor Wilson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/david-zhang-83",
+        "people/victor-wilson-3"
+      ],
+      "pages": [
+        "meetings/oneonone-3-2025-04-04",
+        "meetings/oneonone-10-2025-11-11",
+        "people/david-zhang-83",
+        "meetings/oneonone-1-2025-02-02",
+        "people/victor-wilson-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0045",
+      "text": "Who attended 1:1 Sarah Lopez + Paul Rodriguez?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-lopez-84",
+        "people/paul-rodriguez-4"
+      ],
+      "pages": [
+        "meetings/oneonone-4-2025-05-05",
+        "people/sarah-lopez-84",
+        "meetings/oneonone-23-2025-12-24",
+        "people/paul-rodriguez-4",
+        "meetings/oneonone-18-2025-07-19"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0046",
+      "text": "Who attended 1:1 Priya Taylor + Mia Anderson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/priya-taylor-85",
+        "people/mia-anderson-5"
+      ],
+      "pages": [
+        "meetings/oneonone-5-2025-06-06",
+        "meetings/oneonone-13-2025-02-14",
+        "people/priya-taylor-85",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-8-2025-09-09"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0047",
+      "text": "Who attended 1:1 Julia Davis + Uma Brown?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/julia-davis-86",
+        "people/uma-brown-6"
+      ],
+      "pages": [
+        "meetings/oneonone-6-2025-07-07",
+        "people/julia-davis-86",
+        "meetings/oneonone-8-2025-09-09",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/oneonone-0-2025-01-01"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0048",
+      "text": "Who attended 1:1 Helen Martinez + Ulrich Johnson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/ulrich-johnson-7"
+      ],
+      "pages": [
+        "meetings/oneonone-7-2025-08-08",
+        "people/helen-martinez-87",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-8-2025-09-09",
+        "meetings/oneonone-12-2025-01-13"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0049",
+      "text": "Who attended 1:1 Fiona Moore + Yara Johnson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/fiona-moore-88",
+        "people/yara-johnson-8"
+      ],
+      "pages": [
+        "meetings/oneonone-8-2025-09-09",
+        "people/fiona-moore-88",
+        "people/yara-moore-174",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-5-2025-06-06"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 2,
+      "query_id": "q-0050",
+      "text": "Who attended 1:1 Jack Davis + Rachel Garcia?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/jack-davis-89",
+        "people/rachel-garcia-9"
+      ],
+      "pages": [
+        "meetings/oneonone-9-2025-10-10",
+        "people/jack-davis-89",
+        "people/rachel-gonzalez-175",
+        "meetings/oneonone-15-2025-04-16",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0001",
+      "text": "Who attended Acme Board Meeting Q1 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-jackson-91"
+      ],
+      "pages": [
+        "meetings/board-acme-2025-q1-0",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/board-gamma-2025-q3-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0002",
+      "text": "Who attended Beta Board Meeting Q2 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/victor-taylor-1"
+      ],
+      "pages": [
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/board-helix-2025-q2-9",
+        "meetings/board-pulse-2025-q1-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0003",
+      "text": "Who attended Delta Board Meeting Q4 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/victor-wilson-3",
+        "people/david-zhang-83",
+        "people/rachel-brown-95"
+      ],
+      "pages": [
+        "meetings/board-delta-2025-q4-3",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-gamma-2025-q3-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0004",
+      "text": "Who attended Epsilon Board Meeting Q1 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/paul-rodriguez-4",
+        "people/sarah-lopez-84",
+        "people/sarah-williams-92",
+        "people/olivia-miller-176"
+      ],
+      "pages": [
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/demo-day-2024-05-19-batch-4"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0005",
+      "text": "Who attended Gamma Board Meeting Q3 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/mark-jones-2"
+      ],
+      "pages": [
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/demo-day-2024-03-17-batch-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0006",
+      "text": "Who attended Helix Board Meeting Q2 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rachel-garcia-9"
+      ],
+      "pages": [
+        "meetings/board-helix-2025-q2-9",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/demo-day-2024-10-24-batch-9",
+        "meetings/board-delta-2025-q4-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0007",
+      "text": "Who attended Nimbus Board Meeting Q2 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/mia-anderson-5",
+        "people/tina-lopez-117"
+      ],
+      "pages": [
+        "meetings/board-nimbus-2025-q2-5",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/demo-day-2024-06-20-batch-5",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-helix-2025-q2-9"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0008",
+      "text": "Who attended Pulse Board Meeting Q1 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/yara-johnson-8",
+        "people/eric-martinez-93"
+      ],
+      "pages": [
+        "meetings/board-pulse-2025-q1-8",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-epsilon-2025-q1-4",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0009",
+      "text": "Who attended Quantum Board Meeting Q4 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/ulrich-johnson-7"
+      ],
+      "pages": [
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/board-gamma-2025-q3-2",
+        "meetings/oneonone-7-2025-08-08",
+        "meetings/board-acme-2025-q1-0"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0010",
+      "text": "Who attended Vector Board Meeting Q3 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/uma-brown-6",
+        "people/david-zhang-83",
+        "people/wendy-wilson-170"
+      ],
+      "pages": [
+        "meetings/board-vector-2025-q3-6",
+        "meetings/board-quantum-2025-q4-7",
+        "meetings/board-beta-2025-q2-1",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/board-epsilon-2025-q1-4"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0011",
+      "text": "Who attended Demo Day W24 — Acme?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/wendy-hernandez-80",
+        "people/mia-brown-0",
+        "people/mia-anderson-5",
+        "people/mark-thomas-11",
+        "people/chris-smith-110"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-01-15-batch-0",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0012",
+      "text": "Who attended Demo Day W25 - Beta Cybersecurity Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/carol-jackson-81",
+        "people/victor-taylor-1",
+        "people/uma-brown-6",
+        "people/henry-johnson-12",
+        "people/tara-kapoor-111"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-02-16-batch-1",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0013",
+      "text": "Who attended Demo Day W26 – Gamma Presentation?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/iris-lee-82",
+        "people/mark-jones-2",
+        "people/ulrich-johnson-7",
+        "people/mia-lee-13",
+        "people/tina-jones-112",
+        "people/chris-singh-96"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-03-17-batch-2",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0014",
+      "text": "Who attended Demo Day W27 - Delta Biotech Presentation?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/david-zhang-83",
+        "people/victor-wilson-3",
+        "people/yara-johnson-8",
+        "people/vera-chen-14",
+        "people/adam-lopez-113"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2025-01-17-batch-12",
+        "meetings/demo-day-2024-03-17-batch-2"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0015",
+      "text": "Who attended Demo Day W28 – Epsilon Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-lopez-84",
+        "people/paul-rodriguez-4",
+        "people/rachel-garcia-9",
+        "people/noah-kapoor-15",
+        "people/julia-johnson-114"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-03-17-batch-2",
+        "meetings/demo-day-2024-11-15-batch-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0016",
+      "text": "Who attended Demo Day W29 – Nimbus Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/priya-taylor-85",
+        "people/david-wang-10",
+        "people/ulrich-wang-16",
+        "people/quinten-nakamura-115"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-06-20-batch-5",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0017",
+      "text": "Who attended Demo Day W30?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/julia-davis-86",
+        "people/uma-brown-6",
+        "people/mark-thomas-11",
+        "people/quinten-wang-17",
+        "people/victor-jackson-116"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-01-15-batch-0",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-11-15-batch-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0018",
+      "text": "Who attended Demo Day W31 – Quantum?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/helen-martinez-87",
+        "people/ulrich-johnson-7",
+        "people/henry-johnson-12",
+        "people/nina-rodriguez-18",
+        "people/tina-lopez-117"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-08-22-batch-7",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-12-16-batch-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0019",
+      "text": "Who attended Demo Day W32 – Pulse?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/fiona-moore-88",
+        "people/yara-johnson-8",
+        "people/mia-lee-13",
+        "people/adam-lee-19",
+        "people/xavier-nakamura-118"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-09-23-batch-8",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-02-16-batch-1"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0020",
+      "text": "Who attended Demo Day W33 – Helix Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/jack-davis-89",
+        "people/rachel-garcia-9",
+        "people/vera-chen-14",
+        "people/vera-singh-20",
+        "people/quinn-park-119"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-10-24-batch-9",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-04-18-batch-3",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-11-15-batch-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0021",
+      "text": "Who attended Demo Day W34 – Beacon Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-jackson-90",
+        "people/david-wang-10",
+        "people/noah-kapoor-15",
+        "people/eric-lee-21"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0022",
+      "text": "Who attended Demo Day W35 – Compass?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-jackson-91",
+        "people/mark-thomas-11",
+        "people/ulrich-wang-16",
+        "people/quinten-rodriguez-22"
+      ],
+      "pages": [
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/demo-day-2024-01-15-batch-0"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0023",
+      "text": "Who attended Demo Day W36 — Lumen (Batch 12)?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-williams-92",
+        "people/henry-johnson-12",
+        "people/quinten-wang-17",
+        "people/paul-anderson-23"
+      ],
+      "pages": [
+        "meetings/demo-day-2025-01-17-batch-12",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2025-02-18-batch-13",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0024",
+      "text": "Who attended Demo Day W37 – Cipher Batch 13 Presentation?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/eric-martinez-93",
+        "people/mia-lee-13",
+        "people/nina-rodriguez-18",
+        "people/quinten-lee-24"
+      ],
+      "pages": [
+        "meetings/demo-day-2025-02-18-batch-13",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-05-19-batch-4",
+        "meetings/demo-day-2024-04-18-batch-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0025",
+      "text": "Who attended Demo Day W38 – Mosaic Pitch?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-nakamura-94",
+        "people/vera-chen-14",
+        "people/adam-lee-19",
+        "people/vera-wilson-25"
+      ],
+      "pages": [
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/demo-day-2024-11-15-batch-10",
+        "meetings/demo-day-2024-12-16-batch-11",
+        "meetings/demo-day-2024-09-23-batch-8"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0026",
+      "text": "Who attended 1:1 Wendy Hernandez + Mia Brown?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/wendy-hernandez-80",
+        "people/mia-brown-0"
+      ],
+      "pages": [
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-13-2025-02-14",
+        "meetings/oneonone-5-2025-06-06",
+        "meetings/oneonone-18-2025-07-19",
+        "people/wendy-hernandez-80"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0027",
+      "text": "Who attended 1:1 Carol Jackson + Victor Taylor?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/carol-jackson-81",
+        "people/victor-taylor-1"
+      ],
+      "pages": [
+        "meetings/oneonone-1-2025-02-02",
+        "people/carol-jackson-81",
+        "meetings/oneonone-10-2025-11-11",
+        "people/victor-jackson-116",
+        "meetings/oneonone-3-2025-04-04"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0028",
+      "text": "Who attended 1:1 Rosa Jackson + David Wang?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/david-wang-10"
+      ],
+      "pages": [
+        "meetings/oneonone-10-2025-11-11",
+        "meetings/oneonone-14-2025-03-15",
+        "meetings/oneonone-18-2025-07-19",
+        "people/rosa-jackson-90",
+        "meetings/demo-day-2025-03-19-batch-14"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0029",
+      "text": "Who attended 1:1 Chris Jackson + Mark Thomas?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-jackson-91",
+        "people/mark-thomas-11"
+      ],
+      "pages": [
+        "meetings/oneonone-11-2025-12-12",
+        "people/chris-jackson-91",
+        "meetings/oneonone-10-2025-11-11",
+        "meetings/oneonone-1-2025-02-02",
+        "meetings/oneonone-2-2025-03-03"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0030",
+      "text": "Who attended 1:1 Sarah Williams + Henry Johnson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-williams-92",
+        "people/henry-johnson-12",
+        "people/eric-miller-35"
+      ],
+      "pages": [
+        "meetings/oneonone-12-2025-01-13",
+        "people/sarah-williams-92",
+        "meetings/oneonone-8-2025-09-09",
+        "meetings/oneonone-24-2025-01-25",
+        "meetings/oneonone-0-2025-01-01"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.3333333333333333,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0031",
+      "text": "Who attended 1:1 Eric Martinez + Mia Lee – February 2025?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/eric-martinez-93"
+      ],
+      "pages": [
+        "meetings/oneonone-13-2025-02-14",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-21-2025-10-22",
+        "meetings/oneonone-5-2025-06-06",
+        "people/eric-martinez-93"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0032",
+      "text": "Who attended 1:1 Rosa Nakamura + Vera Chen?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-nakamura-94",
+        "people/vera-chen-14"
+      ],
+      "pages": [
+        "meetings/oneonone-14-2025-03-15",
+        "people/rosa-nakamura-94",
+        "meetings/oneonone-18-2025-07-19",
+        "meetings/oneonone-20-2025-09-21",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0033",
+      "text": "Who attended 1:1 Rachel Brown + Noah Kapoor?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rachel-brown-95",
+        "people/noah-kapoor-15"
+      ],
+      "pages": [
+        "meetings/oneonone-15-2025-04-16",
+        "people/rachel-brown-95",
+        "meetings/oneonone-18-2025-07-19",
+        "people/noah-kapoor-15",
+        "meetings/oneonone-9-2025-10-10"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0034",
+      "text": "Who attended 1:1 Chris Singh + Ulrich Wang?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/chris-singh-96",
+        "people/ulrich-wang-16"
+      ],
+      "pages": [
+        "meetings/oneonone-16-2025-05-17",
+        "people/chris-singh-96",
+        "people/ulrich-wang-16",
+        "meetings/oneonone-10-2025-11-11",
+        "meetings/oneonone-11-2025-12-12"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0035",
+      "text": "Who attended 1:1 Tina Hernandez + Quinten Wang?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/tina-hernandez-97",
+        "people/quinten-wang-17"
+      ],
+      "pages": [
+        "meetings/oneonone-17-2025-06-18",
+        "meetings/oneonone-24-2025-01-25",
+        "people/tina-hernandez-97",
+        "meetings/oneonone-22-2025-11-23",
+        "people/tina-wang-179"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0036",
+      "text": "Who attended 1:1 Rosa Miller + Nina Rodriguez?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/rosa-miller-98",
+        "people/nina-rodriguez-18"
+      ],
+      "pages": [
+        "meetings/oneonone-18-2025-07-19",
+        "meetings/oneonone-14-2025-03-15",
+        "people/rosa-miller-98",
+        "meetings/oneonone-10-2025-11-11",
+        "people/rosa-nakamura-94"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0037",
+      "text": "Who attended 1:1 Kate Lopez + Adam Lee?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/kate-lopez-99",
+        "people/adam-lee-19"
+      ],
+      "pages": [
+        "meetings/oneonone-19-2025-08-20",
+        "people/kate-lopez-99",
+        "people/adam-lopez-113",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0038",
+      "text": "Who attended 1:1 Iris Lee + Mark Jones?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/iris-lee-82",
+        "people/mark-jones-2"
+      ],
+      "pages": [
+        "meetings/oneonone-2-2025-03-03",
+        "people/iris-lee-82",
+        "meetings/oneonone-11-2025-12-12",
+        "companies/iris-36",
+        "meetings/oneonone-13-2025-02-14"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0039",
+      "text": "Who attended 1:1 Zoe Gonzalez + Vera Singh?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/vera-singh-20"
+      ],
+      "pages": [
+        "meetings/oneonone-20-2025-09-21",
+        "meetings/oneonone-14-2025-03-15",
+        "meetings/oneonone-23-2025-12-24",
+        "meetings/demo-day-2025-03-19-batch-14",
+        "meetings/oneonone-15-2025-04-16"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0040",
+      "text": "Who attended 1:1 Chris Miller + Eric Lee?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/eric-lee-21"
+      ],
+      "pages": [
+        "meetings/oneonone-21-2025-10-22",
+        "meetings/oneonone-13-2025-02-14",
+        "meetings/oneonone-11-2025-12-12",
+        "people/eric-miller-35",
+        "meetings/oneonone-16-2025-05-17"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0041",
+      "text": "Who attended 1:1 Kevin Taylor + Quinten Rodriguez?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/quinten-rodriguez-22"
+      ],
+      "pages": [
+        "meetings/oneonone-22-2025-11-23",
+        "meetings/oneonone-24-2025-01-25",
+        "meetings/oneonone-17-2025-06-18",
+        "people/quinten-rodriguez-22",
+        "meetings/oneonone-1-2025-02-02"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0042",
+      "text": "Who attended 1:1 Vera Gonzalez + Paul Anderson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/paul-anderson-23"
+      ],
+      "pages": [
+        "meetings/oneonone-23-2025-12-24",
+        "meetings/oneonone-20-2025-09-21",
+        "meetings/oneonone-14-2025-03-15",
+        "meetings/oneonone-4-2025-05-05",
+        "meetings/oneonone-18-2025-07-19"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0043",
+      "text": "Who attended 1:1 Sarah Wang + Quinten Lee?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/quinten-lee-24"
+      ],
+      "pages": [
+        "meetings/oneonone-24-2025-01-25",
+        "meetings/oneonone-17-2025-06-18",
+        "meetings/oneonone-22-2025-11-23",
+        "people/quinten-wang-17",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0044",
+      "text": "Who attended 1:1 David Zhang + Victor Wilson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/david-zhang-83",
+        "people/victor-wilson-3"
+      ],
+      "pages": [
+        "meetings/oneonone-3-2025-04-04",
+        "meetings/oneonone-10-2025-11-11",
+        "people/david-zhang-83",
+        "meetings/oneonone-1-2025-02-02",
+        "people/victor-wilson-3"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0045",
+      "text": "Who attended 1:1 Sarah Lopez + Paul Rodriguez?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/sarah-lopez-84",
+        "people/paul-rodriguez-4"
+      ],
+      "pages": [
+        "meetings/oneonone-4-2025-05-05",
+        "people/sarah-lopez-84",
+        "meetings/oneonone-23-2025-12-24",
+        "people/paul-rodriguez-4",
+        "meetings/oneonone-18-2025-07-19"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.4,
+        "recall_at_5": 1,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0046",
+      "text": "Who attended 1:1 Priya Taylor + Mia Anderson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/priya-taylor-85",
+        "people/mia-anderson-5"
+      ],
+      "pages": [
+        "meetings/oneonone-5-2025-06-06",
+        "meetings/oneonone-13-2025-02-14",
+        "people/priya-taylor-85",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-8-2025-09-09"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0047",
+      "text": "Who attended 1:1 Julia Davis + Uma Brown?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/julia-davis-86",
+        "people/uma-brown-6"
+      ],
+      "pages": [
+        "meetings/oneonone-6-2025-07-07",
+        "people/julia-davis-86",
+        "meetings/oneonone-8-2025-09-09",
+        "meetings/demo-day-2024-07-21-batch-6",
+        "meetings/oneonone-0-2025-01-01"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0048",
+      "text": "Who attended 1:1 Helen Martinez + Ulrich Johnson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/ulrich-johnson-7"
+      ],
+      "pages": [
+        "meetings/oneonone-7-2025-08-08",
+        "people/helen-martinez-87",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-8-2025-09-09",
+        "meetings/oneonone-12-2025-01-13"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0,
+        "recall_at_5": 0,
+        "hit_at_1": 0,
+        "hit_at_5": 0
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0049",
+      "text": "Who attended 1:1 Fiona Moore + Yara Johnson?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/fiona-moore-88",
+        "people/yara-johnson-8"
+      ],
+      "pages": [
+        "meetings/oneonone-8-2025-09-09",
+        "people/fiona-moore-88",
+        "people/yara-moore-174",
+        "meetings/oneonone-0-2025-01-01",
+        "meetings/oneonone-5-2025-06-06"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    },
+    {
+      "seed": 3,
+      "query_id": "q-0050",
+      "text": "Who attended 1:1 Jack Davis + Rachel Garcia?",
+      "template": "attended",
+      "split": "template",
+      "relevant": [
+        "people/jack-davis-89",
+        "people/rachel-garcia-9"
+      ],
+      "pages": [
+        "meetings/oneonone-9-2025-10-10",
+        "people/jack-davis-89",
+        "people/rachel-gonzalez-175",
+        "meetings/oneonone-15-2025-04-16",
+        "meetings/oneonone-10-2025-11-11"
+      ],
+      "error": null,
+      "metrics": {
+        "precision_at_5": 0.2,
+        "recall_at_5": 0.5,
+        "hit_at_1": 0,
+        "hit_at_5": 1
+      }
+    }
+  ]
+}

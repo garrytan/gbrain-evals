@@ -1,0 +1,306 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat35-transcript-distill",
+  "gbrain_version": "0.60.733.0",
+  "gbrain_pin": "github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50",
+  "started_at": "2026-11-17T07:42:30.338Z",
+  "finished_at": "2026-11-17T07:47:22.009Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 0,
+  "n_scored": 0,
+  "completion_rate": 0,
+  "errors": [],
+  "publishable": false,
+  "resolved_config": {
+    "mode": "partial",
+    "lanes": [],
+    "transcripts": 24,
+    "corpus_sha": "5fce384e57839be4d9adc231849718463af5235061b698576f63ff587cd22eef",
+    "judge_prompt_version": "2026-09-28-v2",
+    "input_allowlist": [
+      "cat35.sut.source@1",
+      "cat35.judge.coverage@1",
+      "cat35.judge.leak@1",
+      "cat35.judge.usability@1"
+    ],
+    "external_lane": {
+      "name": "plain",
+      "dir": "<work>/gbev97/cat35-plain-docs",
+      "max_bytes": 65536,
+      "files": [
+        {
+          "transcript_id": "coding-reflection-01",
+          "file": "coding-reflection-01.md",
+          "bytes": 2146,
+          "sha256": "af6b85e9f082b931a600af57319228a75d2139240dd7e0890066f466126331bd",
+          "claims": 16
+        },
+        {
+          "transcript_id": "coding-reflection-02",
+          "file": "coding-reflection-02.md",
+          "bytes": 1674,
+          "sha256": "063e2815d3cd10ed6eb5ffb8e0f2ddd85c7bc559aa646c2c4366d11504b550e8",
+          "claims": 16
+        },
+        {
+          "transcript_id": "coding-reflection-03",
+          "file": "coding-reflection-03.md",
+          "bytes": 1368,
+          "sha256": "d7df6e8978fcc389b52bc9a133f80e362a05256a496648043ec906832c3417f8",
+          "claims": 13
+        },
+        {
+          "transcript_id": "coding-reflection-04",
+          "file": "coding-reflection-04.md",
+          "bytes": 2855,
+          "sha256": "0a34badf1beeb1d4fcc9f3fd5c1d354866db03ee06354610a9eca7bec580d8f4",
+          "claims": 19
+        },
+        {
+          "transcript_id": "emotional-processing-01",
+          "file": "emotional-processing-01.md",
+          "bytes": 1489,
+          "sha256": "3e80376ccb950c67ce392767793e3c40ca4d2b8e1d7490d506b193cef1e37d65",
+          "claims": 12
+        },
+        {
+          "transcript_id": "emotional-processing-02",
+          "file": "emotional-processing-02.md",
+          "bytes": 1601,
+          "sha256": "dfa7738e933598aab51a0c86b255595a0087b392850b9110b6ec4cd4b30f6fc6",
+          "claims": 13
+        },
+        {
+          "transcript_id": "emotional-processing-03",
+          "file": "emotional-processing-03.md",
+          "bytes": 1684,
+          "sha256": "c7ea44d28f951c93b279bff4851d6aaa7c6fbf56a66c7899dc3387752d11fe9d",
+          "claims": 18
+        },
+        {
+          "transcript_id": "emotional-processing-04",
+          "file": "emotional-processing-04.md",
+          "bytes": 4029,
+          "sha256": "183f0b8f109e97120dd483865db9b4ed0425dc89a468c1b939cfa80d59f00a84",
+          "claims": 30
+        },
+        {
+          "transcript_id": "mixed-routine-signal-01",
+          "file": "mixed-routine-signal-01.md",
+          "bytes": 932,
+          "sha256": "1d9e1bb7b91efc432e3ad02a5eaebab6d60758412176e1837614689d777a9fae",
+          "claims": 9
+        },
+        {
+          "transcript_id": "mixed-routine-signal-02",
+          "file": "mixed-routine-signal-02.md",
+          "bytes": 1489,
+          "sha256": "c14692a09d1f4e2d59891dab7cb0100657b2cca4d72f65d374d3e6c4d7508002",
+          "claims": 14
+        },
+        {
+          "transcript_id": "mixed-routine-signal-03",
+          "file": "mixed-routine-signal-03.md",
+          "bytes": 1692,
+          "sha256": "28be880445048c377530f63bdb84266d266da6c6e4c008543433bb3fae187c86",
+          "claims": 14
+        },
+        {
+          "transcript_id": "mixed-routine-signal-04",
+          "file": "mixed-routine-signal-04.md",
+          "bytes": 2859,
+          "sha256": "dc0ebc223d4a069c37769512df62683c0ec5b8b21dff22b38c365e21e1c552a7",
+          "claims": 32
+        },
+        {
+          "transcript_id": "people-deal-01",
+          "file": "people-deal-01.md",
+          "bytes": 1690,
+          "sha256": "034fcd55d02c372b16e67812ab959578e4a23e683abdc91141d6092d8bc79f98",
+          "claims": 15
+        },
+        {
+          "transcript_id": "people-deal-02",
+          "file": "people-deal-02.md",
+          "bytes": 2765,
+          "sha256": "edde56f3166fb818f68768e6e4f9f45abc24772cee5c962a06386458bdb4c2e6",
+          "claims": 25
+        },
+        {
+          "transcript_id": "people-deal-03",
+          "file": "people-deal-03.md",
+          "bytes": 2729,
+          "sha256": "6a37a5681ee1f9d77979ea45868e8a80b04adb2665c4b6b6b9a6ba8ca8f44cae",
+          "claims": 25
+        },
+        {
+          "transcript_id": "people-deal-04",
+          "file": "people-deal-04.md",
+          "bytes": 4832,
+          "sha256": "f11c1432183df39158184603ee7898226acb79b1e8dd4b54d6f0f26c874aa670",
+          "claims": 31
+        },
+        {
+          "transcript_id": "pure-routine-01",
+          "file": "pure-routine-01.md",
+          "bytes": 1406,
+          "sha256": "f71f18480522d3576c4f8f8cecf34f51052f0d84d538a0648c0686eb35fb17a7",
+          "claims": 12
+        },
+        {
+          "transcript_id": "pure-routine-02",
+          "file": "pure-routine-02.md",
+          "bytes": 1609,
+          "sha256": "e10b37bc0070692486a0c4b03799c1e9dc6bec1b45493c2bfc33accabe013231",
+          "claims": 14
+        },
+        {
+          "transcript_id": "pure-routine-03",
+          "file": "pure-routine-03.md",
+          "bytes": 1656,
+          "sha256": "4bb6eaee0bf358702f0f090af52235b4b87156b42853208875c8949d7f980e6f",
+          "claims": 10
+        },
+        {
+          "transcript_id": "pure-routine-04",
+          "file": "pure-routine-04.md",
+          "bytes": 2818,
+          "sha256": "64579e9b89a7a303c2b001f3d96594cf067fba576fc61f5eb3deb165f6c0bf65",
+          "claims": 19
+        },
+        {
+          "transcript_id": "startup-ideation-01",
+          "file": "startup-ideation-01.md",
+          "bytes": 3058,
+          "sha256": "5a943aeee6f9d4fc829a4643564571088313fcb6bf4f4a8ebcf719ee037c8e24",
+          "claims": 23
+        },
+        {
+          "transcript_id": "startup-ideation-02",
+          "file": "startup-ideation-02.md",
+          "bytes": 1966,
+          "sha256": "8786fd2a5b2c61548e7efe1ef3ff0587759b863ceb94fc42d8ce1f0d53763b9c",
+          "claims": 15
+        },
+        {
+          "transcript_id": "startup-ideation-03",
+          "file": "startup-ideation-03.md",
+          "bytes": 1426,
+          "sha256": "9ef6acf9d33f9d54aa57d80a68e1c48ee1edb25b700e1c22db23300590f4a693",
+          "claims": 17
+        },
+        {
+          "transcript_id": "startup-ideation-04",
+          "file": "startup-ideation-04.md",
+          "bytes": 2788,
+          "sha256": "ed45b593e508fa2d007d69623e1ab1bc1cdb0327ad1ed6f78c9776323e0a4c69",
+          "claims": 19
+        }
+      ],
+      "missing": [],
+      "provenance": "These documents were written by this repository's plain-baseline.ts writer, and every document's sha256 matches the writer receipt summarized in matched_baseline, which names the model, prompt and inputs. They are a no-gbrain baseline, not gbrain output.",
+      "matched_baseline": {
+        "writer_receipt_sha256": "056bfcd7e2fa123e402326af4c18272e5e32b4fcaa6303ff0710556f4b6a5690",
+        "writer": "plain-baseline-cat35-write",
+        "model": "anthropic:claude-sonnet-4-6",
+        "instruction": "Here is the transcript of a session between a user and an AI agent. Write one memory page in Markdown that keeps what is worth remembering from it.",
+        "instruction_sha256": "0c93b15399caa249594103f82ac350d0ab26cad3cb481f04316808c6deda3bbe",
+        "max_tokens": 8192,
+        "sampling": "provider default",
+        "gbrain_evals": {
+          "git_head": "443427ff5a4d437d870e2a19341617856e356e7d",
+          "dirty": false
+        },
+        "documents_matched": 24
+      }
+    },
+    "transcript_mode": "real",
+    "control_inputs": {},
+    "judge_transport": "Anthropic Messages API",
+    "temperature_sent": {
+      "judge": 0
+    },
+    "tool_choice_sent": {
+      "judge": "tool"
+    },
+    "dream_model": "anthropic:claude-opus-5-5",
+    "triage_model": "anthropic:claude-opus-5-5",
+    "facts_model": "anthropic:claude-opus-5-5",
+    "max_turns": 16,
+    "triage_threshold": 0.5,
+    "subagent_timeout_ms": 600000,
+    "dream_concurrency": 2,
+    "detailed_receipt": "eval/reports/cat35-transcript-distill/2026-11-17-074230-cat35.json"
+  },
+  "judge": {
+    "model": "claude-sonnet-4-6",
+    "temperature": 0,
+    "rubric_version": "2026-09-28-v2"
+  },
+  "data": {
+    "coverage_by_lane": {},
+    "gates": {
+      "verbatim_coverage": null,
+      "judge_failed_rate": true,
+      "dream_emission": null,
+      "external_judge_failed_rate": true
+    },
+    "judge_failed_rate": 0,
+    "external_cost_usd": 1.2311,
+    "detailed_receipt": "eval/reports/cat35-transcript-distill/2026-11-17-074230-cat35.json"
+  },
+  "cost": {
+    "usd": 1.231134,
+    "input_tokens": 273698,
+    "output_tokens": 27336,
+    "basis": "budget ledger cat35-transcript-distill-2026-11-17T07-42-30-469Z-7752b606: 90 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<work>/gbev97/ledger.sqlite",
+    "program_cap_usd": 25,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 17.2
+    }
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/plans/2026-11-17-readme-baselines/PREREG.md",
+    "preregistration_commit": "b9a4094b5cb7ecc987579589befc6433ba897496",
+    "runner_commit": "443427ff5a4d437d870e2a19341617856e356e7d",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-17T07:42:30.372Z"
+  },
+  "delivered_tokens": {
+    "tokens": 273698,
+    "basis": "provider-reported input tokens of every paid request (judges, fact extraction, dream synthesis and subagents), from the budget ledger"
+  },
+  "accounting": {
+    "planned": 0,
+    "attempted": 0,
+    "scored": 0,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "483cff18e0700aa2ff5ea9fd377339f870955e94b07a54698daf016dcc23a779",
+      "scheme": "git-index-blob-v1",
+      "files": 16192,
+      "git_head": "443427ff5a4d437d870e2a19341617856e356e7d",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50",
+      "declared_sha": "6ce7195b44a034f85aec811f11fbf862db376f50",
+      "version": "0.60.733.0",
+      "package_sha256": "3d0df978d2bd2e5837eb196a8c604762a62eea88a0010efb8a612ff5bf0a20cf",
+      "loaded_git_head": null
+    }
+  }
+}

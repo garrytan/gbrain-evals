@@ -1,0 +1,1180 @@
+{
+  "plain-a": {
+    "judged_pages": 48,
+    "events_written": 330,
+    "events_per_judged_page": 6.875,
+    "cost": {
+      "metered_usd": 0.254316,
+      "recorded_usd": 0.254316,
+      "per_judged_page_metered": 0.00529825,
+      "by_model": {
+        "anthropic:claude-sonnet-4-6": {
+          "usd": 0.254316,
+          "requests": 48
+        }
+      },
+      "unpriced": 0
+    },
+    "labeled": {
+      "pages": 28,
+      "expected": 38,
+      "matched": 33,
+      "recall": 0.868421052631579,
+      "per_class": {
+        "meeting": {
+          "pages": 8,
+          "expected": 18,
+          "matched": 13,
+          "events": 41
+        },
+        "calendar": {
+          "pages": 20,
+          "expected": 20,
+          "matched": 20,
+          "events": 20
+        }
+      },
+      "unmatched": 28,
+      "premature": 10,
+      "false": 5,
+      "duplicate": 0,
+      "supported": 13,
+      "unreviewed": 0,
+      "false_plus_premature_per_judged_labeled_page": 0.5357142857142857
+    },
+    "conversations": {
+      "pages_with_events": 20,
+      "events": 269,
+      "premature": 0,
+      "sample": {
+        "size": 25,
+        "false": 0,
+        "duplicate": 0,
+        "supported": 25,
+        "unreviewed": 0
+      }
+    },
+    "conversation_sample": [
+      {
+        "slug": "plain-a/conversations/slack-random-2026-04-15/3",
+        "depth": "conversations/slack-random-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Anna Petrov returned from a late night debugging session",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-halfway-partners-2026-04-14/18",
+        "depth": "conversations/slack-halfway-partners-2026-04-14",
+        "day": "2026-04-14",
+        "what": "Lena Park flagged IP concerns raised by Daria during legal review of Vela Bio",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-deal-flow-2026-04-17/10",
+        "depth": "conversations/slack-deal-flow-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Elena Rossi recommended moving Meridian Robotics to partner review based on strong unit economics call",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-deal-flow-2026-04-15/1",
+        "depth": "conversations/slack-deal-flow-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Sarah Chen preparing revised term sheet and diligence checklist for Phantom Robotics, due EOD next day",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-deal-flow-2026-04-17/15",
+        "depth": "conversations/slack-deal-flow-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Amara Okafor requested latest retention numbers from Jordan Park ahead of tomorrow's call",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-halfway-partners-2026-04-17/13",
+        "depth": "conversations/slack-halfway-partners-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Amara Okafor proposed greenlighting Prisma Health follow-on based on strong Q1 numbers and founder-friendly round terms",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-deal-flow-2026-04-15/11",
+        "depth": "conversations/slack-deal-flow-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Ravi Gupta reviewed Phantom Robotics financials, flagging burn rate higher than deck suggested",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-random-2026-04-16/8",
+        "depth": "conversations/slack-random-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Diego Alvarez mentioned an upcoming Austin trip next month",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-ops-2026-04-14/6",
+        "depth": "conversations/slack-ops-2026-04-14",
+        "day": "2026-04-14",
+        "what": "Bill Hart began updating the Q2 LP Report template, draft expected by EOD next day",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-ops-2026-04-15/6",
+        "depth": "conversations/slack-ops-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Anna Petrov confirmed Synthesis Bio funds cleared at 6:47am PT with First Republic",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-ops-2026-04-16/8",
+        "depth": "conversations/slack-ops-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Amara Okafor asked Ravi Gupta to summarize current fund admin bandwidth ahead of Q2 close",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-halfway-partners-2026-04-15/16",
+        "depth": "conversations/slack-halfway-partners-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Amara reviewed Prism Analytics materials and leaned toward passing due to unit economics not holding up",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-ops-2026-04-16/17",
+        "depth": "conversations/slack-ops-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Amara Okafor asked for confirmation on status of updated DocuSign templates due EOD tomorrow",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-random-2026-04-14/2",
+        "depth": "conversations/slack-random-2026-04-14",
+        "day": "2026-04-14",
+        "what": "Lena Park called out Marcus Reid for falling asleep during a documentary screening the previous month",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-halfway-partners-2026-04-17/8",
+        "depth": "conversations/slack-halfway-partners-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Elena Rossi raised concern that Phantom AI's go-to-market is underbaked despite strong technical team",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-ops-2026-04-16/3",
+        "depth": "conversations/slack-ops-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Bill Hart flagged in system notes that Axiom Partners should be pre-cleared for expedited onboarding",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-halfway-partners-2026-04-16/14",
+        "depth": "conversations/slack-halfway-partners-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Diego Alvarez announced he would be offline the next day for a family event and asked the team to loop in Amara on any urgent Stratos deal matters",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-halfway-partners-2026-04-17/14",
+        "depth": "conversations/slack-halfway-partners-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Hannah Liu plans to loop in Derek on technical diligence before committing to next steps",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-ops-2026-04-16/2",
+        "depth": "conversations/slack-ops-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Amara Okafor asked Elena Rossi to pull latest numbers before sync to align on runway projections",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-random-2026-04-15/6",
+        "depth": "conversations/slack-random-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Lena Park signed up for a ceramics class with her first session that evening",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-random-2026-04-17/1",
+        "depth": "conversations/slack-random-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Mina Kapoor working late on deck for LP meeting",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-halfway-partners-2026-04-17/11",
+        "depth": "conversations/slack-halfway-partners-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Jordan Park flagged need to discuss reserve strategy for Tempo AI and Quilted, both likely raising bridge rounds in Q3",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-halfway-partners-2026-04-15/17",
+        "depth": "conversations/slack-halfway-partners-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Lena got off call with Tomoko flagging Meridian burn rate concerns ahead of Thursday IC meeting",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-ops-2026-04-17/15",
+        "depth": "conversations/slack-ops-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Ravi Gupta confirmed wire sent for Photon Bio bridge round; expected to arrive Monday",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/conversations/slack-halfway-partners-2026-04-14/17",
+        "depth": "conversations/slack-halfway-partners-2026-04-14",
+        "day": "2026-04-14",
+        "what": "Kofi Mensah expressed support for moving Pendulum to due diligence",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "review": "supported"
+      }
+    ],
+    "controls_judged": 0,
+    "unmatched_labeled": [
+      {
+        "slug": "plain-a/meetings/mtg-0000/2",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Meridian Robotics closed Q1 2026 with $2.1M ARR, up 34% from Q4 2025",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "false"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/3",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Meridian Robotics customer retention reported at 94%",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/4",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Meridian Robotics CAC payback period improved to 14 months (down from 18 months), attributed to Thornfield Industrial channel partnership",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "false"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/5",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Amara and Elena agreed to begin Series B conversations in Q3 2026",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/6",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Elena disclosed inbound interest from Northvane Partners for Series B",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/7",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Amara offered to introduce Elena to Marcus Reid at Arcline Ventures",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/8",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Meridian Robotics engineering headcount reported at 23, with plans to hire 4 more by end of Q2 2026",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/9",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Elena flagged VP Engineering search is taking longer than expected",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/10",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Amara agreed to send intro email to Marcus Reid by Friday (2026-04-17)",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/11",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-21",
+        "what": "Elena Rossi to share updated investor deck draft (due date set)",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": true
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/12",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Amara agreed to pull VP Eng candidates from Halfway Capital talent network",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0000/13",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-05-01",
+        "what": "Follow-up meeting scheduled for early May to review Series B strategy (approximate)",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": true
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0002/3",
+        "depth": "meetings/mtg-0002",
+        "day": "2026-05-01",
+        "what": "Diego to arrange intro call between Amara and Threshold CEO Jordan Park (early May)",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "premature": true
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0002/4",
+        "depth": "meetings/mtg-0002",
+        "day": "2026-08-01",
+        "what": "Halfway Capital to begin Series B diligence (late August)",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "premature": true
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0002/5",
+        "depth": "meetings/mtg-0002",
+        "day": "2026-09-01",
+        "what": "Threshold Robotics plans to kick off Series B process (late Q3/September)",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "premature": true
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0002/6",
+        "depth": "meetings/mtg-0002",
+        "day": "2026-12-31",
+        "what": "Threshold Robotics aims to close Series B before year-end",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "premature": true
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0005/2",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "CarbonLoop Q1 revenue came in at $2.1M, ahead of $1.8M projection",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "false"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0005/3",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "Three Fortune 500 pilots converted to paid contracts",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "false"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0005/4",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "Burn multiple confirmed at 1.8, down from six months prior",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0005/5",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "Flagged that only 2 of 5 senior engineering roles opened in Q4 have been filled",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0005/9",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "Priya to send recruiting firm intros by end of week",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0005/10",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "Amara to review updated board deck before May meeting",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0005/11",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "Follow-up with CarbonLoop CEO scheduled for ~3 weeks out",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "false"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0005/12",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "Priya to draft Series B positioning memo",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0006/3",
+        "depth": "meetings/mtg-0006",
+        "day": "2026-05-01",
+        "what": "Amara Okafor takes the Helios Energy board seat, replacing the outgoing independent director",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": true
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0006/4",
+        "depth": "meetings/mtg-0006",
+        "day": "2026-05-15",
+        "what": "Amara Okafor to attend Helios Energy board meeting in person in Austin",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": true
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0007/2",
+        "depth": "meetings/mtg-0007",
+        "day": "2026-04-25",
+        "what": "Elena Rossi to send updated cap table and bridge round terms to Amara Okafor (deadline)",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-19",
+        "premature": true
+      },
+      {
+        "slug": "plain-a/meetings/mtg-0007/3",
+        "depth": "meetings/mtg-0007",
+        "day": "2026-05-15",
+        "what": "Amara Okafor to attend Codex Robotics Q2 board meeting in person",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-19",
+        "premature": true
+      }
+    ]
+  },
+  "plain-b": {
+    "judged_pages": 48,
+    "events_written": 335,
+    "events_per_judged_page": 6.979166666666667,
+    "cost": {
+      "metered_usd": 0.257691,
+      "recorded_usd": 0.257691,
+      "per_judged_page_metered": 0.0053685625,
+      "by_model": {
+        "anthropic:claude-sonnet-4-6": {
+          "usd": 0.257691,
+          "requests": 48
+        }
+      },
+      "unpriced": 0
+    },
+    "labeled": {
+      "pages": 28,
+      "expected": 38,
+      "matched": 36,
+      "recall": 0.9473684210526315,
+      "per_class": {
+        "meeting": {
+          "pages": 8,
+          "expected": 18,
+          "matched": 16,
+          "events": 40
+        },
+        "calendar": {
+          "pages": 20,
+          "expected": 20,
+          "matched": 20,
+          "events": 20
+        }
+      },
+      "unmatched": 24,
+      "premature": 6,
+      "false": 4,
+      "duplicate": 0,
+      "supported": 14,
+      "unreviewed": 0,
+      "false_plus_premature_per_judged_labeled_page": 0.35714285714285715
+    },
+    "conversations": {
+      "pages_with_events": 20,
+      "events": 275,
+      "premature": 0,
+      "sample": {
+        "size": 25,
+        "false": 0,
+        "duplicate": 0,
+        "supported": 25,
+        "unreviewed": 0
+      }
+    },
+    "conversation_sample": [
+      {
+        "slug": "plain-b/conversations/slack-random-2026-04-15/17",
+        "depth": "conversations/slack-random-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Kofi Mensah recalled Nadia Freeman explaining blockchain to her mom over FaceTime at the offsite hotel",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-halfway-partners-2026-04-14/3",
+        "depth": "conversations/slack-halfway-partners-2026-04-14",
+        "day": "2026-04-14",
+        "what": "Lena Park committed to prepping a risk assessment before Thursday's call",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-deal-flow-2026-04-17/11",
+        "depth": "conversations/slack-deal-flow-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Hannah Liu reported Quantum Circuits founder is open to a call the following Tuesday",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-deal-flow-2026-04-15/10",
+        "depth": "conversations/slack-deal-flow-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Bill Hart reviewed Quantum Circuit financials, noted high burn rate but strong technology moat; plans to present analysis at partner meeting next day",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-deal-flow-2026-04-17/2",
+        "depth": "conversations/slack-deal-flow-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Ravi Gupta flagged NovaTech for priority review based on solid Series A metrics",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-halfway-partners-2026-04-17/2",
+        "depth": "conversations/slack-halfway-partners-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Kofi Mensah plans to sync with Amara to pressure-test revenue assumptions",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-deal-flow-2026-04-15/11",
+        "depth": "conversations/slack-deal-flow-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Ravi Gupta reviewed updated Phantom Robotics financials, flagged burn rate higher than deck suggested; plans to walk through numbers at partner meeting next day",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-random-2026-04-16/5",
+        "depth": "conversations/slack-random-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Marcus Reid flagged a half-eaten burrito left in the third floor fridge since Monday",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-ops-2026-04-15/1",
+        "depth": "conversations/slack-ops-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Anna Petrov finished final round of LP data room updates and asked Elena Rossi to double-check the Q1 portfolio summary",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-ops-2026-04-16/1",
+        "depth": "conversations/slack-ops-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Diego Alvarez asked Ravi Gupta to pull latest portfolio company headcount numbers for LP update deck due EOW",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-ops-2026-04-17/12",
+        "depth": "conversations/slack-ops-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Bill Hart confirmed the Phantom AI wire transfer cleared",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-halfway-partners-2026-04-15/18",
+        "depth": "conversations/slack-halfway-partners-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Mira Patel confirmed for Thursday deep dive on Stratos infrastructure roadmap; Elena to send calendar invite the next morning",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-ops-2026-04-16/4",
+        "depth": "conversations/slack-ops-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Sarah Chen reported Q2 budget is tracking 8% under forecast and planned to drop full breakdown in shared folder by EOD",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-random-2026-04-14/7",
+        "depth": "conversations/slack-random-2026-04-14",
+        "day": "2026-04-14",
+        "what": "Amara Okafor revealed she is the one who keeps restocking the oat milk at the office",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-ops-2026-04-13/3",
+        "depth": "conversations/slack-ops-2026-04-13",
+        "day": "2026-04-13",
+        "what": "Hannah Liu requested Bill Hart send over the updated cap table for the Meridian deal ahead of the next day's partner meeting",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-13",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-ops-2026-04-16/8",
+        "depth": "conversations/slack-ops-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Amara Okafor asked Ravi Gupta for a summary of current fund admin bandwidth ahead of Q2 close",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-halfway-partners-2026-04-16/17",
+        "depth": "conversations/slack-halfway-partners-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Elena Rossi planned to sync with Amara before the Friday call to present a unified front on the board seat question",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-halfway-partners-2026-04-17/3",
+        "depth": "conversations/slack-halfway-partners-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Nadia Freeman plans to sync with Mina Kapoor to get clarity on runway assumptions before Wednesday call",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-ops-2026-04-16/7",
+        "depth": "conversations/slack-ops-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Kofi Mensah asked Lena Park to pull updated cap table for Forma before 10am sync",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-random-2026-04-15/4",
+        "depth": "conversations/slack-random-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Amara Okafor couldn't sleep and complained about the office coffee machine",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-random-2026-04-16/7",
+        "depth": "conversations/slack-random-2026-04-16",
+        "day": "2026-04-16",
+        "what": "Diego Alvarez mentioned an upcoming Austin trip next month",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-halfway-partners-2026-04-17/14",
+        "depth": "conversations/slack-halfway-partners-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Hannah Liu plans to loop in Derek for technical diligence take before committing to next steps",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-halfway-partners-2026-04-15/3",
+        "depth": "conversations/slack-halfway-partners-2026-04-15",
+        "day": "2026-04-15",
+        "what": "Kofi planned to sync with Amara the next day to pressure test Cognify unit economics",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-ops-2026-04-17/6",
+        "depth": "conversations/slack-ops-2026-04-17",
+        "day": "2026-04-17",
+        "what": "Anna Petrov reported 7 of 12 portfolio companies responded to Q1 reporting requests; following up with remaining five",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-17",
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/conversations/slack-halfway-partners-2026-04-14/2",
+        "depth": "conversations/slack-halfway-partners-2026-04-14",
+        "day": "2026-04-14",
+        "what": "Ravi Gupta suggested holding off on term sheet until Greenloop Packaging situation is resolved",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "review": "supported"
+      }
+    ],
+    "controls_judged": 0,
+    "unmatched_labeled": [
+      {
+        "slug": "plain-b/meetings/mtg-0000/2",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Meridian Robotics closed Q1 2026 with $2.1M ARR, up 34% from Q4 2025",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "false"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0000/3",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Meridian Robotics customer retention reported at 94%",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0000/4",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Meridian Robotics CAC payback period improved to 14 months (from 18 months), attributed to Thornfield Industrial channel partnership",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "false"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0000/5",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Amara and Elena agreed to begin Series B conversations in Q3 2026",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0000/6",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Elena disclosed inbound Series B interest from Northvane Partners and one unnamed growth fund",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0000/7",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Amara offered to introduce Elena to Marcus Reid at Arcline Ventures",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0000/8",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Meridian Robotics engineering headcount reported at 23, with 4 hires planned by end of Q2 2026",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0000/9",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Elena flagged VP Engineering search is taking longer than expected and requested candidates from Amara's network",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0000/10",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-14",
+        "what": "Amara agreed to send intro email to Marcus Reid by Friday",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0000/11",
+        "depth": "meetings/mtg-0000",
+        "day": "2026-04-21",
+        "what": "Elena to share updated investor deck draft (due date set in meeting)",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-14",
+        "premature": true
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0002/2",
+        "depth": "meetings/mtg-0002",
+        "day": "2026-04-15",
+        "what": "Diego confirmed Threshold is targeting $18M Series B with a late Q3 (September) kickoff",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0002/5",
+        "depth": "meetings/mtg-0002",
+        "day": "2026-05-01",
+        "what": "Diego to arrange intro call between Amara and Threshold CEO Jordan Park (early May)",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-15",
+        "premature": true
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0003/4",
+        "depth": "meetings/mtg-0003",
+        "day": "2026-04-16",
+        "what": "Marcus Reid tasked with getting monthly capacity factor data from all three pilot sites",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0003/5",
+        "depth": "meetings/mtg-0003",
+        "day": "2026-04-16",
+        "what": "Amara Okafor tasked with reaching out to Priya Patel for IOU procurement contact reference",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0003/6",
+        "depth": "meetings/mtg-0003",
+        "day": "2026-04-16",
+        "what": "Marcus Reid tasked with compiling interconnection queue analysis for 2027 projects",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0003/7",
+        "depth": "meetings/mtg-0003",
+        "day": "2026-04-16",
+        "what": "Marcus Reid to schedule technical deep-dive with Solaris CTO for the following week",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-16",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0005/2",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "CarbonLoop Q1 revenue came in at $2.1M, ahead of $1.8M projection",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "false"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0005/3",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "Three Fortune 500 pilots converted to paid contracts",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "false"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0005/4",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "Burn multiple confirmed at 1.8, down from six months prior",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0005/5",
+        "depth": "meetings/mtg-0005",
+        "day": "2026-04-18",
+        "what": "Flagged that only 2 of 5 senior engineering roles opened in Q4 have been filled",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": false,
+        "review": "supported"
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0006/3",
+        "depth": "meetings/mtg-0006",
+        "day": "2026-05-01",
+        "what": "Amara Okafor takes Helios Energy board seat, replacing outgoing independent director",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": true
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0006/4",
+        "depth": "meetings/mtg-0006",
+        "day": "2026-05-15",
+        "what": "Amara Okafor to attend Helios Energy board meeting in person in Austin",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-18",
+        "premature": true
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0007/2",
+        "depth": "meetings/mtg-0007",
+        "day": "2026-04-25",
+        "what": "Elena Rossi to send updated cap table and bridge round terms to Amara Okafor (deadline)",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-19",
+        "premature": true
+      },
+      {
+        "slug": "plain-b/meetings/mtg-0007/3",
+        "depth": "meetings/mtg-0007",
+        "day": "2026-05-15",
+        "what": "Codex Robotics Q2 board meeting, Amara Okafor attending in person",
+        "kind": "",
+        "who": [],
+        "page_date": "2026-04-19",
+        "premature": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+[cat35] mode=partial lanes= external=gbrain-aug25 transcripts=24 judge=claude-sonnet-4-6
+[cat35] pre-flight: projected worst-case $8.19, external lane $8.19 for 24 documents (cap $20)
+[cat35] [budget] cat35-transcript-distill: estimated cost $2.00; ledger /home/user/.capy/work/gbev97/ledger.sqlite
+[cat35] external[gbrain-aug25]: 24 documents, 0 missing
+[cat35] ─── Cat 35 Scorecard ───
+[cat35] mode=partial  gbrain=0.60.733.0
+[cat35] gbrain-aug25 salient-unit recall: macro=65.6% [49.3-80.0] micro=65.5% strict=60.6% (judge only; 8 judge-failed items excluded)
+[cat35] gbrain-aug25 evidence-verified joint: macro=49.7% [36.5-61.6] over 165 items (8 excluded)
+[cat35] gbrain-aug25 hallucination: 11.7% (59/505 verifiable claims)
+[cat35] gbrain-aug25 distractor leakage: 0.0% (0 confirmed)
+[cat35] emission: 0/20 expected-high produced pages
+[cat35] external lane gbrain-aug25: 24 documents (sha256 in the receipt), 704 gradable claims, 0 missing, judge_failed_rate 1.4%; not publishable, the harness has no record of how they were made
+[cat35] judge_failed_rate: 0.0%  cost: $0.00 (judges+facts; dream-lane spend not surfaced), external lane $1.22  wall: 306s
+[cat35] gates: {"verbatim_coverage":null,"judge_failed_rate":true,"dream_emission":null,"external_judge_failed_rate":true} → PASS
+[cat35] receipt: /workspace/gbrain-evals/eval/reports/cat35-transcript-distill/2026-11-17-074723-cat35.json
+[cat35] artifacts: /workspace/gbrain-evals/eval/reports/cat35-transcript-distill/2026-11-17-074723-artifacts
