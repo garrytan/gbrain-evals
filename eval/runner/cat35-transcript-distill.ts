@@ -1979,7 +1979,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   if (usabAgg.total) err(`usability checklist: ${usabAgg.satisfied}/${usabAgg.total} (${((usabAgg.satisfied / usabAgg.total) * 100).toFixed(0)}%)`);
   err(`emission: ${emission.emitted}/${emission.expected_high} expected-high produced pages`);
   if (externalLaneRecord) {
-    err(`external lane ${externalLaneRecord.name}: ${externalLaneRecord.files.length} documents (sha256 in the receipt), ${externalLaneRecord.files.reduce((n, f) => n + f.claims, 0)} gradable claims, ${externalLaneRecord.missing.length} missing, judge_failed_rate ${((externalJudgeFailedRate ?? 0) * 100).toFixed(1)}%; not publishable, the harness has no record of how they were made`);
+    err(`external lane ${externalLaneRecord.name}: ${externalLaneRecord.files.length} documents (sha256 in the receipt), ${externalLaneRecord.files.reduce((n, f) => n + f.claims, 0)} gradable claims, ${externalLaneRecord.missing.length} missing, judge_failed_rate ${((externalJudgeFailedRate ?? 0) * 100).toFixed(1)}%; ${'matched_baseline' in externalLaneRecord ? 'a matched no-gbrain baseline (writer receipt in external_lane.matched_baseline); not publishable as a gbrain result' : 'not publishable, the harness has no record of how they were made'}`);
   }
   err(`judge_failed_rate: ${(judgeFailedRate * 100).toFixed(1)}%  cost: $${totalCost.toFixed(2)} (judges+facts; dream-lane spend not surfaced)${external ? `, external lane $${externalCost.toFixed(2)}` : ''}  wall: ${receipt.wall_seconds}s`);
   if (deltas) {

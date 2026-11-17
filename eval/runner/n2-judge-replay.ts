@@ -369,7 +369,7 @@ async function main(): Promise<void> {
     const baseline = JSON.parse(readFileSync(arg(rest, '--baseline')!, 'utf8')) as { model: string; prompt_version: string; results: Judged[] };
     const reference = JSON.parse(readFileSync(arg(rest, '--reference')!, 'utf8'));
     const seed = selection.pairs[0]!.seed;
-    result = { kind: 'n2-judge-replay-compare', baseline: { file: arg(rest, '--baseline'), model: baseline.model, prompt_version: baseline.prompt_version }, reference: arg(rest, '--reference'),
+    result = { kind: 'n2-judge-replay-compare', baseline_run: { file: arg(rest, '--baseline'), model: baseline.model, prompt_version: baseline.prompt_version }, reference_file: arg(rest, '--reference'),
       ...comparePaired(selection.pairs, referenceVerdicts(baseline, seed), referenceVerdicts(reference, seed), { offeredTotal: selection.offered_total, othersTotal: selection.others_total, pooled: rest.includes('--pooled') }) };
   }
   else if (cmd === 'score') result = score(rest);
