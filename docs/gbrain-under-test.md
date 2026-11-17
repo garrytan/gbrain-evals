@@ -6,10 +6,18 @@ gives the results; this page holds the version detail behind them.
 
 ## The pin
 
-This repository installs gbrain v0.60.623.0 (`d253ec0ff`), declared as `gbrain` in `package.json`. Two
-fixed-purpose aliases, `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), are used only by the experiments
-that name them. gbrain-evals itself is at the release [`VERSION`](../VERSION) names, and
-[CHANGELOG.md](../CHANGELOG.md) records each release. The README's quick start shows the same pin as a table.
+This repository installs gbrain v0.60.733.0 ([`6ce7195b4`](https://github.com/garrytan/gbrain/tree/6ce7195b44a034f85aec811f11fbf862db376f50)), gbrain's newest release on 2026-11-16.
+It is declared as `gbrain` in `package.json`, and this is the one page that names it: the README and the other hub
+pages link here. Every new run measures gbrain's newest release ([CLAUDE.md, "Choose the gbrain
+build"](../CLAUDE.md#choose-the-gbrain-build)), and `bun eval/runner/gbrain-pin.ts bump` moves the pin there when gbrain
+tags a newer one, rewriting the line above. That is newer than gbrain's own default install, which follows its `stable`
+channel: stable moves to a release only after extra testing ([gbrain's
+STABILITY.md](https://github.com/garrytan/gbrain/blob/master/docs/STABILITY.md)). The rest of this page, and what the hub
+pages say gbrain does, were last read against v0.60.733.0; [gbrain's
+CHANGELOG](https://github.com/garrytan/gbrain/blob/master/CHANGELOG.md) lists what each later release changed. Two
+fixed-purpose aliases, `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), are frozen pins of the experiments
+that name them and don't move with `gbrain`. gbrain-evals itself is at the release [`VERSION`](../VERSION) names, and
+[CHANGELOG.md](../CHANGELOG.md) records each release.
 
 ## What gbrain does
 
@@ -19,7 +27,8 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 
 - **Hybrid retrieval.** Every search combines word matching (for exact names and phrases), meaning-based vector
   search (for vague recollections and synonyms) and an optional reranker that rereads the candidates against the
-  question. [How the pieces work together](retrieval-lessons.md).
+  question. [How the pieces work together](retrieval-lessons.md). Without an embedding key, `search` and `query` still
+  find pages that hold most of the question's words when too few pages hold all of them.
 - **Relationships as evidence.** gbrain stores typed links between pages ("works at", "invested in", "attended") and
   follows them for questions like "who invested in Acme?", where the answer page may never mention the question's
   words.
@@ -35,6 +44,13 @@ save, find, update and forget what it knows. The parts that matter for an agent:
   the user first, so agents do not spend money or repair data without consent.
 - **A write path you can measure.** Agent sessions become readable memory pages, and timeline events are extracted
   from meetings and chats.
+- **An archive of your agent conversations.** On a personal brain, gbrain saves each day of the conversations your
+  agent harnesses keep on your machine as one redacted, searchable page per conversation, plus a daily index. Archive
+  pages rank a little below the pages you wrote, and `gbrain transcripts archive off` turns it off.
+- **One brain for you, your company or a group.** `gbrain setup claude-code --shape personal|company|both` (or `codex`)
+  starts a brain with pages about you, a company part beside your own notes, or both. A brain can serve several people, each with their own
+  key and a folder only they can read. Notes from people in a group chat are kept apart as guest notes until you take
+  them, and a read can be marked with whether the people in a given chat could see it.
 
 ## Results measured at other commits
 
@@ -52,13 +68,23 @@ The search modes held the same values from v0.48.4.0 through v0.60.169.0. Since 
 - `tokenmax` stopped expanding queries (v0.60.250.0);
 - every mode turned on result-time collapse and rank priors (`search.collapse`, `search.rank_priors`, v0.60.332.0):
   same-slug twins in other sources, merge stubs and copies of one document fold into one result row, and organization,
-  OCR and date priors adjust the ranking after the reranker.
+  OCR and date priors adjust the ranking after the reranker;
+- two keys joined the modes, off in every one (v0.60.710.0): `search.qualified_aliases` brings a page to the top when
+  a 3- to 6-word phrase inside a longer question is its alias, and `search.title_qualified` boosts a person or company
+  page whose title appears inside the question;
+- on a brain with no embedding provider, a `search` or `query` whose first page of results is short adds, after the
+  rows it already had, pages that hold only some of the question's words, with no setting to turn it off
+  (v0.60.725.0). It runs in the `search` and `query` operations; runners here that call gbrain's hybrid search function
+  directly don't ask for it;
+- conversation archive pages rank under a 0.8 prior, and one result list keeps at most two archive hits per day
+  unless the question asks about a conversation or a date (v0.60.726.0; `search.rank_priors false` turns both off).
 
 On 300 LongMemEval-S questions the reranker and expansion changes each kept retrieval within their preregistered
 margins ([reranker addendum](benchmarks/2026-10-13-rerank3-addendum-preregistration.md),
 [expansion latency](benchmarks/2026-10-14-expansion-latency-preregistration.md)); collapse and rank priors have no
-such check here. Retrieval results measured before v0.60.223.0 used `rerank-2.5`, and results measured before
-v0.60.332.0 ran without collapse or rank priors.
+such check here, and neither do the changes since v0.60.623.0. Retrieval results measured before v0.60.223.0 used
+`rerank-2.5`, results measured before v0.60.332.0 ran without collapse or rank priors, and keyless results measured
+through `search` or `query` before v0.60.725.0 ran without the partial-word fill.
 
 ## Read defaults that changed after v0.60.454.0
 
@@ -89,7 +115,32 @@ unwraps the fence on its `query` path, which reads locally
 ([`eval/runner/gbrain-under-test.ts`](../eval/runner/gbrain-under-test.ts)). Setups that run the pinned gbrain with its
 own defaults (the open-source comparison, the hard company benchmark's MCP setup and the agent tool bridges) take all
 five as shipped. The scoreboard's gbrain-defaults container builds its own gbrain, `f05943e6` (v0.60.138.0), so it runs
-none of them.
+none of them. gbrain's changelog names none of the five between v0.60.623.0 and v0.60.733.0, and the three keys the
+harness holds keep their names and defaults.
+
+## Other changes since v0.60.623.0
+
+- **Agent arms on GPT models.** `get_page` with `known_as_of` and `traverse_graph` with `hops` set aside the arguments
+  they don't use instead of refusing the call (v0.60.671.0), and gbrain's tool loop sends OpenAI tool definitions
+  without strict mode, so the model no longer fills every optional argument (v0.60.675.0). Replayed at `6ce7195b4`,
+  480 of GPT-6.1 Sol's 651 recorded SkillOpt page and graph calls read, against 472 at `d253ec0ff`
+  ([`test/eval/skillopt-tool-calls.test.ts`](../test/eval/skillopt-tool-calls.test.ts)).
+- **Deletes and purges hide more.** A soft-deleted page's facts, timeline rows, tags and links are hidden from every
+  caller, local ones included (v0.60.639.0, v0.60.641.0). A purge expires the facts filed on the purged page
+  (v0.60.642.0) and the extracted facts that name it (v0.60.723.0), and a forgotten fact stays forgotten when
+  extraction runs again (v0.60.639.0).
+- **Upkeep while `gbrain serve` is idle.** An open `gbrain serve` runs gbrain's free upkeep when its agent goes quiet,
+  at most one full round a day (v0.60.715.0), and on a personal brain that upkeep includes the conversation archive. A
+  harness that drives `gbrain serve` through a long run can see links, timeline rows and archive pages change
+  mid-run; `gbrain config set maintenance.auto false` turns the upkeep off.
+- **Postgres over the network needs TLS.** A Postgres URL for any host other than this machine, Docker service names
+  included, now requires TLS unless it says `sslmode=disable` (v0.60.653.0). PGLite is unchanged.
+- **The same library surface.** No package export or source file was removed or renamed between the two releases.
+  One export was added (`gbrain/skill-resolver`), and the install no longer runs a `postinstall` step: migrations run
+  on the first command instead.
+- **Shared and remote brains.** Most of the other releases change what callers of a brain shared by several people,
+  or reached over MCP, can read and write: rooms, guest notes, members kept to labelled pages. A local owner's reads
+  are unchanged.
 
 ## When the keyless correctness checks last ran
 
@@ -97,8 +148,8 @@ The README's correctness rows (updates, `forget`, privacy, chat formats) come fr
 with generated answer keys. Their counts were last measured in full at `77cf8e111`, in the [October 11
 re-pin](benchmarks/2026-10-11-wave14-repin.md); no re-pin since has rerun them in full. CI's keyless BrainBench tier
 runs the same checks on every pull request against the gbrain `package.json` pins, smaller (the update and `forget`
-worlds on a slice, privacy in process only), and every one passed at `3ec766c40` in [the checks on pull request
-#223](https://github.com/garrytan/gbrain-evals/actions/runs/41270941149), as did the large-page check's small tiers. The
+worlds on a slice, privacy in process only), and every one passed at `6ce7195b4` in [the checks on pull request
+#448](https://github.com/garrytan/gbrain-evals/actions/runs/43940805988), as did the large-page check's small tiers. The
 29 reproductions in the [bug ledger](benchmarks/2026-10-01-wave-bugs.md) and three memory trust reproductions (37-1,
 37-2 and 37-5 in the [memory trust ledger](benchmarks/2026-10-07-memory-trust-bugs.md)) last ran as a set in that
 October 11 re-pin, where they passed; the timeline-latency entry (Cat7-1) passed on the second pair of hosts, and stays
@@ -106,6 +157,31 @@ open under its stricter closure rule (see the README's known limits). Rows marke
 October round at an earlier pin (the paid runs and the attendance world).
 
 ## Changelog
+
+### 2026-11-16: Two lines name v0.60.733.0 instead of the pin
+
+The read-defaults paragraph says gbrain's changelog names none of the five between v0.60.623.0 and v0.60.733.0 (was
+"the pin"), and the replay of GPT-6.1 Sol's recorded calls reads "at `6ce7195b4`" (was "at the pin"), so a later
+re-pin doesn't carry those claims to a build nobody checked.
+
+### 2026-11-16: This page alone names the pin
+
+The pin sentence is a line of its own, with the commit linked, that `bun eval/runner/gbrain-pin.ts bump` rewrites; each
+bump also adds its own entry here. The README and the hub pages now link to this section instead of naming the commit,
+so a bump changes one page. The section says the page's descriptions were last read against v0.60.733.0 and links
+gbrain's CHANGELOG for later releases, and the STABILITY.md link follows gbrain's master instead of one release. Nothing
+else on the page changed.
+
+### 2026-11-16: Re-pin to gbrain `6ce7195b4`, gbrain's newest release
+
+The pin moves from `d253ec0ff` (v0.60.623.0) to `6ce7195b4` (v0.60.733.0), 110 releases later, and the page says the
+pin now follows gbrain's newest release, newer than gbrain's `stable` channel, while `gbrain-cues` and `gbrain-reader`
+stay frozen. "What gbrain does" adds keyless partial-word search, the conversation archive and brains for a company or
+for several people. "Search defaults" adds `search.qualified_aliases` and `search.title_qualified` (off in every mode),
+the keyless partial-word fill and the archive's rank prior. A new section, "Other changes since v0.60.623.0", covers
+agent arms on GPT models, deletes and purges, idle upkeep under `gbrain serve`, Postgres TLS, the library surface and
+shared brains. The keyless correctness checks name the CI run on pull request #448 at the new pin (was `3ec766c40` on
+pull request #223). No result was rerun.
 
 ### 2026-11-09: Page created from the README's "The gbrain under test"
 

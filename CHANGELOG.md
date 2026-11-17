@@ -2,6 +2,85 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.237] - 2026-11-16
+
+### Changing-facts battleground: corrected exposure for withdrawn facts
+
+- **Corrected.** [docs/benchmarks/2026-11-15-changing-facts-battleground-results.md](docs/benchmarks/2026-11-15-changing-facts-battleground-results.md)
+  now says gbrain's contexts held the withdrawal for 85% of the withdrawn-fact (S5) questions, against 95% for the
+  memory-bank server and 97% for the extract-first server. It first said 60% against 52% and 80%, and put gbrain's S5
+  loss to the memory-bank server down to reading; with the corrected figures, gbrain's context held the withdrawal less
+  often than both servers' by more than its S5 loss to each. The published count took a call-off anywhere in the
+  context; the corrected one needs the entity, the withdrawn value and a call-off word in one sentence. Hybrid search's
+  contexts held the right value for 20% of all questions, not 23%. The corrected figures sit in
+  `exposure-correction.json` beside the unchanged `verdict.json`, and [docs/corrections.md](docs/corrections.md) lists
+  the correction. No accuracy figure, interval or verdict changes.
+
+### A re-pin needs a new row in the SkillOpt replay test only when gbrain's answers change
+
+- **What changed.** `test/eval/skillopt-tool-calls.test.ts` replays GPT-6.1 Sol's 651 recorded SkillOpt calls and
+  keeps the counts for each gbrain pin. A pin with no row of its own must now give the newest row's counts, instead of
+  failing because it has no row, so a re-pin that changes nothing there passes as is. When gbrain changes the counts,
+  the test still fails until the new pin gets its row. Two limits in [README.md](README.md) and two lines in
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md) name `6ce7195b4` (v0.60.733.0), where they were checked,
+  instead of "the pin".
+- **Why.** A daily re-pin should stay mechanical, and a claim checked at one commit shouldn't move to the next pin
+  unchecked.
+
+## [0.10.236] - 2026-11-16
+
+### One page names the gbrain pin, and `bump` updates it
+
+- **What changed.** [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) is now the only page that names the
+  gbrain version and commit this repository installs. README, the hub pages in `docs/` and `eval/` and three runner
+  READMEs link to it, and the docs index names gbrain-evals by `VERSION` instead of a stale v0.10.186.
+  `bun eval/runner/gbrain-pin.ts bump` rewrites that page's pin line, adds the page's changelog entry and writes a
+  `changelog.d` fragment, so a re-pin pull request is `package.json`, `bun.lock`, that page and the fragment. The page
+  says its descriptions were last read against v0.60.733.0. `bump` also refuses to move to a lower version, and says
+  so when restoring `node_modules` after a failed install fails too.
+- **Checks.** `scripts/verify-documentation-refresh.py` checks the pin sentence on that page only, and
+  `test/eval/docs-pin-claims.test.ts` fails when another page's current state names a commit or release in a
+  sentence about what this repository installs.
+- **Why.** gbrain tags several releases a day and this repository re-pins daily, so a re-pin should change one page,
+  not sixteen.
+
+## [0.10.235] - 2026-11-16
+
+### Tests run against gbrain's newest release, and one command keeps the pin there
+
+- **What changed.** `package.json` and `bun.lock` move the `gbrain` dependency from v0.60.623.0 (`d253ec0ff`) to
+  v0.60.733.0 (`6ce7195b4`), gbrain's newest release on 2026-11-16, 110 releases and 2,325 commits later.
+  `bun eval/runner/gbrain-pin.ts bump` finds gbrain's newest release tag on master, moves the pin and `bun.lock` to
+  it, and prints the commit range and gbrain's changelog in between; it exits 2 when that release is already pinned.
+  [CLAUDE.md](CLAUDE.md#choose-the-gbrain-build) gains "Choose the gbrain build": every new run measures the newest
+  release at launch, an experiment's build freezes once its counted runs start, and an older build runs only when the
+  question is about it. `gbrain-cues` and `gbrain-reader` stay frozen at the experiments' pins.
+- **What gbrain does now.** [README.md](README.md) and [docs/gbrain-under-test.md](docs/gbrain-under-test.md) describe
+  the new pin: keyless search that finds pages holding most of a question's words, the conversation archive, brains for
+  a company or for several people, two new opt-in ranking keys, and changes to agent tool reads, deletes and purges,
+  idle upkeep and Postgres TLS. The hub pages name the new pin. No result was rerun, and every row keeps the commit it
+  was measured at; the keyless correctness checks, Cats 37 to 39 included, pass at the new pin.
+- **Harness fixes for the new pin.** The typecheck declares the `DOM.AsyncIterable` library, because gbrain now passes
+  Bun's stdin stream where an async iterable is expected. The test preload also blanks `PPLX_API_KEY`, a Perplexity
+  key gbrain now reads, so no test can reach that provider. The SkillOpt replay tests record the new pin's answers to
+  GPT-6.1 Sol's recorded calls: all 38 graph calls read, and the 169 recorded-time page reads stop only because the
+  test brain has no recorded page at that instant.
+- **Why.** Every new run measures gbrain's newest release at the moment it starts, so results describe the gbrain
+  people install today.
+
+## [0.10.234] - 2026-11-16
+
+### Merging this repository needs gstack 1.97.0.0 or later
+
+- **What changed.** `.gstack/ship-policy.json` raises `min_gstack_version` from 1.96.0.0 to 1.97.0.0, so every gstack
+  command that reads this repository's policy, `gstack-ship-queue land` included, needs 1.97.0.0 or later.
+- **Why.** When main has moved past a pull request's merge base, land runs `bun run validate` and
+  `bun eval/runner/prereg.ts` on the pull request merged onto main's tip, from its own process, which holds the merging
+  account's GitHub token. On Linux, gstack 1.97.0.0 is the first release that stops those checks from reading land's
+  environment through `/proc` and stops anything a check leaves running before land goes on, so a merge run with 1.96
+  could expose that token to a check. A check can still read any other file the merging account can, so pass land
+  `--allow-repo-commands` only for pull requests whose code you trust.
+
 ## [0.10.233] - 2026-11-16
 
 ### A pull request that is behind main merges only after checks on the merged result

@@ -84,8 +84,9 @@ average, above the 0.90 gate.
 ### Design control: gbrain against hybrid search
 
 gbrain was 73.7 points ahead of hybrid search over the same raw chats on the primary questions (+70.0 to +77.4; better
-on 926 questions, worse on 21). Across all questions, hybrid search handed the reader the right value in 23% of its
-contexts and the stale value in 40%. The lead over the comparators that gbrain does have can be credited to its design.
+on 926 questions, worse on 21). Across all questions, hybrid search handed the reader the right value in 20% of its
+contexts (first published as 23%, corrected on 2026-11-16, [see below](#what-went-wrong-along-the-way)) and the stale
+value in 40%. The lead over the comparators that gbrain does have can be credited to its design.
 
 ### Time-indexed: what was true or known at a date, and how it changed (S6 to S8, 720 questions per comparison)
 
@@ -119,8 +120,10 @@ them; gbrain against the memory-bank and extract-first servers):
 - **S7 as known, mostly reading:** 96% against 99% and 100%, gaps of 3.3 and 3.8 points against losses of 9.2 and 10.1.
   The reader had the values it needed and still answered wrong more often with gbrain's context.
 - **S6 as of, mostly retrieval:** 95% against 100% and 98%, gaps of 4.6 and 3.3 points against losses of 6.0 and 3.5.
-- **S5 withdrawn:** 60% against 52% and 80%. gbrain delivered the needed values more often than the memory-bank server
-  and still lost to it, so that loss is in reading; against the extract-first server it is partly retrieval.
+- **S5 withdrawn, retrieval (corrected on 2026-11-16):** 85% against 95% and 97%, gaps of 10.4 and 12.1 points against
+  losses of 6.4 and 9.6. First published as 60% against 52% and 80%, with the loss to the memory-bank server put down to
+  reading; that count took a call-off anywhere in the context as the withdrawal
+  ([what went wrong](#what-went-wrong-along-the-way)).
 - **S1 updated, against the memory-bank server, retrieval:** 95% against 99%.
 
 The preregistration predicted gbrain ahead on S2 and S3 (it was level), level on S1 (it was behind the memory-bank
@@ -213,6 +216,22 @@ builds, or about how the comparators rank against each other.
 - **Two misleading stop messages**, fixed on this branch: a 402 from Google read as Particle running out of credit, and
   as the metering proxy refusing a render. Both stopped the run as they should, but they sent the operator to the wrong
   provider.
+- **The exposure count for withdrawn facts (S5)**, corrected on 2026-11-16. It took a call-off form anywhere in the
+  context as the withdrawal the answer needs, so it counted other entities' call-offs and words such as "nothing" in
+  unrelated chat, and it missed call-offs worded with words its list lacked. The corrected count needs one sentence that
+  names the question's entity, the withdrawn value and a call-off word, and its word list adds the call-off words of the
+  sealed set's own phrasing and of their rewordings in the rendered chats (the list stays in custody with the worlds).
+  A read of 86 masked S5 contexts that the two counts disagree on, or that the corrected count still misses, agreed
+  with the corrected count every time. Only the S5 figures change. Across all questions each row's share changes with
+  them, and the only one this report quotes is hybrid search's (23% to 20%). No accuracy figure, interval or verdict
+  changes. verdict.json keeps the published figures, and
+  [exposure-correction.json](2026-11-15-changing-facts-battleground-results/exposure-correction.json) records the
+  corrected ones:
+
+  | S5 contexts that held the withdrawal | gbrain | memory-bank | extract-first | temporal-graph | hybrid search |
+  |---|---|---|---|---|---|
+  | Published | 60% | 52% | 80% | 61% | 41% |
+  | Corrected | 85% | 95% | 97% | 65% | 12% |
 
 ## Receipts
 
@@ -221,6 +240,17 @@ builds, or about how the comparators rank against each other.
   `bun eval/runner/bg1/verdict.ts verdict` over wave A's 14 unit receipts, wave B's 18 and the 30 particle-1 re-reads.
 - Wave A ran from commit `d4b36d93` and wave B from `7cf81cba`, both on this branch, on 2026-11-11 to 2026-11-15.
   The sealed worlds, questions and gold stay in custody.
+- [exposure-correction.json](2026-11-15-changing-facts-battleground-results/exposure-correction.json): the corrected
+  exposure of 2026-11-16, per row and kind, beside the published and the entity-scoped counts. The rescore read the
+  same counted contexts in custody, and its recount with the published matcher reproduces verdict.json's exposure.
+
+## Changelog
+
+### 2026-11-16: Exposure for withdrawn facts corrected
+
+The S5 line under "By kind of change" and hybrid search's share of contexts that held the right value give corrected
+exposure figures beside the published ones, "What went wrong along the way" says why, and the receipts add
+`exposure-correction.json`. No accuracy figure, interval or verdict changes.
 
 ## Disclosures
 

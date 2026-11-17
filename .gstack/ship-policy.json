@@ -1,5 +1,5 @@
 {
-  "min_gstack_version": "1.96.0.0",
+  "min_gstack_version": "1.97.0.0",
   "bump": "patch",
   "queue_mode": "stamp-at-merge",
   "changelog_fragments": {

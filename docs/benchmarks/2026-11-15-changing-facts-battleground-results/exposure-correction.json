@@ -1,0 +1,777 @@
+{
+  "about": "Corrected exposure for the changing-facts battleground (BG1): the share of counted contexts that held what the answer needs. verdict.json keeps the published figures; this file records the correction of 2026-11-16 (GST-2879). Only exposure moves: no accuracy figure, interval or verdict changes.",
+  "verdict_json_sha256": "091079f256bc4bbcf728cc06830d91ec3e31df05483f27e22972d80b7d104003",
+  "contexts": "The counted contexts behind verdict.json: one per question per row, from wave A, wave B and the particle-1 re-reads (62 receipt directories). Recounting them with the published matcher reproduces verdict.json exposure block exactly.",
+  "counts": {
+    "published": "eval/runner/bg1/exposure.ts, as in verdict.json. For a withdrawn fact (S5) a call-off form anywhere in the context counts as the withdrawal.",
+    "scoped": "eval/runner/bg1/scoped-exposure.ts from pull request 453 at commit 4678ef28c6a0cde914aa4ab9e941d746401b8d4d: what the answer needs must sit in a sentence that names the question entity; for S5, that sentence also restates the withdrawn value and holds a word from the module WITHDRAWAL_WORDS list.",
+    "corrected": "For S5, the scoped rule with 18 more call-off words taken from the sealed set own phrasing and from the rewordings in its rendered chats; the list stays in custody with the worlds. Every other kind keeps its published figure."
+  },
+  "stale_values_unchanged": true,
+  "hand_read": {
+    "s5_contexts": 86,
+    "agreed_with_corrected": 86,
+    "corrected_only": 20,
+    "published_only": 37,
+    "still_missed": 16,
+    "call_offs_of_another_plan": 13,
+    "note": "Masked contexts read in custody; every corrected_only context withdrew the plan the question asks about, every published_only context held another entity call-off, a call-off of another plan of the same entity or a call-off form in unrelated chat, and every still_missed context stated the plan as current."
+  },
+  "scoped_rule_on_other_kinds": "The scoped rule moves no other kind for any row except the temporal-graph library on S4 conflicting (110 to 104 of 240, values in sentences that name no entity). A read of 3 of those found the value once in unrelated chat and twice in a sentence about the deal that names no entity, so neither count is clearly right there and S4 keeps its published figure.",
+  "rows": {
+    "gbrain": {
+      "all": {
+        "contexts": 1920,
+        "published": {
+          "held": 1722,
+          "rate": 0.8969
+        },
+        "scoped": {
+          "held": 1716,
+          "rate": 0.8938
+        },
+        "corrected": {
+          "held": 1780,
+          "rate": 0.9271
+        }
+      },
+      "by_kind": {
+        "s1_updated": {
+          "contexts": 240,
+          "published": {
+            "held": 229,
+            "rate": 0.9542
+          },
+          "scoped": {
+            "held": 229,
+            "rate": 0.9542
+          },
+          "corrected": {
+            "held": 229,
+            "rate": 0.9542
+          }
+        },
+        "s2_corrected": {
+          "contexts": 240,
+          "published": {
+            "held": 235,
+            "rate": 0.9792
+          },
+          "scoped": {
+            "held": 235,
+            "rate": 0.9792
+          },
+          "corrected": {
+            "held": 235,
+            "rate": 0.9792
+          }
+        },
+        "s3_repeated_stale": {
+          "contexts": 240,
+          "published": {
+            "held": 227,
+            "rate": 0.9458
+          },
+          "scoped": {
+            "held": 227,
+            "rate": 0.9458
+          },
+          "corrected": {
+            "held": 227,
+            "rate": 0.9458
+          }
+        },
+        "s4_conflicting": {
+          "contexts": 240,
+          "published": {
+            "held": 234,
+            "rate": 0.975
+          },
+          "scoped": {
+            "held": 234,
+            "rate": 0.975
+          },
+          "corrected": {
+            "held": 234,
+            "rate": 0.975
+          }
+        },
+        "s5_withdrawn": {
+          "contexts": 240,
+          "published": {
+            "held": 145,
+            "rate": 0.6042
+          },
+          "scoped": {
+            "held": 139,
+            "rate": 0.5792
+          },
+          "corrected": {
+            "held": 203,
+            "rate": 0.8458
+          },
+          "published_only": {
+            "total": 16,
+            "another_entitys_call_off": 7,
+            "same_entitys_call_off_of_another_plan": 3,
+            "call_off_form_in_a_sentence_naming_no_entity": 6
+          },
+          "corrected_only": 74,
+          "still_missed": {
+            "total": 37,
+            "entity_and_value_without_a_call_off": 36,
+            "entity_without_the_value": 1
+          },
+          "call_offs_of_another_plan_of_the_same_entity": 9
+        },
+        "s6_as_of": {
+          "contexts": 240,
+          "published": {
+            "held": 228,
+            "rate": 0.95
+          },
+          "scoped": {
+            "held": 228,
+            "rate": 0.95
+          },
+          "corrected": {
+            "held": 228,
+            "rate": 0.95
+          }
+        },
+        "s7_as_known": {
+          "contexts": 240,
+          "published": {
+            "held": 230,
+            "rate": 0.9583
+          },
+          "scoped": {
+            "held": 230,
+            "rate": 0.9583
+          },
+          "corrected": {
+            "held": 230,
+            "rate": 0.9583
+          }
+        },
+        "s8_history": {
+          "contexts": 240,
+          "published": {
+            "held": 194,
+            "rate": 0.8083
+          },
+          "scoped": {
+            "held": 194,
+            "rate": 0.8083
+          },
+          "corrected": {
+            "held": 194,
+            "rate": 0.8083
+          }
+        }
+      }
+    },
+    "memory-bank": {
+      "all": {
+        "contexts": 1920,
+        "published": {
+          "held": 1777,
+          "rate": 0.9255
+        },
+        "scoped": {
+          "held": 1743,
+          "rate": 0.9078
+        },
+        "corrected": {
+          "held": 1880,
+          "rate": 0.9792
+        }
+      },
+      "by_kind": {
+        "s1_updated": {
+          "contexts": 240,
+          "published": {
+            "held": 238,
+            "rate": 0.9917
+          },
+          "scoped": {
+            "held": 238,
+            "rate": 0.9917
+          },
+          "corrected": {
+            "held": 238,
+            "rate": 0.9917
+          }
+        },
+        "s2_corrected": {
+          "contexts": 240,
+          "published": {
+            "held": 233,
+            "rate": 0.9708
+          },
+          "scoped": {
+            "held": 233,
+            "rate": 0.9708
+          },
+          "corrected": {
+            "held": 233,
+            "rate": 0.9708
+          }
+        },
+        "s3_repeated_stale": {
+          "contexts": 240,
+          "published": {
+            "held": 233,
+            "rate": 0.9708
+          },
+          "scoped": {
+            "held": 233,
+            "rate": 0.9708
+          },
+          "corrected": {
+            "held": 233,
+            "rate": 0.9708
+          }
+        },
+        "s4_conflicting": {
+          "contexts": 240,
+          "published": {
+            "held": 236,
+            "rate": 0.9833
+          },
+          "scoped": {
+            "held": 236,
+            "rate": 0.9833
+          },
+          "corrected": {
+            "held": 236,
+            "rate": 0.9833
+          }
+        },
+        "s5_withdrawn": {
+          "contexts": 240,
+          "published": {
+            "held": 125,
+            "rate": 0.5208
+          },
+          "scoped": {
+            "held": 91,
+            "rate": 0.3792
+          },
+          "corrected": {
+            "held": 228,
+            "rate": 0.95
+          },
+          "published_only": {
+            "total": 4,
+            "another_entitys_call_off": 4
+          },
+          "corrected_only": 107,
+          "still_missed": {
+            "total": 12,
+            "entity_and_value_without_a_call_off": 12
+          },
+          "call_offs_of_another_plan_of_the_same_entity": 4
+        },
+        "s6_as_of": {
+          "contexts": 240,
+          "published": {
+            "held": 239,
+            "rate": 0.9958
+          },
+          "scoped": {
+            "held": 239,
+            "rate": 0.9958
+          },
+          "corrected": {
+            "held": 239,
+            "rate": 0.9958
+          }
+        },
+        "s7_as_known": {
+          "contexts": 240,
+          "published": {
+            "held": 238,
+            "rate": 0.9917
+          },
+          "scoped": {
+            "held": 238,
+            "rate": 0.9917
+          },
+          "corrected": {
+            "held": 238,
+            "rate": 0.9917
+          }
+        },
+        "s8_history": {
+          "contexts": 240,
+          "published": {
+            "held": 235,
+            "rate": 0.9792
+          },
+          "scoped": {
+            "held": 235,
+            "rate": 0.9792
+          },
+          "corrected": {
+            "held": 235,
+            "rate": 0.9792
+          }
+        }
+      }
+    },
+    "extract-first": {
+      "all": {
+        "contexts": 1920,
+        "published": {
+          "held": 1845,
+          "rate": 0.9609
+        },
+        "scoped": {
+          "held": 1794,
+          "rate": 0.9344
+        },
+        "corrected": {
+          "held": 1886,
+          "rate": 0.9823
+        }
+      },
+      "by_kind": {
+        "s1_updated": {
+          "contexts": 240,
+          "published": {
+            "held": 235,
+            "rate": 0.9792
+          },
+          "scoped": {
+            "held": 235,
+            "rate": 0.9792
+          },
+          "corrected": {
+            "held": 235,
+            "rate": 0.9792
+          }
+        },
+        "s2_corrected": {
+          "contexts": 240,
+          "published": {
+            "held": 240,
+            "rate": 1.0
+          },
+          "scoped": {
+            "held": 240,
+            "rate": 1.0
+          },
+          "corrected": {
+            "held": 240,
+            "rate": 1.0
+          }
+        },
+        "s3_repeated_stale": {
+          "contexts": 240,
+          "published": {
+            "held": 236,
+            "rate": 0.9833
+          },
+          "scoped": {
+            "held": 236,
+            "rate": 0.9833
+          },
+          "corrected": {
+            "held": 236,
+            "rate": 0.9833
+          }
+        },
+        "s4_conflicting": {
+          "contexts": 240,
+          "published": {
+            "held": 235,
+            "rate": 0.9792
+          },
+          "scoped": {
+            "held": 235,
+            "rate": 0.9792
+          },
+          "corrected": {
+            "held": 235,
+            "rate": 0.9792
+          }
+        },
+        "s5_withdrawn": {
+          "contexts": 240,
+          "published": {
+            "held": 191,
+            "rate": 0.7958
+          },
+          "scoped": {
+            "held": 140,
+            "rate": 0.5833
+          },
+          "corrected": {
+            "held": 232,
+            "rate": 0.9667
+          },
+          "published_only": {
+            "total": 5,
+            "another_entitys_call_off": 4,
+            "same_entitys_call_off_of_another_plan": 1
+          },
+          "corrected_only": 46,
+          "still_missed": {
+            "total": 8,
+            "entity_and_value_without_a_call_off": 8
+          },
+          "call_offs_of_another_plan_of_the_same_entity": 1
+        },
+        "s6_as_of": {
+          "contexts": 240,
+          "published": {
+            "held": 236,
+            "rate": 0.9833
+          },
+          "scoped": {
+            "held": 236,
+            "rate": 0.9833
+          },
+          "corrected": {
+            "held": 236,
+            "rate": 0.9833
+          }
+        },
+        "s7_as_known": {
+          "contexts": 240,
+          "published": {
+            "held": 239,
+            "rate": 0.9958
+          },
+          "scoped": {
+            "held": 239,
+            "rate": 0.9958
+          },
+          "corrected": {
+            "held": 239,
+            "rate": 0.9958
+          }
+        },
+        "s8_history": {
+          "contexts": 240,
+          "published": {
+            "held": 233,
+            "rate": 0.9708
+          },
+          "scoped": {
+            "held": 233,
+            "rate": 0.9708
+          },
+          "corrected": {
+            "held": 233,
+            "rate": 0.9708
+          }
+        }
+      }
+    },
+    "temporal-graph": {
+      "all": {
+        "contexts": 1920,
+        "published": {
+          "held": 1565,
+          "rate": 0.8151
+        },
+        "scoped": {
+          "held": 1493,
+          "rate": 0.7776
+        },
+        "corrected": {
+          "held": 1574,
+          "rate": 0.8198
+        }
+      },
+      "by_kind": {
+        "s1_updated": {
+          "contexts": 240,
+          "published": {
+            "held": 220,
+            "rate": 0.9167
+          },
+          "scoped": {
+            "held": 220,
+            "rate": 0.9167
+          },
+          "corrected": {
+            "held": 220,
+            "rate": 0.9167
+          }
+        },
+        "s2_corrected": {
+          "contexts": 240,
+          "published": {
+            "held": 207,
+            "rate": 0.8625
+          },
+          "scoped": {
+            "held": 207,
+            "rate": 0.8625
+          },
+          "corrected": {
+            "held": 207,
+            "rate": 0.8625
+          }
+        },
+        "s3_repeated_stale": {
+          "contexts": 240,
+          "published": {
+            "held": 221,
+            "rate": 0.9208
+          },
+          "scoped": {
+            "held": 221,
+            "rate": 0.9208
+          },
+          "corrected": {
+            "held": 221,
+            "rate": 0.9208
+          }
+        },
+        "s4_conflicting": {
+          "contexts": 240,
+          "published": {
+            "held": 110,
+            "rate": 0.4583
+          },
+          "scoped": {
+            "held": 104,
+            "rate": 0.4333
+          },
+          "corrected": {
+            "held": 110,
+            "rate": 0.4583
+          }
+        },
+        "s5_withdrawn": {
+          "contexts": 240,
+          "published": {
+            "held": 147,
+            "rate": 0.6125
+          },
+          "scoped": {
+            "held": 81,
+            "rate": 0.3375
+          },
+          "corrected": {
+            "held": 156,
+            "rate": 0.65
+          },
+          "published_only": {
+            "total": 45,
+            "another_entitys_call_off": 33,
+            "same_entitys_call_off_of_another_plan": 11,
+            "call_off_form_in_a_sentence_naming_no_entity": 1
+          },
+          "corrected_only": 54,
+          "still_missed": {
+            "total": 84,
+            "entity_and_value_without_a_call_off": 84
+          },
+          "call_offs_of_another_plan_of_the_same_entity": 17
+        },
+        "s6_as_of": {
+          "contexts": 240,
+          "published": {
+            "held": 234,
+            "rate": 0.975
+          },
+          "scoped": {
+            "held": 234,
+            "rate": 0.975
+          },
+          "corrected": {
+            "held": 234,
+            "rate": 0.975
+          }
+        },
+        "s7_as_known": {
+          "contexts": 240,
+          "published": {
+            "held": 225,
+            "rate": 0.9375
+          },
+          "scoped": {
+            "held": 225,
+            "rate": 0.9375
+          },
+          "corrected": {
+            "held": 225,
+            "rate": 0.9375
+          }
+        },
+        "s8_history": {
+          "contexts": 240,
+          "published": {
+            "held": 201,
+            "rate": 0.8375
+          },
+          "scoped": {
+            "held": 201,
+            "rate": 0.8375
+          },
+          "corrected": {
+            "held": 201,
+            "rate": 0.8375
+          }
+        }
+      }
+    },
+    "hybrid": {
+      "all": {
+        "contexts": 1920,
+        "published": {
+          "held": 445,
+          "rate": 0.2318
+        },
+        "scoped": {
+          "held": 360,
+          "rate": 0.1875
+        },
+        "corrected": {
+          "held": 375,
+          "rate": 0.1953
+        }
+      },
+      "by_kind": {
+        "s1_updated": {
+          "contexts": 240,
+          "published": {
+            "held": 51,
+            "rate": 0.2125
+          },
+          "scoped": {
+            "held": 51,
+            "rate": 0.2125
+          },
+          "corrected": {
+            "held": 51,
+            "rate": 0.2125
+          }
+        },
+        "s2_corrected": {
+          "contexts": 240,
+          "published": {
+            "held": 56,
+            "rate": 0.2333
+          },
+          "scoped": {
+            "held": 56,
+            "rate": 0.2333
+          },
+          "corrected": {
+            "held": 56,
+            "rate": 0.2333
+          }
+        },
+        "s3_repeated_stale": {
+          "contexts": 240,
+          "published": {
+            "held": 48,
+            "rate": 0.2
+          },
+          "scoped": {
+            "held": 48,
+            "rate": 0.2
+          },
+          "corrected": {
+            "held": 48,
+            "rate": 0.2
+          }
+        },
+        "s4_conflicting": {
+          "contexts": 240,
+          "published": {
+            "held": 25,
+            "rate": 0.1042
+          },
+          "scoped": {
+            "held": 25,
+            "rate": 0.1042
+          },
+          "corrected": {
+            "held": 25,
+            "rate": 0.1042
+          }
+        },
+        "s5_withdrawn": {
+          "contexts": 240,
+          "published": {
+            "held": 99,
+            "rate": 0.4125
+          },
+          "scoped": {
+            "held": 14,
+            "rate": 0.0583
+          },
+          "corrected": {
+            "held": 29,
+            "rate": 0.1208
+          },
+          "published_only": {
+            "total": 83,
+            "another_entitys_call_off": 13,
+            "call_off_form_in_a_sentence_naming_no_entity": 70
+          },
+          "corrected_only": 13,
+          "still_missed": {
+            "total": 211,
+            "entity_and_value_without_a_call_off": 75,
+            "entity_without_the_value": 21,
+            "entity_never_named": 115
+          },
+          "call_offs_of_another_plan_of_the_same_entity": 3
+        },
+        "s6_as_of": {
+          "contexts": 240,
+          "published": {
+            "held": 104,
+            "rate": 0.4333
+          },
+          "scoped": {
+            "held": 104,
+            "rate": 0.4333
+          },
+          "corrected": {
+            "held": 104,
+            "rate": 0.4333
+          }
+        },
+        "s7_as_known": {
+          "contexts": 240,
+          "published": {
+            "held": 55,
+            "rate": 0.2292
+          },
+          "scoped": {
+            "held": 55,
+            "rate": 0.2292
+          },
+          "corrected": {
+            "held": 55,
+            "rate": 0.2292
+          }
+        },
+        "s8_history": {
+          "contexts": 240,
+          "published": {
+            "held": 7,
+            "rate": 0.0292
+          },
+          "scoped": {
+            "held": 7,
+            "rate": 0.0292
+          },
+          "corrected": {
+            "held": 7,
+            "rate": 0.0292
+          }
+        }
+      }
+    }
+  }
+}
