@@ -12,8 +12,11 @@
  * engine_capability_missing, reason raw_sql; plan decision D18), so a check that reads or writes the database with
  * raw SQL reports not_applicable on it (rawSqlNotApplicable) and counts as neither a pass nor a fail.
  */
-import { existsSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { SQL } from 'bun';
 import type { BrainEngine } from 'gbrain/engine';
 import type { EngineConfig } from 'gbrain/types';
 import { importGbrain, type GbrainUnderTest } from './gbrain-under-test.ts';
@@ -37,8 +40,10 @@ export function evalEngineRequested(env: Record<string, string | undefined> = pr
 
 export type RustUnavailableReason = 'rust_engine_not_in_build' | 'rust_kind_unsupported' | 'addon_unavailable' | 'store_path_missing';
 
+export type EvalEngineUnavailableReason = RustUnavailableReason | 'postgres_url_missing' | 'postgres_unreachable' | 'engine_not_supported_by_runner';
+
 export class EvalEngineUnavailable extends Error {
-  constructor(readonly kind: EvalEngineKind, readonly reason: RustUnavailableReason | 'postgres_url_missing', message: string) {
+  constructor(readonly kind: EvalEngineKind, readonly reason: EvalEngineUnavailableReason, message: string) {
     super(message);
     this.name = 'EvalEngineUnavailable';
   }
@@ -157,4 +162,94 @@ export function rawSqlNotApplicable(kind: EvalEngineKind, check: string, usesSql
     status: 'not_applicable', engine: kind, check,
     reason: `${check} uses raw SQL to ${usesSqlFor}. The ${kind} engine has no SQL dialect and refuses executeRaw with engine_capability_missing (reason raw_sql; gbrain RUST_ENGINE.md decision D18), so the check cannot run on it.`,
   };
+}
+
+/** The engine GBRAIN_EVAL_ENGINE names, or null when it is unset and the runner keeps its own default. */
+export function requestedEvalEngine(env: Record<string, string | undefined> = process.env): EvalEngineKind | null {
+  return evalEngineRequested(env) ? evalEngineKind(env) : null;
+}
+
+/**
+ * The receipt fields a runner adds when GBRAIN_EVAL_ENGINE is set: the engine kind and the checks that could not run
+ * on it (empty when none). Nothing when the variable is unset, so a default receipt keeps its bytes.
+ */
+export function evalEngineReceiptFields(kind: EvalEngineKind | null, notApplicable: readonly NotApplicable[] = []): { engine?: EvalEngineKind; not_applicable?: NotApplicable[] } {
+  return kind ? { engine: kind, not_applicable: [...notApplicable] } : {};
+}
+
+/**
+ * Exit code of a runner that refused to run because the requested engine is unavailable (EvalEngineUnavailable). It
+ * writes no receipt and no verdict. 69 is EX_UNAVAILABLE from sysexits.h, distinct from the runners' 0 (pass),
+ * 1 (fail or error), 2 (paid-arm refusal) and 3 (harness error), so engine-bench can tell "refused" from "failed".
+ */
+export const EVAL_ENGINE_REFUSED_EXIT = 69;
+
+export function evalEngineRefusalMessage(e: EvalEngineUnavailable, runner: string): string {
+  return `REFUSED: ${runner} did not run on engine ${e.kind}. EvalEngineUnavailable (${e.reason}): ${e.message} No receipt or verdict was written (exit ${EVAL_ENGINE_REFUSED_EXIT}).`;
+}
+
+/** Print the refusal and exit with EVAL_ENGINE_REFUSED_EXIT. */
+export function refuseEvalEngine(e: EvalEngineUnavailable, runner: string): never {
+  console.error(evalEngineRefusalMessage(e, runner));
+  process.exit(EVAL_ENGINE_REFUSED_EXIT);
+}
+
+export interface ScratchEvalEngine extends EvalEngine {
+  /** Disconnect and remove the throwaway store (the Rust directory or the Postgres database). */
+  close(): Promise<void>;
+}
+
+/**
+ * Open `kind` on a throwaway store: PGLite in memory, Postgres in a fresh database created through `pgAdminUrl` and
+ * dropped on close, Rust in a fresh temp directory removed on close.
+ */
+export async function openScratchEvalEngine(o: { gut: GbrainUnderTest; kind: EvalEngineKind; label: string; pgAdminUrl?: string; initSchema?: boolean }): Promise<ScratchEvalEngine> {
+  const disconnect = async (e: EvalEngine) => { await e.engine.disconnect?.().catch(() => {}); };
+  if (o.kind === 'pglite') {
+    const e = await openEvalEngine({ gut: o.gut, kind: 'pglite', initSchema: o.initSchema });
+    return { ...e, close: () => disconnect(e) };
+  }
+  if (o.kind === 'rust') {
+    const dir = mkdtempSync(join(tmpdir(), `${o.label}-rust-`));
+    try {
+      const e = await openEvalEngine({ gut: o.gut, kind: 'rust', databasePath: join(dir, 'brain.rust'), initSchema: o.initSchema });
+      return { ...e, close: async () => { await disconnect(e); rmSync(dir, { recursive: true, force: true }); } };
+    } catch (err) {
+      rmSync(dir, { recursive: true, force: true });
+      throw err;
+    }
+  }
+  if (!o.pgAdminUrl) throw new EvalEngineUnavailable('postgres', 'postgres_url_missing', 'The postgres engine needs an admin URL to create a scratch database (--pg-url or LIFECYCLE_PG_URL).');
+  const db = `${o.label}_${process.pid}_${randomUUID().slice(0, 8)}`.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+  const admin = new SQL(o.pgAdminUrl);
+  try {
+    await admin.unsafe(`CREATE DATABASE ${db}`);
+  } catch (err) {
+    await admin.close().catch(() => {});
+    throw new EvalEngineUnavailable('postgres', 'postgres_unreachable', `Could not create a scratch Postgres database: ${(err as Error).message}`);
+  }
+  const drop = async () => {
+    await admin.unsafe(`DROP DATABASE IF EXISTS ${db} WITH (FORCE)`).catch(() => {});
+    await admin.close().catch(() => {});
+  };
+  const url = new URL(o.pgAdminUrl);
+  url.pathname = `/${db}`;
+  try {
+    const e = await openEvalEngine({ gut: o.gut, kind: 'postgres', databaseUrl: url.toString(), initSchema: o.initSchema });
+    return { ...e, close: async () => { await disconnect(e); await drop(); } };
+  } catch (err) {
+    await drop();
+    throw err;
+  }
+}
+
+/**
+ * Refuse before any work when the requested engine cannot run. For rust this opens and closes a scratch store, so a
+ * build without the engine, a factory that does not know it and an addon that does not load all refuse up front.
+ * PGLite and Postgres need no preflight here (each runner checks Postgres reachability its own way).
+ */
+export async function preflightEvalEngine(gut: GbrainUnderTest, kind: EvalEngineKind): Promise<void> {
+  if (kind !== 'rust') return;
+  const e = await openScratchEvalEngine({ gut, kind, label: 'preflight' });
+  await e.close();
 }
