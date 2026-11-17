@@ -328,7 +328,8 @@ the same reranker 128 ([matched comparison](docs/benchmarks/2026-10-02-concept-v
 - Open loops (commitments gbrain tracks from your email) cover Gmail only, and a commitment fulfilled by reply does not
   close. gbrain's open-loops guide at `6ce7195b4` (v0.60.733.0) still describes Gmail threads only and calls fulfilment
   by reply future work. At that build a forwarded FYI whose forwarded part asks a question also opens a loop, against
-  the guide's own rule (3 of 3 such threads; [keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md#what-got-worse-and-where)).
+  the guide's own rule (3 of 3 such threads), so open-loop precision fell to 53 of 56 from 53 of 53, since gbrain #9246
+  ([keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md#what-got-worse-and-where)).
 - There is no scanner for contradictions across a whole brain. At `6ce7195b4` (v0.60.733.0), the contradiction probe
   behind `find_contradictions` still judges pairs drawn from the top results of the queries it is given.
 - Associative recall, which gbrain does not claim: `volunteer_context` delivered the needed page on 0 of 240 indirect
