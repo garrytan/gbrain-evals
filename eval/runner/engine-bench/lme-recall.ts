@@ -426,7 +426,7 @@ export function comparePair(rows: readonly QuestionRow[], arm: LmeArm, a: EvalEn
   const rustSide = a === 'rust' ? a : b === 'rust' ? b : null;
   const answered = (r: QuestionRow | undefined) => !!r && r.error === undefined && !!r.arms[arm];
   const [rr, ro] = rustSide === a ? [ra, rb] : [rb, ra];
-  const ids = [...ra.keys()].filter(id => rb.has(id) || (rustSide !== null && ro.has(id))).sort();
+  const ids = (rustSide === null ? [...ra.keys()].filter(id => rb.has(id)) : [...ro.keys()]).sort();
   const usable = (id: string) => answered(ra.get(id)) && answered(rb.get(id));
   const rustErrors = rustSide === null ? [] : ids.filter(id => !answered(rr.get(id)) && answered(ro.get(id)) && ro.get(id)!.arms[arm]!.recall_all !== null);
   const excluded = ids.filter(id => !usable(id) && !rustErrors.includes(id));

@@ -136,6 +136,16 @@ describe('the Rust verdict per arm', () => {
     }
   });
 
+  test('a question the other engine answered and Rust has no row for fails the arm, whichever side Rust is on', () => {
+    const rows = [...engineRows('pglite', 50), ...engineRows('rust', 40)];
+    for (const [a, b] of [['pglite', 'rust'], ['rust', 'pglite']] as const) {
+      const c = comparePair(rows, 'keyword', a, b);
+      expect(c.rust_errors).toEqual(ids(50).slice(40));
+      expect(c.rust_verdict).toBe('fail');
+      expect(c.recall_all_delta!.n_pairs).toBe(50);
+    }
+  });
+
   test('a clean identical run passes; a pair without Rust carries no Rust verdict', () => {
     const rows = [...engineRows('pglite', 60), ...engineRows('rust', 60), ...engineRows('pglite', 60).map(r => ({ ...r, engine: 'postgres' as const }))];
     for (const [a, b] of [['pglite', 'rust'], ['rust', 'pglite']] as const) {
