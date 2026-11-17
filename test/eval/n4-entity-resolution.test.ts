@@ -6,8 +6,10 @@ import {
 import { GoldStore } from '../../eval/runner/evaluator/gold-store.ts';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { ProbeAccounting } from '../../eval/runner/probe-accounting.ts';
+import { loadFactUnquote } from '../../eval/runner/quoted-reads.ts';
+import { fenceTranscriptText } from '../../node_modules/gbrain/src/core/search/transcript-quote.ts';
 import {
-  baselinePrediction, bcubed, outcomeOf, plannedProbes, runN4, scoreSurface, verdictOf, writtenPages,
+  baselinePrediction, bcubed, outcomeOf, plannedProbes, recallMarkers, runN4, scoreSurface, verdictOf, writtenPages,
   type Prediction, type ScoredProbe, type ScoringContext,
 } from '../../eval/runner/n4-entity-resolution.ts';
 
@@ -161,6 +163,20 @@ describe('N4 metrics', () => {
     expect(outcomeOf(r, { kind: 'phantom', slug: 'default:ally' }, ctx)).toBe('correct-refusal');
     const other = ledger.pages.find(p => g.kind === 'entity' && p.entity !== g.entity)!;
     expect(outcomeOf(g, { kind: 'pages', pages: [pageKey(other)] }, ctx)).toBe('wrong-merge');
+  });
+});
+
+describe('N4 recall markers', () => {
+  test('a remote recall\'s quote-fenced marker facts (gbrain v0.60.536.0 on) read through the build\'s own unquote, and fail loudly without it', async () => {
+    const unquote = await loadFactUnquote(resolveGbrainUnderTest(null));
+    const plain = { fact: 'n4-marker default:people/a-example' };
+    const facts = [plain, { fact: fenceTranscriptText('n4-marker team:people/b-example', 'fact 2'), quoted: 'transcript' }, { fact: 'an unrelated fact' }];
+    expect(recallMarkers(facts, unquote)).toEqual(['default:people/a-example', 'team:people/b-example']);
+    expect(recallMarkers([plain], undefined)).toEqual(['default:people/a-example']);
+    expect(() => recallMarkers(facts, undefined)).toThrow(/unquoteFactText/);
+    let thrown: unknown;
+    try { recallMarkers(facts, undefined); } catch (e) { thrown = e; }
+    expect((thrown as Error).constructor.name).toBe('HarnessError');
   });
 });
 

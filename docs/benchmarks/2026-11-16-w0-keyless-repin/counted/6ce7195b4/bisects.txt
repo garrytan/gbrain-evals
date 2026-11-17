@@ -1,0 +1,65 @@
+# Keyless bisects of gbrain's first-parent history, diagnostic only (not counted). Logs as written.
+
+## N9 keyword one-hop, paraphrase split, off-arm recall at five (77cf8e111..6ce7195b4)
+22:25:37 commits 678
+22:26:50 test 338 562615815c "version": "0.60.509.0", {"one-hop-template": {"off": 0.6868, "on": 0.7425}, "one-hop-paraphrase": {"off": 0.331, "on": 0.4897}} n4 50/50 -> True
+22:28:09 test 168 1e9cf22cfb "version": "0.60.338.0", {"one-hop-template": {"off": 0.6868, "on": 0.7425}, "one-hop-paraphrase": {"off": 0.331, "on": 0.4897}} n4 50/50 -> True
+22:29:25 test 83 ba55ba624b "version": "0.60.253.0", {"one-hop-template": {"off": 0.7187, "on": 0.771}, "one-hop-paraphrase": {"off": 0.4759, "on": 0.5719}} n4 50/50 -> False
+22:30:41 test 125 a723db672e "version": "0.60.295.0", {"one-hop-template": {"off": 0.7187, "on": 0.771}, "one-hop-paraphrase": {"off": 0.4759, "on": 0.5719}} n4 50/50 -> False
+22:31:59 test 146 25006f32b9 "version": "0.60.316.0", {"one-hop-template": {"off": 0.7187, "on": 0.771}, "one-hop-paraphrase": {"off": 0.4759, "on": 0.5719}} n4 50/50 -> False
+22:33:19 test 157 80dfdf2190 "version": "0.60.327.0", {"one-hop-template": {"off": 0.7187, "on": 0.771}, "one-hop-paraphrase": {"off": 0.4759, "on": 0.5719}} n4 50/50 -> False
+22:34:48 test 162 104983fe26 "version": "0.60.332.0", {"one-hop-template": {"off": 0.7187, "on": 0.771}, "one-hop-paraphrase": {"off": 0.469, "on": 0.5719}} n4 50/50 -> True
+22:36:04 test 159 9c03ec68d5 "version": "0.60.329.0", {"one-hop-template": {"off": 0.7187, "on": 0.771}, "one-hop-paraphrase": {"off": 0.4759, "on": 0.5719}} n4 50/50 -> False
+22:37:19 test 160 a6d066a64b "version": "0.60.330.0", {"one-hop-template": {"off": 0.7187, "on": 0.771}, "one-hop-paraphrase": {"off": 0.4759, "on": 0.5719}} n4 50/50 -> False
+22:38:36 test 161 ca965f7a7c "version": "0.60.331.0", {"one-hop-template": {"off": 0.7187, "on": 0.771}, "one-hop-paraphrase": {"off": 0.4759, "on": 0.5719}} n4 50/50 -> False
+22:38:36 FIRST BAD 162 104983fe26cce7b6d645bda41bb6598cf6e64c18 104983fe2 Merge pull request #7186 from garrytan/capy/query-collapse-twins-stubs
+22:38:36 LAST GOOD 161 ca965f7a7cd73d34874219e91deb63099a67a6c4 ca965f7a7 Merge pull request #7178 from garrytan/capy/wave-b-followups
+22:44:59 163 9a2a062e93 Merge pull request #7169 from garrytan/capy/gbra151-operability-wave {"one-hop-template": [0.7187, 0.771], "one-hop-paraphrase": [0.469, 0.5719]}
+22:46:17 164 169b8170c4 Merge pull request #7194 from garrytan/gbra151-7158-7159-search-timings-where {"one-hop-template": [0.7187, 0.771], "one-hop-paraphrase": [0.469, 0.5719]}
+22:47:30 165 81650fb167 Merge pull request #7229 from garrytan/capy/gbra157-7203-root-aliases {"one-hop-template": [0.7187, 0.771], "one-hop-paraphrase": [0.469, 0.5719]}
+22:48:45 166 e91b3050d2 Merge pull request #7232 from garrytan/capy/fix-7178-delete-wait {"one-hop-template": [0.7187, 0.771], "one-hop-paraphrase": [0.469, 0.5719]}
+22:50:01 167 8c88d1bfc7 Merge pull request #7196 from garrytan/capy/gbra150-landing-resolve {"one-hop-template": [0.7187, 0.771], "one-hop-paraphrase": [0.469, 0.5719]}
+22:50:01 done
+
+## N4 recall floor and remember first names
+22:38:43 recall_floor start lo 338 hi 677
+22:39:02 recall_floor test 507 dbf5146235 {"recall_floor": "48/50", "m118": "unresolved", "remember_first_names_unresolved": 9, "version": "0.60.678.0"} -> True
+22:39:20 recall_floor test 422 27f8b9d628 {"recall_floor": "48/50", "m118": "unresolved", "remember_first_names_unresolved": 9, "version": "0.60.593.0"} -> True
+22:39:47 recall_floor test 380 36806e37b7 {"recall_floor": "48/50", "m118": "unresolved", "remember_first_names_unresolved": 9, "version": "0.60.551.0"} -> True
+22:40:04 recall_floor test 359 6b087fc344 {"recall_floor": "50/50", "m118": "correct", "remember_first_names_unresolved": 9, "version": "0.60.530.0"} -> False
+22:40:22 recall_floor test 369 61b0b4c184 {"recall_floor": "48/50", "m118": "unresolved", "remember_first_names_unresolved": 9, "version": "0.60.540.0"} -> True
+22:40:40 recall_floor test 364 88d3f57295 {"recall_floor": "50/50", "m118": "correct", "remember_first_names_unresolved": 9, "version": "0.60.535.0"} -> False
+22:40:58 recall_floor test 366 1b03855c13 {"recall_floor": "48/50", "m118": "unresolved", "remember_first_names_unresolved": 9, "version": "0.60.537.0"} -> True
+22:41:15 recall_floor test 365 1e763e28cb {"recall_floor": "48/50", "m118": "unresolved", "remember_first_names_unresolved": 9, "version": "0.60.536.0"} -> True
+22:41:15 recall_floor FIRST BAD 365 1e763e28cb76655891096334d03f0883356c3ae8 1e763e28c Merge pull request #8367 from garrytan/capy/gbra269-fence-coverage
+22:41:15 recall_floor LAST GOOD 364 88d3f572950a772d268b22afe0bd53c2a2f090ff 88d3f5729 Merge pull request #8376 from garrytan/capy/gbra258-fix-dst-census
+22:41:15 remember_first_names start lo 168 hi 338
+22:41:32 remember_first_names test 253 f94ac7fc47 {"recall_floor": "50/50", "m118": "correct", "remember_first_names_unresolved": 9, "version": "0.60.423.0"} -> True
+22:41:48 remember_first_names test 210 531b3b1ab6 {"recall_floor": "50/50", "m118": "correct", "remember_first_names_unresolved": 9, "version": "0.60.380.0"} -> True
+22:42:05 remember_first_names test 189 1bf9989f4e {"recall_floor": "50/50", "m118": "correct", "remember_first_names_unresolved": 9, "version": "0.60.359.0"} -> True
+22:42:22 remember_first_names test 178 c0b30d7138 {"recall_floor": "50/50", "m118": "correct", "remember_first_names_unresolved": 0, "version": "0.60.348.0"} -> False
+22:42:40 remember_first_names test 183 a67014c810 {"recall_floor": "50/50", "m118": "correct", "remember_first_names_unresolved": 0, "version": "0.60.353.0"} -> False
+22:42:58 remember_first_names test 186 476047872d {"recall_floor": "50/50", "m118": "correct", "remember_first_names_unresolved": 9, "version": "0.60.356.0"} -> True
+22:43:15 remember_first_names test 184 47361d1ab4 {"recall_floor": "50/50", "m118": "correct", "remember_first_names_unresolved": 0, "version": "0.60.354.0"} -> False
+22:43:32 remember_first_names test 185 dfe501e2fd {"recall_floor": "50/50", "m118": "correct", "remember_first_names_unresolved": 9, "version": "0.60.355.0"} -> True
+22:43:32 remember_first_names FIRST BAD 185 dfe501e2fdda999f31665a766c5e9feb87de2eb8 dfe501e2f Merge pull request #7254 from garrytan/capy/gbra155-remember-receipt
+22:43:33 remember_first_names LAST GOOD 184 47361d1ab47d17ac9942aacfb2c8ba426c795e96 47361d1ab Merge pull request #7230 from garrytan/capy/gbra155-search-exact
+22:43:33 done
+
+## N7 forward_fyi threads opening a loop (77cf8e111..6ce7195b4)
+23:39:01 commits 678
+23:39:16 test 338 562615815c {"version": "\"version\": \"0.60.509.0\",", "forward_fyi_detected": 0, "opens_on_planted": 53} -> False
+23:39:30 test 507 dbf5146235 {"version": "\"version\": \"0.60.678.0\",", "forward_fyi_detected": 0, "opens_on_planted": 53} -> False
+23:39:43 test 592 db2f4f0a09 {"version": "\"version\": \"0.60.721.0\",", "forward_fyi_detected": 3, "opens_on_planted": 56} -> True
+23:39:55 test 549 eb71eb3cb8 {"version": "\"version\": \"0.60.708.0\",", "forward_fyi_detected": 0, "opens_on_planted": 53} -> False
+23:40:08 test 570 a7cf37aa71 {"version": "\"version\": \"0.60.715.0\",", "forward_fyi_detected": 3, "opens_on_planted": 56} -> True
+23:40:21 test 559 3f138e1b49 {"version": "\"version\": \"0.60.711.0\",", "forward_fyi_detected": 3, "opens_on_planted": 56} -> True
+23:40:35 test 554 698a7c38b6 {"version": "\"version\": \"0.60.710.0\",", "forward_fyi_detected": 0, "opens_on_planted": 53} -> False
+23:40:48 test 556 6fd05bf3ad {"version": "\"version\": \"0.60.710.0\",", "forward_fyi_detected": 3, "opens_on_planted": 56} -> True
+23:41:01 test 555 ab0882b120 {"version": "\"version\": \"0.60.710.0\",", "forward_fyi_detected": 0, "opens_on_planted": 53} -> False
+23:41:01 FIRST BAD 556 6fd05bf3add4cf84a8d90abaea8472c4056e9aa6 6fd05bf3a Merge pull request #9246 from garrytan/gbra414/train-c
+23:41:01 LAST GOOD 555 ab0882b1208a471fcaf2007e8cacc39511f96e23 ab0882b12 Merge pull request #9223 from garrytan/capy/train-b-20261112
+23:41:01 done
+
+## N14 128 MiB PGLite native RSS at N14's own build 7a6bdd3 (bisect stopped: the baseline crashes too)
+23:13:07 commits 393; good crash "version":"0.60.454.0" peak RSS 6168 MB
