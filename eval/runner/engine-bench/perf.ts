@@ -42,6 +42,7 @@ import { join, relative, resolve } from 'path';
 import type { BrainEngine } from 'gbrain/engine';
 import type { SearchResult } from 'gbrain/types';
 import { redactUrlPasswords } from '../hermetic-env.ts';
+import { writeScrubbedJson } from '../receipt.ts';
 import { attestPreregistration, type Attestation } from '../prereg.ts';
 import { clusteredPairedDelta, seededRandom, type PairedItem } from '../stats/paired.ts';
 import { EvalEngineUnavailable, isCapabilityMissing, openEvalEngine, supportsRawSql, type EvalEngineKind } from '../eval-engine.ts';
@@ -1264,7 +1265,7 @@ export async function orchestrate(opts: Options, argv: string[]) {
   const dir = opts.outDir ?? REPORT_DIR;
   mkdirSync(dir, { recursive: true });
   const file = join(dir, `${opts.dev ? 'dev-' : ''}speed-${stamp}-${opts.scale}.json`);
-  writeFileSync(file, JSON.stringify(out, null, 2) + '\n');
+  writeScrubbedJson(file, out);
   log(`\nwrote ${relative(REPO_ROOT, file)} (${out.run_seconds.toFixed(0)}s)`);
   return { file, out };
 }

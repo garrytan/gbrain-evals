@@ -33,7 +33,7 @@
  * Exit: 0 when the stage ran (any Rust verdict but fail), 1 when Rust fails, 3 when a runner errored on any engine.
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import {
@@ -41,6 +41,7 @@ import {
 } from '../eval-engine.ts';
 import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { strippedKeysIn } from '../hermetic-env.ts';
+import { writeScrubbedJson } from '../receipt.ts';
 import { N6_SQL_CHECKS } from '../n6-visibility-fuzz.ts';
 import { countedRun, type CountedRun } from './counted.ts';
 import { enginesFrom, startPgvectorContainer } from './surface-parity.ts';
@@ -373,9 +374,8 @@ export async function runCorrectness(o: CorrectnessOptions): Promise<{ receipt: 
     ...o.run,
   };
   if (!o.outDir) return { receipt };
-  mkdirSync(o.outDir, { recursive: true });
   const file = join(o.outDir, `correctness-${receipt.generated_at.replace(/[:.]/g, '-')}.json`);
-  writeFileSync(file, `${JSON.stringify(receipt, null, 2)}\n`);
+  writeScrubbedJson(file, receipt);
   return { receipt, file };
 }
 

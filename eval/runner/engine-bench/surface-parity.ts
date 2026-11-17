@@ -43,6 +43,7 @@ import {
 } from '../eval-engine.ts';
 import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { strippedKeysIn } from '../hermetic-env.ts';
+import { writeScrubbedJson } from '../receipt.ts';
 import { freePort } from '../lifecycle/slice.ts';
 import { countedRun } from './counted.ts';
 
@@ -977,9 +978,8 @@ async function main(argv: string[]): Promise<number> {
     }
     const capturesDir = flag(argv, '--captures');
     const receipt = await runSurfaceParity({ gut, engines, postgresUrl, keepWork: argv.includes('--keep-work'), workDir: flag(argv, '--work-dir'), capturesDir: capturesDir && resolve(capturesDir), environment });
-    mkdirSync(outDir, { recursive: true });
     const file = join(outDir, `surface-parity-${receipt.generated_at.replace(/[:.]/g, '-')}.json`);
-    writeFileSync(file, `${JSON.stringify({ ...receipt, ...run }, null, 2)}\n`);
+    writeScrubbedJson(file, { ...receipt, ...run });
     for (const l of summaryLines(receipt)) console.log(l);
     console.log(`receipt: ${relative(process.cwd(), file)}`);
     return receipt.summary.verdict === 'byte_exact' ? 0 : receipt.summary.verdict === 'differs' ? 1 : 2;
