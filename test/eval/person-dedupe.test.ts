@@ -1,11 +1,14 @@
 import { describe, expect, test } from 'bun:test';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   FAMILIES, PERSON_DEDUPE_DEFAULT_SEED, deriveGold, generateLedger, ledgerFingerprint, pageKey, parseWrittenPage, renderPage,
   type DesignedPair, type WrittenPage,
 } from '../../eval/generators/person-dedupe-gen.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import {
-  ARMS, SELECTIONS, emailKey, emulateFinder, groupId, isRoleEmail, parseFinderOutput, runPersonDedupe, scoreGroups, strictFold, toFinderOutput, variantFold, verdictOf,
+  ARMS, SELECTIONS, checkFinderCoverage, emailKey, emulateFinder, groupId, isRoleEmail, parseFinderOutput, runPersonDedupe, scoreGroups, strictFold, toFinderOutput, variantFold, verdictOf, writeWorld,
   type Group,
 } from '../../eval/runner/person-dedupe.ts';
 
@@ -209,5 +212,37 @@ describe('person-dedupe scorer', () => {
       score,
       notApplicable: { stale: 'person-dedupe has no time axis: a page belongs to one person for the whole world' },
     });
+  });
+});
+
+describe('real-finder run guards', () => {
+  test('writeWorld refuses a directory that already holds files, and writes into an empty one', () => {
+    const ledger = generateLedger(3, 1);
+    const dir = mkdtempSync(join(tmpdir(), 'pd-world-'));
+    try {
+      writeWorld(ledger, join(dir, 'fresh'));
+      expect(() => writeWorld(generateLedger(4, 1), join(dir, 'fresh'))).toThrow(/not empty/);
+      const used = join(dir, 'used');
+      mkdirSync(used);
+      writeFileSync(join(used, 'stale.md'), 'old world');
+      expect(() => writeWorld(ledger, used)).toThrow(/not empty/);
+      mkdirSync(join(dir, 'empty'));
+      expect(() => writeWorld(ledger, join(dir, 'empty'))).not.toThrow();
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  test('coverage passes only when every source imported every page with no failure', () => {
+    const ledger = generateLedger(3, 1);
+    const per = new Map<string, number>();
+    for (const p of ledger.pages) per.set(p.source, (per.get(p.source) ?? 0) + 1);
+    const ok = [...per].map(([source_id, n]) => ({ status: 'success', source_id, imported: n, unchanged: 0, total_files: n, errors: 0, malformed_skipped: 0, failures: [] as unknown[], skipped: 0, chunks: n, duration_s: 0.1 }));
+    expect(() => checkFinderCoverage(ok, ledger)).not.toThrow();
+    expect(() => checkFinderCoverage(ok.slice(1), ledger)).toThrow(/never saw/);
+    expect(() => checkFinderCoverage([{ ...ok[0], imported: ok[0].imported - 1 }, ...ok.slice(1)], ledger)).toThrow(/missing pages/);
+    expect(() => checkFinderCoverage([{ ...ok[0], errors: 1 }, ...ok.slice(1)], ledger)).toThrow(/errors/);
+    expect(() => checkFinderCoverage([{ ...ok[0], malformed_skipped: 1 }, ...ok.slice(1)], ledger)).toThrow(/malformed/);
+    expect(() => checkFinderCoverage([{ ...ok[0], failures: [{ path: 'x' }] }, ...ok.slice(1)], ledger)).toThrow(/failures/);
+    expect(() => checkFinderCoverage([...ok, ok[0]], ledger)).toThrow(/two import summaries/);
+    expect(() => checkFinderCoverage([...ok, { ...ok[0], source_id: 'elsewhere' }], ledger)).toThrow(/does not have/);
   });
 });

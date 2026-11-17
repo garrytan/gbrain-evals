@@ -25,8 +25,11 @@
  *                        ships; never reported as gbrain.
  *   finder               `--finder-json <file>`: the output of
  *                        `gbrain dedupe --preview --json` on this world
- *                        (written with `--write-world <dir>`), labelled
- *                        `--finder-build <tag or sha>`.
+ *                        (written with `--write-world <dir>` into a new
+ *                        directory), labelled `--finder-build <tag or sha>`,
+ *                        with `--finder-imports <file>` holding the
+ *                        `gbrain import --json` summaries, one per line, so
+ *                        the run fails unless the finder saw every page.
  *
  * A finder-shaped output is scored under two selections: auto-link (kind
  * cross_source and class clean, what automatic linking would join) and
@@ -39,10 +42,10 @@
  * the groups that joined it.
  *
  * Usage: bun eval/runner/person-dedupe.ts [--seed N] [--per-family N] [--output DIR]
- *          [--write-world DIR] [--finder-json FILE --finder-build LABEL] [--json]
+ *          [--write-world DIR] [--finder-json FILE --finder-build LABEL --finder-imports FILE] [--json]
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
   FAMILIES, NICKNAMES, PERSON_DEDUPE_DEFAULT_PER_FAMILY, PERSON_DEDUPE_DEFAULT_SEED, PERSON_DEDUPE_GENERATOR_VERSION,
@@ -480,12 +483,46 @@ export function runPersonDedupe(ledger: Ledger, opts: { finderJson?: unknown; fi
   return arms;
 }
 
+/** Writes the world's pages. Refuses a directory that already has files, so an old world never mixes into a new one. */
 export function writeWorld(ledger: Ledger, dir: string): void {
+  if (existsSync(dir) && readdirSync(dir).length > 0) throw new Error(`person-dedupe: --write-world ${dir} is not empty; write each world into a new directory`);
   for (const p of ledger.pages) {
     const file = join(dir, p.source, 'people', `${p.slug}.md`);
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, renderPage(p));
   }
+}
+
+export interface ImportSummary { status: string; source_id: string; imported: number; unchanged: number; total_files: number; errors: number; malformed_skipped: number; failures: unknown[] }
+
+/**
+ * Checks, from the `gbrain import --json` summaries, that the finder's brain holds every page of the
+ * world: one successful import per source, with every file imported or unchanged and none failed.
+ * Throws otherwise, because a finder that never saw a page can't link it and would score as safe.
+ */
+export function checkFinderCoverage(imports: readonly unknown[], ledger: Ledger): void {
+  const want = new Map<string, number>();
+  for (const p of ledger.pages) want.set(p.source, (want.get(p.source) ?? 0) + 1);
+  const seen = new Set<string>();
+  for (const raw of imports) {
+    const s = raw as ImportSummary;
+    if (!s || typeof s !== 'object' || typeof s.source_id !== 'string') throw new Error('person-dedupe: an import summary has no source_id');
+    const n = want.get(s.source_id);
+    if (n === undefined) throw new Error(`person-dedupe: import summary for source ${s.source_id}, which the world does not have`);
+    if (seen.has(s.source_id)) throw new Error(`person-dedupe: two import summaries for source ${s.source_id}`);
+    seen.add(s.source_id);
+    const problems = [
+      s.status !== 'success' && `status ${s.status}`,
+      s.errors !== 0 && `${s.errors} errors`,
+      s.malformed_skipped !== 0 && `${s.malformed_skipped} malformed pages skipped`,
+      (!Array.isArray(s.failures) || s.failures.length > 0) && 'failures listed',
+      s.total_files !== n && `${s.total_files} files, the world has ${n}`,
+      s.imported + s.unchanged !== n && `${s.imported} imported and ${s.unchanged} unchanged, the world has ${n}`,
+    ].filter(Boolean);
+    if (problems.length) throw new Error(`person-dedupe: the finder's brain is missing pages of source ${s.source_id}: ${problems.join('; ')}`);
+  }
+  const missing = [...want.keys()].filter(src => !seen.has(src));
+  if (missing.length) throw new Error(`person-dedupe: no import summary for source ${missing.join(', ')}; the finder never saw those pages`);
 }
 
 function argValue(argv: readonly string[], flag: string): string | undefined {
@@ -508,6 +545,8 @@ async function main(): Promise<void> {
   const finderFile = argValue(argv, '--finder-json');
   const finderBuild = argValue(argv, '--finder-build');
   if (finderFile && !finderBuild) throw new Error('person-dedupe: --finder-json needs --finder-build <tag or sha>');
+  const importsFile = argValue(argv, '--finder-imports');
+  if (finderFile && !importsFile) throw new Error('person-dedupe: --finder-json needs --finder-imports <file of gbrain import --json summaries, one per line>');
   const startedAt = new Date().toISOString();
 
   const ledger = generateLedger(seed, perFamily);
@@ -515,6 +554,7 @@ async function main(): Promise<void> {
   const worldDir = argValue(argv, '--write-world');
   if (worldDir) { writeWorld(ledger, resolve(worldDir)); log(`world written: ${ledger.pages.length} pages under ${worldDir}/<source>/people/`); }
 
+  if (importsFile) checkFinderCoverage(readFileSync(importsFile, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l)), ledger);
   const arms = runPersonDedupe(ledger, { finderJson: finderFile ? JSON.parse(readFileSync(finderFile, 'utf8')) : undefined, finderBuild });
   const headline = arms.find(a => a.id === 'finder:auto-link') ?? arms.find(a => a.id === 'contract-emulator[arm 1]:auto-link')!;
   const nDiff = ledger.pairs.filter(p => p.label === 'different').length;

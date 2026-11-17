@@ -129,13 +129,15 @@ bun eval/runner/person-dedupe.ts --output eval/reports/person-dedupe
 bun test test/eval/person-dedupe.test.ts
 ```
 
-The run takes about two seconds, uses no key and no network, and writes `eval/reports/person-dedupe/receipt.json` with every arm, every family and the ledger's hash (the generator rebuilds the ledger from the seed). To score gbrain's finder once it ships, write the world, import each source into a fresh brain, and score its output:
+The run takes about two seconds, uses no key and no network, and writes `eval/reports/person-dedupe/receipt.json` with every arm, every family and the ledger's hash (the generator rebuilds the ledger from the seed). To score gbrain's finder, write the world into a new, empty folder (the runner refuses a folder that already has files), import each source into a fresh brain, and score its output together with the import summaries (the runner fails unless every page was imported):
 
 ```sh
-bun eval/runner/person-dedupe.ts --write-world /path/to/world
-# import /path/to/world/work and /path/to/world/home as sources work and home, then:
+bun eval/runner/person-dedupe.ts --write-world /path/to/new-world
+gbrain sources add work --path /path/to/new-world/work && gbrain sources add home --path /path/to/new-world/home
+gbrain import /path/to/new-world/work --source work --no-embed --json > imports.jsonl
+gbrain import /path/to/new-world/home --source home --no-embed --json >> imports.jsonl
 gbrain dedupe --preview --json > finder.json
-bun eval/runner/person-dedupe.ts --finder-json finder.json --finder-build <release tag or commit>
+bun eval/runner/person-dedupe.ts --finder-json finder.json --finder-imports imports.jsonl --finder-build <release tag or commit>
 ```
 
 ## Disclosures
