@@ -534,8 +534,10 @@ contrast no room, as the batch 3 section shows.
     `episodes.jsonl.gz` (every episode, with its answer, cause and usage). In 70 of G3's 1,440 episodes an agent's
     text names a temporary directory on the run's VM, 71 times in all. The published file rewrites each `/tmp/` to
     `<tmp>/`, as this repository's receipt writer does for every receipt, so it passes the machine-path check. Nothing
-    else changed, in G3 or in the other three files: rescoring the published episodes with the runner's own scorer
-    gives scorecards byte-identical to the counted runs'.
+    else changed, in G3 or in the other three files: rescoring the published episodes with the runner's own scorer gives
+    scorecards byte-identical to the counted runs'. For G6, `scorecard.json` holds the scorecards as corrected on
+    2026-11-17 ([correction](#correction-2026-11-17)); the counted originals are under `correction.original_scorecards`,
+    and those are what rescoring the published episodes reproduces.
   - `g2/real-593/`: the counted batch 2 scorecard; `g2/secondary/`: the seven secondary scorecards.
   - `batch3-synthetic-641/`: the synthetic batch 3 scorecard. The real one is the
     [`live-recall-b3` reference](2026-11-10-live-recall-batch3/b3-641-scorecard.md).
