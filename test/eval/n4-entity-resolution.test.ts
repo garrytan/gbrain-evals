@@ -174,6 +174,9 @@ describe('N4 recall markers', () => {
     expect(recallMarkers(facts, unquote)).toEqual(['default:people/a-example', 'team:people/b-example']);
     expect(recallMarkers([plain], undefined)).toEqual(['default:people/a-example']);
     expect(() => recallMarkers(facts, undefined)).toThrow(/unquoteFactText/);
+    let thrown: unknown;
+    try { recallMarkers(facts, undefined); } catch (e) { thrown = e; }
+    expect((thrown as Error).constructor.name).toBe('HarnessError');
   });
 });
 

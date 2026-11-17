@@ -345,6 +345,7 @@ const MARKER = 'n4-marker ';
 
 /** The page keys whose marker facts a `recall` answer returned. A remote read quotes facts (gbrain v0.60.536.0 on), so each fact is read through the build's own unquote. */
 export function recallMarkers(facts: ReadonlyArray<{ fact: string; quoted?: unknown }>, unquote: Unquote | undefined): string[] {
+  if (!unquote && facts.some(f => f.quoted)) throw new HarnessError('recall returned a quote-fenced fact, and this build exports no unquoteFactText (v0.60.536.0 and v0.60.537.0 fence facts without it); measure another build');
   return facts.map(f => storedFactText(f.fact, f.quoted, unquote)).filter(f => f.startsWith(MARKER)).map(f => f.slice(MARKER.length));
 }
 
