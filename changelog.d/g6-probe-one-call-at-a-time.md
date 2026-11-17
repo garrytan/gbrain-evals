@@ -1,1 +1,0 @@
-The G6 out-of-view harness now checks each gold page one at a time before an episode starts. A local caller's check is its own `gbrain call` process on a brain that allows one process at a time, so two checks at once could fail the second and wrongly mark a readable page as out of view. That made `test/eval/predictive-g6.test.ts` fail now and then in CI.
