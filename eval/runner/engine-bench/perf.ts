@@ -645,7 +645,10 @@ async function runArmChild(input: ChildInput) {
     const p = ds.pages[i];
     const [, ms] = await timeOp(() => writePage(code, engine, p.slug, pageMarkdown(p)));
     putMs.push(ms);
-    if ((i + 1) % 10000 === 0) log(`[${input.armId}] imported ${i + 1}`);
+    if ((i + 1) % 5000 === 0) {
+      const last = putMs.slice(-5000);
+      log(`[${input.armId}] imported ${i + 1} in ${((performance.now() - tImport) / 1000).toFixed(0)}s; last 5000 at ${(5000 / (last.reduce((a, b) => a + b, 0) / 1000)).toFixed(1)} pages/s, p50 ${summarize(last).p50_ms.toFixed(1)} ms`);
+    }
   }
   const pagesSec = (performance.now() - tImport) / 1000;
   const tLinks = performance.now();
