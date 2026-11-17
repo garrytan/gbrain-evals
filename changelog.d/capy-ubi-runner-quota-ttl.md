@@ -12,4 +12,5 @@
 - The SOTA loop's window launcher (`eval/runner/sota/ubicloud/run.sh`) launches again through this runner. It records
   each window in flight until its final pull lands, refuses the next launch and fails its teardown check while one is
   outstanding, printing the pull command, and `run.sh pull <window>` stops the window's command, brings the state
-  back once it has exited and destroys the VM.
+  back once it has exited and destroys the VM. It never reaps: while any of its VMs exists, expired or not, it refuses
+  to launch, because an expired one may hold a window's only ledger, so a person pulls it and destroys it by hand.

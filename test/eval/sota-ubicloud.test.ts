@@ -24,7 +24,7 @@ function fakeRunner(name: string, list = 'cat "$(dirname "$0")/vms" 2>/dev/null 
   const root = join(dir, name);
   mkdirSync(root, { recursive: true });
   const fake = join(root, 'fake-ubi.sh');
-  writeFileSync(fake, `#!/usr/bin/env bash\n${ttl ? '# honours UBI_TTL_HOURS\n' : ''}echo "$1" >> "$(dirname "$0")/calls"\ncase "$1" in\n  list) ${list} ;;\n  run) shift; echo "$*" >> "$(dirname "$0")/launches"; ${keep ? 'echo "$2 running" >> "$(dirname "$0")/vms"; ' : ''}exit ${runExit} ;;\n  pull) shift; echo "$*" >> "$(dirname "$0")/pulls"; echo "\${UBI_FINAL_PULL:-unset}" >> "$(dirname "$0")/pull-env" ;;\n  ssh) ${sshExit === 'exec' ? 'HOME="$(dirname "$0")/vmhome" bash -c "$3"' : `exit ${sshExit}`} ;;\n  down) sed -i "/^$2 /d" "$(dirname "$0")/vms" ;;\nesac\n`, { mode: 0o755 });
+  writeFileSync(fake, `#!/usr/bin/env bash\n${ttl ? '# honours UBI_TTL_HOURS\n' : ''}echo "$1" >> "$(dirname "$0")/calls"\ncase "$1" in\n  list) ${list} ;;\n  run) shift; echo "$*" >> "$(dirname "$0")/launches"; echo "UBI_REAP=\${UBI_REAP:-unset}" >> "$(dirname "$0")/run-env"; ${keep ? 'echo "$2 running" >> "$(dirname "$0")/vms"; ' : ''}exit ${runExit} ;;\n  pull) shift; echo "$*" >> "$(dirname "$0")/pulls"; echo "\${UBI_FINAL_PULL:-unset}" >> "$(dirname "$0")/pull-env" ;;\n  ssh) ${sshExit === 'exec' ? 'HOME="$(dirname "$0")/vmhome" bash -c "$3"' : `exit ${sshExit}`} ;;\n  down) sed -i "/^$2 /d" "$(dirname "$0")/vms" ;;\nesac\n`, { mode: 0o755 });
   const home = join(root, 'home');
   const launch = (args: string[], env: Record<string, string> = DUMMIES) => spawnSync('bash', ['eval/runner/sota/ubicloud/run.sh', ...args], { cwd: REPO, env: { PATH: process.env.PATH!, HOME: home, UBI_RUNNER: fake, ...env }, encoding: 'utf8' });
   const launches = () => (existsSync(join(root, 'launches')) ? readFileSync(join(root, 'launches'), 'utf8').trim().split('\n') : []);
@@ -75,11 +75,25 @@ describe('run.sh, with a fake runner', () => {
     expect(f.launches()).toEqual([]);
   });
 
+  test('never reaps: an expired VM of its owner with no in-flight marker here refuses the launch before any run, reap or down, and the run is told not to reap', () => {
+    const f = fakeRunner('expired');
+    writeFileSync(join(f.root, 'vms'), 'ubirun-gbev78-1000000000-sota-abc123-t12 running\n');
+    const r = f.launch(['rehearse', '1']);
+    expect([r.status, r.stderr]).toEqual([2, expect.stringContaining("may hold a window's only ledger, so a person pulls it and destroys it by hand")]);
+    expect(f.launches()).toEqual([]);
+    expect(f.calls().filter(c => c !== 'list')).toEqual([]);
+    expect(readFileSync(join(f.root, 'vms'), 'utf8')).toContain('ubirun-gbev78-1000000000-sota-abc123-t12');
+    writeFileSync(join(f.root, 'vms'), '');
+    expect(f.launch(['rehearse', '1']).status).toBe(0);
+    expect(readFileSync(join(f.root, 'run-env'), 'utf8').trim()).toBe('UBI_REAP=0');
+    expect(f.calls()).not.toContain('reap');
+  });
+
   test('a window whose final pull never landed keeps its in-flight marker: the next launch and the teardown check refuse with the pull command, and pull clears it', () => {
     const f = fakeRunner('in-flight', undefined, true, 253, true);
     const first = f.launch(['oracle-dev', '5']);
     expect(first.status).toBe(253);
-    expect(f.calls()[0]).toBe('reap');
+    expect(f.calls()).not.toContain('reap');
     const marker = join(f.home, '.capy/work/sota-windows/oracle-dev.in-flight');
     const vm = /^vm=(.*)$/m.exec(readFileSync(marker, 'utf8'))?.[1] ?? '';
     expect(vm).toMatch(/^ubirun-gbev78-\d{10}-sota-[0-9a-f]{6}-t12$/);
@@ -90,7 +104,7 @@ describe('run.sh, with a fake runner', () => {
     expect(next.stderr).toContain('final pull never landed');
     expect(next.stderr).toContain('run.sh pull oracle-dev');
     expect(next.stderr).toContain(`pull ${vm} work/oracle-dev ${f.home}/.capy/work/sota-windows`);
-    expect(f.calls().filter(c => c === 'reap')).toHaveLength(1);
+    expect(f.calls()).not.toContain('reap');
     expect(f.launches()).toHaveLength(1);
     const check = f.launch(['check']);
     expect([check.status, check.stderr]).toEqual([1, expect.stringContaining('run.sh pull oracle-dev')]);

@@ -367,28 +367,20 @@ new_name() { echo "$PREFIX-$OWNER-$(date +%s)-$(head -c4 /dev/urandom | od -An -
 valid_name() { [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]]; }
 
 # create_lock / create_unlock: creates from this machine take turns from the quota check to the create answer, so each
-# check sees the VMs made before it. The lock is a pid file opened with noclobber (O_EXCL). A lock whose holder died is
-# moved aside and removed; a waiter that moved aside a lock another waiter had just taken puts it back.
-CREATE_LOCK=""
+# check sees the VMs made before it. The lock is a kernel flock on $STATE_ROOT/create.lock, which the kernel drops when
+# its holder exits however it dies, so the file's contents never matter and a file left behind never blocks a create.
+CREATE_LOCK_FD=""
 create_lock() {
-  local lock="$STATE_ROOT/create.lock" holder
+  command -v flock >/dev/null || die "up: flock (util-linux) is missing, so creates from this machine cannot take turns"
   mkdir -p "$STATE_ROOT"
-  until (set -C; echo $$ >"$lock") 2>/dev/null; do
-    holder=$(cat "$lock" 2>/dev/null || true)
-    if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
-      mv -f "$lock" "$lock.stale.$$" 2>/dev/null || continue
-      [ "$(cat "$lock.stale.$$" 2>/dev/null)" = "$holder" ] || ln "$lock.stale.$$" "$lock" 2>/dev/null || true
-      rm -f "$lock.stale.$$"
-      continue
-    fi
-    sleep 1
-  done
-  CREATE_LOCK=$lock
+  exec {CREATE_LOCK_FD}>>"$STATE_ROOT/create.lock"
+  flock "$CREATE_LOCK_FD" || die "up: could not take the create lock $STATE_ROOT/create.lock"
 }
 create_unlock() {
-  [ -n "$CREATE_LOCK" ] || return 0
-  [ "$(cat "$CREATE_LOCK" 2>/dev/null)" != "$$" ] || rm -f "$CREATE_LOCK"
-  CREATE_LOCK=""
+  [ -n "$CREATE_LOCK_FD" ] || return 0
+  flock -u "$CREATE_LOCK_FD" 2>/dev/null || true
+  exec {CREATE_LOCK_FD}>&-
+  CREATE_LOCK_FD=""
 }
 
 # quota_preflight NAME SIZE: refuse, before any create request, a VM that would take the project past UBI_QUOTA_VCPUS

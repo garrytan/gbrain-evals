@@ -29,7 +29,9 @@
 # VM of owner gbev78 exists or another launch of the window holds its state directory, so the ledger has one writer, and
 # the teardown check runs after every launch. It also refuses to launch through a runner that does not honour
 # UBI_TTL_HOURS, because such a runner puts no lifetime cap on the VMs it creates: each window's VM carries a
-# UBI_TTL_HOURS (default 12) lifetime in its name, and the runner destroys this owner's VMs whose lifetime has ended.
+# UBI_TTL_HOURS (default 12) lifetime in its name. run.sh never reaps (it sets UBI_REAP=0): a gbev78 VM past its
+# lifetime may hold a window's only ledger, so every launch refuses while one exists, expired or not, and a person
+# pulls it and destroys it by hand (or runs UBI_OWNER=gbev78 ubi-runner.sh reap once nothing on it is needed).
 #
 # In flight: before each launch, ~/.capy/work/sota-windows/<window>.in-flight records the VM and the launch time. It is
 # cleared only once the run's final pull of the window's state has landed and the VM is gone (the runner exits with
@@ -43,7 +45,7 @@
 set -euo pipefail
 REPO=$(cd "$(dirname "$0")/../../../.." && pwd)
 UBI=${UBI_RUNNER:-$REPO/scripts/ubicloud/ubi-runner.sh}
-export UBI_OWNER=gbev78 UBI_GC_HOURS=0 UBI_TTL_HOURS=${UBI_TTL_HOURS:-12}
+export UBI_OWNER=gbev78 UBI_GC_HOURS=0 UBI_REAP=0 UBI_TTL_HOURS=${UBI_TTL_HOURS:-12}
 WINDOWS=$HOME/.capy/work/sota-windows
 # in_flight: one "<window> <vm> <launched_at>" line per in-flight marker.
 in_flight() {
@@ -113,8 +115,7 @@ if [ -n "$(in_flight)" ]; then
   in_flight_hint
   exit 2
 fi
-"$UBI" reap >&2 || echo "run.sh: the runner could not reap this owner's expired VMs; the teardown check decides" >&2
-if ! check >&2; then echo "run.sh: refusing to launch until the VM list shows no VM of owner $UBI_OWNER: a launch beside a live one would be a second ledger writer" >&2; exit 2; fi
+if ! check >&2; then echo "run.sh: refusing to launch until the VM list shows no VM of owner $UBI_OWNER: a launch beside a live one would be a second ledger writer, and one past its lifetime may hold a window's only ledger, so a person pulls it and destroys it by hand" >&2; exit 2; fi
 if [ ! -d "$STATE/cache" ]; then
   if [ -n "$seed" ]; then cp -a "$seed" "$STATE/cache"; else mkdir -p "$STATE/cache"; fi
 fi

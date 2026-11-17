@@ -6,7 +6,7 @@
  * (UBICLOUD_API_URL) and a fake ssh, so no test reaches the network or makes a VM.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { chmodSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -165,16 +165,32 @@ describe('ubi-runner.sh vCPU lines', () => {
     expect(a.stderr + b.stderr).toContain('quota preflight refused');
   }, 30_000);
 
-  test('a create lock left by a dead holder is broken once: two launches waiting on it with room for one still make one VM', async () => {
+  test('a create lock file left behind, empty or naming a dead holder, never blocks: three launches with room for one make one VM', async () => {
+    for (const [kind, leftover] of [['empty', ''], ['stale', '2147483646\n']]) {
+      project([['gbev95', 12]]);
+      api.createDelayMs = 500;
+      const state = join(tmp, `${kind}-lock-state`);
+      mkdirSync(state, { recursive: true });
+      writeFileSync(join(state, 'create.lock'), leftover);
+      const runs = await Promise.all([1, 2, 3].map(() => runner(['up'], {}, state)));
+      expect(runs.map(r => r.exit).sort()).toEqual([0, 1, 1]);
+      expect(creates()).toHaveLength(1);
+    }
+  }, 60_000);
+
+  test("the create lock is the kernel's: two launches wait while a live process holds it, and a holder killed with SIGKILL frees it for exactly one create", async () => {
     project([['gbev95', 12]]);
-    api.createDelayMs = 1500;
-    const state = join(tmp, 'stale-lock-state');
+    const state = join(tmp, 'killed-holder-state');
     mkdirSync(state, { recursive: true });
-    writeFileSync(join(state, 'create.lock'), '2147483646\n');
-    const [a, b] = await Promise.all([runner(['up'], {}, state), runner(['up'], {}, state)]);
-    expect([a.exit, b.exit].sort()).toEqual([0, 1]);
+    const holder = Bun.spawn(['bash', '-c', 'exec 9>>"$1/create.lock"; flock 9; echo held; exec sleep 60', '_', state], { stdout: 'pipe', stderr: 'ignore', stdin: 'ignore' });
+    await holder.stdout.getReader().read();
+    const waiting = Promise.all([runner(['up'], {}, state), runner(['up'], {}, state)]);
+    await Bun.sleep(1500);
+    expect(creates()).toEqual([]);
+    holder.kill(9);
+    const runs = await waiting;
+    expect(runs.map(r => r.exit).sort()).toEqual([0, 1]);
     expect(creates()).toHaveLength(1);
-    expect(readdirSync(state).filter(f => f.startsWith('create.lock'))).toEqual([]);
   }, 30_000);
 });
 
