@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.244] - 2026-11-17
+
+Every result in README's comparison table now names a measured no-gbrain number, run on the same tasks with the same reader and judge ([baselines](docs/benchmarks/2026-11-17-readme-baselines/README.md)). gbrain beats plain Postgres hybrid search on LongMemEval recall and answers, attendance and attacker claims, and beats a plain prompt on contradiction finding for cheaper models and on memory pages. It is level with the whole history in the prompt on 500 LongMemEval questions, with BM25 on reworded relationship questions, with plain hybrid on PrecisionMemBench and quoted messages, and on timeline extraction.
+
+Code review now leaves out the raw run data of the README baselines (`docs/benchmarks/2026-11-17-readme-baselines/`: JSON, NDJSON, CSV and compressed receipts, about 12.3 MB). With it in, #474's review diff is 12.8 MB, over the review's 2 MB limit, so its review cannot run; the files stay in the repository, the write-ups and code stay in review, and CI's receipt tests still read every receipt.
+
 ## [0.10.243] - 2026-11-17
 
 ### The nightly check reads gbrain's stable release from its tag at launch
