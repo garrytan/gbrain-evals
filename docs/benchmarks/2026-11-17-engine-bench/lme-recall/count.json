@@ -1,0 +1,12 @@
+{
+  "model": "voyage:voyage-4",
+  "dimensions": 1024,
+  "questions": 500,
+  "texts": 107799,
+  "texts_cached": 107799,
+  "texts_to_embed": 0,
+  "chars_to_embed": 0,
+  "est_tokens_to_embed": 0,
+  "price_per_mtok_usd": 0.06,
+  "est_usd": 0
+}
