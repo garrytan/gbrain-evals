@@ -701,7 +701,7 @@ export class GbrainAdapter implements N14Adapter {
     let engineConfig: Record<string, unknown> = { engine: 'pglite', database_path: opts.dataDir ?? ':memory:' };
     if (opts.rust) {
       a.#rustDir = mkdtempSync(join(tmpdir(), 'n14-rust-'));
-      const opened = await openEvalEngine({ gut, kind: 'rust', databasePath: join(a.#rustDir, 'brain.rust'), initSchema: false });
+      const opened = await openEvalEngine({ gut, kind: 'rust', databasePath: join(a.#rustDir, 'brain.rust') });
       engineConfig = opened.config as unknown as Record<string, unknown>;
       a.#engine = opened.engine as unknown as PGLiteEngineType;
       a.#rawSql = false;
@@ -720,7 +720,7 @@ export class GbrainAdapter implements N14Adapter {
       a.#engine = new PGLiteEngine();
       await a.#engine.connect(opts.dataDir ? { database_path: opts.dataDir } : {});
     }
-    await a.#engine.initSchema();
+    if (!opts.rust) await a.#engine.initSchema();
     for (const [k, v] of Object.entries({ 'search.cache.enabled': 'false', 'search.reranker.enabled': 'false', 'search.expansion': 'false' })) await a.#engine.setConfig(k, v);
     for (const [k, v] of Object.entries(opts.config ?? {})) await a.#engine.setConfig(k, v);
     const logger = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };

@@ -11,7 +11,7 @@ import type { GbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { SliceCell } from '../../eval/runner/lifecycle/slice.ts';
 import { checkEvalEngineArgs } from '../../eval/runner/n1-knowledge-update.ts';
-import { N14_SQL_CHECKS, n14NotApplicable, n14Verdict, parseEngine, type N14Summary } from '../../eval/runner/n14-large-page-fidelity.ts';
+import { GbrainAdapter, N14_SQL_CHECKS, n14NotApplicable, n14Verdict, parseEngine, type N14Summary } from '../../eval/runner/n14-large-page-fidelity.ts';
 import { PGLITE_HTTP_UNSUPPORTED, RUST_HTTP_UNSUPPORTED } from '../../eval/runner/n6-postgres-http.ts';
 import { N6_SQL_CHECKS, presence, seed, type CallOutcome, type Gbrain } from '../../eval/runner/n6-visibility-fuzz.ts';
 import { generateN6World } from '../../eval/generators/n6-visibility-gen.ts';
@@ -123,6 +123,27 @@ describe('N6 raw-SQL checks on rust', () => {
     expect(probeRan).toBe(false);
     expect(na.map(x => x.check)).toEqual([N6_SQL_CHECKS.contradiction_report.check]);
   });
+});
+
+describe('N14 adapter on rust', () => {
+  test('opens through gbrain init --migrate-only and never calls initSchema(), which the Rust engine refuses', async () => {
+    const pinned = resolveGbrainUnderTest(null).root;
+    const root = mkdtempSync(join(tmpdir(), 'n14-rust-'));
+    const p = (sub: string) => JSON.stringify(join(pinned, sub));
+    for (const sub of ['src/core/pglite-engine.ts', 'src/core/operations.ts', 'src/core/ai/gateway.ts', 'src/commands/embed.ts', 'src/commands/export.ts']) {
+      mkdirSync(join(root, sub, '..'), { recursive: true });
+      writeFileSync(join(root, sub), 'export * from ' + p(sub) + ';\n');
+    }
+    mkdirSync(join(root, 'src/core/rust-engine'), { recursive: true });
+    writeFileSync(join(root, 'src/cli.ts'), "import { appendFileSync } from 'node:fs'; import { join } from 'node:path'; appendFileSync(join(import.meta.dir, 'cli-calls.jsonl'), JSON.stringify(process.argv.slice(2)) + '\\n');");
+    writeFileSync(join(root, 'src/core/engine-construct.ts'), 'import { PGLiteEngine } from ' + p('src/core/pglite-engine.ts') + ';\n'
+      + 'export async function constructEngine() { const e = new PGLiteEngine(); const connect = e.connect.bind(e); const init = e.initSchema.bind(e);'
+      + ' e.connect = async c => { await connect({}); await init(); };'
+      + ' e.initSchema = async () => { const err = new Error("schema is managed by gbrain init"); err.code = "engine_capability_missing"; throw err; }; return e; }\n');
+    const a = await GbrainAdapter.open(root, 'native', {} as never, { rust: true });
+    await a.close();
+    expect(readFileSync(join(root, 'src/cli-calls.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l))).toEqual([['init', '--migrate-only', '--non-interactive']]);
+  }, 120_000);
 });
 
 describe('N14 engine selection', () => {
