@@ -2,6 +2,10 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.249] - 2026-11-17
+
+Recorded commands and logs now mask any password a connection URL or a `password=` setting carries, including percent-encoded passwords, passwords or user names holding a `'`, quoted `password=` values, and malformed passwords with a raw `@`, `:` or `/`. One helper, `redactUrlPasswords` in `eval/runner/hermetic-env.ts`, now serves the lifecycle slice's operator log (used by N1 and the other lifecycle runners) and the engine-bench speed receipt. Before, each kept its own pattern that missed those shapes. Tests in `test/eval/redact-url-passwords.test.ts`.
+
 ## [0.10.248] - 2026-11-17
 
 engine-bench gains a correctness stage (`bun eval/runner/engine-bench/correctness.ts`). It runs the keyless gate runners N1, N5, N6 (in process and over HTTP), N12 and N14 once per storage engine, through one shared local pgvector container, and writes one JSON receipt. A check passes on the Rust engine when its verdict is pass and every safety count (stale values served, leaks, lost writes, forgotten claims still served, bytes lost and so on, listed per runner in the file) equals the count on PGLite and Postgres. A count the TypeScript engines themselves get wrong is reported as a gbrain finding, and Rust must then be no worse than the better of the two. Checks that need raw SQL are carried as not applicable with their reason, a runner that cannot run an engine is reported as refused, never as a failure, and without a Rust arm the stage still reports any PGLite and Postgres difference. On gbrain v0.60.735.0, PGLite and Postgres pass every check with identical counts (N6 over HTTP runs on Postgres only), and Rust is refused because the build does not carry it yet. Tests in `test/eval/engine-bench-correctness.test.ts`.
