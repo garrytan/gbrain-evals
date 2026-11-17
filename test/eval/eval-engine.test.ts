@@ -1,17 +1,20 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   EvalEngineUnavailable, cliEngineConfig, evalEngineKind, evalEngineRequested, isCapabilityMissing, openEvalEngine,
-  rawSqlNotApplicable, supportsRawSql,
+  rawSqlNotApplicable, rustAddonRefusal, supportsRawSql,
 } from '../../eval/runner/eval-engine.ts';
 import { resolveGbrainUnderTest, type GbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 
-function fakeGbrain(constructSource: string | null): GbrainUnderTest {
+const RECORDING_CLI = "import { appendFileSync, readFileSync } from 'node:fs'; import { join } from 'node:path'; const home = process.env.GBRAIN_HOME; appendFileSync(join(import.meta.dir, 'cli-calls.jsonl'), JSON.stringify({ argv: process.argv.slice(2), config: JSON.parse(readFileSync(join(home, '.gbrain/config.json'), 'utf8')), keys: Object.keys(process.env).filter(k => /API_KEY/.test(k)) }) + '\\n');";
+
+function fakeGbrain(constructSource: string | null, cliSource = RECORDING_CLI): GbrainUnderTest {
   const root = mkdtempSync(join(tmpdir(), 'eval-engine-'));
   mkdirSync(join(root, 'src/core/rust-engine'), { recursive: true });
   if (constructSource !== null) writeFileSync(join(root, 'src/core/engine-construct.ts'), constructSource);
+  writeFileSync(join(root, 'src/cli.ts'), cliSource);
   return { root, version: '0.0.0-fake', overlay: null };
 }
 
@@ -75,12 +78,40 @@ describe('openEvalEngine', () => {
     expect(err.reason).toBe('addon_unavailable');
     expect(err.message).toMatch(/addon_missing/);
   });
-  test('rust opens through the factory once the build carries it', async () => {
+  test('rust opens through the factory and creates the brain with gbrain init, never initSchema', async () => {
     const gut = fakeGbrain('export async function constructEngine(c) { return { kind: c.engine, seen: null, async connect(x) { this.seen = x; }, async initSchema() { this.init = true; } }; }');
     const { engine, kind, config } = await openEvalEngine({ gut, kind: 'rust', databasePath: '/s.rust' });
     expect(kind).toBe('rust');
     expect(config).toEqual({ engine: 'rust', database_path: '/s.rust' } as never);
-    expect((engine as unknown as { init: boolean }).init).toBe(true);
+    expect((engine as unknown as { init?: boolean }).init).toBeUndefined();
+    const calls = readFileSync(join(gut.root, 'src/cli-calls.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect(calls).toEqual([{ argv: ['init', '--migrate-only', '--non-interactive'], config: { engine: 'rust', database_path: '/s.rust', embedding_disabled: true, schema_pack: 'gbrain-base-v2' }, keys: [] }]);
+  });
+  test('initSchema: false skips gbrain init on rust', async () => {
+    const gut = fakeGbrain('export async function constructEngine(c) { return { kind: c.engine, async connect() {} }; }');
+    await openEvalEngine({ gut, kind: 'rust', databasePath: '/s.rust', initSchema: false });
+    expect(existsSync(join(gut.root, 'src/cli-calls.jsonl'))).toBe(false);
+  });
+  test('gbrain init failing on a rust config refuses, keeping an addon code when the CLI printed one', async () => {
+    const construct = 'export async function constructEngine(c) { return { kind: c.engine, async connect() {} }; }';
+    const missing = fakeGbrain(construct, "console.error('error rust_engine_addon_missing: no addon at path'); process.exit(1);");
+    expect((await openEvalEngine({ gut: missing, kind: 'rust', databasePath: '/s.rust' }).catch(e => e)).reason).toBe('rust_engine_addon_missing');
+    const other = fakeGbrain(construct, "console.error('init: capability schema refused'); process.exit(2);");
+    const err = await openEvalEngine({ gut: other, kind: 'rust', databasePath: '/s.rust' }).catch(e => e);
+    expect(err).toBeInstanceOf(EvalEngineUnavailable);
+    expect(err.reason).toBe('rust_init_failed');
+    expect(err.message).toMatch(/capability schema refused/);
+  });
+  test('rust_engine_addon_missing and rust_engine_addon_mismatch are refusals with their own reasons', async () => {
+    for (const code of ['rust_engine_addon_missing', 'rust_engine_addon_mismatch']) {
+      const atConstruct = fakeGbrain(`export async function constructEngine() { const e = new Error('addon'); e.code = '${code}'; throw e; }`);
+      expect((await openEvalEngine({ gut: atConstruct, kind: 'rust', databasePath: '/s.rust' }).catch(e => e)).reason).toBe(code);
+      const atConnect = fakeGbrain(`export async function constructEngine() { return { kind: 'rust', async connect() { const e = new Error('addon'); e.canonical = '${code}'; throw e; } }; }`);
+      const err = await openEvalEngine({ gut: atConnect, kind: 'rust', databasePath: '/s.rust' }).catch(e => e);
+      expect(err).toBeInstanceOf(EvalEngineUnavailable);
+      expect(err.reason).toBe(code);
+    }
+    expect(rustAddonRefusal(new Error('plain'))).toBeNull();
   });
   test('postgres needs a URL', async () => {
     const err = await openEvalEngine({ gut: resolveGbrainUnderTest(null), kind: 'postgres' }).catch(e => e);

@@ -13,7 +13,8 @@
  * raw SQL reports not_applicable on it (rawSqlNotApplicable) and counts as neither a pass nor a fail.
  */
 import { randomUUID } from 'node:crypto';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { SQL } from 'bun';
@@ -38,7 +39,9 @@ export function evalEngineRequested(env: Record<string, string | undefined> = pr
   return Boolean(env[EVAL_ENGINE_ENV]?.trim());
 }
 
-export type RustUnavailableReason = 'rust_engine_not_in_build' | 'rust_kind_unsupported' | 'addon_unavailable' | 'store_path_missing';
+export type RustUnavailableReason =
+  | 'rust_engine_not_in_build' | 'rust_kind_unsupported' | 'addon_unavailable' | 'rust_engine_addon_missing' | 'rust_engine_addon_mismatch'
+  | 'rust_init_failed' | 'store_path_missing';
 
 export type EvalEngineUnavailableReason = RustUnavailableReason | 'postgres_url_missing' | 'postgres_unreachable' | 'engine_not_supported_by_runner';
 
@@ -77,7 +80,7 @@ export interface OpenEvalEngineOptions {
   databaseUrl?: string;
   /** Postgres pool size; ignored by the embedded engines. */
   poolMax?: number;
-  /** Run initSchema after connect. Defaults to true. */
+  /** Bring the schema up: initSchema after connect on PGLite and Postgres, `gbrain init` before connect on Rust. Defaults to true. */
   initSchema?: boolean;
 }
 
@@ -115,19 +118,62 @@ export async function openEvalEngine(o: OpenEvalEngineOptions): Promise<EvalEngi
   try {
     engine = await constructEngine({ ...config, engine: (kind === 'pglite' ? 'pglite' : kind) } as EngineConfig);
   } catch (e) {
-    if (kind === 'rust') throw new EvalEngineUnavailable(kind, 'rust_kind_unsupported', `gbrain ${o.gut.version} does not construct a rust engine: ${(e as Error).message}`);
+    if (kind === 'rust') throw rustAddonRefusal(e) ?? new EvalEngineUnavailable(kind, 'rust_kind_unsupported', `gbrain ${o.gut.version} does not construct a rust engine: ${(e as Error).message}`);
     throw e;
   }
+  if (kind === 'rust' && o.initSchema !== false) initRustBrain(o.gut, o.databasePath!);
   try {
     await engine.connect(config);
   } catch (e) {
-    if (kind === 'rust' && errorCode(e) === 'engine_unavailable') {
-      throw new EvalEngineUnavailable(kind, 'addon_unavailable', `The Rust engine addon did not load (${String((e as { reason?: unknown }).reason ?? 'no reason given')}): ${(e as Error).message}`);
-    }
+    if (kind === 'rust') throw rustAddonRefusal(e) ?? e;
     throw e;
   }
-  if (o.initSchema !== false) await engine.initSchema();
+  if (kind !== 'rust' && o.initSchema !== false) await engine.initSchema();
   return { kind, engine, config };
+}
+
+const RUST_ADDON_CODES = ['rust_engine_addon_missing', 'rust_engine_addon_mismatch'] as const;
+
+/**
+ * The refusal for a Rust engine whose native addon is absent or built for another ABI: gbrain's
+ * rust_engine_addon_missing and rust_engine_addon_mismatch keep their own reasons, and the older engine_unavailable is
+ * addon_unavailable. Null for any other error. A refusal is never a pass.
+ */
+export function rustAddonRefusal(e: unknown): EvalEngineUnavailable | null {
+  const code = errorCode(e);
+  const detail = (e as Error)?.message ?? String(e);
+  if ((RUST_ADDON_CODES as readonly string[]).includes(code ?? '')) {
+    return new EvalEngineUnavailable('rust', code as RustUnavailableReason, `The Rust engine addon did not load (${code}): ${detail}`);
+  }
+  if (code === 'engine_unavailable') {
+    return new EvalEngineUnavailable('rust', 'addon_unavailable', `The Rust engine addon did not load (${String((e as { reason?: unknown }).reason ?? 'no reason given')}): ${detail}`);
+  }
+  return null;
+}
+
+/**
+ * Create a Rust brain the way a user does: write a rust CLI config and run `gbrain init --migrate-only` through the
+ * gbrain under test. The Rust engine refuses initSchema() (capability `schema`), and `gbrain init` has no rust flag,
+ * so the config is written first, as lifecycle/slice.ts does. It runs before this process opens the store, because a
+ * second process on an open Rust store gets store_locked. The child environment carries no provider key.
+ */
+export function initRustBrain(gut: Pick<GbrainUnderTest, 'root' | 'version'>, databasePath: string): void {
+  const home = mkdtempSync(join(tmpdir(), 'eval-engine-rust-init-'));
+  try {
+    mkdirSync(join(home, '.gbrain'), { recursive: true });
+    const config = { ...cliEngineConfig('rust', { databasePath }), embedding_disabled: true, schema_pack: 'gbrain-base-v2' };
+    writeFileSync(join(home, '.gbrain', 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
+    const env = { PATH: process.env.PATH, HOME: home, GBRAIN_HOME: home, GBRAIN_SKIP_STARTUP_HOOKS: '1', TZ: 'UTC', NO_COLOR: '1' };
+    const r = spawnSync(process.execPath, [join(gut.root, 'src/cli.ts'), 'init', '--migrate-only', '--non-interactive'], { env, cwd: home, encoding: 'utf8', timeout: 300_000 });
+    if (r.status === 0) return;
+    const out = `${r.stderr ?? ''}\n${r.stdout ?? ''}`.trim();
+    const tail = out.split('\n').slice(-6).join(' | ').slice(0, 600);
+    const addon = RUST_ADDON_CODES.find(c => out.includes(c));
+    if (addon) throw new EvalEngineUnavailable('rust', addon, `gbrain init on a rust config: the Rust engine addon did not load (${addon}): ${tail}`);
+    throw new EvalEngineUnavailable('rust', 'rust_init_failed', `gbrain ${gut.version} init --migrate-only on a rust config exited ${r.status ?? r.signal}: ${tail}`);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
 }
 
 function errorCode(e: unknown): string | undefined {

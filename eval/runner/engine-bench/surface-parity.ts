@@ -661,7 +661,9 @@ async function captureEngine(o: EngineRunInput): Promise<EngineCapture> {
     writeFileSync(join(brain.home, '.gbrain', 'config.json'), `${JSON.stringify(brain.config, null, 2)}\n`);
     const userHome = join(o.engineDir, `user-home-${label}`);
     mkdirSync(userHome, { recursive: true });
-    return childEnv(brain.home, userHome);
+    const env = childEnv(brain.home, userHome);
+    if (brain.config.engine === 'rust') await setupStep(`init-${label}`, env, ['init', '--migrate-only', '--non-interactive']);
+    return env;
   };
   const exportMarkdown = async (env: NodeJS.ProcessEnv, phase: string) => {
     const dir = join(o.engineDir, phase);
