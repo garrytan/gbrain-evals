@@ -884,8 +884,10 @@ cmd_run() {
   local start rc=0
   start=$(date +%s)
   log "running on $name (detached; output follows): $*"
-  cmd_detach "$name" "$dest" "$*" || die "could not start the command on $name"
+  # Counted as started before the detach answers: a detach whose answer was lost may have started the command, so the
+  # exit handler stops it and pulls before any teardown.
   RUN_STARTED=1
+  cmd_detach "$name" "$dest" "$*" || die "could not start the command on $name"
   cmd_follow "$name" || rc=$?
   if [ "$rc" = 255 ]; then
     RUN_LOST=1 RUN_KEEP=1
