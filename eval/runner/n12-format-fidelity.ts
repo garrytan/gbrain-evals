@@ -43,7 +43,12 @@
  * miss (origin sut); a failed presence assertion is a harness error and the
  * run is void.
  *
- * Usage: bun eval/runner/n12-format-fidelity.ts [--seed N] [--output <dir>] [--gbrain <checkout>[@ref]] [--json]
+ * Usage: bun eval/runner/n12-format-fidelity.ts [--seed N] [--output <dir>] [--gbrain <checkout>[@ref]] [--json] [--pg-url <admin url>]
+ *
+ * GBRAIN_EVAL_ENGINE=pglite|postgres|rust (engine-bench, eval/runner/eval-engine.ts) opens the attendance stage's
+ * brains through openScratchEvalEngine (postgres: a fresh database per brain through --pg-url or LIFECYCLE_PG_URL).
+ * The receipt then adds `engine` and `not_applicable` (empty: no stage uses raw SQL). An unavailable engine exits
+ * 69 with no receipt. Unset, the runner is unchanged.
  */
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -51,6 +56,10 @@ import { join } from 'node:path';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
+import {
+  EvalEngineUnavailable, evalEngineReceiptFields, openScratchEvalEngine, preflightEvalEngine, refuseEvalEngine, requestedEvalEngine,
+  type EvalEngineKind,
+} from './eval-engine.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { evaluatePromotion, describeOutcome } from './promotion.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
@@ -451,15 +460,20 @@ export async function honestyStage(sut: Sut, world: GeneratedN12, root: string, 
  */
 export const INIT_SCHEMA_PACK = 'gbrain-base-v2';
 
-async function attendanceStage(gut: GbrainUnderTest, world: GeneratedN12, schemaPack: string | null): Promise<{ rows: AttendanceRow[]; presence: PresenceCheck[]; write_errors: string[] }> {
+export interface N12EvalEngine { kind: EvalEngineKind; pgAdminUrl: string }
+
+async function attendanceStage(gut: GbrainUnderTest, world: GeneratedN12, schemaPack: string | null, evalEngine: N12EvalEngine | null = null): Promise<{ rows: AttendanceRow[]; presence: PresenceCheck[]; write_errors: string[] }> {
   const { PGLiteEngine } = await importGbrain<{ PGLiteEngine: new () => { connect(o: object): Promise<void>; initSchema(): Promise<void>; disconnect(): Promise<void>; setConfig(k: string, v: string): Promise<void> } }>(gut, 'src/core/pglite-engine.ts');
   const { operations } = await importGbrain<{ operations: Array<{ name: string; handler(ctx: unknown, p: Record<string, unknown>): Promise<unknown> }> }>(gut, 'src/core/operations.ts');
-  const engine = new PGLiteEngine();
-  await engine.connect({});
-  await engine.initSchema();
+  const scratch = evalEngine ? await openScratchEvalEngine({ gut, kind: evalEngine.kind, label: 'n12att', pgAdminUrl: evalEngine.pgAdminUrl }) : null;
+  const engine = scratch ? scratch.engine as unknown as InstanceType<typeof PGLiteEngine> : new PGLiteEngine();
+  if (!scratch) {
+    await engine.connect({});
+    await engine.initSchema();
+  }
   if (schemaPack) await engine.setConfig('schema_pack', schemaPack);
   const logger = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
-  const ctx = { engine, config: { engine: 'pglite', database_path: ':memory:' }, logger, dryRun: false, remote: false, sourceId: 'default' };
+  const ctx = { engine, config: scratch && scratch.kind !== 'pglite' ? scratch.config : { engine: 'pglite', database_path: ':memory:' }, logger, dryRun: false, remote: false, sourceId: 'default' };
   const op = async (name: string, p: Record<string, unknown>) => {
     const o = operations.find(x => x.name === name);
     if (!o) throw new Error(`gbrain has no operation ${name}`);
@@ -495,7 +509,8 @@ async function attendanceStage(gut: GbrainUnderTest, world: GeneratedN12, schema
     ];
     return { rows, presence, write_errors: writeErrors };
   } finally {
-    await engine.disconnect().catch(() => {});
+    if (scratch) await scratch.close();
+    else await engine.disconnect().catch(() => {});
   }
 }
 
@@ -630,11 +645,11 @@ export interface N12RunResult {
   write_errors: string[];
 }
 
-export async function runN12(opts: { gut: GbrainUnderTest; seed?: number; log?: (s: string) => void }): Promise<N12RunResult> {
+export async function runN12(opts: { gut: GbrainUnderTest; seed?: number; log?: (s: string) => void; evalEngine?: N12EvalEngine | null }): Promise<N12RunResult> {
   return withHermeticEnv('n12', () => runN12Hermetic(opts));
 }
 
-async function runN12Hermetic(opts: { gut: GbrainUnderTest; seed?: number; log?: (s: string) => void }): Promise<N12RunResult> {
+async function runN12Hermetic(opts: { gut: GbrainUnderTest; seed?: number; log?: (s: string) => void; evalEngine?: N12EvalEngine | null }): Promise<N12RunResult> {
   const log = opts.log ?? (() => {});
   const world = generateN12World({ seed: opts.seed ?? N12_DEFAULT_SEED });
   const convs = world.ledger.conversations;
@@ -659,9 +674,9 @@ async function runN12Hermetic(opts: { gut: GbrainUnderTest; seed?: number; log?:
     const gj = renderGenericJson(convs[0], root);
     const gjDetect = sut.detect(gj.path);
     const gjParse = sut.parse(JSON.stringify(JSON.parse(await Bun.file(gj.path).text())), convs[0].turns[0].at.slice(0, 10));
-    const att = await attendanceStage(opts.gut, world, INIT_SCHEMA_PACK);
+    const att = await attendanceStage(opts.gut, world, INIT_SCHEMA_PACK, opts.evalEngine);
     result.attendance = att.rows;
-    result.attendance_legacy_pack = (await attendanceStage(opts.gut, world, null)).rows;
+    result.attendance_legacy_pack = (await attendanceStage(opts.gut, world, null, opts.evalEngine)).rows;
     result.write_errors = att.write_errors;
     result.presence.push(...att.presence);
     const failed = result.presence.filter(p => !p.ok);
@@ -682,6 +697,7 @@ async function runN12Hermetic(opts: { gut: GbrainUnderTest; seed?: number; log?:
     });
     return result;
   } catch (e) {
+    if (e instanceof EvalEngineUnavailable) throw e;
     const msg = `harness: ${errMsg(e)}`;
     result.acc.error('run', 'harness', msg);
     result.harnessError = msg;
@@ -711,8 +727,11 @@ async function main(): Promise<void> {
   const startedAt = new Date().toISOString();
   const t0 = Date.now();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
+  const evalKind = requestedEvalEngine();
+  if (evalKind) await preflightEvalEngine(gut, evalKind);
+  const evalEngine = evalKind ? { kind: evalKind, pgAdminUrl: argValue(argv, '--pg-url') ?? process.env.LIFECYCLE_PG_URL ?? 'postgres://postgres@127.0.0.1:55432/postgres' } : null;
   log(`# BrainBench N12: ingestion format fidelity (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
-  const r = await runN12({ gut, seed, log });
+  const r = await runN12({ gut, seed, log, evalEngine });
   const a = r.acc.summary();
   const s = r.summary;
   const receipt: Receipt = {
@@ -731,7 +750,7 @@ async function main(): Promise<void> {
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
     resolved_config: {
-      engine: 'pglite-in-memory (attendance stage only)',
+      engine: evalKind ? `${evalKind} through openScratchEvalEngine (GBRAIN_EVAL_ENGINE; attendance stage only)` : 'pglite-in-memory (attendance stage only)',
       schema_pack: `${INIT_SCHEMA_PACK} (what gbrain init writes); exploratory arm with schema_pack unset`,
       decide: DECIDE_OFF,
       caller: 'in-process gbrain internals and operation handlers with OperationContext { remote: false, sourceId: default }',
@@ -758,6 +777,7 @@ async function main(): Promise<void> {
       attendance_legacy_pack: { schema_pack: 'unset (falls back to bundled gbrain-base)', ...scoreAttendance(r.attendance_legacy_pack), rows: r.attendance_legacy_pack },
       harness_error: r.harnessError,
     },
+    ...evalEngineReceiptFields(evalKind),
   };
   // Verdict is the preregistered safety contracts only (amendment 1, plan section 8); quality floors are reported beside it.
   const rules = registryEntry('N12')?.promotion;
@@ -787,5 +807,9 @@ async function main(): Promise<void> {
 }
 
 if (import.meta.main) {
-  main().catch(e => { console.error(e); process.exit(3); });
+  main().catch(e => {
+    if (e instanceof EvalEngineUnavailable) refuseEvalEngine(e, 'N12 format fidelity');
+    console.error(e);
+    process.exit(3);
+  });
 }

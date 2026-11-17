@@ -29,10 +29,12 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SQL } from 'bun';
+import { cliEngineConfig } from '../eval-engine.ts';
 import { strippedKeysIn } from '../hermetic-env.ts';
 import { CliDriver, McpHttpClient, McpHttpDriver, McpStdioDriver, runCli, type CallResult, type Driver, type RunEnv } from './drivers.ts';
 
-export type Engine = 'pglite' | 'postgres';
+/** `rust` is selected only through GBRAIN_EVAL_ENGINE (eval/runner/eval-engine.ts); ENGINES stays the default matrix. */
+export type Engine = 'pglite' | 'postgres' | 'rust';
 export type Iface = 'cli' | 'mcp-stdio' | 'mcp-http';
 export const ENGINES: readonly Engine[] = ['pglite', 'postgres'];
 export const IFACES: readonly Iface[] = ['cli', 'mcp-stdio', 'mcp-http'];
@@ -177,6 +179,7 @@ export class SliceCell {
     if (this.childKeys.length) throw new Error(`child environment carries provider keys: ${this.childKeys.join(', ')}`);
     const dbArgs: string[] = [];
     if (engine === 'pglite') dbArgs.push('--pglite', '--path', join(this.home, 'brain.pglite'));
+    else if (engine === 'rust') this.writeRustConfig();
     else {
       this.pgDb = `sl_${this.id.replace(/[^a-z0-9]/g, '_')}_${process.pid}`;
       const admin = new SQL(this.opts.pgAdminUrl);
@@ -187,7 +190,9 @@ export class SliceCell {
       u.pathname = `/${this.pgDb}`;
       dbArgs.push('--url', u.toString());
     }
-    const init = await this.operator('init', ['init', ...dbArgs, '--no-embedding', '--non-interactive']);
+    const init = engine === 'rust'
+      ? await this.operator('init', ['init', '--migrate-only', '--non-interactive'])
+      : await this.operator('init', ['init', ...dbArgs, '--no-embedding', '--non-interactive']);
     if (init.code !== 0) throw new Error(`init failed: ${this.operatorLog.at(-1)!.tail}`);
 
     for (const name of ['vault', ...(this.opts.extraSources ?? [])]) {
@@ -233,6 +238,18 @@ export class SliceCell {
     this.primary = new RecordingDriver(inner, this.calls, 'primary');
     await this.primary.start();
     if (inner instanceof McpStdioDriver || inner instanceof McpHttpDriver) this.serverVersion = inner.serverVersion;
+  }
+
+  /**
+   * `gbrain init` keeps its PGLite default and has no Rust flag (gbrain RUST_ENGINE.md, "Engine selection"), so a rust
+   * cell writes the CLI config itself: the engine and store path from cliEngineConfig plus the two keys
+   * `init --no-embedding` writes for a fresh brain. `init --migrate-only` then brings the schema up on that engine.
+   */
+  private writeRustConfig(): void {
+    const dir = join(this.home, '.gbrain');
+    mkdirSync(dir, { recursive: true });
+    const config = { ...cliEngineConfig('rust', { databasePath: join(this.home, 'brain.rust') }), embedding_disabled: true, schema_pack: 'gbrain-base-v2' };
+    writeFileSync(join(dir, 'config.json'), JSON.stringify(config, null, 2) + '\n');
   }
 
   stderrTail(): string[] {
