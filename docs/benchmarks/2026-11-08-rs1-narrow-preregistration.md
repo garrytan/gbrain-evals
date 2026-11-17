@@ -1084,9 +1084,11 @@ Each is incomplete because claude-haiku-5-5 refused prompts about it:
   both runs, and so both abstention items of each hold `validator_error`. `validate.ts` doesn't record stop reasons,
   so that these were refusals is an inference from the candidate check.
 
-Under the code before this change, a chat with a prompt Haiku refuses could never be kept: a refusal doesn't change on
-a rerun, and `validate.ts` asks the same window again without regrouping it. That held five of the nine chats the third
-mint finished. The stop line for those ten slots tripped, and GBEV-3 chose this change over narrowing the set.
+Under the code before this change, a refusal held a chat back when it hit a support prompt, a batched window past the
+regroup limit, or a window in `validate.ts`: a refusal doesn't change on a rerun, and `validate.ts` asks the same window
+again without regrouping it. A refused single-candidate prompt failed only its candidate, which is how `rs1-007` was
+kept after Haiku refused one of its windows. That held five of the nine chats the third mint finished. The stop line for
+those ten slots tripped, and GBEV-3 chose this change over narrowing the set.
 
 **Why Haiku refuses.** Anthropic documents `stop_reason: refusal` as a decline by a safety classifier, names its policy
 area in `stop_details.category` (cyber, bio, frontier_llm, reasoning_extraction or general_harms) and says benign work
@@ -1105,11 +1107,19 @@ and its reply counts in Haiku's place, under Haiku's id. If the fallback refuses
 - in `validate.ts`, a window fails both selected abstention items on `refusal`, so the conversation is regenerated as for
   any failed item, and dropped at the floor after its third selection.
 
-So no refusal leaves a conversation incomplete any longer. A reply the fallback gives is cached with the fallback's id
-beside it, so a rerun reuses it and doesn't ask Haiku again. Both reports name the fallback and count its usable and
-unusable replies (`fallback_answers`, `fallback_unusable`), and the published validation counts include them. Each
-unusable reply keeps its stop reason and, for Anthropic, `stop_details.category`, never text. A refusal by
-gemini-3.8-flash is handled as before.
+A fallback reply that ends in a refusal counts as a refusal, and any partial text before it is discarded, as Anthropic's
+docs advise. So a refusal by claude-haiku-5-5 no longer leaves a conversation incomplete, except a batched window that
+both refuse past the regroup limit, as before. A refusal by gemini-3.8-flash is handled as before. A usable reply the
+fallback gives is cached with the fallback's id beside it, so a rerun reuses it and doesn't ask Haiku again. A prompt
+both refuse isn't cached, so a rerun asks both again and could decide differently; the custodian acts on the first
+report that decides a conversation. A conversation that fails on a double refusal at its third selection is dropped at
+the floor, so its items now count toward `validate.ts`'s stop share; before, it stayed incomplete and outside it.
+
+Both reports name the fallback and count its usable and unusable replies (`fallback_answers`, `fallback_unusable`). They
+also count those replies by the `stop_details.category` of the Haiku refusal that sent each prompt there
+(`fallback_category_<category>`, with `none` when the refusal had no stop details). The published validation counts
+include them. The candidate report also keeps each unusable reply's stop reason and, for Anthropic, its category, never
+text; `validate.ts`'s report records only each item's gate (`refusal` or `validator_error`).
 
 **Why claude-sonnet-5-5.** The preregistration's rule is two validators from different families. The fallback answers
 in place of the Anthropic validator and is in the same family, so that rule holds unchanged, the Anthropic row of the
@@ -1126,23 +1136,34 @@ batched windows and two single-candidate windows, from `rs1-013`, `rs1-019` and 
 ended with `end_turn`, no refusal category, and a reply in the shape the prompt asks for. No answer was kept, so the
 probe says nothing about whether any item passes.
 
-**What it removes.** Under the code before this change, a chat could be kept only if claude-haiku-5-5 would read every
-prompt about it. claude-haiku-5-5 is also gbrain's extraction model, so the kept set was filtered toward chats that
+**What it removes.** Under the code before this change, a chat could be kept only if claude-haiku-5-5 would read its
+support prompts, its batched windows past the regroup limit and every `validate.ts` window about its selected
+abstention items. claude-haiku-5-5 is also gbrain's extraction model, so the kept set was filtered toward chats that
 gbrain's own extraction model doesn't refuse: a survivorship filter that could favour gbrain. With the fallback those
 chats stay in the set, and how gbrain handles them is measured instead of filtered out. Whether gbrain's extraction
 refuses on them isn't measured here.
 
 **Slots already minted.** The five held slots are validated again from their committed artifacts. No slot is minted
-again and no selection is drawn again: `rs1-012` and `rs1-014` keep their selections and the cached replies of their 18
-passing items, and `rs1-013`, `rs1-019` and `rs1-020` go through the candidate check, selection and `validate.ts` as any slot
-does. An incomplete slot has no decision yet, so deciding it replaces no result. The kept set is still the first N_final
-slots that pass validation, in slot order, so a held slot that passes counts ahead of later slots. Kept slots don't
-change: their selected items had no refused prompt, and a finished selection isn't redone. `rs1-017` stays unminted.
+again: `rs1-012` and `rs1-014` keep their selections and the cached replies of their 18 passing items, and `rs1-013`,
+`rs1-019` and `rs1-020` go through the candidate check, their first selection and `validate.ts` as any slot does. If an
+abstention item of `rs1-012` or `rs1-014` now fails, `validate.ts` calls for a regeneration, as for any failed item, and
+that new selection waits for the next mint window. An incomplete slot has no decision yet, so deciding it replaces no
+result. The kept set is still the first N_final slots that pass validation, in slot order, so a held slot that passes
+counts ahead of later slots. `rs1-017` stays unminted.
 
-**Code.** Validation runs from `7c53fa3fe962a50da864831fde45ea9607bd9f06` or a later commit on the results branch, and the custodian
-records the commit each pass ran. At `7c53fa3f`:
-- `validate.ts` has SHA-256 `677a2a1492f9700ce34cffbd35cbd3f82354d05f84e2d0c068415b73d22d1646`;
-- `validate-candidates.ts` has `f778e30243c67cd49d17a5bc39740a2193351b88966614009c96c376a5c81dbb`;
+Kept slots keep their selections, which aren't redrawn, and their `validate.ts` replies, which are cached. The candidate
+check runs on the whole set, so it asks again any prompt about a kept slot that Haiku refused before (`rs1-007`'s
+regrouped window is one), and that slot's candidate entries can change, but not its selection. A kept slot's decision
+could still change in one way: `validate.ts`'s duplicate checks compare each chat and question with those of earlier
+slots, so a held slot that now completes is compared ahead of the kept slots after it. After revalidation the custodian
+checks that every kept slot is still kept with the same items, and if one isn't, nothing is counted until a dated
+amendment decides it.
+
+**Code.** Validation runs from `f58f87fffef5107a17f6ceec61b324c005418891` or a later commit on the results branch, and the
+custodian records the commit each pass ran. `7c53fa3f` added the fallback, and `f58f87ff` discards a fallback reply that
+ends in a refusal and counts the fallback's replies by Haiku's refusal category. At `f58f87ff`:
+- `validate.ts` has SHA-256 `afb07bd67888afd254befcb79f6015d1a33af627044e884075171547429e242d`;
+- `validate-candidates.ts` has `627f65d18355a2151673067fd05ffd38d6cef4e3645fb6013ee88f991c605af0`;
 - `probe-fallback.ts` keeps `28bde987270feb97925b3b521a944e1bb29cb434b741e5f29845ca492a522728`;
 - `mint-lanes.ts`, `mint.sh` and `rs1_mint.py` keep `c2ae8331…`, `dfc833dd…` and `261889ad…`.
 

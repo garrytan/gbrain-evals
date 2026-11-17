@@ -65,8 +65,9 @@ This records what each gbrain-evals release changed and what its measurements me
 - **A fallback validator for Haiku's refusals.** claude-haiku-5-5 refused some validator prompts in the third mint, and a
   refusal doesn't change on a rerun, so five of the nine new chats could never finish validation. validate.ts and
   validate-candidates.ts now send a prompt Haiku refuses to claude-sonnet-5-5, whose reply counts in Haiku's place, and
-  when it refuses too the item fails on the `refusal` gate instead of leaving the conversation incomplete. Fallback
-  replies are cached with the fallback's id and counted in both reports. This is validate.ts's first change since the
+  when it refuses too the item fails on the `refusal` gate instead of leaving the conversation incomplete. A
+  fallback reply that ends in a refusal counts as a refusal. Usable fallback replies are cached with the fallback's id,
+  and both reports count the fallback's replies, also by the category of Haiku's refusal. This is validate.ts's first change since the
   freeze. Beforehand, `eval/custody/rs1/probe-fallback.ts` sent six refused prompts to the fallback and kept only how each
   reply ended: all six were answered.
 - **Records.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` gains its amendments, and
