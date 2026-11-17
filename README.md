@@ -180,7 +180,7 @@ compare against.
 23. A passage copied word for word is what full-text search matches, so both sit at the ceiling. Plain hybrid's one
     miss is a question whose long run of dashes breaks Postgres's query parser, the bug this row's gbrain change
     fixed. gbrain's strict-recall record gives counts only, so that comparison is unpaired; every placement of its
-    four misses gives p ≤ 0.0015.
+    four misses gives p ≤ 0.00154.
 
 Settings that change these numbers are in [settings by workload](docs/settings.md). Two matter most: keep autocut off
 for questions that need several conversations (451 against 384 of 470), and leave query expansion off, since it adds

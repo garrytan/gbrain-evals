@@ -48,7 +48,7 @@ The probe is the one in the [verbatim-probe preregistration](../../2026-10-09-ve
 The verbatim verdict file holds counts only, with no per-question records, so these rows are **unpaired**. Two consequences:
 
 - **Probe:** gbrain found every target, so the pairing is determined anyway: one discordant question, the dash overflow (`36580ce8`), and no measurable difference (p = 1).
-- **Strict recall@10:** gbrain's four misses aren't named. Every possible placement of them gives a **gbrain win**: between 16 and 20 questions only gbrain got, and between 0 and 4 only plain hybrid got, with exact McNemar p from 3.1e-5 to 0.0015.
+- **Strict recall@10:** gbrain's four misses aren't named. Every possible placement of them gives a **gbrain win**: between 16 and 20 questions only gbrain got, and between 0 and 4 only plain hybrid got, with exact McNemar p from 3.1e-5 to 0.00154.
 
 **Why null on the probe?** The probe asks for a passage copied word for word, which keyword search matches almost by definition. Both systems are at the ceiling, so there's no headroom left to separate them.
 
