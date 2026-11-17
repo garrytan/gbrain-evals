@@ -30,7 +30,7 @@ import { appendFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SQL } from 'bun';
 import { cliEngineConfig } from '../eval-engine.ts';
-import { strippedKeysIn } from '../hermetic-env.ts';
+import { redactUrlPasswords, strippedKeysIn } from '../hermetic-env.ts';
 import { CliDriver, McpHttpClient, McpHttpDriver, McpStdioDriver, runCli, type CallResult, type Driver, type RunEnv } from './drivers.ts';
 
 /** `rust` is selected only through GBRAIN_EVAL_ENGINE (eval/runner/eval-engine.ts); ENGINES stays the default matrix. */
@@ -62,7 +62,7 @@ function git(dir: string, args: string[]) {
   execFileSync('git', ['-C', dir, '-c', 'user.name=slice-eval', '-c', 'user.email=slice-eval@example.invalid', ...args], { stdio: 'ignore' });
 }
 
-const redact = (t: string) => t.replace(/gbrain_cs_[0-9a-f]+/g, 'gbrain_cs_<redacted>').replace(/(postgres(?:ql)?:\/\/[^:/@\s]+):[^@\s]+@/g, '$1:<redacted>@');
+const redact = (t: string) => redactUrlPasswords(t.replace(/gbrain_cs_[0-9a-f]+/g, 'gbrain_cs_<redacted>'), '<redacted>');
 
 /** Wraps a driver so every call is recorded. */
 class RecordingDriver implements Driver {
