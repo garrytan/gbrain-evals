@@ -66,7 +66,23 @@ describe('G6 plan and scoring', () => {
       try { await Bun.sleep(5); return JSON.stringify({ slug: args.slug }); } finally { inFlight--; }
     } };
     const gold = tasks[hidden].gold;
-    expect(await probeReachable(arm, gold)).toEqual(Object.fromEntries(gold.map(s => [s, true])));
+    expect(await probeReachable(arm, gold)).toEqual({ observed: Object.fromEntries(gold.map(s => [s, true])), errors: [] });
+  });
+
+  test('only gbrain\'s page_not_found answer is out of view; a lock timeout is a harness error and the episode scores harness_error', async () => {
+    const [first, second] = tasks[hidden].gold;
+    const answers: Record<string, string> = {
+      [first]: `Error: ${JSON.stringify({ error: 'page_not_found', code: 'page_not_found', message: `Page not found: ${first}` }, null, 2)}`,
+      [second]: 'Error: GBrain: Timed out waiting for PGLite data-dir lock at <tmp>/brain.pglite.lock. Retry after the holder finishes.',
+    };
+    const probe = await probeReachable({ call: async (_n, args) => answers[String(args.slug)] }, [first, second]);
+    expect(probe.observed).toEqual({ [first]: false, [second]: true });
+    expect(probe.errors).toHaveLength(1);
+    expect(probe.errors[0]).toStartWith(`${second}: Error: GBrain: Timed out waiting for PGLite`);
+    const task = g6Tasks(world, { caller: 'local', reachable: probe.observed })[hidden];
+    expect(task.out_of_view.local).toEqual([first]);
+    const row = scoreOutOfViewEpisode({ world, task, caller: 'local', model: 'm', trial: 0, calls: [], final: null, usd: 0, stop: 'harness_error' });
+    expect(row).toMatchObject({ verdict: 'invalid', cause: 'harness_error', out_of_view: [first], success: false });
   });
 });
 
