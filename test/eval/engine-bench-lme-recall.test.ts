@@ -23,12 +23,11 @@ const FILLER = [
 ];
 
 /** A tiny LongMemEval-shaped dataset: each question has one evidence session among filler, plus one abstention question. */
-function writeDataset(): string {
-  const facts = [
-    { id: 'q1', type: 'single-session-user', question: 'What colour did I paint my bicycle?', fact: 'The colour I chose to paint my bicycle was turquoise.' },
-    { id: 'q2', type: 'single-session-user', question: 'Which marathon did I sign up for?', fact: 'Which marathon did I sign up for? The Rotterdam marathon in April.' },
-    { id: 'q3_abs', type: 'single-session-user', question: 'What is the name of my pet iguana?', fact: null },
-  ];
+function writeDataset(facts: { id: string; type: string; question: string; fact: string | null }[] = [
+  { id: 'q1', type: 'single-session-user', question: 'What colour did I paint my bicycle?', fact: 'The colour I chose to paint my bicycle was turquoise.' },
+  { id: 'q2', type: 'single-session-user', question: 'Which marathon did I sign up for?', fact: 'Which marathon did I sign up for? The Rotterdam marathon in April.' },
+  { id: 'q3_abs', type: 'single-session-user', question: 'What is the name of my pet iguana?', fact: null },
+], name = 'lme-mini.json'): string {
   const questions = facts.map(f => {
     const sessions = FILLER.map((text, i) => [{ role: 'user', content: text }, { role: 'assistant', content: 'Noted, thanks for sharing (' + i + ').' }]);
     const ids = FILLER.map((_, i) => 'sharegpt_' + f.id + '_' + i);
@@ -42,7 +41,7 @@ function writeDataset(): string {
       haystack_session_ids: ids, haystack_sessions: sessions, answer_session_ids: f.fact ? ['answer_' + f.id + '_1'] : [],
     };
   });
-  const path = join(work, 'lme-mini.json');
+  const path = join(work, name);
   writeFileSync(path, JSON.stringify(questions));
   return path;
 }
@@ -113,6 +112,10 @@ describe('per-question comparison', () => {
     expect(armAgreement(r, 'keyword', ['pglite', 'postgres', 'rust'])).toMatchObject({ n_questions: 1, identical_top5_share: 1 });
     expect(armAgreement(r, 'keyword', ['pglite', 'postgres'])).toMatchObject({ n_questions: 2, identical_top5_share: 1 });
     expect(armAgreement([], 'keyword', ['pglite']).identical_top5_share).toBeNull();
+  });
+  test('agreement counts the questions where every engine returned nothing', () => {
+    const r = [row('pglite', 'x', [], 0), row('postgres', 'x', [], 0), row('pglite', 'y', ['s1'], 1), row('postgres', 'y', ['s1'], 1), row('pglite', 'z', [], 0), row('postgres', 'z', ['s2'], 0)];
+    expect(armAgreement(r, 'keyword', ['pglite', 'postgres'])).toMatchObject({ n_questions: 3, identical_top5_share: 2 / 3, n_all_empty: 1 });
   });
 });
 
@@ -191,6 +194,13 @@ describe('runLmeRecall', () => {
     expect(r.dataset).toMatchObject({ selected: 3, abstention_selected: 1, matches_published_sha256: false });
     expect(r.search_config).toEqual({ 'search.mode': 'balanced', 'search.reranker.enabled': 'false', 'search.autocut': 'false' });
     expect(r.comparisons).toEqual([]);
+  }, 120_000);
+
+  test('keyword arm searches as a keyless brain does: a question with a word no session holds still finds the evidence', async () => {
+    const anyWord = writeDataset([{ id: 'q4', type: 'single-session-user', question: 'Which city did I run the marathon in last spring?', fact: 'I ran the Rotterdam marathon in April.' }], 'lme-any-word.json');
+    const r = await runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: anyWord, arms: ['keyword'], log: quiet });
+    expect(r.rows[0]!.arms.keyword!.retrieved).toContain('answer_q4_1');
+    expect(r.engines[0]!.recall.keyword).toEqual({ recall_all_at_5: 1, recall_any_at_5: 1, n_scored: 1 });
   }, 120_000);
 
   test('a build that carries the rust engine runs it through openEvalEngine and lands in the paired comparison', async () => {

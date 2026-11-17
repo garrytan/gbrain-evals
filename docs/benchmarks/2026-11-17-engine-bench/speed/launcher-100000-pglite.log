@@ -1,8 +1,8 @@
 ubi-runner: reap: no expired VMs of owner gbev98
-ubi-runner: creating eu-central-h1/ubirun-gbev98-1794926729-b0db3dd8-t5 (standard-16)
-ubi-runner: ubirun-gbev98-1794926729-b0db3dd8-t5 carries a 5h TTL: this owner's next up or reap destroys it once that ends; if this process dies first: scripts/ubicloud/ubi-runner.sh down ubirun-gbev98-1794926729-b0db3dd8-t5
-ubi-runner: ready: ubirun-gbev98-1794926729-b0db3dd8-t5 (188.40.197.198)
-ubi-runner: synced <repo> -> ubirun-gbev98-1794926729-b0db3dd8-t5:work/gbrain-evals
+ubi-runner: creating eu-central-h1/<vm> (standard-16)
+ubi-runner: <vm> carries a 5h TTL: this owner's next up or reap destroys it once that ends; if this process dies first: scripts/ubicloud/ubi-runner.sh down <vm>
+ubi-runner: ready: <vm> (<ip>)
+ubi-runner: synced <repo> -> <vm>:work/gbrain-evals
 ubi-runner: running setup engine-bench-setup.sh
 Running kernel seems to be up-to-date.
 Restarting services...
@@ -13,7 +13,7 @@ No VM guests are running outdated hypervisor (qemu) binaries on this host.
 Resolving dependencies
 Resolved, downloaded and extracted [1]
 setup ok: 16 vCPU, 62 GB, bun 1.4.4, gbrain stable
-ubi-runner: running on ubirun-gbev98-1794926729-b0db3dd8-t5 (detached; output follows): export PATH=$HOME/.bun/bin:$PATH; mkdir -p out; timeout 13500 bun eval/runner/engine-bench/perf.ts --dev --scale 100000 --engines pglite --cold-reps 1 --gbrain $HOME/gbrain@v0.60.734.0 --out out > out/run.log 2>&1; tail -40 out/run.log
+ubi-runner: running on <vm> (detached; output follows): export PATH=$HOME/.bun/bin:$PATH; mkdir -p out; timeout 13500 bun eval/runner/engine-bench/perf.ts --dev --scale 100000 --engines pglite --cold-reps 1 --gbrain $HOME/gbrain@v0.60.734.0 --out out > out/run.log 2>&1; tail -40 out/run.log
 == PGLite ==
 [pglite] dataset {"pages":100000,"base_pages":240,"filler_pages":99760,"links":200013,"timeline":301638,"quality_queries":71,"probes":400} fingerprint 11095ed0ac6b
 [pglite] importing 100000 pages
@@ -27,6 +27,6 @@ ubi-runner: running on ubirun-gbev98-1794926729-b0db3dd8-t5 (detached; output fo
 [pglite] imported 40000 in 10132s; last 5000 at 1.8 pages/s, p50 563.5 ms
 [pglite] imported 45000 in 13430s; last 5000 at 1.5 pages/s, p50 658.6 ms
 ubi-runner: command exited 0 after 13516s
-ubi-runner: destroy requested: eu-central-h1/ubirun-gbev98-1794926729-b0db3dd8-t5
-ubi-runner: destroyed eu-central-h1/ubirun-gbev98-1794926729-b0db3dd8-t5
+ubi-runner: destroy requested: eu-central-h1/<vm>
+ubi-runner: destroyed eu-central-h1/<vm>
 EXIT=0
