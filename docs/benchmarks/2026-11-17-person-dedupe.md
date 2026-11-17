@@ -2,7 +2,7 @@
 
 Date: 2026-11-17. Category `person-dedupe` (registry alias N4D), report-only. Runner [eval/runner/person-dedupe.ts](../../eval/runner/person-dedupe.ts), world generator [eval/generators/person-dedupe-gen.ts](../../eval/generators/person-dedupe-gen.ts), receipt [2026-11-17-person-dedupe/receipt.json](2026-11-17-person-dedupe/receipt.json).
 
-- **We learned that "one shared email plus exactly the same name" links different people whenever the address is shared.** A team alias, a family email or a household address that only two same-named people carry looks exactly like one person's own address. You should not let an email make an automatic link on its own name match. On this bench, the documented rule links 120 of 400 different-people pairs (30.0%, 95% interval 25.7% to 34.7%).
+- **We learned that "one shared email plus exactly the same name" links different people whenever the address is shared.** A team alias, a family email or a household address that only two same-named people carry looks exactly like one person's own address. You should not let an email make an automatic link on its own name match. On this bench, that rule as first approved (arm 1) links 120 of 400 different-people pairs (30.0%, 95% interval 25.7% to 34.7%). The finder contract's current `clean` rule adds a veto on a disagreeing LinkedIn or GitHub and the union check (closest here to arm 4 with the union check) and still links 52 of 400 (13.0%, interval 10.1% to 16.7%), all through shared team, family, household and no-role addresses.
 - **We learned that a role-word list helps but can't finish the job, and a union check is needed whatever rule you pick.** Refusing role and household words (team, support, family and so on) still leaves addresses like `thesatos7@` or `bluebirds@`. A page that carries two people's ids joins them through two separate links; checking the union of linked groups before linking removes every such case here. Linking automatically only on a shared LinkedIn or GitHub, with the union check, links no different people (0 of 400, interval 0% to 1.0%) and finds 48 of 280 real duplicates; its email matches wait on a confirm list where 52 of 128 designed pairs are different people. Letting emails link with role words refused, a veto on a disagreeing LinkedIn or GitHub and the union check links 26 of 400 (6.5%, interval 4.5% to 9.4%) and finds 111 to 124 of 280.
 - **These are stress rates on a world built from hard cases, measured on a stand-in, not on gbrain.** gbrain's duplicate finder (`gbrain dedupe --preview --json`) is not in a release yet. These numbers come from a reimplementation of its published rules, scored by the same code that will score the finder. How often each case occurs in a real contact list is not measured, so none of these is a field rate.
 
@@ -48,7 +48,7 @@ Key coverage cycles by instance: a third of instances have emails only, a third 
 
 | arm | rule for `clean` |
 |---|---|
-| 1 | documented rule: one shared key value that only the group carries, the same strict-folded name, one page per source |
+| 1 | approved rule as first written: one shared key value that only the group carries, the same strict-folded name, one page per source |
 | 2 | arm 1, but an email whose local part has a role or household word never makes `clean` |
 | 2b | key-type split: a shared LinkedIn or GitHub plus the same name links; an email also needs a shared LinkedIn or GitHub or the same employer; role emails never; no disagreeing LinkedIn or GitHub |
 | 3 | arm 1, and the pages also share a value of a second key type |
@@ -57,6 +57,8 @@ Key coverage cycles by instance: a third of instances have emails only, a third 
 | 6 | arm 5, but a role email still counts when every page with an address at its domain has the same name |
 | 7 | only a shared LinkedIn or GitHub plus the same name links, with the veto and the union check; an email never links on its own and goes to a confirm list an owner approves |
 | + union | clean groups that share a page are checked as one union: one page per source, and every pair shares a key; a union that fails drops to `likely` |
+
+The contract's current `clean` rule is the approved rule plus the veto on a disagreeing key and the union check (its rulings 1 and 2), which is closest to arm 4 with the union check.
 
 **Metric.** A system's groups are closed transitively, because links chain: if A is linked to B and B to C, A and C count as merged. The headline is the share of designed different-people pairs that end up merged, with a Wilson 95% interval. Recall is the share of designed same-person pairs merged. Each finder-shaped output is scored at two tiers: the automatic tier (`cross_source` and `clean`) and everything the finder proposes (`clean`, `likely` and `weak`; `conflict` is a review list and never a merge).
 
@@ -72,8 +74,8 @@ Seed 20261117, generator version 1, ledger `14877e8e396c`. Intervals are Wilson 
 | 1 + union | 20.0% (80/400; 16.4 to 24.2) | 44.3% (124/280; 38.6 to 50.1) | same as arm 1 | same as arm 1 | team, family, household, no-role alias (20 each) |
 | 2 | 20.0% (80/400; 16.4 to 24.2) | 46.8% (131/280; 41.0 to 52.6) | same as arm 1 | same as arm 1 | household 20, no-role alias 20, bridge 40 |
 | 2 + union | 10.0% (40/400; 7.4 to 13.3) | 39.6% (111/280; 34.1 to 45.5) | same as arm 1 | same as arm 1 | household 20, no-role alias 20 |
-| 2b | 13.2% (53/400; 10.3 to 16.9) | 24.3% (68/280; 19.6 to 29.6) | 49.2% (197/400; 44.4 to 54.1) | 63.2% (177/280; 57.4 to 68.6) | no-role alias 13, bridge 40 |
-| 2b + union | 3.2% (13/400; 1.9 to 5.5) | 17.1% (48/280; 13.2 to 22.0) | same as arm 2b | same as arm 2b | no-role alias 13 |
+| 2b | 13.3% (53/400; 10.3 to 16.9) | 24.3% (68/280; 19.6 to 29.6) | 49.3% (197/400; 44.4 to 54.1) | 63.2% (177/280; 57.4 to 68.6) | no-role alias 13, bridge 40 |
+| 2b + union | 3.3% (13/400; 1.9 to 5.5) | 17.1% (48/280; 13.2 to 22.0) | same as arm 2b | same as arm 2b | no-role alias 13 |
 | 3 | 0.0% (0/400; 0.0 to 1.0) | 14.6% (41/280; 11.0 to 19.3) | same as arm 1 | same as arm 1 | none |
 | 3 + union | 0.0% (0/400; 0.0 to 1.0) | 14.6% (41/280; 11.0 to 19.3) | same as arm 1 | same as arm 1 | none |
 | 4 | 23.0% (92/400; 19.1 to 27.4) | 51.4% (144/280; 45.6 to 57.2) | same as arm 2b | same as arm 2b | 13 in each of the four shared-address families, bridge 40 |
@@ -88,7 +90,7 @@ Seed 20261117, generator version 1, ledger `14877e8e396c`. Intervals are Wilson 
 
 What drives the numbers:
 
-- **The documented rule already keeps apart** namesakes whose team address is on five pages (a conflict) or six (ignored as crowded), Jr suffixes, placeholder emails, assistants, shared mailboxes, lookalike names and the chain.
+- **The approved rule already keeps apart** namesakes whose team address is on five pages (a conflict) or six (ignored as crowded), Jr suffixes, placeholder emails, assistants, shared mailboxes, lookalike names and the chain.
 - **A word list catches only addresses with words on it.** Arm 2 removes the team and family cases and nothing else; household addresses and team aliases without a listed word stay. It also costs the one-person studio's `hello@` (13 pairs), which arm 6 gives back by treating a domain with one name on it as that person's own.
 - **The bridge adds two false merges per instance under every arm except 3 and 7**, because each of its two links passes on its own. The union check removes all 40 and gives up the bridge's true pair (20 recall pairs).
 - **Arm 4's effect is set by key coverage.** It removes exactly the instances where both namesakes carry a LinkedIn, 7 of every 20 here.
@@ -116,6 +118,7 @@ Never treat two different emails as a disagreement: one person often has several
 ## Limits
 
 - The finder stand-in follows the published contract, which marks some rules as specified rather than tested. Where the contract left a choice, the runner says which it took (for example, a `weak` group is the whole same-name set across sources). The real finder may differ, and its numbers replace these when it ships.
+- The stand-in departs from the contract in two places. A group with a disagreeing LinkedIn or GitHub becomes `conflict` here, where the contract makes it `likely`, so the proposed-tier trim from 260 to 197 and the confirm list's 52 of 128 depend on that choice. And a role or household word anywhere in an email's local part counts (`team-sato3@`, `lee.family7@`), where the contract's `role_address` tag matches only the whole local part, so the gains of arms 2, 2b, 5 and 6 would be smaller under the tag.
 - The family mix, key coverage and employer coverage are chosen to stress the rules. The rates say which rule fails on which case, not how often a real brain would see the failure.
 - The world has no aliases, phone numbers, declared ids, X handles, dates, slug-shape cases or one-word pages.
 

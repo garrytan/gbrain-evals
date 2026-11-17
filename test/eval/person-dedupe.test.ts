@@ -5,7 +5,7 @@ import {
 } from '../../eval/generators/person-dedupe-gen.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import {
-  ARMS, emailKey, emulateFinder, groupId, isRoleEmail, parseFinderOutput, runPersonDedupe, scoreGroups, strictFold, toFinderOutput, variantFold, verdictOf,
+  ARMS, SELECTIONS, emailKey, emulateFinder, groupId, isRoleEmail, parseFinderOutput, runPersonDedupe, scoreGroups, strictFold, toFinderOutput, variantFold, verdictOf,
   type Group,
 } from '../../eval/runner/person-dedupe.ts';
 
@@ -143,6 +143,15 @@ describe('finder output parser', () => {
   });
   test('group ids follow the contract rule', () => {
     expect(groupId('cross_source', ['source-a:alice-example', 'source-b:alice-example'])).toBe('dedupe/4614d2e6ef83ae17');
+  });
+  test('the confirm list holds cross-source likely groups held by a shared email, and nothing else', () => {
+    const groups = parseFinderOutput(toFinderOutput([
+      { members: ['home:a', 'work:a'], kind: 'cross_source', class: 'likely', rules: ['shared_key:email'] },
+      { members: ['home:a', 'work:a'], kind: 'cross_source', class: 'likely', rules: ['shared_key:linkedin'] },
+      { members: ['home:a', 'work:a'], kind: 'cross_source', class: 'clean', rules: ['shared_key:email'] },
+    ]), known);
+    expect(groups.filter(SELECTIONS['confirm-list']).map(g => g.rules)).toEqual([['shared_key/shared_key/email']]);
+    expect(groups.filter(SELECTIONS['auto-link+confirm-list']).map(g => g.class)).toEqual(['likely', 'clean']);
   });
 });
 
