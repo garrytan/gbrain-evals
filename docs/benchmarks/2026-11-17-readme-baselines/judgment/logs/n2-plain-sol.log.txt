@@ -1,0 +1,15 @@
+[budget] n2-judge-replay-plain-openai-gpt-6.1-sol: estimated cost $1.00; ledger /home/user/.capy/work/gbev97/ledger.sqlite
+[w9] openai:gpt-6.1-sol: 50/741
+[w9] openai:gpt-6.1-sol: 100/741
+[w9] openai:gpt-6.1-sol: 150/741
+[w9] openai:gpt-6.1-sol: 200/741
+[w9] openai:gpt-6.1-sol: 250/741
+[w9] openai:gpt-6.1-sol: 300/741
+[w9] openai:gpt-6.1-sol: 350/741
+[w9] openai:gpt-6.1-sol: 400/741
+[w9] openai:gpt-6.1-sol: 450/741
+[w9] openai:gpt-6.1-sol: 500/741
+[w9] openai:gpt-6.1-sol: 550/741
+[w9] openai:gpt-6.1-sol: 600/741
+[w9] openai:gpt-6.1-sol: 650/741
+[w9] openai:gpt-6.1-sol: 700/741

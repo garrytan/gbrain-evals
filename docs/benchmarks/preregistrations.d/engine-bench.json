@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "engine-bench",
+      "preregistration": "docs/benchmarks/2026-11-17-engine-bench-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-11-17-engine-bench/**",
+        "docs/benchmarks/2026-11-17-engine-bench.md"
+      ]
+    }
+  ]
+}

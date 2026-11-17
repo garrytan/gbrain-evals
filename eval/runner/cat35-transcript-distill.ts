@@ -14,6 +14,10 @@
  * the dream lane's output (--lanes none scores only that lane). The folder is
  * treated as hostile (readExternalDocs), the receipt records every file's
  * sha256 in external_lane, and such a run is never publishable.
+ * --external-writer-receipt FILE names the receipt of this repository's
+ * plain-baseline.ts writer: when every document's sha256 matches it, the
+ * receipt records the lane as a matched no-gbrain baseline (external_lane.
+ * matched_baseline: writer model, prompt and inputs) instead of an unknown source.
  *
  * Run:
  *   bun eval/runner/cat35-transcript-distill.ts --budget-usd 5              # BPRE smoke (default): 2 transcripts, pre-flight $3.24
@@ -162,6 +166,8 @@ interface Opts {
   lanes: BuiltinLane[];
   /** --external-lane NAME --external-dir DIR; dir is the resolved real path. */
   externalLane: { name: string; dir: string } | null;
+  /** --external-writer-receipt FILE: plain-baseline.ts's receipt for the external documents. */
+  externalWriterReceipt: string | null;
   transcripts: string[] | null;
   judgeCalibration: boolean;
   /** Optional explicit annotation file after --judge-calibration. */
@@ -218,6 +224,24 @@ export const EXTERNAL_PROVENANCE_NOTE =
   'The harness read these documents from --external-dir as they were and has no record of how they were made: ' +
   'which system, version, model, prompt or inputs produced them, or whether that system saw the answer keys. ' +
   'This lane\'s scores are only as trustworthy as the documents, so a run with an external lane is never publishable.';
+export const MATCHED_BASELINE_NOTE =
+  'These documents were written by this repository\'s plain-baseline.ts writer, and every document\'s sha256 matches the writer ' +
+  'receipt summarized in matched_baseline, which names the model, prompt and inputs. They are a no-gbrain baseline, not gbrain output.';
+
+/** The matched-baseline record for documents whose every sha256 matches the writer receipt's; throws on any mismatch. */
+export function matchedBaselineRecord(
+  receipt: { kind?: string; model?: string; instruction?: string; instruction_sha256?: string; max_tokens?: number; sampling?: string; gbrain_evals?: unknown; files?: Array<{ transcript_id: string; sha256: string | null }> },
+  files: ExternalDocs['files'],
+  receiptSha256: string,
+) {
+  if (receipt.kind !== 'plain-baseline-cat35-write') throw new Error(`writer receipt kind is ${receipt.kind}, not plain-baseline-cat35-write`);
+  const written = new Map((receipt.files ?? []).filter((f) => f.sha256).map((f) => [f.transcript_id, f.sha256]));
+  const mismatched = files.filter((f) => written.get(f.transcript_id) !== f.sha256).map((f) => f.transcript_id);
+  if (mismatched.length) throw new Error(`writer receipt does not match ${mismatched.length} documents (first ${mismatched[0]})`);
+  if (written.size !== files.length) throw new Error(`writer receipt lists ${written.size} written documents, the folder holds ${files.length}`);
+  return { writer_receipt_sha256: receiptSha256, writer: receipt.kind, model: receipt.model, instruction: receipt.instruction, instruction_sha256: receipt.instruction_sha256,
+    max_tokens: receipt.max_tokens, sampling: receipt.sampling, gbrain_evals: receipt.gbrain_evals, documents_matched: files.length };
+}
 
 /**
  * The prompt around one judge call's document or conversation: system prompt, tool schema, gold
@@ -398,7 +422,7 @@ function parseOpts(): Opts {
     lanes.push(l);
   }
   let externalLane: Opts['externalLane'] = null;
-  const unknownExternal = a.find((x) => x.startsWith('--external-') && x !== '--external-lane' && x !== '--external-dir');
+  const unknownExternal = a.find((x) => x.startsWith('--external-') && x !== '--external-lane' && x !== '--external-dir' && x !== '--external-writer-receipt');
   if (unknownExternal) refuse(`${unknownExternal}: write --external-lane NAME --external-dir DIR, each value after a space`);
   if (a.includes('--external-lane') || a.includes('--external-dir')) {
     const name = get('--external-lane');
@@ -417,12 +441,15 @@ function parseOpts(): Opts {
   } else if (noBuiltinLanes) {
     refuse('--lanes none needs --external-lane NAME --external-dir DIR');
   }
+  const externalWriterReceipt = get('--external-writer-receipt') ?? null;
+  if (externalWriterReceipt !== null && !externalLane) refuse('--external-writer-receipt goes with --external-lane NAME --external-dir DIR');
   return {
     full: process.env.CAT35_FULL === '1',
     limit: get('--limit') ? Number(get('--limit')) : null,
     json: a.includes('--json'),
     lanes,
     externalLane,
+    externalWriterReceipt,
     transcripts: get('--transcripts') ? get('--transcripts')!.split(',').map((s) => s.trim()) : null,
     judgeCalibration: a.includes('--judge-calibration'),
     judgeCalibrationPath:
@@ -883,6 +910,15 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       return setupError(`--external-dir has no <transcript_id>.md for any of the ${fixtures.length} selected transcripts`);
     }
   }
+  let matchedBaseline: ReturnType<typeof matchedBaselineRecord> | null = null;
+  if (opts.externalWriterReceipt && externalDocs) {
+    try {
+      const raw = readFileSync(opts.externalWriterReceipt);
+      matchedBaseline = matchedBaselineRecord(JSON.parse(raw.toString('utf8')), externalDocs.files, sha256(raw));
+    } catch (error) {
+      return setupError(`--external-writer-receipt: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
   const externalLaneRecord = opts.externalLane && externalDocs
     ? {
         name: opts.externalLane.name,
@@ -890,7 +926,8 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         max_bytes: EXTERNAL_DOC_MAX_BYTES,
         files: externalDocs.files,
         missing: externalDocs.missing,
-        provenance: EXTERNAL_PROVENANCE_NOTE,
+        provenance: matchedBaseline ? MATCHED_BASELINE_NOTE : EXTERNAL_PROVENANCE_NOTE,
+        ...(matchedBaseline ? { matched_baseline: matchedBaseline } : {}),
       }
     : null;
   // Mode integrity: 'full' is publication-eligible and therefore requires the
@@ -1942,7 +1979,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   if (usabAgg.total) err(`usability checklist: ${usabAgg.satisfied}/${usabAgg.total} (${((usabAgg.satisfied / usabAgg.total) * 100).toFixed(0)}%)`);
   err(`emission: ${emission.emitted}/${emission.expected_high} expected-high produced pages`);
   if (externalLaneRecord) {
-    err(`external lane ${externalLaneRecord.name}: ${externalLaneRecord.files.length} documents (sha256 in the receipt), ${externalLaneRecord.files.reduce((n, f) => n + f.claims, 0)} gradable claims, ${externalLaneRecord.missing.length} missing, judge_failed_rate ${((externalJudgeFailedRate ?? 0) * 100).toFixed(1)}%; not publishable, the harness has no record of how they were made`);
+    err(`external lane ${externalLaneRecord.name}: ${externalLaneRecord.files.length} documents (sha256 in the receipt), ${externalLaneRecord.files.reduce((n, f) => n + f.claims, 0)} gradable claims, ${externalLaneRecord.missing.length} missing, judge_failed_rate ${((externalJudgeFailedRate ?? 0) * 100).toFixed(1)}%; ${'matched_baseline' in externalLaneRecord ? 'a matched no-gbrain baseline (writer receipt in external_lane.matched_baseline); not publishable as a gbrain result' : 'not publishable, the harness has no record of how they were made'}`);
   }
   err(`judge_failed_rate: ${(judgeFailedRate * 100).toFixed(1)}%  cost: $${totalCost.toFixed(2)} (judges+facts; dream-lane spend not surfaced)${external ? `, external lane $${externalCost.toFixed(2)}` : ''}  wall: ${receipt.wall_seconds}s`);
   if (deltas) {

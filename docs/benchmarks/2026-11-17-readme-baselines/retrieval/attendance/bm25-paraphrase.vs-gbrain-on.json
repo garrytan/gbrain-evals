@@ -1,0 +1,325 @@
+{
+  "gbrain_receipt": "docs/benchmarks/2026-10-06-attendance-world/n9-hermetic-world-v1-attendees.json",
+  "gbrain_pin": "github:garrytan/gbrain#c5fb0201d1960a0a5a81c35d77718311b03154b7",
+  "ingestion_orders_match": true,
+  "gbrain_arm": "on",
+  "runs": 150,
+  "questions": 50,
+  "mismatches": [],
+  "baseline_recall_at_5": 0.23799999999999996,
+  "gbrain_recall_at_5": 0.26,
+  "runs_gbrain_better": 25,
+  "runs_baseline_better": 21,
+  "questions_gbrain_better": 9,
+  "questions_baseline_better": 7,
+  "questions_same": 34,
+  "sign_test_p": 0.803619384765625,
+  "mean_diff_gbrain_minus_baseline": 0.021999999999999992,
+  "ci95_bootstrap_questions": [
+    -0.07666666666666667,
+    0.11933333333333333
+  ],
+  "classification": "no measurable difference",
+  "per_question": [
+    {
+      "query_id": "q-0001-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0002-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0003-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0004-p",
+      "baseline": 0.5,
+      "gbrain": 0,
+      "diff": -0.5
+    },
+    {
+      "query_id": "q-0005-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0006-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0007-p",
+      "baseline": 0.5,
+      "gbrain": 0,
+      "diff": -0.5
+    },
+    {
+      "query_id": "q-0008-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0009-p",
+      "baseline": 1,
+      "gbrain": 0,
+      "diff": -1
+    },
+    {
+      "query_id": "q-0010-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0011-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0012-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0013-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0014-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0015-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0016-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0017-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0018-p",
+      "baseline": 0.20000000000000004,
+      "gbrain": 0,
+      "diff": -0.20000000000000004
+    },
+    {
+      "query_id": "q-0019-p",
+      "baseline": 0.20000000000000004,
+      "gbrain": 0,
+      "diff": -0.20000000000000004
+    },
+    {
+      "query_id": "q-0020-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0021-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0022-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0023-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0024-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0025-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0026-p",
+      "baseline": 0,
+      "gbrain": 0.5,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0027-p",
+      "baseline": 0,
+      "gbrain": 0.5,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0028-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0029-p",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0030-p",
+      "baseline": 0,
+      "gbrain": 0.3333333333333333,
+      "diff": 0.3333333333333333
+    },
+    {
+      "query_id": "q-0031-p",
+      "baseline": 1,
+      "gbrain": 0,
+      "diff": -1
+    },
+    {
+      "query_id": "q-0032-p",
+      "baseline": 0.5,
+      "gbrain": 0.5,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0033-p",
+      "baseline": 0,
+      "gbrain": 0.5,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0034-p",
+      "baseline": 0.5,
+      "gbrain": 0.5,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0035-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0036-p",
+      "baseline": 0.5,
+      "gbrain": 0.5,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0037-p",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0038-p",
+      "baseline": 0.5,
+      "gbrain": 0,
+      "diff": -0.5
+    },
+    {
+      "query_id": "q-0039-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0040-p",
+      "baseline": 0,
+      "gbrain": 0,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0041-p",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0042-p",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0043-p",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0044-p",
+      "baseline": 0,
+      "gbrain": 0.16666666666666666,
+      "diff": 0.16666666666666666
+    },
+    {
+      "query_id": "q-0045-p",
+      "baseline": 0,
+      "gbrain": 0.5,
+      "diff": 0.5
+    },
+    {
+      "query_id": "q-0046-p",
+      "baseline": 1,
+      "gbrain": 1,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0047-p",
+      "baseline": 0.5,
+      "gbrain": 0.5,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0048-p",
+      "baseline": 0,
+      "gbrain": 1,
+      "diff": 1
+    },
+    {
+      "query_id": "q-0049-p",
+      "baseline": 0.5,
+      "gbrain": 0.5,
+      "diff": 0
+    },
+    {
+      "query_id": "q-0050-p",
+      "baseline": 0.5,
+      "gbrain": 1,
+      "diff": 0.5
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "run_config_hash": "d6f0b77c74a9b080a482d4cfa0df1035d3e111907a8750a49a04504fcb6a4690",
+  "benchmark": "precisionmembench",
+  "contract": "PrecisionMemBench upstream contract",
+  "system": {
+    "system": "plain-hybrid",
+    "embedding": {
+      "mode": "real",
+      "model": "openai:text-embedding-3-large",
+      "dims": 1536
+    }
+  }
+}

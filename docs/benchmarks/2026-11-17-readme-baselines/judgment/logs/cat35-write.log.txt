@@ -1,0 +1,43 @@
+[budget] plain-baseline-cat35-write: estimated cost $1.00; ledger /home/user/.capy/work/gbev97/ledger.sqlite
+[plain-cat35] coding-reflection-03: 338 tokens
+[plain-cat35] coding-reflection-02: 501 tokens
+[plain-cat35] coding-reflection-01: 589 tokens
+[plain-cat35] coding-reflection-04: 849 tokens
+[plain-cat35] startup-ideation-03: 377 tokens
+[plain-cat35] startup-ideation-02: 492 tokens
+[plain-cat35] startup-ideation-01: 757 tokens
+[plain-cat35] people-deal-01: 428 tokens
+[plain-cat35] people-deal-02: 706 tokens
+[plain-cat35] startup-ideation-04: 926 tokens
+[plain-cat35] people-deal-03: 648 tokens
+[plain-cat35] mixed-routine-signal-01: 234 tokens
+[plain-cat35] mixed-routine-signal-02: 380 tokens
+[plain-cat35] mixed-routine-signal-03: 404 tokens
+[plain-cat35] emotional-processing-01: 379 tokens
+[plain-cat35] emotional-processing-02: 435 tokens
+[plain-cat35] mixed-routine-signal-04: 860 tokens
+[plain-cat35] people-deal-04: 1811 tokens
+[plain-cat35] emotional-processing-03: 416 tokens
+[plain-cat35] pure-routine-01: 446 tokens
+[plain-cat35] pure-routine-02: 488 tokens
+[plain-cat35] pure-routine-03: 530 tokens
+[plain-cat35] emotional-processing-04: 966 tokens
+[plain-cat35] pure-routine-04: 1014 tokens
+{
+ "written": 24,
+ "errors": 0,
+ "cost": {
+  "usd": 0.417273,
+  "input_tokens": 64221,
+  "output_tokens": 14974,
+  "basis": "budget ledger plain-baseline-cat35-write-2026-11-17T07-40-38-412Z-660e8a91: 24 paid requests, 0 charged at their reservation because usage was unavailable",
+  "ledger": "/home/user/.capy/work/gbev97/ledger.sqlite",
+  "program_cap_usd": 25,
+  "overshoot_usd": 0,
+  "event_loop_lag_ms": {
+   "p50": 0,
+   "p99": 0,
+   "max": 2.8
+  }
+ }
+}

@@ -46,6 +46,8 @@ export const BG1_SLOTS = 48;
 export const BG1_CONVERSATIONS: readonly string[] = Array.from({ length: BG1_SLOTS }, (_, i) => `bg1-${String(i + 1).padStart(3, '0')}`);
 /** The three public dev worlds (stage 1). */
 export const BG1_DEV_CONVERSATIONS: readonly string[] = ['bg1-dev-01', 'bg1-dev-02', 'bg1-dev-03'];
+/** The 17 extra public dev worlds of BG1's dev loop (GST-2854), a list of their own beside the stage 1 three. */
+export const BG1_DEV_EXTRA_CONVERSATIONS: readonly string[] = Array.from({ length: 17 }, (_, i) => `bg1-dev-${String(i + 4).padStart(2, '0')}`);
 /** Kept worlds per launch unit; wave A (the internal pilot) is the first BG1_WAVE_A kept worlds. */
 export const BG1_KEPT_UNITS = 6;
 export const BG1_WAVE_A = 12;

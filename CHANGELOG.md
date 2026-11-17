@@ -2,6 +2,60 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.246] - 2026-11-17
+
+### The secrets check accepts episode ids in published correction records
+
+- The secrets check that runs before a push now accepts G6 episode ids such as `g6:particle-1:oov-7-p012:local:1` in the
+  `key` fields of correction records under `docs/benchmarks/predictive-measures/`. The entry covers only values shaped
+  like an episode id in `correction-*.json` files there, so any other value is still checked.
+
+engine-bench preregistration ([docs/benchmarks/2026-11-17-engine-bench-preregistration.md](docs/benchmarks/2026-11-17-engine-bench-preregistration.md)). Phase 1 asks whether gbrain's Rust storage engine works like PGLite and Postgres at a named build: the same correctness counts on six keyless checks, the same CLI JSON, MCP and markdown bytes, and LongMemEval-S recall_all@5 within two points, with a verdict of works, works with named gaps, or doesn't work yet. It runs when gbrain's maintainers name a build that serves import and search and passes gbrain's parity suite, with no deadline. Phase 2, speed for the default-on decision, keeps its margins and is marked not yet run.
+
+Corrected three G6 local episodes in the [predictive measures results](docs/benchmarks/2026-11-10-predictive-measures.md#correction-2026-11-17) that were scored as answering without their gold pages because the harness checked two pages at the same time. Rescored from the committed log, G6 local success is 100% for Claude Opus 5.5 (was 99.5%) and 98.0% for particle-1 (was 97.0%), and the local Opus − particle-1 difference is +2.0 points (was +2.5), still no measurable difference. No verdict changes ([corrections](docs/corrections.md)).
+
+## [0.10.245] - 2026-11-17
+
+The G6 out-of-view harness now checks each gold page one at a time before an episode starts. A local caller's check is its own `gbrain call` process on a brain that allows one process at a time, so two checks at once could fail the second and wrongly mark a readable page as out of view. That made `test/eval/predictive-g6.test.ts` fail now and then in CI.
+
+## [0.10.244] - 2026-11-17
+
+Every result in README's comparison table now names a measured no-gbrain number, run on the same tasks with the same reader and judge ([baselines](docs/benchmarks/2026-11-17-readme-baselines/README.md)). gbrain beats plain Postgres hybrid search on LongMemEval recall and answers, attendance and attacker claims, and beats a plain prompt on contradiction finding for cheaper models and on memory pages. It is level with the whole history in the prompt on 500 LongMemEval questions, with BM25 on reworded relationship questions, with plain hybrid on PrecisionMemBench and quoted messages, and on timeline extraction.
+
+Code review now leaves out the raw run data of the README baselines (`docs/benchmarks/2026-11-17-readme-baselines/`: JSON, NDJSON, CSV and compressed receipts, about 12.3 MB). With it in, #474's review diff is 12.8 MB, over the review's 2 MB limit, so its review cannot run; the files stay in the repository, the write-ups and code stay in review, and CI's receipt tests still read every receipt.
+
+## [0.10.243] - 2026-11-17
+
+### The nightly check reads gbrain's stable release from its tag at launch
+
+- **What changed.** `--ref stable` in [the nightly gbrain check](docs/nightly.md) now runs the commit that gbrain's
+  `stable` tag points to when the night starts, read from the gbrain clone's remote with `git ls-remote` and fetched
+  if the clone lacks it. Before, the commit was written into `eval/runner/nightly/run.ts` (v0.60.717.0) and had to be
+  bumped by hand each time the tag moved; on 2026-11-17 the tag pointed to v0.60.733.0.
+- **Where it fails.** A night whose remote can't be reached, has no `stable` tag or can't serve the commit doesn't
+  start: the runner exits 1 with the reason. It never falls back to an older commit or to the clone's own `stable` tag,
+  which a plain `git fetch` doesn't move.
+- **What it records.** `night.json` gains a `stable` field with the remote, the tag object when the tag is annotated,
+  and when it was read. The stable night's report names them under its title, and master's section against stable now
+  names the stable commit and its version. `--resume` keeps the commit the night started on.
+
+## [0.10.242] - 2026-11-17
+
+- **BG1 dev loop: 17 more public dev worlds, as a list of their own.** `bg1-dev-04` to `bg1-dev-20` join stage 1's three dev worlds, from public seeds like them, with their plans and gold under `eval/data/changing-facts-v1/dev/worlds` and template fixtures for keyless tests. They are planned with the gold-audit fixes the sealed worlds carry (a retraction always says the plan is not happening, and no history question asks about a slot with a change scheduled after the world end); stage 1's three, their files and `eval/decisions/splits/bg1-dev.json` are unchanged, and a bg1-dev load with no world list still reads only the three. `eval/custody/bg1/mint.sh --dev --worlds <ids>` renders the extra worlds. `bun eval/runner/bg1/dev-loop.ts run --worlds extra` (or `dev20`, or ids) scores gbrain on them; `run --system ext-memory-bank` or `ext-extract-first` runs a comparator's stage 1 cell on extra worlds, on the wall clock within 14 days of the world end as stage 1 ran them, and `baselines --extra <memory-bank run>,<extract-first run>` turns those runs into a second comparator cache that `score` reads beside stage 1's. `why --extra` puts the comparators' contexts beside gbrain's on the extra worlds. `run` now refuses a world listed twice and checks `--vm-size` before it writes anything.
+
+### Code review skips the generated data of BG1's 17 extra dev worlds
+
+- **What changed.** The code review that runs before a pull request is marked ready now leaves out the generated plans,
+  questions and template fixtures of BG1's extra dev worlds, `bg1-dev-04` to `bg1-dev-20`, under
+  `eval/data/changing-facts-v1/dev/worlds` and `eval/data/changing-facts-v1/fixtures/worlds`: about 6.8 MB of JSON that
+  `eval/generators/changing-facts-gen.ts` writes. With them in, the pull request that adds those worlds has a 7.4 MB review
+  diff, over the review's 2 MB limit, so no reviewer could read it.
+- **What stays the same.** The files stay in the repository, the generator that writes them and its `check` are still
+  reviewed, and so is the comparator cache scored on them. Stage 1's three dev worlds, `bg1-dev-01` to `bg1-dev-03`, keep
+  their plans and questions in review. No score or verdict changes.
+
+README's results table now holds only rows with a measured no-gbrain number, and each row names its own. The newer sealed company worlds show the same files with `grep` at 318 of 600 against gbrain's 382, and the sealed whole-conversation row shows the question alone at 40 of 200. Rows whose alternative is being measured, and checks of gbrain's own behaviour with nothing to compare against, have their own tables ([README](README.md#current-results)).
+
 ## [0.10.241] - 2026-11-17
 
 - New multi-evidence dev loop (`bun eval/runner/multi-evidence/dev-loop.ts`): scores any gbrain build, by default the newest release, on 152 public or synthetic questions whose answer needs two or more pieces of evidence, and reports per item how much gold reached the model, what was cut, turns used against the agent's cap and whether the answer was right. Arms at twice the turn cap and with batch page reads separate "gbrain can't find it" from "the agent ran out of turns". See [eval/runner/multi-evidence/README.md](eval/runner/multi-evidence/README.md).

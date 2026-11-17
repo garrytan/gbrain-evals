@@ -42,14 +42,17 @@
  * set). Seeds: the dev worlds use the public BG1_DEV_SEEDS; a sealed world's seed is HMAC-SHA256 of the custody seed
  * line and "bg1/world/<slot>" (sealedWorldSeed), and a sealed plan never records it.
  *
- * Gold-audit fixes (stage 1, Amendment 4), sealed worlds only, so the dev worlds stage 1 rendered and scored still
- * match a fresh generation: a sealed retraction uses only retract templates that say the plan is not happening (one of
- * NONE_FORMS), because "the report was false" alone does not support the s5 gold; and a sealed s8 question never asks
- * about a slot with a scheduled change, because a value due after the world end is neither history nor stale.
+ * Gold-audit fixes (stage 1, Amendment 4), on sealed worlds and the extra dev worlds, never on stage 1's three dev
+ * worlds, so those still match a fresh generation: an audited retraction uses only retract templates that say the plan
+ * is not happening (one of NONE_FORMS), because "the report was false" alone does not support the s5 gold; and an
+ * audited s8 question never asks about a slot with a scheduled change, because a value due after the world end is
+ * neither history nor stale. An audited dev plan records `gold_audit: true`.
  *
  * Files (eval/data/changing-facts-v1): dev/worlds/<id>/{plan,questions}.json, the public dev plans and gold (stage 1
  * adds the Gemini-rendered world.json beside them), and fixtures/worlds/<id>/{world,questions}.json, the same worlds
- * from the template renderer at BG1_FIXTURE_TOKENS, for keyless tests.
+ * from the template renderer at BG1_FIXTURE_TOKENS, for keyless tests. The dev worlds are stage 1's three
+ * (BG1_DEV_CONVERSATIONS) and the dev loop's 17 extra (BG1_DEV_EXTRA_CONVERSATIONS, bg1-dev-04 to bg1-dev-20), whose
+ * Gemini-rendered world.json the dev loop's mint adds.
  *
  *   bun eval/generators/changing-facts-gen.ts write   write the dev plans and questions and the template fixtures
  *   bun eval/generators/changing-facts-gen.ts check   exit 1 when a committed file differs from a fresh generation
@@ -59,7 +62,7 @@
 import { createHash, createHmac } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { BG1_DEV_CONVERSATIONS, BG1_PRIMARY, BG1_QUESTIONS_PER_STRATUM, familyOf, type Bg1QuestionFields, type Bg1Stratum } from '../runner/bg1/types.ts';
+import { BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_PRIMARY, BG1_QUESTIONS_PER_STRATUM, familyOf, type Bg1QuestionFields, type Bg1Stratum } from '../runner/bg1/types.ts';
 import { encodingCount } from '../runner/systems/render-v2.ts';
 import { ForwardJobState } from './job-state.ts';
 import { Rng, addDays } from './seeded.ts';
@@ -79,7 +82,7 @@ export const BG1_TARGET_TOKENS = 200_000;
 /** The committed template fixtures are smaller than a counted world. */
 export const BG1_FIXTURE_TOKENS = 30_000;
 export const BG1_MAX_LINES_PER_SESSION = 3;
-export const BG1_DEV_SEEDS: Readonly<Record<string, string>> = Object.fromEntries(BG1_DEV_CONVERSATIONS.map(id => [id, `bg1-dev-seed-v1:${id}`]));
+export const BG1_DEV_SEEDS: Readonly<Record<string, string>> = Object.fromEntries([...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS].map(id => [id, `bg1-dev-seed-v1:${id}`]));
 /** Embedded in every sealed plan, world, gold item and custody phrasing set; the sealed key's text rule matches it. */
 export const BG1_CUSTODY_MARKER = ['BG1', 'SEALED', 'CUSTODY', 'v1'].join('-');
 export const BG1_DATA_DIR = resolve(import.meta.dir, '../data/changing-facts-v1');
@@ -133,6 +136,8 @@ export interface WorldPlan {
   /** Dev worlds only: the public seed. A sealed plan never records its seed. */
   seed?: string;
   custody?: string;
+  /** An extra dev world: planned with the gold-audit fixes, as a sealed world is. */
+  gold_audit?: true;
   world_end_weekday: string;
   entities: Entity[];
   slots: Slot[];
@@ -512,7 +517,7 @@ const TOPICS = [
   'a sleep schedule', 'a language exchange', 'a jigsaw puzzle', 'a backyard bird feeder',
 ];
 
-export interface PlanOptions { phrasing?: Phrasing; custody?: boolean; publicSeed?: boolean }
+export interface PlanOptions { phrasing?: Phrasing; custody?: boolean; publicSeed?: boolean; goldAudit?: boolean }
 
 /**
  * The world plan for one world id and seed. Deterministic: the same id, seed and phrasing give the same plan. A seed
@@ -523,7 +528,7 @@ export function planWorld(id: string, seed: string, opts: PlanOptions = {}): Wor
   let last: Error | null = null;
   for (let attempt = 0; attempt < 25; attempt++) {
     try {
-      const plan = buildPlan(id, `${seed}#${attempt}`, phrasing, opts.custody === true, opts.publicSeed ? seed : undefined);
+      const plan = buildPlan(id, `${seed}#${attempt}`, phrasing, opts.custody === true, opts.publicSeed ? seed : undefined, opts.goldAudit === true);
       buildQuestions(plan, phrasing);
       return plan;
     } catch (e) {
@@ -534,11 +539,12 @@ export function planWorld(id: string, seed: string, opts: PlanOptions = {}): Wor
   throw new PlanError(`world ${id}: no attempt could be placed (${last?.message})`);
 }
 
-function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolean, publicSeed: string | undefined): WorldPlan {
+function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolean, publicSeed: string | undefined, goldAudit: boolean): WorldPlan {
   const rng = new Rng(seedNumber(seed));
   const names = new Names(rng, [...phrasingTexts(phrasing), ...TOPICS, ...FILLER_TEXTS, ...WEEKDAYS]);
-  const frames = custody ? { ...phrasing.frames, retract: phrasing.frames.retract.filter(t => NONE_FORMS.some(f => termRegex(f).test(t))) } : phrasing.frames;
-  if (!frames.retract.length) throw new Error('the custody phrasing set has no retract template that says the plan is not happening (gold audit, Amendment 4)');
+  const audited = custody || goldAudit;
+  const frames = audited ? { ...phrasing.frames, retract: phrasing.frames.retract.filter(t => NONE_FORMS.some(f => termRegex(f).test(t))) } : phrasing.frames;
+  if (!frames.retract.length) throw new Error('the phrasing set has no retract template that says the plan is not happening (gold audit, Amendment 4)');
 
   const n = rng.int(BG1_SESSIONS.min, BG1_SESSIONS.max);
   const first = -(BG1_SPAN_DAYS - 1) + rng.int(0, 4), lastDay = -rng.int(0, 2);
@@ -745,7 +751,7 @@ function buildPlan(id: string, seed: string, phrasing: Phrasing, custody: boolea
 
   for (const s of sessions) if (s.lines.length > 1) s.lines = rng.shuffle(s.lines);
   const plan: WorldPlan = {
-    schema: BG1_PLAN_SCHEMA, generator: BG1_GENERATOR_VERSION, id, ...(publicSeed ? { seed: publicSeed } : {}), ...(custody ? { custody: BG1_CUSTODY_MARKER } : {}),
+    schema: BG1_PLAN_SCHEMA, generator: BG1_GENERATOR_VERSION, id, ...(publicSeed ? { seed: publicSeed } : {}), ...(custody ? { custody: BG1_CUSTODY_MARKER } : goldAudit ? { gold_audit: true as const } : {}),
     world_end_weekday: BG1_WORLD_END_WEEKDAY, entities, slots, sessions, lexicon: Object.fromEntries(Object.entries(lexicon).sort(([a], [b]) => (a < b ? -1 : 1))),
   };
   checkPlan(plan);
@@ -999,7 +1005,7 @@ export function buildQuestions(plan: WorldPlan, phrasing: Phrasing = PUBLIC_PHRA
   }
 
   const f8 = balanced(BG1_QUESTIONS_PER_STRATUM);
-  const histories = plan.custody ? changing.filter(s => !s.events.some(e => e.type === 'scheduled')) : changing;
+  const histories = plan.custody || plan.gold_audit ? changing.filter(s => !s.events.some(e => e.type === 'scheduled')) : changing;
   for (const slot of eight(rng.shuffle(histories).sort((a, b) => b.intent.history.length - a.intent.history.length), 's8_history')) {
     const form = f8.shift()!;
     push('s8_history', slot, form, ask(slot, 'history', form), slot.intent.history);
@@ -1120,11 +1126,14 @@ export function renderBriefs(plan: WorldPlan, worldTokensTarget = BG1_TARGET_TOK
 
 const json = (v: unknown) => JSON.stringify(v, null, 1) + '\n';
 
+/** A public dev world's plan from its public seed; an extra dev world's with the gold-audit fixes. */
+export const devWorldPlan = (id: string) => planWorld(id, BG1_DEV_SEEDS[id], { publicSeed: true, goldAudit: BG1_DEV_EXTRA_CONVERSATIONS.includes(id) });
+
 /** The committed dev files (paths relative to eval/data/changing-facts-v1), generated from the public seeds. */
 export function devFiles(): Map<string, string> {
   const files = new Map<string, string>();
-  for (const id of BG1_DEV_CONVERSATIONS) {
-    const plan = planWorld(id, BG1_DEV_SEEDS[id], { publicSeed: true });
+  for (const id of [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS]) {
+    const plan = devWorldPlan(id);
     const questions = json(buildQuestions(plan));
     files.set(`dev/worlds/${id}/plan.json`, json(plan));
     files.set(`dev/worlds/${id}/questions.json`, questions);
@@ -1143,6 +1152,6 @@ if (import.meta.main) {
     if (cmd === 'write') { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, text); continue; }
     if (!existsSync(path) || readFileSync(path, 'utf8') !== text) { differ++; console.error(`changing-facts-gen: ${rel} differs from a fresh generation`); }
   }
-  console.log(`changing-facts-gen ${cmd} worlds=${BG1_DEV_CONVERSATIONS.length} differ=${differ}`);
+  console.log(`changing-facts-gen ${cmd} worlds=${BG1_DEV_CONVERSATIONS.length + BG1_DEV_EXTRA_CONVERSATIONS.length} differ=${differ}`);
   process.exit(differ ? 1 : 0);
 }

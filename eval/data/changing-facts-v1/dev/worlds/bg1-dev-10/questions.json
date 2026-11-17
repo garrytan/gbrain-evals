@@ -1,0 +1,1595 @@
+[
+ {
+  "id": "bg1-dev-10:s1_updated:0",
+  "question": "Who runs operations at Halcyon Freight now?",
+  "answer": "Ximena Larsen",
+  "evidence_sessions": [
+   "s119",
+   "s139"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Ximena Larsen",
+    "Ximena",
+    "Larsen"
+   ],
+   "stale_values": [
+    "Zainab Tanaka",
+    "Cosima Quigley"
+   ],
+   "decoy_values": [
+    "Hiro Weber"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s1_updated:1",
+  "question": "Where does Desmond Lefebvre work now?",
+  "answer": "Emberly Energy",
+  "evidence_sessions": [
+   "s094"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-01.employer",
+   "gold_values": [
+    "Emberly Energy",
+    "Emberly"
+   ],
+   "stale_values": [
+    "Tarnwood Logistics"
+   ],
+   "decoy_values": [
+    "Brightline Analytics"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s1_updated:2",
+  "question": "Which city is Halcyon Freight's head office in these days?",
+  "answer": "Kyoto",
+  "evidence_sessions": [
+   "s128"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Kyoto"
+   ],
+   "stale_values": [
+    "Lisbon",
+    "Bordeaux",
+    "Brno"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s1_updated:3",
+  "question": "Who leads Project Lodestar now?",
+  "answer": "Viktor Holm",
+  "evidence_sessions": [
+   "s128"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Viktor Holm",
+    "Viktor",
+    "Holm"
+   ],
+   "stale_values": [
+    "Valentin Rossi"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s1_updated:4",
+  "question": "Who is running Project Lodestar these days?",
+  "answer": "Viktor Holm",
+  "evidence_sessions": [
+   "s128"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Viktor Holm",
+    "Viktor",
+    "Holm"
+   ],
+   "stale_values": [
+    "Valentin Rossi"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s1_updated:5",
+  "question": "Where does Mirela Novak live these days?",
+  "answer": "Accra",
+  "evidence_sessions": [
+   "s122",
+   "s125"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-02.city",
+   "gold_values": [
+    "Accra"
+   ],
+   "stale_values": [
+    "Bologna",
+    "Lyon",
+    "Rotterdam",
+    "Utrecht"
+   ],
+   "decoy_values": [
+    "Vilnius"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s1_updated:6",
+  "question": "What is Talia Whitlock's job title now?",
+  "answer": "Programme Director",
+  "evidence_sessions": [
+   "s130"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-03.role",
+   "gold_values": [
+    "Programme Director"
+   ],
+   "stale_values": [
+    "Head of Platform",
+    "Field CTO"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s1_updated:7",
+  "question": "What role does Talia Whitlock hold these days?",
+  "answer": "Programme Director",
+  "evidence_sessions": [
+   "s130"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-03.role",
+   "gold_values": [
+    "Programme Director"
+   ],
+   "stale_values": [
+    "Head of Platform",
+    "Field CTO"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s2_corrected:0",
+  "question": "Which city is Desmond Lefebvre based in now?",
+  "answer": "Galway",
+  "evidence_sessions": [
+   "s104",
+   "s117"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-01.city",
+   "gold_values": [
+    "Galway"
+   ],
+   "stale_values": [
+    "Oslo"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s2_corrected:1",
+  "question": "What role does Mirela Novak hold these days?",
+  "answer": "Compliance Officer",
+  "evidence_sessions": [
+   "s011",
+   "s044"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-02.role",
+   "gold_values": [
+    "Compliance Officer"
+   ],
+   "stale_values": [
+    "Analytics Manager"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s2_corrected:2",
+  "question": "Where is Lowmoor Retail headquartered now?",
+  "answer": "Riga",
+  "evidence_sessions": [
+   "s037",
+   "s047"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-02.hq",
+   "gold_values": [
+    "Riga"
+   ],
+   "stale_values": [
+    "Malmo",
+    "Prague"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s2_corrected:3",
+  "question": "Which city is Lowmoor Retail's head office in these days?",
+  "answer": "Riga",
+  "evidence_sessions": [
+   "s037",
+   "s047"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-02.hq",
+   "gold_values": [
+    "Riga"
+   ],
+   "stale_values": [
+    "Malmo",
+    "Prague"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s2_corrected:4",
+  "question": "Who leads Project Kestrel now?",
+  "answer": "Ilse Nilsen",
+  "evidence_sessions": [
+   "s090",
+   "s110"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-02.lead",
+   "gold_values": [
+    "Ilse Nilsen",
+    "Ilse",
+    "Nilsen"
+   ],
+   "stale_values": [
+    "Gideon Raman",
+    "Matteo Zoric"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s2_corrected:5",
+  "question": "Who is running Project Kestrel these days?",
+  "answer": "Ilse Nilsen",
+  "evidence_sessions": [
+   "s090",
+   "s110"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-02.lead",
+   "gold_values": [
+    "Ilse Nilsen",
+    "Ilse",
+    "Nilsen"
+   ],
+   "stale_values": [
+    "Gideon Raman",
+    "Matteo Zoric"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s2_corrected:6",
+  "question": "How much does the Tamsin deal renew for each year now?",
+  "answer": "$52,000",
+  "evidence_sessions": [
+   "s107",
+   "s139"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-01.price",
+   "gold_values": [
+    "$52,000",
+    "52,000",
+    "$52k",
+    "52k",
+    "52 thousand"
+   ],
+   "stale_values": [
+    "$228,000"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s2_corrected:7",
+  "question": "Which vendor does Project Tamarind use now?",
+  "answer": "Northgate Freight",
+  "evidence_sessions": [
+   "s068",
+   "s094"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Northgate Freight",
+    "Northgate"
+   ],
+   "stale_values": [
+    "Rookwood Design",
+    "Oakhaven Health"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s3_repeated_stale:0",
+  "question": "Which vendor does Project Lodestar use now?",
+  "answer": "Quillfeather Media",
+  "evidence_sessions": [
+   "s133"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-01.vendor",
+   "gold_values": [
+    "Quillfeather Media",
+    "Quillfeather"
+   ],
+   "stale_values": [
+    "Vellumworks Print"
+   ],
+   "decoy_values": [
+    "Jasperwood Furniture"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s3_repeated_stale:1",
+  "question": "Which city is Talia Whitlock based in now?",
+  "answer": "Bergen",
+  "evidence_sessions": [
+   "s135"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Bergen"
+   ],
+   "stale_values": [
+    "Busan"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s3_repeated_stale:2",
+  "question": "Where does Talia Whitlock live these days?",
+  "answer": "Bergen",
+  "evidence_sessions": [
+   "s135"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Bergen"
+   ],
+   "stale_values": [
+    "Busan"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s3_repeated_stale:3",
+  "question": "Who is in charge of operations at Lowmoor Retail these days?",
+  "answer": "Elif Coelho",
+  "evidence_sessions": [
+   "s132"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Elif Coelho",
+    "Elif",
+    "Coelho"
+   ],
+   "stale_values": [
+    "Emeka Grieve"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s3_repeated_stale:4",
+  "question": "Who is in charge of operations at Quayside Health these days?",
+  "answer": "Sanne Kiplagat",
+  "evidence_sessions": [
+   "s128"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-03.ops_lead",
+   "gold_values": [
+    "Sanne Kiplagat",
+    "Sanne",
+    "Kiplagat"
+   ],
+   "stale_values": [
+    "Odile Osei"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s3_repeated_stale:5",
+  "question": "Where does Yusuf Delacroix work now?",
+  "answer": "Hazelpoint Consulting",
+  "evidence_sessions": [
+   "s119"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-04.employer",
+   "gold_values": [
+    "Hazelpoint Consulting",
+    "Hazelpoint"
+   ],
+   "stale_values": [
+    "Goldcrest Insurance"
+   ],
+   "decoy_values": [
+    "Lindenhall Bank"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s3_repeated_stale:6",
+  "question": "Where does Delphine Takahashi work now?",
+  "answer": "Copperleaf Systems",
+  "evidence_sessions": [
+   "s123"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Copperleaf Systems",
+    "Copperleaf"
+   ],
+   "stale_values": [
+    "Thistledown Textiles"
+   ],
+   "decoy_values": [
+    "Foxglove Cosmetics"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s3_repeated_stale:7",
+  "question": "Which company employs Delphine Takahashi at the moment?",
+  "answer": "Copperleaf Systems",
+  "evidence_sessions": [
+   "s123"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Copperleaf Systems",
+    "Copperleaf"
+   ],
+   "stale_values": [
+    "Thistledown Textiles"
+   ],
+   "decoy_values": [
+    "Foxglove Cosmetics"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s4_conflicting:0",
+  "question": "What discount did we actually sign on the Tamsin deal?",
+  "answer": "17%",
+  "evidence_sessions": [
+   "s100"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-01.discount",
+   "gold_values": [
+    "17%",
+    "17 percent",
+    "17 per cent"
+   ],
+   "stale_values": [
+    "35%",
+    "16%"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Our CFO confirmed in writing that the discount for the Tamsin deal is final at 17%."
+  }
+ },
+ {
+  "id": "bg1-dev-10:s4_conflicting:1",
+  "question": "Which discount is binding on the Tamsin deal?",
+  "answer": "17%",
+  "evidence_sessions": [
+   "s100"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-01.discount",
+   "gold_values": [
+    "17%",
+    "17 percent",
+    "17 per cent"
+   ],
+   "stale_values": [
+    "35%",
+    "16%"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Our CFO confirmed in writing that the discount for the Tamsin deal is final at 17%."
+  }
+ },
+ {
+  "id": "bg1-dev-10:s4_conflicting:2",
+  "question": "What yearly price is binding on the Beacon deal?",
+  "answer": "$266,000",
+  "evidence_sessions": [
+   "s062"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-02.price",
+   "gold_values": [
+    "$266,000",
+    "266,000",
+    "$266k",
+    "266k",
+    "266 thousand"
+   ],
+   "stale_values": [
+    "$270,000",
+    "$110,000",
+    "$38,000",
+    "$142,000"
+   ],
+   "decoy_values": [],
+   "deciding_line": "The account owner signed off in writing on $266,000 as the binding annual price for the Beacon deal."
+  }
+ },
+ {
+  "id": "bg1-dev-10:s4_conflicting:3",
+  "question": "How long is the binding term on the Beacon deal?",
+  "answer": "15 months",
+  "evidence_sessions": [
+   "s088"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-02.term",
+   "gold_values": [
+    "15 months",
+    "15-month",
+    "15 mo"
+   ],
+   "stale_values": [
+    "66 months",
+    "33 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "The countersigned Beacon contract sets the contract term at 15 months."
+  }
+ },
+ {
+  "id": "bg1-dev-10:s4_conflicting:4",
+  "question": "What contract term did we actually sign for the Cobalt deal?",
+  "answer": "21 months",
+  "evidence_sessions": [
+   "s113"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-03.term",
+   "gold_values": [
+    "21 months",
+    "21-month",
+    "21 mo"
+   ],
+   "stale_values": [
+    "18 months",
+    "30 months",
+    "27 months",
+    "9 months"
+   ],
+   "decoy_values": [
+    "51 months"
+   ],
+   "deciding_line": "Our CFO confirmed in writing that the contract term for the Cobalt deal is final at 21 months."
+  }
+ },
+ {
+  "id": "bg1-dev-10:s4_conflicting:5",
+  "question": "What contract term did we actually sign for the Harbor deal?",
+  "answer": "45 months",
+  "evidence_sessions": [
+   "s087"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-04.term",
+   "gold_values": [
+    "45 months",
+    "45-month",
+    "45 mo"
+   ],
+   "stale_values": [
+    "63 months",
+    "42 months",
+    "54 months",
+    "39 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "The countersigned Harbor contract sets the contract term at 45 months."
+  }
+ },
+ {
+  "id": "bg1-dev-10:s4_conflicting:6",
+  "question": "How long is the binding term on the Harbor deal?",
+  "answer": "45 months",
+  "evidence_sessions": [
+   "s087"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-04.term",
+   "gold_values": [
+    "45 months",
+    "45-month",
+    "45 mo"
+   ],
+   "stale_values": [
+    "63 months",
+    "42 months",
+    "54 months",
+    "39 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "The countersigned Harbor contract sets the contract term at 45 months."
+  }
+ },
+ {
+  "id": "bg1-dev-10:s4_conflicting:7",
+  "question": "How many seats did we actually sign for on the Marlow deal?",
+  "answer": "410 seats",
+  "evidence_sessions": [
+   "s108"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-05.seats",
+   "gold_values": [
+    "410 seats",
+    "410 licenses",
+    "410 licences",
+    "410 users"
+   ],
+   "stale_values": [
+    "660 seats",
+    "530 seats",
+    "290 seats",
+    "840 seats"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Both sides executed the Marlow agreement today, and it fixes the seat count at 410 seats."
+  }
+ },
+ {
+  "id": "bg1-dev-10:s5_withdrawn:0",
+  "question": "Which company is Quayside Health merging with?",
+  "answer": "None: the plan with Saltmarsh Marine was called off.",
+  "evidence_sessions": [
+   "s040",
+   "s046",
+   "s123"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-03.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Saltmarsh Marine"
+   ],
+   "decoy_values": [
+    "Fernhollow Labs"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s5_withdrawn:1",
+  "question": "Who is Quayside Health's merger partner at this point?",
+  "answer": "None: the plan with Saltmarsh Marine was called off.",
+  "evidence_sessions": [
+   "s040",
+   "s046",
+   "s123"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-03.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Saltmarsh Marine"
+   ],
+   "decoy_values": [
+    "Fernhollow Labs"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s5_withdrawn:2",
+  "question": "Who is Project Kestrel's pilot customer right now?",
+  "answer": "None: the report about Ironbark Security was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s025",
+   "s036",
+   "s043",
+   "s110"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-02.pilot",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Ironbark Security"
+   ],
+   "decoy_values": [
+    "Cinderford Steel"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s5_withdrawn:3",
+  "question": "Which customer is Project Mistletoe piloting with?",
+  "answer": "None: the plan with Kettlebrook Brewing was called off.",
+  "evidence_sessions": [
+   "s055",
+   "s059",
+   "s063",
+   "s124"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-04.pilot",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Kettlebrook Brewing"
+   ],
+   "decoy_values": [
+    "Umberfield Mining"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s5_withdrawn:4",
+  "question": "Which customer is Project Tamarind piloting with?",
+  "answer": "None: the report about Kinglet Telecom was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s014",
+   "s026",
+   "s043"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-03.pilot",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Kinglet Telecom"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s5_withdrawn:5",
+  "question": "Which city is Elderflower Travel's offsite in?",
+  "answer": "None: the plan with Denver was called off.",
+  "evidence_sessions": [
+   "s085",
+   "s090",
+   "s093",
+   "s120"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-04.offsite",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Denver"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s5_withdrawn:6",
+  "question": "Which company is Corbel Systems merging with?",
+  "answer": "None: the plan with Quarryhill Materials was called off.",
+  "evidence_sessions": [
+   "s028",
+   "s091"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-05.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Quarryhill Materials"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s5_withdrawn:7",
+  "question": "Who is Corbel Systems's merger partner at this point?",
+  "answer": "None: the plan with Quarryhill Materials was called off.",
+  "evidence_sessions": [
+   "s028",
+   "s091"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-05.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Quarryhill Materials"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s6_as_of:0",
+  "question": "Where did Delphine Takahashi work on [[D:-280]]?",
+  "answer": "Thistledown Textiles",
+  "evidence_sessions": [
+   "s008"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Thistledown Textiles",
+    "Thistledown"
+   ],
+   "stale_values": [
+    "Copperleaf Systems"
+   ],
+   "decoy_values": [
+    "Foxglove Cosmetics"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s6_as_of:1",
+  "question": "On [[D:-402]], who was running Project Lodestar?",
+  "answer": "Valentin Rossi",
+  "evidence_sessions": [
+   "s030"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Valentin Rossi",
+    "Valentin",
+    "Rossi"
+   ],
+   "stale_values": [
+    "Viktor Holm"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s6_as_of:2",
+  "question": "On [[D:-167]], who was in charge of operations at Lowmoor Retail?",
+  "answer": "Emeka Grieve",
+  "evidence_sessions": [
+   "s006"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Emeka Grieve",
+    "Emeka",
+    "Grieve"
+   ],
+   "stale_values": [
+    "Elif Coelho"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s6_as_of:3",
+  "question": "On [[D:-504]], who was in charge of operations at Quayside Health?",
+  "answer": "Odile Osei",
+  "evidence_sessions": [
+   "s008"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-03.ops_lead",
+   "gold_values": [
+    "Odile Osei",
+    "Odile",
+    "Osei"
+   ],
+   "stale_values": [
+    "Sanne Kiplagat"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s6_as_of:4",
+  "question": "Where did Yusuf Delacroix work on [[D:-378]]?",
+  "answer": "Goldcrest Insurance",
+  "evidence_sessions": [
+   "s021"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-04.employer",
+   "gold_values": [
+    "Goldcrest Insurance",
+    "Goldcrest"
+   ],
+   "stale_values": [
+    "Hazelpoint Consulting"
+   ],
+   "decoy_values": [
+    "Lindenhall Bank"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s6_as_of:5",
+  "question": "Where was Halcyon Freight headquartered on [[D:-110]]?",
+  "answer": "Brno",
+  "evidence_sessions": [
+   "s084"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Brno"
+   ],
+   "stale_values": [
+    "Lisbon",
+    "Bordeaux",
+    "Kyoto"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s6_as_of:6",
+  "question": "Who ran operations at Halcyon Freight on [[D:-316]]?",
+  "answer": "Zainab Tanaka",
+  "evidence_sessions": [
+   "s033"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Zainab Tanaka",
+    "Zainab",
+    "Tanaka"
+   ],
+   "stale_values": [
+    "Ximena Larsen",
+    "Cosima Quigley"
+   ],
+   "decoy_values": [
+    "Hiro Weber"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s6_as_of:7",
+  "question": "On [[D:-315]], where did Mirela Novak live?",
+  "answer": "Lyon",
+  "evidence_sessions": [
+   "s039"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-02.city",
+   "gold_values": [
+    "Lyon"
+   ],
+   "stale_values": [
+    "Bologna",
+    "Rotterdam",
+    "Accra",
+    "Utrecht"
+   ],
+   "decoy_values": [
+    "Vilnius"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-10:s7_as_known:0",
+  "question": "On [[D:-394]], where had I been told Lowmoor Retail was headquartered?",
+  "answer": "Prague",
+  "evidence_sessions": [
+   "s037"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-02.hq",
+   "gold_values": [
+    "Prague",
+    "Praha"
+   ],
+   "stale_values": [
+    "Malmo",
+    "Riga"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s7_as_known:1",
+  "question": "As of [[D:-210]], who did I think supplied Project Tamarind?",
+  "answer": "Oakhaven Health",
+  "evidence_sessions": [
+   "s068"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Oakhaven Health",
+    "Oakhaven"
+   ],
+   "stale_values": [
+    "Rookwood Design",
+    "Northgate Freight"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s7_as_known:2",
+  "question": "On [[D:-432]], what had I been told Mirela Novak's job title was?",
+  "answer": "Analytics Manager",
+  "evidence_sessions": [
+   "s011"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-02.role",
+   "gold_values": [
+    "Analytics Manager"
+   ],
+   "stale_values": [
+    "Compliance Officer"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s7_as_known:3",
+  "question": "On [[D:-105]], who had I been told led Project Lodestar?",
+  "answer": "Valentin Rossi",
+  "evidence_sessions": [
+   "s030"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Valentin Rossi",
+    "Valentin",
+    "Rossi"
+   ],
+   "stale_values": [
+    "Viktor Holm"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s7_as_known:4",
+  "question": "As of [[D:-172]], where did I think Desmond Lefebvre lived?",
+  "answer": "Oslo",
+  "evidence_sessions": [
+   "s104"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-01.city",
+   "gold_values": [
+    "Oslo"
+   ],
+   "stale_values": [
+    "Galway"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s7_as_known:5",
+  "question": "As of [[D:-67]], what did I think the Tamsin deal renewed for each year?",
+  "answer": "$228,000",
+  "evidence_sessions": [
+   "s107"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "deal-01.price",
+   "gold_values": [
+    "$228,000",
+    "228,000",
+    "$228k",
+    "228k",
+    "228 thousand"
+   ],
+   "stale_values": [
+    "$52,000"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s7_as_known:6",
+  "question": "On [[D:-189]], who had I been told led Project Kestrel?",
+  "answer": "Matteo Zoric",
+  "evidence_sessions": [
+   "s090"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-02.lead",
+   "gold_values": [
+    "Matteo Zoric",
+    "Matteo",
+    "Zoric"
+   ],
+   "stale_values": [
+    "Gideon Raman",
+    "Ilse Nilsen"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s7_as_known:7",
+  "question": "As of [[D:-114]], which role did I think Talia Whitlock held?",
+  "answer": "Field CTO",
+  "evidence_sessions": [
+   "s069"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-03.role",
+   "gold_values": [
+    "Field CTO"
+   ],
+   "stale_values": [
+    "Head of Platform",
+    "Programme Director"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-10:s8_history:0",
+  "question": "List the cities Halcyon Freight has been headquartered in, oldest first.",
+  "answer": "Lisbon, then Bordeaux, then Brno, then Kyoto",
+  "evidence_sessions": [
+   "s016",
+   "s047",
+   "s084",
+   "s128"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Lisbon",
+    "Bordeaux",
+    "Brno",
+    "Kyoto"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-10:s8_history:1",
+  "question": "In order from earliest, which roles has Talia Whitlock held?",
+  "answer": "Head of Platform, then Field CTO, then Programme Director",
+  "evidence_sessions": [
+   "s009",
+   "s069",
+   "s130"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-03.role",
+   "gold_values": [
+    "Head of Platform",
+    "Field CTO",
+    "Programme Director"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-10:s8_history:2",
+  "question": "List the vendors Project Lodestar has used, oldest first.",
+  "answer": "Vellumworks Print, then Quillfeather Media",
+  "evidence_sessions": [
+   "s020",
+   "s133"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-01.vendor",
+   "gold_values": [
+    "Vellumworks Print",
+    "Quillfeather Media"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Jasperwood Furniture"
+   ],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-10:s8_history:3",
+  "question": "List the companies Yusuf Delacroix has worked at, oldest first.",
+  "answer": "Goldcrest Insurance, then Hazelpoint Consulting",
+  "evidence_sessions": [
+   "s021",
+   "s119"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-04.employer",
+   "gold_values": [
+    "Goldcrest Insurance",
+    "Hazelpoint Consulting"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Lindenhall Bank"
+   ],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-10:s8_history:4",
+  "question": "In order from earliest, who has been in charge of operations at Quayside Health?",
+  "answer": "Odile Osei, then Sanne Kiplagat",
+  "evidence_sessions": [
+   "s008",
+   "s128"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-03.ops_lead",
+   "gold_values": [
+    "Odile Osei",
+    "Sanne Kiplagat"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-10:s8_history:5",
+  "question": "In order from earliest, where has Talia Whitlock lived?",
+  "answer": "Busan, then Bergen",
+  "evidence_sessions": [
+   "s013",
+   "s135"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Busan",
+    "Bergen"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-10:s8_history:6",
+  "question": "List the companies Desmond Lefebvre has worked at, oldest first.",
+  "answer": "Tarnwood Logistics, then Emberly Energy",
+  "evidence_sessions": [
+   "s014",
+   "s094"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-01.employer",
+   "gold_values": [
+    "Tarnwood Logistics",
+    "Emberly Energy"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Brightline Analytics"
+   ],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-10:s8_history:7",
+  "question": "In order from earliest, which employers has Delphine Takahashi had?",
+  "answer": "Thistledown Textiles, then Copperleaf Systems",
+  "evidence_sessions": [
+   "s008",
+   "s123"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Thistledown Textiles",
+    "Copperleaf Systems"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Foxglove Cosmetics"
+   ],
+   "ordered": true
+  }
+ }
+]
