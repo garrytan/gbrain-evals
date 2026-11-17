@@ -353,7 +353,7 @@ export async function runCorrectness(o: CorrectnessOptions): Promise<{ receipt: 
         const usable = receipt && (code === 0 || code === 1);
         const error = usable ? {} : { error: `exit ${code}${receipt ? '' : ', no receipt'}: ${tail.trim().split('\n').slice(-3).join(' | ').slice(0, 400)}` };
         run = readRun(check, { ...base, ...(receipt ? { receipt: receiptPath } : {}), ...error }, receipt);
-        if (usable && run.gbrain_commit !== expectedCommit) run.error = `ran gbrain ${run.gbrain_commit ?? 'unknown'}, expected ${expectedCommit ?? 'unknown'}`;
+        if (usable && (!run.gbrain_commit || !expectedCommit || run.gbrain_commit !== expectedCommit)) run.error = `ran gbrain ${run.gbrain_commit ?? 'unknown'}, expected ${expectedCommit ?? 'unknown'}`;
       }
       runs.push(run);
       log(`[correctness] ${check.id} on ${kind}: exit ${code} in ${Math.round(run.wall_ms / 1000)}s${run.refusal_reason ? ` refused (${run.refusal_reason})` : ''}`);
