@@ -8,8 +8,8 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { homedir, tmpdir } from 'node:os';
+import { basename, join, resolve } from 'node:path';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { assertBuildVerified, countSymlinks, embedStaleArgs, type BuildInfo } from '../../eval/runner/lifecycle/builds.ts';
 import type { CallResult, Driver } from '../../eval/runner/lifecycle/drivers.ts';
@@ -22,6 +22,8 @@ import { loadFactUnquote } from '../../eval/runner/quoted-reads.ts';
 import { fenceTranscriptText } from '../../node_modules/gbrain/src/core/search/transcript-quote.ts';
 import { scoreBijection, scoreCheckpoint, scoreEdges, scoreFacts, scoreOldSlugs, scoreTimeline, type FactEvent } from '../../eval/runner/lifecycle/score.ts';
 import { compareRuns, summarizeCell } from '../../eval/runner/lifecycle-report.ts';
+import { writeLifecycleReceipt } from '../../eval/runner/lifecycle-experiment.ts';
+import { MACHINE_LOCAL_PATH } from '../../eval/runner/receipt.ts';
 
 function slugOf(id: string, phase: PhaseName): string {
   return naiveSlug(versionAt(identityById(id), phase)!.path);
@@ -297,6 +299,27 @@ describe('build identity guard', () => {
     symlinkSync(join(dir, 'pinned'), join(dir, 'src'));
     expect(countSymlinks(join(dir, 'src'))).toBe(1);
     expect(countSymlinks(join(dir, 'pinned'))).toBe(0);
+  });
+});
+
+describe('lifecycle receipt', () => {
+  test('is written without checkout, home or temp paths', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lifecycle-receipt-'));
+    const out = join(dir, 'receipt.json');
+    writeLifecycleReceipt(out, {
+      vault: join(dir, 'cell', 'vault'),
+      work: join(homedir(), 'lc-work', 'new-r3'),
+      build: join(resolve(import.meta.dir, '../..'), 'eval/reports/lifecycle/builds/new'),
+      n: 3,
+    });
+    const text = readFileSync(out, 'utf8');
+    expect(MACHINE_LOCAL_PATH.test(text)).toBe(false);
+    expect(JSON.parse(text)).toEqual({
+      vault: `<tmp>/${basename(dir)}/cell/vault`,
+      work: '~/lc-work/new-r3',
+      build: 'eval/reports/lifecycle/builds/new',
+      n: 3,
+    });
   });
 });
 

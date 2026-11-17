@@ -26,7 +26,7 @@
    "label": "new",
    "description": "6ce7195b44a034f85aec811f11fbf862db376f50",
    "ref": "6ce7195b44a034f85aec811f11fbf862db376f50",
-   "dir": "/home/ubi/w/new/eval/reports/lifecycle/builds/new",
+   "dir": "eval/reports/lifecycle/builds/new",
    "commit": "6ce7195b44a034f85aec811f11fbf862db376f50",
    "tree": "8fc13f1ed648e8532e776aae508af973a2a61b67",
    "version": "0.60.733.0",
@@ -63,7 +63,7 @@
       "init",
       "--pglite",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-cli/gbrain-home/brain.pglite",
+      "~/lc-work/new-r2/new-pglite-cli/gbrain-home/brain.pglite",
       "--embedding-model",
       "litellm:fake-embed",
       "--embedding-dimensions",
@@ -71,7 +71,7 @@
      ],
      "code": 0,
      "ms": 4302,
-     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/ubi/lc-work/new-r2/new-pglite-cli/gbrain-home/.gbrain/content/ccb1560a-27cc-4f09-b425-0a3a95a70e2a/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
+     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: ~/lc-work/new-r2/new-pglite-cli/gbrain-home/.gbrain/content/ccb1560a-27cc-4f09-b425-0a3a95a70e2a/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
      "errors": []
     },
     {
@@ -81,11 +81,11 @@
       "add",
       "vault",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-cli/vault"
+      "~/lc-work/new-r2/new-pglite-cli/vault"
      ],
      "code": 0,
      "ms": 860,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-pglite-cli/vault\",\n  \"source_incarnation\": \"9a4b58e5-2cf5-4d1b-8222-87876b577c14\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"2274c778-a8a9-48d4-9feb-542e7fc719db\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"~/lc-work/new-r2/new-pglite-cli/vault\",\n  \"source_incarnation\": \"9a4b58e5-2cf5-4d1b-8222-87876b577c14\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"2274c778-a8a9-48d4-9feb-542e7fc719db\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
      "errors": []
     },
     {
@@ -95,11 +95,11 @@
       "add",
       "collide",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-cli/collide-vault"
+      "~/lc-work/new-r2/new-pglite-cli/collide-vault"
      ],
      "code": 0,
      "ms": 889,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-pglite-cli/collide-vault\",\n  \"source_incarnation\": \"c2dfc0cb-3519-45cf-8a44-e37164338512\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"8177b393-2733-415d-b51a-e82ce7d5e783\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"~/lc-work/new-r2/new-pglite-cli/collide-vault\",\n  \"source_incarnation\": \"c2dfc0cb-3519-45cf-8a44-e37164338512\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"8177b393-2733-415d-b51a-e82ce7d5e783\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
      "errors": []
     },
     {
@@ -109,11 +109,11 @@
       "add",
       "sharedid",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-cli/sharedid-vault"
+      "~/lc-work/new-r2/new-pglite-cli/sharedid-vault"
      ],
      "code": 0,
      "ms": 981,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-pglite-cli/sharedid-vault\",\n  \"source_incarnation\": \"d4fb0551-9508-4b49-9724-3e4641f41769\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"27772107-53bc-47d9-b553-22d34cd794ef\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"~/lc-work/new-r2/new-pglite-cli/sharedid-vault\",\n  \"source_incarnation\": \"d4fb0551-9508-4b49-9724-3e4641f41769\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"27772107-53bc-47d9-b553-22d34cd794ef\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
      "errors": []
     },
     {
@@ -3194,7 +3194,7 @@
       "init",
       "--pglite",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-mcp-stdio/gbrain-home/brain.pglite",
+      "~/lc-work/new-r2/new-pglite-mcp-stdio/gbrain-home/brain.pglite",
       "--embedding-model",
       "litellm:fake-embed",
       "--embedding-dimensions",
@@ -3202,7 +3202,7 @@
      ],
      "code": 0,
      "ms": 4236,
-     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/ubi/lc-work/new-r2/new-pglite-mcp-stdio/gbrain-home/.gbrain/content/89e12280-0292-4126-aeb9-72048a2c16b7/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
+     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: ~/lc-work/new-r2/new-pglite-mcp-stdio/gbrain-home/.gbrain/content/89e12280-0292-4126-aeb9-72048a2c16b7/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
      "errors": []
     },
     {
@@ -3212,11 +3212,11 @@
       "add",
       "vault",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-mcp-stdio/vault"
+      "~/lc-work/new-r2/new-pglite-mcp-stdio/vault"
      ],
      "code": 0,
      "ms": 891,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-pglite-mcp-stdio/vault\",\n  \"source_incarnation\": \"eca6a06d-c89c-432d-b6eb-b3af854f6c0b\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"da36052a-d972-4d66-803d-29fcf79abf5e\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"~/lc-work/new-r2/new-pglite-mcp-stdio/vault\",\n  \"source_incarnation\": \"eca6a06d-c89c-432d-b6eb-b3af854f6c0b\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"da36052a-d972-4d66-803d-29fcf79abf5e\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
      "errors": []
     },
     {
@@ -3226,11 +3226,11 @@
       "add",
       "collide",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-mcp-stdio/collide-vault"
+      "~/lc-work/new-r2/new-pglite-mcp-stdio/collide-vault"
      ],
      "code": 0,
      "ms": 911,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-pglite-mcp-stdio/collide-vault\",\n  \"source_incarnation\": \"15c80f9b-19c5-4091-82aa-90ac7fc2e47b\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"5a8c0589-17ee-4f52-908d-899227ddd416\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"~/lc-work/new-r2/new-pglite-mcp-stdio/collide-vault\",\n  \"source_incarnation\": \"15c80f9b-19c5-4091-82aa-90ac7fc2e47b\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"5a8c0589-17ee-4f52-908d-899227ddd416\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
      "errors": []
     },
     {
@@ -3240,11 +3240,11 @@
       "add",
       "sharedid",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-mcp-stdio/sharedid-vault"
+      "~/lc-work/new-r2/new-pglite-mcp-stdio/sharedid-vault"
      ],
      "code": 0,
      "ms": 1075,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-pglite-mcp-stdio/sharedid-vault\",\n  \"source_incarnation\": \"4933dfb7-dd1a-4932-990e-9efe75b5edf4\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"140114d7-2617-402b-a23e-91fa5053caf0\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"~/lc-work/new-r2/new-pglite-mcp-stdio/sharedid-vault\",\n  \"source_incarnation\": \"4933dfb7-dd1a-4932-990e-9efe75b5edf4\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"140114d7-2617-402b-a23e-91fa5053caf0\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
      "errors": []
     },
     {
@@ -6541,7 +6541,7 @@
       "init",
       "--pglite",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-mcp-http/gbrain-home/brain.pglite",
+      "~/lc-work/new-r2/new-pglite-mcp-http/gbrain-home/brain.pglite",
       "--embedding-model",
       "litellm:fake-embed",
       "--embedding-dimensions",
@@ -6549,7 +6549,7 @@
      ],
      "code": 0,
      "ms": 4356,
-     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/ubi/lc-work/new-r2/new-pglite-mcp-http/gbrain-home/.gbrain/content/98871223-ae89-459a-a0e4-13548bce38b1/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
+     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: ~/lc-work/new-r2/new-pglite-mcp-http/gbrain-home/.gbrain/content/98871223-ae89-459a-a0e4-13548bce38b1/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
      "errors": []
     },
     {
@@ -6559,11 +6559,11 @@
       "add",
       "vault",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-mcp-http/vault"
+      "~/lc-work/new-r2/new-pglite-mcp-http/vault"
      ],
      "code": 0,
      "ms": 835,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-pglite-mcp-http/vault\",\n  \"source_incarnation\": \"e8af6e89-ca55-420c-b026-1917d8e9c61f\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"fadd71bd-93c2-4146-8580-882431b74f5a\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"~/lc-work/new-r2/new-pglite-mcp-http/vault\",\n  \"source_incarnation\": \"e8af6e89-ca55-420c-b026-1917d8e9c61f\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"fadd71bd-93c2-4146-8580-882431b74f5a\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
      "errors": []
     },
     {
@@ -6573,11 +6573,11 @@
       "add",
       "collide",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-mcp-http/collide-vault"
+      "~/lc-work/new-r2/new-pglite-mcp-http/collide-vault"
      ],
      "code": 0,
      "ms": 840,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-pglite-mcp-http/collide-vault\",\n  \"source_incarnation\": \"c30247df-07c2-4c7b-a832-a7427a36234e\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"ba82fa50-1fbd-47ec-8dc6-c9bd8cddef1b\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"~/lc-work/new-r2/new-pglite-mcp-http/collide-vault\",\n  \"source_incarnation\": \"c30247df-07c2-4c7b-a832-a7427a36234e\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"ba82fa50-1fbd-47ec-8dc6-c9bd8cddef1b\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
      "errors": []
     },
     {
@@ -6587,11 +6587,11 @@
       "add",
       "sharedid",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-pglite-mcp-http/sharedid-vault"
+      "~/lc-work/new-r2/new-pglite-mcp-http/sharedid-vault"
      ],
      "code": 0,
      "ms": 993,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-pglite-mcp-http/sharedid-vault\",\n  \"source_incarnation\": \"4da69131-a52f-4f62-ac05-ecd109187ceb\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"8a39959c-4ac7-4dfa-bb1e-167058413c76\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"~/lc-work/new-r2/new-pglite-mcp-http/sharedid-vault\",\n  \"source_incarnation\": \"4da69131-a52f-4f62-ac05-ecd109187ceb\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"8a39959c-4ac7-4dfa-bb1e-167058413c76\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
      "errors": []
     },
     {
@@ -9583,7 +9583,7 @@
      ],
      "code": 0,
      "ms": 3991,
-     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/ubi/lc-work/new-r2/new-postgres-cli/gbrain-home/.gbrain/content/28f03672-0390-4846-97ea-80e2edbca3bb/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
+     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: ~/lc-work/new-r2/new-postgres-cli/gbrain-home/.gbrain/content/28f03672-0390-4846-97ea-80e2edbca3bb/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
      "errors": []
     },
     {
@@ -9593,11 +9593,11 @@
       "add",
       "vault",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-postgres-cli/vault"
+      "~/lc-work/new-r2/new-postgres-cli/vault"
      ],
      "code": 0,
      "ms": 602,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-postgres-cli/vault\",\n  \"source_incarnation\": \"fc116865-0d27-4c89-8779-f332c7c4100d\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"cad49f0d-79a2-4768-a312-c5b345cc9653\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"~/lc-work/new-r2/new-postgres-cli/vault\",\n  \"source_incarnation\": \"fc116865-0d27-4c89-8779-f332c7c4100d\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"cad49f0d-79a2-4768-a312-c5b345cc9653\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
      "errors": []
     },
     {
@@ -9607,11 +9607,11 @@
       "add",
       "collide",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-postgres-cli/collide-vault"
+      "~/lc-work/new-r2/new-postgres-cli/collide-vault"
      ],
      "code": 0,
      "ms": 714,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-postgres-cli/collide-vault\",\n  \"source_incarnation\": \"7a47bfb6-17cf-4b1f-976f-e9948e7e3c33\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"97b7c8dc-e3ac-43a3-96fb-46f88c3e70f5\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"~/lc-work/new-r2/new-postgres-cli/collide-vault\",\n  \"source_incarnation\": \"7a47bfb6-17cf-4b1f-976f-e9948e7e3c33\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"97b7c8dc-e3ac-43a3-96fb-46f88c3e70f5\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
      "errors": []
     },
     {
@@ -9621,11 +9621,11 @@
       "add",
       "sharedid",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-postgres-cli/sharedid-vault"
+      "~/lc-work/new-r2/new-postgres-cli/sharedid-vault"
      ],
      "code": 0,
      "ms": 606,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-postgres-cli/sharedid-vault\",\n  \"source_incarnation\": \"70846fe3-e757-47c0-b348-c25b53308846\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"bdd3f70d-7660-4f6f-a96f-af64207633db\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"~/lc-work/new-r2/new-postgres-cli/sharedid-vault\",\n  \"source_incarnation\": \"70846fe3-e757-47c0-b348-c25b53308846\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"bdd3f70d-7660-4f6f-a96f-af64207633db\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
      "errors": []
     },
     {
@@ -12711,7 +12711,7 @@
      ],
      "code": 0,
      "ms": 3953,
-     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/ubi/lc-work/new-r2/new-postgres-mcp-stdio/gbrain-home/.gbrain/content/c2ebbad7-9fa5-4d8b-932c-55b5b7240280/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
+     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: ~/lc-work/new-r2/new-postgres-mcp-stdio/gbrain-home/.gbrain/content/c2ebbad7-9fa5-4d8b-932c-55b5b7240280/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
      "errors": []
     },
     {
@@ -12721,11 +12721,11 @@
       "add",
       "vault",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-postgres-mcp-stdio/vault"
+      "~/lc-work/new-r2/new-postgres-mcp-stdio/vault"
      ],
      "code": 0,
      "ms": 651,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-postgres-mcp-stdio/vault\",\n  \"source_incarnation\": \"32a3336b-71b9-49ed-8768-e803f70f7f65\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"e20c0872-b7d0-41ed-8cea-cb6404c3e27a\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"~/lc-work/new-r2/new-postgres-mcp-stdio/vault\",\n  \"source_incarnation\": \"32a3336b-71b9-49ed-8768-e803f70f7f65\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"e20c0872-b7d0-41ed-8cea-cb6404c3e27a\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
      "errors": []
     },
     {
@@ -12735,11 +12735,11 @@
       "add",
       "collide",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-postgres-mcp-stdio/collide-vault"
+      "~/lc-work/new-r2/new-postgres-mcp-stdio/collide-vault"
      ],
      "code": 0,
      "ms": 583,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-postgres-mcp-stdio/collide-vault\",\n  \"source_incarnation\": \"09e5641a-c093-4d24-9a10-7cf656f4d906\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"5037f036-3e55-445b-8ae0-504b45861f2a\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"~/lc-work/new-r2/new-postgres-mcp-stdio/collide-vault\",\n  \"source_incarnation\": \"09e5641a-c093-4d24-9a10-7cf656f4d906\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"5037f036-3e55-445b-8ae0-504b45861f2a\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
      "errors": []
     },
     {
@@ -12749,11 +12749,11 @@
       "add",
       "sharedid",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-postgres-mcp-stdio/sharedid-vault"
+      "~/lc-work/new-r2/new-postgres-mcp-stdio/sharedid-vault"
      ],
      "code": 0,
      "ms": 664,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-postgres-mcp-stdio/sharedid-vault\",\n  \"source_incarnation\": \"8942eba0-08bc-4b52-9b86-5929b318973b\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"a3c88dbc-1798-4acb-ada5-d9e4506c2e74\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"~/lc-work/new-r2/new-postgres-mcp-stdio/sharedid-vault\",\n  \"source_incarnation\": \"8942eba0-08bc-4b52-9b86-5929b318973b\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"a3c88dbc-1798-4acb-ada5-d9e4506c2e74\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
      "errors": []
     },
     {
@@ -16060,7 +16060,7 @@
      ],
      "code": 0,
      "ms": 3920,
-     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: /home/ubi/lc-work/new-r2/new-postgres-mcp-http/gbrain-home/.gbrain/content/740366df-653a-4731-8186-414afbd97a1f/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
+     "tail": "Note: memories agents save are readable by every agent connected to\nthis brain; use visibility:\"private\" for local-only facts.\nOther harnesses (Codex, OpenClaw): docs/protocol/MEMORY_VERBS_v1.md\nIf `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · health `gbrain doctor`\n  Setting up brain schema (v317)...\n  v142: takes.embedding resized to vector(64); existing take vectors cleared\n  312 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: ~/lc-work/new-r2/new-postgres-mcp-http/gbrain-home/.gbrain/content/740366df-653a-4731-8186-414afbd97a1f/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)",
      "errors": []
     },
     {
@@ -16070,11 +16070,11 @@
       "add",
       "vault",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-postgres-mcp-http/vault"
+      "~/lc-work/new-r2/new-postgres-mcp-http/vault"
      ],
      "code": 0,
      "ms": 584,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-postgres-mcp-http/vault\",\n  \"source_incarnation\": \"360e0f63-9c42-4c08-9885-06e24902da26\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"49611b31-c58b-49e1-ab31-b211ab8d3bd0\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"vault\",\n  \"local_path\": \"~/lc-work/new-r2/new-postgres-mcp-http/vault\",\n  \"source_incarnation\": \"360e0f63-9c42-4c08-9885-06e24902da26\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"49611b31-c58b-49e1-ab31-b211ab8d3bd0\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate vault` takes it out",
      "errors": []
     },
     {
@@ -16084,11 +16084,11 @@
       "add",
       "collide",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-postgres-mcp-http/collide-vault"
+      "~/lc-work/new-r2/new-postgres-mcp-http/collide-vault"
      ],
      "code": 0,
      "ms": 712,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-postgres-mcp-http/collide-vault\",\n  \"source_incarnation\": \"c704acee-6113-4c2c-870d-db7d091033b0\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"46fd5d61-c6af-40d5-94f2-378d182eb505\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"collide\",\n  \"local_path\": \"~/lc-work/new-r2/new-postgres-mcp-http/collide-vault\",\n  \"source_incarnation\": \"c704acee-6113-4c2c-870d-db7d091033b0\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"46fd5d61-c6af-40d5-94f2-378d182eb505\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate collide` takes it out",
      "errors": []
     },
     {
@@ -16098,11 +16098,11 @@
       "add",
       "sharedid",
       "--path",
-      "/home/ubi/lc-work/new-r2/new-postgres-mcp-http/sharedid-vault"
+      "~/lc-work/new-r2/new-postgres-mcp-http/sharedid-vault"
      ],
      "code": 0,
      "ms": 578,
-     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"/home/ubi/lc-work/new-r2/new-postgres-mcp-http/sharedid-vault\",\n  \"source_incarnation\": \"aa3d95dd-0903-4ac9-9149-db0653dc296e\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"4fc9ec6f-0a06-4b14-ae98-2f579374d157\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
+     "tail": "    \"federated\": true\n  },\n  \"operation\": \"add\",\n  \"source_id\": \"sharedid\",\n  \"local_path\": \"~/lc-work/new-r2/new-postgres-mcp-http/sharedid-vault\",\n  \"source_incarnation\": \"aa3d95dd-0903-4ac9-9149-db0653dc296e\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"4fc9ec6f-0a06-4b14-ae98-2f579374d157\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}\nthis brain serves one person, so a new source joins default search; `gbrain sources unfederate sharedid` takes it out",
      "errors": []
     },
     {

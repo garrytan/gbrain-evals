@@ -194,9 +194,10 @@ README's large-page row keeps `7a6bdd3`.
 
 ### Harness defects (none in gbrain)
 
-Each runner fix has a test that fails without it and leaves every earlier receipt unchanged; the VM script fix (2) is
-one line in `run-kept.sh`, shown by the third run reaching every cell. Each was committed with a dated amendment
-before the next run.
+Fixes 1 to 5 came before the counted runs. Each runner fix among them has a test that fails without it and leaves
+every earlier receipt unchanged; the VM script fix (2) is one line in `run-kept.sh`, shown by the third run reaching
+every cell. Each was committed with a dated amendment before the next run. Fix 6 came after the runs and changed only
+path strings.
 
 1. **N4 read quote-fenced facts as raw text** (amendment of 2026-11-16, fix `8569f237`). Since v0.60.536.0 (#8367),
    a remote `recall` returns facts below the owner's trust tier inside a quote fence. N4 compared the raw text with its
@@ -215,8 +216,14 @@ before the next run.
    for spend consent since v0.60.46.0 and exits 3 without a terminal; the runner's embedder is a free local hash
    embedder, so a build whose `embed` takes `--yes` now gets it. On PGLite with `gbrain serve` live, the same step
    is refused with `pglite_busy`, a deliberate guard, and the receipts report it as observed.
+6. **Two runners kept VM paths in their receipts** (found by CI's receipt path check on this report's pull request).
+   The lifecycle matrix wrote its receipt without `scrubMachinePaths`, and N5 handed its receipt to `writeReceipt`,
+   which rewrites only the checkout path. Both now rewrite checkout, home and temp paths, as N1 and N14 already did;
+   the lifecycle writer has a test, and N5 is covered by the repository's check on committed receipts. In the four
+   affected receipts (the three lifecycle runs and N5) only those strings changed: the VM checkout became relative,
+   `/home/ubi/` became `~/` and `/tmp/` became `<tmp>/`. Every number, key and verdict is byte-identical.
 
-The N2-2 repro is a sixth case of the same kind: its stand-in engine was thinner than v0.60.733.0's code path. The
+The N2-2 repro is a case like fixes 1 to 5: its stand-in engine was thinner than v0.60.733.0's code path. The
 published file is unchanged, and the real-brain copy above runs at both builds.
 
 ### Rows that wait for the December refresh

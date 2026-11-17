@@ -31,6 +31,7 @@ import {
 } from './lifecycle/scenario.ts';
 import { scoreCheckpoint, type CheckpointScore, type FactEvent } from './lifecycle/score.ts';
 import { loadFactUnquote, type Unquote } from './quoted-reads.ts';
+import { scrubMachinePaths } from './receipt.ts';
 
 type Engine = 'pglite' | 'postgres';
 type Iface = 'cli' | 'mcp-stdio' | 'mcp-http';
@@ -350,11 +351,15 @@ async function main() {
     engines, interfaces: ifaces,
     cells: results,
   };
+  writeLifecycleReceipt(out, receipt);
+  console.error(`[lifecycle] receipt ${out}`);
+}
+
+export function writeLifecycleReceipt(out: string, receipt: unknown): void {
   mkdirSync(dirname(out), { recursive: true });
   const tmp = `${out}.tmp`;
-  writeFileSync(tmp, JSON.stringify(receipt, null, 1) + '\n');
+  writeFileSync(tmp, JSON.stringify(scrubMachinePaths(receipt), null, 1) + '\n');
   renameSync(tmp, out);
-  console.error(`[lifecycle] receipt ${out}`);
 }
 
 if (import.meta.main) {
