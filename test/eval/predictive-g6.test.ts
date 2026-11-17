@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, installPaidRequestGuard } from '../../eval/runner/budget-ledger.ts';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS } from '../../eval/runner/hermetic-env.ts';
-import { g6Tasks, g6World, runOutOfViewEpisode, scoreOutOfViewEpisode, summarizeOutOfView } from '../../eval/runner/predictive/out-of-view/agent.ts';
+import { g6Tasks, g6World, probeReachable, runOutOfViewEpisode, scoreOutOfViewEpisode, summarizeOutOfView } from '../../eval/runner/predictive/out-of-view/agent.ts';
 import { runPaid } from '../../eval/runner/predictive/paid.ts';
 import { paidJobs, planUnit, scorecards } from '../../eval/runner/predictive/run.ts';
 
@@ -56,6 +56,17 @@ describe('G6 plan and scoring', () => {
     expect(card.answered_without_gold).toBe(1);
     expect(Object.values(card.by_subcause).reduce((s, c) => s + c.episodes, 0)).toBe(2 * leaked.subcauses.length);
     expect(card.usd).toBeCloseTo(0.03, 9);
+  });
+
+  test('the probe reads one gold page at a time, so a single-writer brain never refuses a second reader', async () => {
+    let inFlight = 0;
+    const arm = { async call(_name: string, args: Record<string, unknown>) {
+      if (inFlight > 0) return 'Error: GBrain: Timed out waiting for PGLite data-dir lock';
+      inFlight++;
+      try { await Bun.sleep(5); return JSON.stringify({ slug: args.slug }); } finally { inFlight--; }
+    } };
+    const gold = tasks[hidden].gold;
+    expect(await probeReachable(arm, gold)).toEqual(Object.fromEntries(gold.map(s => [s, true])));
   });
 });
 
