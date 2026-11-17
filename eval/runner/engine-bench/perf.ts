@@ -41,6 +41,7 @@ import { cpus, loadavg, platform, release, tmpdir, totalmem } from 'os';
 import { join, relative, resolve } from 'path';
 import type { BrainEngine } from 'gbrain/engine';
 import type { SearchResult } from 'gbrain/types';
+import { redactUrlPasswords } from '../hermetic-env.ts';
 import { attestPreregistration, type Attestation } from '../prereg.ts';
 import { clusteredPairedDelta, seededRandom, type PairedItem } from '../stats/paired.ts';
 import { EvalEngineUnavailable, isCapabilityMissing, openEvalEngine, supportsRawSql, type EvalEngineKind } from '../eval-engine.ts';
@@ -139,7 +140,7 @@ export function summarize(samples: number[]): LatencyStats {
 
 /** The command line a receipt records, with the password of any connection URL replaced. */
 export function recordedCommand(argv: string[]): string {
-  return `bun eval/runner/engine-bench/perf.ts ${argv.map(a => a.replace(/(\/\/[^/:@\s]*:)[^/@\s]*@/g, '$1***@')).join(' ')}`.trim();
+  return `bun eval/runner/engine-bench/perf.ts ${argv.map(a => redactUrlPasswords(a)).join(' ')}`.trim();
 }
 
 export function median(xs: number[]): number {
