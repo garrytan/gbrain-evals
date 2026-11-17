@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "2026-11-16-engine-shootout",
+      "preregistration": "docs/benchmarks/2026-11-16-engine-shootout-preregistration.md",
+      "results": ["docs/benchmarks/2026-11-16-engine-shootout/results/**"]
+    }
+  ]
+}
