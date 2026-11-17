@@ -2,6 +2,16 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.250] - 2026-11-17
+
+### The secrets check accepts N6's expired-token description in engine-bench correctness receipts
+
+- The secrets check that runs before a push now accepts N6's prose description of its expired-token probe in the
+  N6-over-HTTP Postgres receipt that engine-bench's correctness stage writes, at
+  `docs/benchmarks/*/correctness/work/n6-http-postgres/receipt.json`. It is the same allowlist entry, with the same
+  pattern, that already covered counted `n6pg` receipts; only that one path was added, so any other value there is
+  still checked.
+
 ## [0.10.249] - 2026-11-17
 
 Recorded commands and logs now mask any password a connection URL or a `password=` setting carries, including percent-encoded passwords, passwords or user names holding a `'`, quoted `password=` values, and malformed passwords with a raw `@`, `:` or `/`. One helper, `redactUrlPasswords` in `eval/runner/hermetic-env.ts`, now serves the lifecycle slice's operator log (used by N1 and the other lifecycle runners) and the engine-bench speed receipt. Before, each kept its own pattern that missed those shapes. Tests in `test/eval/redact-url-passwords.test.ts`.
