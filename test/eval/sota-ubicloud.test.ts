@@ -4,7 +4,7 @@
  * provider is reached. Key values here are dummies; no test reads a real key.
  */
 import { describe, expect, test } from 'bun:test';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -17,13 +17,14 @@ const DUMMIES = { ANTHROPIC_API_KEY: 'dummy-anthropic', OPENAI_API_KEY: 'dummy-o
  * A fake ubi-runner: it declares UBI_TTL_HOURS support unless ttl is false, logs each subcommand to <root>/calls, list
  * prints <root>/vms, run appends its arguments to <root>/launches and exits runExit (leaving its -n VM in <root>/vms
  * when keep is set), pull appends its arguments to <root>/pulls and its UBI_FINAL_PULL to <root>/pull-env, ssh exits
- * sshExit, and down removes the VM from <root>/vms.
+ * sshExit (or, with 'exec', runs its command here with <root>/vmhome as the VM's home), and down removes the VM from
+ * <root>/vms.
  */
-function fakeRunner(name: string, list = 'cat "$(dirname "$0")/vms" 2>/dev/null || true', ttl = true, runExit = 0, keep = false, sshExit = 0) {
+function fakeRunner(name: string, list = 'cat "$(dirname "$0")/vms" 2>/dev/null || true', ttl = true, runExit = 0, keep = false, sshExit: number | 'exec' = 0) {
   const root = join(dir, name);
   mkdirSync(root, { recursive: true });
   const fake = join(root, 'fake-ubi.sh');
-  writeFileSync(fake, `#!/usr/bin/env bash\n${ttl ? '# honours UBI_TTL_HOURS\n' : ''}echo "$1" >> "$(dirname "$0")/calls"\ncase "$1" in\n  list) ${list} ;;\n  run) shift; echo "$*" >> "$(dirname "$0")/launches"; ${keep ? 'echo "$2 running" >> "$(dirname "$0")/vms"; ' : ''}exit ${runExit} ;;\n  pull) shift; echo "$*" >> "$(dirname "$0")/pulls"; echo "\${UBI_FINAL_PULL:-unset}" >> "$(dirname "$0")/pull-env" ;;\n  ssh) exit ${sshExit} ;;\n  down) sed -i "/^$2 /d" "$(dirname "$0")/vms" ;;\nesac\n`, { mode: 0o755 });
+  writeFileSync(fake, `#!/usr/bin/env bash\n${ttl ? '# honours UBI_TTL_HOURS\n' : ''}echo "$1" >> "$(dirname "$0")/calls"\ncase "$1" in\n  list) ${list} ;;\n  run) shift; echo "$*" >> "$(dirname "$0")/launches"; ${keep ? 'echo "$2 running" >> "$(dirname "$0")/vms"; ' : ''}exit ${runExit} ;;\n  pull) shift; echo "$*" >> "$(dirname "$0")/pulls"; echo "\${UBI_FINAL_PULL:-unset}" >> "$(dirname "$0")/pull-env" ;;\n  ssh) ${sshExit === 'exec' ? 'HOME="$(dirname "$0")/vmhome" bash -c "$3"' : `exit ${sshExit}`} ;;\n  down) sed -i "/^$2 /d" "$(dirname "$0")/vms" ;;\nesac\n`, { mode: 0o755 });
   const home = join(root, 'home');
   const launch = (args: string[], env: Record<string, string> = DUMMIES) => spawnSync('bash', ['eval/runner/sota/ubicloud/run.sh', ...args], { cwd: REPO, env: { PATH: process.env.PATH!, HOME: home, UBI_RUNNER: fake, ...env }, encoding: 'utf8' });
   const launches = () => (existsSync(join(root, 'launches')) ? readFileSync(join(root, 'launches'), 'utf8').trim().split('\n') : []);
@@ -124,6 +125,28 @@ describe('run.sh, with a fake runner', () => {
     expect([h.status, h.stderr]).toEqual([2, expect.stringContaining('a launch of oracle-dev still holds')]);
     expect(held.calls().filter(c => c === 'stop' || c === 'pull' || c === 'down')).toEqual([]);
     expect(existsSync(marker(held))).toBe(true);
+  });
+
+  test('pull waits for every process of the stopped command\'s session, so a paid step orphaned by SIGTERM keeps the marker', async () => {
+    const f = fakeRunner('pull-orphan', undefined, true, 253, true, 'exec');
+    expect(f.launch(['oracle-dev', '5']).status).toBe(253);
+    const vmHome = join(f.root, 'vmhome');
+    mkdirSync(vmHome, { recursive: true });
+    writeFileSync(join(vmHome, '.ubirun-cmd.rc'), '143\n');
+    const orphan = spawn('sleep', ['60'], { detached: true, stdio: 'ignore' });
+    writeFileSync(join(vmHome, '.ubirun-cmd.pid'), `${orphan.pid}\n`);
+    const live = f.launch(['pull', 'oracle-dev']);
+    expect([live.status, live.stderr]).toEqual([1, expect.stringContaining('or a step it started, has not exited')]);
+    expect(f.calls().filter(c => c === 'pull' || c === 'down')).toEqual([]);
+    const gone = new Promise(r => orphan.once('exit', r));
+    orphan.kill('SIGKILL');
+    await gone;
+    writeFileSync(join(vmHome, '.ubirun-cmd.pid'), '');
+    expect(f.launch(['pull', 'oracle-dev']).status).toBe(1);
+    writeFileSync(join(vmHome, '.ubirun-cmd.pid'), `${orphan.pid}\n`);
+    expect(f.launch(['pull', 'oracle-dev']).status).toBe(0);
+    expect(f.calls().slice(-2)).toEqual(['pull', 'down']);
+    expect(existsSync(join(f.home, '.capy/work/sota-windows/oracle-dev.in-flight'))).toBe(false);
   });
 
   test('the marker clears only when the run ends with its pull landed and its VM gone', () => {

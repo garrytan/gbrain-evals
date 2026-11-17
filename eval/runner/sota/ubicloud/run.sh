@@ -88,7 +88,10 @@ if [ "${1:-}" = pull ]; then
   [ -n "$vm" ] || { echo "run.sh: $marker names no VM" >&2; exit 2; }
   exec 9<"$WINDOWS/$window" && flock -n 9 || { echo "run.sh: refusing to pull: a launch of $window still holds $WINDOWS/$window; $marker stays" >&2; exit 2; }
   "$UBI" stop "$vm" || true
-  "$UBI" ssh "$vm" 'test -f ~/.ubirun-cmd.rc' || { echo "run.sh: the command on $vm has not exited (or the VM cannot be reached), so its ledger may still change; $marker stays" >&2; exit 1; }
+  # The exit status proves only that the wrapper's command exited; a paid step it started can outlive it in the same
+  # session (setsid makes the wrapper's pid the session id), so every process in that session must be gone too.
+  "$UBI" ssh "$vm" 'test -f ~/.ubirun-cmd.rc && s=$(cat ~/.ubirun-cmd.pid) && [ -n "$s" ] && { pgrep -s "$s" >/dev/null; [ $? -eq 1 ]; }' \
+    || { echo "run.sh: the command on $vm, or a step it started, has not exited (or the VM cannot be reached), so its ledger may still change; $marker stays" >&2; exit 1; }
   UBI_FINAL_PULL=1 "$UBI" pull "$vm" "work/$window" "$WINDOWS" || { echo "run.sh: the pull from $vm failed; $marker stays" >&2; exit 1; }
   rm -f "$marker"
   echo "run.sh: $window's state is back in $WINDOWS/$window; destroying $vm"
