@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  armAgreement, comparePair, countEmbedPlan, EmbedCacheMiss, fillCache, hashVector, LME_RECALL_TOP_K, main, refuseNetwork, runLmeRecall,
+  aggregateLmeRows, armAgreement, comparePair, countEmbedPlan, readLmeRows, EmbedCacheMiss, fillCache, hashVector, LME_RECALL_TOP_K, main, refuseNetwork, runLmeRecall,
   stubTransport, type QuestionRow,
 } from '../../eval/runner/engine-bench/lme-recall.ts';
 import { resolveGbrainUnderTest, type GbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
@@ -57,7 +57,7 @@ function fakeRustGbrain(): GbrainUnderTest {
   writeFileSync(join(root, 'src/core/engine-construct.ts'),
     'import { PGLiteEngine } from ' + p('src/core/pglite-engine.ts') + ';\n'
     + 'export async function constructEngine() { return new PGLiteEngine(); }\n');
-  for (const sub of ['src/core/import-file.ts', 'src/core/search/hybrid.ts', 'src/core/embedding.ts', 'src/core/ai/gateway.ts', 'src/core/embedding-pricing.ts']) {
+  for (const sub of ['src/core/import-file.ts', 'src/core/search/hybrid.ts', 'src/core/embedding.ts', 'src/core/ai/gateway.ts', 'src/core/embedding-pricing.ts', 'src/core/embed-retry.ts']) {
     writeFileSync(join(root, sub), 'export * from ' + p(sub) + ';\n');
   }
   return { root, version: '0.0.0-fake-rust', overlay: null };
@@ -167,7 +167,7 @@ describe('embedding cache: count, fill, read-only counted run', () => {
   const calls: string[][] = [];
   const recording = (dims: number) => {
     const stub = stubTransport(dims);
-    return async (params: { values: string[] } & Record<string, unknown>) => { calls.push(params.values); return stub(params); };
+    return async (params: { values: string[] } & Record<string, unknown>) => { calls.push(params.values); return { ...(await stub(params)), usage: { tokens: params.values.length * 7 } }; };
   };
 
   test('the counted run fails closed when the cache file does not exist', async () => {
@@ -196,6 +196,7 @@ describe('embedding cache: count, fill, read-only counted run', () => {
     expect(calls.length).toBeGreaterThan(0);
     expect(filled.cache_entries).toBe(before.texts_to_embed);
     expect(filled.cost.usd).toBe(0);
+    expect(filled.provider_usage).toMatchObject({ tokens: calls.reduce((s, v) => s + v.length * 7, 0), requests: calls.length, requests_without_usage: 0 });
 
     const after = await countEmbedPlan({ gut: pinned, datasetPath: dataset, cachePath, limit: 2, log: quiet });
     expect(after).toMatchObject({ texts_to_embed: 0, chars_to_embed: 0, texts_cached: before.texts_to_embed });
@@ -212,6 +213,58 @@ describe('embedding cache: count, fill, read-only counted run', () => {
     new EmbeddingCache(empty, 'voyage:voyage-4@1024').close();
     await expect(runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['vector'], cachePath: empty, limit: 1, log: quiet })).rejects.toBeInstanceOf(EmbedCacheMiss);
   }, 120_000);
+});
+
+describe('sharding and NDJSON resume', () => {
+  const nd = (name: string) => join(work, 'nd', name);
+  const lines = (path: string) => readFileSync(path, 'utf8').split('\n').filter(Boolean).length;
+
+  test('two workers split the questions, a rerun resumes without new rows, and aggregate joins the shards', async () => {
+    const a = nd('w0.ndjson'), b = nd('w1.ndjson');
+    const r0 = await runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['keyword'], ndjsonPath: a, workerId: 0, totalWorkers: 2, log: quiet });
+    const r1 = await runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['keyword'], ndjsonPath: b, workerId: 1, totalWorkers: 2, log: quiet });
+    expect(r0.rows.map(r => r.question_id)).toEqual(['q1', 'q3_abs']);
+    expect(r1.rows.map(r => r.question_id)).toEqual(['q2']);
+    expect(r0.shard).toEqual({ worker_id: 0, total_workers: 2, questions: 2 });
+    expect(lines(a)).toBe(2);
+    expect(r0.rows.every(r => r.run_config_hash === r0.run_config_hashes.pglite)).toBe(true);
+
+    const again = await runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['keyword'], ndjsonPath: a, workerId: 0, totalWorkers: 2, log: quiet });
+    expect(again.resumed_rows).toBe(2);
+    expect(lines(a)).toBe(2);
+    expect(again.engines[0].recall.keyword).toEqual(r0.engines[0].recall.keyword);
+
+    const agg = aggregateLmeRows([a, b]);
+    expect(agg.rows).toHaveLength(3);
+    expect(agg.engines[0]).toMatchObject({ kind: 'pglite', n_questions: 3, n_errors: 0 });
+    expect(agg.engines[0].recall.keyword).toEqual({ recall_all_at_5: 1, recall_any_at_5: 1, n_scored: 2 });
+  }, 180_000);
+
+  test('an error row runs again, and a clean row from another configuration refuses to mix', async () => {
+    const path = nd('errors.ndjson');
+    const first = await runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['keyword'], limit: 1, ndjsonPath: path, log: quiet });
+    const hash = first.run_config_hashes.pglite!;
+    writeFileSync(path, JSON.stringify({ ...first.rows[0], arms: {}, error: 'boom' }) + '\n{"truncated":');
+    const rerun = await runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['keyword'], limit: 1, ndjsonPath: path, log: quiet });
+    expect(rerun.resumed_rows).toBe(0);
+    expect(rerun.rows[0].error).toBeUndefined();
+    expect(readLmeRows(path).map(r => r.error ?? 'clean')).toEqual(['boom', 'clean']);
+
+    writeFileSync(path, JSON.stringify({ ...first.rows[0], run_config_hash: 'other' }) + '\n');
+    await expect(runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['keyword'], limit: 1, ndjsonPath: path, log: quiet })).rejects.toThrow(/different run configuration/);
+    expect(hash).toMatch(/^[0-9a-f]{64}$/);
+  }, 180_000);
+
+  test('a worker id outside the worker count is refused', async () => {
+    await expect(runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['keyword'], workerId: 2, totalWorkers: 2, log: quiet })).rejects.toThrow(/worker-id/);
+  });
+
+  test('aggregate refuses rows from two configurations of one engine', () => {
+    const path = nd('mixed.ndjson');
+    const base = { engine: 'pglite', question_type: 't', is_abs: false, num_sessions: 1, arms: {}, timing_ms: { open: 0, import: 0, search: 0, total: 0 } };
+    writeFileSync(path, [{ ...base, question_id: 'a', run_config_hash: 'x' }, { ...base, question_id: 'b', run_config_hash: 'y' }].map(r => JSON.stringify(r)).join('\n') + '\n');
+    expect(() => aggregateLmeRows([path])).toThrow(/more than one run configuration/);
+  });
 });
 
 describe('no provider calls', () => {

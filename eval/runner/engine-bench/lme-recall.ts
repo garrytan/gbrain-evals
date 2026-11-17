@@ -39,7 +39,7 @@
  * published LongMemEval-S run in this repository used.
  */
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { SQL } from 'bun';
@@ -48,7 +48,7 @@ import type { BrainEngine } from 'gbrain/engine';
 import type { SearchResult } from 'gbrain/types';
 import { EvalEngineUnavailable, EVAL_ENGINES, openEvalEngine, type EvalEngineKind } from '../eval-engine.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
-import { PINNED_SEARCH_CONFIG, isAbsQuestion, normalizeSessions, stratifiedSample, sutPages, type Question } from '../longmemeval.ts';
+import { PINNED_SEARCH_CONFIG, canonicalJson, isAbsQuestion, normalizeSessions, stratifiedSample, sutPages, type Question } from '../longmemeval.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { assertEmbedded } from '../import-embedded.ts';
 import { uniqueInOrder, percentile } from '../metrics.ts';
@@ -88,6 +88,8 @@ interface GbrainModules {
   importFromContent: (engine: BrainEngine, slug: string, content: string, opts?: { noEmbed?: boolean }) => Promise<{ embedding_deferred?: boolean }>;
   hybridSearch: (engine: BrainEngine, query: string, opts?: { limit?: number; expansion?: boolean }) => Promise<SearchResult[]>;
   embedQuery: (text: string) => Promise<Float32Array>;
+  /** The document-side embed gbrain's import path calls (embed-retry.ts embedBatchKeepingUsable). */
+  embedDocuments: (texts: string[]) => Promise<unknown>;
   configureGateway: (config: Record<string, unknown>) => void;
   setEmbedTransport: (fn: EmbedTransport | null) => void;
   defaultEmbedding: { model: string; dimensions: number };
@@ -95,16 +97,18 @@ interface GbrainModules {
 
 /** Every gbrain module comes from the build under test, so the transport seam and the import path share one gateway. */
 async function loadGbrain(gut: GbrainUnderTest): Promise<GbrainModules> {
-  const [imp, hybrid, embedding, gateway] = await Promise.all([
+  const [imp, hybrid, embedding, gateway, retry] = await Promise.all([
     importGbrain<any>(gut, 'src/core/import-file.ts'),
     importGbrain<any>(gut, 'src/core/search/hybrid.ts'),
     importGbrain<any>(gut, 'src/core/embedding.ts'),
     importGbrain<any>(gut, 'src/core/ai/gateway.ts'),
+    importGbrain<any>(gut, 'src/core/embed-retry.ts'),
   ]);
   return {
     importFromContent: imp.importFromContent,
     hybridSearch: hybrid.hybridSearch,
     embedQuery: embedding.embedQuery,
+    embedDocuments: retry.embedBatchKeepingUsable,
     configureGateway: gateway.configureGateway,
     setEmbedTransport: gateway.__setEmbedTransportForTests,
     defaultEmbedding: { model: gateway.DEFAULT_EMBEDDING_MODEL, dimensions: gateway.DEFAULT_EMBEDDING_DIMENSIONS },
@@ -288,6 +292,8 @@ export interface QuestionRow {
   arms: Partial<Record<LmeArm, ArmResult>>;
   timing_ms: { open: number; import: number; search: number; total: number };
   error?: string;
+  /** lmeRunConfigHash of the configuration that produced this row. */
+  run_config_hash?: string;
 }
 
 function sessionIdFromSlug(slug: string): string {
@@ -469,7 +475,13 @@ export interface EngineSummary {
   projected_full_run_minutes?: number;
 }
 
-export interface LmeRecallReceipt {
+export interface RowsSummary {
+  engines: EngineSummary[];
+  comparisons: PairComparison[];
+  agreement: ArmAgreement[];
+}
+
+export interface LmeRecallReceipt extends RowsSummary {
   schema: typeof LME_RECALL_SCHEMA;
   started_at: string;
   finished_at: string;
@@ -478,14 +490,17 @@ export interface LmeRecallReceipt {
     file: string; sha256: string; matches_published_sha256: boolean; total_questions: number; selected: number; abstention_selected: number;
     stratify: number | null; limit: number | null; seed: number; question_ids: string[];
   };
+  /** This process ran the selected questions at positions i with i % total_workers == worker_id. */
+  shard: { worker_id: number; total_workers: number; questions: number };
+  ndjson: string | null;
+  /** Clean rows reused from the NDJSON stream under the same run configuration. */
+  resumed_rows: number;
+  run_config_hashes: Partial<Record<EvalEngineKind, string>>;
   top_k: number;
   arms: LmeArm[];
   search_config: Record<string, string>;
   embedder: { mode: EmbedderMode; model: string | null; dimensions: number | null; cache_path: string | null; plumbing_only: boolean; note: string };
   network: string;
-  engines: EngineSummary[];
-  comparisons: PairComparison[];
-  agreement: ArmAgreement[];
   bootstrap: typeof BOOTSTRAP;
   rows: QuestionRow[];
 }
@@ -520,6 +535,14 @@ function summarizeEngine(kind: EvalEngineKind, strategy: string, rows: QuestionR
   };
 }
 
+/** Per-engine summaries, every pairwise comparison and the all-engine agreement, from the rows of engines that ran. */
+export function summarizeRows(rows: readonly QuestionRow[], ran: readonly EvalEngineKind[], arms: readonly LmeArm[], strategies: Partial<Record<EvalEngineKind, string>> = {}): RowsSummary {
+  const engines = ran.map(k => summarizeEngine(k, strategies[k] ?? 'see the worker receipts', rows.filter(r => r.engine === k), arms));
+  const comparisons: PairComparison[] = [];
+  for (const arm of arms) for (let i = 0; i < ran.length; i++) for (let j = i + 1; j < ran.length; j++) comparisons.push(comparePair(rows, arm, ran[i], ran[j]));
+  return { engines, comparisons, agreement: arms.map(arm => armAgreement(rows, arm, ran)) };
+}
+
 const PROVIDER_KEY: Record<string, string> = { openai: 'OPENAI_API_KEY', voyage: 'VOYAGE_API_KEY' };
 
 /**
@@ -535,6 +558,34 @@ function placeholderKeyEnv(model: string): Record<string, string> {
 function configureEmbedding(mods: GbrainModules, embedding: { model: string; dimensions: number }, env: Record<string, string | undefined>): void {
   mods.configureGateway({ embedding_model: embedding.model, embedding_dimensions: embedding.dimensions, env });
 }
+
+// ─── Run configuration and the NDJSON stream ──────────────────────
+
+/** Two rows with the same hash came from the same pipeline: gbrain build, dataset bytes, arms, search pins, embedder and engine. */
+export function lmeRunConfigHash(o: {
+  gbrain: { version: string; commit: string | null }; datasetSha256: string; arms: readonly LmeArm[];
+  embedder: { mode: EmbedderMode; model: string | null; dimensions: number | null }; engine: EvalEngineKind;
+}): string {
+  return createHash('sha256').update(canonicalJson({
+    schema: LME_RECALL_SCHEMA, top_k: LME_RECALL_TOP_K, search_config: { ...PINNED_SEARCH_CONFIG }, ...o, arms: [...o.arms],
+  })).digest('hex');
+}
+
+/** Rows from an NDJSON stream. A line cut short by a kill is skipped, so that question runs again. */
+export function readLmeRows(path: string): QuestionRow[] {
+  if (!existsSync(path)) return [];
+  const rows: QuestionRow[] = [];
+  for (const line of readFileSync(path, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const row = JSON.parse(line) as QuestionRow;
+      if (row?.engine && row?.question_id) rows.push(row);
+    } catch { /* truncated line: re-run */ }
+  }
+  return rows;
+}
+
+const rowKey = (r: Pick<QuestionRow, 'engine' | 'question_id'>) => r.engine + '::' + r.question_id;
 
 // ─── runLmeRecall ──────────────────────────────────────────────────
 
@@ -554,6 +605,11 @@ export interface RunLmeRecallOptions {
   embedder?: 'cache' | 'plumbing-stub';
   /** Defaults to gbrain's default embedding at the build under test (voyage:voyage-4 at 1024 dimensions today). */
   embedding?: { model: string; dimensions: number };
+  /** Append every row here; clean rows already in it under the same run configuration are reused, error rows run again. */
+  ndjsonPath?: string;
+  /** This worker runs the selected questions at positions i with i % totalWorkers == workerId. */
+  workerId?: number;
+  totalWorkers?: number;
   workDir?: string;
   perQuestionTimeoutMs?: number;
   log?: (line: string) => void;
@@ -565,12 +621,35 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
   const arms = [...(o.arms ?? LME_ARMS)];
   for (const a of arms) if (!(LME_ARMS as readonly string[]).includes(a)) throw new Error('unknown arm ' + a + '; use ' + LME_ARMS.join(', '));
   for (const k of o.engines) if (!(EVAL_ENGINES as readonly string[]).includes(k)) throw new Error('unknown engine ' + k + '; use ' + EVAL_ENGINES.join(', '));
+  const workerId = o.workerId ?? 0, totalWorkers = o.totalWorkers ?? 1;
+  if (!Number.isInteger(totalWorkers) || totalWorkers < 1 || !Number.isInteger(workerId) || workerId < 0 || workerId >= totalWorkers) {
+    throw new Error('--worker-id must be an integer from 0 to --total-workers - 1 (got ' + workerId + ' of ' + totalWorkers + ')');
+  }
   const seed = o.seed ?? 42;
   const ds = loadDataset(o.datasetPath ?? defaultDatasetPath(), { limit: o.limit, stratify: o.stratify, seed });
+  const mine = ds.questions.filter((_, i) => i % totalWorkers === workerId);
   const mods = await loadGbrain(o.gut);
   const embedding = o.embedding ?? mods.defaultEmbedding;
   const needsVectors = arms.some(a => a !== 'keyword');
   const mode: EmbedderMode = needsVectors ? o.embedder ?? 'cache' : 'none';
+  const embedderId = { mode, model: needsVectors ? embedding.model : null, dimensions: needsVectors ? embedding.dimensions : null };
+  const hashes: Partial<Record<EvalEngineKind, string>> = Object.fromEntries(o.engines.map(engine => [engine, lmeRunConfigHash({
+    gbrain: { version: o.gut.version, commit: o.gut.overlay?.build.commit ?? null }, datasetSha256: ds.sha256, arms, embedder: embedderId, engine,
+  })]));
+  const prior = o.ndjsonPath ? readLmeRows(o.ndjsonPath) : [];
+  const stale = prior.filter(r => r.error === undefined && r.engine in hashes && r.run_config_hash !== hashes[r.engine]);
+  if (stale.length > 0) {
+    throw new Error('NDJSON ' + o.ndjsonPath + ' already holds ' + stale.length + ' clean row(s) for ' + [...new Set(stale.map(r => r.engine))].join(', ')
+      + ' from a different run configuration; resuming would mix configurations. Use a fresh --ndjson path.');
+  }
+  const mineIds = new Set(mine.map(q => q.question_id));
+  const done = new Map<string, QuestionRow>();
+  for (const r of prior) if (r.error === undefined && r.run_config_hash === hashes[r.engine] && mineIds.has(r.question_id)) done.set(rowKey(r), r);
+  if (o.ndjsonPath) {
+    mkdirSync(dirname(o.ndjsonPath), { recursive: true });
+    const existing = existsSync(o.ndjsonPath) ? readFileSync(o.ndjsonPath, 'utf8') : '';
+    if (existing && !existing.endsWith('\n')) appendFileSync(o.ndjsonPath, '\n');
+  }
   const cachePath = mode === 'cache' ? o.cachePath ?? defaultCachePath(embedding.model, embedding.dimensions) : null;
   if (cachePath !== null && !existsSync(cachePath)) {
     throw new EmbedCacheMiss('no embedding cache at ' + cachePath + '. The counted run reads only the cache; fill it with "fill-cache --paid --budget-run-id <id>" first.');
@@ -584,8 +663,8 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
     : mode === 'plumbing-stub' ? stubTransport(embedding.dimensions)
       : async () => { throw new Error('the keyword arm embeds nothing'); });
   const factories: StoreFactory[] = [];
-  const summaries: EngineSummary[] = [];
-  const rows: QuestionRow[] = [];
+  const refusals: EngineSummary[] = [];
+  const rows: QuestionRow[] = [...done.values()];
   try {
     for (const kind of o.engines) {
       try {
@@ -593,30 +672,36 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
         log('[lme-recall] ' + kind + ': store template ready');
       } catch (e) {
         const refused = e instanceof EvalEngineUnavailable;
-        summaries.push({ kind, status: refused ? 'refused' : 'error', reason: refused ? e.reason : 'store_init_failed', message: (e as Error).message, n_questions: 0, n_errors: 0, errors: [], recall: {} });
+        refusals.push({ kind, status: refused ? 'refused' : 'error', reason: refused ? e.reason : 'store_init_failed', message: (e as Error).message, n_questions: 0, n_errors: 0, errors: [], recall: {} });
         log('[lme-recall] ' + kind + ' ' + (refused ? 'refused (' + e.reason + ')' : 'failed') + ': ' + (e as Error).message);
       }
     }
+    if (done.size > 0) log('[lme-recall] resuming: ' + done.size + ' clean row(s) already in ' + o.ndjsonPath);
     const timeout = o.perQuestionTimeoutMs ?? 600_000;
-    for (let i = 0; i < ds.questions.length; i++) {
-      const q = ds.questions[i];
+    for (let i = 0; i < mine.length; i++) {
+      const q = mine[i];
       for (const f of factories) {
+        if (done.has(rowKey({ engine: f.kind, question_id: q.question_id }))) continue;
+        let row: QuestionRow;
         try {
-          rows.push(await runQuestion(mods, f, ds, q, arms, timeout));
+          row = await runQuestion(mods, f, ds, q, arms, timeout);
         } catch (e) {
           if (misses.n > 0 || e instanceof EmbedCacheMiss) {
             throw new EmbedCacheMiss(misses.n + ' text(s) for ' + q.question_id + ' are missing from the embedding cache ' + cachePath + '. The counted run stopped instead of calling a provider; fill the cache first.');
           }
-          rows.push({
+          row = {
             engine: f.kind, question_id: q.question_id, question_type: q.question_type, is_abs: isAbsQuestion(q.question_id),
             num_sessions: q.haystack_sessions.length, arms: {}, timing_ms: { open: 0, import: 0, search: 0, total: 0 }, error: (e as Error).message,
-          });
+          };
         }
+        row.run_config_hash = hashes[f.kind];
+        rows.push(row);
+        if (o.ndjsonPath) appendFileSync(o.ndjsonPath, JSON.stringify(row) + '\n');
       }
-      if ((i + 1) % 5 === 0 || i === ds.questions.length - 1) {
-        log('[lme-recall] ' + (i + 1) + '/' + ds.questions.length + ' ' + factories.map(f => {
-          const done = rows.filter(x => x.engine === f.kind && x.error === undefined);
-          return f.kind + ' ' + (done.reduce((s, x) => s + x.timing_ms.total, 0) / Math.max(1, done.length) / 1000).toFixed(2) + 's/question';
+      if ((i + 1) % 5 === 0 || i === mine.length - 1) {
+        log('[lme-recall] ' + (i + 1) + '/' + mine.length + ' ' + factories.map(f => {
+          const ok = rows.filter(x => x.engine === f.kind && x.error === undefined);
+          return f.kind + ' ' + (ok.reduce((s, x) => s + x.timing_ms.total, 0) / Math.max(1, ok.length) / 1000).toFixed(2) + 's/question';
         }).join(', '));
       }
     }
@@ -627,11 +712,8 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
     cache?.close();
     if (!o.workDir) rmSync(workDir, { recursive: true, force: true });
   }
-  for (const f of factories) summaries.push(summarizeEngine(f.kind, f.strategy, rows.filter(r => r.engine === f.kind), arms));
-  summaries.sort((x, y) => o.engines.indexOf(x.kind) - o.engines.indexOf(y.kind));
-  const ran = summaries.filter(s => s.status === 'ran').map(s => s.kind);
-  const comparisons: PairComparison[] = [];
-  for (const arm of arms) for (let i = 0; i < ran.length; i++) for (let j = i + 1; j < ran.length; j++) comparisons.push(comparePair(rows, arm, ran[i], ran[j]));
+  const summary = summarizeRows(rows, factories.map(f => f.kind), arms, Object.fromEntries(factories.map(f => [f.kind, f.strategy])));
+  const engines = [...summary.engines, ...refusals].sort((x, y) => o.engines.indexOf(x.kind) - o.engines.indexOf(y.kind));
   return {
     schema: LME_RECALL_SCHEMA,
     started_at, finished_at: new Date().toISOString(),
@@ -641,20 +723,46 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
       selected: ds.questions.length, abstention_selected: ds.questions.filter(q => isAbsQuestion(q.question_id)).length,
       stratify: o.stratify ?? null, limit: o.limit ?? null, seed, question_ids: ds.questions.map(q => q.question_id),
     },
+    shard: { worker_id: workerId, total_workers: totalWorkers, questions: mine.length },
+    ndjson: o.ndjsonPath ?? null,
+    resumed_rows: done.size,
+    run_config_hashes: hashes,
     top_k: LME_RECALL_TOP_K, arms, search_config: { ...PINNED_SEARCH_CONFIG },
     embedder: {
-      mode, model: needsVectors ? embedding.model : null, dimensions: needsVectors ? embedding.dimensions : null, cache_path: cachePath, plumbing_only: mode === 'plumbing-stub',
+      ...embedderId, cache_path: cachePath, plumbing_only: mode === 'plumbing-stub',
       note: mode === 'plumbing-stub'
         ? 'PLUMBING CHECK: vectors are sha256 hashes of the text, not embeddings. Vector and hybrid scores here mean nothing; they only show the pipeline runs on each engine.'
         : mode === 'cache' ? 'Vectors came from the content-addressed cache only; a miss stops the run and no provider was called.' : 'Keyword arm only; nothing was embedded.',
     },
     network: 'every HTTP(S) request to a non-loopback host was refused during the run',
-    engines: summaries,
-    comparisons,
-    agreement: arms.map(arm => armAgreement(rows, arm, ran)),
+    engines, comparisons: summary.comparisons, agreement: summary.agreement,
     bootstrap: BOOTSTRAP,
     rows,
   };
+}
+
+/**
+ * Combine the NDJSON streams of sharded workers into one summary. Each engine must carry a single run configuration;
+ * a question that appears more than once keeps its last clean row.
+ */
+export function aggregateLmeRows(paths: readonly string[]): RowsSummary & { ndjson: string[]; run_config_hashes: Partial<Record<EvalEngineKind, string>>; arms: LmeArm[]; rows: QuestionRow[] } {
+  const byKey = new Map<string, QuestionRow>();
+  for (const path of paths) {
+    for (const r of readLmeRows(path)) {
+      const prev = byKey.get(rowKey(r));
+      if (!prev || r.error === undefined || prev.error !== undefined) byKey.set(rowKey(r), r);
+    }
+  }
+  const rows = [...byKey.values()];
+  const hashes: Partial<Record<EvalEngineKind, string>> = {};
+  for (const r of rows) {
+    const h = r.run_config_hash ?? '';
+    if (hashes[r.engine] !== undefined && hashes[r.engine] !== h) throw new Error('engine ' + r.engine + ' has rows from more than one run configuration; aggregate one configuration at a time.');
+    hashes[r.engine] = h;
+  }
+  const ran = EVAL_ENGINES.filter(k => k in hashes);
+  const arms = LME_ARMS.filter(a => rows.some(r => r.arms[a]));
+  return { ndjson: [...paths], run_config_hashes: hashes, arms, ...summarizeRows(rows, ran, arms), rows };
 }
 
 // ─── count and fill-cache ──────────────────────────────────────────
@@ -676,8 +784,7 @@ export interface EmbedPlan {
 
 /**
  * Drive the exact import and query-embedding path of the vector and hybrid arms on a scratch PGLite store, so the
- * gateway's embed transport sees every text those arms embed. count passes a recording stub; fill-cache passes the
- * cache over the real provider.
+ * gateway's embed transport sees every text those arms embed.
  */
 async function walkEmbeddings(o: { gut: GbrainUnderTest; mods: GbrainModules; ds: LoadedDataset; workDir: string; log: (l: string) => void }): Promise<void> {
   const f = await storeFactory(o.gut, 'pglite', o.workDir, undefined);
@@ -701,6 +808,8 @@ async function walkEmbeddings(o: { gut: GbrainUnderTest; mods: GbrainModules; ds
 const inputSide = (params: Record<string, unknown>): 'query' | 'document' =>
   (params.providerOptions as { openaiCompatible?: { input_type?: unknown } } | undefined)?.openaiCompatible?.input_type === 'query' ? 'query' : 'document';
 
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+
 export interface CountOptions {
   gut: GbrainUnderTest;
   datasetPath?: string;
@@ -712,24 +821,35 @@ export interface CountOptions {
   log?: (l: string) => void;
 }
 
-/** Keyless: what fill-cache would embed for these questions, counted from the dataset through gbrain's own chunking. */
-export async function countEmbedPlan(o: CountOptions): Promise<EmbedPlan> {
+interface Walked {
+  ds: LoadedDataset;
+  mods: GbrainModules;
+  embedding: { model: string; dimensions: number };
+  cachePath: string;
+  /** Every distinct (side, text) the arms embed, with the text itself only for document texts the cache lacks. */
+  seen: Map<string, { side: 'query' | 'document'; chars: number; cached: boolean; text?: string }>;
+}
+
+/** Free: walk the import path on hash vectors with every request off the machine refused, noting each text the arms embed. */
+async function walkTexts(o: CountOptions, keepTexts: boolean): Promise<Walked> {
   const log = o.log ?? ((line: string) => process.stderr.write(line + '\n'));
   const ds = loadDataset(o.datasetPath ?? defaultDatasetPath(), { limit: o.limit, stratify: o.stratify, seed: o.seed ?? 42 });
   const mods = await loadGbrain(o.gut);
   const embedding = o.embedding ?? mods.defaultEmbedding;
   const cachePath = o.cachePath ?? defaultCachePath(embedding.model, embedding.dimensions);
   const cache = existsSync(cachePath) ? new EmbeddingCache(cachePath, embedding.model + '@' + embedding.dimensions) : null;
-  const seen = new Map<string, { chars: number; cached: boolean }>();
+  const seen: Walked['seen'] = new Map();
   const stub = stubTransport(embedding.dimensions);
-  const workDir = mkdtempSync(join(tmpdir(), 'engine-bench-lme-count-'));
+  const workDir = mkdtempSync(join(tmpdir(), 'engine-bench-lme-walk-'));
   const restoreNetwork = refuseNetwork();
   configureEmbedding(mods, embedding, placeholderKeyEnv(embedding.model));
   mods.setEmbedTransport(async params => {
     const side = inputSide(params);
     for (const v of params.values) {
-      const key = side + ':' + createHash('sha256').update(v).digest('hex');
-      if (!seen.has(key)) seen.set(key, { chars: v.length, cached: cache?.get(v, side) != null });
+      const key = side + ':' + sha256(v);
+      if (seen.has(key)) continue;
+      const cached = cache?.get(v, side) != null;
+      seen.set(key, { side, chars: v.length, cached, ...(keepTexts && !cached && side === 'document' ? { text: v } : {}) });
     }
     return stub(params);
   });
@@ -741,17 +861,26 @@ export async function countEmbedPlan(o: CountOptions): Promise<EmbedPlan> {
     cache?.close();
     rmSync(workDir, { recursive: true, force: true });
   }
-  const todo = [...seen.values()].filter(x => !x.cached);
+  return { ds, mods, embedding, cachePath, seen };
+}
+
+async function planOf(gut: GbrainUnderTest, w: Walked): Promise<EmbedPlan> {
+  const todo = [...w.seen.values()].filter(x => !x.cached);
   const chars = todo.reduce((s, x) => s + x.chars, 0);
   const tokens = Math.ceil(chars / 3.5);
-  const { lookupEmbeddingPrice } = await importGbrain<any>(o.gut, 'src/core/embedding-pricing.ts');
-  const price = lookupEmbeddingPrice(embedding.model);
+  const { lookupEmbeddingPrice } = await importGbrain<any>(gut, 'src/core/embedding-pricing.ts');
+  const price = lookupEmbeddingPrice(w.embedding.model);
   const perM = price.kind === 'known' ? price.pricePerMTok as number : null;
   return {
-    model: embedding.model, dimensions: embedding.dimensions, questions: ds.questions.length, texts: seen.size,
-    texts_cached: seen.size - todo.length, texts_to_embed: todo.length, chars_to_embed: chars, est_tokens_to_embed: tokens,
+    model: w.embedding.model, dimensions: w.embedding.dimensions, questions: w.ds.questions.length, texts: w.seen.size,
+    texts_cached: w.seen.size - todo.length, texts_to_embed: todo.length, chars_to_embed: chars, est_tokens_to_embed: tokens,
     price_per_mtok_usd: perM, est_usd: perM === null ? null : Number((tokens / 1_000_000 * perM).toFixed(4)),
   };
+}
+
+/** Keyless: what fill-cache would embed for these questions, counted from the dataset through gbrain's own chunking. */
+export async function countEmbedPlan(o: CountOptions): Promise<EmbedPlan> {
+  return planOf(o.gut, await walkTexts(o, false));
 }
 
 export interface FillCacheOptions extends CountOptions {
@@ -762,40 +891,81 @@ export interface FillCacheOptions extends CountOptions {
   transport?: EmbedTransport;
   /** Environment the gateway reads provider keys from; defaults to process.env. */
   env?: Record<string, string | undefined>;
+  /** Document texts per gbrain embed call, and how many calls run at once. */
+  batch?: number;
+  parallel?: number;
+}
+
+export interface FillResult {
+  plan: EmbedPlan;
+  cache_path: string;
+  cache_entries: number;
+  /** Summed from the provider's usage field on every response; requests_without_usage counts responses that had none. */
+  provider_usage: { tokens: number; requests: number; requests_without_usage: number; list_usd: number | null };
+  cost: ReturnType<typeof receiptCost>;
 }
 
 /**
- * The paid step, outside every counted run: embed what the vector and hybrid arms need into the cache. It joins a
- * budget-ledger run that is already open (--budget-run-id), so every provider request is reserved before it leaves
- * the process and the run's budget caps it.
+ * The paid step, outside every counted run. First a free walk of the import path finds the texts the cache lacks;
+ * only then does it join the already-open budget-ledger run (--budget-run-id), so every provider request is reserved
+ * before it leaves the process, and embed those texts in large batches through gbrain's own embed call (its batching,
+ * input type and retry) into the cache. Rerunning it after a crash re-walks for free and embeds only what is missing.
  */
-export async function fillCache(o: FillCacheOptions): Promise<{ plan: EmbedPlan; cache_path: string; cache_entries: number; cost: ReturnType<typeof receiptCost> }> {
+export async function fillCache(o: FillCacheOptions): Promise<FillResult> {
   if (!o.paid) throw new Error('fill-cache calls a paid embedding provider; pass --paid to confirm.');
   if (!o.budget.runId) throw new Error('fill-cache needs --budget-run-id <id>: open a run first with "bun eval/runner/budget-ledger.ts open --runner engine-bench-lme-recall --budget-usd <n>".');
   const log = o.log ?? ((line: string) => process.stderr.write(line + '\n'));
-  const plan = await countEmbedPlan({ ...o, log });
-  log('[lme-recall] fill-cache plan: ' + plan.texts_to_embed + ' texts, ' + plan.chars_to_embed + ' chars, about ' + plan.est_tokens_to_embed + ' tokens');
-  const ds = loadDataset(o.datasetPath ?? defaultDatasetPath(), { limit: o.limit, stratify: o.stratify, seed: o.seed ?? 42 });
-  const mods = await loadGbrain(o.gut);
-  const embedding = o.embedding ?? mods.defaultEmbedding;
-  const cachePath = o.cachePath ?? defaultCachePath(embedding.model, embedding.dimensions);
+  const walked = await walkTexts({ ...o, log }, true);
+  const plan = await planOf(o.gut, walked);
+  const { ds, mods, embedding, cachePath } = walked;
+  const docs = [...walked.seen.values()].flatMap(x => (x.text === undefined ? [] : [x.text]));
+  walked.seen.clear();
+  log('[lme-recall] fill-cache: ' + plan.texts_to_embed + ' texts to embed (' + docs.length + ' document side), ' + plan.chars_to_embed + ' chars, about ' + plan.est_tokens_to_embed + ' tokens');
+  mkdirSync(dirname(cachePath), { recursive: true });
   const { run, guard } = startPaidRun('engine-bench-lme-recall-fill', { ...o.budget, estimateUsd: plan.est_usd, log });
   const cache = new EmbeddingCache(cachePath, embedding.model + '@' + embedding.dimensions);
-  const workDir = mkdtempSync(join(tmpdir(), 'engine-bench-lme-fill-'));
+  const usage = { tokens: 0, requests: 0, requests_without_usage: 0 };
+  let cost: ReturnType<typeof receiptCost>;
   try {
     configureEmbedding(mods, embedding, o.env ?? { ...process.env });
-    const real = o.transport ?? (async (params: { values: string[] } & Record<string, unknown>) =>
-      aiSdkEmbedMany(params as unknown as Parameters<typeof aiSdkEmbedMany>[0]) as unknown as Promise<{ embeddings: number[][] }>);
-    mods.setEmbedTransport(makeCachingTransport(real, cache) as EmbedTransport);
-    await walkEmbeddings({ gut: o.gut, mods, ds, workDir, log });
-    return { plan, cache_path: cachePath, cache_entries: cache.size(), cost: receiptCost(run.summary()) };
+    const real: EmbedTransport = o.transport ?? (async params =>
+      aiSdkEmbedMany(params as unknown as Parameters<typeof aiSdkEmbedMany>[0]) as unknown as ReturnType<EmbedTransport>);
+    const metered: EmbedTransport = async params => {
+      const result = await real(params);
+      usage.requests++;
+      const tokens = (result.usage as { tokens?: unknown } | undefined)?.tokens;
+      if (typeof tokens === 'number') usage.tokens += tokens; else usage.requests_without_usage++;
+      return result;
+    };
+    mods.setEmbedTransport(makeCachingTransport(metered, cache) as EmbedTransport);
+    const batch = o.batch ?? 256, parallel = o.parallel ?? 4;
+    let next = 0, embedded = 0, lastLog = 0;
+    const worker = async () => {
+      while (next < docs.length) {
+        const chunk = docs.slice(next, next + batch);
+        next += batch;
+        await mods.embedDocuments(chunk);
+        embedded += chunk.length;
+        if (embedded - lastLog >= 5000 || embedded === docs.length) {
+          lastLog = embedded;
+          log('[lme-recall] fill-cache: ' + embedded + '/' + docs.length + ' document texts, ' + usage.tokens + ' provider tokens so far');
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: parallel }, worker));
+    for (const q of ds.questions) await mods.embedQuery(q.question);
   } finally {
     mods.setEmbedTransport(null);
     guard.uninstall();
-    run.close();
-    cache.close();
-    rmSync(workDir, { recursive: true, force: true });
+    cost = receiptCost(run.close());
   }
+  const entries = cache.size();
+  cache.close();
+  return {
+    plan, cache_path: cachePath, cache_entries: entries,
+    provider_usage: { ...usage, list_usd: plan.price_per_mtok_usd === null ? null : Number((usage.tokens / 1_000_000 * plan.price_per_mtok_usd).toFixed(4)) },
+    cost,
+  };
 }
 
 // ─── CLI ───────────────────────────────────────────────────────────
@@ -810,18 +980,41 @@ const num = (v: string | null) => (v === null ? null : Number(v));
 const list = (v: string) => v.split(',').map(s => s.trim()).filter(Boolean);
 
 export const USAGE = [
-  'usage: bun eval/runner/engine-bench/lme-recall.ts <run|count|fill-cache> [options]',
+  'usage: bun eval/runner/engine-bench/lme-recall.ts <run|aggregate|count|fill-cache> [options]',
   '  run         [--engines pglite,postgres,rust] [--arms keyword,vector,hybrid] [--pg-url <url>] [--plumbing-stub] [--out <file>]',
+  '              [--ndjson <file>] [--worker-id N --total-workers M]   resume from and append to the stream; run one shard',
+  '  aggregate   --ndjson <a.ndjson,b.ndjson,...> [--out <file>]       combine sharded workers into one summary',
   '  count       print what fill-cache would embed, keyless',
   '  fill-cache  --paid --budget-run-id <id> [--budget-ledger <path>]   the one paid step, never part of a counted run',
   '  shared      [--dataset <path>] [--cache <path>] [--limit N] [--stratify N] [--seed N] [--gbrain <checkout>@<ref>]',
 ].join('\n');
 
+function writeJson(out: string, value: unknown): void {
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, JSON.stringify(value, null, 2) + '\n');
+}
+
+function headline(summary: RowsSummary & Record<string, unknown>): unknown {
+  const { rows: _rows, comparisons, ...head } = summary as RowsSummary & { rows?: unknown };
+  return { ...head, comparisons: comparisons.map(({ differences, ...c }) => ({ ...c, n_differences: differences.length })) };
+}
+
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const cmd = argv[0];
-  if (cmd !== 'run' && cmd !== 'count' && cmd !== 'fill-cache') {
+  if (cmd !== 'run' && cmd !== 'aggregate' && cmd !== 'count' && cmd !== 'fill-cache') {
     process.stderr.write(USAGE + '\n');
     return cmd === '--help' ? 0 : 2;
+  }
+  const reports = join(REPO_ROOT, 'eval', 'reports', 'engine-bench');
+  if (cmd === 'aggregate') {
+    const paths = list(flag(argv, '--ndjson') ?? '');
+    if (paths.length === 0) { process.stderr.write(USAGE + '\n'); return 2; }
+    const summary = aggregateLmeRows(paths);
+    const out = flag(argv, '--out') ?? join(reports, 'lme-recall-aggregate-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json');
+    writeJson(out, { schema: LME_RECALL_SCHEMA, bootstrap: BOOTSTRAP, ...summary });
+    process.stdout.write(JSON.stringify(headline(summary as never), null, 2) + '\n');
+    process.stderr.write('[lme-recall] aggregate: ' + out + '\n');
+    return 0;
   }
   const shared = {
     gut: resolveGbrainUnderTest(gbrainSpecFrom(argv)),
@@ -842,12 +1035,13 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     arms: list(flag(argv, '--arms') ?? LME_ARMS.join(',')) as LmeArm[],
     postgresUrl: flag(argv, '--pg-url') ?? undefined,
     embedder: argv.includes('--plumbing-stub') ? 'plumbing-stub' : 'cache',
+    ndjsonPath: flag(argv, '--ndjson') ?? undefined,
+    workerId: num(flag(argv, '--worker-id')) ?? 0,
+    totalWorkers: num(flag(argv, '--total-workers')) ?? 1,
   });
-  const out = flag(argv, '--out') ?? join(REPO_ROOT, 'eval', 'reports', 'engine-bench', 'lme-recall-' + receipt.started_at.replace(/[:.]/g, '-') + '.json');
-  mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(out, JSON.stringify(receipt, null, 2) + '\n');
-  const { rows: _rows, comparisons, ...head } = receipt;
-  process.stdout.write(JSON.stringify({ ...head, comparisons: comparisons.map(({ differences, ...c }) => ({ ...c, n_differences: differences.length })) }, null, 2) + '\n');
+  const out = flag(argv, '--out') ?? join(reports, 'lme-recall-' + receipt.started_at.replace(/[:.]/g, '-') + '.json');
+  writeJson(out, receipt);
+  process.stdout.write(JSON.stringify(headline(receipt as never), null, 2) + '\n');
   process.stderr.write('[lme-recall] receipt: ' + out + '\n');
   return 0;
 }
