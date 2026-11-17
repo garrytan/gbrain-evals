@@ -275,6 +275,36 @@ describe('embedding cache: count, fill, read-only counted run', () => {
     new EmbeddingCache(empty, 'voyage:voyage-4@1024').close();
     await expect(runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['vector'], cachePath: empty, limit: 1, log: quiet })).rejects.toBeInstanceOf(EmbedCacheMiss);
   }, 120_000);
+
+  test('a failed embed call stops every fill worker before the paid-request guard comes off', async () => {
+    const stub = stubTransport(1024);
+    let bad: string | undefined, transportCalls = 0, lateFetches = 0, settled = false;
+    const transport = async (params: { values: string[] } & Record<string, unknown>) => {
+      transportCalls++;
+      bad ??= params.values[0];
+      if (params.values[0] === bad) throw new Error('provider down');
+      await new Promise(r => setTimeout(r, 40));
+      return { ...(await stub(params)), usage: { tokens: 1 } };
+    };
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (async () => { if (settled) lateFetches++; throw new Error('no network in tests'); }) as unknown as typeof fetch;
+    const run = BudgetRun.open({ runner: 'lme-recall-test', budgetUsd: 1, ledgerPath, programCapUsd: 5 });
+    try {
+      await expect(fillCache({
+        gut: pinned, paid: true, budget: { budgetUsd: null, ledgerPath, programCapUsd: null, runId: run.runId }, datasetPath: dataset,
+        cachePath: join(work, 'cache', 'fail.sqlite'), limit: 2, batch: 1, parallel: 4, transport: transport as never, env: { VOYAGE_API_KEY: 'test-placeholder' }, log: quiet,
+      })).rejects.toThrow(/provider down/);
+      settled = true;
+      const after = transportCalls;
+      await new Promise(r => setTimeout(r, 500));
+      expect(transportCalls).toBe(after);
+      expect(lateFetches).toBe(0);
+    } finally {
+      settled = false;
+      globalThis.fetch = realFetch;
+      run.close();
+    }
+  }, 120_000);
 });
 
 describe('sharding and NDJSON resume', () => {

@@ -1001,12 +1001,12 @@ export async function fillCache(o: FillCacheOptions): Promise<FillResult> {
     };
     mods.setEmbedTransport(makeCachingTransport(metered, cache) as EmbedTransport);
     const batch = o.batch ?? 256, parallel = o.parallel ?? 4;
-    let next = 0, embedded = 0, lastLog = 0;
+    let next = 0, embedded = 0, lastLog = 0, failed = false;
     const worker = async () => {
-      while (next < docs.length) {
+      while (!failed && next < docs.length) {
         const chunk = docs.slice(next, next + batch);
         next += batch;
-        await mods.embedDocuments(chunk);
+        try { await mods.embedDocuments(chunk); } catch (e) { failed = true; throw e; }
         embedded += chunk.length;
         if (embedded - lastLog >= 5000 || embedded === docs.length) {
           lastLog = embedded;
@@ -1014,7 +1014,9 @@ export async function fillCache(o: FillCacheOptions): Promise<FillResult> {
         }
       }
     };
-    await Promise.all(Array.from({ length: parallel }, worker));
+    const settled = await Promise.allSettled(Array.from({ length: parallel }, worker));
+    const rejected = settled.find(s => s.status === 'rejected');
+    if (rejected) throw rejected.reason;
     for (const q of ds.questions) await mods.embedQuery(q.question);
   } finally {
     mods.setEmbedTransport(null);
