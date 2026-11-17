@@ -45,7 +45,7 @@
  * published LongMemEval-S run in this repository used.
  */
 import { createHash } from 'node:crypto';
-import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { homedir, loadavg, tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { SQL } from 'bun';
@@ -56,6 +56,7 @@ import { EvalEngineUnavailable, EVAL_ENGINES, openEvalEngine, type EvalEngineKin
 import { gbrainSpecFrom, importGbrain, overlaySummary, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { PINNED_SEARCH_CONFIG, canonicalJson, isAbsQuestion, normalizeSessions, stratifiedSample, sutPages, type Question } from '../longmemeval.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
+import { writeScrubbedJson } from '../receipt.ts';
 import { assertEmbedded } from '../import-embedded.ts';
 import { uniqueInOrder, percentile } from '../metrics.ts';
 import { clusteredPairedDelta, exactMcNemar, type PairedItem } from '../stats/paired.ts';
@@ -1058,11 +1059,6 @@ export const USAGE = [
   '  shared      [--dataset <path>] [--cache <path>] [--limit N] [--stratify N] [--seed N] [--gbrain <checkout>@<ref>]',
 ].join('\n');
 
-function writeJson(out: string, value: unknown): void {
-  mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(out, JSON.stringify(value, null, 2) + '\n');
-}
-
 function headline(summary: RowsSummary & Record<string, unknown>): unknown {
   const { rows: _rows, comparisons, ...head } = summary as RowsSummary & { rows?: unknown };
   return { ...head, comparisons: comparisons.map(({ differences, ...c }) => ({ ...c, n_differences: differences.length })) };
@@ -1080,7 +1076,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     if (paths.length === 0) { process.stderr.write(USAGE + '\n'); return 2; }
     const summary = aggregateLmeRows(paths);
     const out = flag(argv, '--out') ?? join(reports, 'lme-recall-aggregate-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json');
-    writeJson(out, { schema: LME_RECALL_SCHEMA, bootstrap: BOOTSTRAP, ...summary });
+    writeScrubbedJson(out, { schema: LME_RECALL_SCHEMA, bootstrap: BOOTSTRAP, ...summary });
     process.stdout.write(JSON.stringify(headline(summary as never), null, 2) + '\n');
     process.stderr.write('[lme-recall] aggregate: ' + out + '\n');
     return 0;
@@ -1114,7 +1110,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     prereg,
   });
   const out = flag(argv, '--out') ?? join(reports, 'lme-recall-' + receipt.started_at.replace(/[:.]/g, '-') + '.json');
-  writeJson(out, receipt);
+  writeScrubbedJson(out, receipt);
   process.stdout.write(JSON.stringify(headline(receipt as never), null, 2) + '\n');
   process.stderr.write('[lme-recall] receipt: ' + out + '\n');
   return 0;

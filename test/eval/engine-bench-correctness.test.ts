@@ -175,7 +175,7 @@ process.exit(plan.exit);
   test('rust refusal, not_applicable carry-through and the stage receipt', async () => {
     const refusal = evalEngineRefusalMessage(new EvalEngineUnavailable('rust', 'rust_engine_not_in_build', 'not in this build.'), 'fake');
     const { receipt, file, dir } = await stage({ pglite: pass({ leaks: 0, sealed: 0 }), postgres: pass({ leaks: 0, sealed: 0 }), rust: { refusal } }, ['pglite', 'postgres', 'rust']);
-    expect(JSON.parse(readFileSync(file!, 'utf8'))).toEqual(JSON.parse(JSON.stringify(receipt)));
+    expect(JSON.parse(readFileSync(file!, 'utf8'))).toEqual(JSON.parse(JSON.stringify(receipt).replaceAll(`${tmpdir()}/`, '<tmp>/')));
     const row = receipt.checks[0]!;
     expect(row.engines.pglite!.status).toBe('pass');
     expect(row.engines.rust).toMatchObject({ status: 'refused', exit_code: 69, refusal_reason: 'rust_engine_not_in_build' });

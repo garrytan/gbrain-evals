@@ -45,6 +45,8 @@
     "docs/benchmarks/2026-11-17-readme-baselines/**/*.ndjson",
     "docs/benchmarks/2026-11-17-readme-baselines/**/*.gz",
     "docs/benchmarks/2026-11-17-readme-baselines/**/*.csv",
-    "docs/benchmarks/2026-11-17-readme-baselines/**/*.jsonl"
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.jsonl",
+    "docs/benchmarks/*-engine-bench/correctness/work/*/receipt.json",
+    "docs/benchmarks/*-engine-bench/speed/*speed-*-10000.json"
   ]
 }
