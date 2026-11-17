@@ -62,7 +62,7 @@ The scorer passes the mutation kit (`eval/runner/mutation-kit.ts`): it fails a s
 
 ## Agent layer: agent.ts
 
-Each G6 episode builds the world into a fresh brain, importing the pages as Markdown files so their privacy frontmatter is kept exactly, and gives the agent the tool list of `gbrain serve --access read-only`. The remote caller reaches those tools through the MCP server (`remote: true`, no grant), the identity `reach.ts` probes with. The local caller gets the same tool list, dispatched through `gbrain call` (`remote: false`). Before the agent starts, the episode probes each of the task's gold pages with `get_page` as that caller, so the task's `out_of_view` comes from observed reachability. The agent ends by calling `submit_answer` with the fixed schema, and `tasks.ts` scores it. The scorecard counts verdicts by caller and by the privacy sub-cause of the hidden gold, plus answers given without the gold. [The runner's README](../README.md) covers the fake, smoke and counted modes.
+Each G6 episode builds the world into a fresh brain, importing the pages as Markdown files so their privacy frontmatter is kept exactly, and gives the agent the tool list of `gbrain serve --access read-only`. The remote caller reaches those tools through the MCP server (`remote: true`, no grant), the identity `reach.ts` probes with. The local caller gets the same tool list, dispatched through `gbrain call` (`remote: false`). Before the agent starts, the episode probes each of the task's gold pages with `get_page` as that caller, one page at a time, so the task's `out_of_view` comes from observed reachability. A local probe is its own `gbrain call` process on a brain that allows one process at a time, so two probes at once could fail the second and wrongly mark a readable page as out of view. The agent ends by calling `submit_answer` with the fixed schema, and `tasks.ts` scores it. The scorecard counts verdicts by caller and by the privacy sub-cause of the hidden gold, plus answers given without the gold. [The runner's README](../README.md) covers the fake, smoke and counted modes.
 
 ## Reproduce
 
@@ -74,6 +74,9 @@ bun test test/eval/predictive-out-of-view.test.ts
 Optional flags: `--entities`, `--direct-share`, `--alias-share`, `--derived-share` and `--gbrain <checkout>[@ref]`. The runner needs no key, runs inside `withHermeticEnv` and refuses `--paid`. The default world (164 pages) takes about 11 seconds on a Capy cloud machine. At gbrain 0.60.557.0 with seed 7 it reports the local caller with 100 of 100 gold pages in view, the remote caller with 50 of 100 (20 direct flag, 15 alias inheritance, 15 derived default out of view), and 0 unexpected.
 
 ## Changelog
+
+### 2026-11-17: probes run one at a time
+The agent layer now probes gold pages one at a time, because concurrent local probes could fail on the brain's single-process lock and read as out of view.
 
 ### 2026-11-09: agent layer
 Added `agent.ts`, which runs the tasks with an agent as a local and a remote caller and scores them; the README no longer says the agent loop is not wired.
