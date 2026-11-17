@@ -1,0 +1,120 @@
+{
+ "rows": 500,
+ "error_rows": [],
+ "row1_recall_all_at5": {
+  "denominator": 470,
+  "gbrain_strict5": 451,
+  "baseline_strict5": 414,
+  "baseline_any5": 453,
+  "gbrain_only": 45,
+  "baseline_only": 8,
+  "exact_mcnemar_p": 2.3683513772354559e-07,
+  "diff_points_ci95": [
+   4.92,
+   10.82
+  ],
+  "baseline_ci95": [
+   0.8484,
+   0.9071
+  ],
+  "by_type": {
+   "single-session-user": {
+    "n": 64,
+    "gbrain": 64,
+    "baseline": 61
+   },
+   "multi-session": {
+    "n": 121,
+    "gbrain": 112,
+    "baseline": 100
+   },
+   "knowledge-update": {
+    "n": 72,
+    "gbrain": 72,
+    "baseline": 71
+   },
+   "single-session-preference": {
+    "n": 30,
+    "gbrain": 30,
+    "baseline": 25
+   },
+   "temporal-reasoning": {
+    "n": 127,
+    "gbrain": 117,
+    "baseline": 101
+   },
+   "single-session-assistant": {
+    "n": 56,
+    "gbrain": 56,
+    "baseline": 56
+   }
+  },
+  "baseline_strict10_answerable": 451
+ },
+ "row2_verbatim": {
+  "denominator": 500,
+  "gbrain": {
+   "strict10": 496,
+   "strict5": 474,
+   "any10": 500,
+   "probe_found_top50": 500,
+   "source": "docs/benchmarks/2026-10-09-verbatim-probe-verdict.json arm B (counts only)"
+  },
+  "baseline_strict10": 480,
+  "baseline_strict10_ci95": [
+   0.939,
+   0.974
+  ],
+  "baseline_strict5": 438,
+  "baseline_any10": 492,
+  "probe_rank1": 491,
+  "probe_top10": 499,
+  "probe_top50": 499,
+  "probe_errors": [
+   "36580ce8"
+  ],
+  "probe_missing": [],
+  "probe_rank1_ci95": [
+   0.9661,
+   0.9905
+  ],
+  "probe_not_rank1": [
+   {
+    "question_id": "0bc8ad93",
+    "rank": 5
+   },
+   {
+    "question_id": "1cea1afa",
+    "rank": 2
+   },
+   {
+    "question_id": "36580ce8",
+    "rank": null
+   },
+   {
+    "question_id": "6b7dfb22",
+    "rank": 2
+   },
+   {
+    "question_id": "7161e7e2",
+    "rank": 2
+   },
+   {
+    "question_id": "73d42213",
+    "rank": 2
+   },
+   {
+    "question_id": "9ee3ecd6",
+    "rank": 2
+   },
+   {
+    "question_id": "a82c026e",
+    "rank": 2
+   },
+   {
+    "question_id": "gpt4_21adecb5",
+    "rank": 2
+   }
+  ]
+ }
+}
