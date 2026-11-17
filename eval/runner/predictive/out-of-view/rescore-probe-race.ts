@@ -11,7 +11,7 @@
  * against the intended task. It refuses if any remote record differs from the intended view, because nothing here can
  * tell a race from a real hide for that caller. It checks that the log reproduces the published scorecards, rebuilds
  * them with the rescored records, and recomputes the paired G6 comparisons (per-task success, Opus minus the other
- * model, percentile bootstrap over tasks with 10,000 draws and seed 2005, the published method). With
+ * model, percentile bootstrap over tasks with 10,000 draws and seed 2005, the repository's paired bootstrap). With
  * --write it replaces scorecard.json's scorecards, records the correction there, and writes correction-2026-11-17.json.
  */
 import { readFileSync, writeFileSync } from 'node:fs';

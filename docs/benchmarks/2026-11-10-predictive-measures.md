@@ -598,9 +598,11 @@ The log is unchanged. The figures this moves, original first:
   rounds to $0.042 and $0.016.
 - G6 local, Opus − particle-1: +2.5 points (0.0 to +5.5, tasks worse / better 1 / 5) to +2.0 (+0.5 to +4.0, 0 / 4).
   Its interval now excludes zero, but it stays below the 21.7-point MDD, so it still reads no measurable difference.
-  The original bootstrap script isn't in this repository. The recomputation uses `eval/runner/stats/paired.ts` at
-  seed 2005, reproduces the original row from the uncorrected log, and gives the corrected bounds at every one of
-  seven seeds tried.
+  The original bootstrap script isn't in this repository. The recomputation uses `eval/runner/stats/paired.ts` at seed
+  2005, reproduces the original local row from the uncorrected log, and gives the corrected bounds at every one of seven
+  seeds tried. It is not the original script: on the unchanged remote rows it gives a G6 remote Opus − particle-1 lower
+  bound of +12.0 at seed 2005 against the published +11.5, one resampling step apart, and +11.5 at seeds 7, 11, 42 and
+  500, so the published remote rows stand.
 
 No remote-caller figure and no verdict changes. G6 stays KEEP, report-only.
 
