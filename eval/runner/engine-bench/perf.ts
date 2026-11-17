@@ -44,6 +44,7 @@ import type { SearchResult } from 'gbrain/types';
 import { attestPreregistration, type Attestation } from '../prereg.ts';
 import { clusteredPairedDelta, seededRandom, type PairedItem } from '../stats/paired.ts';
 import { EvalEngineUnavailable, isCapabilityMissing, openEvalEngine, supportsRawSql, type EvalEngineKind } from '../eval-engine.ts';
+import { freshPostgresDatabase } from './surface-parity.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 
 // ─── Constants ──────────────────────────────────────────────────────
@@ -134,6 +135,11 @@ export function summarize(samples: number[]): LatencyStats {
   const s = [...samples].sort((a, b) => a - b);
   const sum = s.reduce((x, y) => x + y, 0);
   return { n: s.length, p50_ms: percentile(s, 50), p95_ms: percentile(s, 95), p99_ms: percentile(s, 99), mean_ms: s.length ? sum / s.length : 0, min_ms: s[0] ?? 0, max_ms: s[s.length - 1] ?? 0 };
+}
+
+/** The command line a receipt records, with the password of any connection URL replaced. */
+export function recordedCommand(argv: string[]): string {
+  return `bun eval/runner/engine-bench/perf.ts ${argv.map(a => a.replace(/(\/\/[^/:@\s]*:)[^/@\s]*@/g, '$1***@')).join(' ')}`.trim();
 }
 
 export function median(xs: number[]): number {
@@ -430,11 +436,12 @@ const postgresArm: ArmSpec = {
   kind: 'PostgreSQL server with pgvector in a local Docker container, stock configuration, reached over loopback TCP',
   async prepare({ opts }) {
     if (opts.postgresUrl) {
+      const db = await freshPostgresDatabase(opts.postgresUrl, `engine_bench_perf_${process.pid}_${Date.now()}`);
       return {
-        runtime: { kind: 'postgres', databaseUrl: opts.postgresUrl },
-        info: { mode: 'external server (--postgres-url); server CPU and memory not measured' },
+        runtime: { kind: 'postgres', databaseUrl: db.url },
+        info: { mode: 'scratch database on an external server (--postgres-url); server CPU and memory not measured' },
         async diskUsage() { return { total_bytes: 0, method: 'not measured for an external server' }; },
-        async teardown() {},
+        async teardown() { await db.drop(); },
       };
     }
     const runId = `${process.pid}-${Date.now()}`;
@@ -1239,7 +1246,7 @@ export async function orchestrate(opts: Options, argv: string[]) {
     preregistration_attestation: attestation,
     generated_at: new Date().toISOString(),
     run_seconds: (Date.now() - started) / 1000,
-    command: `bun eval/runner/engine-bench/perf.ts ${argv.join(' ')}`.trim(),
+    command: recordedCommand(argv),
     options: childOpts,
     gbrain: { product: productIdentityFor(gut), overlay: overlaySummary(gut), version: gut.version },
     evals_commit: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO_ROOT, encoding: 'utf-8' }).stdout.trim(),

@@ -3,11 +3,25 @@ import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import {
   DEFAULT_MARGINS, buildDataset, hashEmbed, higherIsBetter, lowerIsBetter, marginsFromPrereg, medianRatio, missingMetric, pageMarkdown,
-  parseArgs, quantileRatio, speedVerdict, type MetricVerdict, type PairedRow,
+  ENGINES, parseArgs, quantileRatio, recordedCommand, speedVerdict, type MetricVerdict, type PairedRow, type Options,
 } from '../../eval/runner/engine-bench/perf.ts';
 
 const REPO = join(import.meta.dir, '../..');
 const m = { ...DEFAULT_MARGINS, bootstrap_draws: 1000, quantile_draws: 400 };
+
+describe('an external Postgres server', () => {
+  test('the arm asks the server for a scratch database and never hands the supplied database to the engine', async () => {
+    const supplied = 'postgres://bench:pw@127.0.0.1:1/brain';
+    const opened = ENGINES.postgres.prepare({ workDir: '/nonexistent', opts: { postgresUrl: supplied } as unknown as Options });
+    await expect(opened).rejects.toThrow();
+  });
+  test('the recorded command hides the password of a connection URL', () => {
+    const cmd = recordedCommand(['--engines', 'postgres', '--postgres-url', 'postgres://bench:s3cret@db.internal:5432/postgres', '--dev']);
+    expect(cmd).toBe('bun eval/runner/engine-bench/perf.ts --engines postgres --postgres-url postgres://bench:***@db.internal:5432/postgres --dev');
+    expect(cmd).not.toContain('s3cret');
+    expect(recordedCommand(['--postgres-url=postgresql://u:p@h/db'])).toBe('bun eval/runner/engine-bench/perf.ts --postgres-url=postgresql://u:***@h/db');
+  });
+});
 
 describe('dataset', () => {
   test('builds exactly the requested number of pages, deterministically', () => {
