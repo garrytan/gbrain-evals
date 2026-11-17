@@ -69,7 +69,7 @@ PGLite, Postgres and Rust. Rust is compared with each TypeScript engine. PGLite 
 `eval/runner/engine-bench/lme-recall.ts`. 500 questions, abstention questions excluded as the official protocol does. Per question, a fresh store per engine, the haystack imported through gbrain's import path, top 5 from gbrain's search with the reranker, query expansion and autocut off. Arms: keyword (keyless), vector and hybrid (vectors from the cache). The run may be split across VMs with `--worker-id/--total-workers` and resumed from its NDJSON rows; the amendment names the worker count.
 
 - Metric: recall_all@5, the share of questions with every answer session in the top 5.
-- Rule: Rust passes an arm when the 95% paired bootstrap interval (10,000 draws) of Rust minus each TypeScript engine has a lower bound of at least -0.02 (two points). Otherwise the arm fails. A better Rust result is not a failure, because a better index can return different sessions.
+- Rule: Rust passes an arm when the 95% paired bootstrap interval (10,000 draws) of Rust minus each TypeScript engine has a lower bound of at least -0.02 (two points). Otherwise the arm fails. An arm also fails when Rust errors on any non-abstention question that both TypeScript engines answered, unless the invalid-run rule under Stop rules covers that error, and the interval covers every non-abstention question. A better Rust result is not a failure, because a better index can return different sessions.
 - The report also lists the share of questions whose top 5 is identical across engines, and every question where it is not.
 
 ## Decision rule
