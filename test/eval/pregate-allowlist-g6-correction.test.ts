@@ -19,7 +19,7 @@ describe('secrets allowlist: G6 correction episode ids', () => {
   test('covers the three rescored episode ids', () => {
     for (const id of ['g6:claude-opus-5-5:oov-7-p002:local:0', 'g6:particle-1:oov-7-p012:local:1', 'g6:particle-1:oov-7-p030:local:3']) {
       expect(covers(`"${id}",`)).toBe(true);
-      expect(covers(id)).toBe(true);
+      expect(covers(`${id}",`)).toBe(true);
     }
   });
 
@@ -27,7 +27,8 @@ describe('secrets allowlist: G6 correction episode ids', () => {
     const anthropicShaped = ['sk', 'ant', 'api03', 'Zx9Qw2Lk7Pn4Rt8Yv1Bm6Cd3Fg5Hj0Ks2Lq9Wr4Et7Yu1Io3Pa6Sd8Fg'].join('-');
     const openaiShaped = ['sk', 'proj', 'Qm7Xc2Vb9Nl4Kj8Hg1Fd6Sa3Pw5Oe0Iu2Yt9Rr4Ee7Ww1Qq3'].join('-');
     const hex40 = '9f86d081884c7d659a2feaea0c55ad01'.concat('5a3bf4f1');
-    for (const value of [anthropicShaped, openaiShaped, hex40, `g6:particle-1:oov-7-p012:local:1${anthropicShaped}`, `g6:particle-1:oov-7-p012:local:1-${hex40}`]) {
+    const appended = ['', '-', ':', '.', '/'].flatMap(sep => [anthropicShaped, hex40].map(key => `g6:particle-1:oov-7-p012:local:1${sep}${key}`));
+    for (const value of [anthropicShaped, openaiShaped, hex40, ...appended]) {
       expect(covers(`"${value}",`)).toBe(false);
       expect(covers(value)).toBe(false);
     }
