@@ -549,11 +549,11 @@ describe('--ref stable reads gbrain\'s stable tag from the remote at launch', ()
 
   test('a credential in the origin URL never reaches the error, which names the remote the way night.json records it', () => {
     const f = fixture();
-    g(f.clone, 'remote', 'set-url', 'origin', 'https://x-access-token:NOT-A-REAL-TOKEN@127.0.0.1:9/gbrain.git');
+    g(f.clone, 'remote', 'set-url', 'origin', 'https://x-access-token:PLACEHOLDER@127.0.0.1:9/gbrain.git');
     let message = '';
     try { resolveStable(f.clone); } catch (e) { message = (e as Error).message; } finally { rmSync(f.root, { recursive: true, force: true }); }
     expect(message).toContain('--ref stable: git ls-remote https://127.0.0.1:9/gbrain.git failed: ');
-    expect(message).not.toContain('NOT-A-REAL-TOKEN');
+    expect(message).not.toContain('PLACEHOLDER');
     expect(message).not.toContain('x-access-token');
   });
 
