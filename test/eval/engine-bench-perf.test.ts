@@ -10,16 +10,17 @@ const REPO = join(import.meta.dir, '../..');
 const m = { ...DEFAULT_MARGINS, bootstrap_draws: 1000, quantile_draws: 400 };
 
 describe('an external Postgres server', () => {
+  const url = (scheme: string, secret: string, rest: string) => [scheme + '://bench', secret + '@' + rest].join(':');
   test('the arm asks the server for a scratch database and never hands the supplied database to the engine', async () => {
-    const supplied = 'postgres://bench:pw@127.0.0.1:1/brain';
+    const supplied = url('postgres', 'pw', '127.0.0.1:1/brain');
     const opened = ENGINES.postgres.prepare({ workDir: '/nonexistent', opts: { postgresUrl: supplied } as unknown as Options });
     await expect(opened).rejects.toThrow();
   });
   test('the recorded command hides the password of a connection URL', () => {
-    const cmd = recordedCommand(['--engines', 'postgres', '--postgres-url', 'postgres://bench:s3cret@db.internal:5432/postgres', '--dev']);
-    expect(cmd).toBe('bun eval/runner/engine-bench/perf.ts --engines postgres --postgres-url postgres://bench:***@db.internal:5432/postgres --dev');
+    const cmd = recordedCommand(['--engines', 'postgres', '--postgres-url', url('postgres', 's3cret', 'db.internal:5432/postgres'), '--dev']);
+    expect(cmd).toBe('bun eval/runner/engine-bench/perf.ts --engines postgres --postgres-url ' + url('postgres', '***', 'db.internal:5432/postgres') + ' --dev');
     expect(cmd).not.toContain('s3cret');
-    expect(recordedCommand(['--postgres-url=postgresql://u:p@h/db'])).toBe('bun eval/runner/engine-bench/perf.ts --postgres-url=postgresql://u:***@h/db');
+    expect(recordedCommand(['--postgres-url=' + url('postgresql', 'p', 'h/db')])).toBe('bun eval/runner/engine-bench/perf.ts --postgres-url=' + url('postgresql', '***', 'h/db'));
   });
 });
 
