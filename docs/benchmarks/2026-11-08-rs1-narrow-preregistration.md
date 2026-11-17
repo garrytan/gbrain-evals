@@ -1077,17 +1077,18 @@ stopped on its plan (an IndexError at `main.py:1540`), and it isn't minted again
 Each is incomplete because claude-haiku-5-5 refused prompts about it:
 - `rs1-013`, `rs1-019` and `rs1-020` are incomplete at the candidate check. Haiku returned stop reason `refusal` on 27, 8
   and 1 of their prompts (support prompts, batched windows and single-candidate windows), and one rerun with its
-  regrouping didn't clear them. A refused support prompt, and a refused window past the regroup limit, leave a
-  conversation incomplete.
+  regrouping didn't clear them. A refused support prompt, and a refused window past that run's regroup limit,
+  leave a conversation incomplete.
 - `rs1-012` and `rs1-014` passed the candidate check and were selected, and 18 of each one's 20 items pass. `validate.ts`
   asks each window about the two selected abstention items in one prompt, Haiku's reply to that prompt was unusable on
   both runs, and so both abstention items of each hold `validator_error`. `validate.ts` doesn't record stop reasons,
   so that these were refusals is an inference from the candidate check.
 
-Under the code before this change, a refusal held a chat back when it hit a support prompt, a batched window past the
-regroup limit, or a window in `validate.ts`: a refusal doesn't change on a rerun, and `validate.ts` asks the same window
-again without regrouping it. A refused single-candidate prompt failed only its candidate, which is how `rs1-007` was
-kept after Haiku refused one of its windows. That held five of the nine chats the third mint finished. The stop line for
+Under the code before this change, a refusal held a chat back when it hit a support prompt or a window in
+`validate.ts`: a refusal doesn't change on a rerun, and `validate.ts` asks the same window again without regrouping it.
+A refused batched window in the candidate check held a chat back only until a run regrouped it, and a refused
+single-candidate prompt failed only its candidate, which is how `rs1-007` was kept after Haiku refused one of its
+windows. That held five of the nine chats the third mint finished. The stop line for
 those ten slots tripped, and GBEV-3 chose this change over narrowing the set.
 
 **Why Haiku refuses.** Anthropic documents `stop_reason: refusal` as a decline by a safety classifier, names its policy
@@ -1108,8 +1109,9 @@ and its reply counts in Haiku's place, under Haiku's id. If the fallback refuses
   any failed item, and dropped at the floor after its third selection.
 
 A fallback reply that ends in a refusal counts as a refusal, and any partial text before it is discarded, as Anthropic's
-docs advise. So a refusal by claude-haiku-5-5 no longer leaves a conversation incomplete, except a batched window that
-both refuse past the regroup limit, as before. A refusal by gemini-3.8-flash is handled as before. A usable reply the
+docs advise. So a refusal by claude-haiku-5-5 no longer leaves a conversation incomplete, except in two cases, as before: a
+batched window that both refuse past that run's regroup limit, until a later run regroups it, and a prompt whose
+fallback reply fails with an error or comes back in the wrong shape without a refusal, which is a `validator_error`. A refusal by gemini-3.8-flash is handled as before. A usable reply the
 fallback gives is cached with the fallback's id beside it, so a rerun reuses it and doesn't ask Haiku again. A prompt
 both refuse isn't cached, so a rerun asks both again and could decide differently; the custodian acts on the first
 report that decides a conversation. A conversation that fails on a double refusal at its third selection is dropped at
@@ -1137,8 +1139,7 @@ ended with `end_turn`, no refusal category, and a reply in the shape the prompt 
 probe says nothing about whether any item passes.
 
 **What it removes.** Under the code before this change, a chat could be kept only if claude-haiku-5-5 would read its
-support prompts, its batched windows past the regroup limit and every `validate.ts` window about its selected
-abstention items. claude-haiku-5-5 is also gbrain's extraction model, so the kept set was filtered toward chats that
+support prompts and every `validate.ts` window about its selected abstention items. claude-haiku-5-5 is also gbrain's extraction model, so the kept set was filtered toward chats that
 gbrain's own extraction model doesn't refuse: a survivorship filter that could favour gbrain. With the fallback those
 chats stay in the set, and how gbrain handles them is measured instead of filtered out. Whether gbrain's extraction
 refuses on them isn't measured here.
@@ -1152,18 +1153,22 @@ result. The kept set is still the first N_final slots that pass validation, in s
 counts ahead of later slots. `rs1-017` stays unminted.
 
 Kept slots keep their selections, which aren't redrawn, and their `validate.ts` replies, which are cached. The candidate
-check runs on the whole set, so it asks again any prompt about a kept slot that Haiku refused before (`rs1-007`'s
-regrouped window is one), and that slot's candidate entries can change, but not its selection. A kept slot's decision
+check runs on the whole set, so it asks again any prompt about a kept slot that Haiku refused before (the refused
+single-candidate prompts of `rs1-007`'s regrouped window are some), and that slot's candidate entries can change, but not its selection. A kept slot's decision
 could still change in one way: `validate.ts`'s duplicate checks compare each chat and question with those of earlier
 slots, so a held slot that now completes is compared ahead of the kept slots after it. After revalidation the custodian
 checks that every kept slot is still kept with the same items, and if one isn't, nothing is counted until a dated
 amendment decides it.
 
-**Code.** Validation runs from `f58f87fffef5107a17f6ceec61b324c005418891` or a later commit on the results branch, and the
-custodian records the commit each pass ran. `7c53fa3f` added the fallback, and `f58f87ff` discards a fallback reply that
-ends in a refusal and counts the fallback's replies by Haiku's refusal category. At `f58f87ff`:
-- `validate.ts` has SHA-256 `afb07bd67888afd254befcb79f6015d1a33af627044e884075171547429e242d`;
-- `validate-candidates.ts` has `627f65d18355a2151673067fd05ffd38d6cef4e3645fb6013ee88f991c605af0`;
+**Code.** `7c53fa3f` added the fallback. `f58f87ff` discards a fallback reply that ends in a refusal and counts the
+fallback's replies by Haiku's refusal category. `e33a78c4` asks a prompt that several calls hold once per validator, so
+no two asks of one prompt share the fallback's records at once. The revalidation of the five held slots runs from
+`b2746deb`, whose code is `f58f87ff`'s, one prompt at a time (`--concurrency 1`), which rules that sharing out there.
+Every later validation pass runs from `e33a78c463e2e012d31cdc2c46d8a75faeaef55c` or a later commit on the results
+branch. The custodian records the commit each pass ran.
+- `validate.ts` has SHA-256 `afb07bd67888afd254befcb79f6015d1a33af627044e884075171547429e242d` at `f58f87ff` and
+  `eb380b68b5730c9abb9b7982a9961a8ab352be149bc8e21ef2fca66c79bfa648` at `e33a78c4`;
+- `validate-candidates.ts` has `627f65d18355a2151673067fd05ffd38d6cef4e3645fb6013ee88f991c605af0` at both;
 - `probe-fallback.ts` keeps `28bde987270feb97925b3b521a944e1bb29cb434b741e5f29845ca492a522728`;
 - `mint-lanes.ts`, `mint.sh` and `rs1_mint.py` keep `c2ae8331…`, `dfc833dd…` and `261889ad…`.
 
