@@ -27,11 +27,11 @@
 # skip what they already hold (the q1 cells resume, the oracle and leader runs buy only rows the cache lacks). Provider
 # keys travel only through ubi-runner's --pass, never onto local disk or the command line. It refuses to launch while any
 # VM of owner gbev78 exists or another launch of the window holds its state directory, so the ledger has one writer, and
-# the teardown check runs after every launch. It also refuses to launch through a runner that does not honour
-# UBI_TTL_HOURS, because such a runner puts no lifetime cap on the VMs it creates: each window's VM carries a
-# UBI_TTL_HOURS (default 12) lifetime in its name. run.sh never reaps (it sets UBI_REAP=0): a gbev78 VM past its
-# lifetime may hold a window's only ledger, so every launch refuses while one exists, expired or not, and a person
-# pulls it and destroys it by hand (or runs UBI_OWNER=gbev78 ubi-runner.sh reap once nothing on it is needed).
+# the teardown check runs after every launch. Each window's VM carries a UBI_TTL_HOURS (default 12) lifetime in its
+# name, but nothing destroys gbev78 VMs automatically: run.sh never reaps (it sets UBI_REAP=0), because a gbev78 VM past
+# its lifetime may hold a window's only ledger. Every launch and the teardown check refuse while any gbev78 VM exists,
+# expired or not, and name each one past its TTL with its age, so a person pulls it (run.sh pull <window>) or destroys
+# it by hand (UBI_OWNER=gbev78 ubi-runner.sh down <name>).
 #
 # In flight: before each launch, ~/.capy/work/sota-windows/<window>.in-flight records the VM and the launch time. It is
 # cleared only once the run's final pull of the window's state has landed and the VM is gone (the runner exits with
@@ -64,7 +64,7 @@ in_flight_hint() {
   done <<<"$(in_flight)"
 }
 check() {
-  local out left rc=0
+  local out left vm now born ttl rc=0
   if [ -n "$(in_flight)" ]; then
     echo "teardown check FAILED: a window is still in flight" >&2
     in_flight_hint
@@ -75,6 +75,13 @@ check() {
   if [ -n "$left" ]; then
     echo "teardown check FAILED: VMs of owner $UBI_OWNER still exist:" >&2
     echo "$left" >&2
+    now=$(date +%s)
+    while read -r vm; do
+      [[ "$vm" =~ ^ubirun-$UBI_OWNER-([0-9]{10})-.*-t([1-9][0-9]{0,2})$ ]] || continue
+      born=${BASH_REMATCH[1]} ttl=${BASH_REMATCH[2]}
+      [ $(( now - born )) -gt $(( ttl * 3600 )) ] || continue
+      echo "$vm is $(( (now - born) / 3600 ))h old, past its ${ttl}h TTL: pull or down by hand; nothing destroys $UBI_OWNER VMs automatically" >&2
+    done <<<"$left"
     echo "pull anything needed, then destroy each with: UBI_OWNER=$UBI_OWNER $UBI down <name>" >&2
     return 1
   fi
@@ -101,7 +108,6 @@ if [ "${1:-}" = pull ]; then
   exit 0
 fi
 [[ "$UBI_TTL_HOURS" =~ ^[1-9][0-9]{0,2}$ ]] || { echo "run.sh: UBI_TTL_HOURS must be a whole number of hours from 1 to 999" >&2; exit 2; }
-grep -q 'UBI_TTL_HOURS' "$UBI" 2>/dev/null || { echo "run.sh: refusing to launch: $UBI puts no lifetime cap on its VMs (it does not honour UBI_TTL_HOURS), so a VM left behind by a killed launcher or a failed pull would keep billing; set UBI_RUNNER to a runner that honours UBI_TTL_HOURS" >&2; exit 2; }
 window=${1:?usage: run.sh <window> <cap-usd> [--cache-seed <dir>] | run.sh check}; cap=${2:?cap in dollars}; shift 2
 seed=
 while [ $# -gt 0 ]; do case $1 in --cache-seed) seed=${2:?--cache-seed <dir>}; shift 2 ;; *) echo "run.sh: unknown option $1" >&2; exit 2 ;; esac; done

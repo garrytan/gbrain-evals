@@ -280,8 +280,9 @@ cmd_list() {
 }
 
 # usage: VMs and vCPUs per owner, from each VM's size (standard-16 = 16 vCPUs), the caller's own row marked (you).
-# Exits 1 with no table when the VM list or any VM's size cannot be read, so a partial count is never taken for the
-# project's usage. A VM destroyed between the list and its size read (404) no longer counts and is not a failure.
+# Exits 1 with no table when the VM list or any VM's size cannot be read, or a size names no positive vCPU count, so a
+# partial count is never taken for the project's usage. A VM destroyed between the list and its size read (404) no
+# longer counts and is not a failure.
 cmd_usage() {
   local tmp rows loc name owner f i=0 unread=0
   rows=$(vm_rows) || { log "usage: could not list the project's VMs"; return 1; }
@@ -306,15 +307,22 @@ cmd_usage() {
     log "usage: could not read the size of $unread of $i VMs"
     return 1
   fi
-  find "$tmp" -type f -exec cat {} + | awk -v me="$OWNER" '
-    { n = $2; sub(/^.*-/, "", n); o = $1 == "-" ? "(untagged)" : $1 == "." ? "(other)" : $1
+  if ! find "$tmp" -type f -exec cat {} + | awk -v me="$OWNER" '
+    { n = $2; sub(/^.*-/, "", n); if (NF != 2 || $2 !~ /-/ || n !~ /^[1-9][0-9]*$/) { bad = 1; exit 1 }
+      o = $1 == "-" ? "(untagged)" : $1 == "." ? "(other)" : $1
       vms[o]++; cpu[o] += n; total += n; count++ }
     END {
+      if (bad) exit 1
       printf "%-14s %4s %6s\n", "OWNER", "VMS", "VCPUS"
       for (o in cpu) printf "%-14s %4d %6d%s\n", o, vms[o], cpu[o], o == me ? "  (you)" : "" | "sort -k3,3nr"
       close("sort -k3,3nr")
       printf "%-14s %4d %6d\n", "total", count, total
     }'
+  then
+    rm -rf "$tmp"
+    log "usage: a VM's size names no vCPU count (sizes are named like standard-16)"
+    return 1
+  fi
   rm -rf "$tmp"
 }
 

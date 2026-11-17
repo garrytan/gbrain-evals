@@ -145,6 +145,22 @@ describe('ubi-runner.sh vCPU lines', () => {
     expect(creates()).toEqual([]);
   }, 30_000);
 
+  test('a VM whose size names no vCPU count (unknown, standard-) fails the usage read, so up creates nothing', async () => {
+    for (const bad of ['unknown', 'standard-']) {
+      project([['harn61', 1]]);
+      api.vms.set(`ubirun-harn61-${NOW}-badsize1-t12`, { size: bad });
+      const u = await runner(['usage']);
+      expect([u.exit, u.stdout]).toEqual([1, '']);
+      expect(u.stderr).toContain("usage: a VM's size names no vCPU count");
+      const r = await runner(['room']);
+      expect([r.exit, r.stdout.trim()]).toEqual([1, 'UBICLOUD_ROOM: room=unknown size=standard-16']);
+      const up = await runner(['up']);
+      expect(up.exit).toBe(1);
+      expect(up.stderr).toContain("could not read the project's vCPU usage");
+      expect(creates()).toEqual([]);
+    }
+  }, 30_000);
+
   test('UBI_QUOTA_WAIT reads again instead of refusing at once, and still refuses when no room comes', async () => {
     project([['gbev95', 13]]);
     const t0 = Date.now();
