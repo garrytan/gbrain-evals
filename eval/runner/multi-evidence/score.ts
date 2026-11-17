@@ -30,7 +30,7 @@ export interface ItemRow {
   category: string | null; question: string | null; expected: string | null; answer: string | null;
   gold: string[]; retrieved: string[]; delivered: string[]; opened: string[] | null; cited: string[] | null; cut: string[] | null;
   coverage: Coverage;
-  turns: number | null; turn_cap: number | null; hit_cap: boolean | null; calls: number | null;
+  turns: number | null; turn_cap: number | null; hit_cap: boolean | null; calls: number | null; assemble_calls: number | null;
   correct: boolean | null; score: number | null; stop: string | null; harness: string | null; cost_usd: number | null;
 }
 
@@ -61,6 +61,7 @@ export function agentItem(o: Outcome, x: { arm: ArmName; ref: string; gold: stri
     category: o.category ?? null, question: o.question ?? null, expected: o.expected ?? null, answer: o.answer ?? null,
     gold: x.gold, retrieved: delivered, delivered, opened, cited, cut: null, coverage: coverage(delivered.length, x.gold.length),
     turns: x.turns, turn_cap: x.turnCap, hit_cap: o.stop === null ? null : o.stop === 'turn_cap', calls: x.calls ? calls.filter(c => c.name !== 'submit_answer').length : (o.calls?.length ?? null),
+    assemble_calls: x.calls ? calls.filter(c => c.name === 'assemble_evidence').length : null,
     correct: o.harness ? null : o.pass, score: o.score, stop: o.stop, harness: o.harness?.error ?? null, cost_usd: o.cost_usd,
   };
 }
@@ -75,7 +76,7 @@ export function qaItem(o: Outcome, x: { arm: ArmName; ref: string; gold: string[
     schema: ITEM_SCHEMA, suite: o.suite, kind: 'qa', item: o.item, reader: o.reader ?? 'none', arm: x.arm, trial: o.trial, gbrain: { ref: x.ref, sha: o.sha },
     category: o.category ?? null, question: o.question ?? null, expected: o.expected ?? null, answer: o.answer ?? null,
     gold: x.gold, retrieved, delivered, opened: null, cited: null, cut: retrieved.filter(g => !delivered.includes(g)), coverage: coverage(delivered.length, x.gold.length),
-    turns: null, turn_cap: null, hit_cap: null, calls: x.ranked ? 1 : null,
+    turns: null, turn_cap: null, hit_cap: null, calls: x.ranked ? 1 : null, assemble_calls: null,
     correct: o.harness ? null : o.pass, score: o.score, stop: o.stop, harness: o.harness?.error ?? null, cost_usd: o.cost_usd,
   };
 }

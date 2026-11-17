@@ -34,6 +34,13 @@ describe('agent items', () => {
     expect(row.cut).toBeNull();
   });
 
+  test('assemble_calls counts batch reads per cell, and is null without a transcript', () => {
+    expect(row.assemble_calls).toBe(0);
+    const batch = [{ name: 'assemble_evidence', args: { hits: [{ slug: 'crm/fenesso-health', chunk_id: 0 }] }, result: 'crm/fenesso-health' }, ...calls];
+    expect(agentItem(o, { arm: 'batch', ref: 'v1', gold, calls: batch, turns: 4, turnCap: 16 }).assemble_calls).toBe(1);
+    expect(agentItem(o, { arm: 'batch', ref: 'v1', gold, calls: null, turns: null, turnCap: 16 }).assemble_calls).toBeNull();
+  });
+
   test('why rows give each gold item a fate', () => {
     const w = agentWhy(row, calls);
     expect(Object.fromEntries(w.gold.map(g => [g.id, g.fate]))).toEqual({

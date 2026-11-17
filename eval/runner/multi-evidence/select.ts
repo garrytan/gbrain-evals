@@ -23,7 +23,7 @@ import { ANSWERABLE, loadClasses } from '../sota/answerability.ts';
 
 const ROOT = resolve(import.meta.dir, '../../..');
 export const ME_DEVSET_PATH = 'eval/data/multi-evidence/devset-v1.json';
-export const ME_SCHEMA = 'multi-evidence-devset/1';
+export const ME_SCHEMA = 'multi-evidence-devset/1' as const;
 export const MIN_GOLD = 2;
 
 export interface MeItem { id: string; gold: number; class?: string }

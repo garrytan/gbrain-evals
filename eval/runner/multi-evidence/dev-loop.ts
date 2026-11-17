@@ -146,6 +146,9 @@ interface Ctx extends NightContext { label: string }
 
 interface Cat40Dirs { world: string; root: string; slots: string }
 
+/** A paid Cat 40 child spends against this dev loop's ledger run, never the closed run a resumed output dir recorded. */
+const ownRun = (ctx: Pick<NightContext, 'paid'>) => (ctx.paid ? ['--new-budget-run'] : []);
+
 async function buildCat40(run: SuiteRun, ctx: Ctx, d: Cat40Dirs): Promise<string | null> {
   const cmds = cat40Commands(run, ctx, d.world, { ...d, cells: '' });
   if (!existsSync(d.world)) {
@@ -157,7 +160,7 @@ async function buildCat40(run: SuiteRun, ctx: Ctx, d: Cat40Dirs): Promise<string
   const marker = join(d.slots, `.built-${ctx.sha}${ctx.fake ? '-keyless' : ''}`);
   if (existsSync(marker)) return null;
   const env = envFor(ctx, run.suite, ['anthropic', 'openai', 'voyage']);
-  const build = (i: number) => runChild({ cmd: cmds.slots[i], env, log: join(d.slots, `slots-${i}.log`), signal: ctx.signal });
+  const build = (i: number) => runChild({ cmd: [...cmds.slots[i], ...ownRun(ctx)], env, log: join(d.slots, `slots-${i}.log`), signal: ctx.signal });
   const built = await Promise.all(cmds.slots.map((_, i) => build(i)));
   const again = built.flatMap((r, i) => (r.code !== 0 && !ctx.signal?.aborted ? [i] : []));
   if (again.length) {
@@ -200,7 +203,7 @@ async function runCat40Arm(full: SuiteRun, ctx: Ctx, arm: ArmName, d: Cat40Dirs,
     hint = join(cells, 'instructions-batch.txt');
     writeFileSync(hint, `${readFileSync(served, 'utf8').replace(/\n+$/, '')}\n\n${BATCH_HINT}\n`);
   }
-  const cmd = [...cat40Commands(run, ctx, d.world, { ...d, cells }).cells, ...cat40ArmFlags(arm, hint)];
+  const cmd = [...cat40Commands(run, ctx, d.world, { ...d, cells }).cells, ...cat40ArmFlags(arm, hint), ...ownRun(ctx)];
   const r = await runChild({ cmd, env: envFor(ctx, run.suite, ['anthropic', 'openai', 'voyage']), log: join(cells, '..', 'cells.log'), signal: ctx.signal });
   return r.code === 0 ? null : `cells exited ${r.code ?? r.signal}: ${r.tail.split('\n').slice(-3).join(' ')}`;
 }
@@ -268,7 +271,7 @@ async function runQaArm(run: SuiteRun, ctx: Ctx, arm: ArmName, armDir: string): 
 }
 
 /** Items from a QA arm: the nightly outcome rows, with the ranked list and how many sessions the reader got. */
-export function qaItems(run: SuiteRun, ctx: Pick<Ctx, 'night' | 'ref' | 'sha' | 'fake' | 'label' | 'dir'>, arm: ArmName, armDir: string): { items: ItemRow[]; why: WhyRow[] } {
+export function qaItems(run: SuiteRun, ctx: Pick<Ctx, 'night' | 'ref' | 'sha' | 'fake' | 'label' | 'dir'> & Partial<NightContext>, arm: ArmName, armDir: string): { items: ItemRow[]; why: WhyRow[] } {
   const benchmark = String(run.suite.config?.benchmark);
   const want = new Set(run.items.map(i => i.id));
   const questions = new Map(loadCorpus(benchmark).questions.filter(q => want.has(q.id)).map(q => [q.id, q]));
@@ -341,9 +344,11 @@ export function renderReport(o: { label: string; sha: string; version: string | 
       const capped = rows[0]!.kind === 'agent' ? `${rows.filter(r => r.hit_cap).length}/${rows.length}` : 'n/a';
       L.push(`| ${suite} | ${reader} | ${rows.length} | ${capped} | ${frac(cap, r => r.coverage === 'all')} | ${frac(cap, r => r.correct === true)} | ${frac(batch, r => r.coverage === 'all')} | ${frac(batch, r => r.correct === true)} |`);
     }
-    const reads = (arm: ArmName) => o.items.filter(r => r.arm === arm && r.kind === 'agent');
-    const assemble = (arm: ArmName) => o.why.filter(w => w.arm === arm).reduce((n, w) => n + w.calls.filter(c => c.name === 'assemble_evidence').length, 0);
-    if (o.arms.includes('batch')) L.push('', `assemble_evidence calls in missed agent items: base ${assemble('base')}, batch ${assemble('batch')} (of ${reads('batch').length} batch rows).`);
+    const used = (arm: ArmName) => {
+      const cells = o.items.filter(r => r.arm === arm && r.kind === 'agent' && r.harness === null && r.assemble_calls !== null);
+      return `${arm} ${cells.filter(r => r.assemble_calls! > 0).length} of ${cells.length} cells (${cells.reduce((n, r) => n + r.assemble_calls!, 0)} calls)`;
+    };
+    if (o.arms.includes('batch')) L.push('', `Cells that called assemble_evidence at least once: ${used('base')}; ${used('batch')}.`);
     L.push('');
   }
   L.push('## What the set can detect', '', 'The smallest paired change in "all gold delivered" between two gbrain builds that this set detects at 80% power (two-sided, 5%), given how often two runs of one build disagree.', '', '| Suite | Rows | Same-build disagreement | Source | Smallest detectable change |', '|---|---|---|---|---|');

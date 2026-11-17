@@ -41,7 +41,9 @@ them, so a question whose cited turns don't support its answer is dropped
 
 ## Arms
 
-- **base**: the nightly's settings. A 16-turn cap for the agent; the reader gets the top 5 sessions.
+- **base**: the nightly's settings. A 16-turn cap for the agent; the reader gets the top 5 sessions. The 5 is this
+  harness's choice (memory-qa's `--qa-sessions` default), not a gbrain setting: gbrain returns a ranked list of
+  chunks, and memory-qa groups them by session and hands the reader the first five.
 - **cap2x**: twice the budget. A 32-turn cap; the reader gets the top 10 sessions of the same ranked list. If an item
   recovers here, gbrain found the evidence and the budget cut it off.
 - **batch**: the base cap, with one paragraph added to gbrain's server instructions telling the agent to read several
@@ -50,7 +52,9 @@ them, so a question whose cited turns don't support its answer is dropped
 On Cat 40, cap2x and batch run only on the items base missed (a wrong answer, or some gold not delivered, for either
 agent). That keeps the cost down, but Cat 40's agents aren't deterministic, so a follow-up arm could also lose items
 base got right, and this loop doesn't measure those losses. The report shows these arms only as "recovered among base
-misses (n)", never as an arm's accuracy or as a difference against base. The QA suites run cap2x on every item.
+misses (n)", never as an arm's accuracy or as a difference against base. The QA suites run cap2x on every item. Each
+agent row counts its `assemble_evidence` calls, so the batch arm separates "told about batch reads and used them" from
+"told and ignored it".
 
 Background work: from v0.60.733.0, an idle `gbrain serve` runs upkeep after 10 to 20 minutes with no request. Upkeep
 is left on, as shipped. It can't reach another cell, because each Cat 40 slot has its own `HOME` and `GBRAIN_HOME` and
