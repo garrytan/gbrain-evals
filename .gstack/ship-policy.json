@@ -40,6 +40,11 @@
     "eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-0[4-9]/questions.json",
     "eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-1[0-9]/questions.json",
     "eval/data/changing-facts-v1/fixtures/worlds/bg1-dev-20/questions.json",
-    "docs/benchmarks/2026-11-16-w0-keyless-repin/counted/**"
+    "docs/benchmarks/2026-11-16-w0-keyless-repin/counted/**",
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.json",
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.ndjson",
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.gz",
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.csv",
+    "docs/benchmarks/2026-11-17-readme-baselines/**/*.jsonl"
   ]
 }
