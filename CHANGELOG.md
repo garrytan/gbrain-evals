@@ -2,6 +2,10 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.247] - 2026-11-17
+
+The G6 out-of-view harness now counts a gold page as out of view only when gbrain answers `page_not_found`, the answer it gives a caller a page is hidden from. Any other failed check before an episode, such as a database lock timeout, makes that episode a `harness_error` row instead of silently marking a readable page as hidden.
+
 ## [0.10.246] - 2026-11-17
 
 ### The secrets check accepts episode ids in published correction records

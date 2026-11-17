@@ -1,1 +1,0 @@
-The G6 out-of-view harness now counts a gold page as out of view only when gbrain answers `page_not_found`, the answer it gives a caller a page is hidden from. Any other failed check before an episode, such as a database lock timeout, makes that episode a `harness_error` row instead of silently marking a readable page as hidden.
