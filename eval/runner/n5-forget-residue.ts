@@ -57,7 +57,7 @@ import {
 import { ENGINES, IFACES, SliceCell, asRows, postgresReachable, runMatrix, type Engine, type Iface } from './lifecycle/slice.ts';
 import { registryEntry } from '../registry.ts';
 import { evaluatePromotion } from './promotion.ts';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, latencySummary, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, latencySummary, noModelSpend, receiptPath, scrubMachinePaths, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
   ACTIVE_TIERS, CHECKPOINTS, N5_DEFAULT_SEED, N5_GENERATOR_VERSION, generateN5World, isForgottenAt, privateTokens, renderInitialPage, writtenBy,
   type ActiveTier, type Canary, type N5Checkpoint, type N5Ledger, type N5World,
@@ -572,7 +572,7 @@ async function main(): Promise<void> {
       cells: result.cells.map(c => ({ ...c, calls: { primary: c.calls.primary, trusted: c.calls.trusted, extra: c.calls.extra } })),
     },
   };
-  writeReceipt(outPath, receipt);
+  writeReceipt(outPath, scrubMachinePaths(receipt));
   const outcome = evaluatePromotion(entry.promotion!, receipt);
 
   log(`\nverdict: ${runStatus === 'error' ? `error (${harnessErrors.map(e => e.message).join('; ').slice(0, 400)})` : verdict}`);
