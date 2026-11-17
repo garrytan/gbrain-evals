@@ -190,6 +190,7 @@ export function pairRows(baseline: BaselineRow[], gbrain: GbrainRow[], arm: 'on'
     if (!r) { mismatches.push(key(b.seed, b.query_id) + ': no gbrain row'); return null; }
     if (r.text !== b.text) mismatches.push(key(b.seed, b.query_id) + ': text differs');
     if (r.relevant && JSON.stringify([...r.relevant].sort()) !== JSON.stringify([...b.relevant].sort())) mismatches.push(key(b.seed, b.query_id) + ': gold differs');
+    if (b.error || !b.metrics) mismatches.push(key(b.seed, b.query_id) + ': baseline row errored');
     const gr = gbrainRecall(r[arm]);
     if (gr === null) mismatches.push(key(b.seed, b.query_id) + ': gbrain row has no recall_at_5');
     return { seed: b.seed, query_id: b.query_id, baseline: b.metrics?.recall_at_5 ?? 0, gbrain: gr ?? 0 };

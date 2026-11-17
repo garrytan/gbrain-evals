@@ -50,6 +50,14 @@ describe('plainCall', () => {
     expect(bad.length).toBe(1);
     await expect(plainCall('gemini:x', 'p', 5, { fetchImpl: fakeFetch([], []) })).rejects.toThrow();
   });
+
+  test('a refusal, a filtered reply or an empty reply is an error, not an empty answer', async () => {
+    expect((await plainCall('anthropic:m', 'p', 5, { fetchImpl: fakeFetch([{ status: 200, json: { model: 'm', stop_reason: 'refusal', content: [], usage: {} } }], []) })).error).toBe('refusal');
+    expect((await plainCall('anthropic:m', 'p', 5, { fetchImpl: fakeFetch([anthropicOk('')], []) })).error).toBe('empty reply');
+    const openai = (finish: string, content: string | null) => ({ status: 200, json: { model: 'g', choices: [{ finish_reason: finish, message: { content } }], usage: {} } });
+    expect((await plainCall('openai:g', 'p', 5, { fetchImpl: fakeFetch([openai('content_filter', null)], []) })).error).toBe('content_filter');
+    expect((await plainCall('openai:g', 'p', 5, { fetchImpl: fakeFetch([openai('stop', null)], []) })).error).toBe('empty reply');
+  });
 });
 
 describe('prompts and parsers', () => {

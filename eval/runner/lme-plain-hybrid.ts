@@ -88,7 +88,7 @@ export async function runQuestion(system: PlainHybridSystem, sanitizer: Sanitize
         const r = ptop.findIndex(x => x.id === last.session.id);
         probe = { ...target, top: ptop, rank: r < 0 ? null : r + 1 };
       } catch (e) {
-        if (/budget/i.test((e as Error).name) || /budget/i.test((e as Error).message)) throw e;
+        if (!/tsquery/i.test(String((e as Error).message))) throw e;
         probe = { ...target, top: [], rank: null, error: String((e as Error).message).slice(0, 500) };
       }
     }
@@ -101,6 +101,19 @@ export async function runQuestion(system: PlainHybridSystem, sanitizer: Sanitize
   } finally {
     await system.reset(ns);
   }
+}
+
+/** Runs `work` over `items` in order on `concurrency` workers, each with its own `open()` resource; once any item throws, no worker starts another, and the call rejects with the first error only after every worker has closed. */
+export async function eachConcurrently<T, W>(items: T[], concurrency: number, open: () => W, work: (w: W, item: T) => Promise<void>, close: (w: W) => Promise<void>): Promise<void> {
+  let next = 0, stopped = false;
+  const settled = await Promise.allSettled(Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    const w = open();
+    try {
+      while (!stopped && next < items.length) await work(w, items[next++]).catch(e => { stopped = true; throw e; });
+    } finally { await close(w); }
+  }));
+  const failure = settled.find((s): s is PromiseRejectedResult => s.status === 'rejected');
+  if (failure) throw failure.reason;
 }
 
 function flag(argv: string[], name: string): string | undefined {
@@ -123,26 +136,20 @@ async function main(argv: string[]) {
   const { run, guard } = startPaidRun('lme-plain-hybrid', { ...budgetOptionsFrom(argv), estimateUsd: 0.016 * todo.length });
   const embed: Embedder = cachedOpenAIEmbedder(cachePath);
   const started = new Date().toISOString();
-  let next = 0, written = 0, failed = 0;
+  let written = 0, failed = 0;
   try {
-    await Promise.all(Array.from({ length: Math.min(concurrency, todo.length) }, async () => {
-      const system = new PlainHybridSystem(embed);
-      try {
-        while (next < todo.length) {
-          const q = todo[next++];
-          let row: HybridRow;
-          try { row = await runQuestion(system, sanitizer, convs.get(q.conversation)!, q); }
-          catch (e) {
-            if (/budget/i.test((e as Error).name) || /budget/i.test((e as Error).message)) throw e;
-            failed++;
-            row = { question_id: q.id, question_type: q.category, abstention: q.abstention, gold: q.gold, sessions: 0, question_top: [], probe: null,
-              recall_all_at5: null, recall_all_at10: null, recall_any_at5: null, recall_any_at10: null, error: String((e as Error).message).slice(0, 500) };
-          }
-          appendFileSync(rowsPath, JSON.stringify(row) + '\n');
-          if (++written % 25 === 0) process.stderr.write(`[lme-plain-hybrid] ${written}/${todo.length} rows (${failed} errors), ledger $${run.summary().actual_usd.toFixed(2)}\n`);
-        }
-      } finally { await system.close(); }
-    }));
+    await eachConcurrently(todo, concurrency, () => new PlainHybridSystem(embed), async (system, q) => {
+      let row: HybridRow;
+      try { row = await runQuestion(system, sanitizer, convs.get(q.conversation)!, q); }
+      catch (e) {
+        if (/budget/i.test((e as Error).name) || /budget/i.test((e as Error).message)) throw e;
+        failed++;
+        row = { question_id: q.id, question_type: q.category, abstention: q.abstention, gold: q.gold, sessions: 0, question_top: [], probe: null,
+          recall_all_at5: null, recall_all_at10: null, recall_any_at5: null, recall_any_at10: null, error: String((e as Error).message).slice(0, 500) };
+      }
+      appendFileSync(rowsPath, JSON.stringify(row) + '\n');
+      if (++written % 25 === 0) process.stderr.write(`[lme-plain-hybrid] ${written}/${todo.length} rows (${failed} errors), ledger $${run.summary().actual_usd.toFixed(2)}\n`);
+    }, system => system.close());
   } finally {
     guard.uninstall();
     const summary = run.close();

@@ -62,6 +62,7 @@ describe('retrieval baselines', () => {
     expect([pair.questions, pair.questions_gbrain_better, pair.questions_same, pair.runs_gbrain_better]).toEqual([2, 1, 1, 1]);
     expect(pair.classification).toBe('no measurable difference');
     expect(pairRows([row(1, 'q9', 0)], [g(1, 'q1', 1)], 'on').mismatches).toEqual(['1:q9: no gbrain row']);
+    expect(pairRows([{ ...row(1, 'q1', 0), metrics: null, error: 'embed failed' } as never], [g(1, 'q1', 1)], 'on').mismatches).toEqual(['1:q1: baseline row errored']);
   });
 
   test('live arms refuse without --paid --budget-run-id before any request; the vector arm has no stub', async () => {

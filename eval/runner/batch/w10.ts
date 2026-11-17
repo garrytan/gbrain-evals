@@ -171,11 +171,12 @@ export function rbRenderer(): Promise<HouseRenderer> {
 export function rbHybridTop(k: number, path = join(ROOT, RB_RETRIEVAL)): Map<string, number[]> {
   const rows = readNdjson(path);
   if (rows.length !== 500 || rows.some(r => r.error)) throw new Error(`${relative(ROOT, path)}: expected 500 retrieval rows without errors`);
+  if (new Set(rows.map(r => r.question_id)).size !== 500) throw new Error(`${relative(ROOT, path)}: expected 500 distinct question ids`);
   return new Map(rows.map(r => [r.question_id as string, (r.question_top as Array<{ index: number }>).slice(0, k).map(x => x.index)]));
 }
 
 /** An RB-LME reader arm: the house notes prompt over each question's sessions as `pick` chooses them, rendered by c5fb0201. */
-function rbArm(id: string, model: string, label: string, pick: () => (q: Question) => number[] | null, maxOutputTokens?: number): ArmDef {
+function rbArm(id: string, model: string, label: string, pick: () => (q: Question) => number[] | null | undefined, maxOutputTokens?: number): ArmDef {
   return {
     id, workstream: 'RB-LME', model, maxOutputTokens, build: () => {
       const r = _rbLoaded;
@@ -186,7 +187,9 @@ function rbArm(id: string, model: string, label: string, pick: () => (q: Questio
       const meta: Record<string, unknown> = {};
       for (const qid of allIds()) {
         const q = ds.get(qid)!;
-        const text = houseNotesText(q, choose(q), r);
+        const picked = choose(q);
+        if (picked === undefined) throw new Error(`${id}/${qid}: no retrieval row for this question`);
+        const text = houseNotesText(q, picked, r);
         const leaked = q.haystack_session_ids.filter(s => s.startsWith('answer_') && (text.user.includes(s) || text.system.includes(s)));
         if (leaked.length) throw new Error(`${id}/${qid}: the prompt carries ${leaked.length} answer_ session id(s)`);
         bodies.set(qid, readerBody(model, text, maxOutputTokens ?? MODEL_SETTINGS[model].max_output_tokens, maxOutputTokens));
@@ -200,9 +203,9 @@ function rbArm(id: string, model: string, label: string, pick: () => (q: Questio
 const RB_HYBRID = 'plain hybrid (PlainHybridSystem: Postgres full-text plus pgvector over text-embedding-3-large at 1,536 dims, RRF k=60) top 5 sessions in rank order, from ' + RB_RETRIEVAL;
 export const RB_ARMS: ArmDef[] = [
   rbArm('rb-sonnet55-full', 'claude-sonnet-5-5', 'every haystack session in haystack order (W10c\'s whole-history arm at W10a\'s settings)', () => () => null, W10A_MAX_OUTPUT),
-  rbArm('rb-sonnet55-hybrid5', 'claude-sonnet-5-5', RB_HYBRID, () => { const top = rbHybridTop(5); return q => top.get(q.question_id)!; }, W10A_MAX_OUTPUT),
+  rbArm('rb-sonnet55-hybrid5', 'claude-sonnet-5-5', RB_HYBRID, () => { const top = rbHybridTop(5); return q => top.get(q.question_id); }, W10A_MAX_OUTPUT),
   rbArm('rb-sonnet55-none', 'claude-sonnet-5-5', 'no sessions: the question alone', () => () => [], W10A_MAX_OUTPUT),
-  rbArm('rb-opus55-hybrid5', 'claude-opus-5-5', RB_HYBRID, () => { const top = rbHybridTop(5); return q => top.get(q.question_id)!; }),
+  rbArm('rb-opus55-hybrid5', 'claude-opus-5-5', RB_HYBRID, () => { const top = rbHybridTop(5); return q => top.get(q.question_id); }),
 ];
 
 export const ARMS: Record<string, ArmDef> = Object.fromEntries(([

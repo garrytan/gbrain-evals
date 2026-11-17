@@ -43,6 +43,8 @@ describe('RB-LME arms', () => {
     expect(rbHybridTop(2, join(dir, 'ok.ndjson')).get('q7')).toEqual([4, 1]);
     writeFileSync(join(dir, 'short.ndjson'), JSON.stringify(row(0)) + '\n');
     expect(() => rbHybridTop(5, join(dir, 'short.ndjson'))).toThrow(/expected 500 retrieval rows/);
+    writeFileSync(join(dir, 'dup.ndjson'), Array.from({ length: 500 }, (_, i) => JSON.stringify(row(i % 499))).join('\n') + '\n');
+    expect(() => rbHybridTop(5, join(dir, 'dup.ndjson'))).toThrow(/expected 500 distinct question ids/);
   });
 
   test('the renderer must be named and at c5fb0201, and the run needs a runaway cap', async () => {

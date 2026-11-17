@@ -48,7 +48,7 @@ export async function plainCall(model: string, prompt: string, maxTokens: number
           const finish = json.stop_reason === 'max_tokens' ? 'length' : json.stop_reason ?? null;
           const u = json.usage ?? {};
           return { text, finish, input_tokens: Number(u.input_tokens ?? 0) + Number(u.cache_read_input_tokens ?? 0) + Number(u.cache_creation_input_tokens ?? 0),
-            output_tokens: Number(u.output_tokens ?? 0), response_model: json.model ?? null, error: finish === 'length' ? truncated(maxTokens) : null, attempts: attempt };
+            output_tokens: Number(u.output_tokens ?? 0), response_model: json.model ?? null, error: finish === 'length' ? truncated(maxTokens) : finish === 'refusal' ? 'refusal' : text ? null : 'empty reply', attempts: attempt };
         }
       } else {
         const res = await f('https://api.openai.com/v1/chat/completions', {
@@ -61,8 +61,9 @@ export async function plainCall(model: string, prompt: string, maxTokens: number
         else {
           const choice = json.choices[0] ?? {};
           const finish = choice.finish_reason ?? null;
-          return { text: typeof choice.message?.content === 'string' ? choice.message.content : '', finish, input_tokens: Number(json.usage?.prompt_tokens ?? 0),
-            output_tokens: Number(json.usage?.completion_tokens ?? 0), response_model: json.model ?? null, error: finish === 'length' ? truncated(maxTokens) : null, attempts: attempt };
+          const text = typeof choice.message?.content === 'string' ? choice.message.content : '';
+          return { text, finish, input_tokens: Number(json.usage?.prompt_tokens ?? 0),
+            output_tokens: Number(json.usage?.completion_tokens ?? 0), response_model: json.model ?? null, error: finish === 'length' ? truncated(maxTokens) : finish === 'content_filter' ? 'content_filter' : text ? null : 'empty reply', attempts: attempt };
         }
       }
     } catch (e) {
