@@ -25,8 +25,8 @@ const FILLER = [
 /** A tiny LongMemEval-shaped dataset: each question has one evidence session among filler, plus one abstention question. */
 function writeDataset(): string {
   const facts = [
-    { id: 'q1', type: 'single-session-user', question: 'What colour did I paint my bicycle?', fact: 'I finally painted my bicycle turquoise last weekend.' },
-    { id: 'q2', type: 'single-session-user', question: 'Which marathon did I sign up for?', fact: 'I signed up for the Rotterdam marathon in April.' },
+    { id: 'q1', type: 'single-session-user', question: 'What colour did I paint my bicycle?', fact: 'The colour I chose to paint my bicycle was turquoise.' },
+    { id: 'q2', type: 'single-session-user', question: 'Which marathon did I sign up for?', fact: 'Which marathon did I sign up for? The Rotterdam marathon in April.' },
     { id: 'q3_abs', type: 'single-session-user', question: 'What is the name of my pet iguana?', fact: null },
   ];
   const questions = facts.map(f => {
