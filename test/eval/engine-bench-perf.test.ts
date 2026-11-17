@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import {
-  DEFAULT_MARGINS, buildDataset, hashEmbed, higherIsBetter, lowerIsBetter, marginsFromPrereg, medianRatio, pageMarkdown,
+  DEFAULT_MARGINS, buildDataset, hashEmbed, higherIsBetter, lowerIsBetter, marginsFromPrereg, medianRatio, missingMetric, pageMarkdown,
   parseArgs, quantileRatio, speedVerdict, type MetricVerdict, type PairedRow,
 } from '../../eval/runner/engine-bench/perf.ts';
 
@@ -78,6 +78,12 @@ describe('speed rule', () => {
     const v = speedVerdict([lat('search_hybrid p99', 1.05, [0.98, 1.15], true)], m);
     expect(v.verdict).toBe('not_shown');
     expect(v.unresolved.length).toBe(1);
+  });
+  test('a missing core operation is slower; a missing other operation is a named exception', () => {
+    expect(speedVerdict([missingMetric('search_vector p50', 'pglite', 'lower_is_better', true)], m).verdict).toBe('slower');
+    const v = speedVerdict([lat('get_page p50', 0.5, [0.4, 0.6], true), missingMetric('graph_walk_d2 p99', 'pglite', 'lower_is_better', false)], m);
+    expect(v.verdict).toBe('no_slower_with_exceptions');
+    expect(v.exceptions.map((x) => x.status)).toEqual(['missing']);
   });
   test('the verdict never counts a metric twice', () => {
     const ms: MetricVerdict[] = [lat('a', 1.3, [1.2, 1.4], false), lat('b', 1.05, [0.9, 1.2], true)];

@@ -43,7 +43,7 @@ import type { BrainEngine } from 'gbrain/engine';
 import type { SearchResult } from 'gbrain/types';
 import { attestPreregistration, type Attestation } from '../prereg.ts';
 import { clusteredPairedDelta, seededRandom, type PairedItem } from '../stats/paired.ts';
-import { EvalEngineUnavailable, openEvalEngine, supportsRawSql, type EvalEngineKind } from '../eval-engine.ts';
+import { EvalEngineUnavailable, isCapabilityMissing, openEvalEngine, supportsRawSql, type EvalEngineKind } from '../eval-engine.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 
 // ─── Constants ──────────────────────────────────────────────────────
@@ -610,9 +610,30 @@ async function deletePages(engine: BrainEngine, slugs: string[]): Promise<void> 
   for (const s of slugs) await engine.deletePage(s).catch(() => {});
 }
 
+/**
+ * Operations an engine refuses with gbrain's typed engine_capability_missing error (the Rust engine refuses each
+ * operation it does not implement yet). Each read operation is tried once; a refused operation is reported as missing
+ * and never timed. Any other error is a real failure and propagates.
+ */
+async function missingOps(ops: Ops, engines: BrainEngine[], names: readonly PairedOp[]): Promise<Record<string, string>> {
+  const missing: Record<string, string> = {};
+  for (const op of names) {
+    if (op === 'put_page') continue;
+    for (const e of engines) {
+      try { await ops[op](e, 0); } catch (err) {
+        if (!isCapabilityMissing(err)) throw err;
+        missing[op] = (err as Error).message.slice(0, 300);
+      }
+    }
+  }
+  return missing;
+}
+
+const availableMix = (missing: Record<string, string>) => READ_MIX.filter((op) => !missing[op]);
+
 // ─── Child: one engine ──────────────────────────────────────────────
 
-interface ChildOpts { scale: number; seed: number; iters: number; warmup: number; coldReps: number; tpReps: number; tpSeconds: number }
+interface ChildOpts { scale: number; seed: number; iters: number; coreIters: number; warmup: number; coldReps: number; tpReps: number; tpSeconds: number }
 interface ChildInput { armId: EvalEngineKind; runtime: ArmRuntime; gbrain: { root: string; version: string }; opts: ChildOpts }
 type Rankings = { keyword: string[][]; vector: string[][]; hybrid: string[][] };
 
@@ -643,6 +664,14 @@ async function runArmChild(input: ChildInput) {
   const tImport = performance.now();
   for (let i = 0; i < ds.pages.length; i++) {
     const p = ds.pages[i];
+    if (i === 0) {
+      try { await writePage(code, engine, p.slug, pageMarkdown(p)); } catch (err) {
+        if (!isCapabilityMissing(err)) throw err;
+        await engine.disconnect().catch(() => {});
+        return { unavailable: { stage: 'import', reason: (err as Error).message.slice(0, 300) } };
+      }
+      await engine.deletePage(p.slug);
+    }
     const [, ms] = await timeOp(() => writePage(code, engine, p.slug, pageMarkdown(p)));
     putMs.push(ms);
     if ((i + 1) % 5000 === 0) {
@@ -682,12 +711,21 @@ async function runArmChild(input: ChildInput) {
   };
 
   log(`[${input.armId}] rankings and steady-state reads`);
+  const rankMissing: Record<string, string> = {};
+  const ranked = async (mode: keyof Rankings, fn: () => Promise<SearchResult[]>): Promise<string[]> => {
+    if (rankMissing[mode]) return [];
+    try { return toSlugs(await fn()); } catch (err) {
+      if (!isCapabilityMissing(err)) throw err;
+      rankMissing[mode] = (err as Error).message.slice(0, 300);
+      return [];
+    }
+  };
   const rank = async (texts: string[]): Promise<Rankings> => {
     const out: Rankings = { keyword: [], vector: [], hybrid: [] };
     for (const t of texts) {
-      out.keyword.push(toSlugs(await engine.searchKeyword(t, { limit: 30 } as never)));
-      out.vector.push(toSlugs(await engine.searchVector(hashEmbed(t), { limit: 30 } as never)));
-      out.hybrid.push(toSlugs(await code.hybridSearch(engine, t, { limit: 30, expansion: false })));
+      out.keyword.push(await ranked('keyword', () => engine.searchKeyword(t, { limit: 30 } as never)));
+      out.vector.push(await ranked('vector', () => engine.searchVector(hashEmbed(t), { limit: 30 } as never)));
+      out.hybrid.push(await ranked('hybrid', () => code.hybridSearch(engine, t, { limit: 30, expansion: false })));
     }
     return out;
   };
@@ -706,9 +744,12 @@ async function runArmChild(input: ChildInput) {
   }
   result.quality_control = { note: 'hash embeddings: an engine-to-engine control, not a retrieval-quality claim', ...qual };
   result.rankings = { quality: qRank, probes: pRank, quality_ids: ds.qualityQueries.map((q) => q.id) };
+  result.rankings_missing = rankMissing;
 
   const ops = makeOps(code, ds, opts.seed ^ 0x5eed, 2000, () => { throw new Error('no writes in the steady-state window'); });
-  for (let i = 0; i < 2000; i++) await ops[READ_MIX[i % READ_MIX.length]](engine, i);
+  const mix = availableMix(await missingOps(ops, [engine], [...new Set(READ_MIX)]));
+  result.steady_read_mix = mix;
+  for (let i = 0; i < 2000 && mix.length; i++) await ops[mix[i % mix.length]](engine, i);
   const steadyRssKb = readProcStatusKb('VmRSS');
   mem.stop();
   const stats = await engine.getStats() as unknown as Record<string, unknown>;
@@ -773,16 +814,29 @@ async function runPairedChild(input: PairedInput) {
   await pinSearch(ref);
   await pinSearch(other);
   const r = rng(opts.seed ^ 0xa11ce);
-  const total = opts.warmup + opts.iters;
+  const total = opts.warmup + Math.max(opts.iters, opts.coreIters);
   const putSlug = (i: number) => `bench/put-${input.tag}-${String(i).padStart(6, '0')}`;
   const ops = makeOps(code, ds, opts.seed ^ 0xa11ce, total, putSlug);
+  const missing = await missingOps(ops, [ref, other], PAIRED_OPS);
+  const mix = availableMix(missing);
 
   const latency: Record<string, PairedRow[]> = {};
   for (const op of PAIRED_OPS) {
+    if (missing[op]) { log(`[paired ${input.tag}] ${op} missing: ${missing[op]}`); continue; }
     const fn = ops[op];
+    if (op === 'put_page') {
+      try { await fn(other, total + 1); await fn(ref, total + 1); } catch (err) {
+        if (!isCapabilityMissing(err)) throw err;
+        missing[op] = (err as Error).message.slice(0, 300);
+        continue;
+      }
+      await deletePages(ref, [putSlug(total + 1)]);
+      await deletePages(other, [putSlug(total + 1)]);
+    }
+    const n = CORE_OPS.includes(op) ? opts.coreIters : opts.iters;
     for (let i = 0; i < opts.warmup; i++) { await fn(ref, i); await fn(other, i); }
     const rows: PairedRow[] = [];
-    for (let i = 0; i < opts.iters; i++) {
+    for (let i = 0; i < n; i++) {
       const qi = opts.warmup + i;
       const otherFirst = r() < 0.5;
       let refMs = 0, otherMs = 0;
@@ -803,9 +857,10 @@ async function runPairedChild(input: PairedInput) {
   for (const clients of THROUGHPUT_CLIENTS) {
     for (let rep = 0; rep < opts.tpReps; rep++) {
       for (const kind of ['read', 'write'] as const) {
+        if ((kind === 'read' && !mix.length) || (kind === 'write' && missing.put_page)) continue;
         const written = new Map<BrainEngine, string[]>([[ref, []], [other, []]]);
         const opFor = (e: BrainEngine) => kind === 'read'
-          ? (w: number, k: number) => ops[READ_MIX[(k + w) % READ_MIX.length]](e, w * 100_003 + k)
+          ? (w: number, k: number) => ops[mix[(k + w) % mix.length]](e, w * 100_003 + k)
           : (w: number, k: number) => {
             const slug = `bench/tp-${input.tag}-${clients}-${rep}-${w}-${k}`;
             written.get(e)!.push(slug);
@@ -828,7 +883,7 @@ async function runPairedChild(input: PairedInput) {
   }
   await other.disconnect();
   await ref.disconnect();
-  return { latency, throughput };
+  return { latency, throughput, missing, read_mix: mix };
 }
 
 // ─── Paired analysis ────────────────────────────────────────────────
@@ -920,7 +975,8 @@ export function medianRatio(ref: number[], other: number[], seed: number, draws:
 
 // ─── Decision rule (speed) ──────────────────────────────────────────
 
-export type MetricStatus = 'pass' | 'fail' | 'inconclusive';
+/** `missing`: the engine refuses the operation (engine_capability_missing), so it cannot be timed. */
+export type MetricStatus = 'pass' | 'fail' | 'inconclusive' | 'missing';
 export interface MetricVerdict { metric: string; against: EvalEngineKind; direction: 'lower_is_better' | 'higher_is_better'; ratio: number; ci95: CI; margin: number; status: MetricStatus; core: boolean }
 
 /** Lower-is-better ratios (latency, cold start, RSS) pass when the interval's upper bound is within the margin. */
@@ -939,6 +995,11 @@ export function higherIsBetter(metric: string, against: EvalEngineKind, r: Ratio
   return { metric, against, direction: 'higher_is_better', ratio: r.ratio, ci95: r.ci95, margin, status, core };
 }
 
+/** A metric the engine cannot be measured on because it refuses the operation: a blocker for a core operation, a named exception otherwise. */
+export function missingMetric(metric: string, against: EvalEngineKind, direction: MetricVerdict['direction'], core: boolean): MetricVerdict {
+  return { metric, against, direction, ratio: NaN, ci95: null, margin: NaN, status: 'missing', core };
+}
+
 export type SpeedVerdict = 'no_slower' | 'no_slower_with_exceptions' | 'not_shown' | 'slower';
 
 /**
@@ -952,9 +1013,9 @@ export type SpeedVerdict = 'no_slower' | 'no_slower_with_exceptions' | 'not_show
 export function speedVerdict(metrics: MetricVerdict[], m: Margins): { verdict: SpeedVerdict; exceptions: MetricVerdict[]; blockers: MetricVerdict[]; unresolved: MetricVerdict[] } {
   const notPass = metrics.filter((x) => x.status !== 'pass');
   const beyond = (x: MetricVerdict) => (x.direction === 'lower_is_better' ? x.ratio > m.exception_ratio : x.ratio < 1 / m.exception_ratio);
-  const blockers = notPass.filter((x) => (x.core && x.status === 'fail') || (!x.core && beyond(x)));
+  const blockers = notPass.filter((x) => (x.core && (x.status === 'fail' || x.status === 'missing')) || (!x.core && x.status !== 'missing' && beyond(x)));
   const unresolved = notPass.filter((x) => x.core && x.status === 'inconclusive');
-  const exceptions = notPass.filter((x) => !x.core && !beyond(x));
+  const exceptions = notPass.filter((x) => !x.core && (x.status === 'missing' || !beyond(x)));
   if (blockers.length) return { verdict: 'slower', exceptions, blockers, unresolved };
   if (unresolved.length) return { verdict: 'not_shown', exceptions, blockers, unresolved };
   if (exceptions.length) return { verdict: 'no_slower_with_exceptions', exceptions, blockers, unresolved };
@@ -977,7 +1038,7 @@ export function marginsFromPrereg(text: string): Margins {
 // ─── Orchestrator ───────────────────────────────────────────────────
 
 export interface Options {
-  scale: number; seed: number; iters: number; warmup: number; coldReps: number; tpReps: number; tpSeconds: number;
+  scale: number; seed: number; iters: number; coreIters: number; warmup: number; coldReps: number; tpReps: number; tpSeconds: number;
   dev: boolean; prereg?: string; outDir?: string; engines: EvalEngineKind[]; postgresUrl?: string; pgImage: string; keepWork: boolean;
 }
 
@@ -988,6 +1049,7 @@ export function parseArgs(argv: string[]): Options {
     seed: Number(get('--seed') ?? 1337),
     iters: Number(get('--iters') ?? 2000),
     warmup: Number(get('--warmup') ?? 100),
+    coreIters: Number(get('--core-iters') ?? 10000),
     coldReps: Number(get('--cold-reps') ?? 11),
     tpReps: Number(get('--tp-reps') ?? 10),
     tpSeconds: Number(get('--tp-seconds') ?? 5),
@@ -1079,7 +1141,7 @@ export async function orchestrate(opts: Options, argv: string[]) {
   mkdirSync(REPORT_DIR, { recursive: true });
   const workDir = mkdtempSync(join(REPORT_DIR, '.work-'));
   const gbrain = { root: gut.root, version: gut.version };
-  const childOpts: ChildOpts = { scale: opts.scale, seed: opts.seed, iters: opts.iters, warmup: opts.warmup, coldReps: opts.coldReps, tpReps: opts.tpReps, tpSeconds: opts.tpSeconds };
+  const childOpts: ChildOpts = { scale: opts.scale, seed: opts.seed, iters: opts.iters, coreIters: opts.coreIters, warmup: opts.warmup, coldReps: opts.coldReps, tpReps: opts.tpReps, tpSeconds: opts.tpSeconds };
   const arms: Record<string, any> = {};
   const rankings: Record<string, Rankings & { quality_ids: string[] }> = {};
   const handles: Partial<Record<EvalEngineKind, ArmHandle>> = {};
@@ -1092,6 +1154,11 @@ export async function orchestrate(opts: Options, argv: string[]) {
       handles[id] = handle;
       const input: ChildInput = { armId: id, runtime: handle.runtime, gbrain, opts: childOpts };
       const run = await runChild('arm', input, workDir, `${id}-run`);
+      if (run.unavailable) {
+        log(`[${id}] unavailable at ${run.unavailable.stage}: ${run.unavailable.reason}`);
+        arms[id] = { id, label: spec.label, kind: spec.kind, info: handle.info, unavailable: run.unavailable };
+        continue;
+      }
       rankings[id] = { ...run.rankings.quality, quality_ids: run.rankings.quality_ids, probes: run.rankings.probes } as never;
       const probeRankings = run.rankings.probes as Rankings;
       delete run.rankings;
@@ -1107,7 +1174,7 @@ export async function orchestrate(opts: Options, argv: string[]) {
       (arms[id] as any)._probes = probeRankings;
     }
 
-    const has = (k: EvalEngineKind) => Boolean(arms[k]);
+    const has = (k: EvalEngineKind) => Boolean(arms[k]) && !arms[k].unavailable;
     const plan: Array<[EvalEngineKind, EvalEngineKind]> = [];
     if (has('rust') && has('pglite')) plan.push(['pglite', 'rust']);
     if (has('rust') && has('postgres')) plan.push(['postgres', 'rust']);
@@ -1117,24 +1184,34 @@ export async function orchestrate(opts: Options, argv: string[]) {
       log(`\n== Paired: ${arms[otherId].label} vs ${arms[refId].label} ==`);
       const raw = await runChild('paired', { tag, ref: { armId: refId, runtime: handles[refId]!.runtime }, other: { armId: otherId, runtime: handles[otherId]!.runtime }, gbrain, opts: childOpts }, workDir, `paired-${tag}`);
       const latency: Record<string, LatencyPairSummary> = {};
-      for (const op of PAIRED_OPS) latency[op] = analyzeLatency(raw.latency[op], opts.seed, margins);
+      for (const op of PAIRED_OPS) if (raw.latency[op]) latency[op] = analyzeLatency(raw.latency[op], opts.seed, margins);
       const throughput: ThroughputSummary[] = [];
-      for (const c of THROUGHPUT_CLIENTS) for (const k of ['read', 'write'] as const) throughput.push(analyzeThroughput(raw.throughput, c, k, opts.seed, margins));
+      for (const c of THROUGHPUT_CLIENTS) for (const k of ['read', 'write'] as const) if (raw.throughput.some((t: ThroughputRow) => t.clients === c && t.kind === k)) throughput.push(analyzeThroughput(raw.throughput, c, k, opts.seed, margins));
       const cold = medianRatio(arms[refId].cold_start.reps.map((x: any) => x.total_ms), arms[otherId].cold_start.reps.map((x: any) => x.total_ms), opts.seed, margins.bootstrap_draws);
       const importRatio: Ratio = { ratio: arms[otherId].run.import.corpus_pages_per_sec / arms[refId].run.import.corpus_pages_per_sec, ci95: null };
       const rssRatio: Ratio = { ratio: arms[otherId].engine_rss_bytes / Math.max(arms[refId].engine_rss_bytes, 1), ci95: null };
       const metrics: MetricVerdict[] = [];
       for (const op of PAIRED_OPS) {
-        metrics.push(lowerIsBetter(`${op} p50`, refId, latency[op].p50_ratio, margins.latency_ratio, CORE_OPS.includes(op)));
-        metrics.push(lowerIsBetter(`${op} p99`, refId, latency[op].p99_ratio, margins.latency_ratio, CORE_OPS.includes(op)));
+        for (const q of ['p50', 'p99'] as const) {
+          metrics.push(latency[op]
+            ? lowerIsBetter(`${op} ${q}`, refId, latency[op][`${q}_ratio`], margins.latency_ratio, CORE_OPS.includes(op))
+            : missingMetric(`${op} ${q}`, refId, 'lower_is_better', CORE_OPS.includes(op)));
+        }
       }
-      for (const t of throughput) metrics.push(higherIsBetter(`${t.kind} throughput at ${t.clients} client${t.clients === 1 ? '' : 's'}`, refId, t.ratio, margins.throughput_ratio, false));
+      for (const c of THROUGHPUT_CLIENTS) {
+        for (const k of ['read', 'write'] as const) {
+          const name = `${k} throughput at ${c} client${c === 1 ? '' : 's'}`;
+          const t = throughput.find((x) => x.clients === c && x.kind === k);
+          metrics.push(t ? higherIsBetter(name, refId, t.ratio, margins.throughput_ratio, false) : missingMetric(name, refId, 'higher_is_better', false));
+        }
+      }
       metrics.push(lowerIsBetter('cold start', refId, cold, margins.point_ratio, false));
       metrics.push(higherIsBetter('corpus import', refId, importRatio, margins.throughput_ratio, false));
       metrics.push(lowerIsBetter('peak RSS', refId, rssRatio, margins.point_ratio, false));
       pairs[tag] = {
         reference: refId, other: otherId,
         direction: 'ratios are other over reference: below 1 means other is faster or smaller for latency, cold start and RSS; above 1 means other is faster for throughput and import',
+        missing: raw.missing, read_mix: raw.read_mix,
         latency, throughput, cold_start_ratio: cold, import_ratio: importRatio, rss_ratio: rssRatio, metrics,
         agreement: { quality_queries: computeAgreement(rankings[otherId], rankings[refId]), probes: computeAgreement(arms[otherId]._probes, arms[refId]._probes) },
         rows: raw,
@@ -1147,9 +1224,12 @@ export async function orchestrate(opts: Options, argv: string[]) {
   for (const a of Object.values(arms)) delete (a as any)._probes;
 
   const rustMetrics = Object.values(pairs).filter((p: any) => p.other === 'rust').flatMap((p: any) => p.metrics as MetricVerdict[]);
-  const speed = rustMetrics.length
-    ? { applies: true, against: Object.values(pairs).filter((p: any) => p.other === 'rust').map((p: any) => p.reference), ...speedVerdict(rustMetrics, margins) }
-    : { applies: false, reason: 'no Rust arm in this run; the speed rule decides only Rust against the TypeScript engines' };
+  const rustUnavailable = arms.rust?.unavailable;
+  const speed = rustUnavailable
+    ? { applies: true, verdict: 'slower' as SpeedVerdict, reason: `the Rust engine refused ${rustUnavailable.stage}, so no operation could be measured: ${rustUnavailable.reason}`, exceptions: [], unresolved: [], blockers: [missingMetric('put_page p50', 'pglite', 'lower_is_better', true)] }
+    : rustMetrics.length
+      ? { applies: true, against: Object.values(pairs).filter((p: any) => p.other === 'rust').map((p: any) => p.reference), ...speedVerdict(rustMetrics, margins) }
+      : { applies: false, reason: 'no Rust arm in this run; the speed rule decides only Rust against the TypeScript engines' };
 
   const out = {
     schema_version: SCHEMA_VERSION,
