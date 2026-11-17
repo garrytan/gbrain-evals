@@ -6,8 +6,8 @@
 #   eval/runner/sota/ubicloud/run.sh check        teardown check: fails if any VM of owner gbev78 remains, or any
 #                                                 window is still in flight
 #   eval/runner/sota/ubicloud/run.sh pull <window>
-#                                                 bring a window's state back from its VM, then destroy the VM and
-#                                                 clear the window's in-flight marker
+#                                                 stop the window's command on its VM, bring its state back, then
+#                                                 destroy the VM and clear the window's in-flight marker
 #
 # Windows, whose steps vm-run.sh runs in order:
 #   rehearse      keyless: the VM setup and every plan step, with no key on the VM and no ledger run
@@ -36,7 +36,9 @@
 # the command's status, neither 253, a failed pull, nor 255, a lost VM, nor a signal). While any marker exists, every
 # launch refuses and the teardown check fails, printing the pull command: a launch after a lost pull would otherwise
 # push a stale ledger, or open a fresh one with a full cap, and overspend by up to one cap. `run.sh pull <window>`
-# brings the state back, then destroys the VM and clears the marker. If the VM is already gone, its ledger and cache are
+# refuses while a launch of the window still runs, stops the window's command and waits for its exit status, brings
+# the state back, then destroys the VM and clears the marker; it keeps the marker when any step fails. If the VM is
+# already gone, its ledger and cache are
 # lost with it: delete the marker by hand only once someone has decided how to account for that window's spend.
 set -euo pipefail
 REPO=$(cd "$(dirname "$0")/../../../.." && pwd)
@@ -56,7 +58,7 @@ in_flight_hint() {
   while read -r window vm at; do
     echo "window $window is in flight on VM $vm (launched $at): its ledger and cache have not come back. Pull them with:" >&2
     echo "  $0 pull $window" >&2
-    echo "which runs: UBI_OWNER=$UBI_OWNER $UBI pull $vm work/$window $WINDOWS, then UBI_OWNER=$UBI_OWNER $UBI down $vm" >&2
+    echo "which stops the command (UBI_OWNER=$UBI_OWNER $UBI stop $vm) and, once it has exited, runs: UBI_OWNER=$UBI_OWNER $UBI pull $vm work/$window $WINDOWS, then UBI_OWNER=$UBI_OWNER $UBI down $vm" >&2
   done <<<"$(in_flight)"
 }
 check() {
@@ -84,7 +86,10 @@ if [ "${1:-}" = pull ]; then
   [ -f "$marker" ] || { echo "run.sh: no in-flight marker for $window ($marker)" >&2; exit 2; }
   vm=$(sed -n 's/^vm=//p' "$marker")
   [ -n "$vm" ] || { echo "run.sh: $marker names no VM" >&2; exit 2; }
-  "$UBI" pull "$vm" "work/$window" "$WINDOWS" || { echo "run.sh: the pull from $vm failed; $marker stays" >&2; exit 1; }
+  exec 9<"$WINDOWS/$window" && flock -n 9 || { echo "run.sh: refusing to pull: a launch of $window still holds $WINDOWS/$window; $marker stays" >&2; exit 2; }
+  "$UBI" stop "$vm" || true
+  "$UBI" ssh "$vm" 'test -f ~/.ubirun-cmd.rc' || { echo "run.sh: the command on $vm has not exited (or the VM cannot be reached), so its ledger may still change; $marker stays" >&2; exit 1; }
+  UBI_FINAL_PULL=1 "$UBI" pull "$vm" "work/$window" "$WINDOWS" || { echo "run.sh: the pull from $vm failed; $marker stays" >&2; exit 1; }
   rm -f "$marker"
   echo "run.sh: $window's state is back in $WINDOWS/$window; destroying $vm"
   "$UBI" down "$vm" || { echo "run.sh: could not destroy $vm; run: UBI_OWNER=$UBI_OWNER $UBI down $vm" >&2; exit 1; }

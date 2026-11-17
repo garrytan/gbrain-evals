@@ -11,4 +11,5 @@
   bound. `up`, `run`, `reap` and `room` refuse without `UBI_OWNER`.
 - The SOTA loop's window launcher (`eval/runner/sota/ubicloud/run.sh`) launches again through this runner. It records
   each window in flight until its final pull lands, refuses the next launch and fails its teardown check while one is
-  outstanding, printing the pull command, and `run.sh pull <window>` brings the state back and destroys the VM.
+  outstanding, printing the pull command, and `run.sh pull <window>` stops the window's command, brings the state
+  back once it has exited and destroys the VM.
