@@ -7,7 +7,7 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
@@ -551,7 +551,7 @@ describe('--ref stable reads gbrain\'s stable tag from the remote at launch', ()
     const f = fixture();
     g(f.clone, 'remote', 'set-url', 'origin', 'https://x-access-token:NOT-A-REAL-TOKEN@127.0.0.1:9/gbrain.git');
     let message = '';
-    try { resolveStable(f.clone); } catch (e) { message = (e as Error).message; }
+    try { resolveStable(f.clone); } catch (e) { message = (e as Error).message; } finally { rmSync(f.root, { recursive: true, force: true }); }
     expect(message).toContain('--ref stable: git ls-remote https://127.0.0.1:9/gbrain.git failed: ');
     expect(message).not.toContain('NOT-A-REAL-TOKEN');
     expect(message).not.toContain('x-access-token');
