@@ -1,7 +1,7 @@
 # PGLite and Postgres in gbrain: the engine-bench baseline (development runs)
 
-- **We learned that gbrain gives the same answers on PGLite and on Postgres.** At gbrain v0.60.734.0 and v0.60.735.0, both engines passed the five keyless correctness checks they can both run with identical counts (zero stale values, leaks, lost writes or bytes lost) and Postgres also passed the sixth, which runs only on Postgres; 301 of 302 CLI, MCP and markdown outputs were byte-identical, and LongMemEval-S retrieval returned the same top 5 on 102 of 102 questions. You can move a brain between the two engines without changing what it returns, except for the `stale` flag in `gbrain search --json`, which only PGLite computes.
-- **We learned that Postgres is the engine for concurrent clients and large brains.** With 16 concurrent clients PGLite served 0.05x Postgres's read rate (17.6 against 347.9 reads per second), and PGLite's import slows as the brain grows: 27.7 pages per second for the first 5,000 pages, 1.5 by 45,000. Postgres slowed only from 28.4 to 23.0 pages per second over all 100,000 pages (22.7 at its lowest). You should use Postgres for a brain that several agents read at once or that will grow past roughly 10,000 pages; for one client, PGLite was 6% slower than Postgres on single reads and wrote faster.
+- **We learned that gbrain gives the same answers on PGLite and on Postgres.** At gbrain v0.60.734.0 and v0.60.735.0, both engines passed the five keyless correctness checks they can both run with identical counts (zero stale values, leaks, lost writes or bytes lost) and Postgres also passed the sixth, which runs only on Postgres; 301 of 302 CLI, MCP and markdown outputs were byte-identical, and LongMemEval-S retrieval returned the same top 5 on 102 of 102 questions. On these fixtures and builds the two engines returned the same outputs, except for the `stale` flag in `gbrain search --json`, which only PGLite computes, and a few vector and hybrid rankings in the 10,000-page speed run (identical top 10 on 70 and 69 of 71 quality queries).
+- **We learned that Postgres is the engine for concurrent clients and large brains.** With 16 concurrent clients PGLite served 0.05x Postgres's read rate (17.6 against 347.9 reads per second), and PGLite's import slows as the brain grows: 27.7 pages per second for the first 5,000 pages, 1.5 by 45,000. Postgres slowed only from 28.4 to 23.0 pages per second over all 100,000 pages (22.7 at its lowest). You should use Postgres for a brain that several agents read at once or that will grow past roughly 10,000 pages; for one client, PGLite's mixed-read throughput was 6% lower than Postgres's and it wrote faster.
 - These are development runs made before the [preregistration](2026-11-17-engine-bench-preregistration.md) froze. They describe the two TypeScript engines and decide nothing. The Rust engine is not measured here: no gbrain release carries it yet, and the counted wave runs when gbrain's maintainers name a build.
 
 ## What engine-bench is
@@ -80,7 +80,7 @@ Throughput alternates 5-second windows between the engines, 10 repetitions per s
 | 1 | write | 28.6 | 58.7 | 1.95 [1.84, 2.05] |
 | 4 | read | 149.0 | 23.1 | 0.15 [0.14, 0.17] |
 | 4 | write | 133.8 | 63.3 | 0.44 [0.39, 0.49] |
-| 16 | read | 347.9 | 17.6 | 0.05 [0.05, 0.05] |
+| 16 | read | 347.9 | 17.6 | 0.051 [0.049, 0.053] |
 | 16 | write | 303.1 | 63.4 | 0.19 [0.17, 0.21] |
 
 Single values: import 17.1 pages per second on PGLite (586 s in total) against 28.6 on Postgres (349 s), counting links, timeline entries and ANALYZE; the page writes alone ran at 19.7 and 29.0 pages per second (507 s and 345 s), and PGLite spent 77 s writing timeline entries against 2.5 s on Postgres. Engine peak memory (the process's peak resident memory minus its resident memory before the engine opened; Postgres adds the server container's peak working set) 2,093 MiB against 820 MiB; cold start (median of 11 fresh processes) 782 ms against 492 ms; store size on disk 707 MiB against 1,005 MiB.
@@ -97,27 +97,27 @@ The same import, one VM per engine, import only:
 | 45,000 | 1.5 pages/s | 658.6 ms | 23.9 pages/s | 42.0 ms |
 | 100,000 | not reached (stopped at the 3.75 h limit) | | 23.0 pages/s | 43.5 ms |
 
-Postgres imported 100,000 pages in 4,124 s, slowing from 28.4 pages per second for the first 5,000 pages to 23.0 for the last 5,000. On PGLite the time per page grows with the number of pages already stored, so total import time grows roughly with the square of the brain's size.
+Postgres wrote 100,000 pages in 4,124 s (4,162 s including links, timeline entries and ANALYZE), slowing from 28.4 pages per second for the first 5,000 pages to 23.0 for the last 5,000. On PGLite the time per page grows with the number of pages already stored, so total import time grows roughly with the square of the brain's size.
 
 ## What to use and what to avoid
 
-- **Either engine for correctness.** No check, output or retrieval answer separated them, apart from `stale`. If your workflow reads `stale` from `gbrain search --json`, know that Postgres always reports `false` at this build.
-- **PGLite for one client and a small brain.** One reader was 6% slower on PGLite (0.94x, interval 0.91 to 0.97), and one writer was faster on PGLite (1.95x), with no server to run.
+- **Either engine for correctness.** No correctness count, output byte or LongMemEval-S answer separated them, apart from `stale`. In the 10,000-page speed run, vector and hybrid search returned a different top 10 on 1 and 2 of 71 quality queries and on 5 and 3 of 200 probes. If your workflow reads `stale` from `gbrain search --json`, know that Postgres always reports `false` at this build.
+- **PGLite for one client and a small brain.** One client running a mix of reads got 6% less throughput on PGLite (0.94x, interval 0.91 to 0.97), and one writer was faster on PGLite (1.95x), with no server to run.
 - **Postgres for several clients or a large brain.** PGLite's read rate falls as clients are added (23.1 reads per second at 4 clients, 17.6 at 16), and its import slows sharply past about 10,000 pages. PGLite's p99 latency was also higher on writes and on keyword and hybrid search.
-- **Limits of this evidence.** These are development runs on one machine each, made before the preregistration froze. The 10,000-page speed run started at a load average of 3.55, above the bar of 2 that a counted run requires, and used 2,000 queries per operation, so its p99 intervals are wide (up to about ±0.27). The LongMemEval-S run is a 102-question sample. N14 ran only its 2 MB tier.
+- **Limits of this evidence.** These are development runs on one machine each, made before the preregistration froze. The 10,000-page speed run started at a load average of 3.55, above the bar of 2 that a counted run requires, and used 2,000 queries per operation, so its p99 intervals are wide (up to 0.54 from end to end, for example 1.58 [1.41, 1.95] on keyword search filtered by type). The LongMemEval-S run is a 102-question sample. N14 ran only its 2 MB tier.
 
 ## Reproduce
 
 From the repository root, with Bun and Docker, and a gbrain checkout at the named tag (`--gbrain <checkout>@<ref>` loads a verified copy):
 
 ```sh
-bun eval/runner/engine-bench/correctness.ts --dev --engines pglite,postgres --gbrain <gbrain checkout>@v0.60.735.0
-bun eval/runner/engine-bench/surface-parity.ts --dev --engines pglite,postgres --gbrain <gbrain checkout>@v0.60.734.0
-bun eval/runner/engine-bench/lme-recall.ts run --dev --engines pglite,postgres --arms keyword,vector,hybrid --stratify 17 --gbrain <gbrain checkout>@v0.60.735.0
-bun eval/runner/engine-bench/perf.ts --dev --scale 10000 --engines pglite,postgres --gbrain <gbrain checkout>@v0.60.734.0
+bun eval/runner/engine-bench/correctness.ts --dev --engines pglite,postgres --gbrain '<gbrain checkout>@v0.60.735.0'
+bun eval/runner/engine-bench/surface-parity.ts --dev --engines pglite,postgres --gbrain '<gbrain checkout>@v0.60.734.0'
+bun eval/runner/engine-bench/lme-recall.ts run --dev --engines pglite,postgres --arms keyword,vector,hybrid --stratify 17 --pg-url '<Postgres admin URL>' --gbrain '<gbrain checkout>@v0.60.735.0'
+bun eval/runner/engine-bench/perf.ts --dev --scale 10000 --engines pglite,postgres --gbrain '<gbrain checkout>@v0.60.734.0'
 ```
 
-The vector and hybrid arms need the filled embedding cache; its sha256 is in [lme-recall/cache.sha256](2026-11-17-engine-bench/lme-recall/cache.sha256). Run times: correctness about 38 minutes for both engines on a 4-core machine; the 10,000-page speed run about 51 minutes on a 16-vCPU Ubicloud `standard-16` VM; the 100,000-page Postgres import 69 minutes.
+The LongMemEval-S runner does not start a database itself: pass `--pg-url` with the admin URL of a local `pgvector/pgvector:pg16` container, because without it the Postgres arm is refused and only PGLite runs. The other three runners start their own container. The vector and hybrid arms need the filled embedding cache; its sha256 is in [lme-recall/cache.sha256](2026-11-17-engine-bench/lme-recall/cache.sha256). Run times: correctness about 38 minutes for both engines on a 4-core machine; the 10,000-page speed run about 51 minutes on a 16-vCPU Ubicloud `standard-16` VM; the 100,000-page Postgres import 69 minutes.
 
 Raw receipts, per-question rows and logs are in [2026-11-17-engine-bench/](2026-11-17-engine-bench/): `correctness/` (the stage receipt and each runner's receipt and log), `surface-parity/`, `lme-recall/` (receipt, NDJSON rows, cache coverage count) and `speed/` (the 10,000-page receipt with every paired query, the 100,000-page Postgres receipt and both engines' 100,000-page logs). Paths on the run machines read `<work>/` for the scratch directory and `~/` for the home directory.
 
