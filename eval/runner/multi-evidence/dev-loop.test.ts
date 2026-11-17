@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Outcome } from '../nightly/outcome.ts';
-import { ARMS, BASE_TURN_CAP, cat40ArmFlags, compareVersions, followUpRun, newestRelease, parseArgs, planRuns, powerTable, rerankTimedOut } from './dev-loop.ts';
+import { ARMS, BASE_TURN_CAP, cat40ArmFlags, compareVersions, followUpRun, newestRelease, parseArgs, planRuns, powerTable, rerankTimedOut, resumeRefusal } from './dev-loop.ts';
 import type { SuiteRun } from '../nightly/adapters.ts';
 import { agentItem, agentWhy, minDetectable, missed, qaItem, qaWhy, readTargets, slice, slugName, trialDiscordance, type ItemRow } from './score.ts';
 import { loadMeDevSet, MIN_GOLD } from './select.ts';
@@ -71,6 +71,14 @@ describe('agent items', () => {
     const row = (item: string, coverage: ItemRow['coverage'], correct: boolean | null, harness: string | null) => ({ item, coverage, correct, harness }) as ItemRow;
     const base = [row('hit', 'all', true, null), row('miss', 'some', false, null), row('miss', 'all', true, null), row('broken', 'none', null, 'boom')];
     expect(followUpRun(run, base).items.map(i => i.id)).toEqual(['miss']);
+  });
+
+  test('a run dir refuses another build or the other mode, and resumes the same build in the same mode', () => {
+    expect(resumeRefusal(null, { sha: 'a'.repeat(40), fake: false }, 'out/v1', 'v1')).toBeNull();
+    expect(resumeRefusal({ sha: 'a'.repeat(40), fake: true }, { sha: 'a'.repeat(40), fake: true }, 'out/v1', 'v1')).toBeNull();
+    expect(resumeRefusal({ sha: 'a'.repeat(40), fake: false }, { sha: 'b'.repeat(40), fake: false }, 'out/v1', 'v1')).toContain('pass a new --out');
+    expect(resumeRefusal({ sha: 'a'.repeat(40), fake: true }, { sha: 'a'.repeat(40), fake: false }, 'out/v1', 'v1')).toContain('keyless and paid rows must not share a run dir');
+    expect(resumeRefusal({ sha: 'a'.repeat(40), fake: false }, { sha: 'a'.repeat(40), fake: true }, 'out/v1', 'v1')).toContain('keyless and paid rows must not share a run dir');
   });
 });
 

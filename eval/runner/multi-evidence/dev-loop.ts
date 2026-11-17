@@ -184,6 +184,14 @@ export function cat40ArmFlags(arm: ArmName, hintFile: string | null): string[] {
  * a wrong answer). The turn-cap test asks what more turns or batch reads recover; the items base already answered
  * would cost about half of each arm and can only show a follow-up arm doing worse, which this loop does not measure.
  */
+/** Why a run dir can't take this run: it holds another build's rows, or rows from the other mode (keyless or paid). */
+export function resumeRefusal(recorded: { sha?: string; fake?: boolean } | null, now: { sha: string; fake: boolean }, dir: string, label: string): string | null {
+  if (!recorded) return null;
+  if (recorded.sha && recorded.sha !== now.sha) return `${dir} holds a run of ${label} at ${recorded.sha.slice(0, 12)}, but ${label} is now ${now.sha.slice(0, 12)}; pass a new --out so the old rows aren't scored as the new build`;
+  if (recorded.fake !== now.fake) return `${dir} holds a ${recorded.fake ? 'keyless (--fake)' : 'paid'} run, and this run is ${now.fake ? 'keyless' : 'paid'}; pass a new --out, because keyless and paid rows must not share a run dir`;
+  return null;
+}
+
 export function followUpRun(run: SuiteRun, base: ItemRow[]): SuiteRun {
   const ids = new Set(base.filter(missed).map(r => r.item));
   return { ...run, items: run.items.filter(i => ids.has(i.id)) };
@@ -404,8 +412,8 @@ export async function main(argv: readonly string[]): Promise<number> {
   const runs = planRuns(me, a);
   if (!runs.length) throw new Error('no suite and item matches --suites and --items');
   const dir = join(a.out!, slug(label));
-  const recorded = existsSync(join(dir, 'run.json')) ? (JSON.parse(readFileSync(join(dir, 'run.json'), 'utf8')) as { sha?: string }).sha : undefined;
-  if (recorded && recorded !== sha) throw new Error(`${dir} holds a run of ${label} at ${recorded.slice(0, 12)}, but ${label} is now ${sha.slice(0, 12)}; pass a new --out so the old rows aren't scored as the new build`);
+  const refusal = resumeRefusal(existsSync(join(dir, 'run.json')) ? JSON.parse(readFileSync(join(dir, 'run.json'), 'utf8')) : null, { sha, fake: a.fake }, dir, label);
+  if (refusal) throw new Error(refusal);
   mkdirSync(dir, { recursive: true });
   const gut = resolveGbrainUnderTest(`${a.clone}@${sha}`);
   let paid: { runId: string; ledger: string } | null = null, opened = false;
