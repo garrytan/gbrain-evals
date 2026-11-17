@@ -44,4 +44,23 @@ describe('runQuestion', () => {
       expect(after.items).toEqual([]);
     } finally { await system.close(); }
   });
+
+  test('a probe whose full-text query fails is a miss on the probe, and the question still scores', async () => {
+    const dashes = Array.from({ length: 80 }, () => '-').join(' ');
+    const conv: Conversation = { id: 'q2', sessions: [
+      { id: 'answer_a', date: '2023/05/02 (Tue) 10:00', turns: [{ speaker: 'user', content: 'My martini ratio is three to one.' }] },
+      { id: 'last_b', date: '2023/05/03 (Wed) 10:00', turns: [{ speaker: 'user', content: `a table ${dashes} end` }] },
+    ] };
+    const q: MemoryQuestion = { id: 'q2', conversation: 'q2', question: 'martini ratio', question_date: '2023/05/30 (Tue) 10:00', category: 'single-session-user', gold: ['answer_a'], abstention: false, answer: '3:1' };
+    const sanitizer = new Sanitizer({ conversations: [conv], questions: [q] }, 'test');
+    const system = new PlainHybridSystem(fakeEmbed);
+    const real = system.retrieve.bind(system);
+    system.retrieve = async (ns, pq, policy) => { if (pq.text.includes('- -')) throw new Error('tsquery stack too small'); return real(ns, pq, policy); };
+    try {
+      const row = await runQuestion(system, sanitizer, conv, q);
+      expect(row.error).toBeUndefined();
+      expect(row.recall_all_at5).toBe(1);
+      expect(row.probe).toMatchObject({ target: 'last_b', rank: null, top: [], error: 'tsquery stack too small' });
+    } finally { await system.close(); }
+  });
 });

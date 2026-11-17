@@ -16,7 +16,8 @@
  *             characters of the longest turn of the last session ingested (the readiness probe before amendment A23).
  *
  * A row per question appends to `<out>/rows.ndjson` with both ranked lists as dataset session ids; a rerun skips
- * questions that already have a row without an error. Embeddings are cached on disk (`--embed-cache`), and every
+ * questions that already have a row without an error, so a question's last row is its result. A failed probe
+ * retrieval is kept on the probe as a miss and does not fail the question's row. Embeddings are cached on disk (`--embed-cache`), and every
  * request goes through the budget ledger's fetch guard.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -49,7 +50,8 @@ export interface HybridRow {
   sessions: number;
   /** Dataset session ids in rank order, each with the haystack index of its stored copy (a repeated id keeps its last copy in ingest order). */
   question_top: Ranked[];
-  probe: { target: string; target_index: number; passage_chars: number; top: Ranked[]; rank: number | null } | null;
+  /** A probe whose retrieval failed (the error, kept apart from the question's) counts as a miss: rank null. */
+  probe: { target: string; target_index: number; passage_chars: number; top: Ranked[]; rank: number | null; error?: string } | null;
   recall_all_at5: number | null;
   recall_all_at10: number | null;
   recall_any_at5: number | null;
@@ -80,9 +82,15 @@ export async function runQuestion(system: PlainHybridSystem, sanitizer: Sanitize
     const passage = verbatimProbe(last.input);
     let probe: HybridRow['probe'] = null;
     if (passage) {
-      const ptop = await ranked(passage);
-      const r = ptop.findIndex(x => x.id === last.session.id);
-      probe = { target: last.session.id, target_index: indexOf.get(last.session.id)!, passage_chars: passage.length, top: ptop, rank: r < 0 ? null : r + 1 };
+      const target = { target: last.session.id, target_index: indexOf.get(last.session.id)!, passage_chars: passage.length };
+      try {
+        const ptop = await ranked(passage);
+        const r = ptop.findIndex(x => x.id === last.session.id);
+        probe = { ...target, top: ptop, rank: r < 0 ? null : r + 1 };
+      } catch (e) {
+        if (/budget/i.test((e as Error).name) || /budget/i.test((e as Error).message)) throw e;
+        probe = { ...target, top: [], rank: null, error: String((e as Error).message).slice(0, 500) };
+      }
     }
     const ids = top.map(x => x.id);
     const at = (f: typeof recallAllAtK, k: number) => (gold.size ? f(ids, gold, k) : null);
