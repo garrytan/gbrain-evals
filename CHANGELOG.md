@@ -2,6 +2,33 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.250] - 2026-11-17
+
+engine-bench baseline ([docs/benchmarks/2026-11-17-engine-bench.md](docs/benchmarks/2026-11-17-engine-bench.md)): development runs of gbrain on PGLite and Postgres at v0.60.734.0 and v0.60.735.0. Both engines pass the five keyless correctness checks they can both run with identical counts (Postgres also passes the sixth, which only it can run), 301 of 302 CLI, MCP and markdown outputs are byte-identical (the exception is `stale` in `gbrain search --json`), and LongMemEval-S retrieval returns the same top 5 on 102 of 102 questions. At 16 concurrent clients PGLite serves 0.05x Postgres's reads, and PGLite's import slows from 27.7 to 1.5 pages per second by 45,000 pages while Postgres slows only from 28.4 to 23. The Rust engine is not measured yet.
+
+### Reviewers leave out engine-bench's bulkiest raw receipts
+
+- Code review before merge now leaves out each engine-bench correctness runner's raw
+  `correctness/work/*/receipt.json` and the 10,000-page speed receipt (`speed/*speed-*-10000.json`), in any dated
+  `docs/benchmarks/*-engine-bench/` folder. They hold every probe and paired query and are too large for a reviewer to
+  read. The results page, the correctness summary, the LongMemEval rows, the 100,000-page speed receipt and every log
+  stay in review, and the check of each published number against its raw data still reads the excluded files.
+
+### Engine-bench receipts are written without machine paths
+
+- Engine-bench's four runners (`correctness`, `surface-parity`, `lme-recall` and `perf`) now write their published JSON
+  with checkout, home and temp paths rewritten, and with Capy scratch paths written as `<work>/`, as other runners'
+  receipts already are. Before this, their receipts carried paths such as `/home/<user>/...`, which the committed-receipt
+  check refuses, so they had to be cleaned by hand before publication.
+
+### The secrets check accepts N6's expired-token description in engine-bench correctness receipts
+
+- The secrets check that runs before a push now accepts N6's prose description of its expired-token probe in the
+  N6-over-HTTP Postgres receipt that engine-bench's correctness stage writes, at
+  `docs/benchmarks/*/correctness/work/n6-http-postgres/receipt.json`. It is the same allowlist entry, with the same
+  pattern, that already covered counted `n6pg` receipts; only that one path was added, so any other value there is
+  still checked.
+
 ## [0.10.249] - 2026-11-17
 
 Recorded commands and logs now mask any password a connection URL or a `password=` setting carries, including percent-encoded passwords, passwords or user names holding a `'`, quoted `password=` values, and malformed passwords with a raw `@`, `:` or `/`. One helper, `redactUrlPasswords` in `eval/runner/hermetic-env.ts`, now serves the lifecycle slice's operator log (used by N1 and the other lifecycle runners) and the engine-bench speed receipt. Before, each kept its own pattern that missed those shapes. Tests in `test/eval/redact-url-passwords.test.ts`.
