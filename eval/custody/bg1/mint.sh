@@ -6,7 +6,7 @@
 #       [--count 48] [--start 1] [--target-tokens 200000] [--yield-gate-ack <approval id>]
 #       (--fake [--fake-break <slot>:<session>:<attempts>,...]
 #        | --budget-ledger <sqlite> --budget-run-id <id> --paid-window <unit> --window-cap-usd <n>)
-#   eval/custody/bg1/mint.sh --dev --out <dir> [--target-tokens 200000]
+#   eval/custody/bg1/mint.sh --dev --out <dir> [--worlds bg1-dev-01,...] [--target-tokens 200000]
 #       (--fake [--fake-break <dev number>:<session>:<attempts>,...] | --budget-ledger ... as above)
 #
 # What it guarantees:
@@ -49,7 +49,8 @@
 #
 # --fake renders with the template renderer and fake checks: no network, and no key or key file is read.
 #
-# --dev renders stage 1's three public dev worlds, bg1-dev-01, -02 and -03 in that order, through render.ts --dev,
+# --dev renders public dev worlds through render.ts --dev: stage 1's three, bg1-dev-01, -02 and -03 in that order, or
+# the ones --worlds lists, in its order, from those three and the dev loop's 17 extra (bg1-dev-04 to bg1-dev-20),
 # behind the same pair of metering proxies per world, on one ledger, after the same window check and with the same key
 # sources as above. It reads no seed or phrasing file: render.ts plans each world from its public seed and refuses one
 # whose plan or questions differ from the committed files. So it takes no --seed-file, --phrasing, --count, --start or
@@ -77,11 +78,12 @@ file_mode() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"; }
 owner_only() { case "$(file_mode "$1")" in 600|400) return 0 ;; *) return 1 ;; esac; }
 
 OUT="" SEED_FILE="${BG1_SEED_FILE:-}" PHRASING="${BG1_PHRASING_FILE:-}" COUNT=48 START=1 TARGET=200000 MODE=real BREAKS=""
-LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK="" DEV=0 SEALED_ONLY=""
+LEDGER="" RUN_ID="" WINDOW="" WINDOW_CAP="" ACK="" DEV=0 SEALED_ONLY="" DEV_WORLDS="bg1-dev-01,bg1-dev-02,bg1-dev-03" DEV_ONLY=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --out) OUT="$2"; shift 2 ;;
     --dev) DEV=1; shift ;;
+    --worlds) DEV_WORLDS="$2"; DEV_ONLY+=" $1"; shift 2 ;;
     --seed-file) SEED_FILE="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
     --phrasing) PHRASING="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
     --count) COUNT="$2"; SEALED_ONLY+=" $1"; shift 2 ;;
@@ -107,6 +109,7 @@ if [ "$DEV" = 1 ]; then
     if [ -e "$f" ] || [ -L "$f" ]; then die "--dev never writes into a custody --out, and this one holds a sealed bg1-NNN entry under set/worlds or render/"; fi
   done
 else
+  [ -z "$DEV_ONLY" ] || die "--worlds lists public dev worlds, so it needs --dev"
   [ -n "$SEED_FILE" ] || die "--seed-file (or BG1_SEED_FILE) is required; there is no default seed"
   [ -n "$PHRASING" ] || die "--phrasing (or BG1_PHRASING_FILE) is required; sealed worlds never use the public phrasing"
 fi
@@ -218,7 +221,12 @@ if [ "$DEV" = 1 ]; then
       (cd "$OUT" && env -i PATH=/usr/bin:/bin HOME="$HOME" LANG=C.UTF-8 TZ=UTC "$BUN" "$HERE/render.ts" --dev-report "$id" --set "$OUT/set" ${ledger[@]+"${ledger[@]}"})
     done
   }
-  for id in bg1-dev-01 bg1-dev-02 bg1-dev-03; do
+  IFS=, read -r -a DEV_IDS <<<"$DEV_WORLDS"
+  for id in "${DEV_IDS[@]}"; do
+    [[ "$id" =~ ^bg1-dev-(0[1-9]|1[0-9]|20)$ ]] || die "--worlds takes bg1-dev-01 to bg1-dev-20, not $id"
+  done
+  [ "$(printf '%s\n' "${DEV_IDS[@]}" | sort | uniq -d)" = "" ] || die "--worlds lists a world twice"
+  for id in "${DEV_IDS[@]}"; do
     render_one "$id" --dev "$id" --set "$OUT/set"
     RENDERED+=("$id")
     case "$RC" in
@@ -231,7 +239,7 @@ if [ "$DEV" = 1 ]; then
     esac
   done
   dev_report
-  say "summary=dev mode=$MODE worlds=3 written=$WRITTEN skipped=$SKIPPED"
+  say "summary=dev mode=$MODE worlds=${#DEV_IDS[@]} written=$WRITTEN skipped=$SKIPPED"
   exit 0
 fi
 

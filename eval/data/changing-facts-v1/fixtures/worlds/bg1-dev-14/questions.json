@@ -1,0 +1,1605 @@
+[
+ {
+  "id": "bg1-dev-14:s1_updated:0",
+  "question": "Where is Stonechat Robotics headquartered now?",
+  "answer": "Kyoto",
+  "evidence_sessions": [
+   "s115"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Kyoto"
+   ],
+   "stale_values": [
+    "Rotterdam",
+    "Edinburgh"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s1_updated:1",
+  "question": "Who is in charge of operations at Tidewell Energy these days?",
+  "answer": "Freya Vance",
+  "evidence_sessions": [
+   "s101"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Freya Vance",
+    "Freya",
+    "Vance"
+   ],
+   "stale_values": [
+    "Theo Sato"
+   ],
+   "decoy_values": [
+    "Cosima Holm"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s1_updated:2",
+  "question": "Where does Leila Sandoval work now?",
+  "answer": "Nettlefield Supply",
+  "evidence_sessions": [
+   "s132",
+   "s151"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-01.employer",
+   "gold_values": [
+    "Nettlefield Supply",
+    "Nettlefield"
+   ],
+   "stale_values": [
+    "Moonvale Pharma",
+    "Heathmont Schools",
+    "Quillfeather Media",
+    "Cinderford Steel"
+   ],
+   "decoy_values": [
+    "Gorseway Transit"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s1_updated:3",
+  "question": "Which company employs Leila Sandoval at the moment?",
+  "answer": "Nettlefield Supply",
+  "evidence_sessions": [
+   "s132",
+   "s151"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-01.employer",
+   "gold_values": [
+    "Nettlefield Supply",
+    "Nettlefield"
+   ],
+   "stale_values": [
+    "Moonvale Pharma",
+    "Heathmont Schools",
+    "Quillfeather Media",
+    "Cinderford Steel"
+   ],
+   "decoy_values": [
+    "Gorseway Transit"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s1_updated:4",
+  "question": "Who leads Project Halyard now?",
+  "answer": "Benedikt Bauer",
+  "evidence_sessions": [
+   "s127",
+   "s129"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Benedikt Bauer",
+    "Benedikt",
+    "Bauer"
+   ],
+   "stale_values": [
+    "Halima Okonjo",
+    "Lorcan Quigley",
+    "Maren Osei"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s1_updated:5",
+  "question": "Where does Leila Sandoval live these days?",
+  "answer": "Turin",
+  "evidence_sessions": [
+   "s132"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-01.city",
+   "gold_values": [
+    "Turin",
+    "Torino"
+   ],
+   "stale_values": [
+    "Brno",
+    "Krakow",
+    "Valencia"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s1_updated:6",
+  "question": "What is Viktor Lindqvist's job title now?",
+  "answer": "Principal Architect",
+  "evidence_sessions": [
+   "s125"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-02.role",
+   "gold_values": [
+    "Principal Architect"
+   ],
+   "stale_values": [
+    "Quality Lead",
+    "Director of Partnerships",
+    "Head of Security"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s1_updated:7",
+  "question": "What role does Viktor Lindqvist hold these days?",
+  "answer": "Principal Architect",
+  "evidence_sessions": [
+   "s125"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-02.role",
+   "gold_values": [
+    "Principal Architect"
+   ],
+   "stale_values": [
+    "Quality Lead",
+    "Director of Partnerships",
+    "Head of Security"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s2_corrected:0",
+  "question": "Where is Tidewell Energy headquartered now?",
+  "answer": "Oslo",
+  "evidence_sessions": [
+   "s026",
+   "s076"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-02.hq",
+   "gold_values": [
+    "Oslo"
+   ],
+   "stale_values": [
+    "Tampere"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s2_corrected:1",
+  "question": "Which vendor does Project Sandpiper use now?",
+  "answer": "Umberfield Mining",
+  "evidence_sessions": [
+   "s101",
+   "s105"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-02.vendor",
+   "gold_values": [
+    "Umberfield Mining",
+    "Umberfield"
+   ],
+   "stale_values": [
+    "Ironbark Security",
+    "Saltmarsh Marine"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s2_corrected:2",
+  "question": "Who supplies Project Sandpiper at the moment?",
+  "answer": "Umberfield Mining",
+  "evidence_sessions": [
+   "s101",
+   "s105"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-02.vendor",
+   "gold_values": [
+    "Umberfield Mining",
+    "Umberfield"
+   ],
+   "stale_values": [
+    "Ironbark Security",
+    "Saltmarsh Marine"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s2_corrected:3",
+  "question": "Which city is Viktor Lindqvist based in now?",
+  "answer": "Helsinki",
+  "evidence_sessions": [
+   "s049",
+   "s063"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-02.city",
+   "gold_values": [
+    "Helsinki"
+   ],
+   "stale_values": [
+    "Denver"
+   ],
+   "decoy_values": [
+    "Taipei"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s2_corrected:4",
+  "question": "Where does Viktor Lindqvist live these days?",
+  "answer": "Helsinki",
+  "evidence_sessions": [
+   "s049",
+   "s063"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-02.city",
+   "gold_values": [
+    "Helsinki"
+   ],
+   "stale_values": [
+    "Denver"
+   ],
+   "decoy_values": [
+    "Taipei"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s2_corrected:5",
+  "question": "What is Talia Achterberg's job title now?",
+  "answer": "VP of Sales",
+  "evidence_sessions": [
+   "s104",
+   "s134"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-03.role",
+   "gold_values": [
+    "VP of Sales"
+   ],
+   "stale_values": [
+    "Chief of Staff",
+    "Head of Platform"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s2_corrected:6",
+  "question": "Who is running Project Ostrava these days?",
+  "answer": "Eamon Larsen",
+  "evidence_sessions": [
+   "s044",
+   "s071"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-03.lead",
+   "gold_values": [
+    "Eamon Larsen",
+    "Eamon",
+    "Larsen"
+   ],
+   "stale_values": [
+    "Tomas Novotny"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s2_corrected:7",
+  "question": "How much does the Wexley deal renew for each year now?",
+  "answer": "$184,000",
+  "evidence_sessions": [
+   "s066",
+   "s100"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-01.price",
+   "gold_values": [
+    "$184,000",
+    "184,000",
+    "$184k",
+    "184k",
+    "184 thousand"
+   ],
+   "stale_values": [
+    "$234,000",
+    "$324,000"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s3_repeated_stale:0",
+  "question": "Who runs operations at Stonechat Robotics now?",
+  "answer": "Fenna Coelho",
+  "evidence_sessions": [
+   "s124"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Fenna Coelho",
+    "Fenna",
+    "Coelho"
+   ],
+   "stale_values": [
+    "Dario Weber"
+   ],
+   "decoy_values": [
+    "Aurelio Adeyemi"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s3_repeated_stale:1",
+  "question": "Where does Nnamdi Quintero work now?",
+  "answer": "Rookwood Design",
+  "evidence_sessions": [
+   "s106"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-04.employer",
+   "gold_values": [
+    "Rookwood Design",
+    "Rookwood"
+   ],
+   "stale_values": [
+    "Bramblecote Bakery"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s3_repeated_stale:2",
+  "question": "Which company employs Nnamdi Quintero at the moment?",
+  "answer": "Rookwood Design",
+  "evidence_sessions": [
+   "s106"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-04.employer",
+   "gold_values": [
+    "Rookwood Design",
+    "Rookwood"
+   ],
+   "stale_values": [
+    "Bramblecote Bakery"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s3_repeated_stale:3",
+  "question": "Who supplies Project Ostrava at the moment?",
+  "answer": "Willowmere Hotels",
+  "evidence_sessions": [
+   "s141"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Willowmere Hotels",
+    "Willowmere"
+   ],
+   "stale_values": [
+    "Lanternfish Games"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s3_repeated_stale:4",
+  "question": "Who supplies Project Halyard at the moment?",
+  "answer": "Elmstead Clinics",
+  "evidence_sessions": [
+   "s144"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-01.vendor",
+   "gold_values": [
+    "Elmstead Clinics",
+    "Elmstead"
+   ],
+   "stale_values": [
+    "Yarrowby Seeds"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s3_repeated_stale:5",
+  "question": "Which city is Talia Achterberg based in now?",
+  "answer": "Bergen",
+  "evidence_sessions": [
+   "s108"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Bergen"
+   ],
+   "stale_values": [
+    "Utrecht"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s3_repeated_stale:6",
+  "question": "Where does Gwen Haddad work now?",
+  "answer": "Kettlebrook Brewing",
+  "evidence_sessions": [
+   "s139"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Kettlebrook Brewing",
+    "Kettlebrook"
+   ],
+   "stale_values": [
+    "Lindenhall Bank"
+   ],
+   "decoy_values": [
+    "Emberly Energy"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s3_repeated_stale:7",
+  "question": "Which company employs Gwen Haddad at the moment?",
+  "answer": "Kettlebrook Brewing",
+  "evidence_sessions": [
+   "s139"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Kettlebrook Brewing",
+    "Kettlebrook"
+   ],
+   "stale_values": [
+    "Lindenhall Bank"
+   ],
+   "decoy_values": [
+    "Emberly Energy"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s4_conflicting:0",
+  "question": "What annual price did we actually sign for the Cobalt deal?",
+  "answer": "$78,000",
+  "evidence_sessions": [
+   "s070"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-02.price",
+   "gold_values": [
+    "$78,000",
+    "78,000",
+    "$78k",
+    "78k",
+    "78 thousand"
+   ],
+   "stale_values": [
+    "$230,000",
+    "$258,000"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Our CFO confirmed in writing that the annual price for the Cobalt deal is final at $78,000."
+  }
+ },
+ {
+  "id": "bg1-dev-14:s4_conflicting:1",
+  "question": "What discount did we actually sign on the Wexley deal?",
+  "answer": "20%",
+  "evidence_sessions": [
+   "s103"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-01.discount",
+   "gold_values": [
+    "20%",
+    "20 percent",
+    "20 per cent"
+   ],
+   "stale_values": [
+    "26%",
+    "15%",
+    "18%",
+    "11%"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Both sides executed the Wexley agreement today, and it fixes the discount at 20%."
+  }
+ },
+ {
+  "id": "bg1-dev-14:s4_conflicting:2",
+  "question": "Which discount is binding on the Wexley deal?",
+  "answer": "20%",
+  "evidence_sessions": [
+   "s103"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-01.discount",
+   "gold_values": [
+    "20%",
+    "20 percent",
+    "20 per cent"
+   ],
+   "stale_values": [
+    "26%",
+    "15%",
+    "18%",
+    "11%"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Both sides executed the Wexley agreement today, and it fixes the discount at 20%."
+  }
+ },
+ {
+  "id": "bg1-dev-14:s4_conflicting:3",
+  "question": "What contract term did we actually sign for the Cobalt deal?",
+  "answer": "9 months",
+  "evidence_sessions": [
+   "s090"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-02.term",
+   "gold_values": [
+    "9 months",
+    "9-month",
+    "9 mo"
+   ],
+   "stale_values": [
+    "30 months",
+    "15 months",
+    "27 months",
+    "33 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Both sides executed the Cobalt agreement today, and it fixes the contract term at 9 months."
+  }
+ },
+ {
+  "id": "bg1-dev-14:s4_conflicting:4",
+  "question": "What seat count is binding on the Beacon deal?",
+  "answer": "170 seats",
+  "evidence_sessions": [
+   "s089"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-03.seats",
+   "gold_values": [
+    "170 seats",
+    "170 licenses",
+    "170 licences",
+    "170 users"
+   ],
+   "stale_values": [
+    "550 seats",
+    "820 seats",
+    "210 seats"
+   ],
+   "decoy_values": [],
+   "deciding_line": "The countersigned Beacon contract sets the seat count at 170 seats."
+  }
+ },
+ {
+  "id": "bg1-dev-14:s4_conflicting:5",
+  "question": "What contract term did we actually sign for the Tamsin deal?",
+  "answer": "45 months",
+  "evidence_sessions": [
+   "s110"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-04.term",
+   "gold_values": [
+    "45 months",
+    "45-month",
+    "45 mo"
+   ],
+   "stale_values": [
+    "66 months",
+    "63 months",
+    "54 months",
+    "18 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Our CFO confirmed in writing that the contract term for the Tamsin deal is final at 45 months."
+  }
+ },
+ {
+  "id": "bg1-dev-14:s4_conflicting:6",
+  "question": "How long is the binding term on the Tamsin deal?",
+  "answer": "45 months",
+  "evidence_sessions": [
+   "s110"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-04.term",
+   "gold_values": [
+    "45 months",
+    "45-month",
+    "45 mo"
+   ],
+   "stale_values": [
+    "66 months",
+    "63 months",
+    "54 months",
+    "18 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Our CFO confirmed in writing that the contract term for the Tamsin deal is final at 45 months."
+  }
+ },
+ {
+  "id": "bg1-dev-14:s4_conflicting:7",
+  "question": "What seat count is binding on the Marlow deal?",
+  "answer": "640 seats",
+  "evidence_sessions": [
+   "s035"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-05.seats",
+   "gold_values": [
+    "640 seats",
+    "640 licenses",
+    "640 licences",
+    "640 users"
+   ],
+   "stale_values": [
+    "250 seats",
+    "280 seats"
+   ],
+   "decoy_values": [
+    "890 seats"
+   ],
+   "deciding_line": "The account owner signed off in writing on 640 seats as the binding seat count for the Marlow deal."
+  }
+ },
+ {
+  "id": "bg1-dev-14:s5_withdrawn:0",
+  "question": "Who is Project Sandpiper's pilot customer right now?",
+  "answer": "None: the plan with Fernhollow Labs was called off.",
+  "evidence_sessions": [
+   "s086",
+   "s088",
+   "s095",
+   "s120"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-02.pilot",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Fernhollow Labs"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s5_withdrawn:1",
+  "question": "Who is Brackenridge Media's merger partner at this point?",
+  "answer": "None: the plan with Larkspur Foods was called off.",
+  "evidence_sessions": [
+   "s049",
+   "s129"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-03.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Larkspur Foods"
+   ],
+   "decoy_values": [
+    "Tarnwood Logistics"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s5_withdrawn:2",
+  "question": "Which customer is Project Kestrel piloting with?",
+  "answer": "None: the plan with Orchardly Retail was called off.",
+  "evidence_sessions": [
+   "s032",
+   "s135"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-04.pilot",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Orchardly Retail"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s5_withdrawn:3",
+  "question": "Which company is Lowmoor Retail merging with?",
+  "answer": "None: the report about Oakhaven Health was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s062",
+   "s092"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-04.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Oakhaven Health"
+   ],
+   "decoy_values": [
+    "Pebblestone Data"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s5_withdrawn:4",
+  "question": "Who is Lowmoor Retail's merger partner at this point?",
+  "answer": "None: the report about Oakhaven Health was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s062",
+   "s092"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-04.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Oakhaven Health"
+   ],
+   "decoy_values": [
+    "Pebblestone Data"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s5_withdrawn:5",
+  "question": "Which company is Vantor Biotech merging with?",
+  "answer": "None: the report about Kinglet Telecom was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s034",
+   "s040",
+   "s141"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-05.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Kinglet Telecom"
+   ],
+   "decoy_values": [
+    "Glasswing Studios"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s5_withdrawn:6",
+  "question": "Where is the Brackenridge Media team offsite being held?",
+  "answer": "None: the plan with Accra was called off.",
+  "evidence_sessions": [
+   "s061",
+   "s122"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-03.offsite",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Accra"
+   ],
+   "decoy_values": [
+    "Leeds"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s5_withdrawn:7",
+  "question": "Which city is Brackenridge Media's offsite in?",
+  "answer": "None: the plan with Accra was called off.",
+  "evidence_sessions": [
+   "s061",
+   "s122"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-03.offsite",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Accra"
+   ],
+   "decoy_values": [
+    "Leeds"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s6_as_of:0",
+  "question": "On [[D:-90]], who supplied Project Ostrava?",
+  "answer": "Lanternfish Games",
+  "evidence_sessions": [
+   "s021"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Lanternfish Games",
+    "Lanternfish"
+   ],
+   "stale_values": [
+    "Willowmere Hotels"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s6_as_of:1",
+  "question": "On [[D:-350]], who was in charge of operations at Tidewell Energy?",
+  "answer": "Theo Sato",
+  "evidence_sessions": [
+   "s015"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Theo Sato",
+    "Theo",
+    "Sato"
+   ],
+   "stale_values": [
+    "Freya Vance"
+   ],
+   "decoy_values": [
+    "Cosima Holm"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s6_as_of:2",
+  "question": "Where did Leila Sandoval work on [[D:-301]]?",
+  "answer": "Heathmont Schools",
+  "evidence_sessions": [
+   "s074"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-01.employer",
+   "gold_values": [
+    "Heathmont Schools",
+    "Heathmont"
+   ],
+   "stale_values": [
+    "Moonvale Pharma",
+    "Quillfeather Media",
+    "Nettlefield Supply",
+    "Cinderford Steel"
+   ],
+   "decoy_values": [
+    "Gorseway Transit"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s6_as_of:3",
+  "question": "Who led Project Halyard on [[D:-233]]?",
+  "answer": "Lorcan Quigley",
+  "evidence_sessions": [
+   "s084"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Lorcan Quigley",
+    "Lorcan",
+    "Quigley"
+   ],
+   "stale_values": [
+    "Halima Okonjo",
+    "Benedikt Bauer",
+    "Maren Osei"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s6_as_of:4",
+  "question": "Which city was Talia Achterberg based in on [[D:-411]]?",
+  "answer": "Utrecht",
+  "evidence_sessions": [
+   "s005"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Utrecht"
+   ],
+   "stale_values": [
+    "Bergen"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s6_as_of:5",
+  "question": "Where did Gwen Haddad work on [[D:-315]]?",
+  "answer": "Lindenhall Bank",
+  "evidence_sessions": [
+   "s011"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Lindenhall Bank",
+    "Lindenhall"
+   ],
+   "stale_values": [
+    "Kettlebrook Brewing"
+   ],
+   "decoy_values": [
+    "Emberly Energy"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s6_as_of:6",
+  "question": "On [[D:-179]], who was in charge of operations at Stonechat Robotics?",
+  "answer": "Dario Weber",
+  "evidence_sessions": [
+   "s009"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Dario Weber",
+    "Dario",
+    "Weber"
+   ],
+   "stale_values": [
+    "Fenna Coelho"
+   ],
+   "decoy_values": [
+    "Aurelio Adeyemi"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s6_as_of:7",
+  "question": "On [[D:-308]], which city was Stonechat Robotics's head office in?",
+  "answer": "Edinburgh",
+  "evidence_sessions": [
+   "s082"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Edinburgh"
+   ],
+   "stale_values": [
+    "Rotterdam",
+    "Kyoto"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s7_as_known:0",
+  "question": "On [[D:-102]], what had I been told Talia Achterberg's job title was?",
+  "answer": "Head of Platform",
+  "evidence_sessions": [
+   "s104"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-03.role",
+   "gold_values": [
+    "Head of Platform"
+   ],
+   "stale_values": [
+    "Chief of Staff",
+    "VP of Sales"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s7_as_known:1",
+  "question": "As of [[D:-381]], which city did I think Tidewell Energy's head office was in?",
+  "answer": "Tampere",
+  "evidence_sessions": [
+   "s026"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-02.hq",
+   "gold_values": [
+    "Tampere"
+   ],
+   "stale_values": [
+    "Oslo"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s7_as_known:2",
+  "question": "On [[D:-371]], who had I been told led Project Ostrava?",
+  "answer": "Tomas Novotny",
+  "evidence_sessions": [
+   "s044"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-03.lead",
+   "gold_values": [
+    "Tomas Novotny",
+    "Tomas",
+    "Novotny"
+   ],
+   "stale_values": [
+    "Eamon Larsen"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s7_as_known:3",
+  "question": "As of [[D:-87]], where did I think Leila Sandoval lived?",
+  "answer": "Valencia",
+  "evidence_sessions": [
+   "s093"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-01.city",
+   "gold_values": [
+    "Valencia"
+   ],
+   "stale_values": [
+    "Brno",
+    "Krakow",
+    "Turin"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s7_as_known:4",
+  "question": "On [[D:-294]], where had I been told Stonechat Robotics was headquartered?",
+  "answer": "Rotterdam",
+  "evidence_sessions": [
+   "s016"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Rotterdam"
+   ],
+   "stale_values": [
+    "Edinburgh",
+    "Kyoto"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s7_as_known:5",
+  "question": "As of [[D:-260]], what did I think the Wexley deal renewed for each year?",
+  "answer": "$324,000",
+  "evidence_sessions": [
+   "s066"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "deal-01.price",
+   "gold_values": [
+    "$324,000",
+    "324,000",
+    "$324k",
+    "324k",
+    "324 thousand"
+   ],
+   "stale_values": [
+    "$234,000",
+    "$184,000"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s7_as_known:6",
+  "question": "On [[D:-365]], which city had I been told Viktor Lindqvist was based in?",
+  "answer": "Denver",
+  "evidence_sessions": [
+   "s049"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-02.city",
+   "gold_values": [
+    "Denver"
+   ],
+   "stale_values": [
+    "Helsinki"
+   ],
+   "decoy_values": [
+    "Taipei"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-14:s7_as_known:7",
+  "question": "As of [[D:-173]], who did I think supplied Project Sandpiper?",
+  "answer": "Saltmarsh Marine",
+  "evidence_sessions": [
+   "s101"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-02.vendor",
+   "gold_values": [
+    "Saltmarsh Marine",
+    "Saltmarsh"
+   ],
+   "stale_values": [
+    "Ironbark Security",
+    "Umberfield Mining"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-14:s8_history:0",
+  "question": "In order from earliest, where has Leila Sandoval lived?",
+  "answer": "Brno, then Krakow, then Valencia, then Turin",
+  "evidence_sessions": [
+   "s016",
+   "s066",
+   "s093",
+   "s132"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-01.city",
+   "gold_values": [
+    "Brno",
+    "Krakow",
+    "Valencia",
+    "Turin"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-14:s8_history:1",
+  "question": "In order from earliest, which roles has Viktor Lindqvist held?",
+  "answer": "Quality Lead, then Director of Partnerships, then Head of Security, then Principal Architect",
+  "evidence_sessions": [
+   "s006",
+   "s057",
+   "s102",
+   "s125"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-02.role",
+   "gold_values": [
+    "Quality Lead",
+    "Director of Partnerships",
+    "Head of Security",
+    "Principal Architect"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-14:s8_history:2",
+  "question": "List the cities Stonechat Robotics has been headquartered in, oldest first.",
+  "answer": "Rotterdam, then Edinburgh, then Kyoto",
+  "evidence_sessions": [
+   "s016",
+   "s082",
+   "s115"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Rotterdam",
+    "Edinburgh",
+    "Kyoto"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-14:s8_history:3",
+  "question": "List the people who have run operations at Tidewell Energy, oldest first.",
+  "answer": "Theo Sato, then Freya Vance",
+  "evidence_sessions": [
+   "s015",
+   "s101"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Theo Sato",
+    "Freya Vance"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Cosima Holm"
+   ],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-14:s8_history:4",
+  "question": "In order from earliest, where has Talia Achterberg lived?",
+  "answer": "Utrecht, then Bergen",
+  "evidence_sessions": [
+   "s005",
+   "s108"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Utrecht",
+    "Bergen"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-14:s8_history:5",
+  "question": "In order from earliest, which employers has Gwen Haddad had?",
+  "answer": "Lindenhall Bank, then Kettlebrook Brewing",
+  "evidence_sessions": [
+   "s011",
+   "s139"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Lindenhall Bank",
+    "Kettlebrook Brewing"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Emberly Energy"
+   ],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-14:s8_history:6",
+  "question": "List the people who have run operations at Stonechat Robotics, oldest first.",
+  "answer": "Dario Weber, then Fenna Coelho",
+  "evidence_sessions": [
+   "s009",
+   "s124"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Dario Weber",
+    "Fenna Coelho"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Aurelio Adeyemi"
+   ],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-14:s8_history:7",
+  "question": "List the vendors Project Halyard has used, oldest first.",
+  "answer": "Yarrowby Seeds, then Elmstead Clinics",
+  "evidence_sessions": [
+   "s004",
+   "s144"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-01.vendor",
+   "gold_values": [
+    "Yarrowby Seeds",
+    "Elmstead Clinics"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ }
+]
