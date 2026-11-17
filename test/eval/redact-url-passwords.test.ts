@@ -15,8 +15,12 @@ describe('redactUrlPasswords', () => {
     ['malformed raw @', url('postgres', 'u', pw('p@', 'ss'), 'h:5432/d'), url('postgres', 'u', '***', 'h:5432/d')],
     ['malformed raw slash and colon', url('postgres', 'u', pw('pa/', 'ss:w'), 'h/d'), url('postgres', 'u', '***', 'h/d')],
     ['other scheme', url('mysql', 'root', pw('to', 'pse'), 'h/d'), url('mysql', 'root', '***', 'h/d')],
+    ["' in the password", url('postgres', 'u', pw("pa'", 'ss'), 'h/db'), url('postgres', 'u', '***', 'h/db')],
+    ["' in the user", url('postgres', "o'brien", pw('p', 'w'), 'h/db'), url('postgres', "o'brien", '***', 'h/db')],
     ['password= in a query string', 'postgres://h/d?sslmode=require&' + pw('pass', 'word=') + pw('x', 'yz') + '&a=1', 'postgres://h/d?sslmode=require&password=***&a=1'],
     ['libpq key=value list', 'host=h ' + pw('pass', 'word=') + pw('x', 'yz') + ' dbname=d', 'host=h password=*** dbname=d'],
+    ['libpq single-quoted value', 'host=h ' + pw('pass', 'word=') + pw("'se c", "ret'") + ' dbname=d', 'host=h password=*** dbname=d'],
+    ['libpq double-quoted value', 'host=h ' + pw('pass', 'word=') + pw('"se c', 'ret"') + ' dbname=d', 'host=h password=*** dbname=d'],
   ];
   for (const [name, input, want] of cases) {
     test(name, () => {
@@ -34,6 +38,10 @@ describe('redactUrlPasswords', () => {
     for (const s of ['postgres://user@host/db', 'postgres://host:5432/db', 'https://example.com:8443/a:b', 'see https://x.org/p?q=1', 'no url here: a@b', '']) {
       expect(redactUrlPasswords(s)).toBe(s);
     }
+  });
+
+  test('a port followed by an @ later in the same token is masked, failing closed', () => {
+    expect(redactUrlPasswords('https://host:8443/path@foo')).toBe('https://host:***@foo');
   });
 
   test('a caller may choose the mask', () => {
