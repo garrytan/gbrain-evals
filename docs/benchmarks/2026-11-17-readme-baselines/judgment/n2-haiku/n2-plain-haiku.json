@@ -23,7 +23,7 @@
   "input_tokens": 412804,
   "output_tokens": 144238,
   "basis": "budget ledger n2-judge-replay-plain-anthropic-claude-haiku-4-5-2026-11-17T07-39-55-314Z-4125b0bc: 2680 paid requests, 0 charged at their reservation because usage was unavailable",
-  "ledger": "/home/user/.capy/work/gbev97/ledger.sqlite",
+  "ledger": "<work>/gbev97/ledger.sqlite",
   "program_cap_usd": 25,
   "overshoot_usd": 0,
   "event_loop_lag_ms": {

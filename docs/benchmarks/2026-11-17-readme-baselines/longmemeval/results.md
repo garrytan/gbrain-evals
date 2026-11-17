@@ -143,6 +143,8 @@ With `--parallel` on `run` and `judge`, an RB-LME batch can open while others ar
 
 Retrieval needs `OPENAI_API_KEY`. The run took about four minutes on an 8-vCPU Ubicloud VM at concurrency 6 (`scripts/vm-setup.sh` bootstraps it). The committed outputs are `retrieval/rows.ndjson.gz` (one row per question, the last row of each question from `rows-raw.ndjson.gz`, both ranked lists), `retrieval/receipt-*.json` (settings, code identity, ledger usage) and `retrieval/summary-retrieval.json`.
 
+After the runs, machine-local paths in the raw receipts were rewritten (`<work>/` for the run machine's scratch folder, `<vm>/` for the run VM, and repo-relative paths for the checkout) so the repository's receipt checks pass; no other field changed.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project.

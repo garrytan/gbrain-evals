@@ -72,7 +72,7 @@
   "input_tokens": 40004233,
   "output_tokens": 0,
   "overshoot_usd": 0.00296335,
-  "ledger_path": "/home/ubi/rb/ledger-retrieval.sqlite",
+  "ledger_path": "<vm>/rb/ledger-retrieval.sqlite",
   "program_cap_usd": 20,
   "event_loop_lag_ms": {
    "p50": 0,

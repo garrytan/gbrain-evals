@@ -91,6 +91,8 @@ bun $D/pair.ts > $D/paired.json
 
 Files: `n2-haiku/` (population, every verdict and reply, compare output), `n2-current/` (per model), `chronicle/` (replies, events, builds, review, scores), `cat35/` (writer receipt, the 24 plain pages, judged receipts and artifacts for the baseline and the control), `paired.json`, `logs/`. Code: gbrain-evals `443427ff5` for every paid run (each receipt records it). Bun 1.4.4. No gbrain code wrote, extracted or judged anything in a baseline arm. The Cat 35 harness imports the pinned gbrain package as it always does, and the budget ledger reads that package's model price table to price requests.
 
+After the runs, machine-local paths in the raw receipts were rewritten (`<work>/` for the run machine's scratch folder, `<vm>/` for the run VM, and repo-relative paths for the checkout) so the repository's receipt checks pass; no other field changed.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project.

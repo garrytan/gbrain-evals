@@ -72,7 +72,7 @@
   "input_tokens": 102733,
   "output_tokens": 0,
   "overshoot_usd": 0,
-  "ledger_path": "/home/user/.capy/work/rb/pulled/ledger-retrieval.sqlite",
+  "ledger_path": "<work>/rb/pulled/ledger-retrieval.sqlite",
   "program_cap_usd": 20,
   "event_loop_lag_ms": {
    "p50": 0,

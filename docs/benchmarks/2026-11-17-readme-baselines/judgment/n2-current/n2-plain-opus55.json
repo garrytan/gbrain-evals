@@ -23,7 +23,7 @@
   "input_tokens": 144758,
   "output_tokens": 96672,
   "basis": "budget ledger n2-judge-replay-plain-anthropic-claude-opus-5-5-2026-11-17T07-39-57-698Z-c3418beb: 741 paid requests, 0 charged at their reservation because usage was unavailable",
-  "ledger": "/home/user/.capy/work/gbev97/ledger.sqlite",
+  "ledger": "<work>/gbev97/ledger.sqlite",
   "program_cap_usd": 25,
   "overshoot_usd": 0,
   "event_loop_lag_ms": {

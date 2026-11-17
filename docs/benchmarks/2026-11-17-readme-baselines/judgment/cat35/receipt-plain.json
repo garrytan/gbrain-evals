@@ -35,7 +35,7 @@
   "lanes": [],
   "external_lane": {
     "name": "plain",
-    "dir": "/home/user/.capy/work/gbev97/cat35-plain-docs",
+    "dir": "<work>/gbev97/cat35-plain-docs",
     "max_bytes": 65536,
     "files": [
       {
@@ -18135,7 +18135,7 @@
   },
   "judge_calibration": null,
   "prior_run": null,
-  "prior_run_skipped_reason": "judge_models_resolved mismatch vs prior receipt (/workspace/gbrain-evals/docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-v0.47.8.0-wave-079941d2.json)",
+  "prior_run_skipped_reason": "judge_models_resolved mismatch vs prior receipt (docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/receipt-2026-08-31-v0.47.8.0-wave-079941d2.json)",
   "deltas": null,
   "item_flips": [],
   "facts_budget_exhausted": false,

@@ -35,7 +35,7 @@
   "lanes": [],
   "external_lane": {
     "name": "gbrain-aug25",
-    "dir": "/home/user/.capy/work/gbev97/cat35-gbrain-aug25-docs",
+    "dir": "<work>/gbev97/cat35-gbrain-aug25-docs",
     "max_bytes": 65536,
     "files": [
       {
@@ -21049,7 +21049,7 @@
   },
   "judge_calibration": null,
   "prior_run": {
-    "path": "/workspace/gbrain-evals/eval/reports/cat35-transcript-distill/2026-11-17-074230-cat35.json",
+    "path": "eval/reports/cat35-transcript-distill/2026-11-17-074230-cat35.json",
     "timestamp": "2026-11-17T07:42:30.338Z",
     "gbrain_version": "0.60.733.0"
   },
