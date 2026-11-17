@@ -26,7 +26,7 @@ The rest of the detail, what didn't work second and the mechanics last:
   map to the same slug (`notes/Foo Bar.md` and `notes/foo-bar.md`) import as one page, and the sync says so ("kept
   notes/foo-bar.md. Rename one file to import both."). On PGLite with `gbrain serve` running, the embedding catch-up
   can't run from the CLI (`pglite_busy`), so the three notes written during an embedding outage stayed unembedded in
-  those two cells, though keyword search found all three.
+  the two PGLite MCP cells, though keyword search found all three.
 - **Large pages (N14).** Five of six slices match the published wave B4 receipts number for number. The sixth, the
   128 MiB PGLite page through gbrain's own tools, crossed the runner's 6,144 MB memory ceiling (6,214 MB, and 6,194 MB
   on a second run). gbrain's own B4 build `7a6bdd3` crossed it too on the same kind of host (6,168 MB), where B4
@@ -34,10 +34,11 @@ The rest of the detail, what didn't work second and the mechanics last:
 - **The privacy and data-loss repros.** 9 of the 10 hold as published. The tenth, N2-2, could not run as written: its
   stand-in engine has no database, and since #6784 a scoped `find_contradictions` reads stored findings back from the
   database. A copy on a real in-memory brain shows the bug fixed at `6ce7195b4` and still present at `77cf8e111`.
-- **The harness had five defects, none in gbrain**, each fixed with a test and a dated amendment before the next run:
-  N4 and the lifecycle matrix compared quote-fenced facts as raw text, the lifecycle matrix worked inside the
-  repository checkout, read a notice that repeats its own query as a leak, and ran a catch-up sweep that now asks for
-  consent, and the N2-2 repro needed a real database ([below](#harness-defects-none-in-gbrain)).
+- **The harness had six defects, none in gbrain.** Five were fixed with a dated amendment before the next run, each
+  runner fix with a test: N4 and the lifecycle matrix compared quote-fenced facts as raw text, the lifecycle matrix
+  worked inside the repository checkout, read a notice that repeats its own query as a leak, and ran a catch-up sweep
+  that now asks for consent. The sixth, found after the runs, left VM paths in two runners' receipts, and only those
+  path strings changed. The N2-2 repro needed a real database ([below](#harness-defects-none-in-gbrain)).
 
 Evidence class: regression check. Every run here is keyless and cost $0 of provider spend. The VM rows ran on two
 Ubicloud `standard-16` machines (part a and part b of the [preregistration](2026-11-16-w0-keyless-repin-preregistration.md))
@@ -237,8 +238,12 @@ repros, the wave 8 and operator-wave checks, the verbatim probe, and README's pa
 
 - `eval/runner/n4-entity-resolution.ts` and `eval/runner/lifecycle/observe.ts` read `recall` facts through the
   build's own unquote; `observe.ts`'s leak probes drop a notice line that repeats the probe's own call;
-  `eval/runner/lifecycle/builds.ts` passes `--yes` to `embed --stale` on builds that take it; and the W0 VM script
-  runs the lifecycle matrix outside the checkout. Each runner change has a test.
+  `eval/runner/lifecycle/builds.ts` passes `--yes` to `embed --stale` on builds that take it; `run-kept.sh`, the VM
+  script for the kept runs, runs the lifecycle matrix outside the checkout; the lifecycle and N5 runners rewrite
+  machine paths in their receipts; and N4 stops as a harness limit on a build that quotes facts without an unquote
+  helper. Each runner change has a test except N5's path rewrite, which the repository's check on committed receipts
+  covers.
+- `scripts/scan-receipts.sh` also secret-scans this report's `counted/` tree.
 - A real-brain copy of the N2-2 repro.
 - README, the documentation hub and `docs/gbrain-under-test.md` move the rows that hold to `6ce7195b4`. The N9 drop
   is noted beside its row and the N7 drop in the open-loops limit, and the large-page row keeps `7a6bdd3`. This report
