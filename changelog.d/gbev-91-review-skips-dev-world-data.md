@@ -2,7 +2,7 @@
 
 - **What changed.** The code review that runs before a pull request is marked ready now leaves out the generated plans,
   questions and template fixtures of BG1's extra dev worlds, `bg1-dev-04` to `bg1-dev-20`, under
-  `eval/data/changing-facts-v1/dev/worlds` and `eval/data/changing-facts-v1/fixtures/worlds`: about 7.1 MB of JSON that
+  `eval/data/changing-facts-v1/dev/worlds` and `eval/data/changing-facts-v1/fixtures/worlds`: about 6.8 MB of JSON that
   `eval/generators/changing-facts-gen.ts` writes. With them in, the pull request that adds those worlds has a 7.4 MB review
   diff, over the review's 2 MB limit, so no reviewer could read it.
 - **What stays the same.** The files stay in the repository, the generator that writes them and its `check` are still
