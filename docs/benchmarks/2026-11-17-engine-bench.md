@@ -119,7 +119,7 @@ bun eval/runner/engine-bench/perf.ts --dev --scale 10000 --engines pglite,postgr
 
 The vector and hybrid arms need the filled embedding cache; its sha256 is in [lme-recall/cache.sha256](2026-11-17-engine-bench/lme-recall/cache.sha256). Run times: correctness about 38 minutes for both engines on a 4-core machine; the 10,000-page speed run about 51 minutes on a 16-vCPU Ubicloud `standard-16` VM; the 100,000-page Postgres import 69 minutes.
 
-Raw receipts, per-question rows and logs are in [2026-11-17-engine-bench/](2026-11-17-engine-bench/): `correctness/` (the stage receipt and each runner's receipt and log), `surface-parity/`, `lme-recall/` (receipt, NDJSON rows, cache coverage count) and `speed/` (the 10,000-page receipt with every paired query, the 100,000-page Postgres receipt and both engines' 100,000-page logs).
+Raw receipts, per-question rows and logs are in [2026-11-17-engine-bench/](2026-11-17-engine-bench/): `correctness/` (the stage receipt and each runner's receipt and log), `surface-parity/`, `lme-recall/` (receipt, NDJSON rows, cache coverage count) and `speed/` (the 10,000-page receipt with every paired query, the 100,000-page Postgres receipt and both engines' 100,000-page logs). Paths on the run machines read `<work>/` for the scratch directory and `~/` for the home directory.
 
 ## Disclosures
 

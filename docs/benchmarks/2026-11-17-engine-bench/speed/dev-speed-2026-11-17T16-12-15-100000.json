@@ -6,7 +6,7 @@
   "preregistration_attestation": null,
   "generated_at": "2026-11-17T16:12:15.133Z",
   "run_seconds": 4414.497,
-  "command": "bun eval/runner/engine-bench/perf.ts --dev --scale 100000 --engines postgres --cold-reps 1 --gbrain /home/ubi/gbrain@v0.60.734.0 --out out",
+  "command": "bun eval/runner/engine-bench/perf.ts --dev --scale 100000 --engines postgres --cold-reps 1 --gbrain ~/gbrain@v0.60.734.0 --out out",
   "options": {
     "scale": 100000,
     "seed": 1337,

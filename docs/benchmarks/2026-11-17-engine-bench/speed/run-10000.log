@@ -1,0 +1,37 @@
+
+== PGLite ==
+[pglite] dataset {"pages":10000,"base_pages":240,"filler_pages":9760,"links":20015,"timeline":31573,"quality_queries":71,"probes":400} fingerprint 779c5dc052cd
+[pglite] importing 10000 pages
+[pglite] imported 10000
+[pglite] rankings and steady-state reads
+[pglite] cold start x11
+
+== Postgres + pgvector ==
+[postgres] started container gbrain-engine-bench-2772-1794906002904 on 127.0.0.1:36983
+[postgres] dataset {"pages":10000,"base_pages":240,"filler_pages":9760,"links":20015,"timeline":31573,"quality_queries":71,"probes":400} fingerprint 779c5dc052cd
+[postgres] importing 10000 pages
+[postgres] imported 10000
+[postgres] rankings and steady-state reads
+[postgres] cold start x11
+
+== Paired: PGLite vs Postgres + pgvector ==
+[paired pglite-vs-postgres] get_page                 median postgres 2.10 ms, pglite 2.16 ms (n=2000)
+[paired pglite-vs-postgres] put_page                 median postgres 32.46 ms, pglite 34.01 ms (n=2000)
+[paired pglite-vs-postgres] search_keyword           median postgres 12.03 ms, pglite 12.53 ms (n=2000)
+[paired pglite-vs-postgres] search_vector            median postgres 21.68 ms, pglite 24.59 ms (n=2000)
+[paired pglite-vs-postgres] search_hybrid            median postgres 84.51 ms, pglite 109.53 ms (n=2000)
+[paired pglite-vs-postgres] search_keyword_filtered  median postgres 9.22 ms, pglite 9.38 ms (n=2000)
+[paired pglite-vs-postgres] search_vector_filtered   median postgres 83.85 ms, pglite 45.27 ms (n=2000)
+[paired pglite-vs-postgres] graph_walk_d1            median postgres 2.18 ms, pglite 2.37 ms (n=2000)
+[paired pglite-vs-postgres] graph_walk_d2            median postgres 2.37 ms, pglite 2.61 ms (n=2000)
+[paired pglite-vs-postgres] graph_walk_d3            median postgres 2.70 ms, pglite 3.01 ms (n=2000)
+[paired pglite-vs-postgres] get_backlinks            median postgres 1.87 ms, pglite 1.99 ms (n=2000)
+[paired pglite-vs-postgres] get_timeline             median postgres 0.64 ms, pglite 0.36 ms (n=2000)
+[paired pglite-vs-postgres] list_pages               median postgres 1.92 ms, pglite 1.86 ms (n=2000)
+[paired pglite-vs-postgres] 1 clients: read 35 vs 33 ops/s; write 29 vs 59 pages/s
+[paired pglite-vs-postgres] 4 clients: read 149 vs 23 ops/s; write 134 vs 63 pages/s
+[paired pglite-vs-postgres] 16 clients: read 348 vs 18 ops/s; write 303 vs 63 pages/s
+[postgres] removed container gbrain-engine-bench-2772-1794906002904
+
+wrote out/dev-speed-2026-11-17T09-39-20-10000.json (3075s)
+~/work/gbrain-evals/out/dev-speed-2026-11-17T09-39-20-10000.json

@@ -30,7 +30,7 @@
       "copied_not_symlinked": true
     },
     "rust_engine_in_build": false,
-    "spec": "/home/user/.capy/work/gbrain@v0.60.735.0"
+    "spec": "<work>/gbrain@v0.60.735.0"
   },
   "engines": [
     "pglite",
@@ -75,8 +75,8 @@
           "engine": "pglite",
           "exit_code": 0,
           "wall_ms": 365765,
-          "log": "/home/user/.capy/work/correctness/work/n1-pglite.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n1-pglite/receipt.json",
+          "log": "<work>/correctness/work/n1-pglite.log",
+          "receipt": "<work>/correctness/work/n1-pglite/receipt.json",
           "contracts": {
             "stale_served": {
               "value": 0
@@ -96,8 +96,8 @@
           "engine": "postgres",
           "exit_code": 0,
           "wall_ms": 247749,
-          "log": "/home/user/.capy/work/correctness/work/n1-postgres.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n1-postgres/receipt.json",
+          "log": "<work>/correctness/work/n1-postgres.log",
+          "receipt": "<work>/correctness/work/n1-postgres/receipt.json",
           "contracts": {
             "stale_served": {
               "value": 0
@@ -155,8 +155,8 @@
           "engine": "pglite",
           "exit_code": 0,
           "wall_ms": 559190,
-          "log": "/home/user/.capy/work/correctness/work/n5-pglite.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n5-pglite/receipt.json",
+          "log": "<work>/correctness/work/n5-pglite.log",
+          "receipt": "<work>/correctness/work/n5-pglite/receipt.json",
           "contracts": {
             "prohibited_active_outputs": {
               "value": 0
@@ -182,8 +182,8 @@
           "engine": "postgres",
           "exit_code": 0,
           "wall_ms": 352542,
-          "log": "/home/user/.capy/work/correctness/work/n5-postgres.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n5-postgres/receipt.json",
+          "log": "<work>/correctness/work/n5-postgres.log",
+          "receipt": "<work>/correctness/work/n5-postgres/receipt.json",
           "contracts": {
             "prohibited_active_outputs": {
               "value": 0
@@ -248,8 +248,8 @@
           "engine": "pglite",
           "exit_code": 0,
           "wall_ms": 139158,
-          "log": "/home/user/.capy/work/correctness/work/n6-pglite.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n6-pglite/receipt.json",
+          "log": "<work>/correctness/work/n6-pglite.log",
+          "receipt": "<work>/correctness/work/n6-pglite/receipt.json",
           "contracts": {
             "content_leak_probes": {
               "value": 0
@@ -275,8 +275,8 @@
           "engine": "postgres",
           "exit_code": 0,
           "wall_ms": 281456,
-          "log": "/home/user/.capy/work/correctness/work/n6-postgres.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n6-postgres/receipt.json",
+          "log": "<work>/correctness/work/n6-postgres.log",
+          "receipt": "<work>/correctness/work/n6-postgres/receipt.json",
           "contracts": {
             "content_leak_probes": {
               "value": 0
@@ -332,7 +332,7 @@
           "engine": "pglite",
           "exit_code": 69,
           "wall_ms": 1071,
-          "log": "/home/user/.capy/work/correctness/work/n6-http-pglite.log",
+          "log": "<work>/correctness/work/n6-http-pglite.log",
           "refusal_reason": "engine_not_supported_by_runner",
           "refusal_message": "N6 Postgres over HTTP did not run on engine pglite. EvalEngineUnavailable (engine_not_supported_by_runner): n6-postgres-http seeds the brain and runs the trusted local replays in process while `gbrain serve --http` holds the same database, because the server's persistence consumer drains the journaled seed writes; PGLite admits one process, so that order needs the pause-and-restart pattern of lifecycle/slice.ts. The pooled-connection condition also samples pg_stat_activity, and the database is created and dropped with Postgres admin SQL. Use n6-visibility-fuzz.ts (in process) for PGLite. No receipt or verdict was written (exit 69).",
           "contracts": {
@@ -353,8 +353,8 @@
           "engine": "postgres",
           "exit_code": 0,
           "wall_ms": 149203,
-          "log": "/home/user/.capy/work/correctness/work/n6-http-postgres.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n6-http-postgres/receipt.json",
+          "log": "<work>/correctness/work/n6-http-postgres.log",
+          "receipt": "<work>/correctness/work/n6-http-postgres/receipt.json",
           "contracts": {
             "leaks": {
               "value": 0
@@ -407,8 +407,8 @@
           "engine": "pglite",
           "exit_code": 0,
           "wall_ms": 10626,
-          "log": "/home/user/.capy/work/correctness/work/n12-pglite.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n12-pglite/receipt.json",
+          "log": "<work>/correctness/work/n12-pglite.log",
+          "receipt": "<work>/correctness/work/n12-pglite/receipt.json",
           "contracts": {
             "fabricated_turns": {
               "value": 0
@@ -431,8 +431,8 @@
           "engine": "postgres",
           "exit_code": 0,
           "wall_ms": 10356,
-          "log": "/home/user/.capy/work/correctness/work/n12-postgres.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n12-postgres/receipt.json",
+          "log": "<work>/correctness/work/n12-postgres.log",
+          "receipt": "<work>/correctness/work/n12-postgres/receipt.json",
           "contracts": {
             "fabricated_turns": {
               "value": 0
@@ -492,8 +492,8 @@
           "engine": "pglite",
           "exit_code": 0,
           "wall_ms": 94165,
-          "log": "/home/user/.capy/work/correctness/work/n14-pglite.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n14-pglite/receipt.json",
+          "log": "<work>/correctness/work/n14-pglite.log",
+          "receipt": "<work>/correctness/work/n14-pglite/receipt.json",
           "contracts": {
             "crashes": {
               "value": 0
@@ -516,8 +516,8 @@
           "engine": "postgres",
           "exit_code": 0,
           "wall_ms": 72825,
-          "log": "/home/user/.capy/work/correctness/work/n14-postgres.log",
-          "receipt": "/home/user/.capy/work/correctness/work/n14-postgres/receipt.json",
+          "log": "<work>/correctness/work/n14-postgres.log",
+          "receipt": "<work>/correctness/work/n14-postgres/receipt.json",
           "contracts": {
             "crashes": {
               "value": 0

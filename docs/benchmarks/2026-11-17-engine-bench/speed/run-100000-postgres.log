@@ -1,0 +1,31 @@
+
+== Postgres + pgvector ==
+[postgres] started container gbrain-engine-bench-2788-1794927523408 on 127.0.0.1:45047
+[postgres] dataset {"pages":100000,"base_pages":240,"filler_pages":99760,"links":200013,"timeline":301638,"quality_queries":71,"probes":400} fingerprint 11095ed0ac6b
+[postgres] importing 100000 pages
+[postgres] imported 5000 in 176s; last 5000 at 28.4 pages/s, p50 34.2 ms
+[postgres] imported 10000 in 352s; last 5000 at 28.5 pages/s, p50 34.5 ms
+[postgres] imported 15000 in 536s; last 5000 at 27.2 pages/s, p50 36.4 ms
+[postgres] imported 20000 in 731s; last 5000 at 25.6 pages/s, p50 38.9 ms
+[postgres] imported 25000 in 928s; last 5000 at 25.4 pages/s, p50 39.4 ms
+[postgres] imported 30000 in 1132s; last 5000 at 24.5 pages/s, p50 40.9 ms
+[postgres] imported 35000 in 1338s; last 5000 at 24.3 pages/s, p50 41.0 ms
+[postgres] imported 40000 in 1544s; last 5000 at 24.2 pages/s, p50 41.5 ms
+[postgres] imported 45000 in 1754s; last 5000 at 23.9 pages/s, p50 42.0 ms
+[postgres] imported 50000 in 1965s; last 5000 at 23.7 pages/s, p50 42.2 ms
+[postgres] imported 55000 in 2176s; last 5000 at 23.7 pages/s, p50 42.2 ms
+[postgres] imported 60000 in 2388s; last 5000 at 23.6 pages/s, p50 42.6 ms
+[postgres] imported 65000 in 2601s; last 5000 at 23.4 pages/s, p50 42.8 ms
+[postgres] imported 70000 in 2816s; last 5000 at 23.3 pages/s, p50 42.9 ms
+[postgres] imported 75000 in 3034s; last 5000 at 23.0 pages/s, p50 43.7 ms
+[postgres] imported 80000 in 3252s; last 5000 at 22.9 pages/s, p50 43.8 ms
+[postgres] imported 85000 in 3469s; last 5000 at 23.1 pages/s, p50 43.3 ms
+[postgres] imported 90000 in 3689s; last 5000 at 22.7 pages/s, p50 44.2 ms
+[postgres] imported 95000 in 3906s; last 5000 at 23.0 pages/s, p50 43.8 ms
+[postgres] imported 100000 in 4124s; last 5000 at 23.0 pages/s, p50 43.5 ms
+[postgres] rankings and steady-state reads
+[postgres] cold start x1
+[postgres] removed container gbrain-engine-bench-2788-1794927523408
+
+wrote out/dev-speed-2026-11-17T16-12-15-100000.json (4414s)
+~/work/gbrain-evals/out/dev-speed-2026-11-17T16-12-15-100000.json
