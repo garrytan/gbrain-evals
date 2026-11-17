@@ -4,11 +4,11 @@ gbrain is Garry Tan's own project. Preregistered in [the preregistration](2026-1
 
 ## What we learned
 
-- We learned that PGLite answers a hybrid search in 1.35 times the time of a Postgres server with pgvector at 1,000 pages (95% interval 1.33 to 1.36) and 1.45 times at 10,000 pages (1.41 to 1.50), which is inside the preregistered 2x margin at both sizes, with a 95th percentile of 16.3 ms and 86.8 ms. You should start a single-user brain on PGLite, which needs no server, and not move to Postgres for search speed alone at these sizes.
+- We learned that PGLite answers a hybrid search in 1.35 times the time of a Postgres server with pgvector at 1,000 pages (95% interval 1.33 to 1.36) and 1.45 times at 10,000 pages (1.41 to 1.50), which is inside the preregistered 2x margin at both sizes. At 10,000 pages PGLite's 95th percentile is 86.8 ms, which passes the preregistered limit of 100 ms by 13 ms, but its 99th percentile is 142 ms, over 100 ms, where Postgres is 39.5 ms at the 95th and 47.7 ms at the 99th. The preregistered outcome is `pglite_adequate` at both sizes, applied by code, and it stays as recorded. You should read the result as a loss at 10,000 pages: about one hybrid search in a hundred took longer than 100 ms on PGLite. Our reading of that, from secondary data (the 99th percentile was not part of the preregistered rule): start a single-user brain on PGLite, which needs no server, and move to Postgres as the brain grows past about 1,000 pages.
 - We learned that PGLite loses on page reads once the brain is large: `get_page` takes 2.46 times as long at 10,000 pages (2.36 to 2.56) and backlinks 2.69 times (2.58 to 2.80), where at 1,000 pages the page read was the same speed. You should pick Postgres for a brain of this size if you read pages and backlinks more than you search, and when you need a second process on the same brain, which this experiment does not test.
-- We learned that PGLite also costs more to run per search, by this experiment's price model: $4.73e-4 against $2.66e-4 per 1,000 hybrid searches at 10,000 pages, and it holds about 2.1 GB of memory against about 0.5 GB for Postgres, at both sizes. You should budget memory for PGLite as a fixed 2 GB or so, not as something that grows with the brain.
+- We learned that PGLite also costs more to run per search, by this experiment's price model: $4.73e-4 against $2.66e-4 per 1,000 hybrid searches at 10,000 pages, and it holds about 2.1 GB of memory against about 0.25 GB for Postgres at 1,000 pages and 0.5 GB at 10,000 pages. You should budget about 2 GB of memory for PGLite at these sizes. It was about the same at both, but we measured only two sizes.
 
-The engines returned the same pages in the same order for every one of the 71 quality queries at both sizes, so these are speed and cost differences between engines with identical answers.
+For all 71 quality queries at both sizes, the engines returned the same top five pages (overlap 1.0) and the same top result, and every per-query Recall@5 and nDCG@10 was identical, so the speed and cost differences are between engines that gave the same answers on those queries. On a separate set of 200 probe queries the engines also agreed in full at 1,000 pages. At 10,000 pages they agreed on keyword search, but on vector and hybrid search the top five overlapped 99.6% and the top result matched for 98% (196 of 200), so identical answers is not established beyond the 71 queries.
 
 This is a PGLite versus Postgres baseline only. It does not say whether PGLite can be deprecated in favor of the Rust engine: the Rust engine is not in it, and neither is concurrent access.
 
@@ -20,7 +20,7 @@ A user installs gbrain, keeps notes in it, and asks which database to point it a
 
 Design, in short (all of it, and the decision rule, is in the [preregistration](2026-11-16-engine-shootout-preregistration.md)):
 
-- One machine (8 logical CPUs, Intel Xeon 6975P-C, 30 GB), run alone, one counted run per size. Postgres is `pgvector/pgvector:pg16` (digest `sha256:484e8380...e579f`, PostgreSQL 16.16) in a local container with stock settings. Both engines use gbrain's schema and search methods, and the same vectors.
+- One machine (8 logical CPUs, Intel Xeon 6975P-C, 30.8 GB), run alone, one counted run per size. Postgres is `pgvector/pgvector:pg16` (digest `sha256:484e8380...e579f`, PostgreSQL 16.16) in a local container with stock settings. Both engines use gbrain's schema and search methods, and the same vectors.
 - Latency: 300 queries per operation after a warm-up. Each query goes to both engines back to back, in a random order, so the engines see the same input, the same moment and the same cache state. The interval is a paired bootstrap over the 300 queries (10,000 draws, seed 1337). Ratios are the geometric mean of per-query PGLite time over Postgres time. The [charts](#charts) and tables come from the receipts.
 - Cost: 20 blocks of 50 identical operations per operation, both engines per block, random order. CPU seconds and memory held, priced with AWS Fargate list prices as of 2026-11-16. This is a price assumption, not a quote.
 - Quality: Recall@5 and nDCG@10 on 71 Tier 5 and Tier 5.5 queries, binary relevance by page.
@@ -48,13 +48,13 @@ Hybrid search in milliseconds, 300 queries (p50 / p95 / p99):
 | 1,000 pages | 9.96 / 11.8 / 12.6 | 13.1 / 16.3 / 19.5 |
 | 10,000 pages | 16.0 / 39.5 / 47.7 | 21.3 / 86.8 / 142 |
 
-Preregistered outcome at both sizes, applied by code: `pglite_adequate` (interval upper bound at most 2.0 and PGLite p95 at most 100 ms). At 10,000 pages the margin to the 100 ms limit is thin: p95 is 86.8 ms and p99 is 142 ms. The 2x margin and the 100 ms limit are product assumptions we chose before the runs, not findings.
+Preregistered outcome at both sizes, applied by code: `pglite_adequate` (interval upper bound at most 2.0 and PGLite p95 at most 100 ms). At 10,000 pages the margin to the 100 ms limit is thin: p95 is 86.8 ms, 13 ms under it, and p99 is 142 ms, over it, against 39.5 ms and 47.7 ms for Postgres. The preregistered rule used p95 only, so the outcome stands as recorded. The p99 loss is a reading of secondary data, which the preregistration did not set a limit for, and it comes from 300 queries per operation, so the 99th percentile rests on about three slow queries. The 2x margin and the 100 ms limit are product assumptions we chose before the runs, not findings.
 
 Where each engine loses, from the same receipts:
 
 - PGLite is slower on keyword, vector and hybrid search at both sizes (about 1.3 to 1.5 times), and on page reads and backlinks at 10,000 pages (about 2.5 times). It is slower to start (885 ms against 507 ms at 10,000 pages, median of 5, warm file cache) and to import (29.8 pages per second against 63.7 at 10,000 pages).
-- Postgres is slower on filtered vector search at 10,000 pages: 51.4 ms against 20.5 ms at the median, so PGLite takes 0.393 times as long. We did not look into why, and we do not claim a cause. It is a result for the default settings and the default index, on this data. Postgres is also slower on small point reads at 1,000 pages: backlinks (PGLite 0.710 times, 0.669 to 0.753) and timeline (0.736 times, 0.698 to 0.774), by fractions of a millisecond.
-- The ordering check shows the same direction and about the same size whichever engine ran first, for every operation except `get_page` at 1,000 pages, where the sign flips within 0.2 ms (0.033 ms against -0.143 ms). The table is in `summary.md`.
+- Postgres is slower on filtered vector search at 10,000 pages: 51.4 ms against 20.5 ms at the median, so PGLite takes 0.393 times as long. We did not look into why, and we do not claim a cause. It is a result for the default settings and the default index, on this data. Postgres is also slower on small point reads at 1,000 pages: backlinks (PGLite 0.710 times, 0.669 to 0.753) and timeline (0.736 times, 0.698 to 0.774), by fractions of a millisecond. Timeline is also faster on PGLite at 10,000 pages (0.627 times, 0.588 to 0.668).
+- The ordering check shows the same direction whichever engine ran first, for every operation except `get_page` at 1,000 pages, where the sign flips within 0.2 ms (0.033 ms against -0.143 ms). At both sizes the two orders differ by less than 2.5 ms, and the largest gap is hybrid search at 10,000 pages (14.7 ms against 12.3 ms). The table is in `summary.md`.
 
 ### Cost per 1,000 operations
 
@@ -71,11 +71,11 @@ These are fractions of a cent. At these prices the money is not the reason to ch
 
 ### Quality
 
-Identical at both sizes. Every Recall@5 and nDCG@10 difference is exactly 0 with 0 queries that differ, for keyword, vector and hybrid. Absolute scores are low and fall as filler pages are added (hybrid Recall@5 0.265 at 1,000 pages, 0.092 at 10,000), because the vectors are hash embeddings, which measure word overlap and not meaning, and because 85.9% of keyword searches return no result for either engine (the natural-language queries do not match all their words in any page). Hash embeddings are a control. These numbers show that the engines agree with each other. They do not show how well gbrain retrieves with a real embedding model.
+Identical at both sizes. Every Recall@5 and nDCG@10 difference is exactly 0 with 0 queries that differ, for keyword, vector and hybrid. Absolute scores are low and fall as filler pages are added (hybrid Recall@5 0.265 at 1,000 pages, 0.092 at 10,000), because the vectors are hash embeddings, which measure word overlap and not meaning, and because 85.9% of keyword searches on the 71 quality queries (61 of 71) return no result for either engine (the natural-language queries do not match all their words in any page). Hash embeddings are a control. These numbers show that the engines agree with each other. They do not show how well gbrain retrieves with a real embedding model.
 
 ### Memory, disk, import and cold start
 
-One run per engine, no interval, and no decision rides on these.
+One run per engine, no interval, and no decision rides on these. MB here means 1,048,576 bytes (mebibytes), as in the receipts' byte counts divided by 2^20.
 
 | Measure | 1,000 Postgres | 1,000 PGLite | 10,000 Postgres | 10,000 PGLite |
 |---|---:|---:|---:|---:|
@@ -84,12 +84,14 @@ One run per engine, no interval, and no decision rides on these.
 | Bulk import (pages per second) | 67.5 | 52.1 | 63.7 | 29.8 |
 | Cold start to first answer (ms, median of 5) | 457 | 801 | 507 | 885 |
 
-PGLite's memory is its WebAssembly heap in the gbrain process, measured as peak resident memory minus the harness's own baseline. It was about the same at both sizes, so treat it as a fixed cost near 2 GB. Postgres is the container's working set (the `docker stats` definition) plus its client.
+PGLite's memory is its WebAssembly heap in the gbrain process, measured as peak resident memory minus the harness's own baseline. It was about the same at both sizes, so it looks like a fixed cost near 2 GB, from two sizes only. Postgres is the container's working set (the `docker stats` definition) plus its client.
 
 ## What to use and avoid
 
-- Use PGLite for a brain up to 10,000 pages when one process is the only reader and you want no server. Search is about 1.3 to 1.5 times slower than Postgres, and hybrid p95 stays under 100 ms in this run.
-- Use Postgres with pgvector when you read pages and backlinks a lot at 10,000 pages, when you need several processes on one brain, when memory is tight (PGLite holds about 2 GB), or when you import often (PGLite imported at about half the rate at 10,000 pages).
+The preregistered outcome is `pglite_adequate` at both sizes. The advice below is not that outcome. It is our reading of the secondary data (p99, page reads, memory, import), labeled as a reading, and it is more cautious than the outcome at 10,000 pages.
+
+- Use PGLite as the default for a brain up to about 1,000 pages when one process is the only reader and you want no server. At 1,000 pages its hybrid search is p95 16.3 ms and p99 19.5 ms, about 1.35 times Postgres. We measured only 1,000 and 10,000 pages, so 1,000 is the largest size where PGLite's p99 is under 100 ms in our data, not a measured threshold.
+- Use Postgres with pgvector for a larger brain, or the Rust engine once it has its own preregistered run and passes on tail latency (it is not measured here). At 10,000 pages PGLite's hybrid search is p95 86.8 ms (passes the 100 ms limit by 13 ms) but p99 142 ms (fails it), where Postgres is p95 39.5 ms and p99 47.7 ms. PGLite is also about 2.5 times slower on page reads and backlinks there. Use Postgres sooner when you need several processes on one brain, when memory is tight (PGLite holds about 2 GB), or when you import often (PGLite imported at about half the rate at 10,000 pages).
 - Avoid reading the 100 ms p95 limit as a guarantee for a bigger brain. PGLite's p95 went from 16.3 to 86.8 ms between the two sizes, and p99 reached 142 ms.
 - Avoid reading these numbers as the answer to whether PGLite can be removed. Concurrency, a hosted server and the Rust engine are not measured.
 
@@ -108,7 +110,7 @@ PGLite's memory is its WebAssembly heap in the gbrain process, measured as peak 
 - Hybrid search is an engine-level reciprocal rank fusion (k = 60) of the keyword and vector lists, not gbrain's full `hybridSearch`.
 - Filler pages are built from `synthetic-v1` and `source-swamp-v1` paragraphs only, so they cannot compete with the relevant pages of the 71 queries.
 - Disk is `du -sb` of the data directory after 100 page updates and a checkpoint.
-- Two earlier launches of the counted command failed before writing any receipt, at both sizes, in the cost-block phase: an index ran past the end of a per-query slug list. We fixed the runner in a [commit on the preregistration branch](../../eval/runner/engine-shootout.ts) (a modulo on the index) and ran again. The fix touches only which query a cost block uses. Both failed launches are invalid runs under the preregistration's stop rules, and the two receipts here are the first valid ones for each size.
+- Two earlier launches of the counted command failed before writing any receipt, at both sizes, in the cost-block phase: an index ran past the end of a per-query slug list. We fixed the runner in a [commit on the preregistration branch](../../eval/runner/engine-shootout.ts) (a modulo on the index) and ran again. The fix landed after the preregistration commit (`afecbb997`), so the receipts record the preregistration commit and the later runner commit (`961d95391`). The fix touches only which query a cost block uses. Both failed launches are invalid runs under the preregistration's stop rules, and the two receipts here are the first valid ones for each size.
 - The preregistration was written after a 300-page development run of the same runner, which is why it is classed as development evidence.
 - Results are from one machine and one run per size. Intervals cover variation across queries, not variation across runs or machines.
 
