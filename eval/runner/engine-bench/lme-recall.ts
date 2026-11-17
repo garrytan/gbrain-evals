@@ -75,6 +75,8 @@ export const LME_FULL_RUN_QUESTIONS = 500;
 /** SHA-256 of longmemeval_s_cleaned.json (Sept 2025 revision), the file the published LongMemEval-S runs used. */
 export const PUBLISHED_LME_S_SHA256 = 'd6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442';
 export const BOOTSTRAP = { seed: 20261117, draws: 10_000 } as const;
+/** Preregistered margin: Rust passes an arm when the 95% paired lower bound of Rust minus each TypeScript engine is at least this. */
+export const RUST_RECALL_MARGIN = -0.02;
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 
 export function defaultDatasetPath(): string {
@@ -386,8 +388,15 @@ export interface PairComparison {
   b: EvalEngineKind;
   /** Questions both engines answered without error. */
   n_questions: number;
-  /** Errored on either side: left out of the paired delta and the top-5 comparison, and listed here. */
+  /** The TypeScript side errored, or both sides did, or Rust failed an abstention question: left out of the paired delta and the top-5 comparison, and listed here. */
   excluded_errors: string[];
+  /**
+   * Only when one side is rust: non-abstention questions the other engine answered and Rust errored on or has no result
+   * for. They stay in the paired delta with Rust's recall_all scored 0, and any one of them fails the arm.
+   */
+  rust_errors?: string[];
+  /** Only when one side is rust: fail on any rust_errors or a lower bound of Rust minus the other below RUST_RECALL_MARGIN; unmeasured with no interval. */
+  rust_verdict?: 'pass' | 'fail' | 'unmeasured';
   /** recall_all@5, B minus A, over non-abstention questions; null when there are none. */
   recall_all_delta: {
     n_pairs: number; mean_a: number; mean_b: number; delta: number; ci95: [number, number] | null; p_two_sided: number;
@@ -414,9 +423,13 @@ const sameSet = (x: string[], y: string[]) => x.length === y.length && x.every(s
 export function comparePair(rows: readonly QuestionRow[], arm: LmeArm, a: EvalEngineKind, b: EvalEngineKind): PairComparison {
   const byEngine = (k: EvalEngineKind) => new Map(rows.filter(r => r.engine === k).map(r => [r.question_id, r]));
   const ra = byEngine(a), rb = byEngine(b);
-  const ids = [...ra.keys()].filter(id => rb.has(id)).sort();
-  const usable = (id: string) => ra.get(id)!.error === undefined && rb.get(id)!.error === undefined && !!ra.get(id)!.arms[arm] && !!rb.get(id)!.arms[arm];
-  const excluded = ids.filter(id => !usable(id));
+  const rustSide = a === 'rust' ? a : b === 'rust' ? b : null;
+  const answered = (r: QuestionRow | undefined) => !!r && r.error === undefined && !!r.arms[arm];
+  const [rr, ro] = rustSide === a ? [ra, rb] : [rb, ra];
+  const ids = [...ra.keys()].filter(id => rb.has(id) || (rustSide !== null && ro.has(id))).sort();
+  const usable = (id: string) => answered(ra.get(id)) && answered(rb.get(id));
+  const rustErrors = rustSide === null ? [] : ids.filter(id => !answered(rr.get(id)) && answered(ro.get(id)) && ro.get(id)!.arms[arm]!.recall_all !== null);
+  const excluded = ids.filter(id => !usable(id) && !rustErrors.includes(id));
   const kept = ids.filter(usable);
   const differences: Top5Difference[] = [];
   let ordered = 0, set = 0;
@@ -430,14 +443,24 @@ export function comparePair(rows: readonly QuestionRow[], arm: LmeArm, a: EvalEn
     if (sameSet(ta, tb)) set++;
     if (x.recall_all !== null && y.recall_all !== null) pairs.push({ id, cluster: id, a: x.recall_all, b: y.recall_all });
   }
+  for (const id of rustErrors) {
+    const other = ro.get(id)!.arms[arm]!.recall_all!;
+    pairs.push({ id, cluster: id, a: rustSide === a ? 0 : other, b: rustSide === a ? other : 0 });
+  }
   let delta: PairComparison['recall_all_delta'] = null;
   if (pairs.length > 0) {
     const d = clusteredPairedDelta(pairs, BOOTSTRAP);
     const mc = exactMcNemar(pairs);
     delta = { n_pairs: d.n_pairs, mean_a: d.mean_a, mean_b: d.mean_b, delta: d.delta, ci95: d.ci95, p_two_sided: d.p_two_sided, wins_b: mc.wins, losses_b: mc.losses, mcnemar_p: mc.p_two_sided };
   }
+  let rust: Pick<PairComparison, 'rust_errors' | 'rust_verdict'> = {};
+  if (rustSide !== null) {
+    const lower = delta?.ci95 ? (rustSide === b ? delta.ci95[0] : -delta.ci95[1]) : null;
+    const verdict = rustErrors.length > 0 ? 'fail' : lower === null ? 'unmeasured' : lower < RUST_RECALL_MARGIN ? 'fail' : 'pass';
+    rust = { rust_errors: rustErrors, rust_verdict: verdict };
+  }
   return {
-    arm, a, b, n_questions: kept.length, excluded_errors: excluded, recall_all_delta: delta,
+    arm, a, b, n_questions: kept.length, excluded_errors: excluded, ...rust, recall_all_delta: delta,
     identical_top5_ordered: kept.length ? ordered / kept.length : 0,
     identical_top5_set: kept.length ? set / kept.length : 0,
     differences,

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  aggregateLmeRows, armAgreement, comparePair, countEmbedPlan, readLmeRows, EmbedCacheMiss, fillCache, hashVector, LME_RECALL_TOP_K, main, refuseNetwork, runLmeRecall,
+  aggregateLmeRows, armAgreement, comparePair, countEmbedPlan, readLmeRows, EmbedCacheMiss, fillCache, hashVector, LME_RECALL_TOP_K, main, refuseNetwork, runLmeRecall, RUST_RECALL_MARGIN,
   stubTransport, type QuestionRow,
 } from '../../eval/runner/engine-bench/lme-recall.ts';
 import { resolveGbrainUnderTest, type GbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
@@ -113,6 +113,56 @@ describe('per-question comparison', () => {
     expect(armAgreement(r, 'keyword', ['pglite', 'postgres', 'rust'])).toMatchObject({ n_questions: 1, identical_top5_share: 1 });
     expect(armAgreement(r, 'keyword', ['pglite', 'postgres'])).toMatchObject({ n_questions: 2, identical_top5_share: 1 });
     expect(armAgreement([], 'keyword', ['pglite']).identical_top5_share).toBeNull();
+  });
+});
+
+describe('the Rust verdict per arm', () => {
+  const ids = (n: number) => Array.from({ length: n }, (_, i) => 'q' + String(i).padStart(3, '0'));
+  const recallOf = (i: number) => (i % 3 === 0 ? 0 : 1);
+  const engineRows = (engine: 'pglite' | 'rust', n: number, f: (i: number) => Partial<QuestionRow> | number = recallOf) =>
+    ids(n).map((id, i) => { const v = f(i); return typeof v === 'number' ? row(engine, id, ['s' + i], v) : row(engine, id, [], 0, v); });
+
+  test('Rust timing out on 100 of 500 questions with otherwise identical recall fails the arm, whichever side Rust is on', () => {
+    const timeout = { error: 'question_timeout_120000ms: import and search', arms: {} };
+    const rows = [...engineRows('pglite', 500), ...engineRows('rust', 500, i => (i % 5 === 0 ? timeout : recallOf(i)))];
+    for (const [a, b] of [['pglite', 'rust'], ['rust', 'pglite']] as const) {
+      const c = comparePair(rows, 'keyword', a, b);
+      expect(c.rust_verdict).toBe('fail');
+      expect(c.rust_errors).toHaveLength(100);
+      expect(c.excluded_errors).toEqual([]);
+      expect(c.n_questions).toBe(400);
+      expect(c.recall_all_delta!.n_pairs).toBe(500);
+      expect(c.recall_all_delta!.ci95).not.toEqual([0, 0]);
+    }
+  });
+
+  test('a clean identical run passes; a pair without Rust carries no Rust verdict', () => {
+    const rows = [...engineRows('pglite', 60), ...engineRows('rust', 60), ...engineRows('pglite', 60).map(r => ({ ...r, engine: 'postgres' as const }))];
+    for (const [a, b] of [['pglite', 'rust'], ['rust', 'pglite']] as const) {
+      expect(comparePair(rows, 'keyword', a, b)).toMatchObject({ rust_verdict: 'pass', rust_errors: [], recall_all_delta: { delta: 0, ci95: [0, 0] } });
+    }
+    const ts = comparePair(rows, 'keyword', 'pglite', 'postgres');
+    expect('rust_verdict' in ts || 'rust_errors' in ts).toBe(false);
+  });
+
+  test('a Rust-only drop below the margin fails, and a TypeScript-only drop does not', () => {
+    const drop = (i: number) => (i < 10 ? 0 : 1);
+    const rustWorse = [...engineRows('pglite', 100, () => 1), ...engineRows('rust', 100, drop)];
+    const rustBetter = [...engineRows('pglite', 100, drop), ...engineRows('rust', 100, () => 1)];
+    for (const [a, b] of [['pglite', 'rust'], ['rust', 'pglite']] as const) {
+      const worse = comparePair(rustWorse, 'keyword', a, b);
+      expect(worse.rust_errors).toEqual([]);
+      expect(worse.rust_verdict).toBe('fail');
+      expect(comparePair(rustBetter, 'keyword', a, b).rust_verdict).toBe('pass');
+    }
+    expect(RUST_RECALL_MARGIN).toBe(-0.02);
+  });
+
+  test('abstention-only questions leave the arm unmeasured; a TypeScript error is excluded, not charged to Rust', () => {
+    const abs = [row('pglite', 'x_abs', ['s1'], null), row('rust', 'x_abs', [], null, { error: 'boom', arms: {} })];
+    expect(comparePair(abs, 'keyword', 'pglite', 'rust')).toMatchObject({ rust_verdict: 'unmeasured', rust_errors: [], excluded_errors: ['x_abs'], recall_all_delta: null });
+    const tsError = [...engineRows('pglite', 20), ...engineRows('rust', 20), row('pglite', 'y', [], 0, { error: 'boom', arms: {} }), row('rust', 'y', ['s1'], 1)];
+    expect(comparePair(tsError, 'keyword', 'pglite', 'rust')).toMatchObject({ rust_verdict: 'pass', rust_errors: [], excluded_errors: ['y'] });
   });
 });
 
