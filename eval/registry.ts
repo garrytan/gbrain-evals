@@ -1408,6 +1408,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'budget-ledger.ts': { role: 'shared paid-run reservation ledger' },
   'bug-ledger.ts': { role: 'shared gbrain bug ledger: validated entries and the Markdown view' },
   'eval-config.ts': { role: 'GBRAIN_EVAL_CONFIG: any gbrain config key for a category arm, applied before the first write and read back' },
+  'eval-engine.ts': { role: 'GBRAIN_EVAL_ENGINE and openEvalEngine: open a pglite, postgres or rust gbrain engine for a runner, refusing rust with a stated reason when the build lacks it; used by engine-bench and the keyless gate runners' },
   'evidence-auto-v2.ts': { role: 'auto v2 follow-up to the evidence-delivery study (decision manifest v2: LongMemEval sanity check and sealed E2)', part_of: 'evidence-delivery' },
   'external-ideas-wave-a.ts': { role: 'GBRA-162 external ideas wave A: search.evidence_resolve_dates on frozen evidence-delivery retrieval (LongMemEval-S plus a synthetic relative-date suite)', part_of: 'evidence-delivery' },
   'cat13-gap-localize.ts': { role: 'Phase E1 diagnostic over Cat13 hybrid stages', part_of: 'concept-search' },
@@ -1534,4 +1535,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'bg1', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'failure-causes', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'live-recall', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'miss-mining', 'multi-evidence', 'nightly', 'outcomes', 'p4-stream', 'pilot', 'power', 'predictive', 'providers', 'q1', 'q2', 'queries', 'refresh-barrier', 'rs1', 'skillopt-method', 'sota', 'stats', 'strict-pageless', 'system-one', 'systems', 't0', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'bg1', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'engine-bench', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'failure-causes', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'live-recall', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'miss-mining', 'multi-evidence', 'nightly', 'outcomes', 'p4-stream', 'pilot', 'power', 'predictive', 'providers', 'q1', 'q2', 'queries', 'refresh-barrier', 'rs1', 'skillopt-method', 'sota', 'stats', 'strict-pageless', 'system-one', 'systems', 't0', 'takes-bootstrap'];
