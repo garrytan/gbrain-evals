@@ -21,6 +21,10 @@
  *        this run would rebuild, is refused before any paid step: answer each configuration in its own --out.
  *        A run holds <out>/run.lock while it runs, so a second run on the same --out is refused.)
  *        [--gbrain <checkout>@<ref>]   measure a copied overlay of another gbrain commit instead of the pin
+ *   bun eval/runner/chronicle-lift.ts plain --out <dir> --budget-usd <n> [--arms plain-a,plain-b] [--model claude-sonnet-4-6]
+ *        no-gbrain baseline (docs/plans/2026-11-17-readme-baselines/PREREG.md): each meeting, calendar and conversation
+ *        page goes to the model once per arm with a plain "list the events" prompt (plain-baseline.ts), and the
+ *        listed lines are scored by score like an ON arm's events. No gbrain build, import or phase runs.
  *   bun eval/runner/chronicle-lift.ts score --out <dir> [--review <review.json>] [--model <id>]
  *        (score never pools answers from two answer identities or two builds of one arm's brain: it refuses,
  *        and --model keeps one model's answers)
@@ -42,6 +46,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { MeteringProxy, McpClient, newMeter, type Meter } from './cat40/gbrain-arm.ts';
 import { runAgent, type Arm, type SubmitPayload, type ToolSpec } from './cat40/loop.ts';
 import { gbrainSpecFrom, overlaySummary, resolveGbrainUnderTest } from './gbrain-under-test.ts';
+import { CHRONICLE_PLAIN_INSTRUCTION, chroniclePlainPrompt, parseEventLines, plainCall } from './plain-baseline.ts';
 
 export const LIFT_VERSION = 'chronicle-lift-v1';
 export const DEFAULT_AGENT_MODEL = 'claude-opus-5-5';
@@ -399,6 +404,61 @@ async function run(argv: string[]) {
   }
 }
 
+// ─── No-gbrain baseline ─────────────────────────────────────────────
+
+export const PLAIN_ARMS = ['plain-a', 'plain-b'] as const;
+export const PLAIN_MAX_TOKENS = 4096;
+
+/** The events a plain reply lists for one page, in score's shape; the slug names the arm, page and line. */
+export function plainEvents(arm: string, page: string, reply: string): Extracted[] {
+  return parseEventLines(reply).map((e, i) => ({ slug: `${arm}/${page}/${i + 1}`, depth: page, day: e.day, what: e.what, kind: '', who: [] }));
+}
+
+async function plain(argv: string[]) {
+  const out = resolve(flag(argv, '--out') ?? 'eval/reports/chronicle-lift/plain');
+  const arms = (flag(argv, '--arms') ?? PLAIN_ARMS.join(',')).split(',');
+  const bad = arms.filter(a => !(PLAIN_ARMS as readonly string[]).includes(a));
+  if (bad.length) throw new Error(`plain arms are ${PLAIN_ARMS.join(', ')}; got ${bad.join(', ')}`);
+  const model = flag(argv, '--model') ?? 'claude-sonnet-4-6';
+  const concurrency = Number(flag(argv, '--concurrency') ?? 4);
+  mkdirSync(out, { recursive: true });
+  const all = renderCorpus();
+  const pages = all.filter(p => CHRONICLE_PREFIXES.some(x => p.path.startsWith(x)));
+  writeFileSync(join(out, 'corpus.json'), JSON.stringify({ digest: corpusDigest(all), pages: all.length, chronicle_shaped: pages.length }, null, 2) + '\n');
+  for (const arm of arms) {
+    const started = new Date().toISOString();
+    const { run, guard } = startPaidRun(`${LIFT_VERSION}-${arm}`, { ...budgetOptionsFrom(argv), estimateUsd: Number(flag(argv, '--estimate-usd') ?? 1) });
+    const replies: Array<{ page: string; text: string; error: string | null; input_tokens: number; output_tokens: number; finish: string | null; response_model: string | null }> = [];
+    const queue = [...pages];
+    try {
+      await Promise.all(Array.from({ length: concurrency }, async () => {
+        for (let p = queue.shift(); p; p = queue.shift()) {
+          const page = p.path.replace(/\.md$/, '');
+          if (guard.exhausted) { replies.push({ page, text: '', error: 'budget exhausted: not judged', input_tokens: 0, output_tokens: 0, finish: null, response_model: null }); continue; }
+          const r = await plainCall(`anthropic:${model}`, chroniclePlainPrompt(p.content), PLAIN_MAX_TOKENS);
+          replies.push({ page, text: r.text, error: r.error, input_tokens: r.input_tokens, output_tokens: r.output_tokens, finish: r.finish, response_model: r.response_model });
+        }
+      }));
+    } finally {
+      guard.uninstall();
+    }
+    const cost = receiptCost(run.close());
+    replies.sort((a, b) => a.page.localeCompare(b.page));
+    const events = replies.filter(r => !r.error).flatMap(r => plainEvents(arm, r.page, r.text));
+    const judged = replies.filter(r => !r.error).length;
+    writeFileSync(join(out, `replies-${arm}.json`), JSON.stringify(replies, null, 2) + '\n');
+    writeFileSync(join(out, `events-${arm}.json`), JSON.stringify(events, null, 2) + '\n');
+    writeFileSync(join(out, `ledger-${arm}.json`), JSON.stringify(replies.map(r => ({ slug: r.page })), null, 2) + '\n');
+    writeFileSync(join(out, `build-${arm}.json`), JSON.stringify({
+      arm, kind: 'no-gbrain plain baseline', started, finished: new Date().toISOString(), model: `anthropic:${model}`, instruction: CHRONICLE_PLAIN_INSTRUCTION, max_tokens: PLAIN_MAX_TOKENS, sampling: 'provider default',
+      gbrain: 'no gbrain build, import or phase ran', gbrain_evals: { git_head: git('rev-parse', 'HEAD'), dirty: (git('status', '--porcelain') ?? '') !== '' },
+      judged, failed: replies.filter(r => r.error).length, events: events.length,
+      meter: { usd: cost.usd, byModel: { [`anthropic:${model}`]: { usd: cost.usd, requests: replies.length } }, unpriced: 0 }, spent_usd_recorded: cost.usd, cost,
+    }, null, 2) + '\n');
+    console.error(`[lift] ${arm}: ${judged} pages, ${events.length} events, $${cost.usd.toFixed(4)}`);
+  }
+}
+
 function score(argv: string[]) {
   const out = resolve(flag(argv, '--out') ?? 'eval/reports/chronicle-lift/run');
   const gold = JSON.parse(readFileSync(join(LABELS, 'gold-events.json'), 'utf8')) as { pages: GoldPage[] };
@@ -406,7 +466,7 @@ function score(argv: string[]) {
   const review: Record<string, { class: string; note?: string }> = reviewPath ? JSON.parse(readFileSync(reviewPath, 'utf8')).events ?? {} : {};
   const questionsDoc = JSON.parse(readFileSync(join(LABELS, 'questions.json'), 'utf8')) as QuestionDoc;
   const result: Record<string, unknown> = {};
-  for (const arm of ['on-a', 'on-b'] as const) {
+  for (const arm of ['on-a', 'on-b', ...PLAIN_ARMS]) {
     if (!existsSync(join(out, `events-${arm}.json`))) continue;
     const events = JSON.parse(readFileSync(join(out, `events-${arm}.json`), 'utf8')) as Extracted[];
     const build = JSON.parse(readFileSync(join(out, `build-${arm}.json`), 'utf8'));
@@ -498,6 +558,7 @@ if (import.meta.main) {
     mkdirSync(out, { recursive: true });
     console.log(JSON.stringify(writeVault(out), null, 2));
   } else if (cmd === 'run') await run(argv);
+  else if (cmd === 'plain') await plain(argv);
   else if (cmd === 'score') score(argv);
-  else { console.error('usage: chronicle-lift.ts corpus|run|score --out <dir> [...]'); process.exit(2); }
+  else { console.error('usage: chronicle-lift.ts corpus|run|plain|score --out <dir> [...]'); process.exit(2); }
 }
