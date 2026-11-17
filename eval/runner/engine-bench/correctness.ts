@@ -138,6 +138,8 @@ export interface EngineRun {
   log: string;
   receipt?: string;
   receipt_verdict?: string;
+  /** The gbrain commit the runner's receipt says it loaded (execution.product.loaded_git_head), not the declared pin. */
+  gbrain_commit?: string | null;
   refusal_reason?: string;
   refusal_message?: string;
   error?: string;
@@ -196,7 +198,12 @@ export function readRun(check: CheckSpec, run: Omit<EngineRun, 'contracts' | 'no
     const v = receipt ? valueAt(receipt, c.path) : undefined;
     contracts[c.id] = { value: typeof v === 'number' ? v : null };
   }
-  return { ...run, contracts, not_applicable: notApplicable, ...(receipt && typeof receipt.verdict === 'string' ? { receipt_verdict: receipt.verdict } : {}) };
+  const loaded = receipt ? valueAt(receipt, 'execution.product.loaded_git_head') : undefined;
+  return {
+    ...run, contracts, not_applicable: notApplicable,
+    ...(receipt && typeof receipt.verdict === 'string' ? { receipt_verdict: receipt.verdict } : {}),
+    ...(receipt ? { gbrain_commit: typeof loaded === 'string' ? loaded : null } : {}),
+  };
 }
 
 export function engineStatus(check: CheckSpec, run: EngineRun): EngineStatus {
@@ -317,6 +324,7 @@ export async function runCorrectness(o: CorrectnessOptions): Promise<{ receipt: 
   const cwd = o.cwd ?? REPO_ROOT;
   const log = o.log ?? (() => {});
   const spec = o.gut.overlay ? `${o.gut.overlay.checkout}@${o.gut.overlay.ref}` : null;
+  const expectedCommit = productIdentityFor(o.gut).loaded_git_head;
   const rows: CheckRow[] = [];
   const findings: Finding[] = [];
   const wall: Record<string, Partial<Record<EvalEngineKind, number>>> = {};
@@ -345,6 +353,7 @@ export async function runCorrectness(o: CorrectnessOptions): Promise<{ receipt: 
         const usable = receipt && (code === 0 || code === 1);
         const error = usable ? {} : { error: `exit ${code}${receipt ? '' : ', no receipt'}: ${tail.trim().split('\n').slice(-3).join(' | ').slice(0, 400)}` };
         run = readRun(check, { ...base, ...(receipt ? { receipt: receiptPath } : {}), ...error }, receipt);
+        if (usable && run.gbrain_commit !== expectedCommit) run.error = `ran gbrain ${run.gbrain_commit ?? 'unknown'}, expected ${expectedCommit ?? 'unknown'}`;
       }
       runs.push(run);
       log(`[correctness] ${check.id} on ${kind}: exit ${code} in ${Math.round(run.wall_ms / 1000)}s${run.refusal_reason ? ` refused (${run.refusal_reason})` : ''}`);
