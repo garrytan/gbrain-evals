@@ -58,7 +58,7 @@ Every arm uses the same house notes prompt (`gbrain-lme-reader-v4-notes-fullsess
 
 | Arm | Correct (official judge) | gbrain only / arm only | Exact McNemar p | gbrain minus arm, points (95% CI) | Verdict | Mean input tokens | Reader $ per question | Reader $ per correct answer |
 |---|---:|---:|---:|---|---|---:|---:|---:|
-| gbrain `c5fb0201` (W10a) | **468** | | | | | about 19,900 | 0.023 | 0.025 |
+| gbrain `c5fb0201` (W10a) | **468** | | | | | 22,167 | 0.023 | 0.025 |
 | (a) whole history in the prompt | **471** | 14 / 17 | 0.72 | −0.6 (−2.8 to +1.6) | no measurable difference | 171,232 | 0.172 | 0.183 |
 | (b) plain hybrid's top five conversations | **445** | 41 / 18 | 0.004 | +4.6 (+1.6 to +7.6) | gbrain win | 22,012 | 0.023 | 0.026 |
 | (c) the question alone | **58** | 412 / 2 | 4e-120 | +82.0 (+78.5 to +85.5) | gbrain win | 295 | 0.001 | 0.008 |
@@ -79,7 +79,7 @@ By type, official judge (gbrain / whole history / plain hybrid top five / questi
 
 **Two provider refusals.** In arm (a), Sonnet 5.5 returned `stop_reason: "refusal"` with no text for two questions, `5025383b` and `gpt4_7f6b06db`. Both had a whole history of about 170,000 tokens, and each refusal was billed for its input. They count as wrong, as every reader error does in W10. That makes the count 471 of 500, or 471 of the 498 answered. No other arm had a reader error, and no arm hit the output limit.
 
-**Why null on the whole history?** Did the reader use what it got? Yes. It is 413 questions above the question-alone arm. Do the tasks fit? A LongMemEval-S history is about 115,000 words and fits Sonnet 5.5's window, so the whole history leaves nothing out. That is the ceiling a retrieval system is trying to reach, not a weak control. Were there enough samples? At 500 pairs the test could detect about 3.1 points, and the observed difference is −0.6. Headroom: both arms are near the top of what this judge credits (468 and 471 of 500). Same as W10c on 150 questions (144 against 139), the whole history's small edge sits in multi-session questions (107 against 103). That's where an answer is spread over more conversations than five. Verdict for README: **KEEP**. gbrain matches the whole history's accuracy at about one seventh of the reader cost per question. It doesn't beat it on accuracy.
+**Why null on the whole history?** Did the reader use what it got? Yes. It is 413 questions above the question-alone arm. Do the tasks fit? A LongMemEval-S history is about 171,000 Sonnet input tokens and fits Sonnet 5.5's window, so the whole history leaves nothing out. That is the ceiling a retrieval system is trying to reach, not a weak control. Were there enough samples? At 500 pairs the test could detect about 3.1 points, and the observed difference is −0.6. Headroom: both arms are near the top of what this judge credits (468 and 471 of 500). Same as W10c on 150 questions (144 against 139), the whole history's small edge sits in multi-session questions (107 against 103). That's where an answer is spread over more conversations than five. Verdict for README: **KEEP**. gbrain matches the whole history's accuracy at about one seventh of the reader cost per question. It doesn't beat it on accuracy.
 
 ### A newer reader, Opus 5.5, on saved results (README row: 474 of 500)
 
