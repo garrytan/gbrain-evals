@@ -6,7 +6,7 @@
   "allowlist": [
     { "finding": "env.kv", "paths": ["docs/comparison-systems/ext-temporal-graph/**/docker-compose.yml"], "pattern": "(?:neo4j/)?shootout-\\x67raphiti(?=$|[\\s\"'])", "reason": "internal-network graph-database dummy password, already on main" },
     { "finding": "env.kv", "paths": ["docs/benchmarks/*/counted/*/lifecycle*-receipt.json"], "pattern": "\"?(?:alice_maps|exachen_lang|frank_email)\"", "reason": "synthetic identity labels in the lifecycle matrix receipts' key fields" },
-    { "finding": "env.kv", "paths": ["docs/benchmarks/*/counted/*/n6pg*-receipt.json"], "pattern": "\"?client_credentials token from a client w[^\"]*", "reason": "N6's description of its expired-token probe, not a token" },
+    { "finding": "env.kv", "paths": ["docs/benchmarks/*/counted/*/n6pg*-receipt.json", "docs/benchmarks/*/correctness/work/n6-http-postgres/receipt.json"], "pattern": "\"?client_credentials token from a client w[^\"]*", "reason": "N6's description of its expired-token probe, not a token" },
     { "finding": "env.kv", "paths": ["docs/benchmarks/predictive-measures/*/correction-*.json"], "pattern": "\"?g[0-9]+:[a-z0-9.-]+:oov-[0-9]+-p[0-9]{3}:(?:local|remote):[0-9]+\"", "reason": "episode ids in correction records' key fields" }
   ],
   "sealed": {
