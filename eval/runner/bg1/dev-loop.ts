@@ -245,6 +245,8 @@ export interface DevCellOptions { sha?: string; system?: Comparator; world: stri
  * runs with the world end pinned and the container clock checked first; deps.clockMs stands in for the container in
  * keyless tests, and it never calls the runner's wall-clock check. A comparator's cell (`system`) reads the wall clock
  * as stage 1 ran it, so it takes the runner's check (at most 14 days past the world end); deps.now stands in for today.
+ * The cell reads the world's whole list (stage 1's three, or the 17 extra worlds), so its shard is that world: a bg1-dev
+ * load with no list reads only the three.
  */
 export async function runDevCell(o: DevCellOptions, deps: CellDeps & { clockMs?: () => number; now?: Date } = {}): Promise<CellResult> {
   const env = o.env ?? process.env;
@@ -263,7 +265,8 @@ export async function runDevCell(o: DevCellOptions, deps: CellDeps & { clockMs?:
   }
   env.GBRAIN_EVALS_BG1_WORLD_END = worldEnd;
   process.env.GBRAIN_EVALS_BG1_WORLD_END = worldEnd;
-  return runCell(def, { out: o.out, shard: { index: list.indexOf(o.world), count: list.length }, systemUrl: o.systemUrl, providerProxy: proxy, env }, deps);
+  return runCell(def, { out: o.out, shard: { index: list.indexOf(o.world), count: list.length }, systemUrl: o.systemUrl, providerProxy: proxy, env },
+    { ...deps, corpus: deps.corpus ?? loadCorpus('bg1-dev', undefined, new Set(list)) });
 }
 
 // ─── Launch ──────────────────────────────────────────────────────────

@@ -158,6 +158,20 @@ describe('cells on an extra world', () => {
     await expect(runDevCell({ sha: SHA, system: 'ext-memory-bank', world: 'bg1-dev-05', out: join(tmp, 'both'), systemUrl: null, env: { ...process.env, ...dead } })).rejects.toThrow(/one of them/);
   });
 
+  test("with no corpus given, a cell on an extra world loads the 17 rendered extra worlds and runs that world's questions", async () => {
+    const s = scripted(1);
+    const root = process.env.GBRAIN_EVALS_BG1_DEV_ROOT;
+    delete process.env.GBRAIN_EVALS_BG1_DEV_ROOT;
+    try {
+      const out = join(tmp, 'rendered', 'worlds');
+      const res = await runDevCell({ system: 'ext-memory-bank', world: 'bg1-dev-05', out, systemUrl: null, env: { ...process.env, ...dead } },
+        { system: new FakeMemorySystem(), reader: s.reader, judge: s.judge, now: new Date('2026-11-17T08:00:00Z') });
+      expect(res.share).toMatchObject({ shard: '1/17', questions: 64, complete: true });
+      const rc = JSON.parse(readFileSync(join(out, 'cells', 'bg1-dev-extra.ext-memory-bank.recipe.component-b8000', 'run-config.json'), 'utf8'));
+      expect(rc.dataset.files.map((f: { path: string }) => f.path.split('/').at(-2))).toEqual([...EXTRA_WORLDS, ...EXTRA_WORLDS].sort());
+    } finally { process.env.GBRAIN_EVALS_BG1_DEV_ROOT = root; }
+  }, 300_000);
+
   for (const c of ['ext-memory-bank', 'ext-extract-first'] as Comparator[]) {
     test(c + ' runs its shard of an extra world within the 14 days', async () => {
       const s = scripted(1);
