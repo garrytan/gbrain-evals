@@ -2,6 +2,19 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.238] - 2026-11-17
+
+### Code review skips the keyless re-pin's raw run receipts
+
+- **What changed.** The code review that runs before a pull request is marked ready now leaves out
+  `docs/benchmarks/2026-11-16-w0-keyless-repin/counted/**`, the raw run output of the November 16 keyless re-pin: JSON
+  receipts, text logs, tree listings and three generated Markdown summaries, about 10.9 MB of diff. With them in, that
+  re-pin's results pull request has an 11.1 MB review diff, over the review's 2 MB limit, so no reviewer could read it.
+- **What stays the same.** The files stay in the repository, and CI's receipt test still reads the JSON receipts. The
+  results report, its preregistration and its repro and VM scripts are still reviewed. No score or verdict changes.
+
+- **BG1 dev loop: score any gbrain build on the changing-facts classes in about an hour.** `bun eval/runner/bg1/dev-loop.ts run` runs gbrain's newest release tag (or any tag, branch or commit given with `--gbrain`) on BG1's three public dev worlds, read by Claude Opus 5.5 and graded by GPT-6 Astra, and prints accuracy, exposure and the gap to the memory-bank and extract-first servers for each class S1 to S8, with paired 95% intervals and the smallest change each class can show. The two servers' rows are cached from BG1 stage 1 (`eval/data/changing-facts-v1/dev/baselines/stage1-opus.json`), so a run pays only for gbrain. gbrain's container clock is pinned to the dev worlds' question day with libfaketime, so time-relative questions keep their meaning on any later date; sealed cells keep the 14-day wall-clock check. `why` lists every missed S1 and S5 to S8 question with gbrain's context and which needed values it held, beside each server's context. `run --overlay <gbrain key>=<value>`, repeatable, sets one of the six search keys on gbrain's arm (for example `search.evidence_date_header=true`) so two runs of one gbrain commit can compare a setting on and off; an unknown key, a bad value or a key gbrain's config does not list at that commit refuses before any VM starts, and the overlay is recorded in run.json, each cell's run-config, the score header and the why rows. `score --against` refuses two runs that differ in anything but their overlay and gbrain ref unless given `--allow-run-diff`. After its cell, each world's VM keeps gbrain's brain as it stood after the last question (`brain/gbrain-defaults.tar`) and lists every idle upkeep run gbrain logged, with its duration and outcome (`upkeep.ndjson`). Before launching, `run` destroys the launching owner's dev-loop VMs older than 7 hours, and after the run it lists any of its VMs still standing, with the commands to pull and destroy each, and exits 4. Its room check now counts the launching owner's own VMs against the crew's 208-vCPU line.
+
 ## [0.10.237] - 2026-11-16
 
 ### Changing-facts battleground: corrected exposure for withdrawn facts
