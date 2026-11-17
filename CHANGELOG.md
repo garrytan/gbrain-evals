@@ -2,6 +2,10 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.245] - 2026-11-17
+
+The G6 out-of-view harness now checks each gold page one at a time before an episode starts. A local caller's check is its own `gbrain call` process on a brain that allows one process at a time, so two checks at once could fail the second and wrongly mark a readable page as out of view. That made `test/eval/predictive-g6.test.ts` fail now and then in CI.
+
 ## [0.10.244] - 2026-11-17
 
 Every result in README's comparison table now names a measured no-gbrain number, run on the same tasks with the same reader and judge ([baselines](docs/benchmarks/2026-11-17-readme-baselines/README.md)). gbrain beats plain Postgres hybrid search on LongMemEval recall and answers, attendance and attacker claims, and beats a plain prompt on contradiction finding for cheaper models and on memory pages. It is level with the whole history in the prompt on 500 LongMemEval questions, with BM25 on reworded relationship questions, with plain hybrid on PrecisionMemBench and quoted messages, and on timeline extraction.
