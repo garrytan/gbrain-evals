@@ -1065,6 +1065,91 @@ and `4ec4ab92` stays an ancestor. Between the two commits, the files counted cel
 `docker-compose.yml` and `capability.json`. In wave A's identity fixture only the gbrain row changes. The gbrain row
 of the systems table above now names the switch.
 
+### 2026-11-17: a fallback validator for claude-haiku-5-5's refusals
+
+No counted cell has run and no system has answered an RS1 question, so everything here comes before any result. It
+changes no arm, reader, judge, margin, N rule or verdict rule, and not the kept set's rule. It is the first change to
+`validate.ts` since the freeze, so the sentence above that it runs unchanged from main no longer holds from `7c53fa3f` on.
+
+**What the third mint showed.** Of the ten slots after the pilot, `rs1-011` to `rs1-020`, four are kept (`rs1-011`, `rs1-015`,
+`rs1-016` and `rs1-018`), so the set holds ten kept conversations. `rs1-017` is unminted: BEAM's question step
+stopped on its plan (an IndexError at `main.py:1540`), and it isn't minted again. None of the other five was dropped.
+Each is incomplete because claude-haiku-5-5 refused prompts about it:
+- `rs1-013`, `rs1-019` and `rs1-020` are incomplete at the candidate check. Haiku returned stop reason `refusal` on 27, 8
+  and 1 of their prompts (support prompts, batched windows and single-candidate windows), and one rerun with its
+  regrouping didn't clear them. A refused support prompt, and a refused window past the regroup limit, leave a
+  conversation incomplete.
+- `rs1-012` and `rs1-014` passed the candidate check and were selected, and 18 of each one's 20 items pass. `validate.ts`
+  asks each window about the two selected abstention items in one prompt, Haiku's reply to that prompt was unusable on
+  both runs, and so both abstention items of each hold `validator_error`. `validate.ts` doesn't record stop reasons,
+  so that these were refusals is an inference from the candidate check.
+
+Under the code before this change, a chat with a prompt Haiku refuses could never be kept: a refusal doesn't change on
+a rerun, and `validate.ts` asks the same window again without regrouping it. That held five of the nine chats the third
+mint finished. The stop line for those ten slots tripped, and GBEV-3 chose this change over narrowing the set.
+
+**Why Haiku refuses.** Anthropic documents `stop_reason: refusal` as a decline by a safety classifier, names its policy
+area in `stop_details.category` (cyber, bio, frontier_llm, reasoning_extraction or general_harms) and says benign work
+can trigger it. It says the same request sent to another Claude model can usually be answered, and that Claude Haiku 5.5
+has no server-side fallback, so the retry is the caller's
+([refusals and fallback](https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback)). Haiku refused
+support prompts as short as 576 cl100k tokens as well as 60,000-token windows, so the chats' content sets it off, not
+the prompts' length. The validator prompts ask for no reasoning.
+
+**The rule.** Whenever claude-haiku-5-5 refuses a prompt (stop reason `refusal`), in `validate-candidates.ts` or
+`validate.ts`, the same prompt goes to claude-sonnet-5-5, the fallback, with the same output allowance and no temperature,
+and its reply counts in Haiku's place, under Haiku's id. If the fallback refuses too:
+- a support prompt fails its candidate or item on the `refusal` gate;
+- in `validate-candidates.ts`, a batched window is regrouped as before, and a single-candidate window prompt fails its
+  candidate on `refusal`;
+- in `validate.ts`, a window fails both selected abstention items on `refusal`, so the conversation is regenerated as for
+  any failed item, and dropped at the floor after its third selection.
+
+So no refusal leaves a conversation incomplete any longer. A reply the fallback gives is cached with the fallback's id
+beside it, so a rerun reuses it and doesn't ask Haiku again. Both reports name the fallback and count its usable and
+unusable replies (`fallback_answers`, `fallback_unusable`), and the published validation counts include them. Each
+unusable reply keeps its stop reason and, for Anthropic, `stop_details.category`, never text. A refusal by
+gemini-3.8-flash is handled as before.
+
+**Why claude-sonnet-5-5.** The preregistration's rule is two validators from different families. The fallback answers
+in place of the Anthropic validator and is in the same family, so that rule holds unchanged, the Anthropic row of the
+provider data-use table already covers it, and it adds no overlap beyond the disclosed ones: Anthropic's models are
+already a reader (claude-opus-5-5), gbrain's extraction model and an item validator (claude-haiku-5-5). A validator never
+answers or grades a counted question. gpt-6.1-sol, the other cleared frontier model, would have made a reader's and a
+judge's family a validator's too, and a provider outside the four RS1 already uses would need its data use confirmed
+before any RS1 text reached it.
+
+**The probe.** Before the change, `eval/custody/rs1/probe-fallback.ts` (at `ffead1f5`) sent six of the prompts Haiku
+refused in the third mint's candidate check to claude-sonnet-5-5 once each, in a paid window: two support prompts, two
+batched windows and two single-candidate windows, from `rs1-013`, `rs1-019` and `rs1-020`. It rebuilt each prompt with
+`validate-candidates.ts`'s own plan, checked it against the candidate report, and kept only how each reply ended. All six
+ended with `end_turn`, no refusal category, and a reply in the shape the prompt asks for. No answer was kept, so the
+probe says nothing about whether any item passes.
+
+**What it removes.** Under the code before this change, a chat could be kept only if claude-haiku-5-5 would read every
+prompt about it. claude-haiku-5-5 is also gbrain's extraction model, so the kept set was filtered toward chats that
+gbrain's own extraction model doesn't refuse: a survivorship filter that could favour gbrain. With the fallback those
+chats stay in the set, and how gbrain handles them is measured instead of filtered out. Whether gbrain's extraction
+refuses on them isn't measured here.
+
+**Slots already minted.** The five held slots are validated again from their committed artifacts. No slot is minted
+again and no selection is drawn again: `rs1-012` and `rs1-014` keep their selections and the cached replies of their 18
+passing items, and `rs1-013`, `rs1-019` and `rs1-020` go through the candidate check, selection and `validate.ts` as any slot
+does. An incomplete slot has no decision yet, so deciding it replaces no result. The kept set is still the first N_final
+slots that pass validation, in slot order, so a held slot that passes counts ahead of later slots. Kept slots don't
+change: their selected items had no refused prompt, and a finished selection isn't redone. `rs1-017` stays unminted.
+
+**Code.** Validation runs from `7c53fa3fe962a50da864831fde45ea9607bd9f06` or a later commit on the results branch, and the custodian
+records the commit each pass ran. At `7c53fa3f`:
+- `validate.ts` has SHA-256 `677a2a1492f9700ce34cffbd35cbd3f82354d05f84e2d0c068415b73d22d1646`;
+- `validate-candidates.ts` has `f778e30243c67cd49d17a5bc39740a2193351b88966614009c96c376a5c81dbb`;
+- `probe-fallback.ts` keeps `28bde987270feb97925b3b521a944e1bb29cb434b741e5f29845ca492a522728`;
+- `mint-lanes.ts`, `mint.sh` and `rs1_mint.py` keep `c2ae8331…`, `dfc833dd…` and `261889ad…`.
+
+Counted cells still run from `c0edd29635222c41405b76b4ba03643abdce4c48` with `rs1-cells.json` SHA-256
+`1f8d7459654427c93569cb809bb0557de329725769e27735a1f7c795fd42a39e`, and the final verdict from `d927c88f` or later. This
+change touches neither. The next mint window's stop line is recorded on the tracking issue.
+
 ## Disclosures
 
 - gbrain is Garry Tan's own project.

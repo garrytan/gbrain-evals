@@ -46,8 +46,7 @@ This records what each gbrain-evals release changed and what its measurements me
   BEAM's truncate would cut it, and conversations planned with 10 keep 10. The new
   `eval/custody/rs1/validate-candidates.ts` asks validate.ts's two validators about every candidate after the probe step,
   sharing validate.ts's reply cache, and `mint.sh --candidates <report>` selects only candidates both passed. A real
-  mint without a report stops each conversation after its probe step. validate.ts is unchanged and still decides what is
-  kept.
+  mint without a report stops each conversation after its probe step, and validate.ts still decides what is kept.
 - **Parallel minting and regrouped window checks.** `eval/custody/rs1/mint-lanes.ts` runs mint.sh's first pass for up
   to eight slots at once, one unchanged mint.sh per slot, with each slot's topic, topic check and plan still run one at a
   time in slot order. It refuses to start more slots than are still needed, stops starting slots on a provider refusal,
@@ -55,8 +54,7 @@ This records what each gbrain-evals release changed and what its measurements me
   and writes `usage.json` once at the end (`mint.sh --no-usage` skips mint.sh's own write). validate-candidates.ts now
   asks a window again with one prompt per abstention candidate when a validator answers the batched prompt in the wrong
   shape (and keeps asking that window one candidate at a time on later runs), fails a candidate whose own prompt the validator refuses on a new `refusal` gate, and records how each
-  unusable reply ended (stop reason, output tokens, content block kinds or HTTP status), never its text. validate.ts is
-  unchanged.
+  unusable reply ended (stop reason, output tokens, content block kinds or HTTP status), never its text.
 - **gbrain's newest release.** RS1's gbrain arm runs gbrain's newest release when wave A launches, in place of the weekly
   `stable` tag: v0.60.733.0 (`6ce7195b`) on 2026-11-16, read again at launch and then frozen for every counted cell. Only
   the pin fields of `rs1-cells.json` change, and the keyless F6 Docker test passes at the new pin.
@@ -64,6 +62,13 @@ This records what each gbrain-evals release changed and what its measurements me
   brain, which in RS1 could happen only when a cell's calls stall and would then change the brain between `/finish` and
   later questions. RS1's gbrain cells set `GBRAIN_IDLE_UPKEEP=off`: every install writes gbrain's own off switch
   (`maintenance.auto false`) and reads it back. The older idle sweep is unchanged.
+- **A fallback validator for Haiku's refusals.** claude-haiku-5-5 refused some validator prompts in the third mint, and a
+  refusal doesn't change on a rerun, so five of the nine new chats could never finish validation. validate.ts and
+  validate-candidates.ts now send a prompt Haiku refuses to claude-sonnet-5-5, whose reply counts in Haiku's place, and
+  when it refuses too the item fails on the `refusal` gate instead of leaving the conversation incomplete. Fallback
+  replies are cached with the fallback's id and counted in both reports. This is validate.ts's first change since the
+  freeze. Beforehand, `eval/custody/rs1/probe-fallback.ts` sent six refused prompts to the fallback and kept only how each
+  reply ended: all six were answered.
 - **Records.** `docs/benchmarks/2026-11-08-rs1-narrow-preregistration.md` gains its amendments, and
   `docs/benchmarks/2026-11-08-rs1-narrow-results.md` starts with the stage 1 run log. No counted RS1 result exists yet.
 
