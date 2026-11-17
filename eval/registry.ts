@@ -1435,6 +1435,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'parse-relational-questions.ts': { role: "the relation a gbrain checkout's parser chooses for each question in Query-shaped JSONL, for the attendance gate", part_of: 'multi-hop-paraphrase' },
   'decide.ts': { role: 'held-out decision kit CLI (bun run eval:decide): decision specs, dev runs of baseline vs candidate gbrain builds, paired verdicts' },
   'eval-adapter-config.ts': { role: 'typed adapter config for matrix cells' },
+  'gbrain-pin.ts': { role: 'moves the gbrain pin in package.json and bun.lock to gbrain\'s newest release tag (bump)' },
   'gbrain-under-test.ts': { role: 'pinned gbrain or a copied --gbrain overlay, with receipt identity' },
   'gbrain-version.ts': { role: 'resolves the loaded gbrain version' },
   'hermetic-env.ts': { role: 'shared keyless environment: strips provider and TypeSafe keys, fresh GBRAIN_HOME, proves System One off' },

@@ -1,0 +1,398 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat34-brainbench-memory",
+  "gbrain_version": "0.60.733.0",
+  "gbrain_pin": "github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50",
+  "started_at": "2026-11-16T22:08:17.460Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 24,
+  "n_scored": 24,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "gbrain_repo": "node_modules/gbrain",
+    "sut_gbrain_version": "0.60.733.0",
+    "harness_sha": "33758dde49084527987e9f9060ec2293e61d0a09",
+    "cmd": [
+      "bun",
+      "src/cli.ts",
+      "eval",
+      "brainbench",
+      "--harness",
+      "all",
+      "--suite",
+      "all",
+      "--json",
+      "--out",
+      "eval/reports/cat34-brainbench-memory/result-mwjtepmc-9dc.json"
+    ],
+    "include_holdout": false,
+    "llm": false,
+    "env_keys_stripped": [],
+    "search_mode": "subprocess-owned (BrainBench hermetic PGLite)",
+    "reranker_enabled": false,
+    "result_nonce": "mwjtepmc-9dc"
+  },
+  "hashes": {
+    "fixtures": "57e72893e5e24283cf19f43c087f8fa459f60be6361d885b9bc75526918a5737"
+  },
+  "finished_at": "2026-11-16T22:10:51.884Z",
+  "data": {
+    "subprocess_exit": 0,
+    "cells": [
+      {
+        "cell": "openclaw/know-to-ask",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 149,
+        "metrics": {
+          "know_to_ask_failure_rate": 0,
+          "false_fire_rate": 0,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 50.1074
+        }
+      },
+      {
+        "cell": "openclaw/push",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 96,
+        "metrics": {
+          "push_precision": 1,
+          "push_recall": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 66.2243
+        }
+      },
+      {
+        "cell": "openclaw/write-back",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 58,
+        "metrics": {
+          "write_back_fidelity": 1,
+          "provenance_accuracy": 1
+        }
+      },
+      {
+        "cell": "openclaw/continuity",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 12,
+        "metrics": {
+          "continuity_rate": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 82.5
+        }
+      },
+      {
+        "cell": "openclaw/trust",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 35,
+        "metrics": {
+          "trust_label_accuracy": 1,
+          "laundering_violations": 0,
+          "self_promotion_violations": 0
+        }
+      },
+      {
+        "cell": "openclaw/state-resolution",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 16,
+        "metrics": {
+          "current_fact_accuracy": 1,
+          "stale_surfaced_as_current": 0,
+          "history_preserved": 1,
+          "lower_tier_supersede_violations": 0
+        }
+      },
+      {
+        "cell": "openclaw/poisoning",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 170,
+        "metrics": {
+          "poison_persist_rate": 0,
+          "flagged_and_labeled_rate": 1,
+          "unconfirmed_preference_activation_rate": 0,
+          "agent_relayed_activation_rate": 0,
+          "poison_activation_rate": 0,
+          "benign_retention": 1,
+          "false_quarantine_rate": 0,
+          "default_persist_unlabeled_rate": 0,
+          "default_activation_unlabeled_rate": 0,
+          "default_benign_retention": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 31.2
+        }
+      },
+      {
+        "cell": "openclaw/deletion",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 5,
+        "metrics": {
+          "residual_after_purge": 0,
+          "receipt_completeness": 1,
+          "resurrection_after_resync": 0
+        }
+      },
+      {
+        "cell": "claude-code/know-to-ask",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 149,
+        "metrics": {
+          "know_to_ask_failure_rate": 0,
+          "false_fire_rate": 0,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 43.6644
+        }
+      },
+      {
+        "cell": "claude-code/push",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 96,
+        "metrics": {
+          "push_precision": 1,
+          "push_recall": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 57.9626
+        }
+      },
+      {
+        "cell": "claude-code/write-back",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 58,
+        "metrics": {
+          "write_back_fidelity": 1,
+          "provenance_accuracy": 1
+        }
+      },
+      {
+        "cell": "claude-code/continuity",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 12,
+        "metrics": {
+          "continuity_rate": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 67.25
+        }
+      },
+      {
+        "cell": "claude-code/trust",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 35,
+        "metrics": {
+          "trust_label_accuracy": 1,
+          "laundering_violations": 0,
+          "self_promotion_violations": 0
+        }
+      },
+      {
+        "cell": "claude-code/state-resolution",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 16,
+        "metrics": {
+          "current_fact_accuracy": 1,
+          "stale_surfaced_as_current": 0,
+          "history_preserved": 1,
+          "lower_tier_supersede_violations": 0
+        }
+      },
+      {
+        "cell": "claude-code/poisoning",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 170,
+        "metrics": {
+          "poison_persist_rate": 0,
+          "flagged_and_labeled_rate": 1,
+          "unconfirmed_preference_activation_rate": 0,
+          "agent_relayed_activation_rate": 0,
+          "poison_activation_rate": 0,
+          "benign_retention": 1,
+          "false_quarantine_rate": 0,
+          "default_persist_unlabeled_rate": 0,
+          "default_activation_unlabeled_rate": 0,
+          "default_benign_retention": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 40.94
+        }
+      },
+      {
+        "cell": "claude-code/deletion",
+        "seam": "production",
+        "gold_failed": 0,
+        "gold_total": 5,
+        "metrics": {
+          "residual_after_purge": 0,
+          "receipt_completeness": 1,
+          "resurrection_after_resync": 0
+        }
+      },
+      {
+        "cell": "codex/know-to-ask",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 149,
+        "metrics": {
+          "know_to_ask_failure_rate": 0,
+          "false_fire_rate": 0,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 47.8658
+        }
+      },
+      {
+        "cell": "codex/push",
+        "seam": "contract",
+        "gold_failed": 39,
+        "gold_total": 96,
+        "metrics": {
+          "push_precision": 1,
+          "push_recall": 0.5938,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 57.9907
+        }
+      },
+      {
+        "cell": "codex/write-back",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 58,
+        "metrics": {
+          "write_back_fidelity": 1,
+          "provenance_accuracy": 1
+        }
+      },
+      {
+        "cell": "codex/continuity",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 12,
+        "metrics": {
+          "continuity_rate": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 158.0833
+        }
+      },
+      {
+        "cell": "codex/trust",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 35,
+        "metrics": {
+          "trust_label_accuracy": 1,
+          "laundering_violations": 0,
+          "self_promotion_violations": 0
+        }
+      },
+      {
+        "cell": "codex/state-resolution",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 16,
+        "metrics": {
+          "current_fact_accuracy": 1,
+          "stale_surfaced_as_current": 0,
+          "history_preserved": 1,
+          "lower_tier_supersede_violations": 0
+        }
+      },
+      {
+        "cell": "codex/poisoning",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 170,
+        "metrics": {
+          "poison_persist_rate": 0,
+          "flagged_and_labeled_rate": 1,
+          "unconfirmed_preference_activation_rate": 0,
+          "agent_relayed_activation_rate": 0,
+          "poison_activation_rate": 0,
+          "benign_retention": 1,
+          "false_quarantine_rate": 0,
+          "default_persist_unlabeled_rate": 0,
+          "default_activation_unlabeled_rate": 0,
+          "default_benign_retention": 1,
+          "source_isolation_violations": 0,
+          "avg_injected_tokens": 51.5
+        }
+      },
+      {
+        "cell": "codex/deletion",
+        "seam": "contract",
+        "gold_failed": 0,
+        "gold_total": 5,
+        "metrics": {
+          "residual_after_purge": 0,
+          "receipt_completeness": 1,
+          "resurrection_after_resync": 0
+        }
+      }
+    ],
+    "seed_failures": [],
+    "expected_suites": {
+      "suites": [
+        "know-to-ask",
+        "push",
+        "write-back",
+        "continuity",
+        "trust",
+        "state-resolution",
+        "poisoning",
+        "deletion"
+      ],
+      "source": "fixture-schema"
+    },
+    "missing_suites": [],
+    "gate": "production-seam cells gate the verdict; contract-seam cells are informational",
+    "informational_failures": [
+      {
+        "cell": "codex/push",
+        "seam": "contract",
+        "gold_failed": 39,
+        "gold_total": 96
+      }
+    ],
+    "result_artifact": "eval/reports/cat34-brainbench-memory/result.json"
+  },
+  "accounting": {
+    "planned": 24,
+    "attempted": 24,
+    "scored": 24,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "cost": null,
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "99d9b946016dd21f4b390119707447c4631201ac5724120df1c1b74ab5d8eb23",
+      "scheme": "git-index-blob-v1",
+      "files": 16118,
+      "git_head": "33758dde49084527987e9f9060ec2293e61d0a09",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#6ce7195b44a034f85aec811f11fbf862db376f50",
+      "declared_sha": "6ce7195b44a034f85aec811f11fbf862db376f50",
+      "version": "0.60.733.0",
+      "package_sha256": "3d0df978d2bd2e5837eb196a8c604762a62eea88a0010efb8a612ff5bf0a20cf",
+      "loaded_git_head": null
+    }
+  }
+}

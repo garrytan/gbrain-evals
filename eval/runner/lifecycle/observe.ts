@@ -4,6 +4,7 @@
  * which links and timeline rows each page reports, and which facts recall
  * returns. Scoring against the ledger happens in `score.ts`.
  */
+import { storedFactText, type Unquote } from '../quoted-reads.ts';
 import type { CallResult, Driver } from './drivers.ts';
 import { IDENTITIES, PRIVATE_ID, PUBLIC_TWIN_ID, identityById, versionAt } from './scenario.ts';
 
@@ -82,7 +83,7 @@ export const FACT_ENTITIES = ['people/alice-example', 'people/bob-example', 'peo
 
 export async function observe(
   driver: Driver,
-  opts: { search?: boolean; facts?: boolean; searchIds?: string[]; extraSources?: string[]; oldSlugs?: string[] } = {},
+  opts: { search?: boolean; facts?: boolean; searchIds?: string[]; extraSources?: string[]; oldSlugs?: string[]; unquote?: Unquote } = {},
 ): Promise<Snapshot> {
   const o = new Observer(driver);
   const snap: Snapshot = {
@@ -131,7 +132,7 @@ export async function observe(
       const r = await o.call('recall', { entity });
       if (!r.ok) { snap.facts[entity] = { active: [], error: r.error }; continue; }
       const facts = asArray(r.data, ['facts']).filter(f => f.expired_at == null).map(f => ({
-        fact_id: String(f.fact_id ?? f.id), fact: String(f.fact ?? ''), entity_slug: f.entity_slug == null ? null : String(f.entity_slug),
+        fact_id: String(f.fact_id ?? f.id), fact: storedFactText(String(f.fact ?? ''), f.quoted, opts.unquote), entity_slug: f.entity_slug == null ? null : String(f.entity_slug),
       }));
       snap.facts[entity] = { active: facts };
     }
@@ -186,6 +187,24 @@ function namedSlugs(data: unknown, out: Set<string> = new Set()): Set<string> {
   return out;
 }
 
+/**
+ * A gbrain notice can end with `fix: <op> <arguments>`, the same call again with our own arguments (since v0.60.733.0
+ * `recall_hint` repeats a `query` as `question`). A probe's own query coming back is not the page's content, so a
+ * `fix:` line whose every argument value is one the probe sent is dropped before markers are matched.
+ */
+export function withoutEchoedCall(raw: string, args: Record<string, unknown>): string {
+  const sent = new Set(Object.values(args).map(String));
+  return raw.split('\n').filter(line => {
+    const m = line.match(/^fix: \S+ (\{.*\})$/);
+    if (!m) return true;
+    try {
+      return !Object.values(JSON.parse(m[1]) as Record<string, unknown>).every(v => sent.has(String(v)));
+    } catch {
+      return true;
+    }
+  }).join('\n');
+}
+
 function stringsIn(data: unknown): string[] {
   return Array.isArray(data) ? data.filter((x): x is string => typeof x === 'string') : [];
 }
@@ -206,23 +225,26 @@ export async function probeLeaks(driver: Driver): Promise<LeakProbe[]> {
   const markers = (v: typeof priv) => [v.canary, ...(v.tags ?? []), ...v.timeline.map(t => t.summary.split(' ')[0])];
   const privTokens = markers(priv);
   const pubTokens = markers(pub);
-  const content = (r: CallResult, toks: string[]) => r.ok && toks.some(t => r.raw.includes(t));
+  const content = (text: string, toks: string[]) => toks.some(t => text.includes(t));
   const names = (r: CallResult, slug: string) => r.ok && (namedSlugs(r.data).has(slug) || stringsIn(r.data).includes(slug));
   const probes: LeakProbe[] = [];
-  const push = (name: string, a: CallResult, b: CallResult) => {
-    const content_leak = content(a, privTokens);
+  const push = async (name: string, op: string, aArgs: Record<string, unknown>, bArgs?: Record<string, unknown>) => {
+    const a = await driver.call(op, aArgs);
+    const b = bArgs ? await driver.call(op, bArgs) : a;
+    const aText = withoutEchoedCall(a.raw, aArgs);
+    const content_leak = a.ok && content(aText, privTokens);
     const existence_leak = names(a, privSlug);
     probes.push({
       name, content_leak, existence_leak,
-      control: content(b, pubTokens) || names(b, pubSlug),
+      control: (b.ok && content(withoutEchoedCall(b.raw, bArgs ?? aArgs), pubTokens)) || names(b, pubSlug),
       ...(a.error ? { leak_error: a.error.slice(0, 200) } : {}),
       ...(b.error ? { control_error: b.error.slice(0, 200) } : {}),
-      ...(content_leak || existence_leak ? { evidence: excerpt(a.raw, [...privTokens, privSlug]) } : {}),
+      ...(content_leak || existence_leak ? { evidence: excerpt(aText, [...privTokens, privSlug]) } : {}),
     });
   };
 
   for (const op of ['get_page', 'get_tags', 'get_timeline', 'get_chunks', 'get_versions', 'get_backlinks']) {
-    push(`${op}(named page)`, await driver.call(op, { slug: privSlug }), await driver.call(op, { slug: pubSlug }));
+    await push(`${op}(named page)`, op, { slug: privSlug }, { slug: pubSlug });
   }
   const tokenSearches: Array<[string, string, string, string]> = [
     ['search', 'page marker', priv.canary, pub.canary],
@@ -232,7 +254,7 @@ export async function probeLeaks(driver: Driver): Promise<LeakProbe[]> {
     ['search', 'tag marker', priv.tags![0], pub.tags![0]],
   ];
   for (const [op, label, a1, b1] of tokenSearches) {
-    push(`${op}(${label})`, await driver.call(op, { query: a1, limit: 10 }), await driver.call(op, { query: b1, limit: 10 }));
+    await push(`${op}(${label})`, op, { query: a1, limit: 10 }, { query: b1, limit: 10 });
   }
   const lists: Array<[string, Record<string, unknown>]> = [
     ['list_pages', { limit: 100 }],
@@ -242,10 +264,7 @@ export async function probeLeaks(driver: Driver): Promise<LeakProbe[]> {
     ['search', { query: 'offsite planning', limit: 20 }],
     ['query', { query: 'offsite planning', limit: 20 }],
   ];
-  for (const [op, args] of lists) {
-    const r = await driver.call(op, args);
-    push(`${op}(listing)`, r, r);
-  }
+  for (const [op, args] of lists) await push(`${op}(listing)`, op, args);
   return probes;
 }
 

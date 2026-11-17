@@ -2,6 +2,136 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.240] - 2026-11-17
+
+### The Ubicloud runner keeps the shared vCPU lines and puts a lifetime on every VM
+
+- `scripts/ubicloud/ubi-runner.sh` reads the project's usage before every VM it creates and refuses, before any create
+  request, unless the project's VMs stay at or under 464 vCPUs and the caller's team (every owner tag with the same
+  leading letters, the caller's own VMs included) at or under 208. A usage read that fails, or a VM size that names no
+  vCPU count, refuses too. Creates from one machine take turns through that check, and `ubi-runner.sh room -s <size>`
+  prints how many more VMs of a size fit, for launchers that start VMs from several machines.
+  `UBI_QUOTA_WAIT=<seconds>` waits for room instead of refusing.
+- Every VM's name now carries its lifetime, `-t<hours>` from `UBI_TTL_HOURS` (default 12), and every launch first
+  destroys the caller's own VMs whose lifetime has ended (`ubi-runner.sh reap` does it on demand; `UBI_REAP=0` skips
+  it), never another owner's. So a VM kept after a failed pull or a lost session, or left by a killed launcher, stops
+  billing at its owner's next launch after its lifetime ends. `up`, `run`, `reap` and `room` refuse without
+  `UBI_OWNER`.
+- The SOTA loop's window launcher (`eval/runner/sota/ubicloud/run.sh`) launches again through this runner. It records
+  each window in flight until its final pull lands, refuses the next launch and fails its teardown check while one is
+  outstanding, printing the pull command, and `run.sh pull <window>` stops the window's command, brings the state
+  back once it has exited and destroys the VM. It never reaps, so nothing destroys its VMs automatically: an expired
+  one may hold a window's only ledger. While any of its VMs exists, expired or not, it refuses to launch, and it names
+  each one past its lifetime with its age, so a person pulls it or destroys it by hand.
+
+## [0.10.239] - 2026-11-17
+
+### The secrets check accepts synthetic labels in published lifecycle and privacy receipts
+
+- The secrets check that runs before a push now accepts two values it flagged in published receipts under
+  `docs/benchmarks/*/counted/`: the lifecycle matrix's synthetic identity labels (`alice_maps`, `exachen_lang`,
+  `frank_email`) and N6's sentence describing its expired-token probe. Each entry covers only that exact value in those
+  receipt files, so any other value there is still checked.
+
+### The keyless correctness checks hold at gbrain v0.60.733.0, and two numbers got worse
+
+- **What changed.** [The November 16 keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md) reran the
+  correctness checks that need no API key at gbrain's newest release, `6ce7195b4` (v0.60.733.0). Updates (388 of 388,
+  never stale), `forget` (0 prohibited outputs), privacy on Postgres over real HTTP (155 of 155 cells, 0 leaks), dates
+  (513 of 513), name resolution (0 wrong merges) and the lifecycle matrix's `forget` and remote-access contracts hold.
+  README's rows for updates, `forget`, privacy and chat formats now name `6ce7195b4`; large pages keep `7a6bdd3`,
+  because the 128 MiB PGLite slice passed the runner's memory ceiling on the rerun's host at both builds.
+- **What got better.** `find-contradictions` with no `--source` now reads the latest stored run (bug N2-2, gbrain
+  #6784), 4 more of the 15 retrieval failure shapes pass, and the search confidence grade separates answerable from
+  unanswerable questions (100 of 120 answerable graded `moderate`, was 40).
+- **What got worse.** Keyword-only recall on reworded one-hop relationship questions fell from 0.476 → 0.572 to 0.380 →
+  0.511 (gbrain #7201), and a forwarded FYI email that forwards a question now opens an open loop (precision 53 of 56,
+  was 53 of 53; gbrain #9246). README notes both.
+- **Harness fixes.** N4 and the lifecycle matrix read `recall`'s quote-fenced facts through gbrain's own unquote, the
+  lifecycle leak probes ignore a notice that repeats their own query, the lifecycle catch-up sweep passes `--yes` to a
+  build whose `embed` asks for consent, the kept-run VM script runs the lifecycle matrix outside the checkout, the
+  lifecycle and N5 runners keep VM paths out of their receipts, and N4 stops as a harness limit on a build that quotes
+  facts without an unquote helper. No earlier receipt's numbers change.
+
+## [0.10.238] - 2026-11-17
+
+### Code review skips the keyless re-pin's raw run receipts
+
+- **What changed.** The code review that runs before a pull request is marked ready now leaves out
+  `docs/benchmarks/2026-11-16-w0-keyless-repin/counted/**`, the raw run output of the November 16 keyless re-pin: JSON
+  receipts, text logs, tree listings and three generated Markdown summaries, about 10.9 MB of diff. With them in, that
+  re-pin's results pull request has an 11.1 MB review diff, over the review's 2 MB limit, so no reviewer could read it.
+- **What stays the same.** The files stay in the repository, and CI's receipt test still reads the JSON receipts. The
+  results report, its preregistration and its repro and VM scripts are still reviewed. No score or verdict changes.
+
+- **BG1 dev loop: score any gbrain build on the changing-facts classes in about an hour.** `bun eval/runner/bg1/dev-loop.ts run` runs gbrain's newest release tag (or any tag, branch or commit given with `--gbrain`) on BG1's three public dev worlds, read by Claude Opus 5.5 and graded by GPT-6 Astra, and prints accuracy, exposure and the gap to the memory-bank and extract-first servers for each class S1 to S8, with paired 95% intervals and the smallest change each class can show. The two servers' rows are cached from BG1 stage 1 (`eval/data/changing-facts-v1/dev/baselines/stage1-opus.json`), so a run pays only for gbrain. gbrain's container clock is pinned to the dev worlds' question day with libfaketime, so time-relative questions keep their meaning on any later date; sealed cells keep the 14-day wall-clock check. `why` lists every missed S1 and S5 to S8 question with gbrain's context and which needed values it held, beside each server's context. `run --overlay <gbrain key>=<value>`, repeatable, sets one of the six search keys on gbrain's arm (for example `search.evidence_date_header=true`) so two runs of one gbrain commit can compare a setting on and off; an unknown key, a bad value or a key gbrain's config does not list at that commit refuses before any VM starts, and the overlay is recorded in run.json, each cell's run-config, the score header and the why rows. `score --against` refuses two runs that differ in anything but their overlay and gbrain ref unless given `--allow-run-diff`. After its cell, each world's VM keeps gbrain's brain as it stood after the last question (`brain/gbrain-defaults.tar`) and lists every idle upkeep run gbrain logged, with its duration and outcome (`upkeep.ndjson`). Before launching, `run` destroys the launching owner's dev-loop VMs older than 7 hours, and after the run it lists any of its VMs still standing, with the commands to pull and destroy each, and exits 4. Its room check now counts the launching owner's own VMs against the crew's 208-vCPU line.
+
+## [0.10.237] - 2026-11-16
+
+### Changing-facts battleground: corrected exposure for withdrawn facts
+
+- **Corrected.** [docs/benchmarks/2026-11-15-changing-facts-battleground-results.md](docs/benchmarks/2026-11-15-changing-facts-battleground-results.md)
+  now says gbrain's contexts held the withdrawal for 85% of the withdrawn-fact (S5) questions, against 95% for the
+  memory-bank server and 97% for the extract-first server. It first said 60% against 52% and 80%, and put gbrain's S5
+  loss to the memory-bank server down to reading; with the corrected figures, gbrain's context held the withdrawal less
+  often than both servers' by more than its S5 loss to each. The published count took a call-off anywhere in the
+  context; the corrected one needs the entity, the withdrawn value and a call-off word in one sentence. Hybrid search's
+  contexts held the right value for 20% of all questions, not 23%. The corrected figures sit in
+  `exposure-correction.json` beside the unchanged `verdict.json`, and [docs/corrections.md](docs/corrections.md) lists
+  the correction. No accuracy figure, interval or verdict changes.
+
+### A re-pin needs a new row in the SkillOpt replay test only when gbrain's answers change
+
+- **What changed.** `test/eval/skillopt-tool-calls.test.ts` replays GPT-6.1 Sol's 651 recorded SkillOpt calls and
+  keeps the counts for each gbrain pin. A pin with no row of its own must now give the newest row's counts, instead of
+  failing because it has no row, so a re-pin that changes nothing there passes as is. When gbrain changes the counts,
+  the test still fails until the new pin gets its row. Two limits in [README.md](README.md) and two lines in
+  [docs/gbrain-under-test.md](docs/gbrain-under-test.md) name `6ce7195b4` (v0.60.733.0), where they were checked,
+  instead of "the pin".
+- **Why.** A daily re-pin should stay mechanical, and a claim checked at one commit shouldn't move to the next pin
+  unchecked.
+
+## [0.10.236] - 2026-11-16
+
+### One page names the gbrain pin, and `bump` updates it
+
+- **What changed.** [docs/gbrain-under-test.md](docs/gbrain-under-test.md#the-pin) is now the only page that names the
+  gbrain version and commit this repository installs. README, the hub pages in `docs/` and `eval/` and three runner
+  READMEs link to it, and the docs index names gbrain-evals by `VERSION` instead of a stale v0.10.186.
+  `bun eval/runner/gbrain-pin.ts bump` rewrites that page's pin line, adds the page's changelog entry and writes a
+  `changelog.d` fragment, so a re-pin pull request is `package.json`, `bun.lock`, that page and the fragment. The page
+  says its descriptions were last read against v0.60.733.0. `bump` also refuses to move to a lower version, and says
+  so when restoring `node_modules` after a failed install fails too.
+- **Checks.** `scripts/verify-documentation-refresh.py` checks the pin sentence on that page only, and
+  `test/eval/docs-pin-claims.test.ts` fails when another page's current state names a commit or release in a
+  sentence about what this repository installs.
+- **Why.** gbrain tags several releases a day and this repository re-pins daily, so a re-pin should change one page,
+  not sixteen.
+
+## [0.10.235] - 2026-11-16
+
+### Tests run against gbrain's newest release, and one command keeps the pin there
+
+- **What changed.** `package.json` and `bun.lock` move the `gbrain` dependency from v0.60.623.0 (`d253ec0ff`) to
+  v0.60.733.0 (`6ce7195b4`), gbrain's newest release on 2026-11-16, 110 releases and 2,325 commits later.
+  `bun eval/runner/gbrain-pin.ts bump` finds gbrain's newest release tag on master, moves the pin and `bun.lock` to
+  it, and prints the commit range and gbrain's changelog in between; it exits 2 when that release is already pinned.
+  [CLAUDE.md](CLAUDE.md#choose-the-gbrain-build) gains "Choose the gbrain build": every new run measures the newest
+  release at launch, an experiment's build freezes once its counted runs start, and an older build runs only when the
+  question is about it. `gbrain-cues` and `gbrain-reader` stay frozen at the experiments' pins.
+- **What gbrain does now.** [README.md](README.md) and [docs/gbrain-under-test.md](docs/gbrain-under-test.md) describe
+  the new pin: keyless search that finds pages holding most of a question's words, the conversation archive, brains for
+  a company or for several people, two new opt-in ranking keys, and changes to agent tool reads, deletes and purges,
+  idle upkeep and Postgres TLS. The hub pages name the new pin. No result was rerun, and every row keeps the commit it
+  was measured at; the keyless correctness checks, Cats 37 to 39 included, pass at the new pin.
+- **Harness fixes for the new pin.** The typecheck declares the `DOM.AsyncIterable` library, because gbrain now passes
+  Bun's stdin stream where an async iterable is expected. The test preload also blanks `PPLX_API_KEY`, a Perplexity
+  key gbrain now reads, so no test can reach that provider. The SkillOpt replay tests record the new pin's answers to
+  GPT-6.1 Sol's recorded calls: all 38 graph calls read, and the 169 recorded-time page reads stop only because the
+  test brain has no recorded page at that instant.
+- **Why.** Every new run measures gbrain's newest release at the moment it starts, so results describe the gbrain
+  people install today.
+
 ## [0.10.234] - 2026-11-16
 
 ### Merging this repository needs gstack 1.97.0.0 or later

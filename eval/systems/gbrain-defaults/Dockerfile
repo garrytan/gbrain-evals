@@ -8,6 +8,9 @@ FROM ${GBRAIN_BUN_IMAGE} AS bun
 FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
 ARG GBRAIN_SHA=f05943e653fd9d938b343b1774a35325ba792271
 ARG GBRAIN_BUN_IMAGE
+# BG1's dev loop (eval/runner/bg1/dev-loop.ts) builds with GBRAIN_FAKETIME_LIB=1 to pin the container's wall clock;
+# every other build leaves libfaketime out.
+ARG GBRAIN_FAKETIME_LIB=0
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 ENV BUN_INSTALL=/opt/bun PATH=/opt/bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin PYTHONUNBUFFERED=1 GBRAIN_SHA=${GBRAIN_SHA} GBRAIN_BUN_IMAGE=${GBRAIN_BUN_IMAGE}
 RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx \
@@ -15,6 +18,10 @@ RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx \
  && gbrain --version \
  && useradd --uid 10001 --create-home --shell /usr/sbin/nologin gbrain \
  && mkdir -p /data /app/_shim /app/gbrain-defaults && chown gbrain:gbrain /data
+RUN if [ "$GBRAIN_FAKETIME_LIB" = 1 ]; then \
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends libfaketime >/dev/null && rm -rf /var/lib/apt/lists/* \
+      && ln -s "$(dpkg -L libfaketime | grep '/libfaketime\.so\.1$')" /usr/local/lib/libfaketime.so.1; \
+    fi
 COPY eval/systems/_shim/shim.py /app/_shim/shim.py
 COPY eval/systems/gbrain-defaults/shim.py eval/systems/gbrain-defaults/capability.json /app/gbrain-defaults/
 USER gbrain
