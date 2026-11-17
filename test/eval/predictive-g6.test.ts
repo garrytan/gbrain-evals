@@ -3,12 +3,13 @@
  * built task with no gbrain; the episodes run the real gbrain serve (remote caller) and gbrain call (local caller) with
  * scripted models, and the paid job runs against a fake Anthropic upstream behind the real paid-request guard.
  */
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, spyOn, test } from 'bun:test';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, installPaidRequestGuard } from '../../eval/runner/budget-ledger.ts';
 import { HERMETIC_KEY_PATTERN, HERMETIC_STRIPPED_KEYS } from '../../eval/runner/hermetic-env.ts';
+import { GbrainCallArm, GbrainMcpArm } from '../../eval/runner/predictive/cli-arm.ts';
 import { g6Tasks, g6World, probeReachable, runOutOfViewEpisode, scoreOutOfViewEpisode, summarizeOutOfView } from '../../eval/runner/predictive/out-of-view/agent.ts';
 import { runPaid } from '../../eval/runner/predictive/paid.ts';
 import { paidJobs, planUnit, scorecards } from '../../eval/runner/predictive/run.ts';
@@ -96,6 +97,25 @@ describe('G6 episodes on the real gbrain', () => {
     expect(remote).toMatchObject({ caller: 'remote', verdict: 'abstained_correctly', out_of_view: tasks[hidden].out_of_view.remote });
     expect(careless).toMatchObject({ verdict: 'answered_without_gold', success: false });
     expect(local.brain_calls).toBe(2);
+  }, 240_000);
+
+  test('a failed probe on either caller scores the episode harness_error before the agent runs, with no model call', async () => {
+    const inView = tasks[hidden].gold.find(s => !tasks[hidden].out_of_view.remote.includes(s))!;
+    const lockTimeout = 'Error: GBrain: Timed out waiting for PGLite data-dir lock at <tmp>/brain.pglite.lock. Retry after the holder finishes.';
+    for (const [caller, Arm] of [['local', GbrainCallArm], ['remote', GbrainMcpArm]] as const) {
+      const original: (name: string, args: Record<string, unknown>) => Promise<string> = Arm.prototype.call;
+      const spy = spyOn(Arm.prototype, 'call').mockImplementation(async function (this: unknown, name: string, args: Record<string, unknown>) {
+        return args.slug === inView ? lockTimeout : original.call(this, name, args);
+      });
+      let asked = 0;
+      try {
+        const row = await runOutOfViewEpisode({ world, index: hidden, caller, trial: 0, model: 'scripted-fake', scripted: () => { asked++; throw new Error('the agent ran'); } });
+        expect(row).toMatchObject({ caller, stop: 'harness_error', verdict: 'invalid', cause: 'harness_error', brain_calls: 0, usd: 0, out_of_view: tasks[hidden].out_of_view[caller] });
+        expect(asked).toBe(0);
+      } finally {
+        spy.mockRestore();
+      }
+    }
   }, 240_000);
 
   test('a real-model episode refuses without the paid-arm run id', async () => {
