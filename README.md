@@ -504,10 +504,10 @@ rows with a measured no-gbrain number, and each names its own. Two rows gained o
 sealed worlds show the same files with `grep` at 318 of 600 (53.0%) against gbrain's 382 of 600 (63.7%), where the row
 showed only the gap, and the sealed whole-conversation row shows the question alone at 40 of 200, from the set's
 solvability check. Twelve rows whose alternative was never run moved to a second table that names the no-gbrain arm
-being measured on the same tasks, reader and judge. Twenty rows that check gbrain's own behaviour (updates, `forget`,
-privacy, chat formats, large pages, sync, table repair, slug conflicts, forecasts, agent safety, takes, scoped vector
-search, the graph walk engine and the held-out multi-relation planner) moved unchanged to a third table with no
-comparison column. No gbrain number changed.
+being measured on the same tasks, reader and judge. Nineteen rows that check gbrain's own behaviour (updates,
+`forget`, privacy, chat formats, large pages, sync, table repair, slug conflicts, forecasts, agent safety, takes,
+scoped vector search, the graph walk engine and the held-out multi-relation planner) moved unchanged to a third table
+with no comparison column. No gbrain number changed.
 
 ### 2026-11-16: Updates, `forget`, privacy and chat formats measured at gbrain v0.60.733.0
 
