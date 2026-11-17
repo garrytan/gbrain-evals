@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" width="920" height="420" role="img" aria-label="Latency ratio against brain size" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<rect width="920" height="420" fill="#0a0a0a"/>
+<text x="24" y="32" font-size="20" fill="#e5e7eb" text-anchor="start" font-weight="700">PGLite time as a multiple of Postgres + pgvector time, by brain size</text>
+<text x="24" y="52" font-size="12" fill="#9ca3af" text-anchor="start" font-weight="400">Geometric mean ratio of paired per-query times, 95% interval. Below the 1x line the other engine is faster. Log axis.</text>
+<rect x="24" y="64" width="10" height="10" rx="2" fill="#f97316"/>
+<text x="40" y="74" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">search_hybrid_rrf</text>
+<rect x="214" y="64" width="10" height="10" rx="2" fill="#38bdf8"/>
+<text x="230" y="74" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">search_keyword</text>
+<rect x="404" y="64" width="10" height="10" rx="2" fill="#16a34a"/>
+<text x="420" y="74" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">search_vector</text>
+<rect x="594" y="64" width="10" height="10" rx="2" fill="#c084fc"/>
+<text x="610" y="74" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">get_page</text>
+<line x1="90" y1="333.4988564781369" x2="860" y2="333.4988564781369" stroke="#262626" />
+<text x="82" y="337.4988564781369" font-size="11" fill="#9ca3af" text-anchor="end" font-weight="400">0.1x</text>
+<line x1="90" y1="276.9602421929439" x2="860" y2="276.9602421929439" stroke="#262626" />
+<text x="82" y="280.9602421929439" font-size="11" fill="#9ca3af" text-anchor="end" font-weight="400">0.25x</text>
+<line x1="90" y1="234.1904315626535" x2="860" y2="234.1904315626535" stroke="#262626" />
+<text x="82" y="238.1904315626535" font-size="11" fill="#9ca3af" text-anchor="end" font-weight="400">0.5x</text>
+<line x1="90" y1="191.4206209323631" x2="860" y2="191.4206209323631" stroke="#9ca3af" stroke-dasharray="4 3"/>
+<text x="82" y="195.4206209323631" font-size="11" fill="#9ca3af" text-anchor="end" font-weight="400">1x</text>
+<line x1="90" y1="148.65081030207273" x2="860" y2="148.65081030207273" stroke="#262626" />
+<text x="82" y="152.65081030207273" font-size="11" fill="#9ca3af" text-anchor="end" font-weight="400">2x</text>
+<line x1="90" y1="105.88099967178235" x2="860" y2="105.88099967178235" stroke="#262626" />
+<text x="82" y="109.88099967178235" font-size="11" fill="#9ca3af" text-anchor="end" font-weight="400">4x</text>
+<text x="282.5" y="364" font-size="12" fill="#e5e7eb" text-anchor="middle" font-weight="400">1,000 pages</text>
+<text x="667.5" y="364" font-size="12" fill="#e5e7eb" text-anchor="middle" font-weight="400">10,000 pages</text>
+<line x1="261.5" y1="173.5976009141771" x2="261.5" y2="172.4270243311938" stroke="#f97316" stroke-width="3" stroke-linecap="round"/>
+<circle cx="261.5" cy="173.00276693235864" r="4" fill="#f97316" stroke="#0a0a0a"/>
+<line x1="646.5" y1="170.10586544500688" x2="646.5" y2="166.6000547281341" stroke="#f97316" stroke-width="3" stroke-linecap="round"/>
+<circle cx="646.5" cy="168.37385992422583" r="4" fill="#f97316" stroke="#0a0a0a"/>
+<line x1="275.5" y1="170.90555865199863" x2="275.5" y2="169.11343303371012" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+<circle cx="275.5" cy="170.01093410272304" r="4" fill="#38bdf8" stroke="#0a0a0a"/>
+<line x1="660.5" y1="175.90966294527726" x2="660.5" y2="168.84075691083643" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+<circle cx="660.5" cy="172.4022908956397" r="4" fill="#38bdf8" stroke="#0a0a0a"/>
+<line x1="289.5" y1="174.99766400183321" x2="289.5" y2="173.45830774194894" stroke="#16a34a" stroke-width="3" stroke-linecap="round"/>
+<circle cx="289.5" cy="174.21962021411443" r="4" fill="#16a34a" stroke="#0a0a0a"/>
+<line x1="674.5" y1="177.2713319227144" x2="674.5" y2="175.95169325614813" stroke="#16a34a" stroke-width="3" stroke-linecap="round"/>
+<circle cx="674.5" cy="176.61457189964884" r="4" fill="#16a34a" stroke="#0a0a0a"/>
+<line x1="303.5" y1="194.5393308628007" x2="303.5" y2="188.22882380803821" stroke="#c084fc" stroke-width="3" stroke-linecap="round"/>
+<circle cx="303.5" cy="191.34543100925882" r="4" fill="#c084fc" stroke="#0a0a0a"/>
+<line x1="688.5" y1="138.44372423172317" x2="688.5" y2="133.40230013295928" stroke="#c084fc" stroke-width="3" stroke-linecap="round"/>
+<circle cx="688.5" cy="135.90742427858183" r="4" fill="#c084fc" stroke="#0a0a0a"/>
+</svg>

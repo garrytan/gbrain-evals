@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" width="920" height="470" role="img" aria-label="Import, startup and footprint" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<rect width="920" height="470" fill="#0a0a0a"/>
+<text x="24" y="32" font-size="20" fill="#e5e7eb" text-anchor="start" font-weight="700">Import, cold start, memory and disk, 10,000 pages</text>
+<text x="24" y="52" font-size="12" fill="#9ca3af" text-anchor="start" font-weight="400">One measured run per engine, so no interval. Each row has its own scale.</text>
+<rect x="24" y="66" width="10" height="10" rx="2" fill="#16a34a"/>
+<text x="40" y="76" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">Postgres + pgvector</text>
+<rect x="194" y="66" width="10" height="10" rx="2" fill="#38bdf8"/>
+<text x="210" y="76" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">PGLite</text>
+<text x="24" y="110" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">Bulk import of 10,000 pages, pages/s (higher is better)</text>
+<rect x="420" y="96" width="360" height="16" rx="2" fill="#16a34a"/>
+<text x="788" y="109" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">63.7</text>
+<rect x="420" y="118" width="168.00638016404153" height="16" rx="2" fill="#38bdf8"/>
+<text x="596.0063801640415" y="131" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">29.8</text>
+<text x="24" y="176" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">Chunk upserts during import, chunks/s (higher is better)</text>
+<rect x="420" y="162" width="360" height="16" rx="2" fill="#16a34a"/>
+<text x="788" y="175" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">216</text>
+<rect x="420" y="184" width="149.21922389696707" height="16" rx="2" fill="#38bdf8"/>
+<text x="577.219223896967" y="197" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">89.4</text>
+<text x="24" y="242" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">Cold start to first answer, ms (lower is better)</text>
+<rect x="420" y="228" width="206.35772777807108" height="16" rx="2" fill="#16a34a"/>
+<text x="634.3577277780711" y="241" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">507</text>
+<rect x="420" y="250" width="360" height="16" rx="2" fill="#38bdf8"/>
+<text x="788" y="263" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">885</text>
+<text x="24" y="308" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">Peak memory (engine plus server), MB (lower is better)</text>
+<rect x="420" y="294" width="79.67023430720278" height="16" rx="2" fill="#16a34a"/>
+<text x="507.6702343072028" y="307" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">484</text>
+<rect x="420" y="316" width="360" height="16" rx="2" fill="#38bdf8"/>
+<text x="788" y="329" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">2,188</text>
+<text x="24" y="374" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">On-disk size, no WAL, MB (lower is better)</text>
+<rect x="420" y="360" width="345.07858278112514" height="16" rx="2" fill="#16a34a"/>
+<text x="773.0785827811251" y="373" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">411</text>
+<rect x="420" y="382" width="360" height="16" rx="2" fill="#38bdf8"/>
+<text x="788" y="395" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">429</text>
+<text x="24" y="456" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">Memory and disk definitions are in the report. Cold start has a warm OS file cache.</text>
+</svg>

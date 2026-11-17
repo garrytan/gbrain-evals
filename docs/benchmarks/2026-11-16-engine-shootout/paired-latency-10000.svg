@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440" role="img" aria-label="Paired latency ratio per operation" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<rect width="920" height="440" fill="#0a0a0a"/>
+<text x="24" y="32" font-size="20" fill="#e5e7eb" text-anchor="start" font-weight="700">PGLite time as a multiple of Postgres + pgvector time</text>
+<text x="24" y="54" font-size="12" fill="#9ca3af" text-anchor="start" font-weight="400">Same query on both engines, back to back, random order, 10,000 pages. Dot is the geometric mean ratio, bar is the 95% interval.</text>
+<text x="24" y="72" font-size="12" fill="#9ca3af" text-anchor="start" font-weight="400">Left of the 1x line, PGLite is faster. The 2x line is the preregistered margin.</text>
+<line x1="266.5237397847354" y1="90" x2="266.5237397847354" y2="370" stroke="#262626" />
+<text x="266.5237397847354" y="388" font-size="11" fill="#9ca3af" text-anchor="middle" font-weight="400">0.1x</text>
+<line x1="410.2260510929343" y1="90" x2="410.2260510929343" y2="370" stroke="#262626" />
+<text x="410.2260510929343" y="388" font-size="11" fill="#9ca3af" text-anchor="middle" font-weight="400">0.25x</text>
+<line x1="518.9326531115889" y1="90" x2="518.9326531115889" y2="370" stroke="#262626" />
+<text x="518.9326531115889" y="388" font-size="11" fill="#9ca3af" text-anchor="middle" font-weight="400">0.5x</text>
+<line x1="627.6392551302438" y1="90" x2="627.6392551302438" y2="370" stroke="#9ca3af" stroke-dasharray="4 3"/>
+<text x="627.6392551302438" y="388" font-size="11" fill="#9ca3af" text-anchor="middle" font-weight="400">1x</text>
+<line x1="736.3458571488984" y1="90" x2="736.3458571488984" y2="370" stroke="#fbbf24" stroke-dasharray="4 3"/>
+<text x="736.3458571488984" y="388" font-size="11" fill="#9ca3af" text-anchor="middle" font-weight="400">2x</text>
+<line x1="845.0524591675531" y1="90" x2="845.0524591675531" y2="370" stroke="#262626" />
+<text x="845.0524591675531" y="388" font-size="11" fill="#9ca3af" text-anchor="middle" font-weight="400">4x</text>
+<text x="238" y="114" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">get_page</text>
+<line x1="762.2888675777036" y1="110" x2="775.1024871620618" y2="110" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<circle cx="768.7352966252712" cy="110" r="5" fill="#e5e7eb"/>
+<text x="868" y="114" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">2.46x</text>
+<text x="238" y="144" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_keyword</text>
+<line x1="667.062940014087" y1="140" x2="685.0297428516242" y2="140" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<circle cx="675.9775106402491" cy="140" r="5" fill="#e5e7eb"/>
+<text x="868" y="144" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">1.36x</text>
+<text x="238" y="174" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_vector</text>
+<line x1="663.6020313631009" y1="170" x2="666.9561129739568" y2="170" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<circle cx="665.2712964217259" cy="170" r="5" fill="#e5e7eb"/>
+<text x="868" y="174" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">1.27x</text>
+<text x="238" y="204" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_hybrid_rrf</text>
+<line x1="681.8142586606075" y1="200" x2="690.7248608993259" y2="200" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<circle cx="686.2164393592593" cy="200" r="5" fill="#e5e7eb"/>
+<text x="868" y="204" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">1.45x</text>
+<text x="238" y="234" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_keyword_filtered</text>
+<line x1="634.9428454519738" y1="230" x2="650.7058581483816" y2="230" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<circle cx="642.8308881764581" cy="230" r="5" fill="#e5e7eb"/>
+<text x="868" y="234" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">1.10x</text>
+<text x="238" y="264" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_vector_filtered</text>
+<line x1="477.5449934503245" y1="260" x2="484.4952599837319" y2="260" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<circle cx="481.0030162628782" cy="260" r="5" fill="#e5e7eb"/>
+<text x="868" y="264" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">0.393x</text>
+<text x="238" y="294" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">get_backlinks</text>
+<line x1="776.0548064037121" y1="290" x2="788.9719733013744" y2="290" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<circle cx="782.6640233086148" cy="290" r="5" fill="#e5e7eb"/>
+<text x="868" y="294" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">2.69x</text>
+<text x="238" y="324" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">list_pages</text>
+<line x1="663.8008700953935" y1="320" x2="680.3087974387392" y2="320" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<circle cx="672.2779710716816" cy="320" r="5" fill="#e5e7eb"/>
+<text x="868" y="324" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">1.33x</text>
+<text x="238" y="354" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">get_timeline</text>
+<line x1="544.28650504175" y1="350" x2="564.4361167921949" y2="350" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+<circle cx="554.3929742717985" cy="350" r="5" fill="#e5e7eb"/>
+<text x="868" y="354" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">0.627x</text>
+<text x="24" y="426" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">n = 300 queries per operation. Source: 2026-11-17 receipt, paired.pglite_vs_postgres.latency</text>
+</svg>

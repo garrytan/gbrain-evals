@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 404" width="920" height="404" role="img" aria-label="Cost per 1,000 operations" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<rect width="920" height="404" fill="#0a0a0a"/>
+<text x="24" y="32" font-size="20" fill="#e5e7eb" text-anchor="start" font-weight="700">Cost per 1,000 operations, 1,000 pages</text>
+<text x="24" y="52" font-size="12" fill="#9ca3af" text-anchor="start" font-weight="400">Measured CPU seconds and memory held, priced at 2026-11-16 AWS Fargate list prices. Not a quote. Lower is better.</text>
+<rect x="24" y="66" width="10" height="10" rx="2" fill="#16a34a"/>
+<text x="40" y="76" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">Postgres + pgvector</text>
+<rect x="194" y="66" width="10" height="10" rx="2" fill="#38bdf8"/>
+<text x="210" y="76" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">PGLite</text>
+<text x="178" y="120" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">get_page</text>
+<rect x="190" y="100" width="10.038716410201799" height="16" rx="2" fill="#16a34a"/>
+<text x="208.0387164102018" y="113" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">$4.70e-6</text>
+<rect x="190" y="120" width="9.992790096874657" height="16" rx="2" fill="#38bdf8"/>
+<text x="207.99279009687467" y="133" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">$4.67e-6</text>
+<text x="710" y="114" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">PGLite minus Postgres + pgvector</text>
+<text x="710" y="130" font-size="11" fill="#e5e7eb" text-anchor="start" font-weight="400">-$2.15e-8  (-$1.39e-6 to $9.40e-7)</text>
+<text x="178" y="176" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_keyword</text>
+<rect x="190" y="156" width="131.06789270125262" height="16" rx="2" fill="#16a34a"/>
+<text x="329.0678927012526" y="169" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">$6.13e-5</text>
+<rect x="190" y="176" width="193.263598839305" height="16" rx="2" fill="#38bdf8"/>
+<text x="391.263598839305" y="189" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">$9.04e-5</text>
+<text x="710" y="170" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">PGLite minus Postgres + pgvector</text>
+<text x="710" y="186" font-size="11" fill="#e5e7eb" text-anchor="start" font-weight="400">$2.91e-5  ($2.74e-5 to $3.06e-5)</text>
+<text x="178" y="232" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_vector</text>
+<rect x="190" y="212" width="155.93380505346957" height="16" rx="2" fill="#16a34a"/>
+<text x="353.93380505346954" y="225" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">$7.30e-5</text>
+<rect x="190" y="232" width="209.60350949002512" height="16" rx="2" fill="#38bdf8"/>
+<text x="407.6035094900251" y="245" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">$9.81e-5</text>
+<text x="710" y="226" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">PGLite minus Postgres + pgvector</text>
+<text x="710" y="242" font-size="11" fill="#e5e7eb" text-anchor="start" font-weight="400">$2.51e-5  ($2.25e-5 to $2.75e-5)</text>
+<text x="178" y="288" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_hybrid_rrf</text>
+<rect x="190" y="268" width="256.15000306255274" height="16" rx="2" fill="#16a34a"/>
+<text x="454.15000306255274" y="281" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">$1.20e-4</text>
+<rect x="190" y="288" width="399.99999999999994" height="16" rx="2" fill="#38bdf8"/>
+<text x="598" y="301" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">$1.87e-4</text>
+<text x="710" y="282" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">PGLite minus Postgres + pgvector</text>
+<text x="710" y="298" font-size="11" fill="#e5e7eb" text-anchor="start" font-weight="400">$6.73e-5  ($6.03e-5 to $7.41e-5)</text>
+<text x="24" y="368" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">Separate line: Amazon RDS for PostgreSQL db.t4g.medium (2 vCPU, 4 GB), Single-AZ, us-east-1, on-demand lists at about $47.45 per month</text>
+<text x="24" y="384" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">regardless of query volume. A list-price assumption, not measured here.</text>
+</svg>

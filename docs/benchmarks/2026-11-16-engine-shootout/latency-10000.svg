@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 596" width="920" height="596" role="img" aria-label="Latency per operation" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<rect width="920" height="596" fill="#0a0a0a"/>
+<text x="24" y="32" font-size="20" fill="#e5e7eb" text-anchor="start" font-weight="700">Latency per operation, 10,000 pages</text>
+<text x="24" y="52" font-size="12" fill="#9ca3af" text-anchor="start" font-weight="400">Solid bar is the median (p50). The tick is the 95th percentile (p95). Log scale, milliseconds, lower is better.</text>
+<rect x="24" y="66" width="10" height="10" rx="2" fill="#16a34a"/>
+<text x="40" y="76" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">Postgres + pgvector</text>
+<rect x="194" y="66" width="10" height="10" rx="2" fill="#38bdf8"/>
+<text x="210" y="76" font-size="12" fill="#e5e7eb" text-anchor="start" font-weight="400">PGLite</text>
+<line x1="230" y1="88" x2="230" y2="546" stroke="#262626"/>
+<text x="230" y="564" font-size="11" fill="#9ca3af" text-anchor="middle" font-weight="400">0.100 ms</text>
+<line x1="433.3333333333333" y1="88" x2="433.3333333333333" y2="546" stroke="#262626"/>
+<text x="433.3333333333333" y="564" font-size="11" fill="#9ca3af" text-anchor="middle" font-weight="400">1.00 ms</text>
+<line x1="636.6666666666666" y1="88" x2="636.6666666666666" y2="546" stroke="#262626"/>
+<text x="636.6666666666666" y="564" font-size="11" fill="#9ca3af" text-anchor="middle" font-weight="400">10.0 ms</text>
+<line x1="840" y1="88" x2="840" y2="546" stroke="#262626"/>
+<text x="840" y="564" font-size="11" fill="#9ca3af" text-anchor="middle" font-weight="400">100 ms</text>
+<text x="220" y="108" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">get_page</text>
+<rect x="230" y="96" width="231.02889292495865" height="12" rx="2" fill="#16a34a"/>
+<line x1="522.4872992428793" y1="95" x2="522.4872992428793" y2="109" stroke="#e5e7eb" stroke-width="2"/>
+<text x="530.4872992428793" y="106" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">1.37 / 2.74</text>
+<rect x="230" y="112" width="318.1107647525537" height="12" rx="2" fill="#38bdf8"/>
+<line x1="555.4623203522058" y1="111" x2="555.4623203522058" y2="125" stroke="#e5e7eb" stroke-width="2"/>
+<text x="563.4623203522058" y="122" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">3.67 / 3.99</text>
+<text x="220" y="158" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_keyword</text>
+<rect x="230" y="146" width="344.3454438639493" height="12" rx="2" fill="#16a34a"/>
+<line x1="723.8282057301058" y1="145" x2="723.8282057301058" y2="159" stroke="#e5e7eb" stroke-width="2"/>
+<text x="731.8282057301058" y="156" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">4.94 / 26.8</text>
+<rect x="230" y="162" width="367.71210069863605" height="12" rx="2" fill="#38bdf8"/>
+<line x1="802.3370009269502" y1="161" x2="802.3370009269502" y2="175" stroke="#e5e7eb" stroke-width="2"/>
+<text x="810.3370009269502" y="172" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">6.43 / 65.3</text>
+<text x="220" y="208" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_vector</text>
+<rect x="230" y="196" width="401.89650016741075" height="12" rx="2" fill="#16a34a"/>
+<line x1="648.6850203436478" y1="195" x2="648.6850203436478" y2="209" stroke="#e5e7eb" stroke-width="2"/>
+<text x="656.6850203436478" y="206" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">9.47 / 11.5</text>
+<rect x="230" y="212" width="422.18671326717515" height="12" rx="2" fill="#38bdf8"/>
+<line x1="670.6381581345561" y1="211" x2="670.6381581345561" y2="225" stroke="#e5e7eb" stroke-width="2"/>
+<text x="678.6381581345561" y="222" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">11.9 / 14.7</text>
+<text x="220" y="258" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_hybrid_rrf</text>
+<rect x="230" y="246" width="447.91987147584996" height="12" rx="2" fill="#16a34a"/>
+<line x1="757.9832779190151" y1="245" x2="757.9832779190151" y2="259" stroke="#e5e7eb" stroke-width="2"/>
+<text x="765.9832779190151" y="256" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">16.0 / 39.5</text>
+<rect x="230" y="262" width="473.34669388065413" height="12" rx="2" fill="#38bdf8"/>
+<line x1="827.5292343270249" y1="261" x2="827.5292343270249" y2="275" stroke="#e5e7eb" stroke-width="2"/>
+<text x="835.5292343270249" y="272" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">21.3 / 86.8</text>
+<text x="220" y="308" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_keyword_filtered</text>
+<rect x="230" y="296" width="325.68640743572655" height="12" rx="2" fill="#16a34a"/>
+<line x1="673.8223146868066" y1="295" x2="673.8223146868066" y2="309" stroke="#e5e7eb" stroke-width="2"/>
+<text x="681.8223146868066" y="306" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">4.00 / 15.2</text>
+<rect x="230" y="312" width="324.34164263867183" height="12" rx="2" fill="#38bdf8"/>
+<line x1="733.5539832383399" y1="311" x2="733.5539832383399" y2="325" stroke="#e5e7eb" stroke-width="2"/>
+<text x="741.5539832383399" y="322" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">3.94 / 30.0</text>
+<text x="220" y="358" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">search_vector_filtered</text>
+<rect x="230" y="346" width="551.2600007151295" height="12" rx="2" fill="#16a34a"/>
+<line x1="786.5917357604228" y1="345" x2="786.5917357604228" y2="359" stroke="#e5e7eb" stroke-width="2"/>
+<text x="794.5917357604228" y="356" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">51.4 / 54.6</text>
+<rect x="230" y="362" width="469.99938153601397" height="12" rx="2" fill="#38bdf8"/>
+<line x1="725.5311481945781" y1="361" x2="725.5311481945781" y2="375" stroke="#e5e7eb" stroke-width="2"/>
+<text x="733.5311481945781" y="372" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">20.5 / 27.4</text>
+<text x="220" y="408" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">get_backlinks</text>
+<rect x="230" y="396" width="216.10404557898096" height="12" rx="2" fill="#16a34a"/>
+<line x1="508.2629101968139" y1="395" x2="508.2629101968139" y2="409" stroke="#e5e7eb" stroke-width="2"/>
+<text x="516.2629101968139" y="406" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">1.16 / 2.34</text>
+<rect x="230" y="412" width="311.2561357258728" height="12" rx="2" fill="#38bdf8"/>
+<line x1="547.8721289547263" y1="411" x2="547.8721289547263" y2="425" stroke="#e5e7eb" stroke-width="2"/>
+<text x="555.8721289547263" y="422" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">3.39 / 3.66</text>
+<text x="220" y="458" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">list_pages</text>
+<rect x="230" y="446" width="201.4353311202799" height="12" rx="2" fill="#16a34a"/>
+<line x1="533.9273169948522" y1="445" x2="533.9273169948522" y2="459" stroke="#e5e7eb" stroke-width="2"/>
+<text x="541.9273169948522" y="456" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">0.979 / 3.12</text>
+<rect x="230" y="462" width="239.42872502230398" height="12" rx="2" fill="#38bdf8"/>
+<line x1="475.5956154515864" y1="461" x2="475.5956154515864" y2="475" stroke="#e5e7eb" stroke-width="2"/>
+<text x="483.5956154515864" y="472" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">1.50 / 1.61</text>
+<text x="220" y="508" font-size="12" fill="#e5e7eb" text-anchor="end" font-weight="400">get_timeline</text>
+<rect x="230" y="496" width="79.08032248851111" height="12" rx="2" fill="#16a34a"/>
+<line x1="395.94627695603685" y1="495" x2="395.94627695603685" y2="509" stroke="#e5e7eb" stroke-width="2"/>
+<text x="403.94627695603685" y="506" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">0.245 / 0.655</text>
+<rect x="230" y="512" width="47.397562436726275" height="12" rx="2" fill="#38bdf8"/>
+<line x1="308.378986134094" y1="511" x2="308.378986134094" y2="525" stroke="#e5e7eb" stroke-width="2"/>
+<text x="316.378986134094" y="522" font-size="11" fill="#9ca3af" text-anchor="start" font-weight="400">0.171 / 0.243</text>
+</svg>
