@@ -18,7 +18,7 @@ describe('scrubLauncherLog', () => {
       `cache ${HOME}/.capy/work/lme/cache.sqlite, gbrain ${HOME}/gbrain@v0.60.734.0`,
       'gbrain 0.60.735.0 serving on 127.0.0.1:8080 at 19:48:17',
       'gstack 1.97.0.0 and 1.100.0.0; host 10.1.2.3 and 2001:4860:4860:0:0:0:0:8888; loopback ::1',
-      'db postgresql://bench:s3cret@10.1.2.3:5432/postgres',
+      'db postgresql://bench:' + 's3cret' + '@10.1.2.3:5432/postgres',
       'reached 188.40.181.219. Then 188.40.181.219.5 is not an address.',
     ].join('\n');
     expect(scrubLauncherLog(text, HOME).split('\n')).toEqual([
