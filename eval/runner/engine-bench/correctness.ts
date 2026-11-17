@@ -33,7 +33,7 @@
  * Exit: 0 when the stage ran (any Rust verdict but fail), 1 when Rust fails, 3 when a runner errored on any engine.
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import {
@@ -326,6 +326,7 @@ export async function runCorrectness(o: CorrectnessOptions): Promise<{ receipt: 
       const output = join(workDir, `${check.id}-${kind}`);
       mkdirSync(output, { recursive: true });
       const logPath = join(workDir, `${check.id}-${kind}.log`);
+      rmSync(join(output, 'receipt.json'), { force: true });
       const args = [check.script, ...check.args, ...(spec ? ['--gbrain', spec] : []), '--output', output];
       log(`[correctness] ${check.id} on ${kind}: bun ${args.join(' ')}`);
       const start = Date.now();

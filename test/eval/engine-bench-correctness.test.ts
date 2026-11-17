@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -145,9 +145,10 @@ process.exit(plan.exit);
 `;
   const gut: GbrainUnderTest = { root: mkdtempSync(join(tmpdir(), 'correctness-gut-')), version: '0.0.0-fake', overlay: null };
 
-  async function stage(plan: Record<string, unknown>, engines: EvalEngineKind[]) {
+  async function stage(plan: Record<string, unknown>, engines: EvalEngineKind[], seedWork?: (work: string) => void) {
     const dir = mkdtempSync(join(tmpdir(), 'correctness-test-'));
     writeFileSync(join(dir, 'fake.js'), FAKE);
+    seedWork?.(join(dir, 'work'));
     writeFileSync(join(dir, 'plan.json'), JSON.stringify(plan));
     const saved = { plan: process.env.FAKE_PLAN, key: process.env.ZZ_FAKE_API_KEY };
     process.env.FAKE_PLAN = join(dir, 'plan.json');
@@ -161,6 +162,15 @@ process.exit(plan.exit);
     }
   }
   const pass = (metrics: Record<string, number>, na: unknown[] = []) => ({ exit: 0, receipt: { verdict: 'pass', not_applicable: na, data: { metrics } } });
+
+  test('a reused work directory never lends an old receipt to a runner that exits before writing one', async () => {
+    const { receipt } = await stage({ pglite: { exit: 1 } }, ['pglite'], work => {
+      mkdirSync(join(work, 'fake-pglite'), { recursive: true });
+      writeFileSync(join(work, 'fake-pglite', 'receipt.json'), JSON.stringify(pass({ leaks: 0, sealed: 0 }).receipt));
+    });
+    expect(receipt.checks[0]!.engines.pglite!.status).toBe('error');
+    expect(receipt.summary.errored).toEqual(['fake:pglite']);
+  });
 
   test('rust refusal, not_applicable carry-through and the stage receipt', async () => {
     const refusal = evalEngineRefusalMessage(new EvalEngineUnavailable('rust', 'rust_engine_not_in_build', 'not in this build.'), 'fake');
