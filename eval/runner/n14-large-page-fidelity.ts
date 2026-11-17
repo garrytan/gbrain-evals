@@ -1606,6 +1606,8 @@ export function parseNativeIngest(argv: readonly string[]): NativeIngest {
   return raw;
 }
 
+// TODO(engine-bench): on rust, measure these through typed engine reads (stored chunks, segment texts, body manifest)
+// once the Rust engine exposes them, so the quality and floor rules stop being not_applicable there.
 /** Every N14 measurement that reads the database with raw SQL; each is not_applicable on an engine without it (rust). */
 export const N14_SQL_CHECKS = [
   { check: 'N14 ingest outcome: stored page and chunk counts', why: 'count the stored pages and their content_chunks rows (on rust the ingest status comes from write errors alone)' },
