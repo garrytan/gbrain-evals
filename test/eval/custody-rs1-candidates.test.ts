@@ -17,8 +17,8 @@ import {
   planCandidates, recordingAnthropicClient, recordingGeminiClient, validateCandidates, writeCandidateReport, type CandidateReport, type StopRecord,
 } from '../../eval/custody/rs1/validate-candidates.ts';
 import {
-  ABILITIES, ANSWER_FIELD, SLOTS, VALIDATOR_IDS, anthropicClient, buildPublicIndex, fakeClient, geminiClient, validateSet, writeReport,
-  type Ability, type ModelClient, type Options, type PublicIndex,
+  ABILITIES, ANSWER_FIELD, FALLBACK_ID, SLOTS, VALIDATOR_IDS, anthropicClient, buildPublicIndex, fakeClient, geminiClient, validateSet, withFallback,
+  writeReport, type Ability, type ModelClient, type Options, type PublicIndex, type RecordingClient,
 } from '../../eval/custody/rs1/validate.ts';
 import { fakeAsk, fallbackAsk, fallbackRequest, parsePicks, probe, ProbeError, resolvePicks, summaryLines } from '../../eval/custody/rs1/probe-fallback.ts';
 
@@ -993,7 +993,7 @@ describe('rs1_mint.py fifteen planned batches (stubbed BEAM)', () => {
 
 describe('validate.ts', () => {
   test('is byte-identical to the preregistered file', () => {
-    expect(sha(readFileSync(join(RS1, 'validate.ts')))).toBe('7805fa768dd94caae2166faf5bf17a202559c20150398ddac239295ce7ed576e');
+    expect(sha(readFileSync(join(RS1, 'validate.ts')))).toBe('677a2a1492f9700ce34cffbd35cbd3f82354d05f84e2d0c068415b73d22d1646');
   });
 });
 
@@ -1165,5 +1165,164 @@ describe('probe-fallback.ts', () => {
     expect(lines[2]).toContain('candidates_sha256=' + sha(readFileSync(reportPath)));
     for (const probeText of [conv.messages[61].slice(0, 60), String(conv.candidates.event_ordering[1].question)]) expect(r.all + written).not.toContain(probeText);
     expect(listing(cache)).toEqual(before);
+  });
+});
+
+
+// ─── the fallback validator (GST-1886, 2026-11-17) ───────────────────
+
+describe('the fallback validator', () => {
+  let root = '', beam = '', index: PublicIndex;
+  beforeAll(() => { root = scratch('fallback'); beam = fakeBeam(root); index = buildPublicIndex(beam); });
+  const options = (set: string, extra: Partial<Options> = {}): Options => ({ setDir: set, beamDir: beam, reportPath: join(root, 'report.json'), targetTokens: 1_000_000, tolerance: 0.9999, windowTokens: 600, overlapTokens: 60, concurrency: 4, ...extra });
+  const questionsOf = (prompt: string) => between(prompt, '<questions>', '</questions>').trim().split('\n');
+  const HAIKU = VALIDATOR_IDS[1];
+  /** fakeClient with a stop record per prompt: prompts refuse() names come back empty with stop reason refusal. */
+  function recordingFake(id: string, refuse: (prompt: string) => boolean): RecordingClient & { asked: string[] } {
+    const inner = fakeClient(id), stops = new Map<string, StopRecord>(), asked: string[] = [];
+    return {
+      id, stops, asked,
+      async complete(prompt, max) {
+        asked.push(prompt);
+        if (refuse(prompt)) { stops.set(prompt, { stop: 'refusal', output_tokens: 0, blocks: [] }); return ''; }
+        stops.set(prompt, { stop: 'end_turn', output_tokens: 9, blocks: ['text'] });
+        return inner.complete(prompt, max);
+      },
+    };
+  }
+  /** The prompts of a conversation: event_ordering/1's support prompt, and the windows holding message 61. */
+  function prompts(conv: ProbedConversation) {
+    const supportQuestion = String(conv.candidates.event_ordering[1].question);
+    const nonce = (k: number) => /nonce-[0-9a-f]+/.exec(String(conv.candidates.abstention[k].question))![0];
+    const support = (p: string) => p.includes('<question>') && p.includes(supportQuestion);
+    const window = (p: string) => p.includes('<conversation_part>') && p.includes(conv.messages[61].slice(0, 60));
+    const batched = (p: string) => window(p) && questionsOf(p).length > 1;
+    const single = (k: number) => (p: string) => window(p) && questionsOf(p).length === 1 && questionsOf(p)[0].includes(nonce(k));
+    return { support, window, batched, single };
+  }
+  const cachedBy = (dir: string) => files(dir).map(f => readJson(f)).filter(e => e.by).map(e => e.by);
+
+  test('a prompt the validator refuses goes to the fallback through the ledger guard, and only that prompt', async () => {
+    const ledgerPath = join(mkdtempSync(join(root, 'ledger-')), 'l.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5 });
+    const run = BudgetRun.open({ runner: 'rs1-fallback-test', budgetUsd: 5, ledgerPath });
+    const sent: Array<{ model: string; prompt: string }> = [];
+    const refusal = { content: [], stop_reason: 'refusal', stop_details: { type: 'refusal', category: 'bio', explanation: 'sealed text' }, usage: { input_tokens: 90, output_tokens: 0 } };
+    const guard = installPaidRequestGuard(run, { fetchImpl: (async (_input: RequestInfo | URL, init: RequestInit = {}) => {
+      const body = JSON.parse(String(init.body));
+      const prompt = body.messages[0].content as string;
+      sent.push({ model: body.model, prompt });
+      if (prompt.startsWith('error') && body.model === 'claude-haiku-5-5') return new Response('{"error": "sealed text"}', { status: 503 });
+      if (body.model === 'claude-haiku-5-5' ? prompt.startsWith('refused') || prompt.startsWith('both') : prompt.startsWith('both')) return Response.json(refusal);
+      return Response.json({ content: [{ type: 'text', text: '{"supported": true}' }], stop_reason: 'end_turn', usage: { input_tokens: 90, output_tokens: 6 } });
+    }) as unknown as typeof fetch });
+    const primary = recordingAnthropicClient('test-key-not-real');
+    const client = withFallback(primary, recordingAnthropicClient('test-key-not-real', 'claude-sonnet-5-5'));
+    const results: unknown[] = [];
+    try {
+      for (const p of ['ok prompt', 'refused prompt', 'both prompt']) results.push(await client.complete(p, 8192));
+      results.push(await client.complete('error prompt', 8192).catch((e: Error) => e.message));
+    } finally { guard.uninstall(); run.close(); }
+    expect(client.id).toBe(HAIKU);
+    expect(client.fallback.id).toBe(FALLBACK_ID);
+    expect(results).toEqual(['{"supported": true}', '{"supported": true}', '', 'api.anthropic.com answered HTTP 503']);
+    expect(sent.map(s => [s.model, s.prompt])).toEqual([
+      ['claude-haiku-5-5', 'ok prompt'], ['claude-haiku-5-5', 'refused prompt'], ['claude-sonnet-5-5', 'refused prompt'],
+      ['claude-haiku-5-5', 'both prompt'], ['claude-sonnet-5-5', 'both prompt'], ['claude-haiku-5-5', 'error prompt'],
+    ]);
+    expect(client.stops.get('ok prompt')).toEqual({ stop: 'end_turn', output_tokens: 6, blocks: ['text'] });
+    expect(client.stops.get('refused prompt')).toEqual({ stop: 'end_turn', output_tokens: 6, blocks: ['text'], by: FALLBACK_ID });
+    expect(primary.stops.get('refused prompt')).toEqual({ stop: 'refusal', output_tokens: 0, blocks: [], category: 'bio' });
+    expect(client.stops.get('both prompt')).toEqual({ stop: 'refusal', output_tokens: 0, blocks: [], category: 'bio', by: FALLBACK_ID });
+    expect(client.stops.get('error prompt')).toEqual({ stop: 'http_503', output_tokens: null, blocks: [] });
+    expect([...client.answeredBy.keys()]).toEqual(['refused prompt', 'both prompt']);
+    expect(JSON.stringify([...client.stops, ...primary.stops])).not.toContain('sealed');
+    expect(readLedger(ledgerPath).entries.filter(e => e.status === 'reconciled')).toHaveLength(5);
+  });
+
+  test('validate-candidates.ts counts the fallback\'s replies in Haiku\'s place, caches them with its id, and reuses them', async () => {
+    const conv = probedConversation('fallback-candidates', 120);
+    const p = prompts(conv);
+    const set = writeProbedSet(join(root, 'fc'), [conv]);
+    const opts = options(set, { cacheDir: join(root, 'fc', 'cache') });
+    const haiku = recordingFake(HAIKU, q => p.support(q) || p.batched(q));
+    const sonnet = recordingFake(FALLBACK_ID, () => false);
+    const report = await validateCandidates(opts, [fakeClient(VALIDATOR_IDS[0]), withFallback(haiku, sonnet)], index);
+    const c = report.conversations.c001;
+    const refusedPrompts = haiku.asked.filter(q => p.support(q) || p.batched(q));
+    expect(refusedPrompts.length).toBeGreaterThanOrEqual(2);
+    expect(sonnet.asked).toEqual(refusedPrompts);
+    expect(c.status).toBe('checked');
+    expect(c.validator_errors).toEqual([]);
+    expect(c.regrouped).toEqual([]);
+    expect(c.candidates['event_ordering/1']).toEqual({ pass: true, gates: [] });
+    expect(report.fallback).toBe(FALLBACK_ID);
+    expect(report.validators).toEqual([...VALIDATOR_IDS]);
+    expect(report.totals).toMatchObject({ fallback_answers: refusedPrompts.length, fallback_unusable: 0, validator_errors: 0, regrouped_windows: 0 });
+    expect(cachedBy(opts.cacheDir!)).toEqual(refusedPrompts.map(() => FALLBACK_ID));
+    const never = recordingFake(HAIKU, () => { throw new Error('asked again'); });
+    const again = await validateCandidates(opts, [fakeClient(VALIDATOR_IDS[0]), withFallback(never, recordingFake(FALLBACK_ID, () => { throw new Error('asked again'); }))], index);
+    expect(never.asked).toEqual([]);
+    expect(again.conversations.c001).toEqual(c);
+    expect(again.totals).toMatchObject({ fallback_answers: refusedPrompts.length, cached_calls: again.totals.calls });
+  });
+
+  test('validate-candidates.ts fails a candidate on refusal when the fallback refuses too, so the conversation is checked, not incomplete', async () => {
+    const conv = probedConversation('fallback-both', 120);
+    const p = prompts(conv);
+    const set = writeProbedSet(join(root, 'fb'), [conv]);
+    const refuse = (q: string) => p.support(q) || p.batched(q) || p.single(1)(q);
+    const haiku = recordingFake(HAIKU, refuse), sonnet = recordingFake(FALLBACK_ID, refuse);
+    const report = await validateCandidates(options(set), [fakeClient(VALIDATOR_IDS[0]), withFallback(haiku, sonnet)], index);
+    const c = report.conversations.c001;
+    expect(c.status).toBe('checked');
+    expect(c.candidates['event_ordering/1']).toEqual({ pass: false, gates: [`refusal:${HAIKU}`] });
+    expect(c.candidates['abstention/1']).toEqual({ pass: false, gates: [`refusal:${HAIKU}`] });
+    expect(c.candidates['abstention/0'].pass && c.candidates['abstention/2'].pass).toBe(true);
+    const windows = haiku.asked.filter(p.batched).length;
+    expect(windows).toBeGreaterThanOrEqual(1);
+    expect(c.regrouped.map(r => r.over_cap)).toEqual(Array(windows).fill(false));
+    expect(sonnet.asked).toEqual(haiku.asked.filter(refuse));
+    expect(c.validator_errors.map(e => [e.kind, e.stop, e.by, e.candidate])).toEqual(expect.arrayContaining([
+      ['support', 'refusal', FALLBACK_ID, 'event_ordering/1'], ['absence', 'refusal', FALLBACK_ID, null], ['absence_single', 'refusal', FALLBACK_ID, 'abstention/1'],
+    ]));
+    expect(report.totals).toMatchObject({ fallback_answers: 0, fallback_unusable: 1 + 2 * windows, gate_refusal: 2, incomplete: 0 });
+    const alone = await validateCandidates(options(set), [fakeClient(VALIDATOR_IDS[0]), recordingFake(HAIKU, refuse)], index);
+    expect(alone.conversations.c001.status).toBe('incomplete');
+    expect(alone.conversations.c001.candidates['event_ordering/1'].gates).toEqual([`validator_error:${HAIKU}`]);
+  });
+
+  test('validate.ts asks the fallback about a window Haiku refuses, and fails both items on refusal when it refuses too', async () => {
+    const conv = probedConversation('fallback-validate', 120);
+    const p = prompts(conv);
+    const set = writeProbedSet(join(root, 'fv'), [conv]);
+    const answered = await validateSet(options(set), [fakeClient(VALIDATOR_IDS[0]), withFallback(recordingFake(HAIKU, p.window), recordingFake(FALLBACK_ID, () => false))], index);
+    expect(Object.keys(answered.conversations.c001.items)).toHaveLength(20);
+    expect(answered.conversations.c001.status).toBe('keep');
+    expect(answered.fallback).toBe(FALLBACK_ID);
+    expect(answered.totals.fallback_answers).toBeGreaterThanOrEqual(1);
+    const both = await validateSet(options(set), [fakeClient(VALIDATOR_IDS[0]), withFallback(recordingFake(HAIKU, p.window), recordingFake(FALLBACK_ID, p.window))], index);
+    const c = both.conversations.c001;
+    expect(c.status).toBe('regenerate');
+    expect(c.reasons).toEqual([]);
+    expect([c.items['abstention#0'], c.items['abstention#1']]).toEqual([0, 1].map(() => ({ pass: false, gates: [`refusal:${HAIKU}`] })));
+    expect(Object.entries(c.items).filter(([, i]) => !i.pass).map(([s]) => s)).toEqual(['abstention#0', 'abstention#1']);
+    expect(both.totals).toMatchObject({ fallback_answers: 0, gate_refusal: 2, incomplete: 0 });
+    const alone = await validateSet(options(set), [fakeClient(VALIDATOR_IDS[0]), recordingFake(HAIKU, p.window)], index);
+    expect(alone.conversations.c001.status).toBe('incomplete');
+    expect(alone.fallback).toBeNull();
+  });
+
+  test('without a refusal the fallback is never asked, and both reports match a run without it', async () => {
+    const set = writeProbedSet(join(root, 'fn'), [probedConversation('fallback-none', 120)]);
+    const sonnet = recordingFake(FALLBACK_ID, () => { throw new Error('asked'); });
+    const run = async (withIt: boolean) => {
+      const haiku = withIt ? withFallback(recordingFake(HAIKU, () => false), sonnet) : recordingFake(HAIKU, () => false);
+      const candidates = await validateCandidates(options(set), [fakeClient(VALIDATOR_IDS[0]), haiku], index);
+      const validation = await validateSet(options(set), [fakeClient(VALIDATOR_IDS[0]), haiku], index);
+      return { candidates: { ...candidates, fallback: null }, validation: { ...validation, fallback: null } };
+    };
+    expect(await run(true)).toEqual(await run(false));
+    expect(sonnet.asked).toEqual([]);
   });
 });

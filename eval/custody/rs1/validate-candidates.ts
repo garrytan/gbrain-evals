@@ -35,6 +35,9 @@
  *     SPII, or a blocked prompt; a refusal does not change on a rerun, so it fails the candidate, not the conversation),
  *     and on validator_error otherwise. A window past the limit fails every abstention candidate on validator_error.
  *     A candidate passes only if every window, from both validators, leaves it unanswered.
+ *   - fallback (the 2026-11-17 amendment), validate.ts's rule: a prompt claude-haiku-5-5 refuses goes to claude-sonnet-5-5,
+ *     whose reply counts in Haiku's place. A support prompt both refuse fails its candidate on "refusal"; a window both
+ *     refuse is regrouped as above, and a single prompt both refuse fails its candidate on "refusal".
  * There is no duplicate gate among candidates: the select step skips a repeated question within an ability, and
  * validate.ts applies its duplicate gate to the selection.
  *
@@ -65,9 +68,10 @@ import { ledgerCaps, PaidArmRefusal, requirePaidArm, requireRs1Window, WindowRef
 import { encodingCount } from '../../runner/systems/render-v2.ts';
 
 import {
-  ABILITIES, absencePrompt, ANSWER_FIELD, anthropicRequest, buildPublicIndex, chunkMessages, DEFAULTS, fakeClient, geminiRequest,
-  ITEMS_PER_ABILITY, ngrams, normalize, runCalls, singleSourceShares, supportPrompt, THRESHOLDS, ValidateError, VALIDATOR_IDS,
-  type Ability, type Message, type ModelClient, type Options, type PublicIndex,
+  ABILITIES, absencePrompt, ANSWER_FIELD, buildPublicIndex, chunkMessages, DEFAULTS, FALLBACK_MODEL, fakeClient, ITEMS_PER_ABILITY, ngrams,
+  normalize, recordingAnthropicClient, recordingGeminiClient, refused, runCalls, singleSourceShares, supportPrompt, THRESHOLDS, ValidateError,
+  VALIDATOR_IDS, withFallback, type Ability, type FallbackClient, type Message, type ModelClient, type Options, type PublicIndex,
+  type RecordingClient, type RunCounts, type StopRecord,
 } from './validate.ts';
 
 /** validate.ts's reply-cache version, part of every cache file name, so both scripts read and write the same entries. */
@@ -78,61 +82,8 @@ const MAX_OUTPUT_TOKENS = 8192;
 const MESSAGE_FRAME_TOKENS = 8;
 /** Windows regrouped per run, by default. */
 export const REGROUP_WINDOWS = 4;
-/** Stop reasons that mean the validator refused the prompt. */
-const REFUSALS = new Set(['refusal', 'SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII']);
-const refused = (stop: string | undefined) => !!stop && (REFUSALS.has(stop) || stop.startsWith('blocked_'));
-
-/** How a paid validator reply ended: provider vocabulary words and numbers only, never reply text. */
-export interface StopRecord { stop: string; output_tokens: number | null; blocks: string[] }
-/** A validator that keeps each prompt's last StopRecord. */
-export interface RecordingClient extends ModelClient { readonly stops: Map<string, StopRecord> }
-
-const vocab = (v: unknown) => (typeof v === 'string' && /^[A-Za-z_]{1,40}$/.test(v) ? v : v === undefined || v === null ? 'none' : 'other');
-const tokenCount = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
-const kinds = (types: string[]) => [...new Set(types)].sort();
-
-/**
- * validate.ts's client for one provider: its request, its post (global fetch, so the paid run's fetch guard prices and
- * reserves the request, and an error naming only host and status) and its reply text, plus the reply's StopRecord.
- */
-function recordingClient(id: string, request: (prompt: string, max: number) => { url: string; body: unknown }, headers: Record<string, string>,
-  text: (reply: any) => string, ended: (reply: any) => StopRecord): RecordingClient {
-  const stops = new Map<string, StopRecord>();
-  return {
-    id,
-    stops,
-    async complete(prompt, max) {
-      const record = (stop: string) => void stops.set(prompt, { stop, output_tokens: null, blocks: [] });
-      const { url, body } = request(prompt, max);
-      let res: Response;
-      try { res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }); } catch (error) {
-        if (!(error instanceof BudgetExceededError)) record('send_error');
-        throw error;
-      }
-      if (!res.ok) { record(`http_${res.status}`); throw new ValidateError(`${new URL(url).hostname} answered HTTP ${res.status}`); }
-      let reply: any, out: string;
-      try { reply = await res.json(); out = text(reply); } catch (error) { record('bad_reply'); throw error; }
-      try { stops.set(prompt, ended(reply)); } catch { record('other'); }
-      return out;
-    },
-  };
-}
-
-export const recordingGeminiClient = (apiKey: string) => recordingClient(VALIDATOR_IDS[0], geminiRequest, { 'x-goog-api-key': apiKey },
-  reply => (reply.candidates?.[0]?.content?.parts ?? []).map((p: { text?: string }) => p.text ?? '').join(''),
-  reply => {
-    const candidate = reply.candidates?.[0];
-    const block = reply.promptFeedback?.blockReason;
-    return {
-      stop: candidate ? vocab(candidate.finishReason) : block ? `blocked_${vocab(block)}` : 'no_candidate',
-      output_tokens: tokenCount(reply.usageMetadata?.candidatesTokenCount),
-      blocks: kinds((candidate?.content?.parts ?? []).map((p: { text?: unknown; thought?: unknown }) => (p.thought ? 'thought' : typeof p.text === 'string' ? 'text' : 'other'))),
-    };
-  });
-
-export const recordingAnthropicClient = (apiKey: string) => recordingClient(VALIDATOR_IDS[1], anthropicRequest, { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-  reply => (reply.content ?? []).filter((b: { type: string }) => b.type === 'text').map((b: { text: string }) => b.text).join(''),
-  reply => ({ stop: vocab(reply.stop_reason), output_tokens: tokenCount(reply.usage?.output_tokens), blocks: kinds((reply.content ?? []).map((b: { type?: unknown }) => vocab(b.type))) }));
+/** validate.ts's recording clients, which the tests and the probe have always imported from here. */
+export { recordingAnthropicClient, recordingGeminiClient, type RecordingClient, type StopRecord } from './validate.ts';
 
 const sha256 = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex');
 const readJson = (path: string) => JSON.parse(readFileSync(path, 'utf8'));
@@ -218,6 +169,8 @@ export interface CandidateConversation {
 export interface CandidateReport {
   schema: 'rs1-candidates/v1';
   validators: string[];
+  /** The model that answers in the second validator's place when it refuses, or null without one. */
+  fallback: string | null;
   params: Record<string, number>;
   public_index: { sources: number; ngrams: number; sources_sha256: string; source_list_sha256: string };
   conversations: Record<string, CandidateConversation>;
@@ -225,7 +178,7 @@ export interface CandidateReport {
   abilities: Record<string, { pass: number; fail: number }>;
 }
 /** calls first; then regroup() returns the calls for the windows whose replies were unusable; then finish. */
-export interface CandidatePlan { calls: Call[]; estimateUsd: number; regroup: () => Call[]; finish: (run: { errors: number; cached: number }) => CandidateReport }
+export interface CandidatePlan { calls: Call[]; estimateUsd: number; regroup: () => Call[]; finish: (run: RunCounts) => CandidateReport }
 
 export function planCandidates(opts: Options, clients: ModelClient[], index: PublicIndex, regroupWindows = REGROUP_WINDOWS): CandidatePlan {
   if (clients.length !== 2 || clients[0].id.split(':')[0] === clients[1].id.split(':')[0]) throw new ValidateError('validation needs two validators from different families');
@@ -237,6 +190,8 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
   const calls: Call[] = [];
   const low = Math.round(opts.targetTokens * (1 - opts.tolerance)), high = Math.round(opts.targetTokens * (1 + opts.tolerance));
   const endedOf = (client: number, prompt: string) => (clients[client] as Partial<RecordingClient>).stops?.get(prompt);
+  /** A prompt the validator and its fallback both refused: its record is the fallback's, with `by` set. */
+  const refusedTwice = (client: number, prompt: string) => { const e = endedOf(client, prompt); return !!e?.by && refused(e.stop); };
   const failItem = (cid: string, key: string, gate: string) => {
     const item = results[cid].candidates[key];
     item.pass = false;
@@ -317,7 +272,7 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
       for (let c = 0; c < 2; c++) {
         calls.push(call(cid, { candidate: key }, c, prompt, tokens, 'support', reply => {
           const supported = reply === null ? undefined : jsonObject(reply)?.supported;
-          if (typeof supported !== 'boolean') { fail(`validator_error:${clients[c].id}`); return false; }
+          if (typeof supported !== 'boolean') { fail(reply !== null && refusedTwice(c, prompt) ? `refusal:${clients[c].id}` : `validator_error:${clients[c].id}`); return false; }
           if (!supported) fail(`support:${clients[c].id}`);
           return true;
         }));
@@ -388,14 +343,14 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
     return singles;
   };
 
-  const finish = (run: { errors: number; cached: number }): CandidateReport => {
+  const finish = (run: RunCounts): CandidateReport => {
     if (!regrouped) for (const r of queued) r.failAll(`validator_error:${clients[r.client].id}`);
     const of = (kind: Call['kind']) => calls.filter(c => c.kind === kind);
     const totals: Record<string, number> = {
       conversations: cids.length, checked: 0, drop: 0, incomplete: 0, unfinished: 0, fillable: 0, candidates: 0, pass: 0, fail: 0,
       calls: calls.length, support_calls: of('support').length, absence_calls: of('absence').length,
       support_tokens: of('support').reduce((s, c) => s + c.tokens, 0), absence_tokens: of('absence').reduce((s, c) => s + c.tokens, 0),
-      cached_calls: run.cached, validator_errors: run.errors, windows: 0,
+      cached_calls: run.cached, validator_errors: run.errors, fallback_answers: run.fallback_answers ?? 0, fallback_unusable: run.fallback_unusable ?? 0, windows: 0,
       absence_single_calls: [...calls, ...singles].filter(c => c.kind === 'absence_single').length,
       absence_single_tokens: [...calls, ...singles].filter(c => c.kind === 'absence_single').reduce((s, c) => s + c.tokens, 0),
       regrouped_windows: Object.values(results).reduce((s, r) => s + r.regrouped.filter(g => !g.over_cap).length, 0),
@@ -429,6 +384,7 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
     return {
       schema: 'rs1-candidates/v1',
       validators: clients.map(c => c.id),
+      fallback: (clients[1] as Partial<FallbackClient>).fallback?.id ?? null,
       params: { target_tokens: opts.targetTokens, tolerance: opts.tolerance, window_tokens: opts.windowTokens, overlap_tokens: opts.overlapTokens, contamination_max: THRESHOLDS.contamination_max, item_contamination_max: THRESHOLDS.item_contamination_max, regroup_windows: regroupWindows },
       public_index: { sources: index.sources, ngrams: index.ngrams, sources_sha256: index.sourcesSha256, source_list_sha256: index.sourceListSha256 },
       conversations: results,
@@ -443,7 +399,10 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
 export async function runPlan(plan: CandidatePlan, clients: ModelClient[], concurrency: number): Promise<CandidateReport> {
   const first = await runCalls(plan.calls, clients, concurrency);
   const second = await runCalls(plan.regroup(), clients, concurrency);
-  return plan.finish({ errors: first.errors + second.errors, cached: first.cached + second.cached });
+  return plan.finish({
+    errors: first.errors + second.errors, cached: first.cached + second.cached,
+    fallback_answers: first.fallback_answers + second.fallback_answers, fallback_unusable: first.fallback_unusable + second.fallback_unusable,
+  });
 }
 
 export async function validateCandidates(opts: Options, clients: ModelClient[], index = buildPublicIndex(opts.beamDir, opts.publicIndexPath), regroupWindows = REGROUP_WINDOWS): Promise<CandidateReport> {
@@ -465,7 +424,7 @@ export function summaryLines(report: CandidateReport, reportSha256: string): str
     `rs1-validate-candidates ${kv({ conversations: t.conversations, checked: t.checked, drop: t.drop, incomplete: t.incomplete, unfinished: t.unfinished, drop_length: t.drop_length, drop_contamination: t.drop_contamination, fillable: t.fillable })}`,
     `rs1-validate-candidates ${kv({ candidates: t.candidates, pass: t.pass, fail: t.fail, ...gates })}`,
     ...ABILITIES.map(a => `rs1-validate-candidates ${kv({ ability: a, pass: report.abilities[a].pass, fail: report.abilities[a].fail })}`),
-    `rs1-validate-candidates ${kv({ calls: t.calls, support_calls: t.support_calls, absence_calls: t.absence_calls, support_tokens: t.support_tokens, absence_tokens: t.absence_tokens, cached_calls: t.cached_calls, validator_errors: t.validator_errors, windows: t.windows })}`,
+    `rs1-validate-candidates ${kv({ calls: t.calls, support_calls: t.support_calls, absence_calls: t.absence_calls, support_tokens: t.support_tokens, absence_tokens: t.absence_tokens, cached_calls: t.cached_calls, validator_errors: t.validator_errors, windows: t.windows, fallback_answers: t.fallback_answers, fallback_unusable: t.fallback_unusable })}`,
     `rs1-validate-candidates ${kv({ unusable: Object.values(report.conversations).reduce((s, c) => s + c.validator_errors.length, 0), ...Object.fromEntries(Object.entries(t).filter(([k]) => k.startsWith('unusable_')).sort()), regrouped_windows: t.regrouped_windows, regroup_over_cap: t.regroup_over_cap, absence_single_calls: t.absence_single_calls })}`,
     `rs1-validate-candidates ${kv({ public_sources: report.public_index.sources, public_ngrams: report.public_index.ngrams, report_sha256: reportSha256 })}`,
   ];
@@ -499,7 +458,8 @@ async function main(argv: string[]): Promise<number> {
   if (!existsSync(join(opts.setDir, 'conversations'))) throw new ValidateError(`${opts.setDir} holds no conversations/`);
   const geminiKey = process.env.GEMINI_API_KEY, anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (!fake && (!geminiKey || !anthropicKey)) throw new ValidateError('paid candidate validation needs GEMINI_API_KEY and ANTHROPIC_API_KEY');
-  const clients = fake ? VALIDATOR_IDS.map(id => fakeClient(`fake-${id}`)) : [recordingGeminiClient(geminiKey!), recordingAnthropicClient(anthropicKey!)];
+  const clients = fake ? VALIDATOR_IDS.map(id => fakeClient(`fake-${id}`))
+    : [recordingGeminiClient(geminiKey!), withFallback(recordingAnthropicClient(anthropicKey!), recordingAnthropicClient(anthropicKey!, FALLBACK_MODEL))];
   const plan = planCandidates(opts, clients, buildPublicIndex(opts.beamDir, opts.publicIndexPath), regroupWindows);
   const paid = !fake && plan.calls.some(c => !c.cached);
   if (paid) requirePaidArm(argv, { arm: 'rs1 validate-candidates', estimateUsd: plan.estimateUsd });
