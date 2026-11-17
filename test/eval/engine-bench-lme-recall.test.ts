@@ -347,6 +347,21 @@ describe('sharding and NDJSON resume', () => {
     expect(hash).toMatch(/^[0-9a-f]{64}$/);
   }, 180_000);
 
+  test('a Rust error is never retried away: resume keeps it and aggregate keeps it over a later clean row', async () => {
+    const path = nd('rust-error.ndjson');
+    const first = await runLmeRecall({ gut: fakeRustGbrain(), engines: ['pglite', 'rust'], datasetPath: dataset, arms: ['keyword'], limit: 2, ndjsonPath: path, log: quiet });
+    const failed = { ...first.rows.find(r => r.engine === 'rust' && r.question_id === 'q1')!, arms: {}, error: 'question_timeout_600000ms: import and search' };
+    writeFileSync(path, first.rows.filter(r => !(r.engine === 'rust' && r.question_id === 'q1')).concat(failed).map(r => JSON.stringify(r)).join('\n') + '\n');
+    const resumed = await runLmeRecall({ gut: fakeRustGbrain(), engines: ['pglite', 'rust'], datasetPath: dataset, arms: ['keyword'], limit: 2, ndjsonPath: path, log: quiet });
+    expect(resumed.rows.find(r => r.engine === 'rust' && r.question_id === 'q1')!.error).toMatch(/question_timeout/);
+    expect(resumed.comparisons[0]).toMatchObject({ a: 'pglite', b: 'rust', rust_errors: ['q1'], rust_verdict: 'fail' });
+
+    const later = nd('rust-error-then-clean.ndjson');
+    writeFileSync(later, [failed, first.rows.find(r => r.engine === 'rust' && r.question_id === 'q1')!].map(r => JSON.stringify(r)).join('\n') + '\n');
+    const agg = aggregateLmeRows([path, later]);
+    expect(agg.comparisons[0]).toMatchObject({ rust_errors: ['q1'], rust_verdict: 'fail' });
+  }, 180_000);
+
   test('a worker id outside the worker count is refused', async () => {
     await expect(runLmeRecall({ gut: pinned, engines: ['pglite'], datasetPath: dataset, arms: ['keyword'], workerId: 2, totalWorkers: 2, log: quiet })).rejects.toThrow(/worker-id/);
   });

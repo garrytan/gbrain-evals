@@ -525,7 +525,7 @@ export interface LmeRecallReceipt extends RowsSummary {
   /** This process ran the selected questions at positions i with i % total_workers == worker_id. */
   shard: { worker_id: number; total_workers: number; questions: number };
   ndjson: string | null;
-  /** Clean rows reused from the NDJSON stream under the same run configuration. */
+  /** Rows reused from the NDJSON stream under the same run configuration: clean rows, and Rust errors, which a rerun never replaces. */
   resumed_rows: number;
   run_config_hashes: Partial<Record<EvalEngineKind, string>>;
   top_k: number;
@@ -624,6 +624,8 @@ export function readLmeRows(path: string): QuestionRow[] {
 }
 
 const rowKey = (r: Pick<QuestionRow, 'engine' | 'question_id'>) => r.engine + '::' + r.question_id;
+/** A Rust error is never retried away: a later clean row for the same question does not replace it. */
+const stickyError = (r?: QuestionRow) => r?.engine === 'rust' && r.error !== undefined;
 
 // ─── runLmeRecall ──────────────────────────────────────────────────
 
@@ -692,7 +694,9 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
   }
   const mineIds = new Set(mine.map(q => q.question_id));
   const done = new Map<string, QuestionRow>();
-  for (const r of prior) if (r.error === undefined && r.run_config_hash === hashes[r.engine] && mineIds.has(r.question_id)) done.set(rowKey(r), r);
+  for (const r of prior) {
+    if ((r.error === undefined || stickyError(r)) && r.run_config_hash === hashes[r.engine] && mineIds.has(r.question_id) && !stickyError(done.get(rowKey(r)))) done.set(rowKey(r), r);
+  }
   if (o.ndjsonPath) {
     mkdirSync(dirname(o.ndjsonPath), { recursive: true });
     const existing = existsSync(o.ndjsonPath) ? readFileSync(o.ndjsonPath, 'utf8') : '';
@@ -725,7 +729,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
         log('[lme-recall] ' + kind + ' ' + (refused ? 'refused (' + e.reason + ')' : 'failed') + ': ' + (e as Error).message);
       }
     }
-    if (done.size > 0) log('[lme-recall] resuming: ' + done.size + ' clean row(s) already in ' + o.ndjsonPath);
+    if (done.size > 0) log('[lme-recall] resuming: ' + done.size + ' row(s) already in ' + o.ndjsonPath + ' (clean rows, and Rust errors, which are never retried)');
     const timeout = o.perQuestionTimeoutMs ?? 600_000;
     for (let i = 0; i < mine.length; i++) {
       const q = mine[i];
@@ -794,7 +798,7 @@ export async function runLmeRecall(o: RunLmeRecallOptions): Promise<LmeRecallRec
 
 /**
  * Combine the NDJSON streams of sharded workers into one summary. Each engine must carry a single run configuration;
- * a question that appears more than once keeps its last clean row. A counted aggregate needs an attestation in every
+ * a question that appears more than once keeps its last clean row, except that a Rust error is never replaced. A counted aggregate needs an attestation in every
  * shard and lists each one (one per process start) under preregistration_attestation.
  */
 export function aggregateLmeRows(paths: readonly string[]): RowsSummary & {
@@ -810,7 +814,7 @@ export function aggregateLmeRows(paths: readonly string[]): RowsSummary & {
     attestations.push(...stream.attestations.map(a => ({ ndjson: path, ...a })));
     for (const r of stream.rows) {
       const prev = byKey.get(rowKey(r));
-      if (!prev || r.error === undefined || prev.error !== undefined) byKey.set(rowKey(r), r);
+      if (!prev || (!stickyError(prev) && (r.error === undefined || prev.error !== undefined || stickyError(r)))) byKey.set(rowKey(r), r);
     }
   }
   const rows = [...byKey.values()];
