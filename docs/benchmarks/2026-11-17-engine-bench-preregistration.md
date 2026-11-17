@@ -4,7 +4,7 @@ Written 2026-11-17. This file freezes in its own commit, pushed before the first
 
 ## Question
 
-gbrain stores a brain in PGLite (Postgres compiled to WebAssembly, inside the gbrain process) or in a Postgres server with pgvector. gbrain is adding a third storage engine written in Rust, loaded in process as a native addon and selected with `engine: "rust"` (gbrain [docs/designs/RUST_ENGINE.md](https://github.com/garrytan/gbrain/blob/master/docs/designs/RUST_ENGINE.md)). The engine ships in gbrain's master switched off.
+gbrain stores a brain in PGLite (Postgres compiled to WebAssembly, inside the gbrain process) or in a Postgres server with pgvector. gbrain is adding a third storage engine written in Rust, loaded in process as a native addon (gbrain [docs/designs/RUST_ENGINE.md](https://github.com/garrytan/gbrain/blob/master/docs/designs/RUST_ENGINE.md)). gbrain's plan is to ship it in master switched off, selected with `engine: "rust"`. At the engine-facts read of 2026-11-17 (below) neither is true yet: gbrain's `engine-construct.ts` has no rust case (due 2026-11-21, by the maintainers' date), and the engine is in master only after gbrain#9631 merges.
 
 Phase 1 answers one decision: **at a named Rust build, does the Rust engine work like PGLite and Postgres, so that it can be switched on, first for Garry Tan's own brain?** Work means the same correctness counts, the same output bytes on every surface a user or agent reads, and the same retrieval answers. Phase 1 measures no speed. Speed decides a later question, whether Rust becomes gbrain's default, and is phase 2 below.
 
@@ -32,7 +32,7 @@ A confirmatory gate on synthetic, public, keyless fixtures plus one public retri
 
 ## Build and data
 
-- **Rust build.** The counted Rust wave runs when gbrain's maintainers name a build that serves gbrain's own import and search paths on Rust and passes gbrain's parity suite. The build is a `garrytan/gbrain` commit or release plus the Rust addon's digest. A dated amendment records the commit, release, date, addon digest and target (`linux-x64-glibc` on the benchmark VMs) before the first counted run, and the receipt records the addon's `engine_build`, `engine_abi`, `catalog_version` and store `format_versions`. The engine-facts answers due 2026-11-20 (below) set the date the wave runs. There is no deadline: if a build is late, the wave waits for it.
+- **Rust build.** The counted Rust wave runs when gbrain's maintainers (Ember, at Vorflux) send a `garrytan/gbrain` commit plus the Rust addon's digest for a build that serves gbrain's own import and search paths on Rust and passes gbrain's parity suite. No build qualifies at the engine-facts read; the earliest, by Ember's date, is about 2026-11-26 PST. A dated amendment records the commit, release if any, date, addon digest and target (`linux-x64-glibc` on the benchmark VMs) before the first counted run. The receipt records the addon's exports `engineBuild`, `engineAbi`, `catalogVersion` and `formatVersions`, and the store's one `format_version`. `engineBuild` hashes the Rust sources, not the addon file, so the addon file's digest is recorded as well. The harness creates a Rust brain the way a user does, with `gbrain init --migrate-only` on a rust config, because the Rust engine refuses `initSchema()`. There is no deadline: if a build is late, the wave waits for it.
 - **PGLite and Postgres.** The same gbrain commit as the Rust build, so all three engines run the same TypeScript code above the engine. They run again in the counted wave beside Rust; those runs, not the baseline, are what Rust is compared with. If that commit is not gbrain's newest release at launch, the amendment says why (the Rust build is the question).
 - **Postgres.** Docker image `pgvector/pgvector:pg16`, stock settings, on the same machine. The receipt records the image digest.
 - **Harness.** The gbrain-evals commit that carries the build amendment, loaded with `--gbrain <checkout>@<ref>` (a verified copy, never a symlink). Every receipt records the loaded commit and this file's attestation.
@@ -49,9 +49,9 @@ PGLite, Postgres and Rust. Rust is compared with each TypeScript engine. PGLite 
 - A check **passes on Rust** when its verdict is pass and every contract count equals the count on both TypeScript engines. If a TypeScript engine fails a contract, or the two disagree, that is a gbrain finding, and Rust must be no worse than the better TypeScript engine on it.
 - A check **fails on Rust** when its verdict is fail, a count is worse than that, or the runner errors on Rust (no usable receipt) where a TypeScript engine completed it.
 - A step that reads or writes the database with raw SQL is `not_applicable` on Rust, because the Rust engine refuses raw SQL by design (gbrain plan decision D18). It counts as neither pass nor fail. A check whose every contract is not_applicable on Rust is unmeasured.
-- A step that needs a second gbrain process on a brain another process holds is not_applicable on Rust with reason `store_locked`, unless the named build's owner process serves other processes.
+- A step that needs a second gbrain process on a brain another process holds is not_applicable on Rust with reason `store_locked`, unless the named build serves it. At the engine-facts read a second process gets `store_locked`; once rust-owner-ipc is wired into core (after gbrain#9631), gbrain's own client becomes a client of the owning process and these steps run.
 - A runner the engine refuses as a whole (exit 69) is `refused`, with its reason.
-- At this harness, N6 over HTTP runs only on Postgres, because it seeds the brain in process while `gbrain serve --http` holds it. On Rust it is therefore unmeasured. Unless an amendment before the counted run adds a path for it, the best phase 1 verdict reachable is "works with named gaps", and the report says so.
+- N6 over HTTP is a named gap on Rust in phase 1: it runs on Postgres only, and per the engine-facts read `gbrain serve --http` on Rust needs a persistence journal and OAuth and access operations that have no date yet. So the best phase 1 verdict reachable is "works with named gaps", and the report says so.
 
 ## Stage 2: output bytes (CLI JSON, MCP, markdown)
 
@@ -60,6 +60,8 @@ PGLite, Postgres and Rust. Rust is compared with each TypeScript engine. PGLite 
 - Normalization is limited to values that differ on every run (timestamps, durations, search stage timings, temporary paths, random ids). Each rule is listed in the receipt with its replacement count per engine and surface.
 - A Rust output passes when it equals both TypeScript engines' bytes. Where PGLite and Postgres already differ at the named build, the difference is listed, and Rust must equal one of them. At v0.60.734.0 the only such difference is the `stale` field of `gbrain search --json`: PGLite computes it (true only when a timeline entry is newer than the page) and Postgres always returns false. If gbrain's maintainers name which engine Rust must match, an amendment records it before the counted run, and Rust must then equal that engine.
 - Every other difference, including ordering or float formatting, is a failure.
+- An operation that only Rust refuses with gbrain's `engine_capability_missing` is `refused` in the receipt: a named gap, or a failure when it is a core path. Any other Rust error on an operation both TypeScript engines answered is a failure.
+- Known at the engine-facts read: the script uses operations that need `health`, `tags`, `pages` and graph members on Rust, and these are expected to be refused and listed as gaps. The MCP onboarding probe does not refuse, but its `get_health` bytes are expected to differ from PGLite's; under the rule above, a differing output is a failure, not a gap.
 - A step that runs while another gbrain process holds the brain is not_applicable on Rust with reason `store_locked`, as in stage 1, unless the named build serves it. Steps whose processes run one after another still run.
 
 ## Stage 3: same answers (LongMemEval-S)
@@ -102,9 +104,21 @@ Ubicloud `standard-16` VMs in one location, with no provider key in the run's en
 - A run is invalid, and may be repeated at most twice, only for: a different dataset or cache fingerprint, a VM or container failure, a load average above 2 at launch, a receipt without this file's attestation, or a Rust error the report traces to the harness or the machine, with the evidence. An invalid run's receipt is kept and named with its reason. No run is repeated because of its result.
 - There is no deadline. If the named build is late, the wave waits.
 
-## Questions for the engine-facts read
+## Engine-facts read
 
-Answered in part by gbrain's maintainers on 2026-11-17: at that date no branch opens a Rust brain through gbrain, a second process gets `store_locked`, and graph walks, backlinks, timeline reads and vector search are not in the Rust store yet. Dated yes-or-no answers on questions 1, 2, 3 and 5 are due 2026-11-20 and go into an amendment. These are about how the Rust engine behaves, not about what counts as working.
+An input to this file, about how the Rust engine behaves, not about what counts as working. Ember (Vorflux, gbrain's Rust engine maintainers) read this preregistration and the harness on 2026-11-17, at about 16:03 UTC, against these heads: this file at 10e8ec383f, the harness at e75b3d5ae5, gbrain `rust-engine/core` at d33703bca3, `rust-store-graph` at d6c740a169 and `rust-owner-ipc` at abf9ede6ac. What it changed here:
+
+- The trigger and earliest date under Build and data, and the `format_version` and export names there.
+- `engine-construct.ts` has no rust case yet, and the engine reaches master only after gbrain#9631 (Question).
+- A second process gets `store_locked` today, and rust-owner-ipc will end that once wired; N6 over HTTP on Rust stays a named gap (stage 1).
+- Expected surface gaps (`health`, `tags`, `pages`, graph members) and the `get_health` difference (stage 2).
+- Graph walks, backlinks and timeline reads exist on the `rust-store-graph` branch and match PGLite there, but are not wired into core yet; vector search is not in the Rust store yet.
+- Raw SQL on gbrain's own paths (question 1): `hybrid.ts`, `alias-resolved.ts` and `import-file.ts` refuse with `raw_sql` today. hybridSearch is due 2026-11-24 and import about 2026-11-25, by the maintainers' dates. A core path the named build still refuses makes the verdict "doesn't work yet".
+- The harness now classifies `rust_engine_addon_missing` and `rust_engine_addon_mismatch` as refusals (never a pass) and creates Rust brains through `gbrain init`.
+
+A gap still never counts as a pass. Dated answers to the questions below are due 2026-11-20 and go into an amendment.
+
+The questions as sent:
 
 1. **Raw SQL on gbrain's own paths.** At v0.60.734.0, gbrain's import path (`importFromContent`, including `sealPageTextProjection`), `hybridSearch` (its supersede probe) and the MCP onboarding-count probe call `executeRaw`. engine-bench writes and searches only through those gbrain paths. Will the named build serve them on Rust, or refuse with `engine_capability_missing`?
 2. **Selecting Rust.** Is it `EngineConfig { engine: "rust", database_path }` through `constructEngine`, with the addon at `GBRAIN_RUST_ENGINE_ADDON` or installed by `gbrain engine install rust`? Does `gbrain init` (or `init --migrate-only`) accept a Rust config?
