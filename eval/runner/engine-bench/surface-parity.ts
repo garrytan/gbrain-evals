@@ -50,7 +50,8 @@ export const SURFACE_PARITY_SCHEMA_VERSION = 'engine-bench-surface-parity/v1';
 export const SURFACE_PARITY_RUNNER = 'engine-bench/surface-parity';
 export const SURFACES = ['cli', 'mcp', 'markdown'] as const;
 export type Surface = (typeof SURFACES)[number];
-export type OpStatus = 'identical' | 'differs' | 'errored' | 'not_applicable';
+/** `refused`: only the Rust engine failed, each time with gbrain's engine_capability_missing, so it is a named gap, never a pass. */
+export type OpStatus = 'identical' | 'differs' | 'errored' | 'refused' | 'not_applicable';
 export type DiffClass = 'ordering' | 'float_formatting' | 'numeric_value' | 'timestamp' | 'content';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
@@ -438,6 +439,11 @@ export function compareCaptures(engines: EngineCapture[]): Comparison {
       operations.push({ surface, op, status: 'not_applicable', engines_compared: kinds, reason: `fewer than two engines ran (${kinds.join(', ') || 'none'}), so there is nothing to compare` });
       continue;
     }
+    const refusedBy = entries.filter(([, v]) => /engine_capability_missing/.test(v?.capture.error ?? v?.text ?? ''));
+    if (refusedBy.length === 1 && refusedBy[0]![0] === 'rust') {
+      operations.push({ surface, op, status: 'refused', engines_compared: kinds, reason: `rust: ${(refusedBy[0]![1]!.capture.error ?? refusedBy[0]![1]!.text ?? '').slice(0, 400)}` });
+      continue;
+    }
     const errored = entries.filter(([, v]) => v?.capture.error);
     if (errored.length) {
       operations.push({ surface, op, status: 'errored', engines_compared: kinds, reason: errored.map(([k, v]) => `${k}: ${v!.capture.error}`).join('; ') });
@@ -803,7 +809,7 @@ export interface SurfaceParityReceipt {
   environment: Record<string, unknown>;
 }
 
-const zeroCounts = (): Record<OpStatus, number> => ({ identical: 0, differs: 0, errored: 0, not_applicable: 0 });
+const zeroCounts = (): Record<OpStatus, number> => ({ identical: 0, differs: 0, errored: 0, refused: 0, not_applicable: 0 });
 
 /** Why the rust arm cannot run on this build, or null when it opens through eval-engine.ts. */
 export async function rustRefusal(gut: GbrainUnderTest, storePath: string): Promise<{ reason: string; message: string } | null> {
@@ -897,7 +903,7 @@ export function buildReceipt(gut: GbrainUnderTest, captures: EngineCapture[], co
   const refused = captures.filter(c => c.status === 'refused').map(c => c.kind);
   const erroredEngines = captures.filter(c => c.status === 'errored').map(c => c.kind);
   const verdict = total.differs > 0 ? 'differs'
-    : total.errored > 0 || erroredEngines.length > 0 || ran.length < 2 || total.identical === 0 ? 'incomplete' : 'byte_exact';
+    : total.errored > 0 || total.refused > 0 || erroredEngines.length > 0 || ran.length < 2 || total.identical === 0 ? 'incomplete' : 'byte_exact';
   return {
     schema_version: SURFACE_PARITY_SCHEMA_VERSION,
     runner: SURFACE_PARITY_RUNNER,
@@ -944,8 +950,8 @@ export function summaryLines(r: SurfaceParityReceipt): string[] {
   for (const s of SURFACES) {
     const c = r.surfaces[s].counts;
     const classes = r.differences_by_class[s];
-    lines.push(`  ${s}: ${c.identical} identical, ${c.differs} differ, ${c.errored} errored, ${c.not_applicable} not applicable${classes ? ` (${Object.entries(classes).map(([k, n]) => `${k} ${n}`).join(', ')})` : ''}`);
-    for (const op of r.surfaces[s].operations.filter(x => x.status === 'differs' || x.status === 'errored')) {
+    lines.push(`  ${s}: ${c.identical} identical, ${c.differs} differ, ${c.errored} errored, ${c.refused} refused, ${c.not_applicable} not applicable${classes ? ` (${Object.entries(classes).map(([k, n]) => `${k} ${n}`).join(', ')})` : ''}`);
+    for (const op of r.surfaces[s].operations.filter(x => x.status === 'differs' || x.status === 'errored' || x.status === 'refused')) {
       lines.push(`    ${op.status} ${op.op}${op.diffs ? ` [${op.diffs.map(d => d.class).join(',')}]` : ''}${op.reason ? `: ${op.reason.slice(0, 160)}` : ''}`);
     }
   }

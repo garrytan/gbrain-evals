@@ -200,6 +200,23 @@ describe('compareCaptures', () => {
     expect(replacements.pglite!.cli).toMatchObject({ timestamp: 1, engine_dir: 1 });
     expect(replacements.rust).toBeUndefined();
   });
+  test('an operation only rust refuses with engine_capability_missing is refused, a named gap; any other rust error stays errored', () => {
+    const ts = (kind: 'pglite' | 'postgres') => engine(kind, [
+      { surface: 'cli', op: 'tags', raw_b64: b64('["a"]'), exit_code: 0 },
+      { surface: 'mcp', op: 'health', raw_b64: b64('{}') },
+      { surface: 'mcp', op: 'crash', raw_b64: b64('{}') },
+    ]);
+    const rust = engine('rust', [
+      { surface: 'cli', op: 'tags', raw_b64: b64('{"error":{"code":"engine_capability_missing","capability":"tags"}}'), exit_code: 1 },
+      { surface: 'mcp', op: 'health', error: 'tools/call get_health: engine_capability_missing (health)' },
+      { surface: 'mcp', op: 'crash', error: 'MCP server exited' },
+    ]);
+    const by = Object.fromEntries(compareCaptures([ts('pglite'), ts('postgres'), rust]).operations.map(o => [o.op, o]));
+    expect(by.tags.status).toBe('refused');
+    expect(by.health.status).toBe('refused');
+    expect(by.health.reason).toContain('rust: tools/call get_health');
+    expect(by.crash.status).toBe('errored');
+  });
   test('one engine alone compares nothing', () => {
     const { operations } = compareCaptures([engine('pglite', [{ surface: 'cli', op: 'x', raw_b64: b64('{}'), exit_code: 0 }]), engine('rust', [], 'refused')]);
     expect(operations[0]).toMatchObject({ status: 'not_applicable', engines_compared: ['pglite'] });
@@ -222,8 +239,8 @@ describe('runSurfaceParity with a fake gbrain', () => {
     expect(r.schema_version).toBe(SURFACE_PARITY_SCHEMA_VERSION);
     expect(r.summary.engines_ran).toEqual(['pglite', 'rust']);
     expect(r.summary.verdict).toBe('byte_exact');
-    expect(r.surfaces.cli.counts).toEqual({ identical: 5, differs: 0, errored: 0, not_applicable: 0 });
-    expect(r.surfaces.mcp.counts).toEqual({ identical: 2, differs: 0, errored: 0, not_applicable: 1 });
+    expect(r.surfaces.cli.counts).toEqual({ identical: 5, differs: 0, errored: 0, refused: 0, not_applicable: 0 });
+    expect(r.surfaces.mcp.counts).toEqual({ identical: 2, differs: 0, errored: 0, refused: 0, not_applicable: 1 });
     expect(r.surfaces.markdown.counts.identical).toBe(2 + 2 + 2);
     const counts = r.normalization.replacements.rust!.cli!;
     expect(counts.timestamp).toBeGreaterThan(0);
