@@ -490,7 +490,7 @@ describe('mint.sh --dev and render.ts --dev render stage 1\'s public dev worlds'
       expect(r.code).toBe(2);
       expect(r.err).toContain('takes no --seed-file, --phrasing or --slot');
     }
-    expect(run('bun', [RENDER, '--dev', 'bg1-dev-04', '--fake', '--set', set]).err).toContain('usage: --dev <bg1-dev-01|bg1-dev-02|bg1-dev-03>');
+    expect(run('bun', [RENDER, '--dev', 'bg1-dev-21', '--fake', '--set', set]).err).toContain('usage: --dev <bg1-dev-01 to bg1-dev-20>');
     const inRepo = join(REPO, 'eval', 'data', 'changing-facts-v1', 'dev-set-must-not-exist');
     const r = run('bun', [RENDER, '--dev', 'bg1-dev-01', '--fake', '--set', inRepo]);
     expect(r.code).toBe(2);

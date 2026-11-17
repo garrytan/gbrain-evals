@@ -13,7 +13,7 @@ import { BG1_CUSTODY_MARKER, BG1_WORLD_END_WEEKDAY, PUBLIC_PHRASING, buildQuesti
 import { DecideError } from '../../eval/runner/decisions/errors.ts';
 import { devConversations, loadSplit } from '../../eval/runner/decisions/splits.ts';
 import { DATASET_PINS } from '../../eval/runner/q1/reuse-check.ts';
-import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_STRATA } from '../../eval/runner/bg1/types.ts';
+import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_STRATA } from '../../eval/runner/bg1/types.ts';
 import {
   BG1_MANIFEST, bg1Kept, bg1ManifestFiles, bg1RunClock, bg1Source, bg1UnitConversations, bg1UnitScope, bg1WorldEnd, fetchDataset, filesFor, loadBg1, loadBg1Dev, loadCorpus,
   readBg1Manifest, resolveBg1Dates, verifyBg1Custody, type Bg1Manifest,
@@ -151,7 +151,8 @@ describe('bg1-dev', () => {
     expect(code(() => loadCorpus('bg1-dev'))).toBe('SPEC_MISSING');
     process.env.GBRAIN_EVALS_BG1_WORLD_END = lastSunday();
     const c = loadCorpus('bg1-dev', undefined, devConversations('bg1-dev')!, { keyless: true });
-    expect(c.conversations).toHaveLength(3);
+    expect(c.conversations).toHaveLength(BG1_DEV_CONVERSATIONS.length + BG1_DEV_EXTRA_CONVERSATIONS.length);
+    expect(loadCorpus('bg1-dev', undefined, undefined, { keyless: true }).conversations).toHaveLength(3);
     expect(filesFor('bg1-dev')).toEqual([]);
   });
 
@@ -296,7 +297,8 @@ describe('the committed manifest and splits', () => {
     expect(sealed.dev).toEqual([]);
     expect(sealed.sealed).toEqual([...BG1_CONVERSATIONS]);
     const dev = loadSplit('bg1-dev');
-    expect(dev.dev).toEqual([...BG1_DEV_CONVERSATIONS]);
+    expect(dev.dev).toEqual([...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS]);
+    expect(JSON.parse(readFileSync(join(REPO, 'eval/decisions/splits/bg1-dev.json'), 'utf8')).dev).toEqual([...BG1_DEV_CONVERSATIONS]);
     expect(dev.sealed).toEqual([]);
   });
 });

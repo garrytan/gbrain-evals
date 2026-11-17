@@ -1,0 +1,1614 @@
+[
+ {
+  "id": "bg1-dev-16:s1_updated:0",
+  "question": "Who leads Project Pennant now?",
+  "answer": "Theo Ugwu",
+  "evidence_sessions": [
+   "s122"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Theo Ugwu",
+    "Theo",
+    "Ugwu"
+   ],
+   "stale_values": [
+    "Matteo Zoric",
+    "Esme Grieve",
+    "Talia Adeyemi"
+   ],
+   "decoy_values": [
+    "Kavya Mahlangu"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s1_updated:1",
+  "question": "Who is running Project Pennant these days?",
+  "answer": "Theo Ugwu",
+  "evidence_sessions": [
+   "s122"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Theo Ugwu",
+    "Theo",
+    "Ugwu"
+   ],
+   "stale_values": [
+    "Matteo Zoric",
+    "Esme Grieve",
+    "Talia Adeyemi"
+   ],
+   "decoy_values": [
+    "Kavya Mahlangu"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s1_updated:2",
+  "question": "Who runs operations at Marlpit Software now?",
+  "answer": "Bettina Weber",
+  "evidence_sessions": [
+   "s106"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Bettina Weber",
+    "Bettina",
+    "Weber"
+   ],
+   "stale_values": [
+    "Saoirse Dimitrov",
+    "Anouk Bauer"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s1_updated:3",
+  "question": "Who is in charge of operations at Marlpit Software these days?",
+  "answer": "Bettina Weber",
+  "evidence_sessions": [
+   "s106"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Bettina Weber",
+    "Bettina",
+    "Weber"
+   ],
+   "stale_values": [
+    "Saoirse Dimitrov",
+    "Anouk Bauer"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s1_updated:4",
+  "question": "Where does Ulla Yilmaz work now?",
+  "answer": "Saltmarsh Marine",
+  "evidence_sessions": [
+   "s122",
+   "s134"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-01.employer",
+   "gold_values": [
+    "Saltmarsh Marine",
+    "Saltmarsh"
+   ],
+   "stale_values": [
+    "Glasswing Studios",
+    "Yarrowby Seeds",
+    "Pebblestone Data"
+   ],
+   "decoy_values": [
+    "Quillfeather Media"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s1_updated:5",
+  "question": "Which city is Fenna Lefebvre based in now?",
+  "answer": "Seville",
+  "evidence_sessions": [
+   "s088"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-02.city",
+   "gold_values": [
+    "Seville",
+    "Sevilla"
+   ],
+   "stale_values": [
+    "Basel"
+   ],
+   "decoy_values": [
+    "Bergen"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s1_updated:6",
+  "question": "What role does Wanjiru Pereira hold these days?",
+  "answer": "VP of Sales",
+  "evidence_sessions": [
+   "s134",
+   "s137"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-03.role",
+   "gold_values": [
+    "VP of Sales"
+   ],
+   "stale_values": [
+    "Staff Data Scientist",
+    "Principal Architect",
+    "Head of Platform",
+    "Head of Growth"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s1_updated:7",
+  "question": "Which city is Marlpit Software's head office in these days?",
+  "answer": "Calgary",
+  "evidence_sessions": [
+   "s114"
+  ],
+  "bg1": {
+   "stratum": "s1_updated",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Calgary"
+   ],
+   "stale_values": [
+    "Leeds",
+    "Tallinn"
+   ],
+   "decoy_values": [
+    "Accra"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s2_corrected:0",
+  "question": "Who leads Project Ostrava now?",
+  "answer": "Nnamdi Jovanovic",
+  "evidence_sessions": [
+   "s060",
+   "s075"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-02.lead",
+   "gold_values": [
+    "Nnamdi Jovanovic",
+    "Nnamdi",
+    "Jovanovic"
+   ],
+   "stale_values": [
+    "Soren Kaur",
+    "Oren Eriksen"
+   ],
+   "decoy_values": [
+    "Benedikt Holm"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s2_corrected:1",
+  "question": "Who is running Project Ostrava these days?",
+  "answer": "Nnamdi Jovanovic",
+  "evidence_sessions": [
+   "s060",
+   "s075"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-02.lead",
+   "gold_values": [
+    "Nnamdi Jovanovic",
+    "Nnamdi",
+    "Jovanovic"
+   ],
+   "stale_values": [
+    "Soren Kaur",
+    "Oren Eriksen"
+   ],
+   "decoy_values": [
+    "Benedikt Holm"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s2_corrected:2",
+  "question": "Which city is Ashgrove Foods's head office in these days?",
+  "answer": "Kyoto",
+  "evidence_sessions": [
+   "s040",
+   "s073"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-02.hq",
+   "gold_values": [
+    "Kyoto"
+   ],
+   "stale_values": [
+    "Bologna",
+    "Malmo"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s2_corrected:3",
+  "question": "How much does the Marlow deal renew for each year now?",
+  "answer": "$36,000",
+  "evidence_sessions": [
+   "s016",
+   "s047"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-01.price",
+   "gold_values": [
+    "$36,000",
+    "36,000",
+    "$36k",
+    "36k",
+    "36 thousand"
+   ],
+   "stale_values": [
+    "$336,000"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s2_corrected:4",
+  "question": "Which vendor does Project Ostrava use now?",
+  "answer": "Copperleaf Systems",
+  "evidence_sessions": [
+   "s049",
+   "s061"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-02.vendor",
+   "gold_values": [
+    "Copperleaf Systems",
+    "Copperleaf"
+   ],
+   "stale_values": [
+    "Fernhollow Labs"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s2_corrected:5",
+  "question": "What is Ilse Nakamura's job title now?",
+  "answer": "Head of Support",
+  "evidence_sessions": [
+   "s030",
+   "s066"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-04.role",
+   "gold_values": [
+    "Head of Support"
+   ],
+   "stale_values": [
+    "Programme Director"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s2_corrected:6",
+  "question": "Which city is Ulla Yilmaz based in now?",
+  "answer": "Aarhus",
+  "evidence_sessions": [
+   "s024",
+   "s050"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-01.city",
+   "gold_values": [
+    "Aarhus"
+   ],
+   "stale_values": [
+    "Krakow",
+    "Oslo"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s2_corrected:7",
+  "question": "Where does Ulla Yilmaz live these days?",
+  "answer": "Aarhus",
+  "evidence_sessions": [
+   "s024",
+   "s050"
+  ],
+  "bg1": {
+   "stratum": "s2_corrected",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-01.city",
+   "gold_values": [
+    "Aarhus"
+   ],
+   "stale_values": [
+    "Krakow",
+    "Oslo"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s3_repeated_stale:0",
+  "question": "Who runs operations at Ashgrove Foods now?",
+  "answer": "Gideon Osei",
+  "evidence_sessions": [
+   "s119"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Gideon Osei",
+    "Gideon",
+    "Osei"
+   ],
+   "stale_values": [
+    "Calla Rinaldi"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s3_repeated_stale:1",
+  "question": "Which vendor does Project Granite use now?",
+  "answer": "Lanternfish Games",
+  "evidence_sessions": [
+   "s121"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Lanternfish Games",
+    "Lanternfish"
+   ],
+   "stale_values": [
+    "Zephyrine Aviation"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s3_repeated_stale:2",
+  "question": "Where does Wanjiru Pereira live these days?",
+  "answer": "Taipei",
+  "evidence_sessions": [
+   "s112"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Taipei"
+   ],
+   "stale_values": [
+    "Riga"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s3_repeated_stale:3",
+  "question": "Who supplies Project Mistletoe at the moment?",
+  "answer": "Rookwood Design",
+  "evidence_sessions": [
+   "s124"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-04.vendor",
+   "gold_values": [
+    "Rookwood Design",
+    "Rookwood"
+   ],
+   "stale_values": [
+    "Northgate Freight"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s3_repeated_stale:4",
+  "question": "Where does Delphine Delacroix work now?",
+  "answer": "Thistledown Textiles",
+  "evidence_sessions": [
+   "s108"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Thistledown Textiles",
+    "Thistledown"
+   ],
+   "stale_values": [
+    "Umberfield Mining"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s3_repeated_stale:5",
+  "question": "Which company employs Delphine Delacroix at the moment?",
+  "answer": "Thistledown Textiles",
+  "evidence_sessions": [
+   "s108"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Thistledown Textiles",
+    "Thistledown"
+   ],
+   "stale_values": [
+    "Umberfield Mining"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s3_repeated_stale:6",
+  "question": "Who runs operations at Quayside Health now?",
+  "answer": "Priya Fontaine",
+  "evidence_sessions": [
+   "s129"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-03.ops_lead",
+   "gold_values": [
+    "Priya Fontaine",
+    "Priya",
+    "Fontaine"
+   ],
+   "stale_values": [
+    "Desmond Wojcik"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s3_repeated_stale:7",
+  "question": "Who is in charge of operations at Quayside Health these days?",
+  "answer": "Priya Fontaine",
+  "evidence_sessions": [
+   "s129"
+  ],
+  "bg1": {
+   "stratum": "s3_repeated_stale",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-03.ops_lead",
+   "gold_values": [
+    "Priya Fontaine",
+    "Priya",
+    "Fontaine"
+   ],
+   "stale_values": [
+    "Desmond Wojcik"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s4_conflicting:0",
+  "question": "What seat count is binding on the Marlow deal?",
+  "answer": "670 seats",
+  "evidence_sessions": [
+   "s101"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-01.seats",
+   "gold_values": [
+    "670 seats",
+    "670 licenses",
+    "670 licences",
+    "670 users"
+   ],
+   "stale_values": [
+    "880 seats",
+    "200 seats",
+    "830 seats",
+    "420 seats"
+   ],
+   "decoy_values": [],
+   "deciding_line": "The account owner signed off in writing on 670 seats as the binding seat count for the Marlow deal."
+  }
+ },
+ {
+  "id": "bg1-dev-16:s4_conflicting:1",
+  "question": "What yearly price is binding on the Beacon deal?",
+  "answer": "$168,000",
+  "evidence_sessions": [
+   "s097"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-02.price",
+   "gold_values": [
+    "$168,000",
+    "168,000",
+    "$168k",
+    "168k",
+    "168 thousand"
+   ],
+   "stale_values": [
+    "$270,000",
+    "$90,000",
+    "$40,000"
+   ],
+   "decoy_values": [
+    "$280,000"
+   ],
+   "deciding_line": "Both sides executed the Beacon agreement today, and it fixes the annual price at $168,000."
+  }
+ },
+ {
+  "id": "bg1-dev-16:s4_conflicting:2",
+  "question": "How many seats did we actually sign for on the Tamsin deal?",
+  "answer": "380 seats",
+  "evidence_sessions": [
+   "s084"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-03.seats",
+   "gold_values": [
+    "380 seats",
+    "380 licenses",
+    "380 licences",
+    "380 users"
+   ],
+   "stale_values": [
+    "640 seats",
+    "920 seats"
+   ],
+   "decoy_values": [],
+   "deciding_line": "The account owner signed off in writing on 380 seats as the binding seat count for the Tamsin deal."
+  }
+ },
+ {
+  "id": "bg1-dev-16:s4_conflicting:3",
+  "question": "What seat count is binding on the Tamsin deal?",
+  "answer": "380 seats",
+  "evidence_sessions": [
+   "s084"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-03.seats",
+   "gold_values": [
+    "380 seats",
+    "380 licenses",
+    "380 licences",
+    "380 users"
+   ],
+   "stale_values": [
+    "640 seats",
+    "920 seats"
+   ],
+   "decoy_values": [],
+   "deciding_line": "The account owner signed off in writing on 380 seats as the binding seat count for the Tamsin deal."
+  }
+ },
+ {
+  "id": "bg1-dev-16:s4_conflicting:4",
+  "question": "How many seats did we actually sign for on the Beacon deal?",
+  "answer": "40 seats",
+  "evidence_sessions": [
+   "s044"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-02.seats",
+   "gold_values": [
+    "40 seats",
+    "40 licenses",
+    "40 licences",
+    "40 users"
+   ],
+   "stale_values": [
+    "680 seats",
+    "340 seats",
+    "860 seats",
+    "330 seats"
+   ],
+   "decoy_values": [],
+   "deciding_line": "The account owner signed off in writing on 40 seats as the binding seat count for the Beacon deal."
+  }
+ },
+ {
+  "id": "bg1-dev-16:s4_conflicting:5",
+  "question": "What discount did we actually sign on the Juniper deal?",
+  "answer": "15%",
+  "evidence_sessions": [
+   "s068"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-04.discount",
+   "gold_values": [
+    "15%",
+    "15 percent",
+    "15 per cent"
+   ],
+   "stale_values": [
+    "31%",
+    "13%",
+    "8%",
+    "24%"
+   ],
+   "decoy_values": [
+    "10%"
+   ],
+   "deciding_line": "Both sides executed the Juniper agreement today, and it fixes the discount at 15%."
+  }
+ },
+ {
+  "id": "bg1-dev-16:s4_conflicting:6",
+  "question": "Which discount is binding on the Juniper deal?",
+  "answer": "15%",
+  "evidence_sessions": [
+   "s068"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "deal-04.discount",
+   "gold_values": [
+    "15%",
+    "15 percent",
+    "15 per cent"
+   ],
+   "stale_values": [
+    "31%",
+    "13%",
+    "8%",
+    "24%"
+   ],
+   "decoy_values": [
+    "10%"
+   ],
+   "deciding_line": "Both sides executed the Juniper agreement today, and it fixes the discount at 15%."
+  }
+ },
+ {
+  "id": "bg1-dev-16:s4_conflicting:7",
+  "question": "What contract term did we actually sign for the Cobalt deal?",
+  "answer": "33 months",
+  "evidence_sessions": [
+   "s071"
+  ],
+  "bg1": {
+   "stratum": "s4_conflicting",
+   "family": "primary",
+   "form": "exact",
+   "slot": "deal-05.term",
+   "gold_values": [
+    "33 months",
+    "33-month",
+    "33 mo"
+   ],
+   "stale_values": [
+    "21 months",
+    "54 months",
+    "66 months",
+    "45 months"
+   ],
+   "decoy_values": [],
+   "deciding_line": "Both sides executed the Cobalt agreement today, and it fixes the contract term at 33 months."
+  }
+ },
+ {
+  "id": "bg1-dev-16:s5_withdrawn:0",
+  "question": "Who is Project Tamarind's pilot customer right now?",
+  "answer": "None: the plan with Gorseway Transit was called off.",
+  "evidence_sessions": [
+   "s030",
+   "s033",
+   "s043",
+   "s081"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "project-05.pilot",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Gorseway Transit"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s5_withdrawn:1",
+  "question": "Which company is Stonechat Robotics merging with?",
+  "answer": "None: the plan with Willowmere Hotels was called off.",
+  "evidence_sessions": [
+   "s016",
+   "s131"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-04.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Willowmere Hotels"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s5_withdrawn:2",
+  "question": "Where is the Vantor Biotech team offsite being held?",
+  "answer": "None: the plan with Busan was called off.",
+  "evidence_sessions": [
+   "s063",
+   "s070",
+   "s078",
+   "s111"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-05.offsite",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Busan"
+   ],
+   "decoy_values": [
+    "Edinburgh"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s5_withdrawn:3",
+  "question": "Which city is Vantor Biotech's offsite in?",
+  "answer": "None: the plan with Busan was called off.",
+  "evidence_sessions": [
+   "s063",
+   "s070",
+   "s078",
+   "s111"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-05.offsite",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Busan"
+   ],
+   "decoy_values": [
+    "Edinburgh"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s5_withdrawn:4",
+  "question": "Which company is Brackenridge Media merging with?",
+  "answer": "None: the report about Nettlefield Supply was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s056",
+   "s058",
+   "s074",
+   "s089"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "company-06.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Nettlefield Supply"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s5_withdrawn:5",
+  "question": "Who is Brackenridge Media's merger partner at this point?",
+  "answer": "None: the report about Nettlefield Supply was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s056",
+   "s058",
+   "s074",
+   "s089"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-06.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Nettlefield Supply"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s5_withdrawn:6",
+  "question": "Which customer is Project Kestrel piloting with?",
+  "answer": "None: the plan with Jasperwood Furniture was called off.",
+  "evidence_sessions": [
+   "s079",
+   "s096",
+   "s141"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "exact",
+   "slot": "project-06.pilot",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Jasperwood Furniture"
+   ],
+   "decoy_values": [
+    "Lindenhall Bank"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s5_withdrawn:7",
+  "question": "Who is Quayside Health's merger partner at this point?",
+  "answer": "None: the report about Heathmont Schools was a rumour, and nothing is planned.",
+  "evidence_sessions": [
+   "s064",
+   "s077",
+   "s079",
+   "s089"
+  ],
+  "bg1": {
+   "stratum": "s5_withdrawn",
+   "family": "primary",
+   "form": "paraphrase",
+   "slot": "company-03.merger",
+   "gold_values": [
+    "none",
+    "no one",
+    "nothing",
+    "called off",
+    "cancelled",
+    "canceled",
+    "not happening",
+    "no longer"
+   ],
+   "stale_values": [
+    "Heathmont Schools"
+   ],
+   "decoy_values": [
+    "Vellumworks Print"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s6_as_of:0",
+  "question": "Which vendor did Project Granite use on [[D:-409]]?",
+  "answer": "Zephyrine Aviation",
+  "evidence_sessions": [
+   "s005"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Zephyrine Aviation",
+    "Zephyrine"
+   ],
+   "stale_values": [
+    "Lanternfish Games"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s6_as_of:1",
+  "question": "Which city was Fenna Lefebvre based in on [[D:-296]]?",
+  "answer": "Basel",
+  "evidence_sessions": [
+   "s034"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-02.city",
+   "gold_values": [
+    "Basel"
+   ],
+   "stale_values": [
+    "Seville"
+   ],
+   "decoy_values": [
+    "Bergen"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s6_as_of:2",
+  "question": "On [[D:-403]], who was in charge of operations at Marlpit Software?",
+  "answer": "Saoirse Dimitrov",
+  "evidence_sessions": [
+   "s018"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Saoirse Dimitrov",
+    "Saoirse",
+    "Dimitrov"
+   ],
+   "stale_values": [
+    "Anouk Bauer",
+    "Bettina Weber"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s6_as_of:3",
+  "question": "Who led Project Pennant on [[D:-187]]?",
+  "answer": "Talia Adeyemi",
+  "evidence_sessions": [
+   "s106"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Talia Adeyemi",
+    "Talia",
+    "Adeyemi"
+   ],
+   "stale_values": [
+    "Matteo Zoric",
+    "Esme Grieve",
+    "Theo Ugwu"
+   ],
+   "decoy_values": [
+    "Kavya Mahlangu"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s6_as_of:4",
+  "question": "On [[D:-232]], who was in charge of operations at Ashgrove Foods?",
+  "answer": "Calla Rinaldi",
+  "evidence_sessions": [
+   "s020"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Calla Rinaldi",
+    "Calla",
+    "Rinaldi"
+   ],
+   "stale_values": [
+    "Gideon Osei"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s6_as_of:5",
+  "question": "Who ran operations at Quayside Health on [[D:-513]]?",
+  "answer": "Desmond Wojcik",
+  "evidence_sessions": [
+   "s004"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-03.ops_lead",
+   "gold_values": [
+    "Desmond Wojcik",
+    "Desmond",
+    "Wojcik"
+   ],
+   "stale_values": [
+    "Priya Fontaine"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s6_as_of:6",
+  "question": "On [[D:-395]], what role did Wanjiru Pereira hold?",
+  "answer": "Staff Data Scientist",
+  "evidence_sessions": [
+   "s021"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-03.role",
+   "gold_values": [
+    "Staff Data Scientist"
+   ],
+   "stale_values": [
+    "Principal Architect",
+    "Head of Platform",
+    "VP of Sales",
+    "Head of Growth"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s6_as_of:7",
+  "question": "On [[D:-457]], where did Wanjiru Pereira live?",
+  "answer": "Riga",
+  "evidence_sessions": [
+   "s017"
+  ],
+  "bg1": {
+   "stratum": "s6_as_of",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Riga"
+   ],
+   "stale_values": [
+    "Taipei"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s7_as_known:0",
+  "question": "As of [[D:-298]], who did I think was in charge of operations at Marlpit Software?",
+  "answer": "Saoirse Dimitrov",
+  "evidence_sessions": [
+   "s018"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Saoirse Dimitrov",
+    "Saoirse",
+    "Dimitrov"
+   ],
+   "stale_values": [
+    "Anouk Bauer",
+    "Bettina Weber"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s7_as_known:1",
+  "question": "On [[D:-338]], which vendor had I been told Project Ostrava used?",
+  "answer": "Fernhollow Labs",
+  "evidence_sessions": [
+   "s049"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-02.vendor",
+   "gold_values": [
+    "Fernhollow Labs",
+    "Fernhollow"
+   ],
+   "stale_values": [
+    "Copperleaf Systems"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s7_as_known:2",
+  "question": "As of [[D:-406]], where did I think Ulla Yilmaz lived?",
+  "answer": "Oslo",
+  "evidence_sessions": [
+   "s024"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-01.city",
+   "gold_values": [
+    "Oslo"
+   ],
+   "stale_values": [
+    "Krakow",
+    "Aarhus"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s7_as_known:3",
+  "question": "On [[D:-289]], where had I been told Ashgrove Foods was headquartered?",
+  "answer": "Malmo",
+  "evidence_sessions": [
+   "s040"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-02.hq",
+   "gold_values": [
+    "Malmo",
+    "Malmö"
+   ],
+   "stale_values": [
+    "Bologna",
+    "Kyoto"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s7_as_known:4",
+  "question": "As of [[D:-364]], which role did I think Ilse Nakamura held?",
+  "answer": "Programme Director",
+  "evidence_sessions": [
+   "s030"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-04.role",
+   "gold_values": [
+    "Programme Director"
+   ],
+   "stale_values": [
+    "Head of Support"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s7_as_known:5",
+  "question": "As of [[D:-412]], what did I think the Marlow deal renewed for each year?",
+  "answer": "$336,000",
+  "evidence_sessions": [
+   "s016"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "deal-01.price",
+   "gold_values": [
+    "$336,000",
+    "336,000",
+    "$336k",
+    "336k",
+    "336 thousand"
+   ],
+   "stale_values": [
+    "$36,000"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s7_as_known:6",
+  "question": "On [[D:-296]], who had I been told led Project Ostrava?",
+  "answer": "Oren Eriksen",
+  "evidence_sessions": [
+   "s060"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-02.lead",
+   "gold_values": [
+    "Oren Eriksen",
+    "Oren",
+    "Eriksen"
+   ],
+   "stale_values": [
+    "Soren Kaur",
+    "Nnamdi Jovanovic"
+   ],
+   "decoy_values": [
+    "Benedikt Holm"
+   ]
+  }
+ },
+ {
+  "id": "bg1-dev-16:s7_as_known:7",
+  "question": "On [[D:-353]], what had I been told Wanjiru Pereira's job title was?",
+  "answer": "Staff Data Scientist",
+  "evidence_sessions": [
+   "s021"
+  ],
+  "bg1": {
+   "stratum": "s7_as_known",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-03.role",
+   "gold_values": [
+    "Staff Data Scientist"
+   ],
+   "stale_values": [
+    "Principal Architect",
+    "Head of Platform",
+    "VP of Sales",
+    "Head of Growth"
+   ],
+   "decoy_values": []
+  }
+ },
+ {
+  "id": "bg1-dev-16:s8_history:0",
+  "question": "In order from earliest, who has run Project Pennant?",
+  "answer": "Matteo Zoric, then Esme Grieve, then Talia Adeyemi, then Theo Ugwu",
+  "evidence_sessions": [
+   "s021",
+   "s059",
+   "s106",
+   "s122"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-01.lead",
+   "gold_values": [
+    "Matteo Zoric",
+    "Esme Grieve",
+    "Talia Adeyemi",
+    "Theo Ugwu"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Kavya Mahlangu"
+   ],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-16:s8_history:1",
+  "question": "In order from earliest, who has been in charge of operations at Marlpit Software?",
+  "answer": "Saoirse Dimitrov, then Anouk Bauer, then Bettina Weber",
+  "evidence_sessions": [
+   "s018",
+   "s074",
+   "s106"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "company-01.ops_lead",
+   "gold_values": [
+    "Saoirse Dimitrov",
+    "Anouk Bauer",
+    "Bettina Weber"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-16:s8_history:2",
+  "question": "List the cities Marlpit Software has been headquartered in, oldest first.",
+  "answer": "Leeds, then Tallinn, then Calgary",
+  "evidence_sessions": [
+   "s023",
+   "s082",
+   "s114"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-01.hq",
+   "gold_values": [
+    "Leeds",
+    "Tallinn",
+    "Calgary"
+   ],
+   "stale_values": [],
+   "decoy_values": [
+    "Accra"
+   ],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-16:s8_history:3",
+  "question": "In order from earliest, which employers has Delphine Delacroix had?",
+  "answer": "Umberfield Mining, then Thistledown Textiles",
+  "evidence_sessions": [
+   "s017",
+   "s108"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "person-05.employer",
+   "gold_values": [
+    "Umberfield Mining",
+    "Thistledown Textiles"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-16:s8_history:4",
+  "question": "List the people who have run operations at Ashgrove Foods, oldest first.",
+  "answer": "Calla Rinaldi, then Gideon Osei",
+  "evidence_sessions": [
+   "s020",
+   "s119"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "company-02.ops_lead",
+   "gold_values": [
+    "Calla Rinaldi",
+    "Gideon Osei"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-16:s8_history:5",
+  "question": "In order from earliest, who has supplied Project Granite?",
+  "answer": "Zephyrine Aviation, then Lanternfish Games",
+  "evidence_sessions": [
+   "s005",
+   "s121"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "paraphrase",
+   "slot": "project-03.vendor",
+   "gold_values": [
+    "Zephyrine Aviation",
+    "Lanternfish Games"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-16:s8_history:6",
+  "question": "List the cities Wanjiru Pereira has been based in, oldest first.",
+  "answer": "Riga, then Taipei",
+  "evidence_sessions": [
+   "s017",
+   "s112"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "person-03.city",
+   "gold_values": [
+    "Riga",
+    "Taipei"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ },
+ {
+  "id": "bg1-dev-16:s8_history:7",
+  "question": "List the vendors Project Mistletoe has used, oldest first.",
+  "answer": "Northgate Freight, then Rookwood Design",
+  "evidence_sessions": [
+   "s012",
+   "s124"
+  ],
+  "bg1": {
+   "stratum": "s8_history",
+   "family": "secondary",
+   "form": "exact",
+   "slot": "project-04.vendor",
+   "gold_values": [
+    "Northgate Freight",
+    "Rookwood Design"
+   ],
+   "stale_values": [],
+   "decoy_values": [],
+   "ordered": true
+  }
+ }
+]
