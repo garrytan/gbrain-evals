@@ -108,15 +108,16 @@ cost, as the providers' usage fields reported it, by its correct answers.
 | G4, gbrain CLI | Claude Opus 5.5 | 100% (240/240) | 1.000 | $0.013 |
 | | particle-1 | 79.2% (190/240) | 0.650 | $0.0043 |
 | | GPT-6.1 Sol | 100% (240/240) | 1.000 | $0.0068 |
-| G6, local caller | Claude Opus 5.5 | 99.5% (199/200) | 0.98 (both callers) | $0.042 (both callers) |
-| | particle-1 | 97.0% (194/200) | 0.73 (both callers) | $0.016 (both callers) |
+| G6, local caller | Claude Opus 5.5 | 100% (200/200) | 0.99 (both callers) | $0.042 (both callers) |
+| | particle-1 | 98.0% (196/200) | 0.74 (both callers) | $0.016 (both callers) |
 | | GPT-6.1 Sol | 100% (200/200) | 1.00 (both callers) | $0.017 (both callers) |
 | G6, remote caller | Claude Opus 5.5 | 99.5% (199/200) | | |
 | | particle-1 | 81.0% (162/200) | | |
 | | GPT-6.1 Sol | 100% (200/200) | | |
 
 pass^4 is the chance that all four trials of a task succeed, averaged over tasks; it falls when a model is right on
-some trials of a task and wrong on others.
+some trials of a task and wrong on others. The G6 local rows were corrected on 2026-11-17; the
+[correction](#correction-2026-11-17) gives the original figures.
 
 **Paired comparisons.** Each difference is the mean over tasks of the per-task success difference (four trials each),
 with a 95% percentile bootstrap interval over tasks. The binding minimum detectable differences (MDDs) were fixed
@@ -133,14 +134,15 @@ difference smaller than its MDD reads "no measurable difference", whatever its i
 | G3 MCP, Opus − Sol | +1.7 | 0.0 to +3.8 | 0 / 3 | No measurable difference |
 | G4, Opus − particle-1 | +20.8 | +12.9 to +29.6 | 0 / 21 | Measurable difference (above 19.8) |
 | G4, Opus − Sol | 0.0 | 0.0 to 0.0 | 0 / 0 | No measurable difference |
-| G6 local, Opus − particle-1 | +2.5 | 0.0 to +5.5 | 1 / 5 | No measurable difference |
+| G6 local, Opus − particle-1 | +2.0 | +0.5 to +4.0 | 0 / 4 | No measurable difference (below 21.7) |
 | G6 remote, Opus − particle-1 | +18.5 | +11.5 to +25.5 | 1 / 22 | No measurable difference (below 21.7) |
 | G6 remote, Opus − Sol | −0.5 | −1.5 to 0.0 | 1 / 0 | No measurable difference |
 
-"Tasks worse / better" counts the tasks on which Opus did worse and better than the other model. Four differences have
-intervals that exclude zero, all of them Opus against particle-1. Three (G1, G3 MCP and G6 remote) are smaller than
-their binding MDDs, so they read as no measurable difference under the rule fixed in advance; the G3 one comes from the
-scoring problem described [under G3](#g3-write-landing-and-call-contract). The fourth, G4, is just above its MDD (20.8
+"Tasks worse / better" counts the tasks on which Opus did worse and better than the other model. Five differences have
+intervals that exclude zero, all of them Opus against particle-1. Four (G1, G3 MCP, G6 local and G6 remote) are smaller
+than their binding MDDs, so they read as no measurable difference under the rule fixed in advance; the G3 one comes from
+the scoring problem described [under G3](#g3-write-landing-and-call-contract), and G6 local's comes from 4 of 50 tasks
+on which particle-1 missed one of four trials and Opus missed none. The fifth, G4, is just above its MDD (20.8
 points against 19.8, with an interval reaching down to 12.9), and it comes from particle-1's answer form rather than
 from choosing the wrong person, as [the G1 and G4 agent cells](#g1-and-g4-agent-cells) show.
 
@@ -525,6 +527,8 @@ contrast no room, as the batch 3 section shows.
   <verdict.json>` refuses any scorecard other than the counted one unless `--secondary` labels it. Run on the published
   scorecards, it reproduces every verdict here.
 - **Paired intervals.** Percentile bootstrap over tasks, 10,000 resamples, seed 2005.
+- **G6 correction.** `bun eval/runner/predictive/out-of-view/rescore-probe-race.ts` rescores the counted G6 log and
+  recomputes the G6 comparisons; `--write` rewrites `g6/scorecard.json` and `g6/correction-2026-11-17.json`.
 - **Raw files**, under [`predictive-measures/`](predictive-measures/):
   - `g1/`, `g3/`, `g4/` and `g6/`: each run's `scorecard.json` (the runner's summary without its spending ledger) and
     `episodes.jsonl.gz` (every episode, with its answer, cause and usage). In 70 of G3's 1,440 episodes an agent's
@@ -569,6 +573,36 @@ Batch 4, the held-out replication the correction called for, read HELD: configur
 batch 4 layer reads PREDICTIVE ([results](2026-11-12-g2-paraphrase-gap-replication.md)). The first takeaway, the G2
 verdict row, the end of the batch 2 section, the advice on paraphrase recall and the caveats now say so. No batch 1 to
 3 number or verdict changed.
+
+## Correction, 2026-11-17
+
+Three counted G6 episodes were scored against a wrong view. Before each episode the harness checked which gold pages
+the caller could read, and it checked a task's two pages at the same time. For the local caller each check is its own
+`gbrain call` process, and the brain lets one process in at a time, so the second check could fail and the harness
+recorded a readable page as hidden. The local caller can read every page by design, so in these three episodes a model
+that answered with both gold pages was scored as answering without its evidence. The harness now checks one page at a
+time ([#477](https://github.com/garrytan/gbrain-evals/pull/477)). No remote-caller episode differs from the intended
+view, and no other runner checks pages this way.
+
+| Episode | Was | Now |
+|---|---|---|
+| Claude Opus 5.5, task `oov-7-p002`, local, trial 0 | answered without gold | correct |
+| particle-1, task `oov-7-p012`, local, trial 1 | answered without gold | correct |
+| particle-1, task `oov-7-p030`, local, trial 3 | answered without gold | correct |
+
+Each was rescored from the committed episode log with the counted scorer: its citations are the task's two gold pages.
+The log is unchanged. The figures this moves, original first:
+
+- G6 local success: Claude Opus 5.5 99.5% (199/200) to 100% (200/200), particle-1 97.0% (194/200) to 98.0% (196/200).
+- pass^4 over both callers: Claude Opus 5.5 0.98 to 0.99, particle-1 0.73 to 0.74. Cost per correct answer still
+  rounds to $0.042 and $0.016.
+- G6 local, Opus − particle-1: +2.5 points (0.0 to +5.5, tasks worse / better 1 / 5) to +2.0 (+0.5 to +4.0, 0 / 4).
+  Its interval now excludes zero, but it stays below the 21.7-point MDD, so it still reads no measurable difference.
+  The original bootstrap script isn't in this repository. The recomputation uses `eval/runner/stats/paired.ts` at
+  seed 2005, reproduces the original row from the uncorrected log, and gives the corrected bounds at every one of
+  seven seeds tried.
+
+No remote-caller figure and no verdict changes. G6 stays KEEP, report-only.
 
 ## Disclosures
 
