@@ -718,7 +718,8 @@ export function planValidation(opts: Options, clients: ModelClient[], index: Pub
 /**
  * Runs the calls, cached replies first. A refused reservation stops every worker and propagates. A usable reply the
  * fallback gave is cached with the fallback's id as `by` and the category of the refusal that sent it there, and every
- * count includes cached fallback replies.
+ * count includes cached fallback replies. A prompt several calls hold is asked once per client, and its reply settles
+ * each of them, as a cached reply would, so no two asks of one prompt share the fallback's bookkeeping at once.
  */
 export async function runCalls(calls: Call[], clients: ModelClient[], concurrency: number): Promise<Required<RunCounts>> {
   let next = 0, errors = 0, cached = 0, fallbackAnswers = 0, fallbackUnusable = 0, stopped = false;
@@ -731,22 +732,30 @@ export async function runCalls(calls: Call[], clients: ModelClient[], concurrenc
     if (entry.by) { fallbackAnswers++; tally(entry.refused_category); }
     c.settle(entry.reply);
   }
-  const pending = calls.filter(c => !c.cached);
+  const asks = new Map<string, Call[]>();
+  for (const c of calls) {
+    if (c.cached) continue;
+    const key = `${c.client}\0${c.prompt}`, group = asks.get(key);
+    if (group) group.push(c); else asks.set(key, [c]);
+  }
+  const pending = [...asks.values()];
   const worker = async () => {
     while (!stopped && next < pending.length) {
-      const c = pending[next++];
+      const group = pending[next++], c = group[0];
       let reply: string;
       try { reply = await clients[c.client].complete(c.prompt, MAX_OUTPUT_TOKENS); } catch (error) {
         if (error instanceof BudgetExceededError) { stopped = true; throw error; }
-        errors++;
-        c.settle(null);
+        errors += group.length;
+        for (const g of group) g.settle(null);
         continue;
       }
       const by = (clients[c.client] as Partial<FallbackClient>).answeredBy?.get(c.prompt);
       const refusedCategory = by ? (clients[c.client] as Partial<RecordingClient>).stops?.get(c.prompt)?.refused_category : undefined;
-      const usable = c.settle(reply);
-      if (by) { tally(refusedCategory); if (usable) fallbackAnswers++; else fallbackUnusable++; }
-      if (usable && c.cacheFile) { mkdirSync(dirname(c.cacheFile), { recursive: true }); writeFileSync(c.cacheFile, JSON.stringify(by ? { reply, by, refused_category: refusedCategory } : { reply })); }
+      for (const g of group) {
+        const usable = g.settle(reply);
+        if (by) { tally(refusedCategory); if (usable) fallbackAnswers++; else fallbackUnusable++; }
+        if (usable && g.cacheFile) { mkdirSync(dirname(g.cacheFile), { recursive: true }); writeFileSync(g.cacheFile, JSON.stringify(by ? { reply, by, refused_category: refusedCategory } : { reply })); }
+      }
     }
   };
   await Promise.all(Array.from({ length: Math.max(1, Math.floor(concurrency)) }, worker));

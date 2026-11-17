@@ -14,10 +14,11 @@ import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
 import { readBeamPaths } from '../../eval/custody/rs1/beam-paths.ts';
 import { BudgetExceededError, BudgetRun, initLedger, installPaidRequestGuard, readLedger } from '../../eval/runner/budget-ledger.ts';
 import {
-  planCandidates, recordingAnthropicClient, recordingGeminiClient, validateCandidates, writeCandidateReport, type CandidateReport, type StopRecord,
+  planCandidates, recordingAnthropicClient, recordingGeminiClient, summaryLines as candidatesSummaryLines, validateCandidates, writeCandidateReport,
+  type CandidateReport, type StopRecord,
 } from '../../eval/custody/rs1/validate-candidates.ts';
 import {
-  ABILITIES, ANSWER_FIELD, FALLBACK_ID, SLOTS, VALIDATOR_IDS, anthropicClient, buildPublicIndex, fakeClient, geminiClient, validateSet, withFallback,
+  ABILITIES, ANSWER_FIELD, FALLBACK_ID, SLOTS, VALIDATOR_IDS, anthropicClient, buildPublicIndex, fakeClient, geminiClient, runCalls, validateSet, withFallback,
   writeReport, summaryLines as validateSummaryLines, type Ability, type ModelClient, type Options, type PublicIndex, type RecordingClient,
 } from '../../eval/custody/rs1/validate.ts';
 import { fakeAsk, fallbackAsk, fallbackRequest, parsePicks, probe, ProbeError, resolvePicks, summaryLines } from '../../eval/custody/rs1/probe-fallback.ts';
@@ -993,7 +994,7 @@ describe('rs1_mint.py fifteen planned batches (stubbed BEAM)', () => {
 
 describe('validate.ts', () => {
   test('is byte-identical to the preregistered file', () => {
-    expect(sha(readFileSync(join(RS1, 'validate.ts')))).toBe('afb07bd67888afd254befcb79f6015d1a33af627044e884075171547429e242d');
+    expect(sha(readFileSync(join(RS1, 'validate.ts')))).toBe('eb380b68b5730c9abb9b7982a9961a8ab352be149bc8e21ef2fca66c79bfa648');
   });
 });
 
@@ -1289,7 +1290,8 @@ describe('the fallback validator', () => {
     expect(c.validator_errors.map(e => [e.kind, e.stop, e.by, e.candidate])).toEqual(expect.arrayContaining([
       ['support', 'refusal', FALLBACK_ID, 'event_ordering/1'], ['absence', 'refusal', FALLBACK_ID, null], ['absence_single', 'refusal', FALLBACK_ID, 'abstention/1'],
     ]));
-    expect(report.totals).toMatchObject({ fallback_answers: 0, fallback_unusable: 1 + 2 * windows, gate_refusal: 2, incomplete: 0 });
+    expect(report.totals).toMatchObject({ fallback_answers: 0, fallback_unusable: 1 + 2 * windows, fallback_category_cyber: 1 + 2 * windows, gate_refusal: 2, incomplete: 0 });
+    expect(candidatesSummaryLines(report, 'f'.repeat(64)).join('\n')).toContain(`fallback_answers=0 fallback_unusable=${1 + 2 * windows} fallback_category_cyber=${1 + 2 * windows}`);
     const alone = await validateCandidates(options(set), [fakeClient(VALIDATOR_IDS[0]), recordingFake(HAIKU, refuse)], index);
     expect(alone.conversations.c001.status).toBe('incomplete');
     expect(alone.conversations.c001.candidates['event_ordering/1'].gates).toEqual([`validator_error:${HAIKU}`]);
@@ -1343,6 +1345,24 @@ describe('the fallback validator', () => {
     await client.complete('same prompt', 64);
     expect(client.answeredBy.has('same prompt')).toBe(false);
     expect(client.stops.get('same prompt')?.by).toBeUndefined();
+  });
+
+  test('runCalls asks a prompt several calls hold once per client, settles each with that reply, and counts a refusal without stop details as none', async () => {
+    const dir = mkdtempSync(join(root, 'dup-'));
+    let asks = 0;
+    const haiku = recordingFake(HAIKU, () => asks++ === 0), sonnet = recordingFake(FALLBACK_ID, () => false);
+    const settled: Array<string | null> = [];
+    const call = (prompt: string) => ({ client: 0, prompt, tokens: 1, cacheFile: join(dir, `${prompt.length}.json`), cached: false, settle: (r: string | null) => { settled.push(r); return r !== null; } });
+    const counts = await runCalls([call('dup prompt'), call('dup prompt'), call('dup prompt')], [withFallback(haiku, sonnet)], 3);
+    expect(haiku.asked).toEqual(['dup prompt']);
+    expect(sonnet.asked).toEqual(['dup prompt']);
+    expect(settled).toHaveLength(3);
+    expect(new Set(settled).size).toBe(1);
+    expect(counts).toEqual({ errors: 0, cached: 0, fallback_answers: 3, fallback_unusable: 0, fallback_categories: { cyber: 3 } });
+    expect(readJson(join(dir, '10.json'))).toEqual({ reply: settled[0], by: FALLBACK_ID, refused_category: 'cyber' });
+    const bare: RecordingClient = { id: HAIKU, stops: new Map(), async complete(prompt) { this.stops.set(prompt, { stop: 'refusal', output_tokens: 0, blocks: [] }); return ''; } };
+    const none = await runCalls([call('no details')], [withFallback(bare, recordingFake(FALLBACK_ID, () => false))], 1);
+    expect(none.fallback_categories).toEqual({ none: 1 });
   });
 
   test('validate.ts fails a support item on refusal when both refuse its prompt, and prints the fallback counts', async () => {
