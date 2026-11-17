@@ -18,7 +18,7 @@ import {
 } from '../../eval/custody/rs1/validate-candidates.ts';
 import {
   ABILITIES, ANSWER_FIELD, FALLBACK_ID, SLOTS, VALIDATOR_IDS, anthropicClient, buildPublicIndex, fakeClient, geminiClient, validateSet, withFallback,
-  writeReport, type Ability, type ModelClient, type Options, type PublicIndex, type RecordingClient,
+  writeReport, summaryLines as validateSummaryLines, type Ability, type ModelClient, type Options, type PublicIndex, type RecordingClient,
 } from '../../eval/custody/rs1/validate.ts';
 import { fakeAsk, fallbackAsk, fallbackRequest, parsePicks, probe, ProbeError, resolvePicks, summaryLines } from '../../eval/custody/rs1/probe-fallback.ts';
 
@@ -993,7 +993,7 @@ describe('rs1_mint.py fifteen planned batches (stubbed BEAM)', () => {
 
 describe('validate.ts', () => {
   test('is byte-identical to the preregistered file', () => {
-    expect(sha(readFileSync(join(RS1, 'validate.ts')))).toBe('677a2a1492f9700ce34cffbd35cbd3f82354d05f84e2d0c068415b73d22d1646');
+    expect(sha(readFileSync(join(RS1, 'validate.ts')))).toBe('afb07bd67888afd254befcb79f6015d1a33af627044e884075171547429e242d');
   });
 });
 
@@ -1177,14 +1177,17 @@ describe('the fallback validator', () => {
   const options = (set: string, extra: Partial<Options> = {}): Options => ({ setDir: set, beamDir: beam, reportPath: join(root, 'report.json'), targetTokens: 1_000_000, tolerance: 0.9999, windowTokens: 600, overlapTokens: 60, concurrency: 4, ...extra });
   const questionsOf = (prompt: string) => between(prompt, '<questions>', '</questions>').trim().split('\n');
   const HAIKU = VALIDATOR_IDS[1];
-  /** fakeClient with a stop record per prompt: prompts refuse() names come back empty with stop reason refusal. */
-  function recordingFake(id: string, refuse: (prompt: string) => boolean): RecordingClient & { asked: string[] } {
+  /**
+   * fakeClient with a stop record per prompt: prompts refuse() names end with stop reason refusal and category cyber,
+   * and come back empty, or with the answer fakeClient would give when `partial` (a refusal after partial output).
+   */
+  function recordingFake(id: string, refuse: (prompt: string) => boolean, partial = false): RecordingClient & { asked: string[] } {
     const inner = fakeClient(id), stops = new Map<string, StopRecord>(), asked: string[] = [];
     return {
       id, stops, asked,
       async complete(prompt, max) {
         asked.push(prompt);
-        if (refuse(prompt)) { stops.set(prompt, { stop: 'refusal', output_tokens: 0, blocks: [] }); return ''; }
+        if (refuse(prompt)) { stops.set(prompt, { stop: 'refusal', output_tokens: 0, blocks: [], category: 'cyber' }); return partial ? inner.complete(prompt, max) : ''; }
         stops.set(prompt, { stop: 'end_turn', output_tokens: 9, blocks: ['text'] });
         return inner.complete(prompt, max);
       },
@@ -1231,9 +1234,9 @@ describe('the fallback validator', () => {
       ['claude-haiku-5-5', 'both prompt'], ['claude-sonnet-5-5', 'both prompt'], ['claude-haiku-5-5', 'error prompt'],
     ]);
     expect(client.stops.get('ok prompt')).toEqual({ stop: 'end_turn', output_tokens: 6, blocks: ['text'] });
-    expect(client.stops.get('refused prompt')).toEqual({ stop: 'end_turn', output_tokens: 6, blocks: ['text'], by: FALLBACK_ID });
+    expect(client.stops.get('refused prompt')).toEqual({ stop: 'end_turn', output_tokens: 6, blocks: ['text'], by: FALLBACK_ID, refused_category: 'bio' });
     expect(primary.stops.get('refused prompt')).toEqual({ stop: 'refusal', output_tokens: 0, blocks: [], category: 'bio' });
-    expect(client.stops.get('both prompt')).toEqual({ stop: 'refusal', output_tokens: 0, blocks: [], category: 'bio', by: FALLBACK_ID });
+    expect(client.stops.get('both prompt')).toEqual({ stop: 'refusal', output_tokens: 0, blocks: [], category: 'bio', by: FALLBACK_ID, refused_category: 'bio' });
     expect(client.stops.get('error prompt')).toEqual({ stop: 'http_503', output_tokens: null, blocks: [] });
     expect([...client.answeredBy.keys()]).toEqual(['refused prompt', 'both prompt']);
     expect(JSON.stringify([...client.stops, ...primary.stops])).not.toContain('sealed');
@@ -1258,13 +1261,13 @@ describe('the fallback validator', () => {
     expect(c.candidates['event_ordering/1']).toEqual({ pass: true, gates: [] });
     expect(report.fallback).toBe(FALLBACK_ID);
     expect(report.validators).toEqual([...VALIDATOR_IDS]);
-    expect(report.totals).toMatchObject({ fallback_answers: refusedPrompts.length, fallback_unusable: 0, validator_errors: 0, regrouped_windows: 0 });
+    expect(report.totals).toMatchObject({ fallback_answers: refusedPrompts.length, fallback_unusable: 0, fallback_category_cyber: refusedPrompts.length, validator_errors: 0, regrouped_windows: 0 });
     expect(cachedBy(opts.cacheDir!)).toEqual(refusedPrompts.map(() => FALLBACK_ID));
     const never = recordingFake(HAIKU, () => { throw new Error('asked again'); });
     const again = await validateCandidates(opts, [fakeClient(VALIDATOR_IDS[0]), withFallback(never, recordingFake(FALLBACK_ID, () => { throw new Error('asked again'); }))], index);
     expect(never.asked).toEqual([]);
     expect(again.conversations.c001).toEqual(c);
-    expect(again.totals).toMatchObject({ fallback_answers: refusedPrompts.length, cached_calls: again.totals.calls });
+    expect(again.totals).toMatchObject({ fallback_answers: refusedPrompts.length, fallback_category_cyber: refusedPrompts.length, cached_calls: again.totals.calls });
   });
 
   test('validate-candidates.ts fails a candidate on refusal when the fallback refuses too, so the conversation is checked, not incomplete', async () => {
@@ -1311,6 +1314,50 @@ describe('the fallback validator', () => {
     const alone = await validateSet(options(set), [fakeClient(VALIDATOR_IDS[0]), recordingFake(HAIKU, p.window)], index);
     expect(alone.conversations.c001.status).toBe('incomplete');
     expect(alone.fallback).toBeNull();
+  });
+
+  test('a fallback reply that ends in a refusal counts as a refusal in both reports, whatever partial text came before it', async () => {
+    const conv = probedConversation('fallback-partial', 120);
+    const p = prompts(conv);
+    const set = writeProbedSet(join(root, 'fp'), [conv]);
+    const refuse = (q: string) => p.support(q) || p.batched(q) || p.single(1)(q);
+    const opts = options(set, { cacheDir: join(root, 'fp', 'cache') });
+    const candidates = await validateCandidates(opts, [fakeClient(VALIDATOR_IDS[0]), withFallback(recordingFake(HAIKU, refuse), recordingFake(FALLBACK_ID, refuse, true))], index);
+    const c = candidates.conversations.c001;
+    expect(c.status).toBe('checked');
+    expect(c.candidates['event_ordering/1']).toEqual({ pass: false, gates: [`refusal:${HAIKU}`] });
+    expect(c.candidates['abstention/1']).toEqual({ pass: false, gates: [`refusal:${HAIKU}`] });
+    expect(candidates.totals).toMatchObject({ fallback_answers: 0, gate_refusal: 2 });
+    expect(cachedBy(opts.cacheDir!)).toEqual([]);
+    const validation = await validateSet(options(set), [fakeClient(VALIDATOR_IDS[0]), withFallback(recordingFake(HAIKU, p.window), recordingFake(FALLBACK_ID, p.window, true))], index);
+    expect(validation.conversations.c001.status).toBe('regenerate');
+    expect(validation.totals).toMatchObject({ fallback_answers: 0, gate_refusal: 2 });
+  });
+
+  test('the fallback mark follows each ask: a prompt Haiku answers when asked again is not the fallback\'s', async () => {
+    let asks = 0;
+    const client = withFallback(recordingFake(HAIKU, () => asks++ === 0), recordingFake(FALLBACK_ID, () => false));
+    await client.complete('same prompt', 64);
+    expect(client.answeredBy.get('same prompt')).toBe(FALLBACK_ID);
+    expect(client.stops.get('same prompt')).toMatchObject({ stop: 'end_turn', by: FALLBACK_ID, refused_category: 'cyber' });
+    await client.complete('same prompt', 64);
+    expect(client.answeredBy.has('same prompt')).toBe(false);
+    expect(client.stops.get('same prompt')?.by).toBeUndefined();
+  });
+
+  test('validate.ts fails a support item on refusal when both refuse its prompt, and prints the fallback counts', async () => {
+    const set = writeProbedSet(join(root, 'fs'), [probedConversation('fallback-support', 120)]);
+    const support = (q: string) => q.includes('<question>');
+    const report = await validateSet(options(set), [fakeClient(VALIDATOR_IDS[0]), withFallback(recordingFake(HAIKU, support), recordingFake(FALLBACK_ID, support))], index);
+    const c = report.conversations.c001;
+    const failed = Object.values(c.items).filter(i => !i.pass);
+    expect(c.status).toBe('regenerate');
+    expect(failed).toHaveLength(18);
+    expect(failed.every(i => i.gates.join() === `refusal:${HAIKU}`)).toBe(true);
+    expect(report.totals).toMatchObject({ gate_refusal: 18, fallback_answers: 0, fallback_unusable: report.totals.fallback_category_cyber, incomplete: 0 });
+    expect(report.totals.fallback_unusable).toBeGreaterThanOrEqual(1);
+    const lines = validateSummaryLines(report, 'f'.repeat(64)).join('\n');
+    expect(lines).toContain(`fallback_answers=0 fallback_unusable=${report.totals.fallback_unusable} fallback_category_cyber=${report.totals.fallback_unusable}`);
   });
 
   test('without a refusal the fallback is never asked, and both reports match a run without it', async () => {

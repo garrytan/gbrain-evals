@@ -392,9 +392,10 @@ export function anthropicClient(apiKey: string): ModelClient {
 
 /**
  * How a paid validator reply ended: provider vocabulary words and numbers only, never reply text. `category` is
- * Anthropic's stop_details.category when the reply has stop_details, and `by` names the fallback when it gave the reply.
+ * Anthropic's stop_details.category when the reply has stop_details, `by` names the fallback when it gave the reply, and
+ * `refused_category` is then the category of the validator's own refusal ("none" without stop_details).
  */
-export interface StopRecord { stop: string; output_tokens: number | null; blocks: string[]; category?: string; by?: string }
+export interface StopRecord { stop: string; output_tokens: number | null; blocks: string[]; category?: string; by?: string; refused_category?: string }
 /** A validator that keeps each prompt's last StopRecord. */
 export interface RecordingClient extends ModelClient { readonly stops: Map<string, StopRecord> }
 /** Stop reasons that mean the validator refused the prompt. */
@@ -457,19 +458,25 @@ export interface FallbackClient extends RecordingClient { readonly fallback: Rec
 
 /**
  * The validator, except that a prompt it refuses goes to the fallback, whose reply (usable or not) counts in its place
- * under the validator's id. The prompt's StopRecord is then the fallback's, with `by` naming it.
+ * under the validator's id. The prompt's StopRecord is then the fallback's, with `by` naming it. A fallback reply that
+ * ends in a refusal comes back empty, whatever partial text came before it.
  */
 export function withFallback(primary: RecordingClient, fallback: RecordingClient): FallbackClient {
   const stops = new Map<string, StopRecord>(), answeredBy = new Map<string, string>();
   return {
     id: primary.id, stops, fallback, answeredBy,
     async complete(prompt, max) {
+      answeredBy.delete(prompt);
       let text: string;
       try { text = await primary.complete(prompt, max); } finally { const ended = primary.stops.get(prompt); if (ended) stops.set(prompt, ended); }
       if (!refused(primary.stops.get(prompt)?.stop)) return text;
       answeredBy.set(prompt, fallback.id);
-      try { return await fallback.complete(prompt, max); } finally {
-        stops.set(prompt, { ...(fallback.stops.get(prompt) ?? { stop: 'unrecorded', output_tokens: null, blocks: [] }), by: fallback.id });
+      const refusedCategory = primary.stops.get(prompt)?.category ?? 'none';
+      try {
+        const reply = await fallback.complete(prompt, max);
+        return refused(fallback.stops.get(prompt)?.stop) ? '' : reply;
+      } finally {
+        stops.set(prompt, { ...(fallback.stops.get(prompt) ?? { stop: 'unrecorded', output_tokens: null, blocks: [] }), by: fallback.id, refused_category: refusedCategory });
       }
     },
   };
@@ -524,8 +531,11 @@ export interface Report {
   abilities: Record<string, { pass: number; fail: number }>;
   verdict: 'continue' | 'stop';
 }
-/** What runCalls counts: failed requests, cached replies, and the fallback's usable and unusable replies. */
-export interface RunCounts { errors: number; cached: number; fallback_answers?: number; fallback_unusable?: number }
+/**
+ * What runCalls counts: failed requests, cached replies, the fallback's usable and unusable replies, and the fallback's
+ * replies by the category of the refusal that sent each prompt there.
+ */
+export interface RunCounts { errors: number; cached: number; fallback_answers?: number; fallback_unusable?: number; fallback_categories?: Record<string, number> }
 /** The calls to make and their worst-case price, then the verdicts once they settle. */
 export interface Plan { calls: Call[]; estimateUsd: number; finish: (run: RunCounts) => Report }
 
@@ -667,6 +677,7 @@ export function planValidation(opts: Options, clients: ModelClient[], index: Pub
 
   const finish = (run: RunCounts): Report => {
     const totals: Record<string, number> = { conversations: cids.length, keep: 0, regenerate: 0, drop: 0, incomplete: 0, items: 0, pass: 0, fail: 0, finished_items: 0, finished_fail: 0, calls: calls.length, cached_calls: run.cached, validator_errors: run.errors, fallback_answers: run.fallback_answers ?? 0, fallback_unusable: run.fallback_unusable ?? 0, windows: 0 };
+    for (const [category, n] of Object.entries(run.fallback_categories ?? {})) totals[`fallback_category_${category}`] = n;
     const abilities = Object.fromEntries(ABILITIES.map(a => [a, { pass: 0, fail: 0 }]));
     for (const result of Object.values(results)) {
       totals.windows += result.windows;
@@ -706,15 +717,18 @@ export function planValidation(opts: Options, clients: ModelClient[], index: Pub
 
 /**
  * Runs the calls, cached replies first. A refused reservation stops every worker and propagates. A usable reply the
- * fallback gave is cached with the fallback's id as `by`, and both counts include cached fallback replies.
+ * fallback gave is cached with the fallback's id as `by` and the category of the refusal that sent it there, and every
+ * count includes cached fallback replies.
  */
 export async function runCalls(calls: Call[], clients: ModelClient[], concurrency: number): Promise<Required<RunCounts>> {
   let next = 0, errors = 0, cached = 0, fallbackAnswers = 0, fallbackUnusable = 0, stopped = false;
+  const categories: Record<string, number> = {};
+  const tally = (category: string | undefined) => { const k = category ?? 'unrecorded'; categories[k] = (categories[k] ?? 0) + 1; };
   for (const c of calls) {
     if (!c.cached) continue;
     const entry = readJson(c.cacheFile!);
     cached++;
-    if (entry.by) fallbackAnswers++;
+    if (entry.by) { fallbackAnswers++; tally(entry.refused_category); }
     c.settle(entry.reply);
   }
   const pending = calls.filter(c => !c.cached);
@@ -729,13 +743,14 @@ export async function runCalls(calls: Call[], clients: ModelClient[], concurrenc
         continue;
       }
       const by = (clients[c.client] as Partial<FallbackClient>).answeredBy?.get(c.prompt);
+      const refusedCategory = by ? (clients[c.client] as Partial<RecordingClient>).stops?.get(c.prompt)?.refused_category : undefined;
       const usable = c.settle(reply);
-      if (by) { if (usable) fallbackAnswers++; else fallbackUnusable++; }
-      if (usable && c.cacheFile) { mkdirSync(dirname(c.cacheFile), { recursive: true }); writeFileSync(c.cacheFile, JSON.stringify(by ? { reply, by } : { reply })); }
+      if (by) { tally(refusedCategory); if (usable) fallbackAnswers++; else fallbackUnusable++; }
+      if (usable && c.cacheFile) { mkdirSync(dirname(c.cacheFile), { recursive: true }); writeFileSync(c.cacheFile, JSON.stringify(by ? { reply, by, refused_category: refusedCategory } : { reply })); }
     }
   };
   await Promise.all(Array.from({ length: Math.max(1, Math.floor(concurrency)) }, worker));
-  return { errors, cached, fallback_answers: fallbackAnswers, fallback_unusable: fallbackUnusable };
+  return { errors, cached, fallback_answers: fallbackAnswers, fallback_unusable: fallbackUnusable, fallback_categories: categories };
 }
 
 export async function validateSet(opts: Options, clients: ModelClient[], index = buildPublicIndex(opts.beamDir, opts.publicIndexPath)): Promise<Report> {
@@ -762,7 +777,7 @@ export function summaryLines(report: Report, reportSha256: string): string[] {
     `rs1-validate ${kv({ items: t.items, pass: t.pass, fail: t.fail, ...gates })}`,
     ...ABILITIES.map(a => `rs1-validate ${kv({ ability: a, pass: report.abilities[a].pass, fail: report.abilities[a].fail })}`),
     `rs1-validate ${kv({ tokens_min: tokens[0] ?? 0, tokens_median: tokens[Math.floor(tokens.length / 2)] ?? 0, tokens_max: tokens.at(-1) ?? 0, contamination_max_share: Math.max(0, ...shares).toFixed(6), contamination_union_max_share: Math.max(0, ...unionShares).toFixed(6) })}`,
-    `rs1-validate ${kv({ calls: t.calls, cached_calls: t.cached_calls, validator_errors: t.validator_errors, windows: t.windows, fallback_answers: t.fallback_answers, fallback_unusable: t.fallback_unusable })}`,
+    `rs1-validate ${kv({ calls: t.calls, cached_calls: t.cached_calls, validator_errors: t.validator_errors, windows: t.windows, fallback_answers: t.fallback_answers, fallback_unusable: t.fallback_unusable, ...Object.fromEntries(Object.entries(t).filter(([k]) => k.startsWith('fallback_category_')).sort()) })}`,
     `rs1-validate ${kv({ public_sources: report.public_index.sources, public_ngrams: report.public_index.ngrams, bloom_fill: report.public_index.fill, bloom_est_false_positive: report.public_index.est_false_positive })}`,
     `rs1-validate ${kv({ finished_fail: t.finished_fail, finished_items: t.finished_items, verdict: report.verdict, report_sha256: reportSha256 })}`,
   ];

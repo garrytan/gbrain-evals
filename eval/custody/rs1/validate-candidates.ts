@@ -3,7 +3,7 @@
  * many candidate items per ability, and many cite turns that do not support their reference answer, so selecting first
  * and regenerating failures could not fill every slot. This script asks validate.ts's two validators about every
  * candidate first, and mint.sh --candidates <report> then selects only from the candidates both passed. validate.ts
- * still runs unchanged on the selection and decides what is kept. It prints counts and hashes only, and writes a report
+ * then runs on the selection and decides what is kept. It prints counts and hashes only, and writes a report
  * of conversation ids, candidate keys, gate names and numbers (never text).
  *
  *   bun eval/custody/rs1/validate-candidates.ts --set <out>/set --beam-dir <out>/tooling/beam --report <out>/validation/candidates.json
@@ -37,7 +37,8 @@
  *     A candidate passes only if every window, from both validators, leaves it unanswered.
  *   - fallback (the 2026-11-17 amendment), validate.ts's rule: a prompt claude-haiku-5-5 refuses goes to claude-sonnet-5-5,
  *     whose reply counts in Haiku's place. A support prompt both refuse fails its candidate on "refusal"; a window both
- *     refuse is regrouped as above, and a single prompt both refuse fails its candidate on "refusal".
+ *     refuse is regrouped as above, and a single prompt both refuse fails its candidate on "refusal". A fallback reply
+ *     that ends in a refusal counts as a refusal, whatever partial text came before it.
  * There is no duplicate gate among candidates: the select step skips a repeated question within an ability, and
  * validate.ts applies its duplicate gate to the selection.
  *
@@ -351,6 +352,7 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
       calls: calls.length, support_calls: of('support').length, absence_calls: of('absence').length,
       support_tokens: of('support').reduce((s, c) => s + c.tokens, 0), absence_tokens: of('absence').reduce((s, c) => s + c.tokens, 0),
       cached_calls: run.cached, validator_errors: run.errors, fallback_answers: run.fallback_answers ?? 0, fallback_unusable: run.fallback_unusable ?? 0, windows: 0,
+      ...Object.fromEntries(Object.entries(run.fallback_categories ?? {}).map(([category, n]) => [`fallback_category_${category}`, n])),
       absence_single_calls: [...calls, ...singles].filter(c => c.kind === 'absence_single').length,
       absence_single_tokens: [...calls, ...singles].filter(c => c.kind === 'absence_single').reduce((s, c) => s + c.tokens, 0),
       regrouped_windows: Object.values(results).reduce((s, r) => s + r.regrouped.filter(g => !g.over_cap).length, 0),
@@ -399,9 +401,12 @@ export function planCandidates(opts: Options, clients: ModelClient[], index: Pub
 export async function runPlan(plan: CandidatePlan, clients: ModelClient[], concurrency: number): Promise<CandidateReport> {
   const first = await runCalls(plan.calls, clients, concurrency);
   const second = await runCalls(plan.regroup(), clients, concurrency);
+  const categories = { ...first.fallback_categories };
+  for (const [category, n] of Object.entries(second.fallback_categories)) categories[category] = (categories[category] ?? 0) + n;
   return plan.finish({
     errors: first.errors + second.errors, cached: first.cached + second.cached,
     fallback_answers: first.fallback_answers + second.fallback_answers, fallback_unusable: first.fallback_unusable + second.fallback_unusable,
+    fallback_categories: categories,
   });
 }
 
@@ -424,7 +429,7 @@ export function summaryLines(report: CandidateReport, reportSha256: string): str
     `rs1-validate-candidates ${kv({ conversations: t.conversations, checked: t.checked, drop: t.drop, incomplete: t.incomplete, unfinished: t.unfinished, drop_length: t.drop_length, drop_contamination: t.drop_contamination, fillable: t.fillable })}`,
     `rs1-validate-candidates ${kv({ candidates: t.candidates, pass: t.pass, fail: t.fail, ...gates })}`,
     ...ABILITIES.map(a => `rs1-validate-candidates ${kv({ ability: a, pass: report.abilities[a].pass, fail: report.abilities[a].fail })}`),
-    `rs1-validate-candidates ${kv({ calls: t.calls, support_calls: t.support_calls, absence_calls: t.absence_calls, support_tokens: t.support_tokens, absence_tokens: t.absence_tokens, cached_calls: t.cached_calls, validator_errors: t.validator_errors, windows: t.windows, fallback_answers: t.fallback_answers, fallback_unusable: t.fallback_unusable })}`,
+    `rs1-validate-candidates ${kv({ calls: t.calls, support_calls: t.support_calls, absence_calls: t.absence_calls, support_tokens: t.support_tokens, absence_tokens: t.absence_tokens, cached_calls: t.cached_calls, validator_errors: t.validator_errors, windows: t.windows, fallback_answers: t.fallback_answers, fallback_unusable: t.fallback_unusable, ...Object.fromEntries(Object.entries(t).filter(([k]) => k.startsWith('fallback_category_')).sort()) })}`,
     `rs1-validate-candidates ${kv({ unusable: Object.values(report.conversations).reduce((s, c) => s + c.validator_errors.length, 0), ...Object.fromEntries(Object.entries(t).filter(([k]) => k.startsWith('unusable_')).sort()), regrouped_windows: t.regrouped_windows, regroup_over_cap: t.regroup_over_cap, absence_single_calls: t.absence_single_calls })}`,
     `rs1-validate-candidates ${kv({ public_sources: report.public_index.sources, public_ngrams: report.public_index.ngrams, report_sha256: reportSha256 })}`,
   ];
