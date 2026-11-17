@@ -184,10 +184,13 @@ export function cat40ArmFlags(arm: ArmName, hintFile: string | null): string[] {
  * a wrong answer). The turn-cap test asks what more turns or batch reads recover; the items base already answered
  * would cost about half of each arm and can only show a follow-up arm doing worse, which this loop does not measure.
  */
-export function cat40FollowUp(run: SuiteRun, ctx: Pick<Ctx, 'night' | 'ref' | 'sha' | 'fake' | 'label' | 'dir'>, world: string): SuiteRun {
-  const base = cat40Items(run, ctx, 'base', join(ctx.dir, 'base', run.suite.id, 'cells'), world).items;
+export function followUpRun(run: SuiteRun, base: ItemRow[]): SuiteRun {
   const ids = new Set(base.filter(missed).map(r => r.item));
   return { ...run, items: run.items.filter(i => ids.has(i.id)) };
+}
+
+export function cat40FollowUp(run: SuiteRun, ctx: Pick<Ctx, 'night' | 'ref' | 'sha' | 'fake' | 'label' | 'dir'>, world: string): SuiteRun {
+  return followUpRun(run, cat40Items(run, ctx, 'base', join(ctx.dir, 'base', run.suite.id, 'cells'), world).items);
 }
 
 async function runCat40Arm(full: SuiteRun, ctx: Ctx, arm: ArmName, d: Cat40Dirs, armDir: string): Promise<string | null> {
@@ -401,6 +404,8 @@ export async function main(argv: readonly string[]): Promise<number> {
   const runs = planRuns(me, a);
   if (!runs.length) throw new Error('no suite and item matches --suites and --items');
   const dir = join(a.out!, slug(label));
+  const recorded = existsSync(join(dir, 'run.json')) ? (JSON.parse(readFileSync(join(dir, 'run.json'), 'utf8')) as { sha?: string }).sha : undefined;
+  if (recorded && recorded !== sha) throw new Error(`${dir} holds a run of ${label} at ${recorded.slice(0, 12)}, but ${label} is now ${sha.slice(0, 12)}; pass a new --out so the old rows aren't scored as the new build`);
   mkdirSync(dir, { recursive: true });
   const gut = resolveGbrainUnderTest(`${a.clone}@${sha}`);
   let paid: { runId: string; ledger: string } | null = null, opened = false;
@@ -439,9 +444,12 @@ export async function main(argv: readonly string[]): Promise<number> {
       mkdirSync(d.slots, { recursive: true });
       const built = await buildCat40(run, ctx, d);
       if (built) { errors.push(`${run.suite.id}: ${built}`); continue; }
+      let baseError: string | null = null;
       for (const arm of a.arms) {
+        if (arm !== 'base' && baseError) { errors.push(`${run.suite.id} ${arm}: not run, because base did not finish (the follow-up items come from a complete base; rerun to finish base first)`); continue; }
         const e = await runCat40Arm(run, ctx, arm, d, join(dir, arm));
         if (e) errors.push(`${run.suite.id} ${arm}: ${e}`);
+        if (arm === 'base') baseError = e;
       }
     }
   };
@@ -456,11 +464,15 @@ export async function main(argv: readonly string[]): Promise<number> {
     const spent = paid ? ledgerStatus({ ledgerPath: paid.ledger, runId: paid.runId }).run?.committed_usd : null;
     ctx.log(`still running: ${Math.round((Date.now() - started) / 60_000)} min${typeof spent === 'number' ? `, $${spent.toFixed(2)} committed` : ''}`);
   }, HEARTBEAT_MS);
-  await Promise.all([cat40(), qa()]).finally(() => clearInterval(heartbeat));
+  try {
+    await Promise.all([cat40(), qa()]);
+  } finally {
+    clearInterval(heartbeat);
+    if (paid && opened) closeRun(paid.ledger, paid.runId);
+  }
 
   let spend: Record<string, unknown> | null = null;
   if (paid) {
-    if (opened) closeRun(paid.ledger, paid.runId);
     const st = ledgerStatus({ ledgerPath: paid.ledger, runId: paid.runId });
     spend = { ledger_run: paid.runId, committed_usd: st.run?.committed_usd ?? null, budget_usd: st.run?.budget_usd ?? null, closed: opened };
   }

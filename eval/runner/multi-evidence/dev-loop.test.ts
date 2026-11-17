@@ -4,7 +4,8 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Outcome } from '../nightly/outcome.ts';
-import { ARMS, BASE_TURN_CAP, cat40ArmFlags, compareVersions, newestRelease, parseArgs, planRuns, powerTable, rerankTimedOut } from './dev-loop.ts';
+import { ARMS, BASE_TURN_CAP, cat40ArmFlags, compareVersions, followUpRun, newestRelease, parseArgs, planRuns, powerTable, rerankTimedOut } from './dev-loop.ts';
+import type { SuiteRun } from '../nightly/adapters.ts';
 import { agentItem, agentWhy, minDetectable, missed, qaItem, qaWhy, readTargets, slice, slugName, trialDiscordance, type ItemRow } from './score.ts';
 import { loadMeDevSet, MIN_GOLD } from './select.ts';
 
@@ -64,6 +65,13 @@ describe('agent items', () => {
     expect(h.correct).toBeNull();
     expect(missed(h)).toBe(false);
   });
+
+  test('follow-up arms run only the items base missed; a harness-only item is not a miss', () => {
+    const run = { items: [{ id: 'hit' }, { id: 'miss' }, { id: 'broken' }] } as unknown as SuiteRun;
+    const row = (item: string, coverage: ItemRow['coverage'], correct: boolean | null, harness: string | null) => ({ item, coverage, correct, harness }) as ItemRow;
+    const base = [row('hit', 'all', true, null), row('miss', 'some', false, null), row('miss', 'all', true, null), row('broken', 'none', null, 'boom')];
+    expect(followUpRun(run, base).items.map(i => i.id)).toEqual(['miss']);
+  });
 });
 
 describe('qa items', () => {
@@ -105,6 +113,16 @@ describe('summaries and power', () => {
     const t = powerTable([q('a', 'x'), q('a', 'y'), q('b', 'x')], 0.167);
     expect(t[0]!.rows).toBe(2);
     expect(t[0]!.noise).toBe(0);
+  });
+  test('powerTable uses measured agent noise only from 20 trial pairs up', () => {
+    const a = (item: string, trial: number, coverage: ItemRow['coverage']) => ({ suite: 'cat40-hard-m', kind: 'agent', item, reader: 'r', arm: 'base', trial, harness: null, coverage }) as ItemRow;
+    const few = powerTable([a('i', 1, 'all'), a('i', 2, 'some')], 0.167);
+    expect(few[0]!.noise).toBe(0.167);
+    expect(few[0]!.noise_source).toMatch(/nightly/);
+    const many = powerTable(Array.from({ length: 20 }, (_, i) => [a(`i${i}`, 1, 'all'), a(`i${i}`, 2, i < 5 ? 'some' : 'all')]).flat(), 0.167);
+    expect(many[0]!.noise).toBe(0.25);
+    expect(many[0]!.noise_source).toBe('measured here, 20 trial pairs');
+    expect(many[0]!.rows).toBe(40);
   });
 });
 
