@@ -245,9 +245,9 @@ repros, the wave 8 and operator-wave checks, the verbatim probe, and README's pa
   covers.
 - `scripts/scan-receipts.sh` also secret-scans this report's `counted/` tree.
 - A real-brain copy of the N2-2 repro.
-- README, the documentation hub and `docs/gbrain-under-test.md` move the rows that hold to `6ce7195b4`. The N9 drop
-  is noted beside its row and the N7 drop in the open-loops limit, and the large-page row keeps `7a6bdd3`. This report
-  doesn't change `package.json`; its gbrain pin moved to `6ce7195b4` separately, in #448.
+- README and `docs/gbrain-under-test.md` move the rows that hold to `6ce7195b4`, and the documentation hub links this
+  report. The N9 drop is noted beside its row and the N7 drop in the open-loops limit, and the large-page row keeps
+  `7a6bdd3`. This report doesn't change `package.json`; its gbrain pin moved to `6ce7195b4` separately, in #448.
 
 ## Reproduce and inspect
 

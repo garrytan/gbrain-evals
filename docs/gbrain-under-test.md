@@ -158,10 +158,10 @@ worlds on a slice, privacy in process only), and every one passed at `6ce7195b4`
 #448](https://github.com/garrytan/gbrain-evals/actions/runs/43940805988), as did the large-page check's small tiers. The
 29 reproductions in the [bug ledger](benchmarks/2026-10-01-wave-bugs.md) and three memory trust reproductions (37-1,
 37-2 and 37-5 in the [memory trust ledger](benchmarks/2026-10-07-memory-trust-bugs.md)) last ran as a set in that
-October 11 re-pin, where they passed. The 10 privacy and data-loss reproductions among them ran again at `6ce7195b4`:
-9 behave as recorded, and N2-2 (`find-contradictions` with no `--source`) is fixed; the timeline-latency entry (Cat7-1) passed on the second pair of hosts, and stays
-open under its stricter closure rule (see the README's known limits). Rows marked `c5fb0201` were measured in the
-October round at an earlier pin (the paid runs and the attendance world).
+October 11 re-pin, where they passed; the timeline-latency entry (Cat7-1) passed on the second pair of hosts, and stays
+open under its stricter closure rule (see the README's known limits). The 10 privacy and data-loss reproductions among
+them ran again at `6ce7195b4`: 9 behave as recorded, and N2-2 (`find-contradictions` with no `--source`) is fixed.
+Rows marked `c5fb0201` were measured in the October round at an earlier pin (the paid runs and the attendance world).
 
 ## Changelog
 
