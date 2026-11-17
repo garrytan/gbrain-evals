@@ -547,6 +547,16 @@ describe('--ref stable reads gbrain\'s stable tag from the remote at launch', ()
     expect(() => resolveStable(f.clone)).toThrow('has no origin remote to read gbrain\'s stable tag from');
   });
 
+  test('a credential in the origin URL never reaches the error, which names the remote the way night.json records it', () => {
+    const f = fixture();
+    g(f.clone, 'remote', 'set-url', 'origin', 'https://x-access-token:NOT-A-REAL-TOKEN@127.0.0.1:9/gbrain.git');
+    let message = '';
+    try { resolveStable(f.clone); } catch (e) { message = (e as Error).message; }
+    expect(message).toContain('--ref stable: git ls-remote https://127.0.0.1:9/gbrain.git failed: ');
+    expect(message).not.toContain('NOT-A-REAL-TOKEN');
+    expect(message).not.toContain('x-access-token');
+  });
+
   test('a resume keeps the commit the night started on: it neither reads the remote nor follows a moved tag', () => {
     const f = fixture();
     const saved = { sha: f.v1, stable: { remote: f.url, tag_object: g(f.work, 'rev-parse', 'refs/tags/stable'), resolved_at: '2026-11-23T09:00:00.000Z' } };
