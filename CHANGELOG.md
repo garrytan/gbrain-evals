@@ -2,6 +2,57 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.240] - 2026-11-17
+
+### The Ubicloud runner keeps the shared vCPU lines and puts a lifetime on every VM
+
+- `scripts/ubicloud/ubi-runner.sh` reads the project's usage before every VM it creates and refuses, before any create
+  request, unless the project's VMs stay at or under 464 vCPUs and the caller's team (every owner tag with the same
+  leading letters, the caller's own VMs included) at or under 208. A usage read that fails, or a VM size that names no
+  vCPU count, refuses too. Creates from one machine take turns through that check, and `ubi-runner.sh room -s <size>`
+  prints how many more VMs of a size fit, for launchers that start VMs from several machines.
+  `UBI_QUOTA_WAIT=<seconds>` waits for room instead of refusing.
+- Every VM's name now carries its lifetime, `-t<hours>` from `UBI_TTL_HOURS` (default 12), and every launch first
+  destroys the caller's own VMs whose lifetime has ended (`ubi-runner.sh reap` does it on demand; `UBI_REAP=0` skips
+  it), never another owner's. So a VM kept after a failed pull or a lost session, or left by a killed launcher, stops
+  billing at its owner's next launch after its lifetime ends. `up`, `run`, `reap` and `room` refuse without
+  `UBI_OWNER`.
+- The SOTA loop's window launcher (`eval/runner/sota/ubicloud/run.sh`) launches again through this runner. It records
+  each window in flight until its final pull lands, refuses the next launch and fails its teardown check while one is
+  outstanding, printing the pull command, and `run.sh pull <window>` stops the window's command, brings the state
+  back once it has exited and destroys the VM. It never reaps, so nothing destroys its VMs automatically: an expired
+  one may hold a window's only ledger. While any of its VMs exists, expired or not, it refuses to launch, and it names
+  each one past its lifetime with its age, so a person pulls it or destroys it by hand.
+
+## [0.10.239] - 2026-11-17
+
+### The secrets check accepts synthetic labels in published lifecycle and privacy receipts
+
+- The secrets check that runs before a push now accepts two values it flagged in published receipts under
+  `docs/benchmarks/*/counted/`: the lifecycle matrix's synthetic identity labels (`alice_maps`, `exachen_lang`,
+  `frank_email`) and N6's sentence describing its expired-token probe. Each entry covers only that exact value in those
+  receipt files, so any other value there is still checked.
+
+### The keyless correctness checks hold at gbrain v0.60.733.0, and two numbers got worse
+
+- **What changed.** [The November 16 keyless re-pin](docs/benchmarks/2026-11-16-w0-keyless-repin.md) reran the
+  correctness checks that need no API key at gbrain's newest release, `6ce7195b4` (v0.60.733.0). Updates (388 of 388,
+  never stale), `forget` (0 prohibited outputs), privacy on Postgres over real HTTP (155 of 155 cells, 0 leaks), dates
+  (513 of 513), name resolution (0 wrong merges) and the lifecycle matrix's `forget` and remote-access contracts hold.
+  README's rows for updates, `forget`, privacy and chat formats now name `6ce7195b4`; large pages keep `7a6bdd3`,
+  because the 128 MiB PGLite slice passed the runner's memory ceiling on the rerun's host at both builds.
+- **What got better.** `find-contradictions` with no `--source` now reads the latest stored run (bug N2-2, gbrain
+  #6784), 4 more of the 15 retrieval failure shapes pass, and the search confidence grade separates answerable from
+  unanswerable questions (100 of 120 answerable graded `moderate`, was 40).
+- **What got worse.** Keyword-only recall on reworded one-hop relationship questions fell from 0.476 → 0.572 to 0.380 →
+  0.511 (gbrain #7201), and a forwarded FYI email that forwards a question now opens an open loop (precision 53 of 56,
+  was 53 of 53; gbrain #9246). README notes both.
+- **Harness fixes.** N4 and the lifecycle matrix read `recall`'s quote-fenced facts through gbrain's own unquote, the
+  lifecycle leak probes ignore a notice that repeats their own query, the lifecycle catch-up sweep passes `--yes` to a
+  build whose `embed` asks for consent, the kept-run VM script runs the lifecycle matrix outside the checkout, the
+  lifecycle and N5 runners keep VM paths out of their receipts, and N4 stops as a harness limit on a build that quotes
+  facts without an unquote helper. No earlier receipt's numbers change.
+
 ## [0.10.238] - 2026-11-17
 
 ### Code review skips the keyless re-pin's raw run receipts
