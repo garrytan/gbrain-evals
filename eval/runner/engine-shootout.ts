@@ -1060,7 +1060,7 @@ async function runPairedChild(input: PairedInput) {
     const cpu0 = process.cpuUsage();
     const srv0 = cgroupCpuUsec(rt.cgroupDir);
     const t0 = performance.now();
-    for (let j = 0; j < n; j++) await fn(e, first + j);
+    for (let j = 0; j < n; j++) await fn(e, (first + j) % total); // wrap: the per-index slug lists have `total` entries
     const wall = (performance.now() - t0) / 1000;
     const c = process.cpuUsage(cpu0);
     const srv1 = cgroupCpuUsec(rt.cgroupDir);
