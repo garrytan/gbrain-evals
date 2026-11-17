@@ -10,7 +10,7 @@
  *   bun eval/runner/nightly/run.ts --resume <night dir>
  *   bun eval/runner/nightly/run.ts --ref <sha> --tier bisect --suites <id> --items a,b [--readers m] --gbrain-clone <path> --night-dir <dir>
  *
- * The ref resolves to a commit in the gbrain clone (stable is the pinned release commit), which is built into a verified
+ * The ref resolves to a commit in the gbrain clone, which is built into a verified
  * overlay (gbrain-under-test.ts); the refresh-barrier harness gets a Git worktree of the same commit, because it reads the
  * root's HEAD. A suite whose requires.gbrain_commit is not an ancestor of the commit is skipped, and the report says why;
  * each item of a skipped or unbuilt suite gets a skipped outcome row with the reason, which a resume replaces once it runs.
@@ -34,6 +34,10 @@
  *
  * Suites run in parallel, each in its own child processes (adapters.ts). The night directory is <out>/<night>/<ref>
  * (the first 12 characters of a sha), holding night.json, outcomes.jsonl, each suite's work under suites/, and the report.
+ * --ref stable reads gbrain's stable release at launch: the peeled commit of the `stable` tag on the clone's origin,
+ * fetched into the clone when it lacks it (resolveStable), recorded in night.json's stable field. It fails closed when
+ * the remote can't be read, has no stable tag or the commit can't be fetched, and never falls back to the clone's own
+ * stable tag, which a plain fetch doesn't move.
  * --resume reruns what is missing, skipped or recorded as a harness failure, except an answer cut off at its output limit,
  * which a rerun would only repeat (outcome.ts resumable), on the gbrain commit the night started on (its ref may have
  * moved since), after settling the stopped run's open ledger reservations (ledger.ts reconcile), at most twice per night;
@@ -57,12 +61,10 @@ import { DEVSET_PATH, loadDevSet, suiteDigest, type DevSet } from './devset.ts';
 import { NightlyCache } from './judge-cache.ts';
 import { closeOwnedNightRun, NIGHTLY_RUNNER_PREFIX, NightlyCapStop, openNightRun, reconcileNightRun } from './ledger.ts';
 import { appendOutcome, outcomeKey, qualifiedModel, readOutcomes, resumable, type Outcome } from './outcome.ts';
-import { findPreviousNight, writeReport, type NightManifest, type SuiteStatus } from './report.ts';
+import { findPreviousNight, writeReport, type NightManifest, type StableResolution, type SuiteStatus } from './report.ts';
 import { OLD_RELEASE } from './smokes/upgrade-from-old.ts';
 
 const REPO = resolve(import.meta.dir, '../../..');
-/** The stable pin: the peeled commit of gbrain's `stable` tag, the soaked release (v0.60.717.0). `latest-stable` is the alpha channel. */
-export const STABLE_SHA = '5dc712b93742ac9ebb82983917659ce8ef493e7c';
 export const EXIT = { NIGHTLY_CAP_STOP: 3, NIGHTLY_VM_LOST: 4, NIGHTLY_HARNESS: 5 } as const;
 /** Retries of one night (resumes after the first invocation). */
 export const MAX_RETRIES = 2;
@@ -161,8 +163,50 @@ export function paidGate(a: NightArgs, plan: SuiteRun[]): { runId: string; ledge
 
 const git = (clone: string, ...args: string[]) => execFileSync('git', ['-C', clone, ...args], { encoding: 'utf8' }).trim();
 
+/**
+ * gbrain's stable release, read at launch: the peeled commit of the `stable` tag on the clone's origin (the soaked
+ * release; `latest-stable` is the alpha channel), fetched into the clone when it lacks it. The clone's own tag is never
+ * read, because a plain fetch doesn't move a tag the clone already has. Any failure throws, so a night never runs on an
+ * older stable than the remote's.
+ */
+export function resolveStable(clone: string): { sha: string; stable: StableResolution } {
+  const fail = (why: string): never => { throw new Error(`--ref stable: ${why}. The night does not start: it never falls back to the clone's own stable tag`); };
+  const firstLine = (s: string | undefined) => (s ?? '').trim().split('\n')[0] || 'no output';
+  const env = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
+  const origin = spawnSync('git', ['-C', clone, 'remote', 'get-url', 'origin'], { encoding: 'utf8' });
+  const remote = origin.status === 0 ? origin.stdout.trim() : '';
+  if (!remote) fail(`${clone} has no origin remote to read gbrain's stable tag from (${firstLine(origin.stderr)})`);
+  const shown = remote.replace(/\/\/[^/@]*@/, '//');
+  const ls = spawnSync('git', ['-C', clone, 'ls-remote', remote, 'refs/tags/stable', 'refs/tags/stable^{}'], { encoding: 'utf8', env, timeout: 120_000 });
+  if (ls.status !== 0) fail(`git ls-remote ${shown} failed: ${firstLine(ls.stderr || ls.error?.message)}`);
+  const refs = new Map<string, string>();
+  for (const line of ls.stdout.split('\n').filter(Boolean)) {
+    const m = /^([0-9a-f]{40})\t(refs\/tags\/stable(?:\^\{\})?)$/.exec(line);
+    if (!m || refs.has(m[2]!)) fail(`git ls-remote ${shown} printed an unexpected line: ${JSON.stringify(line.slice(0, 160))}`);
+    refs.set(m![2]!, m![1]!);
+  }
+  const tag = refs.get('refs/tags/stable');
+  if (!tag) fail(`${shown} has no stable tag`);
+  const peeled = refs.get('refs/tags/stable^{}');
+  const commit = peeled ?? tag!;
+  if (spawnSync('git', ['-C', clone, 'cat-file', '-e', `${commit}^{commit}`]).status !== 0) {
+    const fetch = spawnSync('git', ['-C', clone, 'fetch', '--quiet', '--no-tags', remote, commit], { encoding: 'utf8', env, timeout: 600_000 });
+    if (fetch.status !== 0) fail(`the clone lacks ${commit}, which ${shown}'s stable tag names, and fetching it failed: ${firstLine(fetch.stderr || fetch.error?.message)}`);
+  }
+  const sha = spawnSync('git', ['-C', clone, 'rev-parse', '--verify', '--quiet', `${commit}^{commit}`], { encoding: 'utf8' });
+  if (sha.status !== 0) fail(`${commit}, which ${shown}'s stable tag names, is not a commit in ${clone}`);
+  return { sha: sha.stdout.trim(), stable: { remote: shown, tag_object: peeled ? tag! : null, resolved_at: new Date().toISOString() } };
+}
+
+/** A ref's commit in the clone; stable is read from the remote's tag (resolveStable). */
 export function resolveRef(clone: string, ref: string): string {
-  return git(clone, 'rev-parse', `${ref === 'stable' ? STABLE_SHA : ref}^{commit}`);
+  return ref === 'stable' ? resolveStable(clone).sha : git(clone, 'rev-parse', `${ref}^{commit}`);
+}
+
+/** The commit a night runs on: a resume keeps the one the night started on, and a fresh stable night reads the remote's tag. */
+export function nightCommit(clone: string, ref: string, saved: Pick<NightManifest, 'sha' | 'stable'> | null): { sha: string; stable: StableResolution | null } {
+  if (saved) return { sha: resolveRef(clone, saved.sha), stable: saved.stable ?? null };
+  return ref === 'stable' ? resolveStable(clone) : { sha: resolveRef(clone, ref), stable: null };
 }
 
 /** Why a suite cannot run on sha, or null: its required gbrain commit is missing from the clone or not an ancestor. */
@@ -194,7 +238,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     if (saved.budget) a.budgetRunId = saved.budget.run_id;
   } else a = parseArgs(argv);
 
-  const sha = resolveRef(a.clone, saved?.sha ?? a.ref);
+  const { sha, stable } = nightCommit(a.clone, a.ref, saved);
   const devset = a.devset ? loadDevSet(dirname(a.devset), basename(a.devset)) : loadDevSet();
   const plan = planSuites(devset, a);
   if (!plan.length) throw new Error('no suite and item matches the tier, --suites and --items');
@@ -226,7 +270,7 @@ export async function main(argv: readonly string[]): Promise<number> {
         : { id: r.suite.id, digest: r.digest, k: r.k, readers: a.fake && callsModels(r.suite) ? ['fake'] : r.readers, items: r.items.length, status: before?.status === 'not_built' ? 'not_built' : 'pending' };
     });
     const manifest: NightManifest = {
-      schema: 'nightly-night/1', night: a.night, ref: a.ref, sha, version: gut.version, tier: a.tier, fake: a.fake,
+      schema: 'nightly-night/1', night: a.night, ref: a.ref, sha, version: gut.version, stable, tier: a.tier, fake: a.fake,
       devset: { path: a.devset ?? DEVSET_PATH, digest: devset.digest }, suites: statuses, started_at: saved?.started_at ?? new Date().toISOString(),
       budget: paid ? { run_id: paid.runId, ledger: paid.ledger, opened_by_night: saved?.budget ? saved.budget.opened_by_night === true : paid.opened } : null,
       argv: saved?.argv ?? [...argv], attempts: (saved?.attempts ?? 0) + 1,

@@ -513,3 +513,26 @@ describe("particle-1's agreement with claude-opus-5-5", () => {
     expect(providerCause('Failed after 3 attempts. Last error: Rate limit reached for text-embedding-3-large')).toBe('embedding');
   });
 });
+
+describe('the stable release a matrix night used', () => {
+  test('a stable night\'s header says where its commit came from, and master\'s section against it names that commit and version', () => {
+    const root = mkdtempSync(join(tmpdir(), 'nightly-report-'));
+    const write = (ref: string, m: NightManifest) => {
+      const dir = join(root, '2026-11-23', ref);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, 'night.json'), JSON.stringify(m));
+      writeFileSync(join(dir, 'outcomes.jsonl'), trials(Array(20).fill(3)).map(r => JSON.stringify(r)).join('\n') + '\n');
+      return dir;
+    };
+    const resolution = { remote: 'https://github.com/garrytan/gbrain.git', tag_object: 'f'.repeat(40), resolved_at: '2026-11-23T09:00:00.000Z' };
+    const stable = write('stable', manifest([{ id: 'suite-a' }], { night: '2026-11-23', ref: 'stable', sha: 'e'.repeat(40), version: '0.60.733.0', tier: 'matrix', stable: resolution }));
+    const master = write('master', manifest([{ id: 'suite-a' }], { night: '2026-11-23', tier: 'matrix', stable: null }));
+    writeReport({ dir: stable });
+    expect(readFileSync(join(stable, 'report.md'), 'utf8')).toContain(`# Nightly gbrain check: stable eeeeeeeeeeee (v0.60.733.0), 2026-11-23\n\nStable is gbrain's \`stable\` tag as https://github.com/garrytan/gbrain.git had it at 2026-11-23T09:00:00.000Z: commit ${'e'.repeat(40)}, tag object ${'f'.repeat(40)}.\n`);
+    const summary = writeReport({ dir: master, stable });
+    expect(summary.comparisons).toEqual([expect.objectContaining({ against: 'stable', ref: 'stable', sha: 'e'.repeat(40), version: '0.60.733.0' })]);
+    const md = readFileSync(join(master, 'report.md'), 'utf8');
+    expect(md).toContain('## Against stable (stable eeeeeeeeeeee v0.60.733.0, 2026-11-23)');
+    expect(md).not.toContain('Stable is gbrain');
+  });
+});
