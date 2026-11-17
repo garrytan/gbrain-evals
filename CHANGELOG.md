@@ -2,6 +2,38 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.243] - 2026-11-17
+
+### The nightly check reads gbrain's stable release from its tag at launch
+
+- **What changed.** `--ref stable` in [the nightly gbrain check](docs/nightly.md) now runs the commit that gbrain's
+  `stable` tag points to when the night starts, read from the gbrain clone's remote with `git ls-remote` and fetched
+  if the clone lacks it. Before, the commit was written into `eval/runner/nightly/run.ts` (v0.60.717.0) and had to be
+  bumped by hand each time the tag moved; on 2026-11-17 the tag pointed to v0.60.733.0.
+- **Where it fails.** A night whose remote can't be reached, has no `stable` tag or can't serve the commit doesn't
+  start: the runner exits 1 with the reason. It never falls back to an older commit or to the clone's own `stable` tag,
+  which a plain `git fetch` doesn't move.
+- **What it records.** `night.json` gains a `stable` field with the remote, the tag object when the tag is annotated,
+  and when it was read. The stable night's report names them under its title, and master's section against stable now
+  names the stable commit and its version. `--resume` keeps the commit the night started on.
+
+## [0.10.242] - 2026-11-17
+
+- **BG1 dev loop: 17 more public dev worlds, as a list of their own.** `bg1-dev-04` to `bg1-dev-20` join stage 1's three dev worlds, from public seeds like them, with their plans and gold under `eval/data/changing-facts-v1/dev/worlds` and template fixtures for keyless tests. They are planned with the gold-audit fixes the sealed worlds carry (a retraction always says the plan is not happening, and no history question asks about a slot with a change scheduled after the world end); stage 1's three, their files and `eval/decisions/splits/bg1-dev.json` are unchanged, and a bg1-dev load with no world list still reads only the three. `eval/custody/bg1/mint.sh --dev --worlds <ids>` renders the extra worlds. `bun eval/runner/bg1/dev-loop.ts run --worlds extra` (or `dev20`, or ids) scores gbrain on them; `run --system ext-memory-bank` or `ext-extract-first` runs a comparator's stage 1 cell on extra worlds, on the wall clock within 14 days of the world end as stage 1 ran them, and `baselines --extra <memory-bank run>,<extract-first run>` turns those runs into a second comparator cache that `score` reads beside stage 1's. `why --extra` puts the comparators' contexts beside gbrain's on the extra worlds. `run` now refuses a world listed twice and checks `--vm-size` before it writes anything.
+
+### Code review skips the generated data of BG1's 17 extra dev worlds
+
+- **What changed.** The code review that runs before a pull request is marked ready now leaves out the generated plans,
+  questions and template fixtures of BG1's extra dev worlds, `bg1-dev-04` to `bg1-dev-20`, under
+  `eval/data/changing-facts-v1/dev/worlds` and `eval/data/changing-facts-v1/fixtures/worlds`: about 6.8 MB of JSON that
+  `eval/generators/changing-facts-gen.ts` writes. With them in, the pull request that adds those worlds has a 7.4 MB review
+  diff, over the review's 2 MB limit, so no reviewer could read it.
+- **What stays the same.** The files stay in the repository, the generator that writes them and its `check` are still
+  reviewed, and so is the comparator cache scored on them. Stage 1's three dev worlds, `bg1-dev-01` to `bg1-dev-03`, keep
+  their plans and questions in review. No score or verdict changes.
+
+README's results table now holds only rows with a measured no-gbrain number, and each row names its own. The newer sealed company worlds show the same files with `grep` at 318 of 600 against gbrain's 382, and the sealed whole-conversation row shows the question alone at 40 of 200. Rows whose alternative is being measured, and checks of gbrain's own behaviour with nothing to compare against, have their own tables ([README](README.md#current-results)).
+
 ## [0.10.241] - 2026-11-17
 
 - New multi-evidence dev loop (`bun eval/runner/multi-evidence/dev-loop.ts`): scores any gbrain build, by default the newest release, on 152 public or synthetic questions whose answer needs two or more pieces of evidence, and reports per item how much gold reached the model, what was cut, turns used against the agent's cap and whether the answer was right. Arms at twice the turn cap and with batch page reads separate "gbrain can't find it" from "the agent ran out of turns". See [eval/runner/multi-evidence/README.md](eval/runner/multi-evidence/README.md).

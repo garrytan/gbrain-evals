@@ -8,7 +8,7 @@
  *       [--cache <dir>, default <set>/../render-cache] [--target-tokens 200000]
  *       (--fake [--fake-break <slot>:<session index>:<attempts>,...]
  *        | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)
- *   bun eval/custody/bg1/render.ts --dev <bg1-dev-01|bg1-dev-02|bg1-dev-03> --set <out>/set [--cache <dir>] [--target-tokens 200000]
+ *   bun eval/custody/bg1/render.ts --dev <bg1-dev-01 to bg1-dev-20> --set <out>/set [--cache <dir>] [--target-tokens 200000]
  *       (--fake [--fake-break <dev number>:<session index>:<attempts>,...] | --paid-window ... as above)
  *   bun eval/custody/bg1/render.ts --dev-report <bg1-dev-NN> --set <out>/set [--budget-ledger <file> --budget-run-id <id>]
  *
@@ -64,11 +64,11 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
-  BG1_DATA_DIR, BG1_DEV_SEEDS, BG1_TARGET_TOKENS, BG1_WORLD_SCHEMA, buildQuestions, loadPhrasing, PlanError, planWorld, PUBLIC_PHRASING, renderBriefs, renderTemplateSession,
+  BG1_DATA_DIR, BG1_TARGET_TOKENS, BG1_WORLD_SCHEMA, buildQuestions, devWorldPlan, loadPhrasing, PlanError, planWorld, PUBLIC_PHRASING, renderBriefs, renderTemplateSession,
   sealedWorldSeed, termRegex, type Phrasing, type RenderBrief, type Turn, type World, type WorldPlan,
 } from '../../generators/changing-facts-gen.ts';
 import { readLedger } from '../../runner/budget-ledger.ts';
-import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS } from '../../runner/bg1/types.ts';
+import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS } from '../../runner/bg1/types.ts';
 import { ledgerCaps, requireRs1Window, WindowRefusal } from '../../runner/paid-arm.ts';
 import { PROXY_REFUSAL_MARKERS } from '../../runner/providers/openai-compatible.ts';
 import { encodingCount } from '../../runner/systems/render-v2.ts';
@@ -445,13 +445,15 @@ export const sealedPlan = (seedLine: string, slot: number, phrasing: Phrasing) =
 
 /** The committed public dev worlds' plans and questions, as changing-facts-gen.ts devFiles() writes them. */
 export const BG1_DEV_WORLDS = join(BG1_DATA_DIR, 'dev', 'worlds');
+/** Stage 1's three dev worlds, then the dev loop's 17 extra; a dev world's place here is its --fake-break number. */
+const DEV_IDS: readonly string[] = [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS];
 
 /**
  * A public dev world's plan, planned as devFiles() plans it. Refuses unless the plan and its questions are
  * byte-identical to plan.json and questions.json under worlds/<id>, so the rendered world is the committed gold's.
  */
 export function devPlan(id: string, worlds = BG1_DEV_WORLDS): WorldPlan {
-  const plan = planWorld(id, BG1_DEV_SEEDS[id], { publicSeed: true });
+  const plan = devWorldPlan(id);
   for (const [name, text] of [['plan.json', json(plan)], ['questions.json', json(buildQuestions(plan, PUBLIC_PHRASING))]]) {
     const path = join(worlds, id, name);
     if (!existsSync(path) || readFileSync(path, 'utf8') !== text) throw new RenderRefusal(`${id}'s ${name} differs from the committed eval/data/changing-facts-v1/dev/worlds/${id}/${name}`);
@@ -476,7 +478,7 @@ function insideCheckout(path: string): boolean {
 export function devReport(argv: string[]): string {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const id = flag('--dev-report') ?? '', set = flag('--set'), ledger = flag('--budget-ledger'), run = flag('--budget-run-id');
-  if (!BG1_DEV_CONVERSATIONS.includes(id) || !set || !ledger !== !run) throw new RenderRefusal('usage: --dev-report <bg1-dev-NN> --set <dir> [--budget-ledger <file> --budget-run-id <id>]');
+  if (!DEV_IDS.includes(id) || !set || !ledger !== !run) throw new RenderRefusal('usage: --dev-report <bg1-dev-NN> --set <dir> [--budget-ledger <file> --budget-run-id <id>]');
   const record = join(resolve(set), 'render', `${id}.json`);
   const stats = existsSync(record) ? JSON.parse(readFileSync(record, 'utf8')) as { status: string; attempts: number; regenerated: number } : null;
   const parts = [`bg1-render world=${id} report`, stats ? `status=${stats.status} attempts=${stats.attempts} regenerated=${stats.regenerated}` : 'record=missing'];
@@ -504,7 +506,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
   const dev = argv.includes('--dev') ? flag('--dev') ?? '' : null;
   if (dev !== null) {
     if (seedFile || phrasingFile || slotText) throw new RenderRefusal('--dev plans a public dev world from its public seed and phrasing, so it takes no --seed-file, --phrasing or --slot');
-    if (!set || !BG1_DEV_CONVERSATIONS.includes(dev)) throw new RenderRefusal(`usage: --dev <${BG1_DEV_CONVERSATIONS.join('|')}> --set <dir> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
+    if (!set || !DEV_IDS.includes(dev)) throw new RenderRefusal(`usage: --dev <bg1-dev-01 to bg1-dev-20> --set <dir> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)`);
     if (insideCheckout(set)) throw new RenderRefusal('--set must sit outside any git checkout');
   } else if (!set || !seedFile || !phrasingFile || !slotText) throw new RenderRefusal('usage: --set <dir> --seed-file <path>.bg1-seed --phrasing <path>.bg1-phrasing.json --slot <n> (--fake | --paid-window <unit> --window-cap-usd <n> --budget-ledger <file> --budget-run-id <id>)');
   const cache = resolve(flag('--cache') ?? join(dirname(resolve(set)), 'render-cache'));
@@ -521,7 +523,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
     const gemini = cachedClient(geminiProxyClient(env.BG1_GEMINI_READY), cache), haiku = cachedClient(haikuProxyClient(env.BG1_ANTHROPIC_READY), cache);
     make = () => clientModels(gemini, haiku);
   }
-  const slot = dev === null ? Number(slotText) : BG1_DEV_CONVERSATIONS.indexOf(dev) + 1;
+  const slot = dev === null ? Number(slotText) : DEV_IDS.indexOf(dev) + 1;
   const id = dev ?? worldIdOf(slot);
   const phrasing = dev === null ? readPhrasing(resolve(phrasingFile!)) : PUBLIC_PHRASING;
   const plan = dev === null ? sealedPlan(readSeedLine(resolve(seedFile!)), slot, phrasing) : devPlan(dev, devWorlds);

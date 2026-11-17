@@ -21,7 +21,10 @@ import { decideError } from '../decisions/errors.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { beam10mManifestPath, beam10mRoot, loadBeam10mCorpus } from './beam10m-corpus.ts';
 import { loadBeam10mQuestions } from './beam10m-questions.ts';
-import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_STRATA, type Bg1QuestionFields } from './bg1-names.ts';
+import { BG1_CONVERSATIONS, BG1_DEV_CONVERSATIONS, BG1_DEV_EXTRA_CONVERSATIONS, BG1_N_CAP, BG1_N_FLOOR, BG1_STRATA, type Bg1QuestionFields } from './bg1-names.ts';
+
+/** Every public dev world: stage 1's three, then the dev loop's 17 extra. A load without `only` reads the three. */
+const BG1_DEV_ALL: readonly string[] = [...BG1_DEV_CONVERSATIONS, ...BG1_DEV_EXTRA_CONVERSATIONS];
 
 export interface Turn { speaker: string; content: string; message_ids?: number[] }
 /** `original_id`: the dataset's own session id when `id` is an occurrence id (LongMemEval-M repeats a session id across a haystack). */
@@ -993,7 +996,7 @@ export function bg1Conversation(id: string, worldText: string, questionsText: st
 
 /** The files one BG1 world is read from, as paths relative to the root; refuses when either is missing. */
 export function bg1WorldFiles(root: string, id: string, benchmark: 'bg1' | 'bg1-dev' = 'bg1'): { world: string; questions: string } {
-  const known = benchmark === 'bg1' ? BG1_CONVERSATIONS : BG1_DEV_CONVERSATIONS;
+  const known = benchmark === 'bg1' ? BG1_CONVERSATIONS : BG1_DEV_ALL;
   if (!known.includes(id)) throw new Error(`${benchmark} has no world ${id}`);
   const files = { world: `worlds/${id}/world.json`, questions: `worlds/${id}/questions.json` };
   for (const path of Object.values(files)) if (!existsSync(join(root, path))) {
@@ -1013,12 +1016,12 @@ export function bg1ManifestFiles(root: string, ids: readonly string[] = BG1_CONV
 /**
  * Why a bg1-dev root cannot stand in for stage 1's rendered dev worlds: it resolves to the committed template fixtures,
  * or a world it holds was written by a template renderer (the fixtures' renderer at BG1_FIXTURE_TOKENS, or render.ts
- * --fake); null when neither.
+ * --fake); null when neither. Only the worlds a load reads (`ids`, stage 1's three by default) are checked.
  */
-export function bg1DevFixtureProblem(root: string): string | null {
+export function bg1DevFixtureProblem(root: string, ids: readonly string[] = BG1_DEV_CONVERSATIONS): string | null {
   const real = (p: string) => { try { return realpathSync(p); } catch { return resolve(p); } };
   if (real(root) === real(BG1_FIXTURES_ROOT)) return `${root} is the committed template fixtures (eval/data/changing-facts-v1/fixtures)`;
-  const template = BG1_DEV_CONVERSATIONS.flatMap(id => {
+  const template = ids.flatMap(id => {
     const file = join(root, 'worlds', id, 'world.json');
     if (!existsSync(file)) return [];
     let renderer: unknown;
@@ -1029,22 +1032,24 @@ export function bg1DevFixtureProblem(root: string): string | null {
 }
 
 /**
- * Load bg1-dev: the public dev worlds (or GBRAIN_EVALS_BG1_DEV_ROOT), dates resolved from the world end. Unless the
+ * Load bg1-dev: stage 1's three public dev worlds, or the dev worlds `only` names among all 20 (GBRAIN_EVALS_BG1_DEV_ROOT
+ * moves the root), dates resolved from the world end. Unless the
  * caller declares the load keyless, a root bg1DevFixtureProblem names refuses before any world is read.
  */
 export function loadBg1Dev(opts: { root?: string; only?: ReadonlySet<string>; worldEnd?: string; keyless?: boolean } = {}): Corpus {
   const root = resolve(opts.root ?? fromHome(process.env.GBRAIN_EVALS_BG1_DEV_ROOT) ?? BG1_DEV_ROOT);
   const worldEnd = bg1WorldEnd(opts);
-  const unknown = opts.only ? [...opts.only].filter(id => !BG1_DEV_CONVERSATIONS.includes(id)) : [];
+  const unknown = opts.only ? [...opts.only].filter(id => !BG1_DEV_ALL.includes(id)) : [];
   if (unknown.length) throw new Error(`bg1-dev has no world ${unknown.join(', ')}`);
-  const fixture = opts.keyless ? null : bg1DevFixtureProblem(root);
+  const ids = opts.only ? BG1_DEV_ALL.filter(c => opts.only!.has(c)) : BG1_DEV_CONVERSATIONS;
+  const fixture = opts.keyless ? null : bg1DevFixtureProblem(root, ids);
   if (fixture) throw decideError({ code: 'DATASET_MISSING', message: `bg1-dev: ${fixture}, and this load is not keyless`,
     why: 'the template fixtures are for keyless runs; a paid cell run, judge check or verdict reads only the dev worlds rendered in stage 1 step 1',
     fix: { next: 'ask_user', user_message: 'unset GBRAIN_EVALS_BG1_DEV_ROOT, or point it at the rendered dev worlds, before a paid bg1-dev load' } });
   const conversations: Conversation[] = [];
   const questions: MemoryQuestion[] = [];
   const files: DatasetIdentity['files'] = [];
-  for (const id of BG1_DEV_CONVERSATIONS.filter(c => !opts.only || opts.only.has(c))) {
+  for (const id of ids) {
     const f = bg1WorldFiles(root, id, 'bg1-dev');
     const [world, qs] = [f.world, f.questions].map(path => { const bytes = readFileSync(join(root, path)); files.push({ path: relative(REPO_ROOT, join(root, path)), sha256: sha256(bytes) }); return bytes.toString('utf8'); });
     const c = bg1Conversation(id, world, qs, worldEnd);
