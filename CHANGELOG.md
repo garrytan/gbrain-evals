@@ -2,6 +2,18 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.246] - 2026-11-17
+
+### The secrets check accepts episode ids in published correction records
+
+- The secrets check that runs before a push now accepts G6 episode ids such as `g6:particle-1:oov-7-p012:local:1` in the
+  `key` fields of correction records under `docs/benchmarks/predictive-measures/`. The entry covers only values shaped
+  like an episode id in `correction-*.json` files there, so any other value is still checked.
+
+engine-bench preregistration ([docs/benchmarks/2026-11-17-engine-bench-preregistration.md](docs/benchmarks/2026-11-17-engine-bench-preregistration.md)). Phase 1 asks whether gbrain's Rust storage engine works like PGLite and Postgres at a named build: the same correctness counts on six keyless checks, the same CLI JSON, MCP and markdown bytes, and LongMemEval-S recall_all@5 within two points, with a verdict of works, works with named gaps, or doesn't work yet. It runs when gbrain's maintainers name a build that serves import and search and passes gbrain's parity suite, with no deadline. Phase 2, speed for the default-on decision, keeps its margins and is marked not yet run.
+
+Corrected three G6 local episodes in the [predictive measures results](docs/benchmarks/2026-11-10-predictive-measures.md#correction-2026-11-17) that were scored as answering without their gold pages because the harness checked two pages at the same time. Rescored from the committed log, G6 local success is 100% for Claude Opus 5.5 (was 99.5%) and 98.0% for particle-1 (was 97.0%), and the local Opus − particle-1 difference is +2.0 points (was +2.5), still no measurable difference. No verdict changes ([corrections](docs/corrections.md)).
+
 ## [0.10.245] - 2026-11-17
 
 The G6 out-of-view harness now checks each gold page one at a time before an episode starts. A local caller's check is its own `gbrain call` process on a brain that allows one process at a time, so two checks at once could fail the second and wrongly mark a readable page as out of view. That made `test/eval/predictive-g6.test.ts` fail now and then in CI.
