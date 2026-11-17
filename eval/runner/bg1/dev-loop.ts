@@ -789,7 +789,7 @@ export function renderScore(s: Score): string {
     const mde = Math.max(mb.gap?.mde ?? 0, ef.gap?.mde ?? 0);
     lines.push(`| ${c.label} | ${c.graded === c.n ? c.n : `${c.graded} of ${c.n}`} | ${pct(c.accuracy)} | ${pct(c.exposure)} | ${pct(mb.accuracy)} | ${pct(mb.exposure)} | ${pts(mb.gap)} | ${pct(ef.accuracy)} | ${pct(ef.exposure)} | ${pts(ef.gap)} | ${mde ? `${mde.toFixed(1)} pts` : 'n/a'} |${vs ? ` ${pts(c.against)} |` : ''}`);
   }
-  lines.push('', 'The smallest visible change is the paired difference a two-sided 0.05 test detects with 80% power in that class (the larger of the two comparisons). The intervals cover question sampling within these three worlds, not new worlds.');
+  lines.push('', 'The smallest visible change is the paired difference a two-sided 0.05 test detects with 80% power in that class (the larger of the two comparisons). The intervals cover question sampling within the worlds scored here, not new worlds.');
   return lines.join('\n');
 }
 
