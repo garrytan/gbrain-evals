@@ -1,0 +1,31 @@
+[n6pg] postgres n6pg_83404_1794929369316; seeded 19 pages; presence ok
+[n6pg] serve --http on 127.0.0.1:56400; tokens issued (expiring token ttl 60s, valid before expiry: true)
+[gbrain] vector search unavailable (no_gateway_config) — results are keyword-only. Run `gbrain doctor` to diagnose.
+[orphans.scan] start
+[orphans.scan] done
+[orphans.scan] start
+[orphans.scan] done
+[orphans.scan] start
+[orphans.scan] done
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[think] question embed failed: AI gateway is not configured. Call configureGateway() during engine connect.
+[n6pg] 44 ops (0 named ops absent), 4034 probe tasks, 2135 trusted local replays
+[n6pg] phase warm-owner: 1899 probes in 29s
+[n6pg] phase interleaved: 4034 probes in 52s
+[n6pg] phase scoped-again: 2135 probes in 26s
+[n6pg] verdict pass: mandatory 155/155 covered, leaks 0, oracles 0, accepted 0; pool max 8 connections; receipt <work>/correctness/work/n6-http-postgres/receipt.json
