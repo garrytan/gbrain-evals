@@ -19,7 +19,7 @@ The bridge case is different. Two "Sam Lee"s are in `work`, one with a GitHub lo
 
 ## The experiment
 
-**World.** A seeded generator writes person pages in two sources and keeps a ledger of which invented person each page belongs to. The ledger is the answer key; no system's output is ever used as gold. Every family has 20 instances at the default seed (1,380 pages), and every instance uses names no other instance uses.
+**World.** A seeded generator writes person pages in two sources and keeps a ledger of which invented person each page belongs to. The ledger is the answer key; no system's output is ever used as gold. Every family has 20 instances at the default seed (1,380 pages), and every instance draws its full names fresh. Two initial-form titles, N. Abara and M. Dahl, still land in two instances each at this seed; they add two `weak` groups outside the designed pairs and change no number below.
 
 | Different people (400 designed pairs) | Same person (280 designed pairs) |
 |---|---|
