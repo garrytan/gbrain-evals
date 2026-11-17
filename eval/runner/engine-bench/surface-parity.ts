@@ -25,7 +25,7 @@
  * test carries the engine and its addon loads; the receipt then reports rust as `refused` with the reason, never
  * as a pass or a fail.
  *
- *   bun eval/runner/engine-bench/surface-parity.ts [--engines pglite,postgres] [--gbrain <checkout>@<ref>]
+ *   bun eval/runner/engine-bench/surface-parity.ts --dev | --prereg <path> [--engines pglite,postgres] [--gbrain <checkout>@<ref>]
  *     [--pg-url <admin url>] [--out <dir>] [--captures <dir>] [--work-dir <dir>] [--keep-work]
  *
  * Without --pg-url, a postgres arm starts a pgvector/pgvector:pg16 container on a free local port and removes it at
@@ -44,6 +44,7 @@ import {
 import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { strippedKeysIn } from '../hermetic-env.ts';
 import { freePort } from '../lifecycle/slice.ts';
+import { countedRun } from './counted.ts';
 
 export const SURFACE_PARITY_SCHEMA_VERSION = 'engine-bench-surface-parity/v1';
 export const SURFACE_PARITY_RUNNER = 'engine-bench/surface-parity';
@@ -950,6 +951,7 @@ export function summaryLines(r: SurfaceParityReceipt): string[] {
 }
 
 async function main(argv: string[]): Promise<number> {
+  const run = countedRun(argv, REPO_ROOT);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const engines = enginesFrom(argv);
   const outDir = resolve(flag(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/engine-bench/surface-parity'));
@@ -968,7 +970,7 @@ async function main(argv: string[]): Promise<number> {
     const receipt = await runSurfaceParity({ gut, engines, postgresUrl, keepWork: argv.includes('--keep-work'), workDir: flag(argv, '--work-dir'), capturesDir: capturesDir && resolve(capturesDir), environment });
     mkdirSync(outDir, { recursive: true });
     const file = join(outDir, `surface-parity-${receipt.generated_at.replace(/[:.]/g, '-')}.json`);
-    writeFileSync(file, `${JSON.stringify(receipt, null, 2)}\n`);
+    writeFileSync(file, `${JSON.stringify({ ...receipt, ...run }, null, 2)}\n`);
     for (const l of summaryLines(receipt)) console.log(l);
     console.log(`receipt: ${relative(process.cwd(), file)}`);
     return receipt.summary.verdict === 'byte_exact' ? 0 : receipt.summary.verdict === 'differs' ? 1 : 2;

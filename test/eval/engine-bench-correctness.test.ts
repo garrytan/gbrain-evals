@@ -93,6 +93,12 @@ describe('compareCheck', () => {
     expect(row.engines.rust!.status).toBe('refused');
     expect(row.rust).toEqual({ verdict: 'refused', reasons: ['refused (rust_engine_not_in_build)'] });
   });
+  test('a rust runner error is a failure when a TypeScript engine measured the check', () => {
+    const crashed = { engine: 'rust' as const, exit_code: 3, wall_ms: 1, log: 'x', error: 'exit 3, no receipt: crash' };
+    const { row } = compareCheck(CHECK, [run('pglite', 'pass', { leaks: 0, sealed: 0 }), readRun(CHECK, crashed, null)]);
+    expect(row.engines.rust!.status).toBe('error');
+    expect(row.rust).toEqual({ verdict: 'fail', reasons: ['runner error: exit 3, no receipt: crash'] });
+  });
   test('rust is unmeasured when no TypeScript engine measured the check', () => {
     const { row } = compareCheck(CHECK, [refused('pglite', 'engine_not_supported_by_runner'), run('rust', 'pass', { leaks: 0, sealed: 0 })]);
     expect(row.rust!.verdict).toBe('unmeasured');

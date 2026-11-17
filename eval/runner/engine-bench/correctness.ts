@@ -20,12 +20,14 @@
  * contract count equals the count on both TypeScript engines. Every contract is a count whose bar is zero, so when a
  * TypeScript engine fails a contract (a nonzero count, or the two TypeScript engines disagree), the stage records it
  * as a gbrain finding and Rust must be no worse than the better TypeScript engine on it. Without a Rust arm the stage
- * still compares PGLite and Postgres and reports every difference as a finding.
+ * still compares PGLite and Postgres and reports every difference as a finding. A Rust run that errors (no usable
+ * receipt) on a check a TypeScript engine completed fails that check; a cause traced to the harness or the machine
+ * makes the run invalid instead, under the preregistration's stop rules.
  *
  * Rust stage verdict: fail when any check fails on Rust; refused when every check refused; pass when every check
  * passes; unmeasured otherwise (some checks passed and the rest refused or could not be measured).
  *
- *   bun eval/runner/engine-bench/correctness.ts [--engines pglite,postgres,rust] [--gbrain <checkout>@<ref>]
+ *   bun eval/runner/engine-bench/correctness.ts --dev | --prereg <path> [--engines pglite,postgres,rust] [--gbrain <checkout>@<ref>]
  *     [--pg-url <admin url>] [--checks n1,n5,n6,n6-http,n12,n14] [--n14-tiers 2mb] [--out <dir>] [--work-dir <dir>]
  *
  * Exit: 0 when the stage ran (any Rust verdict but fail), 1 when Rust fails, 3 when a runner errored on any engine.
@@ -40,6 +42,7 @@ import {
 import { gbrainSpecFrom, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { strippedKeysIn } from '../hermetic-env.ts';
 import { N6_SQL_CHECKS } from '../n6-visibility-fuzz.ts';
+import { countedRun, type CountedRun } from './counted.ts';
 import { enginesFrom, startPgvectorContainer } from './surface-parity.ts';
 
 export const CORRECTNESS_SCHEMA_VERSION = 'engine-bench-correctness/v1';
@@ -165,6 +168,8 @@ export interface CorrectnessReceipt {
   findings: Finding[];
   summary: { rust: RustVerdict | null; errored: string[]; findings: number; wall_ms: Record<string, Partial<Record<EvalEngineKind, number>>>; total_wall_ms: number };
   environment: Record<string, unknown>;
+  counted?: boolean;
+  preregistration_attestation?: CountedRun['preregistration_attestation'];
 }
 
 export const PARITY_RULE = 'A check passes on Rust when its verdict is pass and every contract count equals the count on both TypeScript engines. When a TypeScript engine fails a contract (or the TypeScript engines disagree), that is a gbrain finding and Rust must be no worse than the better TypeScript engine. A contract whose measurement is not_applicable on an engine counts as neither; a check with every contract not_applicable is unmeasured there. Exit 69 is refused, never fail.';
@@ -225,7 +230,7 @@ export function compareCheck(check: CheckSpec, runs: EngineRun[]): { row: CheckR
     const reasons: string[] = [];
     let verdict: RustVerdict;
     if (rustRow.status === 'refused') { verdict = 'refused'; reasons.push(`refused (${rustRow.refusal_reason})`); }
-    else if (rustRow.status === 'error') { verdict = 'unmeasured'; reasons.push(`runner error: ${rustRow.error ?? 'no usable receipt'}`); }
+    else if (rustRow.status === 'error') { verdict = ts.length ? 'fail' : 'unmeasured'; reasons.push(`runner error: ${rustRow.error ?? 'no usable receipt'}`); }
     else if (rustRow.status === 'unmeasured') { verdict = 'unmeasured'; reasons.push('every contract not_applicable on rust'); }
     else {
       let failed = rustRow.status === 'fail';
@@ -298,6 +303,8 @@ export interface CorrectnessOptions {
   /** Directory the runner scripts resolve against. The repository root by default. */
   cwd?: string;
   environment?: Record<string, unknown>;
+  /** From countedRun: whether this run counts, and its preregistration attestation. */
+  run?: CountedRun;
   log?: (line: string) => void;
 }
 
@@ -362,6 +369,7 @@ export async function runCorrectness(o: CorrectnessOptions): Promise<{ receipt: 
       total_wall_ms: Date.now() - t0,
     },
     environment: o.environment ?? {},
+    ...o.run,
   };
   if (!o.outDir) return { receipt };
   mkdirSync(o.outDir, { recursive: true });
@@ -387,6 +395,7 @@ function flag(argv: string[], name: string): string | undefined {
 }
 
 async function main(argv: string[]): Promise<number> {
+  const run = countedRun(argv, REPO_ROOT);
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const engines = enginesFrom(argv);
   const all = correctnessChecks({ n14Tiers: flag(argv, '--n14-tiers') });
@@ -406,7 +415,7 @@ async function main(argv: string[]): Promise<number> {
       environment.postgres = { source: '--pg-url' };
     }
     const workDir = flag(argv, '--work-dir');
-    const { receipt, file } = await runCorrectness({ gut, engines, postgresUrl, workDir: workDir && resolve(workDir), outDir, checks, environment, log: l => console.log(l) });
+    const { receipt, file } = await runCorrectness({ gut, engines, postgresUrl, workDir: workDir && resolve(workDir), outDir, checks, environment, run, log: l => console.log(l) });
     for (const l of summaryLines(receipt)) console.log(l);
     console.log(`receipt: ${relative(process.cwd(), file!)}`);
     if (receipt.summary.errored.length) return 3;
