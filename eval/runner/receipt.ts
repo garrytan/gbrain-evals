@@ -478,9 +478,9 @@ export function scrubMachinePaths<T>(value: T, root = REPO_ROOT, home = homedir(
 }
 
 /** Write a published JSON file with checkout, home and temp paths rewritten, and Capy scratch paths as `<work>/`. */
-export function writeScrubbedJson(path: string, value: unknown, home = homedir()): void {
+export function writeScrubbedJson(path: string, value: unknown, home = homedir(), root = REPO_ROOT): void {
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, JSON.stringify(scrubMachinePaths(value, REPO_ROOT, home, tmpdir(), [[`${home}/.capy/work/`, '<work>/']]), null, 2) + '\n');
+  writeFileSync(path, JSON.stringify(scrubMachinePaths(value, root, home, tmpdir(), [[`${root}/`, ''], [root, '.'], [`${home}/.capy/work/`, '<work>/']]), null, 2) + '\n');
 }
 
 /** Atomic write: upgrade to v2, scrub machine-local paths, validate, write temp file in the same dir, rename over target. */

@@ -34,6 +34,19 @@ describe('writeScrubbedJson', () => {
     }
   });
 
+  test('keeps checkout paths repo-relative when the checkout sits under the Capy scratch dir', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scrubbed-json-'));
+    try {
+      const home = '/home/runner-x';
+      const root = `${home}/.capy/work/wt`;
+      const file = join(dir, 'receipt.json');
+      writeScrubbedJson(file, { receipt: `${root}/eval/reports/n1.json`, cwd: root, log: `${home}/.capy/work/n1.log` }, home, root);
+      expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ receipt: 'eval/reports/n1.json', cwd: '.', log: '<work>/n1.log' });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   test('every engine-bench runner writes its published JSON through it', () => {
     for (const runner of ['correctness', 'lme-recall', 'perf', 'surface-parity']) {
       const src = readFileSync(join(ROOT, `eval/runner/engine-bench/${runner}.ts`), 'utf8');
